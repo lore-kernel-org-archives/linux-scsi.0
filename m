@@ -1,7 +1,8 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [V2 PATCH 8/8] bnx2fc: Bump version to 1.0.1
-Date: Thu, 17 Mar 2011 17:13:37 -0700
-Message-ID: <1300407217.644.411.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+Subject: [V2 PATCH 4/8] bnx2fc: Call bnx2fc_return_rqe and
+ bnx2fc_get_next_rqe with tgt lock held
+Date: Thu, 17 Mar 2011 17:13:31 -0700
+Message-ID: <1300407211.644.407.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
@@ -9,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mms1.broadcom.com ([216.31.210.17]:4417 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755982Ab1CRANv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2011 20:13:51 -0400
+	id S1754590Ab1CRANq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Mar 2011 20:13:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James.Bottomley@suse.de" <James.Bottomley@suse.de>
@@ -18,40 +19,77 @@ Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.
 
 From: Nithin Sujir <nsujir@broadcom.com>
 
+tgt lock is needed during -
+        bnx2fc_return_rqe to protect the rq_prod_idx.
+        bnx2fc_get_next_rqe to protect rq_cons_idx
+
 Signed-off-by: Nithin Nayak Sujir <nsujir@broadcom.com>
 Signed-off-by: Michael Chan <mchan@broadcom.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c |   13 +++++++++++--
+ 1 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index d869a4c..b6d350a 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -62,7 +62,7 @@
- #include "bnx2fc_constants.h"
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 4f40968..3de1ce7 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -590,7 +590,10 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
  
- #define BNX2FC_NAME		"bnx2fc"
--#define BNX2FC_VERSION		"1.0.0"
-+#define BNX2FC_VERSION		"1.0.1"
+ 		num_rq = (frame_len + BNX2FC_RQ_BUF_SZ - 1) / BNX2FC_RQ_BUF_SZ;
  
- #define PFX			"bnx2fc: "
++		spin_lock_bh(&tgt->tgt_lock);
+ 		rq_data = (unsigned char *)bnx2fc_get_next_rqe(tgt, num_rq);
++		spin_unlock_bh(&tgt->tgt_lock);
++
+ 		if (rq_data) {
+ 			buf = rq_data;
+ 		} else {
+@@ -603,8 +606,10 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 			}
  
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 38a00fe..2056890 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -21,7 +21,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+ 			for (i = 0; i < num_rq; i++) {
++				spin_lock_bh(&tgt->tgt_lock);
+ 				rq_data = (unsigned char *)
+ 					   bnx2fc_get_next_rqe(tgt, 1);
++				spin_unlock_bh(&tgt->tgt_lock);
+ 				len = BNX2FC_RQ_BUF_SZ;
+ 				memcpy(buf1, rq_data, len);
+ 				buf1 += len;
+@@ -615,13 +620,15 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
  
- #define DRV_MODULE_NAME		"bnx2fc"
- #define DRV_MODULE_VERSION	BNX2FC_VERSION
--#define DRV_MODULE_RELDATE	"Jan 25, 2011"
-+#define DRV_MODULE_RELDATE	"Mar 17, 2011"
+ 		if (buf != rq_data)
+ 			kfree(buf);
++		spin_lock_bh(&tgt->tgt_lock);
+ 		bnx2fc_return_rqe(tgt, num_rq);
++		spin_unlock_bh(&tgt->tgt_lock);
+ 		break;
  
-
- static char version[] __devinitdata =
+ 	case FCOE_ERROR_DETECTION_CQE_TYPE:
+ 		/*
+-		 *In case of error reporting CQE a single RQ entry
+-		 * is consumes.
++		 * In case of error reporting CQE a single RQ entry
++		 * is consumed.
+ 		 */
+ 		spin_lock_bh(&tgt->tgt_lock);
+ 		num_rq = 1;
+@@ -705,6 +712,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 		 *In case of warning reporting CQE a single RQ entry
+ 		 * is consumes.
+ 		 */
++		spin_lock_bh(&tgt->tgt_lock);
+ 		num_rq = 1;
+ 		err_entry = (struct fcoe_err_report_entry *)
+ 			     bnx2fc_get_next_rqe(tgt, 1);
+@@ -717,6 +725,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 			err_entry->tx_buf_off, err_entry->rx_buf_off);
+ 
+ 		bnx2fc_return_rqe(tgt, 1);
++		spin_unlock_bh(&tgt->tgt_lock);
+ 		break;
+ 
+ 	default:
 -- 
 1.7.0.6
 
