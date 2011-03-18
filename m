@@ -1,95 +1,85 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [V2 PATCH 4/8] bnx2fc: Call bnx2fc_return_rqe and
- bnx2fc_get_next_rqe with tgt lock held
-Date: Thu, 17 Mar 2011 17:13:31 -0700
-Message-ID: <1300407211.644.407.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+Subject: [V2 PATCH 7/8] bnx2fc: Remove unnecessary module state checks
+Date: Thu, 17 Mar 2011 17:13:35 -0700
+Message-ID: <1300407215.644.410.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4417 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1899 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754590Ab1CRANq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756072Ab1CRANq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 17 Mar 2011 20:13:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James.Bottomley@suse.de" <James.Bottomley@suse.de>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Nithin Sujir <nsujir@broadcom.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Michael Chan <mchan@broadcom.com>Nithin Sujir <nsujir@broadcom.com>
 
-From: Nithin Sujir <nsujir@broadcom.com>
+The check for module state MODULE_STATE_LIVE is no longer required for LLDs, as
+libfcoe transport takes care of it. Reference:
+http://marc.info/?l=linux-scsi&m=129989565903046&w=2
 
-tgt lock is needed during -
-        bnx2fc_return_rqe to protect the rq_prod_idx.
-        bnx2fc_get_next_rqe to protect rq_cons_idx
-
-Signed-off-by: Nithin Nayak Sujir <nsujir@broadcom.com>
-Signed-off-by: Michael Chan <mchan@broadcom.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |   13 +++++++++++--
- 1 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   23 -----------------------
+ 1 files changed, 0 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 4f40968..3de1ce7 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -590,7 +590,10 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index aab55e2..38a00fe 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1395,12 +1395,6 @@ static int bnx2fc_destroy(struct net_device *netdev)
+ 	rtnl_lock();
  
- 		num_rq = (frame_len + BNX2FC_RQ_BUF_SZ - 1) / BNX2FC_RQ_BUF_SZ;
+ 	mutex_lock(&bnx2fc_dev_lock);
+-#ifdef CONFIG_SCSI_BNX2X_FCOE_MODULE
+-	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
+-		rc = -ENODEV;
+-		goto netdev_err;
+-	}
+-#endif
+ 	/* obtain physical netdev */
+ 	if (netdev->priv_flags & IFF_802_1Q_VLAN)
+ 		phys_dev = vlan_dev_real_dev(netdev);
+@@ -1768,11 +1762,6 @@ static int bnx2fc_disable(struct net_device *netdev)
  
-+		spin_lock_bh(&tgt->tgt_lock);
- 		rq_data = (unsigned char *)bnx2fc_get_next_rqe(tgt, num_rq);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+
- 		if (rq_data) {
- 			buf = rq_data;
- 		} else {
-@@ -603,8 +606,10 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 			}
+ 	mutex_lock(&bnx2fc_dev_lock);
  
- 			for (i = 0; i < num_rq; i++) {
-+				spin_lock_bh(&tgt->tgt_lock);
- 				rq_data = (unsigned char *)
- 					   bnx2fc_get_next_rqe(tgt, 1);
-+				spin_unlock_bh(&tgt->tgt_lock);
- 				len = BNX2FC_RQ_BUF_SZ;
- 				memcpy(buf1, rq_data, len);
- 				buf1 += len;
-@@ -615,13 +620,15 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+-	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
+-		rc = -ENODEV;
+-		goto nodev;
+-	}
+-
+ 	/* obtain physical netdev */
+ 	if (netdev->priv_flags & IFF_802_1Q_VLAN)
+ 		phys_dev = vlan_dev_real_dev(netdev);
+@@ -1828,11 +1817,6 @@ static int bnx2fc_enable(struct net_device *netdev)
+ 	BNX2FC_MISC_DBG("Entered %s\n", __func__);
+ 	mutex_lock(&bnx2fc_dev_lock);
  
- 		if (buf != rq_data)
- 			kfree(buf);
-+		spin_lock_bh(&tgt->tgt_lock);
- 		bnx2fc_return_rqe(tgt, num_rq);
-+		spin_unlock_bh(&tgt->tgt_lock);
- 		break;
+-	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
+-		rc = -ENODEV;
+-		goto nodev;
+-	}
+-
+ 	/* obtain physical netdev */
+ 	if (netdev->priv_flags & IFF_802_1Q_VLAN)
+ 		phys_dev = vlan_dev_real_dev(netdev);
+@@ -1899,13 +1883,6 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
  
- 	case FCOE_ERROR_DETECTION_CQE_TYPE:
- 		/*
--		 *In case of error reporting CQE a single RQ entry
--		 * is consumes.
-+		 * In case of error reporting CQE a single RQ entry
-+		 * is consumed.
- 		 */
- 		spin_lock_bh(&tgt->tgt_lock);
- 		num_rq = 1;
-@@ -705,6 +712,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 		 *In case of warning reporting CQE a single RQ entry
- 		 * is consumes.
- 		 */
-+		spin_lock_bh(&tgt->tgt_lock);
- 		num_rq = 1;
- 		err_entry = (struct fcoe_err_report_entry *)
- 			     bnx2fc_get_next_rqe(tgt, 1);
-@@ -717,6 +725,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 			err_entry->tx_buf_off, err_entry->rx_buf_off);
+ 	mutex_lock(&bnx2fc_dev_lock);
  
- 		bnx2fc_return_rqe(tgt, 1);
-+		spin_unlock_bh(&tgt->tgt_lock);
- 		break;
- 
- 	default:
+-#ifdef CONFIG_SCSI_BNX2X_FCOE_MODULE
+-	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
+-		rc = -ENODEV;
+-		goto mod_err;
+-	}
+-#endif
+-
+ 	if (!try_module_get(THIS_MODULE)) {
+ 		rc = -EINVAL;
+ 		goto mod_err;
 -- 
 1.7.0.6
 
