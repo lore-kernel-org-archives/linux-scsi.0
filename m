@@ -1,75 +1,160 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] firmware/efi: export a routine to retrieve efi-variables
- by GUID
-Date: Fri, 18 Mar 2011 18:15:47 -0700
-Message-ID: <4D8403C3.6020300@intel.com>
-References: <20110318221606.26841.92271.stgit@localhost6.localdomain6> <20110318225016.GB15921@suse.de> <AANLkTim+HB0GWzGiif=MvYHaiXMSLuVB6R0=UK3906xU@mail.gmail.com> <20110319002246.GB14249@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3282 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757490Ab1CSBPu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Mar 2011 21:15:50 -0400
-In-Reply-To: <20110319002246.GB14249@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation	problem
+Date: Fri, 18 Mar 2011 20:28:26 -0600
+Message-ID: <E2EA0861-6143-4F91-805A-63736F45C514@dilger.ca>
+References: <20110222020022.GH32261@tux1.beaverton.ibm.com> <yq1vd0cf26f.fsf@sermon.lab.mkp.net> <20110223202446.GG4020@noexit> <1298493173-sup-8301@think> <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110319000755.GD1110@tux1.beaverton.ibm.com>
+Mime-Version: 1.0 (Apple Message framework v1082)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20110319000755.GD1110@tux1.beaverton.ibm.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: djwong@us.ibm.com
+Cc: Dave Chinner <david@fromorbit.com>, Chris Mason <chris.mason@oracle.com>, Jan Kara <jack@suse.cz>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: "Jiang, Dave" <dave.jiang@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@infradead.org>
 
-On 3/18/2011 5:22 PM, Greg KH wrote:
-> On Fri, Mar 18, 2011 at 04:10:10PM -0700, Dan Williams wrote:
->>> I needed all patches in linux-next _before_ the merge window opened to
->>> be able to accept it.
->>
->> Yes, I know, and as dmaengine maintainer I also hate being ambushed by
->> last minute patches, but now I am unfortunately one of those annoying
->> people on the other side of the coin.
->
-> Then you should know better than to try to go around the well-known
-> rules :)
+On 2011-03-18, at 6:07 PM, Darrick J. Wong wrote:
+>> Ok, here's what I have so far.  I took everyone's suggestions of where to add
+>> calls to wait_on_page_writeback, which seems to handle the multiple-write case
+>> adequately.  Unfortunately, it is still possible to generate checksum errors by
+>> scribbling furiously on a mmap'd region, even after adding the writeback wait
+>> in the ext4 writepage function.  Oddly, I couldn't break btrfs with mmap by
+>> removing its wait_for_page_writeback call, so I suspect there's a bit more
+>> going on in btrfs than I've been able to figure out.
 
-Yes...
+> I wonder, is it possible for this to happen:
+> 
+> 1. Thread A mmaps a page and tries to write to it.  ext4_page_mkwrite executes,
+>   but there's no ongoing writeback, so it returns without delay.
+> 2. Thread A starts writing furiously to the page.
+> 3. Thread B runs fsync() or something that results in the page being
+>   checksummed and scheduled for writeout.
+> 4. Thread A continues to write furiously(!) on that same page before the
+>   controller finishes the DMA transfer.
 
-/me about to push his luck
+Right, page_mkwrite() is only called for the ro->rw transition.
 
-...I also know the rules can sometimes be bent:
+> 5. Disk gets the page, which now doesn't match its checksum, and *boom*
+> 
+> After letting the stress tool run for a few days, I can say fairly confidently
+> that the write() case doesn't seem to fail regardless of the O_DIRECT setting.
+> However, with writes to mmap regions, failures happen about once every 20-40
+> minutes, even with O_DIRECT set.  To me this suggests some sort of race
+> condition that we seem to win except once every 20 minutes.
+> 
+> I then thought, if page_mkwrite contains a wait_on_page_writeback, then perhaps
+> there's something that I could do just prior to calculating the DIF checksum
+> that would cause any subsequent write attempts to be shuffled back into
+> page_mkwrite.  I tried the set_memory_ro thing again, though that led to some
+> recursive lock errors and I noticed that those functions only seem to exist in
+> arch/x86/.  Next I tried directly mucking with PTEs, in addition to feeling
+> messy, only seemed to corrupt memory. :)
 
-$ git describe --contains 9d200153
-v2.6.35-rc2~14^2~15
+This seems like the best solution, IMHO, to ensure that mmap is blocked in page_mkwrite() before it has any chance to dirty the page undergoing checksum.  The trick is that you need to set_page_writeback() before setting the page read-only, otherwise the race still exists.
 
-commit 9d20015391dfc47f6371492925cc0333ac403414
-Author: Stepan Moskovchenko <stepanm@codeaurora.org>
-Date:   Wed May 19 11:03:30 2010 -0700
+> Is there a "correct" way to take a writeable page and make it so that any
+> process trying to write to it ends up hitting the page fault handler where we
+> can then wait for writeback?  Or perhaps I am simply barking up the wrong tree?
+> 
+> (Just FYI I took the old copy-everything-to-bounce-buffers patch that few
+> people liked for a second spin, and the errors did not surface regardless of
+> what combination of write/mmap and directio/bufferedio I told it to use.)
 
-     Staging: add MSM framebuffer driver
+I wouldn't be so much against memcpy() for mmap pages, but it does seem kind of gross that mmap is forcing data copies when a major reason to use mmap is to AVOID data copies.
 
-I see you got flamed for that:
-"I pulled, but quite frankly, I don't want to see this kind of pull 
-request again. There's just no _point_.
+>>> The set_memory_ro debugging trick didn't ferret out any write paths that I
+>>> didn't catch... though it did have the effect of causing occasional fsync()
+>>> deadlocks.  I suppose I could sprinkle in a few more of those write calls to
+>>> see what happens.
+>>> 
+>>> Either way, I'm emailing to ask everyone's advice since I've run out of ideas.
+>>> Or: Did I miss something?
+>>> 
+>>> Thanks all for the feedback so far!
+>>> 
+>>> --
+>>> fs: Wait for page writeback when rewrite detected
+>>> 
+>>> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+>>> ---
+>>> 
+>>> fs/buffer.c     |    4 +++-
+>>> fs/ext4/inode.c |    3 +++
+>>> mm/filemap.c    |   15 +++++++++++++--
+>>> 3 files changed, 19 insertions(+), 3 deletions(-)
+>>> 
+>>> diff --git a/fs/buffer.c b/fs/buffer.c
+>>> index 2219a76..39e934c 100644
+>>> --- a/fs/buffer.c
+>>> +++ b/fs/buffer.c
+>>> @@ -2379,8 +2379,10 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+>>> 			ret = VM_FAULT_OOM;
+>>> 		else /* -ENOSPC, -EIO, etc */
+>>> 			ret = VM_FAULT_SIGBUS;
+>>> -	} else
+>>> +	} else {
+>>> +		wait_on_page_writeback(page);
+>>> 		ret = VM_FAULT_LOCKED;
+>>> +	}
+>> 
+>> I think this needs to wait before the __block_write_begin() call,
+>> not after it. i.e. wait before the page is mapped, not afterwards.
+>> 
+>> ....
+>>> diff --git a/mm/filemap.c b/mm/filemap.c
+>>> index 83a45d3..f201d80 100644
+>>> --- a/mm/filemap.c
+>>> +++ b/mm/filemap.c
+>>> @@ -2217,8 +2217,8 @@ EXPORT_SYMBOL(generic_file_direct_write);
+>>>  * Find or create a page at the given pagecache position. Return the locked
+>>>  * page. This function is specifically for buffered writes.
+>>>  */
+>>> -struct page *grab_cache_page_write_begin(struct address_space *mapping,
+>>> -					pgoff_t index, unsigned flags)
+>>> +struct page *__grab_cache_page_write_begin(struct address_space *mapping,
+>>> +					   pgoff_t index, unsigned flags)
+>>> {
+>>> 	int status;
+>>> 	struct page *page;
+>>> @@ -2243,6 +2243,17 @@ repeat:
+>>> 	}
+>>> 	return page;
+>>> }
+>>> +struct page *grab_cache_page_write_begin(struct address_space *mapping,
+>>> +					pgoff_t index, unsigned flags)
+>>> +{
+>>> +	struct page *p;
+>>> +
+>>> +	p = __grab_cache_page_write_begin(mapping, index, flags);
+>>> +	if (p)
+>>> +		wait_on_page_writeback(p);
+>>> +
+>>> +	return p;
+>>> +}
+>>> EXPORT_SYMBOL(grab_cache_page_write_begin);
+>> 
+>> Not much point in add in a wrapper when nothing else calls
+>> __grab_cache_page_write_begin(), which should also be static....
+>> 
+>> Cheers,
+>> 
+>> Dave.
+>> -- 
+>> Dave Chinner
+>> david@fromorbit.com
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-I'll take new drivers outside the merge window, but there has to be some
-_reason_ for them. See the whole SCSI discussion a few merge windows 
-ago. The new driver needs to improve the life of somebody to the point 
-where I want to feel that there is a _reason_ for pulling it outside the 
-merge window.
 
-These drivers? Not so much. Not even f*cking close.
+Cheers, Andreas
 
-In other words: tell me why the new drivers couldn't just have waited 
-for the next merge window? Really?"
 
-As Jeff pointed out:
-"It seemed like this was turning into another driver that would get held 
-outside the kernel until it's "perfect."  If that is the case, Linus has 
-also made it clear we should get drivers for high volume, shipping 
-hardware into the kernel, even if its staging, if the alternative is to 
-deny users the driver."
 
-So yes, we are targeting that exception.  I'm up for taking the heat 
-directly if you want...  because the pull request will need to backed up 
-with justification.
 
---
-Dan
+
