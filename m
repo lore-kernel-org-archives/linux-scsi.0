@@ -1,160 +1,119 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [RFC] block integrity: Fix write after checksum calculation	problem
-Date: Fri, 18 Mar 2011 20:28:26 -0600
-Message-ID: <E2EA0861-6143-4F91-805A-63736F45C514@dilger.ca>
-References: <20110222020022.GH32261@tux1.beaverton.ibm.com> <yq1vd0cf26f.fsf@sermon.lab.mkp.net> <20110223202446.GG4020@noexit> <1298493173-sup-8301@think> <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110319000755.GD1110@tux1.beaverton.ibm.com>
-Mime-Version: 1.0 (Apple Message framework v1082)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20110319000755.GD1110@tux1.beaverton.ibm.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: djwong@us.ibm.com
-Cc: Dave Chinner <david@fromorbit.com>, Chris Mason <chris.mason@oracle.com>, Jan Kara <jack@suse.cz>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH 00/10] isci: core
+Date: Fri, 18 Mar 2011 23:19:32 -0700
+Message-ID: <AANLkTimZ-=b3Ssu-1X6DVaPgJoUMYmbGUMr=LvLz67Yb@mail.gmail.com>
+References: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
+	<20110318155635.GA22514@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:36095 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab1CSGTd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Mar 2011 02:19:33 -0400
+Received: by fxm17 with SMTP id 17so4293979fxm.19
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Mar 2011 23:19:32 -0700 (PDT)
+In-Reply-To: <20110318155635.GA22514@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-On 2011-03-18, at 6:07 PM, Darrick J. Wong wrote:
->> Ok, here's what I have so far.  I took everyone's suggestions of where to add
->> calls to wait_on_page_writeback, which seems to handle the multiple-write case
->> adequately.  Unfortunately, it is still possible to generate checksum errors by
->> scribbling furiously on a mmap'd region, even after adding the writeback wait
->> in the ext4 writepage function.  Oddly, I couldn't break btrfs with mmap by
->> removing its wait_for_page_writeback call, so I suspect there's a bit more
->> going on in btrfs than I've been able to figure out.
+On Fri, Mar 18, 2011 at 8:56 AM, Christoph Hellwig <hch@infradead.org> =
+wrote:
+[..]
+> You absolutely have to fix it before it can be merged. =A0Gems like
+> duplicating all wire level constants and structures for SCSI, SAS
+> and ATA in your own headers is simply not acceptable.
 
-> I wonder, is it possible for this to happen:
-> 
-> 1. Thread A mmaps a page and tries to write to it.  ext4_page_mkwrite executes,
->   but there's no ongoing writeback, so it returns without delay.
-> 2. Thread A starts writing furiously to the page.
-> 3. Thread B runs fsync() or something that results in the page being
->   checksummed and scheduled for writeout.
-> 4. Thread A continues to write furiously(!) on that same page before the
->   controller finishes the DMA transfer.
+Hence the comment "Many of these want to be deleted in favor of the
+in-kernel equivalent." in "[RFC PATCH 10/10] isci/core: common
+definitions and utility functions' [1].
 
-Right, page_mkwrite() is only called for the ro->rw transition.
+> I'm not sure where you got the idea this could be remotely acceptable=
+=2E
 
-> 5. Disk gets the page, which now doesn't match its checksum, and *boom*
-> 
-> After letting the stress tool run for a few days, I can say fairly confidently
-> that the write() case doesn't seem to fail regardless of the O_DIRECT setting.
-> However, with writes to mmap regions, failures happen about once every 20-40
-> minutes, even with O_DIRECT set.  To me this suggests some sort of race
-> condition that we seem to win except once every 20 minutes.
-> 
-> I then thought, if page_mkwrite contains a wait_on_page_writeback, then perhaps
-> there's something that I could do just prior to calculating the DIF checksum
-> that would cause any subsequent write attempts to be shuffled back into
-> page_mkwrite.  I tried the set_memory_ro thing again, though that led to some
-> recursive lock errors and I noticed that those functions only seem to exist in
-> arch/x86/.  Next I tried directly mucking with PTEs, in addition to feeling
-> messy, only seemed to corrupt memory. :)
+Never did.  We're reworking the driver that was handed to us.
 
-This seems like the best solution, IMHO, to ensure that mmap is blocked in page_mkwrite() before it has any chance to dirty the page undergoing checksum.  The trick is that you need to set_page_writeback() before setting the page read-only, otherwise the race still exists.
+To date fixing bugs in the current code (things like removing
+phys_to_virt and virt_to_phys in favor of proper dma-api and kmap
+usage) has delayed this rework... still plan to fix it.
 
-> Is there a "correct" way to take a writeable page and make it so that any
-> process trying to write to it ends up hitting the page fault handler where we
-> can then wait for writeback?  Or perhaps I am simply barking up the wrong tree?
-> 
-> (Just FYI I took the old copy-everything-to-bounce-buffers patch that few
-> people liked for a second spin, and the errors did not surface regardless of
-> what combination of write/mmap and directio/bufferedio I told it to use.)
+> Also the source layout is a real mess, almost comparably to the broac=
+ade
+> FC driver - there really is no point in having a header for barely mo=
+re
+> than a structure or inline.
 
-I wouldn't be so much against memcpy() for mmap pages, but it does seem kind of gross that mmap is forcing data copies when a major reason to use mmap is to AVOID data copies.
+Agreed.  We consolidated the c files, now need to go back and do the
+same for the headers.  There is also a namespacecheck driven cleanup
+that needs to happen as well.
 
->>> The set_memory_ro debugging trick didn't ferret out any write paths that I
->>> didn't catch... though it did have the effect of causing occasional fsync()
->>> deadlocks.  I suppose I could sprinkle in a few more of those write calls to
->>> see what happens.
->>> 
->>> Either way, I'm emailing to ask everyone's advice since I've run out of ideas.
->>> Or: Did I miss something?
->>> 
->>> Thanks all for the feedback so far!
->>> 
->>> --
->>> fs: Wait for page writeback when rewrite detected
->>> 
->>> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
->>> ---
->>> 
->>> fs/buffer.c     |    4 +++-
->>> fs/ext4/inode.c |    3 +++
->>> mm/filemap.c    |   15 +++++++++++++--
->>> 3 files changed, 19 insertions(+), 3 deletions(-)
->>> 
->>> diff --git a/fs/buffer.c b/fs/buffer.c
->>> index 2219a76..39e934c 100644
->>> --- a/fs/buffer.c
->>> +++ b/fs/buffer.c
->>> @@ -2379,8 +2379,10 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
->>> 			ret = VM_FAULT_OOM;
->>> 		else /* -ENOSPC, -EIO, etc */
->>> 			ret = VM_FAULT_SIGBUS;
->>> -	} else
->>> +	} else {
->>> +		wait_on_page_writeback(page);
->>> 		ret = VM_FAULT_LOCKED;
->>> +	}
->> 
->> I think this needs to wait before the __block_write_begin() call,
->> not after it. i.e. wait before the page is mapped, not afterwards.
->> 
->> ....
->>> diff --git a/mm/filemap.c b/mm/filemap.c
->>> index 83a45d3..f201d80 100644
->>> --- a/mm/filemap.c
->>> +++ b/mm/filemap.c
->>> @@ -2217,8 +2217,8 @@ EXPORT_SYMBOL(generic_file_direct_write);
->>>  * Find or create a page at the given pagecache position. Return the locked
->>>  * page. This function is specifically for buffered writes.
->>>  */
->>> -struct page *grab_cache_page_write_begin(struct address_space *mapping,
->>> -					pgoff_t index, unsigned flags)
->>> +struct page *__grab_cache_page_write_begin(struct address_space *mapping,
->>> +					   pgoff_t index, unsigned flags)
->>> {
->>> 	int status;
->>> 	struct page *page;
->>> @@ -2243,6 +2243,17 @@ repeat:
->>> 	}
->>> 	return page;
->>> }
->>> +struct page *grab_cache_page_write_begin(struct address_space *mapping,
->>> +					pgoff_t index, unsigned flags)
->>> +{
->>> +	struct page *p;
->>> +
->>> +	p = __grab_cache_page_write_begin(mapping, index, flags);
->>> +	if (p)
->>> +		wait_on_page_writeback(p);
->>> +
->>> +	return p;
->>> +}
->>> EXPORT_SYMBOL(grab_cache_page_write_begin);
->> 
->> Not much point in add in a wrapper when nothing else calls
->> __grab_cache_page_write_begin(), which should also be static....
->> 
->> Cheers,
->> 
->> Dave.
->> -- 
->> Dave Chinner
->> david@fromorbit.com
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Also care to explain the design rationale for all these specific
+> semi-statemachines? =A0To my untrained eye they really looks like
+> pointless obsfucation, but maybe there's a good reason that should be
+> explained in long comments.
 
+They model asynchronous hardware / protocol states and are loosely
+analogous to the ata_sff_hsm implementation in libata in terms of
+needing to handle transport layer details of sata, smp, and ssp.   The
+hardware is focused on accelerating the fast paths and let's software
+handle many slow path conditions, for example ata pio requests require
+driver interaction to progress the request through several states at a
+per frame level.  We'll put together some better documentation but
+there are a lot of conditions and states that software is required to
+handle and the state machines keep these organized.
 
-Cheers, Andreas
+There have been some patches to make them more readable (8e131f53,
+ba647271, 03355704), but this work has not been completed across all
+the state machines.  I will say I think the controller state machine
+is one that could be eventually factored out / absorbed into the lldd
+because there are no asynchronous hardware-event driven controller
+state transitions.
 
+> And please don't make the code like ACPICA, macro names like
+> SCU_CONTEXT_COMMAND_REQUEST_POST_TC_ABORT or
+> SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_TC_COMPLETION_=
+SUBSTATE
+> just need to go.
 
+Ok.
 
+> Also please get rid of ALL UPPERCASE SCREAMING NAMES for structures.
 
+Unfortunately, the automated scripts we developed at the beginning of
+the cleanup effort only caught definitions of the form:
 
+typedef struct UPPERCASE_STRUCT { } UPPERCASE_STRUCT_T;
+
+=2E..and missed ones of the form:
+
+struct UPPERCASE_STRUCT { };
+
+=2E..so we need to manually handle these stragglers.
+
+> FYI:
+>
+> =A0 =A0 =A0 =A0 u32 connection_inactivity_timeout:16;
+>
+> is a really dumb idea. =A0Please take the crackpipe away from whateve=
+r
+> idiot came up with junk like that and use the proper right sized inte=
+ger
+> types. =A0Also for sub-byte field please absolutely avoid bitfields.
+> Their layout is unportable, and properly locking them is a nightmare.
+> Just define a flags field and use bit operations on them.
+
+Yeah. it does not make sense to define bitfields for things that are
+correctly aligned base types.
+
+--
+Dan
+
+[1]: http://marc.info/?l=3Dlinux-scsi&m=3D129975444506569&w=3D2
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
