@@ -1,59 +1,51 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v4 07/12] iscsi-target: Add CHAP Authentication support using libcrypto
-Date: Sun, 20 Mar 2011 02:31:32 -0700
-Message-ID: <1300613497-2091-8-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v4 04/12] iscsi-target: Add configfs fabric dependent statistics
+Date: Sun, 20 Mar 2011 02:31:29 -0700
+Message-ID: <1300613497-2091-5-git-send-email-nab@linux-iscsi.org>
 References: <1300613497-2091-1-git-send-email-nab@linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm25.bullet.mail.sp2.yahoo.com ([98.139.91.95]:33079 "HELO
+	nm25.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751820Ab1CTJcJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Mar 2011 05:32:09 -0400
 In-Reply-To: <1300613497-2091-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>, Jesper Juhl <jj@chaosbits.net>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
-=46rom: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for libcrypto md5 based iSCSI CHAP authenticati=
-on
-support for iscsi_target_mod.  This includes support for mutual and one=
--way
-NodeACL authentication for SessionType=3DNormal and SessionType=3DDisco=
-very
-via /sys/kernel/config/target/iscsi.
+This patch adds support for iSCSI fabric dependent configfs statistics
+using TCM v4 default statistics groups.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_auth.c |  496 ++++++++++++++++++++++=
-++++++++
- drivers/target/iscsi/iscsi_target_auth.h |   32 ++
- 2 files changed, 528 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
- create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
+ drivers/target/iscsi/iscsi_target_stat.c |  950 ++++++++++++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target_stat.h |   64 ++
+ 2 files changed, 1014 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_stat.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_stat.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/=
-iscsi/iscsi_target_auth.c
+diff --git a/drivers/target/iscsi/iscsi_target_stat.c b/drivers/target/iscsi/iscsi_target_stat.c
 new file mode 100644
-index 0000000..077e631
+index 0000000..68fe4a3
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -0,0 +1,496 @@
-+/*********************************************************************=
-**********
-+ * This file houses the main functions for the iSCSI CHAP support
++++ b/drivers/target/iscsi/iscsi_target_stat.c
+@@ -0,0 +1,950 @@
++/*******************************************************************************
++ * Modern ConfigFS group context specific iSCSI statistics based on original
++ * iscsi_target_mib.c code
 + *
-+ * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
++ * Copyright (c) 2011 Rising Tide Systems
 + *
-+ * Licensed to the Linux Foundation under the General Public License (=
-GPL) version 2.
++ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
 + *
 + * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
 + *
-+ * This program is free software; you can redistribute it and/or modif=
-y
-+ * it under the terms of the GNU General Public License as published b=
-y
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
 + * the Free Software Foundation; either version 2 of the License, or
 + * (at your option) any later version.
 + *
@@ -61,537 +53,1007 @@ y
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ *********************************************************************=
-*********/
++ ******************************************************************************/
 +
-+#include <linux/string.h>
-+#include <linux/crypto.h>
-+#include <linux/err.h>
-+#include <linux/scatterlist.h>
++#include <linux/configfs.h>
++#include <scsi/iscsi_proto.h>
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
++#include <target/configfs_macros.h>
 +
 +#include "iscsi_target_core.h"
-+#include "iscsi_target_nego.h"
-+#include "iscsi_target_auth.h"
++#include "iscsi_target_parameters.h"
++#include "iscsi_target_device.h"
++#include "iscsi_target_tpg.h"
++#include "iscsi_target_util.h"
++#include "iscsi_target_stat.h"
 +
-+#ifdef DEBUG_CHAP
-+#define PRINT(x...)		printk(KERN_INFO x)
-+#else
-+#define PRINT(x...)
++#ifndef INITIAL_JIFFIES
++#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
 +#endif
 +
-+static unsigned char chap_asciihex_to_binaryhex(unsigned char val[2])
++/* Instance Attributes Table */
++#define ISCSI_INST_NUM_NODES		1
++#define ISCSI_INST_DESCR		"Storage Engine Target"
++#define ISCSI_INST_LAST_FAILURE_TYPE	0
++#define ISCSI_DISCONTINUITY_TIME	0
++
++#define ISCSI_NODE_INDEX		1
++
++#define ISPRINT(a)   ((a >= ' ') && (a <= '~'))
++
++/****************************************************************************
++ * iSCSI MIB Tables
++ ****************************************************************************/
++/*
++ * Instance Attributes Table
++ */
++CONFIGFS_EATTR_STRUCT(iscsi_stat_instance, iscsi_wwn_stat_grps);
++#define ISCSI_STAT_INSTANCE_ATTR(_name, _mode)			\
++static struct iscsi_stat_instance_attribute			\
++			iscsi_stat_instance_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,				\
++	iscsi_stat_instance_show_attr_##_name,			\
++	iscsi_stat_instance_store_attr_##_name);
++
++#define ISCSI_STAT_INSTANCE_ATTR_RO(_name)			\
++static struct iscsi_stat_instance_attribute			\
++			iscsi_stat_instance_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,				\
++	iscsi_stat_instance_show_attr_##_name);
++
++static ssize_t iscsi_stat_instance_show_attr_inst(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	unsigned char result =3D 0;
-+	/*
-+	 * MSB
-+	 */
-+	if ((val[0] >=3D 'a') && (val[0] <=3D 'f'))
-+		result =3D ((val[0] - 'a' + 10) & 0xf) << 4;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(inst);
++
++static ssize_t iscsi_stat_instance_show_attr_min_ver(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DRAFT20_VERSION);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(min_ver);
++
++static ssize_t iscsi_stat_instance_show_attr_max_ver(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DRAFT20_VERSION);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(max_ver);
++
++static ssize_t iscsi_stat_instance_show_attr_portals(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_num_tpg_nps);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(portals);
++
++static ssize_t iscsi_stat_instance_show_attr_nodes(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_INST_NUM_NODES);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(nodes);
++
++static ssize_t iscsi_stat_instance_show_attr_sessions(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_nsessions);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(sessions);
++
++static ssize_t iscsi_stat_instance_show_attr_fail_sess(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
++	u32 sess_err_count;
++
++	spin_lock_bh(&sess_err->lock);
++	sess_err_count = (sess_err->digest_errors +
++			  sess_err->cxn_timeout_errors +
++			  sess_err->pdu_format_errors);
++	spin_unlock_bh(&sess_err->lock);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", sess_err_count);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(fail_sess);
++
++static ssize_t iscsi_stat_instance_show_attr_fail_type(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
++
++	return snprintf(page, PAGE_SIZE, "%u\n",
++			sess_err->last_sess_failure_type);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(fail_type);
++
++static ssize_t iscsi_stat_instance_show_attr_fail_rem_name(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
++
++	return snprintf(page, PAGE_SIZE, "%s\n",
++			sess_err->last_sess_fail_rem_name[0] ?
++			sess_err->last_sess_fail_rem_name : NONE);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(fail_rem_name);
++
++static ssize_t iscsi_stat_instance_show_attr_disc_time(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DISCONTINUITY_TIME);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(disc_time);
++
++static ssize_t iscsi_stat_instance_show_attr_description(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%s\n", ISCSI_INST_DESCR);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(description);
++
++static ssize_t iscsi_stat_instance_show_attr_vendor(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "RisingTide Systems iSCSI-Target\n");
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(vendor);
++
++static ssize_t iscsi_stat_instance_show_attr_version(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%s\n", ISCSI_VERSION);
++}
++ISCSI_STAT_INSTANCE_ATTR_RO(version);
++
++CONFIGFS_EATTR_OPS(iscsi_stat_instance, iscsi_wwn_stat_grps,
++		iscsi_instance_group);
++
++static struct configfs_attribute *iscsi_stat_instance_attrs[] = {
++	&iscsi_stat_instance_inst.attr,
++	&iscsi_stat_instance_min_ver.attr,
++	&iscsi_stat_instance_max_ver.attr,
++	&iscsi_stat_instance_portals.attr,
++	&iscsi_stat_instance_nodes.attr,
++	&iscsi_stat_instance_sessions.attr,
++	&iscsi_stat_instance_fail_sess.attr,
++	&iscsi_stat_instance_fail_type.attr,
++	&iscsi_stat_instance_fail_rem_name.attr,
++	&iscsi_stat_instance_disc_time.attr,
++	&iscsi_stat_instance_description.attr,
++	&iscsi_stat_instance_vendor.attr,
++	&iscsi_stat_instance_version.attr,
++	NULL,
++};
++
++static struct configfs_item_operations iscsi_stat_instance_item_ops = {
++	.show_attribute		= iscsi_stat_instance_attr_show,
++	.store_attribute	= iscsi_stat_instance_attr_store,
++};
++
++struct config_item_type iscsi_stat_instance_cit = {
++	.ct_item_ops		= &iscsi_stat_instance_item_ops,
++	.ct_attrs		= iscsi_stat_instance_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * Instance Session Failure Stats Table
++ */
++CONFIGFS_EATTR_STRUCT(iscsi_stat_sess_err, iscsi_wwn_stat_grps);
++#define ISCSI_STAT_SESS_ERR_ATTR(_name, _mode)			\
++static struct iscsi_stat_sess_err_attribute			\
++			iscsi_stat_sess_err_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,				\
++	iscsi_stat_sess_err_show_attr_##_name,			\
++	iscsi_stat_sess_err_store_attr_##_name);
++
++#define ISCSI_STAT_SESS_ERR_ATTR_RO(_name)			\
++static struct iscsi_stat_sess_err_attribute			\
++			iscsi_stat_sess_err_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,				\
++	iscsi_stat_sess_err_show_attr_##_name);
++
++static ssize_t iscsi_stat_sess_err_show_attr_inst(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++}
++ISCSI_STAT_SESS_ERR_ATTR_RO(inst);
++
++static ssize_t iscsi_stat_sess_err_show_attr_digest_errors(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->digest_errors);
++}
++ISCSI_STAT_SESS_ERR_ATTR_RO(digest_errors);
++
++static ssize_t iscsi_stat_sess_err_show_attr_cxn_errors(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->cxn_timeout_errors);
++}
++ISCSI_STAT_SESS_ERR_ATTR_RO(cxn_errors);
++
++static ssize_t iscsi_stat_sess_err_show_attr_format_errors(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->pdu_format_errors);
++}
++ISCSI_STAT_SESS_ERR_ATTR_RO(format_errors);
++
++CONFIGFS_EATTR_OPS(iscsi_stat_sess_err, iscsi_wwn_stat_grps,
++		iscsi_sess_err_group);
++
++static struct configfs_attribute *iscsi_stat_sess_err_attrs[] = {
++	&iscsi_stat_sess_err_inst.attr,
++	&iscsi_stat_sess_err_digest_errors.attr,
++	&iscsi_stat_sess_err_cxn_errors.attr,
++	&iscsi_stat_sess_err_format_errors.attr,
++	NULL,
++};
++
++static struct configfs_item_operations iscsi_stat_sess_err_item_ops = {
++	.show_attribute		= iscsi_stat_sess_err_attr_show,
++	.store_attribute	= iscsi_stat_sess_err_attr_store,
++};
++
++struct config_item_type iscsi_stat_sess_err_cit = {
++	.ct_item_ops		= &iscsi_stat_sess_err_item_ops,
++	.ct_attrs		= iscsi_stat_sess_err_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * Target Attributes Table
++ */
++CONFIGFS_EATTR_STRUCT(iscsi_stat_tgt_attr, iscsi_wwn_stat_grps);
++#define ISCSI_STAT_TGT_ATTR(_name, _mode)			\
++static struct iscsi_stat_tgt_attr_attribute			\
++			iscsi_stat_tgt_attr_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,				\
++	iscsi_stat_tgt-attr_show_attr_##_name,			\
++	iscsi_stat_tgt_attr_store_attr_##_name);
++
++#define ISCSI_STAT_TGT_ATTR_RO(_name)				\
++static struct iscsi_stat_tgt_attr_attribute			\
++			iscsi_stat_tgt_attr_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,				\
++	iscsi_stat_tgt_attr_show_attr_##_name);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_inst(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++}
++ISCSI_STAT_TGT_ATTR_RO(inst);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_indx(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
++}
++ISCSI_STAT_TGT_ATTR_RO(indx);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_login_fails(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	u32 fail_count;
++
++	spin_lock(&lstat->lock);
++	fail_count = (lstat->redirects + lstat->authorize_fails +
++			lstat->authenticate_fails + lstat->negotiate_fails +
++			lstat->other_fails);
++	spin_unlock(&lstat->lock);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", fail_count);
++}
++ISCSI_STAT_TGT_ATTR_RO(login_fails);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_last_fail_time(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	u32 last_fail_time;
++
++	spin_lock(&lstat->lock);
++	last_fail_time = lstat->last_fail_time ?
++			(u32)(((u32)lstat->last_fail_time -
++				INITIAL_JIFFIES) * 100 / HZ) : 0;
++	spin_unlock(&lstat->lock);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", last_fail_time);
++}
++ISCSI_STAT_TGT_ATTR_RO(last_fail_time);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_last_fail_type(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	u32 last_fail_type;
++
++	spin_lock(&lstat->lock);
++	last_fail_type = lstat->last_fail_type;
++	spin_unlock(&lstat->lock);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", last_fail_type);
++}
++ISCSI_STAT_TGT_ATTR_RO(last_fail_type);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_name(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	unsigned char buf[224];
++
++	spin_lock(&lstat->lock);
++	snprintf(buf, 224, "%s", lstat->last_intr_fail_name[0] ?
++				lstat->last_intr_fail_name : NONE);
++	spin_unlock(&lstat->lock);
++
++	return snprintf(page, PAGE_SIZE, "%s\n", buf);
++}
++ISCSI_STAT_TGT_ATTR_RO(fail_intr_name);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_addr_type(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++			struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	unsigned char buf[8];
++
++	spin_lock(&lstat->lock);
++	snprintf(buf, 8, "%s", (lstat->last_intr_fail_ip6_addr != NULL) ?
++				"ipv6" : "ipv4");
++	spin_unlock(&lstat->lock);
++
++	return snprintf(page, PAGE_SIZE, "%s\n", buf);
++}
++ISCSI_STAT_TGT_ATTR_RO(fail_intr_addr_type);
++
++static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_addr(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++			struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	unsigned char buf[32];
++
++	spin_lock(&lstat->lock);
++	if (lstat->last_intr_fail_ip6_addr != NULL)
++		snprintf(buf, 32, "[%s]", lstat->last_intr_fail_ip6_addr);
 +	else
-+		if ((val[0] >=3D 'A') && (val[0] <=3D 'F'))
-+			result =3D ((val[0] - 'A' + 10) & 0xf) << 4;
-+		else /* digit */
-+			result =3D ((val[0] - '0') & 0xf) << 4;
-+	/*
-+	 * LSB
-+	 */
-+	if ((val[1] >=3D 'a') && (val[1] <=3D 'f'))
-+		result |=3D ((val[1] - 'a' + 10) & 0xf);
-+	else
-+		if ((val[1] >=3D 'A') && (val[1] <=3D 'F'))
-+			result |=3D ((val[1] - 'A' + 10) & 0xf);
-+		else /* digit */
-+			result |=3D ((val[1] - '0') & 0xf);
++		snprintf(buf, 32, "%08X", lstat->last_intr_fail_addr);
++	spin_unlock(&lstat->lock);
 +
-+	return result;
++	return snprintf(page, PAGE_SIZE, "%s\n", buf);
 +}
++ISCSI_STAT_TGT_ATTR_RO(fail_intr_addr);
 +
-+static int chap_string_to_hex(unsigned char *dst, unsigned char *src, =
-int len)
++CONFIGFS_EATTR_OPS(iscsi_stat_tgt_attr, iscsi_wwn_stat_grps,
++		iscsi_tgt_attr_group);
++
++static struct configfs_attribute *iscsi_stat_tgt_attr_attrs[] = {
++	&iscsi_stat_tgt_attr_inst.attr,
++	&iscsi_stat_tgt_attr_indx.attr,
++	&iscsi_stat_tgt_attr_login_fails.attr,
++	&iscsi_stat_tgt_attr_last_fail_time.attr,
++	&iscsi_stat_tgt_attr_last_fail_type.attr,
++	&iscsi_stat_tgt_attr_fail_intr_name.attr,
++	&iscsi_stat_tgt_attr_fail_intr_addr_type.attr,
++	&iscsi_stat_tgt_attr_fail_intr_addr.attr,
++	NULL,
++};
++
++static struct configfs_item_operations iscsi_stat_tgt_attr_item_ops = {
++	.show_attribute		= iscsi_stat_tgt_attr_attr_show,
++	.store_attribute	= iscsi_stat_tgt_attr_attr_store,
++};
++
++struct config_item_type iscsi_stat_tgt_attr_cit = {
++	.ct_item_ops		= &iscsi_stat_tgt_attr_item_ops,
++	.ct_attrs		= iscsi_stat_tgt_attr_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * Target Login Stats Table
++ */
++CONFIGFS_EATTR_STRUCT(iscsi_stat_login, iscsi_wwn_stat_grps);
++#define ISCSI_STAT_LOGIN(_name, _mode)				\
++static struct iscsi_stat_login_attribute			\
++			iscsi_stat_login_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,				\
++	iscsi_stat_login_show_attr_##_name,			\
++	iscsi_stat_login_store_attr_##_name);
++
++#define ISCSI_STAT_LOGIN_RO(_name)				\
++static struct iscsi_stat_login_attribute			\
++			iscsi_stat_login_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,				\
++	iscsi_stat_login_show_attr_##_name);
++
++static ssize_t iscsi_stat_login_show_attr_inst(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	int i, j =3D 0;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
 +
-+	for (i =3D 0; i < len; i +=3D 2) {
-+		dst[j++] =3D (unsigned char) chap_asciihex_to_binaryhex(&src[i]);
-+	}
-+
-+	dst[j] =3D '\0';
-+	return j;
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
 +}
++ISCSI_STAT_LOGIN_RO(inst);
 +
-+static void chap_binaryhex_to_asciihex(char *dst, char *src, int src_l=
-en)
++static ssize_t iscsi_stat_login_show_attr_indx(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	int i;
-+
-+	for (i =3D 0; i < src_len; i++) {
-+		sprintf(&dst[i*2], "%02x", (int) src[i] & 0xff);
-+	}
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
 +}
++ISCSI_STAT_LOGIN_RO(indx);
 +
-+static void chap_set_random(char *data, int length)
++static ssize_t iscsi_stat_login_show_attr_accepts(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	long r;
-+	unsigned n;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	ssize_t ret;
 +
-+	while (length > 0) {
-+		get_random_bytes(&r, sizeof(long));
-+		r =3D r ^ (r >> 8);
-+		r =3D r ^ (r >> 4);
-+		n =3D r & 0x7;
++	spin_lock(&lstat->lock);
++	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->accepts);
++	spin_unlock(&lstat->lock);
 +
-+		get_random_bytes(&r, sizeof(long));
-+		r =3D r ^ (r >> 8);
-+		r =3D r ^ (r >> 5);
-+		n =3D (n << 3) | (r & 0x7);
-+
-+		get_random_bytes(&r, sizeof(long));
-+		r =3D r ^ (r >> 8);
-+		r =3D r ^ (r >> 5);
-+		n =3D (n << 2) | (r & 0x3);
-+
-+		*data++ =3D n;
-+		length--;
-+	}
++	return ret;
 +}
++ISCSI_STAT_LOGIN_RO(accepts);
 +
-+static void chap_gen_challenge(
-+	struct iscsi_conn *conn,
-+	int caller,
-+	char *C_str,
-+	unsigned int *C_len)
++static ssize_t iscsi_stat_login_show_attr_other_fails(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	unsigned char challenge_asciihex[CHAP_CHALLENGE_LENGTH * 2 + 1];
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	ssize_t ret;
 +
-+	memset(challenge_asciihex, 0, CHAP_CHALLENGE_LENGTH * 2 + 1);
++	spin_lock(&lstat->lock);
++	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->other_fails);
++	spin_unlock(&lstat->lock);
 +
-+	chap_set_random(chap->challenge, CHAP_CHALLENGE_LENGTH);
-+	chap_binaryhex_to_asciihex(challenge_asciihex, chap->challenge,
-+				CHAP_CHALLENGE_LENGTH);
-+	/*
-+	 * Set CHAP_C, and copy the generated challenge into C_str.
-+	 */
-+	*C_len +=3D sprintf(C_str + *C_len, "CHAP_C=3D0x%s", challenge_asciih=
-ex);
-+	*C_len +=3D 1;
-+
-+	PRINT("[%s] Sending CHAP_C=3D0x%s\n\n", (caller) ? "server" : "client=
-",
-+			challenge_asciihex);
++	return ret;
 +}
++ISCSI_STAT_LOGIN_RO(other_fails);
 +
-+
-+static struct iscsi_chap *chap_server_open(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	const char *A_str,
-+	char *AIC_str,
-+	unsigned int *AIC_len)
++static ssize_t iscsi_stat_login_show_attr_redirects(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	struct iscsi_chap *chap;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	ssize_t ret;
 +
-+	if (!(auth->naf_flags & NAF_USERID_SET) ||
-+	    !(auth->naf_flags & NAF_PASSWORD_SET)) {
-+		printk(KERN_ERR "CHAP user or password not set for"
-+				" Initiator ACL\n");
-+		return NULL;
-+	}
++	spin_lock(&lstat->lock);
++	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->redirects);
++	spin_unlock(&lstat->lock);
 +
-+	conn->auth_protocol =3D kzalloc(sizeof(struct iscsi_chap), GFP_KERNEL=
-);
-+	if (!conn->auth_protocol)
-+		return NULL;
-+
-+	chap =3D (struct iscsi_chap *) conn->auth_protocol;
-+	/*
-+	 * We only support MD5 MDA presently.
-+	 */
-+	if (strncmp(A_str, "CHAP_A=3D5", 8)) {
-+		printk(KERN_ERR "CHAP_A is not MD5.\n");
-+		return NULL;
-+	}
-+	PRINT("[server] Got CHAP_A=3D5\n");
-+	/*
-+	 * Send back CHAP_A set to MD5.
-+	 */
-+	*AIC_len =3D sprintf(AIC_str, "CHAP_A=3D5");
-+	*AIC_len +=3D 1;
-+	chap->digest_type =3D CHAP_DIGEST_MD5;
-+	PRINT("[server] Sending CHAP_A=3D%d\n", chap->digest_type);
-+	/*
-+	 * Set Identifier.
-+	 */
-+	chap->id =3D ISCSI_TPG_C(conn)->tpg_chap_id++;
-+	*AIC_len +=3D sprintf(AIC_str + *AIC_len, "CHAP_I=3D%d", chap->id);
-+	*AIC_len +=3D 1;
-+	PRINT("[server] Sending CHAP_I=3D%d\n", chap->id);
-+	/*
-+	 * Generate Challenge.
-+	 */
-+	chap_gen_challenge(conn, 1, AIC_str, AIC_len);
-+
-+	return chap;
++	return ret;
 +}
++ISCSI_STAT_LOGIN_RO(redirects);
 +
-+static void chap_close(struct iscsi_conn *conn)
++static ssize_t iscsi_stat_login_show_attr_authorize_fails(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	kfree(conn->auth_protocol);
-+	conn->auth_protocol =3D NULL;
-+}
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	ssize_t ret;
 +
-+static int chap_server_compute_md5(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	char *NR_in_ptr,
-+	char *NR_out_ptr,
-+	unsigned int *NR_out_len)
++	spin_lock(&lstat->lock);
++	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->authorize_fails);
++	spin_unlock(&lstat->lock);
++
++	return ret;
++}
++ISCSI_STAT_LOGIN_RO(authorize_fails);
++
++static ssize_t iscsi_stat_login_show_attr_authenticate_fails(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	char *endptr;
-+	unsigned char id, digest[MD5_SIGNATURE_SIZE];
-+	unsigned char type, response[MD5_SIGNATURE_SIZE * 2 + 2];
-+	unsigned char identifier[10], *challenge =3D NULL;
-+	unsigned char *challenge_binhex =3D NULL;
-+	unsigned char client_digest[MD5_SIGNATURE_SIZE];
-+	unsigned char server_digest[MD5_SIGNATURE_SIZE];
-+	unsigned char chap_n[MAX_CHAP_N_SIZE], chap_r[MAX_RESPONSE_LENGTH];
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
-+	struct crypto_hash *tfm;
-+	struct hash_desc desc;
-+	struct scatterlist sg;
-+	int auth_ret =3D -1, ret, challenge_len;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	ssize_t ret;
 +
-+	memset(identifier, 0, 10);
-+	memset(chap_n, 0, MAX_CHAP_N_SIZE);
-+	memset(chap_r, 0, MAX_RESPONSE_LENGTH);
-+	memset(digest, 0, MD5_SIGNATURE_SIZE);
-+	memset(response, 0, MD5_SIGNATURE_SIZE * 2 + 2);
-+	memset(client_digest, 0, MD5_SIGNATURE_SIZE);
-+	memset(server_digest, 0, MD5_SIGNATURE_SIZE);
++	spin_lock(&lstat->lock);
++	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->authenticate_fails);
++	spin_unlock(&lstat->lock);
 +
-+	challenge =3D kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
-+	if (!challenge) {
-+		printk(KERN_ERR "Unable to allocate challenge buffer\n");
-+		goto out;
-+	}
-+
-+	challenge_binhex =3D kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
-+	if (!challenge_binhex) {
-+		printk(KERN_ERR "Unable to allocate challenge_binhex buffer\n");
-+		goto out;
-+	}
-+	/*
-+	 * Extract CHAP_N.
-+	 */
-+	if (extract_param(NR_in_ptr, "CHAP_N", MAX_CHAP_N_SIZE, chap_n,
-+				&type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_N.\n");
-+		goto out;
-+	}
-+	if (type =3D=3D HEX) {
-+		printk(KERN_ERR "Could not find CHAP_N.\n");
-+		goto out;
-+	}
-+
-+	if (memcmp(chap_n, auth->userid, strlen(auth->userid)) !=3D 0) {
-+		printk(KERN_ERR "CHAP_N values do not match!\n");
-+		goto out;
-+	}
-+	PRINT("[server] Got CHAP_N=3D%s\n", chap_n);
-+	/*
-+	 * Extract CHAP_R.
-+	 */
-+	if (extract_param(NR_in_ptr, "CHAP_R", MAX_RESPONSE_LENGTH, chap_r,
-+				&type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_R.\n");
-+		goto out;
-+	}
-+	if (type !=3D HEX) {
-+		printk(KERN_ERR "Could not find CHAP_R.\n");
-+		goto out;
-+	}
-+
-+	PRINT("[server] Got CHAP_R=3D%s\n", chap_r);
-+	chap_string_to_hex(client_digest, chap_r, strlen(chap_r));
-+
-+	tfm =3D crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
-+	if (IS_ERR(tfm)) {
-+		printk(KERN_ERR "Unable to allocate struct crypto_hash\n");
-+		goto out;
-+	}
-+	desc.tfm =3D tfm;
-+	desc.flags =3D 0;
-+
-+	ret =3D crypto_hash_init(&desc);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_init() failed\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)&chap->id, 1);
-+	ret =3D crypto_hash_update(&desc, &sg, 1);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for id\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)&auth->password, strlen(auth->password));
-+	ret =3D crypto_hash_update(&desc, &sg, strlen(auth->password));
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for password\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)chap->challenge, strlen(chap->challenge));
-+	ret =3D crypto_hash_update(&desc, &sg, strlen(chap->challenge));
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for challenge\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	ret =3D crypto_hash_final(&desc, server_digest);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_final() failed for server digest\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+	crypto_free_hash(tfm);
-+
-+	chap_binaryhex_to_asciihex(response, server_digest, MD5_SIGNATURE_SIZ=
-E);
-+	PRINT("[server] MD5 Server Digest: %s\n", response);
-+
-+	if (memcmp(server_digest, client_digest, MD5_SIGNATURE_SIZE) !=3D 0) =
-{
-+		PRINT("[server] MD5 Digests do not match!\n\n");
-+		goto out;
-+	} else
-+		PRINT("[server] MD5 Digests match, CHAP connetication"
-+				" successful.\n\n");
-+	/*
-+	 * One way authentication has succeeded, return now if mutual
-+	 * authentication is not enabled.
-+	 */
-+	if (!auth->authenticate_target) {
-+		kfree(challenge);
-+		kfree(challenge_binhex);
-+		return 0;
-+	}
-+	/*
-+	 * Get CHAP_I.
-+	 */
-+	if (extract_param(NR_in_ptr, "CHAP_I", 10, identifier, &type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_I.\n");
-+		goto out;
-+	}
-+
-+	if (type =3D=3D HEX)
-+		id =3D (unsigned char)simple_strtoul((char *)&identifier[2],
-+					&endptr, 0);
-+	else
-+		id =3D (unsigned char)simple_strtoul(identifier, &endptr, 0);
-+	/*
-+	 * RFC 1994 says Identifier is no more than octet (8 bits).
-+	 */
-+	PRINT("[server] Got CHAP_I=3D%d\n", id);
-+	/*
-+	 * Get CHAP_C.
-+	 */
-+	if (extract_param(NR_in_ptr, "CHAP_C", CHAP_CHALLENGE_STR_LEN,
-+			challenge, &type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_C.\n");
-+		goto out;
-+	}
-+
-+	if (type !=3D HEX) {
-+		printk(KERN_ERR "Could not find CHAP_C.\n");
-+		goto out;
-+	}
-+	PRINT("[server] Got CHAP_C=3D%s\n", challenge);
-+	challenge_len =3D chap_string_to_hex(challenge_binhex, challenge,
-+				strlen(challenge));
-+	if (!challenge_len) {
-+		printk(KERN_ERR "Unable to convert incoming challenge\n");
-+		goto out;
-+	}
-+	/*
-+	 * Generate CHAP_N and CHAP_R for mutual authentication.
-+	 */
-+	tfm =3D crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
-+	if (IS_ERR(tfm)) {
-+		printk(KERN_ERR "Unable to allocate struct crypto_hash\n");
-+		goto out;
-+	}
-+	desc.tfm =3D tfm;
-+	desc.flags =3D 0;
-+
-+	ret =3D crypto_hash_init(&desc);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_init() failed\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)&id, 1);
-+	ret =3D crypto_hash_update(&desc, &sg, 1);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for id\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)auth->password_mutual,
-+				strlen(auth->password_mutual));
-+	ret =3D crypto_hash_update(&desc, &sg, strlen(auth->password_mutual))=
-;
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for"
-+				" password_mutual\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+	/*
-+	 * Convert received challenge to binary hex.
-+	 */
-+	sg_init_one(&sg, (void *)challenge_binhex, challenge_len);
-+	ret =3D crypto_hash_update(&desc, &sg, challenge_len);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for ma challenge\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	ret =3D crypto_hash_final(&desc, digest);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_final() failed for ma digest\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+	crypto_free_hash(tfm);
-+	/*
-+	 * Generate CHAP_N and CHAP_R.
-+	 */
-+	*NR_out_len =3D sprintf(NR_out_ptr, "CHAP_N=3D%s", auth->userid_mutua=
-l);
-+	*NR_out_len +=3D 1;
-+	PRINT("[server] Sending CHAP_N=3D%s\n", auth->userid_mutual);
-+	/*
-+	 * Convert response from binary hex to ascii hext.
-+	 */
-+	chap_binaryhex_to_asciihex(response, digest, MD5_SIGNATURE_SIZE);
-+	*NR_out_len +=3D sprintf(NR_out_ptr + *NR_out_len, "CHAP_R=3D0x%s",
-+			response);
-+	*NR_out_len +=3D 1;
-+	PRINT("[server] Sending CHAP_R=3D0x%s\n", response);
-+	auth_ret =3D 0;
-+out:
-+	kfree(challenge);
-+	kfree(challenge_binhex);
-+	return auth_ret;
++	return ret;
 +}
++ISCSI_STAT_LOGIN_RO(authenticate_fails);
 +
-+static int chap_got_response(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	char *NR_in_ptr,
-+	char *NR_out_ptr,
-+	unsigned int *NR_out_len)
++static ssize_t iscsi_stat_login_show_attr_negotiate_fails(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++				struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_login_stats *lstat = &tiqn->login_stats;
++	ssize_t ret;
 +
-+	switch (chap->digest_type) {
-+	case CHAP_DIGEST_MD5:
-+		if (chap_server_compute_md5(conn, auth, NR_in_ptr,
-+				NR_out_ptr, NR_out_len) < 0)
-+			return -1;
-+		return 0;
-+	default:
-+		printk(KERN_ERR "Unknown CHAP digest type %d!\n",
-+				chap->digest_type);
-+		return -1;
-+	}
++	spin_lock(&lstat->lock);
++	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->negotiate_fails);
++	spin_unlock(&lstat->lock);
++
++	return ret;
 +}
++ISCSI_STAT_LOGIN_RO(negotiate_fails);
 +
-+u32 chap_main_loop(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	char *in_text,
-+	char *out_text,
-+	int *in_len,
-+	int *out_len)
++CONFIGFS_EATTR_OPS(iscsi_stat_login, iscsi_wwn_stat_grps,
++		iscsi_login_stats_group);
++
++static struct configfs_attribute *iscsi_stat_login_stats_attrs[] = {
++	&iscsi_stat_login_inst.attr,
++	&iscsi_stat_login_indx.attr,
++	&iscsi_stat_login_accepts.attr,
++	&iscsi_stat_login_other_fails.attr,
++	&iscsi_stat_login_redirects.attr,
++	&iscsi_stat_login_authorize_fails.attr,
++	&iscsi_stat_login_authenticate_fails.attr,
++	&iscsi_stat_login_negotiate_fails.attr,
++	NULL,
++};
++
++static struct configfs_item_operations iscsi_stat_login_stats_item_ops = {
++	.show_attribute		= iscsi_stat_login_attr_show,
++	.store_attribute	= iscsi_stat_login_attr_store,
++};
++
++struct config_item_type iscsi_stat_login_cit = {
++	.ct_item_ops		= &iscsi_stat_login_stats_item_ops,
++	.ct_attrs		= iscsi_stat_login_stats_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * Target Logout Stats Table
++ */
++
++CONFIGFS_EATTR_STRUCT(iscsi_stat_logout, iscsi_wwn_stat_grps);
++#define ISCSI_STAT_LOGOUT(_name, _mode)				\
++static struct iscsi_stat_logout_attribute			\
++			iscsi_stat_logout_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,				\
++	iscsi_stat_logout_show_attr_##_name,			\
++	iscsi_stat_logout_store_attr_##_name);
++
++#define ISCSI_STAT_LOGOUT_RO(_name)				\
++static struct iscsi_stat_logout_attribute			\
++			iscsi_stat_logout_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,				\
++	iscsi_stat_logout_show_attr_##_name);
++
++static ssize_t iscsi_stat_logout_show_attr_inst(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
 +{
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++			struct iscsi_tiqn, tiqn_stat_grps);
 +
-+	if (!chap) {
-+		chap =3D chap_server_open(conn, auth, in_text, out_text, out_len);
-+		if (!chap)
-+			return 2;
-+		chap->chap_state =3D CHAP_STAGE_SERVER_AIC;
-+		return 0;
-+	} else if (chap->chap_state =3D=3D CHAP_STAGE_SERVER_AIC) {
-+		convert_null_to_semi(in_text, *in_len);
-+		if (chap_got_response(conn, auth, in_text, out_text,
-+				out_len) < 0) {
-+			chap_close(conn);
-+			return 2;
-+		}
-+		if (auth->authenticate_target)
-+			chap->chap_state =3D CHAP_STAGE_SERVER_NR;
-+		else
-+			*out_len =3D 0;
-+		chap_close(conn);
-+		return 1;
-+	}
-+
-+	return 2;
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
 +}
-diff --git a/drivers/target/iscsi/iscsi_target_auth.h b/drivers/target/=
-iscsi/iscsi_target_auth.h
++ISCSI_STAT_LOGOUT_RO(inst);
++
++static ssize_t iscsi_stat_logout_show_attr_indx(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
++}
++ISCSI_STAT_LOGOUT_RO(indx);
++
++static ssize_t iscsi_stat_logout_show_attr_normal_logouts(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++			struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_logout_stats *lstats = &tiqn->logout_stats;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", lstats->normal_logouts);
++}
++ISCSI_STAT_LOGOUT_RO(normal_logouts);
++
++static ssize_t iscsi_stat_logout_show_attr_abnormal_logouts(
++	struct iscsi_wwn_stat_grps *igrps, char *page)
++{
++	struct iscsi_tiqn *tiqn = container_of(igrps,
++			struct iscsi_tiqn, tiqn_stat_grps);
++	struct iscsi_logout_stats *lstats = &tiqn->logout_stats;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", lstats->abnormal_logouts);
++}
++ISCSI_STAT_LOGOUT_RO(abnormal_logouts);
++
++CONFIGFS_EATTR_OPS(iscsi_stat_logout, iscsi_wwn_stat_grps,
++		iscsi_logout_stats_group);
++
++static struct configfs_attribute *iscsi_stat_logout_stats_attrs[] = {
++	&iscsi_stat_logout_inst.attr,
++	&iscsi_stat_logout_indx.attr,
++	&iscsi_stat_logout_normal_logouts.attr,
++	&iscsi_stat_logout_abnormal_logouts.attr,
++	NULL,
++};
++
++static struct configfs_item_operations iscsi_stat_logout_stats_item_ops = {
++	.show_attribute		= iscsi_stat_logout_attr_show,
++	.store_attribute	= iscsi_stat_logout_attr_store,
++};
++
++struct config_item_type iscsi_stat_logout_cit = {
++	.ct_item_ops		= &iscsi_stat_logout_stats_item_ops,
++	.ct_attrs		= iscsi_stat_logout_stats_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * Session Stats Table
++ */
++
++CONFIGFS_EATTR_STRUCT(iscsi_stat_sess, iscsi_node_stat_grps);
++#define ISCSI_STAT_SESS(_name, _mode)				\
++static struct iscsi_stat_sess_attribute				\
++			iscsi_stat_sess_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,				\
++	iscsi_stat_sess_show_attr_##_name,			\
++	iscsi_stat_sess_store_attr_##_name);
++
++#define ISCSI_STAT_SESS_RO(_name)				\
++static struct iscsi_stat_sess_attribute				\
++			iscsi_stat_sess_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,				\
++	iscsi_stat_sess_show_attr_##_name);
++
++static ssize_t iscsi_stat_sess_show_attr_inst(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_wwn *wwn = acl->se_node_acl.se_tpg->se_tpg_wwn;
++	struct iscsi_tiqn *tiqn = container_of(wwn,
++			struct iscsi_tiqn, tiqn_wwn);
++
++	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++}
++ISCSI_STAT_SESS_RO(inst);
++
++static ssize_t iscsi_stat_sess_show_attr_node(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%u\n",
++				sess->sess_ops->SessionType ? 0 : ISCSI_NODE_INDEX);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(node);
++
++static ssize_t iscsi_stat_sess_show_attr_indx(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%u\n",
++					sess->session_index);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(indx);
++
++static ssize_t iscsi_stat_sess_show_attr_cmd_pdus(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%u\n", sess->cmd_pdus);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(cmd_pdus);
++
++static ssize_t iscsi_stat_sess_show_attr_rsp_pdus(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%u\n", sess->rsp_pdus);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(rsp_pdus);
++
++static ssize_t iscsi_stat_sess_show_attr_txdata_octs(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%llu\n",
++				(unsigned long long)sess->tx_data_octets);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(txdata_octs);
++
++static ssize_t iscsi_stat_sess_show_attr_rxdata_octs(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%llu\n",
++				(unsigned long long)sess->rx_data_octets);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(rxdata_octs);
++
++static ssize_t iscsi_stat_sess_show_attr_conn_digest_errors(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%u\n",
++					sess->conn_digest_errors);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(conn_digest_errors);
++
++static ssize_t iscsi_stat_sess_show_attr_conn_timeout_errors(
++	struct iscsi_node_stat_grps *igrps, char *page)
++{
++	struct iscsi_node_acl *acl = container_of(igrps,
++			struct iscsi_node_acl, node_stat_grps);
++	struct se_node_acl *se_nacl = &acl->se_node_acl;
++	struct iscsi_session *sess;
++	struct se_session *se_sess;
++	ssize_t ret = 0;
++
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess = se_nacl->nacl_sess;
++	if (se_sess) {
++		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (sess)
++			ret = snprintf(page, PAGE_SIZE, "%u\n",
++					sess->conn_timeout_errors);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return ret;
++}
++ISCSI_STAT_SESS_RO(conn_timeout_errors);
++
++CONFIGFS_EATTR_OPS(iscsi_stat_sess, iscsi_node_stat_grps,
++		iscsi_sess_stats_group);
++
++static struct configfs_attribute *iscsi_stat_sess_stats_attrs[] = {
++	&iscsi_stat_sess_inst.attr,
++	&iscsi_stat_sess_node.attr,
++	&iscsi_stat_sess_indx.attr,
++	&iscsi_stat_sess_cmd_pdus.attr,
++	&iscsi_stat_sess_rsp_pdus.attr,
++	&iscsi_stat_sess_txdata_octs.attr,
++	&iscsi_stat_sess_rxdata_octs.attr,
++	&iscsi_stat_sess_conn_digest_errors.attr,
++	&iscsi_stat_sess_conn_timeout_errors.attr,
++	NULL,
++};
++
++static struct configfs_item_operations iscsi_stat_sess_stats_item_ops = {
++	.show_attribute		= iscsi_stat_sess_attr_show,
++	.store_attribute	= iscsi_stat_sess_attr_store,
++};
++
++struct config_item_type iscsi_stat_sess_cit = {
++	.ct_item_ops		= &iscsi_stat_sess_stats_item_ops,
++	.ct_attrs		= iscsi_stat_sess_stats_attrs,
++	.ct_owner		= THIS_MODULE,
++};
+diff --git a/drivers/target/iscsi/iscsi_target_stat.h b/drivers/target/iscsi/iscsi_target_stat.h
 new file mode 100644
-index 0000000..17b042d
+index 0000000..6b4fe50
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_auth.h
-@@ -0,0 +1,32 @@
-+#ifndef _ISCSI_CHAP_H_
-+#define _ISCSI_CHAP_H_
++++ b/drivers/target/iscsi/iscsi_target_stat.h
+@@ -0,0 +1,64 @@
++#ifndef ISCSI_TARGET_STAT_H
++#define ISCSI_TARGET_STAT_H
 +
-+#define CHAP_DIGEST_MD5		5
-+#define CHAP_DIGEST_SHA		6
++/*
++ * For struct iscsi_tiqn->tiqn_wwn default groups
++ */
++extern struct config_item_type iscsi_stat_instance_cit;
++extern struct config_item_type iscsi_stat_sess_err_cit;
++extern struct config_item_type iscsi_stat_tgt_attr_cit;
++extern struct config_item_type iscsi_stat_login_cit;
++extern struct config_item_type iscsi_stat_logout_cit;
 +
-+#define CHAP_CHALLENGE_LENGTH	16
-+#define CHAP_CHALLENGE_STR_LEN	4096
-+#define MAX_RESPONSE_LENGTH	64	/* sufficient for MD5 */
-+#define	MAX_CHAP_N_SIZE		512
++/*
++ * For struct iscsi_session->se_sess default groups
++ */
++extern struct config_item_type iscsi_stat_sess_cit;
 +
-+#define MD5_SIGNATURE_SIZE	16	/* 16 bytes in a MD5 message digest */
++/* iSCSI session error types */
++#define ISCSI_SESS_ERR_UNKNOWN		0
++#define ISCSI_SESS_ERR_DIGEST		1
++#define ISCSI_SESS_ERR_CXN_TIMEOUT	2
++#define ISCSI_SESS_ERR_PDU_FORMAT	3
 +
-+#define CHAP_STAGE_CLIENT_A	1
-+#define CHAP_STAGE_SERVER_AIC	2
-+#define CHAP_STAGE_CLIENT_NR	3
-+#define CHAP_STAGE_CLIENT_NRIC	4
-+#define CHAP_STAGE_SERVER_NR	5
-+
-+extern u32 chap_main_loop(struct iscsi_conn *, struct iscsi_node_auth =
-*, char *, char *,
-+				int *, int *);
-+
-+struct iscsi_chap {
-+	unsigned char	digest_type;
-+	unsigned char	id;
-+	unsigned char	challenge[CHAP_CHALLENGE_LENGTH];
-+	unsigned int	challenge_len;
-+	unsigned int	authenticate_target;
-+	unsigned int	chap_state;
++/* iSCSI session error stats */
++struct iscsi_sess_err_stats {
++	spinlock_t	lock;
++	u32		digest_errors;
++	u32		cxn_timeout_errors;
++	u32		pdu_format_errors;
++	u32		last_sess_failure_type;
++	char		last_sess_fail_rem_name[224];
 +} ____cacheline_aligned;
 +
-+#endif   /*** _ISCSI_CHAP_H_ ***/
---=20
++/* iSCSI login failure types (sub oids) */
++#define ISCSI_LOGIN_FAIL_OTHER		2
++#define ISCSI_LOGIN_FAIL_REDIRECT	3
++#define ISCSI_LOGIN_FAIL_AUTHORIZE	4
++#define ISCSI_LOGIN_FAIL_AUTHENTICATE	5
++#define ISCSI_LOGIN_FAIL_NEGOTIATE	6
++
++/* iSCSI login stats */
++struct iscsi_login_stats {
++	spinlock_t	lock;
++	u32		accepts;
++	u32		other_fails;
++	u32		redirects;
++	u32		authorize_fails;
++	u32		authenticate_fails;
++	u32		negotiate_fails;	/* used for notifications */
++	u64		last_fail_time;		/* time stamp (jiffies) */
++	u32		last_fail_type;
++	u32		last_intr_fail_addr;
++	unsigned char	last_intr_fail_ip6_addr[IPV6_ADDRESS_SPACE];
++	char		last_intr_fail_name[224];
++} ____cacheline_aligned;
++
++/* iSCSI logout stats */
++struct iscsi_logout_stats {
++	spinlock_t	lock;
++	u32		normal_logouts;
++	u32		abnormal_logouts;
++} ____cacheline_aligned;
++
++#endif   /*** ISCSI_TARGET_STAT_H ***/
+-- 
 1.7.4.1
+
