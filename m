@@ -1,37 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 15688] mptsas & poor performance
-Date: Sun, 20 Mar 2011 16:03:40 GMT
-Message-ID: <201103201603.p2KG3e2K014890@demeter2.kernel.org>
-References: <bug-15688-11613@https.bugzilla.kernel.org/>
+From: "Gema Antonio" <laandaluss22@gmail.com>
+Subject: WINNING NOTIFICATION 2011
+Date: Sun, 20 Mar 2011 19:49:29 +0100
+Message-ID: <201103201849.p2KInM3U023423@auth3.smtp.vt.edu>
+Reply-To: <chaletspl@aim.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:41767 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171Ab1CTQDl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Mar 2011 12:03:41 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p2KG3e59014891
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 20 Mar 2011 16:03:40 GMT
-In-Reply-To: <bug-15688-11613@https.bugzilla.kernel.org/>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:38652 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752239Ab1CTSvO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Mar 2011 14:51:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=15688
+WINNING NOTIFICATION 2011
+REF NO: MSW/56B-672GH/EA
+BATCH NO: 4583JL/WIN/IDS
+LUCKY NO:10/23/44/72/80
+Ticket NO:4-18-19-30-48  
 
 
+PROMOTION DATE:2011
+FROM DESK OF PROMOTION {LUCKYDAY LOTTERY}YOUR EMAIL ID HAS WON 450,000,00(FOUR HUNDRED 
+FIFTYTHOUSA AND EUROS) in the first category of our computer ballot email lottery. No ticket was sold but it  is to encourage internet claim your winning, the paying agent office:
 
 
+LUCKY DAY FINNACE,B.V 
+Mrs.Emily Simon
+Email:chaletspl@aim.com
+Tel:+31-647-226-334 
 
---- Comment #10 from Marc Bejarano <bugzilla.kernel.org@beej.org>  2011-03-20 16:03:37 ---
-kashyap: almost a year ago, you wrote "I will post my findings once I am done
-with repro."
+Send the following to the claim departmen:
 
-could you please give your customers a status update?
+Full names:
+Address:
+Age:
+Occupation:
+Phone/Fax no:
+Ref No,Batch No.
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+
+All winnings must be claimed not later than 14 days 
+
+Sincerely Yours,
+
+Gema Antonio"Mrs"
