@@ -1,71 +1,70 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.38 merge window
-Date: Sat, 19 Mar 2011 21:00:50 +0100
-Message-ID: <AANLkTinvwKzYiy5M=Eoae_ViRQwVBF-TgedKspP0qagE@mail.gmail.com>
-References: <1300392635.17266.5.camel@mulgrave.site>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH] firmware/efi: export a routine to retrieve efi-variables
+ by GUID
+Date: Sat, 19 Mar 2011 17:14:59 -0700
+Message-ID: <20110320001459.GA9237@suse.de>
+References: <20110318221606.26841.92271.stgit@localhost6.localdomain6>
+ <20110318225016.GB15921@suse.de>
+ <AANLkTim+HB0GWzGiif=MvYHaiXMSLuVB6R0=UK3906xU@mail.gmail.com>
+ <20110319002246.GB14249@suse.de>
+ <4D8403C3.6020300@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1300392635.17266.5.camel@mulgrave.site>
+Content-Disposition: inline
+In-Reply-To: <4D8403C3.6020300@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "Jiang, Dave" <dave.jiang@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Mar 17, 2011 at 21:10, James Bottomley <James.Bottomley@suse.de=
-> wrote:
-> This represents the usual round of driver updates (fcoe, lpfc, qla2xx=
-x,
-> zfcp, bnx2i, mpt2sas, megaraid_sas, iscsi, cxgbi and hpsa) plus one n=
-ew
-> driver (bnx2fc) and as a bonus we move libsas from the old libata eh =
-to
-> the new one paving the way for junking the old one (once we can get i=
-pr
-> converted).
+On Fri, Mar 18, 2011 at 06:15:47PM -0700, Dan Williams wrote:
+> On 3/18/2011 5:22 PM, Greg KH wrote:
+> >On Fri, Mar 18, 2011 at 04:10:10PM -0700, Dan Williams wrote:
+> >>>I needed all patches in linux-next _before_ the merge window opened to
+> >>>be able to accept it.
+> >>
+> >>Yes, I know, and as dmaengine maintainer I also hate being ambushed by
+> >>last minute patches, but now I am unfortunately one of those annoying
+> >>people on the other side of the coin.
+> >
+> >Then you should know better than to try to go around the well-known
+> >rules :)
+> 
+> Yes...
+> 
+> /me about to push his luck
 
-> Martin K. Petersen (3):
-> =C2=A0 =C2=A0 =C2=A0sd: Logical Block Provisioning update
+<snip>
 
-drivers/scsi/sd.c: In function =E2=80=98sd_prep_fn=E2=80=99:
-drivers/scsi/sd.c:544: warning: =E2=80=98ret=E2=80=99 may be used unini=
-tialized in this function
+> As Jeff pointed out:
+> "It seemed like this was turning into another driver that would get
+> held outside the kernel until it's "perfect."  If that is the case,
+> Linus has also made it clear we should get drivers for high volume,
+> shipping hardware into the kernel, even if its staging, if the
+> alternative is to deny users the driver."
 
-Actually it's in scsi_setup_discard_cmnd(), which is inlined:
+That's fine, _BUT_ you are trying to go around the rules for the merge
+window, which isn't acceptable.  Also note that your driver isn't
+self-contained, it needs this change at the least, right?  Any others?
 
-        int ret;
+> So yes, we are targeting that exception.  I'm up for taking the heat
+> directly if you want...  because the pull request will need to
+> backed up with justification.
 
-        [...]
+No, sorry, I'll not take this for .40, all of my trees are merged with
+Linus now for .40 and I'll only be sending him bugfixes until the .41
+merge window opens up.
 
-        switch (sdkp->provisioning_mode) {
+Remember, it's only a 3 month wait, you knew about this _WAY_ in
+advance, so it's not like this is something new, or out of the ordinary
+at all.  Because of that, I fail to see why this is somehow not
+expected.
 
-                [...]
+On a personal note, I'm going to be very scarse for the next 3 weeks due
+to conferences and travel for spring break, so I physically don't have
+the time to do any more merges like this with Linus.
 
-        default:
-                goto out;
-        }
+thanks,
 
-        [...]
-
-        ret =3D scsi_setup_blk_pc_cmnd(sdp, rq);
-        rq->buffer =3D page_address(page);
-
-out:
-        if (ret !=3D BLKPREP_OK) {
-
-Gr{oetje,eeting}s,
-
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
-
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+greg k-h
