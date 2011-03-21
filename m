@@ -1,49 +1,55 @@
-From: "Gema Antonio" <laandaluss22@gmail.com>
-Subject: WINNING NOTIFICATION 2011
-Date: Sun, 20 Mar 2011 19:49:29 +0100
-Message-ID: <201103201849.p2KInM3U023423@auth3.smtp.vt.edu>
-Reply-To: <chaletspl@aim.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] osst: wrong index used in inner loop
+Date: Mon, 21 Mar 2011 10:02:59 +0900
+Message-ID: <20110321100300P.fujita.tomonori@lab.ntt.co.jp>
+References: <4D8509D1.6080107@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:38652 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239Ab1CTSvO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Mar 2011 14:51:14 -0400
+Received: from sh.osrg.net ([192.16.179.4]:33071 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752353Ab1CUBDw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Mar 2011 21:03:52 -0400
+In-Reply-To: <4D8509D1.6080107@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: roel.kluin@gmail.com
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 
-WINNING NOTIFICATION 2011
-REF NO: MSW/56B-672GH/EA
-BATCH NO: 4583JL/WIN/IDS
-LUCKY NO:10/23/44/72/80
-Ticket NO:4-18-19-30-48  
+On Sat, 19 Mar 2011 20:53:53 +0100
+roel <roel.kluin@gmail.com> wrote:
 
+> Index i was already used in the outer loop.
+> 
+> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+> ---
+>  drivers/scsi/osst.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> I'm not sure if this is the right fix, maybe a break or return
+> is missing?
 
-PROMOTION DATE:2011
-FROM DESK OF PROMOTION {LUCKYDAY LOTTERY}YOUR EMAIL ID HAS WON 450,000,00(FOUR HUNDRED 
-FIFTYTHOUSA AND EUROS) in the first category of our computer ballot email lottery. No ticket was sold but it  is to encourage internet claim your winning, the paying agent office:
-
-
-LUCKY DAY FINNACE,B.V 
-Mrs.Emily Simon
-Email:chaletspl@aim.com
-Tel:+31-647-226-334 
-
-Send the following to the claim departmen:
-
-Full names:
-Address:
-Age:
-Occupation:
-Phone/Fax no:
-Ref No,Batch No.
+What are you trying to fix with this patch?
 
 
-All winnings must be claimed not later than 14 days 
-
-Sincerely Yours,
-
-Gema Antonio"Mrs"
+> diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+> index 521e218..d6d6d89 100644
+> --- a/drivers/scsi/osst.c
+> +++ b/drivers/scsi/osst.c
+> @@ -4702,8 +4702,9 @@ static int __os_scsi_tape_open(struct inode * inode, struct file * filp)
+>  				STp->partition = STp->new_partition = 0;
+>  				if (STp->can_partitions)
+>  					STp->nbr_partitions = 1;  /* This guess will be updated later if necessary */
+> -				for (i=0; i < ST_NBR_PARTITIONS; i++) {
+> -					STps = &(STp->ps[i]);
+> +				int j;
+> +				for (j=0; j < ST_NBR_PARTITIONS; j++) {
+> +					STps = &(STp->ps[j]);
+>  					STps->rw = ST_IDLE;
+>  					STps->eof = ST_NOEOF;
+>  					STps->at_sm = 0;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
