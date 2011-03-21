@@ -1,103 +1,57 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] sd: Fix regression in sd_read_cache_type
-Date: Mon, 21 Mar 2011 17:29:52 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1103211727450.1637-100000@iolanthe.rowland.org>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Mon, 21 Mar 2011 17:22:17 -0500
+Message-ID: <4D87CF99.7040008@linux.vnet.ibm.com>
+References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp> <1299508803.12730.1.camel@mulgrave.site> <4D83C78D.5040908@linux.vnet.ibm.com> <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44359 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753212Ab1CUV3z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 17:29:55 -0400
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:50903 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754689Ab1CUWWW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2011 18:22:22 -0400
+Received: from d01dlp02.pok.ibm.com (d01dlp02.pok.ibm.com [9.56.224.85])
+	by e6.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p2LLw2OR023202
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 17:58:02 -0400
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 127246E8036
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 18:22:19 -0400 (EDT)
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p2LMMIJr2506894
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 18:22:18 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p2LMMHAs000825
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 19:22:18 -0300
+In-Reply-To: <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Richard Senior <richard@r-senior.demon.co.uk>, Luben Tuikov <ltuikov@yahoo.com>, SCSI development list <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-This patch (as1454) fixes a regression in the sd driver.  Commit
-24d720b726c1a85f1962831ac30ad4d2ef8276b1 ([SCSI] Retrieve the Caching
-mode page) recently introduced the strategy of asking for all pages
-(page code 0x3F) instead of asking for the caching page (0x08) on
-devices that might not support it.  This ought to be safe, because sd
-already uses page code 0x3F when checking for write protection.
+Tomo,
 
-Unfortunately, the commit did not copy the checks used by
-sd_read_write_protect_flag().  Some devices don't support page code
-0x3F, and others require a fixed transfer length of 192 bytes.  This
-patch adds those checks into sd_read_cache_type().
+Thanks for all the work you've done with this driver. It is much appreciated.
 
-Without this fix, some USB mass-storage devices crash when they
-receive a MODE SENSE command with page code 0x3F asking for only 4
-bytes of data.
+What sort of performance are you seeing with this? With filebacked devices, I
+was seeing around 1 MB/sec doing a basic disktest run. I haven't compared this
+to ibmvstgt, but I'm pretty sure we did a fair bit better there. Perhaps I've got
+some setup issue?
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-Reported-and-tested-by: Richard Senior <richard@r-senior.demon.co.uk>
-CC: Luben Tuikov <ltuikov@yahoo.com>
-CC: <stable@kernel.org>
-
----
-
-The only stable kernel requiring this fix is 2.6.38; earlier kernels
-are okay.
+I tried a ramdisk device and saw this on the server:
 
 
- drivers/scsi/sd.c |   14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+DMA_TO_DEVICE not supported for RAMDISK_DR with task_sg_chaining=1
 
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -1904,17 +1904,23 @@ sd_read_cache_type(struct scsi_disk *sdk
- 
- 	int dbd;
- 	int modepage;
-+	int first_len;
- 	struct scsi_mode_data data;
- 	struct scsi_sense_hdr sshdr;
- 	int old_wce = sdkp->WCE;
- 	int old_rcd = sdkp->RCD;
- 	int old_dpofua = sdkp->DPOFUA;
- 
-+	first_len = 4;
- 	if (sdp->skip_ms_page_8) {
- 		if (sdp->type == TYPE_RBC)
- 			goto defaults;
- 		else {
-+			if (sdp->skip_ms_page_3f)
-+				goto defaults;
- 			modepage = 0x3F;
-+			if (sdp->use_192_bytes_for_3f)
-+				first_len = 192;
- 			dbd = 0;
- 		}
- 	} else if (sdp->type == TYPE_RBC) {
-@@ -1926,13 +1932,15 @@ sd_read_cache_type(struct scsi_disk *sdk
- 	}
- 
- 	/* cautiously ask */
--	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, 4, &data, &sshdr);
-+	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, first_len,
-+			&data, &sshdr);
- 
- 	if (!scsi_status_is_good(res))
- 		goto bad_sense;
- 
- 	if (!data.header_length) {
- 		modepage = 6;
-+		first_len = 0;
- 		sd_printk(KERN_ERR, sdkp, "Missing header in MODE_SENSE response\n");
- 	}
- 
-@@ -1952,7 +1960,9 @@ sd_read_cache_type(struct scsi_disk *sdk
- 	}
- 
- 	/* Get the data */
--	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
-+	if (len > first_len)
-+		res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len,
-+				&data, &sshdr);
- 
- 	if (scsi_status_is_good(res)) {
- 		int offset = data.header_length + data.block_descriptor_length;
+
+
+All my I/O on the client timed out because of this. 
+
+-Brian
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
 
