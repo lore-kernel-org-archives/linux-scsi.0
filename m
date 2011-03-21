@@ -1,62 +1,79 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 08/13] qla4xxx: Add support for ql4xmaxqdepth command line parameter
-Date: Mon, 21 Mar 2011 03:34:31 -0700
-Message-ID: <1300703676-27398-8-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:50837 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752359Ab1CULBP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 07:01:15 -0400
-In-Reply-To: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ingo Molnar <mingo@elte.hu>
+Subject: [build failure] Re: [GIT PULL] First round of SCSI updates for
+ 2.6.38 merge window
+Date: Mon, 21 Mar 2011 13:21:11 +0100
+Message-ID: <20110321122111.GA17237@elte.hu>
+References: <1300392635.17266.5.camel@mulgrave.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1300392635.17266.5.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.com, vikas.chaudhary@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-This provides the flexibility to modify the qdepth based on different
-target devices to make the best use of system resources.
+* James Bottomley <James.Bottomley@suse.de> wrote:
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> This represents the usual round of driver updates (fcoe, lpfc, qla2xx=
+x,
+> zfcp, bnx2i, mpt2sas, megaraid_sas, iscsi, cxgbi and hpsa) plus one n=
+ew
+> driver (bnx2fc) and as a bonus we move libsas from the old libata eh =
+to
+> the new one paving the way for junking the old one (once we can get i=
+pr
+> converted).
+
+The new bnx2fc driver does not build with module support disabled:
+
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815:17: error: dereferencing pointe=
+r to incomplete type
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815:28: error: =E2=80=98MODULE_STAT=
+E_LIVE=E2=80=99 undeclared (first use in this function)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1878:17: error: dereferencing pointe=
+r to incomplete type
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1878:28: error: =E2=80=98MODULE_STAT=
+E_LIVE=E2=80=99 undeclared (first use in this function)
+
+and this build breakage has been reported to you two weeks ago:
+
+ http://lkml.org/lkml/2011/3/2/468
+
+In the future please do not push broken code upstream or put it into=20
+drivers/staging/scsi/ if it has outstanding problems. I'm using the hac=
+k below=20
+for the time being.
+
+Thanks,
+
+	Ingo
+
+-------------------->
+=46rom dd6fd5ea95cba76a625e13910f35cd967ace7fe4 Mon Sep 17 00:00:00 200=
+1
+=46rom: Ingo Molnar <mingo@elte.hu>
+Date: Mon, 21 Mar 2011 13:15:51 +0100
+Subject: [PATCH] <not for upstream> scsi: Disable the bnx2fc driver for=
+ the time being
+
+Does not build with CONFIG_MODULES disabled.
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+ drivers/scsi/bnx2fc/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 277c45f..051c049 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -51,6 +51,11 @@ MODULE_PARM_DESC(ql4xenablemsix,
- 		" 2 = enable MSI interrupt mechanism.");
- 
- #define QL4_DEF_QDEPTH 32
-+static int ql4xmaxqdepth = QL4_DEF_QDEPTH;
-+module_param(ql4xmaxqdepth, int, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(ql4xmaxqdepth,
-+		"Maximum queue depth to report for target devices.\n"
-+		" Default: 32.");
- 
- /*
-  * SCSI host template entry points
-@@ -1904,10 +1909,15 @@ static int qla4xxx_slave_alloc(struct scsi_device *sdev)
- {
- 	struct iscsi_cls_session *sess = starget_to_session(sdev->sdev_target);
- 	struct ddb_entry *ddb = sess->dd_data;
-+	int queue_depth = QL4_DEF_QDEPTH;
- 
- 	sdev->hostdata = ddb;
- 	sdev->tagged_supported = 1;
--	scsi_activate_tcq(sdev, QL4_DEF_QDEPTH);
-+
-+	if (ql4xmaxqdepth != 0 && ql4xmaxqdepth <= 0xffffU)
-+		queue_depth = ql4xmaxqdepth;
-+
-+	scsi_activate_tcq(sdev, queue_depth);
- 	return 0;
- }
- 
--- 
-1.7.3.2
-
+diff --git a/drivers/scsi/bnx2fc/Kconfig b/drivers/scsi/bnx2fc/Kconfig
+index 6a38080..6a111f0 100644
+--- a/drivers/scsi/bnx2fc/Kconfig
++++ b/drivers/scsi/bnx2fc/Kconfig
+@@ -1,6 +1,7 @@
+ config SCSI_BNX2X_FCOE
+ 	tristate "Broadcom NetXtreme II FCoE support"
+ 	depends on PCI
++	depends on BROKEN
+ 	select NETDEVICES
+ 	select NETDEV_1000
+ 	select LIBFC
