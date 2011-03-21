@@ -1,73 +1,108 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: RE: [PATCH 00/13] qla4xxx: Updates for scsi-misc-2.6
-Date: Mon, 21 Mar 2011 03:35:54 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8728A5219B9@AVEXMB1.qlogic.org>
-References: <5E4F49720D0BAD499EE1F01232234BA872263B1506@AVEXMB1.qlogic.org>
-	 <4D82D647.7050002@cs.wisc.edu> <1300546183.12679.9.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 10/13] qla4xxx: added new function qla4xxx_relogin_all_devices
+Date: Mon, 21 Mar 2011 03:34:33 -0700
+Message-ID: <1300703676-27398-10-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.182]:18705
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752903Ab1CUKgA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 06:36:00 -0400
-In-Reply-To: <1300546183.12679.9.camel@mulgrave.site>
-Content-Language: en-US
+Received: from vpn.pathscale.com ([198.186.3.75]:46146 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753009Ab1CUKqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2011 06:46:05 -0400
+In-Reply-To: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>, Sarang Radke <sarang.radke@qlogic.com>
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.com, vikas.chaudhary@qlogic.com
 
-Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWls
-dG86SmFtZXMuQm90dG9tbGV5QHN1c2UuZGVdDQo+U2VudDogU2F0dXJkYXksIE1hcmNoIDE5LCAy
-MDExIDg6MjAgUE0NCj5UbzogTWlrZSBDaHJpc3RpZQ0KPkNjOiBWaWthcyBDaGF1ZGhhcnk7IGxp
-bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBSYXZpIEFuYW5kOyBMYWxpdA0KPkNoYW5kaXZhZGU7
-IEthcmVuIEhpZ2dpbnM7IFByYXNhbm5hIE11bWJhaTsgU2FyYW5nIFJhZGtlDQo+U3ViamVjdDog
-UmU6IFtQQVRDSCAwMC8xM10gcWxhNHh4eDogVXBkYXRlcyBmb3Igc2NzaS1taXNjLTIuNg0KPg0K
-Pk9uIFRodSwgMjAxMS0wMy0xNyBhdCAyMjo0OSAtMDUwMCwgTWlrZSBDaHJpc3RpZSB3cm90ZToN
-Cj4+IE9uIDAzLzE0LzIwMTEgMTI6MjMgQU0sIFZpa2FzIENoYXVkaGFyeSB3cm90ZToNCj4+ID4g
-SmFtZXMsDQo+PiA+DQo+PiA+IFBsZWFzZSBhcHBseSB0aGVzZSBwYXRjaGVzIG9uIHNjc2ktbWlz
-Yy0yLjYgdHJlZS4NCj4+ID4NCj4+ID4gS2FyZW4gSGlnZ2lucyAoMik6DQo+PiA+ICAgICAgICBx
-bGE0eHh4OiBjbGVhbnVwIEREQiByZWxvZ2luIGxvZ2ljIGR1cmluZyBpbml0aWFsaXphdGlvbg0K
-Pj4gPiAgICAgICAgcWxhNHh4eDogUHJldmVudCBvdGhlciBwb3J0IHJlaW5pdGlhbGl6YXRpb24g
-ZHVyaW5nDQo+cmVtb3ZlX2FkYXB0ZXINCj4+ID4NCj4+ID4gUHJhc2FubmEgTXVtYmFpICgzKToN
-Cj4+ID4gICAgICAgIHFsYTR4eHg6IERvIG5vdCBzZW5kIG1ib3ggY29tbWFuZCBpZiBGVyBpcyBp
-biBmYWlsZWQgc3RhdGUNCj4+ID4gICAgICAgIHFsYTR4eHg6IERvIG5vdCByZXRyeSBJU1A4MlhY
-IGluaXRpYWxpemF0aW9uIGlmIEgvVyBzdGF0ZSBpcw0KPmZhaWxlZA0KPj4gPiAgICAgICAgcWxh
-NHh4eDogbWFza2luZyByZXF1aXJlZCBiaXRzIG9mIGFkZF9md19vcHRpb25zIGR1cmluZw0KPmlu
-aXRpYWxpemF0aW9uDQo+PiA+DQo+PiA+IFNhcmFuZyBSYWRrZSAoMSk6DQo+PiA+ICAgICAgICBx
-bGE0eHh4OiBVc2UgcG9sbGluZyBtb2RlIGZvciBkaXNhYmxlIGludGVycnVwdCBtYWlsYm94DQo+
-Y29tcGxldGlvbg0KPj4gPg0KPj4gPiBWaWthcyBDaGF1ZGhhcnkgKDcpOg0KPj4gPiAgICAgICAg
-cWxhNHh4eDogY2xlYW51cCBxbGE0eHh4X2luaXRpYWxpemVfZGRiX2xpc3QoKQ0KPj4gPiAgICAg
-ICAgcWxhNHh4eDogcmVtb3ZlIHVudXNlZCBkZGIgZmxhZyBERl9OT19SRUxPR0lODQo+PiA+ICAg
-ICAgICBxbGE0eHh4OiBjbGVhbnVwIGZ1bmN0aW9uIHFsYTR4eHhfcHJvY2Vzc19kZGJfY2hhbmdl
-ZA0KPj4gPiAgICAgICAgcWxhNHh4eDogQWRkIHN1cHBvcnQgZm9yIHFsNHhtYXhxZGVwdGggY29t
-bWFuZCBsaW5lIHBhcmFtZXRlcg0KPj4gPiAgICAgICAgcWxhNHh4eDogYWRkIHN1cHBvcnQgZm9y
-IHFsNHhzZXNzX3JlY292ZXJ5X3RtbyBjbWQgbGluZSBwYXJhbQ0KPj4gPiAgICAgICAgcWxhNHh4
-eDogYWRkZWQgbmV3IGZ1bmN0aW9uIHFsYTR4eHhfcmVsb2dpbl9hbGxfZGV2aWNlcw0KPj4gPiAg
-ICAgICAgcWxhNHh4eDogVXBkYXRlIGRyaXZlciB2ZXJzaW9uIHRvIDUuMDIuMDAtazYNCj4+ID4N
-Cj4+DQo+PiBQYXRjaGVzIGxvb2sgb2sgd2l0aCB1cGRhdGVkIDA2LzEzIHBhdGNoLiBKYW1lcywg
-VmlrYXMgYWN0dWFsbHkgc2VudCBhDQo+PiBjb3VwbGUgcmV2aXNpb25zIG9mIDA2LzEzLiBUaGUg
-ZmluYWwgb25lIGlzIGhlcmU6DQo+PiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXNjc2kmbT0x
-MzAwMzUxNTA5MTczNDImdz0yDQo+Pg0KPj4gSSBjb3VsZCBub3QgY29tcGlsZS9jaGVja3BhdGNo
-IHRlc3QgdGhlIHBhdGNoZXMsIGJlY2F1c2UgbXkNCj4+IG1haWxlci9icm93c2VyIGtlZXBzIHJl
-cGxhY2luZyA9IHdpdGggPUQuIE90aGVyIHBlb3BsZSBzZWVtIHRvIGJlIGFibGUNCj4+IHRvIHNl
-ZSBpdCBvaywgc28gSSB0aGluayBpdCBpcyBwcm9ibGVtIG9uIG15IHNpZGUuIENvZGUgd2FzIHJl
-dmlld2VkLg0KPg0KPkkgZG9uJ3QgdGhpbmsgdGhhdCdzIGVudGlyZWx5IHlvdXIgZmF1bHQuICBU
-aGlzIGVudGlyZSBwYXRjaCBzZXJpZXMgaXMNCj53aGl0ZXNwYWNlIGRhbWFnZWQuICBWaWthcywg
-cGxlYXNlIHJlc3VibWl0IHdpdGggdGhlIGNvcnJlY3QgbWFpbGVyDQo+c2V0dGluZ3Mgc28gaXQg
-Y2FuIGJlIGFwcGxpZWQuDQoNCkkgYXBvbG9naWVzIGZvciBpbmNvbnZlbmllbmNlLiBMb29rcyBs
-aWtlIG15IGVtYWlsIGNsaWVudCBhZGRlZCB3aGl0ZXNwYWNlcyBpbiBwYXRjaC4NCkkgYW0gc2Vu
-ZGluZyBwYXRjaGVzIGFnYWluIGluIG5leHQgZW1haWwgdXNpbmcgImdpdCBzZW50LWVtYWlsIi4N
-Cg0KPg0KPj4gUmV2aWV3ZWQtYnk6IE1pa2UgQ2hyaXN0aWUgPG1pY2hhZWxjQGNzLndpc2MuZWR1
-Pg0KPg0KPkknbGwgYWRkIHRoaXMgdG8gdGhlIHJlc3VibWl0LCB0aGFua3MhDQo+DQo+SmFtZXMN
-Cj4NCj4NCg0KDQpUaGlzIG1lc3NhZ2UgYW5kIGFueSBhdHRhY2hlZCBkb2N1bWVudHMgY29udGFp
-biBpbmZvcm1hdGlvbiBmcm9tIFFMb2dpYyBDb3Jwb3JhdGlvbiBvciBpdHMgd2hvbGx5LW93bmVk
-IHN1YnNpZGlhcmllcyB0aGF0IG1heSBiZSBjb25maWRlbnRpYWwuIElmIHlvdSBhcmUgbm90IHRo
-ZSBpbnRlbmRlZCByZWNpcGllbnQsIHlvdSBtYXkgbm90IHJlYWQsIGNvcHksIGRpc3RyaWJ1dGUs
-IG9yIHVzZSB0aGlzIGluZm9ybWF0aW9uLiBJZiB5b3UgaGF2ZSByZWNlaXZlZCB0aGlzIHRyYW5z
-bWlzc2lvbiBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0ZWx5IGJ5
-IHJlcGx5IGUtbWFpbCBhbmQgdGhlbiBkZWxldGUgdGhpcyBtZXNzYWdlLg0K
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+
+Move relogin to all devices code from do_dpc to new
+fuction qla4xxx_relogin_all_devices()
+
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c |   54 +++++++++++++++++-----------------------
+ 1 files changed, 23 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 4a599d3..e70b6bf 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1218,6 +1218,27 @@ recover_ha_init_adapter:
+ 	return status;
+ }
+ 
++static void qla4xxx_relogin_all_devices(struct scsi_qla_host *ha)
++{
++	struct ddb_entry *ddb_entry, *dtemp;
++
++	list_for_each_entry_safe(ddb_entry, dtemp, &ha->ddb_list, list) {
++		if ((atomic_read(&ddb_entry->state) == DDB_STATE_MISSING) ||
++		    (atomic_read(&ddb_entry->state) == DDB_STATE_DEAD)) {
++			if (ddb_entry->fw_ddb_device_state ==
++			    DDB_DS_SESSION_ACTIVE) {
++				atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
++				ql4_printk(KERN_INFO, ha, "scsi%ld: %s: ddb[%d]"
++				    " marked ONLINE\n",	ha->host_no, __func__,
++				    ddb_entry->fw_ddb_index);
++
++				iscsi_unblock_session(ddb_entry->sess);
++			} else
++				qla4xxx_relogin_device(ha, ddb_entry);
++		}
++	}
++}
++
+ void qla4xxx_wake_dpc(struct scsi_qla_host *ha)
+ {
+ 	if (ha->dpc_thread &&
+@@ -1326,13 +1347,7 @@ dpc_post_reset_ha:
+ 	if (test_and_clear_bit(DPC_LINK_CHANGED, &ha->dpc_flags)) {
+ 		if (!test_bit(AF_LINK_UP, &ha->flags)) {
+ 			/* ---- link down? --- */
+-			list_for_each_entry_safe(ddb_entry, dtemp,
+-						 &ha->ddb_list, list) {
+-				if (atomic_read(&ddb_entry->state) ==
+-						DDB_STATE_ONLINE)
+-					qla4xxx_mark_device_missing(ha,
+-							ddb_entry);
+-			}
++			qla4xxx_mark_all_devices_missing(ha);
+ 		} else {
+ 			/* ---- link up? --- *
+ 			 * F/W will auto login to all devices ONLY ONCE after
+@@ -1341,30 +1356,7 @@ dpc_post_reset_ha:
+ 			 * manually relogin to devices when recovering from
+ 			 * connection failures, logouts, expired KATO, etc. */
+ 
+-			list_for_each_entry_safe(ddb_entry, dtemp,
+-							&ha->ddb_list, list) {
+-				if ((atomic_read(&ddb_entry->state) ==
+-						 DDB_STATE_MISSING) ||
+-				    (atomic_read(&ddb_entry->state) ==
+-						 DDB_STATE_DEAD)) {
+-					if (ddb_entry->fw_ddb_device_state ==
+-					    DDB_DS_SESSION_ACTIVE) {
+-						atomic_set(&ddb_entry->state,
+-							   DDB_STATE_ONLINE);
+-						ql4_printk(KERN_INFO, ha,
+-						    "scsi%ld: %s: ddb[%d]"
+-						    " marked ONLINE\n",
+-						    ha->host_no, __func__,
+-						    ddb_entry->fw_ddb_index);
+-
+-						iscsi_unblock_session(
+-						    ddb_entry->sess);
+-					} else
+-						qla4xxx_relogin_device(
+-						    ha, ddb_entry);
+-				}
+-
+-			}
++			qla4xxx_relogin_all_devices(ha);
+ 		}
+ 	}
+ 
+-- 
+1.7.3.2
 
