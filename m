@@ -1,84 +1,246 @@
-From: Brian King <brking@linux.vnet.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Mon, 21 Mar 2011 17:31:15 -0500
-Message-ID: <4D87D1B3.2030106@linux.vnet.ibm.com>
-References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp> <1299508803.12730.1.camel@mulgrave.site> <4D83C78D.5040908@linux.vnet.ibm.com> <20110321100909E.fujita.tomonori@lab.ntt.co.jp> <4D87CF99.7040008@linux.vnet.ibm.com>
+Date: Mon, 21 Mar 2011 15:29:35 -0700
+Message-ID: <1300746575.21880.76.camel@haakon2.linux-iscsi.org>
+References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp>
+	 <1299508803.12730.1.camel@mulgrave.site>
+	 <4D83C78D.5040908@linux.vnet.ibm.com>
+	 <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
+	 <4D87BC8C.5090104@linux.vnet.ibm.com>
+	 <1300741291.21880.17.camel@haakon2.linux-iscsi.org>
+	 <4D87C22A.6070301@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:39350 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753304Ab1CUWbS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 18:31:18 -0400
-Received: from d01dlp01.pok.ibm.com (d01dlp01.pok.ibm.com [9.56.224.56])
-	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p2LM63RU028895
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 18:06:03 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id C739138C803B
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 18:31:12 -0400 (EDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p2LMVHEJ466182
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 18:31:17 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p2LMVGkJ009914
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 16:31:16 -0600
-In-Reply-To: <4D87CF99.7040008@linux.vnet.ibm.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:60279 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754648Ab1CUWgq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 18:36:46 -0400
+In-Reply-To: <4D87C22A.6070301@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 
-Just hit another potential issue. I was mapping / unmapping disks a couple times,
-so that might have helped trigger the issue. I had a file backed disk mapped
-to a vscsi lun, then unmapped it, mapped a ramdisk lun, then switched back to
-the filebacked lun after running into issues with the ramdisk lun and saw this:
+On Mon, 2011-03-21 at 16:24 -0500, Brian King wrote:
+> On 03/21/2011 04:01 PM, Nicholas A. Bellinger wrote:
+> > On Mon, 2011-03-21 at 16:01 -0500, Brian King wrote:
+> >> On 03/20/2011 08:09 PM, FUJITA Tomonori wrote:
+> >>> Thanks for the testings,
+> >>>
+> >>> On Fri, 18 Mar 2011 15:58:53 -0500
+> >>> Brian King <brking@linux.vnet.ibm.com> wrote:
+> >>>
+> >>>> On 03/07/2011 08:40 AM, James Bottomley wrote:
+> >>>>> On Mon, 2011-03-07 at 13:41 +0900, FUJITA Tomonori wrote:
+> >>>>>> On Sat, 12 Feb 2011 14:27:26 -0600
+> >>>>>> James Bottomley <James.Bottomley@suse.de> wrote:
+> >>>>>>
+> >>>>>>>> Disregard my previous comment. It looks like current client should handle reservations
+> >>>>>>>> just fine without any further changes.
+> >>>>>>>
+> >>>>>>> So is that an ack for putting this in scsi-misc ... or did you want to
+> >>>>>>> do more testing first?
+> >>>>>>
+> >>>>>> Ping,
+> >>>>>>
+> >>>>>> Brian, James, can we merge this during the next merge window?
+> >>>>>
+> >>>>> I'm still waiting for an ack from Brian.
+> >>>>
+> >>>> Sorry for the delay... I've got this loaded in the lab and have managed to oops
+> >>>> a couple times. The first one was during shutdown, which I wasn't able to collect
+> >>>> any data for. The most recent occurred when a client was trying to login for the
+> >>>> first time:
+> >>>
+> >>> You mean that the kernel crashes every time when a client logs in?
+> >>
+> >> I think the crash I was seeing when the client logs in was just due to the fact that
+> >> I had things misconfigured. It took me a bit to figure out the configfs stuff. Didn't
+> >> realize at first I had to go off and manually create a lot of the configfs layout
+> >> described in the wiki page. Once I did that, I was able to get a LUN to successfully
+> >> report in on the client side. I'll start pounding on this a bit and see how things
+> >> hold up.
+> >>
+> > 
+> > Hi Brian,
+> > 
+> > If could send along the original misconfigured configfs layout that is
+> > causing the OOPs in handle_crq(), I would be happy to have a quick look.
+> 
+> Here it is. As you can see, there is no ./target/ibmvscsis directory created. In order
+> to get it to work, I did the following. Please let me know if there is a better way
+> to do this...
+> 
+> cd /sys/kernel/configfs/target
+> mkdir -p ibmvscsis/30000003/tpgt_1
+> mkdir ibmvscsis/30000003/tpgt_1/lun/lun_0
+> ln -s core/fileio_0/testfvd ibmvscsis/30000003/tpgt_1/lun/lun_0/default
+> 
 
+This is correct..
 
-Mar 21 16:25:57 jn30a-lp4 kernel: unexpected fifo state
-Mar 21 16:25:57 jn30a-lp4 kernel: ------------[ cut here ]------------
-Mar 21 16:25:57 jn30a-lp4 kernel: WARNING: at drivers/scsi/libsrp.c:162
-Mar 21 16:25:57 jn30a-lp4 kernel: Modules linked in: target_core_pscsi target_core_file target_core_iblock ip6t_LOG xt_tcpudp xt_pkttype ipt_LOG xt_limit ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_raw xt_NOTRACK ipt_REJECT xt_state iptable_raw iptable_filter ip6table_mangle nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables ip6table_filter ip6_tables x_tables ipv6 fuse loop dm_mod ibmvscsis libsrp scsi_tgt target_core_mod ses enclosure sg ibmveth configfs ext3 jbd mbcache sd_mod crc_t10dif ipr libata scsi_mod
-Mar 21 16:25:57 jn30a-lp4 kernel: NIP: d0000000047e0b38 LR: d0000000047e0b34 CTR: 0000000000000000
-Mar 21 16:25:57 jn30a-lp4 kernel: REGS: c00000033f4ef860 TRAP: 0700   Not tainted  (2.6.38-0.7-ppc64-06439-g5bab188-dirty)
-Mar 21 16:25:57 jn30a-lp4 kernel: MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 24002024  XER: 20000001
-Mar 21 16:25:57 jn30a-lp4 kernel: TASK = c00000033f2b39e0[58] 'kworker/4:1' THREAD: c00000033f4ec000 CPU: 4
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR00: d0000000047e0b34 c00000033f4efae0 d0000000047e9768 0000000000000018
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR04: 0000000000000000 0000000000000004 0000000000000000 c000000000f86610
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR08: c000000000f86b20 c0000000008b38b8 000000000007ffff 0000000000000001
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR12: 0000000028002082 c00000000f190a00 0000000000000000 0000000002b80610
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR16: 0000000001a3fc60 0000000002b80d08 0000000001a3fc70 0000000002c81870
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR20: 0000000002b805c8 0000000002c81888 0000000002c81910 0000000000000000
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR24: 0000000000000000 0000000000000000 0000000000000000 c00000033f1bacc0
-Mar 21 16:25:57 jn30a-lp4 kernel: GPR28: 0000000000000001 0000000000000000 d0000000047e9778 d0000000047e1ba8
-Mar 21 16:25:57 jn30a-lp4 kernel: NIP [d0000000047e0b38] .srp_iu_get+0x118/0x130 [libsrp]
-Mar 21 16:25:57 jn30a-lp4 kernel: LR [d0000000047e0b34] .srp_iu_get+0x114/0x130 [libsrp]
-Mar 21 16:25:57 jn30a-lp4 kernel: Call Trace:
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efae0] [d0000000047e0b34] .srp_iu_get+0x114/0x130 [libsrp] (unreliable)
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efb90] [d0000000048f0d6c] .process_crq+0xcc/0x5b8 [ibmvscsis]
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efc50] [d0000000048f183c] .handle_crq+0x224/0xa60 [ibmvscsis]
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efd60] [c0000000000c2120] .process_one_work+0x198/0x518
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efe10] [c0000000000c297c] .worker_thread+0x1f4/0x518
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efed0] [c0000000000cb4c4] .kthread+0xb4/0xc0
-Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4eff90] [c00000000001e864] .kernel_thread+0x54/0x70
-Mar 21 16:25:57 jn30a-lp4 kernel: Instruction dump:
-Mar 21 16:25:57 jn30a-lp4 kernel: e8010010 eb41ffd0 7c0803a6 eb61ffd8 eb81ffe0 eba1ffe8 ebc1fff0 ebe1fff8
-Mar 21 16:25:57 jn30a-lp4 kernel: 4e800020 e87e8058 48000739 e8410028 <0fe00000> 38000001 38600000 981f0000
-Mar 21 16:25:57 jn30a-lp4 kernel: ---[ end trace ec6b6139d888a732 ]---
-Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
-Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
-Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
-Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
+> I had previously created a file backed lun via:
+> 
+> tcm_node --fileio fileio_0/testfvd /vdisks/test 100000000
+> 
+> Thanks,
+> 
+> Brian
+> 
+> 
 
-I'm also seeing disktest complain on the client about commands taking longer than 120 seconds
-on occasion, which may play into the performance issue I mentioned in my previous mail.
+So indeed, the issue appears to be that handle_crq() is running w/o a
+configured /sys/kernel/config/target/ibmvscsis/$VSCSI_WWN/tpgt_1/
+endpoint, but still receiving incoming I/O via handle_crq() ->
+handle_cmd_queue() -> tcm_queuecommand()..
 
--Brian
+Which means that tcm_queuecommand() and struct ibmvscsis_adapter need to
+be aware of some form of state between I/O and control path in order to
+prevent adapter->se_tpg and adapter->se_sess from being referenced
+before the TPG endpoint and VIO I_T Nexus (TCM Session) has been setup
+with the explict mkdir(2) operation via target_core_fabric_configfs.c:
+target_fabric_make_tpg() -> ibmvscsis_make_tpg() code.
 
+I recall it being mentioned at some point that certain VIO clients had
+issue with the failure of the (initial..?) expected INQUIRY, for which
+is handled internally in ibmvscsis_queuecommand() code..
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+So that said, I think we have a couple of options here..
+
+*) Add a lock to protect adapter->se_sess for I/O and
+ibmvscsis_make_tpg() control path code, and find a way to gracefully
+handle tcm_queuecommand() exceptions for non-configured targets
+endpoints after the internally emulated INQUIRY is completed.
+
+*) Determine if breaking up individual external VIO setup logic makes
+more sense from being done in a global manner for all available VIO
+target connections via:
+
+    module_init() ->
+	ibmvscsis_init() ->
+		vio_register_probe() -> 
+
+into a more flexable method via individually configured
+target_core_fabric_configfs.c:target_fabric_make_tpg()
+-> ibmvscsis_make_tpg(), where we don't actually pull the current
+ibmvscsis_probe() -> crq_queue_create() until mkdir -p
+$VIO_TARGET_FULLPATH/tpgt_1 has been preformed.
+
+Obviously for the long term direction of this code I would prefer the
+the latter and a more flexiable direction (Tomo-san, thoughts on
+this..?).
+
+To prevent this from happening with existing code, I think the following
+should address the current OOPs.  Please have a look and let me know.
+
+Thanks!
+
+--nab
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsis.c b/drivers/scsi/ibmvscsi/ibmvscsis.c
+index 714af48..a0cd9b8 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsis.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsis.c
+@@ -98,6 +98,9 @@ struct ibmvscsis_adapter {
+ 
+        struct work_struct crq_work;
+ 
++       /* lock for protecting ->se_sess */
++       spinlock_t sess_lock;
++
+        unsigned long liobn;
+        unsigned long riobn;
+ 
+@@ -335,6 +338,7 @@ static struct se_portal_group *ibmvscsis_make_tpg(struct se_wwn *wwn,
+        struct ibmvscsis_adapter *adapter =
+                container_of(wwn, struct ibmvscsis_adapter, tport_wwn);
+        struct se_node_acl *acl;
++       struct se_session *se_sess;
+        int ret;
+        char *dname = (char *)dev_name(&adapter->dma_dev->dev);
+ 
+@@ -347,16 +351,15 @@ static struct se_portal_group *ibmvscsis_make_tpg(struct se_wwn *wwn,
+        if (ret)
+                return ERR_PTR(-ENOMEM);
+ 
+-       adapter->se_sess = transport_init_session();
+-       if (!adapter->se_sess) {
++       se_sess = transport_init_session();
++       if (!se_sess) {
+                core_tpg_deregister(&adapter->se_tpg);
+                return ERR_PTR(-ENOMEM);
+        }
+ 
+        acl = core_tpg_check_initiator_node_acl(&adapter->se_tpg, dname);
+        if (!acl) {
+-               transport_free_session(adapter->se_sess);
+-               adapter->se_sess = NULL;
++               transport_free_session(se_sess);
+                return ERR_PTR(-ENOMEM);
+        }
+        adapter->se_sess->se_node_acl = acl;
+@@ -365,6 +368,10 @@ static struct se_portal_group *ibmvscsis_make_tpg(struct se_wwn *wwn,
+                                   adapter->se_sess->se_node_acl,
+                                   adapter->se_sess, adapter);
+ 
++       spin_lock_bh(&adapter->sess_lock);
++       adapter->se_sess = se_sess;
++       spin_unlock_bh(&adapter->sess_lock);
++
+        return &adapter->se_tpg;
+ }
+@@ -372,16 +379,19 @@ static void ibmvscsis_drop_tpg(struct se_portal_group *se_tpg)
+ {
+        struct ibmvscsis_adapter *adapter =
+                container_of(se_tpg, struct ibmvscsis_adapter, se_tpg);
++       struct se_session *se_sess;
+        unsigned long flags;
++       
++       transport_deregister_session_configfs(adapter->se_sess);
+ 
++       spin_lock_bh(&adapter->sess_lock);
++       se_sess = adapter->se_sess;
++       adapter->se_sess = NULL;
++       spin_unlock_bh(&adapter->sess_lock);
+ 
+-       transport_deregister_session_configfs(adapter->se_sess);
+        transport_free_session(adapter->se_sess);
+-       core_tpg_deregister(se_tpg);
+ 
+-       spin_lock_irqsave(&tpg_lock, flags);
+-       adapter->se_sess = NULL;
+-       spin_unlock_irqrestore(&tpg_lock, flags);
++       core_tpg_deregister(se_tpg);
+ }
+ 
+ static struct se_wwn *ibmvscsis_make_tport(struct target_fabric_configfs *tf,
+@@ -873,6 +883,17 @@ static int tcm_queuecommand(struct ibmvscsis_adapter *adapter,
+        data_len = srp_data_length(cmd, srp_cmd_direction(cmd));
+ 
+        se_cmd = &vsc->se_cmd;
++       /*
++        * Ensure that an adapter>se_sess and TCM TPG endpoint have been
++        * configured via ibmvscsis_make_tpg().
++        */
++       spin_lock_bh(&adapter->sess_lock);
++       if (!adapter->se_sess) {
++               spin_unlock_bh(&adapter->sess_lock);
++               printk(KERN_ERR "struct ibmvscsis_adapter->se_sess has not been configured\n");
++               return -ENODEV:
++       }
++       spin_unlock_bh(&adapter->sess_lock);
+ 
+        transport_init_se_cmd(se_cmd,
+                              adapter->se_tpg.se_tpg_tfo,
+@@ -1576,6 +1597,7 @@ static int ibmvscsis_probe(struct vio_dev *dev, const struct vio_device_id *id)
+        if (!adapter)
+                return -ENOMEM;
+ 
++       spin_lock_init(&adapter->sess_lock);
+        adapter->dma_dev = dev;
+ 
+        dma = (unsigned int *)vio_get_attribute(dev, "ibm,my-dma-window",
 
 
