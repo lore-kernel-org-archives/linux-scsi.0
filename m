@@ -1,140 +1,61 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Tue, 22 Mar 2011 08:20:07 +0900
-Message-ID: <20110322082013O.fujita.tomonori@lab.ntt.co.jp>
-References: <4D87BC8C.5090104@linux.vnet.ibm.com>
-	<1300741291.21880.17.camel@haakon2.linux-iscsi.org>
-	<4D87C22A.6070301@linux.vnet.ibm.com>
+Date: Tue, 22 Mar 2011 08:22:06 +0900
+Message-ID: <20110322082216V.fujita.tomonori@lab.ntt.co.jp>
+References: <1300746873.21880.81.camel@haakon2.linux-iscsi.org>
+	<20110322080628V.fujita.tomonori@lab.ntt.co.jp>
+	<1300749187.21880.109.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:57125 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:35870 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932108Ab1CUXUW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 19:20:22 -0400
-In-Reply-To: <4D87C22A.6070301@linux.vnet.ibm.com>
+	id S1755627Ab1CUXWX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2011 19:22:23 -0400
+In-Reply-To: <1300749187.21880.109.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: nab@linux-iscsi.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, brking@linux.vnet.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 
-On Mon, 21 Mar 2011 16:24:58 -0500
-Brian King <brking@linux.vnet.ibm.com> wrote:
+On Mon, 21 Mar 2011 16:13:07 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-> > If could send along the original misconfigured configfs layout that is
-> > causing the OOPs in handle_crq(), I would be happy to have a quick look.
+> On Tue, 2011-03-22 at 08:06 +0900, FUJITA Tomonori wrote:
+> > On Mon, 21 Mar 2011 15:34:33 -0700
+> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > 
+> > > On Mon, 2011-03-21 at 17:22 -0500, Brian King wrote:
+> > > > Tomo,
+> > > > 
+> > > > Thanks for all the work you've done with this driver. It is much appreciated.
+> > > > 
+> > > > What sort of performance are you seeing with this? With filebacked devices, I
+> > > > was seeing around 1 MB/sec doing a basic disktest run. I haven't compared this
+> > > > to ibmvstgt, but I'm pretty sure we did a fair bit better there. Perhaps I've got
+> > > > some setup issue?
+> > > > 
+> > > > I tried a ramdisk device and saw this on the server:
+> > > > 
+> > > > 
+> > > > DMA_TO_DEVICE not supported for RAMDISK_DR with task_sg_chaining=1
+> > > > 
+> > > > 
+> > > 
+> > > So for the RAMDISK_DR (direct) SGL memory mapping case we do not support
+> > > WRITEs for HW fabric modules using task_sg_changing=1.
+> > > 
+> > > Please go ahead and use RAMDISK_MCP instead, and I will look at adding a
+> > > special case in target_core_fabric_configfs.c code to disallow
+> > > RAMDISK_DR symlink creation of configfs ports for target fabric modules
+> > > using task_sg_chaining=1.
+> > 
+> > I really want to remove 'task_sg_chaining=0', all the drivers support
+> > sg chaining. It's a hacky. What drivers doesn't support it?
 > 
-> Here it is. As you can see, there is no ./target/ibmvscsis directory created. In order
+> It's only drivers for which we are not using HW provided scatterlists
+> into TCM backend memory, which today is just iscsi_target_mod
+> iscsi_target_rx_thread() -> sock_recvmsg() code.
 
-I suspect something like that. The driver can't crash with any
-configurations though.
-
-
-> to get it to work, I did the following. Please let me know if there is a better way
-> to do this...
-
-As I said long before, this kinda hardware configuration should
-automatically show up when we load the driver module. But the target
-core is broken in this regard.
-
-Anyway, I'll fix the driver not to crash with incomplete
-configurations.
-
-Thanks,
-
-
-> cd /sys/kernel/configfs/target
-> mkdir -p ibmvscsis/30000003/tpgt_1
-> mkdir ibmvscsis/30000003/tpgt_1/lun/lun_0
-> ln -s core/fileio_0/testfvd ibmvscsis/30000003/tpgt_1/lun/lun_0/default
-> 
-> I had previously created a file backed lun via:
-> 
-> tcm_node --fileio fileio_0/testfvd /vdisks/test 100000000
-> 
-> Thanks,
-> 
-> Brian
-> 
-> 
-> ./target
-> ./target/core
-> ./target/core/fileio_0
-> ./target/core/fileio_0/testfvd
-> ./target/core/fileio_0/testfvd/alua
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/members
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/tg_pt_gp_id
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/preferred
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/trans_delay_msecs
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/nonop_delay_msecs
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/alua_write_metadata
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/alua_access_type
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/alua_access_status
-> ./target/core/fileio_0/testfvd/alua/default_tg_pt_gp/alua_access_state
-> ./target/core/fileio_0/testfvd/wwn
-> ./target/core/fileio_0/testfvd/wwn/vpd_assoc_scsi_target_device
-> ./target/core/fileio_0/testfvd/wwn/vpd_assoc_target_port
-> ./target/core/fileio_0/testfvd/wwn/vpd_assoc_logical_unit
-> ./target/core/fileio_0/testfvd/wwn/vpd_protocol_identifier
-> ./target/core/fileio_0/testfvd/wwn/vpd_unit_serial
-> ./target/core/fileio_0/testfvd/pr
-> ./target/core/fileio_0/testfvd/pr/res_aptpl_metadata
-> ./target/core/fileio_0/testfvd/pr/res_aptpl_active
-> ./target/core/fileio_0/testfvd/pr/res_type
-> ./target/core/fileio_0/testfvd/pr/res_pr_type
-> ./target/core/fileio_0/testfvd/pr/res_pr_registered_i_pts
-> ./target/core/fileio_0/testfvd/pr/res_pr_holder_tg_port
-> ./target/core/fileio_0/testfvd/pr/res_pr_generation
-> ./target/core/fileio_0/testfvd/pr/res_pr_all_tgt_pts
-> ./target/core/fileio_0/testfvd/pr/res_holder
-> ./target/core/fileio_0/testfvd/attrib
-> ./target/core/fileio_0/testfvd/attrib/unmap_granularity_alignment
-> ./target/core/fileio_0/testfvd/attrib/unmap_granularity
-> ./target/core/fileio_0/testfvd/attrib/max_unmap_block_desc_count
-> ./target/core/fileio_0/testfvd/attrib/max_unmap_lba_count
-> ./target/core/fileio_0/testfvd/attrib/task_timeout
-> ./target/core/fileio_0/testfvd/attrib/queue_depth
-> ./target/core/fileio_0/testfvd/attrib/hw_queue_depth
-> ./target/core/fileio_0/testfvd/attrib/optimal_sectors
-> ./target/core/fileio_0/testfvd/attrib/max_sectors
-> ./target/core/fileio_0/testfvd/attrib/hw_max_sectors
-> ./target/core/fileio_0/testfvd/attrib/block_size
-> ./target/core/fileio_0/testfvd/attrib/hw_block_size
-> ./target/core/fileio_0/testfvd/attrib/enforce_pr_isids
-> ./target/core/fileio_0/testfvd/attrib/emulate_tpws
-> ./target/core/fileio_0/testfvd/attrib/emulate_tpu
-> ./target/core/fileio_0/testfvd/attrib/emulate_tas
-> ./target/core/fileio_0/testfvd/attrib/emulate_ua_intlck_ctrl
-> ./target/core/fileio_0/testfvd/attrib/emulate_write_cache
-> ./target/core/fileio_0/testfvd/attrib/emulate_fua_read
-> ./target/core/fileio_0/testfvd/attrib/emulate_fua_write
-> ./target/core/fileio_0/testfvd/attrib/emulate_dpo
-> ./target/core/fileio_0/testfvd/alua_lu_gp
-> ./target/core/fileio_0/testfvd/enable
-> ./target/core/fileio_0/testfvd/udev_path
-> ./target/core/fileio_0/testfvd/alias
-> ./target/core/fileio_0/testfvd/control
-> ./target/core/fileio_0/testfvd/info
-> ./target/core/fileio_0/hba_mode
-> ./target/core/fileio_0/hba_info
-> ./target/core/alua
-> ./target/core/alua/lu_gps
-> ./target/core/alua/lu_gps/default_lu_gp
-> ./target/core/alua/lu_gps/default_lu_gp/members
-> ./target/core/alua/lu_gps/default_lu_gp/lu_gp_id
-> ./target/version
-> 
-> 
-> 
-> -- 
-> Brian King
-> Linux on Power Virtualization
-> IBM Linux Technology Center
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please fix iscsi_target_mod then.
