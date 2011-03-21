@@ -1,12 +1,12 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 10/13] qla4xxx: added new function qla4xxx_relogin_all_devices
-Date: Mon, 21 Mar 2011 03:34:33 -0700
-Message-ID: <1300703676-27398-10-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 07/13] qla4xxx: cleanup function qla4xxx_process_ddb_changed
+Date: Mon, 21 Mar 2011 03:34:30 -0700
+Message-ID: <1300703676-27398-7-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:46146 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:46145 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753009Ab1CUKqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753001Ab1CUKqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 21 Mar 2011 06:46:05 -0400
 In-Reply-To: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,93 +16,60 @@ Cc: linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.c
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Move relogin to all devices code from do_dpc to new
-fuction qla4xxx_relogin_all_devices()
+We don't need to check ddb old state we can take action
+based on ddb new state.
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   54 +++++++++++++++++-----------------------
- 1 files changed, 23 insertions(+), 31 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |   15 +++------------
+ 1 files changed, 3 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 4a599d3..e70b6bf 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1218,6 +1218,27 @@ recover_ha_init_adapter:
- 	return status;
- }
- 
-+static void qla4xxx_relogin_all_devices(struct scsi_qla_host *ha)
-+{
-+	struct ddb_entry *ddb_entry, *dtemp;
-+
-+	list_for_each_entry_safe(ddb_entry, dtemp, &ha->ddb_list, list) {
-+		if ((atomic_read(&ddb_entry->state) == DDB_STATE_MISSING) ||
-+		    (atomic_read(&ddb_entry->state) == DDB_STATE_DEAD)) {
-+			if (ddb_entry->fw_ddb_device_state ==
-+			    DDB_DS_SESSION_ACTIVE) {
-+				atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
-+				ql4_printk(KERN_INFO, ha, "scsi%ld: %s: ddb[%d]"
-+				    " marked ONLINE\n",	ha->host_no, __func__,
-+				    ddb_entry->fw_ddb_index);
-+
-+				iscsi_unblock_session(ddb_entry->sess);
-+			} else
-+				qla4xxx_relogin_device(ha, ddb_entry);
-+		}
-+	}
-+}
-+
- void qla4xxx_wake_dpc(struct scsi_qla_host *ha)
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 8b5453a..bbb2e90 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -1409,7 +1409,6 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		uint32_t state, uint32_t conn_err)
  {
- 	if (ha->dpc_thread &&
-@@ -1326,13 +1347,7 @@ dpc_post_reset_ha:
- 	if (test_and_clear_bit(DPC_LINK_CHANGED, &ha->dpc_flags)) {
- 		if (!test_bit(AF_LINK_UP, &ha->flags)) {
- 			/* ---- link down? --- */
--			list_for_each_entry_safe(ddb_entry, dtemp,
--						 &ha->ddb_list, list) {
--				if (atomic_read(&ddb_entry->state) ==
--						DDB_STATE_ONLINE)
--					qla4xxx_mark_device_missing(ha,
--							ddb_entry);
--			}
-+			qla4xxx_mark_all_devices_missing(ha);
- 		} else {
- 			/* ---- link up? --- *
- 			 * F/W will auto login to all devices ONLY ONCE after
-@@ -1341,30 +1356,7 @@ dpc_post_reset_ha:
- 			 * manually relogin to devices when recovering from
- 			 * connection failures, logouts, expired KATO, etc. */
+ 	struct ddb_entry * ddb_entry;
+-	uint32_t old_fw_ddb_device_state;
  
--			list_for_each_entry_safe(ddb_entry, dtemp,
--							&ha->ddb_list, list) {
--				if ((atomic_read(&ddb_entry->state) ==
--						 DDB_STATE_MISSING) ||
--				    (atomic_read(&ddb_entry->state) ==
--						 DDB_STATE_DEAD)) {
--					if (ddb_entry->fw_ddb_device_state ==
--					    DDB_DS_SESSION_ACTIVE) {
--						atomic_set(&ddb_entry->state,
--							   DDB_STATE_ONLINE);
--						ql4_printk(KERN_INFO, ha,
--						    "scsi%ld: %s: ddb[%d]"
--						    " marked ONLINE\n",
--						    ha->host_no, __func__,
--						    ddb_entry->fw_ddb_index);
--
--						iscsi_unblock_session(
--						    ddb_entry->sess);
--					} else
--						qla4xxx_relogin_device(
--						    ha, ddb_entry);
--				}
--
--			}
-+			qla4xxx_relogin_all_devices(ha);
- 		}
+ 	/* check for out of range index */
+ 	if (fw_ddb_index >= MAX_DDB_ENTRIES)
+@@ -1425,22 +1424,14 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
  	}
  
+ 	/* Device already exists in our database. */
+-	old_fw_ddb_device_state = ddb_entry->fw_ddb_device_state;
+ 	DEBUG2(printk("scsi%ld: %s DDB - old state= 0x%x, new state=0x%x for "
+ 		      "index [%d]\n", ha->host_no, __func__,
+ 		      ddb_entry->fw_ddb_device_state, state, fw_ddb_index));
+-	if (old_fw_ddb_device_state == state &&
+-	    state == DDB_DS_SESSION_ACTIVE) {
+-		if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
+-			atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
+-			iscsi_unblock_session(ddb_entry->sess);
+-		}
+-		return QLA_SUCCESS;
+-	}
+ 
+ 	ddb_entry->fw_ddb_device_state = state;
+ 	/* Device is back online. */
+-	if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
++	if ((ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) &&
++	   (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE)) {
+ 		atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
+ 		atomic_set(&ddb_entry->relogin_retry_count, 0);
+ 		atomic_set(&ddb_entry->relogin_timer, 0);
+@@ -1452,7 +1443,7 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		 * Change the lun state to READY in case the lun TIMEOUT before
+ 		 * the device came back.
+ 		 */
+-	} else {
++	} else if (ddb_entry->fw_ddb_device_state != DDB_DS_SESSION_ACTIVE) {
+ 		/* Device went away, mark device missing */
+ 		if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE) {
+ 			DEBUG2(ql4_printk(KERN_INFO, ha, "%s mark missing "
 -- 
 1.7.3.2
 
