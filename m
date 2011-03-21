@@ -1,39 +1,103 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v4 00/12] iSCSI target v4.1.0-rc1 series for .39-rc1
-Date: Mon, 21 Mar 2011 14:18:05 -0700
-Message-ID: <1300742285.21880.28.camel@haakon2.linux-iscsi.org>
-References: <1300613497-2091-1-git-send-email-nab@linux-iscsi.org>
-	 <1300740867.21880.12.camel@haakon2.linux-iscsi.org>
-	 <1300741629.10634.46.camel@mulgrave.site>
-	 <1300741561.21880.22.camel@haakon2.linux-iscsi.org>
-	 <1300742107.10634.49.camel@mulgrave.site>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH] sd: Fix regression in sd_read_cache_type
+Date: Mon, 21 Mar 2011 17:29:52 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1103211727450.1637-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1300742107.10634.49.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>, Jesper Juhl <jj@chaosbits.net>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:44359 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753212Ab1CUV3z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 17:29:55 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Richard Senior <richard@r-senior.demon.co.uk>, Luben Tuikov <ltuikov@yahoo.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2011-03-21 at 16:15 -0500, James Bottomley wrote:
-> On Mon, 2011-03-21 at 14:06 -0700, Nicholas A. Bellinger wrote:
-> > > OK ... so if you're ready, you can send the next one as a patch not rfc.
-> > > 
-> > 
-> > Ok, I will give 1-2 days for the final round of feedback on RFC-v4, and
-> > post the next series as [PATCH].  Please let me know if this should
-> > happen sooner in order not to miss the second round of SCSI patches
-> > going to Linus this week.
-> 
-> It's already way too late for that.  The last patches need to be in
-> today/tomorrow for the -next shakeout, so this will be .41 material.
-> 
+This patch (as1454) fixes a regression in the sd driver.  Commit
+24d720b726c1a85f1962831ac30ad4d2ef8276b1 ([SCSI] Retrieve the Caching
+mode page) recently introduced the strategy of asking for all pages
+(page code 0x3F) instead of asking for the caching page (0x08) on
+devices that might not support it.  This ought to be safe, because sd
+already uses page code 0x3F when checking for write protection.
 
-Mmmm, in that case I will send out a mergable patch for -next shakeout
-testing in the next hours, and will respin as necessary.
+Unfortunately, the commit did not copy the checks used by
+sd_read_write_protect_flag().  Some devices don't support page code
+0x3F, and others require a fixed transfer length of 192 bytes.  This
+patch adds those checks into sd_read_cache_type().
 
-Thank you,
+Without this fix, some USB mass-storage devices crash when they
+receive a MODE SENSE command with page code 0x3F asking for only 4
+bytes of data.
 
---nab
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Reported-and-tested-by: Richard Senior <richard@r-senior.demon.co.uk>
+CC: Luben Tuikov <ltuikov@yahoo.com>
+CC: <stable@kernel.org>
+
+---
+
+The only stable kernel requiring this fix is 2.6.38; earlier kernels
+are okay.
+
+
+ drivers/scsi/sd.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -1904,17 +1904,23 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 
+ 	int dbd;
+ 	int modepage;
++	int first_len;
+ 	struct scsi_mode_data data;
+ 	struct scsi_sense_hdr sshdr;
+ 	int old_wce = sdkp->WCE;
+ 	int old_rcd = sdkp->RCD;
+ 	int old_dpofua = sdkp->DPOFUA;
+ 
++	first_len = 4;
+ 	if (sdp->skip_ms_page_8) {
+ 		if (sdp->type == TYPE_RBC)
+ 			goto defaults;
+ 		else {
++			if (sdp->skip_ms_page_3f)
++				goto defaults;
+ 			modepage = 0x3F;
++			if (sdp->use_192_bytes_for_3f)
++				first_len = 192;
+ 			dbd = 0;
+ 		}
+ 	} else if (sdp->type == TYPE_RBC) {
+@@ -1926,13 +1932,15 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 	}
+ 
+ 	/* cautiously ask */
+-	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, 4, &data, &sshdr);
++	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, first_len,
++			&data, &sshdr);
+ 
+ 	if (!scsi_status_is_good(res))
+ 		goto bad_sense;
+ 
+ 	if (!data.header_length) {
+ 		modepage = 6;
++		first_len = 0;
+ 		sd_printk(KERN_ERR, sdkp, "Missing header in MODE_SENSE response\n");
+ 	}
+ 
+@@ -1952,7 +1960,9 @@ sd_read_cache_type(struct scsi_disk *sdk
+ 	}
+ 
+ 	/* Get the data */
+-	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
++	if (len > first_len)
++		res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len,
++				&data, &sshdr);
+ 
+ 	if (scsi_status_is_good(res)) {
+ 		int offset = data.header_length + data.block_descriptor_length;
+
