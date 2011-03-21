@@ -1,60 +1,52 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [ANNOUNCE] lsscsi 0.25 beta 1, adds --size
-Date: Mon, 21 Mar 2011 18:13:23 +0100
-Message-ID: <4D878733.6020700@interlog.com>
-References: <4D7A870C.7040809@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC v2] support SATA ODD zero power
+Date: Mon, 21 Mar 2011 18:27:59 +0100
+Message-ID: <20110321172759.GJ12003@htj.dyndns.org>
+References: <4D8785C9020000230002A1D0@novprvlin0050.provo.novell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D7A870C.7040809@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@ORACLE.COM>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:47014 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753449Ab1CUR22 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 13:28:28 -0400
+Content-Disposition: inline
+In-Reply-To: <4D8785C9020000230002A1D0@novprvlin0050.provo.novell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joey Lee <jlee@novell.com>
+Cc: henry.su.ati@gmail.com, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 11-03-11 09:33 PM, Douglas Gilbert wrote:
-> Martin Petersen recently sent me some patches
-> to add a --size (or '-s') option to lsscsi:
->
-> # lsscsi -s
-> [0:0:0:0] disk ATA INTEL SSD 2CV1 /dev/sda 80.0GB
-> [10:0:0:0] disk Linux scsi_debug 0004 /dev/sdb 1.09TB
->
-> Martin and I had several hacks at this. Getting
-> utilities to work reliably with sysfs across various
-> kernel versions continues to be a crap shoot. So
-> I am putting this out as a beta and hoping that
-> anyone with problems will contact me (or Martin).
->
-> Note that this logic decodes /sys/block/sda/size
-> (for example) so disks that are present but without
-> a block interface (e.g. physical disks in a RAID)
-> will not have a size shown ('-' is shown instead).
->
-> Version 0.25 beta 1 is available at:
-> http://sg.danny.cz/scsi/lsscsi.html
-> More information can be found on that page including examples
-> and a Download section for the tarball:
-> http://sg.danny.cz/scsi/lsscsi-0.25b1.tgz
-> There are no debian or redhat packages built for this beta.
->
-> Version 0.25 2011/03/04 [svn: r91]
-> - add sas_port and fc_remote_ports transport information
-> - print enclosure_device entry
-> - add '--size' option to show size of disks
-> - add '--protmode' option to show protection information mode
->
-> Version 0.24 2010/06/12 [svn: r83]
-> .....
+Hello,
 
-Recent versions of lsscsi will fail to show block
-devices with recent kernels (e.g. lk 2.6.37 and
-lk 2.6.38) that have these .config settings:
-   CONFIG_SYSFS_DEPRECATED=y
-   CONFIG_SYSFS_DEPRECATED_V2=y
+On Mon, Mar 21, 2011 at 12:07:21AM -0600, Joey Lee wrote:
+> Sorry bother you for about support SATA ODD zero power in kernel.
+> 
+> Henry didn't reply me. 
+> Could you please kindly give any comment for this topic?
+> 
+> Looks the SATA ODD zero power didn't have good power reserve number,
+> does that mean support it in Linux kernel is not worthwhile?
 
-What will they dream up for _DEPRECATED_V3 ?
+Well, 0.1-0.2w is not nothing.  It could be meaningful I guess, but
+the concern that I have are...
 
-Doug Gilbert
+* How wildly is it gonna be deployed?  Most ultraportables don't have
+  ODDs to begin with and extra features in ATA land tend to be very
+  cumbersome to deploy.  It usually ends up like - half of them
+  reporting the supportq incorrectly, quarter of them malfunction when
+  enabled and so on.
+
+* Why is software involved in this at all?  The device needs to
+  process the eject button to begin with.  I don't really see why ACPI
+  or operating system needs to be involved here at all.  What prevents
+  ODD from implementing it itself?  Is there any fundamental reason
+  why OS should be involved?
+
+  The thing is that if it isn't essential, people aren't gonna
+  implement it anyway and we just end up with unused code.
+
+Thanks.
+
+-- 
+tejun
