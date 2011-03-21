@@ -1,55 +1,49 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] osst: wrong index used in inner loop
-Date: Mon, 21 Mar 2011 10:02:59 +0900
-Message-ID: <20110321100300P.fujita.tomonori@lab.ntt.co.jp>
-References: <4D8509D1.6080107@gmail.com>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Mon, 21 Mar 2011 10:09:04 +0900
+Message-ID: <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
+References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp>
+	<1299508803.12730.1.camel@mulgrave.site>
+	<4D83C78D.5040908@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:33071 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:57344 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752353Ab1CUBDw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 20 Mar 2011 21:03:52 -0400
-In-Reply-To: <4D8509D1.6080107@gmail.com>
+	id S1752283Ab1CUBJW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Mar 2011 21:09:22 -0400
+In-Reply-To: <4D83C78D.5040908@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: roel.kluin@gmail.com
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: James.Bottomley@suse.de, fujita.tomonori@lab.ntt.co.jp, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-On Sat, 19 Mar 2011 20:53:53 +0100
-roel <roel.kluin@gmail.com> wrote:
+Thanks for the testings,
 
-> Index i was already used in the outer loop.
+On Fri, 18 Mar 2011 15:58:53 -0500
+Brian King <brking@linux.vnet.ibm.com> wrote:
+
+> On 03/07/2011 08:40 AM, James Bottomley wrote:
+> > On Mon, 2011-03-07 at 13:41 +0900, FUJITA Tomonori wrote:
+> >> On Sat, 12 Feb 2011 14:27:26 -0600
+> >> James Bottomley <James.Bottomley@suse.de> wrote:
+> >>
+> >>>> Disregard my previous comment. It looks like current client should handle reservations
+> >>>> just fine without any further changes.
+> >>>
+> >>> So is that an ack for putting this in scsi-misc ... or did you want to
+> >>> do more testing first?
+> >>
+> >> Ping,
+> >>
+> >> Brian, James, can we merge this during the next merge window?
+> > 
+> > I'm still waiting for an ack from Brian.
 > 
-> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-> ---
->  drivers/scsi/osst.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> I'm not sure if this is the right fix, maybe a break or return
-> is missing?
+> Sorry for the delay... I've got this loaded in the lab and have managed to oops
+> a couple times. The first one was during shutdown, which I wasn't able to collect
+> any data for. The most recent occurred when a client was trying to login for the
+> first time:
 
-What are you trying to fix with this patch?
-
-
-> diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-> index 521e218..d6d6d89 100644
-> --- a/drivers/scsi/osst.c
-> +++ b/drivers/scsi/osst.c
-> @@ -4702,8 +4702,9 @@ static int __os_scsi_tape_open(struct inode * inode, struct file * filp)
->  				STp->partition = STp->new_partition = 0;
->  				if (STp->can_partitions)
->  					STp->nbr_partitions = 1;  /* This guess will be updated later if necessary */
-> -				for (i=0; i < ST_NBR_PARTITIONS; i++) {
-> -					STps = &(STp->ps[i]);
-> +				int j;
-> +				for (j=0; j < ST_NBR_PARTITIONS; j++) {
-> +					STps = &(STp->ps[j]);
->  					STps->rw = ST_IDLE;
->  					STps->eof = ST_NOEOF;
->  					STps->at_sm = 0;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You mean that the kernel crashes every time when a client logs in?
