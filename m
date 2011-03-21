@@ -1,79 +1,73 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: [build failure] Re: [GIT PULL] First round of SCSI updates for
- 2.6.38 merge window
-Date: Mon, 21 Mar 2011 13:21:11 +0100
-Message-ID: <20110321122111.GA17237@elte.hu>
-References: <1300392635.17266.5.camel@mulgrave.site>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Mon, 21 Mar 2011 07:56:18 -0500
+Message-ID: <4D874AF2.3090602@linux.vnet.ibm.com>
+References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp> <1299508803.12730.1.camel@mulgrave.site> <4D83C78D.5040908@linux.vnet.ibm.com> <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1300392635.17266.5.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:48303 "EHLO e4.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751247Ab1CUM4V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2011 08:56:21 -0400
+Received: from d01dlp01.pok.ibm.com (d01dlp01.pok.ibm.com [9.56.224.56])
+	by e4.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p2LCand6017051
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 08:36:49 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 3524938C803C
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 08:56:15 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p2LCuJM12707662
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 08:56:19 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p2LCuIdL011250
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Mar 2011 09:56:19 -0300
+In-Reply-To: <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
+
+On 03/20/2011 08:09 PM, FUJITA Tomonori wrote:
+> Thanks for the testings,
+> 
+> On Fri, 18 Mar 2011 15:58:53 -0500
+> Brian King <brking@linux.vnet.ibm.com> wrote:
+> 
+>> On 03/07/2011 08:40 AM, James Bottomley wrote:
+>>> On Mon, 2011-03-07 at 13:41 +0900, FUJITA Tomonori wrote:
+>>>> On Sat, 12 Feb 2011 14:27:26 -0600
+>>>> James Bottomley <James.Bottomley@suse.de> wrote:
+>>>>
+>>>>>> Disregard my previous comment. It looks like current client should handle reservations
+>>>>>> just fine without any further changes.
+>>>>>
+>>>>> So is that an ack for putting this in scsi-misc ... or did you want to
+>>>>> do more testing first?
+>>>>
+>>>> Ping,
+>>>>
+>>>> Brian, James, can we merge this during the next merge window?
+>>>
+>>> I'm still waiting for an ack from Brian.
+>>
+>> Sorry for the delay... I've got this loaded in the lab and have managed to oops
+>> a couple times. The first one was during shutdown, which I wasn't able to collect
+>> any data for. The most recent occurred when a client was trying to login for the
+>> first time:
+> 
+> You mean that the kernel crashes every time when a client logs in?
+
+That is correct. This occurs whether or not there are any virtual disks defined. This
+is occurring with current linus git head plus the three patches that were posted.
+
+-Brian
 
 
-* James Bottomley <James.Bottomley@suse.de> wrote:
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-> This represents the usual round of driver updates (fcoe, lpfc, qla2xx=
-x,
-> zfcp, bnx2i, mpt2sas, megaraid_sas, iscsi, cxgbi and hpsa) plus one n=
-ew
-> driver (bnx2fc) and as a bonus we move libsas from the old libata eh =
-to
-> the new one paving the way for junking the old one (once we can get i=
-pr
-> converted).
 
-The new bnx2fc driver does not build with module support disabled:
-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815:17: error: dereferencing pointe=
-r to incomplete type
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815:28: error: =E2=80=98MODULE_STAT=
-E_LIVE=E2=80=99 undeclared (first use in this function)
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1878:17: error: dereferencing pointe=
-r to incomplete type
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1878:28: error: =E2=80=98MODULE_STAT=
-E_LIVE=E2=80=99 undeclared (first use in this function)
-
-and this build breakage has been reported to you two weeks ago:
-
- http://lkml.org/lkml/2011/3/2/468
-
-In the future please do not push broken code upstream or put it into=20
-drivers/staging/scsi/ if it has outstanding problems. I'm using the hac=
-k below=20
-for the time being.
-
-Thanks,
-
-	Ingo
-
--------------------->
-=46rom dd6fd5ea95cba76a625e13910f35cd967ace7fe4 Mon Sep 17 00:00:00 200=
-1
-=46rom: Ingo Molnar <mingo@elte.hu>
-Date: Mon, 21 Mar 2011 13:15:51 +0100
-Subject: [PATCH] <not for upstream> scsi: Disable the bnx2fc driver for=
- the time being
-
-Does not build with CONFIG_MODULES disabled.
----
- drivers/scsi/bnx2fc/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/bnx2fc/Kconfig b/drivers/scsi/bnx2fc/Kconfig
-index 6a38080..6a111f0 100644
---- a/drivers/scsi/bnx2fc/Kconfig
-+++ b/drivers/scsi/bnx2fc/Kconfig
-@@ -1,6 +1,7 @@
- config SCSI_BNX2X_FCOE
- 	tristate "Broadcom NetXtreme II FCoE support"
- 	depends on PCI
-+	depends on BROKEN
- 	select NETDEVICES
- 	select NETDEV_1000
- 	select LIBFC
