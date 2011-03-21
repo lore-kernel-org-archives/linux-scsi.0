@@ -1,69 +1,83 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Mon, 21 Mar 2011 14:01:31 -0700
-Message-ID: <1300741291.21880.17.camel@haakon2.linux-iscsi.org>
-References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp>
-	 <1299508803.12730.1.camel@mulgrave.site>
-	 <4D83C78D.5040908@linux.vnet.ibm.com>
-	 <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
-	 <4D87BC8C.5090104@linux.vnet.ibm.com>
+Subject: Re: [RFC-v4 00/12] iSCSI target v4.1.0-rc1 series for .39-rc1
+Date: Mon, 21 Mar 2011 14:06:01 -0700
+Message-ID: <1300741561.21880.22.camel@haakon2.linux-iscsi.org>
+References: <1300613497-2091-1-git-send-email-nab@linux-iscsi.org>
+	 <1300740867.21880.12.camel@haakon2.linux-iscsi.org>
+	 <1300741629.10634.46.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35482 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:35493 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754237Ab1CUVIm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 17:08:42 -0400
-In-Reply-To: <4D87BC8C.5090104@linux.vnet.ibm.com>
+	with ESMTP id S1754374Ab1CUVNO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 17:13:14 -0400
+In-Reply-To: <1300741629.10634.46.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>, Jesper Juhl <jj@chaosbits.net>
 
-On Mon, 2011-03-21 at 16:01 -0500, Brian King wrote:
-> On 03/20/2011 08:09 PM, FUJITA Tomonori wrote:
-> > Thanks for the testings,
+On Mon, 2011-03-21 at 16:07 -0500, James Bottomley wrote:
+> On Mon, 2011-03-21 at 13:54 -0700, Nicholas A. Bellinger wrote:
+> > On Sun, 2011-03-20 at 02:31 -0700, Nicholas A. Bellinger wrote:
+> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > 
+> > > Greetings all,
+> > > 
+> > > This is the forth RFC series of the RisingTide Systems iSCSI target fabric
+> > > module compatible with mainline target core v4 -> for-39 target infrastructure.
+> > > 
+> > > More information about iscsi_target_mod is available here:
+> > > 
+> > > http://linux-iscsi.org/wiki/ISCSI/configFS
+> > > 
+> > > This series contains the updated drivers/target/iscsi/ source tree for modern
+> > > mainline code based on feedback from Christoph Hellwig that has been recently
+> > > pushed into the lio-core-2.6.git/lio-4.1 development branch.  This includes
+> > > another round of iSCSI network portal changes to use proper Linux/Net code
+> > > w/ IPv6/IPv4 iscsi_np->np_sockaddr, conversion of iSCSI TX thread context
+> > > to use schedule_timeout_interruptible(), and the renaming the majority of
+> > > functions to use the 'iscsit_*' function prefix based upon hch's feedback.
+> > > 
+> > > This series is currently rebased against .38-FINAL using target core v4.0.0-rc7-ml.
+> > > 
+> > > The full RFC-v4 series for iscsi-target is available here:
+> > > 
+> > >   git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-39-iscsi-target-v4
+> > > 
+
+<SNIP>
+
+> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > > 
 > > 
-> > On Fri, 18 Mar 2011 15:58:53 -0500
-> > Brian King <brking@linux.vnet.ibm.com> wrote:
+> > Hi Christoph, James and Co,
 > > 
-> >> On 03/07/2011 08:40 AM, James Bottomley wrote:
-> >>> On Mon, 2011-03-07 at 13:41 +0900, FUJITA Tomonori wrote:
-> >>>> On Sat, 12 Feb 2011 14:27:26 -0600
-> >>>> James Bottomley <James.Bottomley@suse.de> wrote:
-> >>>>
-> >>>>>> Disregard my previous comment. It looks like current client should handle reservations
-> >>>>>> just fine without any further changes.
-> >>>>>
-> >>>>> So is that an ack for putting this in scsi-misc ... or did you want to
-> >>>>> do more testing first?
-> >>>>
-> >>>> Ping,
-> >>>>
-> >>>> Brian, James, can we merge this during the next merge window?
-> >>>
-> >>> I'm still waiting for an ack from Brian.
-> >>
-> >> Sorry for the delay... I've got this loaded in the lab and have managed to oops
-> >> a couple times. The first one was during shutdown, which I wasn't able to collect
-> >> any data for. The most recent occurred when a client was trying to login for the
-> >> first time:
-> > 
-> > You mean that the kernel crashes every time when a client logs in?
+> > At this point I have no further changes beyond RFC-v4 for the initial
+> > merge of iscsi-target.  Please let me know if anything was missed from
+> > your review for the above changes, and I will get any remaining items
+> > addressed ASAP.
 > 
-> I think the crash I was seeing when the client logs in was just due to the fact that
-> I had things misconfigured. It took me a bit to figure out the configfs stuff. Didn't
-> realize at first I had to go off and manually create a lot of the configfs layout
-> described in the wiki page. Once I did that, I was able to get a LUN to successfully
-> report in on the client side. I'll start pounding on this a bit and see how things
-> hold up.
+> OK ... so if you're ready, you can send the next one as a patch not rfc.
 > 
 
-Hi Brian,
+Ok, I will give 1-2 days for the final round of feedback on RFC-v4, and
+post the next series as [PATCH].  Please let me know if this should
+happen sooner in order not to miss the second round of SCSI patches
+going to Linus this week.
 
-If could send along the original misconfigured configfs layout that is
-causing the OOPs in handle_crq(), I would be happy to have a quick look.
+> > Also James, how do you prefer this series be sent out for the initial
+> > merge in order avoid the vger lists max character limit..?
+> 
+> I don't really care ... it's fairly easy to combine stuff.  It's nice if
+> the first patch has the complete changelog ...
+> 
+
+Ok, so I will send out the 12 part series tagged as [PATCH], and will
+include a full changelog in the first patch, intending for the rest of
+the patches to be squashed into the first.
 
 Thank you,
 
