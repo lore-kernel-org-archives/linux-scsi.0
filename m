@@ -1,70 +1,71 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [build failure] Re: [GIT PULL] First round of SCSI updates for
- 2.6.38 merge window
-Date: Mon, 21 Mar 2011 18:59:34 +0100
-Message-ID: <20110321175934.GA4849@elte.hu>
-References: <1300392635.17266.5.camel@mulgrave.site>
- <20110321122111.GA17237@elte.hu>
- <1300725211.10634.20.camel@mulgrave.site>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] firmware/efi: export a routine to retrieve efi-variables
+ by GUID
+Date: Mon, 21 Mar 2011 11:41:35 -0700
+Message-ID: <4D879BDF.3060004@intel.com>
+References: <20110318221606.26841.92271.stgit@localhost6.localdomain6> <20110318225016.GB15921@suse.de> <AANLkTim+HB0GWzGiif=MvYHaiXMSLuVB6R0=UK3906xU@mail.gmail.com> <20110319002246.GB14249@suse.de> <4D8403C3.6020300@intel.com> <20110320001459.GA9237@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:36122 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754004Ab1CUR7i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 13:59:38 -0400
-Content-Disposition: inline
-In-Reply-To: <1300725211.10634.20.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110320001459.GA9237@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: "Jiang, Dave" <dave.jiang@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
+On 3/19/2011 5:14 PM, Greg KH wrote:
+> On Fri, Mar 18, 2011 at 06:15:47PM -0700, Dan Williams wrote:
+>> On 3/18/2011 5:22 PM, Greg KH wrote:
+>>> On Fri, Mar 18, 2011 at 04:10:10PM -0700, Dan Williams wrote:
+>>>>> I needed all patches in linux-next _before_ the merge window opened to
+>>>>> be able to accept it.
+>>>>
+>>>> Yes, I know, and as dmaengine maintainer I also hate being ambushed by
+>>>> last minute patches, but now I am unfortunately one of those annoying
+>>>> people on the other side of the coin.
+>>>
+>>> Then you should know better than to try to go around the well-known
+>>> rules :)
+>>
+>> Yes...
+>>
+>> /me about to push his luck
+>
+> <snip>
+>
+>> As Jeff pointed out:
+>> "It seemed like this was turning into another driver that would get
+>> held outside the kernel until it's "perfect."  If that is the case,
+>> Linus has also made it clear we should get drivers for high volume,
+>> shipping hardware into the kernel, even if its staging, if the
+>> alternative is to deny users the driver."
+>
+> That's fine, _BUT_ you are trying to go around the rules for the merge
+> window, which isn't acceptable.   Also note that your driver isn't
+> self-contained, it needs this change at the least, right?  Any others?
 
-* James Bottomley <James.Bottomley@suse.de> wrote:
+This efi export was a late discovery, we tried to use the existing 
+exports (raw efi runtime services) but it was not clean (needed to 
+duplicate utf-8 encoding in the driver).  The other external changes/bug 
+fixes needed for this driver were submitted weeks ago.
 
-> On Mon, 2011-03-21 at 13:21 +0100, Ingo Molnar wrote:
-> > * James Bottomley <James.Bottomley@suse.de> wrote:
-> >=20
-> > > This represents the usual round of driver updates (fcoe, lpfc,
-> > qla2xxx, > zfcp, bnx2i, mpt2sas, megaraid_sas, iscsi, cxgbi and hps=
-a)
-> > plus one new > driver (bnx2fc) and as a bonus we move libsas from t=
-he
-> > old libata eh to > the new one paving the way for junking the old o=
-ne
-> > (once we can get ipr > converted).
-> >=20
-> > The new bnx2fc driver does not build with module support disabled:
-> >=20
-> >  drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815:17: error: dereferencing
-> > pointer to incomplete type  drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815:=
-28:
-> > error: =E2=80=98MODULE_STATE_LIVE=E2=80=99 undeclared (first use in=
- this function)
-> >   drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1878:17: error: dereferencing
-> > pointer to incomplete type  drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1878:=
-28:
-> > error: =E2=80=98MODULE_STATE_LIVE=E2=80=99 undeclared (first use in=
- this function)
-> >=20
-> > and this build breakage has been reported to you two weeks ago:
-> >=20
-> >  http://lkml.org/lkml/2011/3/2/468
->=20
-> The actual fix is here:
->=20
-> http://git.kernel.org/?p=3Dlinux/kernel/git/jejb/scsi-misc-2.6.git;a=3D=
-commit;h=3De81460b20107ae83a7541d12b14114ea731a86fc
+>> So yes, we are targeting that exception.  I'm up for taking the heat
+>> directly if you want...  because the pull request will need to
+>> backed up with justification.
+>
+> No, sorry, I'll not take this for .40, all of my trees are merged with
+> Linus now for .40 and I'll only be sending him bugfixes until the .41
+> merge window opens up.
+>
+> Remember, it's only a 3 month wait, you knew about this _WAY_ in
+> advance, so it's not like this is something new, or out of the ordinary
+> at all.  Because of that, I fail to see why this is somehow not
+> expected.
 
-This too does the trick.
+Yes, we knew about this way in advance, we brought you in too late for a 
+.39-staging discussion.  Appreciate the consideration and understand the 
+outcome.
 
-Thanks,
-
-	Ingo
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
