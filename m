@@ -1,58 +1,47 @@
-From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 03/13] qla4xxx: Do not retry ISP82XX initialization if H/W state is failed
-Date: Mon, 21 Mar 2011 03:34:26 -0700
-Message-ID: <1300703676-27398-3-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: roel <roel.kluin@gmail.com>
+Subject: Re: [PATCH] osst: wrong index used in inner loop
+Date: Mon, 21 Mar 2011 12:00:06 +0100
+Message-ID: <4D872FB6.5000605@gmail.com>
+References: <4D8509D1.6080107@gmail.com> <20110321100300P.fujita.tomonori@lab.ntt.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:46171 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753111Ab1CUKtP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 06:49:15 -0400
-In-Reply-To: <1300703676-27398-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from mail-ew0-f46.google.com ([209.85.215.46]:35488 "EHLO
+	mail-ew0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752650Ab1CULAL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Mar 2011 07:00:11 -0400
+In-Reply-To: <20110321100300P.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, ravi.anand@qlogic.com, lalit.chandivade@qlogic.com, vikas.chaudhary@qlogic.com, Prasanna Mumbai <prasanna.mumbai@qlogic.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 
-From: Prasanna Mumbai <prasanna.mumbai@qlogic.com>
+On 21-03-11 02:02, FUJITA Tomonori wrote:
+> On Sat, 19 Mar 2011 20:53:53 +0100
+> roel <roel.kluin@gmail.com> wrote:
+> 
+>> Index i was already used in the outer loop.
+>>
+>> Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+>> ---
+>>  drivers/scsi/osst.c |    5 +++--
+>>  1 files changed, 3 insertions(+), 2 deletions(-)
+>>
+>> I'm not sure if this is the right fix, maybe a break or return
+>> is missing?
+> 
+> What are you trying to fix with this patch?
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Prasanna Mumbai <prasanna.mumbai@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_os.c |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
+`i' is used as an index in both the outer loop at 4689 and the
+inner loop at 4705.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 3fc1d25..d1501fb 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1630,6 +1630,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	uint8_t init_retry_count = 0;
- 	char buf[34];
- 	struct qla4_8xxx_legacy_intr_set *nx_legacy_intr;
-+	uint32_t dev_state;
- 
- 	if (pci_enable_device(pdev))
- 		return -1;
-@@ -1713,6 +1714,18 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	status = qla4xxx_initialize_adapter(ha, REBUILD_DDB_LIST);
- 	while ((!test_bit(AF_ONLINE, &ha->flags)) &&
- 	    init_retry_count++ < MAX_INIT_RETRIES) {
-+
-+		if (is_qla8022(ha)) {
-+			qla4_8xxx_idc_lock(ha);
-+			dev_state = qla4_8xxx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
-+			qla4_8xxx_idc_unlock(ha);
-+			if (dev_state == QLA82XX_DEV_FAILED) {
-+				ql4_printk(KERN_WARNING, ha, "%s: don't retry "
-+				    "initialize adapter. H/W is in failed state\n",
-+				    __func__);
-+				break;
-+			}
-+		}
- 		DEBUG2(printk("scsi: %s: retrying adapter initialization "
- 			      "(%d)\n", __func__, init_retry_count));
- 
--- 
-1.7.3.2
+if the UNIT_ATTENTION branch is taken `i' is overwritten after the
+loop at 4705 and becomes ST_NBR_PARTITIONS + 1, i.e. 5.
 
+So the loop at 4689 may not loop ten times when the UNIT_ATTENTION
+branch is taken. It may loop 5 times or more than ten or hot spin,
+dependent how often the UNIT_ATTENTION branch is taken. I'm not
+familiar with this driver, but it looked buggy to me.
+
+Roel
