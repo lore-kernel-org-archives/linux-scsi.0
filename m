@@ -1,91 +1,82 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH] bnx2fc: IO completion not processed due to missed
- wakeup
-Date: Mon, 21 Mar 2011 18:51:13 -0700
-Message-ID: <1300758673.644.435.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v4 07/12] iscsi-target: Add CHAP Authentication support
+	using libcrypto
+Date: Mon, 21 Mar 2011 18:50:51 -0700
+Message-ID: <1300758651.21880.207.camel@haakon2.linux-iscsi.org>
+References: <1300613497-2091-1-git-send-email-nab@linux-iscsi.org>
+	 <1300613497-2091-8-git-send-email-nab@linux-iscsi.org>
+	 <4D87F5E6.3010208@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4613 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756269Ab1CVBv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 21:51:26 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4D87F5E6.3010208@cs.wisc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>, Jesper Juhl <jj@chaosbits.net>
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@suse.de" <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, mchan@broadcom.com
 
-Driver does not detect a new CQE (completion queue entry) if a thread receives
-the wakup when it is in TASK_RUNNING state. Fix is to set the state to
-TASK_INTERRUPTIBLE while holding the fp_work_lock.
+On Mon, 2011-03-21 at 20:05 -0500, Mike Christie wrote:
+> On 03/20/2011 04:31 AM, Nicholas A. Bellinger wrote:
+> > +static struct iscsi_chap *chap_server_open(
+> > +	struct iscsi_conn *conn,
+> > +	struct iscsi_node_auth *auth,
+> > +	const char *A_str,
+> > +	char *AIC_str,
+> > +	unsigned int *AIC_len)
+> 
+> Lot of mixed cases like this and below in the patch.
+>
+> > +static int chap_server_compute_md5(
+> > +	struct iscsi_conn *conn,
+> > +	struct iscsi_node_auth *auth,
+> > +	char *NR_in_ptr,
+> > +	char *NR_out_ptr,
+> > +	unsigned int *NR_out_len)
+> 
+> 
 
-Also, Use __set_current_task() since it is now set inside a spinlock with
-synchronization.
+<nod>, fixing this up in lio-4.1 now..
 
-Two other related optimizations:
+> 
+> > +	return 2;
+> > +}
+> > diff --git a/drivers/target/iscsi/iscsi_target_auth.h b/drivers/target/iscsi/iscsi_target_auth.h
+> > new file mode 100644
+> > index 0000000..17b042d
+> > --- /dev/null
+> > +++ b/drivers/target/iscsi/iscsi_target_auth.h
+> 
+> 
+> 
+> > +
+> > +struct iscsi_chap {
+> > +	unsigned char	digest_type;
+> > +	unsigned char	id;
+> > +	unsigned char	challenge[CHAP_CHALLENGE_LENGTH];
+> > +	unsigned int	challenge_len;
+> > +	unsigned int	authenticate_target;
+> > +	unsigned int	chap_state;
+> > +} ____cacheline_aligned;
+> > +
+> 
+> Why are almost all structs in the patches ____cacheline_aligned? Is it 
+> something we are just doing now, or does this affect performance somehow 
+> even though the struct is not used in a perf path?
 
-1.  After we exit the while (!kthread_should_stop()) loop, use
-__set_current_state() since synchronization is no longer needed.
+For this particular case I wanted to make sure it was at least 32-bit
+word aligned for ARM to avoid the unaligned penalites for the single
+byte unsigned chars.
 
-2.  Remove set_current_state(TASK_RUNNING) after schedule() since it
-should always be TASK_RUNNING after schedule().
+There is also a handful of single byte unsigned chars, u8, and u16
+structure membmer usage in iscsi_target_core.h that is using
+____cacheline_aligned using in the non performance critical path.
+I would be happy to do a audit on these and convert to using the packed
+attributed..
 
-Reviewed-by: Michael Chan <mchan@broadcom.com>
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
+Just to double check, what is mainline convention for handling
+structures like this for 32-bit word aligned ISAs..?
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 2056890..e2e6475 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -437,17 +437,16 @@ static int bnx2fc_l2_rcv_thread(void *arg)
- 	set_current_state(TASK_INTERRUPTIBLE);
- 	while (!kthread_should_stop()) {
- 		schedule();
--		set_current_state(TASK_RUNNING);
- 		spin_lock_bh(&bg->fcoe_rx_list.lock);
- 		while ((skb = __skb_dequeue(&bg->fcoe_rx_list)) != NULL) {
- 			spin_unlock_bh(&bg->fcoe_rx_list.lock);
- 			bnx2fc_recv_frame(skb);
- 			spin_lock_bh(&bg->fcoe_rx_list.lock);
- 		}
-+		__set_current_state(TASK_INTERRUPTIBLE);
- 		spin_unlock_bh(&bg->fcoe_rx_list.lock);
--		set_current_state(TASK_INTERRUPTIBLE);
- 	}
--	set_current_state(TASK_RUNNING);
-+	__set_current_state(TASK_RUNNING);
- 	return 0;
- }
- 
-@@ -569,7 +568,6 @@ int bnx2fc_percpu_io_thread(void *arg)
- 	set_current_state(TASK_INTERRUPTIBLE);
- 	while (!kthread_should_stop()) {
- 		schedule();
--		set_current_state(TASK_RUNNING);
- 		spin_lock_bh(&p->fp_work_lock);
- 		while (!list_empty(&p->work_list)) {
- 			list_splice_init(&p->work_list, &work_list);
-@@ -583,10 +581,10 @@ int bnx2fc_percpu_io_thread(void *arg)
- 
- 			spin_lock_bh(&p->fp_work_lock);
- 		}
-+		__set_current_state(TASK_INTERRUPTIBLE);
- 		spin_unlock_bh(&p->fp_work_lock);
--		set_current_state(TASK_INTERRUPTIBLE);
- 	}
--	set_current_state(TASK_RUNNING);
-+	__set_current_state(TASK_RUNNING);
- 
- 	return 0;
- }
--- 
-1.7.0.6
+Thanks for your review Mike!
 
-
-
-
+--nab
