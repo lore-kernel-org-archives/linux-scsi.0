@@ -1,104 +1,91 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 12/12] iscsi-target: Add Makefile/Kconfig and update TCM top level
-Date: Mon, 21 Mar 2011 18:42:31 -0700
-Message-ID: <1300758151-8211-13-git-send-email-nab@linux-iscsi.org>
-References: <1300758151-8211-1-git-send-email-nab@linux-iscsi.org>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: [PATCH] bnx2fc: IO completion not processed due to missed
+ wakeup
+Date: Mon, 21 Mar 2011 18:51:13 -0700
+Message-ID: <1300758673.644.435.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=cp1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm21-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.137]:31343 "HELO
-	nm21-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932077Ab1CVBnf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 21:43:35 -0400
-In-Reply-To: <1300758151-8211-1-git-send-email-nab@linux-iscsi.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:4613 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756269Ab1CVBv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 Mar 2011 21:51:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: "James.Bottomley@suse.de" <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, mchan@broadcom.com
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Driver does not detect a new CQE (completion queue entry) if a thread receives
+the wakup when it is in TASK_RUNNING state. Fix is to set the state to
+TASK_INTERRUPTIBLE while holding the fp_work_lock.
 
-Add Makefile/Kconfig and update drivers/target/[Makefile,Kconfig]
-to include the fabric module.
+Also, Use __set_current_task() since it is now set inside a spinlock with
+synchronization.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Two other related optimizations:
+
+1.  After we exit the while (!kthread_should_stop()) loop, use
+__set_current_state() since synchronization is no longer needed.
+
+2.  Remove set_current_state(TASK_RUNNING) after schedule() since it
+should always be TASK_RUNNING after schedule().
+
+Reviewed-by: Michael Chan <mchan@broadcom.com>
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/target/Kconfig        |    1 +
- drivers/target/Makefile       |    1 +
- drivers/target/iscsi/Kconfig  |   17 +++++++++++++++++
- drivers/target/iscsi/Makefile |   20 ++++++++++++++++++++
- 4 files changed, 39 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/Kconfig
- create mode 100644 drivers/target/iscsi/Makefile
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-index 9ef2dbb..e0619cd 100644
---- a/drivers/target/Kconfig
-+++ b/drivers/target/Kconfig
-@@ -30,5 +30,6 @@ config TCM_PSCSI
- 	passthrough access to Linux/SCSI device
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 2056890..e2e6475 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -437,17 +437,16 @@ static int bnx2fc_l2_rcv_thread(void *arg)
+ 	set_current_state(TASK_INTERRUPTIBLE);
+ 	while (!kthread_should_stop()) {
+ 		schedule();
+-		set_current_state(TASK_RUNNING);
+ 		spin_lock_bh(&bg->fcoe_rx_list.lock);
+ 		while ((skb = __skb_dequeue(&bg->fcoe_rx_list)) != NULL) {
+ 			spin_unlock_bh(&bg->fcoe_rx_list.lock);
+ 			bnx2fc_recv_frame(skb);
+ 			spin_lock_bh(&bg->fcoe_rx_list.lock);
+ 		}
++		__set_current_state(TASK_INTERRUPTIBLE);
+ 		spin_unlock_bh(&bg->fcoe_rx_list.lock);
+-		set_current_state(TASK_INTERRUPTIBLE);
+ 	}
+-	set_current_state(TASK_RUNNING);
++	__set_current_state(TASK_RUNNING);
+ 	return 0;
+ }
  
- source "drivers/target/loopback/Kconfig"
-+source "drivers/target/iscsi/Kconfig"
+@@ -569,7 +568,6 @@ int bnx2fc_percpu_io_thread(void *arg)
+ 	set_current_state(TASK_INTERRUPTIBLE);
+ 	while (!kthread_should_stop()) {
+ 		schedule();
+-		set_current_state(TASK_RUNNING);
+ 		spin_lock_bh(&p->fp_work_lock);
+ 		while (!list_empty(&p->work_list)) {
+ 			list_splice_init(&p->work_list, &work_list);
+@@ -583,10 +581,10 @@ int bnx2fc_percpu_io_thread(void *arg)
  
- endif
-diff --git a/drivers/target/Makefile b/drivers/target/Makefile
-index 1178bbf..2fbc20e 100644
---- a/drivers/target/Makefile
-+++ b/drivers/target/Makefile
-@@ -24,3 +24,4 @@ obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
+ 			spin_lock_bh(&p->fp_work_lock);
+ 		}
++		__set_current_state(TASK_INTERRUPTIBLE);
+ 		spin_unlock_bh(&p->fp_work_lock);
+-		set_current_state(TASK_INTERRUPTIBLE);
+ 	}
+-	set_current_state(TASK_RUNNING);
++	__set_current_state(TASK_RUNNING);
  
- # Fabric modules
- obj-$(CONFIG_LOOPBACK_TARGET)	+= loopback/
-+obj-$(CONFIG_ISCSI_TARGET)	+= iscsi/
-diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
-new file mode 100644
-index 0000000..cc34243
---- /dev/null
-+++ b/drivers/target/iscsi/Kconfig
-@@ -0,0 +1,17 @@
-+config ISCSI_TARGET
-+	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
-+	select CRYPTO
-+	select CRYPTO_CRC32C
-+	select CRYPTO_CRC32C_INTEL if X86
-+	help
-+	Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
-+	Target Mode Stack.
-+
-+if ISCSI_TARGET
-+
-+config ISCSI_TARGET_DEBUG
-+	bool "LIO-Target iscsi_debug.h ring buffer messages"
-+	help
-+	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
-+
-+endif
-diff --git a/drivers/target/iscsi/Makefile b/drivers/target/iscsi/Makefile
-new file mode 100644
-index 0000000..5b9a2cf
---- /dev/null
-+++ b/drivers/target/iscsi/Makefile
-@@ -0,0 +1,20 @@
-+iscsi_target_mod-y +=		iscsi_target_parameters.o \
-+				iscsi_target_seq_pdu_list.o \
-+				iscsi_target_tq.o \
-+				iscsi_target_auth.o \
-+				iscsi_target_datain_values.o \
-+				iscsi_target_device.o \
-+				iscsi_target_erl0.o \
-+				iscsi_target_erl1.o \
-+				iscsi_target_erl2.o \
-+				iscsi_target_login.o \
-+				iscsi_target_nego.o \
-+				iscsi_target_nodeattrib.o \
-+				iscsi_target_tmr.o \
-+				iscsi_target_tpg.o \
-+				iscsi_target_util.o \
-+				iscsi_target.o \
-+				iscsi_target_configfs.o \
-+				iscsi_target_stat.o
-+
-+obj-$(CONFIG_ISCSI_TARGET)	+= iscsi_target_mod.o
+ 	return 0;
+ }
 -- 
-1.7.4.1
+1.7.0.6
+
+
+
 
