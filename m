@@ -1,44 +1,36 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.38 merge window
-Date: Tue, 22 Mar 2011 08:59:14 -0400
-Message-ID: <x49zkons44d.fsf@segfault.boston.devel.redhat.com>
-References: <1300392635.17266.5.camel@mulgrave.site>
-	<AANLkTinvwKzYiy5M=Eoae_ViRQwVBF-TgedKspP0qagE@mail.gmail.com>
-	<yq1fwqfu6dd.fsf@sermon.lab.mkp.net>
+From: "Information Technology" <laura.miehlich@cilla.de>
+Subject: Update Your E-Mail Details Account
+Date: Tue, 22 Mar 2011 15:38:39 +0100
+Message-ID: <201103221438.p2MEciFZ031349__42580.1658923321$1300804932$gmane$org@auth3.smtp.vt.edu>
+Reply-To: <financialcons729@aol.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1fwqfu6dd.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
-	message of "Tue, 22 Mar 2011 00:27:42 -0400")
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, James Bottomley <James.Bottomley@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lennier.cc.vt.edu ([198.82.162.213]:44207 "EHLO
+	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750898Ab1CVOmC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2011 10:42:02 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-"Martin K. Petersen" <martin.petersen@oracle.com> writes:
+Confirm Your E-Mail Details
+                                     
+Dear Email User
+This message is from Information Technology Services of This EMAIL to all our Staff. We are currently upgrading our database and e-mail center and this is our final notification to you.we have sent several messages to you without response.
+We are deleting all unused Mail account to create space for new accounts. In order not to be suspended, you will have to update your account by providing the information listed below:
 
->>>>>> "Geert" =3D=3D Geert Uytterhoeven <geert@linux-m68k.org> writes:
->
-> Geert> drivers/scsi/sd.c: In function =E2=80=98sd_prep_fn=E2=80=99:
-> Geert> drivers/scsi/sd.c:544: warning: =E2=80=98ret=E2=80=99 may be u=
-sed uninitialized
-> Geert> in this function
->
-> Sorry about that.
->
->
-> sd: Fail discard requests when logical block provisioning has been di=
-sabled
->
-> Ensure that we kill discard requests after logical block provisioning
-> has been disabled in sysfs.
->
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Confirm Your E-Mail Details..
+Email.......................
+User name: ..................
+Password:..............
+Re Confirm Password:.............
 
-Tao Ma posted a similar patch.  Anyway, either looks good to me.  This
-one will avoid an unecessary extra setting of ret, but I doubt that
-matters.
+If you fail to confirm your continuous usage of our services by confirming your email password now, your account will be disable and you will not be able to access your email.
 
-Reviewed-by: Jeff Moyer <jmoyer@redhat.com>
+You should immediately reply this email:  upgrading2010@mail.md   and enter your password in the above password column.
+Thanks for your understanding.
+
+Regard,
+IT Services
