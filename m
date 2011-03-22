@@ -1,44 +1,83 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC-v4 11/12] iscsi-target: Add misc utility and debug logic
-Date: Tue, 22 Mar 2011 00:04:31 -0500
-Message-ID: <4D882DDF.3040901@cs.wisc.edu>
-References: <1300613497-2091-1-git-send-email-nab@linux-iscsi.org> <1300613497-2091-12-git-send-email-nab@linux-iscsi.org> <4D881FC0.5080100@cs.wisc.edu>
+From: "Joey Lee" <jlee@novell.com>
+Subject: Re: [PATCH RFC v2] support SATA ODD zero power
+Date: Tue, 22 Mar 2011 01:06:19 -0600
+Message-ID: <4D88E51B020000230002A3AC@novprvlin0050.provo.novell.com>
+References: <4D8785C9020000230002A1D0@novprvlin0050.provo.novell.com>
+ <20110321172759.GJ12003@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D881FC0.5080100@cs.wisc.edu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>, Jesper Juhl <jj@chaosbits.net>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20110321172759.GJ12003@htj.dyndns.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: henry.su.ati@gmail.com, Joey Lee <JLee@novell.com>, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 03/21/2011 11:04 PM, Mike Christie wrote:
->> +
->> +void iscsit_ntoa2(unsigned char *buf, u32 ip)
->> +{
->> + memset(buf, 0, 18);
->> + sprintf(buf, "%u.%u.%u.%u", ((ip>> 24)& 0xff), ((ip>> 16)& 0xff),
->> + ((ip>> 8)& 0xff), (ip& 0xff));
->> +}
->
-> I think we have a function like this already.
->
->
-> If not, I think this should be:
->
-> sprintf(buf, "%pI4",
->
-> What s up with ipv6 btw? That uses %pI6.
->
+Hi Tejun,=20
+
+=E6=96=BC =E4=B8=80=EF=BC=8C2011-03-21 =E6=96=BC 18:27 +0100=EF=BC=8CTe=
+jun Heo =E6=8F=90=E5=88=B0=EF=BC=9A
+> Hello,
+>=20
+> On Mon, Mar 21, 2011 at 12:07:21AM -0600, Joey Lee wrote:
+> > Sorry bother you for about support SATA ODD zero power in kernel.
+> >=20
+> > Henry didn't reply me.=20
+> > Could you please kindly give any comment for this topic?
+> >=20
+> > Looks the SATA ODD zero power didn't have good power reserve number=
+,
+> > does that mean support it in Linux kernel is not worthwhile?
+>=20
+> Well, 0.1-0.2w is not nothing.  It could be meaningful I guess, but
+> the concern that I have are...
+>=20
+> * How wildly is it gonna be deployed?  Most ultraportables don't have
+>   ODDs to begin with and extra features in ATA land tend to be very
+>   cumbersome to deploy.  It usually ends up like - half of them
+>   reporting the supportq incorrectly, quarter of them malfunction whe=
+n
+>   enabled and so on.
+>=20
+
+Per my understood, Intel and AMD's are said they support SATA ODD zero
+power on newest notebook platform, and currently still have many
+notebook ship with ODD. Intel didn't open their spec for support this
+new function.
+
+And,=20
+Yes, this patch didn't test on ultraportables, especially for if they
+try to use USB ODD. For this patch We still need have a lot of test.
+
+> * Why is software involved in this at all?  The device needs to
+>   process the eject button to begin with.  I don't really see why ACP=
+I
+>   or operating system needs to be involved here at all.  What prevent=
+s
+>   ODD from implementing it itself?  Is there any fundamental reason
+>   why OS should be involved?
+>=20
+
+I don't know how does Intel implement this function (by EC or ACPI?),
+but AMD customized a ACPI object to provide this function. I will find =
+a
+chance to use this function on Windows platform, per hardward guys give
+me some information, Windows can resume the ODD power from GUI, I will
+try to verify it on Windows platform then reply to this mail.
+
+>   The thing is that if it isn't essential, people aren't gonna
+>   implement it anyway and we just end up with unused code.
+>=20
+> Thanks.
+>=20
+
+Yes, this is not a essential feature, just Intel and AMD all said they
+support it and some ODM also want to implement.=20
 
 
->> + if (tpg_np->tpg_np->np_sockaddr.ss_family == AF_INET6) {
->> + ip =&tpg_np->tpg_np->np_ipv6[0];
->
->
-> Is ip supposed to be a string with the ip address in it? If so is that
-> right? Is np_ipv6 a string with the ip address in human readable format,
-> but below np_ipv4 is the integer representation then you convert it.
+Thank's a lot!
+Joey Lee
 
-Ignore those, I see in the other patches it is different. Why is that?
+
