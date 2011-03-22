@@ -1,36 +1,63 @@
-From: "Information Technology" <laura.miehlich@cilla.de>
-Subject: Update Your E-Mail Details Account
-Date: Tue, 22 Mar 2011 15:38:39 +0100
-Message-ID: <201103221438.p2MEciFZ031349__42580.1658923321$1300804932$gmane$org@auth3.smtp.vt.edu>
-Reply-To: <financialcons729@aol.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [PATCH 02/36] scsi,rcu: convert call_rcu(fc_rport_free_rcu) to
+ kfree_rcu()
+Date: Tue, 22 Mar 2011 10:28:33 -0700
+Message-ID: <1300814913.19083.427.camel@fritz>
+References: <4D82D071.5020703@cn.fujitsu.com>
+	 <4D82D3FF.2080303@cn.fujitsu.com>  <4D82D45A.30102@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lennier.cc.vt.edu ([198.82.162.213]:44207 "EHLO
-	lennier.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750898Ab1CVOmC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2011 10:42:02 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <4D82D45A.30102@cn.fujitsu.com>
+Sender: netdev-owner@vger.kernel.org
+To: Lai Jiangshan <laijs@cn.fujitsu.com>
+Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>, Tejun Heo <tj@kernel.org>, Jarek Poplawski <jarkao2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Confirm Your E-Mail Details
-                                     
-Dear Email User
-This message is from Information Technology Services of This EMAIL to all our Staff. We are currently upgrading our database and e-mail center and this is our final notification to you.we have sent several messages to you without response.
-We are deleting all unused Mail account to create space for new accounts. In order not to be suspended, you will have to update your account by providing the information listed below:
+On Thu, 2011-03-17 at 20:41 -0700, Lai Jiangshan wrote:
+> 
+> The rcu callback fc_rport_free_rcu() just calls a kfree(),
+> so we use kfree_rcu() instead of the call_rcu(fc_rport_free_rcu).
+> 
+> Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
+> ---
+>  drivers/scsi/libfc/fc_rport.c |   14 +-------------
+>  1 files changed, 1 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index a7175ad..29abab0 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -151,18 +151,6 @@ static struct fc_rport_priv *fc_rport_create(struct fc_lport *lport,
+>  }
+>  
+>  /**
+> - * fc_rport_free_rcu() - Free a remote port
+> - * @rcu: The rcu_head structure inside the remote port
+> - */
+> -static void fc_rport_free_rcu(struct rcu_head *rcu)
+> -{
+> -	struct fc_rport_priv *rdata;
+> -
+> -	rdata = container_of(rcu, struct fc_rport_priv, rcu);
+> -	kfree(rdata);
+> -}
+> -
+> -/**
+>   * fc_rport_destroy() - Free a remote port after last reference is released
+>   * @kref: The remote port's kref
+>   */
+> @@ -171,7 +159,7 @@ static void fc_rport_destroy(struct kref *kref)
+>  	struct fc_rport_priv *rdata;
+>  
+>  	rdata = container_of(kref, struct fc_rport_priv, kref);
+> -	call_rcu(&rdata->rcu, fc_rport_free_rcu);
+> +	kfree_rcu(rdata, rcu);
 
-Confirm Your E-Mail Details..
-Email.......................
-User name: ..................
-Password:..............
-Re Confirm Password:.............
+I think this last line should be:
 
-If you fail to confirm your continuous usage of our services by confirming your email password now, your account will be disable and you will not be able to access your email.
+kfree_rcu(rdata, &rdata->rcu);
 
-You should immediately reply this email:  upgrading2010@mail.md   and enter your password in the above password column.
-Thanks for your understanding.
+Thanks, //Rob
 
-Regard,
-IT Services
