@@ -1,18 +1,109 @@
-From: W Lei <cunal@atauni.edu.tr>
-Subject: Deal
-Date: Tue, 22 Mar 2011 12:40:26 +0200 (EET)
-Message-ID: <189973167.57823.1300790426550.JavaMail.root__36524.4066961624$1300790996$gmane$org@zimbra>
-Reply-To: W Lei <wl2344@w.cn>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Tue, 22 Mar 2011 07:53:08 -0500
+Message-ID: <4D889BB4.4010102@linux.vnet.ibm.com>
+References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp> <1299508803.12730.1.camel@mulgrave.site> <4D83C78D.5040908@linux.vnet.ibm.com> <20110321100909E.fujita.tomonori@lab.ntt.co.jp> <4D87CF99.7040008@linux.vnet.ibm.com> <4D87D1B3.2030106@linux.vnet.ibm.com> <1300747720.21880.95.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from antispam.atauni.edu.tr ([194.27.49.13]:58973 "EHLO
-	antispam.atauni.edu.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753967Ab1CVKta (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2011 06:49:30 -0400
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:35316 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755699Ab1CVMxK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2011 08:53:10 -0400
+Received: from d01dlp01.pok.ibm.com (d01dlp01.pok.ibm.com [9.56.224.56])
+	by e3.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p2MCWduJ012020
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2011 08:32:39 -0400
+Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 8678F38C8039
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2011 08:53:04 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p2MCr9YZ335260
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2011 08:53:09 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p2MCr8VS002657
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Mar 2011 09:53:09 -0300
+In-Reply-To: <1300747720.21880.95.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+
+On 03/21/2011 05:48 PM, Nicholas A. Bellinger wrote:
+> On Mon, 2011-03-21 at 17:31 -0500, Brian King wrote:
+>> Just hit another potential issue. I was mapping / unmapping disks a couple times,
+>> so that might have helped trigger the issue. I had a file backed disk mapped
+>> to a vscsi lun, then unmapped it, mapped a ramdisk lun, then switched back to
+>> the filebacked lun after running into issues with the ramdisk lun and saw this:
+>>
+>>
+> 
+> By mapping/unmapping here do you mean unlinking+linking the Port/LUNs
+> w/o removing the active VIO I_T Nexus, or actually rmdir'ing the whole
+> $VIO_TARGET_FULLPATH/tpgt_1/ struct config_group..?
+
+I just did an rm -r $VIO_TARGET_FULLPATH/tpgt_1/lun/lun_0
+
+> 
+>> Mar 21 16:25:57 jn30a-lp4 kernel: unexpected fifo state
+>> Mar 21 16:25:57 jn30a-lp4 kernel: ------------[ cut here ]------------
+>> Mar 21 16:25:57 jn30a-lp4 kernel: WARNING: at drivers/scsi/libsrp.c:162
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Modules linked in: target_core_pscsi target_core_file target_core_iblock ip6t_LOG xt_tcpudp xt_pkttype ipt_LOG xt_limit ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 ip6table_raw xt_NOTRACK ipt_REJECT xt_state iptable_raw iptable_filter ip6table_mangle nf_conntrack_netbios_ns nf_conntrack_broadcast nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 ip_tables ip6table_filter ip6_tables x_tables ipv6 fuse loop dm_mod ibmvscsis libsrp scsi_tgt target_core_mod ses enclosure sg ibmveth configfs ext3 jbd mbcache sd_mod crc_t10dif ipr libata scsi_mod
+>> Mar 21 16:25:57 jn30a-lp4 kernel: NIP: d0000000047e0b38 LR: d0000000047e0b34 CTR: 0000000000000000
+>> Mar 21 16:25:57 jn30a-lp4 kernel: REGS: c00000033f4ef860 TRAP: 0700   Not tainted  (2.6.38-0.7-ppc64-06439-g5bab188-dirty)
+>> Mar 21 16:25:57 jn30a-lp4 kernel: MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 24002024  XER: 20000001
+>> Mar 21 16:25:57 jn30a-lp4 kernel: TASK = c00000033f2b39e0[58] 'kworker/4:1' THREAD: c00000033f4ec000 CPU: 4
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR00: d0000000047e0b34 c00000033f4efae0 d0000000047e9768 0000000000000018
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR04: 0000000000000000 0000000000000004 0000000000000000 c000000000f86610
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR08: c000000000f86b20 c0000000008b38b8 000000000007ffff 0000000000000001
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR12: 0000000028002082 c00000000f190a00 0000000000000000 0000000002b80610
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR16: 0000000001a3fc60 0000000002b80d08 0000000001a3fc70 0000000002c81870
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR20: 0000000002b805c8 0000000002c81888 0000000002c81910 0000000000000000
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR24: 0000000000000000 0000000000000000 0000000000000000 c00000033f1bacc0
+>> Mar 21 16:25:57 jn30a-lp4 kernel: GPR28: 0000000000000001 0000000000000000 d0000000047e9778 d0000000047e1ba8
+>> Mar 21 16:25:57 jn30a-lp4 kernel: NIP [d0000000047e0b38] .srp_iu_get+0x118/0x130 [libsrp]
+>> Mar 21 16:25:57 jn30a-lp4 kernel: LR [d0000000047e0b34] .srp_iu_get+0x114/0x130 [libsrp]
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Call Trace:
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efae0] [d0000000047e0b34] .srp_iu_get+0x114/0x130 [libsrp] (unreliable)
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efb90] [d0000000048f0d6c] .process_crq+0xcc/0x5b8 [ibmvscsis]
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efc50] [d0000000048f183c] .handle_crq+0x224/0xa60 [ibmvscsis]
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efd60] [c0000000000c2120] .process_one_work+0x198/0x518
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efe10] [c0000000000c297c] .worker_thread+0x1f4/0x518
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4efed0] [c0000000000cb4c4] .kthread+0xb4/0xc0
+>> Mar 21 16:25:57 jn30a-lp4 kernel: [c00000033f4eff90] [c00000000001e864] .kernel_thread+0x54/0x70
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Instruction dump:
+>> Mar 21 16:25:57 jn30a-lp4 kernel: e8010010 eb41ffd0 7c0803a6 eb61ffd8 eb81ffe0 eba1ffe8 ebc1fff0 ebe1fff8
+>> Mar 21 16:25:57 jn30a-lp4 kernel: 4e800020 e87e8058 48000739 e8410028 <0fe00000> 38000001 38600000 981f0000
+>> Mar 21 16:25:57 jn30a-lp4 kernel: ---[ end trace ec6b6139d888a732 ]---
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
+>> Mar 21 16:25:57 jn30a-lp4 kernel: Error getting IU from pool
+>>
+> 
+> If we are talking about the latter case I think my last patch should
+> address this with active I_T Nexus I/O and ibmvscsis_drop_tpg(), but I
+> will followup a bit more and send out a proper patch this evening for
+> Tomo to comment..
+> 
+>> I'm also seeing disktest complain on the client about commands taking longer than 120 seconds
+>> on occasion, which may play into the performance issue I mentioned in my previous mail.
+>>
+> 
+> Mmmm, please verify with RAMDISK_MCP backends as well, as by default
+> FILEIO has O_SYNC enabled..  This does seem strange for LTP disktest
+> however..
+
+How do I specify RAMDISK_MCP? I don't see an option in tcm_node.
+
+Thanks,
+
+Brian
 
 
-I'm Wang Lei, I have a deal worth 25 Million USD if interested, please contact me via my personal email: wl2344@w.cn
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
