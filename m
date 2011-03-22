@@ -1,15 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 01/12] iscsi: Resolve iscsi_proto.h naming conflicts with drivers/target/iscsi
-Date: Mon, 21 Mar 2011 18:42:20 -0700
-Message-ID: <1300758151-8211-2-git-send-email-nab@linux-iscsi.org>
-References: <1300758151-8211-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 00/12] iscsi-target: iSCSI target v4.1.0-rc1 series initial merge
+Date: Mon, 21 Mar 2011 18:42:19 -0700
+Message-ID: <1300758151-8211-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm19.bullet.mail.ne1.yahoo.com ([98.138.90.82]:27344 "HELO
-	nm19.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755715Ab1CVBmo (ORCPT
+Received: from nm28.bullet.mail.bf1.yahoo.com ([98.139.212.187]:46969 "HELO
+	nm28.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754756Ab1CVBmh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Mar 2011 21:42:44 -0400
-In-Reply-To: <1300758151-8211-1-git-send-email-nab@linux-iscsi.org>
+	Mon, 21 Mar 2011 21:42:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
@@ -17,222 +15,125 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch renames the following iscsi_proto.h structures to avoid
-namespace issues with drivers/target/iscsi/iscsi_target_core.h:
+Hi James,
 
-*) struct iscsi_cmd -> struct iscsi_scsi_req
-*) struct iscsi_cmd_rsp -> struct iscsi_scsi_rsp
-*) struct iscsi_login -> struct iscsi_login_req
+Here is an initial mergeable + squashable version of iscsi_target_mod.
 
-This patch includes useful ISCSI_FLAG_LOGIN_[CURRENT,NEXT]_STAGE*,
-and ISCSI_FLAG_SNACK_TYPE_* definitions used by iscsi_target_mod, and
-fixes the incorrect definition of struct iscsi_snack to following
-RFC-3720 Section 10.16. SNACK Request.
+Please merge patch #1 as a seperate libiscsi commit with Mike's signoff,
+and squash #2 -> #12 using the commit message message of patch #2 for
+an initial mergeable commit.
 
-Also, this patch updates libiscsi, iSER, be2iscsi, and bn2xi to
-use the updated structure definitions in a handful of locations.
+I will follow with any comments from Chrisopth, Mike & Co.
+
+Thanks!
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/infiniband/ulp/iser/iser_initiator.c |    2 +-
- drivers/scsi/be2iscsi/be_main.h              |    4 +-
- drivers/scsi/bnx2i/bnx2i_hwi.c               |    8 +++---
- drivers/scsi/bnx2i/bnx2i_iscsi.c             |    2 +-
- drivers/scsi/libiscsi.c                      |    6 ++--
- include/scsi/iscsi_proto.h                   |   30 +++++++++++++++++++-------
- 6 files changed, 33 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
-index 95a08a8..d73bab3 100644
---- a/drivers/infiniband/ulp/iser/iser_initiator.c
-+++ b/drivers/infiniband/ulp/iser/iser_initiator.c
-@@ -271,7 +271,7 @@ int iser_send_command(struct iscsi_conn *conn,
- 	unsigned long edtl;
- 	int err;
- 	struct iser_data_buf *data_buf;
--	struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
-+	struct iscsi_scsi_req *hdr =  (struct iscsi_scsi_req *)task->hdr;
- 	struct scsi_cmnd *sc  =  task->sc;
- 	struct iser_tx_desc *tx_desc = &iser_task->desc;
- 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 90eb74f..205c502 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -398,7 +398,7 @@ struct amap_pdu_data_out {
- };
- 
- struct be_cmd_bhs {
--	struct iscsi_cmd iscsi_hdr;
-+	struct iscsi_scsi_req iscsi_hdr;
- 	unsigned char pad1[16];
- 	struct pdu_data_out iscsi_data_pdu;
- 	unsigned char pad2[BE_SENSE_INFO_SIZE -
-@@ -429,7 +429,7 @@ struct be_nonio_bhs {
- };
- 
- struct be_status_bhs {
--	struct iscsi_cmd iscsi_hdr;
-+	struct iscsi_scsi_req iscsi_hdr;
- 	unsigned char pad1[16];
- 	/**
- 	 * The plus 2 below is to hold the sense info length that gets
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 96505e3..f947c80 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -326,11 +326,11 @@ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
- {
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct bnx2i_login_request *login_wqe;
--	struct iscsi_login *login_hdr;
-+	struct iscsi_login_req *login_hdr;
- 	u32 dword;
- 
- 	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
--	login_hdr = (struct iscsi_login *)task->hdr;
-+	login_hdr = (struct iscsi_login_req *)task->hdr;
- 	login_wqe = (struct bnx2i_login_request *)
- 						bnx2i_conn->ep->qp.sq_prod_qe;
- 
-@@ -1288,7 +1288,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
- 	struct bnx2i_cmd_response *resp_cqe;
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct iscsi_task *task;
--	struct iscsi_cmd_rsp *hdr;
-+	struct iscsi_scsi_rsp *hdr;
- 	u32 datalen = 0;
- 
- 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
-@@ -1315,7 +1315,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
- 	}
- 	bnx2i_iscsi_unmap_sg_list(bnx2i_cmd);
- 
--	hdr = (struct iscsi_cmd_rsp *)task->hdr;
-+	hdr = (struct iscsi_scsi_rsp *)task->hdr;
- 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
- 	hdr->opcode = resp_cqe->op_code;
- 	hdr->max_cmdsn = cpu_to_be32(resp_cqe->max_cmd_sn);
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index f0dce26..21f3d27 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1203,7 +1203,7 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
- 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
- 	struct scsi_cmnd *sc = task->sc;
- 	struct bnx2i_cmd *cmd = task->dd_data;
--	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
-+	struct iscsi_scsi_req *hdr = (struct iscsi_scsi_req *) task->hdr;
- 
- 	/*
- 	 * If there is no scsi_cmnd this must be a mgmt task
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index da8b615..d85154c 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -360,7 +360,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 	struct iscsi_conn *conn = task->conn;
- 	struct iscsi_session *session = conn->session;
- 	struct scsi_cmnd *sc = task->sc;
--	struct iscsi_cmd *hdr;
-+	struct iscsi_scsi_req *hdr;
- 	unsigned hdrlength, cmd_len;
- 	itt_t itt;
- 	int rc;
-@@ -374,7 +374,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 		if (rc)
- 			return rc;
- 	}
--	hdr = (struct iscsi_cmd *) task->hdr;
-+	hdr = (struct iscsi_scsi_req *) task->hdr;
- 	itt = hdr->itt;
- 	memset(hdr, 0, sizeof(*hdr));
- 
-@@ -830,7 +830,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 			       struct iscsi_task *task, char *data,
- 			       int datalen)
- {
--	struct iscsi_cmd_rsp *rhdr = (struct iscsi_cmd_rsp *)hdr;
-+	struct iscsi_scsi_rsp *rhdr = (struct iscsi_scsi_rsp *)hdr;
- 	struct iscsi_session *session = conn->session;
- 	struct scsi_cmnd *sc = task->sc;
- 
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index dd0a52c..a9c9058 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -116,7 +116,7 @@ struct iscsi_ahs_hdr {
- #define ISCSI_CDB_SIZE			16
- 
- /* iSCSI PDU Header */
--struct iscsi_cmd {
-+struct iscsi_scsi_req {
- 	uint8_t opcode;
- 	uint8_t flags;
- 	__be16 rsvd2;
-@@ -161,7 +161,7 @@ struct iscsi_ecdb_ahdr {
- };
- 
- /* SCSI Response Header */
--struct iscsi_cmd_rsp {
-+struct iscsi_scsi_rsp {
- 	uint8_t opcode;
- 	uint8_t flags;
- 	uint8_t response;
-@@ -406,7 +406,7 @@ struct iscsi_text_rsp {
- };
- 
- /* Login Header */
--struct iscsi_login {
-+struct iscsi_login_req {
- 	uint8_t opcode;
- 	uint8_t flags;
- 	uint8_t max_version;	/* Max. version supported */
-@@ -427,7 +427,13 @@ struct iscsi_login {
- #define ISCSI_FLAG_LOGIN_TRANSIT		0x80
- #define ISCSI_FLAG_LOGIN_CONTINUE		0x40
- #define ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK	0x0C	/* 2 bits */
-+#define ISCSI_FLAG_LOGIN_CURRENT_STAGE1		0x04
-+#define ISCSI_FLAG_LOGIN_CURRENT_STAGE2		0x08
-+#define ISCSI_FLAG_LOGIN_CURRENT_STAGE3		0x0C
- #define ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK	0x03	/* 2 bits */
-+#define ISCSI_FLAG_LOGIN_NEXT_STAGE1		0x01
-+#define ISCSI_FLAG_LOGIN_NEXT_STAGE2		0x02
-+#define ISCSI_FLAG_LOGIN_NEXT_STAGE3		0x03
- 
- #define ISCSI_LOGIN_CURRENT_STAGE(flags) \
- 	((flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2)
-@@ -550,17 +556,25 @@ struct iscsi_logout_rsp {
- struct iscsi_snack {
- 	uint8_t opcode;
- 	uint8_t flags;
--	uint8_t rsvd2[14];
-+	uint8_t rsvd2[2];
-+	uint8_t hlength;
-+	uint8_t dlength[3];
-+	uint8_t lun[8];
- 	itt_t	 itt;
-+	__be32  ttt;
-+	uint8_t rsvd3[4];
-+	__be32  exp_statsn;
-+	uint8_t rsvd4[8];
- 	__be32	begrun;
- 	__be32	runlength;
--	__be32	exp_statsn;
--	__be32	rsvd3;
--	__be32	exp_datasn;
--	uint8_t rsvd6[8];
- };
- 
- /* SNACK PDU flags */
-+#define ISCSI_FLAG_SNACK_TYPE_DATA		0
-+#define ISCSI_FLAG_SNACK_TYPE_R2T		0
-+#define ISCSI_FLAG_SNACK_TYPE_STATUS		1
-+#define ISCSI_FLAG_SNACK_TYPE_DATA_ACK		2
-+#define ISCSI_FLAG_SNACK_TYPE_RDATA		3
- #define ISCSI_FLAG_SNACK_TYPE_MASK	0x0F	/* 4 bits */
- 
- /* Reject Message Header */
+Nicholas Bellinger (12):
+  iscsi: Resolve iscsi_proto.h naming conflicts with
+    drivers/target/iscsi
+  iscsi-target: Add iSCSI fabric support for target v4
+  iscsi-target: Add TCM v4 compatiable ConfigFS control plane
+  iscsi-target: Add configfs fabric dependent statistics
+  iscsi-target: Add TPG and Device logic
+  iscsi-target: Add iSCSI Login Negotiation and Parameter logic
+  iscsi-target: Add CHAP Authentication support using libcrypto
+  iscsi-target: Add Sequence/PDU list + DataIN response logic
+  iscsi-target: Add iSCSI Error Recovery Hierarchy support
+  iscsi-target: Add support for task management operations
+  iscsi-target: Add misc utility and debug logic
+  iscsi-target: Add Makefile/Kconfig and update TCM top level
+
+ drivers/infiniband/ulp/iser/iser_initiator.c      |    2 +-
+ drivers/scsi/be2iscsi/be_main.h                   |    4 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c                    |    8 +-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c                  |    2 +-
+ drivers/scsi/libiscsi.c                           |    6 +-
+ drivers/target/Kconfig                            |    1 +
+ drivers/target/Makefile                           |    1 +
+ drivers/target/iscsi/Kconfig                      |   17 +
+ drivers/target/iscsi/Makefile                     |   20 +
+ drivers/target/iscsi/iscsi_target.c               | 5047 +++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target.h               |   32 +
+ drivers/target/iscsi/iscsi_target_auth.c          |  496 ++
+ drivers/target/iscsi/iscsi_target_auth.h          |   32 +
+ drivers/target/iscsi/iscsi_target_configfs.c      | 1922 ++++++++
+ drivers/target/iscsi/iscsi_target_configfs.h      |    7 +
+ drivers/target/iscsi/iscsi_target_core.h          |  882 ++++
+ drivers/target/iscsi/iscsi_target_datain_values.c |  531 +++
+ drivers/target/iscsi/iscsi_target_datain_values.h |   15 +
+ drivers/target/iscsi/iscsi_target_debug.h         |  113 +
+ drivers/target/iscsi/iscsi_target_device.c        |  107 +
+ drivers/target/iscsi/iscsi_target_device.h        |    9 +
+ drivers/target/iscsi/iscsi_target_erl0.c          | 1005 ++++
+ drivers/target/iscsi/iscsi_target_erl0.h          |   17 +
+ drivers/target/iscsi/iscsi_target_erl1.c          | 1305 ++++++
+ drivers/target/iscsi/iscsi_target_erl1.h          |   28 +
+ drivers/target/iscsi/iscsi_target_erl2.c          |  483 ++
+ drivers/target/iscsi/iscsi_target_erl2.h          |   18 +
+ drivers/target/iscsi/iscsi_target_login.c         | 1282 ++++++
+ drivers/target/iscsi/iscsi_target_login.h         |   13 +
+ drivers/target/iscsi/iscsi_target_nego.c          | 1068 +++++
+ drivers/target/iscsi/iscsi_target_nego.h          |   19 +
+ drivers/target/iscsi/iscsi_target_nodeattrib.c    |  264 ++
+ drivers/target/iscsi/iscsi_target_nodeattrib.h    |   14 +
+ drivers/target/iscsi/iscsi_target_parameters.c    | 1909 ++++++++
+ drivers/target/iscsi/iscsi_target_parameters.h    |  271 ++
+ drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |  667 +++
+ drivers/target/iscsi/iscsi_target_seq_pdu_list.h  |   88 +
+ drivers/target/iscsi/iscsi_target_stat.c          |  950 ++++
+ drivers/target/iscsi/iscsi_target_stat.h          |   64 +
+ drivers/target/iscsi/iscsi_target_tmr.c           |  854 ++++
+ drivers/target/iscsi/iscsi_target_tmr.h           |   14 +
+ drivers/target/iscsi/iscsi_target_tpg.c           |  788 ++++
+ drivers/target/iscsi/iscsi_target_tpg.h           |   43 +
+ drivers/target/iscsi/iscsi_target_tq.c            |  552 +++
+ drivers/target/iscsi/iscsi_target_tq.h            |   89 +
+ drivers/target/iscsi/iscsi_target_util.c          | 2526 +++++++++++
+ drivers/target/iscsi/iscsi_target_util.h          |  117 +
+ include/scsi/iscsi_proto.h                        |   30 +-
+ 48 files changed, 23713 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/target/iscsi/Kconfig
+ create mode 100644 drivers/target/iscsi/Makefile
+ create mode 100644 drivers/target/iscsi/iscsi_target.c
+ create mode 100644 drivers/target/iscsi/iscsi_target.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_configfs.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_configfs.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_core.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_debug.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_device.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_device.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl0.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl0.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl1.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl1.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl2.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl2.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_login.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_login.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_nego.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_nego.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_parameters.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_parameters.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_stat.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_stat.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tpg.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tpg.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tq.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tq.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_util.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_util.h
+
 -- 
 1.7.4.1
 
