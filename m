@@ -1,77 +1,50 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH 02/36] scsi,rcu: convert call_rcu(fc_rport_free_rcu) to
- kfree_rcu()
-Date: Tue, 22 Mar 2011 23:50:14 -0700
-Message-ID: <20110323065014.GU2322@linux.vnet.ibm.com>
-References: <4D82D071.5020703@cn.fujitsu.com>
- <4D82D3FF.2080303@cn.fujitsu.com>
- <4D82D45A.30102@cn.fujitsu.com>
- <1300814913.19083.427.camel@fritz>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT] isci: fixes and cleanups
+Date: Wed, 23 Mar 2011 01:04:55 -0700
+Message-ID: <AANLkTi=UHZ-=LsApBic-fpFRGxeJULFh621bWvjLusCy@mail.gmail.com>
+References: <1299747356.31565.24.camel@dwillia2-linux>
+	<20110318151807.GA13636@infradead.org>
+	<20110318153829.GA13169@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1300814913.19083.427.camel@fritz>
-Sender: netdev-owner@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: Lai Jiangshan <laijs@cn.fujitsu.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>, Tejun Heo <tj@kernel.org>, Jarek Poplawski <jarkao2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:46426 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753588Ab1CWIE5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 04:04:57 -0400
+Received: by fxm17 with SMTP id 17so7101745fxm.19
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2011 01:04:56 -0700 (PDT)
+In-Reply-To: <20110318153829.GA13169@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, David Milburn <dmilburn@redhat.com>, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Mar 22, 2011 at 10:28:33AM -0700, Robert Love wrote:
-> On Thu, 2011-03-17 at 20:41 -0700, Lai Jiangshan wrote:
-> > 
-> > The rcu callback fc_rport_free_rcu() just calls a kfree(),
-> > so we use kfree_rcu() instead of the call_rcu(fc_rport_free_rcu).
-> > 
-> > Signed-off-by: Lai Jiangshan <laijs@cn.fujitsu.com>
-> > ---
-> >  drivers/scsi/libfc/fc_rport.c |   14 +-------------
-> >  1 files changed, 1 insertions(+), 13 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-> > index a7175ad..29abab0 100644
-> > --- a/drivers/scsi/libfc/fc_rport.c
-> > +++ b/drivers/scsi/libfc/fc_rport.c
-> > @@ -151,18 +151,6 @@ static struct fc_rport_priv *fc_rport_create(struct fc_lport *lport,
-> >  }
-> >  
-> >  /**
-> > - * fc_rport_free_rcu() - Free a remote port
-> > - * @rcu: The rcu_head structure inside the remote port
-> > - */
-> > -static void fc_rport_free_rcu(struct rcu_head *rcu)
-> > -{
-> > -	struct fc_rport_priv *rdata;
-> > -
-> > -	rdata = container_of(rcu, struct fc_rport_priv, rcu);
-> > -	kfree(rdata);
-> > -}
-> > -
-> > -/**
-> >   * fc_rport_destroy() - Free a remote port after last reference is released
-> >   * @kref: The remote port's kref
-> >   */
-> > @@ -171,7 +159,7 @@ static void fc_rport_destroy(struct kref *kref)
-> >  	struct fc_rport_priv *rdata;
-> >  
-> >  	rdata = container_of(kref, struct fc_rport_priv, kref);
-> > -	call_rcu(&rdata->rcu, fc_rport_free_rcu);
-> > +	kfree_rcu(rdata, rcu);
-> 
-> I think this last line should be:
-> 
-> kfree_rcu(rdata, &rdata->rcu);
+On Fri, Mar 18, 2011 at 8:38 AM, Christoph Hellwig <hch@infradead.org> =
+wrote:
+> On Fri, Mar 18, 2011 at 11:18:07AM -0400, Christoph Hellwig wrote:
+>> Care to post a patch, or in case it's too large a patch link? =A0git=
+ trees
+>> are inherently unreviewable.
+>
+> Sorry, just noticed the patch series. =A0I still don't quite see the
+> connection between the series and the tree, but I'll assume they end =
+up
+> with the same result.
+>
 
-Hello, Robert,
+They will end up with the same result.  I'm assuming the in-progress
+rework state is not that interesting to post every patch to
+linux-scsi.
 
-I believe that it is correct as is.  The kfree_rcu() definition is as
-follows:
+As we have release candidates I will reflow the patch series
+(lldd+core) for review.
 
-#define kfree_rcu(ptr, rcu_head)					\
-	__kfree_rcu(&((ptr)->rcu_head), offsetof(typeof(*(ptr)), rcu_head))
-
-Then __kfree_rcu() encodes the offset into the rcu_head so that it can
-be handled properly at the end of the grace period.
-
-							Thanx, Paul
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
