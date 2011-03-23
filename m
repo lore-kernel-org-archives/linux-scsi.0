@@ -1,74 +1,87 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Wed, 23 Mar 2011 13:34:41 -0700
-Message-ID: <1300912481.18039.25.camel@haakon2.linux-iscsi.org>
-References: <20110307134033K.fujita.tomonori@lab.ntt.co.jp>
-	 <1299508803.12730.1.camel@mulgrave.site>
-	 <4D83C78D.5040908@linux.vnet.ibm.com>
-	 <20110321100909E.fujita.tomonori@lab.ntt.co.jp>
-	 <4D87CF99.7040008@linux.vnet.ibm.com> <4D87D1B3.2030106@linux.vnet.ibm.com>
-	 <1300747720.21880.95.camel@haakon2.linux-iscsi.org>
-	 <4D889BB4.4010102@linux.vnet.ibm.com>
-	 <1300831607.21880.365.camel@haakon2.linux-iscsi.org>
-	 <4D8A0F89.201@linux.vnet.ibm.com>
+Date: Wed, 23 Mar 2011 14:17:10 -0700
+Message-ID: <1300915030.18039.66.camel@haakon2.linux-iscsi.org>
+References: <1300868790.21880.499.camel@haakon2.linux-iscsi.org>
+	 <20110323174843I.fujita.tomonori@lab.ntt.co.jp>
+	 <1300874403.21880.519.camel@haakon2.linux-iscsi.org>
+	 <20110323210357P.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51773 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51861 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933406Ab1CWUlw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 16:41:52 -0400
-In-Reply-To: <4D8A0F89.201@linux.vnet.ibm.com>
+	with ESMTP id S1756638Ab1CWVYV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 17:24:21 -0400
+In-Reply-To: <20110323210357P.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: brking@linux.vnet.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, jlbec@evilplan.org
 
-On Wed, 2011-03-23 at 10:19 -0500, Brian King wrote:
-> On 03/22/2011 05:06 PM, Nicholas A. Bellinger wrote:
-> >>>> I'm also seeing disktest complain on the client about commands taking longer than 120 seconds
-> >>>> on occasion, which may play into the performance issue I mentioned in my previous mail.
-> >>>>
-> >>>
-> >>> Mmmm, please verify with RAMDISK_MCP backends as well, as by default
-> >>> FILEIO has O_SYNC enabled..  This does seem strange for LTP disktest
-> >>> however..
+On Wed, 2011-03-23 at 21:04 +0900, FUJITA Tomonori wrote:
+> On Wed, 23 Mar 2011 03:00:03 -0700
+> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 > 
-> With RAMDISK_MCP I don't see any of the problems seen with RAMDISK_DR. Additionally,
-> disktest is running much snappier. I'm seeing between 30 and 60 MB/sec on the read workload
-> and between 100 and 300 MB/sec on the writes. 
+> > On Wed, 2011-03-23 at 17:48 +0900, FUJITA Tomonori wrote:
+> > > On Wed, 23 Mar 2011 01:26:30 -0700
+> > > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > > 
+> > > > Demo-mode means that a struct se_node_acl will be dynamically allocated
+> > > > when core_tpg_check_initiator_node_acl() is called for an unknown SCSI
+> > > > Initiator WWN in the process of creating a new I_T nexus (struct
+> > > > se_session) when struct target_core_fabric_ops->tpg_check_demo_mode()=1
+> > > > is set.
+> > > 
+> > > Again, acl is not irrelevant for ibmvscsis. So I shoundn't set up
+> > > it.
+> > > 
+> > > All I asking for is simply accepting any initiators and exporting all
+> > > the luns in a target.
+> > > 
+> > > 
+> > 
+> > Yes, I understand this.  But driving (from kernel-level) a default set
+> > of fabric TPG LUN exports for all available target_core_mod backend
+> > export is not a manageable way for /sys/kernel/config/target/$HBA/$DEV
+> > backend export.  This needs to be driven from python library code for
+> > userspace applications automatically without interaction from end user
+> > for ibmvscsis or any other fabric module.
+> 
+> Hmm, you still don't understand.
+> 
+> Again, there is no 'TPG' concept in SRP transport.
 > 
 
-Thanks for the update Brian!  I am glad to hear we have a stable
-baseline for large block throughput with RAMDISK_MCP.
+Yes, I understand that there is no hard requirement for a fabric level
+concept of a TPG in SRP.  But the main reason why this has been done in
+target_core_fabric_config.c is to present a single configfs group layout
+for userspace code to follow using fabric dependent WWN naming, with an
+optional unlimited set fabric dependent attributes hanging off thse
+default set of target fabric groups.
 
-I would also be interested to see how small block performance looks with
-RAMDISK_MCP, and for IBLOCK/FILEIO/PSCSI export on top of some fast
-physical storage as well.  :)
+I don't have an issue with a fabric module connecting directly to a
+struct se_wwn->se_group, but you do realize that this would require both
+WWN and TPGT access modes in exported target I/O path code, yes..?
 
-> I'm having some trouble with multiple LUNs, however. Perhaps this is more
-> configuration issues, but if I create a lun_1 directory and link to a second
-> device, the client just sees two devices which seems to be both mapped to
-> the device mapped at lun_0.
+> The current design strangely forces the TPG concept to SRP. Well, the
+> design is pretty tied to iSCSI.
 > 
+> We need to make TPG concept optional in configfs and the driver design.
 
-Mmmm, this sounds like some a bug in incoming LUN unpack or outgoing LUN
-pack issue.  From a quick look it appears we are missing a
-scsi_lun_to_int() call for transport_get_lun_for_cmd which is currently
-expecting an unpacked LUN.
+I think abstracting away target_core_fabric_ops->[make,drop]_tpg() makes
+sense for the long term for these types of fabric modules.  But I would
+much rather put a struct se_portal_group into the fabric dependent wwn
+structure and do both WWN and tpgt_1 setup from ->[make,drop]_wwn() than
+requring WWN and TPG access modes for target core I/O path fabric code.
 
-@@ -880,7 +901,7 @@ static int tcm_queuecommand(struct ibmvscsis_adapter *adapter,
-                              srp_cmd_direction(cmd),
-                              attr, vsc->sense_buf);
- 
--       ret = transport_get_lun_for_cmd(se_cmd, cmd->lun);
-+       ret = transport_get_lun_for_cmd(se_cmd, scsi_lun_to_int(cmd->lun));
-        if (ret) {
-                printk(KERN_ERR "invalid lun %u\n", GETLUN(cmd->lun));
-                transport_send_check_condition_and_sense(se_cmd,
-
-Best Regards,
+A good first step would be for modules to signal they are only
+interested in a single 'tpgt_1' per target/$FABRIC/$TARGET_WWN/, and
+enforce this in target_core_fabric_configfs.c instead of in fabric
+module control plane code.  From there we can see if it makes sense to
+setup tpgt_1 as a default_group for these fabrics, or if just doing it
+transparent in target_fabric_make_wwn() is a possibility.
 
 --nab
 
