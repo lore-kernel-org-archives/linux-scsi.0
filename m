@@ -1,106 +1,70 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 14/14] iscsi-target: Add Makefile/Kconfig and update TCM top level
-Date: Tue, 22 Mar 2011 20:06:45 -0700
-Message-ID: <1300849605-12651-15-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
+	initial merge
+Date: Tue, 22 Mar 2011 20:06:30 -0700
+Message-ID: <1300849590.21880.411.camel@haakon2.linux-iscsi.org>
 References: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm17.bullet.mail.bf1.yahoo.com ([98.139.212.176]:42242 "HELO
-	nm17.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752583Ab1CWDH4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2011 23:07:56 -0400
+Received: from mail.linux-iscsi.org ([67.23.28.174]:55328 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932102Ab1CWDNm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2011 23:13:42 -0400
 In-Reply-To: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, 2011-03-22 at 20:06 -0700, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> Hi James and Co,
+> 
+> Here is an updated v2 mergeable + squashable version of iscsi_target_mod based
+> upon Mike Christie's recent feedback which contains two additional minor changes
+> to iscsi_proto.h and target core.  Thanks for your review Mike!
+> 
+> This patch series is made against the following scsi-misc-2.6.git/master HEAD:
+> 
+> commit aa7131dcdb262cd08bc39a15ebd788a6bc0cda2f
+> Author: James Bottomley <James.Bottomley@suse.de>
+> Date:   Fri Mar 18 11:24:23 2011 -0400
+> 
+>     [SCSI] ses: add subenclosure support
+> 
+> Please merge patch #1 + #2 as a seperate iscsi commits after Mike's review
+> and signoff.  Patch #3 is a seperate target_core int_to_scsilun() conversion
+> patch so we can drop target_core_fabric_ops->pack_lun() for the initial merge
+> of iscsi-target.
+> 
+> >From there squash #4 -> #14 using the commit message message of patch #4 for
+> an initial commit for iscsi-target.
+> 
+> I will follow with any further comments from Christoph, Mike & Co.
+> 
 
-Add Makefile/Kconfig and update drivers/target/[Makefile,Kconfig]
-to include the fabric module.
+Here is the missing v1 -> v2 changelog btw:
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/Kconfig        |    2 ++
- drivers/target/Makefile       |    3 +++
- drivers/target/iscsi/Kconfig  |   17 +++++++++++++++++
- drivers/target/iscsi/Makefile |   20 ++++++++++++++++++++
- 4 files changed, 42 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/Kconfig
- create mode 100644 drivers/target/iscsi/Makefile
+*) Remove mixed case in iscsi_target_auth.c
+*) Remove unnecessary ____cacheline_aligned usage
+*) Cleanup code to use iscsit_release_cmd()
+*) Convert to use scsilun_to_int and int_to_scsilun
+*) Convert iscsi_session->session_[usage_count,waiting_on_uc] to int
+*) Convert iscsi_conn->conn_[usage_count, waiting_on_uc] to int
+*) Convert to use iscsi_proto.h iscsi_sna_gt
+*) Remove unused iscsit_ntoa
+*) Remove unused inet conversions
+*) Remove unused struct net_device state checks
+*) Convert to use kernel_[send,recv]msg() and struct kvec
+*) Use single np->np_ip and conn->login_ip for AF_INET*
+*) Use list_is_last() in iscsit_[free,stop]_session()
+*) Fix up lio_target_call_delnpfromtpg output
 
-diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-index 2fac3be..03a821c 100644
---- a/drivers/target/Kconfig
-+++ b/drivers/target/Kconfig
-@@ -29,4 +29,6 @@ config TCM_PSCSI
- 	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
- 	passthrough access to Linux/SCSI device
- 
-+source "drivers/target/iscsi/Kconfig"
-+
- endif
-diff --git a/drivers/target/Makefile b/drivers/target/Makefile
-index 4f3cb78..ff9d62b 100644
---- a/drivers/target/Makefile
-+++ b/drivers/target/Makefile
-@@ -21,3 +21,6 @@ obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
- obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
- obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
- obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
-+
-+# Fabric modules
-+obj-$(CONFIG_ISCSI_TARGET)	+= iscsi/
-diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
-new file mode 100644
-index 0000000..cc34243
---- /dev/null
-+++ b/drivers/target/iscsi/Kconfig
-@@ -0,0 +1,17 @@
-+config ISCSI_TARGET
-+	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
-+	select CRYPTO
-+	select CRYPTO_CRC32C
-+	select CRYPTO_CRC32C_INTEL if X86
-+	help
-+	Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
-+	Target Mode Stack.
-+
-+if ISCSI_TARGET
-+
-+config ISCSI_TARGET_DEBUG
-+	bool "LIO-Target iscsi_debug.h ring buffer messages"
-+	help
-+	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
-+
-+endif
-diff --git a/drivers/target/iscsi/Makefile b/drivers/target/iscsi/Makefile
-new file mode 100644
-index 0000000..5b9a2cf
---- /dev/null
-+++ b/drivers/target/iscsi/Makefile
-@@ -0,0 +1,20 @@
-+iscsi_target_mod-y +=		iscsi_target_parameters.o \
-+				iscsi_target_seq_pdu_list.o \
-+				iscsi_target_tq.o \
-+				iscsi_target_auth.o \
-+				iscsi_target_datain_values.o \
-+				iscsi_target_device.o \
-+				iscsi_target_erl0.o \
-+				iscsi_target_erl1.o \
-+				iscsi_target_erl2.o \
-+				iscsi_target_login.o \
-+				iscsi_target_nego.o \
-+				iscsi_target_nodeattrib.o \
-+				iscsi_target_tmr.o \
-+				iscsi_target_tpg.o \
-+				iscsi_target_util.o \
-+				iscsi_target.o \
-+				iscsi_target_configfs.o \
-+				iscsi_target_stat.o
-+
-+obj-$(CONFIG_ISCSI_TARGET)	+= iscsi_target_mod.o
--- 
-1.7.4.1
+Thanks again to Mike Christie for his review!
+
+--nab
+
 
