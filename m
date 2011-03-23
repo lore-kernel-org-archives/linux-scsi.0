@@ -1,70 +1,238 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Tue, 22 Mar 2011 18:35:36 -0700
-Message-ID: <1300844136.21880.406.camel@haakon2.linux-iscsi.org>
-References: <1300747720.21880.95.camel@haakon2.linux-iscsi.org>
-	 <4D889BB4.4010102@linux.vnet.ibm.com>
-	 <1300831607.21880.365.camel@haakon2.linux-iscsi.org>
-	 <20110323074921X.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH-v2 01/14] iscsi: Resolve iscsi_proto.h naming conflicts with drivers/target/iscsi
+Date: Tue, 22 Mar 2011 20:06:32 -0700
+Message-ID: <1300849605-12651-2-git-send-email-nab@linux-iscsi.org>
+References: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:33233 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981Ab1CWBmr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2011 21:42:47 -0400
-In-Reply-To: <20110323074921X.fujita.tomonori@lab.ntt.co.jp>
+Received: from nm3-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.154]:42440 "HELO
+	nm3-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751120Ab1CWDG6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Mar 2011 23:06:58 -0400
+In-Reply-To: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: brking@linux.vnet.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Wed, 2011-03-23 at 07:49 +0900, FUJITA Tomonori wrote:
-> On Tue, 22 Mar 2011 15:06:47 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > On Tue, 2011-03-22 at 07:53 -0500, Brian King wrote:
-> > > On 03/21/2011 05:48 PM, Nicholas A. Bellinger wrote:
-> > > > On Mon, 2011-03-21 at 17:31 -0500, Brian King wrote:
-> > > >> Just hit another potential issue. I was mapping / unmapping disks a couple times,
-> > > >> so that might have helped trigger the issue. I had a file backed disk mapped
-> > > >> to a vscsi lun, then unmapped it, mapped a ramdisk lun, then switched back to
-> > > >> the filebacked lun after running into issues with the ramdisk lun and saw this:
-> > > >>
-> > > >>
-> > > > 
-> > > > By mapping/unmapping here do you mean unlinking+linking the Port/LUNs
-> > > > w/o removing the active VIO I_T Nexus, or actually rmdir'ing the whole
-> > > > $VIO_TARGET_FULLPATH/tpgt_1/ struct config_group..?
-> > > 
-> > > I just did an rm -r $VIO_TARGET_FULLPATH/tpgt_1/lun/lun_0
-> > > 
-> > 
-> > Ok, thanks for the clarification here..
-> > 
-> > I am pretty certain this backtrace is related to active I/O LUN shutdown
-> > with TPG demo mode operation and ibmvscsis.  I will need to take a
-> > deeper look to determine that this is working as expected w/o explict
-> > MappedLUN ACLs provided by target_core_fabric_configfs.c make_nodeacl
-> > and drop_nodeacl() struct target_core_fabric_ops vectors, or if there is
-> > some additional ibmvscsis / libsrp specific logic that needs to be made
-> > to address the active I/O TCM backend Port/LUN unlink.
-> 
-> Why does a driver need to take care of this?
-> 
-> I thought that preventing the removal of a logical unit having
-> outstanding I/Os is the responsibility of the target core.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Yes this should be the case.  However with TPG demo mode and active I/O
-shutdown case w/o ->port_link + ->port_unlink usage, or an fabric
-endpoint disable attribute (to clear the I_T Nexus for the endpoint) we
-may be running into problems here when removing TPG LUNs in demo-mode
-with an active I_T Nexus.
+This patch renames the following iscsi_proto.h structures to avoid
+namespace issues with drivers/target/iscsi/iscsi_target_core.h:
 
-I will take a deeper look and see if there is some breakage wrt to
-target core or something else externally, and will try to reproduce with
-some other fabric modules that support TPG demo mode.
+*) struct iscsi_cmd -> struct iscsi_scsi_req
+*) struct iscsi_cmd_rsp -> struct iscsi_scsi_rsp
+*) struct iscsi_login -> struct iscsi_login_req
 
---nab
+This patch includes useful ISCSI_FLAG_LOGIN_[CURRENT,NEXT]_STAGE*,
+and ISCSI_FLAG_SNACK_TYPE_* definitions used by iscsi_target_mod, and
+fixes the incorrect definition of struct iscsi_snack to following
+RFC-3720 Section 10.16. SNACK Request.
+
+Also, this patch updates libiscsi, iSER, be2iscsi, and bn2xi to
+use the updated structure definitions in a handful of locations.
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/infiniband/ulp/iser/iser_initiator.c |    2 +-
+ drivers/scsi/be2iscsi/be_main.h              |    4 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c               |    8 +++---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c             |    2 +-
+ drivers/scsi/libiscsi.c                      |    6 ++--
+ include/scsi/iscsi_proto.h                   |   30 +++++++++++++++++++-------
+ 6 files changed, 33 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
+index 95a08a8..d73bab3 100644
+--- a/drivers/infiniband/ulp/iser/iser_initiator.c
++++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+@@ -271,7 +271,7 @@ int iser_send_command(struct iscsi_conn *conn,
+ 	unsigned long edtl;
+ 	int err;
+ 	struct iser_data_buf *data_buf;
+-	struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
++	struct iscsi_scsi_req *hdr =  (struct iscsi_scsi_req *)task->hdr;
+ 	struct scsi_cmnd *sc  =  task->sc;
+ 	struct iser_tx_desc *tx_desc = &iser_task->desc;
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 90eb74f..205c502 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -398,7 +398,7 @@ struct amap_pdu_data_out {
+ };
+ 
+ struct be_cmd_bhs {
+-	struct iscsi_cmd iscsi_hdr;
++	struct iscsi_scsi_req iscsi_hdr;
+ 	unsigned char pad1[16];
+ 	struct pdu_data_out iscsi_data_pdu;
+ 	unsigned char pad2[BE_SENSE_INFO_SIZE -
+@@ -429,7 +429,7 @@ struct be_nonio_bhs {
+ };
+ 
+ struct be_status_bhs {
+-	struct iscsi_cmd iscsi_hdr;
++	struct iscsi_scsi_req iscsi_hdr;
+ 	unsigned char pad1[16];
+ 	/**
+ 	 * The plus 2 below is to hold the sense info length that gets
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 1da34c0..665ebdc 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -326,11 +326,11 @@ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
+ {
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_login_request *login_wqe;
+-	struct iscsi_login *login_hdr;
++	struct iscsi_login_req *login_hdr;
+ 	u32 dword;
+ 
+ 	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
+-	login_hdr = (struct iscsi_login *)task->hdr;
++	login_hdr = (struct iscsi_login_req *)task->hdr;
+ 	login_wqe = (struct bnx2i_login_request *)
+ 						bnx2i_conn->ep->qp.sq_prod_qe;
+ 
+@@ -1341,7 +1341,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	struct bnx2i_cmd_response *resp_cqe;
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct iscsi_task *task;
+-	struct iscsi_cmd_rsp *hdr;
++	struct iscsi_scsi_rsp *hdr;
+ 	u32 datalen = 0;
+ 
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+@@ -1368,7 +1368,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	}
+ 	bnx2i_iscsi_unmap_sg_list(bnx2i_cmd);
+ 
+-	hdr = (struct iscsi_cmd_rsp *)task->hdr;
++	hdr = (struct iscsi_scsi_rsp *)task->hdr;
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+ 	hdr->opcode = resp_cqe->op_code;
+ 	hdr->max_cmdsn = cpu_to_be32(resp_cqe->max_cmd_sn);
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 1809f9c..9b50aaf 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1206,7 +1206,7 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+ 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+ 	struct bnx2i_cmd *cmd = task->dd_data;
+-	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
++	struct iscsi_scsi_req *hdr = (struct iscsi_scsi_req *) task->hdr;
+ 
+ 	/*
+ 	 * If there is no scsi_cmnd this must be a mgmt task
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 0c550d5..9c3cb4e 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -360,7 +360,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 	struct iscsi_conn *conn = task->conn;
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+-	struct iscsi_cmd *hdr;
++	struct iscsi_scsi_req *hdr;
+ 	unsigned hdrlength, cmd_len;
+ 	itt_t itt;
+ 	int rc;
+@@ -374,7 +374,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 		if (rc)
+ 			return rc;
+ 	}
+-	hdr = (struct iscsi_cmd *) task->hdr;
++	hdr = (struct iscsi_scsi_req *) task->hdr;
+ 	itt = hdr->itt;
+ 	memset(hdr, 0, sizeof(*hdr));
+ 
+@@ -830,7 +830,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			       struct iscsi_task *task, char *data,
+ 			       int datalen)
+ {
+-	struct iscsi_cmd_rsp *rhdr = (struct iscsi_cmd_rsp *)hdr;
++	struct iscsi_scsi_rsp *rhdr = (struct iscsi_scsi_rsp *)hdr;
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index dd0a52c..a9c9058 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -116,7 +116,7 @@ struct iscsi_ahs_hdr {
+ #define ISCSI_CDB_SIZE			16
+ 
+ /* iSCSI PDU Header */
+-struct iscsi_cmd {
++struct iscsi_scsi_req {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	__be16 rsvd2;
+@@ -161,7 +161,7 @@ struct iscsi_ecdb_ahdr {
+ };
+ 
+ /* SCSI Response Header */
+-struct iscsi_cmd_rsp {
++struct iscsi_scsi_rsp {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	uint8_t response;
+@@ -406,7 +406,7 @@ struct iscsi_text_rsp {
+ };
+ 
+ /* Login Header */
+-struct iscsi_login {
++struct iscsi_login_req {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	uint8_t max_version;	/* Max. version supported */
+@@ -427,7 +427,13 @@ struct iscsi_login {
+ #define ISCSI_FLAG_LOGIN_TRANSIT		0x80
+ #define ISCSI_FLAG_LOGIN_CONTINUE		0x40
+ #define ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK	0x0C	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE1		0x04
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE2		0x08
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE3		0x0C
+ #define ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK	0x03	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE1		0x01
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE2		0x02
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE3		0x03
+ 
+ #define ISCSI_LOGIN_CURRENT_STAGE(flags) \
+ 	((flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2)
+@@ -550,17 +556,25 @@ struct iscsi_logout_rsp {
+ struct iscsi_snack {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+-	uint8_t rsvd2[14];
++	uint8_t rsvd2[2];
++	uint8_t hlength;
++	uint8_t dlength[3];
++	uint8_t lun[8];
+ 	itt_t	 itt;
++	__be32  ttt;
++	uint8_t rsvd3[4];
++	__be32  exp_statsn;
++	uint8_t rsvd4[8];
+ 	__be32	begrun;
+ 	__be32	runlength;
+-	__be32	exp_statsn;
+-	__be32	rsvd3;
+-	__be32	exp_datasn;
+-	uint8_t rsvd6[8];
+ };
+ 
+ /* SNACK PDU flags */
++#define ISCSI_FLAG_SNACK_TYPE_DATA		0
++#define ISCSI_FLAG_SNACK_TYPE_R2T		0
++#define ISCSI_FLAG_SNACK_TYPE_STATUS		1
++#define ISCSI_FLAG_SNACK_TYPE_DATA_ACK		2
++#define ISCSI_FLAG_SNACK_TYPE_RDATA		3
+ #define ISCSI_FLAG_SNACK_TYPE_MASK	0x0F	/* 4 bits */
+ 
+ /* Reject Message Header */
+-- 
+1.7.4.1
 
