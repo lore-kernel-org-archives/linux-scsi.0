@@ -1,63 +1,57 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH] sd: Fix regression in sd_read_cache_type
-Date: Wed, 23 Mar 2011 08:54:32 -0700 (PDT)
-Message-ID: <358235.77053.qm@web31810.mail.mud.yahoo.com>
+Date: Wed, 23 Mar 2011 12:12:38 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1103231146460.2211-100000@iolanthe.rowland.org>
 References: <1300893408.15899.17.camel@mulgrave.site>
-Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm13-vm1.bullet.mail.sp2.yahoo.com ([98.139.91.245]:48299 "HELO
-	nm13-vm1.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756466Ab1CWPyd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2011 11:54:33 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:48071 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933157Ab1CWQMj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 12:12:39 -0400
 In-Reply-To: <1300893408.15899.17.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Richard Senior <richard@r-senior.demon.co.uk>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: ltuikov@yahoo.com, Richard Senior <richard@r-senior.demon.co.uk>, SCSI development list <linux-scsi@vger.kernel.org>
 
---- On Wed, 3/23/11, James Bottomley <James.Bottomley@suse.de> wrote:
+On Wed, 23 Mar 2011, James Bottomley wrote:
+
+> > > Without this fix, some USB mass-storage devices crash when
+> > > they
+> > > receive a MODE SENSE command with page code 0x3F asking for
+> > > only 4
+> > > bytes of data.
+> > > 
+> > > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> > > Reported-and-tested-by: Richard Senior <richard@r-senior.demon.co.uk>
+> > > CC: Luben Tuikov <ltuikov@yahoo.com>
+> > > CC: <stable@kernel.org>
+> > 
+> > Acked-by: Luben Tuikov <ltuikov@yahoo.com>
 > 
-> I put the original patch in on the understanding from both
-> of you that
-> the chances of finding a USB device which crashed with the
-> change was
+> I put the original patch in on the understanding from both of you that
+> the chances of finding a USB device which crashed with the change was
 > very small.
 
-Bottomley, obviously there are no guarantees in life. This is what bug fixes and code development is all about. It's all about making things better for for a wider range of NEW devices.
+I should have checked the patch against the context of the existing 
+code more carefully.  :-(
 
-> Given that several have been found and we're on the eve of
-> the merge window closure,
+> Given that several have been found and we're on the eve of the merge
+> window closure, I'll just revert the original, and you two can work on
+> getting a bullet proof version for the next merge window.
 
-It wouldn't have mattered it if was found two weeks ago or in a month.
+Reverting the original patch for now is fine with me.  As for the next
+merge window, let me submit a more bullet-proof version of the second
+patch.
 
-> I'll just revert the original,
+It's possible that some wierd USB device will report that more than 192
+bytes of mode-sense data is available and then fail when the host asks
+for the reported amount.  You'd think no device could be that stupid,
+but I have seen an example of a device doing exactly this (except that
+it was for INQUIRY data rather than MODE SENSE data -- which is perhaps
+even worse!).
 
-Obviously you don't have to do that if you applied Alan patch.
-
-> and you two can work on getting a bullet proof version for the next
-> merge window.
-
-Here is what happened: I submitted a patch and it was generally liked. To
-refresh your memory here is the thread: http://marc.info/?t=129044508400003&r=1&w=2. The patch was applied. Then an odd device was
-found, as reported by Alan, who fixed it, and submitted a patch. He agreed
-that his patch works on top of mine to fix the problem. It was verified to
-fix the problem by Richard. Then I agreed with Alan that his patch works
-on top of mine to fix the problem by acking it as you can see in this
-thread. So Alan and I have both agreed that this is, at the moment, a
-"bullet-proof" version for this and any other merge window.
-
-Having said that, you should be aware that no patch is "bullet-proof",
-neither is the SCSI Layer, nor is the Linux kernel. That is, as technology
-goes forward.
-
-If you prefer to revert the original patch, I can resubmit the original
-patch with Alan's patch on top of it (as it is a fix for the original,
-larger, topic patch), and then you can apply that.
-
-Let me know what would work for you Bottomley.
-
-    Luben
+Alan Stern
 
