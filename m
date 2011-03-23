@@ -1,81 +1,49 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] sd: Fix regression in sd_read_cache_type
-Date: Wed, 23 Mar 2011 10:55:05 -0700 (PDT)
-Message-ID: <480032.5780.qm@web31811.mail.mud.yahoo.com>
-References: <Pine.LNX.4.44L0.1103231314130.2211-100000@iolanthe.rowland.org>
-Reply-To: ltuikov@yahoo.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH-v2] tcm_loop: Add multi-fabric Linux/SCSI LLD fabric
+ module
+Date: Wed, 23 Mar 2011 13:05:42 -0500
+Message-ID: <1300903542.15899.27.camel@mulgrave.site>
+References: <1300487957-28800-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm8-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.230]:24160 "HELO
-	nm8-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754946Ab1CWSAx convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2011 14:00:53 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1103231314130.2211-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1300487957-28800-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>, Richard Senior <richard@r-senior.demon.co.uk>, SCSI development list <linux-scsi@vger.kernel.org>
 
---- On Wed, 3/23/11, Alan Stern <stern@rowland.harvard.edu> wrote:
->=20
-> No.=A0 It means I'll submit a new version of the
-> $SUBJECT patch (which in=20
-> fact I have already done),
+On Fri, 2011-03-18 at 15:39 -0700, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch adds the TCM_Loop Linux/SCSI LLD fabric module for
+> accessing TCM device
+> backstores as locally accessable SCSI LUNs in virtual SAS, FC, and
+> iSCSI Target ports
+> using the generic fabric TransportID and Target Port WWN naming
+> handlers from TCM's
+> target_core_fabric_lib.c  The TCM_Loop module uses the generic fabric
+> configfs infratructure
+> provided by target_core_fabric_configfs.c and adds a module dependent
+> attribute for the
+> creation/release of the virtual I_T Nexus connected the TCM_Loop
+> Target and Initiator Ports.
+> 
+> TCM_Loop can also be used with scsi-generic and BSG drivers so that
+> STGT userspace
+> fabric modules, QEMU-KVM and other hypervisor SCSI passthrough support
+> can
+> access TCM device backstore and control CDB emulation.
+> 
+> For more information please see:
+> 
+> http://linux-iscsi.org/wiki/Tcm_loop
+> 
+> This patch has been updated with changes from Christoph's feedback.
 
-I just saw it and acked it.
+And checkpatch next time, too please:
 
-> and leave it up to James to
-> decide the best=20
-> way to merge it with your original patch.
+total: 25 errors, 25 warnings, 1681 lines checked
 
-Yes, I'm curious to see what Bottomley does too, now that he's (apparen=
-tly?) decided to revert my topic patch, on top of which yours applies.
-
-> Even though the merge window is now nearly over, my revised
-> patch could
-> still be sent on to Linus as a bug fix for 2.6.39-rc2 (and
-> also queued
-> for 2.6.38.1 or .2, of course).
-
-Yes, that'd be the smart thing to do.
-
-> > > It's possible that some wierd USB device will
-> report that
-> > > more than 192
-> > > bytes of mode-sense data is available and then
-> fail when
-> > > the host asks
-> > > for the reported amount.=A0 You'd think no device
-> could
-> > > be that stupid,
-> >=20
-> > If by "fail" you mean "crash", then yes, that's bad.
-> However, the device may return less data. The while loop of
-> my patch, 24d720b726c1a85f1962831ac30ad4d2ef8276b1, will
-> correctly parse the returned
-> > less data.
->=20
-> True; my patches catch that case.=A0 They prevent a
-> second MODE SENSE=20
-> command from being sent if it would ask for less data than
-> the first=20
-> command has already asked for.
-
-By "that" case you mean asking for less data than already asked for. Yo=
-u don't mean "parsing the MOSE SENSE data for any len correctly".
-
-Indeed, there is no point in asking for _less_ data than already asked =
-for, as the loop I included in my topic patch, 24d720b726c1a85f1962831a=
-c30ad4d2ef8276b1, will parse that data correctly.
-
-  Luben
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
