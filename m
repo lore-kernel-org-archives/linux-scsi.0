@@ -1,48 +1,48 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT] isci: fixes and cleanups
-Date: Wed, 23 Mar 2011 01:04:55 -0700
-Message-ID: <AANLkTi=UHZ-=LsApBic-fpFRGxeJULFh621bWvjLusCy@mail.gmail.com>
-References: <1299747356.31565.24.camel@dwillia2-linux>
-	<20110318151807.GA13636@infradead.org>
-	<20110318153829.GA13169@infradead.org>
+Subject: Re: [RFC PATCH 4/6] isci: hardware / topology event handling
+Date: Wed, 23 Mar 2011 01:15:08 -0700
+Message-ID: <AANLkTi=dfZ5OtV0rY_y=9boMCAu_=47Bucz_-Jwu0d-6@mail.gmail.com>
+References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
+	<20110207003455.27040.94947.stgit@localhost6.localdomain6>
+	<20110318161852.GA19008@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:46426 "EHLO
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:51167 "EHLO
 	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753588Ab1CWIE5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 04:04:57 -0400
-Received: by fxm17 with SMTP id 17so7101745fxm.19
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2011 01:04:56 -0700 (PDT)
-In-Reply-To: <20110318153829.GA13169@infradead.org>
+	with ESMTP id S1752704Ab1CWIPK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 04:15:10 -0400
+Received: by fxm17 with SMTP id 17so7107396fxm.19
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2011 01:15:09 -0700 (PDT)
+In-Reply-To: <20110318161852.GA19008@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, David Milburn <dmilburn@redhat.com>, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-On Fri, Mar 18, 2011 at 8:38 AM, Christoph Hellwig <hch@infradead.org> =
-wrote:
-> On Fri, Mar 18, 2011 at 11:18:07AM -0400, Christoph Hellwig wrote:
->> Care to post a patch, or in case it's too large a patch link? =A0git=
- trees
->> are inherently unreviewable.
+On Fri, Mar 18, 2011 at 9:18 AM, Christoph Hellwig <hch@infradead.org>
+wrote:> On Sun, Feb 06, 2011 at 04:34:55PM -0800, Dan Williams wrote:
+>> 2/ Timer interface.
 >
-> Sorry, just noticed the patch series. =A0I still don't quite see the
-> connection between the series and the tree, but I'll assume they end =
-up
-> with the same result.
->
+> This just needs to go away. =A0It's just a bad emulation of
+> Solaris/Windows style dynamically allocated timer lists, that just ma=
+ke
+> life harder for anyone trying to use it.
 
-They will end up with the same result.  I'm assuming the in-progress
-rework state is not that interesting to post every patch to
-linux-scsi.
+Yeah, started hacking at it [1], but it can all just be converted to
+delayed work.
 
-As we have release candidates I will reflow the patch series
-(lldd+core) for review.
+> Same for the whole events.c code, which is just pointless wrappers.
+
+Ok.
 
 --
 Dan
+
+[1]: http://git.kernel.org/?p=3Dlinux/kernel/git/djbw/isci.git;a=3Dcomm=
+itdiff;h=3D8d32e5b2aefe0d5e966cc7f5c5e887aa2d2b6090;hp=3Ddb3dd417bed5b2=
+be0c95ace9e4b8871102ca5dcf
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
