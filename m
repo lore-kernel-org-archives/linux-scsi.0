@@ -1,64 +1,62 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH][RESEND] SCSI, Brocade FC HBA: Remember to always release_firmware()
- so we don't leak memory.
-Date: Thu, 24 Mar 2011 00:00:39 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1103232356510.28372@swampdragon.chaosbits.net>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH for-2.6.39] [SCSI] scsi_dh_emc: fix panic when handling
+ multiple path failures
+Date: Wed, 23 Mar 2011 19:02:59 -0400
+Message-ID: <20110323230259.GA3758@redhat.com>
+References: <1300737433-11994-1-git-send-email-snitzer@redhat.com>
+ <1300737774.10634.37.camel@mulgrave.site>
+ <20110321203829.GB12157@redhat.com>
+ <1300740249.10634.43.camel@mulgrave.site>
+ <20110321231657.GA12902@redhat.com>
+ <20110323215826.GA3433@redhat.com>
+ <1300917791.15899.39.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Jing Huang <huangj@brocade.com>, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58143 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932755Ab1CWXDE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2011 19:03:04 -0400
+Content-Disposition: inline
+In-Reply-To: <1300917791.15899.39.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, Eddie Williams <eddie.williams@steeleye.com>
 
-Once we've called request_firmware() we must remember to call
-release_firmware() to free memory. We don't currently do this in
-bfad_read_firmware(); causing a memory leak.
+On Wed, Mar 23 2011 at  6:03pm -0400,
+James Bottomley <James.Bottomley@suse.de> wrote:
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-Acked-by: Jing Huang <huangj@brocade.com>
----
- bfad.c |   11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+> On Wed, 2011-03-23 at 17:58 -0400, Mike Snitzer wrote:
+> > On Mon, Mar 21 2011 at  7:16pm -0400,
+> > Mike Snitzer <snitzer@redhat.com> wrote:
+> > 
+> > > > It's a bug fix: of course it can.
+> > > 
+> > > Right, so given scsi_dh_activate()'s {get,put}_device() that wraps the
+> > > call to scsi_dh->activate (aka clariion_activate) I'm not seeing how
+> > > accessing sdev->sdev_gendev (via sdev_printk) could result in a panic.
+> > > So I'll need to dig deeper (hopefully with Eddie's assistance)...
+> > 
+> > Hi James,
+> > 
+> > I checked with Eddie and the sdev_printk() panic he saw no longer occurs
+> > when commit db422318 is in place.  But he also tested with the patch I
+> > provided below.
+> > 
+> > I still feel this fix is needed and would like to get your feedback on
+> > this (relative to 2.6.39):
+> 
+> So what about the fix you propose in
+> 
+> Message-id: <20110321231657.GA12902@redhat.com>
+> 
+> ?  That looks to be the correct one.
 
- Could someone merge this please?
+Yes, that is the correct fix (that is the same patch I quoted in my mail
+preceeding this one).
 
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 44524cf..d7bafeb 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -1558,23 +1558,22 @@ bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
- 
- 	if (request_firmware(&fw, fw_name, &pdev->dev)) {
- 		printk(KERN_ALERT "Can't locate firmware %s\n", fw_name);
--		goto error;
-+		*bfi_image = NULL;
-+		goto out;
- 	}
- 
- 	*bfi_image = vmalloc(fw->size);
- 	if (NULL == *bfi_image) {
- 		printk(KERN_ALERT "Fail to allocate buffer for fw image "
- 			"size=%x!\n", (u32) fw->size);
--		goto error;
-+		goto out;
- 	}
- 
- 	memcpy(*bfi_image, fw->data, fw->size);
- 	*bfi_image_size = fw->size/sizeof(u32);
--
-+out:
-+	release_firmware(fw);
- 	return *bfi_image;
--
--error:
--	return NULL;
- }
- 
- u32 *
+We'd need it in 2.6.38.y too.
 
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+Thanks,
+Mike
