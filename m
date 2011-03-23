@@ -1,13 +1,15 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series initial merge
-Date: Tue, 22 Mar 2011 20:06:31 -0700
-Message-ID: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v2 03/14] target: Convert REPORT_LUNs to use int_to_scsilun
+Date: Tue, 22 Mar 2011 20:06:34 -0700
+Message-ID: <1300849605-12651-4-git-send-email-nab@linux-iscsi.org>
+References: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm29.bullet.mail.bf1.yahoo.com ([98.139.212.188]:24415 "HELO
-	nm29.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751120Ab1CWDGv (ORCPT
+Received: from nm16.bullet.mail.bf1.yahoo.com ([98.139.212.175]:33169 "HELO
+	nm16.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751763Ab1CWDHB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2011 23:06:51 -0400
+	Tue, 22 Mar 2011 23:07:01 -0400
+In-Reply-To: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
@@ -15,143 +17,94 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi James and Co,
+This patch converts transport_core_report_lun_response() to use
+drivers/scsi/scsi_scan.c:int_to_scsilun instead of using the
+struct target_core_fabric_ops->pack_lun() fabric provided API vector.
 
-Here is an updated v2 mergeable + squashable version of iscsi_target_mod based
-upon Mike Christie's recent feedback which contains two additional minor changes
-to iscsi_proto.h and target core.  Thanks for your review Mike!
+It also removes the tfo->pack_lun check from target_fabric_tf_ops_check()
+and will be removed from struct target_core_fabric_ops in a seperate
+patch.
 
-This patch series is made against the following scsi-misc-2.6.git/master HEAD:
-
-commit aa7131dcdb262cd08bc39a15ebd788a6bc0cda2f
-Author: James Bottomley <James.Bottomley@suse.de>
-Date:   Fri Mar 18 11:24:23 2011 -0400
-
-    [SCSI] ses: add subenclosure support
-
-Please merge patch #1 + #2 as a seperate iscsi commits after Mike's review
-and signoff.  Patch #3 is a seperate target_core int_to_scsilun() conversion
-patch so we can drop target_core_fabric_ops->pack_lun() for the initial merge
-of iscsi-target.
-
->From there squash #4 -> #14 using the commit message message of patch #4 for
-an initial commit for iscsi-target.
-
-I will follow with any further comments from Christoph, Mike & Co.
-
-Thank you!
-
+Reported-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_configfs.c |    4 ----
+ drivers/target/target_core_device.c   |   26 +++++---------------------
+ 2 files changed, 5 insertions(+), 25 deletions(-)
 
-Nicholas Bellinger (14):
-  iscsi: Resolve iscsi_proto.h naming conflicts with
-    drivers/target/iscsi
-  iscsi: Add Serial Number Arithmetic LT and GT into iscsi_proto.h
-  target: Convert REPORT_LUNs to use int_to_scsilun
-  iscsi-target: Add iSCSI fabric support for target v4
-  iscsi-target: Add TCM v4 compatiable ConfigFS control plane
-  iscsi-target: Add configfs fabric dependent statistics
-  iscsi-target: Add TPG and Device logic
-  iscsi-target: Add iSCSI Login Negotiation and Parameter logic
-  iscsi-target: Add CHAP Authentication support using libcrypto
-  iscsi-target: Add Sequence/PDU list + DataIN response logic
-  iscsi-target: Add iSCSI Error Recovery Hierarchy support
-  iscsi-target: Add support for task management operations
-  iscsi-target: Add misc utility and debug logic
-  iscsi-target: Add Makefile/Kconfig and update TCM top level
-
- drivers/infiniband/ulp/iser/iser_initiator.c      |    2 +-
- drivers/scsi/be2iscsi/be_main.h                   |    4 +-
- drivers/scsi/bnx2i/bnx2i_hwi.c                    |    8 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c                  |    2 +-
- drivers/scsi/libiscsi.c                           |   22 +-
- drivers/target/Kconfig                            |    2 +
- drivers/target/Makefile                           |    3 +
- drivers/target/iscsi/Kconfig                      |   17 +
- drivers/target/iscsi/Makefile                     |   20 +
- drivers/target/iscsi/iscsi_target.c               | 5017 +++++++++++++++++++++
- drivers/target/iscsi/iscsi_target.h               |   32 +
- drivers/target/iscsi/iscsi_target_auth.c          |  496 ++
- drivers/target/iscsi/iscsi_target_auth.h          |   32 +
- drivers/target/iscsi/iscsi_target_configfs.c      | 1914 ++++++++
- drivers/target/iscsi/iscsi_target_configfs.h      |    7 +
- drivers/target/iscsi/iscsi_target_core.h          |  881 ++++
- drivers/target/iscsi/iscsi_target_datain_values.c |  531 +++
- drivers/target/iscsi/iscsi_target_datain_values.h |   15 +
- drivers/target/iscsi/iscsi_target_debug.h         |  113 +
- drivers/target/iscsi/iscsi_target_device.c        |  108 +
- drivers/target/iscsi/iscsi_target_device.h        |    9 +
- drivers/target/iscsi/iscsi_target_erl0.c          | 1005 +++++
- drivers/target/iscsi/iscsi_target_erl0.h          |   17 +
- drivers/target/iscsi/iscsi_target_erl1.c          | 1305 ++++++
- drivers/target/iscsi/iscsi_target_erl1.h          |   28 +
- drivers/target/iscsi/iscsi_target_erl2.c          |  483 ++
- drivers/target/iscsi/iscsi_target_erl2.h          |   18 +
- drivers/target/iscsi/iscsi_target_login.c         | 1245 +++++
- drivers/target/iscsi/iscsi_target_login.h         |   13 +
- drivers/target/iscsi/iscsi_target_nego.c          | 1068 +++++
- drivers/target/iscsi/iscsi_target_nego.h          |   19 +
- drivers/target/iscsi/iscsi_target_nodeattrib.c    |  264 ++
- drivers/target/iscsi/iscsi_target_nodeattrib.h    |   14 +
- drivers/target/iscsi/iscsi_target_parameters.c    | 1910 ++++++++
- drivers/target/iscsi/iscsi_target_parameters.h    |  271 ++
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |  667 +++
- drivers/target/iscsi/iscsi_target_seq_pdu_list.h  |   88 +
- drivers/target/iscsi/iscsi_target_stat.c          |  950 ++++
- drivers/target/iscsi/iscsi_target_stat.h          |   64 +
- drivers/target/iscsi/iscsi_target_tmr.c           |  854 ++++
- drivers/target/iscsi/iscsi_target_tmr.h           |   14 +
- drivers/target/iscsi/iscsi_target_tpg.c           |  767 ++++
- drivers/target/iscsi/iscsi_target_tpg.h           |   43 +
- drivers/target/iscsi/iscsi_target_tq.c            |  552 +++
- drivers/target/iscsi/iscsi_target_tq.h            |   89 +
- drivers/target/iscsi/iscsi_target_util.c          | 1976 ++++++++
- drivers/target/iscsi/iscsi_target_util.h          |  105 +
- drivers/target/target_core_configfs.c             |    4 -
- drivers/target/target_core_device.c               |   26 +-
- include/scsi/iscsi_proto.h                        |   59 +-
- 50 files changed, 23093 insertions(+), 60 deletions(-)
- create mode 100644 drivers/target/iscsi/Kconfig
- create mode 100644 drivers/target/iscsi/Makefile
- create mode 100644 drivers/target/iscsi/iscsi_target.c
- create mode 100644 drivers/target/iscsi/iscsi_target.h
- create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
- create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
- create mode 100644 drivers/target/iscsi/iscsi_target_configfs.c
- create mode 100644 drivers/target/iscsi/iscsi_target_configfs.h
- create mode 100644 drivers/target/iscsi/iscsi_target_core.h
- create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.c
- create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.h
- create mode 100644 drivers/target/iscsi/iscsi_target_debug.h
- create mode 100644 drivers/target/iscsi/iscsi_target_device.c
- create mode 100644 drivers/target/iscsi/iscsi_target_device.h
- create mode 100644 drivers/target/iscsi/iscsi_target_erl0.c
- create mode 100644 drivers/target/iscsi/iscsi_target_erl0.h
- create mode 100644 drivers/target/iscsi/iscsi_target_erl1.c
- create mode 100644 drivers/target/iscsi/iscsi_target_erl1.h
- create mode 100644 drivers/target/iscsi/iscsi_target_erl2.c
- create mode 100644 drivers/target/iscsi/iscsi_target_erl2.h
- create mode 100644 drivers/target/iscsi/iscsi_target_login.c
- create mode 100644 drivers/target/iscsi/iscsi_target_login.h
- create mode 100644 drivers/target/iscsi/iscsi_target_nego.c
- create mode 100644 drivers/target/iscsi/iscsi_target_nego.h
- create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.c
- create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.h
- create mode 100644 drivers/target/iscsi/iscsi_target_parameters.c
- create mode 100644 drivers/target/iscsi/iscsi_target_parameters.h
- create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.c
- create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.h
- create mode 100644 drivers/target/iscsi/iscsi_target_stat.c
- create mode 100644 drivers/target/iscsi/iscsi_target_stat.h
- create mode 100644 drivers/target/iscsi/iscsi_target_tmr.c
- create mode 100644 drivers/target/iscsi/iscsi_target_tmr.h
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.c
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.h
- create mode 100644 drivers/target/iscsi/iscsi_target_tq.c
- create mode 100644 drivers/target/iscsi/iscsi_target_tq.h
- create mode 100644 drivers/target/iscsi/iscsi_target_util.c
- create mode 100644 drivers/target/iscsi/iscsi_target_util.h
-
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index a5f44a6..ee6fad9 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -497,10 +497,6 @@ static int target_fabric_tf_ops_check(
+ 		printk(KERN_ERR "Missing tfo->is_state_remove()\n");
+ 		return -EINVAL;
+ 	}
+-	if (!(tfo->pack_lun)) {
+-		printk(KERN_ERR "Missing tfo->pack_lun()\n");
+-		return -EINVAL;
+-	}
+ 	/*
+ 	 * We at least require tfo->fabric_make_wwn(), tfo->fabric_drop_wwn()
+ 	 * tfo->fabric_make_tpg() and tfo->fabric_drop_tpg() in
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 3fb8e32..7605967 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -38,6 +38,7 @@
+ #include <net/sock.h>
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
+ 
+ #include <target/target_core_base.h>
+ #include <target/target_core_device.h>
+@@ -658,8 +659,7 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
+ 	struct se_session *se_sess = SE_SESS(se_cmd);
+ 	struct se_task *se_task;
+ 	unsigned char *buf = (unsigned char *)T_TASK(se_cmd)->t_task_buf;
+-	u32 cdb_offset = 0, lun_count = 0, offset = 8;
+-	u64 i, lun;
++	u32 cdb_offset = 0, lun_count = 0, offset = 8, i;
+ 
+ 	list_for_each_entry(se_task, &T_TASK(se_cmd)->t_task_list, t_list)
+ 		break;
+@@ -675,15 +675,7 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
+ 	 * a $FABRIC_MOD.  In that case, report LUN=0 only.
+ 	 */
+ 	if (!(se_sess)) {
+-		lun = 0;
+-		buf[offset++] = ((lun >> 56) & 0xff);
+-		buf[offset++] = ((lun >> 48) & 0xff);
+-		buf[offset++] = ((lun >> 40) & 0xff);
+-		buf[offset++] = ((lun >> 32) & 0xff);
+-		buf[offset++] = ((lun >> 24) & 0xff);
+-		buf[offset++] = ((lun >> 16) & 0xff);
+-		buf[offset++] = ((lun >> 8) & 0xff);
+-		buf[offset++] = (lun & 0xff);
++		int_to_scsilun(0, (struct scsi_lun *)&buf[offset]);
+ 		lun_count = 1;
+ 		goto done;
+ 	}
+@@ -703,16 +695,8 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
+ 		if ((cdb_offset + 8) >= se_cmd->data_length)
+ 			continue;
+ 
+-		lun = cpu_to_be64(CMD_TFO(se_cmd)->pack_lun(deve->mapped_lun));
+-		buf[offset++] = ((lun >> 56) & 0xff);
+-		buf[offset++] = ((lun >> 48) & 0xff);
+-		buf[offset++] = ((lun >> 40) & 0xff);
+-		buf[offset++] = ((lun >> 32) & 0xff);
+-		buf[offset++] = ((lun >> 24) & 0xff);
+-		buf[offset++] = ((lun >> 16) & 0xff);
+-		buf[offset++] = ((lun >> 8) & 0xff);
+-		buf[offset++] = (lun & 0xff);
+-		cdb_offset += 8;
++		int_to_scsilun(deve->mapped_lun, (struct scsi_lun *)&buf[offset]);
++		cdb_offset += 16;
+ 	}
+ 	spin_unlock_irq(&SE_NODE_ACL(se_sess)->device_list_lock);
+ 
 -- 
 1.7.4.1
 
