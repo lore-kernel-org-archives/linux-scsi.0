@@ -1,62 +1,72 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 02/36] scsi,rcu: convert call_rcu(fc_rport_free_rcu) to
- kfree_rcu()
-Date: Wed, 23 Mar 2011 17:45:32 -0500
-Message-ID: <1300920332.15899.45.camel@mulgrave.site>
-References: <4D82D071.5020703@cn.fujitsu.com>
-	 <4D82D3FF.2080303@cn.fujitsu.com> <4D82D45A.30102@cn.fujitsu.com>
-	 <1300814913.19083.427.camel@fritz>
-	 <20110323065014.GU2322@linux.vnet.ibm.com>
-	 <1300889151.15899.4.camel@mulgrave.site>
-	 <20110323222456.GC2322@linux.vnet.ibm.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
+	initial merge
+Date: Thu, 24 Mar 2011 07:46:14 +0900
+Message-ID: <20110324074600L.fujita.tomonori@lab.ntt.co.jp>
+References: <1300875726.21880.542.camel@haakon2.linux-iscsi.org>
+	<20110323200722G.fujita.tomonori@lab.ntt.co.jp>
+	<1300916254.18039.87.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110323222456.GC2322@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: paulmck@linux.vnet.ibm.com
-Cc: Robert Love <robert.w.love@intel.com>, Lai Jiangshan <laijs@cn.fujitsu.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <axboe@kernel.dk>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>, Tejun Heo <tj@kernel.org>, Jarek Poplawski <jarkao2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:40511 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932943Ab1CWWqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Mar 2011 18:46:46 -0400
+In-Reply-To: <1300916254.18039.87.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, bharrosh@panasas.com
 
-On Wed, 2011-03-23 at 15:24 -0700, Paul E. McKenney wrote:
-> On Wed, Mar 23, 2011 at 09:05:51AM -0500, James Bottomley wrote:
-> > On Tue, 2011-03-22 at 23:50 -0700, Paul E. McKenney wrote:
-> > > The kfree_rcu() definition is as
-> > > follows:
-> > > 
-> > > #define kfree_rcu(ptr, rcu_head)					\
-> > > 	__kfree_rcu(&((ptr)->rcu_head), offsetof(typeof(*(ptr)), rcu_head))
+On Wed, 23 Mar 2011 14:37:34 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+> > Removing several thousand lines from kernel isn't benefit?
 > > 
-> > Isn't this one of those cases where the obvious use of the interface is
-> > definitely wrong?
 > > 
-> > It's also another nasty pseudo C prototype.  I know we do this sort of
-> > thing for container_of et al, but I don't really think we want to extend
-> > it.
-> > 
-> > Why not make the interface take a pointer to the embedding structure and
-> > one to the rcu_head ... that way all pointer mathematics can be
-> > contained inside the RCU routines.
 > 
-> Hello, James,
+> No, not when it adds complexity without benefit for the default case and
+> introduces unnecessary userspace C code.
 > 
-> If you pass in a pair of pointers, then it is difficult for RCU to detect
-> bugs where the two pointers are unrelated.  Yes, you can do some sanity
-> checks, but these get cumbersome and have corner cases where they can
-> be fooled.  In contrast, Lai's interface allows the compiler to do the
-> needed type checking -- unless the second argument is a field of type
-> struct rcu_head in the structure pointed to by the first argument, the
-> compiler will complain.
-> 
-> Either way, the pointer mathematics are buried in the RCU API.
-> 
-> Or am I missing something here?
+> At this point in lio-utils.git for target v4 code, we require zero C
+> userspace code for the default operation of iscsi-target, and I want to
+> keep it this way.  
 
-No ... I like the utility ... I just dislike the inelegance of having to
-name a structure element in what looks like a C prototype.
+Hmm, you prefer 'zero C userspace code'? On the other hand, you insist
+that requiring user Python userspace code to set up ibmvscsis is a
+better approach even when the kernel space can set up everything for
+ibmvscsis?
 
-I can see this proliferating everywhere since most of our reference
-counting release callbacks basically free the enclosing object ...
+I can't understand your logic.
 
-James
+And iSCSI setup usually needs userspace code such as iSNS
+anyway. You'll add iSNS to kernel too.
+
+
+> Maintaining backwards compatibility with interpreted script code for the
+> fabric control plane makes life so much eaiser than any kernel <-> user
+> C API that I have ever encountered.
+
+I think that the target can use open-iscsi's kernel <-> user
+interface. All the userspace code needs is passing negotiated iSCSI
+parameters. Once a nexus establishes, the user space will never do
+anything for it. So no complicity like open-iscsi.
+
+
+> > In other words, what the approach to do the pre-nexus operations like
+> > IET (or SCST) can't do?
+> 
+> Because it does not makes sense for the default case, and adds
+> unnecessary complexity to the iscsi-target login process.
+
+Well, I don't think so.
+
+
+> Using mainline libcrypto for CHAP works as expected and allows us to
+> provide one-way and mutual authentication for iSCSI discovery and
+> explict initiator NodeACLs via configfs attributes without any userspace
+> C dependcies.
+
+The user space daemon can read configfs easily to do the same thing.
