@@ -1,100 +1,77 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Wed, 23 Mar 2011 17:48:43 +0900
-Message-ID: <20110323174843I.fujita.tomonori@lab.ntt.co.jp>
-References: <1300844136.21880.406.camel@haakon2.linux-iscsi.org>
-	<20110323141225N.fujita.tomonori@lab.ntt.co.jp>
-	<1300868790.21880.499.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
+ initial merge
+Date: Wed, 23 Mar 2011 17:54:51 +0900
+Message-ID: <20110323175451J.fujita.tomonori@lab.ntt.co.jp>
+References: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:46948 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755774Ab1CWI4a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 04:56:30 -0400
-In-Reply-To: <1300868790.21880.499.camel@haakon2.linux-iscsi.org>
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:56122 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754543Ab1CWJCs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 05:02:48 -0400
+In-Reply-To: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org
-Cc: fujita.tomonori@lab.ntt.co.jp, brking@linux.vnet.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, jlbec@evilplan.org
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com
 
-On Wed, 23 Mar 2011 01:26:30 -0700
+I've not looked at the code yet but...
+
+On Tue, 22 Mar 2011 20:06:31 -0700
 "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-> Demo-mode means that a struct se_node_acl will be dynamically allocated
-> when core_tpg_check_initiator_node_acl() is called for an unknown SCSI
-> Initiator WWN in the process of creating a new I_T nexus (struct
-> se_session) when struct target_core_fabric_ops->tpg_check_demo_mode()=1
-> is set.
-
-Again, acl is not irrelevant for ibmvscsis. So I shoundn't set up
-it.
-
-All I asking for is simply accepting any initiators and exporting all
-the luns in a target.
-
-
-> > I don't know if the similar bug is also in the non-demo mode but why
-> > can't we integrate them well instead of having two totally different
-> > paths?
-> > 
+> Nicholas Bellinger (14):
+>   iscsi: Resolve iscsi_proto.h naming conflicts with
+>     drivers/target/iscsi
+>   iscsi: Add Serial Number Arithmetic LT and GT into iscsi_proto.h
+>   target: Convert REPORT_LUNs to use int_to_scsilun
+>   iscsi-target: Add iSCSI fabric support for target v4
+>   iscsi-target: Add TCM v4 compatiable ConfigFS control plane
+>   iscsi-target: Add configfs fabric dependent statistics
+>   iscsi-target: Add TPG and Device logic
+>   iscsi-target: Add iSCSI Login Negotiation and Parameter logic
+>   iscsi-target: Add CHAP Authentication support using libcrypto
+>   iscsi-target: Add Sequence/PDU list + DataIN response logic
+>   iscsi-target: Add iSCSI Error Recovery Hierarchy support
+>   iscsi-target: Add support for task management operations
+>   iscsi-target: Add misc utility and debug logic
+>   iscsi-target: Add Makefile/Kconfig and update TCM top level
 > 
-> These are not different codepaths paths from the perspective of current
-> I/O path code for access to backend target core struct se_device.  We
-> still create each struct se_node_acl->device_list[] based upon the
-> default set of TPG LUN mappings that allows the SCSI Initiator access to
-> the target core backend devices once the I_T nexus has been established
-> via transport_get_lun_for_cmd().
-> 
-> With explict NodeACLs these can be initiator context specific MappedLUNs
-> that can optionally be different from default TPG LUN layout and have
-> Write Protected (WP=1) access.
+>  drivers/infiniband/ulp/iser/iser_initiator.c      |    2 +-
+>  drivers/scsi/be2iscsi/be_main.h                   |    4 +-
+>  drivers/scsi/bnx2i/bnx2i_hwi.c                    |    8 +-
+>  drivers/scsi/bnx2i/bnx2i_iscsi.c                  |    2 +-
+>  drivers/scsi/libiscsi.c                           |   22 +-
+>  drivers/target/Kconfig                            |    2 +
+>  drivers/target/Makefile                           |    3 +
+>  drivers/target/iscsi/Kconfig                      |   17 +
+>  drivers/target/iscsi/Makefile                     |   20 +
+>  drivers/target/iscsi/iscsi_target.c               | 5017 +++++++++++++++++++++
+>  drivers/target/iscsi/iscsi_target.h               |   32 +
+>  drivers/target/iscsi/iscsi_target_auth.c          |  496 ++
+>  drivers/target/iscsi/iscsi_target_auth.h          |   32 +
+>  drivers/target/iscsi/iscsi_target_configfs.c      | 1914 ++++++++
+>  drivers/target/iscsi/iscsi_target_configfs.h      |    7 +
+>  drivers/target/iscsi/iscsi_target_core.h          |  881 ++++
+>  drivers/target/iscsi/iscsi_target_datain_values.c |  531 +++
+>  drivers/target/iscsi/iscsi_target_datain_values.h |   15 +
+>  drivers/target/iscsi/iscsi_target_debug.h         |  113 +
+>  drivers/target/iscsi/iscsi_target_device.c        |  108 +
+>  drivers/target/iscsi/iscsi_target_device.h        |    9 +
+>  drivers/target/iscsi/iscsi_target_erl0.c          | 1005 +++++
+>  drivers/target/iscsi/iscsi_target_erl0.h          |   17 +
+>  drivers/target/iscsi/iscsi_target_erl1.c          | 1305 ++++++
+>  drivers/target/iscsi/iscsi_target_erl1.h          |   28 +
+>  drivers/target/iscsi/iscsi_target_erl2.c          |  483 ++
+>  drivers/target/iscsi/iscsi_target_erl2.h          |   18 +
+>  drivers/target/iscsi/iscsi_target_login.c         | 1245 +++++
+>  drivers/target/iscsi/iscsi_target_login.h         |   13 +
+>  drivers/target/iscsi/iscsi_target_nego.c          | 1068 +++++
+>  drivers/target/iscsi/iscsi_target_nego.h          |   19 +
 
-Sounds like that non-demo mode has the similar bug that Brian saw.
+Why do we need to do the pre-nexus operations such as login,
+authentication, negotiation, etc in kernel?
 
-
-> > I just don't want to play with TPG since there is no TPG concept in
-> > SRP (and ibmvscsis). And I also don't play with any security stuff
-> > about it because it's also irrelevant for ibmvscsis.
-> > 
-> 
-> This is where I think we have an misunderstanding.
-> 
-> Currently we use user-space driven TPG LUN configfs symlinks from fabric
-> module data structures into a seperate module (target_core_mod) in order
-> to represent the backend exports for fabric TPG LUN layout.
-> 
-> In the past we have tried patches for driving the configfs layout via
-> kernel-space as well, which does function with mkdir and rmdir ops with
-> some VFS level changes, but has been firmly reject by the configfs
-> maintainer back in 2009 and dropped in modern lio-core-2.6.git code.
-> (jlbec CC'ed)
-> 
-> So that said I don't have an issue with ibmvscsis allowing fabric
-> dependent TPG data structure's allocation to be driven by kernel-level
-> code for the special case where no TPG has yet been configured.  However
-> this still requires the explict setup of fabric TPG endpoint @
-> /sys/kernel/config/target/ibmvscsis/$VIO_TARGET/tpgt_1/ in order to
-> access the $VIO_TARGET/tpgt_1/lun/ group as a destination for TPG LUNs
-> symlinks into target core configfs backends.
-> 
-> But in the end I think we still want to be able to drive the creation of
-> configfs symlinks for fabric TPG LUN <-> target core backend usage from
-> userspace driven code.
-  We can do the creation of a configfs layout
-> using a small amount of interpreted userspace code that would require a
-> larger amount kernel code complexity in order to function.  I personally
-> do not see a hard-requirement for doing TPG LUN <-> target core symlink
-> configuration from kernel space for my own code, but if really think
-> this is required and convience folks like Joel Greg-KH with patches, I
-> would be happy to consider a new look at a hybrid target user-level +
-> kernel-level driven control plane.
-
-We definitely need to set up the hardware information in kernel space.
-
-For example, even after loading the kernel module, creating
-/sys/kernel/config/target/ibmvscsi directory by hand makes sense for
-you?
-
-If configfs doesn't fit the bill, needs to create something new.
