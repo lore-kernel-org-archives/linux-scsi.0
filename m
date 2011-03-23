@@ -1,70 +1,78 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
-	initial merge
-Date: Tue, 22 Mar 2011 20:06:30 -0700
-Message-ID: <1300849590.21880.411.camel@haakon2.linux-iscsi.org>
-References: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Wed, 23 Mar 2011 14:12:25 +0900
+Message-ID: <20110323141225N.fujita.tomonori@lab.ntt.co.jp>
+References: <1300831607.21880.365.camel@haakon2.linux-iscsi.org>
+	<20110323074921X.fujita.tomonori@lab.ntt.co.jp>
+	<1300844136.21880.406.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55328 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932102Ab1CWDNm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Mar 2011 23:13:42 -0400
-In-Reply-To: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
+Received: from tama500.ecl.ntt.co.jp ([129.60.39.148]:52738 "EHLO
+	tama500.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755259Ab1CWFUI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 01:20:08 -0400
+In-Reply-To: <1300844136.21880.406.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, brking@linux.vnet.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 
-On Tue, 2011-03-22 at 20:06 -0700, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> Hi James and Co,
-> 
-> Here is an updated v2 mergeable + squashable version of iscsi_target_mod based
-> upon Mike Christie's recent feedback which contains two additional minor changes
-> to iscsi_proto.h and target core.  Thanks for your review Mike!
-> 
-> This patch series is made against the following scsi-misc-2.6.git/master HEAD:
-> 
-> commit aa7131dcdb262cd08bc39a15ebd788a6bc0cda2f
-> Author: James Bottomley <James.Bottomley@suse.de>
-> Date:   Fri Mar 18 11:24:23 2011 -0400
-> 
->     [SCSI] ses: add subenclosure support
-> 
-> Please merge patch #1 + #2 as a seperate iscsi commits after Mike's review
-> and signoff.  Patch #3 is a seperate target_core int_to_scsilun() conversion
-> patch so we can drop target_core_fabric_ops->pack_lun() for the initial merge
-> of iscsi-target.
-> 
-> >From there squash #4 -> #14 using the commit message message of patch #4 for
-> an initial commit for iscsi-target.
-> 
-> I will follow with any further comments from Christoph, Mike & Co.
-> 
+On Tue, 22 Mar 2011 18:35:36 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-Here is the missing v1 -> v2 changelog btw:
+> On Wed, 2011-03-23 at 07:49 +0900, FUJITA Tomonori wrote:
+> > On Tue, 22 Mar 2011 15:06:47 -0700
+> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > 
+> > > On Tue, 2011-03-22 at 07:53 -0500, Brian King wrote:
+> > > > On 03/21/2011 05:48 PM, Nicholas A. Bellinger wrote:
+> > > > > On Mon, 2011-03-21 at 17:31 -0500, Brian King wrote:
+> > > > >> Just hit another potential issue. I was mapping / unmapping disks a couple times,
+> > > > >> so that might have helped trigger the issue. I had a file backed disk mapped
+> > > > >> to a vscsi lun, then unmapped it, mapped a ramdisk lun, then switched back to
+> > > > >> the filebacked lun after running into issues with the ramdisk lun and saw this:
+> > > > >>
+> > > > >>
+> > > > > 
+> > > > > By mapping/unmapping here do you mean unlinking+linking the Port/LUNs
+> > > > > w/o removing the active VIO I_T Nexus, or actually rmdir'ing the whole
+> > > > > $VIO_TARGET_FULLPATH/tpgt_1/ struct config_group..?
+> > > > 
+> > > > I just did an rm -r $VIO_TARGET_FULLPATH/tpgt_1/lun/lun_0
+> > > > 
+> > > 
+> > > Ok, thanks for the clarification here..
+> > > 
+> > > I am pretty certain this backtrace is related to active I/O LUN shutdown
+> > > with TPG demo mode operation and ibmvscsis.  I will need to take a
+> > > deeper look to determine that this is working as expected w/o explict
+> > > MappedLUN ACLs provided by target_core_fabric_configfs.c make_nodeacl
+> > > and drop_nodeacl() struct target_core_fabric_ops vectors, or if there is
+> > > some additional ibmvscsis / libsrp specific logic that needs to be made
+> > > to address the active I/O TCM backend Port/LUN unlink.
+> > 
+> > Why does a driver need to take care of this?
+> > 
+> > I thought that preventing the removal of a logical unit having
+> > outstanding I/Os is the responsibility of the target core.
+> 
+> Yes this should be the case.  However with TPG demo mode and active I/O
+> shutdown case w/o ->port_link + ->port_unlink usage, or an fabric
+> endpoint disable attribute (to clear the I_T Nexus for the endpoint) we
+> may be running into problems here when removing TPG LUNs in demo-mode
+> with an active I_T Nexus.
 
-*) Remove mixed case in iscsi_target_auth.c
-*) Remove unnecessary ____cacheline_aligned usage
-*) Cleanup code to use iscsit_release_cmd()
-*) Convert to use scsilun_to_int and int_to_scsilun
-*) Convert iscsi_session->session_[usage_count,waiting_on_uc] to int
-*) Convert iscsi_conn->conn_[usage_count, waiting_on_uc] to int
-*) Convert to use iscsi_proto.h iscsi_sna_gt
-*) Remove unused iscsit_ntoa
-*) Remove unused inet conversions
-*) Remove unused struct net_device state checks
-*) Convert to use kernel_[send,recv]msg() and struct kvec
-*) Use single np->np_ip and conn->login_ip for AF_INET*
-*) Use list_is_last() in iscsit_[free,stop]_session()
-*) Fix up lio_target_call_delnpfromtpg output
+What are the differences of the demo mode and the non-demo mode?
 
-Thanks again to Mike Christie for his review!
+I don't know if the similar bug is also in the non-demo mode but why
+can't we integrate them well instead of having two totally different
+paths?
 
---nab
+I just don't want to play with TPG since there is no TPG concept in
+SRP (and ibmvscsis). And I also don't play with any security stuff
+about it because it's also irrelevant for ibmvscsis.
 
-
+Also please rename 'demo-mode'. I don't think that it's a good name
+since it doesn't tell anything.
