@@ -1,40 +1,55 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/1] cciss: fix lost command issue
-Date: Wed, 23 Mar 2011 14:33:40 -0500
-Message-ID: <20110323193340.GB18722@beardog.cce.hp.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH-v2] tcm_loop: Add multi-fabric Linux/SCSI LLD fabric
+	module
+Date: Wed, 23 Mar 2011 13:20:29 -0700
+Message-ID: <1300911629.18039.11.camel@haakon2.linux-iscsi.org>
+References: <1300487957-28800-1-git-send-email-nab@linux-iscsi.org>
+	 <1300903542.15899.27.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <1300903542.15899.27.camel@mulgrave.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, bud.brown@redhat.com, mike.bacco@hp.com, Tom Coughlan <coughlan@redhat.com>, alan.ross@hp.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Andrew Morton <akpm@linux-foundation.org>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Patch 1 of 1
+On Wed, 2011-03-23 at 13:05 -0500, James Bottomley wrote:
+> On Fri, 2011-03-18 at 15:39 -0700, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch adds the TCM_Loop Linux/SCSI LLD fabric module for
+> > accessing TCM device
+> > backstores as locally accessable SCSI LUNs in virtual SAS, FC, and
+> > iSCSI Target ports
+> > using the generic fabric TransportID and Target Port WWN naming
+> > handlers from TCM's
+> > target_core_fabric_lib.c  The TCM_Loop module uses the generic fabric
+> > configfs infratructure
+> > provided by target_core_fabric_configfs.c and adds a module dependent
+> > attribute for the
+> > creation/release of the virtual I_T Nexus connected the TCM_Loop
+> > Target and Initiator Ports.
+> > 
+> > TCM_Loop can also be used with scsi-generic and BSG drivers so that
+> > STGT userspace
+> > fabric modules, QEMU-KVM and other hypervisor SCSI passthrough support
+> > can
+> > access TCM device backstore and control CDB emulation.
+> > 
+> > For more information please see:
+> > 
+> > http://linux-iscsi.org/wiki/Tcm_loop
+> > 
+> > This patch has been updated with changes from Christoph's feedback.
+> 
+> And checkpatch next time, too please:
+> 
+> total: 25 errors, 25 warnings, 1681 lines checked
+> 
 
-cciss: fix lost command problem
+Thanks for fixing this up James.  I will get your checkpatch cleanups
+merged from scsi-misc-2.6.git -> lio-core-2.6.git shortly.
 
-From: Bud Brown <bud.brown@redhat.com>
-
-Under certain workloads a command may seem to get lost. IOW, the Smart Array
-thinks all commands have been completed but we still have commands in our
-completion queue. This may lead to system instability, filesystems going
-read-only, or even panics depending on the affected filesystem. We add an
-extra read to force the write to complete.
-
-Testing shows this extra read avoids the problem.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-
-diff -urNp linux-2.6/drivers/block/cciss.h linux-2.6-03212011/drivers/block/cciss.h
---- linux-2.6/drivers/block/cciss.h	2011-03-21 15:41:23.100192400 -0500
-+++ linux-2.6-03212011/drivers/block/cciss.h	2011-03-21 15:39:20.472192814 -0500
-@@ -222,6 +222,7 @@ static void SA5_submit_command( ctlr_inf
- 			h->ctlr, c->busaddr);
- #endif /* CCISS_DEBUG */
- 	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
-+	readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
- 	h->commands_outstanding++;
- 	if ( h->commands_outstanding > h->max_outstanding)
- 		h->max_outstanding = h->commands_outstanding;
+--nab
