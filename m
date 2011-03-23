@@ -1,62 +1,37 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH for-2.6.39] [SCSI] scsi_dh_emc: fix panic when handling
- multiple path failures
-Date: Wed, 23 Mar 2011 19:02:59 -0400
-Message-ID: <20110323230259.GA3758@redhat.com>
-References: <1300737433-11994-1-git-send-email-snitzer@redhat.com>
- <1300737774.10634.37.camel@mulgrave.site>
- <20110321203829.GB12157@redhat.com>
- <1300740249.10634.43.camel@mulgrave.site>
- <20110321231657.GA12902@redhat.com>
- <20110323215826.GA3433@redhat.com>
- <1300917791.15899.39.camel@mulgrave.site>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 02/36] scsi,rcu: convert call_rcu(fc_rport_free_rcu) to
+	kfree_rcu()
+Date: Wed, 23 Mar 2011 17:19:49 -0600
+Message-ID: <20110323231948.GE13806@parisc-linux.org>
+References: <4D82D071.5020703@cn.fujitsu.com> <4D82D3FF.2080303@cn.fujitsu.com> <4D82D45A.30102@cn.fujitsu.com> <1300814913.19083.427.camel@fritz> <20110323065014.GU2322@linux.vnet.ibm.com> <1300889151.15899.4.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58143 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932755Ab1CWXDE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Mar 2011 19:03:04 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1300917791.15899.39.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1300889151.15899.4.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, Eddie Williams <eddie.williams@steeleye.com>
+Cc: paulmck@linux.vnet.ibm.com, Robert Love <robert.w.love@intel.com>, Lai Jiangshan <laijs@cn.fujitsu.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <axboe@kernel.dk>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>, Tejun Heo <tj@kernel.org>, Jarek Poplawski <jarkao2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 23 2011 at  6:03pm -0400,
-James Bottomley <James.Bottomley@suse.de> wrote:
-
-> On Wed, 2011-03-23 at 17:58 -0400, Mike Snitzer wrote:
-> > On Mon, Mar 21 2011 at  7:16pm -0400,
-> > Mike Snitzer <snitzer@redhat.com> wrote:
-> > 
-> > > > It's a bug fix: of course it can.
-> > > 
-> > > Right, so given scsi_dh_activate()'s {get,put}_device() that wraps the
-> > > call to scsi_dh->activate (aka clariion_activate) I'm not seeing how
-> > > accessing sdev->sdev_gendev (via sdev_printk) could result in a panic.
-> > > So I'll need to dig deeper (hopefully with Eddie's assistance)...
-> > 
-> > Hi James,
-> > 
-> > I checked with Eddie and the sdev_printk() panic he saw no longer occurs
-> > when commit db422318 is in place.  But he also tested with the patch I
-> > provided below.
-> > 
-> > I still feel this fix is needed and would like to get your feedback on
-> > this (relative to 2.6.39):
+On Wed, Mar 23, 2011 at 09:05:51AM -0500, James Bottomley wrote:
+> > #define kfree_rcu(ptr, rcu_head)					\
+> > 	__kfree_rcu(&((ptr)->rcu_head), offsetof(typeof(*(ptr)), rcu_head))
 > 
-> So what about the fix you propose in
-> 
-> Message-id: <20110321231657.GA12902@redhat.com>
-> 
-> ?  That looks to be the correct one.
+> Isn't this one of those cases where the obvious use of the interface is
+> definitely wrong?
 
-Yes, that is the correct fix (that is the same patch I quoted in my mail
-preceeding this one).
+But it's a compile time breakage if you use it wrong, not runtime.
 
-We'd need it in 2.6.38.y too.
+> It's also another nasty pseudo C prototype.  I know we do this sort of
+> thing for container_of et al, but I don't really think we want to extend
+> it.
 
-Thanks,
-Mike
+We do it for list_entry, list_for_each_entry, etc.  And those are very
+widespread within the kernel.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
