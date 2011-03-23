@@ -1,17 +1,17 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v2 07/14] iscsi-target: Add TPG and Device logic
-Date: Tue, 22 Mar 2011 20:06:38 -0700
-Message-ID: <1300849605-12651-8-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v2 09/14] iscsi-target: Add CHAP Authentication support using libcrypto
+Date: Tue, 22 Mar 2011 20:06:40 -0700
+Message-ID: <1300849605-12651-10-git-send-email-nab@linux-iscsi.org>
 References: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm19-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.162]:41065 "HELO
-	nm19-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752156Ab1CWDHZ (ORCPT
+Received: from nm16-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.253]:34229 "HELO
+	nm16-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752325Ab1CWDHd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Mar 2011 23:07:25 -0400
+	Tue, 22 Mar 2011 23:07:33 -0400
 In-Reply-To: <1300849605-12651-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,174 +20,33 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 =46rom: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds TPG and device logiced using for mapping iscsi-target
-abstractions on top of TCM v4 struct se_portal_group and struct se_devi=
-ce
-abstractions.
+This patch adds support for libcrypto md5 based iSCSI CHAP authenticati=
+on
+support for iscsi_target_mod.  This includes support for mutual and one=
+-way
+NodeACL authentication for SessionType=3DNormal and SessionType=3DDisco=
+very
+via /sys/kernel/config/target/iscsi.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_device.c |  108 ++++
- drivers/target/iscsi/iscsi_target_device.h |    9 +
- drivers/target/iscsi/iscsi_target_tpg.c    |  767 ++++++++++++++++++++=
+ drivers/target/iscsi/iscsi_target_auth.c |  496 ++++++++++++++++++++++=
 ++++++++
- drivers/target/iscsi/iscsi_target_tpg.h    |   43 ++
- 4 files changed, 927 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_device.c
- create mode 100644 drivers/target/iscsi/iscsi_target_device.h
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.c
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.h
+ drivers/target/iscsi/iscsi_target_auth.h |   32 ++
+ 2 files changed, 528 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/targe=
-t/iscsi/iscsi_target_device.c
+diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/=
+iscsi/iscsi_target_auth.c
 new file mode 100644
-index 0000000..b09ee93
+index 0000000..fc5e067
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_device.c
-@@ -0,0 +1,108 @@
++++ b/drivers/target/iscsi/iscsi_target_auth.c
+@@ -0,0 +1,496 @@
 +/*********************************************************************=
 **********
-+ * This file contains the iSCSI Virtual Device and Disk Transport
-+ * agnostic related functions.
-+ *
-+ =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (=
-GPL) version 2.
-+ *
-+ * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modif=
-y
-+ * it under the terms of the GNU General Public License as published b=
-y
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *********************************************************************=
-*********/
-+
-+#include <scsi/scsi_device.h>
-+#include <target/target_core_base.h>
-+#include <target/target_core_device.h>
-+#include <target/target_core_transport.h>
-+
-+#include "iscsi_target_debug.h"
-+#include "iscsi_target_core.h"
-+#include "iscsi_target_device.h"
-+#include "iscsi_target_tpg.h"
-+#include "iscsi_target_util.h"
-+
-+int iscsit_get_lun_for_tmr(
-+	struct iscsi_cmd *cmd,
-+	u64 lun)
-+{
-+	struct iscsi_conn *conn =3D cmd->conn;
-+	struct iscsi_portal_group *tpg =3D ISCSI_TPG_C(conn);
-+	u32 unpacked_lun;
-+
-+	unpacked_lun =3D scsilun_to_int((struct scsi_lun *)&lun);
-+	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
-+		printk(KERN_ERR "iSCSI LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
-+			"-1: %u for Target Portal Group: %hu\n", unpacked_lun,
-+			TRANSPORT_MAX_LUNS_PER_TPG-1, tpg->tpgt);
-+		return -1;
-+	}
-+
-+	return transport_get_lun_for_tmr(SE_CMD(cmd), unpacked_lun);
-+}
-+
-+int iscsit_get_lun_for_cmd(
-+	struct iscsi_cmd *cmd,
-+	unsigned char *cdb,
-+	u64 lun)
-+{
-+	struct iscsi_conn *conn =3D cmd->conn;
-+	struct iscsi_portal_group *tpg =3D ISCSI_TPG_C(conn);
-+	u32 unpacked_lun;
-+
-+	unpacked_lun =3D scsilun_to_int((struct scsi_lun *)&lun);
-+	if (unpacked_lun > (TRANSPORT_MAX_LUNS_PER_TPG-1)) {
-+		printk(KERN_ERR "iSCSI LUN: %u exceeds TRANSPORT_MAX_LUNS_PER_TPG"
-+			"-1: %u for Target Portal Group: %hu\n", unpacked_lun,
-+			TRANSPORT_MAX_LUNS_PER_TPG-1, tpg->tpgt);
-+		return -1;
-+	}
-+
-+	return transport_get_lun_for_cmd(SE_CMD(cmd), NULL, unpacked_lun);
-+}
-+
-+void iscsit_determine_maxcmdsn(struct iscsi_session *sess)
-+{
-+	struct se_node_acl *se_nacl;
-+
-+	/*
-+	 * This is a discovery session, the single queue slot was already
-+	 * assigned in iscsi_login_zero_tsih().  Since only Logout and
-+	 * Text Opcodes are allowed during discovery we do not have to worry
-+	 * about the HBA's queue depth here.
-+	 */
-+	if (sess->sess_ops->SessionType)
-+		return;
-+
-+	se_nacl =3D sess->se_sess->se_node_acl;
-+
-+	/*
-+	 * This is a normal session, set the Session's CmdSN window to the
-+	 * struct se_node_acl->queue_depth.  The value in struct se_node_acl-=
->queue_depth
-+	 * has already been validated as a legal value in
-+	 * core_set_queue_depth_for_node().
-+	 */
-+	sess->cmdsn_window =3D se_nacl->queue_depth;
-+	sess->max_cmd_sn =3D (sess->max_cmd_sn + se_nacl->queue_depth) - 1;
-+}
-+
-+void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_ses=
-sion *sess)
-+{
-+	if (cmd->immediate_cmd || cmd->maxcmdsn_inc)
-+		return;
-+
-+	cmd->maxcmdsn_inc =3D 1;
-+
-+	spin_lock(&sess->cmdsn_lock);
-+	sess->max_cmd_sn +=3D 1;
-+	TRACE(TRACE_ISCSI, "Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
-+	spin_unlock(&sess->cmdsn_lock);
-+}
-diff --git a/drivers/target/iscsi/iscsi_target_device.h b/drivers/targe=
-t/iscsi/iscsi_target_device.h
-new file mode 100644
-index 0000000..bef1cad
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_device.h
-@@ -0,0 +1,9 @@
-+#ifndef ISCSI_TARGET_DEVICE_H
-+#define ISCSI_TARGET_DEVICE_H
-+
-+extern int iscsit_get_lun_for_tmr(struct iscsi_cmd *, u64);
-+extern int iscsit_get_lun_for_cmd(struct iscsi_cmd *, unsigned char *,=
- u64);
-+extern void iscsit_determine_maxcmdsn(struct iscsi_session *);
-+extern void iscsit_increment_maxcmdsn(struct iscsi_cmd *, struct iscsi=
-_session *);
-+
-+#endif /* ISCSI_TARGET_DEVICE_H */
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/i=
-scsi/iscsi_target_tpg.c
-new file mode 100644
-index 0000000..dcc1d99
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -0,0 +1,767 @@
-+/*********************************************************************=
-**********
-+ * This file contains iSCSI Target Portal Group related functions.
++ * This file houses the main functions for the iSCSI CHAP support
 + *
 + * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
@@ -210,841 +69,535 @@ y
 + *********************************************************************=
 *********/
 +
-+#include <target/target_core_base.h>
-+#include <target/target_core_transport.h>
-+#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_configfs.h>
-+#include <target/target_core_tpg.h>
++#include <linux/string.h>
++#include <linux/crypto.h>
++#include <linux/err.h>
++#include <linux/scatterlist.h>
 +
-+#include "iscsi_target_debug.h"
 +#include "iscsi_target_core.h"
-+#include "iscsi_target_erl0.h"
-+#include "iscsi_target_login.h"
-+#include "iscsi_target_nodeattrib.h"
-+#include "iscsi_target_tpg.h"
-+#include "iscsi_target_util.h"
-+#include "iscsi_target.h"
-+#include "iscsi_target_parameters.h"
++#include "iscsi_target_nego.h"
++#include "iscsi_target_auth.h"
 +
-+struct iscsi_portal_group *iscsit_alloc_portal_group(struct iscsi_tiqn=
- *tiqn, u16 tpgt)
++#ifdef DEBUG_CHAP
++#define PRINT(x...)		printk(KERN_INFO x)
++#else
++#define PRINT(x...)
++#endif
++
++static unsigned char chap_asciihex_to_binaryhex(unsigned char val[2])
 +{
-+	struct iscsi_portal_group *tpg;
++	unsigned char result =3D 0;
++	/*
++	 * MSB
++	 */
++	if ((val[0] >=3D 'a') && (val[0] <=3D 'f'))
++		result =3D ((val[0] - 'a' + 10) & 0xf) << 4;
++	else
++		if ((val[0] >=3D 'A') && (val[0] <=3D 'F'))
++			result =3D ((val[0] - 'A' + 10) & 0xf) << 4;
++		else /* digit */
++			result =3D ((val[0] - '0') & 0xf) << 4;
++	/*
++	 * LSB
++	 */
++	if ((val[1] >=3D 'a') && (val[1] <=3D 'f'))
++		result |=3D ((val[1] - 'a' + 10) & 0xf);
++	else
++		if ((val[1] >=3D 'A') && (val[1] <=3D 'F'))
++			result |=3D ((val[1] - 'A' + 10) & 0xf);
++		else /* digit */
++			result |=3D ((val[1] - '0') & 0xf);
 +
-+	tpg =3D kzalloc(sizeof(struct iscsi_portal_group), GFP_KERNEL);
-+	if (!tpg) {
-+		printk(KERN_ERR "Unable to allocate struct iscsi_portal_group\n");
++	return result;
++}
++
++static int chap_string_to_hex(unsigned char *dst, unsigned char *src, =
+int len)
++{
++	int i, j =3D 0;
++
++	for (i =3D 0; i < len; i +=3D 2) {
++		dst[j++] =3D (unsigned char) chap_asciihex_to_binaryhex(&src[i]);
++	}
++
++	dst[j] =3D '\0';
++	return j;
++}
++
++static void chap_binaryhex_to_asciihex(char *dst, char *src, int src_l=
+en)
++{
++	int i;
++
++	for (i =3D 0; i < src_len; i++) {
++		sprintf(&dst[i*2], "%02x", (int) src[i] & 0xff);
++	}
++}
++
++static void chap_set_random(char *data, int length)
++{
++	long r;
++	unsigned n;
++
++	while (length > 0) {
++		get_random_bytes(&r, sizeof(long));
++		r =3D r ^ (r >> 8);
++		r =3D r ^ (r >> 4);
++		n =3D r & 0x7;
++
++		get_random_bytes(&r, sizeof(long));
++		r =3D r ^ (r >> 8);
++		r =3D r ^ (r >> 5);
++		n =3D (n << 3) | (r & 0x7);
++
++		get_random_bytes(&r, sizeof(long));
++		r =3D r ^ (r >> 8);
++		r =3D r ^ (r >> 5);
++		n =3D (n << 2) | (r & 0x3);
++
++		*data++ =3D n;
++		length--;
++	}
++}
++
++static void chap_gen_challenge(
++	struct iscsi_conn *conn,
++	int caller,
++	char *c_str,
++	unsigned int *c_len)
++{
++	unsigned char challenge_asciihex[CHAP_CHALLENGE_LENGTH * 2 + 1];
++	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
+;
++
++	memset(challenge_asciihex, 0, CHAP_CHALLENGE_LENGTH * 2 + 1);
++
++	chap_set_random(chap->challenge, CHAP_CHALLENGE_LENGTH);
++	chap_binaryhex_to_asciihex(challenge_asciihex, chap->challenge,
++				CHAP_CHALLENGE_LENGTH);
++	/*
++	 * Set CHAP_C, and copy the generated challenge into c_str.
++	 */
++	*c_len +=3D sprintf(c_str + *c_len, "CHAP_C=3D0x%s", challenge_asciih=
+ex);
++	*c_len +=3D 1;
++
++	PRINT("[%s] Sending CHAP_C=3D0x%s\n\n", (caller) ? "server" : "client=
+",
++			challenge_asciihex);
++}
++
++
++static struct iscsi_chap *chap_server_open(
++	struct iscsi_conn *conn,
++	struct iscsi_node_auth *auth,
++	const char *A_str,
++	char *aic_str,
++	unsigned int *aic_len)
++{
++	struct iscsi_chap *chap;
++
++	if (!(auth->naf_flags & NAF_USERID_SET) ||
++	    !(auth->naf_flags & NAF_PASSWORD_SET)) {
++		printk(KERN_ERR "CHAP user or password not set for"
++				" Initiator ACL\n");
 +		return NULL;
 +	}
 +
-+	tpg->tpgt =3D tpgt;
-+	tpg->tpg_state =3D TPG_STATE_FREE;
-+	tpg->tpg_tiqn =3D tiqn;
-+	INIT_LIST_HEAD(&tpg->tpg_gnp_list);
-+	INIT_LIST_HEAD(&tpg->tpg_list);
-+	mutex_init(&tpg->tpg_access_lock);
-+	mutex_init(&tpg->np_login_lock);
-+	spin_lock_init(&tpg->tpg_state_lock);
-+	spin_lock_init(&tpg->tpg_np_lock);
-+
-+	return tpg;
-+}
-+
-+static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *=
++	conn->auth_protocol =3D kzalloc(sizeof(struct iscsi_chap), GFP_KERNEL=
 );
++	if (!conn->auth_protocol)
++		return NULL;
 +
-+int iscsit_load_discovery_tpg(void)
-+{
-+	struct iscsi_param *param;
-+	struct iscsi_portal_group *tpg;
-+	int ret;
-+
-+	tpg =3D iscsit_alloc_portal_group(NULL, 1);
-+	if (!tpg) {
-+		printk(KERN_ERR "Unable to allocate struct iscsi_portal_group\n");
-+		return -1;
-+	}
-+
-+	ret =3D core_tpg_register(
-+			&lio_target_fabric_configfs->tf_ops,
-+			NULL, &tpg->tpg_se_tpg, (void *)tpg,
-+			TRANSPORT_TPG_TYPE_DISCOVERY);
-+	if (ret < 0) {
-+		kfree(tpg);
-+		return -1;
-+	}
-+
-+	tpg->sid =3D 1; /* First Assigned LIO Session ID */
-+	iscsit_set_default_tpg_attribs(tpg);
-+
-+	if (iscsi_create_default_params(&tpg->param_list) < 0)
-+		goto out;
++	chap =3D (struct iscsi_chap *) conn->auth_protocol;
 +	/*
-+	 * By default we disable authentication for discovery sessions,
-+	 * this can be changed with:
-+	 *
-+	 * /sys/kernel/config/target/iscsi/discovery_auth/enforce_discovery_a=
-uth
++	 * We only support MD5 MDA presently.
 +	 */
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param)
-+		goto out;
-+
-+	if (iscsi_update_param_value(param, "CHAP,None") < 0)
-+		goto out;
-+
-+	tpg->tpg_attrib.authentication =3D 0;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state  =3D TPG_STATE_ACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	iscsi_global->discovery_tpg =3D tpg;
-+	printk(KERN_INFO "CORE[0] - Allocated Discovery TPG\n");
-+
-+	return 0;
-+out:
-+	if (tpg->sid =3D=3D 1)
-+		core_tpg_deregister(&tpg->tpg_se_tpg);
-+	kfree(tpg);
-+	return -1;
-+}
-+
-+void iscsit_release_discovery_tpg(void)
-+{
-+	struct iscsi_portal_group *tpg =3D iscsi_global->discovery_tpg;
-+
-+	if (!tpg)
-+		return;
-+
-+	core_tpg_deregister(&tpg->tpg_se_tpg);
-+
-+	kfree(tpg);
-+	iscsi_global->discovery_tpg =3D NULL;
-+}
-+
-+struct iscsi_portal_group *iscsit_get_tpg_from_np(
-+	struct iscsi_tiqn *tiqn,
-+	struct iscsi_np *np)
-+{
-+	struct iscsi_portal_group *tpg =3D NULL;
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	list_for_each_entry(tpg, &tiqn->tiqn_tpg_list, tpg_list) {
-+
-+		spin_lock(&tpg->tpg_state_lock);
-+		if (tpg->tpg_state =3D=3D TPG_STATE_FREE) {
-+			spin_unlock(&tpg->tpg_state_lock);
-+			continue;
-+		}
-+		spin_unlock(&tpg->tpg_state_lock);
-+
-+		spin_lock(&tpg->tpg_np_lock);
-+		list_for_each_entry(tpg_np, &tpg->tpg_gnp_list, tpg_np_list) {
-+			if (tpg_np->tpg_np =3D=3D np) {
-+				spin_unlock(&tpg->tpg_np_lock);
-+				spin_unlock(&tiqn->tiqn_tpg_lock);
-+				return tpg;
-+			}
-+		}
-+		spin_unlock(&tpg->tpg_np_lock);
++	if (strncmp(A_str, "CHAP_A=3D5", 8)) {
++		printk(KERN_ERR "CHAP_A is not MD5.\n");
++		return NULL;
 +	}
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return NULL;
-+}
-+
-+int iscsit_get_tpg(
-+	struct iscsi_portal_group *tpg)
-+{
-+	int ret;
-+
-+	ret =3D mutex_lock_interruptible(&tpg->tpg_access_lock);
-+	return ((ret !=3D 0) || signal_pending(current)) ? -1 : 0;
-+}
-+
-+void iscsit_put_tpg(struct iscsi_portal_group *tpg)
-+{
-+	mutex_unlock(&tpg->tpg_access_lock);
-+}
-+
-+static void iscsit_clear_tpg_np_login_thread(
-+	struct iscsi_tpg_np *tpg_np,
-+	struct iscsi_portal_group *tpg)
-+{
-+	if (!tpg_np->tpg_np) {
-+		printk(KERN_ERR "struct iscsi_tpg_np->tpg_np is NULL!\n");
-+		return;
-+	}
-+
-+	iscsit_reset_np_thread(tpg_np->tpg_np, tpg_np, tpg);
-+	return;
-+}
-+
-+void iscsit_clear_tpg_np_login_threads(
-+	struct iscsi_portal_group *tpg)
-+{
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_for_each_entry(tpg_np, &tpg->tpg_gnp_list, tpg_np_list) {
-+		if (!tpg_np->tpg_np) {
-+			printk(KERN_ERR "struct iscsi_tpg_np->tpg_np is NULL!\n");
-+			continue;
-+		}
-+		spin_unlock(&tpg->tpg_np_lock);
-+		iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
-+		spin_lock(&tpg->tpg_np_lock);
-+	}
-+	spin_unlock(&tpg->tpg_np_lock);
-+}
-+
-+void iscsit_tpg_dump_params(struct iscsi_portal_group *tpg)
-+{
-+	iscsi_print_params(tpg->param_list);
-+}
-+
-+static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *=
-tpg)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	a->authentication =3D TA_AUTHENTICATION;
-+	a->login_timeout =3D TA_LOGIN_TIMEOUT;
-+	a->netif_timeout =3D TA_NETIF_TIMEOUT;
-+	a->default_cmdsn_depth =3D TA_DEFAULT_CMDSN_DEPTH;
-+	a->generate_node_acls =3D TA_GENERATE_NODE_ACLS;
-+	a->cache_dynamic_acls =3D TA_CACHE_DYNAMIC_ACLS;
-+	a->demo_mode_write_protect =3D TA_DEMO_MODE_WRITE_PROTECT;
-+	a->prod_mode_write_protect =3D TA_PROD_MODE_WRITE_PROTECT;
-+}
-+
-+int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_=
-portal_group *tpg)
-+{
-+	if (tpg->tpg_state !=3D TPG_STATE_FREE) {
-+		printk(KERN_ERR "Unable to add iSCSI Target Portal Group: %d"
-+			" while not in TPG_STATE_FREE state.\n", tpg->tpgt);
-+		return -EEXIST;
-+	}
-+	iscsit_set_default_tpg_attribs(tpg);
-+
-+	if (iscsi_create_default_params(&tpg->param_list) < 0)
-+		goto err_out;
-+
-+	ISCSI_TPG_ATTRIB(tpg)->tpg =3D tpg;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state	=3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	list_add_tail(&tpg->tpg_list, &tiqn->tiqn_tpg_list);
-+	tiqn->tiqn_ntpgs++;
-+	printk(KERN_INFO "CORE[%s]_TPG[%hu] - Added iSCSI Target Portal Group=
-\n",
-+			tiqn->tiqn, tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+err_out:
-+	if (tpg->param_list) {
-+		iscsi_release_param_list(tpg->param_list);
-+		tpg->param_list =3D NULL;
-+	}
-+	kfree(tpg);
-+	return -ENOMEM;
-+}
-+
-+int iscsit_tpg_del_portal_group(
-+	struct iscsi_tiqn *tiqn,
-+	struct iscsi_portal_group *tpg,
-+	int force)
-+{
-+	u8 old_state =3D tpg->tpg_state;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state =3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	if (iscsit_release_sessions_for_tpg(tpg, force) < 0) {
-+		printk(KERN_ERR "Unable to delete iSCSI Target Portal Group:"
-+			" %hu while active sessions exist, and force=3D0\n",
-+			tpg->tpgt);
-+		tpg->tpg_state =3D old_state;
-+		return -EPERM;
-+	}
-+
-+	core_tpg_clear_object_luns(&tpg->tpg_se_tpg);
-+
-+	if (tpg->param_list) {
-+		iscsi_release_param_list(tpg->param_list);
-+		tpg->param_list =3D NULL;
-+	}
-+
-+	core_tpg_deregister(&tpg->tpg_se_tpg);
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state =3D TPG_STATE_FREE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_ntpgs--;
-+	list_del(&tpg->tpg_list);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	printk(KERN_INFO "CORE[%s]_TPG[%hu] - Deleted iSCSI Target Portal Gro=
-up\n",
-+			tiqn->tiqn, tpg->tpgt);
-+
-+	kfree(tpg);
-+	return 0;
-+}
-+
-+int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
-+{
-+	struct iscsi_param *param;
-+	struct iscsi_tiqn *tiqn =3D tpg->tpg_tiqn;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	if (tpg->tpg_state =3D=3D TPG_STATE_ACTIVE) {
-+		printk(KERN_ERR "iSCSI target portal group: %hu is already"
-+			" active, ignoring request.\n", tpg->tpgt);
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -EINVAL;
-+	}
++	PRINT("[server] Got CHAP_A=3D5\n");
 +	/*
-+	 * Make sure that AuthMethod does not contain None as an option
-+	 * unless explictly disabled.  Set the default to CHAP if authenticat=
-ion
-+	 * is enforced (as per default), and remove the NONE option.
++	 * Send back CHAP_A set to MD5.
 +	 */
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param) {
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -ENOMEM;
-+	}
-+
-+	if (ISCSI_TPG_ATTRIB(tpg)->authentication) {
-+		if (!strcmp(param->value, NONE))
-+			if (iscsi_update_param_value(param, CHAP) < 0) {
-+				spin_unlock(&tpg->tpg_state_lock);
-+				return -ENOMEM;
-+			}
-+		if (iscsit_ta_authentication(tpg, 1) < 0) {
-+			spin_unlock(&tpg->tpg_state_lock);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	tpg->tpg_state =3D TPG_STATE_ACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_active_tpgs++;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Enabled iSCSI Target Portal Group\=
-n",
-+			tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+}
-+
-+int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *tpg, in=
-t force)
-+{
-+	struct iscsi_tiqn *tiqn;
-+	u8 old_state =3D tpg->tpg_state;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	if (tpg->tpg_state =3D=3D TPG_STATE_INACTIVE) {
-+		printk(KERN_ERR "iSCSI Target Portal Group: %hu is already"
-+			" inactive, ignoring request.\n", tpg->tpgt);
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -EINVAL;
-+	}
-+	tpg->tpg_state =3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	iscsit_clear_tpg_np_login_threads(tpg);
-+
-+	if (iscsit_release_sessions_for_tpg(tpg, force) < 0) {
-+		spin_lock(&tpg->tpg_state_lock);
-+		tpg->tpg_state =3D old_state;
-+		spin_unlock(&tpg->tpg_state_lock);
-+		printk(KERN_ERR "Unable to disable iSCSI Target Portal Group:"
-+			" %hu while active sessions exist, and force=3D0\n",
-+			tpg->tpgt);
-+		return -EPERM;
-+	}
-+
-+	tiqn =3D tpg->tpg_tiqn;
-+	if (!tiqn || (tpg =3D=3D iscsi_global->discovery_tpg))
-+		return 0;
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_active_tpgs--;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Disabled iSCSI Target Portal Group=
-\n",
-+			tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+}
-+
-+struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(
-+	struct iscsi_session *sess)
-+{
-+	struct se_session *se_sess =3D sess->se_sess;
-+	struct se_node_acl *se_nacl =3D se_sess->se_node_acl;
-+	struct iscsi_node_acl *acl =3D container_of(se_nacl, struct iscsi_nod=
-e_acl,
-+					se_node_acl);
-+
-+	return &acl->node_attrib;
-+}
-+
-+struct iscsi_tpg_np *iscsit_tpg_locate_child_np(
-+	struct iscsi_tpg_np *tpg_np,
-+	int network_transport)
-+{
-+	struct iscsi_tpg_np *tpg_np_child, *tpg_np_child_tmp;
-+
-+	spin_lock(&tpg_np->tpg_np_parent_lock);
-+	list_for_each_entry_safe(tpg_np_child, tpg_np_child_tmp,
-+			&tpg_np->tpg_np_parent_list, tpg_np_child_list) {
-+		if (tpg_np_child->tpg_np->np_network_transport =3D=3D
-+				network_transport) {
-+			spin_unlock(&tpg_np->tpg_np_parent_lock);
-+			return tpg_np_child;
-+		}
-+	}
-+	spin_unlock(&tpg_np->tpg_np_parent_lock);
-+
-+	return NULL;
-+}
-+
-+struct iscsi_tpg_np *iscsit_tpg_add_network_portal(
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_np_addr *np_addr,
-+	struct iscsi_tpg_np *tpg_np_parent,
-+	int network_transport,
-+	int af_inet)
-+{
-+	struct iscsi_np *np;
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	tpg_np =3D kzalloc(sizeof(struct iscsi_tpg_np), GFP_KERNEL);
-+	if (!tpg_np) {
-+		printk(KERN_ERR "Unable to allocate memory for"
-+				" struct iscsi_tpg_np.\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	np =3D iscsit_add_np(np_addr, network_transport, af_inet);
-+	if (IS_ERR(np)) {
-+		kfree(tpg_np);
-+		return ERR_CAST(np);
-+	}
-+
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_list);
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_child_list);
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_parent_list);
-+	spin_lock_init(&tpg_np->tpg_np_parent_lock);
-+	tpg_np->tpg_np		=3D np;
-+	tpg_np->tpg		=3D tpg;
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_add_tail(&tpg_np->tpg_np_list, &tpg->tpg_gnp_list);
-+	tpg->num_tpg_nps++;
-+	if (tpg->tpg_tiqn)
-+		tpg->tpg_tiqn->tiqn_num_tpg_nps++;
-+	spin_unlock(&tpg->tpg_np_lock);
-+
-+	if (tpg_np_parent) {
-+		tpg_np->tpg_np_parent =3D tpg_np_parent;
-+		spin_lock(&tpg_np_parent->tpg_np_parent_lock);
-+		list_add_tail(&tpg_np->tpg_np_child_list,
-+			&tpg_np_parent->tpg_np_parent_list);
-+		spin_unlock(&tpg_np_parent->tpg_np_parent_lock);
-+	}
-+
-+	printk(KERN_INFO "CORE[%s] - Added Network Portal: %s:%hu,%hu on %s o=
-n"
-+		" network device: %s\n", tpg->tpg_tiqn->tiqn, np->np_ip,
-+		np->np_port, tpg->tpgt,
-+		(np->np_network_transport =3D=3D ISCSI_TCP) ?
-+		"TCP" : "SCTP", (strlen(np->np_net_dev)) ?
-+		(char *)np->np_net_dev : "None");
-+
-+	return tpg_np;
-+}
-+
-+static int iscsit_tpg_release_np(
-+	struct iscsi_tpg_np *tpg_np,
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_np *np)
-+{
-+	iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
-+
-+	printk(KERN_INFO "CORE[%s] - Removed Network Portal: %s:%hu,%hu on %s=
-"
-+		" on network device: %s\n", tpg->tpg_tiqn->tiqn, np->np_ip,
-+		np->np_port, tpg->tpgt,
-+		(np->np_network_transport =3D=3D ISCSI_TCP) ?
-+		"TCP" : "SCTP",  (strlen(np->np_net_dev)) ?
-+		(char *)np->np_net_dev : "None");
-+
-+	tpg_np->tpg_np =3D NULL;
-+	tpg_np->tpg =3D NULL;
-+	kfree(tpg_np);
++	*aic_len =3D sprintf(aic_str, "CHAP_A=3D5");
++	*aic_len +=3D 1;
++	chap->digest_type =3D CHAP_DIGEST_MD5;
++	PRINT("[server] Sending CHAP_A=3D%d\n", chap->digest_type);
 +	/*
-+	 * iscsit_del_np() will shutdown struct iscsi_np when last TPG refere=
-nce is released.
++	 * Set Identifier.
 +	 */
-+	return iscsit_del_np(np);
++	chap->id =3D ISCSI_TPG_C(conn)->tpg_chap_id++;
++	*aic_len +=3D sprintf(aic_str + *aic_len, "CHAP_I=3D%d", chap->id);
++	*aic_len +=3D 1;
++	PRINT("[server] Sending CHAP_I=3D%d\n", chap->id);
++	/*
++	 * Generate Challenge.
++	 */
++	chap_gen_challenge(conn, 1, aic_str, aic_len);
++
++	return chap;
 +}
 +
-+int iscsit_tpg_del_network_portal(
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_tpg_np *tpg_np)
++static void chap_close(struct iscsi_conn *conn)
 +{
-+	struct iscsi_np *np;
-+	struct iscsi_tpg_np *tpg_np_child, *tpg_np_child_tmp;
-+	int ret =3D 0;
-+
-+	np =3D tpg_np->tpg_np;
-+	if (!np) {
-+		printk(KERN_ERR "Unable to locate struct iscsi_np from"
-+				" struct iscsi_tpg_np\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!tpg_np->tpg_np_parent) {
-+		/*
-+		 * We are the parent tpg network portal.  Release all of the
-+		 * child tpg_np's (eg: the non ISCSI_TCP ones) on our parent
-+		 * list first.
-+		 */
-+		list_for_each_entry_safe(tpg_np_child, tpg_np_child_tmp,
-+				&tpg_np->tpg_np_parent_list,
-+				tpg_np_child_list) {
-+			ret =3D iscsit_tpg_del_network_portal(tpg, tpg_np_child);
-+			if (ret < 0)
-+				printk(KERN_ERR "iscsit_tpg_del_network_portal()"
-+					" failed: %d\n", ret);
-+		}
-+	} else {
-+		/*
-+		 * We are not the parent ISCSI_TCP tpg network portal.  Release
-+		 * our own network portals from the child list.
-+		 */
-+		spin_lock(&tpg_np->tpg_np_parent->tpg_np_parent_lock);
-+		list_del(&tpg_np->tpg_np_child_list);
-+		spin_unlock(&tpg_np->tpg_np_parent->tpg_np_parent_lock);
-+	}
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_del(&tpg_np->tpg_np_list);
-+	tpg->num_tpg_nps--;
-+	if (tpg->tpg_tiqn)
-+		tpg->tpg_tiqn->tiqn_num_tpg_nps--;
-+	spin_unlock(&tpg->tpg_np_lock);
-+
-+	return iscsit_tpg_release_np(tpg_np, tpg, np);
++	kfree(conn->auth_protocol);
++	conn->auth_protocol =3D NULL;
 +}
 +
-+int iscsit_tpg_set_initiator_node_queue_depth(
-+	struct iscsi_portal_group *tpg,
-+	unsigned char *initiatorname,
-+	u32 queue_depth,
-+	int force)
++static int chap_server_compute_md5(
++	struct iscsi_conn *conn,
++	struct iscsi_node_auth *auth,
++	char *nr_in_ptr,
++	char *nr_out_ptr,
++	unsigned int *nr_out_len)
 +{
-+	return core_tpg_set_initiator_node_queue_depth(&tpg->tpg_se_tpg,
-+		initiatorname, queue_depth, force);
-+}
-+
-+int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authe=
-ntication)
-+{
-+	unsigned char buf1[256], buf2[256], *none =3D NULL;
-+	int len;
-+	struct iscsi_param *param;
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((authentication !=3D 1) && (authentication !=3D 0)) {
-+		printk(KERN_ERR "Illegal value for authentication parameter:"
-+			" %u, ignoring request.\n", authentication);
-+		return -1;
-+	}
-+
-+	memset(buf1, 0, sizeof(buf1));
-+	memset(buf2, 0, sizeof(buf2));
-+
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param)
-+		return -EINVAL;
-+
-+	if (authentication) {
-+		snprintf(buf1, sizeof(buf1), "%s", param->value);
-+		none =3D strstr(buf1, NONE);
-+		if (!none)
-+			goto out;
-+		if (!strncmp(none + 4, ",", 1)) {
-+			if (!strcmp(buf1, none))
-+				sprintf(buf2, "%s", none+5);
-+			else {
-+				none--;
-+				*none =3D '\0';
-+				len =3D sprintf(buf2, "%s", buf1);
-+				none +=3D 5;
-+				sprintf(buf2 + len, "%s", none);
-+			}
-+		} else {
-+			none--;
-+			*none =3D '\0';
-+			sprintf(buf2, "%s", buf1);
-+		}
-+		if (iscsi_update_param_value(param, buf2) < 0)
-+			return -EINVAL;
-+	} else {
-+		snprintf(buf1, sizeof(buf1), "%s", param->value);
-+		none =3D strstr(buf1, NONE);
-+		if ((none))
-+			goto out;
-+		strncat(buf1, ",", strlen(","));
-+		strncat(buf1, NONE, strlen(NONE));
-+		if (iscsi_update_param_value(param, buf1) < 0)
-+			return -EINVAL;
-+	}
-+
-+out:
-+	a->authentication =3D authentication;
-+	printk(KERN_INFO "%s iSCSI Authentication Methods for TPG: %hu.\n",
-+		a->authentication ? "Enforcing" : "Disabling", tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_login_timeout(
-+	struct iscsi_portal_group *tpg,
-+	u32 login_timeout)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (login_timeout > TA_LOGIN_TIMEOUT_MAX) {
-+		printk(KERN_ERR "Requested Login Timeout %u larger than maximum"
-+			" %u\n", login_timeout, TA_LOGIN_TIMEOUT_MAX);
-+		return -EINVAL;
-+	} else if (login_timeout < TA_LOGIN_TIMEOUT_MIN) {
-+		printk(KERN_ERR "Requested Logout Timeout %u smaller than"
-+			" minimum %u\n", login_timeout, TA_LOGIN_TIMEOUT_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->login_timeout =3D login_timeout;
-+	printk(KERN_INFO "Set Logout Timeout to %u for Target Portal Group"
-+		" %hu\n", a->login_timeout, tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_netif_timeout(
-+	struct iscsi_portal_group *tpg,
-+	u32 netif_timeout)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (netif_timeout > TA_NETIF_TIMEOUT_MAX) {
-+		printk(KERN_ERR "Requested Network Interface Timeout %u larger"
-+			" than maximum %u\n", netif_timeout,
-+				TA_NETIF_TIMEOUT_MAX);
-+		return -EINVAL;
-+	} else if (netif_timeout < TA_NETIF_TIMEOUT_MIN) {
-+		printk(KERN_ERR "Requested Network Interface Timeout %u smaller"
-+			" than minimum %u\n", netif_timeout,
-+				TA_NETIF_TIMEOUT_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->netif_timeout =3D netif_timeout;
-+	printk(KERN_INFO "Set Network Interface Timeout to %u for"
-+		" Target Portal Group %hu\n", a->netif_timeout, tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_generate_node_acls(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->generate_node_acls =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Generate Initiator Portal Group AC=
-Ls: %s\n",
-+		tpg->tpgt, (a->generate_node_acls) ? "Enabled" : "Disabled");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_default_cmdsn_depth(
-+	struct iscsi_portal_group *tpg,
-+	u32 tcq_depth)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (tcq_depth > TA_DEFAULT_CMDSN_DEPTH_MAX) {
-+		printk(KERN_ERR "Requested Default Queue Depth: %u larger"
-+			" than maximum %u\n", tcq_depth,
-+				TA_DEFAULT_CMDSN_DEPTH_MAX);
-+		return -EINVAL;
-+	} else if (tcq_depth < TA_DEFAULT_CMDSN_DEPTH_MIN) {
-+		printk(KERN_ERR "Requested Default Queue Depth: %u smaller"
-+			" than minimum %u\n", tcq_depth,
-+				TA_DEFAULT_CMDSN_DEPTH_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->default_cmdsn_depth =3D tcq_depth;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Set Default CmdSN TCQ Depth to %u\=
-n",
-+		tpg->tpgt, a->default_cmdsn_depth);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_cache_dynamic_acls(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->cache_dynamic_acls =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Cache Dynamic Initiator Portal Gro=
-up"
-+		" ACLs %s\n", tpg->tpgt, (a->cache_dynamic_acls) ?
-+		"Enabled" : "Disabled");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_demo_mode_write_protect(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->demo_mode_write_protect =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Demo Mode Write Protect bit: %s\n"=
-,
-+		tpg->tpgt, (a->demo_mode_write_protect) ? "ON" : "OFF");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_prod_mode_write_protect(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->prod_mode_write_protect =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Production Mode Write Protect bit:=
-"
-+		" %s\n", tpg->tpgt, (a->prod_mode_write_protect) ?
-+		"ON" : "OFF");
-+
-+	return 0;
-+}
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/i=
-scsi/iscsi_target_tpg.h
-new file mode 100644
-index 0000000..31de29a
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_tpg.h
-@@ -0,0 +1,43 @@
-+#ifndef ISCSI_TARGET_TPG_H
-+#define ISCSI_TARGET_TPG_H
-+
-+extern struct iscsi_portal_group *iscsit_alloc_portal_group(struct isc=
-si_tiqn *, u16);
-+extern int iscsit_load_discovery_tpg(void);
-+extern void iscsit_release_discovery_tpg(void);
-+extern struct iscsi_portal_group *iscsit_get_tpg_from_np(struct iscsi_=
-tiqn *,
-+			struct iscsi_np *);
-+extern int iscsit_get_tpg(struct iscsi_portal_group *);
-+extern void iscsit_put_tpg(struct iscsi_portal_group *);
-+extern void iscsit_clear_tpg_np_login_threads(struct iscsi_portal_grou=
-p *);
-+extern void iscsit_tpg_dump_params(struct iscsi_portal_group *);
-+extern int iscsit_tpg_add_portal_group(struct iscsi_tiqn *, struct isc=
-si_portal_group *);
-+extern int iscsit_tpg_del_portal_group(struct iscsi_tiqn *, struct isc=
-si_portal_group *,
-+			int);
-+extern int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *)=
++	char *endptr;
++	unsigned char id, digest[MD5_SIGNATURE_SIZE];
++	unsigned char type, response[MD5_SIGNATURE_SIZE * 2 + 2];
++	unsigned char identifier[10], *challenge =3D NULL;
++	unsigned char *challenge_binhex =3D NULL;
++	unsigned char client_digest[MD5_SIGNATURE_SIZE];
++	unsigned char server_digest[MD5_SIGNATURE_SIZE];
++	unsigned char chap_n[MAX_CHAP_N_SIZE], chap_r[MAX_RESPONSE_LENGTH];
++	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
 ;
-+extern int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *=
-, int);
-+extern struct iscsi_node_acl *iscsit_tpg_add_initiator_node_acl(
-+			struct iscsi_portal_group *, const char *, u32);
-+extern void iscsit_tpg_del_initiator_node_acl(struct iscsi_portal_grou=
-p *,
-+			struct se_node_acl *);
-+extern struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(struct isc=
-si_session *);
-+extern void iscsit_tpg_del_external_nps(struct iscsi_tpg_np *);
-+extern struct iscsi_tpg_np *iscsit_tpg_locate_child_np(struct iscsi_tp=
-g_np *, int);
-+extern struct iscsi_tpg_np *iscsit_tpg_add_network_portal(struct iscsi=
-_portal_group *,
-+			struct iscsi_np_addr *, struct iscsi_tpg_np *, int, int);
-+extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
-+			struct iscsi_tpg_np *);
-+extern int iscsit_tpg_set_initiator_node_queue_depth(struct iscsi_port=
-al_group *,
-+			unsigned char *, u32, int);
-+extern int iscsit_ta_authentication(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_login_timeout(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_netif_timeout(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_generate_node_acls(struct iscsi_portal_group *, u=
-32);
-+extern int iscsit_ta_default_cmdsn_depth(struct iscsi_portal_group *, =
-u32);
-+extern int iscsit_ta_cache_dynamic_acls(struct iscsi_portal_group *, u=
-32);
-+extern int iscsit_ta_demo_mode_write_protect(struct iscsi_portal_group=
- *, u32);
-+extern int iscsit_ta_prod_mode_write_protect(struct iscsi_portal_group=
- *, u32);
++	struct crypto_hash *tfm;
++	struct hash_desc desc;
++	struct scatterlist sg;
++	int auth_ret =3D -1, ret, challenge_len;
 +
-+extern struct iscsi_global *iscsi_global;
-+extern struct target_fabric_configfs *lio_target_fabric_configfs;
++	memset(identifier, 0, 10);
++	memset(chap_n, 0, MAX_CHAP_N_SIZE);
++	memset(chap_r, 0, MAX_RESPONSE_LENGTH);
++	memset(digest, 0, MD5_SIGNATURE_SIZE);
++	memset(response, 0, MD5_SIGNATURE_SIZE * 2 + 2);
++	memset(client_digest, 0, MD5_SIGNATURE_SIZE);
++	memset(server_digest, 0, MD5_SIGNATURE_SIZE);
 +
-+#endif /* ISCSI_TARGET_TPG_H */
++	challenge =3D kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
++	if (!challenge) {
++		printk(KERN_ERR "Unable to allocate challenge buffer\n");
++		goto out;
++	}
++
++	challenge_binhex =3D kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
++	if (!challenge_binhex) {
++		printk(KERN_ERR "Unable to allocate challenge_binhex buffer\n");
++		goto out;
++	}
++	/*
++	 * Extract CHAP_N.
++	 */
++	if (extract_param(nr_in_ptr, "CHAP_N", MAX_CHAP_N_SIZE, chap_n,
++				&type) < 0) {
++		printk(KERN_ERR "Could not find CHAP_N.\n");
++		goto out;
++	}
++	if (type =3D=3D HEX) {
++		printk(KERN_ERR "Could not find CHAP_N.\n");
++		goto out;
++	}
++
++	if (memcmp(chap_n, auth->userid, strlen(auth->userid)) !=3D 0) {
++		printk(KERN_ERR "CHAP_N values do not match!\n");
++		goto out;
++	}
++	PRINT("[server] Got CHAP_N=3D%s\n", chap_n);
++	/*
++	 * Extract CHAP_R.
++	 */
++	if (extract_param(nr_in_ptr, "CHAP_R", MAX_RESPONSE_LENGTH, chap_r,
++				&type) < 0) {
++		printk(KERN_ERR "Could not find CHAP_R.\n");
++		goto out;
++	}
++	if (type !=3D HEX) {
++		printk(KERN_ERR "Could not find CHAP_R.\n");
++		goto out;
++	}
++
++	PRINT("[server] Got CHAP_R=3D%s\n", chap_r);
++	chap_string_to_hex(client_digest, chap_r, strlen(chap_r));
++
++	tfm =3D crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
++	if (IS_ERR(tfm)) {
++		printk(KERN_ERR "Unable to allocate struct crypto_hash\n");
++		goto out;
++	}
++	desc.tfm =3D tfm;
++	desc.flags =3D 0;
++
++	ret =3D crypto_hash_init(&desc);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_init() failed\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	sg_init_one(&sg, (void *)&chap->id, 1);
++	ret =3D crypto_hash_update(&desc, &sg, 1);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_update() failed for id\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	sg_init_one(&sg, (void *)&auth->password, strlen(auth->password));
++	ret =3D crypto_hash_update(&desc, &sg, strlen(auth->password));
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_update() failed for password\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	sg_init_one(&sg, (void *)chap->challenge, strlen(chap->challenge));
++	ret =3D crypto_hash_update(&desc, &sg, strlen(chap->challenge));
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_update() failed for challenge\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	ret =3D crypto_hash_final(&desc, server_digest);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_final() failed for server digest\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++	crypto_free_hash(tfm);
++
++	chap_binaryhex_to_asciihex(response, server_digest, MD5_SIGNATURE_SIZ=
+E);
++	PRINT("[server] MD5 Server Digest: %s\n", response);
++
++	if (memcmp(server_digest, client_digest, MD5_SIGNATURE_SIZE) !=3D 0) =
+{
++		PRINT("[server] MD5 Digests do not match!\n\n");
++		goto out;
++	} else
++		PRINT("[server] MD5 Digests match, CHAP connetication"
++				" successful.\n\n");
++	/*
++	 * One way authentication has succeeded, return now if mutual
++	 * authentication is not enabled.
++	 */
++	if (!auth->authenticate_target) {
++		kfree(challenge);
++		kfree(challenge_binhex);
++		return 0;
++	}
++	/*
++	 * Get CHAP_I.
++	 */
++	if (extract_param(nr_in_ptr, "CHAP_I", 10, identifier, &type) < 0) {
++		printk(KERN_ERR "Could not find CHAP_I.\n");
++		goto out;
++	}
++
++	if (type =3D=3D HEX)
++		id =3D (unsigned char)simple_strtoul((char *)&identifier[2],
++					&endptr, 0);
++	else
++		id =3D (unsigned char)simple_strtoul(identifier, &endptr, 0);
++	/*
++	 * RFC 1994 says Identifier is no more than octet (8 bits).
++	 */
++	PRINT("[server] Got CHAP_I=3D%d\n", id);
++	/*
++	 * Get CHAP_C.
++	 */
++	if (extract_param(nr_in_ptr, "CHAP_C", CHAP_CHALLENGE_STR_LEN,
++			challenge, &type) < 0) {
++		printk(KERN_ERR "Could not find CHAP_C.\n");
++		goto out;
++	}
++
++	if (type !=3D HEX) {
++		printk(KERN_ERR "Could not find CHAP_C.\n");
++		goto out;
++	}
++	PRINT("[server] Got CHAP_C=3D%s\n", challenge);
++	challenge_len =3D chap_string_to_hex(challenge_binhex, challenge,
++				strlen(challenge));
++	if (!challenge_len) {
++		printk(KERN_ERR "Unable to convert incoming challenge\n");
++		goto out;
++	}
++	/*
++	 * Generate CHAP_N and CHAP_R for mutual authentication.
++	 */
++	tfm =3D crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
++	if (IS_ERR(tfm)) {
++		printk(KERN_ERR "Unable to allocate struct crypto_hash\n");
++		goto out;
++	}
++	desc.tfm =3D tfm;
++	desc.flags =3D 0;
++
++	ret =3D crypto_hash_init(&desc);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_init() failed\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	sg_init_one(&sg, (void *)&id, 1);
++	ret =3D crypto_hash_update(&desc, &sg, 1);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_update() failed for id\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	sg_init_one(&sg, (void *)auth->password_mutual,
++				strlen(auth->password_mutual));
++	ret =3D crypto_hash_update(&desc, &sg, strlen(auth->password_mutual))=
+;
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_update() failed for"
++				" password_mutual\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++	/*
++	 * Convert received challenge to binary hex.
++	 */
++	sg_init_one(&sg, (void *)challenge_binhex, challenge_len);
++	ret =3D crypto_hash_update(&desc, &sg, challenge_len);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_update() failed for ma challenge\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++
++	ret =3D crypto_hash_final(&desc, digest);
++	if (ret < 0) {
++		printk(KERN_ERR "crypto_hash_final() failed for ma digest\n");
++		crypto_free_hash(tfm);
++		goto out;
++	}
++	crypto_free_hash(tfm);
++	/*
++	 * Generate CHAP_N and CHAP_R.
++	 */
++	*nr_out_len =3D sprintf(nr_out_ptr, "CHAP_N=3D%s", auth->userid_mutua=
+l);
++	*nr_out_len +=3D 1;
++	PRINT("[server] Sending CHAP_N=3D%s\n", auth->userid_mutual);
++	/*
++	 * Convert response from binary hex to ascii hext.
++	 */
++	chap_binaryhex_to_asciihex(response, digest, MD5_SIGNATURE_SIZE);
++	*nr_out_len +=3D sprintf(nr_out_ptr + *nr_out_len, "CHAP_R=3D0x%s",
++			response);
++	*nr_out_len +=3D 1;
++	PRINT("[server] Sending CHAP_R=3D0x%s\n", response);
++	auth_ret =3D 0;
++out:
++	kfree(challenge);
++	kfree(challenge_binhex);
++	return auth_ret;
++}
++
++static int chap_got_response(
++	struct iscsi_conn *conn,
++	struct iscsi_node_auth *auth,
++	char *nr_in_ptr,
++	char *nr_out_ptr,
++	unsigned int *nr_out_len)
++{
++	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
+;
++
++	switch (chap->digest_type) {
++	case CHAP_DIGEST_MD5:
++		if (chap_server_compute_md5(conn, auth, nr_in_ptr,
++				nr_out_ptr, nr_out_len) < 0)
++			return -1;
++		return 0;
++	default:
++		printk(KERN_ERR "Unknown CHAP digest type %d!\n",
++				chap->digest_type);
++		return -1;
++	}
++}
++
++u32 chap_main_loop(
++	struct iscsi_conn *conn,
++	struct iscsi_node_auth *auth,
++	char *in_text,
++	char *out_text,
++	int *in_len,
++	int *out_len)
++{
++	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
+;
++
++	if (!chap) {
++		chap =3D chap_server_open(conn, auth, in_text, out_text, out_len);
++		if (!chap)
++			return 2;
++		chap->chap_state =3D CHAP_STAGE_SERVER_AIC;
++		return 0;
++	} else if (chap->chap_state =3D=3D CHAP_STAGE_SERVER_AIC) {
++		convert_null_to_semi(in_text, *in_len);
++		if (chap_got_response(conn, auth, in_text, out_text,
++				out_len) < 0) {
++			chap_close(conn);
++			return 2;
++		}
++		if (auth->authenticate_target)
++			chap->chap_state =3D CHAP_STAGE_SERVER_NR;
++		else
++			*out_len =3D 0;
++		chap_close(conn);
++		return 1;
++	}
++
++	return 2;
++}
+diff --git a/drivers/target/iscsi/iscsi_target_auth.h b/drivers/target/=
+iscsi/iscsi_target_auth.h
+new file mode 100644
+index 0000000..17b042d
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_auth.h
+@@ -0,0 +1,32 @@
++#ifndef _ISCSI_CHAP_H_
++#define _ISCSI_CHAP_H_
++
++#define CHAP_DIGEST_MD5		5
++#define CHAP_DIGEST_SHA		6
++
++#define CHAP_CHALLENGE_LENGTH	16
++#define CHAP_CHALLENGE_STR_LEN	4096
++#define MAX_RESPONSE_LENGTH	64	/* sufficient for MD5 */
++#define	MAX_CHAP_N_SIZE		512
++
++#define MD5_SIGNATURE_SIZE	16	/* 16 bytes in a MD5 message digest */
++
++#define CHAP_STAGE_CLIENT_A	1
++#define CHAP_STAGE_SERVER_AIC	2
++#define CHAP_STAGE_CLIENT_NR	3
++#define CHAP_STAGE_CLIENT_NRIC	4
++#define CHAP_STAGE_SERVER_NR	5
++
++extern u32 chap_main_loop(struct iscsi_conn *, struct iscsi_node_auth =
+*, char *, char *,
++				int *, int *);
++
++struct iscsi_chap {
++	unsigned char	digest_type;
++	unsigned char	id;
++	unsigned char	challenge[CHAP_CHALLENGE_LENGTH];
++	unsigned int	challenge_len;
++	unsigned int	authenticate_target;
++	unsigned int	chap_state;
++} ____cacheline_aligned;
++
++#endif   /*** _ISCSI_CHAP_H_ ***/
 --=20
 1.7.4.1
 
