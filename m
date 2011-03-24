@@ -1,75 +1,73 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH 4/6] isci: hardware / topology event handling
-Date: Wed, 23 Mar 2011 17:07:49 -0700
-Message-ID: <AANLkTinYmRZe9HRrNFWMby9FXZNWCdRUb6QBMgRtW28E@mail.gmail.com>
-References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
-	<20110207003455.27040.94947.stgit@localhost6.localdomain6>
-	<20110318161852.GA19008@infradead.org>
-	<AANLkTi=dfZ5OtV0rY_y=9boMCAu_=47Bucz_-Jwu0d-6@mail.gmail.com>
-	<20110323084054.GA11533@infradead.org>
-	<AANLkTinS9xZ3Jhg1C+jWNO0wj+MYW3qvbqc_acvnsOLS@mail.gmail.com>
-	<20110323090824.GA14536@infradead.org>
+From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
+Subject: Re: [PATCH 02/36] scsi,rcu: convert call_rcu(fc_rport_free_rcu) to
+ kfree_rcu()
+Date: Wed, 23 Mar 2011 17:32:23 -0700
+Message-ID: <20110324003223.GF2322@linux.vnet.ibm.com>
+References: <4D82D071.5020703@cn.fujitsu.com>
+ <4D82D3FF.2080303@cn.fujitsu.com>
+ <4D82D45A.30102@cn.fujitsu.com>
+ <1300814913.19083.427.camel@fritz>
+ <20110323065014.GU2322@linux.vnet.ibm.com>
+ <1300889151.15899.4.camel@mulgrave.site>
+ <20110323222456.GC2322@linux.vnet.ibm.com>
+ <1300920332.15899.45.camel@mulgrave.site>
+Reply-To: paulmck@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:61354 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933023Ab1CXAHu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 20:07:50 -0400
-Received: by fxm17 with SMTP id 17so7828678fxm.19
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Mar 2011 17:07:49 -0700 (PDT)
-In-Reply-To: <20110323090824.GA14536@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1300920332.15899.45.camel@mulgrave.site>
+Sender: netdev-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Robert Love <robert.w.love@intel.com>, Lai Jiangshan <laijs@cn.fujitsu.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <axboe@kernel.dk>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>, Tejun Heo <tj@kernel.org>, Jarek Poplawski <jarkao2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-On Wed, Mar 23, 2011 at 2:08 AM, Christoph Hellwig <hch@infradead.org> =
-wrote:
-> On Wed, Mar 23, 2011 at 02:04:28AM -0700, Dan Williams wrote:
->> Not much beyond the defined semantics of cancel_delayed_work and
->> delayed_work_pending. =A0I was looking to eliminate the current open
->> coded equivalent functionality.
->
-> What's the problem with del_timer_sync and timer_pending?
+On Wed, Mar 23, 2011 at 05:45:32PM -0500, James Bottomley wrote:
+> On Wed, 2011-03-23 at 15:24 -0700, Paul E. McKenney wrote:
+> > On Wed, Mar 23, 2011 at 09:05:51AM -0500, James Bottomley wrote:
+> > > On Tue, 2011-03-22 at 23:50 -0700, Paul E. McKenney wrote:
+> > > > The kfree_rcu() definition is as
+> > > > follows:
+> > > > 
+> > > > #define kfree_rcu(ptr, rcu_head)					\
+> > > > 	__kfree_rcu(&((ptr)->rcu_head), offsetof(typeof(*(ptr)), rcu_head))
+> > > 
+> > > Isn't this one of those cases where the obvious use of the interface is
+> > > definitely wrong?
+> > > 
+> > > It's also another nasty pseudo C prototype.  I know we do this sort of
+> > > thing for container_of et al, but I don't really think we want to extend
+> > > it.
+> > > 
+> > > Why not make the interface take a pointer to the embedding structure and
+> > > one to the rcu_head ... that way all pointer mathematics can be
+> > > contained inside the RCU routines.
+> > 
+> > Hello, James,
+> > 
+> > If you pass in a pair of pointers, then it is difficult for RCU to detect
+> > bugs where the two pointers are unrelated.  Yes, you can do some sanity
+> > checks, but these get cumbersome and have corner cases where they can
+> > be fooled.  In contrast, Lai's interface allows the compiler to do the
+> > needed type checking -- unless the second argument is a field of type
+> > struct rcu_head in the structure pointed to by the first argument, the
+> > compiler will complain.
+> > 
+> > Either way, the pointer mathematics are buried in the RCU API.
+> > 
+> > Or am I missing something here?
+> 
+> No ... I like the utility ... I just dislike the inelegance of having to
+> name a structure element in what looks like a C prototype.
+> 
+> I can see this proliferating everywhere since most of our reference
+> counting release callbacks basically free the enclosing object ...
 
-Actually none.  I mistakenly thought delayed_work_pending would return
-true for executing work as well... so the only remaining benefit of
-delayed_work over the timer api is flush_workqueue().
+Indeed!  Improvements are welcome -- it is just that I am not convinced
+that the dual-pointer approach is really an improvement.
 
-One of the fixes I made in that interim timer api cleanup (8d32e5b2)
-was to use del_timer_sync on all pre-allocated timers to make sure
-nothing fired or was in the process of firing as the driver was
-brought down (unlikely).  The core runs under
-spin_lock_irqsave(ihost->scic_lock) context, and the expectation is
-that all these timeout callbacks are done in that context.  As a
-result we can't call del_timer_sync from the core to cancel a timer
-because that might deadlock on a timer event that is spinning on the
-lock.  Instead we need to set a "cancelled" flag that the timer
-callback will evaluate while holding the lock to check if it was
-cancelled while wait to acquire.  I was thinking
-"!delayed_work_pending()" could stand-in for "cancelled", but it
-can't.
+The C preprocessor...  It is ugly, inelegant, painful, annoying, and
+should have been strangled at birth -- but it is always there when you
+need it!
 
-So we need a different "flush all pending events" mechanism once the
-timers are no longer globally allocated, and that's why I suggested
-delayed_work.  The core will have called cancel_delayed_work on all
-pending items.
-
->> I also want to get rid of the pre-allocation, which I assume was the
->> reason for the original comment?
->
-> The preallocation is even more pointless. =A0Just embedd the struct
-> timer_list where the code currently has a pointer to the timer object=
-=2E
-
-Exactly.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+							Thanx, Paul
