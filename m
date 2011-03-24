@@ -1,89 +1,69 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Thu, 24 Mar 2011 00:29:08 -0700
-Message-ID: <1300951748.18039.252.camel@haakon2.linux-iscsi.org>
-References: <1300874403.21880.519.camel@haakon2.linux-iscsi.org>
-	 <20110323210357P.fujita.tomonori@lab.ntt.co.jp>
-	 <1300915030.18039.66.camel@haakon2.linux-iscsi.org>
-	 <20110324105422K.fujita.tomonori@lab.ntt.co.jp>
+From: <Menny_Hamburger@Dell.com>
+Subject: RE: [PATCH] sd: sd should not modify read capacity, cache type or
+ write protect flag on rescan when there is a transport error
+Date: Thu, 24 Mar 2011 11:10:47 +0000
+Message-ID: <D8C50530D6022F40A817A35C40CC06A7065845D931@DUBX7MCDUB01.EMEA.DELL.COM>
+References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
+	 <1298907291.2487.18.camel@mulgrave.site>
+	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
+ <1299594151.2476.10.camel@mulgrave.site> <4D7814D2.8090101@cs.wisc.edu>
+ <D8C50530D6022F40A817A35C40CC06A7065780048F@DUBX7MCDUB01.EMEA.DELL.COM>
+ <4D79348A.7060609@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54502 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933351Ab1CXHgU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2011 03:36:20 -0400
-In-Reply-To: <20110324105422K.fujita.tomonori@lab.ntt.co.jp>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:46141 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751985Ab1CXLKv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2011 07:10:51 -0400
+In-Reply-To: <4D79348A.7060609@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: brking@linux.vnet.ibm.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, jlbec@evilplan.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On Thu, 2011-03-24 at 10:54 +0900, FUJITA Tomonori wrote:
-> On Wed, 23 Mar 2011 14:17:10 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > On Wed, 2011-03-23 at 21:04 +0900, FUJITA Tomonori wrote:
-> > > On Wed, 23 Mar 2011 03:00:03 -0700
-> > > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> > > 
-> > > > On Wed, 2011-03-23 at 17:48 +0900, FUJITA Tomonori wrote:
-> > > > > On Wed, 23 Mar 2011 01:26:30 -0700
-> > > > > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> > > > > 
-> > > > > > Demo-mode means that a struct se_node_acl will be dynamically allocated
-> > > > > > when core_tpg_check_initiator_node_acl() is called for an unknown SCSI
-> > > > > > Initiator WWN in the process of creating a new I_T nexus (struct
-> > > > > > se_session) when struct target_core_fabric_ops->tpg_check_demo_mode()=1
-> > > > > > is set.
-> > > > > 
-> > > > > Again, acl is not irrelevant for ibmvscsis. So I shoundn't set up
-> > > > > it.
-> > > > > 
-> > > > > All I asking for is simply accepting any initiators and exporting all
-> > > > > the luns in a target.
-> > > > > 
-> > > > > 
-> > > > 
-> > > > Yes, I understand this.  But driving (from kernel-level) a default set
-> > > > of fabric TPG LUN exports for all available target_core_mod backend
-> > > > export is not a manageable way for /sys/kernel/config/target/$HBA/$DEV
-> > > > backend export.  This needs to be driven from python library code for
-> > > > userspace applications automatically without interaction from end user
-> > > > for ibmvscsis or any other fabric module.
-> > > 
-> > > Hmm, you still don't understand.
-> > > 
-> > > Again, there is no 'TPG' concept in SRP transport.
-> > > 
-> > 
-> > Yes, I understand that there is no hard requirement for a fabric level
-> > concept of a TPG in SRP.
-> 
-> Hard requirement? No, please read SRP spec? There is not such thing.
->
-> So forcing TPG is the wrong desing. Requirements must be in all the
-> transport specs. Transport specific things such as TPG shouldn't be
-> exported to every transports.
-> 
-
-I have already explained why this was chosen as the default for the
-target_core_fabric_configfs.c design, and that I am open to abstracting
-this away from the fabric module control plane for non iSCSI fabrics.
-
-> Again, the point is that the current design is pretty tied to
-> iSCSI. Other transports are forced to handle iSCSI specific stuff
-> strangely.
-
-This has not been a limiting factor for any of non iSCSI fabric code
-that I have developed or seen yet.  I would rather have
-target_core_fabric_config.c logic handle a default 'tgpt_1'
-transparently for a non iSCSI struct se_wwn->wwn_group registration,
-than provide two modes of I/O path target endpoint reference for struct
-se_wwn and struct se_portal_group.
-
-I am happy to consider patches to address this.
-
---nab
-
+U29ycnkgZm9yIG5vdCByZXNwb25kaW5nIGVhcmxpZXIuDQpJIHRoaW5rIHRoYXQgYSBzaW1wbGUg
+d2Fsa3Rocm91Z2ggcmVzY2FuIG9uIGV4aXN0aW5nIGNoYW5uZWwvaWQvbHVuIHdpbGwgYmUgT0sg
+aW4gOTklIG9mIHRoZSBjYXNlcy4NCldoZW4gdGhlIHRhcmdldCB3YXMgcmVjb25maWd1cmVkICh3
+aGVuIG9uZSBhZGRzIGx1bnMgZm9yIGV4YW1wbGUpLCBhIHNpbXBsZSByZXNjYW4gd2lsbCBub3Qg
+cGljayB1cCB0aGUgY2hhbmdlcyAob3Igd29yc2UpLiANClNlYW1zIHRoYXQgdGhlcmUgaXMgcmVh
+c29uIHdoeSB0aGVyZSBpcyBubyBrZXJuZWwgYmFzZWQgcmVzY2FuIGZ1bmN0aW9uIG9uIGEgdGFy
+Z2V0IHRvZGF5IC0gb25seSByZXNjYW4gc2NyaXB0cyB0aGF0IHdhbGsgdGhyb3VnaCBldmVyeXRo
+aW5nIGFuZCBjYWxsIHRoZQ0KZGV2aWNlIHJlc2NhbiBjb2RlLiANCkFueXdheSwgSSBzZWUgdGhh
+dCB0aGlzIGNvbnZlcnNhdGlvbiBtYXkgaGF2ZSBiZWVuIHBpY2tlZCB1cCBieSBhbm90aGVyIHRo
+cmVhZCBkaXNjdXNzaW5nIHVldmVudHMgYW5kIHVuaXQgYXR0ZW50aW9uLg0KaHR0cDovL3d3dy5z
+cGluaWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzUwMjQxLmh0bWwNCg0KDQotLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTWlrZSBDaHJpc3RpZSBbbWFpbHRvOm1pY2hhZWxjQGNz
+Lndpc2MuZWR1XSANClNlbnQ6IDEwIE1hcmNoLCAyMDExIDIyOjI5DQpUbzogSGFtYnVyZ2VyLCBN
+ZW5ueQ0KQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBKYW1lcy5Cb3R0b21sZXlAc3Vz
+ZS5kZQ0KU3ViamVjdDogUmU6IFtQQVRDSF0gc2Q6IHNkIHNob3VsZCBub3QgbW9kaWZ5IHJlYWQg
+Y2FwYWNpdHksIGNhY2hlIHR5cGUgb3Igd3JpdGUgcHJvdGVjdCBmbGFnIG9uIHJlc2NhbiB3aGVu
+IHRoZXJlIGlzIGEgdHJhbnNwb3J0IGVycm9yDQoNCk9uIDAzLzEwLzIwMTEgMDI6NDkgQU0sIE1l
+bm55X0hhbWJ1cmdlckBEZWxsLmNvbSB3cm90ZToNCj4gTWlrZSwNCj4NCj4gSSB0aGluayB0aGVy
+ZSBhcmUgc3RpbGwgdHdvIG9wZW4gaXNzdWVzIHN0aWxsIGhlcmU6DQo+IDEpIFNob3VsZCB3ZSBh
+bHdheXMgcmVzY2FuIHdoZW4gdHJhbnNwb3J0IGNvbWVzIGJhY2sgdXA/IE15IG93biBvcGluaW9u
+IHRvIHRoaXMgcXVlc3Rpb24gaXMgdGhhdCBkb2luZyBhIGZ1bGwgcmVzY2FuIG1heSBiZSBhbiBv
+dmVya2lsbA0KDQpJIHRoaW5rIHdlIHNob3VsZCBhbHdheXMgcmVzY2FuLiBUaGUgdmFsdWVzIGNv
+dWxkIGhhdmUgY2hhbmdlZCBvbiB0aGUgDQp0YXJnZXQgZXZlbiBpZiB3ZSBoYXZlIG5vdCBhY3R1
+YWxseSBzZW50IGEgY29tbWFuZCBhbmQgaGFkIGl0IGZhaWxlZCwgc28gDQplaXRoZXIgd2F5IHdl
+IG5lZWQgdG8gcGljayB1cCBuZXcgdmFsdWVzLg0KDQo+ICAgICBJbiB0aGlzIGNhc2UuIElmIHRo
+ZSBkZWNpc2lvbiBpcyBub3QgdG8gcmVzY2FuIGFsd2F5cyAob25seSB3aGVuIHdlIGhhdmUgaW52
+YWxpZCBjYXBhY2l0eSwgY2FjaGUgdHlwZSwgd3JpdGUgcHJvdGVjdCBmbGFnKSwgd2Ugd2lsbCBu
+ZWVkIHRvIG1haW50YWluDQo+ICAgICBBZGRpdGlvbmFsIHN0YXRlIGluZm9ybWF0aW9uIGluIHRo
+ZSBkZXZpY2UgdG8gaW5kaWNhdGUgdGhhdCB0aGUgY3VycmVudCB2YWx1ZXMgYXJlIGludmFsaWQg
+YW5kIGEgcmVzY2FuIGlzIHJlcXVpcmVkLg0KPiAgICAgSmFtZXMgc3RhdGVkIHRoYXQgaXQgaXMg
+YSBsYXllcmluZyB2aW9sYXRpb24gdG8gdGVzdCB0aGUgaG9zdCBieXRlIG9mIHRoZSByZXN1bHQg
+aW4gb3JkZXIgdG8gZGVjaWRlIHdoZXRoZXIgb3Igbm90IGEgcmVzY2FuIGlzIHJlcXVpcmVkLCBz
+byB3ZSB3aWxsDQo+ICAgICBuZWVkIHNldHVwIHRoaXMgc3RhdGUgaW5mb3JtYXRpb24gaW4gYW55
+IGNhc2Ugb2YgZmFpbHVyZSB3aGVuIGdldHRpbmcgdGhlc2UgcHJvcGVydGllcyBmcm9tIHRoZSBk
+ZXZpY2UuDQo+IDIpIFNob3VsZCB3ZSByZXNjYW4gZnJvbSB3aXRoaW4gdGhlIGtlcm5lbCwgb3Ig
+aXNzdWUgYSB1ZXZlbnQgKGhvdHBsdWcpIHRoYXQgd291bGQgYmUgcGlja2VkIHVwIGJ5IHVzZXJs
+YW5kICh0aGF0IHdvdWxkIGluaXRpYXRlIHRoZSByZXNjYW4pPw0KPiAgICAgUmVzY2FubmluZyBm
+cm9tIHdpdGhpbiB0aGUga2VybmVsIHNlZW1zIGEgYml0IG1vcmUgImNsZWFuIiwgaG93ZXZlciB0
+aGVyZSBtYXkgYmUgb3RoZXIgY29uc2lkZXJhdGlvbnMgaGVyZS4NCg0KS2VybmVsLiBJbiB0aGUg
+aXNjc2kgYW5kIGZjIGNsYXNzIHdlIGFscmVhZHkgZG8gYSBzY2FuIGZvciBkZXZpY2VzIHdoZW4g
+DQp0aGUgdHJhbnNwb3J0IGNvbWVzIGJhY2sgdXAgZnJvbSB0aGUga2VybmVsLCBzbyB0aGlzIHJl
+c2NhbiBvZiBkZXZpY2VzIA0KdmFsdWVzIGNhbiBqdXN0IHJ1biBmcm9tIHRoZSBzYW1lIGZ1bmN0
+aW9uLg0K
