@@ -1,69 +1,63 @@
-From: <Menny_Hamburger@Dell.com>
-Subject: RE: [PATCH] sd: sd should not modify read capacity, cache type or
- write protect flag on rescan when there is a transport error
-Date: Thu, 24 Mar 2011 11:10:47 +0000
-Message-ID: <D8C50530D6022F40A817A35C40CC06A7065845D931@DUBX7MCDUB01.EMEA.DELL.COM>
-References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
-	 <1298907291.2487.18.camel@mulgrave.site>
-	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
- <1299594151.2476.10.camel@mulgrave.site> <4D7814D2.8090101@cs.wisc.edu>
- <D8C50530D6022F40A817A35C40CC06A7065780048F@DUBX7MCDUB01.EMEA.DELL.COM>
- <4D79348A.7060609@cs.wisc.edu>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH resend] atp870u: use pci_dev->revision
+Date: Thu, 24 Mar 2011 22:51:18 +0300
+Message-ID: <201103242251.18477.sshtylyov@ru.mvista.com>
+References: <201102112249.34907.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:46141 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751985Ab1CXLKv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2011 07:10:51 -0400
-In-Reply-To: <4D79348A.7060609@cs.wisc.edu>
-Content-Language: en-US
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:44715 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S933847Ab1CXTwz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2011 15:52:55 -0400
+In-Reply-To: <201102112249.34907.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de
 
-U29ycnkgZm9yIG5vdCByZXNwb25kaW5nIGVhcmxpZXIuDQpJIHRoaW5rIHRoYXQgYSBzaW1wbGUg
-d2Fsa3Rocm91Z2ggcmVzY2FuIG9uIGV4aXN0aW5nIGNoYW5uZWwvaWQvbHVuIHdpbGwgYmUgT0sg
-aW4gOTklIG9mIHRoZSBjYXNlcy4NCldoZW4gdGhlIHRhcmdldCB3YXMgcmVjb25maWd1cmVkICh3
-aGVuIG9uZSBhZGRzIGx1bnMgZm9yIGV4YW1wbGUpLCBhIHNpbXBsZSByZXNjYW4gd2lsbCBub3Qg
-cGljayB1cCB0aGUgY2hhbmdlcyAob3Igd29yc2UpLiANClNlYW1zIHRoYXQgdGhlcmUgaXMgcmVh
-c29uIHdoeSB0aGVyZSBpcyBubyBrZXJuZWwgYmFzZWQgcmVzY2FuIGZ1bmN0aW9uIG9uIGEgdGFy
-Z2V0IHRvZGF5IC0gb25seSByZXNjYW4gc2NyaXB0cyB0aGF0IHdhbGsgdGhyb3VnaCBldmVyeXRo
-aW5nIGFuZCBjYWxsIHRoZQ0KZGV2aWNlIHJlc2NhbiBjb2RlLiANCkFueXdheSwgSSBzZWUgdGhh
-dCB0aGlzIGNvbnZlcnNhdGlvbiBtYXkgaGF2ZSBiZWVuIHBpY2tlZCB1cCBieSBhbm90aGVyIHRo
-cmVhZCBkaXNjdXNzaW5nIHVldmVudHMgYW5kIHVuaXQgYXR0ZW50aW9uLg0KaHR0cDovL3d3dy5z
-cGluaWNzLm5ldC9saXN0cy9saW51eC1zY3NpL21zZzUwMjQxLmh0bWwNCg0KDQotLS0tLU9yaWdp
-bmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogTWlrZSBDaHJpc3RpZSBbbWFpbHRvOm1pY2hhZWxjQGNz
-Lndpc2MuZWR1XSANClNlbnQ6IDEwIE1hcmNoLCAyMDExIDIyOjI5DQpUbzogSGFtYnVyZ2VyLCBN
-ZW5ueQ0KQ2M6IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBKYW1lcy5Cb3R0b21sZXlAc3Vz
-ZS5kZQ0KU3ViamVjdDogUmU6IFtQQVRDSF0gc2Q6IHNkIHNob3VsZCBub3QgbW9kaWZ5IHJlYWQg
-Y2FwYWNpdHksIGNhY2hlIHR5cGUgb3Igd3JpdGUgcHJvdGVjdCBmbGFnIG9uIHJlc2NhbiB3aGVu
-IHRoZXJlIGlzIGEgdHJhbnNwb3J0IGVycm9yDQoNCk9uIDAzLzEwLzIwMTEgMDI6NDkgQU0sIE1l
-bm55X0hhbWJ1cmdlckBEZWxsLmNvbSB3cm90ZToNCj4gTWlrZSwNCj4NCj4gSSB0aGluayB0aGVy
-ZSBhcmUgc3RpbGwgdHdvIG9wZW4gaXNzdWVzIHN0aWxsIGhlcmU6DQo+IDEpIFNob3VsZCB3ZSBh
-bHdheXMgcmVzY2FuIHdoZW4gdHJhbnNwb3J0IGNvbWVzIGJhY2sgdXA/IE15IG93biBvcGluaW9u
-IHRvIHRoaXMgcXVlc3Rpb24gaXMgdGhhdCBkb2luZyBhIGZ1bGwgcmVzY2FuIG1heSBiZSBhbiBv
-dmVya2lsbA0KDQpJIHRoaW5rIHdlIHNob3VsZCBhbHdheXMgcmVzY2FuLiBUaGUgdmFsdWVzIGNv
-dWxkIGhhdmUgY2hhbmdlZCBvbiB0aGUgDQp0YXJnZXQgZXZlbiBpZiB3ZSBoYXZlIG5vdCBhY3R1
-YWxseSBzZW50IGEgY29tbWFuZCBhbmQgaGFkIGl0IGZhaWxlZCwgc28gDQplaXRoZXIgd2F5IHdl
-IG5lZWQgdG8gcGljayB1cCBuZXcgdmFsdWVzLg0KDQo+ICAgICBJbiB0aGlzIGNhc2UuIElmIHRo
-ZSBkZWNpc2lvbiBpcyBub3QgdG8gcmVzY2FuIGFsd2F5cyAob25seSB3aGVuIHdlIGhhdmUgaW52
-YWxpZCBjYXBhY2l0eSwgY2FjaGUgdHlwZSwgd3JpdGUgcHJvdGVjdCBmbGFnKSwgd2Ugd2lsbCBu
-ZWVkIHRvIG1haW50YWluDQo+ICAgICBBZGRpdGlvbmFsIHN0YXRlIGluZm9ybWF0aW9uIGluIHRo
-ZSBkZXZpY2UgdG8gaW5kaWNhdGUgdGhhdCB0aGUgY3VycmVudCB2YWx1ZXMgYXJlIGludmFsaWQg
-YW5kIGEgcmVzY2FuIGlzIHJlcXVpcmVkLg0KPiAgICAgSmFtZXMgc3RhdGVkIHRoYXQgaXQgaXMg
-YSBsYXllcmluZyB2aW9sYXRpb24gdG8gdGVzdCB0aGUgaG9zdCBieXRlIG9mIHRoZSByZXN1bHQg
-aW4gb3JkZXIgdG8gZGVjaWRlIHdoZXRoZXIgb3Igbm90IGEgcmVzY2FuIGlzIHJlcXVpcmVkLCBz
-byB3ZSB3aWxsDQo+ICAgICBuZWVkIHNldHVwIHRoaXMgc3RhdGUgaW5mb3JtYXRpb24gaW4gYW55
-IGNhc2Ugb2YgZmFpbHVyZSB3aGVuIGdldHRpbmcgdGhlc2UgcHJvcGVydGllcyBmcm9tIHRoZSBk
-ZXZpY2UuDQo+IDIpIFNob3VsZCB3ZSByZXNjYW4gZnJvbSB3aXRoaW4gdGhlIGtlcm5lbCwgb3Ig
-aXNzdWUgYSB1ZXZlbnQgKGhvdHBsdWcpIHRoYXQgd291bGQgYmUgcGlja2VkIHVwIGJ5IHVzZXJs
-YW5kICh0aGF0IHdvdWxkIGluaXRpYXRlIHRoZSByZXNjYW4pPw0KPiAgICAgUmVzY2FubmluZyBm
-cm9tIHdpdGhpbiB0aGUga2VybmVsIHNlZW1zIGEgYml0IG1vcmUgImNsZWFuIiwgaG93ZXZlciB0
-aGVyZSBtYXkgYmUgb3RoZXIgY29uc2lkZXJhdGlvbnMgaGVyZS4NCg0KS2VybmVsLiBJbiB0aGUg
-aXNjc2kgYW5kIGZjIGNsYXNzIHdlIGFscmVhZHkgZG8gYSBzY2FuIGZvciBkZXZpY2VzIHdoZW4g
-DQp0aGUgdHJhbnNwb3J0IGNvbWVzIGJhY2sgdXAgZnJvbSB0aGUga2VybmVsLCBzbyB0aGlzIHJl
-c2NhbiBvZiBkZXZpY2VzIA0KdmFsdWVzIGNhbiBqdXN0IHJ1biBmcm9tIHRoZSBzYW1lIGZ1bmN0
-aW9uLg0K
+Hello.
+
+On Friday 11 February 2011 10:49:34 pm Sergei Shtylyov wrote:
+
+> This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
+> converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
+> drivers to use pci_device->revision).
+
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+ 
+> ---
+> Resending with a proper tear line...
+
+>  drivers/scsi/atp870u.c |    4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/scsi/atp870u.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/atp870u.c
+> +++ linux-2.6/drivers/scsi/atp870u.c
+> @@ -2583,7 +2583,7 @@ static int atp870u_probe(struct pci_dev 
+>  	 * this than via the PCI device table
+>  	 */
+>  	if (ent->device == PCI_DEVICE_ID_ARTOP_AEC7610) {
+> -		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
+> +		atpdev->chip_ver = pdev->revision;
+>  		if (atpdev->chip_ver < 2)
+>  			goto err_eio;
+>  	}
+> @@ -2602,7 +2602,7 @@ static int atp870u_probe(struct pci_dev 
+>  	base_io &= 0xfffffff8;
+>  
+>  	if ((ent->device == ATP880_DEVID1)||(ent->device == ATP880_DEVID2)) {
+> -		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
+> +		atpdev->chip_ver = pdev->revision;
+>  		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
+>  
+>  		host_id = inb(base_io + 0x39);
+
+   Hm. Will this and 2 other analogous patches of mine be queued somewhere?
+
+WBR, Sergei
