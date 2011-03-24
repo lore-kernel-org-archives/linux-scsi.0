@@ -1,73 +1,94 @@
-From: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>
-Subject: Re: [PATCH 02/36] scsi,rcu: convert call_rcu(fc_rport_free_rcu) to
- kfree_rcu()
-Date: Wed, 23 Mar 2011 17:32:23 -0700
-Message-ID: <20110324003223.GF2322@linux.vnet.ibm.com>
-References: <4D82D071.5020703@cn.fujitsu.com>
- <4D82D3FF.2080303@cn.fujitsu.com>
- <4D82D45A.30102@cn.fujitsu.com>
- <1300814913.19083.427.camel@fritz>
- <20110323065014.GU2322@linux.vnet.ibm.com>
- <1300889151.15899.4.camel@mulgrave.site>
- <20110323222456.GC2322@linux.vnet.ibm.com>
- <1300920332.15899.45.camel@mulgrave.site>
-Reply-To: paulmck@linux.vnet.ibm.com
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
+	initial merge
+Date: Thu, 24 Mar 2011 10:29:39 +0900
+Message-ID: <20110324102939R.fujita.tomonori@lab.ntt.co.jp>
+References: <1300916254.18039.87.camel@haakon2.linux-iscsi.org>
+	<20110324074600L.fujita.tomonori@lab.ntt.co.jp>
+	<1300922917.18039.147.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1300920332.15899.45.camel@mulgrave.site>
-Sender: netdev-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Robert Love <robert.w.love@intel.com>, Lai Jiangshan <laijs@cn.fujitsu.com>, Ingo Molnar <mingo@elte.hu>, Jens Axboe <axboe@kernel.dk>, Neil Horman <nhorman@tuxdriver.com>, "David S. Miller" <davem@davemloft.net>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, Eric Dumazet <eric.dumazet@gmail.com>, Stephen Hemminger <shemminger@vyatta.com>, Tejun Heo <tj@kernel.org>, Jarek Poplawski <jarkao2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:51724 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751700Ab1CXBhi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Mar 2011 21:37:38 -0400
+In-Reply-To: <1300922917.18039.147.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, bharrosh@panasas.com
 
-On Wed, Mar 23, 2011 at 05:45:32PM -0500, James Bottomley wrote:
-> On Wed, 2011-03-23 at 15:24 -0700, Paul E. McKenney wrote:
-> > On Wed, Mar 23, 2011 at 09:05:51AM -0500, James Bottomley wrote:
-> > > On Tue, 2011-03-22 at 23:50 -0700, Paul E. McKenney wrote:
-> > > > The kfree_rcu() definition is as
-> > > > follows:
-> > > > 
-> > > > #define kfree_rcu(ptr, rcu_head)					\
-> > > > 	__kfree_rcu(&((ptr)->rcu_head), offsetof(typeof(*(ptr)), rcu_head))
-> > > 
-> > > Isn't this one of those cases where the obvious use of the interface is
-> > > definitely wrong?
-> > > 
-> > > It's also another nasty pseudo C prototype.  I know we do this sort of
-> > > thing for container_of et al, but I don't really think we want to extend
-> > > it.
-> > > 
-> > > Why not make the interface take a pointer to the embedding structure and
-> > > one to the rcu_head ... that way all pointer mathematics can be
-> > > contained inside the RCU routines.
+On Wed, 23 Mar 2011 16:28:37 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+> > Hmm, you prefer 'zero C userspace code'? On the other hand, you insist
+> > that requiring user Python userspace code to set up ibmvscsis is a
+> > better approach even when the kernel space can set up everything for
+> > ibmvscsis?
 > > 
-> > Hello, James,
-> > 
-> > If you pass in a pair of pointers, then it is difficult for RCU to detect
-> > bugs where the two pointers are unrelated.  Yes, you can do some sanity
-> > checks, but these get cumbersome and have corner cases where they can
-> > be fooled.  In contrast, Lai's interface allows the compiler to do the
-> > needed type checking -- unless the second argument is a field of type
-> > struct rcu_head in the structure pointed to by the first argument, the
-> > compiler will complain.
-> > 
-> > Either way, the pointer mathematics are buried in the RCU API.
-> > 
-> > Or am I missing something here?
 > 
-> No ... I like the utility ... I just dislike the inelegance of having to
-> name a structure element in what looks like a C prototype.
+> Yes, because we expect userspace to drive creation of the current
+> configfs group layout.
 > 
-> I can see this proliferating everywhere since most of our reference
-> counting release callbacks basically free the enclosing object ...
+> The configfs maintainer explictly requested to drop the ability to drive
+> the config_group creation from kernel-space that I had implemented
+> originally, and which has not been included in the mainline target v4.0
+> control plane.
+> 
+> It's folks like Joel and Greg-KH that need to be convinced in order for
+> me to consider this type of logic for for mainline target code.  I do
 
-Indeed!  Improvements are welcome -- it is just that I am not convinced
-that the dual-pointer approach is really an improvement.
+Can you stop insisting that configfs can't do that so the target core
+can't do that?
 
-The C preprocessor...  It is ugly, inelegant, painful, annoying, and
-should have been strangled at birth -- but it is always there when you
-need it!
+We should think about what is the best design for the target code
+first.
 
-							Thanx, Paul
+> > And iSCSI setup usually needs userspace code such as iSNS
+> > anyway. You'll add iSNS to kernel too.
+> > 
+> 
+> iSNS should be walking the /sys/kernel/config/target/iscsi layout, and
+> should not require any kernel code at all.
+
+How you draw the line? Why iSNS can live in user space?
+
+For example, you say that iSNS should live in user space. The similar
+feature to sending the list of target lives in kernel space.
+
+
+> What about for the boot1.kernel.org cases where we can expect 1000s of
+> R/O clients in the future to a proper 10 Gb/sec uplink.  
+> 
+> Why do all of these types of logins need to talk with a userspace login
+> queue interface?
+
+I prefer less kernel space code.
+
+
+>  Why do we need to worry about an interface in the
+> first place for the standard iSCSI login case..?  What happens if this
+> daemon is unexpectedly killed..?  Do I now have to worry about
+
+Can you stop such pointless argument? What happens if the iscsi target
+kernel module crashed?
+
+Linux systems already depend on some essential user space daemons. We
+know how to deal with them.
+
+
+> implementing a multi-threaded userspace daemon to handle the high login
+> volume public iSCSI target case..?
+
+I'm pretty sure that even single-threaded userspace deamon can handle
+iSCSI login operations.
+
+
+> > The user space daemon can read configfs easily to do the same thing.
+> 
+> But reading the of the configfs layout is not the problem, yes..?
+
+I don't think so. The user space doesn't cache the configfs info. So
+the rule is pretty simple.
