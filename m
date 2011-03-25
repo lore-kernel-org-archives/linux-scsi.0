@@ -1,77 +1,120 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH 4/6] isci: hardware / topology event handling
-Date: Thu, 24 Mar 2011 17:57:17 -0700
-Message-ID: <AANLkTik7DUF=Pim3JMjRmhdVJTCgfimiyhQ5x_CZ9BeU@mail.gmail.com>
-References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
-	<20110207003455.27040.94947.stgit@localhost6.localdomain6>
-	<20110318161852.GA19008@infradead.org>
-	<AANLkTi=dfZ5OtV0rY_y=9boMCAu_=47Bucz_-Jwu0d-6@mail.gmail.com>
-	<20110323084054.GA11533@infradead.org>
-	<AANLkTinS9xZ3Jhg1C+jWNO0wj+MYW3qvbqc_acvnsOLS@mail.gmail.com>
-	<20110323090824.GA14536@infradead.org>
-	<AANLkTinYmRZe9HRrNFWMby9FXZNWCdRUb6QBMgRtW28E@mail.gmail.com>
-	<20110324062646.GA27051@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
+ initial merge
+Date: Fri, 25 Mar 2011 12:31:40 +0100
+Message-ID: <AANLkTik2UxAO3uZ8r1U0bqYVX+0zHGUAd8uuiPzVQq57@mail.gmail.com>
+References: <1300916254.18039.87.camel@haakon2.linux-iscsi.org>
+ <20110324074600L.fujita.tomonori@lab.ntt.co.jp> <1300922917.18039.147.camel@haakon2.linux-iscsi.org>
+ <20110324102939R.fujita.tomonori@lab.ntt.co.jp> <1300949980.18039.222.camel@haakon2.linux-iscsi.org>
+ <1301012333.4087.24.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47003 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755356Ab1CYA5T convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2011 20:57:19 -0400
-Received: by fxm17 with SMTP id 17so613899fxm.19
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Mar 2011 17:57:18 -0700 (PDT)
-In-Reply-To: <20110324062646.GA27051@infradead.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:54186 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757099Ab1CYLcB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Mar 2011 07:32:01 -0400
+Received: by vws1 with SMTP id 1so698382vws.19
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Mar 2011 04:32:00 -0700 (PDT)
+In-Reply-To: <1301012333.4087.24.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, bharrosh@panasas.com
 
-On Wed, Mar 23, 2011 at 11:26 PM, Christoph Hellwig <hch@infradead.org>=
- wrote:
-> On Wed, Mar 23, 2011 at 05:07:49PM -0700, Dan Williams wrote:
->> One of the fixes I made in that interim timer api cleanup (8d32e5b2)
->> was to use del_timer_sync on all pre-allocated timers to make sure
->> nothing fired or was in the process of firing as the driver was
->> brought down (unlikely). =A0The core runs under
->> spin_lock_irqsave(ihost->scic_lock) context, and the expectation is
->> that all these timeout callbacks are done in that context.
+On Fri, Mar 25, 2011 at 1:18 AM, James Bottomley
+<James.Bottomley@suse.de> wrote:
+> On Wed, 2011-03-23 at 23:59 -0700, Nicholas A. Bellinger wrote:
+>> On Thu, 2011-03-24 at 10:29 +0900, FUJITA Tomonori wrote:
+>> > On Wed, 23 Mar 2011 16:28:37 -0700
+>> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+>> >
+>> > > > Hmm, you prefer 'zero C userspace code'? On the other hand, yo=
+u insist
+>> > > > that requiring user Python userspace code to set up ibmvscsis =
+is a
+>> > > > better approach even when the kernel space can set up everythi=
+ng for
+>> > > > ibmvscsis?
+>> > > >
+>> > >
+>> > > Yes, because we expect userspace to drive creation of the curren=
+t
+>> > > configfs group layout.
+>> > >
+>> > > The configfs maintainer explictly requested to drop the ability =
+to drive
+>> > > the config_group creation from kernel-space that I had implement=
+ed
+>> > > originally, and which has not been included in the mainline targ=
+et v4.0
+>> > > control plane.
+>> > >
+>> > > It's folks like Joel and Greg-KH that need to be convinced in or=
+der for
+>> > > me to consider this type of logic for for mainline target code. =
+=A0I do
+>> >
+>> > Can you stop insisting that configfs can't do that so the target c=
+ore
+>> > can't do that?
+>> >
+>>
+>> That's certainly not what I am insisting upon. =A0I am trying to exp=
+lain
+>> that we currently have a configfs control plane that is native for
+>> target mode.
+>>
+>> In the last three years to get to this point, I have developed proto=
+type
+>> code and asked upstream review for:
+>>
+>> *) Creating logic to drive configuration from kernel-space for confi=
+gfs
+>> *) Tried at creating sysfs -> configfs symlinks for referencing targ=
+et
+>> core backend devices
+>>
+>> So far both of these attempts at patches have been firmly rejected b=
+y
+>> the configfs and sysfs maintainers.
+>>
+>> I am not saying that configfs is the end-all for all generic target =
+mode
+>> control plane, but what I am saying is that I have yet to see the co=
+de
+>> for a different control plane that makes me want to move the away fr=
+om a
+>> 'native configfs' to 'a configfs/sysfs hyrbid', or something else al=
+l
+>> together for mainline target code.
 >
-> I'm afraid that you'll have to fix that design mistake first. =A0Runn=
-ing
-> large amounts of code under a spinlock just is not a good idea for
-> a wide range of reasons.
+> OK, so what about an upcall to userspace to create the necessary
+> directories? =A0That could be driven by the kernel and still not requ=
+ire
+> any implementation in configfs.
 
-I have been waiting for this issue to be raised.  This was one of the
-first items brought up in our internal reviews of the Linux driver.
-Why does it still exist and what is the rationale for addressing it
-incrementally?:
+Hi James,
 
-Starting with simple locking and then scaling it is arguably easier
-than unwinding a more complex locking scheme implemented too early in
-the design phase.  The lock synchronizes i/o submission against the
-completion/event-queue.  When the event queue runs the state of the
-world might change (phy, port, task context, remote node context), so
-the lock is ensuring a self consistent view of the state machines for
-new submissions.  Now that the core is a slower moving target (in
-terms of code changes) we are incrementally peeling back / minimizing
-the code run under the lock where it is found to be problematic.
+I might have missed something, but which upcall mechanism are you
+referring to ? Personally I'm not fond of the upcall concept because
+as far as I can see any synchronous upcall mechanism can potentially
+be used to trigger lock inversions not detectable by the PROVE_LOCKING
+mechanism.
 
-I will say that in terms of lock overhead investigations one of things
-that makes this lock heavier than it needs to be (irqs disabled) is
-libata's need to hold host_lock over submissions.  That situation is
-problematic for other reasons [1], and is something that has been in
-the back of my mind since first evaluating isci locking.  I expect our
-fast path locking overhead is on par with mvsas which holds an
-irqs-disabled lock across the interrupt handler, and the entire
-lldd_execute_task path.  The higher touch slow path cases, like SATA
-exception / PIO handling, probably have similar overhead to libata's
-locking, but yes this needs to quantified and addressed.
+Regarding kernel-space driven directory creation in configfs: I have
+been wondering whether it is possible to implement any configuration
+filesystem such that directories can be created synchronously from
+kernel space without triggering lock inversion. I don't see this as a
+configfs limitation but as an inherent limitation of a configuration
+filesystem. In a similar way a self-declarative kernel interface like
+sysfs has the limitation that it is not possible to add configfs-style
+configuration functionality without triggering lock inversion. Both
+sysfs and configfs have important advantages over mechanisms like
+ioctl() and netlink but there are some disadvantages too.
 
---
-Dan
-
-[1]: http://marc.info/?l=3Dlinux-scsi&m=3D129791105419577&w=3D2
+Bart.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
