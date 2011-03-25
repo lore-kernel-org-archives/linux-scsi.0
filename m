@@ -1,14 +1,14 @@
 From: <jayamohan.kallickal@emulex.com>
-Subject: [PATCH 4/5] be2iscsi: check before destroy
-Date: Fri, 25 Mar 2011 14:24:00 -0700
-Message-ID: <f790abc7-bcb9-49d2-8a6d-1cb7cd976ce0@exht1.ad.emulex.com>
+Subject: [PATCH 3/5]  be2iscsi: Set a timeout to FW
+Date: Fri, 25 Mar 2011 14:23:59 -0700
+Message-ID: <b6b1656c-1fdd-47a6-a6ab-f2097c6a9fa5@exht1.ad.emulex.com>
 References: <1301088242-29477-1-git-send-email-jayamohan.kallickal@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:59774 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755220Ab1CYVZN (ORCPT
+	with ESMTP id S1755221Ab1CYVZN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Mar 2011 17:25:13 -0400
 In-Reply-To: <1301088242-29477-1-git-send-email-jayamohan.kallickal@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,41 +18,26 @@ Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
 From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-     This patch checks if boot_kset is created before
-	 attempting to destroy it.
+          Thi patch sets a timeout value within which the FW has
+to respond
 
 Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 ---
- drivers/scsi/be2iscsi/be_main.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 7fe38a4..91b354d 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -420,7 +420,8 @@ static int beiscsi_setup_boot_info(struct beiscsi_hba *phba)
- 	return 0;
- 
- free_kset:
--	iscsi_boot_destroy_kset(phba->boot_kset);
-+	if (phba->boot_kset)
-+		iscsi_boot_destroy_kset(phba->boot_kset);
- 	return -ENOMEM;
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 4ffcbf7..b8a82f2 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -458,6 +458,7 @@ void be_cmd_hdr_prepare(struct be_cmd_req_hdr *req_hdr,
+ 	req_hdr->opcode = opcode;
+ 	req_hdr->subsystem = subsystem;
+ 	req_hdr->request_length = cpu_to_le32(cmd_len - sizeof(*req_hdr));
++	req_hdr->timeout = 120;
  }
  
-@@ -4144,10 +4145,11 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 			    phba->ctrl.mbox_mem_alloced.size,
- 			    phba->ctrl.mbox_mem_alloced.va,
- 			    phba->ctrl.mbox_mem_alloced.dma);
-+	if (phba->boot_kset)
-+		iscsi_boot_destroy_kset(phba->boot_kset);
- 	iscsi_host_remove(phba->shost);
- 	pci_dev_put(phba->pcidev);
- 	iscsi_host_free(phba->shost);
--	iscsi_boot_destroy_kset(phba->boot_kset);
- }
- 
- static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+ static void be_cmd_page_addrs_prepare(struct phys_addr *pages, u32 max_pages,
 -- 
 1.7.4.1
 
