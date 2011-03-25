@@ -1,129 +1,79 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
- initial merge
-Date: Thu, 24 Mar 2011 19:18:53 -0500
-Message-ID: <1301012333.4087.24.camel@mulgrave.site>
-References: <1300916254.18039.87.camel@haakon2.linux-iscsi.org>
-	 <20110324074600L.fujita.tomonori@lab.ntt.co.jp>
-	 <1300922917.18039.147.camel@haakon2.linux-iscsi.org>
-	 <20110324102939R.fujita.tomonori@lab.ntt.co.jp>
-	 <1300949980.18039.222.camel@haakon2.linux-iscsi.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH 4/6] isci: hardware / topology event handling
+Date: Thu, 24 Mar 2011 17:57:17 -0700
+Message-ID: <AANLkTik7DUF=Pim3JMjRmhdVJTCgfimiyhQ5x_CZ9BeU@mail.gmail.com>
+References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
+	<20110207003455.27040.94947.stgit@localhost6.localdomain6>
+	<20110318161852.GA19008@infradead.org>
+	<AANLkTi=dfZ5OtV0rY_y=9boMCAu_=47Bucz_-Jwu0d-6@mail.gmail.com>
+	<20110323084054.GA11533@infradead.org>
+	<AANLkTinS9xZ3Jhg1C+jWNO0wj+MYW3qvbqc_acvnsOLS@mail.gmail.com>
+	<20110323090824.GA14536@infradead.org>
+	<AANLkTinYmRZe9HRrNFWMby9FXZNWCdRUb6QBMgRtW28E@mail.gmail.com>
+	<20110324062646.GA27051@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:51975 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752136Ab1CYATE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Mar 2011 20:19:04 -0400
-In-Reply-To: <1300949980.18039.222.camel@haakon2.linux-iscsi.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:47003 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755356Ab1CYA5T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Mar 2011 20:57:19 -0400
+Received: by fxm17 with SMTP id 17so613899fxm.19
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Mar 2011 17:57:18 -0700 (PDT)
+In-Reply-To: <20110324062646.GA27051@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, bharrosh@panasas.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-On Wed, 2011-03-23 at 23:59 -0700, Nicholas A. Bellinger wrote:
-> On Thu, 2011-03-24 at 10:29 +0900, FUJITA Tomonori wrote:
-> > On Wed, 23 Mar 2011 16:28:37 -0700
-> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> > 
-> > > > Hmm, you prefer 'zero C userspace code'? On the other hand, you insist
-> > > > that requiring user Python userspace code to set up ibmvscsis is a
-> > > > better approach even when the kernel space can set up everything for
-> > > > ibmvscsis?
-> > > > 
-> > > 
-> > > Yes, because we expect userspace to drive creation of the current
-> > > configfs group layout.
-> > > 
-> > > The configfs maintainer explictly requested to drop the ability to drive
-> > > the config_group creation from kernel-space that I had implemented
-> > > originally, and which has not been included in the mainline target v4.0
-> > > control plane.
-> > > 
-> > > It's folks like Joel and Greg-KH that need to be convinced in order for
-> > > me to consider this type of logic for for mainline target code.  I do
-> > 
-> > Can you stop insisting that configfs can't do that so the target core
-> > can't do that?
-> > 
-> 
-> That's certainly not what I am insisting upon.  I am trying to explain
-> that we currently have a configfs control plane that is native for
-> target mode.
-> 
-> In the last three years to get to this point, I have developed prototype
-> code and asked upstream review for:
-> 
-> *) Creating logic to drive configuration from kernel-space for configfs
-> *) Tried at creating sysfs -> configfs symlinks for referencing target
-> core backend devices
-> 
-> So far both of these attempts at patches have been firmly rejected by
-> the configfs and sysfs maintainers.
-> 
-> I am not saying that configfs is the end-all for all generic target mode
-> control plane, but what I am saying is that I have yet to see the code
-> for a different control plane that makes me want to move the away from a
-> 'native configfs' to 'a configfs/sysfs hyrbid', or something else all
-> together for mainline target code.
+On Wed, Mar 23, 2011 at 11:26 PM, Christoph Hellwig <hch@infradead.org>=
+ wrote:
+> On Wed, Mar 23, 2011 at 05:07:49PM -0700, Dan Williams wrote:
+>> One of the fixes I made in that interim timer api cleanup (8d32e5b2)
+>> was to use del_timer_sync on all pre-allocated timers to make sure
+>> nothing fired or was in the process of firing as the driver was
+>> brought down (unlikely). =A0The core runs under
+>> spin_lock_irqsave(ihost->scic_lock) context, and the expectation is
+>> that all these timeout callbacks are done in that context.
+>
+> I'm afraid that you'll have to fix that design mistake first. =A0Runn=
+ing
+> large amounts of code under a spinlock just is not a good idea for
+> a wide range of reasons.
 
-OK, so what about an upcall to userspace to create the necessary
-directories?  That could be driven by the kernel and still not require
-any implementation in configfs.
+I have been waiting for this issue to be raised.  This was one of the
+first items brought up in our internal reviews of the Linux driver.
+Why does it still exist and what is the rationale for addressing it
+incrementally?:
 
-> > We should think about what is the best design for the target code
-> > first.
-> > 
-> > > > And iSCSI setup usually needs userspace code such as iSNS
-> > > > anyway. You'll add iSNS to kernel too.
-> > > > 
-> > > 
-> > > iSNS should be walking the /sys/kernel/config/target/iscsi layout, and
-> > > should not require any kernel code at all.
-> > 
-> > How you draw the line? Why iSNS can live in user space?
-> > 
-> > For example, you say that iSNS should live in user space. The similar
-> > feature to sending the list of target lives in kernel space.
-> > 
-> > 
-> 
-> iSNS is a seperate protocol, and there is no hard-requirement of iSNS
-> client logic to be in place in order for basic iSCSI login to function.
-> 
-> > > What about for the boot1.kernel.org cases where we can expect 1000s of
-> > > R/O clients in the future to a proper 10 Gb/sec uplink.  
-> > > 
-> > > Why do all of these types of logins need to talk with a userspace login
-> > > queue interface?
-> > 
-> > I prefer less kernel space code.
-> > 
-> > 
-> > >  Why do we need to worry about an interface in the
-> > > first place for the standard iSCSI login case..?  What happens if this
-> > > daemon is unexpectedly killed..?  Do I now have to worry about
-> > 
-> > Can you stop such pointless argument? What happens if the iscsi target
-> > kernel module crashed?
-> > 
-> > Linux systems already depend on some essential user space daemons. We
-> > know how to deal with them.
-> > 
-> > 
-> 
-> Sorry, but I have no interest in adding the extra complexity to handle
-> this for the default case.
+Starting with simple locking and then scaling it is arguably easier
+than unwinding a more complex locking scheme implemented too early in
+the design phase.  The lock synchronizes i/o submission against the
+completion/event-queue.  When the event queue runs the state of the
+world might change (phy, port, task context, remote node context), so
+the lock is ensuring a self consistent view of the state machines for
+new submissions.  Now that the core is a slower moving target (in
+terms of code changes) we are incrementally peeling back / minimizing
+the code run under the lock where it is found to be problematic.
 
-Look at it this way: there's no way an implementation of all the RFC3720
-authentication methods (let alone the extensions) is going into the
-kernel, so you need a user space interface anyway.  Once you have one,
-creating two paths: one in-kernel and one via upcall just doubles the
-maintenance load and the amount of work that has to be done fixing bugs.
-As far as I can see, authentication isn't in the fast path, so there's
-no real need for any of it to be in-kernel in the first place.
+I will say that in terms of lock overhead investigations one of things
+that makes this lock heavier than it needs to be (irqs disabled) is
+libata's need to hold host_lock over submissions.  That situation is
+problematic for other reasons [1], and is something that has been in
+the back of my mind since first evaluating isci locking.  I expect our
+fast path locking overhead is on par with mvsas which holds an
+irqs-disabled lock across the interrupt handler, and the entire
+lldd_execute_task path.  The higher touch slow path cases, like SATA
+exception / PIO handling, probably have similar overhead to libata's
+locking, but yes this needs to quantified and addressed.
 
-James
+--
+Dan
 
-
+[1]: http://marc.info/?l=3Dlinux-scsi&m=3D129791105419577&w=3D2
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
