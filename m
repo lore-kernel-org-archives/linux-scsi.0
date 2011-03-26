@@ -1,38 +1,36 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: be2iscsi: copyright and other changes
-Date: Fri, 25 Mar 2011 19:35:10 -0500
-Message-ID: <4D8D34BE.2070900@cs.wisc.edu>
-References: <1301088242-29477-1-git-send-email-jayamohan.kallickal@emulex.com> <8719516b-2960-47ac-acc1-6d79328a9f69@exht1.ad.emulex.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50724 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932107Ab1CZAe0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Mar 2011 20:34:26 -0400
-In-Reply-To: <8719516b-2960-47ac-acc1-6d79328a9f69@exht1.ad.emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Coly Li <bosong.ly@taobao.com>
+Subject: [PATCH 4/4] scsi_lib.c: use BUG_ON correctly, v4
+Date: Sun, 27 Mar 2011 01:26:55 +0800
+Message-ID: <1301160415-24569-5-git-send-email-bosong.ly@taobao.com>
+References: <1301160415-24569-1-git-send-email-bosong.ly@taobao.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1301160415-24569-1-git-send-email-bosong.ly@taobao.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Coly Li <bosong.ly@taobao.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jayamohan.kallickal@emulex.com
+
+This patch makes BUG_ON() usage correct in drivers/scsi/scsi_lib.c
+
+Cc: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Coly Li <bosong.ly@taobao.com>
+---
+ drivers/scsi/scsi_lib.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-On 03/25/2011 04:24 PM, jayamohan.kallickal@emulex.com wrote:
-> From: Jayamohan Kallickal<jayamohan.kallickal@emulex.com>
->
-> Hi
->
->    	These set of patches have been made on
-> latest scsi-misc tree pulled on 23 Mar 2011.
->
->
-> 0001     Copyright changes
-> 0002     Modifying Maintainer email id
-> 0003     Force FW to respond within certain time
-> 0004     Destroy only if created
-> 0005     Bug fix to set right parameters for FW
->
-
-Looks ok
-
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Index: linux-2.6/drivers/scsi/scsi_lib.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6/drivers/scsi/scsi_lib.c
+@@ -1033,8 +1033,8 @@ int scsi_init_io(struct scsi_cmnd *cmd,
+ 
+ 		count = blk_rq_map_integrity_sg(rq->q, rq->bio,
+ 						prot_sdb->table.sgl);
+-		BUG_ON(unlikely(count > ivecs));
+-		BUG_ON(unlikely(count > queue_max_integrity_segments(rq->q)));
++		BUG_ON(count > ivecs);
++		BUG_ON(count > queue_max_integrity_segments(rq->q));
+ 
+ 		cmd->prot_sdb = prot_sdb;
+ 		cmd->prot_sdb->table.nents = count;
