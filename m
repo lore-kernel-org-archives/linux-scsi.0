@@ -1,40 +1,32 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 1/1] libsrp: Fix oops on ibmvscsis module remove
-Date: Sun, 27 Mar 2011 17:51:29 +0900
-Message-ID: <20110327175103D.fujita.tomonori@lab.ntt.co.jp>
-References: <201103242016.p2OKGZsc014250@d03av05.boulder.ibm.com>
+Subject: Re: [PATCH-v2 00/14] iscsi-target: iSCSI target v4.1.0-rc1 series
+	initial merge
+Date: Sun, 27 Mar 2011 19:02:25 +0900
+Message-ID: <20110327185119V.fujita.tomonori@lab.ntt.co.jp>
+References: <1300949980.18039.222.camel@haakon2.linux-iscsi.org>
+	<1301012333.4087.24.camel@mulgrave.site>
+	<1301087690.6087.126.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:36516 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:48965 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752783Ab1C0Ivp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 Mar 2011 04:51:45 -0400
-In-Reply-To: <201103242016.p2OKGZsc014250@d03av05.boulder.ibm.com>
+	id S1752942Ab1C0KDA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Mar 2011 06:03:00 -0400
+In-Reply-To: <1301087690.6087.126.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: nab@linux-iscsi.org
+Cc: James.Bottomley@suse.de, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, hch@lst.de, michaelc@cs.wisc.edu, hare@suse.de, bharrosh@panasas.com
 
-On Thu, 24 Mar 2011 15:16:35 -0500
-Brian King <brking@linux.vnet.ibm.com> wrote:
+On Fri, 25 Mar 2011 14:14:50 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-> 
-> While testing the ibmvscsis driver, an oops was observed on module
-> remove. This occurred due to some confusion regarding what layer
-> owns the drvdata in the struct device for an ibmvscsis device.
-> libsrp was overriding what ibmvscsis had already setup, so on
-> module remove we go off a bad pointer. Since libsrp appears
-> only to setup drvdata and never read the value, lets just remove
-> setting it in libsrp and let the server driver own the field.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  drivers/scsi/libsrp.c |    2 --
->  1 file changed, 2 deletions(-)
+> What I am saying is that only the optional to implement iSCSI
+> authentication *payloads* should have a request/response interface with
+> userspace daemons for those types of auth libs that we always expect to
 
-Oops, thanks. This change needs to be merged with ibmvscsis.
-
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+We don't need such interface (authentication *payloads* between kernel
+and user spaces). All operations (including authentication) before
+establishing a nexus should be done in userspace.
