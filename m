@@ -1,16 +1,16 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] isci: remove base_controller abstraction
-Date: Mon, 28 Mar 2011 09:21:04 -0400
-Message-ID: <20110328132103.GA11684@infradead.org>
+Subject: [PATCH 2/2] isci: remove base_request abstraction
+Date: Mon, 28 Mar 2011 09:21:14 -0400
+Message-ID: <20110328132114.GB11684@infradead.org>
 References: <20110328000754.GA28347@infradead.org>
  <20110328132046.GA497@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33088 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:33090 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753229Ab1C1NVE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2011 09:21:04 -0400
+	with ESMTP id S1753634Ab1C1NVP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2011 09:21:15 -0400
 Content-Disposition: inline
 In-Reply-To: <20110328132046.GA497@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,18 +18,46 @@ List-Id: linux-scsi@vger.kernel.org
 To: Dan Williams <dan.j.williams@intel.com>
 Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-Merge struct sci_base_controller into scic_sds_controller, and also factor
-the two types of state machine handlers into one function.  While we're at
-it also remove lots of duplicate incorrect kerneldoc comments for the state
-machine handlers.
+Merge struct sci_base_request into scic_sds_request, and also factor the two
+types of state machine handlers into one function.  While we're at it also
+remove lots of duplicate incorrect kerneldoc comments for the state machine
+handlers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: linux-2.6/drivers/scsi/isci/core/sci_base_controller.h
+Index: linux-2.6/drivers/scsi/isci/core/sci_base_remote_device.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/core/sci_base_controller.h	2011-03-28 10:47:51.502837983 +0200
+--- linux-2.6.orig/drivers/scsi/isci/core/sci_base_remote_device.h	2011-03-28 11:21:32.845838101 +0200
++++ linux-2.6/drivers/scsi/isci/core/sci_base_remote_device.h	2011-03-28 11:40:42.229838870 +0200
+@@ -65,7 +65,7 @@
+ 
+ #include "sci_base_state_machine.h"
+ 
+-struct sci_base_request;
++struct scic_sds_request;
+ 
+ /**
+  * enum sci_base_remote_device_states - This enumeration depicts all the states
+@@ -159,12 +159,12 @@ typedef enum sci_status (*sci_base_remot
+ 
+ typedef enum sci_status (*sci_base_remote_device_request_handler_t)(
+ 	struct sci_base_remote_device *,
+-	struct sci_base_request *
++	struct scic_sds_request *
+ 	);
+ 
+ typedef enum sci_status (*sci_base_remote_device_high_priority_request_complete_handler_t)(
+ 	struct sci_base_remote_device *,
+-	struct sci_base_request *,
++	struct scic_sds_request *,
+ 	void *,
+ 	enum sci_io_status
+ 	);
+Index: linux-2.6/drivers/scsi/isci/core/sci_base_request.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/sci_base_request.h	2011-03-28 11:19:07.474839171 +0200
 +++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,304 +0,0 @@
+@@ -1,195 +0,0 @@
 -/*
 - * This file is provided under a dual BSD/GPLv2 license.  When using or
 - * redistributing this file, you may do so under either license.
@@ -85,1520 +113,2691 @@ Index: linux-2.6/drivers/scsi/isci/core/sci_base_controller.h
 - * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 - */
 -
--#ifndef _SCI_BASE_CONTROLLER_H_
--#define _SCI_BASE_CONTROLLER_H_
--
--#include "intel_sas.h"
--#include "sci_controller_constants.h"
--#include "sci_base_state.h"
--#include "sci_base_memory_descriptor_list.h"
--#include "sci_base_state_machine.h"
--#include "sci_object.h"
--
--struct sci_base_memory_descriptor_list;
+-#ifndef _SCI_BASE_REQUST_H_
+-#define _SCI_BASE_REQUST_H_
 -
 -/**
-- * enum sci_base_controller_states - This enumeration depicts all the states
-- *    for the common controller state machine.
+- * This file contains all of the constants, types, and method declarations for
+- *    the SCI base IO and task request objects.
 - *
 - *
 - */
--enum sci_base_controller_states {
--	/**
--	 * Simply the initial state for the base controller state machine.
--	 */
--	SCI_BASE_CONTROLLER_STATE_INITIAL = 0,
 -
--	/**
--	 * This state indicates that the controller is reset.  The memory for
--	 * the controller is in it's initial state, but the controller requires
--	 * initialization.
--	 * This state is entered from the INITIAL state.
--	 * This state is entered from the RESETTING state.
--	 */
--	SCI_BASE_CONTROLLER_STATE_RESET,
+-#include "sci_base_state_machine.h"
 -
+-/**
+- * enum sci_base_request_states - This enumeration depicts all the states for
+- *    the common request state machine.
+- *
+- *
+- */
+-enum sci_base_request_states {
 -	/**
--	 * This state is typically an action state that indicates the controller
--	 * is in the process of initialization.  In this state no new IO operations
--	 * are permitted.
--	 * This state is entered from the RESET state.
+-	 * Simply the initial state for the base request state machine.
 -	 */
--	SCI_BASE_CONTROLLER_STATE_INITIALIZING,
+-	SCI_BASE_REQUEST_STATE_INITIAL,
 -
 -	/**
--	 * This state indicates that the controller has been successfully
--	 * initialized.  In this state no new IO operations are permitted.
--	 * This state is entered from the INITIALIZING state.
+-	 * This state indicates that the request has been constructed. This state
+-	 * is entered from the INITIAL state.
 -	 */
--	SCI_BASE_CONTROLLER_STATE_INITIALIZED,
+-	SCI_BASE_REQUEST_STATE_CONSTRUCTED,
 -
 -	/**
--	 * This state indicates the the controller is in the process of becoming
--	 * ready (i.e. starting).  In this state no new IO operations are permitted.
--	 * This state is entered from the INITIALIZED state.
+-	 * This state indicates that the request has been started. This state is
+-	 * entered from the CONSTRUCTED state.
 -	 */
--	SCI_BASE_CONTROLLER_STATE_STARTING,
+-	SCI_BASE_REQUEST_STATE_STARTED,
 -
 -	/**
--	 * This state indicates the controller is now ready.  Thus, the user
--	 * is able to perform IO operations on the controller.
--	 * This state is entered from the STARTING state.
+-	 * This state indicates that the request has completed.
+-	 * This state is entered from the STARTED state. This state is entered from
+-	 * the ABORTING state.
 -	 */
--	SCI_BASE_CONTROLLER_STATE_READY,
+-	SCI_BASE_REQUEST_STATE_COMPLETED,
 -
 -	/**
--	 * This state is typically an action state that indicates the controller
--	 * is in the process of resetting.  Thus, the user is unable to perform
--	 * IO operations on the controller.  A reset is considered destructive in
--	 * most cases.
--	 * This state is entered from the READY state.
--	 * This state is entered from the FAILED state.
--	 * This state is entered from the STOPPED state.
+-	 * This state indicates that the request is in the process of being
+-	 * terminated/aborted.
+-	 * This state is entered from the CONSTRUCTED state.
+-	 * This state is entered from the STARTED state.
 -	 */
--	SCI_BASE_CONTROLLER_STATE_RESETTING,
+-	SCI_BASE_REQUEST_STATE_ABORTING,
 -
 -	/**
--	 * This state indicates that the controller is in the process of stopping.
--	 * In this state no new IO operations are permitted, but existing IO
--	 * operations are allowed to complete.
--	 * This state is entered from the READY state.
+-	 * Simply the final state for the base request state machine.
 -	 */
--	SCI_BASE_CONTROLLER_STATE_STOPPING,
--
--	/**
--	 * This state indicates that the controller has successfully been stopped.
--	 * In this state no new IO operations are permitted.
--	 * This state is entered from the STOPPING state.
--	 */
--	SCI_BASE_CONTROLLER_STATE_STOPPED,
--
--	/**
--	 * This state indicates that the controller could not successfully be
--	 * initialized.  In this state no new IO operations are permitted.
--	 * This state is entered from the INITIALIZING state.
--	 * This state is entered from the STARTING state.
--	 * This state is entered from the STOPPING state.
--	 * This state is entered from the RESETTING state.
--	 */
--	SCI_BASE_CONTROLLER_STATE_FAILED,
--
--	SCI_BASE_CONTROLLER_MAX_STATES
--
+-	SCI_BASE_REQUEST_STATE_FINAL,
 -};
 -
 -/**
-- * struct sci_base_controller - The base controller object abstracts the fields
-- *    common to all SCI controller objects.
+- * struct sci_base_request - The base request object abstracts the fields
+- *    common to all SCI IO and task request objects.
 - *
 - *
 - */
--struct sci_base_controller {
+-struct sci_base_request {
 -	/**
--	 * The field specifies that the parent object for the base controller
--	 * is the base object itself.
+-	 * The field specifies that the parent object for the base request is the
+-	 * base object itself.
 -	 */
 -	struct sci_base_object parent;
 -
 -	/**
--	 * This field points to the memory descriptor list associated with this
--	 * controller.  The MDL indicates the memory requirements necessary for
--	 * this controller object.
--	 */
--	struct sci_base_memory_descriptor_list mdl;
--
--	/**
--	 * This field contains the information for the base controller state
--	 * machine.
+-	 * This field contains the information for the base request state machine.
 -	 */
 -	struct sci_base_state_machine state_machine;
 -};
 -
--/* Forward declarations */
--struct sci_base_remote_device;
--struct sci_base_request;
--
--typedef enum sci_status
--(*sci_base_controller_handler_t)(struct sci_base_controller *);
--
--typedef enum sci_status
--(*sci_base_controller_timed_handler_t)(struct sci_base_controller *, u32);
--
--typedef enum sci_status
--(*sci_base_controller_request_handler_t)(struct sci_base_controller *,
--					 struct sci_base_remote_device *,
--					 struct sci_base_request *);
--
--typedef enum sci_status
--(*sci_base_controller_start_request_handler_t)(struct sci_base_controller *,
--					       struct sci_base_remote_device *,
--					       struct sci_base_request *, u16);
+-typedef enum sci_status (*sci_base_request_handler_t)(
+-	struct sci_base_request *this_request
+-	);
 -
 -/**
-- * struct sci_base_controller_state_handler - This structure contains all of
-- *    the state handler methods common to base controller state machines.
+- * struct sci_base_request_state_handler - This structure contains all of the
+- *    state handler methods common to base IO and task request state machines.
 - *    Handler methods provide the ability to change the behavior for user
 - *    requests or transitions depending on the state the machine is in.
 - *
 - *
 - */
--struct sci_base_controller_state_handler {
+-struct sci_base_request_state_handler {
 -	/**
 -	 * The start_handler specifies the method invoked when a user attempts to
--	 * start a controller.
+-	 * start a request.
 -	 */
--	sci_base_controller_timed_handler_t start;
+-	sci_base_request_handler_t start_handler;
 -
 -	/**
--	 * The stop_handler specifies the method invoked when a user attempts to
--	 * stop a controller.
+-	 * The abort_handler specifies the method invoked when a user attempts to
+-	 * abort a request.
 -	 */
--	sci_base_controller_timed_handler_t stop;
+-	sci_base_request_handler_t abort_handler;
 -
 -	/**
--	 * The reset_handler specifies the method invoked when a user attempts to
--	 * reset a controller.
+-	 * The complete_handler specifies the method invoked when a user attempts to
+-	 * complete a request.
 -	 */
--	sci_base_controller_handler_t reset;
+-	sci_base_request_handler_t complete_handler;
 -
 -	/**
--	 * The initialize_handler specifies the method invoked when a user
--	 * attempts to initialize a controller.
+-	 * The destruct_handler specifies the method invoked when a user attempts to
+-	 * destruct a request.
 -	 */
--	sci_base_controller_handler_t initialize;
--
--	/**
--	 * The start_io_handler specifies the method invoked when a user
--	 * attempts to start an IO request for a controller.
--	 */
--	sci_base_controller_start_request_handler_t start_io;
--
--	/**
--	 * The complete_io_handler specifies the method invoked when a user
--	 * attempts to complete an IO request for a controller.
--	 */
--	sci_base_controller_request_handler_t complete_io;
--
--	/**
--	 * The continue_io_handler specifies the method invoked when a user
--	 * attempts to continue an IO request for a controller.
--	 */
--	sci_base_controller_request_handler_t continue_io;
--
--	/**
--	 * The start_task_handler specifies the method invoked when a user
--	 * attempts to start a task management request for a controller.
--	 */
--	sci_base_controller_start_request_handler_t start_task;
--
--	/**
--	 * The complete_task_handler specifies the method invoked when a user
--	 * attempts to complete a task management request for a controller.
--	 */
--	sci_base_controller_request_handler_t complete_task;
+-	sci_base_request_handler_t destruct_handler;
 -
 -};
 -
 -/**
-- * sci_base_controller_construct() - Construct the base controller
-- * @this_controller: This parameter specifies the base controller to be
-- *    constructed.
+- * sci_base_request_construct() - Construct the base request.
+- * @this_request: This parameter specifies the base request to be constructed.
 - * @state_table: This parameter specifies the table of state definitions to be
-- *    utilized for the controller state machine.
-- * @mde_array: This parameter specifies the array of memory descriptor entries
-- *    to be managed by this list.
-- * @mde_array_length: This parameter specifies the size of the array of entries.
-- * @next_mdl: This parameter specifies a subsequent MDL object to be managed by
-- *    this MDL object.
-- * @oem_parameters: This parameter specifies the original equipment
-- *    manufacturer parameters to be utilized by this controller object.
+- *    utilized for the request state machine.
 - *
 - */
--static inline void sci_base_controller_construct(
--	struct sci_base_controller *scic_base,
--	const struct sci_base_state *state_table,
--	struct sci_physical_memory_descriptor *mdes,
--	u32 mde_count,
--	struct sci_base_memory_descriptor_list *next_mdl)
+-static inline void sci_base_request_construct(
+-	struct sci_base_request *base_req,
+-	const struct sci_base_state *my_state_table)
 -{
+-	base_req->parent.private = NULL;
 -	sci_base_state_machine_construct(
--		&scic_base->state_machine,
--		&scic_base->parent,
--		state_table,
--		SCI_BASE_CONTROLLER_STATE_INITIAL
+-		&base_req->state_machine,
+-		&base_req->parent,
+-		my_state_table,
+-		SCI_BASE_REQUEST_STATE_INITIAL
 -		);
 -
--	sci_base_mdl_construct(&scic_base->mdl, mdes, mde_count, next_mdl);
--
--	sci_base_state_machine_start(&scic_base->state_machine);
+-	sci_base_state_machine_start(
+-		&base_req->state_machine
+-		);
 -}
 -
--#endif /* _SCI_BASE_CONTROLLER_H_ */
+-#endif /* _SCI_BASE_REQUST_H_ */
 Index: linux-2.6/drivers/scsi/isci/core/scic_sds_controller.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_controller.c	2011-03-28 10:47:51.518838336 +0200
-+++ linux-2.6/drivers/scsi/isci/core/scic_sds_controller.c	2011-03-28 11:17:28.785838750 +0200
-@@ -212,12 +212,6 @@ static void scic_sds_controller_power_co
- 		SMU_CQGR_EVENT_CYCLE_BIT \
- 		)
- 
--struct sci_base_memory_descriptor_list *
--sci_controller_get_memory_descriptor_list_handle(struct scic_sds_controller *scic)
--{
--       return &scic->parent.mdl;
--}
--
- static void scic_sds_controller_initialize_power_control(struct scic_sds_controller *scic)
- {
- 	struct isci_host *ihost = sci_object_get_association(scic);
-@@ -688,13 +682,13 @@ static void scic_sds_controller_transiti
- {
- 	struct isci_host *ihost = sci_object_get_association(scic);
- 
--	if (scic->parent.state_machine.current_state_id ==
--			SCI_BASE_CONTROLLER_STATE_STARTING) {
-+	if (scic->state_machine.current_state_id ==
-+	    SCI_BASE_CONTROLLER_STATE_STARTING) {
- 		/*
- 		 * We move into the ready state, because some of the phys/ports
- 		 * may be up and operational.
- 		 */
--		sci_base_state_machine_change_state(&scic->parent.state_machine,
-+		sci_base_state_machine_change_state(&scic->state_machine,
- 						    SCI_BASE_CONTROLLER_STATE_READY);
- 
- 		isci_host_start_complete(ihost, status);
-@@ -705,7 +699,7 @@ static void scic_sds_controller_timeout_
- {
- 	struct scic_sds_controller *scic = _scic;
- 	struct isci_host *ihost = sci_object_get_association(scic);
--	struct sci_base_state_machine *sm = &scic->parent.state_machine;
-+	struct sci_base_state_machine *sm = &scic->state_machine;
- 
- 	if (sm->current_state_id == SCI_BASE_CONTROLLER_STATE_STARTING)
- 		scic_sds_controller_transition_to_ready(scic, SCI_FAILURE_TIMEOUT);
-@@ -1549,7 +1543,7 @@ void scic_sds_controller_error_handler(s
- 		dev_err(scic_to_dev(scic), "%s: status: %#x\n", __func__,
- 			interrupt_status);
- 
--		sci_base_state_machine_change_state(&scic->parent.state_machine,
-+		sci_base_state_machine_change_state(&scic->state_machine,
- 						    SCI_BASE_CONTROLLER_STATE_FAILED);
- 
- 		return;
-@@ -1572,7 +1566,7 @@ void scic_sds_controller_link_up(
- 	scic_sds_controller_phy_handler_t link_up;
- 	u32 state;
- 
--	state = scic->parent.state_machine.current_state_id;
-+	state = scic->state_machine.current_state_id;
- 	link_up = scic_sds_controller_state_handler_table[state].link_up;
- 
- 	if (link_up)
-@@ -1593,7 +1587,7 @@ void scic_sds_controller_link_down(
- 	u32 state;
- 	scic_sds_controller_phy_handler_t link_down;
- 
--	state = scic->parent.state_machine.current_state_id;
-+	state = scic->state_machine.current_state_id;
- 	link_down = scic_sds_controller_state_handler_table[state].link_down;
- 
- 	if (link_down)
-@@ -1639,7 +1633,7 @@ void scic_sds_controller_remote_device_s
- 	u32 state;
- 	scic_sds_controller_device_handler_t stopped;
- 
--	state = scic->parent.state_machine.current_state_id;
-+	state = scic->state_machine.current_state_id;
- 	stopped = scic_sds_controller_state_handler_table[state].device_stopped;
- 
- 	if (stopped)
-@@ -1969,14 +1963,14 @@ enum sci_status scic_controller_initiali
- 	struct scic_sds_controller *scic)
- {
- 	enum sci_status status = SCI_FAILURE_INVALID_STATE;
--	sci_base_controller_handler_t initialize;
-+	scic_sds_controller_handler_t initialize;
- 	u32 state;
- 
--	state = scic->parent.state_machine.current_state_id;
--	initialize = scic_sds_controller_state_handler_table[state].base.initialize;
-+	state = scic->state_machine.current_state_id;
-+	initialize = scic_sds_controller_state_handler_table[state].initialize;
- 
- 	if (initialize)
--		status = initialize(&scic->parent);
-+		status = initialize(scic);
- 	else
- 		dev_warn(scic_to_dev(scic),
- 			 "%s: SCIC Controller initialize operation requested "
-@@ -2050,14 +2044,14 @@ enum sci_status scic_controller_start(
- 	u32 timeout)
- {
- 	enum sci_status status = SCI_FAILURE_INVALID_STATE;
--	sci_base_controller_timed_handler_t start;
-+	scic_sds_controller_timed_handler_t start;
- 	u32 state;
- 
--	state = scic->parent.state_machine.current_state_id;
--	start = scic_sds_controller_state_handler_table[state].base.start;
-+	state = scic->state_machine.current_state_id;
-+	start = scic_sds_controller_state_handler_table[state].start;
- 
- 	if (start)
--		status = start(&scic->parent, timeout);
-+		status = start(scic, timeout);
- 	else
- 		dev_warn(scic_to_dev(scic),
- 			 "%s: SCIC Controller start operation requested in "
-@@ -2089,14 +2083,14 @@ enum sci_status scic_controller_stop(
- 	u32 timeout)
- {
- 	enum sci_status status = SCI_FAILURE_INVALID_STATE;
--	sci_base_controller_timed_handler_t stop;
-+	scic_sds_controller_timed_handler_t stop;
- 	u32 state;
- 
--	state = scic->parent.state_machine.current_state_id;
--	stop = scic_sds_controller_state_handler_table[state].base.stop;
-+	state = scic->state_machine.current_state_id;
-+	stop = scic_sds_controller_state_handler_table[state].stop;
- 
- 	if (stop)
--		status = stop(&scic->parent, timeout);
-+		status = stop(scic, timeout);
- 	else
- 		dev_warn(scic_to_dev(scic),
- 			 "%s: SCIC Controller stop operation requested in "
-@@ -2121,14 +2115,14 @@ enum sci_status scic_controller_reset(
- 	struct scic_sds_controller *scic)
- {
- 	enum sci_status status = SCI_FAILURE_INVALID_STATE;
--	sci_base_controller_handler_t reset;
-+	scic_sds_controller_handler_t reset;
- 	u32 state;
- 
--	state = scic->parent.state_machine.current_state_id;
--	reset = scic_sds_controller_state_handler_table[state].base.reset;
-+	state = scic->state_machine.current_state_id;
-+	reset = scic_sds_controller_state_handler_table[state].reset;
- 
- 	if (reset)
--		status = reset(&scic->parent);
-+		status = reset(scic);
- 	else
- 		dev_warn(scic_to_dev(scic),
- 			 "%s: SCIC Controller reset operation requested in "
-@@ -2171,12 +2165,12 @@ enum sci_io_status scic_controller_start
- 	u16 io_tag)
- {
- 	u32 state;
--	sci_base_controller_start_request_handler_t start_io;
-+	scic_sds_controller_start_request_handler_t start_io;
- 
--	state = scic->parent.state_machine.current_state_id;
--	start_io = scic_sds_controller_state_handler_table[state].base.start_io;
-+	state = scic->state_machine.current_state_id;
-+	start_io = scic_sds_controller_state_handler_table[state].start_io;
- 
--	return start_io(&scic->parent,
-+	return start_io(scic,
- 			(struct sci_base_remote_device *) remote_device,
- 			(struct sci_base_request *)io_request, io_tag);
- }
-@@ -2202,13 +2196,13 @@ enum sci_status scic_controller_terminat
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_controller.c	2011-03-28 11:21:32.865841675 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_controller.c	2011-03-28 11:24:41.181837740 +0200
+@@ -2161,7 +2161,7 @@ enum sci_status scic_controller_reset(
+ enum sci_io_status scic_controller_start_io(
+ 	struct scic_sds_controller *scic,
  	struct scic_sds_remote_device *remote_device,
- 	struct scic_sds_request *request)
+-	struct scic_sds_request *io_request,
++	struct scic_sds_request *request,
+ 	u16 io_tag)
  {
--	sci_base_controller_request_handler_t terminate_request;
-+	scic_sds_controller_request_handler_t terminate_request;
  	u32 state;
+@@ -2172,7 +2172,7 @@ enum sci_io_status scic_controller_start
  
--	state = scic->parent.state_machine.current_state_id;
-+	state = scic->state_machine.current_state_id;
- 	terminate_request = scic_sds_controller_state_handler_table[state].terminate_request;
+ 	return start_io(scic,
+ 			(struct sci_base_remote_device *) remote_device,
+-			(struct sci_base_request *)io_request, io_tag);
++			request, io_tag);
+ }
  
--	return terminate_request(&scic->parent,
-+	return terminate_request(scic,
+ /**
+@@ -2204,7 +2204,7 @@ enum sci_status scic_controller_terminat
+ 
+ 	return terminate_request(scic,
  				 (struct sci_base_remote_device *)remote_device,
- 				 (struct sci_base_request *)request);
+-				 (struct sci_base_request *)request);
++				 request);
  }
-@@ -2241,12 +2235,12 @@ enum sci_status scic_controller_complete
- 	struct scic_sds_request *io_request)
+ 
+ /**
+@@ -2232,7 +2232,7 @@ enum sci_status scic_controller_terminat
+ enum sci_status scic_controller_complete_io(
+ 	struct scic_sds_controller *scic,
+ 	struct scic_sds_remote_device *remote_device,
+-	struct scic_sds_request *io_request)
++	struct scic_sds_request *request)
  {
  	u32 state;
--	sci_base_controller_request_handler_t complete_io;
-+	scic_sds_controller_request_handler_t complete_io;
+ 	scic_sds_controller_request_handler_t complete_io;
+@@ -2242,7 +2242,7 @@ enum sci_status scic_controller_complete
  
--	state = scic->parent.state_machine.current_state_id;
--	complete_io = scic_sds_controller_state_handler_table[state].base.complete_io;
-+	state = scic->state_machine.current_state_id;
-+	complete_io = scic_sds_controller_state_handler_table[state].complete_io;
- 
--	return complete_io(&scic->parent,
-+	return complete_io(scic,
+ 	return complete_io(scic,
  			   (struct sci_base_remote_device *)remote_device,
- 			   (struct sci_base_request *)io_request);
+-			   (struct sci_base_request *)io_request);
++			   request);
  }
-@@ -2286,14 +2280,14 @@ enum sci_task_status scic_controller_sta
- 	u16 task_tag)
- {
- 	u32 state;
--	sci_base_controller_start_request_handler_t start_task;
-+	scic_sds_controller_start_request_handler_t start_task;
- 	enum sci_task_status status = SCI_TASK_FAILURE_INVALID_STATE;
  
--	state = scic->parent.state_machine.current_state_id;
--	start_task = scic_sds_controller_state_handler_table[state].base.start_task;
-+	state = scic->state_machine.current_state_id;
-+	start_task = scic_sds_controller_state_handler_table[state].start_task;
- 
+ /**
+@@ -2289,7 +2289,7 @@ enum sci_task_status scic_controller_sta
  	if (start_task)
--		status = start_task(&scic->parent,
-+		status = start_task(scic,
+ 		status = start_task(scic,
  				    (struct sci_base_remote_device *)remote_device,
- 				    (struct sci_base_request *)task_request,
+-				    (struct sci_base_request *)task_request,
++				    task_request,
  				    task_tag);
-@@ -2326,14 +2320,14 @@ enum sci_status scic_controller_complete
- 	struct scic_sds_request *task_request)
- {
- 	u32 state;
--	sci_base_controller_request_handler_t complete_task;
-+	scic_sds_controller_request_handler_t complete_task;
- 	enum sci_status status = SCI_FAILURE_INVALID_STATE;
- 
--	state = scic->parent.state_machine.current_state_id;
--	complete_task = scic_sds_controller_state_handler_table[state].base.complete_task;
-+	state = scic->state_machine.current_state_id;
-+	complete_task = scic_sds_controller_state_handler_table[state].complete_task;
- 
- 	if (complete_task)
--		status = complete_task(&scic->parent,
-+		status = complete_task(scic,
- 				       (struct sci_base_remote_device *)remote_device,
- 				       (struct sci_base_request *)task_request);
  	else
-@@ -2518,9 +2512,9 @@ static enum sci_status scic_controller_s
- {
- 	enum sci_status status          = SCI_SUCCESS;
- 
--	if ((scic->parent.state_machine.current_state_id ==
-+	if ((scic->state_machine.current_state_id ==
- 				SCI_BASE_CONTROLLER_STATE_INITIALIZING) ||
--	    (scic->parent.state_machine.current_state_id ==
-+	    (scic->state_machine.current_state_id ==
- 				SCI_BASE_CONTROLLER_STATE_INITIALIZED)) {
- 		switch (operating_mode) {
- 		case SCI_MODE_SPEED:
-@@ -2583,7 +2577,7 @@ enum sci_status scic_user_parameters_set
- 	struct scic_sds_controller *scic,
- 	union scic_user_parameters *scic_parms)
- {
--	u32 state = scic->parent.state_machine.current_state_id;
-+	u32 state = scic->state_machine.current_state_id;
- 
- 	if (state == SCI_BASE_CONTROLLER_STATE_RESET ||
- 	    state == SCI_BASE_CONTROLLER_STATE_INITIALIZING ||
-@@ -2637,7 +2631,7 @@ enum sci_status scic_oem_parameters_set(
- 	struct scic_sds_controller *scic,
- 	union scic_oem_parameters *scic_parms)
- {
--	u32 state = scic->parent.state_machine.current_state_id;
-+	u32 state = scic->state_machine.current_state_id;
- 
- 	if (state == SCI_BASE_CONTROLLER_STATE_RESET ||
- 	    state == SCI_BASE_CONTROLLER_STATE_INITIALIZING ||
-@@ -2819,54 +2813,52 @@ struct scic_sds_controller *scic_control
- 	return devm_kzalloc(dev, sizeof(struct scic_sds_controller), GFP_KERNEL);
- }
- 
--static enum sci_status default_controller_handler(struct sci_base_controller *base_scic,
--						  const char *func)
-+static enum sci_status
-+default_controller_handler(struct scic_sds_controller *scic, const char *func)
- {
--	struct scic_sds_controller *scic = container_of(base_scic, typeof(*scic), parent);
--	u32 state = base_scic->state_machine.current_state_id;
--
--	dev_warn(scic_to_dev(scic), "%s: invalid state %d\n", func, state);
-+	dev_warn(scic_to_dev(scic), "%s: invalid state %d\n", func,
-+		 scic->state_machine.current_state_id);
- 
- 	return SCI_FAILURE_INVALID_STATE;
- }
- 
+ 		dev_warn(scic_to_dev(scic),
+@@ -2329,7 +2329,7 @@ enum sci_status scic_controller_complete
+ 	if (complete_task)
+ 		status = complete_task(scic,
+ 				       (struct sci_base_remote_device *)remote_device,
+-				       (struct sci_base_request *)task_request);
++				       task_request);
+ 	else
+ 		dev_warn(scic_to_dev(scic),
+ 			 "%s: SCIC Controller completing task from invalid "
+@@ -2825,7 +2825,7 @@ default_controller_handler(struct scic_s
  static enum sci_status scic_sds_controller_default_start_operation_handler(
--	struct sci_base_controller *base_scic,
-+	struct scic_sds_controller *scic,
+ 	struct scic_sds_controller *scic,
  	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request,
+-	struct sci_base_request *io_request,
++	struct scic_sds_request *request,
  	u16 io_tag)
  {
--	return default_controller_handler(base_scic, __func__);
-+	return default_controller_handler(scic, __func__);
- }
- 
+ 	return default_controller_handler(scic, __func__);
+@@ -2834,7 +2834,7 @@ static enum sci_status scic_sds_controll
  static enum sci_status scic_sds_controller_default_request_handler(
--	struct sci_base_controller *base_scic,
-+	struct scic_sds_controller *scic,
+ 	struct scic_sds_controller *scic,
  	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request)
+-	struct sci_base_request *io_request)
++	struct scic_sds_request *request)
  {
--	return default_controller_handler(base_scic, __func__);
-+	return default_controller_handler(scic, __func__);
+ 	return default_controller_handler(scic, __func__);
  }
- 
--static enum sci_status scic_sds_controller_general_reset_handler(struct sci_base_controller *base_scic)
-+static enum sci_status
-+scic_sds_controller_general_reset_handler(struct scic_sds_controller *scic)
- {
- 	/* The reset operation is not a graceful cleanup just perform the state
- 	 * transition.
- 	 */
--	sci_base_state_machine_change_state(&base_scic->state_machine,
-+	sci_base_state_machine_change_state(&scic->state_machine,
- 					    SCI_BASE_CONTROLLER_STATE_RESETTING);
- 
- 	return SCI_SUCCESS;
- }
- 
--static enum sci_status scic_sds_controller_reset_state_initialize_handler(struct sci_base_controller *base_scic)
-+static enum sci_status
-+scic_sds_controller_reset_state_initialize_handler(struct scic_sds_controller *scic)
- {
--	struct sci_base_state_machine *sm = &base_scic->state_machine;
-+	struct sci_base_state_machine *sm = &scic->state_machine;
- 	enum sci_status result = SCI_SUCCESS;
--	struct scic_sds_controller *scic;
- 	struct isci_host *ihost;
- 	u32 index, state;
- 
--	scic = container_of(base_scic, typeof(*scic), parent);
- 	ihost = sci_object_get_association(scic);
- 
- 	sci_base_state_machine_change_state(sm, SCI_BASE_CONTROLLER_STATE_INITIALIZING);
-@@ -3028,13 +3020,7 @@ static enum sci_status scic_sds_controll
-  * * INITIALIZED STATE HANDLERS
-  * ***************************************************************************** */
- 
--/**
-- *
-- * @controller: This is the struct sci_base_controller object which is cast
-- * into a struct scic_sds_controller object.
-- * @timeout: This is the allowed time for the controller object to reach the
-- *    started state.
-- *
-+/*
-  * This function is the struct scic_sds_controller start handler for the
-  * initialized state.
-  * - Validate we have a good memory descriptor table - Initialze the
-@@ -3049,14 +3035,10 @@ static enum sci_status scic_sds_controll
-  * descriptor fields is invalid.
-  */
- static enum sci_status scic_sds_controller_initialized_state_start_handler(
--	struct sci_base_controller *base_scic,
--	u32 timeout)
-+	struct scic_sds_controller *scic, u32 timeout)
- {
- 	u16 index;
- 	enum sci_status result;
--	struct scic_sds_controller *scic;
--
--	scic = container_of(base_scic, typeof(*scic), parent);
- 
- 	/*
- 	 * Make sure that the SCI User filled in the memory descriptor
-@@ -3119,7 +3101,7 @@ static enum sci_status scic_sds_controll
- 
- 		isci_timer_start(scic->timeout_timer, timeout);
- 
--		sci_base_state_machine_change_state(&base_scic->state_machine,
-+		sci_base_state_machine_change_state(&scic->state_machine,
- 						    SCI_BASE_CONTROLLER_STATE_STARTING);
- 	}
- 
-@@ -3180,79 +3162,54 @@ static void scic_sds_controller_starting
- 	/* scic_sds_port_link_down(port, phy); */
- }
- 
--static enum sci_status scic_sds_controller_ready_state_stop_handler(struct sci_base_controller *base_scic,
--								    u32 timeout)
-+static enum sci_status scic_sds_controller_ready_state_stop_handler(
-+		struct scic_sds_controller *scic,
-+		u32 timeout)
- {
--	struct scic_sds_controller *scic;
--
--	scic = container_of(base_scic, typeof(*scic), parent);
- 	isci_timer_start(scic->timeout_timer, timeout);
--	sci_base_state_machine_change_state(&base_scic->state_machine,
-+	sci_base_state_machine_change_state(&scic->state_machine,
- 					    SCI_BASE_CONTROLLER_STATE_STOPPING);
--
- 	return SCI_SUCCESS;
- }
- 
--/**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- * @io_request: This is the struct sci_base_request which is cast to a
-- *    SCIC_SDS_IO_REQUEST object.
-- * @io_tag: This is the IO tag to be assigned to the IO request or
-- *    SCI_CONTROLLER_INVALID_IO_TAG.
-- *
-+/*
-  * This method is called when the struct scic_sds_controller is in the ready state and
-  * the start io handler is called. - Start the io request on the remote device
-  * - if successful - assign the io_request to the io_request_table - post the
-  * request to the hardware enum sci_status SCI_SUCCESS if the start io operation
-  * succeeds SCI_FAILURE_INSUFFICIENT_RESOURCES if the IO tag could not be
-  * allocated for the io request. SCI_FAILURE_INVALID_STATE if one or more
-- * objects are not in a valid state to accept io requests. How does the io_tag
-- * parameter get assigned to the io request?
-+ * objects are not in a valid state to accept io requests.
-+ *
-+ * XXX: How does the io_tag parameter get assigned to the io request?
-  */
+@@ -3186,26 +3186,24 @@ static enum sci_status scic_sds_controll
  static enum sci_status scic_sds_controller_ready_state_start_io_handler(
--	struct sci_base_controller *controller,
-+	struct scic_sds_controller *controller,
+ 	struct scic_sds_controller *controller,
  	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request,
+-	struct sci_base_request *io_request,
++	struct scic_sds_request *request,
  	u16 io_tag)
  {
  	enum sci_status status;
  
--	struct scic_sds_controller *this_controller;
- 	struct scic_sds_request *the_request;
+-	struct scic_sds_request *the_request;
  	struct scic_sds_remote_device *the_device;
  
--	this_controller = (struct scic_sds_controller *)controller;
- 	the_request = (struct scic_sds_request *)io_request;
+-	the_request = (struct scic_sds_request *)io_request;
  	the_device = (struct scic_sds_remote_device *)remote_device;
  
--	status = scic_sds_remote_device_start_io(this_controller, the_device, the_request);
--
--	if (status == SCI_SUCCESS) {
--		this_controller->io_request_table[
--			scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
-+	status = scic_sds_remote_device_start_io(controller, the_device, the_request);
+-	status = scic_sds_remote_device_start_io(controller, the_device, the_request);
++	status = scic_sds_remote_device_start_io(controller, the_device, request);
  
--		scic_sds_controller_post_request(
--			this_controller,
--			scic_sds_request_get_post_context(the_request)
--			);
--	}
-+	if (status != SCI_SUCCESS)
-+		return status;
+ 	if (status != SCI_SUCCESS)
+ 		return status;
  
--	return status;
-+	controller->io_request_table[
-+		scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
-+	scic_sds_controller_post_request(controller,
-+		scic_sds_request_get_post_context(the_request));
-+	return SCI_SUCCESS;
- }
- 
--/**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- * @io_request: This is the struct sci_base_request which is cast to a
-- *    SCIC_SDS_IO_REQUEST object.
-- *
-+/*
-  * This method is called when the struct scic_sds_controller is in the ready state and
-  * the complete io handler is called. - Complete the io request on the remote
-  * device - if successful - remove the io_request to the io_request_table
-@@ -3261,76 +3218,49 @@ static enum sci_status scic_sds_controll
-  * accept io requests.
-  */
- static enum sci_status scic_sds_controller_ready_state_complete_io_handler(
--	struct sci_base_controller *controller,
-+	struct scic_sds_controller *controller,
- 	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request)
- {
- 	u16 index;
- 	enum sci_status status;
--	struct scic_sds_controller *this_controller;
- 	struct scic_sds_request *the_request;
- 	struct scic_sds_remote_device *the_device;
- 
--	this_controller = (struct scic_sds_controller *)controller;
- 	the_request = (struct scic_sds_request *)io_request;
- 	the_device = (struct scic_sds_remote_device *)remote_device;
- 
--	status = scic_sds_remote_device_complete_io(
--		this_controller, the_device, the_request);
--
--	if (status == SCI_SUCCESS) {
--		index = scic_sds_io_tag_get_index(the_request->io_tag);
--		this_controller->io_request_table[index] = NULL;
--	}
-+	status = scic_sds_remote_device_complete_io(controller, the_device,
-+			the_request);
-+	if (status != SCI_SUCCESS)
-+		return status;
- 
--	return status;
-+	index = scic_sds_io_tag_get_index(the_request->io_tag);
-+	controller->io_request_table[index] = NULL;
-+	return SCI_SUCCESS;
- }
- 
--/**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- * @io_request: This is the struct sci_base_request which is cast to a
-- *    SCIC_SDS_IO_REQUEST object.
-- *
-+/*
-  * This method is called when the struct scic_sds_controller is in the ready state and
-  * the continue io handler is called. enum sci_status
-  */
- static enum sci_status scic_sds_controller_ready_state_continue_io_handler(
--	struct sci_base_controller *controller,
-+	struct scic_sds_controller *controller,
- 	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request)
- {
--	struct scic_sds_controller *this_controller;
- 	struct scic_sds_request *the_request;
- 
- 	the_request     = (struct scic_sds_request *)io_request;
--	this_controller = (struct scic_sds_controller *)controller;
- 
--	this_controller->io_request_table[
-+	controller->io_request_table[
- 		scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
--
--	scic_sds_controller_post_request(
--		this_controller,
--		scic_sds_request_get_post_context(the_request)
--		);
--
-+	scic_sds_controller_post_request(controller,
-+		scic_sds_request_get_post_context(the_request));
+ 	controller->io_request_table[
+-		scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
++		scic_sds_io_tag_get_index(request->io_tag)] = request;
+ 	scic_sds_controller_post_request(controller,
+-		scic_sds_request_get_post_context(the_request));
++		scic_sds_request_get_post_context(request));
  	return SCI_SUCCESS;
  }
  
--/**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- * @io_request: This is the struct sci_base_request which is cast to a
-- *    SCIC_SDS_IO_REQUEST object.
-- * @task_tag: This is the task tag to be assigned to the task request or
-- *    SCI_CONTROLLER_INVALID_IO_TAG.
-- *
-+/*
-  * This method is called when the struct scic_sds_controller is in the ready state and
-  * the start task handler is called. - The remote device is requested to start
-  * the task request - if successful - assign the task to the io_request_table -
-@@ -3341,33 +3271,28 @@ static enum sci_status scic_sds_controll
-  * tag get assigned in this code path?
-  */
- static enum sci_status scic_sds_controller_ready_state_start_task_handler(
--	struct sci_base_controller *controller,
-+	struct scic_sds_controller *controller,
+@@ -3220,22 +3218,20 @@ static enum sci_status scic_sds_controll
+ static enum sci_status scic_sds_controller_ready_state_complete_io_handler(
+ 	struct scic_sds_controller *controller,
  	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request,
+-	struct sci_base_request *io_request)
++	struct scic_sds_request *request)
+ {
+ 	u16 index;
+ 	enum sci_status status;
+-	struct scic_sds_request *the_request;
+ 	struct scic_sds_remote_device *the_device;
+ 
+-	the_request = (struct scic_sds_request *)io_request;
+ 	the_device = (struct scic_sds_remote_device *)remote_device;
+ 
+ 	status = scic_sds_remote_device_complete_io(controller, the_device,
+-			the_request);
++			request);
+ 	if (status != SCI_SUCCESS)
+ 		return status;
+ 
+-	index = scic_sds_io_tag_get_index(the_request->io_tag);
++	index = scic_sds_io_tag_get_index(request->io_tag);
+ 	controller->io_request_table[index] = NULL;
+ 	return SCI_SUCCESS;
+ }
+@@ -3247,16 +3243,12 @@ static enum sci_status scic_sds_controll
+ static enum sci_status scic_sds_controller_ready_state_continue_io_handler(
+ 	struct scic_sds_controller *controller,
+ 	struct sci_base_remote_device *remote_device,
+-	struct sci_base_request *io_request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *the_request;
+-
+-	the_request     = (struct scic_sds_request *)io_request;
+-
+ 	controller->io_request_table[
+-		scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
++		scic_sds_io_tag_get_index(request->io_tag)] = request;
+ 	scic_sds_controller_post_request(controller,
+-		scic_sds_request_get_post_context(the_request));
++		scic_sds_request_get_post_context(request));
+ 	return SCI_SUCCESS;
+ }
+ 
+@@ -3273,27 +3265,25 @@ static enum sci_status scic_sds_controll
+ static enum sci_status scic_sds_controller_ready_state_start_task_handler(
+ 	struct scic_sds_controller *controller,
+ 	struct sci_base_remote_device *remote_device,
+-	struct sci_base_request *io_request,
++	struct scic_sds_request *request,
  	u16 task_tag)
  {
--	struct scic_sds_controller *this_controller = (struct scic_sds_controller *)
--						 controller;
- 	struct scic_sds_request *the_request     = (struct scic_sds_request *)
- 					      io_request;
+-	struct scic_sds_request *the_request     = (struct scic_sds_request *)
+-					      io_request;
  	struct scic_sds_remote_device *the_device      = (struct scic_sds_remote_device *)
  						    remote_device;
  	enum sci_status status;
  
--	status = scic_sds_remote_device_start_task(
--		this_controller, the_device, the_request
--		);
-+	status = scic_sds_remote_device_start_task(controller, the_device,
-+			the_request);
+ 	status = scic_sds_remote_device_start_task(controller, the_device,
+-			the_request);
++			request);
  
  	if (status == SCI_SUCCESS) {
--		this_controller->io_request_table[
-+		controller->io_request_table[
- 			scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
+ 		controller->io_request_table[
+-			scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
++			scic_sds_io_tag_get_index(request->io_tag)] = request;
  
--		scic_sds_controller_post_request(
--			this_controller,
--			scic_sds_request_get_post_context(the_request)
--			);
-+		scic_sds_controller_post_request(controller,
-+			scic_sds_request_get_post_context(the_request));
+ 		scic_sds_controller_post_request(controller,
+-			scic_sds_request_get_post_context(the_request));
++			scic_sds_request_get_post_context(request));
  	} else if (status == SCI_FAILURE_RESET_DEVICE_PARTIAL_SUCCESS) {
--		this_controller->io_request_table[
-+		controller->io_request_table[
- 			scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
+ 		controller->io_request_table[
+-			scic_sds_io_tag_get_index(the_request->io_tag)] = the_request;
++			scic_sds_io_tag_get_index(request->io_tag)] = request;
  
  		/*
-@@ -3379,15 +3304,7 @@ static enum sci_status scic_sds_controll
- 	return status;
- }
- 
--/**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- * @io_request: This is the struct sci_base_request which is cast to a
-- *    SCIC_SDS_IO_REQUEST object.
-- *
-+/*
-  * This method is called when the struct scic_sds_controller is in the ready state and
-  * the terminate request handler is called. - call the io request terminate
-  * function - if successful - post the terminate request to the SCU hardware
-@@ -3396,29 +3313,26 @@ static enum sci_status scic_sds_controll
-  * accept io requests.
-  */
+ 		 * We will let framework know this task request started successfully,
+@@ -3315,13 +3305,11 @@ static enum sci_status scic_sds_controll
  static enum sci_status scic_sds_controller_ready_state_terminate_request_handler(
--	struct sci_base_controller *controller,
-+	struct scic_sds_controller *controller,
+ 	struct scic_sds_controller *controller,
  	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request)
+-	struct sci_base_request *io_request)
++	struct scic_sds_request *request)
  {
--	struct scic_sds_controller *this_controller = (struct scic_sds_controller *)
--						 controller;
- 	struct scic_sds_request *the_request     = (struct scic_sds_request *)
- 					      io_request;
+-	struct scic_sds_request *the_request     = (struct scic_sds_request *)
+-					      io_request;
  	enum sci_status status;
  
- 	status = scic_sds_io_request_terminate(the_request);
--	if (status == SCI_SUCCESS) {
--		/*
--		 * Utilize the original post context command and or in the POST_TC_ABORT
--		 * request sub-type. */
--		scic_sds_controller_post_request(
--			this_controller,
--			scic_sds_request_get_post_context(the_request)
--			| SCU_CONTEXT_COMMAND_REQUEST_POST_TC_ABORT
--			);
--	}
-+	if (status != SCI_SUCCESS)
-+		return status;
+-	status = scic_sds_io_request_terminate(the_request);
++	status = scic_sds_io_request_terminate(request);
+ 	if (status != SCI_SUCCESS)
+ 		return status;
  
--	return status;
-+	/*
-+	 * Utilize the original post context command and or in the POST_TC_ABORT
-+	 * request sub-type.
-+	 */
-+	scic_sds_controller_post_request(controller,
-+		scic_sds_request_get_post_context(the_request) |
-+		SCU_CONTEXT_COMMAND_REQUEST_POST_TC_ABORT);
-+	return SCI_SUCCESS;
+@@ -3330,7 +3318,7 @@ static enum sci_status scic_sds_controll
+ 	 * request sub-type.
+ 	 */
+ 	scic_sds_controller_post_request(controller,
+-		scic_sds_request_get_post_context(the_request) |
++		scic_sds_request_get_post_context(request) |
+ 		SCU_CONTEXT_COMMAND_REQUEST_POST_TC_ABORT);
+ 	return SCI_SUCCESS;
  }
- 
- /**
-@@ -3470,38 +3384,20 @@ static void scic_sds_controller_ready_st
-  * ***************************************************************************** */
- 
- /**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- * @io_request: This is the struct sci_base_request which is cast to a
-- *    SCIC_SDS_IO_REQUEST object.
-- *
-  * This method is called when the struct scic_sds_controller is in a stopping state
-  * and the complete io handler is called. - This function is not yet
-  * implemented enum sci_status SCI_FAILURE
-  */
+@@ -3391,7 +3379,7 @@ static void scic_sds_controller_ready_st
  static enum sci_status scic_sds_controller_stopping_state_complete_io_handler(
--	struct sci_base_controller *controller,
-+	struct scic_sds_controller *controller,
+ 	struct scic_sds_controller *controller,
  	struct sci_base_remote_device *remote_device,
- 	struct sci_base_request *io_request)
+-	struct sci_base_request *io_request)
++	struct scic_sds_request *request)
  {
--	struct scic_sds_controller *this_controller;
--
--	this_controller = (struct scic_sds_controller *)controller;
--
--	/* / @todo Implement this function */
-+	/* XXX: Implement this function */
+ 	/* XXX: Implement this function */
  	return SCI_FAILURE;
- }
- 
- /**
-- *
-- * @controller: This is struct sci_base_controller object which is cast into a
-- *    struct scic_sds_controller object.
-- * @remote_device: This is struct sci_base_remote_device which is cast to a
-- *    struct scic_sds_remote_device object.
-- *
-  * This method is called when the struct scic_sds_controller is in a stopping state
-  * and the remote device has stopped.
-  **/
-@@ -3511,8 +3407,7 @@ static void scic_sds_controller_stopping
- )
- {
- 	if (!scic_sds_controller_has_remote_devices_stopping(controller)) {
--		sci_base_state_machine_change_state(
--			&controller->parent.state_machine,
-+		sci_base_state_machine_change_state(&controller->state_machine,
- 			SCI_BASE_CONTROLLER_STATE_STOPPED
- 		);
- 	}
-@@ -3520,77 +3415,77 @@ static void scic_sds_controller_stopping
- 
- const struct scic_sds_controller_state_handler scic_sds_controller_state_handler_table[] = {
- 	[SCI_BASE_CONTROLLER_STATE_INITIAL] = {
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_RESET] = {
--		.base.reset        = scic_sds_controller_general_reset_handler,
--		.base.initialize   = scic_sds_controller_reset_state_initialize_handler,
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.reset        = scic_sds_controller_general_reset_handler,
-+		.initialize   = scic_sds_controller_reset_state_initialize_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_INITIALIZING] = {
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_INITIALIZED] = {
--		.base.start        = scic_sds_controller_initialized_state_start_handler,
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.start        = scic_sds_controller_initialized_state_start_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_STARTING] = {
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 		.link_up           = scic_sds_controller_starting_state_link_up_handler,
- 		.link_down	   = scic_sds_controller_starting_state_link_down_handler
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_READY] = {
--		.base.stop         = scic_sds_controller_ready_state_stop_handler,
--		.base.reset        = scic_sds_controller_general_reset_handler,
--		.base.start_io     = scic_sds_controller_ready_state_start_io_handler,
--		.base.complete_io  = scic_sds_controller_ready_state_complete_io_handler,
--		.base.continue_io  = scic_sds_controller_ready_state_continue_io_handler,
--		.base.start_task   = scic_sds_controller_ready_state_start_task_handler,
--		.base.complete_task = scic_sds_controller_ready_state_complete_io_handler,
-+		.stop         = scic_sds_controller_ready_state_stop_handler,
-+		.reset        = scic_sds_controller_general_reset_handler,
-+		.start_io     = scic_sds_controller_ready_state_start_io_handler,
-+		.complete_io  = scic_sds_controller_ready_state_complete_io_handler,
-+		.continue_io  = scic_sds_controller_ready_state_continue_io_handler,
-+		.start_task   = scic_sds_controller_ready_state_start_task_handler,
-+		.complete_task = scic_sds_controller_ready_state_complete_io_handler,
- 		.terminate_request = scic_sds_controller_ready_state_terminate_request_handler,
- 		.link_up           = scic_sds_controller_ready_state_link_up_handler,
- 		.link_down	   = scic_sds_controller_ready_state_link_down_handler
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_RESETTING] = {
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_STOPPING] = {
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_stopping_state_complete_io_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_stopping_state_complete_io_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 		.device_stopped    = scic_sds_controller_stopping_state_device_stopped_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_STOPPED] = {
--		.base.reset        = scic_sds_controller_general_reset_handler,
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.reset        = scic_sds_controller_general_reset_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- 	[SCI_BASE_CONTROLLER_STATE_FAILED] = {
--		.base.reset        = scic_sds_controller_general_reset_handler,
--		.base.start_io     = scic_sds_controller_default_start_operation_handler,
--		.base.complete_io  = scic_sds_controller_default_request_handler,
--		.base.continue_io  = scic_sds_controller_default_request_handler,
-+		.reset        = scic_sds_controller_general_reset_handler,
-+		.start_io     = scic_sds_controller_default_start_operation_handler,
-+		.complete_io  = scic_sds_controller_default_request_handler,
-+		.continue_io  = scic_sds_controller_default_request_handler,
- 		.terminate_request = scic_sds_controller_default_request_handler,
- 	},
- };
-@@ -3612,8 +3507,8 @@ static void scic_sds_controller_initial_
- 
- 	this_controller = (struct scic_sds_controller *)object;
- 
--	sci_base_state_machine_change_state(
--		&this_controller->parent.state_machine, SCI_BASE_CONTROLLER_STATE_RESET);
-+	sci_base_state_machine_change_state(&this_controller->state_machine,
-+			SCI_BASE_CONTROLLER_STATE_RESET);
- }
- 
- /**
-@@ -3718,9 +3613,9 @@ static void scic_sds_controller_resettin
- {
- 	struct scic_sds_controller *scic;
- 
--	scic = container_of(object, typeof(*scic), parent.parent);
-+	scic = container_of(object, typeof(*scic), parent);
- 	scic_sds_controller_reset_hardware(scic);
--	sci_base_state_machine_change_state(&scic->parent.state_machine,
-+	sci_base_state_machine_change_state(&scic->state_machine,
- 					    SCI_BASE_CONTROLLER_STATE_RESET);
- }
- 
-@@ -3771,10 +3666,13 @@ enum sci_status scic_controller_construc
- {
- 	u8 i;
- 
--	sci_base_controller_construct(&scic->parent,
--				      scic_sds_controller_state_table,
--				      scic->memory_descriptors,
--				      ARRAY_SIZE(scic->memory_descriptors), NULL);
-+	sci_base_state_machine_construct(&scic->state_machine,
-+		&scic->parent, scic_sds_controller_state_table,
-+		SCI_BASE_CONTROLLER_STATE_INITIAL);
-+
-+	sci_base_mdl_construct(&scic->mdl, scic->memory_descriptors,
-+				ARRAY_SIZE(scic->memory_descriptors), NULL);
-+	sci_base_state_machine_start(&scic->state_machine);
- 
- 	scic->scu_registers = scu_base;
- 	scic->smu_registers = smu_base;
 Index: linux-2.6/drivers/scsi/isci/core/scic_sds_controller.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_controller.h	2011-03-28 10:47:51.534838954 +0200
-+++ linux-2.6/drivers/scsi/isci/core/scic_sds_controller.h	2011-03-28 11:16:43.589338840 +0200
-@@ -69,7 +69,9 @@
- #include "sci_pool.h"
- #include "sci_controller_constants.h"
- #include "sci_memory_descriptor_list.h"
--#include "sci_base_controller.h"
-+#include "sci_base_state.h"
-+#include "sci_base_state_machine.h"
-+#include "sci_base_memory_descriptor_list.h"
- #include "scic_config_parameters.h"
- #include "scic_sds_port.h"
- #include "scic_sds_phy.h"
-@@ -82,11 +84,12 @@
- #include "scic_sds_unsolicited_frame_control.h"
- #include "scic_sds_port_configuration_agent.h"
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_controller.h	2011-03-28 11:21:32.885840675 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_controller.h	2011-03-28 11:40:36.973838334 +0200
+@@ -86,7 +86,6 @@
  
-+struct sci_base_remote_device;
+ struct sci_base_remote_device;
  struct scic_sds_remote_device;
-+struct sci_base_request;
+-struct sci_base_request;
  struct scic_sds_request;
  struct scic_sds_controller;
  
--
- #define SCU_COMPLETION_RAM_ALIGNMENT            (64)
- 
- /**
-@@ -166,10 +169,23 @@ struct scic_power_control {
-  */
- struct scic_sds_controller {
- 	/**
--	 * The struct sci_base_controller is the parent object for the struct scic_sds_controller
--	 * object.
-+	 * The field specifies that the parent object for the base controller
-+	 * is the base object itself.
-+	 */
-+	struct sci_base_object parent;
-+
-+	/**
-+	 * This field points to the memory descriptor list associated with this
-+	 * controller.  The MDL indicates the memory requirements necessary for
-+	 * this controller object.
-+	 */
-+	struct sci_base_memory_descriptor_list mdl;
-+
-+	/**
-+	 * This field contains the information for the base controller state
-+	 * machine.
- 	 */
--	struct sci_base_controller parent;
-+	struct sci_base_state_machine state_machine;
- 
- 	/**
- 	 * This field is the driver timer object handler used to time the controller
-@@ -376,24 +392,170 @@ struct scic_sds_controller {
- 
- };
- 
--typedef void (*scic_sds_controller_phy_handler_t)(struct scic_sds_controller *,
--						  struct scic_sds_port *,
--						  struct scic_sds_phy *);
-+/**
-+ * enum scic_sds_controller_states - This enumeration depicts all the states
-+ *    for the common controller state machine.
-+ */
-+enum scic_sds_controller_states {
-+	/**
-+	 * Simply the initial state for the base controller state machine.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_INITIAL = 0,
- 
--typedef void (*scic_sds_controller_device_handler_t)(struct scic_sds_controller *,
--						  struct scic_sds_remote_device *);
-+	/**
-+	 * This state indicates that the controller is reset.  The memory for
-+	 * the controller is in it's initial state, but the controller requires
-+	 * initialization.
-+	 * This state is entered from the INITIAL state.
-+	 * This state is entered from the RESETTING state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_RESET,
- 
-+	/**
-+	 * This state is typically an action state that indicates the controller
-+	 * is in the process of initialization.  In this state no new IO operations
-+	 * are permitted.
-+	 * This state is entered from the RESET state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_INITIALIZING,
-+
-+	/**
-+	 * This state indicates that the controller has been successfully
-+	 * initialized.  In this state no new IO operations are permitted.
-+	 * This state is entered from the INITIALIZING state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_INITIALIZED,
-+
-+	/**
-+	 * This state indicates the the controller is in the process of becoming
-+	 * ready (i.e. starting).  In this state no new IO operations are permitted.
-+	 * This state is entered from the INITIALIZED state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_STARTING,
-+
-+	/**
-+	 * This state indicates the controller is now ready.  Thus, the user
-+	 * is able to perform IO operations on the controller.
-+	 * This state is entered from the STARTING state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_READY,
-+
-+	/**
-+	 * This state is typically an action state that indicates the controller
-+	 * is in the process of resetting.  Thus, the user is unable to perform
-+	 * IO operations on the controller.  A reset is considered destructive in
-+	 * most cases.
-+	 * This state is entered from the READY state.
-+	 * This state is entered from the FAILED state.
-+	 * This state is entered from the STOPPED state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_RESETTING,
-+
-+	/**
-+	 * This state indicates that the controller is in the process of stopping.
-+	 * In this state no new IO operations are permitted, but existing IO
-+	 * operations are allowed to complete.
-+	 * This state is entered from the READY state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_STOPPING,
-+
-+	/**
-+	 * This state indicates that the controller has successfully been stopped.
-+	 * In this state no new IO operations are permitted.
-+	 * This state is entered from the STOPPING state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_STOPPED,
-+
-+	/**
-+	 * This state indicates that the controller could not successfully be
-+	 * initialized.  In this state no new IO operations are permitted.
-+	 * This state is entered from the INITIALIZING state.
-+	 * This state is entered from the STARTING state.
-+	 * This state is entered from the STOPPING state.
-+	 * This state is entered from the RESETTING state.
-+	 */
-+	SCI_BASE_CONTROLLER_STATE_FAILED,
-+
-+	SCI_BASE_CONTROLLER_MAX_STATES
-+
-+};
-+
-+typedef enum sci_status (*scic_sds_controller_handler_t)
-+				(struct scic_sds_controller *);
-+typedef enum sci_status (*scic_sds_controller_timed_handler_t)
-+				(struct scic_sds_controller *, u32);
-+typedef enum sci_status (*scic_sds_controller_request_handler_t)
-+				(struct scic_sds_controller *,
-+				 struct sci_base_remote_device *,
-+				 struct sci_base_request *);
-+typedef enum sci_status (*scic_sds_controller_start_request_handler_t)
-+				(struct scic_sds_controller *,
-+				 struct sci_base_remote_device *,
-+				 struct sci_base_request *, u16);
-+typedef void (*scic_sds_controller_phy_handler_t)
-+				(struct scic_sds_controller *,
-+				 struct scic_sds_port *,
-+				 struct scic_sds_phy *);
-+typedef void (*scic_sds_controller_device_handler_t)
-+				(struct scic_sds_controller *,
-+				 struct scic_sds_remote_device *);
- 
--/**
-- * struct scic_sds_controller_state_handler -
-- *
-- * This structure contains the SDS core specific definition for the state
-- * handlers.
-- */
- struct scic_sds_controller_state_handler {
--	struct sci_base_controller_state_handler base;
-+	/**
-+	 * The start_handler specifies the method invoked when a user attempts to
-+	 * start a controller.
-+	 */
-+	scic_sds_controller_timed_handler_t start;
-+
-+	/**
-+	 * The stop_handler specifies the method invoked when a user attempts to
-+	 * stop a controller.
-+	 */
-+	scic_sds_controller_timed_handler_t stop;
-+
-+	/**
-+	 * The reset_handler specifies the method invoked when a user attempts to
-+	 * reset a controller.
-+	 */
-+	scic_sds_controller_handler_t reset;
-+
-+	/**
-+	 * The initialize_handler specifies the method invoked when a user
-+	 * attempts to initialize a controller.
-+	 */
-+	scic_sds_controller_handler_t initialize;
-+
-+	/**
-+	 * The start_io_handler specifies the method invoked when a user
-+	 * attempts to start an IO request for a controller.
-+	 */
-+	scic_sds_controller_start_request_handler_t start_io;
-+
-+	/**
-+	 * The complete_io_handler specifies the method invoked when a user
-+	 * attempts to complete an IO request for a controller.
-+	 */
-+	scic_sds_controller_request_handler_t complete_io;
-+
-+	/**
-+	 * The continue_io_handler specifies the method invoked when a user
-+	 * attempts to continue an IO request for a controller.
-+	 */
-+	scic_sds_controller_request_handler_t continue_io;
-+
-+	/**
-+	 * The start_task_handler specifies the method invoked when a user
-+	 * attempts to start a task management request for a controller.
-+	 */
-+	scic_sds_controller_start_request_handler_t start_task;
-+
-+	/**
-+	 * The complete_task_handler specifies the method invoked when a user
-+	 * attempts to complete a task management request for a controller.
-+	 */
-+	scic_sds_controller_request_handler_t complete_task;
- 
--	sci_base_controller_request_handler_t terminate_request;
-+	scic_sds_controller_request_handler_t terminate_request;
- 	scic_sds_controller_phy_handler_t link_up;
- 	scic_sds_controller_phy_handler_t link_down;
- 	scic_sds_controller_device_handler_t device_stopped;
-Index: linux-2.6/drivers/scsi/isci/core/sci_controller.h
+@@ -487,11 +486,11 @@ typedef enum sci_status (*scic_sds_contr
+ typedef enum sci_status (*scic_sds_controller_request_handler_t)
+ 				(struct scic_sds_controller *,
+ 				 struct sci_base_remote_device *,
+-				 struct sci_base_request *);
++				 struct scic_sds_request *);
+ typedef enum sci_status (*scic_sds_controller_start_request_handler_t)
+ 				(struct scic_sds_controller *,
+ 				 struct sci_base_remote_device *,
+-				 struct sci_base_request *, u16);
++				 struct scic_sds_request *, u16);
+ typedef void (*scic_sds_controller_phy_handler_t)
+ 				(struct scic_sds_controller *,
+ 				 struct scic_sds_port *,
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_port.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/core/sci_controller.h	2011-03-28 10:51:18.373839042 +0200
-+++ linux-2.6/drivers/scsi/isci/core/sci_controller.h	2011-03-28 10:51:57.169340947 +0200
-@@ -63,36 +63,7 @@
-  *
-  */
- 
--
--struct sci_base_memory_descriptor_list;
--struct scic_sds_controller;
--
- #define SCI_CONTROLLER_INVALID_IO_TAG 0xFFFF
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_port.c	2011-03-28 11:21:32.901837516 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_port.c	2011-03-28 11:25:05.641338436 +0200
+@@ -1090,15 +1090,7 @@ static enum sci_status scic_sds_port_rea
+ 	return SCI_SUCCESS;
+ }
  
 -/**
-- * sci_controller_get_memory_descriptor_list_handle() - This method simply
-- *    returns a handle for the memory descriptor list associated with the
-- *    supplied controller.  The descriptor list provides DMA safe/capable
-- *    memory requirements for this controller.
-- * @controller: This parameter specifies the controller for which to retrieve
-- *    the DMA safe memory descriptor list.
 - *
-- * The user must adhere to the alignment requirements specified in memory
-- * descriptor.  In situations where the operating environment does not offer
-- * memory allocation utilities supporting alignment, then it is the
-- * responsibility of the user to manually align the memory buffer for SCI.
-- * Thus, the user may have to allocate a larger buffer to meet the alignment.
-- * Additionally, the user will need to remember the actual memory allocation
-- * addresses in order to ensure the memory can be properly freed when necessary
-- * to do so. This method will return a valid handle, but the MDL may not be
-- * accurate until after the user has invoked the associated
-- * sci_controller_initialize() routine. A pointer to a physical memory
-- * descriptor array.
-- */
--struct sci_base_memory_descriptor_list *
--	sci_controller_get_memory_descriptor_list_handle(
--	struct scic_sds_controller *controller);
--
--
- #endif  /* _SCI_CONTROLLER_H_ */
+- * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
+- *    object.
+- * @device: This is the struct sci_base_remote_device object which is not used in this
+- *    function.
+- * @io_request: This is the struct sci_base_request object which is not used in this
+- *    function.
+- *
++/*
+  * This method is the general ready substate complete io handler for the
+  * struct scic_sds_port object.  This function decrments the outstanding request count
+  * for this port object. enum sci_status SCI_SUCCESS
+@@ -1194,15 +1186,7 @@ static void scic_sds_port_ready_waiting_
+ 		);
+ }
  
+-/**
+- *
+- * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
+- *    object.
+- * @device: This is the struct sci_base_remote_device object which is not used in this
+- *    request.
+- * @io_request: This is the struct sci_base_request object which is not used in this
+- *    function.
+- *
++/*
+  * This method is the ready waiting substate start io handler for the
+  * struct scic_sds_port object. The port object can not accept new requests so the
+  * request is failed. enum sci_status SCI_FAILURE_INVALID_STATE
+@@ -1316,15 +1300,7 @@ static void scic_sds_port_ready_operatio
+ 						    SCIC_SDS_PORT_READY_SUBSTATE_WAITING);
+ }
+ 
+-/**
+- *
+- * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
+- *    object.
+- * @device: This is the struct sci_base_remote_device object which is not used in this
+- *    function.
+- * @io_request: This is the struct sci_base_request object which is not used in this
+- *    function.
+- *
++/*
+  * This method is the ready operational substate start io handler for the
+  * struct scic_sds_port object.  This function incremetns the outstanding request
+  * count for this port object. enum sci_status SCI_SUCCESS
 Index: linux-2.6/drivers/scsi/isci/core/scic_sds_remote_device.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_remote_device.c	2011-03-28 11:00:58.162838072 +0200
-+++ linux-2.6/drivers/scsi/isci/core/scic_sds_remote_device.c	2011-03-28 11:14:57.437839475 +0200
-@@ -563,12 +563,11 @@ void scic_sds_remote_device_continue_req
- 	/* we need to check if this request is still valid to continue. */
- 	if (sci_req) {
- 		struct scic_sds_controller *scic = sci_req->owning_controller;
--		u32 state = scic->parent.state_machine.current_state_id;
--		sci_base_controller_request_handler_t continue_io;
-+		u32 state = scic->state_machine.current_state_id;
-+		scic_sds_controller_request_handler_t continue_io;
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_remote_device.c	2011-03-28 11:21:32.913838684 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_remote_device.c	2011-03-28 12:16:36.469839797 +0200
+@@ -363,7 +363,7 @@ enum sci_status scic_sds_remote_device_s
+ 	struct scic_sds_request *io_request)
+ {
+ 	return this_device->state_handlers->parent.start_io_handler(
+-		       &this_device->parent, &io_request->parent);
++		       &this_device->parent, io_request);
+ }
  
--		continue_io = scic_sds_controller_state_handler_table[state].base.continue_io;
--		continue_io(&scic->parent, &sci_req->target_device->parent,
--			    &sci_req->parent);
-+		continue_io = scic_sds_controller_state_handler_table[state].continue_io;
-+		continue_io(scic, &sci_req->target_device->parent, &sci_req->parent);
+ /**
+@@ -381,7 +381,7 @@ enum sci_status scic_sds_remote_device_c
+ 	struct scic_sds_request *io_request)
+ {
+ 	return this_device->state_handlers->parent.complete_io_handler(
+-		       &this_device->parent, &io_request->parent);
++		       &this_device->parent, io_request);
+ }
+ 
+ /**
+@@ -399,7 +399,7 @@ enum sci_status scic_sds_remote_device_s
+ 	struct scic_sds_request *io_request)
+ {
+ 	return this_device->state_handlers->parent.start_task_handler(
+-		       &this_device->parent, &io_request->parent);
++		       &this_device->parent, io_request);
+ }
+ 
+ /**
+@@ -567,7 +567,7 @@ void scic_sds_remote_device_continue_req
+ 		scic_sds_controller_request_handler_t continue_io;
+ 
+ 		continue_io = scic_sds_controller_state_handler_table[state].continue_io;
+-		continue_io(scic, &sci_req->target_device->parent, &sci_req->parent);
++		continue_io(scic, &sci_req->target_device->parent, sci_req);
  	}
  }
  
-Index: linux-2.6/drivers/scsi/isci/core/scic_sds_stp_request.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_stp_request.c	2011-03-28 11:01:29.481838605 +0200
-+++ linux-2.6/drivers/scsi/isci/core/scic_sds_stp_request.c	2011-03-28 11:14:59.897907145 +0200
-@@ -649,7 +649,7 @@ static enum sci_status scic_sds_stp_requ
- 	u32 length)
- {
- 	struct scic_sds_stp_request *this_sds_stp_request = (struct scic_sds_stp_request *)this_request;
--	sci_base_controller_request_handler_t continue_io;
-+	scic_sds_controller_request_handler_t continue_io;
- 	struct scu_sgl_element *current_sgl;
- 	struct scic_sds_controller *scic;
- 	u32 state;
-@@ -675,9 +675,9 @@ static enum sci_status scic_sds_stp_requ
+@@ -792,21 +792,21 @@ enum sci_status scic_sds_remote_device_d
  
- 	/* send the new TC out. */
- 	scic = this_request->owning_controller;
--	state = scic->parent.state_machine.current_state_id;
--	continue_io = scic_sds_controller_state_handler_table[state].base.continue_io;
--	return continue_io(&scic->parent, &this_request->target_device->parent,
-+	state = scic->state_machine.current_state_id;
-+	continue_io = scic_sds_controller_state_handler_table[state].continue_io;
-+	return continue_io(scic, &this_request->target_device->parent,
- 			   &this_request->parent);
+ enum sci_status scic_sds_remote_device_default_start_request_handler(
+ 	struct sci_base_remote_device *base_dev,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	return default_device_handler(base_dev, __func__);
  }
  
-@@ -1822,7 +1822,7 @@ static void scic_sds_stp_request_started
- 	struct sci_base_object *object)
+ enum sci_status scic_sds_remote_device_default_complete_request_handler(
+ 	struct sci_base_remote_device *base_dev,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
  {
- 	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
--	sci_base_controller_request_handler_t continue_io;
-+	scic_sds_controller_request_handler_t continue_io;
- 	struct scu_task_context *task_context;
- 	struct sata_fis_reg_h2d *h2d_fis;
- 	struct scic_sds_controller *scic;
-@@ -1839,10 +1839,10 @@ static void scic_sds_stp_request_started
- 	task_context->control_frame = 0;
+ 	return default_device_handler(base_dev, __func__);
+ }
  
- 	scic = this_request->owning_controller;
--	state = scic->parent.state_machine.current_state_id;
--	continue_io = scic_sds_controller_state_handler_table[state].base.continue_io;
-+	state = scic->state_machine.current_state_id;
-+	continue_io = scic_sds_controller_state_handler_table[state].continue_io;
+ enum sci_status scic_sds_remote_device_default_continue_request_handler(
+ 	struct sci_base_remote_device *base_dev,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	return default_device_handler(base_dev, __func__);
+ }
+@@ -1019,13 +1019,7 @@ enum sci_status scic_sds_remote_device_r
+ 	return SCI_SUCCESS;
+ }
  
--	status = continue_io(&scic->parent, &this_request->target_device->parent,
-+	status = continue_io(scic, &this_request->target_device->parent,
- 			     &this_request->parent);
+-/**
+- *
+- * @device: The struct sci_base_remote_device which is cast to a
+- *    struct scic_sds_remote_device for which the request is to be started.
+- * @request: The struct sci_base_request which is cast to a SCIC_SDS_IO_REQUEST that
+- *    is to be started.
+- *
++/*
+  * This method will attempt to start a task request for this device object. The
+  * remote device object will issue the start request for the task and if
+  * successful it will start the request for the port object then increment its
+@@ -1035,38 +1029,28 @@ enum sci_status scic_sds_remote_device_r
+  */
+ static enum sci_status scic_sds_remote_device_ready_state_start_task_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status result;
+ 	struct scic_sds_remote_device *this_device  = (struct scic_sds_remote_device *)device;
+-	struct scic_sds_request *task_request = (struct scic_sds_request *)request;
+ 
+ 	/* See if the port is in a state where we can start the IO request */
+ 	result = scic_sds_port_start_io(
+-		scic_sds_remote_device_get_port(this_device), this_device, task_request);
++		scic_sds_remote_device_get_port(this_device), this_device, request);
+ 
+ 	if (result == SCI_SUCCESS) {
+ 		result = scic_sds_remote_node_context_start_task(
+-			this_device->rnc, task_request
+-			);
+-
+-		if (result == SCI_SUCCESS) {
+-			result = scic_sds_request_start(task_request);
+-		}
++			this_device->rnc, request);
++		if (result == SCI_SUCCESS)
++			result = scic_sds_request_start(request);
+ 
+-		scic_sds_remote_device_start_request(this_device, task_request, result);
++		scic_sds_remote_device_start_request(this_device, request, result);
+ 	}
+ 
+ 	return result;
+ }
+ 
+-/**
+- *
+- * @device: The struct sci_base_remote_device which is cast to a
+- *    struct scic_sds_remote_device for which the request is to be started.
+- * @request: The struct sci_base_request which is cast to a SCIC_SDS_IO_REQUEST that
+- *    is to be started.
+- *
++/*
+  * This method will attempt to start an io request for this device object. The
+  * remote device object will issue the start request for the io and if
+  * successful it will start the request for the port object then increment its
+@@ -1076,38 +1060,28 @@ static enum sci_status scic_sds_remote_d
+  */
+ static enum sci_status scic_sds_remote_device_ready_state_start_io_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status result;
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+-	struct scic_sds_request *io_request  = (struct scic_sds_request *)request;
+ 
+ 	/* See if the port is in a state where we can start the IO request */
+ 	result = scic_sds_port_start_io(
+-		scic_sds_remote_device_get_port(this_device), this_device, io_request);
++		scic_sds_remote_device_get_port(this_device), this_device, request);
+ 
+ 	if (result == SCI_SUCCESS) {
+ 		result = scic_sds_remote_node_context_start_io(
+-			this_device->rnc, io_request
+-			);
++			this_device->rnc, request);
++		if (result == SCI_SUCCESS)
++			result = scic_sds_request_start(request);
+ 
+-		if (result == SCI_SUCCESS) {
+-			result = scic_sds_request_start(io_request);
+-		}
+-
+-		scic_sds_remote_device_start_request(this_device, io_request, result);
++		scic_sds_remote_device_start_request(this_device, request, result);
+ 	}
+ 
+ 	return result;
+ }
+ 
+-/**
+- *
+- * @device: The struct sci_base_remote_device which is cast to a
+- *    struct scic_sds_remote_device for which the request is to be completed.
+- * @request: The struct sci_base_request which is cast to a SCIC_SDS_IO_REQUEST that
+- *    is to be completed.
+- *
++/*
+  * This method will complete the request for the remote device object.  The
+  * method will call the completion handler for the request object and if
+  * successful it will complete the request on the port object then decrement
+@@ -1115,18 +1089,17 @@ static enum sci_status scic_sds_remote_d
+  */
+ static enum sci_status scic_sds_remote_device_ready_state_complete_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status result;
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+-	struct scic_sds_request *the_request = (struct scic_sds_request *)request;
+ 
+-	result = scic_sds_request_complete(the_request);
++	result = scic_sds_request_complete(request);
+ 
+ 	if (result == SCI_SUCCESS) {
+ 		/* See if the port is in a state where we can start the IO request */
+ 		result = scic_sds_port_complete_io(
+-			scic_sds_remote_device_get_port(this_device), this_device, the_request);
++			scic_sds_remote_device_get_port(this_device), this_device, request);
+ 
+ 		if (result == SCI_SUCCESS) {
+ 			scic_sds_remote_device_decrement_request_count(this_device);
+@@ -1178,19 +1151,16 @@ static enum sci_status scic_sds_remote_d
+  */
+ static enum sci_status scic_sds_remote_device_stopping_state_complete_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status = SCI_SUCCESS;
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+ 
+-	status = scic_sds_request_complete(this_request);
++	status = scic_sds_request_complete(request);
+ 	if (status == SCI_SUCCESS) {
+ 		status = scic_sds_port_complete_io(
+ 			scic_sds_remote_device_get_port(this_device),
+-			this_device,
+-			this_request
+-			);
++			this_device, request);
+ 
+ 		if (status == SCI_SUCCESS) {
+ 			scic_sds_remote_device_decrement_request_count(this_device);
+@@ -1255,11 +1225,7 @@ static enum sci_status scic_sds_remote_d
+ 	return SCI_SUCCESS;
+ }
+ 
+-/**
+- *
+- * @device: The device object for which the request is completing.
+- * @request: The task request that is being completed.
+- *
++/*
+  * This method completes requests for this struct scic_sds_remote_device while it is
+  * in the SCI_BASE_REMOTE_DEVICE_STATE_RESETTING state. This method calls the
+  * complete method for the request object and if that is successful the port
+@@ -1268,17 +1234,16 @@ static enum sci_status scic_sds_remote_d
+  */
+ static enum sci_status scic_sds_remote_device_resetting_state_complete_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status = SCI_SUCCESS;
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+ 
+-	status = scic_sds_request_complete(this_request);
++	status = scic_sds_request_complete(request);
  
  	if (status == SCI_SUCCESS) {
-Index: linux-2.6/drivers/scsi/isci/host.c
+ 		status = scic_sds_port_complete_io(
+-			scic_sds_remote_device_get_port(this_device), this_device, this_request);
++			scic_sds_remote_device_get_port(this_device), this_device, request);
+ 
+ 		if (status == SCI_SUCCESS) {
+ 			scic_sds_remote_device_decrement_request_count(this_device);
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_remote_device.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/host.c	2011-03-28 10:51:18.393839193 +0200
-+++ linux-2.6/drivers/scsi/isci/host.c	2011-03-28 10:54:35.953897776 +0200
-@@ -62,6 +62,7 @@
- #include "request.h"
- #include "host.h"
- #include "probe_roms.h"
-+#include "core/scic_sds_controller.h"
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_remote_device.h	2011-03-28 11:21:32.929838543 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_remote_device.h	2011-03-28 12:08:01.793838917 +0200
+@@ -65,7 +65,6 @@
  
- irqreturn_t isci_msix_isr(int vec, void *data)
- {
-@@ -231,9 +232,8 @@ static int isci_host_mdl_allocate_cohere
- 	struct coherent_memory_info *mdl_struct;
- 	u32 size = 0;
+ #include "intel_sas.h"
+ #include "sci_base_remote_device.h"
+-#include "sci_base_request.h"
+ #include "scu_remote_node_context.h"
+ #include "scic_sds_remote_node_context.h"
  
--	struct sci_base_memory_descriptor_list *mdl_handle
--		= sci_controller_get_memory_descriptor_list_handle(
--		isci_host->core_controller);
-+	struct sci_base_memory_descriptor_list *mdl_handle =
-+		&isci_host->core_controller->mdl;
+@@ -507,15 +506,15 @@ enum sci_status scic_sds_remote_device_d
  
- 	sci_mdl_first_entry(mdl_handle);
+ enum sci_status scic_sds_remote_device_default_start_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request);
++	struct scic_sds_request *request);
  
-Index: linux-2.6/drivers/scsi/isci/isci.h
+ enum sci_status scic_sds_remote_device_default_complete_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request);
++	struct scic_sds_request *request);
+ 
+ enum sci_status scic_sds_remote_device_default_continue_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request);
++	struct scic_sds_request *request);
+ 
+ enum sci_status scic_sds_remote_device_default_suspend_handler(
+ 	struct scic_sds_remote_device *this_device,
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_request.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/isci/isci.h	2011-03-28 11:05:31.970896757 +0200
-+++ linux-2.6/drivers/scsi/isci/isci.h	2011-03-28 11:06:01.485461661 +0200
-@@ -65,7 +65,7 @@
- #include <scsi/libsas.h>
- #include <scsi/scsi.h>
- 
--#include "sci_base_controller.h"
-+#include "core/sci_object.h"
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_request.c	2011-03-28 11:19:52.374837312 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_request.c	2011-03-28 12:11:15.433838915 +0200
+@@ -57,7 +57,6 @@
+ #include "intel_sas.h"
+ #include "intel_sata.h"
+ #include "intel_sat.h"
+-#include "sci_base_request.h"
  #include "scic_controller.h"
- #include "host.h"
- #include "timers.h"
+ #include "scic_io_request.h"
+ #include "scic_remote_device.h"
+@@ -728,10 +727,8 @@ enum sci_status scic_io_request_construc
+ 
+ 	scic_sds_io_request_build_ssp_command_iu(sci_req);
+ 
+-	sci_base_state_machine_change_state(
+-		&sci_req->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_CONSTRUCTED
+-		);
++	sci_base_state_machine_change_state(&sci_req->state_machine,
++		SCI_BASE_REQUEST_STATE_CONSTRUCTED);
+ 
+ 	return SCI_SUCCESS;
+ }
+@@ -746,10 +743,8 @@ enum sci_status scic_task_request_constr
+ 	/* Fill in the SSP Task IU */
+ 	scic_sds_task_request_build_ssp_task_iu(sci_req);
+ 
+-	sci_base_state_machine_change_state(
+-		&sci_req->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_CONSTRUCTED
+-		);
++	sci_base_state_machine_change_state(&sci_req->state_machine,
++		SCI_BASE_REQUEST_STATE_CONSTRUCTED);
+ 
+ 	return SCI_SUCCESS;
+ }
+@@ -780,10 +775,8 @@ enum sci_status scic_io_request_construc
+ 	status = scic_io_request_construct_sata(sci_req, proto, len, dir, copy);
+ 
+ 	if (status == SCI_SUCCESS)
+-		sci_base_state_machine_change_state(
+-			&sci_req->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_CONSTRUCTED
+-			);
++		sci_base_state_machine_change_state(&sci_req->state_machine,
++			SCI_BASE_REQUEST_STATE_CONSTRUCTED);
+ 
+ 	return status;
+ }
+@@ -818,10 +811,8 @@ enum sci_status scic_task_request_constr
+ 	}
+ 
+ 	if (status == SCI_SUCCESS)
+-		sci_base_state_machine_change_state(
+-			&sci_req->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_CONSTRUCTED
+-			);
++		sci_base_state_machine_change_state(&sci_req->state_machine,
++			SCI_BASE_REQUEST_STATE_CONSTRUCTED);
+ 
+ 	return status;
+ }
+@@ -891,18 +882,12 @@ u32 scic_io_request_get_number_of_bytes_
+  * This method invokes the base state start request handler for the
+  * SCIC_SDS_IO_REQUEST_T object. enum sci_status
+  */
+-enum sci_status scic_sds_request_start(
+-	struct scic_sds_request *this_request)
++enum sci_status
++scic_sds_request_start(struct scic_sds_request *request)
+ {
+-	if (
+-		this_request->device_sequence
+-		== scic_sds_remote_device_get_sequence(this_request->target_device)
+-		) {
+-		return this_request->state_handlers->parent.start_handler(
+-			       &this_request->parent
+-			       );
+-	}
+-
++	if (request->device_sequence ==
++	    scic_sds_remote_device_get_sequence(request->target_device))
++		return request->state_handlers->start_handler(request);
+ 	return SCI_FAILURE;
+ }
+ 
+@@ -914,11 +899,10 @@ enum sci_status scic_sds_request_start(
+  * This method invokes the base state terminate request handber for the
+  * SCIC_SDS_IO_REQUEST_T object. enum sci_status
+  */
+-enum sci_status scic_sds_io_request_terminate(
+-	struct scic_sds_request *this_request)
++enum sci_status
++scic_sds_io_request_terminate(struct scic_sds_request *request)
+ {
+-	return this_request->state_handlers->parent.abort_handler(
+-		       &this_request->parent);
++	return request->state_handlers->abort_handler(request);
+ }
+ 
+ /**
+@@ -929,11 +913,10 @@ enum sci_status scic_sds_io_request_term
+  * This method invokes the base state request completion handler for the
+  * SCIC_SDS_IO_REQUEST_T object. enum sci_status
+  */
+-enum sci_status scic_sds_io_request_complete(
+-	struct scic_sds_request *this_request)
++enum sci_status
++scic_sds_io_request_complete(struct scic_sds_request *request)
+ {
+-	return this_request->state_handlers->parent.complete_handler(
+-		       &this_request->parent);
++	return request->state_handlers->complete_handler(request);
+ }
+ 
+ /**
+@@ -1023,175 +1006,132 @@ void scic_sds_io_request_copy_response(s
+  * *  DEFAULT STATE HANDLERS
+  * ***************************************************************************** */
+ 
+-/**
+- * scic_sds_request_default_start_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method is the default action to take when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_start() request.  The default action is
+  * to log a warning and return a failure status. enum sci_status
+  * SCI_FAILURE_INVALID_STATE
+  */
+ enum sci_status scic_sds_request_default_start_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *scic_request =
+-		(struct scic_sds_request *)request;
+-
+-	dev_warn(scic_to_dev(scic_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		 "%s: SCIC IO Request requested to start while in wrong "
+ 		 "state %d\n",
+ 		 __func__,
+-		 sci_base_state_machine_get_state(
+-			 &((struct scic_sds_request *)request)->parent.state_machine));
++		 sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+ 
+ static enum sci_status scic_sds_request_default_abort_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *scic_request =
+-		(struct scic_sds_request *)request;
+-
+-	dev_warn(scic_to_dev(scic_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		"%s: SCIC IO Request requested to abort while in wrong "
+ 		"state %d\n",
+ 		__func__,
+-		sci_base_state_machine_get_state(
+-			&((struct scic_sds_request *)request)->parent.state_machine));
++		sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+ 
+-/**
+- * scic_sds_request_default_complete_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method is the default action to take when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_complete() request.  The default action
+  * is to log a warning and return a failure status. enum sci_status
+  * SCI_FAILURE_INVALID_STATE
+  */
+ enum sci_status scic_sds_request_default_complete_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *scic_request =
+-		(struct scic_sds_request *)request;
+-
+-	dev_warn(scic_to_dev(scic_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		"%s: SCIC IO Request requested to complete while in wrong "
+ 		"state %d\n",
+ 		__func__,
+-		sci_base_state_machine_get_state(
+-			&((struct scic_sds_request *)request)->parent.state_machine));
++		sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+ 
+-/**
+- * scic_sds_request_default_destruct_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method is the default action to take when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_complete() request.  The default action
+  * is to log a warning and return a failure status. enum sci_status
+  * SCI_FAILURE_INVALID_STATE
+  */
+ enum sci_status scic_sds_request_default_destruct_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *scic_request =
+-		(struct scic_sds_request *)request;
+-
+-	dev_warn(scic_to_dev(scic_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		 "%s: SCIC IO Request requested to destroy while in wrong "
+ 		 "state %d\n",
+ 		 __func__,
+-		 sci_base_state_machine_get_state(
+-			 &((struct scic_sds_request *)request)->parent.state_machine));
++		 sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+ 
+ /**
+- * scic_sds_request_default_tc_completion_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
+  * This method is the default action to take when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_task_request_complete() request.  The default
+  * action is to log a warning and return a failure status. enum sci_status
+  * SCI_FAILURE_INVALID_STATE
+  */
+ enum sci_status scic_sds_request_default_tc_completion_handler(
+-	struct scic_sds_request *this_request,
++	struct scic_sds_request *request,
+ 	u32 completion_code)
+ {
+-	dev_warn(scic_to_dev(this_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		"%s: SCIC IO Request given task completion notification %x "
+ 		"while in wrong state %d\n",
+ 		__func__,
+ 		completion_code,
+-		sci_base_state_machine_get_state(
+-			&this_request->parent.state_machine));
++		sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ 
+ }
+ 
+-/**
+- * scic_sds_request_default_event_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method is the default action to take when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_event_handler() request.  The default
+  * action is to log a warning and return a failure status. enum sci_status
+  * SCI_FAILURE_INVALID_STATE
+  */
+ enum sci_status scic_sds_request_default_event_handler(
+-	struct scic_sds_request *this_request,
++	struct scic_sds_request *request,
+ 	u32 event_code)
+ {
+-	dev_warn(scic_to_dev(this_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		 "%s: SCIC IO Request given event code notification %x while "
+ 		 "in wrong state %d\n",
+ 		 __func__,
+ 		 event_code,
+-		 sci_base_state_machine_get_state(
+-			 &this_request->parent.state_machine));
++		 sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+ 
+-/**
+- * scic_sds_request_default_frame_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method is the default action to take when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_event_handler() request.  The default
+  * action is to log a warning and return a failure status. enum sci_status
+  * SCI_FAILURE_INVALID_STATE
+  */
+ enum sci_status scic_sds_request_default_frame_handler(
+-	struct scic_sds_request *this_request,
++	struct scic_sds_request *request,
+ 	u32 frame_index)
+ {
+-	dev_warn(scic_to_dev(this_request->owning_controller),
++	dev_warn(scic_to_dev(request->owning_controller),
+ 		 "%s: SCIC IO Request given unexpected frame %x while in "
+ 		 "state %d\n",
+ 		 __func__,
+ 		 frame_index,
+-		 sci_base_state_machine_get_state(
+-			 &this_request->parent.state_machine));
++		 sci_base_state_machine_get_state(&request->state_machine));
+ 
+ 	scic_sds_controller_release_frame(
+-		this_request->owning_controller, frame_index);
++		request->owning_controller, frame_index);
+ 
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+@@ -1201,11 +1141,7 @@ enum sci_status scic_sds_request_default
+  * *  CONSTRUCTED STATE HANDLERS
+  * ***************************************************************************** */
+ 
+-/**
+- * scic_sds_request_constructed_state_start_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action taken when a constructed
+  * SCIC_SDS_IO_REQUEST_T object receives a scic_sds_request_start() request.
+  * This method will, if necessary, allocate a TCi for the io request object and
+@@ -1215,34 +1151,33 @@ enum sci_status scic_sds_request_default
+  * SCI_SUCCESS SCI_FAILURE_INSUFFICIENT_RESOURCES
+  */
+ static enum sci_status scic_sds_request_constructed_state_start_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	struct scu_task_context *task_context;
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+ 
+-	if (this_request->io_tag == SCI_CONTROLLER_INVALID_IO_TAG) {
+-		this_request->io_tag =
+-			scic_controller_allocate_io_tag(this_request->owning_controller);
++	if (request->io_tag == SCI_CONTROLLER_INVALID_IO_TAG) {
++		request->io_tag =
++			scic_controller_allocate_io_tag(request->owning_controller);
+ 	}
+ 
+ 	/* Record the IO Tag in the request */
+-	if (this_request->io_tag != SCI_CONTROLLER_INVALID_IO_TAG) {
+-		task_context = this_request->task_context_buffer;
++	if (request->io_tag != SCI_CONTROLLER_INVALID_IO_TAG) {
++		task_context = request->task_context_buffer;
+ 
+-		task_context->task_index = scic_sds_io_tag_get_index(this_request->io_tag);
++		task_context->task_index = scic_sds_io_tag_get_index(request->io_tag);
+ 
+ 		switch (task_context->protocol_type) {
+ 		case SCU_TASK_CONTEXT_PROTOCOL_SMP:
+ 		case SCU_TASK_CONTEXT_PROTOCOL_SSP:
+ 			/* SSP/SMP Frame */
+-			task_context->type.ssp.tag = this_request->io_tag;
++			task_context->type.ssp.tag = request->io_tag;
+ 			task_context->type.ssp.target_port_transfer_tag = 0xFFFF;
+ 			break;
+ 
+ 		case SCU_TASK_CONTEXT_PROTOCOL_STP:
+ 			/*
+ 			 * STP/SATA Frame
+-			 * task_context->type.stp.ncq_tag = this_request->ncq_tag; */
++			 * task_context->type.stp.ncq_tag = request->ncq_tag; */
+ 			break;
+ 
+ 		case SCU_TASK_CONTEXT_PROTOCOL_NONE:
+@@ -1257,20 +1192,17 @@ static enum sci_status scic_sds_request_
+ 		/*
+ 		 * Check to see if we need to copy the task context buffer
+ 		 * or have been building into the task context buffer */
+-		if (this_request->was_tag_assigned_by_user == false) {
++		if (request->was_tag_assigned_by_user == false) {
+ 			scic_sds_controller_copy_task_context(
+-				this_request->owning_controller, this_request
+-				);
++				request->owning_controller, request);
+ 		}
+ 
+ 		/* Add to the post_context the io tag value */
+-		this_request->post_context |= scic_sds_io_tag_get_index(this_request->io_tag);
++		request->post_context |= scic_sds_io_tag_get_index(request->io_tag);
+ 
+ 		/* Everything is good go ahead and change state */
+-		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_STARTED
+-			);
++		sci_base_state_machine_change_state(&request->state_machine,
++			SCI_BASE_REQUEST_STATE_STARTED);
+ 
+ 		return SCI_SUCCESS;
+ 	}
+@@ -1278,35 +1210,24 @@ static enum sci_status scic_sds_request_
+ 	return SCI_FAILURE_INSUFFICIENT_RESOURCES;
+ }
+ 
+-/**
+- * scic_sds_request_constructed_state_abort_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_terminate() request. Since the request
+  * has not yet been posted to the hardware the request transitions to the
+  * completed state. enum sci_status SCI_SUCCESS
+  */
+ static enum sci_status scic_sds_request_constructed_state_abort_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+-
+ 	/*
+ 	 * This request has been terminated by the user make sure that the correct
+ 	 * status code is returned */
+-	scic_sds_request_set_status(
+-		this_request,
++	scic_sds_request_set_status(request,
+ 		SCU_TASK_DONE_TASK_ABORT,
+-		SCI_FAILURE_IO_TERMINATED
+-		);
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
++		SCI_FAILURE_IO_TERMINATED);
+ 
++	sci_base_state_machine_change_state(&request->state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED);
+ 	return SCI_SUCCESS;
+ }
+ 
+@@ -1315,30 +1236,20 @@ static enum sci_status scic_sds_request_
+  * *  STARTED STATE HANDLERS
+  * ***************************************************************************** */
+ 
+-/**
+- * scic_sds_request_started_state_abort_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_terminate() request. Since the request
+  * has been posted to the hardware the io request state is changed to the
+  * aborting state. enum sci_status SCI_SUCCESS
+  */
+ enum sci_status scic_sds_request_started_state_abort_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+-
+-	if (this_request->has_started_substate_machine) {
+-		sci_base_state_machine_stop(&this_request->started_substate_machine);
+-	}
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_ABORTING
+-		);
++	if (request->has_started_substate_machine)
++		sci_base_state_machine_stop(&request->started_substate_machine);
+ 
++	sci_base_state_machine_change_state(&request->state_machine,
++		SCI_BASE_REQUEST_STATE_ABORTING);
+ 	return SCI_SUCCESS;
+ }
+ 
+@@ -1512,20 +1423,12 @@ enum sci_status scic_sds_request_started
+ 	 */
+ 
+ 	/* In all cases we will treat this as the completion of the IO request. */
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
+-
++	sci_base_state_machine_change_state(&this_request->state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED);
+ 	return SCI_SUCCESS;
+ }
+ 
+-/**
+- * scic_sds_request_started_state_frame_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- * @frame_index: This is the index of the unsolicited frame to be processed.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_frame_handler() request. This method
+  * first determines the frame type received.  If this is a response frame then
+@@ -1601,11 +1504,7 @@ static enum sci_status scic_sds_request_
+  * ***************************************************************************** */
+ 
+ 
+-/**
+- * scic_sds_request_completed_state_complete_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_complete() request. This method frees up
+  * any io request resources that have been allocated and transitions the
+@@ -1613,26 +1512,20 @@ static enum sci_status scic_sds_request_
+  * transitioning to the final state? enum sci_status SCI_SUCCESS
+  */
+ static enum sci_status scic_sds_request_completed_state_complete_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+-
+-	if (this_request->was_tag_assigned_by_user != true) {
++	if (request->was_tag_assigned_by_user != true) {
+ 		scic_controller_free_io_tag(
+-			this_request->owning_controller, this_request->io_tag
+-			);
++			request->owning_controller, request->io_tag);
+ 	}
+ 
+-	if (this_request->saved_rx_frame_index != SCU_INVALID_FRAME_INDEX) {
++	if (request->saved_rx_frame_index != SCU_INVALID_FRAME_INDEX) {
+ 		scic_sds_controller_release_frame(
+-			this_request->owning_controller, this_request->saved_rx_frame_index);
++			request->owning_controller, request->saved_rx_frame_index);
+ 	}
+ 
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_FINAL
+-		);
+-
++	sci_base_state_machine_change_state(&request->state_machine,
++		SCI_BASE_REQUEST_STATE_FINAL);
+ 	return SCI_SUCCESS;
+ }
+ 
+@@ -1641,11 +1534,7 @@ static enum sci_status scic_sds_request_
+  * *  ABORTING STATE HANDLERS
+  * ***************************************************************************** */
+ 
+-/**
+- * scic_sds_request_aborting_state_abort_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_terminate() request. This method is the
+  * io request aborting state abort handlers.  On receipt of a multiple
+@@ -1653,23 +1542,14 @@ static enum sci_status scic_sds_request_
+  * This should not happen in normal operation. enum sci_status SCI_SUCCESS
+  */
+ static enum sci_status scic_sds_request_aborting_state_abort_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
+-
++	sci_base_state_machine_change_state(&request->state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED);
+ 	return SCI_SUCCESS;
+ }
+ 
+-/**
+- * scic_sds_request_aborting_state_tc_completion_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_task_completion() request. This method
+  * decodes the completion type waiting for the abort task complete
+@@ -1687,10 +1567,8 @@ static enum sci_status scic_sds_request_
+ 			this_request, SCU_TASK_DONE_TASK_ABORT, SCI_FAILURE_IO_TERMINATED
+ 			);
+ 
+-		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++		sci_base_state_machine_change_state(&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 
+ 	default:
+@@ -1703,11 +1581,7 @@ static enum sci_status scic_sds_request_
+ 	return SCI_SUCCESS;
+ }
+ 
+-/**
+- * scic_sds_request_aborting_state_frame_handler() -
+- * @request: This is the struct sci_base_request object that is cast to the
+- *    SCIC_SDS_IO_REQUEST_T object for which the start operation is requested.
+- *
++/*
+  * This method implements the action to be taken when an SCIC_SDS_IO_REQUEST_T
+  * object receives a scic_sds_request_frame_handler() request. This method
+  * discards the unsolicited frame since we are waiting for the abort task
+@@ -1727,58 +1601,58 @@ static enum sci_status scic_sds_request_
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_request_state_handler_table[] = {
+ 	[SCI_BASE_REQUEST_STATE_INITIAL] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_default_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_default_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCI_BASE_REQUEST_STATE_CONSTRUCTED] = {
+-		.parent.start_handler    = scic_sds_request_constructed_state_start_handler,
+-		.parent.abort_handler    = scic_sds_request_constructed_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_constructed_state_start_handler,
++		.abort_handler		= scic_sds_request_constructed_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCI_BASE_REQUEST_STATE_STARTED] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_started_state_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_started_state_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_started_state_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_started_state_frame_handler,
+ 	},
+ 	[SCI_BASE_REQUEST_STATE_COMPLETED] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_default_abort_handler,
+-		.parent.complete_handler = scic_sds_request_completed_state_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_default_abort_handler,
++		.complete_handler	= scic_sds_request_completed_state_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCI_BASE_REQUEST_STATE_ABORTING] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_aborting_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_aborting_state_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_aborting_state_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_aborting_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_aborting_state_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_aborting_state_frame_handler,
+ 	},
+ 	[SCI_BASE_REQUEST_STATE_FINAL] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_default_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_default_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ };
+ 
+@@ -1978,7 +1852,11 @@ static void scic_sds_general_request_con
+ 					       void *user_io_request_object,
+ 					       struct scic_sds_request *sci_req)
+ {
+-	sci_base_request_construct(&sci_req->parent, scic_sds_request_state_table);
++	sci_req->parent.private = NULL;
++	sci_base_state_machine_construct(&sci_req->state_machine, &sci_req->parent,
++			scic_sds_request_state_table, SCI_BASE_REQUEST_STATE_INITIAL);
++	sci_base_state_machine_start(&sci_req->state_machine);
++
+ 	sci_req->io_tag = io_tag;
+ 	sci_req->user_request = user_io_request_object;
+ 	sci_req->owning_controller = scic;
+@@ -2070,7 +1948,7 @@ enum sci_status scic_task_request_constr
+ 		/* Construct the started sub-state machine. */
+ 		sci_base_state_machine_construct(
+ 			&sci_req->started_substate_machine,
+-			&sci_req->parent.parent,
++			&sci_req->parent,
+ 			scic_sds_io_request_started_task_mgmt_substate_table,
+ 			SCIC_SDS_IO_REQUEST_STARTED_TASK_MGMT_SUBSTATE_AWAIT_TC_COMPLETION
+ 			);
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_request.h
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_request.h	2011-03-28 11:21:32.953838657 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_request.h	2011-03-28 12:08:17.102838333 +0200
+@@ -64,8 +64,7 @@
+  */
+ 
+ #include "scic_io_request.h"
+-
+-#include "sci_base_request.h"
++#include "sci_base_state_machine.h"
+ #include "scu_task_context.h"
+ #include "intel_sas.h"
+ 
+@@ -127,9 +126,15 @@ enum scic_sds_smp_request_started_substa
+  */
+ struct scic_sds_request {
+ 	/**
+-	 * This field indictes the parent object of the request.
++	 * The field specifies that the parent object for the base request is the
++	 * base object itself.
+ 	 */
+-	struct sci_base_request parent;
++	struct sci_base_object parent;
++
++	/**
++	 * This field contains the information for the base request state machine.
++	 */
++	struct sci_base_state_machine state_machine;
+ 
+ 	void *user_request;
+ 
+@@ -231,15 +236,59 @@ struct scic_sds_request {
+ 
+ };
+ 
++/**
++ * enum sci_base_request_states - This enumeration depicts all the states for
++ *    the common request state machine.
++ *
++ *
++ */
++enum sci_base_request_states {
++	/**
++	 * Simply the initial state for the base request state machine.
++	 */
++	SCI_BASE_REQUEST_STATE_INITIAL,
++
++	/**
++	 * This state indicates that the request has been constructed. This state
++	 * is entered from the INITIAL state.
++	 */
++	SCI_BASE_REQUEST_STATE_CONSTRUCTED,
++
++	/**
++	 * This state indicates that the request has been started. This state is
++	 * entered from the CONSTRUCTED state.
++	 */
++	SCI_BASE_REQUEST_STATE_STARTED,
++
++	/**
++	 * This state indicates that the request has completed.
++	 * This state is entered from the STARTED state. This state is entered from
++	 * the ABORTING state.
++	 */
++	SCI_BASE_REQUEST_STATE_COMPLETED,
+ 
+-typedef enum sci_status
+-(*scic_sds_io_request_frame_handler_t)(struct scic_sds_request *req, u32 frame);
++	/**
++	 * This state indicates that the request is in the process of being
++	 * terminated/aborted.
++	 * This state is entered from the CONSTRUCTED state.
++	 * This state is entered from the STARTED state.
++	 */
++	SCI_BASE_REQUEST_STATE_ABORTING,
+ 
+-typedef enum sci_status
+-(*scic_sds_io_request_event_handler_t)(struct scic_sds_request *req, u32 event);
++	/**
++	 * Simply the final state for the base request state machine.
++	 */
++	SCI_BASE_REQUEST_STATE_FINAL,
++};
+ 
+-typedef enum sci_status
+-(*scic_sds_io_request_task_completion_handler_t)(struct scic_sds_request *req, u32 completion_code);
++typedef enum sci_status (*scic_sds_io_request_handler_t)
++				(struct scic_sds_request *request);
++typedef enum sci_status (*scic_sds_io_request_frame_handler_t)
++				(struct scic_sds_request *req, u32 frame);
++typedef enum sci_status (*scic_sds_io_request_event_handler_t)
++				(struct scic_sds_request *req, u32 event);
++typedef enum sci_status (*scic_sds_io_request_task_completion_handler_t)
++				(struct scic_sds_request *req, u32 completion_code);
+ 
+ /**
+  * struct scic_sds_io_request_state_handler - This is the SDS core definition
+@@ -248,7 +297,30 @@ typedef enum sci_status
+  *
+  */
+ struct scic_sds_io_request_state_handler {
+-	struct sci_base_request_state_handler parent;
++	/**
++	 * The start_handler specifies the method invoked when a user attempts to
++	 * start a request.
++	 */
++	scic_sds_io_request_handler_t start_handler;
++
++	/**
++	 * The abort_handler specifies the method invoked when a user attempts to
++	 * abort a request.
++	 */
++	scic_sds_io_request_handler_t abort_handler;
++
++	/**
++	 * The complete_handler specifies the method invoked when a user attempts to
++	 * complete a request.
++	 */
++	scic_sds_io_request_handler_t complete_handler;
++
++	/**
++	 * The destruct_handler specifies the method invoked when a user attempts to
++	 * destruct a request.
++	 */
++	scic_sds_io_request_handler_t destruct_handler;
++
+ 
+ 	scic_sds_io_request_task_completion_handler_t tc_completion_handler;
+ 	scic_sds_io_request_event_handler_t event_handler;
+@@ -319,7 +391,7 @@ extern const struct sci_base_state scic_
+ 	}
+ 
+ #define scic_sds_request_complete(a_request) \
+-	((a_request)->state_handlers->parent.complete_handler(&(a_request)->parent))
++	((a_request)->state_handlers->complete_handler(a_request))
+ 
+ 
+ 
+@@ -331,15 +403,15 @@ extern const struct sci_base_state scic_
+  * struct scic_sds_io_request object.
+  */
+ #define scic_sds_io_request_tc_completion(this_request, completion_code) \
+-	{ \
+-		if (this_request->parent.state_machine.current_state_id	 \
+-		    == SCI_BASE_REQUEST_STATE_STARTED \
+-		    && this_request->has_started_substate_machine \
+-		    == false) \
+-			scic_sds_request_started_state_tc_completion_handler(this_request, completion_code); \
+-		else \
+-			this_request->state_handlers->tc_completion_handler(this_request, completion_code); \
+-	}
++{ \
++	if (this_request->state_machine.current_state_id	 \
++	    == SCI_BASE_REQUEST_STATE_STARTED \
++	    && this_request->has_started_substate_machine \
++	    == false) \
++		scic_sds_request_started_state_tc_completion_handler(this_request, completion_code); \
++	else \
++		this_request->state_handlers->tc_completion_handler(this_request, completion_code); \
++}
+ 
+ /**
+  * SCU_SGL_ZERO() -
+@@ -426,14 +498,14 @@ enum sci_status scic_sds_task_request_te
+  * ***************************************************************************** */
+ 
+ enum sci_status scic_sds_request_default_start_handler(
+-	struct sci_base_request *this_request);
++	struct scic_sds_request *request);
+ 
+ 
+ enum sci_status scic_sds_request_default_complete_handler(
+-	struct sci_base_request *this_request);
++	struct scic_sds_request *request);
+ 
+ enum sci_status scic_sds_request_default_destruct_handler(
+-	struct sci_base_request *this_request);
++	struct scic_sds_request *request);
+ 
+ enum sci_status scic_sds_request_default_tc_completion_handler(
+ 	struct scic_sds_request *this_request,
+@@ -453,7 +525,7 @@ enum sci_status scic_sds_request_default
+  * ***************************************************************************** */
+ 
+ enum sci_status scic_sds_request_started_state_abort_handler(
+-	struct sci_base_request *this_request);
++	struct scic_sds_request *request);
+ 
+ enum sci_status scic_sds_request_started_state_tc_completion_handler(
+ 	struct scic_sds_request *this_request,
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_smp_remote_device.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_smp_remote_device.c	2011-03-28 11:21:32.969838392 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_smp_remote_device.c	2011-03-28 11:35:46.181338558 +0200
+@@ -78,29 +78,24 @@
+  */
+ static enum sci_status scic_sds_smp_remote_device_ready_idle_substate_start_io_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status;
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+-	struct scic_sds_request *io_request  = (struct scic_sds_request *)request;
+ 
+ 	/* Will the port allow the io request to start? */
+ 	status = this_device->owning_port->state_handlers->start_io_handler(
+-		this_device->owning_port,
+-		this_device,
+-		io_request
+-		);
++		this_device->owning_port, this_device, request);
+ 
+ 	if (status == SCI_SUCCESS) {
+ 		status =
+-			scic_sds_remote_node_context_start_io(this_device->rnc, io_request);
++			scic_sds_remote_node_context_start_io(this_device->rnc, request);
+ 
+-		if (status == SCI_SUCCESS) {
+-			status = scic_sds_request_start(io_request);
+-		}
++		if (status == SCI_SUCCESS)
++			status = scic_sds_request_start(request);
+ 
+ 		if (status == SCI_SUCCESS) {
+-			this_device->working_request = io_request;
++			this_device->working_request = request;
+ 
+ 			sci_base_state_machine_change_state(
+ 				&this_device->ready_substate_machine,
+@@ -108,7 +103,7 @@ static enum sci_status scic_sds_smp_remo
+ 				);
+ 		}
+ 
+-		scic_sds_remote_device_start_request(this_device, io_request, status);
++		scic_sds_remote_device_start_request(this_device, request, status);
+ 	}
+ 
+ 	return status;
+@@ -129,7 +124,7 @@ static enum sci_status scic_sds_smp_remo
+  */
+ static enum sci_status scic_sds_smp_remote_device_ready_cmd_substate_start_io_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+@@ -144,7 +139,7 @@ static enum sci_status scic_sds_smp_remo
+  */
+ static enum sci_status scic_sds_smp_remote_device_ready_cmd_substate_complete_io_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status;
+ 	struct scic_sds_remote_device *this_device;
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_ssp_request.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_ssp_request.c	2011-03-28 11:21:32.989839000 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_ssp_request.c	2011-03-28 12:22:22.045838340 +0200
+@@ -120,10 +120,8 @@ static enum sci_status scic_sds_ssp_task
+ 			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
+ 			);
+ 
+-		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++		sci_base_state_machine_change_state(&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 	}
+ 
+@@ -143,20 +141,12 @@ static enum sci_status scic_sds_ssp_task
+  * pattern for this particular device).
+  */
+ static enum sci_status scic_sds_ssp_task_request_await_tc_response_abort_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_ABORTING
+-		);
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
+-
++	sci_base_state_machine_change_state(&request->state_machine,
++			SCI_BASE_REQUEST_STATE_ABORTING);
++	sci_base_state_machine_change_state(&request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 	return SCI_SUCCESS;
+ }
+ 
+@@ -176,41 +166,36 @@ static enum sci_status scic_sds_ssp_task
+  * probably update to check frame type and make sure it is a response frame.
+  */
+ static enum sci_status scic_sds_ssp_task_request_await_tc_response_frame_handler(
+-	struct scic_sds_request *this_request,
++	struct scic_sds_request *request,
+ 	u32 frame_index)
+ {
+-	scic_sds_io_request_copy_response(this_request);
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
+-
+-	scic_sds_controller_release_frame(
+-		this_request->owning_controller, frame_index
+-		);
++	scic_sds_io_request_copy_response(request);
+ 
++	sci_base_state_machine_change_state(&request->state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED);
++	scic_sds_controller_release_frame(request->owning_controller,
++			frame_index);
+ 	return SCI_SUCCESS;
+ }
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_ssp_task_request_started_substate_handler_table[] = {
+ 	[SCIC_SDS_IO_REQUEST_STARTED_TASK_MGMT_SUBSTATE_AWAIT_TC_COMPLETION] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_ssp_task_request_await_tc_completion_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_ssp_task_request_await_tc_completion_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCIC_SDS_IO_REQUEST_STARTED_TASK_MGMT_SUBSTATE_AWAIT_TC_RESPONSE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_ssp_task_request_await_tc_response_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_ssp_task_request_await_tc_response_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_ssp_task_request_await_tc_response_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_ssp_task_request_await_tc_response_frame_handler,
+ 	}
+ };
+ 
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_stp_packet_request.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_stp_packet_request.c	2011-03-28 11:21:33.009844742 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_stp_packet_request.c	2011-03-28 11:36:39.425839493 +0200
+@@ -659,16 +659,12 @@ enum sci_status scic_sds_stp_packet_requ
+ }
+ 
+ enum sci_status scic_sds_stp_packet_request_started_completion_delay_complete_handler(
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
++	sci_base_state_machine_change_state(&request->parent.state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED);
+ 
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
+-
+-	return this_request->sci_status;
++	return request->sci_status;
+ }
+ 
+ /* --------------------------------------------------------------------------- */
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_stp_remote_device.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_stp_remote_device.c	2011-03-28 11:21:33.029840702 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_stp_remote_device.c	2011-03-28 12:21:27.245402648 +0200
+@@ -78,22 +78,20 @@
+  */
+ static enum sci_status scic_sds_stp_remote_device_complete_request(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+-	struct scic_sds_request *the_request = (struct scic_sds_request *)request;
+ 	enum sci_status status;
+ 
+-	status = scic_sds_io_request_complete(the_request);
++	status = scic_sds_io_request_complete(request);
+ 
+ 	if (status == SCI_SUCCESS) {
+ 		status = scic_sds_port_complete_io(
+-			this_device->owning_port, this_device, the_request
+-			);
++			this_device->owning_port, this_device, request);
+ 
+ 		if (status == SCI_SUCCESS) {
+ 			scic_sds_remote_device_decrement_request_count(this_device);
+-			if (the_request->sci_status == SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED) {
++			if (request->sci_status == SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED) {
+ 				/*
+ 				 * This request causes hardware error, device needs to be Lun Reset.
+ 				 * So here we force the state machine to IDLE state so the rest IOs
+@@ -119,7 +117,7 @@ static enum sci_status scic_sds_stp_remo
+ 			__func__,
+ 			this_device->owning_port,
+ 			this_device,
+-			the_request,
++			request,
+ 			status);
+ 
+ 	return status;
+@@ -143,64 +141,54 @@ static enum sci_status scic_sds_stp_remo
+  */
+ static enum sci_status scic_sds_stp_remote_device_ready_substate_start_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status;
+ 	struct scic_sds_remote_device *this_device  = (struct scic_sds_remote_device *)device;
+-	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
+ 
+ 	/* Will the port allow the io request to start? */
+ 	status = this_device->owning_port->state_handlers->start_io_handler(
+-		this_device->owning_port,
+-		this_device,
+-		this_request
+-		);
+-
+-	if (SCI_SUCCESS == status) {
+-		status =
+-			scic_sds_remote_node_context_start_task(this_device->rnc, this_request);
+-
+-		if (SCI_SUCCESS == status) {
+-			status = this_request->state_handlers->parent.start_handler(request);
+-		}
+-
+-		if (status == SCI_SUCCESS) {
+-			/*
+-			 * / @note If the remote device state is not IDLE this will replace
+-			 * /       the request that probably resulted in the task management
+-			 * /       request. */
+-			this_device->working_request = this_request;
++		this_device->owning_port, this_device, request);
++	if (status != SCI_SUCCESS)
++		return status;
+ 
+-			sci_base_state_machine_change_state(
+-				&this_device->ready_substate_machine,
+-				SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_CMD
+-				);
++	status = scic_sds_remote_node_context_start_task(this_device->rnc, request);
++	if (status != SCI_SUCCESS)
++		goto out;
+ 
+-			/*
+-			 * The remote node context must cleanup the TCi to NCQ mapping table.
+-			 * The only way to do this correctly is to either write to the TLCR
+-			 * register or to invalidate and repost the RNC. In either case the
+-			 * remote node context state machine will take the correct action when
+-			 * the remote node context is suspended and later resumed. */
+-			scic_sds_remote_node_context_suspend(
+-				this_device->rnc, SCI_SOFTWARE_SUSPENSION, NULL, NULL);
+-
+-			scic_sds_remote_node_context_resume(
+-				this_device->rnc,
+-				scic_sds_remote_device_continue_request,
+-				this_device);
+-		}
++	status = request->state_handlers->start_handler(request);
++	if (status != SCI_SUCCESS)
++		goto out;
+ 
+-		scic_sds_remote_device_start_request(this_device, this_request, status);
++	/*
++	 * Note: If the remote device state is not IDLE this will replace
++	 * the request that probably resulted in the task management request.
++	 */
++	this_device->working_request = request;
++	sci_base_state_machine_change_state(&this_device->ready_substate_machine,
++			SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_CMD);
+ 
+-		/*
+-		 * We need to let the controller start request handler know that it can't
+-		 * post TC yet. We will provide a callback function to post TC when RNC gets
+-		 * resumed. */
+-		return SCI_FAILURE_RESET_DEVICE_PARTIAL_SUCCESS;
+-	}
++	/*
++	 * The remote node context must cleanup the TCi to NCQ mapping table.
++	 * The only way to do this correctly is to either write to the TLCR
++	 * register or to invalidate and repost the RNC. In either case the
++	 * remote node context state machine will take the correct action when
++	 * the remote node context is suspended and later resumed.
++	 */
++	scic_sds_remote_node_context_suspend(this_device->rnc,
++			SCI_SOFTWARE_SUSPENSION, NULL, NULL);
++	scic_sds_remote_node_context_resume(this_device->rnc,
++			scic_sds_remote_device_continue_request,
++			this_device);
+ 
+-	return status;
++out:
++	scic_sds_remote_device_start_request(this_device, request, status);
++	/*
++	 * We need to let the controller start request handler know that it can't
++	 * post TC yet. We will provide a callback function to post TC when RNC gets
++	 * resumed.
++	 */
++	return SCI_FAILURE_RESET_DEVICE_PARTIAL_SUCCESS;
+ }
+ 
+ /*
+@@ -221,53 +209,39 @@ static enum sci_status scic_sds_stp_remo
+  */
+ static enum sci_status scic_sds_stp_remote_device_ready_idle_substate_start_io_handler(
+ 	struct sci_base_remote_device *base_device,
+-	struct sci_base_request *base_request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status;
+ 	struct scic_sds_remote_device *device =
+ 		(struct scic_sds_remote_device *)&base_device->parent;
+-	struct scic_sds_request *sds_request  =
+-		(struct scic_sds_request *)&base_request->parent;
+ 	struct isci_request *isci_request =
+-		(struct isci_request *)sci_object_get_association(sds_request);
++		(struct isci_request *)sci_object_get_association(request);
+ 
+ 
+ 	/* Will the port allow the io request to start? */
+ 	status = device->owning_port->state_handlers->start_io_handler(
+-			device->owning_port,
+-			device,
+-			sds_request);
+-
+-	if (status == SCI_SUCCESS) {
+-		status =
+-			scic_sds_remote_node_context_start_io(device->rnc,
+-							      sds_request);
+-
+-		if (status == SCI_SUCCESS)
+-			status =
+-				sds_request->state_handlers->
+-					parent.start_handler(base_request);
++			device->owning_port, device, request);
++	if (status != SCI_SUCCESS)
++		return status;
+ 
+-		if (status == SCI_SUCCESS) {
+-			if (isci_sata_get_sat_protocol(isci_request) ==
+-					SAT_PROTOCOL_FPDMA)
+-				sci_base_state_machine_change_state(
+-					&device->ready_substate_machine,
+-					SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_NCQ);
+-			else {
+-				device->working_request = sds_request;
++	status = scic_sds_remote_node_context_start_io(device->rnc, request);
++	if (status != SCI_SUCCESS)
++		goto out;
+ 
+-				sci_base_state_machine_change_state(
+-					&device->ready_substate_machine,
+-					SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_CMD);
+-			}
+-		}
++	status = request->state_handlers->start_handler(request);
++	if (status != SCI_SUCCESS)
++		goto out;
+ 
+-		scic_sds_remote_device_start_request(device,
+-						     sds_request,
+-						     status);
++	if (isci_sata_get_sat_protocol(isci_request) == SAT_PROTOCOL_FPDMA) {
++		sci_base_state_machine_change_state(&device->ready_substate_machine,
++				SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_NCQ);
++	} else {
++		device->working_request = request;
++		sci_base_state_machine_change_state(&device->ready_substate_machine,
++				SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_CMD);
+ 	}
+-
++out:
++	scic_sds_remote_device_start_request(device, request, status);
+ 	return status;
+ }
+ 
+@@ -308,33 +282,30 @@ static enum sci_status scic_sds_stp_remo
+ 
+ static enum sci_status scic_sds_stp_remote_device_ready_ncq_substate_start_io_handler(
+ 	struct sci_base_remote_device *base_device,
+-	struct sci_base_request *base_request)
++	struct scic_sds_request *request)
+ {
+ 	enum sci_status status;
+ 	struct scic_sds_remote_device *device =
+ 		(struct scic_sds_remote_device *)&base_device->parent;
+-	struct scic_sds_request *sds_request  =
+-		(struct scic_sds_request *)&base_request->parent;
+ 	struct isci_request *isci_request =
+-		(struct isci_request *)sci_object_get_association(sds_request);
++		(struct isci_request *)sci_object_get_association(request);
+ 
+ 	if (isci_sata_get_sat_protocol(isci_request) == SAT_PROTOCOL_FPDMA) {
+ 		status = device->owning_port->state_handlers->start_io_handler(
+ 				device->owning_port,
+ 				device,
+-				sds_request);
++				request);
+ 
+ 		if (status == SCI_SUCCESS) {
+ 			status = scic_sds_remote_node_context_start_io(
+ 					device->rnc,
+-					sds_request);
++					request);
+ 
+ 			if (status == SCI_SUCCESS)
+-				status = sds_request->state_handlers->
+-					parent.start_handler(base_request);
++				status = request->state_handlers->start_handler(request);
+ 
+ 			scic_sds_remote_device_start_request(device,
+-							     sds_request,
++							     request,
+ 							     status);
+ 		}
+ 	} else
+@@ -422,7 +393,7 @@ static enum sci_status scic_sds_stp_remo
+  */
+ static enum sci_status scic_sds_stp_remote_device_ready_cmd_substate_start_io_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+@@ -475,7 +446,7 @@ static enum sci_status scic_sds_stp_remo
+  * ***************************************************************************** */
+ static enum sci_status scic_sds_stp_remote_device_ready_await_reset_substate_start_io_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	return SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED;
+ }
+@@ -494,7 +465,7 @@ static enum sci_status scic_sds_stp_remo
+  */
+ static enum sci_status scic_sds_stp_remote_device_ready_await_reset_substate_complete_request_handler(
+ 	struct sci_base_remote_device *device,
+-	struct sci_base_request *request)
++	struct scic_sds_request *request)
+ {
+ 	struct scic_sds_remote_device *this_device = (struct scic_sds_remote_device *)device;
+ 	struct scic_sds_request *the_request = (struct scic_sds_request *)request;
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_smp_request.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_smp_request.c	2011-03-28 12:02:45.578837563 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_smp_request.c	2011-03-28 12:23:16.189838474 +0200
+@@ -394,7 +394,7 @@ static enum sci_status scic_sds_smp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
++			&this_request->state_machine,
+ 			SCI_BASE_REQUEST_STATE_COMPLETED
+ 			);
+ 	}
+@@ -433,9 +433,8 @@ static enum sci_status scic_sds_smp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 
+ 	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_SMP_RESP_TO_ERR):
+@@ -452,9 +451,8 @@ static enum sci_status scic_sds_smp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 
+ 	default:
+@@ -468,9 +466,8 @@ static enum sci_status scic_sds_smp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 	}
+ 
+@@ -502,9 +499,8 @@ static enum sci_status scic_sds_smp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 
+ 	default:
+@@ -518,9 +514,8 @@ static enum sci_status scic_sds_smp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 	}
+ 
+@@ -530,22 +525,22 @@ static enum sci_status scic_sds_smp_requ
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_smp_request_started_substate_handler_table[] = {
+ 	[SCIC_SDS_SMP_REQUEST_STARTED_SUBSTATE_AWAIT_RESPONSE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_smp_request_await_response_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_smp_request_await_response_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_smp_request_await_response_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_smp_request_await_response_frame_handler,
+ 	},
+ 	[SCIC_SDS_SMP_REQUEST_STARTED_SUBSTATE_AWAIT_TC_COMPLETION] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   =  scic_sds_smp_request_await_tc_completion_tc_completion_handler,
+-		.event_handler           =  scic_sds_request_default_event_handler,
+-		.frame_handler           =  scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	=  scic_sds_smp_request_await_tc_completion_tc_completion_handler,
++		.event_handler		=  scic_sds_request_default_event_handler,
++		.frame_handler		=  scic_sds_request_default_frame_handler,
+ 	}
+ };
+ 
+@@ -626,7 +621,7 @@ enum sci_status scic_io_request_construc
+ 	/* Construct the started sub-state machine. */
+ 	sci_base_state_machine_construct(
+ 		&sci_req->started_substate_machine,
+-		&sci_req->parent.parent,
++		&sci_req->parent,
+ 		scic_sds_smp_request_started_substate_table,
+ 		SCIC_SDS_SMP_REQUEST_STARTED_SUBSTATE_AWAIT_RESPONSE
+ 		);
+@@ -657,10 +652,8 @@ enum sci_status scic_io_request_construc
+ 
+ 	scu_smp_request_construct_task_context(sci_req, smp_req);
+ 
+-	sci_base_state_machine_change_state(
+-		&sci_req->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_CONSTRUCTED
+-		);
++	sci_base_state_machine_change_state(&sci_req->state_machine,
++		SCI_BASE_REQUEST_STATE_CONSTRUCTED);
+ 
+ 	kfree(smp_req);
+ 
+Index: linux-2.6/drivers/scsi/isci/core/scic_sds_stp_request.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/isci/core/scic_sds_stp_request.c	2011-03-28 11:53:12.190837117 +0200
++++ linux-2.6/drivers/scsi/isci/core/scic_sds_stp_request.c	2011-03-28 12:16:18.761839304 +0200
+@@ -465,8 +465,7 @@ static enum sci_status scic_sds_stp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine, SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine, SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 	}
+ 
+@@ -495,7 +494,7 @@ static enum sci_status scic_sds_stp_requ
+ 	struct scic_sds_stp_request *this_request = (struct scic_sds_stp_request *)request;
+ 
+ 	status = scic_sds_unsolicited_frame_control_get_header(
+-		&(this_request->parent.owning_controller->uf_control),
++		&this_request->parent.owning_controller->uf_control,
+ 		frame_index,
+ 		(void **)&frame_header
+ 		);
+@@ -504,7 +503,7 @@ static enum sci_status scic_sds_stp_requ
+ 		switch (frame_header->fis_type) {
+ 		case SATA_FIS_TYPE_REGD2H:
+ 			scic_sds_unsolicited_frame_control_get_buffer(
+-				&(this_request->parent.owning_controller->uf_control),
++				&this_request->parent.owning_controller->uf_control,
+ 				frame_index,
+ 				(void **)&frame_buffer
+ 				);
+@@ -536,14 +535,13 @@ static enum sci_status scic_sds_stp_requ
+ 		}
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.parent.state_machine,
++			&this_request->parent.state_machine,
+ 			SCI_BASE_REQUEST_STATE_COMPLETED
+ 			);
+ 
+ 		/* Frame has been decoded return it to the controller */
+ 		scic_sds_controller_release_frame(
+-			this_request->parent.owning_controller, frame_index
+-			);
++			this_request->parent.owning_controller, frame_index);
+ 	} else
+ 		dev_err(scic_to_dev(request->owning_controller),
+ 			"%s: SCIC IO Request 0x%p could not get frame header "
+@@ -557,22 +555,22 @@ static enum sci_status scic_sds_stp_requ
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_non_data_substate_handler_table[] = {
+ 	[SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_stp_request_non_data_await_h2d_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_stp_request_non_data_await_h2d_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_D2H_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_stp_request_non_data_await_d2h_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_stp_request_non_data_await_d2h_frame_handler,
+ 	}
+ };
+ 
+@@ -625,7 +623,7 @@ enum sci_status scic_sds_stp_non_data_re
+ 	scu_stp_raw_request_construct_task_context(stp_req, sci_req->task_context_buffer);
+ 
+ 	sci_base_state_machine_construct(&sci_req->started_substate_machine,
+-					 &sci_req->parent.parent,
++					 &sci_req->parent,
+ 					 scic_sds_stp_request_started_non_data_substate_table,
+ 					 SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE);
+ 
+@@ -677,8 +675,7 @@ static enum sci_status scic_sds_stp_requ
+ 	scic = this_request->owning_controller;
+ 	state = scic->state_machine.current_state_id;
+ 	continue_io = scic_sds_controller_state_handler_table[state].continue_io;
+-	return continue_io(scic, &this_request->target_device->parent,
+-			   &this_request->parent);
++	return continue_io(scic, &this_request->target_device->parent, this_request);
+ }
+ 
+ /**
+@@ -859,7 +856,7 @@ static enum sci_status scic_sds_stp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
++			&this_request->state_machine,
+ 			SCI_BASE_REQUEST_STATE_COMPLETED
+ 			);
+ 		break;
+@@ -961,7 +958,7 @@ static enum sci_status scic_sds_stp_requ
+ 					);
+ 
+ 				sci_base_state_machine_change_state(
+-					&this_request->parent.parent.state_machine,
++					&this_request->parent.state_machine,
+ 					SCI_BASE_REQUEST_STATE_COMPLETED
+ 					);
+ 			} else {
+@@ -1056,12 +1053,12 @@ static enum sci_status scic_sds_stp_requ
+ 						);
+ 
+ 					sci_base_state_machine_change_state(
+-						&this_request->parent.parent.state_machine,
++						&this_request->parent.state_machine,
+ 						SCI_BASE_REQUEST_STATE_COMPLETED
+ 						);
+ 				} else {
+ 					sci_base_state_machine_change_state(
+-						&this_request->parent.started_substate_machine,
++						&request->started_substate_machine,
+ 						SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
+ 						);
+ 				}
+@@ -1083,7 +1080,7 @@ static enum sci_status scic_sds_stp_requ
+ 				);
+ 
+ 			sci_base_state_machine_change_state(
+-				&this_request->parent.parent.state_machine,
++				&this_request->parent.state_machine,
+ 				SCI_BASE_REQUEST_STATE_COMPLETED
+ 				);
+ 
+@@ -1160,7 +1157,7 @@ static enum sci_status scic_sds_stp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine,
++			&this_request->state_machine,
+ 			SCI_BASE_REQUEST_STATE_COMPLETED
+ 			);
+ 		break;
+@@ -1215,40 +1212,40 @@ static enum sci_status scic_sds_stp_requ
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_pio_substate_handler_table[] = {
+ 	[SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_stp_request_pio_await_h2d_completion_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_stp_request_pio_await_h2d_completion_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_stp_request_pio_await_frame_frame_handler
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_stp_request_pio_await_frame_frame_handler
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_DATA_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_stp_request_pio_data_in_await_data_event_handler,
+-		.frame_handler           = scic_sds_stp_request_pio_data_in_await_data_frame_handler
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_stp_request_pio_data_in_await_data_event_handler,
++		.frame_handler		= scic_sds_stp_request_pio_data_in_await_data_frame_handler
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_OUT_TRANSMIT_DATA_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_stp_request_pio_data_out_await_data_transmit_completion_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_stp_request_pio_data_out_await_data_transmit_completion_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	}
+ };
+ 
+@@ -1352,7 +1349,7 @@ enum sci_status scic_sds_stp_pio_request
+ 	}
+ 
+ 	sci_base_state_machine_construct(&sci_req->started_substate_machine,
+-					 &sci_req->parent.parent,
++					 &sci_req->parent,
+ 					 scic_sds_stp_request_started_pio_substate_table,
+ 					 SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE);
+ 
+@@ -1360,18 +1357,13 @@ enum sci_status scic_sds_stp_pio_request
+ }
+ 
+ static void scic_sds_stp_request_udma_complete_request(
+-	struct scic_sds_request *this_request,
++	struct scic_sds_request *request,
+ 	u32 scu_status,
+ 	enum sci_status sci_status)
+ {
+-	scic_sds_request_set_status(
+-		this_request, scu_status, sci_status
+-		);
+-
+-	sci_base_state_machine_change_state(
+-		&this_request->parent.state_machine,
+-		SCI_BASE_REQUEST_STATE_COMPLETED
+-		);
++	scic_sds_request_set_status(request, scu_status, sci_status);
++	sci_base_state_machine_change_state(&request->state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED);
+ }
+ 
+ /**
+@@ -1518,22 +1510,22 @@ static enum sci_status scic_sds_stp_requ
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_udma_substate_handler_table[] = {
+ 	[SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_stp_request_udma_await_tc_completion_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_stp_request_udma_general_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_stp_request_udma_await_tc_completion_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_stp_request_udma_general_frame_handler,
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_D2H_REG_FIS_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_stp_request_udma_await_d2h_reg_fis_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_stp_request_udma_await_d2h_reg_fis_frame_handler,
+ 	},
+ };
+ 
+@@ -1590,7 +1582,7 @@ enum sci_status scic_sds_stp_udma_reques
+ 
+ 	sci_base_state_machine_construct(
+ 		&sci_req->started_substate_machine,
+-		&sci_req->parent.parent,
++		&sci_req->parent,
+ 		scic_sds_stp_request_started_udma_substate_table,
+ 		SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE
+ 		);
+@@ -1635,8 +1627,7 @@ static enum sci_status scic_sds_stp_requ
+ 			);
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine, SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->state_machine, SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 	}
+ 
+@@ -1679,9 +1670,8 @@ static enum sci_status scic_sds_stp_requ
+ 			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
+ 			);
+ 
+-		sci_base_state_machine_change_state(
+-			&this_request->parent.state_machine, SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++		sci_base_state_machine_change_state(&this_request->state_machine,
++				SCI_BASE_REQUEST_STATE_COMPLETED);
+ 		break;
+ 	}
+ 
+@@ -1753,9 +1743,8 @@ static enum sci_status scic_sds_stp_requ
+ 		}
+ 
+ 		sci_base_state_machine_change_state(
+-			&this_request->parent.parent.state_machine,
+-			SCI_BASE_REQUEST_STATE_COMPLETED
+-			);
++			&this_request->parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED);
+ 
+ 		/* Frame has been decoded return it to the controller */
+ 		scic_sds_controller_release_frame(
+@@ -1774,31 +1763,31 @@ static enum sci_status scic_sds_stp_requ
+ 
+ static const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_soft_reset_substate_handler_table[] = {
+ 	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_stp_request_soft_reset_await_h2d_asserted_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_stp_request_soft_reset_await_h2d_asserted_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_DIAGNOSTIC_COMPLETION_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_stp_request_soft_reset_await_h2d_diagnostic_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_request_default_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_stp_request_soft_reset_await_h2d_diagnostic_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_request_default_frame_handler,
+ 	},
+ 	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_D2H_RESPONSE_FRAME_SUBSTATE] = {
+-		.parent.start_handler    = scic_sds_request_default_start_handler,
+-		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
+-		.parent.complete_handler = scic_sds_request_default_complete_handler,
+-		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
+-		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
+-		.event_handler           = scic_sds_request_default_event_handler,
+-		.frame_handler           = scic_sds_stp_request_soft_reset_await_d2h_frame_handler,
++		.start_handler		= scic_sds_request_default_start_handler,
++		.abort_handler		= scic_sds_request_started_state_abort_handler,
++		.complete_handler	= scic_sds_request_default_complete_handler,
++		.destruct_handler	= scic_sds_request_default_destruct_handler,
++		.tc_completion_handler	= scic_sds_request_default_tc_completion_handler,
++		.event_handler		= scic_sds_request_default_event_handler,
++		.frame_handler		= scic_sds_stp_request_soft_reset_await_d2h_frame_handler,
+ 	},
+ };
+ 
+@@ -1842,8 +1831,7 @@ static void scic_sds_stp_request_started
+ 	state = scic->state_machine.current_state_id;
+ 	continue_io = scic_sds_controller_state_handler_table[state].continue_io;
+ 
+-	status = continue_io(scic, &this_request->target_device->parent,
+-			     &this_request->parent);
++	status = continue_io(scic, &this_request->target_device->parent, this_request);
+ 
+ 	if (status == SCI_SUCCESS) {
+ 		SET_STATE_HANDLER(
+@@ -1888,7 +1876,7 @@ enum sci_status scic_sds_stp_soft_reset_
+ 	scu_stp_raw_request_construct_task_context(stp_req, sci_req->task_context_buffer);
+ 
+ 	sci_base_state_machine_construct(&sci_req->started_substate_machine,
+-					 &sci_req->parent.parent,
++					 &sci_req->parent,
+ 					 scic_sds_stp_request_started_soft_reset_substate_table,
+ 					 SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE);
+ 
