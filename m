@@ -1,35 +1,41 @@
-From: Ric Wheeler <ricwheeler@gmail.com>
-Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Tue, 29 Mar 2011 16:31:57 -0400
-Message-ID: <4D9241BD.6070704@gmail.com>
-References: <1301373398.2590.20.camel@mulgrave.site>	<4D91BF90.8070909@redhat.com> <20110329202904.GG7184@quack.suse.cz>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 22092] Kernel v2.6.36 trouble on USB disconnect
+Date: Tue, 29 Mar 2011 21:49:42 GMT
+Message-ID: <201103292149.p2TLng1E010437@demeter1.kernel.org>
+References: <bug-22092-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:33445 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212Ab1C2UcD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2011 16:32:03 -0400
-In-Reply-To: <20110329202904.GG7184@quack.suse.cz>
+Received: from demeter1.kernel.org ([140.211.167.39]:59526 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752410Ab1C2Vtn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2011 17:49:43 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p2TLngb0010438
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2011 21:49:42 GMT
+In-Reply-To: <bug-22092-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lsf@lists.linux-foundation.org, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 03/29/2011 04:29 PM, Jan Kara wrote:
-> On Tue 29-03-11 07:16:32, Ric Wheeler wrote:
->> On 03/29/2011 12:36 AM, James Bottomley wrote:
->> (3) The union mount versus overlayfs debate - pros and cons. What each do well,
->> what needs doing. Do we want/need both upstream? (Maybe this can get 10 minutes
->> in Al's VFS session?)
->    It might be interesting but neither Miklos nor Val seems to be attending
-> so I'm not sure how deep discussion we can have :).
->
-> 								Honza
+https://bugzilla.kernel.org/show_bug.cgi?id=22092
 
-Very true - probably best to keep that discussion focused upstream (but that 
-seems to have quieted down as well)...
 
-Ric
+Florian Mickler <florian@mickler.org> changed:
 
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |NEEDINFO
+                 CC|                            |florian@mickler.org
+
+
+
+
+--- Comment #7 from Florian Mickler <florian@mickler.org>  2011-03-29 21:49:40 ---
+Is this still a problem on 2.6.38.y?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
