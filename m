@@ -1,33 +1,26 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Ric Wheeler <ricwheeler@gmail.com>
 Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Tue, 29 Mar 2011 09:09:52 -0400
-Message-ID: <yq1sju6hy3j.fsf@sermon.lab.mkp.net>
-References: <1301373398.2590.20.camel@mulgrave.site>
-	<4D91BF90.8070909@redhat.com>
-	<20110329112252.GO13806@parisc-linux.org>
-	<4D91CDBD.40109@fusionio.com>
+Date: Tue, 29 Mar 2011 09:12:46 -0400
+Message-ID: <4D91DACE.3000609@gmail.com>
+References: <1301373398.2590.20.camel@mulgrave.site>	<4D91BF90.8070909@redhat.com>	<20110329112252.GO13806@parisc-linux.org>	<4D91CDBD.40109@fusionio.com> <yq1sju6hy3j.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:20840 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753241Ab1C2NKI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2011 09:10:08 -0400
-In-Reply-To: <4D91CDBD.40109@fusionio.com> (Jens Axboe's message of "Tue, 29
-	Mar 2011 14:17:01 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <yq1sju6hy3j.fsf@sermon.lab.mkp.net>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, lsf@lists.linux-foundation.org, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ric Wheeler <rwheeler@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Ric Wheeler <rwheeler@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
+On 03/29/2011 09:09 AM, Martin K. Petersen wrote:
+>
+> Jens>  I'll join that too.
+>
+> Stack tuning aside, maybe Matthew can speak a bit about NVMe and I'll
+> cover what's going on with the SCSI over PCIe efforts...
 
->> I can throw together a quick presentation on this topic.
+That sounds interesting to me...
 
-Jens> I'll join that too.
+Ric
 
-Stack tuning aside, maybe Matthew can speak a bit about NVMe and I'll
-cover what's going on with the SCSI over PCIe efforts...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
