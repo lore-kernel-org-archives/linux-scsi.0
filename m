@@ -1,90 +1,66 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH 4/6] isci: hardware / topology event handling
-Date: Mon, 28 Mar 2011 18:11:42 -0700
-Message-ID: <AANLkTikVjnumgM0mXCg-krnLG+fc=cFn7Fi9EaVXmNXq@mail.gmail.com>
-References: <20110323084054.GA11533@infradead.org>
-	<AANLkTinS9xZ3Jhg1C+jWNO0wj+MYW3qvbqc_acvnsOLS@mail.gmail.com>
-	<20110323090824.GA14536@infradead.org>
-	<AANLkTinYmRZe9HRrNFWMby9FXZNWCdRUb6QBMgRtW28E@mail.gmail.com>
-	<20110324062646.GA27051@infradead.org>
-	<AANLkTik7DUF=Pim3JMjRmhdVJTCgfimiyhQ5x_CZ9BeU@mail.gmail.com>
-	<20110325194530.GA593@infradead.org>
-	<AANLkTin-HGv1V7y8Jn8kJ=ZeaPoK4LL+=Tsoz8Ej3Yjw@mail.gmail.com>
-	<20110325220706.GA9535@infradead.org>
-	<AANLkTimu_jM8wRuURNXrGmD1tJbXeVsJ7Qga9fLC7MJr@mail.gmail.com>
-	<20110327222854.GA7487@infradead.org>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Tue, 29 Mar 2011 07:16:32 -0400
+Message-ID: <4D91BF90.8070909@redhat.com>
+References: <1301373398.2590.20.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48641 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752681Ab1C2BLn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Mar 2011 21:11:43 -0400
-Received: by fxm17 with SMTP id 17so3112527fxm.19
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Mar 2011 18:11:42 -0700 (PDT)
-In-Reply-To: <20110327222854.GA7487@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <1301373398.2590.20.camel@mulgrave.site>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-On Sun, Mar 27, 2011 at 3:28 PM, Christoph Hellwig <hch@infradead.org> =
-wrote:
-> On Fri, Mar 25, 2011 at 03:34:39PM -0700, Dan Williams wrote:
->> Ok, so that's why I went all the way to recommending a switch to
->> delayed_workqueue. =A0We can bring down the core and ensure all even=
-ts
->> have seen a cancellation. =A0None of these containing objects are
->> dynamically destroyed outside of driver exit, nor would they care
->> about the switch from timer callback to process context. =A0That fin=
-al
->> flush is the only elusive bit that is covered by flush_workqueue.
+On 03/29/2011 12:36 AM, James Bottomley wrote:
+> Hi All,
 >
-> This seems like a really nasy hack to me. =A0Right now there are 9
-> callers of isci_timer_create, of those
+> Since LSF is less than a week away, the programme committee put together
+> a just in time preliminary agenda for LSF.  As you can see there is
+> still plenty of empty space, which you can make suggestions (to this
+> list with appropriate general list cc's) for filling:
 >
-> =A05 operate on struct scic_sds_controller
-> =A02 operate on struct scic_sds_phy
-> =A01 operates on struct scic_sds_port
-> =A01 operates on struct isci_request
+> https://spreadsheets.google.com/pub?hl=en&hl=en&key=0AiQMl7GcVa7OdFdNQzM5UDRXUnVEbHlYVmZUVHQ2amc&output=html
 >
-> of these at least the request has completely different life time rule=
-s
-> than the scic_sds_controller, so both the existing code and the
-> flush_workqueue variant would be incorrect.
-
-Indeed. isci_request is the only usage of this "timer-api" outside of
-the core and should have used the raw Linux api from the beginning.
-
-> I'd suggest that as a first step you remove the dynamic allocation of
-> the timers with a structure embedded into the containing structure
-> and replace isci_timer_list_destroy with a calls to
-> del_timer_sync when the containing structure is freed.
-
-Ok, I was making this more difficult than it needed to be, all of
-these objects can be reached when stopping the core and we can just
-del_timer_sync once we know everything has been cancelled and the core
-is known to be quiesced.
-
-> After that you can trivial remove the wrappers and just opencode the
-> Linux timer calls, which should lead to much simpler and easier to
-> understand code.
+> If you don't make suggestions, the programme committee will feel
+> empowered to make arbitrary assignments based on your topic and attendee
+> email requests ...
 >
-> If the process context of delayed work items provices a significant
-> benefit to your execution model you can convert the timers to delayed
-> work items now, and remove the irqsafe locking. =A0Given that the
-> isci code still does some non-trivial work from it's interrupt
-> handlers and tasklets I'm not sure it's going to buy you much, though=
-=2E
+> We're still not quite sure what rooms we will have at the Kabuki, but
+> we'll add them to the spreadsheet when we know (they should be close to
+> each other).
+>
+> The spreadsheet above also gives contact information for all the
+> attendees and the programme committee.
+>
+> Yours,
+>
+> James Bottomley
+> on behalf of LSF/MM Programme Committee
+>
 
-The irqsafe locking is an external requirement imposed by libata,
-although we already drop the lock
+Here are a few topic ideas:
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(1)  The first topic that might span IO & FS tracks (or just pull in device 
+mapper people to an FS track) could be adding new commands that would allow 
+users to grow/shrink/etc file systems in a generic way.  The thought I had was 
+that we have a reasonable model that we could reuse for these new commands like 
+mount and mount.fs or fsck and fsck.fs. With btrfs coming down the road, it 
+could be nice to identify exactly what common operations users want to do and 
+agree on how to implement them. Alasdair pointed out in the upstream thread that 
+we had a prototype here in fsadm.
+
+(2) Very high speed, low latency SSD devices and testing. Have we settled on the 
+need for these devices to all have block level drivers? For S-ATA or SAS 
+devices, are there known performance issues that require enhancements in 
+somewhere in the stack?
+
+(3) The union mount versus overlayfs debate - pros and cons. What each do well, 
+what needs doing. Do we want/need both upstream? (Maybe this can get 10 minutes 
+in Al's VFS session?)
+
+Thanks!
+
+Ric
+
