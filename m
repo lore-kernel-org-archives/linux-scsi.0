@@ -1,41 +1,43 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 22092] Kernel v2.6.36 trouble on USB disconnect
-Date: Tue, 29 Mar 2011 21:49:42 GMT
-Message-ID: <201103292149.p2TLng1E010437@demeter1.kernel.org>
-References: <bug-22092-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH RFC] Reduce amount of TURs sent in error recovery
+Date: Tue, 29 Mar 2011 18:09:45 -0500
+Message-ID: <4D9266B9.40209@cs.wisc.edu>
+References: <4D80F6D0.1010404@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:59526 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752410Ab1C2Vtn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2011 17:49:43 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p2TLngb0010438
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2011 21:49:42 GMT
-In-Reply-To: <bug-22092-11613@https.bugzilla.kernel.org/>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49651 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751573Ab1C2XIw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Mar 2011 19:08:52 -0400
+In-Reply-To: <4D80F6D0.1010404@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: David Jeffery <dhjeffery@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=22092
+On 03/16/2011 12:43 PM, David Jeffery wrote:
+> +static int scsi_eh_test_devices(struct list_head *cmd_list, struct list_head *work_q, struct list_head *done_q, int try_stu)
+> +{
+> +	struct scsi_cmnd *scmd, *next;
+> +	struct scsi_device *sdev;
+> +	int finish_cmds;
+> +
+> +	while(!list_empty(cmd_list)){
 
+Just some small nits. I think you need some white spaces. Other code 
+does "while (!list_empty(cmd_list)) {"
 
-Florian Mickler <florian@mickler.org> changed:
+> +		scmd = list_entry(cmd_list->next, struct scsi_cmnd, eh_entry);
+> +		sdev = scmd->device;
+> +
+> +		finish_cmds = !scsi_device_online(scmd->device) ||
+> +			(try_stu&&  !scsi_eh_try_stu(scmd)&&  !scsi_eh_tur(scmd)) ||
+> +			!scsi_eh_tur(scmd);
+> +			
+> +		list_for_each_entry_safe(scmd, next, cmd_list, eh_entry)
+> +			if (scmd->device == sdev) {
+> +				if(finish_cmds)
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |NEEDINFO
-                 CC|                            |florian@mickler.org
-
-
-
-
---- Comment #7 from Florian Mickler <florian@mickler.org>  2011-03-29 21:49:40 ---
-Is this still a problem on 2.6.38.y?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Need space here too.
