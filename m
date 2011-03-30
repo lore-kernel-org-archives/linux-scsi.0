@@ -1,12 +1,12 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 01/18] qla2xxx: Display PortID information during FCP command-status handling.
-Date: Wed, 30 Mar 2011 11:46:16 -0700
-Message-ID: <1301510793-2492-2-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 02/18] qla2xxx: Correct calling contexts of qla2x00_mark_device_lost() in async paths.
+Date: Wed, 30 Mar 2011 11:46:17 -0700
+Message-ID: <1301510793-2492-3-git-send-email-madhu.iyengar@qlogic.com>
 References: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:45773 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:45774 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755550Ab1C3SvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755571Ab1C3SvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 30 Mar 2011 14:51:13 -0400
 In-Reply-To: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,37 +16,46 @@ Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogi
 
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-To provide a clearer translation of the command-status origin in
-relation to the midlayer's standard SCSI nexus.
+The respective done() functions are called from process context,
+so there's no reason to 'defer' the request.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index d17ed9a..5bb4d58 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1794,12 +1794,13 @@ out:
- 	if (logit)
- 		DEBUG2(qla_printk(KERN_INFO, ha,
- 		    "scsi(%ld:%d:%d) FCP command status: 0x%x-0x%x (0x%x) "
--		    "oxid=0x%x cdb=%02x%02x%02x len=0x%x "
-+		    "portid=%02x%02x%02x oxid=0x%x cdb=%02x%02x%02x len=0x%x "
- 		    "rsp_info=0x%x resid=0x%x fw_resid=0x%x\n", vha->host_no,
- 		    cp->device->id, cp->device->lun, comp_status, scsi_status,
--		    cp->result, ox_id, cp->cmnd[0],
--		    cp->cmnd[1], cp->cmnd[2], scsi_bufflen(cp), rsp_info_len,
--		    resid_len, fw_resid_len));
-+		    cp->result, fcport->d_id.b.domain, fcport->d_id.b.area,
-+		    fcport->d_id.b.al_pa, ox_id, cp->cmnd[0], cp->cmnd[1],
-+		    cp->cmnd[2], scsi_bufflen(cp), rsp_info_len, resid_len,
-+		    fw_resid_len));
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 8575808..394d03d 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -397,7 +397,7 @@ qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 		if (data[1] & QLA_LOGIO_LOGIN_RETRIED)
+ 			set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 		else
+-			qla2x00_mark_device_lost(vha, fcport, 1, 1);
++			qla2x00_mark_device_lost(vha, fcport, 1, 0);
+ 		break;
+ 	case MBS_PORT_ID_USED:
+ 		fcport->loop_id = data[1];
+@@ -409,7 +409,7 @@ qla2x00_async_login_done(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 		rval = qla2x00_find_new_loop_id(vha, fcport);
+ 		if (rval != QLA_SUCCESS) {
+ 			fcport->flags &= ~FCF_ASYNC_SENT;
+-			qla2x00_mark_device_lost(vha, fcport, 1, 1);
++			qla2x00_mark_device_lost(vha, fcport, 1, 0);
+ 			break;
+ 		}
+ 		qla2x00_post_async_login_work(vha, fcport, NULL);
+@@ -441,7 +441,7 @@ qla2x00_async_adisc_done(struct scsi_qla_host *vha, fc_port_t *fcport,
+ 	if (data[1] & QLA_LOGIO_LOGIN_RETRIED)
+ 		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+ 	else
+-		qla2x00_mark_device_lost(vha, fcport, 1, 1);
++		qla2x00_mark_device_lost(vha, fcport, 1, 0);
  
- 	if (rsp->status_srb == NULL)
- 		qla2x00_sp_compl(ha, sp);
+ 	return;
+ }
 -- 
 1.6.0.2
 
