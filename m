@@ -1,42 +1,64 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 10/10] isci/core: common definitions and utility
- functions
-Date: Wed, 30 Mar 2011 10:37:52 -0400
-Message-ID: <20110330143752.GA31559@infradead.org>
-References: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
- <20110310105511.6485.41512.stgit@localhost6.localdomain6>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Wed, 30 Mar 2011 16:55:28 +0200
+Message-ID: <4D934460.1000302@suse.de>
+References: <1301373398.2590.20.camel@mulgrave.site>	 <4D91BF90.8070909@redhat.com>	 <DBFB1B45AF80394ABD1C807E9F28D15702659CFFED@BLRX7MCDC203.AMER.DELL.COM>	 <20110329173338.GD24485@redhat.com>	 <DBFB1B45AF80394ABD1C807E9F28D15702659D0011@BLRX7MCDC203.AMER.DELL.COM>	 <20110329184501.GG24485@redhat.com>	 <DBFB1B45AF80394ABD1C807E9F28D15702659D0033@BLRX7MCDC203.AMER.DELL.COM>	 <20110329195953.GD21671@redhat.com>	 <DBFB1B45AF80394ABD1C807E9F28D15702659D004B@BLRX7MCDC203.AMER.DELL.COM>	 <20110329202353.GG21671@redhat.com>	 <DBFB1B45AF80394ABD1C807E9F28D15702659D00AB@BLRX7MCDC203.AMER.DELL.COM>	 <4D92C691.9070607@suse.de> <1301493722.2618.1.camel@mulgrave.site>	 <4D9339D3.50500@suse.de> <1301495212.2618.11.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:54101 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932266Ab1C3Ohz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Mar 2011 10:37:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20110310105511.6485.41512.stgit@localhost6.localdomain6>
+Received: from cantor2.suse.de ([195.135.220.15]:53401 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932599Ab1C3Ozn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2011 10:55:43 -0400
+In-Reply-To: <1301495212.2618.11.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Shyam_Iyer@dell.com, linux-scsi@vger.kernel.org, lsf@lists.linux-foundation.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
 
-> +/**
-> + * SCIC_SWAP_DWORD() -
-> + *
-> + * Normal byte swap macro
-> + */
-> +#define SCIC_SWAP_DWORD(x) \
-> +	(\
-> +		(((x) >> 24) & 0x000000FF) \
-> +		| (((x) >>  8) & 0x0000FF00) \
-> +		| (((x) <<  8) & 0x00FF0000) \
-> +		| (((x) << 24) & 0xFF000000) \
-> +	)
+On 03/30/2011 04:26 PM, James Bottomley wrote:
+> On Wed, 2011-03-30 at 16:10 +0200, Hannes Reinecke wrote:
+>> On 03/30/2011 04:02 PM, James Bottomley wrote:
+>>> On Wed, 2011-03-30 at 07:58 +0200, Hannes Reinecke wrote:
+>>>> No, seriously. I think it would be good to have a separate slot
+>>>> discussing DCB (be it FCoE or iSCSI) and cgroups.
+>>>> And how to best align these things.
+>>>
+>>> OK, I'll go for that ... Data Centre Bridging; experiences, technol=
+ogies
+>>> and needs ... something like that.  What about virtualisation and o=
+pen
+>>> vSwitch?
+>>>
+>> Hmm. Not qualified enough to talk about the latter; I was more
+>> envisioning the storage-related aspects here (multiqueue mapping,
+>> QoS classes etc). With virtualisation and open vSwitch we're more in
+>> the network side of things; doubt open vSwitch can do DCB.
+>> And even if it could, virtio certainly can't :-)
+>
+> Technically, the topic DCB is about Data Centre Ethernet enhancements
+> and converged networks ... that's why it's naturally allied to virtua=
+l
+> switching.
+>
+> I was thinking we might put up a panel of vendors to get us all an
+> education on the topic ...
+>
+Oh, but gladly.
+Didn't know we had some at the LSF.
 
-Duplicates the kernel byte sewap macros.  Even worse it's doing an
-unconditional swap instead of a conditional one if the platform
-is big endian.  While we're at it this driver seems to lack any
-kind of endiness awareness, but that's probably to be expected
-coming from intel.  Isn't the new chipset generation supposed to
-support ia64 as well, which is capable of running in big endian
-mode?
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
