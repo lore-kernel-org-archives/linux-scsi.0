@@ -1,42 +1,30 @@
-From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Subject: caviar black + mpt2sas horrific performance
-Date: Wed, 30 Mar 2011 10:01:18 +0200
-Message-ID: <20110330080114.GA5066@apartia.fr>
-Mime-Version: 1.0
+From: Theodore Tso <tytso@MIT.EDU>
+Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Wed, 30 Mar 2011 07:13:43 -0400
+Message-ID: <E32BEFA9-15DE-4169-B313-095920A4DF7A@mit.edu>
+References: <1301373398.2590.20.camel@mulgrave.site> <4D91BF90.8070909@redhat.com> <1301445210.2731.14.camel@mingming-laptop> <20110330021742.GL3008@dastard>
+Mime-Version: 1.0 (Apple Message framework v1082)
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zenon.apartia.fr ([82.66.93.83]:53110 "EHLO zenon.apartia.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752925Ab1C3IKG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Mar 2011 04:10:06 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20110330021742.GL3008@dastard>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mingming Cao <cmm@us.ibm.com>, Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
 
-I am seeing horrific performance on a Dell T610 with a LSISAS2008 (Dell
-H200) card and 8 WD1002FAEX Caviar Black 1TB configured in mdadm raid6.
+On Mar 29, 2011, at 10:17 PM, Dave Chinner wrote:
 
-The LSI card is upgraded to the latest 9.00 firmware:
-http://www.lsi.com/storage_home/products_home/host_bus_adapters/sas_hbas/internal/sas9211-8i/index.html
-and the 2.6.38.2 kernel uses the newer mpt2sas driver.
+> Direct IO semantics have always been that the application is allowed
+> to overlap IO to the same range if it wants to. The result is
+> undefined (just like issuing overlapping reads and writes to a disk
+> at the same time) so it's the application's responsibility to avoid
+> overlapping IO if it is a problem.
 
-On the T610 this command takes 20 minutes:
+Even if the overlapping read/writes are taking place in different processes?
 
-	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  22.64s user 3.34s system 2% cpu 20:00.69 total
+DIO has never been standardized, and was originally implemented as gentleman's agreements between various database manufacturers and proprietary unix vendors.  The lack of formal specifications of what applications are guaranteed to receive is unfortunate....
 
-where on a lower spec'ed Poweredge 2900 III server (LSI Logic MegaRAID
-SAS 1078 + 8 x Hitachi Ultrastar 7K1000 in mdadm raid6) it takes 22
-_seconds_:
+-- Ted
 
-	tar -I pbzip2 -xvf linux-2.6.37.tar.bz2  16.40s user 3.22s system 86% cpu 22.773 total
-
-Besides hardware, the other difference between servers is that the
-PE2900's MegaRAID has no JBOD mode so each disk must be configured as a
-"raid0" vdisk unit. On the T610 no configuration was necessary for the
-disks to "appear" in the OS. Would configuring them as raid0 vdisks
-change anything?
-
-Thanks in advance for any suggestion,
