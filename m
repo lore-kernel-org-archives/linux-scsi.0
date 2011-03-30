@@ -1,68 +1,52 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Wed, 30 Mar 2011 08:46:29 -0700
-Message-ID: <DBFB1B45AF80394ABD1C807E9F28D15702659D03C1@BLRX7MCDC203.AMER.DELL.COM>
-References: <1301373398.2590.20.camel@mulgrave.site>
-	 <4D91BF90.8070909@redhat.com>
-	 <DBFB1B45AF80394ABD1C807E9F28D15702659CFFED@BLRX7MCDC203.AMER.DELL.COM>
-	 <20110329173338.GD24485@redhat.com>
-	 <DBFB1B45AF80394ABD1C807E9F28D15702659D0011@BLRX7MCDC203.AMER.DELL.COM>
-	 <20110329184501.GG24485@redhat.com>
-	 <DBFB1B45AF80394ABD1C807E9F28D15702659D0033@BLRX7MCDC203.AMER.DELL.COM>
-	 <20110329195953.GD21671@redhat.com>
-	 <DBFB1B45AF80394ABD1C807E9F28D15702659D004B@BLRX7MCDC203.AMER.DELL.COM>
-	 <20110329202353.GG21671@redhat.com>
-	 <DBFB1B45AF80394ABD1C807E9F28D15702659D00AB@BLRX7MCDC203.AMER.DELL.COM>
-	 <4D92C691.9070607@suse.de> <1301493722.2618.1.camel@mulgrave.site>
-	 <4D9339D3.50500@suse.de> <1301495212.2618.11.camel@mulgrave.site>
-	 <4D934460.1000302@suse.de> <1301499215.2618.12.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1301499215.2618.12.camel@mulgrave.site>
-Content-Language: en-US
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, hare@suse.de
-Cc: linux-scsi@vger.kernel.org, lsf@lists.linux-foundation.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
+From: madhu.iyengar@qlogic.com
+Subject: [PATCH 01/18] qla2xxx: Display PortID information during FCP command-status handling.
+Date: Wed, 30 Mar 2011 11:46:16 -0700
+Message-ID: <1301510793-2492-2-git-send-email-madhu.iyengar@qlogic.com>
+References: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:45773 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1755550Ab1C3SvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2011 14:51:13 -0400
+In-Reply-To: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-V2VkbmVzZGF5LCBNYXJjaCAzMCwgMjAxMSAxMTozNCBBTQ0KPiBUbzogSGFubmVzIFJlaW5lY2tl
-DQo+IENjOiBJeWVyLCBTaHlhbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGxzZkBsaXN0
-cy5saW51eC0NCj4gZm91bmRhdGlvbi5vcmc7IGRtLWRldmVsQHJlZGhhdC5jb207IGxpbnV4LWZz
-ZGV2ZWxAdmdlci5rZXJuZWwub3JnOw0KPiByd2hlZWxlckByZWRoYXQuY29tDQo+IFN1YmplY3Q6
-IFJlOiBbTHNmXSBQcmVsaW1pbmFyeSBBZ2VuZGEgYW5kIEFjdGl2aXRpZXMgZm9yIExTRg0KPiAN
-Cj4gT24gV2VkLCAyMDExLTAzLTMwIGF0IDE2OjU1ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3Jv
-dGU6DQo+ID4gT24gMDMvMzAvMjAxMSAwNDoyNiBQTSwgSmFtZXMgQm90dG9tbGV5IHdyb3RlOg0K
-PiA+ID4gT24gV2VkLCAyMDExLTAzLTMwIGF0IDE2OjEwICswMjAwLCBIYW5uZXMgUmVpbmVja2Ug
-d3JvdGU6DQo+ID4gPj4gT24gMDMvMzAvMjAxMSAwNDowMiBQTSwgSmFtZXMgQm90dG9tbGV5IHdy
-b3RlOg0KPiA+ID4+PiBPbiBXZWQsIDIwMTEtMDMtMzAgYXQgMDc6NTggKzAyMDAsIEhhbm5lcyBS
-ZWluZWNrZSB3cm90ZToNCj4gPiA+Pj4+IE5vLCBzZXJpb3VzbHkuIEkgdGhpbmsgaXQgd291bGQg
-YmUgZ29vZCB0byBoYXZlIGEgc2VwYXJhdGUgc2xvdA0KPiA+ID4+Pj4gZGlzY3Vzc2luZyBEQ0Ig
-KGJlIGl0IEZDb0Ugb3IgaVNDU0kpIGFuZCBjZ3JvdXBzLg0KPiA+ID4+Pj4gQW5kIGhvdyB0byBi
-ZXN0IGFsaWduIHRoZXNlIHRoaW5ncy4NCj4gPiA+Pj4NCj4gPiA+Pj4gT0ssIEknbGwgZ28gZm9y
-IHRoYXQgLi4uIERhdGEgQ2VudHJlIEJyaWRnaW5nOyBleHBlcmllbmNlcywNCj4gdGVjaG5vbG9n
-aWVzDQo+ID4gPj4+IGFuZCBuZWVkcyAuLi4gc29tZXRoaW5nIGxpa2UgdGhhdC4gIFdoYXQgYWJv
-dXQgdmlydHVhbGlzYXRpb24gYW5kDQo+IG9wZW4NCj4gPiA+Pj4gdlN3aXRjaD8NCj4gPiA+Pj4N
-Cj4gPiA+PiBIbW0uIE5vdCBxdWFsaWZpZWQgZW5vdWdoIHRvIHRhbGsgYWJvdXQgdGhlIGxhdHRl
-cjsgSSB3YXMgbW9yZQ0KPiA+ID4+IGVudmlzaW9uaW5nIHRoZSBzdG9yYWdlLXJlbGF0ZWQgYXNw
-ZWN0cyBoZXJlIChtdWx0aXF1ZXVlIG1hcHBpbmcsDQo+ID4gPj4gUW9TIGNsYXNzZXMgZXRjKS4g
-V2l0aCB2aXJ0dWFsaXNhdGlvbiBhbmQgb3BlbiB2U3dpdGNoIHdlJ3JlIG1vcmUNCj4gaW4NCj4g
-PiA+PiB0aGUgbmV0d29yayBzaWRlIG9mIHRoaW5nczsgZG91YnQgb3BlbiB2U3dpdGNoIGNhbiBk
-byBEQ0IuDQo+ID4gPj4gQW5kIGV2ZW4gaWYgaXQgY291bGQsIHZpcnRpbyBjZXJ0YWlubHkgY2Fu
-J3QgOi0pDQo+ID4gPg0KPiA+ID4gVGVjaG5pY2FsbHksIHRoZSB0b3BpYyBEQ0IgaXMgYWJvdXQg
-RGF0YSBDZW50cmUgRXRoZXJuZXQNCj4gZW5oYW5jZW1lbnRzDQo+ID4gPiBhbmQgY29udmVyZ2Vk
-IG5ldHdvcmtzIC4uLiB0aGF0J3Mgd2h5IGl0J3MgbmF0dXJhbGx5IGFsbGllZCB0bw0KPiB2aXJ0
-dWFsDQo+ID4gPiBzd2l0Y2hpbmcuDQo+ID4gPg0KPiA+ID4gSSB3YXMgdGhpbmtpbmcgd2UgbWln
-aHQgcHV0IHVwIGEgcGFuZWwgb2YgdmVuZG9ycyB0byBnZXQgdXMgYWxsIGFuDQo+ID4gPiBlZHVj
-YXRpb24gb24gdGhlIHRvcGljIC4uLg0KPiA+ID4NCj4gPiBPaCwgYnV0IGdsYWRseS4NCj4gPiBE
-aWRuJ3Qga25vdyB3ZSBoYWQgc29tZSBhdCB0aGUgTFNGLg0KPiANCj4gT0ssIHNvIEkgc2NoZWR1
-bGVkIHRoaXMgd2l0aCBEZWxsIChTaHlhbSBJeWVyKSwgSW50ZWwgKFJvYmVydCBMb3ZlKSBhbmQN
-Cj4gRW11bGV4IChKYW1lcyBTbWFydCkgYnV0IGFueSBvdGhlciBhdHRlbmRpbmcgdmVuZG9ycyB3
-aG8gd2FudCB0byBwaXRjaA0KPiBpbiwgc2VuZCBtZSBhbiBlbWFpbCBhbmQgSSdsbCBhZGQgeW91
-Lg0KPiANCj4gSmFtZXMNCj4gDQpFeGNlbGxlbnQuDQpJIHdvdWxkIHByb2JhYmx5IHZvbHVudGVl
-ciBHaXJpZGhhcihRbG9naWMpIGFzIHdlbGwgbG9va2luZyBhdCB0aGUgbGlzdCBvZiBhdHRlbmRl
-ZXMgYXMgc29tZSBvZiB0aGUgQ05BIGltcGxlbWVudGF0aW9ucyB2YXJ5Li4gDQoNCi1TaHlhbQ0K
-DQo=
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+To provide a clearer translation of the command-status origin in
+relation to the midlayer's standard SCSI nexus.
+
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_isr.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index d17ed9a..5bb4d58 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1794,12 +1794,13 @@ out:
+ 	if (logit)
+ 		DEBUG2(qla_printk(KERN_INFO, ha,
+ 		    "scsi(%ld:%d:%d) FCP command status: 0x%x-0x%x (0x%x) "
+-		    "oxid=0x%x cdb=%02x%02x%02x len=0x%x "
++		    "portid=%02x%02x%02x oxid=0x%x cdb=%02x%02x%02x len=0x%x "
+ 		    "rsp_info=0x%x resid=0x%x fw_resid=0x%x\n", vha->host_no,
+ 		    cp->device->id, cp->device->lun, comp_status, scsi_status,
+-		    cp->result, ox_id, cp->cmnd[0],
+-		    cp->cmnd[1], cp->cmnd[2], scsi_bufflen(cp), rsp_info_len,
+-		    resid_len, fw_resid_len));
++		    cp->result, fcport->d_id.b.domain, fcport->d_id.b.area,
++		    fcport->d_id.b.al_pa, ox_id, cp->cmnd[0], cp->cmnd[1],
++		    cp->cmnd[2], scsi_bufflen(cp), rsp_info_len, resid_len,
++		    fw_resid_len));
+ 
+ 	if (rsp->status_srb == NULL)
+ 		qla2x00_sp_compl(ha, sp);
+-- 
+1.6.0.2
+
