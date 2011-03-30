@@ -1,7 +1,7 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Wed, 30 Mar 2011 10:33:35 -0500
-Message-ID: <1301499215.2618.12.camel@mulgrave.site>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Wed, 30 Mar 2011 08:46:29 -0700
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D15702659D03C1@BLRX7MCDC203.AMER.DELL.COM>
 References: <1301373398.2590.20.camel@mulgrave.site>
 	 <4D91BF90.8070909@redhat.com>
 	 <DBFB1B45AF80394ABD1C807E9F28D15702659CFFED@BLRX7MCDC203.AMER.DELL.COM>
@@ -15,50 +15,54 @@ References: <1301373398.2590.20.camel@mulgrave.site>
 	 <DBFB1B45AF80394ABD1C807E9F28D15702659D00AB@BLRX7MCDC203.AMER.DELL.COM>
 	 <4D92C691.9070607@suse.de> <1301493722.2618.1.camel@mulgrave.site>
 	 <4D9339D3.50500@suse.de> <1301495212.2618.11.camel@mulgrave.site>
-	 <4D934460.1000302@suse.de>
+	 <4D934460.1000302@suse.de> <1301499215.2618.12.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4D934460.1000302@suse.de>
+In-Reply-To: <1301499215.2618.12.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Shyam_Iyer@dell.com, linux-scsi@vger.kernel.org, lsf@lists.linux-foundation.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
+To: James.Bottomley@HansenPartnership.com, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, lsf@lists.linux-foundation.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-03-30 at 16:55 +0200, Hannes Reinecke wrote:
-> On 03/30/2011 04:26 PM, James Bottomley wrote:
-> > On Wed, 2011-03-30 at 16:10 +0200, Hannes Reinecke wrote:
-> >> On 03/30/2011 04:02 PM, James Bottomley wrote:
-> >>> On Wed, 2011-03-30 at 07:58 +0200, Hannes Reinecke wrote:
-> >>>> No, seriously. I think it would be good to have a separate slot
-> >>>> discussing DCB (be it FCoE or iSCSI) and cgroups.
-> >>>> And how to best align these things.
-> >>>
-> >>> OK, I'll go for that ... Data Centre Bridging; experiences, technologies
-> >>> and needs ... something like that.  What about virtualisation and open
-> >>> vSwitch?
-> >>>
-> >> Hmm. Not qualified enough to talk about the latter; I was more
-> >> envisioning the storage-related aspects here (multiqueue mapping,
-> >> QoS classes etc). With virtualisation and open vSwitch we're more in
-> >> the network side of things; doubt open vSwitch can do DCB.
-> >> And even if it could, virtio certainly can't :-)
-> >
-> > Technically, the topic DCB is about Data Centre Ethernet enhancements
-> > and converged networks ... that's why it's naturally allied to virtual
-> > switching.
-> >
-> > I was thinking we might put up a panel of vendors to get us all an
-> > education on the topic ...
-> >
-> Oh, but gladly.
-> Didn't know we had some at the LSF.
-
-OK, so I scheduled this with Dell (Shyam Iyer), Intel (Robert Love) and
-Emulex (James Smart) but any other attending vendors who want to pitch
-in, send me an email and I'll add you.
-
-James
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+V2VkbmVzZGF5LCBNYXJjaCAzMCwgMjAxMSAxMTozNCBBTQ0KPiBUbzogSGFubmVzIFJlaW5lY2tl
+DQo+IENjOiBJeWVyLCBTaHlhbTsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGxzZkBsaXN0
+cy5saW51eC0NCj4gZm91bmRhdGlvbi5vcmc7IGRtLWRldmVsQHJlZGhhdC5jb207IGxpbnV4LWZz
+ZGV2ZWxAdmdlci5rZXJuZWwub3JnOw0KPiByd2hlZWxlckByZWRoYXQuY29tDQo+IFN1YmplY3Q6
+IFJlOiBbTHNmXSBQcmVsaW1pbmFyeSBBZ2VuZGEgYW5kIEFjdGl2aXRpZXMgZm9yIExTRg0KPiAN
+Cj4gT24gV2VkLCAyMDExLTAzLTMwIGF0IDE2OjU1ICswMjAwLCBIYW5uZXMgUmVpbmVja2Ugd3Jv
+dGU6DQo+ID4gT24gMDMvMzAvMjAxMSAwNDoyNiBQTSwgSmFtZXMgQm90dG9tbGV5IHdyb3RlOg0K
+PiA+ID4gT24gV2VkLCAyMDExLTAzLTMwIGF0IDE2OjEwICswMjAwLCBIYW5uZXMgUmVpbmVja2Ug
+d3JvdGU6DQo+ID4gPj4gT24gMDMvMzAvMjAxMSAwNDowMiBQTSwgSmFtZXMgQm90dG9tbGV5IHdy
+b3RlOg0KPiA+ID4+PiBPbiBXZWQsIDIwMTEtMDMtMzAgYXQgMDc6NTggKzAyMDAsIEhhbm5lcyBS
+ZWluZWNrZSB3cm90ZToNCj4gPiA+Pj4+IE5vLCBzZXJpb3VzbHkuIEkgdGhpbmsgaXQgd291bGQg
+YmUgZ29vZCB0byBoYXZlIGEgc2VwYXJhdGUgc2xvdA0KPiA+ID4+Pj4gZGlzY3Vzc2luZyBEQ0Ig
+KGJlIGl0IEZDb0Ugb3IgaVNDU0kpIGFuZCBjZ3JvdXBzLg0KPiA+ID4+Pj4gQW5kIGhvdyB0byBi
+ZXN0IGFsaWduIHRoZXNlIHRoaW5ncy4NCj4gPiA+Pj4NCj4gPiA+Pj4gT0ssIEknbGwgZ28gZm9y
+IHRoYXQgLi4uIERhdGEgQ2VudHJlIEJyaWRnaW5nOyBleHBlcmllbmNlcywNCj4gdGVjaG5vbG9n
+aWVzDQo+ID4gPj4+IGFuZCBuZWVkcyAuLi4gc29tZXRoaW5nIGxpa2UgdGhhdC4gIFdoYXQgYWJv
+dXQgdmlydHVhbGlzYXRpb24gYW5kDQo+IG9wZW4NCj4gPiA+Pj4gdlN3aXRjaD8NCj4gPiA+Pj4N
+Cj4gPiA+PiBIbW0uIE5vdCBxdWFsaWZpZWQgZW5vdWdoIHRvIHRhbGsgYWJvdXQgdGhlIGxhdHRl
+cjsgSSB3YXMgbW9yZQ0KPiA+ID4+IGVudmlzaW9uaW5nIHRoZSBzdG9yYWdlLXJlbGF0ZWQgYXNw
+ZWN0cyBoZXJlIChtdWx0aXF1ZXVlIG1hcHBpbmcsDQo+ID4gPj4gUW9TIGNsYXNzZXMgZXRjKS4g
+V2l0aCB2aXJ0dWFsaXNhdGlvbiBhbmQgb3BlbiB2U3dpdGNoIHdlJ3JlIG1vcmUNCj4gaW4NCj4g
+PiA+PiB0aGUgbmV0d29yayBzaWRlIG9mIHRoaW5nczsgZG91YnQgb3BlbiB2U3dpdGNoIGNhbiBk
+byBEQ0IuDQo+ID4gPj4gQW5kIGV2ZW4gaWYgaXQgY291bGQsIHZpcnRpbyBjZXJ0YWlubHkgY2Fu
+J3QgOi0pDQo+ID4gPg0KPiA+ID4gVGVjaG5pY2FsbHksIHRoZSB0b3BpYyBEQ0IgaXMgYWJvdXQg
+RGF0YSBDZW50cmUgRXRoZXJuZXQNCj4gZW5oYW5jZW1lbnRzDQo+ID4gPiBhbmQgY29udmVyZ2Vk
+IG5ldHdvcmtzIC4uLiB0aGF0J3Mgd2h5IGl0J3MgbmF0dXJhbGx5IGFsbGllZCB0bw0KPiB2aXJ0
+dWFsDQo+ID4gPiBzd2l0Y2hpbmcuDQo+ID4gPg0KPiA+ID4gSSB3YXMgdGhpbmtpbmcgd2UgbWln
+aHQgcHV0IHVwIGEgcGFuZWwgb2YgdmVuZG9ycyB0byBnZXQgdXMgYWxsIGFuDQo+ID4gPiBlZHVj
+YXRpb24gb24gdGhlIHRvcGljIC4uLg0KPiA+ID4NCj4gPiBPaCwgYnV0IGdsYWRseS4NCj4gPiBE
+aWRuJ3Qga25vdyB3ZSBoYWQgc29tZSBhdCB0aGUgTFNGLg0KPiANCj4gT0ssIHNvIEkgc2NoZWR1
+bGVkIHRoaXMgd2l0aCBEZWxsIChTaHlhbSBJeWVyKSwgSW50ZWwgKFJvYmVydCBMb3ZlKSBhbmQN
+Cj4gRW11bGV4IChKYW1lcyBTbWFydCkgYnV0IGFueSBvdGhlciBhdHRlbmRpbmcgdmVuZG9ycyB3
+aG8gd2FudCB0byBwaXRjaA0KPiBpbiwgc2VuZCBtZSBhbiBlbWFpbCBhbmQgSSdsbCBhZGQgeW91
+Lg0KPiANCj4gSmFtZXMNCj4gDQpFeGNlbGxlbnQuDQpJIHdvdWxkIHByb2JhYmx5IHZvbHVudGVl
+ciBHaXJpZGhhcihRbG9naWMpIGFzIHdlbGwgbG9va2luZyBhdCB0aGUgbGlzdCBvZiBhdHRlbmRl
+ZXMgYXMgc29tZSBvZiB0aGUgQ05BIGltcGxlbWVudGF0aW9ucyB2YXJ5Li4gDQoNCi1TaHlhbQ0K
+DQo=
