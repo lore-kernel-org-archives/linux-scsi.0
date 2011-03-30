@@ -1,66 +1,99 @@
-From: Dave Chinner <david@fromorbit.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Wed, 30 Mar 2011 13:17:42 +1100
-Message-ID: <20110330021742.GL3008@dastard>
-References: <1301373398.2590.20.camel@mulgrave.site>
- <4D91BF90.8070909@redhat.com>
- <1301445210.2731.14.camel@mingming-laptop>
+Date: Wed, 30 Mar 2011 07:58:41 +0200
+Message-ID: <4D92C691.9070607@suse.de>
+References: <1301373398.2590.20.camel@mulgrave.site>	<4D91BF90.8070909@redhat.com>	<DBFB1B45AF80394ABD1C807E9F28D15702659CFFED@BLRX7MCDC203.AMER.DELL.COM>	<20110329173338.GD24485@redhat.com>	<DBFB1B45AF80394ABD1C807E9F28D15702659D0011@BLRX7MCDC203.AMER.DELL.COM>	<20110329184501.GG24485@redhat.com>	<DBFB1B45AF80394ABD1C807E9F28D15702659D0033@BLRX7MCDC203.AMER.DELL.COM>	<20110329195953.GD21671@redhat.com>	<DBFB1B45AF80394ABD1C807E9F28D15702659D004B@BLRX7MCDC203.AMER.DELL.COM>	<20110329202353.GG21671@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D15702659D00AB@BLRX7MCDC203.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ipmail07.adl2.internode.on.net ([150.101.137.131]:1562 "EHLO
-	ipmail07.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754170Ab1C3CRr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Mar 2011 22:17:47 -0400
-Content-Disposition: inline
-In-Reply-To: <1301445210.2731.14.camel@mingming-laptop>
+Received: from cantor2.suse.de ([195.135.220.15]:36731 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750972Ab1C3F66 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2011 01:58:58 -0400
+In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D15702659D00AB@BLRX7MCDC203.AMER.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mingming Cao <cmm@us.ibm.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+To: Shyam_Iyer@dell.com
+Cc: snitzer@redhat.com, linux-scsi@vger.kernel.org, lsf@lists.linux-foundation.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
 
-On Tue, Mar 29, 2011 at 05:33:30PM -0700, Mingming Cao wrote:
-> Ric,
-> 
-> May I propose some discussion about concurrent direct IO support for
-> ext4?
+On 03/30/2011 01:09 AM, Shyam_Iyer@dell.com wrote:
+>
+> Let me back up here.. this has to be thought in not only the traditio=
+nal Ethernet
+ > sense but also in a Data Centre Bridged environment. I shouldn't=20
+have wandered
+ > into the multipath constructs..
+>
+> I think the statement on not going to the same LUN was a little erron=
+eous. I meant
+ > different /dev/sdXs.. and hence different block I/O queues.
+>
+> Each I/O queue could be thought of as a bandwidth queue class being s=
+erviced through
+ > a corresponding network adapter's queue(assuming a multiqueue=20
+capable adapter)
+>
+> Let us say /dev/sda(Through eth0) and /dev/sdb(eth1) are a cgroup ban=
+dwidth group
+ > corresponding to a weightage of 20% of the I/O bandwidth the user=20
+has configured
+ > this weight thinking that this will correspond to say 200Mb of=20
+bandwidth.
+>
+> Let us say the network bandwidth on the corresponding network queues =
+corresponding
+ > was reduced by the DCB capable switch...
+> We still need an SLA of 200Mb of I/O bandwidth but the underlying dyn=
+amics have changed.
+>
+> In such a scenario the option is to move I/O to a different bandwidth=
+ priority queue
+ > in the network adapter. This could be moving I/O to a new network=20
+queue in eth0 or
+ > another queue in eth1 ..
+>
+> This requires mapping the block queue to the new network queue.
+>
+> One way of solving this is what is getting into the open-iscsi world =
+i.e. creating
+ > a session tagged to the relevant DCB priority and thus the=20
+session gets mapped
+ > to the relevant tc queue which ultimately maps to one of the=20
+network adapters multiqueue..
+>
+> But when multipath fails over to the different session path then the =
+DCB bandwidth
+ > priority will not move with it..
+>
+> Ok one could argue that is a user mistake to have configured bandwidt=
+h priorities
+ > differently but it may so happen that the bandwidth priority was=20
+just dynamically
+ > changed by the switch for the particular queue.
+>
+> Although I gave an example of a DCB environment but we could definite=
+ly look at
+ > doing a 1:n map of block queues to network adapter queues for=20
+non-DCB environments too..
+>
+That sounds quite convoluted enough to warrant it's own slot :-)
 
-Just look at the way XFS does it and copy that?  i.e. it has a
-filesytem level IO lock and an inode lock both with shared/exclusive
-semantics. These lie below the i_mutex (i.e. locking order is
-i_mutex, i_iolock, i_ilock), and effectively result in the i_mutex
-only being used for VFS level synchronisation and as such is rarely
-used inside XFS itself.
-
-Inode attribute operations are protected by the inode lock, while IO
-operations and truncation synchronisation is provided by the IO
-lock.
-
-So for buffered IO, the IO lock is used in shared mode for reads
-and exclusive mode for writes. This gives normal POSIX buffered IO
-semantics and holding the IO lock exclusive allows sycnhronisation
-against new IO of any kind for truncate.
-
-For direct IO, the IO lock is always taken in shared mode, so we can
-have concurrent read and write operations taking place at once
-regardless of the offset into the file.
-
-> I am looking for some discussion about removing the i_mutex lock in the
-> direct IO write code path for ext4, when multiple threads are
-> direct write to different offset of the same file. This would require
-> some way to track the in-fly DIO IO range, either done at ext4 level or
-> above th vfs layer. 
-
-Direct IO semantics have always been that the application is allowed
-to overlap IO to the same range if it wants to. The result is
-undefined (just like issuing overlapping reads and writes to a disk
-at the same time) so it's the application's responsibility to avoid
-overlapping IO if it is a problem.
+No, seriously. I think it would be good to have a separate slot=20
+discussing DCB (be it FCoE or iSCSI) and cgroups.
+And how to best align these things.
 
 Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
