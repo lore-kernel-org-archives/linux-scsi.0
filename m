@@ -1,14 +1,12 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 18/18] qla2xxx: Update version number to 8.03.07.03-k.
-Date: Wed, 30 Mar 2011 11:46:33 -0700
-Message-ID: <1301510793-2492-19-git-send-email-madhu.iyengar@qlogic.com>
-References: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 00/18] qla2xxx: Updates for scsi-misc-2.6
+Date: Wed, 30 Mar 2011 11:46:15 -0700
+Message-ID: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:45800 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:45769 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755792Ab1C3SvR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Mar 2011 14:51:17 -0400
-In-Reply-To: <1301510793-2492-1-git-send-email-madhu.iyengar@qlogic.com>
+	id S1755548Ab1C3SvN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Mar 2011 14:51:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
@@ -16,30 +14,71 @@ Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogi
 
 From: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 
-A minor change in the versioning. We'll be attaching the "-k"
-in the end.
+James,
 
-Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_version.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Please add these patches. Thanks.
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 86f589c..062c97b 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -7,9 +7,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "8.03.07.00"
-+#define QLA2XXX_VERSION      "8.03.07.03-k"
- 
- #define QLA_DRIVER_MAJOR_VER	8
- #define QLA_DRIVER_MINOR_VER	3
- #define QLA_DRIVER_PATCH_VER	7
--#define QLA_DRIVER_BETA_VER	0
-+#define QLA_DRIVER_BETA_VER	3
--- 
-1.6.0.2
+Andrew Vasquez (7):
+  qla2xxx: Display PortID information during FCP command-status
+    handling.
+  qla2xxx: Correct calling contexts of qla2x00_mark_device_lost() in
+    async paths.
+  qla2xxx: Check for a match before attempting to set FCP-priority
+    information.
+  qla2xxx: Remove extraneous setting of FCF_ASYNC_SENT during
+    login-done completion.
+  qla2xxx: Free firmware PCB on logout request.
+  qla2xxx: Update copyright banner.
+  qla2xxx: Verify login-state has transitioned to PRLI-completed.
+
+Chad Dupuis (1):
+  qla2xxx: Log fcport state transitions when debug messages are
+    enabled.
+
+Giridhar Malavali (6):
+  qla2xxx: Updated the reset sequence for ISP82xx.
+  qla2xxx: Remove extra call to qla82xx_check_fw_alive().
+  qla2xxx: Perform FCoE context reset before trying adapter reset for
+    ISP82xx.
+  qla2xxx: Display hardware/firmware registers to get more information
+    about the error for ISP82xx.
+  qla2xxx: Add the ql2xdontresethba module_param.
+  qla2xxx: Limit the logs in case device state does not change for
+    ISP82xx.
+
+Joe Carnuccio (1):
+  qla2xxx: Add test for valid loop id to qla2x00_relogin().
+
+Madhuranath Iyengar (2):
+  qla2xxx: Update License file.
+  qla2xxx: Update version number to 8.03.07.03-k.
+
+Mike Hernandez (1):
+  qla2xxx: Include request queue ID in the upper 16-bits of the I/O
+    handle for Abort I/O IOCBs.
+
+ Documentation/scsi/LICENSE.qla2xxx  |  292 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/qla2xxx/qla_attr.c     |    4 +-
+ drivers/scsi/qla2xxx/qla_bsg.c      |    2 +-
+ drivers/scsi/qla2xxx/qla_bsg.h      |    2 +-
+ drivers/scsi/qla2xxx/qla_dbg.c      |    2 +-
+ drivers/scsi/qla2xxx/qla_dbg.h      |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h      |   10 +-
+ drivers/scsi/qla2xxx/qla_dfs.c      |    2 +-
+ drivers/scsi/qla2xxx/qla_fw.h       |    2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h      |    5 +-
+ drivers/scsi/qla2xxx/qla_gs.c       |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c     |   45 ++++--
+ drivers/scsi/qla2xxx/qla_inline.h   |   21 +++-
+ drivers/scsi/qla2xxx/qla_iocb.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_isr.c      |   43 ++++--
+ drivers/scsi/qla2xxx/qla_mbx.c      |   24 ++-
+ drivers/scsi/qla2xxx/qla_mid.c      |    4 +-
+ drivers/scsi/qla2xxx/qla_nx.c       |   59 ++++++-
+ drivers/scsi/qla2xxx/qla_nx.h       |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c       |   43 +++++-
+ drivers/scsi/qla2xxx/qla_settings.h |    2 +-
+ drivers/scsi/qla2xxx/qla_sup.c      |    2 +-
+ drivers/scsi/qla2xxx/qla_version.h  |    6 +-
+ 23 files changed, 499 insertions(+), 79 deletions(-)
 
