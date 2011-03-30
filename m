@@ -1,151 +1,87 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: Preliminary Agenda and Activities for LSF
-Date: Wed, 30 Mar 2011 04:39:28 +0530
-Message-ID: <DBFB1B45AF80394ABD1C807E9F28D15702659D00AB@BLRX7MCDC203.AMER.DELL.COM>
+From: Mingming Cao <cmm@us.ibm.com>
+Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Tue, 29 Mar 2011 17:33:30 -0700
+Message-ID: <1301445210.2731.14.camel@mingming-laptop>
 References: <1301373398.2590.20.camel@mulgrave.site>
- <4D91BF90.8070909@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D15702659CFFED@BLRX7MCDC203.AMER.DELL.COM>
- <20110329173338.GD24485@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D15702659D0011@BLRX7MCDC203.AMER.DELL.COM>
- <20110329184501.GG24485@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D15702659D0033@BLRX7MCDC203.AMER.DELL.COM>
- <20110329195953.GD21671@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D15702659D004B@BLRX7MCDC203.AMER.DELL.COM>
- <20110329202353.GG21671@redhat.com>
+	 <4D91BF90.8070909@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20110329202353.GG21671@redhat.com>
-Content-Language: en-US
+In-Reply-To: <4D91BF90.8070909@redhat.com>
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: snitzer@redhat.com
-Cc: linux-scsi@vger.kernel.org, lsf@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, vgoyal@redhat.com, dm-devel@redhat.com
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Mike Snitzer [mailto:snitzer@redhat.com]
-> Sent: Tuesday, March 29, 2011 4:24 PM
-> To: Iyer, Shyam
-> Cc: linux-scsi@vger.kernel.org; lsf@lists.linux-foundation.org; linux-
-> fsdevel@vger.kernel.org; rwheeler@redhat.com; vgoyal@redhat.com;
-> device-mapper development
-> Subject: Re: Preliminary Agenda and Activities for LSF
-> 
-> On Tue, Mar 29 2011 at  4:12pm -0400,
-> Shyam_Iyer@dell.com <Shyam_Iyer@dell.com> wrote:
-> 
+On Tue, 2011-03-29 at 07:16 -0400, Ric Wheeler wrote:
+> On 03/29/2011 12:36 AM, James Bottomley wrote:
+> > Hi All,
 > >
+> > Since LSF is less than a week away, the programme committee put together
+> > a just in time preliminary agenda for LSF.  As you can see there is
+> > still plenty of empty space, which you can make suggestions (to this
+> > list with appropriate general list cc's) for filling:
 > >
-> > > -----Original Message-----
-> > > From: Mike Snitzer [mailto:snitzer@redhat.com]
-> > > Sent: Tuesday, March 29, 2011 4:00 PM
-> > > To: Iyer, Shyam
-> > > Cc: vgoyal@redhat.com; lsf@lists.linux-foundation.org; linux-
-> > > scsi@vger.kernel.org; linux-fsdevel@vger.kernel.org;
-> > > rwheeler@redhat.com; device-mapper development
-> > > Subject: Re: Preliminary Agenda and Activities for LSF
-> > >
-> > > On Tue, Mar 29 2011 at  3:13pm -0400,
-> > > Shyam_Iyer@dell.com <Shyam_Iyer@dell.com> wrote:
-> > >
-> > > > > > > Above is pretty generic. Do you have specific
-> > > needs/ideas/concerns?
-> > > > > > >
-> > > > > > > Thanks
-> > > > > > > Vivek
-> > > > > > Yes.. if I limited by Ethernet b/w to 40% I don't need to
-> limit
-> > > I/O
-> > > > > b/w via cgroups. Such bandwidth manipulations are network
-> switch
-> > > driven
-> > > > > and cgroups never take care of these events from the Ethernet
-> > > driver.
-> > > > >
-> > > > > So if IO is going over network and actual bandwidth control is
-> > > taking
-> > > > > place by throttling ethernet traffic then one does not have to
-> > > specify
-> > > > > block cgroup throttling policy and hence no need for cgroups to
-> be
-> > > > > worried
-> > > > > about ethernet driver events?
-> > > > >
-> > > > > I think I am missing something here.
-> > > > >
-> > > > > Vivek
-> > > > Well.. here is the catch.. example scenario..
-> > > >
-> > > > - Two iSCSI I/O sessions emanating from Ethernet ports eth0, eth1
-> > > multipathed together. Let us say round-robin policy.
-> > > >
-> > > > - The cgroup profile is to limit I/O bandwidth to 40% of the
-> > > multipathed I/O bandwidth. But the switch may have limited the I/O
-> > > bandwidth to 40% for the corresponding vlan associated with one of
-> the
-> > > eth interface say eth1
-> > > >
-> > > > The computation that the bandwidth configured is 40% of the
-> available
-> > > bandwidth is false in this case.  What we need to do is possibly
-> push
-> > > more I/O through eth0 as it is allowed to run at 100% of bandwidth
-> by
-> > > the switch.
-> > > >
-> > > > Now this is a dynamic decision and multipathing layer should take
-> > > care of it.. but it would need a hint..
-> > >
-> > > No hint should be needed.  Just use one of the newer multipath path
-> > > selectors that are dynamic by design: "queue-length" or "service-
-> time".
-> > >
-> > > This scenario is exactly what those path selectors are meant to
-> > > address.
-> > >
-> > > Mike
+> > https://spreadsheets.google.com/pub?hl=en&hl=en&key=0AiQMl7GcVa7OdFdNQzM5UDRXUnVEbHlYVmZUVHQ2amc&output=html
 > >
-> > Since iSCSI multipaths are essentially sessions one could configure
-> > more than one session through the same ethX interface. The sessions
-> > need not be going to the same LUN and hence not governed by the same
-> > multipath selector but the bandwidth policy group would be for a
-> group
-> > of resources.
+> > If you don't make suggestions, the programme committee will feel
+> > empowered to make arbitrary assignments based on your topic and attendee
+> > email requests ...
+> >
+> > We're still not quite sure what rooms we will have at the Kabuki, but
+> > we'll add them to the spreadsheet when we know (they should be close to
+> > each other).
+> >
+> > The spreadsheet above also gives contact information for all the
+> > attendees and the programme committee.
+> >
+> > Yours,
+> >
+> > James Bottomley
+> > on behalf of LSF/MM Programme Committee
+> >
 > 
-> Then the sessions don't correspond to the same backend LUN (and by
-> definition aren't part of the same mpath device).  You're really all
-> over the map with your talking points.
+> Here are a few topic ideas:
 > 
-> I'm having a hard time following you.
+> (1)  The first topic that might span IO & FS tracks (or just pull in device 
+> mapper people to an FS track) could be adding new commands that would allow 
+> users to grow/shrink/etc file systems in a generic way.  The thought I had was 
+> that we have a reasonable model that we could reuse for these new commands like 
+> mount and mount.fs or fsck and fsck.fs. With btrfs coming down the road, it 
+> could be nice to identify exactly what common operations users want to do and 
+> agree on how to implement them. Alasdair pointed out in the upstream thread that 
+> we had a prototype here in fsadm.
 > 
-> Mike
+> (2) Very high speed, low latency SSD devices and testing. Have we settled on the 
+> need for these devices to all have block level drivers? For S-ATA or SAS 
+> devices, are there known performance issues that require enhancements in 
+> somewhere in the stack?
+> 
+> (3) The union mount versus overlayfs debate - pros and cons. What each do well, 
+> what needs doing. Do we want/need both upstream? (Maybe this can get 10 minutes 
+> in Al's VFS session?)
+> 
 
-Let me back up here.. this has to be thought in not only the traditional Ethernet sense but also in a Data Centre Bridged environment. I shouldn't have wandered into the multipath constructs..
+Ric,
 
-I think the statement on not going to the same LUN was a little erroneous. I meant different /dev/sdXs.. and hence different block I/O queues.
+May I propose some discussion about concurrent direct IO support for
+ext4?
 
-Each I/O queue could be thought of as a bandwidth queue class being serviced through a corresponding network adapter's queue(assuming a multiqueue capable adapter)
+Direct IO write are serialized by the single i_mutex lock.  This lock
+contention becomes significant when running database or direct IO heavy
+workload on guest, where  the host pass a file image to guest as a block
+device. All the parallel IOs in guests are being serialized by the
+i_mutex lock on the host disk image file. This greatly penalize the data
+base application performance in KVM. 
 
-Let us say /dev/sda(Through eth0) and /dev/sdb(eth1) are a cgroup bandwidth group corresponding to a weightage of 20% of the I/O bandwidth the user has configured this weight thinking that this will correspond to say 200Mb of bandwidth.
-
-Let us say the network bandwidth on the corresponding network queues corresponding was reduced by the DCB capable switch...
-We still need an SLA of 200Mb of I/O bandwidth but the underlying dynamics have changed.
-
-In such a scenario the option is to move I/O to a different bandwidth priority queue in the network adapter. This could be moving I/O to a new network queue in eth0 or another queue in eth1 .. 
-
-This requires mapping the block queue to the new network queue.
-
-One way of solving this is what is getting into the open-iscsi world i.e. creating a session tagged to the relevant DCB priority and thus the session gets mapped to the relevant tc queue which ultimately maps to one of the network adapters multiqueue..
-
-But when multipath fails over to the different session path then the DCB bandwidth priority will not move with it..
-
-Ok one could argue that is a user mistake to have configured bandwidth priorities differently but it may so happen that the bandwidth priority was just dynamically changed by the switch for the particular queue.
-
-Although I gave an example of a DCB environment but we could definitely look at doing a 1:n map of block queues to network adapter queues for non-DCB environments too..
+I am looking for some discussion about removing the i_mutex lock in the
+direct IO write code path for ext4, when multiple threads are
+direct write to different offset of the same file. This would require
+some way to track the in-fly DIO IO range, either done at ext4 level or
+above th vfs layer. 
 
 
--Shyam
+Thanks,
+
 
