@@ -1,87 +1,62 @@
-From: Mingming Cao <cmm@us.ibm.com>
-Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Tue, 29 Mar 2011 17:33:30 -0700
-Message-ID: <1301445210.2731.14.camel@mingming-laptop>
-References: <1301373398.2590.20.camel@mulgrave.site>
-	 <4D91BF90.8070909@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH 4/6] isci: hardware / topology event handling
+Date: Tue, 29 Mar 2011 17:37:47 -0700
+Message-ID: <AANLkTi=VOEJyNw6nUSAd84KU3h_T0u-aSwjPNUOsyRhC@mail.gmail.com>
+References: <20110323084054.GA11533@infradead.org>
+	<AANLkTinS9xZ3Jhg1C+jWNO0wj+MYW3qvbqc_acvnsOLS@mail.gmail.com>
+	<20110323090824.GA14536@infradead.org>
+	<AANLkTinYmRZe9HRrNFWMby9FXZNWCdRUb6QBMgRtW28E@mail.gmail.com>
+	<20110324062646.GA27051@infradead.org>
+	<AANLkTik7DUF=Pim3JMjRmhdVJTCgfimiyhQ5x_CZ9BeU@mail.gmail.com>
+	<20110325194530.GA593@infradead.org>
+	<AANLkTin-HGv1V7y8Jn8kJ=ZeaPoK4LL+=Tsoz8Ej3Yjw@mail.gmail.com>
+	<20110325220706.GA9535@infradead.org>
+	<AANLkTimu_jM8wRuURNXrGmD1tJbXeVsJ7Qga9fLC7MJr@mail.gmail.com>
+	<20110327222854.GA7487@infradead.org>
+	<AANLkTikVjnumgM0mXCg-krnLG+fc=cFn7Fi9EaVXmNXq@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4D91BF90.8070909@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:52780 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754759Ab1C3Ahs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Mar 2011 20:37:48 -0400
+Received: by fxm17 with SMTP id 17so666536fxm.19
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Mar 2011 17:37:47 -0700 (PDT)
+In-Reply-To: <AANLkTikVjnumgM0mXCg-krnLG+fc=cFn7Fi9EaVXmNXq@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-On Tue, 2011-03-29 at 07:16 -0400, Ric Wheeler wrote:
-> On 03/29/2011 12:36 AM, James Bottomley wrote:
-> > Hi All,
-> >
-> > Since LSF is less than a week away, the programme committee put together
-> > a just in time preliminary agenda for LSF.  As you can see there is
-> > still plenty of empty space, which you can make suggestions (to this
-> > list with appropriate general list cc's) for filling:
-> >
-> > https://spreadsheets.google.com/pub?hl=en&hl=en&key=0AiQMl7GcVa7OdFdNQzM5UDRXUnVEbHlYVmZUVHQ2amc&output=html
-> >
-> > If you don't make suggestions, the programme committee will feel
-> > empowered to make arbitrary assignments based on your topic and attendee
-> > email requests ...
-> >
-> > We're still not quite sure what rooms we will have at the Kabuki, but
-> > we'll add them to the spreadsheet when we know (they should be close to
-> > each other).
-> >
-> > The spreadsheet above also gives contact information for all the
-> > attendees and the programme committee.
-> >
-> > Yours,
-> >
-> > James Bottomley
-> > on behalf of LSF/MM Programme Committee
-> >
-> 
-> Here are a few topic ideas:
-> 
-> (1)  The first topic that might span IO & FS tracks (or just pull in device 
-> mapper people to an FS track) could be adding new commands that would allow 
-> users to grow/shrink/etc file systems in a generic way.  The thought I had was 
-> that we have a reasonable model that we could reuse for these new commands like 
-> mount and mount.fs or fsck and fsck.fs. With btrfs coming down the road, it 
-> could be nice to identify exactly what common operations users want to do and 
-> agree on how to implement them. Alasdair pointed out in the upstream thread that 
-> we had a prototype here in fsadm.
-> 
-> (2) Very high speed, low latency SSD devices and testing. Have we settled on the 
-> need for these devices to all have block level drivers? For S-ATA or SAS 
-> devices, are there known performance issues that require enhancements in 
-> somewhere in the stack?
-> 
-> (3) The union mount versus overlayfs debate - pros and cons. What each do well, 
-> what needs doing. Do we want/need both upstream? (Maybe this can get 10 minutes 
-> in Al's VFS session?)
-> 
+On Mon, Mar 28, 2011 at 6:11 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+>> If the process context of delayed work items provices a significant
+>> benefit to your execution model you can convert the timers to delaye=
+d
+>> work items now, and remove the irqsafe locking. =A0Given that the
+>> isci code still does some non-trivial work from it's interrupt
+>> handlers and tasklets I'm not sure it's going to buy you much, thoug=
+h.
+>
+> The irqsafe locking is an external requirement imposed by libata,
+> although we already drop the lock
+>
 
-Ric,
+<hit 'send' too early>
 
-May I propose some discussion about concurrent direct IO support for
-ext4?
+I was going to say we (and the other libsas drivers that call
+task->done() or sas_task_abort() from lldd_execute_task_context)
+already drop the lock in error conditions.  If that is a safe
+operation then perhaps we could up level that lock drop or otherwise
+move ata submission to an unlocked context to allow libsas drivers to
+use sleeping locks and threaded interrupts.
 
-Direct IO write are serialized by the single i_mutex lock.  This lock
-contention becomes significant when running database or direct IO heavy
-workload on guest, where  the host pass a file image to guest as a block
-device. All the parallel IOs in guests are being serialized by the
-i_mutex lock on the host disk image file. This greatly penalize the data
-base application performance in KVM. 
-
-I am looking for some discussion about removing the i_mutex lock in the
-direct IO write code path for ext4, when multiple threads are
-direct write to different offset of the same file. This would require
-some way to track the in-fly DIO IO range, either done at ext4 level or
-above th vfs layer. 
-
-
-Thanks,
-
-
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
