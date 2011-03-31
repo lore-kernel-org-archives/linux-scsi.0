@@ -1,62 +1,70 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [LSF/MM TOPIC] SCSI referrals support
-Date: Thu, 31 Mar 2011 18:40:13 +0200
-Message-ID: <AANLkTikL-EP=HsVjd_x9AmzptnrjSXdiNh3q1AriBz77@mail.gmail.com>
-References: <4D385C0A.3000901@suse.de> <4D385F69.5060209@interlog.com>
- <1295541361.3014.8.camel@mulgrave.site> <4D3C100C.1010609@panasas.com> <4D3D327F.1040807@suse.de>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: fix synchronous request flags for better performance
+Date: Thu, 31 Mar 2011 09:56:10 -0700
+Message-ID: <4D94B22A.5010809@linux.vnet.ibm.com>
+References: <20110331165142.303106723@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:60354 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757816Ab1CaQke convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Mar 2011 12:40:34 -0400
-Received: by vws1 with SMTP id 1so2009888vws.19
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2011 09:40:33 -0700 (PDT)
-In-Reply-To: <4D3D327F.1040807@suse.de>
+Received: from e9.ny.us.ibm.com ([32.97.182.139]:38722 "EHLO e9.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752464Ab1CaQ4M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Mar 2011 12:56:12 -0400
+Received: from d01dlp01.pok.ibm.com (d01dlp01.pok.ibm.com [9.56.224.56])
+	by e9.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p2VGSo2a011988
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2011 12:28:50 -0400
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by d01dlp01.pok.ibm.com (Postfix) with ESMTP id 070DC38C803B
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2011 12:56:05 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p2VGuBhZ2572372
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2011 12:56:11 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p2VGuA9D005223
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Mar 2011 13:56:11 -0300
+In-Reply-To: <20110331165142.303106723@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@suse.de>, dgilbert@interlog.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>
 
-On Mon, Jan 24, 2011 at 9:04 AM, Hannes Reinecke <hare@suse.de> wrote:
->
-> Currently sense codes have two problems:
->
-> - They are limited to 96 bytes. Anything larger than that will just
-> =A0be discarded (or crash with your patch above :-)
-> - They inherit the same lifetime than the scsi command. But for any
-> =A0decent handling you really need to push them into some
-> =A0asynchronous context as you might well be within an interrupt
-> =A0handler here.
->
-> I'm currently working on a handling framework using relayfs
-> (basically blktrace for SCSI Unit Attention); I can be doing a short
-> presentation at LSF if requested.
+In testing it was noticed that Extended Delay after Reset flag was being set
+for gscsi and volume set devices.  This had a negative effect on performance
+for volume sets.  The fix is to only set the flag for gscsi devices.
 
-(replying to an e-mail of two months ago)
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
 
-There is another scenario where better unit attention support would
-help. Both the LIO-port and the SCST-port of the ibmvstgt driver
-suffer from the same race condition during reboot of the virtual I/O
-server (VIOS). Since the ibmvscsic driver reconnects to the ibmvscsis
-driver as soon as the ibmvscsis driver has been loaded the client
-reconnects before all LUNs have been configured in the VIOS system. So
-even if the target implementation generates an INQUIRY DATA HAS
-CHANGED unit attention condition for each LUN change, LUNs will have
-to be rescanned explicitly at the initiator side in order to get the
-initiator state in sync with the target state.
+ drivers/scsi/ipr.c |    3 ++-
+ drivers/scsi/ipr.h |    2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-Also, when using iSCSI, it would beneficial if LUN changes at the
-target would result in an automatic update of the LUNs reported by the
-initiator. This is not yet the case when using a Linux iSCSI initiator
-because the INQUIRY DATA HAS CHANGED unit attention condition is
-ignored by the Linux SCSI stack.
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2011-03-31 09:48:18.998471040 -0700
++++ b/drivers/scsi/ipr.c	2011-03-31 09:48:50.318094131 -0700
+@@ -5773,7 +5773,8 @@ static int ipr_queuecommand_lck(struct s
+ 		}
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ 		ioarcb->cmd_pkt.flags_hi |= IPR_FLAGS_HI_NO_LINK_DESC;
+-		ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_DELAY_AFTER_RST;
++		if (ipr_is_gscsi(res))
++			ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_DELAY_AFTER_RST;
+ 		ioarcb->cmd_pkt.flags_lo |= IPR_FLAGS_LO_ALIGNED_BFR;
+ 		ioarcb->cmd_pkt.flags_lo |= ipr_get_task_attributes(scsi_cmd);
+ 	}
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2011-03-31 09:48:20.438637636 -0700
++++ b/drivers/scsi/ipr.h	2011-03-31 09:49:19.381456240 -0700
+@@ -474,7 +474,7 @@ struct ipr_cmd_pkt {
+
+ 	u8 flags_lo;
+ #define IPR_FLAGS_LO_ALIGNED_BFR		0x20
+-#define IPR_FLAGS_LO_DELAY_AFTER_RST	0x10
++#define IPR_FLAGS_LO_DELAY_AFTER_RST		0x10
+ #define IPR_FLAGS_LO_UNTAGGED_TASK		0x00
+ #define IPR_FLAGS_LO_SIMPLE_TASK		0x02
+ #define IPR_FLAGS_LO_ORDERED_TASK		0x04
+
