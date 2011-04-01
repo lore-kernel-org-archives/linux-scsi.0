@@ -1,86 +1,57 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 5/6] drivers/scsi/bnx2fc/bnx2fc_hwi.c: introduce missing kfree
-Date: Fri,  1 Apr 2011 16:23:46 +0200
-Message-ID: <1301667827-20056-5-git-send-email-julia@diku.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: kernel-janitors@vger.kernel.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Nithin Nayak Sujir <nsujir@broadcom.com>, Michael Chan <mchan@broadcom.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Ted Ts'o <tytso@mit.edu>
+Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Fri, 1 Apr 2011 11:19:07 -0400
+Message-ID: <20110401151907.GG21075@thunk.org>
+References: <1301373398.2590.20.camel@mulgrave.site>
+ <4D91BF90.8070909@redhat.com>
+ <1301445210.2731.14.camel@mingming-laptop>
+ <20110330021742.GL3008@dastard>
+ <E32BEFA9-15DE-4169-B313-095920A4DF7A@mit.edu>
+ <4D9313E2.6080006@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D9313E2.6080006@gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: Dave Chinner <david@fromorbit.com>, lsf@lists.linux-foundation.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ric Wheeler <rwheeler@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Error handling code following a kmalloc should free the allocated data.
+On Wed, Mar 30, 2011 at 07:28:34AM -0400, Ric Wheeler wrote:
+> 
+> What possible semantics could you have?
+> 
+> If you ever write concurrently from multiple processes without
+> locking, you clearly are at the mercy of the scheduler and the
+> underlying storage which could fragment a single write into multiple
+> IO's sent to the backend device.
+> 
+> I would agree with Dave, let's not make it overly complicated or try
+> to give people "atomic" unbounded size writes just because they set
+> the O_DIRECT flag :)
 
-The semantic match that finds the problem is as follows:
-(http://www.emn.fr/x-info/coccinelle/)
+I just want to have it written down.  After getting burned with ext3's
+semantics promising more than what the standard guaranteed, I've just
+gotten paranoid about application programmers getting upset when
+things change on them --- and in the case of direct I/O, this stuff
+isn't even clearly documented anywhere official.
 
-// <smpl>
-@r exists@
-local idexpression x;
-statement S;
-expression E;
-identifier f,f1,l;
-position p1,p2;
-expression *ptr != NULL;
-@@
+I just think it's best that we document it the fact that concurrent
+DIO's to the same region may result in completely arbitrary behaviour,
+make sure it's well publicized to likely users (and I'm more worried
+about the open source code bases than Oracle DB), and then call it a day.
 
-x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
-...
-if (x == NULL) S
-<... when != x
-     when != if (...) { <+...x...+> }
-(
-x->f1 = E
-|
- (x->f1 == NULL || ...)
-|
- f(...,x->f1,...)
-)
-...>
-(
- return \(0\|<+...x...+>\|ptr\);
-|
- return@p2 ...;
-)
+The closest place that we have to any official documentation about
+O_DIRECT semantics is the open(2) man page in the Linux manpages, and
+it doesn't say anything about this.  It does give a recommendation
+against not mixing buffered and O_DIRECT accesses to the same file,
+but it does promise that things will work in that case.  (Even if it
+does, do we really want to make the promise that it will always work?)
 
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
+In any case, adding some text in that paragraph, or just after that
+paragraph, to the effect that two concurrent DIO accesses to the same
+file block, even by two different processes will result in undefined
+behavior would be a good start.
 
-print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 1b680e2..f756d5f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -522,6 +522,7 @@ void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
- 	fp = fc_frame_alloc(lport, payload_len);
- 	if (!fp) {
- 		printk(KERN_ERR PFX "fc_frame_alloc failure\n");
-+		kfree(unsol_els);
- 		return;
- 	}
- 
-@@ -547,6 +548,7 @@ void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
- 				 */
- 				printk(KERN_ERR PFX "dropping ELS 0x%x\n", op);
- 				kfree_skb(skb);
-+				kfree(unsol_els);
- 				return;
- 			}
- 		}
-@@ -563,6 +565,7 @@ void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
- 	} else {
- 		BNX2FC_HBA_DBG(lport, "fh_r_ctl = 0x%x\n", fh->fh_r_ctl);
- 		kfree_skb(skb);
-+		kfree(unsol_els);
- 	}
- }
- 
+      	       	      	   	      	     - Ted
