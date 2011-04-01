@@ -1,159 +1,236 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 10/11] libfc: rec tov value and REC_TOV_CONST units usages is
-	incorrect
-Date: Fri, 01 Apr 2011 16:06:40 -0700
-Message-ID: <20110401230640.15001.74871.stgit@localhost6.localdomain6>
+Subject: [PATCH 11/11] fcoe: have fcoe log off and lport destroy before
+	ndo_fcoe_disable
+Date: Fri, 01 Apr 2011 16:06:45 -0700
+Message-ID: <20110401230645.15001.30212.stgit@localhost6.localdomain6>
 References: <20110401230548.15001.2009.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:44946 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:46372 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755443Ab1DAXGl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2011 19:06:41 -0400
+	id S1753627Ab1DAXGq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2011 19:06:46 -0400
 In-Reply-To: <20110401230548.15001.2009.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Vasu Dev <vasu.dev@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Added REC_TOV_CONST intent was to have rec tov as e_d_tov + 1s
-but currently it is e_d_tov + 1ms since e_d_tov is stored in ms
-unit.
+Currently fcoe interface cleanup is done after ndo_fcoe_disable
+and that prevents logoff going out to the peer, so this patch
+moves all netdev cleanup and its releasing inside
+fcoe_interface_cleanup to have log off before ndo_fcoe_disable
+disables the fcoe.
 
-Also returned rec tov by get_fsp_rec_tov is in ms and this ms tov
-is used as-is with fc_fcp_timer_set expecting jiffies tov.
-
-Fixed this by having get_fsp_rec_tov return rec tov in jiffies
-as e_d_tov + 1s and then use jiffies tov w/ fc_fcp_timer_set.
-
-Also some cleanup, no need to cache get_fsp_rec_tov return value
-in local rec_tov at various places.
+This patch also fixes asymmetric rtnl locking around fcoe_if_destroy,
+as currently this function requires rtnl held by its caller
+and then have this func drops the lock, instead now don't have
+any processing under rtnl inside fcoe_if_destroy, this required
+moving few func to get build working again.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |   32 +++++++++-----------------------
- 1 files changed, 9 insertions(+), 23 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |  131 +++++++++++++++++++++-------------------------
+ 1 files changed, 60 insertions(+), 71 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 92ba9f0..a879c96 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -57,9 +57,6 @@ static struct kmem_cache *scsi_pkt_cachep;
- #define FC_SRB_READ		(1 << 1)
- #define FC_SRB_WRITE		(1 << 0)
- 
--/* constant added to e_d_tov timeout to get rec_tov value */
--#define REC_TOV_CONST		1
--
- /*
-  * The SCp.ptr should be tested and set under the scsi_pkt_queue lock
-  */
-@@ -248,7 +245,7 @@ static inline void fc_fcp_unlock_pkt(struct fc_fcp_pkt *fsp)
- /**
-  * fc_fcp_timer_set() - Start a timer for a fcp_pkt
-  * @fsp:   The FCP packet to start a timer for
-- * @delay: The timeout period for the timer
-+ * @delay: The timeout period in jiffies
-  */
- static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
- {
-@@ -1098,16 +1095,14 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
- /**
-  * get_fsp_rec_tov() - Helper function to get REC_TOV
-  * @fsp: the FCP packet
-+ *
-+ * Returns rec tov in jiffies as rpriv->e_d_tov + 1 second
-  */
- static inline unsigned int get_fsp_rec_tov(struct fc_fcp_pkt *fsp)
- {
--	struct fc_rport *rport;
--	struct fc_rport_libfc_priv *rpriv;
-+	struct fc_rport_libfc_priv *rpriv = fsp->rport->dd_data;
- 
--	rport = fsp->rport;
--	rpriv = rport->dd_data;
--
--	return rpriv->e_d_tov + REC_TOV_CONST;
-+	return msecs_to_jiffies(rpriv->e_d_tov) + HZ;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 34408d9..5d3700d 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -381,6 +381,42 @@ out:
  }
  
  /**
-@@ -1127,7 +1122,6 @@ static int fc_fcp_cmd_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
- 	struct fc_rport_libfc_priv *rpriv;
- 	const size_t len = sizeof(fsp->cdb_cmd);
- 	int rc = 0;
--	unsigned int rec_tov;
++ * fcoe_interface_release() - fcoe_port kref release function
++ * @kref: Embedded reference count in an fcoe_interface struct
++ */
++static void fcoe_interface_release(struct kref *kref)
++{
++	struct fcoe_interface *fcoe;
++	struct net_device *netdev;
++
++	fcoe = container_of(kref, struct fcoe_interface, kref);
++	netdev = fcoe->netdev;
++	/* tear-down the FCoE controller */
++	fcoe_ctlr_destroy(&fcoe->ctlr);
++	kfree(fcoe);
++	dev_put(netdev);
++	module_put(THIS_MODULE);
++}
++
++/**
++ * fcoe_interface_get() - Get a reference to a FCoE interface
++ * @fcoe: The FCoE interface to be held
++ */
++static inline void fcoe_interface_get(struct fcoe_interface *fcoe)
++{
++	kref_get(&fcoe->kref);
++}
++
++/**
++ * fcoe_interface_put() - Put a reference to a FCoE interface
++ * @fcoe: The FCoE interface to be released
++ */
++static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
++{
++	kref_put(&fcoe->kref, fcoe_interface_release);
++}
++
++/**
+  * fcoe_interface_cleanup() - Clean up a FCoE interface
+  * @fcoe: The FCoE interface to be cleaned up
+  *
+@@ -392,6 +428,21 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 	struct fcoe_ctlr *fip = &fcoe->ctlr;
+ 	u8 flogi_maddr[ETH_ALEN];
+ 	const struct net_device_ops *ops;
++	struct fcoe_port *port = lport_priv(fcoe->ctlr.lp);
++
++	FCOE_NETDEV_DBG(netdev, "Destroying interface\n");
++
++	/* Logout of the fabric */
++	fc_fabric_logoff(fcoe->ctlr.lp);
++
++	/* Cleanup the fc_lport */
++	fc_lport_destroy(fcoe->ctlr.lp);
++
++	/* Stop the transmit retry timer */
++	del_timer_sync(&port->timer);
++
++	/* Free existing transmit skbs */
++	fcoe_clean_pending_queue(fcoe->ctlr.lp);
  
- 	if (fc_fcp_lock_pkt(fsp))
- 		return 0;
-@@ -1158,12 +1152,9 @@ static int fc_fcp_cmd_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
- 	fsp->seq_ptr = seq;
- 	fc_fcp_pkt_hold(fsp);	/* hold for fc_fcp_pkt_destroy */
+ 	/*
+ 	 * Don't listen for Ethernet packets anymore.
+@@ -414,6 +465,9 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 	} else
+ 		dev_mc_del(netdev, FIP_ALL_ENODE_MACS);
  
--	rec_tov = get_fsp_rec_tov(fsp);
--
- 	setup_timer(&fsp->timer, fc_fcp_timeout, (unsigned long)fsp);
--
- 	if (rpriv->flags & FC_RP_FLAGS_REC_SUPPORTED)
--		fc_fcp_timer_set(fsp, rec_tov);
-+		fc_fcp_timer_set(fsp, get_fsp_rec_tov(fsp));
- 
- unlock:
- 	fc_fcp_unlock_pkt(fsp);
-@@ -1240,16 +1231,14 @@ static void fc_lun_reset_send(unsigned long data)
- {
- 	struct fc_fcp_pkt *fsp = (struct fc_fcp_pkt *)data;
- 	struct fc_lport *lport = fsp->lp;
--	unsigned int rec_tov;
- 
- 	if (lport->tt.fcp_cmd_send(lport, fsp, fc_tm_done)) {
- 		if (fsp->recov_retry++ >= FC_MAX_RECOV_RETRY)
- 			return;
- 		if (fc_fcp_lock_pkt(fsp))
- 			return;
--		rec_tov = get_fsp_rec_tov(fsp);
- 		setup_timer(&fsp->timer, fc_lun_reset_send, (unsigned long)fsp);
--		fc_fcp_timer_set(fsp, rec_tov);
-+		fc_fcp_timer_set(fsp, get_fsp_rec_tov(fsp));
- 		fc_fcp_unlock_pkt(fsp);
++	if (!is_zero_ether_addr(port->data_src_addr))
++		dev_uc_del(netdev, port->data_src_addr);
++
+ 	/* Tell the LLD we are done w/ FCoE */
+ 	ops = netdev->netdev_ops;
+ 	if (ops->ndo_fcoe_disable) {
+@@ -421,42 +475,7 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ 			FCOE_NETDEV_DBG(netdev, "Failed to disable FCoE"
+ 					" specific feature for LLD.\n");
  	}
+-}
+-
+-/**
+- * fcoe_interface_release() - fcoe_port kref release function
+- * @kref: Embedded reference count in an fcoe_interface struct
+- */
+-static void fcoe_interface_release(struct kref *kref)
+-{
+-	struct fcoe_interface *fcoe;
+-	struct net_device *netdev;
+-
+-	fcoe = container_of(kref, struct fcoe_interface, kref);
+-	netdev = fcoe->netdev;
+-	/* tear-down the FCoE controller */
+-	fcoe_ctlr_destroy(&fcoe->ctlr);
+-	kfree(fcoe);
+-	dev_put(netdev);
+-	module_put(THIS_MODULE);
+-}
+-
+-/**
+- * fcoe_interface_get() - Get a reference to a FCoE interface
+- * @fcoe: The FCoE interface to be held
+- */
+-static inline void fcoe_interface_get(struct fcoe_interface *fcoe)
+-{
+-	kref_get(&fcoe->kref);
+-}
+-
+-/**
+- * fcoe_interface_put() - Put a reference to a FCoE interface
+- * @fcoe: The FCoE interface to be released
+- */
+-static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
+-{
+-	kref_put(&fcoe->kref, fcoe_interface_release);
++	fcoe_interface_put(fcoe);
  }
-@@ -1541,12 +1530,11 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 			}
- 			fc_fcp_srr(fsp, r_ctl, offset);
- 		} else if (e_stat & ESB_ST_SEQ_INIT) {
--			unsigned int rec_tov = get_fsp_rec_tov(fsp);
- 			/*
- 			 * The remote port has the initiative, so just
- 			 * keep waiting for it to complete.
- 			 */
--			fc_fcp_timer_set(fsp, rec_tov);
-+			fc_fcp_timer_set(fsp,  get_fsp_rec_tov(fsp));
- 		} else {
  
- 			/*
-@@ -1710,7 +1698,6 @@ static void fc_fcp_srr_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ /**
+@@ -821,39 +840,9 @@ skip_oem:
+  * fcoe_if_destroy() - Tear down a SW FCoE instance
+  * @lport: The local port to be destroyed
+  *
+- * Locking: must be called with the RTNL mutex held and RTNL mutex
+- * needed to be dropped by this function since not dropping RTNL
+- * would cause circular locking warning on synchronous fip worker
+- * cancelling thru fcoe_interface_put invoked by this function.
+- *
+  */
+ static void fcoe_if_destroy(struct fc_lport *lport)
  {
- 	struct fc_fcp_pkt *fsp = arg;
- 	struct fc_frame_header *fh;
--	unsigned int rec_tov;
+-	struct fcoe_port *port = lport_priv(lport);
+-	struct fcoe_interface *fcoe = port->priv;
+-	struct net_device *netdev = fcoe->netdev;
+-
+-	FCOE_NETDEV_DBG(netdev, "Destroying interface\n");
+-
+-	/* Logout of the fabric */
+-	fc_fabric_logoff(lport);
+-
+-	/* Cleanup the fc_lport */
+-	fc_lport_destroy(lport);
+-
+-	/* Stop the transmit retry timer */
+-	del_timer_sync(&port->timer);
+-
+-	/* Free existing transmit skbs */
+-	fcoe_clean_pending_queue(lport);
+-
+-	if (!is_zero_ether_addr(port->data_src_addr))
+-		dev_uc_del(netdev, port->data_src_addr);
+-	rtnl_unlock();
+-
+-	/* receives may not be stopped until after this */
+-	fcoe_interface_put(fcoe);
+-
+ 	/* Free queued packets for the per-CPU receive threads */
+ 	fcoe_percpu_clean(lport);
  
- 	if (IS_ERR(fp)) {
- 		fc_fcp_srr_error(fsp, fp);
-@@ -1737,8 +1724,7 @@ static void fc_fcp_srr_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 	switch (fc_frame_payload_op(fp)) {
- 	case ELS_LS_ACC:
- 		fsp->recov_retry = 0;
--		rec_tov = get_fsp_rec_tov(fsp);
--		fc_fcp_timer_set(fsp, rec_tov);
-+		fc_fcp_timer_set(fsp, get_fsp_rec_tov(fsp));
- 		break;
- 	case ELS_LS_RJT:
- 	default:
+@@ -1836,6 +1825,7 @@ static int fcoe_enable(struct net_device *netdev)
+ static int fcoe_destroy(struct net_device *netdev)
+ {
+ 	struct fcoe_interface *fcoe;
++	struct fc_lport *lport;
+ 	int rc = 0;
+ 
+ 	mutex_lock(&fcoe_config_mutex);
+@@ -1846,10 +1836,11 @@ static int fcoe_destroy(struct net_device *netdev)
+ 		rc = -ENODEV;
+ 		goto out_nodev;
+ 	}
+-	fcoe_interface_cleanup(fcoe);
++	lport = fcoe->ctlr.lp;
+ 	list_del(&fcoe->list);
+-	/* RTNL mutex is dropped by fcoe_if_destroy */
+-	fcoe_if_destroy(fcoe->ctlr.lp);
++	fcoe_interface_cleanup(fcoe);
++	rtnl_unlock();
++	fcoe_if_destroy(lport);
+ out_nodev:
+ 	mutex_unlock(&fcoe_config_mutex);
+ 	return rc;
+@@ -1865,8 +1856,6 @@ static void fcoe_destroy_work(struct work_struct *work)
+ 
+ 	port = container_of(work, struct fcoe_port, destroy_work);
+ 	mutex_lock(&fcoe_config_mutex);
+-	rtnl_lock();
+-	/* RTNL mutex is dropped by fcoe_if_destroy */
+ 	fcoe_if_destroy(port->lport);
+ 	mutex_unlock(&fcoe_config_mutex);
+ }
 
