@@ -1,57 +1,87 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Fri, 1 Apr 2011 11:19:07 -0400
-Message-ID: <20110401151907.GG21075@thunk.org>
-References: <1301373398.2590.20.camel@mulgrave.site>
- <4D91BF90.8070909@redhat.com>
- <1301445210.2731.14.camel@mingming-laptop>
- <20110330021742.GL3008@dastard>
- <E32BEFA9-15DE-4169-B313-095920A4DF7A@mit.edu>
- <4D9313E2.6080006@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] sr: Ensure disk is revalidated when media changes
+Date: Fri, 1 Apr 2011 17:43:27 +0200
+Message-ID: <20110401154327.GA6593@mtj.dyndns.org>
+References: <8d830b21c0b944d26f29dc1e0c42c0bef8d448c2.1301595169.git.amit.shah@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4D9313E2.6080006@gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, lsf@lists.linux-foundation.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ric Wheeler <rwheeler@redhat.com>
+In-Reply-To: <8d830b21c0b944d26f29dc1e0c42c0bef8d448c2.1301595169.git.amit.shah@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Amit Shah <amit.shah@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Markus Armbruster <armbru@redhat.com>, Stefan Hajnoczi <stefanha@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Mar 30, 2011 at 07:28:34AM -0400, Ric Wheeler wrote:
+Hello,
+
+On Thu, Mar 31, 2011 at 11:50:04PM +0530, Amit Shah wrote:
+> After the first GET_EVENT_STATUS_NOTIFICATION command, any new media
+> notification is reset by the device.  The following is then noticed:
 > 
-> What possible semantics could you have?
+> 1. insert a CD of a particular size
+> 2. mount it
+> 3. note /sys/block/sr0/size
+> 4. unmount cd
+> 5. replace cd with a size greater than previous one
+> 6. mount it
+> 7. /sys/block/sr0/size isn't updated
+> 8. copy all files from cd to somewhere; IO errors will pop up where the
+>    files lie beyond previous CD's geometry
 > 
-> If you ever write concurrently from multiple processes without
-> locking, you clearly are at the mercy of the scheduler and the
-> underlying storage which could fragment a single write into multiple
-> IO's sent to the backend device.
+> The cause is:
 > 
-> I would agree with Dave, let's not make it overly complicated or try
-> to give people "atomic" unbounded size writes just because they set
-> the O_DIRECT flag :)
+>  cdrom_open()
+>      open_for_data()
+>          cdo->drive_status() = sr_drive_status()
+>              cdrom_get_media_event()
+>              --> GPCMD_GET_EVENT_STATUS_NOTIFICATION
+>          --> med.media_present is true, return CDS_DISK_OK
+>      (success)
+>  check_disk_change()
+>     ... -> 2nd call to GPCMD_GET_EVENT_STATUS_NOTIFICATION
+> 
+> at this point the device has already reset the new media event and the
+> call to revalidate_disk() in check_disk_change() is never made.
 
-I just want to have it written down.  After getting burned with ext3's
-semantics promising more than what the standard guaranteed, I've just
-gotten paranoid about application programmers getting upset when
-things change on them --- and in the case of direct I/O, this stuff
-isn't even clearly documented anywhere official.
+Hmm... I see.  That's something I didn't expect.
 
-I just think it's best that we document it the fact that concurrent
-DIO's to the same region may result in completely arbitrary behaviour,
-make sure it's well publicized to likely users (and I'm more worried
-about the open source code bases than Oracle DB), and then call it a day.
+> All of this is noticed in a qemu-kvm virtual machine where two CD images
+> are created from two files different in size.
+...
+> diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
+> index 8be3055..0651448 100644
+> --- a/drivers/scsi/sr_ioctl.c
+> +++ b/drivers/scsi/sr_ioctl.c
+> @@ -316,12 +316,19 @@ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+>  		return CDS_DRIVE_NOT_READY;
+>  
+>  	if (!cdrom_get_media_event(cdi, &med)) {
+> -		if (med.media_present)
+> +		if (med.media_present) {
+> +			/*
+> +			 * New media was inserted; ensure disk data is
+> +			 * revalidated.
+> +			 */
+> +			if (cdi->disk->fops->revalidate_disk)
+> +				cdi->disk->fops->revalidate_disk(cdi->disk);
+>  			return CDS_DISC_OK;
+> -		else if (med.door_open)
+> +		} else if (med.door_open) {
+>  			return CDS_TRAY_OPEN;
+> -		else
+> +		} else {
+>  			return CDS_NO_DISC;
+> +		}
+>  	}
 
-The closest place that we have to any official documentation about
-O_DIRECT semantics is the open(2) man page in the Linux manpages, and
-it doesn't say anything about this.  It does give a recommendation
-against not mixing buffered and O_DIRECT accesses to the same file,
-but it does promise that things will work in that case.  (Even if it
-does, do we really want to make the promise that it will always work?)
+But I don't think this is the correct place to do it.  The problem
+happens because block layer consumes the event but doesn't remember it
+when the time for revalidation comes.  It should be done by block
+layer, not sr.  Hmmm... looking at the code, the new disk event code
+should handle this correctly.  Was 2.6.38 showing the problem too?
 
-In any case, adding some text in that paragraph, or just after that
-paragraph, to the effect that two concurrent DIO accesses to the same
-file block, even by two different processes will result in undefined
-behavior would be a good start.
+Thanks.
 
-      	       	      	   	      	     - Ted
+-- 
+tejun
