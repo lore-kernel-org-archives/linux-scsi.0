@@ -1,128 +1,89 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 03/11] fcoe: remove unnecessary module state check
-Date: Fri, 01 Apr 2011 16:06:04 -0700
-Message-ID: <20110401230604.15001.56084.stgit@localhost6.localdomain6>
+Subject: [PATCH 04/11] scsi: use list_move() instead of list_del()/list_add()
+	combination
+Date: Fri, 01 Apr 2011 16:06:09 -0700
+Message-ID: <20110401230609.15001.77090.stgit@localhost6.localdomain6>
 References: <20110401230548.15001.2009.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:50306 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:55782 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752207Ab1DAXGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2011 19:06:15 -0400
+	id S1753783Ab1DAXGU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2011 19:06:20 -0400
 In-Reply-To: <20110401230548.15001.2009.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Yi Zou <yi.zou@intel.com>
+Cc: "Kirill A. Shutemov" <kirill@shutemov.name>
 
-From: Yi Zou <yi.zou@intel.com>
+From: Kirill A. Shutemov <kirill@shutemov.name>
 
-The check of module state being MODULE_STATE_LIVE is no longer needed for the
-individual fcoe transport driver, e.g., fcoe.ko, as sysfs entries now go to
-libfcoe now, if it reaches fcoe.ko, it has to be already registered. The module
-state check for libfcoe will guard the possible race condition of sysfs being
-writable before module_init function is called and after module_exit.
-
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   47 ----------------------------------------------
- 1 files changed, 0 insertions(+), 47 deletions(-)
+ drivers/scsi/esp_scsi.c       |    6 ++----
+ drivers/scsi/fcoe/fcoe_ctlr.c |    6 ++----
+ drivers/scsi/scsi_tgt_lib.c   |    6 ++----
+ 3 files changed, 6 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 9e7206e..34408d9 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1783,17 +1783,6 @@ static int fcoe_disable(struct net_device *netdev)
- 	int rc = 0;
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 5755852..9a1af1d 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -708,8 +708,7 @@ static void esp_maybe_execute_command(struct esp *esp)
+ 	tp = &esp->target[tgt];
+ 	lp = dev->hostdata;
  
- 	mutex_lock(&fcoe_config_mutex);
--#ifdef CONFIG_FCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module paramter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
--		rc = -ENODEV;
--		goto out_nodev;
+-	list_del(&ent->list);
+-	list_add(&ent->list, &esp->active_cmds);
++	list_move(&ent->list, &esp->active_cmds);
+ 
+ 	esp->active_cmd = ent;
+ 
+@@ -1244,8 +1243,7 @@ static int esp_finish_select(struct esp *esp)
+ 		/* Now that the state is unwound properly, put back onto
+ 		 * the issue queue.  This command is no longer active.
+ 		 */
+-		list_del(&ent->list);
+-		list_add(&ent->list, &esp->queued_cmds);
++		list_move(&ent->list, &esp->queued_cmds);
+ 		esp->active_cmd = NULL;
+ 
+ 		/* Return value ignored by caller, it directly invokes
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index c93f007..fb3a506 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -978,10 +978,8 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	 * the FCF that answers multicast solicitations, not the others that
+ 	 * are sending periodic multicast advertisements.
+ 	 */
+-	if (mtu_valid) {
+-		list_del(&fcf->list);
+-		list_add(&fcf->list, &fip->fcfs);
 -	}
--#endif
++	if (mtu_valid)
++		list_move(&fcf->list, &fip->fcfs);
  
- 	rtnl_lock();
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
-@@ -1805,7 +1794,6 @@ static int fcoe_disable(struct net_device *netdev)
- 	} else
- 		rc = -ENODEV;
+ 	/*
+ 	 * If this is the first validated FCF, note the time and
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index f672820..edb8bff 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -275,10 +275,8 @@ void scsi_tgt_free_queue(struct Scsi_Host *shost)
  
--out_nodev:
- 	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
- }
-@@ -1824,17 +1812,6 @@ static int fcoe_enable(struct net_device *netdev)
- 	int rc = 0;
+ 	for (i = 0; i < ARRAY_SIZE(qdata->cmd_hash); i++) {
+ 		list_for_each_entry_safe(tcmd, n, &qdata->cmd_hash[i],
+-					 hash_list) {
+-			list_del(&tcmd->hash_list);
+-			list_add(&tcmd->hash_list, &cmds);
+-		}
++					 hash_list)
++			list_move(&tcmd->hash_list, &cmds);
+ 	}
  
- 	mutex_lock(&fcoe_config_mutex);
--#ifdef CONFIG_FCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module paramter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
--		rc = -ENODEV;
--		goto out_nodev;
--	}
--#endif
- 	rtnl_lock();
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
- 	rtnl_unlock();
-@@ -1844,7 +1821,6 @@ static int fcoe_enable(struct net_device *netdev)
- 	else if (!fcoe_link_ok(fcoe->ctlr.lp))
- 		fcoe_ctlr_link_up(&fcoe->ctlr);
- 
--out_nodev:
- 	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
- }
-@@ -1863,17 +1839,6 @@ static int fcoe_destroy(struct net_device *netdev)
- 	int rc = 0;
- 
- 	mutex_lock(&fcoe_config_mutex);
--#ifdef CONFIG_FCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module paramter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
--		rc = -ENODEV;
--		goto out_nodev;
--	}
--#endif
- 	rtnl_lock();
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
- 	if (!fcoe) {
-@@ -1938,18 +1903,6 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 	mutex_lock(&fcoe_config_mutex);
- 	rtnl_lock();
- 
--#ifdef CONFIG_FCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module paramter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
--		rc = -ENODEV;
--		goto out_nodev;
--	}
--#endif
--
- 	/* look for existing lport */
- 	if (fcoe_hostlist_lookup(netdev)) {
- 		rc = -EEXIST;
+ 	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
 
