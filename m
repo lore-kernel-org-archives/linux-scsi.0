@@ -1,140 +1,65 @@
-From: Madhu Iyengar <madhu.iyengar@qlogic.com>
-Subject: RE: [PATCH 3/3] qla2xxx: Run queuecommand outside the host_lock
-Date: Fri, 1 Apr 2011 14:33:08 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8728A7B1A4F@AVEXMB1.qlogic.org>
-References: <20110401202209.GN4183@linux.intel.com>
+From: Mingming Cao <cmm@us.ibm.com>
+Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
+Date: Fri, 01 Apr 2011 14:34:26 -0700
+Message-ID: <1301693666.2720.257.camel@mingming-laptop>
+References: <1301373398.2590.20.camel@mulgrave.site>
+	 <4D91BF90.8070909@redhat.com> <1301445210.2731.14.camel@mingming-laptop>
+	 <20110330021742.GL3008@dastard> <1301521798.7449.65.camel@mingming-laptop>
+	 <20110331010049.GA7794@noexit>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:38702 "EHLO
-	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756758Ab1DAVdO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2011 17:33:14 -0400
-In-Reply-To: <20110401202209.GN4183@linux.intel.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20110331010049.GA7794@noexit>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Joel Becker <jlbec@evilplan.org>
+Cc: Dave Chinner <david@fromorbit.com>, Ric Wheeler <rwheeler@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, lsf@lists.linux-foundation.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Madhu Iyengar <madhu.iyengar@qlogic.com>
 
-Mathew,
+On Wed, 2011-03-30 at 18:00 -0700, Joel Becker wrote: 
+> On Wed, Mar 30, 2011 at 02:49:58PM -0700, Mingming Cao wrote:
+> > On Wed, 2011-03-30 at 13:17 +1100, Dave Chinner wrote:
+> > > For direct IO, the IO lock is always taken in shared mode, so we can
+> > > have concurrent read and write operations taking place at once
+> > > regardless of the offset into the file.
+> > > 
+> > 
+> > thanks for reminding me,in xfs concurrent direct IO write to the same
+> > offset is allowed.
+> 
+> 	ocfs2 as well, with the same sort of strategem (including across
+> the cluster).
+> 
+Thanks for providing view from OCFS2 side. This is good to know.
 
-We submitted the host_lock related changes earlier, and the changes were accepted and went into the 2.6.38-rc6 (or round-about that timeframe) upstream kernel.
+> > > Direct IO semantics have always been that the application is allowed
+> > > to overlap IO to the same range if it wants to. The result is
+> > > undefined (just like issuing overlapping reads and writes to a disk
+> > > at the same time) so it's the application's responsibility to avoid
+> > > overlapping IO if it is a problem.
+> > > 
+> > 
+> > I was thinking along the line to provide finer granularity lock to allow
+> > concurrent direct IO to different offset/range, but to same offset, they
+> > have to be serialized. If it's undefined behavior, i.e. overlapping is
+> > allowed, then concurrent dio implementation is much easier. But not sure
+> > if any apps currently using DIO aware of the ordering has to be done at
+> > the application level. 
+> 
+> 	Oh dear God no.  One of the major DIO use cases is to tell the
+> kernel, "I know I won't do that, so don't spend any effort protecting
+> me."
+> 
+> Joel
+> 
 
-Here's the patch in that sequence we submitted earlier (which is now in the upstream/scsi stream):
-http://marc.info/?l=linux-scsi&m=129850384318495&w=2
+Looks like so -
 
-Cheers,
-Madhu
+So I think we could have a mode to turn on/off concurrent dio if the non
+heavy duty applications relies on filesystem to take care of the
+serialization.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Matthew Wilcox
-> Sent: Friday, April 01, 2011 1:22 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: [PATCH 3/3] qla2xxx: Run queuecommand outside the host_lock
->
->
-> The qla2xxx driver still uses the host_lock, but only to protect against
-> some rare events like rport deletion.
->
-> Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
->
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index f27724d..61340e1 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -506,7 +506,7 @@ qla24xx_fw_version_str(struct scsi_qla_host *vha, char
-> *str)
->
->  static inline srb_t *
->  qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t *fcport,
-> -    struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
-> +    struct scsi_cmnd *cmd)
->  {
->       srb_t *sp;
->       struct qla_hw_data *ha = vha->hw;
-> @@ -520,16 +520,15 @@ qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t
-> *fcport,
->       sp->cmd = cmd;
->       sp->flags = 0;
->       CMD_SP(cmd) = (void *)sp;
-> -     cmd->scsi_done = done;
->       sp->ctx = NULL;
->
->       return sp;
->  }
->
->  static int
-> -qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct
-> scsi_cmnd *))
-> +qla2xxx_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
->  {
-> -     scsi_qla_host_t *vha = shost_priv(cmd->device->host);
-> +     scsi_qla_host_t *vha = shost_priv(shost);
->       fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
->       struct fc_rport *rport = starget_to_rport(scsi_target(cmd->device));
->       struct qla_hw_data *ha = vha->hw;
-> @@ -537,7 +536,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void
-> (*done)(struct scsi_cmnd *)
->       srb_t *sp;
->       int rval;
->
-> -     spin_unlock_irq(vha->host->host_lock);
->       if (ha->flags.eeh_busy) {
->               if (ha->flags.pci_channel_io_perm_failure)
->                       cmd->result = DID_NO_CONNECT << 16;
-> @@ -569,7 +567,7 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void
-> (*done)(struct scsi_cmnd *)
->               goto qc24_target_busy;
->       }
->
-> -     sp = qla2x00_get_new_sp(base_vha, fcport, cmd, done);
-> +     sp = qla2x00_get_new_sp(base_vha, fcport, cmd);
->       if (!sp)
->               goto qc24_host_busy_lock;
->
-> @@ -577,8 +575,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void
-> (*done)(struct scsi_cmnd *)
->       if (rval != QLA_SUCCESS)
->               goto qc24_host_busy_free_sp;
->
-> -     spin_lock_irq(vha->host->host_lock);
-> -
->       return 0;
->
->  qc24_host_busy_free_sp:
-> @@ -586,23 +582,17 @@ qc24_host_busy_free_sp:
->       mempool_free(sp, ha->srb_mempool);
->
->  qc24_host_busy_lock:
-> -     spin_lock_irq(vha->host->host_lock);
->       return SCSI_MLQUEUE_HOST_BUSY;
->
->  qc24_target_busy:
-> -     spin_lock_irq(vha->host->host_lock);
->       return SCSI_MLQUEUE_TARGET_BUSY;
->
->  qc24_fail_command:
-> -     spin_lock_irq(vha->host->host_lock);
-> -     done(cmd);
-> +     cmd->scsi_done(cmd);
->
->       return 0;
->  }
->
-> -static DEF_SCSI_QCMD(qla2xxx_queuecommand)
-> -
-> -
->  /*
->   * qla2x00_eh_wait_on_command
->   *    Waits for the command to be returned by the Firmware for some
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Mingming
 
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
