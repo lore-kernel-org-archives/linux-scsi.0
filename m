@@ -1,93 +1,57 @@
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: Re: [Lsf] Preliminary Agenda and Activities for LSF
-Date: Fri, 1 Apr 2011 09:30:04 -0700
-Message-ID: <AANLkTinZCx3gq-iDjPLzkvSFQNqAc1-bGN8xgzRz_=yj@mail.gmail.com>
-References: <1301373398.2590.20.camel@mulgrave.site>
-	<4D91BF90.8070909@redhat.com>
-	<1301445210.2731.14.camel@mingming-laptop>
-	<20110330021742.GL3008@dastard>
-	<E32BEFA9-15DE-4169-B313-095920A4DF7A@mit.edu>
-	<4D9313E2.6080006@gmail.com>
-	<20110401151907.GG21075@thunk.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 5/14] megaraid_sas: Fix probe_one to clear MSI-X flags
+ in kdump
+Date: Fri, 01 Apr 2011 18:31:19 +0200
+Message-ID: <4D95FDD7.7070703@redhat.com>
+References: <AANLkTimG4HbXCNUdkcpGHbP7D2oNmvymbyKMOkCFNxJD@mail.gmail.com>	<4D93227E.4040407@redhat.com> <AANLkTim2KJV9iz5SCExNfKD_Z+y6Nj34n3hE_jLhupr7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20110401151907.GG21075@thunk.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>
-Cc: Ric Wheeler <ricwheeler@gmail.com>, Dave Chinner <david@fromorbit.com>, lsf@lists.linux-foundation.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, device-mapper development <dm-devel@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ric Wheeler <rwheeler@redhat.com>, Yongqiang Yang <xiaoqiangnk@gmail.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:36008 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758266Ab1DAQ6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Apr 2011 12:58:50 -0400
+In-Reply-To: <AANLkTim2KJV9iz5SCExNfKD_Z+y6Nj34n3hE_jLhupr7@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-On Fri, Apr 1, 2011 at 8:19 AM, Ted Ts'o <tytso@mit.edu> wrote:
-> On Wed, Mar 30, 2011 at 07:28:34AM -0400, Ric Wheeler wrote:
+On 03/31/2011 08:50 PM, adam radford wrote:
+> On Wed, Mar 30, 2011 at 5:30 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>
+>   
+>> Hi Adam,
+>> sorry I'm late, but this is still not applied I think.
+>>     
+> Yes, it is here:
+>
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=66192dfe1e74eae31a76cfc36092dabdba1324e6
+>
+>   
+>> The above #define are already defined in msi.h and pci_regs.h
+>> I'd prefer to include those files instead of define the values.
 >>
->> What possible semantics could you have?
->>
->> If you ever write concurrently from multiple processes without
->> locking, you clearly are at the mercy of the scheduler and the
->> underlying storage which could fragment a single write into multiple
->> IO's sent to the backend device.
->>
->> I would agree with Dave, let's not make it overly complicated or try
->> to give people "atomic" unbounded size writes just because they set
->> the O_DIRECT flag :)
+>>     
+> msi_control_reg() macro is defined in drivers/pci/msi.h _not_
+> include/linux/msi.h.
 >
-> I just want to have it written down. =A0After getting burned with ext=
-3's
-> semantics promising more than what the standard guaranteed, I've just
-> gotten paranoid about application programmers getting upset when
-> things change on them --- and in the case of direct I/O, this stuff
-> isn't even clearly documented anywhere official.
->
-> I just think it's best that we document it the fact that concurrent
-> DIO's to the same region may result in completely arbitrary behaviour=
-,
-> make sure it's well publicized to likely users (and I'm more worried
-> about the open source code bases than Oracle DB), and then call it a =
-day.
->
-> The closest place that we have to any official documentation about
-> O_DIRECT semantics is the open(2) man page in the Linux manpages, and
-> it doesn't say anything about this. =A0It does give a recommendation
-> against not mixing buffered and O_DIRECT accesses to the same file,
-> but it does promise that things will work in that case. =A0(Even if i=
-t
-> does, do we really want to make the promise that it will always work?=
-)
+> Are you suggesting I try to include drivers/pci/msi.h ?
+>   
+That doesn't look that good, probably better would be to put the definition
+to some other place. The patch is already accepted and the priority for me low...
 
-when writing DIO to indirect mapped file holes, we fall back to buffere=
-d write
-(so we won't expose stale data in the case of a crash) concurrent DIO r=
-eads
-to that file (before data writeback) can expose stale data. right?
-do you consider this case mixing buffered and DIO access?
-do you consider that as a problem?
+The PCI_MSIX_FLAGS_ENABLE is defined in pci_regs.h this is included in linux/pci.h and this is included 
+in megaraid_sas_base.c - I think the definition could be simply removed from your patch, isn't it so?
+Again this is low priority I expect no immediate action from you :)
 
-the case interests me because I am afraid we may have to use the fallba=
-ck
-trick for extent move on write from DIO (we did so in current
-implementation anyway).
+Tomas
 
-of course, if we end up implementing in-memory extent tree, we will pro=
-bably be
-able to cope with DIO MOW without fallback to buffered IO.
+> -Adam
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
->
-> In any case, adding some text in that paragraph, or just after that
-> paragraph, to the effect that two concurrent DIO accesses to the same
-> file block, even by two different processes will result in undefined
-> behavior would be a good start.
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 - Ted
-> _______________________________________________
-> Lsf mailing list
-> Lsf@lists.linux-foundation.org
-> https://lists.linux-foundation.org/mailman/listinfo/lsf
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
