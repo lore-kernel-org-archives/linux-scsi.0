@@ -1,57 +1,58 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 5/14] megaraid_sas: Fix probe_one to clear MSI-X flags
- in kdump
-Date: Fri, 01 Apr 2011 18:31:19 +0200
-Message-ID: <4D95FDD7.7070703@redhat.com>
-References: <AANLkTimG4HbXCNUdkcpGHbP7D2oNmvymbyKMOkCFNxJD@mail.gmail.com>	<4D93227E.4040407@redhat.com> <AANLkTim2KJV9iz5SCExNfKD_Z+y6Nj34n3hE_jLhupr7@mail.gmail.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: [LSF]: fc_rport attributes to further populate HBAAPIv2
+Date: Fri, 1 Apr 2011 12:57:01 -0700
+Message-ID: <C9BB62DD.17720%giridhar.malavali@qlogic.com>
+References: <20110401171838.GD20986@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36008 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758266Ab1DAQ6u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Apr 2011 12:58:50 -0400
-In-Reply-To: <AANLkTim2KJV9iz5SCExNfKD_Z+y6Nj34n3hE_jLhupr7@mail.gmail.com>
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:7145 "EHLO
+	VA3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754831Ab1DAT5H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2011 15:57:07 -0400
+In-Reply-To: <20110401171838.GD20986@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "lsf@lists.linux-foundation.org" <lsf@lists.linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On 03/31/2011 08:50 PM, adam radford wrote:
-> On Wed, Mar 30, 2011 at 5:30 AM, Tomas Henzl <thenzl@redhat.com> wrote:
->
->   
->> Hi Adam,
->> sorry I'm late, but this is still not applied I think.
->>     
-> Yes, it is here:
->
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=66192dfe1e74eae31a76cfc36092dabdba1324e6
->
->   
->> The above #define are already defined in msi.h and pci_regs.h
->> I'd prefer to include those files instead of define the values.
->>
->>     
-> msi_control_reg() macro is defined in drivers/pci/msi.h _not_
-> include/linux/msi.h.
->
-> Are you suggesting I try to include drivers/pci/msi.h ?
->   
-That doesn't look that good, probably better would be to put the definition
-to some other place. The patch is already accepted and the priority for me low...
+James,
 
-The PCI_MSIX_FLAGS_ENABLE is defined in pci_regs.h this is included in linux/pci.h and this is included 
-in megaraid_sas_base.c - I think the definition could be simply removed from your patch, isn't it so?
-Again this is low priority I expect no immediate action from you :)
+I would also like to discuss the following topic.
 
-Tomas
+The patches were submitted to linux-scsi earlier which basically includes
+fc_rport attributes to FC transport.
+Here are the links to previous submission
 
-> -Adam
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+http://marc.info/?l=linux-scsi&m=128828294426031&w=2
+http://marc.info/?l=linux-scsi&m=128828255825328&w=2
+http://marc.info/?l=linux-scsi&m=128828263025468&w=2
+
+
+>From review comments from community (Christof S and James Smart), it is
+felt that a common implementation either in transport or block layer would
+be better to avoid all LLD implementing this. In an effort the BSG
+interface is extended to send in-kernel BSG commands to query name server
+and get the required information to populate.
+
+Here are the links for the review comments received
+
+http://marc.info/?l=linux-scsi&m=128834912816011&w=2
+http://marc.info/?l=linux-scsi&m=128838095128776&w=2
+http://marc.info/?l=linux-scsi&m=128871208700376&w=2
+
+
+I would like to discuss to tap more idea from community for any better
+approach. If not, to continue with the present approach.
+
+Thanks,
+Giridhar Malavali
+
+
+
+
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
