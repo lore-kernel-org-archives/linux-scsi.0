@@ -1,63 +1,34 @@
-From: Madhu Iyengar <madhu.iyengar@qlogic.com>
-Subject: RE: [PATCH 3/3] qla2xxx: Run queuecommand outside the host_lock
-Date: Sat, 2 Apr 2011 07:22:03 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8728A7B1AD6@AVEXMB1.qlogic.org>
-References: <20110401202209.GN4183@linux.intel.com>
- <5E4F49720D0BAD499EE1F01232234BA8728A7B1A4F@AVEXMB1.qlogic.org>
- <20110402033123.GB7286@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/3] SCSI: Make cmd_serial_number an atomic
+Date: Sat, 02 Apr 2011 14:10:50 -0400
+Message-ID: <4D9766AA.4020906@garzik.org>
+References: <20110401202051.GL4183@linux.intel.com> <20110402133643.GB18990@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:50827
-	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751909Ab1DBOWI convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Apr 2011 10:22:08 -0400
-In-Reply-To: <20110402033123.GB7286@parisc-linux.org>
-Content-Language: en-US
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:60541 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756212Ab1DBSKx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Apr 2011 14:10:53 -0400
+Received: by qwk3 with SMTP id 3so2669333qwk.19
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Apr 2011 11:10:52 -0700 (PDT)
+In-Reply-To: <20110402133643.GB18990@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Matthew Wilcox <willy@linux.intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Madhu Iyengar <madhu.iyengar@qlogic.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Matthew Wilcox [mailto:matthew@wil.cx]
-> Sent: Friday, April 01, 2011 8:31 PM
-> To: Madhu Iyengar
-> Cc: Matthew Wilcox; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 3/3] qla2xxx: Run queuecommand outside the host_lock
+On 04/02/2011 09:36 AM, Christoph Hellwig wrote:
+> On Fri, Apr 01, 2011 at 04:20:51PM -0400, Matthew Wilcox wrote:
+>>
+>> In preparation for moving some drivers out from under the host_lock,
+>> make cmd_serial_number an atomic.
 >
-> On Fri, Apr 01, 2011 at 02:33:08PM -0700, Madhu Iyengar wrote:
-> > Mathew,
-> >
-> > We submitted the host_lock related changes earlier, and the changes were
-> accepted and went into the 2.6.38-rc6 (or round-about that timeframe)
-> upstream kernel.
-> >
-> > Here's the patch in that sequence we submitted earlier (which is now in
-> the upstream/scsi stream):
-> > http://marc.info/?l=linux-scsi&m=129850384318495&w=2
->
-> Ah, cool.  You missed a step though:
->
->       scsi_qla_host_t *vha = shost_priv(cmd->device->host);
->
-> That can just be:
->
->       scsi_qla_host_t *vha = shost_priv(host);
->
+> The right fix is to stop abusing cmd_serial_nubmer in those few
+> drivers, and use a driver-private and more scalable lookup data
+> structure than a linear list search.
 
-Thanks for pointing it out (:-). We'll correct that when we submit our next patch set.
+Agreed.
 
-> --
-> Matthew Wilcox                                Intel Open Source Technology Centre
-> "Bill, look, we understand that you're interested in selling us this
-> operating system, but compare it to ours.  We can't possibly take such
-> a retrograde step."
-
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
