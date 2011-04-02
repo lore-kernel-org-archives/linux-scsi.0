@@ -1,40 +1,318 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 3/3] qla2xxx: Run queuecommand outside the host_lock
-Date: Fri, 1 Apr 2011 21:31:24 -0600
-Message-ID: <20110402033123.GB7286@parisc-linux.org>
-References: <20110401202209.GN4183@linux.intel.com> <5E4F49720D0BAD499EE1F01232234BA8728A7B1A4F@AVEXMB1.qlogic.org>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: caviar black + mpt2sas horrific performance
+Date: Fri, 1 Apr 2011 22:51:17 -0600
+Message-ID: <4565AEA676113A449269C2F3A549520F808E4AB6@cosmail03.lsi.com>
+References: <20110330080114.GA5066@apartia.fr>
+ <4565AEA676113A449269C2F3A549520F8086471A@cosmail03.lsi.com>
+ <20110330201700.GA6775@apartia.fr>
+ <4565AEA676113A449269C2F3A549520F808648E9@cosmail03.lsi.com>
+ <20110331153456.GA13754@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33731 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393Ab1DBDbZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Apr 2011 23:31:25 -0400
-Content-Disposition: inline
-In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA8728A7B1A4F@AVEXMB1.qlogic.org>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:43759 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750865Ab1DBEuE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Apr 2011 00:50:04 -0400
+In-Reply-To: <20110331153456.GA13754@apartia.fr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Madhu Iyengar <madhu.iyengar@qlogic.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Apr 01, 2011 at 02:33:08PM -0700, Madhu Iyengar wrote:
-> Mathew,
+On Thursday, March 31, 2011 9:35 AM, Louis-David Mitterrand wrote:
+> On Thu, Mar 31, 2011 at 09:07:05AM -0600, Moore, Eric wrote:
+> > On Wednesday, March 30, 2011 2:17 PM, Louis-David Mitterrand wrote:
+> > > On Wed, Mar 30, 2011 at 02:02:12PM -0600, Moore, Eric wrote:
+> > > > Hi Louis, can you send me your /var/log/messages and dmesg output?
+> > > > Please capture after you've run your test.
+> > >
+> > > Hi,
+> > >
+> > > My test produces no specific output through dmesg or /var/log/messages
+> > > as there is no apparent error from the controller.
+> > >
+> > > However I can send you the syslog startup output. Let me know if I can
+> > > run any further tests or provide more information.
+> > >
+> >
+> > need you to set the mpt2sas logging level to 0x310 just before you run
+> you test, then capture the logs after.
+> > Please make sure your syslog level is set to capture all KERN_XXX levels
+> to include KERN_DEBUG.
+> >
+> > Example:
+> > # echo 0x310 > /sys/module/mpt2sas/parameters/logging_level
 > 
-> We submitted the host_lock related changes earlier, and the changes were accepted and went into the 2.6.38-rc6 (or round-about that timeframe) upstream kernel.
+> Hi,
 > 
-> Here's the patch in that sequence we submitted earlier (which is now in the upstream/scsi stream):
-> http://marc.info/?l=linux-scsi&m=129850384318495&w=2
+> Here is the output:
+> 
+> Mar 31 17:07:50 zenon kernel: setting logging_level(0x00000310)
+> Mar 31 17:24:29 zenon kernel: sd 0:0:0:0: [sda] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:29 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221103000000), phy(3)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(0)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	handle(0x0009),
+> ioc_status(success)(0x0000), smid(1344)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:29 zenon kernel: sd 0:0:0:0: [sda] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:29 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221103000000), phy(3)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(0)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	handle(0x0009),
+> ioc_status(success)(0x0000), smid(884)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:29 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:30 zenon kernel: sd 0:0:1:0: [sdb] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:30 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221102000000), phy(2)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(1)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	handle(0x000a),
+> ioc_status(success)(0x0000), smid(100)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:30 zenon kernel: sd 0:0:1:0: [sdb] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:30 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221102000000), phy(2)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(1)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	handle(0x000a),
+> ioc_status(success)(0x0000), smid(510)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:30 zenon kernel: sd 0:0:2:0: [sdc] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:30 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221101000000), phy(1)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(2)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	handle(0x000b),
+> ioc_status(success)(0x0000), smid(1455)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:30 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:31 zenon kernel: sd 0:0:2:0: [sdc] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:31 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221101000000), phy(1)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(2)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	handle(0x000b),
+> ioc_status(success)(0x0000), smid(966)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:31 zenon kernel: sd 0:0:3:0: [sdd] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:31 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221100000000), phy(0)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(3)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	handle(0x000c),
+> ioc_status(success)(0x0000), smid(519)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:31 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:32 zenon kernel: sd 0:0:3:0: [sdd] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:32 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221100000000), phy(0)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(3)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	handle(0x000c),
+> ioc_status(success)(0x0000), smid(1125)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:32 zenon kernel: sd 0:0:4:0: [sde] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:32 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221104000000), phy(4)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(7)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	handle(0x000d),
+> ioc_status(success)(0x0000), smid(570)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:32 zenon kernel: sd 0:0:4:0: [sde] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:32 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221104000000), phy(4)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(7)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	handle(0x000d),
+> ioc_status(success)(0x0000), smid(28)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:32 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:33 zenon kernel: sd 0:0:5:0: [sdf] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:33 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221107000000), phy(7)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(4)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	handle(0x000e),
+> ioc_status(success)(0x0000), smid(471)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:33 zenon kernel: sd 0:0:5:0: [sdf] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:33 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221107000000), phy(7)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(4)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	handle(0x000e),
+> ioc_status(success)(0x0000), smid(789)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:33 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:34 zenon kernel: sd 0:0:6:0: [sdg] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:34 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221106000000), phy(6)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(5)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	handle(0x000f),
+> ioc_status(success)(0x0000), smid(594)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:34 zenon kernel: sd 0:0:6:0: [sdg] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:34 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221106000000), phy(6)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(5)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	handle(0x000f),
+> ioc_status(success)(0x0000), smid(761)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:34 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:35 zenon kernel: sd 0:0:7:0: [sdh] CDB: ATA command pass
+> through(16): 85 06 2c 00 00 00 00 00 00 00 00 00 00 00 e5 00
+> Mar 31 17:24:35 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221105000000), phy(5)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(6)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	handle(0x0010),
+> ioc_status(success)(0x0000), smid(1127)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
+> Mar 31 17:24:35 zenon kernel: sd 0:0:7:0: [sdh] CDB: ATA command pass
+> through(16): 85 06 2c 00 da 00 00 00 00 00 4f 00 c2 00 b0 00
+> Mar 31 17:24:35 zenon kernel: mpt2sas0:
+> 	sas_address(0x4433221105000000), phy(5)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0:
+> 	enclosure_logical_id(0x5842b2b05020c600), slot(6)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	handle(0x0010),
+> ioc_status(success)(0x0000), smid(1583)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	request_len(0), underflow(0),
+> resid(0)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	tag(0), transfer_count(0), sc-
+> >result(0x00000002)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	scsi_status(check
+> condition)(0x02), scsi_state(autosense valid )(0x01)
+> Mar 31 17:24:35 zenon kernel: mpt2sas0: 	[sense_key,asc,ascq]:
+> [0x01,0x00,0x1d], count(22)
 
-Ah, cool.  You missed a step though:
 
-	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+Well you've got a load of SATA passthru request with RECOVERED_ERROR sense key is probably effecting your performance.
 
-That can just be:
+Any chance you could try shutdown the daemons that are sending those request?   I doubt its coming via the filesystem and the test your running.
 
-	scsi_qla_host_t *vha = shost_priv(host);
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Eric
