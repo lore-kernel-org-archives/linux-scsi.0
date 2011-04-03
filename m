@@ -1,64 +1,64 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: PMP and SEMB messages to SEP
-Date: Sun, 3 Apr 2011 19:39:03 +0200
-Message-ID: <20110403173903.GK25397@MAIL.13thfloor.at>
-References: <20110114165957.GH16039@MAIL.13thfloor.at> <20110114170407.GE978@htj.dyndns.org> <20110114173759.GI16039@MAIL.13thfloor.at> <20110117154042.GG27123@htj.dyndns.org> <1295281131.3015.44.camel@mulgrave.site> <20110117171836.GI27123@htj.dyndns.org> <1295284906.3015.136.camel@mulgrave.site> <20110117172415.GK27123@htj.dyndns.org> <20110125030740.GB24024@MAIL.13thfloor.at> <1295964854.4955.21.camel@mulgrave.site>
+Date: Sun, 03 Apr 2011 14:38:22 -0400
+Message-ID: <1301855902.2631.39.camel@mulgrave.site>
+References: <20110114165957.GH16039@MAIL.13thfloor.at>
+	 <20110114170407.GE978@htj.dyndns.org>
+	 <20110114173759.GI16039@MAIL.13thfloor.at>
+	 <20110117154042.GG27123@htj.dyndns.org>
+	 <1295281131.3015.44.camel@mulgrave.site>
+	 <20110117171836.GI27123@htj.dyndns.org>
+	 <1295284906.3015.136.camel@mulgrave.site>
+	 <20110117172415.GK27123@htj.dyndns.org>
+	 <20110125030740.GB24024@MAIL.13thfloor.at>
+	 <1295964854.4955.21.camel@mulgrave.site>
+	 <20110403173903.GK25397@MAIL.13thfloor.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1295964854.4955.21.camel@mulgrave.site>
+In-Reply-To: <20110403173903.GK25397@MAIL.13thfloor.at>
 Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
+To: Herbert Poetzl <herbert@13thfloor.at>
 Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 25, 2011 at 09:14:14AM -0500, James Bottomley wrote:
-> On Tue, 2011-01-25 at 04:07 +0100, Herbert Poetzl wrote:
->> On Mon, Jan 17, 2011 at 06:24:15PM +0100, Tejun Heo wrote:
->>> On Mon, Jan 17, 2011 at 11:21:46AM -0600, James Bottomley wrote:
->>>> Expanders aren't SCSI devices either ... that means they don't
->>>> appear as visible to standard SCSI mechanisms like INQUIRY (SMP
->>>> isn't a SCSI protocol it's a SAS extension). They just appear as
->>>> part of the topology in the device tree.
+On Sun, 2011-04-03 at 19:39 +0200, Herbert Poetzl wrote:
+> >> So, any thoughts on how and where to add the PMP to the devices
+> >> available for sending SCSI or ATA commands to?
+> 
+> >> I'm willing to try to add the required code, but I'm sure I'll
+> >> benefit from a few hints from the experts ...
+> 
+> > Well, I'm not sure I'd count as an expert on this piece:
+> > I haven't read the relevant ATA standards. 
+> 
+> > From what I understand, SES packets are encapsulated over 
+> > an ATA command for SEMB.
+> 
+> correct, just that it can be any protocol (it's just another
+> bus, usually i2c) with the common protocols being SES and
+> SAF_TE AFAIK
+> 
+> > In that case, it should be fairly simple to recognise
+> > this and present a SCSI device which simply encapsulates
+> > everything sent to it over this protocol. 
+> 
+> do you have any pointers for me how that is done for SCSI?
 
->>> Ah, okay.  Then, things would be much simpler.  I was worrying about
->>> how it would map to SCSI layer including INQUIRY emulations and all
->>> those stuff.  Thanks for the info.
+I don't think I understand the question.  It happens automatically for
+anything part of the SCSI domain.  For SEMB you have to unwind the
+encapsulation and expose the resulting device into the SCSI domain for
+the SES ULD to attach, presumably as a libata target or LUN.  If you're
+asking for basic documentation about how SCSI works, that's in
+Documentation/scsi/ plus some of the kernel docbook stuff.
 
->> So, any thoughts on how and where to add the PMP to the devices
->> available for sending SCSI or ATA commands to?
+> > That would allow the ses ULD to attach seamlessly.
+> 
+> any pointers to such an SES ULD (maybe for testing)?
 
->> I'm willing to try to add the required code, but I'm sure I'll
->> benefit from a few hints from the experts ...
+it's drivers/scsi/ses.c
 
-> Well, I'm not sure I'd count as an expert on this piece:
-> I haven't read the relevant ATA standards. 
-
-> From what I understand, SES packets are encapsulated over 
-> an ATA command for SEMB.
-
-correct, just that it can be any protocol (it's just another
-bus, usually i2c) with the common protocols being SES and
-SAF_TE AFAIK
-
-> In that case, it should be fairly simple to recognise
-> this and present a SCSI device which simply encapsulates
-> everything sent to it over this protocol. 
-
-do you have any pointers for me how that is done for SCSI?
-
-> That would allow the ses ULD to attach seamlessly.
-
-any pointers to such an SES ULD (maybe for testing)?
-
-thanks in advance,
-Herbert
-
-> James
+James
 
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
