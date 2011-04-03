@@ -1,63 +1,51 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Sun, 03 Apr 2011 14:38:22 -0400
-Message-ID: <1301855902.2631.39.camel@mulgrave.site>
-References: <20110114165957.GH16039@MAIL.13thfloor.at>
-	 <20110114170407.GE978@htj.dyndns.org>
-	 <20110114173759.GI16039@MAIL.13thfloor.at>
-	 <20110117154042.GG27123@htj.dyndns.org>
-	 <1295281131.3015.44.camel@mulgrave.site>
-	 <20110117171836.GI27123@htj.dyndns.org>
-	 <1295284906.3015.136.camel@mulgrave.site>
-	 <20110117172415.GK27123@htj.dyndns.org>
-	 <20110125030740.GB24024@MAIL.13thfloor.at>
-	 <1295964854.4955.21.camel@mulgrave.site>
-	 <20110403173903.GK25397@MAIL.13thfloor.at>
+Subject: Re: [PATCH 1/3] SCSI: Make cmd_serial_number an atomic
+Date: Sun, 03 Apr 2011 15:54:01 -0400
+Message-ID: <1301860442.2631.43.camel@mulgrave.site>
+References: <20110401202051.GL4183@linux.intel.com>
+	 <20110402133643.GB18990@infradead.org>
+	 <20110402210240.GD7286@parisc-linux.org>
+	 <20110403110057.GC3872@infradead.org>
+	 <20110403131543.GF7286@parisc-linux.org>
+	 <20110403133306.GA22172@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20110403173903.GK25397@MAIL.13thfloor.at>
-Sender: linux-ide-owner@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:50713 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753303Ab1DCTyI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 3 Apr 2011 15:54:08 -0400
+In-Reply-To: <20110403133306.GA22172@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Sun, 2011-04-03 at 19:39 +0200, Herbert Poetzl wrote:
-> >> So, any thoughts on how and where to add the PMP to the devices
-> >> available for sending SCSI or ATA commands to?
+On Sun, 2011-04-03 at 09:33 -0400, Christoph Hellwig wrote:
+> On Sun, Apr 03, 2011 at 07:15:43AM -0600, Matthew Wilcox wrote:
+> > Hm, yeah, it looks like it's only used for checking whether the command
+> > we're aborting is the same command we're using to do the aborts.  In
+> > which case, can't we simply do this?  Eric?
 > 
-> >> I'm willing to try to add the required code, but I'm sure I'll
-> >> benefit from a few hints from the experts ...
-> 
-> > Well, I'm not sure I'd count as an expert on this piece:
-> > I haven't read the relevant ATA standards. 
-> 
-> > From what I understand, SES packets are encapsulated over 
-> > an ATA command for SEMB.
-> 
-> correct, just that it can be any protocol (it's just another
-> bus, usually i2c) with the common protocols being SES and
-> SAF_TE AFAIK
-> 
-> > In that case, it should be fairly simple to recognise
-> > this and present a SCSI device which simply encapsulates
-> > everything sent to it over this protocol. 
-> 
-> do you have any pointers for me how that is done for SCSI?
+> A similar question also applies for the old fusion driver.  There it
+> even compares the serial number with one taken from the same scsi_cmnd
+> in the same function.  If we could reuse a scsi_cmnd while in the
+> ->eh_abort handler for fusion it would have to seriously mess up it's
+> locking and lifetime rules.
 
-I don't think I understand the question.  It happens automatically for
-anything part of the SCSI domain.  For SEMB you have to unwind the
-encapsulation and expose the resulting device into the SCSI domain for
-the SES ULD to attach, presumably as a libata target or LUN.  If you're
-asking for basic documentation about how SCSI works, that's in
-Documentation/scsi/ plus some of the kernel docbook stuff.
+Well, I think there's method in the madness for the old driver.  What it
+seems to worry about is that the command gets reissued after the abort
+because the abort routine sleeps.  If the reissue occurred, the same
+command could be on the active list with a different serial number.
 
-> > That would allow the ses ULD to attach seamlessly.
-> 
-> any pointers to such an SES ULD (maybe for testing)?
+The theory is currently bogus because we halt all activity on the host
+while error handler porcessing is active and the reissue won't occur
+until after the abort routine returns.  Although if we did running error
+handling, problems like this would arise ...
 
-it's drivers/scsi/ses.c
+The new code seems to be an incorrect extract from the old code, so both
+can currently go.
 
 James
 
