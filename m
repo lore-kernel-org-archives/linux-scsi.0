@@ -1,27 +1,34 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [GIT] isci: update for 4/1
-Date: Mon, 4 Apr 2011 17:34:04 -0400
-Message-ID: <20110404213404.GA10733@infradead.org>
-References: <1301194067.28442.22.camel@dwillia2-linux>
- <1301706950.1429.9.camel@dwillia2-linux>
- <20110402121644.GC30913@infradead.org>
- <D010E79907AF0D4E90B603DE907837D5048A9C5666@azsmsx504.amr.corp.intel.com>
+From: Ulziibat Shirendeb <shirende@ohsu.edu>
+Subject: Hello,
+Date: Mon, 4 Apr 2011 15:55:13 -0700
+Message-ID: <2B38B4ED5C3D644DA539CCD960EA32C8935EC1D02B__32704.1583987468$1301958818$gmane$org@EX-MB08.ohsu.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38859 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754278Ab1DDVeE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 17:34:04 -0400
-Content-Disposition: inline
-In-Reply-To: <D010E79907AF0D4E90B603DE907837D5048A9C5666@azsmsx504.amr.corp.intel.com>
+Received: from twedge02.ohsu.edu ([137.53.6.166]:3187 "EHLO twedge02.ohsu.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754250Ab1DDXN0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 19:13:26 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
 
-On Mon, Apr 04, 2011 at 12:50:31PM -0700, Jiang, Dave wrote:
-> Would it be possible for you to let us know if you are working on any particular cleanup right now for the driver or plan to in the next week or so? Just want to make sure there isn't any duplicated effort. Thank you!
 
-I'm pretty busy this week, so don't expect much more from me in this
-timeframe.
+ Hello,
+
+Are you in need of a loan? Have you been finding it difficult to 
+obtain loan from banks and other financial institutions. 
+Our company is Trust Finance Group and we offer all kind of loans 
+to individuals, commercial and private companies, churches, schools 
+etc. at 3% interest rate. Contact us today via email for our efficient 
+service. E-mail: Trust-loan25@hotmail.co.uk
+
+
+
+
+
+
+
+
+
