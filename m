@@ -1,20 +1,34 @@
-From: Microsoft <m.loto.yahoo.co.uk@[24.7.113.8]>
-Subject: winner
-Date: Sun, 03 Apr 2011 21:02:40 -0700
-Message-ID: <0LJ300M5LC5UL9A0@a-mtaout21.012.net.il>
-Reply-To: microsoft_draws0125@yahoo.com.hk
+From: BENZ PROMO <mr.jerry077@hotmail.com>
+Subject: claims information
+Date: Mon, 04 Apr 2011 11:24:21 -0200
+Message-ID: <20110404080707.EB150BA9BFE__7272.44569357044$1301907796$gmane$org@nkosi.realnet.co.sz>
+Reply-To: mr.jerry077@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtaout21.012.net.il ([80.179.55.169]:58943 "EHLO
-	mtaout21.012.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753001Ab1DCTWH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Apr 2011 15:22:07 -0400
-Received: from conversion-daemon.a-mtaout21.012.net.il by a-mtaout21.012.net.il (HyperSendmail v2007.08) id <0LJ300N00BYL2900@a-mtaout21.012.net.il> for linux-scsi@vger.kernel.org; Sun, 03 Apr 2011 22:17:00 +0300 (IDT)
+Received: from netfinity.realnet.co.sz ([196.28.7.2]:60555 "EHLO
+	nkosi.realnet.co.sz" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753362Ab1DDJDJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 05:03:09 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: info@we.org
 
-You have won 500.000 GBP
-send your phone number
-and address
+=A3950,000.00 GBP was awarded to your Id in our British Mercedes Benz P=
+romo=0D
+file your claims contact our fiduciary agent for claims: Name.......=0D
+Address...... Tel.......... Country............=0D
+Email: jerry.smith077@hotmail.co.uk=0D
+=0D
+=0D
+=0D
+---------------------------=0D
+Did you know you can now get unCapped ADSL?=0D
+=46or more info call Real Image Internet on +268 2 409 1000
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
