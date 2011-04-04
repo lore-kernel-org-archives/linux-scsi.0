@@ -1,7 +1,7 @@
 From: "Jiang, Dave" <dave.jiang@intel.com>
 Subject: RE: [GIT] isci: update for 4/1
-Date: Mon, 4 Apr 2011 07:35:57 -0700
-Message-ID: <D010E79907AF0D4E90B603DE907837D5048A9C52A9@azsmsx504.amr.corp.intel.com>
+Date: Mon, 4 Apr 2011 12:50:31 -0700
+Message-ID: <D010E79907AF0D4E90B603DE907837D5048A9C5666@azsmsx504.amr.corp.intel.com>
 References: <1301194067.28442.22.camel@dwillia2-linux>
  <1301706950.1429.9.camel@dwillia2-linux>
  <20110402121644.GC30913@infradead.org>
@@ -9,10 +9,10 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:40203 "EHLO mga14.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:56641 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754511Ab1DDOf7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 10:35:59 -0400
+	id S1754190Ab1DDTue convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 15:50:34 -0400
 In-Reply-To: <20110402121644.GC30913@infradead.org>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
@@ -37,5 +37,5 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>
 > rather ugly way and already starting to bitrot.  Unless you plan to resurrect it
 > real soon I think we're better off removing it entirely for now.
 
-I think this will have to be removed for this go around. It is one of the features that has been moved to target 2.6.40. 
-
+Christoph,
+Would it be possible for you to let us know if you are working on any particular cleanup right now for the driver or plan to in the next week or so? Just want to make sure there isn't any duplicated effort. Thank you!
