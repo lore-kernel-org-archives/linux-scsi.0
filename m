@@ -1,62 +1,93 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device names
- in Kernel.
-Date: Tue, 5 Apr 2011 09:14:54 -0700
-Message-ID: <20110405161454.GB885@kroah.com>
-References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
+From: Dan Rosenberg <drosenberg@vsecurity.com>
+Subject: [PATCH] drivers/scsi/mpt2sas: prevent heap overflows and unchecked
+ reads
+Date: Tue, 05 Apr 2011 12:45:59 -0400
+Message-ID: <1302021959.2082.8.camel@dan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@suse.de>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp
+To: eric.moore@lsi.com, james.bottomley@suse.de, kashyap.desai@lsi.com
+Cc: security@kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Apr 05, 2011 at 09:49:46PM +0900, Nao Nishijima wrote:
-> This patch series provides a SCSI option for persistent device
-> names in kernel. With this option, user can always assign a
-> same device name (e.g. sda) to a specific device according to
-> udev rules and device id.
-> 
-> Issue:
-> Recently, kernel registers block devices in parallel. As a result,
-> different device names will be assigned at each boot time. This
-> will confuse file-system mounter, thus we usually use persistent
-> symbolic links provided by udev. However, dmesg and procfs outputs
-> show device names instead of the symbolic link names. This causes
-> a serious problem when managing multiple devices (e.g. on a
-> large-scale storage), because usually, device errors are output
-> with device names on dmesg. We also concern about some commands
-> which output device names, as well as kernel messages.
-> 
-> Solution:
-> To assign a persistent device name, I create unnamed devices (not
-> a block device, but an intermediate device. users cannot read/write
-> this device). When scsi device driver finds a LU, the LU is registered
-> as an unnamed device and inform to udev. After udev finds the unnamed
-> device, udev assigns a persistent device name to a specific device
-> according to udev rules and registers it as a block device. Hence,
-> this is just a naming, not a renaming.
-> 
-> Some users are satisfied with current udev solution. Therefore, my
-> proposal is implemented as an option.
-> 
-> If using this option, add the following kernel parameter.
-> 
-> 	scsi_mod.persistent_name=1
-> 
-> Also, if you want to assign a device name with sda, add the
-> following udev rules.
-> 
-> SUBSYSTEM=="scsi_unnamed", ATTR{disk_id}=="xxx", PROGRAM="/bin/sh
-> -c 'echo -n sda > /sys/%p/disk_name'"
+At two points in handling device ioctls via /dev/mpt2ctl, user-supplied
+length values are used to copy data from userspace into heap buffers
+without bounds checking, allowing controllable heap corruption and
+subsequently privilege escalation.
 
-Also, where is the "real" program you have created to properly name
-devices from userspace?  You need that to properly test this patch,
-right?
+Additionally, user-supplied values are used to determine the size of a
+copy_to_user() as well as the offset into the buffer to be read, with no
+bounds checking, allowing users to read arbitrary kernel memory.
 
-thanks,
+Compile-tested only.  Thanks to Eric Moore for suggestions on how to fix
+this.
 
-greg k-h
+Signed-off-by: Dan Rosenberg <drosenberg@vsecurity.com>
+Cc: stable@kernel.org
+---
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c |   23 +++++++++++++++++++++--
+ 1 files changed, 21 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index e92b77a..3834c95 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -688,6 +688,13 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
+ 		goto out;
+ 	}
+ 
++	/* Check for overflow and wraparound */
++	if (karg.data_sge_offset * 4 > ioc->request_sz ||
++	    karg.data_sge_offset > (UINT_MAX / 4)) {
++		ret = -EINVAL;
++		goto out;
++	}
++
+ 	/* copy in request message frame from user */
+ 	if (copy_from_user(mpi_request, mf, karg.data_sge_offset*4)) {
+ 		printk(KERN_ERR "failure at %s:%d/%s()!\n", __FILE__, __LINE__,
+@@ -1963,7 +1970,7 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
+ 	Mpi2DiagBufferPostReply_t *mpi_reply;
+ 	int rc, i;
+ 	u8 buffer_type;
+-	unsigned long timeleft;
++	unsigned long timeleft, request_size, copy_size;
+ 	u16 smid;
+ 	u16 ioc_status;
+ 	u8 issue_reset = 0;
+@@ -1999,6 +2006,8 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
+ 		return -ENOMEM;
+ 	}
+ 
++	request_size = ioc->diag_buffer_sz[buffer_type];
++
+ 	if ((karg.starting_offset % 4) || (karg.bytes_to_read % 4)) {
+ 		printk(MPT2SAS_ERR_FMT "%s: either the starting_offset "
+ 		    "or bytes_to_read are not 4 byte aligned\n", ioc->name,
+@@ -2006,13 +2015,23 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
+ 		return -EINVAL;
+ 	}
+ 
++	if (karg.starting_offset > request_size)
++		return -EINVAL;
++
+ 	diag_data = (void *)(request_data + karg.starting_offset);
+ 	dctlprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: diag_buffer(%p), "
+ 	    "offset(%d), sz(%d)\n", ioc->name, __func__,
+ 	    diag_data, karg.starting_offset, karg.bytes_to_read));
+ 
++	/* Truncate data on requests that are too large */
++	if ((diag_data + karg.bytes_to_read < diag_data) ||
++	    (diag_data + karg.bytes_to_read > request_data + request_size))
++		copy_size = request_size - karg.starting_offset;
++	else
++		copy_size = karg.bytes_to_read;
++
+ 	if (copy_to_user((void __user *)uarg->diagnostic_data,
+-	    diag_data, karg.bytes_to_read)) {
++	    diag_data, copy_size)) {
+ 		printk(MPT2SAS_ERR_FMT "%s: Unable to write "
+ 		    "mpt_diag_read_buffer_t data @ %p\n", ioc->name,
+ 		    __func__, diag_data);
