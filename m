@@ -1,106 +1,66 @@
-From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Subject: [PATCH 2/2] SCSI: modify SCSI subsystem
-Date: Tue, 05 Apr 2011 21:50:10 +0900
-Message-ID: <20110405125010.7969.51857.stgit@ltc233.sdl.hitachi.co.jp>
-References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
+From: Amit Shah <amit.shah@redhat.com>
+Subject: Re: [PATCH] sr: Ensure disk is revalidated when media changes
+Date: Tue, 5 Apr 2011 20:16:51 +0530
+Message-ID: <20110405144651.GA20671@amit-x200.redhat.com>
+References: <8d830b21c0b944d26f29dc1e0c42c0bef8d448c2.1301595169.git.amit.shah@redhat.com>
+ <20110401154327.GA6593@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailx.hitachi.co.jp ([133.145.228.49]:34450 "EHLO
-	mailx.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751762Ab1DEMw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2011 08:52:29 -0400
-In-Reply-To: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
+Received: from mx1.redhat.com ([209.132.183.28]:51836 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753575Ab1DEOrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2011 10:47:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20110401154327.GA6593@mtj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org
-Cc: Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@suse.de>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp, Nao Nishijima <nao.nishijima.xt@hitachi.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Markus Armbruster <armbru@redhat.com>, Stefan Hajnoczi <stefanha@gmail.com>
 
-Add a SCSI option for persistent device names in Kernel.
+On (Fri) 01 Apr 2011 [17:43:27], Tejun Heo wrote:
+> Hello,
+> 
+> On Thu, Mar 31, 2011 at 11:50:04PM +0530, Amit Shah wrote:
+> > After the first GET_EVENT_STATUS_NOTIFICATION command, any new media
+> > notification is reset by the device.  The following is then noticed:
+> > 
+> > 1. insert a CD of a particular size
+> > 2. mount it
+> > 3. note /sys/block/sr0/size
+> > 4. unmount cd
+> > 5. replace cd with a size greater than previous one
+> > 6. mount it
+> > 7. /sys/block/sr0/size isn't updated
+> > 8. copy all files from cd to somewhere; IO errors will pop up where the
+> >    files lie beyond previous CD's geometry
+> > 
+> > The cause is:
+> > 
+> >  cdrom_open()
+> >      open_for_data()
+> >          cdo->drive_status() = sr_drive_status()
+> >              cdrom_get_media_event()
+> >              --> GPCMD_GET_EVENT_STATUS_NOTIFICATION
+> >          --> med.media_present is true, return CDS_DISK_OK
+> >      (success)
+> >  check_disk_change()
+> >     ... -> 2nd call to GPCMD_GET_EVENT_STATUS_NOTIFICATION
+> > 
+> > at this point the device has already reset the new media event and the
+> > call to revalidate_disk() in check_disk_change() is never made.
+> 
+> Hmm... I see.  That's something I didn't expect.
 
-If scsi_mod.persistent_name=1, device names is assigned by udev.
-If scsi_mod.persistent_name=0, device names is assigned the order
-of logical unit recognizing.
+...
 
-Signed-off-by: Nao Nishijima <nao.nishijima.xt@hitachi.com>
----
+> But I don't think this is the correct place to do it.  The problem
+> happens because block layer consumes the event but doesn't remember it
+> when the time for revalidation comes.  It should be done by block
+> layer, not sr.
 
- drivers/scsi/sd.c |   10 +++++++---
- drivers/scsi/sr.c |    4 +++-
- drivers/scsi/st.c |    4 +++-
- 3 files changed, 13 insertions(+), 5 deletions(-)
+Hm, only the open call at the start of the call sequence is involved
+from the block layer.  How to pass on such a pending event back?  Some
+kind of an event array with helpers to modify it?
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b61ebec..94ad290 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -65,6 +65,7 @@
- 
- #include "sd.h"
- #include "scsi_logging.h"
-+#include "scsi_unnamed.h"
- 
- MODULE_AUTHOR("Eric Youngdale");
- MODULE_DESCRIPTION("SCSI disk (sd) driver");
-@@ -2554,9 +2555,12 @@ static int sd_probe(struct device *dev)
- 		goto out_free_index;
- 	}
- 
--	error = sd_format_disk_name("sd", index, gd->disk_name, DISK_NAME_LEN);
--	if (error)
--		goto out_free_index;
-+	if (!copy_persistent_name(gd->disk_name, dev)) {
-+		error = sd_format_disk_name("sd", index,
-+				gd->disk_name, DISK_NAME_LEN);
-+		if (error)
-+			goto out_free_index;
-+	}
- 
- 	sdkp->device = sdp;
- 	sdkp->driver = &sd_template;
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index aefadc6..682b1a4 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -58,6 +58,7 @@
- 
- #include "scsi_logging.h"
- #include "sr.h"
-+#include "scsi_unnamed.h"
- 
- 
- MODULE_DESCRIPTION("SCSI cdrom (sr) driver");
-@@ -634,7 +635,8 @@ static int sr_probe(struct device *dev)
- 
- 	disk->major = SCSI_CDROM_MAJOR;
- 	disk->first_minor = minor;
--	sprintf(disk->disk_name, "sr%d", minor);
-+	if (!copy_persistent_name(disk->disk_name, dev))
-+		sprintf(disk->disk_name, "sr%d", minor);
- 	disk->fops = &sr_bdops;
- 	disk->flags = GENHD_FL_CD;
- 	disk->events = DISK_EVENT_MEDIA_CHANGE | DISK_EVENT_EJECT_REQUEST;
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 1871b8a..9acf8b2 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -74,6 +74,7 @@ static const char *verstr = "20101219";
- 
- #include "st_options.h"
- #include "st.h"
-+#include "scsi_unnamed.h"
- 
- static DEFINE_MUTEX(st_mutex);
- static int buffer_kbs;
-@@ -4051,7 +4052,8 @@ static int st_probe(struct device *dev)
- 	}
- 	kref_init(&tpnt->kref);
- 	tpnt->disk = disk;
--	sprintf(disk->disk_name, "st%d", i);
-+	if (!copy_persistent_name(disk->disk_name, dev))
-+		sprintf(disk->disk_name, "st%d", i);
- 	disk->private_data = &tpnt->driver;
- 	disk->queue = SDp->request_queue;
- 	tpnt->driver = &st_template;
-
+		Amit
