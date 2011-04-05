@@ -1,38 +1,67 @@
-From: lsorense@csclub.uwaterloo.ca (Lennart Sorensen)
-Subject: aacraid adapter kernel panic'd ffffffff on 2.6.37 but not 2.6.32
-Date: Tue, 5 Apr 2011 13:13:41 -0400
-Message-ID: <20110405171341.GB351@caffeine.csclub.uwaterloo.ca>
+From: Dan Rosenberg <drosenberg@vsecurity.com>
+Subject: [PATCH] drivers/scsi/pmcraid: reject negative request size
+Date: Tue, 05 Apr 2011 13:27:31 -0400
+Message-ID: <1302024451.2082.30.camel@dan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from caffeine.csclub.uwaterloo.ca ([129.97.134.17]:49292 "EHLO
-	caffeine.csclub.uwaterloo.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751972Ab1DERNl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2011 13:13:41 -0400
-Content-Disposition: inline
+Received: from mx1.vsecurity.com ([209.67.252.12]:54275 "EHLO
+	mx1.vsecurity.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753088Ab1DER1m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Apr 2011 13:27:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: aacraid@adaptec.com, Len Sorensen <lsorense@csclub.uwaterloo.ca>, linux-scsi@vger.kernel.org
+To: anil_ravindranath@pmc-sierra.com, James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org
 
-I have an IBM serveraid 8k which is currently running a 2.6.32 kernel.
-I tried booting knoppix 6.4.4 which uses a 2.6.37 kernel to do some disk
-rearanging and was rather surprised that the aacraid failed to come up
-and instead resulting in the message:
+There's a code path in pmcraid that can be reached via device ioctl that
+causes all sorts of ugliness, including heap corruption or triggering
+the OOM killer due to consecutive allocation of large numbers of pages.
+Not especially relevant from a security perspective, since users must
+have CAP_SYS_ADMIN to open the character device.
 
-AAC0: adapter kernel panic'd ffffffff
-(transcribed by hand from memory, but I am pretty sure they were all f's).
+First, the user can call pmcraid_chr_ioctl() with a type
+PMCRAID_PASSTHROUGH_IOCTL.  A pmcraid_passthrough_ioctl_buffer
+is copied in, and the request_size variable is set to
+buffer->ioarcb.data_transfer_length, which is an arbitrary 32-bit signed
+value provided by the user.
 
-The firmware version on the adapter is 5.2-0[16002].
+If a negative value is provided here, bad things can happen.  For
+example, pmcraid_build_passthrough_ioadls() is called with this
+request_size, which immediately calls pmcraid_alloc_sglist() with a
+negative size.  The resulting math on allocating a scatter list can
+result in an overflow in the kzalloc() call (if num_elem is 0, the
+sglist will be smaller than expected), or if num_elem is unexpectedly
+large the subsequent loop will call alloc_pages() repeatedly, a high
+number of pages will be allocated and the OOM killer might be invoked.
 
-It is running a single raid5 across four 750GB SATA drives (total of
-2.25TB capacity, which has turned out to be a huge pain in the ass,
-but that's hopefully an unrelated story).
+Prevent this value from being negative in pmcraid_ioctl_passthrough().
 
-I would love to know why it works fine with 2.6.32 but fails completely
-with 2.6.37.  I can't find any commits in git that seem major enough to
-really affect things, but clearly something did.  I am somewhat worried
-my next kernel upgrade won't go well.
+Signed-off-by: Dan Rosenberg <drosenberg@vsecurity.com>
+Cc: stable@kernel.org
+---
+ drivers/scsi/pmcraid.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
--- 
-Len Sorensen
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index 321cf3a..ce0701d 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3814,6 +3814,9 @@ static long pmcraid_ioctl_passthrough(
+ 			rc = -EFAULT;
+ 			goto out_free_buffer;
+ 		}
++	} else if (request_size < 0) {
++		rc = -EINVAL;
++		goto out_free_buffer;
+ 	}
+ 
+ 	/* check if we have any additional command parameters */
+
+
+
+
+
+
+
