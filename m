@@ -1,45 +1,81 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH] scsi_dh_rdac: Adding couple more vendor product ids
-Date: Tue, 5 Apr 2011 14:35:25 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4FFAC8CFB@cosmail01.lsi.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF4FF7DC637@cosmail01.lsi.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: [PATCH 1/2] mpt2sas: Remove acquisition of host_lock
+Date: Tue, 5 Apr 2011 17:43:55 -0400
+Message-ID: <20110405214355.GQ4183@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:54209 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754973Ab1DEUeN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Apr 2011 16:34:13 -0400
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4FF7DC637@cosmail01.lsi.com>
-Content-Language: en-US
+Received: from mga02.intel.com ([134.134.136.20]:22344 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751184Ab1DEVoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 5 Apr 2011 17:44:13 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
+To: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-This patch adds couple more Vendor/Product IDs for RDAC.. There are no functional changes.
 
-Signed-off-by: Babu Moger <babu.moger@lsi.com>
----
---- linux-2.6.39-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-04-05 15:01:52.000000000 -0500
-+++ linux-2.6.39-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-04-05 15:06:18.000000000 -0500
-@@ -755,6 +755,7 @@ static const struct scsi_dh_devlist rdac
- 	{"IBM", "3526"},
- 	{"SGI", "TP9400"},
- 	{"SGI", "TP9500"},
-+	{"SGI", "TP9700"},
- 	{"SGI", "IS"},
- 	{"STK", "OPENstorage D280"},
- 	{"SUN", "CSM200_R"},
-@@ -774,6 +775,7 @@ static const struct scsi_dh_devlist rdac
- 	{"SUN", "CSM100_R_FC"},
- 	{"SUN", "STK6580_6780"},
- 	{"SUN", "SUN_6180"},
-+	{"SUN", "ArrayStorage"},
- 	{NULL, NULL},
- };
+We can eliminate the use of the scsi command serial_number, as the race
+that the driver is checking for cannot happen.
+
+Then the driver no longer needs to use the DEF_SCSI_QCMD() macro and no
+longer acquires the host_lock.  This improves performance substantially
+on high-IOPS workloads.
+
+Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 5ded3db..863218f 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2031,7 +2031,6 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 	u16 smid = 0;
+ 	u32 ioc_state;
+ 	unsigned long timeleft;
+-	struct scsi_cmnd *scmd_lookup;
+ 	int rc;
  
-
+ 	mutex_lock(&ioc->tm_cmds.mutex);
+@@ -2132,12 +2131,7 @@ mpt2sas_scsih_issue_tm(struct MPT2SAS_ADAPTER *ioc, u16 handle, uint channel,
+ 		goto bypass_sanity_checks;
+ 	switch (type) {
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK:
+-		scmd_lookup = _scsih_scsi_lookup_get(ioc, smid_task);
+-		if (scmd_lookup && (scmd_lookup->serial_number ==
+-		    scmd->serial_number))
+-			rc = FAILED;
+-		else
+-			rc = SUCCESS;
++		rc = SUCCESS;
+ 		break;
+ 
+ 	case MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET:
+@@ -3358,16 +3352,15 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+  * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
+  */
+ static int
+-_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
++_scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ {
+-	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+ 	struct MPT2SAS_DEVICE *sas_device_priv_data;
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 	Mpi2SCSIIORequest_t *mpi_request;
+ 	u32 mpi_control;
+ 	u16 smid;
+ 
+-	scmd->scsi_done = done;
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -3484,8 +3477,6 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ }
+ 
+-static DEF_SCSI_QCMD(_scsih_qcmd)
+-
+ /**
+  * _scsih_normalize_sense - normalize descriptor and fixed format sense data
+  * @sense_buffer: sense data returned by target
 
