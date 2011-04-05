@@ -1,34 +1,20 @@
-From: BENZ PROMO <mr.jerry077@hotmail.com>
-Subject: claims information
-Date: Mon, 04 Apr 2011 11:24:21 -0200
-Message-ID: <20110404080707.EB150BA9BFE__7272.44569357044$1301907796$gmane$org@nkosi.realnet.co.sz>
-Reply-To: mr.jerry077@hotmail.com
+From: Microsoft <m.loto.yahoo.co.uk@[98.210.36.113]>
+Subject: winner
+Date: Mon, 04 Apr 2011 21:04:52 -0700
+Message-ID: <0LJ4009Z6F2991D0@a-mtaout22.012.net.il>
+Reply-To: microsoft_draws0127@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=Windows-1251
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netfinity.realnet.co.sz ([196.28.7.2]:60555 "EHLO
-	nkosi.realnet.co.sz" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753362Ab1DDJDJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 05:03:09 -0400
-Content-Disposition: inline
+Received: from mtaout22.012.net.il ([80.179.55.172]:52078 "EHLO
+	mtaout22.012.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932Ab1DDJQe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Apr 2011 05:16:34 -0400
+Received: from conversion-daemon.a-mtaout22.012.net.il by a-mtaout22.012.net.il (HyperSendmail v2007.08) id <0LJ400A00F0JKI00@a-mtaout22.012.net.il> for linux-scsi@vger.kernel.org; Mon, 04 Apr 2011 12:16:29 +0300 (IDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: info@we.org
 
-=A3950,000.00 GBP was awarded to your Id in our British Mercedes Benz P=
-romo=0D
-file your claims contact our fiduciary agent for claims: Name.......=0D
-Address...... Tel.......... Country............=0D
-Email: jerry.smith077@hotmail.co.uk=0D
-=0D
-=0D
-=0D
----------------------------=0D
-Did you know you can now get unCapped ADSL?=0D
-=46or more info call Real Image Internet on +268 2 409 1000
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+You have won 500.000 GBP
+send your phone number
+and address
