@@ -1,35 +1,132 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] mpt2sas: Reduce cache misses in command submission
- path
-Date: Wed, 6 Apr 2011 09:46:55 -0400
-Message-ID: <20110406134654.GB21729@infradead.org>
-References: <20110405214714.GR4183@linux.intel.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation
+	problem
+Date: Wed, 6 Apr 2011 16:29:38 -0700
+Message-ID: <20110406232938.GF1110@tux1.beaverton.ibm.com>
+References: <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110319000755.GD1110@tux1.beaverton.ibm.com> <20110321140451.GA7153@quack.suse.cz> <1300716666-sup-2087@think> <20110321164305.GC7153@quack.suse.cz>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:46759 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755896Ab1DFNqz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2011 09:46:55 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110405214714.GR4183@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20110321164305.GC7153@quack.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-On Tue, Apr 05, 2011 at 05:47:14PM -0400, Matthew Wilcox wrote:
+On Mon, Mar 21, 2011 at 05:43:05PM +0100, Jan Kara wrote:
+> On Mon 21-03-11 10:24:41, Chris Mason wrote:
+> > Excerpts from Jan Kara's message of 2011-03-21 10:04:51 -0400:
+> > > On Fri 18-03-11 17:07:55, Darrick J. Wong wrote:
+> > > > > > Ok, here's what I have so far.  I took everyone's suggestions of where to add
+> > > > > > calls to wait_on_page_writeback, which seems to handle the multiple-write case
+> > > > > > adequately.  Unfortunately, it is still possible to generate checksum errors by
+> > > > > > scribbling furiously on a mmap'd region, even after adding the writeback wait
+> > > > > > in the ext4 writepage function.  Oddly, I couldn't break btrfs with mmap by
+> > > > > > removing its wait_for_page_writeback call, so I suspect there's a bit more
+> > > > > > going on in btrfs than I've been able to figure out.
+> > > > 
+> > > > I wonder, is it possible for this to happen:
+> > > > 
+> > > > 1. Thread A mmaps a page and tries to write to it.  ext4_page_mkwrite executes,
+> > > >    but there's no ongoing writeback, so it returns without delay.
+> > > > 2. Thread A starts writing furiously to the page.
+> > > > 3. Thread B runs fsync() or something that results in the page being
+> > > >    checksummed and scheduled for writeout.
+> > > > 4. Thread A continues to write furiously(!) on that same page before the
+> > > >    controller finishes the DMA transfer.
+> > > > 5. Disk gets the page, which now doesn't match its checksum, and *boom*
+> > >   What happens on writepage (see mm/page-writeback.c:write_cache_pages())
+> > > is:
+> > >   lock_page(page)
+> > >   ...
+> > >   clear_page_dirty_for_io() - removes PageDirty, marks page as read-only in
+> > >     PTE
+> > >   ...
+> > >   set_page_writeback() (happens e.g. in __block_write_full_page() called
+> > > from filesystem's writepage implementation).
+> > >   unlock_page(page)
+> > > 
+> > >   So if you compute the checksum after set_page_writeback() is done in the
+> > > writepage() implementation (you cannot use __block_write_full_page() in
+> > > that case)
+>   I should add that if you are computing the checksum in the block layer
+> once the bio is submitted, you obviously are computing it after the page is
+> marked as writeback. So that should be fine...
 > 
-> In a high-IOPS workload, mpt2sas_base_get_smid_scsiio shows up in the top
-> 20 cache misses.  This is because the data structure used for allocating
-> SMIDs is cache unfriendly; freed SMIDs are placed on the tail of the list,
-> guaranteeing a cache miss by the time we allocate it again.
+> > > and you call wait_on_page_writeback() in ext4_page_mkwrite()
+> > > under page lock, you should be safe. If you do all this and still see
+> > > errors, something is broken I'd say...
+> > 
+> > Looking at the ext4_page_mkwrite, it does this:
+> > 
+> > lock the page
+> > check for holes
+> > unlock the page
+> > if (no_holes)
+> > 	return;
+> > 
+> > write_begin/write_end
+> > return
+> > 
+> > So, to have page_mkwrite work, you need to wait for writeback with the
+> > page locked in both the no holes case and after the
+> > write_begin/write_end.  write_begin will dirty the page, so someone can
+> > wander in and start the IO while we are still in page_mkwrite.
+>   Oh right, that's a good point.
 > 
-> By placing the freed SMID at the head of the list, we increase the
-> likelihood of it being cache-hot when it's used again.
+> > This is untested and uncompiled, but it should
+> > do the trick.
+> > 
+> > Jan, did you get rid of all the buffer head based writeback for
+> > data=ordered in ext4?  That's my only other idea, that someone is doing
+> > writeback directly without taking the page lock.
+>   Yes, ext4 shouldn't do any buffer based writeback.
+> 
+> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> > index 9f7f9e4..8a75e12 100644
+> > --- a/fs/ext4/inode.c
+> > +++ b/fs/ext4/inode.c
+> > @@ -5880,6 +5880,7 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+> >  	if (page_has_buffers(page)) {
+> >  		if (!walk_page_buffers(NULL, page_buffers(page), 0, len, NULL,
+> >  					ext4_bh_unmapped)) {
+> > +			wait_on_page_writeback(page);
+> >  			unlock_page(page);
+> >  			goto out_unlock;
+> >  		}
+> > @@ -5901,6 +5902,16 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+> >  	if (ret < 0)
+> >  		goto out_unlock;
+> >  	ret = 0;
+> > +
+> > +	/*
+> > +	 * write_begin/end might have created a dirty page and someone
+> > +	 * could wander in and start the IO.  Make sure that hasn't
+> > +	 * happened
+> > +	 */
+> > +	lock_page(page);
+> > +	wait_on_page_writeback(page);
+> > +	unlock_page(page);
+> > +
+> >  out_unlock:
+> >  	if (ret)
+> >  		ret = VM_FAULT_SIGBUS;
+> > 
+>   This looks good AFAICT.
 
-Looks good for now.  But given that the smids are a statically allocated
-ressource it might be a good idea to get rid of all the rather cache
-unfriendly linked lists and locking and use a bitmap to allocate
-smids and then just index into a linear array of them.
+I gave this a spin a couple of weeks ago (and accidentally left the test
+machines running for a full week!)  From what I can tell, with all the various
+wait_for_page_writeback stuff-ins, we've cut the frequency of writeback errors
+down to about 7-8 per day.  Not bad, but not fixed.
 
+On the odd chance that jbd2 really can provide stable pages during writeback, I
+am now rerunning the test with no patches and data=journal, while noting that
+(a) DIO mode doesn't work with data=journal and (b) the first write failure
+will probably cause the journal to abort == game over.  When that's done I'll
+give the wait-for-writeback patches a whirl with 2.6.39-rc.
+
+Enjoy the warm SF weather!
+
+--D
