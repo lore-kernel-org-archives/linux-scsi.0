@@ -1,76 +1,33 @@
-From: "helight.xu" <helight.xu@gmail.com>
-Subject: =?windows-1252?Q?Re=3A_=5BPATCH=5D_fix_warning=3A_unused?=
- =?windows-1252?Q?_variable_=91log=5Finfo=92_drivers/message/fusion?=
- =?windows-1252?Q?/mptsas=2Ec?=
-Date: Wed, 06 Apr 2011 19:29:25 +0800
-Message-ID: <4D9C4E95.4070705@gmail.com>
-References: <4D9C4E04.9070205@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] mpt2sas: Remove acquisition of host_lock
+Date: Wed, 6 Apr 2011 09:45:55 -0400
+Message-ID: <20110406134555.GA21729@infradead.org>
+References: <20110405214355.GQ4183@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D9C4E04.9070205@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Eric.Moore <Eric.Moore@lsi.com>; support <support@lsi.com>;
-	DL-MPTFusionLinux <DL-MPTFusionLinux@lsi.com>; linux-scsi" <linux-scsi@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:46750 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755896Ab1DFNp5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Apr 2011 09:45:57 -0400
+Content-Disposition: inline
+In-Reply-To: <20110405214355.GQ4183@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-On 04/06/2011 07:27 PM, helight.xu wrote:
-> fix warning: unused variable =91log_info=92 drivers/message/fusion/mp=
-tsas.c
->
->
-> Signed-off-by: helight <helight@zhwen.org>
-> ---
->  drivers/gpu/drm/nouveau/nv50_vm.c |    1 -
->  1 files changed, 0 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/gpu/drm/nouveau/nv50_vm.c=20
-> b/drivers/gpu/drm/nouveau/nv50_vm.c
-> index 6144156..1f47c75 100644
-> --- a/drivers/gpu/drm/nouveau/nv50_vm.c
-> +++ b/drivers/gpu/drm/nouveau/nv50_vm.c
-> @@ -31,7 +31,6 @@ void
->  nv50_vm_map_pgt(struct nouveau_gpuobj *pgd, u32 pde,
->          struct nouveau_gpuobj *pgt[2])
->  {
-> -    struct drm_nouveau_private *dev_priv =3D pgd->dev->dev_private;
->      u64 phys =3D 0xdeadcafe00000000ULL;
->      u32 coverage =3D 0;
->
-sorry ,this is the patch
+On Tue, Apr 05, 2011 at 05:43:55PM -0400, Matthew Wilcox wrote:
+> 
+> We can eliminate the use of the scsi command serial_number, as the race
+> that the driver is checking for cannot happen.
+> 
+> Then the driver no longer needs to use the DEF_SCSI_QCMD() macro and no
+> longer acquires the host_lock.  This improves performance substantially
+> on high-IOPS workloads.
 
 
-fix warning: unused variable =91log_info=92 drivers/message/fusion/mpts=
-as.c
+Looks fine.  Note that this somehow clashes with my patch to simply
+remove the serial_number check from mpt2sas.  We could just drop my
+smaller patch if this one gets in in a timely fashion.
 
-Signed-off-by: helight <helight@zhwen.org>
----
-  drivers/message/fusion/mptsas.c |    2 +-
-  1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/message/fusion/mptsas.c=20
-b/drivers/message/fusion/mptsas.c
-index 8aefb18..431092b 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5009,13 +5009,13 @@ mptsas_event_process(MPT_ADAPTER *ioc,=20
-EventNotificationReply_t *reply)
-              (ioc_stat & MPI_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)) {
-              VirtTarget *vtarget =3D NULL;
-              u8        id, channel;
--            u32     log_info =3D le32_to_cpu(reply->IOCLogInfo);
-
-              id =3D sas_event_data->TargetID;
-              channel =3D sas_event_data->Bus;
-
-              vtarget =3D mptsas_find_vtarget(ioc, channel, id);
-              if (vtarget) {
-+                u32 log_info =3D le32_to_cpu(reply->IOCLogInfo);
-                  devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-                      "LogInfo (0x%x) available for "
-                     "INTERNAL_DEVICE_RESET"
---=20
-1.6.0.2
