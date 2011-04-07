@@ -1,21 +1,33 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
+From: Jan Kara <jack@suse.cz>
 Subject: Re: [RFC] block integrity: Fix write after checksum calculation
-	problem
-Date: Thu, 7 Apr 2011 09:44:06 -0700
-Message-ID: <20110407164406.GG1110@tux1.beaverton.ibm.com>
-References: <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110319000755.GD1110@tux1.beaverton.ibm.com> <20110321140451.GA7153@quack.suse.cz> <1300716666-sup-2087@think> <20110321164305.GC7153@quack.suse.cz> <20110406232938.GF1110@tux1.beaverton.ibm.com>
-Reply-To: djwong@us.ibm.com
+ problem
+Date: Thu, 7 Apr 2011 18:57:00 +0200
+Message-ID: <20110407165700.GB7363@quack.suse.cz>
+References: <1298566775-sup-730@think>
+ <20110224182732.GV27190@tux1.beaverton.ibm.com>
+ <1298897186-sup-9394@think>
+ <20110304210724.GF27190@tux1.beaverton.ibm.com>
+ <20110308045626.GD1956@dastard>
+ <20110319000755.GD1110@tux1.beaverton.ibm.com>
+ <20110321140451.GA7153@quack.suse.cz>
+ <1300716666-sup-2087@think>
+ <20110321164305.GC7153@quack.suse.cz>
+ <20110406232938.GF1110@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54736 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755822Ab1DGQ5E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Apr 2011 12:57:04 -0400
 Content-Disposition: inline
 In-Reply-To: <20110406232938.GF1110@tux1.beaverton.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jan Kara <jack@suse.cz>, Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 06, 2011 at 04:29:38PM -0700, Darrick J. Wong wrote:
+On Wed 06-04-11 16:29:38, Darrick J. Wong wrote:
 > On Mon, Mar 21, 2011 at 05:43:05PM +0100, Jan Kara wrote:
 > > On Mon 21-03-11 10:24:41, Chris Mason wrote:
 > > > Excerpts from Jan Kara's message of 2011-03-21 10:04:51 -0400:
@@ -121,13 +133,10 @@ On Wed, Apr 06, 2011 at 04:29:38PM -0700, Darrick J. Wong wrote:
 > machines running for a full week!)  From what I can tell, with all the various
 > wait_for_page_writeback stuff-ins, we've cut the frequency of writeback errors
 > down to about 7-8 per day.  Not bad, but not fixed.
-> 
-> On the odd chance that jbd2 really can provide stable pages during writeback, I
-> am now rerunning the test with no patches and data=journal, while noting that
-> (a) DIO mode doesn't work with data=journal and (b) the first write failure
-> will probably cause the journal to abort == game over.  When that's done I'll
+  Ugh, strange. Can you post the full patch you are currently using? I've
+already lost track of all the proposed changes... Thanks.
 
-Heh, nope, even with data=journal I still see checksum errors.  So much for
-that hare-brained theory. :(
-
---D
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
