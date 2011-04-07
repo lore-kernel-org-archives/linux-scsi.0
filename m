@@ -1,45 +1,39 @@
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
-	<u.kleine-koenig@pengutronix.de>
+From: Jesper Juhl <jj@chaosbits.net>
 Subject: Re: [RFC 1/6]Fix typo "recieve" in various parts of the kernel.
-Date: Thu, 7 Apr 2011 22:05:41 +0200
-Message-ID: <20110407200541.GC8569@pengutronix.de>
+Date: Thu, 7 Apr 2011 22:32:39 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1104072230440.1538@swampdragon.chaosbits.net>
 References: <1302192567-842-1-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from metis.ext.pengutronix.de ([92.198.50.35]:58332 "EHLO
-	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756565Ab1DGUFs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Apr 2011 16:05:48 -0400
-Content-Disposition: inline
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-input-owner@vger.kernel.org>
 In-Reply-To: <1302192567-842-1-git-send-email-justinmattock@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-input-owner@vger.kernel.org
 To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, socketcan-core@lists.berlios.de, linux-mtd@lists.infradead.org, linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org, netdev@vger.kernel.org, socketcan-core@lists.berlios.de, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Apr 07, 2011 at 09:09:22AM -0700, Justin P. Mattock wrote:
-> The patch below fixes some typos "recieve" in various parts of the ke=
-rnel.
-> Note: these below are in actual code rather than comments(excpet for =
-r852.c which
-s/excpet/except/
+On Thu, 7 Apr 2011, Justin P. Mattock wrote:
 
+> The patch below fixes some typos "recieve" in various parts of the kernel.
+> Note: these below are in actual code rather than comments(excpet for r852.c which
 > has a code fix, and comment).
 > compile tested as best as I can...
-I'm not a native speaker, but "as good as" sounds better in my ears.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> CC: linux-input@vger.kernel.org
+> CC: linux-arm-kernel@lists.infradead.org 
+> CC: linux-mtd@lists.infradead.org
+> CC: netdev@vger.kernel.org
+> CC: socketcan-core@lists.berlios.de
+> CC: linux-scsi@vger.kernel.org 
+> CC: linux-usb@vger.kernel.org
 
-Best regards
-Uwe
+Looks good to me.
 
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig        =
-    |
-Industrial Linux Solutions                 | http://www.pengutronix.de/=
-  |
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Jesper Juhl <jj@chaosbits.net>
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
+
