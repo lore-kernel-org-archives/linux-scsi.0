@@ -1,298 +1,133 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [RFC 1/6]Fix typo "recieve" in various parts of the kernel.
-Date: Thu,  7 Apr 2011 09:09:22 -0700
-Message-ID: <1302192567-842-1-git-send-email-justinmattock@gmail.com>
-Return-path: <linux-input-owner@vger.kernel.org>
-Sender: linux-input-owner@vger.kernel.org
-To: trivial@kernel.org
-Cc: linux-kernel@vger.kernel.org, "Justin P. Mattock" <justinmattock@gmail.com>, linux-input@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-mtd@lists.infradead.org, netdev@vger.kernel.org, socketcan-core@lists.berlios.de, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation
+	problem
+Date: Thu, 7 Apr 2011 09:44:06 -0700
+Message-ID: <20110407164406.GG1110@tux1.beaverton.ibm.com>
+References: <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110319000755.GD1110@tux1.beaverton.ibm.com> <20110321140451.GA7153@quack.suse.cz> <1300716666-sup-2087@think> <20110321164305.GC7153@quack.suse.cz> <20110406232938.GF1110@tux1.beaverton.ibm.com>
+Reply-To: djwong@us.ibm.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110406232938.GF1110@tux1.beaverton.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Chris Mason <chris.mason@oracle.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The patch below fixes some typos "recieve" in various parts of the kernel.
-Note: these below are in actual code rather than comments(excpet for r852.c which
-has a code fix, and comment).
-compile tested as best as I can...
+On Wed, Apr 06, 2011 at 04:29:38PM -0700, Darrick J. Wong wrote:
+> On Mon, Mar 21, 2011 at 05:43:05PM +0100, Jan Kara wrote:
+> > On Mon 21-03-11 10:24:41, Chris Mason wrote:
+> > > Excerpts from Jan Kara's message of 2011-03-21 10:04:51 -0400:
+> > > > On Fri 18-03-11 17:07:55, Darrick J. Wong wrote:
+> > > > > > > Ok, here's what I have so far.  I took everyone's suggestions of where to add
+> > > > > > > calls to wait_on_page_writeback, which seems to handle the multiple-write case
+> > > > > > > adequately.  Unfortunately, it is still possible to generate checksum errors by
+> > > > > > > scribbling furiously on a mmap'd region, even after adding the writeback wait
+> > > > > > > in the ext4 writepage function.  Oddly, I couldn't break btrfs with mmap by
+> > > > > > > removing its wait_for_page_writeback call, so I suspect there's a bit more
+> > > > > > > going on in btrfs than I've been able to figure out.
+> > > > > 
+> > > > > I wonder, is it possible for this to happen:
+> > > > > 
+> > > > > 1. Thread A mmaps a page and tries to write to it.  ext4_page_mkwrite executes,
+> > > > >    but there's no ongoing writeback, so it returns without delay.
+> > > > > 2. Thread A starts writing furiously to the page.
+> > > > > 3. Thread B runs fsync() or something that results in the page being
+> > > > >    checksummed and scheduled for writeout.
+> > > > > 4. Thread A continues to write furiously(!) on that same page before the
+> > > > >    controller finishes the DMA transfer.
+> > > > > 5. Disk gets the page, which now doesn't match its checksum, and *boom*
+> > > >   What happens on writepage (see mm/page-writeback.c:write_cache_pages())
+> > > > is:
+> > > >   lock_page(page)
+> > > >   ...
+> > > >   clear_page_dirty_for_io() - removes PageDirty, marks page as read-only in
+> > > >     PTE
+> > > >   ...
+> > > >   set_page_writeback() (happens e.g. in __block_write_full_page() called
+> > > > from filesystem's writepage implementation).
+> > > >   unlock_page(page)
+> > > > 
+> > > >   So if you compute the checksum after set_page_writeback() is done in the
+> > > > writepage() implementation (you cannot use __block_write_full_page() in
+> > > > that case)
+> >   I should add that if you are computing the checksum in the block layer
+> > once the bio is submitted, you obviously are computing it after the page is
+> > marked as writeback. So that should be fine...
+> > 
+> > > > and you call wait_on_page_writeback() in ext4_page_mkwrite()
+> > > > under page lock, you should be safe. If you do all this and still see
+> > > > errors, something is broken I'd say...
+> > > 
+> > > Looking at the ext4_page_mkwrite, it does this:
+> > > 
+> > > lock the page
+> > > check for holes
+> > > unlock the page
+> > > if (no_holes)
+> > > 	return;
+> > > 
+> > > write_begin/write_end
+> > > return
+> > > 
+> > > So, to have page_mkwrite work, you need to wait for writeback with the
+> > > page locked in both the no holes case and after the
+> > > write_begin/write_end.  write_begin will dirty the page, so someone can
+> > > wander in and start the IO while we are still in page_mkwrite.
+> >   Oh right, that's a good point.
+> > 
+> > > This is untested and uncompiled, but it should
+> > > do the trick.
+> > > 
+> > > Jan, did you get rid of all the buffer head based writeback for
+> > > data=ordered in ext4?  That's my only other idea, that someone is doing
+> > > writeback directly without taking the page lock.
+> >   Yes, ext4 shouldn't do any buffer based writeback.
+> > 
+> > > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> > > index 9f7f9e4..8a75e12 100644
+> > > --- a/fs/ext4/inode.c
+> > > +++ b/fs/ext4/inode.c
+> > > @@ -5880,6 +5880,7 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+> > >  	if (page_has_buffers(page)) {
+> > >  		if (!walk_page_buffers(NULL, page_buffers(page), 0, len, NULL,
+> > >  					ext4_bh_unmapped)) {
+> > > +			wait_on_page_writeback(page);
+> > >  			unlock_page(page);
+> > >  			goto out_unlock;
+> > >  		}
+> > > @@ -5901,6 +5902,16 @@ int ext4_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+> > >  	if (ret < 0)
+> > >  		goto out_unlock;
+> > >  	ret = 0;
+> > > +
+> > > +	/*
+> > > +	 * write_begin/end might have created a dirty page and someone
+> > > +	 * could wander in and start the IO.  Make sure that hasn't
+> > > +	 * happened
+> > > +	 */
+> > > +	lock_page(page);
+> > > +	wait_on_page_writeback(page);
+> > > +	unlock_page(page);
+> > > +
+> > >  out_unlock:
+> > >  	if (ret)
+> > >  		ret = VM_FAULT_SIGBUS;
+> > > 
+> >   This looks good AFAICT.
+> 
+> I gave this a spin a couple of weeks ago (and accidentally left the test
+> machines running for a full week!)  From what I can tell, with all the various
+> wait_for_page_writeback stuff-ins, we've cut the frequency of writeback errors
+> down to about 7-8 per day.  Not bad, but not fixed.
+> 
+> On the odd chance that jbd2 really can provide stable pages during writeback, I
+> am now rerunning the test with no patches and data=journal, while noting that
+> (a) DIO mode doesn't work with data=journal and (b) the first write failure
+> will probably cause the journal to abort == game over.  When that's done I'll
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-CC: linux-input@vger.kernel.org
-CC: linux-arm-kernel@lists.infradead.org 
-CC: linux-mtd@lists.infradead.org
-CC: netdev@vger.kernel.org
-CC: socketcan-core@lists.berlios.de
-CC: linux-scsi@vger.kernel.org 
-CC: linux-usb@vger.kernel.org
----
- drivers/input/misc/keyspan_remote.c |    2 +-
- drivers/mfd/ab8500-gpadc.c          |    2 +-
- drivers/mtd/nand/r852.c             |    6 +++---
- drivers/net/bnx2x/bnx2x_link.c      |    8 ++++----
- drivers/net/can/janz-ican3.c        |    4 ++--
- drivers/scsi/scsi_netlink.c         |    2 +-
- drivers/usb/misc/ftdi-elan.c        |   28 ++++++++++++++--------------
- drivers/uwb/reset.c                 |    2 +-
- 8 files changed, 27 insertions(+), 27 deletions(-)
+Heh, nope, even with data=journal I still see checksum errors.  So much for
+that hare-brained theory. :(
 
-diff --git a/drivers/input/misc/keyspan_remote.c b/drivers/input/misc/keyspan_remote.c
-index a93c525..fc62256 100644
---- a/drivers/input/misc/keyspan_remote.c
-+++ b/drivers/input/misc/keyspan_remote.c
-@@ -312,7 +312,7 @@ static void keyspan_check_data(struct usb_keyspan *remote)
- 			remote->data.tester = remote->data.tester >> 5;
- 			remote->data.bits_left -= 5;
- 		} else {
--			err("Bad message recieved, no stop bit found.\n");
-+			err("Bad message received, no stop bit found.\n");
- 		}
- 
- 		dev_dbg(&remote->udev->dev,
-diff --git a/drivers/mfd/ab8500-gpadc.c b/drivers/mfd/ab8500-gpadc.c
-index bc93b2e..ea91ef1 100644
---- a/drivers/mfd/ab8500-gpadc.c
-+++ b/drivers/mfd/ab8500-gpadc.c
-@@ -314,7 +314,7 @@ int ab8500_gpadc_convert(struct ab8500_gpadc *gpadc, u8 input)
- 	/* wait for completion of conversion */
- 	if (!wait_for_completion_timeout(&gpadc->ab8500_gpadc_complete, 2*HZ)) {
- 		dev_err(gpadc->dev,
--			"timeout: didnt recieve GPADC conversion interrupt\n");
-+			"timeout: didnt receive GPADC conversion interrupt\n");
- 		ret = -EINVAL;
- 		goto out;
- 	}
-diff --git a/drivers/mtd/nand/r852.c b/drivers/mtd/nand/r852.c
-index 6322d1f..45a3f60 100644
---- a/drivers/mtd/nand/r852.c
-+++ b/drivers/mtd/nand/r852.c
-@@ -766,7 +766,7 @@ static irqreturn_t r852_irq(int irq, void *data)
- 		ret = IRQ_HANDLED;
- 		dev->card_detected = !!(card_status & R852_CARD_IRQ_INSERT);
- 
--		/* we shouldn't recieve any interrupts if we wait for card
-+		/* we shouldn't receive any interrupts if we wait for card
- 			to settle */
- 		WARN_ON(dev->card_unstable);
- 
-@@ -794,13 +794,13 @@ static irqreturn_t r852_irq(int irq, void *data)
- 		ret = IRQ_HANDLED;
- 
- 		if (dma_status & R852_DMA_IRQ_ERROR) {
--			dbg("recieved dma error IRQ");
-+			dbg("received dma error IRQ");
- 			r852_dma_done(dev, -EIO);
- 			complete(&dev->dma_done);
- 			goto out;
- 		}
- 
--		/* recieved DMA interrupt out of nowhere? */
-+		/* received DMA interrupt out of nowhere? */
- 		WARN_ON_ONCE(dev->dma_stage == 0);
- 
- 		if (dev->dma_stage == 0)
-diff --git a/drivers/net/bnx2x/bnx2x_link.c b/drivers/net/bnx2x/bnx2x_link.c
-index f2f367d..d25491b 100644
---- a/drivers/net/bnx2x/bnx2x_link.c
-+++ b/drivers/net/bnx2x/bnx2x_link.c
-@@ -2385,7 +2385,7 @@ static void bnx2x_check_fallback_to_cl37(struct bnx2x_phy *phy,
- 					 struct link_params *params)
- {
- 	struct bnx2x *bp = params->bp;
--	u16 rx_status, ustat_val, cl37_fsm_recieved;
-+	u16 rx_status, ustat_val, cl37_fsm_received;
- 	DP(NETIF_MSG_LINK, "bnx2x_check_fallback_to_cl37\n");
- 	/* Step 1: Make sure signal is detected */
- 	CL22_RD_OVER_CL45(bp, phy,
-@@ -2423,15 +2423,15 @@ static void bnx2x_check_fallback_to_cl37(struct bnx2x_phy *phy,
- 	CL22_RD_OVER_CL45(bp, phy,
- 			  MDIO_REG_BANK_REMOTE_PHY,
- 			  MDIO_REMOTE_PHY_MISC_RX_STATUS,
--			  &cl37_fsm_recieved);
--	if ((cl37_fsm_recieved &
-+			  &cl37_fsm_received);
-+	if ((cl37_fsm_received &
- 	     (MDIO_REMOTE_PHY_MISC_RX_STATUS_CL37_FSM_RECEIVED_OVER1G_MSG |
- 	     MDIO_REMOTE_PHY_MISC_RX_STATUS_CL37_FSM_RECEIVED_BRCM_OUI_MSG)) !=
- 	    (MDIO_REMOTE_PHY_MISC_RX_STATUS_CL37_FSM_RECEIVED_OVER1G_MSG |
- 	      MDIO_REMOTE_PHY_MISC_RX_STATUS_CL37_FSM_RECEIVED_BRCM_OUI_MSG)) {
- 		DP(NETIF_MSG_LINK, "No CL37 FSM were received. "
- 			     "misc_rx_status(0x8330) = 0x%x\n",
--			 cl37_fsm_recieved);
-+			 cl37_fsm_received);
- 		return;
- 	}
- 	/*
-diff --git a/drivers/net/can/janz-ican3.c b/drivers/net/can/janz-ican3.c
-index 102b16c..98667f9 100644
---- a/drivers/net/can/janz-ican3.c
-+++ b/drivers/net/can/janz-ican3.c
-@@ -1050,7 +1050,7 @@ static void ican3_handle_inquiry(struct ican3_dev *mod, struct ican3_msg *msg)
- 		complete(&mod->termination_comp);
- 		break;
- 	default:
--		dev_err(mod->dev, "recieved an unknown inquiry response\n");
-+		dev_err(mod->dev, "received an unknown inquiry response\n");
- 		break;
- 	}
- }
-@@ -1058,7 +1058,7 @@ static void ican3_handle_inquiry(struct ican3_dev *mod, struct ican3_msg *msg)
- static void ican3_handle_unknown_message(struct ican3_dev *mod,
- 					struct ican3_msg *msg)
- {
--	dev_warn(mod->dev, "recieved unknown message: spec 0x%.2x length %d\n",
-+	dev_warn(mod->dev, "received unknown message: spec 0x%.2x length %d\n",
- 			   msg->spec, le16_to_cpu(msg->len));
- }
- 
-diff --git a/drivers/scsi/scsi_netlink.c b/drivers/scsi/scsi_netlink.c
-index a2ed201..26a8a45 100644
---- a/drivers/scsi/scsi_netlink.c
-+++ b/drivers/scsi/scsi_netlink.c
-@@ -499,7 +499,7 @@ scsi_netlink_init(void)
- 				SCSI_NL_GRP_CNT, scsi_nl_rcv_msg, NULL,
- 				THIS_MODULE);
- 	if (!scsi_nl_sock) {
--		printk(KERN_ERR "%s: register of recieve handler failed\n",
-+		printk(KERN_ERR "%s: register of receive handler failed\n",
- 				__func__);
- 		netlink_unregister_notifier(&scsi_netlink_notifier);
- 		return;
-diff --git a/drivers/usb/misc/ftdi-elan.c b/drivers/usb/misc/ftdi-elan.c
-index 7839c98..1871a30 100644
---- a/drivers/usb/misc/ftdi-elan.c
-+++ b/drivers/usb/misc/ftdi-elan.c
-@@ -187,7 +187,7 @@ struct usb_ftdi {
-         u32 controlreg;
-         u8 response[4 + 1024];
-         int expected;
--        int recieved;
-+        int received;
-         int ed_found;
- };
- #define kref_to_usb_ftdi(d) container_of(d, struct usb_ftdi, kref)
-@@ -353,7 +353,7 @@ static void ftdi_elan_abandon_targets(struct usb_ftdi *ftdi)
-                         mutex_lock(&ftdi->u132_lock);
-                 }
-         }
--        ftdi->recieved = 0;
-+        ftdi->received = 0;
-         ftdi->expected = 4;
-         ftdi->ed_found = 0;
-         mutex_unlock(&ftdi->u132_lock);
-@@ -411,7 +411,7 @@ static void ftdi_elan_flush_targets(struct usb_ftdi *ftdi)
-                         }
-                 }
-         }
--        ftdi->recieved = 0;
-+        ftdi->received = 0;
-         ftdi->expected = 4;
-         ftdi->ed_found = 0;
-         mutex_unlock(&ftdi->u132_lock);
-@@ -447,7 +447,7 @@ static void ftdi_elan_cancel_targets(struct usb_ftdi *ftdi)
-                         }
-                 }
-         }
--        ftdi->recieved = 0;
-+        ftdi->received = 0;
-         ftdi->expected = 4;
-         ftdi->ed_found = 0;
-         mutex_unlock(&ftdi->u132_lock);
-@@ -874,7 +874,7 @@ static char *have_ed_set_response(struct usb_ftdi *ftdi,
-                         mutex_unlock(&ftdi->u132_lock);
-                         ftdi_elan_do_callback(ftdi, target, 4 + ftdi->response,
-                                 payload);
--                        ftdi->recieved = 0;
-+                        ftdi->received = 0;
-                         ftdi->expected = 4;
-                         ftdi->ed_found = 0;
-                         return ftdi->response;
-@@ -890,7 +890,7 @@ static char *have_ed_set_response(struct usb_ftdi *ftdi,
-                         mutex_unlock(&ftdi->u132_lock);
-                         ftdi_elan_do_callback(ftdi, target, 4 + ftdi->response,
-                                 payload);
--                        ftdi->recieved = 0;
-+                        ftdi->received = 0;
-                         ftdi->expected = 4;
-                         ftdi->ed_found = 0;
-                         return ftdi->response;
-@@ -905,7 +905,7 @@ static char *have_ed_set_response(struct usb_ftdi *ftdi,
-                 mutex_unlock(&ftdi->u132_lock);
-                 ftdi_elan_do_callback(ftdi, target, 4 + ftdi->response,
-                         payload);
--                ftdi->recieved = 0;
-+                ftdi->received = 0;
-                 ftdi->expected = 4;
-                 ftdi->ed_found = 0;
-                 return ftdi->response;
-@@ -914,7 +914,7 @@ static char *have_ed_set_response(struct usb_ftdi *ftdi,
-                 mutex_unlock(&ftdi->u132_lock);
-                 ftdi_elan_do_callback(ftdi, target, 4 + ftdi->response,
-                         payload);
--                ftdi->recieved = 0;
-+                ftdi->received = 0;
-                 ftdi->expected = 4;
-                 ftdi->ed_found = 0;
-                 return ftdi->response;
-@@ -934,7 +934,7 @@ static char *have_ed_get_response(struct usb_ftdi *ftdi,
-         if (target->active)
-                 ftdi_elan_do_callback(ftdi, target, NULL, 0);
-         target->abandoning = 0;
--        ftdi->recieved = 0;
-+        ftdi->received = 0;
-         ftdi->expected = 4;
-         ftdi->ed_found = 0;
-         return ftdi->response;
-@@ -951,7 +951,7 @@ static char *have_ed_get_response(struct usb_ftdi *ftdi,
- */
- static int ftdi_elan_respond_engine(struct usb_ftdi *ftdi)
- {
--        u8 *b = ftdi->response + ftdi->recieved;
-+        u8 *b = ftdi->response + ftdi->received;
-         int bytes_read = 0;
-         int retry_on_empty = 1;
-         int retry_on_timeout = 3;
-@@ -1043,11 +1043,11 @@ static int ftdi_elan_respond_engine(struct usb_ftdi *ftdi)
-                 u8 c = ftdi->bulk_in_buffer[++ftdi->bulk_in_last];
-                 bytes_read += 1;
-                 ftdi->bulk_in_left -= 1;
--                if (ftdi->recieved == 0 && c == 0xFF) {
-+                if (ftdi->received == 0 && c == 0xFF) {
-                         goto have;
-                 } else
-                         *b++ = c;
--                if (++ftdi->recieved < ftdi->expected) {
-+                if (++ftdi->received < ftdi->expected) {
-                         goto have;
-                 } else if (ftdi->ed_found) {
-                         int ed_number = (ftdi->response[0] >> 5) & 0x03;
-@@ -1069,7 +1069,7 @@ static int ftdi_elan_respond_engine(struct usb_ftdi *ftdi)
-                         }
-                         ftdi_elan_do_callback(ftdi, target, 4 + ftdi->response,
-                                 payload);
--                        ftdi->recieved = 0;
-+                        ftdi->received = 0;
-                         ftdi->expected = 4;
-                         ftdi->ed_found = 0;
-                         b = ftdi->response;
-@@ -1089,7 +1089,7 @@ static int ftdi_elan_respond_engine(struct usb_ftdi *ftdi)
-                         *respond->value = data;
-                         *respond->result = 0;
-                         complete(&respond->wait_completion);
--                        ftdi->recieved = 0;
-+                        ftdi->received = 0;
-                         ftdi->expected = 4;
-                         ftdi->ed_found = 0;
-                         b = ftdi->response;
-diff --git a/drivers/uwb/reset.c b/drivers/uwb/reset.c
-index 2784929..3de630b 100644
---- a/drivers/uwb/reset.c
-+++ b/drivers/uwb/reset.c
-@@ -52,7 +52,7 @@ const char *__strerror[] = {
- 	"cancelled",
- 	"invalid state",
- 	"invalid size",
--	"ack not recieved",
-+	"ack not received",
- 	"no more asie notification",
- };
- 
--- 
-1.7.4.2
-
+--D
