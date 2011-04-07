@@ -1,49 +1,39 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH] SCSI, target, loopback: Fix memory leak in
- tcm_loop_make_scsi_hba()
-Date: Thu, 7 Apr 2011 21:14:27 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1104072108370.1538@swampdragon.chaosbits.net>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: remove unneeded volatile declarations
+Date: Thu, 07 Apr 2011 14:22:17 -0500
+Message-ID: <4D9E0EE9.7050800@linux.vnet.ibm.com>
+References: <20110407190943.063847426@linux.vnet.ibm.com> <4D9E0C9E.9050906@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:34077 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756661Ab1DGTXN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Apr 2011 15:23:13 -0400
+Received: from d01dlp02.pok.ibm.com (d01dlp02.pok.ibm.com [9.56.224.85])
+	by e5.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p37IvQFV024642
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2011 14:57:27 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 4B7166E803F
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Apr 2011 15:23:11 -0400 (EDT)
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p37JMF5Z171706
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2011 15:22:29 -0400
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p37JMEit020000
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Apr 2011 13:22:15 -0600
+In-Reply-To: <4D9E0C9E.9050906@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-There is a memory leak in tcm_loop_make_scsi_hba().
-
-If all the strstr() calls return NULL and we end up at 
-  return ERR_PTR(-EINVAL);
-then we'll be leaking the memory previously allocated to tl_hba as that 
-variable goes out of scope.
-
-This patch fixes the leak.
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- tcm_loop.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-  compile tested only.
-
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index aed4e46..c4f81ec 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -1330,7 +1330,8 @@ struct se_wwn *tcm_loop_make_scsi_hba(
- 
- 	printk(KERN_ERR "Unable to locate prefix for emulated Target Port:"
- 			" %s\n", name);
--	return ERR_PTR(-EINVAL);
-+	ret = -EINVAL;
-+	goto out;
- 
- check_len:
- 	if (strlen(name) > TL_WWN_ADDR_LEN) {
-
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
 -- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
