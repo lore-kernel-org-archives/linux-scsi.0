@@ -1,95 +1,91 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device
- names in Kernel.
-Date: Fri, 08 Apr 2011 08:14:12 -0700
-Message-ID: <1302275652.4090.10.camel@mulgrave.site>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device names
+ in Kernel.
+Date: Fri, 8 Apr 2011 09:12:12 -0700
+Message-ID: <20110408161212.GA12111@kroah.com>
 References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
-	 <20110405161400.GA885@kroah.com> <4D9F17DF.5030601@hitachi.com>
-	 <4D9F1CD1.2020600@suse.de>
+ <20110405161454.GB885@kroah.com>
+ <4D9F16AD.2090408@hitachi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-In-Reply-To: <4D9F1CD1.2020600@suse.de>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4D9F16AD.2090408@hitachi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@suse.de>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2011-04-08 at 07:33 -0700, Hannes Reinecke wrote:
-> > The problem I would like to discuss here is that users can not iden=
-tify
-> > a disk from kernel messages when they DIRECTLY refer to these messa=
-ges.
-> > For example, a device name is used instead of a symbolic link names=
- in
-> > bootup messages, I/O devices errors and /proc/partitions =E2=80=A6e=
-tc.
+On Fri, Apr 08, 2011 at 11:07:41PM +0900, Nao Nishijima wrote:
+> Hi,
+>=20
+> (2011/04/06 1:14), Greg KH wrote:
+> > On Tue, Apr 05, 2011 at 09:49:46PM +0900, Nao Nishijima wrote:
+> >> This patch series provides a SCSI option for persistent device
+> >> names in kernel. With this option, user can always assign a
+> >> same device name (e.g. sda) to a specific device according to
+> >> udev rules and device id.
+> >>
+> >> Issue:
+> >> Recently, kernel registers block devices in parallel. As a result,
+> >> different device names will be assigned at each boot time. This
+> >> will confuse file-system mounter, thus we usually use persistent
+> >> symbolic links provided by udev. However, dmesg and procfs outputs
+> >> show device names instead of the symbolic link names. This causes
+> >> a serious problem when managing multiple devices (e.g. on a
+> >> large-scale storage), because usually, device errors are output
+> >> with device names on dmesg. We also concern about some commands
+> >> which output device names, as well as kernel messages.
+> >>
+> >> Solution:
+> >> To assign a persistent device name, I create unnamed devices (not
+> >> a block device, but an intermediate device. users cannot read/writ=
+e
+> >> this device). When scsi device driver finds a LU, the LU is regist=
+ered
+> >> as an unnamed device and inform to udev. After udev finds the unna=
+med
+> >> device, udev assigns a persistent device name to a specific device
+> >> according to udev rules and registers it as a block device. Hence,
+> >> this is just a naming, not a renaming.
+> >>
+> >> Some users are satisfied with current udev solution. Therefore, my
+> >> proposal is implemented as an option.
+> >>
+> >> If using this option, add the following kernel parameter.
+> >>
+> >> 	scsi_mod.persistent_name=3D1
+> >>
+> >> Also, if you want to assign a device name with sda, add the
+> >> following udev rules.
+> >>
+> >> SUBSYSTEM=3D=3D"scsi_unnamed", ATTR{disk_id}=3D=3D"xxx", PROGRAM=3D=
+"/bin/sh
+> >> -c 'echo -n sda > /sys/%p/disk_name'"
 > >=20
-> > In particular, users can not identify an appropriate device from a
-> > device name in syslog since different device name may be assigned t=
-o it
-> > at each boot time.
+> > Also, where is the "real" program you have created to properly name
+> > devices from userspace?  You need that to properly test this patch,
+> > right?
 > >=20
-> > My idea is able to fix this issue with small changes in scsi subsys=
-tem.
-> > Also, it is implemented as an option. Therefore, it does not affect
-> > users who do not select this option.
-> >=20
-> We have been discussing this problem several times in the past, and
-> indeed on these very mailing list.
 >=20
-> The conclusion we arrived at is that the kernel-provided device node
-> name is inherently unstable and impossible to fix within the existing
-> 'sdX' naming scheme.
-> So the choices have been to either move to a totally different naming
-> scheme or keep the naming scheme and provide the required information
-> by other means.
-> We have decided on the latter, and agreed on using udev to provide
-> persistent device names.
-> We are fully aware that any kernel related messages are subject to
-> chance after reboot, but then most kernel related messages are
-> (PID number, timestamps, login tty etc).
-> And also we are aware that any kernel messages need to be matched
-> against the current system layout to figure out any hardware-related
-> issue.
+> In the udev rule described above, notation =E2=80=9Cxxx=E2=80=9D indi=
+cated by
+> ATTR(disk_id) is scsi id given by disk. Then, when udev finds this ru=
+le,
+> "/bin/sh -c 'echo -n sda>  /sys/%p/disk_name'" indicated by PROGRAM i=
+s
+> operated using xxx (scsi id) if udev find the disk with scic id xxx.
+> Thus, persistent device name is assigned.
 >=20
-> But then basically all products requiring to filter out information
-> from kernel messages already do so I don't see a problem with that.
->=20
-> Just adding an in-kernel identifier to the LUN will only be an
-> incomplete solution, as other identifiers will still be volatile.
->=20
-> So I would prefer by keeping the in-kernel information as small
-> as possible to reduce memory consumption and rely on out-of-band
-> programs to provide the required mapping.
+> I have tested this patch using the udev rule. and It works well.
 
-So, while I agree totally with the above: udev and userspace is the way
-to go, I'm not totally opposed to having a non-invasive mechanism for
-indicating a user's preferred name for a device.  I think there are a
-couple of ways to do this:
+That's nice, but it's a "toy".  What have you used to test this with
+20000 scsi devices to properly work like it does today?  Where is the
+program that will name them in a deterministic manner?
 
-     1. Entirely in userspace: just have udev consult a preferred name
-        file and create say /dev/disk/by-preferred.  Then have all the
-        tools that normally output device information do the same (i.e.
-        since real name to preferred name is 1:1, they could all do a
-        reverse lookup).
-     2. have a writeable sysfs preferred_name field, either in the
-        generic device or just in SCSI.  The preferred name would be
-        used by outbound only (i.e. kernel dev_printk messages and
-        possibly /proc/partitions).  All inbound uses of the device
-        would come via the standard udev mechanisms
-        (i.e. /dev/disk/by-preferred would be the usual symlink).  This
-        means from the kernel point of view, no renaming has happened.
-        We'd just try to print out the preferred name in certain
-        circumstances, which should solve most of the described problem=
-=2E
+We have that functionality today, you can't break it.
 
-James
+thanks,
 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-hotplug=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+greg k-h
