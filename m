@@ -1,108 +1,60 @@
-From: "Joey Lee" <jlee@novell.com>
-Subject: Re: [PATCH RFC v2] support SATA ODD zero power
-Date: Fri, 08 Apr 2011 03:01:08 -0600
-Message-ID: <4D9F5B74020000230002B0A1@novprvlin0050.provo.novell.com>
+From: Stefan Hajnoczi <stefanha@gmail.com>
+Subject: Re: [PATCH] sr: Ensure disk is revalidated when media changes
+Date: Fri, 8 Apr 2011 12:37:56 +0100
+Message-ID: <BANLkTinpRJHr+293kPzS1=hCWRPamOOGfw@mail.gmail.com>
+References: <8d830b21c0b944d26f29dc1e0c42c0bef8d448c2.1301595169.git.amit.shah@redhat.com>
+	<20110401154327.GA6593@mtj.dyndns.org>
+	<20110405065129.GC2872@amit-x200.redhat.com>
+	<20110406100620.GA4142@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: henry.su.ati@gmail.com, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110406100620.GA4142@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Amit Shah <amit.shah@redhat.com>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Markus Armbruster <armbru@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-=E6=96=BC =E4=BA=8C=EF=BC=8C2011-03-22 =E6=96=BC 07:06 +0000=EF=BC=8Cjo=
-eyli(Joey Lee) =E6=8F=90=E5=88=B0=EF=BC=9A
-> Hi Tejun,=20
->=20
-> =E6=96=BC =E4=B8=80=EF=BC=8C2011-03-21 =E6=96=BC 18:27 +0100=EF=BC=8C=
-Tejun Heo =E6=8F=90=E5=88=B0=EF=BC=9A
-> > Hello,
-> >=20
-> > On Mon, Mar 21, 2011 at 12:07:21AM -0600, Joey Lee wrote:
-> > > Sorry bother you for about support SATA ODD zero power in kernel.
-> > >=20
-> > > Henry didn't reply me.=20
-> > > Could you please kindly give any comment for this topic?
-> > >=20
-> > > Looks the SATA ODD zero power didn't have good power reserve numb=
-er,
-> > > does that mean support it in Linux kernel is not worthwhile?
-> >=20
-> > Well, 0.1-0.2w is not nothing.  It could be meaningful I guess, but
-> > the concern that I have are...
-> >=20
-> > * How wildly is it gonna be deployed?  Most ultraportables don't ha=
-ve
-> >   ODDs to begin with and extra features in ATA land tend to be very
-> >   cumbersome to deploy.  It usually ends up like - half of them
-> >   reporting the supportq incorrectly, quarter of them malfunction w=
-hen
-> >   enabled and so on.
-> >=20
->=20
-> Per my understood, Intel and AMD's are said they support SATA ODD zer=
-o
-> power on newest notebook platform, and currently still have many
-> notebook ship with ODD. Intel didn't open their spec for support this
-> new function.
->=20
-> And,=20
-> Yes, this patch didn't test on ultraportables, especially for if they
-> try to use USB ODD. For this patch We still need have a lot of test.
->=20
-> > * Why is software involved in this at all?  The device needs to
-> >   process the eject button to begin with.  I don't really see why A=
-CPI
-> >   or operating system needs to be involved here at all.  What preve=
-nts
-> >   ODD from implementing it itself?  Is there any fundamental reason
-> >   why OS should be involved?
-> >=20
->=20
-> I don't know how does Intel implement this function (by EC or ACPI?),
-> but AMD customized a ACPI object to provide this function. I will fin=
-d a
-> chance to use this function on Windows platform, per hardward guys gi=
-ve
-> me some information, Windows can resume the ODD power from GUI, I wil=
-l
-> try to verify it on Windows platform then reply to this mail.
->=20
-
-More information about the SATA ODD zero power support on Windows
-platform from BIOSer. Unfortunately, I still didn't see the REAL window=
+On Wed, Apr 6, 2011 at 11:06 AM, Tejun Heo <tj@kernel.org> wrote:
+> On Tue, Apr 05, 2011 at 12:21:30PM +0530, Amit Shah wrote:
+>> > But I don't think this is the correct place to do it. =A0The probl=
+em
+>> > happens because block layer consumes the event but doesn't remembe=
+r it
+>> > when the time for revalidation comes. =A0It should be done by bloc=
+k
+>> > layer, not sr. =A0Hmmm... looking at the code, the new disk event =
+code
+>> > should handle this correctly. =A0Was 2.6.38 showing the problem to=
+o?
+>>
+>> Yes, 2.6.38 shows the same problem. =A0I went back to ancient kernel=
 s
-system that support SATA ODD zero power.
+>> (2.6.31 on Fedora 11-alpha) which had the previous media_changed
+>> infrastructure and those places too show the same behaviour (with th=
+e
+>> TEST_UNIT_READY way of detecting media changes).
+>
+> Can you please the patch attached in the following bz and see whether
+> it makes any difference?
+>
+> =A0https://bugzilla.kernel.org/show_bug.cgi?id=3D13029
 
-Per discuss with BIOSer, they said:=20
-	- The ODD icon still show up when ODD power-off.
-		+ Driver turn-off ODD power if there have no disk in tray.
-	- End user can power-on ODD by click ODD icon on GUI.
-		+ Driver evaluate ACPI method to power-on ODD.
-	- Intel and AMD all use ACPI to implement interactive with Windows.
+Hi Tejun,
+There is a related issue I have been discussing with Amit:
+https://lkml.org/lkml/2011/3/23/156
 
-Until now, Intel still didn't open any spec for ODD, as I know, there
-also didn't have many shipped notebook support it.
+On media change the inode size is not updated by the sr driver or the
+universal cdrom driver.  A userspace process that holds a /dev/sr0
+file descriptor open across media change causes all processes on the
+system to see the old medium size when they do lseek(fd, 0, SEEK_END).
 
+I think it would make sense to refresh the inode size on media change
+so that even open file descriptors see the new size and a single
+process cannot force a stale value for all other userspace processes
+on the system.
 
-Thank's a lot!
-Joey Lee
+Thoughts?
 
-> >   The thing is that if it isn't essential, people aren't gonna
-> >   implement it anyway and we just end up with unused code.
-> >=20
-> > Thanks.
-> >=20
->=20
-> Yes, this is not a essential feature, just Intel and AMD all said the=
-y
-> support it and some ODM also want to implement.=20
->=20
->=20
-> Thank's a lot!
-> Joey Lee
->=20
-
-
+Stefan
