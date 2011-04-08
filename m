@@ -1,60 +1,89 @@
-From: Stefan Hajnoczi <stefanha@gmail.com>
-Subject: Re: [PATCH] sr: Ensure disk is revalidated when media changes
-Date: Fri, 8 Apr 2011 12:37:56 +0100
-Message-ID: <BANLkTinpRJHr+293kPzS1=hCWRPamOOGfw@mail.gmail.com>
-References: <8d830b21c0b944d26f29dc1e0c42c0bef8d448c2.1301595169.git.amit.shah@redhat.com>
-	<20110401154327.GA6593@mtj.dyndns.org>
-	<20110405065129.GC2872@amit-x200.redhat.com>
-	<20110406100620.GA4142@mtj.dyndns.org>
+From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device names
+ in Kernel.
+Date: Fri, 08 Apr 2011 23:07:41 +0900
+Message-ID: <4D9F16AD.2090408@hitachi.com>
+References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp> <20110405161454.GB885@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110406100620.GA4142@mtj.dyndns.org>
+In-Reply-To: <20110405161454.GB885@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Amit Shah <amit.shah@redhat.com>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Markus Armbruster <armbru@redhat.com>
+To: Greg KH <greg@kroah.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@suse.de>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Apr 6, 2011 at 11:06 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Tue, Apr 05, 2011 at 12:21:30PM +0530, Amit Shah wrote:
->> > But I don't think this is the correct place to do it. =A0The probl=
-em
->> > happens because block layer consumes the event but doesn't remembe=
-r it
->> > when the time for revalidation comes. =A0It should be done by bloc=
-k
->> > layer, not sr. =A0Hmmm... looking at the code, the new disk event =
-code
->> > should handle this correctly. =A0Was 2.6.38 showing the problem to=
-o?
+Hi,
+
+(2011/04/06 1:14), Greg KH wrote:
+> On Tue, Apr 05, 2011 at 09:49:46PM +0900, Nao Nishijima wrote:
+>> This patch series provides a SCSI option for persistent device
+>> names in kernel. With this option, user can always assign a
+>> same device name (e.g. sda) to a specific device according to
+>> udev rules and device id.
 >>
->> Yes, 2.6.38 shows the same problem. =A0I went back to ancient kernel=
-s
->> (2.6.31 on Fedora 11-alpha) which had the previous media_changed
->> infrastructure and those places too show the same behaviour (with th=
-e
->> TEST_UNIT_READY way of detecting media changes).
->
-> Can you please the patch attached in the following bz and see whether
-> it makes any difference?
->
-> =A0https://bugzilla.kernel.org/show_bug.cgi?id=3D13029
+>> Issue:
+>> Recently, kernel registers block devices in parallel. As a result,
+>> different device names will be assigned at each boot time. This
+>> will confuse file-system mounter, thus we usually use persistent
+>> symbolic links provided by udev. However, dmesg and procfs outputs
+>> show device names instead of the symbolic link names. This causes
+>> a serious problem when managing multiple devices (e.g. on a
+>> large-scale storage), because usually, device errors are output
+>> with device names on dmesg. We also concern about some commands
+>> which output device names, as well as kernel messages.
+>>
+>> Solution:
+>> To assign a persistent device name, I create unnamed devices (not
+>> a block device, but an intermediate device. users cannot read/write
+>> this device). When scsi device driver finds a LU, the LU is register=
+ed
+>> as an unnamed device and inform to udev. After udev finds the unname=
+d
+>> device, udev assigns a persistent device name to a specific device
+>> according to udev rules and registers it as a block device. Hence,
+>> this is just a naming, not a renaming.
+>>
+>> Some users are satisfied with current udev solution. Therefore, my
+>> proposal is implemented as an option.
+>>
+>> If using this option, add the following kernel parameter.
+>>
+>> 	scsi_mod.persistent_name=3D1
+>>
+>> Also, if you want to assign a device name with sda, add the
+>> following udev rules.
+>>
+>> SUBSYSTEM=3D=3D"scsi_unnamed", ATTR{disk_id}=3D=3D"xxx", PROGRAM=3D"=
+/bin/sh
+>> -c 'echo -n sda > /sys/%p/disk_name'"
+>=20
+> Also, where is the "real" program you have created to properly name
+> devices from userspace?  You need that to properly test this patch,
+> right?
+>=20
 
-Hi Tejun,
-There is a related issue I have been discussing with Amit:
-https://lkml.org/lkml/2011/3/23/156
+In the udev rule described above, notation =E2=80=9Cxxx=E2=80=9D indica=
+ted by
+ATTR(disk_id) is scsi id given by disk. Then, when udev finds this rule=
+,
+"/bin/sh -c 'echo -n sda>  /sys/%p/disk_name'" indicated by PROGRAM is
+operated using xxx (scsi id) if udev find the disk with scic id xxx.
+Thus, persistent device name is assigned.
 
-On media change the inode size is not updated by the sr driver or the
-universal cdrom driver.  A userspace process that holds a /dev/sr0
-file descriptor open across media change causes all processes on the
-system to see the old medium size when they do lseek(fd, 0, SEEK_END).
+I have tested this patch using the udev rule. and It works well.
 
-I think it would make sense to refresh the inode size on media change
-so that even open file descriptors see the new size and a single
-process cannot force a stale value for all other userspace processes
-on the system.
 
-Thoughts?
+> thanks,
+>=20
+> greg k-h
+>=20
 
-Stefan
+Thanks,
+
+--=20
+Nao NISHIJIMA
+Software Platform Research Dept. Linux Technology Center
+Hitachi, Ltd., YOKOHAMA Research  Laboratory
+Email=EF=BC=9A nao.nishijima.xt@hitachi.com
