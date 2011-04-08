@@ -1,67 +1,108 @@
-From: Ricard Wanderlof <ricard.wanderlof@axis.com>
-Subject: Re: [RFC 1/6]Fix typo "recieve" in various parts of the kernel.
-Date: Fri, 8 Apr 2011 09:14:04 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1104080909040.5186@lnxricardw.se.axis.com>
-References: <1302192567-842-1-git-send-email-justinmattock@gmail.com>
- <20110407200541.GC8569@pengutronix.de> <4D9E4A59.8010604@gmail.com>
+From: "Joey Lee" <jlee@novell.com>
+Subject: Re: [PATCH RFC v2] support SATA ODD zero power
+Date: Fri, 08 Apr 2011 03:01:08 -0600
+Message-ID: <4D9F5B74020000230002B0A1@novprvlin0050.provo.novell.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=iso-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D9E4A59.8010604@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: =?iso-8859-1?Q?Uwe_Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, "trivial@kernel.org" <trivial@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "socketcan-core@lists.berlios.de" <socketcan-core@lists.berlios.de>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: henry.su.ati@gmail.com, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+=E6=96=BC =E4=BA=8C=EF=BC=8C2011-03-22 =E6=96=BC 07:06 +0000=EF=BC=8Cjo=
+eyli(Joey Lee) =E6=8F=90=E5=88=B0=EF=BC=9A
+> Hi Tejun,=20
+>=20
+> =E6=96=BC =E4=B8=80=EF=BC=8C2011-03-21 =E6=96=BC 18:27 +0100=EF=BC=8C=
+Tejun Heo =E6=8F=90=E5=88=B0=EF=BC=9A
+> > Hello,
+> >=20
+> > On Mon, Mar 21, 2011 at 12:07:21AM -0600, Joey Lee wrote:
+> > > Sorry bother you for about support SATA ODD zero power in kernel.
+> > >=20
+> > > Henry didn't reply me.=20
+> > > Could you please kindly give any comment for this topic?
+> > >=20
+> > > Looks the SATA ODD zero power didn't have good power reserve numb=
+er,
+> > > does that mean support it in Linux kernel is not worthwhile?
+> >=20
+> > Well, 0.1-0.2w is not nothing.  It could be meaningful I guess, but
+> > the concern that I have are...
+> >=20
+> > * How wildly is it gonna be deployed?  Most ultraportables don't ha=
+ve
+> >   ODDs to begin with and extra features in ATA land tend to be very
+> >   cumbersome to deploy.  It usually ends up like - half of them
+> >   reporting the supportq incorrectly, quarter of them malfunction w=
+hen
+> >   enabled and so on.
+> >=20
+>=20
+> Per my understood, Intel and AMD's are said they support SATA ODD zer=
+o
+> power on newest notebook platform, and currently still have many
+> notebook ship with ODD. Intel didn't open their spec for support this
+> new function.
+>=20
+> And,=20
+> Yes, this patch didn't test on ultraportables, especially for if they
+> try to use USB ODD. For this patch We still need have a lot of test.
+>=20
+> > * Why is software involved in this at all?  The device needs to
+> >   process the eject button to begin with.  I don't really see why A=
+CPI
+> >   or operating system needs to be involved here at all.  What preve=
+nts
+> >   ODD from implementing it itself?  Is there any fundamental reason
+> >   why OS should be involved?
+> >=20
+>=20
+> I don't know how does Intel implement this function (by EC or ACPI?),
+> but AMD customized a ACPI object to provide this function. I will fin=
+d a
+> chance to use this function on Windows platform, per hardward guys gi=
+ve
+> me some information, Windows can resume the ODD power from GUI, I wil=
+l
+> try to verify it on Windows platform then reply to this mail.
+>=20
 
-On Fri, 8 Apr 2011, Justin P. Mattock wrote:
+More information about the SATA ODD zero power support on Windows
+platform from BIOSer. Unfortunately, I still didn't see the REAL window=
+s
+system that support SATA ODD zero power.
 
-> On 04/07/2011 01:05 PM, Uwe Kleine-K=F6nig wrote:
->> On Thu, Apr 07, 2011 at 09:09:22AM -0700, Justin P. Mattock wrote:
->>> The patch below fixes some typos "recieve" in various parts of the =
-kernel.
->>> Note: these below are in actual code rather than comments(excpet fo=
-r r852.c which
->> s/excpet/except/
->>
->>> has a code fix, and comment).
->>> compile tested as best as I can...
->> I'm not a native speaker, but "as good as" sounds better in my ears.
->>
->> Best regards
->> Uwe
->>
->
-> your right.. gcc and friends are the one's doing all the reall work: =
-"as=20
-> good as *"
+Per discuss with BIOSer, they said:=20
+	- The ODD icon still show up when ODD power-off.
+		+ Driver turn-off ODD power if there have no disk in tray.
+	- End user can power-on ODD by click ODD icon on GUI.
+		+ Driver evaluate ACPI method to power-on ODD.
+	- Intel and AMD all use ACPI to implement interactive with Windows.
 
-I think Uwe was thinking of grammar rather than who was doing the actua=
-l=20
-work.
+Until now, Intel still didn't open any spec for ODD, as I know, there
+also didn't have many shipped notebook support it.
 
-Now that I've gone more or less off topic I may as well voice my opinio=
-n=20
-the 'as best as I can' sounds like a mixup of two constructs: either 'a=
-s=20
-best I can' (which is probably slightly unusual these days), or 'as wel=
-l=20
-as I can'. 'I've done it as good as I can' is gramatically wrong (since=
-=20
-'good' is an adjective and 'well' is an adverb, and it is referring to=20
-'how I did it' (or in the case above, 'how well I tested it'), but fair=
-ly=20
-common nevertheless, and given the large percentage of non-native speak=
-ers=20
-in the Linux community I wouldn't worry about it, the meaning is clear=20
-anyway.
 
-I'll shut up and go now. :-)
+Thank's a lot!
+Joey Lee
 
-/Ricard
---=20
-Ricard Wolf Wanderl=F6f                           ricardw(at)axis.com
-Axis Communications AB, Lund, Sweden            www.axis.com
-Phone +46 46 272 2016                           Fax +46 46 13 61 30
+> >   The thing is that if it isn't essential, people aren't gonna
+> >   implement it anyway and we just end up with unused code.
+> >=20
+> > Thanks.
+> >=20
+>=20
+> Yes, this is not a essential feature, just Intel and AMD all said the=
+y
+> support it and some ODM also want to implement.=20
+>=20
+>=20
+> Thank's a lot!
+> Joey Lee
+>=20
+
+
