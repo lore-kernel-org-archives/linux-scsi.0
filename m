@@ -1,70 +1,95 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [RFC 1/6]Fix typo "recieve" in various parts of the kernel.
-Date: Fri, 08 Apr 2011 08:06:23 -0700
-Message-ID: <4D9F246F.2030305@gmail.com>
-References: <1302192567-842-1-git-send-email-justinmattock@gmail.com> <20110407200541.GC8569@pengutronix.de> <4D9E4A59.8010604@gmail.com> <Pine.LNX.4.64.1104080909040.5186@lnxricardw.se.axis.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device
+ names in Kernel.
+Date: Fri, 08 Apr 2011 08:14:12 -0700
+Message-ID: <1302275652.4090.10.camel@mulgrave.site>
+References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
+	 <20110405161400.GA885@kroah.com> <4D9F17DF.5030601@hitachi.com>
+	 <4D9F1CD1.2020600@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1104080909040.5186@lnxricardw.se.axis.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ricard Wanderlof <ricard.wanderlof@axis.com>
-Cc: =?ISO-8859-1?Q?Uwe_Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>, "trivial@kernel.org" <trivial@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "socketcan-core@lists.berlios.de" <socketcan-core@lists.berlios.de>, "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>, "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+In-Reply-To: <4D9F1CD1.2020600@suse.de>
+Sender: linux-hotplug-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp
 List-Id: linux-scsi@vger.kernel.org
 
-On 04/08/2011 12:14 AM, Ricard Wanderlof wrote:
->
-> On Fri, 8 Apr 2011, Justin P. Mattock wrote:
->
->> On 04/07/2011 01:05 PM, Uwe Kleine-K=F6nig wrote:
->>> On Thu, Apr 07, 2011 at 09:09:22AM -0700, Justin P. Mattock wrote:
->>>> The patch below fixes some typos "recieve" in various parts of the
->>>> kernel.
->>>> Note: these below are in actual code rather than comments(excpet f=
-or
->>>> r852.c which
->>> s/excpet/except/
->>>
->>>> has a code fix, and comment).
->>>> compile tested as best as I can...
->>> I'm not a native speaker, but "as good as" sounds better in my ears=
+On Fri, 2011-04-08 at 07:33 -0700, Hannes Reinecke wrote:
+> > The problem I would like to discuss here is that users can not iden=
+tify
+> > a disk from kernel messages when they DIRECTLY refer to these messa=
+ges.
+> > For example, a device name is used instead of a symbolic link names=
+ in
+> > bootup messages, I/O devices errors and /proc/partitions =E2=80=A6e=
+tc.
+> >=20
+> > In particular, users can not identify an appropriate device from a
+> > device name in syslog since different device name may be assigned t=
+o it
+> > at each boot time.
+> >=20
+> > My idea is able to fix this issue with small changes in scsi subsys=
+tem.
+> > Also, it is implemented as an option. Therefore, it does not affect
+> > users who do not select this option.
+> >=20
+> We have been discussing this problem several times in the past, and
+> indeed on these very mailing list.
+>=20
+> The conclusion we arrived at is that the kernel-provided device node
+> name is inherently unstable and impossible to fix within the existing
+> 'sdX' naming scheme.
+> So the choices have been to either move to a totally different naming
+> scheme or keep the naming scheme and provide the required information
+> by other means.
+> We have decided on the latter, and agreed on using udev to provide
+> persistent device names.
+> We are fully aware that any kernel related messages are subject to
+> chance after reboot, but then most kernel related messages are
+> (PID number, timestamps, login tty etc).
+> And also we are aware that any kernel messages need to be matched
+> against the current system layout to figure out any hardware-related
+> issue.
+>=20
+> But then basically all products requiring to filter out information
+> from kernel messages already do so I don't see a problem with that.
+>=20
+> Just adding an in-kernel identifier to the LUN will only be an
+> incomplete solution, as other identifiers will still be volatile.
+>=20
+> So I would prefer by keeping the in-kernel information as small
+> as possible to reduce memory consumption and rely on out-of-band
+> programs to provide the required mapping.
+
+So, while I agree totally with the above: udev and userspace is the way
+to go, I'm not totally opposed to having a non-invasive mechanism for
+indicating a user's preferred name for a device.  I think there are a
+couple of ways to do this:
+
+     1. Entirely in userspace: just have udev consult a preferred name
+        file and create say /dev/disk/by-preferred.  Then have all the
+        tools that normally output device information do the same (i.e.
+        since real name to preferred name is 1:1, they could all do a
+        reverse lookup).
+     2. have a writeable sysfs preferred_name field, either in the
+        generic device or just in SCSI.  The preferred name would be
+        used by outbound only (i.e. kernel dev_printk messages and
+        possibly /proc/partitions).  All inbound uses of the device
+        would come via the standard udev mechanisms
+        (i.e. /dev/disk/by-preferred would be the usual symlink).  This
+        means from the kernel point of view, no renaming has happened.
+        We'd just try to print out the preferred name in certain
+        circumstances, which should solve most of the described problem=
 =2E
->>>
->>> Best regards
->>> Uwe
->>>
->>
->> your right.. gcc and friends are the one's doing all the reall work:
->> "as good as *"
->
-> I think Uwe was thinking of grammar rather than who was doing the act=
-ual
-> work.
->
-> Now that I've gone more or less off topic I may as well voice my opin=
-ion
-> the 'as best as I can' sounds like a mixup of two constructs: either =
-'as
-> best I can' (which is probably slightly unusual these days), or 'as w=
-ell
-> as I can'. 'I've done it as good as I can' is gramatically wrong (sin=
-ce
-> 'good' is an adjective and 'well' is an adverb, and it is referring t=
-o
-> 'how I did it' (or in the case above, 'how well I tested it'), but
-> fairly common nevertheless, and given the large percentage of non-nat=
-ive
-> speakers in the Linux community I wouldn't worry about it, the meanin=
-g
-> is clear anyway.
->
-> I'll shut up and go now. :-)
->
-> /Ricard
+
+James
 
 
-well... pretty good explanation.
-
-Justin P. Mattock
+--
+To unsubscribe from this list: send the line "unsubscribe linux-hotplug=
+" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
