@@ -1,32 +1,54 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] block integrity: Fix write after checksum calculation
- problem
-Date: Mon, 11 Apr 2011 14:25:41 -0400
-Message-ID: <20110411182541.GA29511@infradead.org>
-References: <20110308045626.GD1956@dastard>
- <20110319000755.GD1110@tux1.beaverton.ibm.com>
- <20110321140451.GA7153@quack.suse.cz>
- <1300716666-sup-2087@think>
- <20110321164305.GC7153@quack.suse.cz>
- <20110406232938.GF1110@tux1.beaverton.ibm.com>
- <20110407165700.GB7363@quack.suse.cz>
- <20110408203135.GH1110@tux1.beaverton.ibm.com>
- <20110411124229.47bc28f6@corrin.poochiereds.net>
- <1302543595-sup-4352@think>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC-v3 2/3] qla2xxx: Enable 2xxx series LLD target mode support
+Date: Mon, 11 Apr 2011 22:37:06 +0400
+Message-ID: <4DA34A52.6020409@vlnb.net>
+References: <1301980307-14778-1-git-send-email-nab@linux-iscsi.org> <1301980307-14778-3-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1302543595-sup-4352@think>
+In-Reply-To: <1301980307-14778-3-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>
-Cc: Jeff Layton <jlayton@redhat.com>, djwong <djwong@us.ibm.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Ruediger Oertel <ro@suse.de>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Apr 11, 2011 at 01:41:16PM -0400, Chris Mason wrote:
-> Actually this isn't a nit.  Keeping the page locked closes an important
-> hole where it can become writeback again.  It might fix the last
-> remaining problem.
+Nicholas A. Bellinger, on 04/05/2011 09:11 AM wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch enables target mode support with the qla2xxx SCSI LLD using
+> qla_target.c logic introduced in commit f86d9fc734.  This includes:
+> 
+> *) Addition of target mode specific members to existing data
+> structures in qla_def.h and struct qla_hw_data->qla2x_tmpl using
+> qla_target.h:struct qla_target_template.
+> 
+> *) Addition of struct qla_target_template and direct calls into
+> qla_target.c logic w/ qla_tgt_* prefixed functions.
+> 
+> *) Addition of qla_iocb:qla2x00_req_pkt() for ring processing, and
+> qla2x00_issue_marker() for handling request/response queue processing
+> for target mode operation
+> 
+> *) Addition of various qla_tgt_mode_enabled() logic checks in
+> qla24xx_nvram_config(), qla2x00_initialize_adapter(), qla2x00_rff_id(),
+> qla2x00_abort_isp(), qla24xx_modify_vp_config(), and qla2x00_vp_abort_isp().
+> 
+> For the specific checks for qla_hw_data->qla2x_tmpl this includes:
+> 
+> *) control plane:
+> 
+> qla_init.c:qla2x00_rport_del() -> qla_tgt_fc_port_deleted()
+> qla_init.c:qla2x00_reg_remote_port() -> qla_tgt_fc_port_added()
+> qla_init.c:qla2x00_device_resync() -> qla2x00_mark_device_lost()
+> 
+> *) I/O path:
+> 
+> qla_isr.c:qla2x00_async_event() -> qla_tgt_async_event()
+> qla_isr.c:qla2x00_process_response_queue() -> qla_tgt_response_pkt_all_vps()
+> qla_isr.c:qla24xx_process_response_queue() -> qla_tgt_response_pkt_all_vps()
 
-Note that the generic block_page_mkwrite atually does that.  But only
-xfs and nilfs2 actually make use of it.
+Most of this code was written by me and other SCST developers. How about
+to give proper credits to the original authors?
+
+Vlad
