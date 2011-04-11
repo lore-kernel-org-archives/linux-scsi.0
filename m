@@ -1,65 +1,71 @@
-From: Mark Goodwin <mgoodwin@redhat.com>
-Subject: Re: [PATCH RFC] Reduce amount of TURs sent in error recovery
-Date: Mon, 11 Apr 2011 10:52:23 +1000
-Message-ID: <4DA250C7.60904@redhat.com>
-References: <4D80F6D0.1010404@gmail.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] mpt2sas: Fix missing reference tag seed with Type 2
+ devices
+Date: Mon, 11 Apr 2011 10:59:13 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157DBBCE3@inbmail01.lsi.com>
+References: <yq162rudrmn.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32615 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751367Ab1DKAw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2011 20:52:27 -0400
-In-Reply-To: <4D80F6D0.1010404@gmail.com>
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:38106 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752144Ab1DKF2E convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Apr 2011 01:28:04 -0400
+In-Reply-To: <yq162rudrmn.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Jeffery <dhjeffery@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnersh>
 
-On 03/17/2011 04:43 AM, David Jeffery wrote:
-> In error recovery, most scsi error recovery stages will send a TUR command
-> for every bad command when a driver's error handler reports success.  When
-> several bad commands to the same device, this results in a device
-> being probed multiple times.
->
-> This becomes very problematic if the device or connection is in a state
-> where the device still doesn't respond to commands even after a recovery
-> function returns success.  The error handler must wait for the test
-> commands to time out.  The time waiting for the redundant commands can
-> drastically lengthen error recovery.
->
-> This patch alters the scsi mid-layer's error routines to send test commands
-> once per device instead of once per bad command.  This can drastically
-> lower error recovery time.
->
+James,
 
-Looks good to me - it should also make recovery times far more predictable,
-which is something a lot of sites currently struggle with because it depends
-on the workload (number of queued commands at the time of the failure).
-With this patch, those sites will need to re-tune their timeouts, right?
+We discuss this patch internally and found as valid candidate to be ACKed.
+Please consider this patch as an ACKed.
 
-Has this been tested on real FC h/w yet, or just with scsi_debug?
-We have a patch to make testing easier: it adds a new sd state 'zombie',
-which stops a particular device/path from queueing any commands,
-basically as follows (not the whole patch, just the gist of it) :
+Thanks, Kashyap
 
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -554,7 +554,10 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-                 cmd->result = (DID_NO_CONNECT << 16);
-                 scsi_done(cmd);
-         } else {
--               rtn = host->hostt->queuecommand(cmd, scsi_done);
-+               if (cmd->device->sdev_state == SDEV_ZOMBIE)
-+                       rtn = 0; /* will timeout so err handler will run */
-+               else
-+                       rtn = host->hostt->queuecommand(cmd, scsi_done);
-         }
-
-Would we want to consider adding this to the patch set too? It will allow
-affected sites to more easily tune their timeouts and redundancy config
-(i.e. echo zombie > /sys/block/sdX/device/state to simulate a failure).
-
-Cheers
--- Mark Goodwin
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Tuesday, March 08, 2011 12:30 PM
+> To: linux-scsi@vger.kernel.org; James.Bottomley@hansenpartnership.com;
+> Desai, Kashyap; Moore, Eric
+> Subject: [PATCH] mpt2sas: Fix missing reference tag seed with Type 2
+> devices
+> 
+> 
+> Ensure that the initial reference tag is passed on to the HBA firmware
+> for DIF Type 2 devices.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> index 16e99b6..f423fe9 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -3230,6 +3230,7 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd,
+> Mpi2SCSIIORequest_t *mpi_request)
+> 
+>  	switch (prot_type) {
+>  	case SCSI_PROT_DIF_TYPE1:
+> +	case SCSI_PROT_DIF_TYPE2:
+> 
+>  		/*
+>  		* enable ref/guard checking
+> @@ -3242,13 +3243,6 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd,
+> Mpi2SCSIIORequest_t *mpi_request)
+>  		    cpu_to_be32(scsi_get_lba(scmd));
+>  		break;
+> 
+> -	case SCSI_PROT_DIF_TYPE2:
+> -
+> -		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
+> -		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
+> -		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
+> -		break;
+> -
+>  	case SCSI_PROT_DIF_TYPE3:
+> 
+>  		/*
