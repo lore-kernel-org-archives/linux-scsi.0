@@ -1,64 +1,65 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 1/2] mpt2sas: Remove acquisition of host_lock
-Date: Sun, 10 Apr 2011 16:01:49 -0600
-Message-ID: <4565AEA676113A449269C2F3A549520F809562FB@cosmail03.lsi.com>
-References: <20110405214355.GQ4183@linux.intel.com>
- <20110406134555.GA21729@infradead.org>
- <20110407053058.GC4673@linux.intel.com>
+From: Mark Goodwin <mgoodwin@redhat.com>
+Subject: Re: [PATCH RFC] Reduce amount of TURs sent in error recovery
+Date: Mon, 11 Apr 2011 10:52:23 +1000
+Message-ID: <4DA250C7.60904@redhat.com>
+References: <4D80F6D0.1010404@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:60379 "EHLO
-	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752415Ab1DJWAa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Apr 2011 18:00:30 -0400
-In-Reply-To: <20110407053058.GC4673@linux.intel.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:32615 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751367Ab1DKAw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Apr 2011 20:52:27 -0400
+In-Reply-To: <4D80F6D0.1010404@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: David Jeffery <dhjeffery@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wednesday, April 06, 2011 11:31 PM, Matthew Wilcox wrote: 
-> On Wed, Apr 06, 2011 at 09:45:55AM -0400, Christoph Hellwig wrote:
-> > On Tue, Apr 05, 2011 at 05:43:55PM -0400, Matthew Wilcox wrote:
-> > >
-> > > We can eliminate the use of the scsi command serial_number, as the race
-> > > that the driver is checking for cannot happen.
-> > >
-> > > Then the driver no longer needs to use the DEF_SCSI_QCMD() macro and no
-> > > longer acquires the host_lock.  This improves performance substantially
-> > > on high-IOPS workloads.
-> >
-> > Looks fine.  Note that this somehow clashes with my patch to simply
-> > remove the serial_number check from mpt2sas.  We could just drop my
-> > smaller patch if this one gets in in a timely fashion.
-> 
-> We should probably split this patch apart into the serial_number removal
-> and then the host_lock removal anyway.
-> 
-> But I don't think your patch is correct:
-> 
-> -               if (scmd_lookup && (scmd_lookup->serial_number ==
-> -                   scmd->serial_number))
-> +               if (scmd_lookup)
->                         rc = FAILED;
->                 else
->                         rc = SUCCESS;
-> 
-> The second part of the conditional is always false (right?  because that
-> command can't be in flight).
-> 
-> So that's (scmd_lookup && 0), which is if (0), so we can just state rc
-> = SUCCESS.  Or is my reasoning faulty somewhere?
+On 03/17/2011 04:43 AM, David Jeffery wrote:
+> In error recovery, most scsi error recovery stages will send a TUR command
+> for every bad command when a driver's error handler reports success.  When
+> several bad commands to the same device, this results in a device
+> being probed multiple times.
+>
+> This becomes very problematic if the device or connection is in a state
+> where the device still doesn't respond to commands even after a recovery
+> function returns success.  The error handler must wait for the test
+> commands to time out.  The time waiting for the redundant commands can
+> drastically lengthen error recovery.
+>
+> This patch alters the scsi mid-layer's error routines to send test commands
+> once per device instead of once per bad command.  This can drastically
+> lower error recovery time.
+>
 
+Looks good to me - it should also make recovery times far more predictable,
+which is something a lot of sites currently struggle with because it depends
+on the workload (number of queued commands at the time of the failure).
+With this patch, those sites will need to re-tune their timeouts, right?
 
-The patch that Christoph provided is correct.   We are doing this check following the task management completion. The purpose of this check is to determine whether the outstanding IO was completed.   For whatever reason, if the scmd_lookup is non-zero, it means the IO is still in driver queue. It's not guaranteed that the IO is returned by the task abort.  So we need to return FAILED status if the scmd_lookup is non-zero.  
+Has this been tested on real FC h/w yet, or just with scsi_debug?
+We have a patch to make testing easier: it adds a new sd state 'zombie',
+which stops a particular device/path from queueing any commands,
+basically as follows (not the whole patch, just the gist of it) :
 
-The serial_number check is there if IO is resent while error recovery is going on, it appears I merged that in from the older generation mptsas driver. It's not needed since unjam host locks down the IO queues.
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -554,7 +554,10 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+                 cmd->result = (DID_NO_CONNECT << 16);
+                 scsi_done(cmd);
+         } else {
+-               rtn = host->hostt->queuecommand(cmd, scsi_done);
++               if (cmd->device->sdev_state == SDEV_ZOMBIE)
++                       rtn = 0; /* will timeout so err handler will run */
++               else
++                       rtn = host->hostt->queuecommand(cmd, scsi_done);
+         }
 
+Would we want to consider adding this to the patch set too? It will allow
+affected sites to more easily tune their timeouts and redundancy config
+(i.e. echo zombie > /sys/block/sdX/device/state to simulate a failure).
 
-  
-
+Cheers
+-- Mark Goodwin
