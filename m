@@ -1,72 +1,85 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v3 2/3] qla2xxx: Enable 2xxx series LLD target mode
-	support
-Date: Tue, 12 Apr 2011 00:38:04 -0700
-Message-ID: <1302593884.25449.68.camel@haakon2.linux-iscsi.org>
-References: <1301980307-14778-1-git-send-email-nab@linux-iscsi.org>
-	 <1301980307-14778-3-git-send-email-nab@linux-iscsi.org>
-	 <4DA34A52.6020409@vlnb.net>
+From: Stefan Hajnoczi <stefanha@gmail.com>
+Subject: Re: [PATCH] sr: Ensure disk is revalidated when media changes
+Date: Tue, 12 Apr 2011 09:16:41 +0100
+Message-ID: <BANLkTi=2344xaNM=YjY_GZbyp8yayyM2nA@mail.gmail.com>
+References: <8d830b21c0b944d26f29dc1e0c42c0bef8d448c2.1301595169.git.amit.shah@redhat.com>
+	<20110401154327.GA6593@mtj.dyndns.org>
+	<20110405065129.GC2872@amit-x200.redhat.com>
+	<20110406100620.GA4142@mtj.dyndns.org>
+	<BANLkTinpRJHr+293kPzS1=hCWRPamOOGfw@mail.gmail.com>
+	<20110408162041.GB3871@mtj.dyndns.org>
+	<BANLkTimYBDvcUO9Z2wdk4VFk88NpGJiZJA@mail.gmail.com>
+	<20110408165207.GD3871@mtj.dyndns.org>
+	<20110412045146.GE26678@amit-x200.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DA34A52.6020409@vlnb.net>
+In-Reply-To: <20110412045146.GE26678@amit-x200.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Ruediger Oertel <ro@suse.de>, Andy Grover <agrover@redhat.com>
+To: Amit Shah <amit.shah@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Markus Armbruster <armbru@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2011-04-11 at 22:37 +0400, Vladislav Bolkhovitin wrote:
-> Nicholas A. Bellinger, on 04/05/2011 09:11 AM wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > This patch enables target mode support with the qla2xxx SCSI LLD using
-> > qla_target.c logic introduced in commit f86d9fc734.  This includes:
-> > 
-> > *) Addition of target mode specific members to existing data
-> > structures in qla_def.h and struct qla_hw_data->qla2x_tmpl using
-> > qla_target.h:struct qla_target_template.
-> > 
-> > *) Addition of struct qla_target_template and direct calls into
-> > qla_target.c logic w/ qla_tgt_* prefixed functions.
-> > 
-> > *) Addition of qla_iocb:qla2x00_req_pkt() for ring processing, and
-> > qla2x00_issue_marker() for handling request/response queue processing
-> > for target mode operation
-> > 
-> > *) Addition of various qla_tgt_mode_enabled() logic checks in
-> > qla24xx_nvram_config(), qla2x00_initialize_adapter(), qla2x00_rff_id(),
-> > qla2x00_abort_isp(), qla24xx_modify_vp_config(), and qla2x00_vp_abort_isp().
-> > 
-> > For the specific checks for qla_hw_data->qla2x_tmpl this includes:
-> > 
-> > *) control plane:
-> > 
-> > qla_init.c:qla2x00_rport_del() -> qla_tgt_fc_port_deleted()
-> > qla_init.c:qla2x00_reg_remote_port() -> qla_tgt_fc_port_added()
-> > qla_init.c:qla2x00_device_resync() -> qla2x00_mark_device_lost()
-> > 
-> > *) I/O path:
-> > 
-> > qla_isr.c:qla2x00_async_event() -> qla_tgt_async_event()
-> > qla_isr.c:qla2x00_process_response_queue() -> qla_tgt_response_pkt_all_vps()
-> > qla_isr.c:qla24xx_process_response_queue() -> qla_tgt_response_pkt_all_vps()
-> 
-> Most of this code was written by me and other SCST developers. How about
-> to give proper credits to the original authors?
-> 
+On Tue, Apr 12, 2011 at 5:51 AM, Amit Shah <amit.shah@redhat.com> wrote=
+:
+> On (Fri) 08 Apr 2011 [09:52:07], Tejun Heo wrote:
+>> Hello,
+>>
+>> On Fri, Apr 08, 2011 at 05:43:16PM +0100, Stefan Hajnoczi wrote:
+>> > >> I think it would make sense to refresh the inode size on media =
+change
+>> > >> so that even open file descriptors see the new size and a singl=
+e
+>> > >> process cannot force a stale value for all other userspace proc=
+esses
+>> > >> on the system.
+>> > >
+>> > > Hmmm... I don't know. =A0Maybe we can but I'm not sure whether t=
+here's a
+>> > > good reason for it. =A0cdrom is locked while opened after all. =A0=
+Are
+>> > > there actual problems?
+>> >
+>> > Yeah, sorry I didn't explain what the use case was. =A0With QEMU y=
+ou can
+>> > pass through the physical CD-ROM into the virtual machine.
+>> >
+>> > QEMU opens /dev/cdrom with O_NONBLOCK | O_RDONLY. =A0The guest can=
+ test
+>> > if the medium is present and QEMU will do ioctl(fd,
+>> > CDROM_DRIVE_STATUS, CDSL_CURRENT). =A0The guest can also lock the =
+tray
+>> > and eject, again using the respective ioctls. =A0Read operations a=
+re
+>> > serviced by performing a read on the file descriptor in QEMU. =A0A=
+nd
+>> > finally the medium size is queried by QEMU using lseek(fd, 0,
+>> > SEEK_END).
+>> >
+>> > Today QEMU cannot keep /dev/cdrom open across media change because=
+ it
+>> > will have an outdated inode size returned from lseek(fd, 0, SEEK_E=
+ND).
+>> > =A0But if the cdrom driver (or sr) refresh the inode size on media
+>> > change then there is no need to work around this from userspace.
+>>
+>> Hmmm... ISTR there was some discussion about changing inode size on
+>> the fly quite a while ago. =A0I didn't follow the discussion but it
+>> seemed to have rather nasty/delicate implications.
+>
+> I don't necessarily agree with having to modify inode sizes on the
+> fly, but the main bug here is that the inode doesn't get invalidated
+> if a CDROM is ejected while a process has an fd to the CDROM device
+> opened. =A0So as in the original case, if a CD is swapped with one
+> having more data, lseek continues to report the original media's size
+> in the process that keeps the fd open across eject/insert.
+>
+> I haven't tried this on physical systems, so can't count out it being
+> a qemu bug as well.
 
-Hello Vlad,
+Amit,
+This sounds exactly like the bug that I described and it happens on
+bare metal without virtualization.
 
-I intend to give proper fabric module credit where fabric module credit
-is due  The original copyright from yourself + SCST developers is in
-place in this patch, as well as my own copyright for the modern LLD
-refactoring, forward-port and cleanups to work with mainline target
-infrastructure.
-
-I have no issues with including your's and other original author's names
-for the pioneering work into the commit log for the next round of review
-of PATCH #2, and am happy to make sure this is included for a future
-squashed version of the series for a mainline commit.
-
---nab
+Stefan
