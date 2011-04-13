@@ -1,149 +1,158 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
- in sysfs
-Date: Wed, 13 Apr 2011 12:00:00 -0500
-Message-ID: <4DA5D690.3040501@cs.wisc.edu>
-References: <1301769261-29896-1-git-send-email-vikas.chaudhary@qlogic.com> <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 2/2] bfa: kdump fix
+Date: Wed, 13 Apr 2011 11:45:53 -0700
+Message-ID: <1302720353-27636-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:32948 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757069Ab1DMRAN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Apr 2011 13:00:13 -0400
-In-Reply-To: <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:47700 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756985Ab1DMS7K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Apr 2011 14:59:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Eddie Wai <waie@broadcom.com>, Michael Chan <mchan@broadcom.com>
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
 
-ccing Broadcom devs, Some questions for you guys below
+Root cause: When kernel crashes, bfa IOC state machine and FW doesn't get
+a notification and hence are not cleanly shutdown. So registers holding
+driver/IOC state information are not reset back to valid disabled/parking
+values. This causes subsequent driver initialization to hang during kdump
+kernel boot.
 
+Fix description: during the initialization of first PCI function, reset
+corresponding register when unclean shutown is detect by reading chip
+registers. This will make sure that ioc/fw gets clean re-initialization.
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
+ drivers/scsi/bfa/bfa_ioc.c    |    4 +++-
+ drivers/scsi/bfa/bfa_ioc.h    |    1 +
+ drivers/scsi/bfa/bfa_ioc_cb.c |   11 +++++++++++
+ drivers/scsi/bfa/bfa_ioc_ct.c |   26 ++++++++++++++++++++++++++
+ 4 files changed, 41 insertions(+), 1 deletions(-)
 
-On 04/02/2011 01:34 PM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
->
-> To support multiple network addresses per adapter need to have a new way to
-> represent network interface (net iface) in sysfs.
->
-> Currently only one ipaddress and hwaddress is displayed
->
-> \# ls /sys/class/iscsi_host/host18
-> device  hwaddress  initiatorname  ipaddress  power  subsystem  uevent
->
-> In this patch the net iface is presented as a separate class device.
-> The one that can be added/removed dynamically or statically, based on how
-> the user configures the multiple net iface on the adapter.
->
-> The new sysfs directory would look like this
-> \# /sys/class/iscsi_iface/
-> |
-> |- ipv4-iface-<host_no>-<iface_no>/<-- for ipv4
->                                  |- ipaddress
->                                  |- subnet
->                                  |- gateway
->                                  |- bootproto
->                                  |- state
-> |- ipv6-iface-<host_no>-<iface_no>/<-- for ipv6
->                                  |- ipaddress
->                                  |- link_local_addr
->                                  |- router_addr
->                                  |- ipaddr_autocfg
->                                  |- linklocal_autocfg
->                                  |- state
->
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index c1f72c4..6c7e033 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -56,6 +56,8 @@ BFA_TRC_FILE(CNA, IOC);
+ #define bfa_ioc_map_port(__ioc) ((__ioc)->ioc_hwif->ioc_map_port(__ioc))
+ #define bfa_ioc_notify_fail(__ioc)              \
+ 			((__ioc)->ioc_hwif->ioc_notify_fail(__ioc))
++#define bfa_ioc_sync_start(__ioc)               \
++			((__ioc)->ioc_hwif->ioc_sync_start(__ioc))
+ #define bfa_ioc_sync_join(__ioc)                \
+ 			((__ioc)->ioc_hwif->ioc_sync_join(__ioc))
+ #define bfa_ioc_sync_leave(__ioc)               \
+@@ -647,7 +649,7 @@ bfa_iocpf_sm_fwcheck(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+ 	switch (event) {
+ 	case IOCPF_E_SEMLOCKED:
+ 		if (bfa_ioc_firmware_lock(ioc)) {
+-			if (bfa_ioc_sync_complete(ioc)) {
++			if (bfa_ioc_sync_start(ioc)) {
+ 				iocpf->retry_count = 0;
+ 				bfa_ioc_sync_join(ioc);
+ 				bfa_fsm_set_state(iocpf, bfa_iocpf_sm_hwinit);
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index ec9cf08..c85182a 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -263,6 +263,7 @@ struct bfa_ioc_hwif_s {
+ 					bfa_boolean_t msix);
+ 	void		(*ioc_notify_fail)	(struct bfa_ioc_s *ioc);
+ 	void		(*ioc_ownership_reset)	(struct bfa_ioc_s *ioc);
++	bfa_boolean_t   (*ioc_sync_start)       (struct bfa_ioc_s *ioc);
+ 	void		(*ioc_sync_join)	(struct bfa_ioc_s *ioc);
+ 	void		(*ioc_sync_leave)	(struct bfa_ioc_s *ioc);
+ 	void		(*ioc_sync_ack)		(struct bfa_ioc_s *ioc);
+diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
+index e4a0713..89ae4c8 100644
+--- a/drivers/scsi/bfa/bfa_ioc_cb.c
++++ b/drivers/scsi/bfa/bfa_ioc_cb.c
+@@ -32,6 +32,7 @@ static void bfa_ioc_cb_map_port(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
+ static void bfa_ioc_cb_notify_fail(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_ownership_reset(struct bfa_ioc_s *ioc);
++static bfa_boolean_t bfa_ioc_cb_sync_start(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_sync_join(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_sync_leave(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_cb_sync_ack(struct bfa_ioc_s *ioc);
+@@ -53,6 +54,7 @@ bfa_ioc_set_cb_hwif(struct bfa_ioc_s *ioc)
+ 	hwif_cb.ioc_isr_mode_set = bfa_ioc_cb_isr_mode_set;
+ 	hwif_cb.ioc_notify_fail = bfa_ioc_cb_notify_fail;
+ 	hwif_cb.ioc_ownership_reset = bfa_ioc_cb_ownership_reset;
++	hwif_cb.ioc_sync_start = bfa_ioc_cb_sync_start;
+ 	hwif_cb.ioc_sync_join = bfa_ioc_cb_sync_join;
+ 	hwif_cb.ioc_sync_leave = bfa_ioc_cb_sync_leave;
+ 	hwif_cb.ioc_sync_ack = bfa_ioc_cb_sync_ack;
+@@ -195,6 +197,15 @@ bfa_ioc_cb_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix)
+ }
+ 
+ /*
++ * Synchronized IOC failure processing routines
++ */
++static bfa_boolean_t
++bfa_ioc_cb_sync_start(struct bfa_ioc_s *ioc)
++{
++	return bfa_ioc_cb_sync_complete(ioc);
++}
++
++/*
+  * Cleanup hw semaphore and usecnt registers
+  */
+ static void
+diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
+index 008d129..9361252 100644
+--- a/drivers/scsi/bfa/bfa_ioc_ct.c
++++ b/drivers/scsi/bfa/bfa_ioc_ct.c
+@@ -41,6 +41,7 @@ static void bfa_ioc_ct_map_port(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
+ static void bfa_ioc_ct_notify_fail(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_ownership_reset(struct bfa_ioc_s *ioc);
++static bfa_boolean_t bfa_ioc_ct_sync_start(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_sync_join(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_sync_leave(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_ct_sync_ack(struct bfa_ioc_s *ioc);
+@@ -62,6 +63,7 @@ bfa_ioc_set_ct_hwif(struct bfa_ioc_s *ioc)
+ 	hwif_ct.ioc_isr_mode_set = bfa_ioc_ct_isr_mode_set;
+ 	hwif_ct.ioc_notify_fail = bfa_ioc_ct_notify_fail;
+ 	hwif_ct.ioc_ownership_reset = bfa_ioc_ct_ownership_reset;
++	hwif_ct.ioc_sync_start = bfa_ioc_ct_sync_start;
+ 	hwif_ct.ioc_sync_join = bfa_ioc_ct_sync_join;
+ 	hwif_ct.ioc_sync_leave = bfa_ioc_ct_sync_leave;
+ 	hwif_ct.ioc_sync_ack = bfa_ioc_ct_sync_ack;
+@@ -351,6 +353,30 @@ bfa_ioc_ct_ownership_reset(struct bfa_ioc_s *ioc)
+ 	writel(1, ioc->ioc_regs.ioc_sem_reg);
+ }
+ 
++static bfa_boolean_t
++bfa_ioc_ct_sync_start(struct bfa_ioc_s *ioc)
++{
++	uint32_t r32 = readl(ioc->ioc_regs.ioc_fail_sync);
++	uint32_t sync_reqd = bfa_ioc_ct_get_sync_reqd(r32);
++
++	/*
++	 * Driver load time.  If the sync required bit for this PCI fn
++	 * is set, it is due to an unclean exit by the driver for this
++	 * PCI fn in the previous incarnation. Whoever comes here first
++	 * should clean it up, no matter which PCI fn.
++	 */
++
++	if (sync_reqd & bfa_ioc_ct_sync_pos(ioc)) {
++		writel(0, ioc->ioc_regs.ioc_fail_sync);
++		writel(1, ioc->ioc_regs.ioc_usage_reg);
++		writel(BFI_IOC_UNINIT, ioc->ioc_regs.ioc_fwstate);
++		writel(BFI_IOC_UNINIT, ioc->ioc_regs.alt_ioc_fwstate);
++		return BFA_TRUE;
++	}
++
++	return bfa_ioc_ct_sync_complete(ioc);
++}
++
+ /*
+  * Synchronized IOC failure processing routines
+  */
+-- 
+1.6.5.2
 
-
-With patch "[RFC-V2 PATCH 1/5] iscsi_transport: add support for 
-set_net_config" userspace would send down the vlan info.
-
-If we add a vlan sysfs file to the iscsi_iface, to export the info was 
-bnx2i going call iscsi_create_iface for each vlan? If so I am not sure 
-what bnx2i will use for the iface_num. It is supposed to be persistent, 
-right?
-
-For bnx2i, when doing iscsi offload and vlans, do you have to have a 
-netdev like ethX.Y setup for each vlan or can bnx2i operate without it 
-(the call to cnic_get_vlan always throws me and I cannot remember if we 
-were going to still do that or change something in the driver so you did 
-not need it).
-
-And just to confirm for vlans and bnx2i, when we make a ep and session, 
-cnic_get_route/cnic_cm_select_dev will do the magic to figure out what 
-vlan to use?
-
-
-
-
-> +
-> +struct iscsi_iface *
-> +iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
-> +		   uint32_t iface_type, uint32_t iface_num, int dd_size)
-> +{
-> +	struct iscsi_iface *iface;
-> +	int id;
-> +	int err;
-> +
-> +	iface = kzalloc(sizeof(*iface) + dd_size, GFP_KERNEL);
-> +	if (!iface)
-> +		return NULL;
-> +
-> +iface_idr_again:
-> +	if (!idr_pre_get(&iscsi_iface_idr, GFP_KERNEL))
-> +		goto free_iface;
-> +
-> +	spin_lock(&iscsi_iface_lock);
-> +	err = idr_get_new(&iscsi_iface_idr, iface,&id);
-> +	if (err == -EAGAIN) {
-> +		spin_unlock(&iscsi_iface_lock);
-> +		goto iface_idr_again;
-> +	}
-> +	spin_unlock(&iscsi_iface_lock);
-> +
-> +	if (err)
-> +		goto free_iface;
-> +
-> +	iface->id = id;
-> +	iface->transport = transport;
-> +	iface->iface_type = iface_type;
-> +	iface->iface_num = iface_num;
-> +	iface->dev.class =&iscsi_iface_class;
-> +	/* parent reference */
-> +	iface->dev.parent = get_device(&shost->shost_gendev);
-> +	if (iface_type == IFACE_TYPE_IPV4)
-> +		dev_set_name(&iface->dev, "ipv4-iface-%u-%u", shost->host_no,
-> +			     iface_num);
-> +	else if (iface_type == IFACE_TYPE_IPV6)
-> +		dev_set_name(&iface->dev, "ipv6-iface-%u-%u", shost->host_no,
-> +			     iface_num);
-> +	else
-> +		goto free_iface;
-> +
-> +	err = device_register(&iface->dev);
-> +	if (err)
-> +		goto free_iface;
-> +
-> +	if (iface_type == IFACE_TYPE_IPV4)
-> +		err = sysfs_create_group(&iface->dev.kobj,
-> +					&iscsi_ipv4_iface_group);
-> +	else if (iface_type == IFACE_TYPE_IPV6)
-> +		err = sysfs_create_group(&iface->dev.kobj,
-> +					&iscsi_ipv6_iface_group);
-> +
-> +	if (err)
-> +		goto iface_unregister_dev;
-> +
-> +	if (dd_size)
-> +		iface->dd_data =&iface[1];
-> +	return iface;
-> +
-> +iface_unregister_dev:
-> +	idr_remove(&iscsi_iface_idr, id);
-> +	device_unregister(&iface->dev);
-> +
-> +free_iface:
-> +	kfree(iface);
-> +	return NULL;
-> +}
-> +EXPORT_SYMBOL_GPL(iscsi_create_iface);
