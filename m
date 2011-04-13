@@ -1,19 +1,19 @@
 From: Jing Huang <huangj@brocade.com>
 Subject: [PATCH 1/2] bfa: firmware download fix
-Date: Wed, 13 Apr 2011 12:09:05 -0700
-Message-ID: <1302721745-4487-1-git-send-email-huangj@brocade.com>
+Date: Wed, 13 Apr 2011 11:44:03 -0700
+Message-ID: <1302720243-25391-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:44160 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:44797 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752502Ab1DMTJP (ORCPT
+	by vger.kernel.org with ESMTP id S1757950Ab1DMTUf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Apr 2011 15:09:15 -0400
+	Wed, 13 Apr 2011 15:20:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: adapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
+Cc: dapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
 
 This patch includes fixes for two issues releated to firmware download
 implementation: 1) Merged memory leak fix provided by Jesper Juhl
