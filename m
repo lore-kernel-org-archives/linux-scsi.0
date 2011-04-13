@@ -1,67 +1,149 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
  in sysfs
-Date: Wed, 13 Apr 2011 11:44:15 -0500
-Message-ID: <4DA5D2DF.5080806@cs.wisc.edu>
-References: <1301769261-29896-1-git-send-email-vikas.chaudhary@qlogic.com> <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com> <4DA52525.3020405@cs.wisc.edu> <4DA5294C.8040305@cs.wisc.edu> <5E4F49720D0BAD499EE1F01232234BA8728A8CB623@AVEXMB1.qlogic.org>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Date: Wed, 13 Apr 2011 12:00:00 -0500
+Message-ID: <4DA5D690.3040501@cs.wisc.edu>
+References: <1301769261-29896-1-git-send-email-vikas.chaudhary@qlogic.com> <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncCLPJla3WGRDppZftBBoEXTyhaA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA8728A8CB623-HolNjIBXvBOXx9kJd3VG2h2eb7JE58TQ@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: Vikas Chaudhary <vikas.chaudhary-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, "James.Bottomley-l3A5Bk7waGM@public.gmane.org" <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lalit Chandivade <lalit.chandivade-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Ravi Anand <ravi.anand-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, "Jayamohan.Kallickal-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org" <Jayamohan.Kallickal-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:32948 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757069Ab1DMRAN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Apr 2011 13:00:13 -0400
+In-Reply-To: <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Eddie Wai <waie@broadcom.com>, Michael Chan <mchan@broadcom.com>
 
-On 04/13/2011 09:48 AM, Vikas Chaudhary wrote:
+ccing Broadcom devs, Some questions for you guys below
+
+
+On 04/02/2011 01:34 PM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
 >
+> To support multiple network addresses per adapter need to have a new way to
+> represent network interface (net iface) in sysfs.
 >
->> -----Original Message-----
->> From: Mike Christie [mailto:michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org]
->> Sent: Wednesday, April 13, 2011 10:11 AM
->> To: Vikas Chaudhary
->> Cc: James.Bottomley-l3A5Bk7waGM@public.gmane.org; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; open-
->> iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org; Lalit Chandivade; Ravi Anand;
->> Jayamohan.Kallickal-iH1Dq9VlAzfQT0dZR+AlfA@public.gmane.org
->> Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
->> in sysfs
->>
->> On 04/12/2011 11:23 PM, Mike Christie wrote:
->>> Do we want to make the kernel iscsi iface more generic or maybe just
->>> rename it to reflect it is just based on net settings?
->>>
->>> The issue with making it more generic is that with the current drivers,
->>> we do not care what info like the initiatorname in the kernel code. That
->>> is all handled in userspace because all the session management is there,
->>> so there is no point in adding that complexity here.
->>
->> I take part of this back. We set the iscsi iface name and initiator name
->> on the session right now. We need that info for relogin type of
->> situations where iscsid might have died and we need to know the
->> initiatorname to use. We cannot read it from a disk, because that disk
->> might be the one are are relogging into.
->>
->> It might not hurt to make the kernel's iscsi ifaces abstraction more
->> general.
+> Currently only one ipaddress and hwaddress is displayed
 >
-> Yes and also to reflect correct status of network settings it will be
-> good to have iscsi_iface in the kernel. This is useful in a case where
-> user set DHCP settings then we can reflect IP addresses and other
-> settings in the kernel iface.
+> \# ls /sys/class/iscsi_host/host18
+> device  hwaddress  initiatorname  ipaddress  power  subsystem  uevent
+>
+> In this patch the net iface is presented as a separate class device.
+> The one that can be added/removed dynamically or statically, based on how
+> the user configures the multiple net iface on the adapter.
+>
+> The new sysfs directory would look like this
+> \# /sys/class/iscsi_iface/
+> |
+> |- ipv4-iface-<host_no>-<iface_no>/<-- for ipv4
+>                                  |- ipaddress
+>                                  |- subnet
+>                                  |- gateway
+>                                  |- bootproto
+>                                  |- state
+> |- ipv6-iface-<host_no>-<iface_no>/<-- for ipv6
+>                                  |- ipaddress
+>                                  |- link_local_addr
+>                                  |- router_addr
+>                                  |- ipaddr_autocfg
+>                                  |- linklocal_autocfg
+>                                  |- state
 >
 
-How come you did not export some values like the vlan in the iscsi iface?
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+With patch "[RFC-V2 PATCH 1/5] iscsi_transport: add support for 
+set_net_config" userspace would send down the vlan info.
+
+If we add a vlan sysfs file to the iscsi_iface, to export the info was 
+bnx2i going call iscsi_create_iface for each vlan? If so I am not sure 
+what bnx2i will use for the iface_num. It is supposed to be persistent, 
+right?
+
+For bnx2i, when doing iscsi offload and vlans, do you have to have a 
+netdev like ethX.Y setup for each vlan or can bnx2i operate without it 
+(the call to cnic_get_vlan always throws me and I cannot remember if we 
+were going to still do that or change something in the driver so you did 
+not need it).
+
+And just to confirm for vlans and bnx2i, when we make a ep and session, 
+cnic_get_route/cnic_cm_select_dev will do the magic to figure out what 
+vlan to use?
+
+
+
+
+> +
+> +struct iscsi_iface *
+> +iscsi_create_iface(struct Scsi_Host *shost, struct iscsi_transport *transport,
+> +		   uint32_t iface_type, uint32_t iface_num, int dd_size)
+> +{
+> +	struct iscsi_iface *iface;
+> +	int id;
+> +	int err;
+> +
+> +	iface = kzalloc(sizeof(*iface) + dd_size, GFP_KERNEL);
+> +	if (!iface)
+> +		return NULL;
+> +
+> +iface_idr_again:
+> +	if (!idr_pre_get(&iscsi_iface_idr, GFP_KERNEL))
+> +		goto free_iface;
+> +
+> +	spin_lock(&iscsi_iface_lock);
+> +	err = idr_get_new(&iscsi_iface_idr, iface,&id);
+> +	if (err == -EAGAIN) {
+> +		spin_unlock(&iscsi_iface_lock);
+> +		goto iface_idr_again;
+> +	}
+> +	spin_unlock(&iscsi_iface_lock);
+> +
+> +	if (err)
+> +		goto free_iface;
+> +
+> +	iface->id = id;
+> +	iface->transport = transport;
+> +	iface->iface_type = iface_type;
+> +	iface->iface_num = iface_num;
+> +	iface->dev.class =&iscsi_iface_class;
+> +	/* parent reference */
+> +	iface->dev.parent = get_device(&shost->shost_gendev);
+> +	if (iface_type == IFACE_TYPE_IPV4)
+> +		dev_set_name(&iface->dev, "ipv4-iface-%u-%u", shost->host_no,
+> +			     iface_num);
+> +	else if (iface_type == IFACE_TYPE_IPV6)
+> +		dev_set_name(&iface->dev, "ipv6-iface-%u-%u", shost->host_no,
+> +			     iface_num);
+> +	else
+> +		goto free_iface;
+> +
+> +	err = device_register(&iface->dev);
+> +	if (err)
+> +		goto free_iface;
+> +
+> +	if (iface_type == IFACE_TYPE_IPV4)
+> +		err = sysfs_create_group(&iface->dev.kobj,
+> +					&iscsi_ipv4_iface_group);
+> +	else if (iface_type == IFACE_TYPE_IPV6)
+> +		err = sysfs_create_group(&iface->dev.kobj,
+> +					&iscsi_ipv6_iface_group);
+> +
+> +	if (err)
+> +		goto iface_unregister_dev;
+> +
+> +	if (dd_size)
+> +		iface->dd_data =&iface[1];
+> +	return iface;
+> +
+> +iface_unregister_dev:
+> +	idr_remove(&iscsi_iface_idr, id);
+> +	device_unregister(&iface->dev);
+> +
+> +free_iface:
+> +	kfree(iface);
+> +	return NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(iscsi_create_iface);
