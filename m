@@ -1,135 +1,85 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
  in sysfs
-Date: Wed, 13 Apr 2011 22:24:57 -0500
-Message-ID: <4DA66909.2060100@cs.wisc.edu>
-References: <1301769261-29896-1-git-send-email-vikas.chaudhary@qlogic.com> <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com> <4DA5D690.3040501@cs.wisc.edu> <1302735225.10843.307.camel@nseg_linux_HP1.broadcom.com>
+Date: Wed, 13 Apr 2011 21:15:56 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA8728A9D490A@AVEXMB1.qlogic.org>
+References: <1301769261-29896-1-git-send-email-vikas.chaudhary@qlogic.com>
+ <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com>
+ <4DA52525.3020405@cs.wisc.edu> <4DA5294C.8040305@cs.wisc.edu>
+ <5E4F49720D0BAD499EE1F01232234BA8728A8CB623@AVEXMB1.qlogic.org>
+ <4DA5D2DF.5080806@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57485 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758676Ab1DNDZI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Apr 2011 23:25:08 -0400
-In-Reply-To: <1302735225.10843.307.camel@nseg_linux_HP1.broadcom.com>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:41188 "EHLO
+	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062Ab1DNEQF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Apr 2011 00:16:05 -0400
+In-Reply-To: <4DA5D2DF.5080806@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Chan <mchan@broadcom.com>
-Cc: "vikas.chaudhary@qlogic.com" <vikas.chaudhary@qlogic.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "lalit.chandivade@qlogic.com" <lalit.chandivade@qlogic.com>, "ravi.anand@qlogic.com" <ravi.anand@qlogic.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, "Jayamohan.Kallickal@Emulex.Com" <Jayamohan.Kallickal@Emulex.Com>
 
-On 04/13/2011 05:53 PM, Michael Chan wrote:
+>-----Original Message-----
+>From: open-iscsi@googlegroups.com [mailto:open-iscsi@googlegroups.com] On
+>Behalf Of Mike Christie
+>Sent: Wednesday, April 13, 2011 10:14 PM
+>To: open-iscsi@googlegroups.com
+>Cc: Vikas Chaudhary; James.Bottomley@suse.de; linux-scsi@vger.kernel.org;
+>Lalit Chandivade; Ravi Anand; Jayamohan.Kallickal@Emulex.Com
+>Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
+>in sysfs
 >
-> On Wed, 2011-04-13 at 10:00 -0700, Mike Christie wrote:
->> ccing Broadcom devs, Some questions for you guys below
+>On 04/13/2011 09:48 AM, Vikas Chaudhary wrote:
 >>
 >>
->> On 04/02/2011 01:34 PM, vikas.chaudhary@qlogic.com wrote:
->>> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+>>> -----Original Message-----
+>>> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
+>>> Sent: Wednesday, April 13, 2011 10:11 AM
+>>> To: Vikas Chaudhary
+>>> Cc: James.Bottomley@suse.de; linux-scsi@vger.kernel.org; open-
+>>> iscsi@googlegroups.com; Lalit Chandivade; Ravi Anand;
+>>> Jayamohan.Kallickal@Emulex.Com
+>>> Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network
+>configuration
+>>> in sysfs
 >>>
->>> To support multiple network addresses per adapter need to have a new way to
->>> represent network interface (net iface) in sysfs.
+>>> On 04/12/2011 11:23 PM, Mike Christie wrote:
+>>>> Do we want to make the kernel iscsi iface more generic or maybe just
+>>>> rename it to reflect it is just based on net settings?
+>>>>
+>>>> The issue with making it more generic is that with the current drivers,
+>>>> we do not care what info like the initiatorname in the kernel code.
+>That
+>>>> is all handled in userspace because all the session management is
+>there,
+>>>> so there is no point in adding that complexity here.
 >>>
->>> Currently only one ipaddress and hwaddress is displayed
+>>> I take part of this back. We set the iscsi iface name and initiator name
+>>> on the session right now. We need that info for relogin type of
+>>> situations where iscsid might have died and we need to know the
+>>> initiatorname to use. We cannot read it from a disk, because that disk
+>>> might be the one are are relogging into.
 >>>
->>> \# ls /sys/class/iscsi_host/host18
->>> device  hwaddress  initiatorname  ipaddress  power  subsystem  uevent
->>>
->>> In this patch the net iface is presented as a separate class device.
->>> The one that can be added/removed dynamically or statically, based on how
->>> the user configures the multiple net iface on the adapter.
->>>
->>> The new sysfs directory would look like this
->>> \# /sys/class/iscsi_iface/
->>> |
->>> |- ipv4-iface-<host_no>-<iface_no>/<-- for ipv4
->>>                                   |- ipaddress
->>>                                   |- subnet
->>>                                   |- gateway
->>>                                   |- bootproto
->>>                                   |- state
->>> |- ipv6-iface-<host_no>-<iface_no>/<-- for ipv6
->>>                                   |- ipaddress
->>>                                   |- link_local_addr
->>>                                   |- router_addr
->>>                                   |- ipaddr_autocfg
->>>                                   |- linklocal_autocfg
->>>                                   |- state
->>>
+>>> It might not hurt to make the kernel's iscsi ifaces abstraction more
+>>> general.
 >>
+>> Yes and also to reflect correct status of network settings it will be
+>> good to have iscsi_iface in the kernel. This is useful in a case where
+>> user set DHCP settings then we can reflect IP addresses and other
+>> settings in the kernel iface.
 >>
->> With patch "[RFC-V2 PATCH 1/5] iscsi_transport: add support for
->> set_net_config" userspace would send down the vlan info.
->>
->> If we add a vlan sysfs file to the iscsi_iface, to export the info was
->> bnx2i going call iscsi_create_iface for each vlan? If so I am not sure
->> what bnx2i will use for the iface_num. It is supposed to be persistent,
->> right?
 >
-> bnx2i doesn't need to know the IP addresses and VLANs for each HBA.  It
-> is all handled in userspace by uIP.  So if we add this sysfs,
-> iscsi_transport can handle sysfs creation for devices generically,
-> right?
-
-
-With these patches the driver need to call iface_create_iface and 
-implement a callout on the iscsi_transport template so 
-scsi_transport_iscsi.c can call into the driver to get the values to 
-display in sysfs like is done for the connection and session settings. 
-We can add some helpers in libiscsi for this like is done for the 
-conn/session stuff.
-
-
-
->
->>
->> For bnx2i, when doing iscsi offload and vlans, do you have to have a
->> netdev like ethX.Y setup for each vlan or can bnx2i operate without it
->> (the call to cnic_get_vlan always throws me and I cannot remember if we
->> were going to still do that or change something in the driver so you did
->> not need it).
->
-> For now, cnic_get_vlan will try to get a matching VLAN from netdev with
-> a route to the target.  But it is not required.  Once we have VLAN
-> attribute in iface, uIP can override and use the VLAN specified in
-> iface.
+>How come you did not export some values like the vlan in the iscsi iface?
 >
 
-Ok.
-
->
->>
->> And just to confirm for vlans and bnx2i, when we make a ep and session,
->> cnic_get_route/cnic_cm_select_dev will do the magic to figure out what
->> vlan to use?
->
-> Yes for now.  The plan is for uIP to override if a VLAN is specified in
-> iface.
+Currently we have partial implementation of VLAN. iscsi_transport supports
+VLAN set operation but we need to implement this in iscsiadm and export
+VLAN to sysfs iface. We will add this support in our next patches.
 
 
-Is the idea to have uIP read the userspace iface config files in 
-/etc/iscsi/iface or /var/lib/iscsi/ifaces or iscsid (basically something 
-in userspace) then pass down in a msg_set_path msg?
-
-
->
-> This is the flow:
->
-> ->  ep_connect
->
->      ->  cnic_cm_connect
->             /* Try to get route/MTU/VLAN from netdev if available */
->          ->  cnic_get_route
->          ->  send nl message to uIP to get next hop
->          ->  recv nl message from uIP
->             /* at this point we may get a new VLAN ID from uIP */
->          ->  make connection to target
->
->
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
