@@ -1,87 +1,84 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: RE: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
- in sysfs
-Date: Wed, 13 Apr 2011 22:54:12 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8728A9D4921@AVEXMB1.qlogic.org>
-References: <1301769261-29896-1-git-send-email-vikas.chaudhary@qlogic.com>
- <1301769261-29896-5-git-send-email-vikas.chaudhary@qlogic.com>
- <4DA52525.3020405@cs.wisc.edu> <4DA5294C.8040305@cs.wisc.edu>
- <5E4F49720D0BAD499EE1F01232234BA8728A8CB623@AVEXMB1.qlogic.org>
- <4DA5D2DF.5080806@cs.wisc.edu>
- <5E4F49720D0BAD499EE1F01232234BA8728A9D490A@AVEXMB1.qlogic.org>
- <4DA683AD.1060802@cs.wisc.edu>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] drivers/scsi/mpt2sas: prevent heap overflows and
+ unchecked reads
+Date: Thu, 14 Apr 2011 11:38:22 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157F09188@inbmail01.lsi.com>
+References: <1302021959.2082.8.camel@dan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:42449
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754854Ab1DNFzH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Apr 2011 01:55:07 -0400
-In-Reply-To: <4DA683AD.1060802@cs.wisc.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1302021959.2082.8.camel@dan>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Rosenberg <drosenberg@vsecurity.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "james.bottomley@suse.de" <james.bottomley@suse.de>
+Cc: "security@kernel.org" <security@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, "Jayamohan.Kallickal@Emulex.Com" <Jayamohan.Kallickal@Emulex.Com>
 
->-----Original Message-----
->From: Mike Christie [mailto:michaelc@cs.wisc.edu]
->Sent: Thursday, April 14, 2011 10:49 AM
->To: open-iscsi@googlegroups.com
->Cc: Vikas Chaudhary; James.Bottomley@suse.de; linux-scsi@vger.kernel.org;
->Lalit Chandivade; Ravi Anand; Jayamohan.Kallickal@Emulex.Com
->Subject: Re: [RFC-V2 PATCH 4/5] iscsi_transport: show network configuration
->in sysfs
->
->On 04/13/2011 11:15 PM, Vikas Chaudhary wrote:
->>
->> Currently we have partial implementation of VLAN. iscsi_transport
->supports
->> VLAN set operation but we need to implement this in iscsiadm and export
->> VLAN to sysfs iface. We will add this support in our next patches.
->>
->
->
->Basically, I just want to know if vlan stuff is going into the
->iscsi_iface class or in some new struct?
->
->For the latter would it be something like:
->
->host
->|
->\-iscsi_iface0
->       |
->       \-iscsi_vlan0
->       |
->       \-iscsi_vlan1
->       |
->       \-iscsi_vlan2
->
->or
->
->host
->|
->\-iscsi_iface1
->       |-vlan0
->\-iscsi_iface2
->       |-vlan1
->\-iscsi_iface3
->       |-vlan2
-
-
-VLAN will be per iface. So it will be like:
-
-host
-|
-\-iscsi_iface1
-        |-vlan0
-\-iscsi_iface2
-        |-vlan1
-\-iscsi_iface3
-        |-vlan2
-
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+DQpUaGlzIHBhdGNoIGhhcyBiZWVuIHRlc3RlZCBieSBFcmljIE1vb3JlIGFuZCBpdCB3b3JrcyBm
+aW5lLg0KDQpQbGVhc2UgY29uc2lkZXIgdGhpcyBwYXRjaCAiQWNrZWQtYnk6IEVyaWMgTW9vcmUg
+PGVyaWMubW9vcmVAbHNpLmNvbT4iIA0KDQpUaGFua3MsIEthc2h5YXANCg0KPiAtLS0tLU9yaWdp
+bmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYW4gUm9zZW5iZXJnIFttYWlsdG86ZHJvc2VuYmVy
+Z0B2c2VjdXJpdHkuY29tXQ0KPiBTZW50OiBUdWVzZGF5LCBBcHJpbCAwNSwgMjAxMSAxMDoxNiBQ
+TQ0KPiBUbzogTW9vcmUsIEVyaWM7IGphbWVzLmJvdHRvbWxleUBzdXNlLmRlOyBEZXNhaSwgS2Fz
+aHlhcA0KPiBDYzogc2VjdXJpdHlAa2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5v
+cmc7IGxpbnV4LQ0KPiBrZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFtQQVRDSF0g
+ZHJpdmVycy9zY3NpL21wdDJzYXM6IHByZXZlbnQgaGVhcCBvdmVyZmxvd3MgYW5kDQo+IHVuY2hl
+Y2tlZCByZWFkcw0KPiANCj4gQXQgdHdvIHBvaW50cyBpbiBoYW5kbGluZyBkZXZpY2UgaW9jdGxz
+IHZpYSAvZGV2L21wdDJjdGwsIHVzZXItc3VwcGxpZWQNCj4gbGVuZ3RoIHZhbHVlcyBhcmUgdXNl
+ZCB0byBjb3B5IGRhdGEgZnJvbSB1c2Vyc3BhY2UgaW50byBoZWFwIGJ1ZmZlcnMNCj4gd2l0aG91
+dCBib3VuZHMgY2hlY2tpbmcsIGFsbG93aW5nIGNvbnRyb2xsYWJsZSBoZWFwIGNvcnJ1cHRpb24g
+YW5kDQo+IHN1YnNlcXVlbnRseSBwcml2aWxlZ2UgZXNjYWxhdGlvbi4NCj4gDQo+IEFkZGl0aW9u
+YWxseSwgdXNlci1zdXBwbGllZCB2YWx1ZXMgYXJlIHVzZWQgdG8gZGV0ZXJtaW5lIHRoZSBzaXpl
+IG9mIGENCj4gY29weV90b191c2VyKCkgYXMgd2VsbCBhcyB0aGUgb2Zmc2V0IGludG8gdGhlIGJ1
+ZmZlciB0byBiZSByZWFkLCB3aXRoDQo+IG5vDQo+IGJvdW5kcyBjaGVja2luZywgYWxsb3dpbmcg
+dXNlcnMgdG8gcmVhZCBhcmJpdHJhcnkga2VybmVsIG1lbW9yeS4NCj4gDQo+IENvbXBpbGUtdGVz
+dGVkIG9ubHkuICBUaGFua3MgdG8gRXJpYyBNb29yZSBmb3Igc3VnZ2VzdGlvbnMgb24gaG93IHRv
+DQo+IGZpeA0KPiB0aGlzLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogRGFuIFJvc2VuYmVyZyA8ZHJv
+c2VuYmVyZ0B2c2VjdXJpdHkuY29tPg0KPiBDYzogc3RhYmxlQGtlcm5lbC5vcmcNCj4gLS0tDQo+
+ICBkcml2ZXJzL3Njc2kvbXB0MnNhcy9tcHQyc2FzX2N0bC5jIHwgICAyMyArKysrKysrKysrKysr
+KysrKysrKystLQ0KPiAgMSBmaWxlcyBjaGFuZ2VkLCAyMSBpbnNlcnRpb25zKCspLCAyIGRlbGV0
+aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQyc2FzL21wdDJzYXNf
+Y3RsLmMNCj4gYi9kcml2ZXJzL3Njc2kvbXB0MnNhcy9tcHQyc2FzX2N0bC5jDQo+IGluZGV4IGU5
+MmI3N2EuLjM4MzRjOTUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9tcHQyc2FzL21wdDJz
+YXNfY3RsLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0MnNhc19jdGwuYw0KPiBA
+QCAtNjg4LDYgKzY4OCwxMyBAQCBfY3RsX2RvX21wdF9jb21tYW5kKHN0cnVjdCBNUFQyU0FTX0FE
+QVBURVIgKmlvYywNCj4gIAkJZ290byBvdXQ7DQo+ICAJfQ0KPiANCj4gKwkvKiBDaGVjayBmb3Ig
+b3ZlcmZsb3cgYW5kIHdyYXBhcm91bmQgKi8NCj4gKwlpZiAoa2FyZy5kYXRhX3NnZV9vZmZzZXQg
+KiA0ID4gaW9jLT5yZXF1ZXN0X3N6IHx8DQo+ICsJICAgIGthcmcuZGF0YV9zZ2Vfb2Zmc2V0ID4g
+KFVJTlRfTUFYIC8gNCkpIHsNCj4gKwkJcmV0ID0gLUVJTlZBTDsNCj4gKwkJZ290byBvdXQ7DQo+
+ICsJfQ0KPiArDQo+ICAJLyogY29weSBpbiByZXF1ZXN0IG1lc3NhZ2UgZnJhbWUgZnJvbSB1c2Vy
+ICovDQo+ICAJaWYgKGNvcHlfZnJvbV91c2VyKG1waV9yZXF1ZXN0LCBtZiwga2FyZy5kYXRhX3Nn
+ZV9vZmZzZXQqNCkpIHsNCj4gIAkJcHJpbnRrKEtFUk5fRVJSICJmYWlsdXJlIGF0ICVzOiVkLyVz
+KCkhXG4iLCBfX0ZJTEVfXywNCj4gX19MSU5FX18sDQo+IEBAIC0xOTYzLDcgKzE5NzAsNyBAQCBf
+Y3RsX2RpYWdfcmVhZF9idWZmZXIodm9pZCBfX3VzZXIgKmFyZywgZW51bQ0KPiBibG9ja19zdGF0
+ZSBzdGF0ZSkNCj4gIAlNcGkyRGlhZ0J1ZmZlclBvc3RSZXBseV90ICptcGlfcmVwbHk7DQo+ICAJ
+aW50IHJjLCBpOw0KPiAgCXU4IGJ1ZmZlcl90eXBlOw0KPiAtCXVuc2lnbmVkIGxvbmcgdGltZWxl
+ZnQ7DQo+ICsJdW5zaWduZWQgbG9uZyB0aW1lbGVmdCwgcmVxdWVzdF9zaXplLCBjb3B5X3NpemU7
+DQo+ICAJdTE2IHNtaWQ7DQo+ICAJdTE2IGlvY19zdGF0dXM7DQo+ICAJdTggaXNzdWVfcmVzZXQg
+PSAwOw0KPiBAQCAtMTk5OSw2ICsyMDA2LDggQEAgX2N0bF9kaWFnX3JlYWRfYnVmZmVyKHZvaWQg
+X191c2VyICphcmcsIGVudW0NCj4gYmxvY2tfc3RhdGUgc3RhdGUpDQo+ICAJCXJldHVybiAtRU5P
+TUVNOw0KPiAgCX0NCj4gDQo+ICsJcmVxdWVzdF9zaXplID0gaW9jLT5kaWFnX2J1ZmZlcl9zelti
+dWZmZXJfdHlwZV07DQo+ICsNCj4gIAlpZiAoKGthcmcuc3RhcnRpbmdfb2Zmc2V0ICUgNCkgfHwg
+KGthcmcuYnl0ZXNfdG9fcmVhZCAlIDQpKSB7DQo+ICAJCXByaW50ayhNUFQyU0FTX0VSUl9GTVQg
+IiVzOiBlaXRoZXIgdGhlIHN0YXJ0aW5nX29mZnNldCAiDQo+ICAJCSAgICAib3IgYnl0ZXNfdG9f
+cmVhZCBhcmUgbm90IDQgYnl0ZSBhbGlnbmVkXG4iLCBpb2MtPm5hbWUsDQo+IEBAIC0yMDA2LDEz
+ICsyMDE1LDIzIEBAIF9jdGxfZGlhZ19yZWFkX2J1ZmZlcih2b2lkIF9fdXNlciAqYXJnLCBlbnVt
+DQo+IGJsb2NrX3N0YXRlIHN0YXRlKQ0KPiAgCQlyZXR1cm4gLUVJTlZBTDsNCj4gIAl9DQo+IA0K
+PiArCWlmIChrYXJnLnN0YXJ0aW5nX29mZnNldCA+IHJlcXVlc3Rfc2l6ZSkNCj4gKwkJcmV0dXJu
+IC1FSU5WQUw7DQo+ICsNCj4gIAlkaWFnX2RhdGEgPSAodm9pZCAqKShyZXF1ZXN0X2RhdGEgKyBr
+YXJnLnN0YXJ0aW5nX29mZnNldCk7DQo+ICAJZGN0bHByaW50ayhpb2MsIHByaW50ayhNUFQyU0FT
+X0lORk9fRk1UICIlczogZGlhZ19idWZmZXIoJXApLCAiDQo+ICAJICAgICJvZmZzZXQoJWQpLCBz
+eiglZClcbiIsIGlvYy0+bmFtZSwgX19mdW5jX18sDQo+ICAJICAgIGRpYWdfZGF0YSwga2FyZy5z
+dGFydGluZ19vZmZzZXQsIGthcmcuYnl0ZXNfdG9fcmVhZCkpOw0KPiANCj4gKwkvKiBUcnVuY2F0
+ZSBkYXRhIG9uIHJlcXVlc3RzIHRoYXQgYXJlIHRvbyBsYXJnZSAqLw0KPiArCWlmICgoZGlhZ19k
+YXRhICsga2FyZy5ieXRlc190b19yZWFkIDwgZGlhZ19kYXRhKSB8fA0KPiArCSAgICAoZGlhZ19k
+YXRhICsga2FyZy5ieXRlc190b19yZWFkID4gcmVxdWVzdF9kYXRhICsNCj4gcmVxdWVzdF9zaXpl
+KSkNCj4gKwkJY29weV9zaXplID0gcmVxdWVzdF9zaXplIC0ga2FyZy5zdGFydGluZ19vZmZzZXQ7
+DQo+ICsJZWxzZQ0KPiArCQljb3B5X3NpemUgPSBrYXJnLmJ5dGVzX3RvX3JlYWQ7DQo+ICsNCj4g
+IAlpZiAoY29weV90b191c2VyKCh2b2lkIF9fdXNlciAqKXVhcmctPmRpYWdub3N0aWNfZGF0YSwN
+Cj4gLQkgICAgZGlhZ19kYXRhLCBrYXJnLmJ5dGVzX3RvX3JlYWQpKSB7DQo+ICsJICAgIGRpYWdf
+ZGF0YSwgY29weV9zaXplKSkgew0KPiAgCQlwcmludGsoTVBUMlNBU19FUlJfRk1UICIlczogVW5h
+YmxlIHRvIHdyaXRlICINCj4gIAkJICAgICJtcHRfZGlhZ19yZWFkX2J1ZmZlcl90IGRhdGEgQCAl
+cFxuIiwgaW9jLT5uYW1lLA0KPiAgCQkgICAgX19mdW5jX18sIGRpYWdfZGF0YSk7DQo+IA0KPiAN
+Cj4gDQoNCg==
