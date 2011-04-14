@@ -1,149 +1,64 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device names
- in Kernel.
-Date: Thu, 14 Apr 2011 13:07:42 -0700
-Message-ID: <20110414200742.GA25668@kroah.com>
-References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>
- <20110405161454.GB885@kroah.com>
- <4D9F16AD.2090408@hitachi.com>
- <20110408161212.GA12111@kroah.com>
- <4DA6AD28.5020604@hitachi.com>
+From: "werner" <w.landgraf@ru.ru>
+Subject: 2.6.39-rc3-git3 problem
+Date: Thu, 14 Apr 2011 18:07:56 -0400
+Message-ID: <web-505236688@zbackend1.aha.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-hotplug-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4DA6AD28.5020604@hitachi.com>
-Sender: linux-hotplug-owner@vger.kernel.org
-To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-hotplug@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@suse.de>, Jon Masters <jcm@redhat.com>, 2nddept-manager@sdl.hitachi.co.jp
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zfrontend2.aha.ru ([195.2.83.148]:55809 "EHLO aha.ru"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754160Ab1DNXIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Apr 2011 19:08:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org, gregkh@suse.de, mingo@elte.hu, tj@kernel.org, randy.dunlap@oracle.com, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-On Thu, Apr 14, 2011 at 05:15:36PM +0900, Nao Nishijima wrote:
-> Hi,
->=20
-> (2011/04/09 1:12), Greg KH wrote:
-> > On Fri, Apr 08, 2011 at 11:07:41PM +0900, Nao Nishijima wrote:
-> >> Hi,
-> >>
-> >> (2011/04/06 1:14), Greg KH wrote:
-> >>> On Tue, Apr 05, 2011 at 09:49:46PM +0900, Nao Nishijima wrote:
-> >>>> This patch series provides a SCSI option for persistent device
-> >>>> names in kernel. With this option, user can always assign a
-> >>>> same device name (e.g. sda) to a specific device according to
-> >>>> udev rules and device id.
-> >>>>
-> >>>> Issue:
-> >>>> Recently, kernel registers block devices in parallel. As a resul=
-t,
-> >>>> different device names will be assigned at each boot time. This
-> >>>> will confuse file-system mounter, thus we usually use persistent
-> >>>> symbolic links provided by udev. However, dmesg and procfs outpu=
-ts
-> >>>> show device names instead of the symbolic link names. This cause=
-s
-> >>>> a serious problem when managing multiple devices (e.g. on a
-> >>>> large-scale storage), because usually, device errors are output
-> >>>> with device names on dmesg. We also concern about some commands
-> >>>> which output device names, as well as kernel messages.
-> >>>>
-> >>>> Solution:
-> >>>> To assign a persistent device name, I create unnamed devices (no=
-t
-> >>>> a block device, but an intermediate device. users cannot read/wr=
-ite
-> >>>> this device). When scsi device driver finds a LU, the LU is regi=
-stered
-> >>>> as an unnamed device and inform to udev. After udev finds the un=
-named
-> >>>> device, udev assigns a persistent device name to a specific devi=
-ce
-> >>>> according to udev rules and registers it as a block device. Henc=
-e,
-> >>>> this is just a naming, not a renaming.
-> >>>>
-> >>>> Some users are satisfied with current udev solution. Therefore, =
-my
-> >>>> proposal is implemented as an option.
-> >>>>
-> >>>> If using this option, add the following kernel parameter.
-> >>>>
-> >>>> 	scsi_mod.persistent_name=3D1
-> >>>>
-> >>>> Also, if you want to assign a device name with sda, add the
-> >>>> following udev rules.
-> >>>>
-> >>>> SUBSYSTEM=3D=3D"scsi_unnamed", ATTR{disk_id}=3D=3D"xxx", PROGRAM=
-=3D"/bin/sh
-> >>>> -c 'echo -n sda > /sys/%p/disk_name'"
-> >>>
-> >>> Also, where is the "real" program you have created to properly na=
-me
-> >>> devices from userspace?  You need that to properly test this patc=
-h,
-> >>> right?
-> >>>
-> >>
-> >> In the udev rule described above, notation =E2=80=9Cxxx=E2=80=9D i=
-ndicated by
-> >> ATTR(disk_id) is scsi id given by disk. Then, when udev finds this=
- rule,
-> >> "/bin/sh -c 'echo -n sda>  /sys/%p/disk_name'" indicated by PROGRA=
-M is
-> >> operated using xxx (scsi id) if udev find the disk with scic id xx=
-x.
-> >> Thus, persistent device name is assigned.
-> >>
-> >> I have tested this patch using the udev rule. and It works well.
-> >=20
-> > That's nice, but it's a "toy".  What have you used to test this wit=
-h
-> > 20000 scsi devices to properly work like it does today?  Where is t=
-he
-> > program that will name them in a deterministic manner?
-> >=20
-> > We have that functionality today, you can't break it.
-> >=20
-> > thanks,
->=20
-> Indeed, I have not (can not, of course) tested 20000 scsi devices to
-> properly work.
+The problem occurs since 2.6.39-rc1 . I reported it at 
+that time, but the kernel mailing list very likely put my 
+e-mail on spam so that it didn't appear. In another 
+reclamation, by a mistake, I wrote 2.6.36-rc1 rather than 
+2.6.39-rc1 .
 
-Why not?  You should be able to do this easily with a laptop these days
-with the dummy scsi device code.
+If one starts the computer with text mode, then it crashs 
+also, but after very long time, appr. 20-40 min after 
+booting.
 
-> This feature targets only scsi disk/cdrom/tape devices.
-> Not all devices. We expect the target users are system administrators
-> who need to control all devices for maintenance. They know all device=
-s
-> connected to the server and those devices will tested before connecti=
-ng.
+I on my server / main computer using the fbdev driver, for 
+testing out this problem also vesa.   With both it crashs 
+short after starting X .
 
-But that's not the large majority of the people using Linux.  You need =
-a
-sane default, which this does not provide.
+One time when I started it on a laptop, then during the 
+boot time, text mode, if the screen switchs to another 
+text mode, then the text became very small, 1 cm, on the 
+top of the screen, several times side-on-side, so that one 
+couldnt read it.  Then I waited and logged in, then I 
+started startx  (normally, it goes in grafic mode 
+automatically, but at that time not).  Then the grafic 
+started normally, but after some 2 min. it crashed.
 
-> We expect that admin will enable this option after installation. This
-> means that device names are assigned by current mechanism when
-> installation. Admin enables the option and makes udev rules (we are
-> planning to make shell script which generate udev rules use by-id and
-> assigned device names). In other word, this feature will be used just
-> for "fixing" the names.
+If the crash occurs in the grafic mode, then it switches 
+instantly to the text screen, and the error message is 
+visible in text-mode, as visible in the foto.
 
-So admins are going to write their own udev rules by hand?  I find that
-very unlikely.
+I started the computer after a crash from an USB key, for 
+not overwrite dmesg. But, in none of the message files is 
+any message related to the crash.
 
-> In our scenario, admin appends a new rule manually when a new LU is
-> added. In the future, we are planning to enhance udev to append a new
-> rule automatically as like as NIC.
+In  order not to overwrite old dmesg files, it should be 
+programmed into the kernel, that dmesg get any suffix, for 
+example a random number, or date-time.
 
-I recommend doing the other options that have been proposed please.
+I hope that informations are helpful to fix this.
 
-thanks,
+If someone fix it, then it can send to me as a normal 
+patch, with the kernel number, and any git number (like 
+the normal git files / kernel gits), because then I can 
+apply the patch and compile the kernel with my normal 
+kernel-compiling script.
 
-greg k-h
---
-To unsubscribe from this list: send the line "unsubscribe linux-hotplug=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+W.Landgraf
+
+Linux SYS
+---
+Professional hosting for everyone - http://www.host.ru
