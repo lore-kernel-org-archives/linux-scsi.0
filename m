@@ -1,33 +1,28 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 2/5] lpfc 8.3.23: Miscellaneous fixes
-Date: Sat, 16 Apr 2011 11:03:17 -0400
-Message-ID: <1302966212.6245.27.camel@wookie>
+Subject: [PATCH 4/5] lpfc 8.3.23: BSG additions and fixes
+Date: Sat, 16 Apr 2011 11:03:43 -0400
+Message-ID: <1302966237.6245.29.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:15975 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:15979 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754770Ab1DPPDz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Apr 2011 11:03:55 -0400
+	with ESMTP id S1755798Ab1DPPE3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Apr 2011 11:04:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Miscellaneous fixes
+BSG additions and fixes
 
-- Do not limit RPI Count to a minimum of 64
-- Fix FCFI incorrect on received unsolicited frames.
-- Save the FCFI returned in the REG_FCFI mailbox command if it was successful.
-- Fixed Vports not sending FDISC after lips.
-- Align based on the SLI4_PAGE_SIZE.
-- Fixed double byte swap on received RRQ.
-- Fixed mask size for the wq_id mask from 0x7F to 0x7FFF.
-- Clear FC_FABRIC flag when NPIV LOGO completes (and add a log message).
-- Modified driver to skip round robin only when ulpStatus==LOCAL_REJECT
-  and word4=SEQUENCE_TIMEOUT to prevent FLOGI to disconnected FCF.
-- Don't add rport if driver unloading
+- Fixed the mixed declarations and codes which violate ISO C90
+   (declarations in subsections that assign at declaration)
+- Add BSG data transfer size protection in mailbox command pass-through path
+- Invoke BSG job_done while holding spinlock to fix deadlock
+- Added support for checking SLI_CONFIG subcommands
+- Fixed bug in BSG mailbox size check to non-embedded external buffer
 
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -35,197 +30,290 @@ Miscellaneous fixes
 
  ---
 
- lpfc_els.c     |   27 +++++++++++++++++++++------
- lpfc_hbadisc.c |    6 +++++-
- lpfc_hw4.h     |    4 +++-
- lpfc_init.c    |    7 +++++--
- lpfc_mbox.c    |    2 +-
- lpfc_sli.c     |    7 ++++---
- 6 files changed, 39 insertions(+), 14 deletions(-)
+ lpfc_bsg.c |   59 +++++++++++++++------------
+ lpfc_bsg.h |  130 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 164 insertions(+), 25 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2011-04-16 08:29:50.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2011-04-16 09:36:49.000000000 -0400
-@@ -670,6 +670,7 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
- 			 * Driver needs to re-reg VPI in order for f/w
- 			 * to update the MAC address.
- 			 */
-+			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
- 			lpfc_register_new_vport(phba, vport, ndlp);
- 			return 0;
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2011-04-16 08:29:50.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2011-04-16 09:38:41.000000000 -0400
+@@ -2426,6 +2426,7 @@ lpfc_bsg_wake_mbox_wait(struct lpfc_hba 
+ {
+ 	struct bsg_job_data *dd_data;
+ 	struct fc_bsg_job *job;
++	struct lpfc_mbx_nembed_cmd *nembed_sge;
+ 	uint32_t size;
+ 	unsigned long flags;
+ 	uint8_t *to;
+@@ -2469,9 +2470,8 @@ lpfc_bsg_wake_mbox_wait(struct lpfc_hba 
+ 			memcpy(to, from, size);
+ 		} else if ((phba->sli_rev == LPFC_SLI_REV4) &&
+ 			(pmboxq->u.mb.mbxCommand == MBX_SLI4_CONFIG)) {
+-			struct lpfc_mbx_nembed_cmd *nembed_sge =
+-				(struct lpfc_mbx_nembed_cmd *)
+-				&pmboxq->u.mb.un.varWords[0];
++			nembed_sge = (struct lpfc_mbx_nembed_cmd *)
++					&pmboxq->u.mb.un.varWords[0];
+ 
+ 			from = (uint8_t *)dd_data->context_un.mbox.dmp->dma.
+ 						virt;
+@@ -2496,16 +2496,18 @@ lpfc_bsg_wake_mbox_wait(struct lpfc_hba 
+ 					job->reply_payload.sg_cnt,
+ 					from, size);
+ 		job->reply->result = 0;
+-
++		/* need to hold the lock until we set job->dd_data to NULL
++		 * to hold off the timeout handler returning to the mid-layer
++		 * while we are still processing the job.
++		 */
+ 		job->dd_data = NULL;
++		dd_data->context_un.mbox.set_job = NULL;
++		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ 		job->job_done(job);
++	} else {
++		dd_data->context_un.mbox.set_job = NULL;
++		spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
  	}
-@@ -869,8 +870,8 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phb
- 		 */
- 		if ((phba->hba_flag & HBA_FIP_SUPPORT) &&
- 		    (phba->fcf.fcf_flag & FCF_DISCOVERY) &&
--		    (irsp->ulpStatus != IOSTAT_LOCAL_REJECT) &&
--		    (irsp->un.ulpWord[4] != IOERR_SLI_ABORTED)) {
-+		    !((irsp->ulpStatus == IOSTAT_LOCAL_REJECT) &&
-+		     (irsp->un.ulpWord[4] == IOERR_SLI_ABORTED))) {
- 			lpfc_printf_log(phba, KERN_WARNING, LOG_FIP | LOG_ELS,
- 					"2611 FLOGI failed on FCF (x%x), "
- 					"status:x%x/x%x, tmo:x%x, perform "
-@@ -4107,13 +4108,13 @@ lpfc_els_clear_rrq(struct lpfc_vport *vp
- 	pcmd += sizeof(uint32_t);
- 	rrq = (struct RRQ *)pcmd;
- 	rrq->rrq_exchg = be32_to_cpu(rrq->rrq_exchg);
--	rxid = be16_to_cpu(bf_get(rrq_rxid, rrq));
-+	rxid = bf_get(rrq_rxid, rrq);
+-	dd_data->context_un.mbox.set_job = NULL;
+-	/* need to hold the lock until we call job done to hold off
+-	 * the timeout handler returning to the midlayer while
+-	 * we are stillprocessing the job
+-	 */
+-	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
  
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
- 			"2883 Clear RRQ for SID:x%x OXID:x%x RXID:x%x"
- 			" x%x x%x\n",
- 			be32_to_cpu(bf_get(rrq_did, rrq)),
--			be16_to_cpu(bf_get(rrq_oxid, rrq)),
-+			bf_get(rrq_oxid, rrq),
- 			rxid,
- 			iocb->iotag, iocb->iocb.ulpContext);
+ 	kfree(dd_data->context_un.mbox.mb);
+ 	mempool_free(dd_data->context_un.mbox.pmboxq, phba->mbox_mem_pool);
+@@ -2644,6 +2646,11 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 	struct ulp_bde64 *rxbpl = NULL;
+ 	struct dfc_mbox_req *mbox_req = (struct dfc_mbox_req *)
+ 		job->request->rqst_data.h_vendor.vendor_cmd;
++	struct READ_EVENT_LOG_VAR *rdEventLog;
++	uint32_t transmit_length, receive_length, mode;
++	struct lpfc_mbx_nembed_cmd *nembed_sge;
++	struct mbox_header *header;
++	struct ulp_bde64 *bde;
+ 	uint8_t *ext = NULL;
+ 	int rc = 0;
+ 	uint8_t *from;
+@@ -2651,9 +2658,16 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 	/* in case no data is transferred */
+ 	job->reply->reply_payload_rcv_len = 0;
  
-@@ -4121,7 +4122,7 @@ lpfc_els_clear_rrq(struct lpfc_vport *vp
- 		"Clear RRQ:  did:x%x flg:x%x exchg:x%.08x",
- 		ndlp->nlp_DID, ndlp->nlp_flag, rrq->rrq_exchg);
- 	if (vport->fc_myDID == be32_to_cpu(bf_get(rrq_did, rrq)))
--		xri = be16_to_cpu(bf_get(rrq_oxid, rrq));
-+		xri = bf_get(rrq_oxid, rrq);
- 	else
- 		xri = rxid;
- 	prrq = lpfc_get_active_rrq(vport, xri, ndlp->nlp_DID);
-@@ -7290,8 +7291,9 @@ lpfc_cmpl_els_npiv_logo(struct lpfc_hba 
- 	struct lpfc_vport *vport = cmdiocb->vport;
- 	IOCB_t *irsp;
- 	struct lpfc_nodelist *ndlp;
--	ndlp = (struct lpfc_nodelist *)cmdiocb->context1;
-+	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 
-+	ndlp = (struct lpfc_nodelist *)cmdiocb->context1;
- 	irsp = &rspiocb->iocb;
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
- 		"LOGO npiv cmpl:  status:x%x/x%x did:x%x",
-@@ -7302,6 +7304,19 @@ lpfc_cmpl_els_npiv_logo(struct lpfc_hba 
- 
- 	/* Trigger the release of the ndlp after logo */
- 	lpfc_nlp_put(ndlp);
-+
-+	/* NPIV LOGO completes to NPort <nlp_DID> */
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+			 "2928 NPIV LOGO completes to NPort x%x "
-+			 "Data: x%x x%x x%x x%x\n",
-+			 ndlp->nlp_DID, irsp->ulpStatus, irsp->un.ulpWord[4],
-+			 irsp->ulpTimeout, vport->num_disc_nodes);
-+
-+	if (irsp->ulpStatus == IOSTAT_SUCCESS) {
-+		spin_lock_irq(shost->host_lock);
-+		vport->fc_flag &= ~FC_FABRIC;
-+		spin_unlock_irq(shost->host_lock);
++	/* sanity check to protect driver */
++	if (job->reply_payload.payload_len > BSG_MBOX_SIZE ||
++	    job->request_payload.payload_len > BSG_MBOX_SIZE) {
++		rc = -ERANGE;
++		goto job_done;
 +	}
- }
- 
- /**
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-04-16 08:29:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-04-16 09:36:49.000000000 -0400
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2009 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2011 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  * Portions Copyright (C) 2004-2005 Christoph Hellwig              *
-@@ -3569,6 +3569,10 @@ lpfc_register_remote_port(struct lpfc_vp
- 		"rport add:       did:x%x flg:x%x type x%x",
- 		ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_type);
- 
-+	/* Don't add the remote port if unloading. */
-+	if (vport->load_flag & FC_UNLOADING)
-+		return;
 +
- 	ndlp->rport = rport = fc_remote_port_add(shost, 0, &rport_ids);
- 	if (!rport || !get_device(&rport->dev)) {
- 		dev_printk(KERN_WARNING, &phba->pcidev->dev,
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-03-27 11:03:17.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-04-16 09:35:21.000000000 -0400
-@@ -2108,6 +2108,8 @@ struct lpfc_mbx_pc_sli4_params {
- #define sgl_pp_align_WORD			word12
- 	uint32_t rsvd_13_63[51];
+ 	/* check if requested extended data lengths are valid */
+-	if ((mbox_req->inExtWLen > MAILBOX_EXT_SIZE) ||
+-		(mbox_req->outExtWLen > MAILBOX_EXT_SIZE)) {
++	if ((mbox_req->inExtWLen > BSG_MBOX_SIZE/sizeof(uint32_t)) ||
++	    (mbox_req->outExtWLen > BSG_MBOX_SIZE/sizeof(uint32_t))) {
+ 		rc = -ERANGE;
+ 		goto job_done;
+ 	}
+@@ -2744,8 +2758,8 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 	 * use ours
+ 	 */
+ 	if (pmb->mbxCommand == MBX_RUN_BIU_DIAG64) {
+-		uint32_t transmit_length = pmb->un.varWords[1];
+-		uint32_t receive_length = pmb->un.varWords[4];
++		transmit_length = pmb->un.varWords[1];
++		receive_length = pmb->un.varWords[4];
+ 		/* transmit length cannot be greater than receive length or
+ 		 * mailbox extension size
+ 		 */
+@@ -2795,10 +2809,9 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 		from += sizeof(MAILBOX_t);
+ 		memcpy((uint8_t *)dmp->dma.virt, from, transmit_length);
+ 	} else if (pmb->mbxCommand == MBX_READ_EVENT_LOG) {
+-		struct READ_EVENT_LOG_VAR *rdEventLog =
+-			&pmb->un.varRdEventLog ;
+-		uint32_t receive_length = rdEventLog->rcv_bde64.tus.f.bdeSize;
+-		uint32_t mode =	 bf_get(lpfc_event_log, rdEventLog);
++		rdEventLog = &pmb->un.varRdEventLog;
++		receive_length = rdEventLog->rcv_bde64.tus.f.bdeSize;
++		mode = bf_get(lpfc_event_log, rdEventLog);
+ 
+ 		/* receive length cannot be greater than mailbox
+ 		 * extension size
+@@ -2843,7 +2856,7 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 			/* rebuild the command for sli4 using our own buffers
+ 			* like we do for biu diags
+ 			*/
+-			uint32_t receive_length = pmb->un.varWords[2];
++			receive_length = pmb->un.varWords[2];
+ 			/* receive length cannot be greater than mailbox
+ 			 * extension size
+ 			 */
+@@ -2879,8 +2892,7 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 			pmb->un.varWords[4] = putPaddrHigh(dmp->dma.phys);
+ 		} else if ((pmb->mbxCommand == MBX_UPDATE_CFG) &&
+ 			pmb->un.varUpdateCfg.co) {
+-			struct ulp_bde64 *bde =
+-				(struct ulp_bde64 *)&pmb->un.varWords[4];
++			bde = (struct ulp_bde64 *)&pmb->un.varWords[4];
+ 
+ 			/* bde size cannot be greater than mailbox ext size */
+ 			if (bde->tus.f.bdeSize > MAILBOX_EXT_SIZE) {
+@@ -2921,10 +2933,6 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 			memcpy((uint8_t *)dmp->dma.virt, from,
+ 				bde->tus.f.bdeSize);
+ 		} else if (pmb->mbxCommand == MBX_SLI4_CONFIG) {
+-			struct lpfc_mbx_nembed_cmd *nembed_sge;
+-			struct mbox_header *header;
+-			uint32_t receive_length;
+-
+ 			/* rebuild the command for sli4 using our own buffers
+ 			* like we do for biu diags
+ 			*/
+@@ -3386,6 +3394,7 @@ no_dd_data:
+ 	job->dd_data = NULL;
+ 	return rc;
+ }
++
+ /**
+  * lpfc_bsg_hst_vendor - process a vendor-specific fc_bsg_job
+  * @job: fc_bsg_job to handle
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
+--- a/drivers/scsi/lpfc/lpfc_bsg.h	2010-08-04 10:31:45.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_bsg.h	2011-04-16 09:38:41.000000000 -0400
+@@ -109,3 +109,133 @@ struct menlo_response {
+ 	uint32_t xri; /* return the xri of the iocb exchange */
  };
-+#define SLI4_PAGE_ALIGN(addr) (((addr)+((SLI4_PAGE_SIZE)-1)) \
-+			       &(~((SLI4_PAGE_SIZE)-1)))
  
- struct lpfc_sli4_parameters {
- 	uint32_t word0;
-@@ -2524,7 +2526,7 @@ struct wqe_common {
- #define wqe_wqes_WORD         word10
- /* Note that this field overlaps above fields */
- #define wqe_wqid_SHIFT        1
--#define wqe_wqid_MASK         0x0000007f
-+#define wqe_wqid_MASK         0x00007fff
- #define wqe_wqid_WORD         word10
- #define wqe_pri_SHIFT         16
- #define wqe_pri_MASK          0x00000007
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-04-16 08:29:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-04-16 09:35:11.000000000 -0400
-@@ -4906,6 +4906,7 @@ lpfc_sli4_create_rpi_hdr(struct lpfc_hba
- 	uint16_t rpi_limit, curr_rpi_range;
- 	struct lpfc_dmabuf *dmabuf;
- 	struct lpfc_rpi_hdr *rpi_hdr;
-+	uint32_t rpi_count;
- 
- 	rpi_limit = phba->sli4_hba.max_cfg_param.rpi_base +
- 		    phba->sli4_hba.max_cfg_param.max_rpi - 1;
-@@ -4920,7 +4921,9 @@ lpfc_sli4_create_rpi_hdr(struct lpfc_hba
- 	 * and to allow the full max_rpi range per port.
- 	 */
- 	if ((curr_rpi_range + (LPFC_RPI_HDR_COUNT - 1)) > rpi_limit)
--		return NULL;
-+		rpi_count = rpi_limit - curr_rpi_range;
-+	else
-+		rpi_count = LPFC_RPI_HDR_COUNT;
- 
- 	/*
- 	 * First allocate the protocol header region for the port.  The
-@@ -4961,7 +4964,7 @@ lpfc_sli4_create_rpi_hdr(struct lpfc_hba
- 	 * The next_rpi stores the next module-64 rpi value to post
- 	 * in any subsequent rpi memory region postings.
- 	 */
--	phba->sli4_hba.next_rpi += LPFC_RPI_HDR_COUNT;
-+	phba->sli4_hba.next_rpi += rpi_count;
- 	spin_unlock_irq(&phba->hbalock);
- 	return rpi_hdr;
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2011-04-16 08:29:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2011-04-16 09:35:21.000000000 -0400
-@@ -1736,7 +1736,7 @@ lpfc_sli4_config(struct lpfc_hba *phba, 
- 	}
- 
- 	/* Setup for the none-embedded mbox command */
--	pcount = (PAGE_ALIGN(length))/SLI4_PAGE_SIZE;
-+	pcount = (SLI4_PAGE_ALIGN(length))/SLI4_PAGE_SIZE;
- 	pcount = (pcount > LPFC_SLI4_MBX_SGE_MAX_PAGES) ?
- 				LPFC_SLI4_MBX_SGE_MAX_PAGES : pcount;
- 	/* Allocate record for keeping SGE virtual addresses */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2011-04-16 08:29:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-04-16 09:35:21.000000000 -0400
-@@ -5018,10 +5018,11 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
- 		lpfc_reg_fcfi(phba, mboxq);
- 		mboxq->vport = phba->pport;
- 		rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
--		if (rc == MBX_SUCCESS)
--			rc = 0;
--		else
-+		if (rc != MBX_SUCCESS)
- 			goto out_unset_queue;
-+		rc = 0;
-+		phba->fcf.fcfi = bf_get(lpfc_reg_fcfi_fcfi,
-+					&mboxq->u.mqe.un.reg_fcfi);
- 	}
- 	/*
- 	 * The port is ready, set the host's link state to LINK_DOWN
++/*
++ * macros and data structures for handling sli-config mailbox command
++ * pass-through support, this header file is shared between user and
++ * kernel spaces, note the set of macros are duplicates from lpfc_hw4.h,
++ * with macro names prefixed with bsg_, as the macros defined in
++ * lpfc_hw4.h are not accessible from user space.
++ */
++
++/* Macros to deal with bit fields. Each bit field must have 3 #defines
++ * associated with it (_SHIFT, _MASK, and _WORD).
++ * EG. For a bit field that is in the 7th bit of the "field4" field of a
++ * structure and is 2 bits in size the following #defines must exist:
++ *      struct temp {
++ *              uint32_t        field1;
++ *              uint32_t        field2;
++ *              uint32_t        field3;
++ *              uint32_t        field4;
++ *      #define example_bit_field_SHIFT         7
++ *      #define example_bit_field_MASK          0x03
++ *      #define example_bit_field_WORD          field4
++ *              uint32_t        field5;
++ *      };
++ * Then the macros below may be used to get or set the value of that field.
++ * EG. To get the value of the bit field from the above example:
++ *      struct temp t1;
++ *      value = bsg_bf_get(example_bit_field, &t1);
++ * And then to set that bit field:
++ *      bsg_bf_set(example_bit_field, &t1, 2);
++ * Or clear that bit field:
++ *      bsg_bf_set(example_bit_field, &t1, 0);
++ */
++#define bsg_bf_get_le32(name, ptr) \
++	((le32_to_cpu((ptr)->name##_WORD) >> name##_SHIFT) & name##_MASK)
++#define bsg_bf_get(name, ptr) \
++	(((ptr)->name##_WORD >> name##_SHIFT) & name##_MASK)
++#define bsg_bf_set_le32(name, ptr, value) \
++	((ptr)->name##_WORD = cpu_to_le32(((((value) & \
++	name##_MASK) << name##_SHIFT) | (le32_to_cpu((ptr)->name##_WORD) & \
++	~(name##_MASK << name##_SHIFT)))))
++#define bsg_bf_set(name, ptr, value) \
++	((ptr)->name##_WORD = ((((value) & name##_MASK) << name##_SHIFT) | \
++	((ptr)->name##_WORD & ~(name##_MASK << name##_SHIFT))))
++
++/*
++ * The sli_config structure specified here is based on the following
++ * restriction:
++ *
++ * -- SLI_CONFIG EMB=0, carrying MSEs, will carry subcommands without
++ *    carrying HBD.
++ * -- SLI_CONFIG EMB=1, not carrying MSE, will carry subcommands with or
++ *    without carrying HBDs.
++ */
++
++struct lpfc_sli_config_mse {
++	uint32_t pa_lo;
++	uint32_t pa_hi;
++	uint32_t buf_len;
++#define lpfc_mbox_sli_config_mse_len_SHIFT	0
++#define lpfc_mbox_sli_config_mse_len_MASK	0xffffff
++#define lpfc_mbox_sli_config_mse_len_WORD	buf_len
++};
++
++struct lpfc_sli_config_subcmd_hbd {
++	uint32_t buf_len;
++#define lpfc_mbox_sli_config_ecmn_hbd_len_SHIFT	0
++#define lpfc_mbox_sli_config_ecmn_hbd_len_MASK	0xffffff
++#define lpfc_mbox_sli_config_ecmn_hbd_len_WORD	buf_len
++	uint32_t pa_lo;
++	uint32_t pa_hi;
++};
++
++struct lpfc_sli_config_hdr {
++	uint32_t word1;
++#define lpfc_mbox_hdr_emb_SHIFT		0
++#define lpfc_mbox_hdr_emb_MASK		0x00000001
++#define lpfc_mbox_hdr_emb_WORD		word1
++#define lpfc_mbox_hdr_mse_cnt_SHIFT	3
++#define lpfc_mbox_hdr_mse_cnt_MASK	0x0000001f
++#define lpfc_mbox_hdr_mse_cnt_WORD	word1
++	uint32_t payload_length;
++	uint32_t tag_lo;
++	uint32_t tag_hi;
++	uint32_t reserved5;
++};
++
++struct lpfc_sli_config_generic {
++	struct lpfc_sli_config_hdr	sli_config_hdr;
++#define LPFC_MBX_SLI_CONFIG_MAX_MSE     19
++	struct lpfc_sli_config_mse	mse[LPFC_MBX_SLI_CONFIG_MAX_MSE];
++};
++
++struct lpfc_sli_config_subcmnd {
++	struct lpfc_sli_config_hdr	sli_config_hdr;
++	uint32_t word6;
++#define lpfc_subcmnd_opcode_SHIFT	0
++#define lpfc_subcmnd_opcode_MASK	0xff
++#define lpfc_subcmnd_opcode_WORD	word6
++#define lpfc_subcmnd_subsys_SHIFT	8
++#define lpfc_subcmnd_subsys_MASK	0xff
++#define lpfc_subcmnd_subsys_WORD	word6
++	uint32_t timeout;
++	uint32_t request_length;
++	uint32_t word9;
++#define lpfc_subcmnd_version_SHIFT	0
++#define lpfc_subcmnd_version_MASK	0xff
++#define lpfc_subcmnd_version_WORD	word9
++	uint32_t word10;
++#define lpfc_subcmnd_ask_rd_len_SHIFT	0
++#define lpfc_subcmnd_ask_rd_len_MASK	0xffffff
++#define lpfc_subcmnd_ask_rd_len_WORD	word10
++	uint32_t rd_offset;
++	uint32_t obj_name[26];
++	uint32_t hbd_count;
++#define LPFC_MBX_SLI_CONFIG_MAX_HBD	10
++	struct lpfc_sli_config_subcmd_hbd   hbd[LPFC_MBX_SLI_CONFIG_MAX_HBD];
++};
++
++struct lpfc_sli_config_mbox {
++	uint32_t word0;
++#define lpfc_mqe_status_SHIFT		16
++#define lpfc_mqe_status_MASK		0x0000FFFF
++#define lpfc_mqe_status_WORD		word0
++#define lpfc_mqe_command_SHIFT		8
++#define lpfc_mqe_command_MASK		0x000000FF
++#define lpfc_mqe_command_WORD		word0
++	union {
++		struct lpfc_sli_config_generic	sli_config_generic;
++		struct lpfc_sli_config_subcmnd	sli_config_subcmnd;
++	} un;
++};
 
 
