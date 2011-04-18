@@ -1,78 +1,50 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH] [SCSI] mpt2sas: fix double mutex lock in NON_BLOCKING state
-Date: Mon, 18 Apr 2011 22:53:38 +0400
-Message-ID: <1303152818-9856-1-git-send-email-khoroshilov@ispras.ru>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Moore <eric.moore@lsi.com>, Kashyap Desai <kashyap.desai@lsi.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alexey Khoroshilov <khoroshilov@ispras.ru>
+From: Jeremy Linton <jlinton@tributary.com>
+Subject: Re: [PATCH 1/2] SCSI: Add a SCSI option for persistent device names
+ in Kernel.
+Date: Mon, 18 Apr 2011 15:10:08 -0500
+Message-ID: <4DAC9AA0.8090904@tributary.com>
+References: <20110405124946.7969.66796.stgit@ltc233.sdl.hitachi.co.jp>	<20110405161400.GA885@kroah.com>	<4D9F17DF.5030601@hitachi.com> <20110408192113.2f3d5eda@stein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay.ihostexchange.net ([66.46.182.51]:42554 "EHLO
+	relay.ihostexchange.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751862Ab1DRUPf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Apr 2011 16:15:35 -0400
+In-Reply-To: <20110408192113.2f3d5eda@stein>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-If mutex_trylock succeed, the control flow goes to mutex_lock_interruptible()
-that is not a good thing.
+> Identifiers and names of target ports and of logical units (per SAM-2 and
+> later, Annex A) --- whether they are persistent, in which scope they are
+> unique, how they look like, and how they can be obtained --- are transport
+> specific.
+> 
+> Neither the INQUIRY command (per SPC) nor any other command is generally
+> useful to obtain e.g. logical unit identifiers.  Any tool that needs to
+> obtain identifiers or names of target ports and of logical units must talk
+> with the transport driver through driver-specific interfaces.
 
-Found by Linux Driver Verification project (linuxtesting.org).
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/scsi/mpt2sas/mpt2sas_ctl.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+	Inquiry page 0x83 has been mandatory for a while now, and while the name/id
+assignments are all over the place, it is getting better. Page 0x80 is also
+supported on nearly every device manufactured in the last 10 years. Parsing a
+few common cases covers the majority of the devices. Of course, the returned
+information may not be helpful (even when supported), but we are mostly just
+talking about messages being displayed to the user. Some of this information is
+already being stored in the kernel, printing something like "s[dgt]X
+(man/model/serial/portinfo)" instead of just a "sda" via sd_printk/etc would
+probably be quite helpful in a lot of situations.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-index 1c6d2b4..9bd7ffc 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
-@@ -648,8 +648,10 @@ _ctl_do_mpt_command(struct MPT2SAS_ADAPTER *ioc,
- 
- 	issue_reset = 0;
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 
-@@ -1587,8 +1589,10 @@ _ctl_diag_register(void __user *arg, enum block_state state)
- 	if (_ctl_verify_adapter(karg.hdr.ioc_number, &ioc) == -1 || !ioc)
- 		return -ENODEV;
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 	rc = _ctl_diag_register_2(ioc, &karg);
-@@ -1932,8 +1936,10 @@ _ctl_diag_release(void __user *arg, enum block_state state)
- 		return 0;
- 	}
- 
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 
-@@ -2033,8 +2039,10 @@ _ctl_diag_read_buffer(void __user *arg, enum block_state state)
- 	}
- 	/* Get a free request frame and save the message context.
- 	*/
--	if (state == NON_BLOCKING && !mutex_trylock(&ioc->ctl_cmds.mutex))
--		return -EAGAIN;
-+	if (state == NON_BLOCKING) {
-+		if (!mutex_trylock(&ioc->ctl_cmds.mutex))
-+			return -EAGAIN;
-+	}
- 	else if (mutex_lock_interruptible(&ioc->ctl_cmds.mutex))
- 		return -ERESTARTSYS;
- 
--- 
-1.7.1
+	Finally, printing this information provides encouragement to the device
+manufactures to make sure its available and correct.
+
+
+
+
+
+
+	
