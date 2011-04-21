@@ -1,27 +1,35 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Open-FCoE] deadlock during fc_remove_host
-Date: Wed, 20 Apr 2011 22:21:51 -0500
-Message-ID: <4DAFA2CF.2080102@cs.wisc.edu>
-References: <4DAF7944.6060909@broadcom.com> <4DAF9C15.1010808@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14961] Very old and buggy ARCMSR drivers are included
+Date: Thu, 21 Apr 2011 05:28:43 GMT
+Message-ID: <201104210528.p3L5SglU012865@demeter2.kernel.org>
+References: <bug-14961-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43665 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753139Ab1DUDWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Apr 2011 23:22:06 -0400
-In-Reply-To: <4DAF9C15.1010808@cs.wisc.edu>
+Received: from demeter2.kernel.org ([140.211.167.42]:53682 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750935Ab1DUF2n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2011 01:28:43 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p3L5ShxL012866
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2011 05:28:43 GMT
+In-Reply-To: <bug-14961-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: Joe Eykholt <jeykholt@cisco.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 04/20/2011 09:53 PM, Mike Christie wrote:
-> Is the reason that rport b's terminate_rport_io has not been called,
-> because that workqueue is queued behind rport a's workqueue and rport
-> b's workqueue function is not called? If so, have you tested this with
-> the current upstream kernel?
+https://bugzilla.kernel.org/show_bug.cgi?id=14961
 
-Oh wait, I think you also need to change the fc class to use 
-alloc_workqueue instead of create_singlethread_workqueue.
+
+
+
+
+--- Comment #8 from mikki@hugo.dk  2011-04-21 05:28:39 ---
+No but if you resolved it mark it as resolved. Its hard for me to know if you
+as a vendor solved the issue.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
