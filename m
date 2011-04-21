@@ -1,16 +1,17 @@
 From: WESTERN UNION OFFICE <online663508@telkomsa.net>
-Subject: Pick Up Your Funds...$5000.00USD
-Date: Thu, 21 Apr 2011 13:42:13 +0200 (SAST)
-Message-ID: <553225640.467661.1303386133747.JavaMail.root@zimbra6-vm1.telkomsa.net>
+Subject: (unknown)
+Date: Thu, 21 Apr 2011 16:35:24 +0200 (SAST)
+Message-ID: <730154111.473466.1303396524833.JavaMail.root@zimbra6-vm1.telkomsa.net>
 Reply-To: WESTERN UNION OFFICE <westernunion.ofice73@yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sargas.telkomsa.net ([196.25.211.69]:26991 "EHLO
+Received: from sargas.telkomsa.net ([196.25.211.69]:58514 "EHLO
 	sargas.telkomsa.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752177Ab1DULn0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2011 07:43:26 -0400
+	with ESMTP id S1753632Ab1DUOf2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Apr 2011 10:35:28 -0400
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -32,7 +33,7 @@ day.Please pick up this information and run to any western union
 email back,so that we can send another $5,000.00USD by tomorrow.
 
 Manager: Mr Frank Amos
-email me on:westernunion.ofice@yahoo.com
+email me on:westernunion.ofice73@yahoo.com
 call us on: +234-7031908911
 once you picked up this $5000.00USD today.
 
