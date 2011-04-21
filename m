@@ -1,34 +1,51 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14961] Very old and buggy ARCMSR drivers are included
-Date: Thu, 21 Apr 2011 01:50:37 GMT
-Message-ID: <201104210150.p3L1obUw015424@demeter2.kernel.org>
-References: <bug-14961-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: deadlock during fc_remove_host
+Date: Wed, 20 Apr 2011 21:53:09 -0500
+Message-ID: <4DAF9C15.1010808@cs.wisc.edu>
+References: <4DAF7944.6060909@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:53300 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751413Ab1DUBui (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Apr 2011 21:50:38 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p3L1ob03015425
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Apr 2011 01:50:38 GMT
-In-Reply-To: <bug-14961-11613@https.bugzilla.kernel.org/>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48050 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751652Ab1DUCxY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Apr 2011 22:53:24 -0400
+In-Reply-To: <4DAF7944.6060909@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Joe Eykholt <jeykholt@cisco.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14961
+On 04/20/2011 07:24 PM, Bhanu Prakash Gollapudi wrote:
+> Hi,
+>
+> We are seeing a similar issue to what Joe has observed a while back -
+> http://www.mail-archive.com/devel@open-fcoe.org/msg02993.html.
+>
+> This happens in a very corner case scenario by creating and destroying
+> fcoe interface in a tight loop. (fcoeadm -c followed by fcoeadm -d). The
+> system had a simple configuration with a single local port 2 remote ports.
+>
+> Reason for the deadlock:
+>
+> 1. destroy (fcoeadm -d) thread hangs in fc_remove_host().
+> 2. fc_remove_host() is trying to flush the shost->work_q, via
+> scsi_flush_work(), but the operation never completes.
+> 3. There are two works scheduled to be run in this work_q, one belonging
+> to rport A, and other rport B.
+> 4. The thread is currently executing rport_delete_work (fc_rport_final
+> _delete) for rport A. It calls fc_terminate_rport_io() that unblocks the
+> sdev->request_queue, so that __blk_run_queue() can be called. So, IO for
+> rport A is ready to run, but stuck at the async layer.
+> 5. Meanwhile, async layer is serializing all the IOs belonging to both
+> rport A and rport B. At this point, it is waiting for IO belonging to
+> rport B to complete.
+> 6. However, the request_queue for rport B is stopped and
+> fc_terminate_rport_io on rport B is not called yet to unblock the
+> device, which will only be called after rport A completes. rport A does
 
-
-
-
-
---- Comment #7 from nick cheng <nick.cheng@areca.com.tw>  2011-04-21 01:50:34 ---
-This bug is not opened by me.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Is the reason that rport b's terminate_rport_io has not been called, 
+because that workqueue is queued behind rport a's workqueue and rport 
+b's workqueue function is not called? If so, have you tested this with 
+the current upstream kernel?
