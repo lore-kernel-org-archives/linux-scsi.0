@@ -1,38 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 33802] list_del corruption in sd driver since 2.6.39-rc4
-Date: Fri, 22 Apr 2011 09:25:43 GMT
-Message-ID: <201104220925.p3M9Phuo024208@demeter2.kernel.org>
-References: <bug-33802-11613@https.bugzilla.kernel.org/>
+From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
+Subject: Re: 2.6.39-rc3: usb-storage hotplug kref corruption/ list
+ corruption
+Date: Fri, 22 Apr 2011 11:29:27 +0200
+Message-ID: <20110422112927.0fd30b6d@stein>
+References: <20110414204910.625a1c51@stein>
+	<20110414192941.GA17591@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:51895 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238Ab1DVJZo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2011 05:25:44 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p3M9PhVN024209
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2011 09:25:43 GMT
-In-Reply-To: <bug-33802-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20110414192941.GA17591-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+On Apr 14 Greg KH wrote:
+> On Thu, Apr 14, 2011 at 08:49:10PM +0200, Stefan Richter wrote:
+> > Also, I am noticing now that there was already a lockdep report from when
+> > the EHCI driver was loaded.
+> 
+> We have a patch for that which will go to Linus later this week, so that
+> shouldn't be an issue here.
+
+Thanks Greg,
+I think I will give 2.6.39 another try when -rc5 is out...  The SCSI device
+kref underflow on the other hand has been confirmed by another reporter,
+this time on 2.6.39-rc4:
 https://bugzilla.kernel.org/show_bug.cgi?id=33802
-
-
-
-
-
---- Comment #2 from Stefan Richter <stefanr@s5r6.in-berlin.de>  2011-04-22 09:25:42 ---
-PS,
-in my case the bug happened not during boot but during power-up of a monitor
-with built-in USB card reader.  Such a power-up happened circa 10 times in that
-2.6.39-rc3 session --- plus a few other plug-in events of USB and FireWire
-disks --- without the bug hitting.
-
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Stefan Richter
+-=====-==-== -=-- =-==-
+http://arcgraph.de/sr/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
