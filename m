@@ -1,14 +1,12 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [PATCH 2/5] qla4xxx: add support for set_net_config
-Date: Fri, 22 Apr 2011 11:07:43 -0700
-Message-ID: <1303495666-731-3-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1303495666-731-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH] iscsiadm: Add netconfig support in iscsiadm and iscsid
+Date: Fri, 22 Apr 2011 11:08:12 -0700
+Message-ID: <1303495692-799-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:46853 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:56255 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751741Ab1DVSNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Apr 2011 14:13:21 -0400
-In-Reply-To: <1303495666-731-1-git-send-email-vikas.chaudhary@qlogic.com>
+	id S1755554Ab1DVSNr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Apr 2011 14:13:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
@@ -16,635 +14,1728 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-Allows user space (iscsiadm) to send down network configuration parameters
-for LLD to set private network configuration on the iSCSI adapters.
+1. Current status:
+Using iscsiadm one cannot do any network configuration for qla4xxx adapters.
+However an iface is created for the qla4xxx ports using the hwaddress.
+
+\# ls /etc/iscsi/ifaces/
+iface.example  iface0  qla4xxx.00:0e:1e:04:8b:2a  qla4xxx.00:0e:1e:04:8b:2e
+
+This allows user to issue sendtargets via the qla4xxx iscsi offload.
+
+2. Current Proposal:
+Current proposal is to allow iscsiadm to configure the network settings for qla4xxx ports.
+
+This implementation is based on discussions at
+http://marc.info/?l=linux-scsi&m=127066184916180&w=2
+http://groups.google.com/group/open-iscsi/browse_thread/thread/d8e8c2df71c95d69/8f731d95d46141a0?lnk=gst&q=iscsi+hba#
+
+2.1 Changes in iscsiadm/iscsid
+
+2.1.1 Add a new event: ISCSI_UEVENT_SET_NET_CONFIG
+
+2.1.2 New structure to represent a single network parameter
+/* iSCSI network params */
+enum iscsi_net_param_type {
+	ISCSI_NET_PARAM_IPV4_ADDR		= 1,
+	ISCSI_NET_PARAM_IPV4_SUBNET		= 2,
+	ISCSI_NET_PARAM_IPV4_GW			= 3,
+	ISCSI_NET_PARAM_IPV4_BOOTPROTO		= 4,
+	ISCSI_NET_PARAM_MAC			= 5,
+	ISCSI_NET_PARAM_IPV6_LINKLOCAL		= 6,
+	ISCSI_NET_PARAM_IPV6_ADDR		= 7,
+	ISCSI_NET_PARAM_IPV6_ROUTER		= 8,
+	ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG	= 9,
+	ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG	= 10,
+	ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG	= 11,
+	ISCSI_NET_PARAM_IFACE_ENABLED		= 12,
+	ISCSI_NET_PARAM_VLAN			= 13,
+};
+
+struct iscsi_net_param {
+	uint32_t param_type;    /* enum iscsi_net_param */
+	uint32_t iface_type;    /* IPv4 or IPv6 */
+	uint32_t iface_num;     /* iface number, 0 - n */
+	uint32_t length;        /* Actual length of the param */
+	uint8_t value[0];       /* length sized value follows */
+} __attribute__((packed));
+
+2.1.3 New parameters in iface
+Added following params:-
+
+typedef struct iface_rec {
+        struct list_head        list;
+        /* iscsi iface record name */
+        char                    name[ISCSI_MAX_IFACE_LEN];
++       uint32_t                iface_num;
+        /* network layer iface name (eth0) */
+        char                    netdev[IFNAMSIZ];
+        char                    ipaddress[NI_MAXHOST];
++       char                    subnet_mask[NI_MAXHOST];
++       char                    gateway[NI_MAXHOST];
++       char                    bootproto[ISCSI_MAX_STR_LEN];
++       char                    ipv6_linklocal[NI_MAXHOST];
++       char                    ipv6_router[NI_MAXHOST];
++       char                    ipv6_autocfg[NI_MAXHOST];
++       char                    linklocal_autocfg[NI_MAXHOST];
++       char                    router_autocfg[NI_MAXHOST];
++       char                    vlan[ISCSI_MAX_STR_LEN];
++       char                    state[ISCSI_MAX_STR_LEN]; /* 0 = disable,
++                                                          * 1 = enable */
+
+2.1.4 Change in operations
+Add two new operations to iscsiadm
+apply: Apply the single iface settings
+applyall: Apply the iface settings of all iface having the same MAC address
+
+2.2 Changes in sysfs network representation
+The new sysfs directory would look like this:-
+/sys/class/iscsi_iface/
+|
+|- ipv4-iface-<host_no>-<iface_no>/                             <-- for ipv4
+				|- ipaddress
+				|- subnet
+				|- gateway
+				|- bootproto
+				|- enabled
+|- ipv6-iface-<host_no>-<iface_no>/                             <-- for ipv6
+				|- ipaddress
+				|- link_local_addr
+				|- router_addr
+				|- ipaddr_autocfg
+				|- linklocal_autocfg
+				|- enabled
+
+3. Flow:
+3.1 User space code:
+	    - If user specify --op=update, then just update the iface config file
+	    - If use specify --op=applyall then read ifaces having the same hwaddress
+	      and build up the net config buffer.
+	    - Note: If --op is "apply" then only settings for single iface is read,
+	      the iface provided with -I option is only read.
+	    - The net config buffer will look like this.
+	----------------------------------------------------------------|
+	| iscsi_net_param {                                             |
+	|  param = ISCSI_NET_PARAM_IPV4_ADDR;                           |
+	|  iface_num = 0;                                               |
+	|  length = 4                                                   |
+	|  offset = 0;                                                  |
+	|  value[0] = ipaddress[0];                                     |
+	|  value[1] = ipaddress[1];                                     |
+	|  value[2] = ipaddress[2];                                     |
+	|  value[3] = ipaddress[3];                                     |
+	| }                                                             |
+	----------------------------------------------------------------|
+	|  iscsi_net_param {                                            |
+	|  param = ISCSI_NET_PARAM_IPV4_GW;                             |
+	|  iface_num = 0;                                               |
+	|  length = 4                                                   |
+	|  offset = 0;                                                  |
+	|  value[0] = ipgateway[0];                                     |
+	|  value[1] = ipgateway[1];                                     |
+	|  value[2] = ipgateway[2];                                     |
+	|  value[3] = ipgateway[3];                                     |
+	| }                                                             |
+	-----------------------------------------------------------------
+	|                                                               |
+	| iscsi_net_param {                                             |
+	|  param = ISCSI_NET_PARAM_IPV4_ADDR;                           |
+	|  iface_num = 1;                                               |
+	|  length = 4                                                   |
+	|  offset = 0;                                                  |
+	|  value[0] = ipaddress[0];                                     |
+	|  value[1] = ipaddress[1];                                     |
+	|  value[2] = ipaddress[2];                                     |
+	|  value[3] = ipaddress[3];                                     |
+	| }                                                             |
+	-----------------------------------------------------------------
+	| iscsi_net_param {                                             |
+	|  param = ISCSI_NET_PARAM_IPV4_GW;                             |
+	|  iface_num = 1;                                               |
+	|  length = 4                                                   |
+	|  offset = 0;                                                  |
+	|  value[0] = ipgateway[0];                                     |
+	|  value[1] = ipgateway[1];                                     |
+	|  value[2] = ipgateway[2];                                     |
+	|  value[3] = ipgateway[3];                                     |
+	| }                                                             |
+	-----------------------------------------------------------------
+	| iscsi_net_param {                                             |
+	|  param = ISCSI_NET_PARAM_IFACE_ENABLED;                       |
+	|  iface_num = 1;                                               |
+	|  length = 1                                                   |
+	|  offset = 0;                                                  |
+	|  value[0] = 0; /* 0 = disable, default = 1 = enable           |
+	| }                                                             |
+	-----------------------------------------------------------------
+
+Each netconfig parameter has different size requirement for value field.
+
+e.g.: IPv4 address requires 4 bytes, IPv6 address requires 16 bytes etc.
+
+	The memory allocated for each netconfig parameter is size of
+	iscsi_net_param + length required for that parameter.
+
+	The multiple IO Vector mechanism is used to send netconfig
+	parameter from user space to kernel using Netlink interface.
+
+	IO Vector 0 is used for Netlink message header.
+
+	IO Vector 1 is used for iSCSI User Event (ev).
+	- The ev will be sent down with event type = ISCSI_UEVENT_SET_NET_CONFIG
+
+	IO Vector 2 onwards, each vector consists of the struct iscsi_net_param
+	with parameter name followed by its value.
+
+	The total size will be addition of all the IO vector sizes.
+
+3.2 Kernel space code:
+	- Once event is received, the buffer will look like struct iscsi_net_param
+	  with parameter name followed by its value, then next parameter and
+	  its value and so on.
+	- the scsi_transport_iscsi would call the adapter's transport->set_net_config
+	- In set_net_config each individual param can be decoded and set into the
+	  hardware.
+
+4. qla4xxx configuration:
+	iscsid, creates the iface for qla4xxx, based on the hwaddress. To display
+	the iface related to qla4xxx execute following
+	   # iscsiadm -m iface
+	       qla4xxx.00:0e:1e:04:8b:2e qla4xxx,00:0e:1e:04:8b:2e,<empty>,<empty>,<empty>
+	       qla4xxx.00:0e:1e:04:8b:2e.ipv6 qla4xxx,00:0e:1e:04:8b:2e,<empty>,<empty>,<empty>
+	       qla4xxx.00:0e:1e:04:8b:2a qla4xxx,00:0e:1e:04:8b:2a,20.15.0.66,<empty>,<empty>
+	       qla4xxx.00:0e:1e:04:8b:2a.ipv6
+	       qla4xxx,00:0e:1e:04:8b:2a,2001:DB8:1111:2222::8888,<empty>,<empty>
+	       qla4xxx.00:0e:1e:04:8b:2a.ipv6.1
+	       qla4xxx,00:0e:1e:04:8b:2a,2001:DB8:4444:5555::9999,<empty>,<empty>
+
+To setup network configuration there can be two methods
+4. 1. User can manually modify the iface file, and issue an "apply" command.
+---------------------------------------------------------------------------
+iface.example  iface0  qla4xxx.00:0e:1e:04:8b:2a  qla4xxx.00:0e:1e:04:8b:2e
+
+            Example:
+            iface.ipaddress = 192.168.2.2 (decimal)
+            iface.iface_num = 0 (default)
+            iface.subnetmask = 255.255.255.0 (decimal)
+            iface.vlan = 0x1022 (hex)
+
+            # vi qla4xxx.00:0e:1e:04:8b:2a.ipv6
+            If file does not exist, the one can create it.
+            iface.ipaddress =  1111:2222::7777:8888 (hex)
+            iface.iface_num = 0
+            iface.vlan = 0x1022 (hex)
+
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a --op=applyall
+            This will read the iface config file and apply the settings to the
+            hardware.
+            Note, this will read all the iface belonging to the same MAC address.
+
+4.2. User can use iscsiadm to specify the values and then apply
+--------------------------------------------------------------
+            # ls /etc/iscsi/ifaces/
+iface.example  iface0  qla4xxx.00:0e:1e:04:8b:2a  qla4xxx.00:0e:1e:04:8b:2e
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o update \
+               -n iface.ipaddress -v 192.168.1.2
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o update \
+                           -n iface.gateway -v 192.168.1.1
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o update \
+                           -n iface.subnet_mask -v 255.255.255.0
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o applyall
+
+            Setting up multiple IP:
+            First interface (default, no need to set iface_num, it is 0 by default)
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o update \
+                           -n iface.ipaddress -v 192.168.1.2
+            Create the second one if it does not exist
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a.1 -op=new
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o update \
+                           -n iface.iface_num -v 1 (Mandatory)
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a -o update \
+                           -n iface.ipaddress -v 192.168.1.3
+            # iscsiadm -m iface -I qla4xxx.00:0e:1e:04:8b:2a --op=applyall
+
+            Note: If there are common settings for multiple interfaces then the
+            settings from 0th iface would be considered valid.
+
+            Note: To apply settings for a single iface, just say --op=apply
 
 Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Reviewed-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_fw.h   |   77 ++++++++++
- drivers/scsi/qla4xxx/ql4_glbl.h |   20 +++-
- drivers/scsi/qla4xxx/ql4_mbx.c  |  119 +++++++++++++++-
- drivers/scsi/qla4xxx/ql4_os.c   |  302 +++++++++++++++++++++++++++++++++++++++
- 4 files changed, 514 insertions(+), 4 deletions(-)
+ include/iscsi_if.h |   76 +++++++
+ usr/config.h       |   13 +
+ usr/idbm.c         |   16 ++
+ usr/idbm_fields.h  |    7 +
+ usr/iface.c        |  616 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ usr/iface.h        |    4 +
+ usr/iscsi_ipc.h    |    3 +
+ usr/iscsiadm.c     |  127 +++++++++++-
+ usr/netlink.c      |  168 ++++++++++----
+ 9 files changed, 980 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index 31e2bf9..d05e8be 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -434,6 +434,14 @@ struct qla_flt_region {
- #define ACB_STATE_VALID		0x05
- #define ACB_STATE_DISABLING	0x06
+diff --git a/include/iscsi_if.h b/include/iscsi_if.h
+index 50a09cb..ef60563 100644
+--- a/include/iscsi_if.h
++++ b/include/iscsi_if.h
+@@ -64,6 +64,7 @@ enum iscsi_uevent_e {
+ 	ISCSI_UEVENT_TRANSPORT_EP_CONNECT_THROUGH_HOST	= UEVENT_BASE + 19,
  
-+/* FLASH offsets */
-+#define FLASH_SEGMENT_IFCB	0x04000000
+ 	ISCSI_UEVENT_PATH_UPDATE	= UEVENT_BASE + 20,
++	ISCSI_UEVENT_SET_NET_CONFIG	= UEVENT_BASE + 21,
+ 
+ 	ISCSI_UEVENT_MAX		= ISCSI_UEVENT_PATH_UPDATE,
+ 
+@@ -181,6 +182,10 @@ struct iscsi_uevent {
+ 		struct msg_set_path {
+ 			uint32_t	host_no;
+ 		} set_path;
++		struct msg_set_net_config {
++			uint32_t	host_no;
++			uint32_t	count;
++		} set_net_config;
+ 	} u;
+ 	union {
+ 		/* messages k -> u */
+@@ -246,6 +251,77 @@ struct iscsi_path {
+ 	uint16_t	pmtu;
+ } __attribute__ ((aligned (sizeof(uint64_t))));
+ 
++#define ISCSI_FALSE	0
++#define ISCSI_TRUE	1
 +
-+#define FLASH_OPT_RMW_HOLD	0
-+#define FLASH_OPT_RMW_INIT	1
-+#define FLASH_OPT_COMMIT	2
-+#define FLASH_OPT_RMW_COMMIT	3
++/* ipv4 bootproto */
++#define	ISCSI_BOOTPROTO_STATIC		0x01
++#define	ISCSI_BOOTPROTO_DHCP		0x02
 +
- /*************************************************************************/
- 
- /* Host Adapter Initialization Control Block (from host) */
-@@ -473,6 +481,7 @@ struct addr_ctrl_blk {
- 
- 	uint16_t iscsi_opts;	/* 30-31 */
- 	uint16_t ipv4_tcp_opts;	/* 32-33 */
-+#define TCPOPT_DHCP_ENABLE		0x0200
- 	uint16_t ipv4_ip_opts;	/* 34-35 */
- #define  IPOPT_IPv4_PROTOCOL_ENABLE	0x8000
- 
-@@ -574,6 +583,74 @@ struct init_fw_ctrl_blk {
- /*	struct addr_ctrl_blk sec;*/
- };
- 
-+struct addr_ctrl_blk_def {
-+	uint8_t reserved1[1];	/* 00 */
-+	uint8_t control;	/* 01 */
-+	uint8_t reserved2[11];	/* 02-0C */
-+	uint8_t inst_num;	/* 0D */
-+	uint8_t reserved3[34];	/* 0E-2F */
-+	uint16_t iscsi_opts;	/* 30-31 */
-+	uint16_t ipv4_tcp_opts;	/* 32-33 */
-+	uint16_t ipv4_ip_opts;	/* 34-35 */
-+	uint16_t iscsi_max_pdu_size;	/* 36-37 */
-+	uint8_t ipv4_tos;	/* 38 */
-+	uint8_t ipv4_ttl;	/* 39 */
-+	uint8_t reserved4[2];	/* 3A-3B */
-+	uint16_t def_timeout;	/* 3C-3D */
-+	uint16_t iscsi_fburst_len;	/* 3E-3F */
-+	uint8_t reserved5[4];	/* 40-43 */
-+	uint16_t iscsi_max_outstnd_r2t;	/* 44-45 */
-+	uint8_t reserved6[2];	/* 46-47 */
-+	uint16_t ipv4_port;	/* 48-49 */
-+	uint16_t iscsi_max_burst_len;	/* 4A-4B */
-+	uint8_t reserved7[4];	/* 4C-4F */
-+	uint8_t ipv4_addr[4];	/* 50-53 */
-+	uint16_t ipv4_vlan_tag;	/* 54-55 */
-+	uint8_t ipv4_addr_state;	/* 56 */
-+	uint8_t ipv4_cacheid;	/* 57 */
-+	uint8_t reserved8[8];	/* 58-5F */
-+	uint8_t ipv4_subnet[4];	/* 60-63 */
-+	uint8_t reserved9[12];	/* 64-6F */
-+	uint8_t ipv4_gw_addr[4];	/* 70-73 */
-+	uint8_t reserved10[84];	/* 74-C7 */
-+	uint8_t abort_timer;	/* C8    */
-+	uint8_t ipv4_tcp_wsf;	/* C9    */
-+	uint8_t reserved11[10];	/* CA-D3 */
-+	uint8_t ipv4_dhcp_vid_len;	/* D4 */
-+	uint8_t ipv4_dhcp_vid[11];	/* D5-DF */
-+	uint8_t reserved12[20];	/* E0-F3 */
-+	uint8_t ipv4_dhcp_alt_cid_len;	/* F4 */
-+	uint8_t ipv4_dhcp_alt_cid[11];	/* F5-FF */
-+	uint8_t iscsi_name[224];	/* 100-1DF */
-+	uint8_t reserved13[32];	/* 1E0-1FF */
-+	uint32_t cookie;	/* 200-203 */
-+	uint16_t ipv6_port;	/* 204-205 */
-+	uint16_t ipv6_opts;	/* 206-207 */
-+	uint16_t ipv6_addtl_opts;	/* 208-209 */
-+	uint16_t ipv6_tcp_opts;		/* 20A-20B */
-+	uint8_t ipv6_tcp_wsf;		/* 20C */
-+	uint16_t ipv6_flow_lbl;		/* 20D-20F */
-+	uint8_t ipv6_dflt_rtr_addr[16];	/* 210-21F */
-+	uint16_t ipv6_vlan_tag;		/* 220-221 */
-+	uint8_t ipv6_lnk_lcl_addr_state;	/* 222 */
-+	uint8_t ipv6_addr0_state;	/* 223 */
-+	uint8_t ipv6_addr1_state;	/* 224 */
-+	uint8_t ipv6_dflt_rtr_state;	/* 225 */
-+	uint8_t ipv6_traffic_class;	/* 226 */
-+	uint8_t ipv6_hop_limit;		/* 227 */
-+	uint8_t ipv6_if_id[8];		/* 228-22F */
-+	uint8_t ipv6_addr0[16];		/* 230-23F */
-+	uint8_t ipv6_addr1[16];		/* 240-24F */
-+	uint32_t ipv6_nd_reach_time;	/* 250-253 */
-+	uint32_t ipv6_nd_rexmit_timer;	/* 254-257 */
-+	uint32_t ipv6_nd_stale_timeout;	/* 258-25B */
-+	uint8_t ipv6_dup_addr_detect_count;	/* 25C */
-+	uint8_t ipv6_cache_id;		/* 25D */
-+	uint8_t reserved14[18];		/* 25E-26F */
-+	uint32_t ipv6_gw_advrt_mtu;	/* 270-273 */
-+	uint8_t reserved15[140];	/* 274-2FF */
++/* ipv6 addr autoconfig type */
++#define ISCSI_IPV6_AUTOCFG_DISABLE		0x01
++#define ISCSI_IPV6_AUTOCFG_ND_ENABLE		0x02
++#define ISCSI_IPV6_AUTOCFG_DHCPV6_ENABLE	0x03
++
++/* ipv6 link local addr type */
++#define ISCSI_IPV6_LINKLOCAL_AUTOCFG_ENABLE	0x01
++#define ISCSI_IPV6_LINKLOCAL_AUTOCFG_DISABLE	0x02
++
++/* ipv6 router addr type */
++#define ISCSI_IPV6_ROUTER_AUTOCFG_ENABLE	0x01
++#define ISCSI_IPV6_ROUTER_AUTOCFG_DISABLE	0x02
++
++/* iSCSI network params */
++enum iscsi_net_param_type {
++	ISCSI_NET_PARAM_IPV4_ADDR		= 1,
++	ISCSI_NET_PARAM_IPV4_SUBNET		= 2,
++	ISCSI_NET_PARAM_IPV4_GW			= 3,
++	ISCSI_NET_PARAM_IPV4_BOOTPROTO		= 4,
++	ISCSI_NET_PARAM_MAC			= 5,
++	ISCSI_NET_PARAM_IPV6_LINKLOCAL		= 6,
++	ISCSI_NET_PARAM_IPV6_ADDR		= 7,
++	ISCSI_NET_PARAM_IPV6_ROUTER		= 8,
++	ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG	= 9,
++	ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG	= 10,
++	ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG	= 11,
++	ISCSI_NET_PARAM_IFACE_ENABLED		= 12,
++	ISCSI_NET_PARAM_VLAN			= 13,
 +};
 +
- /*************************************************************************/
++#define ISCSI_NET_IPV4_ADDR		(1ULL << ISCSI_NET_PARAM_IPV4_ADDR)
++#define ISCSI_NET_IPV4_SUBNET		(1ULL << ISCSI_NET_PARAM_IPV4_SUBNET)
++#define ISCSI_NET_IPV4_GW		(1ULL << ISCSI_NET_PARAM_IPV4_GW)
++#define ISCSI_NET_IPV4_BOOTPROTO	(1ULL << ISCSI_NET_PARAM_IPV4_BOOTPROTO)
++#define ISCSI_NET_MAC			(1ULL << ISCSI_NET_PARAM_MAC)
++#define ISCSI_NET_IPV6_LINKLOCAL	(1ULL << ISCSI_NET_PARAM_IPV6_LINKLOCAL)
++#define ISCSI_NET_IPV6_ADDR		(1ULL << ISCSI_NET_PARAM_IPV6_ADDR)
++#define ISCSI_NET_IPV6_ROUTER		(1ULL << ISCSI_NET_PARAM_IPV6_ROUTER)
++#define ISCSI_NET_IPV6_AUTOCFG		(1ULL << ISCSI_NET_PARAM_IPV6_AUTOCFG)
++#define ISCSI_NET_IPV6_ADDR_AUTOCFG			\
++				(1ULL << ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG)
++#define ISCSI_NET_IPV6_LINKLOCAL_AUTOCFG		\
++				(1ULL << ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG)
++#define ISCSI_NET_IPV6_ROUTER_AUTOCFG			\
++				(1ULL << ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG)
++#define ISCSI_NET_IFACE_ENABLED		(1ULL << ISCSI_NET_PARAM_IFACE_ENABLED)
++#define ISCSI_NET_VLAN			(1ULL << ISCSI_NET_PARAM_VLAN)
++
++/* 20 param per iface * 10 iface per port = 200 params */
++#define	ISCSI_MAX_IFACE_PER_HW		10
++#define	ISCSI_MAX_PARAM_PER_IFACE	20
++#define	ISCSI_MAX_NET_PARAMS		(ISCSI_MAX_IFACE_PER_HW * \
++					ISCSI_MAX_PARAM_PER_IFACE)
++
++#define	IFACE_TYPE_IPV4			0x01
++#define	IFACE_TYPE_IPV6			0x02
++struct iscsi_net_param {
++	uint32_t param_type;	/* enum iscsi_net_param */
++	uint32_t iface_type;	/* IPv4 or IPv6 */
++	uint32_t iface_num;	/* iface number, 0 - n */
++	uint32_t length;	/* Actual length of the param */
++	uint8_t value[0];	/* length sized value follows */
++} __attribute__((packed));
++
+ /*
+  * Common error codes
+  */
+diff --git a/usr/config.h b/usr/config.h
+index 5cb4d56..987f208 100644
+--- a/usr/config.h
++++ b/usr/config.h
+@@ -196,14 +196,27 @@ typedef struct session_rec {
+ } session_rec_t;
  
- struct dev_db_entry {
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index cc53e3f..9c5c5e3 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -52,7 +52,17 @@ int qla4xxx_get_fwddb_entry(struct scsi_qla_host *ha,
+ #define ISCSI_TRANSPORT_NAME_MAXLEN 16
++#define	ISCSI_MAX_STR_LEN	80
  
- int qla4xxx_set_ddb_entry(struct scsi_qla_host * ha, uint16_t fw_ddb_index,
- 			  dma_addr_t fw_ddb_entry_dma);
--
-+uint8_t qla4xxx_get_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
-+			 uint32_t *mbox_sts, dma_addr_t init_fw_cb_dma);
-+int qla4xxx_conn_close_sess_logout(struct scsi_qla_host *ha,
-+				   uint16_t fw_ddb_index,
-+				   uint16_t connection_id,
-+				   uint16_t option);
-+int qla4xxx_disable_acb(struct scsi_qla_host *ha);
-+int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
-+		    uint32_t *mbox_sts, dma_addr_t acb_dma);
-+int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
-+		    uint32_t *mbox_sts, dma_addr_t acb_dma);
- void qla4xxx_mark_device_missing(struct scsi_qla_host *ha,
- 				 struct ddb_entry *ddb_entry);
- u16 rd_nvram_word(struct scsi_qla_host *ha, int offset);
-@@ -75,7 +85,8 @@ void qla4xxx_dump_buffer(void *b, uint32_t size);
- int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
- 	struct ddb_entry *ddb_entry, int lun, uint16_t mrkr_mod);
- int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err);
--
-+int qla4xxx_set_flash(struct scsi_qla_host *ha, dma_addr_t dma_addr,
-+		      uint32_t offset, uint32_t length, uint32_t options);
- int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
- 		uint8_t outCount, uint32_t *mbx_cmd, uint32_t *mbx_sts);
- 
-@@ -95,6 +106,11 @@ void qla4xxx_wake_dpc(struct scsi_qla_host *ha);
- void qla4xxx_get_conn_event_log(struct scsi_qla_host *ha);
- void qla4xxx_mailbox_premature_completion(struct scsi_qla_host *ha);
- void qla4xxx_dump_registers(struct scsi_qla_host *ha);
-+uint8_t qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
-+				  uint32_t *mbox_cmd,
-+				  uint32_t *mbox_sts,
-+				  struct addr_ctrl_blk *init_fw_cb,
-+				  dma_addr_t init_fw_cb_dma);
- 
- void qla4_8xxx_pci_config(struct scsi_qla_host *);
- int qla4_8xxx_iospace_config(struct scsi_qla_host *ha);
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index f9d81c8..743290e 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -317,7 +317,7 @@ qla4xxx_set_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
- 	return QLA_SUCCESS;
+ typedef struct iface_rec {
+ 	struct list_head	list;
+ 	/* iscsi iface record name */
+ 	char			name[ISCSI_MAX_IFACE_LEN];
++	uint32_t		iface_num;
+ 	/* network layer iface name (eth0) */
+ 	char			netdev[IFNAMSIZ];
+ 	char			ipaddress[NI_MAXHOST];
++	char			subnet_mask[NI_MAXHOST];
++	char			gateway[NI_MAXHOST];
++	char			bootproto[ISCSI_MAX_STR_LEN];
++	char			ipv6_linklocal[NI_MAXHOST];
++	char			ipv6_router[NI_MAXHOST];
++	char			ipv6_autocfg[NI_MAXHOST];
++	char			linklocal_autocfg[NI_MAXHOST];
++	char			router_autocfg[NI_MAXHOST];
++	char			vlan[ISCSI_MAX_STR_LEN];
++	char			state[ISCSI_MAX_STR_LEN]; /* 0 = disable,
++							   * 1 = enable */
+ 	/*
+ 	 * TODO: we may have to make this bigger and interconnect
+ 	 * specific for infinniband 
+diff --git a/usr/idbm.c b/usr/idbm.c
+index a73b410..a7fb793 100644
+--- a/usr/idbm.c
++++ b/usr/idbm.c
+@@ -370,6 +370,22 @@ void idbm_recinfo_iface(iface_rec_t *r, recinfo_t *ri)
+ 	__recinfo_str(IFACE_TRANSPORTNAME, ri, r, transport_name,
+ 		      IDBM_SHOW, num, 1);
+ 	__recinfo_str(IFACE_INAME, ri, r, iname, IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_BOOT_PROTO, ri, r, bootproto, IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_SUBNET_MASK, ri, r, subnet_mask,
++		      IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_GATEWAY, ri, r, gateway, IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_IPV6_AUTOCFG, ri, r, ipv6_autocfg,
++		      IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_LINKLOCAL_AUTOCFG, ri, r, linklocal_autocfg,
++		      IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_ROUTER_AUTOCFG, ri, r, router_autocfg,
++		      IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_LINKLOCAL, ri, r, ipv6_linklocal,
++		      IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_ROUTER, ri, r, ipv6_router, IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_STATE, ri, r, state, IDBM_SHOW, num, 1);
++	__recinfo_str(IFACE_VLAN, ri, r, vlan, IDBM_SHOW, num, 1);
++	__recinfo_int(IFACE_NUM, ri, r, iface_num, IDBM_SHOW, num, 1);
  }
  
--static uint8_t
-+uint8_t
- qla4xxx_get_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
- 		 uint32_t *mbox_sts, dma_addr_t init_fw_cb_dma)
- {
-@@ -377,7 +377,7 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ recinfo_t *idbm_recinfo_alloc(int max_keys)
+diff --git a/usr/idbm_fields.h b/usr/idbm_fields.h
+index eaa55d1..33019bb 100644
+--- a/usr/idbm_fields.h
++++ b/usr/idbm_fields.h
+@@ -76,6 +76,13 @@
+ #define IFACE_PRIMARY_DNS	"iface.primary_dns"
+ #define IFACE_SEC_DNS		"iface.secondary_dns"
+ #define IFACE_VLAN		"iface.vlan"
++#define	IFACE_LINKLOCAL		"iface.ipv6_linklocal"
++#define	IFACE_ROUTER		"iface.ipv6_router"
++#define	IFACE_IPV6_AUTOCFG	"iface.ipv6_autocfg"
++#define	IFACE_LINKLOCAL_AUTOCFG	"iface.linklocal_autocfg"
++#define	IFACE_ROUTER_AUTOCFG	"iface.router_autocfg"
++#define	IFACE_STATE		"iface.state"
++#define	IFACE_NUM		"iface.iface_num"
+ 
+ /* discovery fields */
+ #define DISC_STARTUP		"discovery.startup"
+diff --git a/usr/iface.c b/usr/iface.c
+index b10a1d4..558267a 100644
+--- a/usr/iface.c
++++ b/usr/iface.c
+@@ -26,6 +26,7 @@
+ #include <unistd.h>
+ #include <sys/types.h>
+ #include <sys/stat.h>
++#include <arpa/inet.h>
+ 
+ #include "log.h"
+ #include "list.h"
+@@ -898,3 +899,618 @@ fail:
  	}
+ 	return rc;
  }
- 
--static uint8_t
-+uint8_t
- qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
- 			  uint32_t *mbox_cmd,
- 			  uint32_t *mbox_sts,
-@@ -1194,3 +1194,118 @@ exit_send_tgts_no_free:
- 	return ret_val;
- }
- 
-+int qla4xxx_set_flash(struct scsi_qla_host *ha, dma_addr_t dma_addr,
-+		      uint32_t offset, uint32_t length, uint32_t options)
++
++struct iface_param_count {
++	struct iface_rec *primary;
++	int count;
++};
++
++/**
++ * __iface_get_param_count - Gets netconfig parameter count for given iface
++ * @data: iface_param_count structure
++ * @iface: iface to setup
++ */
++static int __iface_get_param_count(void *data, struct iface_rec *iface)
 +{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status = QLA_SUCCESS;
++	struct iface_param_count *iface_params = data;
++	int iptype = IFACE_TYPE_IPV4;
++	int count = 0;
 +
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
++	if (strcmp(iface_params->primary->hwaddress, iface->hwaddress))
++		return 0;
 +
-+	mbox_cmd[0] = MBOX_CMD_WRITE_FLASH;
-+	mbox_cmd[1] = LSDW(dma_addr);
-+	mbox_cmd[2] = MSDW(dma_addr);
-+	mbox_cmd[3] = offset;
-+	mbox_cmd[4] = length;
-+	mbox_cmd[5] = options;
++	if (iface_params->count > ISCSI_MAX_NET_PARAMS)
++		return iface_params->count;
 +
-+	status = qla4xxx_mailbox_command(ha, 6, 2, &mbox_cmd[0], &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_WRITE_FLASH "
-+				  "failed w/ status %04X, mbx1 %04X\n",
-+				  __func__, mbox_sts[0], mbox_sts[1]));
++	if (strcmp(iface->bootproto, "dhcp") && !strstr(iface->ipaddress, "."))
++		iptype = IFACE_TYPE_IPV6;
++
++	if (iptype == IFACE_TYPE_IPV4) {
++
++		if (strcmp(iface->state, "disable")) {
++			if (strstr(iface->bootproto, "dhcp"))
++				/* DHCP enabled */
++				count++;
++			else {
++				/* DHCP disabled */
++				count++;
++
++				if (strstr(iface->ipaddress, ".")) {
++					/* User configured IPv4 Address */
++					count++;
++
++					if (strstr(iface->subnet_mask, "."))
++						/* User configured Subnet */
++						count++;
++
++					if (strstr(iface->gateway, "."))
++						/* User configured Gateway */
++						count++;
++				} else
++					/*
++					 * IPv4 Address not valid, decrement
++					 * count of DHCP
++					 */
++					count--;
++			}
++
++			/*
++			 * If IPv4 configuration in iface file is valid,
++			 * enable state and other parameters (if any)
++			 */
++			if (count)
++				/* iface state */
++				count++;
++
++		} else
++			/* IPv4 is disabled, iface state */
++			count++;
++
++	} else if (iptype == IFACE_TYPE_IPV6) {
++
++		if (strcmp(iface->state, "disable")) {
++
++			/* IPv6 Address */
++			if (strstr(iface->ipv6_autocfg, "nd") ||
++			    strstr(iface->ipv6_autocfg, "dhcpv6"))
++				/* Autocfg enabled */
++				count++;
++			else {
++				/* Autocfg disabled */
++				count++;
++
++				if (strstr(iface->ipaddress, ":"))
++					/* User configured IPv6 Address */
++					count++;
++				else
++					/*
++					 * IPv6 Address not valid, decrement
++					 * count of IPv6 Autocfg
++					 */
++					count--;
++			}
++
++			/* IPv6 LinkLocal Address */
++			if (strstr(iface->linklocal_autocfg, "auto"))
++				/* Autocfg enabled */
++				count++;
++			else {
++				/* Autocfg disabled */
++				count++;
++
++				if (strstr(iface->ipv6_linklocal, ":"))
++					/* User configured LinkLocal Address */
++					count++;
++				else
++					/*
++					 * LinkLocal Address not valid,
++					 * decrement count of LinkLocal Autocfg
++					 */
++					count--;
++			}
++
++			/* IPv6 Router Address */
++			if (strstr(iface->router_autocfg, "auto"))
++				/* Autocfg enabled */
++				count++;
++			else {
++				/* Autocfg disabled */
++				count++;
++
++				if (strstr(iface->ipv6_router, ":"))
++					/* User configured Router Address */
++					count++;
++				else
++					/*
++					 * Router Address not valid,
++					 * decrement count of Router Autocfg
++					 */
++					count--;
++			}
++
++			/*
++			 * If IPv6 configuration in iface file is valid,
++			 * enable state and other parameters (if any)
++			 */
++			if (count)
++				/* iface state */
++				count++;
++		} else
++			/* IPv6 is disabled, iface state */
++			count++;
 +	}
-+	return status;
++
++	iface_params->count += count;
++	return 0;
 +}
 +
-+int qla4xxx_conn_close_sess_logout(struct scsi_qla_host *ha,
-+				   uint16_t fw_ddb_index,
-+				   uint16_t connection_id,
-+				   uint16_t option)
++/**
++ * iface_get_param_count - Gets netconfig parameter count from iface
++ * @iface: iface to setup
++ * @iface_all: Flag for number of ifaces to traverse (1 for all)
++ *
++ * Returns netconfig parameter count.
++ */
++int iface_get_param_count(struct iface_rec *iface, int iface_all)
 +{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status = QLA_SUCCESS;
++	int num_found = 0, rc;
++	struct iface_param_count iface_params;
 +
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
++	log_debug(8, "In iface_get_param_count\n");
 +
-+	mbox_cmd[0] = MBOX_CMD_CONN_CLOSE_SESS_LOGOUT;
-+	mbox_cmd[1] = fw_ddb_index;
-+	mbox_cmd[2] = connection_id;
-+	mbox_cmd[3] = option;
++	iface_params.primary = iface;
++	iface_params.count = 0;
 +
-+	status = qla4xxx_mailbox_command(ha, 4, 2, &mbox_cmd[0], &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_CONN_CLOSE "
-+				  "option %04x failed w/ status %04X %04X\n",
-+				  __func__, option, mbox_sts[0], mbox_sts[1]));
-+	}
-+	return status;
++	if (iface_all)
++		rc = iface_for_each_iface(&iface_params, 0, &num_found,
++					  __iface_get_param_count);
++	else
++		rc = __iface_get_param_count(&iface_params, iface);
++
++	log_debug(8, "iface_get_param_count: rc = %d, count = %d\n",
++		  rc, iface_params.count);
++	return iface_params.count;
 +}
 +
-+int qla4xxx_disable_acb(struct scsi_qla_host *ha)
++/* IPv4/IPv6 Network state: disable/enable */
++static inline int __iface_fill_net_state(struct iovec *iov,
++					 struct iface_rec *iface,
++					 uint32_t iface_type)
 +{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status = QLA_SUCCESS;
++	int len;
++	struct iscsi_net_param *net_param;
 +
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
++	len = sizeof(struct iscsi_net_param) + 1;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
 +
-+	mbox_cmd[0] = MBOX_CMD_DISABLE_ACB;
-+
-+	status = qla4xxx_mailbox_command(ha, 8, 5, &mbox_cmd[0], &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_DISABLE_ACB "
-+				  "failed w/ status %04X %04X %04X", __func__,
-+				  mbox_sts[0], mbox_sts[1], mbox_sts[2]));
-+	}
-+	return status;
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = ISCSI_NET_PARAM_IFACE_ENABLED;
++	net_param->iface_type = iface_type;
++	net_param->iface_num = iface->iface_num;
++	net_param->length = 1;
++	if (!strcmp(iface->state, "disable"))
++		net_param->value[0] = ISCSI_FALSE;
++	else /* Assume enabled */
++		net_param->value[0] = ISCSI_TRUE;
++	return 0;
 +}
 +
-+int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
-+		    uint32_t *mbox_sts, dma_addr_t acb_dma)
++/* IPv4 Bootproto: DHCP/static */
++static inline int __iface_fill_net_bootproto(struct iovec *iov,
++					     struct iface_rec *iface)
 +{
-+	int status = QLA_SUCCESS;
++	int len;
++	struct iscsi_net_param *net_param;
 +
-+	memset(mbox_cmd, 0, sizeof(mbox_cmd[0]) * MBOX_REG_COUNT);
-+	memset(mbox_sts, 0, sizeof(mbox_sts[0]) * MBOX_REG_COUNT);
-+	mbox_cmd[0] = MBOX_CMD_GET_ACB;
-+	mbox_cmd[1] = 0; /* Primary ACB */
-+	mbox_cmd[2] = LSDW(acb_dma);
-+	mbox_cmd[3] = MSDW(acb_dma);
-+	mbox_cmd[4] = sizeof(struct addr_ctrl_blk);
++	len = sizeof(struct iscsi_net_param) + 1;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
 +
-+	status = qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_GET_ACB "
-+				  "failed w/ status %04X\n", __func__,
-+				  mbox_sts[0]));
-+	}
-+	return status;
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = ISCSI_NET_PARAM_IPV4_BOOTPROTO;
++	net_param->iface_type = IFACE_TYPE_IPV4;
++	net_param->iface_num = iface->iface_num;
++	net_param->length = 1;
++	if (!strcmp(iface->bootproto, "dhcp"))
++		net_param->value[0] = ISCSI_BOOTPROTO_DHCP;
++	else
++		net_param->value[0] = ISCSI_BOOTPROTO_STATIC;
++	return 0;
 +}
 +
-+int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
-+		    uint32_t *mbox_sts, dma_addr_t acb_dma)
++/* IPv6 IPAddress Autocfg: nd/dhcpv6/disable */
++static inline int __iface_fill_net_autocfg(struct iovec *iov,
++					   struct iface_rec *iface)
 +{
-+	int status = QLA_SUCCESS;
++	int len;
++	struct iscsi_net_param *net_param;
 +
-+	memset(mbox_cmd, 0, sizeof(mbox_cmd[0]) * MBOX_REG_COUNT);
-+	memset(mbox_sts, 0, sizeof(mbox_sts[0]) * MBOX_REG_COUNT);
-+	mbox_cmd[0] = MBOX_CMD_SET_ACB;
-+	mbox_cmd[1] = 0; /* Primary ACB */
-+	mbox_cmd[2] = LSDW(acb_dma);
-+	mbox_cmd[3] = MSDW(acb_dma);
-+	mbox_cmd[4] = sizeof(struct addr_ctrl_blk);
++	len = sizeof(struct iscsi_net_param) + 1;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
 +
-+	status = qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_WARNING, ha,  "%s: MBOX_CMD_SET_ACB "
-+				  "failed w/ status %04X\n", __func__,
-+				  mbox_sts[0]));
-+	}
-+	return status;
-+}
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 230ba09..e9b669d 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -80,6 +80,8 @@ static int qla4xxx_sess_get_param(struct iscsi_cls_session *sess,
- 				  enum iscsi_param param, char *buf);
- static int qla4xxx_host_get_param(struct Scsi_Host *shost,
- 				  enum iscsi_host_param param, char *buf);
-+static int qla4xxx_set_net_config(struct Scsi_Host *shost, char *data,
-+				  int count);
- static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session);
- static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc);
- 
-@@ -141,6 +143,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
- 	.get_conn_param		= qla4xxx_conn_get_param,
- 	.get_session_param	= qla4xxx_sess_get_param,
- 	.get_host_param		= qla4xxx_host_get_param,
-+	.set_net_config		= qla4xxx_set_net_config,
- 	.session_recovery_timedout = qla4xxx_recovery_timedout,
- };
- 
-@@ -201,6 +204,305 @@ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
- 	return len;
- }
- 
-+static inline void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
-+				    struct iscsi_net_param *net_param,
-+				    struct addr_ctrl_blk *init_fw_cb)
-+{
-+	/*
-+	 * iface_num 0 is valid for IPv6 Addr, linklocal, router, autocfg.
-+	 * iface_num 1 is valid only for IPv6 Addr.
-+	 */
-+	switch (net_param->param_type) {
-+	case ISCSI_NET_PARAM_IPV6_ADDR:
-+		if (net_param->iface_num & 0x1)
-+			/* IPv6 Addr 1 */
-+			memcpy(init_fw_cb->ipv6_addr1, net_param->value,
-+			       sizeof(init_fw_cb->ipv6_addr1));
-+		else
-+			/* IPv6 Addr 0 */
-+			memcpy(init_fw_cb->ipv6_addr0, net_param->value,
-+			       sizeof(init_fw_cb->ipv6_addr0));
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_LINKLOCAL:
-+		if (net_param->iface_num & 0x1)
-+			break;
-+		memcpy(init_fw_cb->ipv6_if_id, &net_param->value[8],
-+		       sizeof(init_fw_cb->ipv6_if_id));
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_ROUTER:
-+		if (net_param->iface_num & 0x1)
-+			break;
-+		memcpy(init_fw_cb->ipv6_dflt_rtr_addr, net_param->value,
-+		       sizeof(init_fw_cb->ipv6_dflt_rtr_addr));
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG:
-+		/* Autocfg applies to even interface */
-+		if (net_param->iface_num & 0x1)
-+			break;
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG;
++	net_param->iface_type = IFACE_TYPE_IPV6;
++	net_param->length = 1;
 +
-+		if (net_param->value[0] == ISCSI_IPV6_AUTOCFG_DISABLE)
-+			init_fw_cb->ipv6_addtl_opts &=
-+				cpu_to_le16(
-+				  ~IPV6_ADDOPT_NEIGHBOR_DISCOVERY_ADDR_ENABLE);
-+		else if (net_param->value[0] == ISCSI_IPV6_AUTOCFG_ND_ENABLE)
-+			init_fw_cb->ipv6_addtl_opts |=
-+				cpu_to_le16(
-+				  IPV6_ADDOPT_NEIGHBOR_DISCOVERY_ADDR_ENABLE);
-+		else
-+			ql4_printk(KERN_ERR, ha, "Invalid autocfg setting for "
-+				   "IPv6 addr\n");
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG:
-+		/* Autocfg applies to even interface */
-+		if (net_param->iface_num & 0x1)
-+			break;
++	if (!strcmp(iface->ipv6_autocfg, "nd"))
++		net_param->value[0] = ISCSI_IPV6_AUTOCFG_ND_ENABLE;
++	else if (!strcmp(iface->ipv6_autocfg, "dhcpv6"))
++		net_param->value[0] = ISCSI_IPV6_AUTOCFG_DHCPV6_ENABLE;
++	else
++		net_param->value[0] = ISCSI_IPV6_AUTOCFG_DISABLE;
 +
-+		if (net_param->value[0] == ISCSI_IPV6_LINKLOCAL_AUTOCFG_ENABLE)
-+			init_fw_cb->ipv6_addtl_opts |= cpu_to_le16(
-+					IPV6_ADDOPT_AUTOCONFIG_LINK_LOCAL_ADDR);
-+		else if (net_param->value[0] ==
-+			 ISCSI_IPV6_LINKLOCAL_AUTOCFG_DISABLE)
-+			init_fw_cb->ipv6_addtl_opts &= cpu_to_le16(
-+				       ~IPV6_ADDOPT_AUTOCONFIG_LINK_LOCAL_ADDR);
-+		else
-+			ql4_printk(KERN_ERR, ha, "Invalid autocfg setting for "
-+				   "IPv6 linklocal addr\n");
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG:
-+		/* Autocfg applies to even interface */
-+		if (net_param->iface_num & 0x1)
-+			break;
-+
-+		if (net_param->value[0] == ISCSI_IPV6_ROUTER_AUTOCFG_ENABLE)
-+			memset(init_fw_cb->ipv6_dflt_rtr_addr, 0,
-+			       sizeof(init_fw_cb->ipv6_dflt_rtr_addr));
-+		break;
-+	case ISCSI_NET_PARAM_IFACE_ENABLED:
-+		if (net_param->value[0] == ISCSI_TRUE)
-+			init_fw_cb->ipv6_opts |=
-+				cpu_to_le16(IPV6_OPT_IPV6_PROTOCOL_ENABLE);
-+		else
-+			init_fw_cb->ipv6_opts &=
-+				cpu_to_le16(~IPV6_OPT_IPV6_PROTOCOL_ENABLE &
-+					    0xFFFF);
-+		break;
-+	case ISCSI_NET_PARAM_VLAN:
-+		if (net_param->length != sizeof(init_fw_cb->ipv6_vlan_tag))
-+			break;
-+		init_fw_cb->ipv6_vlan_tag = *(uint16_t *)net_param->value;
-+		break;
-+	default:
-+		ql4_printk(KERN_ERR, ha, "Unknown IPv6 param = %d\n",
-+			   net_param->param_type);
-+		break;
-+	}
++	return 0;
 +}
 +
-+static inline void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
-+				    struct iscsi_net_param *net_param,
-+				    struct addr_ctrl_blk *init_fw_cb)
++/* IPv6 LinkLocal Autocfg: enable/disable */
++static inline int __iface_fill_linklocal_autocfg(struct iovec *iov,
++						 struct iface_rec *iface)
 +{
-+	switch (net_param->param_type) {
++	int len;
++	struct iscsi_net_param *net_param;
++
++	len = sizeof(struct iscsi_net_param) + 1;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
++
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG;
++	net_param->iface_type = IFACE_TYPE_IPV6;
++	net_param->length = 1;
++
++	if (strstr(iface->linklocal_autocfg, "auto"))
++		net_param->value[0] = ISCSI_IPV6_LINKLOCAL_AUTOCFG_ENABLE;
++	else
++		net_param->value[0] = ISCSI_IPV6_LINKLOCAL_AUTOCFG_DISABLE;
++
++	return 0;
++}
++
++/* IPv6 Router Autocfg: enable/disable */
++static inline int __iface_fill_router_autocfg(struct iovec *iov,
++					      struct iface_rec *iface)
++{
++	int len;
++	struct iscsi_net_param *net_param;
++
++	len = sizeof(struct iscsi_net_param) + 1;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
++
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG;
++	net_param->iface_type = IFACE_TYPE_IPV6;
++	net_param->length = 1;
++
++	if (strstr(iface->router_autocfg, "auto"))
++		net_param->value[0] = ISCSI_IPV6_ROUTER_AUTOCFG_ENABLE;
++	else
++		net_param->value[0] = ISCSI_IPV6_ROUTER_AUTOCFG_DISABLE;
++
++	return 0;
++}
++
++/* IPv4 IPAddress/Subnet Mask/Gateway: 4 bytes */
++static inline int __iface_fill_net_ipv4_addr(struct iovec *iov,
++					     struct iface_rec *iface,
++					     uint32_t param_type)
++{
++	int rc = 1;
++	int len;
++	struct iscsi_net_param *net_param;
++
++	len = sizeof(struct iscsi_net_param) + 4;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
++
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = param_type;
++	net_param->iface_type = IFACE_TYPE_IPV4;
++	net_param->iface_num = iface->iface_num;
++	net_param->length = 4;
++
++	switch (param_type) {
 +	case ISCSI_NET_PARAM_IPV4_ADDR:
-+		memcpy(init_fw_cb->ipv4_addr, net_param->value,
-+		       sizeof(init_fw_cb->ipv4_addr));
++		rc = inet_pton(AF_INET, iface->ipaddress, net_param->value);
++		if (rc <= 0)
++			goto free;
 +		break;
 +	case ISCSI_NET_PARAM_IPV4_SUBNET:
-+		memcpy(init_fw_cb->ipv4_subnet,	net_param->value,
-+		       sizeof(init_fw_cb->ipv4_subnet));
++		rc = inet_pton(AF_INET, iface->subnet_mask, net_param->value);
++		if (rc <= 0)
++			goto free;
 +		break;
 +	case ISCSI_NET_PARAM_IPV4_GW:
-+		memcpy(init_fw_cb->ipv4_gw_addr, net_param->value,
-+		       sizeof(init_fw_cb->ipv4_gw_addr));
-+		break;
-+	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
-+		if (net_param->value[0] == ISCSI_BOOTPROTO_DHCP)
-+			init_fw_cb->ipv4_tcp_opts |=
-+					cpu_to_le16(TCPOPT_DHCP_ENABLE);
-+		else if (net_param->value[0] == ISCSI_BOOTPROTO_STATIC)
-+			init_fw_cb->ipv4_tcp_opts &=
-+					cpu_to_le16(~TCPOPT_DHCP_ENABLE);
-+		else
-+			ql4_printk(KERN_ERR, ha, "Invalid IPv4 bootproto\n");
-+		break;
-+	case ISCSI_NET_PARAM_IFACE_ENABLED:
-+		if (net_param->value[0] == ISCSI_TRUE)
-+			init_fw_cb->ipv4_ip_opts |=
-+				cpu_to_le16(IPOPT_IPv4_PROTOCOL_ENABLE);
-+		else
-+			init_fw_cb->ipv4_ip_opts &=
-+				cpu_to_le16(~IPOPT_IPv4_PROTOCOL_ENABLE &
-+					    0xFFFF);
-+		break;
-+	case ISCSI_NET_PARAM_VLAN:
-+		if (net_param->length != sizeof(init_fw_cb->ipv4_vlan_tag))
-+			break;
-+		init_fw_cb->ipv4_vlan_tag = *(uint16_t *)net_param->value;
++		rc = inet_pton(AF_INET, iface->gateway, net_param->value);
++		if (rc <= 0)
++			goto free;
 +		break;
 +	default:
-+		ql4_printk(KERN_ERR, ha, "Unknown IPv4 param = %d\n",
-+			   net_param->param_type);
++		goto free;
++	}
++
++	/* validate */
++	if (!net_param->value[0] && !net_param->value[1] &&
++	    !net_param->value[2] && !net_param->value[3])
++		goto free;
++
++	return 0;
++free:
++	free(iov->iov_base);
++	iov->iov_base = NULL;
++	iov->iov_len = 0;
++	return 1;
++}
++
++/* IPv6 IPAddress/LinkLocal/Router: 16 bytes */
++static inline int __iface_fill_net_ipv6_addr(struct iovec *iov,
++					     struct iface_rec *iface,
++					     uint32_t param_type)
++{
++	int rc;
++	int len;
++	struct iscsi_net_param *net_param;
++
++	len = sizeof(struct iscsi_net_param) + 16;
++	iov->iov_base = calloc(len, sizeof(char));
++	if (!(iov->iov_base))
++		return 1;
++
++	iov->iov_len = len;
++	net_param = (struct iscsi_net_param *)(iov->iov_base);
++	net_param->param_type = param_type;
++	net_param->iface_type = IFACE_TYPE_IPV6;
++	net_param->iface_num = iface->iface_num;
++	net_param->length = 16;
++
++	switch (param_type) {
++	case ISCSI_NET_PARAM_IPV6_ADDR:
++		rc = inet_pton(AF_INET6, iface->ipaddress, net_param->value);
++		if (rc <= 0)
++			goto free;
 +		break;
++	case ISCSI_NET_PARAM_IPV6_LINKLOCAL:
++		rc = inet_pton(AF_INET6, iface->ipv6_linklocal,
++		    net_param->value);
++		if (rc <= 0)
++			goto free;
++		break;
++	case ISCSI_NET_PARAM_IPV6_ROUTER:
++		rc = inet_pton(AF_INET6, iface->ipv6_router, net_param->value);
++		if (rc <= 0)
++			goto free;
++		break;
++	default:
++		goto free;
 +	}
++
++	return 0;
++free:
++	free(iov->iov_base);
++	iov->iov_base = NULL;
++	iov->iov_len = 0;
++	return 1;
 +}
 +
-+static void
-+qla4xxx_initcb_to_acb(struct addr_ctrl_blk *init_fw_cb)
++struct iface_net_config {
++	struct iface_rec *primary;
++	struct iovec *iovs;
++	int count;
++};
++
++static int __iface_build_net_config(void *data, struct iface_rec *iface)
 +{
-+	struct addr_ctrl_blk_def *acb;
-+	acb = (struct addr_ctrl_blk_def *)init_fw_cb;
-+	memset(acb->reserved1, 0, sizeof(acb->reserved1));
-+	memset(acb->reserved2, 0, sizeof(acb->reserved2));
-+	memset(acb->reserved3, 0, sizeof(acb->reserved3));
-+	memset(acb->reserved4, 0, sizeof(acb->reserved4));
-+	memset(acb->reserved5, 0, sizeof(acb->reserved5));
-+	memset(acb->reserved6, 0, sizeof(acb->reserved6));
-+	memset(acb->reserved7, 0, sizeof(acb->reserved7));
-+	memset(acb->reserved8, 0, sizeof(acb->reserved8));
-+	memset(acb->reserved9, 0, sizeof(acb->reserved9));
-+	memset(acb->reserved10, 0, sizeof(acb->reserved10));
-+	memset(acb->reserved11, 0, sizeof(acb->reserved11));
-+	memset(acb->reserved12, 0, sizeof(acb->reserved12));
-+	memset(acb->reserved13, 0, sizeof(acb->reserved13));
-+	memset(acb->reserved14, 0, sizeof(acb->reserved14));
-+	memset(acb->reserved15, 0, sizeof(acb->reserved15));
++	struct iface_net_config *net_config = data;
++	struct iovec *iov;
++	int iptype = IFACE_TYPE_IPV4;
++	int count = 0;
++
++	if (strcmp(net_config->primary->hwaddress, iface->hwaddress))
++		return 0;
++
++	if (net_config->count > ISCSI_MAX_NET_PARAMS)
++		return net_config->count;
++
++	if (strcmp(iface->bootproto, "dhcp") && !strstr(iface->ipaddress, "."))
++		iptype = IFACE_TYPE_IPV6;
++
++	/* start at 2, because 0 is for nlmsghdr and 1 for event */
++	iov = net_config->iovs + 2;
++
++	if (iptype == IFACE_TYPE_IPV4) {
++
++		if (strcmp(iface->state, "disable")) {
++			if (strstr(iface->bootproto, "dhcp")) {
++				if (__iface_fill_net_bootproto(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++			} else if (strstr(iface->ipaddress, ".")) {
++				if (__iface_fill_net_bootproto(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++				if (__iface_fill_net_ipv4_addr(
++				    &iov[net_config->count], iface,
++				    ISCSI_NET_PARAM_IPV4_ADDR) == 0) {
++					net_config->count++;
++					count++;
++				}
++				if (strstr(iface->subnet_mask, ".")) {
++					if (__iface_fill_net_ipv4_addr(
++					    &iov[net_config->count], iface,
++					    ISCSI_NET_PARAM_IPV4_SUBNET) == 0) {
++						net_config->count++;
++						count++;
++					}
++				}
++				if (strstr(iface->gateway, ".")) {
++					if (__iface_fill_net_ipv4_addr(
++					    &iov[net_config->count], iface,
++					    ISCSI_NET_PARAM_IPV4_GW) == 0) {
++						net_config->count++;
++						count++;
++					}
++				}
++			}
++
++			/*
++			 * If IPv4 configuration in iface file is valid,
++			 * fill state and other parameters (if any)
++			 */
++			if (count) {
++				if (__iface_fill_net_state(
++				    &iov[net_config->count], iface,
++				    IFACE_TYPE_IPV4) == 0) {
++					net_config->count++;
++					count++;
++				}
++			}
++		} else {
++			if (__iface_fill_net_state(&iov[net_config->count],
++			    iface, IFACE_TYPE_IPV4) == 0) {
++				net_config->count++;
++				count++;
++			}
++		}
++
++	} else if (iptype == IFACE_TYPE_IPV6) {
++
++		if (strcmp(iface->state, "disable")) {
++			/* For IPv6 Address */
++			if (strstr(iface->ipv6_autocfg, "nd") ||
++			    strstr(iface->ipv6_autocfg, "dhcpv6")) {
++				if (__iface_fill_net_autocfg(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++			} else if (strstr(iface->ipaddress, ":")) {
++				if (__iface_fill_net_autocfg(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++				/* User provided IPv6 Address */
++				if (__iface_fill_net_ipv6_addr(
++				    &iov[net_config->count],
++				    iface, ISCSI_NET_PARAM_IPV6_ADDR) == 0) {
++					net_config->count++;
++					count++;
++				}
++			}
++
++			/* For LinkLocal Address */
++			if (strstr(iface->linklocal_autocfg, "auto")) {
++				if (__iface_fill_linklocal_autocfg(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++			} else if (strstr(iface->ipv6_linklocal, ":")) {
++				if (__iface_fill_linklocal_autocfg(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++				/* User provided Link Local Address */
++				if (__iface_fill_net_ipv6_addr(
++				    &iov[net_config->count], iface,
++				    ISCSI_NET_PARAM_IPV6_LINKLOCAL) == 0) {
++					net_config->count++;
++					count++;
++				}
++			}
++
++			/* For Router Address */
++			if (strstr(iface->router_autocfg, "auto")) {
++				if (__iface_fill_router_autocfg(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++			} else if (strstr(iface->ipv6_router, ":")) {
++				if (__iface_fill_router_autocfg(
++				    &iov[net_config->count], iface) == 0) {
++					net_config->count++;
++					count++;
++				}
++				/* User provided Router Address */
++				if (__iface_fill_net_ipv6_addr(
++				    &iov[net_config->count], iface,
++				    ISCSI_NET_PARAM_IPV6_ROUTER) == 0) {
++					net_config->count++;
++					count++;
++				}
++			}
++
++			/*
++			 * If IPv6 configuration in iface file is valid,
++			 * fill state and other parameters
++			 */
++			if (count) {
++				if (__iface_fill_net_state(
++				    &iov[net_config->count], iface,
++				    IFACE_TYPE_IPV6) == 0) {
++					net_config->count++;
++					count++;
++				}
++			}
++		} else {
++			if (__iface_fill_net_state(&iov[net_config->count],
++			    iface, IFACE_TYPE_IPV6) == 0) {
++				net_config->count++;
++				count++;
++			}
++		}
++	}
++	return 0;
 +}
 +
++/**
++ * iface_build_net_config - Setup neconfig parameter buffers
++ * @iface: iface to setup
++ * @iface_all: Flag for number of ifaces to traverse (1 for all)
++ * @iovs: iovec buffer for netconfig parameters
++ *
++ * Returns total number of netconfig parameter buffers used.
++ */
++int iface_build_net_config(struct iface_rec *iface, int iface_all,
++			   struct iovec *iovs)
++{
++	int num_found = 0, rc;
++	struct iface_net_config net_config;
++
++	log_debug(8, "In iface_build_net_config\n");
++
++	net_config.primary = iface;
++	net_config.iovs = iovs;
++	net_config.count = 0;
++
++	if (iface_all)
++		rc = iface_for_each_iface(&net_config, 0, &num_found,
++					  __iface_build_net_config);
++	else
++		rc = __iface_build_net_config(&net_config, iface);
++
++	log_debug(8, "iface_build_net_config: rc = %d, count = %d\n",
++		  rc, net_config.count);
++	return net_config.count;
++}
+diff --git a/usr/iface.h b/usr/iface.h
+index 9f6d47e..3ba2a4e 100644
+--- a/usr/iface.h
++++ b/usr/iface.h
+@@ -54,6 +54,10 @@ extern int iface_setup_from_boot_context(struct iface_rec *iface,
+                                    struct boot_context *context);
+ extern int iface_create_ifaces_from_boot_contexts(struct list_head *ifaces,
+ 						  struct list_head *targets);
++extern int iface_get_param_count(struct iface_rec *iface_primary,
++				 int iface_all);
++extern int iface_build_net_config(struct iface_rec *iface_primary,
++				  int iface_all, struct iovec *iovs);
+ 
+ #define iface_fmt "[hw=%s,ip=%s,net_if=%s,iscsi_if=%s]"
+ #define iface_str(_iface) \
+diff --git a/usr/iscsi_ipc.h b/usr/iscsi_ipc.h
+index 93b4917..8df3cdc 100644
+--- a/usr/iscsi_ipc.h
++++ b/usr/iscsi_ipc.h
+@@ -129,6 +129,9 @@ struct iscsi_ipc {
+ 	int (*recv_pdu_begin) (struct iscsi_conn *conn);
+ 
+ 	int (*recv_pdu_end) (struct iscsi_conn *conn);
++
++	int (*set_net_config) (uint64_t transport_handle, uint32_t host_no,
++			       struct iovec *iovs, uint32_t param_count);
+ };
+ 
+ #endif /* ISCSI_IPC_H */
+diff --git a/usr/iscsiadm.c b/usr/iscsiadm.c
+index 3c8abd2..55b4a5a 100644
+--- a/usr/iscsiadm.c
++++ b/usr/iscsiadm.c
+@@ -49,6 +49,7 @@
+ #include "iscsid_req.h"
+ #include "isns-proto.h"
+ #include "iscsi_err.h"
++#include "iscsi_ipc.h"
+ 
+ static char program_name[] = "iscsiadm";
+ static char config_file[TARGET_NAME_MAXLEN];
+@@ -70,7 +71,9 @@ enum iscsiadm_op {
+ 	OP_DELETE		= 0x2,
+ 	OP_UPDATE		= 0x4,
+ 	OP_SHOW			= 0x8,
+-	OP_NONPERSISTENT	= 0x10
++	OP_NONPERSISTENT	= 0x10,
++	OP_APPLY		= 0x20,
++	OP_APPLY_ALL		= 0x40
+ };
+ 
+ static struct option const long_options[] =
+@@ -138,6 +141,10 @@ str_to_op(char *str)
+ 		op = OP_SHOW;
+ 	else if (!strcmp("nonpersistent", str))
+ 		op = OP_NONPERSISTENT;
++	else if (!strcmp("apply", str))
++		op = OP_APPLY;
++	else if (!strcmp("applyall", str))
++		op = OP_APPLY_ALL;
+ 	else
+ 		op = OP_NOOP;
+ 
+@@ -1091,6 +1098,97 @@ static void catch_sigint( int signo ) {
+ 	exit(1);
+ }
+ 
 +static int
-+qla4xxx_set_net_config(struct Scsi_Host *shost, char *data, int count)
++iface_apply_net_config(struct iface_rec *iface, int op)
 +{
-+	struct scsi_qla_host *ha = to_qla_host(shost);
-+	int rval = 0;
-+	struct iscsi_net_param *net_param = NULL;
-+	struct addr_ctrl_blk *init_fw_cb = NULL;
-+	dma_addr_t init_fw_cb_dma;
++	int rc = ISCSI_ERR;
++	uint32_t host_no;
++	int param_count;
++	int param_used;
++	int iface_all = 0;
++	int i;
++	struct iovec *iovs = NULL;
++	struct iovec *iov = NULL;
++	struct iscsi_transport *t = NULL;
++	int fd;
 +
-+	struct addr_ctrl_blk *acb = NULL;
-+	dma_addr_t acb_dma;
++	log_debug(8, "Calling iscsid, to apply net config for"
++	    "iface.name = %s\n", iface->name);
 +
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	uint32_t total_param_count;
-+	uint32_t length;
++	if (op == OP_APPLY_ALL)
++		iface_all = 1;
 +
-+	init_fw_cb = dma_alloc_coherent(&ha->pdev->dev,
-+					sizeof(struct addr_ctrl_blk),
-+					&init_fw_cb_dma, GFP_KERNEL);
-+	if (!init_fw_cb) {
-+		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc init_cb\n",
-+			   __func__);
-+		return -ENOMEM;
++	param_count = iface_get_param_count(iface, iface_all);
++	if (!param_count) {
++		log_error("Nothing to configure.");
++		return ISCSI_SUCCESS;
 +	}
 +
-+	acb = dma_alloc_coherent(&ha->pdev->dev, sizeof(struct addr_ctrl_blk),
-+				 &acb_dma, GFP_KERNEL);
-+	if (!acb) {
-+		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc acb\n",
-+			   __func__);
-+		rval = -ENOMEM;
-+		goto exit_init_fw_cb;
-+	}
-+	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
-+	memset(acb, 0, sizeof(struct addr_ctrl_blk));
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma)) {
-+		ql4_printk(KERN_ERR, ha, "%s: get ifcb failed\n", __func__);
-+		rval = -EIO;
-+		goto exit_init_fw_cb;
++	if (param_count > ISCSI_MAX_NET_PARAMS) {
++		log_error("Too many parameters.");
++		return ISCSI_ERR;
 +	}
 +
-+	total_param_count = count;
-+	net_param = (struct iscsi_net_param *)data;
++	/* +2 for event and nlmsghdr */
++	param_count += 2;
++	iovs = calloc((param_count * sizeof(struct iovec)),
++		       sizeof(char));
++	if (!iovs) {
++		log_error("Out of Memory.");
++		return ISCSI_ERR_NOMEM;
++	}
 +
-+	for ( ; total_param_count != 0; total_param_count--) {
-+		length = net_param->length;
++	/* param_used gives actual number of iovecs used for netconfig */
++	param_used = iface_build_net_config(iface, iface_all, iovs);
++	if (!param_used) {
++		log_error("Build netconfig failed.");
++		goto free_buf;
++	}
 +
-+		switch (net_param->iface_type) {
-+		case IFACE_TYPE_IPV4:
-+			switch (net_param->iface_num) {
-+			case 0:
-+				qla4xxx_set_ipv4(ha, net_param, init_fw_cb);
-+				break;
-+			default:
-+				/* Cannot have more than one IPv4 interface */
-+				ql4_printk(KERN_ERR, ha, "Invalid IPv4 iface "
-+					   "number = %d\n",
-+					   net_param->iface_num);
-+				break;
-+			}
-+			break;
-+		case IFACE_TYPE_IPV6:
-+			switch (net_param->iface_num) {
-+			case 0:
-+			case 1:
-+				qla4xxx_set_ipv6(ha, net_param, init_fw_cb);
-+				break;
-+			default:
-+				/* Cannot have more than two IPv6 interface */
-+				ql4_printk(KERN_ERR, ha, "Invalid IPv6 iface "
-+					   "number = %d\n",
-+					   net_param->iface_num);
-+				break;
-+			}
-+			break;
-+		default:
-+			ql4_printk(KERN_ERR, ha, "%s: Invalid iface type\n",
-+				   __func__);
++	if (param_used > ISCSI_MAX_NET_PARAMS) {
++		log_error("Too many parameters for build netconfig.");
++		goto free_buf;
++	}
++
++	t = iscsi_sysfs_get_transport_by_name(iface->transport_name);
++	if (!t) {
++		log_error("Can't find transport.");
++		goto free_buf;
++	}
++
++	host_no = iscsi_sysfs_get_host_no_from_hwinfo(iface, &rc);
++	if (host_no == -1) {
++		log_error("Can't find host_no.");
++		goto free_buf;
++	}
++	rc = ISCSI_ERR;
++
++	fd = ipc->ctldev_open();
++	if (fd < 0) {
++		log_error("Netlink open failed.");
++		goto free_buf;
++	}
++
++	rc = ipc->set_net_config(t->handle, host_no, iovs, param_count);
++	if (rc < 0)
++		log_error("Set net_config failed. errno=%d", errno);
++
++	ipc->ctldev_close();
++
++free_buf:
++	/* start at 2, because 0 is for nlmsghdr and 1 for event */
++	iov = iovs + 2;
++	for (i = 0; i < param_used; i++, iov++) {
++		if (iov->iov_base)
++			free(iov->iov_base);
++	}
++
++	free(iovs);
++	if (rc)
++		return ISCSI_ERR;
++	return ISCSI_SUCCESS;
++}
++
+ /* TODO: merge iter helpers and clean them up, so we can use them here */
+ static int exec_iface_op(int op, int do_show, int info_level,
+ 			 struct iface_rec *iface, char *name, char *value)
+@@ -1217,6 +1315,33 @@ update_fail:
+ 		log_error("Could not update iface %s: %s",
+ 			  iface->name, iscsi_err_to_str(rc));
+ 		break;
++	case OP_APPLY:
++	case OP_APPLY_ALL:
++		if (!iface) {
++			log_error("Apply requires iface.");
++			rc = ISCSI_ERR_INVAL;
 +			break;
 +		}
 +
-+		net_param = (struct iscsi_net_param *)((uint8_t *)net_param +
-+			    sizeof(struct iscsi_net_param) + length);
-+	}
++		rc = iface_conf_read(iface);
++		if (rc) {
++			log_error("Could not read iface %s (%d).",
++				  iface->name, rc);
++			break;
++		}
 +
-+	init_fw_cb->cookie = cpu_to_le32(0x11BEAD5A);
++		/*
++		 * For each iface where hwaddress match, start filling
++		 * buffer with iscsi_net_param
++		 */
++		rc = iface_apply_net_config(iface, op);
++		if (rc) {
++			log_error("Could not apply net_config: %s",
++				  iscsi_err_to_str(rc));
++			break;
++		}
++		printf("%s applied.\n", iface->name);
++		break;
+ 	default:
+ 		if (!iface || (iface && info_level > 0)) {
+ 			if (op == OP_NOOP || op == OP_SHOW)
+diff --git a/usr/netlink.c b/usr/netlink.c
+index 957fdb6..46b72a4 100644
+--- a/usr/netlink.c
++++ b/usr/netlink.c
+@@ -161,7 +161,6 @@ kwritev(enum iscsi_uevent_e type, struct iovec *iovp, int count)
+ 	int i, rc;
+ 	struct nlmsghdr *nlh;
+ 	struct msghdr msg;
+-	struct iovec iov;
+ 	int datalen = 0;
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+@@ -180,27 +179,25 @@ kwritev(enum iscsi_uevent_e type, struct iovec *iovp, int count)
+ 	}
+ 
+ 	nlh = nlm_sendbuf;
+-	memset(nlh, 0, NLMSG_SPACE(datalen));
++	memset(nlh, 0, NLMSG_SPACE(0));
+ 
+-	nlh->nlmsg_len = NLMSG_SPACE(datalen);
++	datalen = 0;
++	for (i = 1; i < count; i++)
++		datalen += iovp[i].iov_len;
 +
-+	rval = qla4xxx_set_flash(ha, init_fw_cb_dma, FLASH_SEGMENT_IFCB,
-+				 sizeof(struct addr_ctrl_blk),
-+				 FLASH_OPT_RMW_COMMIT);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_ERR, ha, "%s: set flash mbx failed\n",
-+			   __func__);
-+		rval = -EIO;
-+		goto exit_init_fw_cb;
-+	}
++	nlh->nlmsg_len = NLMSG_ALIGN(datalen);
+ 	nlh->nlmsg_pid = getpid();
+ 	nlh->nlmsg_flags = 0;
+ 	nlh->nlmsg_type = type;
+ 
+-	datalen = 0;
+-	for (i = 0; i < count; i++) {
+-		memcpy(NLMSG_DATA(nlh) + datalen, iovp[i].iov_base,
+-		       iovp[i].iov_len);
+-		datalen += iovp[i].iov_len;
+-	}
+-	iov.iov_base = (void*)nlh;
+-	iov.iov_len = nlh->nlmsg_len;
++	iovp[0].iov_base = (void *)nlh;
++	iovp[0].iov_len = sizeof(*nlh);
+ 
+ 	memset(&msg, 0, sizeof(msg));
+ 	msg.msg_name= (void*)&dest_addr;
+ 	msg.msg_namelen = sizeof(dest_addr);
+-	msg.msg_iov = &iov;
+-	msg.msg_iovlen = 1;
++	msg.msg_iov = iovp;
++	msg.msg_iovlen = count;
+ 
+ 	do {
+ 		/*
+@@ -261,19 +258,15 @@ kwritev(enum iscsi_uevent_e type, struct iovec *iovp, int count)
+  *        cleanup. (Dima)
+  */
+ static int
+-__kipc_call(void *iov_base, int iov_len)
++__kipc_call(struct iovec *iovp, int count)
+ {
+ 	int rc, iferr;
+-	struct iovec iov;
+-	struct iscsi_uevent *ev = iov_base;
++	struct iscsi_uevent *ev = iovp[1].iov_base;
+ 	enum iscsi_uevent_e type = ev->type;
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+-	iov.iov_base = iov_base;
+-	iov.iov_len = iov_len;
+-
+-	rc = kwritev(type, &iov, 1);
++	rc = kwritev(type, iovp, count);
+ 
+ 	do {
+ 		if ((rc = nlpayload_read(ctrl_fd, (void*)ev,
+@@ -333,6 +326,7 @@ ksendtargets(uint64_t transport_handle, uint32_t host_no, struct sockaddr *addr)
+ {
+ 	int rc, addrlen;
+ 	struct iscsi_uevent *ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -354,7 +348,9 @@ ksendtargets(uint64_t transport_handle, uint32_t host_no, struct sockaddr *addr)
+ 	}
+ 	memcpy(setparam_buf + sizeof(*ev), addr, addrlen);
+ 
+-	rc = __kipc_call(ev, sizeof(*ev) + addrlen);
++	iov[1].iov_base = ev;
++	iov[1].iov_len = sizeof(*ev) + addrlen;
++	rc = __kipc_call(iov, 2);
+ 	if (rc < 0) {
+ 		log_error("sendtargets failed rc%d\n", rc);
+ 		return rc;
+@@ -369,6 +365,7 @@ kcreate_session(uint64_t transport_handle, uint64_t ep_handle,
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -389,9 +386,11 @@ kcreate_session(uint64_t transport_handle, uint64_t ep_handle,
+ 		ev.u.c_bound_session.ep_handle = ep_handle;
+ 	}
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	*hostno = ev.r.c_session_ret.host_no;
+ 	*out_sid = ev.r.c_session_ret.sid;
+@@ -404,6 +403,7 @@ kdestroy_session(uint64_t transport_handle, uint32_t sid)
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -413,9 +413,11 @@ kdestroy_session(uint64_t transport_handle, uint32_t sid)
+ 	ev.transport_handle = transport_handle;
+ 	ev.u.d_session.sid = sid;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	return 0;
+ }
+@@ -425,6 +427,7 @@ kunbind_session(uint64_t transport_handle, uint32_t sid)
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -434,9 +437,11 @@ kunbind_session(uint64_t transport_handle, uint32_t sid)
+ 	ev.transport_handle = transport_handle;
+ 	ev.u.d_session.sid = sid;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	return 0;
+ }
+@@ -447,6 +452,7 @@ kcreate_conn(uint64_t transport_handle, uint32_t sid,
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -457,7 +463,10 @@ kcreate_conn(uint64_t transport_handle, uint32_t sid,
+ 	ev.u.c_conn.cid = cid;
+ 	ev.u.c_conn.sid = sid;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0) {
+ 		log_debug(7, "returned %d", rc);
+ 		return rc;
+ 	}
+@@ -474,6 +483,7 @@ kdestroy_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid)
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -484,9 +494,11 @@ kdestroy_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid)
+ 	ev.u.d_conn.sid = sid;
+ 	ev.u.d_conn.cid = cid;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	return 0;
+ }
+@@ -497,6 +509,7 @@ kbind_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -509,9 +522,11 @@ kbind_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	ev.u.b_conn.transport_eph = transport_eph;
+ 	ev.u.b_conn.is_leading = is_leading;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	*retcode = ev.r.retcode;
+ 
+@@ -559,7 +574,7 @@ ksend_pdu_end(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ {
+ 	int rc;
+ 	struct iscsi_uevent *ev;
+-	struct iovec iov;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -573,10 +588,11 @@ ksend_pdu_end(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 		exit(-EIO);
+ 	}
+ 
+-	iov.iov_base = xmitbuf;
+-	iov.iov_len = xmitlen;
++	iov[1].iov_base = xmitbuf;
++	iov[1].iov_len = xmitlen;
+ 
+-	if ((rc = __kipc_call(xmitbuf, xmitlen)) < 0)
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		goto err;
+ 	if (ev->r.retcode) {
+ 		*retcode = ev->r.retcode;
+@@ -606,6 +622,7 @@ kset_host_param(uint64_t transport_handle, uint32_t host_no,
+ 	struct iscsi_uevent *ev;
+ 	char *param_str;
+ 	int rc, len;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -632,9 +649,11 @@ kset_host_param(uint64_t transport_handle, uint32_t host_no,
+ 	}
+ 	ev->u.set_host_param.len = len = strlen(param_str) + 1;
+ 
+-	if ((rc = __kipc_call(ev, sizeof(*ev) + len)) < 0) {
++	iov[1].iov_base = ev;
++	iov[1].iov_len = sizeof(*ev) + len;
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	return 0;
+ }
+@@ -646,6 +665,7 @@ kset_param(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	struct iscsi_uevent *ev;
+ 	char *param_str;
+ 	int rc, len;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -673,9 +693,11 @@ kset_param(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	}
+ 	ev->u.set_param.len = len = strlen(param_str) + 1;
+ 
+-	if ((rc = __kipc_call(ev, sizeof(*ev) + len)) < 0) {
++	iov[1].iov_base = ev;
++	iov[1].iov_len = sizeof(*ev) + len;
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	return 0;
+ }
+@@ -685,6 +707,7 @@ kstop_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid, int flag)
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -696,9 +719,11 @@ kstop_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid, int flag)
+ 	ev.u.stop_conn.cid = cid;
+ 	ev.u.stop_conn.flag = flag;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	return 0;
+ }
+@@ -709,6 +734,7 @@ kstart_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -719,9 +745,11 @@ kstart_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	ev.u.start_conn.sid = sid;
+ 	ev.u.start_conn.cid = cid;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	*retcode = ev.r.retcode;
+ 	return 0;
+@@ -786,6 +814,7 @@ ktransport_ep_connect(iscsi_conn_t *conn, int non_blocking)
+ 	int rc, addrlen;
+ 	struct iscsi_uevent *ev;
+ 	struct sockaddr *dst_addr = (struct sockaddr *)&conn->saddr;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -813,7 +842,10 @@ ktransport_ep_connect(iscsi_conn_t *conn, int non_blocking)
+ 	}
+ 	memcpy(setparam_buf + sizeof(*ev), dst_addr, addrlen);
+ 
+-	if ((rc = __kipc_call(ev, sizeof(*ev) + addrlen)) < 0)
++	iov[1].iov_base = ev;
++	iov[1].iov_len = sizeof(*ev) + addrlen;
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+ 
+ 	if (!ev->r.ep_connect_ret.handle)
+@@ -831,6 +863,7 @@ ktransport_ep_poll(iscsi_conn_t *conn, int timeout_ms)
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -841,7 +874,10 @@ ktransport_ep_poll(iscsi_conn_t *conn, int timeout_ms)
+ 	ev.u.ep_poll.ep_handle  = conn->transport_ep_handle;
+ 	ev.u.ep_poll.timeout_ms = timeout_ms;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0)
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+ 
+ 	return ev.r.retcode;
+@@ -852,6 +888,7 @@ ktransport_ep_disconnect(iscsi_conn_t *conn)
+ {
+ 	int rc;
+ 	struct iscsi_uevent ev;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -864,7 +901,10 @@ ktransport_ep_disconnect(iscsi_conn_t *conn)
+ 	ev.transport_handle = conn->session->t->handle;
+ 	ev.u.ep_disconnect.ep_handle = conn->transport_ep_handle;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0) {
+ 		log_error("connnection %d:%d transport disconnect failed for "
+ 			  "ep %" PRIu64 " with error %d.", conn->session->id,
+ 			  conn->id, conn->transport_ep_handle, rc);
+@@ -881,6 +921,7 @@ kget_stats(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	struct iscsi_uevent ev;
+ 	char nlm_ev[NLMSG_SPACE(sizeof(struct iscsi_uevent))];
+ 	struct nlmsghdr *nlh;
++	struct iovec iov[2];
+ 
+ 	log_debug(7, "in %s", __FUNCTION__);
+ 
+@@ -891,9 +932,11 @@ kget_stats(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	ev.u.get_stats.sid = sid;
+ 	ev.u.get_stats.cid = cid;
+ 
+-	if ((rc = __kipc_call(&ev, sizeof(ev))) < 0) {
++	iov[1].iov_base = &ev;
++	iov[1].iov_len = sizeof(ev);
++	rc = __kipc_call(iov, 2);
++	if (rc < 0)
+ 		return rc;
+-	}
+ 
+ 	if ((rc = nl_read(ctrl_fd, nlm_ev,
+ 		NLMSG_SPACE(sizeof(struct iscsi_uevent)), MSG_PEEK)) < 0) {
+@@ -919,6 +962,32 @@ kget_stats(uint64_t transport_handle, uint32_t sid, uint32_t cid,
+ 	return 0;
+ }
+ 
++static int
++kset_net_config(uint64_t transport_handle, uint32_t host_no,
++		struct iovec *iovs, uint32_t param_count)
++{
++	struct iscsi_uevent ev;
++	int rc, ev_len;
++	struct iovec *iov = iovs + 1;
 +
-+	qla4xxx_disable_acb(ha);
++	log_debug(8, "in %s", __FUNCTION__);
 +
-+	/* Get ACB to check the state of IP address */
-+	rval = qla4xxx_get_acb(ha, &mbox_cmd[0], &mbox_sts[0], acb_dma);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_ERR, ha, "%s: get acb mbx failed\n",
-+			   __func__);
-+		rval = -EIO;
-+		goto exit_acb;
-+	}
++	ev_len = sizeof(ev);
++	ev.type = ISCSI_UEVENT_SET_NET_CONFIG;
++	ev.transport_handle = transport_handle;
++	ev.u.set_net_config.host_no = host_no;
++	/* first two iovs for nlmsg hdr and ev */
++	ev.u.set_net_config.count = param_count - 2;
 +
-+	qla4xxx_initcb_to_acb(init_fw_cb);
-+	rval = qla4xxx_set_acb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_ERR, ha, "%s: set acb mbx failed\n",
-+			   __func__);
-+		rval = -EIO;
-+		goto exit_acb;
-+	}
++	iov->iov_base = &ev;
++	iov->iov_len = ev_len;
++	rc = __kipc_call(iovs, param_count);
++	if (rc < 0)
++		return rc;
 +
-+	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
-+	qla4xxx_update_local_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb,
-+				  init_fw_cb_dma);
-+
-+exit_acb:
-+	dma_free_coherent(&ha->pdev->dev, sizeof(struct addr_ctrl_blk),
-+			  acb, acb_dma);
-+exit_init_fw_cb:
-+	dma_free_coherent(&ha->pdev->dev, sizeof(struct addr_ctrl_blk),
-+			  init_fw_cb, init_fw_cb_dma);
-+
-+	return rval;
++	return 0;
 +}
 +
- static int qla4xxx_sess_get_param(struct iscsi_cls_session *sess,
- 				  enum iscsi_param param, char *buf)
+ static void drop_data(struct nlmsghdr *nlh)
  {
+ 	int ev_size;
+@@ -1163,6 +1232,7 @@ struct iscsi_ipc nl_ipc = {
+ 	.read			= kread,
+ 	.recv_pdu_begin         = krecv_pdu_begin,
+ 	.recv_pdu_end           = krecv_pdu_end,
++	.set_net_config         = kset_net_config,
+ };
+ struct iscsi_ipc *ipc = &nl_ipc;
+ 
 -- 
-1.7.3.2
+1.7.1
 
