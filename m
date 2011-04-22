@@ -1,47 +1,147 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC v2] block integrity: Stabilize(?) pages during writeback
-Date: Fri, 22 Apr 2011 22:34:34 +0200
-Message-ID: <20110422203434.GA2977@quack.suse.cz>
-References: <20110406232938.GF1110@tux1.beaverton.ibm.com>
- <20110407165700.GB7363@quack.suse.cz>
- <20110408203135.GH1110@tux1.beaverton.ibm.com>
- <20110411124229.47bc28f6@corrin.poochiereds.net>
- <1302543595-sup-4352@think>
- <1302569212.2580.13.camel@mingming-laptop>
- <20110412005719.GA23077@infradead.org>
- <1302742128.2586.274.camel@mingming-laptop>
- <20110422000226.GA22189@tux1.beaverton.ibm.com>
- <1303476503-sup-4141@think>
+From: "werner" <w.landgraf@ru.ru>
+Subject: Re: 2.6.39-rc3-git3 problem etc , reset-resistent problem
+Date: Fri, 22 Apr 2011 16:44:09 -0400
+Message-ID: <web-511195706@zbackend1.aha.ru>
+References: <web-506519881@zbackend1.aha.ru>
+ <20110422183525.GE21902@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1303476503-sup-4141@think>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>
-Cc: djwong <djwong@us.ibm.com>, Mingming Cao <cmm@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"; format="flowed"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from zfrontend1.aha.ru ([195.2.83.147]:58450 "EHLO aha.ru"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751984Ab1DVUoP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Apr 2011 16:44:15 -0400
+In-Reply-To: <20110422183525.GE21902@mtj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, axboe@kernel.dk, James.Bottomley@HansenPartnership.com, mingo@elte.hu, Andrew Morton <akpm@linux-foundation.org>, gregkh@suse.de, randy.dunlap@oracle.coml
 
-On Fri 22-04-11 08:50:01, Chris Mason wrote:
-> Excerpts from Darrick J. Wong's message of 2011-04-21 20:02:26 -0400:
-> > Hi everyone,
-> > 
-> > I've finally managed to get together a patch that seems to provide stable pages
-> > during writeback, or at least gets us to the point that after several days of
-> > running tests I don't see DIF checksum errors anymore. :)
-> > 
-> > The last two pieces to go into this puzzle were (a) bio_integrity_prep needs to
-> > walk the process tree to find all userland ptes that map to a particular memory
-> > page and revoke write access, and
+With reboot-resistent  i mean, that this is a problem 
+which, after the 1st crash, something is changed on the 
+system so that also on subsequent reboots it crashs 
+quickly, and this change don't go away.    Only if it is 
+explicitely deleted.   This can be, for example, by 
+changes of temporary files which are corrupted and stay 
+corrupted and like this after reboot are used, or if there 
+stay resident parts in the memory (perhaps by the battery 
+current).
+
+This problem is seldom, but right now it's happening, with 
+a serie of the reported errors.
+
+This problem continues also on 2.6.39-rc4-git4.
+
+
+The computer crashs, tipically 1 min. (at 2.6.39-rc1) or 
+later, 20 -60 min. after the boot.  This happens mainly, 
+if you bunzip2 or copy a big file.   I think this have 
+something to do with the memory administration, perhaps 
+with paging.
+
+When you reboot after such a 1st crash, then the computer 
+crashs quickly at the beginning of the boot process, when 
+it's init ata1.0.0.  From this, my most fotos are. It 
+looks, that the computer try to assign anything to ata1. 
+  What, that's changing often. Sometimes it's the grafic 
+card, if before the crash I was in grafic mode.
+
+If you then reboot again, even 10 times, then the same 
+happens.  It crashs again at the ata1 stage, or short 
+after.  Even if I use the reboot button, or switch off the 
+computer completely.   Thus, something is changed by the 
+1st crash, and stays changed even after re-booting or 
+power-off.
+
+This stops only, if I wait 5 minutes or more (what 
+suggests that the 1st crash let something memory-resident 
+what causes the next crashs).   Or, if I boot with a 
+stable kernel (2.6.38.3) which don't crash.      Then, 
+2.6.39-rcX don't crash again at the ata1 stage, but later 
+just like the 1st time (currently, if I unzip or copy a 
+big file), however after this, subsequently it crashs 
+again at the ata1 state, i.e. the same problem repeats.
+
+I have no other tools, the only what I can do is, to make 
+screen fotos.
+
+Also, I imediately compile all new -git's  .  Thus, it's 
+difficult to go back, to reproduce / repeat an error.  But 
+I'll try to make more fotos.
+
+BUT THE KERNEL PEOPLE FINALLY SHOULD INCLUDE, THAT DMESG 
+AT EACH BOOT GET ANOTHER SUFFIX, OR THE OLD DMESG GET A 
+COPY dmesg.old, SO THAT AFTER A CRASH ONE CAN READ DMESG 
+WITHOUT IT WAS OVERWROTEN !!!!!!
+
+In a separate mail, I'll send two more screen shots of 
+crashs.
+
+W.Landgraf
+
+
+
+
+
+===============================================================
+On Fri, 22 Apr 2011 20:35:25 +0200
+  Tejun Heo <tj@kernel.org> wrote:
+> Hello, werner.
 > 
-> Hmm, did you need the bio_integrity_prep change for all the filesystems?
-> This should be happening already as part of using page_mkwrite.
-  Or more precisely page_mkclean() should do what you try to do in
-bio_integrity_prep()... It would certainly be interesting (bug) if you
-could write to the page after calling page_mkclean() without page_mkwrite()
-being called.
+> On Sun, Apr 17, 2011 at 02:38:58AM -0400, werner wrote:
+>> Enclosed pls find a screen foto of another crash with 
+>>this
+>> reset-resistent problem.
+> 
+> What do you mean by reset-resistant?
+> 
+>> As said, after patching blk and scsi in 2.6.39-rc3-git4 
+>>as someone
+>> suggested me to try out, happened crashs short  or 
+>>longer time after
+>> booting, which caused a rather early crash during 
+>>subsequent boots,
+>> which don't go away  even after re-set or power-off, and 
+>>occurs
+>> again and again with 2.6.39-rcX  .  This goes away only 
+>>if I boot
+>> with 2.6.38.2 or .3 ; in this case, if after this I boot 
+>>again with
+>> 2.6.39-rc3-git4+patches, then repeats the same, i.e. the 
+>>first time
+>> it crashs only after the end of booting, but 
+>>subsequently again in
+>> the early stage.
+>> 
+>> I think this is a khugepaged problem, or that the 
+>>computer wrongly
+>> interpretes the video card or anything else as an scsi 
+>>or blk
+>> device.  At least subjectively, the sticking after 
+>>booting is very
+>> similar to the khugepaged problem which I reclaimed 
+>>during
+>> 2.6.38-rc1 (or was it .37-rc1 ), and which then was 
+>>corrected, but
+>> perhaps it wasn't corrected really and now comes back.
+> 
+> Unfortunately, I can't really make much sense of your 
+>report and the
+> screenshot seems already deep into multiple failures 
+>making it very
+> difficult to tell what initiated the whole situation. 
+> As Jens
+> requested before, can you please setup serial or 
+>netconsole and try to
+> capture the full kernel log from boot to crash?
+> 
+> Thank you.
+> 
+> -- 
+> tejun
+> 
+> 
 
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+"werner" <w.landgraf@ru.ru>
+---
+Professional hosting for everyone - http://www.host.ru
