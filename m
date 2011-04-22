@@ -1,56 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: 2.6.39-rc3-git3 problem etc , reset-resistent problem
-Date: Fri, 22 Apr 2011 20:35:25 +0200
-Message-ID: <20110422183525.GE21902@mtj.dyndns.org>
-References: <web-506519881@zbackend1.aha.ru>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [RFC v2] block integrity: Stabilize(?) pages during writeback
+Date: Fri, 22 Apr 2011 22:34:34 +0200
+Message-ID: <20110422203434.GA2977@quack.suse.cz>
+References: <20110406232938.GF1110@tux1.beaverton.ibm.com>
+ <20110407165700.GB7363@quack.suse.cz>
+ <20110408203135.GH1110@tux1.beaverton.ibm.com>
+ <20110411124229.47bc28f6@corrin.poochiereds.net>
+ <1302543595-sup-4352@think>
+ <1302569212.2580.13.camel@mingming-laptop>
+ <20110412005719.GA23077@infradead.org>
+ <1302742128.2586.274.camel@mingming-laptop>
+ <20110422000226.GA22189@tux1.beaverton.ibm.com>
+ <1303476503-sup-4141@think>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:44721 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177Ab1DVSfb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Apr 2011 14:35:31 -0400
-Received: by eyx24 with SMTP id 24so244434eyx.19
-        for <linux-scsi@vger.kernel.org>; Fri, 22 Apr 2011 11:35:30 -0700 (PDT)
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <web-506519881@zbackend1.aha.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1303476503-sup-4141@think>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: djwong <djwong@us.ibm.com>, Mingming Cao <cmm@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: werner <w.landgraf@ru.ru>
-Cc: axboe@kernel.dk, James.Bottomley@HansenPartnership.com, mingo@elte.hu, Andrew Morton <akpm@linux-foundation.org>, gregkh@suse.de, randy.dunlap@oracle.com, linux-scsi@vger.kernel.org
 
-Hello, werner.
-
-On Sun, Apr 17, 2011 at 02:38:58AM -0400, werner wrote:
-> Enclosed pls find a screen foto of another crash with this
-> reset-resistent problem.
-
-What do you mean by reset-resistant?
-
-> As said, after patching blk and scsi in 2.6.39-rc3-git4 as someone
-> suggested me to try out, happened crashs short  or longer time after
-> booting, which caused a rather early crash during subsequent boots,
-> which don't go away  even after re-set or power-off, and occurs
-> again and again with 2.6.39-rcX  .  This goes away only if I boot
-> with 2.6.38.2 or .3 ; in this case, if after this I boot again with
-> 2.6.39-rc3-git4+patches, then repeats the same, i.e. the first time
-> it crashs only after the end of booting, but subsequently again in
-> the early stage.
+On Fri 22-04-11 08:50:01, Chris Mason wrote:
+> Excerpts from Darrick J. Wong's message of 2011-04-21 20:02:26 -0400:
+> > Hi everyone,
+> > 
+> > I've finally managed to get together a patch that seems to provide stable pages
+> > during writeback, or at least gets us to the point that after several days of
+> > running tests I don't see DIF checksum errors anymore. :)
+> > 
+> > The last two pieces to go into this puzzle were (a) bio_integrity_prep needs to
+> > walk the process tree to find all userland ptes that map to a particular memory
+> > page and revoke write access, and
 > 
-> I think this is a khugepaged problem, or that the computer wrongly
-> interpretes the video card or anything else as an scsi or blk
-> device.  At least subjectively, the sticking after booting is very
-> similar to the khugepaged problem which I reclaimed during
-> 2.6.38-rc1 (or was it .37-rc1 ), and which then was corrected, but
-> perhaps it wasn't corrected really and now comes back.
+> Hmm, did you need the bio_integrity_prep change for all the filesystems?
+> This should be happening already as part of using page_mkwrite.
+  Or more precisely page_mkclean() should do what you try to do in
+bio_integrity_prep()... It would certainly be interesting (bug) if you
+could write to the page after calling page_mkclean() without page_mkwrite()
+being called.
 
-Unfortunately, I can't really make much sense of your report and the
-screenshot seems already deep into multiple failures making it very
-difficult to tell what initiated the whole situation.  As Jens
-requested before, can you please setup serial or netconsole and try to
-capture the full kernel log from boot to crash?
-
-Thank you.
-
+									Honza
 -- 
-tejun
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
