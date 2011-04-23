@@ -1,16 +1,16 @@
 From: "WESTERN UNION OFFICE" <info@western.com>
 Subject: (unknown)
-Date: Sat, 23 Apr 2011 16:01:09 -0500 (ECT)
-Message-ID: <53865.41.71.150.177.1303592469.squirrel__19736.9043170058$1303593885$gmane$org@www.ecorae.gov.ec>
+Date: Sat, 23 Apr 2011 17:03:03 -0500 (ECT)
+Message-ID: <55195.41.71.150.177.1303596183.squirrel@www.ecorae.gov.ec>
 Reply-To: western-money71@hotmail.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.ecorae.gob.ec ([174.142.111.34]:58447 "EHLO
+Received: from www.ecorae.gob.ec ([174.142.111.34]:45840 "EHLO
 	server.ecorae.org.ec" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755541Ab1DWVYI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2011 17:24:08 -0400
+	with ESMTP id S1757268Ab1DWWHs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2011 18:07:48 -0400
 Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
