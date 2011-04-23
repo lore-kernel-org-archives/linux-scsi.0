@@ -1,61 +1,38 @@
-From: "WESTERN UNION OFFICE" <info@western.com>
-Subject: (unknown)
-Date: Sat, 23 Apr 2011 17:03:16 -0500 (ECT)
-Message-ID: <55193.41.71.150.177.1303596196.squirrel@www.ecorae.gov.ec>
-Reply-To: western-money71@hotmail.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/5] iscsi_transport: show network configuration in sysfs
+Date: Sat, 23 Apr 2011 17:40:11 -0500
+Message-ID: <4DB3554B.4080505@cs.wisc.edu>
+References: <1303495666-731-1-git-send-email-vikas.chaudhary@qlogic.com> <1303495666-731-5-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.ecorae.gob.ec ([174.142.111.34]:47401 "EHLO
-	server.ecorae.org.ec" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757290Ab1DWWVH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2011 18:21:07 -0400
-Subject: 
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60969 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757277Ab1DWWkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Apr 2011 18:40:24 -0400
+In-Reply-To: <1303495666-731-5-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-How are you today?
+On 04/22/2011 01:07 PM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
+>
+> To support multiple network addresses per adapter need to have a new way to
+> represent network interface (net iface) in sysfs.
+>
 
+ From the previous posting's comments you did not handle or respond to 
+the comment about linking the sessions to the iface. Basically, I want 
+to know how for sessionX you know which iface is being used? For 
+example, users want to know the src ip address for the session.
 
-I write to inform you that we have already sent you $5,000.00USD
-through Western union as we have been given the mandate to transfer
-your full compensation payment of  $1.800,000.00USD via western union
-by this government.
+You could make a symlink from the session to the iface or make the iface 
+the parent of the session instead of the host then add symlinks to/from, 
+for compat with existing tools, the session/host.
 
-I called to give you the information through phone as internet hackers
-were many but i cannot reach you yesterday even this morning,So I
-decided to email you the (MTCN) and sender name so that you can pick
-up this $5,000.00USD to enable us send another $5,000.00USD by
-tomorrow as you knows we will be sending you only $5,000.00USD per
-day.Please pick up this information and run to any western union
-(OUTLET) in your country and pick up this $5,000.00USD and send us an
-email back,so that we can send another $5,000.00USD by tomorrow.
-
-Manager: Mr Frank Amos
-email me on:western-money71@hotmail.com
-call us on: +234-7031908911
-once you picked up this $5000.00USD today.
-
-Here is the western union information to pick up the $5000.00USD,
-
-MTCN : 602 155 4697
-Sender's Name: Mark Winters
-Question: Honest
-Answer:Trust
-Amount send: $5,000.00USD
-country:Nigeria
-
-I am waiting for your E-mail once you pick up $5000.00USD,
-
-Thanks
-Mr Frank Amos.
-
-
-
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
-
+We could do this in another patch, but I would then want to wait off on 
+sending this patch and the 5/5 to James so we do not have some kernels 
+with it and some without.
