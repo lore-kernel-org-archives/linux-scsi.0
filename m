@@ -1,34 +1,25 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] scsi/libfc: fix mm leak in handling incoming request for
- target discovery
-Date: Sun, 24 Apr 2011 10:47:33 +0800
-Message-ID: <BANLkTiniTy862jPL=e_FGcRtPO27r8xVEA@mail.gmail.com>
+From: "CONFIDENTIAL" <europaycen@hotmail.com>
+Subject: CONFIDENTIAL
+Date: Sun, 24 Apr 2011 21:32:11 +0000 (UTC)
+Message-ID: <20110424043623.5C4A8290F4F0__2107.54340882904$1303680731$gmane$org@mail.alsa.co.cr>
+Reply-To: <europaycen@hotmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:32870 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757491Ab1DXCre (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Apr 2011 22:47:34 -0400
+Received: from logistix.cr ([201.201.66.140]:1666 "EHLO mail.alsa.co.cr"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757793Ab1DXVb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Apr 2011 17:31:59 -0400
+Date: Thu, 12 May 2011 19:04:04 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: devel@open-fcoe.org
-Cc: Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-When handling incoming request, if the operation code carried by the
-received frame is not RSCN, the frame should be freed as in the RSCN
-case, or there is memory leakage.
+Acknowledge,
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
-
---- a/drivers/scsi/libfc/fc_disc.c	2011-03-30 03:09:48.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_disc.c	2011-04-24 10:36:14.000000000 +0800
-@@ -205,6 +205,7 @@ static void fc_disc_recv_req(struct fc_l
- 	default:
- 		FC_DISC_DBG(disc, "Received an unsupported request, "
- 			    "the opcode is (%x)\n", op);
-+		fc_frame_free(fp);
- 		break;
- 	}
- }
+An Iraqi made a fixed deposit of $6.5m usd in my bank branch (Hang Seng Bank,Hong Kong) where am a director and he died with his entire family in the war leaving behind no next of kin, I?m ready to share 50/50 with you if you choose to stand as my deceased client next of kin. If interested mail me at the address below: 
+tongwon@ibibo.com  or
+tongwonhk@ibibo.com
+Yours Truly,
+Tong Won.
