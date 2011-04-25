@@ -1,25 +1,55 @@
-From: "CONFIDENTIAL" <europaycen@hotmail.com>
-Subject: CONFIDENTIAL
-Date: Sun, 24 Apr 2011 21:32:11 +0000 (UTC)
-Message-ID: <20110424043623.5C4A8290F4F0__2107.54340882904$1303680731$gmane$org@mail.alsa.co.cr>
-Reply-To: <europaycen@hotmail.com>
+From: "Webmail Account Support Team" <helpdesk@webmaster.com>
+Subject: (unknown)
+Date: Mon, 25 Apr 2011 00:05:42 -0400 (EDT)
+Message-ID: <92425a4c29d2348c778c2df6601c5e59.squirrel@mail.parliament.go.tz>
+Reply-To: webmail.team@cyberservices.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from logistix.cr ([201.201.66.140]:1666 "EHLO mail.alsa.co.cr"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757793Ab1DXVb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Apr 2011 17:31:59 -0400
-Date: Thu, 12 May 2011 19:04:04 +0200
+Received: from 152.84-43-196.Admin.upanga.ttcldata.net ([196.43.84.152]:33145
+	"EHLO bunge.local.local" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750702Ab1DYEIa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Apr 2011 00:08:30 -0400
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Acknowledge,
 
-An Iraqi made a fixed deposit of $6.5m usd in my bank branch (Hang Seng Bank,Hong Kong) where am a director and he died with his entire family in the war leaving behind no next of kin, I?m ready to share 50/50 with you if you choose to stand as my deceased client next of kin. If interested mail me at the address below: 
-tongwon@ibibo.com  or
-tongwonhk@ibibo.com
-Yours Truly,
-Tong Won.
+
+
+Dear Webmail Subscriber,
+
+This is to notify you that we are presently working on our
+webmail User Accounts Owner for safety, We are having congestions due to
+the anonymous registration of accounts so we are shutting down some
+accounts that are no more active and your account might be deleted or
+suspended within 24 hours for security reasons if you do not respond to
+this mail.
+
+We are sending this email to you so that you can verify and let us
+know if you still want to use this account. If you are still interested
+please confirm your account by filling the space below.
+To complete your account verification, you must reply to this email
+immediately and enter your account details below.This will prevent
+your Webmailnaccount from been closed during this exercise.
+
+In order to confirm you Web-Mail identity, you are to provide and
+reply to this E-mail the following data.
+
+Username: (**************)
+Password: (**************)
+Confirm Password:(**************)
+Date Of Birth(************).
+
+Failure to do this will immediately render your account
+deactivated from our database.
+
+We apologise for the inconvenience that this will cause you during
+this period, but trust you understand that our primary concern is for our
+customers and for the security of their data.
+our customers are totally secure.
+Webmail Support Team.
+warning Code: ASPH8B02AXV
+
