@@ -1,18 +1,28 @@
-From: Chris Mason <chris.mason@oracle.com>
+From: Jan Kara <jack@suse.cz>
 Subject: Re: [RFC v2] block integrity: Stabilize(?) pages during writeback
-Date: Tue, 26 Apr 2011 07:33:18 -0400
-Message-ID: <1303817010-sup-351@think>
-References: <20110407165700.GB7363@quack.suse.cz> <20110408203135.GH1110@tux1.beaverton.ibm.com> <20110411124229.47bc28f6@corrin.poochiereds.net> <1302543595-sup-4352@think> <1302569212.2580.13.camel@mingming-laptop> <20110412005719.GA23077@infradead.org> <1302742128.2586.274.camel@mingming-laptop> <20110422000226.GA22189@tux1.beaverton.ibm.com> <1303476503-sup-4141@think> <20110422203434.GA2977@quack.suse.cz> <20110426003738.GB22189@tux1.beaverton.ibm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Date: Tue, 26 Apr 2011 13:37:32 +0200
+Message-ID: <20110426113732.GA5114@quack.suse.cz>
+References: <20110408203135.GH1110@tux1.beaverton.ibm.com>
+ <20110411124229.47bc28f6@corrin.poochiereds.net>
+ <1302543595-sup-4352@think>
+ <1302569212.2580.13.camel@mingming-laptop>
+ <20110412005719.GA23077@infradead.org>
+ <1302742128.2586.274.camel@mingming-laptop>
+ <20110422000226.GA22189@tux1.beaverton.ibm.com>
+ <1303476503-sup-4141@think>
+ <20110422203434.GA2977@quack.suse.cz>
+ <20110426003738.GB22189@tux1.beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <20110426003738.GB22189@tux1.beaverton.ibm.com>
+Content-Disposition: inline
+In-Reply-To: <20110426003738.GB22189@tux1.beaverton.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: djwong <djwong@us.ibm.com>
-Cc: Jan Kara <jack@suse.cz>, Mingming Cao <cmm@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jan Kara <jack@suse.cz>, Chris Mason <chris.mason@oracle.com>, Mingming Cao <cmm@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Excerpts from Darrick J. Wong's message of 2011-04-25 20:37:38 -0400:
+On Mon 25-04-11 17:37:38, Darrick J. Wong wrote:
 > On Fri, Apr 22, 2011 at 10:34:34PM +0200, Jan Kara wrote:
 > > On Fri 22-04-11 08:50:01, Chris Mason wrote:
 > > > Excerpts from Darrick J. Wong's message of 2011-04-21 20:02:26 -0400:
@@ -47,23 +57,25 @@ Excerpts from Darrick J. Wong's message of 2011-04-25 20:37:38 -0400:
 > of those two functions want to set the writeback bit themselves.  However,
 > ext4_bio_write_page tries to allocate memory with GFP_NOFS, which means it can
 > sleep (I think).
+  Yes, it can sleep. But the page remains locked until we set page as
+writeback in both cases.
 
-Sleeping isn't the problem as long as you sleep with the page locked.
-The idea is that writepage will:
+> Unfortunately, ext4_page_mkwrite will check for page locked, wait for
+> page writeback, and then return the page.  I think it is theoretically
+> possible for #1 to trigger a page_mkwrite which completes before #2b,
+> right?
+  I'm not sure I understand but once the page is locked by ext4_writepages()
+before #1, ext4_page_mkwrite() will block until it can get the page lock -
+which can happen only after set_page_writeback() in #2 is done. So then
+ext4_page_mkwrite() will block waiting for PageWriteback which gets cleared
+after the IO is finished... Or did you mean something else?
 
-1) lock the page
-2) clear_page_dirty_for_io (which calls page_mkclean)
-3) set_page_writeback()
-4) unlock the page
-5) start the IO
+> In which case the thread that called mkwrite will think that the
+> page isn't being written out, and happily scribble on it during
+> writeback.  I could be wrong, but it seems to me that one has to
+> write-protect the page after setting the writeback bit.
 
-page_mkwrite will:
-
-1) lock the page
-2) wait on page writeback
-3) do other stuff
-
-So if ext is calling set_page_writeback() on an unlocked page, that's a
-problem.  Otherwise it should be working.
-
--chris
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
