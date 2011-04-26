@@ -1,49 +1,50 @@
-From: Martin George <marting@netapp.com>
-Subject: [PATCH] [SCSI] scsi_dh_alua: Attach to UNAVAILABLE/OFFLINE AAS devices
-Date: Tue, 26 Apr 2011 18:27:05 +0530
-Message-ID: <201104261827.06024.marting@netapp.com>
+From: "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
+Subject: bfa (2.1.2.1) on 2.6.32.29-0.3-xen reports "Unknown" port_type
+Date: Tue, 26 Apr 2011 14:56:00 +0200
+Message-ID: <4DB6DD00020000A100005B96@gwsmtp1.uni-regensburg.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:13135 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755234Ab1DZM5r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Apr 2011 08:57:47 -0400
+Received: from rrzmta4.uni-regensburg.de ([194.94.155.55]:43874 "EHLO
+	rrzmta4.uni-regensburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754803Ab1DZNF6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Apr 2011 09:05:58 -0400
+Received: from rrzmta4.uni-regensburg.de (localhost [127.0.0.1])
+	by localhost (Postfix) with SMTP id 8597124EA
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2011 14:56:06 +0200 (CEST)
+Received: from gwsmtp1.uni-regensburg.de (gwsmtp1.uni-regensburg.de [132.199.5.51])
+	by rrzmta4.uni-regensburg.de (Postfix) with ESMTP id 6E18923B9
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Apr 2011 14:56:06 +0200 (CEST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
-The SCSI ALUA handler currently fails to attach to devices
-reporting an UNAVAILABLE/OFFLINE AAS. But given that an
-UNAVAILABLE/OFFLINE AAS can transition to other states
-like ACTIVE/OPTIMIZED, ACTIVE/NON-OPTIMIZED, etc. as per
-SPC4, this ALUA handler behavior should be rectified so
-as to attach to devices which also report an
-UNAVAILABLE/OFFLINE AAS.
+Hi!
 
-The below patch enables the same.
+This is for SLES11 SP1 with a Brocade-815 and bfa 2.1.2.1. The 8Gb HBA is attached to a 4Gb FC-Switch. The HBA is logged in to the fabric and SAN disks can be accessed just fine.
+Unfortunately the port_type reports "Unknown" instead of "NPort" (or similar). I don't know why.
 
-Signed-off-by: Martin George <marting@netapp.com>
----
- drivers/scsi/device_handler/scsi_dh_alua.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+# for f in /sys/class/scsi_host/host3/device/fc_host/host3/*; do [ -f $f ] && echo "$f: $(<$f)"; done
+/sys/class/scsi_host/host3/device/fc_host/host3/active_fc4s: 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+/sys/class/scsi_host/host3/device/fc_host/host3/fabric_name: 0x1000080088e35fbd
+/sys/class/scsi_host/host3/device/fc_host/host3/maxframe_size: 2112 bytes
+/sys/class/scsi_host/host3/device/fc_host/host3/node_name: 0x200000051efb3dc8
+/sys/class/scsi_host/host3/device/fc_host/host3/port_id: 0x661b13
+/sys/class/scsi_host/host3/device/fc_host/host3/port_name: 0x100000051efb3dc8
+/sys/class/scsi_host/host3/device/fc_host/host3/port_state: Online
+/sys/class/scsi_host/host3/device/fc_host/host3/port_type: Unknown
+/sys/class/scsi_host/host3/device/fc_host/host3/speed: 4 Gbit
+/sys/class/scsi_host/host3/device/fc_host/host3/supported_classes: Class 3
+/sys/class/scsi_host/host3/device/fc_host/host3/supported_fc4s: 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
+/sys/class/scsi_host/host3/device/fc_host/host3/supported_speeds: 1 Gbit, 2 Gbit, 4 Gbit, 8 Gbit
+/sys/class/scsi_host/host3/device/fc_host/host3/symbolic_name: Brocade Brocade-815 FV2.1.2.1   DV2.1.2.1
+/sys/class/scsi_host/host3/device/fc_host/host3/tgtid_bind_type: wwpn (World Wide Port Name)
+/sys/class/scsi_host/host3/device/fc_host/host3/uevent:
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 42fe529..6fec9fe 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -782,7 +782,7 @@ static int alua_bus_attach(struct scsi_device *sdev)
- 	h->sdev = sdev;
- 
- 	err = alua_initialize(sdev, h);
--	if (err != SCSI_DH_OK)
-+	if ((err != SCSI_DH_OK) && (err != SCSI_DH_DEV_OFFLINED))
- 		goto failed;
- 
- 	if (!try_module_get(THIS_MODULE))
--- 
-1.6.3.3
+
+Regards,
+Ulrich
+P.S. Please CC any replies to me as I'm not subscribed to the list
 
