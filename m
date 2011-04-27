@@ -1,56 +1,127 @@
-From: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
-Subject: [PATCH] ipr: Driver version 2.5.2
-Date: Wed, 27 Apr 2011 14:43:40 -0300
-Message-ID: <1303926220.10749.6.camel@dream>
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: [PATCH] scsi: iterate over devices individually for /proc/scsi/scsi
+Date: Wed, 27 Apr 2011 16:22:20 -0400
+Message-ID: <4DB87AFC.8010900@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:60721 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932102Ab1D0Rny (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Apr 2011 13:43:54 -0400
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with XMail ESMTP
-	for <linux-scsi@vger.kernel.org> from <klebers@linux.vnet.ibm.com>;
-	Wed, 27 Apr 2011 14:43:51 -0300
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by mailhub1.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p3RHinXW1019932
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2011 14:44:53 -0300
-Received: from d24av03.br.ibm.com (loopback [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p3RHhk8x000765
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2011 14:43:46 -0300
-Received: from [9.12.225.165] ([9.12.225.165])
-	by d24av03.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id p3RHhi7S000692
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2011 14:43:45 -0300
+Received: from cantor2.suse.de ([195.135.220.15]:41715 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751812Ab1D0UWY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Apr 2011 16:22:24 -0400
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	by mx2.suse.de (Postfix) with ESMTP id 7AA2786A2E
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Apr 2011 22:22:22 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Bump the driver version.
+ On systems with very large numbers (> 1600 or so) of SCSI devices,
+ cat /proc/scsi/scsi ends up failing with -ENOMEM. This is due to
+ the show routine simply iterating over all of the devices with
+ bus_for_each_dev(), and trying to dump all of them into the buffer
+ at the same time. On my test system (using scsi_debug with 4064 devices),
+ the output ends up being ~ 632k, far more than kmalloc will typically allow.
 
-Signed-off-by: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+ This patch defines its own seq_file opreations to iterate over the scsi
+ devices.The result is that each show() operation only dumps ~ 180 bytes
+ into the buffer at a time so we don't run out of memory.
+
+ If the "Attached devices" header isn't required, we can dump the
+ sfile->private bit completely.
+
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
 ---
- drivers/scsi/ipr.h |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
-index 4e9701e..f93f863 100644
---- a/drivers/scsi/ipr.h
-+++ b/drivers/scsi/ipr.h
-@@ -38,8 +38,8 @@
- /*
-  * Literals
+ drivers/scsi/scsi_proc.c |   58 ++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 52 insertions(+), 6 deletions(-)
+
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -386,13 +386,59 @@ static ssize_t proc_scsi_write(struct fi
+  * @s: output goes here
+  * @p: not used
   */
--#define IPR_DRIVER_VERSION "2.5.1"
--#define IPR_DRIVER_DATE "(August 10, 2010)"
-+#define IPR_DRIVER_VERSION "2.5.2"
-+#define IPR_DRIVER_DATE "(April 27, 2011)"
-
- /*
-  * IPR_MAX_CMD_PER_LUN: This defines the maximum number of outstanding
+-static int proc_scsi_show(struct seq_file *s, void *p)
++static int always_match(struct device *dev, void *data)
+ {
+-	seq_printf(s, "Attached devices:\n");
+-	bus_for_each_dev(&scsi_bus_type, NULL, s, proc_print_scsidevice);
+-	return 0;
++	return 1;
+ }
+ 
++static inline struct device *next_scsi_device(struct device *start)
++{
++	struct device *next = bus_find_device(&scsi_bus_type, start, NULL,
++					      always_match);
++	put_device(start);
++	return next;
++}
++
++static void *scsi_seq_start(struct seq_file *sfile, loff_t *pos)
++{
++	struct device *dev = NULL;
++	loff_t n = *pos;
++
++	while ((dev = next_scsi_device(dev))) {
++		if (!n--)
++			break;
++		sfile->private++;
++	}
++	return dev;
++}
++
++static void *scsi_seq_next(struct seq_file *sfile, void *v, loff_t *pos)
++{
++	(*pos)++;
++	sfile->private++;
++	return next_scsi_device(v);
++}
++
++static void scsi_seq_stop(struct seq_file *sfile, void *v)
++{
++	put_device(v);
++}
++
++static int scsi_seq_show(struct seq_file *sfile, void *dev)
++{
++	if (!sfile->private)
++		seq_puts(sfile, "Attached devices:\n");
++
++	return proc_print_scsidevice(dev, sfile);
++}
++
++static struct seq_operations scsi_seq_ops = {
++	.start	= scsi_seq_start,
++	.next	= scsi_seq_next,
++	.stop	= scsi_seq_stop,
++	.show	= scsi_seq_show
++};
++
+ /**
+  * proc_scsi_open - glue function
+  * @inode: not used
+@@ -406,7 +452,7 @@ static int proc_scsi_open(struct inode *
+ 	 * We don't really need this for the write case but it doesn't
+ 	 * harm either.
+ 	 */
+-	return single_open(file, proc_scsi_show, NULL);
++	return seq_open(file, &scsi_seq_ops);
+ }
+ 
+ static const struct file_operations proc_scsi_operations = {
+@@ -415,7 +461,7 @@ static const struct file_operations proc
+ 	.read		= seq_read,
+ 	.write		= proc_scsi_write,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= seq_release,
+ };
+ 
+ /**
 -- 
-1.7.1
-
-
-
+Jeff Mahoney
+SUSE Labs
