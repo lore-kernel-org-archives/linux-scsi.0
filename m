@@ -1,99 +1,35 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: [PATCH] bnx2fc: setup em for npiv port
-Date: Thu, 28 Apr 2011 15:18:45 -0700
-Message-ID: <1304029125.10064.36.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+Date: Thu, 28 Apr 2011 17:25:35 -0500
+Message-ID: <1304029536.2598.41.camel@mulgrave.site>
 References: <20110315231329.13280.54456.stgit@vifc.jf.intel.com>
+	 <1304029125.10064.36.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1580 "EHLO mms2.broadcom.com"
+Received: from cantor.suse.de ([195.135.220.2]:44796 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932154Ab1D1WS7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Apr 2011 18:18:59 -0400
-In-Reply-To: <20110315231329.13280.54456.stgit@vifc.jf.intel.com>
+	id S932154Ab1D1WZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Apr 2011 18:25:43 -0400
+In-Reply-To: <1304029125.10064.36.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
+To: Bhanu Gollapudi <bprakash@broadcom.com>
 Cc: Vasu Dev <vasu.dev@intel.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2011-03-15 at 16:13 -0700, Vasu Dev wrote: 
-> Use fc_exch_mgr_list_clone to setup em for npiv port.
+On Thu, 2011-04-28 at 15:18 -0700, Bhanu Gollapudi wrote:
+> On Tue, 2011-03-15 at 16:13 -0700, Vasu Dev wrote: 
+> > Use fc_exch_mgr_list_clone to setup em for npiv port.
+> > 
+> > Also remove redundant vport and lport initializations.
+> > 
+> > Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 > 
-> Also remove redundant vport and lport initializations.
-> 
-> Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+> Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Acked-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-> ---
-> 
->  drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   29 +++++++++++++++--------------
->  1 files changed, 15 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index e476e87..71842a7 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -1296,20 +1296,17 @@ setup_err:
->  static struct fc_lport *bnx2fc_if_create(struct bnx2fc_hba *hba,
->  				  struct device *parent, int npiv)
->  {
-> -	struct fc_lport		*lport = NULL;
-> +	struct fc_lport		*lport, *n_port;
->  	struct fcoe_port	*port;
->  	struct Scsi_Host	*shost;
->  	struct fc_vport		*vport = dev_to_vport(parent);
->  	int			rc = 0;
->  
->  	/* Allocate Scsi_Host structure */
-> -	if (!npiv) {
-> -		lport = libfc_host_alloc(&bnx2fc_shost_template,
-> -					  sizeof(struct fcoe_port));
-> -	} else {
-> -		lport = libfc_vport_create(vport,
-> -					   sizeof(struct fcoe_port));
-> -	}
-> +	if (!npiv)
-> +		lport = libfc_host_alloc(&bnx2fc_shost_template, sizeof(*port));
-> +	else
-> +		lport = libfc_vport_create(vport, sizeof(*port));
->  
->  	if (!lport) {
->  		printk(KERN_ERR PFX "could not allocate scsi host structure\n");
-> @@ -1327,7 +1324,6 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_hba *hba,
->  		goto lp_config_err;
->  
->  	if (npiv) {
-> -		vport = dev_to_vport(parent);
->  		printk(KERN_ERR PFX "Setting vport names, 0x%llX 0x%llX\n",
->  			vport->node_name, vport->port_name);
->  		fc_set_wwnn(lport, vport->node_name);
-> @@ -1356,12 +1352,17 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_hba *hba,
->  	fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
->  
->  	/* Allocate exchange manager */
-> -	if (!npiv) {
-> +	if (!npiv)
->  		rc = bnx2fc_em_config(lport);
-> -		if (rc) {
-> -			printk(KERN_ERR PFX "Error on bnx2fc_em_config\n");
-> -			goto shost_err;
-> -		}
-> +	else {
-> +		shost = vport_to_shost(vport);
-> +		n_port = shost_priv(shost);
-> +		rc = fc_exch_mgr_list_clone(n_port, lport);
-> +	}
-> +
-> +	if (rc) {
-> +		printk(KERN_ERR PFX "Error on bnx2fc_em_config\n");
-> +		goto shost_err;
->  	}
->  
->  	bnx2fc_interface_get(hba);
-> 
-> 
+This patch hasn't ever been submitted as far as I can tell.
 
+James
 
 
