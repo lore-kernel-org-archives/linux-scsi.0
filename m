@@ -1,223 +1,90 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 1/2 REPOST] arcmsr: code cleanup and some corrections
-Date: Fri, 29 Apr 2011 16:28:24 +0200
-Message-ID: <4DBACB08.8050107@redhat.com>
+Subject: [PATCH 2/2 REPOST] arcmsr: code cleanup and some corrections
+Date: Fri, 29 Apr 2011 16:28:30 +0200
+Message-ID: <4DBACB0E.5040607@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:24602 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46098 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754755Ab1D2O23 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Apr 2011 10:28:29 -0400
+	id S1755172Ab1D2O2e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Apr 2011 10:28:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: nick.cheng@areca.com.tw, James.Bottomley@HansenPartnership.com
 
-This is a repost - the original mail was ack-ed by Nick Cheng - http://www.spinics.net/lists/linux-scsi/msg50595.html
+This is a repost - the original mail was ack-ed by Nick Cheng - http://www.spinics.net/lists/linux-scsi/msg50594.html
 
-I removed outer loops in ...wait_msgint_ready
-the sleeptime and retrycount are in fact never changed so I changed them
-into defines. In arcmsr_flush_hba_cache is a loop removed, which
-printed the same printk 100 times, one line in log is enough I think.
-The arcmsr_sleep_for_bus_reset has lost a functionality with the latest patches,
-The only thing the function does is a long sleep, so it's replaced with a ssleep.
+
+Hi Nick,
+I'm confused with what this code does, I think I must miss something.
+
+	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
+...
+I think that the dma_alloc_coherent returns a page address with zeroes in the lowest bits 
+That would mean the offset computed below is useless as the result is zero every time.
+Added to that is that you then increase dma_coherent_handle by the offset,
+while dma_coherent is increased by multiples of sizeof CommandControlBlock, at least it looks so
+...
+	offset = roundup((unsigned long)dma_coherent, 32) - (unsigned long)dma_coherent;
+	dma_coherent_handle = dma_coherent_handle + offset;
+	dma_coherent = (struct CommandControlBlock *)dma_coherent + offset;
+
+The patch below removes the offset computation.
 
 Signed-off-by: Tomas henzl <thenzl@redhat.com>
 Acked-by: Nick Cheng<nick.cheng@areca.com.tw>
 
 
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 984bd52..4cd522b 100644
+index 4cd522b..da93974 100644
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -75,8 +75,10 @@ MODULE_AUTHOR("Nick Cheng <support@areca.com.tw>");
- MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/16xx/1880) SATA/SAS RAID Host Bus Adapter");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(ARCMSR_DRIVER_VERSION);
--static int sleeptime = 10;
--static int retrycount = 12;
+@@ -441,10 +441,11 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 	struct CommandControlBlock *ccb_tmp;
+ 	int i = 0, j = 0;
+ 	dma_addr_t cdb_phyaddr;
+-	unsigned long roundup_ccbsize = 0, offset;
++	unsigned long roundup_ccbsize;
+ 	unsigned long max_xfer_len;
+ 	unsigned long max_sg_entrys;
+ 	uint32_t  firm_config_version;
 +
-+#define	ARCMSR_SLEEPTIME	10
-+#define	ARCMSR_RETRYCOUNT	12
-+
- wait_queue_head_t wait_q;
- static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 					struct scsi_cmnd *cmd);
-@@ -171,24 +173,6 @@ static struct pci_driver arcmsr_pci_driver = {
- ****************************************************************************
- ****************************************************************************
- */
--int arcmsr_sleep_for_bus_reset(struct scsi_cmnd *cmd)
--{
--		struct Scsi_Host *shost = NULL;
--		int i, isleep;
--		shost = cmd->device->host;
--		isleep = sleeptime / 10;
--		if (isleep > 0) {
--			for (i = 0; i < isleep; i++) {
--				msleep(10000);
--			}
--		}
--
--		isleep = sleeptime % 10;
--		if (isleep > 0) {
--			msleep(isleep*1000);
--		}
--		return 0;
--}
- 
- static void arcmsr_free_hbb_mu(struct AdapterControlBlock *acb)
- {
-@@ -323,66 +307,64 @@ static void arcmsr_define_adapter_type(struct AdapterControlBlock *acb)
- 
- 	default: acb->adapter_type = ACB_ADAPTER_TYPE_A;
+ 	for (i = 0; i < ARCMSR_MAX_TARGETID; i++)
+ 		for (j = 0; j < ARCMSR_MAX_TARGETLUN; j++)
+ 			acb->devstate[i][j] = ARECA_RAID_GONE;
+@@ -454,12 +455,12 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 	firm_config_version = acb->firm_cfg_version;
+ 	if((firm_config_version & 0xFF) >= 3){
+ 		max_xfer_len = (ARCMSR_CDB_SG_PAGE_LENGTH << ((firm_config_version >> 8) & 0xFF)) * 1024;/* max 4M byte */
+-		max_sg_entrys = (max_xfer_len/4096);	
++		max_sg_entrys = (max_xfer_len/4096);
  	}
--}	
-+}
- 
- static uint8_t arcmsr_hba_wait_msgint_ready(struct AdapterControlBlock *acb)
- {
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
--	uint32_t Index;
--	uint8_t Retries = 0x00;
--	do {
--		for (Index = 0; Index < 100; Index++) {
--			if (readl(&reg->outbound_intstatus) &
--					ARCMSR_MU_OUTBOUND_MESSAGE0_INT) {
--				writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT,
--					&reg->outbound_intstatus);
--				return true;
--			}
--			msleep(10);
--		}/*max 1 seconds*/
-+	int i;
-+
-+	for (i = 0; i < 2000; i++) {
-+		if (readl(&reg->outbound_intstatus) &
-+				ARCMSR_MU_OUTBOUND_MESSAGE0_INT) {
-+			writel(ARCMSR_MU_OUTBOUND_MESSAGE0_INT,
-+				&reg->outbound_intstatus);
-+			return true;
-+		}
-+		msleep(10);
-+	}/* max 20 seconds */
- 
--	} while (Retries++ < 20);/*max 20 sec*/
- 	return false;
- }
- 
- static uint8_t arcmsr_hbb_wait_msgint_ready(struct AdapterControlBlock *acb)
- {
- 	struct MessageUnit_B *reg = acb->pmuB;
--	uint32_t Index;
--	uint8_t Retries = 0x00;
--	do {
--		for (Index = 0; Index < 100; Index++) {
--			if (readl(reg->iop2drv_doorbell)
--				& ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
--				writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN
--					, reg->iop2drv_doorbell);
--				writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT, reg->drv2iop_doorbell);
--				return true;
--			}
--			msleep(10);
--		}/*max 1 seconds*/
-+	int i;
-+
-+	for (i = 0; i < 2000; i++) {
-+		if (readl(reg->iop2drv_doorbell)
-+			& ARCMSR_IOP2DRV_MESSAGE_CMD_DONE) {
-+			writel(ARCMSR_MESSAGE_INT_CLEAR_PATTERN,
-+					reg->iop2drv_doorbell);
-+			writel(ARCMSR_DRV2IOP_END_OF_INTERRUPT,
-+					reg->drv2iop_doorbell);
-+			return true;
-+		}
-+		msleep(10);
-+	}/* max 20 seconds */
- 
--	} while (Retries++ < 20);/*max 20 sec*/
- 	return false;
- }
- 
- static uint8_t arcmsr_hbc_wait_msgint_ready(struct AdapterControlBlock *pACB)
- {
- 	struct MessageUnit_C *phbcmu = (struct MessageUnit_C *)pACB->pmuC;
--	unsigned char Retries = 0x00;
--	uint32_t Index;
--	do {
--		for (Index = 0; Index < 100; Index++) {
--			if (readl(&phbcmu->outbound_doorbell) & ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
--				writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR, &phbcmu->outbound_doorbell_clear);/*clear interrupt*/
--				return true;
--			}
--			/* one us delay	*/
--			msleep(10);
--		} /*max 1 seconds*/
--	} while (Retries++ < 20); /*max 20 sec*/
-+	int i;
-+
-+	for (i = 0; i < 2000; i++) {
-+		if (readl(&phbcmu->outbound_doorbell)
-+				& ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE) {
-+			writel(ARCMSR_HBCMU_IOP2DRV_MESSAGE_CMD_DONE_DOORBELL_CLEAR,
-+				&phbcmu->outbound_doorbell_clear); /*clear interrupt*/
-+			return true;
-+		}
-+		msleep(10);
-+	} /* max 20 seconds */
-+
- 	return false;
- }
-+
- static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb)
- {
- 	struct MessageUnit_A __iomem *reg = acb->pmuA;
-@@ -2602,12 +2584,8 @@ static int arcmsr_iop_confirm(struct AdapterControlBlock *acb)
- 		if (cdb_phyaddr_hi32 != 0) {
- 			struct MessageUnit_C *reg = (struct MessageUnit_C *)acb->pmuC;
- 
--			if (cdb_phyaddr_hi32 != 0) {
--				unsigned char Retries = 0x00;
--				do {
--					printk(KERN_NOTICE "arcmsr%d: cdb_phyaddr_hi32=0x%x \n", acb->adapter_index, cdb_phyaddr_hi32);
--				} while (Retries++ < 100);
--			}
-+			printk(KERN_NOTICE "arcmsr%d: cdb_phyaddr_hi32=0x%x \n",
-+					acb->adapter_index, cdb_phyaddr_hi32);
- 			writel(ARCMSR_SIGNATURE_SET_CONFIG, &reg->msgcode_rwbuffer[0]);
- 			writel(cdb_phyaddr_hi32, &reg->msgcode_rwbuffer[1]);
- 			writel(ARCMSR_INBOUND_MESG0_SET_CONFIG, &reg->inbound_msgaddr0);
-@@ -2955,10 +2933,10 @@ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
- 				arcmsr_hardware_reset(acb);
- 				acb->acb_flags &= ~ACB_F_IOP_INITED;
- sleep_again:
--				arcmsr_sleep_for_bus_reset(cmd);
-+				ssleep(ARCMSR_SLEEPTIME);
- 				if ((readl(&reg->outbound_msgaddr1) & ARCMSR_OUTBOUND_MESG1_FIRMWARE_OK) == 0) {
- 					printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, retry=%d \n", acb->host->host_no, retry_count);
--					if (retry_count > retrycount) {
-+					if (retry_count > ARCMSR_RETRYCOUNT) {
- 						acb->fw_flag = FW_DEADLOCK;
- 						printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, RETRY TERMINATED!! \n", acb->host->host_no);
- 						return FAILED;
-@@ -3025,10 +3003,10 @@ sleep_again:
- 				arcmsr_hardware_reset(acb);
- 				acb->acb_flags &= ~ACB_F_IOP_INITED;
- sleep:
--				arcmsr_sleep_for_bus_reset(cmd);
-+				ssleep(ARCMSR_SLEEPTIME);
- 				if ((readl(&reg->host_diagnostic) & 0x04) != 0) {
- 					printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, retry=%d \n", acb->host->host_no, retry_count);
--					if (retry_count > retrycount) {
-+					if (retry_count > ARCMSR_RETRYCOUNT) {
- 						acb->fw_flag = FW_DEADLOCK;
- 						printk(KERN_ERR "arcmsr%d: waiting for hw bus reset return, RETRY TERMINATED!! \n", acb->host->host_no);
- 						return FAILED;
+ 	acb->host->max_sectors = max_xfer_len/512;
+ 	acb->host->sg_tablesize = max_sg_entrys;
+ 	roundup_ccbsize = roundup(sizeof(struct CommandControlBlock) + (max_sg_entrys - 1) * sizeof(struct SG64ENTRY), 32);
+-	acb->uncache_size = roundup_ccbsize * ARCMSR_MAX_FREECCB_NUM + 32;
++	acb->uncache_size = roundup_ccbsize * ARCMSR_MAX_FREECCB_NUM;
+ 	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
+ 	if(!dma_coherent){
+ 		printk(KERN_NOTICE "arcmsr%d: dma_alloc_coherent got error \n", acb->host->host_no);
+@@ -468,9 +469,6 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 	acb->dma_coherent = dma_coherent;
+ 	acb->dma_coherent_handle = dma_coherent_handle;
+ 	memset(dma_coherent, 0, acb->uncache_size);
+-	offset = roundup((unsigned long)dma_coherent, 32) - (unsigned long)dma_coherent;
+-	dma_coherent_handle = dma_coherent_handle + offset;
+-	dma_coherent = (struct CommandControlBlock *)dma_coherent + offset;
+ 	ccb_tmp = dma_coherent;
+ 	acb->vir2phy_offset = (unsigned long)dma_coherent - (unsigned long)dma_coherent_handle;
+ 	for(i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++){
 
 
 --
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
