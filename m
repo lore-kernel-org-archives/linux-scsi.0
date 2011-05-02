@@ -1,61 +1,36 @@
-From: "WESTERN UNION OFFICE" <info@western.com>
-Subject: (unknown)
-Date: Mon, 2 May 2011 03:45:22 -0500 (ECT)
-Message-ID: <63811.41.138.188.140.1304325922.squirrel__24639.3549642109$1304326266$gmane$org@www.ecorae.gov.ec>
-Reply-To: western-money71@hotmail.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH repost] mpt2sas: fix failure path
+Date: Mon, 02 May 2011 15:00:50 +0200
+Message-ID: <4DBEAB02.7050000@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.ecorae.gob.ec ([174.142.111.34]:49373 "EHLO
-	server.ecorae.org.ec" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751021Ab1EBIu6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2011 04:50:58 -0400
-Subject: 
+Received: from mx1.redhat.com ([209.132.183.28]:11048 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757562Ab1EBNA4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 May 2011 09:00:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
 
-How are you today?
+host allocated with scsi_host_alloc should be freed when
+init fails
 
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 16e99b6..1cb48ab 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -6985,6 +6985,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	list_del(&ioc->list);
+ 	scsi_remove_host(shost);
+  out_add_shost_fail:
++	scsi_host_put(shost);
+ 	return -ENODEV;
+ }
+ 
 
-I write to inform you that we have already sent you $5,000.00USD
-through Western union as we have been given the mandate to transfer
-your full compensation payment of  $1.800,000.00USD via western union
-by this government.
-
-I called to give you the information through phone as internet hackers
-were many but i cannot reach you yesterday even this morning,So I
-decided to email you the (MTCN) and sender name so that you can pick
-up this $5,000.00USD to enable us send another $5,000.00USD by
-tomorrow as you knows we will be sending you only $5,000.00USD per
-day.Please pick up this information and run to any western union
-(OUTLET) in your country and pick up this $5,000.00USD and send us an
-email back,so that we can send another $5,000.00USD by tomorrow.
-
-Manager: Mr Frank Amos
-email me on:western-money71@hotmail.com
-call us on: +234-7031908911
-once you picked up this $5000.00USD today.
-
-Here is the western union information to pick up the $5000.00USD,
-
-MTCN : 602 155 4697
-Sender's Name: Mark Winters
-Question: Honest
-Answer:Trust
-Amount send: $5,000.00USD
-country:Nigeria
-
-I am waiting for your E-mail once you pick up $5000.00USD,
-
-Thanks
-Mr Frank Amos.
-
-
-Kuito
-
--- 
-This message has been scanned for viruses and
-dangerous content by MailScanner, and is
-believed to be clean.
 
