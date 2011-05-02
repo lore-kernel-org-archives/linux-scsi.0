@@ -1,53 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] [SCSI] scsi_dh_alua: Attach to UNAVAILABLE/OFFLINE AAS
- devices
-Date: Mon, 02 May 2011 08:00:32 +0200
-Message-ID: <4DBE4880.8090303@suse.de>
-References: <201104261827.06024.marting@netapp.com>
+From: "WESTERN UNION OFFICE" <info@western.com>
+Subject: (unknown)
+Date: Mon, 2 May 2011 03:45:22 -0500 (ECT)
+Message-ID: <63811.41.138.188.140.1304325922.squirrel__24639.3549642109$1304326266$gmane$org@www.ecorae.gov.ec>
+Reply-To: western-money71@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42785 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753325Ab1EBGDc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 May 2011 02:03:32 -0400
-In-Reply-To: <201104261827.06024.marting@netapp.com>
+Received: from www.ecorae.gob.ec ([174.142.111.34]:49373 "EHLO
+	server.ecorae.org.ec" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751021Ab1EBIu6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2011 04:50:58 -0400
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin George <marting@netapp.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-On 04/26/2011 02:57 PM, Martin George wrote:
-> The SCSI ALUA handler currently fails to attach to devices
-> reporting an UNAVAILABLE/OFFLINE AAS. But given that an
-> UNAVAILABLE/OFFLINE AAS can transition to other states
-> like ACTIVE/OPTIMIZED, ACTIVE/NON-OPTIMIZED, etc. as per
-> SPC4, this ALUA handler behavior should be rectified so
-> as to attach to devices which also report an
-> UNAVAILABLE/OFFLINE AAS.
->
-> The below patch enables the same.
->
-> Signed-off-by: Martin George<marting@netapp.com>
+How are you today?
 
-Patch is correct. Even a path in state 'UNAVAILABLE' or 'OFFLINE'
-responds to ALUA commands and thus should be handle by the alua
-device_handler.
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+I write to inform you that we have already sent you $5,000.00USD
+through Western union as we have been given the mandate to transfer
+your full compensation payment of  $1.800,000.00USD via western union
+by this government.
 
-Cheers,
+I called to give you the information through phone as internet hackers
+were many but i cannot reach you yesterday even this morning,So I
+decided to email you the (MTCN) and sender name so that you can pick
+up this $5,000.00USD to enable us send another $5,000.00USD by
+tomorrow as you knows we will be sending you only $5,000.00USD per
+day.Please pick up this information and run to any western union
+(OUTLET) in your country and pick up this $5,000.00USD and send us an
+email back,so that we can send another $5,000.00USD by tomorrow.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Manager: Mr Frank Amos
+email me on:western-money71@hotmail.com
+call us on: +234-7031908911
+once you picked up this $5000.00USD today.
+
+Here is the western union information to pick up the $5000.00USD,
+
+MTCN : 602 155 4697
+Sender's Name: Mark Winters
+Question: Honest
+Answer:Trust
+Amount send: $5,000.00USD
+country:Nigeria
+
+I am waiting for your E-mail once you pick up $5000.00USD,
+
+Thanks
+Mr Frank Amos.
+
+
+Kuito
+
+-- 
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
+
