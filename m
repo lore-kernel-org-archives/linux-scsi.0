@@ -1,67 +1,53 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH REPOST] mptfusion: fix msgContext in mptctl_hp_hostinfo
-Date: Mon, 02 May 2011 15:26:08 +0200
-Message-ID: <4DBEB0F0.3020600@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Borislav Petkov <bp@amd64.org>
+Subject: [PATCH] mptsas: Fix annoying warning
+Date: Mon,  2 May 2011 16:49:38 +0200
+Message-ID: <1304347778-12129-1-git-send-email-bp@amd64.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8416 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757606Ab1EBN0M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 May 2011 09:26:12 -0400
+Received: from s15228384.onlinehome-server.info ([87.106.30.177]:49641 "EHLO
+	mail.x86-64.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759719Ab1EBOuJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 May 2011 10:50:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+To: Eric Moore <Eric.Moore@lsi.com>
+Cc: Borislav Petkov <borislav.petkov@amd.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This is a repost - the original mail was ack-ed by Kashyap - http://www.spinics.net/lists/linux-scsi/msg50872.html
+From: Borislav Petkov <borislav.petkov@amd.com>
 
+Shut up
 
-Hi,
+drivers/message/fusion/mptsas.c: In function 'mptsas_event_process':
+drivers/message/fusion/mptsas.c:5015: warning: unused variable 'log_info'
 
-without this patch the istwiRWRequest->MsgContext is always set to zero,
-this patch saves the MsgContext in a msgcontext variable and then restores 
-the value.
-Thanks to  <mailto:djeffery@redhat.com>David Jeffery who found the issue and did the analysis.
+for configs with CONFIG_SCSI_MPT2SAS_LOGGING unset.
 
+Signed-off-by: Borislav Petkov <borislav.petkov@amd.com>
+---
+ drivers/message/fusion/mptsas.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-Acked-by: Kashyap Desai <Kashyap.Desai@lsi.com>
-
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 4dbe546..43c0749 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -2423,9 +2423,9 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
- 	int			rc, cim_rev;
- 	ToolboxIstwiReadWriteRequest_t	*IstwiRWRequest;
- 	MPT_FRAME_HDR		*mf = NULL;
--	MPIHeader_t		*mpi_hdr;
- 	unsigned long		timeleft;
- 	int			retval;
-+	u32			msgcontext;
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 66f9412..7596aec 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -5012,7 +5012,6 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
+ 			(ioc_stat & MPI_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)) {
+ 			VirtTarget *vtarget = NULL;
+ 			u8		id, channel;
+-			u32	 log_info = le32_to_cpu(reply->IOCLogInfo);
  
- 	/* Reset long to int. Should affect IA64 and SPARC only
- 	 */
-@@ -2572,11 +2572,11 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
- 	}
- 
- 	IstwiRWRequest = (ToolboxIstwiReadWriteRequest_t *)mf;
--	mpi_hdr = (MPIHeader_t *) mf;
-+	msgcontext = IstwiRWRequest->MsgContext;
- 	memset(IstwiRWRequest,0,sizeof(ToolboxIstwiReadWriteRequest_t));
-+	IstwiRWRequest->MsgContext = msgcontext;
- 	IstwiRWRequest->Function = MPI_FUNCTION_TOOLBOX;
- 	IstwiRWRequest->Tool = MPI_TOOLBOX_ISTWI_READ_WRITE_TOOL;
--	IstwiRWRequest->MsgContext = mpi_hdr->MsgContext;
- 	IstwiRWRequest->Flags = MPI_TB_ISTWI_FLAGS_READ;
- 	IstwiRWRequest->NumAddressBytes = 0x01;
- 	IstwiRWRequest->DataLength = cpu_to_le16(0x04);
-
-
-
-
---
-
+ 			id = sas_event_data->TargetID;
+ 			channel = sas_event_data->Bus;
+@@ -5023,7 +5022,8 @@ mptsas_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *reply)
+ 				    "LogInfo (0x%x) available for "
+ 				   "INTERNAL_DEVICE_RESET"
+ 				   "fw_id %d fw_channel %d\n", ioc->name,
+-				   log_info, id, channel));
++				   le32_to_cpu(reply->IOCLogInfo),
++				   id, channel));
+ 				if (vtarget->raidVolume) {
+ 					devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+ 					"Skipping Raid Volume for inDMD\n",
+-- 
+1.7.4.rc2
 
