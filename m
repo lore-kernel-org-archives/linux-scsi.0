@@ -1,182 +1,85 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 2/2] bfa: kdump fix
-Date: Mon, 2 May 2011 15:16:29 -0700
-Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5D745DD4A@HQ1-EXCH01.corp.brocade.com>
-References: <1302720353-27636-1-git-send-email-huangj@brocade.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [RFC v2] block integrity: Stabilize(?) pages during writeback
+Date: Mon, 2 May 2011 18:59:31 -0700
+Message-ID: <20110503015931.GC20579@tux1.beaverton.ibm.com>
+References: <20110411124229.47bc28f6@corrin.poochiereds.net> <1302543595-sup-4352@think> <1302569212.2580.13.camel@mingming-laptop> <20110412005719.GA23077@infradead.org> <1302742128.2586.274.camel@mingming-laptop> <20110422000226.GA22189@tux1.beaverton.ibm.com> <1303476503-sup-4141@think> <20110422203434.GA2977@quack.suse.cz> <20110426003738.GB22189@tux1.beaverton.ibm.com> <1303817010-sup-351@think>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:54496 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755026Ab1EBWQg convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 May 2011 18:16:36 -0400
-In-Reply-To: <1302720353-27636-1-git-send-email-huangj@brocade.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1303817010-sup-351@think>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: Jan Kara <jack@suse.cz>, Mingming Cao <cmm@us.ibm.com>, Christoph Hellwig <hch@infradead.org>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@Brocade.COM>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
-Hi James,
+On Tue, Apr 26, 2011 at 07:33:18AM -0400, Chris Mason wrote:
+> Excerpts from Darrick J. Wong's message of 2011-04-25 20:37:38 -0400:
+> > On Fri, Apr 22, 2011 at 10:34:34PM +0200, Jan Kara wrote:
+> > > On Fri 22-04-11 08:50:01, Chris Mason wrote:
+> > > > Excerpts from Darrick J. Wong's message of 2011-04-21 20:02:26 -0400:
+> > > > > Hi everyone,
+> > > > > 
+> > > > > I've finally managed to get together a patch that seems to provide stable pages
+> > > > > during writeback, or at least gets us to the point that after several days of
+> > > > > running tests I don't see DIF checksum errors anymore. :)
+> > > > > 
+> > > > > The last two pieces to go into this puzzle were (a) bio_integrity_prep needs to
+> > > > > walk the process tree to find all userland ptes that map to a particular memory
+> > > > > page and revoke write access, and
+> > > > 
+> > > > Hmm, did you need the bio_integrity_prep change for all the filesystems?
+> > > > This should be happening already as part of using page_mkwrite.
+> > >   Or more precisely page_mkclean() should do what you try to do in
+> > > bio_integrity_prep()... It would certainly be interesting (bug) if you
+> > > could write to the page after calling page_mkclean() without page_mkwrite()
+> > > being called.
+> > 
+> > Hm... in mpage_da_submit_io I see the following sequence of calls:
+> > 
+> > 1. clear_page_dirty_for_io
+> > 2. possibly one of: ext4_bio_write_page or block_write_full_page.
+> >    If ext4_bio_write_page, 
+> >    2a. kmem_cache_alloc
+> >    2b. set_page_writeback
+> > 
+> > Before and after #1, the page is locked but writeback is not set.
+> > 
+> > Before #2, the page must be locked and writeback must not be set, because both
+> > of those two functions want to set the writeback bit themselves.  However,
+> > ext4_bio_write_page tries to allocate memory with GFP_NOFS, which means it can
+> > sleep (I think).
+> 
+> Sleeping isn't the problem as long as you sleep with the page locked.
+> The idea is that writepage will:
+> 
+> 1) lock the page
+> 2) clear_page_dirty_for_io (which calls page_mkclean)
+> 3) set_page_writeback()
+> 4) unlock the page
+> 5) start the IO
+> 
+> page_mkwrite will:
+> 
+> 1) lock the page
+> 2) wait on page writeback
+> 3) do other stuff
+> 
+> So if ext is calling set_page_writeback() on an unlocked page, that's a
+> problem.  Otherwise it should be working.
 
-I noticed that PATCH 1/2 of the same serial has been accepted into scsi-misc, but not PATCH 2/2. What is the status?
+You're right, at this point in time writepage and page_mkwrite in ext4 both
+behave as you describe.  I began backing out parts of my patches to
+bio-integrity.c and discovered that with the current kernel (2.6.39-rc5) the
+only part that seems useful is the set_memory_ro/rw pair from that old
+debugging patch.  Unfortunately, those two functions only seem to exist on x86;
+I suppose I could port them to others.  If that's even a sane idea.
 
-He is the mac.info link of my original submission:
-
-http://marc.info/?l=linux-scsi&m=130272116021546&w=2
-
-Thanks
-Jing
-
->-----Original Message-----
->From: Jing Huang
->Sent: Wednesday, April 13, 2011 11:46 AM
->To: James.Bottomley@suse.de; linux-scsi@vger.kernel.org
->Cc: Adapter Linux Open SRC Team; Jing Huang
->Subject: [PATCH 2/2] bfa: kdump fix
->
->Root cause: When kernel crashes, bfa IOC state machine and FW doesn't get
->a notification and hence are not cleanly shutdown. So registers holding
->driver/IOC state information are not reset back to valid disabled/parking
->values. This causes subsequent driver initialization to hang during kdump
->kernel boot.
->
->Fix description: during the initialization of first PCI function, reset
->corresponding register when unclean shutown is detect by reading chip
->registers. This will make sure that ioc/fw gets clean re-initialization.
->Signed-off-by: Jing Huang <huangj@brocade.com>
->---
-> drivers/scsi/bfa/bfa_ioc.c    |    4 +++-
-> drivers/scsi/bfa/bfa_ioc.h    |    1 +
-> drivers/scsi/bfa/bfa_ioc_cb.c |   11 +++++++++++
-> drivers/scsi/bfa/bfa_ioc_ct.c |   26 ++++++++++++++++++++++++++
-> 4 files changed, 41 insertions(+), 1 deletions(-)
->
->diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
->index c1f72c4..6c7e033 100644
->--- a/drivers/scsi/bfa/bfa_ioc.c
->+++ b/drivers/scsi/bfa/bfa_ioc.c
->@@ -56,6 +56,8 @@ BFA_TRC_FILE(CNA, IOC);
-> #define bfa_ioc_map_port(__ioc) ((__ioc)->ioc_hwif->ioc_map_port(__ioc))
-> #define bfa_ioc_notify_fail(__ioc)              \
-> 			((__ioc)->ioc_hwif->ioc_notify_fail(__ioc))
->+#define bfa_ioc_sync_start(__ioc)               \
->+			((__ioc)->ioc_hwif->ioc_sync_start(__ioc))
-> #define bfa_ioc_sync_join(__ioc)                \
-> 			((__ioc)->ioc_hwif->ioc_sync_join(__ioc))
-> #define bfa_ioc_sync_leave(__ioc)               \
->@@ -647,7 +649,7 @@ bfa_iocpf_sm_fwcheck(struct bfa_iocpf_s *iocpf, enum
->iocpf_event event)
-> 	switch (event) {
-> 	case IOCPF_E_SEMLOCKED:
-> 		if (bfa_ioc_firmware_lock(ioc)) {
->-			if (bfa_ioc_sync_complete(ioc)) {
->+			if (bfa_ioc_sync_start(ioc)) {
-> 				iocpf->retry_count = 0;
-> 				bfa_ioc_sync_join(ioc);
-> 				bfa_fsm_set_state(iocpf, bfa_iocpf_sm_hwinit);
->diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
->index ec9cf08..c85182a 100644
->--- a/drivers/scsi/bfa/bfa_ioc.h
->+++ b/drivers/scsi/bfa/bfa_ioc.h
->@@ -263,6 +263,7 @@ struct bfa_ioc_hwif_s {
-> 					bfa_boolean_t msix);
-> 	void		(*ioc_notify_fail)	(struct bfa_ioc_s *ioc);
-> 	void		(*ioc_ownership_reset)	(struct bfa_ioc_s *ioc);
->+	bfa_boolean_t   (*ioc_sync_start)       (struct bfa_ioc_s *ioc);
-> 	void		(*ioc_sync_join)	(struct bfa_ioc_s *ioc);
-> 	void		(*ioc_sync_leave)	(struct bfa_ioc_s *ioc);
-> 	void		(*ioc_sync_ack)		(struct bfa_ioc_s *ioc);
->diff --git a/drivers/scsi/bfa/bfa_ioc_cb.c b/drivers/scsi/bfa/bfa_ioc_cb.c
->index e4a0713..89ae4c8 100644
->--- a/drivers/scsi/bfa/bfa_ioc_cb.c
->+++ b/drivers/scsi/bfa/bfa_ioc_cb.c
->@@ -32,6 +32,7 @@ static void bfa_ioc_cb_map_port(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_cb_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
-> static void bfa_ioc_cb_notify_fail(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_cb_ownership_reset(struct bfa_ioc_s *ioc);
->+static bfa_boolean_t bfa_ioc_cb_sync_start(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_cb_sync_join(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_cb_sync_leave(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_cb_sync_ack(struct bfa_ioc_s *ioc);
->@@ -53,6 +54,7 @@ bfa_ioc_set_cb_hwif(struct bfa_ioc_s *ioc)
-> 	hwif_cb.ioc_isr_mode_set = bfa_ioc_cb_isr_mode_set;
-> 	hwif_cb.ioc_notify_fail = bfa_ioc_cb_notify_fail;
-> 	hwif_cb.ioc_ownership_reset = bfa_ioc_cb_ownership_reset;
->+	hwif_cb.ioc_sync_start = bfa_ioc_cb_sync_start;
-> 	hwif_cb.ioc_sync_join = bfa_ioc_cb_sync_join;
-> 	hwif_cb.ioc_sync_leave = bfa_ioc_cb_sync_leave;
-> 	hwif_cb.ioc_sync_ack = bfa_ioc_cb_sync_ack;
->@@ -195,6 +197,15 @@ bfa_ioc_cb_isr_mode_set(struct bfa_ioc_s *ioc,
->bfa_boolean_t msix)
-> }
->
-> /*
->+ * Synchronized IOC failure processing routines
->+ */
->+static bfa_boolean_t
->+bfa_ioc_cb_sync_start(struct bfa_ioc_s *ioc)
->+{
->+	return bfa_ioc_cb_sync_complete(ioc);
->+}
->+
->+/*
->  * Cleanup hw semaphore and usecnt registers
->  */
-> static void
->diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
->index 008d129..9361252 100644
->--- a/drivers/scsi/bfa/bfa_ioc_ct.c
->+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
->@@ -41,6 +41,7 @@ static void bfa_ioc_ct_map_port(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_ct_isr_mode_set(struct bfa_ioc_s *ioc, bfa_boolean_t msix);
-> static void bfa_ioc_ct_notify_fail(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_ct_ownership_reset(struct bfa_ioc_s *ioc);
->+static bfa_boolean_t bfa_ioc_ct_sync_start(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_ct_sync_join(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_ct_sync_leave(struct bfa_ioc_s *ioc);
-> static void bfa_ioc_ct_sync_ack(struct bfa_ioc_s *ioc);
->@@ -62,6 +63,7 @@ bfa_ioc_set_ct_hwif(struct bfa_ioc_s *ioc)
-> 	hwif_ct.ioc_isr_mode_set = bfa_ioc_ct_isr_mode_set;
-> 	hwif_ct.ioc_notify_fail = bfa_ioc_ct_notify_fail;
-> 	hwif_ct.ioc_ownership_reset = bfa_ioc_ct_ownership_reset;
->+	hwif_ct.ioc_sync_start = bfa_ioc_ct_sync_start;
-> 	hwif_ct.ioc_sync_join = bfa_ioc_ct_sync_join;
-> 	hwif_ct.ioc_sync_leave = bfa_ioc_ct_sync_leave;
-> 	hwif_ct.ioc_sync_ack = bfa_ioc_ct_sync_ack;
->@@ -351,6 +353,30 @@ bfa_ioc_ct_ownership_reset(struct bfa_ioc_s *ioc)
-> 	writel(1, ioc->ioc_regs.ioc_sem_reg);
-> }
->
->+static bfa_boolean_t
->+bfa_ioc_ct_sync_start(struct bfa_ioc_s *ioc)
->+{
->+	uint32_t r32 = readl(ioc->ioc_regs.ioc_fail_sync);
->+	uint32_t sync_reqd = bfa_ioc_ct_get_sync_reqd(r32);
->+
->+	/*
->+	 * Driver load time.  If the sync required bit for this PCI fn
->+	 * is set, it is due to an unclean exit by the driver for this
->+	 * PCI fn in the previous incarnation. Whoever comes here first
->+	 * should clean it up, no matter which PCI fn.
->+	 */
->+
->+	if (sync_reqd & bfa_ioc_ct_sync_pos(ioc)) {
->+		writel(0, ioc->ioc_regs.ioc_fail_sync);
->+		writel(1, ioc->ioc_regs.ioc_usage_reg);
->+		writel(BFI_IOC_UNINIT, ioc->ioc_regs.ioc_fwstate);
->+		writel(BFI_IOC_UNINIT, ioc->ioc_regs.alt_ioc_fwstate);
->+		return BFA_TRUE;
->+	}
->+
->+	return bfa_ioc_ct_sync_complete(ioc);
->+}
->+
-> /*
->  * Synchronized IOC failure processing routines
->  */
->--
->1.6.5.2
-
+--D
+> 
+> -chris
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
