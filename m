@@ -1,50 +1,42 @@
-From: Billy Crook <billycrook@gmail.com>
-Subject: Re: looking for non-raid perc/H200 equivalent
-Date: Tue, 3 May 2011 01:02:23 -0500
-Message-ID: <BANLkTim-kbG0k+R7sQ_eMjm+t=E-Bo4z=w@mail.gmail.com>
-References: <20110502153617.GA14849@apartia.fr>
+From: "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
+Subject: writing "- - -" to /sys/class/scsi_host/...
+Date: Tue, 03 May 2011 12:54:47 +0200
+Message-ID: <4DBFFB17020000A100005C59@gwsmtp1.uni-regensburg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:35060 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796Ab1ECGDH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2011 02:03:07 -0400
-Received: by bwz15 with SMTP id 15so5244420bwz.19
-        for <linux-scsi@vger.kernel.org>; Mon, 02 May 2011 23:03:05 -0700 (PDT)
-In-Reply-To: <20110502153617.GA14849@apartia.fr>
+Received: from rrzmta2.uni-regensburg.de ([194.94.155.52]:38428 "EHLO
+	rrzmta2.uni-regensburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752053Ab1ECKyz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2011 06:54:55 -0400
+Received: from rrzmta2.uni-regensburg.de (localhost [127.0.0.1])
+	by localhost (Postfix) with SMTP id A0AA03883
+	for <linux-scsi@vger.kernel.org>; Tue,  3 May 2011 12:54:52 +0200 (CEST)
+Received: from gwsmtp1.uni-regensburg.de (gwsmtp1.uni-regensburg.de [132.199.5.51])
+	by rrzmta2.uni-regensburg.de (Postfix) with ESMTP id 904053806
+	for <linux-scsi@vger.kernel.org>; Tue,  3 May 2011 12:54:52 +0200 (CEST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Areca makes some very well performing non-raid sas cards.  My
-preference is kernel-raid, but on an HBA with a substantial amount of
-battery-backed cache, just using it as JBOD.
+Hello,
 
-On Mon, May 2, 2011 at 10:36, Louis-David Mitterrand
-<vindex+lists-linux-scsi@apartia.org> wrote:
-> Hi,
->
-> My T610 came with a Perc/H200 raid controller which has horrible
-> performance in JBOD mode (I use only linux softraid).
->
-> What non-raid, straight sas/sata controller/expander card can I get f=
-rom
-> Dell (or otherwise) that would be a drop-in replacement?
->
-> See picture of present card at:
-> http://zenon.apartia.fr/stuff/perc_h200.jpg
->
-> Thanks,
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I was trying to find out the meaning of "- - -" in the magic command to scan a SCSI host. After finding the code in the sources (after extensive searching), I'm wondering (2.6.16.60, scsi_sysfs.c):
+
+static int check_set(unsigned int *val, char *src)
+{
+        char *last;
+
+        if (strncmp(src, "-", 20) == 0) {
+                *val = SCAN_WILD_CARD;
+        } else {
+[...]
+
+If it's still there in the current sources, does that "20" do anything useful? The comparison should end at the second character anyway. "-" is always zero-terminated. Did I miss something?
+
+Regards,
+Ulrich
+P.S. Please CC me if your reply should reach me, I'm not subscribed in the list!
+
