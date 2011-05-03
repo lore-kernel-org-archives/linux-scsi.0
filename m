@@ -1,39 +1,107 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 16/16] hpsa: add P2000 to list of shared SAS devices
-Date: Tue, 03 May 2011 15:00:07 -0500
-Message-ID: <20110503200007.5478.88000.stgit@beardog.cce.hp.com>
+Subject: [PATCH 12/16] hpsa: use new doorbell-bit-5 reset method
+Date: Tue, 03 May 2011 14:59:46 -0500
+Message-ID: <20110503195946.5478.65144.stgit@beardog.cce.hp.com>
 References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:41372 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755053Ab1ECUAH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 May 2011 16:00:07 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Signed-off-by: Scott Teel <scott.stacy.teel@hp.com>
+The bit-2-doorbell reset method seemed to cause (survivable) NMIs
+on some systems and (unsurvivable) IOCK NMIs on some G7 servers.
+Firmware guys implemented a new doorbell method to alleviate these
+problems triggered by bit 5 of the doorbell register.  We want to
+use it if it's available.
+
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c     |   25 ++++++++++++++++++++-----
+ drivers/scsi/hpsa_cmd.h |    2 ++
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 5c03cb5..cffc7bb 100644
+index ca92141..c096cda 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -1591,6 +1591,7 @@ static unsigned char *msa2xxx_model[] = {
- 	"MSA2024",
- 	"MSA2312",
- 	"MSA2324",
-+	"P2000 G3 SAS",
- 	NULL,
+@@ -3128,7 +3128,7 @@ static __devinit int hpsa_message(struct pci_dev *pdev, unsigned char opcode,
+ #define hpsa_noop(p) hpsa_message(p, 3, 0)
+ 
+ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+-	void * __iomem vaddr, bool use_doorbell)
++	void * __iomem vaddr, u32 use_doorbell)
+ {
+ 	u16 pmcsr;
+ 	int pos;
+@@ -3139,7 +3139,7 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		 * other way using the doorbell register.
+ 		 */
+ 		dev_info(&pdev->dev, "using doorbell to reset controller\n");
+-		writel(DOORBELL_CTLR_RESET, vaddr + SA5_DOORBELL);
++		writel(use_doorbell, vaddr + SA5_DOORBELL);
+ 		msleep(1000);
+ 	} else { /* Try to do it the PCI power state way */
+ 
+@@ -3243,7 +3243,7 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	u32 misc_fw_support;
+ 	int rc;
+ 	struct CfgTable __iomem *cfgtable;
+-	bool use_doorbell;
++	u32 use_doorbell;
+ 	u32 board_id;
+ 	u16 command_register;
+ 
+@@ -3306,9 +3306,24 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	if (rc)
+ 		goto unmap_vaddr;
+ 
+-	/* If reset via doorbell register is supported, use that. */
++	/* If reset via doorbell register is supported, use that.
++	 * There are two such methods.  Favor the newest method.
++	 */
+ 	misc_fw_support = readl(&cfgtable->misc_fw_support);
+-	use_doorbell = misc_fw_support & MISC_FW_DOORBELL_RESET;
++	use_doorbell = misc_fw_support & MISC_FW_DOORBELL_RESET2;
++	if (use_doorbell) {
++		use_doorbell = DOORBELL_CTLR_RESET2;
++	} else {
++		use_doorbell = misc_fw_support & MISC_FW_DOORBELL_RESET;
++		if (use_doorbell) {
++			dev_warn(&pdev->dev, "Controller claims that "
++				"'Bit 2 doorbell reset' is "
++				"supported, but not 'bit 5 doorbell reset'.  "
++				"Firmware update is recommended.\n");
++			rc = -ENODEV;
++			goto unmap_cfgtable;
++		}
++	}
+ 
+ 	rc = hpsa_controller_hard_reset(pdev, vaddr, use_doorbell);
+ 	if (rc)
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 8fd35a7..55d741b 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -101,6 +101,7 @@
+ #define CFGTBL_ChangeReq        0x00000001l
+ #define CFGTBL_AccCmds          0x00000001l
+ #define DOORBELL_CTLR_RESET	0x00000004l
++#define DOORBELL_CTLR_RESET2	0x00000020l
+ 
+ #define CFGTBL_Trans_Simple     0x00000002l
+ #define CFGTBL_Trans_Performant 0x00000004l
+@@ -337,6 +338,7 @@ struct CfgTable {
+ 	u8		reserved[0x78 - 0x58];
+ 	u32		misc_fw_support; /* offset 0x78 */
+ #define			MISC_FW_DOORBELL_RESET (0x02)
++#define			MISC_FW_DOORBELL_RESET2 (0x010)
+ 	u8		driver_version[32];
  };
  
-
