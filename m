@@ -1,8 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 05/16] hpsa: do a better job of detecting controller reset
-	failure
-Date: Tue, 03 May 2011 14:59:10 -0500
-Message-ID: <20110503195910.5478.63675.stgit@beardog.cce.hp.com>
+Subject: [PATCH 14/16] hpsa: remove superfluous sleeps around reset code
+Date: Tue, 03 May 2011 14:59:56 -0500
+Message-ID: <20110503195956.5478.65695.stgit@beardog.cce.hp.com>
 References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,147 +15,29 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Detect failure of controller reset by noticing if the 32 bytes of
-"driver version" we store on the hardware in the config table
-fail to get zeroed out.  Previously we noticed if the controller
-did not transition to "simple mode", but this did not detect reset
-failure if the controller was already in simple mode prior to
-the reset attempt (e.g. due to module parameter hpsa_simple_mode=1).
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |   76 +++++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/hpsa_cmd.h |    1 +
- 2 files changed, 67 insertions(+), 10 deletions(-)
+ drivers/scsi/hpsa.c |    3 ---
+ 1 files changed, 0 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 8266850..2aeb210 100644
+index 6fe77d0..ca8ee92 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3184,6 +3184,59 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+@@ -3217,7 +3217,6 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		 */
+ 		dev_info(&pdev->dev, "using doorbell to reset controller\n");
+ 		writel(use_doorbell, vaddr + SA5_DOORBELL);
+-		msleep(1000);
+ 	} else { /* Try to do it the PCI power state way */
+ 
+ 		/* Quoting from the Open CISS Specification: "The Power
+@@ -3248,8 +3247,6 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
+ 		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
+ 		pmcsr |= PCI_D0;
+ 		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
+-
+-		msleep(500);
+ 	}
  	return 0;
  }
- 
-+static __devinit void init_driver_version(char *driver_version, int len)
-+{
-+	memset(driver_version, 0, len);
-+	strncpy(driver_version, "hpsa " HPSA_DRIVER_VERSION, len - 1);
-+}
-+
-+static __devinit int write_driver_ver_to_cfgtable(
-+	struct CfgTable __iomem *cfgtable)
-+{
-+	char *driver_version;
-+	int i, size = sizeof(cfgtable->driver_version);
-+
-+	driver_version = kmalloc(size, GFP_KERNEL);
-+	if (!driver_version)
-+		return -ENOMEM;
-+
-+	init_driver_version(driver_version, size);
-+	for (i = 0; i < size; i++)
-+		writeb(driver_version[i], &cfgtable->driver_version[i]);
-+	kfree(driver_version);
-+	return 0;
-+}
-+
-+static __devinit void read_driver_ver_from_cfgtable(
-+	struct CfgTable __iomem *cfgtable, unsigned char *driver_ver)
-+{
-+	int i;
-+
-+	for (i = 0; i < sizeof(cfgtable->driver_version); i++)
-+		driver_ver[i] = readb(&cfgtable->driver_version[i]);
-+}
-+
-+static __devinit int controller_reset_failed(
-+	struct CfgTable __iomem *cfgtable)
-+{
-+
-+	char *driver_ver, *old_driver_ver;
-+	int rc, size = sizeof(cfgtable->driver_version);
-+
-+	old_driver_ver = kmalloc(2 * size, GFP_KERNEL);
-+	if (!old_driver_ver)
-+		return -ENOMEM;
-+	driver_ver = old_driver_ver + size;
-+
-+	/* After a reset, the 32 bytes of "driver version" in the cfgtable
-+	 * should have been changed, otherwise we know the reset failed.
-+	 */
-+	init_driver_version(old_driver_ver, size);
-+	read_driver_ver_from_cfgtable(cfgtable, driver_ver);
-+	rc = !memcmp(driver_ver, old_driver_ver, size);
-+	kfree(old_driver_ver);
-+	return rc;
-+}
- /* This does a hard reset of the controller using PCI power management
-  * states or the using the doorbell register.
-  */
-@@ -3194,7 +3247,7 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	u64 cfg_base_addr_index;
- 	void __iomem *vaddr;
- 	unsigned long paddr;
--	u32 misc_fw_support, active_transport;
-+	u32 misc_fw_support;
- 	int rc;
- 	struct CfgTable __iomem *cfgtable;
- 	bool use_doorbell;
-@@ -3256,6 +3309,9 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 		rc = -ENOMEM;
- 		goto unmap_vaddr;
- 	}
-+	rc = write_driver_ver_to_cfgtable(cfgtable);
-+	if (rc)
-+		goto unmap_vaddr;
- 
- 	/* If reset via doorbell register is supported, use that. */
- 	misc_fw_support = readl(&cfgtable->misc_fw_support);
-@@ -3289,19 +3345,16 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 			"failed waiting for board to become ready\n");
- 		goto unmap_cfgtable;
- 	}
--	dev_info(&pdev->dev, "board ready.\n");
- 
--	/* Controller should be in simple mode at this point.  If it's not,
--	 * It means we're on one of those controllers which doesn't support
--	 * the doorbell reset method and on which the PCI power management reset
--	 * method doesn't work (P800, for example.)
--	 * In those cases, don't try to proceed, as it generally doesn't work.
--	 */
--	active_transport = readl(&cfgtable->TransportActive);
--	if (active_transport & PERFORMANT_MODE) {
-+	rc = controller_reset_failed(vaddr);
-+	if (rc < 0)
-+		goto unmap_cfgtable;
-+	if (rc) {
- 		dev_warn(&pdev->dev, "Unable to successfully reset controller,"
- 			" Ignoring controller.\n");
- 		rc = -ENODEV;
-+	} else {
-+		dev_info(&pdev->dev, "board ready.\n");
- 	}
- 
- unmap_cfgtable:
-@@ -3542,6 +3595,9 @@ static int __devinit hpsa_find_cfgtables(struct ctlr_info *h)
- 		       cfg_base_addr_index) + cfg_offset, sizeof(*h->cfgtable));
- 	if (!h->cfgtable)
- 		return -ENOMEM;
-+	rc = write_driver_ver_to_cfgtable(h->cfgtable);
-+	if (rc)
-+		return rc;
- 	/* Find performant mode table. */
- 	trans_offset = readl(&h->cfgtable->TransMethodOffset);
- 	h->transtable = remap_pci_mem(pci_resource_start(h->pdev,
-diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 0500740..8fd35a7 100644
---- a/drivers/scsi/hpsa_cmd.h
-+++ b/drivers/scsi/hpsa_cmd.h
-@@ -337,6 +337,7 @@ struct CfgTable {
- 	u8		reserved[0x78 - 0x58];
- 	u32		misc_fw_support; /* offset 0x78 */
- #define			MISC_FW_DOORBELL_RESET (0x02)
-+	u8		driver_version[32];
- };
- 
- #define NUM_BLOCKFETCH_ENTRIES 8
