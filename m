@@ -1,29 +1,38 @@
-From: "Jim Schutt" <jaschut@sandia.gov>
-Subject: Re: 2.6.39-rc5+ BUG at scsi_run_queue+0x24/0xe3
-Date: Tue, 3 May 2011 12:52:32 -0600
-Message-ID: <4DC04EF0.4020909@sandia.gov>
-References: <4DC0330F.6050906@sandia.gov>
- <1304442019.10982.7.camel@mulgrave.site> <4DC03B0A.50209@sandia.gov>
- <1304444251.10982.9.camel@mulgrave.site> <4DC0415F.5020509@sandia.gov>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 01/16] hpsa: do readl after writel in main i/o path to ensure
+	commands don't get lost.
+Date: Tue, 03 May 2011 14:58:49 -0500
+Message-ID: <20110503195849.5478.13229.stgit@beardog.cce.hp.com>
+References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8;
- format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DC0415F.5020509@sandia.gov>
+In-Reply-To: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-FWIW, I noticed that commit 99f3c722e23 in scsi-rc-fixes-2.6
-might want a Cc: stable@kernel.org, since the commit it's
-fixing, 86cbfb5607d4, had one.
+Apparently we've been doin it rong for a decade, but only lately do we
+run into problems.
 
-I'm not sure how that all works, but I thought I'd mention it
-just in case.
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
--- Jim
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 621a153..98c97ca 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -212,6 +212,7 @@ static void SA5_submit_command(struct ctlr_info *h,
+ 	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
+ 		c->Header.Tag.lower);
+ 	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
++	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
+ 	h->commands_outstanding++;
+ 	if (h->commands_outstanding > h->max_outstanding)
+ 		h->max_outstanding = h->commands_outstanding;
