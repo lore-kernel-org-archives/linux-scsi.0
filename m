@@ -1,8 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 02/16] hpsa: add readl after writel in interrupt mask setting
-	code
-Date: Tue, 03 May 2011 14:58:55 -0500
-Message-ID: <20110503195854.5478.57327.stgit@beardog.cce.hp.com>
+Subject: [PATCH 06/16] hpsa: wait longer for no-op to complete after resetting
+	controller
+Date: Tue, 03 May 2011 14:59:15 -0500
+Message-ID: <20110503195915.5478.72321.stgit@beardog.cce.hp.com>
 References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,41 +16,24 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-This is to ensure the board interrupts are really off when
-these functions return.
+This is to avoid the usual two or three messages about the command
+timing out.  We're obviously not waiting long enough.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.h |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 98c97ca..7eec397 100644
+index 7eec397..7a4ee73 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -228,10 +228,12 @@ static void SA5_intr_mask(struct ctlr_info *h, unsigned long val)
- 	if (val) { /* Turn interrupts on */
- 		h->interrupts_enabled = 1;
- 		writel(0, h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+		(void) readl(h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
- 	} else { /* Turn them off */
- 		h->interrupts_enabled = 0;
- 		writel(SA5_INTR_OFF,
- 			h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+		(void) readl(h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
- 	}
- }
+@@ -130,7 +130,7 @@ struct ctlr_info {
+ #define HPSA_BUS_RESET_MSG 2
+ #define HPSA_HOST_RESET_MSG 3
+ #define HPSA_MSG_SEND_RETRY_LIMIT 10
+-#define HPSA_MSG_SEND_RETRY_INTERVAL_MSECS 1000
++#define HPSA_MSG_SEND_RETRY_INTERVAL_MSECS (10000)
  
-@@ -240,10 +242,12 @@ static void SA5_performant_intr_mask(struct ctlr_info *h, unsigned long val)
- 	if (val) { /* turn on interrupts */
- 		h->interrupts_enabled = 1;
- 		writel(0, h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+		(void) readl(h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
- 	} else {
- 		h->interrupts_enabled = 0;
- 		writel(SA5_PERF_INTR_OFF,
- 			h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
-+		(void) readl(h->vaddr + SA5_REPLY_INTR_MASK_OFFSET);
- 	}
- }
- 
+ /* Maximum time in seconds driver will wait for command completions
+  * when polling before giving up.
