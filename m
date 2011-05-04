@@ -1,118 +1,135 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 34522] New: Error-valued pointer overwrite in SCSI
-Date: Wed, 4 May 2011 20:37:30 GMT
-Message-ID: <bug-34522-11613@https.bugzilla.kernel.org/>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH v3 0/3] data integrity: Stabilize pages during
+	writeback for ext4
+Date: Wed, 4 May 2011 16:57:06 -0700
+Message-ID: <20110504235706.GJ20579@tux1.beaverton.ibm.com>
+References: <20110408203135.GH1110@tux1.beaverton.ibm.com> <20110411124229.47bc28f6@corrin.poochiereds.net> <1302543595-sup-4352@think> <1302569212.2580.13.camel@mingming-laptop> <20110412005719.GA23077@infradead.org> <1302742128.2586.274.camel@mingming-laptop> <20110422000226.GA22189@tux1.beaverton.ibm.com> <20110504173704.GE20579@tux1.beaverton.ibm.com> <20110504184644.GA23246@infradead.org> <1304536162-sup-3721@think>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:45736 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751426Ab1EDUhb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 16:37:31 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p44KbUmI014314
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 4 May 2011 20:37:30 GMT
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1304536162-sup-3721@think>
+Sender: owner-linux-mm@kvack.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <cmm@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm <linux-mm@kvack.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=34522
+On Wed, May 04, 2011 at 03:21:55PM -0400, Chris Mason wrote:
+> Excerpts from Christoph Hellwig's message of 2011-05-04 14:46:44 -0400:
+> > This seems to miss out on a lot of the generic functionality like
+> > write_cache_pages and block_page_mkwrite and just patch it into
+> > the ext4 copy & paste variants.  Please make sure your patches also
+> > work for filesystem that use more of the generic functionality like
+> > xfs or ext2 (the latter one might be fun for the mmap case).
+> 
+> Probably after the block_commit_write in block_page_mkwrite()
+> Another question is, do we want to introduce a wait_on_stable_page_writeback()?
 
-           Summary: Error-valued pointer overwrite in SCSI
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.38.3
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: crubio@cs.wisc.edu
-        Regression: No
+Something like this here?  It fixes block_page_mkwrite users and sticks in a
+simple page_mkwrite for fses that don't provide one at all.  From a quick wac
+run it seems to make xfs work.  ext2 seems to have some issues with modifying a
+buffer_head's bh_data without locking the bh during the update, so I guess it
+needs some review.
 
+--D
 
-We have statically analyzed SCSI, the VFS and the Memory Management module to
-find error-valued pointers that are overwritten without first being checked for
-errors. We have found one potential overwrite:
+--
 
-drivers/scsi/scsi_scan.c:639: overwriting potential non-tentative unchecked
-error in variable "*bflags", which may contain one of the following error
-codes: *EINVAL
+fs: Modify/provide generic writepage/page_mkwrite functions to wait for writeback
 
-Here is a sample trace that illustrates how the overwrite might occur:
+Modify the generic writepage function, and add an empty page_mkwrite function,
+to wait for page writeback to finish before allowing writes.  This is so that
+simple filesystems have stable pages during write operations.
 
-include/linux/err.h:24: an unchecked error may be returned
-drivers/scsi/scsi_devinfo.c:268:"cabs2cil_" receives an error from function
-"ERR_PTR"
-drivers/scsi/scsi_devinfo.c:268:"tmp___8" receives an error from "cabs2cil_"
-drivers/scsi/scsi_devinfo.c:268:"tmp___8" may have an unchecked error
-drivers/scsi/scsi_devinfo.c:268:"tmp" receives an error from "tmp___8"
-drivers/scsi/scsi_devinfo.c:268:"tmp" may have an unchecked error
-drivers/scsi/scsi_devinfo.c:268:"tmp___7" receives an error from "tmp"
-drivers/scsi/scsi_devinfo.c:268:"tmp___7" may have an unchecked error
-drivers/scsi/scsi_devinfo.c:268: an unchecked error may be returned
-drivers/scsi/scsi_devinfo.c:477:"devinfo_table" receives an error from function
-"scsi_devinfo_lookup_by_key"
-drivers/scsi/scsi_devinfo.c:479:"devinfo_table" may have an unchecked error
-drivers/scsi/scsi_devinfo.c:480:"devinfo_table" may have an unchecked error
-include/linux/err.h:29: an unchecked error may be returned
-drivers/scsi/scsi_devinfo.c:480:"cabs2cil____0" receives an error from function
-"PTR_ERR"
-drivers/scsi/scsi_devinfo.c:480:"tmp___19" receives an error from
-"cabs2cil____0"
-drivers/scsi/scsi_devinfo.c:480:"tmp___17" receives an error from "tmp___19"
-drivers/scsi/scsi_devinfo.c:480:"tmp___7" receives an error from "tmp___17"
-drivers/scsi/scsi_devinfo.c:480: an unchecked error may be returned
-drivers/scsi/scsi_devinfo.c:451:"tmp___7" receives an error from function
-"scsi_get_device_flags_keyed"
-drivers/scsi/scsi_devinfo.c:451: an unchecked error may be returned
-drivers/scsi/scsi_scan.c:639:"*bflags" receives an error from function
-"scsi_get_device_flags"
-drivers/scsi/scsi_scan.c:644:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:645:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:646:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:655:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:656:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:657:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:658:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:573:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:578:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:581:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:582:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:583:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:585:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:587:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:592:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:596:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:603:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:605:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:609:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:578:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:581:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:582:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:583:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:585:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:587:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:592:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:596:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:603:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:620:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:623:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:624:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:625:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:626:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:628:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:629:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:630:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:639:"*bflags" may have an unchecked error
-drivers/scsi/scsi_scan.c:639: overwriting potential non-tentative unchecked
-error in variable "*bflags"
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+ fs/buffer.c  |    1 +
+ mm/filemap.c |   10 ++++++++++
+ 2 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/fs/buffer.c b/fs/buffer.c
+index a08bb8e..cf9a795 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2361,6 +2361,7 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	if (!ret)
+ 		ret = block_commit_write(page, 0, end);
+ 
++	wait_on_page_writeback(page);
+ 	if (unlikely(ret)) {
+ 		unlock_page(page);
+ 		if (ret == -ENOMEM)
+diff --git a/mm/filemap.c b/mm/filemap.c
+index c22675f..9cb4e51 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1713,8 +1713,18 @@ page_not_uptodate:
+ }
+ EXPORT_SYMBOL(filemap_fault);
+ 
++static int empty_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
++{
++	struct page *page = vmf->page;
++
++	lock_page(page);
++	wait_on_page_writeback(page);
++	return VM_FAULT_LOCKED;
++}
++
+ const struct vm_operations_struct generic_file_vm_ops = {
+ 	.fault		= filemap_fault,
++	.page_mkwrite	= empty_page_mkwrite,
+ };
+ 
+ /* This is used for a general mmap of a disk file */
+--
+
+Here's the beginning of a patch against ext2 also.  It fixes most of the
+checksum errors when metadata writes are in progress, though I suspect there
+are more spots that I haven't caught yet.
+
+--
+
+ext2: Lock buffer_heads during metadata update
+
+ext2 does not protect buffer head that represent metadata against modifications
+during write operations.  This is a problem if the memory buffer needs to be
+stable during writes; I think there are a few more spots in ext2 that need this
+treatment. :)
+
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
+
+ fs/ext2/inode.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
+
+diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+index 788e09a..5314b0b 100644
+--- a/fs/ext2/inode.c
++++ b/fs/ext2/inode.c
+@@ -1426,6 +1426,7 @@ static int __ext2_write_inode(struct inode *inode, int do_sync)
+ 	if (IS_ERR(raw_inode))
+  		return -EIO;
+ 
++	lock_buffer(bh);
+ 	/* For fields not not tracking in the in-memory inode,
+ 	 * initialise them to zero for new inodes. */
+ 	if (ei->i_state & EXT2_STATE_NEW)
+@@ -1502,6 +1503,8 @@ static int __ext2_write_inode(struct inode *inode, int do_sync)
+ 		}
+ 	} else for (n = 0; n < EXT2_N_BLOCKS; n++)
+ 		raw_inode->i_block[n] = ei->i_data[n];
++	unlock_buffer(bh);
++
+ 	mark_buffer_dirty(bh);
+ 	if (do_sync) {
+ 		sync_dirty_buffer(bh);
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
