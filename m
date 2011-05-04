@@ -1,56 +1,76 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 1/3] mpt2sas: removetheuseofwriteq@lsi.com, since
-	writeq is not atomic
-Date: Wed, 4 May 2011 13:42:20 -0600
-Message-ID: <20110504194220.GA25875@parisc-linux.org>
-References: <20110504110317.GA17855@lsi.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: Re: 2.6.39-rc6: cdrecord oops
+Date: Wed, 4 May 2011 22:45:56 +0300
+Message-ID: <20110504194555.GA4492@p183>
+References: <20110504190707.GA4521@p183>
+ <BANLkTi=-Qv4eUbhS0QGdyX9Q8oQ8VYcD5A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:34962 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755284Ab1EDTmX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 15:42:23 -0400
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:39591 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751380Ab1EDTqB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 15:46:01 -0400
+Received: by bwz15 with SMTP id 15so1270786bwz.19
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2011 12:46:00 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20110504110317.GA17855@lsi.com>
+In-Reply-To: <BANLkTi=-Qv4eUbhS0QGdyX9Q8oQ8VYcD5A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: akpm@linux-foundation.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
 
-On Wed, May 04, 2011 at 04:33:51PM +0530, Kashyap, Desai wrote:
-> We need the 64 bit completed in one access pci memory write, else spin lock is required.
-> Since it's going to be difficult to know which writeq was implemented in the kernel, 
-> the driver is going to have to always acquire a spin lock each time we do 64bit write.
->   */
-> -#ifndef writeq
->  static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
->      spinlock_t *writeq_lock)
->  {
-> @@ -1570,13 +1569,6 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
->  	writel((u32)(data_out >> 32), (addr + 4));
->  	spin_unlock_irqrestore(writeq_lock, flags);
->  }
-> -#else
-> -static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
-> -    spinlock_t *writeq_lock)
-> -{
-> -	writeq(cpu_to_le64(b), addr);
-> -}
-> -#endif
->  
+On Wed, May 04, 2011 at 12:32:50PM -0700, Linus Torvalds wrote:
+> On Wed, May 4, 2011 at 12:07 PM, Alexey Dobriyan <adobriyan@gmail.com=
+> wrote:
+> > Got one at the very end of burning session (haven't tried to reprod=
+uce yet).
+> > Apparently happened when cdrecord tried to open the door.
+> >
+> > =A0 =A0 =A0 =A0__lock_acquire
+> > =A0 =A0 =A0 =A0lock_acquire
+> > =A0 =A0 =A0 =A0_raw_spin_lock_irq
+> > =A0 =A0 =A0 =A0blk_get_request
+>=20
+> Hmm. That would be the
+>=20
+>   spin_lock_irq(q->queue_lock);
+>=20
+> in there, I'm not seeing any other spinlock.
+>=20
+> > =A0 =A0 =A0 =A0scsi_execute
+> > =A0 =A0 =A0 =A0scsi_set_medium_removal
+> > =A0 =A0 =A0 =A0sr_lock_door
+> > =A0 =A0 =A0 =A0cdrom_release
+> > =A0 =A0 =A0 =A0sr_block_release
+> > =A0 =A0 =A0 =A0__blk_dev_put
+> > =A0 =A0 =A0 =A0blkdev_put
+> > =A0 =A0 =A0 =A0blkdev_close
+> > =A0 =A0 =A0 =A0fput
+> > =A0 =A0 =A0 =A0filp_close
+> > =A0 =A0 =A0 =A0sys_close
+> >
+> > comm: cdrecord
+> > RAX was small number like 0x46(?)
+> > RBX 6b6b6b6b6b6b6b83
+> > RDI 6b6b6b6b6b6b6b83
+>=20
+> And that implies that 'q' has been free'd before it's used, and you
+> have SLUB-debugging turned on.
+>=20
+> > This model is USB device.
+>=20
+> Hmm. It looks a bit odd that cdrom_release() does the ->release call
+> before it does the ->tray_move thing, but I don't think that's it.
+>=20
+> Jens/James: What's the sequence to blk_cleanup_queue() for a SCSI
+> CD-ROM? It really does look like we're releasing the queue before
+> we're done with it.
 
-Instead of taking out this optimisation (which is going to hurt massively
-on 8-socket systems), why not simply change:
-
--#ifndef writeq
-+#if BITS_PER_LONG < 64
-
-(OK, there's an assumption that all 64-bit systems have an atomic 64-bit
-MMIO store operation ... but I think that's a valid assumption).
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Second time, burning finished to the end successfully.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
