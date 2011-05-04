@@ -1,56 +1,65 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to ensure commands don't get lost.
-Date: Wed, 04 May 2011 13:28:21 -0400
-Message-ID: <10639.1304530101@localhost>
-References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com> <4DC13566.5070203@redhat.com>
-            <20110504125212.GC5997@beardog.cce.hp.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH v3 0/3] data integrity: Stabilize pages during writeback
+	for ext4
+Date: Wed, 4 May 2011 10:37:04 -0700
+Message-ID: <20110504173704.GE20579@tux1.beaverton.ibm.com>
+References: <20110321164305.GC7153@quack.suse.cz> <20110406232938.GF1110@tux1.beaverton.ibm.com> <20110407165700.GB7363@quack.suse.cz> <20110408203135.GH1110@tux1.beaverton.ibm.com> <20110411124229.47bc28f6@corrin.poochiereds.net> <1302543595-sup-4352@think> <1302569212.2580.13.camel@mingming-laptop> <20110412005719.GA23077@infradead.org> <1302742128.2586.274.camel@mingming-laptop> <20110422000226.GA22189@tux1.beaverton.ibm.com>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1304530101_7352P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: Your message of "Wed, 04 May 2011 07:52:12 CDT."
-             <20110504125212.GC5997@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: Tomas Henzl <thenzl@redhat.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20110422000226.GA22189@tux1.beaverton.ibm.com>
+Sender: owner-linux-mm@kvack.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
 
---==_Exmh_1304530101_7352P
-Content-Type: text/plain; charset=us-ascii
+Hi all,
 
-On Wed, 04 May 2011 07:52:12 CDT, scameron@beardog.cce.hp.com said:
-> On Wed, May 04, 2011 at 01:15:50PM +0200, Tomas Henzl wrote:
-> > On 05/03/2011 09:58 PM, Stephen M. Cameron wrote:
-> > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+This is v3 of the stable-page-writes patchset for ext4.  A lot of code has been
+cut out since v2 of this patch set.  For v3, the large hairy function to walk
+the page tables of every process is gone since Chris Mason pointed out that
+page_mkclean does what I need.  The set_memory_* hack is also gone, since (I
+think) the only time the kernel maps a file data blocks for writing is in the
+buffered IO case.  That leaves us with some surgery to ext4_page_mkwrite to
+return locked pages and to be careful about re-checking the writeback status
+after dropping and re-grabbing the page lock; and a slight modification to the
+mm code to wait for page writeback when grabbing pages for buffered writes.
+There are also some cleanups for wait_on_page_writeback use in ext4.
 
-> > >  	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
-> > >  		c->Header.Tag.lower);
-> > >  	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
-> > > +	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
+I ran my write-after-checksum ("wac") reproducer program to try to create the
+DIF checksum errors by madly rewriting the same memory pages.  In fact, I tried
+the following combinations:
 
-> I just put it there to make it clear that it ignoring the return of readl is 
-> done intentionally, not accidentally.  If this goes against some coding convention,
-> whatever, I'm not super attached to the (void), but I did put it there on purpose,
-> and would have done it in cciss as well, had I thought of it at the time.
+a. 64 write() threads + sync_file_range
+b. 64 mmap write threads + msync
+c. 32 write() threads + sync_file_range + 32 mmap write threads + msync
+d. Same as C, but with all threads in directio mode
+e. Same as A, but with all threads in directio mode
+f. Same as B, but with all threads in directio mode
 
-This probably needs a comment like
-	/* don't care - dummy read just to force write posting to chipset */
-or similar.  I'm assuming it's just functioning as a barrier-type flush of some sort?
+After some 44 hours of safety testing across 4 machines, I saw zero errors.
+Before the patchset, I could run any of A-F for 10 seconds or less and have a
+screen full of errors.
 
+To assess the performance impact of stable page writes, I moved to a disk that
+doesn't have DIF support so that I could measure just the impact of waiting for
+writeback.  I first ran wac with 64 threads madly scribbling on a 64k file and
+saw about a 12% performance decrease.  I then reran the wac program with 64
+threads and a 64MB file and saw about the same performance numbers.  I will of
+course be testing a wider range of hardware now that I have a functioning patch
+set, though as I suspected the patchset only seems to impact workloads that
+rewrite the same memory page frequently.
 
+As always, questions and comments are welcome; and thank you to all the
+previous reviewers of this patchset!
 
+--D
 
---==_Exmh_1304530101_7352P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFNwYy1cC3lWbTT17ARAtBTAJ99nLBal+gVKChT+db9zUyukiTruQCePk/d
-zfMU7pRV2aHY12MlQIiuoL8=
-=qqQi
------END PGP SIGNATURE-----
-
---==_Exmh_1304530101_7352P--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
