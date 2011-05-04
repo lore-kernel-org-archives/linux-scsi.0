@@ -1,79 +1,65 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to
- ensure	commands don't get lost.
-Date: Wed, 04 May 2011 15:34:31 +0200
-Message-ID: <4DC155E7.1010802@redhat.com>
-References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com> <4DC13566.5070203@redhat.com> <20110504125212.GC5997@beardog.cce.hp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 34412] New: Error-valued pointer dereferences in SCSI
+Date: Wed, 4 May 2011 14:07:25 GMT
+Message-ID: <bug-34412-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110504125212.GC5997@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter1.kernel.org ([140.211.167.39]:39635 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753478Ab1EDOHZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 10:07:25 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p44E7PSu023605
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 4 May 2011 14:07:25 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 05/04/2011 02:52 PM, scameron@beardog.cce.hp.com wrote:
-> On Wed, May 04, 2011 at 01:15:50PM +0200, Tomas Henzl wrote:
->   
->> On 05/03/2011 09:58 PM, Stephen M. Cameron wrote:
->>     
->>> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
->>>
->>> Apparently we've been doin it rong for a decade, but only lately do we
->>> run into problems.
->>>
->>> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
->>> ---
->>>  drivers/scsi/hpsa.h |    1 +
->>>  1 files changed, 1 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
->>> index 621a153..98c97ca 100644
->>> --- a/drivers/scsi/hpsa.h
->>> +++ b/drivers/scsi/hpsa.h
->>> @@ -212,6 +212,7 @@ static void SA5_submit_command(struct ctlr_info *h,
->>>  	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
->>>  		c->Header.Tag.lower);
->>>  	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
->>> +	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
->>>   
->>>       
->> Hi,
->> a small nit -
->> the (void) ^ is I think not needed for gcc and isn't present in the cciss.h patch
->>     
-> I just put it there to make it clear that it ignoring the return of readl is 
-> done intentionally, not accidentally.  If this goes against some coding convention,
-> whatever, I'm not super attached to the (void), but I did put it there on purpose,
-> and would have done it in cciss as well, had I thought of it at the time.
->   
-I'm not sure what the coding convention says about this, I personally would omit it,
-both ways are used in the kernel - so it is fine for me.
+https://bugzilla.kernel.org/show_bug.cgi?id=34412
 
-Ack - Tomas
+           Summary: Error-valued pointer dereferences in SCSI
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.38.3
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: crubio@cs.wisc.edu
+        Regression: No
 
 
+Created an attachment (id=56572)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=56572)
+Complete sample traces and slices describing error-valued pointer dereferences
+in SCSI
 
-> -- steve
->
->   
->> Tomas
->>
->>     
->>>  	h->commands_outstanding++;
->>>  	if (h->commands_outstanding > h->max_outstanding)
->>>  		h->max_outstanding = h->commands_outstanding;
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>   
->>>       
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+We have statically analyzed SCSI, VFS and the memory management module to
+find error-valued pointers that are dereferenced. We have found two potential
+error-valued pointer dereferences:
+
+drivers/scsi/scsi_devinfo.c:716: Dereferencing variable
+scsi_dev_info_add_list#devinfo_table, which may contain one of the following
+error codes: EINVAL* 
+
+mm/slub.c:511: Dereferencing variable check_bytes#start, which may contain one
+of the following error codes: ENOMEM* 
+
+For each potential error-valued pointer dereference, our tool produces a
+complete sample trace and a corresponding slice. The complete sample trace
+illustrates how one error code may reach the program point at which the
+variable is dereferenced. The slice summarizes the complete sample trace by
+including only relevant program points at which the error code is transferred
+from variable to variable or returned by a function. Sample traces and slices
+for the above error-valued pointer dereferences are attached.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
