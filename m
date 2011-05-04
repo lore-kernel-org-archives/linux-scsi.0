@@ -1,102 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 34422] New: Error-valued pointers used in pointer arithmetic in
- SCSI
-Date: Wed, 4 May 2011 14:22:58 GMT
-Message-ID: <bug-34422-11613@https.bugzilla.kernel.org/>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT] isci: remote_device state_handlers and base_object	removal
+Date: Wed, 04 May 2011 07:59:57 -0700
+Message-ID: <4DC169ED.5050101@intel.com>
+References: <1304441142.20102.12.camel@dwillia2-linux> <20110504095507.GA30387@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:46738 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752311Ab1EDOW6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 10:22:58 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p44EMwbM016278
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 4 May 2011 14:22:58 GMT
+Received: from mga01.intel.com ([192.55.52.88]:38279 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754450Ab1EDO76 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 May 2011 10:59:58 -0400
+In-Reply-To: <20110504095507.GA30387@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=34422
+On 5/4/2011 2:55 AM, Christoph Hellwig wrote:
+> In general this looks like the way to go.  The only think I'm not overly
+> happy wih is how the sci_base_object removal is handled.  In general it
+> shouldn't be replaced by untyped void pointers, by proper container_of
+> usage.  I guess for most instances it doesn't matter too much as the
+> different layers of structures for the same object are in the process of
+> beeing merged anyway, but it's fairly significant for the state machine.
 
-           Summary: Error-valued pointers used in pointer arithmetic in
-                    SCSI
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 2.6.38.3
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: crubio@cs.wisc.edu
-        Regression: No
+As it turns out I gave this same feedback internally when reviewing the 
+series.  I grabbed this early version for a couple reasons:
 
+1/ wanted to get wider testing of the removal of structure member 
+position assumptions.
 
-Created an attachment (id=56582)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=56582)
-Complete sample traces and slices describing bad pointer arithmetic in SCSI
+2/ this arrived before I had the patches to start killing off the 
+substate machines so it was not quite ready for this conversion.
 
-We have statically analyzed SCSI, VFS and the memory management module to
-find error-valued pointers that are used in pointer arithmetic. We have found
-12 instances:
+Will circle back and re-add the type-safety after the substate machines 
+are gone and the unification is completed.
 
-include/linux/mm.h:389: Using variable virt_to_head_page#x in pointer
-arithmetic, which may contain one of the following error codes: ENOMEM* 
+> All the enter/exit handler should be passed a struct sci_base_state_machine *,
+> and then use container_of to get at the containing structure, thus removing
+> the need for the state_machine_owner field in struct sci_base_state_machine.
 
-m/slub.c:251: Using variable check_valid_pointer#object in pointer arithmetic,
-which may contain one of the following error codes: ENOMEM* 
+Ah yes, forgot about that field.
 
-mm/slub.c:358: Using variable get_track#object in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM* 
+> And while you're at it _please_ remove all the utterly pointless kerneldoc
+> comments for the state enter/exit handlers.
 
-mm/slub.c:360: Using variable get_track#object in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM* 
-
-mm/slub.c:452: Using variable print_trailer#p in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM*
-
-mm/slub.c:457: Using variable print_trailer#p in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM* 
-
-mm/slub.c:470: Using variable print_trailer#p in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM*
-
-m/slub.c:505: Using variable init_object#p in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM* 
-
-mm/slub.c:537: Using variable check_bytes_and_report#start in pointer
-arithmetic, which may contain one of the following error codes: ENOMEM*
-
-mm/slub.c:603: Using variable check_pad_bytes#p in pointer arithmetic, which
-may contain one of the following error codes: ENOMEM* 
-
-mm/slub.c:643: Using variable check_object#object in pointer arithmetic, which
-may contain one of the following error codes: ENOMEM* 
-
-mm/slub.c:657: Using variable check_object#p in pointer arithmetic, which may
-contain one of the following error codes: ENOMEM* 
-
-For each case above, our tool produces a complete sample trace and a
-corresponding slice. The complete sample trace illustrates how one error code
-may reach the program point at which the error-valued pointer is used in
-pointer arithmetic. The slice summarizes the complete sample trace by
-including only relevant program points at which the error code is transferred
-from variable to variable or returned by a function. Sample traces and slices
-are attached.
-
-All cases seem to be related: the error originates in the memory management
-module, then it is propagated through VFS code (where there are some error
-checks), SCSI code, and finally back to the memory management module where the
-bad pointer arithmetic occurs (see sample traces). These bad pointer arithmetic
-instances are reported only when analyzing SCSI code (and not any file system
-implementation).
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Looks like I managed to kill them all for remote_device, will double 
+check that this gets done for the rest.
