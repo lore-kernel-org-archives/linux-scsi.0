@@ -1,34 +1,70 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT] isci: remote_device state_handlers and base_object
-	removal
-Date: Wed, 4 May 2011 11:55:07 +0200
-Message-ID: <20110504095507.GA30387@lst.de>
-References: <1304441142.20102.12.camel@dwillia2-linux>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH 1/3] mpt2sas: removetheuseofwriteq@lsi.com, since writeq is
+ not atomic
+Date: Wed, 4 May 2011 16:33:51 +0530
+Message-ID: <20110504110317.GA17855@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:45114 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170Ab1EDJzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2011 05:55:08 -0400
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:43709 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753243Ab1EDKlu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 06:41:50 -0400
 Content-Disposition: inline
-In-Reply-To: <1304441142.20102.12.camel@dwillia2-linux>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, Christoph Hellwig <hch@lst.de>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-In general this looks like the way to go.  The only think I'm not overly
-happy wih is how the sci_base_object removal is handled.  In general it
-shouldn't be replaced by untyped void pointers, by proper container_of
-usage.  I guess for most instances it doesn't matter too much as the
-different layers of structures for the same object are in the process of
-beeing merged anyway, but it's fairly significant for the state machine.
 
-All the enter/exit handler should be passed a struct sci_base_state_machine *,
-and then use container_of to get at the containing structure, thus removing
-the need for the state_machine_owner field in struct sci_base_state_machine.
+The following code seems to be there in /usr/src/linux/arch/x86/include/asm/io.h.
+This is not going to work.
 
-And while you're at it _please_ remove all the utterly pointless kerneldoc
-comments for the state enter/exit handlers.  
+static inline void writeq(__u64 val, volatile void __iomem *addr)
+{
+        writel(val, addr);
+        writel(val >> 32, addr+4);
+}
 
+So with this code turned on in the kernel, there is going to be race condition 
+where multiple cpus can be writing to the request descriptor at the same time.
+
+Meaning this could happen:
+(A) CPU A doest 32bit write
+(B) CPU B does 32 bit write
+(C) CPU A does 32 bit write
+(D) CPU B does 32 bit write
+
+We need the 64 bit completed in one access pci memory write, else spin lock is required.
+Since it's going to be difficult to know which writeq was implemented in the kernel, 
+the driver is going to have to always acquire a spin lock each time we do 64bit write.
+
+Cc: stable@kernle.org
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+---
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index efa0255..5778334 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1558,7 +1558,6 @@ mpt2sas_base_free_smid(struct MPT2SAS_ADAPTER *ioc, u16 smid)
+  * care of 32 bit environment where its not quarenteed to send the entire word
+  * in one transfer.
+  */
+-#ifndef writeq
+ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
+     spinlock_t *writeq_lock)
+ {
+@@ -1570,13 +1569,6 @@ static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
+ 	writel((u32)(data_out >> 32), (addr + 4));
+ 	spin_unlock_irqrestore(writeq_lock, flags);
+ }
+-#else
+-static inline void _base_writeq(__u64 b, volatile void __iomem *addr,
+-    spinlock_t *writeq_lock)
+-{
+-	writeq(cpu_to_le64(b), addr);
+-}
+-#endif
+ 
+ /**
+  * mpt2sas_base_put_smid_scsi_io - send SCSI_IO request to firmware
