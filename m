@@ -1,72 +1,47 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 3/3] mm: Wait for writeback when grabbing pages to
- begin a write
-Date: Wed, 4 May 2011 14:48:03 -0400
-Message-ID: <20110504184803.GB23246@infradead.org>
-References: <20110406232938.GF1110@tux1.beaverton.ibm.com>
- <20110407165700.GB7363@quack.suse.cz>
- <20110408203135.GH1110@tux1.beaverton.ibm.com>
- <20110411124229.47bc28f6@corrin.poochiereds.net>
- <1302543595-sup-4352@think>
- <1302569212.2580.13.camel@mingming-laptop>
- <20110412005719.GA23077@infradead.org>
- <1302742128.2586.274.camel@mingming-laptop>
- <20110422000226.GA22189@tux1.beaverton.ibm.com>
- <20110504174227.GH20579@tux1.beaverton.ibm.com>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: 2.6.39-rc6: cdrecord oops
+Date: Wed, 4 May 2011 22:07:07 +0300
+Message-ID: <20110504190707.GA4521@p183>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:45906 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755023Ab1EDTJH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 15:09:07 -0400
+Received: by fxm17 with SMTP id 17so1052606fxm.19
+        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2011 12:09:06 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20110504174227.GH20579@tux1.beaverton.ibm.com>
-Sender: owner-linux-mm@kvack.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org, linux-ext4 <linux-ext4@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
 
-On Wed, May 04, 2011 at 10:42:27AM -0700, Darrick J. Wong wrote:
-> When grabbing a page for a buffered IO write, the mm should wait for writeback
-> on the page to complete so that the page does not become writable during the IO
-> operation.
-> 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-> ---
-> 
->  mm/filemap.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index c641edf..c22675f 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -2287,8 +2287,10 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
->  		gfp_notmask = __GFP_FS;
->  repeat:
->  	page = find_lock_page(mapping, index);
-> -	if (page)
-> +	if (page) {
-> +		wait_on_page_writeback(page);
->  		return page;
-> +	}
+Got one at the very end of burning session (haven't tried to reproduce yet).
+Apparently happened when cdrecord tried to open the door.
 
-		goto found;
+	__lock_acquire
+	lock_acquire
+	_raw_spin_lock_irq
+	blk_get_request
+	scsi_execute
+	scsi_set_medium_removal
+	sr_lock_door
+	cdrom_release
+	sr_block_release
+	__blk_dev_put
+	blkdev_put
+	blkdev_close
+	fput
+	filp_close
+	sys_close
 
->  
->  	page = __page_cache_alloc(mapping_gfp_mask(mapping) & ~gfp_notmask);
->  	if (!page)
-> @@ -2301,6 +2303,7 @@ repeat:
->  			goto repeat;
->  		return NULL;
->  	}
+comm: cdrecord
+RAX was small number like 0x46(?)
+RBX 6b6b6b6b6b6b6b83
+RDI 6b6b6b6b6b6b6b83
 
-found:
-> +	wait_on_page_writeback(page);
->  	return page;
->  }
->  EXPORT_SYMBOL(grab_cache_page_write_begin);
+	scsi 8:0:0:0: CD-ROM            Optiarc  DVD RW AD-7700S 1.03 PQ: 0 ANSI: 0
+	sr0: scsi3-mmc drive: 62x/62x writer dvd-ram cd/rw xa/form2 cdda tray
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+This model is USB device.
