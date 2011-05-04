@@ -1,50 +1,56 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT] isci: remote_device state_handlers and base_object	removal
-Date: Wed, 04 May 2011 07:59:57 -0700
-Message-ID: <4DC169ED.5050101@intel.com>
-References: <1304441142.20102.12.camel@dwillia2-linux> <20110504095507.GA30387@lst.de>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to ensure commands don't get lost.
+Date: Wed, 04 May 2011 13:28:21 -0400
+Message-ID: <10639.1304530101@localhost>
+References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com> <4DC13566.5070203@redhat.com>
+            <20110504125212.GC5997@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; boundary="==_Exmh_1304530101_7352P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38279 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754450Ab1EDO76 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 May 2011 10:59:58 -0400
-In-Reply-To: <20110504095507.GA30387@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: Your message of "Wed, 04 May 2011 07:52:12 CDT."
+             <20110504125212.GC5997@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scameron@beardog.cce.hp.com
+Cc: Tomas Henzl <thenzl@redhat.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>
 
-On 5/4/2011 2:55 AM, Christoph Hellwig wrote:
-> In general this looks like the way to go.  The only think I'm not overly
-> happy wih is how the sci_base_object removal is handled.  In general it
-> shouldn't be replaced by untyped void pointers, by proper container_of
-> usage.  I guess for most instances it doesn't matter too much as the
-> different layers of structures for the same object are in the process of
-> beeing merged anyway, but it's fairly significant for the state machine.
+--==_Exmh_1304530101_7352P
+Content-Type: text/plain; charset=us-ascii
 
-As it turns out I gave this same feedback internally when reviewing the 
-series.  I grabbed this early version for a couple reasons:
+On Wed, 04 May 2011 07:52:12 CDT, scameron@beardog.cce.hp.com said:
+> On Wed, May 04, 2011 at 01:15:50PM +0200, Tomas Henzl wrote:
+> > On 05/03/2011 09:58 PM, Stephen M. Cameron wrote:
+> > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-1/ wanted to get wider testing of the removal of structure member 
-position assumptions.
+> > >  	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
+> > >  		c->Header.Tag.lower);
+> > >  	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+> > > +	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
 
-2/ this arrived before I had the patches to start killing off the 
-substate machines so it was not quite ready for this conversion.
+> I just put it there to make it clear that it ignoring the return of readl is 
+> done intentionally, not accidentally.  If this goes against some coding convention,
+> whatever, I'm not super attached to the (void), but I did put it there on purpose,
+> and would have done it in cciss as well, had I thought of it at the time.
 
-Will circle back and re-add the type-safety after the substate machines 
-are gone and the unification is completed.
+This probably needs a comment like
+	/* don't care - dummy read just to force write posting to chipset */
+or similar.  I'm assuming it's just functioning as a barrier-type flush of some sort?
 
-> All the enter/exit handler should be passed a struct sci_base_state_machine *,
-> and then use container_of to get at the containing structure, thus removing
-> the need for the state_machine_owner field in struct sci_base_state_machine.
 
-Ah yes, forgot about that field.
 
-> And while you're at it _please_ remove all the utterly pointless kerneldoc
-> comments for the state enter/exit handlers.
 
-Looks like I managed to kill them all for remote_device, will double 
-check that this gets done for the rest.
+--==_Exmh_1304530101_7352P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFNwYy1cC3lWbTT17ARAtBTAJ99nLBal+gVKChT+db9zUyukiTruQCePk/d
+zfMU7pRV2aHY12MlQIiuoL8=
+=qqQi
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1304530101_7352P--
