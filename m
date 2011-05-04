@@ -1,47 +1,50 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: 2.6.39-rc6: cdrecord oops
-Date: Wed, 4 May 2011 22:07:07 +0300
-Message-ID: <20110504190707.GA4521@p183>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:45906 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755023Ab1EDTJH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 15:09:07 -0400
-Received: by fxm17 with SMTP id 17so1052606fxm.19
-        for <linux-scsi@vger.kernel.org>; Wed, 04 May 2011 12:09:06 -0700 (PDT)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: [PATCH v3 0/3] data integrity: Stabilize pages during writeback for ext4
+Date: Wed, 04 May 2011 15:21:55 -0400
+Message-ID: <1304536162-sup-3721@think>
+References: <20110406232938.GF1110@tux1.beaverton.ibm.com> <20110407165700.GB7363@quack.suse.cz> <20110408203135.GH1110@tux1.beaverton.ibm.com> <20110411124229.47bc28f6@corrin.poochiereds.net> <1302543595-sup-4352@think> <1302569212.2580.13.camel@mingming-laptop> <20110412005719.GA23077@infradead.org> <1302742128.2586.274.camel@mingming-laptop> <20110422000226.GA22189@tux1.beaverton.ibm.com> <20110504173704.GE20579@tux1.beaverton.ibm.com> <20110504184644.GA23246@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-reply-to: <20110504184644.GA23246@infradead.org>
+Sender: owner-linux-mm@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm <linux-mm@kvack.org>
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, axboe@kernel.dk
 
-Got one at the very end of burning session (haven't tried to reproduce yet).
-Apparently happened when cdrecord tried to open the door.
+Excerpts from Christoph Hellwig's message of 2011-05-04 14:46:44 -0400:
+> This seems to miss out on a lot of the generic functionality like
+> write_cache_pages and block_page_mkwrite and just patch it into
+> the ext4 copy & paste variants.  Please make sure your patches also
+> work for filesystem that use more of the generic functionality like
+> xfs or ext2 (the latter one might be fun for the mmap case).
 
-	__lock_acquire
-	lock_acquire
-	_raw_spin_lock_irq
-	blk_get_request
-	scsi_execute
-	scsi_set_medium_removal
-	sr_lock_door
-	cdrom_release
-	sr_block_release
-	__blk_dev_put
-	blkdev_put
-	blkdev_close
-	fput
-	filp_close
-	sys_close
+Probably after the block_commit_write in block_page_mkwrite()
+Another question is, do we want to introduce a wait_on_stable_page_writeb=
+ack()?
 
-comm: cdrecord
-RAX was small number like 0x46(?)
-RBX 6b6b6b6b6b6b6b83
-RDI 6b6b6b6b6b6b6b83
+This would allow us to add a check against the bdi requesting stable
+pages.
 
-	scsi 8:0:0:0: CD-ROM            Optiarc  DVD RW AD-7700S 1.03 PQ: 0 ANSI: 0
-	sr0: scsi3-mmc drive: 62x/62x writer dvd-ram cd/rw xa/form2 cdda tray
+>=20
+> Also what's the status of btrfs?  I remembered there was one or two
+> bits missing despite doing the right thing in most areas.
 
-This model is USB device.
+As far as I know btrfs is getting it right.  The only bit missing is the
+one Nick Piggin pointed out where it is possible to change mmap'd O_DIREC=
+T
+memory in flight while a DIO is in progress.  Josef has a test case that
+demonstrates this.
+
+Nick had a plan to fix it, but it involved redoing the get_user_pages
+api.
+
+-chris
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter=
+.ca/
+Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
