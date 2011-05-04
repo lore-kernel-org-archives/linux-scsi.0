@@ -1,47 +1,40 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to ensure commands don't get lost.
-Date: Wed, 04 May 2011 13:54:22 -0400
-Message-ID: <11821.1304531662@localhost>
-References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com> <4DC13566.5070203@redhat.com> <20110504125212.GC5997@beardog.cce.hp.com> <10639.1304530101@localhost>
-            <20110504173735.GB22953@parisc-linux.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 0/3] data integrity: Stabilize pages during writeback
+ for ext4
+Date: Wed, 4 May 2011 14:46:44 -0400
+Message-ID: <20110504184644.GA23246@infradead.org>
+References: <20110406232938.GF1110@tux1.beaverton.ibm.com>
+ <20110407165700.GB7363@quack.suse.cz>
+ <20110408203135.GH1110@tux1.beaverton.ibm.com>
+ <20110411124229.47bc28f6@corrin.poochiereds.net>
+ <1302543595-sup-4352@think>
+ <1302569212.2580.13.camel@mingming-laptop>
+ <20110412005719.GA23077@infradead.org>
+ <1302742128.2586.274.camel@mingming-laptop>
+ <20110422000226.GA22189@tux1.beaverton.ibm.com>
+ <20110504173704.GE20579@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1304531662_7352P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: Your message of "Wed, 04 May 2011 11:37:35 MDT."
-             <20110504173735.GB22953@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: scameron@beardog.cce.hp.com, Tomas Henzl <thenzl@redhat.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20110504173704.GE20579@tux1.beaverton.ibm.com>
+Sender: owner-linux-mm@kvack.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
 
---==_Exmh_1304531662_7352P
-Content-Type: text/plain; charset=us-ascii
+This seems to miss out on a lot of the generic functionality like
+write_cache_pages and block_page_mkwrite and just patch it into
+the ext4 copy & paste variants.  Please make sure your patches also
+work for filesystem that use more of the generic functionality like
+xfs or ext2 (the latter one might be fun for the mmap case).
 
-On Wed, 04 May 2011 11:37:35 MDT, Matthew Wilcox said:
-> > This probably needs a comment like
-> > 	/* don't care - dummy read just to force write posting to chipset */
-> > or similar.  I'm assuming it's just functioning as a barrier-type flush of some sort?
-> 
-> It's a PCI write flush.  It's not clear to me why it's needed here,
-> though.  The write will eventually get to the device; why we need to
-> make the CPU wait around for it to actually get there doesn't make sense.
+Also what's the status of btrfs?  I remembered there was one or two
+bits missing despite doing the right thing in most areas.
 
-Exactly why I think it needs a one-liner comment. :)
-
-
-
---==_Exmh_1304531662_7352P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFNwZLOcC3lWbTT17ARAoxZAKCC6uTzzQpErmifrHpBnMEda5m7+gCgsmSa
-hihEfg9c6H21ti8tVTcsssQ=
-=akVN
------END PGP SIGNATURE-----
-
---==_Exmh_1304531662_7352P--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
