@@ -1,70 +1,96 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] mptsas: Fix annoying warning
-Date: Wed, 4 May 2011 17:10:03 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157F09DC3@inbmail01.lsi.com>
-References: <1304347778-12129-1-git-send-email-bp@amd64.org>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [RFC-V2 PATCH] iscsiadm: Add netconfig support in iscsiadm and
+ iscsid
+Date: Wed, 4 May 2011 05:42:03 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA8728AC7E529@AVEXMB1.qlogic.org>
+References: <1301769339-30008-1-git-send-email-vikas.chaudhary@qlogic.com>
+ <1304293717.3737.80.camel@ltirv-waie-lx1>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1304347778-12129-1-git-send-email-bp@amd64.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:17261
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753547Ab1EDMmO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 May 2011 08:42:14 -0400
+In-Reply-To: <1304293717.3737.80.camel@ltirv-waie-lx1>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Borislav Petkov <bp@amd64.org>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Borislav Petkov <borislav.petkov@amd.com>, Support <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eddie Wai <eddie.wai@broadcom.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-Please consider this patch as an ACKed.
+>-----Original Message-----
+>From: Eddie Wai [mailto:eddie.wai@broadcom.com]
+>Sent: Monday, May 02, 2011 5:19 AM
+>To: open-iscsi@googlegroups.com
+>Cc: James.Bottomley@suse.de; michaelc@cs.wisc.edu; linux-
+>scsi@vger.kernel.org; Vikas Chaudhary; Lalit Chandivade; Ravi Anand; Harish
+>Zunjarrao
+>Subject: Re: [RFC-V2 PATCH] iscsiadm: Add netconfig support in iscsiadm and
+>iscsid
+>
+>Hello Vikas,
+>
+>The patch looks good but I have a few questions/comments in relation to
+>the general scheme of setting these iface net parameters:
+>
+>1.  As far as I understand, each iface file of the same hw must now
+>incorporate an unique iface_num which will be used to key off the
+>corresponding iface settings in the transport.  Iscsiadm will send a
+>UEVENT along with the net contents to the transport only when it is
+>explicitly asked to apply the update via the command line.  Perhaps it
+>would be beneficial to have the initiator apply the changes implicitly
+>like how it is currently making the call to the
+>iscsi_host_set_net_params just prior to all the ep_connect calls.  This
+>will allow the current iface parameters to be set for the corresponding
+>ep_connect call.
 
-~ Kashyap
+Yes, it makes sense. We can add flag similar to "t->template->set_host_ip"
+and allow implicit network configuration for each ep_connect.
 
-> -----Original Message-----
-> From: Borislav Petkov [mailto:bp@amd64.org]
-> Sent: Monday, May 02, 2011 8:20 PM
-> To: Moore, Eric
-> Cc: Borislav Petkov; Support; DL-MPT Fusion Linux; linux-
-> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: [PATCH] mptsas: Fix annoying warning
-> 
-> From: Borislav Petkov <borislav.petkov@amd.com>
-> 
-> Shut up
-> 
-> drivers/message/fusion/mptsas.c: In function 'mptsas_event_process':
-> drivers/message/fusion/mptsas.c:5015: warning: unused variable
-> 'log_info'
-> 
-> for configs with CONFIG_SCSI_MPT2SAS_LOGGING unset.
-> 
-> Signed-off-by: Borislav Petkov <borislav.petkov@amd.com>
-> ---
->  drivers/message/fusion/mptsas.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/message/fusion/mptsas.c
-> b/drivers/message/fusion/mptsas.c
-> index 66f9412..7596aec 100644
-> --- a/drivers/message/fusion/mptsas.c
-> +++ b/drivers/message/fusion/mptsas.c
-> @@ -5012,7 +5012,6 @@ mptsas_event_process(MPT_ADAPTER *ioc,
-> EventNotificationReply_t *reply)
->  			(ioc_stat & MPI_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)) {
->  			VirtTarget *vtarget = NULL;
->  			u8		id, channel;
-> -			u32	 log_info = le32_to_cpu(reply->IOCLogInfo);
-> 
->  			id = sas_event_data->TargetID;
->  			channel = sas_event_data->Bus;
-> @@ -5023,7 +5022,8 @@ mptsas_event_process(MPT_ADAPTER *ioc,
-> EventNotificationReply_t *reply)
->  				    "LogInfo (0x%x) available for "
->  				   "INTERNAL_DEVICE_RESET"
->  				   "fw_id %d fw_channel %d\n", ioc->name,
-> -				   log_info, id, channel));
-> +				   le32_to_cpu(reply->IOCLogInfo),
-> +				   id, channel));
->  				if (vtarget->raidVolume) {
->  					devtprintk(ioc, printk(MYIOC_s_DEBUG_FMT
->  					"Skipping Raid Volume for inDMD\n",
-> --
-> 1.7.4.rc2
+Mike C, do you see any issues?
+
+However, when we apply network settings for qla4xxx, it will do logout and
+login all devices, so to avoid all devices getting logout and login for each
+ep_connect call we do not want to apply network settings for each ep_connect.
+
+>
+>2. In the qla4xxx code changes, it looks like each Scsi_Host is only
+>allowing 1 IPv4 and 2 IPv6 addresses to the applied to the HBA.  This is
+>conceivable as each interface can only assume that number of addresses.
+>But in the case of VLANs, how do you handle the case when the VLANs
+>assume different IP addresses and subnets when they are based off of the
+>same HBA?
+>
+>This can be resolved easily if we have a direct reference to the iface
+>parameters upon the ep_connect call.  Perhaps embed this info (or
+>iface_num) to the Scsi_Host struct?  Or just do as proposed in (1).
+>
+>3. Its probably a good idea to bump the ISCSI_UEVENT_MAX #define since
+>the netlink.c in the initiator uses it to error out undefined events.
+>>         ISCSI_UEVENT_PATH_UPDATE        = UEVENT_BASE + 20,
+>> +       ISCSI_UEVENT_SET_NET_CONFIG     = UEVENT_BASE + 21,
+>>
+>>         ISCSI_UEVENT_MAX                = ISCSI_UEVENT_PATH_UPDATE,
+>+       ISCSI_UEVENT_MAX                = ISCSI_UEVENT_SET_NET_CONFIG,
+>>
+>
+
+Yes, we will fix this.
+
+>4. Although the newly defined "set_net_config" to the iscsi_transport
+>structure in the driver is a new augmentation, its interesting that the
+>iscsi_transport_template in the initiator already has a "set_net_config"
+>entry which is currently used for uip_broadcast_params.  We probably
+>should change the name of one of them.
+
+We are not able to find duplication of "set_net_config" on master branch of
+open_iscsi. Can you please point out exact location?.
+
+Thanks,
+Vikas.
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
