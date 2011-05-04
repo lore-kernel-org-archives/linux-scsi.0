@@ -1,39 +1,52 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 3/3] mpt2sas: Driver version upgrade 08.100.00.02
-Date: Wed, 4 May 2011 16:37:04 +0530
-Message-ID: <20110504110700.GC17855@lsi.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to
+ ensure	commands don't get lost.
+Date: Wed, 04 May 2011 13:15:50 +0200
+Message-ID: <4DC13566.5070203@redhat.com>
+References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:54725 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751315Ab1EDKpC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 May 2011 06:45:02 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110503195849.5478.13229.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Driver version upgrade patch.
+On 05/03/2011 09:58 PM, Stephen M. Cameron wrote:
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+>
+> Apparently we've been doin it rong for a decade, but only lately do we
+> run into problems.
+>
+> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> ---
+>  drivers/scsi/hpsa.h |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+> index 621a153..98c97ca 100644
+> --- a/drivers/scsi/hpsa.h
+> +++ b/drivers/scsi/hpsa.h
+> @@ -212,6 +212,7 @@ static void SA5_submit_command(struct ctlr_info *h,
+>  	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
+>  		c->Header.Tag.lower);
+>  	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+> +	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
+>   
+Hi,
+a small nit -
+the (void) ^ is I think not needed for gcc and isn't present in the cciss.h patch
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 2a3c05f..dcc289c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -69,11 +69,11 @@
- #define MPT2SAS_DRIVER_NAME		"mpt2sas"
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
--#define MPT2SAS_DRIVER_VERSION		"08.100.00.01"
-+#define MPT2SAS_DRIVER_VERSION		"08.100.00.02"
- #define MPT2SAS_MAJOR_VERSION		08
- #define MPT2SAS_MINOR_VERSION		100
- #define MPT2SAS_BUILD_VERSION		00
--#define MPT2SAS_RELEASE_VERSION		01
-+#define MPT2SAS_RELEASE_VERSION		02
- 
- /*
-  * Set MPT2SAS_SG_DEPTH value based on user input.
+Tomas
+
+>  	h->commands_outstanding++;
+>  	if (h->commands_outstanding > h->max_outstanding)
+>  		h->max_outstanding = h->commands_outstanding;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
