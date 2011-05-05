@@ -1,135 +1,108 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH v3 0/3] data integrity: Stabilize pages during
-	writeback for ext4
-Date: Wed, 4 May 2011 16:57:06 -0700
-Message-ID: <20110504235706.GJ20579@tux1.beaverton.ibm.com>
-References: <20110408203135.GH1110@tux1.beaverton.ibm.com> <20110411124229.47bc28f6@corrin.poochiereds.net> <1302543595-sup-4352@think> <1302569212.2580.13.camel@mingming-laptop> <20110412005719.GA23077@infradead.org> <1302742128.2586.274.camel@mingming-laptop> <20110422000226.GA22189@tux1.beaverton.ibm.com> <20110504173704.GE20579@tux1.beaverton.ibm.com> <20110504184644.GA23246@infradead.org> <1304536162-sup-3721@think>
-Reply-To: djwong@us.ibm.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC-V2 PATCH] iscsiadm: Add netconfig support in iscsiadm and
+ iscsid
+Date: Thu, 05 May 2011 00:04:25 -0500
+Message-ID: <4DC22FD9.4000908@cs.wisc.edu>
+References: <1301769339-30008-1-git-send-email-vikas.chaudhary@qlogic.com> <1304293717.3737.80.camel@ltirv-waie-lx1> <5E4F49720D0BAD499EE1F01232234BA8728AC7E529@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1304536162-sup-3721@think>
-Sender: owner-linux-mm@kvack.org
-To: Chris Mason <chris.mason@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <cmm@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm <linux-mm@kvack.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57990 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883Ab1EEFEa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 May 2011 01:04:30 -0400
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA8728AC7E529@AVEXMB1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: Eddie Wai <eddie.wai@broadcom.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-On Wed, May 04, 2011 at 03:21:55PM -0400, Chris Mason wrote:
-> Excerpts from Christoph Hellwig's message of 2011-05-04 14:46:44 -0400:
-> > This seems to miss out on a lot of the generic functionality like
-> > write_cache_pages and block_page_mkwrite and just patch it into
-> > the ext4 copy & paste variants.  Please make sure your patches also
-> > work for filesystem that use more of the generic functionality like
-> > xfs or ext2 (the latter one might be fun for the mmap case).
-> 
-> Probably after the block_commit_write in block_page_mkwrite()
-> Another question is, do we want to introduce a wait_on_stable_page_writeback()?
+On 05/04/2011 07:42 AM, Vikas Chaudhary wrote:
+>> -----Original Message-----
+>> From: Eddie Wai [mailto:eddie.wai@broadcom.com]
+>> Sent: Monday, May 02, 2011 5:19 AM
+>> To: open-iscsi@googlegroups.com
+>> Cc: James.Bottomley@suse.de; michaelc@cs.wisc.edu; linux-
+>> scsi@vger.kernel.org; Vikas Chaudhary; Lalit Chandivade; Ravi Anand; Harish
+>> Zunjarrao
+>> Subject: Re: [RFC-V2 PATCH] iscsiadm: Add netconfig support in iscsiadm and
+>> iscsid
+>>
+>> Hello Vikas,
+>>
+>> The patch looks good but I have a few questions/comments in relation to
+>> the general scheme of setting these iface net parameters:
+>>
+>> 1.  As far as I understand, each iface file of the same hw must now
+>> incorporate an unique iface_num which will be used to key off the
+>> corresponding iface settings in the transport.  Iscsiadm will send a
+>> UEVENT along with the net contents to the transport only when it is
+>> explicitly asked to apply the update via the command line.  Perhaps it
+>> would be beneficial to have the initiator apply the changes implicitly
+>> like how it is currently making the call to the
+>> iscsi_host_set_net_params just prior to all the ep_connect calls.  This
+>> will allow the current iface parameters to be set for the corresponding
+>> ep_connect call.
+>
+> Yes, it makes sense. We can add flag similar to "t->template->set_host_ip"
+> and allow implicit network configuration for each ep_connect.
+>
+> Mike C, do you see any issues?
 
-Something like this here?  It fixes block_page_mkwrite users and sticks in a
-simple page_mkwrite for fses that don't provide one at all.  From a quick wac
-run it seems to make xfs work.  ext2 seems to have some issues with modifying a
-buffer_head's bh_data without locking the bh during the update, so I guess it
-needs some review.
+No.
 
---D
+And for the iface_num, I was also think working on just making the iface 
+number more of a string or something. Userspace could then just pass 
+down any value it wanted, so drivers like bnx2i/cxgbi/be2iscsi would not 
+have to worry about the value. It could just be the userpace iface name 
+since that is unique, and it would allow us to match the iface to the 
+kernel object. Still working on it though. I have not completely 
+convince myself. Do you guys have any issues with it or any comments?
 
---
 
-fs: Modify/provide generic writepage/page_mkwrite functions to wait for writeback
+>
+> However, when we apply network settings for qla4xxx, it will do logout and
+> login all devices, so to avoid all devices getting logout and login for each
+> ep_connect call we do not want to apply network settings for each ep_connect.
+>
+>>
+>> 2. In the qla4xxx code changes, it looks like each Scsi_Host is only
+>> allowing 1 IPv4 and 2 IPv6 addresses to the applied to the HBA.  This is
+>> conceivable as each interface can only assume that number of addresses.
+>> But in the case of VLANs, how do you handle the case when the VLANs
+>> assume different IP addresses and subnets when they are based off of the
+>> same HBA?
+>>
+>> This can be resolved easily if we have a direct reference to the iface
+>> parameters upon the ep_connect call.  Perhaps embed this info (or
+>> iface_num) to the Scsi_Host struct?  Or just do as proposed in (1).
+>>
+>> 3. Its probably a good idea to bump the ISCSI_UEVENT_MAX #define since
+>> the netlink.c in the initiator uses it to error out undefined events.
+>>>          ISCSI_UEVENT_PATH_UPDATE        = UEVENT_BASE + 20,
+>>> +       ISCSI_UEVENT_SET_NET_CONFIG     = UEVENT_BASE + 21,
+>>>
+>>>          ISCSI_UEVENT_MAX                = ISCSI_UEVENT_PATH_UPDATE,
+>> +       ISCSI_UEVENT_MAX                = ISCSI_UEVENT_SET_NET_CONFIG,
+>>>
+>>
+>
+> Yes, we will fix this.
 
-Modify the generic writepage function, and add an empty page_mkwrite function,
-to wait for page writeback to finish before allowing writes.  This is so that
-simple filesystems have stable pages during write operations.
+I will fix that up for you.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+>
+>> 4. Although the newly defined "set_net_config" to the iscsi_transport
+>> structure in the driver is a new augmentation, its interesting that the
+>> iscsi_transport_template in the initiator already has a "set_net_config"
+>> entry which is currently used for uip_broadcast_params.  We probably
+>> should change the name of one of them.
+>
+> We are not able to find duplication of "set_net_config" on master branch of
+> open_iscsi. Can you please point out exact location?.
+>
 
- fs/buffer.c  |    1 +
- mm/filemap.c |   10 ++++++++++
- 2 files changed, 11 insertions(+), 0 deletions(-)
-
-diff --git a/fs/buffer.c b/fs/buffer.c
-index a08bb8e..cf9a795 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2361,6 +2361,7 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
- 	if (!ret)
- 		ret = block_commit_write(page, 0, end);
- 
-+	wait_on_page_writeback(page);
- 	if (unlikely(ret)) {
- 		unlock_page(page);
- 		if (ret == -ENOMEM)
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c22675f..9cb4e51 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -1713,8 +1713,18 @@ page_not_uptodate:
- }
- EXPORT_SYMBOL(filemap_fault);
- 
-+static int empty_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
-+{
-+	struct page *page = vmf->page;
-+
-+	lock_page(page);
-+	wait_on_page_writeback(page);
-+	return VM_FAULT_LOCKED;
-+}
-+
- const struct vm_operations_struct generic_file_vm_ops = {
- 	.fault		= filemap_fault,
-+	.page_mkwrite	= empty_page_mkwrite,
- };
- 
- /* This is used for a general mmap of a disk file */
---
-
-Here's the beginning of a patch against ext2 also.  It fixes most of the
-checksum errors when metadata writes are in progress, though I suspect there
-are more spots that I haven't caught yet.
-
---
-
-ext2: Lock buffer_heads during metadata update
-
-ext2 does not protect buffer head that represent metadata against modifications
-during write operations.  This is a problem if the memory buffer needs to be
-stable during writes; I think there are a few more spots in ext2 that need this
-treatment. :)
-
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
-
- fs/ext2/inode.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
-index 788e09a..5314b0b 100644
---- a/fs/ext2/inode.c
-+++ b/fs/ext2/inode.c
-@@ -1426,6 +1426,7 @@ static int __ext2_write_inode(struct inode *inode, int do_sync)
- 	if (IS_ERR(raw_inode))
-  		return -EIO;
- 
-+	lock_buffer(bh);
- 	/* For fields not not tracking in the in-memory inode,
- 	 * initialise them to zero for new inodes. */
- 	if (ei->i_state & EXT2_STATE_NEW)
-@@ -1502,6 +1503,8 @@ static int __ext2_write_inode(struct inode *inode, int do_sync)
- 		}
- 	} else for (n = 0; n < EXT2_N_BLOCKS; n++)
- 		raw_inode->i_block[n] = ei->i_data[n];
-+	unlock_buffer(bh);
-+
- 	mark_buffer_dirty(bh);
- 	if (do_sync) {
- 		sync_dirty_buffer(bh);
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Eddie, is referring to some code in a distro specific patch. Eddie, you 
+probably have a better picture than Vikas of what is going on since you 
+have seen the uip related patches. Any naming suggestions?
