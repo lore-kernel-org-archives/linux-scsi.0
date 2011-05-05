@@ -1,174 +1,110 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch v3 2/3] block: hold queue if flush is running for
- non-queueable flush drive
-Date: Thu, 5 May 2011 10:38:53 +0200
-Message-ID: <20110505083853.GC30950@htj.dyndns.org>
-References: <20110505015932.306763905@sli10-conroe.sh.intel.com>
- <20110505020417.817084678@sli10-conroe.sh.intel.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH v3 0/3] data integrity: Stabilize pages during
+ writeback for ext4
+Date: Thu, 5 May 2011 17:26:01 +0200
+Message-ID: <20110505152601.GI5323@quack.suse.cz>
+References: <20110411124229.47bc28f6@corrin.poochiereds.net>
+ <1302543595-sup-4352@think>
+ <1302569212.2580.13.camel@mingming-laptop>
+ <20110412005719.GA23077@infradead.org>
+ <1302742128.2586.274.camel@mingming-laptop>
+ <20110422000226.GA22189@tux1.beaverton.ibm.com>
+ <20110504173704.GE20579@tux1.beaverton.ibm.com>
+ <20110504184644.GA23246@infradead.org>
+ <1304536162-sup-3721@think>
+ <20110504235706.GJ20579@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20110505020417.817084678@sli10-conroe.sh.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: shaohua.li@intel.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, jaxboe@fusionio.com, hch@infradead.org, jgarzik@pobox.com, djwong@us.ibm.com, sshtylyov@mvista.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, ricwheeler@gmail.com
+In-Reply-To: <20110504235706.GJ20579@tux1.beaverton.ibm.com>
+Sender: owner-linux-mm@kvack.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Chris Mason <chris.mason@oracle.com>, Christoph Hellwig <hch@infradead.org>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@redhat.com>, Jan Kara <jack@suse.cz>, Dave Chinner <david@fromorbit.com>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <cmm@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm <linux-mm@kvack.org>
 List-Id: linux-scsi@vger.kernel.org
 
-(cc'ing James, Ric, Christoph and lscsi.  Hi! Please jump to the
-bottom of the message.)
+  Hello,
 
-Hello,
-
-On Thu, May 05, 2011 at 09:59:34AM +0800, shaohua.li@intel.com wrote:
-> In some drives, flush requests are non-queueable. When flush request is running,
-> normal read/write requests can't run. If block layer dispatches such request,
-> driver can't handle it and requeue it.
-> Tejun suggested we can hold the queue when flush is running. This can avoid
-> unnecessary requeue.
-> Also this can improve performance. For example, we have request flush1, write1,
-> flush 2. flush1 is dispatched, then queue is hold, write1 isn't inserted to
-> queue. After flush1 is finished, flush2 will be dispatched. Since disk cache
-> is already clean, flush2 will be finished very soon, so looks like flush2 is
-> folded to flush1.
-> In my test, the queue holding completely solves a regression introduced by
-> commit 53d63e6b0dfb95882ec0219ba6bbd50cde423794:
->     block: make the flush insertion use the tail of the dispatch list
+On Wed 04-05-11 16:57:06, Darrick J. Wong wrote:
+> On Wed, May 04, 2011 at 03:21:55PM -0400, Chris Mason wrote:
+> > Excerpts from Christoph Hellwig's message of 2011-05-04 14:46:44 -0400:
+> > > This seems to miss out on a lot of the generic functionality like
+> > > write_cache_pages and block_page_mkwrite and just patch it into
+> > > the ext4 copy & paste variants.  Please make sure your patches also
+> > > work for filesystem that use more of the generic functionality like
+> > > xfs or ext2 (the latter one might be fun for the mmap case).
+> > 
+> > Probably after the block_commit_write in block_page_mkwrite()
+> > Another question is, do we want to introduce a wait_on_stable_page_writeback()?
 > 
->     It's not a preempt type request, in fact we have to insert it
->     behind requests that do specify INSERT_FRONT.
-> which causes about 20% regression running a sysbench fileio
-> workload.
+> Something like this here?  It fixes block_page_mkwrite users and sticks in a
+> simple page_mkwrite for fses that don't provide one at all.  From a quick wac
+> run it seems to make xfs work.  ext2 seems to have some issues with modifying a
+> buffer_head's bh_data without locking the bh during the update, so I guess it
+> needs some review.
+  Yes, ext2 is rather difficult because of all the metadata updates to
+buffers happening. That would need a serious work I suspect.
+
+> fs: Modify/provide generic writepage/page_mkwrite functions to wait for writeback
 > 
-> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+> Modify the generic writepage function, and add an empty page_mkwrite function,
+> to wait for page writeback to finish before allowing writes.  This is so that
+> simple filesystems have stable pages during write operations.
+> 
+> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+> ---
+> 
+>  fs/buffer.c  |    1 +
+>  mm/filemap.c |   10 ++++++++++
+>  2 files changed, 11 insertions(+), 0 deletions(-)
+> 
+> diff --git a/fs/buffer.c b/fs/buffer.c
+> index a08bb8e..cf9a795 100644
+> --- a/fs/buffer.c
+> +++ b/fs/buffer.c
+> @@ -2361,6 +2361,7 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+>  	if (!ret)
+>  		ret = block_commit_write(page, 0, end);
+>  
+> +	wait_on_page_writeback(page);
+>  	if (unlikely(ret)) {
+>  		unlock_page(page);
+>  		if (ret == -ENOMEM)
+> diff --git a/mm/filemap.c b/mm/filemap.c
+> index c22675f..9cb4e51 100644
+> --- a/mm/filemap.c
+> +++ b/mm/filemap.c
+> @@ -1713,8 +1713,18 @@ page_not_uptodate:
+>  }
+>  EXPORT_SYMBOL(filemap_fault);
+>  
+> +static int empty_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
+> +{
+> +	struct page *page = vmf->page;
+> +
+> +	lock_page(page);
+> +	wait_on_page_writeback(page);
+> +	return VM_FAULT_LOCKED;
+> +}
+> +
+  I guess you miss the whether the page has been truncated here (in which
+case you should return VM_FAULT_NOPAGE).
 
-Acked-by: Tejun Heo <tj@kernel.org>
+>  const struct vm_operations_struct generic_file_vm_ops = {
+>  	.fault		= filemap_fault,
+> +	.page_mkwrite	= empty_page_mkwrite,
+>  };
+>  
+>  /* This is used for a general mmap of a disk file */
 
-But, I think the description and comments can use some refinements.
-First of all, new lines won't steal your first born.  Don't be too
-afraid of them both in the patch description and comments.
-
-For the patch description, I want to recomment explaining the
-regression case first - explain why the regression happened and then
-show how this patch solves the issue.  Also, more conventional way to
-refer to a commit is 53d63e6b0d (block: make the flush insertion use
-the tail of the dispatch list).
-
->  	/*
-> -	 * Moving a request silently to empty queue_head may stall the
-> -	 * queue.  Kick the queue in those cases.  This function is called
-> -	 * from request completion path and calling directly into
-> -	 * request_fn may confuse the driver.  Always use kblockd.
-> +	 * Kick the queue to avoid stall for two cases:
-> +	 * 1. Moving a request silently to empty queue_head may stall the
-> +	 * queue.
-> +	 * 2. When flush request is running in non-queueable queue, the
-> +	 * queue is hold. Restart the queue after flush request is finished
-> +	 * to avoid stall.
-> +	 * This function is called from request completion path and calling
-> +	 * directly into request_fn may confuse the driver.  Always use
-> +	 * kblockd.
->  	 */
-
-Yeap, pretty good but let's add a bit more whitespaces and apply
-slight adjustments.
-
-	/*
-	 * After flush sequencing, the following two cases may lead to
-	 * queue stall.
-	 *
-	 * 1. Moving a request silently to empty queue_head.
-	 *
-	 * 2. If flush request was non-queueable, request dispatching may
-	 *    have been blocked while flush was in progress.
-	 *
-	 * Make sure queue processing is restarted by kicking the queue.
-	 * As this function is called from request completion path,
-	 * calling directly into request_fn may confuse the driver.  Always
-	 * use kblockd.
-	 */
-
-> +		/*
-> +		 * Flush request is running and flush request isn't queueable
-> +		 * in the drive, we can hold the queue till flush request is
-> +		 * finished. Even we don't do this, driver can't dispatch next
-> +		 * requests and will requeue them. And this can improve
-> +		 * throughput too. For example, we have request flush1, write1,
-> +		 * flush 2. flush1 is dispatched, then queue is hold, write1
-> +		 * isn't inserted to queue. After flush1 is finished, flush2
-> +		 * will be dispatched. Since disk cache is already clean,
-> +		 * flush2 will be finished very soon, so looks like flush2 is
-> +		 * folded to flush1.
-> +		 * Since the queue is hold, a flag is set to indicate the queue
-> +		 * should be restarted later. Please see flush_end_io() for
-> +		 * details.
-> +		 */
-
-Similarly, I'd like to suggest something like the following.
-
-		/*
-		 * Hold dispatching of regular requests if non-queueable
-		 * flush is in progress; otherwise, the low level driver
-		 * would keep dispatching IO requests just to requeue them
-		 * until the flush finishes, which not only adds
-		 * dispatching / requeueing overhead but may also
-		 * significantly affect throughput when multiple flushes
-		 * are issued back-to-back.  Please consider the following
-		 * scenario.
-		 *
-		 * - flush1 is dispatched with write1 in the elevator.
-		 *
-		 * - Driver dispatches write1 and requeues it.
-		 *
-		 * - flush2 is issued and appended to dispatch queue after
-		 *   the requeued write1.  As write1 has been requeued
-		 *   flush2 can't be put in front of it.
-		 *
-		 * - When flush1 finishes, the driver has to process write1
-		 *   before flush2 even though there's no fundamental
-		 *   reason flush2 can't be processed first and, when two
-		 *   flushes are issued back-to-back without intervening
-		 *   writes, the second one essentially becomes noop.
-		 *
-		 * This phenomena becomes quite visible under heavy
-		 * concurrent fsync workload and holding the queue while
-		 * flush is in progress leads to significant throughput
-		 * gain.
-		 */
-
-And two more things that I think are worth investigating.
-
-- I wonder whether this would be useful for even devices which can
-  queue flushes (ie. native SCSI ones).  There definitely are some
-  benefits to queueing flushes in terms of hiding command dispatching
-  overhead and if the device is smart/deep enough parallelly
-  processing non-conflicting operations (ie. reads and flushing later
-  writes together if the head sweeps that way).
-
-  That said, flushes are mostly mutually exclusive w.r.t. writes and
-  even with queueable flushes, we might benefit more by holding
-  further writes until flush finishes.  Under light sync workload,
-  this doesn't matter anyway.  Under heavy, the benefit of queueing
-  the later writes together can be easily outweighted by some of
-  flushes becoming noops.
-
-  Unfortunately (or rather, fortunately), I don't have any access to
-  such fancy devices so it would be great if the upscale storage guys
-  can tinker with it a bit and see how it fares.  If it goes well, we
-  can also make things more advanced by implementing back-to-back
-  noop'ing in block layer and allowing issue of reads parallelly with
-  flushes, if the benefits they bring justify the added complexity.
-
-- This is much more minor but if block layer already knows flushes are
-  non-queueable, it might be a good idea to hold dispatching of
-  flushes if other requests are already in progress.  It will only
-  save dispatch/requeue overhead which might not matter at all, so
-  this has pretty good chance of not being worth of the added
-  complexity tho.
-
-So, is anyone from the upscale storage world interested?
-
-Thanks.
-
+									Honza
 -- 
-tejun
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
