@@ -1,59 +1,55 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to ensure commands don't get lost.
-Date: Thu, 5 May 2011 13:35:15 -0500
-Message-ID: <20110505183515.GA14193@beardog.cce.hp.com>
-References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com> <4DC13566.5070203@redhat.com> <20110504125212.GC5997@beardog.cce.hp.com> <10639.1304530101@localhost> <20110504173735.GB22953@parisc-linux.org> <11821.1304531662@localhost>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 34412] Error-valued pointer dereferences in SCSI
+Date: Thu, 5 May 2011 22:35:01 GMT
+Message-ID: <201105052235.p45MZ1Uf019957@demeter2.kernel.org>
+References: <bug-34412-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0026.austin.hp.com ([15.216.28.33]:24669 "EHLO
-	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932103Ab1EESl1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2011 14:41:27 -0400
-Content-Disposition: inline
-In-Reply-To: <11821.1304531662@localhost>
+Received: from demeter2.kernel.org ([140.211.167.42]:43535 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967Ab1EEWfC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2011 18:35:02 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p45MZ11u019958
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 5 May 2011 22:35:01 GMT
+In-Reply-To: <bug-34412-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Valdis.Kletnieks@vt.edu, scameron@beardog.cce.hp.com, thenzl@redhat.com, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: linux-scsi@vger.kernel.org
 
-On Wed, May 04, 2011 at 01:54:22PM -0400, Valdis.Kletnieks@vt.edu wrote:
-> On Wed, 04 May 2011 11:37:35 MDT, Matthew Wilcox said:
-> > > This probably needs a comment like
-> > > 	/* don't care - dummy read just to force write posting to chipset */
-> > > or similar.  I'm assuming it's just functioning as a barrier-type flush of some sort?
-> > 
-> > It's a PCI write flush.  It's not clear to me why it's needed here,
-> > though.  The write will eventually get to the device; why we need to
-> > make the CPU wait around for it to actually get there doesn't make sense.
+https://bugzilla.kernel.org/show_bug.cgi?id=34412
+
+
+Andrew Morton <akpm@linux-foundation.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
+
+
+
+
+--- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2011-05-05 22:34:59 ---
+(In reply to comment #0)
+
+> drivers/scsi/scsi_devinfo.c:716: Dereferencing variable
+> scsi_dev_info_add_list#devinfo_table, which may contain one of the following
+> error codes: EINVAL* 
 > 
-> Exactly why I think it needs a one-liner comment. :)
-> 
-So we're not exactly sure why it's needed either. We've had reports of
-commands getting "lost" or "stuck" under some workloads. The extra readl
-works around the issue but certainly may have negative side effects.
 
-I'm not sure I understand how writel works.
+This appears to be just wrong.  I see no such bug in scsi_dev_info_add_list().
 
->From linux-2.6/arch/x86/include/asm/io.h:
+I suggest that you look more closely at the code which the tool is generating
+reports about, to identify false positives and to improve the tool.
 
-#define build_mmio_write(name, size, type, reg, barrier) \
-static inline void name(type val, volatile void __iomem *addr) \
-{ asm volatile("mov" size " %0,%1": :reg (val), \
-"m" (*(volatile type __force *)addr) barrier); }
+When you have spotted some real bugs, please report them via email to
+linux-kernel@vger.kernel.org.  Because hardly anyone reads bugzilla and to get
+a developer to look at these issues I'd have to route the reports to the
+linux-kernel list for you.
 
-This implies (at least to me) that a barrier is part of writel. I don't know
-why a write operation needs a barrier but thats essentially what we've done
-by adding the extra readl. Can someone confirm or deny that a barrier is
-actually built into writel? Or used by writel? If so, does this indicate
-that barrier is broken?
-
-At this point we (the software guys) are pretty much at a loss as to how to
-continue debugging. We don't know what to trigger on for the PCIe analyzer.
-If we track outstanding commands then trigger on one that doesn't complete in
-some amount of time the problem could conceivably be far in the past and
-difficult to correlate to the data in the trace.
-
-If anyone has any thoughts, suggestions, or flames they would be greatly
-appreciated.
-
--- mikem
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
