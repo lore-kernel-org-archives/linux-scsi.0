@@ -1,131 +1,59 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: [RFC-V2 PATCH] iscsiadm: Add netconfig support in iscsiadm
- and iscsid
-Date: Thu, 5 May 2011 11:16:27 -0700
-Message-ID: <1304619387.3761.88.camel@ltirv-waie-lx1>
-References: <1301769339-30008-1-git-send-email-vikas.chaudhary@qlogic.com>
- <1304293717.3737.80.camel@ltirv-waie-lx1>
- <5E4F49720D0BAD499EE1F01232234BA8728AC7E529@AVEXMB1.qlogic.org>
- <4DC22FD9.4000908@cs.wisc.edu>
+From: Mike Miller <mike.miller@hp.com>
+Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path to ensure commands don't get lost.
+Date: Thu, 5 May 2011 13:35:15 -0500
+Message-ID: <20110505183515.GA14193@beardog.cce.hp.com>
+References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com> <20110503195849.5478.13229.stgit@beardog.cce.hp.com> <4DC13566.5070203@redhat.com> <20110504125212.GC5997@beardog.cce.hp.com> <10639.1304530101@localhost> <20110504173735.GB22953@parisc-linux.org> <11821.1304531662@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4380 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755521Ab1EESQl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 May 2011 14:16:41 -0400
-In-Reply-To: <4DC22FD9.4000908@cs.wisc.edu>
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:24669 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932103Ab1EESl1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2011 14:41:27 -0400
+Content-Disposition: inline
+In-Reply-To: <11821.1304531662@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+Cc: Valdis.Kletnieks@vt.edu, scameron@beardog.cce.hp.com, thenzl@redhat.com, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
+On Wed, May 04, 2011 at 01:54:22PM -0400, Valdis.Kletnieks@vt.edu wrote:
+> On Wed, 04 May 2011 11:37:35 MDT, Matthew Wilcox said:
+> > > This probably needs a comment like
+> > > 	/* don't care - dummy read just to force write posting to chipset */
+> > > or similar.  I'm assuming it's just functioning as a barrier-type flush of some sort?
+> > 
+> > It's a PCI write flush.  It's not clear to me why it's needed here,
+> > though.  The write will eventually get to the device; why we need to
+> > make the CPU wait around for it to actually get there doesn't make sense.
+> 
+> Exactly why I think it needs a one-liner comment. :)
+> 
+So we're not exactly sure why it's needed either. We've had reports of
+commands getting "lost" or "stuck" under some workloads. The extra readl
+works around the issue but certainly may have negative side effects.
 
-On Wed, 2011-05-04 at 22:04 -0700, Mike Christie wrote:
-> On 05/04/2011 07:42 AM, Vikas Chaudhary wrote:
-> >> -----Original Message-----
-> >> From: Eddie Wai [mailto:eddie.wai@broadcom.com]
-> >> Sent: Monday, May 02, 2011 5:19 AM
-> >> To: open-iscsi@googlegroups.com
-> >> Cc: James.Bottomley@suse.de; michaelc@cs.wisc.edu; linux-
-> >> scsi@vger.kernel.org; Vikas Chaudhary; Lalit Chandivade; Ravi Anand; Harish
-> >> Zunjarrao
-> >> Subject: Re: [RFC-V2 PATCH] iscsiadm: Add netconfig support in iscsiadm and
-> >> iscsid
-> >>
-> >> Hello Vikas,
-> >>
-> >> The patch looks good but I have a few questions/comments in relation to
-> >> the general scheme of setting these iface net parameters:
-> >>
-> >> 1.  As far as I understand, each iface file of the same hw must now
-> >> incorporate an unique iface_num which will be used to key off the
-> >> corresponding iface settings in the transport.  Iscsiadm will send a
-> >> UEVENT along with the net contents to the transport only when it is
-> >> explicitly asked to apply the update via the command line.  Perhaps it
-> >> would be beneficial to have the initiator apply the changes implicitly
-> >> like how it is currently making the call to the
-> >> iscsi_host_set_net_params just prior to all the ep_connect calls.  This
-> >> will allow the current iface parameters to be set for the corresponding
-> >> ep_connect call.
-> >
-> > Yes, it makes sense. We can add flag similar to "t->template->set_host_ip"
-> > and allow implicit network configuration for each ep_connect.
-> >
-> > Mike C, do you see any issues?
-> 
-> No.
-> 
-> And for the iface_num, I was also think working on just making the iface 
-> number more of a string or something. Userspace could then just pass 
-> down any value it wanted, so drivers like bnx2i/cxgbi/be2iscsi would not 
-> have to worry about the value. It could just be the userpace iface name 
-> since that is unique, and it would allow us to match the iface to the 
-> kernel object. Still working on it though. I have not completely 
-> convince myself. Do you guys have any issues with it or any comments?
-> 
-I think it would work as long as the handle passed to the transport is unique.
-> 
-> 
-> >
-> > However, when we apply network settings for qla4xxx, it will do logout and
-> > login all devices, so to avoid all devices getting logout and login for each
-> > ep_connect call we do not want to apply network settings for each ep_connect.
-> >
-> >>
-> >> 2. In the qla4xxx code changes, it looks like each Scsi_Host is only
-> >> allowing 1 IPv4 and 2 IPv6 addresses to the applied to the HBA.  This is
-> >> conceivable as each interface can only assume that number of addresses.
-> >> But in the case of VLANs, how do you handle the case when the VLANs
-> >> assume different IP addresses and subnets when they are based off of the
-> >> same HBA?
-> >>
-> >> This can be resolved easily if we have a direct reference to the iface
-> >> parameters upon the ep_connect call.  Perhaps embed this info (or
-> >> iface_num) to the Scsi_Host struct?  Or just do as proposed in (1).
-> >>
-> >> 3. Its probably a good idea to bump the ISCSI_UEVENT_MAX #define since
-> >> the netlink.c in the initiator uses it to error out undefined events.
-> >>>          ISCSI_UEVENT_PATH_UPDATE        = UEVENT_BASE + 20,
-> >>> +       ISCSI_UEVENT_SET_NET_CONFIG     = UEVENT_BASE + 21,
-> >>>
-> >>>          ISCSI_UEVENT_MAX                = ISCSI_UEVENT_PATH_UPDATE,
-> >> +       ISCSI_UEVENT_MAX                = ISCSI_UEVENT_SET_NET_CONFIG,
-> >>>
-> >>
-> >
-> > Yes, we will fix this.
-> 
-> I will fix that up for you.
-> 
-> >
-> >> 4. Although the newly defined "set_net_config" to the iscsi_transport
-> >> structure in the driver is a new augmentation, its interesting that the
-> >> iscsi_transport_template in the initiator already has a "set_net_config"
-> >> entry which is currently used for uip_broadcast_params.  We probably
-> >> should change the name of one of them.
-> >
-> > We are not able to find duplication of "set_net_config" on master branch of
-> > open_iscsi. Can you please point out exact location?.
-> >
-> 
-> Eddie, is referring to some code in a distro specific patch. Eddie, you 
-> probably have a better picture than Vikas of what is going on since you 
-> have seen the uip related patches. Any naming suggestions?
-> 
-uIP is the userspace app that our offload solution uses for some of the
-TCP/IP assistance like DHCP, ICMP, etc.  We have plans to upstream this
-code so other people can use it for the same purposes also.
+I'm not sure I understand how writel works.
 
-I think it would be more fitting to change the
-iscsi_transport_template's set_net_config in the initiator to something
-more specific to uIP like set_uip_config instead.  
+>From linux-2.6/arch/x86/include/asm/io.h:
 
-Specifically for the uIP solution, I would imagine it's iscsid thread will only
-be used to build up the iface database within the app.  The actual iface used
-will have to come from the unique iface handle passed from the transport via
-PATH_REQUEST.
+#define build_mmio_write(name, size, type, reg, barrier) \
+static inline void name(type val, volatile void __iomem *addr) \
+{ asm volatile("mov" size " %0,%1": :reg (val), \
+"m" (*(volatile type __force *)addr) barrier); }
 
+This implies (at least to me) that a barrier is part of writel. I don't know
+why a write operation needs a barrier but thats essentially what we've done
+by adding the extra readl. Can someone confirm or deny that a barrier is
+actually built into writel? Or used by writel? If so, does this indicate
+that barrier is broken?
 
+At this point we (the software guys) are pretty much at a loss as to how to
+continue debugging. We don't know what to trigger on for the PCIe analyzer.
+If we track outstanding commands then trigger on one that doesn't complete in
+some amount of time the problem could conceivably be far in the past and
+difficult to correlate to the data in the trace.
 
+If anyone has any thoughts, suggestions, or flames they would be greatly
+appreciated.
+
+-- mikem
