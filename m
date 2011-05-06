@@ -1,55 +1,56 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 34412] Error-valued pointer dereferences in SCSI
-Date: Thu, 5 May 2011 22:35:01 GMT
-Message-ID: <201105052235.p45MZ1Uf019957@demeter2.kernel.org>
-References: <bug-34412-11613@https.bugzilla.kernel.org/>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/3] libsas: fix/amend device gone notification in sas_deform_port()
+Date: Thu, 5 May 2011 17:13:44 -0700
+Message-ID: <BANLkTikhUQ6b3Y=ZAqOmHF8BtP57DQ4zqg@mail.gmail.com>
+References: <20110503183526.21471.84735.stgit@localhost6.localdomain6>
+	<20110503183627.21471.57988.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:43535 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967Ab1EEWfC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 May 2011 18:35:02 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p45MZ11u019958
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 5 May 2011 22:35:01 GMT
-In-Reply-To: <bug-34412-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20110503183627.21471.57988.stgit@localhost6.localdomain6>
+Sender: linux-ide-owner@vger.kernel.org
+To: james.bottomley@suse.de
+Cc: Haipao Fan <haipao.fan@intel.com>, linux-scsi@vger.kernel.org, David Milburn <dmilburn@redhat.com>, Maciej Trela <maciej.trela@intel.com>, linux-ide@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=34412
+On Tue, May 3, 2011 at 11:36 AM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> This patch also introduces sas_device_gone() which hopefully allows
+> subtle/tricky locking to be dropped from lldd drivers, like the
+> following in mvsas which is broken if the ata path is ever converted =
+to
+> call lldd_execute_task() with irqs enabled:
+[..]
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas=
+/sas_expander.c
+> index 505ffe3..7a785df 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -1721,13 +1721,27 @@ out:
+> =A0 =A0 =A0 =A0return res;
+> =A0}
+>
+> +/* FIXME: delete this routine when/if sas_ata stops submitting tasks
+> + * with host_lock held
+> + */
+> +void sas_device_gone(struct domain_device *dev)
+> +{
+> + =A0 =A0 =A0 struct sas_rphy *rphy =3D dev->rphy;
+> + =A0 =A0 =A0 struct Scsi_Host *shost =3D dev_to_shost(rphy->dev.pare=
+nt);
+> +
+> + =A0 =A0 =A0 /* take the lock to synchronize against incoming sata i=
+/o */
+> + =A0 =A0 =A0 spin_lock_irq(shost->host_lock);
+> + =A0 =A0 =A0 dev->gone =3D 1;
+> + =A0 =A0 =A0 spin_unlock_irq(shost->host_lock);
+> +}
 
+Commit a29b5dad "libata: fix locking for sas paths" has gone in since
+this patch was created so this locking no longer has any effect.
 
-Andrew Morton <akpm@linux-foundation.org> changed:
+Now needs to be dev->sata_dev.ap->lock, will resubmit.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |akpm@linux-foundation.org
-
-
-
-
---- Comment #1 from Andrew Morton <akpm@linux-foundation.org>  2011-05-05 22:34:59 ---
-(In reply to comment #0)
-
-> drivers/scsi/scsi_devinfo.c:716: Dereferencing variable
-> scsi_dev_info_add_list#devinfo_table, which may contain one of the following
-> error codes: EINVAL* 
-> 
-
-This appears to be just wrong.  I see no such bug in scsi_dev_info_add_list().
-
-I suggest that you look more closely at the code which the tool is generating
-reports about, to identify false positives and to improve the tool.
-
-When you have spotted some real bugs, please report them via email to
-linux-kernel@vger.kernel.org.  Because hardly anyone reads bugzilla and to get
-a developer to look at these issues I'd have to route the reports to the
-linux-kernel list for you.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+--
+Dan
