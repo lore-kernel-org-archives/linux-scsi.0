@@ -1,57 +1,23 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [GIT PULL] SCSI fixes for 2.6.39-rc6
-Date: Fri, 06 May 2011 11:41:25 -0500
-Message-ID: <1304700085.12427.10.camel@mulgrave.site>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [patch v3 2/3] block: hold queue if flush is running for  non-queueable
+ flush drive
+Date: Fri, 6 May 2011 11:28:54 -0600
+Message-ID: <4DC42FD6.8010508@fusionio.com>
+References: <20110505015932.306763905@sli10-conroe.sh.intel.com> <20110505020417.817084678@sli10-conroe.sh.intel.com> <20110505083853.GC30950@htj.dyndns.org> <1304656325.3828.22.camel@sli10-conroe> <20110506065347.GA8824@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110506065347.GA8824@htj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Shaohua Li <shaohua.li@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "djwong@us.ibm.com" <djwong@us.ibm.com>, "sshtylyov@mvista.com" <sshtylyov@mvista.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ricwheeler@gmail.com" <ricwheeler@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Actually, it's just one fix ... another oops triggered by a previous
-fix.
+On 2011-05-06 00:53, Tejun Heo wrote:
+> Jens, can you please queue this for the next merge window?
 
-The patch is available here:
+Yep I will, I'll mark it as a backport as well.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-
-The short changelog is:
-
-James Bottomley (1):
-      fix oops in scsi_run_queue()
-
-The diffstat is:
-
- drivers/scsi/scsi_lib.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-And the full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e9901b8..0bac91e 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -400,10 +400,15 @@ static inline int scsi_host_is_busy(struct Scsi_Host *shost)
- static void scsi_run_queue(struct request_queue *q)
- {
- 	struct scsi_device *sdev = q->queuedata;
--	struct Scsi_Host *shost = sdev->host;
-+	struct Scsi_Host *shost;
- 	LIST_HEAD(starved_list);
- 	unsigned long flags;
- 
-+	/* if the device is dead, sdev will be NULL, so no queue to run */
-+	if (!sdev)
-+		return;
-+
-+	shost = sdev->host;
- 	if (scsi_target(sdev)->single_lun)
- 		scsi_single_lun_run(sdev);
- 
+-- 
+Jens Axboe
