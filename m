@@ -1,41 +1,1135 @@
 From: vikas.chaudhary@qlogic.com
-Subject: [RFC PATCH 1/3] scsi_transport_iscsi: Add flag CAP_LOGIN_OFFLOAD
-Date: Fri,  6 May 2011 05:29:51 -0700
-Message-ID: <1304684993-1715-2-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [RFC PATCH 3/3] qla4xxx: Remove reduandant code after open-iscsi integration.
+Date: Fri,  6 May 2011 05:29:53 -0700
+Message-ID: <1304684993-1715-4-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1304684993-1715-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:36725 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:36747 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1752288Ab1EFMgC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752206Ab1EFMgC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 6 May 2011 08:36:02 -0400
 In-Reply-To: <1304684993-1715-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Rangankar <manish.rangankar@qlogic.com>
 
 From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-Add capability for offloading session login.
+1. Remove device database entry (ddb) state.
+2. Remove device database (DDB) list building.
+        With open-iscsi integration the logins to the target devices are
+        handled by the user space. So the information of target is now
+        maintained in the iscsi_session object. This is handled at
+        libiscsi level so there is no need to maintain a list of DDBs in
+        the qla4xxx LLD.
+3. qla4xxx: Remove add_device_dynamically.
+        Since autologin in FW is disabled with open-iscsi integration,
+        driver will never get an AEN for which driver has not requested
+        a DDB index. So remove the add_device_dynamically function.
+4. Remove qla4xxx_tgt_dscvr
+        Since firmware autologin is disabled this function will not work.
+        Now user has the ability to do the target discovery and login to
+        each target individually. Firwmare will not do the login on its own.
+5. Remove relogin related code
+        All relogin is handled by userspace now. qla4xxx just need to
+        notify userspace of a connection failure, this triggers the
+        relogin.
+6. Remove add_session and alloc_session
+        Now qla4xxx uses iscsi_session_setup that would do the necessary
+        allocations for session and ddb_entry.
 
+Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
 Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- include/scsi/iscsi_if.h |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h  |   45 +---
+ drivers/scsi/qla4xxx/ql4_glbl.h |   12 +-
+ drivers/scsi/qla4xxx/ql4_init.c |  607 +--------------------------------------
+ drivers/scsi/qla4xxx/ql4_iocb.c |    2 -
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   55 ----
+ drivers/scsi/qla4xxx/ql4_os.c   |  125 +--------
+ 6 files changed, 10 insertions(+), 836 deletions(-)
 
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 86f6f1a..ad9fb02 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -481,6 +481,7 @@ enum iscsi_host_param {
- #define CAP_DIGEST_OFFLOAD	0x1000	/* offload hdr and data digests */
- #define CAP_PADDING_OFFLOAD	0x2000	/* offload padding insertion, removal,
- 					 and verification */
-+#define CAP_LOGIN_OFFLOAD	0x4000  /* offload session login */
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index d9d59ba..86578e9 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -231,52 +231,12 @@ struct ql4_aen_log {
+  * Device Database (DDB) structure
+  */
+ struct ddb_entry {
+-	struct list_head list;	/* ddb list */
+ 	struct scsi_qla_host *ha;
+ 	struct iscsi_cls_session *sess;
+ 	struct iscsi_cls_conn *conn;
  
+-	atomic_t state;		/* DDB State */
+-
+-	unsigned long flags;	/* DDB Flags */
+-
+ 	uint16_t fw_ddb_index;	/* DDB firmware index */
+-	uint16_t options;
+ 	uint32_t fw_ddb_device_state; /* F/W Device State  -- see ql4_fw.h */
+-
+-	uint32_t CmdSn;
+-	uint16_t target_session_id;
+-	uint16_t connection_id;
+-	uint16_t exe_throttle;	/* Max mumber of cmds outstanding
+-				 * simultaneously */
+-	uint16_t task_mgmt_timeout; /* Min time for task mgmt cmds to
+-				     * complete */
+-	uint16_t default_relogin_timeout; /*  Max time to wait for
+-					   *  relogin to complete */
+-	uint16_t tcp_source_port_num;
+-	uint32_t default_time2wait; /* Default Min time between
+-				     * relogins (+aens) */
+-
+-	atomic_t retry_relogin_timer; /* Min Time between relogins
+-				       * (4000 only) */
+-	atomic_t relogin_timer;	/* Max Time to wait for relogin to complete */
+-	atomic_t relogin_retry_count; /* Num of times relogin has been
+-				       * retried */
+-
+-	uint16_t port;
+-	uint32_t tpgt;
+-	uint8_t ip_addr[IP_ADDR_LEN];
+-	uint8_t iscsi_name[ISCSI_NAME_SIZE];	/* 72 x48 */
+-	uint8_t iscsi_alias[0x20];
+-	uint8_t isid[6];
+-	uint16_t iscsi_max_burst_len;
+-	uint16_t iscsi_max_outsnd_r2t;
+-	uint16_t iscsi_first_burst_len;
+-	uint16_t iscsi_max_rcv_data_seg_len;
+-	uint16_t iscsi_max_snd_data_seg_len;
+-
+-	struct in6_addr remote_ipv6_addr;
+-	struct in6_addr link_local_ipv6_addr;
+ 	struct completion aen_comp;
+ };
+ 
+@@ -546,10 +506,7 @@ struct scsi_qla_host {
+ 	volatile uint8_t mbox_status_count;
+ 	volatile uint32_t mbox_status[MBOX_REG_COUNT];
+ 
+-	/* local device database list (contains internal ddb entries) */
+-	struct list_head ddb_list;
+-
+-	/* Map ddb_list entry by FW ddb index */
++	/* FW ddb index map*/
+ 	struct ddb_entry *fw_ddb_index_map[MAX_DDB_ENTRIES];
+ 
+ 	/* Saved srb for status continuation entry processing */
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 74d89d6..3098f8f 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -12,20 +12,15 @@ struct iscsi_cls_conn;
+ 
+ int qla4xxx_hw_reset(struct scsi_qla_host *ha);
+ int ql4xxx_lock_drvr_wait(struct scsi_qla_host *a);
+-int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port);
+ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb *srb);
+-int qla4xxx_initialize_adapter(struct scsi_qla_host *ha,
+-			       uint8_t renew_ddb_list);
++int qla4xxx_initialize_adapter(struct scsi_qla_host *ha);
+ int qla4xxx_soft_reset(struct scsi_qla_host *ha);
+ irqreturn_t qla4xxx_intr_handler(int irq, void *dev_id);
+ 
+-void qla4xxx_free_ddb_list(struct scsi_qla_host *ha);
+ void qla4xxx_free_ddb(struct scsi_qla_host *ha, struct ddb_entry *ddb_entry);
+ void qla4xxx_process_aen(struct scsi_qla_host *ha, uint8_t process_aen);
+ 
+ int qla4xxx_get_dhcp_ip_address(struct scsi_qla_host *ha);
+-int qla4xxx_relogin_device(struct scsi_qla_host *ha,
+-			   struct ddb_entry *ddb_entry);
+ int qla4xxx_abort_task(struct scsi_qla_host *ha, struct srb *srb);
+ int qla4xxx_reset_lun(struct scsi_qla_host *ha, struct ddb_entry *ddb_entry,
+ 		      int lun);
+@@ -67,9 +62,6 @@ void qla4xxx_mark_device_missing(struct iscsi_cls_session *cls_session);
+ int qla4xxx_session_online(struct iscsi_cls_session *session);
+ u16 rd_nvram_word(struct scsi_qla_host *ha, int offset);
+ void qla4xxx_get_crash_record(struct scsi_qla_host *ha);
+-struct ddb_entry *qla4xxx_alloc_sess(struct scsi_qla_host *ha);
+-int qla4xxx_add_sess(struct ddb_entry *);
+-void qla4xxx_destroy_sess(struct ddb_entry *ddb_entry);
+ int qla4xxx_is_nvram_configuration_valid(struct scsi_qla_host *ha);
+ int qla4xxx_get_fw_version(struct scsi_qla_host * ha);
+ void qla4xxx_interrupt_service_routine(struct scsi_qla_host *ha,
+@@ -78,13 +70,11 @@ int qla4xxx_init_rings(struct scsi_qla_host *ha);
+ void qla4xxx_srb_compl(struct kref *ref);
+ struct srb *qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
+ 		uint32_t index);
+-int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host *ha);
+ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		uint32_t state, uint32_t conn_error);
+ void qla4xxx_dump_buffer(void *b, uint32_t size);
+ int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
+ 	struct ddb_entry *ddb_entry, int lun, uint16_t mrkr_mod);
+-int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err);
+ int qla4xxx_set_flash(struct scsi_qla_host *ha, dma_addr_t dma_addr,
+ 		      uint32_t offset, uint32_t length, uint32_t options);
+ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 4165bfe..c41c0f7 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -11,9 +11,6 @@
+ #include "ql4_dbg.h"
+ #include "ql4_inline.h"
+ 
+-static struct ddb_entry *qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
+-					   uint32_t fw_ddb_index);
+-
+ static void ql4xxx_set_mac_number(struct scsi_qla_host *ha)
+ {
+ 	uint32_t value;
+@@ -61,25 +58,6 @@ void qla4xxx_free_ddb(struct scsi_qla_host *ha,
+ }
+ 
+ /**
+- * qla4xxx_free_ddb_list - deallocate all ddbs
+- * @ha: pointer to host adapter structure.
+- *
+- * This routine deallocates and removes all devices on the sppecified adapter.
+- **/
+-void qla4xxx_free_ddb_list(struct scsi_qla_host *ha)
+-{
+-	struct list_head *ptr;
+-	struct ddb_entry *ddb_entry;
+-
+-	while (!list_empty(&ha->ddb_list)) {
+-		ptr = ha->ddb_list.next;
+-		/* Free memory for device entry and remove */
+-		ddb_entry = list_entry(ptr, struct ddb_entry, list);
+-		qla4xxx_free_ddb(ha, ddb_entry);
+-	}
+-}
+-
+-/**
+  * qla4xxx_init_response_q_entries() - Initializes response queue entries.
+  * @ha: HA context
+  *
+@@ -469,488 +447,6 @@ static int qla4xxx_init_firmware(struct scsi_qla_host *ha)
+ 	return qla4xxx_get_firmware_status(ha);
+ }
+ 
+-static struct ddb_entry* qla4xxx_get_ddb_entry(struct scsi_qla_host *ha,
+-						uint32_t fw_ddb_index,
+-						uint32_t *new_tgt)
+-{
+-	struct dev_db_entry *fw_ddb_entry = NULL;
+-	dma_addr_t fw_ddb_entry_dma;
+-	struct ddb_entry *ddb_entry = NULL;
+-	int found = 0;
+-	uint32_t device_state;
+-
+-	*new_tgt = 0;
+-	/* Make sure the dma buffer is valid */
+-	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev,
+-					  sizeof(*fw_ddb_entry),
+-					  &fw_ddb_entry_dma, GFP_KERNEL);
+-	if (fw_ddb_entry == NULL) {
+-		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+-			      ha->host_no, __func__));
+-		goto exit_get_ddb_entry_no_free;
+-	}
+-
+-	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
+-				    fw_ddb_entry_dma, NULL, NULL,
+-				    &device_state, NULL, NULL, NULL) ==
+-				    QLA_ERROR) {
+-		DEBUG2(printk("scsi%ld: %s: failed get_ddb_entry for "
+-			      "fw_ddb_index %d\n", ha->host_no, __func__,
+-			      fw_ddb_index));
+-		goto exit_get_ddb_entry;
+-	}
+-
+-	/* Allocate DDB if not already allocated. */
+-	DEBUG2(printk("scsi%ld: %s: Looking for ddb[%d]\n", ha->host_no,
+-		      __func__, fw_ddb_index));
+-	list_for_each_entry(ddb_entry, &ha->ddb_list, list) {
+-		if ((memcmp(ddb_entry->iscsi_name, fw_ddb_entry->iscsi_name,
+-			   ISCSI_NAME_SIZE) == 0) &&
+-			(ddb_entry->tpgt ==
+-				le32_to_cpu(fw_ddb_entry->tgt_portal_grp)) &&
+-			(memcmp(ddb_entry->isid, fw_ddb_entry->isid,
+-				sizeof(ddb_entry->isid)) == 0)) {
+-			found++;
+-			break;
+-		}
+-	}
+-
+-	/* if not found allocate new ddb */
+-	if (!found) {
+-		DEBUG2(printk("scsi%ld: %s: ddb[%d] not found - allocating "
+-			      "new ddb\n", ha->host_no, __func__,
+-			      fw_ddb_index));
+-		*new_tgt = 1;
+-		ddb_entry = qla4xxx_alloc_ddb(ha, fw_ddb_index);
+-	}
+-
+-exit_get_ddb_entry:
+-	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry), fw_ddb_entry,
+-			  fw_ddb_entry_dma);
+-
+-exit_get_ddb_entry_no_free:
+-	return ddb_entry;
+-}
+-
+-/**
+- * qla4xxx_update_ddb_entry - update driver's internal ddb
+- * @ha: pointer to host adapter structure.
+- * @ddb_entry: pointer to device database structure to be filled
+- * @fw_ddb_index: index of the ddb entry in fw ddb table
+- *
+- * This routine updates the driver's internal device database entry
+- * with information retrieved from the firmware's device database
+- * entry for the specified device. The ddb_entry->fw_ddb_index field
+- * must be initialized prior to	calling this routine
+- *
+- **/
+-static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
+-				    struct ddb_entry *ddb_entry,
+-				    uint32_t fw_ddb_index)
+-{
+-	struct dev_db_entry *fw_ddb_entry = NULL;
+-	dma_addr_t fw_ddb_entry_dma;
+-	int status = QLA_ERROR;
+-	uint32_t conn_err;
+-
+-	if (ddb_entry == NULL) {
+-		DEBUG2(printk("scsi%ld: %s: ddb_entry is NULL\n", ha->host_no,
+-			      __func__));
+-
+-		goto exit_update_ddb_no_free;
+-	}
+-
+-	/* Make sure the dma buffer is valid */
+-	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev,
+-					  sizeof(*fw_ddb_entry),
+-					  &fw_ddb_entry_dma, GFP_KERNEL);
+-	if (fw_ddb_entry == NULL) {
+-		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+-			      ha->host_no, __func__));
+-
+-		goto exit_update_ddb_no_free;
+-	}
+-
+-	if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
+-				    fw_ddb_entry_dma, NULL, NULL,
+-				    &ddb_entry->fw_ddb_device_state, &conn_err,
+-				    &ddb_entry->tcp_source_port_num,
+-				    &ddb_entry->connection_id) ==
+-				    QLA_ERROR) {
+-		DEBUG2(printk("scsi%ld: %s: failed get_ddb_entry for "
+-			      "fw_ddb_index %d\n", ha->host_no, __func__,
+-			      fw_ddb_index));
+-
+-		goto exit_update_ddb;
+-	}
+-
+-	status = QLA_SUCCESS;
+-	ddb_entry->options = le16_to_cpu(fw_ddb_entry->options);
+-	ddb_entry->target_session_id = le16_to_cpu(fw_ddb_entry->tsid);
+-	ddb_entry->task_mgmt_timeout =
+-		le16_to_cpu(fw_ddb_entry->def_timeout);
+-	ddb_entry->CmdSn = 0;
+-	ddb_entry->exe_throttle = le16_to_cpu(fw_ddb_entry->exec_throttle);
+-	ddb_entry->default_relogin_timeout =
+-		le16_to_cpu(fw_ddb_entry->def_timeout);
+-	ddb_entry->default_time2wait = le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
+-
+-	/* Update index in case it changed */
+-	ddb_entry->fw_ddb_index = fw_ddb_index;
+-	ha->fw_ddb_index_map[fw_ddb_index] = ddb_entry;
+-
+-	ddb_entry->port = le16_to_cpu(fw_ddb_entry->port);
+-	ddb_entry->tpgt = le32_to_cpu(fw_ddb_entry->tgt_portal_grp);
+-	memcpy(ddb_entry->isid, fw_ddb_entry->isid, sizeof(ddb_entry->isid));
+-
+-	memcpy(&ddb_entry->iscsi_name[0], &fw_ddb_entry->iscsi_name[0],
+-	       min(sizeof(ddb_entry->iscsi_name),
+-		   sizeof(fw_ddb_entry->iscsi_name)));
+-	memcpy(&ddb_entry->iscsi_alias[0], &fw_ddb_entry->iscsi_alias[0],
+-	       min(sizeof(ddb_entry->iscsi_alias),
+-		   sizeof(fw_ddb_entry->iscsi_alias)));
+-	memcpy(&ddb_entry->ip_addr[0], &fw_ddb_entry->ip_addr[0],
+-	       min(sizeof(ddb_entry->ip_addr), sizeof(fw_ddb_entry->ip_addr)));
+-
+-	ddb_entry->iscsi_max_burst_len = fw_ddb_entry->iscsi_max_burst_len;
+-	ddb_entry->iscsi_max_outsnd_r2t = fw_ddb_entry->iscsi_max_outsnd_r2t;
+-	ddb_entry->iscsi_first_burst_len = fw_ddb_entry->iscsi_first_burst_len;
+-	ddb_entry->iscsi_max_rcv_data_seg_len =
+-				fw_ddb_entry->iscsi_max_rcv_data_seg_len;
+-	ddb_entry->iscsi_max_snd_data_seg_len =
+-				fw_ddb_entry->iscsi_max_snd_data_seg_len;
+-
+-	if (ddb_entry->options & DDB_OPT_IPV6_DEVICE) {
+-		memcpy(&ddb_entry->remote_ipv6_addr,
+-			fw_ddb_entry->ip_addr,
+-			min(sizeof(ddb_entry->remote_ipv6_addr),
+-			sizeof(fw_ddb_entry->ip_addr)));
+-		memcpy(&ddb_entry->link_local_ipv6_addr,
+-			fw_ddb_entry->link_local_ipv6_addr,
+-			min(sizeof(ddb_entry->link_local_ipv6_addr),
+-			sizeof(fw_ddb_entry->link_local_ipv6_addr)));
+-
+-		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: DDB[%d] State %04x"
+-					" ConnErr %08x IP %pI6 "
+-					":%04d \"%s\"\n",
+-					__func__, fw_ddb_index,
+-					ddb_entry->fw_ddb_device_state,
+-					conn_err, fw_ddb_entry->ip_addr,
+-					le16_to_cpu(fw_ddb_entry->port),
+-					fw_ddb_entry->iscsi_name));
+-	} else
+-		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: DDB[%d] State %04x"
+-					" ConnErr %08x IP %pI4 "
+-					":%04d \"%s\"\n",
+-					__func__, fw_ddb_index,
+-					ddb_entry->fw_ddb_device_state,
+-					conn_err, fw_ddb_entry->ip_addr,
+-					le16_to_cpu(fw_ddb_entry->port),
+-					fw_ddb_entry->iscsi_name));
+-exit_update_ddb:
+-	if (fw_ddb_entry)
+-		dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+-				  fw_ddb_entry, fw_ddb_entry_dma);
+-
+-exit_update_ddb_no_free:
+-	return status;
+-}
+-
+-/**
+- * qla4xxx_alloc_ddb - allocate device database entry
+- * @ha: Pointer to host adapter structure.
+- * @fw_ddb_index: Firmware's device database index
+- *
+- * This routine allocates a ddb_entry, ititializes some values, and
+- * inserts it into the ddb list.
+- **/
+-static struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
+-					    uint32_t fw_ddb_index)
+-{
+-	struct ddb_entry *ddb_entry;
+-
+-	DEBUG2(printk("scsi%ld: %s: fw_ddb_index [%d]\n", ha->host_no,
+-		      __func__, fw_ddb_index));
+-
+-	ddb_entry = qla4xxx_alloc_sess(ha);
+-	if (ddb_entry == NULL) {
+-		DEBUG2(printk("scsi%ld: %s: Unable to allocate memory "
+-			      "to add fw_ddb_index [%d]\n",
+-			      ha->host_no, __func__, fw_ddb_index));
+-		return ddb_entry;
+-	}
+-
+-	ddb_entry->fw_ddb_index = fw_ddb_index;
+-	atomic_set(&ddb_entry->retry_relogin_timer, INVALID_ENTRY);
+-	atomic_set(&ddb_entry->relogin_timer, 0);
+-	atomic_set(&ddb_entry->relogin_retry_count, 0);
+-	atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
+-	list_add_tail(&ddb_entry->list, &ha->ddb_list);
+-	ha->fw_ddb_index_map[fw_ddb_index] = ddb_entry;
+-	ha->tot_ddbs++;
+-
+-	return ddb_entry;
+-}
+-
+-/**
+- * qla4_is_relogin_allowed - Are we allowed to login?
+- * @ha: Pointer to host adapter structure.
+- * @conn_err: Last connection error associated with the ddb
+- *
+- * This routine tests the given connection error to determine if
+- * we are allowed to login.
+- **/
+-int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err)
+-{
+-	uint32_t err_code, login_rsp_sts_class;
+-	int relogin = 1;
+-
+-	err_code = ((conn_err & 0x00ff0000) >> 16);
+-	login_rsp_sts_class = ((conn_err & 0x0000ff00) >> 8);
+-	if (err_code == 0x1c || err_code == 0x06) {
+-		DEBUG2(ql4_printk(KERN_INFO, ha,
+-		    ": conn_err=0x%08x, send target completed"
+-		    " or access denied failure\n", conn_err));
+-		relogin = 0;
+-	}
+-	if ((err_code == 0x08) && (login_rsp_sts_class == 0x02)) {
+-		/* Login Response PDU returned an error.
+-		   Login Response Status in Error Code Detail
+-		   indicates login should not be retried.*/
+-		DEBUG2(ql4_printk(KERN_INFO, ha,
+-		    ": conn_err=0x%08x, do not retry relogin\n",
+-		    conn_err));
+-		relogin = 0;
+-	}
+-
+-	return relogin;
+-}
+-
+-static void qla4xxx_flush_AENS(struct scsi_qla_host *ha)
+-{
+-	unsigned long wtime;
+-
+-	/* Flush the 0x8014 AEN from the firmware as a result of
+-	 * Auto connect. We are basically doing get_firmware_ddb()
+-	 * to determine whether we need to log back in or not.
+-	 * Trying to do a set ddb before we have processed 0x8014
+-	 * will result in another set_ddb() for the same ddb. In other
+-	 * words there will be stale entries in the aen_q.
+-	 */
+-	wtime = jiffies + (2 * HZ);
+-	do {
+-		if (qla4xxx_get_firmware_state(ha) == QLA_SUCCESS)
+-			if (ha->firmware_state & (BIT_2 | BIT_0))
+-				return;
+-
+-		if (test_and_clear_bit(DPC_AEN, &ha->dpc_flags))
+-			qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
+-
+-		msleep(1000);
+-	} while (!time_after_eq(jiffies, wtime));
+-}
+-
+-/**
+- * qla4xxx_build_ddb_list - builds driver ddb list
+- * @ha: Pointer to host adapter structure.
+- *
+- * This routine searches for all valid firmware ddb entries and builds
+- * an internal ddb list. Ddbs that are considered valid are those with
+- * a device state of SESSION_ACTIVE.
+- * A relogin (set_ddb) is issued for DDBs that are not online.
+- **/
+-static int qla4xxx_build_ddb_list(struct scsi_qla_host *ha)
+-{
+-	int status = QLA_ERROR;
+-	uint32_t fw_ddb_index = 0;
+-	uint32_t next_fw_ddb_index = 0;
+-	uint32_t ddb_state;
+-	uint32_t conn_err;
+-	struct ddb_entry *ddb_entry;
+-	struct dev_db_entry *fw_ddb_entry = NULL;
+-	dma_addr_t fw_ddb_entry_dma;
+-	uint32_t ipv6_device;
+-	uint32_t new_tgt;
+-
+-	qla4xxx_flush_AENS(ha);
+-
+-	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+-			&fw_ddb_entry_dma, GFP_KERNEL);
+-	if (fw_ddb_entry == NULL) {
+-		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: DMA alloc failed\n",
+-				__func__));
+-
+-		goto exit_build_ddb_list_no_free;
+-	}
+-
+-	ql4_printk(KERN_INFO, ha, "Initializing DDBs ...\n");
+-	for (fw_ddb_index = 0; fw_ddb_index < MAX_DDB_ENTRIES;
+-	     fw_ddb_index = next_fw_ddb_index) {
+-		/* First, let's see if a device exists here */
+-		if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index, fw_ddb_entry,
+-					    0, NULL, &next_fw_ddb_index,
+-					    &ddb_state, &conn_err,
+-					    NULL, NULL) ==
+-					    QLA_ERROR) {
+-			DEBUG2(printk("scsi%ld: %s: get_ddb_entry, "
+-				      "fw_ddb_index %d failed", ha->host_no,
+-				      __func__, fw_ddb_index));
+-			goto exit_build_ddb_list;
+-		}
+-
+-		DEBUG2(printk("scsi%ld: %s: Getting DDB[%d] ddbstate=0x%x, "
+-			      "next_fw_ddb_index=%d.\n", ha->host_no, __func__,
+-			      fw_ddb_index, ddb_state, next_fw_ddb_index));
+-
+-		/* Issue relogin, if necessary. */
+-		if (ddb_state == DDB_DS_SESSION_FAILED ||
+-		    ddb_state == DDB_DS_NO_CONNECTION_ACTIVE) {
+-			/* Try and login to device */
+-			DEBUG2(printk("scsi%ld: %s: Login to DDB[%d]\n",
+-				      ha->host_no, __func__, fw_ddb_index));
+-			ipv6_device = le16_to_cpu(fw_ddb_entry->options) &
+-					DDB_OPT_IPV6_DEVICE;
+-			if (qla4_is_relogin_allowed(ha, conn_err) &&
+-					((!ipv6_device &&
+-					  *((uint32_t *)fw_ddb_entry->ip_addr))
+-					 || ipv6_device)) {
+-				qla4xxx_set_ddb_entry(ha, fw_ddb_index, 0,
+-						      NULL);
+-				if (qla4xxx_get_fwddb_entry(ha, fw_ddb_index,
+-							NULL, 0, NULL,
+-							&next_fw_ddb_index,
+-							&ddb_state, &conn_err,
+-							NULL, NULL)
+-						== QLA_ERROR) {
+-					DEBUG2(printk("scsi%ld: %s:"
+-						"get_ddb_entry %d failed\n",
+-						ha->host_no,
+-						__func__, fw_ddb_index));
+-					goto exit_build_ddb_list;
+-				}
+-			}
+-		}
+-
+-		if (ddb_state != DDB_DS_SESSION_ACTIVE)
+-			goto next_one;
+-		/*
+-		 * if fw_ddb with session active state found,
+-		 * add to ddb_list
+-		 */
+-		DEBUG2(printk("scsi%ld: %s: DDB[%d] added to list\n",
+-			      ha->host_no, __func__, fw_ddb_index));
+-
+-		/* Add DDB to internal our ddb list. */
+-		ddb_entry = qla4xxx_get_ddb_entry(ha, fw_ddb_index, &new_tgt);
+-		if (ddb_entry == NULL) {
+-			DEBUG2(printk("scsi%ld: %s: Unable to allocate memory "
+-				      "for device at fw_ddb_index %d\n",
+-				      ha->host_no, __func__, fw_ddb_index));
+-			goto exit_build_ddb_list;
+-		}
+-		/* Fill in the device structure */
+-		if (qla4xxx_update_ddb_entry(ha, ddb_entry, fw_ddb_index) ==
+-		    QLA_ERROR) {
+-			ha->fw_ddb_index_map[fw_ddb_index] =
+-				(struct ddb_entry *)INVALID_ENTRY;
+-
+-			DEBUG2(printk("scsi%ld: %s: update_ddb_entry failed "
+-				      "for fw_ddb_index %d.\n",
+-				      ha->host_no, __func__, fw_ddb_index));
+-			goto exit_build_ddb_list;
+-		}
+-
+-next_one:
+-		/* We know we've reached the last device when
+-		 * next_fw_ddb_index is 0 */
+-		if (next_fw_ddb_index == 0)
+-			break;
+-	}
+-
+-	status = QLA_SUCCESS;
+-	ql4_printk(KERN_INFO, ha, "DDB list done..\n");
+-
+-exit_build_ddb_list:
+-	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry), fw_ddb_entry,
+-		fw_ddb_entry_dma);
+-
+-exit_build_ddb_list_no_free:
+-	return status;
+-}
+-
+-static int qla4xxx_initialize_ddb_list(struct scsi_qla_host *ha)
+-{
+-	uint16_t fw_ddb_index;
+-	int status = QLA_SUCCESS;
+-
+-	/* free the ddb list if is not empty */
+-	if (!list_empty(&ha->ddb_list))
+-		qla4xxx_free_ddb_list(ha);
+-
+-	for (fw_ddb_index = 0; fw_ddb_index < MAX_DDB_ENTRIES; fw_ddb_index++)
+-		ha->fw_ddb_index_map[fw_ddb_index] =
+-		    (struct ddb_entry *)INVALID_ENTRY;
+-
+-	ha->tot_ddbs = 0;
+-
+-	/* Perform device discovery and build ddb list. */
+-	status = qla4xxx_build_ddb_list(ha);
+-
+-	return status;
+-}
+-
+-/**
+- * qla4xxx_reinitialize_ddb_list - update the driver ddb list
+- * @ha: pointer to host adapter structure.
+- *
+- * This routine obtains device information from the F/W database after
+- * firmware or adapter resets.  The device table is preserved.
+- **/
+-int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host *ha)
+-{
+-	int status = QLA_SUCCESS;
+-	struct ddb_entry *ddb_entry, *detemp;
+-
+-	/* Update the device information for all devices. */
+-	list_for_each_entry_safe(ddb_entry, detemp, &ha->ddb_list, list) {
+-		qla4xxx_update_ddb_entry(ha, ddb_entry,
+-					 ddb_entry->fw_ddb_index);
+-		if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
+-			atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
+-			DEBUG2(printk ("scsi%ld: %s: ddb index [%d] marked "
+-				       "ONLINE\n", ha->host_no, __func__,
+-				       ddb_entry->fw_ddb_index));
+-			iscsi_unblock_session(ddb_entry->sess);
+-		} else if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE)
+-			qla4xxx_mark_device_missing(ddb_entry->sess);
+-	}
+-	return status;
+-}
+-
+-/**
+- * qla4xxx_relogin_device - re-establish session
+- * @ha: Pointer to host adapter structure.
+- * @ddb_entry: Pointer to device database entry
+- *
+- * This routine does a session relogin with the specified device.
+- * The ddb entry must be assigned prior to making this call.
+- **/
+-int qla4xxx_relogin_device(struct scsi_qla_host *ha,
+-			   struct ddb_entry * ddb_entry)
+-{
+-	uint16_t relogin_timer;
+-
+-	relogin_timer = max(ddb_entry->default_relogin_timeout,
+-			    (uint16_t)RELOGIN_TOV);
+-	atomic_set(&ddb_entry->relogin_timer, relogin_timer);
+-
+-	DEBUG2(printk("scsi%ld: Relogin ddb [%d]. TOV=%d\n", ha->host_no,
+-		      ddb_entry->fw_ddb_index, relogin_timer));
+-
+-	qla4xxx_set_ddb_entry(ha, ddb_entry->fw_ddb_index, 0, NULL);
+-
+-	return QLA_SUCCESS;
+-}
+ 
+ static int qla4xxx_config_nvram(struct scsi_qla_host *ha)
+ {
+@@ -1255,18 +751,13 @@ int qla4xxx_start_firmware(struct scsi_qla_host *ha)
+ /**
+  * qla4xxx_initialize_adapter - initiailizes hba
+  * @ha: Pointer to host adapter structure.
+- * @renew_ddb_list: Indicates what to do with the adapter's ddb list
+- *	after adapter recovery has completed.
+- *	0=preserve ddb list, 1=destroy and rebuild ddb list
+  *
+  * This routine parforms all of the steps necessary to initialize the adapter.
+  *
+  **/
+-int qla4xxx_initialize_adapter(struct scsi_qla_host *ha,
+-			       uint8_t renew_ddb_list)
++int qla4xxx_initialize_adapter(struct scsi_qla_host *ha)
+ {
+ 	int status = QLA_ERROR;
+-	int8_t ip_address[IP_ADDR_LEN] = {0} ;
+ 
+ 	ha->eeprom_cmd_data = 0;
+ 
+@@ -1292,47 +783,6 @@ int qla4xxx_initialize_adapter(struct scsi_qla_host *ha,
+ 	if (status == QLA_ERROR)
+ 		goto exit_init_hba;
+ 
+-	/*
+-	 * FW is waiting to get an IP address from DHCP server: Skip building
+-	 * the ddb_list and wait for DHCP lease acquired aen to come in
+-	 * followed by 0x8014 aen" to trigger the tgt discovery process.
+-	 */
+-	if (ha->firmware_state & FW_STATE_CONFIGURING_IP)
+-		goto exit_init_online;
+-
+-	/* Skip device discovery if ip and subnet is zero */
+-	if (memcmp(ha->ip_config.ip_address, ip_address, IP_ADDR_LEN) == 0 ||
+-	    memcmp(ha->ip_config.subnet_mask, ip_address, IP_ADDR_LEN) == 0)
+-		goto exit_init_online;
+-
+-	if (renew_ddb_list == PRESERVE_DDB_LIST) {
+-		/*
+-		 * We want to preserve lun states (i.e. suspended, etc.)
+-		 * for recovery initiated by the driver.  So just update
+-		 * the device states for the existing ddb_list.
+-		 */
+-		qla4xxx_reinitialize_ddb_list(ha);
+-	} else if (renew_ddb_list == REBUILD_DDB_LIST) {
+-		/*
+-		 * We want to build the ddb_list from scratch during
+-		 * driver initialization and recovery initiated by the
+-		 * INT_HBA_RESET IOCTL.
+-		 */
+-		status = qla4xxx_initialize_ddb_list(ha);
+-		if (status == QLA_ERROR) {
+-			DEBUG2(printk("%s(%ld) Error occurred during build"
+-				      "ddb list\n", __func__, ha->host_no));
+-			goto exit_init_hba;
+-		}
+-
+-	}
+-	if (!ha->tot_ddbs) {
+-		DEBUG2(printk("scsi%ld: Failed to initialize devices or none "
+-			      "present in Firmware device database\n",
+-			      ha->host_no));
+-	}
+-
+-exit_init_online:
+ 	set_bit(AF_ONLINE, &ha->flags);
+ exit_init_hba:
+ 	if (is_qla8022(ha) && (status == QLA_ERROR)) {
+@@ -1347,61 +797,6 @@ exit_init_hba:
+ }
+ 
+ /**
+- * qla4xxx_add_device_dynamically - ddb addition due to an AEN
+- * @ha:  Pointer to host adapter structure.
+- * @fw_ddb_index:  Firmware's device database index
+- *
+- * This routine processes adds a device as a result of an 8014h AEN.
+- **/
+-static void qla4xxx_add_device_dynamically(struct scsi_qla_host *ha,
+-					   uint32_t fw_ddb_index)
+-{
+-	struct ddb_entry * ddb_entry;
+-	uint32_t new_tgt;
+-
+-	/* First allocate a device structure */
+-	ddb_entry = qla4xxx_get_ddb_entry(ha, fw_ddb_index, &new_tgt);
+-	if (ddb_entry == NULL) {
+-		DEBUG2(printk(KERN_WARNING
+-			      "scsi%ld: Unable to allocate memory to add "
+-			      "fw_ddb_index %d\n", ha->host_no, fw_ddb_index));
+-		return;
+-	}
+-
+-	if (!new_tgt && (ddb_entry->fw_ddb_index != fw_ddb_index)) {
+-		/* Target has been bound to a new fw_ddb_index */
+-		qla4xxx_free_ddb(ha, ddb_entry);
+-		ddb_entry = qla4xxx_alloc_ddb(ha, fw_ddb_index);
+-		if (ddb_entry == NULL) {
+-			DEBUG2(printk(KERN_WARNING
+-				"scsi%ld: Unable to allocate memory"
+-				" to add fw_ddb_index %d\n",
+-				ha->host_no, fw_ddb_index));
+-			return;
+-		}
+-	}
+-	if (qla4xxx_update_ddb_entry(ha, ddb_entry, fw_ddb_index) ==
+-				    QLA_ERROR) {
+-		ha->fw_ddb_index_map[fw_ddb_index] =
+-					(struct ddb_entry *)INVALID_ENTRY;
+-		DEBUG2(printk(KERN_WARNING
+-			      "scsi%ld: failed to add new device at index "
+-			      "[%d]\n Unable to retrieve fw ddb entry\n",
+-			      ha->host_no, fw_ddb_index));
+-		qla4xxx_free_ddb(ha, ddb_entry);
+-		return;
+-	}
+-
+-	if (qla4xxx_add_sess(ddb_entry)) {
+-		DEBUG2(printk(KERN_WARNING
+-			      "scsi%ld: failed to add new device at index "
+-			      "[%d]\n Unable to add connection and session\n",
+-			      ha->host_no, fw_ddb_index));
+-		qla4xxx_free_ddb(ha, ddb_entry);
+-	}
+-}
+-
+-/**
+  * qla4xxx_process_ddb_changed - process ddb state change
+  * @ha - Pointer to host adapter structure.
+  * @fw_ddb_index - Firmware's device database index
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index 2c752ab..3dc5434 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -313,10 +313,8 @@ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb)
+ 	cmd_entry->hdr.entryType = ET_COMMAND;
+ 	cmd_entry->handle = cpu_to_le32(index);
+ 	cmd_entry->target = cpu_to_le16(ddb_entry->fw_ddb_index);
+-	cmd_entry->connection_id = cpu_to_le16(ddb_entry->connection_id);
+ 
+ 	int_to_scsilun(cmd->device->lun, &cmd_entry->lun);
+-	cmd_entry->cmdSeqNum = cpu_to_le32(ddb_entry->CmdSn);
+ 	cmd_entry->ttlByteCnt = cpu_to_le32(scsi_bufflen(cmd));
+ 	memcpy(cmd_entry->cdb, cmd->cmnd, cmd->cmd_len);
+ 	cmd_entry->dataSegCnt = cpu_to_le16(tot_dsds);
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 100b4f2..8ed5e19 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1200,61 +1200,6 @@ int qla4xxx_req_ddb_entry(struct scsi_qla_host *ha, uint32_t ddb_index,
+ 	return status;
+ }
+ 
+-int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port)
+-{
+-	struct dev_db_entry *fw_ddb_entry;
+-	dma_addr_t fw_ddb_entry_dma;
+-	uint32_t ddb_index;
+-	uint32_t mbx_sts;
+-	int ret_val = QLA_SUCCESS;
+-
+-
+-	fw_ddb_entry = dma_alloc_coherent(&ha->pdev->dev,
+-					  sizeof(*fw_ddb_entry),
+-					  &fw_ddb_entry_dma, GFP_KERNEL);
+-	if (!fw_ddb_entry) {
+-		DEBUG2(printk("scsi%ld: %s: Unable to allocate dma buffer.\n",
+-			      ha->host_no, __func__));
+-		ret_val = QLA_ERROR;
+-		goto exit_send_tgts_no_free;
+-	}
+-
+-	ret_val = qla4xxx_get_default_ddb(ha, fw_ddb_entry_dma);
+-	if (ret_val != QLA_SUCCESS)
+-		goto exit_send_tgts;
+-
+-	ret_val = qla4xxx_req_ddb_entry(ha, ddb_index, &mbx_sts);
+-	if (ret_val != QLA_SUCCESS)
+-		goto exit_send_tgts;
+-
+-	memset(fw_ddb_entry->iscsi_alias, 0,
+-	       sizeof(fw_ddb_entry->iscsi_alias));
+-
+-	memset(fw_ddb_entry->iscsi_name, 0,
+-	       sizeof(fw_ddb_entry->iscsi_name));
+-
+-	memset(fw_ddb_entry->ip_addr, 0, sizeof(fw_ddb_entry->ip_addr));
+-	memset(fw_ddb_entry->tgt_addr, 0,
+-	       sizeof(fw_ddb_entry->tgt_addr));
+-
+-	fw_ddb_entry->options = (DDB_OPT_DISC_SESSION | DDB_OPT_TARGET);
+-	fw_ddb_entry->port = cpu_to_le16(ntohs(port));
+-
+-	fw_ddb_entry->ip_addr[0] = *ip;
+-	fw_ddb_entry->ip_addr[1] = *(ip + 1);
+-	fw_ddb_entry->ip_addr[2] = *(ip + 2);
+-	fw_ddb_entry->ip_addr[3] = *(ip + 3);
+-
+-	ret_val = qla4xxx_set_ddb_entry(ha, ddb_index, fw_ddb_entry_dma,
+-					NULL);
+-
+-exit_send_tgts:
+-	dma_free_coherent(&ha->pdev->dev, sizeof(*fw_ddb_entry),
+-			  fw_ddb_entry, fw_ddb_entry_dma);
+-exit_send_tgts_no_free:
+-	return ret_val;
+-}
+-
+ int qla4xxx_clear_ddb_entry(struct scsi_qla_host *ha, uint32_t ddb_index)
+ {
+ 	int status;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 8c9eea2..0a92440 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -73,9 +73,6 @@ static void qla4xxx_config_dma_addressing(struct scsi_qla_host *ha);
  /*
-  * These flags describes reason of stop_conn() call
+  * iSCSI template entry points
+  */
+-static int qla4xxx_tgt_dscvr(struct Scsi_Host *shost,
+-			     enum iscsi_tgt_dscvr type, uint32_t enable,
+-			     struct sockaddr *dst_addr);
+ static int qla4xxx_conn_get_param(struct iscsi_cls_conn *conn,
+ 				  enum iscsi_param param, char *buf);
+ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
+@@ -125,7 +122,6 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
+ static int qla4xxx_slave_alloc(struct scsi_device *device);
+ static int qla4xxx_slave_configure(struct scsi_device *device);
+ static void qla4xxx_slave_destroy(struct scsi_device *sdev);
+-static void qla4xxx_scan_start(struct Scsi_Host *shost);
+ 
+ static struct qla4_8xxx_legacy_intr_set legacy_intr[] =
+     QLA82XX_LEGACY_INTR_CONFIG;
+@@ -186,7 +182,6 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 				  ISCSI_NET_VLAN_ID |
+ 				  ISCSI_NET_VLAN_PRIORITY |
+ 				  ISCSI_NET_VLAN_ENABLED,
+-	.tgt_dscvr		= qla4xxx_tgt_dscvr,
+ 	.create_session         = qla4xxx_session_create,
+ 	.destroy_session        = qla4xxx_session_destroy,
+ 	.start_conn             = qla4xxx_conn_start,
+@@ -888,94 +883,6 @@ static int qla4xxx_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 
+ }
+ 
+-static int qla4xxx_tgt_dscvr(struct Scsi_Host *shost,
+-			     enum iscsi_tgt_dscvr type, uint32_t enable,
+-			     struct sockaddr *dst_addr)
+-{
+-	struct scsi_qla_host *ha;
+-	struct sockaddr_in *addr;
+-	struct sockaddr_in6 *addr6;
+-	int ret = 0;
+-
+-	ha = (struct scsi_qla_host *) to_qla_host(shost);
+-
+-	switch (type) {
+-	case ISCSI_TGT_DSCVR_SEND_TARGETS:
+-		if (dst_addr->sa_family == AF_INET) {
+-			addr = (struct sockaddr_in *)dst_addr;
+-			if (qla4xxx_send_tgts(ha, (char *)&addr->sin_addr,
+-					      addr->sin_port) != QLA_SUCCESS)
+-				ret = -EIO;
+-		} else if (dst_addr->sa_family == AF_INET6) {
+-			/*
+-			 * TODO: fix qla4xxx_send_tgts
+-			 */
+-			addr6 = (struct sockaddr_in6 *)dst_addr;
+-			if (qla4xxx_send_tgts(ha, (char *)&addr6->sin6_addr,
+-					      addr6->sin6_port) != QLA_SUCCESS)
+-				ret = -EIO;
+-		} else
+-			ret = -ENOSYS;
+-		break;
+-	default:
+-		ret = -ENOSYS;
+-	}
+-	return ret;
+-}
+-
+-void qla4xxx_destroy_sess(struct ddb_entry *ddb_entry)
+-{
+-	if (!ddb_entry->sess)
+-		return;
+-
+-	if (ddb_entry->conn) {
+-		atomic_set(&ddb_entry->state, DDB_STATE_DEAD);
+-		iscsi_remove_session(ddb_entry->sess);
+-	}
+-	iscsi_free_session(ddb_entry->sess);
+-}
+-
+-int qla4xxx_add_sess(struct ddb_entry *ddb_entry)
+-{
+-	int err;
+-
+-	ddb_entry->sess->recovery_tmo = ql4xsess_recovery_tmo;
+-
+-	err = iscsi_add_session(ddb_entry->sess, ddb_entry->fw_ddb_index);
+-	if (err) {
+-		DEBUG2(printk(KERN_ERR "Could not add session.\n"));
+-		return err;
+-	}
+-
+-	ddb_entry->conn = iscsi_create_conn(ddb_entry->sess, 0, 0);
+-	if (!ddb_entry->conn) {
+-		iscsi_remove_session(ddb_entry->sess);
+-		DEBUG2(printk(KERN_ERR "Could not add connection.\n"));
+-		return -ENOMEM;
+-	}
+-
+-	/* finally ready to go */
+-	iscsi_unblock_session(ddb_entry->sess);
+-	return 0;
+-}
+-
+-struct ddb_entry *qla4xxx_alloc_sess(struct scsi_qla_host *ha)
+-{
+-	struct ddb_entry *ddb_entry;
+-	struct iscsi_cls_session *sess;
+-
+-	sess = iscsi_alloc_session(ha->host, &qla4xxx_iscsi_transport,
+-				   sizeof(struct ddb_entry));
+-	if (!sess)
+-		return NULL;
+-
+-	ddb_entry = sess->dd_data;
+-	memset(ddb_entry, 0, sizeof(*ddb_entry));
+-	ddb_entry->ha = ha;
+-	ddb_entry->sess = sess;
+-	return ddb_entry;
+-}
+-
+ static struct iscsi_cls_session *
+ qla4xxx_session_create(struct iscsi_endpoint *ep,
+ 			uint16_t cmds_max, uint16_t qdepth,
+@@ -1149,9 +1056,8 @@ static int qla4xxx_conn_start(struct iscsi_cls_conn *cls_conn)
+ 	init_completion(&ddb_entry->aen_comp);
+ 	status = qla4xxx_conn_open(ha, ddb_entry->fw_ddb_index);
+ 	if (status == QLA_ERROR) {
+-		ql4_printk(KERN_ERR, ha, "%s: Login failed: %s %s:%d\n",
+-			   __func__, ddb_entry->iscsi_name,
+-			   ddb_entry->ip_addr, ddb_entry->port);
++		ql4_printk(KERN_ERR, ha, "%s: Login failed: %s\n",
++			   __func__, sess->targetname);
+ 		ret = -EINVAL;
+ 		goto exit_conn_start;
+ 	}
+@@ -1386,18 +1292,6 @@ static int qla4xxx_task_xmit(struct iscsi_task *task)
+ 	return -1;
+ }
+ 
+-static void qla4xxx_scan_start(struct Scsi_Host *shost)
+-{
+-	struct scsi_qla_host *ha = to_qla_host(shost);
+-	struct ddb_entry *ddb_entry, *ddbtemp;
+-
+-	/* finish setup of sessions that were already setup in firmware */
+-	list_for_each_entry_safe(ddb_entry, ddbtemp, &ha->ddb_list, list) {
+-		if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE)
+-			qla4xxx_add_sess(ddb_entry);
+-	}
+-}
+-
+ static void qla4xxx_update_session_conn_param(struct scsi_qla_host *ha,
+ 					     struct ddb_entry *ddb_entry,
+ 					     struct dev_db_entry *fw_ddb_entry)
+@@ -2185,7 +2079,7 @@ recover_ha_init_adapter:
+ 
+ 		/* NOTE: AF_ONLINE flag set upon successful completion of
+ 		 *       qla4xxx_initialize_adapter */
+-		status = qla4xxx_initialize_adapter(ha, PRESERVE_DDB_LIST);
++		status = qla4xxx_initialize_adapter(ha);
+ 	}
+ 
+ 	/* Retry failed adapter initialization, if necessary
+@@ -2720,7 +2614,6 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 	qla4xxx_config_dma_addressing(ha);
+ 
+ 	/* Initialize lists and spinlocks. */
+-	INIT_LIST_HEAD(&ha->ddb_list);
+ 	INIT_LIST_HEAD(&ha->free_srb_q);
+ 
+ 	mutex_init(&ha->mbox_sem);
+@@ -2768,7 +2661,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 	 * firmware
+ 	 * NOTE: interrupts enabled upon successful completion
+ 	 */
+-	status = qla4xxx_initialize_adapter(ha, REBUILD_DDB_LIST);
++	status = qla4xxx_initialize_adapter(ha);
+ 	while ((!test_bit(AF_ONLINE, &ha->flags)) &&
+ 	    init_retry_count++ < MAX_INIT_RETRIES) {
+ 
+@@ -2789,7 +2682,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 		if (ha->isp_ops->reset_chip(ha) == QLA_ERROR)
+ 			continue;
+ 
+-		status = qla4xxx_initialize_adapter(ha, REBUILD_DDB_LIST);
++		status = qla4xxx_initialize_adapter(ha);
+ 	}
+ 
+ 	if (!test_bit(AF_ONLINE, &ha->flags)) {
+@@ -2919,9 +2812,6 @@ static void __devexit qla4xxx_remove_adapter(struct pci_dev *pdev)
+ 	if (!is_qla8022(ha))
+ 		qla4xxx_prevent_other_port_reinit(ha);
+ 
+-	/* remove devs from iscsi_sessions to scsi_devices */
+-	qla4xxx_free_ddb_list(ha);
+-
+ 	/* destroy iface from sysfs */
+ 	qla4xxx_destroy_iface(ha);
+ 
+@@ -3481,7 +3371,7 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 
+ 		qla4_8xxx_idc_unlock(ha);
+ 		clear_bit(AF_FW_RECOVERY, &ha->flags);
+-		rval = qla4xxx_initialize_adapter(ha, PRESERVE_DDB_LIST);
++		rval = qla4xxx_initialize_adapter(ha);
+ 		qla4_8xxx_idc_lock(ha);
+ 
+ 		if (rval != QLA_SUCCESS) {
+@@ -3517,8 +3407,7 @@ static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
+ 		if ((qla4_8xxx_rd_32(ha, QLA82XX_CRB_DEV_STATE) ==
+ 		    QLA82XX_DEV_READY)) {
+ 			clear_bit(AF_FW_RECOVERY, &ha->flags);
+-			rval = qla4xxx_initialize_adapter(ha,
+-			    PRESERVE_DDB_LIST);
++			rval = qla4xxx_initialize_adapter(ha);
+ 			if (rval == QLA_SUCCESS) {
+ 				ret = qla4xxx_request_irqs(ha);
+ 				if (ret) {
 -- 
 1.7.3.2
 
