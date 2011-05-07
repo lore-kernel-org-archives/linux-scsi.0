@@ -1,73 +1,111 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 2/4] qla2xxx: Fix hang during driver unload when vport is active.
-Date: Fri,  6 May 2011 17:30:11 -0700
-Message-ID: <1304728223-30817-6-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 11/12] qla2xxx: Refactor call to qla2xxx_read_sfp for thermal temperature.
+Date: Fri,  6 May 2011 17:30:22 -0700
+Message-ID: <1304728223-30817-17-git-send-email-madhu.iyengar@qlogic.com>
 References: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:32830 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:32821 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753970Ab1EGAnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 May 2011 20:43:13 -0400
+	id S1753814Ab1EGAnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2011 20:43:11 -0400
 In-Reply-To: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-From: Arun Easi <arun.easi@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-Bumping ref count during fc_vport_terminate() was the cause. vport
-delete would wait for ref count to drop to zero and that would never
-happen.
+Eliminate duplicate code by refactoring the calls to qla2xxx_read_sfp()
+in qla2x00_get_thermal_temp(). This keeps the parameter values separate
+from the mailbox register mechanics. This also allows qla2xxx_read_sfp()
+to be the sole "spec" for READ SFP semantics.
 
-Cc: stable@kernel.org
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Signed-off_by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++++++----------
- 1 files changed, 15 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |   53 ++++++++-------------------------------
+ 1 files changed, 11 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 0ca6664..e1efbc7 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2368,21 +2368,26 @@ qla2x00_remove_one(struct pci_dev *pdev)
- 	base_vha = pci_get_drvdata(pdev);
- 	ha = base_vha->hw;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 7184b87..c26f0ac 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4142,63 +4142,32 @@ int
+ qla2x00_get_thermal_temp(scsi_qla_host_t *vha, uint16_t *temp, uint16_t *frac)
+ {
+ 	int rval;
+-	mbx_cmd_t mc;
+-	mbx_cmd_t *mcp = &mc;
++	uint8_t byte;
+ 	struct qla_hw_data *ha = vha->hw;
  
--	spin_lock_irqsave(&ha->vport_slock, flags);
--	list_for_each_entry(vha, &ha->vp_list, list) {
--		atomic_inc(&vha->vref_count);
-+	mutex_lock(&ha->vport_lock);
-+	while (ha->cur_vport_count) {
-+		struct Scsi_Host *scsi_host;
+-	DEBUG11(printk(KERN_INFO "%s(%ld): entered.\n", __func__, ha->host_no));
++	DEBUG11(printk(KERN_INFO "%s(%ld): entered.\n", __func__, vha->host_no));
  
--		if (vha->fc_vport) {
--			spin_unlock_irqrestore(&ha->vport_slock, flags);
-+		spin_lock_irqsave(&ha->vport_slock, flags);
- 
--			fc_vport_terminate(vha->fc_vport);
-+		BUG_ON(base_vha->list.next == &ha->vp_list);
-+		/* This assumes first entry in ha->vp_list is always base vha */
-+		vha = list_first_entry(&base_vha->list, scsi_qla_host_t, list);
-+		scsi_host = scsi_host_get(vha->host);
- 
--			spin_lock_irqsave(&ha->vport_slock, flags);
--		}
-+		spin_unlock_irqrestore(&ha->vport_slock, flags);
-+		mutex_unlock(&ha->vport_lock);
-+
-+		fc_vport_terminate(vha->fc_vport);
-+		scsi_host_put(vha->host);
- 
--		atomic_dec(&vha->vref_count);
-+		mutex_lock(&ha->vport_lock);
+-	/* High bits. */
+-	mcp->mb[0] = MBC_READ_SFP;
+-	mcp->mb[1] = 0x98;
+-	mcp->mb[2] = 0;
+-	mcp->mb[3] = 0;
+-	mcp->mb[6] = 0;
+-	mcp->mb[7] = 0;
+-	mcp->mb[8] = 1;
+-	mcp->mb[9] = 0x01;
+-	mcp->mb[10] = BIT_13|BIT_0;
+-	mcp->out_mb = MBX_10|MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
+-	mcp->in_mb = MBX_1|MBX_0;
+-	mcp->tov = MBX_TOV_SECONDS;
+-	mcp->flags = 0;
+-	rval = qla2x00_mailbox_command(vha, mcp);
++	/* Integer part */
++	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x01, 1, BIT_13|BIT_0);
+ 	if (rval != QLA_SUCCESS) {
+ 		DEBUG2_3_11(printk(KERN_WARNING
+-		    "%s(%ld): failed=%x (%x).\n", __func__,
+-		    vha->host_no, rval, mcp->mb[0]));
++		    "%s(%ld): failed=%x.\n", __func__, vha->host_no, rval));
+ 		ha->flags.thermal_supported = 0;
+ 		goto fail;
  	}
--	spin_unlock_irqrestore(&ha->vport_slock, flags);
-+	mutex_unlock(&ha->vport_lock);
+-	*temp = mcp->mb[1] & 0xFF;
++	*temp = byte;
  
- 	set_bit(UNLOADING, &base_vha->dpc_flags);
+-	/* Low bits. */
+-	mcp->mb[0] = MBC_READ_SFP;
+-	mcp->mb[1] = 0x98;
+-	mcp->mb[2] = 0;
+-	mcp->mb[3] = 0;
+-	mcp->mb[6] = 0;
+-	mcp->mb[7] = 0;
+-	mcp->mb[8] = 1;
+-	mcp->mb[9] = 0x10;
+-	mcp->mb[10] = BIT_13|BIT_0;
+-	mcp->out_mb = MBX_10|MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
+-	mcp->in_mb = MBX_1|MBX_0;
+-	mcp->tov = MBX_TOV_SECONDS;
+-	mcp->flags = 0;
+-	rval = qla2x00_mailbox_command(vha, mcp);
++	/* Fraction part */
++	rval = qla2x00_read_sfp(vha, 0, &byte, 0x98, 0x10, 1, BIT_13|BIT_0);
+ 	if (rval != QLA_SUCCESS) {
+ 		DEBUG2_3_11(printk(KERN_WARNING
+-		    "%s(%ld): failed=%x (%x).\n", __func__,
+-		    vha->host_no, rval, mcp->mb[0]));
++		    "%s(%ld): failed=%x.\n", __func__, vha->host_no, rval));
+ 		ha->flags.thermal_supported = 0;
+ 		goto fail;
+ 	}
+-	*frac = ((mcp->mb[1] & 0xFF) >> 6) * 25;
++	*frac = (byte >> 6) * 25;
  
+-	if (rval == QLA_SUCCESS)
+-		DEBUG11(printk(KERN_INFO
+-		    "%s(%ld): done.\n", __func__, ha->host_no));
++	DEBUG11(printk(KERN_INFO "%s(%ld): done.\n", __func__, vha->host_no));
+ fail:
+ 	return rval;
+ }
 -- 
 1.6.0.2
 
