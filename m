@@ -1,167 +1,43 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/3] libsas: fix/amend device gone notification in
- sas_deform_port()
-Date: Fri, 06 May 2011 16:43:42 -0700
-Message-ID: <1304725422.30576.99.camel@dwillia2-linux>
-References: <20110503183526.21471.84735.stgit@localhost6.localdomain6>
-	 <20110503183627.21471.57988.stgit@localhost6.localdomain6>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20110503183627.21471.57988.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-To: "james.bottomley@suse.de" <james.bottomley@suse.de>
-Cc: "Fan, Haipao" <haipao.fan@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, David Milburn <dmilburn@redhat.com>, "Trela, Maciej" <Maciej.Trela@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Darrick J. Wong" <djwong@us.ibm.com>
+From: madhu.iyengar@qlogic.com
+Subject: [PATCH 09/12] qla2xxx: Clear complete initialization control block.
+Date: Fri,  6 May 2011 17:30:20 -0700
+Message-ID: <1304728223-30817-15-git-send-email-madhu.iyengar@qlogic.com>
+References: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:32819 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753369Ab1EGAnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 May 2011 20:43:11 -0400
+In-Reply-To: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
->From 0326887e94470d693cf5d10b37058a8b472b046b Mon Sep 17 00:00:00 2001
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 18 Feb 2011 09:22:43 -0800
-Subject: [PATCH v2] libsas: fix/amend device gone notification in sas_deform_port()
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Commit 56dd2c06 "libsas: Don't issue commands to devices that have been
-hot-removed" edited Darrick's original patch to remove setting 'gone' in
-the sas_deform_port() path because that prevented scsi sync cache
-commands from being issued when the driver was unloaded.  However, this
-allows true device gone notifications (as signaled port phy events) to
-trigger sync cache commands to devices that are known to be unreachable.
+Use proper init_cb_size member which takes into account
+MID/non-MID init-cb structure sizes.
 
-Teach libsas which sas_deform_port() invocations are likely device gone
-events.
-
-Cc: Darrick J. Wong <djwong@us.ibm.com>
-Cc: Haipao Fan <haipao.fan@intel.com>
-Cc: Maciej Trela <maciej.trela@intel.com>
-Cc: David Milburn <dmilburn@redhat.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
-Version 2: drop sas_device_gone().  It did not eliminate scenarios where
-an lldd might need to return i/o from ->lldd_execute_task, and after the
-locking change in 2.6.39 we needed to dig into the sata_dev to take the
-lock.  It can be reintroduced later, but for now do the simple fix by
-itself.
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 0001374..65c75a9 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -61,7 +61,7 @@ int  sas_init_queue(struct sas_ha_struct *sas_ha);
- int  sas_init_events(struct sas_ha_struct *sas_ha);
- void sas_shutdown_queue(struct sas_ha_struct *sas_ha);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index cb69693..920b76b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5210,7 +5210,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
+ 	}
  
--void sas_deform_port(struct asd_sas_phy *phy);
-+void sas_deform_port(struct asd_sas_phy *phy, int gone);
+ 	/* Reset Initialization control block */
+-	memset(icb, 0, sizeof(struct init_cb_81xx));
++	memset(icb, 0, ha->init_cb_size);
  
- void sas_porte_bytes_dmaed(struct work_struct *work);
- void sas_porte_broadcast_rcvd(struct work_struct *work);
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index b459c4b..e0f5018 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -39,7 +39,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
- 	sas_begin_event(PHYE_LOSS_OF_SIGNAL, &phy->ha->event_lock,
- 			&phy->phy_events_pending);
- 	phy->error = 0;
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- static void sas_phye_oob_done(struct work_struct *work)
-@@ -66,7 +66,7 @@ static void sas_phye_oob_error(struct work_struct *work)
- 	sas_begin_event(PHYE_OOB_ERROR, &phy->ha->event_lock,
- 			&phy->phy_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- 
- 	if (!port && phy->enabled && i->dft->lldd_control_phy) {
- 		phy->error++;
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 5257fdf..42fd1f2 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -57,7 +57,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 
- 	if (port) {
- 		if (!phy_is_wideport_member(port, phy))
--			sas_deform_port(phy);
-+			sas_deform_port(phy, 0);
- 		else {
- 			SAS_DPRINTK("%s: phy%d belongs to port%d already(%d)!\n",
- 				    __func__, phy->id, phy->port->id,
-@@ -153,28 +153,31 @@ static void sas_form_port(struct asd_sas_phy *phy)
-  * This is called when the physical link to the other phy has been
-  * lost (on this phy), in Event thread context. We cannot delay here.
-  */
--void sas_deform_port(struct asd_sas_phy *phy)
-+void sas_deform_port(struct asd_sas_phy *phy, int gone)
- {
- 	struct sas_ha_struct *sas_ha = phy->ha;
- 	struct asd_sas_port *port = phy->port;
- 	struct sas_internal *si =
- 		to_sas_internal(sas_ha->core.shost->transportt);
-+	struct domain_device *dev;
- 	unsigned long flags;
- 
- 	if (!port)
- 		return;		  /* done by a phy event */
- 
--	if (port->port_dev)
--		port->port_dev->pathways--;
-+	dev = port->port_dev;
-+	if (dev)
-+		dev->pathways--;
- 
- 	if (port->num_phys == 1) {
-+		if (dev && gone)
-+			dev->gone = 1;
- 		sas_unregister_domain_devices(port);
- 		sas_port_delete(port->port);
- 		port->port = NULL;
- 	} else
- 		sas_port_delete_phy(port->port, phy->phy);
- 
--
- 	if (si->dft->lldd_port_deformed)
- 		si->dft->lldd_port_deformed(phy);
- 
-@@ -244,7 +247,7 @@ void sas_porte_link_reset_err(struct work_struct *work)
- 	sas_begin_event(PORTE_LINK_RESET_ERR, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- void sas_porte_timer_event(struct work_struct *work)
-@@ -256,7 +259,7 @@ void sas_porte_timer_event(struct work_struct *work)
- 	sas_begin_event(PORTE_TIMER_EVENT, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- void sas_porte_hard_reset(struct work_struct *work)
-@@ -268,7 +271,7 @@ void sas_porte_hard_reset(struct work_struct *work)
- 	sas_begin_event(PORTE_HARD_RESET, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- /* ---------- SAS port registration ---------- */
-@@ -306,6 +309,6 @@ void sas_unregister_ports(struct sas_ha_struct *sas_ha)
- 
- 	for (i = 0; i < sas_ha->num_phys; i++)
- 		if (sas_ha->sas_phy[i]->port)
--			sas_deform_port(sas_ha->sas_phy[i]);
-+			sas_deform_port(sas_ha->sas_phy[i], 0);
- 
- }
-
+ 	/* Copy 1st segment. */
+ 	dptr1 = (uint8_t *)icb;
+-- 
+1.6.0.2
 
