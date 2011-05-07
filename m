@@ -1,37 +1,42 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 0/4] qla2xxx: Patches for 2.6.39-rcx
-Date: Fri,  6 May 2011 17:30:06 -0700
-Message-ID: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 02/12] qla2xxx: Correct buffer start in edc sysfs debug print.
+Date: Fri,  6 May 2011 17:30:10 -0700
+Message-ID: <1304728223-30817-5-git-send-email-madhu.iyengar@qlogic.com>
+References: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:32828 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:32827 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753912Ab1EGAnM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753899Ab1EGAnM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 6 May 2011 20:43:12 -0400
+In-Reply-To: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-From: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-James,
+The debug print prints the first byte of the buffer which is buf[8].
 
-Please apply these patches. Thanks.
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Andrew Vasquez (1):
-  qla2xxx: Properly set the dsd_list_len for dsd_chaining in cmd type
-    6.
-
-Arun Easi (2):
-  qla2xxx: Fix hang during driver unload when vport is active.
-  qla2xxx: Fix vport delete hang when logins are outstanding.
-
-Saurav Kashyap (1):
-  qla2xxx: Fix virtual port failing to login after chip reset.
-
- drivers/scsi/qla2xxx/qla_attr.c |    5 +++--
- drivers/scsi/qla2xxx/qla_fw.h   |    3 +--
- drivers/scsi/qla2xxx/qla_nx.c   |    4 ++--
- drivers/scsi/qla2xxx/qla_os.c   |   32 +++++++++++++++++++-------------
- 4 files changed, 25 insertions(+), 19 deletions(-)
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 260c030..4e51124 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -633,7 +633,7 @@ qla2x00_sysfs_write_edc(struct file *filp, struct kobject *kobj,
+ 	if (rval != QLA_SUCCESS) {
+ 		DEBUG2(qla_printk(KERN_INFO, ha,
+ 		    "Unable to write EDC (%x) %02x:%02x:%04x:%02x:%02x.\n",
+-		    rval, dev, adr, opt, len, *buf));
++		    rval, dev, adr, opt, len, buf[8]));
+ 		return 0;
+ 	}
+ 
+-- 
+1.6.0.2
 
