@@ -1,50 +1,52 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 01/12] qla2xxx: Update firmware version after flash update for ISP82xx.
-Date: Fri,  6 May 2011 17:30:09 -0700
-Message-ID: <1304728223-30817-4-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 3/4] qla2xxx: Fix vport delete hang when logins are outstanding.
+Date: Fri,  6 May 2011 17:30:12 -0700
+Message-ID: <1304728223-30817-7-git-send-email-madhu.iyengar@qlogic.com>
 References: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:32829 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:32831 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753542Ab1EGAnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754008Ab1EGAnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 6 May 2011 20:43:13 -0400
 In-Reply-To: <1304728223-30817-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
-The driver keeps a copy of the fw_version within the ha structure.
-For ISP82xx, this local copy doesn't get updated, and as a result,
-the old firmware version ends up getting displayed. This patch fixes
-this issue.
+Timer is required to flush out entries that may be present in work queues.
 
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: stable@kernel.org
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_init.c |    7 +++++++
- 1 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 24d2d19..cb69693 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5435,6 +5435,13 @@ qla82xx_restart_isp(scsi_qla_host_t *vha)
- 		ha->isp_abort_cnt = 0;
- 		clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 75faf48..260c030 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1877,14 +1877,15 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
  
-+		/* Update the firmware version */
-+		qla2x00_get_fw_version(vha, &ha->fw_major_version,
-+		    &ha->fw_minor_version, &ha->fw_subminor_version,
-+		    &ha->fw_attributes, &ha->fw_memory_size,
-+		    ha->mpi_version, &ha->mpi_capabilities,
-+		    ha->phy_version);
+ 	scsi_remove_host(vha->host);
+ 
++	/* Allow timer to run to drain queued items, when removing vp */
++	qla24xx_deallocate_vp_id(vha);
 +
- 		if (ha->fce) {
- 			ha->flags.fce_enabled = 1;
- 			memset(ha->fce, 0,
+ 	if (vha->timer_active) {
+ 		qla2x00_vp_stop_timer(vha);
+ 		DEBUG15(printk(KERN_INFO "scsi(%ld): timer for the vport[%d]"
+ 		" = %p has stopped\n", vha->host_no, vha->vp_idx, vha));
+ 	}
+ 
+-	qla24xx_deallocate_vp_id(vha);
+-
+ 	/* No pending activities shall be there on the vha now */
+ 	DEBUG(msleep(random32()%10));  /* Just to see if something falls on
+ 					* the net we have placed below */
 -- 
 1.6.0.2
 
