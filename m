@@ -1,106 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 3/3] target: Fix bug with task_sg chained transport_free_dev_tasks release
-Date: Fri,  6 May 2011 19:54:58 -0700
-Message-ID: <1304736898-10830-4-git-send-email-nab@linux-iscsi.org>
-References: <1304736898-10830-1-git-send-email-nab@linux-iscsi.org>
+From: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
+Subject: [PATCH] sym53c8xx_2: avoid data corruption when disk rejects commands
+ with QUEUE FULL
+Date: Sun, 8 May 2011 21:00:26 +0200 (CEST)
+Message-ID: <alpine.DEB.2.00.1105082057460.15552@artax.karlin.mff.cuni.cz>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1304736898-10830-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>, "Robert W. Love" <robert.w.love@intel.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Bart Van Assche <bvanassche@acm.org>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Matthew Wilcox <matthew@wil.cx>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+[ the maintainer is not responding, so I'm sending this to other people ]
 
-This patch addresses a bug in the target core release path for HW
-operation where transport_free_dev_tasks() was incorrectly being called
-from transport_lun_remove_cmd() while releasing a se_cmd reference and
-calling struct target_core_fabric_ops->queue_data_in().
+sym53c8xx_2: avoid data corruption when disk rejects commands with QUEUE 
+FULL
 
-This would result in a OOPs with HW target mode when the release of
-se_task->task_sg[] would happen before pci_unmap_sg() can be called in
-HW target mode fabric module code.  This patch addresses the issue by
-moving transport_free_dev_tasks() from transport_lun_remove_cmd() into
-transport_generic_free_cmd(), and adding TRANSPORT_FREE_CMD_INTR and
-transport_generic_free_cmd_intr() to allow se_cmd descriptor release
-to happen fromfrom within transport_processing_thread() process context
-when release of se_cmd is not possible from HW interrupt context.
+When the controller encounters an error (including QUEUE FULL or BUSY 
+status), it aborts all not yet submitted requests in the function 
+sym_dequeue_from_squeue.
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+This function aborts them with DID_SOFT_ERROR.
+
+If the disk has a full tag queue, the request that caused the overflow is
+aborted with QUEUE FULL status (and the scsi midlayer properly retries it
+until it is accepted by the disk), but other requests are aborted with
+DID_SOFT_ERROR --- for them, the midlayer does just a few retries and then
+signals the error up to sd.
+
+The result is that disk returning QUEUE FULL causes request failures.
+
+The error was reproduced on 53c895 with COMPAQ BD03685A24 disk (rebranded
+ST336607LC) with command queue 48 or 64 tags. The disk has 64 tags, but
+under some access patterns it return QUEUE FULL when there are less than
+64 pending tags. The SCSI specification allows returning QUEUE FULL
+anytime and it is up to the host to retry.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+
 ---
- drivers/target/target_core_transport.c |   13 ++++++++++++-
- include/target/target_core_base.h      |    1 +
- include/target/target_core_transport.h |    1 +
- 3 files changed, 14 insertions(+), 1 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index fefe10a..3eeb3e2 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -762,7 +762,6 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
- 	transport_all_task_dev_remove_state(cmd);
- 	spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
- 
--	transport_free_dev_tasks(cmd);
- 
- check_lun:
- 	spin_lock_irqsave(&lun->lun_cmd_lock, flags);
-@@ -2058,6 +2057,13 @@ int transport_generic_handle_tmr(
- }
- EXPORT_SYMBOL(transport_generic_handle_tmr);
- 
-+void transport_generic_free_cmd_intr(
-+	struct se_cmd *cmd)
-+{
-+	transport_add_cmd_to_queue(cmd, TRANSPORT_FREE_CMD_INTR);
-+}
-+EXPORT_SYMBOL(transport_generic_free_cmd_intr);
-+
- static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- {
- 	struct se_task *task, *task_tmp;
-@@ -5301,6 +5307,8 @@ void transport_generic_free_cmd(
- 		if (wait_for_tasks && cmd->transport_wait_for_tasks)
- 			cmd->transport_wait_for_tasks(cmd, 0, 0);
- 
-+		transport_free_dev_tasks(cmd);
-+
- 		transport_generic_remove(cmd, release_to_pool,
- 				session_reinstatement);
- 	}
-@@ -6136,6 +6144,9 @@ get_cmd:
- 		case TRANSPORT_REMOVE:
- 			transport_generic_remove(cmd, 1, 0);
- 			break;
-+		case TRANSPORT_FREE_CMD_INTR:
-+			transport_generic_free_cmd(cmd, 0, 1, 0);
-+			break;
- 		case TRANSPORT_PROCESS_TMR:
- 			transport_generic_do_tmr(cmd);
- 			break;
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 1d3b5b2..561ac99 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -98,6 +98,7 @@ enum transport_state_table {
- 	TRANSPORT_REMOVE	= 14,
- 	TRANSPORT_FREE		= 15,
- 	TRANSPORT_NEW_CMD_MAP	= 16,
-+	TRANSPORT_FREE_CMD_INTR = 17,
- };
- 
- /* Used for struct se_cmd->se_cmd_flags */
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 59aa464..24a1c6c 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -172,6 +172,7 @@ extern int transport_generic_handle_cdb_map(struct se_cmd *);
- extern int transport_generic_handle_data(struct se_cmd *);
- extern void transport_new_cmd_failure(struct se_cmd *);
- extern int transport_generic_handle_tmr(struct se_cmd *);
-+extern void transport_generic_free_cmd_intr(struct se_cmd *);
- extern void __transport_stop_task_timer(struct se_task *, unsigned long *);
- extern unsigned char transport_asciihex_to_binaryhex(unsigned char val[2]);
- extern int transport_generic_map_mem_to_cmd(struct se_cmd *cmd, struct scatterlist *, u32,
--- 
-1.7.5.1
+Index: linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c
+===================================================================
+--- linux-2.6.36-rc5-fast.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:25:59.000000000 +0200
++++ linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:26:27.000000000 +0200
+@@ -3000,7 +3000,11 @@ sym_dequeue_from_squeue(struct sym_hcb *
+ 		if ((target == -1 || cp->target == target) &&
+ 		    (lun    == -1 || cp->lun    == lun)    &&
+ 		    (task   == -1 || cp->tag    == task)) {
++#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 			sym_set_cam_status(cp->cmd, DID_SOFT_ERROR);
++#else
++			sym_set_cam_status(cp->cmd, DID_REQUEUE);
++#endif
+ 			sym_remque(&cp->link_ccbq);
+ 			sym_insque_tail(&cp->link_ccbq, &np->comp_ccbq);
+ 		}
