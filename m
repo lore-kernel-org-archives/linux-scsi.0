@@ -1,25 +1,80 @@
-From: "Sydgg" <schwalbeydjd@yahoo.de>
-Subject: mDU7
-Date: Tue, 10 May 2011 06:53:51 +0800
-Message-ID: <201105100653515780316@yahoo.de>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during writeback
+	for various fses
+Date: Mon, 09 May 2011 16:03:18 -0700
+Message-ID: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm3-vm0.bullet.mail.ukl.yahoo.com ([217.146.183.228]:48413 "HELO
-	nm3-vm0.bullet.mail.ukl.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752871Ab1EIW7y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 May 2011 18:59:54 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cc: Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-QjYxNDM5MDM2NjQ4MTU0NzQ0RA0KxPq6w6O6DQqxvrmry77T67rP1/e5q8u+0vK9+M/usci9z7bg
-tcjUrdLyo6yzpMbazqrE+szhuamjug0KICAgtPoqv6oq1eYqt6IqxrEgo6jStSrO8aOpWA0KICCw
-/MCoo7rG1c2o1PbWtcuwoaK5+suwoaK12Muwt6IvxrGhornjuOahotfJ0a+horvh0umhor2o1v65
-pLPMoaLJzMa3DQrP+srboaLXocveoaK5+sTa1MvK5KOsufq8yrv11Muhotfiwd6hormk0rXNs9K7
-oaK6o7nYvcm/7srptci3oi3GsaGjDQogICAg0tTJz7eiLy/Gsb75v8nJz834sunRr7vytb21sbXY
-y7C+1tHp1qSjrMuwtePTxaOsDQq7ttOtwLS159fJ0a+ho7TyyMXH68HCveKjodDo0qrH68H008Mh
-MTI2LmNvbQ0KICAgIMGqz7XIy6O6MTM5LTE4NjMtMTMyNSCzws/Iyfogv823/lFRo7oxMjYtNDAx
-Ny01NTQgIA0KXFxtc2EuaGluZXQubmV0NjE0MzkwMzY2NDgxNTQ3NDRM
+Hi all,
+
+This is v3.1 of the stable-page-writes patchset for ext4/3/2, xfs, and fat.
+The purpose of this patchset is to prohibit processes from writing on memory
+pages that are currently being written to disk because certain storage setups
+(e.g. SCSI disks with DIF integrity checksums) will fail a write if the page
+contents don't match the checksum.  btrfs already guarantees page stability, so
+it does not use these changes.
+
+The technique used is fairly simple -- whenever a page is about to become
+writable (either because of a write fault to a mapped page, or a buffered write
+is in progress), wait for the page writeback flag to be clear, indicating that
+the page is not being written to disk.  This means that it is necessary (1) to
+add wait for writeback code to grab_cache_page_write_begin to take care of
+buffered writes, and (2) all filesystems must have a page_mkwrite that locks a
+page, waits for writeback, and returns the locked page.  For filesystems that
+piggyback on the generic block_page_mkwrite, the patchset adds the writeback
+wait to that function; for filesystems that do not use the page_mkwrite hook at
+all, the patchset provides a stub page_mkwrite.
+
+I ran my write-after-checksum ("wac") reproducer program to try to create the
+DIF checksum errors by madly rewriting the same memory pages.  In fact, I tried
+the following combinations against ext2/3/4, xfs, btrfs, and vfat:
+
+a. 64 write() threads + sync_file_range
+b. 64 mmap write threads + msync
+c. 32 write() threads + sync_file_range + 32 mmap write threads + msync
+d. Same as C, but with all threads in directio mode
+e. Same as A, but with all threads in directio mode
+f. Same as B, but with all threads in directio mode
+
+After running profiles A-F for 30 minutes each on 6 different machines, ext2,
+ext4, xfs, and vfat reported no errors.  ext3 still has a lingering failure
+case (which I will touch on briefly later) and btrfs eventually reports -ENOSPC
+and fails the test, though it does that even without any of the patches applied.
+
+To assess the performance impact of stable page writes, I moved to a disk that
+doesn't have DIF support so that I could measure just the impact of waiting for
+writeback.  I first ran wac with 64 threads madly scribbling on a 64k file and
+saw about a 12 percent performance decrease.  I then reran the wac program with
+64 threads and a 64MB file and saw about the same performance numbers.  As I
+suspected, the patchset only seems to impact workloads that rewrite the same
+memory page frequently.
+
+I am still chasing down what exactly is broken in ext3.  data=writeback mode
+passes with no failures.  data=ordered, however, does not pass; my current
+suspicion is that jbd is calling submit_bh on data buffers but doesn't call
+page_mkclean to kick the userspace programs off the page before writing it.
+
+Per various comments regarding v3 of this patchset, I've integrated his
+suggestions, reworked the patch descriptions to make it clearer which ones
+touch all the filesystems and which ones are to fix remaining holes in specific
+filesystems, and expanded the scope of filesystems that got fixed.
+
+As always, questions and comments are welcome; and thank you to all the
+previous reviewers of this patchset.  I am also soliciting people's opinions on
+whether or not these patches could go upstream for .40.
+
+--D
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
