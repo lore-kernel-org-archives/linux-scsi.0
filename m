@@ -1,104 +1,36 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Expected payload size for WRITE_SAME_16?
-Date: Mon, 09 May 2011 14:53:11 -0400
-Message-ID: <4DC83817.5060906@interlog.com>
-References: <4DC193C0.8090401@rnanetworks.com> <1304729895.10072.475.camel@haakon2.linux-iscsi.org>
-Reply-To: dgilbert@interlog.com
+From: Jesse Barnes <jbarnes@virtuousgeek.org>
+Subject: Re: [PATCH v2] Add Marvell UMI driver
+Date: Mon, 9 May 2011 12:20:51 -0700
+Message-ID: <20110509122051.33f1672f@jbarnes-desktop>
+References: <Message-Id>
+	<1304943577-2876-1-git-send-email-jianyunff@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:49637 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751933Ab1EITAZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 May 2011 15:00:25 -0400
-In-Reply-To: <1304729895.10072.475.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1304943577-2876-1-git-send-email-jianyunff@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jianyun Li <jianyunff@gmail.com>
+Cc: James.Bottomley@suse.de, Jianyun Li <jyli@marvell.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On 11-05-06 08:58 PM, Nicholas A. Bellinger wrote:
-> On Wed, 2011-05-04 at 10:58 -0700, Chris Greiveldinger wrote:
->> Hello again,
->>
->
-> Hi Chris,
->
->>    From sbc3r25:  "The WRITE SAME (16) command (see table 112) requests
->> that the device server transfer a single logical block from the data-out
->> buffer."  The code for WRITE_SAME_16 in
->> target_core_transport.c:transport_generic_cmd_sequencer() calculates the
->> expected size to be sectors * block size (via transport_get_size), which
->> I expect is too large if sectors is greater than one.
->
-> Not exactly..
->
-> We use the per CDB 'size = transport_get_size()' assignment with
-> WRITE_SAME_16+UNMAP=1 in transport_generic_cmd_sequencer() to compare
-> the SCSI CDB level expected data transfer length (size) against the
-> fabric dependent expected transfer length (struct se_cmd->data_length)
-> at the bottom of transport_generic_cmd_sequencer().
->
-> The value in se_cmd->data_length is then used to determine the 'range'
-> and makes the backend calls via:
->
->     target_core_cdb.c:target_emulate_write_same()
->         dev->transport->do_discard() ->
->           target_core_iblock.c:iblock_do_discard() ->
->                block/blk-lib.c:blkdev_issue_discard()
->
->
->> Since the sg3_utils sg_write_same utility allows me to specify the the payload
->> size, I can issue a command that has the payload length that
->> transport_generic_cmd_sequencer() expects, but I'm not sure what the
->> correct size should be.
->>
->
-> It was my understanding that you need to match the sg_write_same
-> parameters of --num and --xferlen depending on the SCSI block_size (512)
-> used for the SCSI devices:
->
-> sg_write_same -S --unmap --in=/dev/zero --lba=10 --num=1
-> --xferlen=512 /dev/sdd
->
-> sg_write_same -S --unmap --in=/dev/zero --lba=10 --num=100
-> --xferlen=51200 /dev/sdd
+On Mon,  9 May 2011 20:19:33 +0800
+Jianyun Li <jianyunff@gmail.com> wrote:
 
-No, it should be '--xferlen=512' in both cases or simply
-don't give that option. If it is not given then the READ
-CAPACITY response is consulted to read the 'Logical block
-length in bytes' field which I guess will be 512 in the
-cases you are looking at.
+> 	The Marvell Universal Message Interface (UMI) defines a messaging
+> interface between host and Marvell products (Plato, for example). It
+> considers situations of limited system resource and optimized system
+> performance.
+> 	UMI driver translates host request to message and sends message
+> to FW via UMI, FW receives message and processes it, then sends response
+> to UMI driver.
+> 	FW generates an interrupt when it needs to send information or
+> response to UMI driver
+> 
 
-Perhaps 'man sg_write_same' needs some examples (or just
-needs to be read ...).
+Unless you're using the PCI ID outside of this driver, you can just put
+it in your header file rather than pci_ids.h, which is meant for IDs
+that are shared between modules.
 
-> Note that sg_write_same does check --xferlen against a hardcoded max of
-> 64k, which is obviously somewhat limiting.
-
-The 64Kb limit is the biggest block size that sg_write_same
-can handle. I'm not aware that is a practical restriction yet.
-
-Doug Gilbert
-
->> Am I wrong in my interpretation of the WRITE_SAME(16) command, or is
->> this a bug in transport_generic_cmd_sequencer()?
->>
->
-> So the above case --num>  0 case things should still be working as
-> expected with recent upstream LIO code and your last Reported-by: patch,
-> but there does appear to be an issue with the --num=0 case being
-> rejected by the write underflow/overflow check inside
-> transport_generic_cmd_sequencer().
->
-> I will send out a patch shortly against lio-4.1 for you to test that
-> makes the sg_write_same --unmap + --num=0 case work again (Christoph
-> CC'ed and linux-scsi CC'ed).
->
-> Thanks for your review!
->
-> --nab
->
->
-
+-- 
+Jesse Barnes, Intel Open Source Technology Center
