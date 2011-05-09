@@ -1,19 +1,22 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH] mpt2sas: Fix memset using sizeof(ptr) not sizeof(*ptr)
-Date: Sun, 08 May 2011 23:11:45 -0700
-Message-ID: <1304921505.19586.26.camel@Joe-Laptop>
+Subject: [RFC PATCH] hpsa: Change memset using sizeof(ptr) to sizeof(*ptr)
+Date: Sun, 08 May 2011 23:32:40 -0700
+Message-ID: <1304922760.19586.30.camel@Joe-Laptop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1367 "EHLO mail.perches.com"
+Received: from mail.perches.com ([173.55.12.10]:1371 "EHLO mail.perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750860Ab1EIGLr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 May 2011 02:11:47 -0400
+	id S1751308Ab1EIGcl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 May 2011 02:32:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Not at all sure this is correct or appropriate to change,
+but this seems odd.
 
 Found via coccinelle script
 
@@ -27,21 +30,21 @@ expression E1;
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/mpt2sas/mpt2sas_transport.c |    2 +-
+ drivers/scsi/hpsa.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index cb1cdec..9e86708 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -163,7 +163,7 @@ _transport_set_identify(struct MPT2SAS_ADAPTER *ioc, u16 handle,
- 		return -EIO;
- 	}
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 415ad4f..c8d97b4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1308,7 +1308,7 @@ static void hpsa_scsi_do_simple_cmd_with_retry(struct ctlr_info *h,
+ 	int retry_count = 0;
  
--	memset(identify, 0, sizeof(identify));
-+	memset(identify, 0, sizeof(*identify));
- 	device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
- 
- 	/* sas_address */
+ 	do {
+-		memset(c->err_info, 0, sizeof(c->err_info));
++		memset(c->err_info, 0, sizeof(*c->err_info));
+ 		hpsa_scsi_do_simple_cmd_core(h, c);
+ 		retry_count++;
+ 	} while (check_for_unit_attention(h, c) && retry_count <= 3);
 
 
