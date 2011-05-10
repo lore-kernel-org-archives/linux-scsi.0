@@ -1,123 +1,43 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 05/11] qla2xxx: Add qla82xx_rom_unlock() function.
-Date: Tue, 10 May 2011 11:30:10 -0700
-Message-ID: <1305052216-17347-6-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 09/11] qla2xxx: Clear complete initialization control block.
+Date: Tue, 10 May 2011 11:30:14 -0700
+Message-ID: <1305052216-17347-10-git-send-email-madhu.iyengar@qlogic.com>
 References: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:39931 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:39934 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751677Ab1EJSge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2011 14:36:34 -0400
+	id S1750911Ab1EJSgf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2011 14:36:35 -0400
 In-Reply-To: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-Encapsulate the unlocking of the ROM lock in a function for better
-code readability.
+Use proper init_cb_size member which takes into account
+MID/non-MID init-cb structure sizes.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h |    1 -
- drivers/scsi/qla2xxx/qla_nx.c  |   20 +++++++++++++-------
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index fbb4b8f..53968cc 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -552,7 +552,6 @@ extern int qla82xx_wr_32(struct qla_hw_data *, ulong, u32);
- extern int qla82xx_rd_32(struct qla_hw_data *, ulong);
- extern int qla82xx_rdmem(struct qla_hw_data *, u64, void *, int);
- extern int qla82xx_wrmem(struct qla_hw_data *, u64, void *, int);
--extern void qla82xx_rom_unlock(struct qla_hw_data *);
- 
- /* ISP 8021 IDC */
- extern void qla82xx_clear_drv_active(struct qla_hw_data *);
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 752b03e..5d5b603 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -844,6 +844,12 @@ qla82xx_rom_lock(struct qla_hw_data *ha)
- 	return 0;
- }
- 
-+static void
-+qla82xx_rom_unlock(struct qla_hw_data *ha)
-+{
-+	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+}
-+
- static int
- qla82xx_wait_rom_busy(struct qla_hw_data *ha)
- {
-@@ -924,7 +930,7 @@ qla82xx_rom_fast_read(struct qla_hw_data *ha, int addr, int *valp)
- 		return -1;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index cb69693..920b76b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5210,7 +5210,7 @@ qla81xx_nvram_config(scsi_qla_host_t *vha)
  	}
- 	ret = qla82xx_do_rom_fast_read(ha, addr, valp);
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- 	return ret;
- }
  
-@@ -1056,7 +1062,7 @@ qla82xx_write_flash_dword(struct qla_hw_data *ha, uint32_t flashaddr,
- 	ret = qla82xx_flash_wait_write_finish(ha);
+ 	/* Reset Initialization control block */
+-	memset(icb, 0, sizeof(struct init_cb_81xx));
++	memset(icb, 0, ha->init_cb_size);
  
- done_write:
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- 	return ret;
- }
- 
-@@ -1144,7 +1150,7 @@ qla82xx_pinit_from_rom(scsi_qla_host_t *vha)
- 	qla82xx_wr_32(ha, QLA82XX_CRB_QDR_NET + 0xe4, val);
- 	msleep(20);
- 
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- 
- 	/* Read the signature value from the flash.
- 	 * Offset 0: Contain signature (0xcafecafe)
-@@ -3010,7 +3016,7 @@ qla82xx_unprotect_flash(struct qla_hw_data *ha)
- 		qla_printk(KERN_WARNING, ha, "Write disable failed\n");
- 
- done_unprotect:
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- 	return ret;
- }
- 
-@@ -3039,7 +3045,7 @@ qla82xx_protect_flash(struct qla_hw_data *ha)
- 	if (qla82xx_write_disable_flash(ha) != 0)
- 		qla_printk(KERN_WARNING, ha, "Write disable failed\n");
- done_protect:
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- 	return ret;
- }
- 
-@@ -3067,7 +3073,7 @@ qla82xx_erase_sector(struct qla_hw_data *ha, int addr)
- 	}
- 	ret = qla82xx_flash_wait_write_finish(ha);
- done:
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- 	return ret;
- }
- 
-@@ -3247,7 +3253,7 @@ void qla82xx_rom_lock_recovery(struct qla_hw_data *ha)
- 	 * else died while holding it.
- 	 * In either case, unlock.
- 	 */
--	qla82xx_rd_32(ha, QLA82XX_PCIE_REG(PCIE_SEM2_UNLOCK));
-+	qla82xx_rom_unlock(ha);
- }
- 
- /*
+ 	/* Copy 1st segment. */
+ 	dptr1 = (uint8_t *)icb;
 -- 
 1.6.0.2
 
