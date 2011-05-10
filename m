@@ -1,46 +1,52 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH 2/7] fs: block_page_mkwrite should wait for writeback
-	to finish
-Date: Tue, 10 May 2011 10:12:45 -0700
-Message-ID: <20110510171245.GF18929@tux1.beaverton.ibm.com>
-References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com> <20110509230334.19566.17603.stgit@elm3c44.beaverton.ibm.com> <20110510124103.GC4402@quack.suse.cz>
-Reply-To: djwong@us.ibm.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110510124103.GC4402@quack.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Theodore Tso <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
+From: madhu.iyengar@qlogic.com
+Subject: [PATCH 3/4] qla2xxx: Fix vport delete hang when logins are outstanding.
+Date: Tue, 10 May 2011 11:18:17 -0700
+Message-ID: <1305051498-16718-4-git-send-email-madhu.iyengar@qlogic.com>
+References: <1305051498-16718-1-git-send-email-madhu.iyengar@qlogic.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:38279 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751505Ab1EJSYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2011 14:24:35 -0400
+In-Reply-To: <1305051498-16718-1-git-send-email-madhu.iyengar@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>
 
-For filesystems such as nilfs2 and xfs that use block_page_mkwrite, modify that
-function to wait for pending writeback before allowing the page to become
-writable.  This is needed to stabilize pages during writeback for those two
-filesystems.
+From: Arun Easi <arun.easi@qlogic.com>
 
-Slight rework based on Jan Kara's suggestion.
+Timer is required to flush out entries that may be present in work queues.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+Cc: stable@kernel.org
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
+ drivers/scsi/qla2xxx/qla_attr.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
- fs/buffer.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/fs/buffer.c b/fs/buffer.c
-index a08bb8e..0e7fa16 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2367,8 +2367,10 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
- 			ret = VM_FAULT_OOM;
- 		else /* -ENOSPC, -EIO, etc */
- 			ret = VM_FAULT_SIGBUS;
--	} else
-+	} else {
-+		wait_on_page_writeback(page);
- 		ret = VM_FAULT_LOCKED;
-+	}
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 75faf48..260c030 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1877,14 +1877,15 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
  
- out:
- 	return ret;
+ 	scsi_remove_host(vha->host);
+ 
++	/* Allow timer to run to drain queued items, when removing vp */
++	qla24xx_deallocate_vp_id(vha);
++
+ 	if (vha->timer_active) {
+ 		qla2x00_vp_stop_timer(vha);
+ 		DEBUG15(printk(KERN_INFO "scsi(%ld): timer for the vport[%d]"
+ 		" = %p has stopped\n", vha->host_no, vha->vp_idx, vha));
+ 	}
+ 
+-	qla24xx_deallocate_vp_id(vha);
+-
+ 	/* No pending activities shall be there on the vha now */
+ 	DEBUG(msleep(random32()%10));  /* Just to see if something falls on
+ 					* the net we have placed below */
+-- 
+1.6.0.2
+
