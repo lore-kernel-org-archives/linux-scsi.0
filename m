@@ -1,40 +1,31 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
- writeback for various fses
-Date: Tue, 10 May 2011 14:51:24 +0200
-Message-ID: <20110510125124.GD4402@quack.suse.cz>
-References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com>
+From: "Aaron" <aaron.aaron@inbox.ru>
+Subject: Hello
+Date: Tue, 10 May 2011 02:11:47 +0100
+Message-ID: <130498987479520682@ukmrpl002>
+Reply-To: <aaron-aaron@inbox.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com>
-Sender: owner-linux-mm@kvack.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ukmrpl002.threembb.net ([217.171.136.36]:41769 "HELO
+	ukmrpl002.it.hutchison3g.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with SMTP id S1752425Ab1EJNA4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2011 09:00:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon 09-05-11 16:03:18, Darrick J. Wong wrote:
-> I am still chasing down what exactly is broken in ext3.  data=writeback mode
-> passes with no failures.  data=ordered, however, does not pass; my current
-> suspicion is that jbd is calling submit_bh on data buffers but doesn't call
-> page_mkclean to kick the userspace programs off the page before writing it.
-  Yes, ext3 in data=ordered mode writes pages from
-journal_commit_transaction() via submit_bh() without clearing page dirty
-bits thus page_mkclean() is not called for these pages. Frankly, do you
-really want to bother with adding support for ext2 and ext3? People can use
-ext4 as a fs driver when they want to start using blk-integrity support.
-Especially ext2 patch looks really painful and just from a quick look I can
-see code e.g. in fs/ext2/namei.c which isn't handled by your patch yet.
+Hello,
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+I know you don't know me and this Email is out of the blue, but I ask for a few minutes of your time to hear me out.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+My name is Aaron and I come to you with a business offer.
+
+If you are interested please do get back to me so I can give you full information on the matter and about myself.
+
+Thank you for your time
+
+Regards
+
+Aaron
