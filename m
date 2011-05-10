@@ -1,65 +1,73 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 1/4] qla2xxx: Properly set the dsd_list_len for dsd_chaining in cmd type 6.
-Date: Tue, 10 May 2011 11:18:15 -0700
-Message-ID: <1305051498-16718-2-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 2/4] qla2xxx: Fix hang during driver unload when vport is active.
+Date: Tue, 10 May 2011 11:18:16 -0700
+Message-ID: <1305051498-16718-3-git-send-email-madhu.iyengar@qlogic.com>
 References: <1305051498-16718-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:38273 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:38277 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751517Ab1EJSYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751502Ab1EJSYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 10 May 2011 14:24:35 -0400
 In-Reply-To: <1305051498-16718-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Arun Easi <arun.easi@qlogic.com>
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Arun Easi <arun.easi@qlogic.com>
 
-The firmware spec has the fcp_data_dseg_len defined as a 32-bit
-value, while the corresponding field in the driver structure has
-it defined as a 16-bit value.
+Bumping ref count during fc_vport_terminate() was the cause. vport
+delete would wait for ref count to drop to zero and that would never
+happen.
 
 Cc: stable@kernel.org
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Signed-off-by: Arun Easi <arun.easi@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_fw.h |    3 +--
- drivers/scsi/qla2xxx/qla_nx.c |    4 ++--
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |   25 +++++++++++++++----------
+ 1 files changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index 73888ae..691783a 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -416,8 +416,7 @@ struct cmd_type_6 {
- 	uint8_t vp_index;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 0ca6664..e1efbc7 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2368,21 +2368,26 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	base_vha = pci_get_drvdata(pdev);
+ 	ha = base_vha->hw;
  
- 	uint32_t fcp_data_dseg_address[2];	/* Data segment address. */
--	uint16_t fcp_data_dseg_len;		/* Data segment length. */
--	uint16_t reserved_1;			/* MUST be set to 0. */
-+	uint32_t fcp_data_dseg_len;		/* Data segment length. */
- };
+-	spin_lock_irqsave(&ha->vport_slock, flags);
+-	list_for_each_entry(vha, &ha->vp_list, list) {
+-		atomic_inc(&vha->vref_count);
++	mutex_lock(&ha->vport_lock);
++	while (ha->cur_vport_count) {
++		struct Scsi_Host *scsi_host;
  
- #define COMMAND_TYPE_7	0x18		/* Command Type 7 entry */
-diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index acd1ad3..8b217f3 100644
---- a/drivers/scsi/qla2xxx/qla_nx.c
-+++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -2563,11 +2563,11 @@ qla2xx_build_scsi_type_6_iocbs(srb_t *sp, struct cmd_type_6 *cmd_pkt,
- 			dsd_seg = (uint32_t *)&cmd_pkt->fcp_data_dseg_address;
- 			*dsd_seg++ = cpu_to_le32(LSD(dsd_ptr->dsd_list_dma));
- 			*dsd_seg++ = cpu_to_le32(MSD(dsd_ptr->dsd_list_dma));
--			cmd_pkt->fcp_data_dseg_len = dsd_list_len;
-+			*dsd_seg++ = cpu_to_le32(dsd_list_len);
- 		} else {
- 			*cur_dsd++ = cpu_to_le32(LSD(dsd_ptr->dsd_list_dma));
- 			*cur_dsd++ = cpu_to_le32(MSD(dsd_ptr->dsd_list_dma));
--			*cur_dsd++ = dsd_list_len;
-+			*cur_dsd++ = cpu_to_le32(dsd_list_len);
- 		}
- 		cur_dsd = (uint32_t *)next_dsd;
- 		while (avail_dsds) {
+-		if (vha->fc_vport) {
+-			spin_unlock_irqrestore(&ha->vport_slock, flags);
++		spin_lock_irqsave(&ha->vport_slock, flags);
+ 
+-			fc_vport_terminate(vha->fc_vport);
++		BUG_ON(base_vha->list.next == &ha->vp_list);
++		/* This assumes first entry in ha->vp_list is always base vha */
++		vha = list_first_entry(&base_vha->list, scsi_qla_host_t, list);
++		scsi_host = scsi_host_get(vha->host);
+ 
+-			spin_lock_irqsave(&ha->vport_slock, flags);
+-		}
++		spin_unlock_irqrestore(&ha->vport_slock, flags);
++		mutex_unlock(&ha->vport_lock);
++
++		fc_vport_terminate(vha->fc_vport);
++		scsi_host_put(vha->host);
+ 
+-		atomic_dec(&vha->vref_count);
++		mutex_lock(&ha->vport_lock);
+ 	}
+-	spin_unlock_irqrestore(&ha->vport_slock, flags);
++	mutex_unlock(&ha->vport_lock);
+ 
+ 	set_bit(UNLOADING, &base_vha->dpc_flags);
+ 
 -- 
 1.6.0.2
 
