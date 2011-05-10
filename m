@@ -1,85 +1,55 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 08/11] qla2xxx: Allow an override of the registered maximum LUN.
-Date: Tue, 10 May 2011 11:30:13 -0700
-Message-ID: <1305052216-17347-9-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 06/11] qla2xxx: Correctly read sfp single byte mailbox register.
+Date: Tue, 10 May 2011 11:30:11 -0700
+Message-ID: <1305052216-17347-7-git-send-email-madhu.iyengar@qlogic.com>
 References: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:39932 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:39930 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751685Ab1EJSge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751671Ab1EJSge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 10 May 2011 14:36:34 -0400
 In-Reply-To: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+From: Joe Carnuccio <joe.carnuccio@qlogic.com>
 
-The 'max_lun' value registered for each scsi_host is currently
-capped at 0xffff.  The new module parameter can allow for
-2nd-level flat-space addressing method-infrastructure to be
-supported.
+When reading a single byte using the READ SFP mailbox command, the
+single byte of data is returned in MB[1] and not MB[8].
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+The reason that MB[8] was being used is that the spec was unclear
+as it evolved over time; and we have not needed to read a single
+byte until recently.
+
+Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_gbl.h |    1 +
- drivers/scsi/qla2xxx/qla_mid.c |    2 +-
- drivers/scsi/qla2xxx/qla_os.c  |    8 +++++++-
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 53968cc..79a12aa 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -103,6 +103,7 @@ extern int ql2xenabledif;
- extern int ql2xenablehba_err_chk;
- extern int ql2xtargetreset;
- extern int ql2xdontresethba;
-+extern unsigned int ql2xmaxlun;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 975aeaa..aab628b 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3608,14 +3608,14 @@ qla2x00_read_edc(scsi_qla_host_t *vha, uint16_t dev, uint16_t adr,
+ 	mcp->mb[9] = adr;
+ 	mcp->mb[10] = opt;
+ 	mcp->out_mb = MBX_10|MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
+-	mcp->in_mb = MBX_0;
++	mcp->in_mb = MBX_1|MBX_0;
+ 	mcp->tov = MBX_TOV_SECONDS;
+ 	mcp->flags = 0;
+ 	rval = qla2x00_mailbox_command(vha, mcp);
  
- extern int qla2x00_loop_reset(scsi_qla_host_t *);
- extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index e34d7dd..5e34391 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -456,7 +456,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
- 	else
- 		host->max_cmd_len = MAX_CMDSZ;
- 	host->max_channel = MAX_BUSES - 1;
--	host->max_lun = MAX_LUNS;
-+	host->max_lun = ql2xmaxlun;
- 	host->unique_id = host->host_no;
- 	host->max_id = MAX_TARGETS_2200;
- 	host->transportt = qla2xxx_transport_vport_template;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 8401a6f..f461925 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -172,6 +172,12 @@ MODULE_PARM_DESC(ql2xdontresethba,
- 	" 0 (Default) -- Reset on failure.\n"
- 	" 1 -- Do not reset on failure.\n");
+ 	if (opt & BIT_0)
+ 		if (sfp)
+-			*sfp = mcp->mb[8];
++			*sfp = mcp->mb[1];
  
-+uint ql2xmaxlun = MAX_LUNS;
-+module_param(ql2xmaxlun, uint, S_IRUGO);
-+MODULE_PARM_DESC(ql2xmaxlun,
-+		"Defines the maximum LU number to register with the SCSI "
-+		"midlayer. Default is 65535.");
-+
- /*
-  * SCSI host template entry points
-  */
-@@ -2136,7 +2142,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	else
- 		host->max_cmd_len = MAX_CMDSZ;
- 	host->max_channel = MAX_BUSES - 1;
--	host->max_lun = MAX_LUNS;
-+	host->max_lun = ql2xmaxlun;
- 	host->transportt = qla2xxx_transport_template;
- 	sht->vendor_id = (SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC);
- 
+ 	if (rval != QLA_SUCCESS) {
+ 		DEBUG2_3_11(printk("%s(%ld): failed=%x (%x).\n", __func__,
 -- 
 1.6.0.2
 
