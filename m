@@ -1,55 +1,53 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 06/11] qla2xxx: Correctly read sfp single byte mailbox register.
-Date: Tue, 10 May 2011 11:30:11 -0700
-Message-ID: <1305052216-17347-7-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 07/11] qla2xxx: Add host number in reset and quiescent message logs.
+Date: Tue, 10 May 2011 11:30:12 -0700
+Message-ID: <1305052216-17347-8-git-send-email-madhu.iyengar@qlogic.com>
 References: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:39930 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:39933 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751671Ab1EJSge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751687Ab1EJSge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 10 May 2011 14:36:34 -0400
 In-Reply-To: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Joe Carnuccio <joe.carnuccio@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-When reading a single byte using the READ SFP mailbox command, the
-single byte of data is returned in MB[1] and not MB[8].
-
-The reason that MB[8] was being used is that the spec was unclear
-as it evolved over time; and we have not needed to read a single
-byte until recently.
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_nx.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 975aeaa..aab628b 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -3608,14 +3608,14 @@ qla2x00_read_edc(scsi_qla_host_t *vha, uint16_t dev, uint16_t adr,
- 	mcp->mb[9] = adr;
- 	mcp->mb[10] = opt;
- 	mcp->out_mb = MBX_10|MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
--	mcp->in_mb = MBX_0;
-+	mcp->in_mb = MBX_1|MBX_0;
- 	mcp->tov = MBX_TOV_SECONDS;
- 	mcp->flags = 0;
- 	rval = qla2x00_mailbox_command(vha, mcp);
- 
- 	if (opt & BIT_0)
- 		if (sfp)
--			*sfp = mcp->mb[8];
-+			*sfp = mcp->mb[1];
- 
- 	if (rval != QLA_SUCCESS) {
- 		DEBUG2_3_11(printk("%s(%ld): failed=%x (%x).\n", __func__,
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 5d5b603..e1138bc 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3657,7 +3657,8 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
+ 		if (dev_state == QLA82XX_DEV_NEED_RESET &&
+ 		    !test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags)) {
+ 			qla_printk(KERN_WARNING, ha,
+-			    "%s(): Adapter reset needed!\n", __func__);
++			    "scsi(%ld) %s: Adapter reset needed!\n",
++				vha->host_no, __func__);
+ 			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+ 			qla2xxx_wake_dpc(vha);
+ 		} else if (dev_state == QLA82XX_DEV_NEED_QUIESCENT &&
+@@ -3704,8 +3705,9 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
+ 				if (ha->flags.mbox_busy) {
+ 					ha->flags.mbox_int = 1;
+ 					DEBUG2(qla_printk(KERN_ERR, ha,
+-					    "Due to fw hung, doing premature "
+-					    "completion of mbx command\n"));
++					    "scsi(%ld) Due to fw hung, doing "
++					    "premature completion of mbx "
++					    "command\n", vha->host_no));
+ 					if (test_bit(MBX_INTR_WAIT,
+ 					    &ha->mbx_cmd_flags))
+ 						complete(&ha->mbx_intr_comp);
 -- 
 1.6.0.2
 
