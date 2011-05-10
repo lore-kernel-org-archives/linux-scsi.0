@@ -1,50 +1,57 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi-0.25 released
-Date: Tue, 10 May 2011 10:34:19 -0400
-Message-ID: <4DC94CEB.2000404@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
+ writeback for various fses
+Date: Tue, 10 May 2011 16:49:39 +0200
+Message-ID: <20110510144939.GI4402@quack.suse.cz>
+References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com>
+ <87tyd31fkc.fsf@devron.myhome.or.jp>
+ <20110510133603.GA5823@infradead.org>
+ <874o524q9h.fsf@devron.myhome.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:43221 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753143Ab1EJOeh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2011 10:34:37 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <874o524q9h.fsf@devron.myhome.or.jp>
+Sender: owner-linux-mm@kvack.org
+To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <djwong@us.ibm.com>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Matt Taggart <taggart@debian.org>, "Martin K. Petersen" <martin.petersen@ORACLE.COM>
 
-lsscsi is a utility that uses sysfs in linux 2.6 series kernels
-to list information about SCSI devices and SCSI hosts. Both a
-compact format which is one line per device and a "classic"
-format (like the output of 'cat /proc/scsi/scsi') are supported.
+On Tue 10-05-11 22:52:10, OGAWA Hirofumi wrote:
+> Christoph Hellwig <hch@infradead.org> writes:
+> 
+> > On Tue, May 10, 2011 at 10:59:15AM +0900, OGAWA Hirofumi wrote:
+> >> I'd like to know those patches are on what state. Waiting in writeback
+> >> page makes slower, like you mentioned it (I guess it would more
+> >> noticeable if device was slower that like FAT uses). And I think
+> >> currently it doesn't help anything others for blk-integrity stuff
+> >> (without other technic, it doesn't help FS consistency)?
+> >
+> > It only makes things slower if we rewrite a region in a file that is
+> > currently undergoing writeback. I'd be interested to know about real
+> > life applications doing that, and if they really are badly affect we
+> > should help them to work around that in userspace, e.g. by adding a
+> > fadvice will rewrite call that might be used to never write back that
+> > regions without an explicit fsync call.
+> 
+> Isn't it reallocated blocks too, and metadata too?
+  Reallocated blocks - not really. For a block to be freed it cannot be
+under writeback and when it's freed no writeback is started. For metadata -
+yes. But ext3, ext4, xfs, btrfs have to avoid modifying metadata under
+writeback anyway (because of journalling / COW constraints) and thus they
+don't care. For ext2 or vfat it's a different story. But as I wrote to
+Darrick, I'm not sure about vfat but for ext2 and similar legacy
+filesystems, I'd rather let them live with their unstable pages under IO ;)
+because I see a limited use for that.
 
-Version 0.25 is available at:
-     http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for tarballs, rpm and deb packages.
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
-There have only been superficial changes to the beta release
-of 0.25 made in March 2011. The only adverse report was a
-problem when a kernel was configured with both
-CONFIG_SYSFS_DEPRECATED and CONFIG_SYSFS_DEPRECATED_V2.
-
-The most commonly useful addition is the '--size' option:
-$ lsscsi -s
-[0:0:0:0]  disk  ATA    INTEL SSDSA2M080 2CV1  /dev/sda  80.0GB
-[6:0:0:0]  disk  Linux  scsi_debug       0004  /dev/sdb  4.29PB
-
-
-ChangeLog:
-Version 0.25 2011/05/09 [svn: r92]
-   - add sas_port and fc_remote_ports transport information
-   - print enclosure_device entry
-   - add '--size' option to show size of disks
-   - add '--protmode' option to show protection information mode
-
-Version 0.24 2010/06/12 [svn: r83]
-...
-
-Doug Gilbert
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
