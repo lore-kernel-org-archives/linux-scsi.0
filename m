@@ -1,14 +1,14 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 4/4] qla2xxx: Fix virtual port failing to login after chip reset.
-Date: Tue, 10 May 2011 11:18:18 -0700
-Message-ID: <1305051498-16718-5-git-send-email-madhu.iyengar@qlogic.com>
-References: <1305051498-16718-1-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 01/11] qla2xxx: Update firmware version after flash update for ISP82xx.
+Date: Tue, 10 May 2011 11:30:06 -0700
+Message-ID: <1305052216-17347-2-git-send-email-madhu.iyengar@qlogic.com>
+References: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:38283 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:39918 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751535Ab1EJSYf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 May 2011 14:24:35 -0400
-In-Reply-To: <1305051498-16718-1-git-send-email-madhu.iyengar@qlogic.com>
+	id S1751344Ab1EJSgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 May 2011 14:36:33 -0400
+In-Reply-To: <1305052216-17347-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
@@ -16,41 +16,35 @@ Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogi
 
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-This patch ensures qla82xx_watchdog is not being run for the vport. It also
-makes sure that beacon ON is not done for the vport, as it will lead to the
-waking up of the dpc thread again and again.
+The driver keeps a copy of the fw_version within the ha structure.
+For ISP82xx, this local copy doesn't get updated, and as a result,
+the old firmware version ends up getting displayed. This patch fixes
+this issue.
 
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e1efbc7..010f560 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3628,7 +3628,8 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 	if (!pci_channel_offline(ha->pdev))
- 		pci_read_config_word(ha->pdev, PCI_VENDOR_ID, &w);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 24d2d19..cb69693 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5435,6 +5435,13 @@ qla82xx_restart_isp(scsi_qla_host_t *vha)
+ 		ha->isp_abort_cnt = 0;
+ 		clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
  
--	if (IS_QLA82XX(ha)) {
-+	/* Make sure qla82xx_watchdog is run only for physical port */
-+	if (!vha->vp_idx && IS_QLA82XX(ha)) {
- 		if (test_bit(ISP_QUIESCE_NEEDED, &vha->dpc_flags))
- 			start_dpc++;
- 		qla82xx_watchdog(vha);
-@@ -3709,8 +3710,8 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 		    atomic_read(&vha->loop_down_timer)));
- 	}
- 
--	/* Check if beacon LED needs to be blinked */
--	if (ha->beacon_blink_led == 1) {
-+	/* Check if beacon LED needs to be blinked for physical host only */
-+	if (!vha->vp_idx && (ha->beacon_blink_led == 1)) {
- 		set_bit(BEACON_BLINK_NEEDED, &vha->dpc_flags);
- 		start_dpc++;
- 	}
++		/* Update the firmware version */
++		qla2x00_get_fw_version(vha, &ha->fw_major_version,
++		    &ha->fw_minor_version, &ha->fw_subminor_version,
++		    &ha->fw_attributes, &ha->fw_memory_size,
++		    ha->mpi_version, &ha->mpi_capabilities,
++		    ha->phy_version);
++
+ 		if (ha->fce) {
+ 			ha->flags.fce_enabled = 1;
+ 			memset(ha->fce, 0,
 -- 
 1.6.0.2
 
