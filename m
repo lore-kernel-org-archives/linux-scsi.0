@@ -1,161 +1,156 @@
-From: Andy Grover <agrover@redhat.com>
+From: mwf@risingtidesystems.com
 Subject: Re: rtsadmin-v1.99 BETA packages
-Date: Wed, 11 May 2011 09:59:33 -0700
-Message-ID: <4DCAC075.5090007@redhat.com>
-References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org> <1304553788.10072.241.camel@haakon2.linux-iscsi.org>
+Date: Wed, 11 May 2011 17:36:15 +0000
+Message-ID: <1857068040-1305135375-cardhu_decombobulator_blackberry.rim.net-942172660-@bda192.bisx.prod.on.blackberry>
+References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org> <1304553788.10072.241.camel@haakon2.linux-iscsi.org><4DCAC075.5090007@redhat.com>
+Reply-To: mwf@risingtidesystems.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31272 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753701Ab1EKR2r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 May 2011 13:28:47 -0400
-In-Reply-To: <1304553788.10072.241.camel@haakon2.linux-iscsi.org>
+Received: from smtp11.bis.na.blackberry.com ([216.9.248.25]:18337 "EHLO
+	smtp11.bis.na.blackberry.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752393Ab1EKRqB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 May 2011 13:46:01 -0400
+In-Reply-To: <4DCAC075.5090007@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@risingtidesystems.com
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <openosd@gmail.com>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jerome Martin <jxm@risingtidesystems.com>, Marc Fleischmann <mwf@risingtidesystems.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>, Nicholas Bellinger <nab@risingtidesystems.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, "Dr. Hannes Reinecke" <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <openosd@gmail.com>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jerome Martin <jxm@risingtidesystems.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org
 
-[CCing lists too.]
-
-Hi Nicholas,
-
-Thank you to you, Jerome and RTS for this work!
-
-The rtsadmin-frozen rpm from 04-May-2011 installed ok but didn't seem to
-work quite right, but I wouldn't worry about it. I'm working on rpm
-packages with proper dependencies for Fedora rawhide, hopefully they'll
-be ready within a few days and I can make binary+src rpms available.
-
-Regards -- Andy
-
-On 05/04/2011 05:03 PM, Nicholas A. Bellinger wrote:
-> On Fri, 2011-04-29 at 17:01 -0700, Nicholas A. Bellinger wrote:
->> Greetings all,
->>
->> It's my great pleasure to be able to share the initial RTSAdmin v1.99
->> BETA 64-bit userspace packages here:
->>
-> 
-> Hello again folks,
-> 
-> Just a few updates on our BETA progress in the last week.  We have
-> updated the rtsadmin-v2 frozen and lio-utils packages for Debian Squeeze
-> and RHEL6 64-bit userspace here:
-> 
-> http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/
-> 
-> This version of lio-utils contains support for tcm_qla2xxx, ib_srpt,
-> tcm_fc and loopback fabric modules with the following operations:
-> 
-> *) rtsadmin-v2 'saveconfig' now creates /etc/target/$FABRICNAME_start.sh
-> for active tcm_qla2xxx, ib_srpt, tcm_fc and loopback configurations.
-> *) 'service target start' now re-creates the fabric configfs layout
-> using available /etc/target/$FABRICNAME_start.sh from currently saved
-> fabrics.
-> *) 'service target startbak $TIMESTAMP' now re-creates the fabric
-> configfs layout via /etc/target/backup/$FABRICNAME_backup-$TIMESTAMP.sh
-> from previously saved fabrics.
-> *) 'service target stop' will unload the current running configuration
-> for all active fabric modules and target core.
-> 
-> Unfortuately the frozen RPM package is currently having issues running
-> with RHEL6-final, so getting up and running on RHEL6 from source takes a
-> little bit of effort to manually install the python simpleparse library
-> which is currently not packaged for RHEL6.  Instructions for this and
-> other distros be added into the rtsadmin-v2 wiki shortly.
-> 
-> Also, we have setup the public rtsadmin-v2 community repository for
-> configshell.git, rtslib.git and rtsadmin.git source repos for those
-> interested in having a look at the code:
-> 
-> http://www.risingtidesystems.com/git/
-> 
-> Feedback is welcome, and please let us know if you have any issues
-> getting setup with the v2 shell.
-> 
-> --nab
-> 
-> 
->>
->> So far this is going out to Linux/SCSI community members who are
->> currently using the target core v4.0 + fabric module logic with the
->> default set of 5 specs included in the initial BETA release.
->>
->> We have been testing the .deb builds on Debian Squeeze 64-bit and .rpm
->> builds on RHEL6 64-bit thus far.  On this kernel side, this includes
->> support for the following target core + fabric module configurations:
->>
->> Target v4.x with >= .38 based lio-core-2.6.git code:
->>
->> 	iscsi-target
->>         tcm_loop
->>         tcm_fc(openfcoe)
->>         tcm_qla2xxx
->>         ib_srpt
->>
->> Target v3.5.x out-of-tree lio-core-backports.git code
->>
->>         iscsi-target
->>         tcm_loop
->>
->> The first round of rtsadmin-v2 specific fabric module information has
->> been added into the wiki below.  This includes example usage for
->> configuring Qlogic with demo mode TPG, and IB SRPT using explict SRP
->> Initiator NodeACLs + MappedLUNs along with similar instructions for
->> Open-FCoE.org target, and TCM_Loop LLD driver.
->>
->> http://linux-iscsi.org/wiki/QLogic/rtsadmin-v2
->> http://linux-iscsi.org/wiki/SCSI_RDMA_Protocol/rtsadmin-v2
->> http://linux-iscsi.org/wiki/FCoE/rtsadmin-v2
->> http://linux-iscsi.org/wiki/Tcm_loop/rtsadmin-v2
->>
->> We will be adding more usage examples and tips+tricks into the wiki in
->> the upcoming days, but please feel free to try out the initial packages,
->> and let us know if you have any problems getting setup.  Note there are
->> a handful of items missing from these builds, most notiably being able
->> to save non iscsi-target + tcm_loop fabrics layouts across
->> init.d/target restart.  This will be addressed along with our other
->> remaining items for a follow-up release next week.
->>
->> >From there we will be ironing out remaining bugs and finishing up
->> remaining the TODO list. We intend to release the community version via
->> git source tree and announce the new develpoer and user mailing lists in
->> the upcoming weeks as we more toward a stable v2 release.
->>
->> Also, the 'collapsed tpg' feature has been included in this build based
->> on Tomo's feedback which hides the 'tpgt' by default with non iSCSI
->> fabrics.  This ends up looking like the following with 'ls . 2' (eg: to
->> limit the object output to tree_max_depth=2) with five fabric modules
->> running in mixed-mode on .38.3 code with bare-metal 5600 series
->> hardware:
->>
->> /> ls . 2
->> o-/ ...................................................................... [...]
->>   o-backstores .................................................. [2 Backstores]
->>   | o-iblock0 ............................................... [1 Storage Object]
->>   | o-iblock1 ............................................... [1 Storage Object]
->>   o-ib_srpt ........................................................ [2 Targets]
->>   | o-0x00000000000000000002c903000e8acd ............................. [enabled]
->>   | o-0x00000000000000000002c903000e8ace ............................. [enabled]
->>   o-iscsi ........................................................... [1 Target]
->>   | o-iqn.2003-01.org.linux-iscsi.tifa.x8664:sn.2e732952bb1a ........... [1 TPG]
->>   o-loopback ....................................................... [2 Targets]
->>   | o-naa.6001405c3214b06a .............................. [naa.6001405305bd4088]
->>   | o-naa.6001405d500c6966 .............................. [naa.600140589253c5ee]
->>   o-qla2xxx ........................................................ [2 Targets]
->>   | o-21:00:00:24:ff:31:4c:48 ........................................ [enabled]
->>   | o-21:00:00:24:ff:31:4c:49 ........................................ [enabled]
->>   o-tcm_fc .......................................................... [1 Target]
->>     o-20:00:00:15:17:af:5b:30 ........................................ [enabled]
->> /> 
->>
->> We are very interested to get your feedback on the v2 shell.  Please
->> have a look and let myself and Jerome know if you run into trouble
->> getting installed and running.
->>
->> --nab
->>
-> 
+QW5keSwNCg0KVGhhbmsgeW91IGZvciB3b3JraW5nIHdpdGggdXMgdG8gcHJvZHVjdGl6ZSBydHNh
+ZG1pbiBhbmQgcHV0dGluZyB0b2dldGhlciBhIGdyZWF0IHBhY2thZ2UhDQoNCkJlc3QsDQpNYXJj
+DQoNClNlbnQgdmlhIEJsYWNrQmVycnkgZnJvbSBULU1vYmlsZQ0KDQotLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KRnJvbTogQW5keSBHcm92ZXIgPGFncm92ZXJAcmVkaGF0LmNvbT4NCkRhdGU6
+IFdlZCwgMTEgTWF5IDIwMTEgMDk6NTk6MzMgDQpUbzogPG5hYkByaXNpbmd0aWRlc3lzdGVtcy5j
+b20+DQpDYzogTWlrZSBDaHJpc3RpZTxtaWNoYWVsY0Bjcy53aXNjLmVkdT47IENocmlzdG9waCBI
+ZWxsd2lnPGhjaEBsc3QuZGU+OyBIYW5uZXMgUmVpbmVja2U8aGFyZUBzdXNlLmRlPjsgSmFtZXMg
+Qm90dG9tbGV5PEphbWVzLkJvdHRvbWxleUBzdXNlLmRlPjsgQm9heiBIYXJyb3NoPG9wZW5vc2RA
+Z21haWwuY29tPjsgUGF0aWwsIEtpcmFuPGtpcmFuLnBhdGlsQGludGVsLmNvbT47IExvdmUsIFJv
+YmVydCBXPHJvYmVydC53LmxvdmVAaW50ZWwuY29tPjsgTWFkaHUgSXllbmdhcjxtYWRodS5peWVu
+Z2FyQHFsb2dpYy5jb20+OyBBbmRyZXcgVmFzcXVlejxhbmRyZXcudmFzcXVlekBxbG9naWMuY29t
+PjsgSmVyb21lIE1hcnRpbjxqeG1AcmlzaW5ndGlkZXN5c3RlbXMuY29tPjsgTWFyYyBGbGVpc2No
+bWFubjxtd2ZAcmlzaW5ndGlkZXN5c3RlbXMuY29tPjsgRlVKSVRBIFRvbW9ub3JpPGZ1aml0YS50
+b21vbm9yaUBsYWIubnR0LmNvLmpwPjsgSi5ILjx3YXJ0aG9nOUBrZXJuZWwub3JnPjsgSC4gUGV0
+ZXIgQW52aW48aHBhQHp5dG9yLmNvbT47IE1hdHRoZXcgV2lsY294PG1hdHRoZXdAd2lsLmN4Pjsg
+U3RlZmFuIEhham5vY3ppPHN0ZWZhbmhhQGdtYWlsLmNvbT47IGxpbnV4LWlzY3NpLXRhcmdldC1k
+ZXY8bGludXgtaXNjc2ktdGFyZ2V0LWRldkBnb29nbGVncm91cHMuY29tPjsgPGxpbnV4LXNjc2lA
+dmdlci5rZXJuZWwub3JnPg0KU3ViamVjdDogUmU6IHJ0c2FkbWluLXYxLjk5IEJFVEEgcGFja2Fn
+ZXMNCg0KW0NDaW5nIGxpc3RzIHRvby5dDQoNCkhpIE5pY2hvbGFzLA0KDQpUaGFuayB5b3UgdG8g
+eW91LCBKZXJvbWUgYW5kIFJUUyBmb3IgdGhpcyB3b3JrIQ0KDQpUaGUgcnRzYWRtaW4tZnJvemVu
+IHJwbSBmcm9tIDA0LU1heS0yMDExIGluc3RhbGxlZCBvayBidXQgZGlkbid0IHNlZW0gdG8NCndv
+cmsgcXVpdGUgcmlnaHQsIGJ1dCBJIHdvdWxkbid0IHdvcnJ5IGFib3V0IGl0LiBJJ20gd29ya2lu
+ZyBvbiBycG0NCnBhY2thZ2VzIHdpdGggcHJvcGVyIGRlcGVuZGVuY2llcyBmb3IgRmVkb3JhIHJh
+d2hpZGUsIGhvcGVmdWxseSB0aGV5J2xsDQpiZSByZWFkeSB3aXRoaW4gYSBmZXcgZGF5cyBhbmQg
+SSBjYW4gbWFrZSBiaW5hcnkrc3JjIHJwbXMgYXZhaWxhYmxlLg0KDQpSZWdhcmRzIC0tIEFuZHkN
+Cg0KT24gMDUvMDQvMjAxMSAwNTowMyBQTSwgTmljaG9sYXMgQS4gQmVsbGluZ2VyIHdyb3RlOg0K
+PiBPbiBGcmksIDIwMTEtMDQtMjkgYXQgMTc6MDEgLTA3MDAsIE5pY2hvbGFzIEEuIEJlbGxpbmdl
+ciB3cm90ZToNCj4+IEdyZWV0aW5ncyBhbGwsDQo+Pg0KPj4gSXQncyBteSBncmVhdCBwbGVhc3Vy
+ZSB0byBiZSBhYmxlIHRvIHNoYXJlIHRoZSBpbml0aWFsIFJUU0FkbWluIHYxLjk5DQo+PiBCRVRB
+IDY0LWJpdCB1c2Vyc3BhY2UgcGFja2FnZXMgaGVyZToNCj4+DQo+IA0KPiBIZWxsbyBhZ2FpbiBm
+b2xrcywNCj4gDQo+IEp1c3QgYSBmZXcgdXBkYXRlcyBvbiBvdXIgQkVUQSBwcm9ncmVzcyBpbiB0
+aGUgbGFzdCB3ZWVrLiAgV2UgaGF2ZQ0KPiB1cGRhdGVkIHRoZSBydHNhZG1pbi12MiBmcm96ZW4g
+YW5kIGxpby11dGlscyBwYWNrYWdlcyBmb3IgRGViaWFuIFNxdWVlemUNCj4gYW5kIFJIRUw2IDY0
+LWJpdCB1c2Vyc3BhY2UgaGVyZToNCj4gDQo+IGh0dHA6Ly93d3cucmlzaW5ndGlkZXN5c3RlbXMu
+Y29tL3J0c2FkbWluLXYxLjk5LUJFVEEvDQo+IA0KPiBUaGlzIHZlcnNpb24gb2YgbGlvLXV0aWxz
+IGNvbnRhaW5zIHN1cHBvcnQgZm9yIHRjbV9xbGEyeHh4LCBpYl9zcnB0LA0KPiB0Y21fZmMgYW5k
+IGxvb3BiYWNrIGZhYnJpYyBtb2R1bGVzIHdpdGggdGhlIGZvbGxvd2luZyBvcGVyYXRpb25zOg0K
+PiANCj4gKikgcnRzYWRtaW4tdjIgJ3NhdmVjb25maWcnIG5vdyBjcmVhdGVzIC9ldGMvdGFyZ2V0
+LyRGQUJSSUNOQU1FX3N0YXJ0LnNoDQo+IGZvciBhY3RpdmUgdGNtX3FsYTJ4eHgsIGliX3NycHQs
+IHRjbV9mYyBhbmQgbG9vcGJhY2sgY29uZmlndXJhdGlvbnMuDQo+ICopICdzZXJ2aWNlIHRhcmdl
+dCBzdGFydCcgbm93IHJlLWNyZWF0ZXMgdGhlIGZhYnJpYyBjb25maWdmcyBsYXlvdXQNCj4gdXNp
+bmcgYXZhaWxhYmxlIC9ldGMvdGFyZ2V0LyRGQUJSSUNOQU1FX3N0YXJ0LnNoIGZyb20gY3VycmVu
+dGx5IHNhdmVkDQo+IGZhYnJpY3MuDQo+ICopICdzZXJ2aWNlIHRhcmdldCBzdGFydGJhayAkVElN
+RVNUQU1QJyBub3cgcmUtY3JlYXRlcyB0aGUgZmFicmljDQo+IGNvbmZpZ2ZzIGxheW91dCB2aWEg
+L2V0Yy90YXJnZXQvYmFja3VwLyRGQUJSSUNOQU1FX2JhY2t1cC0kVElNRVNUQU1QLnNoDQo+IGZy
+b20gcHJldmlvdXNseSBzYXZlZCBmYWJyaWNzLg0KPiAqKSAnc2VydmljZSB0YXJnZXQgc3RvcCcg
+d2lsbCB1bmxvYWQgdGhlIGN1cnJlbnQgcnVubmluZyBjb25maWd1cmF0aW9uDQo+IGZvciBhbGwg
+YWN0aXZlIGZhYnJpYyBtb2R1bGVzIGFuZCB0YXJnZXQgY29yZS4NCj4gDQo+IFVuZm9ydHVhdGVs
+eSB0aGUgZnJvemVuIFJQTSBwYWNrYWdlIGlzIGN1cnJlbnRseSBoYXZpbmcgaXNzdWVzIHJ1bm5p
+bmcNCj4gd2l0aCBSSEVMNi1maW5hbCwgc28gZ2V0dGluZyB1cCBhbmQgcnVubmluZyBvbiBSSEVM
+NiBmcm9tIHNvdXJjZSB0YWtlcyBhDQo+IGxpdHRsZSBiaXQgb2YgZWZmb3J0IHRvIG1hbnVhbGx5
+IGluc3RhbGwgdGhlIHB5dGhvbiBzaW1wbGVwYXJzZSBsaWJyYXJ5DQo+IHdoaWNoIGlzIGN1cnJl
+bnRseSBub3QgcGFja2FnZWQgZm9yIFJIRUw2LiAgSW5zdHJ1Y3Rpb25zIGZvciB0aGlzIGFuZA0K
+PiBvdGhlciBkaXN0cm9zIGJlIGFkZGVkIGludG8gdGhlIHJ0c2FkbWluLXYyIHdpa2kgc2hvcnRs
+eS4NCj4gDQo+IEFsc28sIHdlIGhhdmUgc2V0dXAgdGhlIHB1YmxpYyBydHNhZG1pbi12MiBjb21t
+dW5pdHkgcmVwb3NpdG9yeSBmb3INCj4gY29uZmlnc2hlbGwuZ2l0LCBydHNsaWIuZ2l0IGFuZCBy
+dHNhZG1pbi5naXQgc291cmNlIHJlcG9zIGZvciB0aG9zZQ0KPiBpbnRlcmVzdGVkIGluIGhhdmlu
+ZyBhIGxvb2sgYXQgdGhlIGNvZGU6DQo+IA0KPiBodHRwOi8vd3d3LnJpc2luZ3RpZGVzeXN0ZW1z
+LmNvbS9naXQvDQo+IA0KPiBGZWVkYmFjayBpcyB3ZWxjb21lLCBhbmQgcGxlYXNlIGxldCB1cyBr
+bm93IGlmIHlvdSBoYXZlIGFueSBpc3N1ZXMNCj4gZ2V0dGluZyBzZXR1cCB3aXRoIHRoZSB2MiBz
+aGVsbC4NCj4gDQo+IC0tbmFiDQo+IA0KPiANCj4+DQo+PiBTbyBmYXIgdGhpcyBpcyBnb2luZyBv
+dXQgdG8gTGludXgvU0NTSSBjb21tdW5pdHkgbWVtYmVycyB3aG8gYXJlDQo+PiBjdXJyZW50bHkg
+dXNpbmcgdGhlIHRhcmdldCBjb3JlIHY0LjAgKyBmYWJyaWMgbW9kdWxlIGxvZ2ljIHdpdGggdGhl
+DQo+PiBkZWZhdWx0IHNldCBvZiA1IHNwZWNzIGluY2x1ZGVkIGluIHRoZSBpbml0aWFsIEJFVEEg
+cmVsZWFzZS4NCj4+DQo+PiBXZSBoYXZlIGJlZW4gdGVzdGluZyB0aGUgLmRlYiBidWlsZHMgb24g
+RGViaWFuIFNxdWVlemUgNjQtYml0IGFuZCAucnBtDQo+PiBidWlsZHMgb24gUkhFTDYgNjQtYml0
+IHRodXMgZmFyLiAgT24gdGhpcyBrZXJuZWwgc2lkZSwgdGhpcyBpbmNsdWRlcw0KPj4gc3VwcG9y
+dCBmb3IgdGhlIGZvbGxvd2luZyB0YXJnZXQgY29yZSArIGZhYnJpYyBtb2R1bGUgY29uZmlndXJh
+dGlvbnM6DQo+Pg0KPj4gVGFyZ2V0IHY0Lnggd2l0aCA+PSAuMzggYmFzZWQgbGlvLWNvcmUtMi42
+LmdpdCBjb2RlOg0KPj4NCj4+IAlpc2NzaS10YXJnZXQNCj4+ICAgICAgICAgdGNtX2xvb3ANCj4+
+ICAgICAgICAgdGNtX2ZjKG9wZW5mY29lKQ0KPj4gICAgICAgICB0Y21fcWxhMnh4eA0KPj4gICAg
+ICAgICBpYl9zcnB0DQo+Pg0KPj4gVGFyZ2V0IHYzLjUueCBvdXQtb2YtdHJlZSBsaW8tY29yZS1i
+YWNrcG9ydHMuZ2l0IGNvZGUNCj4+DQo+PiAgICAgICAgIGlzY3NpLXRhcmdldA0KPj4gICAgICAg
+ICB0Y21fbG9vcA0KPj4NCj4+IFRoZSBmaXJzdCByb3VuZCBvZiBydHNhZG1pbi12MiBzcGVjaWZp
+YyBmYWJyaWMgbW9kdWxlIGluZm9ybWF0aW9uIGhhcw0KPj4gYmVlbiBhZGRlZCBpbnRvIHRoZSB3
+aWtpIGJlbG93LiAgVGhpcyBpbmNsdWRlcyBleGFtcGxlIHVzYWdlIGZvcg0KPj4gY29uZmlndXJp
+bmcgUWxvZ2ljIHdpdGggZGVtbyBtb2RlIFRQRywgYW5kIElCIFNSUFQgdXNpbmcgZXhwbGljdCBT
+UlANCj4+IEluaXRpYXRvciBOb2RlQUNMcyArIE1hcHBlZExVTnMgYWxvbmcgd2l0aCBzaW1pbGFy
+IGluc3RydWN0aW9ucyBmb3INCj4+IE9wZW4tRkNvRS5vcmcgdGFyZ2V0LCBhbmQgVENNX0xvb3Ag
+TExEIGRyaXZlci4NCj4+DQo+PiBodHRwOi8vbGludXgtaXNjc2kub3JnL3dpa2kvUUxvZ2ljL3J0
+c2FkbWluLXYyDQo+PiBodHRwOi8vbGludXgtaXNjc2kub3JnL3dpa2kvU0NTSV9SRE1BX1Byb3Rv
+Y29sL3J0c2FkbWluLXYyDQo+PiBodHRwOi8vbGludXgtaXNjc2kub3JnL3dpa2kvRkNvRS9ydHNh
+ZG1pbi12Mg0KPj4gaHR0cDovL2xpbnV4LWlzY3NpLm9yZy93aWtpL1RjbV9sb29wL3J0c2FkbWlu
+LXYyDQo+Pg0KPj4gV2Ugd2lsbCBiZSBhZGRpbmcgbW9yZSB1c2FnZSBleGFtcGxlcyBhbmQgdGlw
+cyt0cmlja3MgaW50byB0aGUgd2lraSBpbg0KPj4gdGhlIHVwY29taW5nIGRheXMsIGJ1dCBwbGVh
+c2UgZmVlbCBmcmVlIHRvIHRyeSBvdXQgdGhlIGluaXRpYWwgcGFja2FnZXMsDQo+PiBhbmQgbGV0
+IHVzIGtub3cgaWYgeW91IGhhdmUgYW55IHByb2JsZW1zIGdldHRpbmcgc2V0dXAuICBOb3RlIHRo
+ZXJlIGFyZQ0KPj4gYSBoYW5kZnVsIG9mIGl0ZW1zIG1pc3NpbmcgZnJvbSB0aGVzZSBidWlsZHMs
+IG1vc3Qgbm90aWFibHkgYmVpbmcgYWJsZQ0KPj4gdG8gc2F2ZSBub24gaXNjc2ktdGFyZ2V0ICsg
+dGNtX2xvb3AgZmFicmljcyBsYXlvdXRzIGFjcm9zcw0KPj4gaW5pdC5kL3RhcmdldCByZXN0YXJ0
+LiAgVGhpcyB3aWxsIGJlIGFkZHJlc3NlZCBhbG9uZyB3aXRoIG91ciBvdGhlcg0KPj4gcmVtYWlu
+aW5nIGl0ZW1zIGZvciBhIGZvbGxvdy11cCByZWxlYXNlIG5leHQgd2Vlay4NCj4+DQo+PiA+RnJv
+bSB0aGVyZSB3ZSB3aWxsIGJlIGlyb25pbmcgb3V0IHJlbWFpbmluZyBidWdzIGFuZCBmaW5pc2hp
+bmcgdXANCj4+IHJlbWFpbmluZyB0aGUgVE9ETyBsaXN0LiBXZSBpbnRlbmQgdG8gcmVsZWFzZSB0
+aGUgY29tbXVuaXR5IHZlcnNpb24gdmlhDQo+PiBnaXQgc291cmNlIHRyZWUgYW5kIGFubm91bmNl
+IHRoZSBuZXcgZGV2ZWxwb2VyIGFuZCB1c2VyIG1haWxpbmcgbGlzdHMgaW4NCj4+IHRoZSB1cGNv
+bWluZyB3ZWVrcyBhcyB3ZSBtb3JlIHRvd2FyZCBhIHN0YWJsZSB2MiByZWxlYXNlLg0KPj4NCj4+
+IEFsc28sIHRoZSAnY29sbGFwc2VkIHRwZycgZmVhdHVyZSBoYXMgYmVlbiBpbmNsdWRlZCBpbiB0
+aGlzIGJ1aWxkIGJhc2VkDQo+PiBvbiBUb21vJ3MgZmVlZGJhY2sgd2hpY2ggaGlkZXMgdGhlICd0
+cGd0JyBieSBkZWZhdWx0IHdpdGggbm9uIGlTQ1NJDQo+PiBmYWJyaWNzLiAgVGhpcyBlbmRzIHVw
+IGxvb2tpbmcgbGlrZSB0aGUgZm9sbG93aW5nIHdpdGggJ2xzIC4gMicgKGVnOiB0bw0KPj4gbGlt
+aXQgdGhlIG9iamVjdCBvdXRwdXQgdG8gdHJlZV9tYXhfZGVwdGg9Mikgd2l0aCBmaXZlIGZhYnJp
+YyBtb2R1bGVzDQo+PiBydW5uaW5nIGluIG1peGVkLW1vZGUgb24gLjM4LjMgY29kZSB3aXRoIGJh
+cmUtbWV0YWwgNTYwMCBzZXJpZXMNCj4+IGhhcmR3YXJlOg0KPj4NCj4+IC8+IGxzIC4gMg0KPj4g
+by0vIC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4gWy4uLl0NCj4+ICAgby1iYWNrc3RvcmVzIC4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uIFsyIEJhY2tzdG9yZXNdDQo+PiAg
+IHwgby1pYmxvY2swIC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uIFsxIFN0b3JhZ2UgT2JqZWN0XQ0KPj4gICB8IG8taWJsb2NrMSAuLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLiBbMSBTdG9yYWdlIE9iamVjdF0NCj4+ICAg
+by1pYl9zcnB0IC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uIFsyIFRhcmdldHNdDQo+PiAgIHwgby0weDAwMDAwMDAwMDAwMDAwMDAwMDAyYzkw
+MzAwMGU4YWNkIC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uIFtlbmFibGVkXQ0KPj4gICB8
+IG8tMHgwMDAwMDAwMDAwMDAwMDAwMDAwMmM5MDMwMDBlOGFjZSAuLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLiBbZW5hYmxlZF0NCj4+ICAgby1pc2NzaSAuLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLiBbMSBUYXJnZXRdDQo+PiAgIHwg
+by1pcW4uMjAwMy0wMS5vcmcubGludXgtaXNjc2kudGlmYS54ODY2NDpzbi4yZTczMjk1MmJiMWEg
+Li4uLi4uLi4uLi4gWzEgVFBHXQ0KPj4gICBvLWxvb3BiYWNrIC4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4gWzIgVGFyZ2V0c10NCj4+ICAgfCBv
+LW5hYS42MDAxNDA1YzMyMTRiMDZhIC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLiBbbmFh
+LjYwMDE0MDUzMDViZDQwODhdDQo+PiAgIHwgby1uYWEuNjAwMTQwNWQ1MDBjNjk2NiAuLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4gW25hYS42MDAxNDA1ODkyNTNjNWVlXQ0KPj4gICBvLXFs
+YTJ4eHggLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4gWzIgVGFyZ2V0c10NCj4+ICAgfCBvLTIxOjAwOjAwOjI0OmZmOjMxOjRjOjQ4IC4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4gW2VuYWJsZWRdDQo+PiAgIHwgby0y
+MTowMDowMDoyNDpmZjozMTo0Yzo0OSAuLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uIFtlbmFibGVkXQ0KPj4gICBvLXRjbV9mYyAuLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uIFsxIFRhcmdldF0NCj4+ICAgICBvLTIw
+OjAwOjAwOjE1OjE3OmFmOjViOjMwIC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4u
+Li4uLi4gW2VuYWJsZWRdDQo+PiAvPiANCj4+DQo+PiBXZSBhcmUgdmVyeSBpbnRlcmVzdGVkIHRv
+IGdldCB5b3VyIGZlZWRiYWNrIG9uIHRoZSB2MiBzaGVsbC4gIFBsZWFzZQ0KPj4gaGF2ZSBhIGxv
+b2sgYW5kIGxldCBteXNlbGYgYW5kIEplcm9tZSBrbm93IGlmIHlvdSBydW4gaW50byB0cm91Ymxl
+DQo+PiBnZXR0aW5nIGluc3RhbGxlZCBhbmQgcnVubmluZy4NCj4+DQo+PiAtLW5hYg0KPj4NCj4g
+DQoNCg==
 
