@@ -1,123 +1,130 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 5/8] megaraid_sas: Fix bug where AENs could be lost in probe()
- and resume()
-Date: Wed, 11 May 2011 18:34:29 -0700
-Message-ID: <BANLkTi=Om7hfCeKnCgh4R5Sh8xYD6jfqaA@mail.gmail.com>
+Subject: [PATCH 6/8] megaraid_sas: Convert 6,10,12 byte CDB's for FastPath IO
+Date: Wed, 11 May 2011 18:34:40 -0700
+Message-ID: <BANLkTinwLMU7S5rr-XUVhrnZywDa+Nmz7g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001636426b6bbcece804a30a3055
+Content-Type: multipart/mixed; boundary=0016364ede6c638dd904a30a311d
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:50650 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756480Ab1ELBe3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2011 21:34:29 -0400
-Received: by mail-qy0-f181.google.com with SMTP id 14so618486qyg.19
-        for <linux-scsi@vger.kernel.org>; Wed, 11 May 2011 18:34:29 -0700 (PDT)
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:57992 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756365Ab1ELBek (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 May 2011 21:34:40 -0400
+Received: by mail-qy0-f174.google.com with SMTP id 7so2650853qyk.19
+        for <linux-scsi@vger.kernel.org>; Wed, 11 May 2011 18:34:40 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---001636426b6bbcece804a30a3055
+--0016364ede6c638dd904a30a311d
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/linux-scsi,
 
-The following patch for megaraid_sas fixes a bug where AENs could be
-lost in probe() and resume().
+The following patch for megaraid_sas converts 6,10,12 byte CDB's to 16
+byte CDB for large LBA's for FastPath IO.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
-diff -Naur scsi-misc/drivers/scsi/megaraid/megaraid_sas_base.c
-scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_base.c
---- scsi-misc/drivers/scsi/megaraid/megaraid_sas_base.c	2011-05-11
-15:12:58.708429569 -0700
-+++ scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-05-11
-15:19:01.260428701 -0700
-@@ -4115,6 +4115,14 @@
- 	megasas_mgmt_info.max_index++;
+diff -Naur scsi-misc/drivers/scsi/megaraid/megaraid_sas_fusion.c
+scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_fusion.c
+--- scsi-misc/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-05-11
+15:00:38.730367313 -0700
++++ scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-05-11
+15:36:16.087430239 -0700
+@@ -1137,7 +1137,7 @@
+ 	u64 start_blk = io_info->pdBlock;
+ 	u8 *cdb = io_request->CDB.CDB32;
+ 	u32 num_blocks = io_info->numBlocks;
+-	u8 opcode, flagvals, groupnum, control;
++	u8 opcode = 0, flagvals = 0, groupnum = 0, control = 0;
 
- 	/*
-+	 * Register with SCSI mid-layer
-+	 */
-+	if (megasas_io_attach(instance))
-+		goto fail_io_attach;
+ 	/* Check if T10 PI (DIF) is enabled for this LD */
+ 	ld = MR_TargetIdToLdGet(io_info->ldTgtId, local_map_ptr);
+@@ -1219,7 +1219,46 @@
+ 			cdb[8] = (u8)(num_blocks & 0xff);
+ 			cdb[7] = (u8)((num_blocks >> 8) & 0xff);
+
++			io_request->IoFlags = 10; /* Specify 10-byte cdb */
+ 			cdb_len = 10;
++		} else if ((cdb_len < 16) && (start_blk > 0xffffffff)) {
++			/* Convert to 16 byte CDB for large LBA's */
++			switch (cdb_len) {
++			case 6:
++				opcode = cdb[0] == READ_6 ? READ_16 : WRITE_16;
++				control = cdb[5];
++				break;
++			case 10:
++				opcode =
++					cdb[0] == READ_10 ? READ_16 : WRITE_16;
++				flagvals = cdb[1];
++				groupnum = cdb[6];
++				control = cdb[9];
++				break;
++			case 12:
++				opcode =
++					cdb[0] == READ_12 ? READ_16 : WRITE_16;
++				flagvals = cdb[1];
++				groupnum = cdb[10];
++				control = cdb[11];
++				break;
++			}
 +
-+	instance->unload = 0;
++			memset(cdb, 0, sizeof(io_request->CDB.CDB32));
 +
-+	/*
- 	 * Initiate AEN (Asynchronous Event Notification)
- 	 */
- 	if (megasas_start_aen(instance)) {
-@@ -4122,13 +4130,6 @@
- 		goto fail_start_aen;
- 	}
-
--	/*
--	 * Register with SCSI mid-layer
--	 */
--	if (megasas_io_attach(instance))
--		goto fail_io_attach;
--
--	instance->unload = 0;
- 	return 0;
-
-       fail_start_aen:
-@@ -4383,12 +4384,6 @@
-
- 	instance->instancet->enable_intr(instance->reg_set);
-
--	/*
--	 * Initiate AEN (Asynchronous Event Notification)
--	 */
--	if (megasas_start_aen(instance))
--		printk(KERN_ERR "megasas: Start AEN failed\n");
--
- 	/* Initialize the cmd completion timer */
- 	if (poll_mode_io)
- 		megasas_start_timer(instance, &instance->io_completion_timer,
-@@ -4396,6 +4391,12 @@
- 				MEGASAS_COMPLETION_TIMER_INTERVAL);
- 	instance->unload = 0;
-
-+	/*
-+	 * Initiate AEN (Asynchronous Event Notification)
-+	 */
-+	if (megasas_start_aen(instance))
-+		printk(KERN_ERR "megasas: Start AEN failed\n");
++			cdb[0] = opcode;
++			cdb[1] = flagvals;
++			cdb[14] = groupnum;
++			cdb[15] = control;
 +
- 	return 0;
++			/* Transfer length */
++			cdb[13] = (u8)(num_blocks & 0xff);
++			cdb[12] = (u8)((num_blocks >> 8) & 0xff);
++			cdb[11] = (u8)((num_blocks >> 16) & 0xff);
++			cdb[10] = (u8)((num_blocks >> 24) & 0xff);
++
++			io_request->IoFlags = 16; /* Specify 16-byte cdb */
++			cdb_len = 16;
+ 		}
 
- fail_irq:
+ 		/* Normal case, just load LBA here */
 
---001636426b6bbcece804a30a3055
-Content-Type: application/octet-stream; name="megaraid_sas.patch5"
-Content-Disposition: attachment; filename="megaraid_sas.patch5"
+--0016364ede6c638dd904a30a311d
+Content-Type: application/octet-stream; name="megaraid_sas.patch6"
+Content-Disposition: attachment; filename="megaraid_sas.patch6"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gnl0mbhs0
+X-Attachment-Id: f_gnl0osoh0
 
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19i
-YXNlLmMgc2NzaS1taXNjLm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jh
-c2UuYwotLS0gc2NzaS1taXNjL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFz
-ZS5jCTIwMTEtMDUtMTEgMTU6MTI6NTguNzA4NDI5NTY5IC0wNzAwCisrKyBzY3NpLW1pc2MubmV3
-L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTEtMDUtMTEgMTU6
-MTk6MDEuMjYwNDI4NzAxIC0wNzAwCkBAIC00MTE1LDYgKzQxMTUsMTQgQEAKIAltZWdhc2FzX21n
-bXRfaW5mby5tYXhfaW5kZXgrKzsKIAogCS8qCisJICogUmVnaXN0ZXIgd2l0aCBTQ1NJIG1pZC1s
-YXllcgorCSAqLworCWlmIChtZWdhc2FzX2lvX2F0dGFjaChpbnN0YW5jZSkpCisJCWdvdG8gZmFp
-bF9pb19hdHRhY2g7CisKKwlpbnN0YW5jZS0+dW5sb2FkID0gMDsKKworCS8qCiAJICogSW5pdGlh
-dGUgQUVOIChBc3luY2hyb25vdXMgRXZlbnQgTm90aWZpY2F0aW9uKQogCSAqLwogCWlmIChtZWdh
-c2FzX3N0YXJ0X2FlbihpbnN0YW5jZSkpIHsKQEAgLTQxMjIsMTMgKzQxMzAsNiBAQAogCQlnb3Rv
-IGZhaWxfc3RhcnRfYWVuOwogCX0KIAotCS8qCi0JICogUmVnaXN0ZXIgd2l0aCBTQ1NJIG1pZC1s
-YXllcgotCSAqLwotCWlmIChtZWdhc2FzX2lvX2F0dGFjaChpbnN0YW5jZSkpCi0JCWdvdG8gZmFp
-bF9pb19hdHRhY2g7Ci0KLQlpbnN0YW5jZS0+dW5sb2FkID0gMDsKIAlyZXR1cm4gMDsKIAogICAg
-ICAgZmFpbF9zdGFydF9hZW46CkBAIC00MzgzLDEyICs0Mzg0LDYgQEAKIAogCWluc3RhbmNlLT5p
-bnN0YW5jZXQtPmVuYWJsZV9pbnRyKGluc3RhbmNlLT5yZWdfc2V0KTsKIAotCS8qCi0JICogSW5p
-dGlhdGUgQUVOIChBc3luY2hyb25vdXMgRXZlbnQgTm90aWZpY2F0aW9uKQotCSAqLwotCWlmICht
-ZWdhc2FzX3N0YXJ0X2FlbihpbnN0YW5jZSkpCi0JCXByaW50ayhLRVJOX0VSUiAibWVnYXNhczog
-U3RhcnQgQUVOIGZhaWxlZFxuIik7Ci0KIAkvKiBJbml0aWFsaXplIHRoZSBjbWQgY29tcGxldGlv
-biB0aW1lciAqLwogCWlmIChwb2xsX21vZGVfaW8pCiAJCW1lZ2FzYXNfc3RhcnRfdGltZXIoaW5z
-dGFuY2UsICZpbnN0YW5jZS0+aW9fY29tcGxldGlvbl90aW1lciwKQEAgLTQzOTYsNiArNDM5MSwx
-MiBAQAogCQkJCU1FR0FTQVNfQ09NUExFVElPTl9USU1FUl9JTlRFUlZBTCk7CiAJaW5zdGFuY2Ut
-PnVubG9hZCA9IDA7CiAKKwkvKgorCSAqIEluaXRpYXRlIEFFTiAoQXN5bmNocm9ub3VzIEV2ZW50
-IE5vdGlmaWNhdGlvbikKKwkgKi8KKwlpZiAobWVnYXNhc19zdGFydF9hZW4oaW5zdGFuY2UpKQor
-CQlwcmludGsoS0VSTl9FUlIgIm1lZ2FzYXM6IFN0YXJ0IEFFTiBmYWlsZWRcbiIpOworCiAJcmV0
-dXJuIDA7CiAKIGZhaWxfaXJxOgo=
---001636426b6bbcece804a30a3055--
+ZGlmZiAtTmF1ciBzY3NpLW1pc2MvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19m
+dXNpb24uYyBzY3NpLW1pc2MubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNf
+ZnVzaW9uLmMKLS0tIHNjc2ktbWlzYy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2Fz
+X2Z1c2lvbi5jCTIwMTEtMDUtMTEgMTU6MDA6MzguNzMwMzY3MzEzIC0wNzAwCisrKyBzY3NpLW1p
+c2MubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMJMjAxMS0w
+NS0xMSAxNTozNjoxNi4wODc0MzAyMzkgLTA3MDAKQEAgLTExMzcsNyArMTEzNyw3IEBACiAJdTY0
+IHN0YXJ0X2JsayA9IGlvX2luZm8tPnBkQmxvY2s7CiAJdTggKmNkYiA9IGlvX3JlcXVlc3QtPkNE
+Qi5DREIzMjsKIAl1MzIgbnVtX2Jsb2NrcyA9IGlvX2luZm8tPm51bUJsb2NrczsKLQl1OCBvcGNv
+ZGUsIGZsYWd2YWxzLCBncm91cG51bSwgY29udHJvbDsKKwl1OCBvcGNvZGUgPSAwLCBmbGFndmFs
+cyA9IDAsIGdyb3VwbnVtID0gMCwgY29udHJvbCA9IDA7CiAKIAkvKiBDaGVjayBpZiBUMTAgUEkg
+KERJRikgaXMgZW5hYmxlZCBmb3IgdGhpcyBMRCAqLwogCWxkID0gTVJfVGFyZ2V0SWRUb0xkR2V0
+KGlvX2luZm8tPmxkVGd0SWQsIGxvY2FsX21hcF9wdHIpOwpAQCAtMTIxOSw3ICsxMjE5LDQ2IEBA
+CiAJCQljZGJbOF0gPSAodTgpKG51bV9ibG9ja3MgJiAweGZmKTsKIAkJCWNkYls3XSA9ICh1OCko
+KG51bV9ibG9ja3MgPj4gOCkgJiAweGZmKTsKIAorCQkJaW9fcmVxdWVzdC0+SW9GbGFncyA9IDEw
+OyAvKiBTcGVjaWZ5IDEwLWJ5dGUgY2RiICovCiAJCQljZGJfbGVuID0gMTA7CisJCX0gZWxzZSBp
+ZiAoKGNkYl9sZW4gPCAxNikgJiYgKHN0YXJ0X2JsayA+IDB4ZmZmZmZmZmYpKSB7CisJCQkvKiBD
+b252ZXJ0IHRvIDE2IGJ5dGUgQ0RCIGZvciBsYXJnZSBMQkEncyAqLworCQkJc3dpdGNoIChjZGJf
+bGVuKSB7CisJCQljYXNlIDY6CisJCQkJb3Bjb2RlID0gY2RiWzBdID09IFJFQURfNiA/IFJFQURf
+MTYgOiBXUklURV8xNjsKKwkJCQljb250cm9sID0gY2RiWzVdOworCQkJCWJyZWFrOworCQkJY2Fz
+ZSAxMDoKKwkJCQlvcGNvZGUgPQorCQkJCQljZGJbMF0gPT0gUkVBRF8xMCA/IFJFQURfMTYgOiBX
+UklURV8xNjsKKwkJCQlmbGFndmFscyA9IGNkYlsxXTsKKwkJCQlncm91cG51bSA9IGNkYls2XTsK
+KwkJCQljb250cm9sID0gY2RiWzldOworCQkJCWJyZWFrOworCQkJY2FzZSAxMjoKKwkJCQlvcGNv
+ZGUgPQorCQkJCQljZGJbMF0gPT0gUkVBRF8xMiA/IFJFQURfMTYgOiBXUklURV8xNjsKKwkJCQlm
+bGFndmFscyA9IGNkYlsxXTsKKwkJCQlncm91cG51bSA9IGNkYlsxMF07CisJCQkJY29udHJvbCA9
+IGNkYlsxMV07CisJCQkJYnJlYWs7CisJCQl9CisKKwkJCW1lbXNldChjZGIsIDAsIHNpemVvZihp
+b19yZXF1ZXN0LT5DREIuQ0RCMzIpKTsKKworCQkJY2RiWzBdID0gb3Bjb2RlOworCQkJY2RiWzFd
+ID0gZmxhZ3ZhbHM7CisJCQljZGJbMTRdID0gZ3JvdXBudW07CisJCQljZGJbMTVdID0gY29udHJv
+bDsKKworCQkJLyogVHJhbnNmZXIgbGVuZ3RoICovCisJCQljZGJbMTNdID0gKHU4KShudW1fYmxv
+Y2tzICYgMHhmZik7CisJCQljZGJbMTJdID0gKHU4KSgobnVtX2Jsb2NrcyA+PiA4KSAmIDB4ZmYp
+OworCQkJY2RiWzExXSA9ICh1OCkoKG51bV9ibG9ja3MgPj4gMTYpICYgMHhmZik7CisJCQljZGJb
+MTBdID0gKHU4KSgobnVtX2Jsb2NrcyA+PiAyNCkgJiAweGZmKTsKKworCQkJaW9fcmVxdWVzdC0+
+SW9GbGFncyA9IDE2OyAvKiBTcGVjaWZ5IDE2LWJ5dGUgY2RiICovCisJCQljZGJfbGVuID0gMTY7
+CiAJCX0KIAogCQkvKiBOb3JtYWwgY2FzZSwganVzdCBsb2FkIExCQSBoZXJlICovCg==
+--0016364ede6c638dd904a30a311d--
