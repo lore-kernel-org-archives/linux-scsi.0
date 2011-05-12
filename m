@@ -1,243 +1,107 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Charles Hannum <root-5QZFqCxYnb9eoWH0uzbU5w@public.gmane.org>
 Subject: Re: [PATCH] scsi/sd: fix suspend with USB-connected Android phone
  (one line)
-Date: Thu, 12 May 2011 15:36:03 -0500
-Message-ID: <1305232563.2575.85.camel@mulgrave.site>
+Date: Thu, 12 May 2011 16:59:24 -0400
+Message-ID: <BANLkTin1peZBPiRZCbMEeqaME=-ok5dCQw@mail.gmail.com>
 References: <BANLkTi=XNyR8GD43GGnMag+=JmhUd_5HtA@mail.gmail.com>
-	 <201105122203.13671.rjw@sisk.pl>
+	<201105122203.13671.rjw@sisk.pl>
+	<1305232563.2575.85.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201105122203.13671.rjw@sisk.pl>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Charles Hannum <root@ihack.net>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, linux-usb@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1305232563.2575.85.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2011-05-12 at 22:03 +0200, Rafael J. Wysocki wrote:
-> Hi,
->=20
-> Added some CCs.
->=20
-> On Thursday, May 12, 2011, Charles Hannum wrote:
-> > Short version: My laptop doesn't suspend when my Android phone is
-> > connected and has been =E2=80=9Cejected=E2=80=9D.
-> >=20
-> > Long version:
-> >=20
-> > Android phones connect as USB mass storage devices.  After the =E2=80=
-=9CTurn
-> > on USB storage=E2=80=9D button has been clicked, there are a few di=
-fferent
-> > ways to detach the =E2=80=9Cdisk=E2=80=9D:
-> >=20
-> > 1) pull the cable
-> > 2) click =E2=80=9CTurn off USB storage=E2=80=9D
-> > 3) =E2=80=9Ceject=E2=80=9D the device
-> >=20
-> > In cases 2 & 3, the USB device is still attached to the system, but
-> > will now return MEDIUM NOT PRESENT for many commands, including
-> > SYNCHRONIZE CACHE=E2=80=94basically it acts like any device with re=
-movable
-> > media.  However, the act of the =E2=80=9Cmedia=E2=80=9D being remov=
-ed does not
-> > invalidate sdkp->WCE; therefore sd_shutdown() and sd_suspend() stil=
-l
-> > call sd_sync_cache(), which *fails* because it gets a MEDIUM NOT
-> > PRESENT sense code.  In the sd_suspend() case, this causes the enti=
+On Thu, May 12, 2011 at 16:36, James Bottomley
+<James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
+> On Thu, 2011-05-12 at 22:03 +0200, Rafael J. Wysocki wrote:
+>> Hi,
+>>
+>> Added some CCs.
+>>
+>> On Thursday, May 12, 2011, Charles Hannum wrote:
+>> > Short version: My laptop doesn't suspend when my Android phone is
+>> > connected and has been =93ejected=94.
+>> >
+>> > Long version:
+>> >
+>> > Android phones connect as USB mass storage devices. =A0After the =93=
+Turn
+>> > on USB storage=94 button has been clicked, there are a few differe=
+nt
+>> > ways to detach the =93disk=94:
+>> >
+>> > 1) pull the cable
+>> > 2) click =93Turn off USB storage=94
+>> > 3) =93eject=94 the device
+>> >
+>> > In cases 2 & 3, the USB device is still attached to the system, bu=
+t
+>> > will now return MEDIUM NOT PRESENT for many commands, including
+>> > SYNCHRONIZE CACHE=97basically it acts like any device with removab=
+le
+>> > media. =A0However, the act of the =93media=94 being removed does n=
+ot
+>> > invalidate sdkp->WCE; therefore sd_shutdown() and sd_suspend() sti=
+ll
+>> > call sd_sync_cache(), which *fails* because it gets a MEDIUM NOT
+>> > PRESENT sense code. =A0In the sd_suspend() case, this causes the e=
+ntire
+>> > suspend to fail, and the laptop rewakes immediately.
+>
+> So this was the subject of some debate when suspend of sd was first
+> introduced. =A0The synopsis of that debate is that by suspending, we'=
 re
-> > suspend to fail, and the laptop rewakes immediately.
+> about the power down the system, and anything in the cache will be lo=
+st,
+> possibly causing corruption, so failure to synchronise the cache
+> *should* abort suspend.
 
-So this was the subject of some debate when suspend of sd was first
-introduced.  The synopsis of that debate is that by suspending, we're
-about the power down the system, and anything in the cache will be lost=
-,
-possibly causing corruption, so failure to synchronise the cache
-*should* abort suspend.
+If the device has been =93ejected=94, there is by definition no data in
+the cache that needs to be synchronized=97or, if there is, it's because
+we failed to do a SYNCHRONIZE CACHE in the eject path.  At this point
+the device believes there's no medium present, and the driver even
+agrees, so it's perfectly reasonable for the device to return MEDIUM
+NOT PRESENT.  The problem here is a generic failure of the suspend
+code in the case of removable media that has been removed=97there is a
+piece of state left behind in the driver that causes it to misbehave.
 
-> > There are a few different ways to fix this; e.g. one could
-> > specifically test media_not_present() if a sense code is returned i=
-n
-> > sd_sync_cache().=20
+Nothing I have mentioned (other than enumerating the cable-pulling
+case), nor the change I proposed, has anything whatsoever to do with
+the user inappropriately yanking an active device.
 
-Isn't this the best approach?  For removable medium, the onus is on the
-user not to eject with the cache unsynced.  If the user ignores that, w=
-e
-should recognise the problem and take a caveat emptor approach.
+>> > There are a few different ways to fix this; e.g. one could
+>> > specifically test media_not_present() if a sense code is returned =
+in
+>> > sd_sync_cache().
+>
+> Isn't this the best approach? =A0For removable medium, the onus is on=
+ the
+> user not to eject with the cache unsynced. =A0If the user ignores tha=
+t, we
+> should recognise the problem and take a caveat emptor approach.
 
-As a side note: having write through caches on removable media is a
-really silly idea because of the above problem ...
+I was attempting to make the case where the user behaved completely
+appropriately work right, not worrying about the other cases.  It
+seems a bit silly to even call sd_sync_cache() if we already know the
+medium has been removed; furthermore, it means the behavior is
+different between when the device is first plugged in (WCE is still 0)
+and when it's been used and then ejected (WCE remains 1 until a new
+medium is inserted); this inconsistency seems poor.
 
->  However, the following patch seems simpler, and
-> > avoids calling sd_sync_cache() at all in this case.  sdkp->WCE will=
- be
-> > reset when new medium is recognized and sd_read_cache_type() is
-> > called.  Note this code always gets called=E2=80=94it's in the same=
- path as
-> > sd_read_capacity(), which has to be called for the device to be usa=
-ble
-> > again; thus the patch is inherently safe.
-> >=20
-> > Kernel tested: 2.6.38 (Ubuntu Natty)
->=20
-> Patch appended for completness.
->=20
-> I need someone from USB/SCSI camp to see if this approach makes sense=
-=2E
+> As a side note: having write through caches on removable media is a
+> really silly idea because of the above problem ...
 
-I don't really think so, because it's pretending the device cache has
-flipped to write through.  It's certainly possible to envisage removabl=
-e
-media where the cache is in the housing and we still need to preserve
-the idea of it being write back.
-
-Instinct tells me the correct set of fixes is to add a sync cache from
-release (so we automatically sync on last close, which is usually when
-an ordered remove happens), keep the one on shutdown, just in case the
-system goes down with stuff still mounted and print a nasty message on
-suspend for a write back device that's been removed.
-
-I also think we shouldn't abort the suspend if the disk doesn't respond
-correctly to start/stop ... the power is going to be disconnected
-anyway, so it's no issue if the disk spins for a second or so longer.
-
-The problem this is going to cause is double sync on shutdown (once whe=
-n
-final unmount closes the device and once on shutdown) ... do people
-agree that's a price worth paying?
-
-Something like this?
-
-James
-
----
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index e567302..b5c485a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -408,6 +408,41 @@ static void scsi_disk_put(struct scsi_disk *sdkp)
- 	mutex_unlock(&sd_ref_mutex);
- }
-=20
-+static int sd_sync_cache(struct scsi_disk *sdkp)
-+{
-+	int retries, res;
-+	struct scsi_device *sdp =3D sdkp->device;
-+	struct scsi_sense_hdr sshdr;
-+
-+	if (!scsi_device_online(sdp))
-+		return -ENODEV;
-+
-+
-+	for (retries =3D 3; retries > 0; --retries) {
-+		unsigned char cmd[10] =3D { 0 };
-+
-+		cmd[0] =3D SYNCHRONIZE_CACHE;
-+		/*
-+		 * Leave the rest of the command zero to indicate
-+		 * flush everything.
-+		 */
-+		res =3D scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
-+				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
-+		if (res =3D=3D 0)
-+			break;
-+	}
-+
-+	if (res) {
-+		sd_print_result(sdkp, res);
-+		if (driver_byte(res) & DRIVER_SENSE)
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+	}
-+
-+	if (res)
-+		return -EIO;
-+	return 0;
-+}
-+
- static void sd_prot_op(struct scsi_cmnd *scmd, unsigned int dif)
- {
- 	unsigned int prot_op =3D SCSI_PROT_NORMAL;
-@@ -897,6 +932,11 @@ static int sd_release(struct gendisk *disk, fmode_=
-t mode)
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
- 	}
-=20
-+	if (sdkp->WCE) {
-+		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-+		sd_sync_cache(sdkp);
-+	}
-+
- 	/*
- 	 * XXX and what if there are packets in flight and this close()
- 	 * XXX is followed by a "rmmod sd_mod"?
-@@ -1093,41 +1133,6 @@ out:
- 	return retval;
- }
-=20
--static int sd_sync_cache(struct scsi_disk *sdkp)
--{
--	int retries, res;
--	struct scsi_device *sdp =3D sdkp->device;
--	struct scsi_sense_hdr sshdr;
--
--	if (!scsi_device_online(sdp))
--		return -ENODEV;
--
--
--	for (retries =3D 3; retries > 0; --retries) {
--		unsigned char cmd[10] =3D { 0 };
--
--		cmd[0] =3D SYNCHRONIZE_CACHE;
--		/*
--		 * Leave the rest of the command zero to indicate
--		 * flush everything.
--		 */
--		res =3D scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
--		if (res =3D=3D 0)
--			break;
--	}
--
--	if (res) {
--		sd_print_result(sdkp, res);
--		if (driver_byte(res) & DRIVER_SENSE)
--			sd_print_sense_hdr(sdkp, &sshdr);
--	}
--
--	if (res)
--		return -EIO;
--	return 0;
--}
--
- static void sd_rescan(struct device *dev)
- {
- 	struct scsi_disk *sdkp =3D scsi_disk_get_from_dev(dev);
-@@ -2627,15 +2632,19 @@ static int sd_suspend(struct device *dev, pm_me=
-ssage_t mesg)
- 		return 0;	/* this can happen */
-=20
- 	if (sdkp->WCE) {
--		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
--		ret =3D sd_sync_cache(sdkp);
--		if (ret)
--			goto done;
-+		if (sdkp->media_present) {
-+			sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
-+			ret =3D sd_sync_cache(sdkp);
-+			if (ret)
-+				goto done;
-+		} else {
-+			sd_printk(KERN_NOTICE, sdkp, "Disk already ejected, not synchronizi=
-ng SCSI cache\n");
-+		}=09
- 	}
-=20
- 	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop)=
- {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
--		ret =3D sd_start_stop_device(sdkp, 0);
-+		sd_start_stop_device(sdkp, 0); /* ignore return code */
- 	}
-=20
- done:
+In the Android case, I see no reason why it's a problem, and the
+device acts appropriately under the circumstances.  And given tray
+locking, I'm not sure why it's a problem even for spinning media.  But
+regardless, these are real devices, and that ship has long since
+sailed.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
