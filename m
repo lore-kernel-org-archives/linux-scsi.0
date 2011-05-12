@@ -1,56 +1,79 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH-v3 14/14] iscsi-target: Add Makefile/Kconfig and update
- TCM top level
-Date: Thu, 12 May 2011 08:13:57 -0700
-Message-ID: <20110512081357.106419c0.randy.dunlap@oracle.com>
-References: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
-	<1305184041-32189-15-git-send-email-nab@linux-iscsi.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH] scsi/sd: fix suspend with USB-connected Android phone (one line)
+Date: Thu, 12 May 2011 22:03:13 +0200
+Message-ID: <201105122203.13671.rjw@sisk.pl>
+References: <BANLkTi=XNyR8GD43GGnMag+=JmhUd_5HtA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: Text/Plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305184041-32189-15-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <BANLkTi=XNyR8GD43GGnMag+=JmhUd_5HtA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>
+To: Charles Hannum <root@ihack.net>
+Cc: linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 12 May 2011 00:07:21 -0700 Nicholas A. Bellinger wrote:
+Hi,
 
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> Add Makefile/Kconfig and update drivers/target/[Makefile,Kconfig]
-> to include the fabric module.
-> 
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/Kconfig        |    1 +
->  drivers/target/Makefile       |    1 +
->  drivers/target/iscsi/Kconfig  |   18 ++++++++++++++++++
->  drivers/target/iscsi/Makefile |   20 ++++++++++++++++++++
->  4 files changed, 40 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/target/iscsi/Kconfig
->  create mode 100644 drivers/target/iscsi/Makefile
-> 
-> diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
-> new file mode 100644
-> index 0000000..abdb8f9
-> --- /dev/null
-> +++ b/drivers/target/iscsi/Kconfig
-> @@ -0,0 +1,18 @@
-> +config ISCSI_TARGET
-> +	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
-> +	depends on m
-> +	select CRYPTO
-> +	select CRYPTO_CRC32C
-> +	select CRYPTO_CRC32C_INTEL if X86
-> +	help
-> +	Say M here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
-> +	Target Mode Stack.
+Added some CCs.
 
-Just curious:  why is this available only as a loadable module?
+On Thursday, May 12, 2011, Charles Hannum wrote:
+> Short version: My laptop doesn't suspend when my Android phone is
+> connected and has been =E2=80=9Cejected=E2=80=9D.
+>=20
+> Long version:
+>=20
+> Android phones connect as USB mass storage devices.  After the =E2=80=
+=9CTurn
+> on USB storage=E2=80=9D button has been clicked, there are a few diff=
+erent
+> ways to detach the =E2=80=9Cdisk=E2=80=9D:
+>=20
+> 1) pull the cable
+> 2) click =E2=80=9CTurn off USB storage=E2=80=9D
+> 3) =E2=80=9Ceject=E2=80=9D the device
+>=20
+> In cases 2 & 3, the USB device is still attached to the system, but
+> will now return MEDIUM NOT PRESENT for many commands, including
+> SYNCHRONIZE CACHE=E2=80=94basically it acts like any device with remo=
+vable
+> media.  However, the act of the =E2=80=9Cmedia=E2=80=9D being removed=
+ does not
+> invalidate sdkp->WCE; therefore sd_shutdown() and sd_suspend() still
+> call sd_sync_cache(), which *fails* because it gets a MEDIUM NOT
+> PRESENT sense code.  In the sd_suspend() case, this causes the entire
+> suspend to fail, and the laptop rewakes immediately.
+>=20
+> There are a few different ways to fix this; e.g. one could
+> specifically test media_not_present() if a sense code is returned in
+> sd_sync_cache().  However, the following patch seems simpler, and
+> avoids calling sd_sync_cache() at all in this case.  sdkp->WCE will b=
+e
+> reset when new medium is recognized and sd_read_cache_type() is
+> called.  Note this code always gets called=E2=80=94it's in the same p=
+ath as
+> sd_read_capacity(), which has to be called for the device to be usabl=
+e
+> again; thus the patch is inherently safe.
+>=20
+> Kernel tested: 2.6.38 (Ubuntu Natty)
 
-thanks,
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Patch appended for completness.
+
+I need someone from USB/SCSI camp to see if this approach makes sense.
+
+Thanks,
+Rafael
+
+
+--- linux-2.6.38/drivers/scsi/sd.c.orig	2011-05-11 18:08:44.969497976 -=
+0400
++++ linux-2.6.38/drivers/scsi/sd.c	2011-05-11 15:26:15.439610760 -0400
+@@ -996,6 +996,7 @@
+ 	if (sdkp->device->removable) {
+ 		sdkp->media_present =3D 0;
+ 		sdkp->capacity =3D 0;
++		sdkp->WCE =3D 0;
+ 	}
+ }
+=20
