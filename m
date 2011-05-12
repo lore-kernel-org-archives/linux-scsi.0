@@ -1,57 +1,56 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
- writeback for various fses
-Date: Thu, 12 May 2011 11:42:55 +0200
-Message-ID: <20110512094255.GA4690@quack.suse.cz>
-References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com>
- <20110510125124.GD4402@quack.suse.cz>
- <20110511181901.GK20579@tux1.beaverton.ibm.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH-v3 14/14] iscsi-target: Add Makefile/Kconfig and update
+ TCM top level
+Date: Thu, 12 May 2011 08:13:57 -0700
+Message-ID: <20110512081357.106419c0.randy.dunlap@oracle.com>
+References: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
+	<1305184041-32189-15-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20110511181901.GK20579@tux1.beaverton.ibm.com>
-Sender: owner-linux-mm@kvack.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Jan Kara <jack@suse.cz>, Theodore Tso <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1305184041-32189-15-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed 11-05-11 11:19:01, Darrick J. Wong wrote:
-> On Tue, May 10, 2011 at 02:51:24PM +0200, Jan Kara wrote:
-> > On Mon 09-05-11 16:03:18, Darrick J. Wong wrote:
-> > > I am still chasing down what exactly is broken in ext3.  data=writeback mode
-> > > passes with no failures.  data=ordered, however, does not pass; my current
-> > > suspicion is that jbd is calling submit_bh on data buffers but doesn't call
-> > > page_mkclean to kick the userspace programs off the page before writing it.
-> >   Yes, ext3 in data=ordered mode writes pages from
-> > journal_commit_transaction() via submit_bh() without clearing page dirty
-> > bits thus page_mkclean() is not called for these pages. Frankly, do you
-> > really want to bother with adding support for ext2 and ext3? People can use
-> > ext4 as a fs driver when they want to start using blk-integrity support.
-> > Especially ext2 patch looks really painful and just from a quick look I can
-> > see code e.g. in fs/ext2/namei.c which isn't handled by your patch yet.
+On Thu, 12 May 2011 00:07:21 -0700 Nicholas A. Bellinger wrote:
+
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> Yeah, I agree that ext2 is ugly and ext3/jbd might be more painful.  Are there
-> any other code that wants stable pages that's already running with ext3?  In
-> this months-long discussion I've heard that encryption and raid also like
-> stable pages during writes.  Have those users been broken this whole time, or
-> have they been stabilizing pages themselves?
-  I believe part of them has been broken (e.g. raid) and part of them do
-copy-out so they were OK.
+> Add Makefile/Kconfig and update drivers/target/[Makefile,Kconfig]
+> to include the fabric module.
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/Kconfig        |    1 +
+>  drivers/target/Makefile       |    1 +
+>  drivers/target/iscsi/Kconfig  |   18 ++++++++++++++++++
+>  drivers/target/iscsi/Makefile |   20 ++++++++++++++++++++
+>  4 files changed, 40 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/target/iscsi/Kconfig
+>  create mode 100644 drivers/target/iscsi/Makefile
+> 
+> diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
+> new file mode 100644
+> index 0000000..abdb8f9
+> --- /dev/null
+> +++ b/drivers/target/iscsi/Kconfig
+> @@ -0,0 +1,18 @@
+> +config ISCSI_TARGET
+> +	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
+> +	depends on m
+> +	select CRYPTO
+> +	select CRYPTO_CRC32C
+> +	select CRYPTO_CRC32C_INTEL if X86
+> +	help
+> +	Say M here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
+> +	Target Mode Stack.
 
-> I suppose we can cross the "ext3 fails horribly on DIF" bridge when someone
-> complains about it.  Possibly we could try to steer them to btrfs.
-  Well, btrfs might be a bit too advantageous for production servers but
-ext4 would be definitely viable for them.
+Just curious:  why is this available only as a loadable module?
 
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+thanks,
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
