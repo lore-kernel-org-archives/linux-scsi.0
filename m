@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v3 01/14] iscsi: Resolve iscsi_proto.h naming conflicts with drivers/target/iscsi
-Date: Thu, 12 May 2011 00:07:08 -0700
-Message-ID: <1305184041-32189-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v3 03/14] target: Convert REPORT_LUNs to use int_to_scsilun
+Date: Thu, 12 May 2011 00:07:10 -0700
+Message-ID: <1305184041-32189-4-git-send-email-nab@linux-iscsi.org>
 References: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
@@ -12,221 +12,93 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch renames the following iscsi_proto.h structures to avoid
-namespace issues with drivers/target/iscsi/iscsi_target_core.h:
+This patch converts transport_core_report_lun_response() to use
+drivers/scsi/scsi_scan.c:int_to_scsilun instead of using the
+struct target_core_fabric_ops->pack_lun() fabric provided API vector.
 
-*) struct iscsi_cmd -> struct iscsi_scsi_req
-*) struct iscsi_cmd_rsp -> struct iscsi_scsi_rsp
-*) struct iscsi_login -> struct iscsi_login_req
+It also removes the tfo->pack_lun check from target_fabric_tf_ops_check()
+and will be removed from struct target_core_fabric_ops in a seperate
+patch.
 
-This patch includes useful ISCSI_FLAG_LOGIN_[CURRENT,NEXT]_STAGE*,
-and ISCSI_FLAG_SNACK_TYPE_* definitions used by iscsi_target_mod, and
-fixes the incorrect definition of struct iscsi_snack to following
-RFC-3720 Section 10.16. SNACK Request.
-
-Also, this patch updates libiscsi, iSER, be2iscsi, and bn2xi to
-use the updated structure definitions in a handful of locations.
-
+Reported-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/infiniband/ulp/iser/iser_initiator.c |    2 +-
- drivers/scsi/be2iscsi/be_main.h              |    4 +-
- drivers/scsi/bnx2i/bnx2i_hwi.c               |    8 +++---
- drivers/scsi/bnx2i/bnx2i_iscsi.c             |    2 +-
- drivers/scsi/libiscsi.c                      |    6 ++--
- include/scsi/iscsi_proto.h                   |   30 +++++++++++++++++++-------
- 6 files changed, 33 insertions(+), 19 deletions(-)
+ drivers/target/target_core_configfs.c |    4 ----
+ drivers/target/target_core_device.c   |   26 +++++---------------------
+ 2 files changed, 5 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
-index 95a08a8..d73bab3 100644
---- a/drivers/infiniband/ulp/iser/iser_initiator.c
-+++ b/drivers/infiniband/ulp/iser/iser_initiator.c
-@@ -271,7 +271,7 @@ int iser_send_command(struct iscsi_conn *conn,
- 	unsigned long edtl;
- 	int err;
- 	struct iser_data_buf *data_buf;
--	struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
-+	struct iscsi_scsi_req *hdr =  (struct iscsi_scsi_req *)task->hdr;
- 	struct scsi_cmnd *sc  =  task->sc;
- 	struct iser_tx_desc *tx_desc = &iser_task->desc;
- 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 90eb74f..205c502 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -398,7 +398,7 @@ struct amap_pdu_data_out {
- };
- 
- struct be_cmd_bhs {
--	struct iscsi_cmd iscsi_hdr;
-+	struct iscsi_scsi_req iscsi_hdr;
- 	unsigned char pad1[16];
- 	struct pdu_data_out iscsi_data_pdu;
- 	unsigned char pad2[BE_SENSE_INFO_SIZE -
-@@ -429,7 +429,7 @@ struct be_nonio_bhs {
- };
- 
- struct be_status_bhs {
--	struct iscsi_cmd iscsi_hdr;
-+	struct iscsi_scsi_req iscsi_hdr;
- 	unsigned char pad1[16];
- 	/**
- 	 * The plus 2 below is to hold the sense info length that gets
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index f0b8951..cc73938 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -326,11 +326,11 @@ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
- {
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct bnx2i_login_request *login_wqe;
--	struct iscsi_login *login_hdr;
-+	struct iscsi_login_req *login_hdr;
- 	u32 dword;
- 
- 	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
--	login_hdr = (struct iscsi_login *)task->hdr;
-+	login_hdr = (struct iscsi_login_req *)task->hdr;
- 	login_wqe = (struct bnx2i_login_request *)
- 						bnx2i_conn->ep->qp.sq_prod_qe;
- 
-@@ -1341,7 +1341,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
- 	struct bnx2i_cmd_response *resp_cqe;
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct iscsi_task *task;
--	struct iscsi_cmd_rsp *hdr;
-+	struct iscsi_scsi_rsp *hdr;
- 	u32 datalen = 0;
- 
- 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
-@@ -1368,7 +1368,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index a5f44a6..ee6fad9 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -497,10 +497,6 @@ static int target_fabric_tf_ops_check(
+ 		printk(KERN_ERR "Missing tfo->is_state_remove()\n");
+ 		return -EINVAL;
  	}
- 	bnx2i_iscsi_unmap_sg_list(bnx2i_cmd);
- 
--	hdr = (struct iscsi_cmd_rsp *)task->hdr;
-+	hdr = (struct iscsi_scsi_rsp *)task->hdr;
- 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
- 	hdr->opcode = resp_cqe->op_code;
- 	hdr->max_cmdsn = cpu_to_be32(resp_cqe->max_cmd_sn);
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 1809f9c..9b50aaf 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1206,7 +1206,7 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
- 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
- 	struct scsi_cmnd *sc = task->sc;
- 	struct bnx2i_cmd *cmd = task->dd_data;
--	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
-+	struct iscsi_scsi_req *hdr = (struct iscsi_scsi_req *) task->hdr;
- 
+-	if (!(tfo->pack_lun)) {
+-		printk(KERN_ERR "Missing tfo->pack_lun()\n");
+-		return -EINVAL;
+-	}
  	/*
- 	 * If there is no scsi_cmnd this must be a mgmt task
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 0c550d5..9c3cb4e 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -360,7 +360,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 	struct iscsi_conn *conn = task->conn;
- 	struct iscsi_session *session = conn->session;
- 	struct scsi_cmnd *sc = task->sc;
--	struct iscsi_cmd *hdr;
-+	struct iscsi_scsi_req *hdr;
- 	unsigned hdrlength, cmd_len;
- 	itt_t itt;
- 	int rc;
-@@ -374,7 +374,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 		if (rc)
- 			return rc;
+ 	 * We at least require tfo->fabric_make_wwn(), tfo->fabric_drop_wwn()
+ 	 * tfo->fabric_make_tpg() and tfo->fabric_drop_tpg() in
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index d25e208..64a7b4d 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -38,6 +38,7 @@
+ #include <net/sock.h>
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
+ 
+ #include <target/target_core_base.h>
+ #include <target/target_core_device.h>
+@@ -658,8 +659,7 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
+ 	struct se_session *se_sess = SE_SESS(se_cmd);
+ 	struct se_task *se_task;
+ 	unsigned char *buf = (unsigned char *)T_TASK(se_cmd)->t_task_buf;
+-	u32 cdb_offset = 0, lun_count = 0, offset = 8;
+-	u64 i, lun;
++	u32 cdb_offset = 0, lun_count = 0, offset = 8, i;
+ 
+ 	list_for_each_entry(se_task, &T_TASK(se_cmd)->t_task_list, t_list)
+ 		break;
+@@ -675,15 +675,7 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
+ 	 * a $FABRIC_MOD.  In that case, report LUN=0 only.
+ 	 */
+ 	if (!(se_sess)) {
+-		lun = 0;
+-		buf[offset++] = ((lun >> 56) & 0xff);
+-		buf[offset++] = ((lun >> 48) & 0xff);
+-		buf[offset++] = ((lun >> 40) & 0xff);
+-		buf[offset++] = ((lun >> 32) & 0xff);
+-		buf[offset++] = ((lun >> 24) & 0xff);
+-		buf[offset++] = ((lun >> 16) & 0xff);
+-		buf[offset++] = ((lun >> 8) & 0xff);
+-		buf[offset++] = (lun & 0xff);
++		int_to_scsilun(0, (struct scsi_lun *)&buf[offset]);
+ 		lun_count = 1;
+ 		goto done;
  	}
--	hdr = (struct iscsi_cmd *) task->hdr;
-+	hdr = (struct iscsi_scsi_req *) task->hdr;
- 	itt = hdr->itt;
- 	memset(hdr, 0, sizeof(*hdr));
+@@ -703,16 +695,8 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
+ 		if ((cdb_offset + 8) >= se_cmd->data_length)
+ 			continue;
  
-@@ -830,7 +830,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 			       struct iscsi_task *task, char *data,
- 			       int datalen)
- {
--	struct iscsi_cmd_rsp *rhdr = (struct iscsi_cmd_rsp *)hdr;
-+	struct iscsi_scsi_rsp *rhdr = (struct iscsi_scsi_rsp *)hdr;
- 	struct iscsi_session *session = conn->session;
- 	struct scsi_cmnd *sc = task->sc;
+-		lun = cpu_to_be64(CMD_TFO(se_cmd)->pack_lun(deve->mapped_lun));
+-		buf[offset++] = ((lun >> 56) & 0xff);
+-		buf[offset++] = ((lun >> 48) & 0xff);
+-		buf[offset++] = ((lun >> 40) & 0xff);
+-		buf[offset++] = ((lun >> 32) & 0xff);
+-		buf[offset++] = ((lun >> 24) & 0xff);
+-		buf[offset++] = ((lun >> 16) & 0xff);
+-		buf[offset++] = ((lun >> 8) & 0xff);
+-		buf[offset++] = (lun & 0xff);
+-		cdb_offset += 8;
++		int_to_scsilun(deve->mapped_lun, (struct scsi_lun *)&buf[offset]);
++		cdb_offset += 16;
+ 	}
+ 	spin_unlock_irq(&SE_NODE_ACL(se_sess)->device_list_lock);
  
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index dd0a52c..a9c9058 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -116,7 +116,7 @@ struct iscsi_ahs_hdr {
- #define ISCSI_CDB_SIZE			16
- 
- /* iSCSI PDU Header */
--struct iscsi_cmd {
-+struct iscsi_scsi_req {
- 	uint8_t opcode;
- 	uint8_t flags;
- 	__be16 rsvd2;
-@@ -161,7 +161,7 @@ struct iscsi_ecdb_ahdr {
- };
- 
- /* SCSI Response Header */
--struct iscsi_cmd_rsp {
-+struct iscsi_scsi_rsp {
- 	uint8_t opcode;
- 	uint8_t flags;
- 	uint8_t response;
-@@ -406,7 +406,7 @@ struct iscsi_text_rsp {
- };
- 
- /* Login Header */
--struct iscsi_login {
-+struct iscsi_login_req {
- 	uint8_t opcode;
- 	uint8_t flags;
- 	uint8_t max_version;	/* Max. version supported */
-@@ -427,7 +427,13 @@ struct iscsi_login {
- #define ISCSI_FLAG_LOGIN_TRANSIT		0x80
- #define ISCSI_FLAG_LOGIN_CONTINUE		0x40
- #define ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK	0x0C	/* 2 bits */
-+#define ISCSI_FLAG_LOGIN_CURRENT_STAGE1		0x04
-+#define ISCSI_FLAG_LOGIN_CURRENT_STAGE2		0x08
-+#define ISCSI_FLAG_LOGIN_CURRENT_STAGE3		0x0C
- #define ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK	0x03	/* 2 bits */
-+#define ISCSI_FLAG_LOGIN_NEXT_STAGE1		0x01
-+#define ISCSI_FLAG_LOGIN_NEXT_STAGE2		0x02
-+#define ISCSI_FLAG_LOGIN_NEXT_STAGE3		0x03
- 
- #define ISCSI_LOGIN_CURRENT_STAGE(flags) \
- 	((flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2)
-@@ -550,17 +556,25 @@ struct iscsi_logout_rsp {
- struct iscsi_snack {
- 	uint8_t opcode;
- 	uint8_t flags;
--	uint8_t rsvd2[14];
-+	uint8_t rsvd2[2];
-+	uint8_t hlength;
-+	uint8_t dlength[3];
-+	uint8_t lun[8];
- 	itt_t	 itt;
-+	__be32  ttt;
-+	uint8_t rsvd3[4];
-+	__be32  exp_statsn;
-+	uint8_t rsvd4[8];
- 	__be32	begrun;
- 	__be32	runlength;
--	__be32	exp_statsn;
--	__be32	rsvd3;
--	__be32	exp_datasn;
--	uint8_t rsvd6[8];
- };
- 
- /* SNACK PDU flags */
-+#define ISCSI_FLAG_SNACK_TYPE_DATA		0
-+#define ISCSI_FLAG_SNACK_TYPE_R2T		0
-+#define ISCSI_FLAG_SNACK_TYPE_STATUS		1
-+#define ISCSI_FLAG_SNACK_TYPE_DATA_ACK		2
-+#define ISCSI_FLAG_SNACK_TYPE_RDATA		3
- #define ISCSI_FLAG_SNACK_TYPE_MASK	0x0F	/* 4 bits */
- 
- /* Reject Message Header */
 -- 
 1.7.5.1
