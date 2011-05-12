@@ -1,168 +1,50 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v3 07/14] iscsi-target: Add TPG and Device logic
-Date: Thu, 12 May 2011 00:07:14 -0700
-Message-ID: <1305184041-32189-8-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v3 12/14] iscsi-target: Add support for task management operations
+Date: Thu, 12 May 2011 00:07:19 -0700
+Message-ID: <1305184041-32189-13-git-send-email-nab@linux-iscsi.org>
 References: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm16-vm0.access.bullet.mail.mud.yahoo.com ([66.94.236.19]:20903
+	"HELO nm16-vm0.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932326Ab1ELHIt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 May 2011 03:08:49 -0400
 In-Reply-To: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 =46rom: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds TPG and device logiced using for mapping iscsi-target
-abstractions on top of TCM v4 struct se_portal_group and struct se_devi=
-ce
-abstractions.
+This patch adds support for iSCSI task management operations called
+directly from iscsi_target.c TMR request/response PDU logic, and
+interfaces struct se_lun -> struct se_device for assoication
+of TMRs to TCM backend devices.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_device.c |   88 ++++
- drivers/target/iscsi/iscsi_target_device.h |    9 +
- drivers/target/iscsi/iscsi_target_tpg.c    |  760 ++++++++++++++++++++=
+ drivers/target/iscsi/iscsi_target_tmr.c |  850 +++++++++++++++++++++++=
 ++++++++
- drivers/target/iscsi/iscsi_target_tpg.h    |   41 ++
- 4 files changed, 898 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_device.c
- create mode 100644 drivers/target/iscsi/iscsi_target_device.h
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.c
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.h
+ drivers/target/iscsi/iscsi_target_tmr.h |   14 +
+ 2 files changed, 864 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/targe=
-t/iscsi/iscsi_target_device.c
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.c b/drivers/target/i=
+scsi/iscsi_target_tmr.c
 new file mode 100644
-index 0000000..47218c2
+index 0000000..32a9c97
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_device.c
-@@ -0,0 +1,88 @@
++++ b/drivers/target/iscsi/iscsi_target_tmr.c
+@@ -0,0 +1,850 @@
 +/*********************************************************************=
 **********
-+ * This file contains the iSCSI Virtual Device and Disk Transport
-+ * agnostic related functions.
-+ *
-+ =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
-+ *
-+ * Licensed to the Linux Foundation under the General Public License (=
-GPL) version 2.
-+ *
-+ * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modif=
-y
-+ * it under the terms of the GNU General Public License as published b=
-y
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *********************************************************************=
-*********/
-+
-+#include <scsi/scsi_device.h>
-+#include <target/target_core_base.h>
-+#include <target/target_core_device.h>
-+#include <target/target_core_transport.h>
-+
-+#include "iscsi_target_debug.h"
-+#include "iscsi_target_core.h"
-+#include "iscsi_target_device.h"
-+#include "iscsi_target_tpg.h"
-+#include "iscsi_target_util.h"
-+
-+int iscsit_get_lun_for_tmr(
-+	struct iscsi_cmd *cmd,
-+	u64 lun)
-+{
-+	u32 unpacked_lun =3D scsilun_to_int((struct scsi_lun *)&lun);
-+
-+	return transport_get_lun_for_tmr(SE_CMD(cmd), unpacked_lun);
-+}
-+
-+int iscsit_get_lun_for_cmd(
-+	struct iscsi_cmd *cmd,
-+	unsigned char *cdb,
-+	u64 lun)
-+{
-+	u32 unpacked_lun =3D scsilun_to_int((struct scsi_lun *)&lun);
-+
-+	return transport_get_lun_for_cmd(SE_CMD(cmd), NULL, unpacked_lun);
-+}
-+
-+void iscsit_determine_maxcmdsn(struct iscsi_session *sess)
-+{
-+	struct se_node_acl *se_nacl;
-+
-+	/*
-+	 * This is a discovery session, the single queue slot was already
-+	 * assigned in iscsi_login_zero_tsih().  Since only Logout and
-+	 * Text Opcodes are allowed during discovery we do not have to worry
-+	 * about the HBA's queue depth here.
-+	 */
-+	if (sess->sess_ops->SessionType)
-+		return;
-+
-+	se_nacl =3D sess->se_sess->se_node_acl;
-+
-+	/*
-+	 * This is a normal session, set the Session's CmdSN window to the
-+	 * struct se_node_acl->queue_depth.  The value in struct se_node_acl-=
->queue_depth
-+	 * has already been validated as a legal value in
-+	 * core_set_queue_depth_for_node().
-+	 */
-+	sess->cmdsn_window =3D se_nacl->queue_depth;
-+	sess->max_cmd_sn =3D (sess->max_cmd_sn + se_nacl->queue_depth) - 1;
-+}
-+
-+void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_ses=
-sion *sess)
-+{
-+	if (cmd->immediate_cmd || cmd->maxcmdsn_inc)
-+		return;
-+
-+	cmd->maxcmdsn_inc =3D 1;
-+
-+	spin_lock(&sess->cmdsn_lock);
-+	sess->max_cmd_sn +=3D 1;
-+	TRACE(TRACE_ISCSI, "Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
-+	spin_unlock(&sess->cmdsn_lock);
-+}
-diff --git a/drivers/target/iscsi/iscsi_target_device.h b/drivers/targe=
-t/iscsi/iscsi_target_device.h
-new file mode 100644
-index 0000000..bef1cad
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_device.h
-@@ -0,0 +1,9 @@
-+#ifndef ISCSI_TARGET_DEVICE_H
-+#define ISCSI_TARGET_DEVICE_H
-+
-+extern int iscsit_get_lun_for_tmr(struct iscsi_cmd *, u64);
-+extern int iscsit_get_lun_for_cmd(struct iscsi_cmd *, unsigned char *,=
- u64);
-+extern void iscsit_determine_maxcmdsn(struct iscsi_session *);
-+extern void iscsit_increment_maxcmdsn(struct iscsi_cmd *, struct iscsi=
-_session *);
-+
-+#endif /* ISCSI_TARGET_DEVICE_H */
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/i=
-scsi/iscsi_target_tpg.c
-new file mode 100644
-index 0000000..b658857
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -0,0 +1,760 @@
-+/*********************************************************************=
-**********
-+ * This file contains iSCSI Target Portal Group related functions.
++ * This file contains the iSCSI Target specific Task Management functi=
+ons.
 + *
 + * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
@@ -185,831 +67,881 @@ y
 + *********************************************************************=
 *********/
 +
++#include <asm/unaligned.h>
++#include <scsi/iscsi_proto.h>
 +#include <target/target_core_base.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_configfs.h>
-+#include <target/target_core_tpg.h>
 +
 +#include "iscsi_target_debug.h"
 +#include "iscsi_target_core.h"
++#include "iscsi_target_seq_pdu_list.h"
++#include "iscsi_target_datain_values.h"
++#include "iscsi_target_device.h"
 +#include "iscsi_target_erl0.h"
-+#include "iscsi_target_login.h"
-+#include "iscsi_target_nodeattrib.h"
++#include "iscsi_target_erl1.h"
++#include "iscsi_target_erl2.h"
++#include "iscsi_target_tmr.h"
 +#include "iscsi_target_tpg.h"
 +#include "iscsi_target_util.h"
 +#include "iscsi_target.h"
-+#include "iscsi_target_parameters.h"
 +
-+struct iscsi_portal_group *iscsit_alloc_portal_group(struct iscsi_tiqn=
- *tiqn, u16 tpgt)
++u8 iscsit_tmr_abort_task(
++	struct iscsi_cmd *cmd,
++	unsigned char *buf)
 +{
-+	struct iscsi_portal_group *tpg;
++	struct iscsi_cmd *ref_cmd;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct iscsi_tmr_req *tmr_req =3D cmd->tmr_req;
++	struct se_tmr_req *se_tmr =3D SE_CMD(cmd)->se_tmr_req;
++	struct iscsi_tm *hdr =3D (struct iscsi_tm *) buf;
 +
-+	tpg =3D kzalloc(sizeof(struct iscsi_portal_group), GFP_KERNEL);
-+	if (!tpg) {
-+		printk(KERN_ERR "Unable to allocate struct iscsi_portal_group\n");
-+		return NULL;
++	ref_cmd =3D iscsit_find_cmd_from_itt(conn, hdr->rtt);
++	if (!ref_cmd) {
++		printk(KERN_ERR "Unable to locate RefTaskTag: 0x%08x on CID:"
++			" %hu.\n", hdr->rtt, conn->cid);
++		return ((hdr->refcmdsn >=3D conn->sess->exp_cmd_sn) &&
++			(hdr->refcmdsn <=3D conn->sess->max_cmd_sn)) ?
++			ISCSI_TMF_RSP_COMPLETE : ISCSI_TMF_RSP_NO_TASK;
++	}
++	if (ref_cmd->cmd_sn !=3D hdr->refcmdsn) {
++		printk(KERN_ERR "RefCmdSN 0x%08x does not equal"
++			" task's CmdSN 0x%08x. Rejecting ABORT_TASK.\n",
++			hdr->refcmdsn, ref_cmd->cmd_sn);
++		return ISCSI_TMF_RSP_REJECTED;
 +	}
 +
-+	tpg->tpgt =3D tpgt;
-+	tpg->tpg_state =3D TPG_STATE_FREE;
-+	tpg->tpg_tiqn =3D tiqn;
-+	INIT_LIST_HEAD(&tpg->tpg_gnp_list);
-+	INIT_LIST_HEAD(&tpg->tpg_list);
-+	mutex_init(&tpg->tpg_access_lock);
-+	mutex_init(&tpg->np_login_lock);
-+	spin_lock_init(&tpg->tpg_state_lock);
-+	spin_lock_init(&tpg->tpg_np_lock);
++	se_tmr->ref_task_tag		=3D hdr->rtt;
++	se_tmr->ref_cmd			=3D &ref_cmd->se_cmd;
++	tmr_req->ref_cmd_sn		=3D hdr->refcmdsn;
++	tmr_req->exp_data_sn		=3D hdr->exp_datasn;
 +
-+	return tpg;
++	return ISCSI_TMF_RSP_COMPLETE;
 +}
 +
-+static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *=
-);
-+
-+int iscsit_load_discovery_tpg(void)
++/*
++ *	Called from iscsit_handle_task_mgt_cmd().
++ */
++int iscsit_tmr_task_warm_reset(
++	struct iscsi_conn *conn,
++	struct iscsi_tmr_req *tmr_req,
++	unsigned char *buf)
 +{
-+	struct iscsi_param *param;
-+	struct iscsi_portal_group *tpg;
-+	int ret;
-+
-+	tpg =3D iscsit_alloc_portal_group(NULL, 1);
-+	if (!tpg) {
-+		printk(KERN_ERR "Unable to allocate struct iscsi_portal_group\n");
-+		return -1;
-+	}
-+
-+	ret =3D core_tpg_register(
-+			&lio_target_fabric_configfs->tf_ops,
-+			NULL, &tpg->tpg_se_tpg, (void *)tpg,
-+			TRANSPORT_TPG_TYPE_DISCOVERY);
-+	if (ret < 0) {
-+		kfree(tpg);
-+		return -1;
-+	}
-+
-+	tpg->sid =3D 1; /* First Assigned LIO Session ID */
-+	iscsit_set_default_tpg_attribs(tpg);
-+
-+	if (iscsi_create_default_params(&tpg->param_list) < 0)
-+		goto out;
-+	/*
-+	 * By default we disable authentication for discovery sessions,
-+	 * this can be changed with:
-+	 *
-+	 * /sys/kernel/config/target/iscsi/discovery_auth/enforce_discovery_a=
-uth
-+	 */
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param)
-+		goto out;
-+
-+	if (iscsi_update_param_value(param, "CHAP,None") < 0)
-+		goto out;
-+
-+	tpg->tpg_attrib.authentication =3D 0;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state  =3D TPG_STATE_ACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	iscsit_global->discovery_tpg =3D tpg;
-+	printk(KERN_INFO "CORE[0] - Allocated Discovery TPG\n");
-+
-+	return 0;
-+out:
-+	if (tpg->sid =3D=3D 1)
-+		core_tpg_deregister(&tpg->tpg_se_tpg);
-+	kfree(tpg);
-+	return -1;
-+}
-+
-+void iscsit_release_discovery_tpg(void)
-+{
-+	struct iscsi_portal_group *tpg =3D iscsit_global->discovery_tpg;
-+
-+	if (!tpg)
-+		return;
-+
-+	core_tpg_deregister(&tpg->tpg_se_tpg);
-+
-+	kfree(tpg);
-+	iscsit_global->discovery_tpg =3D NULL;
-+}
-+
-+struct iscsi_portal_group *iscsit_get_tpg_from_np(
-+	struct iscsi_tiqn *tiqn,
-+	struct iscsi_np *np)
-+{
-+	struct iscsi_portal_group *tpg =3D NULL;
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	list_for_each_entry(tpg, &tiqn->tiqn_tpg_list, tpg_list) {
-+
-+		spin_lock(&tpg->tpg_state_lock);
-+		if (tpg->tpg_state =3D=3D TPG_STATE_FREE) {
-+			spin_unlock(&tpg->tpg_state_lock);
-+			continue;
-+		}
-+		spin_unlock(&tpg->tpg_state_lock);
-+
-+		spin_lock(&tpg->tpg_np_lock);
-+		list_for_each_entry(tpg_np, &tpg->tpg_gnp_list, tpg_np_list) {
-+			if (tpg_np->tpg_np =3D=3D np) {
-+				spin_unlock(&tpg->tpg_np_lock);
-+				spin_unlock(&tiqn->tiqn_tpg_lock);
-+				return tpg;
-+			}
-+		}
-+		spin_unlock(&tpg->tpg_np_lock);
-+	}
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return NULL;
-+}
-+
-+int iscsit_get_tpg(
-+	struct iscsi_portal_group *tpg)
-+{
-+	int ret;
-+
-+	ret =3D mutex_lock_interruptible(&tpg->tpg_access_lock);
-+	return ((ret !=3D 0) || signal_pending(current)) ? -1 : 0;
-+}
-+
-+void iscsit_put_tpg(struct iscsi_portal_group *tpg)
-+{
-+	mutex_unlock(&tpg->tpg_access_lock);
-+}
-+
-+static void iscsit_clear_tpg_np_login_thread(
-+	struct iscsi_tpg_np *tpg_np,
-+	struct iscsi_portal_group *tpg)
-+{
-+	if (!tpg_np->tpg_np) {
-+		printk(KERN_ERR "struct iscsi_tpg_np->tpg_np is NULL!\n");
-+		return;
-+	}
-+
-+	iscsit_reset_np_thread(tpg_np->tpg_np, tpg_np, tpg);
-+}
-+
-+void iscsit_clear_tpg_np_login_threads(
-+	struct iscsi_portal_group *tpg)
-+{
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_for_each_entry(tpg_np, &tpg->tpg_gnp_list, tpg_np_list) {
-+		if (!tpg_np->tpg_np) {
-+			printk(KERN_ERR "struct iscsi_tpg_np->tpg_np is NULL!\n");
-+			continue;
-+		}
-+		spin_unlock(&tpg->tpg_np_lock);
-+		iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
-+		spin_lock(&tpg->tpg_np_lock);
-+	}
-+	spin_unlock(&tpg->tpg_np_lock);
-+}
-+
-+void iscsit_tpg_dump_params(struct iscsi_portal_group *tpg)
-+{
-+	iscsi_print_params(tpg->param_list);
-+}
-+
-+static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *=
-tpg)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	a->authentication =3D TA_AUTHENTICATION;
-+	a->login_timeout =3D TA_LOGIN_TIMEOUT;
-+	a->netif_timeout =3D TA_NETIF_TIMEOUT;
-+	a->default_cmdsn_depth =3D TA_DEFAULT_CMDSN_DEPTH;
-+	a->generate_node_acls =3D TA_GENERATE_NODE_ACLS;
-+	a->cache_dynamic_acls =3D TA_CACHE_DYNAMIC_ACLS;
-+	a->demo_mode_write_protect =3D TA_DEMO_MODE_WRITE_PROTECT;
-+	a->prod_mode_write_protect =3D TA_PROD_MODE_WRITE_PROTECT;
-+}
-+
-+int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_=
-portal_group *tpg)
-+{
-+	if (tpg->tpg_state !=3D TPG_STATE_FREE) {
-+		printk(KERN_ERR "Unable to add iSCSI Target Portal Group: %d"
-+			" while not in TPG_STATE_FREE state.\n", tpg->tpgt);
-+		return -EEXIST;
-+	}
-+	iscsit_set_default_tpg_attribs(tpg);
-+
-+	if (iscsi_create_default_params(&tpg->param_list) < 0)
-+		goto err_out;
-+
-+	ISCSI_TPG_ATTRIB(tpg)->tpg =3D tpg;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state	=3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	list_add_tail(&tpg->tpg_list, &tiqn->tiqn_tpg_list);
-+	tiqn->tiqn_ntpgs++;
-+	printk(KERN_INFO "CORE[%s]_TPG[%hu] - Added iSCSI Target Portal Group=
-\n",
-+			tiqn->tiqn, tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+err_out:
-+	if (tpg->param_list) {
-+		iscsi_release_param_list(tpg->param_list);
-+		tpg->param_list =3D NULL;
-+	}
-+	kfree(tpg);
-+	return -ENOMEM;
-+}
-+
-+int iscsit_tpg_del_portal_group(
-+	struct iscsi_tiqn *tiqn,
-+	struct iscsi_portal_group *tpg,
-+	int force)
-+{
-+	u8 old_state =3D tpg->tpg_state;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state =3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	if (iscsit_release_sessions_for_tpg(tpg, force) < 0) {
-+		printk(KERN_ERR "Unable to delete iSCSI Target Portal Group:"
-+			" %hu while active sessions exist, and force=3D0\n",
-+			tpg->tpgt);
-+		tpg->tpg_state =3D old_state;
-+		return -EPERM;
-+	}
-+
-+	core_tpg_clear_object_luns(&tpg->tpg_se_tpg);
-+
-+	if (tpg->param_list) {
-+		iscsi_release_param_list(tpg->param_list);
-+		tpg->param_list =3D NULL;
-+	}
-+
-+	core_tpg_deregister(&tpg->tpg_se_tpg);
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state =3D TPG_STATE_FREE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_ntpgs--;
-+	list_del(&tpg->tpg_list);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	printk(KERN_INFO "CORE[%s]_TPG[%hu] - Deleted iSCSI Target Portal Gro=
-up\n",
-+			tiqn->tiqn, tpg->tpgt);
-+
-+	kfree(tpg);
-+	return 0;
-+}
-+
-+int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
-+{
-+	struct iscsi_param *param;
-+	struct iscsi_tiqn *tiqn =3D tpg->tpg_tiqn;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	if (tpg->tpg_state =3D=3D TPG_STATE_ACTIVE) {
-+		printk(KERN_ERR "iSCSI target portal group: %hu is already"
-+			" active, ignoring request.\n", tpg->tpgt);
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -EINVAL;
++	struct iscsi_session *sess =3D conn->sess;
++	struct iscsi_node_attrib *na =3D iscsit_tpg_get_node_attrib(sess);
++#if 0
++	struct iscsi_init_task_mgt_cmnd *hdr =3D
++		(struct iscsi_init_task_mgt_cmnd *) buf;
++#endif
++	if (!na->tmr_warm_reset) {
++		printk(KERN_ERR "TMR Opcode TARGET_WARM_RESET authorization"
++			" failed for Initiator Node: %s\n",
++			sess->se_sess->se_node_acl->initiatorname);
++		 return -1;
 +	}
 +	/*
-+	 * Make sure that AuthMethod does not contain None as an option
-+	 * unless explictly disabled.  Set the default to CHAP if authenticat=
-ion
-+	 * is enforced (as per default), and remove the NONE option.
++	 * Do the real work in transport_generic_do_tmr().
 +	 */
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param) {
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -ENOMEM;
-+	}
-+
-+	if (ISCSI_TPG_ATTRIB(tpg)->authentication) {
-+		if (!strcmp(param->value, NONE))
-+			if (iscsi_update_param_value(param, CHAP) < 0) {
-+				spin_unlock(&tpg->tpg_state_lock);
-+				return -ENOMEM;
-+			}
-+		if (iscsit_ta_authentication(tpg, 1) < 0) {
-+			spin_unlock(&tpg->tpg_state_lock);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	tpg->tpg_state =3D TPG_STATE_ACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_active_tpgs++;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Enabled iSCSI Target Portal Group\=
-n",
-+			tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
 +	return 0;
 +}
 +
-+int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *tpg, in=
-t force)
++int iscsit_tmr_task_cold_reset(
++	struct iscsi_conn *conn,
++	struct iscsi_tmr_req *tmr_req,
++	unsigned char *buf)
 +{
-+	struct iscsi_tiqn *tiqn;
-+	u8 old_state =3D tpg->tpg_state;
++	struct iscsi_session *sess =3D conn->sess;
++	struct iscsi_node_attrib *na =3D iscsit_tpg_get_node_attrib(sess);
 +
-+	spin_lock(&tpg->tpg_state_lock);
-+	if (tpg->tpg_state =3D=3D TPG_STATE_INACTIVE) {
-+		printk(KERN_ERR "iSCSI Target Portal Group: %hu is already"
-+			" inactive, ignoring request.\n", tpg->tpgt);
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -EINVAL;
++	if (!na->tmr_cold_reset) {
++		printk(KERN_ERR "TMR Opcode TARGET_COLD_RESET authorization"
++			" failed for Initiator Node: %s\n",
++			sess->se_sess->se_node_acl->initiatorname);
++		return -1;
 +	}
-+	tpg->tpg_state =3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	iscsit_clear_tpg_np_login_threads(tpg);
-+
-+	if (iscsit_release_sessions_for_tpg(tpg, force) < 0) {
-+		spin_lock(&tpg->tpg_state_lock);
-+		tpg->tpg_state =3D old_state;
-+		spin_unlock(&tpg->tpg_state_lock);
-+		printk(KERN_ERR "Unable to disable iSCSI Target Portal Group:"
-+			" %hu while active sessions exist, and force=3D0\n",
-+			tpg->tpgt);
-+		return -EPERM;
-+	}
-+
-+	tiqn =3D tpg->tpg_tiqn;
-+	if (!tiqn || (tpg =3D=3D iscsit_global->discovery_tpg))
-+		return 0;
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_active_tpgs--;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Disabled iSCSI Target Portal Group=
-\n",
-+			tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
++	/*
++	 * Do the real work in transport_generic_do_tmr().
++	 */
 +	return 0;
 +}
 +
-+struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(
++u8 iscsit_tmr_task_reassign(
++	struct iscsi_cmd *cmd,
++	unsigned char *buf)
++{
++	struct iscsi_cmd *ref_cmd =3D NULL;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct iscsi_conn_recovery *cr =3D NULL;
++	struct iscsi_tmr_req *tmr_req =3D cmd->tmr_req;
++	struct se_tmr_req *se_tmr =3D SE_CMD(cmd)->se_tmr_req;
++	struct iscsi_tm *hdr =3D (struct iscsi_tm *) buf;
++	int ret;
++
++	TRACE(TRACE_ERL2, "Got TASK_REASSIGN TMR ITT: 0x%08x,"
++		" RefTaskTag: 0x%08x, ExpDataSN: 0x%08x, CID: %hu\n",
++		hdr->itt, hdr->rtt, hdr->exp_datasn, conn->cid);
++
++	if (conn->sess->sess_ops->ErrorRecoveryLevel !=3D 2) {
++		printk(KERN_ERR "TMR TASK_REASSIGN not supported in ERL<2,"
++				" ignoring request.\n");
++		return ISCSI_TMF_RSP_NOT_SUPPORTED;
++	}
++
++	ret =3D iscsit_find_cmd_for_recovery(conn->sess, &ref_cmd, &cr, hdr->=
+rtt);
++	if (ret =3D=3D -2) {
++		printk(KERN_ERR "Command ITT: 0x%08x is still alligent to CID:"
++			" %hu\n", ref_cmd->init_task_tag, cr->cid);
++		return ISCSI_TMF_RSP_TASK_ALLEGIANT;
++	} else if (ret =3D=3D -1) {
++		printk(KERN_ERR "Unable to locate RefTaskTag: 0x%08x in"
++			" connection recovery command list.\n", hdr->rtt);
++		return ISCSI_TMF_RSP_NO_TASK;
++	}
++	/*
++	 * Temporary check to prevent connection recovery for
++	 * connections with a differing MaxRecvDataSegmentLength.
++	 */
++	if (cr->maxrecvdatasegmentlength !=3D
++	    conn->conn_ops->MaxRecvDataSegmentLength) {
++		printk(KERN_ERR "Unable to perform connection recovery for"
++			" differing MaxRecvDataSegmentLength, rejecting"
++			" TMR TASK_REASSIGN.\n");
++		return ISCSI_TMF_RSP_REJECTED;
++	}
++
++	se_tmr->ref_task_tag		=3D hdr->rtt;
++	se_tmr->ref_cmd			=3D &ref_cmd->se_cmd;
++	se_tmr->ref_task_lun		=3D get_unaligned_le64(&hdr->lun[0]);
++	tmr_req->ref_cmd_sn		=3D hdr->refcmdsn;
++	tmr_req->exp_data_sn		=3D hdr->exp_datasn;
++	tmr_req->conn_recovery		=3D cr;
++	tmr_req->task_reassign		=3D 1;
++	/*
++	 * Command can now be reassigned to a new connection.
++	 * The task management response must be sent before the
++	 * reassignment actually happens.  See iscsi_tmr_post_handler().
++	 */
++	return ISCSI_TMF_RSP_COMPLETE;
++}
++
++static void iscsit_task_reassign_remove_cmd(
++	struct iscsi_cmd *cmd,
++	struct iscsi_conn_recovery *cr,
 +	struct iscsi_session *sess)
 +{
-+	struct se_session *se_sess =3D sess->se_sess;
-+	struct se_node_acl *se_nacl =3D se_sess->se_node_acl;
-+	struct iscsi_node_acl *acl =3D container_of(se_nacl, struct iscsi_nod=
-e_acl,
-+					se_node_acl);
++	int ret;
 +
-+	return &acl->node_attrib;
++	spin_lock(&cr->conn_recovery_cmd_lock);
++	ret =3D iscsit_remove_cmd_from_connection_recovery(cmd, sess);
++	spin_unlock(&cr->conn_recovery_cmd_lock);
++	if (!ret) {
++		printk(KERN_INFO "iSCSI connection recovery successful for CID:"
++			" %hu on SID: %u\n", cr->cid, sess->sid);
++		iscsit_remove_active_connection_recovery_entry(cr, sess);
++	}
 +}
 +
-+struct iscsi_tpg_np *iscsit_tpg_locate_child_np(
-+	struct iscsi_tpg_np *tpg_np,
-+	int network_transport)
++static int iscsit_task_reassign_complete_nop_out(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
 +{
-+	struct iscsi_tpg_np *tpg_np_child, *tpg_np_child_tmp;
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	struct iscsi_conn_recovery *cr;
 +
-+	spin_lock(&tpg_np->tpg_np_parent_lock);
-+	list_for_each_entry_safe(tpg_np_child, tpg_np_child_tmp,
-+			&tpg_np->tpg_np_parent_list, tpg_np_child_list) {
-+		if (tpg_np_child->tpg_np->np_network_transport =3D=3D
-+				network_transport) {
-+			spin_unlock(&tpg_np->tpg_np_parent_lock);
-+			return tpg_np_child;
-+		}
++	if (!cmd->cr) {
++		printk(KERN_ERR "struct iscsi_conn_recovery pointer for ITT: 0x%08x"
++			" is NULL!\n", cmd->init_task_tag);
++		return -1;
 +	}
-+	spin_unlock(&tpg_np->tpg_np_parent_lock);
++	cr =3D cmd->cr;
 +
-+	return NULL;
-+}
-+
-+struct iscsi_tpg_np *iscsit_tpg_add_network_portal(
-+	struct iscsi_portal_group *tpg,
-+	struct __kernel_sockaddr_storage *sockaddr,
-+	char *ip_str,
-+	struct iscsi_tpg_np *tpg_np_parent,
-+	int network_transport)
-+{
-+	struct iscsi_np *np;
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	tpg_np =3D kzalloc(sizeof(struct iscsi_tpg_np), GFP_KERNEL);
-+	if (!tpg_np) {
-+		printk(KERN_ERR "Unable to allocate memory for"
-+				" struct iscsi_tpg_np.\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	np =3D iscsit_add_np(sockaddr, ip_str, network_transport);
-+	if (IS_ERR(np)) {
-+		kfree(tpg_np);
-+		return ERR_CAST(np);
-+	}
-+
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_list);
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_child_list);
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_parent_list);
-+	spin_lock_init(&tpg_np->tpg_np_parent_lock);
-+	tpg_np->tpg_np		=3D np;
-+	tpg_np->tpg		=3D tpg;
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_add_tail(&tpg_np->tpg_np_list, &tpg->tpg_gnp_list);
-+	tpg->num_tpg_nps++;
-+	if (tpg->tpg_tiqn)
-+		tpg->tpg_tiqn->tiqn_num_tpg_nps++;
-+	spin_unlock(&tpg->tpg_np_lock);
-+
-+	if (tpg_np_parent) {
-+		tpg_np->tpg_np_parent =3D tpg_np_parent;
-+		spin_lock(&tpg_np_parent->tpg_np_parent_lock);
-+		list_add_tail(&tpg_np->tpg_np_child_list,
-+			&tpg_np_parent->tpg_np_parent_list);
-+		spin_unlock(&tpg_np_parent->tpg_np_parent_lock);
-+	}
-+
-+	printk(KERN_INFO "CORE[%s] - Added Network Portal: %s:%hu,%hu on %s\n=
-",
-+		tpg->tpg_tiqn->tiqn, np->np_ip, np->np_port, tpg->tpgt,
-+		(np->np_network_transport =3D=3D ISCSI_TCP) ? "TCP" : "SCTP");
-+
-+	return tpg_np;
-+}
-+
-+static int iscsit_tpg_release_np(
-+	struct iscsi_tpg_np *tpg_np,
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_np *np)
-+{
-+	iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
-+
-+	printk(KERN_INFO "CORE[%s] - Removed Network Portal: %s:%hu,%hu on %s=
-\n",
-+		tpg->tpg_tiqn->tiqn, np->np_ip, np->np_port, tpg->tpgt,
-+		(np->np_network_transport =3D=3D ISCSI_TCP) ? "TCP" : "SCTP");
-+
-+	tpg_np->tpg_np =3D NULL;
-+	tpg_np->tpg =3D NULL;
-+	kfree(tpg_np);
 +	/*
-+	 * iscsit_del_np() will shutdown struct iscsi_np when last TPG refere=
-nce is released.
++	 * Reset the StatSN so a new one for this commands new connection
++	 * will be assigned.
++	 * Reset the ExpStatSN as well so we may receive Status SNACKs.
 +	 */
-+	return iscsit_del_np(np);
++	cmd->stat_sn =3D cmd->exp_stat_sn =3D 0;
++
++	iscsit_task_reassign_remove_cmd(cmd, cr, conn->sess);
++
++	spin_lock_bh(&conn->cmd_lock);
++	list_add_tail(&cmd->i_list, &conn->conn_cmd_list);
++	spin_unlock_bh(&conn->cmd_lock);
++
++	cmd->i_state =3D ISTATE_SEND_NOPIN;
++	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++	return 0;
 +}
 +
-+int iscsit_tpg_del_network_portal(
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_tpg_np *tpg_np)
++static int iscsit_task_reassign_complete_write(
++	struct iscsi_cmd *cmd,
++	struct iscsi_tmr_req *tmr_req)
 +{
-+	struct iscsi_np *np;
-+	struct iscsi_tpg_np *tpg_np_child, *tpg_np_child_tmp;
-+	int ret =3D 0;
-+
-+	np =3D tpg_np->tpg_np;
-+	if (!np) {
-+		printk(KERN_ERR "Unable to locate struct iscsi_np from"
-+				" struct iscsi_tpg_np\n");
-+		return -EINVAL;
-+	}
-+
-+	if (!tpg_np->tpg_np_parent) {
-+		/*
-+		 * We are the parent tpg network portal.  Release all of the
-+		 * child tpg_np's (eg: the non ISCSI_TCP ones) on our parent
-+		 * list first.
-+		 */
-+		list_for_each_entry_safe(tpg_np_child, tpg_np_child_tmp,
-+				&tpg_np->tpg_np_parent_list,
-+				tpg_np_child_list) {
-+			ret =3D iscsit_tpg_del_network_portal(tpg, tpg_np_child);
-+			if (ret < 0)
-+				printk(KERN_ERR "iscsit_tpg_del_network_portal()"
-+					" failed: %d\n", ret);
-+		}
++	int no_build_r2ts =3D 0;
++	u32 length =3D 0, offset =3D 0;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct se_cmd *se_cmd =3D SE_CMD(cmd);
++	/*
++	 * The Initiator must not send a R2T SNACK with a Begrun less than
++	 * the TMR TASK_REASSIGN's ExpDataSN.
++	 */
++	if (!tmr_req->exp_data_sn) {
++		cmd->cmd_flags &=3D ~ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D 0;
 +	} else {
-+		/*
-+		 * We are not the parent ISCSI_TCP tpg network portal.  Release
-+		 * our own network portals from the child list.
-+		 */
-+		spin_lock(&tpg_np->tpg_np_parent->tpg_np_parent_lock);
-+		list_del(&tpg_np->tpg_np_child_list);
-+		spin_unlock(&tpg_np->tpg_np_parent->tpg_np_parent_lock);
++		cmd->cmd_flags |=3D ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D (tmr_req->exp_data_sn - 1);
 +	}
 +
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_del(&tpg_np->tpg_np_list);
-+	tpg->num_tpg_nps--;
-+	if (tpg->tpg_tiqn)
-+		tpg->tpg_tiqn->tiqn_num_tpg_nps--;
-+	spin_unlock(&tpg->tpg_np_lock);
++	/*
++	 * The TMR TASK_REASSIGN's ExpDataSN contains the next R2TSN the
++	 * Initiator is expecting.  The Target controls all WRITE operations
++	 * so if we have received all DataOUT we can safety ignore Initiator.
++	 */
++	if (cmd->cmd_flags & ICF_GOT_LAST_DATAOUT) {
++		if (!atomic_read(&cmd->transport_sent)) {
++			TRACE(TRACE_ERL2, "WRITE ITT: 0x%08x: t_state: %d"
++				" never sent to transport\n",
++				cmd->init_task_tag, cmd->se_cmd.t_state);
++			return transport_generic_handle_data(se_cmd);
++		}
 +
-+	return iscsit_tpg_release_np(tpg_np, tpg, np);
++		cmd->i_state =3D ISTATE_SEND_STATUS;
++		iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++		return 0;
++	}
++
++	/*
++	 * Special case to deal with DataSequenceInOrder=3DNo and Non-Immeida=
+te
++	 * Unsolicited DataOut.
++	 */
++	if (cmd->unsolicited_data) {
++		cmd->unsolicited_data =3D 0;
++
++		offset =3D cmd->next_burst_len =3D cmd->write_data_done;
++
++		if ((conn->sess->sess_ops->FirstBurstLength - offset) >=3D
++		     cmd->data_length) {
++			no_build_r2ts =3D 1;
++			length =3D (cmd->data_length - offset);
++		} else
++			length =3D (conn->sess->sess_ops->FirstBurstLength - offset);
++
++		spin_lock_bh(&cmd->r2t_lock);
++		if (iscsit_add_r2t_to_list(cmd, offset, length, 0, 0) < 0) {
++			spin_unlock_bh(&cmd->r2t_lock);
++			return -1;
++		}
++		cmd->outstanding_r2ts++;
++		spin_unlock_bh(&cmd->r2t_lock);
++
++		if (no_build_r2ts)
++			return 0;
++	}
++	/*
++	 * iscsit_build_r2ts_for_cmd() can handle the rest from here.
++	 */
++	return iscsit_build_r2ts_for_cmd(cmd, conn, 2);
 +}
 +
-+int iscsit_tpg_set_initiator_node_queue_depth(
-+	struct iscsi_portal_group *tpg,
-+	unsigned char *initiatorname,
-+	u32 queue_depth,
-+	int force)
++static int iscsit_task_reassign_complete_read(
++	struct iscsi_cmd *cmd,
++	struct iscsi_tmr_req *tmr_req)
 +{
-+	return core_tpg_set_initiator_node_queue_depth(&tpg->tpg_se_tpg,
-+		initiatorname, queue_depth, force);
-+}
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct iscsi_datain_req *dr;
++	struct se_cmd *se_cmd =3D SE_CMD(cmd);
++	/*
++	 * The Initiator must not send a Data SNACK with a BegRun less than
++	 * the TMR TASK_REASSIGN's ExpDataSN.
++	 */
++	if (!tmr_req->exp_data_sn) {
++		cmd->cmd_flags &=3D ~ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D 0;
++	} else {
++		cmd->cmd_flags |=3D ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D (tmr_req->exp_data_sn - 1);
++	}
 +
-+int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authe=
-ntication)
-+{
-+	unsigned char buf1[256], buf2[256], *none =3D NULL;
-+	int len;
-+	struct iscsi_param *param;
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
++	if (!atomic_read(&cmd->transport_sent)) {
++		printk(KERN_INFO "READ ITT: 0x%08x: t_state: %d never sent to"
++			" transport\n", cmd->init_task_tag,
++			SE_CMD(cmd)->t_state);
++		transport_generic_handle_cdb(se_cmd);
++		return 0;
++	}
 +
-+	if ((authentication !=3D 1) && (authentication !=3D 0)) {
-+		printk(KERN_ERR "Illegal value for authentication parameter:"
-+			" %u, ignoring request.\n", authentication);
++	if (!atomic_read(&se_cmd->t_task->t_transport_complete)) {
++		printk(KERN_ERR "READ ITT: 0x%08x: t_state: %d, never returned"
++			" from transport\n", cmd->init_task_tag,
++			SE_CMD(cmd)->t_state);
 +		return -1;
 +	}
 +
-+	memset(buf1, 0, sizeof(buf1));
-+	memset(buf2, 0, sizeof(buf2));
++	dr =3D iscsit_allocate_datain_req();
++	if (!dr)
++		return -1;
++	/*
++	 * The TMR TASK_REASSIGN's ExpDataSN contains the next DataSN the
++	 * Initiator is expecting.
++	 */
++	dr->data_sn =3D dr->begrun =3D tmr_req->exp_data_sn;
++	dr->runlength =3D 0;
++	dr->generate_recovery_values =3D 1;
++	dr->recovery =3D DATAIN_CONNECTION_RECOVERY;
 +
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param)
-+		return -EINVAL;
++	iscsit_attach_datain_req(cmd, dr);
 +
-+	if (authentication) {
-+		snprintf(buf1, sizeof(buf1), "%s", param->value);
-+		none =3D strstr(buf1, NONE);
-+		if (!none)
-+			goto out;
-+		if (!strncmp(none + 4, ",", 1)) {
-+			if (!strcmp(buf1, none))
-+				sprintf(buf2, "%s", none+5);
-+			else {
-+				none--;
-+				*none =3D '\0';
-+				len =3D sprintf(buf2, "%s", buf1);
-+				none +=3D 5;
-+				sprintf(buf2 + len, "%s", none);
-+			}
-+		} else {
-+			none--;
-+			*none =3D '\0';
-+			sprintf(buf2, "%s", buf1);
++	cmd->i_state =3D ISTATE_SEND_DATAIN;
++	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++	return 0;
++}
++
++static int iscsit_task_reassign_complete_none(
++	struct iscsi_cmd *cmd,
++	struct iscsi_tmr_req *tmr_req)
++{
++	struct iscsi_conn *conn =3D cmd->conn;
++
++	cmd->i_state =3D ISTATE_SEND_STATUS;
++	iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++	return 0;
++}
++
++static int iscsit_task_reassign_complete_scsi_cmnd(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	struct iscsi_conn_recovery *cr;
++
++	if (!cmd->cr) {
++		printk(KERN_ERR "struct iscsi_conn_recovery pointer for ITT: 0x%08x"
++			" is NULL!\n", cmd->init_task_tag);
++		return -1;
++	}
++	cr =3D cmd->cr;
++
++	/*
++	 * Reset the StatSN so a new one for this commands new connection
++	 * will be assigned.
++	 * Reset the ExpStatSN as well so we may receive Status SNACKs.
++	 */
++	cmd->stat_sn =3D cmd->exp_stat_sn =3D 0;
++
++	iscsit_task_reassign_remove_cmd(cmd, cr, conn->sess);
++
++	spin_lock_bh(&conn->cmd_lock);
++	list_add_tail(&cmd->i_list, &conn->conn_cmd_list);
++	spin_unlock_bh(&conn->cmd_lock);
++
++	if (se_cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
++		cmd->i_state =3D ISTATE_SEND_STATUS;
++		iscsit_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++		return 0;
++	}
++
++	switch (cmd->data_direction) {
++	case DMA_TO_DEVICE:
++		return iscsit_task_reassign_complete_write(cmd, tmr_req);
++	case DMA_FROM_DEVICE:
++		return iscsit_task_reassign_complete_read(cmd, tmr_req);
++	case DMA_NONE:
++		return iscsit_task_reassign_complete_none(cmd, tmr_req);
++	default:
++		printk(KERN_ERR "Unknown cmd->data_direction: 0x%02x\n",
++				cmd->data_direction);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int iscsit_task_reassign_complete(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd;
++	struct iscsi_cmd *cmd;
++	int ret =3D 0;
++
++	if (!se_tmr->ref_cmd) {
++		printk(KERN_ERR "TMR Request is missing a RefCmd struct iscsi_cmd.\n=
+");
++		return -1;
++	}
++	se_cmd =3D se_tmr->ref_cmd;
++	cmd =3D container_of(se_cmd, struct iscsi_cmd, se_cmd);
++
++	cmd->conn =3D conn;
++
++	switch (cmd->iscsi_opcode) {
++	case ISCSI_OP_NOOP_OUT:
++		ret =3D iscsit_task_reassign_complete_nop_out(tmr_req, conn);
++		break;
++	case ISCSI_OP_SCSI_CMD:
++		ret =3D iscsit_task_reassign_complete_scsi_cmnd(tmr_req, conn);
++		break;
++	default:
++		 printk(KERN_ERR "Illegal iSCSI Opcode 0x%02x during"
++			" command realligence\n", cmd->iscsi_opcode);
++		return -1;
++	}
++
++	if (ret !=3D 0)
++		return ret;
++
++	TRACE(TRACE_ERL2, "Completed connection realligence for Opcode: 0x%02=
+x,"
++		" ITT: 0x%08x to CID: %hu.\n", cmd->iscsi_opcode,
++			cmd->init_task_tag, conn->cid);
++
++	return 0;
++}
++
++/*
++ *	Handles special after-the-fact actions related to TMRs.
++ *	Right now the only one that its really needed for is
++ *	connection recovery releated TASK_REASSIGN.
++ */
++extern int iscsit_tmr_post_handler(struct iscsi_cmd *cmd, struct iscsi=
+_conn *conn)
++{
++	struct iscsi_tmr_req *tmr_req =3D cmd->tmr_req;
++	struct se_tmr_req *se_tmr =3D SE_CMD(cmd)->se_tmr_req;
++
++	if (tmr_req->task_reassign &&
++	   (se_tmr->response =3D=3D ISCSI_TMF_RSP_COMPLETE))
++		return iscsit_task_reassign_complete(tmr_req, conn);
++
++	return 0;
++}
++
++/*
++ *	Nothing to do here, but leave it for good measure. :-)
++ */
++int iscsit_task_reassign_prepare_read(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	return 0;
++}
++
++static void iscsit_task_reassign_prepare_unsolicited_dataout(
++	struct iscsi_cmd *cmd,
++	struct iscsi_conn *conn)
++{
++	int i, j;
++	struct iscsi_pdu *pdu =3D NULL;
++	struct iscsi_seq *seq =3D NULL;
++
++	if (conn->sess->sess_ops->DataSequenceInOrder) {
++		cmd->data_sn =3D 0;
++
++		if (cmd->immediate_data)
++			cmd->r2t_offset +=3D (cmd->first_burst_len -
++				cmd->seq_start_offset);
++
++		if (conn->sess->sess_ops->DataPDUInOrder) {
++			cmd->write_data_done -=3D (cmd->immediate_data) ?
++						(cmd->first_burst_len -
++						 cmd->seq_start_offset) :
++						 cmd->first_burst_len;
++			cmd->first_burst_len =3D 0;
++			return;
 +		}
-+		if (iscsi_update_param_value(param, buf2) < 0)
-+			return -EINVAL;
++
++		for (i =3D 0; i < cmd->pdu_count; i++) {
++			pdu =3D &cmd->pdu_list[i];
++
++			if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++				continue;
++
++			if ((pdu->offset >=3D cmd->seq_start_offset) &&
++			   ((pdu->offset + pdu->length) <=3D
++			     cmd->seq_end_offset)) {
++				cmd->first_burst_len -=3D pdu->length;
++				cmd->write_data_done -=3D pdu->length;
++				pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++			}
++		}
 +	} else {
-+		snprintf(buf1, sizeof(buf1), "%s", param->value);
-+		none =3D strstr(buf1, NONE);
-+		if ((none))
-+			goto out;
-+		strncat(buf1, ",", strlen(","));
-+		strncat(buf1, NONE, strlen(NONE));
-+		if (iscsi_update_param_value(param, buf1) < 0)
-+			return -EINVAL;
++		for (i =3D 0; i < cmd->seq_count; i++) {
++			seq =3D &cmd->seq_list[i];
++
++			if (seq->type !=3D SEQTYPE_UNSOLICITED)
++				continue;
++
++			cmd->write_data_done -=3D
++					(seq->offset - seq->orig_offset);
++			cmd->first_burst_len =3D 0;
++			seq->data_sn =3D 0;
++			seq->offset =3D seq->orig_offset;
++			seq->next_burst_len =3D 0;
++			seq->status =3D DATAOUT_SEQUENCE_WITHIN_COMMAND_RECOVERY;
++
++			if (conn->sess->sess_ops->DataPDUInOrder)
++				continue;
++
++			for (j =3D 0; j < seq->pdu_count; j++) {
++				pdu =3D &cmd->pdu_list[j+seq->pdu_start];
++
++				if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++					continue;
++
++				pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++			}
++		}
 +	}
-+
-+out:
-+	a->authentication =3D authentication;
-+	printk(KERN_INFO "%s iSCSI Authentication Methods for TPG: %hu.\n",
-+		a->authentication ? "Enforcing" : "Disabling", tpg->tpgt);
-+
-+	return 0;
 +}
 +
-+int iscsit_ta_login_timeout(
-+	struct iscsi_portal_group *tpg,
-+	u32 login_timeout)
++int iscsit_task_reassign_prepare_write(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
 +{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	struct iscsi_pdu *pdu =3D NULL;
++	struct iscsi_r2t *r2t =3D NULL, *r2t_tmp;
++	int first_incomplete_r2t =3D 1, i =3D 0;
 +
-+	if (login_timeout > TA_LOGIN_TIMEOUT_MAX) {
-+		printk(KERN_ERR "Requested Login Timeout %u larger than maximum"
-+			" %u\n", login_timeout, TA_LOGIN_TIMEOUT_MAX);
-+		return -EINVAL;
-+	} else if (login_timeout < TA_LOGIN_TIMEOUT_MIN) {
-+		printk(KERN_ERR "Requested Logout Timeout %u smaller than"
-+			" minimum %u\n", login_timeout, TA_LOGIN_TIMEOUT_MIN);
-+		return -EINVAL;
++	/*
++	 * The command was in the process of receiving Unsolicited DataOUT wh=
+en
++	 * the connection failed.
++	 */
++	if (cmd->unsolicited_data)
++		iscsit_task_reassign_prepare_unsolicited_dataout(cmd, conn);
++
++	/*
++	 * The Initiator is requesting R2Ts starting from zero,  skip
++	 * checking acknowledged R2Ts and start checking struct iscsi_r2ts
++	 * greater than zero.
++	 */
++	if (!tmr_req->exp_data_sn)
++		goto drop_unacknowledged_r2ts;
++
++	/*
++	 * We now check that the PDUs in DataOUT sequences below
++	 * the TMR TASK_REASSIGN ExpDataSN (R2TSN the Initiator is
++	 * expecting next) have all the DataOUT they require to complete
++	 * the DataOUT sequence.  First scan from R2TSN 0 to TMR
++	 * TASK_REASSIGN ExpDataSN-1.
++	 *
++	 * If we have not received all DataOUT in question,  we must
++	 * make sure to make the appropriate changes to values in
++	 * struct iscsi_cmd (and elsewhere depending on session parameters)
++	 * so iscsit_build_r2ts_for_cmd() in iscsit_task_reassign_complete_wr=
+ite()
++	 * will resend a new R2T for the DataOUT sequences in question.
++	 */
++	spin_lock_bh(&cmd->r2t_lock);
++	if (list_empty(&cmd->cmd_r2t_list)) {
++		spin_unlock_bh(&cmd->r2t_lock);
++		return -1;
 +	}
 +
-+	a->login_timeout =3D login_timeout;
-+	printk(KERN_INFO "Set Logout Timeout to %u for Target Portal Group"
-+		" %hu\n", a->login_timeout, tpg->tpgt);
++	list_for_each_entry(r2t, &cmd->cmd_r2t_list, r2t_list) {
++
++		if (r2t->r2t_sn >=3D tmr_req->exp_data_sn)
++			continue;
++		/*
++		 * Safely ignore Recovery R2Ts and R2Ts that have completed
++		 * DataOUT sequences.
++		 */
++		if (r2t->seq_complete)
++			continue;
++
++		if (r2t->recovery_r2t)
++			continue;
++
++		/*
++		 *                 DataSequenceInOrder=3DYes:
++		 *
++		 * Taking into account the iSCSI implementation requirement of
++		 * MaxOutstandingR2T=3D1 while ErrorRecoveryLevel>0 and
++		 * DataSequenceInOrder=3DYes, we must take into consideration
++		 * the following:
++		 *
++		 *                  DataSequenceInOrder=3DNo:
++		 *
++		 * Taking into account that the Initiator controls the (possibly
++		 * random) PDU Order in (possibly random) Sequence Order of
++		 * DataOUT the target requests with R2Ts,  we must take into
++		 * consideration the following:
++		 *
++		 *      DataPDUInOrder=3DYes for DataSequenceInOrder=3D[Yes,No]:
++		 *
++		 * While processing non-complete R2T DataOUT sequence requests
++		 * the Target will re-request only the total sequence length
++		 * minus current received offset.  This is because we must
++		 * assume the initiator will continue sending DataOUT from the
++		 * last PDU before the connection failed.
++		 *
++		 *      DataPDUInOrder=3DNo for DataSequenceInOrder=3D[Yes,No]:
++		 *
++		 * While processing non-complete R2T DataOUT sequence requests
++		 * the Target will re-request the entire DataOUT sequence if
++		 * any single PDU is missing from the sequence.  This is because
++		 * we have no logical method to determine the next PDU offset,
++		 * and we must assume the Initiator will be sending any random
++		 * PDU offset in the current sequence after TASK_REASSIGN
++		 * has completed.
++		 */
++		if (conn->sess->sess_ops->DataSequenceInOrder) {
++			if (!first_incomplete_r2t) {
++				cmd->r2t_offset -=3D r2t->xfer_len;
++				goto next;
++			}
++
++			if (conn->sess->sess_ops->DataPDUInOrder) {
++				cmd->data_sn =3D 0;
++				cmd->r2t_offset -=3D (r2t->xfer_len -
++					cmd->next_burst_len);
++				first_incomplete_r2t =3D 0;
++				goto next;
++			}
++
++			cmd->data_sn =3D 0;
++			cmd->r2t_offset -=3D r2t->xfer_len;
++
++			for (i =3D 0; i < cmd->pdu_count; i++) {
++				pdu =3D &cmd->pdu_list[i];
++
++				if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++					continue;
++
++				if ((pdu->offset >=3D r2t->offset) &&
++				    (pdu->offset < (r2t->offset +
++						r2t->xfer_len))) {
++					cmd->next_burst_len -=3D pdu->length;
++					cmd->write_data_done -=3D pdu->length;
++					pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++				}
++			}
++
++			first_incomplete_r2t =3D 0;
++		} else {
++			struct iscsi_seq *seq;
++
++			seq =3D iscsit_get_seq_holder(cmd, r2t->offset,
++					r2t->xfer_len);
++			if (!seq) {
++				spin_unlock_bh(&cmd->r2t_lock);
++				return -1;
++			}
++
++			cmd->write_data_done -=3D
++					(seq->offset - seq->orig_offset);
++			seq->data_sn =3D 0;
++			seq->offset =3D seq->orig_offset;
++			seq->next_burst_len =3D 0;
++			seq->status =3D DATAOUT_SEQUENCE_WITHIN_COMMAND_RECOVERY;
++
++			cmd->seq_send_order--;
++
++			if (conn->sess->sess_ops->DataPDUInOrder)
++				goto next;
++
++			for (i =3D 0; i < seq->pdu_count; i++) {
++				pdu =3D &cmd->pdu_list[i+seq->pdu_start];
++
++				if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++					continue;
++
++				pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++			}
++		}
++
++next:
++		cmd->outstanding_r2ts--;
++	}
++	spin_unlock_bh(&cmd->r2t_lock);
++
++	/*
++	 * We now drop all unacknowledged R2Ts, ie: ExpDataSN from TMR
++	 * TASK_REASSIGN to the last R2T in the list..  We are also careful
++	 * to check that the Initiator is not requesting R2Ts for DataOUT
++	 * sequences it has already completed.
++	 *
++	 * Free each R2T in question and adjust values in struct iscsi_cmd
++	 * accordingly so iscsit_build_r2ts_for_cmd() do the rest of
++	 * the work after the TMR TASK_REASSIGN Response is sent.
++	 */
++drop_unacknowledged_r2ts:
++
++	cmd->cmd_flags &=3D ~ICF_SENT_LAST_R2T;
++	cmd->r2t_sn =3D tmr_req->exp_data_sn;
++
++	spin_lock_bh(&cmd->r2t_lock);
++	list_for_each_entry_safe(r2t, r2t_tmp, &cmd->cmd_r2t_list, r2t_list) =
+{
++		/*
++		 * Skip up to the R2T Sequence number provided by the
++		 * iSCSI TASK_REASSIGN TMR
++		 */
++		if (r2t->r2t_sn < tmr_req->exp_data_sn)
++			continue;
++
++		if (r2t->seq_complete) {
++			printk(KERN_ERR "Initiator is requesting R2Ts from"
++				" R2TSN: 0x%08x, but R2TSN: 0x%08x, Offset: %u,"
++				" Length: %u is already complete."
++				"   BAD INITIATOR ERL=3D2 IMPLEMENTATION!\n",
++				tmr_req->exp_data_sn, r2t->r2t_sn,
++				r2t->offset, r2t->xfer_len);
++			spin_unlock_bh(&cmd->r2t_lock);
++			return -1;
++		}
++
++		if (r2t->recovery_r2t) {
++			iscsit_free_r2t(r2t, cmd);
++			continue;
++		}
++
++		/*		   DataSequenceInOrder=3DYes:
++		 *
++		 * Taking into account the iSCSI implementation requirement of
++		 * MaxOutstandingR2T=3D1 while ErrorRecoveryLevel>0 and
++		 * DataSequenceInOrder=3DYes, it's safe to subtract the R2Ts
++		 * entire transfer length from the commands R2T offset marker.
++		 *
++		 *		   DataSequenceInOrder=3DNo:
++		 *
++		 * We subtract the difference from struct iscsi_seq between the
++		 * current offset and original offset from cmd->write_data_done
++		 * for account for DataOUT PDUs already received.  Then reset
++		 * the current offset to the original and zero out the current
++		 * burst length,  to make sure we re-request the entire DataOUT
++		 * sequence.
++		 */
++		if (conn->sess->sess_ops->DataSequenceInOrder)
++			cmd->r2t_offset -=3D r2t->xfer_len;
++		else
++			cmd->seq_send_order--;
++
++		cmd->outstanding_r2ts--;
++		iscsit_free_r2t(r2t, cmd);
++	}
++	spin_unlock_bh(&cmd->r2t_lock);
 +
 +	return 0;
 +}
 +
-+int iscsit_ta_netif_timeout(
-+	struct iscsi_portal_group *tpg,
-+	u32 netif_timeout)
++/*
++ *	Performs sanity checks TMR TASK_REASSIGN's ExpDataSN for
++ *	a given struct iscsi_cmd.
++ */
++int iscsit_check_task_reassign_expdatasn(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
 +{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *ref_cmd =3D container_of(se_cmd, struct iscsi_cmd, =
+se_cmd);
 +
-+	if (netif_timeout > TA_NETIF_TIMEOUT_MAX) {
-+		printk(KERN_ERR "Requested Network Interface Timeout %u larger"
-+			" than maximum %u\n", netif_timeout,
-+				TA_NETIF_TIMEOUT_MAX);
-+		return -EINVAL;
-+	} else if (netif_timeout < TA_NETIF_TIMEOUT_MIN) {
-+		printk(KERN_ERR "Requested Network Interface Timeout %u smaller"
-+			" than minimum %u\n", netif_timeout,
-+				TA_NETIF_TIMEOUT_MIN);
-+		return -EINVAL;
++	if (ref_cmd->iscsi_opcode !=3D ISCSI_OP_SCSI_CMD)
++		return 0;
++
++	if (se_cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION)
++		return 0;
++
++	if (ref_cmd->data_direction =3D=3D DMA_NONE)
++		return 0;
++
++	/*
++	 * For READs the TMR TASK_REASSIGNs ExpDataSN contains the next DataS=
+N
++	 * of DataIN the Initiator is expecting.
++	 *
++	 * Also check that the Initiator is not re-requesting DataIN that has
++	 * already been acknowledged with a DataAck SNACK.
++	 */
++	if (ref_cmd->data_direction =3D=3D DMA_FROM_DEVICE) {
++		if (tmr_req->exp_data_sn > ref_cmd->data_sn) {
++			printk(KERN_ERR "Received ExpDataSN: 0x%08x for READ"
++				" in TMR TASK_REASSIGN greater than command's"
++				" DataSN: 0x%08x.\n", tmr_req->exp_data_sn,
++				ref_cmd->data_sn);
++			return -1;
++		}
++		if ((ref_cmd->cmd_flags & ICF_GOT_DATACK_SNACK) &&
++		    (tmr_req->exp_data_sn <=3D ref_cmd->acked_data_sn)) {
++			printk(KERN_ERR "Received ExpDataSN: 0x%08x for READ"
++				" in TMR TASK_REASSIGN for previously"
++				" acknowledged DataIN: 0x%08x,"
++				" protocol error\n", tmr_req->exp_data_sn,
++				ref_cmd->acked_data_sn);
++			return -1;
++		}
++		return iscsit_task_reassign_prepare_read(tmr_req, conn);
 +	}
 +
-+	a->netif_timeout =3D netif_timeout;
-+	printk(KERN_INFO "Set Network Interface Timeout to %u for"
-+		" Target Portal Group %hu\n", a->netif_timeout, tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_generate_node_acls(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
++	/*
++	 * For WRITEs the TMR TASK_REASSIGNs ExpDataSN contains the next R2TS=
+N
++	 * for R2Ts the Initiator is expecting.
++	 *
++	 * Do the magic in iscsit_task_reassign_prepare_write().
++	 */
++	if (ref_cmd->data_direction =3D=3D DMA_TO_DEVICE) {
++		if (tmr_req->exp_data_sn > ref_cmd->r2t_sn) {
++			printk(KERN_ERR "Received ExpDataSN: 0x%08x for WRITE"
++				" in TMR TASK_REASSIGN greater than command's"
++				" R2TSN: 0x%08x.\n", tmr_req->exp_data_sn,
++					ref_cmd->r2t_sn);
++			return -1;
++		}
++		return iscsit_task_reassign_prepare_write(tmr_req, conn);
 +	}
 +
-+	a->generate_node_acls =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Generate Initiator Portal Group AC=
-Ls: %s\n",
-+		tpg->tpgt, (a->generate_node_acls) ? "Enabled" : "Disabled");
++	printk(KERN_ERR "Unknown iSCSI data_direction: 0x%02x\n",
++			ref_cmd->data_direction);
 +
-+	return 0;
++	return -1;
 +}
-+
-+int iscsit_ta_default_cmdsn_depth(
-+	struct iscsi_portal_group *tpg,
-+	u32 tcq_depth)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (tcq_depth > TA_DEFAULT_CMDSN_DEPTH_MAX) {
-+		printk(KERN_ERR "Requested Default Queue Depth: %u larger"
-+			" than maximum %u\n", tcq_depth,
-+				TA_DEFAULT_CMDSN_DEPTH_MAX);
-+		return -EINVAL;
-+	} else if (tcq_depth < TA_DEFAULT_CMDSN_DEPTH_MIN) {
-+		printk(KERN_ERR "Requested Default Queue Depth: %u smaller"
-+			" than minimum %u\n", tcq_depth,
-+				TA_DEFAULT_CMDSN_DEPTH_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->default_cmdsn_depth =3D tcq_depth;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Set Default CmdSN TCQ Depth to %u\=
-n",
-+		tpg->tpgt, a->default_cmdsn_depth);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_cache_dynamic_acls(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->cache_dynamic_acls =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Cache Dynamic Initiator Portal Gro=
-up"
-+		" ACLs %s\n", tpg->tpgt, (a->cache_dynamic_acls) ?
-+		"Enabled" : "Disabled");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_demo_mode_write_protect(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->demo_mode_write_protect =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Demo Mode Write Protect bit: %s\n"=
-,
-+		tpg->tpgt, (a->demo_mode_write_protect) ? "ON" : "OFF");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_prod_mode_write_protect(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->prod_mode_write_protect =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Production Mode Write Protect bit:=
-"
-+		" %s\n", tpg->tpgt, (a->prod_mode_write_protect) ?
-+		"ON" : "OFF");
-+
-+	return 0;
-+}
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/i=
-scsi/iscsi_target_tpg.h
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.h b/drivers/target/i=
+scsi/iscsi_target_tmr.h
 new file mode 100644
-index 0000000..dda48c1
+index 0000000..142e992
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_tpg.h
-@@ -0,0 +1,41 @@
-+#ifndef ISCSI_TARGET_TPG_H
-+#define ISCSI_TARGET_TPG_H
++++ b/drivers/target/iscsi/iscsi_target_tmr.h
+@@ -0,0 +1,14 @@
++#ifndef ISCSI_TARGET_TMR_H
++#define ISCSI_TARGET_TMR_H
 +
-+extern struct iscsi_portal_group *iscsit_alloc_portal_group(struct isc=
-si_tiqn *, u16);
-+extern int iscsit_load_discovery_tpg(void);
-+extern void iscsit_release_discovery_tpg(void);
-+extern struct iscsi_portal_group *iscsit_get_tpg_from_np(struct iscsi_=
-tiqn *,
-+			struct iscsi_np *);
-+extern int iscsit_get_tpg(struct iscsi_portal_group *);
-+extern void iscsit_put_tpg(struct iscsi_portal_group *);
-+extern void iscsit_clear_tpg_np_login_threads(struct iscsi_portal_grou=
-p *);
-+extern void iscsit_tpg_dump_params(struct iscsi_portal_group *);
-+extern int iscsit_tpg_add_portal_group(struct iscsi_tiqn *, struct isc=
-si_portal_group *);
-+extern int iscsit_tpg_del_portal_group(struct iscsi_tiqn *, struct isc=
-si_portal_group *,
-+			int);
-+extern int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *)=
-;
-+extern int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *=
-, int);
-+extern struct iscsi_node_acl *iscsit_tpg_add_initiator_node_acl(
-+			struct iscsi_portal_group *, const char *, u32);
-+extern void iscsit_tpg_del_initiator_node_acl(struct iscsi_portal_grou=
-p *,
-+			struct se_node_acl *);
-+extern struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(struct isc=
-si_session *);
-+extern void iscsit_tpg_del_external_nps(struct iscsi_tpg_np *);
-+extern struct iscsi_tpg_np *iscsit_tpg_locate_child_np(struct iscsi_tp=
-g_np *, int);
-+extern struct iscsi_tpg_np *iscsit_tpg_add_network_portal(struct iscsi=
-_portal_group *,
-+			struct __kernel_sockaddr_storage *, char *, struct iscsi_tpg_np *,
-+			int);
-+extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
-+			struct iscsi_tpg_np *);
-+extern int iscsit_tpg_set_initiator_node_queue_depth(struct iscsi_port=
-al_group *,
-+			unsigned char *, u32, int);
-+extern int iscsit_ta_authentication(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_login_timeout(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_netif_timeout(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_generate_node_acls(struct iscsi_portal_group *, u=
-32);
-+extern int iscsit_ta_default_cmdsn_depth(struct iscsi_portal_group *, =
-u32);
-+extern int iscsit_ta_cache_dynamic_acls(struct iscsi_portal_group *, u=
-32);
-+extern int iscsit_ta_demo_mode_write_protect(struct iscsi_portal_group=
- *, u32);
-+extern int iscsit_ta_prod_mode_write_protect(struct iscsi_portal_group=
- *, u32);
++extern u8 iscsit_tmr_abort_task(struct iscsi_cmd *, unsigned char *);
++extern int iscsit_tmr_task_warm_reset(struct iscsi_conn *, struct iscs=
+i_tmr_req *,
++			unsigned char *);
++extern int iscsit_tmr_task_cold_reset(struct iscsi_conn *, struct iscs=
+i_tmr_req *,
++			unsigned char *);
++extern u8 iscsit_tmr_task_reassign(struct iscsi_cmd *, unsigned char *=
+);
++extern int iscsit_tmr_post_handler(struct iscsi_cmd *, struct iscsi_co=
+nn *);
++extern int iscsit_check_task_reassign_expdatasn(struct iscsi_tmr_req *=
+,
++			struct iscsi_conn *);
 +
-+#endif /* ISCSI_TARGET_TPG_H */
++#endif /* ISCSI_TARGET_TMR_H */
 --=20
 1.7.5.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
