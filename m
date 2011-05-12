@@ -1,57 +1,57 @@
-From: "Samuel R. Schwaller" <sschwall@uark.edu>
-Subject: Re.funds
-Date: Wed, 11 May 2011 20:30:43 -0700
-Message-ID: <e82fb15f6a39.4dcaf1f3__1688.37639871544$1305191105$gmane$org@uark.edu>
-Reply-To: money_gramlimited@mspil.edu.cn
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
+ writeback for various fses
+Date: Thu, 12 May 2011 11:42:55 +0200
+Message-ID: <20110512094255.GA4690@quack.suse.cz>
+References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com>
+ <20110510125124.GD4402@quack.suse.cz>
+ <20110511181901.GK20579@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhost.uark.edu ([130.184.5.66]:60831 "EHLO mailhost.uark.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752174Ab1ELJEq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 May 2011 05:04:46 -0400
-Content-language: en
-Content-disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20110511181901.GK20579@tux1.beaverton.ibm.com>
+Sender: owner-linux-mm@kvack.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jan Kara <jack@suse.cz>, Theodore Tso <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed 11-05-11 11:19:01, Darrick J. Wong wrote:
+> On Tue, May 10, 2011 at 02:51:24PM +0200, Jan Kara wrote:
+> > On Mon 09-05-11 16:03:18, Darrick J. Wong wrote:
+> > > I am still chasing down what exactly is broken in ext3.  data=writeback mode
+> > > passes with no failures.  data=ordered, however, does not pass; my current
+> > > suspicion is that jbd is calling submit_bh on data buffers but doesn't call
+> > > page_mkclean to kick the userspace programs off the page before writing it.
+> >   Yes, ext3 in data=ordered mode writes pages from
+> > journal_commit_transaction() via submit_bh() without clearing page dirty
+> > bits thus page_mkclean() is not called for these pages. Frankly, do you
+> > really want to bother with adding support for ext2 and ext3? People can use
+> > ext4 as a fs driver when they want to start using blk-integrity support.
+> > Especially ext2 patch looks really painful and just from a quick look I can
+> > see code e.g. in fs/ext2/namei.c which isn't handled by your patch yet.
+> 
+> Yeah, I agree that ext2 is ugly and ext3/jbd might be more painful.  Are there
+> any other code that wants stable pages that's already running with ext3?  In
+> this months-long discussion I've heard that encryption and raid also like
+> stable pages during writes.  Have those users been broken this whole time, or
+> have they been stabilizing pages themselves?
+  I believe part of them has been broken (e.g. raid) and part of them do
+copy-out so they were OK.
 
+> I suppose we can cross the "ext3 fails horribly on DIF" bridge when someone
+> complains about it.  Possibly we could try to steer them to btrfs.
+  Well, btrfs might be a bit too advantageous for production servers but
+ext4 would be definitely viable for them.
 
-My associate has helped me to send your first payment
-of $7,500 USD to you as instructed by the Malaysian
-Government and Mr. David Cameron the United Kingdom
-prime minister after the last G20 meeting that was
-held in Malaysia, making you one of the beneficiaries through 
-an email natural simple ballot selection.
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
-He told Allan Davis to keep sending you $5,000 USD via Money Gram
-twice a week until the FULL payment of ($820,000.00 )
-is completed.
-
-MONEY TRANSFER REFERENCE:2116-3297
-
-SENDER'S NAME:Patrick Lee Chun
-AMOUNT: US$5000
-
-To track your funds forward money gram
-Transfer agent Mr Allan Davis
-
-Your Name.____________
-Phone .______________
-
-Contact Allan Davis for the funds clearance
-certificate (FCC) neccessary for the realise of your funds
-
-E-mail:money_gramlimited@mspil.edu.cn
-D/L: Tel:+601-635-44376
-
-You cannot pickup the money until the certificate is
-obtained by you.
-
-Regards
-Mr. Allan Davis.
-Tel: +601-635-44376
-
-Best Regards,
-Mr Allan Davis
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
