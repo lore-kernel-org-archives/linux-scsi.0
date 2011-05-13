@@ -1,40 +1,32 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: [GIT PULL] isci merge candidate
-Date: Fri, 13 May 2011 17:46:10 -0400
-Message-ID: <4DCDA6A2.4060001@garzik.org>
-References: <1305317680.21099.83.camel@dwillia2-linux> <BANLkTim3igaB8XXQkDY6GEutWfbK-o840A@mail.gmail.com>
+Date: Sat, 14 May 2011 08:16:02 +1000
+Message-ID: <1305324962.2781.5.camel@pasglop>
+References: <1305317680.21099.83.camel@dwillia2-linux>
+	 <BANLkTim3igaB8XXQkDY6GEutWfbK-o840A@mail.gmail.com>
+	 <4DCDA663.2040202@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTim3igaB8XXQkDY6GEutWfbK-o840A@mail.gmail.com>
+In-Reply-To: <4DCDA663.2040202@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, James.Bottomley@hansenpartnership.com, Christoph Hellwig <hch@lst.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 05/13/2011 04:34 PM, Linus Torvalds wrote:
-> What's the likely user base of this?
 
-Pretty big, I imagine.
+> It's a SAS (serial-attached-scsi) driver so it ties in to libsas rather 
+> than libata (libsas itself ties in to libata for tunnelling SATA 
+> protocol over SAS).  The size is attributable to the fact that all 
+> protocol handling for non-fast path i/o is handled by software.  There 
+> are still cleanups that can be made, but likely not on the on the same 
+> order of what we have already done.
 
-> Why is it a SCSI driver rather
-> than SATA?
+How much of that non-fast-path could/should be in generic code vs. in
+the driver specific code ? IE. If somebody comes up with another "dumb"
+SAS adapter tomorrow that doesn't do all that magic in an offload CPU,
+is any of that code re-usable ?
 
-It's "server" SAS hardware, a la mvsas driver.  SAS hardware is that 
-"lovely" superset of SATA + SCSI, where SATA is one of several frame 
-formats the device may speak.  So it is definitely a SCSI driver, that 
-hooks into SATA processing via ata_sas_* hooks and functions.
-
-> Why is it so f&*%ing big?
-
-1. Because it's a SAS driver :)
-
-2. Because it used to be an ugly vendor driver, now in the process of 
-being cleaned up, rather than a nice, clean from-scratch Linux driver.
-
-So it's a bit of a tough call.  It still needs more hammering and 
-cleaning, but if this is what winds up on all Intel "server" boards that 
-makes it pretty important.
-
-	Jeff
+Cheers,
+Ben.
