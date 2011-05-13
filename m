@@ -1,67 +1,64 @@
-From: Stephen Boyd <sboyd@codeaurora.org>
-Subject: [PATCH 0/9] strict user copy checks on x86_64
-Date: Thu, 12 May 2011 16:50:03 -0700
-Message-ID: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Intel Linux Wireless <ilw@linux.intel.com>, linux-scsi@vger.kernel.org, x86@kernel.org, Andrew Morton <akpm@linux-foundation.org>
+From: rhumana <rhumana@inifta.unlp.edu.ar>
+Subject: Re.funds
+Date: Fri, 13 May 2011 04:36:04 -0300
+Message-ID: <20110513043604.643559e2k3boo7go@webmail.inifta.unlp.edu.ar>
+Reply-To: money_gramlimited@mspil.edu.cn
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stonestorm.inifta.unlp.edu.ar ([163.10.21.140]:57224 "EHLO
+	stonestorm.inifta.unlp.edu.ar" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757797Ab1EMIKU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2011 04:10:20 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-It turns out that strict user copy checks (also known as
-CONFIG_DEBUG_STRICT_USER_COPY_CHECKS) isn't actually implemented
-on x86_64 and thus we aren't catching potential security holes
-at compile time.
+My associate has helped me to send your first payment
+of $7,500 USD to you as instructed by the Malaysian
+Government and Mr. David Cameron the United Kingdom
+prime minister after the last G20 meeting that was
+held in Malaysia, making you one of the beneficiaries through
+an email natural simple ballot selection.
 
-This series adds support for strict user copy checks on x86_64
-and silences all the benign warnings in the x86_64 allyesconfig.
+He told Allan Davis to keep sending you $5,000 USD via Money Gram
+twice a week until the FULL payment of ($820,000.00 )
+is completed.
 
-The final patch consolidates the config option as its duplicated
-across mutliple arches. I don't know what tree this series should
-go through so I tried to send the individual driver patches to the
-respective maintainers.
+MONEY TRANSFER REFERENCE:2116-3297
 
-Stephen Boyd (9):
-  iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  debugfs: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  kprobes: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  ASoC: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-  x86: Implement strict user copy checks for x86_64
-  Consolidate CONFIG_DEBUG_STRICT_USER_COPY_CHECKS
+SENDER'S NAME:Patrick Lee Chun
+AMOUNT: US$5000
 
- arch/parisc/Kconfig                         |    1 +
- arch/parisc/Kconfig.debug                   |   14 --------------
- arch/s390/Kconfig                           |    1 +
- arch/s390/Kconfig.debug                     |   14 --------------
- arch/s390/lib/Makefile                      |    1 -
- arch/s390/lib/usercopy.c                    |    8 --------
- arch/sparc/lib/Makefile                     |    1 -
- arch/sparc/lib/usercopy.c                   |    8 --------
- arch/tile/Kconfig                           |    8 +-------
- arch/tile/include/asm/uaccess.h             |    7 ++++++-
- arch/tile/lib/uaccess.c                     |    8 --------
- arch/x86/Kconfig                            |    1 +
- arch/x86/Kconfig.debug                      |   14 --------------
- arch/x86/include/asm/uaccess_64.h           |   12 +++++++++---
- arch/x86/lib/usercopy_32.c                  |    6 ------
- drivers/net/wireless/iwlegacy/iwl-4965-rs.c |    2 +-
- drivers/net/wireless/iwlwifi/iwl-agn-rs.c   |    2 +-
- drivers/scsi/lpfc/lpfc_debugfs.c            |    3 ++-
- fs/debugfs/file.c                           |    2 +-
- kernel/kprobes.c                            |    2 +-
- lib/Kconfig.debug                           |   18 ++++++++++++++++++
- lib/Makefile                                |    1 +
- lib/usercopy.c                              |    8 ++++++++
- net/bluetooth/rfcomm/sock.c                 |    3 ++-
- sound/soc/soc-core.c                        |    2 +-
- 25 files changed, 55 insertions(+), 92 deletions(-)
- delete mode 100644 arch/s390/lib/usercopy.c
- delete mode 100644 arch/sparc/lib/usercopy.c
- create mode 100644 lib/usercopy.c
+To track your funds forward money gram
+Transfer agent Mr Allan Davis
 
--- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
+Your Name.____________
+Phone .______________
+
+Contact Allan Davis for the funds clearance
+certificate (FCC) neccessary for the realise of your funds
+
+E-mail:money_gramlimited@mspil.edu.cn
+D/L: Tel:+601-635-44376
+
+You cannot pickup the money until the certificate is
+obtained by you.
+
+Regards
+Mr. Allan Davis.
+Tel: +601-635-44376
+
+Best Regards,
+Mr Allan Davis
+
+
+
+
+
+----------------------------------------------------------------
+This message was sent using IMP, the Internet Messaging Program.
+
