@@ -1,38 +1,39 @@
-From: Mikael Abrahamsson <swmike@swm.pp.se>
-Subject: Re: mpt2sas: bug in disk ordering?
-Date: Fri, 13 May 2011 14:09:43 +0200 (CEST)
-Message-ID: <alpine.DEB.2.00.1105131406320.20305@uplift.swm.pp.se>
-References: <BANLkTi=SsdjeHJOU_we+kZMgM0qm7eaVjg@mail.gmail.com> <BANLkTikmS3ytn2MNczbvRinvwk4M-ba90g@mail.gmail.com> <B2FD678A64EAAD45B089B123FDFC3ED70157F7BB82@inbmail01.lsi.com> <BANLkTinqCmZzc2E7G1-W0qB-p8domw4KYA@mail.gmail.com>
+From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
+Subject: aacraid adaptec 6805 support?
+Date: Fri, 13 May 2011 16:12:42 +0200
+Message-ID: <20110513141242.GA1048@apartia.fr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swm.pp.se ([212.247.200.143]:44577 "EHLO uplift.swm.pp.se"
+Received: from zenon.apartia.fr ([82.66.93.83]:32818 "EHLO zenon.apartia.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757150Ab1EMMJp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2011 08:09:45 -0400
-In-Reply-To: <BANLkTinqCmZzc2E7G1-W0qB-p8domw4KYA@mail.gmail.com>
+	id S1750876Ab1EMOMo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2011 10:12:44 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Caspar Smit <c.smit@truebit.nl>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 13 May 2011, Caspar Smit wrote:
+Hi,
 
-> I am used to the fact that all disks in a chassis are ordered in linux 
-> according to the slot numbers on the chassis, this is to ensure a 
-> reliable RAID setup so that /dev/sdb for instance is always in a certain 
-> slot in the chassis. So far I only used lsi 3081e-r controllers and 
-> these always gave me solid and reliable disk numbering. If this goes 
-> random, how am i supposed to keep track which disk is where in the 
-> chassis?
+I compiled the latest 2.6.38.x with aacraid support but my Adaptec RAID
+6805 is not recognized:
 
-This has been discussed extensively before. There is no way to do it the 
-way you want to. Personally, I label the serial number on the front of the 
-drive cage and use that for tracking (together with smartctl).
+http://www.adaptec.com/en-us/support/raid/sas_raid/sas-6805/
 
-Drive naming is not deterministic in linux as said before, and the quicker 
-you accept this try to find other ways you're comfortable with that solves 
-your operational problem, the less pain you will be in.
+When I try building the driver source downloaded from adaptec I get a
+compile error:
 
--- 
-Mikael Abrahamsson    email: swmike@swm.pp.se
+	CC      drivers/scsi/aacraid/commctrl.o
+	drivers/scsi/aacraid/commctrl.c: In function 'open_getadapter_fib':
+	drivers/scsi/aacraid/commctrl.c:449:3: error: implicit declaration of function 'init_MUTEX_LOCKED' [-Werror=implicit-function-declaration]
+	cc1: some warnings being treated as errors
+
+	make[3]: *** [drivers/scsi/aacraid/commctrl.o] Error 1
+	make[2]: *** [drivers/scsi/aacraid] Error 2
+	make[1]: *** [drivers/scsi] Error 2
+	make: *** [drivers] Error 2
+
+Any idea if that card is supported?
+
+Thanks,
