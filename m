@@ -1,41 +1,52 @@
-From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Subject: Re: aacraid adaptec 6805 support?
-Date: Fri, 13 May 2011 16:54:21 +0200
-Message-ID: <20110513145420.GA2797@apartia.fr>
-References: <20110513141242.GA1048@apartia.fr>
- <20110513164922.5167ea53@harpe.intellique.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH resend] atp870u: use pci_dev->revision
+Date: Fri, 13 May 2011 19:01:26 +0400
+Message-ID: <201105131901.27129.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zenon.apartia.fr ([82.66.93.83]:42115 "EHLO zenon.apartia.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750876Ab1EMOyX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2011 10:54:23 -0400
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:40591 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758382Ab1EMPC5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 11:02:57 -0400
 Content-Disposition: inline
-In-Reply-To: <20110513164922.5167ea53@harpe.intellique.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On Fri, May 13, 2011 at 04:49:22PM +0200, Emmanuel Florac wrote:
-> Le Fri, 13 May 2011 16:12:42 +0200
-> Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org> =E9criva=
-it:
->=20
-> > Any idea if that card is supported?
->=20
-> I compiled this driver yesterday with the latest 2.6.35 without
-> problem. Are you sure you have all the proper kernel includes availab=
-le
-> at compilation?
+This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
+converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
+drivers to use pci_device->revision).
 
-Ah, but I am trying with 2.6.38.6 and it seems the driver lags behind
-kernel sources.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Thanks for the info
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+This wasn't merged in 2.6.39 time, I hope it can be merged to 2.6.40...
+
+ drivers/scsi/atp870u.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/scsi/atp870u.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/atp870u.c
++++ linux-2.6/drivers/scsi/atp870u.c
+@@ -2583,7 +2583,7 @@ static int atp870u_probe(struct pci_dev 
+ 	 * this than via the PCI device table
+ 	 */
+ 	if (ent->device == PCI_DEVICE_ID_ARTOP_AEC7610) {
+-		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
++		atpdev->chip_ver = pdev->revision;
+ 		if (atpdev->chip_ver < 2)
+ 			goto err_eio;
+ 	}
+@@ -2602,7 +2602,7 @@ static int atp870u_probe(struct pci_dev 
+ 	base_io &= 0xfffffff8;
+ 
+ 	if ((ent->device == ATP880_DEVID1)||(ent->device == ATP880_DEVID2)) {
+-		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
++		atpdev->chip_ver = pdev->revision;
+ 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
+ 
+ 		host_id = inb(base_io + 0x39);
