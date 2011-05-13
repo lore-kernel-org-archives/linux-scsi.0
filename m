@@ -1,59 +1,57 @@
-From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Subject: Re: aacraid adaptec 6805 support?
-Date: Fri, 13 May 2011 17:39:22 +0200
-Message-ID: <20110513153922.GA5041@apartia.fr>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: aacraid adaptec 6805 support? [sorry if double post...]
+Date: Fri, 13 May 2011 18:33:56 +0200
+Message-ID: <20110513183356.64937c6d@harpe.intellique.com>
 References: <20110513141242.GA1048@apartia.fr>
- <20110513164922.5167ea53@harpe.intellique.com>
- <20110513145420.GA2797@apartia.fr>
- <20110513172457.0db50c93@harpe.intellique.com>
+	<20110513164922.5167ea53@harpe.intellique.com>
+	<20110513145420.GA2797@apartia.fr>
+	<20110513172457.0db50c93@harpe.intellique.com>
+	<20110513153922.GA5041@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zenon.apartia.fr ([82.66.93.83]:34715 "EHLO zenon.apartia.fr"
+Received: from smtp4-g21.free.fr ([212.27.42.4]:37234 "EHLO smtp4-g21.free.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752129Ab1EMPjX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 May 2011 11:39:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20110513172457.0db50c93@harpe.intellique.com>
+	id S1753337Ab1EMQdz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 12:33:55 -0400
+In-Reply-To: <20110513153922.GA5041@apartia.fr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, May 13, 2011 at 05:24:57PM +0200, Emmanuel Florac wrote:
-> Le Fri, 13 May 2011 16:54:21 +0200
-> Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org> =E9criva=
-it:
->=20
-> > Ah, but I am trying with 2.6.38.6 and it seems the driver lags behi=
-nd
-> > kernel sources.
->=20
-> It looks like this driver version (1.1-7) will be included in 2.6.39
-> though, so it should compile against the most current kernel. Or
-> maybe grab the source from the linux-next tree instead ?
+Le Fri, 13 May 2011 17:39:22 +0200
+Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org> =E9crivait=
+:
 
-Yep, the driver is included - and works - with 2.6.39-rc7.
+> On each disk the third partition /dev/sdX3 is the last and largest bu=
+t
+> it seems the Adaptec controller doesn't "see" the end of the disk
+> where the md superblock is? Does that make sense?
 
-Now I have another problem: my 8 sata disks used to work with a
-LSI-SAS2008 controller in "no-configuration" mode (meaning I configured
-no array on that card, just used the disks for sw raid).
+Not to me, but I've seen weirder things from Adaptec firmwares :)
+Are the drives configured as JBOD, or something else? You may segment
+the drives (for instance if their sizes differ slightly), so maybe some
+of them appear as volume segments instead of JBOD?
 
-Now when I connect these same disks to the Adaptec controller my first
-two /dev/mdX (0 and 1) devices work fine but /dev/md2 doesn't:
+> When booting the controller lists all disks in "legacy" mode. What
+> does that mean vs JBOD?
 
-	May 13 17:14:37 zenon kernel: md: sde3 does not have a valid v1.2 supe=
-rblock, no
-t importing!
+I have no idea. However I've seen adapters from different builders
+partly (and wrongly) recognize each other on-disk headers. I've
+recently moved a bunch of disks from an LSI 9200 4i4e to an Adaptec
+6445, but I don't remember of any particular weirdness.
 
-On each disk the third partition /dev/sdX3 is the last and largest but
-it seems the Adaptec controller doesn't "see" the end of the disk where
-the md superblock is? Does that make sense?
-
-When booting the controller lists all disks in "legacy" mode. What does
-that mean vs JBOD?
-
-Thanks,
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
