@@ -1,52 +1,58 @@
 From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH resend] atp870u: use pci_dev->revision
-Date: Fri, 13 May 2011 19:01:26 +0400
-Message-ID: <201105131901.27129.sshtylyov@ru.mvista.com>
+Subject: [PATCH v2 resend] qla4xxx: use pci_dev->revision
+Date: Fri, 13 May 2011 19:04:34 +0400
+Message-ID: <201105131904.35018.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:40591 "HELO
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:57627 "HELO
 	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758382Ab1EMPC5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 11:02:57 -0400
+	with SMTP id S1758615Ab1EMPGE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 11:06:04 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com, iscsi-driver@qlogic.com
 
-This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
-converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
-drivers to use pci_device->revision).
+Commit f4f5df23bf72208d0c2f1d8be629839924c2f4c2 ([SCSI] qla4xxx: Added support
+for ISP82XX) added code to read the PCI revision ID from the PCI configuration
+register while it's already stored by PCI subsystem in the 'revision' field of
+'struct pci_dev'...
 
 Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
 ---
-This wasn't merged in 2.6.39 time, I hope it can be merged to 2.6.40...
+The patch is against the recent Linus' tree.
+It wasn't merged in 2.6.39 time, I hope it can be merged to 2.6.40...
 
- drivers/scsi/atp870u.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Index: linux-2.6/drivers/scsi/atp870u.c
+Index: linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/atp870u.c
-+++ linux-2.6/drivers/scsi/atp870u.c
-@@ -2583,7 +2583,7 @@ static int atp870u_probe(struct pci_dev 
- 	 * this than via the PCI device table
- 	 */
- 	if (ent->device == PCI_DEVICE_ID_ARTOP_AEC7610) {
--		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
-+		atpdev->chip_ver = pdev->revision;
- 		if (atpdev->chip_ver < 2)
- 			goto err_eio;
+--- linux-2.6.orig/drivers/scsi/qla4xxx/ql4_os.c
++++ linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1428,7 +1428,6 @@ static void qla4xxx_free_adapter(struct 
+ int qla4_8xxx_iospace_config(struct scsi_qla_host *ha)
+ {
+ 	int status = 0;
+-	uint8_t revision_id;
+ 	unsigned long mem_base, mem_len, db_base, db_len;
+ 	struct pci_dev *pdev = ha->pdev;
+ 
+@@ -1440,10 +1439,9 @@ int qla4_8xxx_iospace_config(struct scsi
+ 		goto iospace_error_exit;
  	}
-@@ -2602,7 +2602,7 @@ static int atp870u_probe(struct pci_dev 
- 	base_io &= 0xfffffff8;
  
- 	if ((ent->device == ATP880_DEVID1)||(ent->device == ATP880_DEVID2)) {
--		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
-+		atpdev->chip_ver = pdev->revision;
- 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
+-	pci_read_config_byte(pdev, PCI_REVISION_ID, &revision_id);
+ 	DEBUG2(printk(KERN_INFO "%s: revision-id=%d\n",
+-	    __func__, revision_id));
+-	ha->revision_id = revision_id;
++	    __func__, pdev->revision));
++	ha->revision_id = pdev->revision;
  
- 		host_id = inb(base_io + 0x39);
+ 	/* remap phys address */
+ 	mem_base = pci_resource_start(pdev, 0); /* 0 is for BAR 0 */
