@@ -1,57 +1,82 @@
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: aacraid adaptec 6805 support? [sorry if double post...]
-Date: Fri, 13 May 2011 18:33:56 +0200
-Message-ID: <20110513183356.64937c6d@harpe.intellique.com>
-References: <20110513141242.GA1048@apartia.fr>
-	<20110513164922.5167ea53@harpe.intellique.com>
-	<20110513145420.GA2797@apartia.fr>
-	<20110513172457.0db50c93@harpe.intellique.com>
-	<20110513153922.GA5041@apartia.fr>
+From: Arne Redlich <arne.redlich@googlemail.com>
+Subject: Re: [PATCH-v3 13/14] iscsi-target: Add misc utility and debug logic
+Date: Fri, 13 May 2011 21:30:41 +0200
+Message-ID: <BANLkTikMdAUjT=G+DHaJwDOXuh532uN8nw@mail.gmail.com>
+References: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
+	<1305184041-32189-14-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp4-g21.free.fr ([212.27.42.4]:37234 "EHLO smtp4-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753337Ab1EMQdz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 12:33:55 -0400
-In-Reply-To: <20110513153922.GA5041@apartia.fr>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:50671 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014Ab1EMTan convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 15:30:43 -0400
+In-Reply-To: <1305184041-32189-14-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>
 
-Le Fri, 13 May 2011 17:39:22 +0200
-Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org> =E9crivait=
-:
+2011/5/12 Nicholas A. Bellinger <nab@linux-iscsi.org>:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>
+> This file adds iscsi_target_util.[c,h] code containing a number
+> of miscellaneous utility functions for iscsi_target_mod.
+>
+> It also contains iscsi_debug.h macros for CONFIG_ISCSI_TARGET_DEBUG
+>
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-> On each disk the third partition /dev/sdX3 is the last and largest bu=
-t
-> it seems the Adaptec controller doesn't "see" the end of the disk
-> where the md superblock is? Does that make sense?
+<snip>
 
-Not to me, but I've seen weirder things from Adaptec firmwares :)
-Are the drives configured as JBOD, or something else? You may segment
-the drives (for instance if their sizes differ slightly), so maybe some
-of them appear as volume segments instead of JBOD?
+> diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/targe=
+t/iscsi/iscsi_target_util.c
+> new file mode 100644
+> index 0000000..af1c5c44
+> --- /dev/null
+> +++ b/drivers/target/iscsi/iscsi_target_util.c
 
-> When booting the controller lists all disks in "legacy" mode. What
-> does that mean vs JBOD?
+<snip>
 
-I have no idea. However I've seen adapters from different builders
-partly (and wrongly) recognize each other on-disk headers. I've
-recently moved a bunch of disks from an LSI 9200 4i4e to an Adaptec
-6445, but I don't remember of any particular weirdness.
+> +
+> +struct iscsi_r2t *iscsit_get_r2t_for_eos(
+> + =C2=A0 =C2=A0 =C2=A0 struct iscsi_cmd *cmd,
+> + =C2=A0 =C2=A0 =C2=A0 u32 offset,
+> + =C2=A0 =C2=A0 =C2=A0 u32 length)
+> +{
+> + =C2=A0 =C2=A0 =C2=A0 struct iscsi_r2t *r2t;
+> +
+> + =C2=A0 =C2=A0 =C2=A0 spin_lock_bh(&cmd->r2t_lock);
+> + =C2=A0 =C2=A0 =C2=A0 list_for_each_entry(r2t, &cmd->cmd_r2t_list, r=
+2t_list) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if ((r2t->offset <=
+=3D offset) &&
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (r2t=
+->offset + r2t->xfer_len) >=3D (offset + length))
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 break;
+> + =C2=A0 =C2=A0 =C2=A0 }
+> + =C2=A0 =C2=A0 =C2=A0 spin_unlock_bh(&cmd->r2t_lock);
+> +
+> + =C2=A0 =C2=A0 =C2=A0 if (!r2t) {
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 printk(KERN_ERR "U=
+nable to locate R2T for Offset: %u, Length:"
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+ =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 " %u\n", offset, length);
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return NULL;
+> + =C2=A0 =C2=A0 =C2=A0 }
+> +
+> + =C2=A0 =C2=A0 =C2=A0 return r2t;
+> +}
+> +
 
---=20
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
+Nicholas,
+
+This lookup pattern (repeated several times throughout the patch)
+looks seriously flawed to me as r2t will never be NULL.
+
+Arne
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
