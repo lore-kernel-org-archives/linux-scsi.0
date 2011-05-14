@@ -1,41 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT PULL] isci merge candidate
-Date: Sat, 14 May 2011 10:49:49 +0200
-Message-ID: <20110514084949.GA23984@lst.de>
-References: <1305317680.21099.83.camel@dwillia2-linux>
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: aacraid adaptec 6805 support?
+Date: Sat, 14 May 2011 12:20:45 +0200
+Message-ID: <20110514122045.6019d4c2@galadriel2.home>
+References: <20110513141242.GA1048@apartia.fr>
+	<20110513164922.5167ea53@harpe.intellique.com>
+	<20110513145420.GA2797@apartia.fr>
+	<20110513172457.0db50c93@harpe.intellique.com>
+	<20110513153922.GA5041@apartia.fr>
+	<20110513183356.64937c6d@harpe.intellique.com>
+	<20110514062533.GA13324@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1305317680.21099.83.camel@dwillia2-linux>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: James.Bottomley@hansenpartnership.com, Christoph Hellwig <hch@lst.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Jiang <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Jeff Garzik <jeff@garzik.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp3-g21.free.fr ([212.27.42.3]:58909 "EHLO smtp3-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754076Ab1ENKVX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 May 2011 06:21:23 -0400
+In-Reply-To: <20110514062533.GA13324@apartia.fr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, May 13, 2011 at 01:14:40PM -0700, Dan Williams wrote:
-> The isci driver team has now completed the major rework items addressed
-> in the review on linux-scsi (including removal of state handlers,
-> merging lldd and 'core', cleaning up the source code layout).
+Le Sat, 14 May 2011 08:25:33 +0200 vous =C3=A9criviez:
 
-I've looked over the driver a bit and I'm quite impressed with what
-you're archived in the short time since taking over the driver from
-whoever came up with the mess that it was initially.
+> And in that "legacy" mode the disk geometry appears slightly smaller
+> to the OS than with the LSI controller, hence my problem
+> with /dev/md2.
 
-I don't think you're quite done yet with the todo list that was given
-to you yet.  One thing that springs to mind is wrappers in timers.c,
-which are not just ugly, but in case of isci_task_execute_tmf is plain
-wrong as the implementation assumes all timers have the same lifetime
-rules as the isci_host.  You'll need to at least replace that last usage
-with a direct wait_for_completion_timeout, and even better get rid
-of it entirely.
+Yes, some controllers reserve out a part of the drive to allow for
+using slightly different drives to repair the array. Unfortunately that
+parameter may or may not be user-tunable.
 
-Also not quite done yet, although I'm happy with postponing that for now
-is the unification of the various data structures from the different
-layers of the original driver, e.g. isci_phy vs scic_sds_phy,
-isci_port vs scic_sds_port, isci_remote_device vs scic_sds_remote_device
-and isci_request vs scic_sds_request.
-
-And of course there's a lot of room for additional further cleanups
-that should be able to shave off another couple thousands of lines, but
-these never were on the plate for the initial merge anyway.
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
