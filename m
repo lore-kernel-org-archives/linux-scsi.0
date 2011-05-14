@@ -1,102 +1,79 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v3 13/14] iscsi-target: Add misc utility and debug logic
-Date: Fri, 13 May 2011 16:32:25 -0700
-Message-ID: <1305329545.7102.53.camel@haakon2.linux-iscsi.org>
-References: <1305184041-32189-1-git-send-email-nab@linux-iscsi.org>
-	 <1305184041-32189-14-git-send-email-nab@linux-iscsi.org>
-	 <BANLkTikMdAUjT=G+DHaJwDOXuh532uN8nw@mail.gmail.com>
+Subject: Re: [PATCH-v2 0/4] Bugfixes for .39-rc8
+Date: Fri, 13 May 2011 17:05:29 -0700
+Message-ID: <1305331529.7102.61.camel@haakon2.linux-iscsi.org>
+References: <1305088535-27486-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45036 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758472Ab1EMXkd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 19:40:33 -0400
-In-Reply-To: <BANLkTikMdAUjT=G+DHaJwDOXuh532uN8nw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1305088535-27486-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Arne Redlich <arne.redlich@googlemail.com>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>
 
-On Fri, 2011-05-13 at 21:30 +0200, Arne Redlich wrote:
-> 2011/5/12 Nicholas A. Bellinger <nab@linux-iscsi.org>:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> >
-> > This file adds iscsi_target_util.[c,h] code containing a number
-> > of miscellaneous utility functions for iscsi_target_mod.
-> >
-> > It also contains iscsi_debug.h macros for CONFIG_ISCSI_TARGET_DEBUG
-> >
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+On Tue, 2011-05-10 at 21:35 -0700, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> <snip>
+> Hi James and Co,
 > 
-> > diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-> > new file mode 100644
-> > index 0000000..af1c5c44
-> > --- /dev/null
-> > +++ b/drivers/target/iscsi/iscsi_target_util.c
+> This series is resend of four patches that should be considered critical
+> target core bugfixes for .39 that have been under stress testing in a
+> couple of different labs recently using lio-core-2.6.git/lio-4.1 (.39-rcX)
+> and /lio-4.0 (.38.3) branch code.
 > 
-> <snip>
+> These are all important bugfixes that are required to run with in-flight
+> .40 HW target drivers in the upstream LIO tree.  This includes fixes for
+> the main transport_do_task_sg_chain() Data I/O mapping logic, and
+> task->task_sg[] shutdown path from MSI-X interrupt context.  These bugfixes
+> apply for all of the following HW fabric drivers:
 > 
-> > +
-> > +struct iscsi_r2t *iscsit_get_r2t_for_eos(
-> > +       struct iscsi_cmd *cmd,
-> > +       u32 offset,
-> > +       u32 length)
-> > +{
-> > +       struct iscsi_r2t *r2t;
-> > +
-> > +       spin_lock_bh(&cmd->r2t_lock);
-> > +       list_for_each_entry(r2t, &cmd->cmd_r2t_list, r2t_list) {
-> > +               if ((r2t->offset <= offset) &&
-> > +                   (r2t->offset + r2t->xfer_len) >= (offset + length))
-> > +                       break;
-> > +       }
-> > +       spin_unlock_bh(&cmd->r2t_lock);
-> > +
-> > +       if (!r2t) {
-> > +               printk(KERN_ERR "Unable to locate R2T for Offset: %u, Length:"
-> > +                               " %u\n", offset, length);
-> > +               return NULL;
-> > +       }
-> > +
-> > +       return r2t;
-> > +}
-> > +
+>    tcm_fc(openfcoe) w/ ddp offload, tcm_qla2xxx, ib_srpt and ibmvscsis.
 > 
-> Nicholas,
+> These patches address issues that are able to easily produce OOPsen with
+> small backstore max_sectors values.  Please review+apply for .39 and
+> also queue into stable@kernel.org for .38.
+>
+> The series is also available here for a direct pull:
 > 
-> This lookup pattern (repeated several times throughout the patch)
-> looks seriously flawed to me as r2t will never be NULL.
+>   git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-39-rc-fixes
 > 
 
-Ugh..
+Hi James,
 
-Unfortuately this breakage was introduced during the v4 conversion of
-iscsi-target to use struct list_head instead of the legacy raw ->next
-pointers for list walking in about 10 different locations..
+Ping on getting these bugfixes merged into .39-final and .38 stable..? 
 
-I have pushed the following commit into lio-core-2.6.git to address the
-cases where a bogus NULL check of *pos after list_for_each_entry()
-exists:
+The tcm_fc(openfcoe) HW offload also in the queue for .40 from Kiran &
+Co depends upon these fixes.
 
-iscsi-target: Fix incorrect list_for_each_entry() NULL checks
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=af66a1368ec3256ba44656490688364084fa893d
-
-Please review the changes in lio-core-2.6.git/lio-4.1 and let me know if
-you see any more of these cases that need to be fixed, or have any
-additional review comments.
-
-So with that, I will go ahead and re-spin a proper PATCH-v4 series over
-the weekend for James to merge with this patch, and hopefully one
-additional v4.1 specific bugfix that is currently be investigated by
-Martin.
-
-Seriously, thanks for catching this one Arne..
-
-Best Regards,
+Thanks,
 
 --nab
 
+> and has been made against the following scsi-rc-fixes-2.6.git HEAD:
+> 
+> commit c055f5b2614b4f758ae6cc86733f31fa4c2c5844
+> Author: James Bottomley <James.Bottomley@suse.de>
+> Date:   Sun May 1 09:42:07 2011 -0500
+> 
+>     [SCSI] fix oops in scsi_run_queue()
+> 
+> Thanks!
+> 
+> --nab
+> 
+> Nicholas Bellinger (4):
+>   target: Fix multi task->task_sg[] chaining logic bug
+>   target: Fix interrupt context bug with stats_lock and
+>     core_tmr_alloc_req
+>   target: Fix bug with task_sg chained transport_free_dev_tasks release
+>   target: Fix task->task_execute_queue=1 clear bug + LUN_RESET OOPs
+> 
+>  drivers/target/target_core_device.c    |    4 +-
+>  drivers/target/target_core_tmr.c       |    7 +++--
+>  drivers/target/target_core_transport.c |   46 +++++++++++++++++++++++--------
+>  include/target/target_core_base.h      |    1 +
+>  include/target/target_core_transport.h |    1 +
+>  5 files changed, 42 insertions(+), 17 deletions(-)
+> 
