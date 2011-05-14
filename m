@@ -1,49 +1,99 @@
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: aacraid adaptec 6805 support?
-Date: Sat, 14 May 2011 12:20:45 +0200
-Message-ID: <20110514122045.6019d4c2@galadriel2.home>
-References: <20110513141242.GA1048@apartia.fr>
-	<20110513164922.5167ea53@harpe.intellique.com>
-	<20110513145420.GA2797@apartia.fr>
-	<20110513172457.0db50c93@harpe.intellique.com>
-	<20110513153922.GA5041@apartia.fr>
-	<20110513183356.64937c6d@harpe.intellique.com>
-	<20110514062533.GA13324@apartia.fr>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [PATCH] scsi/sd: fix suspend with USB-connected Android phone (one line)
+Date: Sat, 14 May 2011 21:11:52 +0200
+Message-ID: <201105142111.53266.oliver@neukum.org>
+References: <BANLkTi=XNyR8GD43GGnMag+=JmhUd_5HtA@mail.gmail.com> <201105122203.13671.rjw@sisk.pl> <1305232563.2575.85.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp3-g21.free.fr ([212.27.42.3]:58909 "EHLO smtp3-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754076Ab1ENKVX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 May 2011 06:21:23 -0400
-In-Reply-To: <20110514062533.GA13324@apartia.fr>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1305232563.2575.85.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, hare@suse.de
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Charles Hannum <root@ihack.net>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Le Sat, 14 May 2011 08:25:33 +0200 vous =C3=A9criviez:
+Am Donnerstag, 12. Mai 2011, 22:36:03 schrieb James Bottomley:
 
-> And in that "legacy" mode the disk geometry appears slightly smaller
-> to the OS than with the LSI controller, hence my problem
-> with /dev/md2.
+> Instinct tells me the correct set of fixes is to add a sync cache from
+> release (so we automatically sync on last close, which is usually when
+> an ordered remove happens), keep the one on shutdown, just in case the
+> system goes down with stuff still mounted and print a nasty message on
+> suspend for a write back device that's been removed.
+> 
+> I also think we shouldn't abort the suspend if the disk doesn't respond
+> correctly to start/stop ... the power is going to be disconnected
+> anyway, so it's no issue if the disk spins for a second or so longer.
+> 
+> The problem this is going to cause is double sync on shutdown (once when
+> final unmount closes the device and once on shutdown) ... do people
+> agree that's a price worth paying?
+> 
+> Something like this?
 
-Yes, some controllers reserve out a part of the drive to allow for
-using slightly different drives to repair the array. Unfortunately that
-parameter may or may not be user-tunable.
+Hi,
 
---=20
------------------------------------------------------------------------=
--
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
------------------------------------------------------------------------=
--
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+it seems to me that the error codes should really be evaluated a bit better.
+How about this?
+
+	Regards
+		Oliver
+
+>From 2ab03ae46d6dc126a51ee9cd38206fbdc8bf6a34 Mon Sep 17 00:00:00 2001
+From: Oliver Neukum <oliver@neukum.org>
+Date: Mon, 25 Oct 2010 12:25:26 +0200
+Subject: [PATCH 2/5] SCSI:sd:error handling in sd_sync_cache()
+
+The SCSI commands sd_sync_cache() uses may fail.
+These errors needs to be evaluated to return correct
+error codes. This fixes system suspension while a device
+removal is being handled.
+
+Signed-off-by: Oliver NEukum <oneukum@suse.de>
+---
+ drivers/scsi/sd.c |   28 ++++++++++++++++++++++++----
+ 1 files changed, 24 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fcba7d2..5ed75bf 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1104,11 +1104,31 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		sd_print_result(sdkp, res);
+ 		if (driver_byte(res) & DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+-	}
+ 
+-	if (res)
+-		return -EIO;
+-	return 0;
++		/* we need to evaluate the error return  */
++		if ((scsi_sense_valid(&sshdr) &&
++			/* 0x3a is medium not present */
++			sshdr.asc == 0x3a))
++			/* this is no error here */
++			return 0;
++
++		switch (host_byte(res)) {
++		/* ignore errors due to racing a disconnection */
++		case DID_BAD_TARGET:
++		case DID_NO_CONNECT:	
++			return 0;
++		/* signal the upper layer it might try again */
++		case DID_BUS_BUSY:
++		case DID_IMM_RETRY:
++		case DID_REQUEUE:
++		case DID_SOFT_ERROR:
++			return -EBUSY;
++		default:
++			return -EIO;
++		}
++	} else {
++		return 0;
++	}
+ }
+ 
+ static void sd_rescan(struct device *dev)
+-- 
+1.7.1
