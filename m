@@ -1,259 +1,76 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 2.6.39-rc7-git7: Reported regressions 2.6.37 -> 2.6.38
-Date: Sun, 15 May 2011 00:39:04 +0200 (CEST)
-Message-ID: <Zsp7lN2vZ2O.A.J7C.bQwzNB@chimera>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: rtsadmin-v1.99 BETA packages
+Date: Sat, 14 May 2011 16:36:53 -0700
+Message-ID: <4DCF1215.2010406@redhat.com>
+References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org>	 <1304553788.10072.241.camel@haakon2.linux-iscsi.org>	 <4DCAC075.5090007@redhat.com>	 <1305160226.19744.47.camel@haakon2.linux-iscsi.org> <1305337311.7102.88.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60086 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755734Ab1ENXhc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 May 2011 19:37:32 -0400
+In-Reply-To: <1305337311.7102.88.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@risingtidesystems.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jerome Martin <jxm@risingtidesystems.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Paolo Bonzini <pbonzini@redhat.com>Jerome Martin <jxm@risingtidesystems.com>
 
-[NOTE:
- This most likely is the last summary report of post-2.6.37 regressions
- introduced during the 2.6.38 development cycle.  Please let us know wh=
-at
- the current status of those bugs is, if possible, and thanks for all o=
-f
- the reports, updates and fixes.]
+On 05/13/2011 06:41 PM, Nicholas A. Bellinger wrote:
+> This afternoon's updated RHEL6 and Debian Squeeze BETA builds are
+> available here:
+> 
+> http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/rtsadmin-frozen-11.99-20110513091048.3434628.x86_64.rpm
+> http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/rtsadmin-frozen_11.99-20110513161709.3434628_amd64.deb
+> 
+> These contain an important bugfix for v2 device creation where 
+> /sys/kernel/config/target/core/$HBA/$DEV/wwn/vpd_unit_serial
+> was not being automatically generated for newly created virtual devices.
+> There is also a seperate multi-fabric export HBA context 'delete
+> $DEVICE_NAME' that has been fixed as well and pushed into the community
+> repo.
+> 
+> Also, the lio-utils v4.0 packages for RHEL6 and Debian Squeeze have been
+> updated with a few minor improvements to tcm_fabric.py code.
+> 
+> http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/lio-utils-4.0-d2cf595d.x86_64.rpm
+> http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/lio-utils_4.0_amd64.deb
+> 
+> Please let us know if you have any questions.
 
-This message contains a list of some post-2.6.37 regressions introduced=
- before
-2.6.38, for which there are no fixes in the mainline known to the track=
-ing team.
-If any of them have been fixed already, please let us know.
+Hi nab and Jerome,
 
-If you know of any other unresolved post-2.6.37 regressions, please let=
- us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+Could you explain the versioning of the rtsadmin-frozen packages? I
+think the 2011.. is a datetime stamp, but I don't grok the 11.99 and
+3434628.
 
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
+Would it be possible to release src rpms/debs, or even a tar.gz, for
+these as well?
 
+Have you looked into putting these into yum or apt repos, for easy
+upgrading?
 
-Listed regressions statistics:
+Finally, I notice modified versions of the rpm specfiles I authored are
+now in your rtsadmin[1], rtslib, and configshell repos. There is no
+indication of origin or attribution to me or my employer. I think this
+is technically ok since the files are licensed under the Fedora CLA[2],
+but it is an accepted FOSS practice to say where you got something, at
+least in the checkin notes.
 
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-05-15      107       23          20
-  2011-04-30      105       29          28
-  2011-04-17       98       28          28
-  2011-03-27       88       26          26
-  2011-03-06       70       27          26
-  2011-02-21       51       18          17
-  2011-02-12       39       20          18
-  2011-02-03       19       11           7
+I'm not sweating it, just letting you know :-)
 
+But, this becomes a more significant issue when talking about code
+contributions, and a potential non-free version of, or code that builds
+on, rtsadmin. Once you accept outside contributions under the AGPLv3,
+you are required to release the source of derivative works[3]. Could you
+be a little clearer about your plans for a non-free version, and what
+the boundary will be between it and the released code, so that we can
+make contributions that do not end up in non-free code?
 
-Unresolved regressions
-----------------------
+Thanks -- Regards -- Andy
 
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D34992
-Subject		: Regression with ath5k, cannot find any wireless network
-Submitter	: Joshua Covington <joshuacov-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
-Date		: 2011-05-12 11:24 (3 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D33982
-Subject		: ath9k: regulatory: strange tx power limits
-Submitter	: Richard Sch=C3=BCtz <r.schtz-zqRNUXuvxA0b1SvskN2V4Q@public.gmane.org>
-Date		: 2011-04-26 18:37 (19 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D33882
-Subject		: rt2800pci bad performance in 2.6.38
-Submitter	: Ricardo Gra=C3=A7a <r.jpg-8MI2nhFGehw@public.gmane.org>
-Date		: 2011-04-23 14:35 (22 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D33852
-Subject		: Regression of AR2413 802.11bg in 2.6.38.4
-Submitter	: Boris Popov <popov.b-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-04-23 12:12 (22 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/42c025f3de9042d9c9abd9a=
-6f6205d1a0f4bcadf
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D33662
-Subject		: System hangs during X startup (kwin compositing?)
-Submitter	: Luke-Jr <luke-jr+linuxbugs-LLS2WxOx/a1AfugRpC6u6w@public.gmane.org>
-Date		: 2011-04-19 04:26 (26 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/e8616b6ced6137085e6657c=
-c63bc2fe3900b8616
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D32862
-Subject		: acer_wmi partially crashes ACPI/EC (Aspire 8930G)
-Submitter	: Hector Martin <hector-eIot3r3D0w+Wd6l5hS35sQ@public.gmane.org>
-Date		: 2011-04-07 17:44 (38 days old)
-Handled-By	: Lee, Chun-Yi <jlee-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D32522
-Subject		: drm:i915_hangcheck_ring_idle after suspend/resume cycle
-Submitter	:  <fhimpe-CNXmb7IdZIWZIoH1IeqzKA@public.gmane.org>
-Date		: 2011-04-02 18:40 (43 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D32202
-Subject		: 2.6.38 hangs on boot until key is pressed
-Submitter	: Tvrtko Ursulin <tvrtko-9sj9WOxYP5jR7s880joybQ@public.gmane.org>
-Date		: 2011-03-27 19:18 (49 days old)
-Message-ID	: <1301253485.2500.2.camel@deuteros>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D130125411116558&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31922
-Subject		: ath5k: Decreased throughput in IBSS or 802.11n mode
-Submitter	: Jeff Cook <jeff-Lrzp875GHuWS7RsuTa25K+qUGfbH9hYC@public.gmane.org>
-Date		: 2011-03-26 20:06 (50 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31782
-Subject		: nouveau: lockdep spew
-Submitter	: Johannes Berg <johannes-cdvu00un1VgdHxzADdlk8Q@public.gmane.org>
-Date		: 2011-03-24 09:51 (52 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31572
-Subject		: BUG in vb_alloc() - firewire crash at boot
-Submitter	: Pavel Kysilka <goldenfish-3RRv3fhkseTjAhjy0/KdDg@public.gmane.org>
-Date		: 2011-03-21 12:40 (55 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31402
-Subject		: Diminished brightness at startup
-Submitter	: Guilherme Salazar <guilhermesalazar-DaQTI0RpDDMAvxtiuMwx3w@public.gmane.org>
-Date		: 2011-03-18 16:29 (58 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31322
-Subject		: 2.6.38-rc echo 3 > /proc/sys/vm/drop_caches repairs mplayer =
-distortions
-Submitter	: Hans de Bruin <jmdebruin-agH9qYG3oEhmR6Xm/wNWPw@public.gmane.org>
-Date		: 2011-03-14 21:34 (62 days old)
-Message-ID	: <4D7E89E7.3080505-agH9qYG3oEhmR6Xm/wNWPw@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D130014181919827&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31012
-Subject		: WARNING: Perf: bad frame pointer =3D (null), 2.6.38-rc8
-Submitter	: Chuck Ebbert <cebbert-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Date		: 2011-03-12 19:08 (64 days old)
-Message-ID	: <20110312140851.52420149@katamari>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D129995721014931&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D30992
-Subject		: 2.6.38-rc7: Some strange soft-lockup
-Submitter	: Dmitry Nezhevenko <dion-Riw6fTKU00peoWH0uzbU5w@public.gmane.org>
-Date		: 2011-03-06 14:01 (70 days old)
-Message-ID	: <20110306140104.GA7700-Kfeq/R7O60eE+EvaaNYduQ@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D129942161205739&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D29992
-Subject		: boot hang 2.6.37.1 regression w/ intel_idle and CONFIG_NO_HZ=
-=3Dn - asus p7p55d le
-Submitter	: De Ganseman Amaury <amaury.deganseman-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-02-27 10:38 (77 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D29672
-Subject		: [regression][ALSA][hda-conexant][2.6.38-rcX] external microp=
-hone sound too quiet
-Submitter	: Shawn Starr <shawn.starr-bJEeYj9oJeDQT0dZR+AlfA@public.gmane.org>
-Date		: 2011-02-19 6:02 (85 days old)
-Message-ID	: <474630.25335.qm-LGyaPT5kzbjzJNTqFNLFoaJ1FwRQo79cG6kzb5Gsg2M@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D129809536502092&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D28522
-Subject		: Unable to mount FAT-formatted floppy on /dev/fd0, plus WARN_=
-ON when using /dev/fd0u1440
-Submitter	: Alex Villacis Lasso <avillaci-x0m+Mc+nT7uljOmnV8AmnkElSqmLX1BE@public.gmane.org>
-Date		: 2011-02-07 17:21 (97 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D28452
-Subject		: 2.6.38-rc3 regression on parisc: segfaults
-Submitter	: Meelis Roos <mroos-Y27EyoLml9s@public.gmane.org>
-Date		: 2011-02-01 22:00 (103 days old)
-Message-ID	: <alpine.SOC.1.00.1102012342200.25944-ptEonEWSGqKptlylMvRsHA@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D129659763426600&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D28422
-Subject		: kref and apparmor panic in 2.6.38-rc2.
-Submitter	: Tao Ma <tm-d1IQDZat3X0@public.gmane.org>
-Date		: 2011-01-31 10:06 (104 days old)
-Message-ID	: <4D46899B.80302-d1IQDZat3X0@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D129646840303149&w=3D=
-2
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D34252
-Subject		: Unexpected behaviour when switching video cards with vga_swi=
-tcheroo
-Submitter	: Igor Murzov <e-mail-YtcMAkmAr8g@public.gmane.org>
-Date		: 2011-05-02 22:39 (13 days old)
-Handled-By	: Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=3D57582
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D32072
-Subject		: 2.6.38 Regression: Nvidia GeForce8400 + i915 =3D Crash on Bo=
-ot
-Submitter	: simon-wM4F9T/ekXmXDw4h08c5KA@public.gmane.org
-Date		: 2011-03-24 15:20 (52 days old)
-Message-ID	: <fe471c05897776b7c26b9fd2603e3b76.squirrel-N82HvsEaY4kGLQ9C4TkFhg@public.gmane.org=
-com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D130100955926434&w=3D=
-2
-Patch		: http://marc.info/?l=3Dlinux-xfs&m=3D130144519123809&w=3D2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D31522
-Subject		: i915/kms regression after 2.6.38-rc8 (was: Re: Linux 2.6.38)
-Submitter	: Melchior FRANZ <melchior.franz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-03-16 17:30 (60 days old)
-Message-ID	: <201103161830.52231-s3vZadu4I7qzZXS1Dc/lvw@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D130029706416659&w=3D=
-2
-		  http://marc.info/?l=3Dlinux-kernel&m=3D130409270332174&w=3D2
-Patch		: https://patchwork.kernel.org/patch/743162/
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions introd=
-uced
-between 2.6.37 and 2.6.38, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D27352
-
-Please let the tracking team know if there are any Bugzilla entries tha=
-t
-should be added to the list in there.
-
-Thanks!
+[1]
+http://www.risingtidesystems.com/git/?p=rtsadmin.git;a=commit;h=d9c8421c3df0f9a6b922903ba90df43068d687fa
+[2] http://fedoraproject.org/wiki/Licensing#License_of_Fedora_SPEC_Files
+[3] IANAL - I am not a lawyer.
