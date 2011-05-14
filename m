@@ -1,99 +1,149 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [PATCH] scsi/sd: fix suspend with USB-connected Android phone (one line)
-Date: Sat, 14 May 2011 21:11:52 +0200
-Message-ID: <201105142111.53266.oliver@neukum.org>
-References: <BANLkTi=XNyR8GD43GGnMag+=JmhUd_5HtA@mail.gmail.com> <201105122203.13671.rjw@sisk.pl> <1305232563.2575.85.camel@mulgrave.site>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: 2.6.39-rc7-git7: Reported regressions from 2.6.38
+Date: Sun, 15 May 2011 00:18:48 +0200 (CEST)
+Message-ID: <So1vU2GC7XM.A.5wB.44vzNB@chimera>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305232563.2575.85.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, hare@suse.de
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Charles Hannum <root@ihack.net>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, linux-usb@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ogre.sisk.pl ([217.79.144.158]:51734 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754937Ab1ENW12 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 May 2011 18:27:28 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
 
-Am Donnerstag, 12. Mai 2011, 22:36:03 schrieb James Bottomley:
+This message contains a list of some regressions from 2.6.38,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-> Instinct tells me the correct set of fixes is to add a sync cache from
-> release (so we automatically sync on last close, which is usually when
-> an ordered remove happens), keep the one on shutdown, just in case the
-> system goes down with stuff still mounted and print a nasty message on
-> suspend for a write back device that's been removed.
-> 
-> I also think we shouldn't abort the suspend if the disk doesn't respond
-> correctly to start/stop ... the power is going to be disconnected
-> anyway, so it's no issue if the disk spins for a second or so longer.
-> 
-> The problem this is going to cause is double sync on shutdown (once when
-> final unmount closes the device and once on shutdown) ... do people
-> agree that's a price worth paying?
-> 
-> Something like this?
+If you know of any other unresolved regressions from 2.6.38, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-Hi,
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-it seems to me that the error codes should really be evaluated a bit better.
-How about this?
 
-	Regards
-		Oliver
+Listed regressions statistics:
 
->From 2ab03ae46d6dc126a51ee9cd38206fbdc8bf6a34 Mon Sep 17 00:00:00 2001
-From: Oliver Neukum <oliver@neukum.org>
-Date: Mon, 25 Oct 2010 12:25:26 +0200
-Subject: [PATCH 2/5] SCSI:sd:error handling in sd_sync_cache()
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-05-15       50       12          11
+  2011-04-30       38       17          16
+  2011-04-17       17       11          10
 
-The SCSI commands sd_sync_cache() uses may fail.
-These errors needs to be evaluated to return correct
-error codes. This fixes system suspension while a device
-removal is being handled.
 
-Signed-off-by: Oliver NEukum <oneukum@suse.de>
----
- drivers/scsi/sd.c |   28 ++++++++++++++++++++++++----
- 1 files changed, 24 insertions(+), 4 deletions(-)
+Unresolved regressions
+----------------------
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fcba7d2..5ed75bf 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1104,11 +1104,31 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 		sd_print_result(sdkp, res);
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
--	}
- 
--	if (res)
--		return -EIO;
--	return 0;
-+		/* we need to evaluate the error return  */
-+		if ((scsi_sense_valid(&sshdr) &&
-+			/* 0x3a is medium not present */
-+			sshdr.asc == 0x3a))
-+			/* this is no error here */
-+			return 0;
-+
-+		switch (host_byte(res)) {
-+		/* ignore errors due to racing a disconnection */
-+		case DID_BAD_TARGET:
-+		case DID_NO_CONNECT:	
-+			return 0;
-+		/* signal the upper layer it might try again */
-+		case DID_BUS_BUSY:
-+		case DID_IMM_RETRY:
-+		case DID_REQUEUE:
-+		case DID_SOFT_ERROR:
-+			return -EBUSY;
-+		default:
-+			return -EIO;
-+		}
-+	} else {
-+		return 0;
-+	}
- }
- 
- static void sd_rescan(struct device *dev)
--- 
-1.7.1
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=35062
+Subject		: Suspend to ram stopped working after commit of " intel-iommu: Unlink domain from iommu "
+Submitter	:  <optiluca@gmail.com>
+Date		: 2011-05-14 11:08 (1 days old)
+First-Bad-Commit: http://git.kernel.org/linus/a97590e56d0d58e1dd262353f7cbd84e81d8e600
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34952
+Subject		: 2.6.39-rc6: SATA hangs for a few seconds during boot
+Submitter	: Tino Keitel <tino.keitel@tikei.de>
+Date		: 2011-05-09 20:48 (6 days old)
+Message-ID	: <20110509204801.GA2258@x61.home>
+References	: http://marc.info/?l=linux-kernel&m=130497409509438&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34942
+Subject		: [Bug] Kdump does not work when panic triggered due to MCE
+Submitter	: K.Prasad <prasad@linux.vnet.ibm.com>
+Date		: 2011-05-06 16:54 (9 days old)
+Message-ID	: <20110506165412.GB2719@in.ibm.com>
+References	: http://marc.info/?l=linux-kernel&m=130470087226270&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34662
+Subject		: Warning at block/genhd.c:1556 disk_clear_events
+Submitter	: Meelis Roos <mroos@linux.ee>
+Date		: 2011-05-02 9:59 (13 days old)
+Message-ID	: <alpine.SOC.1.00.1105021255400.6200@math.ut.ee>
+References	: http://marc.info/?l=linux-kernel&m=130433037002610&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34492
+Subject		: [2.6.39-rc4, x86_32] Stall at default_idle()
+Submitter	: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Date		: 2011-04-27 4:49 (18 days old)
+Message-ID	: <201104270449.p3R4n54n023453@www262.sakura.ne.jp>
+References	: http://marc.info/?l=linux-kernel&m=130387977425687&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34202
+Subject		: MCEUSB remotes don't work with USB 3.0 ports
+Submitter	: Aaron Barany <akb825@gmail.com>
+Date		: 2011-05-01 23:48 (14 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=34002
+Subject		: [REGRESSION] [2.6.39-rc3] Wrong resolution in framebuffer and X Window
+Submitter	: Maciej Rutecki <maciej.rutecki@gmail.com>
+Date		: 2011-04-17 16:04 (28 days old)
+Message-ID	: <201104171804.04664.maciej.rutecki@gmail.com>
+References	: http://marc.info/?l=linux-fbdev&m=130305625114863&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33842
+Subject		: NULL pointer dereference in ip_fragment
+Submitter	: Tomas Carnecky <tom@dbservice.com>
+Date		: 2011-04-23 07:51 (22 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33792
+Subject		: lockdep trace when unplugging usb audio (.39rc4)
+Submitter	: Dave Jones <davej@redhat.com>
+Date		: 2011-04-19 18:07 (26 days old)
+Message-ID	: <20110419180745.GA438@redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=130323648920431&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33272
+Subject		: drm related hard-hang
+Submitter	: Peter Teoh <htmldeveloper@gmail.com>
+Date		: 2011-04-14 01:29 (31 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33242
+Subject		: Lockdep splat in autofs with 2.6.39-rc2
+Submitter	: Nick Bowler <nbowler@elliptictech.com>
+Date		: 2011-04-07 19:44 (38 days old)
+Message-ID	: <20110407194403.GA29404@elliptictech.com>
+References	: http://marc.info/?l=linux-kernel&m=130220545614682&w=2
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=33802
+Subject		: list_del corruption in sd driver since 2.6.39-rc4
+Submitter	: Christian Casteyde <casteyde.christian@free.fr>
+Date		: 2011-04-21 21:10 (24 days old)
+Handled-By	: James Bottomley <James.Bottomley@suse.de>
+Patch		: http://marc.info/?l=linux-kernel&m=130271409412095
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.38,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=32012
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
+
