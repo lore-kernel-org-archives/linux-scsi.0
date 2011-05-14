@@ -1,85 +1,84 @@
-From: "Nicholas A. Bellinger" <nab@risingtidesystems.com>
-Subject: Re: rtsadmin-v1.99 BETA packages
-Date: Fri, 13 May 2011 18:41:51 -0700
-Message-ID: <1305337311.7102.88.camel@haakon2.linux-iscsi.org>
-References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org>
-	 <1304553788.10072.241.camel@haakon2.linux-iscsi.org>
-	 <4DCAC075.5090007@redhat.com>
-	 <1305160226.19744.47.camel@haakon2.linux-iscsi.org>
-Reply-To: nab@risingtidesystems.com
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] libata SATL: WWN for device id VPD page
+Date: Fri, 13 May 2011 23:16:50 -0400
+Message-ID: <4DCDF422.5060109@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010408060008000106000901"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58838 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751223Ab1ENBuA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 21:50:00 -0400
-In-Reply-To: <1305160226.19744.47.camel@haakon2.linux-iscsi.org>
+Received: from smtp.infotech.no ([82.134.31.41]:43176 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758621Ab1ENDRL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 May 2011 23:17:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jerome Martin <jxm@risingtidesystems.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Paolo Bonzini <pbonzini@redhat.com>
+To: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, jgarzik@redhat.com, Tejun Heo <tj@kernel.org>
 
-On Wed, 2011-05-11 at 17:30 -0700, Nicholas A. Bellinger wrote:
-> On Wed, 2011-05-11 at 09:59 -0700, Andy Grover wrote:
-> > [CCing lists too.]
-> > 
-> > Hi Nicholas,
-> > 
-> > Thank you to you, Jerome and RTS for this work!
-> > 
-> > The rtsadmin-frozen rpm from 04-May-2011 installed ok but didn't seem to
-> > work quite right, but I wouldn't worry about it. I'm working on rpm
-> > packages with proper dependencies for Fedora rawhide, hopefully they'll
-> > be ready within a few days and I can make binary+src rpms available.
-> > 
-> 
-> Hey Andy,
-> 
-> Thanks alot for this status update wrt to rtsadmin-v2 userspace.  I am
-> really looking forward to seeing rtsadmin-v2 community edition available
-> very soon in Fedora rawhide.  We (RTS) are also very excited to expose
-> the v2 shell to a larger audience using mainline >= .38 target v4
-> infrastructure.
-> 
-> We believe that having an interactive target shell and python library
-> available to developers and users is criticaly important to the success
-> of the mainline target ecosystem as a whole.  We are very proud to be
-> able to work with the upstream community to achieve this important
-> milestone with the v2 shell.
-> 
-> Thank you Andy!!
-> 
-> --nab
-> 
+This is a multi-part message in MIME format.
+--------------010408060008000106000901
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hello everyone,
+libata implements a SCSI to ATA Translation Layer and
+should comply with the SAT (ANSI INCITS 431-2007) and
+SAT-2 (ANSI INCITS 465-2010).
 
-Just a quick update on the userspace side..
+Both standards require that if an ATA device supplies
+a World Wide Name (WWN) then it should appear in the
+corresponding SCSI device identification VPD page.
 
-This afternoon's updated RHEL6 and Debian Squeeze BETA builds are
-available here:
+Changelog:
+   - add NAA descriptor to the device identification VPD
+     page for the addressed logical unit. ATA's WWN is
+     in NAA(5) format.
 
-http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/rtsadmin-frozen-11.99-20110513091048.3434628.x86_64.rpm
-http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/rtsadmin-frozen_11.99-20110513161709.3434628_amd64.deb
+The attached patch is against lk 2.6.38 .
 
-These contain an important bugfix for v2 device creation where 
-/sys/kernel/config/target/core/$HBA/$DEV/wwn/vpd_unit_serial
-was not being automatically generated for newly created virtual devices.
-There is also a seperate multi-fabric export HBA context 'delete
-$DEVICE_NAME' that has been fixed as well and pushed into the community
-repo.
 
-Also, the lio-utils v4.0 packages for RHEL6 and Debian Squeeze have been
-updated with a few minor improvements to tcm_fabric.py code.
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/lio-utils-4.0-d2cf595d.x86_64.rpm
-http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/lio-utils_4.0_amd64.deb
+--------------010408060008000106000901
+Content-Type: text/x-patch;
+ name="libata-scsi_vpd83.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="libata-scsi_vpd83.patch"
 
-Please let us know if you have any questions.
+--- linux/drivers/ata/libata-scsi.c	2011-03-16 06:47:24.647997871 -0400
++++ linux/drivers/ata/libata-scsi.c_vpd83a	2011-05-13 19:35:40.601635269 -0400
+@@ -2028,12 +2028,29 @@ static unsigned int ata_scsiop_inq_80(st
+ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
+ {
+ 	const int sat_model_serial_desc_len = 68;
+-	int num;
++	int num, k;
++	unsigned char wwn_arr[8];
+ 
+ 	rbuf[1] = 0x83;			/* this page code */
+ 	num = 4;
+ 
+-	/* piv=0, assoc=lu, code_set=ACSII, designator=vendor */
++	/* WWN starts at word 108 in IDENTIFY response */
++	ata_id_string(args->id, wwn_arr, 108, 8);
++	/* SPL(SAS-2.1) checks for zeros rather than checking supported bit */
++	for (k = 0; (k < 8) && (0 == wwn_arr[k]); ++k)
++		;
++	if (k < 8) {	/* found non-zero WWN */
++		/* piv=0, assoc=lu, code_set=binary, designator=naa */
++		rbuf[num + 0] = 1;
++		rbuf[num + 1] = 3;
++		rbuf[num + 2] = 0;
++		rbuf[num + 3] = 8;
++		num += 4;
++		memcpy(rbuf + num, wwn_arr, 8);
++		num += 8;
++	}
++
++	/* piv=0, assoc=lu, code_set=ASCII, designator=vendor */
+ 	rbuf[num + 0] = 2;
+ 	rbuf[num + 3] = ATA_ID_SERNO_LEN;
+ 	num += 4;
 
-Thanks!
-
---nab
-
+--------------010408060008000106000901--
