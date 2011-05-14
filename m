@@ -1,65 +1,41 @@
-From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Subject: Re: aacraid adaptec 6805 support?
-Date: Sat, 14 May 2011 08:25:33 +0200
-Message-ID: <20110514062533.GA13324@apartia.fr>
-References: <20110513141242.GA1048@apartia.fr>
- <20110513164922.5167ea53@harpe.intellique.com>
- <20110513145420.GA2797@apartia.fr>
- <20110513172457.0db50c93@harpe.intellique.com>
- <20110513153922.GA5041@apartia.fr>
- <20110513183356.64937c6d@harpe.intellique.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [GIT PULL] isci merge candidate
+Date: Sat, 14 May 2011 10:49:49 +0200
+Message-ID: <20110514084949.GA23984@lst.de>
+References: <1305317680.21099.83.camel@dwillia2-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zenon.apartia.fr ([82.66.93.83]:55929 "EHLO zenon.apartia.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750867Ab1ENGZf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 May 2011 02:25:35 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110513183356.64937c6d@harpe.intellique.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1305317680.21099.83.camel@dwillia2-linux>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: James.Bottomley@hansenpartnership.com, Christoph Hellwig <hch@lst.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Jiang <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, May 13, 2011 at 06:33:56PM +0200, Emmanuel Florac wrote:
-> Le Fri, 13 May 2011 17:39:22 +0200
-> Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org> =E9criva=
-it:
->=20
-> > On each disk the third partition /dev/sdX3 is the last and largest =
-but
-> > it seems the Adaptec controller doesn't "see" the end of the disk
-> > where the md superblock is? Does that make sense?
->=20
-> Not to me, but I've seen weirder things from Adaptec firmwares :)
-> Are the drives configured as JBOD, or something else? You may segment
-> the drives (for instance if their sizes differ slightly), so maybe so=
-me
-> of them appear as volume segments instead of JBOD?
+On Fri, May 13, 2011 at 01:14:40PM -0700, Dan Williams wrote:
+> The isci driver team has now completed the major rework items addressed
+> in the review on linux-scsi (including removal of state handlers,
+> merging lldd and 'core', cleaning up the source code layout).
 
-Actually I didn't configure the Adaptec controller at all, just let it
-boot with disks transfered from the LSI controller. So the disks are no=
-t
-JBOD, in the adaptec sense at least, which requires "initializing"
-(meaning wiping) disks. I thought JBOD meant "just use the disks as the=
-y
-are" but that is in fact what adaptec calls "legacy" mode:
+I've looked over the driver a bit and I'm quite impressed with what
+you're archived in the short time since taking over the driver from
+whoever came up with the mess that it was initially.
 
-	May 13 17:09:57 zenon kernel: scsi 0:0:0:0: Direct-Access     Adaptec =
- 6805 Legacy      V1.0 PQ: 0 ANSI: 2
+I don't think you're quite done yet with the todo list that was given
+to you yet.  One thing that springs to mind is wrappers in timers.c,
+which are not just ugly, but in case of isci_task_execute_tmf is plain
+wrong as the implementation assumes all timers have the same lifetime
+rules as the isci_host.  You'll need to at least replace that last usage
+with a direct wait_for_completion_timeout, and even better get rid
+of it entirely.
 
-And in that "legacy" mode the disk geometry appears slightly smaller to
-the OS than with the LSI controller, hence my problem with /dev/md2. An=
-d
-/dev/md2 is a huge backup partition that would be very inconvenient to
-wipe and re-create (xfs doesn't support shrinking alas, so I can' shrin=
-k
-the partition).
+Also not quite done yet, although I'm happy with postponing that for now
+is the unification of the various data structures from the different
+layers of the original driver, e.g. isci_phy vs scic_sds_phy,
+isci_port vs scic_sds_port, isci_remote_device vs scic_sds_remote_device
+and isci_request vs scic_sds_request.
 
-Anyway thanks for your input,
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And of course there's a lot of room for additional further cleanups
+that should be able to shave off another couple thousands of lines, but
+these never were on the plate for the initial merge anyway.
