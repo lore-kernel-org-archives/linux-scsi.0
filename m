@@ -1,79 +1,85 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v2 0/4] Bugfixes for .39-rc8
-Date: Fri, 13 May 2011 17:05:29 -0700
-Message-ID: <1305331529.7102.61.camel@haakon2.linux-iscsi.org>
-References: <1305088535-27486-1-git-send-email-nab@linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@risingtidesystems.com>
+Subject: Re: rtsadmin-v1.99 BETA packages
+Date: Fri, 13 May 2011 18:41:51 -0700
+Message-ID: <1305337311.7102.88.camel@haakon2.linux-iscsi.org>
+References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org>
+	 <1304553788.10072.241.camel@haakon2.linux-iscsi.org>
+	 <4DCAC075.5090007@redhat.com>
+	 <1305160226.19744.47.camel@haakon2.linux-iscsi.org>
+Reply-To: nab@risingtidesystems.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305088535-27486-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel <linux-kernel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58838 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab1ENBuA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 May 2011 21:50:00 -0400
+In-Reply-To: <1305160226.19744.47.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jerome Martin <jxm@risingtidesystems.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Paolo Bonzini <pbonzini@redhat.com>
 
-On Tue, 2011-05-10 at 21:35 -0700, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2011-05-11 at 17:30 -0700, Nicholas A. Bellinger wrote:
+> On Wed, 2011-05-11 at 09:59 -0700, Andy Grover wrote:
+> > [CCing lists too.]
+> > 
+> > Hi Nicholas,
+> > 
+> > Thank you to you, Jerome and RTS for this work!
+> > 
+> > The rtsadmin-frozen rpm from 04-May-2011 installed ok but didn't seem to
+> > work quite right, but I wouldn't worry about it. I'm working on rpm
+> > packages with proper dependencies for Fedora rawhide, hopefully they'll
+> > be ready within a few days and I can make binary+src rpms available.
+> > 
 > 
-> Hi James and Co,
+> Hey Andy,
 > 
-> This series is resend of four patches that should be considered critical
-> target core bugfixes for .39 that have been under stress testing in a
-> couple of different labs recently using lio-core-2.6.git/lio-4.1 (.39-rcX)
-> and /lio-4.0 (.38.3) branch code.
+> Thanks alot for this status update wrt to rtsadmin-v2 userspace.  I am
+> really looking forward to seeing rtsadmin-v2 community edition available
+> very soon in Fedora rawhide.  We (RTS) are also very excited to expose
+> the v2 shell to a larger audience using mainline >= .38 target v4
+> infrastructure.
 > 
-> These are all important bugfixes that are required to run with in-flight
-> .40 HW target drivers in the upstream LIO tree.  This includes fixes for
-> the main transport_do_task_sg_chain() Data I/O mapping logic, and
-> task->task_sg[] shutdown path from MSI-X interrupt context.  These bugfixes
-> apply for all of the following HW fabric drivers:
+> We believe that having an interactive target shell and python library
+> available to developers and users is criticaly important to the success
+> of the mainline target ecosystem as a whole.  We are very proud to be
+> able to work with the upstream community to achieve this important
+> milestone with the v2 shell.
 > 
->    tcm_fc(openfcoe) w/ ddp offload, tcm_qla2xxx, ib_srpt and ibmvscsis.
-> 
-> These patches address issues that are able to easily produce OOPsen with
-> small backstore max_sectors values.  Please review+apply for .39 and
-> also queue into stable@kernel.org for .38.
->
-> The series is also available here for a direct pull:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-39-rc-fixes
-> 
-
-Hi James,
-
-Ping on getting these bugfixes merged into .39-final and .38 stable..? 
-
-The tcm_fc(openfcoe) HW offload also in the queue for .40 from Kiran &
-Co depends upon these fixes.
-
-Thanks,
-
---nab
-
-> and has been made against the following scsi-rc-fixes-2.6.git HEAD:
-> 
-> commit c055f5b2614b4f758ae6cc86733f31fa4c2c5844
-> Author: James Bottomley <James.Bottomley@suse.de>
-> Date:   Sun May 1 09:42:07 2011 -0500
-> 
->     [SCSI] fix oops in scsi_run_queue()
-> 
-> Thanks!
+> Thank you Andy!!
 > 
 > --nab
 > 
-> Nicholas Bellinger (4):
->   target: Fix multi task->task_sg[] chaining logic bug
->   target: Fix interrupt context bug with stats_lock and
->     core_tmr_alloc_req
->   target: Fix bug with task_sg chained transport_free_dev_tasks release
->   target: Fix task->task_execute_queue=1 clear bug + LUN_RESET OOPs
-> 
->  drivers/target/target_core_device.c    |    4 +-
->  drivers/target/target_core_tmr.c       |    7 +++--
->  drivers/target/target_core_transport.c |   46 +++++++++++++++++++++++--------
->  include/target/target_core_base.h      |    1 +
->  include/target/target_core_transport.h |    1 +
->  5 files changed, 42 insertions(+), 17 deletions(-)
-> 
+
+Hello everyone,
+
+Just a quick update on the userspace side..
+
+This afternoon's updated RHEL6 and Debian Squeeze BETA builds are
+available here:
+
+http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/rtsadmin-frozen-11.99-20110513091048.3434628.x86_64.rpm
+http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/rtsadmin-frozen_11.99-20110513161709.3434628_amd64.deb
+
+These contain an important bugfix for v2 device creation where 
+/sys/kernel/config/target/core/$HBA/$DEV/wwn/vpd_unit_serial
+was not being automatically generated for newly created virtual devices.
+There is also a seperate multi-fabric export HBA context 'delete
+$DEVICE_NAME' that has been fixed as well and pushed into the community
+repo.
+
+Also, the lio-utils v4.0 packages for RHEL6 and Debian Squeeze have been
+updated with a few minor improvements to tcm_fabric.py code.
+
+http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/lio-utils-4.0-d2cf595d.x86_64.rpm
+http://www.risingtidesystems.com/rtsadmin-v1.99-BETA/lio-utils_4.0_amd64.deb
+
+Please let us know if you have any questions.
+
+Thanks!
+
+--nab
+
