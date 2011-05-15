@@ -1,50 +1,40 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH 2/3] bsg: remove unnecessary conditional expressions
-Date: Sun, 15 May 2011 14:31:52 +0900
-Message-ID: <1305437513-3914-2-git-send-email-namhyung@gmail.com>
-References: <1305437513-3914-1-git-send-email-namhyung@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 33802] list_del corruption in sd driver since 2.6.39-rc4
+Date: Sun, 15 May 2011 11:00:20 GMT
+Message-ID: <201105151100.p4FB0KV3015697@demeter2.kernel.org>
+References: <bug-33802-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f173.google.com ([209.85.212.173]:45482 "EHLO
-	mail-px0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752259Ab1EOFcB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 May 2011 01:32:01 -0400
-In-Reply-To: <1305437513-3914-1-git-send-email-namhyung@gmail.com>
+Received: from demeter2.kernel.org ([140.211.167.42]:40920 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754859Ab1EOLAV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 May 2011 07:00:21 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p4FB0KBC015699
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 15 May 2011 11:00:20 GMT
+In-Reply-To: <bug-33802-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Second condition in OR always implies first condition is false
-thus bytes_read in the second is not needed. The same goes to
-bytes_written.
+https://bugzilla.kernel.org/show_bug.cgi?id=33802
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
----
- block/bsg.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index c4f49e255751..b7e42ad55361 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -606,7 +606,7 @@ bsg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
- 	ret = __bsg_read(buf, count, bd, NULL, &bytes_read);
- 	*ppos = bytes_read;
- 
--	if (!bytes_read || (bytes_read && err_block_err(ret)))
-+	if (!bytes_read || err_block_err(ret))
- 		bytes_read = ret;
- 
- 	return bytes_read;
-@@ -686,7 +686,7 @@ bsg_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
- 	/*
- 	 * return bytes written on non-fatal errors
- 	 */
--	if (!bytes_written || (bytes_written && err_block_err(ret)))
-+	if (!bytes_written || err_block_err(ret))
- 		bytes_written = ret;
- 
- 	dprintk("%s: returning %Zd\n", bd->name, bytes_written);
+Christian Casteyde <casteyde.christian@free.fr> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|RESOLVED                    |CLOSED
+
+
+
+
+--- Comment #5 from Christian Casteyde <casteyde.christian@free.fr>  2011-05-15 11:00:17 ---
+I didn't reproduced on recent kernels.
+
 -- 
-1.7.5
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
