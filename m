@@ -1,48 +1,60 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
-	writeback for various fses
-Date: Mon, 16 May 2011 13:55:35 -0700
-Message-ID: <20110516205535.GP20579@tux1.beaverton.ibm.com>
-References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com> <20110516190427.GN20579@tux1.beaverton.ibm.com> <20110516202710.GA32630@infradead.org>
-Reply-To: djwong@us.ibm.com
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/8] libfc, libfcoe and fcoe patches for 2.6.40
+Date: Mon, 16 May 2011 16:45:19 -0700
+Message-ID: <20110516234519.24502.22027.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:34852 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756038Ab1EPU4N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2011 16:56:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20110516202710.GA32630@infradead.org>
+Received: from mga01.intel.com ([192.55.52.88]:31844 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751052Ab1EPXpT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 May 2011 19:45:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-On Mon, May 16, 2011 at 04:27:10PM -0400, Christoph Hellwig wrote:
-> Whay about just sending the VFS patches to Al
+The following series implements a variety of fixes for
+libfc, libfcoe and fcoe. There isn't any theme to this
+series and the the only noteworthy patch is one that
+removes some unnecessary module state checks as it was
+discussed a bit on linux-scsi.
 
-Al was in the To: list of all 7 patches.
+These patches were tested against scsi-misc the day of
+this posting.
 
-> instead of talking about it on a totally irrelevant call that doesn't include
-> the important stakeholders?  FS-specific patches can go through the fs
-> maintainers independently.
+---
 
-The maintainers (ext4/ext2/vfat) were also in the To: list.
+Bhanu Prakash Gollapudi (1):
+      libfcoe: Incorrect CVL handling for NPIV ports
 
-Trouble is, MAINTAINERS says this:
+Hillf Danton (1):
+      libfc: fix mm leak in handling incoming request for target discovery
 
-MEMORY MANAGEMENT
-L:      linux-mm@kvack.org
-W:      http://www.linux-mm.org
-S:      Maintained
-F:      include/linux/mm.h
-F:      mm/
+Neerav Parikh (1):
+      fcoe: Prevent creation of an NPIV port with duplicate WWPN
 
-There's a list, but no specific contact person.  That's why I had to start
-asking around about who actually pushes mm changes to Linus.
+Robert Love (1):
+      libfcoe: Remove unnecessary module state checks
 
-As for Al Viro, he's still listed as the VFS maintainer; isn't he resting?
-I guess he did nominate you for the holding off of morons (like me). :)
+Vasu Dev (2):
+      libfc: don't call resp handler after FC_EX_TIMEOUT
+      libfc: fix race in SRR response
 
---D
+Yi Zou (2):
+      libfc: release DDP context if frame_send() fails
+      libfc: do not immediately retry the cmd when seq_send fails in fc_fcp_send_data
+
+
+ drivers/scsi/fcoe/fcoe.c           |   58 ++++++++++++++++
+ drivers/scsi/fcoe/fcoe.h           |   10 +++
+ drivers/scsi/fcoe/fcoe_ctlr.c      |  133 ++++++++++++++++++++++++------------
+ drivers/scsi/fcoe/fcoe_transport.c |   40 -----------
+ drivers/scsi/libfc/fc_disc.c       |    1 
+ drivers/scsi/libfc/fc_exch.c       |    2 +
+ drivers/scsi/libfc/fc_fcp.c        |   16 ++--
+ drivers/scsi/libfc/fc_libfc.h      |    1 
+ 8 files changed, 168 insertions(+), 93 deletions(-)
+
+-- 
+Thanks, //Rob
