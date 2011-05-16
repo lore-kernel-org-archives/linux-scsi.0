@@ -1,77 +1,56 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi/sd: fix suspend with USB-connected Android phone
- (one line)
-Date: Mon, 16 May 2011 07:56:14 +0200
-Message-ID: <4DD0BC7E.3060901@suse.de>
-References: <BANLkTi=XNyR8GD43GGnMag+=JmhUd_5HtA@mail.gmail.com> <201105122203.13671.rjw@sisk.pl> <1305232563.2575.85.camel@mulgrave.site> <201105142111.53266.oliver@neukum.org>
+From: Frans van Berckel <fberckel@xs4all.nl>
+Subject: Re: [PATCH 03/03] mptfusion: Bump version 3.4.19
+Date: Mon, 16 May 2011 16:04:42 +0200
+Message-ID: <1305554682.1771.19.camel@deblnxsrv222>
+References: <1305552879.1771.1.camel@deblnxsrv222>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201105142111.53266.oliver@neukum.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Charles Hannum <root@ihack.net>, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-vbr12.xs4all.nl ([194.109.24.32]:2618 "EHLO
+	smtp-vbr12.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755196Ab1EPOEs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2011 10:04:48 -0400
+In-Reply-To: <1305552879.1771.1.camel@deblnxsrv222>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 05/14/2011 09:11 PM, Oliver Neukum wrote:
-> Am Donnerstag, 12. Mai 2011, 22:36:03 schrieb James Bottomley:
->
->> Instinct tells me the correct set of fixes is to add a sync cache fr=
-om
->> release (so we automatically sync on last close, which is usually wh=
-en
->> an ordered remove happens), keep the one on shutdown, just in case t=
-he
->> system goes down with stuff still mounted and print a nasty message =
-on
->> suspend for a write back device that's been removed.
->>
->> I also think we shouldn't abort the suspend if the disk doesn't resp=
-ond
->> correctly to start/stop ... the power is going to be disconnected
->> anyway, so it's no issue if the disk spins for a second or so longer=
-=2E
->>
->> The problem this is going to cause is double sync on shutdown (once =
-when
->> final unmount closes the device and once on shutdown) ... do people
->> agree that's a price worth paying?
->>
->> Something like this?
->
-> Hi,
->
-> it seems to me that the error codes should really be evaluated a bit =
-better.
-> How about this?
->
-> 	Regards
-> 		Oliver
->
->  From 2ab03ae46d6dc126a51ee9cd38206fbdc8bf6a34 Mon Sep 17 00:00:00 20=
-01
-> From: Oliver Neukum<oliver@neukum.org>
-> Date: Mon, 25 Oct 2010 12:25:26 +0200
-> Subject: [PATCH 2/5] SCSI:sd:error handling in sd_sync_cache()
->
-> The SCSI commands sd_sync_cache() uses may fail.
-> These errors needs to be evaluated to return correct
-> error codes. This fixes system suspension while a device
-> removal is being handled.
->
-> Signed-off-by: Oliver NEukum<oneukum@suse.de>
-Yep, this makes sense.
+Dear Desai,
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+Do you know anyone inside LSI is working on a MPT Fusion kernel patch
+for version 4? Have seen your company did release 4.26.00 last summer.
 
-Cheers,
+MPT Fusion Linux OS Driver Release Notes
+Driver Version: mptlinux-4.26.00.00-1
+12/07/2010
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
+Thanks,
+
+
+Frans van Berckel
+
+On Mon, 2011-05-16 at 15:34 +0200, Kashyap, Desai wrote:
+> Update version string to 3.4.19
+> 
+> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+> ---
+> diff --git a/drivers/message/fusion/mptbase.h
+> b/drivers/message/fusion/mptbase.h
+> index 1735c84..fe90233 100644
+> --- a/drivers/message/fusion/mptbase.h
+> +++ b/drivers/message/fusion/mptbase.h
+> @@ -76,8 +76,8 @@
+> #define COPYRIGHT "Copyright (c) 1999-2008 " MODULEAUTHOR
+> #endif
+> 
+> -#define MPT_LINUX_VERSION_COMMON "3.04.18"
+> -#define MPT_LINUX_PACKAGE_NAME "@(#)mptlinux-3.04.18"
+> +#define MPT_LINUX_VERSION_COMMON "3.04.19"
+> +#define MPT_LINUX_PACKAGE_NAME "@(#)mptlinux-3.04.19"
+> #define WHAT_MAGIC_STRING "@" "(" "#" ")"
+> 
+> #define show_mptmod_ver(s,ver)  \
+
+
