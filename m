@@ -1,39 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Submit commit 3dea642afd for 2.6.38.stable?
-Date: Mon, 16 May 2011 16:45:15 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1105161626070.2013-100000@iolanthe.rowland.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
+	writeback for various fses
+Date: Mon, 16 May 2011 13:55:35 -0700
+Message-ID: <20110516205535.GP20579@tux1.beaverton.ibm.com>
+References: <20110509230318.19566.66202.stgit@elm3c44.beaverton.ibm.com> <20110516190427.GN20579@tux1.beaverton.ibm.com> <20110516202710.GA32630@infradead.org>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55548 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752314Ab1EPUpQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2011 16:45:16 -0400
+Received: from e37.co.us.ibm.com ([32.97.110.158]:34852 "EHLO
+	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756038Ab1EPU4N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 May 2011 16:56:13 -0400
+Content-Disposition: inline
+In-Reply-To: <20110516202710.GA32630@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, SCSI development list <linux-scsi@vger.kernel.org>, stable@kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Theodore Tso <tytso@mit.edu>, Jan Kara <jack@suse.cz>, Alexander Viro <viro@zeniv.linux.org.uk>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 
-James:
+On Mon, May 16, 2011 at 04:27:10PM -0400, Christoph Hellwig wrote:
+> Whay about just sending the VFS patches to Al
 
-Your commit 3dea642afd9187728d119fce5c82a7ed9faa9b6a ([SCSI] Revert
-"[SCSI] Retrieve the Caching mode page") hasn't been submitted for the
-2.6.38 stable tree.  More people are now getting hit with the
-underlying problem; see
+Al was in the To: list of all 7 patches.
 
-	https://bugzilla.kernel.org/show_bug.cgi?id=35042
+> instead of talking about it on a totally irrelevant call that doesn't include
+> the important stakeholders?  FS-specific patches can go through the fs
+> maintainers independently.
 
-Do you want to queue your commit to the stable tree, or do you prefer
-to wait until the proper repair patch:
+The maintainers (ext4/ext2/vfat) were also in the To: list.
 
-	http://marc.info/?l=linux-scsi&m=130089710431684&w=2
+Trouble is, MAINTAINERS says this:
 
-has been merged so it can go into the stable tree instead?
+MEMORY MANAGEMENT
+L:      linux-mm@kvack.org
+W:      http://www.linux-mm.org
+S:      Maintained
+F:      include/linux/mm.h
+F:      mm/
 
-Alan Stern
+There's a list, but no specific contact person.  That's why I had to start
+asking around about who actually pushes mm changes to Linus.
 
-P.S.: As of now, the scsi-next tree doesn't show any signs of
-reinstating Luben's original commit together with my repair patch.  
-Does this mean you intend to forget about the original "Retrieve the
-Caching mode page" change, or do you intend to merge them for 2.6.41?)
+As for Al Viro, he's still listed as the VFS maintainer; isn't he resting?
+I guess he did nominate you for the holding off of morons (like me). :)
 
+--D
