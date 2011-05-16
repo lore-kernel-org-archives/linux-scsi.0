@@ -1,60 +1,63 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 2/3] BNX2I: Updated the connection shutdown/cleanup
- timeout
-Date: Mon, 16 May 2011 11:13:19 -0700
-Message-ID: <1305569600-1523-3-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
+	writeback for various fses
+Date: Mon, 16 May 2011 11:47:36 -0700
+Message-ID: <20110516184736.GL20579@tux1.beaverton.ibm.com>
+References: <87tyd31fkc.fsf@devron.myhome.or.jp> <20110510123819.GB4402@quack.suse.cz> <87hb924s2x.fsf@devron.myhome.or.jp> <20110510132953.GE4402@quack.suse.cz> <878vue4qjb.fsf@devron.myhome.or.jp> <87zkmu3b2i.fsf@devron.myhome.or.jp> <20110510145421.GJ4402@quack.suse.cz> <87zkmupmaq.fsf@devron.myhome.or.jp> <20110510162237.GM4402@quack.suse.cz> <87vcxipljj.fsf@devron.myhome.or.jp>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1866 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751758Ab1EPSNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2011 14:13:37 -0400
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <87vcxipljj.fsf@devron.myhome.or.jp>
+Sender: linux-ext4-owner@vger.kernel.org
+To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cc: Jan Kara <jack@suse.cz>, Theodore Tso <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@novell.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-Modified the 10s wait time for inflight offload connections to
-advance to the next state to 2s based on test result.
-Modified the 20s shutdown timeout to 30s based on test result.
+On Wed, May 11, 2011 at 01:28:32AM +0900, OGAWA Hirofumi wrote:
+> Jan Kara <jack@suse.cz> writes:
+> 
+> >> Maybe possible, but you really think on usual case just blocking is
+> >> better?
+> >   Define usual case... As Christoph noted, we don't currently have a real
+> > practical case where blocking would matter (since frequent rewrites are
+> > rather rare). So defining what is usual when we don't have a single real
+> > case is kind of tough ;)
+> 
+> OK. E.g. usual workload on desktop, but FS like ext2/fat.
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_init.c  |    2 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+In the frequent rewrite case, here's what you get:
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 1d24a28..6adbdc3 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -244,7 +244,7 @@ void bnx2i_stop(void *handle)
- 	wait_event_interruptible_timeout(hba->eh_wait,
- 					 (list_empty(&hba->ep_ofld_list) &&
- 					 list_empty(&hba->ep_destroy_list)),
--					 10 * HZ);
-+					 2 * HZ);
- 	/* Wait for all endpoints to be torn down, Chip will be reset once
- 	 *  control returns to network driver. So it is required to cleanup and
- 	 * release all connection resources before returning from this routine.
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 7b4d1d0..51a970f 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -858,7 +858,7 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
- 	mutex_init(&hba->net_dev_lock);
- 	init_waitqueue_head(&hba->eh_wait);
- 	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type)) {
--		hba->hba_shutdown_tmo = 20 * HZ;
-+		hba->hba_shutdown_tmo = 30 * HZ;
- 		hba->conn_teardown_tmo = 20 * HZ;
- 		hba->conn_ctx_destroy_tmo = 6 * HZ;
- 	} else {	/* 5706/5708/5709 */
--- 
-1.7.0.5
+Regular disk: (possibly garbage) write, followed by a second write to make the
+disk reflect memory contents.
 
+RAID w/ shadow pages: two writes, both consistent.  Higher memory consumption.
 
+T10 DIF disk: disk error any time the CPU modifies a page that the disk
+controller is DMA'ing out of memory.  I suppose one could simply retry the
+operation if the page is dirty, but supposing memory writes are happening fast
+enough that the retries also produce disk errors, _nothing_ ever gets written.
+
+With the new stable-page-writes patchset, the garbage write/disk error symptoms
+go away since the processes block instead of creating this window where it's
+not clear whether the disk's copy of the data is consistent.  I could turn the
+wait_on_page_writeback calls into some sort of page migration if the
+performance turns out to be terrible, though I'm still working on quantifying
+the impact.  Some people pointed out that sqlite tends to write the same blocks
+frequently, though I wonder if sqlite actually tries to write memory pages
+while syncing them?
+
+One use case where I could see a serious performance hit happening is the case
+where some app writes a bunch of memory pages, calls sync to force the dirty
+pages to disk, and /must/ resume writing those memory pages before the sync
+completes.  The page migration would of course help there, provided a memory
+page can be found in less time than an I/O operation.
+
+Someone commented on the LWN article about this topic, claiming that he had a
+program that couldn't afford to block on writes to mlock()'d memory.  I'm not
+sure how to fix that program, because if memory writes never coordinate with
+disk writes and the other threads are always writing memory, I wonder how the
+copy on disk isn't always indeterminate.
+
+--D
