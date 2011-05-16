@@ -1,35 +1,76 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/3] BNX2I: Optimized the iSCSI offload performance
-Date: Mon, 16 May 2011 14:13:37 -0500
-Message-ID: <4DD17761.5060606@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1305569600-1523-4-git-send-email-eddie.wai@broadcom.com>
+From: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during writeback for various fses
+Date: Tue, 17 May 2011 04:31:37 +0900
+Message-ID: <87oc3230iu.fsf@devron.myhome.or.jp>
+References: <87tyd31fkc.fsf@devron.myhome.or.jp>
+	<20110510123819.GB4402@quack.suse.cz>
+	<87hb924s2x.fsf@devron.myhome.or.jp>
+	<20110510132953.GE4402@quack.suse.cz>
+	<878vue4qjb.fsf@devron.myhome.or.jp>
+	<87zkmu3b2i.fsf@devron.myhome.or.jp>
+	<20110510145421.GJ4402@quack.suse.cz>
+	<87zkmupmaq.fsf@devron.myhome.or.jp>
+	<20110510162237.GM4402@quack.suse.cz>
+	<87vcxipljj.fsf@devron.myhome.or.jp>
+	<20110516184736.GL20579@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38233 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753824Ab1EPTNs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2011 15:13:48 -0400
-In-Reply-To: <1305569600-1523-4-git-send-email-eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20110516184736.GL20579@tux1.beaverton.ibm.com> (Darrick
+	J. Wong's message of "Mon, 16 May 2011 11:47:36 -0700")
+Sender: owner-linux-mm@kvack.org
+To: djwong@us.ibm.com
+Cc: Jan Kara <jack@suse.cz>, Theodore Tso <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
 
-On 05/16/2011 01:13 PM, Eddie Wai wrote:
-> 5. Changed the cmd_per_lun from 32 to 24.
+"Darrick J. Wong" <djwong@us.ibm.com> writes:
+
+>> OK. E.g. usual workload on desktop, but FS like ext2/fat.
 >
+> In the frequent rewrite case, here's what you get:
+>
+> Regular disk: (possibly garbage) write, followed by a second write to make the
+> disk reflect memory contents.
+>
+> RAID w/ shadow pages: two writes, both consistent.  Higher memory consumption.
+>
+> T10 DIF disk: disk error any time the CPU modifies a page that the disk
+> controller is DMA'ing out of memory.  I suppose one could simply retry the
+> operation if the page is dirty, but supposing memory writes are happening fast
+> enough that the retries also produce disk errors, _nothing_ ever gets written.
+>
+> With the new stable-page-writes patchset, the garbage write/disk error symptoms
+> go away since the processes block instead of creating this window where it's
+> not clear whether the disk's copy of the data is consistent.  I could turn the
+> wait_on_page_writeback calls into some sort of page migration if the
+> performance turns out to be terrible, though I'm still working on quantifying
+> the impact.  Some people pointed out that sqlite tends to write the same blocks
+> frequently, though I wonder if sqlite actually tries to write memory pages
+> while syncing them?
+>
+> One use case where I could see a serious performance hit happening is the case
+> where some app writes a bunch of memory pages, calls sync to force the dirty
+> pages to disk, and /must/ resume writing those memory pages before the sync
+> completes.  The page migration would of course help there, provided a memory
+> page can be found in less time than an I/O operation.
+>
+> Someone commented on the LWN article about this topic, claiming that he had a
+> program that couldn't afford to block on writes to mlock()'d memory.  I'm not
+> sure how to fix that program, because if memory writes never coordinate with
+> disk writes and the other threads are always writing memory, I wonder how the
+> copy on disk isn't always indeterminate.
 
-What was the reason for this?
+I'm not thinking data page is special operation for doing this (at least
+logically). In other word, if you are talking about only data page, you
+shouldn't send patches for metadata with it.
 
-> @@ -2159,7 +2165,7 @@ static struct scsi_host_template bnx2i_host_template = {
->   	.change_queue_depth	= iscsi_change_queue_depth,
->   	.can_queue		= 1024,
->   	.max_sectors		= 127,
-> -	.cmd_per_lun		= 32,
-> +	.cmd_per_lun		= 24,
->   	.this_id		= -1,
->   	.use_clustering		= ENABLE_CLUSTERING,
->   	.sg_tablesize		= ISCSI_MAX_BDS_PER_CMD,
+Thanks.
+-- 
+OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
