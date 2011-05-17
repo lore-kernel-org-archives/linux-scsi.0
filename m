@@ -1,23 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 35282] BUG() in 2.6.38.6
-Date: Tue, 17 May 2011 23:55:02 +0400
-Message-ID: <1305662102.2667.25.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 35282] BUG() in 2.6.38.6
+Date: Tue, 17 May 2011 20:33:55 GMT
+Message-ID: <201105172033.p4HKXt9f002889@demeter1.kernel.org>
 References: <bug-35282-11613@https.bugzilla.kernel.org/>
-	 <201105171917.p4HJHUhx019356@demeter2.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51059 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932141Ab1EQTzJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2011 15:55:09 -0400
-In-Reply-To: <201105171917.p4HJHUhx019356@demeter2.kernel.org>
+Received: from demeter1.kernel.org ([140.211.167.39]:51578 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932075Ab1EQUdz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2011 16:33:55 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p4HKXtSJ002890
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 20:33:55 GMT
+In-Reply-To: <bug-35282-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=35282
+
+
+
+
+
+--- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2011-05-17 20:33:51 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Tue, 2011-05-17 at 19:17 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -43,4 +52,7 @@ Thanks,
 
 James
 
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
