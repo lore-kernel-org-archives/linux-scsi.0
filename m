@@ -1,29 +1,78 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PULL] isci merge candidate
-Date: Mon, 16 May 2011 20:47:24 -0400
-Message-ID: <BANLkTi=yGe+xKpB+VnD3+tvw1-o4Qs_Z7w@mail.gmail.com>
-References: <1305317680.21099.83.camel@dwillia2-linux>
-	<BANLkTim3igaB8XXQkDY6GEutWfbK-o840A@mail.gmail.com>
-	<4DCDA663.2040202@intel.com>
-	<1305324962.2781.5.camel@pasglop>
-	<BANLkTimYfjz=vhF=cGXNqRD1RTzKTGhv9w@mail.gmail.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCHSET v3.1 0/7] data integrity: Stabilize pages during
+	writeback for various fses
+Date: Mon, 16 May 2011 18:23:07 -0700
+Message-ID: <20110517012307.GQ20579@tux1.beaverton.ibm.com>
+References: <87hb924s2x.fsf@devron.myhome.or.jp> <20110510132953.GE4402@quack.suse.cz> <878vue4qjb.fsf@devron.myhome.or.jp> <87zkmu3b2i.fsf@devron.myhome.or.jp> <20110510145421.GJ4402@quack.suse.cz> <87zkmupmaq.fsf@devron.myhome.or.jp> <20110510162237.GM4402@quack.suse.cz> <87vcxipljj.fsf@devron.myhome.or.jp> <20110516184736.GL20579@tux1.beaverton.ibm.com> <87oc3230iu.fsf@devron.myhome.or.jp>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimYfjz=vhF=cGXNqRD1RTzKTGhv9w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linus Torvalds <torvalds@linux-foundation.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <87oc3230iu.fsf@devron.myhome.or.jp>
+Sender: owner-linux-mm@kvack.org
+To: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+Cc: Jan Kara <jack@suse.cz>, Theodore Tso <tytso@mit.edu>, Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, May 16, 2011 at 8:39 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> At a minimum It would require a more verbose interface to
-> libsas/libata (or new libframe?) to allow us to deliver raw
-> unsolicited frames into common protocol handlers.
+On Tue, May 17, 2011 at 04:31:37AM +0900, OGAWA Hirofumi wrote:
+> "Darrick J. Wong" <djwong@us.ibm.com> writes:
+> 
+> >> OK. E.g. usual workload on desktop, but FS like ext2/fat.
+> >
+> > In the frequent rewrite case, here's what you get:
+> >
+> > Regular disk: (possibly garbage) write, followed by a second write to make the
+> > disk reflect memory contents.
+> >
+> > RAID w/ shadow pages: two writes, both consistent.  Higher memory consumption.
+> >
+> > T10 DIF disk: disk error any time the CPU modifies a page that the disk
+> > controller is DMA'ing out of memory.  I suppose one could simply retry the
+> > operation if the page is dirty, but supposing memory writes are happening fast
+> > enough that the retries also produce disk errors, _nothing_ ever gets written.
+> >
+> > With the new stable-page-writes patchset, the garbage write/disk error symptoms
+> > go away since the processes block instead of creating this window where it's
+> > not clear whether the disk's copy of the data is consistent.  I could turn the
+> > wait_on_page_writeback calls into some sort of page migration if the
+> > performance turns out to be terrible, though I'm still working on quantifying
+> > the impact.  Some people pointed out that sqlite tends to write the same blocks
+> > frequently, though I wonder if sqlite actually tries to write memory pages
+> > while syncing them?
+> >
+> > One use case where I could see a serious performance hit happening is the case
+> > where some app writes a bunch of memory pages, calls sync to force the dirty
+> > pages to disk, and /must/ resume writing those memory pages before the sync
+> > completes.  The page migration would of course help there, provided a memory
+> > page can be found in less time than an I/O operation.
+> >
+> > Someone commented on the LWN article about this topic, claiming that he had a
+> > program that couldn't afford to block on writes to mlock()'d memory.  I'm not
+> > sure how to fix that program, because if memory writes never coordinate with
+> > disk writes and the other threads are always writing memory, I wonder how the
+> > copy on disk isn't always indeterminate.
+> 
+> I'm not thinking data page is special operation for doing this (at least
+> logically). In other word, if you are talking about only data page, you
+> shouldn't send patches for metadata with it.
 
- ...which is where SAS and SATA have been heading for a while, anyway.
- With chained SAS expander setup you have a network, if an annoying,
-manually configured and routed one.  Over that network you deliver
-frames of various types.
+Patch 7, which is the only patch that touches code under fs/fat/, only fixes
+the case where the filesystem tries to modify its own metadata while writing
+out the same metadata.
 
-     Jeff
+Patches 2 and 3, which affect only files mm/ and fs/, prevent data pages from
+being modified while the same data pages are being written out.  It is not
+necessary to modify any fs/fat/ code to fix the data page case, fortunately.
+
+That said, the intent of the patch set is to prevent writes to any memory page,
+regardless of type (data or metadata), while the same page is being written out.
+
+--D
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
