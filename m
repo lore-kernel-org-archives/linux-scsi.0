@@ -1,48 +1,37 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: rtsadmin-v1.99 BETA packages
-Date: Tue, 17 May 2011 10:12:12 -0700
-Message-ID: <4DD2AC6C.5020205@redhat.com>
-References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org>	<1304553788.10072.241.camel@haakon2.linux-iscsi.org>	<4DCAC075.5090007@redhat.com>	<1305160226.19744.47.camel@haakon2.linux-iscsi.org>	<1305337311.7102.88.camel@haakon2.linux-iscsi.org>	<4DCF1215.2010406@redhat.com>	<1305617458.2856.139.camel@haakon2.linux-iscsi.org> <BANLkTikmp8LdCt2CcpJ21feL8x6=ODGMHQ@mail.gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: fix possible false positive detection of stuck
+ interrupt
+Date: Tue, 17 May 2011 12:59:02 -0500
+Message-ID: <4DD2B766.9060408@linux.vnet.ibm.com>
+References: <20110517161648.403401807@linux.vnet.ibm.com> <4DD29FED.60707@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53076 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755327Ab1EQRMj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 May 2011 13:12:39 -0400
-In-Reply-To: <BANLkTikmp8LdCt2CcpJ21feL8x6=ODGMHQ@mail.gmail.com>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:47980 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755745Ab1EQR7M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2011 13:59:12 -0400
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4HHliVQ007450
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:47:44 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p4HHx5R2149678
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:59:05 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p4HHx4DL022533
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:59:05 -0600
+In-Reply-To: <4DD29FED.60707@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jerome Martin <jxm@risingtidesystems.com>
-Cc: nab@risingtidesystems.com, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Paolo Bonzini <pbonzini@redhat.com>, Marc Fleischmann <mwf@risingtidesystems.com>
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Kleber Sacilotto de Souza <klebers@br.ibm.com>
 
-On 05/17/2011 05:56 AM, Jerome Martin wrote:
->   Andy, in your own packaging, I noticed you got rid of the timestamps.
-> Please don't, it is here for a good reason: It guarantees a proper
-> version comparison/ordering across development builds, for both dpkg and
-> rpm. If the version string seems lengthy to you, remember that those are
-> just for for development builds, tagged ones will be much easier to the eye.
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Sure, I did add a .0 after the 1.99 in order to allow for further
-development rpms before 2.0, but I can see how timestamps would be
-easier from an automation perspective.
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-In any case, since my rpm building process is rather manual, I'll
-probably refrain from many more versions before release. I just wanted
-to get something out there for my own use, and to get it in the pipeline
-for distro inclusion.
 
-> Last, but not least regarding your initial question, as Nic said, the
-> frozen packages are not part of the OSS tree. In order to differentiate
-> the non-OSS tree builds from the OSS ones, we prepend a '1' to the OSS
-> tree version strings, allowing us to provide an upgrade path from OSS to
-> non OSS (same packages names, but higher version, allows seemless
-> upgrade), and also distinguish the packages easily. But please don't
-> bother about that specific item, it is not relevant to the OSS branch,
-> just mentioning it FYI :-)
-
-Ok, thanks. I think for my purposes, I can ignore the -frozen packages,
-and even pretend your non-OSS version doesn't exist, and go from there.
-
-Regards -- Andy
