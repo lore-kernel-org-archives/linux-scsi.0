@@ -1,56 +1,44 @@
-From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: [RESEND] [PATCH] ipr: Rate limit DMA mapping errors
-Date: Tue, 17 May 2011 09:58:35 -0700
-Message-ID: <4DD2A93B.3000006@linux.vnet.ibm.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: rtsadmin-v1.99 BETA packages
+Date: Tue, 17 May 2011 10:12:00 -0700
+Message-ID: <4DD2AC60.6010506@redhat.com>
+References: <1304121705.14278.196.camel@haakon2.linux-iscsi.org>	 <1304553788.10072.241.camel@haakon2.linux-iscsi.org>	 <4DCAC075.5090007@redhat.com>	 <1305160226.19744.47.camel@haakon2.linux-iscsi.org>	 <1305337311.7102.88.camel@haakon2.linux-iscsi.org>	 <4DCF1215.2010406@redhat.com> <1305617458.2856.139.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:34558 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755277Ab1EQQ7K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2011 12:59:10 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4HGrKdn018987
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 10:53:20 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p4HH045x055608
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:00:04 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p4HAwaKP021900
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 04:58:36 -0600
+Received: from mx1.redhat.com ([209.132.183.28]:57846 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755458Ab1EQRM3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 May 2011 13:12:29 -0400
+In-Reply-To: <1305617458.2856.139.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: brking@us.ibm.com, linux-scsi@vger.kernel.org, Anton Blanchard <anton@samba.org>
+To: nab@risingtidesystems.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Jerome Martin <jxm@risingtidesystems.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Matthew Wilcox <matthew@wil.cx>, Stefan Hajnoczi <stefanha@gmail.com>, linux-iscsi-target-dev <linux-iscsi-target-dev@googlegroups.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Paolo Bonzini <pbonzini@redhat.com>, Marc Fleischmann <mwf@risingtidesystems.com>
 
-Resending this based on James' request that was sent to the
-linux-scsi list on May 10.
+On 05/17/2011 12:30 AM, Nicholas A. Bellinger wrote:
+> So to clarify here.  We intend to keep everything related to single
+> target management for rtslib/configshell/rtsadmin available under AGPLv3
+> on http://www.risingtidesystems.com/git/  This currently includes:
+> 
+> *) high level single node management, libs, and docs for target core
+> *) high level single node management, libs, and docs for fabrics using 
+>    the mainline target_core_fabric_config.c framework.
+> *) configshell python library and docs
+> *) Ability to build rpm/deb source packages with necessary dependecies
+> 
+> Our commerical versions will include a number of integrated features to
+> complement single node target core/fabric management, along with
+> allowing rtsadmin-v2 to function in a larger multi-node cluster
+> environment.
+> 
+> To the question of contributing code to the AGPLv3 licensed community
+> edition of rtslib/configshell/rtsadmin, we are doing a dual licensing
+> model like MySQL.   Please feel free to contact Marc directly with
+> specific questions that you may have wrt to licensing for our python
+> code.
 
----
+Thanks for the clarification.
 
-I noticed a stream of errors from the IPR driver while doing
-IOMMU fault injection. Rate limit the errors so we don't clog
-up the console and logfiles.
-
-Signed-off-by: Anton Blanchard <anton@samba.org>
----
-
-Index: linux-powerpc/drivers/scsi/ipr.c
-===================================================================
---- linux-powerpc.orig/drivers/scsi/ipr.c	2011-05-03 16:35:10.304480474 +1000
-+++ linux-powerpc/drivers/scsi/ipr.c	2011-05-09 10:00:41.439578385 +1000
-@@ -5143,7 +5143,8 @@ static int ipr_build_ioadl64(struct ipr_
-
- 	nseg = scsi_dma_map(scsi_cmd);
- 	if (nseg < 0) {
--		dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
-+		if (printk_ratelimit())
-+			dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
- 		return -1;
- 	}
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards -- Andy
