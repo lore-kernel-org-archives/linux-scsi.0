@@ -1,129 +1,51 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 8/8] libfcoe: Remove unnecessary module state checks
-Date: Mon, 16 May 2011 16:46:02 -0700
-Message-ID: <20110516234602.24502.34765.stgit@localhost6.localdomain6>
-References: <20110516234519.24502.22027.stgit@localhost6.localdomain6>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT PULL] isci merge candidate
+Date: Mon, 16 May 2011 17:39:26 -0700
+Message-ID: <BANLkTimYfjz=vhF=cGXNqRD1RTzKTGhv9w@mail.gmail.com>
+References: <1305317680.21099.83.camel@dwillia2-linux>
+	<BANLkTim3igaB8XXQkDY6GEutWfbK-o840A@mail.gmail.com>
+	<4DCDA663.2040202@intel.com>
+	<1305324962.2781.5.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:13859 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753980Ab1EPXqC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 May 2011 19:46:02 -0400
-In-Reply-To: <20110516234519.24502.22027.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1305324962.2781.5.camel@pasglop>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>
 
-libfcoe's interface consists of create, destroy, enable,
-disable and create_vn2vn. These are currently module
-paramaters added durring the module initialization. A
-concern arose that the module parameters were being added
-with write permissions before the module had completed
-initialization. The following code was added to each
-sysfs store file.
+On Fri, May 13, 2011 at 3:16 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+>
+>> It's a SAS (serial-attached-scsi) driver so it ties in to libsas rat=
+her
+>> than libata (libsas itself ties in to libata for tunnelling SATA
+>> protocol over SAS). =A0The size is attributable to the fact that all
+>> protocol handling for non-fast path i/o is handled by software. =A0T=
+here
+>> are still cleanups that can be made, but likely not on the on the sa=
+me
+>> order of what we have already done.
+>
+> How much of that non-fast-path could/should be in generic code vs. in
+> the driver specific code ? IE. If somebody comes up with another "dum=
+b"
 
-* Make sure the module has been initialized, and is not about to be
-* removed.  Module parameter sysfs files are writable before the
-* module_init function is called and after module_exit.
-*/
-if (THIS_MODULE->state != MODULE_STATE_LIVE)
-    goto out_nodev;
+I prefer the word "thin" :-), where "fat" refers to controllers that
+hide this logic in offload cpu's, firmware, and or custom asics.
 
-This check was called out as unhelpful as the module can
-go dead at any time and therefore its state isn't a reliable
-thing to look at as a sign of stability and initialization
-completion. Also, that functional interfaces like these
-should be added after module initialization.
+> SAS adapter tomorrow that doesn't do all that magic in an offload CPU=
+,
+> is any of that code re-usable ?
 
-This patch removes the unnecessary checks and hopes to
-disprove the concern about initialization ordering.
+At a minimum It would require a more verbose interface to
+libsas/libata (or new libframe?) to allow us to deliver raw
+unsolicited frames into common protocol handlers.  The concern would
+be wrangling different sets of protocol states and exception
+conditions that individual vendors would choose to/not to offload.  To
+date no other libsas based controller has taken this approach.
 
-Recent fcoe transport rework changes now require fcoe
-transports to register with libfcoe before any operation
-can take place. libfcoe may access some static variables
-but nothing that could cause a problem. Once a fcoe transport
-is registered, libfcoe is usable and any interface calls will
-be functional.
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
----
- drivers/scsi/fcoe/fcoe_transport.c |   40 ------------------------------------
- 1 files changed, 0 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index f81f77c..41068e8 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -544,16 +544,6 @@ static int fcoe_transport_create(const char *buffer, struct kernel_param *kp)
- 	struct fcoe_transport *ft = NULL;
- 	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
--		goto out_nodev;
--#endif
--
- 	mutex_lock(&ft_mutex);
- 
- 	netdev = fcoe_if_to_netdev(buffer);
-@@ -618,16 +608,6 @@ static int fcoe_transport_destroy(const char *buffer, struct kernel_param *kp)
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
--		goto out_nodev;
--#endif
--
- 	mutex_lock(&ft_mutex);
- 
- 	netdev = fcoe_if_to_netdev(buffer);
-@@ -672,16 +652,6 @@ static int fcoe_transport_disable(const char *buffer, struct kernel_param *kp)
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
--		goto out_nodev;
--#endif
--
- 	mutex_lock(&ft_mutex);
- 
- 	netdev = fcoe_if_to_netdev(buffer);
-@@ -720,16 +690,6 @@ static int fcoe_transport_enable(const char *buffer, struct kernel_param *kp)
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
--		goto out_nodev;
--#endif
--
- 	mutex_lock(&ft_mutex);
- 
- 	netdev = fcoe_if_to_netdev(buffer);
-
+--
+Dan
