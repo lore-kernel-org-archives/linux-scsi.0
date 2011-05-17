@@ -1,39 +1,46 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] aacraid: Add module param to export disks as 'fixed'
- instead of 'removable'
-Date: Tue, 17 May 2011 15:35:44 -0400
-Message-ID: <20110517193544.GA27336@infradead.org>
-References: <4DD2CE01.9090403@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 35282] BUG() in 2.6.38.6
+Date: Tue, 17 May 2011 23:55:02 +0400
+Message-ID: <1305662102.2667.25.camel@mulgrave.site>
+References: <bug-35282-11613@https.bugzilla.kernel.org/>
+	 <201105171917.p4HJHUhx019356@demeter2.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:39471 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932088Ab1EQTfq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2011 15:35:46 -0400
-Content-Disposition: inline
-In-Reply-To: <4DD2CE01.9090403@suse.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51059 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932141Ab1EQTzJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 May 2011 15:55:09 -0400
+In-Reply-To: <201105171917.p4HJHUhx019356@demeter2.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ankit Jain <jankit@suse.de>
-Cc: linux-scsi@vger.kernel.org, aacraid@adaptec.com, Hannes Reinecke <hare@suse.de>
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, May 18, 2011 at 01:05:29AM +0530, Ankit Jain wrote:
-> aacraid: Add 'aac_export_fixed' module param to export disks as
-> 'fixed' instead of 'removable'.
-> 
-> Adaptec controllers set the removable flag on devices to
-> allow for reconfiguration. The fear is that _not_ setting this
-> flag would inhibit the OS from detecting any device reconfiguration.
+On Tue, 2011-05-17 at 19:17 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=35282
 
-The flag should not be set at all and just be removed.
 
-> This manifested itself in a bug where Paravirtualized NetWare
-> was not able to boot with more than one PHY disk attached to a Xen
-> VM. NetWare sees two removable disks (and not CD-ROM), which is
-> an unsupported configuration. Details can be found at -
-> https://bugzilla.novell.com/show_bug.cgi?id=667226 .
+> May 15 16:09:32 192.168.42.2 Call Trace:
+> May 15 16:09:32 192.168.42.2 <IRQ>
+> May 15 16:09:32 192.168.42.2
+> May 15 16:09:32 192.168.42.2 [<ffffffff812160eb>] ? __blk_run_queue+0x24/0x7e
+> May 15 16:09:32 192.168.42.2 [<ffffffff81216167>] ? blk_run_queue+0x22/0x34
+> May 15 16:09:32 192.168.42.2 [<ffffffff812b2fde>] ? scsi_run_queue+0x2ce/0x36d
+> May 15 16:09:32 192.168.42.2 [<ffffffff812b39ef>] ? scsi_next_command+0x2d/0x39
+> May 15 16:09:32 192.168.42.2 [<ffffffff812b4289>] ?
+> scsi_io_completion+0x1ca/0x3fd
 
-But if you can't get aacraid fixed entirely the next best work around
-is to stop Xen from blindly copying flags to the guest disk.
+This looks like it might be related to the queue guard in
+__elv_next_request() again,  could you try this patch:
+
+http://marc.info/?l=linux-scsi&m=130348673628282
+
+Thanks,
+
+James
+
 
