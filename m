@@ -1,37 +1,39 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: fix possible false positive detection of stuck
- interrupt
-Date: Tue, 17 May 2011 12:59:02 -0500
-Message-ID: <4DD2B766.9060408@linux.vnet.ibm.com>
-References: <20110517161648.403401807@linux.vnet.ibm.com> <4DD29FED.60707@linux.vnet.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 35282] BUG() in 2.6.38.6
+Date: Tue, 17 May 2011 19:17:30 GMT
+Message-ID: <201105171917.p4HJHUhx019356@demeter2.kernel.org>
+References: <bug-35282-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:47980 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755745Ab1EQR7M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2011 13:59:12 -0400
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p4HHliVQ007450
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:47:44 -0600
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p4HHx5R2149678
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:59:05 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p4HHx4DL022533
-	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 11:59:05 -0600
-In-Reply-To: <4DD29FED.60707@linux.vnet.ibm.com>
+Received: from demeter2.kernel.org ([140.211.167.42]:58299 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756346Ab1EQTRb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 May 2011 15:17:31 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p4HJHUA3019380
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 17 May 2011 19:17:30 GMT
+In-Reply-To: <bug-35282-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Kleber Sacilotto de Souza <klebers@br.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=35282
+
+
+Greg Kroah-Hartman <greg@kroah.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|USB                         |SCSI
+         AssignedTo|greg@kroah.com              |linux-scsi@vger.kernel.org
+            Product|Drivers                     |IO/Storage
+
+
+
 
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
