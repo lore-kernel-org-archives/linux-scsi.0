@@ -1,76 +1,76 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 1/3] mpt2sas: remove the use of writeq, since writeq is
- not atomic
-Date: Wed, 18 May 2011 09:37:08 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157F7BCE5@inbmail01.lsi.com>
-References: <20110504115324.GE17855@lsi.com>
- <1305616571.6008.23.camel@mulgrave.site>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 1/3] mpt2sas: remove the use of writeq, since writeq is
+	not atomic
+Date: Tue, 17 May 2011 22:15:52 -0600
+Message-ID: <20110518041551.GL15227@parisc-linux.org>
+References: <20110504115324.GE17855@lsi.com> <1305616571.6008.23.camel@mulgrave.site> <B2FD678A64EAAD45B089B123FDFC3ED70157F7BCE5@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:49948 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750918Ab1EREHT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2011 00:07:19 -0400
-In-Reply-To: <1305616571.6008.23.camel@mulgrave.site>
-Content-Language: en-US
+Received: from palinux.external.hp.com ([192.25.206.14]:34272 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310Ab1EREPx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2011 00:15:53 -0400
+Content-Disposition: inline
+In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED70157F7BCE5@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, benh@kernel.crashing.org, paulus@samba.org, linuxppc-dev@lists.ozlabs.org
 
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
-aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VuUGFydG5lcnNoaXAuY29tXSANClNlbnQ6IFR1ZXNk
-YXksIE1heSAxNywgMjAxMSAxMjo0NiBQTQ0KVG86IERlc2FpLCBLYXNoeWFwDQpDYzogbGludXgt
-c2NzaUB2Z2VyLmtlcm5lbC5vcmc7IE1vb3JlLCBFcmljOyBQcmFrYXNoLCBTYXRoeWENClN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggMS8zXSBtcHQyc2FzOiByZW1vdmUgdGhlIHVzZSBvZiB3cml0ZXEsIHNp
-bmNlIHdyaXRlcSBpcyBub3QgYXRvbWljDQoNCk9uIFdlZCwgMjAxMS0wNS0wNCBhdCAxNzoyMyAr
-MDUzMCwgS2FzaHlhcCwgRGVzYWkgd3JvdGU6DQo+IFRoZSBmb2xsb3dpbmcgY29kZSBzZWVtcyB0
-byBiZSB0aGVyZSBpbiAvdXNyL3NyYy9saW51eC9hcmNoL3g4Ni9pbmNsdWRlL2FzbS9pby5oLg0K
-PiBUaGlzIGlzIG5vdCBnb2luZyB0byB3b3JrLg0KPiANCj4gc3RhdGljIGlubGluZSB2b2lkIHdy
-aXRlcShfX3U2NCB2YWwsIHZvbGF0aWxlIHZvaWQgX19pb21lbSAqYWRkcikNCj4gew0KPiAgICAg
-ICAgIHdyaXRlbCh2YWwsIGFkZHIpOw0KPiAgICAgICAgIHdyaXRlbCh2YWwgPj4gMzIsIGFkZHIr
-NCk7DQo+IH0NCj4gDQo+IFNvIHdpdGggdGhpcyBjb2RlIHR1cm5lZCBvbiBpbiB0aGUga2VybmVs
-LCB0aGVyZSBpcyBnb2luZyB0byBiZSByYWNlIGNvbmRpdGlvbiANCj4gd2hlcmUgbXVsdGlwbGUg
-Y3B1cyBjYW4gYmUgd3JpdGluZyB0byB0aGUgcmVxdWVzdCBkZXNjcmlwdG9yIGF0IHRoZSBzYW1l
-IHRpbWUuDQo+IA0KPiBNZWFuaW5nIHRoaXMgY291bGQgaGFwcGVuOg0KPiAoQSkgQ1BVIEEgZG9l
-c3QgMzJiaXQgd3JpdGUNCj4gKEIpIENQVSBCIGRvZXMgMzIgYml0IHdyaXRlDQo+IChDKSBDUFUg
-QSBkb2VzIDMyIGJpdCB3cml0ZQ0KPiAoRCkgQ1BVIEIgZG9lcyAzMiBiaXQgd3JpdGUNCj4gDQo+
-IFdlIG5lZWQgdGhlIDY0IGJpdCBjb21wbGV0ZWQgaW4gb25lIGFjY2VzcyBwY2kgbWVtb3J5IHdy
-aXRlLCBlbHNlIHNwaW4gbG9jayBpcyByZXF1aXJlZC4NCj4gU2luY2UgaXQncyBnb2luZyB0byBi
-ZSBkaWZmaWN1bHQgdG8ga25vdyB3aGljaCB3cml0ZXEgd2FzIGltcGxlbWVudGVkIGluIHRoZSBr
-ZXJuZWwsIA0KPiB0aGUgZHJpdmVyIGlzIGdvaW5nIHRvIGhhdmUgdG8gYWx3YXlzIGFjcXVpcmUg
-YSBzcGluIGxvY2sgZWFjaCB0aW1lIHdlIGRvIDY0Yml0IHdyaXRlLg0KPiANCj4gQ2M6IHN0YWJs
-ZUBrZXJubGUub3JnDQo+IFNpZ25lZC1vZmYtYnk6IEthc2h5YXAgRGVzYWkgPGthc2h5YXAuZGVz
-YWlAbHNpLmNvbT4NCj4gLS0tDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbXB0MnNhcy9t
-cHQyc2FzX2Jhc2UuYyBiL2RyaXZlcnMvc2NzaS9tcHQyc2FzL21wdDJzYXNfYmFzZS5jDQo+IGlu
-ZGV4IGVmYTAyNTUuLjU3NzgzMzQgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9tcHQyc2Fz
-L21wdDJzYXNfYmFzZS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9tcHQyc2FzL21wdDJzYXNfYmFz
-ZS5jDQo+IEBAIC0xNTU4LDcgKzE1NTgsNiBAQCBtcHQyc2FzX2Jhc2VfZnJlZV9zbWlkKHN0cnVj
-dCBNUFQyU0FTX0FEQVBURVIgKmlvYywgdTE2IHNtaWQpDQo+ICAgKiBjYXJlIG9mIDMyIGJpdCBl
-bnZpcm9ubWVudCB3aGVyZSBpdHMgbm90IHF1YXJlbnRlZWQgdG8gc2VuZCB0aGUgZW50aXJlIHdv
-cmQNCj4gICAqIGluIG9uZSB0cmFuc2Zlci4NCj4gICAqLw0KPiAtI2lmbmRlZiB3cml0ZXENCg0K
-V2h5IG5vdCBtYWtlIHRoaXMgI2lmbmRlZiBDT05GSUdfNjRCSVQ/ICBZb3Uga25vdyB0aGF0IGFs
-bCA2NCBiaXQNCnN5c3RlbXMgaGF2ZSB3cml0ZXEgaW1wbGVtZW50ZWQgY29ycmVjdGx5OyB5b3Ug
-c3VzcGVjdCAzMiBiaXQgc3lzdGVtcw0KZG9uJ3QuDQoNCkphbWVzDQoNCkphbWVzLCBUaGlzIGlz
-c3VlIHdhcyBvYnNlcnZlZCBvbiBQUEM2NCBzeXN0ZW0uIFNvIHdoYXQgeW91IGhhdmUgc3VnZ2Vz
-dGVkIHdpbGwgbm90IHNvbHZlIHRoaXMgaXNzdWUuDQpJZiB3ZSBhcmUgc3VyZSB0aGF0IHdyaXRl
-cSgpIGlzIGF0b21pYyBhY3Jvc3MgYWxsIGFyY2hpdGVjdHVyZSwgd2UgY2FuIHVzZSBpdCBzYWZl
-bHkuIEFzIHdlIGhhdmUgc2VlbiBpc3N1ZSBvbiBwcGM2NCwgd2UgYXJlIG5vdCBjb25maWRlbnQg
-dG8gdXNlDQoid3JpdGVxIiBjYWxsLg0KDQp+IEthc2h5YXANCg0KPiAgc3RhdGljIGlubGluZSB2
-b2lkIF9iYXNlX3dyaXRlcShfX3U2NCBiLCB2b2xhdGlsZSB2b2lkIF9faW9tZW0gKmFkZHIsDQo+
-ICAgICAgc3BpbmxvY2tfdCAqd3JpdGVxX2xvY2spDQo+ICB7DQo+IEBAIC0xNTcwLDEzICsxNTY5
-LDYgQEAgc3RhdGljIGlubGluZSB2b2lkIF9iYXNlX3dyaXRlcShfX3U2NCBiLCB2b2xhdGlsZSB2
-b2lkIF9faW9tZW0gKmFkZHIsDQo+ICAJd3JpdGVsKCh1MzIpKGRhdGFfb3V0ID4+IDMyKSwgKGFk
-ZHIgKyA0KSk7DQo+ICAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSh3cml0ZXFfbG9jaywgZmxhZ3Mp
-Ow0KPiAgfQ0KPiAtI2Vsc2UNCj4gLXN0YXRpYyBpbmxpbmUgdm9pZCBfYmFzZV93cml0ZXEoX191
-NjQgYiwgdm9sYXRpbGUgdm9pZCBfX2lvbWVtICphZGRyLA0KPiAtICAgIHNwaW5sb2NrX3QgKndy
-aXRlcV9sb2NrKQ0KPiAtew0KPiAtCXdyaXRlcShjcHVfdG9fbGU2NChiKSwgYWRkcik7DQo+IC19
-DQo+IC0jZW5kaWYNCj4gIA0KPiAgLyoqDQo+ICAgKiBtcHQyc2FzX2Jhc2VfcHV0X3NtaWRfc2Nz
-aV9pbyAtIHNlbmQgU0NTSV9JTyByZXF1ZXN0IHRvIGZpcm13YXJlDQo+IC0tDQo+IFRvIHVuc3Vi
-c2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1z
-Y3NpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
-Lm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
-am9yZG9tby1pbmZvLmh0bWwNCg0KDQo=
+On Wed, May 18, 2011 at 09:37:08AM +0530, Desai, Kashyap wrote:
+> On Wed, 2011-05-04 at 17:23 +0530, Kashyap, Desai wrote:
+> > The following code seems to be there in /usr/src/linux/arch/x86/include/asm/io.h.
+> > This is not going to work.
+> > 
+> > static inline void writeq(__u64 val, volatile void __iomem *addr)
+> > {
+> >         writel(val, addr);
+> >         writel(val >> 32, addr+4);
+> > }
+> > 
+> > So with this code turned on in the kernel, there is going to be race condition 
+> > where multiple cpus can be writing to the request descriptor at the same time.
+> > 
+> > Meaning this could happen:
+> > (A) CPU A doest 32bit write
+> > (B) CPU B does 32 bit write
+> > (C) CPU A does 32 bit write
+> > (D) CPU B does 32 bit write
+> > 
+> > We need the 64 bit completed in one access pci memory write, else spin lock is required.
+> > Since it's going to be difficult to know which writeq was implemented in the kernel, 
+> > the driver is going to have to always acquire a spin lock each time we do 64bit write.
+> > 
+> > Cc: stable@kernle.org
+> > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+> > ---
+> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > index efa0255..5778334 100644
+> > --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> > @@ -1558,7 +1558,6 @@ mpt2sas_base_free_smid(struct MPT2SAS_ADAPTER *ioc, u16 smid)
+> >   * care of 32 bit environment where its not quarenteed to send the entire word
+> >   * in one transfer.
+> >   */
+> > -#ifndef writeq
+> 
+> Why not make this #ifndef CONFIG_64BIT?  You know that all 64 bit
+> systems have writeq implemented correctly; you suspect 32 bit systems
+> don't.
+> 
+> James
+> 
+> James, This issue was observed on PPC64 system. So what you have suggested will not solve this issue.
+> If we are sure that writeq() is atomic across all architecture, we can use it safely. As we have seen issue on ppc64, we are not confident to use
+> "writeq" call.
+
+So have you told the powerpc people that they have a broken writeq?
+And why do you obfuscate your report by talking about i386 when it's
+really about powerpc64?
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
