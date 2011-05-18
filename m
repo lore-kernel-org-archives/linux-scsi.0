@@ -1,48 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 00/10] qla4xxx: Updates for scsi-misc-2.6
-Date: Wed, 18 May 2011 13:45:12 -0500
-Message-ID: <4DD413B8.8010402@cs.wisc.edu>
-References: <1305699432-13225-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: [RFC v2 PATCH 0/2] scsi_transport_fc: Add new rport attributes.
+Date: Wed, 18 May 2011 14:45:44 -0400
+Message-ID: <alpine.LFD.2.02.1105181443310.7238@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50234 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933386Ab1ERSoq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2011 14:44:46 -0400
-In-Reply-To: <1305699432-13225-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:41424
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933460Ab1ERSpu convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2011 14:45:50 -0400
+Received: from mail160-ch1 (localhost.localdomain [127.0.0.1])	by
+ mail160-ch1-R.bigfish.com (Postfix) with ESMTP id C68F619F02AA	for
+ <linux-scsi@vger.kernel.org>; Wed, 18 May 2011 18:45:48 +0000 (UTC)
+Received: from CH1EHSMHS032.bigfish.com (snatpool1.int.messaging.microsoft.com
+ [10.43.68.248])	by mail160-ch1.bigfish.com (Postfix) with ESMTP id
+ 87C541480052	for <linux-scsi@vger.kernel.org>; Wed, 18 May 2011 18:45:48
+ +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: linux-scsi@vger.kernel.org
 
-On 05/18/2011 01:17 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
->
-> James,
->
-> Please apply these patches on scsi-misc-2.6 tree.
->
-> Harish Zunjarrao (1):
-> 	qla4xxx: Added vendor specific sysfs attributes
->
-> Lalit Chandivade (1):
-> 	qla4xxx: Remove AF_DPC_SCHEDULED flag from ha.
->
-> Prasanna Mumbai (2):
-> 	qla4xxx: update function qla4xxx_isr_decode_mailbox()
-> 	qla4xxx: Complete the cmd if sense_len is zero
->
-> Vikas Chaudhary (6):
-> 	qla4xxx: Updated the reset sequence for ISP82xx
-> 	qla4xxx: Dump HW/FW reg to figure out what caused FW to be hung for ISP82XX
-> 	qla4xxx: Don't process mbx interrupt unconditionally
-> 	qla4xxx: Don't check FW alive if ISP82XX reset is in progress
-> 	qla4xxx: Remove host_lock in queuecommand function
-> 	qla4xxx: Update driver version to 5.02.00-k7
->
+This is a response to the original RFC for adding new rport attributes to the
+FC transport layer:
 
-Looks ok to me.
+http://marc.info/?l=linux-scsi&m=128828294426031&w=2
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+The bulk of populating the attribute data was done in the low-level device
+driver in that set but a more vendor agnostic method was desired.
+
+This RFC patch set moves the name server calls into the FC transport itself
+and utilizes the existing bsg infrastructure to send CT commands.  However,
+a method for sending bsg commands from the kernel needed to be devised so
+patch one makes the proposed changes to the bsg layer.
+
+The second patch in this set makes the actual changes to the SCSI transport as
+well as some changes to the libfc header files to add the needed CT command
+definitions.
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
