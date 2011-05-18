@@ -1,42 +1,44 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/3] bsg: fix bsg_poll() to return POLLOUT properly
-Date: Wed, 18 May 2011 21:30:57 +0200
-Message-ID: <4DD41E71.6080103@kernel.dk>
-References: <1305437513-3914-1-git-send-email-namhyung@gmail.com> <20110519.030933.1568838937885764850.fujita.tomonori@lab.ntt.co.jp@lab.ntt.co.jp>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/3] BNX2I: Bug fixes and Performance Optimization
+Date: Wed, 18 May 2011 14:52:54 -0500
+Message-ID: <4DD42396.6000702@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1305569600-1523-1-git-send-email-eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:54572 "EHLO kernel.dk"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41035 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933756Ab1ERTa7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2011 15:30:59 -0400
-In-Reply-To: <20110519.030933.1568838937885764850.fujita.tomonori@lab.ntt.co.jp@lab.ntt.co.jp>
+	id S1750941Ab1ERTw0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2011 15:52:26 -0400
+In-Reply-To: <1305569600-1523-1-git-send-email-eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: namhyung@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de
+To: Eddie Wai <eddie.wai@broadcom.com>
+Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
 
-On 2011-05-18 20:09, FUJITA Tomonori wrote:
-> On Sun, 15 May 2011 14:31:51 +0900
-> Namhyung Kim <namhyung@gmail.com> wrote:
-> 
->> POLLOUT should be returned only if bd->queued_cmds < bd->max_queue
->> so that bsg_alloc_command() can proceed.
->>
->> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
->> ---
->>  block/bsg.c |    2 +-
->>  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> All the three patches look good.
-> 
-> Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+On 05/16/2011 01:13 PM, Eddie Wai wrote:
+> Hello,
+>
+> This patch set contains a bug fix and some performance optimization
+> for iSCSI offload connection cleanup/recovery and throughput.
+>
+> Please review, thanks.
+>
+> Eddie Wai (3):
+>    BNX2I: Fixed packet error created when the sq_size is set to 16
+>    BNX2I: Updated the connection shutdown/cleanup timeout
+>    BNX2I: Optimized the iSCSI offload performance
+>
+>   drivers/scsi/bnx2i/bnx2i.h       |   16 ++++++++++------
+>   drivers/scsi/bnx2i/bnx2i_hwi.c   |   27 +++++++++++++++------------
+>   drivers/scsi/bnx2i/bnx2i_init.c  |    2 +-
+>   drivers/scsi/bnx2i/bnx2i_iscsi.c |   13 +++++++++++--
+>   4 files changed, 37 insertions(+), 21 deletions(-)
+>
 
-You can add mine, too.
+Got my question in the other mail answered.
 
-Acked-by: Jens Axboe <jaxboe@fusionio.com>
+Patches look ok.
 
--- 
-Jens Axboe
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
