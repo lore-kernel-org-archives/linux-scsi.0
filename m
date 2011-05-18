@@ -1,29 +1,40 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt merge
-Date: Wed, 18 May 2011 18:59:36 +0200
-Message-ID: <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com>
-References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: TCM/LIO ib_srpt testing
+Date: Wed, 18 May 2011 19:05:41 +0200
+Message-ID: <BANLkTi=dT=SWvZP-UKQEtp+KJDePFwA_tw@mail.gmail.com>
+References: <BANLkTim5inFCXMwnFz=4CHrAmhXMYyMscw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rmda <linux-rdma@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:43120 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933228Ab1ERRGC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2011 13:06:02 -0400
+Received: by vxi39 with SMTP id 39so1260284vxi.19
+        for <linux-scsi@vger.kernel.org>; Wed, 18 May 2011 10:06:01 -0700 (PDT)
+In-Reply-To: <BANLkTim5inFCXMwnFz=4CHrAmhXMYyMscw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vasilis Liaskovitis <vliaskov@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, May 18, 2011 at 3:36 AM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> ib_srpt: Convert se_wwn endpoint reference to struct srpt_port->port_wwn
-> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=4e544a210acb227df1bb4ca5086e65bdf4e648ea
+On Tue, May 17, 2011 at 12:37 PM, Vasilis Liaskovitis
+<vliaskov@gmail.com> wrote:
+> I am trying to test the TCM/LIO ib_srpt target driver from master
+> branch of lio-core-2.6
+>
+> However, the tcm_ib_srpt-38 branch results in a =A0kernel panic durin=
+g
+> I/O traffic (e.g. doing simple dd tests on exported disk)
+> I was hoping that the latest patches in master would fix this.
 
-Why has that change been implemented ? As far as I know InfiniBand
-HCAs have either one or two ports. If there are two ports present, at
-most one is active at any time. I don't see the point of making
-individual ports visible and configurable in configfs on the target
-instead of the HCA. If a user enables one port of a HCA but not the
-other, that could result in some really strange and hard to diagnose
-failures if the IB subnet manager decides to switch over to the other
-port. Or am I missing something ?
+I have never seen such behavior during any of the tests I ran. I'll
+see whether I can reproduce that behavior with lio-4.1.
 
 Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
