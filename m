@@ -1,150 +1,56 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt merge
-Date: Wed, 18 May 2011 03:47:16 -0400
-Message-ID: <20110518074716.GA8927@infradead.org>
-References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
+From: "David Laight" <David.Laight@ACULAB.COM>
+Subject: RE: [PATCH 1/3] mpt2sas: remove the use of writeq, since writeq isnot atomic
+Date: Wed, 18 May 2011 09:04:57 +0100
+Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6D8AD3E@saturn3.aculab.com>
+References: <1305692584.2580.3.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rmda <linux-rdma@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Bart Van Assche <bvanassche@acm.org>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0.aculab.com ([213.249.233.131]:48687 "HELO mx0.aculab.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754697Ab1ERIGQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2011 04:06:16 -0400
+Received: from mx0.aculab.com ([127.0.0.1])
+ by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
+ id 07726-05 for <linux-scsi@vger.kernel.org>;
+ Wed, 18 May 2011 09:06:04 +0100 (BST)
+Content-class: urn:content-classes:message
+In-Reply-To: <1305692584.2580.3.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>
+Cc: "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Desai,Kashyap" <Kashyap.Desai@lsi.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, paulus@samba.org, "Moore,Eric" <Eric.Moore@lsi.com>
 
-> +ccflags-y			:= -Idrivers/target
+ 
 
-Why do you need the ccflags?  Everything needed should be under
-include/target, and if not that needs to be fixed.
+> > > > static inline void writeq(__u64 val, volatile void __iomem
+*addr)
+> > > > {
+> > > >         writel(val, addr);
+> > > >         writel(val >> 32, addr+4);
+> > > > }
+...
+> > > > We need the 64 bit completed in one access pci memory write,
+else spin lock is required.
+> > > > Since it's going to be difficult to know which writeq was
+implemented in the kernel, 
+> > > > the driver is going to have to always acquire a spin lock each
+time we do 64bit write.
+...
+> I'm just in the process of finding them now on IRC so I can demand an
+> explanation: this is a really serious API problem because writeq is
+> supposed to be atomic on 64 bit.
 
-> +#include <linux/kthread.h>
-> +#include <linux/string.h>
-> +#include <linux/delay.h>
-> +#include <linux/atomic.h>
-> +#include <scsi/libsas.h> /* TASK_ATTR_* */
+Most 32 bit systems don't have atomic 64bit writes.
+I'd also have thought there would be code which wouldn't mind the
+write being done as two cycles.
 
-We really need to stop spreading that include.  Care to submit a patch
-for .40 to move the TASK_ATTR_* defines to scsi/scsi.h?
+I'm not sure that some of the ppc soc systems are capable of
+doing a 64bit data pci/pcie cycle except by dma.
+So your driver is probably doomed to require a lock.
 
-> +/**
-> + * srpt_sdev_name() - Return the name associated with the HCA.
-> + *
-> + * Examples are ib0, ib1, ...
-> + */
-> +static inline const char *srpt_sdev_name(struct srpt_device *sdev)
-> +{
-> +	return sdev->device->name;
-> +}
+	David
 
-Does this really need a helper?
 
-> +
-> +static enum rdma_ch_state srpt_get_ch_state(struct srpt_rdma_ch *ch)
-> +{
-> +	unsigned long flags;
-> +	enum rdma_ch_state state;
-> +
-> +	spin_lock_irqsave(&ch->spinlock, flags);
-> +	state = ch->state;
-> +	spin_unlock_irqrestore(&ch->spinlock, flags);
-> +	return state;
-> +}
-
-Given that the channel is a 32-bit value taking a lock over reading
-it doesn't help anything.  If you need any kind of exclusion it needs
-to be held over the actual use of it, else it can be dropped.
-
-> +static enum rdma_ch_state
-> +srpt_set_ch_state(struct srpt_rdma_ch *ch, enum rdma_ch_state new_state)
-> +{
-> +	unsigned long flags;
-> +	enum rdma_ch_state prev;
-> +
-> +	spin_lock_irqsave(&ch->spinlock, flags);
-> +	prev = ch->state;
-> +	ch->state = new_state;
-> +	spin_unlock_irqrestore(&ch->spinlock, flags);
-> +	return prev;
-> +}
-
-The oly caller of this does a spin_lock_irq so I assume it's from
-process context.  So this one could do the same.  It would be good idea
-to check what kind of action is done from irq context at all and
-document what data structures / critical sections can be access from
-there.
-
-> +/**
-> + * srpt_srq_event() - SRQ event callback function.
-> + */
-> +static void srpt_srq_event(struct ib_event *event, void *ctx)
-> +{
-> +	printk(KERN_INFO "SRQ event %d\n", event->event);
-> +}
-
-Is this overly useful?
-
-> +static enum srpt_command_state srpt_get_cmd_state(struct srpt_send_ioctx *ioctx)
-> +{
-> +	enum srpt_command_state state;
-> +	unsigned long flags;
-> +
-> +	BUG_ON(!ioctx);
-> +
-> +	spin_lock_irqsave(&ioctx->spinlock, flags);
-> +	state = ioctx->state;
-> +	spin_unlock_irqrestore(&ioctx->spinlock, flags);
-> +	return state;
-
-Same comment about reading a variable as above.
-
-> +/*
-> + * srpt_unpack_lun() - Convert from network LUN to linear LUN.
-> + *
-> + * Convert an 2-byte, 4-byte, 6-byte or 8-byte LUN structure in network byte
-> + * order (big endian) to a linear LUN. Supports three LUN addressing methods:
-> + * peripheral, flat and logical unit. See also SAM-2, section 4.9.4 (page 40).
-> + */
-> +static uint64_t srpt_unpack_lun(const uint8_t *lun, int len)
-
-Nick, didn't you plan to take the LUN addressing to the core?  After
-all it's not a transport specific format.
-
-> +static int srpt_compl_thread(void *arg)
-> +{
-> +	struct srpt_rdma_ch *ch;
-> +
-> +	/* Hibernation / freezing of the SRPT kernel thread is not supported. */
-> +	current->flags |= PF_NOFREEZE;
-> +
-> +	ch = arg;
-> +	BUG_ON(!ch);
-> +	printk(KERN_INFO "Session %s: kernel thread %s (PID %d) started\n",
-> +	       ch->sess_name, ch->thread->comm, current->pid);
-
-Can we please kill all these verbose printks?  I know the target core
-does them, but that needs to be fixed to.  If you really care for
-debugging you can trivially trace it using the function tracer.
-
-> +	while (!kthread_should_stop()) {
-> +		wait_event_interruptible(ch->wait_queue,
-> +			(srpt_process_completion(ch->cq, ch),
-> +			 kthread_should_stop()));
-> +	}
-
-Instead of doing a wait_event_interruptible in a kthread you can just
-do a schedule() in interruptible context and use wake_up_process to wake
-it up.
-
-> +#include <linux/version.h>
-
-Shouldn't be needed.
-
-> +static inline u64 encode_wr_id(u8 opcode, u32 idx)
-> +{ return ((u64)opcode << 32) | idx; }
-> +static inline u8 opcode_from_wr_id(u64 wr_id)
-> +{ return wr_id >> 32; }
-> +static inline u32 idx_from_wr_id(u64 wr_id)
-> +{ return (u32)wr_id; }
-
-Please fix the indentation.
