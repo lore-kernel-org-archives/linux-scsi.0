@@ -1,37 +1,42 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt merge
-Date: Wed, 18 May 2011 12:17:21 -0700
-Message-ID: <BANLkTi==bZ0h3o5FNrg8PSJFp6F-zh5hTA@mail.gmail.com>
-References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
- <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com> <20110518170556.GB2595@obsidianresearch.com>
- <BANLkTimQXU0u5gtRzXsnsB=sCF-bvpY+Ag@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 1/3] bsg: fix bsg_poll() to return POLLOUT properly
+Date: Wed, 18 May 2011 21:30:57 +0200
+Message-ID: <4DD41E71.6080103@kernel.dk>
+References: <1305437513-3914-1-git-send-email-namhyung@gmail.com> <20110519.030933.1568838937885764850.fujita.tomonori@lab.ntt.co.jp@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog101.obsmtp.com ([74.125.245.70]:45283 "HELO
-	na3sys010aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933451Ab1ERTRn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2011 15:17:43 -0400
-In-Reply-To: <BANLkTimQXU0u5gtRzXsnsB=sCF-bvpY+Ag@mail.gmail.com>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:54572 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933756Ab1ERTa7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2011 15:30:59 -0400
+In-Reply-To: <20110519.030933.1568838937885764850.fujita.tomonori@lab.ntt.co.jp@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rmda <linux-rdma@vger.kernel.org>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: namhyung@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de
 
-On Wed, May 18, 2011 at 11:02 AM, Bart Van Assche <bvanassche@acm.org> wrote:
-> Thanks for the feedback. I'm still wondering though about the
-> usefulness of disabling / enabling SRPT per HCA port. For the use
-> cases I know about SRP communication over all target ports will be
-> enabled as soon as target configuration has finished and more
-> fine-grained access configuration will occur by allowing/disallowing
-> certain initiators to log in.
+On 2011-05-18 20:09, FUJITA Tomonori wrote:
+> On Sun, 15 May 2011 14:31:51 +0900
+> Namhyung Kim <namhyung@gmail.com> wrote:
+> 
+>> POLLOUT should be returned only if bd->queued_cmds < bd->max_queue
+>> so that bsg_alloc_command() can proceed.
+>>
+>> Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+>> ---
+>>  block/bsg.c |    2 +-
+>>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> All the three patches look good.
+> 
+> Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-I definitely think that allowing the flexibility to configure ports individually
-is required.  It's easy to imagine a case with a separate front-end and
-back-end networks on the two HCA ports (this would be a pretty normal
-ethernet config), where only one port should be a target port.
+You can add mine, too.
 
-It may not be how people do things now but it should at least be possible.
+Acked-by: Jens Axboe <jaxboe@fusionio.com>
 
- - R.
+-- 
+Jens Axboe
+
