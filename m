@@ -1,62 +1,77 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH 1/3] mpt2sas: remove the use of writeq, since writeq is
- not atomic
-Date: Wed, 18 May 2011 15:45:43 +1000
-Message-ID: <1305697543.2781.28.camel@pasglop>
-References: <20110504115324.GE17855@lsi.com>
-	 <1305616571.6008.23.camel@mulgrave.site>
-	 <B2FD678A64EAAD45B089B123FDFC3ED70157F7BCE5@inbmail01.lsi.com>
-	 <20110518041551.GL15227@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: vikas.chaudhary@qlogic.com
+Subject: [PATCH 02/10] qla4xxx: Updated the reset sequence for ISP82xx
+Date: Tue, 17 May 2011 23:17:04 -0700
+Message-ID: <1305699432-13225-3-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1305699432-13225-1-git-send-email-vikas.chaudhary@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:36133 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754438Ab1ERFqD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2011 01:46:03 -0400
-In-Reply-To: <20110518041551.GL15227@parisc-linux.org>
+Received: from vpn.pathscale.com ([198.186.3.75]:50922 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754359Ab1ERGXq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 May 2011 02:23:46 -0400
+In-Reply-To: <1305699432-13225-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, paulus@samba.org, linuxppc-dev@lists.ozlabs.org, Matthew Wilcox <matthew@wil.cx>
+To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-> > > Cc: stable@kernle.org
-> > > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> > > ---
-> > > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > > index efa0255..5778334 100644
-> > > --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > > @@ -1558,7 +1558,6 @@ mpt2sas_base_free_smid(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-> > >   * care of 32 bit environment where its not quarenteed to send the entire word
-> > >   * in one transfer.
-> > >   */
-> > > -#ifndef writeq
-> > 
-> > Why not make this #ifndef CONFIG_64BIT?  You know that all 64 bit
-> > systems have writeq implemented correctly; you suspect 32 bit systems
-> > don't.
-> > 
-> > James
-> > 
-> > James, This issue was observed on PPC64 system. So what you have
-> suggested will not solve this issue.
-> > If we are sure that writeq() is atomic across all architecture, we
-> can use it safely. As we have seen issue on ppc64, we are not
-> confident to use
-> > "writeq" call.
-> 
-> So have you told the powerpc people that they have a broken writeq?
-> And why do you obfuscate your report by talking about i386 when it's
-> really about powerpc64?
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_nx.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
 
-Well, our writeq isn't supposed to be broken :-)
-
-It's defined as an std instruction (and "ld" for readq) so that's
-perfectly atomic ... provided your access is aligned. Is it ?
-
-Cheers,
-Be
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 35381cb..e1085ed 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -943,12 +943,26 @@ qla4_8xxx_pinit_from_rom(struct scsi_qla_host *ha, int verbose)
+ 	/* Halt all the indiviual PEGs and other blocks of the ISP */
+ 	qla4_8xxx_rom_lock(ha);
+ 
+-	/* mask all niu interrupts */
++	/* disable all I2Q */
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_I2Q + 0x10, 0x0);
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_I2Q + 0x14, 0x0);
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_I2Q + 0x18, 0x0);
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_I2Q + 0x1c, 0x0);
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_I2Q + 0x20, 0x0);
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_I2Q + 0x24, 0x0);
++
++	/* disable all niu interrupts */
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_NIU + 0x40, 0xff);
+ 	/* disable xge rx/tx */
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_NIU + 0x70000, 0x00);
+ 	/* disable xg1 rx/tx */
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_NIU + 0x80000, 0x00);
++	/* disable sideband mac */
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_NIU + 0x90000, 0x00);
++	/* disable ap0 mac */
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_NIU + 0xa0000, 0x00);
++	/* disable ap1 mac */
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_NIU + 0xb0000, 0x00);
+ 
+ 	/* halt sre */
+ 	val = qla4_8xxx_rd_32(ha, QLA82XX_CRB_SRE + 0x1000);
+@@ -963,6 +977,7 @@ qla4_8xxx_pinit_from_rom(struct scsi_qla_host *ha, int verbose)
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_TIMER + 0x10, 0x0);
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_TIMER + 0x18, 0x0);
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_TIMER + 0x100, 0x0);
++	qla4_8xxx_wr_32(ha, QLA82XX_CRB_TIMER + 0x200, 0x0);
+ 
+ 	/* halt pegs */
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_PEG_NET_0 + 0x3c, 1);
+@@ -970,9 +985,9 @@ qla4_8xxx_pinit_from_rom(struct scsi_qla_host *ha, int verbose)
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_PEG_NET_2 + 0x3c, 1);
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_PEG_NET_3 + 0x3c, 1);
+ 	qla4_8xxx_wr_32(ha, QLA82XX_CRB_PEG_NET_4 + 0x3c, 1);
++	msleep(5);
+ 
+ 	/* big hammer */
+-	msleep(1000);
+ 	if (test_bit(DPC_RESET_HA, &ha->dpc_flags))
+ 		/* don't reset CAM block on reset */
+ 		qla4_8xxx_wr_32(ha, QLA82XX_ROMUSB_GLB_SW_RESET, 0xfeffffff);
+-- 
+1.7.3.2
 
