@@ -1,91 +1,173 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt
-	merge
-Date: Thu, 19 May 2011 13:03:39 -0700
-Message-ID: <1305835419.32066.20.camel@haakon2.linux-iscsi.org>
-References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
-	 <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com>
-	 <20110518170556.GB2595@obsidianresearch.com>
-	 <BANLkTimQXU0u5gtRzXsnsB=sCF-bvpY+Ag@mail.gmail.com>
-	 <BANLkTi==bZ0h3o5FNrg8PSJFp6F-zh5hTA@mail.gmail.com>
-	 <1305778694.2856.533.camel@haakon2.linux-iscsi.org>
-	 <BANLkTi=Xb-ypQNa3=MmwiLeE4Q9FWHnZXg@mail.gmail.com>
+From: Jim Cromie <jim.cromie@gmail.com>
+Subject: [PATCH 01/23] add register_chrdev_ids() to char_dev.c, API
+Date: Thu, 19 May 2011 15:33:04 -0600
+Message-ID: <1305840792-25877-2-git-send-email-jim.cromie@gmail.com>
+References: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <BANLkTi=Xb-ypQNa3=MmwiLeE4Q9FWHnZXg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rmda <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Return-path: <devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Sender: devel-bounces@linuxdriverproject.org
+Errors-To: devel-bounces@linuxdriverproject.org
+To: linux-kernel@vger.kernel.org
+Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-sh@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, "Hans J. Koch" <hjk@hansjkoch.de>, linux-mtd@lists.infradead.org, Sean Hefty <sean.hefty@intel.com>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, David Brownell <dbrownell@users.sourceforge.net>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, linux-input@vger.kernel.org, osst-users@lists.sourceforge.net, Hal Rosenstock <hal.rosenstock@gmail.com>, linux-media@vger.kernel.org, Doug Gilbert <dgilbert@interlog.com>, Roland Dreier <roland@kernel.org>, rtc-linux@googlegroups.com, Matthew Wilcox <matthew@wil.cx>, Boaz Harrosh <bharrosh@panasas.com>, Chris Metcalf <cmetcalf@tilera.com>, Mauro Carvalho Chehab <mchehab@infradead.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, subscribers-only <linuxp>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2011-05-19 at 12:40 +0200, Bart Van Assche wrote:
-> On Thu, May 19, 2011 at 6:18 AM, Nicholas A. Bellinger
-> <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org> wrote:
-> > The srpt_port->port_wwn patch in question does
-> > current ensure that sport->enabled has been set via an configfs
-> > attribute at:
-> >
-> >   /sys/kernel/config/target/srpt/$IB_PORT_GUID/tpgt_1/enable
-> >
-> > and will reject all SRP login attempts to an individual struct srpt_port
-> > until the attribute has been explictly triggered.
-> >
-> > This allows ib_srpt to follow what is expected by rtsadmin-v2 +
-> > lio-utils, and used to generate /etc/target/srpt_start.sh used to save
-> > persistent fabric configuration.  Currently other fabrics like
-> > iscsi-target and tcm_qla2xxx expect to be able to reject fabric login
-> > requests before the full set of WWPN endpoints, LUNs, NodeACLs +
-> > MappedLUNs have been recreated during an typical init.d/target start
-> > operation.
-> >
-> > I think it makes sense to do the same for the SRPT control plane on an
-> > individual HCA port GUID basis as long as there are no underlying fabric
-> > issues, and that Roland is happy.  In terms of supporting more than one
-> > type of /sys/kernel/config/target/srpt/$WWPN/$TPGT/ layout, I would
-> > really like to avoid this for mainline code unless there is a really
-> > good reason..
-> 
-> I'm still wondering whether it was a good idea to switch from ib<n>
-> style names to port GIDs. Not only will that make it hard for users to
-> match the ib<n> names already assigned to InfiniBand HCAs with target
-> port names but this also deviates from the naming scheme used for any
-> other Linux device. Ethernet devices e.g. appear as eth<n> in /dev
-> instead of a MAC address like 00:1a:64:10:18:6f.
-> 
+register_chrdev_ids() replaces and deprecates register_chrdev_region()
+and alloc_chrdev_region() with a single function that works for both
+dynamic and static major numbers.
 
-So from the user perspective in rtsadmin/rtslib, the Port GUIDs are
-automatically presented in long-form after being extracted and parsed
-from /sys/class/infiniband/*/ports/*/gids/0 input via ib_srpt.spec here:
+Like alloc_chrdev_region(), 1st arg is a dev_t*, but its an in/out
+parameter, and expects both major and minor to be preset, and thus the
+separate minor arg is dropped.  If major == 0, a dynamic major is
+reserved, saved into 1st arg, and thus available to caller afterwards.
 
-http://www.linux-iscsi.org/wiki/SCSI_RDMA_Protocol/RTSadmin#Specification_file
+Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
 
-The available IB Port GUIs appear as <TAB> completable input
-in /ib_srpt/ during a 'create wwn=' operation shown here:
+cc: Alessandro Zummo <a.zummo@towertech.it>
+cc: Alexander Viro <viro@zeniv.linux.org.uk>
+cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+cc: Benny Halevy <bhalevy@panasas.com>
+cc: Boaz Harrosh <bharrosh@panasas.com>
+cc: Chris Metcalf <cmetcalf@tilera.com>
+cc: David Brownell <dbrownell@users.sourceforge.net>
+cc: "David S. Miller" <davem@davemloft.net>
+cc: David Woodhouse <dwmw2@infradead.org>
+cc: devel@driverdev.osuosl.org
+cc: Doug Gilbert <dgilbert@interlog.com>
+cc: Greg Kroah-Hartman <gregkh@suse.de>
+cc: Hal Rosenstock <hal.rosenstock@gmail.com>
+cc: "Hans J. Koch" <hjk@hansjkoch.de>
+cc: Heiko Carstens <heiko.carstens@de.ibm.com>
+cc: Jens Axboe <axboe@kernel.dk>
+cc: Jim Cromie <jim.cromie@gmail.com>
+cc: Jiri Kosina <jkosina@suse.cz>
+cc: Jiri Slaby <jirislaby@gmail.com>
+cc: linux390@de.ibm.com
+cc: linux-fsdevel@vger.kernel.org
+cc: linux-input@vger.kernel.org
+cc: linux-kernel@vger.kernel.org
+cc: linux-media@vger.kernel.org
+cc: linux-mtd@lists.infradead.org
+cc: linuxpps@ml.enneenne.com (subscribers-only)
+cc: linux-rdma@vger.kernel.org
+cc: linux-s390@vger.kernel.org
+cc: linux-scsi@vger.kernel.org
+cc: linux-sh@vger.kernel.org
+cc: linux-usb@vger.kernel.org
+cc: Martin Schwidefsky <schwidefsky@de.ibm.com>
+cc: Matthew Wilcox <matthew@wil.cx>
+cc: Mauro Carvalho Chehab <mchehab@infradead.org>
+cc: netdev@vger.kernel.org
+cc: osd-dev@open-osd.org
+cc: osst-users@lists.sourceforge.net
+cc: Paul Mundt <lethal@linux-sh.org>
+cc: Rodolfo Giometti <giometti@enneenne.com>
+cc: Roland Dreier <roland@kernel.org>
+cc: rtc-linux@googlegroups.com
+cc: Sean Hefty <sean.hefty@intel.com>
+cc: Willem Riede <osst@riede.org>
+---
+ fs/char_dev.c      |   33 +++++++++++++++++++++++++++++----
+ include/linux/fs.h |    6 ++++--
+ 2 files changed, 33 insertions(+), 6 deletions(-)
 
-http://www.linux-iscsi.org/wiki/SCSI_RDMA_Protocol/RTSadmin#Configuration
-
-There is no reason why we can't present a more verbose informational
-display based on individual available HW fabric WWPNs. Eg: things like
-HW port status information, driver, firmware rev, etc..
-
-So aside from the user side of things, I think using a IB Port GUID
-makes more sense to ensure that /sys/kernel/config/target/srpt/
-configuration does not depend upon the ordering of symbolic HCA names
-in /sys/class/infiniband/, which AFAIK are not guarenteed to be
-persistent as HCAs are added/removed from the system.
-
-Ensuring that we can reference target fabric WWPNs using an underlying
-HW reference instead of a symbolic name is important for this reason,
-and is currently how other HW target mode drivers including
-tcm_fc(openfcoe) currently function.
-
-Thanks,
-
---nab
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/fs/char_dev.c b/fs/char_dev.c
+index dca9e5e..9149b7c 100644
+--- a/fs/char_dev.c
++++ b/fs/char_dev.c
+@@ -93,7 +93,7 @@ void chrdev_show(struct seq_file *f, off_t offset)
+  */
+ static struct char_device_struct *
+ __register_chrdev_region(unsigned int major, unsigned int baseminor,
+-			   int minorct, const char *name)
++			 int minorct, const char *name)
+ {
+ 	struct char_device_struct *cd, **cp;
+ 	int ret = 0;
+@@ -193,7 +193,8 @@ __unregister_chrdev_region(unsigned major, unsigned baseminor, int minorct)
+  *
+  * Return value is zero on success, a negative error code on failure.
+  */
+-int register_chrdev_region(dev_t from, unsigned count, const char *name)
++int __deprecated
++register_chrdev_region(dev_t from, unsigned count, const char *name)
+ {
+ 	struct char_device_struct *cd;
+ 	dev_t to = from + count;
+@@ -229,8 +230,9 @@ fail:
+  * chosen dynamically, and returned (along with the first minor number)
+  * in @dev.  Returns zero or a negative error code.
+  */
+-int alloc_chrdev_region(dev_t *dev, unsigned baseminor, unsigned count,
+-			const char *name)
++int __deprecated
++alloc_chrdev_region(dev_t *dev, unsigned baseminor, unsigned count,
++		    const char *name)
+ {
+ 	struct char_device_struct *cd;
+ 	cd = __register_chrdev_region(0, baseminor, count, name);
+@@ -241,6 +243,28 @@ int alloc_chrdev_region(dev_t *dev, unsigned baseminor, unsigned count,
+ }
+ 
+ /**
++ * register_chrdev_ids() - register a range of char device numbers
++ * @dev: in/output parameter for requested/claimed device major, minor
++ * @count: the number of minor numbers required
++ * @name: the name of the associated device or driver
++ *
++ * Allocates a range of char device numbers.  The major number will be
++ * chosen dynamically if passed as 0, or reserved specifically otherwize,
++ * with reserved numbers written into @dev.
++ * Returns zero, or a negative error code.
++ */
++int register_chrdev_ids(dev_t *dev, unsigned count, const char *name)
++{
++	struct char_device_struct *cd;
++
++	cd = __register_chrdev_region(MAJOR(*dev), MINOR(*dev), count, name);
++	if (IS_ERR(cd))
++		return PTR_ERR(cd);
++	*dev = MKDEV(cd->major, cd->baseminor);
++	return 0;
++}
++
++/**
+  * __register_chrdev() - create and register a cdev occupying a range of minors
+  * @major: major device number or 0 for dynamic allocation
+  * @baseminor: first of the requested range of minor numbers
+@@ -566,6 +590,7 @@ void __init chrdev_init(void)
+ EXPORT_SYMBOL(register_chrdev_region);
+ EXPORT_SYMBOL(unregister_chrdev_region);
+ EXPORT_SYMBOL(alloc_chrdev_region);
++EXPORT_SYMBOL(register_chrdev_ids);
+ EXPORT_SYMBOL(cdev_init);
+ EXPORT_SYMBOL(cdev_alloc);
+ EXPORT_SYMBOL(cdev_del);
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index cdf9495..e72de48 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -2075,8 +2075,10 @@ static inline void bd_unlink_disk_holder(struct block_device *bdev,
+ 
+ /* fs/char_dev.c */
+ #define CHRDEV_MAJOR_HASH_SIZE	255
+-extern int alloc_chrdev_region(dev_t *, unsigned, unsigned, const char *);
+-extern int register_chrdev_region(dev_t, unsigned, const char *);
++extern int register_chrdev_ids(dev_t *, unsigned, const char *);
++extern int __deprecated alloc_chrdev_region(dev_t *, unsigned, unsigned,
++					    const char *);
++extern int __deprecated register_chrdev_region(dev_t, unsigned, const char *);
+ extern int __register_chrdev(unsigned int major, unsigned int baseminor,
+ 			     unsigned int count, const char *name,
+ 			     const struct file_operations *fops);
+-- 
+1.7.4.4
