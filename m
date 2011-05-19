@@ -1,137 +1,71 @@
-From: Jim Cromie <jim.cromie@gmail.com>
-Subject: [PATCH 08/23] use register_chrdev_ids in drivers/scsi/
-Date: Thu, 19 May 2011 15:33:11 -0600
-Message-ID: <1305840792-25877-9-git-send-email-jim.cromie@gmail.com>
-References: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: gregkh@suse.de, Jim Cromie <jim.cromie@gmail.com>, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Benny Halevy <bhalevy@panasas.com>, Boaz Harrosh <bharrosh@panasas.com>, osd-dev@open-osd.org, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCHSET v3.2 0/3] data integrity: Stabilize pages during writeback
+	for various fses
+Date: Thu, 19 May 2011 15:48:41 -0700
+Message-ID: <20110519224841.28755.80650.stgit@elm3c44.beaverton.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-cc: Doug Gilbert <dgilbert@interlog.com>
-cc: linux-scsi@vger.kernel.org
-cc: Benny Halevy <bhalevy@panasas.com>
-cc: Boaz Harrosh <bharrosh@panasas.com>
-cc: osd-dev@open-osd.org
-cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-cc: linux-scsi@vger.kernel.org
-Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
----
- drivers/scsi/osd/osd_uld.c |    6 +++---
- drivers/scsi/pmcraid.c     |    3 +--
- drivers/scsi/sg.c          |    6 +++---
- drivers/scsi/st.c          |    7 +++----
- 4 files changed, 10 insertions(+), 12 deletions(-)
+Hi all,
 
-diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-index b31a8e3..18dcd38 100644
---- a/drivers/scsi/osd/osd_uld.c
-+++ b/drivers/scsi/osd/osd_uld.c
-@@ -528,6 +528,7 @@ static struct scsi_driver osd_driver = {
- static int __init osd_uld_init(void)
- {
- 	int err;
-+	dev_t devt = MKDEV(SCSI_OSD_MAJOR, 0);
- 
- 	err = class_register(&osd_uld_class);
- 	if (err) {
-@@ -535,8 +536,7 @@ static int __init osd_uld_init(void)
- 		return err;
- 	}
- 
--	err = register_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0),
--				     SCSI_OSD_MAX_MINOR, osd_name);
-+	err = register_chrdev_ids(&devt, SCSI_OSD_MAX_MINOR, osd_name);
- 	if (err) {
- 		OSD_ERR("Unable to register major %d for osd ULD => %d\n",
- 			SCSI_OSD_MAJOR, err);
-@@ -553,7 +553,7 @@ static int __init osd_uld_init(void)
- 	return 0;
- 
- err_out_chrdev:
--	unregister_chrdev_region(MKDEV(SCSI_OSD_MAJOR, 0), SCSI_OSD_MAX_MINOR);
-+	unregister_chrdev_region(devt, SCSI_OSD_MAX_MINOR);
- err_out:
- 	class_unregister(&osd_uld_class);
- 	return err;
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 7f636b1..61a2207 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -6100,8 +6100,7 @@ static int __init pmcraid_init(void)
- 			 PMCRAID_DRIVER_NAME,
- 			 PMCRAID_DRIVER_VERSION, PMCRAID_DRIVER_DATE);
- 
--	error = alloc_chrdev_region(&dev, 0,
--				    PMCRAID_MAX_ADAPTERS,
-+	error = register_chrdev_ids(&dev, PMCRAID_MAX_ADAPTERS,
- 				    PMCRAID_DEVFILE);
- 
- 	if (error) {
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 909ed9e..e741988 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1575,6 +1575,7 @@ static int __init
- init_sg(void)
- {
- 	int rc;
-+	dev_t devt = MKDEV(SCSI_GENERIC_MAJOR, 0);
- 
- 	if (scatter_elem_sz < PAGE_SIZE) {
- 		scatter_elem_sz = PAGE_SIZE;
-@@ -1585,8 +1586,7 @@ init_sg(void)
- 	else
- 		def_reserved_size = sg_big_buff;
- 
--	rc = register_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), 
--				    SG_MAX_DEVS, "sg");
-+	rc = register_chrdev_ids(&devt, SG_MAX_DEVS, "sg");
- 	if (rc)
- 		return rc;
-         sg_sysfs_class = class_create(THIS_MODULE, "scsi_generic");
-@@ -1604,7 +1604,7 @@ init_sg(void)
- 	}
- 	class_destroy(sg_sysfs_class);
- err_out:
--	unregister_chrdev_region(MKDEV(SCSI_GENERIC_MAJOR, 0), SG_MAX_DEVS);
-+	unregister_chrdev_region(devt, SG_MAX_DEVS);
- 	return rc;
- }
- 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 1871b8a..5cce227 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4260,6 +4260,7 @@ static void scsi_tape_release(struct kref *kref)
- static int __init init_st(void)
- {
- 	int err;
-+	dev_t devt = MKDEV(SCSI_TAPE_MAJOR, 0);
- 
- 	validate_options();
- 
-@@ -4272,8 +4273,7 @@ static int __init init_st(void)
- 		return PTR_ERR(st_sysfs_class);
- 	}
- 
--	err = register_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
--				     ST_MAX_TAPE_ENTRIES, "st");
-+	err = register_chrdev_ids(&devt, ST_MAX_TAPE_ENTRIES, "st");
- 	if (err) {
- 		printk(KERN_ERR "Unable to get major %d for SCSI tapes\n",
- 		       SCSI_TAPE_MAJOR);
-@@ -4293,8 +4293,7 @@ static int __init init_st(void)
- err_scsidrv:
- 	scsi_unregister_driver(&st_template.gendrv);
- err_chrdev:
--	unregister_chrdev_region(MKDEV(SCSI_TAPE_MAJOR, 0),
--				 ST_MAX_TAPE_ENTRIES);
-+	unregister_chrdev_region(devt, ST_MAX_TAPE_ENTRIES);
- err_class:
- 	class_destroy(st_sysfs_class);
- 	return err;
--- 
-1.7.4.4
+This is v3.2 of the stable-page-writes patchset for ext4 and xfs.  The purpose
+of this patchset is to prohibit processes from writing on memory pages that are
+currently being written to disk because certain storage setups (e.g. SCSI disks
+with DIF integrity checksums) will fail a write if the page contents don't
+match the checksum.  btrfs already guarantees page stability, so it does not
+use these changes.
+
+The technique used is fairly simple -- whenever a page is about to become
+writable (either because of a write fault to a mapped page, or a buffered write
+is in progress), wait for the page writeback flag to be clear, indicating that
+the page is not being written to disk.  This means that it is necessary (1) to
+add wait for writeback code to grab_cache_page_write_begin to take care of
+buffered writes, and (2) all filesystems must have a page_mkwrite that locks a
+page, waits for writeback, and returns the locked page.  For filesystems that
+piggyback on the generic block_page_mkwrite, the patchset adds the writeback
+wait to that function; for filesystems that do not use the page_mkwrite hook at
+all, the patchset provides a stub page_mkwrite.
+
+I ran my write-after-checksum ("wac") reproducer program to try to create the
+DIF checksum errors by madly rewriting the same memory pages.  In fact, I tried
+the following combinations against ext4, xfs, and btrfs:
+
+a. 64 write() threads + sync_file_range
+b. 64 mmap write threads + msync
+c. 32 write() threads + sync_file_range + 32 mmap write threads + msync
+d. Same as C, but with all threads in directio mode
+e. Same as A, but with all threads in directio mode
+f. Same as B, but with all threads in directio mode
+
+After running profiles A-F for 30 minutes each on 6 different machines, ext4
+and xfs report no errors.   btrfs eventually reports -ENOSPC and fails the
+test, though it does that even without any of the patches applied.
+
+To assess the performance impact of stable page writes, I moved to a disk that
+doesn't have DIF support so that I could measure just the impact of waiting for
+writeback.  I first ran wac with 64 threads madly scribbling on a 64k file and
+saw about a 12 percent performance decrease.  I then reran the wac program with
+64 threads and a 64MB file and saw about the same performance numbers.  As I
+suspected, the patchset only seems to impact workloads that rewrite the same
+memory page frequently.
+
+Per various comments regarding v3 of this patchset, I've integrated his
+suggestions, reworked the patch descriptions to make it clearer which ones
+touch all the filesystems and which ones are to fix remaining holes in specific
+filesystems, and expanded the scope of filesystems that got fixed.
+
+As always, questions and comments are welcome; and thank you to all the
+previous reviewers of this patchset.  I am also soliciting people's opinions on
+whether or not these patches could go upstream for .40.
+
+This latest iteration of the patchset focuses solely on the generic changes
+necessary to provide stable pages.  It is being sent to Al Viro (just like v3.1
+was).
+
+--D
