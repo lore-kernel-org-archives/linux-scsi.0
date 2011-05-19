@@ -1,44 +1,52 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] scsi: netlink: avoid including netlink interface in
- scsi module
-Date: Wed, 18 May 2011 17:48:57 -0700
-Message-ID: <20110518174857.77dbda09.randy.dunlap@oracle.com>
-References: <1305753940-18570-1-git-send-email-jengelh@medozas.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Submit commit 3dea642afd for 2.6.38.stable?
+Date: Thu, 19 May 2011 08:02:29 +0400
+Message-ID: <1305777749.2576.10.camel@mulgrave.site>
+References: <Pine.LNX.4.44L0.1105161626070.2013-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:34647 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753216Ab1ESAtO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 May 2011 20:49:14 -0400
-In-Reply-To: <1305753940-18570-1-git-send-email-jengelh@medozas.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54708 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750722Ab1ESECi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 May 2011 00:02:38 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1105161626070.2013-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Engelhardt <jengelh@medozas.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@suse.de>, Luben Tuikov <ltuikov@yahoo.com>, SCSI development list <linux-scsi@vger.kernel.org>, stable@kernel.org
 
-On Wed, 18 May 2011 23:25:39 +0200 Jan Engelhardt wrote:
+On Mon, 2011-05-16 at 16:45 -0400, Alan Stern wrote:
+> James:
+> 
+> Your commit 3dea642afd9187728d119fce5c82a7ed9faa9b6a ([SCSI] Revert
+> "[SCSI] Retrieve the Caching mode page") hasn't been submitted for the
+> 2.6.38 stable tree.  More people are now getting hit with the
+> underlying problem; see
+> 
+> 	https://bugzilla.kernel.org/show_bug.cgi?id=35042
 
-> Only scsi_transport_fc needs it, so don't include it in scsi_mod
-> if fc=m.
+OK, yes, the reversion needs sending to stable ... can you do that?
 
-BTW, scsi_transport_iscsi.c also makes netlink calls (but it's missing the
-needed header files).
+> Do you want to queue your commit to the stable tree, or do you prefer
+> to wait until the proper repair patch:
+> 
+> 	http://marc.info/?l=linux-scsi&m=130089710431684&w=2
+> 
+> has been merged so it can go into the stable tree instead?
+> 
+> Alan Stern
+> 
+> P.S.: As of now, the scsi-next tree doesn't show any signs of
+> reinstating Luben's original commit together with my repair patch.  
+> Does this mean you intend to forget about the original "Retrieve the
+> Caching mode page" change, or do you intend to merge them for 2.6.41?)
 
-and what about pmcraid.c ?
+Actually, no, I was waiting for you to send the combined patch (with
+both signoffs) rather than having me reconstruct it.
 
-> Cc: Randy Dunlap <randy.dunlap@oracle.com>   // was not cc:ed
-> Signed-off-by: Jan Engelhardt <jengelh@medozas.de>
-> ---
->  drivers/scsi/Kconfig        |    3 ++-
->  drivers/scsi/Makefile       |    2 +-
->  drivers/scsi/scsi.c         |    3 ---
->  drivers/scsi/scsi_netlink.c |   22 +++++++++++++---------
->  drivers/scsi/scsi_priv.h    |    7 +------
->  5 files changed, 17 insertions(+), 20 deletions(-)
+James
 
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
