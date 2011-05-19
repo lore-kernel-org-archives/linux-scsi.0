@@ -1,8 +1,7 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 1/3] mm: Wait for writeback when grabbing pages to begin a
-	write
-Date: Thu, 19 May 2011 15:48:49 -0700
-Message-ID: <20110519224849.28755.19733.stgit@elm3c44.beaverton.ibm.com>
+Subject: [PATCH 2/3] fs: block_page_mkwrite should wait for writeback to finish
+Date: Thu, 19 May 2011 15:48:55 -0700
+Message-ID: <20110519224855.28755.2720.stgit@elm3c44.beaverton.ibm.com>
 References: <20110519224841.28755.80650.stgit@elm3c44.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,39 +13,33 @@ To: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <djwong@us.ibm.c
 Cc: Jens Axboe <axboe@kernel.dk>, Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When grabbing a page for a buffered IO write, the mm should wait for writeback
-on the page to complete so that the page does not become writable during the IO
-operation.  This change is needed to provide page stability during writes for
-all filesystems.
+For filesystems such as nilfs2 and xfs that use block_page_mkwrite, modify that
+function to wait for pending writeback before allowing the page to become
+writable.  This is needed to stabilize pages during writeback for those two
+filesystems.
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
- mm/filemap.c |    4 +++-
+ fs/buffer.c |    4 +++-
  1 files changed, 3 insertions(+), 1 deletions(-)
 
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c641edf..fd0e7f2 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2288,7 +2288,7 @@ struct page *grab_cache_page_write_begin(struct address_space *mapping,
- repeat:
- 	page = find_lock_page(mapping, index);
- 	if (page)
--		return page;
-+		goto found;
+diff --git a/fs/buffer.c b/fs/buffer.c
+index a08bb8e..0e7fa16 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2367,8 +2367,10 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 			ret = VM_FAULT_OOM;
+ 		else /* -ENOSPC, -EIO, etc */
+ 			ret = VM_FAULT_SIGBUS;
+-	} else
++	} else {
++		wait_on_page_writeback(page);
+ 		ret = VM_FAULT_LOCKED;
++	}
  
- 	page = __page_cache_alloc(mapping_gfp_mask(mapping) & ~gfp_notmask);
- 	if (!page)
-@@ -2301,6 +2301,8 @@ repeat:
- 			goto repeat;
- 		return NULL;
- 	}
-+found:
-+	wait_on_page_writeback(page);
- 	return page;
- }
- EXPORT_SYMBOL(grab_cache_page_write_begin);
+ out:
+ 	return ret;
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
