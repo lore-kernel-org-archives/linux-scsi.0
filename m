@@ -1,60 +1,76 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: TCM/LIO ib_srpt testing
-Date: Wed, 18 May 2011 21:25:06 -0700
-Message-ID: <1305779106.2856.540.camel@haakon2.linux-iscsi.org>
-References: <BANLkTim5inFCXMwnFz=4CHrAmhXMYyMscw@mail.gmail.com>
-	 <1305668263.2856.235.camel@haakon2.linux-iscsi.org>
-	 <BANLkTikyHRsskL+4kbiOUwexJg1Medb+hw@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] mpt2sas: remove the use of writeq, since writeq is
+ not atomic
+Date: Thu, 19 May 2011 08:46:00 +0400
+Message-ID: <1305780360.2576.20.camel@mulgrave.site>
+References: <20110504115324.GE17855@lsi.com>
+	 <1305616571.6008.23.camel@mulgrave.site>
+	 <B2FD678A64EAAD45B089B123FDFC3ED70157F7BCE5@inbmail01.lsi.com>
+	 <20110518041551.GL15227@parisc-linux.org>
+	 <1305692584.2580.3.camel@mulgrave.site> <1305702010.2781.33.camel@pasglop>
+	 <mpt2sas-writeq-powerpc64@mdm.bga.com>
+	 <4565AEA676113A449269C2F3A549520F80B66280@cosmail03.lsi.com>
+	 <x86-32-writeq-is-broken@mdm.bga.com>
+	 <4565AEA676113A449269C2F3A549520F80BE7F37@cosmail03.lsi.com>
+	 <BANLkTin4w1QyL1NyTyrZARPWASai45W_4Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47021 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752139Ab1ESEdR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 May 2011 00:33:17 -0400
-In-Reply-To: <BANLkTikyHRsskL+4kbiOUwexJg1Medb+hw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arch-owner@vger.kernel.org>
+In-Reply-To: <BANLkTin4w1QyL1NyTyrZARPWASai45W_4Q@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
+To: Hitoshi Mitake <h.mitake@gmail.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Milton Miller <miltonm@bga.com>, Sam Ravnborg <sam@ravnborg.org>, Ingo Molnar <mingo@elte.hu>, Ingo Molnar <mingo@redhat.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, Matthew Wilcox <matthew@wil.cx>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux scsi dev <linux-scsi@vger.kernel.org>, "paulus@samba.org" <paulus@samba.org>, linux powerpc dev <linuxppc-dev@lists.ozlabs.org>, linux pci <linux-pci@vger.kernel.org>, linux kernel <linux-kernel@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>, Roland Dreier <roland@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Vasilis Liaskovitis <vliaskov@gmail.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-On Wed, 2011-05-18 at 12:19 +0200, Bart Van Assche wrote:
-> On Tue, May 17, 2011 at 11:37 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > On Tue, 2011-05-17 at 12:37 +0200, Vasilis Liaskovitis wrote:
-> > > In the past, using branch tcm_ib_srpt-38, I have successfully
-> > > initialized the srp target and initiator with the "manual steps" in:
-> > > http://linux-iscsi.org/wiki/SCSI_RDMA_Protocol#Manual_steps
-> > >
-> > > However with master, the manual steps fail at:
-> > > root@server1:~# mkdir -p /sys/kernel/config/target/srpt/mlx4_0/mlx4_0/lun/lun_0
-> > > mkdir: cannot create directory
-> > > `/sys/kernel/config/target/srpt/mlx4_0': Invalid argument
-> > > Has the recommended ib_srpt initialization procedure changed recently?
+On Thu, 2011-05-19 at 13:08 +0900, Hitoshi Mitake wrote:
+> On Thu, May 19, 2011 at 04:11, Moore, Eric <Eric.Moore@lsi.com> wrote:
+> > On Wednesday, May 18, 2011 12:31 PM Milton Miller wrote:
+> >> Ingo I would propose the following commits added in 2.6.29 be reverted.
+> >> I think the current concensus is drivers must know if the writeq is
+> >> not atomic so they can provide their own locking or other workaround.
+> >>
 > >
-> > Yes.  In order for ib_srpt to properly work with rtslib+rtsadmin, the
-> > control plane has been changed from Bart's original patch to reference
-> > HW IB Port GUID instead of the symbolic /sys/class/infiniband/ name
+> >
+> > Exactly.
+> >
 > 
-> Most users expect the original behavior. If you agree I can prepare a
-> new patch where the target name format can be selected via a kernel
-> module parameter and in which Christoph Hellwig's recent comments are
-> addressed too.
+> The original motivation of preparing common readq/writeq is that
+> letting each driver
+> have their own readq/writeq is bad for maintenance of source code.
 > 
+> But if you really dislike them, there might be two solutions:
+> 
+> 1. changing the name of readq/writeq to readq_nonatomic/writeq_nonatomic
 
-Since we don't have any real userspace to break with 
-/sys/kernel/config/target/srpt/ at this point, we need to avoid multiple
-configfs layouts in mainline without a really solid backwards compatible
-reason for needing to do so.
+This is fine, but not really very useful
 
-I don't have a strong issue with this myself, and would even be happy to
-support it in lio upstream and backports if it's really useful, but I
-think for mainline we have to decide on a single configfs layout for
-modern v2 userspace.
+> 2. adding new C file to somewhere and defining spinlock for them.
+>     With spin_lock_irqsave() and spin_unlock_irqrestore() on the spinlock,
+>     readq/writeq can be atomic.
 
-Thank you for your comments,
+This can't really be done generically.  There are several considerations
+to do with hardware requirements.  I can see some hw requiring a
+specific write order (I think this applies more to read order, though).
 
---nab
+The specific mpt2sas problem is that if we write a 64 bit register non
+atomically, we can't allow any interleaving writes for any other region
+on the chip, otherwise the HW will take the write as complete in the 64
+bit register and latch the wrong value.  The only way to achieve that
+given the semantics of writeq is a global static spinlock.
 
+> How do you think about them? If you cannot agree with the above two
+> solutions, I'll agree with reverting them.
 
+Having x86 roll its own never made any sense, so I think they need
+reverting anyway.  This is a driver/platform bus problem not an
+architecture problem.  The assumption we can make is that the platform
+CPU can write atomically at its chip width.  We *may* be able to make
+the assumption that the bus controller can translate an atomic chip
+width transaction to a single atomic bus transaction; I think that
+assumption holds true for at least PCI and on the parisc legacy busses,
+so if we can agree on semantics, this should be a global define
+somewhere.  If there are problems with the bus assumption, we'll likely
+need some type of opt-in (or just not bother).
+
+James
