@@ -1,47 +1,39 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Submit commit 3dea642afd for 2.6.38.stable?
-Date: Thu, 19 May 2011 08:28:35 -0700
-Message-ID: <20110519152835.GA15620@kroah.com>
-References: <1305777749.2576.10.camel@mulgrave.site>
- <Pine.LNX.4.44L0.1105191008150.1900-100000@iolanthe.rowland.org>
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt
+ merge
+Date: Thu, 19 May 2011 10:57:28 -0600
+Message-ID: <20110519165728.GB12525@obsidianresearch.com>
+References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
+ <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com>
+ <20110518170556.GB2595@obsidianresearch.com>
+ <BANLkTimQXU0u5gtRzXsnsB=sCF-bvpY+Ag@mail.gmail.com>
+ <BANLkTi==bZ0h3o5FNrg8PSJFp6F-zh5hTA@mail.gmail.com>
+ <1305778694.2856.533.camel@haakon2.linux-iscsi.org>
+ <BANLkTi=Xb-ypQNa3=MmwiLeE4Q9FWHnZXg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out3.smtp.messagingengine.com ([66.111.4.27]:33656 "EHLO
-	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752505Ab1ESPdM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 May 2011 11:33:12 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1105191008150.1900-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <BANLkTi=Xb-ypQNa3=MmwiLeE4Q9FWHnZXg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rmda <linux-rdma@vger.kernel.org>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Luben Tuikov <ltuikov@yahoo.com>, SCSI development list <linux-scsi@vger.kernel.org>, stable@kernel.org
 
-On Thu, May 19, 2011 at 10:19:54AM -0400, Alan Stern wrote:
-> On Thu, 19 May 2011, James Bottomley wrote:
-> 
-> > On Mon, 2011-05-16 at 16:45 -0400, Alan Stern wrote:
-> > > James:
-> > > 
-> > > Your commit 3dea642afd9187728d119fce5c82a7ed9faa9b6a ([SCSI] Revert
-> > > "[SCSI] Retrieve the Caching mode page") hasn't been submitted for the
-> > > 2.6.38 stable tree.  More people are now getting hit with the
-> > > underlying problem; see
-> > > 
-> > > 	https://bugzilla.kernel.org/show_bug.cgi?id=35042
-> > 
-> > OK, yes, the reversion needs sending to stable ... can you do that?
-> 
-> I'll handle it.
-> 
-> Greg, can you send the commit listed above directly into the stable 
-> queue, or should I email it to stable@kernel.org as a separate patch?  
-> It needs to be applied to 2.6.38.x only.
+On Thu, May 19, 2011 at 12:40:02PM +0200, Bart Van Assche wrote:
 
-Now queued up, all I needed was the git commit id above.
+> I'm still wondering whether it was a good idea to switch from ib<n>
+> style names to port GIDs. Not only will that make it hard for users to
+> match the ib<n> names already assigned to InfiniBand HCAs with target
+> port names but this also deviates from the naming scheme used for any
+> other Linux device. Ethernet devices e.g. appear as eth<n> in /dev
+> instead of a MAC address like 00:1a:64:10:18:6f.
 
-thanks,
+The ib# names returned by ip addr are already disjoint from the
+namespace that is being used by SRP targets. The only choices are port
+GUID or something like mlx4_0/1, the later is somewhat less
+commonly used..
 
-greg k-h
+Is there some approach here for selecting the pkey as well?
+
+Jason
