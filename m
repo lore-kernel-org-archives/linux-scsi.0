@@ -1,7 +1,8 @@
 From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH 2/3] fs: block_page_mkwrite should wait for writeback to finish
-Date: Thu, 19 May 2011 15:48:55 -0700
-Message-ID: <20110519224855.28755.2720.stgit@elm3c44.beaverton.ibm.com>
+Subject: [PATCH 3/3] mm: Provide stub page_mkwrite functionality to stabilize
+	pages during writes
+Date: Thu, 19 May 2011 15:49:03 -0700
+Message-ID: <20110519224903.28755.2703.stgit@elm3c44.beaverton.ibm.com>
 References: <20110519224841.28755.80650.stgit@elm3c44.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,33 +14,49 @@ To: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <djwong@us.ibm.c
 Cc: Jens Axboe <axboe@kernel.dk>, Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-For filesystems such as nilfs2 and xfs that use block_page_mkwrite, modify that
-function to wait for pending writeback before allowing the page to become
-writable.  This is needed to stabilize pages during writeback for those two
-filesystems.
+For filesystems that do not provide any page_mkwrite handler, provide a stub
+page_mkwrite function that locks the page and waits for pending writeback to
+complete.  This is needed to stabilize pages during writes for a large variety
+of filesystem drivers (ext2, ext3, vfat, hfs...).
 
 Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
 ---
- fs/buffer.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+ mm/filemap.c |   19 +++++++++++++++++++
+ 1 files changed, 19 insertions(+), 0 deletions(-)
 
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index a08bb8e..0e7fa16 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -2367,8 +2367,10 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
- 			ret = VM_FAULT_OOM;
- 		else /* -ENOSPC, -EIO, etc */
- 			ret = VM_FAULT_SIGBUS;
--	} else
-+	} else {
-+		wait_on_page_writeback(page);
- 		ret = VM_FAULT_LOCKED;
-+	}
+diff --git a/mm/filemap.c b/mm/filemap.c
+index fd0e7f2..2a922b4 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -1713,8 +1713,27 @@ page_not_uptodate:
+ }
+ EXPORT_SYMBOL(filemap_fault);
  
- out:
- 	return ret;
++static int stub_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf)
++{
++	struct page *page = vmf->page;
++	struct inode *inode = vma->vm_file->f_path.dentry->d_inode;
++	loff_t size;
++
++	lock_page(page);
++	size = i_size_read(inode);
++	if ((page->mapping != inode->i_mapping) ||
++	    (page_offset(page) > size)) {
++		/* page got truncated out from underneath us */
++		unlock_page(page);
++		return VM_FAULT_NOPAGE;
++	}
++	wait_on_page_writeback(page);
++	return VM_FAULT_LOCKED;
++}
++
+ const struct vm_operations_struct generic_file_vm_ops = {
+ 	.fault		= filemap_fault,
++	.page_mkwrite	= stub_page_mkwrite,
+ };
+ 
+ /* This is used for a general mmap of a disk file */
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
