@@ -1,43 +1,42 @@
-From: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt
- merge
-Date: Thu, 19 May 2011 12:41:13 -0600
-Message-ID: <20110519184113.GE12525@obsidianresearch.com>
-References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
- <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com>
- <20110518170556.GB2595@obsidianresearch.com>
- <BANLkTikOCeNcDvoCM=BOSxQaSECFhJ05Gg@mail.gmail.com>
- <20110519174420.GD12525@obsidianresearch.com>
- <BANLkTikOsqazAE-mHFrM+=4GTs+249Ae5Q@mail.gmail.com>
+From: Jan Engelhardt <jengelh@medozas.de>
+Subject: Re: [PATCH] scsi: netlink: avoid including netlink interface in scsi
+ module
+Date: Thu, 19 May 2011 21:06:59 +0200 (CEST)
+Message-ID: <alpine.LNX.2.01.1105192105140.8008@frira.zrqbmnf.qr>
+References: <1305753940-18570-1-git-send-email-jengelh@medozas.de> <20110518174857.77dbda09.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <BANLkTikOsqazAE-mHFrM+=4GTs+249Ae5Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rmda <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from seven.medozas.de ([188.40.89.202]:39022 "EHLO seven.medozas.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933727Ab1ESTHB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 May 2011 15:07:01 -0400
+In-Reply-To: <20110518174857.77dbda09.randy.dunlap@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On Thu, May 19, 2011 at 08:34:08PM +0200, Bart Van Assche wrote:
-> My reply applies to your original statement where you were referring
-> to APM with different destination ports. What you write above is about
-> APM with identical destination ports and hence does not apply to my
-> reply.
+On Thursday 2011-05-19 02:48, Randy Dunlap wrote:
 
-The subnet manager can give an APM result that will switch between
-ports on the same node, APM handles both switching to a different path
-with the same end ports, and also switching to a new path using the
-same end ports. An implementation supporting APM must be ready for
-both situations - realistically no additional app code is required to
-support the multiport case since it falls out for free. You'd actually
-have to actively work to prevent it...
+>On Wed, 18 May 2011 23:25:39 +0200 Jan Engelhardt wrote:
+>
+>> Only scsi_transport_fc needs it, so don't include it in scsi_mod
+>> if fc=m.
+>
+>BTW, scsi_transport_iscsi.c also makes netlink calls (but it's missing the
+>needed header files).
 
-This is why in the IB verbs architecture nearly everything is tied to
-a *device*, not a port.
+What, where?
 
-Jason
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>and what about pmcraid.c ?
+
+I have both enabled, and the patch does not make any new warnings w.r.t. 
+missing prototypes or otherwise pop up. So there does not seem to be 
+anything missing.
+
+>> Cc: Randy Dunlap <randy.dunlap@oracle.com>   // was not cc:ed
+
+I had hoped git send-email would scan through the commit message, 
+and add Ccs, apparently it did not.
+
