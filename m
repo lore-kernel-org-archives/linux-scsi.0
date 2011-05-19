@@ -1,37 +1,49 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 1/3] mpt2sas: remove the use of writeq, since writeq is
- not atomic
-Date: Wed, 18 May 2011 16:05:58 -0600
-Message-ID: <4565AEA676113A449269C2F3A549520F80BE7FAF@cosmail03.lsi.com>
-References: <20110504115324.GE17855@lsi.com>
-	 <1305616571.6008.23.camel@mulgrave.site>
-	 <B2FD678A64EAAD45B089B123FDFC3ED70157F7BCE5@inbmail01.lsi.com>
-	 <20110518041551.GL15227@parisc-linux.org>
-	 <1305692584.2580.3.camel@mulgrave.site>	<1305702010.2781.33.camel@pasglop>
-	 <mpt2sas-writeq-powerpc64@mdm.bga.com>
-	 <4565AEA676113A449269C2F3A549520F80B66280@cosmail03.lsi.com>
- <1305754218.7481.0.camel@pasglop>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [stable] Submit commit 3dea642afd for 2.6.38.stable?
+Date: Wed, 18 May 2011 17:27:27 -0700
+Message-ID: <20110519002727.GD8697@kroah.com>
+References: <Pine.LNX.4.44L0.1105161626070.2013-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:45992 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754446Ab1ERWGC (ORCPT
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:46953 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753406Ab1ESA3e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 May 2011 18:06:02 -0400
-In-Reply-To: <1305754218.7481.0.camel@pasglop>
-Content-Language: en-US
+	Wed, 18 May 2011 20:29:34 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1105161626070.2013-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Milton Miller <miltonm@bga.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "paulus@samba.org" <paulus@samba.org>, "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Luben Tuikov <ltuikov@yahoo.com>, stable@kernel.org
 
-T24gV2VkbmVzZGF5LCBNYXkgMTgsIDIwMTEgMzozMCBQTSwgQmVuamFtaW4gSGVycmVuc2NobWlk
-dCB3cm90ZToNCj4gDQo+IFlvdSBtYXkgYWxzbyB3YW50IHRvIGxvb2sgYXQgTWlsdG9uJ3MgY29t
-bWVudHMsIGl0IGxvb2tzIGxpa2UgdGhlIHdheQ0KPiB5b3UgZG8gaW5pdF9jb21wbGV0aW9uIGZv
-bGxvd2VkIGltbWVkaWF0ZWx5IGJ5IHdhaXRfY29tcGxldGlvbiBpcyByYWN5Lg0KPiANCj4gWW91
-IHNob3VsZCBpbml0IHRoZSBjb21wbGV0aW9uIGJlZm9yZSB5b3UgZG8gdGhlIElPIHRoYXQgd2ls
-bCBldmVudHVhbGx5DQo+IHRyaWdnZXIgY29tcGxldGUoKSB0byBiZSBjYWxsZWQuDQo+IA0KDQpJ
-IGFncmVlLiAgVGhlIGluaXRfY29tcGxldGlvbiBuZWVkcyB0byBiZSBkb25lIHByaW9yIHRvIHBv
-c3RpbmcgdGhlIHNtaWQuICBJJ20gbm90IHN1cmUgd2h5IEkgZGlkIGl0IHRoYXQgd2F5Lg0K
+On Mon, May 16, 2011 at 04:45:15PM -0400, Alan Stern wrote:
+> James:
+> 
+> Your commit 3dea642afd9187728d119fce5c82a7ed9faa9b6a ([SCSI] Revert
+> "[SCSI] Retrieve the Caching mode page") hasn't been submitted for the
+> 2.6.38 stable tree.  More people are now getting hit with the
+> underlying problem; see
+> 
+> 	https://bugzilla.kernel.org/show_bug.cgi?id=35042
+> 
+> Do you want to queue your commit to the stable tree, or do you prefer
+> to wait until the proper repair patch:
+> 
+> 	http://marc.info/?l=linux-scsi&m=130089710431684&w=2
+> 
+> has been merged so it can go into the stable tree instead?
+> 
+> Alan Stern
+> 
+> P.S.: As of now, the scsi-next tree doesn't show any signs of
+> reinstating Luben's original commit together with my repair patch.  
+> Does this mean you intend to forget about the original "Retrieve the
+> Caching mode page" change, or do you intend to merge them for 2.6.41?)
+
+James, any ideas?
+
+thanks,
+
+greg k-h
