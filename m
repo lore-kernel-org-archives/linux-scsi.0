@@ -1,39 +1,33 @@
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt
- merge
-Date: Thu, 19 May 2011 10:57:28 -0600
-Message-ID: <20110519165728.GB12525@obsidianresearch.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt merge
+Date: Thu, 19 May 2011 19:29:21 +0200
+Message-ID: <BANLkTikOCeNcDvoCM=BOSxQaSECFhJ05Gg@mail.gmail.com>
 References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
- <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com>
- <20110518170556.GB2595@obsidianresearch.com>
- <BANLkTimQXU0u5gtRzXsnsB=sCF-bvpY+Ag@mail.gmail.com>
- <BANLkTi==bZ0h3o5FNrg8PSJFp6F-zh5hTA@mail.gmail.com>
- <1305778694.2856.533.camel@haakon2.linux-iscsi.org>
- <BANLkTi=Xb-ypQNa3=MmwiLeE4Q9FWHnZXg@mail.gmail.com>
+ <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com> <20110518170556.GB2595@obsidianresearch.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <BANLkTi=Xb-ypQNa3=MmwiLeE4Q9FWHnZXg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rmda <linux-rdma@vger.kernel.org>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20110518170556.GB2595-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>
+Cc: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, linux-kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rmda <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, May 19, 2011 at 12:40:02PM +0200, Bart Van Assche wrote:
+On Wed, May 18, 2011 at 7:05 PM, Jason Gunthorpe
+<jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org> wrote:
+> Many installations run dual rail IB with a desire
+> for both ports to be active and handling traffic at once. Not sure how
+> this translates to SRPT, but a good goal would be for a SRPT target to
+> be available on both HCA ports and support APM between them, at the
+> discretion of the client.
 
-> I'm still wondering whether it was a good idea to switch from ib<n>
-> style names to port GIDs. Not only will that make it hard for users to
-> match the ib<n> names already assigned to InfiniBand HCAs with target
-> port names but this also deviates from the naming scheme used for any
-> other Linux device. Ethernet devices e.g. appear as eth<n> in /dev
-> instead of a MAC address like 00:1a:64:10:18:6f.
+Regarding APM: the Linux kernel already has multipath support and
+duplicate functionality is in general not welcomed. So you will have
+to come up with a very good reason before APM support in ib_srp or
+ib_srpt would be considered for acceptance.
 
-The ib# names returned by ip addr are already disjoint from the
-namespace that is being used by SRP targets. The only choices are port
-GUID or something like mlx4_0/1, the later is somewhat less
-commonly used..
-
-Is there some approach here for selecting the pkey as well?
-
-Jason
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
