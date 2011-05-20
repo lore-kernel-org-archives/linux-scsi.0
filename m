@@ -1,74 +1,104 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [dm-devel] [PATCH] scsi_dh_rdac: Adding couple more vendor product	ids
-Date: Fri, 20 May 2011 17:08:32 -0400
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD90DAF451E@RTPMVEXC1-PRD.hq.netapp.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF4FF7DC637@cosmail01.lsi.com> <E463DF2B2E584B4A82673F53D62C2EF4FFAC8CFB@cosmail01.lsi.com>
+From: <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH]: be2iscsi: Fix MSIX interrupt names
+Date: Fri, 20 May 2011 15:07:26 -0700
+Message-ID: <50725EF61B96174EB1803401F1A2E37335099FC9FC@EXMAIL.ad.emulex.com>
+References: <4DD6AEB7.2090900@redhat.com> <4DD6AF29.8090903@redhat.com>
+ <50725EF61B96174EB1803401F1A2E37335099FC989@EXMAIL.ad.emulex.com>
+ <4DD6BD43.5070607@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:51108 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754774Ab1ETVIg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2011 17:08:36 -0400
-Content-class: urn:content-classes:message
+Received: from exht1.emulex.com ([138.239.113.183]:36574 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756806Ab1ETWHr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2011 18:07:47 -0400
+In-Reply-To: <4DD6BD43.5070607@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
-Cc: dmilburn@redhat.com
+To: prarit@redhat.com, linux-scsi@vger.kernel.org
+Cc: mchristi@redhat.com
 
-Pinging again.  This patch was not picked up yet. James let me know if you want me to resubmit again..  
-
-
-> -----Original Message-----
-> From: Moger, Babu
-> Sent: Friday, May 06, 2011 8:39 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: 'James Bottomley'
-> Subject: RE: [dm-devel] [PATCH] scsi_dh_rdac: Adding couple more vendor
-> product ids
-> 
-> I did not see this patch being picked up..  Forwarding again..
-> 
-> > -----Original Message-----
-> > From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
-> > On Behalf Of Moger, Babu
-> > Sent: Tuesday, April 05, 2011 3:35 PM
-> > To: linux-scsi@vger.kernel.org
-> > Cc: device-mapper development
-> > Subject: [dm-devel] [PATCH] scsi_dh_rdac: Adding couple more vendor
-> > product ids
-> >
-> > This patch adds couple more Vendor/Product IDs for RDAC.. There are no
-> > functional changes.
-> >
-> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> > ---
-> > --- linux-2.6.39-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
-> > 	2011-04-05 15:01:52.000000000 -0500
-> > +++ linux-2.6.39-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-
-> > 04-05 15:06:18.000000000 -0500
-> > @@ -755,6 +755,7 @@ static const struct scsi_dh_devlist rdac
-> >  	{"IBM", "3526"},
-> >  	{"SGI", "TP9400"},
-> >  	{"SGI", "TP9500"},
-> > +	{"SGI", "TP9700"},
-> >  	{"SGI", "IS"},
-> >  	{"STK", "OPENstorage D280"},
-> >  	{"SUN", "CSM200_R"},
-> > @@ -774,6 +775,7 @@ static const struct scsi_dh_devlist rdac
-> >  	{"SUN", "CSM100_R_FC"},
-> >  	{"SUN", "STK6580_6780"},
-> >  	{"SUN", "SUN_6180"},
-> > +	{"SUN", "ArrayStorage"},
-> >  	{NULL, NULL},
-> >  };
-> >
-> >
-> >
-> >
-> > --
-> > dm-devel mailing list
-> > dm-devel@redhat.com
-> > https://www.redhat.com/mailman/listinfo/dm-devel
+DQpQbCBzZWUgaW5saW5lDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUHJhcml0
+IEJoYXJnYXZhIFttYWlsdG86cHJhcml0QHJlZGhhdC5jb21dIA0KU2VudDogRnJpZGF5LCBNYXkg
+MjAsIDIwMTEgMTI6MTMgUE0NClRvOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KQ2M6IEth
+bGxpY2thbCwgSmF5YW1vaGFuOyBtY2hyaXN0aUByZWRoYXQuY29tDQpTdWJqZWN0OiBSZTogW1BB
+VENIXTogYmUyaXNjc2k6IEZpeCBNU0lYIGludGVycnVwdCBuYW1lcw0KDQoNCltWMl0gSmF5YW1v
+aGFuIC4uLiBJIHJld29ya2VkIHRoZSBjb2RlIHNvIHRoYXQgdGhlIGFsbG9jYXRpb25zIG9mIHRo
+ZSBtc2lfbmFtZQ0KZG9uJ3QgY29sbGlkZSB3aXRoIHRoZSBpcnFfcmVxdWVzdHMuICBJZiBJIGRv
+IGl0IGluIHRoZSBzYW1lIGZvciBsb29wIHRoaW5ncw0KZ2V0IHZlcnkgbWVzc3kgdmVyeSBxdWlj
+a2x5LiAgVGhpcyBzaG91bGQgd29yayBzaW5jZSB0aGUgcGhiYSBpcyB6ZXJvJ2Qgb3V0Lg0KDQpU
+aGUgYmUyaXNjc2kgZHJpdmVyIHVzZXMgYSBzaW5nbGUgc3RhdGljIGFycmF5IGluIGEgZnVuY3Rp
+b24gZm9yIHRoZQ0KaXJxIGFjdGlvbi0+bmFtZSBmaWVsZC4NCg0KVGhpcyByZXN1bHRzIGluIC9w
+cm9jL2ludGVycnVwdHMgb3V0cHV0IGxpa2UNCg0KMTU2OiAgMCAgICAgICAgICAwICAgICAgICAg
+IDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCANCjAgICAgICAg
+ICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAg
+IDAgICAgICAgICAgMCANCiAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAg
+MCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICANCiAgICAgMCAgICAgICAgICAw
+ICAgICAgIFBDSS1NU0ktWCANClfvv70577+9X96ySu+/ve+/ve+/ve+/ve+/ve+/vXTvv73vv71r
+ZmJZ77+977+9fn3vv73vv73vv73vv70ocO+/ve+/ve+/vSXvv73vv73vv70nbG9Dbe+/ve+/ve+/
+ve+/ve+/ve+/ve+/vW5gIe+/vXbvv73vv70l77+9NO+/ve+/ve+/ve+/vWJcIlDvv73vv73vv73v
+v73vv70vIu+/vXTvv73vv73vv70oYu+/ve+/vUnvv73vv73Uq++/ve+/vTEvIu+/ve+/vVJt77+9
+dX7vv73vv73vv73vv73vv73vv73vv70NCg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCu+/vThy77+9Ke+/vU7vv70+XGFqKu+/ve+/
+vSvvv73Qte+/ve+/vdu777+9d0LknZ/vv71CbO+/ve+/vQ0KDQpJbiB0aGUgbGluZSBhYm92ZSwg
+ZXZlcnl0aGluZyB1cCB0byBQQ0ktTVNJLVggaXMgY29ycmVjdC4gIFRoZSBwb2ludGVyIGZvcg0K
+YWN0aW9uLT5uYW1lIGlzIGdhcmJhZ2UgYW5kIHNjcmliYmxlcyB0aGUgb3V0cHV0IG9uIHRoZSBz
+Y3JlZW4uDQoNClRoaXMgcGF0Y2ggZml4ZXMgdGhlIHByb2JsZW06DQoNCjE1NjogICAgICAgICAg
+MCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAg
+ICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAg
+ICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAg
+ICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAg
+ICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgUENJLU1TSS1YICBiZWlzY3NpX21zaXhf
+MDAxNw0KDQoNCi0tLS0+OC0tLS0NCg0KRml4IGJlMmlzY3NpIGRyaXZlciB0byB1c2UgYSBzZXBh
+cmF0ZSBwb2ludGVyIGZvciBlYWNoIGlycSBhY3Rpb24tPm5hbWUgZmllbGQuDQpBbHNvIGZpeCBh
+IGNhbGN1bGF0aW9uIGVycm9yIGluIHRoZSBmcmVlX21zaXhfaXJxcyBmb3IgbG9vcC4NCg0KU3Vj
+Y2Vzc2Z1bGx5IHRlc3RlZCBieSBtZSBvbiBhbiBIUCBCTDQ2MEMgRzcuDQoNCmRpZmYgLS1naXQg
+YS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5jIGIvZHJpdmVycy9zY3NpL2JlMmlzY3Np
+L2JlX21haW4uYw0KaW5kZXggMmU4OWY4OC4uZDQ0YjU5ZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
+c2NzaS9iZTJpc2NzaS9iZV9tYWluLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9t
+YWluLmMNCkBAIC02NzIsMTYgKzY3MiwyMyBAQCBzdGF0aWMgaW50IGJlaXNjc2lfaW5pdF9pcnFz
+KHN0cnVjdCBiZWlzY3NpX2hiYSAqcGhiYSkNCiAJc3RydWN0IGh3aV9jb250cm9sbGVyICpwaHdp
+X2N0cmxyOw0KIAlzdHJ1Y3QgaHdpX2NvbnRleHRfbWVtb3J5ICpwaHdpX2NvbnRleHQ7DQogCWlu
+dCByZXQsIG1zaXhfdmVjLCBpLCBqOw0KLQljaGFyIGRlc2NbMzJdOw0KIA0KIAlwaHdpX2N0cmxy
+ID0gcGhiYS0+cGh3aV9jdHJscjsNCiAJcGh3aV9jb250ZXh0ID0gcGh3aV9jdHJsci0+cGh3aV9j
+dHh0Ow0KIA0KKwlmb3IgKGkgPSAwOyBpIDwgcGhiYS0+bnVtX2NwdXM7IGkrKykgew0KKwkJcGhi
+YS0+bXNpX25hbWVbaV0gPSBremFsbG9jKEJFSVNDU0lfTVNJX05BTUUsIEdGUF9LRVJORUwpOw0K
+KwkJaWYgKCFwaGJhLT5tc2lfbmFtZVtpXSkgew0KKwkJCXJldCA9IC1FTk9NRU07DQorCQkJZ290
+byBmcmVlX21zaXhfbmFtZXM7DQorCQl9DQorCX0NCiAJaWYgKHBoYmEtPm1zaXhfZW5hYmxlZCkg
+ew0KIAkJZm9yIChpID0gMDsgaSA8IHBoYmEtPm51bV9jcHVzOyBpKyspIHsNCi0JCQlzcHJpbnRm
+KGRlc2MsICJiZWlzY3NpX21zaXhfJTA0eCIsIGkpOw0KKwkJCXNwcmludGYocGhiYS0+bXNpX25h
+bWVbaV0sICJiZWlzY3NpX21zaXhfJTA0eCIsIGkpOw0KIAkJCW1zaXhfdmVjID0gcGhiYS0+bXNp
+eF9lbnRyaWVzW2ldLnZlY3RvcjsNCi0JCQlyZXQgPSByZXF1ZXN0X2lycShtc2l4X3ZlYywgYmVf
+aXNyX21zaXgsIDAsIGRlc2MsDQorCQkJcmV0ID0gcmVxdWVzdF9pcnEobXNpeF92ZWMsIGJlX2lz
+cl9tc2l4LCAwLA0KKwkJCQkJICBwaGJhLT5tc2lfbmFtZVtpXSwNCiAJCQkJCSAgJnBod2lfY29u
+dGV4dC0+YmVfZXFbaV0pOw0KIAkJCWlmIChyZXQpIHsNCiAJCQkJc2hvc3RfcHJpbnRrKEtFUk5f
+RVJSLCBwaGJhLT5zaG9zdCwNCkBAIC03MTMsOCArNzIwLDExIEBAIHN0YXRpYyBpbnQgYmVpc2Nz
+aV9pbml0X2lycXMoc3RydWN0IGJlaXNjc2lfaGJhICpwaGJhKQ0KIAl9DQogCXJldHVybiAwOw0K
+IGZyZWVfbXNpeF9pcnFzOg0KLQlmb3IgKGogPSBpIC0gMTsgaiA9PSAwOyBqKyspDQorCWZvciAo
+aiA9IGkgLSAxOyBqID09IDA7IGotLSkNCg0KQWdyZWVkLiBUaGFua3MNCiAJCWZyZWVfaXJxKG1z
+aXhfdmVjLCAmcGh3aV9jb250ZXh0LT5iZV9lcVtqXSk7DQorZnJlZV9tc2l4X25hbWVzOg0KKwlm
+b3IgKGkgPSAwOyBpIDwgcGhiYS0+bnVtX2NwdXMgOyBpKyspDQoNCg0KSSB0aGluayB3ZSBuZWVk
+IHRvIHJlcGxhY2UgdGhlIGFib3ZlIGxpbmUgd2l0aCBzb21ldGhpbmcgbGlrZQ0KCWZvciAoaiA9
+IGkgLSAxOyBqID09IDA7IGotLSkNCmFzIG90aGVyd2lzZSBpZiBhbGxvYyBmYWlscyBiZWZvcmUg
+cmVhY2hpbmcgbnVtX2NwdXMgLSAxLCB3ZSB3b3VsZCBmcmVlDQogd2l0aG91dCBhbGxvY2F0aW5n
+DQoNCg0KKwkJa2ZyZWUocGhiYS0+bXNpX25hbWVbaV0pOw0KIAlyZXR1cm4gcmV0Ow0KIH0NCiAN
+CkBAIC0zODMyLDYgKzM4NDIsNyBAQCBzdGF0aWMgdm9pZCBiZWlzY3NpX3JlbW92ZShzdHJ1Y3Qg
+cGNpX2RldiAqcGNpZGV2KQ0KIAkJZm9yIChpID0gMDsgaSA8PSBwaGJhLT5udW1fY3B1czsgaSsr
+KSB7DQogCQkJbXNpeF92ZWMgPSBwaGJhLT5tc2l4X2VudHJpZXNbaV0udmVjdG9yOw0KIAkJCWZy
+ZWVfaXJxKG1zaXhfdmVjLCAmcGh3aV9jb250ZXh0LT5iZV9lcVtpXSk7DQorCQkJa2ZyZWUocGhi
+YS0+bXNpX25hbWVbaV0pOw0KIAkJfQ0KIAl9IGVsc2UNCiAJCWlmIChwaGJhLT5wY2lkZXYtPmly
+cSkNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5oIGIvZHJpdmVy
+cy9zY3NpL2JlMmlzY3NpL2JlX21haW4uaA0KaW5kZXggZDFlZTAwYi4uMDhjYzcxNCAxMDA2NDQN
+Ci0tLSBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmgNCisrKyBiL2RyaXZlcnMvc2Nz
+aS9iZTJpc2NzaS9iZV9tYWluLmgNCkBAIC0xNjMsNiArMTYzLDggQEAgZG8gewkJCQkJCQlcDQog
+I2RlZmluZSBQQUdFU19SRVFVSVJFRCh4KSBcDQogCSgoeCA8IFBBR0VfU0laRSkgPyAxIDogICgo
+eCArIFBBR0VfU0laRSAtIDEpIC8gUEFHRV9TSVpFKSkNCiANCisjZGVmaW5lIEJFSVNDU0lfTVNJ
+X05BTUUgMjAgLyogc2l6ZSBvZiBtc2lfbmFtZSBzdHJpbmcgKi8NCisNCiBlbnVtIGJlX21lbV9l
+bnVtIHsNCiAJSFdJX01FTV9BREROX0NPTlRFWFQsDQogCUhXSV9NRU1fV1JCLA0KQEAgLTI4OCw2
+ICsyOTAsNyBAQCBzdHJ1Y3QgYmVpc2NzaV9oYmEgew0KIAl1bnNpZ25lZCBpbnQgbnVtX2NwdXM7
+DQogCXVuc2lnbmVkIGludCBueHRfY3FpZDsNCiAJc3RydWN0IG1zaXhfZW50cnkgbXNpeF9lbnRy
+aWVzW01BWF9DUFVTICsgMV07DQorCWNoYXIgKm1zaV9uYW1lW01BWF9DUFVTICsgMV07DQogCWJv
+b2wgbXNpeF9lbmFibGVkOw0KIAlzdHJ1Y3QgYmVfbWVtX2Rlc2NyaXB0b3IgKmluaXRfbWVtOw0K
+IA0K
