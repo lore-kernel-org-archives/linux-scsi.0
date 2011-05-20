@@ -1,155 +1,98 @@
-From: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH]: be2iscsi: Fix MSIX interrupt names
-Date: Fri, 20 May 2011 14:12:57 -0400
-Message-ID: <4DD6AF29.8090903@redhat.com>
-References: <4DD6AEB7.2090900@redhat.com>
+From: <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH]: be2iscsi: Fix MSIX interrupt names
+Date: Fri, 20 May 2011 11:33:20 -0700
+Message-ID: <50725EF61B96174EB1803401F1A2E37335099FC989@EXMAIL.ad.emulex.com>
+References: <4DD6AEB7.2090900@redhat.com> <4DD6AF29.8090903@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14175 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933693Ab1ETSNA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 May 2011 14:13:00 -0400
-In-Reply-To: <4DD6AEB7.2090900@redhat.com>
+Received: from exht2.emulex.com ([138.239.113.184]:56839 "EHLO
+	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934166Ab1ETSi4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2011 14:38:56 -0400
+In-Reply-To: <4DD6AF29.8090903@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jayamohank@serverengines.com, mchristi@redhat.com
+To: prarit@redhat.com, linux-scsi@vger.kernel.org
+Cc: mchristi@redhat.com
 
-
-The be2iscsi driver uses a single static array in a function for the
-irq action->name field.
-
-This results in /proc/interrupts output like
-
-156:  0          0          0          0          0          0         =
- 0=20
-0          0          0          0          0          0          0    =
-      0=20
-        0          0          0          0          0          0       =
-   0   =20
-     0          0       PCI-MSI-X=20
-W=EF=BF=BD9=EF=BF=BD_=DE=B2J=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=
-=EF=BF=BDt=EF=BF=BD=EF=BF=BDkfbY=EF=BF=BD=EF=BF=BD~}=EF=BF=BD=EF=BF=BD=EF=
-=BF=BD=EF=BF=BD(p=EF=BF=BD=EF=BF=BD=EF=BF=BD%=EF=BF=BD=EF=BF=BD=EF=BF=BD=
-'loCm=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDn`!=
-=EF=BF=BDv=EF=BF=BD=EF=BF=BD%=EF=BF=BD4=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=
-=BDb\"P=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD/"=EF=BF=BDt=EF=BF=BD=
-=EF=BF=BD=EF=BF=BD(b=EF=BF=BD=EF=BF=BDI=EF=BF=BD=EF=BF=BD=D4=AB=EF=BF=BD=
-=EF=BF=BD1/"=EF=BF=BD=EF=BF=BDRm=EF=BF=BDu~=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=
-=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD
-
-                                                          =20
-=EF=BF=BD8r=EF=BF=BD)=EF=BF=BDN=EF=BF=BD>\aj*=EF=BF=BD=EF=BF=BD+=EF=BF=BD=
-=D0=B5=EF=BF=BD=EF=BF=BD=DB=BB=EF=BF=BDwB=E4=9D=9F=EF=BF=BDBl=EF=BF=BD=EF=
-=BF=BD
-
-In the line above, everything up to PCI-MSI-X is correct.  The pointer =
-for
-action->name is garbage and scribbles the output on the screen.
-
-This patch fixes the problem:
-
-156:          0          0          0          0          0          0 =
-         0          0          0          0          0          0      =
-    0          0          0          0          0          0          0=
-          0          0          0          0          0       PCI-MSI-X=
-  beiscsi_msix_0017
-
-P.
-
----->8----
-
-=46ix be2iscsi driver to use a separate pointer for each irq action->na=
-me field
-and avoid display corruption in /proc/interrupts.
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be=
-_main.c
-index 24e20ba..8d71e47 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -874,16 +874,20 @@ static int beiscsi_init_irqs(struct beiscsi_hba *=
-phba)
- 	struct hwi_controller *phwi_ctrlr;
- 	struct hwi_context_memory *phwi_context;
- 	int ret, msix_vec, i, j;
--	char desc[32];
-=20
- 	phwi_ctrlr =3D phba->phwi_ctrlr;
- 	phwi_context =3D phwi_ctrlr->phwi_ctxt;
-=20
- 	if (phba->msix_enabled) {
- 		for (i =3D 0; i < phba->num_cpus; i++) {
--			sprintf(desc, "beiscsi_msix_%04x", i);
-+			phba->msi_name[i] =3D kzalloc(BEISCSI_MSI_NAME,
-+						    GFP_KERNEL);
-+			if (!phba->msi_name[i])
-+				goto free_msix_irqs;
-+			sprintf(phba->msi_name[i], "beiscsi_msix_%04x", i);
- 			msix_vec =3D phba->msix_entries[i].vector;
--			ret =3D request_irq(msix_vec, be_isr_msix, 0, desc,
-+			ret =3D request_irq(msix_vec, be_isr_msix, 0,
-+					  phba->msi_name[i],
- 					  &phwi_context->be_eq[i]);
- 			if (ret) {
- 				shost_printk(KERN_ERR, phba->shost,
-@@ -915,8 +919,10 @@ static int beiscsi_init_irqs(struct beiscsi_hba *p=
-hba)
- 	}
- 	return 0;
- free_msix_irqs:
--	for (j =3D i - 1; j =3D=3D 0; j++)
-+	for (j =3D i - 1; j =3D=3D 0; j++) {
- 		free_irq(msix_vec, &phwi_context->be_eq[j]);
-+		kfree(phba->msi_name[i]);
-+	}
- 	return ret;
- }
-=20
-@@ -4117,10 +4123,13 @@ static void beiscsi_remove(struct pci_dev *pcid=
-ev)
- 		for (i =3D 0; i <=3D phba->num_cpus; i++) {
- 			msix_vec =3D phba->msix_entries[i].vector;
- 			free_irq(msix_vec, &phwi_context->be_eq[i]);
-+			kfree(phba->msi_name[i]);
- 		}
- 	} else
--		if (phba->pcidev->irq)
-+		if (phba->pcidev->irq) {
- 			free_irq(phba->pcidev->irq, phba);
-+			kfree(phba->msi_name[i]);
-+		}
- 	pci_disable_msix(phba->pcidev);
- 	destroy_workqueue(phba->wq);
- 	if (blk_iopoll_enabled)
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be=
-_main.h
-index 90eb74f..0c97e5a 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -163,6 +163,8 @@ do {							\
- #define PAGES_REQUIRED(x) \
- 	((x < PAGE_SIZE) ? 1 :  ((x + PAGE_SIZE - 1) / PAGE_SIZE))
-=20
-+#define BEISCSI_MSI_NAME 20 /* size of msi_name string */
-+
- enum be_mem_enum {
- 	HWI_MEM_ADDN_CONTEXT,
- 	HWI_MEM_WRB,
-@@ -288,6 +290,7 @@ struct beiscsi_hba {
- 	unsigned int num_cpus;
- 	unsigned int nxt_cqid;
- 	struct msix_entry msix_entries[MAX_CPUS + 1];
-+	char * msi_name[MAX_CPUS + 1];
- 	bool msix_enabled;
- 	struct be_mem_descriptor *init_mem;
-=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+VGhhbmtzIGZvciB0aGUgcGF0Y2guIFBsIHNlZSBteSBjb21tZW50cyBpbiBsaW5lDQoNCi0tLS0t
+T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBQcmFyaXQgQmhhcmdhdmEgW21haWx0bzpwcmFy
+aXRAcmVkaGF0LmNvbV0gDQpTZW50OiBGcmlkYXksIE1heSAyMCwgMjAxMSAxMToxMyBBTQ0KVG86
+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpDYzogS2FsbGlja2FsLCBKYXlhbW9oYW47IG1j
+aHJpc3RpQHJlZGhhdC5jb20NClN1YmplY3Q6IFtQQVRDSF06IGJlMmlzY3NpOiBGaXggTVNJWCBp
+bnRlcnJ1cHQgbmFtZXMNCg0KDQpUaGUgYmUyaXNjc2kgZHJpdmVyIHVzZXMgYSBzaW5nbGUgc3Rh
+dGljIGFycmF5IGluIGEgZnVuY3Rpb24gZm9yIHRoZQ0KaXJxIGFjdGlvbi0+bmFtZSBmaWVsZC4N
+Cg0KVGhpcyByZXN1bHRzIGluIC9wcm9jL2ludGVycnVwdHMgb3V0cHV0IGxpa2UNCg0KMTU2OiAg
+MCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAg
+ICAgICAgICAgMCANCjAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAg
+MCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCANCiAgICAgICAgMCAgICAgICAgICAw
+ICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAg
+ICANCiAgICAgMCAgICAgICAgICAwICAgICAgIFBDSS1NU0ktWCANClfvv70577+9X96ySu+/ve+/
+ve+/ve+/ve+/ve+/vXTvv73vv71rZmJZ77+977+9fn3vv73vv73vv73vv70ocO+/ve+/ve+/vSXv
+v73vv73vv70nbG9Dbe+/ve+/ve+/ve+/ve+/ve+/ve+/vW5gIe+/vXbvv73vv70l77+9NO+/ve+/
+ve+/ve+/vWJcIlDvv73vv73vv73vv73vv70vIu+/vXTvv73vv73vv70oYu+/ve+/vUnvv73vv73U
+q++/ve+/vTEvIu+/ve+/vVJt77+9dX7vv73vv73vv73vv73vv73vv73vv70NCg0KICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCu+/vThy
+77+9Ke+/vU7vv70+XGFqKu+/ve+/vSvvv73Qte+/ve+/vdu777+9d0LknZ/vv71CbO+/ve+/vQ0K
+DQpJbiB0aGUgbGluZSBhYm92ZSwgZXZlcnl0aGluZyB1cCB0byBQQ0ktTVNJLVggaXMgY29ycmVj
+dC4gIFRoZSBwb2ludGVyIGZvcg0KYWN0aW9uLT5uYW1lIGlzIGdhcmJhZ2UgYW5kIHNjcmliYmxl
+cyB0aGUgb3V0cHV0IG9uIHRoZSBzY3JlZW4uDQoNClRoaXMgcGF0Y2ggZml4ZXMgdGhlIHByb2Js
+ZW06DQoNCjE1NjogICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAg
+ICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAg
+ICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAg
+ICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAg
+ICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgUENJ
+LU1TSS1YICBiZWlzY3NpX21zaXhfMDAxNw0KDQpQLg0KDQotLS0tPjgtLS0tDQoNCkZpeCBiZTJp
+c2NzaSBkcml2ZXIgdG8gdXNlIGEgc2VwYXJhdGUgcG9pbnRlciBmb3IgZWFjaCBpcnEgYWN0aW9u
+LT5uYW1lIGZpZWxkDQphbmQgYXZvaWQgZGlzcGxheSBjb3JydXB0aW9uIGluIC9wcm9jL2ludGVy
+cnVwdHMuDQoNClNpZ25lZC1vZmYtYnk6IFByYXJpdCBCaGFyZ2F2YSA8cHJhcml0QHJlZGhhdC5j
+b20+DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5jIGIvZHJp
+dmVycy9zY3NpL2JlMmlzY3NpL2JlX21haW4uYw0KaW5kZXggMjRlMjBiYS4uOGQ3MWU0NyAxMDA2
+NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmMNCisrKyBiL2RyaXZlcnMv
+c2NzaS9iZTJpc2NzaS9iZV9tYWluLmMNCkBAIC04NzQsMTYgKzg3NCwyMCBAQCBzdGF0aWMgaW50
+IGJlaXNjc2lfaW5pdF9pcnFzKHN0cnVjdCBiZWlzY3NpX2hiYSAqcGhiYSkNCiAJc3RydWN0IGh3
+aV9jb250cm9sbGVyICpwaHdpX2N0cmxyOw0KIAlzdHJ1Y3QgaHdpX2NvbnRleHRfbWVtb3J5ICpw
+aHdpX2NvbnRleHQ7DQogCWludCByZXQsIG1zaXhfdmVjLCBpLCBqOw0KLQljaGFyIGRlc2NbMzJd
+Ow0KIA0KIAlwaHdpX2N0cmxyID0gcGhiYS0+cGh3aV9jdHJscjsNCiAJcGh3aV9jb250ZXh0ID0g
+cGh3aV9jdHJsci0+cGh3aV9jdHh0Ow0KIA0KIAlpZiAocGhiYS0+bXNpeF9lbmFibGVkKSB7DQog
+CQlmb3IgKGkgPSAwOyBpIDwgcGhiYS0+bnVtX2NwdXM7IGkrKykgew0KLQkJCXNwcmludGYoZGVz
+YywgImJlaXNjc2lfbXNpeF8lMDR4IiwgaSk7DQorCQkJcGhiYS0+bXNpX25hbWVbaV0gPSBremFs
+bG9jKEJFSVNDU0lfTVNJX05BTUUsDQorCQkJCQkJICAgIEdGUF9LRVJORUwpOw0KKwkJCWlmICgh
+cGhiYS0+bXNpX25hbWVbaV0pDQorCQkJCWdvdG8gZnJlZV9tc2l4X2lycXM7DQpXZSBuZWVkIHRv
+IGVuc3VyZSBpICE9IDAgYmVmb3JlIGp1bXBpbmcgdG8gZnJlZV9tc2l4X2lycXMNCg0KKwkJCXNw
+cmludGYocGhiYS0+bXNpX25hbWVbaV0sICJiZWlzY3NpX21zaXhfJTA0eCIsIGkpOw0KIAkJCW1z
+aXhfdmVjID0gcGhiYS0+bXNpeF9lbnRyaWVzW2ldLnZlY3RvcjsNCi0JCQlyZXQgPSByZXF1ZXN0
+X2lycShtc2l4X3ZlYywgYmVfaXNyX21zaXgsIDAsIGRlc2MsDQorCQkJcmV0ID0gcmVxdWVzdF9p
+cnEobXNpeF92ZWMsIGJlX2lzcl9tc2l4LCAwLA0KKwkJCQkJICBwaGJhLT5tc2lfbmFtZVtpXSwN
+CiAJCQkJCSAgJnBod2lfY29udGV4dC0+YmVfZXFbaV0pOw0KIAkJCWlmIChyZXQpIHsNCiAJCQkJ
+c2hvc3RfcHJpbnRrKEtFUk5fRVJSLCBwaGJhLT5zaG9zdCwNCkBAIC05MTUsOCArOTE5LDEwIEBA
+IHN0YXRpYyBpbnQgYmVpc2NzaV9pbml0X2lycXMoc3RydWN0IGJlaXNjc2lfaGJhICpwaGJhKQ0K
+IAl9DQogCXJldHVybiAwOw0KIGZyZWVfbXNpeF9pcnFzOg0KLQlmb3IgKGogPSBpIC0gMTsgaiA9
+PSAwOyBqKyspDQorCWZvciAoaiA9IGkgLSAxOyBqID09IDA7IGorKykgew0KIAkJZnJlZV9pcnEo
+bXNpeF92ZWMsICZwaHdpX2NvbnRleHQtPmJlX2VxW2pdKTsNCisJCWtmcmVlKHBoYmEtPm1zaV9u
+YW1lW2ldKTsNCisJfQ0KIAlyZXR1cm4gcmV0Ow0KIH0NCiANCkBAIC00MTE3LDEwICs0MTIzLDEz
+IEBAIHN0YXRpYyB2b2lkIGJlaXNjc2lfcmVtb3ZlKHN0cnVjdCBwY2lfZGV2ICpwY2lkZXYpDQog
+CQlmb3IgKGkgPSAwOyBpIDw9IHBoYmEtPm51bV9jcHVzOyBpKyspIHsNCiAJCQltc2l4X3ZlYyA9
+IHBoYmEtPm1zaXhfZW50cmllc1tpXS52ZWN0b3I7DQogCQkJZnJlZV9pcnEobXNpeF92ZWMsICZw
+aHdpX2NvbnRleHQtPmJlX2VxW2ldKTsNCisJCQlrZnJlZShwaGJhLT5tc2lfbmFtZVtpXSk7DQog
+CQl9DQogCX0gZWxzZQ0KLQkJaWYgKHBoYmEtPnBjaWRldi0+aXJxKQ0KKwkJaWYgKHBoYmEtPnBj
+aWRldi0+aXJxKSB7DQogCQkJZnJlZV9pcnEocGhiYS0+cGNpZGV2LT5pcnEsIHBoYmEpOw0KKwkJ
+CWtmcmVlKHBoYmEtPm1zaV9uYW1lW2ldKTsNCkRvIHdlIG5lZWQgdGhlIGZyZWUgZm9yIG5vbi1t
+c2l4IGNhc2UgYXMgd2UgYXJlIG5vdCBhbGxvY2F0aW9uPw0KKwkJfQ0KIAlwY2lfZGlzYWJsZV9t
+c2l4KHBoYmEtPnBjaWRldik7DQogCWRlc3Ryb3lfd29ya3F1ZXVlKHBoYmEtPndxKTsNCiAJaWYg
+KGJsa19pb3BvbGxfZW5hYmxlZCkNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kv
+YmVfbWFpbi5oIGIvZHJpdmVycy9zY3NpL2JlMmlzY3NpL2JlX21haW4uaA0KaW5kZXggOTBlYjc0
+Zi4uMGM5N2U1YSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmgN
+CisrKyBiL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmgNCkBAIC0xNjMsNiArMTYzLDgg
+QEAgZG8gewkJCQkJCQlcDQogI2RlZmluZSBQQUdFU19SRVFVSVJFRCh4KSBcDQogCSgoeCA8IFBB
+R0VfU0laRSkgPyAxIDogICgoeCArIFBBR0VfU0laRSAtIDEpIC8gUEFHRV9TSVpFKSkNCiANCisj
+ZGVmaW5lIEJFSVNDU0lfTVNJX05BTUUgMjAgLyogc2l6ZSBvZiBtc2lfbmFtZSBzdHJpbmcgKi8N
+CisNCiBlbnVtIGJlX21lbV9lbnVtIHsNCiAJSFdJX01FTV9BREROX0NPTlRFWFQsDQogCUhXSV9N
+RU1fV1JCLA0KQEAgLTI4OCw2ICsyOTAsNyBAQCBzdHJ1Y3QgYmVpc2NzaV9oYmEgew0KIAl1bnNp
+Z25lZCBpbnQgbnVtX2NwdXM7DQogCXVuc2lnbmVkIGludCBueHRfY3FpZDsNCiAJc3RydWN0IG1z
+aXhfZW50cnkgbXNpeF9lbnRyaWVzW01BWF9DUFVTICsgMV07DQorCWNoYXIgKiBtc2lfbmFtZVtN
+QVhfQ1BVUyArIDFdOw0KIAlib29sIG1zaXhfZW5hYmxlZDsNCiAJc3RydWN0IGJlX21lbV9kZXNj
+cmlwdG9yICppbml0X21lbTsNCiANCg==
