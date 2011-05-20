@@ -1,33 +1,36 @@
-From: "PROF.MAURICE IWU" <augustine_osakwe@yahoo.co.in>
-Subject: Equity Business Investment
-Date: Fri, 20 May 2011 20:13:07 +0530 (IST)
-Message-ID: <469951.68127.qm__27718.0418874652$1305903004$gmane$org@web95514.mail.in.yahoo.com>
-Reply-To: profmauriceiwu2221@yahoo.co.jp
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 08/23] use register_chrdev_ids in drivers/scsi/
+Date: Fri, 20 May 2011 18:42:24 +0300
+Message-ID: <4DD68BE0.6030003@panasas.com>
+References: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com> <1305840792-25877-9-git-send-email-jim.cromie@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web95514.mail.in.yahoo.com ([121.101.151.14]:24359 "HELO
-	web95514.mail.in.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756955Ab1ETOtu convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 May 2011 10:49:50 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1305840792-25877-9-git-send-email-jim.cromie@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jim Cromie <jim.cromie@gmail.com>
+Cc: linux-kernel@vger.kernel.org, gregkh@suse.de, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Benny Halevy <bhalevy@panasas.com>, osd-dev@open-osd.org, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On 05/20/2011 12:33 AM, Jim Cromie wrote:
+> cc: Doug Gilbert <dgilbert@interlog.com>
+> cc: linux-scsi@vger.kernel.org
+> cc: Benny Halevy <bhalevy@panasas.com>
+> cc: Boaz Harrosh <bharrosh@panasas.com>
+> cc: osd-dev@open-osd.org
+> cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+> cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
+> ---
+>  drivers/scsi/osd/osd_uld.c |    6 +++---
+>  drivers/scsi/pmcraid.c     |    3 +--
+>  drivers/scsi/sg.c          |    6 +++---
+>  drivers/scsi/st.c          |    7 +++----
+>  4 files changed, 10 insertions(+), 12 deletions(-)
 
-Equity Business Investment
->From Prof. Maurice Iwu 
+Do you have a git tree with all these that I can pull
+and test?
 
-Dear Friend,
-
-I am Prof. Maurice M. Iwu, Former Chairman Independent Electoral Commission 
-(INEC).Currently, I am on compulsory terminal leave presently in UK , 
-leading up to my final retirement from public service.
-
-I am seeking your partnership in a mutual benefit project involving 
-investing into your company and secondly on properties and to be precise Estate Development or any other profitable venture of your great idea for our mutual benefit of Equity Market Investment.,
-
-Sincerely,
-Prof. Maurice M.Iwu.
-{INEC.}
+Thanks
+Boaz
