@@ -1,36 +1,51 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 08/23] use register_chrdev_ids in drivers/scsi/
-Date: Fri, 20 May 2011 18:42:24 +0300
-Message-ID: <4DD68BE0.6030003@panasas.com>
-References: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com> <1305840792-25877-9-git-send-email-jim.cromie@gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC v2 PATCH 1/2] bsg: Add infrastructure to send in kernel
+ bsg commands.
+Date: Sat, 21 May 2011 01:02:26 +0900
+Message-ID: <20110521010226J.fujita.tomonori@lab.ntt.co.jp>
+References: <alpine.LFD.2.02.1105181445490.7238@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305840792-25877-9-git-send-email-jim.cromie@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jim Cromie <jim.cromie@gmail.com>
-Cc: linux-kernel@vger.kernel.org, gregkh@suse.de, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Benny Halevy <bhalevy@panasas.com>, osd-dev@open-osd.org, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:44645 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934558Ab1ETQCu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 May 2011 12:02:50 -0400
+In-Reply-To: <alpine.LFD.2.02.1105181445490.7238@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: chad.dupuis@qlogic.com, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org
 
-On 05/20/2011 12:33 AM, Jim Cromie wrote:
-> cc: Doug Gilbert <dgilbert@interlog.com>
-> cc: linux-scsi@vger.kernel.org
-> cc: Benny Halevy <bhalevy@panasas.com>
-> cc: Boaz Harrosh <bharrosh@panasas.com>
-> cc: osd-dev@open-osd.org
-> cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-> cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
+On Wed, 18 May 2011 14:47:13 -0400
+Chad Dupuis <chad.dupuis@qlogic.com> wrote:
+
+> From: Chad Dupuis <chad.dupuis@qlogic.com>
+> 
+> This patch adds a new exported function, bsg_private_command(), and a few
+> supporting functions that allow a device driver or other kernel code to be
+> able to send bsg commands from within the kernel using sg_io_v4.  The private
+> command infrastructure mimics the ioctl interface except that the bsg request
+> queue needs to be explicitly passed in.
+
+I can't recall the discussion conclusion about sending bsg requests from
+kernel space at lsf. The conclusion is that we need this feature?
+
+> The helper functions are similar to the bsg_map_hdr() function except that
+> no bsg_device is needed and kernel buffers are used instead of user buffers.
+> This was done so that the current semantics of user space bsg calls would
+> remain undisturbed, to avoid the complications of mixing user vs. kernel
+> buffers and not having to create a dummy bsg device for each command submitted.
+> 
+> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 > ---
->  drivers/scsi/osd/osd_uld.c |    6 +++---
->  drivers/scsi/pmcraid.c     |    3 +--
->  drivers/scsi/sg.c          |    6 +++---
->  drivers/scsi/st.c          |    7 +++----
->  4 files changed, 10 insertions(+), 12 deletions(-)
+>   block/bsg.c         |  207 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>   include/linux/bsg.h |    1 +
+>   2 files changed, 208 insertions(+), 0 deletions(-)
 
-Do you have a git tree with all these that I can pull
-and test?
+Looks like the majority of the code is the copy of the exisiting code. Can we
+avoid the duplication by creating some common helper functions?
 
-Thanks
-Boaz
+Don't we need to take care of a race that sending a bsg request to a bsg
+device in the process of removal?
