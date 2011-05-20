@@ -1,82 +1,74 @@
-From: Rolf Eike Beer <eike@sf-mail.de>
-Subject: Re: [PATCH]: be2iscsi: Fix MSIX interrupt names
-Date: Fri, 20 May 2011 22:17:30 +0200
-Message-ID: <2030549.qtzsKLDxZd@donald.sf-tec.de>
-References: <4DD6AEB7.2090900@redhat.com> <50725EF61B96174EB1803401F1A2E37335099FC989@EXMAIL.ad.emulex.com> <4DD6B83B.5000703@redhat.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: RE: [dm-devel] [PATCH] scsi_dh_rdac: Adding couple more vendor product	ids
+Date: Fri, 20 May 2011 17:08:32 -0400
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD90DAF451E@RTPMVEXC1-PRD.hq.netapp.com>
+References: <E463DF2B2E584B4A82673F53D62C2EF4FF7DC637@cosmail01.lsi.com> <E463DF2B2E584B4A82673F53D62C2EF4FFAC8CFB@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart5957450.Po198Dm8QF"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain;
+	charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:53462 "EHLO mail.sf-mail.de"
+Received: from mx2.netapp.com ([216.240.18.37]:51108 "EHLO mx2.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935756Ab1ETURu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 May 2011 16:17:50 -0400
-In-Reply-To: <4DD6B83B.5000703@redhat.com>
+	id S1754774Ab1ETVIg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2011 17:08:36 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: Jayamohan.Kallickal@emulex.com, linux-scsi@vger.kernel.org, mchristi@redhat.com
+To: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+Cc: dmilburn@redhat.com
+
+Pinging again.  This patch was not picked up yet. James let me know if you want me to resubmit again..  
 
 
---nextPart5957450.Po198Dm8QF
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-
-Prarit Bhargava wrote:
-> On 05/20/2011 02:33 PM, Jayamohan.Kallickal@Emulex.Com wrote:
-> > Thanks for the patch. Pl see my comments in line
+> -----Original Message-----
+> From: Moger, Babu
+> Sent: Friday, May 06, 2011 8:39 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: 'James Bottomley'
+> Subject: RE: [dm-devel] [PATCH] scsi_dh_rdac: Adding couple more vendor
+> product ids
 > 
-> np.
+> I did not see this patch being picked up..  Forwarding again..
 > 
-> > diff --git a/drivers/scsi/be2iscsi/be_main.c
-> > b/drivers/scsi/be2iscsi/be_main.c index 24e20ba..8d71e47 100644
-> > --- a/drivers/scsi/be2iscsi/be_main.c
-> > +++ b/drivers/scsi/be2iscsi/be_main.c
-> > @@ -874,16 +874,20 @@ static int beiscsi_init_irqs(struct beiscsi_hba
-> > *phba)
-> > 
-> >  	struct hwi_controller *phwi_ctrlr;
-> >  	struct hwi_context_memory *phwi_context;
-> >  	int ret, msix_vec, i, j;
-> > 
-> > -	char desc[32];
-> > 
-> >  	phwi_ctrlr = phba->phwi_ctrlr;
-> >  	phwi_context = phwi_ctrlr->phwi_ctxt;
-> >  	
-> >  	if (phba->msix_enabled) {
-> >  	
-> >  		for (i = 0; i < phba->num_cpus; i++) {
-> > 
-> > -			sprintf(desc, "beiscsi_msix_%04x", i);
-> > +			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
-> > +						    GFP_KERNEL);
-> > +			if (!phba->msi_name[i])
-> > +				goto free_msix_irqs;
-> > We need to ensure i != 0 before jumping to free_msix_irqs
-> 
-> Will fix in next version ... I think I may have to do a bit more work
-> here because I just realized that if we free_irq() on a non-allocated
-> irq we'll get an angry message from the kernel ;)  Unfortunately this
-> may complicate the code.... I'll rework this and see if I can come up
-> with something better.
-
-This could be simpler if you would use devres and devm_kzalloc() and 
-devm_request_irq(). You simply need to return with error then and the driver 
-core would free everything you already allocated.
-
-Eike
---nextPart5957450.Po198Dm8QF
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAk3WzGcACgkQXKSJPmm5/E5CfACggkOeo+y2dtRWjn+QnUWnfyrj
-0iQAoKEyVx76/qH/L+hmeUVmAwjtsq01
-=Q3Pz
------END PGP SIGNATURE-----
-
---nextPart5957450.Po198Dm8QF--
-
+> > -----Original Message-----
+> > From: dm-devel-bounces@redhat.com [mailto:dm-devel-bounces@redhat.com]
+> > On Behalf Of Moger, Babu
+> > Sent: Tuesday, April 05, 2011 3:35 PM
+> > To: linux-scsi@vger.kernel.org
+> > Cc: device-mapper development
+> > Subject: [dm-devel] [PATCH] scsi_dh_rdac: Adding couple more vendor
+> > product ids
+> >
+> > This patch adds couple more Vendor/Product IDs for RDAC.. There are no
+> > functional changes.
+> >
+> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
+> > ---
+> > --- linux-2.6.39-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
+> > 	2011-04-05 15:01:52.000000000 -0500
+> > +++ linux-2.6.39-rc1/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-
+> > 04-05 15:06:18.000000000 -0500
+> > @@ -755,6 +755,7 @@ static const struct scsi_dh_devlist rdac
+> >  	{"IBM", "3526"},
+> >  	{"SGI", "TP9400"},
+> >  	{"SGI", "TP9500"},
+> > +	{"SGI", "TP9700"},
+> >  	{"SGI", "IS"},
+> >  	{"STK", "OPENstorage D280"},
+> >  	{"SUN", "CSM200_R"},
+> > @@ -774,6 +775,7 @@ static const struct scsi_dh_devlist rdac
+> >  	{"SUN", "CSM100_R_FC"},
+> >  	{"SUN", "STK6580_6780"},
+> >  	{"SUN", "SUN_6180"},
+> > +	{"SUN", "ArrayStorage"},
+> >  	{NULL, NULL},
+> >  };
+> >
+> >
+> >
+> >
+> > --
+> > dm-devel mailing list
+> > dm-devel@redhat.com
+> > https://www.redhat.com/mailman/listinfo/dm-devel
