@@ -1,104 +1,80 @@
-From: <Jayamohan.Kallickal@Emulex.Com>
-Subject: RE: [PATCH]: be2iscsi: Fix MSIX interrupt names
-Date: Fri, 20 May 2011 15:07:26 -0700
-Message-ID: <50725EF61B96174EB1803401F1A2E37335099FC9FC@EXMAIL.ad.emulex.com>
-References: <4DD6AEB7.2090900@redhat.com> <4DD6AF29.8090903@redhat.com>
- <50725EF61B96174EB1803401F1A2E37335099FC989@EXMAIL.ad.emulex.com>
- <4DD6BD43.5070607@redhat.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [RFC v2 PATCH 1/2] bsg: Add infrastructure to send in kernel
+ bsg commands.
+Date: Fri, 20 May 2011 18:26:52 -0400
+Message-ID: <alpine.LFD.2.02.1105201816550.4468@localhost6.localdomain6>
+References: <alpine.LFD.2.02.1105181445490.7238@localhost6.localdomain6> <20110521010226J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:36574 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756806Ab1ETWHr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 May 2011 18:07:47 -0400
-In-Reply-To: <4DD6BD43.5070607@redhat.com>
-Content-Language: en-US
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:10170
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753307Ab1ETW1C convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 May 2011 18:27:02 -0400
+In-Reply-To: <20110521010226J.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: prarit@redhat.com, linux-scsi@vger.kernel.org
-Cc: mchristi@redhat.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQpQbCBzZWUgaW5saW5lDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogUHJhcml0
-IEJoYXJnYXZhIFttYWlsdG86cHJhcml0QHJlZGhhdC5jb21dIA0KU2VudDogRnJpZGF5LCBNYXkg
-MjAsIDIwMTEgMTI6MTMgUE0NClRvOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KQ2M6IEth
-bGxpY2thbCwgSmF5YW1vaGFuOyBtY2hyaXN0aUByZWRoYXQuY29tDQpTdWJqZWN0OiBSZTogW1BB
-VENIXTogYmUyaXNjc2k6IEZpeCBNU0lYIGludGVycnVwdCBuYW1lcw0KDQoNCltWMl0gSmF5YW1v
-aGFuIC4uLiBJIHJld29ya2VkIHRoZSBjb2RlIHNvIHRoYXQgdGhlIGFsbG9jYXRpb25zIG9mIHRo
-ZSBtc2lfbmFtZQ0KZG9uJ3QgY29sbGlkZSB3aXRoIHRoZSBpcnFfcmVxdWVzdHMuICBJZiBJIGRv
-IGl0IGluIHRoZSBzYW1lIGZvciBsb29wIHRoaW5ncw0KZ2V0IHZlcnkgbWVzc3kgdmVyeSBxdWlj
-a2x5LiAgVGhpcyBzaG91bGQgd29yayBzaW5jZSB0aGUgcGhiYSBpcyB6ZXJvJ2Qgb3V0Lg0KDQpU
-aGUgYmUyaXNjc2kgZHJpdmVyIHVzZXMgYSBzaW5nbGUgc3RhdGljIGFycmF5IGluIGEgZnVuY3Rp
-b24gZm9yIHRoZQ0KaXJxIGFjdGlvbi0+bmFtZSBmaWVsZC4NCg0KVGhpcyByZXN1bHRzIGluIC9w
-cm9jL2ludGVycnVwdHMgb3V0cHV0IGxpa2UNCg0KMTU2OiAgMCAgICAgICAgICAwICAgICAgICAg
-IDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCANCjAgICAgICAg
-ICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAg
-IDAgICAgICAgICAgMCANCiAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAg
-MCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICANCiAgICAgMCAgICAgICAgICAw
-ICAgICAgIFBDSS1NU0ktWCANClfvv70577+9X96ySu+/ve+/ve+/ve+/ve+/ve+/vXTvv73vv71r
-ZmJZ77+977+9fn3vv73vv73vv73vv70ocO+/ve+/ve+/vSXvv73vv73vv70nbG9Dbe+/ve+/ve+/
-ve+/ve+/ve+/ve+/vW5gIe+/vXbvv73vv70l77+9NO+/ve+/ve+/ve+/vWJcIlDvv73vv73vv73v
-v73vv70vIu+/vXTvv73vv73vv70oYu+/ve+/vUnvv73vv73Uq++/ve+/vTEvIu+/ve+/vVJt77+9
-dX7vv73vv73vv73vv73vv73vv73vv70NCg0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICANCu+/vThy77+9Ke+/vU7vv70+XGFqKu+/ve+/
-vSvvv73Qte+/ve+/vdu777+9d0LknZ/vv71CbO+/ve+/vQ0KDQpJbiB0aGUgbGluZSBhYm92ZSwg
-ZXZlcnl0aGluZyB1cCB0byBQQ0ktTVNJLVggaXMgY29ycmVjdC4gIFRoZSBwb2ludGVyIGZvcg0K
-YWN0aW9uLT5uYW1lIGlzIGdhcmJhZ2UgYW5kIHNjcmliYmxlcyB0aGUgb3V0cHV0IG9uIHRoZSBz
-Y3JlZW4uDQoNClRoaXMgcGF0Y2ggZml4ZXMgdGhlIHByb2JsZW06DQoNCjE1NjogICAgICAgICAg
-MCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAg
-ICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAg
-ICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAg
-ICAgICAwICAgICAgICAgIDAgICAgICAgICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAg
-ICAgMCAgICAgICAgICAwICAgICAgICAgIDAgICAgICAgUENJLU1TSS1YICBiZWlzY3NpX21zaXhf
-MDAxNw0KDQoNCi0tLS0+OC0tLS0NCg0KRml4IGJlMmlzY3NpIGRyaXZlciB0byB1c2UgYSBzZXBh
-cmF0ZSBwb2ludGVyIGZvciBlYWNoIGlycSBhY3Rpb24tPm5hbWUgZmllbGQuDQpBbHNvIGZpeCBh
-IGNhbGN1bGF0aW9uIGVycm9yIGluIHRoZSBmcmVlX21zaXhfaXJxcyBmb3IgbG9vcC4NCg0KU3Vj
-Y2Vzc2Z1bGx5IHRlc3RlZCBieSBtZSBvbiBhbiBIUCBCTDQ2MEMgRzcuDQoNCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5jIGIvZHJpdmVycy9zY3NpL2JlMmlzY3Np
-L2JlX21haW4uYw0KaW5kZXggMmU4OWY4OC4uZDQ0YjU5ZCAxMDA2NDQNCi0tLSBhL2RyaXZlcnMv
-c2NzaS9iZTJpc2NzaS9iZV9tYWluLmMNCisrKyBiL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9t
-YWluLmMNCkBAIC02NzIsMTYgKzY3MiwyMyBAQCBzdGF0aWMgaW50IGJlaXNjc2lfaW5pdF9pcnFz
-KHN0cnVjdCBiZWlzY3NpX2hiYSAqcGhiYSkNCiAJc3RydWN0IGh3aV9jb250cm9sbGVyICpwaHdp
-X2N0cmxyOw0KIAlzdHJ1Y3QgaHdpX2NvbnRleHRfbWVtb3J5ICpwaHdpX2NvbnRleHQ7DQogCWlu
-dCByZXQsIG1zaXhfdmVjLCBpLCBqOw0KLQljaGFyIGRlc2NbMzJdOw0KIA0KIAlwaHdpX2N0cmxy
-ID0gcGhiYS0+cGh3aV9jdHJscjsNCiAJcGh3aV9jb250ZXh0ID0gcGh3aV9jdHJsci0+cGh3aV9j
-dHh0Ow0KIA0KKwlmb3IgKGkgPSAwOyBpIDwgcGhiYS0+bnVtX2NwdXM7IGkrKykgew0KKwkJcGhi
-YS0+bXNpX25hbWVbaV0gPSBremFsbG9jKEJFSVNDU0lfTVNJX05BTUUsIEdGUF9LRVJORUwpOw0K
-KwkJaWYgKCFwaGJhLT5tc2lfbmFtZVtpXSkgew0KKwkJCXJldCA9IC1FTk9NRU07DQorCQkJZ290
-byBmcmVlX21zaXhfbmFtZXM7DQorCQl9DQorCX0NCiAJaWYgKHBoYmEtPm1zaXhfZW5hYmxlZCkg
-ew0KIAkJZm9yIChpID0gMDsgaSA8IHBoYmEtPm51bV9jcHVzOyBpKyspIHsNCi0JCQlzcHJpbnRm
-KGRlc2MsICJiZWlzY3NpX21zaXhfJTA0eCIsIGkpOw0KKwkJCXNwcmludGYocGhiYS0+bXNpX25h
-bWVbaV0sICJiZWlzY3NpX21zaXhfJTA0eCIsIGkpOw0KIAkJCW1zaXhfdmVjID0gcGhiYS0+bXNp
-eF9lbnRyaWVzW2ldLnZlY3RvcjsNCi0JCQlyZXQgPSByZXF1ZXN0X2lycShtc2l4X3ZlYywgYmVf
-aXNyX21zaXgsIDAsIGRlc2MsDQorCQkJcmV0ID0gcmVxdWVzdF9pcnEobXNpeF92ZWMsIGJlX2lz
-cl9tc2l4LCAwLA0KKwkJCQkJICBwaGJhLT5tc2lfbmFtZVtpXSwNCiAJCQkJCSAgJnBod2lfY29u
-dGV4dC0+YmVfZXFbaV0pOw0KIAkJCWlmIChyZXQpIHsNCiAJCQkJc2hvc3RfcHJpbnRrKEtFUk5f
-RVJSLCBwaGJhLT5zaG9zdCwNCkBAIC03MTMsOCArNzIwLDExIEBAIHN0YXRpYyBpbnQgYmVpc2Nz
-aV9pbml0X2lycXMoc3RydWN0IGJlaXNjc2lfaGJhICpwaGJhKQ0KIAl9DQogCXJldHVybiAwOw0K
-IGZyZWVfbXNpeF9pcnFzOg0KLQlmb3IgKGogPSBpIC0gMTsgaiA9PSAwOyBqKyspDQorCWZvciAo
-aiA9IGkgLSAxOyBqID09IDA7IGotLSkNCg0KQWdyZWVkLiBUaGFua3MNCiAJCWZyZWVfaXJxKG1z
-aXhfdmVjLCAmcGh3aV9jb250ZXh0LT5iZV9lcVtqXSk7DQorZnJlZV9tc2l4X25hbWVzOg0KKwlm
-b3IgKGkgPSAwOyBpIDwgcGhiYS0+bnVtX2NwdXMgOyBpKyspDQoNCg0KSSB0aGluayB3ZSBuZWVk
-IHRvIHJlcGxhY2UgdGhlIGFib3ZlIGxpbmUgd2l0aCBzb21ldGhpbmcgbGlrZQ0KCWZvciAoaiA9
-IGkgLSAxOyBqID09IDA7IGotLSkNCmFzIG90aGVyd2lzZSBpZiBhbGxvYyBmYWlscyBiZWZvcmUg
-cmVhY2hpbmcgbnVtX2NwdXMgLSAxLCB3ZSB3b3VsZCBmcmVlDQogd2l0aG91dCBhbGxvY2F0aW5n
-DQoNCg0KKwkJa2ZyZWUocGhiYS0+bXNpX25hbWVbaV0pOw0KIAlyZXR1cm4gcmV0Ow0KIH0NCiAN
-CkBAIC0zODMyLDYgKzM4NDIsNyBAQCBzdGF0aWMgdm9pZCBiZWlzY3NpX3JlbW92ZShzdHJ1Y3Qg
-cGNpX2RldiAqcGNpZGV2KQ0KIAkJZm9yIChpID0gMDsgaSA8PSBwaGJhLT5udW1fY3B1czsgaSsr
-KSB7DQogCQkJbXNpeF92ZWMgPSBwaGJhLT5tc2l4X2VudHJpZXNbaV0udmVjdG9yOw0KIAkJCWZy
-ZWVfaXJxKG1zaXhfdmVjLCAmcGh3aV9jb250ZXh0LT5iZV9lcVtpXSk7DQorCQkJa2ZyZWUocGhi
-YS0+bXNpX25hbWVbaV0pOw0KIAkJfQ0KIAl9IGVsc2UNCiAJCWlmIChwaGJhLT5wY2lkZXYtPmly
-cSkNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvYmUyaXNjc2kvYmVfbWFpbi5oIGIvZHJpdmVy
-cy9zY3NpL2JlMmlzY3NpL2JlX21haW4uaA0KaW5kZXggZDFlZTAwYi4uMDhjYzcxNCAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvc2NzaS9iZTJpc2NzaS9iZV9tYWluLmgNCisrKyBiL2RyaXZlcnMvc2Nz
-aS9iZTJpc2NzaS9iZV9tYWluLmgNCkBAIC0xNjMsNiArMTYzLDggQEAgZG8gewkJCQkJCQlcDQog
-I2RlZmluZSBQQUdFU19SRVFVSVJFRCh4KSBcDQogCSgoeCA8IFBBR0VfU0laRSkgPyAxIDogICgo
-eCArIFBBR0VfU0laRSAtIDEpIC8gUEFHRV9TSVpFKSkNCiANCisjZGVmaW5lIEJFSVNDU0lfTVNJ
-X05BTUUgMjAgLyogc2l6ZSBvZiBtc2lfbmFtZSBzdHJpbmcgKi8NCisNCiBlbnVtIGJlX21lbV9l
-bnVtIHsNCiAJSFdJX01FTV9BREROX0NPTlRFWFQsDQogCUhXSV9NRU1fV1JCLA0KQEAgLTI4OCw2
-ICsyOTAsNyBAQCBzdHJ1Y3QgYmVpc2NzaV9oYmEgew0KIAl1bnNpZ25lZCBpbnQgbnVtX2NwdXM7
-DQogCXVuc2lnbmVkIGludCBueHRfY3FpZDsNCiAJc3RydWN0IG1zaXhfZW50cnkgbXNpeF9lbnRy
-aWVzW01BWF9DUFVTICsgMV07DQorCWNoYXIgKm1zaV9uYW1lW01BWF9DUFVTICsgMV07DQogCWJv
-b2wgbXNpeF9lbmFibGVkOw0KIAlzdHJ1Y3QgYmVfbWVtX2Rlc2NyaXB0b3IgKmluaXRfbWVtOw0K
-IA0K
+
+
+On Fri, 20 May 2011, FUJITA Tomonori wrote:
+
+> On Wed, 18 May 2011 14:47:13 -0400
+> Chad Dupuis <chad.dupuis@qlogic.com> wrote:
+>
+>> From: Chad Dupuis <chad.dupuis@qlogic.com>
+>>
+>> This patch adds a new exported function, bsg_private_command(), and a few
+>> supporting functions that allow a device driver or other kernel code to be
+>> able to send bsg commands from within the kernel using sg_io_v4.  The private
+>> command infrastructure mimics the ioctl interface except that the bsg request
+>> queue needs to be explicitly passed in.
+>
+> I can't recall the discussion conclusion about sending bsg requests from
+> kernel space at lsf. The conclusion is that we need this feature?
+>
+
+We had proposed some additional rport attributes awhile back but the
+concensus at the time was that the code to  send and parse
+the CT commands should be done via the bsg CT passthrough interface so as
+to make it vendor agnostic.  There is currently, to my knowledge, no mechanism to
+send bsg commands from kernel space so this patch was to create that mechanism.
+
+>> The helper functions are similar to the bsg_map_hdr() function except that
+>> no bsg_device is needed and kernel buffers are used instead of user buffers.
+>> This was done so that the current semantics of user space bsg calls would
+>> remain undisturbed, to avoid the complications of mixing user vs. kernel
+>> buffers and not having to create a dummy bsg device for each command submitted.
+>>
+>> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+>> ---
+>>   block/bsg.c         |  207 +++++++++++++++++++++++++++++++++++++++++++++++++++
+>>   include/linux/bsg.h |    1 +
+>>   2 files changed, 208 insertions(+), 0 deletions(-)
+>
+> Looks like the majority of the code is the copy of the exisiting code. Can we
+> avoid the duplication by creating some common helper functions?
+
+Yes, we will refactor the functions so as to avoid duplication.
+
+>
+> Don't we need to take care of a race that sending a bsg request to a bsg
+> device in the process of removal?
+
+We do check for a valid request_queue in bsg_private_command() before we
+dispatch the request but we'll double check to make sure we don't hit any
+other race conditions
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
