@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-v5 06/13] iscsi-target: Add TPG and Device logic
-Date: Thu, 19 May 2011 20:37:51 -0700
-Message-ID: <1305862678-30150-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH-v5 04/13] iscsi-target: Add TCM v4 compatiable ConfigFS control plane
+Date: Thu, 19 May 2011 20:37:49 -0700
+Message-ID: <1305862678-30150-5-git-send-email-nab@linux-iscsi.org>
 References: <1305862678-30150-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
@@ -15,37 +15,45 @@ List-Id: linux-scsi@vger.kernel.org
 
 =46rom: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds TPG and device logiced using for mapping iscsi-target
-abstractions on top of TCM v4 struct se_portal_group and struct se_devi=
-ce
-abstractions.
+This patch adds support for /sys/kernel/config/target/iscsi using
+TCM v4.0 compatiable calls following target_core_fabric_configfs.c
+
+This includes a number of iSCSI fabric dependent attributes upon
+target_core_fabric_configfs.c provided struct config_item_types from
+include/target/target_core_configfs.hstruct target_fabric_configfs_temp=
+late
+
+It also includes iscsi_target_nodeattrib.[c,h] for handling the
+lio_target_nacl_attrib_attrs[] store/show for iSCSI fabric dependent
+attributes.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_device.c |   88 ++++
- drivers/target/iscsi/iscsi_target_device.h |    9 +
- drivers/target/iscsi/iscsi_target_tpg.c    |  760 ++++++++++++++++++++=
+ drivers/target/iscsi/iscsi_target_configfs.c   | 1925 ++++++++++++++++=
 ++++++++
- drivers/target/iscsi/iscsi_target_tpg.h    |   41 ++
- 4 files changed, 898 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_device.c
- create mode 100644 drivers/target/iscsi/iscsi_target_device.h
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.c
- create mode 100644 drivers/target/iscsi/iscsi_target_tpg.h
+ drivers/target/iscsi/iscsi_target_configfs.h   |    7 +
+ drivers/target/iscsi/iscsi_target_nodeattrib.c |  264 ++++
+ drivers/target/iscsi/iscsi_target_nodeattrib.h |   14 +
+ 4 files changed, 2210 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_configfs.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_configfs.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_device.c b/drivers/targe=
-t/iscsi/iscsi_target_device.c
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/tar=
+get/iscsi/iscsi_target_configfs.c
 new file mode 100644
-index 0000000..47218c2
+index 0000000..2816876
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_device.c
-@@ -0,0 +1,88 @@
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -0,0 +1,1925 @@
 +/*********************************************************************=
 **********
-+ * This file contains the iSCSI Virtual Device and Disk Transport
-+ * agnostic related functions.
++ * This file contains the configfs implementation for iSCSI Target mod=
+e
++ * from the LIO-Target Project.
 + *
-+ =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
++ * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
 + * Licensed to the Linux Foundation under the General Public License (=
 GPL) version 2.
@@ -64,105 +72,2002 @@ y
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
 + *********************************************************************=
-*********/
+*******/
 +
-+#include <scsi/scsi_device.h>
++#include <linux/configfs.h>
 +#include <target/target_core_base.h>
-+#include <target/target_core_device.h>
 +#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_configfs.h>
++#include <target/target_core_fabric_lib.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
++#include <target/target_core_configfs.h>
++#include <target/configfs_macros.h>
 +
-+#include "iscsi_target_debug.h"
 +#include "iscsi_target_core.h"
++#include "iscsi_target_parameters.h"
 +#include "iscsi_target_device.h"
++#include "iscsi_target_erl0.h"
++#include "iscsi_target_nodeattrib.h"
 +#include "iscsi_target_tpg.h"
 +#include "iscsi_target_util.h"
++#include "iscsi_target.h"
++#include "iscsi_target_stat.h"
++#include "iscsi_target_configfs.h"
 +
-+int iscsit_get_lun_for_tmr(
-+	struct iscsi_cmd *cmd,
-+	u64 lun)
++struct target_fabric_configfs *lio_target_fabric_configfs;
++
++struct lio_target_configfs_attribute {
++	struct configfs_attribute attr;
++	ssize_t (*show)(void *, char *);
++	ssize_t (*store)(void *, const char *, size_t);
++};
++
++struct iscsi_portal_group *lio_get_tpg_from_tpg_item(
++	struct config_item *item,
++	struct iscsi_tiqn **tiqn_out)
 +{
-+	u32 unpacked_lun =3D scsilun_to_int((struct scsi_lun *)&lun);
++	struct se_portal_group *se_tpg =3D container_of(to_config_group(item)=
+,
++					struct se_portal_group, tpg_group);
++	struct iscsi_portal_group *tpg =3D
++			(struct iscsi_portal_group *)se_tpg->se_tpg_fabric_ptr;
++	int ret;
 +
-+	return transport_get_lun_for_tmr(SE_CMD(cmd), unpacked_lun);
++	if (!tpg) {
++		printk(KERN_ERR "Unable to locate struct iscsi_portal_group "
++			"pointer\n");
++		return NULL;
++	}
++	ret =3D iscsit_get_tpg(tpg);
++	if (ret < 0)
++		return NULL;
++
++	*tiqn_out =3D tpg->tpg_tiqn;
++	return tpg;
 +}
 +
-+int iscsit_get_lun_for_cmd(
-+	struct iscsi_cmd *cmd,
-+	unsigned char *cdb,
-+	u64 lun)
-+{
-+	u32 unpacked_lun =3D scsilun_to_int((struct scsi_lun *)&lun);
++/* Start items for lio_target_portal_cit */
 +
-+	return transport_get_lun_for_cmd(SE_CMD(cmd), NULL, unpacked_lun);
++static ssize_t lio_target_np_show_sctp(
++	struct se_tpg_np *se_tpg_np,
++	char *page)
++{
++	struct iscsi_tpg_np *tpg_np =3D container_of(se_tpg_np,
++				struct iscsi_tpg_np, se_tpg_np);
++	struct iscsi_tpg_np *tpg_np_sctp;
++	ssize_t rb;
++
++	tpg_np_sctp =3D iscsit_tpg_locate_child_np(tpg_np, ISCSI_SCTP_TCP);
++	if (tpg_np_sctp)
++		rb =3D sprintf(page, "1\n");
++	else
++		rb =3D sprintf(page, "0\n");
++
++	return rb;
 +}
 +
-+void iscsit_determine_maxcmdsn(struct iscsi_session *sess)
++static ssize_t lio_target_np_store_sctp(
++	struct se_tpg_np *se_tpg_np,
++	const char *page,
++	size_t count)
 +{
-+	struct se_node_acl *se_nacl;
++	struct iscsi_np *np;
++	struct iscsi_portal_group *tpg;
++	struct iscsi_tpg_np *tpg_np =3D container_of(se_tpg_np,
++				struct iscsi_tpg_np, se_tpg_np);
++	struct iscsi_tpg_np *tpg_np_sctp =3D NULL;
++	char *endptr;
++	u32 op;
++	int ret;
 +
++	op =3D simple_strtoul(page, &endptr, 0);
++	if ((op !=3D 1) && (op !=3D 0)) {
++		printk(KERN_ERR "Illegal value for tpg_enable: %u\n", op);
++		return -EINVAL;
++	}
++	np =3D tpg_np->tpg_np;
++	if (!np) {
++		printk(KERN_ERR "Unable to locate struct iscsi_np from"
++				" struct iscsi_tpg_np\n");
++		return -EINVAL;
++	}
++
++	tpg =3D tpg_np->tpg;
++	if (iscsit_get_tpg(tpg) < 0)
++		return -EINVAL;
++
++	if (op) {
++		/*
++		 * Use existing np->np_sockaddr for SCTP network portal reference
++		 */
++		tpg_np_sctp =3D iscsit_tpg_add_network_portal(tpg, &np->np_sockaddr,
++					np->np_ip, tpg_np, ISCSI_SCTP_TCP);
++		if (!tpg_np_sctp || IS_ERR(tpg_np_sctp))
++			goto out;
++	} else {
++		tpg_np_sctp =3D iscsit_tpg_locate_child_np(tpg_np, ISCSI_SCTP_TCP);
++		if (!tpg_np_sctp)
++			goto out;
++
++		ret =3D iscsit_tpg_del_network_portal(tpg, tpg_np_sctp);
++		if (ret < 0)
++			goto out;
++	}
++
++	iscsit_put_tpg(tpg);
++	return count;
++out:
++	iscsit_put_tpg(tpg);
++	return -EINVAL;
++}
++
++TF_NP_BASE_ATTR(lio_target, sctp, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_portal_attrs[] =3D {
++	&lio_target_np_sctp.attr,
++	NULL,
++};
++
++/* Stop items for lio_target_portal_cit */
++
++/* Start items for lio_target_np_cit */
++
++#define MAX_PORTAL_LEN		256
++
++struct se_tpg_np *lio_target_call_addnptotpg(
++	struct se_portal_group *se_tpg,
++	struct config_group *group,
++	const char *name)
++{
++	struct iscsi_portal_group *tpg;
++	struct iscsi_tpg_np *tpg_np;
++	char *str, *str2, *ip_str, *port_str;
++	struct __kernel_sockaddr_storage sockaddr;
++	struct sockaddr_in *sock_in;
++	struct sockaddr_in6 *sock_in6;
++	unsigned long port;
++	int ret;
++	char buf[MAX_PORTAL_LEN + 1];
++
++	if (strlen(name) > MAX_PORTAL_LEN) {
++		printk(KERN_ERR "strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
++			(int)strlen(name), MAX_PORTAL_LEN);
++		return ERR_PTR(-EOVERFLOW);
++	}
++	memset(buf, 0, MAX_PORTAL_LEN + 1);
++	snprintf(buf, MAX_PORTAL_LEN, "%s", name);
++
++	memset(&sockaddr, 0, sizeof(struct __kernel_sockaddr_storage));
++
++	str =3D strstr(buf, "[");
++	if (str) {
++		const char *end;
++
++		str2 =3D strstr(str, "]");
++		if (!str2) {
++			printk(KERN_ERR "Unable to locate trailing \"]\""
++				" in IPv6 iSCSI network portal address\n");
++			return ERR_PTR(-EINVAL);
++		}
++		str++; /* Skip over leading "[" */
++		*str2 =3D '\0'; /* Terminate the IPv6 address */
++		str2++; /* Skip over the "]" */
++		port_str =3D strstr(str2, ":");
++		if (!port_str) {
++			printk(KERN_ERR "Unable to locate \":port\""
++				" in IPv6 iSCSI network portal address\n");
++			return ERR_PTR(-EINVAL);
++		}
++		*port_str =3D '\0'; /* Terminate string for IP */
++		port_str++; /* Skip over ":" */
++
++		ret =3D strict_strtoul(port_str, 0, &port);
++		if (ret < 0) {
++			printk("strict_strtoul() failed for port_str: %d\n", ret);
++			return ERR_PTR(ret);
++		}
++		sock_in6 =3D (struct sockaddr_in6 *)&sockaddr;
++		sock_in6->sin6_family =3D AF_INET6;
++		sock_in6->sin6_port =3D htons((unsigned short)port);
++		ret =3D in6_pton(str, IPV6_ADDRESS_SPACE,
++				(void *)&sock_in6->sin6_addr.in6_u, -1, &end);
++		if (ret <=3D 0) {
++			printk(KERN_ERR "in6_pton returned: %d\n", ret);
++			return ERR_PTR(-EINVAL);
++		}
++	} else {
++		str =3D ip_str =3D &buf[0];
++		port_str =3D strstr(ip_str, ":");
++		if (!port_str) {
++			printk(KERN_ERR "Unable to locate \":port\""
++				" in IPv4 iSCSI network portal address\n");
++			return ERR_PTR(-EINVAL);
++		}
++		*port_str =3D '\0'; /* Terminate string for IP */
++		port_str++; /* Skip over ":" */
++
++		ret =3D strict_strtoul(port_str, 0, &port);
++		if (ret < 0) {
++			printk("strict_strtoul() failed for port_str: %d\n", ret);
++			return ERR_PTR(ret);
++		}
++		sock_in =3D (struct sockaddr_in *)&sockaddr;
++		sock_in->sin_family =3D AF_INET;
++		sock_in->sin_port =3D htons((unsigned short)port);
++		sock_in->sin_addr.s_addr =3D in_aton(ip_str);
++	}
++	tpg =3D container_of(se_tpg, struct iscsi_portal_group, tpg_se_tpg);
++	ret =3D iscsit_get_tpg(tpg);
++	if (ret < 0)
++		return ERR_PTR(-EINVAL);
++
++	printk(KERN_INFO "LIO_Target_ConfigFS: REGISTER -> %s TPGT: %hu"
++		" PORTAL: %s\n",
++		config_item_name(&se_tpg->se_tpg_wwn->wwn_group.cg_item),
++		tpg->tpgt, name);
 +	/*
-+	 * This is a discovery session, the single queue slot was already
-+	 * assigned in iscsi_login_zero_tsih().  Since only Logout and
-+	 * Text Opcodes are allowed during discovery we do not have to worry
-+	 * about the HBA's queue depth here.
++	 * Assume ISCSI_TCP by default.  Other network portals for other
++	 * iSCSI fabrics:
++	 *
++	 * Traditional iSCSI over SCTP (initial support)
++	 * iSER/TCP (TODO, hardware available)
++	 * iSER/SCTP (TODO, software emulation with osc-iwarp)
++	 * iSER/IB (TODO, hardware available)
++	 *
++	 * can be enabled with atributes under
++	 * sys/kernel/config/iscsi/$IQN/$TPG/np/$IP:$PORT/
++	 *
 +	 */
-+	if (sess->sess_ops->SessionType)
++	tpg_np =3D iscsit_tpg_add_network_portal(tpg, &sockaddr, str, NULL,
++				ISCSI_TCP);
++	if (IS_ERR(tpg_np)) {
++		iscsit_put_tpg(tpg);
++		return ERR_PTR(PTR_ERR(tpg_np));
++	}
++	printk(KERN_INFO "LIO_Target_ConfigFS: addnptotpg done!\n");
++
++	iscsit_put_tpg(tpg);
++	return &tpg_np->se_tpg_np;
++}
++
++static void lio_target_call_delnpfromtpg(
++	struct se_tpg_np *se_tpg_np)
++{
++	struct iscsi_portal_group *tpg;
++	struct iscsi_tpg_np *tpg_np;
++	struct se_portal_group *se_tpg;
++	int ret;
++
++	tpg_np =3D container_of(se_tpg_np, struct iscsi_tpg_np, se_tpg_np);
++	tpg =3D tpg_np->tpg;
++	ret =3D iscsit_get_tpg(tpg);
++	if (ret < 0)
 +		return;
 +
-+	se_nacl =3D sess->se_sess->se_node_acl;
++	se_tpg =3D &tpg->tpg_se_tpg;
++	printk(KERN_INFO "LIO_Target_ConfigFS: DEREGISTER -> %s TPGT: %hu"
++		" PORTAL: %s:%hu\n", config_item_name(&se_tpg->se_tpg_wwn->wwn_group=
+=2Ecg_item),
++		tpg->tpgt, tpg_np->tpg_np->np_ip, tpg_np->tpg_np->np_port);
 +
-+	/*
-+	 * This is a normal session, set the Session's CmdSN window to the
-+	 * struct se_node_acl->queue_depth.  The value in struct se_node_acl-=
->queue_depth
-+	 * has already been validated as a legal value in
-+	 * core_set_queue_depth_for_node().
-+	 */
-+	sess->cmdsn_window =3D se_nacl->queue_depth;
-+	sess->max_cmd_sn =3D (sess->max_cmd_sn + se_nacl->queue_depth) - 1;
++	ret =3D iscsit_tpg_del_network_portal(tpg, tpg_np);
++	if (ret < 0)
++		goto out;
++
++	printk(KERN_INFO "LIO_Target_ConfigFS: delnpfromtpg done!\n");
++out:
++	iscsit_put_tpg(tpg);
 +}
 +
-+void iscsit_increment_maxcmdsn(struct iscsi_cmd *cmd, struct iscsi_ses=
-sion *sess)
++/* End items for lio_target_np_cit */
++
++/* Start items for lio_target_nacl_attrib_cit */
++
++#define DEF_NACL_ATTRIB(name)						\
++static ssize_t iscsi_nacl_attrib_show_##name(				\
++	struct se_node_acl *se_nacl,					\
++	char *page)							\
++{									\
++	struct iscsi_node_acl *nacl =3D container_of(se_nacl, struct iscsi_no=
+de_acl, \
++					se_node_acl);			\
++									\
++	return sprintf(page, "%u\n", ISCSI_NODE_ATTRIB(nacl)->name);	\
++}									\
++									\
++static ssize_t iscsi_nacl_attrib_store_##name(				\
++	struct se_node_acl *se_nacl,					\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct iscsi_node_acl *nacl =3D container_of(se_nacl, struct iscsi_no=
+de_acl, \
++					se_node_acl);			\
++	char *endptr;							\
++	u32 val;							\
++	int ret;							\
++									\
++	val =3D simple_strtoul(page, &endptr, 0);				\
++	ret =3D iscsit_na_##name(nacl, val);				\
++	if (ret < 0)							\
++		return ret;						\
++									\
++	return count;							\
++}
++
++#define NACL_ATTR(_name, _mode) TF_NACL_ATTRIB_ATTR(iscsi, _name, _mod=
+e);
++/*
++ * Define iscsi_node_attrib_s_dataout_timeout
++ */
++DEF_NACL_ATTRIB(dataout_timeout);
++NACL_ATTR(dataout_timeout, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_dataout_timeout_retries
++ */
++DEF_NACL_ATTRIB(dataout_timeout_retries);
++NACL_ATTR(dataout_timeout_retries, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_default_erl
++ */
++DEF_NACL_ATTRIB(default_erl);
++NACL_ATTR(default_erl, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_nopin_timeout
++ */
++DEF_NACL_ATTRIB(nopin_timeout);
++NACL_ATTR(nopin_timeout, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_nopin_response_timeout
++ */
++DEF_NACL_ATTRIB(nopin_response_timeout);
++NACL_ATTR(nopin_response_timeout, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_random_datain_pdu_offsets
++ */
++DEF_NACL_ATTRIB(random_datain_pdu_offsets);
++NACL_ATTR(random_datain_pdu_offsets, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_random_datain_seq_offsets
++ */
++DEF_NACL_ATTRIB(random_datain_seq_offsets);
++NACL_ATTR(random_datain_seq_offsets, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_node_attrib_s_random_r2t_offsets
++ */
++DEF_NACL_ATTRIB(random_r2t_offsets);
++NACL_ATTR(random_r2t_offsets, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_nacl_attrib_attrs[] =3D {
++	&iscsi_nacl_attrib_dataout_timeout.attr,
++	&iscsi_nacl_attrib_dataout_timeout_retries.attr,
++	&iscsi_nacl_attrib_default_erl.attr,
++	&iscsi_nacl_attrib_nopin_timeout.attr,
++	&iscsi_nacl_attrib_nopin_response_timeout.attr,
++	&iscsi_nacl_attrib_random_datain_pdu_offsets.attr,
++	&iscsi_nacl_attrib_random_datain_seq_offsets.attr,
++	&iscsi_nacl_attrib_random_r2t_offsets.attr,
++	NULL,
++};
++
++/* End items for lio_target_nacl_attrib_cit */
++
++/* Start items for lio_target_nacl_auth_cit */
++
++#define __DEF_NACL_AUTH_STR(prefix, name, flags)			\
++static ssize_t __iscsi_##prefix##_show_##name(				\
++	struct iscsi_node_acl *nacl,					\
++	char *page)							\
++{									\
++	struct iscsi_node_auth *auth =3D &nacl->node_auth;		\
++									\
++	if (!capable(CAP_SYS_ADMIN))					\
++		return -EPERM;						\
++	return snprintf(page, PAGE_SIZE, "%s\n", auth->name);		\
++}									\
++									\
++static ssize_t __iscsi_##prefix##_store_##name(				\
++	struct iscsi_node_acl *nacl,					\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct iscsi_node_auth *auth =3D &nacl->node_auth;		\
++									\
++	if (!capable(CAP_SYS_ADMIN))					\
++		return -EPERM;						\
++									\
++	snprintf(auth->name, PAGE_SIZE, "%s", page);			\
++	if (!strncmp("NULL", auth->name, 4))				\
++		auth->naf_flags &=3D ~flags;				\
++	else								\
++		auth->naf_flags |=3D flags;				\
++									\
++	if ((auth->naf_flags & NAF_USERID_IN_SET) &&			\
++	    (auth->naf_flags & NAF_PASSWORD_IN_SET))			\
++		auth->authenticate_target =3D 1;				\
++	else								\
++		auth->authenticate_target =3D 0;				\
++									\
++	return count;							\
++}
++
++#define __DEF_NACL_AUTH_INT(prefix, name)				\
++static ssize_t __iscsi_##prefix##_show_##name(				\
++	struct iscsi_node_acl *nacl,					\
++	char *page)							\
++{									\
++	struct iscsi_node_auth *auth =3D &nacl->node_auth;		\
++									\
++	if (!capable(CAP_SYS_ADMIN))					\
++		return -EPERM;						\
++									\
++	return snprintf(page, PAGE_SIZE, "%d\n", auth->name);		\
++}
++
++#define DEF_NACL_AUTH_STR(name, flags)					\
++	__DEF_NACL_AUTH_STR(nacl_auth, name, flags)			\
++static ssize_t iscsi_nacl_auth_show_##name(				\
++	struct se_node_acl *nacl,					\
++	char *page)							\
++{									\
++	return __iscsi_nacl_auth_show_##name(container_of(nacl,		\
++			struct iscsi_node_acl, se_node_acl), page);		\
++}									\
++static ssize_t iscsi_nacl_auth_store_##name(				\
++	struct se_node_acl *nacl,					\
++	const char *page,						\
++	size_t count)							\
++{									\
++	return __iscsi_nacl_auth_store_##name(container_of(nacl,	\
++			struct iscsi_node_acl, se_node_acl), page, count);	\
++}
++
++#define DEF_NACL_AUTH_INT(name)						\
++	__DEF_NACL_AUTH_INT(nacl_auth, name)				\
++static ssize_t iscsi_nacl_auth_show_##name(				\
++	struct se_node_acl *nacl,					\
++	char *page)							\
++{									\
++	return __iscsi_nacl_auth_show_##name(container_of(nacl,		\
++			struct iscsi_node_acl, se_node_acl), page);		\
++}
++
++#define AUTH_ATTR(_name, _mode)	TF_NACL_AUTH_ATTR(iscsi, _name, _mode)=
+;
++#define AUTH_ATTR_RO(_name) TF_NACL_AUTH_ATTR_RO(iscsi, _name);
++
++/*
++ * One-way authentication userid
++ */
++DEF_NACL_AUTH_STR(userid, NAF_USERID_SET);
++AUTH_ATTR(userid, S_IRUGO | S_IWUSR);
++/*
++ * One-way authentication password
++ */
++DEF_NACL_AUTH_STR(password, NAF_PASSWORD_SET);
++AUTH_ATTR(password, S_IRUGO | S_IWUSR);
++/*
++ * Enforce mutual authentication
++ */
++DEF_NACL_AUTH_INT(authenticate_target);
++AUTH_ATTR_RO(authenticate_target);
++/*
++ * Mutual authentication userid
++ */
++DEF_NACL_AUTH_STR(userid_mutual, NAF_USERID_IN_SET);
++AUTH_ATTR(userid_mutual, S_IRUGO | S_IWUSR);
++/*
++ * Mutual authentication password
++ */
++DEF_NACL_AUTH_STR(password_mutual, NAF_PASSWORD_IN_SET);
++AUTH_ATTR(password_mutual, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_nacl_auth_attrs[] =3D {
++	&iscsi_nacl_auth_userid.attr,
++	&iscsi_nacl_auth_password.attr,
++	&iscsi_nacl_auth_authenticate_target.attr,
++	&iscsi_nacl_auth_userid_mutual.attr,
++	&iscsi_nacl_auth_password_mutual.attr,
++	NULL,
++};
++
++/* End items for lio_target_nacl_auth_cit */
++
++/* Start items for lio_target_nacl_param_cit */
++
++#define DEF_NACL_PARAM(name)						\
++static ssize_t iscsi_nacl_param_show_##name(				\
++	struct se_node_acl *se_nacl,					\
++	char *page)							\
++{									\
++	struct iscsi_session *sess;					\
++	struct se_session *se_sess;					\
++	ssize_t rb;							\
++									\
++	spin_lock_bh(&se_nacl->nacl_sess_lock);				\
++	se_sess =3D se_nacl->nacl_sess;					\
++	if (!se_sess) {							\
++		rb =3D snprintf(page, PAGE_SIZE,				\
++			"No Active iSCSI Session\n");			\
++	} else {							\
++		sess =3D se_sess->fabric_sess_ptr;			\
++		rb =3D snprintf(page, PAGE_SIZE, "%u\n",			\
++			(u32)sess->sess_ops->name);			\
++	}								\
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);			\
++									\
++	return rb;							\
++}
++
++#define NACL_PARAM_ATTR(_name) TF_NACL_PARAM_ATTR_RO(iscsi, _name);
++
++DEF_NACL_PARAM(MaxConnections);
++NACL_PARAM_ATTR(MaxConnections);
++
++DEF_NACL_PARAM(InitialR2T);
++NACL_PARAM_ATTR(InitialR2T);
++
++DEF_NACL_PARAM(ImmediateData);
++NACL_PARAM_ATTR(ImmediateData);
++
++DEF_NACL_PARAM(MaxBurstLength);
++NACL_PARAM_ATTR(MaxBurstLength);
++
++DEF_NACL_PARAM(FirstBurstLength);
++NACL_PARAM_ATTR(FirstBurstLength);
++
++DEF_NACL_PARAM(DefaultTime2Wait);
++NACL_PARAM_ATTR(DefaultTime2Wait);
++
++DEF_NACL_PARAM(DefaultTime2Retain);
++NACL_PARAM_ATTR(DefaultTime2Retain);
++
++DEF_NACL_PARAM(MaxOutstandingR2T);
++NACL_PARAM_ATTR(MaxOutstandingR2T);
++
++DEF_NACL_PARAM(DataPDUInOrder);
++NACL_PARAM_ATTR(DataPDUInOrder);
++
++DEF_NACL_PARAM(DataSequenceInOrder);
++NACL_PARAM_ATTR(DataSequenceInOrder);
++
++DEF_NACL_PARAM(ErrorRecoveryLevel);
++NACL_PARAM_ATTR(ErrorRecoveryLevel);
++
++static struct configfs_attribute *lio_target_nacl_param_attrs[] =3D {
++	&iscsi_nacl_param_MaxConnections.attr,
++	&iscsi_nacl_param_InitialR2T.attr,
++	&iscsi_nacl_param_ImmediateData.attr,
++	&iscsi_nacl_param_MaxBurstLength.attr,
++	&iscsi_nacl_param_FirstBurstLength.attr,
++	&iscsi_nacl_param_DefaultTime2Wait.attr,
++	&iscsi_nacl_param_DefaultTime2Retain.attr,
++	&iscsi_nacl_param_MaxOutstandingR2T.attr,
++	&iscsi_nacl_param_DataPDUInOrder.attr,
++	&iscsi_nacl_param_DataSequenceInOrder.attr,
++	&iscsi_nacl_param_ErrorRecoveryLevel.attr,
++	NULL,
++};
++
++/* End items for lio_target_nacl_param_cit */
++
++/* Start items for lio_target_acl_cit */
++
++static ssize_t lio_target_nacl_show_info(
++	struct se_node_acl *se_nacl,
++	char *page)
 +{
-+	if (cmd->immediate_cmd || cmd->maxcmdsn_inc)
-+		return;
++	struct iscsi_session *sess;
++	struct iscsi_conn *conn;
++	struct se_session *se_sess;
++	ssize_t rb =3D 0;
 +
-+	cmd->maxcmdsn_inc =3D 1;
++	spin_lock_bh(&se_nacl->nacl_sess_lock);
++	se_sess =3D se_nacl->nacl_sess;
++	if (!se_sess) {
++		rb +=3D sprintf(page+rb, "No active iSCSI Session for Initiator"
++			" Endpoint: %s\n", se_nacl->initiatorname);
++	} else {
++		sess =3D se_sess->fabric_sess_ptr;
 +
-+	spin_lock(&sess->cmdsn_lock);
-+	sess->max_cmd_sn +=3D 1;
-+	TRACE(TRACE_ISCSI, "Updated MaxCmdSN to 0x%08x\n", sess->max_cmd_sn);
-+	spin_unlock(&sess->cmdsn_lock);
++		if (sess->sess_ops->InitiatorName)
++			rb +=3D sprintf(page+rb, "InitiatorName: %s\n",
++				sess->sess_ops->InitiatorName);
++		if (sess->sess_ops->InitiatorAlias)
++			rb +=3D sprintf(page+rb, "InitiatorAlias: %s\n",
++				sess->sess_ops->InitiatorAlias);
++
++		rb +=3D sprintf(page+rb, "LIO Session ID: %u   "
++			"ISID: 0x%02x %02x %02x %02x %02x %02x  "
++			"TSIH: %hu  ", sess->sid,
++			sess->isid[0], sess->isid[1], sess->isid[2],
++			sess->isid[3], sess->isid[4], sess->isid[5],
++			sess->tsih);
++		rb +=3D sprintf(page+rb, "SessionType: %s\n",
++				(sess->sess_ops->SessionType) ?
++				"Discovery" : "Normal");
++		rb +=3D sprintf(page+rb, "Session State: ");
++		switch (sess->session_state) {
++		case TARG_SESS_STATE_FREE:
++			rb +=3D sprintf(page+rb, "TARG_SESS_FREE\n");
++			break;
++		case TARG_SESS_STATE_ACTIVE:
++			rb +=3D sprintf(page+rb, "TARG_SESS_STATE_ACTIVE\n");
++			break;
++		case TARG_SESS_STATE_LOGGED_IN:
++			rb +=3D sprintf(page+rb, "TARG_SESS_STATE_LOGGED_IN\n");
++			break;
++		case TARG_SESS_STATE_FAILED:
++			rb +=3D sprintf(page+rb, "TARG_SESS_STATE_FAILED\n");
++			break;
++		case TARG_SESS_STATE_IN_CONTINUE:
++			rb +=3D sprintf(page+rb, "TARG_SESS_STATE_IN_CONTINUE\n");
++			break;
++		default:
++			rb +=3D sprintf(page+rb, "ERROR: Unknown Session"
++					" State!\n");
++			break;
++		}
++
++		rb +=3D sprintf(page+rb, "---------------------[iSCSI Session"
++				" Values]-----------------------\n");
++		rb +=3D sprintf(page+rb, "  CmdSN/WR  :  CmdSN/WC  :  ExpCmdSN"
++				"  :  MaxCmdSN  :     ITT    :     TTT\n");
++		rb +=3D sprintf(page+rb, " 0x%08x   0x%08x   0x%08x   0x%08x"
++				"   0x%08x   0x%08x\n",
++			sess->cmdsn_window,
++			(sess->max_cmd_sn - sess->exp_cmd_sn) + 1,
++			sess->exp_cmd_sn, sess->max_cmd_sn,
++			sess->init_task_tag, sess->targ_xfer_tag);
++		rb +=3D sprintf(page+rb, "----------------------[iSCSI"
++				" Connections]-------------------------\n");
++
++		spin_lock(&sess->conn_lock);
++		list_for_each_entry(conn, &sess->sess_conn_list, conn_list) {
++			rb +=3D sprintf(page+rb, "CID: %hu  Connection"
++					" State: ", conn->cid);
++			switch (conn->conn_state) {
++			case TARG_CONN_STATE_FREE:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_FREE\n");
++				break;
++			case TARG_CONN_STATE_XPT_UP:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_XPT_UP\n");
++				break;
++			case TARG_CONN_STATE_IN_LOGIN:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_IN_LOGIN\n");
++				break;
++			case TARG_CONN_STATE_LOGGED_IN:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_LOGGED_IN\n");
++				break;
++			case TARG_CONN_STATE_IN_LOGOUT:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_IN_LOGOUT\n");
++				break;
++			case TARG_CONN_STATE_LOGOUT_REQUESTED:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_LOGOUT_REQUESTED\n");
++				break;
++			case TARG_CONN_STATE_CLEANUP_WAIT:
++				rb +=3D sprintf(page+rb,
++					"TARG_CONN_STATE_CLEANUP_WAIT\n");
++				break;
++			default:
++				rb +=3D sprintf(page+rb,
++					"ERROR: Unknown Connection State!\n");
++				break;
++			}
++
++			rb +=3D sprintf(page+rb, "   Address %s %s", conn->login_ip,
++				(conn->network_transport =3D=3D ISCSI_TCP) ?
++				"TCP" : "SCTP");
++			rb +=3D sprintf(page+rb, "  StatSN: 0x%08x\n",
++				conn->stat_sn);
++		}
++		spin_unlock(&sess->conn_lock);
++	}
++	spin_unlock_bh(&se_nacl->nacl_sess_lock);
++
++	return rb;
 +}
-diff --git a/drivers/target/iscsi/iscsi_target_device.h b/drivers/targe=
-t/iscsi/iscsi_target_device.h
-new file mode 100644
-index 0000000..bef1cad
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_device.h
-@@ -0,0 +1,9 @@
-+#ifndef ISCSI_TARGET_DEVICE_H
-+#define ISCSI_TARGET_DEVICE_H
 +
-+extern int iscsit_get_lun_for_tmr(struct iscsi_cmd *, u64);
-+extern int iscsit_get_lun_for_cmd(struct iscsi_cmd *, unsigned char *,=
- u64);
-+extern void iscsit_determine_maxcmdsn(struct iscsi_session *);
-+extern void iscsit_increment_maxcmdsn(struct iscsi_cmd *, struct iscsi=
-_session *);
++TF_NACL_BASE_ATTR_RO(lio_target, info);
 +
-+#endif /* ISCSI_TARGET_DEVICE_H */
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.c b/drivers/target/i=
-scsi/iscsi_target_tpg.c
++static ssize_t lio_target_nacl_show_cmdsn_depth(
++	struct se_node_acl *se_nacl,
++	char *page)
++{
++	return sprintf(page, "%u\n", se_nacl->queue_depth);
++}
++
++static ssize_t lio_target_nacl_store_cmdsn_depth(
++	struct se_node_acl *se_nacl,
++	const char *page,
++	size_t count)
++{
++	struct se_portal_group *se_tpg =3D se_nacl->se_tpg;
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,
++			struct iscsi_portal_group, tpg_se_tpg);
++	struct config_item *acl_ci, *tpg_ci, *wwn_ci;
++	char *endptr;
++	u32 cmdsn_depth =3D 0;
++	int ret;
++
++	cmdsn_depth =3D simple_strtoul(page, &endptr, 0);
++	if (cmdsn_depth > TA_DEFAULT_CMDSN_DEPTH_MAX) {
++		printk(KERN_ERR "Passed cmdsn_depth: %u exceeds"
++			" TA_DEFAULT_CMDSN_DEPTH_MAX: %u\n", cmdsn_depth,
++			TA_DEFAULT_CMDSN_DEPTH_MAX);
++		return -EINVAL;
++	}
++	acl_ci =3D &se_nacl->acl_group.cg_item;
++	if (!acl_ci) {
++		printk(KERN_ERR "Unable to locatel acl_ci\n");
++		return -EINVAL;
++	}
++	tpg_ci =3D &acl_ci->ci_parent->ci_group->cg_item;
++	if (!tpg_ci) {
++		printk(KERN_ERR "Unable to locate tpg_ci\n");
++		return -EINVAL;
++	}
++	wwn_ci =3D &tpg_ci->ci_group->cg_item;
++	if (!wwn_ci) {
++		printk(KERN_ERR "Unable to locate config_item wwn_ci\n");
++		return -EINVAL;
++	}
++
++	if (iscsit_get_tpg(tpg) < 0)
++		return -EINVAL;
++	/*
++	 * iscsit_tpg_set_initiator_node_queue_depth() assumes force=3D1
++	 */
++	ret =3D iscsit_tpg_set_initiator_node_queue_depth(tpg,
++				config_item_name(acl_ci), cmdsn_depth, 1);
++
++	printk(KERN_INFO "LIO_Target_ConfigFS: %s/%s Set CmdSN Window: %u for=
+"
++		"InitiatorName: %s\n", config_item_name(wwn_ci),
++		config_item_name(tpg_ci), cmdsn_depth,
++		config_item_name(acl_ci));
++
++	iscsit_put_tpg(tpg);
++	return (!ret) ? count : (ssize_t)ret;
++}
++
++TF_NACL_BASE_ATTR(lio_target, cmdsn_depth, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_initiator_attrs[] =3D {
++	&lio_target_nacl_info.attr,
++	&lio_target_nacl_cmdsn_depth.attr,
++	NULL,
++};
++
++static struct se_node_acl *lio_tpg_alloc_fabric_acl(
++	struct se_portal_group *se_tpg)
++{
++	struct iscsi_node_acl *acl;
++
++	acl =3D kzalloc(sizeof(struct iscsi_node_acl), GFP_KERNEL);
++	if (!acl) {
++		printk(KERN_ERR "Unable to allocate memory for struct iscsi_node_acl=
+\n");
++		return NULL;
++	}
++
++	return &acl->se_node_acl;
++}
++
++static struct se_node_acl *lio_target_make_nodeacl(
++	struct se_portal_group *se_tpg,
++	struct config_group *group,
++	const char *name)
++{
++	struct config_group *stats_cg;
++	struct iscsi_node_acl *acl;
++	struct se_node_acl *se_nacl_new, *se_nacl;
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,
++			struct iscsi_portal_group, tpg_se_tpg);
++	u32 cmdsn_depth;
++
++	se_nacl_new =3D lio_tpg_alloc_fabric_acl(se_tpg);
++	if (!se_nacl_new)
++		return ERR_PTR(-ENOMEM);
++
++	acl =3D container_of(se_nacl_new, struct iscsi_node_acl,
++				se_node_acl);
++
++	cmdsn_depth =3D ISCSI_TPG_ATTRIB(tpg)->default_cmdsn_depth;
++	/*
++	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
++	 * when converting a NdoeACL from demo mode -> explict
++	 */
++	se_nacl =3D core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,
++				name, cmdsn_depth);
++	if (IS_ERR(se_nacl))
++		return se_nacl;
++
++	stats_cg =3D &acl->se_node_acl.acl_fabric_stat_group;
++
++	stats_cg->default_groups =3D kzalloc(sizeof(struct config_group) * 2,
++				GFP_KERNEL);
++	if (!stats_cg->default_groups) {
++		printk(KERN_ERR "Unable to allocate memory for"
++				" stats_cg->default_groups\n");
++		core_tpg_del_initiator_node_acl(se_tpg, se_nacl, 1);
++		kfree(acl);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	stats_cg->default_groups[0] =3D &NODE_STAT_GRPS(acl)->iscsi_sess_stat=
+s_group;
++	stats_cg->default_groups[1] =3D NULL;
++	config_group_init_type_name(&NODE_STAT_GRPS(acl)->iscsi_sess_stats_gr=
+oup,
++			"iscsi_sess_stats", &iscsi_stat_sess_cit);
++
++	return se_nacl;
++}
++
++static void lio_target_drop_nodeacl(
++	struct se_node_acl *se_nacl)
++{
++	struct se_portal_group *se_tpg =3D se_nacl->se_tpg;
++	struct iscsi_node_acl *acl =3D container_of(se_nacl,
++			struct iscsi_node_acl, se_node_acl);
++	struct config_item *df_item;
++	struct config_group *stats_cg;
++	int i;
++
++	stats_cg =3D &acl->se_node_acl.acl_fabric_stat_group;
++	for (i =3D 0; stats_cg->default_groups[i]; i++) {
++		df_item =3D &stats_cg->default_groups[i]->cg_item;
++		stats_cg->default_groups[i] =3D NULL;
++		config_item_put(df_item);
++	}
++	kfree(stats_cg->default_groups);
++
++	core_tpg_del_initiator_node_acl(se_tpg, se_nacl, 1);
++	kfree(acl);
++}
++
++/* End items for lio_target_acl_cit */
++
++/* Start items for lio_target_tpg_attrib_cit */
++
++#define DEF_TPG_ATTRIB(name)						\
++									\
++static ssize_t iscsi_tpg_attrib_show_##name(				\
++	struct se_portal_group *se_tpg,				\
++	char *page)							\
++{									\
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,		\
++			struct iscsi_portal_group, tpg_se_tpg);	\
++	ssize_t rb;							\
++									\
++	if (iscsit_get_tpg(tpg) < 0)					\
++		return -EINVAL;						\
++									\
++	rb =3D sprintf(page, "%u\n", ISCSI_TPG_ATTRIB(tpg)->name);	\
++	iscsit_put_tpg(tpg);						\
++	return rb;							\
++}									\
++									\
++static ssize_t iscsi_tpg_attrib_store_##name(				\
++	struct se_portal_group *se_tpg,				\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,		\
++			struct iscsi_portal_group, tpg_se_tpg);	\
++	char *endptr;							\
++	u32 val;							\
++	int ret;							\
++									\
++	if (iscsit_get_tpg(tpg) < 0)					\
++		return -EINVAL;						\
++									\
++	val =3D simple_strtoul(page, &endptr, 0);				\
++	ret =3D iscsit_ta_##name(tpg, val);				\
++	if (ret < 0)							\
++		goto out;						\
++									\
++	iscsit_put_tpg(tpg);						\
++	return count;							\
++out:									\
++	iscsit_put_tpg(tpg);						\
++	return ret;							\
++}
++
++#define TPG_ATTR(_name, _mode) TF_TPG_ATTRIB_ATTR(iscsi, _name, _mode)=
+;
++
++/*
++ * Define iscsi_tpg_attrib_s_authentication
++ */
++DEF_TPG_ATTRIB(authentication);
++TPG_ATTR(authentication, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_login_timeout
++ */
++DEF_TPG_ATTRIB(login_timeout);
++TPG_ATTR(login_timeout, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_netif_timeout
++ */
++DEF_TPG_ATTRIB(netif_timeout);
++TPG_ATTR(netif_timeout, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_generate_node_acls
++ */
++DEF_TPG_ATTRIB(generate_node_acls);
++TPG_ATTR(generate_node_acls, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_default_cmdsn_depth
++ */
++DEF_TPG_ATTRIB(default_cmdsn_depth);
++TPG_ATTR(default_cmdsn_depth, S_IRUGO | S_IWUSR);
++/*
++ Define iscsi_tpg_attrib_s_cache_dynamic_acls
++ */
++DEF_TPG_ATTRIB(cache_dynamic_acls);
++TPG_ATTR(cache_dynamic_acls, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_demo_mode_write_protect
++ */
++DEF_TPG_ATTRIB(demo_mode_write_protect);
++TPG_ATTR(demo_mode_write_protect, S_IRUGO | S_IWUSR);
++/*
++ * Define iscsi_tpg_attrib_s_prod_mode_write_protect
++ */
++DEF_TPG_ATTRIB(prod_mode_write_protect);
++TPG_ATTR(prod_mode_write_protect, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_tpg_attrib_attrs[] =3D {
++	&iscsi_tpg_attrib_authentication.attr,
++	&iscsi_tpg_attrib_login_timeout.attr,
++	&iscsi_tpg_attrib_netif_timeout.attr,
++	&iscsi_tpg_attrib_generate_node_acls.attr,
++	&iscsi_tpg_attrib_default_cmdsn_depth.attr,
++	&iscsi_tpg_attrib_cache_dynamic_acls.attr,
++	&iscsi_tpg_attrib_demo_mode_write_protect.attr,
++	&iscsi_tpg_attrib_prod_mode_write_protect.attr,
++	NULL,
++};
++
++/* End items for lio_target_tpg_attrib_cit */
++
++/* Start items for lio_target_tpg_param_cit */
++
++#define DEF_TPG_PARAM(name)						\
++static ssize_t iscsi_tpg_param_show_##name(				\
++	struct se_portal_group *se_tpg,					\
++	char *page)							\
++{									\
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,		\
++			struct iscsi_portal_group, tpg_se_tpg);		\
++	struct iscsi_param *param;					\
++	ssize_t rb;							\
++									\
++	if (iscsit_get_tpg(tpg) < 0)					\
++		return -EINVAL;						\
++									\
++	param =3D iscsi_find_param_from_key(__stringify(name),		\
++				tpg->param_list);			\
++	if (!param) {							\
++		iscsit_put_tpg(tpg);					\
++		return -EINVAL;						\
++	}								\
++	rb =3D snprintf(page, PAGE_SIZE, "%s\n", param->value);		\
++									\
++	iscsit_put_tpg(tpg);						\
++	return rb;							\
++}									\
++static ssize_t iscsi_tpg_param_store_##name(				\
++	struct se_portal_group *se_tpg,				\
++	const char *page,						\
++	size_t count)							\
++{									\
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,		\
++			struct iscsi_portal_group, tpg_se_tpg);		\
++	char *buf;							\
++	int ret;							\
++									\
++	buf =3D kzalloc(PAGE_SIZE, GFP_KERNEL);				\
++	if (!buf)							\
++		return -ENOMEM;						\
++	snprintf(buf, PAGE_SIZE, "%s=3D%s", __stringify(name), page);	\
++	buf[strlen(buf)-1] =3D '\0'; /* Kill newline */			\
++									\
++	if (iscsit_get_tpg(tpg) < 0) {					\
++		kfree(buf);						\
++		return -EINVAL;						\
++	}								\
++									\
++	ret =3D iscsi_change_param_value(buf, tpg->param_list, 1);	\
++	if (ret < 0)							\
++		goto out;						\
++									\
++	kfree(buf);							\
++	iscsit_put_tpg(tpg);						\
++	return count;							\
++out:									\
++	kfree(buf);							\
++	iscsit_put_tpg(tpg);						\
++	return -EINVAL;						\
++}
++
++#define TPG_PARAM_ATTR(_name, _mode) TF_TPG_PARAM_ATTR(iscsi, _name, _=
+mode);
++
++DEF_TPG_PARAM(AuthMethod);
++TPG_PARAM_ATTR(AuthMethod, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(HeaderDigest);
++TPG_PARAM_ATTR(HeaderDigest, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(DataDigest);
++TPG_PARAM_ATTR(DataDigest, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(MaxConnections);
++TPG_PARAM_ATTR(MaxConnections, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(TargetAlias);
++TPG_PARAM_ATTR(TargetAlias, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(InitialR2T);
++TPG_PARAM_ATTR(InitialR2T, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(ImmediateData);
++TPG_PARAM_ATTR(ImmediateData, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(MaxRecvDataSegmentLength);
++TPG_PARAM_ATTR(MaxRecvDataSegmentLength, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(MaxBurstLength);
++TPG_PARAM_ATTR(MaxBurstLength, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(FirstBurstLength);
++TPG_PARAM_ATTR(FirstBurstLength, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(DefaultTime2Wait);
++TPG_PARAM_ATTR(DefaultTime2Wait, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(DefaultTime2Retain);
++TPG_PARAM_ATTR(DefaultTime2Retain, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(MaxOutstandingR2T);
++TPG_PARAM_ATTR(MaxOutstandingR2T, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(DataPDUInOrder);
++TPG_PARAM_ATTR(DataPDUInOrder, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(DataSequenceInOrder);
++TPG_PARAM_ATTR(DataSequenceInOrder, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(ErrorRecoveryLevel);
++TPG_PARAM_ATTR(ErrorRecoveryLevel, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(IFMarker);
++TPG_PARAM_ATTR(IFMarker, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(OFMarker);
++TPG_PARAM_ATTR(OFMarker, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(IFMarkInt);
++TPG_PARAM_ATTR(IFMarkInt, S_IRUGO | S_IWUSR);
++
++DEF_TPG_PARAM(OFMarkInt);
++TPG_PARAM_ATTR(OFMarkInt, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_tpg_param_attrs[] =3D {
++	&iscsi_tpg_param_AuthMethod.attr,
++	&iscsi_tpg_param_HeaderDigest.attr,
++	&iscsi_tpg_param_DataDigest.attr,
++	&iscsi_tpg_param_MaxConnections.attr,
++	&iscsi_tpg_param_TargetAlias.attr,
++	&iscsi_tpg_param_InitialR2T.attr,
++	&iscsi_tpg_param_ImmediateData.attr,
++	&iscsi_tpg_param_MaxRecvDataSegmentLength.attr,
++	&iscsi_tpg_param_MaxBurstLength.attr,
++	&iscsi_tpg_param_FirstBurstLength.attr,
++	&iscsi_tpg_param_DefaultTime2Wait.attr,
++	&iscsi_tpg_param_DefaultTime2Retain.attr,
++	&iscsi_tpg_param_MaxOutstandingR2T.attr,
++	&iscsi_tpg_param_DataPDUInOrder.attr,
++	&iscsi_tpg_param_DataSequenceInOrder.attr,
++	&iscsi_tpg_param_ErrorRecoveryLevel.attr,
++	&iscsi_tpg_param_IFMarker.attr,
++	&iscsi_tpg_param_OFMarker.attr,
++	&iscsi_tpg_param_IFMarkInt.attr,
++	&iscsi_tpg_param_OFMarkInt.attr,
++	NULL,
++};
++
++/* End items for lio_target_tpg_param_cit */
++
++/* Start items for lio_target_tpg_cit */
++
++static ssize_t lio_target_tpg_show_enable(
++	struct se_portal_group *se_tpg,
++	char *page)
++{
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,
++			struct iscsi_portal_group, tpg_se_tpg);
++	ssize_t len;
++
++	spin_lock(&tpg->tpg_state_lock);
++	len =3D sprintf(page, "%d\n",
++			(tpg->tpg_state =3D=3D TPG_STATE_ACTIVE) ? 1 : 0);
++	spin_unlock(&tpg->tpg_state_lock);
++
++	return len;
++}
++
++static ssize_t lio_target_tpg_store_enable(
++	struct se_portal_group *se_tpg,
++	const char *page,
++	size_t count)
++{
++	struct iscsi_portal_group *tpg =3D container_of(se_tpg,
++			struct iscsi_portal_group, tpg_se_tpg);
++	char *endptr;
++	u32 op;
++	int ret =3D 0;
++
++	op =3D simple_strtoul(page, &endptr, 0);
++	if ((op !=3D 1) && (op !=3D 0)) {
++		printk(KERN_ERR "Illegal value for tpg_enable: %u\n", op);
++		return -EINVAL;
++	}
++
++	ret =3D iscsit_get_tpg(tpg);
++	if (ret < 0)
++		return -EINVAL;
++
++	if (op) {
++		ret =3D iscsit_tpg_enable_portal_group(tpg);
++		if (ret < 0)
++			goto out;
++	} else {
++		/*
++		 * iscsit_tpg_disable_portal_group() assumes force=3D1
++		 */
++		ret =3D iscsit_tpg_disable_portal_group(tpg, 1);
++		if (ret < 0)
++			goto out;
++	}
++
++	iscsit_put_tpg(tpg);
++	return count;
++out:
++	iscsit_put_tpg(tpg);
++	return -EINVAL;
++}
++
++TF_TPG_BASE_ATTR(lio_target, enable, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_tpg_attrs[] =3D {
++	&lio_target_tpg_enable.attr,
++	NULL,
++};
++
++/* End items for lio_target_tpg_cit */
++
++/* Start items for lio_target_tiqn_cit */
++
++struct se_portal_group *lio_target_tiqn_addtpg(
++	struct se_wwn *wwn,
++	struct config_group *group,
++	const char *name)
++{
++	struct iscsi_portal_group *tpg;
++	struct iscsi_tiqn *tiqn;
++	char *tpgt_str, *end_ptr;
++	int ret =3D 0;
++	unsigned short int tpgt;
++
++	tiqn =3D container_of(wwn, struct iscsi_tiqn, tiqn_wwn);
++	/*
++	 * Only tpgt_# directory groups can be created below
++	 * target/iscsi/iqn.superturodiskarry/
++	*/
++	tpgt_str =3D strstr(name, "tpgt_");
++	if (!tpgt_str) {
++		printk(KERN_ERR "Unable to locate \"tpgt_#\" directory"
++				" group\n");
++		return NULL;
++	}
++	tpgt_str +=3D 5; /* Skip ahead of "tpgt_" */
++	tpgt =3D (unsigned short int) simple_strtoul(tpgt_str, &end_ptr, 0);
++
++	tpg =3D iscsit_alloc_portal_group(tiqn, tpgt);
++	if (!tpg)
++		return NULL;
++
++	ret =3D core_tpg_register(
++			&lio_target_fabric_configfs->tf_ops,
++			wwn, &tpg->tpg_se_tpg, (void *)tpg,
++			TRANSPORT_TPG_TYPE_NORMAL);
++	if (ret < 0)
++		return NULL;
++
++	ret =3D iscsit_tpg_add_portal_group(tiqn, tpg);
++	if (ret !=3D 0)
++		goto out;
++
++	printk(KERN_INFO "LIO_Target_ConfigFS: REGISTER -> %s\n", tiqn->tiqn)=
+;
++	printk(KERN_INFO "LIO_Target_ConfigFS: REGISTER -> Allocated TPG: %s\=
+n",
++			name);
++	return &tpg->tpg_se_tpg;
++out:
++	core_tpg_deregister(&tpg->tpg_se_tpg);
++	kfree(tpg);
++	return NULL;
++}
++
++void lio_target_tiqn_deltpg(struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg;
++	struct iscsi_tiqn *tiqn;
++
++	tpg =3D container_of(se_tpg, struct iscsi_portal_group, tpg_se_tpg);
++	tiqn =3D tpg->tpg_tiqn;
++	/*
++	 * iscsit_tpg_del_portal_group() assumes force=3D1
++	 */
++	printk(KERN_INFO "LIO_Target_ConfigFS: DEREGISTER -> Releasing TPG\n"=
+);
++	iscsit_tpg_del_portal_group(tiqn, tpg, 1);
++}
++
++/* End items for lio_target_tiqn_cit */
++
++/* Start LIO-Target TIQN struct contig_item lio_target_cit */
++
++static ssize_t lio_target_wwn_show_attr_lio_version(
++	struct target_fabric_configfs *tf,
++	char *page)
++{
++	return sprintf(page, "RisingTide Systems Linux-iSCSI Target "ISCSIT_V=
+ERSION"\n");
++}
++
++TF_WWN_ATTR_RO(lio_target, lio_version);
++
++static struct configfs_attribute *lio_target_wwn_attrs[] =3D {
++	&lio_target_wwn_lio_version.attr,
++	NULL,
++};
++
++struct se_wwn *lio_target_call_coreaddtiqn(
++	struct target_fabric_configfs *tf,
++	struct config_group *group,
++	const char *name)
++{
++	struct config_group *stats_cg;
++	struct iscsi_tiqn *tiqn;
++
++	tiqn =3D iscsit_add_tiqn((unsigned char *)name);
++	if (IS_ERR(tiqn))
++		return ERR_PTR(PTR_ERR(tiqn));
++	/*
++	 * Setup struct iscsi_wwn_stat_grps for se_wwn->fabric_stat_group.
++	 */
++	stats_cg =3D &tiqn->tiqn_wwn.fabric_stat_group;
++
++	stats_cg->default_groups =3D kzalloc(sizeof(struct config_group) * 6,
++				GFP_KERNEL);
++	if (!stats_cg->default_groups) {
++		printk(KERN_ERR "Unable to allocate memory for"
++				" stats_cg->default_groups\n");
++		iscsit_del_tiqn(tiqn);
++		return ERR_PTR(-ENOMEM);
++	}
++
++	stats_cg->default_groups[0] =3D &WWN_STAT_GRPS(tiqn)->iscsi_instance_=
+group;
++	stats_cg->default_groups[1] =3D &WWN_STAT_GRPS(tiqn)->iscsi_sess_err_=
+group;
++	stats_cg->default_groups[2] =3D &WWN_STAT_GRPS(tiqn)->iscsi_tgt_attr_=
+group;
++	stats_cg->default_groups[3] =3D &WWN_STAT_GRPS(tiqn)->iscsi_login_sta=
+ts_group;
++	stats_cg->default_groups[4] =3D &WWN_STAT_GRPS(tiqn)->iscsi_logout_st=
+ats_group;
++	stats_cg->default_groups[5] =3D NULL;
++	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_instance_grou=
+p,
++			"iscsi_instance", &iscsi_stat_instance_cit);
++	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_sess_err_grou=
+p,
++			"iscsi_sess_err", &iscsi_stat_sess_err_cit);
++	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_tgt_attr_grou=
+p,
++			"iscsi_tgt_attr", &iscsi_stat_tgt_attr_cit);
++	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_login_stats_g=
+roup,
++			"iscsi_login_stats", &iscsi_stat_login_cit);
++	config_group_init_type_name(&WWN_STAT_GRPS(tiqn)->iscsi_logout_stats_=
+group,
++			"iscsi_logout_stats", &iscsi_stat_logout_cit);
++
++	printk(KERN_INFO "LIO_Target_ConfigFS: REGISTER -> %s\n", tiqn->tiqn)=
+;
++	printk(KERN_INFO "LIO_Target_ConfigFS: REGISTER -> Allocated Node:"
++			" %s\n", name);
++	return &tiqn->tiqn_wwn;
++}
++
++void lio_target_call_coredeltiqn(
++	struct se_wwn *wwn)
++{
++	struct iscsi_tiqn *tiqn =3D container_of(wwn, struct iscsi_tiqn, tiqn=
+_wwn);
++	struct config_item *df_item;
++	struct config_group *stats_cg;
++	int i;
++
++	stats_cg =3D &tiqn->tiqn_wwn.fabric_stat_group;
++	for (i =3D 0; stats_cg->default_groups[i]; i++) {
++		df_item =3D &stats_cg->default_groups[i]->cg_item;
++		stats_cg->default_groups[i] =3D NULL;
++		config_item_put(df_item);
++	}
++	kfree(stats_cg->default_groups);
++
++	printk(KERN_INFO "LIO_Target_ConfigFS: DEREGISTER -> %s\n",
++			tiqn->tiqn);
++	iscsit_del_tiqn(tiqn);
++}
++
++/* End LIO-Target TIQN struct contig_lio_target_cit */
++
++/* Start lio_target_discovery_auth_cit */
++
++#define DEF_DISC_AUTH_STR(name, flags)					\
++	__DEF_NACL_AUTH_STR(disc, name, flags)				\
++static ssize_t iscsi_disc_show_##name(					\
++	struct target_fabric_configfs *tf,				\
++	char *page)							\
++{									\
++	return __iscsi_disc_show_##name(&iscsit_global->discovery_acl,	\
++		page);							\
++}									\
++static ssize_t iscsi_disc_store_##name(					\
++	struct target_fabric_configfs *tf,				\
++	const char *page,						\
++	size_t count)							\
++{									\
++	return __iscsi_disc_store_##name(&iscsit_global->discovery_acl,	\
++		page, count);						\
++}
++
++#define DEF_DISC_AUTH_INT(name)						\
++	__DEF_NACL_AUTH_INT(disc, name)					\
++static ssize_t iscsi_disc_show_##name(					\
++	struct target_fabric_configfs *tf,				\
++	char *page)							\
++{									\
++	return __iscsi_disc_show_##name(&iscsit_global->discovery_acl,	\
++			page);						\
++}
++
++#define DISC_AUTH_ATTR(_name, _mode) TF_DISC_ATTR(iscsi, _name, _mode)
++#define DISC_AUTH_ATTR_RO(_name) TF_DISC_ATTR_RO(iscsi, _name)
++
++/*
++ * One-way authentication userid
++ */
++DEF_DISC_AUTH_STR(userid, NAF_USERID_SET);
++DISC_AUTH_ATTR(userid, S_IRUGO | S_IWUSR);
++/*
++ * One-way authentication password
++ */
++DEF_DISC_AUTH_STR(password, NAF_PASSWORD_SET);
++DISC_AUTH_ATTR(password, S_IRUGO | S_IWUSR);
++/*
++ * Enforce mutual authentication
++ */
++DEF_DISC_AUTH_INT(authenticate_target);
++DISC_AUTH_ATTR_RO(authenticate_target);
++/*
++ * Mutual authentication userid
++ */
++DEF_DISC_AUTH_STR(userid_mutual, NAF_USERID_IN_SET);
++DISC_AUTH_ATTR(userid_mutual, S_IRUGO | S_IWUSR);
++/*
++ * Mutual authentication password
++ */
++DEF_DISC_AUTH_STR(password_mutual, NAF_PASSWORD_IN_SET);
++DISC_AUTH_ATTR(password_mutual, S_IRUGO | S_IWUSR);
++
++/*
++ * enforce_discovery_auth
++ */
++static ssize_t iscsi_disc_show_enforce_discovery_auth(
++	struct target_fabric_configfs *tf,
++	char *page)
++{
++	struct iscsi_node_auth *discovery_auth =3D &iscsit_global->discovery_=
+acl.node_auth;
++
++	return sprintf(page, "%d\n", discovery_auth->enforce_discovery_auth);
++}
++
++static ssize_t iscsi_disc_store_enforce_discovery_auth(
++	struct target_fabric_configfs *tf,
++	const char *page,
++	size_t count)
++{
++	struct iscsi_param *param;
++	struct iscsi_portal_group *discovery_tpg =3D iscsit_global->discovery=
+_tpg;
++	char *endptr;
++	u32 op;
++
++	op =3D simple_strtoul(page, &endptr, 0);
++	if ((op !=3D 1) && (op !=3D 0)) {
++		printk(KERN_ERR "Illegal value for enforce_discovery_auth:"
++				" %u\n", op);
++		return -EINVAL;
++	}
++
++	if (!discovery_tpg) {
++		printk(KERN_ERR "iscsit_global->discovery_tpg is NULL\n");
++		return -EINVAL;
++	}
++
++	param =3D iscsi_find_param_from_key(AUTHMETHOD,
++				discovery_tpg->param_list);
++	if (!param)
++		return -EINVAL;
++
++	if (op) {
++		/*
++		 * Reset the AuthMethod key to CHAP.
++		 */
++		if (iscsi_update_param_value(param, CHAP) < 0)
++			return -EINVAL;
++
++		discovery_tpg->tpg_attrib.authentication =3D 1;
++		iscsit_global->discovery_acl.node_auth.enforce_discovery_auth =3D 1;
++		printk(KERN_INFO "LIO-CORE[0] Successfully enabled"
++			" authentication enforcement for iSCSI"
++			" Discovery TPG\n");
++	} else {
++		/*
++		 * Reset the AuthMethod key to CHAP,None
++		 */
++		if (iscsi_update_param_value(param, "CHAP,None") < 0)
++			return -EINVAL;
++
++		discovery_tpg->tpg_attrib.authentication =3D 0;
++		iscsit_global->discovery_acl.node_auth.enforce_discovery_auth =3D 0;
++		printk(KERN_INFO "LIO-CORE[0] Successfully disabled"
++			" authentication enforcement for iSCSI"
++			" Discovery TPG\n");
++	}
++
++	return count;
++}
++
++DISC_AUTH_ATTR(enforce_discovery_auth, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *lio_target_discovery_auth_attrs[] =3D=
+ {
++	&iscsi_disc_userid.attr,
++	&iscsi_disc_password.attr,
++	&iscsi_disc_authenticate_target.attr,
++	&iscsi_disc_userid_mutual.attr,
++	&iscsi_disc_password_mutual.attr,
++	&iscsi_disc_enforce_discovery_auth.attr,
++	NULL,
++};
++
++/* End lio_target_discovery_auth_cit */
++
++/* Start functions for target_core_fabric_ops */
++
++static char *iscsi_get_fabric_name(void)
++{
++	return "iSCSI";
++}
++
++static u32 iscsi_get_task_tag(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	return cmd->init_task_tag;
++}
++
++static int iscsi_get_cmd_state(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	return cmd->i_state;
++}
++
++static void iscsi_new_cmd_failure(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	if (cmd->immediate_data || cmd->unsolicited_data)
++		complete(&cmd->unsolicited_data_comp);
++}
++
++static int iscsi_is_state_remove(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	return (cmd->i_state =3D=3D ISTATE_REMOVE);
++}
++
++static int lio_sess_logged_in(struct se_session *se_sess)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++	int ret;
++	/*
++	 * Called with spin_lock_bh(&tpg_lock); and
++	 * spin_lock(&se_tpg->session_lock); held.
++	 */
++	spin_lock(&sess->conn_lock);
++	ret =3D (sess->session_state !=3D TARG_SESS_STATE_LOGGED_IN);
++	spin_unlock(&sess->conn_lock);
++
++	return ret;
++}
++
++static u32 lio_sess_get_index(struct se_session *se_sess)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++
++	return sess->session_index;
++}
++
++static u32 lio_sess_get_initiator_sid(
++	struct se_session *se_sess,
++	unsigned char *buf,
++	u32 size)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++	/*
++	 * iSCSI Initiator Session Identifier from RFC-3720.
++	 */
++	return snprintf(buf, size, "%02x%02x%02x%02x%02x%02x",
++		sess->isid[0], sess->isid[1], sess->isid[2],
++		sess->isid[3], sess->isid[4], sess->isid[5]);
++}
++
++static int lio_queue_data_in(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	cmd->i_state =3D ISTATE_SEND_DATAIN;
++	iscsit_add_cmd_to_response_queue(cmd, cmd->conn, cmd->i_state);
++	return 0;
++}
++
++static int lio_write_pending(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	if (cmd->immediate_data || cmd->unsolicited_data)
++		complete(&cmd->unsolicited_data_comp);
++	else {
++		if (iscsit_build_r2ts_for_cmd(cmd, cmd->conn, 1) < 0)
++			return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
++	}
++
++	return 0;
++}
++
++static int lio_write_pending_status(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	int ret;
++
++	spin_lock_bh(&cmd->istate_lock);
++	ret =3D !(cmd->cmd_flags & ICF_GOT_LAST_DATAOUT);
++	spin_unlock_bh(&cmd->istate_lock);
++
++	return ret;
++}
++
++static int lio_queue_status(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	cmd->i_state =3D ISTATE_SEND_STATUS;
++	iscsit_add_cmd_to_response_queue(cmd, cmd->conn, cmd->i_state);
++	return 0;
++}
++
++static u16 lio_set_fabric_sense_len(struct se_cmd *se_cmd, u32 sense_l=
+ength)
++{
++	unsigned char *buffer =3D se_cmd->sense_buffer;
++	/*
++	 * From RFC-3720 10.4.7.  Data Segment - Sense and Response Data Segm=
+ent
++	 * 16-bit SenseLength.
++	 */
++	buffer[0] =3D ((sense_length >> 8) & 0xff);
++	buffer[1] =3D (sense_length & 0xff);
++	/*
++	 * Return two byte offset into allocated sense_buffer.
++	 */
++	return 2;
++}
++
++static u16 lio_get_fabric_sense_len(void)
++{
++	/*
++	 * Return two byte offset into allocated sense_buffer.
++	 */
++	return 2;
++}
++
++static int lio_queue_tm_rsp(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	cmd->i_state =3D ISTATE_SEND_TASKMGTRSP;
++	iscsit_add_cmd_to_response_queue(cmd, cmd->conn, cmd->i_state);
++	return 0;
++}
++
++static char *lio_tpg_get_endpoint_wwn(struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return &tpg->tpg_tiqn->tiqn[0];
++}
++
++static u16 lio_tpg_get_tag(struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return tpg->tpgt;
++}
++
++static u32 lio_tpg_get_default_depth(struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return ISCSI_TPG_ATTRIB(tpg)->default_cmdsn_depth;
++}
++
++static int lio_tpg_check_demo_mode(struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return ISCSI_TPG_ATTRIB(tpg)->generate_node_acls;
++}
++
++static int lio_tpg_check_demo_mode_cache(struct se_portal_group *se_tp=
+g)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return ISCSI_TPG_ATTRIB(tpg)->cache_dynamic_acls;
++}
++
++static int lio_tpg_check_demo_mode_write_protect(
++	struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return ISCSI_TPG_ATTRIB(tpg)->demo_mode_write_protect;
++}
++
++static int lio_tpg_check_prod_mode_write_protect(
++	struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return ISCSI_TPG_ATTRIB(tpg)->prod_mode_write_protect;
++}
++
++static void lio_tpg_release_fabric_acl(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_acl)
++{
++	struct iscsi_node_acl *acl =3D container_of(se_acl,
++				struct iscsi_node_acl, se_node_acl);
++	kfree(acl);
++}
++
++/*
++ * Called with spin_lock_bh(struct se_portal_group->session_lock) held=
+=2E.
++ *
++ * Also, this function calls iscsit_inc_session_usage_count() on the
++ * struct iscsi_session in question.
++ */
++static int lio_tpg_shutdown_session(struct se_session *se_sess)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++
++	spin_lock(&sess->conn_lock);
++	if (atomic_read(&sess->session_fall_back_to_erl0) ||
++	    atomic_read(&sess->session_logout) ||
++	    (sess->time2retain_timer_flags & ISCSI_TF_EXPIRED)) {
++		spin_unlock(&sess->conn_lock);
++		return 0;
++	}
++	atomic_set(&sess->session_reinstatement, 1);
++	spin_unlock(&sess->conn_lock);
++
++	iscsit_inc_session_usage_count(sess);
++	iscsit_stop_time2retain_timer(sess);
++
++	return 1;
++}
++
++/*
++ * Calls iscsit_dec_session_usage_count() as inverse of
++ * lio_tpg_shutdown_session()
++ */
++static void lio_tpg_close_session(struct se_session *se_sess)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++	/*
++	 * If the iSCSI Session for the iSCSI Initiator Node exists,
++	 * forcefully shutdown the iSCSI NEXUS.
++	 */
++	iscsit_stop_session(sess, 1, 1);
++	iscsit_dec_session_usage_count(sess);
++	iscsit_close_session(sess);
++}
++
++static void lio_tpg_stop_session(
++	struct se_session *se_sess,
++	int sess_sleep,
++	int conn_sleep)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++
++	iscsit_stop_session(sess, sess_sleep, conn_sleep);
++}
++
++static void lio_tpg_fall_back_to_erl0(struct se_session *se_sess)
++{
++	struct iscsi_session *sess =3D se_sess->fabric_sess_ptr;
++
++	iscsit_fall_back_to_erl0(sess);
++}
++
++static u32 lio_tpg_get_inst_index(struct se_portal_group *se_tpg)
++{
++	struct iscsi_portal_group *tpg =3D se_tpg->se_tpg_fabric_ptr;
++
++	return tpg->tpg_tiqn->tiqn_index;
++}
++
++static void lio_set_default_node_attributes(struct se_node_acl *se_acl=
+)
++{
++	struct iscsi_node_acl *acl =3D container_of(se_acl, struct iscsi_node=
+_acl,
++				se_node_acl);
++
++	ISCSI_NODE_ATTRIB(acl)->nacl =3D acl;
++	iscsit_set_default_node_attribues(acl);
++}
++
++static int iscsi_allocate_iovecs_for_cmd(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	u32 iov_count =3D (se_cmd->t_task.t_tasks_se_num =3D=3D 0) ? 1 :
++				se_cmd->t_task.t_tasks_se_num;
++
++	iov_count +=3D TRANSPORT_IOV_DATA_BUFFER;
++
++	cmd->iov_data =3D kzalloc(iov_count * sizeof(struct kvec), GFP_KERNEL=
+);
++	if (!cmd->iov_data)
++		return -ENOMEM;
++
++	cmd->orig_iov_data_count =3D iov_count;
++	return 0;
++}
++
++static void lio_release_cmd_direct(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	iscsit_release_cmd(cmd);
++}
++
++static void lio_release_cmd(struct se_cmd *se_cmd)
++{
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++
++	iscsit_release_cmd(cmd);
++}
++
++/* End functions for target_core_fabric_ops */
++
++int iscsi_target_register_configfs(void)
++{
++	struct target_fabric_configfs *fabric;
++	int ret;
++
++	lio_target_fabric_configfs =3D NULL;
++	fabric =3D target_fabric_configfs_init(THIS_MODULE, "iscsi");
++	if (IS_ERR(fabric)) {
++		printk(KERN_ERR "target_fabric_configfs_init() for"
++				" LIO-Target failed!\n");
++		return PTR_ERR(fabric);
++	}
++	/*
++	 * Setup the fabric API of function pointers used by target_core_mod.=
+=2E
++	 */
++	fabric->tf_ops.get_fabric_name =3D &iscsi_get_fabric_name;
++	fabric->tf_ops.get_fabric_proto_ident =3D &iscsi_get_fabric_proto_ide=
+nt;
++	fabric->tf_ops.tpg_get_wwn =3D &lio_tpg_get_endpoint_wwn;
++	fabric->tf_ops.tpg_get_tag =3D &lio_tpg_get_tag;
++	fabric->tf_ops.tpg_get_default_depth =3D &lio_tpg_get_default_depth;
++	fabric->tf_ops.tpg_get_pr_transport_id =3D &iscsi_get_pr_transport_id=
+;
++	fabric->tf_ops.tpg_get_pr_transport_id_len =3D
++				&iscsi_get_pr_transport_id_len;
++	fabric->tf_ops.tpg_parse_pr_out_transport_id =3D
++				&iscsi_parse_pr_out_transport_id;
++	fabric->tf_ops.tpg_check_demo_mode =3D &lio_tpg_check_demo_mode;
++	fabric->tf_ops.tpg_check_demo_mode_cache =3D
++				&lio_tpg_check_demo_mode_cache;
++	fabric->tf_ops.tpg_check_demo_mode_write_protect =3D
++				&lio_tpg_check_demo_mode_write_protect;
++	fabric->tf_ops.tpg_check_prod_mode_write_protect =3D
++				&lio_tpg_check_prod_mode_write_protect;
++	fabric->tf_ops.tpg_alloc_fabric_acl =3D &lio_tpg_alloc_fabric_acl;
++	fabric->tf_ops.tpg_release_fabric_acl =3D &lio_tpg_release_fabric_acl=
+;
++	fabric->tf_ops.tpg_get_inst_index =3D &lio_tpg_get_inst_index;
++	/*
++	 * Use our local iscsi_allocate_iovecs_for_cmd() for the extra
++	 * callback in transport_generic_new_cmd() to allocate
++	 * iscsi_cmd->iov_data[] for Linux/Net kernel sockets operations.
++	 */
++	fabric->tf_ops.alloc_cmd_iovecs =3D &iscsi_allocate_iovecs_for_cmd;
++	fabric->tf_ops.release_cmd_to_pool =3D &lio_release_cmd;
++	fabric->tf_ops.release_cmd_direct =3D &lio_release_cmd_direct;
++	fabric->tf_ops.shutdown_session =3D &lio_tpg_shutdown_session;
++	fabric->tf_ops.close_session =3D &lio_tpg_close_session;
++	fabric->tf_ops.stop_session =3D &lio_tpg_stop_session;
++	fabric->tf_ops.fall_back_to_erl0 =3D &lio_tpg_fall_back_to_erl0;
++	fabric->tf_ops.sess_logged_in =3D &lio_sess_logged_in;
++	fabric->tf_ops.sess_get_index =3D &lio_sess_get_index;
++	fabric->tf_ops.sess_get_initiator_sid =3D &lio_sess_get_initiator_sid=
+;
++	fabric->tf_ops.write_pending =3D &lio_write_pending;
++	fabric->tf_ops.write_pending_status =3D &lio_write_pending_status;
++	fabric->tf_ops.set_default_node_attributes =3D
++				&lio_set_default_node_attributes;
++	fabric->tf_ops.get_task_tag =3D &iscsi_get_task_tag;
++	fabric->tf_ops.get_cmd_state =3D &iscsi_get_cmd_state;
++	fabric->tf_ops.new_cmd_failure =3D &iscsi_new_cmd_failure;
++	fabric->tf_ops.queue_data_in =3D &lio_queue_data_in;
++	fabric->tf_ops.queue_status =3D &lio_queue_status;
++	fabric->tf_ops.queue_tm_rsp =3D &lio_queue_tm_rsp;
++	fabric->tf_ops.set_fabric_sense_len =3D &lio_set_fabric_sense_len;
++	fabric->tf_ops.get_fabric_sense_len =3D &lio_get_fabric_sense_len;
++	fabric->tf_ops.is_state_remove =3D &iscsi_is_state_remove;
++	/*
++	 * Setup function pointers for generic logic in target_core_fabric_co=
+nfigfs.c
++	 */
++	fabric->tf_ops.fabric_make_wwn =3D &lio_target_call_coreaddtiqn;
++	fabric->tf_ops.fabric_drop_wwn =3D &lio_target_call_coredeltiqn;
++	fabric->tf_ops.fabric_make_tpg =3D &lio_target_tiqn_addtpg;
++	fabric->tf_ops.fabric_drop_tpg =3D &lio_target_tiqn_deltpg;
++	fabric->tf_ops.fabric_post_link	=3D NULL;
++	fabric->tf_ops.fabric_pre_unlink =3D NULL;
++	fabric->tf_ops.fabric_make_np =3D &lio_target_call_addnptotpg;
++	fabric->tf_ops.fabric_drop_np =3D &lio_target_call_delnpfromtpg;
++	fabric->tf_ops.fabric_make_nodeacl =3D &lio_target_make_nodeacl;
++	fabric->tf_ops.fabric_drop_nodeacl =3D &lio_target_drop_nodeacl;
++	/*
++	 * Setup default attribute lists for various fabric->tf_cit_tmpl
++	 * sturct config_item_type's
++	 */
++	TF_CIT_TMPL(fabric)->tfc_discovery_cit.ct_attrs =3D lio_target_discov=
+ery_auth_attrs;
++	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs =3D lio_target_wwn_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs =3D lio_target_tpg_att=
+rs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs =3D lio_target_tpg_a=
+ttrib_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs =3D lio_target_tpg_pa=
+ram_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs =3D lio_target_port=
+al_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs =3D lio_target_in=
+itiator_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs =3D lio_target_=
+nacl_attrib_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs =3D lio_target_na=
+cl_auth_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs =3D lio_target_n=
+acl_param_attrs;
++
++	ret =3D target_fabric_configfs_register(fabric);
++	if (ret < 0) {
++		printk(KERN_ERR "target_fabric_configfs_register() for"
++				" LIO-Target failed!\n");
++		target_fabric_configfs_free(fabric);
++		return ret;
++	}
++
++	lio_target_fabric_configfs =3D fabric;
++	printk(KERN_INFO "LIO_TARGET[0] - Set fabric ->"
++			" lio_target_fabric_configfs\n");
++	return 0;
++}
++
++
++void iscsi_target_deregister_configfs(void)
++{
++	if (!lio_target_fabric_configfs)
++		return;
++	/*
++	 * Shutdown discovery sessions and disable discovery TPG
++	 */
++	if (iscsit_global->discovery_tpg)
++		iscsit_tpg_disable_portal_group(iscsit_global->discovery_tpg, 1);
++
++	target_fabric_configfs_deregister(lio_target_fabric_configfs);
++	lio_target_fabric_configfs =3D NULL;
++	printk(KERN_INFO "LIO_TARGET[0] - Cleared"
++				" lio_target_fabric_configfs\n");
++}
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.h b/drivers/tar=
+get/iscsi/iscsi_target_configfs.h
 new file mode 100644
-index 0000000..b658857
+index 0000000..8cd5a63
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_tpg.c
-@@ -0,0 +1,760 @@
++++ b/drivers/target/iscsi/iscsi_target_configfs.h
+@@ -0,0 +1,7 @@
++#ifndef ISCSI_TARGET_CONFIGFS_H
++#define ISCSI_TARGET_CONFIGFS_H
++
++extern int iscsi_target_register_configfs(void);
++extern void iscsi_target_deregister_configfs(void);
++
++#endif /* ISCSI_TARGET_CONFIGFS_H */
+diff --git a/drivers/target/iscsi/iscsi_target_nodeattrib.c b/drivers/t=
+arget/iscsi/iscsi_target_nodeattrib.c
+new file mode 100644
+index 0000000..96072c7
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_nodeattrib.c
+@@ -0,0 +1,264 @@
 +/*********************************************************************=
 **********
-+ * This file contains iSCSI Target Portal Group related functions.
++ * This file contains the main functions related to Initiator Node Att=
+ributes.
 + *
 + * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
@@ -187,829 +2092,278 @@ y
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_configfs.h>
-+#include <target/target_core_tpg.h>
 +
 +#include "iscsi_target_debug.h"
 +#include "iscsi_target_core.h"
-+#include "iscsi_target_erl0.h"
-+#include "iscsi_target_login.h"
-+#include "iscsi_target_nodeattrib.h"
++#include "iscsi_target_device.h"
 +#include "iscsi_target_tpg.h"
 +#include "iscsi_target_util.h"
-+#include "iscsi_target.h"
-+#include "iscsi_target_parameters.h"
++#include "iscsi_target_nodeattrib.h"
 +
-+struct iscsi_portal_group *iscsit_alloc_portal_group(struct iscsi_tiqn=
- *tiqn, u16 tpgt)
++static inline char *iscsit_na_get_initiatorname(
++	struct iscsi_node_acl *nacl)
 +{
-+	struct iscsi_portal_group *tpg;
++	struct se_node_acl *se_nacl =3D &nacl->se_node_acl;
 +
-+	tpg =3D kzalloc(sizeof(struct iscsi_portal_group), GFP_KERNEL);
-+	if (!tpg) {
-+		printk(KERN_ERR "Unable to allocate struct iscsi_portal_group\n");
-+		return NULL;
-+	}
-+
-+	tpg->tpgt =3D tpgt;
-+	tpg->tpg_state =3D TPG_STATE_FREE;
-+	tpg->tpg_tiqn =3D tiqn;
-+	INIT_LIST_HEAD(&tpg->tpg_gnp_list);
-+	INIT_LIST_HEAD(&tpg->tpg_list);
-+	mutex_init(&tpg->tpg_access_lock);
-+	mutex_init(&tpg->np_login_lock);
-+	spin_lock_init(&tpg->tpg_state_lock);
-+	spin_lock_init(&tpg->tpg_np_lock);
-+
-+	return tpg;
++	return &se_nacl->initiatorname[0];
 +}
 +
-+static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *=
-);
-+
-+int iscsit_load_discovery_tpg(void)
++void iscsit_set_default_node_attribues(
++	struct iscsi_node_acl *acl)
 +{
-+	struct iscsi_param *param;
-+	struct iscsi_portal_group *tpg;
-+	int ret;
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
 +
-+	tpg =3D iscsit_alloc_portal_group(NULL, 1);
-+	if (!tpg) {
-+		printk(KERN_ERR "Unable to allocate struct iscsi_portal_group\n");
-+		return -1;
-+	}
-+
-+	ret =3D core_tpg_register(
-+			&lio_target_fabric_configfs->tf_ops,
-+			NULL, &tpg->tpg_se_tpg, (void *)tpg,
-+			TRANSPORT_TPG_TYPE_DISCOVERY);
-+	if (ret < 0) {
-+		kfree(tpg);
-+		return -1;
-+	}
-+
-+	tpg->sid =3D 1; /* First Assigned LIO Session ID */
-+	iscsit_set_default_tpg_attribs(tpg);
-+
-+	if (iscsi_create_default_params(&tpg->param_list) < 0)
-+		goto out;
-+	/*
-+	 * By default we disable authentication for discovery sessions,
-+	 * this can be changed with:
-+	 *
-+	 * /sys/kernel/config/target/iscsi/discovery_auth/enforce_discovery_a=
-uth
-+	 */
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param)
-+		goto out;
-+
-+	if (iscsi_update_param_value(param, "CHAP,None") < 0)
-+		goto out;
-+
-+	tpg->tpg_attrib.authentication =3D 0;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state  =3D TPG_STATE_ACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	iscsit_global->discovery_tpg =3D tpg;
-+	printk(KERN_INFO "CORE[0] - Allocated Discovery TPG\n");
-+
-+	return 0;
-+out:
-+	if (tpg->sid =3D=3D 1)
-+		core_tpg_deregister(&tpg->tpg_se_tpg);
-+	kfree(tpg);
-+	return -1;
++	a->dataout_timeout =3D NA_DATAOUT_TIMEOUT;
++	a->dataout_timeout_retries =3D NA_DATAOUT_TIMEOUT_RETRIES;
++	a->nopin_timeout =3D NA_NOPIN_TIMEOUT;
++	a->nopin_response_timeout =3D NA_NOPIN_RESPONSE_TIMEOUT;
++	a->random_datain_pdu_offsets =3D NA_RANDOM_DATAIN_PDU_OFFSETS;
++	a->random_datain_seq_offsets =3D NA_RANDOM_DATAIN_SEQ_OFFSETS;
++	a->random_r2t_offsets =3D NA_RANDOM_R2T_OFFSETS;
++	a->default_erl =3D NA_DEFAULT_ERL;
 +}
 +
-+void iscsit_release_discovery_tpg(void)
++extern int iscsit_na_dataout_timeout(
++	struct iscsi_node_acl *acl,
++	u32 dataout_timeout)
 +{
-+	struct iscsi_portal_group *tpg =3D iscsit_global->discovery_tpg;
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
 +
-+	if (!tpg)
-+		return;
-+
-+	core_tpg_deregister(&tpg->tpg_se_tpg);
-+
-+	kfree(tpg);
-+	iscsit_global->discovery_tpg =3D NULL;
-+}
-+
-+struct iscsi_portal_group *iscsit_get_tpg_from_np(
-+	struct iscsi_tiqn *tiqn,
-+	struct iscsi_np *np)
-+{
-+	struct iscsi_portal_group *tpg =3D NULL;
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	list_for_each_entry(tpg, &tiqn->tiqn_tpg_list, tpg_list) {
-+
-+		spin_lock(&tpg->tpg_state_lock);
-+		if (tpg->tpg_state =3D=3D TPG_STATE_FREE) {
-+			spin_unlock(&tpg->tpg_state_lock);
-+			continue;
-+		}
-+		spin_unlock(&tpg->tpg_state_lock);
-+
-+		spin_lock(&tpg->tpg_np_lock);
-+		list_for_each_entry(tpg_np, &tpg->tpg_gnp_list, tpg_np_list) {
-+			if (tpg_np->tpg_np =3D=3D np) {
-+				spin_unlock(&tpg->tpg_np_lock);
-+				spin_unlock(&tiqn->tiqn_tpg_lock);
-+				return tpg;
-+			}
-+		}
-+		spin_unlock(&tpg->tpg_np_lock);
-+	}
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return NULL;
-+}
-+
-+int iscsit_get_tpg(
-+	struct iscsi_portal_group *tpg)
-+{
-+	int ret;
-+
-+	ret =3D mutex_lock_interruptible(&tpg->tpg_access_lock);
-+	return ((ret !=3D 0) || signal_pending(current)) ? -1 : 0;
-+}
-+
-+void iscsit_put_tpg(struct iscsi_portal_group *tpg)
-+{
-+	mutex_unlock(&tpg->tpg_access_lock);
-+}
-+
-+static void iscsit_clear_tpg_np_login_thread(
-+	struct iscsi_tpg_np *tpg_np,
-+	struct iscsi_portal_group *tpg)
-+{
-+	if (!tpg_np->tpg_np) {
-+		printk(KERN_ERR "struct iscsi_tpg_np->tpg_np is NULL!\n");
-+		return;
-+	}
-+
-+	iscsit_reset_np_thread(tpg_np->tpg_np, tpg_np, tpg);
-+}
-+
-+void iscsit_clear_tpg_np_login_threads(
-+	struct iscsi_portal_group *tpg)
-+{
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_for_each_entry(tpg_np, &tpg->tpg_gnp_list, tpg_np_list) {
-+		if (!tpg_np->tpg_np) {
-+			printk(KERN_ERR "struct iscsi_tpg_np->tpg_np is NULL!\n");
-+			continue;
-+		}
-+		spin_unlock(&tpg->tpg_np_lock);
-+		iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
-+		spin_lock(&tpg->tpg_np_lock);
-+	}
-+	spin_unlock(&tpg->tpg_np_lock);
-+}
-+
-+void iscsit_tpg_dump_params(struct iscsi_portal_group *tpg)
-+{
-+	iscsi_print_params(tpg->param_list);
-+}
-+
-+static void iscsit_set_default_tpg_attribs(struct iscsi_portal_group *=
-tpg)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	a->authentication =3D TA_AUTHENTICATION;
-+	a->login_timeout =3D TA_LOGIN_TIMEOUT;
-+	a->netif_timeout =3D TA_NETIF_TIMEOUT;
-+	a->default_cmdsn_depth =3D TA_DEFAULT_CMDSN_DEPTH;
-+	a->generate_node_acls =3D TA_GENERATE_NODE_ACLS;
-+	a->cache_dynamic_acls =3D TA_CACHE_DYNAMIC_ACLS;
-+	a->demo_mode_write_protect =3D TA_DEMO_MODE_WRITE_PROTECT;
-+	a->prod_mode_write_protect =3D TA_PROD_MODE_WRITE_PROTECT;
-+}
-+
-+int iscsit_tpg_add_portal_group(struct iscsi_tiqn *tiqn, struct iscsi_=
-portal_group *tpg)
-+{
-+	if (tpg->tpg_state !=3D TPG_STATE_FREE) {
-+		printk(KERN_ERR "Unable to add iSCSI Target Portal Group: %d"
-+			" while not in TPG_STATE_FREE state.\n", tpg->tpgt);
-+		return -EEXIST;
-+	}
-+	iscsit_set_default_tpg_attribs(tpg);
-+
-+	if (iscsi_create_default_params(&tpg->param_list) < 0)
-+		goto err_out;
-+
-+	ISCSI_TPG_ATTRIB(tpg)->tpg =3D tpg;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state	=3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	list_add_tail(&tpg->tpg_list, &tiqn->tiqn_tpg_list);
-+	tiqn->tiqn_ntpgs++;
-+	printk(KERN_INFO "CORE[%s]_TPG[%hu] - Added iSCSI Target Portal Group=
-\n",
-+			tiqn->tiqn, tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+err_out:
-+	if (tpg->param_list) {
-+		iscsi_release_param_list(tpg->param_list);
-+		tpg->param_list =3D NULL;
-+	}
-+	kfree(tpg);
-+	return -ENOMEM;
-+}
-+
-+int iscsit_tpg_del_portal_group(
-+	struct iscsi_tiqn *tiqn,
-+	struct iscsi_portal_group *tpg,
-+	int force)
-+{
-+	u8 old_state =3D tpg->tpg_state;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state =3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	if (iscsit_release_sessions_for_tpg(tpg, force) < 0) {
-+		printk(KERN_ERR "Unable to delete iSCSI Target Portal Group:"
-+			" %hu while active sessions exist, and force=3D0\n",
-+			tpg->tpgt);
-+		tpg->tpg_state =3D old_state;
-+		return -EPERM;
-+	}
-+
-+	core_tpg_clear_object_luns(&tpg->tpg_se_tpg);
-+
-+	if (tpg->param_list) {
-+		iscsi_release_param_list(tpg->param_list);
-+		tpg->param_list =3D NULL;
-+	}
-+
-+	core_tpg_deregister(&tpg->tpg_se_tpg);
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	tpg->tpg_state =3D TPG_STATE_FREE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_ntpgs--;
-+	list_del(&tpg->tpg_list);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	printk(KERN_INFO "CORE[%s]_TPG[%hu] - Deleted iSCSI Target Portal Gro=
-up\n",
-+			tiqn->tiqn, tpg->tpgt);
-+
-+	kfree(tpg);
-+	return 0;
-+}
-+
-+int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *tpg)
-+{
-+	struct iscsi_param *param;
-+	struct iscsi_tiqn *tiqn =3D tpg->tpg_tiqn;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	if (tpg->tpg_state =3D=3D TPG_STATE_ACTIVE) {
-+		printk(KERN_ERR "iSCSI target portal group: %hu is already"
-+			" active, ignoring request.\n", tpg->tpgt);
-+		spin_unlock(&tpg->tpg_state_lock);
++	if (dataout_timeout > NA_DATAOUT_TIMEOUT_MAX) {
++		printk(KERN_ERR "Requested DataOut Timeout %u larger than"
++			" maximum %u\n", dataout_timeout,
++			NA_DATAOUT_TIMEOUT_MAX);
 +		return -EINVAL;
-+	}
-+	/*
-+	 * Make sure that AuthMethod does not contain None as an option
-+	 * unless explictly disabled.  Set the default to CHAP if authenticat=
-ion
-+	 * is enforced (as per default), and remove the NONE option.
-+	 */
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param) {
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -ENOMEM;
-+	}
-+
-+	if (ISCSI_TPG_ATTRIB(tpg)->authentication) {
-+		if (!strcmp(param->value, NONE))
-+			if (iscsi_update_param_value(param, CHAP) < 0) {
-+				spin_unlock(&tpg->tpg_state_lock);
-+				return -ENOMEM;
-+			}
-+		if (iscsit_ta_authentication(tpg, 1) < 0) {
-+			spin_unlock(&tpg->tpg_state_lock);
-+			return -ENOMEM;
-+		}
-+	}
-+
-+	tpg->tpg_state =3D TPG_STATE_ACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_active_tpgs++;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Enabled iSCSI Target Portal Group\=
-n",
-+			tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+}
-+
-+int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *tpg, in=
-t force)
-+{
-+	struct iscsi_tiqn *tiqn;
-+	u8 old_state =3D tpg->tpg_state;
-+
-+	spin_lock(&tpg->tpg_state_lock);
-+	if (tpg->tpg_state =3D=3D TPG_STATE_INACTIVE) {
-+		printk(KERN_ERR "iSCSI Target Portal Group: %hu is already"
-+			" inactive, ignoring request.\n", tpg->tpgt);
-+		spin_unlock(&tpg->tpg_state_lock);
-+		return -EINVAL;
-+	}
-+	tpg->tpg_state =3D TPG_STATE_INACTIVE;
-+	spin_unlock(&tpg->tpg_state_lock);
-+
-+	iscsit_clear_tpg_np_login_threads(tpg);
-+
-+	if (iscsit_release_sessions_for_tpg(tpg, force) < 0) {
-+		spin_lock(&tpg->tpg_state_lock);
-+		tpg->tpg_state =3D old_state;
-+		spin_unlock(&tpg->tpg_state_lock);
-+		printk(KERN_ERR "Unable to disable iSCSI Target Portal Group:"
-+			" %hu while active sessions exist, and force=3D0\n",
-+			tpg->tpgt);
-+		return -EPERM;
-+	}
-+
-+	tiqn =3D tpg->tpg_tiqn;
-+	if (!tiqn || (tpg =3D=3D iscsit_global->discovery_tpg))
-+		return 0;
-+
-+	spin_lock(&tiqn->tiqn_tpg_lock);
-+	tiqn->tiqn_active_tpgs--;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Disabled iSCSI Target Portal Group=
-\n",
-+			tpg->tpgt);
-+	spin_unlock(&tiqn->tiqn_tpg_lock);
-+
-+	return 0;
-+}
-+
-+struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(
-+	struct iscsi_session *sess)
-+{
-+	struct se_session *se_sess =3D sess->se_sess;
-+	struct se_node_acl *se_nacl =3D se_sess->se_node_acl;
-+	struct iscsi_node_acl *acl =3D container_of(se_nacl, struct iscsi_nod=
-e_acl,
-+					se_node_acl);
-+
-+	return &acl->node_attrib;
-+}
-+
-+struct iscsi_tpg_np *iscsit_tpg_locate_child_np(
-+	struct iscsi_tpg_np *tpg_np,
-+	int network_transport)
-+{
-+	struct iscsi_tpg_np *tpg_np_child, *tpg_np_child_tmp;
-+
-+	spin_lock(&tpg_np->tpg_np_parent_lock);
-+	list_for_each_entry_safe(tpg_np_child, tpg_np_child_tmp,
-+			&tpg_np->tpg_np_parent_list, tpg_np_child_list) {
-+		if (tpg_np_child->tpg_np->np_network_transport =3D=3D
-+				network_transport) {
-+			spin_unlock(&tpg_np->tpg_np_parent_lock);
-+			return tpg_np_child;
-+		}
-+	}
-+	spin_unlock(&tpg_np->tpg_np_parent_lock);
-+
-+	return NULL;
-+}
-+
-+struct iscsi_tpg_np *iscsit_tpg_add_network_portal(
-+	struct iscsi_portal_group *tpg,
-+	struct __kernel_sockaddr_storage *sockaddr,
-+	char *ip_str,
-+	struct iscsi_tpg_np *tpg_np_parent,
-+	int network_transport)
-+{
-+	struct iscsi_np *np;
-+	struct iscsi_tpg_np *tpg_np;
-+
-+	tpg_np =3D kzalloc(sizeof(struct iscsi_tpg_np), GFP_KERNEL);
-+	if (!tpg_np) {
-+		printk(KERN_ERR "Unable to allocate memory for"
-+				" struct iscsi_tpg_np.\n");
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	np =3D iscsit_add_np(sockaddr, ip_str, network_transport);
-+	if (IS_ERR(np)) {
-+		kfree(tpg_np);
-+		return ERR_CAST(np);
-+	}
-+
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_list);
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_child_list);
-+	INIT_LIST_HEAD(&tpg_np->tpg_np_parent_list);
-+	spin_lock_init(&tpg_np->tpg_np_parent_lock);
-+	tpg_np->tpg_np		=3D np;
-+	tpg_np->tpg		=3D tpg;
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_add_tail(&tpg_np->tpg_np_list, &tpg->tpg_gnp_list);
-+	tpg->num_tpg_nps++;
-+	if (tpg->tpg_tiqn)
-+		tpg->tpg_tiqn->tiqn_num_tpg_nps++;
-+	spin_unlock(&tpg->tpg_np_lock);
-+
-+	if (tpg_np_parent) {
-+		tpg_np->tpg_np_parent =3D tpg_np_parent;
-+		spin_lock(&tpg_np_parent->tpg_np_parent_lock);
-+		list_add_tail(&tpg_np->tpg_np_child_list,
-+			&tpg_np_parent->tpg_np_parent_list);
-+		spin_unlock(&tpg_np_parent->tpg_np_parent_lock);
-+	}
-+
-+	printk(KERN_INFO "CORE[%s] - Added Network Portal: %s:%hu,%hu on %s\n=
-",
-+		tpg->tpg_tiqn->tiqn, np->np_ip, np->np_port, tpg->tpgt,
-+		(np->np_network_transport =3D=3D ISCSI_TCP) ? "TCP" : "SCTP");
-+
-+	return tpg_np;
-+}
-+
-+static int iscsit_tpg_release_np(
-+	struct iscsi_tpg_np *tpg_np,
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_np *np)
-+{
-+	iscsit_clear_tpg_np_login_thread(tpg_np, tpg);
-+
-+	printk(KERN_INFO "CORE[%s] - Removed Network Portal: %s:%hu,%hu on %s=
-\n",
-+		tpg->tpg_tiqn->tiqn, np->np_ip, np->np_port, tpg->tpgt,
-+		(np->np_network_transport =3D=3D ISCSI_TCP) ? "TCP" : "SCTP");
-+
-+	tpg_np->tpg_np =3D NULL;
-+	tpg_np->tpg =3D NULL;
-+	kfree(tpg_np);
-+	/*
-+	 * iscsit_del_np() will shutdown struct iscsi_np when last TPG refere=
-nce is released.
-+	 */
-+	return iscsit_del_np(np);
-+}
-+
-+int iscsit_tpg_del_network_portal(
-+	struct iscsi_portal_group *tpg,
-+	struct iscsi_tpg_np *tpg_np)
-+{
-+	struct iscsi_np *np;
-+	struct iscsi_tpg_np *tpg_np_child, *tpg_np_child_tmp;
-+	int ret =3D 0;
-+
-+	np =3D tpg_np->tpg_np;
-+	if (!np) {
-+		printk(KERN_ERR "Unable to locate struct iscsi_np from"
-+				" struct iscsi_tpg_np\n");
++	} else if (dataout_timeout < NA_DATAOUT_TIMEOUT_MIX) {
++		printk(KERN_ERR "Requested DataOut Timeout %u smaller than"
++			" minimum %u\n", dataout_timeout,
++			NA_DATAOUT_TIMEOUT_MIX);
 +		return -EINVAL;
 +	}
 +
-+	if (!tpg_np->tpg_np_parent) {
-+		/*
-+		 * We are the parent tpg network portal.  Release all of the
-+		 * child tpg_np's (eg: the non ISCSI_TCP ones) on our parent
-+		 * list first.
-+		 */
-+		list_for_each_entry_safe(tpg_np_child, tpg_np_child_tmp,
-+				&tpg_np->tpg_np_parent_list,
-+				tpg_np_child_list) {
-+			ret =3D iscsit_tpg_del_network_portal(tpg, tpg_np_child);
-+			if (ret < 0)
-+				printk(KERN_ERR "iscsit_tpg_del_network_portal()"
-+					" failed: %d\n", ret);
-+		}
-+	} else {
-+		/*
-+		 * We are not the parent ISCSI_TCP tpg network portal.  Release
-+		 * our own network portals from the child list.
-+		 */
-+		spin_lock(&tpg_np->tpg_np_parent->tpg_np_parent_lock);
-+		list_del(&tpg_np->tpg_np_child_list);
-+		spin_unlock(&tpg_np->tpg_np_parent->tpg_np_parent_lock);
-+	}
-+
-+	spin_lock(&tpg->tpg_np_lock);
-+	list_del(&tpg_np->tpg_np_list);
-+	tpg->num_tpg_nps--;
-+	if (tpg->tpg_tiqn)
-+		tpg->tpg_tiqn->tiqn_num_tpg_nps--;
-+	spin_unlock(&tpg->tpg_np_lock);
-+
-+	return iscsit_tpg_release_np(tpg_np, tpg, np);
-+}
-+
-+int iscsit_tpg_set_initiator_node_queue_depth(
-+	struct iscsi_portal_group *tpg,
-+	unsigned char *initiatorname,
-+	u32 queue_depth,
-+	int force)
-+{
-+	return core_tpg_set_initiator_node_queue_depth(&tpg->tpg_se_tpg,
-+		initiatorname, queue_depth, force);
-+}
-+
-+int iscsit_ta_authentication(struct iscsi_portal_group *tpg, u32 authe=
-ntication)
-+{
-+	unsigned char buf1[256], buf2[256], *none =3D NULL;
-+	int len;
-+	struct iscsi_param *param;
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((authentication !=3D 1) && (authentication !=3D 0)) {
-+		printk(KERN_ERR "Illegal value for authentication parameter:"
-+			" %u, ignoring request.\n", authentication);
-+		return -1;
-+	}
-+
-+	memset(buf1, 0, sizeof(buf1));
-+	memset(buf2, 0, sizeof(buf2));
-+
-+	param =3D iscsi_find_param_from_key(AUTHMETHOD, tpg->param_list);
-+	if (!param)
-+		return -EINVAL;
-+
-+	if (authentication) {
-+		snprintf(buf1, sizeof(buf1), "%s", param->value);
-+		none =3D strstr(buf1, NONE);
-+		if (!none)
-+			goto out;
-+		if (!strncmp(none + 4, ",", 1)) {
-+			if (!strcmp(buf1, none))
-+				sprintf(buf2, "%s", none+5);
-+			else {
-+				none--;
-+				*none =3D '\0';
-+				len =3D sprintf(buf2, "%s", buf1);
-+				none +=3D 5;
-+				sprintf(buf2 + len, "%s", none);
-+			}
-+		} else {
-+			none--;
-+			*none =3D '\0';
-+			sprintf(buf2, "%s", buf1);
-+		}
-+		if (iscsi_update_param_value(param, buf2) < 0)
-+			return -EINVAL;
-+	} else {
-+		snprintf(buf1, sizeof(buf1), "%s", param->value);
-+		none =3D strstr(buf1, NONE);
-+		if ((none))
-+			goto out;
-+		strncat(buf1, ",", strlen(","));
-+		strncat(buf1, NONE, strlen(NONE));
-+		if (iscsi_update_param_value(param, buf1) < 0)
-+			return -EINVAL;
-+	}
-+
-+out:
-+	a->authentication =3D authentication;
-+	printk(KERN_INFO "%s iSCSI Authentication Methods for TPG: %hu.\n",
-+		a->authentication ? "Enforcing" : "Disabling", tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_login_timeout(
-+	struct iscsi_portal_group *tpg,
-+	u32 login_timeout)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (login_timeout > TA_LOGIN_TIMEOUT_MAX) {
-+		printk(KERN_ERR "Requested Login Timeout %u larger than maximum"
-+			" %u\n", login_timeout, TA_LOGIN_TIMEOUT_MAX);
-+		return -EINVAL;
-+	} else if (login_timeout < TA_LOGIN_TIMEOUT_MIN) {
-+		printk(KERN_ERR "Requested Logout Timeout %u smaller than"
-+			" minimum %u\n", login_timeout, TA_LOGIN_TIMEOUT_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->login_timeout =3D login_timeout;
-+	printk(KERN_INFO "Set Logout Timeout to %u for Target Portal Group"
-+		" %hu\n", a->login_timeout, tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_netif_timeout(
-+	struct iscsi_portal_group *tpg,
-+	u32 netif_timeout)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (netif_timeout > TA_NETIF_TIMEOUT_MAX) {
-+		printk(KERN_ERR "Requested Network Interface Timeout %u larger"
-+			" than maximum %u\n", netif_timeout,
-+				TA_NETIF_TIMEOUT_MAX);
-+		return -EINVAL;
-+	} else if (netif_timeout < TA_NETIF_TIMEOUT_MIN) {
-+		printk(KERN_ERR "Requested Network Interface Timeout %u smaller"
-+			" than minimum %u\n", netif_timeout,
-+				TA_NETIF_TIMEOUT_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->netif_timeout =3D netif_timeout;
-+	printk(KERN_INFO "Set Network Interface Timeout to %u for"
-+		" Target Portal Group %hu\n", a->netif_timeout, tpg->tpgt);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_generate_node_acls(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->generate_node_acls =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Generate Initiator Portal Group AC=
-Ls: %s\n",
-+		tpg->tpgt, (a->generate_node_acls) ? "Enabled" : "Disabled");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_default_cmdsn_depth(
-+	struct iscsi_portal_group *tpg,
-+	u32 tcq_depth)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if (tcq_depth > TA_DEFAULT_CMDSN_DEPTH_MAX) {
-+		printk(KERN_ERR "Requested Default Queue Depth: %u larger"
-+			" than maximum %u\n", tcq_depth,
-+				TA_DEFAULT_CMDSN_DEPTH_MAX);
-+		return -EINVAL;
-+	} else if (tcq_depth < TA_DEFAULT_CMDSN_DEPTH_MIN) {
-+		printk(KERN_ERR "Requested Default Queue Depth: %u smaller"
-+			" than minimum %u\n", tcq_depth,
-+				TA_DEFAULT_CMDSN_DEPTH_MIN);
-+		return -EINVAL;
-+	}
-+
-+	a->default_cmdsn_depth =3D tcq_depth;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Set Default CmdSN TCQ Depth to %u\=
-n",
-+		tpg->tpgt, a->default_cmdsn_depth);
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_cache_dynamic_acls(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->cache_dynamic_acls =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Cache Dynamic Initiator Portal Gro=
-up"
-+		" ACLs %s\n", tpg->tpgt, (a->cache_dynamic_acls) ?
-+		"Enabled" : "Disabled");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_demo_mode_write_protect(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->demo_mode_write_protect =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Demo Mode Write Protect bit: %s\n"=
-,
-+		tpg->tpgt, (a->demo_mode_write_protect) ? "ON" : "OFF");
-+
-+	return 0;
-+}
-+
-+int iscsit_ta_prod_mode_write_protect(
-+	struct iscsi_portal_group *tpg,
-+	u32 flag)
-+{
-+	struct iscsi_tpg_attrib *a =3D &tpg->tpg_attrib;
-+
-+	if ((flag !=3D 0) && (flag !=3D 1)) {
-+		printk(KERN_ERR "Illegal value %d\n", flag);
-+		return -EINVAL;
-+	}
-+
-+	a->prod_mode_write_protect =3D flag;
-+	printk(KERN_INFO "iSCSI_TPG[%hu] - Production Mode Write Protect bit:=
++	a->dataout_timeout =3D dataout_timeout;
++	TRACE(TRACE_NODEATTRIB, "Set DataOut Timeout to %u for Initiator Node=
 "
-+		" %s\n", tpg->tpgt, (a->prod_mode_write_protect) ?
-+		"ON" : "OFF");
++		" %s\n", a->dataout_timeout, iscsit_na_get_initiatorname(acl));
 +
 +	return 0;
 +}
-diff --git a/drivers/target/iscsi/iscsi_target_tpg.h b/drivers/target/i=
-scsi/iscsi_target_tpg.h
++
++extern int iscsit_na_dataout_timeout_retries(
++	struct iscsi_node_acl *acl,
++	u32 dataout_timeout_retries)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++
++	if (dataout_timeout_retries > NA_DATAOUT_TIMEOUT_RETRIES_MAX) {
++		printk(KERN_ERR "Requested DataOut Timeout Retries %u larger"
++			" than maximum %u", dataout_timeout_retries,
++				NA_DATAOUT_TIMEOUT_RETRIES_MAX);
++		return -EINVAL;
++	} else if (dataout_timeout_retries < NA_DATAOUT_TIMEOUT_RETRIES_MIN) =
+{
++		printk(KERN_ERR "Requested DataOut Timeout Retries %u smaller"
++			" than minimum %u", dataout_timeout_retries,
++				NA_DATAOUT_TIMEOUT_RETRIES_MIN);
++		return -EINVAL;
++	}
++
++	a->dataout_timeout_retries =3D dataout_timeout_retries;
++	TRACE(TRACE_NODEATTRIB, "Set DataOut Timeout Retries to %u for"
++		" Initiator Node %s\n", a->dataout_timeout_retries,
++		iscsit_na_get_initiatorname(acl));
++
++	return 0;
++}
++
++extern int iscsit_na_nopin_timeout(
++	struct iscsi_node_acl *acl,
++	u32 nopin_timeout)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++	struct iscsi_session *sess;
++	struct iscsi_conn *conn;
++	struct se_node_acl *se_nacl =3D &a->nacl->se_node_acl;
++	struct se_session *se_sess;
++	u32 orig_nopin_timeout =3D a->nopin_timeout;
++
++	if (nopin_timeout > NA_NOPIN_TIMEOUT_MAX) {
++		printk(KERN_ERR "Requested NopIn Timeout %u larger than maximum"
++			" %u\n", nopin_timeout, NA_NOPIN_TIMEOUT_MAX);
++		return -EINVAL;
++	} else if ((nopin_timeout < NA_NOPIN_TIMEOUT_MIN) &&
++		   (nopin_timeout !=3D 0)) {
++		printk(KERN_ERR "Requested NopIn Timeout %u smaller than"
++			" minimum %u and not 0\n", nopin_timeout,
++			NA_NOPIN_TIMEOUT_MIN);
++		return -EINVAL;
++	}
++
++	a->nopin_timeout =3D nopin_timeout;
++	TRACE(TRACE_NODEATTRIB, "Set NopIn Timeout to %u for Initiator"
++		" Node %s\n", a->nopin_timeout,
++		iscsit_na_get_initiatorname(acl));
++	/*
++	 * Reenable disabled nopin_timeout timer for all iSCSI connections.
++	 */
++	if (!orig_nopin_timeout) {
++		spin_lock_bh(&se_nacl->nacl_sess_lock);
++		se_sess =3D se_nacl->nacl_sess;
++		if (se_sess) {
++			sess =3D (struct iscsi_session *)se_sess->fabric_sess_ptr;
++
++			spin_lock(&sess->conn_lock);
++			list_for_each_entry(conn, &sess->sess_conn_list,
++					conn_list) {
++				if (conn->conn_state !=3D
++						TARG_CONN_STATE_LOGGED_IN)
++					continue;
++
++				spin_lock(&conn->nopin_timer_lock);
++				__iscsit_start_nopin_timer(conn);
++				spin_unlock(&conn->nopin_timer_lock);
++			}
++			spin_unlock(&sess->conn_lock);
++		}
++		spin_unlock_bh(&se_nacl->nacl_sess_lock);
++	}
++
++	return 0;
++}
++
++extern int iscsit_na_nopin_response_timeout(
++	struct iscsi_node_acl *acl,
++	u32 nopin_response_timeout)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++
++	if (nopin_response_timeout > NA_NOPIN_RESPONSE_TIMEOUT_MAX) {
++		printk(KERN_ERR "Requested NopIn Response Timeout %u larger"
++			" than maximum %u\n", nopin_response_timeout,
++				NA_NOPIN_RESPONSE_TIMEOUT_MAX);
++		return -EINVAL;
++	} else if (nopin_response_timeout < NA_NOPIN_RESPONSE_TIMEOUT_MIN) {
++		printk(KERN_ERR "Requested NopIn Response Timeout %u smaller"
++			" than minimum %u\n", nopin_response_timeout,
++				NA_NOPIN_RESPONSE_TIMEOUT_MIN);
++		return -EINVAL;
++	}
++
++	a->nopin_response_timeout =3D nopin_response_timeout;
++	TRACE(TRACE_NODEATTRIB, "Set NopIn Response Timeout to %u for"
++		" Initiator Node %s\n", a->nopin_timeout,
++		iscsit_na_get_initiatorname(acl));
++
++	return 0;
++}
++
++extern int iscsit_na_random_datain_pdu_offsets(
++	struct iscsi_node_acl *acl,
++	u32 random_datain_pdu_offsets)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++
++	if (random_datain_pdu_offsets !=3D 0 && random_datain_pdu_offsets !=3D=
+ 1) {
++		printk(KERN_ERR "Requested Random DataIN PDU Offsets: %u not"
++			" 0 or 1\n", random_datain_pdu_offsets);
++		return -EINVAL;
++	}
++
++	a->random_datain_pdu_offsets =3D random_datain_pdu_offsets;
++	TRACE(TRACE_NODEATTRIB, "Set Random DataIN PDU Offsets to %u for"
++		" Initiator Node %s\n", a->random_datain_pdu_offsets,
++		iscsit_na_get_initiatorname(acl));
++
++	return 0;
++}
++
++extern int iscsit_na_random_datain_seq_offsets(
++	struct iscsi_node_acl *acl,
++	u32 random_datain_seq_offsets)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++
++	if (random_datain_seq_offsets !=3D 0 && random_datain_seq_offsets !=3D=
+ 1) {
++		printk(KERN_ERR "Requested Random DataIN Sequence Offsets: %u"
++			" not 0 or 1\n", random_datain_seq_offsets);
++		return -EINVAL;
++	}
++
++	a->random_datain_seq_offsets =3D random_datain_seq_offsets;
++	TRACE(TRACE_NODEATTRIB, "Set Random DataIN Sequence Offsets to %u for=
+"
++		" Initiator Node %s\n", a->random_datain_seq_offsets,
++		iscsit_na_get_initiatorname(acl));
++
++	return 0;
++}
++
++extern int iscsit_na_random_r2t_offsets(
++	struct iscsi_node_acl *acl,
++	u32 random_r2t_offsets)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++
++	if (random_r2t_offsets !=3D 0 && random_r2t_offsets !=3D 1) {
++		printk(KERN_ERR "Requested Random R2T Offsets: %u not"
++			" 0 or 1\n", random_r2t_offsets);
++		return -EINVAL;
++	}
++
++	a->random_r2t_offsets =3D random_r2t_offsets;
++	TRACE(TRACE_NODEATTRIB, "Set Random R2T Offsets to %u for"
++		" Initiator Node %s\n", a->random_r2t_offsets,
++		iscsit_na_get_initiatorname(acl));
++
++	return 0;
++}
++
++extern int iscsit_na_default_erl(
++	struct iscsi_node_acl *acl,
++	u32 default_erl)
++{
++	struct iscsi_node_attrib *a =3D &acl->node_attrib;
++
++	if (default_erl !=3D 0 && default_erl !=3D 1 && default_erl !=3D 2) {
++		printk(KERN_ERR "Requested default ERL: %u not 0, 1, or 2\n",
++				default_erl);
++		return -EINVAL;
++	}
++
++	a->default_erl =3D default_erl;
++	TRACE(TRACE_NODEATTRIB, "Set use ERL0 flag to %u for Initiator"
++		" Node %s\n", a->default_erl,
++		iscsit_na_get_initiatorname(acl));
++
++	return 0;
++}
+diff --git a/drivers/target/iscsi/iscsi_target_nodeattrib.h b/drivers/t=
+arget/iscsi/iscsi_target_nodeattrib.h
 new file mode 100644
-index 0000000..dda48c1
+index 0000000..c970b326
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_tpg.h
-@@ -0,0 +1,41 @@
-+#ifndef ISCSI_TARGET_TPG_H
-+#define ISCSI_TARGET_TPG_H
++++ b/drivers/target/iscsi/iscsi_target_nodeattrib.h
+@@ -0,0 +1,14 @@
++#ifndef ISCSI_TARGET_NODEATTRIB_H
++#define ISCSI_TARGET_NODEATTRIB_H
 +
-+extern struct iscsi_portal_group *iscsit_alloc_portal_group(struct isc=
-si_tiqn *, u16);
-+extern int iscsit_load_discovery_tpg(void);
-+extern void iscsit_release_discovery_tpg(void);
-+extern struct iscsi_portal_group *iscsit_get_tpg_from_np(struct iscsi_=
-tiqn *,
-+			struct iscsi_np *);
-+extern int iscsit_get_tpg(struct iscsi_portal_group *);
-+extern void iscsit_put_tpg(struct iscsi_portal_group *);
-+extern void iscsit_clear_tpg_np_login_threads(struct iscsi_portal_grou=
-p *);
-+extern void iscsit_tpg_dump_params(struct iscsi_portal_group *);
-+extern int iscsit_tpg_add_portal_group(struct iscsi_tiqn *, struct isc=
-si_portal_group *);
-+extern int iscsit_tpg_del_portal_group(struct iscsi_tiqn *, struct isc=
-si_portal_group *,
-+			int);
-+extern int iscsit_tpg_enable_portal_group(struct iscsi_portal_group *)=
++extern void iscsit_set_default_node_attribues(struct iscsi_node_acl *)=
 ;
-+extern int iscsit_tpg_disable_portal_group(struct iscsi_portal_group *=
-, int);
-+extern struct iscsi_node_acl *iscsit_tpg_add_initiator_node_acl(
-+			struct iscsi_portal_group *, const char *, u32);
-+extern void iscsit_tpg_del_initiator_node_acl(struct iscsi_portal_grou=
-p *,
-+			struct se_node_acl *);
-+extern struct iscsi_node_attrib *iscsit_tpg_get_node_attrib(struct isc=
-si_session *);
-+extern void iscsit_tpg_del_external_nps(struct iscsi_tpg_np *);
-+extern struct iscsi_tpg_np *iscsit_tpg_locate_child_np(struct iscsi_tp=
-g_np *, int);
-+extern struct iscsi_tpg_np *iscsit_tpg_add_network_portal(struct iscsi=
-_portal_group *,
-+			struct __kernel_sockaddr_storage *, char *, struct iscsi_tpg_np *,
-+			int);
-+extern int iscsit_tpg_del_network_portal(struct iscsi_portal_group *,
-+			struct iscsi_tpg_np *);
-+extern int iscsit_tpg_set_initiator_node_queue_depth(struct iscsi_port=
-al_group *,
-+			unsigned char *, u32, int);
-+extern int iscsit_ta_authentication(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_login_timeout(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_netif_timeout(struct iscsi_portal_group *, u32);
-+extern int iscsit_ta_generate_node_acls(struct iscsi_portal_group *, u=
-32);
-+extern int iscsit_ta_default_cmdsn_depth(struct iscsi_portal_group *, =
++extern int iscsit_na_dataout_timeout(struct iscsi_node_acl *, u32);
++extern int iscsit_na_dataout_timeout_retries(struct iscsi_node_acl *, =
 u32);
-+extern int iscsit_ta_cache_dynamic_acls(struct iscsi_portal_group *, u=
++extern int iscsit_na_nopin_timeout(struct iscsi_node_acl *, u32);
++extern int iscsit_na_nopin_response_timeout(struct iscsi_node_acl *, u=
 32);
-+extern int iscsit_ta_demo_mode_write_protect(struct iscsi_portal_group=
- *, u32);
-+extern int iscsit_ta_prod_mode_write_protect(struct iscsi_portal_group=
- *, u32);
++extern int iscsit_na_random_datain_pdu_offsets(struct iscsi_node_acl *=
+, u32);
++extern int iscsit_na_random_datain_seq_offsets(struct iscsi_node_acl *=
+, u32);
++extern int iscsit_na_random_r2t_offsets(struct iscsi_node_acl *, u32);
++extern int iscsit_na_default_erl(struct iscsi_node_acl *, u32);
 +
-+#endif /* ISCSI_TARGET_TPG_H */
++#endif /* ISCSI_TARGET_NODEATTRIB_H */
 --=20
 1.7.5.1
