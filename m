@@ -1,61 +1,62 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 08/23] use register_chrdev_ids in drivers/scsi/
-Date: Sat, 21 May 2011 10:59:10 +0300
-Message-ID: <4DD770CE.7040001@panasas.com>
-References: <1305840792-25877-1-git-send-email-jim.cromie@gmail.com> <1305840792-25877-9-git-send-email-jim.cromie@gmail.com> <4DD68BE0.6030003@panasas.com> <BANLkTi=6qWpUX6wMi5egRhi+qigaGPgnFQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Bug 35282] BUG() in 2.6.38.6
+Date: Sun, 22 May 2011 00:30:50 +0400
+Message-ID: <1306009851.12379.16.camel@mulgrave.site>
+References: <bug-35282-11613@https.bugzilla.kernel.org/>
+	 <201105191944.p4JJiVVm029690@demeter1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:18124 "EHLO
-	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578Ab1EUH7Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2011 03:59:16 -0400
-In-Reply-To: <BANLkTi=6qWpUX6wMi5egRhi+qigaGPgnFQ@mail.gmail.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50249 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754440Ab1EUUa6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 May 2011 16:30:58 -0400
+In-Reply-To: <201105191944.p4JJiVVm029690@demeter1.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jim Cromie <jim.cromie@gmail.com>
-Cc: linux-kernel@vger.kernel.org, gregkh@suse.de, Doug Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Benny Halevy <bhalevy@panasas.com>, osd-dev@open-osd.org, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On 05/21/2011 07:21 AM, Jim Cromie wrote:
-> On Fri, May 20, 2011 at 9:42 AM, Boaz Harrosh <bharrosh@panasas.com> wrote:
->> On 05/20/2011 12:33 AM, Jim Cromie wrote:
->>> cc: Doug Gilbert <dgilbert@interlog.com>
->>> cc: linux-scsi@vger.kernel.org
->>> cc: Benny Halevy <bhalevy@panasas.com>
->>> cc: Boaz Harrosh <bharrosh@panasas.com>
->>> cc: osd-dev@open-osd.org
->>> cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
->>> cc: linux-scsi@vger.kernel.org
->>> Signed-off-by: Jim Cromie <jim.cromie@gmail.com>
->>> ---
->>>  drivers/scsi/osd/osd_uld.c |    6 +++---
->>>  drivers/scsi/pmcraid.c     |    3 +--
->>>  drivers/scsi/sg.c          |    6 +++---
->>>  drivers/scsi/st.c          |    7 +++----
->>>  4 files changed, 10 insertions(+), 12 deletions(-)
->>
->> Do you have a git tree with all these that I can pull
->> and test?
->>
+On Thu, 2011-05-19 at 19:44 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> --- Comment #2 from Fabio Coatti <fabio.coatti@gmail.com>  2011-05-19 19:44:30 ---
+> Thanks for your answer :)
 > 
-> I do, its at git://github.com/jimc/linux-2.6.git  chrdev-pub1 branch
-> 
-> For you, I think there are 3 patches of interest
-> 1 - adds new call, deprecates old.
-> if you build with this applied and CONFIG_ENABLE_WARN_DEPRECATED=y
-> you should get a deprecated warning
-> 2 - reimplements alloc_chardev_region() with register_chardev_ids()
-> your driver may be using register_chardev_region(), if so this is uninteresting.
-> 3 - patch that adapts your scsi parts.
-> 
->> Thanks
->> Boaz
->>
-> 
-> no, thank you
-> Jim Cromie
+> Just tried (patch applied, compiled with make mrproper beforehand), but the
+> result is pretty much the same.
+> Interesting enough, If I reboot after using 2.6.38.5 for a while, the first
+> boot on .6 is successful; following boots fails as shown so I guess that some
+> hardware status can have a role into this, even if I don't know what happens.
+> Here you can find the last capture with netconsole, with patch applied. (btw,
+> how I can 100% sure to have applied it properly, besides checking the kernel
+> date?)
 
-Grate many thanks. I will test it next week and confirm.
+Well, the first patch was just a guess.  It looks like another queue
+guard problem.  However, I think this one is that the code thinks a dead
+queue isn't stopped.  Could you try this patch instead?
 
-Boaz
+Thanks,
+
+James
+
+---
+
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2ad95fa..8166845 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -473,7 +473,9 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ }
+ 
+ #define blk_queue_tagged(q)	test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_flags)
+-#define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
++#define blk_queue_stopped(q)	\
++		(test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags) || \
++		 test_bit(QUEUE_FLAG_DEAD, &(q)->queue_flags))
+ #define blk_queue_nomerges(q)	test_bit(QUEUE_FLAG_NOMERGES, &(q)->queue_flags)
+ #define blk_queue_noxmerges(q)	\
+ 	test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
+
+
