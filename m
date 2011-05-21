@@ -1,23 +1,32 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 35282] BUG() in 2.6.38.6
-Date: Sun, 22 May 2011 00:30:50 +0400
-Message-ID: <1306009851.12379.16.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 35282] BUG() in 2.6.38.6
+Date: Sat, 21 May 2011 20:31:21 GMT
+Message-ID: <201105212031.p4LKVLfD009667@demeter2.kernel.org>
 References: <bug-35282-11613@https.bugzilla.kernel.org/>
-	 <201105191944.p4JJiVVm029690@demeter1.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50249 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754440Ab1EUUa6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 May 2011 16:30:58 -0400
-In-Reply-To: <201105191944.p4JJiVVm029690@demeter1.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:37822 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601Ab1EUUbV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 21 May 2011 16:31:21 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p4LKVLsF009668
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 21 May 2011 20:31:21 GMT
+In-Reply-To: <bug-35282-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=35282
+
+
+
+
+
+--- Comment #3 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2011-05-21 20:31:19 ---
+Reply-To: James.Bottomley@HansenPartnership.com
 
 On Thu, 2011-05-19 at 19:44 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -47,16 +56,22 @@ diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
 index 2ad95fa..8166845 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -473,7 +473,9 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+@@ -473,7 +473,9 @@ static inline void queue_flag_clear(unsigned int flag,
+struct request_queue *q)
  }
- 
- #define blk_queue_tagged(q)	test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_flags)
--#define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
-+#define blk_queue_stopped(q)	\
-+		(test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags) || \
-+		 test_bit(QUEUE_FLAG_DEAD, &(q)->queue_flags))
- #define blk_queue_nomerges(q)	test_bit(QUEUE_FLAG_NOMERGES, &(q)->queue_flags)
- #define blk_queue_noxmerges(q)	\
- 	test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
 
+ #define blk_queue_tagged(q)    test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_flags)
+-#define blk_queue_stopped(q)    test_bit(QUEUE_FLAG_STOPPED,
+&(q)->queue_flags)
++#define blk_queue_stopped(q)    \
++        (test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags) || \
++         test_bit(QUEUE_FLAG_DEAD, &(q)->queue_flags))
+ #define blk_queue_nomerges(q)    test_bit(QUEUE_FLAG_NOMERGES,
+&(q)->queue_flags)
+ #define blk_queue_noxmerges(q)    \
+     test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
 
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
