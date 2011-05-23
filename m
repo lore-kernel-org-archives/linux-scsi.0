@@ -1,49 +1,67 @@
 From: akpm@linux-foundation.org
-Subject: [patch 3/6] osst: wrong index used in inner loop
-Date: Mon, 23 May 2011 15:29:12 -0700
-Message-ID: <201105232229.p4NMTDTP016152@imap1.linux-foundation.org>
+Subject: [patch 5/6] drivers/scsi/megaraid.c: fix sparse warnings
+Date: Mon, 23 May 2011 15:29:14 -0700
+Message-ID: <201105232229.p4NMTEmw016158@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:41989 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:40195 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757828Ab1EWW3R (ORCPT
+	by vger.kernel.org with ESMTP id S1757770Ab1EWW3U (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2011 18:29:17 -0400
+	Mon, 23 May 2011 18:29:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, roel.kluin@gmail.com, osst@riede.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, megaraidlinux@lsi.com, viro@ZenIV.linux.org.uk
 
-From: Roel Kluin <roel.kluin@gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Index i was already used in the outer loop.  Fixes a potentially-infinite
-loop.
+Fix sparse warnings of right shift bigger than source value size:
 
-[akpm@linux-foundation.org: coding-style fixes]
-Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
-Cc: Willem Riede <osst@riede.org>
+drivers/scsi/megaraid.c:311:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:313:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:317:67: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:319:67: warning: right shift by bigger than source value
+
+Patch suggestion from email by Al Viro:
+
+"Since both are claimed to be strings, I really suspect that this >> 8 is
+misspelled >> 4 and they have a character followed by pair of two-digit
+packed decimals in there..."
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/osst.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/osst.c~osst-wrong-index-used-in-inner-loop drivers/scsi/osst.c
---- a/drivers/scsi/osst.c~osst-wrong-index-used-in-inner-loop
-+++ a/drivers/scsi/osst.c
-@@ -4702,8 +4702,9 @@ static int __os_scsi_tape_open(struct in
- 				STp->partition = STp->new_partition = 0;
- 				if (STp->can_partitions)
- 					STp->nbr_partitions = 1;  /* This guess will be updated later if necessary */
--				for (i=0; i < ST_NBR_PARTITIONS; i++) {
--					STps = &(STp->ps[i]);
-+				int j;
-+				for (j = 0; j < ST_NBR_PARTITIONS; j++) {
-+					STps = &(STp->ps[j]);
- 					STps->rw = ST_IDLE;
- 					STps->eof = ST_NOEOF;
- 					STps->at_sm = 0;
+diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings
++++ a/drivers/scsi/megaraid.c
+@@ -310,15 +310,15 @@ mega_query_adapter(adapter_t *adapter)
+ 	if (adapter->product_info.subsysvid == HP_SUBSYS_VID) {
+ 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
+ 			 adapter->product_info.fw_version[2],
+-			 adapter->product_info.fw_version[1] >> 8,
++			 adapter->product_info.fw_version[1] >> 4,
+ 			 adapter->product_info.fw_version[1] & 0x0f,
+-			 adapter->product_info.fw_version[0] >> 8,
++			 adapter->product_info.fw_version[0] >> 4,
+ 			 adapter->product_info.fw_version[0] & 0x0f);
+ 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
+ 			 adapter->product_info.bios_version[2],
+-			 adapter->product_info.bios_version[1] >> 8,
++			 adapter->product_info.bios_version[1] >> 4,
+ 			 adapter->product_info.bios_version[1] & 0x0f,
+-			 adapter->product_info.bios_version[0] >> 8,
++			 adapter->product_info.bios_version[0] >> 4,
+ 			 adapter->product_info.bios_version[0] & 0x0f);
+ 	} else {
+ 		memcpy(adapter->fw_version,
 _
