@@ -1,67 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 5/6] drivers/scsi/megaraid.c: fix sparse warnings
-Date: Mon, 23 May 2011 15:29:14 -0700
-Message-ID: <201105232229.p4NMTEmw016158@imap1.linux-foundation.org>
+Subject: [patch 6/6] drivers/scsi/ultrastor.c: fix asm snippet
+Date: Mon, 23 May 2011 15:29:15 -0700
+Message-ID: <201105232229.p4NMTFGS016161@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:40195 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33163 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757770Ab1EWW3U (ORCPT
+	by vger.kernel.org with ESMTP id S1757826Ab1EWW3e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2011 18:29:20 -0400
+	Mon, 23 May 2011 18:29:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, megaraidlinux@lsi.com, viro@ZenIV.linux.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, samuel.thibault@ens-lyon.org, deweerdt@free.fr
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Samuel Thibault <samuel.thibault@ens-lyon.org>
 
-Fix sparse warnings of right shift bigger than source value size:
+Commit 1292500b ("ultrastor: clean up inline asm warnings") replaced
 
-drivers/scsi/megaraid.c:311:65: warning: right shift by bigger than source value
-drivers/scsi/megaraid.c:313:65: warning: right shift by bigger than source value
-drivers/scsi/megaraid.c:317:67: warning: right shift by bigger than source value
-drivers/scsi/megaraid.c:319:67: warning: right shift by bigger than source value
+"=m" (*field) : "1" (*field)
 
-Patch suggestion from email by Al Viro:
+with
 
-"Since both are claimed to be strings, I really suspect that this >> 8 is
-misspelled >> 4 and they have a character followed by pair of two-digit
-packed decimals in there..."
+"=m" (*field) :
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+with comment "The following patch fixes it by using the '+' operator on
+the (*field) operand, marking it as read-write to gcc."
+'+' was actually forgotten.  This really puts it.
+
+Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Cc: Frederik Deweerdt <deweerdt@free.fr>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/ultrastor.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings
-+++ a/drivers/scsi/megaraid.c
-@@ -310,15 +310,15 @@ mega_query_adapter(adapter_t *adapter)
- 	if (adapter->product_info.subsysvid == HP_SUBSYS_VID) {
- 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
- 			 adapter->product_info.fw_version[2],
--			 adapter->product_info.fw_version[1] >> 8,
-+			 adapter->product_info.fw_version[1] >> 4,
- 			 adapter->product_info.fw_version[1] & 0x0f,
--			 adapter->product_info.fw_version[0] >> 8,
-+			 adapter->product_info.fw_version[0] >> 4,
- 			 adapter->product_info.fw_version[0] & 0x0f);
- 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
- 			 adapter->product_info.bios_version[2],
--			 adapter->product_info.bios_version[1] >> 8,
-+			 adapter->product_info.bios_version[1] >> 4,
- 			 adapter->product_info.bios_version[1] & 0x0f,
--			 adapter->product_info.bios_version[0] >> 8,
-+			 adapter->product_info.bios_version[0] >> 4,
- 			 adapter->product_info.bios_version[0] & 0x0f);
- 	} else {
- 		memcpy(adapter->fw_version,
+diff -puN drivers/scsi/ultrastor.c~drivers-scsi-ultrastorc-fix-asm-snippet drivers/scsi/ultrastor.c
+--- a/drivers/scsi/ultrastor.c~drivers-scsi-ultrastorc-fix-asm-snippet
++++ a/drivers/scsi/ultrastor.c
+@@ -307,7 +307,7 @@ static inline int find_and_clear_bit_16(
+ 	"0: bsfw %1,%w0\n\t"
+ 	"btr %0,%1\n\t"
+ 	"jnc 0b"
+-	: "=&r" (rv), "=m" (*field) :);
++	: "=&r" (rv), "+m" (*field) :);
+ 
+   return rv;
+ }
 _
