@@ -1,37 +1,76 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [RFC] ib_srpt: initial .40-rc1 drivers/infiniband/ulp/srpt merge
-Date: Sun, 22 May 2011 21:14:23 +0200
-Message-ID: <BANLkTimK+da8N1uTyCmYqggHzd-+yZSTig@mail.gmail.com>
-References: <1305682604-21383-1-git-send-email-nab@linux-iscsi.org>
- <BANLkTi=e+v7PLcSc8GNov-TOXFF7rurXew@mail.gmail.com> <20110518170556.GB2595@obsidianresearch.com>
- <BANLkTikOCeNcDvoCM=BOSxQaSECFhJ05Gg@mail.gmail.com> <20110519174420.GD12525@obsidianresearch.com>
- <BANLkTikOsqazAE-mHFrM+=4GTs+249Ae5Q@mail.gmail.com> <20110519184113.GE12525@obsidianresearch.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 35682] New: killing requests for dead queue
+Date: Mon, 23 May 2011 10:34:04 GMT
+Message-ID: <bug-35682-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:42185 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237Ab1EVTOo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 May 2011 15:14:44 -0400
-In-Reply-To: <20110519184113.GE12525@obsidianresearch.com>
+Received: from demeter1.kernel.org ([140.211.167.39]:40006 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793Ab1EWKeG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2011 06:34:06 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p4NAY41G026860
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 23 May 2011 10:34:04 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-rmda <linux-rdma@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: linux-scsi@vger.kernel.org
 
-On Thu, May 19, 2011 at 8:41 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> This is why in the IB verbs architecture nearly everything is tied to
-> a *device*, not a port.
+https://bugzilla.kernel.org/show_bug.cgi?id=35682
 
-LIO has a feature called "access control lists" that allows to define
-which initiators are allowed to log in to a target. For a single-rail
-HCA it makes most sense to configure that information per HCA. For a
-dual-rail HCA the most flexible approach is to allow the user to
-configure ACLs per HCA port. That made me wonder whether it is
-possible to find out from software whether a dual-port HCA is
-single-rail or dual-rail. A quick glance at struct ib_device_attr and
-struct ib_port_attr in <rdma/ib_verbs.h> didn't yield any field usable
-for this purpose. Did I overlook something ?
+           Summary: killing requests for dead queue
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.39
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: zb@jabster.pl
+        Regression: No
 
-Bart.
+
+When yesterday booted newly compiled 2.6.39 kernel up - directly after the
+compilation - there wasn't anything bad. But today in the morning system was
+unable to complete boot-up, staying at the message: "sde: 
+killing requests for dead queue".
+
+Maybe new kernel doesn't like my USB card reader? "cat /proc/scsi/scsi" shows:
+
+Attached devices:
+Host: scsi0 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: STM3320418AS     Rev: CC38
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi2 Channel: 00 Id: 00 Lun: 00
+  Vendor: HL-DT-ST Model: DVD-RAM GH22LS30 Rev: 1.01
+  Type:   CD-ROM                           ANSI  SCSI revision: 05
+Host: scsi4 Channel: 00 Id: 00 Lun: 00
+  Vendor: Generic  Model: USB SD Reader    Rev: 1.00
+  Type:   Direct-Access                    ANSI  SCSI revision: 00
+Host: scsi4 Channel: 00 Id: 00 Lun: 01
+  Vendor: Generic  Model: USB CF Reader    Rev: 1.01
+  Type:   Direct-Access                    ANSI  SCSI revision: 00
+Host: scsi4 Channel: 00 Id: 00 Lun: 02
+  Vendor: Generic  Model: USB SM Reader    Rev: 1.02
+  Type:   Direct-Access                    ANSI  SCSI revision: 00
+Host: scsi4 Channel: 00 Id: 00 Lun: 03
+  Vendor: Generic  Model: USB MS Reader    Rev: 1.03
+  Type:   Direct-Access                    ANSI  SCSI revision: 00
+
+No memory cards neither USB sticks were inserted during boot-up.
+
+It seems, that issue discussed in the thread, which I've found at:
+
+https://lkml.org/lkml/2011/4/11/175
+
+...still hasn't been resolved. Well, at least not completely.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
