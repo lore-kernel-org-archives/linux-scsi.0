@@ -1,43 +1,46 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Signed-off-by for a recent patch
-Date: Mon, 23 May 2011 13:19:48 -0700
-Message-ID: <1306181988.29724.42.camel@haakon2.linux-iscsi.org>
-References: <F71742D1-0CE9-4646-91C7-B681E4E865A6@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] MAINTAINERS: Add drivers/target/ entry
+Date: Mon, 23 May 2011 13:56:26 -0700
+Message-ID: <1306184186-11551-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47467 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933517Ab1EWU2H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2011 16:28:07 -0400
-In-Reply-To: <F71742D1-0CE9-4646-91C7-B681E4E865A6@intel.com>
+Received: from nm21-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.176]:20172
+	"HELO nm21-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752532Ab1EWU5H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 May 2011 16:57:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-iscsi-target-dev@googlegroups.com" <linux-iscsi-target-dev@googlegroups.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Mon, 2011-05-23 at 13:23 -0700, Rustad, Mark D wrote:
-> James,
-> 
-> For the upstream commit, could you please add:
-> 
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> 
-> to the patch Nicholas sent last week with the subject:
-> 
-> [PATCH-v5 02/13] iscsi: Add Serial Number Arithmetic LT and GT into
-> iscsi_proto.h
-> 
-> I contributed the change in the algorithm for comparing the sequence
-> numbers that this patch implements.
-> 
-> Thank you.
-> 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Thanks again Mark!!
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ MAINTAINERS |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Best Regards,
-
---nab
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 20be668..a831859 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6039,6 +6039,16 @@ F:	Documentation/accounting/taskstats*
+ F:	include/linux/taskstats*
+ F:	kernel/taskstats.c
+ 
++TARGET SUBSYSTEM
++M:	Nicholas A. Bellinger <nab@linux-iscsi.org>
++L:	linux-scsi@vger.kernel.org
++L:	http://groups.google.com/group/linux-iscsi-target-dev
++W:	http://www.linux-iscsi.org
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/nab/lio-core-2.6.git master
++S:	Supported
++F:	drivers/target/
++F:	include/target/
++
+ TC CLASSIFIER
+ M:	Jamal Hadi Salim <hadi@cyberus.ca>
+ L:	netdev@vger.kernel.org
+-- 
+1.7.5.2
 
