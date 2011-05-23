@@ -1,79 +1,65 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm: Integrity errors should not cause failover
-Date: Mon, 23 May 2011 14:17:24 -0400
-Message-ID: <20110523181723.GA18971@redhat.com>
-References: <yq18vu4fw9e.fsf@sermon.lab.mkp.net>
- <20110518121156.GB18433@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH][SCSI] target: Fix double test of inquiry_prod
+Date: Mon, 23 May 2011 12:21:26 -0700
+Message-ID: <1306178486.29724.18.camel@haakon2.linux-iscsi.org>
+References: <1303920422-31142-1-git-send-email-roland@kernel.org>
+	 <BANLkTinKNKk3uW=+rDYd_9Bdqi7CXWWkag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:64718 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756474Ab1EWSRc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2011 14:17:32 -0400
-Content-Disposition: inline
-In-Reply-To: <20110518121156.GB18433@redhat.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:59447 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756190Ab1EWT3n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2011 15:29:43 -0400
+In-Reply-To: <BANLkTinKNKk3uW=+rDYd_9Bdqi7CXWWkag@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "Alasdair G. Kergon" <agk@redhat.com>, linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, Andy Grover <agrover@redhat.com>
 
-On Wed, May 18 2011 at  8:11am -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
-
-> On Wed, May 18 2011 at 12:49am -0400,
-> Martin K. Petersen <martin.petersen@oracle.com> wrote:
-> 
-> > 
-> > Integrity errors need to be passed to the owner of the integrity
-> > metadata for processing. Consequently EILSEQ should be passed up the
-> > stack.
-> > 
-> > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> > Acked-by: Mike Snitzer <snitzer@redhat.com>
-> > 
+On Mon, 2011-05-23 at 10:20 -0700, Roland Dreier wrote:
+> On Wed, Apr 27, 2011 at 9:07 AM, Roland Dreier <roland@kernel.org> wrote:
+> > From: Roland Dreier <roland@purestorage.com>
+> >
+> > The code really intends to make sure that neither inquiry_prod nor
+> > inquiry_rev is NULL.
+> >
+> > Signed-off-by: Roland Dreier <roland@purestorage.com>
 > > ---
-> > 
-> > Ping on this one?
+> >  drivers/target/target_core_transport.c |    2 +-
+> >  1 files changed, 1 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> > index 9583b23..4a03098 100644
+> > --- a/drivers/target/target_core_transport.c
+> > +++ b/drivers/target/target_core_transport.c
+> > @@ -1725,7 +1725,7 @@ struct se_device *transport_add_device_to_core_hba(
+> >         * setup.
+> >         */
+> >        if (TRANSPORT(dev)->transport_type != TRANSPORT_PLUGIN_PHBA_PDEV) {
+> > -               if (!(inquiry_prod) || !(inquiry_prod)) {
+> > +               if (!inquiry_prod || !inquiry_rev) {
+> >                        printk(KERN_ERR "All non TCM/pSCSI plugins require"
+> >                                " INQUIRY consts\n");
+> >                        goto out;
+> >
 > 
-> It has been on my personal queue but I didn't push the issue with
-> Alasdair (for 2.6.39).
-> 
-> At this point seems we should be targetting this fix for 2.6.40 but I'll
-> defer to Alasdair on whether he'd like to push to .39 last minute.
+> Hi Nick, did you ever get a chance to look at this?  Seems pretty obvious to me.
 
-Hi Martin,
+Hey Roland,
 
-Alasdair and I just chatted about this patch: it will always pass the
-the -EILSEQ up _without_ performing any mpath path failure.
+This has been included in upstream LIO v4.1, and I have been intending
+to include in a non-critical for-40 series (post for-40 round 1 +
+iscsi-target merge) later this week along with some of Andy's other
+target core cleanups and improvements that have been merged into LIO
+upstream.
 
-The newfound concern is: is there ever a benefit to failing the path
-before returning -EILSEQ?
-
-Or will -EILSEQ always imply there is nothing wrong with the path?
-E.g. a transport error cannot cause a CRC error -- the transport
-error is always trapped by SCSI and cannot result in continued
-processing of an IO (that goes on to have CRC error)?
+James, would you mind including Roland's patch directly in scsi-misc
+with my signoff after you merge the outstanding target for-40 series
+items..?
 
 Thanks,
-Mike
 
-> 
-> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> > index a550a05..aa4e570 100644
-> > --- a/drivers/md/dm-mpath.c
-> > +++ b/drivers/md/dm-mpath.c
-> > @@ -1290,7 +1290,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
-> >  	if (!error && !clone->errors)
-> >  		return 0;	/* I/O complete */
-> >  
-> > -	if (error == -EOPNOTSUPP || error == -EREMOTEIO)
-> > +	if (error == -EOPNOTSUPP || error == -EREMOTEIO || error == -EILSEQ)
-> >  		return error;
-> >  
-> >  	if (mpio->pgpath)
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+--nab
+
