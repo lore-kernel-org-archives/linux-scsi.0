@@ -1,43 +1,31 @@
-From: akpm@linux-foundation.org
-Subject: [patch 2/6] aic94xx: world-writable sysfs update_bios file
-Date: Mon, 23 May 2011 15:29:12 -0700
-Message-ID: <201105232229.p4NMTCD8016149@imap1.linux-foundation.org>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH-v2] MAINTAINERS: Add drivers/target/ entry
+Date: Mon, 23 May 2011 16:36:29 -0700
+Message-ID: <1306193789.8687.61.camel@Joe-Laptop>
+References: <1306185032-11629-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:57445 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757826Ab1EWW3g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 May 2011 18:29:36 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1306185032-11629-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, segoon@openwall.com
 
-From: Vasiliy Kulikov <segoon@openwall.com>
+On Mon, 2011-05-23 at 14:10 -0700, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> +TARGET SUBSYSTEM
+> +M:	Nicholas A. Bellinger <nab@linux-iscsi.org>
+> +L:	linux-scsi@vger.kernel.org
+> +L:	http://groups.google.com/group/linux-iscsi-target-dev
+> +W:	http://www.linux-iscsi.org
+> +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/nab/lio-core-2.6.git master
+> +S:	Supported
+> +F:	drivers/target/
+> +F:	include/target/
+> +F:	Documentation/target/
 
-Don't allow everybody to load firmware.
+Shouldn't the file layout be more like
 
-Signed-off-by: Vasiliy Kulikov <segoon@openwall.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/aic94xx/aic94xx_init.c~aic94xx-world-writable-sysfs-update_bios-file drivers/scsi/aic94xx/aic94xx_init.c
---- a/drivers/scsi/aic94xx/aic94xx_init.c~aic94xx-world-writable-sysfs-update_bios-file
-+++ a/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -486,7 +486,7 @@ static ssize_t asd_show_update_bios(stru
- 			flash_error_table[i].reason);
- }
- 
--static DEVICE_ATTR(update_bios, S_IRUGO|S_IWUGO,
-+static DEVICE_ATTR(update_bios, S_IRUGO|S_IWUSR,
- 	asd_show_update_bios, asd_store_update_bios);
- 
- static int asd_create_dev_attrs(struct asd_ha_struct *asd_ha)
-_
+drivers/lio/target?
