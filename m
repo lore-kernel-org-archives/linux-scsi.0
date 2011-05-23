@@ -1,65 +1,36 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH][SCSI] target: Fix double test of inquiry_prod
-Date: Mon, 23 May 2011 12:21:26 -0700
-Message-ID: <1306178486.29724.18.camel@haakon2.linux-iscsi.org>
-References: <1303920422-31142-1-git-send-email-roland@kernel.org>
-	 <BANLkTinKNKk3uW=+rDYd_9Bdqi7CXWWkag@mail.gmail.com>
+From: "Rustad, Mark D" <mark.d.rustad@intel.com>
+Subject: Signed-off-by for a recent patch
+Date: Mon, 23 May 2011 13:23:00 -0700
+Message-ID: <F71742D1-0CE9-4646-91C7-B681E4E865A6@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:59447 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756190Ab1EWT3n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2011 15:29:43 -0400
-In-Reply-To: <BANLkTinKNKk3uW=+rDYd_9Bdqi7CXWWkag@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:46395 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752284Ab1EWUXD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 May 2011 16:23:03 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, Andy Grover <agrover@redhat.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-iscsi-target-dev@googlegroups.com" <linux-iscsi-target-dev@googlegroups.com>
 
-On Mon, 2011-05-23 at 10:20 -0700, Roland Dreier wrote:
-> On Wed, Apr 27, 2011 at 9:07 AM, Roland Dreier <roland@kernel.org> wrote:
-> > From: Roland Dreier <roland@purestorage.com>
-> >
-> > The code really intends to make sure that neither inquiry_prod nor
-> > inquiry_rev is NULL.
-> >
-> > Signed-off-by: Roland Dreier <roland@purestorage.com>
-> > ---
-> >  drivers/target/target_core_transport.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> > index 9583b23..4a03098 100644
-> > --- a/drivers/target/target_core_transport.c
-> > +++ b/drivers/target/target_core_transport.c
-> > @@ -1725,7 +1725,7 @@ struct se_device *transport_add_device_to_core_hba(
-> >         * setup.
-> >         */
-> >        if (TRANSPORT(dev)->transport_type != TRANSPORT_PLUGIN_PHBA_PDEV) {
-> > -               if (!(inquiry_prod) || !(inquiry_prod)) {
-> > +               if (!inquiry_prod || !inquiry_rev) {
-> >                        printk(KERN_ERR "All non TCM/pSCSI plugins require"
-> >                                " INQUIRY consts\n");
-> >                        goto out;
-> >
-> 
-> Hi Nick, did you ever get a chance to look at this?  Seems pretty obvious to me.
+James,
 
-Hey Roland,
+For the upstream commit, could you please add:
 
-This has been included in upstream LIO v4.1, and I have been intending
-to include in a non-critical for-40 series (post for-40 round 1 +
-iscsi-target merge) later this week along with some of Andy's other
-target core cleanups and improvements that have been merged into LIO
-upstream.
+Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
 
-James, would you mind including Roland's patch directly in scsi-misc
-with my signoff after you merge the outstanding target for-40 series
-items..?
+to the patch Nicholas sent last week with the subject:
 
-Thanks,
+[PATCH-v5 02/13] iscsi: Add Serial Number Arithmetic LT and GT into iscsi_proto.h
 
---nab
+I contributed the change in the algorithm for comparing the sequence numbers that this patch implements.
+
+Thank you.
+
+-- 
+Mark Rustad, LAN Access Division, Intel Corporation
+
 
