@@ -1,59 +1,39 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Reduce error recovery time by reducing use of TURs
-Date: Tue, 24 May 2011 12:53:07 -0400
-Message-ID: <1306255988.10201.11.camel@mulgrave.site>
-References: <4DD56448.7060003@gmail.com>
+Subject: Re: [PATCH 5/6] target: Convert REPORT_LUNs to use int_to_scsilun
+Date: Tue, 24 May 2011 13:02:57 -0400
+Message-ID: <1306256577.10201.13.camel@mulgrave.site>
+References: <1305861554-29960-1-git-send-email-nab@linux-iscsi.org>
+	 <1305861554-29960-6-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36727 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751648Ab1EXVcJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2011 17:32:09 -0400
-In-Reply-To: <4DD56448.7060003@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1305861554-29960-6-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>
 List-Id: linux-scsi@vger.kernel.org
-To: David Jeffery <dhjeffery@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Thu, 2011-05-19 at 14:41 -0400, David Jeffery wrote:
-> This is a resend of a patch with some minor whitespace cleanups which I'd
-> like to have considered for inclusion.
+On Thu, 2011-05-19 at 20:19 -0700, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch converts transport_core_report_lun_response() to use
+> drivers/scsi/scsi_scan.c:int_to_scsilun instead of using the
+> struct target_core_fabric_ops->pack_lun() fabric provided API vector.
+> 
+> It also removes the tfo->pack_lun check from target_fabric_tf_ops_check()
+> and removes from struct target_core_fabric_ops->pack_lun() from
+> target_core_fabric_ops.h, and the following mainline scsi-misc fabric
+> modules:
+> 
+> *) tcm_loop: Drop tcm_loop_pack_lun() usage
+> *) tcm_fc: Drop ft_pack_lun() usage
+> 
+> Reported-by: Mike Christie <michaelc@cs.wisc.edu>
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-Not enough, though:
-
-WARNING: line over 80 characters
-#53: FILE: drivers/scsi/scsi_error.c:964:
-+static int scsi_eh_test_devices(struct list_head *cmd_list, struct
-list_head *work_q, struct list_head *done_q, int try_stu)
-
-ERROR: trailing whitespace
-#63: FILE: drivers/scsi/scsi_error.c:974:
-+^I^Ifinish_cmds = !scsi_device_online(scmd->device) || $
-
-WARNING: line over 80 characters
-#64: FILE: drivers/scsi/scsi_error.c:975:
-+                       (try_stu && !scsi_eh_try_stu(scmd) && !
-scsi_eh_tur(scmd)) ||
-
-ERROR: trailing whitespace
-#66: FILE: drivers/scsi/scsi_error.c:977:
-+^I^I^I$
-
-ERROR: space required before the open parenthesis '('
-#196: FILE: drivers/scsi/scsi_error.c:1303:
-+               } else if(rtn == FAST_IO_FAIL) {
-
-total: 3 errors, 2 warnings, 172 lines checked
-
-checkpatch.pl is your friend ...
-
-This is pretty trivial, so I fixed it up manually (I usually only care
-about errors, but in this case the warning about the function template
-and long line needed fixing to match the file).
+There's no way this or the following patch count as bug fixes.  They're
+converging hand rolled functions and definitions (which is good, but not
+a bug fix).
 
 James
-
-
