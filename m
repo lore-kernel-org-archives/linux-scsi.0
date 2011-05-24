@@ -1,336 +1,194 @@
-From: yxlraid@gmail.com
-Subject: [PATCH 8/9] [SCSI] mvsas: update comments
-Date: Tue, 24 May 2011 22:38:10 +0800
-Message-ID: <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
-References: <mvsas-comments>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <mvsas-comments>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: jslaby@suse.cz, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com, jfeng@marvell.com
+From: Prarit Bhargava <prarit@redhat.com>
+Subject: Re: [PATCH]: be2iscsi: Fix MSIX interrupt names
+Date: Tue, 24 May 2011 10:48:09 -0400
+Message-ID: <4DDBC529.9020008@redhat.com>
+References: <4DD6AEB7.2090900@redhat.com> <50725EF61B96174EB1803401F1A2E37335099FC989@EXMAIL.ad.emulex.com> <4DD6B83B.5000703@redhat.com> <2030549.qtzsKLDxZd@donald.sf-tec.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33941 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752662Ab1EXOsT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2011 10:48:19 -0400
+In-Reply-To: <2030549.qtzsKLDxZd@donald.sf-tec.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Rolf Eike Beer <eike@sf-mail.de>, Jayamohan.Kallickal@emulex.com, mchristi@redhat.com
 
-From: Xiangliang Yu <yuxiangl@marvell.com>
+On 05/20/2011 04:17 PM, Rolf Eike Beer wrote:
+>=20
+> This could be simpler if you would use devres and devm_kzalloc() and=20
+> devm_request_irq(). You simply need to return with error then and the=
+ driver=20
+> core would free everything you already allocated.
+>=20
+> Eike
 
--- Update comments: remove obsolete comments and add new comments
+Thanks for the suggestion Eike.
 
-Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
----
- drivers/scsi/mvsas/mv_64xx.c  |   17 ++++-------------
- drivers/scsi/mvsas/mv_94xx.c  |   19 ++++++-------------
- drivers/scsi/mvsas/mv_94xx.h  |   24 ++++++++++++------------
- drivers/scsi/mvsas/mv_chips.h |    2 --
- drivers/scsi/mvsas/mv_defs.h  |    2 +-
- drivers/scsi/mvsas/mv_init.c  |    1 -
- drivers/scsi/mvsas/mv_sas.c   |   14 +-------------
- 7 files changed, 24 insertions(+), 55 deletions(-)
+I've never used devres before.  This seems to work -- please review as =
+[v3].
 
-diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
-index bc75ba7..dec5f96 100644
---- a/drivers/scsi/mvsas/mv_64xx.c
-+++ b/drivers/scsi/mvsas/mv_64xx.c
-@@ -33,7 +33,6 @@ static void mvs_64xx_detect_porttype(struct mvs_info *mvi, int i)
- 	u32 reg;
- 	struct mvs_phy *phy = &mvi->phy[i];
- 
--	/* TODO check & save device type */
- 	reg = mr32(MVS_GBL_PORT_TYPE);
- 	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
- 	if (reg & MODE_SAS_SATA & (1 << i))
-@@ -63,7 +62,6 @@ static void __devinit mvs_64xx_phy_hacks(struct mvs_info *mvi)
- 	mvs_phy_hacks(mvi);
- 
- 	if (!(mvi->flags & MVF_FLAG_SOC)) {
--		/* TEST - for phy decoding error, adjust voltage levels */
- 		for (i = 0; i < MVS_SOC_PORTS; i++) {
- 			mvs_write_port_vsr_addr(mvi, i, VSR_PHY_MODE8);
- 			mvs_write_port_vsr_data(mvi, i, 0x2F0);
-@@ -375,13 +373,7 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
- 		mvs_update_phyinfo(mvi, i, 1);
+Thanks,
+
+P.
+
+---8<----
+
+The be2iscsi driver uses a single static array in a function for the
+irq action->name field.
+
+This results in /proc/interrupts output like
+
+156:  0          0          0          0          0          0         =
+ 0=20
+0          0          0          0          0          0          0    =
+      0=20
+        0          0          0          0          0          0       =
+   0   =20
+	     0          0       PCI-MSI-X=20
+	     W=EF=BF=BD9=EF=BF=BD_=DE=B2J=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=
+=BF=BD=EF=BF=BDt=EF=BF=BD=EF=BF=BDkfbY=EF=BF=BD=EF=BF=BD~}=EF=BF=BD=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD(p=EF=BF=BD=EF=BF=BD=EF=BF=BD%=EF=BF=BD=EF=BF=BD=EF=
+=BF=BD'loCm=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=
+=BDn`!=EF=BF=BDv=EF=BF=BD=EF=BF=BD%=EF=BF=BD4=EF=BF=BD=EF=BF=BD=EF=BF=BD=
+=EF=BF=BDb\"P=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD/"=EF=BF=BDt=EF=
+=BF=BD=EF=BF=BD=EF=BF=BD(b=EF=BF=BD=EF=BF=BDI=EF=BF=BD=EF=BF=BD=D4=AB=EF=
+=BF=BD=EF=BF=BD1/"=EF=BF=BD=EF=BF=BDRm=EF=BF=BDu~=EF=BF=BD=EF=BF=BD=EF=BF=
+=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD
+
+			                                                               =20
+			     =EF=BF=BD8r=EF=BF=BD)=EF=BF=BDN=EF=BF=BD>\aj*=EF=BF=BD=EF=BF=BD=
++=EF=BF=BD=D0=B5=EF=BF=BD=EF=BF=BD=DB=BB=EF=BF=BDwB=E4=9D=9F=EF=BF=BDBl=
+=EF=BF=BD=EF=BF=BD
+
+In the line above, everything up to PCI-MSI-X is correct.  The pointer =
+for
+action->name is garbage and scribbles the output on the screen.
+
+This patch fixes the problem and eliminates the need for memory cleanup=
+ by
+using devres.
+
+156:          0          0          0          0          0          0 =
+         0          0          0          0          0          0      =
+    0          0          0          0          0          0          0=
+          0          0          0          0          0       PCI-MSI-X=
+  beiscsi_msix_0017
+
+
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be=
+_main.c
+index 94b9a07..16a83ee 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -874,40 +874,44 @@ static int beiscsi_init_irqs(struct beiscsi_hba *=
+phba)
+ 	struct pci_dev *pcidev =3D phba->pcidev;
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+-	int ret, msix_vec, i, j;
+-	char desc[32];
++	int ret, msix_vec, i;
+=20
+ 	phwi_ctrlr =3D phba->phwi_ctrlr;
+ 	phwi_context =3D phwi_ctrlr->phwi_ctxt;
+=20
+ 	if (phba->msix_enabled) {
+ 		for (i =3D 0; i < phba->num_cpus; i++) {
+-			sprintf(desc, "beiscsi_msix_%04x", i);
++			phba->msi_name[i] =3D devm_kzalloc(&pcidev->dev, 20,
++							 GFP_KERNEL);
++			if (!phba->msi_name[i])
++				return -ENOMEM;
++			sprintf(phba->msi_name[i], "beiscsi_msix_%04x", i);
+ 			msix_vec =3D phba->msix_entries[i].vector;
+-			ret =3D request_irq(msix_vec, be_isr_msix, 0, desc,
+-					  &phwi_context->be_eq[i]);
++			ret =3D devm_request_irq(&pcidev->dev,
++					       msix_vec, be_isr_msix, 0,
++					       phba->msi_name[i],
++					       &phwi_context->be_eq[i]);
+ 			if (ret) {
+ 				shost_printk(KERN_ERR, phba->shost,
+ 					     "beiscsi_init_irqs-Failed to"
+ 					     "register msix for i =3D %d\n", i);
+-				if (!i)
+-					return ret;
+-				goto free_msix_irqs;
++				return ret;
+ 			}
+ 		}
+ 		msix_vec =3D phba->msix_entries[i].vector;
+-		ret =3D request_irq(msix_vec, be_isr_mcc, 0, "beiscsi_msix_mcc",
+-				  &phwi_context->be_eq[i]);
++		ret =3D devm_request_irq(&pcidev->dev,
++				       msix_vec, be_isr_mcc, 0,
++				       "beiscsi_msix_mcc",
++				       &phwi_context->be_eq[i]);
+ 		if (ret) {
+ 			shost_printk(KERN_ERR, phba->shost, "beiscsi_init_irqs-"
+ 				     "Failed to register beiscsi_msix_mcc\n");
+-			i++;
+-			goto free_msix_irqs;
++			return ret;
+ 		}
+=20
+ 	} else {
+-		ret =3D request_irq(pcidev->irq, be_isr, IRQF_SHARED,
+-				  "beiscsi", phba);
++		ret =3D devm_request_irq(&pcidev->dev, pcidev->irq, be_isr,
++				       IRQF_SHARED, "beiscsi", phba);
+ 		if (ret) {
+ 			shost_printk(KERN_ERR, phba->shost, "beiscsi_init_irqs-"
+ 				     "Failed to register irq\\n");
+@@ -915,10 +919,6 @@ static int beiscsi_init_irqs(struct beiscsi_hba *p=
+hba)
+ 		}
  	}
- 
--	/* FIXME: update wide port bitmaps */
--
- 	/* little endian for open address and command table, etc. */
--	/*
--	 * it seems that ( from the spec ) turning on big-endian won't
--	 * do us any good on big-endian machines, need further confirmation
--	 */
- 	cctl = mr32(MVS_CTL);
- 	cctl |= CCTL_ENDIAN_CMD;
- 	cctl |= CCTL_ENDIAN_DATA;
-@@ -394,8 +386,8 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
- 	tmp |= PCS_CMD_RST;
- 	tmp &= ~PCS_SELF_CLEAR;
- 	mw32(MVS_PCS, tmp);
--	/* interrupt coalescing may cause missing HW interrput in some case,
--	 * and the max count is 0x1ff, while our max slot is 0x200,
-+	/*
-+	 * the max count is 0x1ff, while our max slot is 0x200,
- 	 * it will make count 0.
- 	 */
- 	tmp = 0;
-@@ -632,7 +624,6 @@ static void mvs_64xx_phy_work_around(struct mvs_info *mvi, int i)
- {
- 	u32 tmp;
- 	struct mvs_phy *phy = &mvi->phy[i];
--	/* workaround for HW phy decoding error on 1.5g disk drive */
- 	mvs_write_port_vsr_addr(mvi, i, VSR_PHY_MODE6);
- 	tmp = mvs_read_port_vsr_data(mvi, i);
- 	if (((phy->phy_status & PHY_NEG_SPP_PHYS_LINK_RATE_MASK) >>
-@@ -765,8 +756,8 @@ static void mvs_64xx_tune_interrupt(struct mvs_info *mvi, u32 time)
- {
- 	void __iomem *regs = mvi->regs;
- 	u32 tmp = 0;
--	/* interrupt coalescing may cause missing HW interrput in some case,
--	 * and the max count is 0x1ff, while our max slot is 0x200,
-+	/*
-+	 * the max count is 0x1ff, while our max slot is 0x200,
- 	 * it will make count 0.
- 	 */
- 	if (time == 0) {
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index 1276e49..f4a995c 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -460,13 +460,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
- 		mvs_update_phyinfo(mvi, i, 1);
- 	}
- 
--	/* FIXME: update wide port bitmaps */
--
- 	/* little endian for open address and command table, etc. */
--	/*
--	 * it seems that ( from the spec ) turning on big-endian won't
--	 * do us any good on big-endian machines, need further confirmation
--	 */
- 	cctl = mr32(MVS_CTL);
- 	cctl |= CCTL_ENDIAN_CMD;
- 	cctl &= ~CCTL_ENDIAN_OPEN;
-@@ -478,8 +472,8 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
- 	tmp |= PCS_CMD_RST;
- 	tmp &= ~PCS_SELF_CLEAR;
- 	mw32(MVS_PCS, tmp);
--	/* interrupt coalescing may cause missing HW interrput in some case,
--	 * and the max count is 0x1ff, while our max slot is 0x200,
-+	/*
-+	 * the max count is 0x1ff, while our max slot is 0x200,
- 	 * it will make count 0.
- 	 */
- 	tmp = 0;
-@@ -488,6 +482,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
- 	else
- 		mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ | COAL_EN);
- 
-+	/* default interrupt coalescing time is 128us */
- 	tmp = 0x10000 | interrupt_coalescing;
- 	mw32(MVS_INT_COAL_TMOUT, tmp);
- 
-@@ -745,7 +740,7 @@ static int mvs_94xx_oob_done(struct mvs_info *mvi, int i)
- {
- 	u32 phy_st;
- 	phy_st = mvs_read_phy_ctl(mvi, i);
--	if (phy_st & PHY_READY_MASK)	/* phy ready */
-+	if (phy_st & PHY_READY_MASK)
- 		return 1;
  	return 0;
+-free_msix_irqs:
+-	for (j =3D i - 1; j =3D=3D 0; j++)
+-		free_irq(msix_vec, &phwi_context->be_eq[j]);
+-	return ret;
  }
-@@ -770,7 +765,6 @@ static void mvs_94xx_get_att_identify_frame(struct mvs_info *mvi, int port_id,
- 	int i;
- 	u32 id_frame[7];
- 
--	/* mvs_hexdump(28, (u8 *)id_frame, 0); */
- 	for (i = 0; i < 7; i++) {
- 		mvs_write_port_cfg_addr(mvi, port_id,
- 					CONFIG_ATT_ID_FRAME0 + i * 4);
-@@ -778,7 +772,6 @@ static void mvs_94xx_get_att_identify_frame(struct mvs_info *mvi, int port_id,
- 		mv_dprintk("94xx phy %d atta frame %d %x.\n",
- 			port_id + mvi->id * mvi->chip->n_phy, i, id_frame[i]);
- 	}
--	/* mvs_hexdump(28, (u8 *)id_frame, 0); */
- 	memcpy(id, id_frame, 28);
- }
- 
-@@ -962,8 +955,8 @@ static void mvs_94xx_tune_interrupt(struct mvs_info *mvi, u32 time)
- {
- 	void __iomem *regs = mvi->regs;
- 	u32 tmp = 0;
--	/* interrupt coalescing may cause missing HW interrput in some case,
--	 * and the max count is 0x1ff, while our max slot is 0x200,
-+	/*
-+	 * the max count is 0x1ff, while our max slot is 0x200,
- 	 * it will make count 0.
- 	 */
- 	if (time == 0) {
-diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
-index b42532b..77a1e52 100644
---- a/drivers/scsi/mvsas/mv_94xx.h
-+++ b/drivers/scsi/mvsas/mv_94xx.h
-@@ -121,18 +121,18 @@ enum pci_cfg_registers {
- 
- /*  SAS/SATA Vendor Specific Port Registers */
- enum sas_sata_vsp_regs {
--	VSR_PHY_STAT		= 0x00 * 4, /* Phy Status */
--	VSR_PHY_MODE1		= 0x01 * 4, /* phy tx */
--	VSR_PHY_MODE2		= 0x02 * 4, /* tx scc */
--	VSR_PHY_MODE3		= 0x03 * 4, /* pll */
--	VSR_PHY_MODE4		= 0x04 * 4, /* VCO */
--	VSR_PHY_MODE5		= 0x05 * 4, /* Rx */
--	VSR_PHY_MODE6		= 0x06 * 4, /* CDR */
--	VSR_PHY_MODE7		= 0x07 * 4, /* Impedance */
--	VSR_PHY_MODE8		= 0x08 * 4, /* Voltage */
--	VSR_PHY_MODE9		= 0x09 * 4, /* Test */
--	VSR_PHY_MODE10		= 0x0A * 4, /* Power */
--	VSR_PHY_MODE11		= 0x0B * 4, /* Phy Mode */
-+	VSR_PHY_STAT		= 0x00 * 4, /* Phy Interrupt Status */
-+	VSR_PHY_MODE1		= 0x01 * 4, /* phy Interrupt Enable */
-+	VSR_PHY_MODE2		= 0x02 * 4, /* Phy Configuration */
-+	VSR_PHY_MODE3		= 0x03 * 4, /* Phy Status */
-+	VSR_PHY_MODE4		= 0x04 * 4, /* Phy Counter 0 */
-+	VSR_PHY_MODE5		= 0x05 * 4, /* Phy Counter 1 */
-+	VSR_PHY_MODE6		= 0x06 * 4, /* Event Counter Control */
-+	VSR_PHY_MODE7		= 0x07 * 4, /* Event Counter Select */
-+	VSR_PHY_MODE8		= 0x08 * 4, /* Event Counter 0 */
-+	VSR_PHY_MODE9		= 0x09 * 4, /* Event Counter 1 */
-+	VSR_PHY_MODE10		= 0x0A * 4, /* Event Counter 2 */
-+	VSR_PHY_MODE11		= 0x0B * 4, /* Event Counter 3 */
- 	VSR_PHY_ACT_LED		= 0x0C * 4, /* Activity LED control */
- 
- 	VSR_PHY_FFE_CONTROL	= 0x10C,
-diff --git a/drivers/scsi/mvsas/mv_chips.h b/drivers/scsi/mvsas/mv_chips.h
-index 0a11bc7..bcc4080 100644
---- a/drivers/scsi/mvsas/mv_chips.h
-+++ b/drivers/scsi/mvsas/mv_chips.h
-@@ -164,7 +164,6 @@ static inline void __devinit mvs_phy_hacks(struct mvs_info *mvi)
- {
- 	u32 tmp;
- 
--	/* workaround for SATA R-ERR, to ignore phy glitch */
- 	tmp = mvs_cr32(mvi, CMD_PHY_TIMER);
- 	tmp &= ~(1 << 9);
- 	tmp |= (1 << 10);
-@@ -179,7 +178,6 @@ static inline void __devinit mvs_phy_hacks(struct mvs_info *mvi)
- 	tmp |= 0x3fff;
- 	mvs_cw32(mvi, CMD_SAS_CTL0, tmp);
- 
--	/* workaround for WDTIMEOUT , set to 550 ms */
- 	mvs_cw32(mvi, CMD_WD_TIMER, 0x7a0000);
- 
- 	/* not to halt for different port op during wideport link change */
-diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
-index 1927e1b..dec7cad 100644
---- a/drivers/scsi/mvsas/mv_defs.h
-+++ b/drivers/scsi/mvsas/mv_defs.h
-@@ -160,7 +160,7 @@ enum hw_register_bits {
- 	TXQ_CMD_SSP		= 1,		/* SSP protocol */
- 	TXQ_CMD_SMP		= 2,		/* SMP protocol */
- 	TXQ_CMD_STP		= 3,		/* STP/SATA protocol */
--	TXQ_CMD_SSP_FREE_LIST	= 4,		/* add to SSP targ free list */
-+	TXQ_CMD_SSP_FREE_LIST	= 4,		/* add to SSP target free list */
- 	TXQ_CMD_SLOT_RESET	= 7,		/* reset command slot */
- 	TXQ_MODE_I		= (1U << 28),	/* mode: 0=target,1=initiator */
- 	TXQ_MODE_TARGET 	= 0,
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index b28ee5b..cf4aaa9 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -405,7 +405,6 @@ err_out:
- 	return NULL;
- }
- 
--/* move to PCI layer or libata core? */
- static int pci_go_64(struct pci_dev *pdev)
- {
- 	int rc;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 31ca8fe..4958fef 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -102,7 +102,6 @@ struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
- 
- }
- 
--/* FIXME */
- int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
- {
- 	unsigned long i = 0, j = 0, n = 0, num = 0;
-@@ -177,7 +176,6 @@ void mvs_phys_reset(struct mvs_info *mvi, u32 phy_mask, int hard)
- 	}
- }
- 
--/* FIXME: locking? */
- int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 			void *funcdata)
- {
-@@ -504,11 +502,8 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
- 			flags |= MCH_ATAPI;
- 	}
- 
--	/* FIXME: fill in port multiplier number */
--
- 	hdr->flags = cpu_to_le32(flags);
- 
--	/* FIXME: the low order order 5 bits for the TAG if enable NCQ */
- 	if (task->ata_task.use_ncq && mvs_get_ncq_tag(task, &hdr_tag))
- 		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
- 	else
-@@ -552,9 +547,6 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
- 	buf_tmp_dma += i;
- 
- 	/* region 4: status buffer (larger the PRD, smaller this buf) ****** */
--	/* FIXME: probably unused, for SATA.  kept here just in case
--	 * we get a STP/SATA error information record
--	 */
- 	slot->response = buf_tmp;
- 	hdr->status_buf = cpu_to_le64(buf_tmp_dma);
- 	if (mvi->flags & MVF_FLAG_SOC)
-@@ -1126,7 +1118,6 @@ static void *mvs_get_d2h_reg(struct mvs_info *mvi, int i, void *buf)
- 	MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG0);
- 	s[0] = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
- 
--	/* Workaround: take some ATAPI devices for ATA */
- 	if (((s[1] & 0x00FFFFFF) == 0x00EB1401) && (*(u8 *)&s[3] == 0x01))
- 		s[1] = 0x00EB1401 | (*((u8 *)&s[1] + 3) & 0x10);
- 
-@@ -1433,7 +1424,6 @@ static void mvs_tmf_timedout(unsigned long data)
- 	complete(&task->completion);
- }
- 
--/* XXX */
- #define MVS_TASK_TIMEOUT 20
- static int mvs_exec_internal_tmf_task(struct domain_device *dev,
- 			void *parameter, u32 para_len, struct mvs_tmf_task *tmf)
-@@ -1577,7 +1567,6 @@ int mvs_I_T_nexus_reset(struct domain_device *dev)
- 	mv_printk("%s for device[%x]:rc= %d\n",
- 		__func__, mvi_dev->device_id, rc);
- 
--	/* housekeeper */
- 	spin_lock_irqsave(&mvi->lock, flags);
- 	mvs_release_task(mvi, dev);
- 	spin_unlock_irqrestore(&mvi->lock, flags);
-@@ -1681,7 +1670,6 @@ int mvs_abort_task(struct sas_task *task)
- 
- 	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
- 		task->task_proto & SAS_PROTOCOL_STP) {
--		/* to do free register_set */
- 		if (SATA_DEV == dev->dev_type) {
- 			struct mvs_slot_info *slot = task->lldd_task;
- 			u32 slot_idx = (u32)(slot - mvi->slot_info);
-@@ -1901,6 +1889,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
- 		return -1;
- 	}
- 
-+	/* when no device attaching, go ahead and complete by error handling*/
- 	if (unlikely(!mvi_dev || flags)) {
- 		if (!mvi_dev)
- 			mv_dprintk("port has not device.\n");
-@@ -2017,7 +2006,6 @@ void mvs_release_task(struct mvs_info *mvi,
- 		      struct domain_device *dev)
- {
- 	int i, phyno[WIDE_PORT_MAX_PHY], num;
--	/* housekeeper */
- 	num = mvs_find_dev_phyno(dev, phyno);
- 	for (i = 0; i < num; i++)
- 		mvs_do_release_task(mvi, phyno[i], dev);
--- 
-1.7.4.4
+=20
+ static void hwi_ring_cq_db(struct beiscsi_hba *phba,
+@@ -4122,11 +4122,12 @@ static void beiscsi_remove(struct pci_dev *pcid=
+ev)
+ 	if (phba->msix_enabled) {
+ 		for (i =3D 0; i <=3D phba->num_cpus; i++) {
+ 			msix_vec =3D phba->msix_entries[i].vector;
+-			free_irq(msix_vec, &phwi_context->be_eq[i]);
++			devm_free_irq(&pcidev->dev, msix_vec,
++				      &phwi_context->be_eq[i]);
+ 		}
+ 	} else
+ 		if (phba->pcidev->irq)
+-			free_irq(phba->pcidev->irq, phba);
++			devm_free_irq(&pcidev->dev, phba->pcidev->irq, phba);
+ 	pci_disable_msix(phba->pcidev);
+ 	destroy_workqueue(phba->wq);
+ 	if (blk_iopoll_enabled)
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be=
+_main.h
+index 081c171..1c03174 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -287,6 +287,7 @@ struct beiscsi_hba {
+ 	unsigned int num_cpus;
+ 	unsigned int nxt_cqid;
+ 	struct msix_entry msix_entries[MAX_CPUS + 1];
++	char *msi_name[MAX_CPUS + 1];
+ 	bool msix_enabled;
+ 	struct be_mem_descriptor *init_mem;
+=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
