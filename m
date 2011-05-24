@@ -1,52 +1,107 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 0/4] libsas updates for 2.6.40 (resend)
-Date: Tue, 24 May 2011 13:17:43 -0700
-Message-ID: <20110524201708.7351.76421.stgit@localhost6.localdomain6>
+Subject: [PATCH 1/4] libsas: flush initial device discovery before completing
+	->scan_finished()
+Date: Tue, 24 May 2011 13:17:48 -0700
+Message-ID: <20110524201748.7351.48220.stgit@localhost6.localdomain6>
+References: <20110524201708.7351.76421.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45943 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753747Ab1EXTzl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2011 15:55:41 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20110524201708.7351.76421.stgit@localhost6.localdomain6>
+Sender: linux-ide-owner@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
-Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jeffrey.d.skirvin@intel.com, jacek.danecki@intel.com, linux-ide@vger.kernel.org, edmund.nadolski@intel.com
+Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jeffrey.d.skirvin@intel.com, jacek.danecki@intel.com, jack_wang@usish.com, lindar_liu@usish.com, linux-ide@vger.kernel.org, David Milburn <dmilburn@redhat.com>, edmund.nadolski@intel.com, Srinivas <satyasrinivasp@hcl.in>
+List-Id: linux-scsi@vger.kernel.org
 
-This is a resend [1] of our pending libsas patch queue, plus one more for .40
-consideration "libsas: Add option for SATA soft reset".  We're still
-investigating whether having a soft reset handler will be beneficial for isci.
-If it does we need an available hook in the .40 baseline, so we can
-drop/hook-up our private implementation.  The only other change from the last
-posting [2] is to drop the problematic locking in "libsas: fix/amend device
-gone notification in sas_deform_port()".
+During initial scan libsas drivers start their phys and notify libsas
+with PORTE_BYTES_DMAED events as port links are established.  This
+notification in turn causes libsas to post DISCE_DISCOVER_DOMAIN events
+to the queue.  Calling scsi_flush_work() at the end of scan_finished
+guarantees that all preceding PORTE_BYTES_DMAED events have been
+registered in the queue, but it does not guarantee that the resulting
+DISCE_DISCOVER_DOMAIN events have been processed because
+flush_workqueue() explicitly avoids live-locking with incoming work.
 
---
-Dan
+Introduce sas_flush_discovery() to guarantee that all initial discovery
+events have completed.  It is called after the driver determines all
+initial PORTE_BYTES_DMAED events have had a chance to enter the queue.
+This does not cover BCNs that are generated during expander bring up,
+only the initial sas_discover_domain() event.
 
-[1]: http://marc.info/?l=linux-scsi&m=130504487714639&w=2
-[2]: http://marc.info/?l=linux-scsi&m=130444681502181&w=2
-
+Cc: David Milburn <dmilburn@redhat.com>
+Cc: Srinivas <satyasrinivasp@hcl.in>
+Cc: jack_wang@usish.com
+Cc: lindar_liu@usish.com
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
-
-Dan Williams (3):
-      libsas: flush initial device discovery before completing ->scan_finished()
-      libsas: fix/amend device gone notification in sas_deform_port()
-      libsas: check dev->gone before submitting sata i/o
-
-Dave Jiang (1):
-      libsas: Add option for SATA soft reset
-
-
  drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
- drivers/scsi/libsas/sas_ata.c       |   41 ++++++++++++++++++++++++++++++++++-
- drivers/scsi/libsas/sas_internal.h  |    2 +-
- drivers/scsi/libsas/sas_phy.c       |    4 ++-
- drivers/scsi/libsas/sas_port.c      |   21 ++++++++++--------
- drivers/scsi/libsas/sas_scsi_host.c |   14 ++++++------
  drivers/scsi/mvsas/mv_sas.c         |    2 +-
  drivers/scsi/pm8001/pm8001_sas.c    |    2 +-
- include/scsi/libsas.h               |   14 ++++++++++++
- 9 files changed, 79 insertions(+), 23 deletions(-)
+ include/scsi/libsas.h               |   13 +++++++++++++
+ 4 files changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 3b7e83d..f763daa 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -972,7 +972,7 @@ static int asd_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (time < HZ)
+ 		return 0;
+ 	/* Wait for discovery to finish */
+-	scsi_flush_work(shost);
++	sas_flush_discovery(shost);
+ 	return 1;
+ }
+ 
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index adedaa9..e34c378 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -440,7 +440,7 @@ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (time < HZ)
+ 		return 0;
+ 	/* Wait for discovery to finish */
+-	scsi_flush_work(shost);
++	sas_flush_discovery(shost);
+ 	return 1;
+ }
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 6ae059e..997cf59 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -253,7 +253,7 @@ int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (time < HZ)
+ 		return 0;
+ 	/* Wait for discovery to finish */
+-	scsi_flush_work(shost);
++	sas_flush_discovery(shost);
+ 	return 1;
+ }
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 8f6bb9c..d603b26e 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -405,6 +405,19 @@ static inline void sas_phy_disconnected(struct asd_sas_phy *phy)
+ 	phy->linkrate = SAS_LINK_RATE_UNKNOWN;
+ }
+ 
++/* Before returning from ->scan_finished() an LLDD calls this routine to
++ * ensure that all port notifications have been promoted to domain
++ * discovery events, and that initial domain discovery has completed
++ */
++static inline void sas_flush_discovery(struct Scsi_Host *shost)
++{
++	/* flush port events */
++	scsi_flush_work(shost);
++
++	/* flush domain discovery events queued by the port events */
++	scsi_flush_work(shost);
++}
++
+ /* ---------- Tasks ---------- */
+ /*
+       service_response |  SAS_TASK_COMPLETE  |  SAS_TASK_UNDELIVERED |
+
