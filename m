@@ -1,170 +1,532 @@
 From: yxlraid@gmail.com
-Subject: [PATCH 1/9] [SCSI] mvsas: Add support for Non specific NCQ error interrupt
-Date: Tue, 24 May 2011 22:26:50 +0800
-Message-ID: <1306247210-5888-1-git-send-email-yxlraid@gamil.com>
-References: <mvsas-ncq>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:60215 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756109Ab1EXO1c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 10:27:32 -0400
-In-Reply-To: <mvsas-ncq>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 2/9] [SCSI] mvsas: add support for 94xx phy tuning and multiple revisions
+Date: Tue, 24 May 2011 22:28:31 +0800
+Message-ID: <1306247311-5992-1-git-send-email-yxlraid@gmail.com>
+References: <mvsas-phy-tuning>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <mvsas-phy-tuning>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: jslaby@suse.cz, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com, jfeng@marvell.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiangliang Yu <yuxiangl@marvell.com>
 
--- Add support for Non specific NCQ error interrupt.
+-- Add 94xx phy tuning to aid manufacturing.
+-- Add support for 94xx multiple revisions: A0, B0, C0, C1, C2.
 
 Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
 ---
- drivers/scsi/mvsas/mv_64xx.c  |    1 +
- drivers/scsi/mvsas/mv_94xx.c  |   32 +++++++++++++++++++++++++++++++-
- drivers/scsi/mvsas/mv_chips.h |    3 +++
- drivers/scsi/mvsas/mv_defs.h  |    1 +
- drivers/scsi/mvsas/mv_sas.c   |   14 ++++++++++++++
- drivers/scsi/mvsas/mv_sas.h   |    2 ++
- 6 files changed, 52 insertions(+), 1 deletions(-)
+ drivers/scsi/mvsas/mv_94xx.c |  267 +++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/mvsas/mv_94xx.h |   58 +++++++++
+ drivers/scsi/mvsas/mv_init.c |    3 +
+ drivers/scsi/mvsas/mv_sas.h  |   68 +++++++++++
+ 4 files changed, 382 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
-index 13c9604..0e13e64 100644
---- a/drivers/scsi/mvsas/mv_64xx.c
-+++ b/drivers/scsi/mvsas/mv_64xx.c
-@@ -811,5 +811,6 @@ const struct mvs_dispatch mvs_64xx_dispatch = {
- #ifndef DISABLE_HOTPLUG_DMA_FIX
- 	mvs_64xx_fix_dma,
- #endif
-+	NULL,
- };
- 
 diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index 78162c3..9d60c7c 100644
+index 9d60c7c..3f2ad93 100644
 --- a/drivers/scsi/mvsas/mv_94xx.c
 +++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -249,7 +249,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
- 
- 	/* enable completion queue interrupt */
- 	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM | CINT_SRS | CINT_CI_STOP |
--		CINT_DMA_PCIE);
-+		CINT_DMA_PCIE | CINT_NON_SPEC_NCQ_ERROR);
- 	tmp |= CINT_PHY_MASK;
- 	mw32(MVS_INT_MASK, tmp);
- 
-@@ -367,6 +367,35 @@ static void mvs_94xx_issue_stop(struct mvs_info *mvi, enum mvs_port_type type,
- 	mw32(MVS_PCS, tmp);
+@@ -48,6 +48,216 @@ static void mvs_94xx_detect_porttype(struct mvs_info *mvi, int i)
+ 	}
  }
  
-+static void mvs_94xx_non_spec_ncq_error(struct mvs_info *mvi)
++void set_phy_tuning(struct mvs_info *mvi, int phy_id,
++			struct phy_tuning phy_tuning)
 +{
-+	void __iomem *regs = mvi->regs;
-+	u32 err_0, err_1;
++	u32 tmp, setting_0 = 0, setting_1 = 0;
 +	u8 i;
-+	struct mvs_device *device;
 +
-+	err_0 = mr32(MVS_NON_NCQ_ERR_0);
-+	err_1 = mr32(MVS_NON_NCQ_ERR_1);
++	/* Remap information for B0 chip:
++	*
++	* R0Ch -> R118h[15:0] (Adapted DFE F3 - F5 coefficient)
++	* R0Dh -> R118h[31:16] (Generation 1 Setting 0)
++	* R0Eh -> R11Ch[15:0]  (Generation 1 Setting 1)
++	* R0Fh -> R11Ch[31:16] (Generation 2 Setting 0)
++	* R10h -> R120h[15:0]  (Generation 2 Setting 1)
++	* R11h -> R120h[31:16] (Generation 3 Setting 0)
++	* R12h -> R124h[15:0]  (Generation 3 Setting 1)
++	* R13h -> R124h[31:16] (Generation 4 Setting 0 (Reserved))
++	*/
 +
-+	mv_dprintk("non specific ncq error err_0:%x,err_1:%x.\n",
-+			err_0, err_1);
-+	for (i = 0; i < 32; i++) {
-+		if (err_0 & bit(i)) {
-+			device = mvs_find_dev_by_reg_set(mvi, i);
-+			if (device)
-+				mvs_release_task(mvi, device->sas_device);
++	/* A0 has a different set of registers */
++	if (mvi->pdev->revision == VANIR_A0_REV)
++		return;
++
++	for (i = 0; i < 3; i++) {
++		/* loop 3 times, set Gen 1, Gen 2, Gen 3 */
++		switch (i) {
++		case 0:
++			setting_0 = GENERATION_1_SETTING;
++			setting_1 = GENERATION_1_2_SETTING;
++			break;
++		case 1:
++			setting_0 = GENERATION_1_2_SETTING;
++			setting_1 = GENERATION_2_3_SETTING;
++			break;
++		case 2:
++			setting_0 = GENERATION_2_3_SETTING;
++			setting_1 = GENERATION_3_4_SETTING;
++			break;
 +		}
-+		if (err_1 & bit(i)) {
-+			device = mvs_find_dev_by_reg_set(mvi, i+32);
-+			if (device)
-+				mvs_release_task(mvi, device->sas_device);
++
++		/* Set:
++		*
++		* Transmitter Emphasis Enable
++		* Transmitter Emphasis Amplitude
++		* Transmitter Amplitude
++		*/
++		mvs_write_port_vsr_addr(mvi, phy_id, setting_0);
++		tmp = mvs_read_port_vsr_data(mvi, phy_id);
++		tmp &= ~(0xFBE << 16);
++		tmp |= (((phy_tuning.trans_emp_en << 11) |
++			(phy_tuning.trans_emp_amp << 7) |
++			(phy_tuning.trans_amp << 1)) << 16);
++		mvs_write_port_vsr_data(mvi, phy_id, tmp);
++
++		/* Set Transmitter Amplitude Adjust */
++		mvs_write_port_vsr_addr(mvi, phy_id, setting_1);
++		tmp = mvs_read_port_vsr_data(mvi, phy_id);
++		tmp &= ~(0xC000);
++		tmp |= (phy_tuning.trans_amp_adj << 14);
++		mvs_write_port_vsr_data(mvi, phy_id, tmp);
++	}
++}
++
++void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
++				struct ffe_control ffe)
++{
++	u32 tmp;
++
++	/* Don't run this if A0/B0 */
++	if ((mvi->pdev->revision == VANIR_A0_REV)
++		|| (mvi->pdev->revision == VANIR_B0_REV))
++		return;
++
++	/* FFE Resistor and Capacitor */
++	/* R10Ch DFE Resolution Control/Squelch and FFE Setting
++	 *
++	 * FFE_FORCE            [7]
++	 * FFE_RES_SEL          [6:4]
++	 * FFE_CAP_SEL          [3:0]
++	 */
++	mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_FFE_CONTROL);
++	tmp = mvs_read_port_vsr_data(mvi, phy_id);
++	tmp &= ~0xFF;
++
++	/* Read from HBA_Info_Page */
++	tmp |= ((0x1 << 7) |
++		(ffe.ffe_rss_sel << 4) |
++		(ffe.ffe_cap_sel << 0));
++
++	mvs_write_port_vsr_data(mvi, phy_id, tmp);
++
++	/* R064h PHY Mode Register 1
++	 *
++	 * DFE_DIS		18
++	 */
++	mvs_write_port_vsr_addr(mvi, phy_id, VSR_REF_CLOCK_CRTL);
++	tmp = mvs_read_port_vsr_data(mvi, phy_id);
++	tmp &= ~0x40001;
++	/* Hard coding */
++	/* No defines in HBA_Info_Page */
++	tmp |= (0 << 18);
++	mvs_write_port_vsr_data(mvi, phy_id, tmp);
++
++	/* R110h DFE F0-F1 Coefficient Control/DFE Update Control
++	 *
++	 * DFE_UPDATE_EN        [11:6]
++	 * DFE_FX_FORCE         [5:0]
++	 */
++	mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_DFE_UPDATE_CRTL);
++	tmp = mvs_read_port_vsr_data(mvi, phy_id);
++	tmp &= ~0xFFF;
++	/* Hard coding */
++	/* No defines in HBA_Info_Page */
++	tmp |= ((0x3F << 6) | (0x0 << 0));
++	mvs_write_port_vsr_data(mvi, phy_id, tmp);
++
++	/* R1A0h Interface and Digital Reference Clock Control/Reserved_50h
++	 *
++	 * FFE_TRAIN_EN         3
++	 */
++	mvs_write_port_vsr_addr(mvi, phy_id, VSR_REF_CLOCK_CRTL);
++	tmp = mvs_read_port_vsr_data(mvi, phy_id);
++	tmp &= ~0x8;
++	/* Hard coding */
++	/* No defines in HBA_Info_Page */
++	tmp |= (0 << 3);
++	mvs_write_port_vsr_data(mvi, phy_id, tmp);
++}
++
++/*Notice: this function must be called when phy is disabled*/
++void set_phy_rate(struct mvs_info *mvi, int phy_id, u8 rate)
++{
++	union reg_phy_cfg phy_cfg, phy_cfg_tmp;
++	mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_MODE2);
++	phy_cfg_tmp.v = mvs_read_port_vsr_data(mvi, phy_id);
++	phy_cfg.v = 0;
++	phy_cfg.u.disable_phy = phy_cfg_tmp.u.disable_phy;
++	phy_cfg.u.sas_support = 1;
++	phy_cfg.u.sata_support = 1;
++	phy_cfg.u.sata_host_mode = 1;
++
++	switch (rate) {
++	case 0x0:
++		/* support 1.5 Gbps */
++		phy_cfg.u.speed_support = 1;
++		phy_cfg.u.snw_3_support = 0;
++		phy_cfg.u.tx_lnk_parity = 1;
++		phy_cfg.u.tx_spt_phs_lnk_rate = 0x30;
++		break;
++	case 0x1:
++
++		/* support 1.5, 3.0 Gbps */
++		phy_cfg.u.speed_support = 3;
++		phy_cfg.u.tx_spt_phs_lnk_rate = 0x3c;
++		phy_cfg.u.tx_lgcl_lnk_rate = 0x08;
++		break;
++	case 0x2:
++	default:
++		/* support 1.5, 3.0, 6.0 Gbps */
++		phy_cfg.u.speed_support = 7;
++		phy_cfg.u.snw_3_support = 1;
++		phy_cfg.u.tx_lnk_parity = 1;
++		phy_cfg.u.tx_spt_phs_lnk_rate = 0x3f;
++		phy_cfg.u.tx_lgcl_lnk_rate = 0x09;
++		break;
++	}
++	mvs_write_port_vsr_data(mvi, phy_id, phy_cfg.v);
++}
++
++static void __devinit
++mvs_94xx_config_reg_from_hba(struct mvs_info *mvi, int phy_id)
++{
++	u32 temp;
++	temp = (u32)(*(u32 *)&mvi->hba_info_param.phy_tuning[phy_id]);
++	if (temp == 0xFFFFFFFFL) {
++		mvi->hba_info_param.phy_tuning[phy_id].trans_emp_amp = 0x6;
++		mvi->hba_info_param.phy_tuning[phy_id].trans_amp = 0x1A;
++		mvi->hba_info_param.phy_tuning[phy_id].trans_amp_adj = 0x3;
++	}
++
++	temp = (u8)(*(u8 *)&mvi->hba_info_param.ffe_ctl[phy_id]);
++	if (temp == 0xFFL) {
++		switch (mvi->pdev->revision) {
++		case VANIR_A0_REV:
++		case VANIR_B0_REV:
++			mvi->hba_info_param.ffe_ctl[phy_id].ffe_rss_sel = 0x7;
++			mvi->hba_info_param.ffe_ctl[phy_id].ffe_cap_sel = 0x7;
++			break;
++		case VANIR_C0_REV:
++		case VANIR_C1_REV:
++		case VANIR_C2_REV:
++		default:
++			mvi->hba_info_param.ffe_ctl[phy_id].ffe_rss_sel = 0x7;
++			mvi->hba_info_param.ffe_ctl[phy_id].ffe_cap_sel = 0xC;
++			break;
 +		}
 +	}
 +
-+	mw32(MVS_NON_NCQ_ERR_0, err_0);
-+	mw32(MVS_NON_NCQ_ERR_1, err_1);
++	temp = (u8)(*(u8 *)&mvi->hba_info_param.phy_rate[phy_id]);
++	if (temp == 0xFFL)
++		/*set default phy_rate = 6Gbps*/
++		mvi->hba_info_param.phy_rate[phy_id] = 0x2;
++
++	set_phy_tuning(mvi, phy_id,
++		mvi->hba_info_param.phy_tuning[phy_id]);
++	set_phy_ffe_tuning(mvi, phy_id,
++		mvi->hba_info_param.ffe_ctl[phy_id]);
++	set_phy_rate(mvi, phy_id,
++		mvi->hba_info_param.phy_rate[phy_id]);
 +}
 +
- static void mvs_94xx_free_reg_set(struct mvs_info *mvi, u8 *tfs)
+ static void __devinit mvs_94xx_enable_xmt(struct mvs_info *mvi, int phy_id)
  {
  	void __iomem *regs = mvi->regs;
-@@ -679,5 +708,6 @@ const struct mvs_dispatch mvs_94xx_dispatch = {
- #ifndef DISABLE_HOTPLUG_DMA_FIX
- 	mvs_94xx_fix_dma,
- #endif
-+	mvs_94xx_non_spec_ncq_error,
- };
+@@ -90,12 +300,25 @@ static void mvs_94xx_phy_disable(struct mvs_info *mvi, u32 phy_id)
  
-diff --git a/drivers/scsi/mvsas/mv_chips.h b/drivers/scsi/mvsas/mv_chips.h
-index 1753a6f..4519f80 100644
---- a/drivers/scsi/mvsas/mv_chips.h
-+++ b/drivers/scsi/mvsas/mv_chips.h
-@@ -223,6 +223,9 @@ static inline void mvs_int_full(struct mvs_info *mvi)
- 			mvs_int_port(mvi, i, tmp);
- 	}
- 
-+	if (stat & CINT_NON_SPEC_NCQ_ERROR)
-+		MVS_CHIP_DISP->non_spec_ncq_error(mvi);
+ static void mvs_94xx_phy_enable(struct mvs_info *mvi, u32 phy_id)
+ {
+-	mvs_write_port_vsr_addr(mvi, phy_id, 0x1B4);
+-	mvs_write_port_vsr_data(mvi, phy_id, 0x8300ffc1);
+-	mvs_write_port_vsr_addr(mvi, phy_id, 0x104);
+-	mvs_write_port_vsr_data(mvi, phy_id, 0x00018080);
++	u32 tmp;
++	u8 revision = 0;
 +
- 	if (stat & CINT_SRS)
- 		mvs_int_sata(mvi);
- 
-diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
-index bc00c94..9202bc6 100644
---- a/drivers/scsi/mvsas/mv_defs.h
-+++ b/drivers/scsi/mvsas/mv_defs.h
-@@ -144,6 +144,7 @@ enum hw_register_bits {
- 	CINT_DMA_PCIE		= (1U << 27),	/* DMA to PCIE timeout */
- 	CINT_MEM		= (1U << 26),	/* int mem parity err */
- 	CINT_I2C_SLAVE		= (1U << 25),	/* slave I2C event */
-+	CINT_NON_SPEC_NCQ_ERROR	= (1U << 25),	/* Non specific NCQ error */
- 	CINT_SRS		= (1U << 3),	/* SRS event */
- 	CINT_CI_STOP		= (1U << 1),	/* cmd issue stopped */
- 	CINT_DONE		= (1U << 0),	/* cmd completion */
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 0ef2742..aaa475a 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -253,6 +253,20 @@ int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
- 	return num;
++	revision = mvi->pdev->revision;
++	if (revision == VANIR_A0_REV) {
++		mvs_write_port_vsr_addr(mvi, phy_id, CMD_HOST_RD_DATA);
++		mvs_write_port_vsr_data(mvi, phy_id, 0x8300ffc1);
++	}
++	if (revision == VANIR_B0_REV) {
++		mvs_write_port_vsr_addr(mvi, phy_id, CMD_APP_MEM_CTL);
++		mvs_write_port_vsr_data(mvi, phy_id, 0x08001006);
++		mvs_write_port_vsr_addr(mvi, phy_id, CMD_HOST_RD_DATA);
++		mvs_write_port_vsr_data(mvi, phy_id, 0x0000705f);
++	}
++
+ 	mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_MODE2);
+-	mvs_write_port_vsr_data(mvi, phy_id, 0x00207fff);
++	tmp = mvs_read_port_vsr_data(mvi, phy_id);
++	tmp |= bit(0);
++	mvs_write_port_vsr_data(mvi, phy_id, tmp & 0xfd7fffff);
  }
  
-+struct mvs_device *mvs_find_dev_by_reg_set(struct mvs_info *mvi,
-+						u8 reg_set)
-+{
-+	u32 dev_no;
-+	for (dev_no = 0; dev_no < MVS_MAX_DEVICES; dev_no++) {
-+		if (mvi->devices[dev_no].taskfileset == MVS_ID_NOT_MAPPED)
-+			continue;
-+
-+		if (mvi->devices[dev_no].taskfileset == reg_set)
-+			return &mvi->devices[dev_no];
-+	}
-+	return NULL;
-+}
-+
- static inline void mvs_free_reg_set(struct mvs_info *mvi,
- 				struct mvs_device *dev)
- {
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 1367d8b..f96100d 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -170,6 +170,7 @@ struct mvs_dispatch {
- #ifndef DISABLE_HOTPLUG_DMA_FIX
- 	void (*dma_fix)(dma_addr_t buf_dma, int buf_len, int from, void *prd);
- #endif
-+	void (*non_spec_ncq_error)(struct mvs_info *mvi);
+ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+@@ -103,7 +326,9 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 	void __iomem *regs = mvi->regs;
+ 	int i;
+ 	u32 tmp, cctl;
++	u8 revision;
  
++	revision = mvi->pdev->revision;
+ 	mvs_show_pcie_usage(mvi);
+ 	if (mvi->flags & MVF_FLAG_SOC) {
+ 		tmp = mr32(MVS_PHY_CTL);
+@@ -133,6 +358,28 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 		msleep(100);
+ 	}
+ 
++	/* disable Multiplexing, enable phy implemented */
++	mw32(MVS_PORTS_IMP, 0xFF);
++
++	if (revision == VANIR_A0_REV) {
++		mw32(MVS_PA_VSR_ADDR, CMD_CMWK_OOB_DET);
++		mw32(MVS_PA_VSR_PORT, 0x00018080);
++	}
++	mw32(MVS_PA_VSR_ADDR, VSR_PHY_MODE2);
++	if (revision == VANIR_A0_REV || revision == VANIR_B0_REV)
++		/* set 6G/3G/1.5G, multiplexing, without SSC */
++		mw32(MVS_PA_VSR_PORT, 0x0084d4fe);
++	else
++		/* set 6G/3G/1.5G, multiplexing, with and without SSC */
++		mw32(MVS_PA_VSR_PORT, 0x0084fffe);
++
++	if (revision == VANIR_B0_REV) {
++		mw32(MVS_PA_VSR_ADDR, CMD_APP_MEM_CTL);
++		mw32(MVS_PA_VSR_PORT, 0x08001006);
++		mw32(MVS_PA_VSR_ADDR, CMD_HOST_RD_DATA);
++		mw32(MVS_PA_VSR_PORT, 0x0000705f);
++	}
++
+ 	/* reset control */
+ 	mw32(MVS_PCS, 0);		/* MVS_PCS */
+ 	mw32(MVS_STP_REG_SET_0, 0);
+@@ -141,15 +388,6 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 	/* init phys */
+ 	mvs_phy_hacks(mvi);
+ 
+-	/* disable Multiplexing, enable phy implemented */
+-	mw32(MVS_PORTS_IMP, 0xFF);
+-
+-
+-	mw32(MVS_PA_VSR_ADDR, 0x00000104);
+-	mw32(MVS_PA_VSR_PORT, 0x00018080);
+-	mw32(MVS_PA_VSR_ADDR, VSR_PHY_MODE8);
+-	mw32(MVS_PA_VSR_PORT, 0x0084ffff);
+-
+ 	/* set LED blink when IO*/
+ 	mw32(MVS_PA_VSR_ADDR, 0x00000030);
+ 	tmp = mr32(MVS_PA_VSR_PORT);
+@@ -178,6 +416,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 						(mvi->phy[i].dev_sas_addr));
+ 
+ 		mvs_94xx_enable_xmt(mvi, i);
++		mvs_94xx_config_reg_from_hba(mvi, i);
+ 		mvs_94xx_phy_enable(mvi, i);
+ 
+ 		mvs_94xx_phy_reset(mvi, i, 1);
+diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+index 8835bef..e71ae11 100644
+--- a/drivers/scsi/mvsas/mv_94xx.h
++++ b/drivers/scsi/mvsas/mv_94xx.h
+@@ -30,6 +30,14 @@
+ 
+ #define MAX_LINK_RATE		SAS_LINK_RATE_6_0_GBPS
+ 
++enum VANIR_REVISION_ID {
++	VANIR_A0_REV		= 0xA0,
++	VANIR_B0_REV		= 0x01,
++	VANIR_C0_REV		= 0x02,
++	VANIR_C1_REV		= 0x03,
++	VANIR_C2_REV		= 0xC2,
++};
++
+ enum hw_registers {
+ 	MVS_GBL_CTL		= 0x04,  /* global control */
+ 	MVS_GBL_INT_STAT	= 0x00,  /* global irq status */
+@@ -126,6 +134,10 @@ enum sas_sata_vsp_regs {
+ 	VSR_PHY_MODE11		= 0x0B * 4, /* Phy Mode */
+ 	VSR_PHY_VS0		= 0x0C * 4, /* Vednor Specific 0 */
+ 	VSR_PHY_VS1		= 0x0D * 4, /* Vednor Specific 1 */
++
++	VSR_PHY_FFE_CONTROL	= 0x10C,
++	VSR_PHY_DFE_UPDATE_CRTL	= 0x110,
++	VSR_REF_CLOCK_CRTL	= 0x1A0,
  };
  
-@@ -416,5 +417,6 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events);
- void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st);
- int mvs_int_rx(struct mvs_info *mvi, bool self_clear);
- void mvs_hexdump(u32 size, u8 *data, u32 baseaddr);
-+struct mvs_device *mvs_find_dev_by_reg_set(struct mvs_info *mvi, u8 reg_set);
- #endif
+ enum chip_register_bits {
+@@ -169,6 +181,41 @@ enum pci_interrupt_cause {
+ 	IRQ_PCIE_ERR                   = (1 << 31),
+ };
  
++union reg_phy_cfg{
++	u32 v;
++	struct {
++		u32 phy_reset:1;
++		u32 sas_support:1;
++		u32 sata_support:1;
++		u32 sata_host_mode:1;
++		/*
++		 * bit 2: 6Gbps support
++		 * bit 1: 3Gbps support
++		 * bit 0: 1.5Gbps support
++		 */
++		u32 speed_support:3;
++		u32 snw_3_support:1;
++		u32 tx_lnk_parity:1;
++		/*
++		 * bit 5: G1 (1.5Gbps) Without SSC
++		 * bit 4: G1 (1.5Gbps) with SSC
++		 * bit 3: G2 (3.0Gbps) Without SSC
++		 * bit 2: G2 (3.0Gbps) with SSC
++		 * bit 1: G3 (6.0Gbps) without SSC
++		 * bit 0: G3 (6.0Gbps) with SSC
++		 */
++		u32 tx_spt_phs_lnk_rate:6;
++		/* 8h: 1.5Gbps 9h: 3Gbps Ah: 6Gbps */
++		u32 tx_lgcl_lnk_rate:4;
++		u32 tx_ssc_type:1;
++		u32 sata_spin_up_spt:1;
++		u32 sata_spin_up_en:1;
++		u32 bypass_oob:1;
++		u32 disable_phy:1;
++		u32 rsvd:8;
++	} u;
++};
++
+ #define MAX_SG_ENTRY		255
+ 
+ struct mvs_prd_imt {
+@@ -185,6 +232,17 @@ struct mvs_prd {
+ 	struct mvs_prd_imt	im_len;
+ } __attribute__ ((packed));
+ 
++/*
++ * these registers are accessed through port vendor
++ * specific address/data registers
++ */
++enum sas_sata_phy_regs {
++    GENERATION_1_SETTING		= 0x118,
++    GENERATION_1_2_SETTING		= 0x11C,
++    GENERATION_2_3_SETTING		= 0x120,
++    GENERATION_3_4_SETTING		= 0x124,
++};
++
+ #define SPI_CTRL_REG_94XX           	0xc800
+ #define SPI_ADDR_REG_94XX            	0xc804
+ #define SPI_WR_DATA_REG_94XX         0xc808
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 90b6366..9f1cccc 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -569,6 +569,9 @@ static int __devinit mvs_pci_init(struct pci_dev *pdev,
+ 			goto err_out_regions;
+ 		}
+ 
++		memset(&mvi->hba_info_param, 0xFF,
++			sizeof(struct hba_info_page));
++
+ 		mvs_init_sas_add(mvi);
+ 
+ 		mvi->instance = nhost;
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index f96100d..8740b78 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -250,6 +250,73 @@ struct mvs_device {
+ 	u16 reserved;
+ };
+ 
++/* Generate  PHY tunning parameters */
++struct phy_tuning {
++	/* 1 bit,  transmitter emphasis enable	*/
++	u8	trans_emp_en:1;
++	/* 4 bits, transmitter emphasis amplitude */
++	u8	trans_emp_amp:4;
++	/* 3 bits, reserved space */
++	u8	Reserved_2bit_1:3;
++	/* 5 bits, transmitter amplitude */
++	u8	trans_amp:5;
++	/* 2 bits, transmitter amplitude adjust */
++	u8	trans_amp_adj:2;
++	/* 1 bit, reserved space */
++	u8	resv_2bit_2:1;
++	/* 2 bytes, reserved space */
++	u8	reserved[2];
++};
++
++struct ffe_control {
++	/* 4 bits,  FFE Capacitor Select  (value range 0~F)  */
++	u8 ffe_cap_sel:4;
++	/* 3 bits,  FFE Resistor Select (value range 0~7) */
++	u8 ffe_rss_sel:3;
++	/* 1 bit reserve*/
++	u8 reserved:1;
++};
++
++/*
++ * HBA_Info_Page is saved in Flash/NVRAM, total 256 bytes.
++ * The data area is valid only Signature="MRVL".
++ * If any member fills with 0xFF, the member is invalid.
++ */
++struct hba_info_page{
++	/* Dword 0 */
++	/* 4 bytes, structure signature,should be "MRVL" at first initial */
++	u8 signature[4];
++
++	/* Dword 1-13 */
++	u32 reserved1[13];
++
++	/* Dword 14-29 */
++	/* 64 bytes, SAS address for each port */
++	u64 sas_addr[8];
++
++	/* Dword 30-31 */
++	/* 8 bytes for vanir 8 port PHY FFE seeting
++	 * BIT 0~3 : FFE Capacitor select(value range 0~F)
++	 * BIT 4~6 : FFE Resistor select(value range 0~7)
++	 * BIT 7: reserve.
++	 */
++
++	struct ffe_control  ffe_ctl[8];
++	/* Dword 32 -43 */
++	u32 reserved2[12];
++
++	/* Dword 44-45 */
++	/* 8 bytes,  0:  1.5G, 1: 3.0G, should be 0x01 at first initial */
++	u8 phy_rate[8];
++
++	/* Dword 46-53 */
++	/* 32 bytes, PHY tuning parameters for each PHY*/
++	struct phy_tuning   phy_tuning[8];
++
++	/* Dword 54-63 */
++	u32 reserved3[10];
++};	/* total 256 bytes */
++
+ struct mvs_slot_info {
+ 	struct list_head entry;
+ 	union {
+@@ -338,6 +405,7 @@ struct mvs_info {
+ 	u32 flashsectSize;
+ 
+ 	void *addon;
++	struct hba_info_page hba_info_param;
+ 	struct mvs_device	devices[MVS_MAX_DEVICES];
+ #ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	void *bulk_buffer;
 -- 
 1.7.4.4
-
