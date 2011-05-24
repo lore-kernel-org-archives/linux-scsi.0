@@ -1,10 +1,10 @@
 From: yxlraid@gmail.com
-Subject: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt coalescing to device 	attributes in sysfs
-Date: Tue, 24 May 2011 22:31:47 +0800
-Message-ID: <1306247507-6136-1-git-send-email-yxlraid@gmail.com>
-References: <mvsas-intr-coal>
+Subject: [PATCH 4/9] [SCSI] mvsas: fix 94xx hotplug issue
+Date: Tue, 24 May 2011 22:33:11 +0800
+Message-ID: <1306247591-6222-1-git-send-email-yxlraid@gmail.com>
+References: <mvsas-hotplug-issue>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <mvsas-intr-coal>
+In-Reply-To: <mvsas-hotplug-issue>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: jslaby@suse.cz, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com, jfeng@marvell.com
@@ -12,250 +12,258 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiangliang Yu <yuxiangl@marvell.com>
 
--- Add support for driver version and interrupt coalescing device attributes.
+-- Fix 94xx A0/B0 revision hotplug issue.
+-- Remove unused macro: DISABLE_HOTPLUG_DMA_FIX
 
 Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
 ---
- drivers/scsi/mvsas/mv_64xx.c |   25 +++++++++++++-
- drivers/scsi/mvsas/mv_94xx.c |   26 ++++++++++++++-
- drivers/scsi/mvsas/mv_init.c |   75 ++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/mvsas/mv_sas.h  |    2 +
- 4 files changed, 126 insertions(+), 2 deletions(-)
+ drivers/scsi/mvsas/mv_64xx.c |    9 ++++-----
+ drivers/scsi/mvsas/mv_94xx.c |   16 +++++++++++-----
+ drivers/scsi/mvsas/mv_init.c |   15 +++++++++++----
+ drivers/scsi/mvsas/mv_sas.c  |   28 ++++++++++++----------------
+ drivers/scsi/mvsas/mv_sas.h  |    9 ++++-----
+ 5 files changed, 42 insertions(+), 35 deletions(-)
 
 diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
-index 0e13e64..c88b8a7 100644
+index c88b8a7..b02dd80 100644
 --- a/drivers/scsi/mvsas/mv_64xx.c
 +++ b/drivers/scsi/mvsas/mv_64xx.c
-@@ -402,7 +402,7 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
- 	tmp = 0;
- 	mw32(MVS_INT_COAL, tmp);
- 
--	tmp = 0x100;
-+	tmp = 0x10000 | interrupt_coalescing;
- 	mw32(MVS_INT_COAL_TMOUT, tmp);
- 
- 	/* ladies and gentlemen, start your engines */
-@@ -758,6 +758,28 @@ void mvs_64xx_fix_dma(dma_addr_t buf_dma, int buf_len, int from, void *prd)
+@@ -744,11 +744,13 @@ int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+ 	return -1;
  }
- #endif
  
-+static void mvs_64xx_tune_interrupt(struct mvs_info *mvi, u32 time)
-+{
-+	void __iomem *regs = mvi->regs;
-+	u32 tmp = 0;
-+	/* interrupt coalescing may cause missing HW interrput in some case,
-+	 * and the max count is 0x1ff, while our max slot is 0x200,
-+	 * it will make count 0.
-+	 */
-+	if (time == 0) {
-+		mw32(MVS_INT_COAL, 0);
-+		mw32(MVS_INT_COAL_TMOUT, 0x10000);
-+	} else {
-+		if (MVS_CHIP_SLOT_SZ > 0x1ff)
-+			mw32(MVS_INT_COAL, 0x1ff|COAL_EN);
-+		else
-+			mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ|COAL_EN);
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
+-void mvs_64xx_fix_dma(dma_addr_t buf_dma, int buf_len, int from, void *prd)
++void mvs_64xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
++				int buf_len, int from, void *prd)
+ {
+ 	int i;
+ 	struct mvs_prd *buf_prd = prd;
++	dma_addr_t buf_dma = mvi->bulk_buffer_dma;
 +
-+		tmp = 0x10000 | time;
-+		mw32(MVS_INT_COAL_TMOUT, tmp);
-+	}
-+}
-+
- const struct mvs_dispatch mvs_64xx_dispatch = {
- 	"mv64xx",
- 	mvs_64xx_init,
-@@ -811,6 +833,7 @@ const struct mvs_dispatch mvs_64xx_dispatch = {
- #ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	buf_prd	+= from;
+ 	for (i = 0; i < MAX_SG_ENTRY - from; i++) {
+ 		buf_prd->addr = cpu_to_le64(buf_dma);
+@@ -756,7 +758,6 @@ void mvs_64xx_fix_dma(dma_addr_t buf_dma, int buf_len, int from, void *prd)
+ 		++buf_prd;
+ 	}
+ }
+-#endif
+ 
+ static void mvs_64xx_tune_interrupt(struct mvs_info *mvi, u32 time)
+ {
+@@ -830,9 +831,7 @@ const struct mvs_dispatch mvs_64xx_dispatch = {
+ 	mvs_64xx_spi_buildcmd,
+ 	mvs_64xx_spi_issuecmd,
+ 	mvs_64xx_spi_waitdataready,
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
  	mvs_64xx_fix_dma,
- #endif
-+	mvs_64xx_tune_interrupt,
+-#endif
+ 	mvs_64xx_tune_interrupt,
  	NULL,
  };
- 
 diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index 3f2ad93..e589f31 100644
+index e589f31..ef3c901 100644
 --- a/drivers/scsi/mvsas/mv_94xx.c
 +++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -475,7 +475,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
- 	tmp = 0;
- 	mw32(MVS_INT_COAL, tmp);
- 
--	tmp = 0x100;
-+	tmp = 0x10000 | interrupt_coalescing;
- 	mw32(MVS_INT_COAL_TMOUT, tmp);
- 
- 	/* ladies and gentlemen, start your engines */
-@@ -894,6 +894,29 @@ static void mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set,
- {
+@@ -871,19 +871,27 @@ int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+ 	return -1;
  }
  
-+static void mvs_94xx_tune_interrupt(struct mvs_info *mvi, u32 time)
-+{
-+	void __iomem *regs = mvi->regs;
-+	u32 tmp = 0;
-+	/* interrupt coalescing may cause missing HW interrput in some case,
-+	 * and the max count is 0x1ff, while our max slot is 0x200,
-+	 * it will make count 0.
-+	 */
-+	if (time == 0) {
-+		mw32(MVS_INT_COAL, 0);
-+		mw32(MVS_INT_COAL_TMOUT, 0x10000);
-+	} else {
-+		if (MVS_CHIP_SLOT_SZ > 0x1ff)
-+			mw32(MVS_INT_COAL, 0x1ff|COAL_EN);
-+		else
-+			mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ|COAL_EN);
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
+-void mvs_94xx_fix_dma(dma_addr_t buf_dma, int buf_len, int from, void *prd)
++void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
++				int buf_len, int from, void *prd)
+ {
+ 	int i;
+ 	struct mvs_prd *buf_prd = prd;
++	dma_addr_t buf_dma;
+ 	buf_prd += from;
 +
-+		tmp = 0x10000 | time;
-+		mw32(MVS_INT_COAL_TMOUT, tmp);
-+	}
++	if ((mvi->pdev->revision == VANIR_A0_REV) ||
++			(mvi->pdev->revision == VANIR_B0_REV))
++		buf_dma = (phy_mask <= 0x08) ?
++				mvi->bulk_buffer_dma : mvi->bulk_buffer_dma1;
++	else
++		return;
 +
-+}
-+
- const struct mvs_dispatch mvs_94xx_dispatch = {
- 	"mv94xx",
- 	mvs_94xx_init,
-@@ -947,6 +970,7 @@ const struct mvs_dispatch mvs_94xx_dispatch = {
- #ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	for (i = 0; i < MAX_SG_ENTRY - from; i++) {
+ 		buf_prd->addr = cpu_to_le64(buf_dma);
+ 		buf_prd->im_len.len = cpu_to_le32(buf_len);
+ 		++buf_prd;
+ 	}
+ }
+-#endif
+ 
+ /*
+  * FIXME JEJB: temporary nop clear_srs_irq to make 94xx still work
+@@ -967,9 +975,7 @@ const struct mvs_dispatch mvs_94xx_dispatch = {
+ 	mvs_94xx_spi_buildcmd,
+ 	mvs_94xx_spi_issuecmd,
+ 	mvs_94xx_spi_waitdataready,
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
  	mvs_94xx_fix_dma,
- #endif
-+	mvs_94xx_tune_interrupt,
+-#endif
+ 	mvs_94xx_tune_interrupt,
  	mvs_94xx_non_spec_ncq_error,
  };
- 
 diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 9f1cccc..531093d 100644
+index 531093d..b111ae2 100644
 --- a/drivers/scsi/mvsas/mv_init.c
 +++ b/drivers/scsi/mvsas/mv_init.c
-@@ -34,6 +34,8 @@ MODULE_PARM_DESC(collector, "\n"
- 	"\tThe mvsas SAS LLDD supports both modes.\n"
- 	"\tDefault: 1 (Direct Mode).\n");
+@@ -153,11 +153,13 @@ static void mvs_free(struct mvs_info *mvi)
+ 		dma_free_coherent(mvi->dev,
+ 				  sizeof(*mvi->slot) * slot_nr,
+ 				  mvi->slot, mvi->slot_dma);
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
++
+ 	if (mvi->bulk_buffer)
+ 		dma_free_coherent(mvi->dev, TRASH_BUCKET_SIZE,
+ 				  mvi->bulk_buffer, mvi->bulk_buffer_dma);
+-#endif
++	if (mvi->bulk_buffer1)
++		dma_free_coherent(mvi->dev, TRASH_BUCKET_SIZE,
++				  mvi->bulk_buffer1, mvi->bulk_buffer_dma1);
  
-+int interrupt_coalescing = 0x80;
-+
- static struct scsi_transport_template *mvs_stt;
- struct kmem_cache *mvs_task_list_cache;
- static const struct mvs_chip_info mvs_chips[] = {
-@@ -48,6 +50,8 @@ static const struct mvs_chip_info mvs_chips[] = {
- 	[chip_1320] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
- };
+ 	MVS_CHIP_DISP->chip_iounmap(mvi);
+ 	if (mvi->shost)
+@@ -278,13 +280,18 @@ static int __devinit mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+ 		goto err_out;
+ 	memset(mvi->slot, 0, sizeof(*mvi->slot) * slot_nr);
  
-+struct device_attribute *mvst_host_attrs[];
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	mvi->bulk_buffer = dma_alloc_coherent(mvi->dev,
+ 				       TRASH_BUCKET_SIZE,
+ 				       &mvi->bulk_buffer_dma, GFP_KERNEL);
+ 	if (!mvi->bulk_buffer)
+ 		goto err_out;
+-#endif
 +
- #define SOC_SAS_NUM 2
- #define SG_MX 64
++	mvi->bulk_buffer1 = dma_alloc_coherent(mvi->dev,
++				       TRASH_BUCKET_SIZE,
++				       &mvi->bulk_buffer_dma1, GFP_KERNEL);
++	if (!mvi->bulk_buffer1)
++		goto err_out;
++
+ 	sprintf(pool_name, "%s%d", "mvs_dma_pool", mvi->id);
+ 	mvi->dma_pool = pci_pool_create(pool_name, mvi->pdev, MVS_SLOT_BUF_SZ, 16, 0);
+ 	if (!mvi->dma_pool) {
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index aaa475a..4585dc0 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -630,14 +630,11 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 		(mvi_dev->taskfileset << TXQ_SRS_SHIFT);
+ 	mvi->tx[mvi->tx_prod] = cpu_to_le32(del_q);
  
-@@ -74,6 +78,7 @@ static struct scsi_host_template mvs_sht = {
- 	.slave_alloc		= mvs_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
-+	.shost_attrs		= mvst_host_attrs,
- };
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	if (task->data_dir == DMA_FROM_DEVICE)
+ 		flags = (MVS_CHIP_DISP->prd_count() << MCH_PRD_LEN_SHIFT);
+ 	else
+ 		flags = (tei->n_elem << MCH_PRD_LEN_SHIFT);
+-#else
+-	flags = (tei->n_elem << MCH_PRD_LEN_SHIFT);
+-#endif
++
+ 	if (task->ata_task.use_ncq)
+ 		flags |= MCH_FPDMA;
+ 	if (dev->sata_dev.command_set == ATAPI_COMMAND_SET) {
+@@ -729,11 +726,11 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
  
- static struct sas_domain_function_template mvs_transport_ops = {
-@@ -706,6 +711,70 @@ static struct pci_driver mvs_pci_driver = {
- 	.remove		= __devexit_p(mvs_pci_remove),
- };
- 
-+static ssize_t
-+mvs_show_driver_version(struct device *cdev,
-+		struct device_attribute *attr,  char *buffer)
-+{
-+	return snprintf(buffer, PAGE_SIZE, "%s\n", DRV_VERSION);
-+}
+ 	/* fill in PRD (scatter/gather) table, if any */
+ 	MVS_CHIP_DISP->make_prd(task->scatter, tei->n_elem, buf_prd);
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
 +
-+static DEVICE_ATTR(driver_version,
-+			 S_IRUGO,
-+			 mvs_show_driver_version,
-+			 NULL);
+ 	if (task->data_dir == DMA_FROM_DEVICE)
+-		MVS_CHIP_DISP->dma_fix(mvi->bulk_buffer_dma,
++		MVS_CHIP_DISP->dma_fix(mvi, sas_port->phy_mask,
+ 				TRASH_BUCKET_SIZE, tei->n_elem, buf_prd);
+-#endif
 +
-+static ssize_t
-+mvs_store_interrupt_coalescing(struct device *cdev,
-+			struct device_attribute *attr,
-+			const char *buffer, size_t size)
-+{
-+	int val = 0;
-+	struct mvs_info *mvi = NULL;
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
-+	u8 i, core_nr;
-+	if (buffer == NULL)
-+		return size;
-+
-+	if (sscanf(buffer, "%d", &val) != 1)
-+		return -EINVAL;
-+
-+	if (val >= 0x10000) {
-+		mv_dprintk("interrupt coalescing timer %d us is"
-+			"too long\n", val);
-+		return strlen(buffer);
-+	}
-+
-+	interrupt_coalescing = val;
-+
-+	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
-+	mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[0];
-+
-+	if (unlikely(!mvi))
-+		return -EINVAL;
-+
-+	for (i = 0; i < core_nr; i++) {
-+		mvi = ((struct mvs_prv_info *)sha->lldd_ha)->mvi[i];
-+		if (MVS_CHIP_DISP->tune_interrupt)
-+			MVS_CHIP_DISP->tune_interrupt(mvi,
-+				interrupt_coalescing);
-+	}
-+	mv_dprintk("set interrupt coalescing time to %d us\n",
-+		interrupt_coalescing);
-+	return strlen(buffer);
-+}
-+
-+static ssize_t mvs_show_interrupt_coalescing(struct device *cdev,
-+			struct device_attribute *attr, char *buffer)
-+{
-+	return snprintf(buffer, PAGE_SIZE, "%d\n", interrupt_coalescing);
-+}
-+
-+static DEVICE_ATTR(interrupt_coalescing,
-+			 S_IRUGO|S_IWUSR,
-+			 mvs_show_interrupt_coalescing,
-+			 mvs_store_interrupt_coalescing);
-+
- /* task handler */
- struct task_struct *mvs_th;
- static int __init mvs_init(void)
-@@ -742,6 +811,12 @@ static void __exit mvs_exit(void)
- 	kmem_cache_destroy(mvs_task_list_cache);
+ 	return 0;
  }
  
-+struct device_attribute *mvst_host_attrs[] = {
-+	&dev_attr_driver_version,
-+	&dev_attr_interrupt_coalescing,
-+	NULL,
-+};
-+
- module_init(mvs_init);
- module_exit(mvs_exit);
+@@ -1283,6 +1280,13 @@ static u32 mvs_is_sig_fis_received(u32 irq_status)
+ 	return irq_status & PHYEV_SIG_FIS;
+ }
  
++static void mvs_sig_remove_timer(struct mvs_phy *phy)
++{
++	if (phy->timer.function)
++		del_timer(&phy->timer);
++	phy->timer.function = NULL;
++}
++
+ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ {
+ 	struct mvs_phy *phy = &mvi->phy[i];
+@@ -1305,6 +1309,7 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ 		if (phy->phy_type & PORT_TYPE_SATA) {
+ 			phy->identify.target_port_protocols = SAS_PROTOCOL_STP;
+ 			if (mvs_is_sig_fis_received(phy->irq_status)) {
++				mvs_sig_remove_timer(phy);
+ 				phy->phy_attached = 1;
+ 				phy->att_dev_sas_addr =
+ 					i + mvi->id * mvi->chip->n_phy;
+@@ -1322,7 +1327,6 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ 						tmp | PHYEV_SIG_FIS);
+ 				phy->phy_attached = 0;
+ 				phy->phy_type &= ~PORT_TYPE_SATA;
+-				MVS_CHIP_DISP->phy_reset(mvi, i, 0);
+ 				goto out_done;
+ 			}
+ 		}	else if (phy->phy_type & PORT_TYPE_SAS
+@@ -2193,13 +2197,6 @@ static void mvs_sig_time_out(unsigned long tphy)
+ 	}
+ }
+ 
+-static void mvs_sig_remove_timer(struct mvs_phy *phy)
+-{
+-	if (phy->timer.function)
+-		del_timer(&phy->timer);
+-	phy->timer.function = NULL;
+-}
+-
+ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
+ {
+ 	u32 tmp;
+@@ -2263,7 +2260,6 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
+ 	}
+ 	if (phy->irq_status & (PHYEV_SIG_FIS | PHYEV_ID_DONE)) {
+ 		phy->phy_status = mvs_is_phy_ready(mvi, phy_no);
+-		mvs_sig_remove_timer(phy);
+ 		mv_dprintk("notify plug in on phy[%d]\n", phy_no);
+ 		if (phy->phy_status) {
+ 			mdelay(10);
 diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 8740b78..fed8495 100644
+index fed8495..3399ff1 100644
 --- a/drivers/scsi/mvsas/mv_sas.h
 +++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -64,6 +64,7 @@
- #endif
- #define MV_MAX_U32			0xffffffff
- 
-+extern int interrupt_coalescing;
- extern struct mvs_tgt_initiator mvs_tgt;
- extern struct mvs_info *tgt_mvi;
- extern const struct mvs_dispatch mvs_64xx_dispatch;
-@@ -170,6 +171,7 @@ struct mvs_dispatch {
- #ifndef DISABLE_HOTPLUG_DMA_FIX
- 	void (*dma_fix)(dma_addr_t buf_dma, int buf_len, int from, void *prd);
- #endif
-+	void (*tune_interrupt)(struct mvs_info *mvi, u32 time);
+@@ -168,9 +168,8 @@ struct mvs_dispatch {
+ 						);
+ 	int (*spi_issuecmd)(struct mvs_info *mvi, u32 cmd);
+ 	int (*spi_waitdataready)(struct mvs_info *mvi, u32 timeout);
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
+-	void (*dma_fix)(dma_addr_t buf_dma, int buf_len, int from, void *prd);
+-#endif
++	void (*dma_fix)(struct mvs_info *mvi, u32 phy_mask,
++				int buf_len, int from, void *prd);
+ 	void (*tune_interrupt)(struct mvs_info *mvi, u32 time);
  	void (*non_spec_ncq_error)(struct mvs_info *mvi);
  
+@@ -409,11 +408,11 @@ struct mvs_info {
+ 	void *addon;
+ 	struct hba_info_page hba_info_param;
+ 	struct mvs_device	devices[MVS_MAX_DEVICES];
+-#ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	void *bulk_buffer;
+ 	dma_addr_t bulk_buffer_dma;
++	void *bulk_buffer1;
++	dma_addr_t bulk_buffer_dma1;
+ #define TRASH_BUCKET_SIZE    	0x20000
+-#endif
+ 	void *dma_pool;
+ 	struct mvs_slot_info slot_info[0];
  };
 -- 
 1.7.4.4
