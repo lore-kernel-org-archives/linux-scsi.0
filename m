@@ -1,65 +1,61 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] block: fix oops in blk_run_queue()
-Date: Tue, 24 May 2011 13:18:51 -0400
-Message-ID: <1306257531.10201.20.camel@mulgrave.site>
-References: <bug-35282-11613@https.bugzilla.kernel.org/>
-	 <201105191944.p4JJiVVm029690@demeter1.kernel.org>
+Subject: Re: [PATCH]: Fix Ultrastor asm snippet
+Date: Tue, 24 May 2011 13:28:44 -0400
+Message-ID: <1306258124.10201.22.camel@mulgrave.site>
+References: <20110518150605.GA25262@const.bordeaux.inria.fr>
+	 <20110520130215.GB3428@infradead.org>
+	 <20110520142459.4c37d3e0@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36757 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36763 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757560Ab1EXVce (ORCPT
+	by vger.kernel.org with ESMTP id S932161Ab1EXVck (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 May 2011 17:32:34 -0400
-In-Reply-To: <201105191944.p4JJiVVm029690@demeter1.kernel.org>
+	Tue, 24 May 2011 17:32:40 -0400
+In-Reply-To: <20110520142459.4c37d3e0@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, Samuel Thibault <samuel.thibault@ens-lyon.org>, James.Bottomley@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-Bugzilla report is here:
+On Fri, 2011-05-20 at 14:24 +0100, Alan Cox wrote:
+> On Fri, 20 May 2011 09:02:15 -0400
+> Christoph Hellwig <hch@infradead.org> wrote:
+> 
+> > On Wed, May 18, 2011 at 05:06:05PM +0200, Samuel Thibault wrote:
+> > > Commit 1292500b replaced
+> > > 
+> > > "=m" (*field) : "1" (*field)
+> > > 
+> > > with
+> > > 
+> > > "=m" (*field) :
+> > > 
+> > > with comment "The following patch fixes it by using the '+' operator on
+> > > the (*field) operand, marking it as read-write to gcc."
+> > > '+' was actually forgotten.  This really puts it.
+> > 
+> > Do you actually have the hardware or was this just a code audit?
+> > 
+> > I have the strong suspicion that this driver is pretty much dead and
+> > bitrotting.
+> 
+> There are a pile of scsi drivers like the Ultrastor that probably want
+> retiring via staging.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=35682
+OK, can someone work out how we do this and then send the patch (I
+assume it's just an update in the deprecated features and a move to
+staging?)
 
-The problem occurs if blk_run_queue() or its variants is called after
-blk_cleanup_queue() is called.  The run checks should have a state guard
-for QUEUE_FLAG_DEAD.  Since a DEAD queue is always STOPPED, just fold it
-into the blk_queue_stopped() test.
+> I can believe an AHA152x or two lurk around,
 
-Signed-off-by: James Bottomley <jbottomley@parallels.com>
+Yes, got one ... and occasionally even test with it.
 
----
-
-Jens, can you look at this, please ... would you prefer a separate DEAD
-test instead?  Incidentally, this is in addition to the other DEAD test
-you still haven't applied ...
+>  and the odd NCR53c80 and
+> clones because they were so voluminous but the rest I doubt somewhat.
 
 James
-
-
-
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 2ad95fa..8166845 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -473,7 +473,9 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
- }
- 
- #define blk_queue_tagged(q)	test_bit(QUEUE_FLAG_QUEUED, &(q)->queue_flags)
--#define blk_queue_stopped(q)	test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags)
-+#define blk_queue_stopped(q)	\
-+		(test_bit(QUEUE_FLAG_STOPPED, &(q)->queue_flags) || \
-+		 test_bit(QUEUE_FLAG_DEAD, &(q)->queue_flags))
- #define blk_queue_nomerges(q)	test_bit(QUEUE_FLAG_NOMERGES, &(q)->queue_flags)
- #define blk_queue_noxmerges(q)	\
- 	test_bit(QUEUE_FLAG_NOXMERGES, &(q)->queue_flags)
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
