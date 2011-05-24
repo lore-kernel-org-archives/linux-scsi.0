@@ -1,62 +1,170 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 3/9] [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y
- warning
-Date: Tue, 24 May 2011 09:32:47 -0400
-Message-ID: <5b0f759a-66ec-4f31-bcdf-084e3a6aa4c3@exht1.ad.emulex.com>
-References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org> <1305244212-19183-4-git-send-email-sboyd@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305244212-19183-4-git-send-email-sboyd@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Boyd <sboyd@codeaurora.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Iannicelli, Alex" <Alex.Iannicelli@Emulex.Com>
+From: yxlraid@gmail.com
+Subject: [PATCH 1/9] [SCSI] mvsas: Add support for Non specific NCQ error interrupt
+Date: Tue, 24 May 2011 22:26:50 +0800
+Message-ID: <1306247210-5888-1-git-send-email-yxlraid@gamil.com>
+References: <mvsas-ncq>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:60215 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756109Ab1EXO1c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 10:27:32 -0400
+In-Reply-To: <mvsas-ncq>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: jslaby@suse.cz, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com, jfeng@marvell.com
 
-Acked-by: James Smart <james.smart@emulex.com>
+From: Xiangliang Yu <yuxiangl@marvell.com>
 
-Thanks
+-- Add support for Non specific NCQ error interrupt.
 
--- james
+Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
+---
+ drivers/scsi/mvsas/mv_64xx.c  |    1 +
+ drivers/scsi/mvsas/mv_94xx.c  |   32 +++++++++++++++++++++++++++++++-
+ drivers/scsi/mvsas/mv_chips.h |    3 +++
+ drivers/scsi/mvsas/mv_defs.h  |    1 +
+ drivers/scsi/mvsas/mv_sas.c   |   14 ++++++++++++++
+ drivers/scsi/mvsas/mv_sas.h   |    2 ++
+ 6 files changed, 52 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
+index 13c9604..0e13e64 100644
+--- a/drivers/scsi/mvsas/mv_64xx.c
++++ b/drivers/scsi/mvsas/mv_64xx.c
+@@ -811,5 +811,6 @@ const struct mvs_dispatch mvs_64xx_dispatch = {
+ #ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	mvs_64xx_fix_dma,
+ #endif
++	NULL,
+ };
+ 
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index 78162c3..9d60c7c 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -249,7 +249,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 
+ 	/* enable completion queue interrupt */
+ 	tmp = (CINT_PORT_MASK | CINT_DONE | CINT_MEM | CINT_SRS | CINT_CI_STOP |
+-		CINT_DMA_PCIE);
++		CINT_DMA_PCIE | CINT_NON_SPEC_NCQ_ERROR);
+ 	tmp |= CINT_PHY_MASK;
+ 	mw32(MVS_INT_MASK, tmp);
+ 
+@@ -367,6 +367,35 @@ static void mvs_94xx_issue_stop(struct mvs_info *mvi, enum mvs_port_type type,
+ 	mw32(MVS_PCS, tmp);
+ }
+ 
++static void mvs_94xx_non_spec_ncq_error(struct mvs_info *mvi)
++{
++	void __iomem *regs = mvi->regs;
++	u32 err_0, err_1;
++	u8 i;
++	struct mvs_device *device;
++
++	err_0 = mr32(MVS_NON_NCQ_ERR_0);
++	err_1 = mr32(MVS_NON_NCQ_ERR_1);
++
++	mv_dprintk("non specific ncq error err_0:%x,err_1:%x.\n",
++			err_0, err_1);
++	for (i = 0; i < 32; i++) {
++		if (err_0 & bit(i)) {
++			device = mvs_find_dev_by_reg_set(mvi, i);
++			if (device)
++				mvs_release_task(mvi, device->sas_device);
++		}
++		if (err_1 & bit(i)) {
++			device = mvs_find_dev_by_reg_set(mvi, i+32);
++			if (device)
++				mvs_release_task(mvi, device->sas_device);
++		}
++	}
++
++	mw32(MVS_NON_NCQ_ERR_0, err_0);
++	mw32(MVS_NON_NCQ_ERR_1, err_1);
++}
++
+ static void mvs_94xx_free_reg_set(struct mvs_info *mvi, u8 *tfs)
+ {
+ 	void __iomem *regs = mvi->regs;
+@@ -679,5 +708,6 @@ const struct mvs_dispatch mvs_94xx_dispatch = {
+ #ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	mvs_94xx_fix_dma,
+ #endif
++	mvs_94xx_non_spec_ncq_error,
+ };
+ 
+diff --git a/drivers/scsi/mvsas/mv_chips.h b/drivers/scsi/mvsas/mv_chips.h
+index 1753a6f..4519f80 100644
+--- a/drivers/scsi/mvsas/mv_chips.h
++++ b/drivers/scsi/mvsas/mv_chips.h
+@@ -223,6 +223,9 @@ static inline void mvs_int_full(struct mvs_info *mvi)
+ 			mvs_int_port(mvi, i, tmp);
+ 	}
+ 
++	if (stat & CINT_NON_SPEC_NCQ_ERROR)
++		MVS_CHIP_DISP->non_spec_ncq_error(mvi);
++
+ 	if (stat & CINT_SRS)
+ 		mvs_int_sata(mvi);
+ 
+diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
+index bc00c94..9202bc6 100644
+--- a/drivers/scsi/mvsas/mv_defs.h
++++ b/drivers/scsi/mvsas/mv_defs.h
+@@ -144,6 +144,7 @@ enum hw_register_bits {
+ 	CINT_DMA_PCIE		= (1U << 27),	/* DMA to PCIE timeout */
+ 	CINT_MEM		= (1U << 26),	/* int mem parity err */
+ 	CINT_I2C_SLAVE		= (1U << 25),	/* slave I2C event */
++	CINT_NON_SPEC_NCQ_ERROR	= (1U << 25),	/* Non specific NCQ error */
+ 	CINT_SRS		= (1U << 3),	/* SRS event */
+ 	CINT_CI_STOP		= (1U << 1),	/* cmd issue stopped */
+ 	CINT_DONE		= (1U << 0),	/* cmd completion */
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 0ef2742..aaa475a 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -253,6 +253,20 @@ int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
+ 	return num;
+ }
+ 
++struct mvs_device *mvs_find_dev_by_reg_set(struct mvs_info *mvi,
++						u8 reg_set)
++{
++	u32 dev_no;
++	for (dev_no = 0; dev_no < MVS_MAX_DEVICES; dev_no++) {
++		if (mvi->devices[dev_no].taskfileset == MVS_ID_NOT_MAPPED)
++			continue;
++
++		if (mvi->devices[dev_no].taskfileset == reg_set)
++			return &mvi->devices[dev_no];
++	}
++	return NULL;
++}
++
+ static inline void mvs_free_reg_set(struct mvs_info *mvi,
+ 				struct mvs_device *dev)
+ {
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 1367d8b..f96100d 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -170,6 +170,7 @@ struct mvs_dispatch {
+ #ifndef DISABLE_HOTPLUG_DMA_FIX
+ 	void (*dma_fix)(dma_addr_t buf_dma, int buf_len, int from, void *prd);
+ #endif
++	void (*non_spec_ncq_error)(struct mvs_info *mvi);
+ 
+ };
+ 
+@@ -416,5 +417,6 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events);
+ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st);
+ int mvs_int_rx(struct mvs_info *mvi, bool self_clear);
+ void mvs_hexdump(u32 size, u8 *data, u32 baseaddr);
++struct mvs_device *mvs_find_dev_by_reg_set(struct mvs_info *mvi, u8 reg_set);
+ #endif
+ 
+-- 
+1.7.4.4
 
-On 5/12/2011 7:50 PM, Stephen Boyd wrote:
-> Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
-> warning:
->
-> In file included from arch/x86/include/asm/uaccess.h:573,
->                   from include/linux/uaccess.h:5,
->                   from include/linux/highmem.h:7,
->                   from include/linux/pagemap.h:10,
->                   from include/linux/blkdev.h:12,
->                   from drivers/scsi/lpfc/lpfc_debugfs.c:21:
-> In function 'copy_from_user':
-> arch/x86/include/asm/uaccess_64.h:65:
-> warning: call to 'copy_from_user_overflow' declared with
-> attribute warning: copy_from_user() buffer size is not provably
-> correct
->
-> presumably due to buf_size being signed causing GCC to fail to
-> see that buf_size can't become negative.
->
-> Cc: James Smart<james.smart@emulex.com>
-> Signed-off-by: Stephen Boyd<sboyd@codeaurora.org>
-> ---
->   drivers/scsi/lpfc/lpfc_debugfs.c |    3 ++-
->   1 files changed, 2 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-> index 3d96774..0af53a6 100644
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-> @@ -1305,7 +1305,8 @@ static int lpfc_idiag_cmd_get(const char __user *buf, size_t nbytes,
->   {
->   	char mybuf[64];
->   	char *pbuf, *step_str;
-> -	int bsize, i;
-> +	int i;
-> +	size_t bsize;
->
->   	/* Protect copy from user */
->   	if (!access_ok(VERIFY_READ, buf, nbytes))
