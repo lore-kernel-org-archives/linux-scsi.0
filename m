@@ -1,792 +1,431 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/8] lpfc 8.3.24: Add SR-IOV control
-Date: Tue, 24 May 2011 11:42:11 -0400
-Message-ID: <1306251731.6335.15.camel@wookie>
+Subject: [PATCH 4/8] lpfc 8.3.24: Add request-firmware support
+Date: Tue, 24 May 2011 11:42:45 -0400
+Message-ID: <1306251765.6335.16.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:23135 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:23149 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751049Ab1EXPmV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 11:42:21 -0400
+	with ESMTP id S1753624Ab1EXPnM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 11:43:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Add SR-IOV control
+Add request-firmware support:
+- Add support for request_firmware interface for INTF2 SLI4 ports.
+- Add ability to reset SLI4 INTF2 ports.
+
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h      |    1 
- lpfc_attr.c |  237 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- lpfc_crtn.h |    2 
- lpfc_hw.h   |    2 
- lpfc_hw4.h  |  149 +++++++++++++++++++++++++++++++++++++
- lpfc_init.c |  144 +++++++++++++++++++++++++++++++++++-
- lpfc_sli4.h |    6 +
- 7 files changed, 536 insertions(+), 5 deletions(-)
+ lpfc_attr.c |   33 ++++++++++++-------
+ lpfc_crtn.h |    1 
+ lpfc_hw4.h  |   44 +++++++++++++++++++++++++
+ lpfc_init.c |  102 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ lpfc_sli.c  |   90 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 259 insertions(+), 11 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2011-05-23 16:58:34.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-05-23 17:01:19.000000000 -0400
-@@ -1384,6 +1384,102 @@ lpfc_dss_show(struct device *dev, struct
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2011-05-23 17:01:19.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-05-23 17:02:32.000000000 -0400
+@@ -755,18 +755,18 @@ lpfc_issue_reset(struct device *dev, str
  }
  
  /**
-+ * lpfc_sriov_hw_max_virtfn_show - Return maximum number of virtual functions
-+ * @dev: class converted to a Scsi_host structure.
-+ * @attr: device attribute, not used.
-+ * @buf: on return contains the formatted support level.
-+ *
-+ * Description:
-+ * Returns the maximum number of virtual functions a physical function can
-+ * support, 0 will be returned if called on virtual function.
-+ *
-+ * Returns: size of formatted string.
-+ **/
-+static ssize_t
-+lpfc_sriov_hw_max_virtfn_show(struct device *dev,
-+			      struct device_attribute *attr,
-+			      char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
-+	struct lpfc_hba *phba = vport->phba;
-+	struct pci_dev *pdev = phba->pcidev;
-+	union  lpfc_sli4_cfg_shdr *shdr;
-+	uint32_t shdr_status, shdr_add_status;
-+	LPFC_MBOXQ_t *mboxq;
-+	struct lpfc_mbx_get_prof_cfg *get_prof_cfg;
-+	struct lpfc_rsrc_desc_pcie *desc;
-+	uint32_t max_nr_virtfn;
-+	uint32_t desc_count;
-+	int length, rc, i;
-+
+- * lpfc_sli4_fw_dump_request - Request firmware to perform a firmware dump
++ * lpfc_sli4_pdev_reg_request - Request physical dev to perform a register acc
+  * @phba: lpfc_hba pointer.
+  *
+  * Description:
+- * Request SLI4 interface type-2 device to perform a dump of firmware dump
+- * object into it's /dbg directory of the flash file system.
++ * Request SLI4 interface type-2 device to perform a physical register set
++ * access.
+  *
+  * Returns:
+  * zero for success
+  **/
+ static ssize_t
+-lpfc_sli4_fw_dump_request(struct lpfc_hba *phba)
++lpfc_sli4_pdev_reg_request(struct lpfc_hba *phba, uint32_t opcode)
+ {
+ 	struct completion online_compl;
+ 	uint32_t reg_val;
+@@ -776,6 +776,11 @@ lpfc_sli4_fw_dump_request(struct lpfc_hb
+ 	if (!phba->cfg_enable_hba_reset)
+ 		return -EIO;
+ 
 +	if ((phba->sli_rev < LPFC_SLI_REV4) ||
 +	    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
 +	     LPFC_SLI_INTF_IF_TYPE_2))
 +		return -EPERM;
 +
-+	if (!pdev->is_physfn)
-+		return snprintf(buf, PAGE_SIZE, "%d\n", 0);
-+
-+	mboxq = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	if (!mboxq)
-+		return -ENOMEM;
-+
-+	/* get the maximum number of virtfn support by physfn */
-+	length = (sizeof(struct lpfc_mbx_get_prof_cfg) -
-+		  sizeof(struct lpfc_sli4_cfg_mhdr));
-+	lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_GET_PROFILE_CONFIG,
-+			 length, LPFC_SLI4_MBX_EMBED);
-+	shdr = (union lpfc_sli4_cfg_shdr *)
-+		&mboxq->u.mqe.un.sli4_config.header.cfg_shdr;
-+	bf_set(lpfc_mbox_hdr_pf_num, &shdr->request,
-+	       phba->sli4_hba.iov.pf_number + 1);
-+
-+	get_prof_cfg = &mboxq->u.mqe.un.get_prof_cfg;
-+	bf_set(lpfc_mbx_get_prof_cfg_prof_tp, &get_prof_cfg->u.request,
-+	       LPFC_CFG_TYPE_CURRENT_ACTIVE);
-+
-+	rc = lpfc_sli_issue_mbox_wait(phba, mboxq,
-+				lpfc_mbox_tmo_val(phba, MBX_SLI4_CONFIG));
-+
-+	if (rc != MBX_TIMEOUT) {
-+		/* check return status */
-+		shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
-+		shdr_add_status = bf_get(lpfc_mbox_hdr_add_status,
-+					 &shdr->response);
-+		if (shdr_status || shdr_add_status || rc)
-+			goto error_out;
-+
-+	} else
-+		goto error_out;
-+
-+	desc_count = get_prof_cfg->u.response.prof_cfg.rsrc_desc_count;
-+
-+	for (i = 0; i < LPFC_RSRC_DESC_MAX_NUM; i++) {
-+		desc = (struct lpfc_rsrc_desc_pcie *)
-+			&get_prof_cfg->u.response.prof_cfg.desc[i];
-+		if (LPFC_RSRC_DESC_TYPE_PCIE ==
-+		    bf_get(lpfc_rsrc_desc_pcie_type, desc)) {
-+			max_nr_virtfn = bf_get(lpfc_rsrc_desc_pcie_nr_virtfn,
-+					       desc);
-+			break;
-+		}
-+	}
-+
-+	if (i < LPFC_RSRC_DESC_MAX_NUM) {
-+		if (rc != MBX_TIMEOUT)
-+			mempool_free(mboxq, phba->mbox_mem_pool);
-+		return snprintf(buf, PAGE_SIZE, "%d\n", max_nr_virtfn);
-+	}
-+
-+error_out:
-+	if (rc != MBX_TIMEOUT)
-+		mempool_free(mboxq, phba->mbox_mem_pool);
-+	return -EIO;
-+}
-+
-+/**
-  * lpfc_param_show - Return a cfg attribute value in decimal
-  *
-  * Description:
-@@ -1824,6 +1920,8 @@ static DEVICE_ATTR(lpfc_temp_sensor, S_I
- static DEVICE_ATTR(lpfc_fips_level, S_IRUGO, lpfc_fips_level_show, NULL);
- static DEVICE_ATTR(lpfc_fips_rev, S_IRUGO, lpfc_fips_rev_show, NULL);
- static DEVICE_ATTR(lpfc_dss, S_IRUGO, lpfc_dss_show, NULL);
-+static DEVICE_ATTR(lpfc_sriov_hw_max_virtfn, S_IRUGO,
-+		   lpfc_sriov_hw_max_virtfn_show, NULL);
+ 	status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
  
- static char *lpfc_soft_wwn_key = "C99G71SL8032A";
+ 	if (status != 0)
+@@ -786,7 +791,14 @@ lpfc_sli4_fw_dump_request(struct lpfc_hb
  
-@@ -3076,7 +3174,7 @@ static DEVICE_ATTR(lpfc_link_speed, S_IR
-  *
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: containing the string "selective".
-+ * @buf: containing enable or disable aer flag.
-  * @count: unused variable.
-  *
-  * Description:
-@@ -3160,7 +3258,7 @@ lpfc_param_show(aer_support)
- /**
-  * lpfc_aer_support_init - Set the initial adapters aer support flag
-  * @phba: lpfc_hba pointer.
-- * @val: link speed value.
-+ * @val: enable aer or disable aer flag.
-  *
-  * Description:
-  * If val is in a valid range [0,1], then set the adapter's initial
-@@ -3199,7 +3297,7 @@ static DEVICE_ATTR(lpfc_aer_support, S_I
-  * lpfc_aer_cleanup_state - Clean up aer state to the aer enabled device
-  * @dev: class device that is converted into a Scsi_host.
-  * @attr: device attribute, not used.
-- * @buf: containing the string "selective".
-+ * @buf: containing flag 1 for aer cleanup state.
-  * @count: unused variable.
-  *
-  * Description:
-@@ -3242,6 +3340,136 @@ lpfc_aer_cleanup_state(struct device *de
- static DEVICE_ATTR(lpfc_aer_state_cleanup, S_IWUSR, NULL,
- 		   lpfc_aer_cleanup_state);
+ 	reg_val = readl(phba->sli4_hba.conf_regs_memmap_p +
+ 			LPFC_CTL_PDEV_CTL_OFFSET);
+-	reg_val |= LPFC_FW_DUMP_REQUEST;
++
++	if (opcode == LPFC_FW_DUMP)
++		reg_val |= LPFC_FW_DUMP_REQUEST;
++	else if (opcode == LPFC_FW_RESET)
++		reg_val |= LPFC_CTL_PDEV_CTL_FRST;
++	else if (opcode == LPFC_DV_RESET)
++		reg_val |= LPFC_CTL_PDEV_CTL_DRST;
++
+ 	writel(reg_val, phba->sli4_hba.conf_regs_memmap_p +
+ 	       LPFC_CTL_PDEV_CTL_OFFSET);
+ 	/* flush */
+@@ -904,12 +916,11 @@ lpfc_board_mode_store(struct device *dev
+ 		else
+ 			status = lpfc_do_offline(phba, LPFC_EVT_KILL);
+ 	else if (strncmp(buf, "dump", sizeof("dump") - 1) == 0)
+-		if ((phba->sli_rev < LPFC_SLI_REV4) ||
+-		    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
+-		     LPFC_SLI_INTF_IF_TYPE_2))
+-			return -EPERM;
+-		else
+-			status = lpfc_sli4_fw_dump_request(phba);
++		status = lpfc_sli4_pdev_reg_request(phba, LPFC_FW_DUMP);
++	else if (strncmp(buf, "fw_reset", sizeof("fw_reset") - 1) == 0)
++		status = lpfc_sli4_pdev_reg_request(phba, LPFC_FW_RESET);
++	else if (strncmp(buf, "dv_reset", sizeof("dv_reset") - 1) == 0)
++		status = lpfc_sli4_pdev_reg_request(phba, LPFC_DV_RESET);
+ 	else
+ 		return -EINVAL;
  
-+/**
-+ * lpfc_sriov_nr_virtfn_store - Enable the adapter for sr-iov virtual functions
-+ *
-+ * @dev: class device that is converted into a Scsi_host.
-+ * @attr: device attribute, not used.
-+ * @buf: containing the string the number of vfs to be enabled.
-+ * @count: unused variable.
-+ *
-+ * Description:
-+ * When this api is called either through user sysfs, the driver shall
-+ * try to enable or disable SR-IOV virtual functions according to the
-+ * following:
-+ *
-+ * If zero virtual function has been enabled to the physical function,
-+ * the driver shall invoke the pci enable virtual function api trying
-+ * to enable the virtual functions. If the nr_vfn provided is greater
-+ * than the maximum supported, the maximum virtual function number will
-+ * be used for invoking the api; otherwise, the nr_vfn provided shall
-+ * be used for invoking the api. If the api call returned success, the
-+ * actual number of virtual functions enabled will be set to the driver
-+ * cfg_sriov_nr_virtfn; otherwise, -EINVAL shall be returned and driver
-+ * cfg_sriov_nr_virtfn remains zero.
-+ *
-+ * If none-zero virtual functions have already been enabled to the
-+ * physical function, as reflected by the driver's cfg_sriov_nr_virtfn,
-+ * -EINVAL will be returned and the driver does nothing;
-+ *
-+ * If the nr_vfn provided is zero and none-zero virtual functions have
-+ * been enabled, as indicated by the driver's cfg_sriov_nr_virtfn, the
-+ * disabling virtual function api shall be invoded to disable all the
-+ * virtual functions and driver's cfg_sriov_nr_virtfn shall be set to
-+ * zero. Otherwise, if zero virtual function has been enabled, do
-+ * nothing.
-+ *
-+ * Returns:
-+ * length of the buf on success if val is in range the intended mode
-+ * is supported.
-+ * -EINVAL if val out of range or intended mode is not supported.
-+ **/
-+static ssize_t
-+lpfc_sriov_nr_virtfn_store(struct device *dev, struct device_attribute *attr,
-+			 const char *buf, size_t count)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
-+	struct lpfc_hba *phba = vport->phba;
-+	struct pci_dev *pdev = phba->pcidev;
-+	int val = 0, rc = -EINVAL;
-+
-+	/* Sanity check on user data */
-+	if (!isdigit(buf[0]))
-+		return -EINVAL;
-+	if (sscanf(buf, "%i", &val) != 1)
-+		return -EINVAL;
-+	if (val < 0)
-+		return -EINVAL;
-+
-+	/* Request disabling virtual functions */
-+	if (val == 0) {
-+		if (phba->cfg_sriov_nr_virtfn > 0) {
-+			pci_disable_sriov(pdev);
-+			phba->cfg_sriov_nr_virtfn = 0;
-+		}
-+		return strlen(buf);
-+	}
-+
-+	/* Request enabling virtual functions */
-+	if (phba->cfg_sriov_nr_virtfn > 0) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3018 There are %d virtual functions "
-+				"enabled on physical function.\n",
-+				phba->cfg_sriov_nr_virtfn);
-+		return -EEXIST;
-+	}
-+
-+	if (val <= LPFC_MAX_VFN_PER_PFN)
-+		phba->cfg_sriov_nr_virtfn = val;
-+	else {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3019 Enabling %d virtual functions is not "
-+				"allowed.\n", val);
-+		return -EINVAL;
-+	}
-+
-+	rc = lpfc_sli_probe_sriov_nr_virtfn(phba, phba->cfg_sriov_nr_virtfn);
-+	if (rc) {
-+		phba->cfg_sriov_nr_virtfn = 0;
-+		rc = -EPERM;
-+	} else
-+		rc = strlen(buf);
-+
-+	return rc;
-+}
-+
-+static int lpfc_sriov_nr_virtfn = LPFC_DEF_VFN_PER_PFN;
-+module_param(lpfc_sriov_nr_virtfn, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(lpfc_sriov_nr_virtfn, "Enable PCIe device SR-IOV virtual fn");
-+lpfc_param_show(sriov_nr_virtfn)
-+
-+/**
-+ * lpfc_sriov_nr_virtfn_init - Set the initial sr-iov virtual function enable
-+ * @phba: lpfc_hba pointer.
-+ * @val: link speed value.
-+ *
-+ * Description:
-+ * If val is in a valid range [0,255], then set the adapter's initial
-+ * cfg_sriov_nr_virtfn field. If it's greater than the maximum, the maximum
-+ * number shall be used instead. It will be up to the driver's probe_one
-+ * routine to determine whether the device's SR-IOV is supported or not.
-+ *
-+ * Returns:
-+ * zero if val saved.
-+ * -EINVAL val out of range
-+ **/
-+static int
-+lpfc_sriov_nr_virtfn_init(struct lpfc_hba *phba, int val)
-+{
-+	if (val >= 0 && val <= LPFC_MAX_VFN_PER_PFN) {
-+		phba->cfg_sriov_nr_virtfn = val;
-+		return 0;
-+	}
-+
-+	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"3017 Enabling %d virtual functions is not "
-+			"allowed.\n", val);
-+	return -EINVAL;
-+}
-+static DEVICE_ATTR(lpfc_sriov_nr_virtfn, S_IRUGO | S_IWUSR,
-+		   lpfc_sriov_nr_virtfn_show, lpfc_sriov_nr_virtfn_store);
-+
- /*
- # lpfc_fcp_class:  Determines FC class to use for the FCP protocol.
- # Value range is [2,3]. Default value is 3.
-@@ -3559,6 +3787,7 @@ struct device_attribute *lpfc_hba_attrs[
- 	&dev_attr_lpfc_prot_sg_seg_cnt,
- 	&dev_attr_lpfc_aer_support,
- 	&dev_attr_lpfc_aer_state_cleanup,
-+	&dev_attr_lpfc_sriov_nr_virtfn,
- 	&dev_attr_lpfc_suppress_link_up,
- 	&dev_attr_lpfc_iocb_cnt,
- 	&dev_attr_iocb_hw,
-@@ -3567,6 +3796,7 @@ struct device_attribute *lpfc_hba_attrs[
- 	&dev_attr_lpfc_fips_level,
- 	&dev_attr_lpfc_fips_rev,
- 	&dev_attr_lpfc_dss,
-+	&dev_attr_lpfc_sriov_hw_max_virtfn,
- 	NULL,
- };
- 
-@@ -4767,6 +4997,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
- 	lpfc_hba_queue_depth_init(phba, lpfc_hba_queue_depth);
- 	lpfc_hba_log_verbose_init(phba, lpfc_log_verbose);
- 	lpfc_aer_support_init(phba, lpfc_aer_support);
-+	lpfc_sriov_nr_virtfn_init(phba, lpfc_sriov_nr_virtfn);
- 	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
- 	lpfc_iocb_cnt_init(phba, lpfc_iocb_cnt);
- 	phba->cfg_enable_dss = 1;
 diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2011-05-23 16:51:47.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2011-05-23 17:01:19.000000000 -0400
-@@ -430,3 +430,5 @@ void lpfc_cleanup_wt_rrqs(struct lpfc_hb
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2011-05-23 17:01:19.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2011-05-23 17:02:32.000000000 -0400
+@@ -430,5 +430,6 @@ void lpfc_cleanup_wt_rrqs(struct lpfc_hb
  void lpfc_cleanup_vports_rrqs(struct lpfc_vport *, struct lpfc_nodelist *);
  struct lpfc_node_rrq *lpfc_get_active_rrq(struct lpfc_vport *, uint16_t,
  	uint32_t);
-+/* functions to support SR-IOV */
-+int lpfc_sli_probe_sriov_nr_virtfn(struct lpfc_hba *, int);
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2011-05-23 16:51:47.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2011-05-23 17:01:19.000000000 -0400
-@@ -660,6 +660,7 @@ struct lpfc_hba {
- 	uint32_t cfg_hostmem_hgp;
- 	uint32_t cfg_log_verbose;
- 	uint32_t cfg_aer_support;
-+	uint32_t cfg_sriov_nr_virtfn;
- 	uint32_t cfg_iocb_cnt;
- 	uint32_t cfg_suppress_link_up;
- #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
++int lpfc_wr_object(struct lpfc_hba *, struct list_head *, uint32_t, uint32_t *);
+ /* functions to support SR-IOV */
+ int lpfc_sli_probe_sriov_nr_virtfn(struct lpfc_hba *, int);
 diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-05-23 16:58:34.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-05-23 17:01:19.000000000 -0400
-@@ -758,6 +758,12 @@ union lpfc_sli4_cfg_shdr {
- #define lpfc_mbox_hdr_version_SHIFT	0
- #define lpfc_mbox_hdr_version_MASK	0x000000FF
- #define lpfc_mbox_hdr_version_WORD	word9
-+#define lpfc_mbox_hdr_pf_num_SHIFT	16
-+#define lpfc_mbox_hdr_pf_num_MASK	0x000000FF
-+#define lpfc_mbox_hdr_pf_num_WORD	word9
-+#define lpfc_mbox_hdr_vh_num_SHIFT	24
-+#define lpfc_mbox_hdr_vh_num_MASK	0x000000FF
-+#define lpfc_mbox_hdr_vh_num_WORD	word9
- #define LPFC_Q_CREATE_VERSION_2	2
- #define LPFC_Q_CREATE_VERSION_1	1
- #define LPFC_Q_CREATE_VERSION_0	0
-@@ -813,6 +819,8 @@ struct mbox_header {
- #define LPFC_MBOX_OPCODE_QUERY_FW_CFG		0x3A
- #define LPFC_MBOX_OPCODE_FUNCTION_RESET		0x3D
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-05-23 17:01:19.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-05-23 17:02:32.000000000 -0400
+@@ -821,6 +821,7 @@ struct mbox_header {
  #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT		0x5A
-+#define LPFC_MBOX_OPCODE_GET_FUNCTION_CONFIG    0xA0
-+#define LPFC_MBOX_OPCODE_GET_PROFILE_CONFIG	0xA4
+ #define LPFC_MBOX_OPCODE_GET_FUNCTION_CONFIG    0xA0
+ #define LPFC_MBOX_OPCODE_GET_PROFILE_CONFIG	0xA4
++#define LPFC_MBOX_OPCODE_WRITE_OBJECT		0xAC
  #define LPFC_MBOX_OPCODE_GET_SLI4_PARAMETERS	0xB5
  
  /* FCoE Opcodes */
-@@ -2217,6 +2225,145 @@ struct lpfc_mbx_get_sli4_parameters {
- 	struct lpfc_sli4_parameters sli4_parameters;
- };
+@@ -2372,6 +2373,29 @@ struct lpfc_mbx_get_prof_cfg {
+ #define MB_CEQ_STATUS_QUEUE_FLUSHING		0x4
+ #define MB_CQE_STATUS_DMA_FAILED		0x5
  
-+struct lpfc_rscr_desc_generic {
-+#define LPFC_RSRC_DESC_WSIZE			18
-+	uint32_t desc[LPFC_RSRC_DESC_WSIZE];
-+};
-+
-+struct lpfc_rsrc_desc_pcie {
-+	uint32_t word0;
-+#define lpfc_rsrc_desc_pcie_type_SHIFT		0
-+#define lpfc_rsrc_desc_pcie_type_MASK		0x000000ff
-+#define lpfc_rsrc_desc_pcie_type_WORD		word0
-+#define LPFC_RSRC_DESC_TYPE_PCIE		0x40
-+	uint32_t word1;
-+#define lpfc_rsrc_desc_pcie_pfnum_SHIFT		0
-+#define lpfc_rsrc_desc_pcie_pfnum_MASK		0x000000ff
-+#define lpfc_rsrc_desc_pcie_pfnum_WORD		word1
-+	uint32_t reserved;
-+	uint32_t word3;
-+#define lpfc_rsrc_desc_pcie_sriov_sta_SHIFT	0
-+#define lpfc_rsrc_desc_pcie_sriov_sta_MASK	0x000000ff
-+#define lpfc_rsrc_desc_pcie_sriov_sta_WORD	word3
-+#define lpfc_rsrc_desc_pcie_pf_sta_SHIFT	8
-+#define lpfc_rsrc_desc_pcie_pf_sta_MASK		0x000000ff
-+#define lpfc_rsrc_desc_pcie_pf_sta_WORD		word3
-+#define lpfc_rsrc_desc_pcie_pf_type_SHIFT	16
-+#define lpfc_rsrc_desc_pcie_pf_type_MASK	0x000000ff
-+#define lpfc_rsrc_desc_pcie_pf_type_WORD	word3
-+	uint32_t word4;
-+#define lpfc_rsrc_desc_pcie_nr_virtfn_SHIFT	0
-+#define lpfc_rsrc_desc_pcie_nr_virtfn_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_pcie_nr_virtfn_WORD	word4
-+};
-+
-+struct lpfc_rsrc_desc_fcfcoe {
-+	uint32_t word0;
-+#define lpfc_rsrc_desc_fcfcoe_type_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_type_MASK		0x000000ff
-+#define lpfc_rsrc_desc_fcfcoe_type_WORD		word0
-+#define LPFC_RSRC_DESC_TYPE_FCFCOE		0x43
-+	uint32_t word1;
-+#define lpfc_rsrc_desc_fcfcoe_vfnum_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_vfnum_MASK	0x000000ff
-+#define lpfc_rsrc_desc_fcfcoe_vfnum_WORD	word1
-+#define lpfc_rsrc_desc_fcfcoe_pfnum_SHIFT	16
-+#define lpfc_rsrc_desc_fcfcoe_pfnum_MASK        0x000007ff
-+#define lpfc_rsrc_desc_fcfcoe_pfnum_WORD        word1
-+	uint32_t word2;
-+#define lpfc_rsrc_desc_fcfcoe_rpi_cnt_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_rpi_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_rpi_cnt_WORD	word2
-+#define lpfc_rsrc_desc_fcfcoe_xri_cnt_SHIFT	16
-+#define lpfc_rsrc_desc_fcfcoe_xri_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_xri_cnt_WORD	word2
-+	uint32_t word3;
-+#define lpfc_rsrc_desc_fcfcoe_wq_cnt_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_wq_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_wq_cnt_WORD	word3
-+#define lpfc_rsrc_desc_fcfcoe_rq_cnt_SHIFT	16
-+#define lpfc_rsrc_desc_fcfcoe_rq_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_rq_cnt_WORD	word3
-+	uint32_t word4;
-+#define lpfc_rsrc_desc_fcfcoe_cq_cnt_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_cq_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_cq_cnt_WORD	word4
-+#define lpfc_rsrc_desc_fcfcoe_vpi_cnt_SHIFT	16
-+#define lpfc_rsrc_desc_fcfcoe_vpi_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_vpi_cnt_WORD	word4
-+	uint32_t word5;
-+#define lpfc_rsrc_desc_fcfcoe_fcfi_cnt_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_fcfi_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_fcfi_cnt_WORD	word5
-+#define lpfc_rsrc_desc_fcfcoe_vfi_cnt_SHIFT	16
-+#define lpfc_rsrc_desc_fcfcoe_vfi_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_vfi_cnt_WORD	word5
-+	uint32_t word6;
-+	uint32_t word7;
-+	uint32_t word8;
-+	uint32_t word9;
-+	uint32_t word10;
-+	uint32_t word11;
-+	uint32_t word12;
-+	uint32_t word13;
-+#define lpfc_rsrc_desc_fcfcoe_lnk_nr_SHIFT	0
-+#define lpfc_rsrc_desc_fcfcoe_lnk_nr_MASK	0x0000003f
-+#define lpfc_rsrc_desc_fcfcoe_lnk_nr_WORD	word13
-+#define lpfc_rsrc_desc_fcfcoe_lnk_tp_SHIFT      6
-+#define lpfc_rsrc_desc_fcfcoe_lnk_tp_MASK	0x00000003
-+#define lpfc_rsrc_desc_fcfcoe_lnk_tp_WORD	word13
-+#define lpfc_rsrc_desc_fcfcoe_lmc_SHIFT		8
-+#define lpfc_rsrc_desc_fcfcoe_lmc_MASK		0x00000001
-+#define lpfc_rsrc_desc_fcfcoe_lmc_WORD		word13
-+#define lpfc_rsrc_desc_fcfcoe_lld_SHIFT		9
-+#define lpfc_rsrc_desc_fcfcoe_lld_MASK		0x00000001
-+#define lpfc_rsrc_desc_fcfcoe_lld_WORD		word13
-+#define lpfc_rsrc_desc_fcfcoe_eq_cnt_SHIFT	16
-+#define lpfc_rsrc_desc_fcfcoe_eq_cnt_MASK	0x0000ffff
-+#define lpfc_rsrc_desc_fcfcoe_eq_cnt_WORD	word13
-+};
-+
-+struct lpfc_func_cfg {
-+#define LPFC_RSRC_DESC_MAX_NUM			2
-+	uint32_t rsrc_desc_count;
-+	struct lpfc_rscr_desc_generic desc[LPFC_RSRC_DESC_MAX_NUM];
-+};
-+
-+struct lpfc_mbx_get_func_cfg {
++#define LPFC_MBX_WR_CONFIG_MAX_BDE		8
++struct lpfc_mbx_wr_object {
 +	struct mbox_header header;
-+#define LPFC_CFG_TYPE_PERSISTENT_OVERRIDE	0x0
-+#define LPFC_CFG_TYPE_FACTURY_DEFAULT		0x1
-+#define LPFC_CFG_TYPE_CURRENT_ACTIVE		0x2
-+	struct lpfc_func_cfg func_cfg;
-+};
-+
-+struct lpfc_prof_cfg {
-+#define LPFC_RSRC_DESC_MAX_NUM			2
-+	uint32_t rsrc_desc_count;
-+	struct lpfc_rscr_desc_generic desc[LPFC_RSRC_DESC_MAX_NUM];
-+};
-+
-+struct lpfc_mbx_get_prof_cfg {
-+	struct mbox_header header;
-+#define LPFC_CFG_TYPE_PERSISTENT_OVERRIDE	0x0
-+#define LPFC_CFG_TYPE_FACTURY_DEFAULT		0x1
-+#define LPFC_CFG_TYPE_CURRENT_ACTIVE		0x2
 +	union {
 +		struct {
-+			uint32_t word10;
-+#define lpfc_mbx_get_prof_cfg_prof_id_SHIFT	0
-+#define lpfc_mbx_get_prof_cfg_prof_id_MASK	0x000000ff
-+#define lpfc_mbx_get_prof_cfg_prof_id_WORD	word10
-+#define lpfc_mbx_get_prof_cfg_prof_tp_SHIFT	8
-+#define lpfc_mbx_get_prof_cfg_prof_tp_MASK	0x00000003
-+#define lpfc_mbx_get_prof_cfg_prof_tp_WORD	word10
++			uint32_t word4;
++#define lpfc_wr_object_eof_SHIFT		31
++#define lpfc_wr_object_eof_MASK			0x00000001
++#define lpfc_wr_object_eof_WORD			word4
++#define lpfc_wr_object_write_length_SHIFT	0
++#define lpfc_wr_object_write_length_MASK	0x00FFFFFF
++#define lpfc_wr_object_write_length_WORD	word4
++			uint32_t write_offset;
++			uint32_t object_name[26];
++			uint32_t bde_count;
++			struct ulp_bde64 bde[LPFC_MBX_WR_CONFIG_MAX_BDE];
 +		} request;
 +		struct {
-+			struct lpfc_prof_cfg prof_cfg;
++			uint32_t actual_write_length;
 +		} response;
 +	} u;
 +};
 +
- /* Mailbox Completion Queue Error Messages */
- #define MB_CQE_STATUS_SUCCESS 			0x0
- #define MB_CQE_STATUS_INSUFFICIENT_PRIVILEGES	0x1
-@@ -2271,6 +2418,8 @@ struct lpfc_mqe {
- 		struct lpfc_mbx_supp_pages supp_pages;
- 		struct lpfc_mbx_pc_sli4_params sli4_params;
- 		struct lpfc_mbx_get_sli4_parameters get_sli4_parameters;
-+		struct lpfc_mbx_get_func_cfg get_func_cfg;
-+		struct lpfc_mbx_get_prof_cfg get_prof_cfg;
+ /* mailbox queue entry structure */
+ struct lpfc_mqe {
+ 	uint32_t word0;
+@@ -2421,6 +2445,7 @@ struct lpfc_mqe {
+ 		struct lpfc_mbx_get_func_cfg get_func_cfg;
+ 		struct lpfc_mbx_get_prof_cfg get_prof_cfg;
  		struct lpfc_mbx_nop nop;
++		struct lpfc_mbx_wr_object wr_object;
  	} un;
  };
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2011-05-23 16:58:34.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2011-05-23 17:01:19.000000000 -0400
-@@ -903,6 +903,8 @@ struct RRQ {			/* Structure is in Big En
- #define rrq_rxid_WORD		rrq_exchg
+ 
+@@ -2966,9 +2991,28 @@ union lpfc_wqe {
+ 	struct gen_req64_wqe gen_req;
  };
  
-+#define LPFC_MAX_VFN_PER_PFN	255 /* Maximum VFs allowed per ARI */
-+#define LPFC_DEF_VFN_PER_PFN	0   /* Default VFs due to platform limitation*/
++#define LPFC_GROUP_OJECT_MAGIC_NUM		0xfeaa0001
++#define LPFC_FILE_TYPE_GROUP			0xf7
++#define LPFC_FILE_ID_GROUP			0xa2
++struct lpfc_grp_hdr {
++	uint32_t size;
++	uint32_t magic_number;
++	uint32_t word2;
++#define lpfc_grp_hdr_file_type_SHIFT	24
++#define lpfc_grp_hdr_file_type_MASK	0x000000FF
++#define lpfc_grp_hdr_file_type_WORD	word2
++#define lpfc_grp_hdr_id_SHIFT		16
++#define lpfc_grp_hdr_id_MASK		0x000000FF
++#define lpfc_grp_hdr_id_WORD		word2
++	uint8_t rev_name[128];
++};
++
+ #define FCP_COMMAND 0x0
+ #define FCP_COMMAND_DATA_OUT 0x1
+ #define ELS_COMMAND_NON_FIP 0xC
+ #define ELS_COMMAND_FIP 0xD
+ #define OTHER_COMMAND 0x8
  
- struct RTV_RSP {		/* Structure is in Big Endian format */
- 	uint32_t ratov;
++#define LPFC_FW_DUMP	1
++#define LPFC_FW_RESET	2
++#define LPFC_DV_RESET	3
 diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-05-23 16:58:34.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-05-23 17:01:19.000000000 -0400
-@@ -4034,6 +4034,36 @@ lpfc_reset_hba(struct lpfc_hba *phba)
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-05-23 17:01:19.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-05-23 17:02:32.000000000 -0400
+@@ -30,6 +30,7 @@
+ #include <linux/ctype.h>
+ #include <linux/aer.h>
+ #include <linux/slab.h>
++#include <linux/firmware.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -8775,6 +8776,97 @@ lpfc_sli4_get_els_iocb_cnt(struct lpfc_h
  }
  
  /**
-+ * lpfc_sli_probe_sriov_nr_virtfn - Enable a number of sr-iov virtual functions
++ * lpfc_write_firmware - attempt to write a firmware image to the port
 + * @phba: pointer to lpfc hba data structure.
-+ * @nr_vfn: number of virtual functions to be enabled.
++ * @fw: pointer to firmware image returned from request_firmware.
 + *
-+ * This function enables the PCI SR-IOV virtual functions to a physical
-+ * function. It invokes the PCI SR-IOV api with the @nr_vfn provided to
-+ * enable the number of virtual functions to the physical function. As
-+ * not all devices support SR-IOV, the return code from the pci_enable_sriov()
-+ * API call does not considered as an error condition for most of the device.
++ * returns the number of bytes written if write is successful.
++ * returns a negative error value if there were errors.
++ * returns 0 if firmware matches currently active firmware on port.
 + **/
 +int
-+lpfc_sli_probe_sriov_nr_virtfn(struct lpfc_hba *phba, int nr_vfn)
++lpfc_write_firmware(struct lpfc_hba *phba, const struct firmware *fw)
 +{
-+	struct pci_dev *pdev = phba->pcidev;
-+	int rc;
++	char fwrev[32];
++	struct lpfc_grp_hdr *image = (struct lpfc_grp_hdr *)fw->data;
++	struct list_head dma_buffer_list;
++	int i, rc = 0;
++	struct lpfc_dmabuf *dmabuf, *next;
++	uint32_t offset = 0, temp_offset = 0;
 +
-+	rc = pci_enable_sriov(pdev, nr_vfn);
-+	if (rc) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
-+				"2806 Failed to enable sriov on this device "
-+				"with vfn number nr_vf:%d, rc:%d\n",
-+				nr_vfn, rc);
-+	} else
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
-+				"2807 Successful enable sriov on this device "
-+				"with vfn number nr_vf:%d\n", nr_vfn);
++	INIT_LIST_HEAD(&dma_buffer_list);
++	if ((image->magic_number != LPFC_GROUP_OJECT_MAGIC_NUM) ||
++	    (bf_get(lpfc_grp_hdr_file_type, image) != LPFC_FILE_TYPE_GROUP) ||
++	    (bf_get(lpfc_grp_hdr_id, image) != LPFC_FILE_ID_GROUP) ||
++	    (image->size != fw->size)) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"3022 Invalid FW image found. "
++				"Magic:%d Type:%x ID:%x\n",
++				image->magic_number,
++				bf_get(lpfc_grp_hdr_file_type, image),
++				bf_get(lpfc_grp_hdr_id, image));
++		return -EINVAL;
++	}
++	lpfc_decode_firmware_rev(phba, fwrev, 1);
++	if (strncmp(fwrev, image->rev_name, strnlen(fwrev, 16))) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"3023 Updating Firmware. Current Version:%s "
++				"New Version:%s\n",
++				fwrev, image->rev_name);
++		for (i = 0; i < LPFC_MBX_WR_CONFIG_MAX_BDE; i++) {
++			dmabuf = kzalloc(sizeof(struct lpfc_dmabuf),
++					 GFP_KERNEL);
++			if (!dmabuf) {
++				rc = -ENOMEM;
++				goto out;
++			}
++			dmabuf->virt = dma_alloc_coherent(&phba->pcidev->dev,
++							  SLI4_PAGE_SIZE,
++							  &dmabuf->phys,
++							  GFP_KERNEL);
++			if (!dmabuf->virt) {
++				kfree(dmabuf);
++				rc = -ENOMEM;
++				goto out;
++			}
++			list_add_tail(&dmabuf->list, &dma_buffer_list);
++		}
++		while (offset < fw->size) {
++			temp_offset = offset;
++			list_for_each_entry(dmabuf, &dma_buffer_list, list) {
++				if (offset + SLI4_PAGE_SIZE > fw->size) {
++					temp_offset += fw->size - offset;
++					memcpy(dmabuf->virt,
++					       fw->data + temp_offset,
++					       fw->size - offset);
++					break;
++				}
++				temp_offset += SLI4_PAGE_SIZE;
++				memcpy(dmabuf->virt, fw->data + temp_offset,
++				       SLI4_PAGE_SIZE);
++			}
++			rc = lpfc_wr_object(phba, &dma_buffer_list,
++				    (fw->size - offset), &offset);
++			if (rc) {
++				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++						"3024 Firmware update failed. "
++						"%d\n", rc);
++				goto out;
++			}
++		}
++		rc = offset;
++	}
++out:
++	list_for_each_entry_safe(dmabuf, next, &dma_buffer_list, list) {
++		list_del(&dmabuf->list);
++		dma_free_coherent(&phba->pcidev->dev, SLI4_PAGE_SIZE,
++				  dmabuf->virt, dmabuf->phys);
++		kfree(dmabuf);
++	}
 +	return rc;
 +}
 +
 +/**
-  * lpfc_sli_driver_resource_setup - Setup driver internal resources for SLI3 dev.
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -4048,6 +4078,7 @@ static int
- lpfc_sli_driver_resource_setup(struct lpfc_hba *phba)
- {
- 	struct lpfc_sli *psli;
-+	int rc;
+  * lpfc_pci_probe_one_s4 - PCI probe func to reg SLI-4 device to PCI subsys
+  * @pdev: pointer to PCI device
+  * @pid: pointer to PCI device identifier
+@@ -8803,6 +8895,8 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	int mcnt;
+ 	int adjusted_fcp_eq_count;
+ 	int fcp_qidx;
++	const struct firmware *fw;
++	uint8_t file_name[16];
  
- 	/*
- 	 * Initialize timers used by driver
-@@ -4122,6 +4153,23 @@ lpfc_sli_driver_resource_setup(struct lp
- 	if (lpfc_mem_alloc(phba, BPL_ALIGN_SZ))
- 		return -ENOMEM;
+ 	/* Allocate memory for HBA structure */
+ 	phba = lpfc_hba_alloc(pdev);
+@@ -8957,6 +9051,14 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 	/* Perform post initialization setup */
+ 	lpfc_post_init_setup(phba);
  
-+	/*
-+	 * Enable sr-iov virtual functions if supported and configured
-+	 * through the module parameter.
-+	 */
-+	if (phba->cfg_sriov_nr_virtfn > 0) {
-+		rc = lpfc_sli_probe_sriov_nr_virtfn(phba,
-+						 phba->cfg_sriov_nr_virtfn);
-+		if (rc) {
-+			lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
-+					"2808 Requested number of SR-IOV "
-+					"virtual functions (%d) is not "
-+					"supported\n",
-+					phba->cfg_sriov_nr_virtfn);
-+			phba->cfg_sriov_nr_virtfn = 0;
-+		}
++	/* check for firmware upgrade or downgrade */
++	snprintf(file_name, 16, "%s.grp", phba->ModelName);
++	error = request_firmware(&fw, file_name, &phba->pcidev->dev);
++	if (!error) {
++		lpfc_write_firmware(phba, fw);
++		release_firmware(fw);
 +	}
 +
- 	return 0;
+ 	/* Check if there are static vports to be created. */
+ 	lpfc_create_static_vport(phba);
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2011-05-23 16:51:48.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-05-23 17:02:32.000000000 -0400
+@@ -13500,6 +13500,96 @@ out:
  }
  
-@@ -4427,6 +4475,23 @@ lpfc_sli4_driver_resource_setup(struct l
- 		goto out_free_fcp_eq_hdl;
- 	}
- 
-+	/*
-+	 * Enable sr-iov virtual functions if supported and configured
-+	 * through the module parameter.
-+	 */
-+	if (phba->cfg_sriov_nr_virtfn > 0) {
-+		rc = lpfc_sli_probe_sriov_nr_virtfn(phba,
-+						 phba->cfg_sriov_nr_virtfn);
-+		if (rc) {
-+			lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
-+					"3020 Requested number of SR-IOV "
-+					"virtual functions (%d) is not "
-+					"supported\n",
-+					phba->cfg_sriov_nr_virtfn);
-+			phba->cfg_sriov_nr_virtfn = 0;
-+		}
-+	}
-+
- 	return rc;
- 
- out_free_fcp_eq_hdl:
-@@ -5780,7 +5845,12 @@ lpfc_sli4_read_config(struct lpfc_hba *p
- {
- 	LPFC_MBOXQ_t *pmb;
- 	struct lpfc_mbx_read_config *rd_config;
--	uint32_t rc = 0;
-+	union  lpfc_sli4_cfg_shdr *shdr;
+ /**
++ * lpfc_wr_object - write an object to the firmware
++ * @phba: HBA structure that indicates port to create a queue on.
++ * @dmabuf_list: list of dmabufs to write to the port.
++ * @size: the total byte value of the objects to write to the port.
++ * @offset: the current offset to be used to start the transfer.
++ *
++ * This routine will create a wr_object mailbox command to send to the port.
++ * the mailbox command will be constructed using the dma buffers described in
++ * @dmabuf_list to create a list of BDEs. This routine will fill in as many
++ * BDEs that the imbedded mailbox can support. The @offset variable will be
++ * used to indicate the starting offset of the transfer and will also return
++ * the offset after the write object mailbox has completed. @size is used to
++ * determine the end of the object and whether the eof bit should be set.
++ *
++ * Return 0 is successful and offset will contain the the new offset to use
++ * for the next write.
++ * Return negative value for error cases.
++ **/
++int
++lpfc_wr_object(struct lpfc_hba *phba, struct list_head *dmabuf_list,
++	       uint32_t size, uint32_t *offset)
++{
++	struct lpfc_mbx_wr_object *wr_object;
++	LPFC_MBOXQ_t *mbox;
++	int rc = 0, i = 0;
 +	uint32_t shdr_status, shdr_add_status;
-+	struct lpfc_mbx_get_func_cfg *get_func_cfg;
-+	struct lpfc_rsrc_desc_fcfcoe *desc;
-+	uint32_t desc_count;
-+	int length, i, rc = 0;
- 
- 	pmb = (LPFC_MBOXQ_t *) mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
- 	if (!pmb) {
-@@ -5855,7 +5925,9 @@ lpfc_sli4_read_config(struct lpfc_hba *p
- 				phba->sli4_hba.max_cfg_param.fcfi_base,
- 				phba->sli4_hba.max_cfg_param.max_fcfi);
- 	}
--	mempool_free(pmb, phba->mbox_mem_pool);
++	uint32_t mbox_tmo;
++	union lpfc_sli4_cfg_shdr *shdr;
++	struct lpfc_dmabuf *dmabuf;
++	uint32_t written = 0;
 +
-+	if (rc)
-+		goto read_cfg_out;
- 
- 	/* Reset the DFT_HBA_Q_DEPTH to the max xri  */
- 	if (phba->cfg_hba_queue_depth >
-@@ -5864,6 +5936,65 @@ lpfc_sli4_read_config(struct lpfc_hba *p
- 		phba->cfg_hba_queue_depth =
- 			phba->sli4_hba.max_cfg_param.max_xri -
- 				lpfc_sli4_get_els_iocb_cnt(phba);
++	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!mbox)
++		return -ENOMEM;
 +
-+	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
-+	    LPFC_SLI_INTF_IF_TYPE_2)
-+		goto read_cfg_out;
++	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
++			LPFC_MBOX_OPCODE_WRITE_OBJECT,
++			sizeof(struct lpfc_mbx_wr_object) -
++			sizeof(struct lpfc_sli4_cfg_mhdr), LPFC_SLI4_MBX_EMBED);
 +
-+	/* get the pf# and vf# for SLI4 if_type 2 port */
-+	length = (sizeof(struct lpfc_mbx_get_func_cfg) -
-+		  sizeof(struct lpfc_sli4_cfg_mhdr));
-+	lpfc_sli4_config(phba, pmb, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_GET_FUNCTION_CONFIG,
-+			 length, LPFC_SLI4_MBX_EMBED);
-+
-+	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_POLL);
-+	shdr = (union lpfc_sli4_cfg_shdr *)
-+				&pmb->u.mqe.un.sli4_config.header.cfg_shdr;
++	wr_object = (struct lpfc_mbx_wr_object *)&mbox->u.mqe.un.wr_object;
++	wr_object->u.request.write_offset = *offset;
++	sprintf((uint8_t *)wr_object->u.request.object_name, "/");
++	wr_object->u.request.object_name[0] =
++		cpu_to_le32(wr_object->u.request.object_name[0]);
++	bf_set(lpfc_wr_object_eof, &wr_object->u.request, 0);
++	list_for_each_entry(dmabuf, dmabuf_list, list) {
++		if (i >= LPFC_MBX_WR_CONFIG_MAX_BDE || written >= size)
++			break;
++		wr_object->u.request.bde[i].addrLow = putPaddrLow(dmabuf->phys);
++		wr_object->u.request.bde[i].addrHigh =
++			putPaddrHigh(dmabuf->phys);
++		if (written + SLI4_PAGE_SIZE >= size) {
++			wr_object->u.request.bde[i].tus.f.bdeSize =
++				(size - written);
++			written += (size - written);
++			bf_set(lpfc_wr_object_eof, &wr_object->u.request, 1);
++		} else {
++			wr_object->u.request.bde[i].tus.f.bdeSize =
++				SLI4_PAGE_SIZE;
++			written += SLI4_PAGE_SIZE;
++		}
++		i++;
++	}
++	wr_object->u.request.bde_count = i;
++	bf_set(lpfc_wr_object_write_length, &wr_object->u.request, written);
++	if (!phba->sli4_hba.intr_enable)
++		rc = lpfc_sli_issue_mbox(phba, mbox, MBX_POLL);
++	else {
++		mbox_tmo = lpfc_mbox_tmo_val(phba, MBX_SLI4_CONFIG);
++		rc = lpfc_sli_issue_mbox_wait(phba, mbox, mbox_tmo);
++	}
++	/* The IOCTL status is embedded in the mailbox subheader. */
++	shdr = (union lpfc_sli4_cfg_shdr *) &wr_object->header.cfg_shdr;
 +	shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
 +	shdr_add_status = bf_get(lpfc_mbox_hdr_add_status, &shdr->response);
-+	if (rc || shdr_status || shdr_add_status) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"3026 Mailbox failed , mbxCmd x%x "
-+				"GET_FUNCTION_CONFIG, mbxStatus x%x\n",
-+				bf_get(lpfc_mqe_command, &pmb->u.mqe),
-+				bf_get(lpfc_mqe_status, &pmb->u.mqe));
-+		rc = -EIO;
-+		goto read_cfg_out;
-+	}
++	if (rc != MBX_TIMEOUT)
++		mempool_free(mbox, phba->mbox_mem_pool);
++	if (shdr_status || shdr_add_status || rc) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"3025 Write Object mailbox failed with "
++				"status x%x add_status x%x, mbx status x%x\n",
++				shdr_status, shdr_add_status, rc);
++		rc = -ENXIO;
++	} else
++		*offset += wr_object->u.response.actual_write_length;
++	return rc;
++}
 +
-+	/* search for fc_fcoe resrouce descriptor */
-+	get_func_cfg = &pmb->u.mqe.un.get_func_cfg;
-+	desc_count = get_func_cfg->func_cfg.rsrc_desc_count;
-+
-+	for (i = 0; i < LPFC_RSRC_DESC_MAX_NUM; i++) {
-+		desc = (struct lpfc_rsrc_desc_fcfcoe *)
-+			&get_func_cfg->func_cfg.desc[i];
-+		if (LPFC_RSRC_DESC_TYPE_FCFCOE ==
-+		    bf_get(lpfc_rsrc_desc_pcie_type, desc)) {
-+			phba->sli4_hba.iov.pf_number =
-+				bf_get(lpfc_rsrc_desc_fcfcoe_pfnum, desc);
-+			phba->sli4_hba.iov.vf_number =
-+				bf_get(lpfc_rsrc_desc_fcfcoe_vfnum, desc);
-+			break;
-+		}
-+	}
-+
-+	if (i < LPFC_RSRC_DESC_MAX_NUM)
-+		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-+				"3027 GET_FUNCTION_CONFIG: pf_number:%d, "
-+				"vf_number:%d\n", phba->sli4_hba.iov.pf_number,
-+				phba->sli4_hba.iov.vf_number);
-+	else {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"3028 GET_FUNCTION_CONFIG: failed to find "
-+				"Resrouce Descriptor:x%x\n",
-+				LPFC_RSRC_DESC_TYPE_FCFCOE);
-+		rc = -EIO;
-+	}
-+
-+read_cfg_out:
-+	mempool_free(pmb, phba->mbox_mem_pool);
- 	return rc;
- }
- 
-@@ -7825,6 +7956,7 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phb
- {
- 	int wait_cnt = 0;
- 	LPFC_MBOXQ_t *mboxq;
-+	struct pci_dev *pdev = phba->pcidev;
- 
- 	lpfc_stop_hba_timers(phba);
- 	phba->sli4_hba.intr_enable = 0;
-@@ -7864,6 +7996,10 @@ lpfc_sli4_hba_unset(struct lpfc_hba *phb
- 	/* Disable PCI subsystem interrupt */
- 	lpfc_sli4_disable_intr(phba);
- 
-+	/* Disable SR-IOV if enabled */
-+	if (phba->cfg_sriov_nr_virtfn)
-+		pci_disable_sriov(pdev);
-+
- 	/* Stop kthread signal shall trigger work_done one more time */
- 	kthread_stop(phba->worker_thread);
- 
-@@ -8243,6 +8379,10 @@ lpfc_pci_remove_one_s3(struct pci_dev *p
- 
- 	lpfc_debugfs_terminate(vport);
- 
-+	/* Disable SR-IOV if enabled */
-+	if (phba->cfg_sriov_nr_virtfn)
-+		pci_disable_sriov(pdev);
-+
- 	/* Disable interrupt */
- 	lpfc_sli_disable_intr(phba);
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2011-03-27 11:03:17.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2011-05-23 17:01:19.000000000 -0400
-@@ -365,6 +365,11 @@ struct lpfc_pc_sli4_params {
- 	uint8_t rqv;
- };
- 
-+struct lpfc_iov {
-+	uint32_t pf_number;
-+	uint32_t vf_number;
-+};
-+
- /* SLI4 HBA data structure entries */
- struct lpfc_sli4_hba {
- 	void __iomem *conf_regs_memmap_p; /* Kernel memory mapped address for
-@@ -467,6 +472,7 @@ struct lpfc_sli4_hba {
- 	struct list_head sp_els_xri_aborted_work_queue;
- 	struct list_head sp_unsol_work_queue;
- 	struct lpfc_sli4_link link_state;
-+	struct lpfc_iov iov;
- 	spinlock_t abts_scsi_buf_list_lock; /* list of aborted SCSI IOs */
- 	spinlock_t abts_sgl_list_lock; /* list of aborted els IOs */
- };
++/**
+  * lpfc_cleanup_pending_mbox - Free up vport discovery mailbox commands.
+  * @vport: pointer to vport data structure.
+  *
 
 
