@@ -1,10 +1,10 @@
 From: yxlraid@gmail.com
-Subject: [PATCH 6/9] [SCSI] mvsas: Add new macros and functions
-Date: Tue, 24 May 2011 22:36:02 +0800
-Message-ID: <1306247762-6395-1-git-send-email-yxlraid@gmail.com>
-References: <mvsas-add-macros>
+Subject: [PATCH 7/9] [SCSI] mvsas: misc improvements
+Date: Tue, 24 May 2011 22:37:25 +0800
+Message-ID: <1306247845-6466-1-git-send-email-yxlraid@gmail.com>
+References: <mvsas-misc>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <mvsas-add-macros>
+In-Reply-To: <mvsas-misc>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James.Bottomley@suse.de
 Cc: jslaby@suse.cz, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com, jfeng@marvell.com
@@ -12,519 +12,707 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiangliang Yu <yuxiangl@marvell.com>
 
--- Add new macros: MVS_SOFT_RESET, MVS_HARD_RESET, MVS_PHY_TUNE,
-	MVS_COMMAND_ACTIVE, EXP_BRCT_CHG, MVS_MAX_SG
--- Add new member sg_width in struct mvs_chip_info
--- Use macros rather than magic number
--- Add new functions: mvs_fill_ssp_resp_iu, mvs_set_sense,
-	mvs_94xx_clear_srs_irq, mvs_94xx_phy_set_link_rate
+--Change code to match HBA datasheet.
+--Change code to make it readable.
+--Add support big endian for mvs_prd_imt.
+--Add cpu_to_le32 and cpu_to_le64 to use on addr.
+--Add scan_finished for structure mvs_prv_info.
 
 Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
 ---
- drivers/scsi/mvsas/mv_64xx.c |   18 ++++----
- drivers/scsi/mvsas/mv_94xx.c |   80 ++++++++++++++++++++++++++---------
- drivers/scsi/mvsas/mv_94xx.h |    2 +
- drivers/scsi/mvsas/mv_defs.h |    3 +-
- drivers/scsi/mvsas/mv_init.c |   21 +++++----
- drivers/scsi/mvsas/mv_sas.c  |   94 +++++++++++++++++++++++++++++++++++-------
- drivers/scsi/mvsas/mv_sas.h  |    7 +++
- 7 files changed, 169 insertions(+), 56 deletions(-)
+ drivers/scsi/mvsas/mv_64xx.c  |   28 ++++++-----
+ drivers/scsi/mvsas/mv_94xx.c  |   72 +++++++++++++++++----------
+ drivers/scsi/mvsas/mv_94xx.h  |   13 ++++-
+ drivers/scsi/mvsas/mv_chips.h |   12 -----
+ drivers/scsi/mvsas/mv_init.c  |    3 +-
+ drivers/scsi/mvsas/mv_sas.c   |  109 ++++++++++++++++++++---------------------
+ drivers/scsi/mvsas/mv_sas.h   |    3 +-
+ 7 files changed, 127 insertions(+), 113 deletions(-)
 
 diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
-index 96bde34..702c767 100644
+index 702c767..bc75ba7 100644
 --- a/drivers/scsi/mvsas/mv_64xx.c
 +++ b/drivers/scsi/mvsas/mv_64xx.c
-@@ -48,7 +48,7 @@ static void __devinit mvs_64xx_enable_xmt(struct mvs_info *mvi, int phy_id)
- 	u32 tmp;
+@@ -58,24 +58,17 @@ static void __devinit mvs_64xx_enable_xmt(struct mvs_info *mvi, int phy_id)
+ static void __devinit mvs_64xx_phy_hacks(struct mvs_info *mvi)
+ {
+ 	void __iomem *regs = mvi->regs;
++	int i;
  
- 	tmp = mr32(MVS_PCS);
--	if (mvi->chip->n_phy <= 4)
-+	if (mvi->chip->n_phy <= MVS_SOC_PORTS)
- 		tmp |= 1 << (phy_id + PCS_EN_PORT_XMT_SHIFT);
- 	else
- 		tmp |= 1 << (phy_id + PCS_EN_PORT_XMT_SHIFT2);
-@@ -95,7 +95,7 @@ static void mvs_64xx_stp_reset(struct mvs_info *mvi, u32 phy_id)
- 	u32 reg, tmp;
- 
- 	if (!(mvi->flags & MVF_FLAG_SOC)) {
--		if (phy_id < 4)
-+		if (phy_id < MVS_SOC_PORTS)
- 			pci_read_config_dword(mvi->pdev, PCR_PHY_CTL, &reg);
- 		else
- 			pci_read_config_dword(mvi->pdev, PCR_PHY_CTL2, &reg);
-@@ -104,13 +104,13 @@ static void mvs_64xx_stp_reset(struct mvs_info *mvi, u32 phy_id)
- 		reg = mr32(MVS_PHY_CTL);
- 
- 	tmp = reg;
--	if (phy_id < 4)
-+	if (phy_id < MVS_SOC_PORTS)
- 		tmp |= (1U << phy_id) << PCTL_LINK_OFFS;
- 	else
--		tmp |= (1U << (phy_id - 4)) << PCTL_LINK_OFFS;
-+		tmp |= (1U << (phy_id - MVS_SOC_PORTS)) << PCTL_LINK_OFFS;
- 
- 	if (!(mvi->flags & MVF_FLAG_SOC)) {
--		if (phy_id < 4) {
-+		if (phy_id < MVS_SOC_PORTS) {
- 			pci_write_config_dword(mvi->pdev, PCR_PHY_CTL, tmp);
- 			mdelay(10);
- 			pci_write_config_dword(mvi->pdev, PCR_PHY_CTL, reg);
-@@ -133,9 +133,9 @@ static void mvs_64xx_phy_reset(struct mvs_info *mvi, u32 phy_id, int hard)
- 	tmp &= ~PHYEV_RDY_CH;
- 	mvs_write_port_irq_stat(mvi, phy_id, tmp);
- 	tmp = mvs_read_phy_ctl(mvi, phy_id);
--	if (hard == 1)
-+	if (hard == MVS_HARD_RESET)
- 		tmp |= PHY_RST_HARD;
--	else if (hard == 0)
-+	else if (hard == MVS_SOFT_RESET)
- 		tmp |= PHY_RST;
- 	mvs_write_phy_ctl(mvi, phy_id, tmp);
- 	if (hard) {
-@@ -346,7 +346,7 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
- 
- 		mvs_64xx_enable_xmt(mvi, i);
- 
--		mvs_64xx_phy_reset(mvi, i, 1);
-+		mvs_64xx_phy_reset(mvi, i, MVS_HARD_RESET);
- 		msleep(500);
- 		mvs_64xx_detect_porttype(mvi, i);
- 	}
-@@ -661,7 +661,7 @@ void mvs_64xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
- 		tmp |= lrmax;
- 	}
- 	mvs_write_phy_ctl(mvi, phy_id, tmp);
--	mvs_64xx_phy_reset(mvi, phy_id, 1);
-+	mvs_64xx_phy_reset(mvi, phy_id, MVS_HARD_RESET);
- }
- 
- static void mvs_64xx_clear_active_cmds(struct mvs_info *mvi)
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index 5b25f1b..a0ec4aa 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -389,7 +389,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
  	mvs_phy_hacks(mvi);
  
- 	/* set LED blink when IO*/
--	mw32(MVS_PA_VSR_ADDR, 0x00000030);
-+	mw32(MVS_PA_VSR_ADDR, VSR_PHY_ACT_LED);
- 	tmp = mr32(MVS_PA_VSR_PORT);
- 	tmp &= 0xFFFF00FF;
- 	tmp |= 0x00003300;
-@@ -419,7 +419,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
- 		mvs_94xx_config_reg_from_hba(mvi, i);
- 		mvs_94xx_phy_enable(mvi, i);
- 
--		mvs_94xx_phy_reset(mvi, i, 1);
-+		mvs_94xx_phy_reset(mvi, i, PHY_RST_HARD);
- 		msleep(500);
- 		mvs_94xx_detect_porttype(mvi, i);
- 	}
-@@ -585,10 +585,48 @@ static irqreturn_t mvs_94xx_isr(struct mvs_info *mvi, int irq, u32 stat)
- static void mvs_94xx_command_active(struct mvs_info *mvi, u32 slot_idx)
- {
- 	u32 tmp;
--	mvs_cw32(mvi, 0x300 + (slot_idx >> 3), 1 << (slot_idx % 32));
--	do {
--		tmp = mvs_cr32(mvi, 0x300 + (slot_idx >> 3));
--	} while (tmp & 1 << (slot_idx % 32));
-+	tmp = mvs_cr32(mvi, MVS_COMMAND_ACTIVE+(slot_idx >> 3));
-+	if (tmp && 1 << (slot_idx % 32)) {
-+		mv_printk("command active %08X,  slot [%x].\n", tmp, slot_idx);
-+		mvs_cw32(mvi, MVS_COMMAND_ACTIVE + (slot_idx >> 3),
-+			1 << (slot_idx % 32));
-+		do {
-+			tmp = mvs_cr32(mvi,
-+				MVS_COMMAND_ACTIVE + (slot_idx >> 3));
-+		} while (tmp & 1 << (slot_idx % 32));
-+	}
-+}
-+
-+void mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
-+{
-+	void __iomem *regs = mvi->regs;
-+	u32 tmp;
-+
-+	if (clear_all) {
-+		tmp = mr32(MVS_INT_STAT_SRS_0);
-+		if (tmp) {
-+			mv_dprintk("check SRS 0 %08X.\n", tmp);
-+			mw32(MVS_INT_STAT_SRS_0, tmp);
-+		}
-+		tmp = mr32(MVS_INT_STAT_SRS_1);
-+		if (tmp) {
-+			mv_dprintk("check SRS 1 %08X.\n", tmp);
-+			mw32(MVS_INT_STAT_SRS_1, tmp);
-+		}
-+	} else {
-+		if (reg_set > 31)
-+			tmp = mr32(MVS_INT_STAT_SRS_1);
-+		else
-+			tmp = mr32(MVS_INT_STAT_SRS_0);
-+
-+		if (tmp & (1 << (reg_set % 32))) {
-+			mv_dprintk("register set 0x%x was stopped.\n", reg_set);
-+			if (reg_set > 31)
-+				mw32(MVS_INT_STAT_SRS_1, 1 << (reg_set % 32));
-+			else
-+				mw32(MVS_INT_STAT_SRS_0, 1 << (reg_set % 32));
-+		}
-+	}
- }
- 
- static void mvs_94xx_issue_stop(struct mvs_info *mvi, enum mvs_port_type type,
-@@ -596,12 +634,10 @@ static void mvs_94xx_issue_stop(struct mvs_info *mvi, enum mvs_port_type type,
- {
- 	void __iomem *regs = mvi->regs;
- 	u32 tmp;
-+	mvs_94xx_clear_srs_irq(mvi, 0, 1);
- 
--	if (type == PORT_TYPE_SATA) {
--		tmp = mr32(MVS_INT_STAT_SRS_0) | (1U << tfs);
--		mw32(MVS_INT_STAT_SRS_0, tmp);
--	}
--	mw32(MVS_INT_STAT, CINT_CI_STOP);
-+	tmp = mr32(MVS_INT_STAT);
-+	mw32(MVS_INT_STAT, tmp | CINT_CI_STOP);
- 	tmp = mr32(MVS_PCS) | 0xFF00;
- 	mw32(MVS_PCS, tmp);
- }
-@@ -794,7 +830,18 @@ static void mvs_94xx_fix_phy_info(struct mvs_info *mvi, int i,
- void mvs_94xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
- 			struct sas_phy_linkrates *rates)
- {
--	/* TODO */
-+	u32 lrmax = 0;
-+	u32 tmp;
-+
-+	tmp = mvs_read_phy_ctl(mvi, phy_id);
-+	lrmax = (rates->maximum_linkrate - SAS_LINK_RATE_1_5_GBPS) << 12;
-+
-+	if (lrmax) {
-+		tmp &= ~(0x3 << 12);
-+		tmp |= lrmax;
-+	}
-+	mvs_write_phy_ctl(mvi, phy_id, tmp);
-+	mvs_94xx_phy_reset(mvi, phy_id, PHY_RST_HARD);
- }
- 
- static void mvs_94xx_clear_active_cmds(struct mvs_info *mvi)
-@@ -893,15 +940,6 @@ void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
- 	}
- }
- 
--/*
-- * FIXME JEJB: temporary nop clear_srs_irq to make 94xx still work
-- * with 64xx fixes
-- */
--static void mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set,
--				   u8 clear_all)
--{
--}
+ 	if (!(mvi->flags & MVF_FLAG_SOC)) {
+ 		/* TEST - for phy decoding error, adjust voltage levels */
+-		mw32(MVS_P0_VSR_ADDR + 0, 0x8);
+-		mw32(MVS_P0_VSR_DATA + 0, 0x2F0);
 -
- static void mvs_94xx_tune_interrupt(struct mvs_info *mvi, u32 time)
+-		mw32(MVS_P0_VSR_ADDR + 8, 0x8);
+-		mw32(MVS_P0_VSR_DATA + 8, 0x2F0);
+-
+-		mw32(MVS_P0_VSR_ADDR + 16, 0x8);
+-		mw32(MVS_P0_VSR_DATA + 16, 0x2F0);
+-
+-		mw32(MVS_P0_VSR_ADDR + 24, 0x8);
+-		mw32(MVS_P0_VSR_DATA + 24, 0x2F0);
++		for (i = 0; i < MVS_SOC_PORTS; i++) {
++			mvs_write_port_vsr_addr(mvi, i, VSR_PHY_MODE8);
++			mvs_write_port_vsr_data(mvi, i, 0x2F0);
++		}
+ 	} else {
+-		int i;
+ 		/* disable auto port detection */
+ 		mw32(MVS_GBL_PORT_TYPE, 0);
+ 		for (i = 0; i < mvi->chip->n_phy; i++) {
+@@ -321,6 +314,11 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
+ 	/* init phys */
+ 	mvs_64xx_phy_hacks(mvi);
+ 
++	tmp = mvs_cr32(mvi, CMD_PHY_MODE_21);
++	tmp &= 0x0000ffff;
++	tmp |= 0x00fa0000;
++	mvs_cw32(mvi, CMD_PHY_MODE_21, tmp);
++
+ 	/* enable auto port detection */
+ 	mw32(MVS_GBL_PORT_TYPE, MODE_AUTO_DET_EN);
+ 
+@@ -394,13 +392,17 @@ static int __devinit mvs_64xx_init(struct mvs_info *mvi)
+ 	/* reset CMD queue */
+ 	tmp = mr32(MVS_PCS);
+ 	tmp |= PCS_CMD_RST;
++	tmp &= ~PCS_SELF_CLEAR;
+ 	mw32(MVS_PCS, tmp);
+ 	/* interrupt coalescing may cause missing HW interrput in some case,
+ 	 * and the max count is 0x1ff, while our max slot is 0x200,
+ 	 * it will make count 0.
+ 	 */
+ 	tmp = 0;
+-	mw32(MVS_INT_COAL, tmp);
++	if (MVS_CHIP_SLOT_SZ > 0x1ff)
++		mw32(MVS_INT_COAL, 0x1ff | COAL_EN);
++	else
++		mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ | COAL_EN);
+ 
+ 	tmp = 0x10000 | interrupt_coalescing;
+ 	mw32(MVS_INT_COAL_TMOUT, tmp);
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index a0ec4aa..1276e49 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -271,7 +271,14 @@ static void __devinit mvs_94xx_enable_xmt(struct mvs_info *mvi, int phy_id)
+ static void mvs_94xx_phy_reset(struct mvs_info *mvi, u32 phy_id, int hard)
+ {
+ 	u32 tmp;
+-
++	u32 delay = 5000;
++	if (hard == MVS_PHY_TUNE) {
++		mvs_write_port_cfg_addr(mvi, phy_id, PHYR_SATA_CTL);
++		tmp = mvs_read_port_cfg_data(mvi, phy_id);
++		mvs_write_port_cfg_data(mvi, phy_id, tmp|0x20000000);
++		mvs_write_port_cfg_data(mvi, phy_id, tmp|0x100000);
++		return;
++	}
+ 	tmp = mvs_read_port_irq_stat(mvi, phy_id);
+ 	tmp &= ~PHYEV_RDY_CH;
+ 	mvs_write_port_irq_stat(mvi, phy_id, tmp);
+@@ -281,12 +288,15 @@ static void mvs_94xx_phy_reset(struct mvs_info *mvi, u32 phy_id, int hard)
+ 		mvs_write_phy_ctl(mvi, phy_id, tmp);
+ 		do {
+ 			tmp = mvs_read_phy_ctl(mvi, phy_id);
+-		} while (tmp & PHY_RST_HARD);
++			udelay(10);
++			delay--;
++		} while ((tmp & PHY_RST_HARD) && delay);
++		if (!delay)
++			mv_dprintk("phy hard reset failed.\n");
+ 	} else {
+-		mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_STAT);
+-		tmp = mvs_read_port_vsr_data(mvi, phy_id);
++		tmp = mvs_read_phy_ctl(mvi, phy_id);
+ 		tmp |= PHY_RST;
+-		mvs_write_port_vsr_data(mvi, phy_id, tmp);
++		mvs_write_phy_ctl(mvi, phy_id, tmp);
+ 	}
+ }
+ 
+@@ -413,7 +423,7 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 		mvs_94xx_phy_disable(mvi, i);
+ 		/* set phy local SAS address */
+ 		mvs_set_sas_addr(mvi, i, CONFIG_ID_FRAME3, CONFIG_ID_FRAME4,
+-						(mvi->phy[i].dev_sas_addr));
++						cpu_to_le64(mvi->phy[i].dev_sas_addr));
+ 
+ 		mvs_94xx_enable_xmt(mvi, i);
+ 		mvs_94xx_config_reg_from_hba(mvi, i);
+@@ -459,7 +469,6 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 	 */
+ 	cctl = mr32(MVS_CTL);
+ 	cctl |= CCTL_ENDIAN_CMD;
+-	cctl |= CCTL_ENDIAN_DATA;
+ 	cctl &= ~CCTL_ENDIAN_OPEN;
+ 	cctl |= CCTL_ENDIAN_RSP;
+ 	mw32_f(MVS_CTL, cctl);
+@@ -467,13 +476,17 @@ static int __devinit mvs_94xx_init(struct mvs_info *mvi)
+ 	/* reset CMD queue */
+ 	tmp = mr32(MVS_PCS);
+ 	tmp |= PCS_CMD_RST;
++	tmp &= ~PCS_SELF_CLEAR;
+ 	mw32(MVS_PCS, tmp);
+ 	/* interrupt coalescing may cause missing HW interrput in some case,
+ 	 * and the max count is 0x1ff, while our max slot is 0x200,
+ 	 * it will make count 0.
+ 	 */
+ 	tmp = 0;
+-	mw32(MVS_INT_COAL, tmp);
++	if (MVS_CHIP_SLOT_SZ > 0x1ff)
++		mw32(MVS_INT_COAL, 0x1ff | COAL_EN);
++	else
++		mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ | COAL_EN);
+ 
+ 	tmp = 0x10000 | interrupt_coalescing;
+ 	mw32(MVS_INT_COAL_TMOUT, tmp);
+@@ -674,24 +687,16 @@ static void mvs_94xx_non_spec_ncq_error(struct mvs_info *mvi)
+ static void mvs_94xx_free_reg_set(struct mvs_info *mvi, u8 *tfs)
  {
  	void __iomem *regs = mvi->regs;
+-	u32 tmp;
+ 	u8 reg_set = *tfs;
+ 
+ 	if (*tfs == MVS_ID_NOT_MAPPED)
+ 		return;
+ 
+ 	mvi->sata_reg_set &= ~bit(reg_set);
+-	if (reg_set < 32) {
++	if (reg_set < 32)
+ 		w_reg_set_enable(reg_set, (u32)mvi->sata_reg_set);
+-		tmp = mr32(MVS_INT_STAT_SRS_0) & (u32)mvi->sata_reg_set;
+-		if (tmp)
+-			mw32(MVS_INT_STAT_SRS_0, tmp);
+-	} else {
+-		w_reg_set_enable(reg_set, mvi->sata_reg_set);
+-		tmp = mr32(MVS_INT_STAT_SRS_1) & mvi->sata_reg_set;
+-		if (tmp)
+-			mw32(MVS_INT_STAT_SRS_1, tmp);
+-	}
++	else
++		w_reg_set_enable(reg_set, (u32)(mvi->sata_reg_set >> 32));
+ 
+ 	*tfs = MVS_ID_NOT_MAPPED;
+ 
+@@ -707,7 +712,7 @@ static u8 mvs_94xx_assign_reg_set(struct mvs_info *mvi, u8 *tfs)
+ 		return 0;
+ 
+ 	i = mv_ffc64(mvi->sata_reg_set);
+-	if (i > 32) {
++	if (i >= 32) {
+ 		mvi->sata_reg_set |= bit(i);
+ 		w_reg_set_enable(i, (u32)(mvi->sata_reg_set >> 32));
+ 		*tfs = i;
+@@ -726,9 +731,12 @@ static void mvs_94xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
+ 	int i;
+ 	struct scatterlist *sg;
+ 	struct mvs_prd *buf_prd = prd;
++	struct mvs_prd_imt im_len;
++	*(u32 *)&im_len = 0;
+ 	for_each_sg(scatter, sg, nr, i) {
+ 		buf_prd->addr = cpu_to_le64(sg_dma_address(sg));
+-		buf_prd->im_len.len = cpu_to_le32(sg_dma_len(sg));
++		im_len.len = sg_dma_len(sg);
++		buf_prd->im_len = cpu_to_le32(*(u32 *)&im_len);
+ 		buf_prd++;
+ 	}
+ }
+@@ -751,7 +759,7 @@ static void mvs_94xx_get_dev_identify_frame(struct mvs_info *mvi, int port_id,
+ 	for (i = 0; i < 7; i++) {
+ 		mvs_write_port_cfg_addr(mvi, port_id,
+ 					CONFIG_ID_FRAME0 + i * 4);
+-		id_frame[i] = mvs_read_port_cfg_data(mvi, port_id);
++		id_frame[i] = cpu_to_le32(mvs_read_port_cfg_data(mvi, port_id));
+ 	}
+ 	memcpy(id, id_frame, 28);
+ }
+@@ -766,7 +774,7 @@ static void mvs_94xx_get_att_identify_frame(struct mvs_info *mvi, int port_id,
+ 	for (i = 0; i < 7; i++) {
+ 		mvs_write_port_cfg_addr(mvi, port_id,
+ 					CONFIG_ATT_ID_FRAME0 + i * 4);
+-		id_frame[i] = mvs_read_port_cfg_data(mvi, port_id);
++		id_frame[i] = cpu_to_le32(mvs_read_port_cfg_data(mvi, port_id));
+ 		mv_dprintk("94xx phy %d atta frame %d %x.\n",
+ 			port_id + mvi->id * mvi->chip->n_phy, i, id_frame[i]);
+ 	}
+@@ -924,8 +932,12 @@ void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
+ 	int i;
+ 	struct mvs_prd *buf_prd = prd;
+ 	dma_addr_t buf_dma;
++	struct mvs_prd_imt im_len;
++
++	*(u32 *)&im_len = 0;
+ 	buf_prd += from;
+ 
++#define PRD_CHAINED_ENTRY 0x01
+ 	if ((mvi->pdev->revision == VANIR_A0_REV) ||
+ 			(mvi->pdev->revision == VANIR_B0_REV))
+ 		buf_dma = (phy_mask <= 0x08) ?
+@@ -933,10 +945,16 @@ void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
+ 	else
+ 		return;
+ 
+-	for (i = 0; i < MAX_SG_ENTRY - from; i++) {
+-		buf_prd->addr = cpu_to_le64(buf_dma);
+-		buf_prd->im_len.len = cpu_to_le32(buf_len);
+-		++buf_prd;
++	for (i = from; i < MAX_SG_ENTRY; i++, ++buf_prd) {
++		if (i == MAX_SG_ENTRY - 1) {
++			buf_prd->addr = cpu_to_le64(virt_to_phys(buf_prd - 1));
++			im_len.len = 2;
++			im_len.misc_ctl = PRD_CHAINED_ENTRY;
++		} else {
++			buf_prd->addr = cpu_to_le64(buf_dma);
++			im_len.len = buf_len;
++		}
++		buf_prd->im_len = cpu_to_le32(*(u32 *)&im_len);
+ 	}
+ }
+ 
 diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
-index 458d127..ba78129 100644
+index ba78129..b42532b 100644
 --- a/drivers/scsi/mvsas/mv_94xx.h
 +++ b/drivers/scsi/mvsas/mv_94xx.h
-@@ -109,6 +109,7 @@ enum hw_registers {
- 	MVS_P4_VSR_DATA 	= 0x254, /* phy4 VSR data */
- 	MVS_PA_VSR_ADDR		= 0x290, /* All port VSR addr */
- 	MVS_PA_VSR_PORT		= 0x294, /* All port VSR data */
-+	MVS_COMMAND_ACTIVE	= 0x300,
+@@ -142,8 +142,8 @@ enum sas_sata_vsp_regs {
+ 
+ enum chip_register_bits {
+ 	PHY_MIN_SPP_PHYS_LINK_RATE_MASK = (0x7 << 8),
+-	PHY_MAX_SPP_PHYS_LINK_RATE_MASK = (0x7 << 8),
+-	PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET = (12),
++	PHY_MAX_SPP_PHYS_LINK_RATE_MASK = (0x7 << 12),
++	PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET = (16),
+ 	PHY_NEG_SPP_PHYS_LINK_RATE_MASK =
+ 			(0x3 << PHY_NEG_SPP_PHYS_LINK_RATE_MASK_OFFSET),
+ };
+@@ -219,17 +219,24 @@ union reg_phy_cfg{
+ #define MAX_SG_ENTRY		255
+ 
+ struct mvs_prd_imt {
++#ifndef __BIG_ENDIAN
+ 	__le32			len:22;
+ 	u8			_r_a:2;
+ 	u8			misc_ctl:4;
+ 	u8			inter_sel:4;
++#else
++	u32			inter_sel:4;
++	u32			misc_ctl:4;
++	u32			_r_a:2;
++	u32			len:22;
++#endif
  };
  
- enum pci_cfg_registers {
-@@ -132,6 +133,7 @@ enum sas_sata_vsp_regs {
- 	VSR_PHY_MODE9		= 0x09 * 4, /* Test */
- 	VSR_PHY_MODE10		= 0x0A * 4, /* Power */
- 	VSR_PHY_MODE11		= 0x0B * 4, /* Phy Mode */
-+	VSR_PHY_ACT_LED		= 0x0C * 4, /* Activity LED control */
+ struct mvs_prd {
+ 	/* 64-bit buffer address */
+ 	__le64			addr;
+ 	/* 22-bit length */
+-	struct mvs_prd_imt	im_len;
++	__le32		 	im_len;
+ } __attribute__ ((packed));
  
- 	VSR_PHY_FFE_CONTROL	= 0x10C,
- 	VSR_PHY_DFE_UPDATE_CRTL	= 0x110,
-diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
-index e39629d..1927e1b 100644
---- a/drivers/scsi/mvsas/mv_defs.h
-+++ b/drivers/scsi/mvsas/mv_defs.h
-@@ -395,9 +395,10 @@ enum mvs_info_flags {
- };
+ /*
+diff --git a/drivers/scsi/mvsas/mv_chips.h b/drivers/scsi/mvsas/mv_chips.h
+index 4519f80..0a11bc7 100644
+--- a/drivers/scsi/mvsas/mv_chips.h
++++ b/drivers/scsi/mvsas/mv_chips.h
+@@ -184,18 +184,6 @@ static inline void __devinit mvs_phy_hacks(struct mvs_info *mvi)
  
- enum mvs_event_flags {
--	PHY_PLUG_EVENT	= (3U),
-+	PHY_PLUG_EVENT		= (3U),
- 	PHY_PLUG_IN		= (1U << 0),	/* phy plug in */
- 	PHY_PLUG_OUT		= (1U << 1),	/* phy plug out */
-+	EXP_BRCT_CHG		= (1U << 2),	/* broadcast change */
- };
- 
- enum mvs_port_type {
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index a7815f9..bf7d90c 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -39,15 +39,15 @@ int interrupt_coalescing = 0x80;
- static struct scsi_transport_template *mvs_stt;
- struct kmem_cache *mvs_task_list_cache;
- static const struct mvs_chip_info mvs_chips[] = {
--	[chip_6320] =	{ 1, 2, 0x400, 17, 16,  9, &mvs_64xx_dispatch, },
--	[chip_6440] =	{ 1, 4, 0x400, 17, 16,  9, &mvs_64xx_dispatch, },
--	[chip_6485] =	{ 1, 8, 0x800, 33, 32, 10, &mvs_64xx_dispatch, },
--	[chip_9180] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
--	[chip_9480] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
--	[chip_9445] =	{ 1, 4, 0x800, 17, 64, 11, &mvs_94xx_dispatch, },
--	[chip_9485] =	{ 2, 4, 0x800, 17, 64, 11, &mvs_94xx_dispatch, },
--	[chip_1300] =	{ 1, 4, 0x400, 17, 16,  9, &mvs_64xx_dispatch, },
--	[chip_1320] =	{ 2, 4, 0x800, 17, 64,  9, &mvs_94xx_dispatch, },
-+	[chip_6320] =	{ 1, 2, 0x400, 17, 16, 6,  9, &mvs_64xx_dispatch, },
-+	[chip_6440] =	{ 1, 4, 0x400, 17, 16, 6,  9, &mvs_64xx_dispatch, },
-+	[chip_6485] =	{ 1, 8, 0x800, 33, 32, 6, 10, &mvs_64xx_dispatch, },
-+	[chip_9180] =	{ 2, 4, 0x800, 17, 64, 8,  9, &mvs_94xx_dispatch, },
-+	[chip_9480] =	{ 2, 4, 0x800, 17, 64, 8,  9, &mvs_94xx_dispatch, },
-+	[chip_9445] =	{ 1, 4, 0x800, 17, 64, 8, 11, &mvs_94xx_dispatch, },
-+	[chip_9485] =	{ 2, 4, 0x800, 17, 64, 8, 11, &mvs_94xx_dispatch, },
-+	[chip_1300] =	{ 1, 4, 0x400, 17, 16, 6,  9, &mvs_64xx_dispatch, },
-+	[chip_1320] =	{ 2, 4, 0x800, 17, 64, 8,  9, &mvs_94xx_dispatch, },
- };
- 
- struct device_attribute *mvst_host_attrs[];
-@@ -466,7 +466,7 @@ static int __devinit mvs_prep_sas_ha_init(struct Scsi_Host *shost,
- 	((struct mvs_prv_info *)sha->lldd_ha)->n_host = core_nr;
- 
- 	shost->transportt = mvs_stt;
--	shost->max_id = 128;
-+	shost->max_id = MVS_MAX_DEVICES;
- 	shost->max_lun = ~0;
- 	shost->max_channel = 1;
- 	shost->max_cmd_len = 16;
-@@ -512,6 +512,7 @@ static void  __devinit mvs_post_sas_ha_init(struct Scsi_Host *shost,
- 		can_queue = MVS_CHIP_SLOT_SZ;
- 
- 	sha->lldd_queue_size = can_queue;
-+	shost->sg_tablesize = min_t(u16, SG_ALL, MVS_MAX_SG);
- 	shost->can_queue = can_queue;
- 	mvi->shost->cmd_per_lun = MVS_QUEUE_SIZE;
- 	sha->core.shost = mvi->shost;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 7bd0ee3..38b47918 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -203,12 +203,12 @@ int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 		tmp = MVS_CHIP_DISP->read_phy_ctl(mvi, phy_id);
- 		if (tmp & PHY_RST_HARD)
- 			break;
--		MVS_CHIP_DISP->phy_reset(mvi, phy_id, 1);
-+		MVS_CHIP_DISP->phy_reset(mvi, phy_id, MVS_HARD_RESET);
- 		break;
- 
- 	case PHY_FUNC_LINK_RESET:
- 		MVS_CHIP_DISP->phy_enable(mvi, phy_id);
--		MVS_CHIP_DISP->phy_reset(mvi, phy_id, 0);
-+		MVS_CHIP_DISP->phy_reset(mvi, phy_id, MVS_SOFT_RESET);
- 		break;
- 
- 	case PHY_FUNC_DISABLE:
-@@ -1758,12 +1758,63 @@ static int mvs_sata_done(struct mvs_info *mvi, struct sas_task *task,
- 	return stat;
+ 	/* not to halt for different port op during wideport link change */
+ 	mvs_cw32(mvi, CMD_APP_ERR_CONFIG, 0xffefbf7d);
+-
+-	/* workaround for Seagate disk not-found OOB sequence, recv
+-	 * COMINIT before sending out COMWAKE */
+-	tmp = mvs_cr32(mvi, CMD_PHY_MODE_21);
+-	tmp &= 0x0000ffff;
+-	tmp |= 0x00fa0000;
+-	mvs_cw32(mvi, CMD_PHY_MODE_21, tmp);
+-
+-	tmp = mvs_cr32(mvi, CMD_PHY_TIMER);
+-	tmp &= 0x1fffffff;
+-	tmp |= (2U << 29);	/* 8 ms retry */
+-	mvs_cw32(mvi, CMD_PHY_TIMER, tmp);
  }
  
-+void mvs_set_sense(u8 *buffer, int len, int d_sense,
-+		int key, int asc, int ascq)
-+{
-+	memset(buffer, 0, len);
+ static inline void mvs_int_sata(struct mvs_info *mvi)
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index bf7d90c..b28ee5b 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -104,6 +104,7 @@ static void __devinit mvs_phy_init(struct mvs_info *mvi, int phy_id)
+ 	struct asd_sas_phy *sas_phy = &phy->sas_phy;
+ 
+ 	phy->mvi = mvi;
++	phy->port = NULL;
+ 	init_timer(&phy->timer);
+ 	sas_phy->enabled = (phy_id < mvi->chip->n_phy) ? 1 : 0;
+ 	sas_phy->class = SAS;
+@@ -366,7 +367,7 @@ static struct mvs_info *__devinit mvs_pci_alloc(struct pci_dev *pdev,
+ 				const struct pci_device_id *ent,
+ 				struct Scsi_Host *shost, unsigned int id)
+ {
+-	struct mvs_info *mvi;
++	struct mvs_info *mvi = NULL;
+ 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
+ 
+ 	mvi = kzalloc(sizeof(*mvi) +
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 38b47918..31ca8fe 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -300,7 +300,10 @@ int mvs_slave_configure(struct scsi_device *sdev)
+ 
+ 	if (ret)
+ 		return ret;
+-	if (dev_is_sata(dev)) {
++	if (!dev_is_sata(dev)) {
++		sas_change_queue_depth(sdev,
++			MVS_QUEUE_SIZE,
++			SCSI_QDEPTH_DEFAULT);
+ 	}
+ 	return 0;
+ }
+@@ -311,6 +314,7 @@ void mvs_scan_start(struct Scsi_Host *shost)
+ 	unsigned short core_nr;
+ 	struct mvs_info *mvi;
+ 	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct mvs_prv_info *mvs_prv = sha->lldd_ha;
+ 
+ 	core_nr = ((struct mvs_prv_info *)sha->lldd_ha)->n_host;
+ 
+@@ -319,15 +323,17 @@ void mvs_scan_start(struct Scsi_Host *shost)
+ 		for (i = 0; i < mvi->chip->n_phy; ++i)
+ 			mvs_bytes_dmaed(mvi, i);
+ 	}
++	mvs_prv->scan_finished = 1;
+ }
+ 
+ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ {
+-	/* give the phy enabling interrupt event time to come in (1s
+-	 * is empirically about all it takes) */
+-	if (time < HZ)
++	struct sas_ha_struct *sha = SHOST_TO_SAS_HA(shost);
++	struct mvs_prv_info *mvs_prv = sha->lldd_ha;
 +
-+	if (d_sense) {
-+		/* Descriptor format */
-+		if (len < 4) {
-+			mv_printk("Length %d of sense buffer too small to "
-+				"fit sense %x:%x:%x", len, key, asc, ascq);
-+		}
++	if (mvs_prv->scan_finished == 0)
+ 		return 0;
+-	/* Wait for discovery to finish */
 +
-+		buffer[0] = 0x72;		/* Response Code	*/
-+		if (len > 1)
-+			buffer[1] = key;	/* Sense Key */
-+		if (len > 2)
-+			buffer[2] = asc;	/* ASC	*/
-+		if (len > 3)
-+			buffer[3] = ascq;	/* ASCQ	*/
-+	} else {
-+		if (len < 14) {
-+			mv_printk("Length %d of sense buffer too small to "
-+				"fit sense %x:%x:%x", len, key, asc, ascq);
-+		}
+ 	scsi_flush_work(shost);
+ 	return 1;
+ }
+@@ -625,6 +631,9 @@ static int mvs_task_prep_ssp(struct mvs_info *mvi,
+ 	}
+ 	if (is_tmf)
+ 		flags |= (MCH_SSP_FR_TASK << MCH_SSP_FR_TYPE_SHIFT);
++	else
++		flags |= (MCH_SSP_FR_CMD << MCH_SSP_FR_TYPE_SHIFT);
 +
-+		buffer[0] = 0x70;		/* Response Code	*/
-+		if (len > 2)
-+			buffer[2] = key;	/* Sense Key */
-+		if (len > 7)
-+			buffer[7] = 0x0a;	/* Additional Sense Length */
-+		if (len > 12)
-+			buffer[12] = asc;	/* ASC */
-+		if (len > 13)
-+			buffer[13] = ascq; /* ASCQ */
-+	}
-+
-+	return;
-+}
-+
-+void mvs_fill_ssp_resp_iu(struct ssp_response_iu *iu,
-+				u8 key, u8 asc, u8 asc_q)
-+{
-+	iu->datapres = 2;
-+	iu->response_data_len = 0;
-+	iu->sense_data_len = 17;
-+	iu->status = 02;
-+	mvs_set_sense(iu->sense_data, 17, 0,
-+			key, asc, asc_q);
-+}
-+
- static int mvs_slot_err(struct mvs_info *mvi, struct sas_task *task,
- 			 u32 slot_idx)
+ 	hdr->flags = cpu_to_le32(flags | (tei->n_elem << MCH_PRD_LEN_SHIFT));
+ 	hdr->tags = cpu_to_le32(tag);
+ 	hdr->data_len = cpu_to_le32(task->total_xfer_len);
+@@ -1049,9 +1058,9 @@ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
+ 	mvs_slot_free(mvi, slot_idx);
+ }
+ 
+-static void mvs_update_wideport(struct mvs_info *mvi, int i)
++static void mvs_update_wideport(struct mvs_info *mvi, int phy_no)
+ {
+-	struct mvs_phy *phy = &mvi->phy[i];
++	struct mvs_phy *phy = &mvi->phy[phy_no];
+ 	struct mvs_port *port = phy->port;
+ 	int j, no;
+ 
+@@ -1106,16 +1115,16 @@ static void *mvs_get_d2h_reg(struct mvs_info *mvi, int i, void *buf)
+ 		return NULL;
+ 
+ 	MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG3);
+-	s[3] = MVS_CHIP_DISP->read_port_cfg_data(mvi, i);
++	s[3] = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
+ 
+ 	MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG2);
+-	s[2] = MVS_CHIP_DISP->read_port_cfg_data(mvi, i);
++	s[2] = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
+ 
+ 	MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG1);
+-	s[1] = MVS_CHIP_DISP->read_port_cfg_data(mvi, i);
++	s[1] = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
+ 
+ 	MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG0);
+-	s[0] = MVS_CHIP_DISP->read_port_cfg_data(mvi, i);
++	s[0] = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
+ 
+ 	/* Workaround: take some ATAPI devices for ATA */
+ 	if (((s[1] & 0x00FFFFFF) == 0x00EB1401) && (*(u8 *)&s[3] == 0x01))
+@@ -1201,9 +1210,9 @@ void mvs_update_phyinfo(struct mvs_info *mvi, int i, int get_st)
+ 		if (MVS_CHIP_DISP->phy_work_around)
+ 			MVS_CHIP_DISP->phy_work_around(mvi, i);
+ 	}
+-	mv_dprintk("port %d attach dev info is %x\n",
++	mv_dprintk("phy %d attach dev info is %x\n",
+ 		i + mvi->id * mvi->chip->n_phy, phy->att_dev_info);
+-	mv_dprintk("port %d attach sas addr is %llx\n",
++	mv_dprintk("phy %d attach sas addr is %llx\n",
+ 		i + mvi->id * mvi->chip->n_phy, phy->att_dev_sas_addr);
+ out_done:
+ 	if (get_st)
+@@ -1228,10 +1237,10 @@ static void mvs_port_notify_formed(struct asd_sas_phy *sas_phy, int lock)
+ 	}
+ 	hi = i/((struct mvs_prv_info *)sas_ha->lldd_ha)->n_phy;
+ 	mvi = ((struct mvs_prv_info *)sas_ha->lldd_ha)->mvi[hi];
+-	if (sas_port->id >= mvi->chip->n_phy)
+-		port = &mvi->port[sas_port->id - mvi->chip->n_phy];
++	if (i >= mvi->chip->n_phy)
++		port = &mvi->port[i - mvi->chip->n_phy];
+ 	else
+-		port = &mvi->port[sas_port->id];
++		port = &mvi->port[i];
+ 	if (lock)
+ 		spin_lock_irqsave(&mvi->lock, flags);
+ 	port->port_attached = 1;
+@@ -1260,7 +1269,7 @@ static void mvs_port_notify_deformed(struct asd_sas_phy *sas_phy, int lock)
+ 			return;
+ 	}
+ 	list_for_each_entry(dev, &port->dev_list, dev_list_node)
+-		mvs_do_release_task(phy->mvi, phy_no, NULL);
++		mvs_do_release_task(phy->mvi, phy_no, dev);
+ 
+ }
+ 
+@@ -1324,6 +1333,7 @@ int mvs_dev_found_notify(struct domain_device *dev, int lock)
+ 	mvi_device->dev_status = MVS_DEV_NORMAL;
+ 	mvi_device->dev_type = dev->dev_type;
+ 	mvi_device->mvi_info = mvi;
++	mvi_device->sas_device = dev;
+ 	if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type)) {
+ 		int phy_id;
+ 		u8 phy_num = parent_dev->ex_dev.num_phys;
+@@ -1375,6 +1385,7 @@ void mvs_dev_gone_notify(struct domain_device *dev)
+ 		mv_dprintk("found dev has gone.\n");
+ 	}
+ 	dev->lldd_dev = NULL;
++	mvi_dev->sas_device = NULL;
+ 
+ 	spin_unlock_irqrestore(&mvi->lock, flags);
+ }
+@@ -1455,7 +1466,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+ 		}
+ 
+ 		wait_for_completion(&task->completion);
+-		res = -TMF_RESP_FUNC_FAILED;
++		res = TMF_RESP_FUNC_FAILED;
+ 		/* Even TMF timed out, return direct. */
+ 		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+@@ -1505,11 +1516,10 @@ static int mvs_debug_issue_ssp_tmf(struct domain_device *dev,
+ 				u8 *lun, struct mvs_tmf_task *tmf)
+ {
+ 	struct sas_ssp_task ssp_task;
+-	DECLARE_COMPLETION_ONSTACK(completion);
+ 	if (!(dev->tproto & SAS_PROTOCOL_SSP))
+ 		return TMF_RESP_FUNC_ESUPP;
+ 
+-	strncpy((u8 *)&ssp_task.LUN, lun, 8);
++	memcpy(ssp_task.LUN, lun, 8);
+ 
+ 	return mvs_exec_internal_tmf_task(dev, &ssp_task,
+ 				sizeof(ssp_task), tmf);
+@@ -1533,7 +1543,7 @@ static int mvs_debug_I_T_nexus_reset(struct domain_device *dev)
+ int mvs_lu_reset(struct domain_device *dev, u8 *lun)
+ {
+ 	unsigned long flags;
+-	int i, phyno[WIDE_PORT_MAX_PHY], num , rc = TMF_RESP_FUNC_FAILED;
++	int rc = TMF_RESP_FUNC_FAILED;
+ 	struct mvs_tmf_task tmf_task;
+ 	struct mvs_device * mvi_dev = dev->lldd_dev;
+ 	struct mvs_info *mvi = mvi_dev->mvi_info;
+@@ -1542,10 +1552,8 @@ int mvs_lu_reset(struct domain_device *dev, u8 *lun)
+ 	mvi_dev->dev_status = MVS_DEV_EH;
+ 	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
+ 	if (rc == TMF_RESP_FUNC_COMPLETE) {
+-		num = mvs_find_dev_phyno(dev, phyno);
+ 		spin_lock_irqsave(&mvi->lock, flags);
+-		for (i = 0; i < num; i++)
+-			mvs_release_task(mvi, dev);
++		mvs_release_task(mvi, dev);
+ 		spin_unlock_irqrestore(&mvi->lock, flags);
+ 	}
+ 	/* If failed, fall-through I_T_Nexus reset */
+@@ -1563,6 +1571,8 @@ int mvs_I_T_nexus_reset(struct domain_device *dev)
+ 
+ 	if (mvi_dev->dev_status != MVS_DEV_EH)
+ 		return TMF_RESP_FUNC_COMPLETE;
++	else
++		mvi_dev->dev_status = MVS_DEV_NORMAL;
+ 	rc = mvs_debug_I_T_nexus_reset(dev);
+ 	mv_printk("%s for device[%x]:rc= %d\n",
+ 		__func__, mvi_dev->device_id, rc);
+@@ -1606,9 +1616,6 @@ int mvs_query_task(struct sas_task *task)
+ 		case TMF_RESP_FUNC_FAILED:
+ 		case TMF_RESP_FUNC_COMPLETE:
+ 			break;
+-		default:
+-			rc = TMF_RESP_FUNC_COMPLETE;
+-			break;
+ 		}
+ 	}
+ 	mv_printk("%s:rc= %d\n", __func__, rc);
+@@ -1628,8 +1635,8 @@ int mvs_abort_task(struct sas_task *task)
+ 	u32 tag;
+ 
+ 	if (!mvi_dev) {
+-		mv_printk("%s:%d TMF_RESP_FUNC_FAILED\n", __func__, __LINE__);
+-		rc = TMF_RESP_FUNC_FAILED;
++		mv_printk("Device has removed\n");
++		return TMF_RESP_FUNC_FAILED;
+ 	}
+ 
+ 	mvi = mvi_dev->mvi_info;
+@@ -1677,22 +1684,15 @@ int mvs_abort_task(struct sas_task *task)
+ 		/* to do free register_set */
+ 		if (SATA_DEV == dev->dev_type) {
+ 			struct mvs_slot_info *slot = task->lldd_task;
+-			struct task_status_struct *tstat;
+ 			u32 slot_idx = (u32)(slot - mvi->slot_info);
+-			tstat = &task->task_status;
+-			mv_dprintk(KERN_DEBUG "mv_abort_task() mvi=%p task=%p "
++			mv_dprintk("mvs_abort_task() mvi=%p task=%p "
+ 				   "slot=%p slot_idx=x%x\n",
+ 				   mvi, task, slot, slot_idx);
+-			tstat->stat = SAS_ABORTED_TASK;
+-			if (mvi_dev && mvi_dev->running_req)
+-				mvi_dev->running_req--;
+-			if (sas_protocol_ata(task->task_proto))
+-				mvs_free_reg_set(mvi, mvi_dev);
++			mvs_tmf_timedout((unsigned long)task);
+ 			mvs_slot_task_free(mvi, task, slot, slot_idx);
+-			return -1;
++			rc = TMF_RESP_FUNC_COMPLETE;
++			goto out;
+ 		}
+-	} else {
+-		/* SMP */
+ 
+ 	}
+ out:
+@@ -1813,7 +1813,7 @@ static int mvs_slot_err(struct mvs_info *mvi, struct sas_task *task,
  {
  	struct mvs_slot_info *slot = &mvi->slot_info[slot_idx];
  	int stat;
- 	u32 err_dw0 = le32_to_cpu(*(u32 *) (slot->response));
-+	u32 err_dw1 = le32_to_cpu(*((u32 *)slot->response + 1));
+-	u32 err_dw0 = le32_to_cpu(*(u32 *) (slot->response));
++	u32 err_dw0 = le32_to_cpu(*(u32 *)slot->response);
+ 	u32 err_dw1 = le32_to_cpu(*((u32 *)slot->response + 1));
  	u32 tfs = 0;
  	enum mvs_port_type type = PORT_TYPE_SAS;
- 
-@@ -1775,8 +1826,19 @@ static int mvs_slot_err(struct mvs_info *mvi, struct sas_task *task,
- 	stat = SAM_STAT_CHECK_CONDITION;
- 	switch (task->task_proto) {
- 	case SAS_PROTOCOL_SSP:
-+	{
- 		stat = SAS_ABORTED_TASK;
-+		if ((err_dw0 & NO_DEST) || err_dw1 & bit(31)) {
-+			struct ssp_response_iu *iu = slot->response +
-+				sizeof(struct mvs_err_info);
-+			mvs_fill_ssp_resp_iu(iu, NOT_READY, 0x04, 01);
-+			sas_ssp_task_response(mvi->dev, task, iu);
-+			stat = SAM_STAT_CHECK_CONDITION;
-+		}
-+		if (err_dw1 & bit(31))
-+			mv_printk("reuse same slot, retry command.\n");
- 		break;
-+	}
- 	case SAS_PROTOCOL_SMP:
- 		stat = SAM_STAT_CHECK_CONDITION;
- 		break;
-@@ -1974,13 +2036,13 @@ static void mvs_work_queue(struct work_struct *work)
- 	struct mvs_wq *mwq = container_of(dw, struct mvs_wq, work_q);
- 	struct mvs_info *mvi = mwq->mvi;
- 	unsigned long flags;
-+	u32 phy_no = (unsigned long) mwq->data;
-+	struct sas_ha_struct *sas_ha = mvi->sas;
-+	struct mvs_phy *phy = &mvi->phy[phy_no];
-+	struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 
- 	spin_lock_irqsave(&mvi->lock, flags);
- 	if (mwq->handler & PHY_PLUG_EVENT) {
--		u32 phy_no = (unsigned long) mwq->data;
--		struct sas_ha_struct *sas_ha = mvi->sas;
--		struct mvs_phy *phy = &mvi->phy[phy_no];
--		struct asd_sas_phy *sas_phy = &phy->sas_phy;
- 
- 		if (phy->phy_event & PHY_PLUG_OUT) {
- 			u32 tmp;
-@@ -2002,6 +2064,11 @@ static void mvs_work_queue(struct work_struct *work)
- 				mv_dprintk("phy%d Attached Device\n", phy_no);
- 			}
- 		}
-+	} else if (mwq->handler & EXP_BRCT_CHG) {
-+		phy->phy_event &= ~EXP_BRCT_CHG;
-+		sas_ha->notify_port_event(sas_phy,
-+				PORTE_BROADCAST_RCVD);
-+		mv_dprintk("phy%d Got Broadcast Change\n", phy_no);
+@@ -1847,10 +1847,8 @@ static int mvs_slot_err(struct mvs_info *mvi, struct sas_task *task,
+ 	case SAS_PROTOCOL_STP:
+ 	case SAS_PROTOCOL_SATA | SAS_PROTOCOL_STP:
+ 	{
+-		if (err_dw0 == 0x80400002)
+-			mv_printk("find reserved error, why?\n");
+-
+ 		task->ata_task.use_ncq = 0;
++		stat = SAS_PROTO_RESPONSE;
+ 		mvs_sata_done(mvi, task, slot_idx, err_dw0);
  	}
- 	list_del(&mwq->entry);
- 	spin_unlock_irqrestore(&mvi->lock, flags);
-@@ -2037,7 +2104,7 @@ static void mvs_sig_time_out(unsigned long tphy)
- 		if (&mvi->phy[phy_no] == phy) {
- 			mv_dprintk("Get signature time out, reset phy %d\n",
- 				phy_no+mvi->id*mvi->chip->n_phy);
--			MVS_CHIP_DISP->phy_reset(mvi, phy_no, 1);
-+			MVS_CHIP_DISP->phy_reset(mvi, phy_no, MVS_HARD_RESET);
- 		}
- 	}
- }
-@@ -2045,9 +2112,7 @@ static void mvs_sig_time_out(unsigned long tphy)
- void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- {
- 	u32 tmp;
--	struct sas_ha_struct *sas_ha = mvi->sas;
+ 		break;
+@@ -1912,6 +1910,9 @@ int mvs_slot_complete(struct mvs_info *mvi, u32 rx_desc, u32 flags)
+ 
+ 	/* error info record present */
+ 	if (unlikely((rx_desc & RXQ_ERR) && (*(u64 *) slot->response))) {
++		mv_dprintk("port %d slot %d rx_desc %X has error info"
++			"%016llX.\n", slot->port->sas_port.id, slot_idx,
++			 rx_desc, (u64)(*(u64 *)slot->response));
+ 		tstat->stat = mvs_slot_err(mvi, task, slot_idx);
+ 		tstat->resp = SAS_TASK_COMPLETE;
+ 		goto out;
+@@ -1973,8 +1974,7 @@ out:
+ 	spin_unlock(&mvi->lock);
+ 	if (task->task_done)
+ 		task->task_done(task);
+-	else
+-		mv_dprintk("why has not task_done.\n");
++
+ 	spin_lock(&mvi->lock);
+ 
+ 	return sts;
+@@ -2115,9 +2115,10 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
  	struct mvs_phy *phy = &mvi->phy[phy_no];
--	struct asd_sas_phy *sas_phy = &phy->sas_phy;
  
  	phy->irq_status = MVS_CHIP_DISP->read_port_irq_stat(mvi, phy_no);
- 	mv_dprintk("port %d ctrl sts=0x%X.\n", phy_no+mvi->id*mvi->chip->n_phy,
-@@ -2086,7 +2151,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- 							phy_no);
- 				else
- 					MVS_CHIP_DISP->phy_reset(mvi,
--							phy_no, 0);
-+							phy_no, MVS_SOFT_RESET);
- 				return;
- 			}
- 		}
-@@ -2118,14 +2183,14 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- 			}
- 			mvs_update_phyinfo(mvi, phy_no, 0);
- 			if (phy->phy_type & PORT_TYPE_SAS) {
--				MVS_CHIP_DISP->phy_reset(mvi, phy_no, 2);
-+				MVS_CHIP_DISP->phy_reset(mvi, phy_no, MVS_PHY_TUNE);
- 				mdelay(10);
- 			}
+-	mv_dprintk("port %d ctrl sts=0x%X.\n", phy_no+mvi->id*mvi->chip->n_phy,
++	MVS_CHIP_DISP->write_port_irq_stat(mvi, phy_no, phy->irq_status);
++	mv_dprintk("phy %d ctrl sts=0x%08X.\n", phy_no+mvi->id*mvi->chip->n_phy,
+ 		MVS_CHIP_DISP->read_phy_ctl(mvi, phy_no));
+-	mv_dprintk("Port %d irq sts = 0x%X\n", phy_no+mvi->id*mvi->chip->n_phy,
++	mv_dprintk("phy %d irq sts = 0x%08X\n", phy_no+mvi->id*mvi->chip->n_phy,
+ 		phy->irq_status);
  
- 			mvs_bytes_dmaed(mvi, phy_no);
- 			/* whether driver is going to handle hot plug */
- 			if (phy->phy_event & PHY_PLUG_OUT) {
--				mvs_port_notify_formed(sas_phy, 0);
-+				mvs_port_notify_formed(&phy->sas_phy, 0);
- 				phy->phy_event &= ~PHY_PLUG_OUT;
- 			}
- 		} else {
-@@ -2135,9 +2200,8 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
- 	} else if (phy->irq_status & PHYEV_BROAD_CH) {
- 		mv_dprintk("port %d broadcast change.\n",
- 			phy_no + mvi->id*mvi->chip->n_phy);
--		/* exception for Samsung disk drive*/
--		mdelay(1000);
--		sas_ha->notify_port_event(sas_phy, PORTE_BROADCAST_RCVD);
-+		mvs_handle_event(mvi, (void *)(unsigned long)phy_no,
-+				EXP_BRCT_CHG);
+ 	/*
+@@ -2126,11 +2127,12 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
+ 	*/
+ 
+ 	if (phy->irq_status & PHYEV_DCDR_ERR) {
+-		mv_dprintk("port %d STP decoding error.\n",
++		mv_dprintk("phy %d STP decoding error.\n",
+ 		phy_no + mvi->id*mvi->chip->n_phy);
  	}
- 	MVS_CHIP_DISP->write_port_irq_stat(mvi, phy_no, phy->irq_status);
+ 
+ 	if (phy->irq_status & PHYEV_POOF) {
++		mdelay(500);
+ 		if (!(phy->phy_event & PHY_PLUG_OUT)) {
+ 			int dev_sata = phy->phy_type & PORT_TYPE_SATA;
+ 			int ready;
+@@ -2141,10 +2143,6 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
+ 				(void *)(unsigned long)phy_no,
+ 				PHY_PLUG_EVENT);
+ 			ready = mvs_is_phy_ready(mvi, phy_no);
+-			if (!ready)
+-				mv_dprintk("phy%d Unplug Notice\n",
+-					phy_no +
+-					mvi->id * mvi->chip->n_phy);
+ 			if (ready || dev_sata) {
+ 				if (MVS_CHIP_DISP->stp_reset)
+ 					MVS_CHIP_DISP->stp_reset(mvi,
+@@ -2164,7 +2162,7 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
+ 		if (phy->timer.function == NULL) {
+ 			phy->timer.data = (unsigned long)phy;
+ 			phy->timer.function = mvs_sig_time_out;
+-			phy->timer.expires = jiffies + 10*HZ;
++			phy->timer.expires = jiffies + 5*HZ;
+ 			add_timer(&phy->timer);
+ 		}
+ 	}
+@@ -2198,12 +2196,11 @@ void mvs_int_port(struct mvs_info *mvi, int phy_no, u32 events)
+ 				phy_no + mvi->id*mvi->chip->n_phy);
+ 		}
+ 	} else if (phy->irq_status & PHYEV_BROAD_CH) {
+-		mv_dprintk("port %d broadcast change.\n",
++		mv_dprintk("phy %d broadcast change.\n",
+ 			phy_no + mvi->id*mvi->chip->n_phy);
+ 		mvs_handle_event(mvi, (void *)(unsigned long)phy_no,
+ 				EXP_BRCT_CHG);
+ 	}
+-	MVS_CHIP_DISP->write_port_irq_stat(mvi, phy_no, phy->irq_status);
  }
+ 
+ int mvs_int_rx(struct mvs_info *mvi, bool self_clear)
 diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 7abfa2d..abc4358 100644
+index abc4358..56ece2e 100644
 --- a/drivers/scsi/mvsas/mv_sas.h
 +++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -96,6 +96,11 @@ enum dev_status {
- 	MVS_DEV_EH	= 0x1,
+@@ -417,7 +417,8 @@ struct mvs_info {
+ struct mvs_prv_info{
+ 	u8 n_host;
+ 	u8 n_phy;
+-	u16 reserve;
++	u8 scan_finished;
++	u8 reserve;
+ 	struct mvs_info *mvi[2];
  };
  
-+enum dev_reset {
-+	MVS_SOFT_RESET	= 0,
-+	MVS_HARD_RESET	= 1,
-+	MVS_PHY_TUNE	= 2,
-+};
- 
- struct mvs_info;
- 
-@@ -176,9 +181,11 @@ struct mvs_chip_info {
- 	u32 		fis_offs;
- 	u32 		fis_count;
- 	u32 		srs_sz;
-+	u32		sg_width;
- 	u32 		slot_width;
- 	const struct mvs_dispatch *dispatch;
- };
-+#define MVS_MAX_SG		(1U << mvi->chip->sg_width)
- #define MVS_CHIP_SLOT_SZ	(1U << mvi->chip->slot_width)
- #define MVS_RX_FISL_SZ		\
- 	(mvi->chip->fis_offs + (mvi->chip->fis_count * 0x100))
 -- 
 1.7.4.4
