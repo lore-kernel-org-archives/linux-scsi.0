@@ -1,51 +1,59 @@
-From: Stephen Boyd <sboyd@codeaurora.org>
-Subject: Re: [PATCH 0/9] strict user copy checks on x86_64
-Date: Tue, 24 May 2011 14:29:19 -0700
-Message-ID: <4DDC232F.7080005@codeaurora.org>
-References: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Reduce error recovery time by reducing use of TURs
+Date: Tue, 24 May 2011 12:53:07 -0400
+Message-ID: <1306255988.10201.11.camel@mulgrave.site>
+References: <4DD56448.7060003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1305244212-19183-1-git-send-email-sboyd@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Intel Linux Wireless <ilw@linux.intel.com>, linux-scsi@vger.kernel.org, x86@kernel.org, Ingo Molnar <mingo@elte.hu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36727 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751648Ab1EXVcJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2011 17:32:09 -0400
+In-Reply-To: <4DD56448.7060003@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Jeffery <dhjeffery@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Andrew,
+On Thu, 2011-05-19 at 14:41 -0400, David Jeffery wrote:
+> This is a resend of a patch with some minor whitespace cleanups which I'd
+> like to have considered for inclusion.
 
-(I don't know who to pick on sorry)
+Not enough, though:
 
-On 05/12/2011 04:50 PM, Stephen Boyd wrote:
-> It turns out that strict user copy checks (also known as
-> CONFIG_DEBUG_STRICT_USER_COPY_CHECKS) isn't actually implemented
-> on x86_64 and thus we aren't catching potential security holes
-> at compile time.
->
-> This series adds support for strict user copy checks on x86_64
-> and silences all the benign warnings in the x86_64 allyesconfig.
->
-> The final patch consolidates the config option as its duplicated
-> across mutliple arches. I don't know what tree this series should
-> go through so I tried to send the individual driver patches to the
-> respective maintainers.
->
-> Stephen Boyd (9):
->   iwlegacy: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   iwlwifi: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   debugfs: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   kprobes: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   Bluetooth: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   ASoC: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->   x86: Implement strict user copy checks for x86_64
->   Consolidate CONFIG_DEBUG_STRICT_USER_COPY_CHECKS
+WARNING: line over 80 characters
+#53: FILE: drivers/scsi/scsi_error.c:964:
++static int scsi_eh_test_devices(struct list_head *cmd_list, struct
+list_head *work_q, struct list_head *done_q, int try_stu)
 
-It looks like 1, 2, 4, 6, and 7 got picked up. Should I resend the left
-over patches with appropriate acked-bys and tags? Would it be
-appropriate to push this through your tree?
+ERROR: trailing whitespace
+#63: FILE: drivers/scsi/scsi_error.c:974:
++^I^Ifinish_cmds = !scsi_device_online(scmd->device) || $
 
--- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
+WARNING: line over 80 characters
+#64: FILE: drivers/scsi/scsi_error.c:975:
++                       (try_stu && !scsi_eh_try_stu(scmd) && !
+scsi_eh_tur(scmd)) ||
+
+ERROR: trailing whitespace
+#66: FILE: drivers/scsi/scsi_error.c:977:
++^I^I^I$
+
+ERROR: space required before the open parenthesis '('
+#196: FILE: drivers/scsi/scsi_error.c:1303:
++               } else if(rtn == FAST_IO_FAIL) {
+
+total: 3 errors, 2 warnings, 172 lines checked
+
+checkpatch.pl is your friend ...
+
+This is pretty trivial, so I fixed it up manually (I usually only care
+about errors, but in this case the warning about the function template
+and long line needed fixing to match the file).
+
+James
+
+
