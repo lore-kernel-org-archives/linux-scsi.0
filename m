@@ -1,22 +1,34 @@
-From: "Jack Wang" <jack_wang@usish.com>
+From: Xiangliang Yu <yuxiangl@marvell.com>
 Subject: RE: [PATCH 8/9] [SCSI] mvsas: update comments
-Date: Wed, 25 May 2011 09:41:46 +0800
-Message-ID: <A93C706D6A2D45248207F8826F244771@usish.com.cn>
-References: <mvsas-comments> <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
+Date: Tue, 24 May 2011 19:05:29 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D19FAD0B7B1@SC-VEXCH4.marvell.com>
+References: <mvsas-comments>
+ <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
+ <A93C706D6A2D45248207F8826F244771@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:49812 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754446Ab1EYBlv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 21:41:51 -0400
-In-Reply-To: <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:36828 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752356Ab1EYCGF convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 May 2011 22:06:05 -0400
+In-Reply-To: <A93C706D6A2D45248207F8826F244771@usish.com.cn>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>, "yxlraid@gmail.com" <yxlraid@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+I find a issue in [PATCH 9/9] before committing. I will commit the patch when the issue is fixed
+
+-----Original Message-----
+From: Jack Wang [mailto:jack_wang@usish.com] 
+Sent: Wednesday, May 25, 2011 9:42 AM
 To: yxlraid@gmail.com
-Cc: linux-scsi@vger.kernel.org, yuxiangl@marvell.com
+Cc: linux-scsi@vger.kernel.org; Xiangliang Yu
+Subject: RE: [PATCH 8/9] [SCSI] mvsas: update comments
 
 Where is the [PATCH 9/9]?
 > From: Xiangliang Yu <yuxiangl@marvell.com>
