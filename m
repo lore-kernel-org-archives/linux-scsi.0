@@ -1,49 +1,92 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: dm: Integrity errors should not cause failover
-Date: Wed, 25 May 2011 11:04:58 -0400
-Message-ID: <yq139k2akit.fsf@sermon.lab.mkp.net>
-References: <yq18vu4fw9e.fsf@sermon.lab.mkp.net>
-	<20110518121156.GB18433@redhat.com>
-	<20110523181723.GA18971@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH 4/4] fusion: do not check serial_number in the abort
+ handler
+Date: Wed, 25 May 2011 11:18:35 -0400
+Message-ID: <1306336715.1641.38.camel@mulgrave.site>
+References: <20110404134203.GA29525@infradead.org>
+	 <20110404134241.GD32522@infradead.org>
+	 <B2FD678A64EAAD45B089B123FDFC3ED70157F7C03E@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:62508 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932176Ab1EYPFP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2011 11:05:15 -0400
-In-Reply-To: <20110523181723.GA18971@redhat.com> (Mike Snitzer's message of
-	"Mon, 23 May 2011 14:17:24 -0400")
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39310 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757794Ab1EYPSj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2011 11:18:39 -0400
+In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED70157F7C03E@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, device-mapper development <dm-devel@redhat.com>, "Alasdair G. Kergon" <agk@redhat.com>, linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
->>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
+On Wed, 2011-05-25 at 19:11 +0530, Desai, Kashyap wrote:
+> > -----Original Message-----
+> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> > owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> > Sent: Monday, April 04, 2011 7:13 PM
+> > To: James.Bottomley@suse.de
+> > Cc: linux-scsi@vger.kernel.org; Moore, Eric
+> > Subject: [PATCH 4/4] fusion: do not check serial_number in the abort
+> > handler
+> > 
+> > The SCSI midlayer stops all command processing when in error handling,
+> > which
+> > means there is no chance for command reuse when the abort handler is
+> > called.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > Index: linux-2.6/drivers/message/fusion/mptscsih.c
+> > ===================================================================
+> > --- linux-2.6.orig/drivers/message/fusion/mptscsih.c	2011-04-04
+> > 06:25:45.526096602 -0700
+> > +++ linux-2.6/drivers/message/fusion/mptscsih.c	2011-04-04
+> > 06:26:07.036096337 -0700
+> > @@ -1773,7 +1773,6 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+> >  	int		 scpnt_idx;
+> >  	int		 retval;
+> >  	VirtDevice	 *vdevice;
+> > -	ulong	 	 sn = SCpnt->serial_number;
+> >  	MPT_ADAPTER	*ioc;
+> > 
+> >  	/* If we can't locate our host adapter structure, return FAILED
+> > status.
+> > @@ -1859,8 +1858,7 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+> >  			 vdevice->vtarget->id, vdevice->lun,
+> >  			 ctx2abort, mptscsih_get_tm_timeout(ioc));
+> > 
+> > -	if (SCPNT_TO_LOOKUP_IDX(ioc, SCpnt) == scpnt_idx &&
+> > -	    SCpnt->serial_number == sn) {
+> > +	if (SCPNT_TO_LOOKUP_IDX(ioc, SCpnt) == scpnt_idx) {
+> >  		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
+> >  		    "task abort: command still in active list! (sc=%p)\n",
+> >  		    ioc->name, SCpnt));
+> > @@ -1873,9 +1871,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+> >  	}
+> > 
+> 
+> This change looks good to me.!
+> 
+> >   out:
+> > -	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p)
+> > (sn=%ld)\n",
+> > +	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p)\n",
+> >  	    ioc->name, ((retval == SUCCESS) ? "SUCCESS" : "FAILED"),
+> > retval,
+> > -	    SCpnt, SCpnt->serial_number);
+> > +	    SCpnt);
+> 
+> Can't we keep serial_number print for debugging purpose. ?
 
-Mike,
+There's no real point ... it's a useless number unrelated to anything
+else in the system (there's nothing you can really use it for in
+debugging).
 
-Mike> Alasdair and I just chatted about this patch: it will always pass
-Mike> the the -EILSEQ up _without_ performing any mpath path failure.
+Plus once all of these patches are through, we'll eliminate the serial
+number field from the host and command.
 
-Correct.
-
-
-Mike> The newfound concern is: is there ever a benefit to failing the
-Mike> path before returning -EILSEQ?
-
-No, never.
+James
 
 
-Mike> Or will -EILSEQ always imply there is nothing wrong with the path?
-Mike> E.g. a transport error cannot cause a CRC error -- the transport
-Mike> error is always trapped by SCSI and cannot result in continued
-Mike> processing of an IO (that goes on to have CRC error)?
-
--EILSEQ is only returned if a discrepancy is detected between data and
-protection information. In both cases the block in question was
-successfully received by either initiator or target. I.e. the path is
-working fine.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
