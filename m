@@ -1,48 +1,55 @@
-From: David Rientjes <rientjes@google.com>
-Subject: [patch 3/6] scsi, fnic: require DMA support for Cisco FNIC
-Date: Tue, 24 May 2011 16:53:50 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1105241651350.29780@chino.kir.corp.google.com>
-References: <alpine.DEB.2.00.1105241650230.29780@chino.kir.corp.google.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 5/6] target: Convert REPORT_LUNs to use int_to_scsilun
+Date: Tue, 24 May 2011 17:52:12 -0700
+Message-ID: <1306284732.29724.167.camel@haakon2.linux-iscsi.org>
+References: <1305861554-29960-1-git-send-email-nab@linux-iscsi.org>
+	 <1305861554-29960-6-git-send-email-nab@linux-iscsi.org>
+	 <1306256577.10201.13.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:55634 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933261Ab1EXXxz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 19:53:55 -0400
-Received: from hpaq3.eem.corp.google.com (hpaq3.eem.corp.google.com [172.25.149.3])
-	by smtp-out.google.com with ESMTP id p4ONrrt9013647
-	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2011 16:53:53 -0700
-Received: from pzk37 (pzk37.prod.google.com [10.243.19.165])
-	by hpaq3.eem.corp.google.com with ESMTP id p4ONrCqh005763
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 24 May 2011 16:53:52 -0700
-Received: by pzk37 with SMTP id 37so3637550pzk.29
-        for <linux-scsi@vger.kernel.org>; Tue, 24 May 2011 16:53:51 -0700 (PDT)
-In-Reply-To: <alpine.DEB.2.00.1105241650230.29780@chino.kir.corp.google.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45136 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011Ab1EYBAa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 21:00:30 -0400
+In-Reply-To: <1306256577.10201.13.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>
 
-The Cisco FNIC driver requires creating a SLAB_CACHE_DMA cache, which is
-not possible if CONFIG_ZONE_DMA is disasbled.  Avoid compiling it without
-DMA support.
+On Tue, 2011-05-24 at 13:02 -0400, James Bottomley wrote:
+> On Thu, 2011-05-19 at 20:19 -0700, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch converts transport_core_report_lun_response() to use
+> > drivers/scsi/scsi_scan.c:int_to_scsilun instead of using the
+> > struct target_core_fabric_ops->pack_lun() fabric provided API vector.
+> > 
+> > It also removes the tfo->pack_lun check from target_fabric_tf_ops_check()
+> > and removes from struct target_core_fabric_ops->pack_lun() from
+> > target_core_fabric_ops.h, and the following mainline scsi-misc fabric
+> > modules:
+> > 
+> > *) tcm_loop: Drop tcm_loop_pack_lun() usage
+> > *) tcm_fc: Drop ft_pack_lun() usage
+> > 
+> > Reported-by: Mike Christie <michaelc@cs.wisc.edu>
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> 
+> There's no way this or the following patch count as bug fixes.  They're
+> converging hand rolled functions and definitions (which is good, but not
+> a bug fix).
+> 
 
-Signed-off-by: David Rientjes <rientjes@google.com>
----
- drivers/scsi/Kconfig |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Correct, patches # 1 -> 4 where the bugfixes patches of this series that
+needed to go to also go into stable, but the remaining two patches
+requested by Mike and Christoph during iscsi-target review are >= .40
+only material.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -688,7 +688,7 @@ config FCOE
- 
- config FCOE_FNIC
- 	tristate "Cisco FNIC Driver"
--	depends on PCI && X86
-+	depends on PCI && X86 && ZONE_DMA
- 	select LIBFCOE
- 	help
- 	  This is support for the Cisco PCI-Express FCoE HBA.
+Thank you!
+
+--nab
+
+
