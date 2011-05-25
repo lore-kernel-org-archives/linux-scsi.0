@@ -1,90 +1,69 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 4/4] fusion: do not check serial_number in the abort
- handler
-Date: Wed, 25 May 2011 19:11:40 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157F7C03E@inbmail01.lsi.com>
-References: <20110404134203.GA29525@infradead.org>
- <20110404134241.GD32522@infradead.org>
+From: scameron@beardog.cce.hp.com
+Subject: Question about aborting commands
+Date: Wed, 25 May 2011 08:50:35 -0500
+Message-ID: <20110525135035.GK26570@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:41350 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753157Ab1EYNls convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2011 09:41:48 -0400
-In-Reply-To: <20110404134241.GD32522@infradead.org>
-Content-Language: en-US
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:20655 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756380Ab1EYNug (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2011 09:50:36 -0400
+Received: from g5t0029.atlanta.hp.com (g5t0029.atlanta.hp.com [16.228.8.141])
+	by g5t0009.atlanta.hp.com (Postfix) with ESMTP id E6DA0302BC
+	for <linux-scsi@vger.kernel.org>; Wed, 25 May 2011 13:50:35 +0000 (UTC)
+Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
+	by g5t0029.atlanta.hp.com (Postfix) with ESMTP id CA21C20082
+	for <linux-scsi@vger.kernel.org>; Wed, 25 May 2011 13:50:35 +0000 (UTC)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org
+Cc: scameron@beardog.cce.hp.com
 
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> Sent: Monday, April 04, 2011 7:13 PM
-> To: James.Bottomley@suse.de
-> Cc: linux-scsi@vger.kernel.org; Moore, Eric
-> Subject: [PATCH 4/4] fusion: do not check serial_number in the abort
-> handler
-> 
-> The SCSI midlayer stops all command processing when in error handling,
-> which
-> means there is no chance for command reuse when the abort handler is
-> called.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6/drivers/message/fusion/mptscsih.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/message/fusion/mptscsih.c	2011-04-04
-> 06:25:45.526096602 -0700
-> +++ linux-2.6/drivers/message/fusion/mptscsih.c	2011-04-04
-> 06:26:07.036096337 -0700
-> @@ -1773,7 +1773,6 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
->  	int		 scpnt_idx;
->  	int		 retval;
->  	VirtDevice	 *vdevice;
-> -	ulong	 	 sn = SCpnt->serial_number;
->  	MPT_ADAPTER	*ioc;
-> 
->  	/* If we can't locate our host adapter structure, return FAILED
-> status.
-> @@ -1859,8 +1858,7 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
->  			 vdevice->vtarget->id, vdevice->lun,
->  			 ctx2abort, mptscsih_get_tm_timeout(ioc));
-> 
-> -	if (SCPNT_TO_LOOKUP_IDX(ioc, SCpnt) == scpnt_idx &&
-> -	    SCpnt->serial_number == sn) {
-> +	if (SCPNT_TO_LOOKUP_IDX(ioc, SCpnt) == scpnt_idx) {
->  		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
->  		    "task abort: command still in active list! (sc=%p)\n",
->  		    ioc->name, SCpnt));
-> @@ -1873,9 +1871,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
->  	}
-> 
+If a command is aborted by an abort error handler function in
+a LLD, and the aborted command comes back from the HBA with a
+status that indicates it was aborted, what status (in cmd->result,
+and/or sense data?) is the mid layer expecting in such a case?
 
-This change looks good to me.!
+Just wondering, because in playing around with adding an abort
+handler to the hpsa driver for controllers which are able to do
+aborts, I can cause commands to be aborted, and I copy the
+sense data back to the mid layer, and give it a
+cmd->result = DID_ABORT << 16.  
 
->   out:
-> -	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p)
-> (sn=%ld)\n",
-> +	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p)\n",
->  	    ioc->name, ((retval == SUCCESS) ? "SUCCESS" : "FAILED"),
-> retval,
-> -	    SCpnt, SCpnt->serial_number);
-> +	    SCpnt);
+That is, it's hitting this case in hpsa.c: complete_scsi_command()
 
-Can't we keep serial_number print for debugging purpose. ?
+        case CMD_ABORTED:
+                cmd->result = DID_ABORT << 16;
+                dev_warn(&h->pdev->dev, "cmd %s was aborted with "
+                                "status 0x%x\n", fmtcmd, ei->ScsiStatus);
 
-> 
->  	return retval;
->  }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+it does not seem to be hitting this case below, (same function).
+That is, it's not getting a target status/check condition/aborted command.)
+
+                        if (sense_key == ABORTED_COMMAND) {
+                                /* Aborted command is retryable */
+                                dev_warn(&h->pdev->dev, "cmd %s "
+                                        "has check condition: aborted command: "
+                                        "ASC: 0x%x, ASCQ: 0x%x\n",
+                                        fmtcmd, asc, ascq);
+                                cmd->result = DID_SOFT_ERROR << 16;
+                                break;
+                        }
+
+And, I have a dd running which
+I think I have aborted one of the commands that was reading data
+for that dd, and yet the dd proceeds happily along, oblivious.
+This makes me think I'm not doing the right thing to alert the
+mid layer that the command got aborted -- or else the midlayer is
+retrying the command somehow? I didn't see how this would happen,
+but maybe I missed it.
+
+Or, maybe I should be reporting the CMD_ABORTED case back as
+
+	cmd->result = DID_SOFT_ERROR << 16;
+
+-- steve
+
