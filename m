@@ -1,92 +1,82 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
 Subject: RE: [PATCH 4/4] fusion: do not check serial_number in the abort
  handler
-Date: Wed, 25 May 2011 11:18:35 -0400
-Message-ID: <1306336715.1641.38.camel@mulgrave.site>
+Date: Wed, 25 May 2011 20:52:38 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157F7C044@inbmail01.lsi.com>
 References: <20110404134203.GA29525@infradead.org>
 	 <20110404134241.GD32522@infradead.org>
 	 <B2FD678A64EAAD45B089B123FDFC3ED70157F7C03E@inbmail01.lsi.com>
+ <1306336715.1641.38.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39310 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757794Ab1EYPSj (ORCPT
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:50530 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757240Ab1EYPWq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 25 May 2011 11:18:39 -0400
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED70157F7C03E@inbmail01.lsi.com>
+	Wed, 25 May 2011 11:22:46 -0400
+In-Reply-To: <1306336715.1641.38.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Christoph Hellwig <hch@infradead.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Wed, 2011-05-25 at 19:11 +0530, Desai, Kashyap wrote:
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-> > Sent: Monday, April 04, 2011 7:13 PM
-> > To: James.Bottomley@suse.de
-> > Cc: linux-scsi@vger.kernel.org; Moore, Eric
-> > Subject: [PATCH 4/4] fusion: do not check serial_number in the abort
-> > handler
-> > 
-> > The SCSI midlayer stops all command processing when in error handling,
-> > which
-> > means there is no chance for command reuse when the abort handler is
-> > called.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > Index: linux-2.6/drivers/message/fusion/mptscsih.c
-> > ===================================================================
-> > --- linux-2.6.orig/drivers/message/fusion/mptscsih.c	2011-04-04
-> > 06:25:45.526096602 -0700
-> > +++ linux-2.6/drivers/message/fusion/mptscsih.c	2011-04-04
-> > 06:26:07.036096337 -0700
-> > @@ -1773,7 +1773,6 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
-> >  	int		 scpnt_idx;
-> >  	int		 retval;
-> >  	VirtDevice	 *vdevice;
-> > -	ulong	 	 sn = SCpnt->serial_number;
-> >  	MPT_ADAPTER	*ioc;
-> > 
-> >  	/* If we can't locate our host adapter structure, return FAILED
-> > status.
-> > @@ -1859,8 +1858,7 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
-> >  			 vdevice->vtarget->id, vdevice->lun,
-> >  			 ctx2abort, mptscsih_get_tm_timeout(ioc));
-> > 
-> > -	if (SCPNT_TO_LOOKUP_IDX(ioc, SCpnt) == scpnt_idx &&
-> > -	    SCpnt->serial_number == sn) {
-> > +	if (SCPNT_TO_LOOKUP_IDX(ioc, SCpnt) == scpnt_idx) {
-> >  		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-> >  		    "task abort: command still in active list! (sc=%p)\n",
-> >  		    ioc->name, SCpnt));
-> > @@ -1873,9 +1871,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
-> >  	}
-> > 
-> 
-> This change looks good to me.!
-> 
-> >   out:
-> > -	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p)
-> > (sn=%ld)\n",
-> > +	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p)\n",
-> >  	    ioc->name, ((retval == SUCCESS) ? "SUCCESS" : "FAILED"),
-> > retval,
-> > -	    SCpnt, SCpnt->serial_number);
-> > +	    SCpnt);
-> 
-> Can't we keep serial_number print for debugging purpose. ?
-
-There's no real point ... it's a useless number unrelated to anything
-else in the system (there's nothing you can really use it for in
-debugging).
-
-Plus once all of these patches are through, we'll eliminate the serial
-number field from the host and command.
-
-James
-
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+V2VkbmVzZGF5LCBNYXkgMjUsIDIwMTEgODo0OSBQTQ0KPiBUbzogRGVzYWksIEthc2h5YXANCj4g
+Q2M6IENocmlzdG9waCBIZWxsd2lnOyBKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZTsgbGludXgtDQo+
+IHNjc2lAdmdlci5rZXJuZWwub3JnOyBNb29yZSwgRXJpYw0KPiBTdWJqZWN0OiBSRTogW1BBVENI
+IDQvNF0gZnVzaW9uOiBkbyBub3QgY2hlY2sgc2VyaWFsX251bWJlciBpbiB0aGUNCj4gYWJvcnQg
+aGFuZGxlcg0KPiANCj4gT24gV2VkLCAyMDExLTA1LTI1IGF0IDE5OjExICswNTMwLCBEZXNhaSwg
+S2FzaHlhcCB3cm90ZToNCj4gPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBG
+cm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2kt
+DQo+ID4gPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFsZiBPZiBDaHJpc3RvcGggSGVs
+bHdpZw0KPiA+ID4gU2VudDogTW9uZGF5LCBBcHJpbCAwNCwgMjAxMSA3OjEzIFBNDQo+ID4gPiBU
+bzogSmFtZXMuQm90dG9tbGV5QHN1c2UuZGUNCj4gPiA+IENjOiBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZzsgTW9vcmUsIEVyaWMNCj4gPiA+IFN1YmplY3Q6IFtQQVRDSCA0LzRdIGZ1c2lvbjog
+ZG8gbm90IGNoZWNrIHNlcmlhbF9udW1iZXIgaW4gdGhlDQo+IGFib3J0DQo+ID4gPiBoYW5kbGVy
+DQo+ID4gPg0KPiA+ID4gVGhlIFNDU0kgbWlkbGF5ZXIgc3RvcHMgYWxsIGNvbW1hbmQgcHJvY2Vz
+c2luZyB3aGVuIGluIGVycm9yDQo+IGhhbmRsaW5nLA0KPiA+ID4gd2hpY2gNCj4gPiA+IG1lYW5z
+IHRoZXJlIGlzIG5vIGNoYW5jZSBmb3IgY29tbWFuZCByZXVzZSB3aGVuIHRoZSBhYm9ydCBoYW5k
+bGVyDQo+IGlzDQo+ID4gPiBjYWxsZWQuDQo+ID4gPg0KPiA+ID4gU2lnbmVkLW9mZi1ieTogQ2hy
+aXN0b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+ID4gPg0KPiA+ID4gSW5kZXg6IGxpbnV4LTIu
+Ni9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmMNCj4gPiA+ID09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCj4g
+PiA+IC0tLSBsaW51eC0yLjYub3JpZy9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmMJ
+MjAxMS0wNC0wNA0KPiA+ID4gMDY6MjU6NDUuNTI2MDk2NjAyIC0wNzAwDQo+ID4gPiArKysgbGlu
+dXgtMi42L2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYwkyMDExLTA0LTA0DQo+ID4g
+PiAwNjoyNjowNy4wMzYwOTYzMzcgLTA3MDANCj4gPiA+IEBAIC0xNzczLDcgKzE3NzMsNiBAQCBt
+cHRzY3NpaF9hYm9ydChzdHJ1Y3Qgc2NzaV9jbW5kICogU0NwbnQpDQo+ID4gPiAgCWludAkJIHNj
+cG50X2lkeDsNCj4gPiA+ICAJaW50CQkgcmV0dmFsOw0KPiA+ID4gIAlWaXJ0RGV2aWNlCSAqdmRl
+dmljZTsNCj4gPiA+IC0JdWxvbmcJIAkgc24gPSBTQ3BudC0+c2VyaWFsX251bWJlcjsNCj4gPiA+
+ICAJTVBUX0FEQVBURVIJKmlvYzsNCj4gPiA+DQo+ID4gPiAgCS8qIElmIHdlIGNhbid0IGxvY2F0
+ZSBvdXIgaG9zdCBhZGFwdGVyIHN0cnVjdHVyZSwgcmV0dXJuIEZBSUxFRA0KPiA+ID4gc3RhdHVz
+Lg0KPiA+ID4gQEAgLTE4NTksOCArMTg1OCw3IEBAIG1wdHNjc2loX2Fib3J0KHN0cnVjdCBzY3Np
+X2NtbmQgKiBTQ3BudCkNCj4gPiA+ICAJCQkgdmRldmljZS0+dnRhcmdldC0+aWQsIHZkZXZpY2Ut
+Pmx1biwNCj4gPiA+ICAJCQkgY3R4MmFib3J0LCBtcHRzY3NpaF9nZXRfdG1fdGltZW91dChpb2Mp
+KTsNCj4gPiA+DQo+ID4gPiAtCWlmIChTQ1BOVF9UT19MT09LVVBfSURYKGlvYywgU0NwbnQpID09
+IHNjcG50X2lkeCAmJg0KPiA+ID4gLQkgICAgU0NwbnQtPnNlcmlhbF9udW1iZXIgPT0gc24pIHsN
+Cj4gPiA+ICsJaWYgKFNDUE5UX1RPX0xPT0tVUF9JRFgoaW9jLCBTQ3BudCkgPT0gc2NwbnRfaWR4
+KSB7DQo+ID4gPiAgCQlkdG1wcmludGsoaW9jLCBwcmludGsoTVlJT0Nfc19ERUJVR19GTVQNCj4g
+PiA+ICAJCSAgICAidGFzayBhYm9ydDogY29tbWFuZCBzdGlsbCBpbiBhY3RpdmUgbGlzdCEgKHNj
+PSVwKVxuIiwNCj4gPiA+ICAJCSAgICBpb2MtPm5hbWUsIFNDcG50KSk7DQo+ID4gPiBAQCAtMTg3
+Myw5ICsxODcxLDkgQEAgbXB0c2NzaWhfYWJvcnQoc3RydWN0IHNjc2lfY21uZCAqIFNDcG50KQ0K
+PiA+ID4gIAl9DQo+ID4gPg0KPiA+DQo+ID4gVGhpcyBjaGFuZ2UgbG9va3MgZ29vZCB0byBtZS4h
+DQo+ID4NCj4gPiA+ICAgb3V0Og0KPiA+ID4gLQlwcmludGsoTVlJT0Nfc19JTkZPX0ZNVCAidGFz
+ayBhYm9ydDogJXMgKHJ2PSUwNHgpIChzYz0lcCkNCj4gPiA+IChzbj0lbGQpXG4iLA0KPiA+ID4g
+KwlwcmludGsoTVlJT0Nfc19JTkZPX0ZNVCAidGFzayBhYm9ydDogJXMgKHJ2PSUwNHgpIChzYz0l
+cClcbiIsDQo+ID4gPiAgCSAgICBpb2MtPm5hbWUsICgocmV0dmFsID09IFNVQ0NFU1MpID8gIlNV
+Q0NFU1MiIDogIkZBSUxFRCIpLA0KPiA+ID4gcmV0dmFsLA0KPiA+ID4gLQkgICAgU0NwbnQsIFND
+cG50LT5zZXJpYWxfbnVtYmVyKTsNCj4gPiA+ICsJICAgIFNDcG50KTsNCj4gPg0KPiA+IENhbid0
+IHdlIGtlZXAgc2VyaWFsX251bWJlciBwcmludCBmb3IgZGVidWdnaW5nIHB1cnBvc2UuID8NCj4g
+DQo+IFRoZXJlJ3Mgbm8gcmVhbCBwb2ludCAuLi4gaXQncyBhIHVzZWxlc3MgbnVtYmVyIHVucmVs
+YXRlZCB0byBhbnl0aGluZw0KPiBlbHNlIGluIHRoZSBzeXN0ZW0gKHRoZXJlJ3Mgbm90aGluZyB5
+b3UgY2FuIHJlYWxseSB1c2UgaXQgZm9yIGluDQo+IGRlYnVnZ2luZykuDQo+IA0KPiBQbHVzIG9u
+Y2UgYWxsIG9mIHRoZXNlIHBhdGNoZXMgYXJlIHRocm91Z2gsIHdlJ2xsIGVsaW1pbmF0ZSB0aGUg
+c2VyaWFsDQo+IG51bWJlciBmaWVsZCBmcm9tIHRoZSBob3N0IGFuZCBjb21tYW5kLg0KDQpKYW1l
+cywgWWVzIEkgdW5kZXJzdGFuZCB5b3VyIHBvaW50LiBJIHdlbnQgdGhyb3VnaCBvdGhlciB0aHJl
+YWRzIGFuZCBmb3VuZCBteSBhcmd1bWVudCBpcyBub3QgdmFsaWQuLlRoYW5rcyBmb3IgYnJpbmdp
+bmcgdGhpcyB0byBteSBub3RpY2UuICBDb25zaWRlciB0aGlzIHBhdGNoIGFzIEFja2VkIGJ5IG1l
+Lg0KPiANCj4gSmFtZXMNCj4gDQoNCg==
