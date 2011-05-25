@@ -1,115 +1,51 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 01/16] hpsa: do readl after writel in main i/o path to
- ensure commands don't get lost.
-Date: Wed, 25 May 2011 15:20:18 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77887D5207690A@GVW0547EXC.americas.hpqcorp.net>
-References: <20110503195750.5478.54853.stgit@beardog.cce.hp.com>
- <20110503195849.5478.13229.stgit@beardog.cce.hp.com>
- <4DC13566.5070203@redhat.com> <20110504125212.GC5997@beardog.cce.hp.com>
- <10639.1304530101@localhost> <20110504173735.GB22953@parisc-linux.org>
- <11821.1304531662@localhost> <20110505183515.GA14193@beardog.cce.hp.com>
- <4DDA46FD.904@redhat.com>
+From: Meelis Roos <mroos@linux.ee>
+Subject: BUG on dpt_i2o module removal
+Date: Wed, 25 May 2011 18:36:53 +0300 (EEST)
+Message-ID: <alpine.SOC.1.00.1105251206580.19636@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DDA46FD.904@redhat.com>
-Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "Valdis.Kletnieks@vt.edu" <Valdis.Kletnieks@vt.edu>, "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Tomas wrote:
+While trying to "rmmod dpt_i2o" in 1.6.39 with one unused DPT SmartRAID 
+V card in the system, I got the following BUG:
 
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Monday, May 23, 2011 6:38 AM
-> To: Miller, Mike (OS Dev)
-> Cc: Valdis.Kletnieks@vt.edu; scameron@beardog.cce.hp.com; Andrew Morton;
-> LKML; LKML-scsi; Jens Axboe
-> Subject: Re: [PATCH 01/16] hpsa: do readl after writel in main i/o path
-> to ensure commands don't get lost.
-> 
-> On 05/05/2011 08:35 PM, Mike Miller wrote:
-> > On Wed, May 04, 2011 at 01:54:22PM -0400, Valdis.Kletnieks@vt.edu
-> wrote:
-> >
-> >> On Wed, 04 May 2011 11:37:35 MDT, Matthew Wilcox said:
-> >>
-> >>>> This probably needs a comment like
-> >>>> 	/* don't care - dummy read just to force write posting to chipset
-> */
-> >>>> or similar.  I'm assuming it's just functioning as a barrier-type
-> flush of some sort?
-> >>>>
-> >>> It's a PCI write flush.  It's not clear to me why it's needed here,
-> >>> though.  The write will eventually get to the device; why we need to
-> >>> make the CPU wait around for it to actually get there doesn't make
-> sense.
-> >>>
-> >> Exactly why I think it needs a one-liner comment. :)
-> >>
-> >>
-> > So we're not exactly sure why it's needed either. We've had reports of
-> > commands getting "lost" or "stuck" under some workloads. The extra
-> readl
-> > works around the issue but certainly may have negative side effects.
-> >
-> > I'm not sure I understand how writel works.
-> >
-> > From linux-2.6/arch/x86/include/asm/io.h:
-> >
-> > #define build_mmio_write(name, size, type, reg, barrier) \
-> > static inline void name(type val, volatile void __iomem *addr) \
-> > { asm volatile("mov" size " %0,%1": :reg (val), \
-> > "m" (*(volatile type __force *)addr) barrier); }
-> >
-> > This implies (at least to me) that a barrier is part of writel. I
-> don't know
-> > why a write operation needs a barrier but thats essentially what we've
-> done
-> > by adding the extra readl. Can someone confirm or deny that a barrier
-> is
-> > actually built into writel? Or used by writel? If so, does this
-> indicate
-> > that barrier is broken?
-> >
-> > At this point we (the software guys) are pretty much at a loss as to
-> how to
-> > continue debugging. We don't know what to trigger on for the PCIe
-> analyzer.
-> > If we track outstanding commands then trigger on one that doesn't
-> complete in
-> > some amount of time the problem could conceivably be far in the past
-> and
-> > difficult to correlate to the data in the trace.
-> >
-> I'd look at the firmware part, you could check what happens for example
-> when
-> the firmware gets send a command it doesn't understand.
-> You could also change the communication with the fw by adding a count
-> field, which can
-> be then checked for the !(next_value == previous_value + 1) and raise an
-> event.
-> tomas
+[  776.979914] BUG: unable to handle kernel NULL pointer dereference at 00000004
+[  776.980018] IP: [<c11845ea>] scsi_unregister+0xf/0x34
+[  776.980018] *pde = 00000000 
+[  776.980018] Oops: 0002 [#1] PREEMPT 
+[  776.980018] last sysfs file: /sys/devices/pci0000:00/0000:00:1e.0/class
+[  776.980018] Modules linked in: snd_hrtimer ppdev lp uinput fuse nfsd nfs lockd auth_rpcgss nfs_acl sunrpc ipv6 adm1025 hwmon_vid smsc47m1 usb_storage usb_libusual udf crc_itu_t isofs zlib_inflate vfat fat eeprom ntfs i2o_core snd_intel8x0 snd_ac97_codec ac97_bus snd_pcm_oss snd_mixer_oss snd_pcm snd_seq_dummy snd_seq_oss snd_seq_midi snd_rawmidi snd_seq_midi_event snd_seq sg snd_timer sr_mod snd_seq_device radeon cdrom snd ttm evdev uhci_hcd soundcore drm_kms_helper hwmon cfbcopyarea ehci_hcd snd_page_alloc dpt_i2o(-) cfbimgblt usbcore cfbfillrect parport_pc i2c_i801 parport processor button
+[  776.980018] 
+[  776.980018] Pid: 2051, comm: rmmod Not tainted 2.6.39 #373                  /D815EEA2                       
+[  776.980018] EIP: 0060:[<c11845ea>] EFLAGS: 00210292 CPU: 0
+[  776.980018] EIP is at scsi_unregister+0xf/0x34
+[  776.980018] EAX: dea27000 EBX: dea27000 ECX: 00000000 EDX: 00000000
+[  776.980018] ESI: 00000000 EDI: 00000880 EBP: d8ca9f4c ESP: d8ca9f4c
+[  776.980018]  DS: 007b ES: 007b FS: 0000 GS: 00e0 SS: 0068
+[  776.980018] Process rmmod (pid: 2051, ti=d8ca8000 task=df791b40 task.ti=d8ca8000)
+[  776.980018] Stack:
+[  776.980018]  d8ca9f5c e083bc42 e083e164 00000000 d8ca9fac c1042d18 5f747064 006f3269
+[  776.980018]  df70aa60 df79822c d8ca9f9c c106a12e ffffffff b785e000 b785d000 b785e000
+[  776.980018]  df798e34 df70aa60 df70aa94 00000000 00ca9fac cff7145c bff033a0 bff033a0
+[  776.980018] Call Trace:
+[  776.980018]  [<e083bc42>] adpt_exit+0x39/0x3f7 [dpt_i2o]
+[  776.980018]  [<c1042d18>] sys_delete_module+0x151/0x1ad
+[  776.980018]  [<c106a12e>] ? do_munmap+0x183/0x19a
+[  776.980018]  [<c1249777>] sysenter_do_call+0x12/0x26
+[  776.980018] Code: a4 00 00 00 89 e5 e8 25 3b ff ff 5d c3 55 05 e0 00 00 00 89 e5 e8 16 3b ff ff 5d c3 55 8b 88 28 02 00 00 89 e5 8b 90 2c 02 00 00 
+[  776.980018]  51 04 89 0a c7 80 28 02 00 00 00 01 10 00 c7 80 2c 02 00 00 
+[  776.980018] EIP: [<c11845ea>] scsi_unregister+0xf/0x34 SS:ESP 0068:d8ca9f4c
+[  776.980018] CR2: 0000000000000004
+[  777.209807] ---[ end trace 3feb5860cd6a778d ]---
 
-Tomas,
-We've tried something very similar to the counter idea in fw. It doesn't help because the controller thinks he's done with the request. We have a (pretty crude) counter in the driver but no timing mechanism. We could add a timer. But what's a suitable timeout value? Is 2 seconds too short, too long? Suggestions, please.
+It seems list_del gets NULL shost->sht_legacy_list.
 
--- mikem
+scsi_register is never called, this seems to be the reason why 
+sht_legacy_list is not filled?
 
-
-> 
-> 
-> > If anyone has any thoughts, suggestions, or flames they would be
-> greatly
-> > appreciated.
-> >
-> > -- mikem
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+-- 
+Meelis Roos (mroos@linux.ee)
