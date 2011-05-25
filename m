@@ -1,82 +1,386 @@
-From: Parag Warudkar <parag.lkml@gmail.com>
-Subject: [PATCH] SCSI IOCTL: Check for device deletion [was Re: __elv_add_request
- OOPS]
-Date: Tue, 24 May 2011 21:41:17 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1105242127340.3472@ubuntu-natty>
-References: <alpine.DEB.2.02.1105232329040.1910@natty-nar> <4DDB8BF6.2000304@fusionio.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH 8/9] [SCSI] mvsas: update comments
+Date: Wed, 25 May 2011 09:41:46 +0800
+Message-ID: <A93C706D6A2D45248207F8826F244771@usish.com.cn>
+References: <mvsas-comments> <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:54299 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675Ab1EYBl0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 21:41:26 -0400
-In-Reply-To: <4DDB8BF6.2000304@fusionio.com>
+Received: from sr-smtp.usish.com ([210.5.144.203]:49812 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754446Ab1EYBlv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 May 2011 21:41:51 -0400
+In-Reply-To: <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Parag Warudkar <parag.lkml@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: yxlraid@gmail.com
+Cc: linux-scsi@vger.kernel.org, yuxiangl@marvell.com
 
-
-
-On Tue, 24 May 2011, Jens Axboe wrote:
-
-> On 2011-05-24 06:29, Parag Warudkar wrote:
-> > 
-> > External DVD drive - connected when suspended, removed before resume.
-> > Results in NULL pointer dereference in __blk_add_request on resume.
-> > 
-> > *ffffffff811d6503:      48 89 58 08             mov    %rbx,0x8(%rax) |
-> > %ebx = ffff880131559020 <--- faulting instruction
-> > 
-> > 48 89 58 08 appears only in list_add :
-> > 
-> > static inline void list_add(struct list_head *new, struct list_head *head)
-> > {
-> >         __list_add(new, head, head->next);
-> > ffffffff81ac012c:       49 8b 04 24             mov    (%r12),%rax
-> > #ifndef CONFIG_DEBUG_LIST
-> > static inline void __list_add(struct list_head *new,
-> >                               struct list_head *prev,
-> >                               struct list_head *next)
-> > {
-> >         next->prev = new;
-> > ffffffff81ac0130:       48 89 58 08             mov    %rbx,0x8(%rax)
-> > 
-> > AFAICS list_add is only called from one place in __elv_add_request :
-> > 
-> >        switch (where) {
-> >         case ELEVATOR_INSERT_REQUEUE:
-> >         case ELEVATOR_INSERT_FRONT:
-> >                 rq->cmd_flags |= REQ_SOFTBARRIER;
-> >               **  list_add(&rq->queuelist, &q->queue_head);
-> >                 break;
-> > 
-> > Now, where is the patch? :)
+Where is the [PATCH 9/9]?
+> From: Xiangliang Yu <yuxiangl@marvell.com>
 > 
-> You forgot to attach it?
+> -- Update comments: remove obsolete comments and add new comments
 > 
-> This is clearly q == NULL [snip]
+> Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
+> ---
+>  drivers/scsi/mvsas/mv_64xx.c  |   17 ++++-------------
+>  drivers/scsi/mvsas/mv_94xx.c  |   19 ++++++-------------
+>  drivers/scsi/mvsas/mv_94xx.h  |   24 ++++++++++++------------
+>  drivers/scsi/mvsas/mv_chips.h |    2 --
+>  drivers/scsi/mvsas/mv_defs.h  |    2 +-
+>  drivers/scsi/mvsas/mv_init.c  |    1 -
+>  drivers/scsi/mvsas/mv_sas.c   |   14 +-------------
+>  7 files changed, 24 insertions(+), 55 deletions(-)
+> 
+> diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
+> index bc75ba7..dec5f96 100644
+> --- a/drivers/scsi/mvsas/mv_64xx.c
+> +++ b/drivers/scsi/mvsas/mv_64xx.c
+> @@ -33,7 +33,6 @@ static void mvs_64xx_detect_porttype(struct mvs_info
+*mvi,
+> int i)
+>  	u32 reg;
+>  	struct mvs_phy *phy = &mvi->phy[i];
+> 
+> -	/* TODO check & save device type */
+>  	reg = mr32(MVS_GBL_PORT_TYPE);
+>  	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
+>  	if (reg & MODE_SAS_SATA & (1 << i))
+> @@ -63,7 +62,6 @@ static void __devinit mvs_64xx_phy_hacks(struct mvs_info
+> *mvi)
+>  	mvs_phy_hacks(mvi);
+> 
+>  	if (!(mvi->flags & MVF_FLAG_SOC)) {
+> -		/* TEST - for phy decoding error, adjust voltage levels */
+>  		for (i = 0; i < MVS_SOC_PORTS; i++) {
+>  			mvs_write_port_vsr_addr(mvi, i, VSR_PHY_MODE8);
+>  			mvs_write_port_vsr_data(mvi, i, 0x2F0);
+> @@ -375,13 +373,7 @@ static int __devinit mvs_64xx_init(struct mvs_info
+*mvi)
+>  		mvs_update_phyinfo(mvi, i, 1);
+>  	}
+> 
+> -	/* FIXME: update wide port bitmaps */
+> -
+>  	/* little endian for open address and command table, etc. */
+> -	/*
+> -	 * it seems that ( from the spec ) turning on big-endian won't
+> -	 * do us any good on big-endian machines, need further confirmation
+> -	 */
+>  	cctl = mr32(MVS_CTL);
+>  	cctl |= CCTL_ENDIAN_CMD;
+>  	cctl |= CCTL_ENDIAN_DATA;
+> @@ -394,8 +386,8 @@ static int __devinit mvs_64xx_init(struct mvs_info
+*mvi)
+>  	tmp |= PCS_CMD_RST;
+>  	tmp &= ~PCS_SELF_CLEAR;
+>  	mw32(MVS_PCS, tmp);
+> -	/* interrupt coalescing may cause missing HW interrput in some case,
+> -	 * and the max count is 0x1ff, while our max slot is 0x200,
+> +	/*
+> +	 * the max count is 0x1ff, while our max slot is 0x200,
+>  	 * it will make count 0.
+>  	 */
+>  	tmp = 0;
+> @@ -632,7 +624,6 @@ static void mvs_64xx_phy_work_around(struct mvs_info
+*mvi,
+> int i)
+>  {
+>  	u32 tmp;
+>  	struct mvs_phy *phy = &mvi->phy[i];
+> -	/* workaround for HW phy decoding error on 1.5g disk drive */
+>  	mvs_write_port_vsr_addr(mvi, i, VSR_PHY_MODE6);
+>  	tmp = mvs_read_port_vsr_data(mvi, i);
+>  	if (((phy->phy_status & PHY_NEG_SPP_PHYS_LINK_RATE_MASK) >>
+> @@ -765,8 +756,8 @@ static void mvs_64xx_tune_interrupt(struct mvs_info
+*mvi,
+> u32 time)
+>  {
+>  	void __iomem *regs = mvi->regs;
+>  	u32 tmp = 0;
+> -	/* interrupt coalescing may cause missing HW interrput in some case,
+> -	 * and the max count is 0x1ff, while our max slot is 0x200,
+> +	/*
+> +	 * the max count is 0x1ff, while our max slot is 0x200,
+>  	 * it will make count 0.
+>  	 */
+>  	if (time == 0) {
+> diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+> index 1276e49..f4a995c 100644
+> --- a/drivers/scsi/mvsas/mv_94xx.c
+> +++ b/drivers/scsi/mvsas/mv_94xx.c
+> @@ -460,13 +460,7 @@ static int __devinit mvs_94xx_init(struct mvs_info
+*mvi)
+>  		mvs_update_phyinfo(mvi, i, 1);
+>  	}
+> 
+> -	/* FIXME: update wide port bitmaps */
+> -
+>  	/* little endian for open address and command table, etc. */
+> -	/*
+> -	 * it seems that ( from the spec ) turning on big-endian won't
+> -	 * do us any good on big-endian machines, need further confirmation
+> -	 */
+>  	cctl = mr32(MVS_CTL);
+>  	cctl |= CCTL_ENDIAN_CMD;
+>  	cctl &= ~CCTL_ENDIAN_OPEN;
+> @@ -478,8 +472,8 @@ static int __devinit mvs_94xx_init(struct mvs_info
+*mvi)
+>  	tmp |= PCS_CMD_RST;
+>  	tmp &= ~PCS_SELF_CLEAR;
+>  	mw32(MVS_PCS, tmp);
+> -	/* interrupt coalescing may cause missing HW interrput in some case,
+> -	 * and the max count is 0x1ff, while our max slot is 0x200,
+> +	/*
+> +	 * the max count is 0x1ff, while our max slot is 0x200,
+>  	 * it will make count 0.
+>  	 */
+>  	tmp = 0;
+> @@ -488,6 +482,7 @@ static int __devinit mvs_94xx_init(struct mvs_info
+*mvi)
+>  	else
+>  		mw32(MVS_INT_COAL, MVS_CHIP_SLOT_SZ | COAL_EN);
+> 
+> +	/* default interrupt coalescing time is 128us */
+>  	tmp = 0x10000 | interrupt_coalescing;
+>  	mw32(MVS_INT_COAL_TMOUT, tmp);
+> 
+> @@ -745,7 +740,7 @@ static int mvs_94xx_oob_done(struct mvs_info *mvi, int
+i)
+>  {
+>  	u32 phy_st;
+>  	phy_st = mvs_read_phy_ctl(mvi, i);
+> -	if (phy_st & PHY_READY_MASK)	/* phy ready */
+> +	if (phy_st & PHY_READY_MASK)
+>  		return 1;
+>  	return 0;
+>  }
+> @@ -770,7 +765,6 @@ static void mvs_94xx_get_att_identify_frame(struct
+> mvs_info *mvi, int port_id,
+>  	int i;
+>  	u32 id_frame[7];
+> 
+> -	/* mvs_hexdump(28, (u8 *)id_frame, 0); */
+>  	for (i = 0; i < 7; i++) {
+>  		mvs_write_port_cfg_addr(mvi, port_id,
+>  					CONFIG_ATT_ID_FRAME0 + i * 4);
+> @@ -778,7 +772,6 @@ static void mvs_94xx_get_att_identify_frame(struct
+> mvs_info *mvi, int port_id,
+>  		mv_dprintk("94xx phy %d atta frame %d %x.\n",
+>  			port_id + mvi->id * mvi->chip->n_phy, i,
+id_frame[i]);
+>  	}
+> -	/* mvs_hexdump(28, (u8 *)id_frame, 0); */
+>  	memcpy(id, id_frame, 28);
+>  }
+> 
+> @@ -962,8 +955,8 @@ static void mvs_94xx_tune_interrupt(struct mvs_info
+*mvi,
+> u32 time)
+>  {
+>  	void __iomem *regs = mvi->regs;
+>  	u32 tmp = 0;
+> -	/* interrupt coalescing may cause missing HW interrput in some case,
+> -	 * and the max count is 0x1ff, while our max slot is 0x200,
+> +	/*
+> +	 * the max count is 0x1ff, while our max slot is 0x200,
+>  	 * it will make count 0.
+>  	 */
+>  	if (time == 0) {
+> diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+> index b42532b..77a1e52 100644
+> --- a/drivers/scsi/mvsas/mv_94xx.h
+> +++ b/drivers/scsi/mvsas/mv_94xx.h
+> @@ -121,18 +121,18 @@ enum pci_cfg_registers {
+> 
+>  /*  SAS/SATA Vendor Specific Port Registers */
+>  enum sas_sata_vsp_regs {
+> -	VSR_PHY_STAT		= 0x00 * 4, /* Phy Status */
+> -	VSR_PHY_MODE1		= 0x01 * 4, /* phy tx */
+> -	VSR_PHY_MODE2		= 0x02 * 4, /* tx scc */
+> -	VSR_PHY_MODE3		= 0x03 * 4, /* pll */
+> -	VSR_PHY_MODE4		= 0x04 * 4, /* VCO */
+> -	VSR_PHY_MODE5		= 0x05 * 4, /* Rx */
+> -	VSR_PHY_MODE6		= 0x06 * 4, /* CDR */
+> -	VSR_PHY_MODE7		= 0x07 * 4, /* Impedance */
+> -	VSR_PHY_MODE8		= 0x08 * 4, /* Voltage */
+> -	VSR_PHY_MODE9		= 0x09 * 4, /* Test */
+> -	VSR_PHY_MODE10		= 0x0A * 4, /* Power */
+> -	VSR_PHY_MODE11		= 0x0B * 4, /* Phy Mode */
+> +	VSR_PHY_STAT		= 0x00 * 4, /* Phy Interrupt Status */
+> +	VSR_PHY_MODE1		= 0x01 * 4, /* phy Interrupt Enable */
+> +	VSR_PHY_MODE2		= 0x02 * 4, /* Phy Configuration */
+> +	VSR_PHY_MODE3		= 0x03 * 4, /* Phy Status */
+> +	VSR_PHY_MODE4		= 0x04 * 4, /* Phy Counter 0 */
+> +	VSR_PHY_MODE5		= 0x05 * 4, /* Phy Counter 1 */
+> +	VSR_PHY_MODE6		= 0x06 * 4, /* Event Counter Control */
+> +	VSR_PHY_MODE7		= 0x07 * 4, /* Event Counter Select */
+> +	VSR_PHY_MODE8		= 0x08 * 4, /* Event Counter 0 */
+> +	VSR_PHY_MODE9		= 0x09 * 4, /* Event Counter 1 */
+> +	VSR_PHY_MODE10		= 0x0A * 4, /* Event Counter 2 */
+> +	VSR_PHY_MODE11		= 0x0B * 4, /* Event Counter 3 */
+>  	VSR_PHY_ACT_LED		= 0x0C * 4, /* Activity LED control */
+> 
+>  	VSR_PHY_FFE_CONTROL	= 0x10C,
+> diff --git a/drivers/scsi/mvsas/mv_chips.h b/drivers/scsi/mvsas/mv_chips.h
+> index 0a11bc7..bcc4080 100644
+> --- a/drivers/scsi/mvsas/mv_chips.h
+> +++ b/drivers/scsi/mvsas/mv_chips.h
+> @@ -164,7 +164,6 @@ static inline void __devinit mvs_phy_hacks(struct
+mvs_info
+> *mvi)
+>  {
+>  	u32 tmp;
+> 
+> -	/* workaround for SATA R-ERR, to ignore phy glitch */
+>  	tmp = mvs_cr32(mvi, CMD_PHY_TIMER);
+>  	tmp &= ~(1 << 9);
+>  	tmp |= (1 << 10);
+> @@ -179,7 +178,6 @@ static inline void __devinit mvs_phy_hacks(struct
+mvs_info
+> *mvi)
+>  	tmp |= 0x3fff;
+>  	mvs_cw32(mvi, CMD_SAS_CTL0, tmp);
+> 
+> -	/* workaround for WDTIMEOUT , set to 550 ms */
+>  	mvs_cw32(mvi, CMD_WD_TIMER, 0x7a0000);
+> 
+>  	/* not to halt for different port op during wideport link change */
+> diff --git a/drivers/scsi/mvsas/mv_defs.h b/drivers/scsi/mvsas/mv_defs.h
+> index 1927e1b..dec7cad 100644
+> --- a/drivers/scsi/mvsas/mv_defs.h
+> +++ b/drivers/scsi/mvsas/mv_defs.h
+> @@ -160,7 +160,7 @@ enum hw_register_bits {
+>  	TXQ_CMD_SSP		= 1,		/* SSP protocol */
+>  	TXQ_CMD_SMP		= 2,		/* SMP protocol */
+>  	TXQ_CMD_STP		= 3,		/* STP/SATA protocol */
+> -	TXQ_CMD_SSP_FREE_LIST	= 4,		/* add to SSP targ free list
+*/
+> +	TXQ_CMD_SSP_FREE_LIST	= 4,		/* add to SSP target free
+list */
+>  	TXQ_CMD_SLOT_RESET	= 7,		/* reset command slot */
+>  	TXQ_MODE_I		= (1U << 28),	/* mode:
+0=target,1=initiator */
+>  	TXQ_MODE_TARGET 	= 0,
+> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> index b28ee5b..cf4aaa9 100644
+> --- a/drivers/scsi/mvsas/mv_init.c
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -405,7 +405,6 @@ err_out:
+>  	return NULL;
+>  }
+> 
+> -/* move to PCI layer or libata core? */
+>  static int pci_go_64(struct pci_dev *pdev)
+>  {
+>  	int rc;
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+> index 31ca8fe..4958fef 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -102,7 +102,6 @@ struct mvs_info *mvs_find_dev_mvi(struct domain_device
+> *dev)
+> 
+>  }
+> 
+> -/* FIXME */
+>  int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
+>  {
+>  	unsigned long i = 0, j = 0, n = 0, num = 0;
+> @@ -177,7 +176,6 @@ void mvs_phys_reset(struct mvs_info *mvi, u32
+phy_mask,
+> int hard)
+>  	}
+>  }
+> 
+> -/* FIXME: locking? */
+>  int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+>  			void *funcdata)
+>  {
+> @@ -504,11 +502,8 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+>  			flags |= MCH_ATAPI;
+>  	}
+> 
+> -	/* FIXME: fill in port multiplier number */
+> -
+>  	hdr->flags = cpu_to_le32(flags);
+> 
+> -	/* FIXME: the low order order 5 bits for the TAG if enable NCQ */
+>  	if (task->ata_task.use_ncq && mvs_get_ncq_tag(task, &hdr_tag))
+>  		task->ata_task.fis.sector_count |= (u8) (hdr_tag << 3);
+>  	else
+> @@ -552,9 +547,6 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+>  	buf_tmp_dma += i;
+> 
+>  	/* region 4: status buffer (larger the PRD, smaller this buf) ******
+*/
+> -	/* FIXME: probably unused, for SATA.  kept here just in case
+> -	 * we get a STP/SATA error information record
+> -	 */
+>  	slot->response = buf_tmp;
+>  	hdr->status_buf = cpu_to_le64(buf_tmp_dma);
+>  	if (mvi->flags & MVF_FLAG_SOC)
+> @@ -1126,7 +1118,6 @@ static void *mvs_get_d2h_reg(struct mvs_info *mvi,
+int
+> i, void *buf)
+>  	MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG0);
+>  	s[0] = cpu_to_le32(MVS_CHIP_DISP->read_port_cfg_data(mvi, i));
+> 
+> -	/* Workaround: take some ATAPI devices for ATA */
+>  	if (((s[1] & 0x00FFFFFF) == 0x00EB1401) && (*(u8 *)&s[3] == 0x01))
+>  		s[1] = 0x00EB1401 | (*((u8 *)&s[1] + 3) & 0x10);
+> 
+> @@ -1433,7 +1424,6 @@ static void mvs_tmf_timedout(unsigned long data)
+>  	complete(&task->completion);
+>  }
+> 
+> -/* XXX */
+>  #define MVS_TASK_TIMEOUT 20
+>  static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+>  			void *parameter, u32 para_len, struct mvs_tmf_task
+*tmf)
+> @@ -1577,7 +1567,6 @@ int mvs_I_T_nexus_reset(struct domain_device *dev)
+>  	mv_printk("%s for device[%x]:rc= %d\n",
+>  		__func__, mvi_dev->device_id, rc);
+> 
+> -	/* housekeeper */
+>  	spin_lock_irqsave(&mvi->lock, flags);
+>  	mvs_release_task(mvi, dev);
+>  	spin_unlock_irqrestore(&mvi->lock, flags);
+> @@ -1681,7 +1670,6 @@ int mvs_abort_task(struct sas_task *task)
+> 
+>  	} else if (task->task_proto & SAS_PROTOCOL_SATA ||
+>  		task->task_proto & SAS_PROTOCOL_STP) {
+> -		/* to do free register_set */
+>  		if (SATA_DEV == dev->dev_type) {
+>  			struct mvs_slot_info *slot = task->lldd_task;
+>  			u32 slot_idx = (u32)(slot - mvi->slot_info);
+> @@ -1901,6 +1889,7 @@ int mvs_slot_complete(struct mvs_info *mvi, u32
+rx_desc,
+> u32 flags)
+>  		return -1;
+>  	}
+> 
+> +	/* when no device attaching, go ahead and complete by error
+handling*/
+>  	if (unlikely(!mvi_dev || flags)) {
+>  		if (!mvi_dev)
+>  			mv_dprintk("port has not device.\n");
+> @@ -2017,7 +2006,6 @@ void mvs_release_task(struct mvs_info *mvi,
+>  		      struct domain_device *dev)
+>  {
+>  	int i, phyno[WIDE_PORT_MAX_PHY], num;
+> -	/* housekeeper */
+>  	num = mvs_find_dev_phyno(dev, phyno);
+>  	for (i = 0; i < num; i++)
+>  		mvs_do_release_task(mvi, phyno[i], dev);
+> --
+> 1.7.4.4
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-OK, I think this patch should do the trick.
-
-Signed-off-by: Parag Warudkar <parag.lkml@gmail.com>
-Reported-and-tested-by: Parag Warudkar <parag.lkml@gmail.com>
- 
-Check for device deletion before sending it a scsi command. This fixes an 
-OOPS I was seeing during resume when the external dvd drive was removed 
-while suspended.
-
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index d9564fb..cc4edbf 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -136,7 +136,7 @@ int scsi_set_medium_removal(struct scsi_device *sdev, char state)
- 	char scsi_cmd[MAX_COMMAND_SIZE];
- 	int ret;
- 
--	if (!sdev->removable || !sdev->lockable)
-+	if (!sdev->removable || !sdev->lockable || sdev->sdev_state == SDEV_DEL)
- 	       return 0;
- 
- 	scsi_cmd[0] = ALLOW_MEDIUM_REMOVAL;
