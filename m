@@ -1,23 +1,45 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 3/6] scsi, fnic: require DMA support for Cisco FNIC
-Date: Wed, 25 May 2011 04:04:09 -0400
-Message-ID: <20110525080409.GA16582@infradead.org>
-References: <alpine.DEB.2.00.1105241650230.29780@chino.kir.corp.google.com>
- <alpine.DEB.2.00.1105241651350.29780@chino.kir.corp.google.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] block: fix oops in blk_run_queue()
+Date: Wed, 25 May 2011 13:28:41 +0200
+Message-ID: <4DDCE7E9.5090107@kernel.dk>
+References: <bug-35282-11613@https.bugzilla.kernel.org/>	 <201105191944.p4JJiVVm029690@demeter1.kernel.org> <1306257531.10201.20.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1105241651350.29780@chino.kir.corp.google.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Rientjes <rientjes@google.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Pekka Enberg <penberg@kernel.org>, Christoph Lameter <cl@linux.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:56030 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750783Ab1EYL2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 25 May 2011 07:28:45 -0400
+In-Reply-To: <1306257531.10201.20.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, May 24, 2011 at 04:53:50PM -0700, David Rientjes wrote:
-> The Cisco FNIC driver requires creating a SLAB_CACHE_DMA cache, which is
-> not possible if CONFIG_ZONE_DMA is disasbled.  Avoid compiling it without
-> DMA support.
+On 2011-05-24 19:18, James Bottomley wrote:
+> Bugzilla report is here:
+> 
+> https://bugzilla.kernel.org/show_bug.cgi?id=35682
+> 
+> The problem occurs if blk_run_queue() or its variants is called after
+> blk_cleanup_queue() is called.  The run checks should have a state guard
+> for QUEUE_FLAG_DEAD.  Since a DEAD queue is always STOPPED, just fold it
+> into the blk_queue_stopped() test.
+> 
+> Signed-off-by: James Bottomley <jbottomley@parallels.com>
+> 
+> ---
+> 
+> Jens, can you look at this, please ... would you prefer a separate DEAD
+> test instead?  Incidentally, this is in addition to the other DEAD test
+> you still haven't applied ...
 
-And you're sure it actually needs it and isn't some sort of typo?  It
-might help to Cc the maintainer to figure that out.
+Seems a bit of a mixup. Would be cleaner to set STOPPED when it is
+marked dead, but I suspect that will kill erroring out IO when the
+device goes away unless we add some logic to ensure that happens without
+the drivers help.
+
+-- 
+Jens Axboe
+
