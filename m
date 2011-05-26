@@ -1,30 +1,45 @@
-From: Parag Warudkar <parag.lkml@gmail.com>
-Subject: Re: [PATCH] SCSI IOCTL: Check for device deletion [was Re:
- __elv_add_request OOPS]
-Date: Wed, 25 May 2011 21:43:25 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1105252140080.2539@ubuntu-natty>
-References: <alpine.DEB.2.02.1105232329040.1910@natty-nar> <4DDB8BF6.2000304@fusionio.com> <alpine.DEB.2.02.1105242127340.3472@ubuntu-natty> <4DDCB1C8.7040708@fusionio.com> <alpine.DEB.2.02.1105251416340.3472@ubuntu-natty> <BANLkTimZi6rPSA-1OX+ZAh3135SMpDcHKg@mail.gmail.com>
- <4DDD5240.2060308@fusionio.com> <BANLkTikSXMZ3a6-e4-k5dV5vHtegxuUL-w@mail.gmail.com> <4DDD55D6.1080909@fusionio.com> <alpine.DEB.2.02.1105251548420.2742@ubuntu-natty> <BANLkTimWPWc4k2_q0KZpmWo9G93UmVWoxA@mail.gmail.com> <alpine.DEB.2.02.1105251613500.8972@ubuntu-natty>
- <BANLkTimndXcBJ9wwJrcTt3Pf3vaNVUUtwg@mail.gmail.com> <alpine.DEB.2.02.1105251638220.8972@ubuntu-natty> <1306356735.1641.61.camel@mulgrave.site> <BANLkTimuomu=_JuMr7SWrMVvboMX4BX0fA@mail.gmail.com> <1306370123.1641.76.camel@mulgrave.site>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] scsi: fix scsi_proc.c kernel-doc warnings
+Date: Wed, 25 May 2011 19:23:08 -0700
+Message-ID: <20110525192308.8937bcc4.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1306370123.1641.76.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Parag Warudkar <parag.lkml@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <jaxboe@fusionio.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:20276 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932190Ab1EZCXV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 May 2011 22:23:21 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejbscsi <james.bottomley@suse.de>
 
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
+Fix kernel-doc warnings in scsi_proc.c:
 
-On Wed, 25 May 2011, James Bottomley wrote:
+Warning(drivers/scsi/scsi_proc.c:390): No description found for parameter 'dev'
+Warning(drivers/scsi/scsi_proc.c:390): No description found for parameter 'data'
+Warning(drivers/scsi/scsi_proc.c:390): Excess function parameter 's' description in 'always_match'
+Warning(drivers/scsi/scsi_proc.c:390): Excess function parameter 'p' description in 'always_match'
 
-> so, hopefully, applying this on top will now fix it.
-> 
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/scsi_proc.c |    5 -----
+ 1 file changed, 5 deletions(-)
 
-Yeah seems to be OK with that patch on top of the previous one - thanks.
-
-Now I am left with 2 more unrelated suspend/resume issues to report.
-
-
-Parag
+--- linux-2.6.39-git10.orig/drivers/scsi/scsi_proc.c
++++ linux-2.6.39-git10/drivers/scsi/scsi_proc.c
+@@ -381,11 +381,6 @@ static ssize_t proc_scsi_write(struct fi
+ 	return err;
+ }
+ 
+-/**
+- * proc_scsi_show - show contents of /proc/scsi/scsi (attached devices)
+- * @s: output goes here
+- * @p: not used
+- */
+ static int always_match(struct device *dev, void *data)
+ {
+ 	return 1;
