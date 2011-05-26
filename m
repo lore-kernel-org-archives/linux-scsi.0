@@ -1,105 +1,321 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-v5 00/13] iscsi-target: initial .40-rc1 merge
-Date: Wed, 25 May 2011 19:34:41 -0700
-Message-ID: <1306377281.5807.89.camel@haakon2.linux-iscsi.org>
-References: <1305862678-30150-1-git-send-email-nab@linux-iscsi.org>
-	 <1306217216.29724.144.camel@haakon2.linux-iscsi.org>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] Reduce error recovery time by reducing use of TURs
+Date: Thu, 26 May 2011 10:44:06 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70157F7C062@inbmail01.lsi.com>
+References: <4DD56448.7060003@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1306217216.29724.144.camel@haakon2.linux-iscsi.org>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andy Grover <agrover@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, Martin Svec <martin.svec@zoner.cz>, Stephen Rothwell <sfr@canb.auug.org.au>, Randy Dunlap <randy.dunlap@oracle.com>, linux-next <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:35558 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751314Ab1EZFOP convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 May 2011 01:14:15 -0400
+In-Reply-To: <4DD56448.7060003@gmail.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Jeffery <dhjeffery@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, 2011-05-23 at 23:06 -0700, Nicholas A. Bellinger wrote:
-> On Thu, 2011-05-19 at 20:37 -0700, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Hi James,
-> > 
-> > Here is an updated v5 mergeable + squashable .40-rc1 series of iscsi-target
-> > against scsi-misc .39-rc7 target core intrastructure with (round 1) .40
-> > target core patches from this evening applied:
-> > 
 
-Hi James,
 
-Just a heads up that this patch was sent out to the list here:
-
-[PATCH] iscsi-target: Fix SessionType=Discovery RX context conn->conn_logout_comp hang
-http://marc.info/?l=linux-scsi&m=130637348407180&w=2
-
-This now puts the PATCH-v5 series in sync wrt to bugfixes for LIO
-upstream iscsi-target v4.1 code..
-
-More comments below..
-
-> > As before, please merge patch #1 + #2 as seperate libiscsi commits with
-> > Mike's signoff.  From there go ahead and squash #3 -> #13 using the commit
-> > message of patch #3 for an initial commit of drivers/target/iscsi/
-> > 
-> > This patch has been made against the latest scsi-misc HEAD:
-> > 
-> > commit 6ad11eaa8a689a27e0c99905bcf800a37cd432a0
-> > Author: Joe Carnuccio <joe.carnuccio@qlogic.com>
-> > Date:   Tue May 10 11:30:16 2011 -0700
-> > 
-> >     [SCSI] qla2xxx: Refactor call to qla2xxx_read_sfp for thermal temperature.
-> > 
-> > 
-> > The complete series for an initial merge including (round 1) .40 changes is
-> > available directly here:
-> > 
-> >    git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-40-iscsi-target-merge-v3
-> > 
-> > 
-> > At this point there is one outstanding bug + patch being tested by Martin wrt
-> > to SessionType=Discovery logout exception handling during an iscsi-target
-> > failure/shutdown event.  Please expect an rc-fixes patch to address this
-> > specific issue after the initial merge.
-> > 
-> > Thanks folks!
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of David Jeffery
+> Sent: Friday, May 20, 2011 12:11 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: [PATCH] Reduce error recovery time by reducing use of TURs
 > 
-
-<SNIP>
-
-> I have no further changes nor gotten any further review feedback at this
-> point for an initial merge for .40-rc1 (or 2.8.0-rc1) , and one
-> iscsi-target bugfix is currently in my queue for rc-fixes that has been
-> resolved recently with Martin's help.
+> In error recovery, most scsi error recovery stages will send a TUR
+> command
+> for every bad command when a driver's error handler reports success.
+> When
+> several bad commands to the same device, this results in a device
+> being probed multiple times.
 > 
-> Considering the short term window this time around, can you please have
-> a look at getting this merged ASAP so that it can send a few days in
-> linux-next..?
+> This becomes very problematic if the device or connection is in a state
+> where the device still doesn't respond to commands even after a
+> recovery
+> function returns success.  The error handler must wait for the test
+> commands to time out.  The time waiting for the redundant commands can
+> drastically lengthen error recovery.
 > 
+> This patch alters the scsi mid-layer's error routines to send test
+> commands
+> once per device instead of once per bad command.  This can drastically
+> lower error recovery time.
+> 
+> Signed-of-by: David Jeffery <djeffery@redhat.com>
+> ---
+> 
+> This is a resend of a patch with some minor whitespace cleanups which
+> I'd
+> like to have considered for inclusion.
+> 
+> As an extreme example of the problem with the current error recovery,
+> use scsi_debug configured to drop all commands sent to a device.  It
+> takes 10 commands 5.5 minutes from starting error recovery to the
+> returning
+> of errors without the patch.  After the patch, error recovery only
+> takes 1 minute.  This is do to all error stages only having to wait for
+> the
+> test commands to time out once per device instead of once for each bad
+> command.
+> 
+> The patch adds a helper function, scsi_eh_test_devices(), to handle a
+> list
+> of commands to devices which need to be checked.  If a check for a
+> device is
+> successful, all commands to a device are completed to the done queue.
+> If a
+> check to a device fails, all commands to the failing device are
+> returned to
+> the work queue for additional error recovery.
+> 
+> scsi_eh_abort_cmds(), scsi_eh_target_reset(), scsi_eh_bus_reset(), and
+> scsi_eh_host_reset() were all converted to use this helper function.
+> scsi_eh_bus_device_reset() was not changed as it already has the
+> behavior
+> of probing once per device.
+> 
+> One other behavior change with this patch is the probing commands occur
+> after
+> all driver error handlers of a given type are called. e.g.  Instead of
+> abort,
+> probe, abort, probe... it's now abort, abort, abort, probe... etc.
 
-There have been no further review comments for an initial merge, and we
-are ready to move forward.  :)
+I agree with above change. _BUT_ don't we restrict this new way of handling error recovery only for abort command.
+I mean we can leave Target reset, bus reset and Host reset as it is.
 
-So at this point I think providing the three 'mass-market' software
-fabric drivers (tcm_loop, tcm_fc and iscsi-target) makes the most sense
-for mainline .40 / 2.8.0 moving forward, and focus on outstanding HW
-target driver items for the next merge window.
+> 
+>  scsi_error.c |   84 ++++++++++++++++++++++++++++++++++++++++++++------
+> ---------
+>  1 file changed, 64 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 633c239..5339e89 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -50,6 +50,8 @@
+>  #define BUS_RESET_SETTLE_TIME   (10)
+>  #define HOST_RESET_SETTLE_TIME  (10)
+> 
+> +static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+> +
+>  /* called with shost->host_lock held */
+>  void scsi_eh_wakeup(struct Scsi_Host *shost)
+>  {
+> @@ -941,6 +943,45 @@ retry_tur:
+>  }
+> 
+>  /**
+> + * scsi_eh_test_devices - check if devices are responding from error
+> recovery.
+> + * @cmd_list:	scsi commands in error recovery.
+> + * @work_q:     queue for commands which still need more error
+> recovery
+> + * @done_q:     queue for commands which are finished
+> + * @try_stu:    boolean on if a STU command should be tried in
+> addition to TUR.
+> + *
+> + * Decription:
+> + *    Tests if devices are in a working state.  Commands to devices
+> now in
+> + *    a working state are sent to the done_q while commands to devices
+> which
+> + *    are still failing to respond are returned to the work_q for more
+> + *    processing.
+> + **/
+> +static int scsi_eh_test_devices(struct list_head *cmd_list, struct
+> list_head *work_q, struct list_head *done_q, int try_stu)
+> +{
+> +	struct scsi_cmnd *scmd, *next;
+> +	struct scsi_device *sdev;
+> +	int finish_cmds;
+> +
+> +	while (!list_empty(cmd_list)) {
+> +		scmd = list_entry(cmd_list->next, struct scsi_cmnd,
+> eh_entry);
+> +		sdev = scmd->device;
+> +
+> +		finish_cmds = !scsi_device_online(scmd->device) ||
+> +			(try_stu && !scsi_eh_try_stu(scmd) &&
+> !scsi_eh_tur(scmd)) ||
+> +			!scsi_eh_tur(scmd);
+> +
+> +		list_for_each_entry_safe(scmd, next, cmd_list, eh_entry)
+> +			if (scmd->device == sdev) {
+> +				if (finish_cmds)
+> +					scsi_eh_finish_cmd(scmd, done_q);
+> +				else
+> +					list_move_tail(&scmd->eh_entry, work_q);
+> +			}
+> +	}
+> +	return list_empty(work_q);
+> +}
+> +
+> +
+> +/**
+>   * scsi_eh_abort_cmds - abort pending commands.
+>   * @work_q:	&list_head for pending commands.
+>   * @done_q:	&list_head for processed commands.
+> @@ -956,6 +997,7 @@ static int scsi_eh_abort_cmds(struct list_head
+> *work_q,
+>  			      struct list_head *done_q)
+>  {
+>  	struct scsi_cmnd *scmd, *next;
+> +	LIST_HEAD(check_list);
+>  	int rtn;
+> 
+>  	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+> @@ -967,11 +1009,10 @@ static int scsi_eh_abort_cmds(struct list_head
+> *work_q,
+>  		rtn = scsi_try_to_abort_cmd(scmd->device->host->hostt,
+> scmd);
+>  		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+>  			scmd->eh_eflags &= ~SCSI_EH_CANCEL_CMD;
+> -			if (!scsi_device_online(scmd->device) ||
+> -			    rtn == FAST_IO_FAIL ||
+> -			    !scsi_eh_tur(scmd)) {
+> +			if (rtn == FAST_IO_FAIL)
+>  				scsi_eh_finish_cmd(scmd, done_q);
+> -			}
+> +			else
+> +				list_move_tail(&scmd->eh_entry, &check_list);
+>  		} else
+>  			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting"
+>  							  " cmd failed:"
+> @@ -980,7 +1021,7 @@ static int scsi_eh_abort_cmds(struct list_head
+> *work_q,
+>  							  scmd));
+>  	}
+> 
+> -	return list_empty(work_q);
+> +	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
+>  }
+> 
+>  /**
+> @@ -1131,6 +1172,7 @@ static int scsi_eh_target_reset(struct Scsi_Host
+> *shost,
+>  				struct list_head *done_q)
+>  {
+>  	LIST_HEAD(tmp_list);
+> +	LIST_HEAD(check_list);
+> 
+>  	list_splice_init(work_q, &tmp_list);
+> 
+> @@ -1155,9 +1197,9 @@ static int scsi_eh_target_reset(struct Scsi_Host
+> *shost,
+>  			if (scmd_id(scmd) != id)
+>  				continue;
+See above check will make sure only one TUR per device will be send.  There will not be redundant TUR in this case same as Abort call.
 
-I know things are still very busy on your side with /drivers/scsi/ code,
-but wanted to ensure that iscsi-target is still included for this short
-merge window considering the extensive amount of linux-scsi review, code
-conversion + cleanups, and testing it has undergone in the last 6 months
-since the mainline drivers/target/ merge.
+> 
+> -			if ((rtn == SUCCESS || rtn == FAST_IO_FAIL)
+> -			    && (!scsi_device_online(scmd->device) ||
+> -				 rtn == FAST_IO_FAIL || !scsi_eh_tur(scmd)))
+> +			if (rtn == SUCCESS)
+> +				list_move_tail(&scmd->eh_entry, &check_list);
+> +			else if (rtn == FAST_IO_FAIL)
+>  				scsi_eh_finish_cmd(scmd, done_q);
+>  			else
+>  				/* push back on work queue for further
+> processing */
+> @@ -1165,7 +1207,7 @@ static int scsi_eh_target_reset(struct Scsi_Host
+> *shost,
+>  		}
+>  	}
+> 
+> -	return list_empty(work_q);
+> +	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
 
-Please let me know if you need anything else to get this merged
-scsi-misc, or if it makes more sense given the time pressures to ask
-Linus (CC'ed) to merge this directly with appropriate Signed-off-bys
-from Christoph, Mike, Tomo-san, Dr. Hannes, Boaz and yourself..
+We can avoid this change..(considering fact that there is no redundant TUR same as task abort..!
+Similarly same comment for bus reset and host reset call.
 
-I am happy either way, but just want to avoid having this slip (again)
-given the large amount of efforts involved and mass market applicability
-of this particular target fabric code.
-
---nab
+>  }
+> 
+>  /**
+> @@ -1179,6 +1221,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host
+> *shost,
+>  			     struct list_head *done_q)
+>  {
+>  	struct scsi_cmnd *scmd, *chan_scmd, *next;
+> +	LIST_HEAD(check_list);
+>  	unsigned int channel;
+>  	int rtn;
+> 
+> @@ -1210,12 +1253,14 @@ static int scsi_eh_bus_reset(struct Scsi_Host
+> *shost,
+>  		rtn = scsi_try_bus_reset(chan_scmd);
+>  		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+>  			list_for_each_entry_safe(scmd, next, work_q,
+> eh_entry) {
+> -				if (channel == scmd_channel(scmd))
+> -					if (!scsi_device_online(scmd->device) ||
+> -					    rtn == FAST_IO_FAIL ||
+> -					    !scsi_eh_tur(scmd))
+> +				if (channel == scmd_channel(scmd)) {
+> +					if (rtn == FAST_IO_FAIL)
+>  						scsi_eh_finish_cmd(scmd,
+>  								   done_q);
+> +					else
+> +						list_move_tail(&scmd->eh_entry,
+> +							       &check_list);
+> +				}
+>  			}
+>  		} else {
+>  			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: BRST"
+> @@ -1224,7 +1269,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host
+> *shost,
+>  							  channel));
+>  		}
+>  	}
+> -	return list_empty(work_q);
+> +	return scsi_eh_test_devices(&check_list, work_q, done_q, 0);
+>  }
+> 
+>  /**
+> @@ -1236,6 +1281,7 @@ static int scsi_eh_host_reset(struct list_head
+> *work_q,
+>  			      struct list_head *done_q)
+>  {
+>  	struct scsi_cmnd *scmd, *next;
+> +	LIST_HEAD(check_list);
+>  	int rtn;
+> 
+>  	if (!list_empty(work_q)) {
+> @@ -1246,12 +1292,10 @@ static int scsi_eh_host_reset(struct list_head
+> *work_q,
+>  						  , current->comm));
+> 
+>  		rtn = scsi_try_host_reset(scmd);
+> -		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+> +		if (rtn == SUCCESS) {
+> +			list_splice_init(work_q, &check_list);
+> +		} else if(rtn == FAST_IO_FAIL) {
+>  			list_for_each_entry_safe(scmd, next, work_q,
+> eh_entry) {
+> -				if (!scsi_device_online(scmd->device) ||
+> -				    rtn == FAST_IO_FAIL ||
+> -				    (!scsi_eh_try_stu(scmd) &&
+> !scsi_eh_tur(scmd)) ||
+> -				    !scsi_eh_tur(scmd))
+>  					scsi_eh_finish_cmd(scmd, done_q);
+>  			}
+>  		} else {
+> @@ -1260,7 +1304,7 @@ static int scsi_eh_host_reset(struct list_head
+> *work_q,
+>  							  current->comm));
+>  		}
+>  	}
+> -	return list_empty(work_q);
+> +	return scsi_eh_test_devices(&check_list, work_q, done_q, 1);
+>  }
+> 
+>  /**
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
