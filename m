@@ -1,29 +1,30 @@
 From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 2/2] mvsas: add support for Task collector mode and
- fixed relative bugs
-Date: Thu, 26 May 2011 01:16:26 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D19FAD846B5@SC-VEXCH4.marvell.com>
-References: <mvsas-support-task-collector-mode>
-	<1303825011-6345-1-git-send-email-yxlraid@gmail.com>
- <BANLkTi=xZnK6--p0gp+MAH1aRRJsPw9=Lg@mail.gmail.com>
+Subject: RE: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt
+ coalescing to device 	attributes in sysfs
+Date: Thu, 26 May 2011 02:00:21 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D19FAD846E0@SC-VEXCH4.marvell.com>
+References: <mvsas-intr-coal>
+ <1306247507-6136-1-git-send-email-yxlraid@gmail.com>
+ <20110526021809.GA22496@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTi=xZnK6--p0gp+MAH1aRRJsPw9=Lg@mail.gmail.com>
+In-Reply-To: <20110526021809.GA22496@kroah.com>
 Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: "dan.j.williams@gmail.com" <dan.j.williams@gmail.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>, Xiangliang Yu <yuxiangl@marvell.com>
+To: Greg KH <greg@kroah.com>, Xiangliang Yu <yuxiangl@marvell.com>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "jslaby@suse.cz" <jslaby@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
 List-Id: linux-scsi@vger.kernel.org
 
->> From: Xiangliang Yu <yuxiangl@marvell.com>
->>
->> 3.Unlock ap->lock within .lldd_execute_task for direct mode to improve performance
 
->Can you share more details about the performance impact?  Seems like
->this should be made generic across all libsas drivers... see below.
+>Subject: Re: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt >coalescing to device attributes in sysfs
+>> 
+>> -- Add support for driver version and interrupt coalescing device attributes.
 
-The direct mode should be change to task collector mode. Sorry, this is my fault.
-We can use interrupt tasklet by unlocking ap->lock within .lldd_execute_task,
-but interrupt tasklet has some issue, and I'm debugging it.
+>When you add a sysfs file, you must also add a Documentation/ABI file as
+>well.  Please do that here.
+
+These device attributes are sysft class properties for the scsi host, and the
+sysfs files are within scsi host sysfs directory. so, do you think I need add a ABI file?  and , I can't find anything about scsi host sysfs file under directory
+Documentation/ABI. Thanks!
