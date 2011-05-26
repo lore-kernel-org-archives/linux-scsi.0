@@ -1,46 +1,102 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] MAINTAINERS update for SCSI (new email address)
-Date: Thu, 26 May 2011 15:08:56 -0500
-Message-ID: <1306440536.4048.42.camel@mulgrave.site>
+Subject: Re: [PATCH-v5 07/13] iscsi-target: Add iSCSI Login Negotiation +
+ Parameter logic
+Date: Thu, 26 May 2011 15:14:40 -0500
+Message-ID: <1306440882.4048.47.camel@mulgrave.site>
+References: <1305862678-30150-8-git-send-email-nab@linux-iscsi.org>
+	 <1306428415.4048.22.camel@mulgrave.site>
+	 <1306436832.5807.127.camel@haakon2.linux-iscsi.org>
+	 <20110527042934U.fujita.tomonori@lab.ntt.co.jp>
+	 <1306439399.19113.22.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58682 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756699Ab1EZUI7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 May 2011 16:08:59 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTP id 47EB28EE0F4
-	for <linux-scsi@vger.kernel.org>; Thu, 26 May 2011 13:08:59 -0700 (PDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id ArgM0WdcmGl2 for <linux-scsi@vger.kernel.org>;
-	Thu, 26 May 2011 13:08:59 -0700 (PDT)
-Received: from [192.168.2.10] (dagonet.hansenpartnership.com [76.243.235.53])
-	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 972668EE0E2
-	for <linux-scsi@vger.kernel.org>; Thu, 26 May 2011 13:08:58 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1306439399.19113.22.camel@haakon2.linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de, hare@suse.de, agrover@redhat.com, michaelc@cs.wisc.edu, bharrosh@panasas.com, akpm@linux-foundation.org, martin.svec@zoner.cz
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+
+On Thu, 2011-05-26 at 12:49 -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2011-05-27 at 04:29 +0900, FUJITA Tomonori wrote:
+> > On Thu, 26 May 2011 12:07:12 -0700
+> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > 
+> > > On Thu, 2011-05-26 at 11:46 -0500, James Bottomley wrote:
+> > > > On Thu, 2011-05-19 at 20:37 -0700, Nicholas A. Bellinger wrote:
+> > > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > > > 
+> > > > > This patch adds the princple RFC-3720 compatiable iSCSI Login
+> > > > > phase negotiation for iscsi_target_mod.  This also includes the
+> > > > > target RX/TX thread queue logic which is called directly from iSCSI
+> > > > > login associated code.
+> > > > > 
+> > > > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org> 
+> > > > 
+> > > > I thought the upshot of the thread with Tomo was that we wouldn't be
+> > > > doing all of this in-kernel.  Where's the userspace upcall for this?
+> > > > 
+> > > 
+> > > The technical reasons why I want to avoid this have not changed for the
+> > > 1) authentication disabled and 2) 'required-to-implement' CHAP
+> > > authentication cases.  These where discussed at the bottom of the thread
+> > > from March with Tomo-san here:
+> > > 
+> > > http://marc.info/?l=linux-scsi&m=130108812405710&w=2
+> > > 
+> > > As mentioned, I am open to adding a userspace upcall for authentication
+> > > payloads post merge in order to support the 'optional-to-implement'
+> > > authentication cases.  However, pushing the above two cases out to
+> > 
+> > We don't need such, passing payloads from kernel to user space. You do the pre
+> > SCSI nexus operations in user space then kernel takes care of established
+> > nexuses.
+> > 
+> 
+> I understand what you have in mind, but I still think this the wrong
+> approach for the default cases.  For an in-kernel iscsi-target capable
+> of changing any aspect of the control plane on the fly, this type of
+> split is problematic to support and maintain and does not actually buy
+> us anything for the default cases.
+
+Handling the default case separately from the less usual ones is
+actually the bigger recipe for disaster because the less used path
+becomes less well tested.
+
+I don't really see how a kernel/user split is problematic.  After all,
+it's what we use for a lot of things (udev being the most notable).
+
+> > > userspace really does add unnecessary complexity and limitiations that I
+> > > want to avoid for the default iSCSI login cases.
+> > > 
+> > > It also would break existing rtslib/rtsadmin-v2 userspace code, and
+> > 
+> > I don't think breaking the existing code matters.
+> 
+> Sure it does.  It means the difference between if the
+> 'required-to-implement' cases can be exposed via configfs to a native
+> python object library and shell, or if we need to have an external
+> daemon + configuration that has to be kept in sync between the two,
+> parse external configuration files, et al.
+
+     1. We can always handle this in an ABI shim in userspace
+     2. The current *kernel* code doesn't exist, therefore it has no
+        users.  Maintaining compatibility with the out of tree code is
+        fine, but not at the expense of less optimal design decisions.
+
+> With the current design, the NodeACLs + authentication are available
+> directly as part of the rtslib python object library, and python code
+> including rtslib can reference all aspects of the initiator
+> configuration directly.  Breaking this up to an external daemon and
+> configuration is a step backwards for the default cases from the
+> perspective of rtslib, and making it work with an external
+> configuration / daemon for the NodeACLs + default authentication case is
+> an hack compared to how iscsi-target functionality is exposed to
+> application level progammers via rtslib today.
+
+I don't buy this.  It doesn't have to be a daemon (udev isn't).  And
+udev certainly isn't a hack compared to what went before (which was
+fully in-kernel).
 
 James
-
----
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 59cd2f5..90b8974 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5492,7 +5492,7 @@ F:	drivers/scsi/sg.c
- F:	include/scsi/sg.h
- 
- SCSI SUBSYSTEM
--M:	"James E.J. Bottomley" <James.Bottomley@suse.de>
-+M:	"James E.J. Bottomley" <JBottomley@parallels.com>
- L:	linux-scsi@vger.kernel.org
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-
-
