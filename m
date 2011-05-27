@@ -1,64 +1,87 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI IOCTL: Check for device deletion [was Re:
- __elv_add_request OOPS]
-Date: Thu, 26 May 2011 22:53:04 -0500
-Message-ID: <1306468385.4048.73.camel@mulgrave.site>
-References: <alpine.DEB.2.02.1105232329040.1910@natty-nar>
-	 <4DDB8BF6.2000304@fusionio.com>
-	 <alpine.DEB.2.02.1105242127340.3472@ubuntu-natty>
-	 <4DDCB1C8.7040708@fusionio.com>
-	 <alpine.DEB.2.02.1105251416340.3472@ubuntu-natty>
-	 <BANLkTimZi6rPSA-1OX+ZAh3135SMpDcHKg@mail.gmail.com>
-	 <4DDD5240.2060308@fusionio.com>
-	 <BANLkTikSXMZ3a6-e4-k5dV5vHtegxuUL-w@mail.gmail.com>
-	 <4DDD55D6.1080909@fusionio.com>
-	 <alpine.DEB.2.02.1105251548420.2742@ubuntu-natty>
-	 <BANLkTimWPWc4k2_q0KZpmWo9G93UmVWoxA@mail.gmail.com>
-	 <alpine.DEB.2.02.1105251613500.8972@ubuntu-natty>
-	 <BANLkTimndXcBJ9wwJrcTt3Pf3vaNVUUtwg@mail.gmail.com>
-	 <alpine.DEB.2.02.1105251638220.8972@ubuntu-natty>
-	 <1306356735.1641.61.camel@mulgrave.site>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Fwd: [Open-FCoE] [PATCH 4/4] bnx2fc: Bumped version to 1.0.2
+Date: Thu, 26 May 2011 22:22:55 -0700
+Message-ID: <4DDF352F.2020800@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+ charset=iso-8859-1;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1306356735.1641.61.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Parag Warudkar <parag.lkml@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <jaxboe@fusionio.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:4780 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804Ab1E0FXI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 May 2011 01:23:08 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2011-05-25 at 15:52 -0500, James Bottomley wrote:
-> On Wed, 2011-05-25 at 16:42 -0400, Parag Warudkar wrote:
-> > Yeah - that makes sense. By that logic, looks like we can only disallow 
-> > for SDEV_DEL (if we decide to do that check here).
-> 
-> I don't think this is the root cause.  I think q is non-NULL but has
-> already been released, so we're just getting a NULL deref on the actual
-> list head.
-> 
-> Does this fix it?  It adds the refcounting at approximately the correct
-> places.  Of course, we'll now be trying elevator operations on an extant
-> queue but one whose elevator functions have been destroyed, so there are
-> probably additional state guards to place.
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 58584dc..44e8ca3 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -297,7 +297,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
->  		kfree(sdev);
->  		goto out;
->  	}
-> -
-> +	blk_get_queue(sdev->request_queue);
+Hi James,
 
-Apparently we can't do this because blk_[put|get]_queue aren't exported
-for use in modules (and SCSI can be modular), so this caused a build
-failure in linux-next.
+It doesnt look like the following patch set was committed. Can you 
+please do so? Please let me know if you want me to re-submit.
 
-James
+Here are the links:
+
+http://marc.info/?l=linux-scsi&m=130135398425844&w=2
+http://marc.info/?l=linux-scsi&m=130135398825857&w=2
+http://marc.info/?l=linux-scsi&m=130135399825872&w=2
+http://marc.info/?l=linux-scsi&m=130135401925893&w=2
+
+
+Thanks,
+Bhanu
+
+-------- Original Message --------
+Subject: [Open-FCoE] [PATCH 4/4] bnx2fc: Bumped version to 1.0.2
+Date: Mon, 28 Mar 2011 16:12:57 -0700
+From: Bhanu Gollapudi <bprakash@broadcom.com>
+To: James.Bottomley@suse.de <James.Bottomley@suse.de>
+CC: devel@open-fcoe.org <devel@open-fcoe.org>, 
+linux-scsi@vger.kernel.org	<linux-scsi@vger.kernel.org>
+
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+  drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+  drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+  2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index e9cfda3..24102e8 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -62,7 +62,7 @@
+  #include "bnx2fc_constants.h"
+
+  #define BNX2FC_NAME		"bnx2fc"
+-#define BNX2FC_VERSION		"1.0.1"
++#define BNX2FC_VERSION		"1.0.2"
+
+  #define PFX			"bnx2fc: "
+
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c 
+b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 41456c5..8fb9b6e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -21,7 +21,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
+
+  #define DRV_MODULE_NAME		"bnx2fc"
+  #define DRV_MODULE_VERSION	BNX2FC_VERSION
+-#define DRV_MODULE_RELDATE	"Mar 17, 2011"
++#define DRV_MODULE_RELDATE	"Mar 28, 2011"
+
+
+  static char version[] __devinitdata =
+-- 
+1.7.0.6
+
+
+
+
+_______________________________________________
+devel mailing list
+devel@open-fcoe.org
+https://lists.open-fcoe.org/mailman/listinfo/devel
+
+
