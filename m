@@ -1,35 +1,25 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: tcm_fc comments
-Date: Fri, 27 May 2011 06:24:10 -0400
-Message-ID: <20110527102410.GA14951@infradead.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCHSET v3.2 0/3] data integrity: Stabilize pages during
+	writeback for various fses
+Date: Fri, 27 May 2011 09:20:00 -0700
+Message-ID: <20110527162000.GV18929@tux1.beaverton.ibm.com>
+References: <20110519224841.28755.80650.stgit@elm3c44.beaverton.ibm.com> <20110527073326.GA15405@infradead.org>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:49742
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752600Ab1E0KYM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 May 2011 06:24:12 -0400
+Return-path: <linux-ext4-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20110527073326.GA15405@infradead.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: kiran.patil@intel.com, nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org
 
+On Fri, May 27, 2011 at 03:33:26AM -0400, Christoph Hellwig wrote:
+> Can you resend patches 1 and 2 ontop of current Linus' tree with Jans
+> page_mkwrite changes?  I don't think there's much point of patch 3 until
+> we get a user for simple_page_mkwrite.
 
- - please remove all the extra -I lines in EXTRA_CLFAGs, none of them
-   should be needed.
- - CONFIGFS_TCM_FC_DEBUG should be used directly in the code instead of
-   definining another symbol
- - there's no need for thread_wq, you can just do a wake_up_process
-   on the task_struct for the thread.  That also means you don't have
-   the races with the kthread API you currently have
- - The set_user_nice in ft_thread needs a comment explaning why you
-   really need to mess with priorities here.  I suspect you don't have
-   to anyway.
- - There's lots of code like "if (!(acl)) {" with completley superflous
-   braces.
+Sure thing.  I'll have something ready by the afternoon (here).
 
-In general it would have been nice to have sent a review request to
-linux-scsi, especially as most of these items have been commented on
-multiple times for other target frontends before.
+--D
