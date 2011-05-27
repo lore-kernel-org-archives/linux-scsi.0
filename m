@@ -1,88 +1,20 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: Fwd: [Open-FCoE] [PATCH 4/4] bnx2fc: Bumped version to
- 1.0.2
-Date: Thu, 26 May 2011 23:18:25 -0700
-Message-ID: <4DDF4231.6000503@broadcom.com>
-References: <4DDF352F.2020800@broadcom.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCHSET v3.2 0/3] data integrity: Stabilize pages during
+ writeback for various fses
+Date: Fri, 27 May 2011 03:33:26 -0400
+Message-ID: <20110527073326.GA15405@infradead.org>
+References: <20110519224841.28755.80650.stgit@elm3c44.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3073 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752576Ab1E0GSf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 May 2011 02:18:35 -0400
-In-Reply-To: <4DDF352F.2020800@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110519224841.28755.80650.stgit@elm3c44.beaverton.ibm.com>
+Sender: linux-ext4-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, Jens Axboe <axboe@kernel.dk>, Theodore Tso <tytso@mit.edu>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@redhat.com>, Dave Chinner <david@fromorbit.com>, linux-kernel <linux-kernel@vger.kernel.org>, Dave Hansen <dave@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Chris Mason <chris.mason@oracle.com>, Joel Becker <jlbec@evilplan.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 5/26/2011 10:22 PM, Bhanu Prakash Gollapudi wrote:
-> Hi James,
->
-> It doesnt look like the following patch set was committed. Can you
-> please do so? Please let me know if you want me to re-submit.
-
-Apparently, there will be some merge conflicts when you try to apply 
-these patches. I think it is better that I re-submit them. Will do it soon.
-
-Thanks,
-Bhanu
-
->
-> Here are the links:
->
-> http://marc.info/?l=linux-scsi&m=130135398425844&w=2
-> http://marc.info/?l=linux-scsi&m=130135398825857&w=2
-> http://marc.info/?l=linux-scsi&m=130135399825872&w=2
-> http://marc.info/?l=linux-scsi&m=130135401925893&w=2
->
->
-> Thanks,
-> Bhanu
->
-> -------- Original Message --------
-> Subject: [Open-FCoE] [PATCH 4/4] bnx2fc: Bumped version to 1.0.2
-> Date: Mon, 28 Mar 2011 16:12:57 -0700
-> From: Bhanu Gollapudi<bprakash@broadcom.com>
-> To: James.Bottomley@suse.de<James.Bottomley@suse.de>
-> CC: devel@open-fcoe.org<devel@open-fcoe.org>,
-> linux-scsi@vger.kernel.org	<linux-scsi@vger.kernel.org>
->
-> Signed-off-by: Bhanu Prakash Gollapudi<bprakash@broadcom.com>
-> ---
->    drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
->    drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
->    2 files changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-> index e9cfda3..24102e8 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc.h
-> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
-> @@ -62,7 +62,7 @@
->    #include "bnx2fc_constants.h"
->
->    #define BNX2FC_NAME		"bnx2fc"
-> -#define BNX2FC_VERSION		"1.0.1"
-> +#define BNX2FC_VERSION		"1.0.2"
->
->    #define PFX			"bnx2fc: "
->
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index 41456c5..8fb9b6e 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -21,7 +21,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
->
->    #define DRV_MODULE_NAME		"bnx2fc"
->    #define DRV_MODULE_VERSION	BNX2FC_VERSION
-> -#define DRV_MODULE_RELDATE	"Mar 17, 2011"
-> +#define DRV_MODULE_RELDATE	"Mar 28, 2011"
->
->
->    static char version[] __devinitdata =
-
+Can you resend patches 1 and 2 ontop of current Linus' tree with Jans
+page_mkwrite changes?  I don't think there's much point of patch 3 until
+we get a user for simple_page_mkwrite.
 
