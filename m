@@ -1,67 +1,64 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt
- coalescing to device 	attributes in sysfs
-Date: Thu, 26 May 2011 20:23:18 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D19FAD848FB@SC-VEXCH4.marvell.com>
-References: <mvsas-intr-coal>
- <1306247507-6136-1-git-send-email-yxlraid@gmail.com>
- <20110526021809.GA22496@kroah.com>
- <F766E4F80769BD478052FB6533FA745D19FAD846E0@SC-VEXCH4.marvell.com>
- <20110526141430.GD4164@kroah.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] SCSI IOCTL: Check for device deletion [was Re:
+ __elv_add_request OOPS]
+Date: Thu, 26 May 2011 22:53:04 -0500
+Message-ID: <1306468385.4048.73.camel@mulgrave.site>
+References: <alpine.DEB.2.02.1105232329040.1910@natty-nar>
+	 <4DDB8BF6.2000304@fusionio.com>
+	 <alpine.DEB.2.02.1105242127340.3472@ubuntu-natty>
+	 <4DDCB1C8.7040708@fusionio.com>
+	 <alpine.DEB.2.02.1105251416340.3472@ubuntu-natty>
+	 <BANLkTimZi6rPSA-1OX+ZAh3135SMpDcHKg@mail.gmail.com>
+	 <4DDD5240.2060308@fusionio.com>
+	 <BANLkTikSXMZ3a6-e4-k5dV5vHtegxuUL-w@mail.gmail.com>
+	 <4DDD55D6.1080909@fusionio.com>
+	 <alpine.DEB.2.02.1105251548420.2742@ubuntu-natty>
+	 <BANLkTimWPWc4k2_q0KZpmWo9G93UmVWoxA@mail.gmail.com>
+	 <alpine.DEB.2.02.1105251613500.8972@ubuntu-natty>
+	 <BANLkTimndXcBJ9wwJrcTt3Pf3vaNVUUtwg@mail.gmail.com>
+	 <alpine.DEB.2.02.1105251638220.8972@ubuntu-natty>
+	 <1306356735.1641.61.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110526141430.GD4164@kroah.com>
-Content-Language: en-US
+In-Reply-To: <1306356735.1641.61.camel@mulgrave.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "jslaby@suse.cz" <jslaby@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
+To: Parag Warudkar <parag.lkml@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <jaxboe@fusionio.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-> >>Subject: Re: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt >>>coalescing to device attributes in sysfs
+On Wed, 2011-05-25 at 15:52 -0500, James Bottomley wrote:
+> On Wed, 2011-05-25 at 16:42 -0400, Parag Warudkar wrote:
+> > Yeah - that makes sense. By that logic, looks like we can only disallow 
+> > for SDEV_DEL (if we decide to do that check here).
+> 
+> I don't think this is the root cause.  I think q is non-NULL but has
+> already been released, so we're just getting a NULL deref on the actual
+> list head.
+> 
+> Does this fix it?  It adds the refcounting at approximately the correct
+> places.  Of course, we'll now be trying elevator operations on an extant
+> queue but one whose elevator functions have been destroyed, so there are
+> probably additional state guards to place.
+> 
+> James
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 58584dc..44e8ca3 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -297,7 +297,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+>  		kfree(sdev);
+>  		goto out;
+>  	}
+> -
+> +	blk_get_queue(sdev->request_queue);
 
-> >>On Thu, May 26, 2011 at 02:00:21AM -0700, Xiangliang Yu wrote:
-> >
-> >Subject: Re: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt >coalescing to device attributes in sysfs
-> >> 
-> >> -- Add support for driver version and interrupt coalescing device attributes.
-> >>
-> >>When you add a sysfs file, you must also add a Documentation/ABI file as
-> >>well.  Please do that here.
-> >
-> >These device attributes are sysft class properties for the scsi host,
->> and the sysfs files are within scsi host sysfs directory. so, do you
->> think I need add a ABI file?  and , I can't find anything about scsi
->> host sysfs file under directory Documentation/ABI.
+Apparently we can't do this because blk_[put|get]_queue aren't exported
+for use in modules (and SCSI can be modular), so this caused a build
+failure in linux-next.
 
->Yes, again, if you add a sysfs file, you need to add documentation
->explaining exactly what it is there for and what it does.
->
->And if there isn't already a file for this device, then please add it.
-How about this:
-
-.../ABI/testing/sysfs-bus-pci-scsi-devices-mvsas   |   13 +++++++++++++
- 1 files changed, 13 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-pci-scsi-devices-mvsas
-
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci-scsi-devices-mvsas b/Documentation/ABI/testing/sysfs-bus-pci-scsi
--devices-mvsas
-new file mode 100644
-index 0000000..45f597e
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-pci-scsi-devices-mvsas
-@@ -0,0 +1,13 @@
-+What:          /sys/devices/pci/<devices>/<dev>/host/scsi_host/host/driver_version
-+Date:          May 2011
-+Kernel Version:        2.6.39
-+Contact:       yuxiangl@marvell.com
-+Description:   Display the mvsas drivers version
-+
-+What:          /sys/devices/pci/<devices>/<dev>/host/scsi_host/host/interrupt_coalescing
-+Date:          May 2011
-+Kernel Version:        2.6.39
-+Contact:       yuxiangl@marvell.com
-+Description:   Determines the maximum time the 88SE94XX waits after the occurrence of a
-+               Command Done before generating an interrupt.The maximum number of the 
-+               variable is less than 0x10000.
+James
