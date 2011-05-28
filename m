@@ -1,33 +1,80 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: 2.6.39 kernel panic w/screenshots & kernel cfg link provided
-Date: Sat, 28 May 2011 08:01:38 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCH] SCSI IOCTL: Check for device deletion [was Re:   __elv_add_request
+ OOPS]
+Date: Sat, 28 May 2011 14:42:21 +0200
+Message-ID: <4DE0EDAD.5060108@fusionio.com>
+References: <alpine.DEB.2.02.1105232329040.1910@natty-nar>	 <4DDB8BF6.2000304@fusionio.com>	 <alpine.DEB.2.02.1105242127340.3472@ubuntu-natty>	 <4DDCB1C8.7040708@fusionio.com>	 <alpine.DEB.2.02.1105251416340.3472@ubuntu-natty>	 <BANLkTimZi6rPSA-1OX+ZAh3135SMpDcHKg@mail.gmail.com>	 <4DDD5240.2060308@fusionio.com>	 <BANLkTikSXMZ3a6-e4-k5dV5vHtegxuUL-w@mail.gmail.com>	 <4DDD55D6.1080909@fusionio.com>	 <alpine.DEB.2.02.1105251548420.2742@ubuntu-natty>	 <BANLkTimWPWc4k2_q0KZpmWo9G93UmVWoxA@mail.gmail.com>	 <alpine.DEB.2.02.1105251613500.8972@ubuntu-natty>	 <BANLkTimndXcBJ9wwJrcTt3Pf3vaNVUUtwg@mail.gmail.com>	 <alpine.DEB.2.02.1105251638220.8972@ubuntu-natty>	 <1306356735.1641.61.camel@mulgrave.site>	 <1306468385.4048.73.camel@mulgrave.site>  <4DDF3A07.7040106@fusionio.com> <1306527677.12244.2.c
+ amel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lucidpixels.com ([75.144.35.66]:57476 "EHLO lucidpixels.com"
+Received: from mx1.fusionio.com ([66.114.96.30]:53549 "EHLO mx1.fusionio.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751813Ab1E1MBj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 May 2011 08:01:39 -0400
+	id S1751116Ab1E1Mm0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 May 2011 08:42:26 -0400
+In-Reply-To: <1306527677.12244.2.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Parag Warudkar <parag.lkml@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
 
-Hello,
+On 2011-05-27 22:21, James Bottomley wrote:
+> On Fri, 2011-05-27 at 07:43 +0200, Jens Axboe wrote: 
+>> On 2011-05-27 05:53, James Bottomley wrote:
+>>> On Wed, 2011-05-25 at 15:52 -0500, James Bottomley wrote:
+>>>> On Wed, 2011-05-25 at 16:42 -0400, Parag Warudkar wrote:
+>>>>> Yeah - that makes sense. By that logic, looks like we can only disallow 
+>>>>> for SDEV_DEL (if we decide to do that check here).
+>>>>
+>>>> I don't think this is the root cause.  I think q is non-NULL but has
+>>>> already been released, so we're just getting a NULL deref on the actual
+>>>> list head.
+>>>>
+>>>> Does this fix it?  It adds the refcounting at approximately the correct
+>>>> places.  Of course, we'll now be trying elevator operations on an extant
+>>>> queue but one whose elevator functions have been destroyed, so there are
+>>>> probably additional state guards to place.
+>>>>
+>>>> James
+>>>>
+>>>> ---
+>>>>
+>>>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+>>>> index 58584dc..44e8ca3 100644
+>>>> --- a/drivers/scsi/scsi_scan.c
+>>>> +++ b/drivers/scsi/scsi_scan.c
+>>>> @@ -297,7 +297,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+>>>>  		kfree(sdev);
+>>>>  		goto out;
+>>>>  	}
+>>>> -
+>>>> +	blk_get_queue(sdev->request_queue);
+>>>
+>>> Apparently we can't do this because blk_[put|get]_queue aren't exported
+>>> for use in modules (and SCSI can be modular), so this caused a build
+>>> failure in linux-next.
+>>
+>> I'll just export them.
+> 
+> OK, if you're fine with that, how does this patch look?
 
-Since I updated to 2.6.39, my system has been crashing on a random basis, 
-can someone identify what is going on here?
+Outdated :-)
 
-I've checked the hardware it is OK and this only started to occur after I 
-moved to 2.6.39 from what I can tell..
+I already merged the export addition:
 
-Kernel crash/panic, hang:
-http://home.comcast.net/~jpiszcz/20110528/2639-ss1.jpg 
-http://home.comcast.net/~jpiszcz/20110528/2639-ss2.jpg
+commit d86e0e83b32bc84600adb0b6ea1fce389b266682
+Author: Jens Axboe <jaxboe@fusionio.com>
+Date:   Fri May 27 07:44:43 2011 +0200
 
-Kernel .config:
-http://home.comcast.net/~jpiszcz/20110528/config-2.6.39.txt
+    block: export blk_{get,put}_queue()
 
-Justin.
+> I can take it through my rc-fixes tree (with your ack), since I'm a bit
+> late on the merge window now.
+
+Only the SCSI bit remains, so add at will. You can add my acked-by to
+that standalone, if you wish.
+
+-- 
+Jens Axboe
 
