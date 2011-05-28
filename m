@@ -1,80 +1,47 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH] SCSI IOCTL: Check for device deletion [was Re:   __elv_add_request
- OOPS]
-Date: Sat, 28 May 2011 14:42:21 +0200
-Message-ID: <4DE0EDAD.5060108@fusionio.com>
-References: <alpine.DEB.2.02.1105232329040.1910@natty-nar>	 <4DDB8BF6.2000304@fusionio.com>	 <alpine.DEB.2.02.1105242127340.3472@ubuntu-natty>	 <4DDCB1C8.7040708@fusionio.com>	 <alpine.DEB.2.02.1105251416340.3472@ubuntu-natty>	 <BANLkTimZi6rPSA-1OX+ZAh3135SMpDcHKg@mail.gmail.com>	 <4DDD5240.2060308@fusionio.com>	 <BANLkTikSXMZ3a6-e4-k5dV5vHtegxuUL-w@mail.gmail.com>	 <4DDD55D6.1080909@fusionio.com>	 <alpine.DEB.2.02.1105251548420.2742@ubuntu-natty>	 <BANLkTimWPWc4k2_q0KZpmWo9G93UmVWoxA@mail.gmail.com>	 <alpine.DEB.2.02.1105251613500.8972@ubuntu-natty>	 <BANLkTimndXcBJ9wwJrcTt3Pf3vaNVUUtwg@mail.gmail.com>	 <alpine.DEB.2.02.1105251638220.8972@ubuntu-natty>	 <1306356735.1641.61.camel@mulgrave.site>	 <1306468385.4048.73.camel@mulgrave.site>  <4DDF3A07.7040106@fusionio.com> <1306527677.12244.2.c
- amel@mulgrave.site>
+From: Ankit Jain <jankit@suse.de>
+Subject: Re: [PATCH] libsas: export sas_alloc_task()
+Date: Sat, 28 May 2011 19:24:19 +0530
+Message-ID: <4DE0FE8B.3090603@suse.de>
+References: <20110528010202.13696.25504.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.fusionio.com ([66.114.96.30]:53549 "EHLO mx1.fusionio.com"
+Received: from cantor.suse.de ([195.135.220.2]:52449 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751116Ab1E1Mm0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 May 2011 08:42:26 -0400
-In-Reply-To: <1306527677.12244.2.camel@mulgrave.site>
+	id S1753388Ab1E1NxA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 May 2011 09:53:00 -0400
+In-Reply-To: <20110528010202.13696.25504.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Parag Warudkar <parag.lkml@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: JBottomley@parallels.com, Lindar Liu <lindar_liu@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org, Jack Wang <jack_wang@usish.com>
 
-On 2011-05-27 22:21, James Bottomley wrote:
-> On Fri, 2011-05-27 at 07:43 +0200, Jens Axboe wrote: 
->> On 2011-05-27 05:53, James Bottomley wrote:
->>> On Wed, 2011-05-25 at 15:52 -0500, James Bottomley wrote:
->>>> On Wed, 2011-05-25 at 16:42 -0400, Parag Warudkar wrote:
->>>>> Yeah - that makes sense. By that logic, looks like we can only disallow 
->>>>> for SDEV_DEL (if we decide to do that check here).
->>>>
->>>> I don't think this is the root cause.  I think q is non-NULL but has
->>>> already been released, so we're just getting a NULL deref on the actual
->>>> list head.
->>>>
->>>> Does this fix it?  It adds the refcounting at approximately the correct
->>>> places.  Of course, we'll now be trying elevator operations on an extant
->>>> queue but one whose elevator functions have been destroyed, so there are
->>>> probably additional state guards to place.
->>>>
->>>> James
->>>>
->>>> ---
->>>>
->>>> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
->>>> index 58584dc..44e8ca3 100644
->>>> --- a/drivers/scsi/scsi_scan.c
->>>> +++ b/drivers/scsi/scsi_scan.c
->>>> @@ -297,7 +297,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
->>>>  		kfree(sdev);
->>>>  		goto out;
->>>>  	}
->>>> -
->>>> +	blk_get_queue(sdev->request_queue);
->>>
->>> Apparently we can't do this because blk_[put|get]_queue aren't exported
->>> for use in modules (and SCSI can be modular), so this caused a build
->>> failure in linux-next.
->>
->> I'll just export them.
+On 05/28/2011 06:32 AM, Dan Williams wrote:
+> Before isci adds a 3rd open coded user of this functionality just share
+> the libsas version.
 > 
-> OK, if you're fine with that, how does this patch look?
+> Cc: Jack Wang <jack_wang@usish.com>
+> Cc: Lindar Liu <lindar_liu@usish.com>
+> Cc: Xiangliang Yu <yuxiangl@marvell.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/libsas/sas_init.c   |   27 ++++++++++++++++++++++++++-
+>  drivers/scsi/mvsas/mv_sas.c      |   28 +++-------------------------
+>  drivers/scsi/pm8001/pm8001_sas.c |   36 ++++++------------------------------
+>  include/scsi/libsas.h            |   26 ++------------------------
+>  4 files changed, 37 insertions(+), 80 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+> index 2dc5534..408a46b 100644
+> --- a/drivers/scsi/libsas/sas_init.c
+> +++ b/drivers/scsi/libsas/sas_init.c
 
-Outdated :-)
+Comments in include/linux/slab.h suggest that KMEM_CACHE macro should be
+used now instead of kmem_cache_create. Since you are touching this code
+anyway, might as well fix that (in sas_class_init).
 
-I already merged the export addition:
-
-commit d86e0e83b32bc84600adb0b6ea1fce389b266682
-Author: Jens Axboe <jaxboe@fusionio.com>
-Date:   Fri May 27 07:44:43 2011 +0200
-
-    block: export blk_{get,put}_queue()
-
-> I can take it through my rc-fixes tree (with your ack), since I'm a bit
-> late on the merge window now.
-
-Only the SCSI bit remains, so add at will. You can add my acked-by to
-that standalone, if you wish.
-
+Thanks,
 -- 
-Jens Axboe
-
+Ankit Jain
+SUSE Labs
