@@ -1,74 +1,97 @@
-From: Joe Perches <joe@perches.com>
-Subject: [TRIVIAL PATCH next 00/15] treewide: Convert vmalloc/memset to vzalloc
-Date: Sat, 28 May 2011 10:36:20 -0700
-Message-ID: <cover.1306603968.git.joe__5263.34786923162$1306604467$gmane$org@perches.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: 2.6.39 and Powerfile c200
+Date: Sat, 28 May 2011 20:26:46 +0200
+Message-ID: <20110528202646.02280a95@stein>
+References: <BANLkTikkCOML4aNv_wSrk9VRSofjVwtVAw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:2185 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751971Ab1E1Rgz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 May 2011 13:36:55 -0400
+Received: from einhorn.in-berlin.de ([192.109.42.8]:45037 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754683Ab1E1S1D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 May 2011 14:27:03 -0400
+In-Reply-To: <BANLkTikkCOML4aNv_wSrk9VRSofjVwtVAw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, drbd-user@lists.linbit.com, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org, linux-scsi
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, devel@driverdev.osuosl.org, xfs@oss.sgi.com
+To: Jonathan Isom <jeisom@gmail.com>
+Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Resubmittal of patches from November 2010 and a few new ones.
+(Cc: lsml)
 
-Joe Perches (15):
-  s390: Convert vmalloc/memset to vzalloc
-  x86: Convert vmalloc/memset to vzalloc
-  atm: Convert vmalloc/memset to vzalloc
-  drbd: Convert vmalloc/memset to vzalloc
-  char: Convert vmalloc/memset to vzalloc
-  isdn: Convert vmalloc/memset to vzalloc
-  md: Convert vmalloc/memset to vzalloc
-  media: Convert vmalloc/memset to vzalloc
-  mtd: Convert vmalloc/memset to vzalloc
-  scsi: Convert vmalloc/memset to vzalloc
-  staging: Convert vmalloc/memset to vzalloc
-  video: Convert vmalloc/memset to vzalloc
-  fs: Convert vmalloc/memset to vzalloc
-  mm: Convert vmalloc/memset to vzalloc
-  net: Convert vmalloc/memset to vzalloc
+On May 27 Jonathan Isom wrote to linux1394-user:
+> After upgrading to 2.6.39,  I'm getting "rejecting I/O to offline
+> device" repeatedly in dmesg.  Full log is attached.
+> I can load disks into the DVD drives, however the drives a not usable.
+>  The Powerfile C200 is a 200 Disk DVD
+> Changer with 2 drives. I didn't turn on the Changer till 249508.718311.
 
- arch/s390/hypfs/hypfs_diag.c           |    3 +--
- arch/x86/mm/pageattr-test.c            |    3 +--
- drivers/atm/idt77252.c                 |   11 ++++++-----
- drivers/atm/lanai.c                    |    3 +--
- drivers/block/drbd/drbd_bitmap.c       |    5 ++---
- drivers/char/agp/backend.c             |    3 +--
- drivers/char/raw.c                     |    3 +--
- drivers/isdn/i4l/isdn_common.c         |    4 ++--
- drivers/isdn/mISDN/dsp_core.c          |    3 +--
- drivers/isdn/mISDN/l1oip_codec.c       |    6 ++----
- drivers/md/dm-log.c                    |    3 +--
- drivers/md/dm-snap-persistent.c        |    3 +--
- drivers/md/dm-table.c                  |    4 +---
- drivers/media/video/videobuf2-dma-sg.c |    8 ++------
- drivers/mtd/mtdswap.c                  |    3 +--
- drivers/s390/cio/blacklist.c           |    3 +--
- drivers/scsi/bfa/bfad.c                |    3 +--
- drivers/scsi/bfa/bfad_debugfs.c        |    8 ++------
- drivers/scsi/cxgbi/libcxgbi.h          |    6 ++----
- drivers/scsi/qla2xxx/qla_attr.c        |    6 ++----
- drivers/scsi/qla2xxx/qla_bsg.c         |    3 +--
- drivers/scsi/scsi_debug.c              |    7 ++-----
- drivers/staging/rts_pstor/ms.c         |    3 +--
- drivers/staging/rts_pstor/rtsx_chip.c  |    6 ++----
- drivers/video/arcfb.c                  |    5 ++---
- drivers/video/broadsheetfb.c           |    4 +---
- drivers/video/hecubafb.c               |    5 ++---
- drivers/video/metronomefb.c            |    4 +---
- drivers/video/xen-fbfront.c            |    3 +--
- fs/coda/coda_linux.h                   |    5 ++---
- fs/reiserfs/journal.c                  |    9 +++------
- fs/reiserfs/resize.c                   |    4 +---
- fs/xfs/linux-2.6/kmem.h                |    7 +------
- mm/page_cgroup.c                       |    3 +--
- net/netfilter/x_tables.c               |    5 ++---
- net/rds/ib_cm.c                        |    6 ++----
- 36 files changed, 57 insertions(+), 113 deletions(-)
+Which is:
 
+[249508.718311] firewire_core: phy config: card 0, new root=ffc1, gap_count=5
+[249509.320382] firewire_core: created device fw1: GUID 003060f200002759, S400
+[249509.458787] scsi8 : SBP-2 IEEE-1394
+[249509.659575] firewire_sbp2: fw1.0: logged in to LUN 0000 (0 retries)
+[249509.661749] scsi 8:0:0:0: CD-ROM            TOSHIBA  DVD-ROM SD-M1212 1032 PQ: 0 ANSI: 0 CCS
+[249509.666218] sr1: scsi3-mmc drive: 32x/32x cd/rw xa/form2 cdda tray
+[249509.666479] sr 8:0:0:0: Attached scsi CD-ROM sr1
+[249509.666611] sr 8:0:0:0: Attached scsi generic sg5 type 5
+[249509.668791] firewire_sbp2: fw1.0: logged in to LUN 0001 (0 retries)
+[249509.671056] scsi 8:0:0:1: CD-ROM            TOSHIBA  DVD-ROM SD-M1212 1032 PQ: 0 ANSI: 0 CCS
+[249509.676162] sr2: scsi3-mmc drive: 32x/32x cd/rw xa/form2 cdda tray
+[249509.676385] sr 8:0:0:1: Attached scsi CD-ROM sr2
+[249509.676514] sr 8:0:0:1: Attached scsi generic sg6 type 5
+[249509.678677] firewire_sbp2: fw1.0: logged in to LUN 0002 (0 retries)
+[249509.683634] scsi 8:0:0:2: Medium Changer    Escient  Powerfile C200   04A  PQ: 0 ANSI: 3
+
+OK.
+
+[249509.685951] ch0: reading element address assigment page failed!
+
+Don't know if this is bad or not.
+
+[249509.685962] ch0: INITIALIZE ELEMENT STATUS, may take some time ...
+[249509.686719] ch0: ... finished
+[249509.686729] ch 8:0:0:2: Attached scsi changer ch0
+[249509.686948] ch 8:0:0:2: Attached scsi generic sg7 type 8
+
+OK.
+
+[249539.712075] firewire_sbp2: fw1.0: sbp2_scsi_abort
+[249549.712062] firewire_sbp2: fw1.0: sbp2_scsi_abort
+[249549.712287] sr 8:0:0:0: Device offlined - not ready after error recovery
+[249549.712393] sr 8:0:0:0: rejecting I/O to offline device
+[249583.704061] firewire_sbp2: fw1.0: sbp2_scsi_abort
+[249593.704070] firewire_sbp2: fw1.0: sbp2_scsi_abort
+[249593.704307] sr 8:0:0:1: Device offlined - not ready after error recovery
+[249593.704423] sr 8:0:0:1: rejecting I/O to offline device
+[249593.706254] sr 8:0:0:0: rejecting I/O to offline device
+[249593.706276] sr 8:0:0:0: rejecting I/O to offline device
+[249593.706948] sr 8:0:0:0: rejecting I/O to offline device
+[249593.706976] sr 8:0:0:0: rejecting I/O to offline device
+[249593.709258] sr 8:0:0:1: rejecting I/O to offline device
+[...repeated almost 2000 times...]
+[250542.004258] sr 8:0:0:0: rejecting I/O to offline device
+[250542.004269] sr 8:0:0:0: rejecting I/O to offline device
+[250542.004340] sr 8:0:0:1: rejecting I/O to offline device
+[250542.004350] sr 8:0:0:1: rejecting I/O to offline device
+
+All three SCSI units were probed and attached successfully.  This involves
+successful execution of a few basic SCSI commands.
+
+30 seconds after that, and again after additional 10 seconds and further
+34 seconds + additional 10 seconds, firewire-sbp2 logs that in total four
+SCSI commands timed out.  The kernel's SCSI subsystem decides to take the
+two DVD-ROM logical units offline.
+
+Why the time-outs happened is is not clear.  Also, I have no idea what
+could be done with the kernel's SCSI subsystem so that it logs *which*
+commands timed out.
+
+Was the 2.6.39 kernel update the only change that you did on your system,
+or were there userland updates too?  If yes, maybe you have a program now
+that sends weird commands that crash the Powerfile's firmware.
 -- 
-1.7.5.rc3.dirty
-
+Stefan Richter
+-=====-==-== -=-= ===--
+http://arcgraph.de/sr/
