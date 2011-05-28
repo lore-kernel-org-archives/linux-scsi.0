@@ -1,144 +1,34 @@
-From: Jonathan Isom <jeisom@gmail.com>
-Subject: Re: 2.6.39 and Powerfile c200
-Date: Sat, 28 May 2011 15:32:54 -0500
-Message-ID: <BANLkTi=JUTZ+7DNNZJR5wpODes78tYPVjA@mail.gmail.com>
-References: <BANLkTikkCOML4aNv_wSrk9VRSofjVwtVAw@mail.gmail.com> <20110528202646.02280a95@stein>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Kernel BUG after removing USB device
+Date: Sun, 29 May 2011 05:47:28 +0800
+Message-ID: <20110528214728.GC19246@kroah.com>
+References: <Pine.LNX.4.44L0.1105271419170.2014-100000@iolanthe.rowland.org>
+ <1306601646.5630.22.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:60314 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751723Ab1E1UdP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 May 2011 16:33:15 -0400
-Received: by qyg14 with SMTP id 14so1443214qyg.19
-        for <linux-scsi@vger.kernel.org>; Sat, 28 May 2011 13:33:14 -0700 (PDT)
-In-Reply-To: <20110528202646.02280a95@stein>
+Received: from out3.smtp.messagingengine.com ([66.111.4.27]:44438 "EHLO
+	out3.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751614Ab1E1VrK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 May 2011 17:47:10 -0400
+Content-Disposition: inline
+In-Reply-To: <1306601646.5630.22.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Bruce Guenter <bruce@untroubled.org>, Jens Axboe <jaxboe@fusionio.com>, USB list <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Sat, May 28, 2011 at 1:26 PM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> (Cc: lsml)
->
-> On May 27 Jonathan Isom wrote to linux1394-user:
->> After upgrading to 2.6.39, =A0I'm getting "rejecting I/O to offline
->> device" repeatedly in dmesg. =A0Full log is attached.
->> I can load disks into the DVD drives, however the drives a not usabl=
-e.
->> =A0The Powerfile C200 is a 200 Disk DVD
->> Changer with 2 drives. I didn't turn on the Changer till 249508.7183=
-11.
->
-> Which is:
->
-> [249508.718311] firewire_core: phy config: card 0, new root=3Dffc1, g=
-ap_count=3D5
-> [249509.320382] firewire_core: created device fw1: GUID 003060f200002=
-759, S400
-> [249509.458787] scsi8 : SBP-2 IEEE-1394
-> [249509.659575] firewire_sbp2: fw1.0: logged in to LUN 0000 (0 retrie=
-s)
-> [249509.661749] scsi 8:0:0:0: CD-ROM =A0 =A0 =A0 =A0 =A0 =A0TOSHIBA =A0=
-DVD-ROM SD-M1212 1032 PQ: 0 ANSI: 0 CCS
-> [249509.666218] sr1: scsi3-mmc drive: 32x/32x cd/rw xa/form2 cdda tra=
-y
-> [249509.666479] sr 8:0:0:0: Attached scsi CD-ROM sr1
-> [249509.666611] sr 8:0:0:0: Attached scsi generic sg5 type 5
-> [249509.668791] firewire_sbp2: fw1.0: logged in to LUN 0001 (0 retrie=
-s)
-> [249509.671056] scsi 8:0:0:1: CD-ROM =A0 =A0 =A0 =A0 =A0 =A0TOSHIBA =A0=
-DVD-ROM SD-M1212 1032 PQ: 0 ANSI: 0 CCS
-> [249509.676162] sr2: scsi3-mmc drive: 32x/32x cd/rw xa/form2 cdda tra=
-y
-> [249509.676385] sr 8:0:0:1: Attached scsi CD-ROM sr2
-> [249509.676514] sr 8:0:0:1: Attached scsi generic sg6 type 5
-> [249509.678677] firewire_sbp2: fw1.0: logged in to LUN 0002 (0 retrie=
-s)
-> [249509.683634] scsi 8:0:0:2: Medium Changer =A0 =A0Escient =A0Powerf=
-ile C200 =A0 04A =A0PQ: 0 ANSI: 3
->
-> OK.
->
-> [249509.685951] ch0: reading element address assigment page failed!
->
-> Don't know if this is bad or not.
->
-> [249509.685962] ch0: INITIALIZE ELEMENT STATUS, may take some time ..=
-=2E
-> [249509.686719] ch0: ... finished
-> [249509.686729] ch 8:0:0:2: Attached scsi changer ch0
-> [249509.686948] ch 8:0:0:2: Attached scsi generic sg7 type 8
->
-> OK.
->
-> [249539.712075] firewire_sbp2: fw1.0: sbp2_scsi_abort
-> [249549.712062] firewire_sbp2: fw1.0: sbp2_scsi_abort
-> [249549.712287] sr 8:0:0:0: Device offlined - not ready after error r=
-ecovery
-> [249549.712393] sr 8:0:0:0: rejecting I/O to offline device
-> [249583.704061] firewire_sbp2: fw1.0: sbp2_scsi_abort
-> [249593.704070] firewire_sbp2: fw1.0: sbp2_scsi_abort
-> [249593.704307] sr 8:0:0:1: Device offlined - not ready after error r=
-ecovery
-> [249593.704423] sr 8:0:0:1: rejecting I/O to offline device
-> [249593.706254] sr 8:0:0:0: rejecting I/O to offline device
-> [249593.706276] sr 8:0:0:0: rejecting I/O to offline device
-> [249593.706948] sr 8:0:0:0: rejecting I/O to offline device
-> [249593.706976] sr 8:0:0:0: rejecting I/O to offline device
-> [249593.709258] sr 8:0:0:1: rejecting I/O to offline device
-> [...repeated almost 2000 times...]
-> [250542.004258] sr 8:0:0:0: rejecting I/O to offline device
-> [250542.004269] sr 8:0:0:0: rejecting I/O to offline device
-> [250542.004340] sr 8:0:0:1: rejecting I/O to offline device
-> [250542.004350] sr 8:0:0:1: rejecting I/O to offline device
->
-> All three SCSI units were probed and attached successfully. =A0This i=
-nvolves
-> successful execution of a few basic SCSI commands.
->
-> 30 seconds after that, and again after additional 10 seconds and furt=
-her
-> 34 seconds + additional 10 seconds, firewire-sbp2 logs that in total =
-four
-> SCSI commands timed out. =A0The kernel's SCSI subsystem decides to ta=
-ke the
-> two DVD-ROM logical units offline.
->
-> Why the time-outs happened is is not clear. =A0Also, I have no idea w=
-hat
-> could be done with the kernel's SCSI subsystem so that it logs *which=
-*
-> commands timed out.
->
-> Was the 2.6.39 kernel update the only change that you did on your sys=
-tem,
-> or were there userland updates too? =A0If yes, maybe you have a progr=
-am now
-> that sends weird commands that crash the Powerfile's firmware.
+On Sat, May 28, 2011 at 11:54:06AM -0500, James Bottomley wrote:
+> On Fri, 2011-05-27 at 14:26 -0400, Alan Stern wrote:
+> > Added a few entries to the CC: list.
+> 
+> Yes, it's a SCSI issue.  There's a fix already in play, although not
+> actually applied upstream yet:
+> 
+> http://marc.info/?l=linux-scsi&m=130635674521428
+> 
+> It also relies on a couple of block patches (mentioned in the thread).
 
-I have done some updates. Been messing around trying to get it
-working. I'm getting
-the same problem with 2.6.38.2.  At one point I got a drive to work
-under 2.6.39, but not
-the other drive and the changer failed to show.  I got an older
-firewire mac I'll try messing
-with it later to see if there is a failure in the Powerfile.
-
-Thanks for the input.
-
-Jonathan
-
-
-> --
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D=3D-=3D=3D -=3D-=3D =3D=3D=3D--
-> http://arcgraph.de/sr/
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+These are all marked properly so that -stable knows to pick them up,
+right?
