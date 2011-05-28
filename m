@@ -1,51 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/42 RESEND+NEW] Target updates for May 27
-Date: Sat, 28 May 2011 12:09:17 -0700
-Message-ID: <1306609757.23461.524.camel@haakon2.linux-iscsi.org>
-References: <1306523240-15543-1-git-send-email-agrover@redhat.com>
-	 <1306534540.23461.203.camel@haakon2.linux-iscsi.org>
-	 <20110527223538.GA26592@infradead.org>
-	 <1306539563.23461.229.camel@haakon2.linux-iscsi.org>
-	 <20110528074333.GA22382@infradead.org>
+From: Daniel Thaler <daniel@dthaler.de>
+Subject: Re: 2.6.39 kernel panic w/screenshots & kernel cfg link provided
+Date: Sat, 28 May 2011 21:49:46 +0200
+Message-ID: <4DE151DA.7050701@dthaler.de>
+References: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48628 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754144Ab1E1TRg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 May 2011 15:17:36 -0400
-In-Reply-To: <20110528074333.GA22382@infradead.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:38153 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755086Ab1E1TwD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 28 May 2011 15:52:03 -0400
+In-Reply-To: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, 2011-05-28 at 03:43 -0400, Christoph Hellwig wrote:
-> On Fri, May 27, 2011 at 04:39:23PM -0700, Nicholas A. Bellinger wrote:
-> > I will send these out as they are committed into lio-core-2.6.git for
-> 
-> Nick, the whole point is to get things reviewed before they are
-> commited.
-> 
+On 28.05.2011 14:01, Justin Piszcz wrote:
+> Hello,
+>
+> Since I updated to 2.6.39, my system has been crashing on a random basis,
+> can someone identify what is going on here?
+>
+> I've checked the hardware it is OK and this only started to occur after I
+> moved to 2.6.39 from what I can tell..
+>
+> Kernel crash/panic, hang:
+> http://home.comcast.net/~jpiszcz/20110528/2639-ss1.jpg
+> http://home.comcast.net/~jpiszcz/20110528/2639-ss2.jpg
+>
+> Kernel .config:
+> http://home.comcast.net/~jpiszcz/20110528/config-2.6.39.txt
+>
+> Justin.
 
-Committed where..?  Andy has been sending lots cleanup patches regularly
-the last months, but because of the very slow pace of target changes
-moving into mainline these all end up going into lio-core-2.6.git.
+I've just had a very similar panic.
 
-I don't have time to seperate out all of the cleanup items that depend
-upon iscsi-target from Andy, make drastic changes that James wants for
-iscsi-target at the last minute of a merge window, and get everyone's
-signoff on linux-scsi for everything into goes into lio-core-2.6.git.
-It's not physically possible.
+Here's a screenshot: http://dl.dropbox.com/u/3531548/panic.png
 
-This workflow is quickly becoming unmanageable and extremely frustrating
-when people are moving forward on lio-core-2.6.git, and we still cant
-agree on basic design of iscsi-target for mainline.  I am not advocating
-for less review, I want more review but the current workflow is
-inefficent for the amount of changes that full time developers like Andy
-are producing.
-
---nab
-
-
+Daniel
