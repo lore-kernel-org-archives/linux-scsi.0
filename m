@@ -1,40 +1,83 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 0/42 RESEND+NEW] Target updates for May 27
-Date: Sat, 28 May 2011 19:23:43 -0700
-Message-ID: <4DE1AE2F.70705@redhat.com>
-References: <1306523240-15543-1-git-send-email-agrover@redhat.com> <1306534540.23461.203.camel@haakon2.linux-iscsi.org> <20110527223538.GA26592@infradead.org> <1306539563.23461.229.camel@haakon2.linux-iscsi.org> <20110528074333.GA22382@infradead.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] iscsi-target: Merge for .40-rc1
+Date: Sun, 29 May 2011 11:49:08 -0700
+Message-ID: <BANLkTimt5qisV7EH7NMv1tG8gR_9d-kA3g@mail.gmail.com>
+References: <1306551592.23461.506.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62942 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751003Ab1E2CXz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 May 2011 22:23:55 -0400
-In-Reply-To: <20110528074333.GA22382@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1306551592.23461.506.camel@haakon2.linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Andy Grover <agrover@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 05/28/2011 12:43 AM, Christoph Hellwig wrote:
-> On Fri, May 27, 2011 at 04:39:23PM -0700, Nicholas A. Bellinger wrote:
->> I will send these out as they are committed into lio-core-2.6.git for
-> 
-> Nick, the whole point is to get things reviewed before they are
-> commited.
+Gaah.
 
-I guess this is my fault for not CCing linux-scsi. I'm working on tcm
-cleanups and have been sending them to linux-iscsi-target-dev, because
-there are a lot of them. Aren't you guys on that list too?
+I don't feel confident or motivated enough about iscsi-target, so
+after some (little) thought I ended up not pulling this. I really need
+a lot of acks from people who actually work on and care about SCSI,
+and right now I feel like with me being away for the next week, I
+can't handle it.
 
-In any case, here's my git tree for review hch, I've been developing
-against nab's lio-41, under the perhaps mistaken assumption that it all
-would go in and then patched up to snuff:
+I just don't want to be in the situation where I pull something that
+is apparently contentious in the SCSI space in general, but that's
+_particularly_ true this release. So I'm afraid that this essentially
+got pushed out to the next release.
 
-git://fedorapeople.org/home/fedora/grover/public_git/linux-2.6.git for-nab
+                    Linus
 
-My work is completely unrelated to the user/kernel auth question, but
-was done under the assumption that nab's iscsi fabric was going to go in.
-
-Regards -- Andy
+On Fri, May 27, 2011 at 7:59 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> Hi Linus,
+>
+> This is a GIT PULL request for the initial merge of the iscsi-target
+> fabric driver for mainline target core v4.0 infrastructure.
+>
+> =A0git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-=
+2.6.git for-40-iscsi-target
+>
+> This series has been made against the following linux-2.6.git HEAD:
+>
+> commit dc7acbb2518f250050179c8581a972df3b6a24f1
+> Merge: f01e1af 4bf0ff2
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date: =A0 Thu May 26 19:01:15 2011 -0700
+>
+> =A0 =A0Merge branch 'upstream/tidy-xen-mmu-2.6.39' of git://git.kerne=
+l.org/pub/scm/linux/kernel/git/jeremy/xen
+>
+> This code has undergone a number of review cycles on linux-scsi over =
+the
+> last six months by Christoph, Mike and other interested folks. =A0Thi=
+s has
+> included a number of cleanups to follow mainline conventions, and
+> conversion to use mainline include/scsi/iscsi_proto.h RFC definitions=
+=2E
+> There has been an good amount of testing feedback on this code so far=
+,
+> and with the LIO communities help we have been able to resolve the
+> reported cleanup/conversion regressions, and fix one long-standing
+> shutdown bug.
+>
+> Unfortuately James and I have been unable to come to an aggreement on
+> implementation details wrt to proper kernel/user split ahead of his
+> final SCSI pull for .40. =A0I have no interest to take the mainline
+> iscsi-target development effort in this direction again, so I am
+> offically committing to you to support iscsi-target in good-faith
+> together with rtslib community edition moving forward. =A0I am also
+> committing to extending iscsi-target to address the non-standard
+> authentication pieces that James has mentioned, but by the time .40
+> ships we are still not going to have iSCSI clients that actually supp=
+ort
+> them.
+>
+> I believe that Christoph is happy with the current iscsi-target code =
+for
+> an initial merge now, and am asking for the merge to avoid slipping
+> (again) for this type of 'mass-market' code that has a large audience=
+,
+> and poses minimal risk considering the small amount of external chang=
+es.
+> [...]
