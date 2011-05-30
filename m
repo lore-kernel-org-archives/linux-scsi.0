@@ -1,65 +1,101 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 3/9] [SCSI] mvsas: Add driver version and interrupt
- coalescing to device 	attributes in sysfs
-Date: Mon, 30 May 2011 04:22:40 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D19FAD84CD9@SC-VEXCH4.marvell.com>
-References: <mvsas-intr-coal>
- <1306247507-6136-1-git-send-email-yxlraid@gmail.com>
- <20110526021809.GA22496@kroah.com>
- <F766E4F80769BD478052FB6533FA745D19FAD846E0@SC-VEXCH4.marvell.com>
- <20110526141430.GD4164@kroah.com>
- <F766E4F80769BD478052FB6533FA745D19FAD848FB@SC-VEXCH4.marvell.com>
- <20110527073302.GA16178@kroah.com>
- <F766E4F80769BD478052FB6533FA745D19FAD84C40@SC-VEXCH4.marvell.com>
- <20110530074508.GB7806@kroah.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/42 RESEND+NEW] Target updates for May 27
+Date: Mon, 30 May 2011 08:56:04 -0400
+Message-ID: <20110530125604.GA15449@infradead.org>
+References: <1306523240-15543-1-git-send-email-agrover@redhat.com>
+ <1306534540.23461.203.camel@haakon2.linux-iscsi.org>
+ <20110527223538.GA26592@infradead.org>
+ <1306539563.23461.229.camel@haakon2.linux-iscsi.org>
+ <20110528074333.GA22382@infradead.org>
+ <4DE1AE2F.70705@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110530074508.GB7806@kroah.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "jslaby@suse.cz" <jslaby@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:46824
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756587Ab1E3M4e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 May 2011 08:56:34 -0400
+Content-Disposition: inline
+In-Reply-To: <4DE1AE2F.70705@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
+On Sat, May 28, 2011 at 07:23:43PM -0700, Andy Grover wrote:
+> I guess this is my fault for not CCing linux-scsi. I'm working on tcm
+> cleanups and have been sending them to linux-iscsi-target-dev, because
+> there are a lot of them. Aren't you guys on that list too?
 
->> >> +What:          /sys/devices/pci/<devices>/<dev>/host/scsi_host/host/interrupt_coalescing
->> >> +Date:          May 2011
->> >> +Kernel Version:        2.6.39
->> 
->> >2.6.39 was released already, is this file in that release?
->> Yes.
+I'm not on it.  In fact I didn't really know about it until known.
 
->How, doesn't your patch below implement that option?  How can it already
->be in the .39 kernel?
-oh, that is my fault, I read the README and find out the misunderstanding of Kernel
-Version. How about 2.6.40?
+I'll take all my complains back in that case, my fault for not beeing
+on the proper list.
 
->> >> +Contact:       yuxiangl@marvell.com
->> >> +Description:   Determines the maximum time the 88SE94XX waits after the occurrence of a
->> >> +               Command Done before generating an interrupt.The maximum number of the 
->> >> +               variable is less than 0x10000.
->> 
->> >Why would a user, or anyone else, ever want to be able to change this?
->> Because different platform can get better performance by setting different value
+> In any case, here's my git tree for review hch, I've been developing
+> against nab's lio-41, under the perhaps mistaken assumption that it all
+> would go in and then patched up to snuff:
+> 
+> git://fedorapeople.org/home/fedora/grover/public_git/linux-2.6.git for-nab
 
->Then you need to document _how_ to do this tuning, and why someone would
->want to, and lots of other stuff.  Don't just blindly let userspace
->change a value that they know nothing about.
-How about this HOW_TO: you can get a better I/O throughput by decreasing the value of Interrupt coalescing, or you can get a better CPU think time if you increase the value. 
+Looks pretty good, and removes a few items from my todo list.
 
->> >Why wouldn't this just be something that the driver handles
-> >>automagically so the user never has to worry about it at all?
-> >>As for now, driver can't do it. The value need to be test, and get the best.
->Why don't you test it and set it to the proper value now?  What would
->change in a user's system that require this to be changed?  Size of the
->machine?  Number of disks?  Something else?
->It really should be automatic, people do not ever want to have to
->manually tune their machines anymore they should be smart enough to
->determine the load on them and make the changes without any user needing
->to do it for them.
-The default value is best for normal situation, but sometime user need to tune
-The value. For example, the system has more than 16 SATA SSD disks, CPU need more time to schedule other jobs while running I/O, but the user want to do lots of other jobs at the same time, so, the user can write a bigger number to the sysfs, the CPU can execute other jobs more quickly. This is a balance
-between CPU think time and I/O throughput. But the value is depend on the system environment, like as: disk number, what kind of platform, etc. Actually, the most important reason for tuning is what the user want, I/O throughput or think time.
-By default, the value don't need to be changed.
+Some comments on the patches:
+
+"target: get_cdb should never return NULL":
+
+	looks good by itself, but I think the real fix here is to not
+	leave the CDB allocation to the I/O backend, but just include
+	it in the se_task.  Or maybe even in the se_cmd once that
+	whole CDB splitting mess is moved into pscsi, which will
+	simplify the common code further,
+
+"target: inline struct se_transport_task into struct se_task"
+
+	The description is wrong, it's moved into the se_cmd, which
+	is the correct thing to do anyway.
+
+"target: Rename transport_generic_handle_cdb to _new_cmd"
+
+	About the naming:  For now it's transport_generic for exported
+	APIs I think.  IMHO it's a pretty bad choice and should be
+	replaced by target_, but let's do that in one big sweep.
+
+"target: Have iscsi fabric allocate its own buffers"
+
+	ceil seems to be a reimplementation of DIV_ROUND_UP from
+	kernel.h
+
+"target/iscsi: Do not use t_mem_list anymore"
+
+	Very nice cleanup!
+
+"target: Call transport_new_cmd instead of adding to cmd queue"
+
+	Did you test all other frontends that they are fine with this
+	change?
+	Also the code really needs to handle errors from transport_new_cmd.
+
+	The comment above transport_generic_new_cmd needs an update,
+	or even better the wrapper should be killed and callers should
+	use transport_new_cmd directly.
+	The TRANSPORT_NEW_CMD enum value and code switch case in
+	transport_processing_thread cab be removed now.
+
+	Btw, it seems like transport_processing_thread and the various
+	helpers to queue up work to it could be nicely cleaned up
+	by using a workqueue with a work item embedded into the
+	se_cmd.  That way this work could a) be made to scale to
+	multiple CPUs, and b) we could kill new_cmd_map by just
+	allowing the frontend to setup their own work queue handlers
+	instead of going through this abstraction.
+
+"target/file: Alloc iov[] off the stack"
+
+	We can get pretty large iovecs, and blindly allocation them on
+	the stack seems like a bad idea.  It might make sense to do
+	so for the fast path, which means we'd need a __fd_do_readv
+	that gets the vector passed, and then a smart wrapper using
+	the stack for small vectors, and some technic making sure
+	gcc doesn't bloat the stack otherwise.
