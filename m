@@ -1,36 +1,23 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT PULL] iscsi-target: Merge for .40-rc1
-Date: Mon, 30 May 2011 15:09:49 +0200
-Message-ID: <20110530130949.GB13494@lst.de>
-References: <1306551592.23461.506.camel@haakon2.linux-iscsi.org> <BANLkTimt5qisV7EH7NMv1tG8gR_9d-kA3g@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: target development list
+Date: Mon, 30 May 2011 08:57:49 -0400
+Message-ID: <20110530125749.GB15449@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:59853
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755928Ab1E3N2Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 May 2011 09:28:16 -0400
 Content-Disposition: inline
-In-Reply-To: <BANLkTimt5qisV7EH7NMv1tG8gR_9d-kA3g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Andy Grover <agrover@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, linux-iscsi-target-dev@googlegroups.com
 
-On Sun, May 29, 2011 at 11:49:08AM -0700, Linus Torvalds wrote:
-> I don't feel confident or motivated enough about iscsi-target, so
-> after some (little) thought I ended up not pulling this. I really need
-> a lot of acks from people who actually work on and care about SCSI,
-> and right now I feel like with me being away for the next week, I
-> can't handle it.
-> 
-> I just don't want to be in the situation where I pull something that
-> is apparently contentious in the SCSI space in general, but that's
-> _particularly_ true this release. So I'm afraid that this essentially
-> got pushed out to the next release.
+Nick,
 
-The main contention right now is wether to put the authentification
-into kernel space or not.  Doing the slow path in userspace worked
-out okay but not great on the initiator, but it has the potential
-to become a nightmare worse than oprofile if the split ends up not
-beeing perfect.
-
-Given that we pretty well tested and working code that's used in lots
-of production setups my vote is for taking it as-is unless someone can
-actually show a prototype for a nicely working user/kernel split.
+can we please get the target list hosted on something sane like vger?
+IMHO linux-scsi is enough, but if you want a list please make it some
+normal hosting, and not crap like google groups that forces you to
+create an account with the biggest spy agency of the world.
