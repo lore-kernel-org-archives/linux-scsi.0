@@ -1,116 +1,53 @@
-From: Jonathan Isom <jeisom@gmail.com>
-Subject: Re: 2.6.39 and Powerfile c200
-Date: Tue, 31 May 2011 11:48:38 -0500
-Message-ID: <BANLkTinSPtcr-btv7v5ZUkdPObguYDSSag@mail.gmail.com>
-References: <BANLkTikkCOML4aNv_wSrk9VRSofjVwtVAw@mail.gmail.com>
- <20110528202646.02280a95@stein> <BANLkTi=JUTZ+7DNNZJR5wpODes78tYPVjA@mail.gmail.com>
- <BANLkTin=kaUtYMi7QeEAJmSLvLm7rmADkQ@mail.gmail.com> <20110530232429.3ef05054@stein>
- <BANLkTin4A-RCNtogW6LiVpumNcea+rmCAg@mail.gmail.com> <20110530233841.4e652322@stein>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:52052 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752762Ab1EaQs7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2011 12:48:59 -0400
-Received: by qwk3 with SMTP id 3so2180256qwk.19
-        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2011 09:48:58 -0700 (PDT)
-In-Reply-To: <20110530233841.4e652322@stein>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stephen Boyd <sboyd@codeaurora.org>
+Subject: [PATCH 1/4] [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
+Date: Tue, 31 May 2011 11:14:30 -0700
+Message-ID: <1306865673-20560-2-git-send-email-sboyd@codeaurora.org>
+References: <1306865673-20560-1-git-send-email-sboyd@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1306865673-20560-1-git-send-email-sboyd@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Mon, May 30, 2011 at 4:38 PM, Stefan Richter
-<stefanr@s5r6.in-berlin.de> wrote:
-> On May 30 Jonathan Isom wrote:
->> 02:00.0 FireWire (IEEE 1394) [0c00]: Agere Systems FW643 PCI
->> Express1394b Controller (PHY/Link) [11c1:5901] (rev 06)
->
-> Ah right; you were the one who reported that FW643 rev 06 issue again=
-st
-> kernel 2.6.36 which we fixed in 2.6.37. =A0Another dead end idea.
+Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
+warning:
 
-Well I did some further testing.  If I boot with /bin/sh as init and
-manually load the firewire
-modules the C200 works.  I moved out all kernel modules but firewire
-and loaded init and
-it start giving the offline messages.  So it appears to be a userspace
-problem.  Just  not
-sure where to start. I already did some digging in udev but no luck so
-far. I'm running gentoo
-which probably make tracking it down just a little harder as there are
-few identical installs in the
-world.  Below is a listing of init scripts loaded at boot.
+In file included from arch/x86/include/asm/uaccess.h:573,
+                 from include/linux/uaccess.h:5,
+                 from include/linux/highmem.h:7,
+                 from include/linux/pagemap.h:10,
+                 from include/linux/blkdev.h:12,
+                 from drivers/scsi/lpfc/lpfc_debugfs.c:21:
+In function 'copy_from_user':
+arch/x86/include/asm/uaccess_64.h:65:
+warning: call to 'copy_from_user_overflow' declared with
+attribute warning: copy_from_user() buffer size is not provably
+correct
 
-Any Ideas?
+presumably due to buf_size being signed causing GCC to fail to
+see that buf_size can't become negative.
 
-Jonathan
+Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
+Acked-by: James Smart <james.smart@emulex.com>
+---
+ drivers/scsi/lpfc/lpfc_debugfs.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-
-> --
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D=3D-=3D=3D -=3D-=3D =3D=3D=3D=3D-
-> http://arcgraph.de/sr/
->
- init scripts
-  apache2                   default
-  atd                       default
-  avahi-daemon              default
-  avahi-dnsconfd            default
-  bluetooth                 default
-  bootmisc                  boot
-  callerid                  default
-  cgroups                   boot
-  consolefont               boot
-    cpufrequtils              default
-  cupsd                     default
-  dbus                      default
-  devfs                     sysinit
-  device-mapper             boot
-  dmesg                     sysinit
-  fsck                      boot
-  hdparm                    default
-  hostname                  boot
-  hwclock                   boot
-  irexec                    default
-  keymaps                   boot
-  killprocs                 shutdown
-  lircd                     default
-  local                     default
-  localmount                boot
-  modules                   boot
-  mount-ro                  shutdown
-  mpd                       default
-  mtab                      boot
-  mysql                     default
-  mythbackend               default
-  net.eth2
-  net.lo                    boot
-  netmount                  default
-  network
-  nfs                       default
-  ntp-client                default
-  ntpd                      default
-  procfs                    boot
-  qpsmtpd                   default
-  root                      boot
-  samba                     default
-  savecache                 shutdown
-  smartd                    default
-  sshd                      default
-  swap                      boot
-  sysctl                    boot
-  syslog-ng                 default
-  termencoding              boot
-  udev                      sysinit
-  udev-postmount            default
-  urandom                   boot
-  vixie-cron                default
-  xdm                       default
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index ffe82d1..30b25c5 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -1147,7 +1147,8 @@ static int lpfc_idiag_cmd_get(const char __user *buf, size_t nbytes,
+ {
+ 	char mybuf[64];
+ 	char *pbuf, *step_str;
+-	int bsize, i;
++	int i;
++	size_t bsize;
+ 
+ 	/* Protect copy from user */
+ 	if (!access_ok(VERIFY_READ, buf, nbytes))
+-- 
+Sent by an employee of the Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
