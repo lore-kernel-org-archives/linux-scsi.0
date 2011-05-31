@@ -1,98 +1,116 @@
-From: Brad Campbell <lists2009@fnarfbargle.com>
-Subject: Re: 2.6.39 kernel panic w/screenshots & kernel cfg link provided
-Date: Tue, 31 May 2011 22:31:12 +0800
-Message-ID: <4DE4FBB0.9080708@fnarfbargle.com>
-References: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
+From: Jonathan Isom <jeisom@gmail.com>
+Subject: Re: 2.6.39 and Powerfile c200
+Date: Tue, 31 May 2011 11:48:38 -0500
+Message-ID: <BANLkTinSPtcr-btv7v5ZUkdPObguYDSSag@mail.gmail.com>
+References: <BANLkTikkCOML4aNv_wSrk9VRSofjVwtVAw@mail.gmail.com>
+ <20110528202646.02280a95@stein> <BANLkTi=JUTZ+7DNNZJR5wpODes78tYPVjA@mail.gmail.com>
+ <BANLkTin=kaUtYMi7QeEAJmSLvLm7rmADkQ@mail.gmail.com> <20110530232429.3ef05054@stein>
+ <BANLkTin4A-RCNtogW6LiVpumNcea+rmCAg@mail.gmail.com> <20110530233841.4e652322@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fnarfbargle.com ([93.93.131.224]:33598 "EHLO fnarfbargle.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753443Ab1EaOyu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 May 2011 10:54:50 -0400
-In-Reply-To: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:52052 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752762Ab1EaQs7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2011 12:48:59 -0400
+Received: by qwk3 with SMTP id 3so2180256qwk.19
+        for <linux-scsi@vger.kernel.org>; Tue, 31 May 2011 09:48:58 -0700 (PDT)
+In-Reply-To: <20110530233841.4e652322@stein>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On 28/05/11 20:01, Justin Piszcz wrote:
-> Hello,
+On Mon, May 30, 2011 at 4:38 PM, Stefan Richter
+<stefanr@s5r6.in-berlin.de> wrote:
+> On May 30 Jonathan Isom wrote:
+>> 02:00.0 FireWire (IEEE 1394) [0c00]: Agere Systems FW643 PCI
+>> Express1394b Controller (PHY/Link) [11c1:5901] (rev 06)
 >
-> Since I updated to 2.6.39, my system has been crashing on a random
-> basis, can someone identify what is going on here?
+> Ah right; you were the one who reported that FW643 rev 06 issue again=
+st
+> kernel 2.6.36 which we fixed in 2.6.37. =A0Another dead end idea.
+
+Well I did some further testing.  If I boot with /bin/sh as init and
+manually load the firewire
+modules the C200 works.  I moved out all kernel modules but firewire
+and loaded init and
+it start giving the offline messages.  So it appears to be a userspace
+problem.  Just  not
+sure where to start. I already did some digging in udev but no luck so
+far. I'm running gentoo
+which probably make tracking it down just a little harder as there are
+few identical installs in the
+world.  Below is a listing of init scripts loaded at boot.
+
+Any Ideas?
+
+Jonathan
+
+
+> --
+> Stefan Richter
+> -=3D=3D=3D=3D=3D-=3D=3D-=3D=3D -=3D-=3D =3D=3D=3D=3D-
+> http://arcgraph.de/sr/
 >
-> I've checked the hardware it is OK and this only started to occur after
-> I moved to 2.6.39 from what I can tell..
->
-> Kernel crash/panic, hang:
-> http://home.comcast.net/~jpiszcz/20110528/2639-ss1.jpg
-> http://home.comcast.net/~jpiszcz/20110528/2639-ss2.jpg
->
-> Kernel .config:
-> http://home.comcast.net/~jpiszcz/20110528/config-2.6.39.txt
-
-Just a me too I'm afraid.
-On a 2.6.39 kernel I get these from about 3 of 4 boots.
-If I append "panic=30" to the command line and leave it go, eventually I 
-get into a working kernel.
-
-I've seen them on a 2.6.38.7 kernel also, but far harder to hit and I've 
-not seen them at all on a 2.6.38.2 kernel.
-
-Once the kernel is running I don't seem to have an issue.
-
-brad@srv:~$ lspci
-00:00.0 Host bridge: Advanced Micro Devices [AMD] RS880 Host Bridge
-00:01.0 PCI bridge: ASRock Incorporation Device 9602
-00:02.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
-(ext gfx port 0)
-00:03.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
-(ext gfx port 1)
-00:04.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
-(PCIE port 0)
-00:09.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
-(PCIE port 4)
-00:0a.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
-(PCIE port 5)
-00:11.0 SATA controller: ATI Technologies Inc SB700/SB800 SATA 
-Controller [AHCI mode] (rev 40)
-00:12.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 
-Controller
-00:12.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
-00:13.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 
-Controller
-00:13.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
-00:14.0 SMBus: ATI Technologies Inc SBx00 SMBus Controller (rev 41)
-00:14.2 Audio device: ATI Technologies Inc SBx00 Azalia (Intel HDA) (rev 40)
-00:14.3 ISA bridge: ATI Technologies Inc SB700/SB800 LPC host controller 
-(rev 40)
-00:14.4 PCI bridge: ATI Technologies Inc SBx00 PCI to PCI Bridge (rev 40)
-00:14.5 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI2 
-Controller
-00:16.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 
-Controller
-00:16.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
-00:18.0 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
-HyperTransport Configuration
-00:18.1 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
-Address Map
-00:18.2 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
-DRAM Controller
-00:18.3 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
-Miscellaneous Control
-00:18.4 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
-Link Control
-01:05.0 VGA compatible controller: ATI Technologies Inc RS880 [Radeon HD 
-4250]
-02:00.0 USB Controller: NEC Corporation uPD720200 USB 3.0 Host 
-Controller (rev 03)
-03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. 
-RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 06)
-04:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 9240 
-(rev 02)
-05:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 9240 
-(rev 02)
-07:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 
-PCI-e 4-port SATA-II (rev 02)
+ init scripts
+  apache2                   default
+  atd                       default
+  avahi-daemon              default
+  avahi-dnsconfd            default
+  bluetooth                 default
+  bootmisc                  boot
+  callerid                  default
+  cgroups                   boot
+  consolefont               boot
+    cpufrequtils              default
+  cupsd                     default
+  dbus                      default
+  devfs                     sysinit
+  device-mapper             boot
+  dmesg                     sysinit
+  fsck                      boot
+  hdparm                    default
+  hostname                  boot
+  hwclock                   boot
+  irexec                    default
+  keymaps                   boot
+  killprocs                 shutdown
+  lircd                     default
+  local                     default
+  localmount                boot
+  modules                   boot
+  mount-ro                  shutdown
+  mpd                       default
+  mtab                      boot
+  mysql                     default
+  mythbackend               default
+  net.eth2
+  net.lo                    boot
+  netmount                  default
+  network
+  nfs                       default
+  ntp-client                default
+  ntpd                      default
+  procfs                    boot
+  qpsmtpd                   default
+  root                      boot
+  samba                     default
+  savecache                 shutdown
+  smartd                    default
+  sshd                      default
+  swap                      boot
+  sysctl                    boot
+  syslog-ng                 default
+  termencoding              boot
+  udev                      sysinit
+  udev-postmount            default
+  urandom                   boot
+  vixie-cron                default
+  xdm                       default
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
