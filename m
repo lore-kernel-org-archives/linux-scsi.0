@@ -1,32 +1,34 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [GIT PULL] iscsi-target: Merge for .40-rc1
-Date: Tue, 31 May 2011 12:19:47 +0200
-Message-ID: <20110531101947.GA31648@lst.de>
-References: <1306551592.23461.506.camel@haakon2.linux-iscsi.org> <BANLkTimt5qisV7EH7NMv1tG8gR_9d-kA3g@mail.gmail.com> <20110530130949.GB13494@lst.de> <BANLkTikdJcNPv4CV4nLuyuPtAYpCR1cp0Q@mail.gmail.com>
+Subject: Re: [PATCH 39/42] target: Call transport_new_cmd instead of adding
+	to cmd queue
+Date: Tue, 31 May 2011 12:22:00 +0200
+Message-ID: <20110531102200.GA31697@lst.de>
+References: <1306523240-15543-1-git-send-email-agrover@redhat.com> <1306523240-15543-40-git-send-email-agrover@redhat.com> <1306834367.8193.169.camel@haakon2.linux-iscsi.org> <20110531094800.GA31240@lst.de> <1306836641.8193.185.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:44704 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752302Ab1EaKWA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 May 2011 06:22:00 -0400
 Content-Disposition: inline
-In-Reply-To: <BANLkTikdJcNPv4CV4nLuyuPtAYpCR1cp0Q@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, Andy Grover <agrover@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+In-Reply-To: <1306836641.8193.185.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, May 30, 2011 at 05:13:22PM +0200, Bart Van Assche wrote:
-> On Mon, May 30, 2011 at 3:09 PM, Christoph Hellwig <hch@lst.de> wrote:
-> > Given that we pretty well tested and working code that's used in lots
-> > of production setups my vote is for taking it as-is unless someone can
-> > actually show a prototype for a nicely working user/kernel split.
-> 
-> As far as I know such a user/kernel split has been implemented in both
-> IET and SCST and is working fine in both of these projects.
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -1118,7 +1118,7 @@ attach_cmd:
+>          * the underlying transport plugin has allocated the buffer to
+>          * receive the Immediate Write Data into.
+>          */
+> -       transport_generic_handle_cdb(SE_CMD(cmd));
+> +       transport_generic_new_cmd(SE_CMD(cmd));
 
-Which are unrelated codebases - if you want to offer a competing iSCSI
-implementation for the core target framework we have in mainline based
-on the codebase go ahead.
+This is still missing the error handling, as well as the other callers
+in the iscsi code.  When adding the proper error handling please do it
+by checking the transport_generic_new_cmd return value instead of
+through transport_new_cmd_failure.  With a bit more work this should
+also allow killing off the SCF_SE_CMD_FAILED flag.
 
-> And here is another issue that still hasn't been resolved yet:
-> http://marc.info/?l=linux-scsi&m=129707890023739&w=2.
-
-This is related to the software iSCSI fronted in what way?
