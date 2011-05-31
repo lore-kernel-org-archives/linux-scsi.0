@@ -1,194 +1,67 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 42/42] target/file: Alloc iov[] off the stack
-Date: Tue, 31 May 2011 03:59:14 -0700
-Message-ID: <1306839554.8193.190.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 39/42] target: Call transport_new_cmd instead of adding
+	to cmd queue
+Date: Tue, 31 May 2011 04:18:14 -0700
+Message-ID: <1306840694.8193.206.camel@haakon2.linux-iscsi.org>
 References: <1306523240-15543-1-git-send-email-agrover@redhat.com>
-	 <1306523240-15543-43-git-send-email-agrover@redhat.com>
+	 <1306523240-15543-40-git-send-email-agrover@redhat.com>
+	 <1306834367.8193.169.camel@haakon2.linux-iscsi.org>
+	 <20110531101755.GA31447@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51707 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41281 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041Ab1EaLHi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2011 07:07:38 -0400
-In-Reply-To: <1306523240-15543-43-git-send-email-agrover@redhat.com>
+	with ESMTP id S1752488Ab1EaL0i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2011 07:26:38 -0400
+In-Reply-To: <20110531101755.GA31447@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com
-Cc: target-devel <target-devel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2011-05-27 at 12:07 -0700, Andy Grover wrote:
-> Apparently C supports variable arrays on the stack now, pretty sweet.
-> Perfect for the iovec array.
+On Tue, 2011-05-31 at 12:17 +0200, Christoph Hellwig wrote:
+> On Tue, May 31, 2011 at 02:32:47AM -0700, Nicholas A. Bellinger wrote:
+> > As Christoph mentioned earler, this original patch to enable your
+> > iscsi-target optimization series breaks all non iscsi-target fabrics.
+> > But hey, that is easy enough for me to fix now.  ;-)
 > 
-> Signed-off-by: Andy Grover <agrover@redhat.com>
-> ---
+> I don't think it breaks all of them.  Besides iscsi only tcm_fc (btw, why did
+> this one get commited with the stupd tcm prefix that we killed in all other
+> places?) and SRP use this function.  FC uses the same scheme as iSCSI
+> and should be fine with the direct call.  SRP has a three callers leading
+> towards srpt_handle_new_iu, of which two also come from the main handling
+> thread, and the third comes from an IB layer callback.  I've not looked
+> over the IB code yet, but it appears to either be fine to do the direct
+> call here, or easily doable by offloading the IB callback from a higher
+> level.
+> 
 
-So as Christoph mentioned, this is really not safe to do for all cases..
+Hmmm yes, tcm_fc is still using transport_generic_handle_cdb() and
+should be OK with the direct call here..  I will get this converted
+later this afternoon.
 
-What about something along the lines of the following..?  Christoph, is
-there a smarter way to determine when *_onstack() should be getting
-called..?
+Also need to take a deeper look wrt to SRP and see how this conversion
+would be possible..
+
+> Doing this would have the huge advantage of greatly simplifying the
+> entry points into the command processing - either call transport_new_cmd
+> directly, or use the thread for the TRANSPORT_NEW_CMD case.  Mid-term
+> getting rid of that entry point also sounds fine, if we replace the
+> current main thread with a work queue where frontends can queue their
+> own items, and use those for deferring things from IRQ context only
+> when needed.  This would also mean we can remove the new_cmd_map callback.
+> 
+> 
+
+I very much agree with these points, and moving to workqueues for TCM
+v4.1 (mainline v3.1) for these reasons makes alot of sense to me.  I
+need to get a better idea of how this will actually look, but am eager
+to move ahead..
 
 Thanks,
 
 --nab
-
---------------------------------------------------------------------
-
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index 5c47f42..f437c51 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -284,23 +284,16 @@ fd_alloc_task(struct se_cmd *cmd)
-        return &fd_req->fd_task;
- }
- 
--static int fd_do_readv(struct se_task *task)
-+static int __fd_do_readv(struct se_task *task, struct iovec *iov)
- {
-        struct fd_request *req = FILE_REQ(task);
-        struct file *fd = req->fd_dev->fd_file;
-        struct scatterlist *sg = task->task_sg;
--       struct iovec *iov;
-        mm_segment_t old_fs;
-        loff_t pos = (task->task_lba *
-                      task->se_dev->se_sub_dev->se_dev_attrib.block_size);
-        int ret = 0, i;
- 
--       iov = kzalloc(sizeof(struct iovec) * task->task_sg_num, GFP_KERNEL);
--       if (!(iov)) {
--               printk(KERN_ERR "Unable to allocate fd_do_readv iov[]\n");
--               return -ENOMEM;
--       }
--
-        for (i = 0; i < task->task_sg_num; i++) {
-                iov[i].iov_len = sg[i].length;
-                iov[i].iov_base = sg_virt(&sg[i]);
-@@ -310,8 +303,6 @@ static int fd_do_readv(struct se_task *task)
-        set_fs(get_ds());
-        ret = vfs_readv(fd, &iov[0], task->task_sg_num, &pos);
-        set_fs(old_fs);
--
--       kfree(iov);
-        /*
-         * Return zeros and GOOD status even if the READ did not return
-         * the expected virt_size for struct file w/o a backing struct
-@@ -335,23 +326,39 @@ static int fd_do_readv(struct se_task *task)
-        return 1;
- }
- 
--static int fd_do_writev(struct se_task *task)
-+static int fd_do_readv_onstack(struct se_task *task)
-+{
-+       struct iovec iov[task->task_sg_num];
-+
-+       return __fd_do_readv(task, &iov[0]);
-+}
-+
-+static int fd_do_readv_offstack(struct se_task *task)
-+{
-+       struct iovec *iov;
-+       int ret;
-+
-+       iov = kzalloc(sizeof(struct iovec) * task->task_sg_num, GFP_KERNEL);
-+       if (!iov) {
-+               printk(KERN_ERR "Unable to allocate fd_do_readv iov[]\n");
-+               return -ENOMEM;
-+       }
-+
-+       ret = __fd_do_readv(task, iov);
-+       kfree(iov);
-+       return ret;
-+}
-+
-+static int __fd_do_writev(struct se_task *task, struct iovec *iov)
- {
-        struct fd_request *req = FILE_REQ(task);
-        struct file *fd = req->fd_dev->fd_file;
-        struct scatterlist *sg = task->task_sg;
--       struct iovec *iov;
-        mm_segment_t old_fs;
-        loff_t pos = (task->task_lba *
-                      task->se_dev->se_sub_dev->se_dev_attrib.block_size);
-        int ret, i = 0;
- 
--       iov = kzalloc(sizeof(struct iovec) * task->task_sg_num, GFP_KERNEL);
--       if (!(iov)) {
--               printk(KERN_ERR "Unable to allocate fd_do_writev iov[]\n");
--               return -ENOMEM;
--       }
--
-        for (i = 0; i < task->task_sg_num; i++) {
-                iov[i].iov_len = sg[i].length;
-                iov[i].iov_base = sg_virt(&sg[i]);
-@@ -362,8 +369,6 @@ static int fd_do_writev(struct se_task *task)
-        ret = vfs_writev(fd, &iov[0], task->task_sg_num, &pos);
-        set_fs(old_fs);
- 
--       kfree(iov);
--
-        if (ret < 0 || ret != task->task_size) {
-                printk(KERN_ERR "vfs_writev() returned %d\n", ret);
-                return (ret < 0 ? ret : -EINVAL);
-@@ -372,6 +377,29 @@ static int fd_do_writev(struct se_task *task)
-        return 1;
- }
- 
-+static int fd_do_writev_onstack(struct se_task *task)
-+{
-+       struct iovec iov[task->task_sg_num];
-+
-+       return __fd_do_writev(task, &iov[0]);
-+}
-+
-+static int fd_do_writev_offstack(struct se_task *task)
-+{
-+       struct iovec *iov;
-+       int ret;
-+
-+       iov = kzalloc(sizeof(struct iovec) * task->task_sg_num, GFP_KERNEL);
-+       if (!iov) {
-+               printk(KERN_ERR "Unable to allocate fd_do_writev iov[]\n");
-+               return -ENOMEM;
-+       }
-+
-+       ret = __fd_do_writev(task, iov);
-+       kfree(iov);
-+       return ret;
-+}
-+
- static void fd_emulate_sync_cache(struct se_task *task)
- {
-        struct se_cmd *cmd = task->task_se_cmd;
-@@ -461,6 +489,7 @@ static int fd_do_task(struct se_task *task)
- {
-        struct se_cmd *cmd = task->task_se_cmd;
-        struct se_device *dev = cmd->se_dev;
-+       u32 iovec_bytes = task->task_sg_num * sizeof(struct iovec);
-        int ret = 0;
- 
-        /*
-@@ -468,9 +497,15 @@ static int fd_do_task(struct se_task *task)
-         * physical memory addresses to struct iovec virtual memory.
-         */
-        if (task->task_data_direction == DMA_FROM_DEVICE) {
--               ret = fd_do_readv(task);
-+               if (iovec_bytes < (THREAD_SIZE / 2))
-+                       ret = fd_do_readv_onstack(task);
-+               else
-+                       ret = fd_do_readv_offstack(task);
-        } else {
--               ret = fd_do_writev(task);
-+               if (iovec_bytes < (THREAD_SIZE / 2))
-+                       ret = fd_do_writev_onstack(task);
-+               else
-+                       ret = fd_do_writev_offstack(task);
- 
-                if (ret > 0 &&
-                    dev->se_sub_dev->se_dev_attrib.emulate_write_cache > 0 &&
-
-
 
 
