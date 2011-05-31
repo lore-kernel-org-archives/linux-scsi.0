@@ -1,52 +1,92 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 39/42] target: Call transport_new_cmd instead of adding
-	to cmd queue
-Date: Tue, 31 May 2011 04:22:03 -0700
-Message-ID: <1306840923.8193.211.camel@haakon2.linux-iscsi.org>
-References: <1306523240-15543-1-git-send-email-agrover@redhat.com>
-	 <1306523240-15543-40-git-send-email-agrover@redhat.com>
-	 <1306834367.8193.169.camel@haakon2.linux-iscsi.org>
-	 <20110531094800.GA31240@lst.de>
-	 <1306836641.8193.185.camel@haakon2.linux-iscsi.org>
-	 <20110531102200.GA31697@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34916 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752571Ab1EaLa0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2011 07:30:26 -0400
-In-Reply-To: <20110531102200.GA31697@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH] drivers/scsi/ipr.c: reorder error handling code to include iounmap
+Date: Tue, 31 May 2011 16:16:49 +0200
+Message-ID: <1306851409-14963-1-git-send-email-julia@diku.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brian King <brking@us.ibm.com>
+Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-05-31 at 12:22 +0200, Christoph Hellwig wrote:
-> > +++ b/drivers/target/iscsi/iscsi_target.c
-> > @@ -1118,7 +1118,7 @@ attach_cmd:
-> >          * the underlying transport plugin has allocated the buffer to
-> >          * receive the Immediate Write Data into.
-> >          */
-> > -       transport_generic_handle_cdb(SE_CMD(cmd));
-> > +       transport_generic_new_cmd(SE_CMD(cmd));
-> 
-> This is still missing the error handling, as well as the other callers
-> in the iscsi code.  When adding the proper error handling please do it
-> by checking the transport_generic_new_cmd return value instead of
-> through transport_new_cmd_failure.  With a bit more work this should
-> also allow killing off the SCF_SE_CMD_FAILED flag.
-> 
+From: Julia Lawall <julia@diku.dk>
 
-<nod>.
+The out_msi_disable label should be before cleanup_nomem to additionally
+benefit from the call to iounmap.  Subsequent gotos are adjusted to go to
+out_msi_disable instead of cleanup_nomem, which now follows it.  This is
+safe because pci_disable_msi does nothing if pci_enable_msi was not called.
 
-I will have a look getting this addressed later today as well and send
-out a follow-up patch on top of what has been pushed so far of Andy's
-patches into lio-core-2.6.git.
+A simplified version of the semantic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-Thanks,
+// <smpl>
+@r@
+expression e1,e2;
+statement S;
+@@
 
---nab
+e1 = pci_ioremap_bar(...);
+... when != e1 = e2
+    when != iounmap(e1)
+    when any
+(
+ if (<+...e1...+>) S
+|
+ if(...) { ... return 0; }
+|
+ if (...) { ... when != iounmap(e1)
+                when != if (...) { ... iounmap(e1) ... }
+* return ...;
+ } else S
+)
+// </smpl>
 
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
+---
+ drivers/scsi/ipr.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 888086c..8d63630 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -8778,14 +8778,14 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
+ 	if (rc != PCIBIOS_SUCCESSFUL) {
+ 		dev_err(&pdev->dev, "Failed to save PCI config space\n");
+ 		rc = -EIO;
+-		goto cleanup_nomem;
++		goto out_msi_disable;
+ 	}
+ 
+ 	if ((rc = ipr_save_pcix_cmd_reg(ioa_cfg)))
+-		goto cleanup_nomem;
++		goto out_msi_disable;
+ 
+ 	if ((rc = ipr_set_pcix_cmd_reg(ioa_cfg)))
+-		goto cleanup_nomem;
++		goto out_msi_disable;
+ 
+ 	if (ioa_cfg->sis64)
+ 		ioa_cfg->cfg_table_size = (sizeof(struct ipr_config_table_hdr64)
+@@ -8800,7 +8800,7 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
+ 	if (rc < 0) {
+ 		dev_err(&pdev->dev,
+ 			"Couldn't allocate enough memory for device driver!\n");
+-		goto cleanup_nomem;
++		goto out_msi_disable;
+ 	}
+ 
+ 	/*
+@@ -8845,10 +8845,10 @@ out:
+ 
+ cleanup_nolog:
+ 	ipr_free_mem(ioa_cfg);
+-cleanup_nomem:
+-	iounmap(ipr_regs);
+ out_msi_disable:
+ 	pci_disable_msi(pdev);
++cleanup_nomem:
++	iounmap(ipr_regs);
+ out_release_regions:
+ 	pci_release_regions(pdev);
+ out_scsi_host_put:
