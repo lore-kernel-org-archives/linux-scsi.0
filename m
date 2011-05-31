@@ -1,92 +1,98 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH] drivers/scsi/ipr.c: reorder error handling code to include iounmap
-Date: Tue, 31 May 2011 16:16:49 +0200
-Message-ID: <1306851409-14963-1-git-send-email-julia@diku.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@us.ibm.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Brad Campbell <lists2009@fnarfbargle.com>
+Subject: Re: 2.6.39 kernel panic w/screenshots & kernel cfg link provided
+Date: Tue, 31 May 2011 22:31:12 +0800
+Message-ID: <4DE4FBB0.9080708@fnarfbargle.com>
+References: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fnarfbargle.com ([93.93.131.224]:33598 "EHLO fnarfbargle.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753443Ab1EaOyu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 May 2011 10:54:50 -0400
+In-Reply-To: <alpine.DEB.2.02.1105280755050.4345@p34.internal.lan>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+On 28/05/11 20:01, Justin Piszcz wrote:
+> Hello,
+>
+> Since I updated to 2.6.39, my system has been crashing on a random
+> basis, can someone identify what is going on here?
+>
+> I've checked the hardware it is OK and this only started to occur after
+> I moved to 2.6.39 from what I can tell..
+>
+> Kernel crash/panic, hang:
+> http://home.comcast.net/~jpiszcz/20110528/2639-ss1.jpg
+> http://home.comcast.net/~jpiszcz/20110528/2639-ss2.jpg
+>
+> Kernel .config:
+> http://home.comcast.net/~jpiszcz/20110528/config-2.6.39.txt
 
-The out_msi_disable label should be before cleanup_nomem to additionally
-benefit from the call to iounmap.  Subsequent gotos are adjusted to go to
-out_msi_disable instead of cleanup_nomem, which now follows it.  This is
-safe because pci_disable_msi does nothing if pci_enable_msi was not called.
+Just a me too I'm afraid.
+On a 2.6.39 kernel I get these from about 3 of 4 boots.
+If I append "panic=30" to the command line and leave it go, eventually I 
+get into a working kernel.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+I've seen them on a 2.6.38.7 kernel also, but far harder to hit and I've 
+not seen them at all on a 2.6.38.2 kernel.
 
-// <smpl>
-@r@
-expression e1,e2;
-statement S;
-@@
+Once the kernel is running I don't seem to have an issue.
 
-e1 = pci_ioremap_bar(...);
-... when != e1 = e2
-    when != iounmap(e1)
-    when any
-(
- if (<+...e1...+>) S
-|
- if(...) { ... return 0; }
-|
- if (...) { ... when != iounmap(e1)
-                when != if (...) { ... iounmap(e1) ... }
-* return ...;
- } else S
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/ipr.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 888086c..8d63630 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -8778,14 +8778,14 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
- 	if (rc != PCIBIOS_SUCCESSFUL) {
- 		dev_err(&pdev->dev, "Failed to save PCI config space\n");
- 		rc = -EIO;
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 	}
- 
- 	if ((rc = ipr_save_pcix_cmd_reg(ioa_cfg)))
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 
- 	if ((rc = ipr_set_pcix_cmd_reg(ioa_cfg)))
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 
- 	if (ioa_cfg->sis64)
- 		ioa_cfg->cfg_table_size = (sizeof(struct ipr_config_table_hdr64)
-@@ -8800,7 +8800,7 @@ static int __devinit ipr_probe_ioa(struct pci_dev *pdev,
- 	if (rc < 0) {
- 		dev_err(&pdev->dev,
- 			"Couldn't allocate enough memory for device driver!\n");
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 	}
- 
- 	/*
-@@ -8845,10 +8845,10 @@ out:
- 
- cleanup_nolog:
- 	ipr_free_mem(ioa_cfg);
--cleanup_nomem:
--	iounmap(ipr_regs);
- out_msi_disable:
- 	pci_disable_msi(pdev);
-+cleanup_nomem:
-+	iounmap(ipr_regs);
- out_release_regions:
- 	pci_release_regions(pdev);
- out_scsi_host_put:
+brad@srv:~$ lspci
+00:00.0 Host bridge: Advanced Micro Devices [AMD] RS880 Host Bridge
+00:01.0 PCI bridge: ASRock Incorporation Device 9602
+00:02.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
+(ext gfx port 0)
+00:03.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
+(ext gfx port 1)
+00:04.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
+(PCIE port 0)
+00:09.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
+(PCIE port 4)
+00:0a.0 PCI bridge: Advanced Micro Devices [AMD] RS780 PCI to PCI bridge 
+(PCIE port 5)
+00:11.0 SATA controller: ATI Technologies Inc SB700/SB800 SATA 
+Controller [AHCI mode] (rev 40)
+00:12.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 
+Controller
+00:12.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
+00:13.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 
+Controller
+00:13.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
+00:14.0 SMBus: ATI Technologies Inc SBx00 SMBus Controller (rev 41)
+00:14.2 Audio device: ATI Technologies Inc SBx00 Azalia (Intel HDA) (rev 40)
+00:14.3 ISA bridge: ATI Technologies Inc SB700/SB800 LPC host controller 
+(rev 40)
+00:14.4 PCI bridge: ATI Technologies Inc SBx00 PCI to PCI Bridge (rev 40)
+00:14.5 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI2 
+Controller
+00:16.0 USB Controller: ATI Technologies Inc SB700/SB800 USB OHCI0 
+Controller
+00:16.2 USB Controller: ATI Technologies Inc SB700/SB800 USB EHCI Controller
+00:18.0 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
+HyperTransport Configuration
+00:18.1 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
+Address Map
+00:18.2 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
+DRAM Controller
+00:18.3 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
+Miscellaneous Control
+00:18.4 Host bridge: Advanced Micro Devices [AMD] Family 10h Processor 
+Link Control
+01:05.0 VGA compatible controller: ATI Technologies Inc RS880 [Radeon HD 
+4250]
+02:00.0 USB Controller: NEC Corporation uPD720200 USB 3.0 Host 
+Controller (rev 03)
+03:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. 
+RTL8111/8168B PCI Express Gigabit Ethernet controller (rev 06)
+04:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 9240 
+(rev 02)
+05:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 9240 
+(rev 02)
+07:00.0 SCSI storage controller: Marvell Technology Group Ltd. 88SX7042 
+PCI-e 4-port SATA-II (rev 02)
