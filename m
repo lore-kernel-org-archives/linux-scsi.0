@@ -1,39 +1,34 @@
-From: morrowj47@yahoo.com
-Subject: ATTENTION,
-Date: Mon, 30 May 2011 17:51:49 -0400
-Message-ID: <20110530175149.14993ge3234p3qfw@webmail.ascsaz.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: target development list
+Date: Mon, 30 May 2011 18:26:40 -0700
+Message-ID: <1306805200.8193.5.camel@haakon2.linux-iscsi.org>
+References: <20110530125749.GB15449@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from drive740.station030.com ([64.118.87.7]:50509 "EHLO
-	drive740.station030.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655Ab1E3VwB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2011 17:52:01 -0400
-Content-Disposition: inline
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48052 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752318Ab1EaBfJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2011 21:35:09 -0400
+In-Reply-To: <20110530125749.GB15449@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-iscsi-target-dev@googlegroups.com, David Miller <davem@davemloft.net>, "J.H." <warthog9@kernel.org>
 
-ATTENTION,
+On Mon, 2011-05-30 at 08:57 -0400, Christoph Hellwig wrote:
+> Nick,
+> 
+> can we please get the target list hosted on something sane like vger?
+> IMHO linux-scsi is enough, but if you want a list please make it some
+> normal hosting, and not crap like google groups that forces you to
+> create an account with the biggest spy agency of the world.
 
-Your mailbox has exceeded the storage limit which is 10GB as set by
-your administrator, you are currently running on 10.9GB,you may not be
-able to send or receive new mail until you re-validate your mailbox. To
-re-validate your mailbox please click the link below:
+Yes please.  I am happy to git-send-patch for all drivers/target/
+patches to a new vger/ko based target list.  (DaveM and J.H CC'ed)
 
-http://www.twapt.net/filun8v
+Thank you,
 
-If the link above don't work please copy and paste the link below to
-your browser window
-
-http://www.twapt.net/filun8v
-
-If you fail to re-validate your mailbox, your mailbox will be De-
-activated!!!
-
-Thanks
-Admin Help Desk
+--nab
 
