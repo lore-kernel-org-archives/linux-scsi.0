@@ -1,53 +1,67 @@
-From: Stephen Boyd <sboyd@codeaurora.org>
-Subject: [PATCH 1/4] [SCSI] lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
-Date: Tue, 31 May 2011 11:14:30 -0700
-Message-ID: <1306865673-20560-2-git-send-email-sboyd@codeaurora.org>
-References: <1306865673-20560-1-git-send-email-sboyd@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1306865673-20560-1-git-send-email-sboyd@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: 2.6.39 and Powerfile c200
+Date: Tue, 31 May 2011 21:26:43 +0200
+Message-ID: <20110531212643.174c2739@stein>
+References: <BANLkTikkCOML4aNv_wSrk9VRSofjVwtVAw@mail.gmail.com>
+	<20110528202646.02280a95@stein>
+	<BANLkTi=JUTZ+7DNNZJR5wpODes78tYPVjA@mail.gmail.com>
+	<BANLkTin=kaUtYMi7QeEAJmSLvLm7rmADkQ@mail.gmail.com>
+	<20110530232429.3ef05054@stein>
+	<BANLkTin4A-RCNtogW6LiVpumNcea+rmCAg@mail.gmail.com>
+	<20110530233841.4e652322@stein>
+	<BANLkTinSPtcr-btv7v5ZUkdPObguYDSSag@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:34560 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752807Ab1EaT04 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 May 2011 15:26:56 -0400
+In-Reply-To: <BANLkTinSPtcr-btv7v5ZUkdPObguYDSSag@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jonathan Isom <jeisom@gmail.com>
+Cc: linux1394-user@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-Enabling DEBUG_STRICT_USER_COPY_CHECKS causes the following
-warning:
+On May 31 Jonathan Isom wrote:
+> Well I did some further testing.  If I boot with /bin/sh as init and
+> manually load the firewire modules the C200 works.  I moved out all
+> kernel modules but firewire and loaded init and it start giving the
+> offline messages.  So it appears to be a userspace problem.
 
-In file included from arch/x86/include/asm/uaccess.h:573,
-                 from include/linux/uaccess.h:5,
-                 from include/linux/highmem.h:7,
-                 from include/linux/pagemap.h:10,
-                 from include/linux/blkdev.h:12,
-                 from drivers/scsi/lpfc/lpfc_debugfs.c:21:
-In function 'copy_from_user':
-arch/x86/include/asm/uaccess_64.h:65:
-warning: call to 'copy_from_user_overflow' declared with
-attribute warning: copy_from_user() buffer size is not provably
-correct
+(Or a firmware problem actually, provoked by Linux userspace that does not
+behave like a Windows system.)
 
-presumably due to buf_size being signed causing GCC to fail to
-see that buf_size can't become negative.
+> Just  not sure where to start. I already did some digging in udev but
+> no luck so far. I'm running gentoo which probably make tracking it
+> down just a little harder as there are few identical installs in the
+> world.  Below is a listing of init scripts loaded at boot.
+> 
+> Any Ideas?
+[...]
 
-Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
-Acked-by: James Smart <james.smart@emulex.com>
----
- drivers/scsi/lpfc/lpfc_debugfs.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Nothing obvious as far as I can tell.  The mythbackend perhaps?  Or a GUI
+desktop component that is started after login into xdm?
 
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index ffe82d1..30b25c5 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -1147,7 +1147,8 @@ static int lpfc_idiag_cmd_get(const char __user *buf, size_t nbytes,
- {
- 	char mybuf[64];
- 	char *pbuf, *step_str;
--	int bsize, i;
-+	int i;
-+	size_t bsize;
- 
- 	/* Protect copy from user */
- 	if (!access_ok(VERIFY_READ, buf, nbytes))
+I don't know if there is a logging facility in the kernel's SCSI layer
+that could expose the process name of SCSI ioctl issuers, but you can add
+one:
+
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -479,6 +479,9 @@ static int sr_block_open(struct block_de
+ 		ret = cdrom_open(&cd->cdi, bdev, mode);
+ 		if (ret)
+ 			scsi_cd_put(cd);
++		else
++			printk(KERN_INFO "***** %s opened by %s *****\n",
++			       cd->cdi.name, current->comm);
+ 	}
+ 	mutex_unlock(&sr_mutex);
+ 	return ret;
+
 -- 
-Sent by an employee of the Qualcomm Innovation Center, Inc.
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum.
+Stefan Richter
+-=====-==-== -=-= =====
+http://arcgraph.de/sr/
