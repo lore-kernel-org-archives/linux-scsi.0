@@ -1,27 +1,54 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: target development list
-Date: Mon, 30 May 2011 19:33:04 -0700 (PDT)
-Message-ID: <20110530.193304.34672561.davem@davemloft.net>
-References: <1306805200.8193.5.camel@haakon2.linux-iscsi.org>
-	<20110530.185135.40782775.davem@davemloft.net>
-	<1306807520.8193.7.camel@haakon2.linux-iscsi.org>
+From: Meelis Roos <mroos@linux.ee>
+Subject: [PATCH] dpt_i2o: fix module removal BUG
+Date: Tue, 31 May 2011 10:01:22 +0300 (EEST)
+Message-ID: <alpine.SOC.1.00.1105310956250.26883@math.ut.ee>
+References: <alpine.SOC.1.00.1105251206580.19636@math.ut.ee>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:37753 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755565Ab1EaCeM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 May 2011 22:34:12 -0400
-In-Reply-To: <1306807520.8193.7.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.SOC.1.00.1105251206580.19636@math.ut.ee>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org, linux-iscsi-target-dev@googlegroups.com, warthog9@kernel.org
 
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Date: Mon, 30 May 2011 19:05:20 -0700
+dpt_i2o rmmod fails with
 
-> target-devel sounds good to me.   8-)
+BUG: unable to handle kernel NULL pointer dereference at 00000004
 
-target-devel@vger.kernel.org has been created
+The reason is that legacy scsi_unregister() expects that legacy 
+scsi_register() has been called before but this is not the case here. 
+Driver has been mostly converted to newer style scsi registration, so 
+scsi_host_put() is needed instead of scsi_unregister().
+
+Also deletes obsolete comments around the fix.
+
+Tested with DPT SmartRAID V with several module insertions and 
+removals.
+
+Signed-off-by: Meelis Roos <mroos@linux.ee>
+
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index b4f6c9a..1f3df55 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -299,15 +299,11 @@ rebuild_sys_tab:
+ }
+ 
+ 
+-/*
+- * scsi_unregister will be called AFTER we return.
+- */
+ static int adpt_release(struct Scsi_Host *host)
+ {
+ 	adpt_hba* pHba = (adpt_hba*) host->hostdata[0];
+-//	adpt_i2o_quiesce_hba(pHba);
+ 	adpt_i2o_delete_hba(pHba);
+-	scsi_unregister(host);
++	scsi_host_put(host);
+ 	return 0;
+ }
+ 
+
+-- 
+Meelis Roos (mroos@linux.ee)
