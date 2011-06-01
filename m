@@ -1,51 +1,68 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 39/42] target: Call transport_new_cmd instead of adding
-	to cmd queue
-Date: Wed, 1 Jun 2011 06:09:45 +0200
-Message-ID: <20110601040945.GB15488@lst.de>
-References: <1306523240-15543-1-git-send-email-agrover@redhat.com> <1306523240-15543-40-git-send-email-agrover@redhat.com> <1306834367.8193.169.camel@haakon2.linux-iscsi.org> <20110531101755.GA31447@lst.de> <1306840694.8193.206.camel@haakon2.linux-iscsi.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi_transport_spi: Export host width and HBA id
+Date: Wed, 01 Jun 2011 15:18:48 +0200
+Message-ID: <201106011318.p51DImMr003035@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46417 "EHLO newverein.lst.de"
+Received: from cantor.suse.de ([195.135.220.2]:54844 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750770Ab1FAEJq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2011 00:09:46 -0400
-Content-Disposition: inline
-In-Reply-To: <1306840694.8193.206.camel@haakon2.linux-iscsi.org>
+	id S1750803Ab1FANTC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jun 2011 09:19:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-
-On Tue, May 31, 2011 at 04:18:14AM -0700, Nicholas A. Bellinger wrote:
-> I very much agree with these points, and moving to workqueues for TCM
-> v4.1 (mainline v3.1) for these reasons makes alot of sense to me.  I
-> need to get a better idea of how this will actually look, but am eager
-> to move ahead..
-
-I think the first step would be to move split the se_task execution
-from the current thread into a workqueue.  That would also help with
-making the file backend scale much better.  If it wasn't for head of queue
-semantics this would be almost trivial - just embedd a work_struct in
-every task and queue it up to the work queue, which handles concurrency.
-I'm not entirely sure how to handle head of queue semantics correctly,
-maybe just adding a pointer to pending head of queue tasks to the
-se_dev and executing those first might work.
+To: James Bottomley <James.Bottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
 
-Btw, I can't fully make sense of the current task execution, so
-here's a few questions:
+Currently it's impossible to find out if the host supports
+wide SCSI unless you're committed to trawl through syslog.
+And it's near impossible to find the actual HBA id, which
+is settable for some SCSI HBAs (like aic7xxx).
+So export them via sysfs.
 
- - why do we have separate __transport_execute_tasks and
-   transport_execute_tasks, or rather why is it safe to use
-   __transport_execute_tasks transport_processing_thread
-   without the checks for shutting down?
- - what is the point of the transport_generic_process_write wrapper?
- - why does transport_generic_new_cmd call transport_execute_tasks
-   for reads, but for writes we leave it to the ->write_pending
-   method which only calls transport_execute_tasks for some of
-   the fabrics?  Note that with the current code transport_generic_new_cmd
-   might not get called from the fabric thread and thus stall the
-   caller - it might make sense switch to calling transport_generic_handle_data
-   for that case.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 8a172d4..f5a3a68 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -597,6 +597,28 @@ static DEVICE_ATTR(signalling, S_IRUGO,
+ 		   show_spi_host_signalling,
+ 		   store_spi_host_signalling);
+ 
++static ssize_t show_spi_host_width(struct device *cdev,
++				      struct device_attribute *attr,
++				      char *buf)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++
++	return sprintf(buf, "%s\n", shost->max_id == 16 ? "wide" : "narrow");
++}
++static DEVICE_ATTR(width, S_IRUGO,
++		   show_spi_host_width, NULL);
++
++static ssize_t show_spi_host_hba_id(struct device *cdev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++
++	return sprintf(buf, "%d\n", shost->this_id);
++}
++static DEVICE_ATTR(hba_id, S_IRUGO,
++		   show_spi_host_hba_id, NULL);
++
+ #define DV_SET(x, y)			\
+ 	if(i->f->set_##x)		\
+ 		i->f->set_##x(sdev->sdev_target, y)
+@@ -1380,6 +1402,8 @@ static DECLARE_ANON_TRANSPORT_CLASS(spi_device_class,
+ 
+ static struct attribute *host_attributes[] = {
+ 	&dev_attr_signalling.attr,
++	&dev_attr_width.attr,
++	&dev_attr_hba_id.attr,
+ 	NULL
+ };
+ 
