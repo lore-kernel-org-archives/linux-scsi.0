@@ -1,68 +1,158 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi_transport_spi: Export host width and HBA id
-Date: Wed, 01 Jun 2011 15:18:48 +0200
-Message-ID: <201106011318.p51DImMr003035@pentland.suse.de>
+From: Artur Wojcik <artur.wojcik@intel.com>
+Subject: [PATCH] libsas: add SMP READ/WRTIE GPIO support
+Date: Wed, 01 Jun 2011 16:02:03 +0200
+Message-ID: <20110601140203.26324.22849.stgit@gklab-128-184.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:54844 "EHLO mx1.suse.de"
+Received: from mga09.intel.com ([134.134.136.24]:46685 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750803Ab1FANTC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2011 09:19:02 -0400
+	id S1751445Ab1FAOCf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jun 2011 10:02:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@parallels.com>
+To: James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org
 
+This patch enables the SMP READ/WRITE GPIO function interface in libsas SMP
+host module. The interface is used to control the SGPIO initiator in the SAS
+initiator. The implementation is SFF-8485 and SAS-2 compliant.
 
-Currently it's impossible to find out if the host supports
-wide SCSI unless you're committed to trawl through syslog.
-And it's near impossible to find the actual HBA id, which
-is settable for some SCSI HBAs (like aic7xxx).
-So export them via sysfs.
+There are two functions in transport class only responsible for reading and
+writting GPIO registers. I decided to leave the decission about what type of
+registers are supported to lldd.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Now the user space application may issue SMP READ/WRITE GPIO frame to HBA in
+order to read/write GPIO registers.
 
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 8a172d4..f5a3a68 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -597,6 +597,28 @@ static DEVICE_ATTR(signalling, S_IRUGO,
- 		   show_spi_host_signalling,
- 		   store_spi_host_signalling);
+Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
+---
+ drivers/scsi/libsas/sas_host_smp.c |   48 +++++++++++++++++++++++++++++++++++-
+ include/scsi/libsas.h              |   14 +++++++++++
+ include/scsi/sas.h                 |    4 +++
+ 3 files changed, 64 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_host_smp.c b/drivers/scsi/libsas/sas_host_smp.c
+index 04ad8dd..2d34cb6 100644
+--- a/drivers/scsi/libsas/sas_host_smp.c
++++ b/drivers/scsi/libsas/sas_host_smp.c
+@@ -51,6 +51,40 @@ static void sas_host_smp_discover(struct sas_ha_struct *sas_ha, u8 *resp_data,
+ 	resp_data[15] = rphy->identify.target_port_protocols;
+ }
  
-+static ssize_t show_spi_host_width(struct device *cdev,
-+				      struct device_attribute *attr,
-+				      char *buf)
++static void sas_host_smp_read_gpio(struct sas_ha_struct *sas_ha, u8 *resp_data,
++	u8 reg_type, u8 reg_index, u8 reg_count)
 +{
-+	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++	struct sas_internal *i =
++		to_sas_internal(sas_ha->core.shost->transportt);
 +
-+	return sprintf(buf, "%s\n", shost->max_id == 16 ? "wide" : "narrow");
++	if (i->dft->lldd_read_gpio == NULL) {
++		resp_data[2] = SMP_RESP_FUNC_UNK;
++	} else {
++		if (i->dft->lldd_read_gpio(sas_ha, reg_type, reg_index,
++					   reg_count, &resp_data[4]) == 0)
++			resp_data[2] = SMP_RESP_FUNC_ACC;
++		else
++			resp_data[2] = SMP_RESP_FUNC_FAILED;
++	}
 +}
-+static DEVICE_ATTR(width, S_IRUGO,
-+		   show_spi_host_width, NULL);
 +
-+static ssize_t show_spi_host_hba_id(struct device *cdev,
-+				    struct device_attribute *attr,
-+				    char *buf)
++static void sas_host_smp_write_gpio(struct sas_ha_struct *sas_ha, u8 *resp_data,
++	u8 reg_type, u8 reg_index, u8 reg_count, u8 *write_data)
 +{
-+	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++	struct sas_internal *i =
++		to_sas_internal(sas_ha->core.shost->transportt);
 +
-+	return sprintf(buf, "%d\n", shost->this_id);
++	if (i->dft->lldd_write_gpio == NULL) {
++		resp_data[2] = SMP_RESP_FUNC_UNK;
++	} else {
++		if (i->dft->lldd_write_gpio(sas_ha, reg_type, reg_index,
++					    reg_count, &resp_data[8]) == 0)
++			resp_data[2] = SMP_RESP_FUNC_ACC;
++		else
++			resp_data[2] = SMP_RESP_FUNC_FAILED;
++	}
 +}
-+static DEVICE_ATTR(hba_id, S_IRUGO,
-+		   show_spi_host_hba_id, NULL);
 +
- #define DV_SET(x, y)			\
- 	if(i->f->set_##x)		\
- 		i->f->set_##x(sdev->sdev_target, y)
-@@ -1380,6 +1402,8 @@ static DECLARE_ANON_TRANSPORT_CLASS(spi_device_class,
+ static void sas_report_phy_sata(struct sas_ha_struct *sas_ha, u8 *resp_data,
+ 				u8 phy_id)
+ {
+@@ -195,8 +229,13 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 		       SAS_EXPANDER_PRODUCT_ID_LEN);
+ 		break;
  
- static struct attribute *host_attributes[] = {
- 	&dev_attr_signalling.attr,
-+	&dev_attr_width.attr,
-+	&dev_attr_hba_id.attr,
- 	NULL
++	case SMP_READ_GPIO_REG_ENHANCED:
+ 	case SMP_READ_GPIO_REG:
+-		/* FIXME: need GPIO support in the transport class */
++		if (req->resid_len != 12)
++			resp_data[2] = SMP_RESP_INV_FRM_LEN;
++		else
++			sas_host_smp_read_gpio(sas_ha, resp_data, req_data[2],
++				req_data[3], req_data[4]);
+ 		break;
+ 
+ 	case SMP_DISCOVER:
+@@ -230,8 +269,13 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 		/* Can't implement; hosts have no routes */
+ 		break;
+ 
++	case SMP_WRITE_GPIO_REG_ENHANCED:
+ 	case SMP_WRITE_GPIO_REG:
+-		/* FIXME: need GPIO support in the transport class */
++		if (req->resid_len < (req_data[4] * 4) + 8)
++			resp_data[2] = SMP_RESP_INV_FRM_LEN;
++		else
++			sas_host_smp_write_gpio(sas_ha, resp_data, req_data[2],
++				req_data[3], req_data[4], &req_data[5]);
+ 		break;
+ 
+ 	case SMP_CONF_ROUTE_INFO:
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 8f6bb9c..6d876ca 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -56,6 +56,14 @@ enum sas_phy_type {
+         PHY_TYPE_VIRTUAL
  };
  
++enum gpio_reg_type {
++	GPIO_REG_CFG = 0,
++	GPIO_REG_RX = 1,
++	GPIO_REG_RX_GP = 2,
++	GPIO_REG_TX = 3,
++	GPIO_REG_TX_GP = 4,
++};
++
+ /* The events are mnemonically described in sas_dump.c
+  * so when updating/adding events here, please also
+  * update the other file too.
+@@ -613,6 +621,12 @@ struct sas_domain_function_template {
+ 
+ 	/* Phy management */
+ 	int (*lldd_control_phy)(struct asd_sas_phy *, enum phy_func, void *);
++
++	/* GPIO support */
++	int (*lldd_read_gpio)(struct sas_ha_struct *, u8 reg_type,
++			      u8 reg_index, u8 reg_count, u8 *read_data);
++	int (*lldd_write_gpio)(struct sas_ha_struct *, u8 reg_type,
++			       u8 reg_index, u8 reg_count, u8 *write_data);
+ };
+ 
+ extern int sas_register_ha(struct sas_ha_struct *);
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index e9fd022..253094d 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -54,6 +54,10 @@
+ #define SMP_PHY_CONTROL          0x91
+ #define SMP_PHY_TEST_FUNCTION    0x92
+ 
++/* SAS-2 specific */
++#define SMP_READ_GPIO_REG_ENHANCED    0x07
++#define SMP_WRITE_GPIO_REG_ENHANCED   0x83
++
+ #define SMP_RESP_FUNC_ACC        0x00
+ #define SMP_RESP_FUNC_UNK        0x01
+ #define SMP_RESP_FUNC_FAILED     0x02
+
