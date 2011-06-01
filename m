@@ -1,54 +1,56 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_transport_spi: Export host width and HBA id
-Date: Wed, 01 Jun 2011 11:15:43 -0400
-Message-ID: <4DE6579F.8080402@interlog.com>
-References: <201106011318.p51DImMr003035@pentland.suse.de> <1306940171.11897.52.camel@mulgrave.site> <4DE65408.2020502@suse.de>
-Reply-To: dgilbert@interlog.com
+From: Artur Wojcik <artur.wojcik@intel.com>
+Subject: Re: [PATCH] libsas: add SMP READ/WRTIE GPIO support
+Date: Wed, 01 Jun 2011 19:02:07 +0200
+Message-ID: <4DE6708F.8080604@intel.com>
+References: <20110601140203.26324.22849.stgit@gklab-128-184.igk.intel.com> <4DE64D78.6090309@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:37562 "EHLO smtp.infotech.no"
+Received: from mga01.intel.com ([192.55.52.88]:55835 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757990Ab1FAPQF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Jun 2011 11:16:05 -0400
-In-Reply-To: <4DE65408.2020502@suse.de>
+	id S1756965Ab1FARCX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Jun 2011 13:02:23 -0400
+In-Reply-To: <4DE64D78.6090309@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, James Bottomley <James.Bottomley@parallels.com>, linux-scsi@vger.kernel.org
+To: "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11-06-01 11:00 AM, Hannes Reinecke wrote:
-> On 06/01/2011 04:56 PM, James Bottomley wrote:
->> On Wed, 2011-06-01 at 15:18 +0200, Hannes Reinecke wrote:
->>> Currently it's impossible to find out if the host supports
->>> wide SCSI unless you're committed to trawl through syslog.
->>> And it's near impossible to find the actual HBA id, which
->>> is settable for some SCSI HBAs (like aic7xxx).
->>> So export them via sysfs.
+On 06/01/2011 04:32 PM, Douglas Gilbert wrote:
+> On 11-06-01 10:02 AM, Artur Wojcik wrote:
+>> This patch enables the SMP READ/WRITE GPIO function interface in 
+>> libsas SMP
+>> host module. The interface is used to control the SGPIO initiator in 
+>> the SAS
+>> initiator. The implementation is SFF-8485 and SAS-2 compliant.
 >>
->> Um, that's what the the
+>> There are two functions in transport class only responsible for 
+>> reading and
+>> writting GPIO registers. I decided to leave the decission about what 
+>> type of
+>> registers are supported to lldd.
 >>
->> /sys/class/spi_transport/target<x:y:x>/max_width
->>
->> parameter gives you, isn't it?
->>
->> max_width tells you if the HBA/device combination supports wide; width
->> tells you if the device is using it.
->>
-> Not quite. You'll only have that parameter if there is a target attached to the
-> HBA.
-> If there is none you still wouldn't know how far you should be scanning as there
-> won't be any indicator in sysfs.
+>> Now the user space application may issue SMP READ/WRITE GPIO frame to 
+>> HBA in
+>> order to read/write GPIO registers.
 >
-> In this case that's an ESX server emulating an sym53c8xx HBA.
-> And disks attached to it on the fly.
-> If you start up with no disks attached and attach a new disc
-> to eg target ID 12 you're stuck.
+> Your code also accepts the somewhat mysterious READ GPIO
+> REGISTER ENHANCED SMP function and its WRITE equivalent.
+> Reference is made in sas2r16.pdf to SFF-8485 for those
+> functions. However the most recent version of SFF-8485
+> on the Seagate site is 0.7 dated February 2006, and it does
+> not define those ENHANCED functions.
+>
+> Could you tell us what those ENHANCED versions do?
+>
+> Doug Gilbert
+I have not found the description of ENHANCED frames in any publicly 
+available specification related to SGPIO. I took SAS-2 as the major 
+reference and it says SMP functions 02h (READ) and 82h (WRITE) are 
+obsolete. My understanding is that for the moment the new functions are 
+replacing the deprecated functions, but the frame format and registers 
+set stay the same.
 
-It is about time that VMware emulated SAS rather than SPI for
-virtual storage. Then if something changes, ESX can emulate
-a SAS Broadcast(Change) and then smarter SAS HBA drivers will
-run their discover process and find the changes.
+Artur Wojcik
 
-Doug Gilbert
