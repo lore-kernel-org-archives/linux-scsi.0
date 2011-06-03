@@ -1,45 +1,62 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: BUG: linux-2.6.39 kernel panic issue when hot-plut disk during I/O
-Date: Fri, 3 Jun 2011 15:36:03 +0800
-Message-ID: <32A6DF19414949D7ABD99B20EB14F34E@usish.com.cn>
-References: <20110602234645.6352.38075.stgit@localhost6.localdomain6> <9CA988CDD3E54DBA829117B230B6F986@usish.com.cn> <F766E4F80769BD478052FB6533FA745D19FADEEADF@SC-VEXCH4.marvell.com> <4DE87A83.4090801@intel.com> <F766E4F80769BD478052FB6533FA745D19FADEEB4F@SC-VEXCH4.marvell.com> <BANLkTinv8Wb4S=46=gLF6FTz8Lphu3MmcA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:48180 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752098Ab1FCHgI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 03:36:08 -0400
-In-Reply-To: <BANLkTinv8Wb4S=46=gLF6FTz8Lphu3MmcA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [Trivial PATCH 0/5] treewide: Use angle brackets for system includes
+Date: Fri,  3 Jun 2011 02:28:45 -0700
+Message-ID: <cover.1307092588.git.joe@perches.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>, drbd-dev@lists.linbit.com, dri-devel@lists.freedesktop.org
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org, alsa-devel@alsa-project.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Bart Van Assche' <bvanassche@acm.org>, 'Xiangliang Yu' <yuxiangl@marvell.com>
-Cc: 'Dan Williams' <dan.j.williams@intel.com>, JBottomley@parallels.com, 'Lindar Liu' <lindar_liu@usish.com>, 'Ankit Jain' <jankit@suse.de>, linux-scsi@vger.kernel.org
 
-I can reproduce this panic in 2.6.39, and found 2.6.39rc1 works fine.
+Just neatening.
 
-> 
-> On Fri, Jun 3, 2011 at 8:45 AM, Xiangliang Yu <yuxiangl@marvell.com>
-wrote:
-> > >On 6/2/2011 8:27 PM, Xiangliang Yu wrote:
-> > > > Hi, all
-> > > > I upgrade kernel version to 2.6.39 and find out a kernel panic when
-I
-> test the MVSAS driver: kernel panic if hot-plug disk during I/O. But the
-driver
-> is OK in version 2.6.37
-> >
-> > > If it is a stable reproduction can you bisect it?
-> > What I use is latest kernel version (2.6.39).
-> 
-> Although I'm not sure this will help, it might be worth trying
-> 2.6.39.1. There are some block layer fixes in 2.6.39.1.
-> 
-> Bart.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Joe Perches (5):
+  drbd: Use angle brackets for system includes
+  drm: Use angle brackets for system includes
+  aix94xx: Use angle brackets for system includes
+  ALSA: asihpi: Use angle brackets for system includes
+  staging: msm: Use angle brackets for system includes
 
+ drivers/block/drbd/drbd_int.h                 |    2 +-
+ drivers/block/drbd/drbd_nl.c                  |    4 ++--
+ drivers/gpu/drm/drm_ioctl.c                   |    2 +-
+ drivers/gpu/drm/i915/i915_gem_tiling.c        |    4 ++--
+ drivers/gpu/drm/nouveau/nouveau_drv.h         |   10 +++++-----
+ drivers/gpu/drm/ttm/ttm_agp_backend.c         |    6 +++---
+ drivers/gpu/drm/ttm/ttm_bo.c                  |    6 +++---
+ drivers/gpu/drm/ttm/ttm_bo_manager.c          |    6 +++---
+ drivers/gpu/drm/ttm/ttm_bo_util.c             |    4 ++--
+ drivers/gpu/drm/ttm/ttm_execbuf_util.c        |    6 +++---
+ drivers/gpu/drm/ttm/ttm_lock.c                |    4 ++--
+ drivers/gpu/drm/ttm/ttm_memory.c              |    6 +++---
+ drivers/gpu/drm/ttm/ttm_module.c              |    2 +-
+ drivers/gpu/drm/ttm/ttm_object.c              |    4 ++--
+ drivers/gpu/drm/ttm/ttm_page_alloc.c          |    4 ++--
+ drivers/gpu/drm/ttm/ttm_tt.c                  |    8 ++++----
+ drivers/gpu/drm/vmwgfx/vmwgfx_buffer.c        |    4 ++--
+ drivers/gpu/drm/vmwgfx/vmwgfx_drv.c           |    8 ++++----
+ drivers/gpu/drm/vmwgfx/vmwgfx_drv.h           |   12 ++++++------
+ drivers/gpu/drm/vmwgfx/vmwgfx_execbuf.c       |    4 ++--
+ drivers/gpu/drm/vmwgfx/vmwgfx_fb.c            |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_fifo.c          |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_gmr.c           |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_gmrid_manager.c |    6 +++---
+ drivers/gpu/drm/vmwgfx/vmwgfx_overlay.c       |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_resource.c      |    4 ++--
+ drivers/scsi/aic94xx/aic94xx_dump.c           |    2 +-
+ drivers/staging/msm/ebi2_l2f.c                |    2 +-
+ drivers/staging/msm/ebi2_tmd20.c              |    2 +-
+ drivers/staging/msm/mddihost.h                |    2 +-
+ drivers/staging/msm/mdp_ppp.c                 |    2 +-
+ drivers/staging/msm/mdp_ppp_v20.c             |    2 +-
+ drivers/staging/msm/mdp_ppp_v31.c             |    2 +-
+ drivers/staging/msm/msm_fb.h                  |    2 +-
+ include/drm/ttm/ttm_bo_driver.h               |   12 ++++++------
+ include/drm/ttm/ttm_execbuf_util.h            |    2 +-
+ include/drm/ttm/ttm_lock.h                    |    2 +-
+ include/linux/drbd_tag_magic.h                |    2 +-
+ sound/pci/asihpi/hpidspcd.c                   |    2 +-
+ 39 files changed, 80 insertions(+), 80 deletions(-)
+
+-- 
+1.7.5.rc3.dirty
