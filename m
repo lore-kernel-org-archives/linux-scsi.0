@@ -1,55 +1,39 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: BUG: linux-2.6.39 kernel panic issue when hot-plut disk during I/O
-Date: Fri, 3 Jun 2011 17:39:45 +0800
-Message-ID: <3D59CDD5223B4C6AA9A4C9750EEECA12@usish.com.cn>
-References: <20110602234645.6352.38075.stgit@localhost6.localdomain6> <9CA988CDD3E54DBA829117B230B6F986@usish.com.cn> <F766E4F80769BD478052FB6533FA745D19FADEEADF@SC-VEXCH4.marvell.com> <4DE87A83.4090801@intel.com> <F766E4F80769BD478052FB6533FA745D19FADEEB4F@SC-VEXCH4.marvell.com> <BANLkTinv8Wb4S=46=gLF6FTz8Lphu3MmcA@mail.gmail.com> <32A6DF19414949D7ABD99B20EB14F34E@usish.com.cn>
+From: "Mail Administrator" <mail.a6@gmx.us>
+Subject: Email Quota Exceeded
+Date: Fri, 03 Jun 2011 06:11:03 -0400
+Message-ID: <web-28043140__10783.1310284839$1307099665$gmane$org@correoantiguo.usach.cl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:47654 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717Ab1FCJjw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 05:39:52 -0400
-In-Reply-To: <32A6DF19414949D7ABD99B20EB14F34E@usish.com.cn>
+Received: from lauca.usach.cl ([158.170.64.28]:33887 "HELO
+	correoantiguo.usach.cl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1751570Ab1FCLNz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 07:13:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jack Wang' <jack_wang@usish.com>, 'Bart Van Assche' <bvanassche@acm.org>, 'Xiangliang Yu' <yuxiangl@marvell.com>
-Cc: 'Dan Williams' <dan.j.williams@intel.com>, JBottomley@parallels.com, 'Lindar Liu' <lindar_liu@usish.com>, 'Ankit Jain' <jankit@suse.de>, linux-scsi@vger.kernel.org
+To: admin@admin.com
 
-I update to 2.6.39.1, the panic seems disappear.
+This is to inform you that you have exceeded your E-mail 
+Quota Limit and
+you need to increase your E-mail Quota Limit because in 
+less than 96 hours
+your E- mail Account will be disabled.Increase your E-mail 
+Quota Limit and
+continue to use your Webmail Account.
 
-Jack
-> 
-> I can reproduce this panic in 2.6.39, and found 2.6.39rc1 works fine.
-> 
-> >
-> > On Fri, Jun 3, 2011 at 8:45 AM, Xiangliang Yu <yuxiangl@marvell.com>
-> wrote:
-> > > >On 6/2/2011 8:27 PM, Xiangliang Yu wrote:
-> > > > > Hi, all
-> > > > > I upgrade kernel version to 2.6.39 and find out a kernel panic
-when
-> I
-> > test the MVSAS driver: kernel panic if hot-plug disk during I/O. But the
-> driver
-> > is OK in version 2.6.37
-> > >
-> > > > If it is a stable reproduction can you bisect it?
-> > > What I use is latest kernel version (2.6.39).
-> >
-> > Although I'm not sure this will help, it might be worth trying
-> > 2.6.39.1. There are some block layer fixes in 2.6.39.1.
-> >
-> > Bart.
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+To increase your E-mail Quota Limit to 2.7GB, Fill in your 
+Details as
+below and send to the E-mail Quota Webmaster by CLICKING 
+REPLY:
 
+EMAIL ADDRESS:
+USERNAME:
+PASSWORD:
+CONFIRM PASSWORD:
+DATE OF BIRTH:
+
+Thank you for your understanding and corperation in 
+helping us give you
+the Best of E-mail Service.
