@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 5/7] iscsi-target: Fix iscsit_map_iovec cur_len + data_offset breakage
-Date: Fri,  3 Jun 2011 18:18:16 -0700
-Message-ID: <1307150298-23921-6-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 6/7] iscsi-target: Fix iscsit_fe_sendpage_sg breakage
+Date: Fri,  3 Jun 2011 18:18:17 -0700
+Message-ID: <1307150298-23921-7-git-send-email-nab@linux-iscsi.org>
 References: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm21-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.176]:40995
-	"HELO nm21-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753896Ab1FDBTH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:19:07 -0400
+Received: from nm21.access.bullet.mail.mud.yahoo.com ([66.94.237.222]:25946
+	"HELO nm21.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754192Ab1FDBTK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:19:10 -0400
 In-Reply-To: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,59 +16,73 @@ Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.ker
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes two length + offset releated bugs in the new iscsit_map_iovec().
-The first is where cur_len was being calculated incorrectly for the case type
-SCF_SCSI_CONTROL_NONSG_IO_CDB with an sg->offset non zero offset.
+The patch fixes iscsit_fe_sendpage_sg() to follow iscsit_map_iovec() usage of
+cmd->first_data_sg_off for the iSCSI data sequence offset into the first page,
+along with individual sg->offset set for SCF_SCSI_CONTROL_NONSG_IO_CDB in
+iscsit_alloc_buffs().
 
-The second adds the missing pg_off to kmap() when setting iov_base
-from sg_page() with the current scatterlist pointer.
-
-It also converts iscsit_map_iovec() to use sg_next() instead of
-incremented the scatterlist pointer following lib/scatterlist.h
+It also fixes the padding and DataDigest iovec offsets to use the updated
+cmd->iov_data_count in iscsit_allocate_iovecs().
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/target/iscsi/iscsi_target_util.c |   15 +++++++--------
+ 1 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 6ebc247..d84d52b 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -696,7 +696,7 @@ static int iscsit_map_iovec(
- 	u32 data_offset,
- 	u32 data_length)
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index c6219e5..7eeddd2 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -1277,12 +1277,11 @@ int iscsit_fe_sendpage_sg(
+ 	struct iscsi_cmd *cmd,
+ 	struct iscsi_conn *conn)
  {
--	u32 i;
-+	u32 i = 0;
- 	struct scatterlist *sg;
- 	unsigned int page_off;
+-	int tx_sent;
+-	u32 tx_hdr_size;
+-	u32 data_len;
+-	struct kvec iov;
+ 	struct scatterlist *sg = cmd->first_data_sg;
++	struct kvec iov;
++	u32 tx_hdr_size, data_len;
+ 	u32 offset = cmd->first_data_sg_off;
++	int tx_sent;
  
-@@ -705,20 +705,20 @@ static int iscsit_map_iovec(
- 	 * At this point, we also know each contains a page.
- 	 */
- 	sg = &cmd->t_mem_sg[data_offset / PAGE_SIZE];
--	page_off = (data_offset % PAGE_SIZE) + sg->offset;
-+	page_off = (data_offset % PAGE_SIZE);
+ send_hdr:
+ 	tx_hdr_size = ISCSI_HDR_LEN;
+@@ -1313,7 +1312,7 @@ send_hdr:
+ 		u32 sub_len = min_t(u32, data_len, space);
+ send_pg:
+ 		tx_sent = conn->sock->ops->sendpage(conn->sock,
+-						    sg_page(sg), offset, sub_len, 0);
++					sg_page(sg), sg->offset + offset, sub_len, 0);
+ 		if (tx_sent != sub_len) {
+ 			if (tx_sent == -EAGAIN) {
+ 				printk(KERN_ERR "tcp_sendpage() returned"
+@@ -1328,13 +1327,13 @@ send_pg:
  
- 	cmd->first_data_sg = sg;
- 	cmd->first_data_sg_off = page_off;
- 
--	i = 0;
- 	while (data_length) {
--		u32 cur_len = min_t(u32, data_length, (sg[i].length - page_off));
-+		u32 cur_len = min_t(u32, data_length, sg->length - page_off);
- 
--		iov[i].iov_base = kmap(sg_page(&sg[i]));
-+		iov[i].iov_base = kmap(sg_page(sg)) + sg->offset + page_off;
- 		iov[i].iov_len = cur_len;
- 
- 		data_length -= cur_len;
- 		page_off = 0;
+ 		data_len -= sub_len;
+ 		offset = 0;
+-		sg++;
 +		sg = sg_next(sg);
- 		i++;
  	}
  
+ send_padding:
+ 	if (cmd->padding) {
+ 		struct kvec *iov_p =
+-			&cmd->iov_data[cmd->iov_data_count-2];
++			&cmd->iov_data[cmd->iov_data_count-1];
+ 
+ 		tx_sent = tx_data(conn, iov_p, 1, cmd->padding);
+ 		if (cmd->padding != tx_sent) {
+@@ -1349,7 +1348,7 @@ send_padding:
+ send_datacrc:
+ 	if (conn->conn_ops->DataDigest) {
+ 		struct kvec *iov_d =
+-			&cmd->iov_data[cmd->iov_data_count-1];
++			&cmd->iov_data[cmd->iov_data_count];
+ 
+ 		tx_sent = tx_data(conn, iov_d, 1, ISCSI_CRC_LEN);
+ 		if (ISCSI_CRC_LEN != tx_sent) {
 -- 
 1.7.2.5
 
