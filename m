@@ -1,36 +1,61 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/7] iscsi-target: Fix iscsit_alloc_buffs() breakage
-	with offset_in_page
-Date: Sat, 4 Jun 2011 16:21:38 +0200
-Message-ID: <20110604142138.GB13579@lst.de>
-References: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org> <1307150298-23921-2-git-send-email-nab@linux-iscsi.org>
+From: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+Subject: [PATCH 3/8] scsi/sg: use printk_ratelimited instead of
+ printk_ratelimit
+Date: Sat, 4 Jun 2011 17:36:10 +0200
+Message-ID: <200c12c3d7ae259146549092a2abe211ec23138d.1307199715.git.christian.dietrich@informatik.uni-erlangen.de>
+References: <cover.1307199715.git.christian.dietrich@informatik.uni-erlangen.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59612 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756216Ab1FDOVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 4 Jun 2011 10:21:38 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1307150298-23921-2-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <cover.1307199715.git.christian.dietrich@informatik.uni-erlangen.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Doug Gilbert <dgilbert@interlog.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, trivial@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Jun 03, 2011 at 06:18:12PM -0700, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch changes iscsit_alloc_buffs() w/ SCF_SCSI_CONTROL_NONSG_IO_CDB
-> to take into account the offset_in_page(), and also handles the case
-> where length and PAGE_SIZE are identical, and require nents to be incremented.
-> 
-> It also moves iscsit_allocate_iovecs() for the SCSI payload case until
-> after transport_generic_map_mem_to_cmd() has been called because the
-> iovec allocation depends upon cmd->se_cmd.t_tasks_se_num having been
-> set by the return of transport_map_sg_to_mem() done in RX thread context.
+Since printk_ratelimit() shouldn't be used anymore (see comment in
+include/linux/printk.h), replace it with printk_ratelimited.
 
-I'd rather just remove the SCF_SCSI_CONTROL_NONSG_IO_CDB side of the
-code path, and always allocate one page per S/G list item.  That simplifies
-the code, and fixes the issues with non-aligned kmallocs.
+Signed-off-by: Christian Dietrich <christian.dietrich@informatik.uni-erlangen.de>
+---
+ drivers/scsi/sg.c |   18 ++++++++++--------
+ 1 files changed, 10 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 909ed9e..441a1c5 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -50,6 +50,7 @@ static int sg_version_num = 30534;	/* 2 digits for each component */
+ #include <linux/delay.h>
+ #include <linux/blktrace_api.h>
+ #include <linux/mutex.h>
++#include <linux/ratelimit.h>
+ 
+ #include "scsi.h"
+ #include <scsi/scsi_dbg.h>
+@@ -626,14 +627,15 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	 */
+ 	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
+ 		static char cmd[TASK_COMM_LEN];
+-		if (strcmp(current->comm, cmd) && printk_ratelimit()) {
+-			printk(KERN_WARNING
+-			       "sg_write: data in/out %d/%d bytes for SCSI command 0x%x--"
+-			       "guessing data in;\n   "
+-			       "program %s not setting count and/or reply_len properly\n",
+-			       old_hdr.reply_len - (int)SZ_SG_HEADER,
+-			       input_size, (unsigned int) cmnd[0],
+-			       current->comm);
++		if (strcmp(current->comm, cmd)) {
++			printk_ratelimited(KERN_WARNING
++					   "sg_write: data in/out %d/%d bytes "
++					   "for SCSI command 0x%x-- guessing "
++					   "data in;\n   program %s not setting "
++					   "count and/or reply_len properly\n",
++					   old_hdr.reply_len - (int)SZ_SG_HEADER,
++					   input_size, (unsigned int) cmnd[0],
++					   current->comm);
+ 			strcpy(cmd, current->comm);
+ 		}
+ 	}
+-- 
+1.7.1
