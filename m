@@ -1,42 +1,43 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 7/7] iscsi-target: Fix iscsit_do_crypto_hash_sg() bug
-Date: Fri,  3 Jun 2011 18:18:18 -0700
-Message-ID: <1307150298-23921-8-git-send-email-nab@linux-iscsi.org>
-References: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: merge release_cmd methods
+Date: Fri, 03 Jun 2011 18:28:55 -0700
+Message-ID: <1307150935.8419.5.camel@haakon2.linux-iscsi.org>
+References: <20110601015718.GA28574@infradead.org>
+	 <20110601035657.GA17204@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm3-vm0.access.bullet.mail.mud.yahoo.com ([66.94.237.136]:43986
-	"HELO nm3-vm0.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752740Ab1FDBTN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:19:13 -0400
-In-Reply-To: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:38720 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409Ab1FDBhb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:37:31 -0400
+In-Reply-To: <20110601035657.GA17204@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Tue, 2011-05-31 at 23:56 -0400, Christoph Hellwig wrote:
+> [add the missing lists]
+> 
+> On Tue, May 31, 2011 at 09:57:18PM -0400, Christoph Hellwig wrote:
+> The release_cmd_to_pool and release_cmd_direct methods are always the same.
+> Merge them into a single release_cmd method, and clean up the fallout.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
 
-This patch fixes breakage in iscsit_do_crypto_hash_sg() where
-crypto_hash_update() was not referencing the current sg[] offset 'i'.
+Hey Christoph,
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/iscsi/iscsi_target.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Apologies for the delay here..  I think this looks reasonable to merge
+into for v4.1, and thanks for the nice target core and fabric cleanup
+with TFO->release_cmd().
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index d84d52b..fdeea0f 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1243,7 +1243,7 @@ static u32 iscsit_do_crypto_hash_sg(
- 	while (data_length) {
- 		u32 cur_len = min_t(u32, data_length, (sg[i].length - page_off));
- 
--		crypto_hash_update(hash, sg, cur_len);
-+		crypto_hash_update(hash, &sg[i], cur_len);
- 
- 		data_length -= cur_len;
- 		page_off = 0;
--- 
-1.7.2.5
+Committed as e6ce6902ad2 into lio-core-2.6.git/master with some minor
+transport_generic_free_cmd() parameter build breakage in
+drivers/target/tcm_fc/tfc_cmd.c.
+
+--nab
+
 
