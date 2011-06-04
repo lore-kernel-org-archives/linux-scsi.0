@@ -1,43 +1,63 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: merge release_cmd methods
-Date: Fri, 03 Jun 2011 18:28:55 -0700
-Message-ID: <1307150935.8419.5.camel@haakon2.linux-iscsi.org>
-References: <20110601015718.GA28574@infradead.org>
-	 <20110601035657.GA17204@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 3.0-rc1
+Date: Sat, 04 Jun 2011 10:41:28 +0900
+Message-ID: <1307151688.2771.26.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:38720 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409Ab1FDBhb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:37:31 -0400
-In-Reply-To: <20110601035657.GA17204@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-On Tue, 2011-05-31 at 23:56 -0400, Christoph Hellwig wrote:
-> [add the missing lists]
-> 
-> On Tue, May 31, 2011 at 09:57:18PM -0400, Christoph Hellwig wrote:
-> The release_cmd_to_pool and release_cmd_direct methods are always the same.
-> Merge them into a single release_cmd method, and clean up the fallout.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
+This is a single fix for the queue refcounting oops we were debugging
+just before 3.0-rc1 was released.  Jens is still working on the DEAD
+queue guard bit.
 
-Hey Christoph,
+The patch is available here:
 
-Apologies for the delay here..  I think this looks reasonable to merge
-into for v4.1, and thanks for the nice target core and fabric cleanup
-with TFO->release_cmd().
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-Committed as e6ce6902ad2 into lio-core-2.6.git/master with some minor
-transport_generic_free_cmd() parameter build breakage in
-drivers/target/tcm_fc/tfc_cmd.c.
+The short changelog is:
 
---nab
+James Bottomley (1):
+      Fix oops caused by queue refcounting failure
 
+The diffstat is:
 
+ drivers/scsi/scsi_scan.c  |    2 +-
+ drivers/scsi/scsi_sysfs.c |    1 +
+ 2 files changed, 2 insertions(+), 1 deletions(-)
+
+And the full patch is below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 58584dc..44e8ca3 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -297,7 +297,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 		kfree(sdev);
+ 		goto out;
+ 	}
+-
++	blk_get_queue(sdev->request_queue);
+ 	sdev->request_queue->queuedata = sdev;
+ 	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index e639125..e0bd3f7 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -322,6 +322,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 		kfree(evt);
+ 	}
+ 
++	blk_put_queue(sdev->request_queue);
+ 	/* NULL queue means the device can't be used */
+ 	sdev->request_queue = NULL;
+ 
