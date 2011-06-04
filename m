@@ -1,63 +1,104 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 3.0-rc1
-Date: Sat, 04 Jun 2011 10:41:28 +0900
-Message-ID: <1307151688.2771.26.camel@mulgrave.site>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 39/42] target: Call transport_new_cmd instead of adding
+	to cmd queue
+Date: Fri, 03 Jun 2011 19:33:58 -0700
+Message-ID: <1307154838.8419.55.camel@haakon2.linux-iscsi.org>
+References: <1306523240-15543-1-git-send-email-agrover@redhat.com>
+	 <1306523240-15543-40-git-send-email-agrover@redhat.com>
+	 <1306834367.8193.169.camel@haakon2.linux-iscsi.org>
+	 <20110531101755.GA31447@lst.de>
+	 <1306840694.8193.206.camel@haakon2.linux-iscsi.org>
+	 <20110601040945.GB15488@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51785 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753239Ab1FDCm2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 22:42:28 -0400
+In-Reply-To: <20110601040945.GB15488@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a single fix for the queue refcounting oops we were debugging
-just before 3.0-rc1 was released.  Jens is still working on the DEAD
-queue guard bit.
+On Wed, 2011-06-01 at 06:09 +0200, Christoph Hellwig wrote:
+> On Tue, May 31, 2011 at 04:18:14AM -0700, Nicholas A. Bellinger wrote:
+> > I very much agree with these points, and moving to workqueues for TCM
+> > v4.1 (mainline v3.1) for these reasons makes alot of sense to me.  I
+> > need to get a better idea of how this will actually look, but am eager
+> > to move ahead..
+> 
+> I think the first step would be to move split the se_task execution
+> from the current thread into a workqueue.  That would also help with
+> making the file backend scale much better.  If it wasn't for head of queue
+> semantics this would be almost trivial - just embedd a work_struct in
+> every task and queue it up to the work queue, which handles concurrency.
+> I'm not entirely sure how to handle head of queue semantics correctly,
+> maybe just adding a pointer to pending head of queue tasks to the
+> se_dev and executing those first might work.
+> 
+> 
 
-The patch is available here:
+<nod>.  I need to think about this a bit more wrt to HOQ, but I think
+this sounds like a reasonable first step.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> Btw, I can't fully make sense of the current task execution, so
+> here's a few questions:
+> 
+>  - why do we have separate __transport_execute_tasks and
+>    transport_execute_tasks, or rather why is it safe to use
+>    __transport_execute_tasks transport_processing_thread
+>    without the checks for shutting down?
 
-The short changelog is:
+This is because the current code in transport_processing_thread() cannot
+be shutdown until last fabric port symlink reference has dropped from
+configfs.  We currrently expect all outstanding I/O to be accounted
+during fabric port shutdown for individual struct se_lun <-> struct
+se_device fabric mappings in __transport_clear_lun_from_sessions()
 
-James Bottomley (1):
-      Fix oops caused by queue refcounting failure
+>  - what is the point of the transport_generic_process_write wrapper?
 
-The diffstat is:
+Minus the stubbed WRITE overflow copy stuff, this primarly used by
+tcm_loop to queue up the cmd's tasks for execution via
+transport_execute_tasks() instead of a direct fabric module call..
 
- drivers/scsi/scsi_scan.c  |    2 +-
- drivers/scsi/scsi_sysfs.c |    1 +
- 2 files changed, 2 insertions(+), 1 deletions(-)
+Currently tcm_loop is the only user of this as we know the full WRITE
+payload is available once the struct scsi_cmd as been dispatched via
+->queuecommand().
 
-And the full patch is below.
+>  - why does transport_generic_new_cmd call transport_execute_tasks
+>    for reads, but for writes we leave it to the ->write_pending
+>    method which only calls transport_execute_tasks for some of
+>    the fabrics?
 
-James
+This is because all of the necessary SCSI WRITE payload may have not
+been received to execute tasks to the struct se_device backends.
 
----
+>    Note that with the current code transport_generic_new_cmd
+>    might not get called from the fabric thread and thus stall the
+>    caller - it might make sense switch to calling transport_generic_handle_data
+>    for that case.
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 58584dc..44e8ca3 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -297,7 +297,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 		kfree(sdev);
- 		goto out;
- 	}
--
-+	blk_get_queue(sdev->request_queue);
- 	sdev->request_queue->queuedata = sdev;
- 	scsi_adjust_queue_depth(sdev, 0, sdev->host->cmd_per_lun);
- 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index e639125..e0bd3f7 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -322,6 +322,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 		kfree(evt);
- 	}
- 
-+	blk_put_queue(sdev->request_queue);
- 	/* NULL queue means the device can't be used */
- 	sdev->request_queue = NULL;
- 
+Not exactly..  Andy's patches call transport_generic_new_cmd() directly
+only for the immediate WRITE payload case in iscsit_handle_scsi_cmd() to
+alloc + build + queue via RX thread context, but not for the other non
+immediate WRITEs cases.  The other case currently follows:
+
+    iscsit_handle_scsi_cmd() ->
+         iscsit_sequence_cmd () ->
+              iscsit_execute_cmd() ->
+                 transport_generic_handle_cdb() (queue via processing context)
+
+This was originally done because it's possible for
+transport_generic_handle_cdb() to be called from a different iSCSI
+connection RX context depending upon CmdSN ordering.
+
+So the immediate WRITE case appear to be working as expected now with
+the most recent series, and I am still investigating the other codepaths
+for possible breakage..
+
+--nab
+
+
