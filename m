@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 6/7] iscsi-target: Fix iscsit_fe_sendpage_sg breakage
-Date: Fri,  3 Jun 2011 18:18:17 -0700
-Message-ID: <1307150298-23921-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 7/7] iscsi-target: Fix iscsit_do_crypto_hash_sg() bug
+Date: Fri,  3 Jun 2011 18:18:18 -0700
+Message-ID: <1307150298-23921-8-git-send-email-nab@linux-iscsi.org>
 References: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm21.access.bullet.mail.mud.yahoo.com ([66.94.237.222]:25946
-	"HELO nm21.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754192Ab1FDBTK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:19:10 -0400
+Received: from nm3-vm0.access.bullet.mail.mud.yahoo.com ([66.94.237.136]:43986
+	"HELO nm3-vm0.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752740Ab1FDBTN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Jun 2011 21:19:13 -0400
 In-Reply-To: <1307150298-23921-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,73 +16,27 @@ Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.ker
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-The patch fixes iscsit_fe_sendpage_sg() to follow iscsit_map_iovec() usage of
-cmd->first_data_sg_off for the iSCSI data sequence offset into the first page,
-along with individual sg->offset set for SCF_SCSI_CONTROL_NONSG_IO_CDB in
-iscsit_alloc_buffs().
-
-It also fixes the padding and DataDigest iovec offsets to use the updated
-cmd->iov_data_count in iscsit_allocate_iovecs().
+This patch fixes breakage in iscsit_do_crypto_hash_sg() where
+crypto_hash_update() was not referencing the current sg[] offset 'i'.
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_util.c |   15 +++++++--------
- 1 files changed, 7 insertions(+), 8 deletions(-)
+ drivers/target/iscsi/iscsi_target.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index c6219e5..7eeddd2 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -1277,12 +1277,11 @@ int iscsit_fe_sendpage_sg(
- 	struct iscsi_cmd *cmd,
- 	struct iscsi_conn *conn)
- {
--	int tx_sent;
--	u32 tx_hdr_size;
--	u32 data_len;
--	struct kvec iov;
- 	struct scatterlist *sg = cmd->first_data_sg;
-+	struct kvec iov;
-+	u32 tx_hdr_size, data_len;
- 	u32 offset = cmd->first_data_sg_off;
-+	int tx_sent;
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index d84d52b..fdeea0f 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -1243,7 +1243,7 @@ static u32 iscsit_do_crypto_hash_sg(
+ 	while (data_length) {
+ 		u32 cur_len = min_t(u32, data_length, (sg[i].length - page_off));
  
- send_hdr:
- 	tx_hdr_size = ISCSI_HDR_LEN;
-@@ -1313,7 +1312,7 @@ send_hdr:
- 		u32 sub_len = min_t(u32, data_len, space);
- send_pg:
- 		tx_sent = conn->sock->ops->sendpage(conn->sock,
--						    sg_page(sg), offset, sub_len, 0);
-+					sg_page(sg), sg->offset + offset, sub_len, 0);
- 		if (tx_sent != sub_len) {
- 			if (tx_sent == -EAGAIN) {
- 				printk(KERN_ERR "tcp_sendpage() returned"
-@@ -1328,13 +1327,13 @@ send_pg:
+-		crypto_hash_update(hash, sg, cur_len);
++		crypto_hash_update(hash, &sg[i], cur_len);
  
- 		data_len -= sub_len;
- 		offset = 0;
--		sg++;
-+		sg = sg_next(sg);
- 	}
- 
- send_padding:
- 	if (cmd->padding) {
- 		struct kvec *iov_p =
--			&cmd->iov_data[cmd->iov_data_count-2];
-+			&cmd->iov_data[cmd->iov_data_count-1];
- 
- 		tx_sent = tx_data(conn, iov_p, 1, cmd->padding);
- 		if (cmd->padding != tx_sent) {
-@@ -1349,7 +1348,7 @@ send_padding:
- send_datacrc:
- 	if (conn->conn_ops->DataDigest) {
- 		struct kvec *iov_d =
--			&cmd->iov_data[cmd->iov_data_count-1];
-+			&cmd->iov_data[cmd->iov_data_count];
- 
- 		tx_sent = tx_data(conn, iov_d, 1, ISCSI_CRC_LEN);
- 		if (ISCSI_CRC_LEN != tx_sent) {
+ 		data_length -= cur_len;
+ 		page_off = 0;
 -- 
 1.7.2.5
 
