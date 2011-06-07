@@ -1,56 +1,38 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [GIT] isci: towards the v3.0 merge candidate
-Date: Tue, 7 Jun 2011 15:20:54 +1000
-Message-ID: <20110607152054.910ae0df.sfr@canb.auug.org.au>
-References: <1307408765.11482.40.camel@dwillia2-linux>
+From: Xiangliang Yu <yuxiangl@marvell.com>
+Subject: RE: BUG: linux-2.6.39 kernel panic issue when hot-plut disk during
+ I/O
+Date: Tue, 7 Jun 2011 00:45:30 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D19FADEEF8A@SC-VEXCH4.marvell.com>
+References: <20110602234645.6352.38075.stgit@localhost6.localdomain6>
+ <9CA988CDD3E54DBA829117B230B6F986@usish.com.cn>
+ <F766E4F80769BD478052FB6533FA745D19FADEEADF@SC-VEXCH4.marvell.com>
+ <4DE87A83.4090801@intel.com>
+ <F766E4F80769BD478052FB6533FA745D19FADEEB4F@SC-VEXCH4.marvell.com>
+ <BANLkTinv8Wb4S=46=gLF6FTz8Lphu3MmcA@mail.gmail.com>
+ <32A6DF19414949D7ABD99B20EB14F34E@usish.com.cn>
+ <3D59CDD5223B4C6AA9A4C9750EEECA12@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Tue__7_Jun_2011_15_20_54_+1000_KlsqJnM_IYnxj/_1"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:48604 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750705Ab1FGFVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Jun 2011 01:21:06 -0400
-In-Reply-To: <1307408765.11482.40.camel@dwillia2-linux>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:43555 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751135Ab1FGHpt convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Jun 2011 03:45:49 -0400
+In-Reply-To: <3D59CDD5223B4C6AA9A4C9750EEECA12@usish.com.cn>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, Jeff Garzik <jeff@garzik.org>, Dave Jiang <dave.jiang@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, David Milburn <dmilburn@redhat.com>, hare@suse.de
+To: Jack Wang <jack_wang@usish.com>, 'Bart Van Assche' <bvanassche@acm.org>
+Cc: 'Dan Williams' <dan.j.williams@intel.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>, 'Lindar Liu' <lindar_liu@usish.com>, 'Ankit Jain' <jankit@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Xiangliang Yu <yuxiangl@marvell.com>
 
---Signature=_Tue__7_Jun_2011_15_20_54_+1000_KlsqJnM_IYnxj/_1
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>I update to 2.6.39.1, the panic seems disappear.
+No, it still have.
 
-On Mon, 06 Jun 2011 18:06:05 -0700 Dan Williams <dan.j.williams@intel.com> =
-wrote:
->
-> [ copying sfr to get his opinion on having exposure of this tree in
-> -next for a few weeks before  it hits James' tree.  isci.git#master
-> never rebases so I don't expect conflicts once scsi-misc.git starts
-> carrying the same ]
+To JBottomley@parallels.com:
+Why did you remove MVSAS patches in version 2.6.39.1? 
+(http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=0b15fb1fdfd403726542cb6111bc916b7a9f7fad)
 
-I am happy with that idea as long as James thinks it is a good one.
+Thanks!
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Tue__7_Jun_2011_15_20_54_+1000_KlsqJnM_IYnxj/_1
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJN7bU2AAoJEDMEi1NhKgbsxW0H/Rajmyq9NmnkWOcw3naOHPGU
-J1rjTfjzcL1LA+I1h5pGoWb0mMVYM06UdA43q7zcNBDoNvJ9NH8tr7vaEeuoyISX
-Y6417OAkGknvuldyrOVKzYX2oZ2I6SDoB5CuvNLAIecZ1MFd3bfrp8UMzoBeWw4B
-yepKO+SX1YLbdsE8Y9HQcTZ+yYk2oBt2jzG+920lq2v78xSyJrF+LvJz0WYtaljZ
-5lOuVr3CyjFEKMR3viXodXqAo0NV6xRe8GYXlvZSAwukLEMgEa8D+I7d08ixq2EY
-kUEdj1Ix+G4F/iuMCr8xxdzueRa75PX9b1lx8HFrj/1SuhcN1sFCdAvb8HKmRr8=
-=KalI
------END PGP SIGNATURE-----
-
---Signature=_Tue__7_Jun_2011_15_20_54_+1000_KlsqJnM_IYnxj/_1--
