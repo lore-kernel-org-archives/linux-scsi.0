@@ -1,49 +1,61 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 35682] killing requests for dead queue
-Date: Thu, 9 Jun 2011 17:12:38 GMT
-Message-ID: <201106091712.p59HCcok003916@demeter2.kernel.org>
-References: <bug-35682-11613@https.bugzilla.kernel.org/>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] aha152x: add missing ISA PNP IDs
+Date: Thu, 9 Jun 2011 21:21:23 +0200
+Message-ID: <201106092121.27196.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:57895 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753038Ab1FIRMj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2011 13:12:39 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p59HCcnI003917
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2011 17:12:38 GMT
-In-Reply-To: <bug-35682-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Juergen E. Fischer" <fischer@norbit.de>
+Cc: linux-scsi@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=35682
+Add ISA PNP IDs of the following cards to aha152x driver:
+AVA-1502
+AVA-1505
+AHA-1510
+AVA-1515
+AHA-1520
+AHA-1522
+AHA-1530
+AHA-1532
+AIC-6360
+(list from SCSI.INF file)
 
+This makes my AHA-1530P card (has ADP3015 ID) work automatically.
 
-Michael Tokarev <mjt@tls.msk.ru> changed:
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |mjt@tls.msk.ru
+--- linux-2.6.39-rc2-orig/drivers/scsi/aha152x.c	2011-04-06 03:30:43.000000000 +0200
++++ linux-2.6.39-rc2/drivers/scsi/aha152x.c	2011-06-09 21:11:47.000000000 +0200
+@@ -422,10 +422,19 @@ MODULE_PARM_DESC(aha152x1, "parameters f
+ 
+ #ifdef __ISAPNP__
+ static struct isapnp_device_id id_table[] __devinitdata = {
+-	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,
+-		ISAPNP_VENDOR('A','D','P'), ISAPNP_FUNCTION(0x1505), 0 },
+-	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,
+-		ISAPNP_VENDOR('A','D','P'), ISAPNP_FUNCTION(0x1530), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1502), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1505), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1510), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1515), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1520), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x2015), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1522), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x2215), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1530), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x3015), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1532), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x3215), 0 },
++	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x6360), 0 },
+ 	{ ISAPNP_DEVICE_SINGLE_END, }
+ };
+ MODULE_DEVICE_TABLE(isapnp, id_table);
 
-
-
-
---- Comment #1 from Michael Tokarev <mjt@tls.msk.ru>  2011-06-09 17:12:32 ---
-The same happens to me with 2.6.39.1 - when I boot with an USB stick inserted
-it hangs with the same message, but it boots fine w/o the stick attached.  I
-can hotplug it later and it works fine.  What's "interesting" is that I
-discovered the issue while trying to boot a new kernel from this USB stick, so
-in that case it obviously _is_ inserted during boot...
-
-There's one more case which may be related -- see e.g.
-https://lkml.org/lkml/2011/6/3/33 -- that's how 2.6.38.8 were hanging here too,
-but it appears that these QUEUE_FLAG_DEAD changes has been incorporated into
-.39.1 already.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Ondrej Zary
