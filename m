@@ -1,56 +1,53 @@
-From: Ankit Jain <jankit@suse.de>
-Subject: [PATCH v2][scsi] Blacklist Traxdata CDR4120 and IOMEGA Zip drive
- to avoid lockups
-Date: Thu, 09 Jun 2011 11:04:24 +0530
-Message-ID: <4DF05B60.2060206@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 37042] New: linux 3.0.0-rc2 libata-eh.c:4018
+ ata_scsi_port_error_handler+0x80/0x53d on s2disk
+Date: Thu, 9 Jun 2011 08:22:41 GMT
+Message-ID: <bug-37042-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:59503 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750868Ab1FIFct (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Jun 2011 01:32:49 -0400
+Received: from demeter1.kernel.org ([140.211.167.39]:49384 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752879Ab1FIIWm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Jun 2011 04:22:42 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p598MfKM017783
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Jun 2011 08:22:41 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, werner@novell.com, Hannes Reinecke <hare@suse.de>
 
-From: Werner Fink <werner@novell.com>
-Date: Thu, 9 Jun 2011 10:54:24 +0530
-Subject: [PATCH] [scsi] Blacklist Traxdata CDR4120 and IOMEGA Zip drive to avoid lock ups.
+https://bugzilla.kernel.org/show_bug.cgi?id=37042
 
-This patch resulted from the discussion at
-https://bugzilla.novell.com/show_bug.cgi?id=679277,
-https://bugzilla.novell.com/show_bug.cgi?id=681840 .
+           Summary: linux 3.0.0-rc2 libata-eh.c:4018
+                    ata_scsi_port_error_handler+0x80/0x53d on s2disk
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 3.0.0-rc2
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: alex.vizor@gmail.com
+        Regression: Yes
 
-Signed-off-by: Werner Fink <werner@novell.com>
-Signed-off-by: Ankit Jain <jankit@suse.de>
----
- drivers/scsi/scsi_devinfo.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 82e9e5c..cf8dfab 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -197,6 +197,7 @@ static struct {
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
- 	{"iomega", "jaz 1GB", "J.86", BLIST_NOTQ | BLIST_NOLUN},
-+	{"IOMEGA", "ZIP", NULL, BLIST_NOTQ | BLIST_NOLUN},
- 	{"IOMEGA", "Io20S         *F", NULL, BLIST_KEY},
- 	{"INSITE", "Floptical   F*8I", NULL, BLIST_KEY},
- 	{"INSITE", "I325VM", NULL, BLIST_KEY},
-@@ -243,6 +244,7 @@ static struct {
- 	{"Tornado-", "F4", "*", BLIST_NOREPORTLUN},
- 	{"TOSHIBA", "CDROM", NULL, BLIST_ISROM},
- 	{"TOSHIBA", "CD-ROM", NULL, BLIST_ISROM},
-+	{"Traxdata", "CDR4120", NULL, BLIST_NOLUN},	/* locks up */
- 	{"USB2.0", "SMARTMEDIA/XD", NULL, BLIST_FORCELUN | BLIST_INQUIRY_36},
- 	{"WangDAT", "Model 2600", "01.7", BLIST_SELECT_NO_ATN},
- 	{"WangDAT", "Model 3200", "02.2", BLIST_SELECT_NO_ATN},
+Created an attachment (id=61332)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=61332)
+kernel.log
+
+Hi,
+
+I'm using linux kernel 3.0.0-rc2 from git and seems s2disk functionality is
+broken, s2ram also doesn't work, I suspect that bith these regressions have
+same roots. And yes this is a regression because it worked OK in linux 2.6.39
 
 -- 
-Ankit Jain
-SUSE Labs
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
