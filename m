@@ -1,53 +1,36 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH] Fix spelling - change hsot into host
-Date: Sun, 12 Jun 2011 13:36:20 +0200
-Message-ID: <201106121336.21017.bvanassche@acm.org>
+From: WEBMAIL MANAGEMENT SERVICE <arinal@unimap.edu.my>
+Subject: Dear Webmail Subscriber
+Date: Sun, 12 Jun 2011 22:39:06 +0800 (MYT)
+Message-ID: <1463645576.56704.1307889546696.JavaMail.root__49668.4749298312$1307892108$gmane$org@mailbox2.unimap.edu.my>
+Reply-To: WEBMAIL MANAGEMENT SERVICE <webmailmanagementservice@yahoo.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jester.euphonynet.be ([212.87.96.13]:60946 "EHLO
-	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753227Ab1FLMHp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jun 2011 08:07:45 -0400
+Received: from email1.unimap.edu.my ([58.27.57.25]:50438 "EHLO
+	email.unimap.edu.my" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751608Ab1FLPUj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Jun 2011 11:20:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/aic7xxx_old/aic7xxx.seq |    2 +-
- drivers/scsi/scsi_error.c            |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Dear Webmail Subscribers, 
 
-diff --git a/drivers/scsi/aic7xxx_old/aic7xxx.seq b/drivers/scsi/aic7xxx_old/aic7xxx.seq
-index 823ff28..dc3bb81 100644
---- a/drivers/scsi/aic7xxx_old/aic7xxx.seq
-+++ b/drivers/scsi/aic7xxx_old/aic7xxx.seq
-@@ -693,7 +693,7 @@ p_status:
-  * it's own message.
-  * 
-  * If MSG_OUT is == HOST_MSG, also interrupt the host and take a message.
-- * This is done to allow the hsot to send messages outside of an identify
-+ * This is done to allow the host to send messages outside of an identify
-  * sequence while protecting the seqencer from testing the MK_MESSAGE bit
-  * on an SCB that might not be for the current nexus. (For example, a
-  * BDR message in response to a bad reselection would leave us pointed to
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a4b9cdb..87521b1 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -510,7 +510,7 @@ static void scsi_eh_done(struct scsi_cmnd *scmd)
- 
- /**
-  * scsi_try_host_reset - ask host adapter to reset itself
-- * @scmd:	SCSI cmd to send hsot reset.
-+ * @scmd:	SCSI cmd to send host reset.
-  */
- static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
+
+We are contacting you to remind you that our Account Review Team identified some unusual activity in your Webmail Account. As a result,access to your account has been limited in accordance with the  Webmail Account Online User Agreement.  Your account access will remain limited until this issue has been resolved. You are therefore required to provide the information below: E-mail
+
+
+User:_________
+
+Password:________
+
+Date of Birth:_________
+
+
+Important*Please provide all these information completely and correctly otherwise due to security reasons we may have to close your  Webmail Account temporarily.We thank you for your prompt attention to this matter.Please understand that this is a security measure intended to help protect you and your  Webmail Account. We apologise for any inconvenience
+
 -- 
-1.7.3.4
+This message has been scanned for viruses and
+dangerous content by MailScanner, and is
+believed to be clean.
 
