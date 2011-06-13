@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 00/12] bfa: Update bfa driver to version 3.0.2.0
-Date: Mon, 13 Jun 2011 15:39:24 -0700
-Message-ID: <1308004764-13616-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 10/12] bfa: Driver initialization and model description fix
+Date: Mon, 13 Jun 2011 15:54:31 -0700
+Message-ID: <1308005671-14681-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59127 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59151 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753922Ab1FMWyv (ORCPT
+	by vger.kernel.org with ESMTP id S1751959Ab1FMWzN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:54:51 -0400
+	Mon, 13 Jun 2011 18:55:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -17,78 +17,310 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Hi James,
+Change details:
+	- Moved FCS initialization, which internally does the im_port creation
+	  as well as the scsi_host creation before bfa_init.
+	- Once the bfa_init is complete & successful:
+	  - Reset the FCS base port cfg params such as pwwn/nwwn and setup fc host
+	    params - based on the values learned during the ioc getattr request.
+	- Change needed to support BSG commands even on bfa init failure.
+	- Model description fixes for Brocade adapters.
 
-	The following patch set adds support for Brocade-1860 Fabric Adapter and
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_fcs.c   |   32 ++++++++++++++++++++++++---
+ drivers/scsi/bfa/bfa_fcs.h   |    2 +
+ drivers/scsi/bfa/bfa_ioc.h   |    4 +-
+ drivers/scsi/bfa/bfad.c      |   36 +++++++++++++++++++++++-------
+ drivers/scsi/bfa/bfad_attr.c |   48 ++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/bfa/bfad_im.c   |   19 ++--------------
+ 6 files changed, 101 insertions(+), 40 deletions(-)
 
-	updates the Brocade BFA driver to v3.0.2.0.
-
-	I have compiled & tested the code against your scsi-misc and
-
-	linux-next (3.0.0-rc2-next-20110610-0.7-default).
-
-Thanks,
-Krishna C Gudipati.
-
-Krishna Gudipati (12):
-  bfa: Introduced generic address len pair to represent DMA memory
-    chunk.
-  bfa: Introduce IOC event notification mechanism.
-  bfa: Add pbc port disable check and fix LPS message name
-  bfa: Brocade-1860 Fabric Adapter Hardware Enablement
-  bfa: Changes to support vport disable and enable operations.
-  bfa: IOC and pll init changes for Brocade-1860 Fabric Adapter.
-  bfa: Brocade-1860 Fabric Adapter 16Gbs support and flash controller fixes.
-  bfa: FC credit recovery and misc bug fixes.
-  bfa: Enhancement for fcpim and IO tag handling.
-  bfa: Driver initialization and model description fix
-  bfa: Add BSG interface to support ELS, CT and vendor commands.
-  bfa: Update the driver version to 3.0.2.0
-
- drivers/scsi/bfa/Makefile        |    2 +-
- drivers/scsi/bfa/bfa.h           |   29 +-
- drivers/scsi/bfa/bfa_core.c      |  244 ++++++++-----
- drivers/scsi/bfa/bfa_defs.h      |   34 ++-
- drivers/scsi/bfa/bfa_defs_svc.h  |   11 +-
- drivers/scsi/bfa/bfa_fc.h        |   11 +-
- drivers/scsi/bfa/bfa_fcbuild.c   |   18 +-
- drivers/scsi/bfa/bfa_fcbuild.h   |   12 +-
- drivers/scsi/bfa/bfa_fcpim.c     |  283 ++++++++++----
- drivers/scsi/bfa/bfa_fcpim.h     |   69 +++-
- drivers/scsi/bfa/bfa_fcs.c       |  135 ++++++-
- drivers/scsi/bfa/bfa_fcs.h       |    9 +
- drivers/scsi/bfa/bfa_fcs_lport.c |  155 ++++++++-
- drivers/scsi/bfa/bfa_fcs_rport.c |   38 +--
- drivers/scsi/bfa/bfa_hw_cb.c     |   84 +++--
- drivers/scsi/bfa/bfa_hw_ct.c     |   89 ++---
- drivers/scsi/bfa/bfa_ioc.c       |  387 +++++++++++--------
- drivers/scsi/bfa/bfa_ioc.h       |  173 +++++----
- drivers/scsi/bfa/bfa_ioc_cb.c    |   56 ++--
- drivers/scsi/bfa/bfa_ioc_ct.c    |  473 +++++++++++++++++++----
- drivers/scsi/bfa/bfa_modules.h   |    7 +-
- drivers/scsi/bfa/bfa_port.c      |   62 ++-
- drivers/scsi/bfa/bfa_port.h      |    5 +-
- drivers/scsi/bfa/bfa_svc.c       |  121 ++++---
- drivers/scsi/bfa/bfa_svc.h       |    9 +-
- drivers/scsi/bfa/bfad.c          |  119 ++++---
- drivers/scsi/bfa/bfad_attr.c     |   53 +++-
- drivers/scsi/bfa/bfad_bsg.c      |  768 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfad_bsg.h      |  135 +++++++
- drivers/scsi/bfa/bfad_drv.h      |    6 +-
- drivers/scsi/bfa/bfad_im.c       |   25 +-
- drivers/scsi/bfa/bfad_im.h       |    3 +
- drivers/scsi/bfa/bfi.h           |  103 ++++--
- drivers/scsi/bfa/bfi_cbreg.h     |  305 ---------------
- drivers/scsi/bfa/bfi_ctreg.h     |  636 -------------------------------
- drivers/scsi/bfa/bfi_ms.h        |   98 ++++--
- drivers/scsi/bfa/bfi_reg.h       |  439 ++++++++++++++++++++++
- 37 files changed, 3343 insertions(+), 1863 deletions(-)
- create mode 100644 drivers/scsi/bfa/bfad_bsg.c
- create mode 100644 drivers/scsi/bfa/bfad_bsg.h
- delete mode 100644 drivers/scsi/bfa/bfi_cbreg.h
- delete mode 100644 drivers/scsi/bfa/bfi_ctreg.h
- create mode 100644 drivers/scsi/bfa/bfi_reg.h
-
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 6c8a27e..b9f9e15 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -92,25 +92,49 @@ bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa, struct bfad_s *bfad,
+ void
+ bfa_fcs_init(struct bfa_fcs_s *fcs)
+ {
+-	int		i, npbc_vports;
++	int	i;
+ 	struct bfa_fcs_mod_s  *mod;
+-	struct bfi_pbc_vport_s pbc_vports[BFI_PBC_MAX_VPORTS];
+ 
+ 	for (i = 0; i < sizeof(fcs_modules) / sizeof(fcs_modules[0]); i++) {
+ 		mod = &fcs_modules[i];
+ 		if (mod->modinit)
+ 			mod->modinit(fcs);
+ 	}
++}
++
++/*
++ * FCS update cfg - reset the pwwn/nwwn of fabric base logical port
++ * with values learned during bfa_init firmware GETATTR REQ.
++ */
++void
++bfa_fcs_update_cfg(struct bfa_fcs_s *fcs)
++{
++	struct bfa_fcs_fabric_s *fabric = &fcs->fabric;
++	struct bfa_lport_cfg_s *port_cfg = &fabric->bport.port_cfg;
++	struct bfa_ioc_s *ioc = &fabric->fcs->bfa->ioc;
++
++	port_cfg->nwwn = ioc->attr->nwwn;
++	port_cfg->pwwn = ioc->attr->pwwn;
++}
++
++/*
++ * fcs pbc vport initialization
++ */
++void
++bfa_fcs_pbc_vport_init(struct bfa_fcs_s *fcs)
++{
++	int i, npbc_vports;
++	struct bfi_pbc_vport_s pbc_vports[BFI_PBC_MAX_VPORTS];
++
+ 	/* Initialize pbc vports */
+ 	if (!fcs->min_cfg) {
+ 		npbc_vports =
+-		    bfa_iocfc_get_pbc_vports(fcs->bfa, pbc_vports);
++			bfa_iocfc_get_pbc_vports(fcs->bfa, pbc_vports);
+ 		for (i = 0; i < npbc_vports; i++)
+ 			bfa_fcb_pbc_vport_create(fcs->bfa->bfad, pbc_vports[i]);
+ 	}
+ }
+ 
+-
+ /*
+  *	brief
+  *		FCS driver details initialization.
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index 4cfd2e9..c418c31 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -721,6 +721,8 @@ void bfa_fcs_attach(struct bfa_fcs_s *fcs, struct bfa_s *bfa,
+ 		    struct bfad_s *bfad,
+ 		    bfa_boolean_t min_cfg);
+ void bfa_fcs_init(struct bfa_fcs_s *fcs);
++void bfa_fcs_pbc_vport_init(struct bfa_fcs_s *fcs);
++void bfa_fcs_update_cfg(struct bfa_fcs_s *fcs);
+ void bfa_fcs_driver_info_init(struct bfa_fcs_s *fcs,
+ 			      struct bfa_fcs_driver_info_s *driver_info);
+ void bfa_fcs_exit(struct bfa_fcs_s *fcs);
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 527e613..c717b20 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -287,8 +287,8 @@ struct bfa_ioc_hwif_s {
+ #define bfa_ioc_portid(__ioc)		((__ioc)->port_id)
+ #define bfa_ioc_asic_gen(__ioc)		((__ioc)->asic_gen)
+ #define bfa_ioc_is_cna(__ioc)	\
+-	((bfa_ioc_get_type(ioc) == BFA_IOC_TYPE_FCoE) ||	\
+-	 (bfa_ioc_get_type(ioc) == BFA_IOC_TYPE_LL))
++	((bfa_ioc_get_type(__ioc) == BFA_IOC_TYPE_FCoE) ||	\
++	 (bfa_ioc_get_type(__ioc) == BFA_IOC_TYPE_LL))
+ #define bfa_ioc_fetch_stats(__ioc, __stats) \
+ 		(((__stats)->drv_stats) = (__ioc)->stats)
+ #define bfa_ioc_clr_stats(__ioc)	\
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index cdf84f6..0db583c 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -915,12 +915,29 @@ bfad_drv_init(struct bfad_s *bfad)
+ 	bfa_fcs_attach(&bfad->bfa_fcs, &bfad->bfa, bfad, BFA_FALSE);
+ 	bfad->bfa_fcs.fdmi_enabled = fdmi_enable;
+ 	bfad->bfa_fcs.bbscn_enabled = fc_credit_recovery;
++	bfa_fcs_init(&bfad->bfa_fcs);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 	bfad->bfad_flags |= BFAD_DRV_INIT_DONE;
+ 
++	/* configure base port */
++	rc = bfad_cfg_pport(bfad, BFA_LPORT_ROLE_FCP_IM);
++	if (rc != BFA_STATUS_OK)
++		goto out_cfg_pport_fail;
++
+ 	return BFA_STATUS_OK;
+ 
++out_cfg_pport_fail:
++	/* fcs exit - on cfg pport failure */
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	init_completion(&bfad->comp);
++	bfad->pport.flags |= BFAD_PORT_DELETE;
++	bfa_fcs_exit(&bfad->bfa_fcs);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	wait_for_completion(&bfad->comp);
++	/* bfa detach - free hal memory */
++	bfa_detach(&bfad->bfa);
++	bfad_hal_mem_release(bfad);
+ out_hal_mem_alloc_failure:
+ 	return BFA_STATUS_FAILED;
+ }
+@@ -952,6 +969,7 @@ bfad_drv_start(struct bfad_s *bfad)
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	bfa_iocfc_start(&bfad->bfa);
++	bfa_fcs_pbc_vport_init(&bfad->bfa_fcs);
+ 	bfa_fcs_fabric_modstart(&bfad->bfa_fcs);
+ 	bfad->bfad_flags |= BFAD_HAL_START_DONE;
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+@@ -1056,19 +1074,19 @@ bfad_start_ops(struct bfad_s *bfad) {
+ 	strncpy(driver_info.os_device_name, bfad->pci_name,
+ 		sizeof(driver_info.os_device_name - 1));
+ 
+-	/* FCS INIT */
++	/* FCS driver info init */
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	bfa_fcs_driver_info_init(&bfad->bfa_fcs, &driver_info);
+-	bfa_fcs_init(&bfad->bfa_fcs);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+-	retval = bfad_cfg_pport(bfad, BFA_LPORT_ROLE_FCP_IM);
+-	if (retval != BFA_STATUS_OK) {
+-		if (bfa_sm_cmp_state(bfad, bfad_sm_initializing))
+-			bfa_sm_set_state(bfad, bfad_sm_failed);
+-		bfad_stop(bfad);
+-		return BFA_STATUS_FAILED;
+-	}
++	/*
++	 * FCS update cfg - reset the pwwn/nwwn of fabric base logical port
++	 * with values learned during bfa_init firmware GETATTR REQ.
++	 */
++	bfa_fcs_update_cfg(&bfad->bfa_fcs);
++
++	/* Setup fc host fixed attribute if the lk supports */
++	bfad_fc_host_init(bfad->pport.im_port);
+ 
+ 	/* BFAD level FC4 IM specific resource allocation */
+ 	retval = bfad_im_probe(bfad);
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 3127df2..97391cc 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -677,8 +677,10 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 	struct bfad_s *bfad = im_port->bfad;
+ 	char model[BFA_ADAPTER_MODEL_NAME_LEN];
+ 	char model_descr[BFA_ADAPTER_MODEL_DESCR_LEN];
++	int nports = 0;
+ 
+ 	bfa_get_adapter_model(&bfad->bfa, model);
++	nports = bfa_get_nports(&bfad->bfa);
+ 	if (!strcmp(model, "Brocade-425"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+ 			"Brocade 4Gbps PCIe dual port FC HBA");
+@@ -687,10 +689,10 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 			"Brocade 8Gbps PCIe dual port FC HBA");
+ 	else if (!strcmp(model, "Brocade-42B"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"HP 4Gbps PCIe dual port FC HBA");
++			"Brocade 4Gbps PCIe dual port FC HBA for HP");
+ 	else if (!strcmp(model, "Brocade-82B"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"HP 8Gbps PCIe dual port FC HBA");
++			"Brocade 8Gbps PCIe dual port FC HBA for HP");
+ 	else if (!strcmp(model, "Brocade-1010"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+ 			"Brocade 10Gbps single port CNA");
+@@ -699,7 +701,7 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 			"Brocade 10Gbps dual port CNA");
+ 	else if (!strcmp(model, "Brocade-1007"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 10Gbps CNA");
++			"Brocade 10Gbps CNA for IBM Blade Center");
+ 	else if (!strcmp(model, "Brocade-415"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+ 			"Brocade 4Gbps PCIe single port FC HBA");
+@@ -708,17 +710,45 @@ bfad_im_model_desc_show(struct device *dev, struct device_attribute *attr,
+ 			"Brocade 8Gbps PCIe single port FC HBA");
+ 	else if (!strcmp(model, "Brocade-41B"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"HP 4Gbps PCIe single port FC HBA");
++			"Brocade 4Gbps PCIe single port FC HBA for HP");
+ 	else if (!strcmp(model, "Brocade-81B"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"HP 8Gbps PCIe single port FC HBA");
++			"Brocade 8Gbps PCIe single port FC HBA for HP");
+ 	else if (!strcmp(model, "Brocade-804"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"HP Bladesystem C-class 8Gbps FC HBA");
+-	else if (!strcmp(model, "Brocade-902"))
++			"Brocade 8Gbps FC HBA for HP Bladesystem C-class");
++	else if (!strcmp(model, "Brocade-902") ||
++		 !strcmp(model, "Brocade-1741"))
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+-			"Brocade 10Gbps CNA");
+-	else
++			"Brocade 10Gbps CNA for Dell M-Series Blade Servers");
++	else if (strstr(model, "Brocade-1560")) {
++		if (nports == 1)
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 16Gbps PCIe single port FC HBA");
++		else
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 16Gbps PCIe dual port FC HBA");
++	} else if (strstr(model, "Brocade-1710")) {
++		if (nports == 1)
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 10Gbps single port CNA");
++		else
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 10Gbps dual port CNA");
++	} else if (strstr(model, "Brocade-1860")) {
++		if (nports == 1 && bfa_ioc_is_cna(&bfad->bfa.ioc))
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 10Gbps single port CNA");
++		else if (nports == 1 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 16Gbps PCIe single port FC HBA");
++		else if (nports == 2 && bfa_ioc_is_cna(&bfad->bfa.ioc))
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 10Gbps dual port CNA");
++		else if (nports == 2 && !bfa_ioc_is_cna(&bfad->bfa.ioc))
++			snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
++				"Brocade 16Gbps PCIe dual port FC HBA");
++	} else
+ 		snprintf(model_descr, BFA_ADAPTER_MODEL_DESCR_LEN,
+ 			"Invalid Model");
+ 
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 451ff55..06cd113 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -175,21 +175,11 @@ bfad_im_info(struct Scsi_Host *shost)
+ 	struct bfad_im_port_s *im_port =
+ 			(struct bfad_im_port_s *) shost->hostdata[0];
+ 	struct bfad_s *bfad = im_port->bfad;
+-	struct bfa_s *bfa = &bfad->bfa;
+-	struct bfa_ioc_s *ioc = &bfa->ioc;
+-	char model[BFA_ADAPTER_MODEL_NAME_LEN];
+-
+-	bfa_get_adapter_model(bfa, model);
+ 
+ 	memset(bfa_buf, 0, sizeof(bfa_buf));
+-	if (bfa_ioc_is_cna(ioc))
+-		snprintf(bfa_buf, sizeof(bfa_buf),
+-		"Brocade FCOE Adapter, " "model: %s hwpath: %s driver: %s",
+-		 model, bfad->pci_name, BFAD_DRIVER_VERSION);
+-	else
+-		snprintf(bfa_buf, sizeof(bfa_buf),
+-		"Brocade FC Adapter, " "model: %s hwpath: %s driver: %s",
+-		model, bfad->pci_name, BFAD_DRIVER_VERSION);
++	snprintf(bfa_buf, sizeof(bfa_buf),
++		"Brocade FC/FCOE Adapter, " "hwpath: %s driver: %s",
++		bfad->pci_name, BFAD_DRIVER_VERSION);
+ 
+ 	return bfa_buf;
+ }
+@@ -572,9 +562,6 @@ bfad_im_scsi_host_alloc(struct bfad_s *bfad, struct bfad_im_port_s *im_port,
+ 		goto out_fc_rel;
+ 	}
+ 
+-	/* setup host fixed attribute if the lk supports */
+-	bfad_fc_host_init(im_port);
+-
+ 	return 0;
+ 
+ out_fc_rel:
 -- 
 1.7.3.rc1
 
