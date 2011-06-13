@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 08/12] bfa: FC credit recovery and misc bug fixes.
-Date: Mon, 13 Jun 2011 15:53:04 -0700
-Message-ID: <1308005584-12630-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 09/12] bfa: Enhancement for fcpim and IO tag handling.
+Date: Mon, 13 Jun 2011 15:53:58 -0700
+Message-ID: <1308005638-13771-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59089 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59106 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752543Ab1FMWx7 (ORCPT
+	by vger.kernel.org with ESMTP id S1752193Ab1FMWyb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:53:59 -0400
+	Mon, 13 Jun 2011 18:54:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,693 +18,794 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Introduce FC credit recovery.
-	- Added module parameter to enable/disable credit recovery.
-Bug Fixes:
-	- Removed check for ignoring plogi from initiator in switched fabric mode.
-	- The ABTS for PLOGI is going out few millisecs earlier due to FW timer
-	  calibration (around 300 miilisecs earlier). So there is a window if an accept
-	  comes during this time HBA would have initiated an ABORT.
-	- Added 1 to FC_ELS_TOV for compensating for FW timer.
+	- Enhancements to FCPIM module.
+	- Introduced IO tag management to allocate/release IOs to FCPIM module
+	  from a free IOtag pool.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_defs_svc.h  |    6 ++++
- drivers/scsi/bfa/bfa_fc.h        |    2 +-
- drivers/scsi/bfa/bfa_fcbuild.c   |   18 ++++++-----
- drivers/scsi/bfa/bfa_fcbuild.h   |    6 ++--
- drivers/scsi/bfa/bfa_fcs.c       |   60 ++++++++++++++++++++++++++++++++++----
- drivers/scsi/bfa/bfa_fcs.h       |    5 +++
- drivers/scsi/bfa/bfa_fcs_lport.c |    8 +++--
- drivers/scsi/bfa/bfa_fcs_rport.c |   38 +++---------------------
- drivers/scsi/bfa/bfa_svc.c       |   25 ++++++++++++++-
- drivers/scsi/bfa/bfa_svc.h       |    8 ++++-
- drivers/scsi/bfa/bfad.c          |    5 +++
- drivers/scsi/bfa/bfad_drv.h      |    1 +
- drivers/scsi/bfa/bfi_ms.h        |    7 +++-
- 13 files changed, 129 insertions(+), 60 deletions(-)
+ drivers/scsi/bfa/bfa_core.c     |    9 +-
+ drivers/scsi/bfa/bfa_defs_svc.h |    3 +-
+ drivers/scsi/bfa/bfa_fcpim.c    |  267 +++++++++++++++++++++++++++++----------
+ drivers/scsi/bfa/bfa_fcpim.h    |   69 ++++++++---
+ drivers/scsi/bfa/bfa_modules.h  |    5 +-
+ drivers/scsi/bfa/bfi_ms.h       |    3 +
+ 6 files changed, 263 insertions(+), 93 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 0dbdd2d..6da615f 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -31,7 +31,7 @@ static struct bfa_module_s *hal_mods[] = {
+ 	&hal_mod_lps,
+ 	&hal_mod_uf,
+ 	&hal_mod_rport,
+-	&hal_mod_fcpim,
++	&hal_mod_fcp,
+ 	NULL
+ };
+ 
+@@ -51,7 +51,7 @@ static bfa_isr_func_t  bfa_isrs[BFI_MC_MAX] = {
+ 	bfa_fcxp_isr,		/* BFI_MC_FCXP */
+ 	bfa_lps_isr,		/* BFI_MC_LPS */
+ 	bfa_rport_isr,		/* BFI_MC_RPORT */
+-	bfa_itnim_isr,		/* BFI_MC_ITN */
++	bfa_itn_isr,		/* BFI_MC_ITN */
+ 	bfa_isr_unhandled,	/* BFI_MC_IOIM_READ */
+ 	bfa_isr_unhandled,	/* BFI_MC_IOIM_WRITE */
+ 	bfa_isr_unhandled,	/* BFI_MC_IOIM_IO */
+@@ -448,6 +448,8 @@ bfa_iocfc_send_cfg(void *bfa_arg)
+ 	 */
+ 	cfg_info->endian_sig = BFI_IOC_ENDIAN_SIG;
+ 	cfg_info->num_cqs = cfg->fwcfg.num_cqs;
++	cfg_info->num_ioim_reqs = cpu_to_be16(cfg->fwcfg.num_ioim_reqs);
++	cfg_info->num_fwtio_reqs = cpu_to_be16(cfg->fwcfg.num_fwtio_reqs);
+ 
+ 	bfa_dma_be_addr_set(cfg_info->cfgrsp_addr, iocfc->cfgrsp_dma.pa);
+ 	/*
+@@ -729,6 +731,7 @@ bfa_iocfc_cfgrsp(struct bfa_s *bfa)
+ 
+ 	fwcfg->num_cqs	      = fwcfg->num_cqs;
+ 	fwcfg->num_ioim_reqs  = be16_to_cpu(fwcfg->num_ioim_reqs);
++	fwcfg->num_fwtio_reqs = be16_to_cpu(fwcfg->num_fwtio_reqs);
+ 	fwcfg->num_tskim_reqs = be16_to_cpu(fwcfg->num_tskim_reqs);
+ 	fwcfg->num_fcxp_reqs  = be16_to_cpu(fwcfg->num_fcxp_reqs);
+ 	fwcfg->num_uf_bufs    = be16_to_cpu(fwcfg->num_uf_bufs);
+@@ -1272,6 +1275,7 @@ bfa_cfg_get_default(struct bfa_iocfc_cfg_s *cfg)
+ 	cfg->fwcfg.num_fcxp_reqs = DEF_CFG_NUM_FCXP_REQS;
+ 	cfg->fwcfg.num_uf_bufs = DEF_CFG_NUM_UF_BUFS;
+ 	cfg->fwcfg.num_cqs = DEF_CFG_NUM_CQS;
++	cfg->fwcfg.num_fwtio_reqs = 0;
+ 
+ 	cfg->drvcfg.num_reqq_elems = DEF_CFG_NUM_REQQ_ELEMS;
+ 	cfg->drvcfg.num_rspq_elems = DEF_CFG_NUM_RSPQ_ELEMS;
+@@ -1293,6 +1297,7 @@ bfa_cfg_get_min(struct bfa_iocfc_cfg_s *cfg)
+ 	cfg->fwcfg.num_fcxp_reqs   = BFA_FCXP_MIN;
+ 	cfg->fwcfg.num_uf_bufs     = BFA_UF_MIN;
+ 	cfg->fwcfg.num_rports      = BFA_RPORT_MIN;
++	cfg->fwcfg.num_fwtio_reqs = 0;
+ 
+ 	cfg->drvcfg.num_sgpgs      = BFA_SGPG_MIN;
+ 	cfg->drvcfg.num_reqq_elems = BFA_REQQ_NELEMS_MIN;
 diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index bcc919c..6934b2d 100644
+index 6934b2d..e1aae51 100644
 --- a/drivers/scsi/bfa/bfa_defs_svc.h
 +++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -746,6 +746,8 @@ struct bfa_port_cfg_s {
- 	u8	 tx_bbcredit;	/*  transmit buffer credits	*/
- 	u8	 ratelimit;	/*  ratelimit enabled or not	*/
- 	u8	 trl_def_speed;	/*  ratelimit default speed	*/
-+	u8	bb_scn;
-+	u8	rsvd[3];
- 	u16 path_tov;	/*  device path timeout	*/
- 	u16 q_depth;	/*  SCSI Queue depth		*/
+@@ -47,11 +47,12 @@ struct bfa_iocfc_fwcfg_s {
+ 	u16        num_rports;	/*  number of remote ports	*/
+ 	u16        num_ioim_reqs;	/*  number of IO reqs		*/
+ 	u16        num_tskim_reqs;	/*  task management requests	*/
++	u16	   num_fwtio_reqs;	/* number of TM IO reqs in FW */
+ 	u16        num_fcxp_reqs;	/*  unassisted FC exchanges	*/
+ 	u16        num_uf_bufs;	/*  unsolicited recv buffers	*/
+ 	u8		num_cqs;
+ 	u8		fw_tick_res;	/*  FW clock resolution in ms */
+-	u8		rsvd[4];
++	u8		rsvd[2];
  };
-@@ -782,6 +784,7 @@ struct bfa_port_attr_s {
- 	bfa_boolean_t		beacon;		/*  current beacon status */
- 	bfa_boolean_t		link_e2e_beacon; /*  link beacon is on */
- 	bfa_boolean_t		plog_enabled;	/*  portlog is enabled */
-+	bfa_boolean_t	bbsc_op_status;	/* fc credit recovery oper state */
+ #pragma pack()
  
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 874cd79..76d9a00 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -19,7 +19,6 @@
+ #include "bfa_modules.h"
+ 
+ BFA_TRC_FILE(HAL, FCPIM);
+-BFA_MODULE(fcpim);
+ 
+ /*
+  *  BFA ITNIM Related definitions
+@@ -295,16 +294,9 @@ bfa_fcpim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
  	/*
- 	 * Dynamic field - info from FCS
-@@ -1018,6 +1021,9 @@ struct bfa_port_fc_stats_s {
- 	u64     bad_os_count;   /*  Invalid ordered sets        */
- 	u64     err_enc_out;    /*  Encoding err nonframe_8b10b */
- 	u64     err_enc;        /*  Encoding err frame_8b10b    */
-+	u64	bbsc_frames_lost; /* Credit Recovery-Frames Lost  */
-+	u64	bbsc_credits_lost; /* Credit Recovery-Credits Lost */
-+	u64	bbsc_link_resets; /* Credit Recovery-Link Resets   */
- };
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-index 7bc0208..8d0b88f 100644
---- a/drivers/scsi/bfa/bfa_fc.h
-+++ b/drivers/scsi/bfa/bfa_fc.h
-@@ -1021,7 +1021,7 @@ struct fc_symname_s {
- #define FC_ED_TOV	2
- #define FC_REC_TOV	(FC_ED_TOV + 1)
- #define FC_RA_TOV	10
--#define FC_ELS_TOV	(2 * FC_RA_TOV)
-+#define FC_ELS_TOV	((2 * FC_RA_TOV) + 1)
- #define FC_FCCT_TOV	(3 * FC_RA_TOV)
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_fcbuild.c b/drivers/scsi/bfa/bfa_fcbuild.c
-index b7e2534..08fba37 100644
---- a/drivers/scsi/bfa/bfa_fcbuild.c
-+++ b/drivers/scsi/bfa/bfa_fcbuild.c
-@@ -94,7 +94,6 @@ fcbuild_init(void)
+ 	 * IO memory
  	 */
- 	plogi_tmpl.csp.verhi = FC_PH_VER_PH_3;
- 	plogi_tmpl.csp.verlo = FC_PH_VER_4_3;
--	plogi_tmpl.csp.bbcred = cpu_to_be16(0x0004);
- 	plogi_tmpl.csp.ciro = 0x1;
- 	plogi_tmpl.csp.cisc = 0x0;
- 	plogi_tmpl.csp.altbbcred = 0x0;
-@@ -207,7 +206,7 @@ fc_bls_rsp_build(struct fchs_s *fchs, u32 d_id, u32 s_id, __be16 ox_id)
- static          u16
- fc_plogi_x_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
- 		 __be16 ox_id, wwn_t port_name, wwn_t node_name,
--		 u16 pdu_size, u8 els_code)
-+		 u16 pdu_size, u16 bb_cr, u8 els_code)
- {
- 	struct fc_logi_s *plogi = (struct fc_logi_s *) (pld);
- 
-@@ -220,6 +219,7 @@ fc_plogi_x_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
- 		fc_els_rsp_build(fchs, d_id, s_id, ox_id);
- 
- 	plogi->csp.rxsz = plogi->class3.rxsz = cpu_to_be16(pdu_size);
-+	plogi->csp.bbcred  = cpu_to_be16(bb_cr);
- 
- 	memcpy(&plogi->port_name, &port_name, sizeof(wwn_t));
- 	memcpy(&plogi->node_name, &node_name, sizeof(wwn_t));
-@@ -268,15 +268,17 @@ fc_flogi_build(struct fchs_s *fchs, struct fc_logi_s *flogi, u32 s_id,
- u16
- fc_flogi_acc_build(struct fchs_s *fchs, struct fc_logi_s *flogi, u32 s_id,
- 		   __be16 ox_id, wwn_t port_name, wwn_t node_name,
--		   u16 pdu_size, u16 local_bb_credits)
-+		   u16 pdu_size, u16 local_bb_credits, u8 bb_scn)
- {
- 	u32        d_id = 0;
-+	u16	   bbscn_rxsz = (bb_scn << 12) | pdu_size;
- 
- 	memcpy(flogi, &plogi_tmpl, sizeof(struct fc_logi_s));
- 	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
- 
- 	flogi->els_cmd.els_code = FC_ELS_ACC;
--	flogi->csp.rxsz = flogi->class3.rxsz = cpu_to_be16(pdu_size);
-+	flogi->class3.rxsz = cpu_to_be16(pdu_size);
-+	flogi->csp.rxsz  = cpu_to_be16(bbscn_rxsz);	/* bb_scn/rxsz */
- 	flogi->port_name = port_name;
- 	flogi->node_name = node_name;
- 
-@@ -306,19 +308,19 @@ fc_fdisc_build(struct fchs_s *fchs, struct fc_logi_s *flogi, u32 s_id,
- u16
- fc_plogi_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
- 	       u16 ox_id, wwn_t port_name, wwn_t node_name,
--	       u16 pdu_size)
-+	       u16 pdu_size, u16 bb_cr)
- {
- 	return fc_plogi_x_build(fchs, pld, d_id, s_id, ox_id, port_name,
--				node_name, pdu_size, FC_ELS_PLOGI);
-+				node_name, pdu_size, bb_cr, FC_ELS_PLOGI);
- }
- 
- u16
- fc_plogi_acc_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
- 		   u16 ox_id, wwn_t port_name, wwn_t node_name,
--		   u16 pdu_size)
-+		   u16 pdu_size, u16 bb_cr)
- {
- 	return fc_plogi_x_build(fchs, pld, d_id, s_id, ox_id, port_name,
--				node_name, pdu_size, FC_ELS_ACC);
-+				node_name, pdu_size, bb_cr, FC_ELS_ACC);
- }
- 
- enum fc_parse_status
-diff --git a/drivers/scsi/bfa/bfa_fcbuild.h b/drivers/scsi/bfa/bfa_fcbuild.h
-index 24c4cfb..9ba24c7 100644
---- a/drivers/scsi/bfa/bfa_fcbuild.h
-+++ b/drivers/scsi/bfa/bfa_fcbuild.h
-@@ -147,11 +147,11 @@ u16        fc_flogi_acc_build(struct fchs_s *fchs, struct fc_logi_s *flogi,
- 				   u32 s_id, __be16 ox_id,
- 				   wwn_t port_name, wwn_t node_name,
- 				   u16 pdu_size,
--				   u16 local_bb_credits);
-+				   u16 local_bb_credits, u8 bb_scn);
- 
- u16        fc_plogi_build(struct fchs_s *fchs, void *pld, u32 d_id,
- 			       u32 s_id, u16 ox_id, wwn_t port_name,
--			       wwn_t node_name, u16 pdu_size);
-+			       wwn_t node_name, u16 pdu_size, u16 bb_cr);
- 
- enum fc_parse_status fc_plogi_parse(struct fchs_s *fchs);
- 
-@@ -189,7 +189,7 @@ u16        fc_scr_build(struct fchs_s *fchs, struct fc_scr_s *scr,
- u16        fc_plogi_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
- 				   u32 s_id, u16 ox_id,
- 				   wwn_t port_name, wwn_t node_name,
--				   u16 pdu_size);
-+				   u16 pdu_size, u16 bb_cr);
- 
- u16        fc_adisc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc,
- 			u32 d_id, u32 s_id, __be16 ox_id, wwn_t port_name,
-diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
-index eb42e74..6c8a27e 100644
---- a/drivers/scsi/bfa/bfa_fcs.c
-+++ b/drivers/scsi/bfa/bfa_fcs.c
-@@ -196,6 +196,9 @@ static void bfa_fcs_fabric_flogiacc_comp(void *fcsarg,
- 					 u32 rsp_len,
- 					 u32 resid_len,
- 					 struct fchs_s *rspfchs);
-+static u8 bfa_fcs_fabric_oper_bbscn(struct bfa_fcs_fabric_s *fabric);
-+static bfa_boolean_t bfa_fcs_fabric_is_bbscn_enabled(
-+				struct bfa_fcs_fabric_s *fabric);
- 
- static void	bfa_fcs_fabric_sm_uninit(struct bfa_fcs_fabric_s *fabric,
- 					 enum bfa_fcs_fabric_event event);
-@@ -322,7 +325,8 @@ bfa_fcs_fabric_sm_flogi(struct bfa_fcs_fabric_s *fabric,
- 	case BFA_FCS_FABRIC_SM_CONT_OP:
- 
- 		bfa_fcport_set_tx_bbcredit(fabric->fcs->bfa,
--					   fabric->bb_credit);
-+					   fabric->bb_credit,
-+					   bfa_fcs_fabric_oper_bbscn(fabric));
- 		fabric->fab_type = BFA_FCS_FABRIC_SWITCHED;
- 
- 		if (fabric->auth_reqd && fabric->is_auth) {
-@@ -350,7 +354,8 @@ bfa_fcs_fabric_sm_flogi(struct bfa_fcs_fabric_s *fabric,
- 	case BFA_FCS_FABRIC_SM_NO_FABRIC:
- 		fabric->fab_type = BFA_FCS_FABRIC_N2N;
- 		bfa_fcport_set_tx_bbcredit(fabric->fcs->bfa,
--					   fabric->bb_credit);
-+					   fabric->bb_credit,
-+					   bfa_fcs_fabric_oper_bbscn(fabric));
- 		bfa_fcs_fabric_notify_online(fabric);
- 		bfa_sm_set_state(fabric, bfa_fcs_fabric_sm_nofabric);
- 		break;
-@@ -518,7 +523,8 @@ bfa_fcs_fabric_sm_nofabric(struct bfa_fcs_fabric_s *fabric,
- 	case BFA_FCS_FABRIC_SM_NO_FABRIC:
- 		bfa_trc(fabric->fcs, fabric->bb_credit);
- 		bfa_fcport_set_tx_bbcredit(fabric->fcs->bfa,
--					   fabric->bb_credit);
-+					   fabric->bb_credit,
-+					   bfa_fcs_fabric_oper_bbscn(fabric));
- 		break;
- 
- 	default:
-@@ -764,6 +770,10 @@ bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status)
- 
- 	case BFA_STATUS_FABRIC_RJT:
- 		fabric->stats.flogi_rejects++;
-+		if (fabric->lps->lsrjt_rsn == FC_LS_RJT_RSN_LOGICAL_ERROR &&
-+		    fabric->lps->lsrjt_expl == FC_LS_RJT_EXP_NO_ADDL_INFO)
-+			fabric->fcs->bbscn_flogi_rjt = BFA_TRUE;
-+
- 		bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_RETRY_OP);
- 		return;
- 
-@@ -808,13 +818,17 @@ bfa_fcs_fabric_login(struct bfa_fcs_fabric_s *fabric)
- {
- 	struct bfa_s		*bfa = fabric->fcs->bfa;
- 	struct bfa_lport_cfg_s	*pcfg = &fabric->bport.port_cfg;
--	u8			alpa = 0;
-+	u8			alpa = 0, bb_scn = 0;
- 
- 	if (bfa_fcport_get_topology(bfa) == BFA_PORT_TOPOLOGY_LOOP)
- 		alpa = bfa_fcport_get_myalpa(bfa);
- 
-+	if (bfa_fcs_fabric_is_bbscn_enabled(fabric) &&
-+	    (!fabric->fcs->bbscn_flogi_rjt))
-+		bb_scn = BFA_FCS_PORT_DEF_BB_SCN;
-+
- 	bfa_lps_flogi(fabric->lps, fabric, alpa, bfa_fcport_get_maxfrsize(bfa),
--		      pcfg->pwwn, pcfg->nwwn, fabric->auth_reqd);
-+		      pcfg->pwwn, pcfg->nwwn, fabric->auth_reqd, bb_scn);
- 
- 	fabric->stats.flogi_sent++;
- }
-@@ -873,6 +887,37 @@ bfa_fcs_fabric_delay(void *cbarg)
- }
- 
- /*
-+ * Computes operating BB_SCN value
-+ */
-+static u8
-+bfa_fcs_fabric_oper_bbscn(struct bfa_fcs_fabric_s *fabric)
-+{
-+	u8	pr_bbscn = fabric->lps->pr_bbscn;
-+
-+	if (!(fabric->fcs->bbscn_enabled && pr_bbscn))
-+		return 0;
-+
-+	/* return max of local/remote bb_scn values */
-+	return ((pr_bbscn > BFA_FCS_PORT_DEF_BB_SCN) ?
-+		pr_bbscn : BFA_FCS_PORT_DEF_BB_SCN);
-+}
-+
-+/*
-+ * Check if BB_SCN can be enabled.
-+ */
-+static bfa_boolean_t
-+bfa_fcs_fabric_is_bbscn_enabled(struct bfa_fcs_fabric_s *fabric)
-+{
-+	if (bfa_ioc_get_fcmode(&fabric->fcs->bfa->ioc) &&
-+			fabric->fcs->bbscn_enabled &&
-+			!bfa_fcport_is_qos_enabled(fabric->fcs->bfa) &&
-+			!bfa_fcport_is_trunk_enabled(fabric->fcs->bfa))
-+		return BFA_TRUE;
-+	else
-+		return BFA_FALSE;
-+}
-+
-+/*
-  * Delete all vports and wait for vport delete completions.
-  */
- static void
-@@ -989,6 +1034,7 @@ void
- bfa_fcs_fabric_link_down(struct bfa_fcs_fabric_s *fabric)
- {
- 	bfa_trc(fabric->fcs, fabric->bport.port_cfg.pwwn);
-+	fabric->fcs->bbscn_flogi_rjt = BFA_FALSE;
- 	bfa_sm_send_event(fabric, BFA_FCS_FABRIC_SM_LINK_DOWN);
- }
- 
-@@ -1192,6 +1238,7 @@ bfa_fcs_fabric_process_flogi(struct bfa_fcs_fabric_s *fabric,
- 	}
- 
- 	fabric->bb_credit = be16_to_cpu(flogi->csp.bbcred);
-+	fabric->lps->pr_bbscn = (be16_to_cpu(flogi->csp.rxsz) >> 12);
- 	bport->port_topo.pn2n.rem_port_wwn = flogi->port_name;
- 	bport->port_topo.pn2n.reply_oxid = fchs->ox_id;
- 
-@@ -1224,7 +1271,8 @@ bfa_fcs_fabric_send_flogi_acc(struct bfa_fcs_fabric_s *fabric)
- 				    n2n_port->reply_oxid, pcfg->pwwn,
- 				    pcfg->nwwn,
- 				    bfa_fcport_get_maxfrsize(bfa),
--				    bfa_fcport_get_rx_bbcredit(bfa));
-+				    bfa_fcport_get_rx_bbcredit(bfa),
-+				    bfa_fcs_fabric_oper_bbscn(fabric));
- 
- 	bfa_fcxp_send(fcxp, NULL, fabric->vf_id, fabric->lps->lp_tag,
- 		      BFA_FALSE, FC_CLASS_3,
-diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index a9942b4..4cfd2e9 100644
---- a/drivers/scsi/bfa/bfa_fcs.h
-+++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -254,6 +254,9 @@ struct bfa_fcs_fabric_s;
- #define BFA_FCS_PORT_SYMBNAME_OSINFO_SZ			48
- #define BFA_FCS_PORT_SYMBNAME_OSPATCH_SZ		16
- 
-+/* bb_scn value in 2^bb_scn */
-+#define BFA_FCS_PORT_DEF_BB_SCN				3
-+
- /*
-  * Get FC port ID for a logical port.
-  */
-@@ -650,6 +653,8 @@ struct bfa_fcs_s {
- 	struct bfa_trc_mod_s  *trcmod;	/*  tracing module */
- 	bfa_boolean_t	vf_enabled;	/*  VF mode is enabled */
- 	bfa_boolean_t	fdmi_enabled;	/*  FDMI is enabled */
-+	bfa_boolean_t	bbscn_enabled;	/*  Driver Config Parameter */
-+	bfa_boolean_t	bbscn_flogi_rjt;/*  FLOGI reject due to BB_SCN */
- 	bfa_boolean_t min_cfg;		/* min cfg enabled/disabled */
- 	u16	port_vfid;	/*  port default VF ID */
- 	struct bfa_fcs_driver_info_s driver_info;
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index a0c6f96..479ccbe 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -2892,7 +2892,8 @@ bfa_fcs_lport_ms_send_plogi(void *ms_cbarg, struct bfa_fcxp_s *fcxp_alloced)
- 			     bfa_hton3b(FC_MGMT_SERVER),
- 			     bfa_fcs_lport_get_fcid(port), 0,
- 			     port->port_cfg.pwwn, port->port_cfg.nwwn,
--				 bfa_fcport_get_maxfrsize(port->fcs->bfa));
-+			     bfa_fcport_get_maxfrsize(port->fcs->bfa),
-+			     bfa_fcport_get_rx_bbcredit(port->fcs->bfa));
- 
- 	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
- 			  FC_CLASS_3, len, &fchs,
-@@ -3636,7 +3637,7 @@ bfa_fcs_lport_ns_send_plogi(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
- 
- 	bfa_trc(port->fcs, port->pid);
- 
--fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
-+	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
- 	if (!fcxp) {
- 		port->stats.ns_plogi_alloc_wait++;
- 		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
-@@ -3649,7 +3650,8 @@ fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
- 			     bfa_hton3b(FC_NAME_SERVER),
- 			     bfa_fcs_lport_get_fcid(port), 0,
- 			     port->port_cfg.pwwn, port->port_cfg.nwwn,
--				 bfa_fcport_get_maxfrsize(port->fcs->bfa));
-+			     bfa_fcport_get_maxfrsize(port->fcs->bfa),
-+			     bfa_fcport_get_rx_bbcredit(port->fcs->bfa));
- 
- 	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
- 			  FC_CLASS_3, len, &fchs,
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index caaee6f..2ec5719 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -1356,7 +1356,8 @@ bfa_fcs_rport_send_plogi(void *rport_cbarg, struct bfa_fcxp_s *fcxp_alloced)
- 	len = fc_plogi_build(&fchs, bfa_fcxp_get_reqbuf(fcxp), rport->pid,
- 				bfa_fcs_lport_get_fcid(port), 0,
- 				port->port_cfg.pwwn, port->port_cfg.nwwn,
--				bfa_fcport_get_maxfrsize(port->fcs->bfa));
-+				bfa_fcport_get_maxfrsize(port->fcs->bfa),
-+				bfa_fcport_get_rx_bbcredit(port->fcs->bfa));
- 
- 	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
- 			FC_CLASS_3, len, &fchs, bfa_fcs_rport_plogi_response,
-@@ -1476,7 +1477,8 @@ bfa_fcs_rport_send_plogiacc(void *rport_cbarg, struct bfa_fcxp_s *fcxp_alloced)
- 				 rport->pid, bfa_fcs_lport_get_fcid(port),
- 				 rport->reply_oxid, port->port_cfg.pwwn,
- 				 port->port_cfg.nwwn,
--				 bfa_fcport_get_maxfrsize(port->fcs->bfa));
-+				 bfa_fcport_get_maxfrsize(port->fcs->bfa),
-+				 bfa_fcport_get_rx_bbcredit(port->fcs->bfa));
- 
- 	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
- 			FC_CLASS_3, len, &fchs, NULL, NULL, FC_MAX_PDUSZ, 0);
-@@ -2120,7 +2122,7 @@ bfa_fcs_rport_update(struct bfa_fcs_rport_s *rport, struct fc_logi_s *plogi)
- 
- 		port->fabric->bb_credit = be16_to_cpu(plogi->csp.bbcred);
- 		bfa_fcport_set_tx_bbcredit(port->fcs->bfa,
--					  port->fabric->bb_credit);
-+					  port->fabric->bb_credit, 0);
- 	}
- 
- }
-@@ -2233,22 +2235,6 @@ bfa_fcs_rport_plogi_create(struct bfa_fcs_lport_s *port, struct fchs_s *fchs,
- 	bfa_sm_send_event(rport, RPSM_EVENT_PLOGI_RCVD);
- }
- 
--static int
--wwn_compare(wwn_t wwn1, wwn_t wwn2)
--{
--	u8		*b1 = (u8 *) &wwn1;
--	u8		*b2 = (u8 *) &wwn2;
--	int		i;
+-	if (cfg->fwcfg.num_ioim_reqs < BFA_IOIM_MIN)
+-		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MIN;
+-	else if (cfg->fwcfg.num_ioim_reqs > BFA_IOIM_MAX)
+-		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MAX;
 -
--	for (i = 0; i < sizeof(wwn_t); i++) {
--		if (b1[i] < b2[i])
--			return -1;
--		if (b1[i] > b2[i])
--			return 1;
--	}
--	return 0;
+ 	*km_len += cfg->fwcfg.num_ioim_reqs *
+ 	  (sizeof(struct bfa_ioim_s) + sizeof(struct bfa_ioim_sp_s));
+ 
+-	*dm_len += cfg->fwcfg.num_ioim_reqs * BFI_IOIM_SNSLEN;
+-
+ 	/*
+ 	 * task management command memory
+ 	 */
+@@ -315,19 +307,21 @@ bfa_fcpim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
+ 
+ 
+ static void
+-bfa_fcpim_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+-		struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
++bfa_fcpim_attach(struct bfa_fcp_mod_s *fcp, void *bfad,
++		struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
++		struct bfa_pcidev_s *pcidev)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = &fcp->fcpim;
++	struct bfa_s *bfa = fcp->bfa;
+ 
+ 	bfa_trc(bfa, cfg->drvcfg.path_tov);
+ 	bfa_trc(bfa, cfg->fwcfg.num_rports);
+ 	bfa_trc(bfa, cfg->fwcfg.num_ioim_reqs);
+ 	bfa_trc(bfa, cfg->fwcfg.num_tskim_reqs);
+ 
++	fcpim->fcp		= fcp;
+ 	fcpim->bfa		= bfa;
+ 	fcpim->num_itnims	= cfg->fwcfg.num_rports;
+-	fcpim->num_ioim_reqs  = cfg->fwcfg.num_ioim_reqs;
+ 	fcpim->num_tskim_reqs = cfg->fwcfg.num_tskim_reqs;
+ 	fcpim->path_tov		= cfg->drvcfg.path_tov;
+ 	fcpim->delay_comp	= cfg->drvcfg.delay_comp;
+@@ -340,24 +334,9 @@ bfa_fcpim_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ }
+ 
+ static void
+-bfa_fcpim_detach(struct bfa_s *bfa)
+-{
 -}
 -
- /*
-  *	Called by bport/vport to handle PLOGI received from an existing
-  *	 remote port.
-@@ -2266,20 +2252,6 @@ bfa_fcs_rport_plogi(struct bfa_fcs_rport_s *rport, struct fchs_s *rx_fchs,
- 	rport->reply_oxid = rx_fchs->ox_id;
- 	bfa_trc(rport->fcs, rport->reply_oxid);
- 
--	/*
--	 * In Switched fabric topology,
--	 * PLOGI to each other. If our pwwn is smaller, ignore it,
--	 * if it is not a well known address.
--	 * If the link topology is N2N,
--	 * this Plogi should be accepted.
--	 */
--	if ((wwn_compare(rport->port->port_cfg.pwwn, rport->pwwn) == -1) &&
--		(bfa_fcs_fabric_is_switched(rport->port->fabric)) &&
--		(!BFA_FCS_PID_IS_WKA(rport->pid))) {
--		bfa_trc(rport->fcs, rport->pid);
--		return;
--	}
+-static void
+-bfa_fcpim_start(struct bfa_s *bfa)
+-{
+-}
 -
- 	rport->stats.plogi_rcvd++;
- 	bfa_sm_send_event(rport, RPSM_EVENT_PLOGI_RCVD);
+-static void
+-bfa_fcpim_stop(struct bfa_s *bfa)
++bfa_fcpim_iocdisable(struct bfa_fcp_mod_s *fcp)
+ {
+-}
+-
+-static void
+-bfa_fcpim_iocdisable(struct bfa_s *bfa)
+-{
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = &fcp->fcpim;
+ 	struct bfa_itnim_s *itnim;
+ 	struct list_head *qe, *qen;
+ 
+@@ -370,7 +349,7 @@ bfa_fcpim_iocdisable(struct bfa_s *bfa)
+ void
+ bfa_fcpim_path_tov_set(struct bfa_s *bfa, u16 path_tov)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 
+ 	fcpim->path_tov = path_tov * 1000;
+ 	if (fcpim->path_tov > BFA_FCPIM_PATHTOV_MAX)
+@@ -380,7 +359,7 @@ bfa_fcpim_path_tov_set(struct bfa_s *bfa, u16 path_tov)
+ u16
+ bfa_fcpim_path_tov_get(struct bfa_s *bfa)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 
+ 	return fcpim->path_tov / 1000;
  }
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 46e8cdd..5373e5d 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -1257,6 +1257,7 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
+@@ -388,7 +367,7 @@ bfa_fcpim_path_tov_get(struct bfa_s *bfa)
+ u16
+ bfa_fcpim_qdepth_get(struct bfa_s *bfa)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
  
- 	case BFA_LPS_SM_OFFLINE:
-+	case BFA_LPS_SM_DELETE:
- 		bfa_sm_set_state(lps, bfa_lps_sm_init);
- 		break;
- 
-@@ -1285,6 +1286,7 @@ bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	case BFA_LPS_SM_OFFLINE:
-+	case BFA_LPS_SM_DELETE:
- 		bfa_sm_set_state(lps, bfa_lps_sm_init);
- 		bfa_reqq_wcancel(&lps->wqe);
- 		break;
-@@ -1409,6 +1411,7 @@ bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	case BFA_LPS_SM_OFFLINE:
-+	case BFA_LPS_SM_DELETE:
- 		bfa_sm_set_state(lps, bfa_lps_sm_init);
- 		break;
- 
-@@ -1433,6 +1436,7 @@ bfa_lps_sm_logowait(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		break;
- 
- 	case BFA_LPS_SM_OFFLINE:
-+	case BFA_LPS_SM_DELETE:
- 		bfa_sm_set_state(lps, bfa_lps_sm_init);
- 		bfa_reqq_wcancel(&lps->wqe);
- 		break;
-@@ -1551,6 +1555,7 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
- 		lps->lp_mac	= rsp->lp_mac;
- 		lps->brcd_switch = rsp->brcd_switch;
- 		lps->fcf_mac	= rsp->fcf_mac;
-+		lps->pr_bbscn	= rsp->bb_scn;
- 
- 		break;
- 
-@@ -1647,6 +1652,7 @@ bfa_lps_send_login(struct bfa_lps_s *lps)
- 	m->nwwn		= lps->nwwn;
- 	m->fdisc	= lps->fdisc;
- 	m->auth_en	= lps->auth_en;
-+	m->bb_scn	= lps->bb_scn;
- 
- 	bfa_reqq_produce(lps->bfa, lps->reqq);
+ 	return fcpim->q_depth;
  }
-@@ -1838,7 +1844,7 @@ bfa_lps_delete(struct bfa_lps_s *lps)
+@@ -1000,7 +979,7 @@ bfa_itnim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
+ }
+ 
+ void
+-bfa_itnim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
++bfa_itnim_attach(struct bfa_fcpim_s *fcpim, struct bfa_meminfo_s *minfo)
+ {
+ 	struct bfa_s	*bfa = fcpim->bfa;
+ 	struct bfa_itnim_s *itnim;
+@@ -1224,7 +1203,7 @@ bfa_itnim_iotov_delete(struct bfa_itnim_s *itnim)
+ static void
+ bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(itnim->bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(itnim->bfa);
+ 	fcpim->del_itn_stats.del_itn_iocomp_aborted +=
+ 		itnim->stats.iocomp_aborted;
+ 	fcpim->del_itn_stats.del_itn_iocomp_timedout +=
+@@ -1250,7 +1229,7 @@ bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim)
+ void
+ bfa_itnim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	union bfi_itn_i2h_msg_u msg;
+ 	struct bfa_itnim_s *itnim;
+ 
+@@ -1295,9 +1274,11 @@ bfa_itnim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ struct bfa_itnim_s *
+ bfa_itnim_create(struct bfa_s *bfa, struct bfa_rport_s *rport, void *ditn)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	struct bfa_itnim_s *itnim;
+ 
++	bfa_itn_create(bfa, rport, bfa_itnim_isr);
++
+ 	itnim = BFA_ITNIM_FROM_TAG(fcpim, rport->rport_tag);
+ 	WARN_ON(itnim->rport != rport);
+ 
+@@ -1991,7 +1972,8 @@ __bfa_cb_ioim_comp(void *cbarg, bfa_boolean_t complete)
+ 		if ((m->scsi_status == SCSI_STATUS_CHECK_CONDITION) &&
+ 					m->sns_len) {
+ 			sns_len = m->sns_len;
+-			snsinfo = ioim->iosp->snsinfo;
++			snsinfo = BFA_SNSINFO_FROM_TAG(ioim->fcpim->fcp,
++						ioim->iotag);
+ 		}
+ 
+ 		/*
+@@ -2360,46 +2342,31 @@ bfa_ioim_delayed_comp(struct bfa_ioim_s *ioim, bfa_boolean_t iotov)
+  * Memory allocation and initialization.
   */
  void
- bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa, u16 pdusz,
--	wwn_t pwwn, wwn_t nwwn, bfa_boolean_t auth_en)
-+	wwn_t pwwn, wwn_t nwwn, bfa_boolean_t auth_en, uint8_t bb_scn)
+-bfa_ioim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
++bfa_ioim_attach(struct bfa_fcpim_s *fcpim, struct bfa_meminfo_s *minfo)
  {
- 	lps->uarg	= uarg;
- 	lps->alpa	= alpa;
-@@ -1847,6 +1853,7 @@ bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa, u16 pdusz,
- 	lps->nwwn	= nwwn;
- 	lps->fdisc	= BFA_FALSE;
- 	lps->auth_en	= auth_en;
-+	lps->bb_scn	= bb_scn;
- 	bfa_sm_send_event(lps, BFA_LPS_SM_LOGIN);
- }
- 
-@@ -2900,6 +2907,7 @@ bfa_fcport_reset_linkinfo(struct bfa_fcport_s *fcport)
- {
- 	fcport->speed = BFA_PORT_SPEED_UNKNOWN;
- 	fcport->topology = BFA_PORT_TOPOLOGY_NONE;
-+	fcport->bbsc_op_state = BFA_FALSE;
- }
- 
- /*
-@@ -3010,6 +3018,7 @@ bfa_fcport_send_txcredit(void *port_cbarg)
- 	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ,
- 			bfa_lpuid(fcport->bfa));
- 	m->tx_bbcredit = cpu_to_be16((u16)fcport->cfg.tx_bbcredit);
-+	m->bb_scn = fcport->cfg.bb_scn;
+ 	struct bfa_ioim_s		*ioim;
+ 	struct bfa_ioim_sp_s	*iosp;
+ 	u16		i;
+-	u8			*snsinfo;
+-	u32		snsbufsz;
  
  	/*
- 	 * queue I/O message to firmware
-@@ -3626,11 +3635,14 @@ bfa_fcport_get_rx_bbcredit(struct bfa_s *bfa)
+ 	 * claim memory first
+ 	 */
+ 	ioim = (struct bfa_ioim_s *) bfa_meminfo_kva(minfo);
+ 	fcpim->ioim_arr = ioim;
+-	bfa_meminfo_kva(minfo) = (u8 *) (ioim + fcpim->num_ioim_reqs);
++	bfa_meminfo_kva(minfo) = (u8 *) (ioim + fcpim->fcp->num_ioim_reqs);
+ 
+ 	iosp = (struct bfa_ioim_sp_s *) bfa_meminfo_kva(minfo);
+ 	fcpim->ioim_sp_arr = iosp;
+-	bfa_meminfo_kva(minfo) = (u8 *) (iosp + fcpim->num_ioim_reqs);
+-
+-	/*
+-	 * Claim DMA memory for per IO sense data.
+-	 */
+-	snsbufsz = fcpim->num_ioim_reqs * BFI_IOIM_SNSLEN;
+-	fcpim->snsbase.pa  = bfa_meminfo_dma_phys(minfo);
+-	bfa_meminfo_dma_phys(minfo) += snsbufsz;
+-
+-	fcpim->snsbase.kva = bfa_meminfo_dma_virt(minfo);
+-	bfa_meminfo_dma_virt(minfo) += snsbufsz;
+-	snsinfo = fcpim->snsbase.kva;
+-	bfa_iocfc_set_snsbase(fcpim->bfa, fcpim->snsbase.pa);
++	bfa_meminfo_kva(minfo) = (u8 *) (iosp + fcpim->fcp->num_ioim_reqs);
+ 
+ 	/*
+ 	 * Initialize ioim free queues
+ 	 */
+-	INIT_LIST_HEAD(&fcpim->ioim_free_q);
+ 	INIT_LIST_HEAD(&fcpim->ioim_resfree_q);
+ 	INIT_LIST_HEAD(&fcpim->ioim_comp_q);
+ 
+-	for (i = 0; i < fcpim->num_ioim_reqs;
+-	     i++, ioim++, iosp++, snsinfo += BFI_IOIM_SNSLEN) {
++	for (i = 0; i < fcpim->fcp->num_ioim_reqs;
++	     i++, ioim++, iosp++) {
+ 		/*
+ 		 * initialize IOIM
+ 		 */
+@@ -2408,22 +2375,19 @@ bfa_ioim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
+ 		ioim->bfa     = fcpim->bfa;
+ 		ioim->fcpim   = fcpim;
+ 		ioim->iosp    = iosp;
+-		iosp->snsinfo = snsinfo;
+ 		INIT_LIST_HEAD(&ioim->sgpg_q);
+ 		bfa_reqq_winit(&ioim->iosp->reqq_wait,
+ 				   bfa_ioim_qresume, ioim);
+ 		bfa_sgpg_winit(&ioim->iosp->sgpg_wqe,
+ 				   bfa_ioim_sgpg_alloced, ioim);
+ 		bfa_sm_set_state(ioim, bfa_ioim_sm_uninit);
+-
+-		list_add_tail(&ioim->qe, &fcpim->ioim_free_q);
+ 	}
  }
  
  void
--bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit)
-+bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit, u8 bb_scn)
+ bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
  {
- 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	struct bfi_ioim_rsp_s *rsp = (struct bfi_ioim_rsp_s *) m;
+ 	struct bfa_ioim_s *ioim;
+ 	u16	iotag;
+@@ -2507,7 +2471,7 @@ bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ void
+ bfa_ioim_good_comp_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	struct bfi_ioim_rsp_s *rsp = (struct bfi_ioim_rsp_s *) m;
+ 	struct bfa_ioim_s *ioim;
+ 	u16	iotag;
+@@ -2573,18 +2537,21 @@ struct bfa_ioim_s *
+ bfa_ioim_alloc(struct bfa_s *bfa, struct bfad_ioim_s *dio,
+ 		struct bfa_itnim_s *itnim, u16 nsges)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	struct bfa_ioim_s *ioim;
++	struct bfa_iotag_s *iotag = NULL;
  
- 	fcport->cfg.tx_bbcredit = (u8)tx_bbcredit;
-+	fcport->cfg.bb_scn = bb_scn;
-+	if (bb_scn)
-+		fcport->bbsc_op_state = BFA_TRUE;
- 	bfa_fcport_send_txcredit(fcport);
- }
+ 	/*
+ 	 * alocate IOIM resource
+ 	 */
+-	bfa_q_deq(&fcpim->ioim_free_q, &ioim);
+-	if (!ioim) {
++	bfa_q_deq(&fcpim->fcp->iotag_ioim_free_q, &iotag);
++	if (!iotag) {
+ 		bfa_stats(itnim, no_iotags);
+ 		return NULL;
+ 	}
  
-@@ -3683,6 +3695,7 @@ bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_port_attr_s *attr)
- 	attr->pport_cfg.path_tov  = bfa_fcpim_path_tov_get(bfa);
- 	attr->pport_cfg.q_depth  = bfa_fcpim_qdepth_get(bfa);
- 	attr->port_state = bfa_sm_to_state(hal_port_sm_table, fcport->sm);
-+	attr->bbsc_op_status =  fcport->bbsc_op_state;
- 
- 	/* PBC Disabled State */
- 	if (bfa_fcport_is_pbcdisabled(bfa))
-@@ -3805,6 +3818,14 @@ bfa_fcport_is_qos_enabled(struct bfa_s *bfa)
- 	return fcport->cfg.qos_enabled;
- }
- 
-+bfa_boolean_t
-+bfa_fcport_is_trunk_enabled(struct bfa_s *bfa)
-+{
-+	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++	ioim = BFA_IOIM_FROM_TAG(fcpim, iotag->tag);
 +
-+	return fcport->cfg.trunked;
+ 	ioim->dio = dio;
+ 	ioim->itnim = itnim;
+ 	ioim->nsges = nsges;
+@@ -2601,7 +2568,8 @@ bfa_ioim_alloc(struct bfa_s *bfa, struct bfad_ioim_s *dio,
+ void
+ bfa_ioim_free(struct bfa_ioim_s *ioim)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = ioim->fcpim;
++	struct bfa_fcpim_s *fcpim = ioim->fcpim;
++	struct bfa_iotag_s *iotag;
+ 
+ 	if (ioim->nsgpgs > 0)
+ 		bfa_sgpg_mfree(ioim->bfa, &ioim->sgpg_q, ioim->nsgpgs);
+@@ -2610,8 +2578,17 @@ bfa_ioim_free(struct bfa_ioim_s *ioim)
+ 	fcpim->ios_active--;
+ 
+ 	ioim->iotag &= BFA_IOIM_IOTAG_MASK;
++
++	WARN_ON(!(ioim->iotag <
++		(fcpim->fcp->num_ioim_reqs + fcpim->fcp->num_fwtio_reqs)));
++	iotag = BFA_IOTAG_FROM_TAG(fcpim->fcp, ioim->iotag);
++
++	if (ioim->iotag < fcpim->fcp->num_ioim_reqs)
++		list_add_tail(&iotag->qe, &fcpim->fcp->iotag_ioim_free_q);
++	else
++		list_add_tail(&iotag->qe, &fcpim->fcp->iotag_tio_free_q);
++
+ 	list_del(&ioim->qe);
+-	list_add_tail(&ioim->qe, &fcpim->ioim_free_q);
+ }
+ 
+ void
+@@ -3129,7 +3106,7 @@ bfa_tskim_cleanup(struct bfa_tskim_s *tskim)
+  * Memory allocation and initialization.
+  */
+ void
+-bfa_tskim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
++bfa_tskim_attach(struct bfa_fcpim_s *fcpim, struct bfa_meminfo_s *minfo)
+ {
+ 	struct bfa_tskim_s *tskim;
+ 	u16	i;
+@@ -3161,7 +3138,7 @@ bfa_tskim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
+ void
+ bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	struct bfi_tskim_rsp_s *rsp = (struct bfi_tskim_rsp_s *) m;
+ 	struct bfa_tskim_s *tskim;
+ 	u16	tsk_tag = be16_to_cpu(rsp->tsk_tag);
+@@ -3188,7 +3165,7 @@ bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ struct bfa_tskim_s *
+ bfa_tskim_alloc(struct bfa_s *bfa, struct bfad_tskim_s *dtsk)
+ {
+-	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
++	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
+ 	struct bfa_tskim_s *tskim;
+ 
+ 	bfa_q_deq(&fcpim->tskim_free_q, &tskim);
+@@ -3233,3 +3210,153 @@ bfa_tskim_start(struct bfa_tskim_s *tskim, struct bfa_itnim_s *itnim,
+ 	list_add_tail(&tskim->qe, &itnim->tsk_q);
+ 	bfa_sm_send_event(tskim, BFA_TSKIM_SM_START);
+ }
++
++/* BFA FCP module - parent module for fcpim */
++
++BFA_MODULE(fcp);
++
++static void
++bfa_fcp_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len, u32 *dm_len)
++{
++	u16	num_io_req;
++
++	/*
++	 * ZERO for num_ioim_reqs and num_fwtio_reqs is allowed config value.
++	 * So if the values are non zero, adjust them appropriately.
++	 */
++	if (cfg->fwcfg.num_ioim_reqs &&
++	    cfg->fwcfg.num_ioim_reqs < BFA_IOIM_MIN)
++		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MIN;
++	else if (cfg->fwcfg.num_ioim_reqs > BFA_IOIM_MAX)
++		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MAX;
++
++	if (cfg->fwcfg.num_fwtio_reqs > BFA_FWTIO_MAX)
++		cfg->fwcfg.num_fwtio_reqs = BFA_FWTIO_MAX;
++
++	num_io_req = (cfg->fwcfg.num_ioim_reqs + cfg->fwcfg.num_fwtio_reqs);
++	if (num_io_req > BFA_IO_MAX) {
++		if (cfg->fwcfg.num_ioim_reqs && cfg->fwcfg.num_fwtio_reqs) {
++			cfg->fwcfg.num_ioim_reqs = BFA_IO_MAX/2;
++			cfg->fwcfg.num_fwtio_reqs = BFA_IO_MAX/2;
++		} else if (cfg->fwcfg.num_fwtio_reqs)
++			cfg->fwcfg.num_fwtio_reqs = BFA_FWTIO_MAX;
++		else
++			cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MAX;
++	}
++
++	bfa_fcpim_meminfo(cfg, km_len, dm_len);
++
++	num_io_req = (cfg->fwcfg.num_ioim_reqs + cfg->fwcfg.num_fwtio_reqs);
++	*km_len += num_io_req * sizeof(struct bfa_iotag_s);
++	*km_len += cfg->fwcfg.num_rports * sizeof(struct bfa_itn_s);
++	*dm_len += num_io_req * BFI_IOIM_SNSLEN;
 +}
 +
- /*
-  * Rport State machine functions
-  */
-diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
-index c5927a5..c81cf5c 100644
---- a/drivers/scsi/bfa/bfa_svc.h
-+++ b/drivers/scsi/bfa/bfa_svc.h
-@@ -377,6 +377,8 @@ struct bfa_lps_s {
- 	bfa_status_t	status;		/*  login status		*/
- 	u16		pdusz;		/*  max receive PDU size	*/
- 	u16		pr_bbcred;	/*  BB_CREDIT from peer		*/
-+	u8		pr_bbscn;	/*  BB_SCN from peer		*/
-+	u8		bb_scn;		/*  local BB_SCN		*/
- 	u8		lsrjt_rsn;	/*  LSRJT reason		*/
- 	u8		lsrjt_expl;	/*  LSRJT explanation		*/
- 	wwn_t		pwwn;		/*  port wwn of lport		*/
-@@ -477,6 +479,7 @@ struct bfa_fcport_s {
- 	bfa_boolean_t		diag_busy; /*  diag busy status */
- 	bfa_boolean_t		beacon; /*  port beacon status */
- 	bfa_boolean_t		link_e2e_beacon; /*  link beacon status */
-+	bfa_boolean_t		bbsc_op_state;	/* Cred recov Oper State */
- 	struct bfa_fcport_trunk_s trunk;
- 	u16		fcoe_vlan;
++static void
++bfa_fcp_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++		struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
++{
++	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
++	u32	snsbufsz;
++
++	fcp->num_ioim_reqs = cfg->fwcfg.num_ioim_reqs;
++	fcp->num_fwtio_reqs  = cfg->fwcfg.num_fwtio_reqs;
++	fcp->num_itns	= cfg->fwcfg.num_rports;
++	fcp->bfa = bfa;
++
++	snsbufsz = (fcp->num_ioim_reqs + fcp->num_fwtio_reqs) * BFI_IOIM_SNSLEN;
++	fcp->snsbase.pa = bfa_meminfo_dma_phys(meminfo);
++	bfa_meminfo_dma_phys(meminfo) += snsbufsz;
++
++	fcp->snsbase.kva = bfa_meminfo_dma_virt(meminfo);
++	bfa_meminfo_dma_virt(meminfo) += snsbufsz;
++	bfa_iocfc_set_snsbase(bfa, fcp->snsbase.pa);
++
++	bfa_fcpim_attach(fcp, bfad, cfg, meminfo, pcidev);
++
++	fcp->itn_arr = (struct bfa_itn_s *) bfa_meminfo_kva(meminfo);
++	bfa_meminfo_kva(meminfo) = (u8 *)fcp->itn_arr +
++			(fcp->num_itns * sizeof(struct bfa_itn_s));
++	memset(fcp->itn_arr, 0,
++			(fcp->num_itns * sizeof(struct bfa_itn_s)));
++
++	bfa_iotag_attach(fcp, meminfo);
++}
++
++static void
++bfa_fcp_detach(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcp_start(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcp_stop(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcp_iocdisable(struct bfa_s *bfa)
++{
++	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
++
++	bfa_fcpim_iocdisable(fcp);
++}
++
++void
++bfa_itn_create(struct bfa_s *bfa, struct bfa_rport_s *rport,
++		void (*isr)(struct bfa_s *bfa, struct bfi_msg_s *m))
++{
++	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
++	struct bfa_itn_s *itn;
++
++	itn =  BFA_ITN_FROM_TAG(fcp, rport->rport_tag);
++	itn->isr = isr;
++}
++
++/*
++ * Itn interrupt processing.
++ */
++void
++bfa_itn_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
++{
++	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
++	union bfi_itn_i2h_msg_u msg;
++	struct bfa_itn_s *itn;
++
++	msg.msg = m;
++	itn =  BFA_ITN_FROM_TAG(fcp, msg.create_rsp->bfa_handle);
++
++	if (itn->isr)
++		itn->isr(bfa, m);
++	else
++		WARN_ON(1);
++}
++
++void
++bfa_iotag_attach(struct bfa_fcp_mod_s *fcp, struct bfa_meminfo_s *minfo)
++{
++	struct bfa_iotag_s *iotag;
++	u16	num_io_req, i;
++
++	iotag = (struct bfa_iotag_s *) bfa_meminfo_kva(minfo);
++	fcp->iotag_arr = iotag;
++
++	INIT_LIST_HEAD(&fcp->iotag_ioim_free_q);
++	INIT_LIST_HEAD(&fcp->iotag_tio_free_q);
++
++	num_io_req = fcp->num_ioim_reqs + fcp->num_fwtio_reqs;
++	for (i = 0; i < num_io_req; i++, iotag++) {
++		memset(iotag, 0, sizeof(struct bfa_iotag_s));
++		iotag->tag = i;
++		if (i < fcp->num_ioim_reqs)
++			list_add_tail(&iotag->qe, &fcp->iotag_ioim_free_q);
++		else
++			list_add_tail(&iotag->qe, &fcp->iotag_tio_free_q);
++	}
++
++	bfa_meminfo_kva(minfo) = (u8 *) iotag;
++}
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index 1e38dad..e1e3221 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -24,6 +24,32 @@
+ #include "bfa_defs_svc.h"
+ #include "bfa_cs.h"
+ 
++/* FCP module related definitions */
++#define BFA_IO_MAX	2000
++#define BFA_FWTIO_MAX	0
++
++struct bfa_fcp_mod_s;
++struct bfa_iotag_s {
++	struct list_head	qe;	/* queue element	*/
++	u16	tag;			/* FW IO tag		*/
++};
++
++struct bfa_itn_s {
++	bfa_isr_func_t isr;
++};
++
++void bfa_itn_create(struct bfa_s *bfa, struct bfa_rport_s *rport,
++		void (*isr)(struct bfa_s *bfa, struct bfi_msg_s *m));
++void bfa_itn_isr(struct bfa_s *bfa, struct bfi_msg_s *m);
++void bfa_iotag_attach(struct bfa_fcp_mod_s *fcp, struct bfa_meminfo_s *minfo);
++
++#define BFA_FCP_MOD(_hal)	(&(_hal)->modules.fcp_mod)
++#define BFA_IOTAG_FROM_TAG(_fcp, _tag)	\
++	(&(_fcp)->iotag_arr[(_tag & BFA_IOIM_IOTAG_MASK)])
++#define BFA_ITN_FROM_TAG(_fcp, _tag)	\
++	((_fcp)->itn_arr + ((_tag) & ((_fcp)->num_itns - 1)))
++#define BFA_SNSINFO_FROM_TAG(_fcp, _tag) \
++	(((u8 *)(_fcp)->snsbase.kva) + (_tag * BFI_IOIM_SNSLEN))
+ 
+ #define BFA_ITNIM_MIN   32
+ #define BFA_ITNIM_MAX   1024
+@@ -75,22 +101,20 @@ struct bfad_tskim_s;
+ 
+ typedef void    (*bfa_fcpim_profile_t) (struct bfa_ioim_s *ioim);
+ 
+-struct bfa_fcpim_mod_s {
++struct bfa_fcpim_s {
+ 	struct bfa_s		*bfa;
++	struct bfa_fcp_mod_s	*fcp;
+ 	struct bfa_itnim_s	*itnim_arr;
+ 	struct bfa_ioim_s	*ioim_arr;
+ 	struct bfa_ioim_sp_s	*ioim_sp_arr;
+ 	struct bfa_tskim_s	*tskim_arr;
+-	struct bfa_dma_s	snsbase;
+ 	int			num_itnims;
+-	int			num_ioim_reqs;
+ 	int			num_tskim_reqs;
+ 	u32			path_tov;
+ 	u16			q_depth;
+ 	u8			reqq;		/*  Request queue to be used */
+ 	u8			rsvd;
+ 	struct list_head	itnim_q;	/*  queue of active itnim */
+-	struct list_head	ioim_free_q;	/*  free IO resources	*/
+ 	struct list_head	ioim_resfree_q; /*  IOs waiting for f/w */
+ 	struct list_head	ioim_comp_q;	/*  IO global comp Q	*/
+ 	struct list_head	tskim_free_q;
+@@ -104,6 +128,19 @@ struct bfa_fcpim_mod_s {
+ 	bfa_fcpim_profile_t     profile_start;
  };
-@@ -515,7 +518,7 @@ void bfa_fcport_event_register(struct bfa_s *bfa,
- bfa_boolean_t bfa_fcport_is_disabled(struct bfa_s *bfa);
- enum bfa_port_speed bfa_fcport_get_ratelim_speed(struct bfa_s *bfa);
  
--void bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit);
-+void bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit, u8 bb_scn);
- bfa_boolean_t     bfa_fcport_is_ratelim(struct bfa_s *bfa);
- bfa_boolean_t	bfa_fcport_is_linkup(struct bfa_s *bfa);
- bfa_status_t bfa_fcport_get_stats(struct bfa_s *bfa,
-@@ -524,6 +527,7 @@ bfa_status_t bfa_fcport_get_stats(struct bfa_s *bfa,
- bfa_status_t bfa_fcport_clear_stats(struct bfa_s *bfa, bfa_cb_port_t cbfn,
- 				    void *cbarg);
- bfa_boolean_t bfa_fcport_is_qos_enabled(struct bfa_s *bfa);
-+bfa_boolean_t bfa_fcport_is_trunk_enabled(struct bfa_s *bfa);
- bfa_status_t bfa_fcport_is_pbcdisabled(struct bfa_s *bfa);
- 
++struct bfa_fcp_mod_s {
++	struct bfa_s		*bfa;
++	struct list_head	iotag_ioim_free_q;	/* free IO resources */
++	struct list_head	iotag_tio_free_q;	/* free IO resources */
++	struct bfa_iotag_s	*iotag_arr;
++	struct bfa_itn_s	*itn_arr;
++	int			num_ioim_reqs;
++	int			num_fwtio_reqs;
++	int			num_itns;
++	struct bfa_dma_s	snsbase;
++	struct bfa_fcpim_s	fcpim;
++};
++
  /*
-@@ -607,7 +611,7 @@ struct bfa_lps_s *bfa_lps_alloc(struct bfa_s *bfa);
- void bfa_lps_delete(struct bfa_lps_s *lps);
- void bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa,
- 		   u16 pdusz, wwn_t pwwn, wwn_t nwwn,
--		   bfa_boolean_t auth_en);
-+		   bfa_boolean_t auth_en, u8 bb_scn);
- void bfa_lps_fdisc(struct bfa_lps_s *lps, void *uarg, u16 pdusz,
- 		   wwn_t pwwn, wwn_t nwwn);
- void bfa_lps_fdisclogo(struct bfa_lps_s *lps);
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 57cc50e..cdf84f6 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -53,6 +53,7 @@ int		bfa_log_level = 3; /* WARNING log level */
- int		ioc_auto_recover = BFA_TRUE;
- int		bfa_linkup_delay = -1;
- int		fdmi_enable = BFA_TRUE;
-+int		fc_credit_recovery = BFA_TRUE;
- int		pcie_max_read_reqsz;
- int		bfa_debugfs_enable = 1;
- int		msix_disable_cb = 0, msix_disable_ct = 0;
-@@ -138,6 +139,9 @@ MODULE_PARM_DESC(msix_disable_ct, "Disable Message Signaled Interrupts "
- module_param(fdmi_enable, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(fdmi_enable, "Enables fdmi registration, default=1, "
- 				"Range[false:0|true:1]");
-+module_param(fc_credit_recovery, int, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(fc_credit_recovery, "Enables FC Credit Recovery, default=1, "
-+				"Range[false:0|true:1]");
- module_param(pcie_max_read_reqsz, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(pcie_max_read_reqsz, "PCIe max read request size, default=0 "
- 		"(use system setting), Range[128|256|512|1024|2048|4096]");
-@@ -910,6 +914,7 @@ bfad_drv_init(struct bfad_s *bfad)
- 	bfad->bfa_fcs.trcmod = bfad->trcmod;
- 	bfa_fcs_attach(&bfad->bfa_fcs, &bfad->bfa, bfad, BFA_FALSE);
- 	bfad->bfa_fcs.fdmi_enabled = fdmi_enable;
-+	bfad->bfa_fcs.bbscn_enabled = fc_credit_recovery;
- 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+  * BFA IO (initiator mode)
+  */
+@@ -111,7 +148,7 @@ struct bfa_ioim_s {
+ 	struct list_head	qe;		/*  queue elememt	*/
+ 	bfa_sm_t		sm;		/*  BFA ioim state machine */
+ 	struct bfa_s		*bfa;		/*  BFA module	*/
+-	struct bfa_fcpim_mod_s	*fcpim;		/*  parent fcpim module */
++	struct bfa_fcpim_s	*fcpim;		/*  parent fcpim module */
+ 	struct bfa_itnim_s	*itnim;		/*  i-t-n nexus for this IO  */
+ 	struct bfad_ioim_s	*dio;		/*  driver IO handle	*/
+ 	u16			iotag;		/*  FWI IO tag	*/
+@@ -129,7 +166,6 @@ struct bfa_ioim_s {
  
- 	bfad->bfad_flags |= BFAD_DRV_INIT_DONE;
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 4af1b02..dcb112c 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -353,6 +353,7 @@ extern int      bfa_linkup_delay;
- extern int      msix_disable_cb;
- extern int      msix_disable_ct;
- extern int      fdmi_enable;
-+extern int	fc_credit_recovery;
- extern int      supported_fc4s;
- extern int	pcie_max_read_reqsz;
- extern int bfa_debugfs_enable;
+ struct bfa_ioim_sp_s {
+ 	struct bfi_msg_s	comp_rspmsg;	/*  IO comp f/w response */
+-	u8			*snsinfo;	/*  sense info for this IO   */
+ 	struct bfa_sgpg_wqe_s	sgpg_wqe;	/*  waitq elem for sgpg	*/
+ 	struct bfa_reqq_wait_s	reqq_wait;	/*  to wait for room in reqq */
+ 	bfa_boolean_t		abort_explicit;	/*  aborted by OS	*/
+@@ -143,7 +179,7 @@ struct bfa_tskim_s {
+ 	struct list_head	qe;
+ 	bfa_sm_t		sm;
+ 	struct bfa_s		*bfa;	/*  BFA module  */
+-	struct bfa_fcpim_mod_s  *fcpim;	/*  parent fcpim module	*/
++	struct bfa_fcpim_s	*fcpim;	/*  parent fcpim module	*/
+ 	struct bfa_itnim_s	*itnim;	/*  i-t-n nexus for this IO  */
+ 	struct bfad_tskim_s	*dtsk;  /*  driver task mgmt cmnd	*/
+ 	bfa_boolean_t		notify;	/*  notify itnim on TM comp  */
+@@ -182,13 +218,13 @@ struct bfa_itnim_s {
+ 	struct bfa_wc_s	wc;		/*  waiting counter	*/
+ 	struct bfa_timer_s timer;	/*  pending IO TOV	 */
+ 	struct bfa_reqq_wait_s reqq_wait; /*  to wait for room in reqq */
+-	struct bfa_fcpim_mod_s *fcpim;	/*  fcpim module	*/
++	struct bfa_fcpim_s *fcpim;	/*  fcpim module	*/
+ 	struct bfa_itnim_iostats_s	stats;
+ 	struct bfa_itnim_ioprofile_s  ioprofile;
+ };
+ 
+ #define bfa_itnim_is_online(_itnim) ((_itnim)->is_online)
+-#define BFA_FCPIM_MOD(_hal) (&(_hal)->modules.fcpim_mod)
++#define BFA_FCPIM(_hal)	(&(_hal)->modules.fcp_mod.fcpim)
+ #define BFA_IOIM_TAG_2_ID(_iotag)	((_iotag) & BFA_IOIM_IOTAG_MASK)
+ #define BFA_IOIM_FROM_TAG(_fcpim, _iotag)	\
+ 	(&fcpim->ioim_arr[(_iotag & BFA_IOIM_IOTAG_MASK)])
+@@ -196,9 +232,9 @@ struct bfa_itnim_s {
+ 	(&fcpim->tskim_arr[_tmtag & (fcpim->num_tskim_reqs - 1)])
+ 
+ #define bfa_io_profile_start_time(_bfa)	\
+-	(_bfa->modules.fcpim_mod.io_profile_start_time)
++	((_bfa)->modules.fcp_mod.fcpim.io_profile_start_time)
+ #define bfa_fcpim_get_io_profile(_bfa)	\
+-	(_bfa->modules.fcpim_mod.io_profile)
++	((_bfa)->modules.fcp_mod.fcpim.io_profile)
+ #define bfa_ioim_update_iotag(__ioim) do {				\
+ 	uint16_t k = (__ioim)->iotag >> BFA_IOIM_RETRY_TAG_OFFSET;	\
+ 	k++; (__ioim)->iotag &= BFA_IOIM_IOTAG_MASK;			\
+@@ -217,7 +253,7 @@ bfa_ioim_maxretry_reached(struct bfa_ioim_s *ioim)
+ /*
+  * function prototypes
+  */
+-void	bfa_ioim_attach(struct bfa_fcpim_mod_s *fcpim,
++void	bfa_ioim_attach(struct bfa_fcpim_s *fcpim,
+ 					struct bfa_meminfo_s *minfo);
+ void	bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+ void	bfa_ioim_good_comp_isr(struct bfa_s *bfa,
+@@ -228,7 +264,7 @@ void	bfa_ioim_cleanup_tm(struct bfa_ioim_s *ioim,
+ void	bfa_ioim_iocdisable(struct bfa_ioim_s *ioim);
+ void	bfa_ioim_tov(struct bfa_ioim_s *ioim);
+ 
+-void	bfa_tskim_attach(struct bfa_fcpim_mod_s *fcpim,
++void	bfa_tskim_attach(struct bfa_fcpim_s *fcpim,
+ 					struct bfa_meminfo_s *minfo);
+ void	bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+ void	bfa_tskim_iodone(struct bfa_tskim_s *tskim);
+@@ -237,9 +273,8 @@ void	bfa_tskim_cleanup(struct bfa_tskim_s *tskim);
+ 
+ void	bfa_itnim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
+ 					u32 *dm_len);
+-void	bfa_itnim_attach(struct bfa_fcpim_mod_s *fcpim,
++void	bfa_itnim_attach(struct bfa_fcpim_s *fcpim,
+ 					struct bfa_meminfo_s *minfo);
+-void	bfa_itnim_detach(struct bfa_fcpim_mod_s *fcpim);
+ void	bfa_itnim_iocdisable(struct bfa_itnim_s *itnim);
+ void	bfa_itnim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+ void	bfa_itnim_iodone(struct bfa_itnim_s *itnim);
+@@ -254,11 +289,11 @@ u16	bfa_fcpim_path_tov_get(struct bfa_s *bfa);
+ u16	bfa_fcpim_qdepth_get(struct bfa_s *bfa);
+ 
+ #define bfa_fcpim_ioredirect_enabled(__bfa)				\
+-	(((struct bfa_fcpim_mod_s *)(BFA_FCPIM_MOD(__bfa)))->ioredirect)
++	(((struct bfa_fcpim_s *)(BFA_FCPIM(__bfa)))->ioredirect)
+ 
+ #define bfa_fcpim_get_next_reqq(__bfa, __qid)				\
+ {									\
+-	struct bfa_fcpim_mod_s *__fcpim = BFA_FCPIM_MOD(__bfa);      \
++	struct bfa_fcpim_s *__fcpim = BFA_FCPIM(__bfa);      \
+ 	__fcpim->reqq++;						\
+ 	__fcpim->reqq &= (BFI_IOC_MAX_CQS - 1);      \
+ 	*(__qid) = __fcpim->reqq;					\
+diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
+index 4b67ea2..0fc23f6 100644
+--- a/drivers/scsi/bfa/bfa_modules.h
++++ b/drivers/scsi/bfa/bfa_modules.h
+@@ -34,7 +34,7 @@ struct bfa_modules_s {
+ 	struct bfa_lps_mod_s	lps_mod;	/*  fcxp module	      */
+ 	struct bfa_uf_mod_s	uf_mod;		/*  unsolicited frame module */
+ 	struct bfa_rport_mod_s	rport_mod;	/*  remote port module	      */
+-	struct bfa_fcpim_mod_s	fcpim_mod;	/*  FCP initiator module     */
++	struct bfa_fcp_mod_s	fcp_mod;	/*  FCP initiator module     */
+ 	struct bfa_sgpg_mod_s	sgpg_mod;	/*  SG page module	      */
+ 	struct bfa_port_s	port;		/*  Physical port module     */
+ };
+@@ -51,7 +51,6 @@ enum {
+ 	BFA_TRC_HAL_IOCFC_CB	= 5,
+ };
+ 
+-
+ /*
+  * Macro to define a new BFA module
+  */
+@@ -122,6 +121,6 @@ extern struct bfa_module_s hal_mod_fcxp;
+ extern struct bfa_module_s hal_mod_lps;
+ extern struct bfa_module_s hal_mod_uf;
+ extern struct bfa_module_s hal_mod_rport;
+-extern struct bfa_module_s hal_mod_fcpim;
++extern struct bfa_module_s hal_mod_fcp;
+ 
+ #endif /* __BFA_MODULES_H__ */
 diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-index d43bf6a..edb9256 100644
+index edb9256..263631d 100644
 --- a/drivers/scsi/bfa/bfi_ms.h
 +++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -226,7 +226,8 @@ struct bfi_fcport_enable_req_s {
- struct bfi_fcport_set_svc_params_req_s {
- 	struct bfi_mhdr_s  mh;		/*  msg header */
- 	__be16	   tx_bbcredit;	/*  Tx credits */
--	u16	   rsvd;
-+	u8	bb_scn;		/* BB_SC FC credit recovery */
-+	u8	rsvd;
- };
+@@ -40,6 +40,9 @@ struct bfi_iocfc_cfg_s {
+ 	u8	 sense_buf_len;	/*  SCSI sense length	    */
+ 	u16	rsvd_1;
+ 	u32	endian_sig;	/*  endian signature of host     */
++	__be16	num_ioim_reqs;
++	__be16	num_fwtio_reqs;
++	u8	rsvd[4];
  
- /*
-@@ -374,7 +375,7 @@ struct bfi_lps_login_req_s {
- 	u8		fdisc;
- 	u8		auth_en;
- 	u8		lps_role;
--	u8		rsvd[1];
-+	u8		bb_scn;
- };
- 
- struct bfi_lps_login_rsp_s {
-@@ -394,6 +395,8 @@ struct bfi_lps_login_rsp_s {
- 	mac_t		fcf_mac;
- 	u8		ext_status;
- 	u8		brcd_switch;	/*  attached peer is brcd switch */
-+	u8		bb_scn;		/* atatched port's bb_scn */
-+	u8		resvd;
- };
- 
- struct bfi_lps_logout_req_s {
+ 	/*
+ 	 * Request and response circular queue base addresses, size and
 -- 
 1.7.3.rc1
 
