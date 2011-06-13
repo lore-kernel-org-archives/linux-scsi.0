@@ -1,40 +1,41 @@
 From: Dan Carpenter <error27@gmail.com>
-Subject: [patch 3/4] SCSI: target: don't return ERR_PTR in
- target_fabric_configfs_init()
-Date: Mon, 13 Jun 2011 23:10:49 +0300
-Message-ID: <20110613201049.GJ3583@shale.localdomain>
+Subject: [patch 4/4] SCSI: target: off by one in tcm_loop_make_naa_tpg()
+Date: Mon, 13 Jun 2011 23:12:19 +0300
+Message-ID: <20110613201219.GK3583@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:38245 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188Ab1FMULo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2011 16:11:44 -0400
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:53396 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752045Ab1FMUN2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2011 16:13:28 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-In the original code, there were several places inside the
-target_fabric_configfs_init() function that returned NULL on error
-and one place the returned an ERR_PTR.  There are two places that
-call this function and they only check for NULL returns; they don't
-check for ERR_PTRs.  So I've changed the ERR_PTR so now the function
-only returns NULL on error.
+There are TL_TPGS_PER_HBA elements in the ->tl_hba_tpgs[] array so
+this test is off by one.  Later when we take the pointer, it would
+be one past the end and we'd crash:
+
+	tl_tpg = &tl_hba->tl_hba_tpgs[tpgt];
+	tl_tpg->tl_hba = tl_hba;
+
+I think this can only be triggered by root.
 
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index ee6fad9..b17abd1 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -312,7 +312,7 @@ struct target_fabric_configfs *target_fabric_configfs_init(
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 7329d0e..4fedb58 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -1227,7 +1227,7 @@ struct se_portal_group *tcm_loop_make_naa_tpg(
+ 	tpgt_str += 5; /* Skip ahead of "tpgt_" */
+ 	tpgt = (unsigned short int) simple_strtoul(tpgt_str, &end_ptr, 0);
  
- 	tf = kzalloc(sizeof(struct target_fabric_configfs), GFP_KERNEL);
- 	if (!(tf))
--		return ERR_PTR(-ENOMEM);
-+		return NULL;
- 
- 	INIT_LIST_HEAD(&tf->tf_list);
- 	atomic_set(&tf->tf_access_cnt, 0);
+-	if (tpgt > TL_TPGS_PER_HBA) {
++	if (tpgt >= TL_TPGS_PER_HBA) {
+ 		printk(KERN_ERR "Passed tpgt: %hu exceeds TL_TPGS_PER_HBA:"
+ 				" %u\n", tpgt, TL_TPGS_PER_HBA);
+ 		return ERR_PTR(-EINVAL);
