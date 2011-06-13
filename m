@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 12/12] bfa: Update the driver version to 3.0.2.0
-Date: Mon, 13 Jun 2011 15:55:39 -0700
-Message-ID: <1308005739-16140-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 02/12] bfa: Introduce IOC event notification mechanism.
+Date: Mon, 13 Jun 2011 16:00:27 -0700
+Message-ID: <1308006027-22753-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59259 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59429 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752885Ab1FMW4I (ORCPT
+	by vger.kernel.org with ESMTP id S1751959Ab1FMXBR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2011 18:56:08 -0400
+	Mon, 13 Jun 2011 19:01:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -17,24 +17,369 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
+Change details:
+	- Introduced a generic event notification callback function that receives
+	  IOC_ENABLED, IOC_DISABLED, IOC_FAILED events and notifies the modules
+	  registered for these events.
+
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfad_drv.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfa_core.c |    2 +-
+ drivers/scsi/bfa/bfa_ioc.c  |   53 ++++++++++++++++++++++---------------------
+ drivers/scsi/bfa/bfa_ioc.h  |   24 +++++++++++++------
+ drivers/scsi/bfa/bfa_port.c |   47 +++++++++++++++++++++++--------------
+ drivers/scsi/bfa/bfa_port.h |    4 +-
+ drivers/scsi/bfa/bfi.h      |   16 ++++++++++--
+ 6 files changed, 88 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index bfe69db..7cfaa62 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -56,7 +56,7 @@
- #ifdef BFA_DRIVER_VERSION
- #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
- #else
--#define BFAD_DRIVER_VERSION    "2.3.2.3"
-+#define BFAD_DRIVER_VERSION    "3.0.2.0"
- #endif
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 91838c5..8e496e1 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -821,7 +821,7 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	if (pcidev->device_id == BFA_PCI_DEVICE_ID_CT_FC)
+ 		bfa_ioc_set_fcmode(&bfa->ioc);
  
- #define BFAD_PROTO_NAME FCPI_NAME
+-	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_MC_IOCFC);
++	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_PCIFN_CLASS_FC);
+ 	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
+ 
+ 	bfa_iocfc_init_mem(bfa, bfad, cfg, pcidev);
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 6c7e033..d215168 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -87,6 +87,8 @@ static void bfa_ioc_mbox_poll(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_mbox_hbfail(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_recover(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_check_attr_wwns(struct bfa_ioc_s *ioc);
++static void bfa_ioc_event_notify(struct bfa_ioc_s *ioc ,
++				enum bfa_ioc_event_e event);
+ static void bfa_ioc_disable_comp(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_lpu_stop(struct bfa_ioc_s *ioc);
+ static void bfa_ioc_debug_save_ftrc(struct bfa_ioc_s *ioc);
+@@ -391,6 +393,7 @@ bfa_ioc_sm_op_entry(struct bfa_ioc_s *ioc)
+ 	struct bfad_s *bfad = (struct bfad_s *)ioc->bfa->bfad;
+ 
+ 	ioc->cbfn->enable_cbfn(ioc->bfa, BFA_STATUS_OK);
++	bfa_ioc_event_notify(ioc, BFA_IOC_E_ENABLED);
+ 	bfa_ioc_hb_monitor(ioc);
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level, "IOC enabled\n");
+ }
+@@ -1185,23 +1188,28 @@ bfa_iocpf_sm_fail(struct bfa_iocpf_s *iocpf, enum iocpf_event event)
+  *  BFA IOC private functions
+  */
+ 
++/*
++ * Notify common modules registered for notification.
++ */
+ static void
+-bfa_ioc_disable_comp(struct bfa_ioc_s *ioc)
++bfa_ioc_event_notify(struct bfa_ioc_s *ioc, enum bfa_ioc_event_e event)
+ {
+-	struct list_head			*qe;
+-	struct bfa_ioc_hbfail_notify_s	*notify;
+-
+-	ioc->cbfn->disable_cbfn(ioc->bfa);
++	struct bfa_ioc_notify_s	*notify;
++	struct list_head	*qe;
+ 
+-	/*
+-	 * Notify common modules registered for notification.
+-	 */
+-	list_for_each(qe, &ioc->hb_notify_q) {
+-		notify = (struct bfa_ioc_hbfail_notify_s *) qe;
+-		notify->cbfn(notify->cbarg);
++	list_for_each(qe, &ioc->notify_q) {
++		notify = (struct bfa_ioc_notify_s *)qe;
++		notify->cbfn(notify->cbarg, event);
+ 	}
+ }
+ 
++static void
++bfa_ioc_disable_comp(struct bfa_ioc_s *ioc)
++{
++	ioc->cbfn->disable_cbfn(ioc->bfa);
++	bfa_ioc_event_notify(ioc, BFA_IOC_E_DISABLED);
++}
++
+ bfa_boolean_t
+ bfa_ioc_sem_get(void __iomem *sem_reg)
+ {
+@@ -1508,7 +1516,7 @@ bfa_ioc_send_enable(struct bfa_ioc_s *ioc)
+ 
+ 	bfi_h2i_set(enable_req.mh, BFI_MC_IOC, BFI_IOC_H2I_ENABLE_REQ,
+ 		    bfa_ioc_portid(ioc));
+-	enable_req.ioc_class = ioc->ioc_mc;
++	enable_req.clscode = cpu_to_be16(ioc->clscode);
+ 	do_gettimeofday(&tv);
+ 	enable_req.tv_sec = be32_to_cpu(tv.tv_sec);
+ 	bfa_ioc_mbox_send(ioc, &enable_req, sizeof(struct bfi_ioc_ctrl_req_s));
+@@ -1816,18 +1824,13 @@ bfa_ioc_smem_clr(struct bfa_ioc_s *ioc, u32 soff, u32 sz)
+ static void
+ bfa_ioc_fail_notify(struct bfa_ioc_s *ioc)
+ {
+-	struct list_head		*qe;
+-	struct bfa_ioc_hbfail_notify_s	*notify;
+ 	struct bfad_s *bfad = (struct bfad_s *)ioc->bfa->bfad;
+ 
+ 	/*
+ 	 * Notify driver and common modules registered for notification.
+ 	 */
+ 	ioc->cbfn->hbfail_cbfn(ioc->bfa);
+-	list_for_each(qe, &ioc->hb_notify_q) {
+-		notify = (struct bfa_ioc_hbfail_notify_s *) qe;
+-		notify->cbfn(notify->cbarg);
+-	}
++	bfa_ioc_event_notify(ioc, BFA_IOC_E_FAILED);
+ 
+ 	bfa_ioc_debug_save_ftrc(ioc);
+ 
+@@ -2011,7 +2014,7 @@ bfa_ioc_attach(struct bfa_ioc_s *ioc, void *bfa, struct bfa_ioc_cbfn_s *cbfn,
+ 	ioc->iocpf.ioc	= ioc;
+ 
+ 	bfa_ioc_mbox_attach(ioc);
+-	INIT_LIST_HEAD(&ioc->hb_notify_q);
++	INIT_LIST_HEAD(&ioc->notify_q);
+ 
+ 	bfa_fsm_set_state(ioc, bfa_ioc_sm_uninit);
+ 	bfa_fsm_send_event(ioc, IOC_E_RESET);
+@@ -2033,9 +2036,9 @@ bfa_ioc_detach(struct bfa_ioc_s *ioc)
+  */
+ void
+ bfa_ioc_pci_init(struct bfa_ioc_s *ioc, struct bfa_pcidev_s *pcidev,
+-		 enum bfi_mclass mc)
++		enum bfi_pcifn_class clscode)
+ {
+-	ioc->ioc_mc	= mc;
++	ioc->clscode	= clscode;
+ 	ioc->pcidev	= *pcidev;
+ 	ioc->ctdev	= bfa_asic_id_ct(ioc->pcidev.device_id);
+ 	ioc->cna	= ioc->ctdev && !ioc->fcmode;
+@@ -2318,12 +2321,10 @@ bfa_ioc_get_type(struct bfa_ioc_s *ioc)
+ {
+ 	if (!ioc->ctdev || ioc->fcmode)
+ 		return BFA_IOC_TYPE_FC;
+-	else if (ioc->ioc_mc == BFI_MC_IOCFC)
++	else if (ioc->clscode == BFI_PCIFN_CLASS_FC)
+ 		return BFA_IOC_TYPE_FCoE;
+-	else if (ioc->ioc_mc == BFI_MC_LL)
+-		return BFA_IOC_TYPE_LL;
+ 	else {
+-		WARN_ON(ioc->ioc_mc != BFI_MC_LL);
++		WARN_ON(ioc->clscode != BFI_PCIFN_CLASS_ETH);
+ 		return BFA_IOC_TYPE_LL;
+ 	}
+ }
+@@ -2531,7 +2532,7 @@ bfa_ioc_send_fwsync(struct bfa_ioc_s *ioc)
+ 
+ 	bfi_h2i_set(req->mh, BFI_MC_IOC, BFI_IOC_H2I_DBG_SYNC,
+ 		    bfa_ioc_portid(ioc));
+-	req->ioc_class = ioc->ioc_mc;
++	req->clscode = cpu_to_be16(ioc->clscode);
+ 	bfa_ioc_mbox_queue(ioc, &cmd);
+ }
+ 
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 62318d2..ff8e21d 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -197,18 +197,26 @@ struct bfa_ioc_cbfn_s {
+ };
+ 
+ /*
+- * Heartbeat failure notification queue element.
++ * IOC event notification mechanism.
+  */
+-struct bfa_ioc_hbfail_notify_s {
++enum bfa_ioc_event_e {
++	BFA_IOC_E_ENABLED	= 1,
++	BFA_IOC_E_DISABLED	= 2,
++	BFA_IOC_E_FAILED	= 3,
++};
++
++typedef void (*bfa_ioc_notify_cbfn_t)(void *, enum bfa_ioc_event_e);
++
++struct bfa_ioc_notify_s {
+ 	struct list_head		qe;
+-	bfa_ioc_hbfail_cbfn_t	cbfn;
++	bfa_ioc_notify_cbfn_t	cbfn;
+ 	void			*cbarg;
+ };
+ 
+ /*
+- * Initialize a heartbeat failure notification structure
++ * Initialize a IOC event notification structure
+  */
+-#define bfa_ioc_hbfail_init(__notify, __cbfn, __cbarg) do {	\
++#define bfa_ioc_notify_init(__notify, __cbfn, __cbarg) do {	\
+ 	(__notify)->cbfn = (__cbfn);      \
+ 	(__notify)->cbarg = (__cbarg);      \
+ } while (0)
+@@ -229,11 +237,11 @@ struct bfa_ioc_s {
+ 	struct bfa_timer_s	sem_timer;
+ 	struct bfa_timer_s	hb_timer;
+ 	u32		hb_count;
+-	struct list_head		hb_notify_q;
++	struct list_head	notify_q;
+ 	void			*dbg_fwsave;
+ 	int			dbg_fwsave_len;
+ 	bfa_boolean_t		dbg_fwsave_once;
+-	enum bfi_mclass		ioc_mc;
++	enum bfi_pcifn_class	clscode;
+ 	struct bfa_ioc_regs_s	ioc_regs;
+ 	struct bfa_trc_mod_s	*trcmod;
+ 	struct bfa_ioc_drv_stats_s	stats;
+@@ -334,7 +342,7 @@ void bfa_ioc_attach(struct bfa_ioc_s *ioc, void *bfa,
+ void bfa_ioc_auto_recover(bfa_boolean_t auto_recover);
+ void bfa_ioc_detach(struct bfa_ioc_s *ioc);
+ void bfa_ioc_pci_init(struct bfa_ioc_s *ioc, struct bfa_pcidev_s *pcidev,
+-		enum bfi_mclass mc);
++		enum bfi_pcifn_class clscode);
+ void bfa_ioc_mem_claim(struct bfa_ioc_s *ioc,  u8 *dm_kva, u64 dm_pa);
+ void bfa_ioc_enable(struct bfa_ioc_s *ioc);
+ void bfa_ioc_disable(struct bfa_ioc_s *ioc);
+diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
+index 3f8e9d6..5ebdb62 100644
+--- a/drivers/scsi/bfa/bfa_port.c
++++ b/drivers/scsi/bfa/bfa_port.c
+@@ -387,32 +387,43 @@ bfa_port_clear_stats(struct bfa_port_s *port, bfa_port_stats_cbfn_t cbfn,
+ }
+ 
+ /*
+- * bfa_port_hbfail()
++ * bfa_port_notify()
+  *
++ * Port module IOC event handler
+  *
+  * @param[in] Pointer to the Port module data structure.
++ * @param[in] IOC event structure
+  *
+  * @return void
+  */
+ void
+-bfa_port_hbfail(void *arg)
++bfa_port_notify(void *arg, enum bfa_ioc_event_e event)
+ {
+ 	struct bfa_port_s *port = (struct bfa_port_s *) arg;
+ 
+-	/* Fail any pending get_stats/clear_stats requests */
+-	if (port->stats_busy) {
+-		if (port->stats_cbfn)
+-			port->stats_cbfn(port->stats_cbarg, BFA_STATUS_FAILED);
+-		port->stats_cbfn = NULL;
+-		port->stats_busy = BFA_FALSE;
+-	}
+-
+-	/* Clear any enable/disable is pending */
+-	if (port->endis_pending) {
+-		if (port->endis_cbfn)
+-			port->endis_cbfn(port->endis_cbarg, BFA_STATUS_FAILED);
+-		port->endis_cbfn = NULL;
+-		port->endis_pending = BFA_FALSE;
++	switch (event) {
++	case BFA_IOC_E_DISABLED:
++	case BFA_IOC_E_FAILED:
++		/* Fail any pending get_stats/clear_stats requests */
++		if (port->stats_busy) {
++			if (port->stats_cbfn)
++				port->stats_cbfn(port->stats_cbarg,
++						BFA_STATUS_FAILED);
++			port->stats_cbfn = NULL;
++			port->stats_busy = BFA_FALSE;
++		}
++
++		/* Clear any enable/disable is pending */
++		if (port->endis_pending) {
++			if (port->endis_cbfn)
++				port->endis_cbfn(port->endis_cbarg,
++						BFA_STATUS_FAILED);
++			port->endis_cbfn = NULL;
++			port->endis_pending = BFA_FALSE;
++		}
++		break;
++	default:
++		break;
+ 	}
+ }
+ 
+@@ -447,8 +458,8 @@ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+ 	port->endis_cbfn = NULL;
+ 
+ 	bfa_ioc_mbox_regisr(port->ioc, BFI_MC_PORT, bfa_port_isr, port);
+-	bfa_ioc_hbfail_init(&port->hbfail, bfa_port_hbfail, port);
+-	list_add_tail(&port->hbfail.qe, &port->ioc->hb_notify_q);
++	bfa_ioc_notify_init(&port->ioc_notify, bfa_port_notify, port);
++	list_add_tail(&port->ioc_notify.qe, &port->ioc->notify_q);
+ 
+ 	/*
+ 	 * initialize time stamp for stats reset
+diff --git a/drivers/scsi/bfa/bfa_port.h b/drivers/scsi/bfa/bfa_port.h
+index c4ee9db..8b56174 100644
+--- a/drivers/scsi/bfa/bfa_port.h
++++ b/drivers/scsi/bfa/bfa_port.h
+@@ -43,12 +43,12 @@ struct bfa_port_s {
+ 	bfa_port_endis_cbfn_t		endis_cbfn;
+ 	void				*endis_cbarg;
+ 	bfa_status_t			endis_status;
+-	struct bfa_ioc_hbfail_notify_s	hbfail;
++	struct bfa_ioc_notify_s		ioc_notify;
+ };
+ 
+ void	     bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+ 				void *dev, struct bfa_trc_mod_s *trcmod);
+-void	     bfa_port_hbfail(void *arg);
++void	bfa_port_notify(void *arg, enum bfa_ioc_event_e event);
+ 
+ bfa_status_t bfa_port_get_stats(struct bfa_port_s *port,
+ 				 union bfa_port_stats_u *stats,
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 6ef1ba50..d57522dd 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -43,13 +43,15 @@ struct bfi_mhdr_s {
+ 	u8		msg_id;		/*  msg opcode with in the class   */
+ 	union {
+ 		struct {
+-			u8	rsvd;
++			u8	qid;
+ 			u8	lpu_id;	/*  msg destination		    */
+ 		} h2i;
+ 		u16	i2htok;	/*  token in msgs to host	    */
+ 	} mtag;
+ };
+ 
++#define bfi_mhdr_2_qid(_mh)	(_mh)->mtag.h2i.qid
++
+ #define bfi_h2i_set(_mh, _mc, _op, _lpuid) do {		\
+ 	(_mh).msg_class		= (_mc);      \
+ 	(_mh).msg_id		= (_op);      \
+@@ -157,6 +159,14 @@ struct bfi_mbmsg_s {
+ };
+ 
+ /*
++ * Supported PCI function class codes (personality)
++ */
++enum bfi_pcifn_class {
++	BFI_PCIFN_CLASS_FC  = 0x0c04,
++	BFI_PCIFN_CLASS_ETH = 0x0200,
++};
++
++/*
+  * Message Classes
+  */
+ enum bfi_mclass {
+@@ -353,8 +363,8 @@ enum {
+  */
+ struct bfi_ioc_ctrl_req_s {
+ 	struct bfi_mhdr_s	mh;
+-	u8			ioc_class;
+-	u8			rsvd[3];
++	u16			clscode;
++	u16			rsvd;
+ 	u32		tv_sec;
+ };
+ #define bfi_ioc_enable_req_t struct bfi_ioc_ctrl_req_s;
 -- 
 1.7.3.rc1
 
