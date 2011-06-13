@@ -1,41 +1,231 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch 4/4] SCSI: target: off by one in tcm_loop_make_naa_tpg()
-Date: Mon, 13 Jun 2011 23:12:19 +0300
-Message-ID: <20110613201219.GK3583@shale.localdomain>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 03/12] bfa: Add pbc port disable check and fix LPS message name
+Date: Mon, 13 Jun 2011 15:46:21 -0700
+Message-ID: <1308005181-958-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:53396 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045Ab1FMUN2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Jun 2011 16:13:28 -0400
-Content-Disposition: inline
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59006 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751465Ab1FMWug (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Jun 2011 18:50:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocade.com
 
-There are TL_TPGS_PER_HBA elements in the ->tl_hba_tpgs[] array so
-this test is off by one.  Later when we take the pointer, it would
-be one past the end and we'd crash:
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-	tl_tpg = &tl_hba->tl_hba_tpgs[tpgt];
-	tl_tpg->tl_hba = tl_hba;
+Change details:
+	- Add PBC port Disabled condition check.
+	- Rename incorrectly named LPS I2H messages.
 
-I think this can only be triggered by root.
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_port.c |   13 +++++++++++++
+ drivers/scsi/bfa/bfa_port.h |    1 +
+ drivers/scsi/bfa/bfa_svc.c  |   43 ++++++++++++++++++++++++++++++++++++-------
+ drivers/scsi/bfa/bfa_svc.h  |    1 +
+ drivers/scsi/bfa/bfi.h      |    3 ++-
+ drivers/scsi/bfa/bfi_ms.h   |    6 +++---
+ 6 files changed, 56 insertions(+), 11 deletions(-)
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 7329d0e..4fedb58 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -1227,7 +1227,7 @@ struct se_portal_group *tcm_loop_make_naa_tpg(
- 	tpgt_str += 5; /* Skip ahead of "tpgt_" */
- 	tpgt = (unsigned short int) simple_strtoul(tpgt_str, &end_ptr, 0);
+diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
+index 5ebdb62..6b75936 100644
+--- a/drivers/scsi/bfa/bfa_port.c
++++ b/drivers/scsi/bfa/bfa_port.c
+@@ -236,6 +236,12 @@ bfa_port_enable(struct bfa_port_s *port, bfa_port_endis_cbfn_t cbfn,
+ {
+ 	struct bfi_port_generic_req_s *m;
  
--	if (tpgt > TL_TPGS_PER_HBA) {
-+	if (tpgt >= TL_TPGS_PER_HBA) {
- 		printk(KERN_ERR "Passed tpgt: %hu exceeds TL_TPGS_PER_HBA:"
- 				" %u\n", tpgt, TL_TPGS_PER_HBA);
- 		return ERR_PTR(-EINVAL);
++	/* If port is PBC disabled, return error */
++	if (port->pbc_disabled) {
++		bfa_trc(port, BFA_STATUS_PBC);
++		return BFA_STATUS_PBC;
++	}
++
+ 	if (bfa_ioc_is_disabled(port->ioc)) {
+ 		bfa_trc(port, BFA_STATUS_IOC_DISABLED);
+ 		return BFA_STATUS_IOC_DISABLED;
+@@ -280,6 +286,12 @@ bfa_port_disable(struct bfa_port_s *port, bfa_port_endis_cbfn_t cbfn,
+ {
+ 	struct bfi_port_generic_req_s *m;
+ 
++	/* If port is PBC disabled, return error */
++	if (port->pbc_disabled) {
++		bfa_trc(port, BFA_STATUS_PBC);
++		return BFA_STATUS_PBC;
++	}
++
+ 	if (bfa_ioc_is_disabled(port->ioc)) {
+ 		bfa_trc(port, BFA_STATUS_IOC_DISABLED);
+ 		return BFA_STATUS_IOC_DISABLED;
+@@ -456,6 +468,7 @@ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+ 	port->endis_pending = BFA_FALSE;
+ 	port->stats_cbfn = NULL;
+ 	port->endis_cbfn = NULL;
++	port->pbc_disabled = BFA_FALSE;
+ 
+ 	bfa_ioc_mbox_regisr(port->ioc, BFI_MC_PORT, bfa_port_isr, port);
+ 	bfa_ioc_notify_init(&port->ioc_notify, bfa_port_notify, port);
+diff --git a/drivers/scsi/bfa/bfa_port.h b/drivers/scsi/bfa/bfa_port.h
+index 8b56174..1587a6f 100644
+--- a/drivers/scsi/bfa/bfa_port.h
++++ b/drivers/scsi/bfa/bfa_port.h
+@@ -44,6 +44,7 @@ struct bfa_port_s {
+ 	void				*endis_cbarg;
+ 	bfa_status_t			endis_status;
+ 	struct bfa_ioc_notify_s		ioc_notify;
++	bfa_boolean_t			pbc_disabled;
+ };
+ 
+ void	     bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index d1674c6..46e8cdd 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -1934,15 +1934,15 @@ bfa_lps_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ 	msg.msg = m;
+ 
+ 	switch (m->mhdr.msg_id) {
+-	case BFI_LPS_H2I_LOGIN_RSP:
++	case BFI_LPS_I2H_LOGIN_RSP:
+ 		bfa_lps_login_rsp(bfa, msg.login_rsp);
+ 		break;
+ 
+-	case BFI_LPS_H2I_LOGOUT_RSP:
++	case BFI_LPS_I2H_LOGOUT_RSP:
+ 		bfa_lps_logout_rsp(bfa, msg.logout_rsp);
+ 		break;
+ 
+-	case BFI_LPS_H2I_CVL_EVENT:
++	case BFI_LPS_I2H_CVL_EVENT:
+ 		bfa_lps_rx_cvl_event(bfa, msg.cvl_event);
+ 		break;
+ 
+@@ -3308,6 +3308,9 @@ bfa_fcport_init(struct bfa_s *bfa)
+ 	fcport->cfg.rx_bbcredit = bfa_ioc_rx_bbcredit(&bfa->ioc);
+ 	fcport->speed_sup = bfa_ioc_speed_sup(&bfa->ioc);
+ 
++	if (bfa_fcport_is_pbcdisabled(bfa))
++		bfa->modules.port.pbc_disabled = BFA_TRUE;
++
+ 	WARN_ON(!fcport->cfg.maxfrsize);
+ 	WARN_ON(!fcport->cfg.rx_bbcredit);
+ 	WARN_ON(!fcport->speed_sup);
+@@ -3432,6 +3435,9 @@ bfa_fcport_enable(struct bfa_s *bfa)
+ {
+ 	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
+ 
++	if (bfa_fcport_is_pbcdisabled(bfa))
++		return BFA_STATUS_PBC;
++
+ 	if (bfa_ioc_is_disabled(&bfa->ioc))
+ 		return BFA_STATUS_IOC_DISABLED;
+ 
+@@ -3445,6 +3451,8 @@ bfa_fcport_enable(struct bfa_s *bfa)
+ bfa_status_t
+ bfa_fcport_disable(struct bfa_s *bfa)
+ {
++	if (bfa_fcport_is_pbcdisabled(bfa))
++		return BFA_STATUS_PBC;
+ 
+ 	if (bfa_ioc_is_disabled(&bfa->ioc))
+ 		return BFA_STATUS_IOC_DISABLED;
+@@ -3453,6 +3461,21 @@ bfa_fcport_disable(struct bfa_s *bfa)
+ 	return BFA_STATUS_OK;
+ }
+ 
++/* If PBC is disabled on port, return error */
++bfa_status_t
++bfa_fcport_is_pbcdisabled(struct bfa_s *bfa)
++{
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++	struct bfa_iocfc_s *iocfc = &bfa->iocfc;
++	struct bfi_iocfc_cfgrsp_s *cfgrsp = iocfc->cfgrsp;
++
++	if (cfgrsp->pbc_cfg.port_enabled == BFI_PBC_PORT_DISABLED) {
++		bfa_trc(bfa, fcport->pwwn);
++		return BFA_STATUS_PBC;
++	}
++	return BFA_STATUS_OK;
++}
++
+ /*
+  * Configure port speed.
+  */
+@@ -3660,10 +3683,16 @@ bfa_fcport_get_attr(struct bfa_s *bfa, struct bfa_port_attr_s *attr)
+ 	attr->pport_cfg.path_tov  = bfa_fcpim_path_tov_get(bfa);
+ 	attr->pport_cfg.q_depth  = bfa_fcpim_qdepth_get(bfa);
+ 	attr->port_state = bfa_sm_to_state(hal_port_sm_table, fcport->sm);
+-	if (bfa_ioc_is_disabled(&fcport->bfa->ioc))
+-		attr->port_state = BFA_PORT_ST_IOCDIS;
+-	else if (bfa_ioc_fw_mismatch(&fcport->bfa->ioc))
+-		attr->port_state = BFA_PORT_ST_FWMISMATCH;
++
++	/* PBC Disabled State */
++	if (bfa_fcport_is_pbcdisabled(bfa))
++		attr->port_state = BFA_PORT_ST_PREBOOT_DISABLED;
++	else {
++		if (bfa_ioc_is_disabled(&fcport->bfa->ioc))
++			attr->port_state = BFA_PORT_ST_IOCDIS;
++		else if (bfa_ioc_fw_mismatch(&fcport->bfa->ioc))
++			attr->port_state = BFA_PORT_ST_FWMISMATCH;
++	}
+ 
+ 	/* FCoE vlan */
+ 	attr->fcoe_vlan = fcport->fcoe_vlan;
+diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
+index 5902a45..c5927a5 100644
+--- a/drivers/scsi/bfa/bfa_svc.h
++++ b/drivers/scsi/bfa/bfa_svc.h
+@@ -524,6 +524,7 @@ bfa_status_t bfa_fcport_get_stats(struct bfa_s *bfa,
+ bfa_status_t bfa_fcport_clear_stats(struct bfa_s *bfa, bfa_cb_port_t cbfn,
+ 				    void *cbarg);
+ bfa_boolean_t bfa_fcport_is_qos_enabled(struct bfa_s *bfa);
++bfa_status_t bfa_fcport_is_pbcdisabled(struct bfa_s *bfa);
+ 
+ /*
+  * bfa rport API functions
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index d57522dd..5b69d07 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -50,7 +50,7 @@ struct bfi_mhdr_s {
+ 	} mtag;
+ };
+ 
+-#define bfi_mhdr_2_qid(_mh)	(_mh)->mtag.h2i.qid
++#define bfi_mhdr_2_qid(_mh)	((_mh)->mtag.h2i.qid)
+ 
+ #define bfi_h2i_set(_mh, _mc, _op, _lpuid) do {		\
+ 	(_mh).msg_class		= (_mc);      \
+@@ -411,6 +411,7 @@ union bfi_ioc_i2h_msg_u {
+ 
+ #define BFI_PBC_MAX_BLUNS	8
+ #define BFI_PBC_MAX_VPORTS	16
++#define BFI_PBC_PORT_DISABLED	2
+ 
+ /*
+  * PBC boot lun configuration
+diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
+index a29d905..dd2aad9 100644
+--- a/drivers/scsi/bfa/bfi_ms.h
++++ b/drivers/scsi/bfa/bfi_ms.h
+@@ -346,9 +346,9 @@ enum bfi_lps_h2i_msgs {
+ };
+ 
+ enum bfi_lps_i2h_msgs {
+-	BFI_LPS_H2I_LOGIN_RSP	= BFA_I2HM(1),
+-	BFI_LPS_H2I_LOGOUT_RSP	= BFA_I2HM(2),
+-	BFI_LPS_H2I_CVL_EVENT	= BFA_I2HM(3),
++	BFI_LPS_I2H_LOGIN_RSP	= BFA_I2HM(1),
++	BFI_LPS_I2H_LOGOUT_RSP	= BFA_I2HM(2),
++	BFI_LPS_I2H_CVL_EVENT	= BFA_I2HM(3),
+ };
+ 
+ struct bfi_lps_login_req_s {
+-- 
+1.7.3.rc1
+
