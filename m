@@ -1,52 +1,37 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 0/8] M68k SCSI compile warning fixes
-Date: Mon, 13 Jun 2011 20:41:08 +0200
-Message-ID: <BANLkTimBan7tqAOA8rN8Encoi_rWQJfuYQ@mail.gmail.com>
+Subject: [PATCH 6/8] scsi/sun3: Check for NCR_TIMEOUT being defined instead of having a value
+Date: Mon, 13 Jun 2011 20:39:20 +0200
+Message-ID: <1307990362-22768-7-git-send-email-geert@linux-m68k.org>
 References: <1307990362-22768-1-git-send-email-geert@linux-m68k.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-m68k-owner@vger.kernel.org>
 In-Reply-To: <1307990362-22768-1-git-send-email-geert@linux-m68k.org>
 Sender: linux-m68k-owner@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, Sam Creasey <sammy@sammy.net>
 List-Id: linux-scsi@vger.kernel.org
 
-[corrected the subject]
+This fixes:
 
-=C2=A0 =C2=A0 =C2=A0 =C2=A0Hi James,
+drivers/scsi/sun3_NCR5380.c:1448:5: warning: "NCR_TIMEOUT" is not defined
 
-These patches fix several compile warnings on m68k.
-As I don't have the hardware, I couldn't run test them, though.
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Sam Creasey <sammy@sammy.net>
+---
+ drivers/scsi/sun3_NCR5380.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-=C2=A0b/drivers/scsi/atari_NCR5380.c | =C2=A0 =C2=A05 +++
-=C2=A0b/drivers/scsi/atari_scsi.c =C2=A0 =C2=A0| =C2=A0 =C2=A01
-=C2=A0b/drivers/scsi/mac_scsi.c =C2=A0 =C2=A0 =C2=A0| =C2=A0 =C2=A02 -
-=C2=A0b/drivers/scsi/sun3_NCR5380.c =C2=A0| =C2=A0 =C2=A02 -
-=C2=A0b/drivers/scsi/sun3_scsi.c =C2=A0 =C2=A0 | =C2=A0 =C2=A02 -
-=C2=A0b/drivers/scsi/sun3_scsi_vme.c | =C2=A0 =C2=A02 -
-=C2=A0drivers/scsi/mac_scsi.c =C2=A0 =C2=A0 =C2=A0 =C2=A0| =C2=A0 12 --=
------
-=C2=A0drivers/scsi/sun3_NCR5380.c =C2=A0 =C2=A0| =C2=A0 65 +++---------=
------------------------------
-=C2=A0drivers/scsi/sun3_scsi.c =C2=A0 =C2=A0 =C2=A0 | =C2=A0 =C2=A09 ++=
-++-
-=C2=A0drivers/scsi/sun3_scsi_vme.c =C2=A0 | =C2=A0 =C2=A09 ++++-
-=C2=A010 files changed, 31 insertions(+), 78 deletions(-)
-
-Gr{oetje,eeting}s,
-
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
-
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index 2ba1cb7..f3cffdf 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -1445,7 +1445,7 @@ static int NCR5380_select(struct Scsi_Host *instance, struct scsi_cmnd *cmd,
+     local_irq_restore(flags);
+ 
+     /* Wait for arbitration logic to complete */
+-#if NCR_TIMEOUT
++#ifdef NCR_TIMEOUT
+     {
+       unsigned long timeout = jiffies + 2*NCR_TIMEOUT;
+ 
+-- 
+1.7.0.4
