@@ -1,13 +1,13 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 01/12] bfa: Introduced generic address len pair to represent DMA memory chunk.
-Date: Mon, 13 Jun 2011 15:39:36 -0700
-Message-ID: <1308004776-13819-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 00/12] bfa: Update bfa driver to version 3.0.2.0
+Date: Mon, 13 Jun 2011 15:39:24 -0700
+Message-ID: <1308004764-13616-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59127 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751959Ab1FMWyv (ORCPT
+	by vger.kernel.org with ESMTP id S1753922Ab1FMWyv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 13 Jun 2011 18:54:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,214 +17,78 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Change details:
-	- Avoid the use of hardware defined structure bfi_sge_s for DMA requests in host.
-	- Defined a generic address len pair to represent a DMA memory chunk (bfi_alen_s).
+Hi James,
 
-Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
----
- drivers/scsi/bfa/bfa_ioc.h |   22 ++++++++----------
- drivers/scsi/bfa/bfa_svc.c |   53 ++++++++-----------------------------------
- drivers/scsi/bfa/bfi.h     |   10 +++++++-
- drivers/scsi/bfa/bfi_ms.h  |    6 ++--
- 4 files changed, 32 insertions(+), 59 deletions(-)
+	The following patch set adds support for Brocade-1860 Fabric Adapter and
 
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index c85182a..62318d2 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -112,18 +112,6 @@ struct bfa_dma_s {
- #define BFI_SMEM_CB_SIZE	0x200000U	/* ! 2MB for crossbow	*/
- #define BFI_SMEM_CT_SIZE	0x280000U	/* ! 2.5MB for catapult	*/
- 
--
--#define bfa_dma_addr_set(dma_addr, pa)	\
--		__bfa_dma_addr_set(&dma_addr, (u64)pa)
--
--static inline void
--__bfa_dma_addr_set(union bfi_addr_u *dma_addr, u64 pa)
--{
--	dma_addr->a32.addr_lo = (__be32) pa;
--	dma_addr->a32.addr_hi = (__be32) (pa >> 32);
--}
--
--
- #define bfa_dma_be_addr_set(dma_addr, pa)	\
- 		__bfa_dma_be_addr_set(&dma_addr, (u64)pa)
- static inline void
-@@ -133,6 +121,16 @@ __bfa_dma_be_addr_set(union bfi_addr_u *dma_addr, u64 pa)
- 	dma_addr->a32.addr_hi = cpu_to_be32(pa >> 32);
- }
- 
-+#define bfa_alen_set(__alen, __len, __pa)	\
-+	__bfa_alen_set(__alen, __len, (u64)__pa)
-+
-+static inline void
-+__bfa_alen_set(struct bfi_alen_s *alen, u32 len, u64 pa)
-+{
-+	alen->al_len = cpu_to_be32(len);
-+	bfa_dma_be_addr_set(alen->al_addr, pa);
-+}
-+
- struct bfa_ioc_regs_s {
- 	void __iomem *hfn_mbox_cmd;
- 	void __iomem *hfn_mbox;
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index 16d9a5f..d1674c6 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -750,23 +750,6 @@ hal_fcxp_send_comp(struct bfa_s *bfa, struct bfi_fcxp_send_rsp_s *fcxp_rsp)
- }
- 
- static void
--hal_fcxp_set_local_sges(struct bfi_sge_s *sge, u32 reqlen, u64 req_pa)
--{
--	union bfi_addr_u      sga_zero = { {0} };
--
--	sge->sg_len = reqlen;
--	sge->flags = BFI_SGE_DATA_LAST;
--	bfa_dma_addr_set(sge[0].sga, req_pa);
--	bfa_sge_to_be(sge);
--	sge++;
--
--	sge->sga = sga_zero;
--	sge->sg_len = reqlen;
--	sge->flags = BFI_SGE_PGDLEN;
--	bfa_sge_to_be(sge);
--}
--
--static void
- hal_fcxp_tx_plog(struct bfa_s *bfa, u32 reqlen, struct bfa_fcxp_s *fcxp,
- 		 struct fchs_s *fchs)
- {
-@@ -873,18 +856,16 @@ bfa_fcxp_queue(struct bfa_fcxp_s *fcxp, struct bfi_fcxp_send_req_s *send_req)
- 	 * setup req sgles
- 	 */
- 	if (fcxp->use_ireqbuf == 1) {
--		hal_fcxp_set_local_sges(send_req->req_sge, reqi->req_tot_len,
-+		bfa_alen_set(&send_req->req_alen, reqi->req_tot_len,
- 					BFA_FCXP_REQ_PLD_PA(fcxp));
- 	} else {
- 		if (fcxp->nreq_sgles > 0) {
- 			WARN_ON(fcxp->nreq_sgles != 1);
--			hal_fcxp_set_local_sges(send_req->req_sge,
--						reqi->req_tot_len,
--						fcxp->req_sga_cbfn(fcxp->caller,
--								   0));
-+			bfa_alen_set(&send_req->req_alen, reqi->req_tot_len,
-+				fcxp->req_sga_cbfn(fcxp->caller, 0));
- 		} else {
- 			WARN_ON(reqi->req_tot_len != 0);
--			hal_fcxp_set_local_sges(send_req->rsp_sge, 0, 0);
-+			bfa_alen_set(&send_req->rsp_alen, 0, 0);
- 		}
- 	}
- 
-@@ -894,19 +875,17 @@ bfa_fcxp_queue(struct bfa_fcxp_s *fcxp, struct bfi_fcxp_send_req_s *send_req)
- 	if (fcxp->use_irspbuf == 1) {
- 		WARN_ON(rspi->rsp_maxlen > BFA_FCXP_MAX_LBUF_SZ);
- 
--		hal_fcxp_set_local_sges(send_req->rsp_sge, rspi->rsp_maxlen,
-+		bfa_alen_set(&send_req->rsp_alen, rspi->rsp_maxlen,
- 					BFA_FCXP_RSP_PLD_PA(fcxp));
--
- 	} else {
- 		if (fcxp->nrsp_sgles > 0) {
- 			WARN_ON(fcxp->nrsp_sgles != 1);
--			hal_fcxp_set_local_sges(send_req->rsp_sge,
--						rspi->rsp_maxlen,
--						fcxp->rsp_sga_cbfn(fcxp->caller,
--								   0));
-+			bfa_alen_set(&send_req->rsp_alen, rspi->rsp_maxlen,
-+				fcxp->rsp_sga_cbfn(fcxp->caller, 0));
-+
- 		} else {
- 			WARN_ON(rspi->rsp_maxlen != 0);
--			hal_fcxp_set_local_sges(send_req->rsp_sge, 0, 0);
-+			bfa_alen_set(&send_req->rsp_alen, 0, 0);
- 		}
- 	}
- 
-@@ -4801,8 +4780,6 @@ static void
- claim_uf_post_msgs(struct bfa_uf_mod_s *ufm, struct bfa_meminfo_s *mi)
- {
- 	struct bfi_uf_buf_post_s *uf_bp_msg;
--	struct bfi_sge_s      *sge;
--	union bfi_addr_u      sga_zero = { {0} };
- 	u16 i;
- 	u16 buf_len;
- 
-@@ -4818,17 +4795,7 @@ claim_uf_post_msgs(struct bfa_uf_mod_s *ufm, struct bfa_meminfo_s *mi)
- 		uf_bp_msg->buf_len = cpu_to_be16(buf_len);
- 		bfi_h2i_set(uf_bp_msg->mh, BFI_MC_UF, BFI_UF_H2I_BUF_POST,
- 			    bfa_lpuid(ufm->bfa));
--
--		sge = uf_bp_msg->sge;
--		sge[0].sg_len = buf_len;
--		sge[0].flags = BFI_SGE_DATA_LAST;
--		bfa_dma_addr_set(sge[0].sga, ufm_pbs_pa(ufm, i));
--		bfa_sge_to_be(sge);
--
--		sge[1].sg_len = buf_len;
--		sge[1].flags = BFI_SGE_PGDLEN;
--		sge[1].sga = sga_zero;
--		bfa_sge_to_be(&sge[1]);
-+		bfa_alen_set(&uf_bp_msg->alen, buf_len, ufm_pbs_pa(ufm, i));
- 	}
- 
- 	/*
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index 72b69a0..6ef1ba50 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -101,7 +101,7 @@ union bfi_addr_u {
- };
- 
- /*
-- * Scatter Gather Element
-+ * Scatter Gather Element used for fast-path IO requests
-  */
- struct bfi_sge_s {
- #ifdef __BIG_ENDIAN
-@@ -116,6 +116,14 @@ struct bfi_sge_s {
- 	union bfi_addr_u sga;
- };
- 
-+/**
-+ * Generic DMA addr-len pair.
-+ */
-+struct bfi_alen_s {
-+	union bfi_addr_u	al_addr;	/* DMA addr of buffer	*/
-+	u32			al_len;		/* length of buffer	*/
-+};
-+
- /*
-  * Scatter Gather Page
-  */
-diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-index 19e888a..a29d905 100644
---- a/drivers/scsi/bfa/bfi_ms.h
-+++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -297,8 +297,8 @@ struct bfi_fcxp_send_req_s {
- 	struct fchs_s	fchs;	/*  request FC header structure    */
- 	__be32	req_len;	/*  request payload length	    */
- 	__be32	rsp_maxlen;	/*  max response length expected   */
--	struct bfi_sge_s   req_sge[BFA_FCXP_MAX_SGES];	/*  request buf    */
--	struct bfi_sge_s   rsp_sge[BFA_FCXP_MAX_SGES];	/*  response buf   */
-+	struct bfi_alen_s req_alen;	/* request buffer	*/
-+	struct bfi_alen_s rsp_alen;	/* response buffer	*/
- };
- 
- /*
-@@ -328,7 +328,7 @@ struct bfi_uf_buf_post_s {
- 	struct bfi_mhdr_s  mh;		/*  Common msg header		*/
- 	u16	buf_tag;	/*  buffer tag			*/
- 	__be16	buf_len;	/*  total buffer length	*/
--	struct bfi_sge_s   sge[BFA_UF_MAX_SGES]; /*  buffer DMA SGEs	*/
-+	struct bfi_alen_s alen;	/* buffer address/len pair	*/
- };
- 
- struct bfi_uf_frm_rcvd_s {
+	updates the Brocade BFA driver to v3.0.2.0.
+
+	I have compiled & tested the code against your scsi-misc and
+
+	linux-next (3.0.0-rc2-next-20110610-0.7-default).
+
+Thanks,
+Krishna C Gudipati.
+
+Krishna Gudipati (12):
+  bfa: Introduced generic address len pair to represent DMA memory
+    chunk.
+  bfa: Introduce IOC event notification mechanism.
+  bfa: Add pbc port disable check and fix LPS message name
+  bfa: Brocade-1860 Fabric Adapter Hardware Enablement
+  bfa: Changes to support vport disable and enable operations.
+  bfa: IOC and pll init changes for Brocade-1860 Fabric Adapter.
+  bfa: Brocade-1860 Fabric Adapter 16Gbs support and flash controller fixes.
+  bfa: FC credit recovery and misc bug fixes.
+  bfa: Enhancement for fcpim and IO tag handling.
+  bfa: Driver initialization and model description fix
+  bfa: Add BSG interface to support ELS, CT and vendor commands.
+  bfa: Update the driver version to 3.0.2.0
+
+ drivers/scsi/bfa/Makefile        |    2 +-
+ drivers/scsi/bfa/bfa.h           |   29 +-
+ drivers/scsi/bfa/bfa_core.c      |  244 ++++++++-----
+ drivers/scsi/bfa/bfa_defs.h      |   34 ++-
+ drivers/scsi/bfa/bfa_defs_svc.h  |   11 +-
+ drivers/scsi/bfa/bfa_fc.h        |   11 +-
+ drivers/scsi/bfa/bfa_fcbuild.c   |   18 +-
+ drivers/scsi/bfa/bfa_fcbuild.h   |   12 +-
+ drivers/scsi/bfa/bfa_fcpim.c     |  283 ++++++++++----
+ drivers/scsi/bfa/bfa_fcpim.h     |   69 +++-
+ drivers/scsi/bfa/bfa_fcs.c       |  135 ++++++-
+ drivers/scsi/bfa/bfa_fcs.h       |    9 +
+ drivers/scsi/bfa/bfa_fcs_lport.c |  155 ++++++++-
+ drivers/scsi/bfa/bfa_fcs_rport.c |   38 +--
+ drivers/scsi/bfa/bfa_hw_cb.c     |   84 +++--
+ drivers/scsi/bfa/bfa_hw_ct.c     |   89 ++---
+ drivers/scsi/bfa/bfa_ioc.c       |  387 +++++++++++--------
+ drivers/scsi/bfa/bfa_ioc.h       |  173 +++++----
+ drivers/scsi/bfa/bfa_ioc_cb.c    |   56 ++--
+ drivers/scsi/bfa/bfa_ioc_ct.c    |  473 +++++++++++++++++++----
+ drivers/scsi/bfa/bfa_modules.h   |    7 +-
+ drivers/scsi/bfa/bfa_port.c      |   62 ++-
+ drivers/scsi/bfa/bfa_port.h      |    5 +-
+ drivers/scsi/bfa/bfa_svc.c       |  121 ++++---
+ drivers/scsi/bfa/bfa_svc.h       |    9 +-
+ drivers/scsi/bfa/bfad.c          |  119 ++++---
+ drivers/scsi/bfa/bfad_attr.c     |   53 +++-
+ drivers/scsi/bfa/bfad_bsg.c      |  768 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfad_bsg.h      |  135 +++++++
+ drivers/scsi/bfa/bfad_drv.h      |    6 +-
+ drivers/scsi/bfa/bfad_im.c       |   25 +-
+ drivers/scsi/bfa/bfad_im.h       |    3 +
+ drivers/scsi/bfa/bfi.h           |  103 ++++--
+ drivers/scsi/bfa/bfi_cbreg.h     |  305 ---------------
+ drivers/scsi/bfa/bfi_ctreg.h     |  636 -------------------------------
+ drivers/scsi/bfa/bfi_ms.h        |   98 ++++--
+ drivers/scsi/bfa/bfi_reg.h       |  439 ++++++++++++++++++++++
+ 37 files changed, 3343 insertions(+), 1863 deletions(-)
+ create mode 100644 drivers/scsi/bfa/bfad_bsg.c
+ create mode 100644 drivers/scsi/bfa/bfad_bsg.h
+ delete mode 100644 drivers/scsi/bfa/bfi_cbreg.h
+ delete mode 100644 drivers/scsi/bfa/bfi_ctreg.h
+ create mode 100644 drivers/scsi/bfa/bfi_reg.h
+
 -- 
 1.7.3.rc1
 
