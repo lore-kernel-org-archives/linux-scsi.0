@@ -1,299 +1,457 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 02/07] mpt2sas  MPI next revision header update
-Date: Tue, 14 Jun 2011 10:55:45 +0530
-Message-ID: <20110614052541.GD14349@lsi.com>
+Subject: [PATCH 01/07] mpt2sas: Fixed Big Indian Issues on 32 bit PPC
+Date: Tue, 14 Jun 2011 10:54:56 +0530
+Message-ID: <20110614052452.GC14349@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55364 "EHLO
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:49659 "EHLO
 	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750844Ab1FNFLB (ORCPT
+	by vger.kernel.org with ESMTP id S1751699Ab1FNFLE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2011 01:11:01 -0400
+	Tue, 14 Jun 2011 01:11:04 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-
-mpt2sas driver revision q header update
-
-(1) Modified the descriptions of the LocalAddress bit in the
-Flags field of the MPI SGE Format description and the MPI
-Simple Element.
-(2) Modified Data Location Address Space bits in the Flags field
-of the IEEE Chain Element.
-(3) Added more detail to the description of the DataLength field
-for the SCSI IO Request and Target Assist Request. Removed
-restriction on using chained SGLs when using multicast or
-bidirectional support.
-(4) In Manufacturing Page 7, added ReceptacleID field to
-ConnectorInfo, and reworked how the Pinout field is used.
-(5) In IO Unit Page 7, added BoardTemperature and
-BoardTemperatureUnits fields.
-(6) In IOC Page 1, changed CoalescingTimeout to units of
-half-microsecond and updated descriptions.
-(7) Modified descriptions of SATASlumberTimeout and
-SASSlumberTimeout fields in SAS IO Unit Page 5 to indicate
-the timers start after partial mode is entered.
-(8) Added Extended Manufacturing configuration pages.
+This patch addresses many endian issues solved by runing sparse with the 
+option __CHECK_ENDIAN__ turned on.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
-index a3e6038..3105d5e 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
-@@ -8,7 +8,7 @@
-  *                  scatter/gather formats.
-  *  Creation Date:  June 21, 2006
-  *
-- *  mpi2.h Version:  02.00.17
-+ *  mpi2.h Version:  02.00.18
-  *
-  *  Version History
-  *  ---------------
-@@ -64,6 +64,8 @@
-  *  05-12-10  02.00.16  Bumped MPI2_HEADER_VERSION_UNIT.
-  *                      Added alternative defines for the SGE Direction bit.
-  *  08-11-10  02.00.17  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *  11-10-10  02.00.18  Bumped MPI2_HEADER_VERSION_UNIT.
-+ *                      Added MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR define.
-  *  --------------------------------------------------------------------------
-  */
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index efa0255..1da606c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -94,7 +94,7 @@ module_param(diag_buffer_enable, int, 0);
+ MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
+     "(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
  
-@@ -89,7 +91,7 @@
- #define MPI2_VERSION_02_00                  (0x0200)
+-int mpt2sas_fwfault_debug;
++static int mpt2sas_fwfault_debug;
+ MODULE_PARM_DESC(mpt2sas_fwfault_debug, " enable detection of firmware fault "
+     "and halt firmware - (default=0)");
  
- /* versioning for this MPI header set */
--#define MPI2_HEADER_VERSION_UNIT            (0x11)
-+#define MPI2_HEADER_VERSION_UNIT            (0x12)
- #define MPI2_HEADER_VERSION_DEV             (0x00)
- #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
- #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
-@@ -1060,10 +1062,14 @@ typedef struct _MPI2_IEEE_SGE_UNION
+@@ -857,7 +857,7 @@ _base_interrupt(int irq, void *bus_id)
+ 	completed_cmds = 0;
+ 	cb_idx = 0xFF;
+ 	do {
+-		rd.word = rpf->Words;
++		rd.word = le64_to_cpu(rpf->Words);
+ 		if (rd.u.low == UINT_MAX || rd.u.high == UINT_MAX)
+ 			goto out;
+ 		reply = 0;
+@@ -906,7 +906,7 @@ _base_interrupt(int irq, void *bus_id)
  
- #define MPI2_IEEE_SGE_FLAGS_ADDR_MASK           (0x03)
- #define MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR         (0x00)
-+						/* IEEE Simple Element only */
- #define MPI2_IEEE_SGE_FLAGS_IOCDDR_ADDR         (0x01)
-+						/* IEEE Simple Element only */
- #define MPI2_IEEE_SGE_FLAGS_IOCPLB_ADDR         (0x02)
- #define MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR      (0x03)
--
-+						/* IEEE Simple Element only */
-+#define MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR   (0x03)
-+						/* IEEE Chain Element only */
+  next:
  
- /****************************************************************************
- *  IEEE SGE operation Macros
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-index f5b9c76..bd7897c 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI Configuration messages and pages
-  *  Creation Date:  November 10, 2006
-  *
-- *    mpi2_cnfg.h Version:  02.00.16
-+ *    mpi2_cnfg.h Version:  02.00.17
-  *
-  *  Version History
-  *  ---------------
-@@ -127,6 +127,13 @@
-  *                      Added MPI2_SAS_NEG_LINK_RATE_UNSUPPORTED_PHY define.
-  *  08-11-10  02.00.16  Removed IO Unit Page 1 device path (multi-pathing)
-  *                      defines.
-+ *  11-10-10  02.00.17  Added ReceptacleID field (replacing Reserved1) to
-+ *                      MPI2_MANPAGE7_CONNECTOR_INFO and reworked defines for
-+ *                      the Pinout field.
-+ *                      Added BoardTemperature and BoardTemperatureUnits fields
-+ *                      to MPI2_CONFIG_PAGE_IO_UNIT_7.
-+ *                      Added MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING define
-+ *                      and MPI2_CONFIG_PAGE_EXT_MAN_PS structure.
-  *  --------------------------------------------------------------------------
-  */
+-		rpf->Words = ULLONG_MAX;
++		rpf->Words = cpu_to_le64(ULLONG_MAX);
+ 		ioc->reply_post_host_index = (ioc->reply_post_host_index ==
+ 		    (ioc->reply_post_queue_depth - 1)) ? 0 :
+ 		    ioc->reply_post_host_index + 1;
+@@ -1817,7 +1817,9 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+ 	char desc[16];
+ 	u8 revision;
+ 	u32 iounit_pg1_flags;
++	u32 bios_version;
  
-@@ -210,6 +217,7 @@ typedef union _MPI2_CONFIG_EXT_PAGE_HEADER_UNION
- #define MPI2_CONFIG_EXTPAGETYPE_DRIVER_MAPPING      (0x17)
- #define MPI2_CONFIG_EXTPAGETYPE_SAS_PORT            (0x18)
- #define MPI2_CONFIG_EXTPAGETYPE_ETHERNET            (0x19)
-+#define MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING   (0x1A)
++	bios_version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
+ 	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
+ 	strncpy(desc, ioc->manu_pg0.ChipName, 16);
+ 	printk(MPT2SAS_INFO_FMT "%s: FWVersion(%02d.%02d.%02d.%02d), "
+@@ -1828,10 +1830,10 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
+ 	   (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
+ 	   ioc->facts.FWVersion.Word & 0x000000FF,
+ 	   revision,
+-	   (ioc->bios_pg3.BiosVersion & 0xFF000000) >> 24,
+-	   (ioc->bios_pg3.BiosVersion & 0x00FF0000) >> 16,
+-	   (ioc->bios_pg3.BiosVersion & 0x0000FF00) >> 8,
+-	    ioc->bios_pg3.BiosVersion & 0x000000FF);
++	   (bios_version & 0xFF000000) >> 24,
++	   (bios_version & 0x00FF0000) >> 16,
++	   (bios_version & 0x0000FF00) >> 8,
++	    bios_version & 0x000000FF);
  
+ 	_base_display_dell_branding(ioc);
+ 	_base_display_intel_branding(ioc);
+@@ -2150,7 +2152,7 @@ _base_release_memory_pools(struct MPT2SAS_ADAPTER *ioc)
+ static int
+ _base_allocate_memory_pools(struct MPT2SAS_ADAPTER *ioc,  int sleep_flag)
+ {
+-	Mpi2IOCFactsReply_t *facts;
++	struct mpt2sas_facts *facts;
+ 	u32 queue_size, queue_diff;
+ 	u16 max_sge_elements;
+ 	u16 num_of_reply_frames;
+@@ -2783,7 +2785,7 @@ _base_handshake_req_reply_wait(struct MPT2SAS_ADAPTER *ioc, int request_bytes,
+ 	int i;
+ 	u8 failed;
+ 	u16 dummy;
+-	u32 *mfp;
++	__le32 *mfp;
  
- /*****************************************************************************
-@@ -612,23 +620,31 @@ typedef struct _MPI2_MANPAGE7_CONNECTOR_INFO
-     U32                         Pinout;                 /* 0x00 */
-     U8                          Connector[16];          /* 0x04 */
-     U8                          Location;               /* 0x14 */
--    U8                          Reserved1;              /* 0x15 */
-+	U8                          ReceptacleID;           /* 0x15 */
-     U16                         Slot;                   /* 0x16 */
-     U32                         Reserved2;              /* 0x18 */
- } MPI2_MANPAGE7_CONNECTOR_INFO, MPI2_POINTER PTR_MPI2_MANPAGE7_CONNECTOR_INFO,
-   Mpi2ManPage7ConnectorInfo_t, MPI2_POINTER pMpi2ManPage7ConnectorInfo_t;
+ 	/* make sure doorbell is not in use */
+ 	if ((readl(&ioc->chip->Doorbell) & MPI2_DOORBELL_USED)) {
+@@ -2871,7 +2873,7 @@ _base_handshake_req_reply_wait(struct MPT2SAS_ADAPTER *ioc, int request_bytes,
+ 	writel(0, &ioc->chip->HostInterruptStatus);
  
- /* defines for the Pinout field */
--#define MPI2_MANPAGE7_PINOUT_SFF_8484_L4                (0x00080000)
--#define MPI2_MANPAGE7_PINOUT_SFF_8484_L3                (0x00040000)
--#define MPI2_MANPAGE7_PINOUT_SFF_8484_L2                (0x00020000)
--#define MPI2_MANPAGE7_PINOUT_SFF_8484_L1                (0x00010000)
--#define MPI2_MANPAGE7_PINOUT_SFF_8470_L4                (0x00000800)
--#define MPI2_MANPAGE7_PINOUT_SFF_8470_L3                (0x00000400)
--#define MPI2_MANPAGE7_PINOUT_SFF_8470_L2                (0x00000200)
--#define MPI2_MANPAGE7_PINOUT_SFF_8470_L1                (0x00000100)
--#define MPI2_MANPAGE7_PINOUT_SFF_8482                   (0x00000002)
--#define MPI2_MANPAGE7_PINOUT_CONNECTION_UNKNOWN         (0x00000001)
-+#define MPI2_MANPAGE7_PINOUT_LANE_MASK                  (0x0000FF00)
-+#define MPI2_MANPAGE7_PINOUT_LANE_SHIFT                 (8)
-+
-+#define MPI2_MANPAGE7_PINOUT_TYPE_MASK                  (0x000000FF)
-+#define MPI2_MANPAGE7_PINOUT_TYPE_UNKNOWN               (0x00)
-+#define MPI2_MANPAGE7_PINOUT_SATA_SINGLE                (0x01)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8482                   (0x02)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8486                   (0x03)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8484                   (0x04)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8087                   (0x05)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8643_4I                (0x06)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8643_8I                (0x07)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8470                   (0x08)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8088                   (0x09)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8644_4X                (0x0A)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8644_8X                (0x0B)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8644_16X               (0x0C)
-+#define MPI2_MANPAGE7_PINOUT_SFF_8436                   (0x0D)
+ 	if (ioc->logging_level & MPT_DEBUG_INIT) {
+-		mfp = (u32 *)reply;
++		mfp = (__le32 *)reply;
+ 		printk(KERN_INFO "\toffset:data\n");
+ 		for (i = 0; i < reply_bytes/4; i++)
+ 			printk(KERN_INFO "\t[0x%02x]:%08x\n", i*4,
+@@ -3097,7 +3099,8 @@ static int
+ _base_get_port_facts(struct MPT2SAS_ADAPTER *ioc, int port, int sleep_flag)
+ {
+ 	Mpi2PortFactsRequest_t mpi_request;
+-	Mpi2PortFactsReply_t mpi_reply, *pfacts;
++	Mpi2PortFactsReply_t mpi_reply;
++	struct mpt2sas_port_facts *pfacts;
+ 	int mpi_reply_sz, mpi_request_sz, r;
  
- /* defines for the Location field */
- #define MPI2_MANPAGE7_LOCATION_UNKNOWN                  (0x01)
-@@ -662,7 +678,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7
-   MPI2_POINTER PTR_MPI2_CONFIG_PAGE_MAN_7,
-   Mpi2ManufacturingPage7_t, MPI2_POINTER pMpi2ManufacturingPage7_t;
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+@@ -3139,7 +3142,8 @@ static int
+ _base_get_ioc_facts(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ {
+ 	Mpi2IOCFactsRequest_t mpi_request;
+-	Mpi2IOCFactsReply_t mpi_reply, *facts;
++	Mpi2IOCFactsReply_t mpi_reply;
++	struct mpt2sas_facts *facts;
+ 	int mpi_reply_sz, mpi_request_sz, r;
  
--#define MPI2_MANUFACTURING7_PAGEVERSION                 (0x00)
-+#define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+@@ -3225,17 +3229,6 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	mpi_request.MsgVersion = cpu_to_le16(MPI2_VERSION);
+ 	mpi_request.HeaderVersion = cpu_to_le16(MPI2_HEADER_VERSION);
  
- /* defines for the Flags field */
- #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
-@@ -849,11 +865,13 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
-     U16                     IOCTemperature;                         /* 0x10 */
-     U8                      IOCTemperatureUnits;                    /* 0x12 */
-     U8                      IOCSpeed;                               /* 0x13 */
--    U32                     Reserved3;                              /* 0x14 */
-+	U16                     BoardTemperature;              /* 0x14 */
-+	U8                      BoardTemperatureUnits;         /* 0x16 */
-+	U8                      Reserved3;                     /* 0x17 */
- } MPI2_CONFIG_PAGE_IO_UNIT_7, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_7,
-   Mpi2IOUnitPage7_t, MPI2_POINTER pMpi2IOUnitPage7_t;
+-	/* In MPI Revision I (0xA), the SystemReplyFrameSize(offset 0x18) was
+-	 * removed and made reserved.  For those with older firmware will need
+-	 * this fix. It was decided that the Reply and Request frame sizes are
+-	 * the same.
+-	 */
+-	if ((ioc->facts.HeaderVersion >> 8) < 0xA) {
+-		mpi_request.Reserved7 = cpu_to_le16(ioc->reply_sz);
+-/*		mpi_request.SystemReplyFrameSize =
+- *		 cpu_to_le16(ioc->reply_sz);
+- */
+-	}
  
--#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x01)
-+#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x02)
+ 	mpi_request.SystemRequestFrameSize = cpu_to_le16(ioc->request_sz/4);
+ 	mpi_request.ReplyDescriptorPostQueueDepth =
+@@ -3243,25 +3236,17 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	mpi_request.ReplyFreeQueueDepth =
+ 	    cpu_to_le16(ioc->reply_free_queue_depth);
  
- /* defines for IO Unit Page 7 PCIeWidth field */
- #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X1              (0x01)
-@@ -881,7 +899,6 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
- #define MPI2_IOUNITPAGE7_PMCAP_PCIE_WIDTH_CHANGE    (0x00000008)
- #define MPI2_IOUNITPAGE7_PMCAP_PCIE_SPEED_CHANGE    (0x00000004)
- 
--
- /* defines for IO Unit Page 7 IOCTemperatureUnits field */
- #define MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT       (0x00)
- #define MPI2_IOUNITPAGE7_IOC_TEMP_FAHRENHEIT        (0x01)
-@@ -893,6 +910,11 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
- #define MPI2_IOUNITPAGE7_IOC_SPEED_QUARTER          (0x04)
- #define MPI2_IOUNITPAGE7_IOC_SPEED_EIGHTH           (0x08)
- 
-+/* defines for IO Unit Page 7 BoardTemperatureUnits field */
-+#define MPI2_IOUNITPAGE7_BOARD_TEMP_NOT_PRESENT     (0x00)
-+#define MPI2_IOUNITPAGE7_BOARD_TEMP_FAHRENHEIT      (0x01)
-+#define MPI2_IOUNITPAGE7_BOARD_TEMP_CELSIUS         (0x02)
+-#if BITS_PER_LONG > 32
+ 	mpi_request.SenseBufferAddressHigh =
+-	    cpu_to_le32(ioc->sense_dma >> 32);
++	    cpu_to_le32((u64)ioc->sense_dma >> 32);
+ 	mpi_request.SystemReplyAddressHigh =
+-	    cpu_to_le32(ioc->reply_dma >> 32);
++	    cpu_to_le32((u64)ioc->reply_dma >> 32);
+ 	mpi_request.SystemRequestFrameBaseAddress =
+-	    cpu_to_le64(ioc->request_dma);
++	    cpu_to_le64((u64)ioc->request_dma);
+ 	mpi_request.ReplyFreeQueueAddress =
+-	    cpu_to_le64(ioc->reply_free_dma);
++	    cpu_to_le64((u64)ioc->reply_free_dma);
+ 	mpi_request.ReplyDescriptorPostQueueAddress =
+-	    cpu_to_le64(ioc->reply_post_free_dma);
+-#else
+-	mpi_request.SystemRequestFrameBaseAddress =
+-	    cpu_to_le32(ioc->request_dma);
+-	mpi_request.ReplyFreeQueueAddress =
+-	    cpu_to_le32(ioc->reply_free_dma);
+-	mpi_request.ReplyDescriptorPostQueueAddress =
+-	    cpu_to_le32(ioc->reply_post_free_dma);
+-#endif
++	    cpu_to_le64((u64)ioc->reply_post_free_dma);
 +
  
+ 	/* This time stamp specifies number of milliseconds
+ 	 * since epoch ~ midnight January 1, 1970.
+@@ -3271,10 +3256,10 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	    (current_time.tv_usec / 1000));
  
- /****************************************************************************
-@@ -2799,5 +2821,25 @@ typedef struct _MPI2_CONFIG_PAGE_ETHERNET_1 {
- #define MPI2_ETHPG1_MS_DATA_RATE_1GBIT              (0x03)
+ 	if (ioc->logging_level & MPT_DEBUG_INIT) {
+-		u32 *mfp;
++		__le32 *mfp;
+ 		int i;
  
+-		mfp = (u32 *)&mpi_request;
++		mfp = (__le32 *)&mpi_request;
+ 		printk(KERN_INFO "\toffset:data\n");
+ 		for (i = 0; i < sizeof(Mpi2IOCInitRequest_t)/4; i++)
+ 			printk(KERN_INFO "\t[0x%02x]:%08x\n", i*4,
+@@ -3759,7 +3744,7 @@ _base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
  
-+/****************************************************************************
-+*   Extended Manufacturing Config Pages
-+****************************************************************************/
+ 	/* initialize Reply Post Free Queue */
+ 	for (i = 0; i < ioc->reply_post_queue_depth; i++)
+-		ioc->reply_post_free[i].Words = ULLONG_MAX;
++		ioc->reply_post_free[i].Words = cpu_to_le64(ULLONG_MAX);
+ 
+ 	r = _base_send_ioc_init(ioc, sleep_flag);
+ 	if (r)
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 2a3c05f..605ea3c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -541,6 +541,53 @@ struct _tr_list {
+ 
+ typedef void (*MPT_ADD_SGE)(void *paddr, u32 flags_length, dma_addr_t dma_addr);
+ 
++/* IOC Facts and Port Facts converted from little endian to cpu */
++union mpi2_version_union {
++	MPI2_VERSION_STRUCT		Struct;
++	u32				Word;
++};
 +
-+/*
-+ * Generic structure to use for product-specific extended manufacturing pages
-+ * (currently Extended Manufacturing Page 40 through Extended Manufacturing
-+ * Page 60).
-+ */
++struct mpt2sas_facts {
++	u16			MsgVersion;
++	u16			HeaderVersion;
++	u8			IOCNumber;
++	u8			VP_ID;
++	u8			VF_ID;
++	u16			IOCExceptions;
++	u16			IOCStatus;
++	u32			IOCLogInfo;
++	u8			MaxChainDepth;
++	u8			WhoInit;
++	u8			NumberOfPorts;
++	u8			MaxMSIxVectors;
++	u16			RequestCredit;
++	u16			ProductID;
++	u32			IOCCapabilities;
++	union mpi2_version_union	FWVersion;
++	u16			IOCRequestFrameSize;
++	u16			Reserved3;
++	u16			MaxInitiators;
++	u16			MaxTargets;
++	u16			MaxSasExpanders;
++	u16			MaxEnclosures;
++	u16			ProtocolFlags;
++	u16			HighPriorityCredit;
++	u16			MaxReplyDescriptorPostQueueDepth;
++	u8			ReplyFrameSize;
++	u8			MaxVolumes;
++	u16			MaxDevHandle;
++	u16			MaxPersistentEntries;
++	u16			MinDevHandle;
++};
 +
-+typedef struct _MPI2_CONFIG_PAGE_EXT_MAN_PS {
-+	MPI2_CONFIG_EXTENDED_PAGE_HEADER    Header;                 /* 0x00 */
-+	U32                                 ProductSpecificInfo;    /* 0x08 */
-+}	MPI2_CONFIG_PAGE_EXT_MAN_PS,
-+	MPI2_POINTER PTR_MPI2_CONFIG_PAGE_EXT_MAN_PS,
-+	Mpi2ExtManufacturingPagePS_t,
-+	MPI2_POINTER pMpi2ExtManufacturingPagePS_t;
++struct mpt2sas_port_facts {
++	u8			PortNumber;
++	u8			VP_ID;
++	u8			VF_ID;
++	u8			PortType;
++	u16			MaxPostedCmdBuffers;
++};
 +
-+/* PageVersion should be provided by product-specific code */
-+
- #endif
+ /**
+  * struct MPT2SAS_ADAPTER - per adapter struct
+  * @list: ioc_list
+@@ -749,8 +796,8 @@ struct MPT2SAS_ADAPTER {
+ 	u32		event_masks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];
  
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-index 20e6b88..52a10eb 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI SCSI initiator mode messages and structures
-  *  Creation Date:  June 23, 2006
-  *
-- *    mpi2_init.h Version:  02.00.10
-+ *    mpi2_init.h Version:  02.00.11
-  *
-  *  Version History
-  *  ---------------
-@@ -33,6 +33,7 @@
-  *                      Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
-  *  02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
-  *  05-12-10  02.00.10  Added optional vendor-unique region to SCSI IO Request.
-+ *  11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
-  *  --------------------------------------------------------------------------
-  */
+ 	/* static config pages */
+-	Mpi2IOCFactsReply_t facts;
+-	Mpi2PortFactsReply_t *pfacts;
++	struct mpt2sas_facts facts;
++	struct mpt2sas_port_facts *pfacts;
+ 	Mpi2ManufacturingPage0_t manu_pg0;
+ 	Mpi2BiosPage2_t	bios_pg2;
+ 	Mpi2BiosPage3_t	bios_pg3;
+@@ -840,7 +887,7 @@ struct MPT2SAS_ADAPTER {
  
-@@ -139,6 +140,9 @@ typedef struct _MPI2_SCSI_IO_REQUEST
- #define MPI2_SCSIIO_SGLFLAGS_SGL1_SHIFT             (4)
- #define MPI2_SCSIIO_SGLFLAGS_SGL0_SHIFT             (0)
+ 	/* reply free queue */
+ 	u16 		reply_free_queue_depth;
+-	u32		*reply_free;
++	__le32		*reply_free;
+ 	dma_addr_t	reply_free_dma;
+ 	struct dma_pool *reply_free_dma_pool;
+ 	u32		reply_free_host_index;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 437c2d9..d1c3bba 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -2706,13 +2706,13 @@ static DEVICE_ATTR(ioc_reset_count, S_IRUGO,
+     _ctl_ioc_reset_count_show, NULL);
  
-+/* number of SGLOffset fields */
-+#define MPI2_SCSIIO_NUM_SGLOFFSETS                  (4)
-+
- /* SCSI IO IoFlags bits */
+ struct DIAG_BUFFER_START {
+-	u32 Size;
+-	u32 DiagVersion;
++	__le32 Size;
++	__le32 DiagVersion;
+ 	u8 BufferType;
+ 	u8 Reserved[3];
+-	u32 Reserved1;
+-	u32 Reserved2;
+-	u32 Reserved3;
++	__le32 Reserved1;
++	__le32 Reserved2;
++	__le32 Reserved3;
+ };
+ /**
+  * _ctl_host_trace_buffer_size_show - host buffer size (trace only)
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_debug.h b/drivers/scsi/mpt2sas/mpt2sas_debug.h
+index 3dcddfe..9731f8e 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_debug.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_debug.h
+@@ -164,7 +164,7 @@ static inline void
+ _debug_dump_mf(void *mpi_request, int sz)
+ {
+ 	int i;
+-	u32 *mfp = (u32 *)mpi_request;
++	__le32 *mfp = (__le32 *)mpi_request;
  
- /* Large CDB Address Space */
-diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-index 761cbdb..1f0c190 100644
---- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
-@@ -6,7 +6,7 @@
-  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
-  *  Creation Date:  October 11, 2006
-  *
-- *  mpi2_ioc.h Version:  02.00.15
-+ *  mpi2_ioc.h Version:  02.00.16
-  *
-  *  Version History
-  *  ---------------
-@@ -103,6 +103,7 @@
-  *                      defines.
-  *  05-12-10  02.00.15  Marked Task Set Full Event as obsolete.
-  *                      Added MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY define.
-+ *  11-10-10  02.00.16  Added MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC.
-  *  --------------------------------------------------------------------------
-  */
+ 	printk(KERN_INFO "mf:\n\t");
+ 	for (i = 0; i < sz; i++) {
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index f12e023..c88ee83 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -1953,7 +1953,7 @@ _scsih_slave_configure(struct scsi_device *sdev)
+ 		case MPI2_RAID_VOL_TYPE_RAID1E:
+ 			qdepth = MPT2SAS_RAID_QUEUE_DEPTH;
+ 			if (ioc->manu_pg10.OEMIdentifier &&
+-			    (ioc->manu_pg10.GenericFlags0 &
++			    (le32_to_cpu(ioc->manu_pg10.GenericFlags0) &
+ 			    MFG10_GF0_R10_DISPLAY) &&
+ 			    !(raid_device->num_pds % 2))
+ 				r_level = "RAID10";
+@@ -4565,7 +4565,7 @@ _scsih_expander_add(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	Mpi2SasEnclosurePage0_t enclosure_pg0;
+ 	u32 ioc_status;
+ 	u16 parent_handle;
+-	__le64 sas_address, sas_address_parent = 0;
++	u64 sas_address, sas_address_parent = 0;
+ 	int i;
+ 	unsigned long flags;
+ 	struct _sas_port *mpt2sas_port = NULL;
+@@ -5371,7 +5371,7 @@ _scsih_sas_device_status_change_event(struct MPT2SAS_ADAPTER *ioc,
+ {
+ 	struct MPT2SAS_TARGET *target_priv_data;
+ 	struct _sas_device *sas_device;
+-	__le64 sas_address;
++	u64 sas_address;
+ 	unsigned long flags;
+ 	Mpi2EventDataSasDeviceStatusChange_t *event_data =
+ 	    fw_event->event_data;
+@@ -6533,7 +6533,7 @@ _scsih_search_responding_expanders(struct MPT2SAS_ADAPTER *ioc)
+ 	Mpi2ExpanderPage0_t expander_pg0;
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	u16 ioc_status;
+-	__le64 sas_address;
++	u64 sas_address;
+ 	u16 handle;
  
-@@ -1032,6 +1033,7 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST
- #define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
- #define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
- #define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
-+#define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
+ 	printk(MPT2SAS_INFO_FMT "%s\n", ioc->name, __func__);
+@@ -7469,7 +7469,7 @@ _scsih_suspend(struct pci_dev *pdev, pm_message_t state)
+ {
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+-	u32 device_state;
++	pci_power_t device_state;
  
- /* FWDownload TransactionContext Element */
- typedef struct _MPI2_FW_DOWNLOAD_TCSGE
+ 	mpt2sas_base_stop_watchdog(ioc);
+ 	scsi_block_requests(shost);
+@@ -7496,7 +7496,7 @@ _scsih_resume(struct pci_dev *pdev)
+ {
+ 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+-	u32 device_state = pdev->current_state;
++	pci_power_t device_state = pdev->current_state;
+ 	int r;
+ 
+ 	printk(MPT2SAS_INFO_FMT "pdev=0x%p, slot=%s, previous "
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+index cb1cdec..15c7980 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -299,7 +299,6 @@ _transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
+ 	void *data_out = NULL;
+ 	dma_addr_t data_out_dma;
+ 	u32 sz;
+-	u64 *sas_address_le;
+ 	u16 wait_state_count;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+@@ -372,8 +371,7 @@ _transport_expander_report_manufacture(struct MPT2SAS_ADAPTER *ioc,
+ 	mpi_request->PhysicalPort = 0xFF;
+ 	mpi_request->VF_ID = 0; /* TODO */
+ 	mpi_request->VP_ID = 0;
+-	sas_address_le = (u64 *)&mpi_request->SASAddress;
+-	*sas_address_le = cpu_to_le64(sas_address);
++	mpi_request->SASAddress = cpu_to_le64(sas_address);
+ 	mpi_request->RequestDataLength =
+ 	    cpu_to_le16(sizeof(struct rep_manu_request));
+ 	psge = &mpi_request->SGL;
+@@ -1049,14 +1047,14 @@ struct phy_error_log_reply{
+ 	u8 function; /* 0x11 */
+ 	u8 function_result;
+ 	u8 response_length;
+-	u16 expander_change_count;
++	__be16 expander_change_count;
+ 	u8 reserved_1[3];
+ 	u8 phy_identifier;
+ 	u8 reserved_2[2];
+-	u32 invalid_dword;
+-	u32 running_disparity_error;
+-	u32 loss_of_dword_sync;
+-	u32 phy_reset_problem;
++	__be32 invalid_dword;
++	__be32 running_disparity_error;
++	__be32 loss_of_dword_sync;
++	__be32 phy_reset_problem;
+ };
+ 
+ /**
+@@ -1085,7 +1083,6 @@ _transport_get_expander_phy_error_log(struct MPT2SAS_ADAPTER *ioc,
+ 	void *data_out = NULL;
+ 	dma_addr_t data_out_dma;
+ 	u32 sz;
+-	u64 *sas_address_le;
+ 	u16 wait_state_count;
+ 
+ 	if (ioc->shost_recovery || ioc->pci_error_recovery) {
+@@ -1160,8 +1157,7 @@ _transport_get_expander_phy_error_log(struct MPT2SAS_ADAPTER *ioc,
+ 	mpi_request->PhysicalPort = 0xFF;
+ 	mpi_request->VF_ID = 0; /* TODO */
+ 	mpi_request->VP_ID = 0;
+-	sas_address_le = (u64 *)&mpi_request->SASAddress;
+-	*sas_address_le = cpu_to_le64(phy->identify.sas_address);
++	mpi_request->SASAddress = cpu_to_le64(phy->identify.sas_address);
+ 	mpi_request->RequestDataLength =
+ 	    cpu_to_le16(sizeof(struct phy_error_log_request));
+ 	psge = &mpi_request->SGL;
+@@ -1406,7 +1402,6 @@ _transport_expander_phy_control(struct MPT2SAS_ADAPTER *ioc,
+ 	void *data_out = NULL;
+ 	dma_addr_t data_out_dma;
+ 	u32 sz;
+-	u64 *sas_address_le;
+ 	u16 wait_state_count;
+ 
+ 	if (ioc->shost_recovery) {
+@@ -1486,8 +1481,7 @@ _transport_expander_phy_control(struct MPT2SAS_ADAPTER *ioc,
+ 	mpi_request->PhysicalPort = 0xFF;
+ 	mpi_request->VF_ID = 0; /* TODO */
+ 	mpi_request->VP_ID = 0;
+-	sas_address_le = (u64 *)&mpi_request->SASAddress;
+-	*sas_address_le = cpu_to_le64(phy->identify.sas_address);
++	mpi_request->SASAddress = cpu_to_le64(phy->identify.sas_address);
+ 	mpi_request->RequestDataLength =
+ 	    cpu_to_le16(sizeof(struct phy_error_log_request));
+ 	psge = &mpi_request->SGL;
+@@ -1914,7 +1908,7 @@ _transport_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 	mpi_request->PhysicalPort = 0xFF;
+ 	mpi_request->VF_ID = 0; /* TODO */
+ 	mpi_request->VP_ID = 0;
+-	*((u64 *)&mpi_request->SASAddress) = (rphy) ?
++	mpi_request->SASAddress = (rphy) ?
+ 	    cpu_to_le64(rphy->identify.sas_address) :
+ 	    cpu_to_le64(ioc->sas_hba.sas_address);
+ 	mpi_request->RequestDataLength = cpu_to_le16(blk_rq_bytes(req) - 4);
