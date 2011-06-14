@@ -1,87 +1,54 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 04/12] bfa: Brocade-1860 Fabric Adapter Hardware Enablement
-Date: Tue, 14 Jun 2011 08:18:17 +0200
-Message-ID: <1424874.obOgTWAhri@donald.sf-tec.de>
-References: <1308005435-9193-1-git-send-email-kgudipat@brocade.com>
+From: =?UTF-8?B?Q8OpZHJpYyBDYW5v?= <ccano@interfaceconcept.com>
+Subject: Re: [PATCH 1/1] Big endian swap for Marvell 6440 SAS driver
+Date: Tue, 14 Jun 2011 08:42:59 +0200
+Message-ID: <4DF702F3.704@interfaceconcept.com>
+References: <4DF2228E.7060806@ic.fr> <1307832356.2874.312.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1757231.3sqtQqq14U"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:57396 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751210Ab1FNGS0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2011 02:18:26 -0400
-In-Reply-To: <1308005435-9193-1-git-send-email-kgudipat@brocade.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1307832356.2874.312.camel@pasglop>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kgudipat@brocade.com
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, huangj@brocade.com, adapter_linux_open_src_team@brocade.com
 
-
---nextPart1757231.3sqtQqq14U
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="ISO-8859-1"
-
-kgudipat@brocade.com wrote:
-> From: Krishna Gudipati <kgudipat@brocade.com>
-> 
-> Change details:
-> 	- Added support for Brocade-1860 Fabric Adapter.
-> 	- Made changes to support single firmware image per asic type.
-> 	- Combined bfi_cbreg.h and bfi_ctreg.h defines into bfi_reg.h with
-> 	  only minimal defines used by host.
-> 	- Added changes to setup CPE/RME Queue register offsets based on
-> 	  firmware response.
-> 	- Removed queue register offset initializations and added register offsets
-> 	  to BFI config response message.
-> 	- Added Brocade-1860 asic specific interrupt status definitions and
-> 	  mailbox interfaces.
-> 
-> Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
-> ---
->  drivers/scsi/bfa/bfa.h        |   14 +-
->  drivers/scsi/bfa/bfa_core.c   |  209 +++++++++-----
->  drivers/scsi/bfa/bfa_defs.h   |   13 +-
->  drivers/scsi/bfa/bfa_hw_cb.c  |   34 +--
->  drivers/scsi/bfa/bfa_hw_ct.c  |   75 ++----
->  drivers/scsi/bfa/bfa_ioc.c    |  144 ++++++---
->  drivers/scsi/bfa/bfa_ioc.h    |  117 +++++---
->  drivers/scsi/bfa/bfa_ioc_cb.c |   56 ++--
->  drivers/scsi/bfa/bfa_ioc_ct.c |  418 ++++++++++++++++++++++------
->  drivers/scsi/bfa/bfa_port.c   |    2 -
->  drivers/scsi/bfa/bfad.c       |   81 +++---
->  drivers/scsi/bfa/bfad_drv.h   |    1 +
->  drivers/scsi/bfa/bfad_im.c    |    2 +-
->  drivers/scsi/bfa/bfi.h        |   62 +++--
->  drivers/scsi/bfa/bfi_cbreg.h  |  305 --------------------
->  drivers/scsi/bfa/bfi_ctreg.h  |  636
-> ----------------------------------------- drivers/scsi/bfa/bfi_ms.h     |  
-> 36 +++
->  drivers/scsi/bfa/bfi_reg.h    |  428 +++++++++++++++++++++++++++
->  18 files changed, 1262 insertions(+), 1371 deletions(-)
->  delete mode 100644 drivers/scsi/bfa/bfi_cbreg.h
->  delete mode 100644 drivers/scsi/bfa/bfi_ctreg.h
->  create mode 100644 drivers/scsi/bfa/bfi_reg.h
-
-[12k lines diff]
-
-This patch is _way_ to big. And it's impossible to review. I suggest e.g. 
-splitting the header merge things out of them so that these become a simple 
-code move without any other changes. And some of the other patches likely 
-deserve their own patch.
-
-Eike
---nextPart1757231.3sqtQqq14U
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAk32/SoACgkQXKSJPmm5/E5L/wCgnm/L9Z6BB2lxwYjE5hLfyWEr
-5H4An3qrs3TLxPOxbKSxMbhqJE1D97Bc
-=qnOG
------END PGP SIGNATURE-----
-
---nextPart1757231.3sqtQqq14U--
-
+SGkgQmVuLAoKWW91J3JlIGFscmlnaHQhIEkgaGFkbid0IHRob3VnaHQgdG8gdXNlIGxlMzJfdG9f
+Y3B1LgpEbyB5b3Ugd2FudCBJIG1ha2UgYSBuZXcgcGF0Y2g/CgpDZWRyaWMKCkxlIDEyLzA2LzIw
+MTEgMDA6NDUsIEJlbmphbWluIEhlcnJlbnNjaG1pZHQgYSDDqWNyaXQgOgo+IE9uIEZyaSwgMjAx
+MS0wNi0xMCBhdCAxNTo1NiArMDIwMCwgQ8OpZHJpYyBDYW5vIHdyb3RlOgo+PiBIaSwKPj4KPj4g
+TWFydmVsbCBTQVMgZHJpdmVyIGRvZXNuJ3Qgd29yayBvbiBwb3dlcnBjIGFyY2hpdGVjdHVyZSBk
+dWUgdG8gYmlnCj4+IGVuZGlhbiBzd2FwLiBJJ3ZlIHRlc3RlZCBpdCB3aXRoIHRoZSBNVjY0NDAg
+Y2hpcC4KPj4gSGVyZSB5b3UgY2FuIGZpbmQgdGhlIHBhdGNoIGZvciBMaW51eCAyLjYuMzkuMS4K
+Pj4KPj4gQ2VkcmljIENhbm8KPj4KPj4gU2lnbmVkLW9mZi1ieTogQ2VkcmljIENhbm88Y2Nhbm9A
+aW50ZXJmYWNlY29uY2VwdC5jb20+Cj4+IC0tLQo+PiAtLS0gZHJpdmVycy9zY3NpL212c2FzL212
+X3Nhcy5jICAgIDIwMTEtMDYtMTAgMTU6NTA6MDQuMDAwMDAwMDAwICswMjAwCj4+ICsrKyBkcml2
+ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgICAgMjAxMS0wNi0xMCAxNTo1MDoxMi4wMDAwMDAwMDAg
+KzAyMDAKPj4gQEAgLTExNDMsNiArMTE0MywxNCBAQAo+PiAgICAgICAgTVZTX0NISVBfRElTUC0+
+d3JpdGVfcG9ydF9jZmdfYWRkcihtdmksIGksIFBIWVJfU0FUQV9TSUcwKTsKPj4gICAgICAgIHNb
+MF0gPSBNVlNfQ0hJUF9ESVNQLT5yZWFkX3BvcnRfY2ZnX2RhdGEobXZpLCBpKTsKPj4KPj4gKyAg
+ICAvKiBzd2FwIGZvciBiaWcgZW5kaWFuIGRldmljZXMgYmVjYXVzZSBvZiB1c2Ugb2YgdGhlc2Ug
+ZGF0YSBpbiBieXRlcyAqLwo+PiArI2lmZGVmIF9fQklHX0VORElBTgo+PiArICAgIHNbMF0gPSBz
+d2FiMzIoc1swXSk7Cj4+ICsgICAgc1sxXSA9IHN3YWIzMihzWzFdKTsKPj4gKyAgICBzWzJdID0g
+c3dhYjMyKHNbMl0pOwo+PiArICAgIHNbM10gPSBzd2FiMzIoc1szXSk7Cj4+ICsjZW5kaWYgLyog
+X19CSUdfRU5ESUFOICovCj4gSGkgQ2VkcmljICEKPgo+IFRoYW5rcyBmb3IgdGhpcy4gQ0MnaW5n
+IGxpbnV4LXNjc2kuCj4KPiBOb3RlIHRoYXQgaXQgd291bGQgcHJvYmFibHkgaGF2ZSBiZWVuIGJl
+dHRlciB0byB1c2UgbGUzMl90b19jcHUsIHdoaWNoCj4gYXZvaWRzIHRoZSBpZmRlZiBjb21wbGV0
+ZWx5Lgo+Cj4gQ2hlZXJzLAo+IEJlbi4KPgo+PiAgICAgICAgLyogV29ya2Fyb3VuZDogdGFrZSBz
+b21lIEFUQVBJIGRldmljZXMgZm9yIEFUQSAqLwo+PiAgICAgICAgaWYgKCgoc1sxXSYgIDB4MDBG
+RkZGRkYpID09IDB4MDBFQjE0MDEpJiYgICgqKHU4ICopJnNbM10gPT0gMHgwMSkpCj4+ICAgICAg
+ICAgICAgc1sxXSA9IDB4MDBFQjE0MDEgfCAoKigodTggKikmc1sxXSArIDMpJiAgMHgxMCk7Cj4+
+Cj4+IC0tLQo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xwo+PiBMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0Cj4+IExpbnV4cHBjLWRldkBsaXN0cy5vemxh
+YnMub3JnCj4+IGh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXYK
+Pgo+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4
+cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6
+Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
