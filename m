@@ -1,15 +1,15 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
 Subject: [PATCH 00/07] : mpt2sas : Description Patch
-Date: Tue, 14 Jun 2011 10:51:10 +0530
-Message-ID: <20110614052036.GA14349@lsi.com>
+Date: Tue, 14 Jun 2011 10:54:24 +0530
+Message-ID: <20110614052420.GB14349@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55500 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750972Ab1FNE43 (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:59619 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750972Ab1FNE7o (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2011 00:56:29 -0400
+	Tue, 14 Jun 2011 00:59:44 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,7 +21,7 @@ Please consider this patch set for next kernel release.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-[PATCH 01/07] mpt2sas: Adding support to retrieve FW diag buffer between each RESET.
+[PATCH 01/07] mpt2sas: Fixed Big Indian Issues on 32 bit PPC
 [PATCH 02/07] mpt2sas  MPI next revision header update 
 [PATCH 03/07] mpt2sas: Set max_sector count from module para.
 [PATCH 04/07] mpt2sas: broadcast AEN and task management issue fixed.
