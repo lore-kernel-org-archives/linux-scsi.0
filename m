@@ -1,82 +1,41 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 06/07] mpt2sas: Adding support for customer specific branding
-Date: Tue, 14 Jun 2011 10:57:31 +0530
-Message-ID: <20110614052727.GH14349@lsi.com>
+Subject: [PATCH 07/07] mpt2sas: Bump version 09.100.00.00
+Date: Tue, 14 Jun 2011 10:57:51 +0530
+Message-ID: <20110614052748.GI14349@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:57590 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752058Ab1FNFCu (ORCPT
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:48252 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751210Ab1FNFDL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2011 01:02:50 -0400
+	Tue, 14 Jun 2011 01:03:11 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-
-Adding support for displaying customer branding info.
+version upgrade patch.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 1da606c..83035bd 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1740,9 +1740,11 @@ _base_display_dell_branding(struct MPT2SAS_ADAPTER *ioc)
- static void
- _base_display_intel_branding(struct MPT2SAS_ADAPTER *ioc)
- {
--	if (ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_INTEL &&
--	    ioc->pdev->device == MPI2_MFGPAGE_DEVID_SAS2008) {
-+	if (ioc->pdev->subsystem_vendor != PCI_VENDOR_ID_INTEL)
-+		return;
- 
-+	switch (ioc->pdev->device) {
-+	case MPI2_MFGPAGE_DEVID_SAS2008:
- 		switch (ioc->pdev->subsystem_device) {
- 		case MPT2SAS_INTEL_RMS2LL080_SSDID:
- 			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-@@ -1752,7 +1754,20 @@ _base_display_intel_branding(struct MPT2SAS_ADAPTER *ioc)
- 			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
- 			    MPT2SAS_INTEL_RMS2LL040_BRANDING);
- 			break;
-+		default:
-+			break;
- 		}
-+	case MPI2_MFGPAGE_DEVID_SAS2308_2:
-+		switch (ioc->pdev->subsystem_device) {
-+		case MPT2SAS_INTEL_RS25GB008_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_INTEL_RS25GB008_BRANDING);
-+			break;
-+		default:
-+			break;
-+		}
-+	default:
-+		break;
- 	}
- }
- 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index df135db..b743847 100644
+index 04ed752..ddd1faf 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -161,12 +161,15 @@
- 				"Intel Integrated RAID Module RMS2LL080"
- #define MPT2SAS_INTEL_RMS2LL040_BRANDING	\
- 				"Intel Integrated RAID Module RMS2LL040"
-+#define MPT2SAS_INTEL_RS25GB008_BRANDING       \
-+				"Intel(R) RAID Controller RS25GB008"
+@@ -69,11 +69,11 @@
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
+-#define MPT2SAS_DRIVER_VERSION		"08.100.00.01"
+-#define MPT2SAS_MAJOR_VERSION		08
++#define MPT2SAS_DRIVER_VERSION		"09.100.00.00"
++#define MPT2SAS_MAJOR_VERSION		09
+ #define MPT2SAS_MINOR_VERSION		100
+ #define MPT2SAS_BUILD_VERSION		00
+-#define MPT2SAS_RELEASE_VERSION		01
++#define MPT2SAS_RELEASE_VERSION		00
  
  /*
-  * Intel HBA SSDIDs
-  */
- #define MPT2SAS_INTEL_RMS2LL080_SSDID          0x350E
- #define MPT2SAS_INTEL_RMS2LL040_SSDID          0x350F
-+#define MPT2SAS_INTEL_RS25GB008_SSDID          0x3000
- 
- 
- /*
+  * Set MPT2SAS_SG_DEPTH value based on user input.
