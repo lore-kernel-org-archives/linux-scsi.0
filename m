@@ -1,43 +1,30 @@
-From: Abhijeet Joglekar <abjoglek@cisco.com>
-Subject: [PATCH 2/2] fnic: Update Maintainers list for fnic.
-Date: Mon, 13 Jun 2011 21:21:17 -0700
-Message-ID: <20110614042106.5915.29625.stgit@localhost.localdomain>
-References: <20110614041741.5915.8518.stgit@localhost.localdomain>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH 00/07] : mpt2sas : Description Patch
+Date: Tue, 14 Jun 2011 10:51:10 +0530
+Message-ID: <20110614052036.GA14349@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:6298 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081Ab1FNEVR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2011 00:21:17 -0400
-In-Reply-To: <20110614041741.5915.8518.stgit@localhost.localdomain>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55500 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750972Ab1FNE43 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2011 00:56:29 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, abjoglek@cisco.com
-Cc: vbhamidi@cisco.com, buchino@cisco.com
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Update Maintainers list for fnic.
+MPT2SAS driver changes.
+Please consider this patch set for next kernel release.
 
-Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
- MAINTAINERS |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 29801f7..e3162dc 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1762,7 +1762,8 @@ F:	include/linux/clk.h
- 
- CISCO FCOE HBA DRIVER
- M:	Abhijeet Joglekar <abjoglek@cisco.com>
--M:	Joe Eykholt <jeykholt@cisco.com>
-+M:	Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
-+M:	Brian Uchino <buchino@cisco.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- F:	drivers/scsi/fnic/
-
-
+[PATCH 01/07] mpt2sas: Adding support to retrieve FW diag buffer between each RESET.
+[PATCH 02/07] mpt2sas  MPI next revision header update 
+[PATCH 03/07] mpt2sas: Set max_sector count from module para.
+[PATCH 04/07] mpt2sas: broadcast AEN and task management issue fixed.
+[PATCH 05/07] mpt2sas: Added DID_NO_CONNECT return when driver remove and avoid shutdown call
+[PATCH 06/07] mpt2sas: Adding support for customer specific branding 
+[PATCH 07/07] mpt2sas: Bump version 09.100.00.00
