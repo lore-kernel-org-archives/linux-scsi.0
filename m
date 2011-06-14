@@ -1,92 +1,95 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] drivers/scsi/ipr.c: reorder error handling code to include
- iounmap
-Date: Tue, 14 Jun 2011 11:09:32 -0500
-Message-ID: <4DF787BC.8050701@linux.vnet.ibm.com>
-References: <1306851409-14963-1-git-send-email-julia@diku.dk> <4DF0EC00.9020603@linux.vnet.ibm.com>
+From: Krishna Gudipati <kgudipat@Brocade.com>
+Subject: RE: [PATCH 04/12] bfa: Brocade-1860 Fabric Adapter Hardware
+ Enablement
+Date: Tue, 14 Jun 2011 10:44:25 -0700
+Message-ID: <B5EE62D80D50B84BB9E5174F7FCCE80A02BC1D1A@HQ1-EXCH02.corp.brocade.com>
+References: <1308005435-9193-1-git-send-email-kgudipat@brocade.com>
+ <1424874.obOgTWAhri@donald.sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:42683 "EHLO e7.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750899Ab1FNQJ4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2011 12:09:56 -0400
-In-Reply-To: <4DF0EC00.9020603@linux.vnet.ibm.com>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:42260 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752281Ab1FNRom convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2011 13:44:42 -0400
+In-Reply-To: <1424874.obOgTWAhri@donald.sf-tec.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: Julia Lawall <julia@diku.dk>, Brian King <brking@us.ibm.com>, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jing Huang <huangj@Brocade.COM>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
-On 06/09/2011 10:51 AM, Wayne Boyer wrote:
-> On 05/31/2011 07:16 AM, Julia Lawall wrote:
->> From: Julia Lawall <julia@diku.dk>
->>
->> The out_msi_disable label should be before cleanup_nomem to additionally
->> benefit from the call to iounmap.
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Rolf Eike Beer
+Sent: Monday, June 13, 2011 11:18 PM
+To: Krishna Gudipati
+Cc: JBottomley@parallels.com; linux-scsi@vger.kernel.org; Jing Huang; Adapter Linux Open SRC Team
+Subject: Re: [PATCH 04/12] bfa: Brocade-1860 Fabric Adapter Hardware Enablement
+
+kgudipat@brocade.com wrote:
+> From: Krishna Gudipati <kgudipat@brocade.com>
 > 
-> Yes, this is a problem.  I propose the following patch instead.
-
-By removing the out_msi_disable label, if you fail initialization later
-on and goto cleanup_nomem, you will end up leaving MSI enabled when you exit
-with this patch.
-
--Brian
-
-
-
+> Change details:
+> 	- Added support for Brocade-1860 Fabric Adapter.
+> 	- Made changes to support single firmware image per asic type.
+> 	- Combined bfi_cbreg.h and bfi_ctreg.h defines into bfi_reg.h with
+> 	  only minimal defines used by host.
+> 	- Added changes to setup CPE/RME Queue register offsets based on
+> 	  firmware response.
+> 	- Removed queue register offset initializations and added register offsets
+> 	  to BFI config response message.
+> 	- Added Brocade-1860 asic specific interrupt status definitions and
+> 	  mailbox interfaces.
 > 
+> Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 > ---
-> 
-> In the case where ipr_test_msi returns an error that is not -EOPNOTSUPP, the
-> execution jumps to the out_msi_disable label.  This misses the call to iounmap
-> for ipr_regs which was initialized earlier.
-> 
-> The fix is to do the call to pci_disable_msi when the error case is detected
-> and then goto the cleanup_nomem label if the error is not -EOPNOTSUPP.
-> 
-> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-> ---
-> 
->  drivers/scsi/ipr.c |   10 ++++------
->  1 file changed, 4 insertions(+), 6 deletions(-)
-> 
-> Index: b/drivers/scsi/ipr.c
-> ===================================================================
-> --- a/drivers/scsi/ipr.c        2011-06-09 08:14:44.927740117 -0700
-> +++ b/drivers/scsi/ipr.c        2011-06-09 08:50:10.105630466 -0700
-> @@ -8763,11 +8763,11 @@ static int __devinit ipr_probe_ioa(struc
->         /* Enable MSI style interrupts if they are supported. */
->         if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI && !pci_enable_msi(pdev)) {
->                 rc = ipr_test_msi(ioa_cfg, pdev);
-> -               if (rc == -EOPNOTSUPP)
-> +               if (rc) {
->                         pci_disable_msi(pdev);
-> -               else if (rc)
-> -                       goto out_msi_disable;
-> -               else
-> +                       if (rc != -EOPNOTSUPP)
-> +                               goto cleanup_nomem;
-> +               } else
->                         dev_info(&pdev->dev, "MSI enabled with IRQ: %d\n", pdev->irq);
->         } else if (ipr_debug)
->                 dev_info(&pdev->dev, "Cannot enable MSI.\n");
-> @@ -8847,8 +8847,6 @@ cleanup_nolog:
->         ipr_free_mem(ioa_cfg);
->  cleanup_nomem:
->         iounmap(ipr_regs);
-> -out_msi_disable:
-> -       pci_disable_msi(pdev);
->  out_release_regions:
->         pci_release_regions(pdev);
->  out_scsi_host_put:
-> 
-> 
+>  drivers/scsi/bfa/bfa.h        |   14 +-
+>  drivers/scsi/bfa/bfa_core.c   |  209 +++++++++-----
+>  drivers/scsi/bfa/bfa_defs.h   |   13 +-
+>  drivers/scsi/bfa/bfa_hw_cb.c  |   34 +--
+>  drivers/scsi/bfa/bfa_hw_ct.c  |   75 ++----
+>  drivers/scsi/bfa/bfa_ioc.c    |  144 ++++++---
+>  drivers/scsi/bfa/bfa_ioc.h    |  117 +++++---
+>  drivers/scsi/bfa/bfa_ioc_cb.c |   56 ++--
+>  drivers/scsi/bfa/bfa_ioc_ct.c |  418 ++++++++++++++++++++++------
+>  drivers/scsi/bfa/bfa_port.c   |    2 -
+>  drivers/scsi/bfa/bfad.c       |   81 +++---
+>  drivers/scsi/bfa/bfad_drv.h   |    1 +
+>  drivers/scsi/bfa/bfad_im.c    |    2 +-
+>  drivers/scsi/bfa/bfi.h        |   62 +++--
+>  drivers/scsi/bfa/bfi_cbreg.h  |  305 --------------------
+>  drivers/scsi/bfa/bfi_ctreg.h  |  636
+> ----------------------------------------- drivers/scsi/bfa/bfi_ms.h     |  
+> 36 +++
+>  drivers/scsi/bfa/bfi_reg.h    |  428 +++++++++++++++++++++++++++
+>  18 files changed, 1262 insertions(+), 1371 deletions(-)
+>  delete mode 100644 drivers/scsi/bfa/bfi_cbreg.h
+>  delete mode 100644 drivers/scsi/bfa/bfi_ctreg.h
+>  create mode 100644 drivers/scsi/bfa/bfi_reg.h
 
+[12k lines diff]
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+This patch is _way_ to big. And it's impossible to review. I suggest e.g. 
+splitting the header merge things out of them so that these become a simple 
+code move without any other changes. And some of the other patches likely 
+deserve their own patch.
 
+Eike
 
+----
+
+Thanks Eike for reviewing.
+
+I have split the patch into 2 patches with the second patch just removing the deleted
+files bfi_cbreg.h and bfi_ctreg.h as you mentioned.
+
+	[PATCH 4a/12] bfa: Brocade-1860 Fabric Adapter Hardware Enablement
+	[PATCH 4b/12] bfa: Remove unused bfi_cbreg.h and bfi_ctreg.h
+
+Regarding some patches deserve their own patch - we tried to make each patch compilable
+and also functional, so we could not split some of the hardware enablement patches.
+
+Thanks,
+Krishna.
