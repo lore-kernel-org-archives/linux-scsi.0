@@ -1,82 +1,201 @@
 From: Dan Carpenter <error27@gmail.com>
-Subject: [patch 1/4 v2] SCSI: target: dereferencing ERR_PTRs
-Date: Tue, 14 Jun 2011 10:27:20 +0300
-Message-ID: <20110614072720.GO3583@shale.localdomain>
-References: <4DF676CD.7010401@suse.de>
+Subject: [patch] SCSI: target: strlen() doesn't count the NUL terminator
+Date: Tue, 14 Jun 2011 10:29:04 +0300
+Message-ID: <20110614072904.GP3583@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f46.google.com ([209.85.210.46]:55039 "EHLO
-	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754398Ab1FNH1t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2011 03:27:49 -0400
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:39187 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754217Ab1FNH3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2011 03:29:32 -0400
 Content-Disposition: inline
-In-Reply-To: <4DF676CD.7010401@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <jbottomley@parallels.com>, Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>, Joe Eykholt <jeykholt@cisco.com>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, Ankit Jain <jankit@suse.de>, kernel-janitors@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-transport_init_session() and core_tmr_alloc_req() never return NULL,
-they only return ERR_PTRs on error.
+strlen() returns the number of characters in the string not counting
+the NUL character at the end.  So if you do something like:
+
+	char buf[10];
+
+	if (strlen("0123456789") > 10)
+		return -ETOOLONG;
+	snprintf(buf, 10, "0123456789");
+	printf("%s\n", buf);
+
+then the last "9" gets chopped off and only "012345678" is printed.
+
+Plus I threw in one small related cleanup.
 
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 ---
-v2: return PTR_ERR(tl_nexus->se_sess); for Ankit Jain.
+I obviously tried to do this correctly, but it has only been compile
+tested.  Sorry for that.
 
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index a3bd57f..03744c2 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -229,7 +229,7 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
- 		return NULL;
- 
- 	sess->se_sess = transport_init_session();
--	if (!sess->se_sess) {
-+	if (IS_ERR(sess->se_sess)) {
- 		kfree(sess);
- 		return NULL;
- 	}
 diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index dee2a2c..77ff8d0 100644
+index 6333a0c..852ba48 100644
 --- a/drivers/target/loopback/tcm_loop.c
 +++ b/drivers/target/loopback/tcm_loop.c
-@@ -386,7 +386,7 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
+@@ -1144,7 +1144,7 @@ static ssize_t tcm_loop_tpg_store_nexus(
+ 	 * the fabric protocol_id set in tcm_loop_make_scsi_hba(), and call
+ 	 * tcm_loop_make_nexus()
  	 */
- 	se_cmd->se_tmr_req = core_tmr_alloc_req(se_cmd, (void *)tl_tmr,
- 				TMR_LUN_RESET);
--	if (!se_cmd->se_tmr_req)
-+	if (IS_ERR(se_cmd->se_tmr_req))
- 		goto release;
- 	/*
- 	 * Locate the underlying TCM struct se_lun from sc->device->lun
-@@ -1017,6 +1017,7 @@ static int tcm_loop_make_nexus(
- 	struct se_portal_group *se_tpg;
- 	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
- 	struct tcm_loop_nexus *tl_nexus;
-+	int ret = -ENOMEM;
+-	if (strlen(page) > TL_WWN_ADDR_LEN) {
++	if (strlen(page) >= TL_WWN_ADDR_LEN) {
+ 		printk(KERN_ERR "Emulated NAA Sas Address: %s, exceeds"
+ 				" max: %d\n", page, TL_WWN_ADDR_LEN);
+ 		return -EINVAL;
+@@ -1325,7 +1325,7 @@ struct se_wwn *tcm_loop_make_scsi_hba(
+ 	return ERR_PTR(-EINVAL);
  
- 	if (tl_tpg->tl_hba->tl_nexus) {
- 		printk(KERN_INFO "tl_tpg->tl_hba->tl_nexus already exists\n");
-@@ -1033,8 +1034,11 @@ static int tcm_loop_make_nexus(
- 	 * Initialize the struct se_session pointer
- 	 */
- 	tl_nexus->se_sess = transport_init_session();
--	if (!tl_nexus->se_sess)
-+	if (IS_ERR(tl_nexus->se_sess)) {
-+		ret = PTR_ERR(tl_nexus->se_sess);
- 		goto out;
-+	}
-+
- 	/*
- 	 * Since we are running in 'demo mode' this call with generate a
- 	 * struct se_node_acl for the tcm_loop struct se_portal_group with the SCSI
-@@ -1060,7 +1064,7 @@ static int tcm_loop_make_nexus(
+ check_len:
+-	if (strlen(name) > TL_WWN_ADDR_LEN) {
++	if (strlen(name) >= TL_WWN_ADDR_LEN) {
+ 		printk(KERN_ERR "Emulated NAA %s Address: %s, exceeds"
+ 			" max: %d\n", name, tcm_loop_dump_proto_id(tl_hba),
+ 			TL_WWN_ADDR_LEN);
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index b17abd1..25c1f49 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -304,7 +304,7 @@ struct target_fabric_configfs *target_fabric_configfs_init(
+ 		printk(KERN_ERR "Unable to locate passed fabric name\n");
+ 		return NULL;
+ 	}
+-	if (strlen(name) > TARGET_FABRIC_NAME_SIZE) {
++	if (strlen(name) >= TARGET_FABRIC_NAME_SIZE) {
+ 		printk(KERN_ERR "Passed name: %s exceeds TARGET_FABRIC"
+ 			"_NAME_SIZE\n", name);
+ 		return NULL;
+@@ -851,7 +851,7 @@ static ssize_t target_core_dev_wwn_store_attr_vpd_unit_serial(
+ 		return -EOPNOTSUPP;
+ 	}
  
- out:
- 	kfree(tl_nexus);
--	return -ENOMEM;
-+	return ret;
- }
+-	if ((strlen(page) + 1) > INQUIRY_VPD_SERIAL_LEN) {
++	if (strlen(page) >= INQUIRY_VPD_SERIAL_LEN) {
+ 		printk(KERN_ERR "Emulated VPD Unit Serial exceeds"
+ 		" INQUIRY_VPD_SERIAL_LEN: %d\n", INQUIRY_VPD_SERIAL_LEN);
+ 		return -EOVERFLOW;
+@@ -917,7 +917,7 @@ static ssize_t target_core_dev_wwn_show_attr_vpd_protocol_identifier(
  
- static int tcm_loop_drop_nexus(
+ 		transport_dump_vpd_proto_id(vpd, buf, VPD_TMP_BUF_SIZE);
+ 
+-		if ((len + strlen(buf) > PAGE_SIZE))
++		if ((len + strlen(buf) >= PAGE_SIZE))
+ 			break;
+ 
+ 		len += sprintf(page+len, "%s", buf);
+@@ -962,19 +962,19 @@ static ssize_t target_core_dev_wwn_show_attr_##_name(			\
+ 									\
+ 		memset(buf, 0, VPD_TMP_BUF_SIZE);			\
+ 		transport_dump_vpd_assoc(vpd, buf, VPD_TMP_BUF_SIZE);	\
+-		if ((len + strlen(buf) > PAGE_SIZE))			\
++		if ((len + strlen(buf) >= PAGE_SIZE))			\
+ 			break;						\
+ 		len += sprintf(page+len, "%s", buf);			\
+ 									\
+ 		memset(buf, 0, VPD_TMP_BUF_SIZE);			\
+ 		transport_dump_vpd_ident_type(vpd, buf, VPD_TMP_BUF_SIZE); \
+-		if ((len + strlen(buf) > PAGE_SIZE))			\
++		if ((len + strlen(buf) >= PAGE_SIZE))			\
+ 			break;						\
+ 		len += sprintf(page+len, "%s", buf);			\
+ 									\
+ 		memset(buf, 0, VPD_TMP_BUF_SIZE);			\
+ 		transport_dump_vpd_ident(vpd, buf, VPD_TMP_BUF_SIZE); \
+-		if ((len + strlen(buf) > PAGE_SIZE))			\
++		if ((len + strlen(buf) >= PAGE_SIZE))			\
+ 			break;						\
+ 		len += sprintf(page+len, "%s", buf);			\
+ 	}								\
+@@ -1299,7 +1299,7 @@ static ssize_t target_core_dev_pr_show_attr_res_pr_registered_i_pts(
+ 			&i_buf[0] : "", pr_reg->pr_res_key,
+ 			pr_reg->pr_res_generation);
+ 
+-		if ((len + strlen(buf) > PAGE_SIZE))
++		if ((len + strlen(buf) >= PAGE_SIZE))
+ 			break;
+ 
+ 		len += sprintf(page+len, "%s", buf);
+@@ -1496,7 +1496,7 @@ static ssize_t target_core_dev_pr_store_attr_res_aptpl_metadata(
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			if (strlen(i_port) > PR_APTPL_MAX_IPORT_LEN) {
++			if (strlen(i_port) >= PR_APTPL_MAX_IPORT_LEN) {
+ 				printk(KERN_ERR "APTPL metadata initiator_node="
+ 					" exceeds PR_APTPL_MAX_IPORT_LEN: %d\n",
+ 					PR_APTPL_MAX_IPORT_LEN);
+@@ -1510,7 +1510,7 @@ static ssize_t target_core_dev_pr_store_attr_res_aptpl_metadata(
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			if (strlen(isid) > PR_REG_ISID_LEN) {
++			if (strlen(isid) >= PR_REG_ISID_LEN) {
+ 				printk(KERN_ERR "APTPL metadata initiator_isid"
+ 					"= exceeds PR_REG_ISID_LEN: %d\n",
+ 					PR_REG_ISID_LEN);
+@@ -1571,7 +1571,7 @@ static ssize_t target_core_dev_pr_store_attr_res_aptpl_metadata(
+ 				ret = -ENOMEM;
+ 				goto out;
+ 			}
+-			if (strlen(t_port) > PR_APTPL_MAX_TPORT_LEN) {
++			if (strlen(t_port) >= PR_APTPL_MAX_TPORT_LEN) {
+ 				printk(KERN_ERR "APTPL metadata target_node="
+ 					" exceeds PR_APTPL_MAX_TPORT_LEN: %d\n",
+ 					PR_APTPL_MAX_TPORT_LEN);
+@@ -3052,7 +3052,7 @@ static struct config_group *target_core_call_addhbatotarget(
+ 	int ret;
+ 
+ 	memset(buf, 0, TARGET_CORE_NAME_MAX_LEN);
+-	if (strlen(name) > TARGET_CORE_NAME_MAX_LEN) {
++	if (strlen(name) >= TARGET_CORE_NAME_MAX_LEN) {
+ 		printk(KERN_ERR "Passed *name strlen(): %d exceeds"
+ 			" TARGET_CORE_NAME_MAX_LEN: %d\n", (int)strlen(name),
+ 			TARGET_CORE_NAME_MAX_LEN);
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 8407f9c..381e428 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1430,7 +1430,7 @@ struct se_lun_acl *core_dev_init_initiator_node_lun_acl(
+ 	struct se_lun_acl *lacl;
+ 	struct se_node_acl *nacl;
+ 
+-	if (strlen(initiatorname) > TRANSPORT_IQN_LEN) {
++	if (strlen(initiatorname) >= TRANSPORT_IQN_LEN) {
+ 		printk(KERN_ERR "%s InitiatorName exceeds maximum size.\n",
+ 			TPG_TFO(tpg)->get_fabric_name());
+ 		*ret = -EOVERFLOW;
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index a79f518..b662db3 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1916,7 +1916,7 @@ static int __core_scsi3_update_aptpl_buf(
+ 				pr_reg->pr_res_mapped_lun);
+ 		}
+ 
+-		if ((len + strlen(tmp) > pr_aptpl_buf_len)) {
++		if ((len + strlen(tmp) >= pr_aptpl_buf_len)) {
+ 			printk(KERN_ERR "Unable to update renaming"
+ 				" APTPL metadata\n");
+ 			spin_unlock(&T10_RES(su_dev)->registration_lock);
+@@ -1934,7 +1934,7 @@ static int __core_scsi3_update_aptpl_buf(
+ 			TPG_TFO(tpg)->tpg_get_tag(tpg),
+ 			lun->lun_sep->sep_rtpi, lun->unpacked_lun, reg_count);
+ 
+-		if ((len + strlen(tmp) > pr_aptpl_buf_len)) {
++		if ((len + strlen(tmp) >= pr_aptpl_buf_len)) {
+ 			printk(KERN_ERR "Unable to update renaming"
+ 				" APTPL metadata\n");
+ 			spin_unlock(&T10_RES(su_dev)->registration_lock);
+@@ -1986,7 +1986,7 @@ static int __core_scsi3_write_aptpl_to_file(
+ 	memset(iov, 0, sizeof(struct iovec));
+ 	memset(path, 0, 512);
+ 
+-	if (strlen(&wwn->unit_serial[0]) > 512) {
++	if (strlen(&wwn->unit_serial[0]) >= 512) {
+ 		printk(KERN_ERR "WWN value for struct se_device does not fit"
+ 			" into path buffer\n");
+ 		return -1;
