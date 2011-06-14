@@ -1,54 +1,96 @@
-From: =?UTF-8?B?Q8OpZHJpYyBDYW5v?= <ccano@interfaceconcept.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: [PATCH 1/1] Big endian swap for Marvell 6440 SAS driver
-Date: Tue, 14 Jun 2011 08:42:59 +0200
-Message-ID: <4DF702F3.704@interfaceconcept.com>
+Date: Tue, 14 Jun 2011 17:05:23 +1000
+Message-ID: <1308035123.2874.1055.camel@pasglop>
 References: <4DF2228E.7060806@ic.fr> <1307832356.2874.312.camel@pasglop>
+	 <4DF702F3.704@interfaceconcept.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1307832356.2874.312.camel@pasglop>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:40080 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753234Ab1FNHFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Jun 2011 03:05:33 -0400
+In-Reply-To: <4DF702F3.704@interfaceconcept.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?C=E9dric?= Cano <ccano@interfaceconcept.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
 
-SGkgQmVuLAoKWW91J3JlIGFscmlnaHQhIEkgaGFkbid0IHRob3VnaHQgdG8gdXNlIGxlMzJfdG9f
-Y3B1LgpEbyB5b3Ugd2FudCBJIG1ha2UgYSBuZXcgcGF0Y2g/CgpDZWRyaWMKCkxlIDEyLzA2LzIw
-MTEgMDA6NDUsIEJlbmphbWluIEhlcnJlbnNjaG1pZHQgYSDDqWNyaXQgOgo+IE9uIEZyaSwgMjAx
-MS0wNi0xMCBhdCAxNTo1NiArMDIwMCwgQ8OpZHJpYyBDYW5vIHdyb3RlOgo+PiBIaSwKPj4KPj4g
-TWFydmVsbCBTQVMgZHJpdmVyIGRvZXNuJ3Qgd29yayBvbiBwb3dlcnBjIGFyY2hpdGVjdHVyZSBk
-dWUgdG8gYmlnCj4+IGVuZGlhbiBzd2FwLiBJJ3ZlIHRlc3RlZCBpdCB3aXRoIHRoZSBNVjY0NDAg
-Y2hpcC4KPj4gSGVyZSB5b3UgY2FuIGZpbmQgdGhlIHBhdGNoIGZvciBMaW51eCAyLjYuMzkuMS4K
-Pj4KPj4gQ2VkcmljIENhbm8KPj4KPj4gU2lnbmVkLW9mZi1ieTogQ2VkcmljIENhbm88Y2Nhbm9A
-aW50ZXJmYWNlY29uY2VwdC5jb20+Cj4+IC0tLQo+PiAtLS0gZHJpdmVycy9zY3NpL212c2FzL212
-X3Nhcy5jICAgIDIwMTEtMDYtMTAgMTU6NTA6MDQuMDAwMDAwMDAwICswMjAwCj4+ICsrKyBkcml2
-ZXJzL3Njc2kvbXZzYXMvbXZfc2FzLmMgICAgMjAxMS0wNi0xMCAxNTo1MDoxMi4wMDAwMDAwMDAg
-KzAyMDAKPj4gQEAgLTExNDMsNiArMTE0MywxNCBAQAo+PiAgICAgICAgTVZTX0NISVBfRElTUC0+
-d3JpdGVfcG9ydF9jZmdfYWRkcihtdmksIGksIFBIWVJfU0FUQV9TSUcwKTsKPj4gICAgICAgIHNb
-MF0gPSBNVlNfQ0hJUF9ESVNQLT5yZWFkX3BvcnRfY2ZnX2RhdGEobXZpLCBpKTsKPj4KPj4gKyAg
-ICAvKiBzd2FwIGZvciBiaWcgZW5kaWFuIGRldmljZXMgYmVjYXVzZSBvZiB1c2Ugb2YgdGhlc2Ug
-ZGF0YSBpbiBieXRlcyAqLwo+PiArI2lmZGVmIF9fQklHX0VORElBTgo+PiArICAgIHNbMF0gPSBz
-d2FiMzIoc1swXSk7Cj4+ICsgICAgc1sxXSA9IHN3YWIzMihzWzFdKTsKPj4gKyAgICBzWzJdID0g
-c3dhYjMyKHNbMl0pOwo+PiArICAgIHNbM10gPSBzd2FiMzIoc1szXSk7Cj4+ICsjZW5kaWYgLyog
-X19CSUdfRU5ESUFOICovCj4gSGkgQ2VkcmljICEKPgo+IFRoYW5rcyBmb3IgdGhpcy4gQ0MnaW5n
-IGxpbnV4LXNjc2kuCj4KPiBOb3RlIHRoYXQgaXQgd291bGQgcHJvYmFibHkgaGF2ZSBiZWVuIGJl
-dHRlciB0byB1c2UgbGUzMl90b19jcHUsIHdoaWNoCj4gYXZvaWRzIHRoZSBpZmRlZiBjb21wbGV0
-ZWx5Lgo+Cj4gQ2hlZXJzLAo+IEJlbi4KPgo+PiAgICAgICAgLyogV29ya2Fyb3VuZDogdGFrZSBz
-b21lIEFUQVBJIGRldmljZXMgZm9yIEFUQSAqLwo+PiAgICAgICAgaWYgKCgoc1sxXSYgIDB4MDBG
-RkZGRkYpID09IDB4MDBFQjE0MDEpJiYgICgqKHU4ICopJnNbM10gPT0gMHgwMSkpCj4+ICAgICAg
-ICAgICAgc1sxXSA9IDB4MDBFQjE0MDEgfCAoKigodTggKikmc1sxXSArIDMpJiAgMHgxMCk7Cj4+
-Cj4+IC0tLQo+PiBfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwo+PiBMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0Cj4+IExpbnV4cHBjLWRldkBsaXN0cy5vemxh
-YnMub3JnCj4+IGh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXYK
-Pgo+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4
-cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6
-Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
+On Tue, 2011-06-14 at 08:42 +0200, C=C3=A9dric Cano wrote:
+> Hi Ben,
+>=20
+> You're alright! I hadn't thought to use le32_to_cpu.
+> Do you want I make a new patch?
+
+Well, I'm not the maintainer of the subsystem or of the driver, so I'm
+not going to be the one accepting/merging it :-)
+
+I'm just reviewing the patch, but yes, I think you should, and you
+should send it to the right people, ie, I think at least linux-scsi and
+possibly the author/maintainer of the driver itself.
+
+Cheers,
+Ben.
+
+> Cedric
+>=20
+> Le 12/06/2011 00:45, Benjamin Herrenschmidt a =C3=A9crit :
+> > On Fri, 2011-06-10 at 15:56 +0200, C=C3=A9dric Cano wrote:
+> >> Hi,
+> >>
+> >> Marvell SAS driver doesn't work on powerpc architecture due to big
+> >> endian swap. I've tested it with the MV6440 chip.
+> >> Here you can find the patch for Linux 2.6.39.1.
+> >>
+> >> Cedric Cano
+> >>
+> >> Signed-off-by: Cedric Cano<ccano@interfaceconcept.com>
+> >> ---
+> >> --- drivers/scsi/mvsas/mv_sas.c    2011-06-10 15:50:04.000000000 +=
+0200
+> >> +++ drivers/scsi/mvsas/mv_sas.c    2011-06-10 15:50:12.000000000 +=
+0200
+> >> @@ -1143,6 +1143,14 @@
+> >>        MVS_CHIP_DISP->write_port_cfg_addr(mvi, i, PHYR_SATA_SIG0);
+> >>        s[0] =3D MVS_CHIP_DISP->read_port_cfg_data(mvi, i);
+> >>
+> >> +    /* swap for big endian devices because of use of these data i=
+n bytes */
+> >> +#ifdef __BIG_ENDIAN
+> >> +    s[0] =3D swab32(s[0]);
+> >> +    s[1] =3D swab32(s[1]);
+> >> +    s[2] =3D swab32(s[2]);
+> >> +    s[3] =3D swab32(s[3]);
+> >> +#endif /* __BIG_ENDIAN */
+> > Hi Cedric !
+> >
+> > Thanks for this. CC'ing linux-scsi.
+> >
+> > Note that it would probably have been better to use le32_to_cpu, wh=
+ich
+> > avoids the ifdef completely.
+> >
+> > Cheers,
+> > Ben.
+> >
+> >>        /* Workaround: take some ATAPI devices for ATA */
+> >>        if (((s[1]&  0x00FFFFFF) =3D=3D 0x00EB1401)&&  (*(u8 *)&s[3=
+] =3D=3D 0x01))
+> >>            s[1] =3D 0x00EB1401 | (*((u8 *)&s[1] + 3)&  0x10);
+> >>
+> >> ---
+> >> _______________________________________________
+> >> Linuxppc-dev mailing list
+> >> Linuxppc-dev@lists.ozlabs.org
+> >> https://lists.ozlabs.org/listinfo/linuxppc-dev
+> >
+> >
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
