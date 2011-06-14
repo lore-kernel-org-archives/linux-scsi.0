@@ -1,47 +1,37 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] target: Make se_dev_check_online() locking IRQ-safe
-Date: Mon, 13 Jun 2011 20:55:06 -0700
-Message-ID: <1308023706-7255-1-git-send-email-roland@kernel.org>
+From: Abhijeet Joglekar <abjoglek@cisco.com>
+Subject: [PATCH 0/2] Fixes for fnic
+Date: Mon, 13 Jun 2011 21:20:20 -0700
+Message-ID: <20110614041741.5915.8518.stgit@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog104.obsmtp.com ([74.125.245.76]:51226 "HELO
-	na3sys010aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751495Ab1FNDzN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Jun 2011 23:55:13 -0400
+Received: from sj-iport-2.cisco.com ([171.71.176.71]:11961 "EHLO
+	sj-iport-2.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751074Ab1FNEUV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2011 00:20:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: linux-scsi@vger.kernel.org, abjoglek@cisco.com
+Cc: vbhamidi@cisco.com, buchino@cisco.com
 
-From: Roland Dreier <roland@purestorage.com>
+The following series implements a bug fix for fnic and updates Maintainers
+list.
 
-se_dev_check_online() is called from transport_lookup_cmd_lun(), which
-as discussed before may be called from interrupt context.  So it needs
-to use spin_lock_irqsave() instead of spin_lock_irq() to avoid
-enabling interrupts at the wrong time.
+The patches are based off scsi-misc tree.
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/target/target_core_device.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index fcb8161..f2a4bf2 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -815,12 +815,13 @@ static void se_dev_stop(struct se_device *dev)
- 
- int se_dev_check_online(struct se_device *dev)
- {
-+	unsigned long flags;
- 	int ret;
- 
--	spin_lock_irq(&dev->dev_status_lock);
-+	spin_lock_irqsave(&dev->dev_status_lock, flags);
- 	ret = ((dev->dev_status & TRANSPORT_DEVICE_ACTIVATED) ||
- 	       (dev->dev_status & TRANSPORT_DEVICE_DEACTIVATED)) ? 0 : 1;
--	spin_unlock_irq(&dev->dev_status_lock);
-+	spin_unlock_irqrestore(&dev->dev_status_lock, flags);
- 
- 	return ret;
- }
+Abhijeet Joglekar (2):
+      fnic: Update Maintainers list for fnic.
+      fnic: fix incorrect use of SLAB_CACHE_DMA flag
+
+
+ MAINTAINERS                   |    3 ++-
+ drivers/scsi/fnic/fnic.h      |    2 +-
+ drivers/scsi/fnic/fnic_main.c |   21 ++++-----------------
+ drivers/scsi/fnic/fnic_scsi.c |    2 +-
+ 4 files changed, 8 insertions(+), 20 deletions(-)
+
+-- 
+Signature
