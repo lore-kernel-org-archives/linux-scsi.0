@@ -1,70 +1,299 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 03/07] mpt2sas: Set max_sector count from module para
-Date: Tue, 14 Jun 2011 10:56:12 +0530
-Message-ID: <20110614052609.GE14349@lsi.com>
+Subject: [PATCH 02/07] mpt2sas  MPI next revision header update
+Date: Tue, 14 Jun 2011 10:55:45 +0530
+Message-ID: <20110614052541.GD14349@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:57633 "EHLO
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:55364 "EHLO
 	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751081Ab1FNFLD (ORCPT
+	by vger.kernel.org with ESMTP id S1750844Ab1FNFLB (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Jun 2011 01:11:03 -0400
+	Tue, 14 Jun 2011 01:11:01 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: JBottomley@parallels.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-This feature is to override the default
-max_sectors setting at load time, taking max_sectors as an
-command line option when loading the driver.  The setting is
-currently hard-coded in the driver to 8192 sectors (4MB transfers).
-If max_sectors is specified at load time, minimum specified
-setting will be 64, and the maximum is 8192.  The driver will
-modify the setting to be on even boundary. If max_sectors is not
-specified, the driver will default to 8192.
+
+mpt2sas driver revision q header update
+
+(1) Modified the descriptions of the LocalAddress bit in the
+Flags field of the MPI SGE Format description and the MPI
+Simple Element.
+(2) Modified Data Location Address Space bits in the Flags field
+of the IEEE Chain Element.
+(3) Added more detail to the description of the DataLength field
+for the SCSI IO Request and Target Assist Request. Removed
+restriction on using chained SGLs when using multicast or
+bidirectional support.
+(4) In Manufacturing Page 7, added ReceptacleID field to
+ConnectorInfo, and reworked how the Pinout field is used.
+(5) In IO Unit Page 7, added BoardTemperature and
+BoardTemperatureUnits fields.
+(6) In IOC Page 1, changed CoalescingTimeout to units of
+half-microsecond and updated descriptions.
+(7) Modified descriptions of SATASlumberTimeout and
+SASSlumberTimeout fields in SAS IO Unit Page 5 to indicate
+the timers start after partial mode is entered.
+(8) Added Extended Manufacturing configuration pages.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index c88ee83..ff0178a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -94,6 +94,10 @@ static u32 logging_level;
- MODULE_PARM_DESC(logging_level, " bits for enabling additional logging info "
-     "(default=0)");
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index a3e6038..3105d5e 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.17
++ *  mpi2.h Version:  02.00.18
+  *
+  *  Version History
+  *  ---------------
+@@ -64,6 +64,8 @@
+  *  05-12-10  02.00.16  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                      Added alternative defines for the SGE Direction bit.
+  *  08-11-10  02.00.17  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  11-10-10  02.00.18  Bumped MPI2_HEADER_VERSION_UNIT.
++ *                      Added MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR define.
+  *  --------------------------------------------------------------------------
+  */
  
-+static ushort max_sectors = 0xFFFF;
-+module_param(max_sectors, ushort, 0);
-+MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 8192  default=8192");
-+
- /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
- #define MPT2SAS_MAX_LUN (16895)
- static int max_lun = MPT2SAS_MAX_LUN;
-@@ -7400,6 +7404,25 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->transportt = mpt2sas_transport_template;
- 	shost->unique_id = ioc->id;
+@@ -89,7 +91,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
  
-+	if (max_sectors != 0xFFFF) {
-+		if (max_sectors < 64) {
-+			shost->max_sectors = 64;
-+			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
-+			    "for max_sectors, range is 64 to 8192. Assigning "
-+			    "value of 64.\n", ioc->name, max_sectors);
-+		} else if (max_sectors > 8192) {
-+			shost->max_sectors = 8192;
-+			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
-+			    "for max_sectors, range is 64 to 8192. Assigning "
-+			    "default value of 8192.\n", ioc->name,
-+			    max_sectors);
-+		} else {
-+			shost->max_sectors = max_sectors & 0xFFFE;
-+			printk(MPT2SAS_INFO_FMT "The max_sectors value is "
-+			    "set to %d\n", ioc->name, shost->max_sectors);
-+		}
-+	}
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x11)
++#define MPI2_HEADER_VERSION_UNIT            (0x12)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+@@ -1060,10 +1062,14 @@ typedef struct _MPI2_IEEE_SGE_UNION
+ 
+ #define MPI2_IEEE_SGE_FLAGS_ADDR_MASK           (0x03)
+ #define MPI2_IEEE_SGE_FLAGS_SYSTEM_ADDR         (0x00)
++						/* IEEE Simple Element only */
+ #define MPI2_IEEE_SGE_FLAGS_IOCDDR_ADDR         (0x01)
++						/* IEEE Simple Element only */
+ #define MPI2_IEEE_SGE_FLAGS_IOCPLB_ADDR         (0x02)
+ #define MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR      (0x03)
+-
++						/* IEEE Simple Element only */
++#define MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR   (0x03)
++						/* IEEE Chain Element only */
+ 
+ /****************************************************************************
+ *  IEEE SGE operation Macros
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+index f5b9c76..bd7897c 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Configuration messages and pages
+  *  Creation Date:  November 10, 2006
+  *
+- *    mpi2_cnfg.h Version:  02.00.16
++ *    mpi2_cnfg.h Version:  02.00.17
+  *
+  *  Version History
+  *  ---------------
+@@ -127,6 +127,13 @@
+  *                      Added MPI2_SAS_NEG_LINK_RATE_UNSUPPORTED_PHY define.
+  *  08-11-10  02.00.16  Removed IO Unit Page 1 device path (multi-pathing)
+  *                      defines.
++ *  11-10-10  02.00.17  Added ReceptacleID field (replacing Reserved1) to
++ *                      MPI2_MANPAGE7_CONNECTOR_INFO and reworked defines for
++ *                      the Pinout field.
++ *                      Added BoardTemperature and BoardTemperatureUnits fields
++ *                      to MPI2_CONFIG_PAGE_IO_UNIT_7.
++ *                      Added MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING define
++ *                      and MPI2_CONFIG_PAGE_EXT_MAN_PS structure.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -210,6 +217,7 @@ typedef union _MPI2_CONFIG_EXT_PAGE_HEADER_UNION
+ #define MPI2_CONFIG_EXTPAGETYPE_DRIVER_MAPPING      (0x17)
+ #define MPI2_CONFIG_EXTPAGETYPE_SAS_PORT            (0x18)
+ #define MPI2_CONFIG_EXTPAGETYPE_ETHERNET            (0x19)
++#define MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING   (0x1A)
+ 
+ 
+ /*****************************************************************************
+@@ -612,23 +620,31 @@ typedef struct _MPI2_MANPAGE7_CONNECTOR_INFO
+     U32                         Pinout;                 /* 0x00 */
+     U8                          Connector[16];          /* 0x04 */
+     U8                          Location;               /* 0x14 */
+-    U8                          Reserved1;              /* 0x15 */
++	U8                          ReceptacleID;           /* 0x15 */
+     U16                         Slot;                   /* 0x16 */
+     U32                         Reserved2;              /* 0x18 */
+ } MPI2_MANPAGE7_CONNECTOR_INFO, MPI2_POINTER PTR_MPI2_MANPAGE7_CONNECTOR_INFO,
+   Mpi2ManPage7ConnectorInfo_t, MPI2_POINTER pMpi2ManPage7ConnectorInfo_t;
+ 
+ /* defines for the Pinout field */
+-#define MPI2_MANPAGE7_PINOUT_SFF_8484_L4                (0x00080000)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8484_L3                (0x00040000)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8484_L2                (0x00020000)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8484_L1                (0x00010000)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8470_L4                (0x00000800)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8470_L3                (0x00000400)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8470_L2                (0x00000200)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8470_L1                (0x00000100)
+-#define MPI2_MANPAGE7_PINOUT_SFF_8482                   (0x00000002)
+-#define MPI2_MANPAGE7_PINOUT_CONNECTION_UNKNOWN         (0x00000001)
++#define MPI2_MANPAGE7_PINOUT_LANE_MASK                  (0x0000FF00)
++#define MPI2_MANPAGE7_PINOUT_LANE_SHIFT                 (8)
 +
- 	if ((scsi_add_host(shost, &pdev->dev))) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
++#define MPI2_MANPAGE7_PINOUT_TYPE_MASK                  (0x000000FF)
++#define MPI2_MANPAGE7_PINOUT_TYPE_UNKNOWN               (0x00)
++#define MPI2_MANPAGE7_PINOUT_SATA_SINGLE                (0x01)
++#define MPI2_MANPAGE7_PINOUT_SFF_8482                   (0x02)
++#define MPI2_MANPAGE7_PINOUT_SFF_8486                   (0x03)
++#define MPI2_MANPAGE7_PINOUT_SFF_8484                   (0x04)
++#define MPI2_MANPAGE7_PINOUT_SFF_8087                   (0x05)
++#define MPI2_MANPAGE7_PINOUT_SFF_8643_4I                (0x06)
++#define MPI2_MANPAGE7_PINOUT_SFF_8643_8I                (0x07)
++#define MPI2_MANPAGE7_PINOUT_SFF_8470                   (0x08)
++#define MPI2_MANPAGE7_PINOUT_SFF_8088                   (0x09)
++#define MPI2_MANPAGE7_PINOUT_SFF_8644_4X                (0x0A)
++#define MPI2_MANPAGE7_PINOUT_SFF_8644_8X                (0x0B)
++#define MPI2_MANPAGE7_PINOUT_SFF_8644_16X               (0x0C)
++#define MPI2_MANPAGE7_PINOUT_SFF_8436                   (0x0D)
+ 
+ /* defines for the Location field */
+ #define MPI2_MANPAGE7_LOCATION_UNKNOWN                  (0x01)
+@@ -662,7 +678,7 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_7
+   MPI2_POINTER PTR_MPI2_CONFIG_PAGE_MAN_7,
+   Mpi2ManufacturingPage7_t, MPI2_POINTER pMpi2ManufacturingPage7_t;
+ 
+-#define MPI2_MANUFACTURING7_PAGEVERSION                 (0x00)
++#define MPI2_MANUFACTURING7_PAGEVERSION                 (0x01)
+ 
+ /* defines for the Flags field */
+ #define MPI2_MANPAGE7_FLAG_USE_SLOT_INFO                (0x00000001)
+@@ -849,11 +865,13 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+     U16                     IOCTemperature;                         /* 0x10 */
+     U8                      IOCTemperatureUnits;                    /* 0x12 */
+     U8                      IOCSpeed;                               /* 0x13 */
+-    U32                     Reserved3;                              /* 0x14 */
++	U16                     BoardTemperature;              /* 0x14 */
++	U8                      BoardTemperatureUnits;         /* 0x16 */
++	U8                      Reserved3;                     /* 0x17 */
+ } MPI2_CONFIG_PAGE_IO_UNIT_7, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_7,
+   Mpi2IOUnitPage7_t, MPI2_POINTER pMpi2IOUnitPage7_t;
+ 
+-#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x01)
++#define MPI2_IOUNITPAGE7_PAGEVERSION                    (0x02)
+ 
+ /* defines for IO Unit Page 7 PCIeWidth field */
+ #define MPI2_IOUNITPAGE7_PCIE_WIDTH_X1              (0x01)
+@@ -881,7 +899,6 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+ #define MPI2_IOUNITPAGE7_PMCAP_PCIE_WIDTH_CHANGE    (0x00000008)
+ #define MPI2_IOUNITPAGE7_PMCAP_PCIE_SPEED_CHANGE    (0x00000004)
+ 
+-
+ /* defines for IO Unit Page 7 IOCTemperatureUnits field */
+ #define MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT       (0x00)
+ #define MPI2_IOUNITPAGE7_IOC_TEMP_FAHRENHEIT        (0x01)
+@@ -893,6 +910,11 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+ #define MPI2_IOUNITPAGE7_IOC_SPEED_QUARTER          (0x04)
+ #define MPI2_IOUNITPAGE7_IOC_SPEED_EIGHTH           (0x08)
+ 
++/* defines for IO Unit Page 7 BoardTemperatureUnits field */
++#define MPI2_IOUNITPAGE7_BOARD_TEMP_NOT_PRESENT     (0x00)
++#define MPI2_IOUNITPAGE7_BOARD_TEMP_FAHRENHEIT      (0x01)
++#define MPI2_IOUNITPAGE7_BOARD_TEMP_CELSIUS         (0x02)
++
+ 
+ 
+ /****************************************************************************
+@@ -2799,5 +2821,25 @@ typedef struct _MPI2_CONFIG_PAGE_ETHERNET_1 {
+ #define MPI2_ETHPG1_MS_DATA_RATE_1GBIT              (0x03)
+ 
+ 
++/****************************************************************************
++*   Extended Manufacturing Config Pages
++****************************************************************************/
++
++/*
++ * Generic structure to use for product-specific extended manufacturing pages
++ * (currently Extended Manufacturing Page 40 through Extended Manufacturing
++ * Page 60).
++ */
++
++typedef struct _MPI2_CONFIG_PAGE_EXT_MAN_PS {
++	MPI2_CONFIG_EXTENDED_PAGE_HEADER    Header;                 /* 0x00 */
++	U32                                 ProductSpecificInfo;    /* 0x08 */
++}	MPI2_CONFIG_PAGE_EXT_MAN_PS,
++	MPI2_POINTER PTR_MPI2_CONFIG_PAGE_EXT_MAN_PS,
++	Mpi2ExtManufacturingPagePS_t,
++	MPI2_POINTER pMpi2ExtManufacturingPagePS_t;
++
++/* PageVersion should be provided by product-specific code */
++
+ #endif
+ 
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_init.h b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+index 20e6b88..52a10eb 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_init.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_init.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI SCSI initiator mode messages and structures
+  *  Creation Date:  June 23, 2006
+  *
+- *    mpi2_init.h Version:  02.00.10
++ *    mpi2_init.h Version:  02.00.11
+  *
+  *  Version History
+  *  ---------------
+@@ -33,6 +33,7 @@
+  *                      Added MPI2_SCSITASKMGMT_RSP_TM_OVERLAPPED_TAG define.
+  *  02-10-10  02.00.09  Removed unused structure that had "#if 0" around it.
+  *  05-12-10  02.00.10  Added optional vendor-unique region to SCSI IO Request.
++ *  11-10-10  02.00.11  Added MPI2_SCSIIO_NUM_SGLOFFSETS define.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -139,6 +140,9 @@ typedef struct _MPI2_SCSI_IO_REQUEST
+ #define MPI2_SCSIIO_SGLFLAGS_SGL1_SHIFT             (4)
+ #define MPI2_SCSIIO_SGLFLAGS_SGL0_SHIFT             (0)
+ 
++/* number of SGLOffset fields */
++#define MPI2_SCSIIO_NUM_SGLOFFSETS                  (4)
++
+ /* SCSI IO IoFlags bits */
+ 
+ /* Large CDB Address Space */
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index 761cbdb..1f0c190 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.15
++ *  mpi2_ioc.h Version:  02.00.16
+  *
+  *  Version History
+  *  ---------------
+@@ -103,6 +103,7 @@
+  *                      defines.
+  *  05-12-10  02.00.15  Marked Task Set Full Event as obsolete.
+  *                      Added MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY define.
++ *  11-10-10  02.00.16  Added MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -1032,6 +1033,7 @@ typedef struct _MPI2_FW_DOWNLOAD_REQUEST
+ #define MPI2_FW_DOWNLOAD_ITYPE_MEGARAID             (0x09)
+ #define MPI2_FW_DOWNLOAD_ITYPE_COMPLETE             (0x0A)
+ #define MPI2_FW_DOWNLOAD_ITYPE_COMMON_BOOT_BLOCK    (0x0B)
++#define MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC (0xF0)
+ 
+ /* FWDownload TransactionContext Element */
+ typedef struct _MPI2_FW_DOWNLOAD_TCSGE
