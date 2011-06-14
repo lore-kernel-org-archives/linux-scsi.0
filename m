@@ -1,44 +1,58 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] LIBSAS: fix libsas link error issue
-Date: Tue, 14 Jun 2011 10:29:27 -0500
-Message-ID: <1308065367.2401.24.camel@mulgrave>
-References: <1308064628-11826-1-git-send-email-yxlraid@gmail.com>
+From: Roland Dreier <roland@kernel.org>
+Subject: Re: [PATCH] target: Make transport_lookup_cmd_lun() locking IRQ-safe
+Date: Tue, 14 Jun 2011 08:58:57 -0700
+Message-ID: <BANLkTin9U47ej2eR2ns7-=T-QHrRw=-t_Q@mail.gmail.com>
+References: <1308023045-5257-1-git-send-email-roland@kernel.org> <20110614081259.GA10379@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1308064628-11826-1-git-send-email-yxlraid@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: yxlraid@gmail.com
-Cc: jack_wang@usish.com, lucas.demarchi@profusion.mobi, maciej.trela@intel.com, dan.j.williams@intel.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com, jfeng@marvell.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:52207 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751214Ab1FNP7T convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Jun 2011 11:59:19 -0400
+In-Reply-To: <20110614081259.GA10379@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-On Tue, 2011-06-14 at 23:17 +0800, yxlraid@gmail.com wrote:
-> From: Xiangliang Yu <yuxiangl@marvell.com>
-> 
-> -- The value of child link rate should is minimum of link rate, or
->    command will fail if child link rate is bigger than parent link rate.
-> 
-> Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 874e29d..6ccca09 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -638,7 +638,7 @@ static void sas_ex_get_linkrate(struct domain_device *parent,
->  			sas_port_add_phy(port, phy->phy);
->  		}
->  	}
-> -	child->linkrate = min(parent_phy->linkrate, child->max_linkrate);
-> +	child->linkrate = min(parent_phy->linkrate, child->min_linkrate);
+On Tue, Jun 14, 2011 at 1:12 AM, Christoph Hellwig <hch@infradead.org> =
+wrote:
+>> transport_lookup_cmd_lun() may be called from interrupt context (eg
+>> tcm_loop_allocate_core_cmd() calls it, and it has a comment that say=
+s,
+>> "Can be called from interrupt context"), so it needs to use
+>> spin_lock_irqsave() instead of spin_lock_irq() to avoid enabling
+>> interrupts at the wrong time.
 
-This patch doesn't look right.  It will clamp the phy to the minimum
-possible link rate.  The child is supposed to support everywhere between
-child->min_linkrate and child->max_linkrate.  The reason why we pick the
-max is because we should use that if the parent supports it, and fall
-back only if the parent isn't capable.
+> It currently is, but I think we'd better be off stopping to call it f=
+rom
+> IRQ context. =A0Soon after we offload the work to thread context anyw=
+ay.
+> By moving the point of offloading a little earlier we can simply the
+> calling conventions a lot, and keep the amount of code that needs
+> IRQ-safe locking minimal.
 
-James
+=46air enough... however that seems like a much more major project,
+as eg the qla2xxx code does a fair bit from interrupt context.
+
+Also it seems even if we are running from thread context it would
+be legitimate for a target driver to do
+
+    spin_lock_irq(&internal_target_lock);
+    ...
+    transport_lookup_cmd_lun();
+    ...
+    spin_unlock_irq
+
+and so transport_lookup_cmd_lun() shouldn't be reenabling IRQs
+unconditionally.
+
+Thanks,
+  Roland
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
