@@ -1,58 +1,123 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH] [SCSI] LIBSAS: fix libsas link error issue
-Date: Tue, 14 Jun 2011 23:31:25 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D19FAE66AAF@SC-VEXCH4.marvell.com>
-References: <1308064628-11826-1-git-send-email-yxlraid@gmail.com>
-	 <1308065367.2401.24.camel@mulgrave>
-	 <F766E4F80769BD478052FB6533FA745D19FAE669AF@SC-VEXCH4.marvell.com>
- <1308117450.2329.31.camel@mulgrave>
+From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Subject: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
+Date: Wed, 15 Jun 2011 17:16:28 +0900
+Message-ID: <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
+References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1308117450.2329.31.camel@mulgrave>
-Content-Language: en-US
+In-Reply-To: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "yxlraid@gmail.com" <yxlraid@gmail.com>, "jack_wang@usish.com" <jack_wang@usish.com>, "lucas.demarchi@profusion.mobi" <lucas.demarchi@profusion.mobi>, "maciej.trela@intel.com" <maciej.trela@intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, greg@kroah.com, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com, Nao Nishijima <nao.nishijima.xt@hitachi.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Allow users to set the preferred name of device via sysfs interface.
 
-On Tue, 2011-06-14 at 18:44 -0700, Xiangliang Yu wrote:
->> Subject: Re: [PATCH] [SCSI] LIBSAS: fix libsas link error issue
->> 
->> On Tue, 2011-06-14 at 23:17 +0800, yxlraid@gmail.com wrote:
->> >> From: Xiangliang Yu <yuxiangl@marvell.com>
->> >> 
->> >> -- The value of child link rate should is minimum of link rate, or
->> >>    command will fail if child link rate is bigger than parent link rate.
->> >> 
->> >> Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
->> >> ---
->> >>  drivers/scsi/libsas/sas_expander.c |    2 +-
->> >>  1 files changed, 1 insertions(+), 1 deletions(-)
->> >> 
->> >> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
->> >> index 874e29d..6ccca09 100644
->> >> --- a/drivers/scsi/libsas/sas_expander.c
->> >> +++ b/drivers/scsi/libsas/sas_expander.c
->> >> @@ -638,7 +638,7 @@ static void sas_ex_get_linkrate(struct domain_device *parent,
->> >>  			sas_port_add_phy(port, phy->phy);
->> >>  		}
->> >>  	}
->> >> -	child->linkrate = min(parent_phy->linkrate, child->max_linkrate);
->> >> +	child->linkrate = min(parent_phy->linkrate, child->min_linkrate);
->> 
->> >This patch doesn't look right.  It will clamp the phy to the minim
->> >possible link rate.  
->> Link negotiation should get the minimum.
+(Exsample) sda -> foo
+# echo foo > /sys/block/sda/preferred_name
 
->it's probably a negotiation problem.  If the
->child can't support the highest possible link rate because of problems
->like transmission errors, it should fall back.
+Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+Suggested-by: Jon Masters <jcm@redhat.com>
+Signed-off-by: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+---
 
-I get the issue like this: 
-1. HBA support 3Gbps, level 1 expander support 6Gbps, and level 2 expander support 6Gbps; 
-2. level 1 is fine, and find that level 2 link rate is 6Gbps in DISCOVER command response.
-3. LIBSAS think level 2 is 6Gbps by sas_ex_get_linkrate function, and send command to level 2 expander
-4. LIBSAS link error.
+ block/genhd.c          |   28 ++++++++++++++++++++++++++++
+ include/linux/device.h |    9 +++++++++
+ 2 files changed, 37 insertions(+), 0 deletions(-)
+
+diff --git a/block/genhd.c b/block/genhd.c
+index 95822ae..79b97f6 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -909,6 +909,31 @@ static int __init genhd_device_init(void)
+ 
+ subsys_initcall(genhd_device_init);
+ 
++static ssize_t preferred_name_show(struct device *dev,
++				struct device_attribute *attr, char *buf)
++{
++	return snprintf(buf, PREFERRED_NAME_LEN, "%s\n", dev->preferred_name);
++}
++
++static ssize_t preferred_name_store(struct device *dev,
++					struct device_attribute *attr,
++					const char *buf, size_t count)
++{
++	struct gendisk *disk = dev_to_disk(dev);
++	if (!count)
++		return -EINVAL;
++	if (strlen(buf) >= PREFERRED_NAME_LEN) {
++		printk(KERN_ERR "preferred_name: %s is too long\n", buf);
++		return -EINVAL;
++	}
++	dev->preferred_name = kasprintf(GFP_KERNEL, "%s", buf);
++	if (!dev->preferred_name)
++		return -ENOMEM;
++	printk(KERN_INFO "preferred_name: assigned %s to %s\n",
++		buf, disk->disk_name);
++	return count;
++}
++
+ static ssize_t disk_range_show(struct device *dev,
+ 			       struct device_attribute *attr, char *buf)
+ {
+@@ -968,6 +993,8 @@ static ssize_t disk_discard_alignment_show(struct device *dev,
+ 	return sprintf(buf, "%d\n", queue_discard_alignment(disk->queue));
+ }
+ 
++static DEVICE_ATTR(preferred_name, S_IRUGO|S_IWUSR, preferred_name_show,
++			preferred_name_store);
+ static DEVICE_ATTR(range, S_IRUGO, disk_range_show, NULL);
+ static DEVICE_ATTR(ext_range, S_IRUGO, disk_ext_range_show, NULL);
+ static DEVICE_ATTR(removable, S_IRUGO, disk_removable_show, NULL);
+@@ -990,6 +1017,7 @@ static struct device_attribute dev_attr_fail_timeout =
+ #endif
+ 
+ static struct attribute *disk_attrs[] = {
++	&dev_attr_preferred_name.attr,
+ 	&dev_attr_range.attr,
+ 	&dev_attr_ext_range.attr,
+ 	&dev_attr_removable.attr,
+diff --git a/include/linux/device.h b/include/linux/device.h
+index c66111a..0486644 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -490,6 +490,9 @@ struct device_dma_parameters {
+ 	unsigned long segment_boundary_mask;
+ };
+ 
++/* maximum length of preferred name */
++#define PREFERRED_NAME_LEN	256
++
+ /**
+  * struct device - The basic device structure
+  * @parent:	The device's "parent" device, the device to which it is attached.
+@@ -500,6 +503,7 @@ struct device_dma_parameters {
+  * 		See the comment of the struct device_private for detail.
+  * @kobj:	A top-level, abstract class from which other classes are derived.
+  * @init_name:	Initial name of the device.
++ * @preferred_name: Preferred name of the device.
+  * @type:	The type of device.
+  * 		This identifies the device type and carries type-specific
+  * 		information.
+@@ -556,6 +560,7 @@ struct device {
+ 
+ 	struct kobject kobj;
+ 	const char		*init_name; /* initial name of the device */
++	const char	*preferred_name; /* preferred name of the device */
+ 	const struct device_type *type;
+ 
+ 	struct mutex		mutex;	/* mutex to synchronize calls to
+@@ -608,6 +613,10 @@ struct device {
+ 
+ static inline const char *dev_name(const struct device *dev)
+ {
++	/* Use the preferred name when users set it */
++	if (dev->preferred_name)
++		return dev->preferred_name;
++
+ 	/* Use the init name until the kobject becomes available */
+ 	if (dev->init_name)
+ 		return dev->init_name;
