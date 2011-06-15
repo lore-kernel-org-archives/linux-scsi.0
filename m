@@ -1,38 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] fusion: don't use flush_scheduled_work()
-Date: Wed, 15 Jun 2011 15:39:15 +0200
-Message-ID: <20110615133915.GX8141@htj.dyndns.org>
-References: <1295877451-16602-1-git-send-email-tj@kernel.org>
- <1295877451-16602-5-git-send-email-tj@kernel.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device
+ structure
+Date: Wed, 15 Jun 2011 10:43:25 -0400
+Message-ID: <1308149005.2616.10.camel@mulgrave>
+References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
+	 <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57635 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752064Ab1FONjU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2011 09:39:20 -0400
-Received: by fxm17 with SMTP id 17so400169fxm.19
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Jun 2011 06:39:19 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1295877451-16602-5-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, greg@kroah.com, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
 
-On Mon, Jan 24, 2011 at 02:57:31PM +0100, Tejun Heo wrote:
-> mptscsih_suspend() does flush_scheduled_work() but mptscsih is the
-> only one using the system_wq.  Make mptspi use its own workqueue, and
-> on suspend, flush it and then call mptscsih_suspend().
+On Wed, 2011-06-15 at 17:16 +0900, Nao Nishijima wrote:
+> Allow users to set the preferred name of device via sysfs interface.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Eric Moore <Eric.Moore@lsi.com>
+> (Exsample) sda -> foo
+> # echo foo > /sys/block/sda/preferred_name
+> 
+> Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Ping on this one too.  I'm quite close to marking
-flush_scheduled_work() deprecated in linux-next and this is one of few
-holdouts outside of staging.  It would be great if this patch can
-appear in linux-next soon.
+So, as I said previously, I think this needs to be in struct device not
+struct gendisk.   It will be an easier infrastructure to use and it
+easily generalises to our other naming problems (like net).
 
-Thank you.
-
--- 
-tejun
+James
