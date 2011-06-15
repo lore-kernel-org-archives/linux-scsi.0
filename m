@@ -1,99 +1,57 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH] drivers/scsi/ipr.c: reorder error handling code to
- include iounmap
-Date: Wed, 15 Jun 2011 10:50:51 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1106151050430.10106@ask.diku.dk>
-References: <1306851409-14963-1-git-send-email-julia@diku.dk>
- <4DF0EC00.9020603@linux.vnet.ibm.com> <4DF787BC.8050701@linux.vnet.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND] scsi: don't use execute_in_process_context()
+Date: Wed, 15 Jun 2011 12:18:31 +0200
+Message-ID: <20110615101831.GU8141@htj.dyndns.org>
+References: <20110430145602.GL29280@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DF787BC.8050701@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Wayne Boyer <wayneb@linux.vnet.ibm.com>, Brian King <brking@us.ibm.com>, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:35584 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754167Ab1FOKSh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2011 06:18:37 -0400
+Content-Disposition: inline
+In-Reply-To: <20110430145602.GL29280@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, lkml <linux-kernel@vger.kernel.org>, Steven Whitehouse <swhiteho@redhat.com>
 
-On Tue, 14 Jun 2011, Brian King wrote:
+On Sat, Apr 30, 2011 at 04:56:02PM +0200, Tejun Heo wrote:
+> SCSI is the only subsystem which uses execute_in_process_context() and
+> its use is racy against module unload.  ie. the reap work is not
+> properly flushed and could still be running after the scsi module is
+> unloaded.
+> 
+> Although execute_in_process_context() can be more efficient when the
+> caller already has a context, in this case, the call paths are quite
+> cold and the difference is practically meaningless.  With commit
+> c8efcc25 (workqueue: allow chained queueing during destruction), the
+> race condition can easily be fixed by using a dedicated workqueue and
+> destroying it on module unload.
+> 
+> Create and use scsi_wq instead of execute_in_process_context().
+> 
+> * scsi_device->ew is replaced with release_work.  scsi_target->ew is
+>   replaced with reap_work.
+> 
+> * Both works are initialized with the respective release/reap function
+>   during device/target init.  scsi_target_reap_usercontext() is moved
+>   upwards to avoid needing forward declaration.
+> 
+> * scsi_alloc_target() now explicitly flushes the reap_work of the
+>   found dying target before putting it instead of depending on
+>   flush_scheduled_work().
+> 
+> For more info on the issues, please read the following threads.
+> 
+>  http://thread.gmane.org/gmane.linux.scsi/62923
+>  http://thread.gmane.org/gmane.linux.kernel/1124773
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Steven Whitehouse <swhiteho@redhat.com>
 
-> On 06/09/2011 10:51 AM, Wayne Boyer wrote:
-> > On 05/31/2011 07:16 AM, Julia Lawall wrote:
-> >> From: Julia Lawall <julia@diku.dk>
-> >>
-> >> The out_msi_disable label should be before cleanup_nomem to additionally
-> >> benefit from the call to iounmap.
-> > 
-> > Yes, this is a problem.  I propose the following patch instead.
-> 
-> By removing the out_msi_disable label, if you fail initialization later
-> on and goto cleanup_nomem, you will end up leaving MSI enabled when you exit
-> with this patch.
+James, ping?
 
-I agree.
-
-julia
-
-> -Brian
-> 
-> 
-> 
-> > 
-> > ---
-> > 
-> > In the case where ipr_test_msi returns an error that is not -EOPNOTSUPP, the
-> > execution jumps to the out_msi_disable label.  This misses the call to iounmap
-> > for ipr_regs which was initialized earlier.
-> > 
-> > The fix is to do the call to pci_disable_msi when the error case is detected
-> > and then goto the cleanup_nomem label if the error is not -EOPNOTSUPP.
-> > 
-> > Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-> > ---
-> > 
-> >  drivers/scsi/ipr.c |   10 ++++------
-> >  1 file changed, 4 insertions(+), 6 deletions(-)
-> > 
-> > Index: b/drivers/scsi/ipr.c
-> > ===================================================================
-> > --- a/drivers/scsi/ipr.c        2011-06-09 08:14:44.927740117 -0700
-> > +++ b/drivers/scsi/ipr.c        2011-06-09 08:50:10.105630466 -0700
-> > @@ -8763,11 +8763,11 @@ static int __devinit ipr_probe_ioa(struc
-> >         /* Enable MSI style interrupts if they are supported. */
-> >         if (ioa_cfg->ipr_chip->intr_type == IPR_USE_MSI && !pci_enable_msi(pdev)) {
-> >                 rc = ipr_test_msi(ioa_cfg, pdev);
-> > -               if (rc == -EOPNOTSUPP)
-> > +               if (rc) {
-> >                         pci_disable_msi(pdev);
-> > -               else if (rc)
-> > -                       goto out_msi_disable;
-> > -               else
-> > +                       if (rc != -EOPNOTSUPP)
-> > +                               goto cleanup_nomem;
-> > +               } else
-> >                         dev_info(&pdev->dev, "MSI enabled with IRQ: %d\n", pdev->irq);
-> >         } else if (ipr_debug)
-> >                 dev_info(&pdev->dev, "Cannot enable MSI.\n");
-> > @@ -8847,8 +8847,6 @@ cleanup_nolog:
-> >         ipr_free_mem(ioa_cfg);
-> >  cleanup_nomem:
-> >         iounmap(ipr_regs);
-> > -out_msi_disable:
-> > -       pci_disable_msi(pdev);
-> >  out_release_regions:
-> >         pci_release_regions(pdev);
-> >  out_scsi_host_put:
-> > 
-> > 
-> 
-> 
-> -- 
-> Brian King
-> Linux on Power Virtualization
-> IBM Linux Technology Center
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+-- 
+tejun
