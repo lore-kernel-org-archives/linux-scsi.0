@@ -1,52 +1,71 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: RE: [PATCH] [SCSI] LIBSAS: fix libsas link error issue
-Date: Tue, 14 Jun 2011 21:52:05 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D19FAE66A54@SC-VEXCH4.marvell.com>
+Date: Wed, 15 Jun 2011 01:57:30 -0400
+Message-ID: <1308117450.2329.31.camel@mulgrave>
 References: <1308064628-11826-1-git-send-email-yxlraid@gmail.com>
- <1308065367.2401.24.camel@mulgrave>
- <F766E4F80769BD478052FB6533FA745D19FAE669AF@SC-VEXCH4.marvell.com>
- <4DF831E6.3050502@interlog.com>
+	 <1308065367.2401.24.camel@mulgrave>
+	 <F766E4F80769BD478052FB6533FA745D19FAE669AF@SC-VEXCH4.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DF831E6.3050502@interlog.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "yxlraid@gmail.com" <yxlraid@gmail.com>, "jack_wang@usish.com" <jack_wang@usish.com>, "lucas.demarchi@profusion.mobi" <lucas.demarchi@profusion.mobi>, "maciej.trela@intel.com" <maciej.trela@intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55452 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751922Ab1FOF5e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Jun 2011 01:57:34 -0400
+In-Reply-To: <F766E4F80769BD478052FB6533FA745D19FAE669AF@SC-VEXCH4.marvell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: "yxlraid@gmail.com" <yxlraid@gmail.com>, "jack_wang@usish.com" <jack_wang@usish.com>, "lucas.demarchi@profusion.mobi" <lucas.demarchi@profusion.mobi>, "maciej.trela@intel.com" <maciej.trela@intel.com>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
 
-DQpPbiAxMS0wNi0xNCAwOTo0NCBQTSwgWGlhbmdsaWFuZyBZdSB3cm90ZToNCj4+IFN1YmplY3Q6
-IFJlOiBbUEFUQ0hdIFtTQ1NJXSBMSUJTQVM6IGZpeCBsaWJzYXMgbGluayBlcnJvciBpc3N1ZQ0K
-Pj4NCj4+IE9uIFR1ZSwgMjAxMS0wNi0xNCBhdCAyMzoxNyArMDgwMCwgeXhscmFpZEBnbWFpbC5j
-b20gd3JvdGU6DQo+Pj4+IEZyb206IFhpYW5nbGlhbmcgWXU8eXV4aWFuZ2xAbWFydmVsbC5jb20+
-DQo+Pj4+DQo+Pj4+IC0tIFRoZSB2YWx1ZSBvZiBjaGlsZCBsaW5rIHJhdGUgc2hvdWxkIGlzIG1p
-bmltdW0gb2YgbGluayByYXRlLCBvcg0KPj4+PiAgICAgY29tbWFuZCB3aWxsIGZhaWwgaWYgY2hp
-bGQgbGluayByYXRlIGlzIGJpZ2dlciB0aGFuIHBhcmVudCBsaW5rIHJhdGUuDQo+Pj4+DQo+Pj4+
-IFNpZ25lZC1vZmYtYnk6IFhpYW5nbGlhbmcgWXU8eXV4aWFuZ2xAbWFydmVsbC5jb20+DQo+Pj4+
-IC0tLQ0KPj4+PiAgIGRyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2V4cGFuZGVyLmMgfCAgICAyICst
-DQo+Pj4+ICAgMSBmaWxlcyBjaGFuZ2VkLCAxIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0p
-DQo+Pj4+DQo+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRl
-ci5jIGIvZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfZXhwYW5kZXIuYw0KPj4+PiBpbmRleCA4NzRl
-MjlkLi42Y2NjYTA5IDEwMDY0NA0KPj4+PiAtLS0gYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19l
-eHBhbmRlci5jDQo+Pj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2V4cGFuZGVyLmMN
-Cj4+Pj4gQEAgLTYzOCw3ICs2MzgsNyBAQCBzdGF0aWMgdm9pZCBzYXNfZXhfZ2V0X2xpbmtyYXRl
-KHN0cnVjdCBkb21haW5fZGV2aWNlICpwYXJlbnQsDQo+Pj4+ICAgCQkJc2FzX3BvcnRfYWRkX3Bo
-eShwb3J0LCBwaHktPnBoeSk7DQo+Pj4+ICAgCQl9DQo+Pj4+ICAgCX0NCj4+Pj4gLQljaGlsZC0+
-bGlua3JhdGUgPSBtaW4ocGFyZW50X3BoeS0+bGlua3JhdGUsIGNoaWxkLT5tYXhfbGlua3JhdGUp
-Ow0KPj4+PiArCWNoaWxkLT5saW5rcmF0ZSA9IG1pbihwYXJlbnRfcGh5LT5saW5rcmF0ZSwgY2hp
-bGQtPm1pbl9saW5rcmF0ZSk7DQo+Pg0KPj4+IFRoaXMgcGF0Y2ggZG9lc24ndCBsb29rIHJpZ2h0
-LiAgSXQgd2lsbCBjbGFtcCB0aGUgcGh5IHRvIHRoZSBtaW5pbQ0KPj4+IHBvc3NpYmxlIGxpbmsg
-cmF0ZS4NCj4+IExpbmsgbmVnb3RpYXRpb24gc2hvdWxkIGdldCB0aGUgbWluaW11bS4NCg0KPnNw
-bDJyMDEucGRmIFtNb3N0IHJlY2VudCBTQVMtMyBkcmFmdCBmb3IgdGhlIHByb3RvY29sIGxheWVy
-c10NCj41LjcuNC4yLjEgU0FTIHNwZWVkIG5lZ290aWF0aW9uIHNlcXVlbmNlIG92ZXJ2aWV3DQo+
-IlRoZSBTQVMgc3BlZWQgbmVnb3RpYXRpb24gc2VxdWVuY2UgZXN0YWJsaXNoZXMgY29tbXVuaWNh
-dGlvbnMgYmV0d2Vlbg0KPnRoZSB0d28gcGh5cyBvbiBhIHBoeXNpY2FsIGxpbmsgYXQgdGhlIGhp
-Z2hlc3QgcG9zc2libGUgdHJhbnNtaXNzaW9uDQo+cmF0ZS4iDQo+VGhhdCBzZWVtcyB0byBzdWdn
-ZXN0Og0KPiAgICBtaW4oPG9uZV9lbmQ+Lm1heF9saW5rcmF0ZSwgPG90aGVyX2VuZD4ubWF4X2xp
-bmtyYXRlKQ0KDQpUaGFua3OjoQ0KVGhlIGN1cnJlbnQgc3RhdGVtZW50IGxpa2UgdGhpczogY2hp
-bGQtPmxpbmtyYXRlID0gbWluKGNoaWxkX3BoeV9saW5rcmF0ZSwgbWF4KHBhcmVudC0+bWF4X2xp
-bmtyYXRlLCBjaGlsZF9waHlfbGlua3JhdGUtPm1heF9saW5rcmF0ZSk7DQoNCkhvdyBhYm91dCB0
-aGlzIGNoYW5nZToNCmNoaWxkLT5saW5rcmF0ZSA9IG1pbihwYXJlbnQtPm1heF9saW5rcmF0ZSwg
-Y2hpbGQtPm1heF9saW5rcmF0ZSk7DQoNCg==
+On Tue, 2011-06-14 at 18:44 -0700, Xiangliang Yu wrote:
+> Subject: Re: [PATCH] [SCSI] LIBSAS: fix libsas link error issue
+> 
+> On Tue, 2011-06-14 at 23:17 +0800, yxlraid@gmail.com wrote:
+> >> From: Xiangliang Yu <yuxiangl@marvell.com>
+> >> 
+> >> -- The value of child link rate should is minimum of link rate, or
+> >>    command will fail if child link rate is bigger than parent link rate.
+> >> 
+> >> Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
+> >> ---
+> >>  drivers/scsi/libsas/sas_expander.c |    2 +-
+> >>  1 files changed, 1 insertions(+), 1 deletions(-)
+> >> 
+> >> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+> >> index 874e29d..6ccca09 100644
+> >> --- a/drivers/scsi/libsas/sas_expander.c
+> >> +++ b/drivers/scsi/libsas/sas_expander.c
+> >> @@ -638,7 +638,7 @@ static void sas_ex_get_linkrate(struct domain_device *parent,
+> >>  			sas_port_add_phy(port, phy->phy);
+> >>  		}
+> >>  	}
+> >> -	child->linkrate = min(parent_phy->linkrate, child->max_linkrate);
+> >> +	child->linkrate = min(parent_phy->linkrate, child->min_linkrate);
+> 
+> >This patch doesn't look right.  It will clamp the phy to the minim
+> >possible link rate.  
+> Link negotiation should get the minimum.
+
+No ... according to the spec it should be the max of what the child
+supports taking into account the max the expander phy supports.
+
+> >The child is supposed to support everywhere between
+> >child->min_linkrate and child->max_linkrate.  The reason why we pick the
+> >max is because we should use that if the parent supports it, and fall
+> >back only if the parent isn't capable.
+> Now, the problem is command fail, and LIBSAS seem to do nothing.
+> Do you mean drive need to fix the link error?
+> Thanks!
+> 
+> PS: The Kernel will panic when link error happening.
+
+Post the panic then ... it's probably a negotiation problem.  If the
+child can't support the highest possible link rate because of problems
+like transmission errors, it should fall back.
+
+James
+
+
