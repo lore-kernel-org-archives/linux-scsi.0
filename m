@@ -1,117 +1,89 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/3] [RFC] Persistent device name using preferred name
-Date: Wed, 15 Jun 2011 08:37:11 -0700
-Message-ID: <20110615153711.GB10160@kroah.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [patch 1/4 v2] SCSI: target: dereferencing ERR_PTRs
+Date: Wed, 15 Jun 2011 09:38:31 -0700
+Message-ID: <1308155911.20109.6.camel@haakon2.linux-iscsi.org>
+References: <20110614072720.GO3583@shale.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:35635 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751142Ab1FOQrW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Jun 2011 12:47:22 -0400
+In-Reply-To: <20110614072720.GO3583@shale.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <error27@gmail.com>
+Cc: James Bottomley <jbottomley@parallels.com>, Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>, Joe Eykholt <jeykholt@cisco.com>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, Ankit Jain <jankit@suse.de>, kernel-janitors@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 
-On Wed, Jun 15, 2011 at 05:16:10PM +0900, Nao Nishijima wrote:
-> Hi,
+On Tue, 2011-06-14 at 10:27 +0300, Dan Carpenter wrote:
+> transport_init_session() and core_tmr_alloc_req() never return NULL,
+> they only return ERR_PTRs on error.
 > 
-> This patch series provides preferred name into kernel and procfs
-> messages. Preferred name is user's preferred name for a device.
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> ---
+> v2: return PTR_ERR(tl_nexus->se_sess); for Ankit Jain.
 > 
-> The purpose of this feature is to solve the persistent device
-> naming issues which was discussed here:
-> 
->  http://marc.info/?l=linux-scsi&m=130200794615884&w=2
-> 
-> There are four issues.
-> 1. kernel messages doesn't show persistent device names
 
-That is because a persistent device name could be anything, there are
-multiple ways of defining a device, and the kernel will not know them
-all as multiple ones could be in use for the same device.
+Thanks Dan and Ankit!  Committed as 4e559cb1699 into lio-core-2.6.git
 
-> 2. procfs messages doesn't show persistent device names
+--nab
 
-See above.
+> diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+> index a3bd57f..03744c2 100644
+> --- a/drivers/target/tcm_fc/tfc_sess.c
+> +++ b/drivers/target/tcm_fc/tfc_sess.c
+> @@ -229,7 +229,7 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+>  		return NULL;
+>  
+>  	sess->se_sess = transport_init_session();
+> -	if (!sess->se_sess) {
+> +	if (IS_ERR(sess->se_sess)) {
+>  		kfree(sess);
+>  		return NULL;
+>  	}
+> diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+> index dee2a2c..77ff8d0 100644
+> --- a/drivers/target/loopback/tcm_loop.c
+> +++ b/drivers/target/loopback/tcm_loop.c
+> @@ -386,7 +386,7 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
+>  	 */
+>  	se_cmd->se_tmr_req = core_tmr_alloc_req(se_cmd, (void *)tl_tmr,
+>  				TMR_LUN_RESET);
+> -	if (!se_cmd->se_tmr_req)
+> +	if (IS_ERR(se_cmd->se_tmr_req))
+>  		goto release;
+>  	/*
+>  	 * Locate the underlying TCM struct se_lun from sc->device->lun
+> @@ -1017,6 +1017,7 @@ static int tcm_loop_make_nexus(
+>  	struct se_portal_group *se_tpg;
+>  	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
+>  	struct tcm_loop_nexus *tl_nexus;
+> +	int ret = -ENOMEM;
+>  
+>  	if (tl_tpg->tl_hba->tl_nexus) {
+>  		printk(KERN_INFO "tl_tpg->tl_hba->tl_nexus already exists\n");
+> @@ -1033,8 +1034,11 @@ static int tcm_loop_make_nexus(
+>  	 * Initialize the struct se_session pointer
+>  	 */
+>  	tl_nexus->se_sess = transport_init_session();
+> -	if (!tl_nexus->se_sess)
+> +	if (IS_ERR(tl_nexus->se_sess)) {
+> +		ret = PTR_ERR(tl_nexus->se_sess);
+>  		goto out;
+> +	}
+> +
+>  	/*
+>  	 * Since we are running in 'demo mode' this call with generate a
+>  	 * struct se_node_acl for the tcm_loop struct se_portal_group with the SCSI
+> @@ -1060,7 +1064,7 @@ static int tcm_loop_make_nexus(
+>  
+>  out:
+>  	kfree(tl_nexus);
+> -	return -ENOMEM;
+> +	return ret;
+>  }
+>  
+>  static int tcm_loop_drop_nexus(
 
-> 3. Some commands didn't support persistent device name in arguments
-
-Then fix the commands!
-
-Seriously, this could be done by now, it's been over a year since this
-was first discussed.  All distros could have the updated packages by now
-and this would not be an issue.
-
-I still think this is the correct way to solve the problem as it is a
-userspace issue, not a kernel one.
-
-> 4. Some commands message didn't show persistent device names
-
-Same as #3.
-
-> Then I suggested the intermediate device naming which changes
-> the naming scheme, but it was rejected. I realized that we should
-> use udev to provide persistent device names instead of change the
-> naming scheme.
-
-Yes.
-
-> In LKML discussion, a new idea was suggested by James Bottomley.
-> This idea allows kernel messages show preferred names by adding a
-> new attribute to a device, kernel messages show this new attribute.
-> This idea's advantage is not to change the current naming scheme.
-> 
-> I tried implementation of preferred name, and then there are two
-> discussion points.
-> 
-> (a) Which devices need support?
-> Preferred name is stored in struct device. Therefore it is available
-> for all devices if we make preferred name support with other device
-> types.
-> 
-> This patch series only support scsi block device. Is there the device
-> which needs support? (e.g. Ntwork devices, generic SCSI devices, etc.)
-> 
-> (b) What kind of procfs form is good?
-> I implemented preferred name something like this,
-> 
-> (preferred name assigned foo to sda)
-> #cat /proc/partitions
-> major minor  #blocks  name
-> 
->    8        0  488386584 foo
->    8        1     194560 foo1
-> ...
-> 
-> Do you needs device name filed?
-> Something like this,
-> 
-> (preferred name assigned foo to sda)
-> #cat /proc/partitions
-> major minor  #blocks  name preferred
-> 
->    8        0  488386584 sda foo
->    8        1     194560 sda1 foo1
-> ...
-
-Sorry, but you can not change the format of procfs files without
-breaking a lot of tools, that's no longer allowed.
-
-> Issue 3 and 4 is command releated issue. Commands have to be
-> modified to use preferred name. We need to create library for
-> preferred name.
-
-Again, this is quite simple and could have been finished by now :(
-
-> Our goal is to solve those issues, and users can use and see
-> preferred name anywhere.
-
-I don't see how your proposed solution would solve the issue of
-userspace using different persistant names for the same device.  How
-would it know which one is correct?
-
-Again, this is a userspace thing, not a kernel thing, please solve it in
-userspace.
-
-greg k-h
