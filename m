@@ -1,61 +1,54 @@
-From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Thu, 16 Jun 2011 21:03:43 +0900
-Message-ID: <4DF9F11F.705@hitachi.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp> <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com>
+From: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
+Subject: [PATCH 08/11] [SCSI] tcm_fc: use printk_ratelimited() instead of
+ printk_ratelimit()
+Date: Thu, 16 Jun 2011 14:13:48 +0200
+Message-ID: <9fa37410d549c9e160ac75828f326f9a2b5b1e81.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+References: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110615153337.GA10160@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from faui40.informatik.uni-erlangen.de ([131.188.34.40]:40350 "EHLO
+	faui40.informatik.uni-erlangen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756982Ab1FPMNu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jun 2011 08:13:50 -0400
+Content-Disposition: inline
+In-Reply-To: <cover.1308142053.git.manuel.f.zerpies@ww.stud.uni-erlangen.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <jbottomley@parallels.com>, Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>, Joe Eykholt <jeykholt@cisco.>
+Cc: christian.dietrich@informatik.uni-erlangen.de
 
-Hi Greg,
+Since printk_ratelimit() shouldn't be used anymore (see comment in
+include/linux/printk.h), replace it with printk_ratelimited()
 
-(2011/06/16 0:33), Greg KH wrote:
-> On Wed, Jun 15, 2011 at 05:16:28PM +0900, Nao Nishijima wrote:
->> Allow users to set the preferred name of device via sysfs interface.
->>
->> (Exsample) sda -> foo
->> # echo foo > /sys/block/sda/preferred_name
->>
->> Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com=
->
->> Suggested-by: Jon Masters <jcm@redhat.com>
->> Signed-off-by: Nao Nishijima <nao.nishijima.xt@hitachi.com>
->=20
-> You don't document this new sysfs file (which is required), nor do yo=
-u
-> explain what it is for and how to use it.
->=20
-> Please do that in this patch, and in a Documentation/ABI/ file for an=
-y
-> new sysfs file you create.
->
+Signed-off-by: Manuel Zerpies <manuel.f.zerpies@ww.stud.uni-erlangen.de>
+---
+ drivers/target/tcm_fc/tfc_io.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-I'm afraid that my explanation was not enough.
-I will add explanation to this patch and Documentation/ABI file.
+diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
+index 4c3c0ef..b1d6911 100644
+--- a/drivers/target/tcm_fc/tfc_io.c
++++ b/drivers/target/tcm_fc/tfc_io.c
+@@ -39,6 +39,7 @@
+ #include <linux/configfs.h>
+ #include <linux/ctype.h>
+ #include <linux/hash.h>
++#include <linux/ratelimit.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -201,8 +202,7 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
+ 		error = lport->tt.seq_send(lport, cmd->seq, fp);
+ 		if (error) {
+ 			/* XXX For now, initiator will retry */
+-			if (printk_ratelimit())
+-				printk(KERN_ERR "%s: Failed to send frame %p, "
++			printk_ratelimited(KERN_ERR "%s: Failed to send frame %p, "
+ 						"xid <0x%x>, remaining <0x%x>, "
+ 						"lso_max <0x%x>\n",
+ 						__func__, fp, ep->xid,
+-- 
+1.7.4.1
 
-> I still fail to understand how a "preferred" file will help anyone ou=
-t
-> here at all...
->
-
-Let me explain, users cannot identify a device from a device name
-because device names may change at each boot up time. If kernel show
-preferred names in kernel messages, users can easily identify a device
-from kernel messages.
-
-> greg k-h
->=20
-
-Thanks,
-
---=20
-Nao NISHIJIMA
-Software Platform Research Dept. Linux Technology Center
-Hitachi, Ltd., YOKOHAMA Research  Laboratory
-Email=EF=BC=9A nao.nishijima.xt@hitachi.com
