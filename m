@@ -1,75 +1,37 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Al Viro <viro@ZenIV.linux.org.uk>
 Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Thu, 16 Jun 2011 14:00:52 -0400
-Message-ID: <4DFA44D4.2010602@interlog.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp> <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com> <4DF9F11F.705@hitachi.com> <20110616154129.GA31498@kroah.com> <1308239454.2436.34.camel@mulgrave> <20110616161442.GA32113@kroah.com> <1308241506.2436.44.camel@mulgrave> <BANLkTi=qHhzwGfp4v8B1CAmT+gtA=sOgvw@mail.gmail.com> <BANLkTikUNqTxgD_+TTVpcFyRDu_fSesrsg@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+Date: Thu, 16 Jun 2011 19:02:33 +0100
+Message-ID: <20110616180233.GN11521@ZenIV.linux.org.uk>
+References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
+ <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
+ <20110615153337.GA10160@kroah.com>
+ <4DF9F11F.705@hitachi.com>
+ <20110616154129.GA31498@kroah.com>
+ <1308239454.2436.34.camel@mulgrave>
+ <4DFA3E1A.9050207@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:37194 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758503Ab1FPSBO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jun 2011 14:01:14 -0400
-In-Reply-To: <BANLkTikUNqTxgD_+TTVpcFyRDu_fSesrsg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4DFA3E1A.9050207@interlog.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 
-On 11-06-16 01:20 PM, Kay Sievers wrote:
-> On Thu, Jun 16, 2011 at 19:09, Kay Sievers<kay.sievers@vrfy.org>  wrote:
->> On Thu, Jun 16, 2011 at 18:25, James Bottomley
->> <James.Bottomley@hansenpartnership.com>  wrote:
->>> On Thu, 2011-06-16 at 09:14 -0700, Greg KH wrote:
->>>> All userspace naming will be taken care of by the usual udev rules, so
->>>>> for disks, something like /dev/disk/by-preferred/<fred>  which would be
->>>>> the usual symbolic link.
->>>>
->>>> No, udev can not create such a link after the preferred name is set, as
->>>> it has no way of knowing that the name was set.
->>>
->>> It can if we trigger a uevent.  Note: I'm not advocating this ... I'd be
->>> equally happy having whatever sets the kernel name create the link (or
->>> tickle udev to create it).  We definitely require device links, though,
->>> to get this to work.
->
-> Guess all that would work now, including mount(8) not canonicalizing.
-> What would happen if we mount:
->    /dev/disk/by-pretty/foo
-> and some tool later thinks the pretty name should better be 'bar', it
-> writes the name to /sys, we get a uevent, the old link disappears, we
-> get a new link, mount has no device node anymore for the mounted
-> device ...
->
-> So we basically get a one-shot additional pretty name? Guess, the
-> _single_ name changed anytime later just asks for serious problems. We
-> need to set it very early to be really useful, but how, where is it
-> coming from?
+On Thu, Jun 16, 2011 at 01:32:10PM -0400, Douglas Gilbert wrote:
 
-One obvious candidate for a preferred block device name
-is:
-   - a SATA disk's WWN (NAA 5 64 bit), or
-   - a SCSI disk's logical unit name (e.g. SAS: NAA 5)
+> As James' notes each storage device can only have one
+> "preferred name" at a time. But how can that preferred name
+> be represented in sysfs ? If /sys/block/<kernel_name>
+> suddenly changed to /sys/block/<preferred_name> that would
+> be very disruptive. I would prefer something like
+> /sys/class/block_preferred_name/<preferred_name> was introduced
+> as a symlink to /sys/block/<kernel_name> but that would require
+> that all <preferred_name>s were unique. [Not a bad restriction
+> IMO]. If the <preferred_name> was only placed in the
+> /sys/block/<kernel_name> directory that would be ugly from
+> the user space tool point of view.
 
-These names (actually numbers) are meant to be world wide
-unique.
-
-The kernel's device naming (following from how devices are
-discovered) is topological. However at higher levels
-the user is interested in the device identity. So if
-unique device names were used as preferred names and
-preferred names were unique (in a Linux system at any
-given time) then any subsequent path to an existing device
-would be highlighted. [That is because subsequent attempts
-to create its preferred name would fail because it is
-already there.]
-
-You don't need thousands of dollars of equipment to
-demonstrate this point. An external single disk
-SATA enclosure with a USB and eSATA interface will do.
-
-Doug Gilbert
-
-
+Oh, rapture... so now we can expect the container crowd to introduce
+yet *another* "namespace" ;-/
