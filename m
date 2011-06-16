@@ -1,135 +1,108 @@
-From: Takashi TAKATORI <MXE02152@nifty.com>
-Subject: kernel oops on the kernel with 'fix race conditions in SCSI/Block leading to oops' patch.
-Date: Thu, 16 Jun 2011 21:07:31 +0900
-Message-ID: <201106161207.p5GC7cX8003727@msag502.nifty.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sv1.nifty.com ([220.209.183.60]:48379 "EHLO
-	defg302.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755540Ab1FPMTM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2011 08:19:12 -0400
-Received: from msag502.nifty.com (msag502p.nifty.com [172.22.128.253])by defg302.nifty.com with ESMTP id p5GC8RUZ021954
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 21:08:27 +0900
-Received: from nifty.com (p8058-ipbfp03kobeminato.hyogo.ocn.ne.jp [125.200.195.58]) (authenticated)
-	by msag502.nifty.com with ESMTP id p5GC7cX8003727
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 21:07:38 +0900
-Sender: linux-scsi-owner@vger.kernel.org
+From: Shawn Guo <shawn.guo@linaro.org>
+Subject: [PATCH v3 RESEND] dma-mapping: add new API for max_segment_number
+Date: Thu, 16 Jun 2011 20:30:53 +0800
+Message-ID: <1308227453-2034-1-git-send-email-shawn.guo@linaro.org>
+References: <BANLkTi=-t9HVc6U6QY07su+c3WztsGoq3Q@mail.gmail.com>
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <BANLkTi=-t9HVc6U6QY07su+c3WztsGoq3Q@mail.gmail.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Russell King - ARM Linux <linux@arm.linux.org.uk>, vinod.koul@intel.com, gregkh@suse.de, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Dan Williams <dan.j.williams@intel.com>, cjb@laptop.org, Per Forlin <per.forlin@linaro.org>, Shawn Guo <shawn.guo@linaro.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+Like dma_set(get)_max_seg_size for max_segment_size, the patch adds
+max_segment_number into device_dma_parameters and creates the
+corresponding API dma_set(get)_max_seg_number for it.
 
-I'm using kernel-2.6.33.7 and rt-patch(patch-2.6.33.7.2-rt30).
-My first problem is a very rare occurrence, the kernel stops during boot sequence.(the log at the bottom of this mail)
+Here is the user story that tells the need of the new api.  The
+mxs-mmc is the mmc host controller for Freescale MXS architecture.
+There are a pair of  mmc host specific parameters max_seg_size and
+max_segs that mxs-mmc host driver needs to tell mmc core, so that
+mmc core can know how big each data segment could be and how many
+segments could be handled one time in a scatter list by host driver.
 
-I found a similar issue.
+The mxs-mmc driver is one user of dmaengine mxs-dma, and it will call
+mxs-dma to transfer data in scatter list.  That is to say mxs-mmc has
+no idea of what max_seg_size and max_segs should be, because they are
+all mxs-dma capability parameters, and mxs-mmc needs to query them
+from mxs-dma.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=33802
+Right now, there is well defined dma api (dma_get_max_seg_size) for
+mmc to query max_seg_size from dma driver, but the one for max_segs
+is missing.  That's why mxs-mmc driver has to hard-code it.
 
-So I patched followings for work around boot time hung-up.
+The mxs-mmc is just one example to demonstrate the need of the new
+api, and there are other mmc host drivers (mxcmmc on imx-dma is
+another example) and possibly even other dmaengine users need this
+new api to know the maximum segments that dma driver can handle per
+dma call.
 
-https://patchwork.kernel.org/patch/705411/
-https://patchwork.kernel.org/patch/750832/
-
-After that, oops occurred insted of hung-up.
-
+Signed-off-by: Shawn Guo <shawn.guo@linaro.org>
 ---
-[<c042d64a>] ? kmsg_dump+0xe2/0xec
-[<c08ae43c>] oops_end+0x7a/0x81
-[<c04188ca>] no_context+0x113/0x11d
-[<c04189c8>] __bad_area_nosemaphore+0xef/0xf7
-[<c04189dd>] bad_area_nosemaphore+0x12/0x15
-[<c08af92a>] do_page_fault+0x1e7/0x359
-[<c08af743>] ? do_page_fault+0x0/0x359
-[<c08adb8f>] error_code+0x73/0x78
-[<c041edaa>] ? task_rq_lock+0x31/0x72
-[<c04269b2>] try_to_wake_up+0x29/0x334
-[<c0426d35>] ? wake_up_process+0x3/0x18
-[<c0430928>] ? wakeup_softirq+0x2d/0x2f
-[<c0465108>] ? ftrace_list_func+0x18/0x28
-[<c0426d48>] wake_up_process+0x16/0x18
-[<c0430928>] wakeup_softirqd+0x2d/0x2f
-[<c043094b>] trigger_softirqs+0x21/0x2c
-[<c04318f7>] __do_softirq+0x1b8/0x1c0
-[<c0431903>] ? do_softirq+0x4/0x30
-[<c04319b5>] ? irq_exit+0x31/0x6e
-[<c0465108>] ? ftrace_list_func+0x18/0x28
-[<c043192a>] do_softirq+0x2b/0x30
-[<c04319b5>] irq_exit+0x31/0x6e
-[<c0413089>] smp_apic_timer_interrupt+0x74/0x82
-[<c08ad925>] apic_timer_interrupt+0x31/0x38
-[<c04076c6>] ? mwait_idle+0x9a/0xa0
-[<c0401518>] cpu_idle+0x6f/0x9e
-[<c0880a59>] rest_init+0x85/0x87
-[<c0b2f735>] start_kernel+0x314/0x319
-[<c0b2f092>] i386_start_kernel+0x92/0x99
----
-(Sorry, I didn't log serial console. So I typed messages on the screen.)
+Reasons for resend:
+ * Cc linux-scsi for comment, per request from FUJITA Tomonori
+ * Take suggestion from Per Forlin to change patch subject to
+   dma-mapping
 
-I'm afraid I need any other patch(es). (and your helps)
+ include/linux/device.h      |   16 ++++++++++++----
+ include/linux/dma-mapping.h |   15 +++++++++++++++
+ 2 files changed, 27 insertions(+), 4 deletions(-)
 
-Would you please give me some advice?
-
-ttaka
-
----
-
-The log of boot time hung-up is here.
-
-=============================================
-[ INFO: possible recursive locking detected ]
-2.6.33.7.2-rt30 #56
----------------------------------------------
-kblockd/0/39 is trying to acquire lock:
- ((&q->unplug_work)){+.+...}, at: [<c0441916>] __cancel_work_timer+0x81/0x12f
-
-but task is already holding lock:
- ((&q->unplug_work)){+.+...}, at: [<c044172d>] worker_thread+0x1e9/0x318
-
-other info that might help us debug this:
-2 locks held by kblockd/0/39:
- #0:  (kblockd){+.+...}, at: [<c044172d>] worker_thread+0x1e9/0x318
- #1:  ((&q->unplug_work)){+.+...}, at: [<c044172d>] worker_thread+0x1e9/0x318
-
-stack backtrace:
-Pid: 39, comm: kblockd/0 Not tainted 2.6.33.7.2-rt30 #56
- sda:Call Trace:
- [<c08c20da>] ? printk+0x14/0x16
- [<c045452a>] __lock_acquire+0xc4e/0x1381
- [<c045564d>] ? mark_held_locks+0x41/0x5d
- [<c046e633>] ? function_profile_call+0xe8/0xf2
- [<c0441916>] ? __cancel_work_timer+0x81/0x12f
- [<c04550d1>] lock_acquire+0xac/0xc5
- [<c0441916>] ? __cancel_work_timer+0x81/0x12f
- [<c044192d>] __cancel_work_timer+0x98/0x12f
- [<c0441916>] ? __cancel_work_timer+0x81/0x12f
- [<c04419e5>] cancel_work_sync+0xf/0x11
- [<c05bf9ca>] blk_sync_queue+0x2c/0x2f
- [<c05bf9de>] blk_cleanup_queue+0x11/0x48
- [<c066d7fb>] scsi_free_queue+0xd/0xf
- [<c066ff21>] scsi_device_dev_release_usercontext+0x10b/0x144
- [<c066fe16>] ? scsi_device_dev_release_usercontext+0x0/0x144
- [<c0441506>] execute_in_process_context+0x22/0x60
- [<c066fe14>] scsi_device_dev_release+0x18/0x1a
- [<c064a123>] device_release+0x3a/0x62
- [<c05d076d>] kobject_release+0x40/0x50
- [<c05d072d>] ? kobject_release+0x0/0x50
- [<c05d1400>] kref_put+0x39/0x42
- [<c05d06b9>] kobject_put+0x37/0x3c
- [<c0649cde>] put_device+0x14/0x16
- [<c066d099>] scsi_request_fn+0x322/0x3e3
- [<c05c2523>] __generic_unplug_device+0x2e/0x31
- [<c05c2748>] generic_unplug_device+0x26/0x34
- [<c05bd5b4>] blk_unplug_work+0x56/0x5a
- [<c0441772>] worker_thread+0x22e/0x318
- [<c044172d>] ? worker_thread+0x1e9/0x318
- [<c05bd55e>] ? blk_unplug_work+0x0/0x5a
- [<c0444d51>] ? autoremove_wake_function+0x0/0x34
- [<c0441544>] ? worker_thread+0x0/0x318
- [<c04449b9>] kthread+0x64/0x69
- [<c0444955>] ? kthread+0x0/0x69
- [<c0444955>] ? kthread+0x0/0x69
- [<c0402d82>] kernel_thread_helper+0x6/0x10
+diff --git a/include/linux/device.h b/include/linux/device.h
+index c66111a..f1152c5 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -481,12 +481,20 @@ extern int devres_release_group(struct device *dev, void *id);
+ extern void *devm_kzalloc(struct device *dev, size_t size, gfp_t gfp);
+ extern void devm_kfree(struct device *dev, void *p);
+ 
++/*
++ * device_dma_parameters is a property of DMA provider, and it belongs to the
++ * 'struct device' that actually provides DMA service, typically the drivers
++ * under drivers/dma, although in some cases the DMA provider and block device
++ * uses DMA service happen to be the same 'struct device'.
++ *
++ * It's not necessary for every single DMA providers to have this structure,
++ * because some DMA providers simply do not have these parameters/limitations.
++ * For those do have, the DMA providers should be responsible for setting the
++ * parameters up.
++ */
+ struct device_dma_parameters {
+-	/*
+-	 * a low level driver may set these to teach IOMMU code about
+-	 * sg limitations.
+-	 */
+ 	unsigned int max_segment_size;
++	unsigned int max_segment_number;
+ 	unsigned long segment_boundary_mask;
+ };
+ 
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index ba8319a..fd314f4 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -131,6 +131,21 @@ static inline unsigned int dma_set_max_seg_size(struct device *dev,
+ 		return -EIO;
+ }
+ 
++static inline unsigned int dma_get_max_seg_number(struct device *dev)
++{
++	return dev->dma_parms ? dev->dma_parms->max_segment_number : 1;
++}
++
++static inline unsigned int dma_set_max_seg_number(struct device *dev,
++						  unsigned int number)
++{
++	if (dev->dma_parms) {
++		dev->dma_parms->max_segment_number = number;
++		return 0;
++	} else
++		return -EIO;
++}
++
+ static inline unsigned long dma_get_seg_boundary(struct device *dev)
+ {
+ 	return dev->dma_parms ?
+-- 
+1.7.4.1
 
