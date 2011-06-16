@@ -1,91 +1,60 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Thu, 16 Jun 2011 11:19:43 -0700
-Message-ID: <20110616181943.GB1439@kroah.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
- <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
- <20110615153337.GA10160@kroah.com>
- <4DF9F11F.705@hitachi.com>
- <20110616154129.GA31498@kroah.com>
- <1308239454.2436.34.camel@mulgrave>
- <20110616161442.GA32113@kroah.com>
- <1308241506.2436.44.camel@mulgrave>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
+Date: Thu, 16 Jun 2011 20:40:23 +0200
+Message-ID: <20110616184023.GA2362@osiris.boeblingen.de.ibm.com>
+References: <20110615112016.GA4227@osiris.boeblingen.de.ibm.com>
+ <20110616160155.GB3843@osiris.boeblingen.de.ibm.com>
+ <1308242275.2436.56.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:37396 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752687Ab1FPSWm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Jun 2011 14:22:42 -0400
+Received: from mtagate7.uk.ibm.com ([194.196.100.167]:58099 "EHLO
+	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751578Ab1FPSkc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2011 14:40:32 -0400
+Received: from d06nrmr1507.portsmouth.uk.ibm.com (d06nrmr1507.portsmouth.uk.ibm.com [9.149.38.233])
+	by mtagate7.uk.ibm.com (8.13.1/8.13.1) with ESMTP id p5GIeOtp031610
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 18:40:24 GMT
+Received: from d06av07.portsmouth.uk.ibm.com (d06av07.portsmouth.uk.ibm.com [9.149.37.248])
+	by d06nrmr1507.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p5GIeOpO2531340
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 19:40:24 +0100
+Received: from d06av07.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av07.portsmouth.uk.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p5GIeNqD017956
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 12:40:24 -0600
 Content-Disposition: inline
-In-Reply-To: <1308241506.2436.44.camel@mulgrave>
+In-Reply-To: <1308242275.2436.56.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-On Thu, Jun 16, 2011 at 12:25:06PM -0400, James Bottomley wrote:
-> On Thu, 2011-06-16 at 09:14 -0700, Greg KH wrote:
-> > > All userspace naming will be taken care of by the usual udev rules, so
-> > > for disks, something like /dev/disk/by-preferred/<fred> which would be
-> > > the usual symbolic link.
+On Thu, Jun 16, 2011 at 12:37:55PM -0400, James Bottomley wrote:
+> On Thu, 2011-06-16 at 18:01 +0200, Heiko Carstens wrote:
+> > cc'ing Jens (full quote of the original bug report at the end).
 > > 
-> > No, udev can not create such a link after the preferred name is set, as
-> > it has no way of knowing that the name was set.
-> 
-> It can if we trigger a uevent.  Note: I'm not advocating this ... I'd be
-> equally happy having whatever sets the kernel name create the link (or
-> tickle udev to create it).  We definitely require device links, though,
-> to get this to work.
-
-And no, I don't want to trigger a uevent, Kay pointed out where this
-will go very wrong very quickly if this is done.
-
-> > > This will ensure that kernel output and udev input are consistent.  It
-> > > will still require that user space utilities which derive a name for a
-> > > device will need modifying to print out the preferred name.
+> > I patched the SLUB debugging code so that it includes full call traces
+> > instead of just the address of the caller of kfree/kmalloc. So here is
+> > yet another incarnation of what I think is the same use-after-free bug:
 > > 
-> > It also doesn't solve the issue of userspace wanting to use such a
-> > "preferred" name in the command line of tools, as there will not be a
-> > link back to the "kernel" name directly in /dev/.
+> > What we can see here: while scsi_dispatch_cmd() operates on a scsi_cmnd
+> > it gets freed via blk_done_softirq().
+> > In this specific case scsi_send_log() crashes while trying to dereference
+> > the SLAB/SLUB poison value.
 > 
-> Right ... most tools use the name they're given (and all variants
-> including the preferred one have links in /dev), which means they will
-> show the preferred name by default (if they were given that name as
-> input).  The only problem is tools that attempt to derive a device name,
-> which is quite a small subset.
+> But you're crashing in the submit path, not the completion path.
+> scsi_send_log() is called *before* we dispatch the command, so how on
+> earth did the command get freed in the completion (softirq) path?
 
-Douglas pointed out that those tools look in /dev/ which would not work
-properly for this type of thing.
+Well, I was hoping you would point to something obviously wrong ;)
+So the only way I can think this could have happened then seems to
+be something like this sequence:
 
-> > So as userspace tools will still need to be fixed, I don't see how
-> > adding a kernel file for this is going to help any.  Well, a bit in that
-> > the kernel log files will look "different", but again, that really isn't
-> > a problem that userspace couldn't also solve with no kernel changes
-> > needed.
-> 
-> This is true, but I think for the small effort it takes to implement the
-> feature in-kernel compared with what we'd have to do to the
-> distributions to get it implemented in userspace (we'd need klogd to do
-> the conversion for dmesg ... I'm entirely unclear what we need to modify
-> for /proc/partitions, etc.) the benefit outweighs the cost.
-> 
-> Additionally, since renaming is something users seem to want (just look
-> at net interfaces), if we can make this work, we now have a definitive
-> answer to point people at.
+User A -- allocs command
+User A -- somehow frees command (but still has a reference)
+User B -- submit path allocs command (gets freed slab again)
+User A -- frees it again
+User B -- submit path crashes
 
-Renaming is something that we do NOT want to do, as we have learned our
-lesson of the network device renaming mess.  And as Kay pointed out, we
-already have an "alias" name there, which no one uses.
-
-So again, I really don't like this, just fix the userspace tools to map
-the proper device name that the kernel is using to the userspace name
-the tool used, and all is fine.  This has been done already today,
-succesfully, by many of the big "enterprise" monitoring systems that
-work quite well on Linux, proving that this is not something that the
-kernel needs to provide to implement properly.
-
-thanks,
-
-greg k-h
+So looks like I need to add more trace and/or debug code. Sigh.
+Dunno.. maybe zfcp returns the command twice or something like that; even
+though there is code in place which should prevent exactly this scenario.
