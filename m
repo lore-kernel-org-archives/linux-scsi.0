@@ -1,89 +1,91 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Greg KH <greg@kroah.com>
 Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Thu, 16 Jun 2011 14:15:56 -0400
-Message-ID: <4DFA485C.4090300@interlog.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp> <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com> <4DF9F11F.705@hitachi.com> <20110616154129.GA31498@kroah.com> <1308239454.2436.34.camel@mulgrave> <20110616161442.GA32113@kroah.com> <1308241506.2436.44.camel@mulgrave> <BANLkTi=qHhzwGfp4v8B1CAmT+gtA=sOgvw@mail.gmail.com> <BANLkTikUNqTxgD_+TTVpcFyRDu_fSesrsg@mail.gmail.com> <4DFA44D4.2010602@interlog.com> <BANLkTimHMM6gNcFFP62eU-SUfaCPyhWE_A@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+Date: Thu, 16 Jun 2011 11:19:43 -0700
+Message-ID: <20110616181943.GB1439@kroah.com>
+References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
+ <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
+ <20110615153337.GA10160@kroah.com>
+ <4DF9F11F.705@hitachi.com>
+ <20110616154129.GA31498@kroah.com>
+ <1308239454.2436.34.camel@mulgrave>
+ <20110616161442.GA32113@kroah.com>
+ <1308241506.2436.44.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <BANLkTimHMM6gNcFFP62eU-SUfaCPyhWE_A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from out4.smtp.messagingengine.com ([66.111.4.28]:37396 "EHLO
+	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752687Ab1FPSWm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Jun 2011 14:22:42 -0400
+Content-Disposition: inline
+In-Reply-To: <1308241506.2436.44.camel@mulgrave>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 
-On 11-06-16 02:05 PM, Kay Sievers wrote:
-> On Thu, Jun 16, 2011 at 20:00, Douglas Gilbert<dgilbert@interlog.com>  wrote:
->> On 11-06-16 01:20 PM, Kay Sievers wrote:
->>> On Thu, Jun 16, 2011 at 19:09, Kay Sievers<kay.sievers@vrfy.org>    wrote:
->>>> On Thu, Jun 16, 2011 at 18:25, James Bottomley
->>>> <James.Bottomley@hansenpartnership.com>    wrote:
->>>>>
->>>>> On Thu, 2011-06-16 at 09:14 -0700, Greg KH wrote:
->>>>>>
->>>>>> All userspace naming will be taken care of by the usual udev rules, so
->>>>>>>
->>>>>>> for disks, something like /dev/disk/by-preferred/<fred>    which would
->>>>>>> be
->>>>>>> the usual symbolic link.
->>>>>>
->>>>>> No, udev can not create such a link after the preferred name is set, as
->>>>>> it has no way of knowing that the name was set.
->>>>>
->>>>> It can if we trigger a uevent.  Note: I'm not advocating this ... I'd be
->>>>> equally happy having whatever sets the kernel name create the link (or
->>>>> tickle udev to create it).  We definitely require device links, though,
->>>>> to get this to work.
->>>
->>> Guess all that would work now, including mount(8) not canonicalizing.
->>> What would happen if we mount:
->>>    /dev/disk/by-pretty/foo
->>> and some tool later thinks the pretty name should better be 'bar', it
->>> writes the name to /sys, we get a uevent, the old link disappears, we
->>> get a new link, mount has no device node anymore for the mounted
->>> device ...
->>>
->>> So we basically get a one-shot additional pretty name? Guess, the
->>> _single_ name changed anytime later just asks for serious problems. We
->>> need to set it very early to be really useful, but how, where is it
->>> coming from?
->>
->> One obvious candidate for a preferred block device name
->> is:
->>   - a SATA disk's WWN (NAA 5 64 bit), or
->>   - a SCSI disk's logical unit name (e.g. SAS: NAA 5)
->>
->> These names (actually numbers) are meant to be world wide
->> unique.
->>
->> The kernel's device naming (following from how devices are
->> discovered) is topological. However at higher levels
->> the user is interested in the device identity. So if
->> unique device names were used as preferred names and
->> preferred names were unique (in a Linux system at any
->> given time) then any subsequent path to an existing device
->> would be highlighted. [That is because subsequent attempts
->> to create its preferred name would fail because it is
->> already there.]
->>
->> You don't need thousands of dollars of equipment to
->> demonstrate this point. An external single disk
->> SATA enclosure with a USB and eSATA interface will do.
->
-> Udev does that already since quite a while. This is my cheap laptop:
->    # find /dev/disk/ -name "wwn*"
->    /dev/disk/by-id/wwn-0x50015179593f3038-part1
->    /dev/disk/by-id/wwn-0x50015179593f3038-part4
->    /dev/disk/by-id/wwn-0x50015179593f3038-part3
->    /dev/disk/by-id/wwn-0x50015179593f3038-part2
->    /dev/disk/by-id/wwn-0x50015179593f3038
+On Thu, Jun 16, 2011 at 12:25:06PM -0400, James Bottomley wrote:
+> On Thu, 2011-06-16 at 09:14 -0700, Greg KH wrote:
+> > > All userspace naming will be taken care of by the usual udev rules, so
+> > > for disks, something like /dev/disk/by-preferred/<fred> which would be
+> > > the usual symbolic link.
+> > 
+> > No, udev can not create such a link after the preferred name is set, as
+> > it has no way of knowing that the name was set.
+> 
+> It can if we trigger a uevent.  Note: I'm not advocating this ... I'd be
+> equally happy having whatever sets the kernel name create the link (or
+> tickle udev to create it).  We definitely require device links, though,
+> to get this to work.
 
-That is my point, if that disk is eSATA and USB connected
-which transport is that link pointing to? I would
-prefer eSATA over USB any day but is udev that smart? Or
-are we just seeing a symlink to the first (or perhaps last)
-path discovered?
+And no, I don't want to trigger a uevent, Kay pointed out where this
+will go very wrong very quickly if this is done.
 
-Doug Gilbert
+> > > This will ensure that kernel output and udev input are consistent.  It
+> > > will still require that user space utilities which derive a name for a
+> > > device will need modifying to print out the preferred name.
+> > 
+> > It also doesn't solve the issue of userspace wanting to use such a
+> > "preferred" name in the command line of tools, as there will not be a
+> > link back to the "kernel" name directly in /dev/.
+> 
+> Right ... most tools use the name they're given (and all variants
+> including the preferred one have links in /dev), which means they will
+> show the preferred name by default (if they were given that name as
+> input).  The only problem is tools that attempt to derive a device name,
+> which is quite a small subset.
+
+Douglas pointed out that those tools look in /dev/ which would not work
+properly for this type of thing.
+
+> > So as userspace tools will still need to be fixed, I don't see how
+> > adding a kernel file for this is going to help any.  Well, a bit in that
+> > the kernel log files will look "different", but again, that really isn't
+> > a problem that userspace couldn't also solve with no kernel changes
+> > needed.
+> 
+> This is true, but I think for the small effort it takes to implement the
+> feature in-kernel compared with what we'd have to do to the
+> distributions to get it implemented in userspace (we'd need klogd to do
+> the conversion for dmesg ... I'm entirely unclear what we need to modify
+> for /proc/partitions, etc.) the benefit outweighs the cost.
+> 
+> Additionally, since renaming is something users seem to want (just look
+> at net interfaces), if we can make this work, we now have a definitive
+> answer to point people at.
+
+Renaming is something that we do NOT want to do, as we have learned our
+lesson of the network device renaming mess.  And as Kay pointed out, we
+already have an "alias" name there, which no one uses.
+
+So again, I really don't like this, just fix the userspace tools to map
+the proper device name that the kernel is using to the userspace name
+the tool used, and all is fine.  This has been done already today,
+succesfully, by many of the big "enterprise" monitoring systems that
+work quite well on Linux, proving that this is not something that the
+kernel needs to provide to implement properly.
+
+thanks,
+
+greg k-h
