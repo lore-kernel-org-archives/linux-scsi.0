@@ -1,58 +1,80 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Thu, 16 Jun 2011 22:25:23 -0700
-Message-ID: <20110617052523.GB741@kroah.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
- <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp>
- <20110615153337.GA10160@kroah.com>
- <4DF9F11F.705@hitachi.com>
- <20110616154129.GA31498@kroah.com>
- <1308239454.2436.34.camel@mulgrave>
- <20110616161442.GA32113@kroah.com>
- <1308241506.2436.44.camel@mulgrave>
- <20110616181943.GB1439@kroah.com>
- <1308256290.2436.143.camel@mulgrave>
+From: Ankit Jain <jankit@suse.de>
+Subject: Re: [PATCH] iscsi: Use struct scsi_lun in iscsi structs instead of
+ u8[8]
+Date: Fri, 17 Jun 2011 11:27:06 +0530
+Message-ID: <4DFAECB2.2010107@suse.de>
+References: <1308265029-32337-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4.smtp.messagingengine.com ([66.111.4.28]:39641 "EHLO
-	out4.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756576Ab1FQF0q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2011 01:26:46 -0400
-Content-Disposition: inline
-In-Reply-To: <1308256290.2436.143.camel@mulgrave>
+Received: from cantor.suse.de ([195.135.220.2]:50392 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750757Ab1FQFz3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Jun 2011 01:55:29 -0400
+In-Reply-To: <1308265029-32337-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+To: Andy Grover <agrover@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Jun 16, 2011 at 04:31:29PM -0400, James Bottomley wrote:
-> > So again, I really don't like this, just fix the userspace tools to map
-> > the proper device name that the kernel is using to the userspace name
-> > the tool used, and all is fine.  This has been done already today,
-> > succesfully, by many of the big "enterprise" monitoring systems that
-> > work quite well on Linux, proving that this is not something that the
-> > kernel needs to provide to implement properly.
+On 06/17/2011 04:27 AM, Andy Grover wrote:
+> struct scsi_lun is also just a struct with an array of 8 octets (64 bits)
+> but using it instead in iscsi structs lets us call scsilun_to_int
+> without a cast, and also lets us copy it using assignment, instead of
+> memcpy().
 > 
-> Well, it's expediency.  Sure we could try to patch the world, but I
-> think the simple patch of getting the kernel to print a preferred name
-> solves 90% of the problem.  Sure there is a long tail of userspace
-> components that needs fixing, but that can be done gradually if we take
-> the kernel route.  If we go the userspace route, it will be a long while
-> before we even get to 50% coverage.
+> Signed-off-by: Andy Grover <agrover@redhat.com>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c |    5 ++---
+>  drivers/scsi/bnx2i/bnx2i_hwi.c  |    8 ++++----
+>  drivers/scsi/libiscsi.c         |   14 +++++++-------
+>  include/scsi/iscsi_proto.h      |   18 +++++++++---------
+>  include/scsi/libiscsi.h         |    2 +-
+>  5 files changed, 23 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index 94b9a07..96d7d07 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -3963,11 +3963,10 @@ static int beiscsi_iotask(struct iscsi_task *task, struct scatterlist *sg,
+>  	}
+>  	memcpy(&io_task->cmd_bhs->iscsi_data_pdu.
+>  	       dw[offsetof(struct amap_pdu_data_out, lun) / 32],
+> -	       io_task->cmd_bhs->iscsi_hdr.lun, sizeof(struct scsi_lun));
+> +	       &io_task->cmd_bhs->iscsi_hdr.lun, sizeof(struct scsi_lun));
+>  
+>  	AMAP_SET_BITS(struct amap_iscsi_wrb, lun, pwrb,
+> -		      cpu_to_be16((unsigned short)io_task->cmd_bhs->iscsi_hdr.
+> -				  lun[0]));
+> +		      cpu_to_be16(*(unsigned short*)&io_task->cmd_bhs->iscsi_hdr.lun));
+>  	AMAP_SET_BITS(struct amap_iscsi_wrb, r2t_exp_dtl, pwrb, xferlen);
+>  	AMAP_SET_BITS(struct amap_iscsi_wrb, wrb_idx, pwrb,
+>  		      io_task->pwrb_handle->wrb_index);
+> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> index 5c54a2d..550e6c4 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> @@ -430,7 +430,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
+>  	default:
+>  		tmfabort_wqe->ref_itt = RESERVED_ITT;
+>  	}
+> -	memcpy(scsi_lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
+> +	memcpy(scsi_lun, &tmfabort_hdr->lun, sizeof(struct scsi_lun));
+>  	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
+>  	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
+>  
+> @@ -547,7 +547,7 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn *bnx2i_conn,
+>  
+>  	nopout_wqe->op_code = nopout_hdr->opcode;
+>  	nopout_wqe->op_attr = ISCSI_FLAG_CMD_FINAL;
+> -	memcpy(nopout_wqe->lun, nopout_hdr->lun, 8);
+> +	memcpy(nopout_wqe->lun, &nopout_hdr->lun, 8);
 
-I do not think that just because some people feel it is easier to change
-the kernel than change userspace tools, that we are somehow forced to
-accept their changes.
+Should you be using "sizeof (..)" here (and similar instances), rather
+than 8? It is being done that way in other instances and it would be
+better practice, IMHO.
 
-As for "expediency", it has been a full year since the last time this
-was proposed.  All userspace tools that would need to be changed to
-implement this in userspace have had updates released for them in that
-year, and the changes needed to make to them could have been done
-already.
-
-So any argument about "quickness" here which requires a kernel change
-instead of fixing userspace programs is totally false, sorry.
-
-greg k-h
+-- 
+Ankit Jain
+SUSE Labs
