@@ -1,73 +1,55 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] iscsi: Use struct scsi_lun in iscsi structs instead of
- u8[8]
-Date: Fri, 17 Jun 2011 14:38:07 +0200
-Message-ID: <20110617143807.485b7e35@stein>
-References: <1308265029-32337-1-git-send-email-agrover@redhat.com>
-	<4DFAECB2.2010107@suse.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH v3 RESEND] dma-mapping: add new API for
+	max_segment_number
+Date: Fri, 17 Jun 2011 06:40:35 -0600
+Message-ID: <20110617124035.GA19693@parisc-linux.org>
+References: <BANLkTi=-t9HVc6U6QY07su+c3WztsGoq3Q@mail.gmail.com> <1308227453-2034-1-git-send-email-shawn.guo@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:60830 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756985Ab1FQMiS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jun 2011 08:38:18 -0400
-In-Reply-To: <4DFAECB2.2010107@suse.de>
+Received: from palinux.external.hp.com ([192.25.206.14]:52554 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756985Ab1FQMki (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jun 2011 08:40:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1308227453-2034-1-git-send-email-shawn.guo@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ankit Jain <jankit@suse.de>
-Cc: Andy Grover <agrover@redhat.com>, linux-scsi@vger.kernel.org, Eddie Wai <eddie.wai@broadcom.com>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mmc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Russell King - ARM Linux <linux@arm.linux.org.uk>, vinod.koul@intel.com, gregkh@suse.de, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Dan Williams <dan.j.williams@intel.com>, cjb@laptop.org, Per Forlin <per.forlin@linaro.org>
 
-On Jun 17 Ankit Jain wrote:
-> On 06/17/2011 04:27 AM, Andy Grover wrote:
-> > --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-> > +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> > @@ -430,7 +430,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
-> >  	default:
-> >  		tmfabort_wqe->ref_itt = RESERVED_ITT;
-> >  	}
-> > -	memcpy(scsi_lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
-> > +	memcpy(scsi_lun, &tmfabort_hdr->lun, sizeof(struct scsi_lun));
-> >  	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
-> >  	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
-> >  
-> > @@ -547,7 +547,7 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn *bnx2i_conn,
-> >  
-> >  	nopout_wqe->op_code = nopout_hdr->opcode;
-> >  	nopout_wqe->op_attr = ISCSI_FLAG_CMD_FINAL;
-> > -	memcpy(nopout_wqe->lun, nopout_hdr->lun, 8);
-> > +	memcpy(nopout_wqe->lun, &nopout_hdr->lun, 8);
+On Thu, Jun 16, 2011 at 08:30:53PM +0800, Shawn Guo wrote:
+> Here is the user story that tells the need of the new api.  The
+> mxs-mmc is the mmc host controller for Freescale MXS architecture.
+> There are a pair of  mmc host specific parameters max_seg_size and
+> max_segs that mxs-mmc host driver needs to tell mmc core, so that
+> mmc core can know how big each data segment could be and how many
+> segments could be handled one time in a scatter list by host driver.
 > 
-> Should you be using "sizeof (..)" here (and similar instances), rather
-> than 8? It is being done that way in other instances and it would be
-> better practice, IMHO.
+> The mxs-mmc driver is one user of dmaengine mxs-dma, and it will call
+> mxs-dma to transfer data in scatter list.  That is to say mxs-mmc has
+> no idea of what max_seg_size and max_segs should be, because they are
+> all mxs-dma capability parameters, and mxs-mmc needs to query them
+> from mxs-dma.
 
-sizeof or not sizeof is the least of the coding style issues in drivers/scsi/bnx2i/.
-Exhibit one from 57xx_iscsi_hsi.h:
+This approach would make sense if mxs-mmc were generic, but it's tied to
+mxs-dma, so it can just as well call mxs-dma to find out how many segments
+it supports.
 
-struct bnx2i_nop_out_request {
-#if defined(__BIG_ENDIAN)
-[...]
-#elif defined(__LITTLE_ENDIAN)
-[...]
-#endif
+> Right now, there is well defined dma api (dma_get_max_seg_size) for
+> mmc to query max_seg_size from dma driver, but the one for max_segs
+> is missing.  That's why mxs-mmc driver has to hard-code it.
+> 
+> The mxs-mmc is just one example to demonstrate the need of the new
+> api, and there are other mmc host drivers (mxcmmc on imx-dma is
+> another example) and possibly even other dmaengine users need this
+> new api to know the maximum segments that dma driver can handle per
+> dma call.
 
-This kind of coding leads to obfuscated CPU accessors to DMA data/ on the wire data.
-If a structure for on-the-wire contains a bitfield (e.g. a 32 bits wide bitfield),
-just use __be... or __le... data types (e.g. __be32 or __le32) as required by the
-device or protocol.  When the CPU needs to read and write certain bits and bytes in
-the word, use the usual cpu_to_... and ..._to_cpu accessors on the entire bitfield,
-plus CPU-side shifts and masks.
+Again, mxcmmc can just call imx-dma directly.
 
-The end result should be obvious to the reader of the code, and intrinsically clean
-in a CF="-D__CHECK_ENDIAN__" run of make.
-
-Did nobody ask about that when this code was staged for merge into 2.6.31?
-
-Hard to tell at a first glance whether the introduction of struct scsi_lun into the
-mix makes this code better or worse.
 -- 
-Stefan Richter
--=====-==-== -==- =---=
-http://arcgraph.de/sr/
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
