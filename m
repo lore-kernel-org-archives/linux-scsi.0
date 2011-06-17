@@ -1,97 +1,33 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH RESEND 3/3] bsg: fix address space warning from sparse
-Date: Fri, 17 Jun 2011 11:17:09 +0900
-Message-ID: <1308277029-2193-3-git-send-email-namhyung@gmail.com>
-References: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
+From: "Mr. Vincent Cheng" <director@sevilla.uned.es>
+Subject: (unknown)
+Date: Fri, 17 Jun 2011 04:18:44 +0200
+Message-ID: <285bc5ea27e9287538976abaa0e6c6b0.squirrel@correo.uned.es>
+Reply-To: choi_chu003@yahoo.co.jp
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:37339 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829Ab1FQCRT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2011 22:17:19 -0400
-Received: by mail-pv0-f174.google.com with SMTP id 12so1463913pvg.19
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 19:17:19 -0700 (PDT)
-In-Reply-To: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
+Received: from smtp-out-cinco.uned.es ([62.204.192.119]:46902 "EHLO
+	smtp-out-cinco.uned.es" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829Ab1FQCbZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2011 22:31:25 -0400
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-copy_from/to_user() and blk_rq_map_user() want __user pointer.
-This patch fixes following warnings from sparse:
+Good Day,
 
-   CHECK   block/bsg.c
- block/bsg.c:185:38: warning: incorrect type in argument 2 (different address spaces)
- block/bsg.c:185:38:    expected void const [noderef] <asn:1>*from
- block/bsg.c:185:38:    got void *<noident>
- block/bsg.c:295:58: warning: incorrect type in argument 4 (different address spaces)
- block/bsg.c:295:58:    expected void [noderef] <asn:1>*<noident>
- block/bsg.c:295:58:    got void *[assigned] dxferp
- block/bsg.c:311:52: warning: incorrect type in argument 4 (different address spaces)
- block/bsg.c:311:52:    expected void [noderef] <asn:1>*<noident>
- block/bsg.c:311:52:    got void *[assigned] dxferp
- block/bsg.c:448:37: warning: incorrect type in argument 1 (different address spaces)
- block/bsg.c:448:37:    expected void [noderef] <asn:1>*dst
- block/bsg.c:448:37:    got void *<noident>
+I am Mr. Vincent Cheng Hoi Chuen, GBS, JP Chairman of the Hong Kong and
+Shanghai Banking Corporation Limited.i have a business proposal of Twenty
+Two million Five Hundred Thousand United State Dollars only for you to 
+transact with me from my bank to your country.
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
-Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+All confirmable documents to back up the claims will be made available to
+you prior to your acceptance and as soon as I receive your return mail and
+I will let you know what is required of you.
 
-diff --git a/block/bsg.c b/block/bsg.c
-index b7e42ad55361..702f1316bb8f 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -182,7 +182,7 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 			return -ENOMEM;
- 	}
- 
--	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
-+	if (copy_from_user(rq->cmd, (void __user *)(unsigned long)hdr->request,
- 			   hdr->request_len))
- 		return -EFAULT;
- 
-@@ -249,7 +249,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
- 	struct request *rq, *next_rq = NULL;
- 	int ret, rw;
- 	unsigned int dxfer_len;
--	void *dxferp = NULL;
-+	void __user *dxferp = NULL;
- 	struct bsg_class_device *bcd = &q->bsg_dev;
- 
- 	/* if the LLD has been removed then the bsg_unregister_queue will
-@@ -291,7 +291,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
- 		rq->next_rq = next_rq;
- 		next_rq->cmd_type = rq->cmd_type;
- 
--		dxferp = (void*)(unsigned long)hdr->din_xferp;
-+		dxferp = (void __user *)(unsigned long)hdr->din_xferp;
- 		ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
- 				       hdr->din_xfer_len, GFP_KERNEL);
- 		if (ret)
-@@ -300,10 +300,10 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
- 
- 	if (hdr->dout_xfer_len) {
- 		dxfer_len = hdr->dout_xfer_len;
--		dxferp = (void*)(unsigned long)hdr->dout_xferp;
-+		dxferp = (void __user *)(unsigned long)hdr->dout_xferp;
- 	} else if (hdr->din_xfer_len) {
- 		dxfer_len = hdr->din_xfer_len;
--		dxferp = (void*)(unsigned long)hdr->din_xferp;
-+		dxferp = (void __user *)(unsigned long)hdr->din_xferp;
- 	} else
- 		dxfer_len = 0;
- 
-@@ -445,7 +445,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 		int len = min_t(unsigned int, hdr->max_response_len,
- 					rq->sense_len);
- 
--		ret = copy_to_user((void*)(unsigned long)hdr->response,
-+		ret = copy_to_user((void __user *)(unsigned long)hdr->response,
- 				   rq->sense, len);
- 		if (!ret)
- 			hdr->response_len = len;
--- 
-1.7.5.2
+Your earliest response to this letter will be appreciated.
+
+Best Regards,
+Mr. Vincent Cheng
 
