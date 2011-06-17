@@ -1,66 +1,63 @@
 From: Kay Sievers <kay.sievers@vrfy.org>
 Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Fri, 17 Jun 2011 17:57:12 +0200
-Message-ID: <BANLkTi=G4d4JPyt=Q38bGsQJ2K5VPzOhBA@mail.gmail.com>
+Date: Fri, 17 Jun 2011 18:12:14 +0200
+Message-ID: <BANLkTinMzyQWZvxiRw4tvZBwW5xsxvMz-Q@mail.gmail.com>
 References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
  <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com>
  <4DF9F11F.705@hitachi.com> <20110616154129.GA31498@kroah.com>
  <1308239454.2436.34.camel@mulgrave> <20110616161442.GA32113@kroah.com>
  <1308241506.2436.44.camel@mulgrave> <20110616181943.GB1439@kroah.com>
- <1308256290.2436.143.camel@mulgrave> <20110617052523.GB741@kroah.com> <4DFB75A4.8070405@interlog.com>
+ <1308256290.2436.143.camel@mulgrave> <BANLkTikfCMR_=5Jp7tLhM_Wr3vxihEL+rA@mail.gmail.com>
+ <1308264321.2436.161.camel@mulgrave> <BANLkTinvfmU0dszQyu4U=Pw3_BtrmOUi_g@mail.gmail.com>
+ <1308320844.2586.14.camel@mulgrave> <BANLkTikMa6vO4m3tk1O2mtj76k6s66f2gQ@mail.gmail.com>
+ <1308322193.2586.30.camel@mulgrave> <BANLkTinywFK3yAxN51O7RDYyqeNRHBRThA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4DFB75A4.8070405@interlog.com>
+In-Reply-To: <BANLkTinywFK3yAxN51O7RDYyqeNRHBRThA@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jun 17, 2011 at 17:41, Douglas Gilbert <dgilbert@interlog.com> =
-wrote:
-> On 11-06-17 01:25 AM, Greg KH wrote:
->> As for "expediency", it has been a full year since the last time thi=
-s
->> was proposed. =C2=A0All userspace tools that would need to be change=
-d to
->> implement this in userspace have had updates released for them in th=
-at
->> year, and the changes needed to make to them could have been done
->> already.
+On Fri, Jun 17, 2011 at 17:39, Kay Sievers <kay.sievers@vrfy.org> wrote=
+:
+> On Fri, Jun 17, 2011 at 16:49, James Bottomley
+
+>> So this is subsystem specific. =C2=A0For the case of a SCSI enclosur=
+e, I can
+>> answer that it's actually burned into the enclosure firmware. =C2=A0=
+When you
+>> build an enclosure with labels, the label names are stored in a
+>> diagnostic page. =C2=A0We can actually interrogate the enclosure dir=
+ectly or
+>> use the ses driver to get these names mapped to current devices.
 >
-> Could you elaborate taking one user space tool as an
-> example and tell us what changes you think should be
-> made?
+> To me this sounds like a nice name on top of the current bunch of
+> names, not like a 'preferred' name.
 >
-> Are you talking about low level tools such as hdparm,
-> smartmontools and mine or tools further up the "food
-> chain"?
+> I still don't like to introduce any new facility to the kernel that
+> can handle only one single name. Reality the last years has taught us
+> a very different story, and we've walked a long way to get where we
+> are. I really don't believe single names will ever work, it's just a
+> nice theory.
 
-I think the only thing really missing is a smarter 'syslog' that has
-context, and not just a stream of almost random free-text packets.
+I might need to clarify this a bit.
 
-Ideally the main source would be a _structured_ and properly machine
-readable error/debug log from the kernel, maintained in userspace as
-an indexable database, and constant merging of userspace state
-information into it.
+I have no problem in general to add a 'alias' to every disk, and use
+that when stuff is logged. Just the same way the netifs have an alias.
+Sure, it might be useful for some use cases. And if that helps to
+solve any real problem, we should just do it.
 
-Debug/error messages from the kernel would need proper classification
-and if needed can carry additional data structures, even binary data,
-that contain dumps of sense results or firmware data.
+I just want to make clear, that I don't think that it is anywhere near
+to a solution for the problems which are described here. And that
+nobody should see this as an excuse not to get their stuff together
+and work on the problem, which is that we don't have machine-readable
+error and debug from the kernel and a smart syslog.
 
-I doubt there can be any really useful kernel only solution to
-enterprise storage needs. Especially not based on printk().
-
-I'm sure, we should really start to think in that direction instead of
-extending things that are unlikely to solve the underlying  problem
-ever.
-
-Userspace tools can already query the udev database very easily, it's
-almost free, no IPC, no fork() involved, it's just a few libudev calls
-which read files out of tmpfs. If they want to show names they can do
-that already today. Making the kernel decide which one of the names is
-the single one to choose, just can't work, I think.
+If we had that, I'm very sure nobody would even ask for a 'pretty
+name' in the kernel, and I think that is a good indication that we are
+not on the right track here.
 
 Kay
