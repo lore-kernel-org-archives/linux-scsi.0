@@ -1,55 +1,115 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH] iscsi: Use struct scsi_lun in iscsi structs instead of
- u8[8]
-Date: Fri, 17 Jun 2011 09:31:38 -0700
-Message-ID: <4DFB816A.2020901@redhat.com>
-References: <1308265029-32337-1-git-send-email-agrover@redhat.com>	<4DFAECB2.2010107@suse.de> <20110617143807.485b7e35@stein>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] fusion: use pci_dev->revision
+Date: Fri, 17 Jun 2011 21:40:28 +0400
+Message-ID: <201106172140.28753.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:2095 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752294Ab1FQQbu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Jun 2011 12:31:50 -0400
-In-Reply-To: <20110617143807.485b7e35@stein>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:57598 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752317Ab1FQRmK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jun 2011 13:42:10 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Ankit Jain <jankit@suse.de>, linux-scsi@vger.kernel.org, Eddie Wai <eddie.wai@broadcom.com>
+To: Eric.Moore@lsi.com, DL-MPTFusionLinux@lsi.com
+Cc: linux-scsi@vger.kernel.org, support@lsi.com
 
-On 06/17/2011 05:38 AM, Stefan Richter wrote:
-> On Jun 17 Ankit Jain wrote:
->> On 06/17/2011 04:27 AM, Andy Grover wrote:
->>> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
->>> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
->>> @@ -430,7 +430,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
->>>  	default:
->>>  		tmfabort_wqe->ref_itt = RESERVED_ITT;
->>>  	}
->>> -	memcpy(scsi_lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
->>> +	memcpy(scsi_lun, &tmfabort_hdr->lun, sizeof(struct scsi_lun));
->>>  	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
->>>  	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
->>>  
->>> @@ -547,7 +547,7 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn *bnx2i_conn,
->>>  
->>>  	nopout_wqe->op_code = nopout_hdr->opcode;
->>>  	nopout_wqe->op_attr = ISCSI_FLAG_CMD_FINAL;
->>> -	memcpy(nopout_wqe->lun, nopout_hdr->lun, 8);
->>> +	memcpy(nopout_wqe->lun, &nopout_hdr->lun, 8);
->>
->> Should you be using "sizeof (..)" here (and similar instances), rather
->> than 8? It is being done that way in other instances and it would be
->> better practice, IMHO.
-> 
-> sizeof or not sizeof is the least of the coding style issues in drivers/scsi/bnx2i/.
-> Exhibit one from 57xx_iscsi_hsi.h:
+This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
+converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
+drivers to use pci_device->revision).
 
-<snip>
+In one case, it even reads PCI revision ID without using it -- that code is now
+removed...
 
-I hear ya. The focus of this patch was really the change to
-iscsi_proto.h. All the other bits are compile fixes from that, so I
-tried not to get distracted by other obvious driver issues.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Regards -- Andy
+---
+The patch is against the recent Linus' tree.
+
+ drivers/message/fusion/mptbase.c |   12 ++++--------
+ drivers/message/fusion/mptctl.c  |    4 +---
+ 2 files changed, 5 insertions(+), 11 deletions(-)
+
+Index: linux-2.6/drivers/message/fusion/mptbase.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptbase.c
++++ linux-2.6/drivers/message/fusion/mptbase.c
+@@ -1591,7 +1591,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 	unsigned long	 port;
+ 	u32		 msize;
+ 	u32		 psize;
+-	u8		 revision;
+ 	int		 r = -ENODEV;
+ 	struct pci_dev *pdev;
+ 
+@@ -1608,8 +1607,6 @@ mpt_mapresources(MPT_ADAPTER *ioc)
+ 		return r;
+ 	}
+ 
+-	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+-
+ 	if (sizeof(dma_addr_t) > 4) {
+ 		const uint64_t required_mask = dma_get_required_mask
+ 		    (&pdev->dev);
+@@ -1717,7 +1714,6 @@ mpt_attach(struct pci_dev *pdev, const s
+ 	MPT_ADAPTER	*ioc;
+ 	u8		 cb_idx;
+ 	int		 r = -ENODEV;
+-	u8		 revision;
+ 	u8		 pcixcmd;
+ 	static int	 mpt_ids = 0;
+ #ifdef CONFIG_PROC_FS
+@@ -1825,8 +1821,8 @@ mpt_attach(struct pci_dev *pdev, const s
+ 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT "facts @ %p, pfacts[0] @ %p\n",
+ 	    ioc->name, &ioc->facts, &ioc->pfacts[0]));
+ 
+-	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+-	mpt_get_product_name(pdev->vendor, pdev->device, revision, ioc->prod_name);
++	mpt_get_product_name(pdev->vendor, pdev->device, pdev->revision,
++			     ioc->prod_name);
+ 
+ 	switch (pdev->device)
+ 	{
+@@ -1841,7 +1837,7 @@ mpt_attach(struct pci_dev *pdev, const s
+ 		break;
+ 
+ 	case MPI_MANUFACTPAGE_DEVICEID_FC929X:
+-		if (revision < XL_929) {
++		if (pdev->revision < XL_929) {
+ 			/* 929X Chip Fix. Set Split transactions level
+ 		 	* for PCIX. Set MOST bits to zero.
+ 		 	*/
+@@ -1872,7 +1868,7 @@ mpt_attach(struct pci_dev *pdev, const s
+ 		/* 1030 Chip Fix. Disable Split transactions
+ 		 * for PCIX. Set MOST bits to zero if Rev < C0( = 8).
+ 		 */
+-		if (revision < C0_1030) {
++		if (pdev->revision < C0_1030) {
+ 			pci_read_config_byte(pdev, 0x6a, &pcixcmd);
+ 			pcixcmd &= 0x8F;
+ 			pci_write_config_byte(pdev, 0x6a, pcixcmd);
+Index: linux-2.6/drivers/message/fusion/mptctl.c
+===================================================================
+--- linux-2.6.orig/drivers/message/fusion/mptctl.c
++++ linux-2.6/drivers/message/fusion/mptctl.c
+@@ -1250,7 +1250,6 @@ mptctl_getiocinfo (unsigned long arg, un
+ 	int			iocnum;
+ 	unsigned int		port;
+ 	int			cim_rev;
+-	u8			revision;
+ 	struct scsi_device 	*sdev;
+ 	VirtDevice		*vdevice;
+ 
+@@ -1324,8 +1323,7 @@ mptctl_getiocinfo (unsigned long arg, un
+ 	pdev = (struct pci_dev *) ioc->pcidev;
+ 
+ 	karg->pciId = pdev->device;
+-	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+-	karg->hwRev = revision;
++	karg->hwRev = pdev->revision;
+ 	karg->subSystemDevice = pdev->subsystem_device;
+ 	karg->subSystemVendor = pdev->subsystem_vendor;
+ 
