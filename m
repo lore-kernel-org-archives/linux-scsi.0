@@ -1,7 +1,7 @@
 From: Kay Sievers <kay.sievers@vrfy.org>
 Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Fri, 17 Jun 2011 16:30:34 +0200
-Message-ID: <BANLkTik6knyDWL3=F2TM1F4GgXYRf6zvaw@mail.gmail.com>
+Date: Fri, 17 Jun 2011 16:40:25 +0200
+Message-ID: <BANLkTikMa6vO4m3tk1O2mtj76k6s66f2gQ@mail.gmail.com>
 References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
  <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com>
  <4DF9F11F.705@hitachi.com> <20110616154129.GA31498@kroah.com>
@@ -9,85 +9,96 @@ References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
  <1308241506.2436.44.camel@mulgrave> <20110616181943.GB1439@kroah.com>
  <1308256290.2436.143.camel@mulgrave> <BANLkTikfCMR_=5Jp7tLhM_Wr3vxihEL+rA@mail.gmail.com>
  <1308264321.2436.161.camel@mulgrave> <BANLkTinvfmU0dszQyu4U=Pw3_BtrmOUi_g@mail.gmail.com>
- <4DFB403E.9020009@hitachi.com>
+ <1308320844.2586.14.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:51750 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754936Ab1FQOau (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Jun 2011 10:30:50 -0400
-In-Reply-To: <4DFB403E.9020009@hitachi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1308320844.2586.14.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 
-On Fri, Jun 17, 2011 at 13:53, Masami Hiramatsu
-<masami.hiramatsu.pt@hitachi.com> wrote:
-> (2011/06/17 8:04), Kay Sievers wrote:
-
->> I don't think that solves the problem, no. We need _smart_ userspace
->> with a debug/error message channel from the kernel to userspace that
->> pops out _structured_ data. Userspace needs to index the data, and
->> merge a lot of userspace information into it.
+On Fri, Jun 17, 2011 at 16:27, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Fri, 2011-06-17 at 01:04 +0200, Kay Sievers wrote:
+>> >> We need many names, and we need all of them from the very
+>> beginning,
+>> >> and they should not change during device lifetime unless the devi=
+ce
+>> >> state changes.
+>> >
+>> > So that's actually an argument for leaving the links, surely? =C2=A0=
+We
+>> can
+>> > have many inbound links, but the kernel can only print one name in
+>> > messages, which would be the preferred name that was currently set=
+=2E
+>>
+>> I really question any concept of _the_ name. My take on it: It will
+>> never work in reality.
 >
-> If that is possible, I think it's so helpful. But most of driver
-> developers doesn't like that... They may tend to continue using
-> printk() debug/error notification. (actually I hope them to
-> use some notification API, like traceevent...)
-
-Sure they will add printk() for things, that's fine and should not
-change. There are things that can not and should not be formalized,
-and need a human to rad and fix it anyway.
-
-But it's also trivial to wire up the interesting debug/error
-information to some _sane_ channel at the same time, that does not
-produce for programmatic processing absolutely useless random and
-chaotic text dumps, but structured data for programs to consume. And
-right, it's very much like the problems tracing tries to solve.
-
-It's really time to leave the unix stone age behind us, and not to
-pimp up broken-by-design, or never designed, facilities. Storage
-management that needs this
-
-> Maybe, some kind of errors, like AER/MCE, easily move on to
-> such smarter system. But I doubt other device-specific errors
-> can do that too. There are so much specific kind of errors...
+> OK, so lets take the common example: a desktop with three disks and a=
+n
+> enclosure with three slots and labels "fred", "jim", and "betty".
 >
->> Adding just another single-name to the kernel just makes the
->> much-too-dumb free-text printk() a bit more readable, but still sounds
->> not like a solution. Pimping up syslog is not the solution to this
->> problem, and it can't be solved in the kernel alone.
+> The desired outcome is that whenever the user manipulates those devic=
+es
+> he uses a name related to the label, so whenever dmesg flags a proble=
+m,
+> it says sd betty: =C2=A0device offline or something. =C2=A0Whenever h=
+e mounts, he
+> mounts by /dev/disk/by-preferred/betty (or whatever the current udev
+> vernacular is). =C2=A0Whenever smartmon says there's an over temp pro=
+blem. it
+> says that fred has it; =C2=A0cat /proc/partitions shows how fred, jim=
+ and
+> betty are partitioned and so on.
 >
-> I agree with you that the _smart_ error notifier can solve our
-> problem too.
-
-The lets start working on the real fix. We should stop papering over
-issues caused by pretty much useless free-text printk() strings. It
-just makes something totallydumb, a bit more pretty, introduces a lot
-diffferent problems by doing that, and has not the potential of
-solving the underlying problem properly. To me it sounds like a
-promise it can't deliver in reality.
-
-> However, we can't jump into it directly.
-> And just making printk() readable helps us A LOT!
-
-I'm not convinced. I think it only 'sounds' nice, but in reality, no
-'single name' can be composed reliably.
-
->> I don't think we can even solve 10% of the problems that way. It's
->> just a hack that makes stuff a bit more pretty, but doesn't provide
->> any reasonable solution to the problem. I doubt we can even make a
->> simple use case out of it, what name to put into that field for a
->> multipath setup.
+> To do this, we set the preferred name at start of day via a machine
+> specific customisation. =C2=A0For an enclosure, there's a standard wa=
+y of
+> mapping the name to the device, so we'd just use that, but it's not
+> impossible to imagine systems with stranger entities that require per
+> motherboard customisations.
 >
-> Good point! we have to consider multipath case in document.
-> Perhaps, we need a special naming rule in that case. I think
-> it can be solved if udev script is enough smart :-)
+> Once the name is set in boot up, we, in fact, never alter it.
+>
+> With the kernel patch proposed and a corresponding update to udev
+> actually makes all the above happen. =C2=A0There have to be tweaks to=
+ the
+> startup scripts, like smartd needs a file configuration that lists th=
+e
+> disk by preferred path so that the output is correct.
+>
+> Obviously, I chose the commands above so there is no need to modify a=
+ny
+> of them. =C2=A0There will be utilities (like overly smart san manager=
+s) that
+> do derive the name and will need updating, but they're not among the
+> standard workstation admin tools.
 
-I don't think that can be solved. You have the problem that all that
-needs to be available very early during boot to be useful, and I don't
-see how we can really have that policy information during that time.
+Ok, the still remaining questions:
+
+Why isn't logging all symlink names during device discovery solving
+all the problems we discuss without any change to the kernel? It's
+just a single udev rule that can be added to ages old systems today. I
+think that solves exactly the same problem and works with many names
+at the same time.
+
+Where is "fred", "jim", and "betty" stored on bootup?
+
+What are the keys to match the pretty names to the disks?
+
+The pretty name is a one-shot setting only? If not how is a change
+handled for already used devices?
+
+How will this information be available in the initramfs, where
+mutltiple disks might need to be mounted already? Initramfs images are
+generic and not created per host.
+
+How are multipath setups handled where the exact same disk is behind
+multiple kernel devices? What to put into these names in this case?
 
 Kay
