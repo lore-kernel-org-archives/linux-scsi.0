@@ -1,51 +1,66 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
 Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
-Date: Fri, 17 Jun 2011 11:41:24 -0400
-Message-ID: <4DFB75A4.8070405@interlog.com>
-References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp> <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com> <4DF9F11F.705@hitachi.com> <20110616154129.GA31498@kroah.com> <1308239454.2436.34.camel@mulgrave> <20110616161442.GA32113@kroah.com> <1308241506.2436.44.camel@mulgrave> <20110616181943.GB1439@kroah.com> <1308256290.2436.143.camel@mulgrave> <20110617052523.GB741@kroah.com>
-Reply-To: dgilbert@interlog.com
+Date: Fri, 17 Jun 2011 17:57:12 +0200
+Message-ID: <BANLkTi=G4d4JPyt=Q38bGsQJ2K5VPzOhBA@mail.gmail.com>
+References: <20110615081610.2237.44767.stgit@ltc233.sdl.hitachi.co.jp>
+ <20110615081627.2237.9620.stgit@ltc233.sdl.hitachi.co.jp> <20110615153337.GA10160@kroah.com>
+ <4DF9F11F.705@hitachi.com> <20110616154129.GA31498@kroah.com>
+ <1308239454.2436.34.camel@mulgrave> <20110616161442.GA32113@kroah.com>
+ <1308241506.2436.44.camel@mulgrave> <20110616181943.GB1439@kroah.com>
+ <1308256290.2436.143.camel@mulgrave> <20110617052523.GB741@kroah.com> <4DFB75A4.8070405@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110617052523.GB741@kroah.com>
+In-Reply-To: <4DFB75A4.8070405@interlog.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kay.sievers@vrfy.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
+To: dgilbert@interlog.com
+Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 11-06-17 01:25 AM, Greg KH wrote:
-> On Thu, Jun 16, 2011 at 04:31:29PM -0400, James Bottomley wrote:
->>> So again, I really don't like this, just fix the userspace tools to map
->>> the proper device name that the kernel is using to the userspace name
->>> the tool used, and all is fine.  This has been done already today,
->>> succesfully, by many of the big "enterprise" monitoring systems that
->>> work quite well on Linux, proving that this is not something that the
->>> kernel needs to provide to implement properly.
->>
->> Well, it's expediency.  Sure we could try to patch the world, but I
->> think the simple patch of getting the kernel to print a preferred name
->> solves 90% of the problem.  Sure there is a long tail of userspace
->> components that needs fixing, but that can be done gradually if we take
->> the kernel route.  If we go the userspace route, it will be a long while
->> before we even get to 50% coverage.
+On Fri, Jun 17, 2011 at 17:41, Douglas Gilbert <dgilbert@interlog.com> =
+wrote:
+> On 11-06-17 01:25 AM, Greg KH wrote:
+>> As for "expediency", it has been a full year since the last time thi=
+s
+>> was proposed. =C2=A0All userspace tools that would need to be change=
+d to
+>> implement this in userspace have had updates released for them in th=
+at
+>> year, and the changes needed to make to them could have been done
+>> already.
 >
-> I do not think that just because some people feel it is easier to change
-> the kernel than change userspace tools, that we are somehow forced to
-> accept their changes.
+> Could you elaborate taking one user space tool as an
+> example and tell us what changes you think should be
+> made?
 >
-> As for "expediency", it has been a full year since the last time this
-> was proposed.  All userspace tools that would need to be changed to
-> implement this in userspace have had updates released for them in that
-> year, and the changes needed to make to them could have been done
-> already.
+> Are you talking about low level tools such as hdparm,
+> smartmontools and mine or tools further up the "food
+> chain"?
 
-Could you elaborate taking one user space tool as an
-example and tell us what changes you think should be
-made?
+I think the only thing really missing is a smarter 'syslog' that has
+context, and not just a stream of almost random free-text packets.
 
-Are you talking about low level tools such as hdparm,
-smartmontools and mine or tools further up the "food
-chain"?
+Ideally the main source would be a _structured_ and properly machine
+readable error/debug log from the kernel, maintained in userspace as
+an indexable database, and constant merging of userspace state
+information into it.
 
-Doug Gilbert
+Debug/error messages from the kernel would need proper classification
+and if needed can carry additional data structures, even binary data,
+that contain dumps of sense results or firmware data.
+
+I doubt there can be any really useful kernel only solution to
+enterprise storage needs. Especially not based on printk().
+
+I'm sure, we should really start to think in that direction instead of
+extending things that are unlikely to solve the underlying  problem
+ever.
+
+Userspace tools can already query the udev database very easily, it's
+almost free, no IPC, no fork() involved, it's just a few libudev calls
+which read files out of tmpfs. If they want to show names they can do
+that already today. Making the kernel decide which one of the names is
+the single one to choose, just can't work, I think.
+
+Kay
