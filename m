@@ -1,42 +1,53 @@
 From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH RESEND 1/3] bsg: fix bsg_poll() to return POLLOUT properly
-Date: Fri, 17 Jun 2011 11:17:07 +0900
-Message-ID: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
+Subject: [PATCH RESEND 2/3] bsg: remove unnecessary conditional expressions
+Date: Fri, 17 Jun 2011 11:17:08 +0900
+Message-ID: <1308277029-2193-2-git-send-email-namhyung@gmail.com>
+References: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-pv0-f174.google.com ([74.125.83.174]:37339 "EHLO
 	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829Ab1FQCRP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2011 22:17:15 -0400
-Received: by pvg12 with SMTP id 12so1463913pvg.19
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 19:17:14 -0700 (PDT)
+	with ESMTP id S1750829Ab1FQCRR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Jun 2011 22:17:17 -0400
+Received: by mail-pv0-f174.google.com with SMTP id 12so1463913pvg.19
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Jun 2011 19:17:17 -0700 (PDT)
+In-Reply-To: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
 
-POLLOUT should be returned only if bd->queued_cmds < bd->max_queue
-so that bsg_alloc_command() can proceed.
+Second condition in OR always implies first condition is false
+thus bytes_read in the second is not needed. The same goes to
+bytes_written.
 
 Signed-off-by: Namhyung Kim <namhyung@gmail.com>
 Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Acked-by: Jens Axboe <jaxboe@fusionio.com>
 ---
- block/bsg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ block/bsg.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/block/bsg.c b/block/bsg.c
-index 0c8b64a16484..c4f49e255751 100644
+index c4f49e255751..b7e42ad55361 100644
 --- a/block/bsg.c
 +++ b/block/bsg.c
-@@ -878,7 +878,7 @@ static unsigned int bsg_poll(struct file *file, poll_table *wait)
- 	spin_lock_irq(&bd->lock);
- 	if (!list_empty(&bd->done_list))
- 		mask |= POLLIN | POLLRDNORM;
--	if (bd->queued_cmds >= bd->max_queue)
-+	if (bd->queued_cmds < bd->max_queue)
- 		mask |= POLLOUT;
- 	spin_unlock_irq(&bd->lock);
+@@ -606,7 +606,7 @@ bsg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+ 	ret = __bsg_read(buf, count, bd, NULL, &bytes_read);
+ 	*ppos = bytes_read;
  
+-	if (!bytes_read || (bytes_read && err_block_err(ret)))
++	if (!bytes_read || err_block_err(ret))
+ 		bytes_read = ret;
+ 
+ 	return bytes_read;
+@@ -686,7 +686,7 @@ bsg_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+ 	/*
+ 	 * return bytes written on non-fatal errors
+ 	 */
+-	if (!bytes_written || (bytes_written && err_block_err(ret)))
++	if (!bytes_written || err_block_err(ret))
+ 		bytes_written = ret;
+ 
+ 	dprintk("%s: returning %Zd\n", bd->name, bytes_written);
 -- 
 1.7.5.2
 
