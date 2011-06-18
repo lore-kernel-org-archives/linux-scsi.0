@@ -1,62 +1,72 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [GIT PULL] iscsi-target: Merge for .40-rc1
-Date: Sun, 19 Jun 2011 01:55:14 +0900
-Message-ID: <20110619015025V.fujita.tomonori@lab.ntt.co.jp>
-References: <1306551592.23461.506.camel@haakon2.linux-iscsi.org>
-	<BANLkTimt5qisV7EH7NMv1tG8gR_9d-kA3g@mail.gmail.com>
-	<20110530130949.GB13494@lst.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device
+ structure
+Date: Sat, 18 Jun 2011 14:40:17 -0500
+Message-ID: <1308426017.2586.1273.camel@mulgrave>
+References: <20110616181943.GB1439@kroah.com>
+	 <1308256290.2436.143.camel@mulgrave>
+	 <BANLkTikfCMR_=5Jp7tLhM_Wr3vxihEL+rA@mail.gmail.com>
+	 <1308264321.2436.161.camel@mulgrave>
+	 <BANLkTinvfmU0dszQyu4U=Pw3_BtrmOUi_g@mail.gmail.com>
+	 <1308320844.2586.14.camel@mulgrave>
+	 <BANLkTikMa6vO4m3tk1O2mtj76k6s66f2gQ@mail.gmail.com>
+	 <1308322193.2586.30.camel@mulgrave>
+	 <BANLkTinywFK3yAxN51O7RDYyqeNRHBRThA@mail.gmail.com>
+	 <BANLkTinMzyQWZvxiRw4tvZBwW5xsxvMz-Q@mail.gmail.com>
+	 <20110617162247.GA16261@kroah.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:35286 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751066Ab1FRQ4R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 18 Jun 2011 12:56:17 -0400
-In-Reply-To: <20110530130949.GB13494@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110617162247.GA16261@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 List-Id: linux-scsi@vger.kernel.org
-To: hch@lst.de
-Cc: torvalds@linux-foundation.org, nab@linux-iscsi.org, michaelc@cs.wisc.edu, agrover@redhat.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 30 May 2011 15:09:49 +0200
-Christoph Hellwig <hch@lst.de> wrote:
-
-> On Sun, May 29, 2011 at 11:49:08AM -0700, Linus Torvalds wrote:
-> > I don't feel confident or motivated enough about iscsi-target, so
-> > after some (little) thought I ended up not pulling this. I really need
-> > a lot of acks from people who actually work on and care about SCSI,
-> > and right now I feel like with me being away for the next week, I
-> > can't handle it.
+On Fri, 2011-06-17 at 09:22 -0700, Greg KH wrote:
+> On Fri, Jun 17, 2011 at 06:12:14PM +0200, Kay Sievers wrote:
+> > On Fri, Jun 17, 2011 at 17:39, Kay Sievers <kay.sievers@vrfy.org> wrote:
+> > > On Fri, Jun 17, 2011 at 16:49, James Bottomley
 > > 
-> > I just don't want to be in the situation where I pull something that
-> > is apparently contentious in the SCSI space in general, but that's
-> > _particularly_ true this release. So I'm afraid that this essentially
-> > got pushed out to the next release.
+> > >> So this is subsystem specific.  For the case of a SCSI enclosure, I can
+> > >> answer that it's actually burned into the enclosure firmware.  When you
+> > >> build an enclosure with labels, the label names are stored in a
+> > >> diagnostic page.  We can actually interrogate the enclosure directly or
+> > >> use the ses driver to get these names mapped to current devices.
+> > >
+> > > To me this sounds like a nice name on top of the current bunch of
+> > > names, not like a 'preferred' name.
+> > >
+> > > I still don't like to introduce any new facility to the kernel that
+> > > can handle only one single name. Reality the last years has taught us
+> > > a very different story, and we've walked a long way to get where we
+> > > are. I really don't believe single names will ever work, it's just a
+> > > nice theory.
+> > 
+> > I might need to clarify this a bit.
+> > 
+> > I have no problem in general to add a 'alias' to every disk, and use
+> > that when stuff is logged. Just the same way the netifs have an alias.
+> > Sure, it might be useful for some use cases. And if that helps to
+> > solve any real problem, we should just do it.
+> > 
+> > I just want to make clear, that I don't think that it is anywhere near
+> > to a solution for the problems which are described here. And that
+> > nobody should see this as an excuse not to get their stuff together
+> > and work on the problem, which is that we don't have machine-readable
+> > error and debug from the kernel and a smart syslog.
+> > 
+> > If we had that, I'm very sure nobody would even ask for a 'pretty
+> > name' in the kernel, and I think that is a good indication that we are
+> > not on the right track here.
 > 
-> The main contention right now is wether to put the authentification
-> into kernel space or not.  Doing the slow path in userspace worked
-> out okay but not great on the initiator, but it has the potential
-> to become a nightmare worse than oprofile if the split ends up not
-> beeing perfect.
+> And I totally agree here, which is why I don't want to accept this
+> change to the driver core to add this, as it's not the correct solution.
 
-As I said earlier, the split is pretty simple for target code unlike
-initiator code. Doing operations before SCSI nexus establishment in
-userspace and then the kernel takes over nexuses. The information that
-the user space needs for the login negotiation is exported via
-configfs. Unlike open-iscsi split, the nexuses don't go back and forth
-between user and kernel space.
+OK, fine ... we'll do it as gendisk only then.  I suppose that is the
+95% use case anyway.
 
+Thanks,
 
-> Given that we pretty well tested and working code that's used in lots
-> of production setups my vote is for taking it as-is unless someone can
-> actually show a prototype for a nicely working user/kernel split.
-
-ok, I implemented something like that. It's not finished at all but
-my open-iscsi box successfully logged in. The daemon just passes a file
-descriptor to kernel space after the negotiation finishes.
-
-ssh://master.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git lio-4.1-ud
-
-The user space code is at:
-ssh://master.kernel.org/pub/scm/linux/kernel/git/tomo/iscsi-tcmd.git
+James
