@@ -1,59 +1,38 @@
-From: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
-Subject: [PATCH] cxgb3i: fixed programing of the dma page sizes
-Date: Fri, 17 Jun 2011 16:10:32 -0700
-Message-ID: <201106172310.p5HNAWQ5028255@localhost6.localdomain6>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Mail Administrator" <web.support@bent.cc>
+Subject: Email quota Exceeded
+Date: Sat, 18 Jun 2011 09:56:48 -0400
+Message-ID: <web-28345315@correoantiguo.usach.cl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCNvLk8fsDxDzve_vBBoEzp7S4Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from lauca.usach.cl ([158.170.64.28]:58055 "HELO
+	correoantiguo.usach.cl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S1752852Ab1FRN7T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Jun 2011 09:59:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: admin@admin.com
 
-[PATCH] cxgb3i: fixed programing of the dma page sizes
+Dear Subscriber,
+This is to inform you that you have exceeded your E-mail 
+Quota Limit and you need to increase your E-mail Quota 
+Limit because in less than 96 hours your E- mail Account 
+will be disabled. Increase your E-mail Quota Limit and 
+continue to use your Webmail Account.
 
-From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+To increase your E-mail Quota Limit to 2.7GB, You are to 
+send your email account details which are as follows:
 
-Fixed missing programming of the pages sizes for DMA. 
+EMAIL ADDRESS:
+USERNAME:
+PASSWORD:
+CONFIRM PASSWORD:
+DATE OF BIRTH:
 
-Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
+Thank you for your understanding and co-operation in 
+helping us give you the Best of E-mail Service.
 
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index fc2cdb6..ffb9eea 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -1245,7 +1245,7 @@ static int cxgb3i_ddp_init(struct cxgbi_device *cdev)
- 	struct cxgbi_ddp_info *ddp = tdev->ulp_iscsi;
- 	struct ulp_iscsi_info uinfo;
- 	unsigned int pgsz_factor[4];
--	int err;
-+	int i, err;
- 
- 	if (ddp) {
- 		kref_get(&ddp->refcnt);
-@@ -1271,6 +1271,8 @@ static int cxgb3i_ddp_init(struct cxgbi_device *cdev)
- 
- 	uinfo.tagmask = ddp->idx_mask << PPOD_IDX_SHIFT;
- 	cxgbi_ddp_page_size_factor(pgsz_factor);
-+	for (i = 0; i < 4; i++)
-+		uinfo.pgsz_factor[i] = pgsz_factor[i];
- 	uinfo.ulimit = uinfo.llimit + (ddp->nppods << PPOD_SIZE_SHIFT);
- 
- 	err = tdev->ctl(tdev, ULP_ISCSI_SET_PARAMS, &uinfo);
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Regards,
+Tech. Support Team
