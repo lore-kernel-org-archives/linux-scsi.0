@@ -1,83 +1,73 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 04/12] fcoe: support ndo_fcoe_ddp_target() for DDP in FCoE
- targe
-Date: Mon, 20 Jun 2011 16:30:28 -0700
-Message-ID: <20110620233028.31635.24363.stgit@localhost6.localdomain6>
+Subject: [PATCH 05/12] fcoe: Unable to select the exchangeID from offload pool
+ for storage targets
+Date: Mon, 20 Jun 2011 16:30:34 -0700
+Message-ID: <20110620233034.31635.74404.stgit@localhost6.localdomain6>
 References: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10215 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:30654 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755338Ab1FTXa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:30:29 -0400
+	id S1755338Ab1FTXae (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:30:34 -0400
 In-Reply-To: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>
+Cc: Kiran Patil <kiran.patil@intel.com>
 
-From: Yi Zou <yi.zou@intel.com>
+From: Kiran Patil <kiran.patil@intel.com>
 
-Add ddp_target() support to the Open-FCoE sw fcoe hba driver (fcoe.ko).
+Problem: When initiator sends write command to target, target tries to assign new sequence. It
+         allocates new exchangeID (RX_ID) always from non-offloaded pool (Non-offload EMA)
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
+Fix:     Enhanced fcoe_oem_match routine to look at F_CTL flags and if it is exchange responder and
+         command type is WRITEDATA, then function returns TRUE instead of FALSE. This function
+         is used to determine which pool to use (offload pool of exchange is used only if this
+         function returns TRUE).
+
+Technical Notes: N/A
+
 Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   26 +++++++++++++++++++++++++-
- 1 files changed, 25 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   19 +++++++++++++++++--
+ 1 files changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 155d7b9..f76a321 100644
+index f76a321..6378c58 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -99,7 +99,8 @@ static void fcoe_destroy_work(struct work_struct *);
- static int fcoe_ddp_setup(struct fc_lport *, u16, struct scatterlist *,
- 			  unsigned int);
- static int fcoe_ddp_done(struct fc_lport *, u16);
--
-+static int fcoe_ddp_target(struct fc_lport *, u16, struct scatterlist *,
-+			   unsigned int);
- static int fcoe_cpu_callback(struct notifier_block *, unsigned long, void *);
- 
- static bool fcoe_match(struct net_device *netdev);
-@@ -143,6 +144,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
- 	.frame_send = fcoe_xmit,
- 	.ddp_setup = fcoe_ddp_setup,
- 	.ddp_done = fcoe_ddp_done,
-+	.ddp_target = fcoe_ddp_target,
- 	.elsct_send = fcoe_elsct_send,
- 	.get_lesb = fcoe_get_lesb,
- 	.lport_set_port_id = fcoe_set_port_id,
-@@ -887,6 +889,28 @@ static int fcoe_ddp_setup(struct fc_lport *lport, u16 xid,
+@@ -751,12 +751,27 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
+  * The offload EM that this routine is associated with will handle any
+  * packets that are for SCSI read requests.
+  *
++ * This has been enhanced to work when FCoE stack is operating in target
++ * mode.
++ *
+  * Returns: True for read types I/O, otherwise returns false.
+  */
+ bool fcoe_oem_match(struct fc_frame *fp)
+ {
+-	return fc_fcp_is_read(fr_fsp(fp)) &&
+-		(fr_fsp(fp)->data_len > fcoe_ddp_min);
++	struct fc_frame_header *fh = fc_frame_header_get(fp);
++	struct fcp_cmnd *fcp;
++
++	if (fc_fcp_is_read(fr_fsp(fp)) &&
++	    (fr_fsp(fp)->data_len > fcoe_ddp_min))
++		return true;
++	else if (!(ntoh24(fh->fh_f_ctl) & FC_FC_EX_CTX)) {
++		fcp = fc_frame_payload_get(fp, sizeof(*fcp));
++		if (ntohs(fh->fh_rx_id) == FC_XID_UNKNOWN &&
++		    fcp && (ntohl(fcp->fc_dl) > fcoe_ddp_min) &&
++		    (fcp->fc_flags & FCP_CFL_WRDATA))
++			return true;
++	}
++	return false;
  }
  
  /**
-+ * fcoe_ddp_target() - Call a LLD's ddp_target through the net device
-+ * @lport: The local port to setup DDP for
-+ * @xid:   The exchange ID for this DDP transfer
-+ * @sgl:   The scatterlist describing this transfer
-+ * @sgc:   The number of sg items
-+ *
-+ * Returns: 0 if the DDP context was not configured
-+ */
-+static int fcoe_ddp_target(struct fc_lport *lport, u16 xid,
-+			   struct scatterlist *sgl, unsigned int sgc)
-+{
-+	struct net_device *netdev = fcoe_netdev(lport);
-+
-+	if (netdev->netdev_ops->ndo_fcoe_ddp_target)
-+		return netdev->netdev_ops->ndo_fcoe_ddp_target(netdev, xid,
-+							       sgl, sgc);
-+
-+	return 0;
-+}
-+
-+
-+/**
-  * fcoe_ddp_done() - Call a LLD's ddp_done through the net device
-  * @lport: The local port to complete DDP on
-  * @xid:   The exchange ID for this DDP transfer
 
