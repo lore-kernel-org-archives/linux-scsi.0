@@ -1,67 +1,45 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v2 00/12] libfc, libfcoe and fcoe updates for scsi-misc
-Date: Mon, 20 Jun 2011 16:58:48 -0700
-Message-ID: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 01/12] tcm_fc: Fix warning in file tfc_io
+Date: Mon, 20 Jun 2011 16:58:53 -0700
+Message-ID: <20110620235853.1777.39728.stgit@localhost6.localdomain6>
+References: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:31171 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:39660 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756135Ab1FTX6s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:58:48 -0400
+	id S1756135Ab1FTX6y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:58:54 -0400
+In-Reply-To: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Kiran Patil <kiran.patil@intel.com>
 
-The following series contains target offload patches and
-a few bug fixes. The main change that this series presents
-is target mode offload support. These are the same offloads
-that the initiator uses, so there is no new hardware support.
-There is a new hook in the netdev_ops structure to setup
-a DDP context for an offloadable exchange. If ndo_fcoe_ddp_target
-is present on the netdevice the fcoe stack will make use of
-it. This interfce was merged at the v3.0 merge window, so
-all depedencies should already be complete and in-kernel.
+From: Kiran Patil <kiran.patil@intel.com>
 
-Aside from this feature there are a few fixes to tcm_fc as
-well as libfc and fcoe.
+Printk causing warning, trying to print size_t as %x.
 
-All patches were tested against scsi-misc on the day of
-this posting.
+Fix the printk statement, to print it as %zd instead of explictly casting to (unsigned int)
 
+Signed-off-by: Kiran Patil <kiran.patil@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
+ drivers/target/tcm_fc/tfc_io.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Kiran Patil (8):
-      tcm_fc: Fix warning in file tfc_io
-      libfc: Enhancement to RPORT state machine applicable only for VN2VN mode
-      fcoe: Unable to select the exchangeID from offload pool for storage targets
-      fcoe: Round-robin based selection of CPU for post-processing of incoming commands
-      fcoe: Amends previous patch, Round-robin based selection of CPU for post processing of incoming request for FCoE target
-      libfc:Fix for exchange/seq loopup failure when FCoE stack is used as target and connected to windows initaitor
-      tcm_fc: Fix ft_send_tm-bug and drop ft_get_lun_for_cmd usage
-      tcm_fc: Fixing reference counting problem which was causing ft_sess to be deleted.
+diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
+index 4c3c0ef..702d4b8 100644
+--- a/drivers/target/tcm_fc/tfc_io.c
++++ b/drivers/target/tcm_fc/tfc_io.c
+@@ -203,7 +203,7 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
+ 			/* XXX For now, initiator will retry */
+ 			if (printk_ratelimit())
+ 				printk(KERN_ERR "%s: Failed to send frame %p, "
+-						"xid <0x%x>, remaining <0x%x>, "
++						"xid <0x%x>, remaining <%zd>, "
+ 						"lso_max <0x%x>\n",
+ 						__func__, fp, ep->xid,
+ 						remaining, lport->lso_max);
 
-Neerav Parikh (1):
-      fcoe: Rearrange fcoe port and NPIV port cleanup
-
-Vasu Dev (1):
-      libfc: post reset event on lport reset
-
-Yi Zou (2):
-      libfc, tcm_fc: add ddp_targ() to libfc function template to supprot FCoE DDP in target mode
-      fcoe: support ndo_fcoe_ddp_target() for DDP in FCoE targe
-
-
- drivers/scsi/fcoe/fcoe.c        |  174 ++++++++++++++++++++++++++++++---------
- drivers/scsi/libfc/fc_exch.c    |   26 +++++-
- drivers/scsi/libfc/fc_lport.c   |    2 
- drivers/scsi/libfc/fc_rport.c   |   14 +++
- drivers/target/tcm_fc/tcm_fc.h  |    2 
- drivers/target/tcm_fc/tfc_cmd.c |   88 +++++++++++---------
- drivers/target/tcm_fc/tfc_io.c  |    2 
- include/scsi/libfc.h            |    8 ++
- 8 files changed, 233 insertions(+), 83 deletions(-)
-
--- 
-Thanks, //Rob
