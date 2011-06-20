@@ -1,9 +1,8 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 07/12] fcoe: Amends previous patch,
- Round-robin based selection of CPU for post processing of incoming
- request for FCoE target
-Date: Mon, 20 Jun 2011 16:30:44 -0700
-Message-ID: <20110620233044.31635.89769.stgit@localhost6.localdomain6>
+Subject: [PATCH 08/12] libfc:Fix for exchange/seq loopup failure when FCoE
+ stack is used as target and connected to windows initaitor
+Date: Mon, 20 Jun 2011 16:30:49 -0700
+Message-ID: <20110620233049.31635.64178.stgit@localhost6.localdomain6>
 References: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -11,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:56783 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756137Ab1FTXap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:30:45 -0400
+	id S1755994Ab1FTXau (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:30:50 -0400
 In-Reply-To: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,49 +20,63 @@ Cc: Kiran Patil <kiran.patil@intel.com>
 
 From: Kiran Patil <kiran.patil@intel.com>
 
-Problem: Selection of RX queue on target is based on RX-ID. FCoE used 8 Net Rx queues.
-HW post the packets based on rx_id % num_rx_queue. Due to this has based filtering,
-only one CPU is busy servicing incoming request including post-processing of incoming
-request. This is gating factor because
-1. Only one CPU is utilized 100% while others CPUs are not used at all.
-2. CPU which received request assign "sequence' by selecting exchange from
-   per CPU pool (num_ddp_context / num_online_cpus, approxi.). Due to which if
-   if rate of incoming request is higher than rate of servicing request, existing
-   code path end of sending "BUSY" response (SAM_STAT_BUSY because unable to
-   allocate exchange).
+Problem: Linux based SW target (TCM) connected to windows initiator was unable to satisfy
+write request of size > 2K.
 
-Fix: Fan-out incoming request to all other CPUs excluding the CPU which is receiving
-all incoiming request. This path also addresses, selecting same CPU based on rx_id
-from received frame for completion of the request such as "releasing exchange
-to the per CPU Pool". This fix is applicable for FCoE target since initiator
-code path already takes care of selecting CPU to complete post-processing of request
-once OX_ID is assigned.
+Fix: Existing linux implememtation of FCoE stack is expecting sequence number to match w.r.t
+incoming framme. When DDP is used on target in response to write request from initiator, SW
+stack is notified only when last data frame arrives and only the pakcket header of last data
+frame is posted to NetRx queue of storage. When that last packet was processed in libfc:Exchange
+layer, implementation was expecting sequence number to match, but in this case sequence number
+which is embedded in FC Header is assigned by windows initaitor, hence due to sequence number mismatch
+post-processing which shall result into sending RSP is not done. Enhanced the code to
+utilize the sequence number of incoming last frame and process the packet so that, it
+will eventually complete the write request by sending write response (RSP) GOOD.
 
-Notes: N/A
-
-Dependencines: N/A
+Notes/Dependencies: This patch is validated using windows and linux initiator to make
+sure, it doesn't break anything.
 
 Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |   26 ++++++++++++++++++++++++--
+ 1 files changed, 24 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index da73115..522fbaa 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1358,7 +1358,11 @@ int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 			do {
- 				cpu = fcoe_select_cpu(cpu);
- 			} while (!cpu_online(cpu));
--		}
-+		} else  if ((fh->fh_type == FC_TYPE_FCP) &&
-+			    (ntohs(fh->fh_rx_id) != FC_XID_UNKNOWN)) {
-+			cpu = ntohs(fh->fh_rx_id) & fc_cpu_mask;
-+		} else
-+			cpu = smp_processor_id();
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 3b8a645..f5a0665 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -965,8 +965,30 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
+ 		sp = &ep->seq;
+ 		if (sp->id != fh->fh_seq_id) {
+ 			atomic_inc(&mp->stats.seq_not_found);
+-			reject = FC_RJT_SEQ_ID;	/* sequence/exch should exist */
+-			goto rel;
++			if (f_ctl & FC_FC_END_SEQ) {
++				/*
++				 * Update sequence_id based on incoming last
++				 * frame of sequence exchange. This is needed
++				 * for FCoE target where DDP has been used
++				 * on target where, stack is indicated only
++				 * about last frame's (payload _header) header.
++				 * Whereas "seq_id" which is part of
++				 * frame_header is allocated by initiator
++				 * which is totally different from "seq_id"
++				 * allocated when XFER_RDY was sent by target.
++				 * To avoid false -ve which results into not
++				 * sending RSP, hence write request on other
++				 * end never finishes.
++				 */
++				spin_lock_bh(&ep->ex_lock);
++				sp->ssb_stat |= SSB_ST_RESP;
++				sp->id = fh->fh_seq_id;
++				spin_unlock_bh(&ep->ex_lock);
++			} else {
++				/* sequence/exch should exist */
++				reject = FC_RJT_SEQ_ID;
++				goto rel;
++			}
+ 		}
  	}
- 	fps = &per_cpu(fcoe_percpu, cpu);
- 	spin_lock_bh(&fps->fcoe_rx_list.lock);
+ 	WARN_ON(ep != fc_seq_exch(sp));
 
