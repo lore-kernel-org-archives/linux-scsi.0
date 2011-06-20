@@ -1,222 +1,152 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v2 12/12] fcoe: Rearrange fcoe port and NPIV port cleanup
-Date: Mon, 20 Jun 2011 16:59:51 -0700
-Message-ID: <20110620235951.1777.57649.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 09/12] tcm_fc: Fix ft_send_tm-bug and drop
+ ft_get_lun_for_cmd usage
+Date: Mon, 20 Jun 2011 16:59:36 -0700
+Message-ID: <20110620235936.1777.869.stgit@localhost6.localdomain6>
 References: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:18717 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:40424 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756438Ab1FTX7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:59:52 -0400
+	id S1756445Ab1FTX7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:59:53 -0400
 In-Reply-To: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Neerav Parikh <Neerav.Parikh@intel.com>
+Cc: Kiran Patil <kiran.patil@intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Neerav Parikh <neerav.parikh@intel.com>
+From: Kiran Patil <kiran.patil@intel.com>
 
-When NPIV port destroy handler is called it does not do all the cleanup
-required for the given NPIV port. This was happening as some of the
-lport cleanup moved to fcoe_interface_cleanup() routine, which is not
-called as part of the vport delete process.
+This patch fixes a bug in ft_send_tm() that was incorrectly calling
+ft_get_lun_for_cmd() -> transport_get_lun_for_cmd(), instead of using
+transport_get_lun_for_tmr() for the proper struct se_lun lookup.
 
-This patch rearranges the sequence in which the fcoe_if_destory() and
-fcoe_interface_cleanup() functions are being called from various places
-in the code. It now matches the sequence they are constructed during the
-create process for both N_Port as well as NPIV port.
+It also drops the now unnecessary ft_get_lun_for_cmd() code, and uses
+scsilun_to_int() directly ahead of direct transport_get_lun_for_cmd()
+and transport_get_lun_for_tmr usage().
 
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
-Signed-off-by: Neerav Parikh <Neerav.Parikh@intel.com>
+Patch was reworked due to NULL pointer access in function transport_get_lun_for_tmr(),
+(NOTE: transport_get_lun_for_tmr access tmr_req pointer which caused
+panic due to NULL pointer access) This patch fixes the issue by re-arranging
+the codepath where function "transport_get_lun_for_tmr" is called
+after tmr request is allocated and made it available as part of se_cmd.
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   86 ++++++++++++++++++++++++++--------------------
- 1 files changed, 49 insertions(+), 37 deletions(-)
+ drivers/target/tcm_fc/tcm_fc.h  |    2 +
+ drivers/target/tcm_fc/tfc_cmd.c |   62 ++++++++++++++++++++-------------------
+ 2 files changed, 32 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 522fbaa..204fa8d 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -431,21 +431,6 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	struct fcoe_ctlr *fip = &fcoe->ctlr;
- 	u8 flogi_maddr[ETH_ALEN];
- 	const struct net_device_ops *ops;
--	struct fcoe_port *port = lport_priv(fcoe->ctlr.lp);
--
--	FCOE_NETDEV_DBG(netdev, "Destroying interface\n");
--
--	/* Logout of the fabric */
--	fc_fabric_logoff(fcoe->ctlr.lp);
--
--	/* Cleanup the fc_lport */
--	fc_lport_destroy(fcoe->ctlr.lp);
--
--	/* Stop the transmit retry timer */
--	del_timer_sync(&port->timer);
--
--	/* Free existing transmit skbs */
--	fcoe_clean_pending_queue(fcoe->ctlr.lp);
- 
- 	/*
- 	 * Don't listen for Ethernet packets anymore.
-@@ -468,9 +453,6 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	} else
- 		dev_mc_del(netdev, FIP_ALL_ENODE_MACS);
- 
--	if (!is_zero_ether_addr(port->data_src_addr))
--		dev_uc_del(netdev, port->data_src_addr);
--
- 	/* Tell the LLD we are done w/ FCoE */
- 	ops = netdev->netdev_ops;
- 	if (ops->ndo_fcoe_disable) {
-@@ -478,6 +460,8 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 			FCOE_NETDEV_DBG(netdev, "Failed to disable FCoE"
- 					" specific feature for LLD.\n");
- 	}
-+
-+	/* Release the self-reference taken during fcoe_interface_create() */
- 	fcoe_interface_put(fcoe);
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index defff32..7b82f1b 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -144,7 +144,7 @@ enum ft_cmd_state {
+  */
+ struct ft_cmd {
+ 	enum ft_cmd_state state;
+-	u16 lun;			/* LUN from request */
++	u32 lun;                        /* LUN from request */
+ 	struct ft_sess *sess;		/* session held for cmd */
+ 	struct fc_seq *seq;		/* sequence in exchange mgr */
+ 	struct se_cmd se_cmd;		/* Local TCM I/O descriptor */
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 1625b48..cdbcb6c 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -94,29 +94,6 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
+ 		16, 4, cmd->cdb, MAX_COMMAND_SIZE, 0);
  }
  
-@@ -861,6 +845,32 @@ skip_oem:
-  */
- static void fcoe_if_destroy(struct fc_lport *lport)
+-/*
+- * Get LUN from CDB.
+- */
+-static int ft_get_lun_for_cmd(struct ft_cmd *cmd, u8 *lunp)
+-{
+-	u64 lun;
+-
+-	lun = lunp[1];
+-	switch (lunp[0] >> 6) {
+-	case 0:
+-		break;
+-	case 1:
+-		lun |= (lunp[0] & 0x3f) << 8;
+-		break;
+-	default:
+-		return -1;
+-	}
+-	if (lun >= TRANSPORT_MAX_LUNS_PER_TPG)
+-		return -1;
+-	cmd->lun = lun;
+-	return transport_get_lun_for_cmd(&cmd->se_cmd, NULL, lun);
+-}
+-
+ static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
  {
-+	struct fcoe_port *port = lport_priv(lport);
-+	struct fcoe_interface *fcoe = port->priv;
-+	struct net_device *netdev = fcoe->netdev;
-+
-+	FCOE_NETDEV_DBG(netdev, "Destroying interface\n");
-+
-+	/* Logout of the fabric */
-+	fc_fabric_logoff(lport);
-+
-+	/* Cleanup the fc_lport */
-+	fc_lport_destroy(lport);
-+
-+	/* Stop the transmit retry timer */
-+	del_timer_sync(&port->timer);
-+
-+	/* Free existing transmit skbs */
-+	fcoe_clean_pending_queue(lport);
-+
-+	rtnl_lock();
-+	if (!is_zero_ether_addr(port->data_src_addr))
-+		dev_uc_del(netdev, port->data_src_addr);
-+	rtnl_unlock();
-+
-+	/* Release reference held in fcoe_if_create() */
-+	fcoe_interface_put(fcoe);
-+
- 	/* Free queued packets for the per-CPU receive threads */
- 	fcoe_percpu_clean(lport);
- 
-@@ -1813,7 +1823,6 @@ static int fcoe_device_notification(struct notifier_block *notifier,
- 	case NETDEV_UNREGISTER:
- 		list_del(&fcoe->list);
- 		port = lport_priv(fcoe->ctlr.lp);
--		fcoe_interface_cleanup(fcoe);
- 		queue_work(fcoe_wq, &port->destroy_work);
- 		goto out;
+ 	struct se_queue_obj *qobj;
+@@ -426,13 +403,6 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ 	switch (fcp->fc_tm_flags) {
+ 	case FCP_TMF_LUN_RESET:
+ 		tm_func = TMR_LUN_RESET;
+-		if (ft_get_lun_for_cmd(cmd, fcp->fc_lun) < 0) {
+-			ft_dump_cmd(cmd, __func__);
+-			transport_send_check_condition_and_sense(&cmd->se_cmd,
+-				cmd->se_cmd.scsi_sense_reason, 0);
+-			ft_sess_put(cmd->sess);
+-			return;
+-		}
  		break;
-@@ -1907,22 +1916,22 @@ static int fcoe_destroy(struct net_device *netdev)
- {
- 	struct fcoe_interface *fcoe;
- 	struct fc_lport *lport;
-+	struct fcoe_port *port;
- 	int rc = 0;
- 
- 	mutex_lock(&fcoe_config_mutex);
- 	rtnl_lock();
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
- 	if (!fcoe) {
--		rtnl_unlock();
- 		rc = -ENODEV;
- 		goto out_nodev;
+ 	case FCP_TMF_TGT_RESET:
+ 		tm_func = TMR_TARGET_WARM_RESET;
+@@ -464,6 +434,35 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ 		return;
  	}
- 	lport = fcoe->ctlr.lp;
-+	port = lport_priv(lport);
- 	list_del(&fcoe->list);
--	fcoe_interface_cleanup(fcoe);
--	rtnl_unlock();
--	fcoe_if_destroy(lport);
-+	queue_work(fcoe_wq, &port->destroy_work);
- out_nodev:
-+	rtnl_unlock();
- 	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
- }
-@@ -1934,10 +1943,25 @@ out_nodev:
- static void fcoe_destroy_work(struct work_struct *work)
- {
- 	struct fcoe_port *port;
-+	struct fcoe_interface *fcoe;
-+	int npiv = 0;
- 
- 	port = container_of(work, struct fcoe_port, destroy_work);
- 	mutex_lock(&fcoe_config_mutex);
+ 	cmd->se_cmd.se_tmr_req = tmr;
 +
-+	/* set if this is an NPIV port */
-+	npiv = port->lport->vport ? 1 : 0;
-+
-+	fcoe = port->priv;
- 	fcoe_if_destroy(port->lport);
-+
-+	/* Do not tear down the fcoe interface for NPIV port */
-+	if (!npiv) {
-+		rtnl_lock();
-+		fcoe_interface_cleanup(fcoe);
-+		rtnl_unlock();
++	switch (fcp->fc_tm_flags) {
++	case FCP_TMF_LUN_RESET:
++		cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
++		if (transport_get_lun_for_tmr(&cmd->se_cmd, cmd->lun) < 0) {
++			/*
++			 * Make sure to clean up newly allocated TMR request
++			 * since "unable to  handle TMR request because failed
++			 * to get to LUN"
++			 */
++			FT_TM_DBG("Failed to get LUN for TMR func %d, "
++				  "se_cmd %p, unpacked_lun %d\n",
++				  tm_func, &cmd->se_cmd, cmd->lun);
++			transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
++			ft_dump_cmd(cmd, __func__);
++			transport_send_check_condition_and_sense(&cmd->se_cmd,
++				cmd->se_cmd.scsi_sense_reason, 0);
++			ft_sess_put(cmd->sess);
++			return;
++		}
++		break;
++	case FCP_TMF_TGT_RESET:
++	case FCP_TMF_CLR_TASK_SET:
++	case FCP_TMF_ABT_TASK_SET:
++	case FCP_TMF_CLR_ACA:
++		break;
++	default:
++		return;
 +	}
-+
- 	mutex_unlock(&fcoe_config_mutex);
+ 	transport_generic_handle_tmr(&cmd->se_cmd);
  }
  
-@@ -1966,7 +1990,7 @@ static bool fcoe_match(struct net_device *netdev)
-  */
- static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- {
--	int rc;
-+	int rc = 0;
- 	struct fcoe_interface *fcoe;
- 	struct fc_lport *lport;
+@@ -636,7 +635,8 @@ static void ft_send_cmd(struct ft_cmd *cmd)
  
-@@ -1991,7 +2015,7 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 		       netdev->name);
- 		rc = -EIO;
- 		fcoe_interface_cleanup(fcoe);
--		goto out_free;
-+		goto out_nodev;
- 	}
+ 	fc_seq_exch(cmd->seq)->lp->tt.seq_set_resp(cmd->seq, ft_recv_seq, cmd);
  
- 	/* Make this the "master" N_Port */
-@@ -2006,17 +2030,6 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 	if (!fcoe_link_ok(lport))
- 		fcoe_ctlr_link_up(&fcoe->ctlr);
- 
--	/*
--	 * Release from init in fcoe_interface_create(), on success lport
--	 * should be holding a reference taken in fcoe_if_create().
--	 */
--	fcoe_interface_put(fcoe);
--	rtnl_unlock();
--	mutex_unlock(&fcoe_config_mutex);
--
--	return 0;
--out_free:
--	fcoe_interface_put(fcoe);
- out_nodev:
- 	rtnl_unlock();
- 	mutex_unlock(&fcoe_config_mutex);
-@@ -2298,7 +2311,6 @@ static void __exit fcoe_exit(void)
- 	list_for_each_entry_safe(fcoe, tmp, &fcoe_hostlist, list) {
- 		list_del(&fcoe->list);
- 		port = lport_priv(fcoe->ctlr.lp);
--		fcoe_interface_cleanup(fcoe);
- 		queue_work(fcoe_wq, &port->destroy_work);
- 	}
- 	rtnl_unlock();
+-	ret = ft_get_lun_for_cmd(cmd, fcp->fc_lun);
++	cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
++	ret = transport_get_lun_for_cmd(&cmd->se_cmd, NULL, cmd->lun);
+ 	if (ret < 0) {
+ 		ft_dump_cmd(cmd, __func__);
+ 		transport_send_check_condition_and_sense(&cmd->se_cmd,
 
