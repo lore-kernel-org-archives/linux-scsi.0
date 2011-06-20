@@ -1,54 +1,67 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/2] [SCSI] ibmvscsi: Fix SCSI scanning
-Date: Mon, 20 Jun 2011 14:10:24 -0500
-Message-ID: <4DFF9B20.8040100@linux.vnet.ibm.com>
-References: <201106191348.40759.bvanassche@acm.org> <20110620114058.GA7372@infradead.org> <BANLkTim=EffOgBK=xrMfva-zOdX4fz-2Lg@mail.gmail.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/12] libfc, libfcoe and fcoe updates for scsi-misc
+Date: Mon, 20 Jun 2011 16:30:07 -0700
+Message-ID: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e7.ny.us.ibm.com ([32.97.182.137]:52714 "EHLO e7.ny.us.ibm.com"
+Received: from mga01.intel.com ([192.55.52.88]:54395 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752726Ab1FTTK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 15:10:29 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p5KIk7dB023501
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2011 14:46:07 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p5KJASwL130846
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2011 15:10:28 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p5KFAEwO014217
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Jun 2011 12:10:16 -0300
-In-Reply-To: <BANLkTim=EffOgBK=xrMfva-zOdX4fz-2Lg@mail.gmail.com>
+	id S1755285Ab1FTXaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:30:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi@vger.kernel.org
 
-On 06/20/2011 12:58 PM, Bart Van Assche wrote:
-> On Mon, Jun 20, 2011 at 1:40 PM, Christoph Hellwig <hch@infradead.org> wrote:
->> On Sun, Jun 19, 2011 at 01:48:40PM +0200, Bart Van Assche wrote:
->>> Avoid that SCSI scanning triggers creation of targets with a non-zero
->>> channel number.
->>
->> Same comment as for the SRP one applies here as well.
-> 
-> If no kernel module parameters have been specified, max_channel is set
-> to three in the ibmvscsi driver. It's not clear to me why.
+The following series contains target offload patches and
+a few bug fixes. The main change that this series presents
+is target mode offload support. These are the same offloads
+that the initiator uses, so there is no new hardware support.
+There is a new hook in the netdev_ops structure to setup
+a DDP context for an offloadable exchange. If ndo_fcoe_ddp_target
+is present on the netdevice the fcoe stack will make use of
+it. This interfce was merged at the v3.0 merge window, so
+all depedencies should already be complete and in-kernel.
 
-It could be set as high as 16 in order to support the full 3 bits worth
-of bus values as defined in Logical Unit Addressing model in SAM, but
-3 is generally sufficient for most users as it allows for 64 targets *
-3 buses = 192 virtual scsi targets.
+Aside from this feature there are a few fixes to tcm_fc as
+well as libfc and fcoe.
 
-Thanks,
+All patches were tested against scsi-misc on the day of
+this posting.
 
-Brian
+---
+
+Kiran Patil (8):
+      tcm_fc: Fix warning in file tfc_io
+      libfc: Enhancement to RPORT state machine applicable only for VN2VN mode
+      fcoe: Unable to select the exchangeID from offload pool for storage targets
+      fcoe: Round-robin based selection of CPU for post-processing of incoming commands
+      fcoe: Amends previous patch, Round-robin based selection of CPU for post processing of incoming request for FCoE target
+      libfc:Fix for exchange/seq loopup failure when FCoE stack is used as target and connected to windows initaitor
+      tcm_fc: Fix ft_send_tm-bug and drop ft_get_lun_for_cmd usage
+      tcm_fc: Fixing reference counting problem which was causing ft_sess to be deleted.
+
+Neerav Parikh (1):
+      fcoe: Rearrange fcoe port and NPIV port cleanup
+
+Vasu Dev (1):
+      libfc: post reset event on lport reset
+
+Yi Zou (2):
+      libfc, tcm_fc: add ddp_targ() to libfc function template to supprot FCoE DDP in target mode
+      fcoe: support ndo_fcoe_ddp_target() for DDP in FCoE targe
+
+
+ drivers/scsi/fcoe/fcoe.c        |  174 ++++++++++++++++++++++++++++++---------
+ drivers/scsi/libfc/fc_exch.c    |   26 +++++-
+ drivers/scsi/libfc/fc_lport.c   |    2 
+ drivers/scsi/libfc/fc_rport.c   |   14 +++
+ drivers/target/tcm_fc/tcm_fc.h  |    2 
+ drivers/target/tcm_fc/tfc_cmd.c |   88 +++++++++++---------
+ drivers/target/tcm_fc/tfc_io.c  |    2 
+ include/scsi/libfc.h            |    8 ++
+ 8 files changed, 233 insertions(+), 83 deletions(-)
 
 -- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
-
-
+Thanks, //Rob
