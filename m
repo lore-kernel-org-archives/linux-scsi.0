@@ -1,28 +1,29 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH RESEND 1/3] bsg: fix bsg_poll() to return POLLOUT properly
-Date: Mon, 20 Jun 2011 13:25:31 +0200
-Message-ID: <4DFF2E2B.3090405@kernel.dk>
-References: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] IB/srp: Fix SCSI scanning
+Date: Mon, 20 Jun 2011 07:37:36 -0400
+Message-ID: <20110620113736.GA406@infradead.org>
+References: <201106191348.24122.bvanassche@acm.org>
+ <1308504469.14467.5.camel@obelisk.thedillows.org>
+ <BANLkTi=5nBDB-SGd0U0UZDgR4gKBDqaj0w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:37720 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751487Ab1FTLZd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 07:25:33 -0400
-In-Reply-To: <1308277029-2193-1-git-send-email-namhyung@gmail.com>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:46898
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751669Ab1FTLhq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 07:37:46 -0400
+Content-Disposition: inline
+In-Reply-To: <BANLkTi=5nBDB-SGd0U0UZDgR4gKBDqaj0w@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Namhyung Kim <namhyung@gmail.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: David Dillow <dillowda@ornl.gov>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Roland Dreier <roland@purestorage.com>, Brian King <brking@linux.vnet.ibm.com>
 
-On 2011-06-17 04:17, Namhyung Kim wrote:
-> POLLOUT should be returned only if bd->queued_cmds < bd->max_queue
-> so that bsg_alloc_command() can proceed.
+We really shouldn't require workaround for this in every SCSI driver.
 
-I picked up 1-3 and added to for-3.1/drivers
-
--- 
-Jens Axboe
+scsi_scan_host_selected already makes sure never to scan above
+shost->max_channel.  Could it be that you don't have that one set
+properly in the srp driver?  It not we'll need to debug why it happens
+instead of adding hacks like this.
 
