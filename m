@@ -1,18 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v2 03/12] libfc,
- tcm_fc: add ddp_targ() to libfc function template to supprot FCoE DDP
- in target mode
-Date: Mon, 20 Jun 2011 16:59:05 -0700
-Message-ID: <20110620235904.1777.55336.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 04/12] fcoe: support ndo_fcoe_ddp_target() for DDP in FCoE
+ targe
+Date: Mon, 20 Jun 2011 16:59:10 -0700
+Message-ID: <20110620235910.1777.64207.stgit@localhost6.localdomain6>
 References: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:11071 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:34685 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756351Ab1FTX7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:59:07 -0400
+	id S1756351Ab1FTX7K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:59:10 -0400
 In-Reply-To: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,53 +20,64 @@ Cc: Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>
 
 From: Yi Zou <yi.zou@intel.com>
 
-The fcoe driver can implement ddp_targ() similarly to ddp_setup() when fcoe
-stack works with existing target frame, e.g., tcm, where the ddp_targ() would
-eventually point to the underlying hardware driver's implementation of
-ndo_fcoe_ddp_targ() through net_device_ops. This new API sets up DDP context
-for target appropriately by setting required bits for DDP context.
+Add ddp_target() support to the Open-FCoE sw fcoe hba driver (fcoe.ko).
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/target/tcm_fc/tfc_cmd.c |    5 +++--
- include/scsi/libfc.h            |    8 ++++++++
- 2 files changed, 11 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   26 +++++++++++++++++++++++++-
+ 1 files changed, 25 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index c056a11..1625b48 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -289,8 +289,9 @@ int ft_write_pending(struct se_cmd *se_cmd)
- 				cmd->sg_cnt =
- 					T_TASK(se_cmd)->t_tasks_sg_chained_no;
- 			}
--			if (cmd->sg && lport->tt.ddp_setup(lport, ep->xid,
--						    cmd->sg, cmd->sg_cnt))
-+			if (cmd->sg && lport->tt.ddp_target(lport, ep->xid,
-+							    cmd->sg,
-+							    cmd->sg_cnt))
- 				cmd->was_ddp_setup = 1;
- 		}
- 	}
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index a3cbda4..7d96829 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -511,6 +511,14 @@ struct libfc_function_template {
- 	 */
- 	int (*ddp_done)(struct fc_lport *, u16);
- 	/*
-+	 * Sets up the DDP context for a given exchange id on the given
-+	 * scatterlist if LLD supports DDP for FCoE target.
-+	 *
-+	 * STATUS: OPTIONAL
-+	 */
-+	int (*ddp_target)(struct fc_lport *, u16, struct scatterlist *,
-+			  unsigned int);
-+	/*
- 	 * Allow LLD to fill its own Link Error Status Block
- 	 *
- 	 * STATUS: OPTIONAL
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 155d7b9..f76a321 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -99,7 +99,8 @@ static void fcoe_destroy_work(struct work_struct *);
+ static int fcoe_ddp_setup(struct fc_lport *, u16, struct scatterlist *,
+ 			  unsigned int);
+ static int fcoe_ddp_done(struct fc_lport *, u16);
+-
++static int fcoe_ddp_target(struct fc_lport *, u16, struct scatterlist *,
++			   unsigned int);
+ static int fcoe_cpu_callback(struct notifier_block *, unsigned long, void *);
+ 
+ static bool fcoe_match(struct net_device *netdev);
+@@ -143,6 +144,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ 	.frame_send = fcoe_xmit,
+ 	.ddp_setup = fcoe_ddp_setup,
+ 	.ddp_done = fcoe_ddp_done,
++	.ddp_target = fcoe_ddp_target,
+ 	.elsct_send = fcoe_elsct_send,
+ 	.get_lesb = fcoe_get_lesb,
+ 	.lport_set_port_id = fcoe_set_port_id,
+@@ -887,6 +889,28 @@ static int fcoe_ddp_setup(struct fc_lport *lport, u16 xid,
+ }
+ 
+ /**
++ * fcoe_ddp_target() - Call a LLD's ddp_target through the net device
++ * @lport: The local port to setup DDP for
++ * @xid:   The exchange ID for this DDP transfer
++ * @sgl:   The scatterlist describing this transfer
++ * @sgc:   The number of sg items
++ *
++ * Returns: 0 if the DDP context was not configured
++ */
++static int fcoe_ddp_target(struct fc_lport *lport, u16 xid,
++			   struct scatterlist *sgl, unsigned int sgc)
++{
++	struct net_device *netdev = fcoe_netdev(lport);
++
++	if (netdev->netdev_ops->ndo_fcoe_ddp_target)
++		return netdev->netdev_ops->ndo_fcoe_ddp_target(netdev, xid,
++							       sgl, sgc);
++
++	return 0;
++}
++
++
++/**
+  * fcoe_ddp_done() - Call a LLD's ddp_done through the net device
+  * @lport: The local port to complete DDP on
+  * @xid:   The exchange ID for this DDP transfer
 
