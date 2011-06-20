@@ -1,45 +1,73 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v2 01/12] tcm_fc: Fix warning in file tfc_io
-Date: Mon, 20 Jun 2011 16:58:53 -0700
-Message-ID: <20110620235853.1777.39728.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 03/12] libfc,
+ tcm_fc: add ddp_targ() to libfc function template to supprot FCoE DDP
+ in target mode
+Date: Mon, 20 Jun 2011 16:59:05 -0700
+Message-ID: <20110620235904.1777.55336.stgit@localhost6.localdomain6>
 References: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:39660 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:11071 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756135Ab1FTX6y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:58:54 -0400
+	id S1756351Ab1FTX7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:59:07 -0400
 In-Reply-To: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Kiran Patil <kiran.patil@intel.com>
+Cc: Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>
 
-From: Kiran Patil <kiran.patil@intel.com>
+From: Yi Zou <yi.zou@intel.com>
 
-Printk causing warning, trying to print size_t as %x.
+The fcoe driver can implement ddp_targ() similarly to ddp_setup() when fcoe
+stack works with existing target frame, e.g., tcm, where the ddp_targ() would
+eventually point to the underlying hardware driver's implementation of
+ndo_fcoe_ddp_targ() through net_device_ops. This new API sets up DDP context
+for target appropriately by setting required bits for DDP context.
 
-Fix the printk statement, to print it as %zd instead of explictly casting to (unsigned int)
-
+Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/target/tcm_fc/tfc_io.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/target/tcm_fc/tfc_cmd.c |    5 +++--
+ include/scsi/libfc.h            |    8 ++++++++
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 4c3c0ef..702d4b8 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -203,7 +203,7 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
- 			/* XXX For now, initiator will retry */
- 			if (printk_ratelimit())
- 				printk(KERN_ERR "%s: Failed to send frame %p, "
--						"xid <0x%x>, remaining <0x%x>, "
-+						"xid <0x%x>, remaining <%zd>, "
- 						"lso_max <0x%x>\n",
- 						__func__, fp, ep->xid,
- 						remaining, lport->lso_max);
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index c056a11..1625b48 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -289,8 +289,9 @@ int ft_write_pending(struct se_cmd *se_cmd)
+ 				cmd->sg_cnt =
+ 					T_TASK(se_cmd)->t_tasks_sg_chained_no;
+ 			}
+-			if (cmd->sg && lport->tt.ddp_setup(lport, ep->xid,
+-						    cmd->sg, cmd->sg_cnt))
++			if (cmd->sg && lport->tt.ddp_target(lport, ep->xid,
++							    cmd->sg,
++							    cmd->sg_cnt))
+ 				cmd->was_ddp_setup = 1;
+ 		}
+ 	}
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index a3cbda4..7d96829 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -511,6 +511,14 @@ struct libfc_function_template {
+ 	 */
+ 	int (*ddp_done)(struct fc_lport *, u16);
+ 	/*
++	 * Sets up the DDP context for a given exchange id on the given
++	 * scatterlist if LLD supports DDP for FCoE target.
++	 *
++	 * STATUS: OPTIONAL
++	 */
++	int (*ddp_target)(struct fc_lport *, u16, struct scatterlist *,
++			  unsigned int);
++	/*
+ 	 * Allow LLD to fill its own Link Error Status Block
+ 	 *
+ 	 * STATUS: OPTIONAL
 
