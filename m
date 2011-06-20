@@ -1,82 +1,76 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 08/12] libfc:Fix for exchange/seq loopup failure when FCoE
- stack is used as target and connected to windows initaitor
-Date: Mon, 20 Jun 2011 16:30:49 -0700
-Message-ID: <20110620233049.31635.64178.stgit@localhost6.localdomain6>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: [PATCH 00/12] libfc, libfcoe and fcoe updates for scsi-misc
+Date: Mon, 20 Jun 2011 16:55:45 -0700
+Message-ID: <323EB47A1D53E741A39C883FA25C5E220AD61884@orsmsx511.amr.corp.intel.com>
 References: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:56783 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:7906 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755994Ab1FTXau (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:30:50 -0400
+	id S1756135Ab1FTXzq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Jun 2011 19:55:46 -0400
 In-Reply-To: <20110620233007.31635.60206.stgit@localhost6.localdomain6>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kiran Patil <kiran.patil@intel.com>
+To: "Love, Robert W" <robert.w.love@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Kiran Patil <kiran.patil@intel.com>
-
-Problem: Linux based SW target (TCM) connected to windows initiator was unable to satisfy
-write request of size > 2K.
-
-Fix: Existing linux implememtation of FCoE stack is expecting sequence number to match w.r.t
-incoming framme. When DDP is used on target in response to write request from initiator, SW
-stack is notified only when last data frame arrives and only the pakcket header of last data
-frame is posted to NetRx queue of storage. When that last packet was processed in libfc:Exchange
-layer, implementation was expecting sequence number to match, but in this case sequence number
-which is embedded in FC Header is assigned by windows initaitor, hence due to sequence number mismatch
-post-processing which shall result into sending RSP is not done. Enhanced the code to
-utilize the sequence number of incoming last frame and process the packet so that, it
-will eventually complete the write request by sending write response (RSP) GOOD.
-
-Notes/Dependencies: This patch is validated using windows and linux initiator to make
-sure, it doesn't break anything.
-
-Signed-off-by: Kiran Patil <kiran.patil@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/libfc/fc_exch.c |   26 ++++++++++++++++++++++++--
- 1 files changed, 24 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 3b8a645..f5a0665 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -965,8 +965,30 @@ static enum fc_pf_rjt_reason fc_seq_lookup_recip(struct fc_lport *lport,
- 		sp = &ep->seq;
- 		if (sp->id != fh->fh_seq_id) {
- 			atomic_inc(&mp->stats.seq_not_found);
--			reject = FC_RJT_SEQ_ID;	/* sequence/exch should exist */
--			goto rel;
-+			if (f_ctl & FC_FC_END_SEQ) {
-+				/*
-+				 * Update sequence_id based on incoming last
-+				 * frame of sequence exchange. This is needed
-+				 * for FCoE target where DDP has been used
-+				 * on target where, stack is indicated only
-+				 * about last frame's (payload _header) header.
-+				 * Whereas "seq_id" which is part of
-+				 * frame_header is allocated by initiator
-+				 * which is totally different from "seq_id"
-+				 * allocated when XFER_RDY was sent by target.
-+				 * To avoid false -ve which results into not
-+				 * sending RSP, hence write request on other
-+				 * end never finishes.
-+				 */
-+				spin_lock_bh(&ep->ex_lock);
-+				sp->ssb_stat |= SSB_ST_RESP;
-+				sp->id = fh->fh_seq_id;
-+				spin_unlock_bh(&ep->ex_lock);
-+			} else {
-+				/* sequence/exch should exist */
-+				reject = FC_RJT_SEQ_ID;
-+				goto rel;
-+			}
- 		}
- 	}
- 	WARN_ON(ep != fc_seq_exch(sp));
-
+Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogbGludXgtc2NzaS1vd25lckB2Z2Vy
+Lmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1zY3NpLQ0KPm93bmVyQHZnZXIua2VybmVsLm9yZ10g
+T24gQmVoYWxmIE9mIFJvYmVydCBMb3ZlDQo+U2VudDogTW9uZGF5LCBKdW5lIDIwLCAyMDExIDQ6
+MzAgUE0NCj5UbzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj5TdWJqZWN0OiBbUEFUQ0gg
+MDAvMTJdIGxpYmZjLCBsaWJmY29lIGFuZCBmY29lIHVwZGF0ZXMgZm9yIHNjc2ktbWlzYw0KPg0K
+PlRoZSBmb2xsb3dpbmcgc2VyaWVzIGNvbnRhaW5zIHRhcmdldCBvZmZsb2FkIHBhdGNoZXMgYW5k
+DQo+YSBmZXcgYnVnIGZpeGVzLiBUaGUgbWFpbiBjaGFuZ2UgdGhhdCB0aGlzIHNlcmllcyBwcmVz
+ZW50cw0KPmlzIHRhcmdldCBtb2RlIG9mZmxvYWQgc3VwcG9ydC4gVGhlc2UgYXJlIHRoZSBzYW1l
+IG9mZmxvYWRzDQo+dGhhdCB0aGUgaW5pdGlhdG9yIHVzZXMsIHNvIHRoZXJlIGlzIG5vIG5ldyBo
+YXJkd2FyZSBzdXBwb3J0Lg0KPlRoZXJlIGlzIGEgbmV3IGhvb2sgaW4gdGhlIG5ldGRldl9vcHMg
+c3RydWN0dXJlIHRvIHNldHVwDQo+YSBERFAgY29udGV4dCBmb3IgYW4gb2ZmbG9hZGFibGUgZXhj
+aGFuZ2UuIElmIG5kb19mY29lX2RkcF90YXJnZXQNCj5pcyBwcmVzZW50IG9uIHRoZSBuZXRkZXZp
+Y2UgdGhlIGZjb2Ugc3RhY2sgd2lsbCBtYWtlIHVzZSBvZg0KPml0LiBUaGlzIGludGVyZmNlIHdh
+cyBtZXJnZWQgYXQgdGhlIHYzLjAgbWVyZ2Ugd2luZG93LCBzbw0KPmFsbCBkZXBlZGVuY2llcyBz
+aG91bGQgYWxyZWFkeSBiZSBjb21wbGV0ZSBhbmQgaW4ta2VybmVsLg0KPg0KPkFzaWRlIGZyb20g
+dGhpcyBmZWF0dXJlIHRoZXJlIGFyZSBhIGZldyBmaXhlcyB0byB0Y21fZmMgYXMNCj53ZWxsIGFz
+IGxpYmZjIGFuZCBmY29lLg0KPg0KPkFsbCBwYXRjaGVzIHdlcmUgdGVzdGVkIGFnYWluc3Qgc2Nz
+aS1taXNjIG9uIHRoZSBkYXkgb2YNCj50aGlzIHBvc3RpbmcuDQo+DQo+LS0tDQo+DQo+S2lyYW4g
+UGF0aWwgKDgpOg0KPiAgICAgIHRjbV9mYzogRml4IHdhcm5pbmcgaW4gZmlsZSB0ZmNfaW8NCj4g
+ICAgICBsaWJmYzogRW5oYW5jZW1lbnQgdG8gUlBPUlQgc3RhdGUgbWFjaGluZSBhcHBsaWNhYmxl
+IG9ubHkgZm9yDQo+Vk4yVk4gbW9kZQ0KPiAgICAgIGZjb2U6IFVuYWJsZSB0byBzZWxlY3QgdGhl
+IGV4Y2hhbmdlSUQgZnJvbSBvZmZsb2FkIHBvb2wgZm9yDQo+c3RvcmFnZSB0YXJnZXRzDQo+ICAg
+ICAgZmNvZTogUm91bmQtcm9iaW4gYmFzZWQgc2VsZWN0aW9uIG9mIENQVSBmb3IgcG9zdC1wcm9j
+ZXNzaW5nIG9mDQo+aW5jb21pbmcgY29tbWFuZHMNCj4gICAgICBmY29lOiBBbWVuZHMgcHJldmlv
+dXMgcGF0Y2gsIFJvdW5kLXJvYmluIGJhc2VkIHNlbGVjdGlvbiBvZiBDUFUNCj5mb3IgcG9zdCBw
+cm9jZXNzaW5nIG9mIGluY29taW5nIHJlcXVlc3QgZm9yIEZDb0UgdGFyZ2V0DQo+ICAgICAgbGli
+ZmM6Rml4IGZvciBleGNoYW5nZS9zZXEgbG9vcHVwIGZhaWx1cmUgd2hlbiBGQ29FIHN0YWNrIGlz
+IHVzZWQNCj5hcyB0YXJnZXQgYW5kIGNvbm5lY3RlZCB0byB3aW5kb3dzIGluaXRhaXRvcg0KPiAg
+ICAgIHRjbV9mYzogRml4IGZ0X3NlbmRfdG0tYnVnIGFuZCBkcm9wIGZ0X2dldF9sdW5fZm9yX2Nt
+ZCB1c2FnZQ0KPiAgICAgIHRjbV9mYzogRml4aW5nIHJlZmVyZW5jZSBjb3VudGluZyBwcm9ibGVt
+IHdoaWNoIHdhcyBjYXVzaW5nDQo+ZnRfc2VzcyB0byBiZSBkZWxldGVkLg0KPg0KPk5lZXJhdiBQ
+YXJpa2ggKDEpOg0KPiAgICAgIGZjb2U6IFJlYXJyYW5nZSBmY29lIHBvcnQgYW5kIE5QSVYgcG9y
+dCBjbGVhbnVwDQo+DQo+VmFzdSBEZXYgKDEpOg0KPiAgICAgIGxpYmZjOiBwb3N0IHJlc2V0IGV2
+ZW50IG9uIGxwb3J0IHJlc2V0DQo+DQo+WWkgWm91ICgyKToNCj4gICAgICBsaWJmYywgdGNtX2Zj
+OiBhZGQgZGRwX3RhcmcoKSB0byBsaWJmYyBmdW5jdGlvbiB0ZW1wbGF0ZSB0bw0KPnN1cHByb3Qg
+RkNvRSBERFAgaW4gdGFyZ2V0IG1vZGUNCj4gICAgICBmY29lOiBzdXBwb3J0IG5kb19mY29lX2Rk
+cF90YXJnZXQoKSBmb3IgRERQIGluIEZDb0UgdGFyZ2UNCj4NCj4NCj4gZHJpdmVycy9zY3NpL2Zj
+b2UvZmNvZS5jICAgICAgICB8ICAxNzQgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0N
+Cj4tLS0tLS0tDQo+IGRyaXZlcnMvc2NzaS9saWJmYy9mY19leGNoLmMgICAgfCAgIDI2ICsrKysr
+LQ0KPiBkcml2ZXJzL3Njc2kvbGliZmMvZmNfbHBvcnQuYyAgIHwgICAgMg0KPiBkcml2ZXJzL3Nj
+c2kvbGliZmMvZmNfcnBvcnQuYyAgIHwgICAxNCArKysNCj4gZHJpdmVycy90YXJnZXQvdGNtX2Zj
+L3RjbV9mYy5oICB8ICAgIDINCj4gZHJpdmVycy90YXJnZXQvdGNtX2ZjL3RmY19jbWQuYyB8ICAg
+ODggKysrKysrKysrKystLS0tLS0tLS0NCj4gZHJpdmVycy90YXJnZXQvdGNtX2ZjL3RmY19pby5j
+ICB8ICAgIDINCj4gaW5jbHVkZS9zY3NpL2xpYmZjLmggICAgICAgICAgICB8ICAgIDggKysNCj4g
+OCBmaWxlcyBjaGFuZ2VkLCAyMzMgaW5zZXJ0aW9ucygrKSwgODMgZGVsZXRpb25zKC0pDQo+DQo+
+LS0NCg0KVGhlcmUgd2FzIGEgY29tbWEgaW4gb25lIG9mIHRoZSBzaWduZWQgb2ZmIGxpbmVzLiBX
+aGVuIEkgbWFpbCBwYXRjaGVzIEkgdXNlIHN0Z2l0DQphbmQgc3BlY2lmaWNhbGx5ICdzdGcgLS1h
+dXRvJyB3aGljaCB3aWxsIENDIGFueW9uZSB3aG8gaGFzIHNpZ25lZCB0aGUgcGF0Y2hlcy4gSSBk
+byBub3QNCnVzZSB0aGUgJy0tYXV0bycgb3B0aW9uIHdoZW4gSSB0ZXN0IG1haWwgbXlzZWxmIGJl
+Zm9yZSBtYWlsaW5nIGV4dGVybmFsbHkgc28gSSBkaWRuJ3QNCmNhdGNoIHRoaXMgb24gbXkgdGVz
+dCBtYWlsLiBJIGd1ZXNzICdzdGcgLS1hdXRvJyBkb2Vzbid0IGxpa2UgJzxsYXN0bmFtZT4sIDxm
+aXJzdG5hbWU+Jw0KZm9yIHNpZ25lZC1vZmYgbGluZXMuIE9uIGEgcXVpY2sgZ2xhbmNlLCBJIGRp
+ZG4ndCBzZWUgYW55dGhpbmcgaW4gU3VibWl0dGluZ1BhdGNoZXMNCmFib3V0IGxhc3QgbmFtZSBj
+b21tYSBmaXJzdCBuYW1lIGJlaW5nIGEgZm9ybWF0IHZpb2xhdGlvbiwgYWx0aG91Z2ggSSBoYXZl
+IG5ldmVyIHNlZW4NCnRoYXQgb3JkZXJpbmcgYmVmb3JlIG9uIHNpZ25lZC1vZmYgbGluZXMuIFN0
+Z2l0IGF0IGxlYXN0IGRvZXNuJ3QgbGlrZSBpdC4NCg0KSSdsbCByZXNlbmQgdGhpcyBzZXJpZXMg
+YXMgJ3YyJy4NCg0KU29ycnkgZm9yIHRoZSB0cmFzaCwgLy9Sb2INCg==
