@@ -1,35 +1,37 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 37042] linux 3.0.0-rc2 libata-eh.c:4018
- ata_scsi_port_error_handler+0x80/0x53d on s2disk
-Date: Sun, 19 Jun 2011 22:50:55 GMT
-Message-ID: <201106192250.p5JMotbg001299@demeter2.kernel.org>
-References: <bug-37042-11613@https.bugzilla.kernel.org/>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH][Trivial] SCSI, Target, tcm_loop: Remove include duplicate
+Date: Mon, 20 Jun 2011 10:49:52 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1106201044310.18991@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:40375 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754930Ab1FSWu4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Jun 2011 18:50:56 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p5JMoupO001300
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Jun 2011 22:50:56 GMT
-In-Reply-To: <bug-37042-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, linux-kernel@vger.kernel.org, trivial@kernel.org, "Nicholas A. Bellinger" <nab@risingtidesystems.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=37042
+Commit e66ecd50 added a duplicate include of scsi/scsi_tcq.h to 
+drivers/target/loopback/tcm_loop.c - this patch removes the duplicate.
 
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ tcm_loop.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-
-
-
---- Comment #1 from Alex Zhavnerchik <alex.vizor@gmail.com>  2011-06-19 22:50:54 ---
-Nobody interested in fixing this bug?
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index dee2a2c..ee95903 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -31,7 +31,6 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_tcq.h>
+ 
+ #include <target/target_core_base.h>
+ #include <target/target_core_transport.h>
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
