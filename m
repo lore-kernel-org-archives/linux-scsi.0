@@ -1,61 +1,62 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH] [resend] aha152x: add missing ISA PNP IDs
-Date: Mon, 20 Jun 2011 19:12:00 +0200
-Message-ID: <201106201912.03876.linux@rainbow-software.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/2] IB/srp: Fix SCSI scanning
+Date: Mon, 20 Jun 2011 19:53:16 +0200
+Message-ID: <BANLkTinVL6AVLipCwdeAbhZ1JY064KZOYA@mail.gmail.com>
+References: <201106191348.24122.bvanassche@acm.org> <1308504469.14467.5.camel@obelisk.thedillows.org>
+ <BANLkTi=5nBDB-SGd0U0UZDgR4gKBDqaj0w@mail.gmail.com> <20110620113736.GA406@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Juergen E. Fischer" <fischer@norbit.de>
-Cc: linux-scsi@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:50903 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754003Ab1FTRxh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Jun 2011 13:53:37 -0400
+In-Reply-To: <20110620113736.GA406@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: David Dillow <dillowda@ornl.gov>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Roland Dreier <roland@purestorage.com>, Brian King <brking@linux.vnet.ibm.com>
 
-Add ISA PNP IDs of the following cards to aha152x driver:
-AVA-1502
-AVA-1505
-AHA-1510
-AVA-1515
-AHA-1520
-AHA-1522
-AHA-1530
-AHA-1532
-AIC-6360
-(list from SCSI.INF file)
+On Mon, Jun 20, 2011 at 1:37 PM, Christoph Hellwig <hch@infradead.org> =
+wrote:
+> We really shouldn't require workaround for this in every SCSI driver.
+>
+> scsi_scan_host_selected already makes sure never to scan above
+> shost->max_channel. =A0Could it be that you don't have that one set
+> properly in the srp driver? =A0It not we'll need to debug why it happ=
+ens
+> instead of adding hacks like this.
 
-This makes my AHA-1530P card (has ADP3015 ID) work automatically.
+As far as I can see the default value for max_channel is zero. The patc=
+h
+below also avoids creation of duplicate SCSI targets on my setup.
 
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
---- linux-2.6.39-rc2-orig/drivers/scsi/aha152x.c	2011-04-06 03:30:43.000000000 +0200
-+++ linux-2.6.39-rc2/drivers/scsi/aha152x.c	2011-06-09 21:11:47.000000000 +0200
-@@ -422,10 +422,19 @@ MODULE_PARM_DESC(aha152x1, "parameters f
- 
- #ifdef __ISAPNP__
- static struct isapnp_device_id id_table[] __devinitdata = {
--	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,
--		ISAPNP_VENDOR('A','D','P'), ISAPNP_FUNCTION(0x1505), 0 },
--	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,
--		ISAPNP_VENDOR('A','D','P'), ISAPNP_FUNCTION(0x1530), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1502), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1505), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1510), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1515), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1520), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x2015), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1522), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x2215), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1530), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x3015), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x1532), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x3215), 0 },
-+	{ ISAPNP_ANY_ID, ISAPNP_ANY_ID,	ISAPNP_VENDOR('A', 'D', 'P'), ISAPNP_FUNCTION(0x6360), 0 },
- 	{ ISAPNP_DEVICE_SINGLE_END, }
- };
- MODULE_DEVICE_TABLE(isapnp, id_table);
+---
+ drivers/infiniband/ulp/srp/ib_srp.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c
+b/drivers/infiniband/ulp/srp/ib_srp.c
+index ee165fd..4ab1271 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -2127,6 +2127,7 @@ static ssize_t srp_create_target(struct device *d=
+ev,
+ 		return -ENOMEM;
 
--- 
-Ondrej Zary
+ 	target_host->transportt  =3D ib_srp_transport_template;
++	target_host->max_id      =3D 1;
+ 	target_host->max_lun     =3D SRP_MAX_LUN;
+ 	target_host->max_cmd_len =3D sizeof ((struct srp_cmd *) (void *) 0L)-=
+>cdb;
+
+--=20
+1.7.3.4
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
