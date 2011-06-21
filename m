@@ -1,152 +1,115 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH v2 09/12] tcm_fc: Fix ft_send_tm-bug and drop
- ft_get_lun_for_cmd usage
-Date: Mon, 20 Jun 2011 16:59:36 -0700
-Message-ID: <20110620235936.1777.869.stgit@localhost6.localdomain6>
-References: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
+From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Subject: Re: [PATCH 1/3] [RFC] genhd: add a new attribute in device structure
+Date: Tue, 21 Jun 2011 13:51:03 +0900
+Message-ID: <4E002337.1010208@hitachi.com>
+References: <20110616181943.GB1439@kroah.com> <1308256290.2436.143.camel@mulgrave> <BANLkTikfCMR_=5Jp7tLhM_Wr3vxihEL+rA@mail.gmail.com> <1308264321.2436.161.camel@mulgrave> <BANLkTinvfmU0dszQyu4U=Pw3_BtrmOUi_g@mail.gmail.com> <1308320844.2586.14.camel@mulgrave> <BANLkTikMa6vO4m3tk1O2mtj76k6s66f2gQ@mail.gmail.com> <1308322193.2586.30.camel@mulgrave> <BANLkTinywFK3yAxN51O7RDYyqeNRHBRThA@mail.gmail.com> <BANLkTinMzyQWZvxiRw4tvZBwW5xsxvMz-Q@mail.gmail.com> <20110617162247.GA16261@kroah.com> <1308426017.2586.1273.camel@mulgrave> <BANLkTin6xfEv85v2BnN1hOuCKtQfzc1Eiw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40424 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756445Ab1FTX7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Jun 2011 19:59:53 -0400
-In-Reply-To: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
+Received: from mail9.hitachi.co.jp ([133.145.228.44]:50497 "EHLO
+	mail9.hitachi.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706Ab1FUEvJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Jun 2011 00:51:09 -0400
+In-Reply-To: <BANLkTin6xfEv85v2BnN1hOuCKtQfzc1Eiw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kiran Patil <kiran.patil@intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jcm@redhat.com, hare@suse.de, stefanr@s5r6.in-berlin.de, yrl.pp-manager.tt@hitachi.com
 
-From: Kiran Patil <kiran.patil@intel.com>
+(2011/06/19 4:55), Kay Sievers wrote:
+> On Sat, Jun 18, 2011 at 21:40, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+>> On Fri, 2011-06-17 at 09:22 -0700, Greg KH wrote:
+>>> On Fri, Jun 17, 2011 at 06:12:14PM +0200, Kay Sievers wrote:
+>>>> On Fri, Jun 17, 2011 at 17:39, Kay Sievers <kay.sievers@vrfy.org> =
+wrote:
+>>>>> On Fri, Jun 17, 2011 at 16:49, James Bottomley
+>>>>
+>>>>>> So this is subsystem specific.  For the case of a SCSI enclosure=
+, I can
+>>>>>> answer that it's actually burned into the enclosure firmware.  W=
+hen you
+>>>>>> build an enclosure with labels, the label names are stored in a
+>>>>>> diagnostic page.  We can actually interrogate the enclosure dire=
+ctly or
+>>>>>> use the ses driver to get these names mapped to current devices.
+>>>>>
+>>>>> To me this sounds like a nice name on top of the current bunch of
+>>>>> names, not like a 'preferred' name.
+>>>>>
+>>>>> I still don't like to introduce any new facility to the kernel th=
+at
+>>>>> can handle only one single name. Reality the last years has taugh=
+t us
+>>>>> a very different story, and we've walked a long way to get where =
+we
+>>>>> are. I really don't believe single names will ever work, it's jus=
+t a
+>>>>> nice theory.
+>>>>
+>>>> I might need to clarify this a bit.
+>>>>
+>>>> I have no problem in general to add a 'alias' to every disk, and u=
+se
+>>>> that when stuff is logged. Just the same way the netifs have an al=
+ias.
+>>>> Sure, it might be useful for some use cases. And if that helps to
+>>>> solve any real problem, we should just do it.
+>>>>
+>>>> I just want to make clear, that I don't think that it is anywhere =
+near
+>>>> to a solution for the problems which are described here. And that
+>>>> nobody should see this as an excuse not to get their stuff togethe=
+r
+>>>> and work on the problem, which is that we don't have machine-reada=
+ble
+>>>> error and debug from the kernel and a smart syslog.
+>>>>
+>>>> If we had that, I'm very sure nobody would even ask for a 'pretty
+>>>> name' in the kernel, and I think that is a good indication that we=
+ are
+>>>> not on the right track here.
+>>>
+>>> And I totally agree here, which is why I don't want to accept this
+>>> change to the driver core to add this, as it's not the correct solu=
+tion.
+>>
+>> OK, fine ... we'll do it as gendisk only then.  I suppose that is th=
+e
+>> 95% use case anyway.
+>=20
+> Sounds fine. It's probably easier to have it domain-specific anyway.
+> Just like the netif alias already is.
+>=20
 
-This patch fixes a bug in ft_send_tm() that was incorrectly calling
-ft_get_lun_for_cmd() -> transport_get_lun_for_cmd(), instead of using
-transport_get_lun_for_tmr() for the proper struct se_lun lookup.
+Agreed. Our purpose is to output disk's alias name in kernel messages.
 
-It also drops the now unnecessary ft_get_lun_for_cmd() code, and uses
-scsilun_to_int() directly ahead of direct transport_get_lun_for_cmd()
-and transport_get_lun_for_tmr usage().
+> I would suggest not to call it 'preferred' though, but something
+> similar to 'alias'. Having /dev/disk/by-preferred/ doesn't sound too
+> convincing to me.
+>=20
 
-Patch was reworked due to NULL pointer access in function transport_get_lun_for_tmr(),
-(NOTE: transport_get_lun_for_tmr access tmr_req pointer which caused
-panic due to NULL pointer access) This patch fixes the issue by re-arranging
-the codepath where function "transport_get_lun_for_tmr" is called
-after tmr request is allocated and made it available as part of se_cmd.
+OK, I will change 'preferred name' to 'alias name'.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-Signed-off-by: Kiran Patil <kiran.patil@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/target/tcm_fc/tcm_fc.h  |    2 +
- drivers/target/tcm_fc/tfc_cmd.c |   62 ++++++++++++++++++++-------------------
- 2 files changed, 32 insertions(+), 32 deletions(-)
+> An 'change' uevent when the alias is set sounds fine. I don't think a
+> set-once policy is needed.
+>=20
 
-diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
-index defff32..7b82f1b 100644
---- a/drivers/target/tcm_fc/tcm_fc.h
-+++ b/drivers/target/tcm_fc/tcm_fc.h
-@@ -144,7 +144,7 @@ enum ft_cmd_state {
-  */
- struct ft_cmd {
- 	enum ft_cmd_state state;
--	u16 lun;			/* LUN from request */
-+	u32 lun;                        /* LUN from request */
- 	struct ft_sess *sess;		/* session held for cmd */
- 	struct fc_seq *seq;		/* sequence in exchange mgr */
- 	struct se_cmd se_cmd;		/* Local TCM I/O descriptor */
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 1625b48..cdbcb6c 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -94,29 +94,6 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
- 		16, 4, cmd->cdb, MAX_COMMAND_SIZE, 0);
- }
- 
--/*
-- * Get LUN from CDB.
-- */
--static int ft_get_lun_for_cmd(struct ft_cmd *cmd, u8 *lunp)
--{
--	u64 lun;
--
--	lun = lunp[1];
--	switch (lunp[0] >> 6) {
--	case 0:
--		break;
--	case 1:
--		lun |= (lunp[0] & 0x3f) << 8;
--		break;
--	default:
--		return -1;
--	}
--	if (lun >= TRANSPORT_MAX_LUNS_PER_TPG)
--		return -1;
--	cmd->lun = lun;
--	return transport_get_lun_for_cmd(&cmd->se_cmd, NULL, lun);
--}
--
- static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
- {
- 	struct se_queue_obj *qobj;
-@@ -426,13 +403,6 @@ static void ft_send_tm(struct ft_cmd *cmd)
- 	switch (fcp->fc_tm_flags) {
- 	case FCP_TMF_LUN_RESET:
- 		tm_func = TMR_LUN_RESET;
--		if (ft_get_lun_for_cmd(cmd, fcp->fc_lun) < 0) {
--			ft_dump_cmd(cmd, __func__);
--			transport_send_check_condition_and_sense(&cmd->se_cmd,
--				cmd->se_cmd.scsi_sense_reason, 0);
--			ft_sess_put(cmd->sess);
--			return;
--		}
- 		break;
- 	case FCP_TMF_TGT_RESET:
- 		tm_func = TMR_TARGET_WARM_RESET;
-@@ -464,6 +434,35 @@ static void ft_send_tm(struct ft_cmd *cmd)
- 		return;
- 	}
- 	cmd->se_cmd.se_tmr_req = tmr;
-+
-+	switch (fcp->fc_tm_flags) {
-+	case FCP_TMF_LUN_RESET:
-+		cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
-+		if (transport_get_lun_for_tmr(&cmd->se_cmd, cmd->lun) < 0) {
-+			/*
-+			 * Make sure to clean up newly allocated TMR request
-+			 * since "unable to  handle TMR request because failed
-+			 * to get to LUN"
-+			 */
-+			FT_TM_DBG("Failed to get LUN for TMR func %d, "
-+				  "se_cmd %p, unpacked_lun %d\n",
-+				  tm_func, &cmd->se_cmd, cmd->lun);
-+			transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
-+			ft_dump_cmd(cmd, __func__);
-+			transport_send_check_condition_and_sense(&cmd->se_cmd,
-+				cmd->se_cmd.scsi_sense_reason, 0);
-+			ft_sess_put(cmd->sess);
-+			return;
-+		}
-+		break;
-+	case FCP_TMF_TGT_RESET:
-+	case FCP_TMF_CLR_TASK_SET:
-+	case FCP_TMF_ABT_TASK_SET:
-+	case FCP_TMF_CLR_ACA:
-+		break;
-+	default:
-+		return;
-+	}
- 	transport_generic_handle_tmr(&cmd->se_cmd);
- }
- 
-@@ -636,7 +635,8 @@ static void ft_send_cmd(struct ft_cmd *cmd)
- 
- 	fc_seq_exch(cmd->seq)->lp->tt.seq_set_resp(cmd->seq, ft_recv_seq, cmd);
- 
--	ret = ft_get_lun_for_cmd(cmd, fcp->fc_lun);
-+	cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
-+	ret = transport_get_lun_for_cmd(&cmd->se_cmd, NULL, cmd->lun);
- 	if (ret < 0) {
- 		ft_dump_cmd(cmd, __func__);
- 		transport_send_check_condition_and_sense(&cmd->se_cmd,
+I will intent to implement as follows
+- Change the name from preferred to alias
+- Add alias_name in gendisk
+- Notify 'change' uevent when the alias is set
 
+Thanks,
+
+--=20
+Nao NISHIJIMA
+Software Platform Research Dept. Linux Technology Center
+Hitachi, Ltd., YOKOHAMA Research  Laboratory
+Email=EF=BC=9A nao.nishijima.xt@hitachi.com
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
