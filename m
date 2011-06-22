@@ -1,47 +1,52 @@
-From: "Rolf Eike Beer" <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 3/4] BNX2I: Changed the nopout_wqe->lun memcpy to use
- sizeof instead
-Date: Wed, 22 Jun 2011 10:00:25 +0200
-Message-ID: <fd5f3b85d2c9ef5d221cd1f3cdc56f05.squirrel@webmail.sf-mail.de>
-References: <Eddie Wai <eddie.wai@broadcom.com>
-    <1308674994-4694-4-git-send-email-eddie.wai@broadcom.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 37042] linux 3.0.0-rc2 libata-eh.c:4018
+ ata_scsi_port_error_handler+0x80/0x53d on s2disk
+Date: Wed, 22 Jun 2011 08:18:42 GMT
+Message-ID: <201106220818.p5M8IgIW028497@demeter1.kernel.org>
+References: <bug-37042-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:44349 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751604Ab1FVIA3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2011 04:00:29 -0400
-In-Reply-To: <1308674994-4694-4-git-send-email-eddie.wai@broadcom.com>
+Received: from demeter1.kernel.org ([140.211.167.39]:46025 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162Ab1FVISn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2011 04:18:43 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p5M8Igki028499
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2011 08:18:42 GMT
+In-Reply-To: <bug-37042-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: James Bottomley <jbottomley@novell.com>, Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: linux-scsi@vger.kernel.org
 
-> Modified the memcpy of nopout_wqe->lun to use sizeof(struct scsi_lun)
-> instead of the hardcoded value 8 as noted by review comments.
->
-> Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-> ---
->  drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c
-> b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> index 64089e2..d5f3bf6 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> @@ -551,7 +551,7 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn
-> *bnx2i_conn,
->
->  	nopout_wqe->op_code = nopout_hdr->opcode;
->  	nopout_wqe->op_attr = ISCSI_FLAG_CMD_FINAL;
-> -	memcpy(nopout_wqe->lun, nopout_hdr->lun, 8);
-> +	memcpy(nopout_wqe->lun, nopout_hdr->lun, sizeof(struct scsi_lun));
->
->  	if (test_bit(BNX2I_NX2_DEV_57710, &ep->hba->cnic_dev_type)) {
->  		u32 tmp = nopout_wqe->lun[0];
+https://bugzilla.kernel.org/show_bug.cgi?id=37042
 
-Why not just use sizeof(*nopout_wqe->lun)?
 
-Eike
+Andrew Morton <akpm@linux-foundation.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
+          Component|SCSI                        |Serial ATA
+         AssignedTo|linux-scsi@vger.kernel.org  |jgarzik@pobox.com
+
+Rafael J. Wysocki <rjw@sisk.pl> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |florian@mickler.org,
+                   |                            |maciej.rutecki@gmail.com,
+                   |                            |rjw@sisk.pl
+             Blocks|                            |32012, 7216
+
+
+
+
+--- Comment #2 from Florian Mickler <florian@mickler.org>  2011-06-22 08:18:38 ---
+Does this help: http://www.spinics.net/lists/dri-devel/msg12162.html ?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
