@@ -1,7 +1,7 @@
 From: WEBMAIL MANAGEMENT SERVICE <info@web.org>
 Subject: Dear Webmail Subscriber
-Date: Wed, 22 Jun 2011 15:04:00 +0200
-Message-ID: <20110622150400.28mdii1xcwgsw8sc@94.124.104.8>
+Date: Wed, 22 Jun 2011 15:04:02 +0200
+Message-ID: <20110622150402.0fz019d0fwc8og44@94.124.104.8>
 Reply-To: mrchau@gala.net
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -10,10 +10,10 @@ Content-Type: text/plain;
 	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from equichannel.kaora.cz ([94.124.104.8]:54106 "EHLO
+Received: from equichannel.kaora.cz ([94.124.104.8]:54209 "EHLO
 	equichannel.kaora.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754214Ab1FVRZt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2011 13:25:49 -0400
+	with ESMTP id S1758014Ab1FVRZ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2011 13:25:58 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
