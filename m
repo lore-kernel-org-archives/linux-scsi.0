@@ -1,71 +1,146 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCH] libsas: add SMP READ/WRTIE GPIO support
-Date: Wed, 22 Jun 2011 11:27:59 -0700
-Message-ID: <BANLkTim_8-6_0eodM32-3cuU1Nk2Ubyh6g@mail.gmail.com>
-References: <20110601140203.26324.22849.stgit@gklab-128-184.igk.intel.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 09/12] tcm_fc: Fix ft_send_tm-bug and drop
+	ft_get_lun_for_cmd usage
+Date: Wed, 22 Jun 2011 11:37:52 -0700
+Message-ID: <1308767872.19756.225.camel@haakon2.linux-iscsi.org>
+References: <20110620235848.1777.5168.stgit@localhost6.localdomain6>
+	 <20110620235936.1777.869.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:37255 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757429Ab1FVS2A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2011 14:28:00 -0400
-Received: by pvg12 with SMTP id 12so672615pvg.19
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Jun 2011 11:28:00 -0700 (PDT)
-In-Reply-To: <20110601140203.26324.22849.stgit@gklab-128-184.igk.intel.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43050 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758720Ab1FVSqs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Jun 2011 14:46:48 -0400
+In-Reply-To: <20110620235936.1777.869.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Artur Wojcik <artur.wojcik@intel.com>
+To: Robert Love <robert.w.love@intel.com>
+Cc: linux-scsi@vger.kernel.org, Kiran Patil <kiran.patil@intel.com>, target-devel <target-devel@vger.kernel.org>
 
-On Wed, Jun 1, 2011 at 7:02 AM, Artur Wojcik <artur.wojcik@intel.com> w=
-rote:
-> This patch enables the SMP READ/WRITE GPIO function interface in libs=
-as SMP
-> host module. The interface is used to control the SGPIO initiator in =
-the SAS
-> initiator. The implementation is SFF-8485 and SAS-2 compliant.
->
-> There are two functions in transport class only responsible for readi=
-ng and
-> writting GPIO registers. I decided to leave the decission about what =
-type of
-> registers are supported to lldd.
->
-> Now the user space application may issue SMP READ/WRITE GPIO frame to=
- HBA in
-> order to read/write GPIO registers.
->
-> Signed-off-by: Artur Wojcik <artur.wojcik@intel.com>
+On Mon, 2011-06-20 at 16:59 -0700, Robert Love wrote:
+> From: Kiran Patil <kiran.patil@intel.com>
+> 
+> This patch fixes a bug in ft_send_tm() that was incorrectly calling
+> ft_get_lun_for_cmd() -> transport_get_lun_for_cmd(), instead of using
+> transport_get_lun_for_tmr() for the proper struct se_lun lookup.
+> 
+> It also drops the now unnecessary ft_get_lun_for_cmd() code, and uses
+> scsilun_to_int() directly ahead of direct transport_get_lun_for_cmd()
+> and transport_get_lun_for_tmr usage().
+> 
+> Patch was reworked due to NULL pointer access in function transport_get_lun_for_tmr(),
+> (NOTE: transport_get_lun_for_tmr access tmr_req pointer which caused
+> panic due to NULL pointer access) This patch fixes the issue by re-arranging
+> the codepath where function "transport_get_lun_for_tmr" is called
+> after tmr request is allocated and made it available as part of se_cmd.
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> Signed-off-by: Kiran Patil <kiran.patil@intel.com>
+> Signed-off-by: Robert Love <robert.w.love@intel.com>
+
+Hi Robert,
+
+Thanks for the follow up on this.  One comment below..
+
 > ---
-> =A0drivers/scsi/libsas/sas_host_smp.c | =A0 48 ++++++++++++++++++++++=
-+++++++++++++-
-> =A0include/scsi/libsas.h =A0 =A0 =A0 =A0 =A0 =A0 =A0| =A0 14 ++++++++=
-+++
-> =A0include/scsi/sas.h =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 | =A0 =A04 +++
-> =A03 files changed, 64 insertions(+), 2 deletions(-)
->
+>  drivers/target/tcm_fc/tcm_fc.h  |    2 +
+>  drivers/target/tcm_fc/tfc_cmd.c |   62 ++++++++++++++++++++-------------------
+>  2 files changed, 32 insertions(+), 32 deletions(-)
+> 
 
-James, thoughts?
+<SNIP>
 
-The thing that struck me most about this patch was the following
-subtle deletion:
+>  static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
+>  {
+>  	struct se_queue_obj *qobj;
+> @@ -426,13 +403,6 @@ static void ft_send_tm(struct ft_cmd *cmd)
+>  	switch (fcp->fc_tm_flags) {
+>  	case FCP_TMF_LUN_RESET:
+>  		tm_func = TMR_LUN_RESET;
+> -		if (ft_get_lun_for_cmd(cmd, fcp->fc_lun) < 0) {
+> -			ft_dump_cmd(cmd, __func__);
+> -			transport_send_check_condition_and_sense(&cmd->se_cmd,
+> -				cmd->se_cmd.scsi_sense_reason, 0);
+> -			ft_sess_put(cmd->sess);
+> -			return;
+> -		}
+>  		break;
+>  	case FCP_TMF_TGT_RESET:
+>  		tm_func = TMR_TARGET_WARM_RESET;
+> @@ -464,6 +434,35 @@ static void ft_send_tm(struct ft_cmd *cmd)
+>  		return;
+>  	}
+>  	cmd->se_cmd.se_tmr_req = tmr;
+> +
+> +	switch (fcp->fc_tm_flags) {
+> +	case FCP_TMF_LUN_RESET:
+> +		cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
+> +		if (transport_get_lun_for_tmr(&cmd->se_cmd, cmd->lun) < 0) {
+> +			/*
+> +			 * Make sure to clean up newly allocated TMR request
+> +			 * since "unable to  handle TMR request because failed
+> +			 * to get to LUN"
+> +			 */
+> +			FT_TM_DBG("Failed to get LUN for TMR func %d, "
+> +				  "se_cmd %p, unpacked_lun %d\n",
+> +				  tm_func, &cmd->se_cmd, cmd->lun);
+> +			transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
+> +			ft_dump_cmd(cmd, __func__);
+> +			transport_send_check_condition_and_sense(&cmd->se_cmd,
+> +				cmd->se_cmd.scsi_sense_reason, 0);
+> +			ft_sess_put(cmd->sess);
+> +			return;
 
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* FIXME: need GPIO support in the tran=
-sport class */
+This appears to be incorrect as transport_generic_free_cmd() will
+release cmd->se_cmd before transport_send_check_condition_and_sense() is
+called.  I think they need to be reversed along the lines of how
+ft_send_cmd() failure cases for -ENOMEM and -EINVAL are handled.
 
-Transport class support in my mind implies sysfs representation of the
-sgpio targets, this patch is just providing an interface for tickling
-sgpio-initiator registers in the hba.  This is likely fine to get the
-conversation started, but it punts on the bigger question on
-whether/how to describe the sgpio initiator topology to userspace.
-This patch also enforces that the interface to the lldd is raw sgpio
-protocol, which seems like a passable idea to me.  If a vendor does
-something non-standard they can internally translate sgpio to
-vendor-specific.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here is a patch for lio-core-2.6.git with TCM v4.1 code to address the
+issue, please review and I will plan to respin against mainline and send
+off to Linus for -rc5.
+
+Thanks!
+
+--nab
+
+------------------------------------------------------------------------------
+
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 6333170..1f2e9f5 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -390,6 +390,7 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ {
+        struct se_tmr_req *tmr;
+        struct fcp_cmnd *fcp;
++       struct ft_sess *sess;
+        u8 tm_func;
+ 
+        fcp = fc_frame_payload_get(cmd->req_frame, sizeof(*fcp));
+@@ -399,10 +400,20 @@ static void ft_send_tm(struct ft_cmd *cmd)
+                tm_func = TMR_LUN_RESET;
+                cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
+                if (transport_lookup_tmr_lun(&cmd->se_cmd, cmd->lun) < 0) {
++                       /*
++                        * Make sure to clean up newly allocated TMR request
++                        * since "unable to  handle TMR request because failed
++                        * to get to LUN"
++                        */
++                       FT_TM_DBG("Failed to get LUN for TMR func %d, "
++                               "se_cmd %p, unpacked_lun %d\n",
++                               tm_func, &cmd->se_cmd, cmd->lun);
+                        ft_dump_cmd(cmd, __func__);
++                       sess = cmd->sess;
+                        transport_send_check_condition_and_sense(&cmd->se_cmd,
+                                cmd->se_cmd.scsi_sense_reason, 0);
+-                       ft_sess_put(cmd->sess);
++                       transport_generic_free_cmd(&cmd->se_cmd, 0, 0);
++                       ft_sess_put(sess);
+                        return;
+                }
+                break;
+
+
