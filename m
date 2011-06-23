@@ -1,166 +1,332 @@
-From: Kiran Patil <kiran.patil@intel.com>
-Subject: [PATCH] tcm_fc: Fix ft_send_tm-bug and drop ft_get_lun_for_cmd usage
-Date: Wed, 22 Jun 2011 16:30:22 -0700
-Message-ID: <20110622233022.5358.5149.stgit@localhost.localdomain>
-References: <20110620235936.1777.869.stgit@localhost6.localdomain6>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC v3 PATCH 1/2] bsg: Add infrastructure to send in kernel
+ bsg commands.
+Date: Thu, 23 Jun 2011 10:51:50 +0900
+Message-ID: <20110623104625Y.fujita.tomonori@lab.ntt.co.jp>
+References: <alpine.LFD.2.02.1106160825540.2424@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:40757 "EHLO mga02.intel.com"
+Received: from sh.osrg.net ([192.16.179.4]:48380 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932464Ab1FVX2n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Jun 2011 19:28:43 -0400
-In-Reply-To: <20110620235936.1777.869.stgit@localhost6.localdomain6>
+	id S1753164Ab1FWBv5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Jun 2011 21:51:57 -0400
+In-Reply-To: <alpine.LFD.2.02.1106160825540.2424@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: nab@linux-iscsi.org, target-devel@vger.kernel.org, devel@open-fcoe.org
+To: chad.dupuis@qlogic.com
+Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-From: Kiran Patil <kiran.patil@intel.com>
+On Thu, 16 Jun 2011 08:36:19 -0400
+Chad Dupuis <chad.dupuis@qlogic.com> wrote:
 
-This patch fixes a bug in ft_send_tm() that was incorrectly calling
-ft_get_lun_for_cmd() -> transport_get_lun_for_cmd(), instead of using
-transport_get_lun_for_tmr() for the proper struct se_lun lookup.
+> This is version 3 of this patch which is based on review comments here:
+> http://marc.info/?l=linux-scsi&m=130590738308822&w=2
+> 
+> Essentially, the code was refactored to reduce code duplication.
+> 
+> From: Chad Dupuis <chad.dupuis@qlogic.com>
+> 
+> This patch adds a new exported function, bsg_private_command() that allows a
+> device driver or other kernel code to be able to send bsg commands from within
+> the kernel using sg_io_v4.  The private command infrastructure mimics the ioctl
+> interface except that the bsg request queue needs to be explicitly passed in.
+> 
+> bsg_map_hdr() and blk_fill_sgv4_hdr_rq() needed to be refactored slightly as
+> well to allow for both user and kernel buffers.  Two helper functions were
+> created as a front-end to bsg_map_hdr() so as to call bsg_map_hdr() with the correct
+> semantics depending on the type of buffer that we're using.  bsg_map_hdr() and
+> blk_fill_sgv4_hdr_rq() also have an extra argument, is_user, to tell what type
+> of buffer is being used as well.
+> 
+> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+> ---
+>   block/bsg.c         |  138 ++++++++++++++++++++++++++++++++++++++++-----------
+>   include/linux/bsg.h |    1 +
+>   2 files changed, 109 insertions(+), 30 deletions(-)
 
-It also drops the now unnecessary ft_get_lun_for_cmd() code, and uses
-scsilun_to_int() directly ahead of direct transport_get_lun_for_cmd()
-and transport_get_lun_for_tmr usage().
+What git tree can this be applied? I can't apply this to Linus' or
+scsi-misc cleanly.
 
-Patch was reworked due to NULL pointer access in function transport_get_lun_for_tmr(),
-(NOTE: transport_get_lun_for_tmr access tmr_req pointer which caused
-panic due to NULL pointer access) This patch fixes the issue by re-arranging
-the codepath where function "transport_get_lun_for_tmr" is called
-after tmr request is allocated and made it available as part of se_cmd.
 
-Patch was reworked based on Nick's comment, where order of transport_generic_free_cmd and
-transport_send_check_condition_and_sense needs to be reversed. transport_generic_free_cmd
-releases cmd->se_cmd. Address of cmd->se_cmd is passed to transport_send_check_condition_and_sense
-hence transport_send_check_condition_and_sense shall be called before transport_generic_free_cmd.
+> diff --git a/block/bsg.c b/block/bsg.c
+> index 0c8b64a..9babd96 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -74,6 +74,8 @@ static int bsg_major;
+> 
+>   static struct kmem_cache *bsg_cmd_cachep;
+> 
+> +static struct request *
+> +bsg_map_hdr(struct request_queue *, struct sg_io_v4 *, fmode_t, u8 *, int);
+>   /*
+>    * our internal command type
+>    */
+> @@ -173,8 +175,8 @@ unlock:
+>   }
+> 
+>   static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+> -                               struct sg_io_v4 *hdr, struct bsg_device *bd,
+> -                               fmode_t has_write_perm)
+> +                               struct sg_io_v4 *hdr, fmode_t has_write_perm,
+> +                               int is_user)
+>   {
+>         if (hdr->request_len > BLK_MAX_CDB) {
+>                 rq->cmd = kzalloc(hdr->request_len, GFP_KERNEL);
+> @@ -182,9 +184,14 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+>                         return -ENOMEM;
+>         }
+> 
+> -       if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
+> -                          hdr->request_len))
+> -               return -EFAULT;
+> +       if (is_user) {
+> +               if (copy_from_user(rq->cmd,
+> +                   (void *)(unsigned long)hdr->request, hdr->request_len))
+> +                       return -EFAULT;
+> +       } else {
+> +               memcpy(rq->cmd, (void *)(unsigned long)hdr->request,
+> +                   hdr->request_len);
+> +       }
+> 
+>         if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
+>                 if (blk_verify_command(rq->cmd, has_write_perm))
+> @@ -238,18 +245,13 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
+>         return ret;
+>   }
+> 
+> -/*
+> - * map sg_io_v4 to a request.
+> - */
+> +#define BSG_BUFFER_KERN                0
+> +#define BSG_BUFFER_USER                1
+>   static struct request *
+> -bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
+> -           u8 *sense)
+> +bsg_map_hdr_user(struct bsg_device *bd, struct sg_io_v4 *hdr,
+> +                fmode_t has_write_perm, u8 *sense)
+>   {
+>         struct request_queue *q = bd->queue;
+> -       struct request *rq, *next_rq = NULL;
+> -       int ret, rw;
+> -       unsigned int dxfer_len;
+> -       void *dxferp = NULL;
+>         struct bsg_class_device *bcd = &q->bsg_dev;
+> 
+>         /* if the LLD has been removed then the bsg_unregister_queue will
+> @@ -259,6 +261,28 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
+>         if (!bcd->class_dev)
+>                 return ERR_PTR(-ENXIO);
+> 
+> +       return(bsg_map_hdr(q, hdr, has_write_perm, sense, BSG_BUFFER_USER));
+> +}
+> +
+> +static struct request *
+> +bsg_map_hdr_kern(struct request_queue *q, struct sg_io_v4 *hdr,
+> +                 fmode_t has_write_perm, u8 *sense)
+> +{
+> +       return(bsg_map_hdr(q, hdr, has_write_perm, sense, BSG_BUFFER_KERN));
+> +}
+> +
+> +/*
+> + * map sg_io_v4 to a request.
+> + */
+> +static struct request *
+> +bsg_map_hdr(struct request_queue *q, struct sg_io_v4 *hdr,
+> +           fmode_t has_write_perm, u8 *sense, int is_user)
+> +{
+> +       struct request *rq, *next_rq = NULL;
+> +       int ret, rw;
+> +       unsigned int dxfer_len;
+> +       void *dxferp = NULL;
+> +
+>         dprintk("map hdr %llx/%u %llx/%u\n", (unsigned long long) hdr->dout_xferp,
+>                 hdr->dout_xfer_len, (unsigned long long) hdr->din_xferp,
+>                 hdr->din_xfer_len);
+> @@ -273,7 +297,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
+>         rq = blk_get_request(q, rw, GFP_KERNEL);
+>         if (!rq)
+>                 return ERR_PTR(-ENOMEM);
+> -       ret = blk_fill_sgv4_hdr_rq(q, rq, hdr, bd, has_write_perm);
+> +       ret = blk_fill_sgv4_hdr_rq(q, rq, hdr, has_write_perm, is_user);
+>         if (ret)
+>                 goto out;
+> 
+> @@ -292,8 +316,14 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
+>                 next_rq->cmd_type = rq->cmd_type;
+> 
+>                 dxferp = (void*)(unsigned long)hdr->din_xferp;
+> -               ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
+> -                                      hdr->din_xfer_len, GFP_KERNEL);
+> +
+> +               if (is_user)
+> +                       ret =  blk_rq_map_user(q, next_rq, NULL, dxferp,
+> +                                              hdr->din_xfer_len, GFP_KERNEL);
+> +               else
+> +                       ret =  blk_rq_map_kern(q, next_rq, dxferp,
+> +                                              hdr->din_xfer_len, GFP_KERNEL);
+> +
+>                 if (ret)
+>                         goto out;
+>         }
+> @@ -308,8 +338,13 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr, fmode_t has_write_perm,
+>                 dxfer_len = 0;
+> 
+>         if (dxfer_len) {
+> -               ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
+> -                                     GFP_KERNEL);
+> +               if (is_user)
+> +                       ret = blk_rq_map_user(q, rq, NULL, dxferp, dxfer_len,
+> +                                             GFP_KERNEL);
+> +               else
+> +                       ret = blk_rq_map_kern(q, rq, dxferp, dxfer_len,
+> +                                             GFP_KERNEL);
+> +
+>                 if (ret)
+>                         goto out;
+>         }
+> @@ -323,7 +358,8 @@ out:
+>                 kfree(rq->cmd);
+>         blk_put_request(rq);
+>         if (next_rq) {
+> -               blk_rq_unmap_user(next_rq->bio);
+> +               if (is_user)
+> +                       blk_rq_unmap_user(next_rq->bio);
+>                 blk_put_request(next_rq);
+>         }
+>         return ERR_PTR(ret);
+> @@ -425,7 +461,8 @@ static struct bsg_command *bsg_get_done_cmd(struct bsg_device *bd)
+>   }
+> 
+>   static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+> -                                   struct bio *bio, struct bio *bidi_bio)
+> +                                   struct bio *bio, struct bio *bidi_bio,
+> +                                   int is_user)
+>   {
+>         int ret = 0;
+> 
+> @@ -445,8 +482,13 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+>                 int len = min_t(unsigned int, hdr->max_response_len,
+>                                         rq->sense_len);
+> 
+> -               ret = copy_to_user((void*)(unsigned long)hdr->response,
+> -                                  rq->sense, len);
+> +               if (is_user)
+> +                       ret = copy_to_user((void*)(unsigned long)hdr->response,
+> +                                          rq->sense, len);
+> +               else
+> +                       memcpy((void*)(unsigned long)hdr->response, rq->sense,
+> +                              len);
+> +
+>                 if (!ret)
+>                         hdr->response_len = len;
+>                 else
+> @@ -456,7 +498,8 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+>         if (rq->next_rq) {
+>                 hdr->dout_resid = rq->resid_len;
+>                 hdr->din_resid = rq->next_rq->resid_len;
+> -               blk_rq_unmap_user(bidi_bio);
+> +               if (is_user)
+> +                       blk_rq_unmap_user(bidi_bio);
+>                 blk_put_request(rq->next_rq);
+>         } else if (rq_data_dir(rq) == READ)
+>                 hdr->din_resid = rq->resid_len;
+> @@ -472,7 +515,8 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+>         if (!ret && rq->errors < 0)
+>                 ret = rq->errors;
+> 
+> -       blk_rq_unmap_user(bio);
+> +       if (is_user)
+> +               blk_rq_unmap_user(bio);
+>         if (rq->cmd != rq->__cmd)
+>                 kfree(rq->cmd);
+>         blk_put_request(rq);
+> @@ -519,7 +563,7 @@ static int bsg_complete_all_commands(struct bsg_device *bd)
+>                         break;
+> 
+>                 tret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio,
+> -                                               bc->bidi_bio);
+> +                                               bc->bidi_bio, 1);
+>                 if (!ret)
+>                         ret = tret;
+> 
+> @@ -554,7 +598,7 @@ __bsg_read(char __user *buf, size_t count, struct bsg_device *bd,
+>                  * bsg_complete_work() cannot do that for us
+>                  */
+>                 ret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio,
+> -                                              bc->bidi_bio);
+> +                                              bc->bidi_bio, 1);
+> 
+>                 if (copy_to_user(buf, &bc->hdr, sizeof(bc->hdr)))
+>                         ret = -EFAULT;
+> @@ -645,7 +689,7 @@ static int __bsg_write(struct bsg_device *bd, const char __user *buf,
+>                 /*
+>                  * get a request, fill in the blanks, and add to request queue
+>                  */
+> -               rq = bsg_map_hdr(bd, &bc->hdr, has_write_perm, bc->sense);
+> +               rq = bsg_map_hdr_user(bd, &bc->hdr, has_write_perm, bc->sense);
+>                 if (IS_ERR(rq)) {
+>                         ret = PTR_ERR(rq);
+>                         rq = NULL;
+> @@ -936,7 +980,7 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>                 if (copy_from_user(&hdr, uarg, sizeof(hdr)))
+>                         return -EFAULT;
+> 
+> -               rq = bsg_map_hdr(bd, &hdr, file->f_mode & FMODE_WRITE, sense);
+> +               rq = bsg_map_hdr_user(bd, &hdr, file->f_mode & FMODE_WRITE, sense);
+>                 if (IS_ERR(rq))
+>                         return PTR_ERR(rq);
+> 
+> @@ -946,7 +990,7 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+> 
+>                 at_head = (0 == (hdr.flags & BSG_FLAG_Q_AT_TAIL));
+>                 blk_execute_rq(bd->queue, NULL, rq, at_head);
+> -               ret = blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio);
+> +               ret = blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio, 1);
+> 
+>                 if (copy_to_user(uarg, &hdr, sizeof(hdr)))
+>                         return -EFAULT;
+> @@ -965,6 +1009,40 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>         }
+>   }
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-Signed-off-by: Patil, Kiran <kiran.patil@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
+Rather than adding 'is_user' argument to everywhere, it could cleaner
+to add something like 'int from_kernel' in struct bsg_command? No?
 
- drivers/target/tcm_fc/tcm_fc.h  |    2 +
- drivers/target/tcm_fc/tfc_cmd.c |   64 ++++++++++++++++++++-------------------
- 2 files changed, 34 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
-index defff32..7b82f1b 100644
---- a/drivers/target/tcm_fc/tcm_fc.h
-+++ b/drivers/target/tcm_fc/tcm_fc.h
-@@ -144,7 +144,7 @@ enum ft_cmd_state {
-  */
- struct ft_cmd {
- 	enum ft_cmd_state state;
--	u16 lun;			/* LUN from request */
-+	u32 lun;                        /* LUN from request */
- 	struct ft_sess *sess;		/* session held for cmd */
- 	struct fc_seq *seq;		/* sequence in exchange mgr */
- 	struct se_cmd se_cmd;		/* Local TCM I/O descriptor */
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 1625b48..b9cea59 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -94,29 +94,6 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
- 		16, 4, cmd->cdb, MAX_COMMAND_SIZE, 0);
- }
- 
--/*
-- * Get LUN from CDB.
-- */
--static int ft_get_lun_for_cmd(struct ft_cmd *cmd, u8 *lunp)
--{
--	u64 lun;
--
--	lun = lunp[1];
--	switch (lunp[0] >> 6) {
--	case 0:
--		break;
--	case 1:
--		lun |= (lunp[0] & 0x3f) << 8;
--		break;
--	default:
--		return -1;
--	}
--	if (lun >= TRANSPORT_MAX_LUNS_PER_TPG)
--		return -1;
--	cmd->lun = lun;
--	return transport_get_lun_for_cmd(&cmd->se_cmd, NULL, lun);
--}
--
- static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
- {
- 	struct se_queue_obj *qobj;
-@@ -419,6 +396,7 @@ static void ft_send_tm(struct ft_cmd *cmd)
- {
- 	struct se_tmr_req *tmr;
- 	struct fcp_cmnd *fcp;
-+	struct ft_sess *sess;
- 	u8 tm_func;
- 
- 	fcp = fc_frame_payload_get(cmd->req_frame, sizeof(*fcp));
-@@ -426,13 +404,6 @@ static void ft_send_tm(struct ft_cmd *cmd)
- 	switch (fcp->fc_tm_flags) {
- 	case FCP_TMF_LUN_RESET:
- 		tm_func = TMR_LUN_RESET;
--		if (ft_get_lun_for_cmd(cmd, fcp->fc_lun) < 0) {
--			ft_dump_cmd(cmd, __func__);
--			transport_send_check_condition_and_sense(&cmd->se_cmd,
--				cmd->se_cmd.scsi_sense_reason, 0);
--			ft_sess_put(cmd->sess);
--			return;
--		}
- 		break;
- 	case FCP_TMF_TGT_RESET:
- 		tm_func = TMR_TARGET_WARM_RESET;
-@@ -464,6 +435,36 @@ static void ft_send_tm(struct ft_cmd *cmd)
- 		return;
- 	}
- 	cmd->se_cmd.se_tmr_req = tmr;
-+
-+	switch (fcp->fc_tm_flags) {
-+	case FCP_TMF_LUN_RESET:
-+		cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
-+		if (transport_get_lun_for_tmr(&cmd->se_cmd, cmd->lun) < 0) {
-+			/*
-+			 * Make sure to clean up newly allocated TMR request
-+			 * since "unable to  handle TMR request because failed
-+			 * to get to LUN"
-+			 */
-+			FT_TM_DBG("Failed to get LUN for TMR func %d, "
-+				  "se_cmd %p, unpacked_lun %d\n",
-+				  tm_func, &cmd->se_cmd, cmd->lun);
-+			ft_dump_cmd(cmd, __func__);
-+			sess = cmd->sess;
-+			transport_send_check_condition_and_sense(&cmd->se_cmd,
-+				cmd->se_cmd.scsi_sense_reason, 0);
-+			transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
-+			ft_sess_put(sess);
-+			return;
-+		}
-+		break;
-+	case FCP_TMF_TGT_RESET:
-+	case FCP_TMF_CLR_TASK_SET:
-+	case FCP_TMF_ABT_TASK_SET:
-+	case FCP_TMF_CLR_ACA:
-+		break;
-+	default:
-+		return;
-+	}
- 	transport_generic_handle_tmr(&cmd->se_cmd);
- }
- 
-@@ -636,7 +637,8 @@ static void ft_send_cmd(struct ft_cmd *cmd)
- 
- 	fc_seq_exch(cmd->seq)->lp->tt.seq_set_resp(cmd->seq, ft_recv_seq, cmd);
- 
--	ret = ft_get_lun_for_cmd(cmd, fcp->fc_lun);
-+	cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
-+	ret = transport_get_lun_for_cmd(&cmd->se_cmd, NULL, cmd->lun);
- 	if (ret < 0) {
- 		ft_dump_cmd(cmd, __func__);
- 		transport_send_check_condition_and_sense(&cmd->se_cmd,
+> +int bsg_private_command (struct request_queue *q, struct sg_io_v4 *hdr)
+> +{
+> +       struct request *rq;
+> +       struct bio *bio, *bidi_bio = NULL;
+> +       int at_head;
+> +       u8 sense[SCSI_SENSE_BUFFERSIZE];
+> +       fmode_t has_write_perm = 0;
+> +       int ret;
+> +
+> +       if (!q)
+> +               return -ENXIO;
+> +
+> +       /* Fake that we have write permission */
+> +       has_write_perm |= FMODE_WRITE;
+> +
+> +       rq = bsg_map_hdr_kern(q, hdr, has_write_perm, sense);
+> +
+> +       if (IS_ERR(rq)) {
+> +               return PTR_ERR(rq);
+> +       }
+> +
+> +       bio = rq->bio;
+> +       if (rq->next_rq)
+> +               bidi_bio = rq->next_rq->bio;
+> +       at_head = (0 == (hdr->flags & BSG_FLAG_Q_AT_TAIL));
+> +
+> +       blk_execute_rq(q, NULL, rq, at_head);
+> +       ret = blk_complete_sgv4_hdr_rq(rq, hdr, bio, bidi_bio, 0);
+> +
+> +       return ret;
+> +}
+> +EXPORT_SYMBOL(bsg_private_command);
+
+EXPORT_SYMBOL_GPL, please.
 
