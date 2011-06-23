@@ -1,131 +1,751 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 4/4 v2] BNX2I: Updated copyright and bump version
-Date: Thu, 23 Jun 2011 15:51:37 -0700
-Message-ID: <1308869497-2709-5-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH 1/4 v2] BNX2I: Added the use of kthreads to handle SCSI
+ cmd completion
+Date: Thu, 23 Jun 2011 15:51:34 -0700
+Message-ID: <1308869497-2709-2-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1272 "EHLO MMS3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:1928 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760121Ab1FWWvw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2011 18:51:52 -0400
+	id S1753266Ab1FWWvu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Jun 2011 18:51:50 -0400
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-Bumped version from 2.6.2.3 to 2.7.0.3
+This patch breaks the SCSI cmd completion into two parts:
+1. The bh will allocate and queued work to the cmd specific CPU IO
+completion kthread.  The CPU for the cmd is from the sc->request->cpu.
+
+2. The CPU specific IO completion kthread will call the scsi_cmd_resp
+routine to do the actual cmd completion.
+
+In the normal case, these IO completion kthreads should complete before
+the blk IO times out at 60s.  However, in the case when these kthreads
+are blocked for whatever reason and exceeded the timeout, the call
+to conn_destroy will have to iterate and exhaust all related work in the
+percpu work list for all online CPUs.  This will guarantee the protection
+of the work->session and conn pointers before they get freed.
+
+Also modified the event coalescing formula to have at least the
+event_coal_min outstanding cmds in the pipeline so the SCSI producer
+would not get underrun.
+
+Also changed the following SCSI parameters:
+- can_queue from 1024 to 2048
+- cmds_per_lun from 24 to 128
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+Acked-by: Benjamin Li <benli@broadcom.com>
+Acked-by: Michael Chan <mchan@broadcom.com>
 ---
- drivers/scsi/bnx2i/57xx_iscsi_constants.h |    2 +-
- drivers/scsi/bnx2i/57xx_iscsi_hsi.h       |    2 +-
- drivers/scsi/bnx2i/bnx2i.h                |    2 +-
- drivers/scsi/bnx2i/bnx2i_hwi.c            |    2 +-
- drivers/scsi/bnx2i/bnx2i_init.c           |    6 +++---
- drivers/scsi/bnx2i/bnx2i_iscsi.c          |    2 +-
- drivers/scsi/bnx2i/bnx2i_sysfs.c          |    2 +-
- 7 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h       |   31 ++++++-
+ drivers/scsi/bnx2i/bnx2i_hwi.c   |  183 ++++++++++++++++++++++++++++++++------
+ drivers/scsi/bnx2i/bnx2i_init.c  |  118 ++++++++++++++++++++++++-
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   36 +++++++-
+ 4 files changed, 333 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/57xx_iscsi_constants.h b/drivers/scsi/bnx2i/57xx_iscsi_constants.h
-index 30e6bdb..aca593d 100644
---- a/drivers/scsi/bnx2i/57xx_iscsi_constants.h
-+++ b/drivers/scsi/bnx2i/57xx_iscsi_constants.h
-@@ -1,6 +1,6 @@
- /* 57xx_iscsi_constants.h: Broadcom NetXtreme II iSCSI HSI
-  *
-- * Copyright (c) 2006 - 2010 Broadcom Corporation
-+ * Copyright (c) 2006 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/bnx2i/57xx_iscsi_hsi.h b/drivers/scsi/bnx2i/57xx_iscsi_hsi.h
-index dad6c8a..1c39177 100644
---- a/drivers/scsi/bnx2i/57xx_iscsi_hsi.h
-+++ b/drivers/scsi/bnx2i/57xx_iscsi_hsi.h
-@@ -1,6 +1,6 @@
- /* 57xx_iscsi_hsi.h: Broadcom NetXtreme II iSCSI HSI.
-  *
-- * Copyright (c) 2006 - 2010 Broadcom Corporation
-+ * Copyright (c) 2006 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
 diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index 239bc4e..54e2e03 100644
+index 6bdd25a..239bc4e 100644
 --- a/drivers/scsi/bnx2i/bnx2i.h
 +++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -1,6 +1,6 @@
- /* bnx2i.h: Broadcom NetXtreme II iSCSI driver.
+@@ -22,11 +22,14 @@
+ #include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/interrupt.h>
++#include <linux/delay.h>
+ #include <linux/sched.h>
+ #include <linux/in.h>
+ #include <linux/kfifo.h>
+ #include <linux/netdevice.h>
+ #include <linux/completion.h>
++#include <linux/kthread.h>
++#include <linux/cpu.h>
+ 
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -202,10 +205,13 @@ struct io_bdt {
+ /**
+  * bnx2i_cmd - iscsi command structure
   *
-- * Copyright (c) 2006 - 2010 Broadcom Corporation
-+ * Copyright (c) 2006 - 2011 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
++ * @hdr:                iSCSI header
++ * @conn:               iscsi_conn pointer
+  * @scsi_cmd:           SCSI-ML task pointer corresponding to this iscsi cmd
+  * @sg:                 SG list
+  * @io_tbl:             buffer descriptor (BD) table
+  * @bd_tbl_dma:         buffer descriptor (BD) table's dma address
++ * @req:                bnx2i specific command request struct
+  */
+ struct bnx2i_cmd {
+ 	struct iscsi_hdr hdr;
+@@ -229,6 +235,7 @@ struct bnx2i_cmd {
+  * @gen_pdu:               login/nopout/logout pdu resources
+  * @violation_notified:    bit mask used to track iscsi error/warning messages
+  *                         already printed out
++ * @work_cnt:              keeps track of the number of outstanding work
   *
+  * iSCSI connection structure
+  */
+@@ -252,6 +259,8 @@ struct bnx2i_conn {
+ 	 */
+ 	struct generic_pdu_resc gen_pdu;
+ 	u64 violation_notified;
++
++	atomic_t work_cnt;
+ };
+ 
+ 
+@@ -661,7 +670,6 @@ enum {
+  * @hba:                adapter to which this connection belongs
+  * @conn:               iscsi connection this EP is linked to
+  * @cls_ep:             associated iSCSI endpoint pointer
+- * @sess:               iscsi session this EP is linked to
+  * @cm_sk:              cnic sock struct
+  * @hba_age:            age to detect if 'iscsid' issues ep_disconnect()
+  *                      after HBA reset is completed by bnx2i/cnic/bnx2
+@@ -687,7 +695,7 @@ struct bnx2i_endpoint {
+ 	u32 hba_age;
+ 	u32 state;
+ 	unsigned long timestamp;
+-	int num_active_cmds;
++	atomic_t num_active_cmds;
+ 	u32 ec_shift;
+ 
+ 	struct qp_info qp;
+@@ -700,6 +708,19 @@ struct bnx2i_endpoint {
+ };
+ 
+ 
++struct bnx2i_work {
++	struct list_head list;
++	struct iscsi_session *session;
++	struct bnx2i_conn *bnx2i_conn;
++	struct cqe cqe;
++};
++
++struct bnx2i_percpu_s {
++	struct task_struct *iothread;
++	struct list_head work_list;
++	spinlock_t p_work_lock;
++};
++
+ 
+ /* Global variables */
+ extern unsigned int error_mask1, error_mask2;
+@@ -783,7 +804,7 @@ extern struct bnx2i_endpoint *bnx2i_find_ep_in_destroy_list(
+ 		struct bnx2i_hba *hba, u32 iscsi_cid);
+ 
+ extern int bnx2i_map_ep_dbell_regs(struct bnx2i_endpoint *ep);
+-extern void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action);
++extern int bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action);
+ 
+ extern int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep);
+ 
+@@ -793,4 +814,8 @@ extern void bnx2i_print_active_cmd_queue(struct bnx2i_conn *conn);
+ extern void bnx2i_print_xmit_pdu_queue(struct bnx2i_conn *conn);
+ extern void bnx2i_print_recv_state(struct bnx2i_conn *conn);
+ 
++extern int bnx2i_percpu_io_thread(void *arg);
++extern int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
++				       struct bnx2i_conn *bnx2i_conn,
++				       struct cqe *cqe);
+ #endif
 diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index ba2f96e..ff5e872 100644
+index 5c54a2d..2a1bb9f 100644
 --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1,6 +1,6 @@
- /* bnx2i_hwi.c: Broadcom NetXtreme II iSCSI driver.
+@@ -17,6 +17,8 @@
+ #include <scsi/libiscsi.h>
+ #include "bnx2i.h"
+ 
++DECLARE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
++
+ /**
+  * bnx2i_get_cid_num - get cid from ep
+  * @ep: 	endpoint pointer
+@@ -131,16 +133,16 @@ static void bnx2i_iscsi_license_error(struct bnx2i_hba *hba, u32 error_code)
+  *	the driver. EQ event is generated CQ index is hit or at least 1 CQ is
+  *	outstanding and on chip timer expires
+  */
+-void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action)
++int bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action)
+ {
+ 	struct bnx2i_5771x_cq_db *cq_db;
+ 	u16 cq_index;
+-	u16 next_index;
++	u16 next_index = 0;
+ 	u32 num_active_cmds;
+ 
+ 	/* Coalesce CQ entries only on 10G devices */
+ 	if (!test_bit(BNX2I_NX2_DEV_57710, &ep->hba->cnic_dev_type))
+-		return;
++		return 0;
+ 
+ 	/* Do not update CQ DB multiple times before firmware writes
+ 	 * '0xFFFF' to CQDB->SQN field. Deviation may cause spurious
+@@ -150,16 +152,17 @@ void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action)
+ 
+ 	if (action != CNIC_ARM_CQE_FP)
+ 		if (cq_db->sqn[0] && cq_db->sqn[0] != 0xFFFF)
+-			return;
++			return 0;
+ 
+ 	if (action == CNIC_ARM_CQE || action == CNIC_ARM_CQE_FP) {
+-		num_active_cmds = ep->num_active_cmds;
++		num_active_cmds = atomic_read(&ep->num_active_cmds);
+ 		if (num_active_cmds <= event_coal_min)
+ 			next_index = 1;
+-		else
+-			next_index = event_coal_min +
+-				     ((num_active_cmds - event_coal_min) >>
+-				     ep->ec_shift);
++		else {
++			next_index = num_active_cmds >> ep->ec_shift;
++			if (next_index > num_active_cmds - event_coal_min)
++				next_index = num_active_cmds - event_coal_min;
++		}
+ 		if (!next_index)
+ 			next_index = 1;
+ 		cq_index = ep->qp.cqe_exp_seq_sn + next_index - 1;
+@@ -170,6 +173,7 @@ void bnx2i_arm_cq_event_coalescing(struct bnx2i_endpoint *ep, u8 action)
+ 
+ 		cq_db->sqn[0] = cq_index;
+ 	}
++	return next_index;
+ }
+ 
+ 
+@@ -265,7 +269,7 @@ static void bnx2i_ring_sq_dbell(struct bnx2i_conn *bnx2i_conn, int count)
+ 	struct bnx2i_5771x_sq_rq_db *sq_db;
+ 	struct bnx2i_endpoint *ep = bnx2i_conn->ep;
+ 
+-	ep->num_active_cmds++;
++	atomic_inc(&ep->num_active_cmds);
+ 	wmb();	/* flush SQ WQE memory before the doorbell is rung */
+ 	if (test_bit(BNX2I_NX2_DEV_57710, &ep->hba->cnic_dev_type)) {
+ 		sq_db = (struct bnx2i_5771x_sq_rq_db *) ep->qp.sq_pgtbl_virt;
+@@ -1331,14 +1335,15 @@ int bnx2i_send_fw_iscsi_init_msg(struct bnx2i_hba *hba)
+ 
+ /**
+  * bnx2i_process_scsi_cmd_resp - this function handles scsi cmd completion.
+- * @conn:	iscsi connection
++ * @session:	iscsi session
++ * @bnx2i_conn:	bnx2i connection
+  * @cqe:	pointer to newly DMA'ed CQE entry for processing
   *
-- * Copyright (c) 2006 - 2010 Broadcom Corporation
-+ * Copyright (c) 2006 - 2011 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
+  * process SCSI CMD Response CQE & complete the request to SCSI-ML
+  */
+-static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+-				       struct bnx2i_conn *bnx2i_conn,
+-				       struct cqe *cqe)
++int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
++				struct bnx2i_conn *bnx2i_conn,
++				struct cqe *cqe)
+ {
+ 	struct iscsi_conn *conn = bnx2i_conn->cls_conn->dd_data;
+ 	struct bnx2i_cmd_response *resp_cqe;
+@@ -1348,7 +1353,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	u32 datalen = 0;
+ 
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+-	spin_lock(&session->lock);
++	spin_lock_bh(&session->lock);
+ 	task = iscsi_itt_to_task(conn,
+ 				 resp_cqe->itt & ISCSI_CMD_RESPONSE_INDEX);
+ 	if (!task)
+@@ -1409,7 +1414,7 @@ done:
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr,
+ 			     conn->data, datalen);
+ fail:
+-	spin_unlock(&session->lock);
++	spin_unlock_bh(&session->lock);
+ 	return 0;
+ }
+ 
+@@ -1836,21 +1841,130 @@ static void bnx2i_process_cmd_cleanup_resp(struct iscsi_session *session,
+ }
+ 
+ 
++/**
++ * bnx2i_percpu_io_thread - thread per cpu for ios
++ *
++ * @arg:	ptr to bnx2i_percpu_info structure
++ */
++int bnx2i_percpu_io_thread(void *arg)
++{
++	struct bnx2i_percpu_s *p = arg;
++	struct bnx2i_work *work, *tmp;
++	LIST_HEAD(work_list);
++
++	set_user_nice(current, -20);
++
++	while (!kthread_should_stop()) {
++		spin_lock_bh(&p->p_work_lock);
++		while (!list_empty(&p->work_list)) {
++			list_splice_init(&p->work_list, &work_list);
++			spin_unlock_bh(&p->p_work_lock);
++
++			list_for_each_entry_safe(work, tmp, &work_list, list) {
++				list_del_init(&work->list);
++				/* work allocated in the bh, freed here */
++				bnx2i_process_scsi_cmd_resp(work->session,
++							    work->bnx2i_conn,
++							    &work->cqe);
++				atomic_dec(&work->bnx2i_conn->work_cnt);
++				kfree(work);
++			}
++			spin_lock_bh(&p->p_work_lock);
++		}
++		set_current_state(TASK_INTERRUPTIBLE);
++		spin_unlock_bh(&p->p_work_lock);
++		schedule();
++	}
++	__set_current_state(TASK_RUNNING);
++
++	return 0;
++}
++
++
++/**
++ * bnx2i_queue_scsi_cmd_resp - queue cmd completion to the percpu thread
++ * @bnx2i_conn:		bnx2i connection
++ *
++ * this function is called by generic KCQ handler to queue all pending cmd
++ * completion CQEs
++ *
++ * The implementation is to queue the cmd response based on the
++ * last recorded command for the given connection.  The
++ * cpu_id gets recorded upon task_xmit.  No out-of-order completion!
++ */
++static int bnx2i_queue_scsi_cmd_resp(struct iscsi_session *session,
++				     struct bnx2i_conn *bnx2i_conn,
++				     struct bnx2i_nop_in_msg *cqe)
++{
++	struct bnx2i_work *bnx2i_work = NULL;
++	struct bnx2i_percpu_s *p = NULL;
++	struct iscsi_task *task;
++	struct scsi_cmnd *sc;
++	int rc = 0;
++
++	spin_lock(&session->lock);
++	task = iscsi_itt_to_task(bnx2i_conn->cls_conn->dd_data,
++				 cqe->itt & ISCSI_CMD_RESPONSE_INDEX);
++	if (!task) {
++		spin_unlock(&session->lock);
++		return -EINVAL;
++	}
++	sc = task->sc;
++	spin_unlock(&session->lock);
++
++	p = &per_cpu(bnx2i_percpu, sc->request->cpu);
++	spin_lock(&p->p_work_lock);
++	if (unlikely(!p->iothread)) {
++		rc = -EINVAL;
++		goto err;
++	}
++	/* Alloc and copy to the cqe */
++	bnx2i_work = kzalloc(sizeof(struct bnx2i_work), GFP_ATOMIC);
++	if (bnx2i_work) {
++		INIT_LIST_HEAD(&bnx2i_work->list);
++		bnx2i_work->session = session;
++		bnx2i_work->bnx2i_conn = bnx2i_conn;
++		memcpy(&bnx2i_work->cqe, cqe, sizeof(struct cqe));
++		list_add_tail(&bnx2i_work->list, &p->work_list);
++		atomic_inc(&bnx2i_conn->work_cnt);
++		wake_up_process(p->iothread);
++		spin_unlock(&p->p_work_lock);
++		goto done;
++	} else
++		rc = -ENOMEM;
++err:
++	spin_unlock(&p->p_work_lock);
++	bnx2i_process_scsi_cmd_resp(session, bnx2i_conn, (struct cqe *)cqe);
++done:
++	return rc;
++}
++
+ 
+ /**
+  * bnx2i_process_new_cqes - process newly DMA'ed CQE's
+- * @bnx2i_conn:		iscsi connection
++ * @bnx2i_conn:		bnx2i connection
   *
+  * this function is called by generic KCQ handler to process all pending CQE's
+  */
+-static void bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
++static int bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
+ {
+ 	struct iscsi_conn *conn = bnx2i_conn->cls_conn->dd_data;
+ 	struct iscsi_session *session = conn->session;
+-	struct qp_info *qp = &bnx2i_conn->ep->qp;
++	struct qp_info *qp;
+ 	struct bnx2i_nop_in_msg *nopin;
+ 	int tgt_async_msg;
++	int cqe_cnt = 0;
+ 
++	if (bnx2i_conn->ep == NULL)
++		return 0;
++
++	qp = &bnx2i_conn->ep->qp;
++
++	if (!qp->cq_virt) {
++		printk(KERN_ALERT "bnx2i (%s): cq resr freed in bh execution!",
++			bnx2i_conn->hba->netdev->name);
++		goto out;
++	}
+ 	while (1) {
+ 		nopin = (struct bnx2i_nop_in_msg *) qp->cq_cons_qe;
+ 		if (nopin->cq_req_sn != qp->cqe_exp_seq_sn)
+@@ -1873,8 +1987,9 @@ static void bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
+ 		switch (nopin->op_code) {
+ 		case ISCSI_OP_SCSI_CMD_RSP:
+ 		case ISCSI_OP_SCSI_DATA_IN:
+-			bnx2i_process_scsi_cmd_resp(session, bnx2i_conn,
+-						    qp->cq_cons_qe);
++			/* Run the kthread engine only for data cmds
++			   All other cmds will be completed in this bh! */
++			bnx2i_queue_scsi_cmd_resp(session, bnx2i_conn, nopin);
+ 			break;
+ 		case ISCSI_OP_LOGIN_RSP:
+ 			bnx2i_process_login_resp(session, bnx2i_conn,
+@@ -1918,13 +2033,21 @@ static void bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
+ 			printk(KERN_ALERT "bnx2i: unknown opcode 0x%x\n",
+ 					  nopin->op_code);
+ 		}
+-		if (!tgt_async_msg)
+-			bnx2i_conn->ep->num_active_cmds--;
++		if (!tgt_async_msg) {
++			if (!atomic_read(&bnx2i_conn->ep->num_active_cmds))
++				printk(KERN_ALERT "bnx2i (%s): no active cmd! "
++				       "op 0x%x\n",
++				       bnx2i_conn->hba->netdev->name,
++				       nopin->op_code);
++			else
++				atomic_dec(&bnx2i_conn->ep->num_active_cmds);
++		}
+ cqe_out:
+ 		/* clear out in production version only, till beta keep opcode
+ 		 * field intact, will be helpful in debugging (context dump)
+ 		 * nopin->op_code = 0;
+ 		 */
++		cqe_cnt++;
+ 		qp->cqe_exp_seq_sn++;
+ 		if (qp->cqe_exp_seq_sn == (qp->cqe_size * 2 + 1))
+ 			qp->cqe_exp_seq_sn = ISCSI_INITIAL_SN;
+@@ -1937,6 +2060,8 @@ cqe_out:
+ 			qp->cq_cons_idx++;
+ 		}
+ 	}
++out:
++	return cqe_cnt;
+ }
+ 
+ /**
+@@ -1952,6 +2077,7 @@ static void bnx2i_fastpath_notification(struct bnx2i_hba *hba,
+ {
+ 	struct bnx2i_conn *bnx2i_conn;
+ 	u32 iscsi_cid;
++	int nxt_idx;
+ 
+ 	iscsi_cid = new_cqe_kcqe->iscsi_conn_id;
+ 	bnx2i_conn = bnx2i_get_conn_from_id(hba, iscsi_cid);
+@@ -1964,9 +2090,12 @@ static void bnx2i_fastpath_notification(struct bnx2i_hba *hba,
+ 		printk(KERN_ALERT "cid #%x - ep not bound\n", iscsi_cid);
+ 		return;
+ 	}
++
+ 	bnx2i_process_new_cqes(bnx2i_conn);
+-	bnx2i_arm_cq_event_coalescing(bnx2i_conn->ep, CNIC_ARM_CQE_FP);
+-	bnx2i_process_new_cqes(bnx2i_conn);
++	nxt_idx = bnx2i_arm_cq_event_coalescing(bnx2i_conn->ep,
++						CNIC_ARM_CQE_FP);
++	if (nxt_idx && nxt_idx == bnx2i_process_new_cqes(bnx2i_conn))
++		bnx2i_arm_cq_event_coalescing(bnx2i_conn->ep, CNIC_ARM_CQE_FP);
+ }
+ 
+ 
+@@ -2312,7 +2441,7 @@ static void bnx2i_process_ofld_cmpl(struct bnx2i_hba *hba,
+ 			printk(KERN_ALERT "bnx2i (%s): ofld1 cmpl - invalid "
+ 				"opcode\n", hba->netdev->name);
+ 		else if (ofld_kcqe->completion_status ==
+-			ISCSI_KCQE_COMPLETION_STATUS_CID_BUSY)
++			 ISCSI_KCQE_COMPLETION_STATUS_CID_BUSY)
+ 			/* error status code valid only for 5771x chipset */
+ 			ep->state = EP_STATE_OFLD_FAILED_CID_BUSY;
+ 		else
+@@ -2511,7 +2640,7 @@ static void bnx2i_cm_remote_abort(struct cnic_sock *cm_sk)
+ 
+ 
+ static int bnx2i_send_nl_mesg(void *context, u32 msg_type,
+-			       char *buf, u16 buflen)
++			      char *buf, u16 buflen)
+ {
+ 	struct bnx2i_hba *hba = context;
+ 	int rc;
 diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 28bfa9e..4f252a9 100644
+index 6adbdc3..0f7fb14 100644
 --- a/drivers/scsi/bnx2i/bnx2i_init.c
 +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -1,6 +1,6 @@
- /* bnx2i.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2006 - 2010 Broadcom Corporation
-+ * Copyright (c) 2006 - 2011 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
-  *
-@@ -18,8 +18,8 @@ static struct list_head adapter_list = LIST_HEAD_INIT(adapter_list);
- static u32 adapter_count;
+@@ -40,7 +40,7 @@ unsigned int event_coal_min = 24;
+ module_param(event_coal_min, int, 0664);
+ MODULE_PARM_DESC(event_coal_min, "Event Coalescing Minimum Commands");
  
- #define DRV_MODULE_NAME		"bnx2i"
--#define DRV_MODULE_VERSION	"2.6.2.3"
--#define DRV_MODULE_RELDATE	"Dec 31, 2010"
-+#define DRV_MODULE_VERSION	"2.7.0.3"
-+#define DRV_MODULE_RELDATE	"Jun 15, 2011"
+-unsigned int event_coal_div = 1;
++unsigned int event_coal_div = 2;
+ module_param(event_coal_div, int, 0664);
+ MODULE_PARM_DESC(event_coal_div, "Event Coalescing Divide Factor");
  
- static char version[] __devinitdata =
- 		"Broadcom NetXtreme II iSCSI Driver " DRV_MODULE_NAME \
+@@ -66,6 +66,15 @@ MODULE_PARM_DESC(rq_size, "Configure RQ size");
+ 
+ u64 iscsi_error_mask = 0x00;
+ 
++DEFINE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
++
++static int bnx2i_cpu_callback(struct notifier_block *nfb,
++			      unsigned long action, void *hcpu);
++/* notification function for CPU hotplug events */
++static struct notifier_block bnx2i_cpu_notifier = {
++	.notifier_call = bnx2i_cpu_callback,
++};
++
+ 
+ /**
+  * bnx2i_identify_device - identifies NetXtreme II device type
+@@ -362,6 +371,91 @@ void bnx2i_ulp_exit(struct cnic_dev *dev)
+ 
+ 
+ /**
++ * bnx2i_percpu_thread_create - Create a receive thread for an
++ *				online CPU
++ *
++ * @cpu:	cpu index for the online cpu
++ */
++static void bnx2i_percpu_thread_create(unsigned int cpu)
++{
++	struct bnx2i_percpu_s *p;
++	struct task_struct *thread;
++
++	p = &per_cpu(bnx2i_percpu, cpu);
++
++	thread = kthread_create(bnx2i_percpu_io_thread, (void *)p,
++				"bnx2i_thread/%d", cpu);
++	/* bind thread to the cpu */
++	if (likely(!IS_ERR(thread))) {
++		kthread_bind(thread, cpu);
++		p->iothread = thread;
++		wake_up_process(thread);
++	}
++}
++
++
++static void bnx2i_percpu_thread_destroy(unsigned int cpu)
++{
++	struct bnx2i_percpu_s *p;
++	struct task_struct *thread;
++	struct bnx2i_work *work, *tmp;
++
++	/* Prevent any new work from being queued for this CPU */
++	p = &per_cpu(bnx2i_percpu, cpu);
++	spin_lock_bh(&p->p_work_lock);
++	thread = p->iothread;
++	p->iothread = NULL;
++
++	/* Free all work in the list */
++	list_for_each_entry_safe(work, tmp, &p->work_list, list) {
++		list_del_init(&work->list);
++		bnx2i_process_scsi_cmd_resp(work->session,
++					    work->bnx2i_conn, &work->cqe);
++		kfree(work);
++	}
++
++	spin_unlock_bh(&p->p_work_lock);
++	if (thread)
++		kthread_stop(thread);
++}
++
++
++/**
++ * bnx2i_cpu_callback - Handler for CPU hotplug events
++ *
++ * @nfb:	The callback data block
++ * @action:	The event triggering the callback
++ * @hcpu:	The index of the CPU that the event is for
++ *
++ * This creates or destroys per-CPU data for iSCSI
++ *
++ * Returns NOTIFY_OK always.
++ */
++static int bnx2i_cpu_callback(struct notifier_block *nfb,
++			      unsigned long action, void *hcpu)
++{
++	unsigned cpu = (unsigned long)hcpu;
++
++	switch (action) {
++	case CPU_ONLINE:
++	case CPU_ONLINE_FROZEN:
++		printk(KERN_INFO "bnx2i: CPU %x online: Create Rx thread\n",
++			cpu);
++		bnx2i_percpu_thread_create(cpu);
++		break;
++	case CPU_DEAD:
++	case CPU_DEAD_FROZEN:
++		printk(KERN_INFO "CPU %x offline: Remove Rx thread\n", cpu);
++		bnx2i_percpu_thread_destroy(cpu);
++		break;
++	default:
++		break;
++	}
++	return NOTIFY_OK;
++}
++
++
++/**
+  * bnx2i_mod_init - module init entry point
+  *
+  * initialize any driver wide global data structures such as endpoint pool,
+@@ -371,6 +465,8 @@ void bnx2i_ulp_exit(struct cnic_dev *dev)
+ static int __init bnx2i_mod_init(void)
+ {
+ 	int err;
++	unsigned cpu = 0;
++	struct bnx2i_percpu_s *p;
+ 
+ 	printk(KERN_INFO "%s", version);
+ 
+@@ -393,6 +489,20 @@ static int __init bnx2i_mod_init(void)
+ 		goto unreg_xport;
+ 	}
+ 
++	/* Create percpu kernel threads to handle iSCSI I/O completions */
++	for_each_possible_cpu(cpu) {
++		p = &per_cpu(bnx2i_percpu, cpu);
++		INIT_LIST_HEAD(&p->work_list);
++		spin_lock_init(&p->p_work_lock);
++		p->iothread = NULL;
++	}
++
++	for_each_online_cpu(cpu)
++		bnx2i_percpu_thread_create(cpu);
++
++	/* Initialize per CPU interrupt thread */
++	register_hotcpu_notifier(&bnx2i_cpu_notifier);
++
+ 	return 0;
+ 
+ unreg_xport:
+@@ -413,6 +523,7 @@ out:
+ static void __exit bnx2i_mod_exit(void)
+ {
+ 	struct bnx2i_hba *hba;
++	unsigned cpu = 0;
+ 
+ 	mutex_lock(&bnx2i_dev_lock);
+ 	while (!list_empty(&adapter_list)) {
+@@ -430,6 +541,11 @@ static void __exit bnx2i_mod_exit(void)
+ 	}
+ 	mutex_unlock(&bnx2i_dev_lock);
+ 
++	unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
++
++	for_each_online_cpu(cpu)
++		bnx2i_percpu_thread_destroy(cpu);
++
+ 	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+ 	cnic_unregister_driver(CNIC_ULP_ISCSI);
+ }
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 9d40f32..5c55a75 100644
+index 041928b..9d40f32 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1,7 +1,7 @@
- /*
-  * bnx2i_iscsi.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2006 - 2010 Broadcom Corporation
-+ * Copyright (c) 2006 - 2011 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
-  *
-diff --git a/drivers/scsi/bnx2i/bnx2i_sysfs.c b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-index 9174196..83a77f7 100644
---- a/drivers/scsi/bnx2i/bnx2i_sysfs.c
-+++ b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-@@ -1,6 +1,6 @@
- /* bnx2i_sysfs.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2004 - 2010 Broadcom Corporation
-+ * Copyright (c) 2004 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
+@@ -27,6 +27,7 @@ static struct scsi_host_template bnx2i_host_template;
+  */
+ static DEFINE_SPINLOCK(bnx2i_resc_lock); /* protects global resources */
+ 
++DECLARE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
+ 
+ static int bnx2i_adapter_ready(struct bnx2i_hba *hba)
+ {
+@@ -1214,7 +1215,8 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+ 	struct bnx2i_cmd *cmd = task->dd_data;
+ 	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
+ 
+-	if (bnx2i_conn->ep->num_active_cmds + 1 > hba->max_sqes)
++	if (atomic_read(&bnx2i_conn->ep->num_active_cmds) + 1  >
++	    hba->max_sqes)
+ 		return -ENOMEM;
+ 
+ 	/*
+@@ -1354,6 +1356,9 @@ bnx2i_conn_create(struct iscsi_cls_session *cls_session, uint32_t cid)
+ 	bnx2i_conn = conn->dd_data;
+ 	bnx2i_conn->cls_conn = cls_conn;
+ 	bnx2i_conn->hba = hba;
++
++	atomic_set(&bnx2i_conn->work_cnt, 0);
++
+ 	/* 'ep' ptr will be assigned in bind() call */
+ 	bnx2i_conn->ep = NULL;
+ 	init_completion(&bnx2i_conn->cmd_cleanup_cmpl);
+@@ -1457,11 +1462,34 @@ static void bnx2i_conn_destroy(struct iscsi_cls_conn *cls_conn)
+ 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
+ 	struct Scsi_Host *shost;
+ 	struct bnx2i_hba *hba;
++	struct bnx2i_work *work, *tmp;
++	unsigned cpu = 0;
++	struct bnx2i_percpu_s *p;
+ 
+ 	shost = iscsi_session_to_shost(iscsi_conn_to_session(cls_conn));
+ 	hba = iscsi_host_priv(shost);
+ 
+ 	bnx2i_conn_free_login_resources(hba, bnx2i_conn);
++
++	if (atomic_read(&bnx2i_conn->work_cnt)) {
++		for_each_online_cpu(cpu) {
++			p = &per_cpu(bnx2i_percpu, cpu);
++			spin_lock_bh(&p->p_work_lock);
++			list_for_each_entry_safe(work, tmp,
++						 &p->work_list, list) {
++				if (work->session == conn->session &&
++				    work->bnx2i_conn == bnx2i_conn) {
++					list_del_init(&work->list);
++					kfree(work);
++					if (!atomic_dec_and_test(
++							&bnx2i_conn->work_cnt))
++						break;
++				}
++			}
++			spin_unlock_bh(&p->p_work_lock);
++		}
++	}
++
+ 	iscsi_conn_teardown(cls_conn);
+ }
+ 
+@@ -1769,7 +1797,7 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	}
+ 	bnx2i_ep = ep->dd_data;
+ 
+-	bnx2i_ep->num_active_cmds = 0;
++	atomic_set(&bnx2i_ep->num_active_cmds, 0);
+ 	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
+ 	if (iscsi_cid == -1) {
+ 		printk(KERN_ALERT "bnx2i (%s): alloc_ep - unable to allocate "
+@@ -2163,9 +2191,9 @@ static struct scsi_host_template bnx2i_host_template = {
+ 	.eh_device_reset_handler = iscsi_eh_device_reset,
+ 	.eh_target_reset_handler = iscsi_eh_recover_target,
+ 	.change_queue_depth	= iscsi_change_queue_depth,
+-	.can_queue		= 1024,
++	.can_queue		= 2048,
+ 	.max_sectors		= 127,
+-	.cmd_per_lun		= 24,
++	.cmd_per_lun		= 128,
+ 	.this_id		= -1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.sg_tablesize		= ISCSI_MAX_BDS_PER_CMD,
 -- 
 1.7.0.5
 
