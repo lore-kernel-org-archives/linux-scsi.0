@@ -1,19 +1,42 @@
-From: Microsoft <m.loto.yahoo.co.uk@[66.165.177.133]>
-Subject: winner
-Date: Thu, 23 Jun 2011 11:54:23 -0700
-Message-ID: <0LNA005R8FVS3MA0__36147.7073435255$1308908063$gmane$org@a-mtaout22.012.net.il>
-Reply-To: microsoft_draws0232@yahoo.com.hk
-Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: 7bit
+From: John Kacur <jkacur@redhat.com>
+Subject: [PATCH] [SCSI] mpt2sas: Remove duplicate code in mpt2sas_base_attach
+Date: Fri, 24 Jun 2011 11:59:29 +0200
+Message-ID: <1308909569-5293-1-git-send-email-jkacur@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtaout22.012.net.il ([80.179.55.172]:42043 "EHLO
-	mtaout22.012.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065Ab1FXJeF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jun 2011 05:34:05 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:55792 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753089Ab1FXJ7x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Jun 2011 05:59:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, lkml <linux-kernel@vger.kernel.org>
+Cc: Eric Moore <eric.moore@lsi.com>, linux-scsi@vger.kernel.org, John Kacur <jkacur@redhat.com>
 
-You have won 500.000 GBP
-send your phone number
-and address
+Remove this duplicate code I found by inspection.
+
+Signed-off-by: John Kacur <jkacur@redhat.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index efa0255..2660b3c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -3933,13 +3933,6 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
+ 		goto out_free_resources;
+ 	}
+ 
+-	if (!ioc->base_cmds.reply || !ioc->transport_cmds.reply ||
+-	    !ioc->scsih_cmds.reply || !ioc->tm_cmds.reply ||
+-	    !ioc->config_cmds.reply || !ioc->ctl_cmds.reply) {
+-		r = -ENOMEM;
+-		goto out_free_resources;
+-	}
+-
+ 	init_completion(&ioc->shost_recovery_done);
+ 
+ 	for (i = 0; i < MPI2_EVENT_NOTIFY_EVENTMASK_WORDS; i++)
+-- 
+1.7.2.3
+
