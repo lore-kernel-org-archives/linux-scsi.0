@@ -1,81 +1,85 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target: Updates for v3.0-rc5
-Date: Thu, 23 Jun 2011 17:42:59 -0700
-Message-ID: <1308876179-3974-1-git-send-email-nab@linux-iscsi.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC v3 PATCH 1/2] bsg: Add infrastructure to send in kernel
+ bsg commands.
+Date: Thu, 23 Jun 2011 19:02:56 -0700
+Message-ID: <4E03F050.5030001@panasas.com>
+References: <alpine.LFD.2.02.1106160825540.2424@localhost.localdomain> <20110623104625Y.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm22.access.bullet.mail.mud.yahoo.com ([66.94.237.223]:34838
-	"HELO nm22.access.bullet.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754264Ab1FXAg7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Jun 2011 20:36:59 -0400
+Received: from natasha.panasas.com ([67.152.220.90]:43864 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005Ab1FXDRq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Jun 2011 23:17:46 -0400
+In-Reply-To: <20110623104625Y.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, Kiran Patil <kiran.patil@intel.com>, Roland Dreier <roland@purestorage.com>, Dan Carpenter <error27@gmail.com>, Randy Dunlap <randy.dunlap@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: chad.dupuis@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 06/22/2011 06:51 PM, FUJITA Tomonori wrote:
+>> @@ -965,6 +1009,40 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>>         }
+>>   }
+> 
+> Rather than adding 'is_user' argument to everywhere, it could cleaner
+> to add something like 'int from_kernel' in struct bsg_command? No?
+> 
 
-Hi Linus,
+I agree it should be part of the bsg_command,
 
-Here are the target updates for v3.0-rc5 that have been marinating in
-lio-core-2.6.git for a few weeks now, and are ready for you to pull.
+I would prefer if all these "from_kernel" or "is_user" are bool. and true/false
+we don't do int for bool(s) in Kernel anymore.
 
-It includes a OOPs bugfix for task management exception handling in target
-core, a bugfix for incorrect TMR LUN lookup in tcm_fc fixed by Kiran,
-a series from Dan to address issues with ERR_PTR dereferencing + strlen usage +
-possible deadlock fix, and Roland's spin_lock_irq() -> irqsave() change
-required for certain cases in HW target mode operation in order prevent from
-re-enabling interrupts that have already been disabled with a seperate
-irqsave() call.
+> 
+>> +int bsg_private_command (struct request_queue *q, struct sg_io_v4 *hdr)
+A question:
+  I needed to do something like this for a long time. But the way I need it I actually
+  have user_buffers at @hdr. Because I want it as part of an OSD ioctl which is filtered
+  and enhanced and then chained to here. (Like block devices chain to blk_ioctl)
 
-This series has been made against the following HEAD:
+  Could we add in the future, a bool param "is_user" to this API?
 
-commit 56299378726d5f2ba8d3c8cbbd13cb280ba45e4f
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Mon Jun 20 20:25:46 2011 -0700
+>> +{
+>> +       struct request *rq;
+>> +       struct bio *bio, *bidi_bio = NULL;
+>> +       int at_head;
+>> +       u8 sense[SCSI_SENSE_BUFFERSIZE];
+>> +       fmode_t has_write_perm = 0;
+>> +       int ret;
+>> +
+>> +       if (!q)
+>> +               return -ENXIO;
+>> +
+>> +       /* Fake that we have write permission */
+>> +       has_write_perm |= FMODE_WRITE;
+>> +
+>> +       rq = bsg_map_hdr_kern(q, hdr, has_write_perm, sense);
+>> +
+>> +       if (IS_ERR(rq)) {
+>> +               return PTR_ERR(rq);
+>> +       }
+>> +
+>> +       bio = rq->bio;
+>> +       if (rq->next_rq)
+>> +               bidi_bio = rq->next_rq->bio;
+>> +       at_head = (0 == (hdr->flags & BSG_FLAG_Q_AT_TAIL));
+>> +
+>> +       blk_execute_rq(q, NULL, rq, at_head);
+>> +       ret = blk_complete_sgv4_hdr_rq(rq, hdr, bio, bidi_bio, 0);
+>> +
+>> +       return ret;
+>> +}
+>> +EXPORT_SYMBOL(bsg_private_command);
+> 
+> EXPORT_SYMBOL_GPL, please.
+> 
 
-    Linux 3.0-rc4
+I have a question about this API:
+ From user mode we open a filehandle on the device and it is pinned down till
+ we close the handle. A kernel user API might need to take the device reference
+ somewhere. Is that true?
 
-Please pull go ahead and pull from:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-linus
-
-Thanks!
-
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-
-Dan Carpenter (4):
-  target: Fix ERR_PTR dereferencing bugs
-  target: Drop bogus ERR_PTR usage in target_fabric_configfs_init
-  target: Fix incorrect strlen() NULL terminator checks
-  tcm_fc: Fix possible lock to unlock type deadlock
-
-Kiran Patil (1):
-  tcm_fc: Fix ft_send_tm LUN lookup OOPs
-
-Nicholas Bellinger (2):
-  target: Fix transport_get_lun_for_tmr failure cases
-  tcm_fc: Fix conversion spec warning
-
-Roland Dreier (1):
-  target: Convert transport_deregister_session_configfs nacl_sess_lock
-    to save irq state
-
- drivers/target/loopback/tcm_loop.c     |   13 ++++--
- drivers/target/target_core_configfs.c  |   24 ++++++------
- drivers/target/target_core_device.c    |    5 +-
- drivers/target/target_core_pr.c        |    6 +-
- drivers/target/target_core_tmr.c       |    8 +++-
- drivers/target/target_core_transport.c |    6 +-
- drivers/target/tcm_fc/tcm_fc.h         |    2 +-
- drivers/target/tcm_fc/tfc_cmd.c        |   64 ++++++++++++++++---------------
- drivers/target/tcm_fc/tfc_io.c         |    2 +-
- drivers/target/tcm_fc/tfc_sess.c       |    4 +-
- 10 files changed, 73 insertions(+), 61 deletions(-)
-
--- 
-1.7.5.4
-
+Thanks
+Boaz
