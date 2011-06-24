@@ -1,71 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] iscsi-target: Merge for .40-rc1
-Date: Fri, 24 Jun 2011 11:36:36 -0500
-Message-ID: <1308933396.6366.4.camel@mulgrave>
-References: <1306551592.23461.506.camel@haakon2.linux-iscsi.org>
-	 <BANLkTimt5qisV7EH7NMv1tG8gR_9d-kA3g@mail.gmail.com>
-	 <20110530130949.GB13494@lst.de>
-	 <20110619015025V.fujita.tomonori@lab.ntt.co.jp>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] cxgb3i: fixed programing of the dma page sizes
+Date: Fri, 24 Jun 2011 13:46:47 -0500
+Message-ID: <4E04DB97.8030101@cs.wisc.edu>
+References: <201106172310.p5HNAWQ5028255@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110619015025V.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hch@lst.de, torvalds@linux-foundation.org, nab@linux-iscsi.org, michaelc@cs.wisc.edu, agrover@redhat.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:45924 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751413Ab1FXSpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jun 2011 14:45:11 -0400
+In-Reply-To: <201106172310.p5HNAWQ5028255@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kxie@chelsio.com
+Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, James.Bottomley@HansenPartnership.com
 
-On Sun, 2011-06-19 at 01:55 +0900, FUJITA Tomonori wrote:
-> On Mon, 30 May 2011 15:09:49 +0200
-> Christoph Hellwig <hch@lst.de> wrote:
+On 06/17/2011 06:10 PM, kxie@chelsio.com wrote:
+> [PATCH] cxgb3i: fixed programing of the dma page sizes
 > 
-> > On Sun, May 29, 2011 at 11:49:08AM -0700, Linus Torvalds wrote:
-> > > I don't feel confident or motivated enough about iscsi-target, so
-> > > after some (little) thought I ended up not pulling this. I really need
-> > > a lot of acks from people who actually work on and care about SCSI,
-> > > and right now I feel like with me being away for the next week, I
-> > > can't handle it.
-> > > 
-> > > I just don't want to be in the situation where I pull something that
-> > > is apparently contentious in the SCSI space in general, but that's
-> > > _particularly_ true this release. So I'm afraid that this essentially
-> > > got pushed out to the next release.
-> > 
-> > The main contention right now is wether to put the authentification
-> > into kernel space or not.  Doing the slow path in userspace worked
-> > out okay but not great on the initiator, but it has the potential
-> > to become a nightmare worse than oprofile if the split ends up not
-> > beeing perfect.
+> From: Karen Xie <kxie@chelsio.com>
 > 
-> As I said earlier, the split is pretty simple for target code unlike
-> initiator code. Doing operations before SCSI nexus establishment in
-> userspace and then the kernel takes over nexuses. The information that
-> the user space needs for the login negotiation is exported via
-> configfs. Unlike open-iscsi split, the nexuses don't go back and forth
-> between user and kernel space.
+> Fixed missing programming of the pages sizes for DMA. 
 > 
+> Signed-off-by: Karen Xie <kxie@chelsio.com>
+> ---
+>  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
 > 
-> > Given that we pretty well tested and working code that's used in lots
-> > of production setups my vote is for taking it as-is unless someone can
-> > actually show a prototype for a nicely working user/kernel split.
-> 
-> ok, I implemented something like that. It's not finished at all but
-> my open-iscsi box successfully logged in. The daemon just passes a file
-> descriptor to kernel space after the negotiation finishes.
-> 
-> ssh://master.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git lio-4.1-ud
-> 
-> The user space code is at:
-> ssh://master.kernel.org/pub/scm/linux/kernel/git/tomo/iscsi-tcmd.git
+> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+> index fc2cdb6..ffb9eea 100644
+> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+> @@ -1245,7 +1245,7 @@ static int cxgb3i_ddp_init(struct cxgbi_device *cdev)
+>  	struct cxgbi_ddp_info *ddp = tdev->ulp_iscsi;
+>  	struct ulp_iscsi_info uinfo;
+>  	unsigned int pgsz_factor[4];
+> -	int err;
+> +	int i, err;
+>  
+>  	if (ddp) {
+>  		kref_get(&ddp->refcnt);
+> @@ -1271,6 +1271,8 @@ static int cxgb3i_ddp_init(struct cxgbi_device *cdev)
+>  
+>  	uinfo.tagmask = ddp->idx_mask << PPOD_IDX_SHIFT;
+>  	cxgbi_ddp_page_size_factor(pgsz_factor);
+> +	for (i = 0; i < 4; i++)
+> +		uinfo.pgsz_factor[i] = pgsz_factor[i];
+>  	uinfo.ulimit = uinfo.llimit + (ddp->nppods << PPOD_SIZE_SHIFT);
+>  
+>  	err = tdev->ctl(tdev, ULP_ISCSI_SET_PARAMS, &uinfo);
 
-There's been a singular lack of comments on this.
+Looks ok.
 
-To me, the code looks reasonable (at just over 200 lines for the socket
-passing.  It's extensible to support arbitrary login protocols, and it
-doesn't impact the fast path at all.
-
-Now that we have the actual code, it's a lot cleaner even than I
-imagined ... is there any objection simply to doing this?
-
-James
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
