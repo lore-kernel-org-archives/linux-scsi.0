@@ -1,12 +1,12 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/4] iscsi_boot_sysfs: have this module check for null on destruction
-Date: Fri, 24 Jun 2011 15:11:52 -0500
-Message-ID: <1308946315-9240-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 2/4] iscsi_ibft, be2iscsi, iscsi_boot: fix boot kobj data lifetime management
+Date: Fri, 24 Jun 2011 15:11:53 -0500
+Message-ID: <1308946315-9240-3-git-send-email-michaelc@cs.wisc.edu>
 References: <1308946315-9240-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:31975 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47017 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753089Ab1FXUKK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753126Ab1FXUKK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 24 Jun 2011 16:10:10 -0400
 In-Reply-To: <1308946315-9240-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,53 +16,512 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This moves the check for NULL boot_sets to the iscsi_boot_sysfs
-module instead of having the drivers do it.
+be2iscsi passes the boot functions its phba object which is
+allocated in the shost, but iscsi_ibft passes in a object
+allocated for each item to display. The problem is that
+iscsi_boot_sysfs was managing the lifetime of the object
+passed in and doing a kfree on release. This causes a double
+free for be2iscsi which frees the shost in its pci_remove.
+
+This patch fixes the problem by adding a release callback
+which the drivers can call kfree or a put() type of function
+(needed for be2iscsi which will do a get/put on the shost).
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_main.c |    6 ++----
- drivers/scsi/iscsi_boot_sysfs.c |    3 +++
- 2 files changed, 5 insertions(+), 4 deletions(-)
+ drivers/firmware/iscsi_ibft.c    |   14 ++-
+ drivers/scsi/be2iscsi/be_main.c  |  190 ++++++++++++++++++++------------------
+ drivers/scsi/iscsi_boot_sysfs.c  |   28 ++++--
+ include/linux/iscsi_boot_sysfs.h |   16 +++-
+ 4 files changed, 142 insertions(+), 106 deletions(-)
 
+diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index ce33f46..c811cb1 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -566,6 +566,11 @@ static mode_t __init ibft_check_initiator_for(void *data, int type)
+ 	return rc;
+ }
+ 
++static void ibft_kobj_release(void *data)
++{
++	kfree(data);
++}
++
+ /*
+  * Helper function for ibft_register_kobjects.
+  */
+@@ -595,7 +600,8 @@ static int __init ibft_create_kobject(struct acpi_table_ibft *header,
+ 		boot_kobj = iscsi_boot_create_initiator(boot_kset, hdr->index,
+ 						ibft_kobj,
+ 						ibft_attr_show_initiator,
+-						ibft_check_initiator_for);
++						ibft_check_initiator_for,
++						ibft_kobj_release);
+ 		if (!boot_kobj) {
+ 			rc = -ENOMEM;
+ 			goto free_ibft_obj;
+@@ -610,7 +616,8 @@ static int __init ibft_create_kobject(struct acpi_table_ibft *header,
+ 		boot_kobj = iscsi_boot_create_ethernet(boot_kset, hdr->index,
+ 						       ibft_kobj,
+ 						       ibft_attr_show_nic,
+-						       ibft_check_nic_for);
++						       ibft_check_nic_for,
++						       ibft_kobj_release);
+ 		if (!boot_kobj) {
+ 			rc = -ENOMEM;
+ 			goto free_ibft_obj;
+@@ -625,7 +632,8 @@ static int __init ibft_create_kobject(struct acpi_table_ibft *header,
+ 		boot_kobj = iscsi_boot_create_target(boot_kset, hdr->index,
+ 						     ibft_kobj,
+ 						     ibft_attr_show_target,
+-						     ibft_check_tgt_for);
++						     ibft_check_tgt_for,
++						     ibft_kobj_release);
+ 		if (!boot_kobj) {
+ 			rc = -ENOMEM;
+ 			goto free_ibft_obj;
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 94b9a07..ef49c7e 100644
+index ef49c7e..9e51da4 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -420,8 +420,7 @@ static int beiscsi_setup_boot_info(struct beiscsi_hba *phba)
- 	return 0;
+@@ -215,73 +215,62 @@ unlock:
+ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
+ {
+ 	struct beiscsi_hba *phba = data;
++	struct mgmt_session_info *boot_sess = &phba->boot_sess;
++	struct mgmt_conn_info *boot_conn = &boot_sess->conn_list[0];
+ 	char *str = buf;
+ 	int rc;
  
- free_kset:
--	if (phba->boot_kset)
--		iscsi_boot_destroy_kset(phba->boot_kset);
+ 	switch (type) {
+ 	case ISCSI_BOOT_TGT_NAME:
+ 		rc = sprintf(buf, "%.*s\n",
+-				(int)strlen(phba->boot_sess.target_name),
+-				(char *)&phba->boot_sess.target_name);
++			    (int)strlen(boot_sess->target_name),
++			    (char *)&boot_sess->target_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_IP_ADDR:
+-		if (phba->boot_sess.conn_list[0].dest_ipaddr.ip_type == 0x1)
++		if (boot_conn->dest_ipaddr.ip_type == 0x1)
+ 			rc = sprintf(buf, "%pI4\n",
+-				(char *)&phba->boot_sess.conn_list[0].
+-				dest_ipaddr.ip_address);
++				(char *)&boot_conn->dest_ipaddr.ip_address);
+ 		else
+ 			rc = sprintf(str, "%pI6\n",
+-				(char *)&phba->boot_sess.conn_list[0].
+-				dest_ipaddr.ip_address);
++				(char *)&boot_conn->dest_ipaddr.ip_address);
+ 		break;
+ 	case ISCSI_BOOT_TGT_PORT:
+-		rc = sprintf(str, "%d\n", phba->boot_sess.conn_list[0].
+-				  dest_port);
++		rc = sprintf(str, "%d\n", boot_conn->dest_port);
+ 		break;
+ 
+ 	case ISCSI_BOOT_TGT_CHAP_NAME:
+ 		rc = sprintf(str,  "%.*s\n",
+-				      phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      target_chap_name_length,
+-				      (char *)&phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      target_chap_name);
++			     boot_conn->negotiated_login_options.auth_data.chap.
++			     target_chap_name_length,
++			     (char *)&boot_conn->negotiated_login_options.
++			     auth_data.chap.target_chap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_CHAP_SECRET:
+ 		rc = sprintf(str,  "%.*s\n",
+-				      phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      target_secret_length,
+-				      (char *)&phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      target_secret);
+-
++			     boot_conn->negotiated_login_options.auth_data.chap.
++			     target_secret_length,
++			     (char *)&boot_conn->negotiated_login_options.
++			     auth_data.chap.target_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_NAME:
+ 		rc = sprintf(str,  "%.*s\n",
+-				      phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      intr_chap_name_length,
+-				      (char *)&phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      intr_chap_name);
+-
++			     boot_conn->negotiated_login_options.auth_data.chap.
++			     intr_chap_name_length,
++			     (char *)&boot_conn->negotiated_login_options.
++			     auth_data.chap.intr_chap_name);
+ 		break;
+ 	case ISCSI_BOOT_TGT_REV_CHAP_SECRET:
+-			rc = sprintf(str,  "%.*s\n",
+-				      phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      intr_secret_length,
+-				      (char *)&phba->boot_sess.conn_list[0].
+-				      negotiated_login_options.auth_data.chap.
+-				      intr_secret);
++		rc = sprintf(str,  "%.*s\n",
++			     boot_conn->negotiated_login_options.auth_data.chap.
++			     intr_secret_length,
++			     (char *)&boot_conn->negotiated_login_options.
++			     auth_data.chap.intr_secret);
+ 		break;
+ 	case ISCSI_BOOT_TGT_FLAGS:
+-			rc = sprintf(str, "2\n");
++		rc = sprintf(str, "2\n");
+ 		break;
+ 	case ISCSI_BOOT_TGT_NIC_ASSOC:
+-			rc = sprintf(str, "0\n");
++		rc = sprintf(str, "0\n");
+ 		break;
+ 	default:
+ 		rc = -ENOSYS;
+@@ -315,10 +304,10 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
+ 
+ 	switch (type) {
+ 	case ISCSI_BOOT_ETH_FLAGS:
+-			rc = sprintf(str, "2\n");
++		rc = sprintf(str, "2\n");
+ 		break;
+ 	case ISCSI_BOOT_ETH_INDEX:
+-			rc = sprintf(str, "0\n");
++		rc = sprintf(str, "0\n");
+ 		break;
+ 	case ISCSI_BOOT_ETH_MAC:
+ 		rc  = beiscsi_get_macaddr(buf, phba);
+@@ -391,39 +380,6 @@ static mode_t beiscsi_eth_get_attr_visibility(void *data, int type)
+ 	return rc;
+ }
+ 
+-static int beiscsi_setup_boot_info(struct beiscsi_hba *phba)
+-{
+-	struct iscsi_boot_kobj *boot_kobj;
+-
+-	phba->boot_kset = iscsi_boot_create_host_kset(phba->shost->host_no);
+-	if (!phba->boot_kset)
+-		return -ENOMEM;
+-
+-	/* get boot info using mgmt cmd */
+-	boot_kobj = iscsi_boot_create_target(phba->boot_kset, 0, phba,
+-					     beiscsi_show_boot_tgt_info,
+-					     beiscsi_tgt_get_attr_visibility);
+-	if (!boot_kobj)
+-		goto free_kset;
+-
+-	boot_kobj = iscsi_boot_create_initiator(phba->boot_kset, 0, phba,
+-					     beiscsi_show_boot_ini_info,
+-					     beiscsi_ini_get_attr_visibility);
+-	if (!boot_kobj)
+-		goto free_kset;
+-
+-	boot_kobj = iscsi_boot_create_ethernet(phba->boot_kset, 0, phba,
+-					     beiscsi_show_boot_eth_info,
+-					     beiscsi_eth_get_attr_visibility);
+-	if (!boot_kobj)
+-		goto free_kset;
+-	return 0;
+-
+-free_kset:
+-	iscsi_boot_destroy_kset(phba->boot_kset);
+-	return -ENOMEM;
+-}
+-
+ /*------------------- PCI Driver operations and data ----------------- */
+ static DEFINE_PCI_DEVICE_TABLE(beiscsi_pci_id_table) = {
+ 	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
+@@ -482,14 +438,6 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
+ 	if (iscsi_host_add(shost, &phba->pcidev->dev))
+ 		goto free_devices;
+ 
+-	if (beiscsi_setup_boot_info(phba))
+-		/*
+-		 * log error but continue, because we may not be using
+-		 * iscsi boot.
+-		 */
+-		shost_printk(KERN_ERR, phba->shost, "Could not set up "
+-		"iSCSI boot info.");
+-
+ 	return phba;
+ 
+ free_devices:
+@@ -3510,6 +3458,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	unsigned int tag, wrb_num;
+ 	unsigned short status, extd_status;
+ 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
++	int ret = -ENOMEM;
+ 
+ 	tag = beiscsi_get_boot_target(phba);
+ 	if (!tag) {
+@@ -3534,8 +3483,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	boot_resp = embedded_payload(wrb);
+ 
+ 	if (boot_resp->boot_session_handle < 0) {
+-		printk(KERN_ERR "No Boot Session for this pci_func,"
+-			"session Hndl = %d\n", boot_resp->boot_session_handle);
++		shost_printk(KERN_INFO, phba->shost, "No Boot Session.\n");
+ 		return -ENXIO;
+ 	}
+ 
+@@ -3573,14 +3521,70 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	wrb = queue_get_wrb(mccq, wrb_num);
+ 	free_mcc_tag(&phba->ctrl, tag);
+ 	session_resp = nonemb_cmd.va ;
++
+ 	memcpy(&phba->boot_sess, &session_resp->session_info,
+ 	       sizeof(struct mgmt_session_info));
+-	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+-		    nonemb_cmd.va, nonemb_cmd.dma);
+-	return 0;
++	ret = 0;
++
+ boot_freemem:
+ 	pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+ 		    nonemb_cmd.va, nonemb_cmd.dma);
++	return ret;
++}
++
++static void beiscsi_boot_release(void *data)
++{
++	struct beiscsi_hba *phba = data;
++
++	scsi_host_put(phba->shost);
++}
++
++static int beiscsi_setup_boot_info(struct beiscsi_hba *phba)
++{
++	struct iscsi_boot_kobj *boot_kobj;
++
++	/* get boot info using mgmt cmd */
++	if (beiscsi_get_boot_info(phba))
++		/* Try to see if we can carry on without this */
++		return 0;
++
++	phba->boot_kset = iscsi_boot_create_host_kset(phba->shost->host_no);
++	if (!phba->boot_kset)
++		return -ENOMEM;
++
++	/* get a ref because the show function will ref the phba */
++	if (!scsi_host_get(phba->shost))
++		goto free_kset;
++	boot_kobj = iscsi_boot_create_target(phba->boot_kset, 0, phba,
++					     beiscsi_show_boot_tgt_info,
++					     beiscsi_tgt_get_attr_visibility,
++					     beiscsi_boot_release);
++	if (!boot_kobj)
++		goto put_shost;
++
++	if (!scsi_host_get(phba->shost))
++		goto free_kset;
++	boot_kobj = iscsi_boot_create_initiator(phba->boot_kset, 0, phba,
++						beiscsi_show_boot_ini_info,
++						beiscsi_ini_get_attr_visibility,
++						beiscsi_boot_release);
++	if (!boot_kobj)
++		goto put_shost;
++
++	if (!scsi_host_get(phba->shost))
++		goto free_kset;
++	boot_kobj = iscsi_boot_create_ethernet(phba->boot_kset, 0, phba,
++					       beiscsi_show_boot_eth_info,
++					       beiscsi_eth_get_attr_visibility,
++					       beiscsi_boot_release);
++	if (!boot_kobj)
++		goto put_shost;
++	return 0;
++
++put_shost:
++	scsi_host_put(phba->shost);
++free_kset:
 +	iscsi_boot_destroy_kset(phba->boot_kset);
  	return -ENOMEM;
  }
  
-@@ -4150,8 +4149,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
- 			    phba->ctrl.mbox_mem_alloced.size,
- 			    phba->ctrl.mbox_mem_alloced.va,
- 			    phba->ctrl.mbox_mem_alloced.dma);
--	if (phba->boot_kset)
--		iscsi_boot_destroy_kset(phba->boot_kset);
-+	iscsi_boot_destroy_kset(phba->boot_kset);
- 	iscsi_host_remove(phba->shost);
- 	pci_dev_put(phba->pcidev);
- 	iscsi_host_free(phba->shost);
+@@ -4308,11 +4312,15 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
+ 		goto free_blkenbld;
+ 	}
+ 	hwi_enable_intr(phba);
+-	ret = beiscsi_get_boot_info(phba);
+-	if (ret < 0) {
+-		shost_printk(KERN_ERR, phba->shost, "beiscsi_dev_probe-"
+-			     "No Boot Devices !!!!!\n");
+-	}
++
++	if (beiscsi_setup_boot_info(phba))
++		/*
++		 * log error but continue, because we may not be using
++		 * iscsi boot.
++		 */
++		shost_printk(KERN_ERR, phba->shost, "Could not set up "
++			     "iSCSI boot info.");
++
+ 	SE_DEBUG(DBG_LVL_8, "\n\n\n SUCCESS - DRIVER LOADED\n\n\n");
+ 	return 0;
+ 
 diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
-index df6bff7..4274ce9 100644
+index 4274ce9..89700cb 100644
 --- a/drivers/scsi/iscsi_boot_sysfs.c
 +++ b/drivers/scsi/iscsi_boot_sysfs.c
-@@ -472,6 +472,9 @@ void iscsi_boot_destroy_kset(struct iscsi_boot_kset *boot_kset)
- {
- 	struct iscsi_boot_kobj *boot_kobj, *tmp_kobj;
+@@ -64,7 +64,8 @@ static void iscsi_boot_kobj_release(struct kobject *kobj)
+ 	struct iscsi_boot_kobj *boot_kobj =
+ 			container_of(kobj, struct iscsi_boot_kobj, kobj);
  
-+	if (!boot_kset)
-+		return;
+-	kfree(boot_kobj->data);
++	if (boot_kobj->release)
++		boot_kobj->release(boot_kobj->data);
+ 	kfree(boot_kobj);
+ }
+ 
+@@ -305,7 +306,8 @@ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
+ 		       struct attribute_group *attr_group,
+ 		       const char *name, int index, void *data,
+ 		       ssize_t (*show) (void *data, int type, char *buf),
+-		       mode_t (*is_visible) (void *data, int type))
++		       mode_t (*is_visible) (void *data, int type),
++		       void (*release) (void *data))
+ {
+ 	struct iscsi_boot_kobj *boot_kobj;
+ 
+@@ -323,6 +325,7 @@ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
+ 	boot_kobj->data = data;
+ 	boot_kobj->show = show;
+ 	boot_kobj->is_visible = is_visible;
++	boot_kobj->release = release;
+ 
+ 	if (sysfs_create_group(&boot_kobj->kobj, attr_group)) {
+ 		/*
+@@ -331,7 +334,7 @@ iscsi_boot_create_kobj(struct iscsi_boot_kset *boot_kset,
+ 		 * the boot kobj was not setup and the normal release
+ 		 * path is not being run.
+ 		 */
+-		boot_kobj->data = NULL;
++		boot_kobj->release = NULL;
+ 		kobject_put(&boot_kobj->kobj);
+ 		return NULL;
+ 	}
+@@ -357,6 +360,7 @@ static void iscsi_boot_remove_kobj(struct iscsi_boot_kobj *boot_kobj)
+  * @data: driver specific data for target
+  * @show: attr show function
+  * @is_visible: attr visibility function
++ * @release: release function
+  *
+  * Note: The boot sysfs lib will free the data passed in for the caller
+  * when all refs to the target kobject have been released.
+@@ -365,10 +369,12 @@ struct iscsi_boot_kobj *
+ iscsi_boot_create_target(struct iscsi_boot_kset *boot_kset, int index,
+ 			 void *data,
+ 			 ssize_t (*show) (void *data, int type, char *buf),
+-			 mode_t (*is_visible) (void *data, int type))
++			 mode_t (*is_visible) (void *data, int type),
++			 void (*release) (void *data))
+ {
+ 	return iscsi_boot_create_kobj(boot_kset, &iscsi_boot_target_attr_group,
+-				      "target%d", index, data, show, is_visible);
++				      "target%d", index, data, show, is_visible,
++				      release);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_boot_create_target);
+ 
+@@ -379,6 +385,7 @@ EXPORT_SYMBOL_GPL(iscsi_boot_create_target);
+  * @data: driver specific data
+  * @show: attr show function
+  * @is_visible: attr visibility function
++ * @release: release function
+  *
+  * Note: The boot sysfs lib will free the data passed in for the caller
+  * when all refs to the initiator kobject have been released.
+@@ -387,12 +394,13 @@ struct iscsi_boot_kobj *
+ iscsi_boot_create_initiator(struct iscsi_boot_kset *boot_kset, int index,
+ 			    void *data,
+ 			    ssize_t (*show) (void *data, int type, char *buf),
+-			    mode_t (*is_visible) (void *data, int type))
++			    mode_t (*is_visible) (void *data, int type),
++			    void (*release) (void *data))
+ {
+ 	return iscsi_boot_create_kobj(boot_kset,
+ 				      &iscsi_boot_initiator_attr_group,
+ 				      "initiator", index, data, show,
+-				      is_visible);
++				      is_visible, release);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_boot_create_initiator);
+ 
+@@ -403,6 +411,7 @@ EXPORT_SYMBOL_GPL(iscsi_boot_create_initiator);
+  * @data: driver specific data
+  * @show: attr show function
+  * @is_visible: attr visibility function
++ * @release: release function
+  *
+  * Note: The boot sysfs lib will free the data passed in for the caller
+  * when all refs to the ethernet kobject have been released.
+@@ -411,12 +420,13 @@ struct iscsi_boot_kobj *
+ iscsi_boot_create_ethernet(struct iscsi_boot_kset *boot_kset, int index,
+ 			   void *data,
+ 			   ssize_t (*show) (void *data, int type, char *buf),
+-			   mode_t (*is_visible) (void *data, int type))
++			   mode_t (*is_visible) (void *data, int type),
++			   void (*release) (void *data))
+ {
+ 	return iscsi_boot_create_kobj(boot_kset,
+ 				      &iscsi_boot_ethernet_attr_group,
+ 				      "ethernet%d", index, data, show,
+-				      is_visible);
++				      is_visible, release);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_boot_create_ethernet);
+ 
+diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
+index f1e6c18..f0a2f8b 100644
+--- a/include/linux/iscsi_boot_sysfs.h
++++ b/include/linux/iscsi_boot_sysfs.h
+@@ -92,6 +92,13 @@ struct iscsi_boot_kobj {
+ 	 * properties.
+ 	 */
+ 	mode_t (*is_visible) (void *data, int type);
 +
- 	list_for_each_entry_safe(boot_kobj, tmp_kobj,
- 				 &boot_kset->kobj_list, list)
- 		iscsi_boot_remove_kobj(boot_kobj);
++	/*
++	 * Driver specific release function.
++	 *
++	 * The function should free the data passed in.
++	 */
++	void (*release) (void *data);
+ };
+ 
+ struct iscsi_boot_kset {
+@@ -103,18 +110,21 @@ struct iscsi_boot_kobj *
+ iscsi_boot_create_initiator(struct iscsi_boot_kset *boot_kset, int index,
+ 			    void *data,
+ 			    ssize_t (*show) (void *data, int type, char *buf),
+-			    mode_t (*is_visible) (void *data, int type));
++			    mode_t (*is_visible) (void *data, int type),
++			    void (*release) (void *data));
+ 
+ struct iscsi_boot_kobj *
+ iscsi_boot_create_ethernet(struct iscsi_boot_kset *boot_kset, int index,
+ 			   void *data,
+ 			   ssize_t (*show) (void *data, int type, char *buf),
+-			   mode_t (*is_visible) (void *data, int type));
++			   mode_t (*is_visible) (void *data, int type),
++			   void (*release) (void *data));
+ struct iscsi_boot_kobj *
+ iscsi_boot_create_target(struct iscsi_boot_kset *boot_kset, int index,
+ 			 void *data,
+ 			 ssize_t (*show) (void *data, int type, char *buf),
+-			 mode_t (*is_visible) (void *data, int type));
++			 mode_t (*is_visible) (void *data, int type),
++			 void (*release) (void *data));
+ 
+ struct iscsi_boot_kset *iscsi_boot_create_kset(const char *set_name);
+ struct iscsi_boot_kset *iscsi_boot_create_host_kset(unsigned int hostno);
 -- 
 1.7.2.3
 
