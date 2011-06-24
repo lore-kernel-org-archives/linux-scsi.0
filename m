@@ -1,155 +1,48 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/4] iscsi_tcp: fix locking around iscsi sk user data
-Date: Fri, 24 Jun 2011 15:11:54 -0500
-Message-ID: <1308946315-9240-4-git-send-email-michaelc@cs.wisc.edu>
-References: <1308946315-9240-1-git-send-email-michaelc@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 3/4 v2] BNX2I: Changed the nopout_wqe->lun memcpy to use
+ sizeof instead
+Date: Fri, 24 Jun 2011 15:20:43 -0500
+Message-ID: <4E04F19B.5080800@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1308869497-2709-4-git-send-email-eddie.wai@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58674 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:46404 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753126Ab1FXUKS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 16:10:18 -0400
-In-Reply-To: <1308946315-9240-1-git-send-email-michaelc@cs.wisc.edu>
+	id S1750920Ab1FXUTG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jun 2011 16:19:06 -0400
+In-Reply-To: <1308869497-2709-4-git-send-email-eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: open-iscsi@googlegroups.com
+Cc: Eddie Wai <eddie.wai@broadcom.com>, James Bottomley <JBottomley@novell.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Andy Grover <agrover@redhat.com>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On 06/23/2011 05:51 PM, Eddie Wai wrote:
+> Modified the memcpy of nopout_wqe->lun to use sizeof(struct scsi_lun)
+> instead of the hardcoded value 8 as noted by review comments.
+> 
+> Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+> ---
+>  drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> index 2a1bb9f..ba2f96e 100644
+> --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
+> +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+> @@ -551,7 +551,7 @@ int bnx2i_send_iscsi_nopout(struct bnx2i_conn *bnx2i_conn,
+>  
+>  	nopout_wqe->op_code = nopout_hdr->opcode;
+>  	nopout_wqe->op_attr = ISCSI_FLAG_CMD_FINAL;
+> -	memcpy(nopout_wqe->lun, nopout_hdr->lun, 8);
+> +	memcpy(nopout_wqe->lun, nopout_hdr->lun, sizeof(struct scsi_lun));
+>  
+>  	if (test_bit(BNX2I_NX2_DEV_57710, &ep->hba->cnic_dev_type)) {
+>  		u32 tmp = nopout_wqe->lun[0];
 
-iscsi_sw_tcp_conn_restore_callbacks could have set
-the sk_user_data field to NULL then iscsi_sw_tcp_data_ready
-could read that and try to access the NULL pointer. This
-adds some checks for NULL sk_user_data in the sk
-callback functions and it uses the sk_callback_lock to
-set/get that sk_user_data field.
+This patch and Andy your patch "[PATCH] iscsi: Use struct scsi_lun in
+iscsi structs instead of u8[8]" are going to conflict with each other.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/iscsi_tcp.c |   61 +++++++++++++++++++++++++++++++---------------
- 1 files changed, 41 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 3df9853..7724414 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -107,10 +107,12 @@ static int iscsi_sw_tcp_recv(read_descriptor_t *rd_desc, struct sk_buff *skb,
-  * If the socket is in CLOSE or CLOSE_WAIT we should
-  * not close the connection if there is still some
-  * data pending.
-+ *
-+ * Must be called with sk_callback_lock.
-  */
- static inline int iscsi_sw_sk_state_check(struct sock *sk)
- {
--	struct iscsi_conn *conn = (struct iscsi_conn*)sk->sk_user_data;
-+	struct iscsi_conn *conn = sk->sk_user_data;
- 
- 	if ((sk->sk_state == TCP_CLOSE_WAIT || sk->sk_state == TCP_CLOSE) &&
- 	    !atomic_read(&sk->sk_rmem_alloc)) {
-@@ -123,11 +125,17 @@ static inline int iscsi_sw_sk_state_check(struct sock *sk)
- 
- static void iscsi_sw_tcp_data_ready(struct sock *sk, int flag)
- {
--	struct iscsi_conn *conn = sk->sk_user_data;
--	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
-+	struct iscsi_conn *conn;
-+	struct iscsi_tcp_conn *tcp_conn;
- 	read_descriptor_t rd_desc;
- 
- 	read_lock(&sk->sk_callback_lock);
-+	conn = sk->sk_user_data;
-+	if (!conn) {
-+		read_unlock(&sk->sk_callback_lock);
-+		return;
-+	}
-+	tcp_conn = conn->dd_data;
- 
- 	/*
- 	 * Use rd_desc to pass 'conn' to iscsi_tcp_recv.
-@@ -141,11 +149,10 @@ static void iscsi_sw_tcp_data_ready(struct sock *sk, int flag)
- 
- 	iscsi_sw_sk_state_check(sk);
- 
--	read_unlock(&sk->sk_callback_lock);
--
- 	/* If we had to (atomically) map a highmem page,
- 	 * unmap it now. */
- 	iscsi_tcp_segment_unmap(&tcp_conn->in.segment);
-+	read_unlock(&sk->sk_callback_lock);
- }
- 
- static void iscsi_sw_tcp_state_change(struct sock *sk)
-@@ -157,8 +164,11 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
- 	void (*old_state_change)(struct sock *);
- 
- 	read_lock(&sk->sk_callback_lock);
--
--	conn = (struct iscsi_conn*)sk->sk_user_data;
-+	conn = sk->sk_user_data;
-+	if (!conn) {
-+		read_unlock(&sk->sk_callback_lock);
-+		return;
-+	}
- 	session = conn->session;
- 
- 	iscsi_sw_sk_state_check(sk);
-@@ -178,11 +188,25 @@ static void iscsi_sw_tcp_state_change(struct sock *sk)
-  **/
- static void iscsi_sw_tcp_write_space(struct sock *sk)
- {
--	struct iscsi_conn *conn = (struct iscsi_conn*)sk->sk_user_data;
--	struct iscsi_tcp_conn *tcp_conn = conn->dd_data;
--	struct iscsi_sw_tcp_conn *tcp_sw_conn = tcp_conn->dd_data;
-+	struct iscsi_conn *conn;
-+	struct iscsi_tcp_conn *tcp_conn;
-+	struct iscsi_sw_tcp_conn *tcp_sw_conn;
-+	void (*old_write_space)(struct sock *);
-+
-+	read_lock_bh(&sk->sk_callback_lock);
-+	conn = sk->sk_user_data;
-+	if (!conn) {
-+		read_unlock_bh(&sk->sk_callback_lock);
-+		return;
-+	}
-+
-+	tcp_conn = conn->dd_data;
-+	tcp_sw_conn = tcp_conn->dd_data;
-+	old_write_space = tcp_sw_conn->old_write_space;
-+	read_unlock_bh(&sk->sk_callback_lock);
-+
-+	old_write_space(sk);
- 
--	tcp_sw_conn->old_write_space(sk);
- 	ISCSI_SW_TCP_DBG(conn, "iscsi_write_space\n");
- 	iscsi_conn_queue_work(conn);
- }
-@@ -592,20 +616,17 @@ static void iscsi_sw_tcp_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
- 	/* userspace may have goofed up and not bound us */
- 	if (!sock)
- 		return;
--	/*
--	 * Make sure our recv side is stopped.
--	 * Older tools called conn stop before ep_disconnect
--	 * so IO could still be coming in.
--	 */
--	write_lock_bh(&tcp_sw_conn->sock->sk->sk_callback_lock);
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
--	write_unlock_bh(&tcp_sw_conn->sock->sk->sk_callback_lock);
- 
- 	sock->sk->sk_err = EIO;
- 	wake_up_interruptible(sk_sleep(sock->sk));
- 
--	iscsi_conn_stop(cls_conn, flag);
-+	/* stop xmit side */
-+	iscsi_suspend_tx(conn);
-+
-+	/* stop recv side and release socket */
- 	iscsi_sw_tcp_release_conn(conn);
-+
-+	iscsi_conn_stop(cls_conn, flag);
- }
- 
- static int
--- 
-1.7.2.3
+And Eddie, I think you missed some other instances where 8 is hardcoded.
 
