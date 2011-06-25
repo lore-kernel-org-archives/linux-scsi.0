@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 04/15] bfa: Brocade-1860 Fabric Adapter PLL init fixes.
-Date: Fri, 24 Jun 2011 20:23:38 -0700
-Message-ID: <1308972218-5664-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 05/15] bfa: Brocade-1860 Fabric Adapter vHBA support.
+Date: Fri, 24 Jun 2011 20:24:08 -0700
+Message-ID: <1308972248-6660-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57519 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57524 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752218Ab1FYDYJ (ORCPT
+	by vger.kernel.org with ESMTP id S1752218Ab1FYDYb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 23:24:09 -0400
+	Fri, 24 Jun 2011 23:24:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,588 +18,1335 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- If flash controller is halted unconditionally, this results in illegal
-	  write access to flash controller register domain. Since flash controller
-	  registers are only accessible once s_clk is started - added logic to check
-	  for WGN status and halt flash controller only if it is already running.
-	- Added check to wait for flash controller halt to be completed before
-	  proceeding with s_clk/l_clk initializations.
-	- Removed unnecessary reset logic for PMM 1T memory and moved memory
-	  initialization after flash access enable.
-	- Disable Brocade-1860 asic MBOX interrupt before PLL initialization.
-	- Remove reset enable for S_CLK/L_CLK after both PLL initializations are complete.
+	- Introduced partitioning of the BFA resources.
+	- Added h/w queue ID in CPE messages, firmware uses h/w queue ID
+	  from messages to pick a matching RME queue.
+	- Added message header to bfa_reqq_produce(). h/w queue ID is set
+	  in the message header and firmware modules use h/w queue ID from
+	  message header instead of from cpqe event.
+	- Made changes to allow using all 256 queues of Brocade-1860 asic.
+	  Previously only a single queue per queue group was used.
+	- Added function tag to BFI message header. Only used by FC BFI messages.
+	  Used to translate host tag to firmware tag. bfa_lpuid() is changed to
+	  bfa_fn_lpu() that encodes both PCI function and port ID in BFI message header.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c   |   43 ++++++++--
- drivers/scsi/bfa/bfa_hw_cb.c  |    2 +-
- drivers/scsi/bfa/bfa_ioc.c    |   42 +---------
- drivers/scsi/bfa/bfa_ioc.h    |    3 +-
- drivers/scsi/bfa/bfa_ioc_ct.c |  180 +++++++++++++++++++++++-----------------
- drivers/scsi/bfa/bfad.c       |   15 +++-
- drivers/scsi/bfa/bfi.h        |    2 +-
- drivers/scsi/bfa/bfi_ms.h     |    3 +-
- drivers/scsi/bfa/bfi_reg.h    |   11 +++
- 9 files changed, 169 insertions(+), 132 deletions(-)
+ drivers/scsi/bfa/bfa.h           |   18 +++-
+ drivers/scsi/bfa/bfa_core.c      |   62 ++++++++-----
+ drivers/scsi/bfa/bfa_fcpim.c     |   64 ++++++++++---
+ drivers/scsi/bfa/bfa_fcpim.h     |    4 +
+ drivers/scsi/bfa/bfa_fcs.c       |    2 +-
+ drivers/scsi/bfa/bfa_fcs_lport.c |    4 +-
+ drivers/scsi/bfa/bfa_hw_cb.c     |   10 --
+ drivers/scsi/bfa/bfa_ioc_ct.c    |    4 +-
+ drivers/scsi/bfa/bfa_svc.c       |  188 ++++++++++++++++++++++++++++---------
+ drivers/scsi/bfa/bfa_svc.h       |   11 ++-
+ drivers/scsi/bfa/bfi.h           |   10 +-
+ drivers/scsi/bfa/bfi_ms.h        |   19 ++--
+ 12 files changed, 278 insertions(+), 118 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
+index 42769bc..ee072d9 100644
+--- a/drivers/scsi/bfa/bfa.h
++++ b/drivers/scsi/bfa/bfa.h
+@@ -54,7 +54,8 @@ void bfa_isr_unhandled(struct bfa_s *bfa, struct bfi_msg_s *m);
+ 	 ((void *)((struct bfi_msg_s *)((__bfa)->iocfc.req_cq_ba[__reqq].kva) \
+ 		   + bfa_reqq_pi((__bfa), (__reqq)))))
+ 
+-#define bfa_reqq_produce(__bfa, __reqq)	do {				\
++#define bfa_reqq_produce(__bfa, __reqq, __mh)  do {			\
++		(__mh).mtag.h2i.qid     = (__bfa)->iocfc.hw_qid[__reqq];\
+ 		(__bfa)->iocfc.req_cq_pi[__reqq]++;			\
+ 		(__bfa)->iocfc.req_cq_pi[__reqq] &=			\
+ 			((__bfa)->iocfc.cfg.drvcfg.num_reqq_elems - 1); \
+@@ -272,6 +273,7 @@ struct bfa_iocfc_s {
+ 	int			action;
+ 	u32		req_cq_pi[BFI_IOC_MAX_CQS];
+ 	u32		rsp_cq_ci[BFI_IOC_MAX_CQS];
++	u8		hw_qid[BFI_IOC_MAX_CQS];
+ 	struct bfa_cb_qe_s	init_hcb_qe;
+ 	struct bfa_cb_qe_s	stop_hcb_qe;
+ 	struct bfa_cb_qe_s	dis_hcb_qe;
+@@ -294,8 +296,8 @@ struct bfa_iocfc_s {
+ 	struct bfa_faa_args_s	faa_args;
+ };
+ 
+-#define bfa_lpuid(__bfa)						\
+-	bfa_ioc_portid(&(__bfa)->ioc)
++#define bfa_fn_lpu(__bfa)	\
++	bfi_fn_lpu(bfa_ioc_pcifn(&(__bfa)->ioc), bfa_ioc_portid(&(__bfa)->ioc))
+ #define bfa_msix_init(__bfa, __nvecs)					\
+ 	((__bfa)->iocfc.hwif.hw_msix_init(__bfa, __nvecs))
+ #define bfa_msix_ctrl_install(__bfa)					\
+@@ -304,11 +306,18 @@ struct bfa_iocfc_s {
+ 	((__bfa)->iocfc.hwif.hw_msix_queue_install(__bfa))
+ #define bfa_msix_uninstall(__bfa)					\
+ 	((__bfa)->iocfc.hwif.hw_msix_uninstall(__bfa))
++#define bfa_isr_rspq_ack(__bfa, __queue) do {				\
++	if ((__bfa)->iocfc.hwif.hw_rspq_ack)				\
++		(__bfa)->iocfc.hwif.hw_rspq_ack(__bfa, __queue);	\
++} while (0)
++#define bfa_isr_reqq_ack(__bfa, __queue) do {				\
++	if ((__bfa)->iocfc.hwif.hw_reqq_ack)				\
++		(__bfa)->iocfc.hwif.hw_reqq_ack(__bfa, __queue);	\
++} while (0)
+ #define bfa_isr_mode_set(__bfa, __msix) do {				\
+ 	if ((__bfa)->iocfc.hwif.hw_isr_mode_set)			\
+ 		(__bfa)->iocfc.hwif.hw_isr_mode_set(__bfa, __msix);	\
+ } while (0)
+-
+ #define bfa_msix_getvecs(__bfa, __vecmap, __nvecs, __maxvec)		\
+ 	((__bfa)->iocfc.hwif.hw_msix_getvecs(__bfa, __vecmap,		\
+ 					__nvecs, __maxvec))
+@@ -340,7 +349,6 @@ void bfa_msix_rspq(struct bfa_s *bfa, int vec);
+ void bfa_msix_lpu_err(struct bfa_s *bfa, int vec);
+ 
+ void bfa_hwcb_reginit(struct bfa_s *bfa);
+-void bfa_hwcb_reqq_ack(struct bfa_s *bfa, int rspq);
+ void bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq);
+ void bfa_hwcb_msix_init(struct bfa_s *bfa, int nvecs);
+ void bfa_hwcb_msix_ctrl_install(struct bfa_s *bfa);
 diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 4befbf9..f949844 100644
+index f949844..0048fc8 100644
 --- a/drivers/scsi/bfa/bfa_core.c
 +++ b/drivers/scsi/bfa/bfa_core.c
-@@ -251,7 +251,39 @@ bfa_isr_reqq(struct bfa_s *bfa, int qid)
- void
- bfa_msix_all(struct bfa_s *bfa, int vec)
+@@ -203,7 +203,7 @@ bfa_isr_rspq(struct bfa_s *bfa, int qid)
+ 	u32	pi, ci;
+ 	struct list_head *waitq;
+ 
+-	bfa->iocfc.hwif.hw_rspq_ack(bfa, qid);
++	bfa_isr_rspq_ack(bfa, qid);
+ 
+ 	ci = bfa_rspq_ci(bfa, qid);
+ 	pi = bfa_rspq_pi(bfa, qid);
+@@ -236,9 +236,7 @@ bfa_isr_reqq(struct bfa_s *bfa, int qid)
  {
--	bfa_intx(bfa);
-+	u32	intr, qintr;
-+	int	queue;
+ 	struct list_head *waitq;
+ 
+-	qid &= (BFI_IOC_MAX_CQS - 1);
+-
+-	bfa->iocfc.hwif.hw_reqq_ack(bfa, qid);
++	bfa_isr_reqq_ack(bfa, qid);
+ 
+ 	/*
+ 	 * Resume any pending requests in the corresponding reqq.
+@@ -296,16 +294,19 @@ bfa_intx(struct bfa_s *bfa)
+ 	if (!intr)
+ 		return BFA_FALSE;
+ 
++	qintr = intr & (__HFN_INT_RME_MASK | __HFN_INT_CPE_MASK);
++	if (qintr)
++		writel(qintr, bfa->iocfc.bfa_regs.intr_status);
 +
-+	intr = readl(bfa->iocfc.bfa_regs.intr_status);
-+	if (!intr)
-+		return;
-+
-+	/*
-+	 * RME completion queue interrupt
-+	 */
-+	qintr = intr & __HFN_INT_RME_MASK;
+ 	/*
+ 	 * RME completion queue interrupt
+ 	 */
+ 	qintr = intr & __HFN_INT_RME_MASK;
+-	writel(qintr, bfa->iocfc.bfa_regs.intr_status);
+-
+-	for (queue = 0; queue < BFI_IOC_MAX_CQS_ASIC; queue++) {
+-		if ((intr & (__HFN_INT_RME_Q0 << queue)) && bfa->queue_process)
+-			bfa_isr_rspq(bfa, queue & (BFI_IOC_MAX_CQS - 1));
 +	if (qintr && bfa->queue_process) {
 +		for (queue = 0; queue < BFI_IOC_MAX_CQS; queue++)
 +			bfa_isr_rspq(bfa, queue);
-+	}
+ 	}
 +
-+	intr &= ~qintr;
-+	if (!intr)
-+		return;
-+
-+	/*
-+	 * CPE completion queue interrupt
-+	 */
-+	qintr = intr & __HFN_INT_CPE_MASK;
+ 	intr &= ~qintr;
+ 	if (!intr)
+ 		return BFA_TRUE;
+@@ -314,11 +315,9 @@ bfa_intx(struct bfa_s *bfa)
+ 	 * CPE completion queue interrupt
+ 	 */
+ 	qintr = intr & __HFN_INT_CPE_MASK;
+-	writel(qintr, bfa->iocfc.bfa_regs.intr_status);
+-
+-	for (queue = 0; queue < BFI_IOC_MAX_CQS_ASIC; queue++) {
+-		if ((intr & (__HFN_INT_CPE_Q0 << queue)) && bfa->queue_process)
+-			bfa_isr_reqq(bfa, queue & (BFI_IOC_MAX_CQS - 1));
 +	if (qintr && bfa->queue_process) {
 +		for (queue = 0; queue < BFI_IOC_MAX_CQS; queue++)
 +			bfa_isr_reqq(bfa, queue);
-+	}
-+	intr &= ~qintr;
-+	if (!intr)
-+		return;
-+
-+	bfa_msix_lpu_err(bfa, intr);
- }
- 
- bfa_boolean_t
-@@ -469,6 +501,9 @@ bfa_iocfc_send_cfg(void *bfa_arg)
- 	/*
- 	 * initialize IOC configuration info
- 	 */
-+	cfg_info->single_msix_vec = 0;
-+	if (bfa->msix.nvecs == 1)
-+		cfg_info->single_msix_vec = 1;
- 	cfg_info->endian_sig = BFI_IOC_ENDIAN_SIG;
- 	cfg_info->num_cqs = cfg->fwcfg.num_cqs;
- 	cfg_info->num_ioim_reqs = cpu_to_be16(cfg->fwcfg.num_ioim_reqs);
-@@ -1080,12 +1115,6 @@ bfa_iocfc_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	ioc->trcmod = bfa->trcmod;
- 	bfa_ioc_attach(&bfa->ioc, bfa, &bfa_iocfc_cbfn, &bfa->timer_mod);
- 
--	/*
--	 * Set FC mode for BFA_PCI_DEVICE_ID_CT_FC.
--	 */
--	if (pcidev->device_id == BFA_PCI_DEVICE_ID_CT_FC)
--		bfa_ioc_set_fcmode(&bfa->ioc);
--
- 	bfa_ioc_pci_init(&bfa->ioc, pcidev, BFI_PCIFN_CLASS_FC);
- 	bfa_ioc_mbox_register(&bfa->ioc, bfa_mbox_isrs);
- 
-diff --git a/drivers/scsi/bfa/bfa_hw_cb.c b/drivers/scsi/bfa/bfa_hw_cb.c
-index 15fbb13..694ebf1 100644
---- a/drivers/scsi/bfa/bfa_hw_cb.c
-+++ b/drivers/scsi/bfa/bfa_hw_cb.c
-@@ -114,7 +114,7 @@ bfa_hwcb_msix_ctrl_install(struct bfa_s *bfa)
- 		return;
- 
- 	if (bfa->msix.nvecs == 1) {
--		for (i = BFI_MSIX_RME_QMAX_CB+1; i < BFI_MSIX_CB_MAX; i++)
-+		for (i = BFI_MSIX_CPE_QMIN_CB; i < BFI_MSIX_CB_MAX; i++)
- 			bfa->msix.handler[i] = bfa_msix_all;
- 		return;
  	}
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 7b4a567..bfe3a87 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -2399,12 +2399,6 @@ bfa_ioc_error_isr(struct bfa_ioc_s *ioc)
- 	bfa_fsm_send_event(ioc, IOC_E_HWERROR);
+ 	intr &= ~qintr;
+ 	if (!intr)
+@@ -542,7 +541,7 @@ bfa_iocfc_send_cfg(void *bfa_arg)
+ 	 * dma map IOC configuration itself
+ 	 */
+ 	bfi_h2i_set(cfg_req.mh, BFI_MC_IOCFC, BFI_IOCFC_H2I_CFG_REQ,
+-		    bfa_lpuid(bfa));
++		    bfa_fn_lpu(bfa));
+ 	bfa_dma_be_addr_set(cfg_req.ioc_cfg_dma_addr, iocfc->cfg_info.pa);
+ 
+ 	bfa_ioc_mbox_send(&bfa->ioc, &cfg_req,
+@@ -579,8 +578,8 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 		iocfc->hwif.cpe_vec_q0 = BFI_MSIX_CPE_QMIN_CT;
+ 	} else {
+ 		iocfc->hwif.hw_reginit = bfa_hwcb_reginit;
+-		iocfc->hwif.hw_reqq_ack = bfa_hwcb_reqq_ack;
+-		iocfc->hwif.hw_rspq_ack = bfa_hwcb_rspq_ack;
++		iocfc->hwif.hw_reqq_ack = NULL;
++		iocfc->hwif.hw_rspq_ack = NULL;
+ 		iocfc->hwif.hw_msix_init = bfa_hwcb_msix_init;
+ 		iocfc->hwif.hw_msix_ctrl_install = bfa_hwcb_msix_ctrl_install;
+ 		iocfc->hwif.hw_msix_queue_install = bfa_hwcb_msix_queue_install;
+@@ -597,6 +596,7 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	if (bfa_asic_id_ct2(bfa_ioc_devid(&bfa->ioc))) {
+ 		iocfc->hwif.hw_reginit = bfa_hwct2_reginit;
+ 		iocfc->hwif.hw_isr_mode_set = NULL;
++		iocfc->hwif.hw_rspq_ack = NULL;
+ 	}
+ 
+ 	iocfc->hwif.hw_reginit(bfa);
+@@ -701,7 +701,7 @@ bfa_iocfc_start_submod(struct bfa_s *bfa)
+ 
+ 	bfa->queue_process = BFA_TRUE;
+ 	for (i = 0; i < BFI_IOC_MAX_CQS; i++)
+-		bfa->iocfc.hwif.hw_rspq_ack(bfa, i);
++		bfa_isr_rspq_ack(bfa, i);
+ 
+ 	for (i = 0; hal_mods[i]; i++)
+ 		hal_mods[i]->start(bfa);
+@@ -768,6 +768,7 @@ bfa_iocfc_qreg(struct bfa_s *bfa, struct bfi_iocfc_qreg_s *qreg)
+ 	void __iomem *kva = bfa_ioc_bar0(&bfa->ioc);
+ 
+ 	for (i = 0; i < BFI_IOC_MAX_CQS; i++) {
++		bfa->iocfc.hw_qid[i] = qreg->hw_qid[i];
+ 		r->cpe_q_ci[i] = kva + be32_to_cpu(qreg->cpe_q_ci_off[i]);
+ 		r->cpe_q_pi[i] = kva + be32_to_cpu(qreg->cpe_q_pi_off[i]);
+ 		r->cpe_q_ctrl[i] = kva + be32_to_cpu(qreg->cpe_qctl_off[i]);
+@@ -777,6 +778,16 @@ bfa_iocfc_qreg(struct bfa_s *bfa, struct bfi_iocfc_qreg_s *qreg)
+ 	}
  }
  
--void
--bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc)
--{
--	ioc->fcmode  = BFA_TRUE;
--}
--
++static void
++bfa_iocfc_res_recfg(struct bfa_s *bfa, struct bfa_iocfc_fwcfg_s *fwcfg)
++{
++	bfa_fcxp_res_recfg(bfa, fwcfg->num_fcxp_reqs);
++	bfa_uf_res_recfg(bfa, fwcfg->num_uf_bufs);
++	bfa_rport_res_recfg(bfa, fwcfg->num_rports);
++	bfa_fcp_res_recfg(bfa, fwcfg->num_ioim_reqs);
++	bfa_tskim_res_recfg(bfa, fwcfg->num_tskim_reqs);
++}
++
  /*
-  * return true if IOC is disabled
+  * Update BFA configuration from firmware configuration.
   */
-@@ -2592,35 +2586,7 @@ bfa_ioc_get_adapter_model(struct bfa_ioc_s *ioc, char *model)
+@@ -803,6 +814,11 @@ bfa_iocfc_cfgrsp(struct bfa_s *bfa)
+ 	bfa_iocfc_qreg(bfa, &cfgrsp->qreg);
  
- 	ioc_attr = ioc->attr;
+ 	/*
++	 * Re-configure resources as learnt from Firmware
++	 */
++	bfa_iocfc_res_recfg(bfa, fwcfg);
++
++	/*
+ 	 * Install MSIX queue handlers
+ 	 */
+ 	bfa_msix_queue_install(bfa);
+@@ -880,7 +896,7 @@ bfa_faa_enable(struct bfa_s *bfa, bfa_cb_iocfc_t cbfn, void *cbarg)
  
--	/*
--	 * model name
--	 */
--	if (ioc->asic_gen == BFI_ASIC_GEN_CT2) {
--		int np = bfa_ioc_get_nports(ioc);
--		char c;
--		switch (ioc_attr->card_type) {
--		case BFA_MFG_TYPE_PROWLER_F:
--		case BFA_MFG_TYPE_PROWLER_N:
--		case BFA_MFG_TYPE_PROWLER_C:
--			snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN,
--				"%s-%u-%u",
--				BFA_MFG_NAME, ioc_attr->card_type, np);
--			break;
--		case BFA_MFG_TYPE_PROWLER_D:
--			if (ioc_attr->ic == BFA_MFG_IC_FC)
--				c = 'F';
--			else
--				c = 'P';
--
--			snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN,
--				"%s-%u-%u%c",
--				BFA_MFG_NAME, ioc_attr->card_type, np, c);
--			break;
--		default:
--			break;
--		}
--	} else
--		snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
-+	snprintf(model, BFA_ADAPTER_MODEL_NAME_LEN, "%s-%u",
- 			BFA_MFG_NAME, ioc_attr->card_type);
- }
+ 	memset(&faa_enable_req, 0, sizeof(struct bfi_faa_en_dis_s));
+ 	bfi_h2i_set(faa_enable_req.mh, BFI_MC_IOCFC,
+-		BFI_IOCFC_H2I_FAA_ENABLE_REQ, bfa_lpuid(bfa));
++		BFI_IOCFC_H2I_FAA_ENABLE_REQ, bfa_fn_lpu(bfa));
  
-@@ -2711,12 +2677,6 @@ bfa_ioc_get_mfg_mac(struct bfa_ioc_s *ioc)
- 	return m;
- }
+ 	bfa_ioc_mbox_send(&bfa->ioc, &faa_enable_req,
+ 			sizeof(struct bfi_faa_en_dis_s));
+@@ -914,7 +930,7 @@ bfa_faa_disable(struct bfa_s *bfa, bfa_cb_iocfc_t cbfn,
  
--bfa_boolean_t
--bfa_ioc_get_fcmode(struct bfa_ioc_s *ioc)
--{
--	return ioc->fcmode || bfa_asic_id_cb(ioc->pcidev.device_id);
--}
--
- /*
-  * Retrieve saved firmware trace from a prior IOC failure.
-  */
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 78e9606..1055ca9 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -362,6 +362,7 @@ bfa_status_t bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode);
- } while (0)
- #define	bfa_ioc_ownership_reset(__ioc)				\
- 			((__ioc)->ioc_hwif->ioc_ownership_reset(__ioc))
-+#define bfa_ioc_get_fcmode(__ioc)	((__ioc)->fcmode)
- #define bfa_ioc_lpu_read_stat(__ioc) do {			\
- 	if ((__ioc)->ioc_hwif->ioc_lpu_read_stat)		\
- 		((__ioc)->ioc_hwif->ioc_lpu_read_stat(__ioc));	\
-@@ -414,8 +415,6 @@ bfa_status_t bfa_ioc_debug_fwtrc(struct bfa_ioc_s *ioc, void *trcdata,
- 				 int *trclen);
- bfa_status_t bfa_ioc_debug_fwcore(struct bfa_ioc_s *ioc, void *buf,
- 	u32 *offset, int *buflen);
--void bfa_ioc_set_fcmode(struct bfa_ioc_s *ioc);
--bfa_boolean_t bfa_ioc_get_fcmode(struct bfa_ioc_s *ioc);
- bfa_boolean_t bfa_ioc_sem_get(void __iomem *sem_reg);
- void bfa_ioc_fwver_get(struct bfa_ioc_s *ioc,
- 			struct bfi_ioc_image_hdr_s *fwhdr);
-diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
-index 216016c..77f2b44 100644
---- a/drivers/scsi/bfa/bfa_ioc_ct.c
-+++ b/drivers/scsi/bfa/bfa_ioc_ct.c
-@@ -564,10 +564,12 @@ bfa_ioc_set_ct2_hwif(struct bfa_ioc_s *ioc)
-  * Temporary workaround for MSI-X resource allocation for catapult-2.
-  */
- #define HOSTFN_MSIX_DEFAULT		16
-+#define HOSTFN_MSIX_VT_INDEX_MBOX_ERR	0x30138
- #define HOSTFN_MSIX_VT_OFST_NUMVT	0x3013c
- #define __MSIX_VT_NUMVT__MK		0x003ff800
- #define __MSIX_VT_NUMVT__SH		11
- #define __MSIX_VT_NUMVT_(_v)		((_v) << __MSIX_VT_NUMVT__SH)
-+#define __MSIX_VT_OFST_			0x000007ff
- void
- bfa_ioc_ct2_poweron(struct bfa_ioc_s *ioc)
- {
-@@ -575,12 +577,17 @@ bfa_ioc_ct2_poweron(struct bfa_ioc_s *ioc)
- 	u32	r32;
+ 	memset(&faa_disable_req, 0, sizeof(struct bfi_faa_en_dis_s));
+ 	bfi_h2i_set(faa_disable_req.mh, BFI_MC_IOCFC,
+-		BFI_IOCFC_H2I_FAA_DISABLE_REQ, bfa_lpuid(bfa));
++		BFI_IOCFC_H2I_FAA_DISABLE_REQ, bfa_fn_lpu(bfa));
  
- 	r32 = readl(rb + HOSTFN_MSIX_VT_OFST_NUMVT);
--	if (r32 & __MSIX_VT_NUMVT__MK)
-+	if (r32 & __MSIX_VT_NUMVT__MK) {
-+		writel(r32 & __MSIX_VT_OFST_,
-+			rb + HOSTFN_MSIX_VT_INDEX_MBOX_ERR);
- 		return;
-+	}
+ 	bfa_ioc_mbox_send(&bfa->ioc, &faa_disable_req,
+ 		sizeof(struct bfi_faa_en_dis_s));
+@@ -944,7 +960,7 @@ bfa_faa_query(struct bfa_s *bfa, struct bfa_faa_attr_s *attr,
+ 	iocfc->faa_args.busy = BFA_TRUE;
+ 	memset(&faa_attr_req, 0, sizeof(struct bfi_faa_query_s));
+ 	bfi_h2i_set(faa_attr_req.mh, BFI_MC_IOCFC,
+-		BFI_IOCFC_H2I_FAA_QUERY_REQ, bfa_lpuid(bfa));
++		BFI_IOCFC_H2I_FAA_QUERY_REQ, bfa_fn_lpu(bfa));
  
- 	writel(__MSIX_VT_NUMVT_(HOSTFN_MSIX_DEFAULT - 1) |
- 		HOSTFN_MSIX_DEFAULT * bfa_ioc_pcifn(ioc),
- 		rb + HOSTFN_MSIX_VT_OFST_NUMVT);
-+	writel(HOSTFN_MSIX_DEFAULT * bfa_ioc_pcifn(ioc),
-+		rb + HOSTFN_MSIX_VT_INDEX_MBOX_ERR);
- }
+ 	bfa_ioc_mbox_send(&bfa->ioc, &faa_attr_req,
+ 		sizeof(struct bfi_faa_query_s));
+@@ -1230,7 +1246,7 @@ bfa_iocfc_israttr_set(struct bfa_s *bfa, struct bfa_iocfc_intr_attr_s *attr)
+ 		return BFA_STATUS_DEVBUSY;
  
- bfa_status_t
-@@ -649,17 +656,8 @@ bfa_ioc_ct_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
+ 	bfi_h2i_set(m->mh, BFI_MC_IOCFC, BFI_IOCFC_H2I_SET_INTR_REQ,
+-		    bfa_lpuid(bfa));
++		    bfa_fn_lpu(bfa));
+ 	m->coalesce = iocfc->cfginfo->intr_attr.coalesce;
+ 	m->delay    = iocfc->cfginfo->intr_attr.delay;
+ 	m->latency  = iocfc->cfginfo->intr_attr.latency;
+@@ -1238,7 +1254,7 @@ bfa_iocfc_israttr_set(struct bfa_s *bfa, struct bfa_iocfc_intr_attr_s *attr)
+ 	bfa_trc(bfa, attr->delay);
+ 	bfa_trc(bfa, attr->latency);
+ 
+-	bfa_reqq_produce(bfa, BFA_REQQ_IOC);
++	bfa_reqq_produce(bfa, BFA_REQQ_IOC, m->mh);
  	return BFA_STATUS_OK;
  }
  
--static struct { u32 sclk, speed, half_speed; } ct2_pll[] = {
--	{0},							/* unused */
--	{__APP_PLL_SCLK_CLK_DIV2, 0, 0},			/* FC 8G  */
--	{0, 0, 0},						/* FC 16G */
--	{__APP_PLL_SCLK_REFCLK_SEL | __APP_PLL_SCLK_CLK_DIV2, 0, /* ETH   */
--	__APP_LPUCLK_HALFSPEED},
--	{0, 0, 0},						/* COMBO  */
--};
--
- static void
--bfa_ioc_ct2_sclk_init(void __iomem *rb, enum bfi_asic_mode mode)
-+bfa_ioc_ct2_sclk_init(void __iomem *rb)
- {
- 	u32 r32;
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 76d9a00..eb14fd6 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -340,6 +340,9 @@ bfa_fcpim_iocdisable(struct bfa_fcp_mod_s *fcp)
+ 	struct bfa_itnim_s *itnim;
+ 	struct list_head *qe, *qen;
  
-@@ -673,11 +671,12 @@ bfa_ioc_ct2_sclk_init(void __iomem *rb, enum bfi_asic_mode mode)
- 	writel(r32, (rb + CT2_APP_PLL_SCLK_CTL_REG));
++	/* Enqueue unused ioim resources to free_q */
++	list_splice_tail_init(&fcpim->tskim_unused_q, &fcpim->tskim_free_q);
++
+ 	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
+ 		itnim = (struct bfa_itnim_s *) qe;
+ 		bfa_itnim_iocdisable(itnim);
+@@ -1036,7 +1039,7 @@ bfa_itnim_send_fwcreate(struct bfa_itnim_s *itnim)
+ 	}
  
+ 	bfi_h2i_set(m->mh, BFI_MC_ITN, BFI_ITN_H2I_CREATE_REQ,
+-			bfa_lpuid(itnim->bfa));
++			bfa_fn_lpu(itnim->bfa));
+ 	m->fw_handle = itnim->rport->fw_handle;
+ 	m->class = FC_CLASS_3;
+ 	m->seq_rec = itnim->seq_rec;
+@@ -1046,7 +1049,7 @@ bfa_itnim_send_fwcreate(struct bfa_itnim_s *itnim)
  	/*
--	 * select clock speed based on mode
-+	 * Ignore mode and program for the max clock (which is FC16)
-+	 * Firmware/NFC will do the PLL init appropiately
+ 	 * queue I/O message to firmware
  	 */
- 	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
- 	r32 &= ~(__APP_PLL_SCLK_REFCLK_SEL | __APP_PLL_SCLK_CLK_DIV2);
--	writel(r32 | ct2_pll[mode].sclk, (rb + CT2_APP_PLL_SCLK_CTL_REG));
-+	writel(r32, (rb + CT2_APP_PLL_SCLK_CTL_REG));
- 
- 	/*
- 	 * while doing PLL init dont clock gate ethernet subsystem
-@@ -700,30 +699,10 @@ bfa_ioc_ct2_sclk_init(void __iomem *rb, enum bfi_asic_mode mode)
- 	 * poll for s_clk lock or delay 1ms
- 	 */
- 	udelay(1000);
--
--	/*
--	 * release soft reset on s_clk & l_clk
--	 */
--	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
--	writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
--		(rb + CT2_APP_PLL_SCLK_CTL_REG));
--
--	/*
--	 * clock gating for ethernet subsystem if not in ethernet mode
--	 */
--	if (mode != BFI_ASIC_MODE_ETH) {
--		r32 = readl((rb + CT2_CHIP_MISC_PRG));
--		writel(r32 & ~__ETH_CLK_ENABLE_PORT0,
--			(rb + CT2_CHIP_MISC_PRG));
--
--		r32 = readl((rb + CT2_PCIE_MISC_REG));
--		writel(r32 & ~__ETH_CLK_ENABLE_PORT1,
--			(rb + CT2_PCIE_MISC_REG));
--	}
+-	bfa_reqq_produce(itnim->bfa, itnim->reqq);
++	bfa_reqq_produce(itnim->bfa, itnim->reqq, m->mh);
+ 	return BFA_TRUE;
  }
  
- static void
--bfa_ioc_ct2_lclk_init(void __iomem *rb, enum bfi_asic_mode mode)
-+bfa_ioc_ct2_lclk_init(void __iomem *rb)
- {
- 	u32 r32;
+@@ -1065,14 +1068,14 @@ bfa_itnim_send_fwdelete(struct bfa_itnim_s *itnim)
+ 	}
  
-@@ -737,97 +716,144 @@ bfa_ioc_ct2_lclk_init(void __iomem *rb, enum bfi_asic_mode mode)
- 	writel(r32, (rb + CT2_APP_PLL_LCLK_CTL_REG));
- 
- 	/*
--	 * set LPU speed
-+	 * set LPU speed (set for FC16 which will work for other modes)
- 	 */
- 	r32 = readl((rb + CT2_CHIP_MISC_PRG));
--	writel(r32 | ct2_pll[mode].speed,
--		(rb + CT2_CHIP_MISC_PRG));
-+	writel(r32, (rb + CT2_CHIP_MISC_PRG));
+ 	bfi_h2i_set(m->mh, BFI_MC_ITN, BFI_ITN_H2I_DELETE_REQ,
+-			bfa_lpuid(itnim->bfa));
++			bfa_fn_lpu(itnim->bfa));
+ 	m->fw_handle = itnim->rport->fw_handle;
+ 	bfa_stats(itnim, fw_delete);
  
  	/*
--	 * set LPU half speed
-+	 * set LPU half speed (set for FC16 which will work for other modes)
+ 	 * queue I/O message to firmware
  	 */
- 	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
--	writel(r32 | ct2_pll[mode].half_speed,
--		(rb + CT2_APP_PLL_LCLK_CTL_REG));
-+	writel(r32, (rb + CT2_APP_PLL_LCLK_CTL_REG));
- 
- 	/*
--	 * set lclk for mode
-+	 * set lclk for mode (set for FC16)
- 	 */
- 	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
- 	r32 &= (__P_LCLK_PLL_LOCK | __APP_LPUCLK_HALFSPEED);
--	 if (mode == BFI_ASIC_MODE_FC || mode == BFI_ASIC_MODE_FC16 ||
--	     mode == BFI_ASIC_MODE_ETH)
--		r32 |= 0x20c1731b;
--	else
--		r32 |= 0x2081731b;
-+	r32 |= 0x20c1731b;
- 	writel(r32, (rb + CT2_APP_PLL_LCLK_CTL_REG));
- 
- 	/*
- 	 * poll for s_clk lock or delay 1ms
- 	 */
- 	udelay(1000);
--
--	/*
--	 * release soft reset on s_clk & l_clk
--	 */
--	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
--	writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
--		(rb + CT2_APP_PLL_LCLK_CTL_REG));
+-	bfa_reqq_produce(itnim->bfa, itnim->reqq);
++	bfa_reqq_produce(itnim->bfa, itnim->reqq, m->mh);
+ 	return BFA_TRUE;
  }
  
- static void
--bfa_ioc_ct2_mem_init(void __iomem *rb, enum bfi_asic_mode mode)
-+bfa_ioc_ct2_mem_init(void __iomem *rb)
- {
--	bfa_boolean_t fcmode;
- 	u32	r32;
+@@ -2171,12 +2174,12 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 	 */
+ 	switch (m->cmnd.iodir) {
+ 	case FCP_IODIR_READ:
+-		bfi_h2i_set(m->mh, BFI_MC_IOIM_READ, 0, bfa_lpuid(ioim->bfa));
++		bfi_h2i_set(m->mh, BFI_MC_IOIM_READ, 0, bfa_fn_lpu(ioim->bfa));
+ 		bfa_stats(itnim, input_reqs);
+ 		ioim->itnim->stats.rd_throughput += fcp_dl;
+ 		break;
+ 	case FCP_IODIR_WRITE:
+-		bfi_h2i_set(m->mh, BFI_MC_IOIM_WRITE, 0, bfa_lpuid(ioim->bfa));
++		bfi_h2i_set(m->mh, BFI_MC_IOIM_WRITE, 0, bfa_fn_lpu(ioim->bfa));
+ 		bfa_stats(itnim, output_reqs);
+ 		ioim->itnim->stats.wr_throughput += fcp_dl;
+ 		break;
+@@ -2184,16 +2187,16 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 		bfa_stats(itnim, input_reqs);
+ 		bfa_stats(itnim, output_reqs);
+ 	default:
+-		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_lpuid(ioim->bfa));
++		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_fn_lpu(ioim->bfa));
+ 	}
+ 	if (itnim->seq_rec ||
+ 	    (scsi_bufflen(cmnd) & (sizeof(u32) - 1)))
+-		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_lpuid(ioim->bfa));
++		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_fn_lpu(ioim->bfa));
  
--	fcmode = (mode == BFI_ASIC_MODE_FC) || (mode == BFI_ASIC_MODE_FC16);
--	if (!fcmode) {
--		writel(__PMM_1T_PNDB_P | __PMM_1T_RESET_P,
--			(rb + CT2_PMM_1T_CONTROL_REG_P0));
--		writel(__PMM_1T_PNDB_P | __PMM_1T_RESET_P,
--			(rb + CT2_PMM_1T_CONTROL_REG_P1));
--	}
--
- 	r32 = readl((rb + PSS_CTL_REG));
- 	r32 &= ~__PSS_LMEM_RESET;
- 	writel(r32, (rb + PSS_CTL_REG));
- 	udelay(1000);
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(ioim->bfa, ioim->reqq);
++	bfa_reqq_produce(ioim->bfa, ioim->reqq, m->mh);
+ 	return BFA_TRUE;
+ }
  
--	if (!fcmode) {
--		writel(__PMM_1T_PNDB_P, (rb + CT2_PMM_1T_CONTROL_REG_P0));
--		writel(__PMM_1T_PNDB_P, (rb + CT2_PMM_1T_CONTROL_REG_P1));
--	}
--
- 	writel(__EDRAM_BISTR_START, (rb + CT2_MBIST_CTL_REG));
- 	udelay(1000);
- 	writel(0, (rb + CT2_MBIST_CTL_REG));
+@@ -2251,14 +2254,14 @@ bfa_ioim_send_abort(struct bfa_ioim_s *ioim)
+ 	else
+ 		msgop = BFI_IOIM_H2I_IOCLEANUP_REQ;
+ 
+-	bfi_h2i_set(m->mh, BFI_MC_IOIM, msgop, bfa_lpuid(ioim->bfa));
++	bfi_h2i_set(m->mh, BFI_MC_IOIM, msgop, bfa_fn_lpu(ioim->bfa));
+ 	m->io_tag    = cpu_to_be16(ioim->iotag);
+ 	m->abort_tag = ++ioim->abort_tag;
+ 
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(ioim->bfa, ioim->reqq);
++	bfa_reqq_produce(ioim->bfa, ioim->reqq, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -2998,7 +3001,7 @@ bfa_tskim_send(struct bfa_tskim_s *tskim)
+ 	 * build i/o request message next
+ 	 */
+ 	bfi_h2i_set(m->mh, BFI_MC_TSKIM, BFI_TSKIM_H2I_TM_REQ,
+-			bfa_lpuid(tskim->bfa));
++			bfa_fn_lpu(tskim->bfa));
+ 
+ 	m->tsk_tag = cpu_to_be16(tskim->tsk_tag);
+ 	m->itn_fhdl = tskim->itnim->rport->fw_handle;
+@@ -3009,7 +3012,7 @@ bfa_tskim_send(struct bfa_tskim_s *tskim)
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(tskim->bfa, itnim->reqq);
++	bfa_reqq_produce(tskim->bfa, itnim->reqq, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -3033,14 +3036,14 @@ bfa_tskim_send_abort(struct bfa_tskim_s *tskim)
+ 	 * build i/o request message next
+ 	 */
+ 	bfi_h2i_set(m->mh, BFI_MC_TSKIM, BFI_TSKIM_H2I_ABORT_REQ,
+-			bfa_lpuid(tskim->bfa));
++			bfa_fn_lpu(tskim->bfa));
+ 
+ 	m->tsk_tag  = cpu_to_be16(tskim->tsk_tag);
+ 
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(tskim->bfa, itnim->reqq);
++	bfa_reqq_produce(tskim->bfa, itnim->reqq, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -3112,6 +3115,7 @@ bfa_tskim_attach(struct bfa_fcpim_s *fcpim, struct bfa_meminfo_s *minfo)
+ 	u16	i;
+ 
+ 	INIT_LIST_HEAD(&fcpim->tskim_free_q);
++	INIT_LIST_HEAD(&fcpim->tskim_unused_q);
+ 
+ 	tskim = (struct bfa_tskim_s *) bfa_meminfo_kva(minfo);
+ 	fcpim->tskim_arr = tskim;
+@@ -3211,6 +3215,19 @@ bfa_tskim_start(struct bfa_tskim_s *tskim, struct bfa_itnim_s *itnim,
+ 	bfa_sm_send_event(tskim, BFA_TSKIM_SM_START);
  }
  
 +void
-+bfa_ioc_ct2_mac_reset(void __iomem *rb)
++bfa_tskim_res_recfg(struct bfa_s *bfa, u16 num_tskim_fw)
 +{
-+	u32	r32;
++	struct bfa_fcpim_s	*fcpim = BFA_FCPIM(bfa);
++	struct list_head	*qe;
++	int	i;
 +
-+	bfa_ioc_ct2_sclk_init(rb);
-+	bfa_ioc_ct2_lclk_init(rb);
-+
-+	/*
-+	 * release soft reset on s_clk & l_clk
-+	 */
-+	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
-+	writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
-+		(rb + CT2_APP_PLL_SCLK_CTL_REG));
-+
-+	/*
-+	 * release soft reset on s_clk & l_clk
-+	 */
-+	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
-+	writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
-+		(rb + CT2_APP_PLL_LCLK_CTL_REG));
-+
-+	/* put port0, port1 MAC & AHB in reset */
-+	writel((__CSI_MAC_RESET | __CSI_MAC_AHB_RESET),
-+		rb + CT2_CSI_MAC_CONTROL_REG(0));
-+	writel((__CSI_MAC_RESET | __CSI_MAC_AHB_RESET),
-+		rb + CT2_CSI_MAC_CONTROL_REG(1));
++	for (i = 0; i < (fcpim->num_tskim_reqs - num_tskim_fw); i++) {
++		bfa_q_deq_tail(&fcpim->tskim_free_q, &qe);
++		list_add_tail(qe, &fcpim->tskim_unused_q);
++	}
 +}
 +
-+#define CT2_NFC_MAX_DELAY	1000
- bfa_status_t
- bfa_ioc_ct2_pll_init(void __iomem *rb, enum bfi_asic_mode mode)
+ /* BFA FCP module - parent module for fcpim */
+ 
+ BFA_MODULE(fcp);
+@@ -3303,10 +3320,26 @@ bfa_fcp_iocdisable(struct bfa_s *bfa)
  {
--	u32	r32;
-+	u32	wgn, r32;
-+	int i;
+ 	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
  
- 	/*
- 	 * Initialize PLL if not already done by NFC
- 	 */
--	r32 = readl((rb + CT2_WGN_STATUS));
-+	wgn = readl(rb + CT2_WGN_STATUS);
-+	if (!(wgn & __GLBL_PF_VF_CFG_RDY)) {
-+		writel(__HALT_NFC_CONTROLLER, rb + CT2_NFC_CSR_SET_REG);
-+		for (i = 0; i < CT2_NFC_MAX_DELAY; i++) {
-+			r32 = readl(rb + CT2_NFC_CSR_SET_REG);
-+			if (r32 & __NFC_CONTROLLER_HALTED)
-+				break;
-+			udelay(1000);
-+		}
-+	}
- 
--	writel(__HALT_NFC_CONTROLLER, (rb + CT2_NFC_CSR_SET_REG));
-+	/*
-+	 * Mask the interrupts and clear any
-+	 * pending interrupts.
-+	 */
-+	writel(1, (rb + CT2_LPU0_HOSTFN_MBOX0_MSK));
-+	writel(1, (rb + CT2_LPU1_HOSTFN_MBOX0_MSK));
- 
--	bfa_ioc_ct2_sclk_init(rb, mode);
--	bfa_ioc_ct2_lclk_init(rb, mode);
--	bfa_ioc_ct2_mem_init(rb, mode);
-+	r32 = readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
-+	if (r32 == 1) {
-+		writel(1, (rb + CT2_LPU0_HOSTFN_CMD_STAT));
-+		readl((rb + CT2_LPU0_HOSTFN_CMD_STAT));
-+	}
-+	r32 = readl((rb + CT2_LPU1_HOSTFN_CMD_STAT));
-+	if (r32 == 1) {
-+		writel(1, (rb + CT2_LPU1_HOSTFN_CMD_STAT));
-+		readl((rb + CT2_LPU1_HOSTFN_CMD_STAT));
-+	}
++	/* Enqueue unused ioim resources to free_q */
++	list_splice_tail_init(&fcp->iotag_unused_q, &fcp->iotag_ioim_free_q);
 +
-+	bfa_ioc_ct2_mac_reset(rb);
-+	bfa_ioc_ct2_sclk_init(rb);
-+	bfa_ioc_ct2_lclk_init(rb);
-+
-+	/*
-+	 * release soft reset on s_clk & l_clk
-+	 */
-+	r32 = readl((rb + CT2_APP_PLL_SCLK_CTL_REG));
-+	writel(r32 & ~__APP_PLL_SCLK_LOGIC_SOFT_RESET,
-+		(rb + CT2_APP_PLL_SCLK_CTL_REG));
-+
-+	/*
-+	 * release soft reset on s_clk & l_clk
-+	 */
-+	r32 = readl((rb + CT2_APP_PLL_LCLK_CTL_REG));
-+	writel(r32 & ~__APP_PLL_LCLK_LOGIC_SOFT_RESET,
-+		(rb + CT2_APP_PLL_LCLK_CTL_REG));
+ 	bfa_fcpim_iocdisable(fcp);
+ }
  
- 	/*
- 	 * Announce flash device presence, if flash was corrupted.
- 	 */
--	if (r32 == (__WGN_READY | __GLBL_PF_VF_CFG_RDY)) {
--		writel(0, (rb + PSS_GPIO_OUT_REG));
--		writel(1, (rb + PSS_GPIO_OE_REG));
-+	if (wgn == (__WGN_READY | __GLBL_PF_VF_CFG_RDY)) {
-+		r32 = readl((rb + PSS_GPIO_OUT_REG));
-+		writel(r32 & ~1, (rb + PSS_GPIO_OUT_REG));
-+		r32 = readl((rb + PSS_GPIO_OE_REG));
-+		writel(r32 | 1, (rb + PSS_GPIO_OE_REG));
+ void
++bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw)
++{
++	struct bfa_fcp_mod_s	*mod = BFA_FCP_MOD(bfa);
++	struct list_head	*qe;
++	int	i;
++
++	for (i = 0; i < (mod->num_ioim_reqs - num_ioim_fw); i++) {
++		bfa_q_deq_tail(&mod->iotag_ioim_free_q, &qe);
++		list_add_tail(qe, &mod->iotag_unused_q);
++	}
++}
++
++void
+ bfa_itn_create(struct bfa_s *bfa, struct bfa_rport_s *rport,
+ 		void (*isr)(struct bfa_s *bfa, struct bfi_msg_s *m))
+ {
+@@ -3347,6 +3380,7 @@ bfa_iotag_attach(struct bfa_fcp_mod_s *fcp, struct bfa_meminfo_s *minfo)
+ 
+ 	INIT_LIST_HEAD(&fcp->iotag_ioim_free_q);
+ 	INIT_LIST_HEAD(&fcp->iotag_tio_free_q);
++	INIT_LIST_HEAD(&fcp->iotag_unused_q);
+ 
+ 	num_io_req = fcp->num_ioim_reqs + fcp->num_fwtio_reqs;
+ 	for (i = 0; i < num_io_req; i++, iotag++) {
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index e1e3221..bc6b294 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -42,6 +42,7 @@ void bfa_itn_create(struct bfa_s *bfa, struct bfa_rport_s *rport,
+ 		void (*isr)(struct bfa_s *bfa, struct bfi_msg_s *m));
+ void bfa_itn_isr(struct bfa_s *bfa, struct bfi_msg_s *m);
+ void bfa_iotag_attach(struct bfa_fcp_mod_s *fcp, struct bfa_meminfo_s *minfo);
++void bfa_fcp_res_recfg(struct bfa_s *bfa, u16 num_ioim_fw);
+ 
+ #define BFA_FCP_MOD(_hal)	(&(_hal)->modules.fcp_mod)
+ #define BFA_IOTAG_FROM_TAG(_fcp, _tag)	\
+@@ -118,6 +119,7 @@ struct bfa_fcpim_s {
+ 	struct list_head	ioim_resfree_q; /*  IOs waiting for f/w */
+ 	struct list_head	ioim_comp_q;	/*  IO global comp Q	*/
+ 	struct list_head	tskim_free_q;
++	struct list_head	tskim_unused_q;	/* Unused tskim Q */
+ 	u32			ios_active;	/*  current active IOs	*/
+ 	u32			delay_comp;
+ 	struct bfa_fcpim_del_itn_stats_s del_itn_stats;
+@@ -132,6 +134,7 @@ struct bfa_fcp_mod_s {
+ 	struct bfa_s		*bfa;
+ 	struct list_head	iotag_ioim_free_q;	/* free IO resources */
+ 	struct list_head	iotag_tio_free_q;	/* free IO resources */
++	struct list_head	iotag_unused_q;	/* unused IO resources*/
+ 	struct bfa_iotag_s	*iotag_arr;
+ 	struct bfa_itn_s	*itn_arr;
+ 	int			num_ioim_reqs;
+@@ -270,6 +273,7 @@ void	bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+ void	bfa_tskim_iodone(struct bfa_tskim_s *tskim);
+ void	bfa_tskim_iocdisable(struct bfa_tskim_s *tskim);
+ void	bfa_tskim_cleanup(struct bfa_tskim_s *tskim);
++void	bfa_tskim_res_recfg(struct bfa_s *bfa, u16 num_tskim_fw);
+ 
+ void	bfa_itnim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
+ 					u32 *dm_len);
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index 5332017..5bbb76b 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -1298,7 +1298,7 @@ bfa_fcs_fabric_send_flogi_acc(struct bfa_fcs_fabric_s *fabric)
+ 				    bfa_fcport_get_rx_bbcredit(bfa),
+ 				    bfa_fcs_fabric_oper_bbscn(fabric));
+ 
+-	bfa_fcxp_send(fcxp, NULL, fabric->vf_id, fabric->lps->lp_tag,
++	bfa_fcxp_send(fcxp, NULL, fabric->vf_id, fabric->lps->bfa_tag,
+ 		      BFA_FALSE, FC_CLASS_3,
+ 		      reqlen, &fchs, bfa_fcs_fabric_flogiacc_comp, fabric,
+ 		      FC_MAX_PDUSZ, 0);
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index 479ccbe..942443e 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -898,8 +898,8 @@ bfa_fcs_lport_attach(struct bfa_fcs_lport_s *lport, struct bfa_fcs_s *fcs,
+ 	lport->fcs = fcs;
+ 	lport->fabric = bfa_fcs_vf_lookup(fcs, vf_id);
+ 	lport->vport = vport;
+-	lport->lp_tag = (vport) ? vport->lps->lp_tag :
+-				  lport->fabric->lps->lp_tag;
++	lport->lp_tag = (vport) ? vport->lps->bfa_tag :
++				  lport->fabric->lps->bfa_tag;
+ 
+ 	INIT_LIST_HEAD(&lport->rport_q);
+ 	lport->num_rports = 0;
+diff --git a/drivers/scsi/bfa/bfa_hw_cb.c b/drivers/scsi/bfa/bfa_hw_cb.c
+index 694ebf1..e7ffd82 100644
+--- a/drivers/scsi/bfa/bfa_hw_cb.c
++++ b/drivers/scsi/bfa/bfa_hw_cb.c
+@@ -35,11 +35,6 @@ bfa_hwcb_reginit(struct bfa_s *bfa)
  	}
+ }
  
-+	bfa_ioc_ct2_mem_init(rb);
-+
- 	writel(BFI_IOC_UNINIT, (rb + CT2_BFA_IOC0_STATE_REG));
- 	writel(BFI_IOC_UNINIT, (rb + CT2_BFA_IOC1_STATE_REG));
- 	return BFA_STATUS_OK;
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 4fa3988..76af7ac 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -784,11 +784,14 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
- 	pci_set_master(pdev);
+-void
+-bfa_hwcb_reqq_ack(struct bfa_s *bfa, int reqq)
+-{
+-}
+-
+ static void
+ bfa_hwcb_reqq_ack_msix(struct bfa_s *bfa, int reqq)
+ {
+@@ -47,11 +42,6 @@ bfa_hwcb_reqq_ack_msix(struct bfa_s *bfa, int reqq)
+ 			bfa->iocfc.bfa_regs.intr_status);
+ }
  
- 
--	if (pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)
--		if (pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0) {
-+	if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(64)) != 0) ||
-+	    (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(64)) != 0)) {
-+		if ((pci_set_dma_mask(pdev, DMA_BIT_MASK(32)) != 0) ||
-+		   (pci_set_consistent_dma_mask(pdev, DMA_BIT_MASK(32)) != 0)) {
- 			printk(KERN_ERR "pci_set_dma_mask fail %p\n", pdev);
- 			goto out_release_region;
- 		}
-+	}
- 
- 	bfad->pci_bar0_kva = pci_iomap(pdev, 0, pci_resource_len(pdev, 0));
- 	bfad->pci_bar2_kva = pci_iomap(pdev, 2, pci_resource_len(pdev, 2));
-@@ -1291,6 +1294,7 @@ bfad_setup_intr(struct bfad_s *bfad)
- 	u32 mask = 0, i, num_bit = 0, max_bit = 0;
- 	struct msix_entry msix_entries[MAX_MSIX_ENTRY];
- 	struct pci_dev *pdev = bfad->pcidev;
-+	u16	reg;
- 
- 	/* Call BFA to get the msix map for this PCI function.  */
- 	bfa_msix_getvecs(&bfad->bfa, &mask, &num_bit, &max_bit);
-@@ -1320,6 +1324,13 @@ bfad_setup_intr(struct bfad_s *bfad)
- 			goto line_based;
- 		}
- 
-+		/* Disable INTX in MSI-X mode */
-+		pci_read_config_word(pdev, PCI_COMMAND, &reg);
-+
-+		if (!(reg & PCI_COMMAND_INTX_DISABLE))
-+			pci_write_config_word(pdev, PCI_COMMAND,
-+				reg | PCI_COMMAND_INTX_DISABLE);
-+
- 		/* Save the vectors */
- 		for (i = 0; i < bfad->nvec; i++) {
- 			bfa_trc(bfad, msix_entries[i].vector);
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index d8f1a71..3fb2e83 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -253,7 +253,7 @@ struct bfi_ioc_attr_s {
- 	u32	adapter_prop;	/*  adapter properties     */
- 	u16	maxfrsize;	/*  max receive frame size */
- 	char		asic_rev;
--	u8		ic;	/* initial capability */
-+	u8		rsvd_d;
- 	char		fw_version[BFA_VERSION_LEN];
- 	char		optrom_version[BFA_VERSION_LEN];
- 	struct		bfa_mfg_vpd_s	vpd;
-diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-index c665a80..8c19734 100644
---- a/drivers/scsi/bfa/bfi_ms.h
-+++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -48,7 +48,8 @@ struct bfi_iocfc_cfg_s {
- 	u32	endian_sig;	/*  endian signature of host     */
- 	__be16	num_ioim_reqs;
- 	__be16	num_fwtio_reqs;
--	u8	rsvd[4];
-+	u8	single_msix_vec;
-+	u8	rsvd[3];
- 
- 	/*
- 	 * Request and response circular queue base addresses, size and
-diff --git a/drivers/scsi/bfa/bfi_reg.h b/drivers/scsi/bfa/bfi_reg.h
-index d20d2b3..d892064 100644
---- a/drivers/scsi/bfa/bfi_reg.h
-+++ b/drivers/scsi/bfa/bfi_reg.h
-@@ -277,6 +277,8 @@ enum {
- #define CT2_LPU1_HOSTFN_CMD_STAT	(CT2_PCI_CPQ_BASE + 0x8c)
- #define CT2_HOSTFN_LPU0_READ_STAT	(CT2_PCI_CPQ_BASE + 0x90)
- #define CT2_HOSTFN_LPU1_READ_STAT	(CT2_PCI_CPQ_BASE + 0x94)
-+#define CT2_LPU0_HOSTFN_MBOX0_MSK	(CT2_PCI_CPQ_BASE + 0x98)
-+#define CT2_LPU1_HOSTFN_MBOX0_MSK	(CT2_PCI_CPQ_BASE + 0x9C)
- #define CT2_HOST_SEM0_REG		0x000148f0
- #define CT2_HOST_SEM1_REG		0x000148f4
- #define CT2_HOST_SEM2_REG		0x000148f8
-@@ -337,6 +339,15 @@ enum {
- #define __GLBL_PF_VF_CFG_RDY		0x00000200
- #define CT2_NFC_CSR_SET_REG		0x00027424
- #define __HALT_NFC_CONTROLLER		0x00000002
-+#define __NFC_CONTROLLER_HALTED		0x00001000
-+
-+#define CT2_CSI_MAC0_CONTROL_REG	0x000270d0
-+#define __CSI_MAC_RESET			0x00000010
-+#define __CSI_MAC_AHB_RESET		0x00000008
-+#define CT2_CSI_MAC1_CONTROL_REG	0x000270d4
-+#define CT2_CSI_MAC_CONTROL_REG(__n)	\
-+	(CT2_CSI_MAC0_CONTROL_REG +	\
-+	(__n) * (CT2_CSI_MAC1_CONTROL_REG - CT2_CSI_MAC0_CONTROL_REG))
+-void
+-bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq)
+-{
+-}
+-
+ static void
+ bfa_hwcb_rspq_ack_msix(struct bfa_s *bfa, int rspq)
+ {
+diff --git a/drivers/scsi/bfa/bfa_ioc_ct.c b/drivers/scsi/bfa/bfa_ioc_ct.c
+index 77f2b44..d1b8f0c 100644
+--- a/drivers/scsi/bfa/bfa_ioc_ct.c
++++ b/drivers/scsi/bfa/bfa_ioc_ct.c
+@@ -561,9 +561,9 @@ bfa_ioc_set_ct2_hwif(struct bfa_ioc_s *ioc)
+ }
  
  /*
-  * Name semaphore registers based on usage
+- * Temporary workaround for MSI-X resource allocation for catapult-2.
++ * Workaround for MSI-X resource allocation for catapult-2 with no asic block
+  */
+-#define HOSTFN_MSIX_DEFAULT		16
++#define HOSTFN_MSIX_DEFAULT		64
+ #define HOSTFN_MSIX_VT_INDEX_MBOX_ERR	0x30138
+ #define HOSTFN_MSIX_VT_OFST_NUMVT	0x3013c
+ #define __MSIX_VT_NUMVT__MK		0x003ff800
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index fe99ce2..cfc0b09 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -125,6 +125,7 @@ static void bfa_lps_stop(struct bfa_s *bfa);
+ static void bfa_lps_iocdisable(struct bfa_s *bfa);
+ static void bfa_lps_login_rsp(struct bfa_s *bfa,
+ 				struct bfi_lps_login_rsp_s *rsp);
++static void bfa_lps_no_res(struct bfa_lps_s *first_lps, u8 count);
+ static void bfa_lps_logout_rsp(struct bfa_s *bfa,
+ 				struct bfi_lps_logout_rsp_s *rsp);
+ static void bfa_lps_reqq_resume(void *lps_arg);
+@@ -475,6 +476,7 @@ claim_fcxps_mem(struct bfa_fcxp_mod_s *mod, struct bfa_meminfo_s *mi)
+ 
+ 	INIT_LIST_HEAD(&mod->fcxp_free_q);
+ 	INIT_LIST_HEAD(&mod->fcxp_active_q);
++	INIT_LIST_HEAD(&mod->fcxp_unused_q);
+ 
+ 	mod->fcxp_list = fcxp;
+ 
+@@ -561,6 +563,9 @@ bfa_fcxp_iocdisable(struct bfa_s *bfa)
+ 	struct bfa_fcxp_s *fcxp;
+ 	struct list_head	      *qe, *qen;
+ 
++	/* Enqueue unused fcxp resources to free_q */
++	list_splice_tail_init(&mod->fcxp_unused_q, &mod->fcxp_free_q);
++
+ 	list_for_each_safe(qe, qen, &mod->fcxp_active_q) {
+ 		fcxp = (struct bfa_fcxp_s *) qe;
+ 		if (fcxp->caller == NULL) {
+@@ -829,7 +834,7 @@ bfa_fcxp_queue(struct bfa_fcxp_s *fcxp, struct bfi_fcxp_send_req_s *send_req)
+ 	struct bfa_rport_s		*rport = reqi->bfa_rport;
+ 
+ 	bfi_h2i_set(send_req->mh, BFI_MC_FCXP, BFI_FCXP_H2I_SEND_REQ,
+-		    bfa_lpuid(bfa));
++		    bfa_fn_lpu(bfa));
+ 
+ 	send_req->fcxp_tag = cpu_to_be16(fcxp->fcxp_tag);
+ 	if (rport) {
+@@ -843,7 +848,7 @@ bfa_fcxp_queue(struct bfa_fcxp_s *fcxp, struct bfi_fcxp_send_req_s *send_req)
+ 	}
+ 
+ 	send_req->vf_id = cpu_to_be16(reqi->vf_id);
+-	send_req->lp_tag = reqi->lp_tag;
++	send_req->lp_fwtag = bfa_lps_get_fwtag(bfa, reqi->lp_tag);
+ 	send_req->class = reqi->class;
+ 	send_req->rsp_timeout = rspi->rsp_timeout;
+ 	send_req->cts = reqi->cts;
+@@ -891,7 +896,7 @@ bfa_fcxp_queue(struct bfa_fcxp_s *fcxp, struct bfi_fcxp_send_req_s *send_req)
+ 
+ 	hal_fcxp_tx_plog(bfa, reqi->req_tot_len, fcxp, &reqi->fchs);
+ 
+-	bfa_reqq_produce(bfa, BFA_REQQ_FCXP);
++	bfa_reqq_produce(bfa, BFA_REQQ_FCXP, send_req->mh);
+ 
+ 	bfa_trc(bfa, bfa_reqq_pi(bfa, BFA_REQQ_FCXP));
+ 	bfa_trc(bfa, bfa_reqq_ci(bfa, BFA_REQQ_FCXP));
+@@ -1160,6 +1165,18 @@ bfa_fcxp_get_maxrsp(struct bfa_s *bfa)
+ 	return mod->rsp_pld_sz;
+ }
+ 
++void
++bfa_fcxp_res_recfg(struct bfa_s *bfa, u16 num_fcxp_fw)
++{
++	struct bfa_fcxp_mod_s	*mod = BFA_FCXP_MOD(bfa);
++	struct list_head	*qe;
++	int	i;
++
++	for (i = 0; i < (mod->num_fcxps - num_fcxp_fw); i++) {
++		bfa_q_deq_tail(&mod->fcxp_free_q, &qe);
++		list_add_tail(qe, &mod->fcxp_unused_q);
++	}
++}
+ 
+ /*
+  *  BFA LPS state machine functions
+@@ -1171,7 +1188,7 @@ bfa_fcxp_get_maxrsp(struct bfa_s *bfa)
+ static void
+ bfa_lps_sm_init(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1223,7 +1240,7 @@ bfa_lps_sm_init(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ static void
+ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1277,7 +1294,7 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ static void
+ bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1310,7 +1327,7 @@ bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ static void
+ bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1359,7 +1376,7 @@ bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ static void
+ bfa_lps_sm_online_n2n_pid_wait(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1401,7 +1418,7 @@ bfa_lps_sm_online_n2n_pid_wait(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ static void
+ bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1426,7 +1443,7 @@ bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ static void
+ bfa_lps_sm_logowait(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, event);
+ 
+ 	switch (event) {
+@@ -1488,10 +1505,11 @@ bfa_lps_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 
+ 	INIT_LIST_HEAD(&mod->lps_free_q);
+ 	INIT_LIST_HEAD(&mod->lps_active_q);
++	INIT_LIST_HEAD(&mod->lps_login_q);
+ 
+ 	for (i = 0; i < mod->num_lps; i++, lps++) {
+ 		lps->bfa	= bfa;
+-		lps->lp_tag	= (u8) i;
++		lps->bfa_tag	= (u8) i;
+ 		lps->reqq	= BFA_REQQ_LPS;
+ 		bfa_reqq_winit(&lps->wqe, bfa_lps_reqq_resume, lps);
+ 		list_add_tail(&lps->qe, &mod->lps_free_q);
+@@ -1527,6 +1545,11 @@ bfa_lps_iocdisable(struct bfa_s *bfa)
+ 		lps = (struct bfa_lps_s *) qe;
+ 		bfa_sm_send_event(lps, BFA_LPS_SM_OFFLINE);
+ 	}
++	list_for_each_safe(qe, qen, &mod->lps_login_q) {
++		lps = (struct bfa_lps_s *) qe;
++		bfa_sm_send_event(lps, BFA_LPS_SM_OFFLINE);
++	}
++	list_splice_tail_init(&mod->lps_login_q, &mod->lps_active_q);
+ }
+ 
+ /*
+@@ -1538,12 +1561,13 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
+ 	struct bfa_lps_mod_s	*mod = BFA_LPS_MOD(bfa);
+ 	struct bfa_lps_s	*lps;
+ 
+-	WARN_ON(rsp->lp_tag >= mod->num_lps);
+-	lps = BFA_LPS_FROM_TAG(mod, rsp->lp_tag);
++	WARN_ON(rsp->bfa_tag >= mod->num_lps);
++	lps = BFA_LPS_FROM_TAG(mod, rsp->bfa_tag);
+ 
+ 	lps->status = rsp->status;
+ 	switch (rsp->status) {
+ 	case BFA_STATUS_OK:
++		lps->fw_tag	= rsp->fw_tag;
+ 		lps->fport	= rsp->f_port;
+ 		if (lps->fport)
+ 			lps->lp_pid = rsp->lp_pid;
+@@ -1570,14 +1594,46 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
+ 
+ 		break;
+ 
++	case BFA_STATUS_VPORT_MAX:
++		if (!rsp->ext_status)
++			bfa_lps_no_res(lps, rsp->ext_status);
++		break;
++
+ 	default:
+ 		/* Nothing to do with other status */
+ 		break;
+ 	}
+ 
++	list_del(&lps->qe);
++	list_add_tail(&lps->qe, &mod->lps_active_q);
+ 	bfa_sm_send_event(lps, BFA_LPS_SM_FWRSP);
+ }
+ 
++static void
++bfa_lps_no_res(struct bfa_lps_s *first_lps, u8 count)
++{
++	struct bfa_s		*bfa = first_lps->bfa;
++	struct bfa_lps_mod_s	*mod = BFA_LPS_MOD(bfa);
++	struct list_head	*qe, *qe_next;
++	struct bfa_lps_s	*lps;
++
++	bfa_trc(bfa, count);
++
++	qe = bfa_q_next(first_lps);
++
++	while (count && qe) {
++		qe_next = bfa_q_next(qe);
++		lps = (struct bfa_lps_s *)qe;
++		bfa_trc(bfa, lps->bfa_tag);
++		lps->status = first_lps->status;
++		list_del(&lps->qe);
++		list_add_tail(&lps->qe, &mod->lps_active_q);
++		bfa_sm_send_event(lps, BFA_LPS_SM_FWRSP);
++		qe = qe_next;
++		count--;
++	}
++}
++
+ /*
+  * Firmware logout response
+  */
+@@ -1587,8 +1643,8 @@ bfa_lps_logout_rsp(struct bfa_s *bfa, struct bfi_lps_logout_rsp_s *rsp)
+ 	struct bfa_lps_mod_s	*mod = BFA_LPS_MOD(bfa);
+ 	struct bfa_lps_s	*lps;
+ 
+-	WARN_ON(rsp->lp_tag >= mod->num_lps);
+-	lps = BFA_LPS_FROM_TAG(mod, rsp->lp_tag);
++	WARN_ON(rsp->bfa_tag >= mod->num_lps);
++	lps = BFA_LPS_FROM_TAG(mod, rsp->bfa_tag);
+ 
+ 	bfa_sm_send_event(lps, BFA_LPS_SM_FWRSP);
+ }
+@@ -1602,7 +1658,7 @@ bfa_lps_rx_cvl_event(struct bfa_s *bfa, struct bfi_lps_cvl_event_s *cvl)
+ 	struct bfa_lps_mod_s	*mod = BFA_LPS_MOD(bfa);
+ 	struct bfa_lps_s	*lps;
+ 
+-	lps = BFA_LPS_FROM_TAG(mod, cvl->lp_tag);
++	lps = BFA_LPS_FROM_TAG(mod, cvl->bfa_tag);
+ 
+ 	bfa_sm_send_event(lps, BFA_LPS_SM_RX_CVL);
+ }
+@@ -1637,15 +1693,16 @@ bfa_lps_free(struct bfa_lps_s *lps)
+ static void
+ bfa_lps_send_login(struct bfa_lps_s *lps)
+ {
++	struct bfa_lps_mod_s	*mod = BFA_LPS_MOD(lps->bfa);
+ 	struct bfi_lps_login_req_s	*m;
+ 
+ 	m = bfa_reqq_next(lps->bfa, lps->reqq);
+ 	WARN_ON(!m);
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_LPS, BFI_LPS_H2I_LOGIN_REQ,
+-		bfa_lpuid(lps->bfa));
++		bfa_fn_lpu(lps->bfa));
+ 
+-	m->lp_tag	= lps->lp_tag;
++	m->bfa_tag	= lps->bfa_tag;
+ 	m->alpa		= lps->alpa;
+ 	m->pdu_size	= cpu_to_be16(lps->pdusz);
+ 	m->pwwn		= lps->pwwn;
+@@ -1654,7 +1711,9 @@ bfa_lps_send_login(struct bfa_lps_s *lps)
+ 	m->auth_en	= lps->auth_en;
+ 	m->bb_scn	= lps->bb_scn;
+ 
+-	bfa_reqq_produce(lps->bfa, lps->reqq);
++	bfa_reqq_produce(lps->bfa, lps->reqq, m->mh);
++	list_del(&lps->qe);
++	list_add_tail(&lps->qe, &mod->lps_login_q);
+ }
+ 
+ /*
+@@ -1669,11 +1728,11 @@ bfa_lps_send_logout(struct bfa_lps_s *lps)
+ 	WARN_ON(!m);
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_LPS, BFI_LPS_H2I_LOGOUT_REQ,
+-		bfa_lpuid(lps->bfa));
++		bfa_fn_lpu(lps->bfa));
+ 
+-	m->lp_tag    = lps->lp_tag;
++	m->fw_tag = lps->fw_tag;
+ 	m->port_name = lps->pwwn;
+-	bfa_reqq_produce(lps->bfa, lps->reqq);
++	bfa_reqq_produce(lps->bfa, lps->reqq, m->mh);
+ }
+ 
+ /*
+@@ -1688,11 +1747,11 @@ bfa_lps_send_set_n2n_pid(struct bfa_lps_s *lps)
+ 	WARN_ON(!m);
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_LPS, BFI_LPS_H2I_N2N_PID_REQ,
+-		bfa_lpuid(lps->bfa));
++		bfa_fn_lpu(lps->bfa));
+ 
+-	m->lp_tag = lps->lp_tag;
++	m->fw_tag = lps->fw_tag;
+ 	m->lp_pid = lps->lp_pid;
+-	bfa_reqq_produce(lps->bfa, lps->reqq);
++	bfa_reqq_produce(lps->bfa, lps->reqq, m->mh);
+ }
+ 
+ /*
+@@ -1884,6 +1943,13 @@ bfa_lps_fdisclogo(struct bfa_lps_s *lps)
+ 	bfa_sm_send_event(lps, BFA_LPS_SM_LOGOUT);
+ }
+ 
++u8
++bfa_lps_get_fwtag(struct bfa_s *bfa, u8 lp_tag)
++{
++	struct bfa_lps_mod_s    *mod = BFA_LPS_MOD(bfa);
++
++	return BFA_LPS_FROM_TAG(mod, lp_tag)->fw_tag;
++}
+ 
+ /*
+  * Return lport services tag given the pid
+@@ -1897,7 +1963,7 @@ bfa_lps_get_tag_from_pid(struct bfa_s *bfa, u32 pid)
+ 
+ 	for (i = 0, lps = mod->lps_arr; i < mod->num_lps; i++, lps++) {
+ 		if (lps->lp_pid == pid)
+-			return lps->lp_tag;
++			return lps->bfa_tag;
+ 	}
+ 
+ 	/* Return base port tag anyway */
+@@ -1922,7 +1988,7 @@ bfa_lps_get_base_pid(struct bfa_s *bfa)
+ void
+ bfa_lps_set_n2n_pid(struct bfa_lps_s *lps, uint32_t n2n_pid)
+ {
+-	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, lps->bfa_tag);
+ 	bfa_trc(lps->bfa, n2n_pid);
+ 
+ 	lps->lp_pid = n2n_pid;
+@@ -2935,7 +3001,7 @@ bfa_fcport_send_enable(struct bfa_fcport_s *fcport)
+ 	}
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_ENABLE_REQ,
+-			bfa_lpuid(fcport->bfa));
++			bfa_fn_lpu(fcport->bfa));
+ 	m->nwwn = fcport->nwwn;
+ 	m->pwwn = fcport->pwwn;
+ 	m->port_cfg = fcport->cfg;
+@@ -2949,7 +3015,7 @@ bfa_fcport_send_enable(struct bfa_fcport_s *fcport)
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -2978,13 +3044,13 @@ bfa_fcport_send_disable(struct bfa_fcport_s *fcport)
+ 	}
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_DISABLE_REQ,
+-			bfa_lpuid(fcport->bfa));
++			bfa_fn_lpu(fcport->bfa));
+ 	m->msgtag = fcport->msgtag;
+ 
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT, m->mh);
+ 
+ 	return BFA_TRUE;
+ }
+@@ -3016,14 +3082,14 @@ bfa_fcport_send_txcredit(void *port_cbarg)
+ 	}
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ,
+-			bfa_lpuid(fcport->bfa));
++			bfa_fn_lpu(fcport->bfa));
+ 	m->tx_bbcredit = cpu_to_be16((u16)fcport->cfg.tx_bbcredit);
+ 	m->bb_scn = fcport->cfg.bb_scn;
+ 
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT, m->mh);
+ }
+ 
+ static void
+@@ -3127,8 +3193,8 @@ bfa_fcport_send_stats_get(void *cbarg)
+ 
+ 	memset(msg, 0, sizeof(struct bfi_fcport_req_s));
+ 	bfi_h2i_set(msg->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_STATS_GET_REQ,
+-			bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++			bfa_fn_lpu(fcport->bfa));
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT, msg->mh);
+ }
+ 
+ static void
+@@ -3189,8 +3255,8 @@ bfa_fcport_send_stats_clear(void *cbarg)
+ 
+ 	memset(msg, 0, sizeof(struct bfi_fcport_req_s));
+ 	bfi_h2i_set(msg->mh, BFI_MC_FCPORT, BFI_FCPORT_H2I_STATS_CLEAR_REQ,
+-			bfa_lpuid(fcport->bfa));
+-	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT);
++			bfa_fn_lpu(fcport->bfa));
++	bfa_reqq_produce(fcport->bfa, BFA_REQQ_PORT, msg->mh);
+ }
+ 
+ /*
+@@ -4370,6 +4436,7 @@ bfa_rport_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 
+ 	INIT_LIST_HEAD(&mod->rp_free_q);
+ 	INIT_LIST_HEAD(&mod->rp_active_q);
++	INIT_LIST_HEAD(&mod->rp_unused_q);
+ 
+ 	rp = (struct bfa_rport_s *) bfa_meminfo_kva(meminfo);
+ 	mod->rps_list = rp;
+@@ -4421,6 +4488,9 @@ bfa_rport_iocdisable(struct bfa_s *bfa)
+ 	struct bfa_rport_s *rport;
+ 	struct list_head *qe, *qen;
+ 
++	/* Enqueue unused rport resources to free_q */
++	list_splice_tail_init(&mod->rp_unused_q, &mod->rp_free_q);
++
+ 	list_for_each_safe(qe, qen, &mod->rp_active_q) {
+ 		rport = (struct bfa_rport_s *) qe;
+ 		bfa_sm_send_event(rport, BFA_RPORT_SM_HWFAIL);
+@@ -4464,11 +4534,11 @@ bfa_rport_send_fwcreate(struct bfa_rport_s *rp)
+ 	}
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_RPORT, BFI_RPORT_H2I_CREATE_REQ,
+-			bfa_lpuid(rp->bfa));
++			bfa_fn_lpu(rp->bfa));
+ 	m->bfa_handle = rp->rport_tag;
+ 	m->max_frmsz = cpu_to_be16(rp->rport_info.max_frmsz);
+ 	m->pid = rp->rport_info.pid;
+-	m->lp_tag = rp->rport_info.lp_tag;
++	m->lp_fwtag = bfa_lps_get_fwtag(rp->bfa, (u8)rp->rport_info.lp_tag);
+ 	m->local_pid = rp->rport_info.local_pid;
+ 	m->fc_class = rp->rport_info.fc_class;
+ 	m->vf_en = rp->rport_info.vf_en;
+@@ -4478,7 +4548,7 @@ bfa_rport_send_fwcreate(struct bfa_rport_s *rp)
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(rp->bfa, BFA_REQQ_RPORT);
++	bfa_reqq_produce(rp->bfa, BFA_REQQ_RPORT, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -4497,13 +4567,13 @@ bfa_rport_send_fwdelete(struct bfa_rport_s *rp)
+ 	}
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_RPORT, BFI_RPORT_H2I_DELETE_REQ,
+-			bfa_lpuid(rp->bfa));
++			bfa_fn_lpu(rp->bfa));
+ 	m->fw_handle = rp->fw_handle;
+ 
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(rp->bfa, BFA_REQQ_RPORT);
++	bfa_reqq_produce(rp->bfa, BFA_REQQ_RPORT, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -4522,14 +4592,14 @@ bfa_rport_send_fwspeed(struct bfa_rport_s *rp)
+ 	}
+ 
+ 	bfi_h2i_set(m->mh, BFI_MC_RPORT, BFI_RPORT_H2I_SET_SPEED_REQ,
+-			bfa_lpuid(rp->bfa));
++			bfa_fn_lpu(rp->bfa));
+ 	m->fw_handle = rp->fw_handle;
+ 	m->speed = (u8)rp->rport_info.speed;
+ 
+ 	/*
+ 	 * queue I/O message to firmware
+ 	 */
+-	bfa_reqq_produce(rp->bfa, BFA_REQQ_RPORT);
++	bfa_reqq_produce(rp->bfa, BFA_REQQ_RPORT, m->mh);
+ 	return BFA_TRUE;
+ }
+ 
+@@ -4579,7 +4649,18 @@ bfa_rport_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ 	}
+ }
+ 
++void
++bfa_rport_res_recfg(struct bfa_s *bfa, u16 num_rport_fw)
++{
++	struct bfa_rport_mod_s	*mod = BFA_RPORT_MOD(bfa);
++	struct list_head	*qe;
++	int	i;
+ 
++	for (i = 0; i < (mod->num_rports - num_rport_fw); i++) {
++		bfa_q_deq_tail(&mod->rp_free_q, &qe);
++		list_add_tail(qe, &mod->rp_unused_q);
++	}
++}
+ 
+ /*
+  *  bfa_rport_api
+@@ -4880,7 +4961,7 @@ claim_uf_post_msgs(struct bfa_uf_mod_s *ufm, struct bfa_meminfo_s *mi)
+ 		buf_len = sizeof(struct bfa_uf_buf_s);
+ 		uf_bp_msg->buf_len = cpu_to_be16(buf_len);
+ 		bfi_h2i_set(uf_bp_msg->mh, BFI_MC_UF, BFI_UF_H2I_BUF_POST,
+-			    bfa_lpuid(ufm->bfa));
++			    bfa_fn_lpu(ufm->bfa));
+ 		bfa_alen_set(&uf_bp_msg->alen, buf_len, ufm_pbs_pa(ufm, i));
+ 	}
+ 
+@@ -4957,6 +5038,7 @@ bfa_uf_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	ufm->num_ufs = cfg->fwcfg.num_uf_bufs;
+ 	INIT_LIST_HEAD(&ufm->uf_free_q);
+ 	INIT_LIST_HEAD(&ufm->uf_posted_q);
++	INIT_LIST_HEAD(&ufm->uf_unused_q);
+ 
+ 	uf_mem_claim(ufm, meminfo);
+ }
+@@ -4992,7 +5074,7 @@ bfa_uf_post(struct bfa_uf_mod_s *ufm, struct bfa_uf_s *uf)
+ 
+ 	memcpy(uf_post_msg, &ufm->uf_buf_posts[uf->uf_tag],
+ 		      sizeof(struct bfi_uf_buf_post_s));
+-	bfa_reqq_produce(ufm->bfa, BFA_REQQ_FCXP);
++	bfa_reqq_produce(ufm->bfa, BFA_REQQ_FCXP, uf_post_msg->mh);
+ 
+ 	bfa_trc(ufm->bfa, uf->uf_tag);
+ 
+@@ -5061,6 +5143,9 @@ bfa_uf_iocdisable(struct bfa_s *bfa)
+ 	struct bfa_uf_s *uf;
+ 	struct list_head *qe, *qen;
+ 
++	/* Enqueue unused uf resources to free_q */
++	list_splice_tail_init(&ufm->uf_unused_q, &ufm->uf_free_q);
++
+ 	list_for_each_safe(qe, qen, &ufm->uf_posted_q) {
+ 		uf = (struct bfa_uf_s *) qe;
+ 		list_del(&uf->qe);
+@@ -5125,4 +5210,15 @@ bfa_uf_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 	}
+ }
+ 
++void
++bfa_uf_res_recfg(struct bfa_s *bfa, u16 num_uf_fw)
++{
++	struct bfa_uf_mod_s	*mod = BFA_UF_MOD(bfa);
++	struct list_head	*qe;
++	int	i;
+ 
++	for (i = 0; i < (mod->num_ufs - num_uf_fw); i++) {
++		bfa_q_deq_tail(&mod->uf_free_q, &qe);
++		list_add_tail(qe, &mod->uf_unused_q);
++	}
++}
+diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
+index acb30ef..6df1492 100644
+--- a/drivers/scsi/bfa/bfa_svc.h
++++ b/drivers/scsi/bfa/bfa_svc.h
+@@ -93,6 +93,7 @@ struct bfa_fcxp_mod_s {
+ 	void		*rsp_pld_list_kva;	/* list of FCXP resp pld */
+ 	u64	rsp_pld_list_pa;	/* list of FCXP resp pld */
+ 	struct list_head  wait_q;		/* wait queue for free fcxp */
++	struct list_head fcxp_unused_q; /* unused fcxps */
+ 	u32	req_pld_sz;
+ 	u32	rsp_pld_sz;
+ };
+@@ -238,6 +239,7 @@ struct bfa_rport_mod_s {
+ 	struct bfa_rport_s *rps_list;	/*  list of rports	*/
+ 	struct list_head	rp_free_q;	/*  free bfa_rports	*/
+ 	struct list_head	rp_active_q;	/*  free bfa_rports	*/
++	struct list_head	rp_unused_q;	/*  unused bfa rports  */
+ 	u16	num_rports;	/*  number of rports	*/
+ };
+ 
+@@ -254,6 +256,7 @@ struct bfa_rport_mod_s {
+  * protected functions
+  */
+ void	bfa_rport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++void	bfa_rport_res_recfg(struct bfa_s *bfa, u16 num_rport_fw);
+ 
+ /*
+  *	BFA rport information.
+@@ -332,6 +335,7 @@ struct bfa_uf_mod_s {
+ 	u16	num_ufs;	/*  num unsolicited rx frames */
+ 	struct list_head	uf_free_q;	/*  free UFs */
+ 	struct list_head	uf_posted_q;	/*  UFs posted to IOC */
++	struct list_head	uf_unused_q;	/*  unused UF's */
+ 	struct bfa_uf_buf_s *uf_pbs_kva;	/*  list UF bufs request pld */
+ 	u64	uf_pbs_pa;	/*  phy addr for UF bufs */
+ 	struct bfi_uf_buf_post_s *uf_buf_posts;
+@@ -346,6 +350,7 @@ struct bfa_uf_mod_s {
+ 	((_ufmod)->uf_pbs_pa + sizeof(struct bfa_uf_buf_s) * (_uftag))
+ 
+ void	bfa_uf_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++void	bfa_uf_res_recfg(struct bfa_s *bfa, u16 num_uf_fw);
+ 
+ #define BFA_UF_BUFSZ	(2 * 1024 + 256)
+ 
+@@ -364,7 +369,8 @@ struct bfa_lps_s {
+ 	struct list_head	qe;	/*  queue element		*/
+ 	struct bfa_s	*bfa;		/*  parent bfa instance	*/
+ 	bfa_sm_t	sm;		/*  finite state machine	*/
+-	u8		lp_tag;		/*  lport tag			*/
++	u8		bfa_tag;	/*  lport tag		*/
++	u8		fw_tag;		/*  lport fw tag                */
+ 	u8		reqq;		/*  lport request queue	*/
+ 	u8		alpa;		/*  ALPA for loop topologies	*/
+ 	u32	lp_pid;		/*  lport port ID		*/
+@@ -397,6 +403,7 @@ struct bfa_lps_s {
+ struct bfa_lps_mod_s {
+ 	struct list_head		lps_free_q;
+ 	struct list_head		lps_active_q;
++	struct list_head		lps_login_q;
+ 	struct bfa_lps_s	*lps_arr;
+ 	int			num_lps;
+ };
+@@ -583,6 +590,7 @@ void bfa_fcxp_send(struct bfa_fcxp_s *fcxp, struct bfa_rport_s *rport,
+ bfa_status_t bfa_fcxp_abort(struct bfa_fcxp_s *fcxp);
+ u32 bfa_fcxp_get_reqbufsz(struct bfa_fcxp_s *fcxp);
+ u32 bfa_fcxp_get_maxrsp(struct bfa_s *bfa);
++void bfa_fcxp_res_recfg(struct bfa_s *bfa, u16 num_fcxp_fw);
+ 
+ static inline void *
+ bfa_uf_get_frmbuf(struct bfa_uf_s *uf)
+@@ -617,6 +625,7 @@ void bfa_lps_fdisc(struct bfa_lps_s *lps, void *uarg, u16 pdusz,
+ 		   wwn_t pwwn, wwn_t nwwn);
+ void bfa_lps_fdisclogo(struct bfa_lps_s *lps);
+ void bfa_lps_set_n2n_pid(struct bfa_lps_s *lps, u32 n2n_pid);
++u8 bfa_lps_get_fwtag(struct bfa_s *bfa, u8 lp_tag);
+ u32 bfa_lps_get_base_pid(struct bfa_s *bfa);
+ u8 bfa_lps_get_tag_from_pid(struct bfa_s *bfa, u32 pid);
+ void bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status);
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 3fb2e83..40002f4 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -38,18 +38,20 @@ struct bfi_mhdr_s {
+ 	union {
+ 		struct {
+ 			u8	qid;
+-			u8	lpu_id;	/*  msg destination		    */
++			u8	fn_lpu;	/*  msg destination		    */
+ 		} h2i;
+ 		u16	i2htok;	/*  token in msgs to host	    */
+ 	} mtag;
+ };
+ 
+-#define bfi_mhdr_2_qid(_mh)	((_mh)->mtag.h2i.qid)
++#define bfi_fn_lpu(__fn, __lpu)	((__fn) << 1 | (__lpu))
++#define bfi_mhdr_2_fn(_mh)	((_mh)->mtag.h2i.fn_lpu >> 1)
++#define bfi_mhdr_2_qid(_m)	((_mh)->mtag.h2i.qid)
+ 
+-#define bfi_h2i_set(_mh, _mc, _op, _lpuid) do {		\
++#define bfi_h2i_set(_mh, _mc, _op, _fn_lpu) do {		\
+ 	(_mh).msg_class		= (_mc);      \
+ 	(_mh).msg_id		= (_op);      \
+-	(_mh).mtag.h2i.lpu_id	= (_lpuid);      \
++	(_mh).mtag.h2i.fn_lpu	= (_fn_lpu);      \
+ } while (0)
+ 
+ #define bfi_i2h_set(_mh, _mc, _op, _i2htok) do {		\
+diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
+index 8c19734..0727c75 100644
+--- a/drivers/scsi/bfa/bfi_ms.h
++++ b/drivers/scsi/bfa/bfi_ms.h
+@@ -88,6 +88,7 @@ struct bfi_iocfc_qreg_s {
+ 	u32	rme_q_ci_off[BFI_IOC_MAX_CQS];
+ 	u32	rme_q_pi_off[BFI_IOC_MAX_CQS];
+ 	u32	rme_qctl_off[BFI_IOC_MAX_CQS];
++	u8	hw_qid[BFI_IOC_MAX_CQS];
+ };
+ 
+ struct bfi_iocfc_cfgrsp_s {
+@@ -348,7 +349,7 @@ struct bfi_fcxp_send_req_s {
+ 	u8	 class;		/*  FC class used for req/rsp	    */
+ 	u8	 rsp_timeout;	/*  timeout in secs, 0-no response */
+ 	u8	 cts;		/*  continue sequence		    */
+-	u8	 lp_tag;	/*  lport tag			    */
++	u8	 lp_fwtag;	/*  lport tag			    */
+ 	struct fchs_s	fchs;	/*  request FC header structure    */
+ 	__be32	req_len;	/*  request payload length	    */
+ 	__be32	rsp_maxlen;	/*  max response length expected   */
+@@ -408,7 +409,7 @@ enum bfi_lps_i2h_msgs {
+ 
+ struct bfi_lps_login_req_s {
+ 	struct bfi_mhdr_s  mh;		/*  common msg header		*/
+-	u8		lp_tag;
++	u8		bfa_tag;
+ 	u8		alpa;
+ 	__be16		pdu_size;
+ 	wwn_t		pwwn;
+@@ -421,7 +422,7 @@ struct bfi_lps_login_req_s {
+ 
+ struct bfi_lps_login_rsp_s {
+ 	struct bfi_mhdr_s  mh;		/*  common msg header		*/
+-	u8		lp_tag;
++	u8		fw_tag;
+ 	u8		status;
+ 	u8		lsrjt_rsn;
+ 	u8		lsrjt_expl;
+@@ -437,32 +438,32 @@ struct bfi_lps_login_rsp_s {
+ 	u8		ext_status;
+ 	u8		brcd_switch;	/*  attached peer is brcd switch */
+ 	u8		bb_scn;		/* atatched port's bb_scn */
+-	u8		resvd;
++	u8		bfa_tag;
+ };
+ 
+ struct bfi_lps_logout_req_s {
+ 	struct bfi_mhdr_s  mh;		/*  common msg header		*/
+-	u8		lp_tag;
++	u8		fw_tag;
+ 	u8		rsvd[3];
+ 	wwn_t		port_name;
+ };
+ 
+ struct bfi_lps_logout_rsp_s {
+ 	struct bfi_mhdr_s  mh;		/*  common msg header		*/
+-	u8		lp_tag;
++	u8		bfa_tag;
+ 	u8		status;
+ 	u8		rsvd[2];
+ };
+ 
+ struct bfi_lps_cvl_event_s {
+ 	struct bfi_mhdr_s  mh;		/*  common msg header		*/
+-	u8		lp_tag;
++	u8		bfa_tag;
+ 	u8		rsvd[3];
+ };
+ 
+ struct bfi_lps_n2n_pid_req_s {
+ 	struct bfi_mhdr_s	mh;	/*  common msg header		*/
+-	u8	lp_tag;
++	u8	fw_tag;
+ 	u32	lp_pid:24;
+ };
+ 
+@@ -497,7 +498,7 @@ struct bfi_rport_create_req_s {
+ 	u16	bfa_handle;	/*  host rport handle		*/
+ 	__be16	max_frmsz;	/*  max rcv pdu size		*/
+ 	u32	pid:24,	/*  remote port ID		*/
+-		lp_tag:8;	/*  local port tag		*/
++		lp_fwtag:8;	/*  local port tag		*/
+ 	u32	local_pid:24,	/*  local port ID		*/
+ 		cisc:8;
+ 	u8	fc_class;	/*  supported FC classes	*/
 -- 
 1.7.3.rc1
 
