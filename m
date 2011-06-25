@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 10/15] bfa: Added support to obtain SFP info.
-Date: Fri, 24 Jun 2011 20:26:25 -0700
-Message-ID: <1308972385-10181-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 11/15] bfa: Added support for flash configuration
+Date: Fri, 24 Jun 2011 20:27:13 -0700
+Message-ID: <1308972433-11304-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57609 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57653 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752343Ab1FYD1S (ORCPT
+	by vger.kernel.org with ESMTP id S1752343Ab1FYD2T (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 23:27:18 -0400
+	Fri, 24 Jun 2011 23:28:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,436 +18,290 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added SFP sub-module to BFA.
-	- Added interface to collect sfp media info and sfp speed.
+	- Added flash sub-module.
+	- Implemented the interface to read/erase/update flash partition.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c    |   13 ++
- drivers/scsi/bfa/bfa_defs.h    |  266 +++++++++++++++++++++++
- drivers/scsi/bfa/bfa_ioc.c     |  457 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_ioc.h     |   52 +++++
+ drivers/scsi/bfa/bfa.h         |   22 --
+ drivers/scsi/bfa/bfa_core.c    |   15 ++
+ drivers/scsi/bfa/bfa_defs.h    |  106 +++++++--
+ drivers/scsi/bfa/bfa_ioc.c     |  494 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_ioc.h     |   72 ++++++
  drivers/scsi/bfa/bfa_modules.h |    1 +
- drivers/scsi/bfa/bfad_bsg.c    |   49 +++++
- drivers/scsi/bfa/bfad_bsg.h    |   16 ++
- drivers/scsi/bfa/bfi.h         |   49 +++++
- 8 files changed, 903 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfad_bsg.c    |  117 ++++++++++
+ drivers/scsi/bfa/bfad_bsg.h    |   21 ++
+ drivers/scsi/bfa/bfi.h         |  109 +++++++++
+ 9 files changed, 910 insertions(+), 47 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
+index c7cfc58..3b0af11 100644
+--- a/drivers/scsi/bfa/bfa.h
++++ b/drivers/scsi/bfa/bfa.h
+@@ -27,7 +27,6 @@
+ struct bfa_s;
+ 
+ typedef void (*bfa_isr_func_t) (struct bfa_s *bfa, struct bfi_msg_s *m);
+-typedef void    (*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
+ 
+ /*
+  * Interrupt message handlers
+@@ -77,16 +76,6 @@ void bfa_isr_unhandled(struct bfa_s *bfa, struct bfi_msg_s *m);
+ } while (0)
+ 
+ /*
+- * Queue element to wait for room in request queue. FIFO order is
+- * maintained when fullfilling requests.
+- */
+-struct bfa_reqq_wait_s {
+-	struct list_head	qe;
+-	void		(*qresume) (void *cbarg);
+-	void		*cbarg;
+-};
+-
+-/*
+  * Circular queue usage assignments
+  */
+ enum {
+@@ -129,17 +118,6 @@ bfa_reqq_winit(struct bfa_reqq_wait_s *wqe, void (*qresume) (void *cbarg),
+ 
+ #define bfa_reqq_wcancel(__wqe)	list_del(&(__wqe)->qe)
+ 
+-
+-/*
+- * Generic BFA callback element.
+- */
+-struct bfa_cb_qe_s {
+-	struct list_head         qe;
+-	bfa_cb_cbfn_t  cbfn;
+-	bfa_boolean_t   once;
+-	void           *cbarg;
+-};
+-
+ #define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {	\
+ 		(__hcb_qe)->cbfn  = (__cbfn);      \
+ 		(__hcb_qe)->cbarg = (__cbarg);      \
 diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index ec98724..3ba73fa 100644
+index 3ba73fa..04d3620 100644
 --- a/drivers/scsi/bfa/bfa_core.c
 +++ b/drivers/scsi/bfa/bfa_core.c
-@@ -122,6 +122,16 @@ bfa_com_cee_attach(struct bfa_s *bfa)
- 	bfa_cee_mem_claim(cee, cee_dma->kva_curp, cee_dma->dma_curp);
+@@ -132,6 +132,17 @@ bfa_com_sfp_attach(struct bfa_s *bfa)
+ 	bfa_sfp_memclaim(sfp, sfp_dma->kva_curp, sfp_dma->dma_curp);
  }
  
 +static void
-+bfa_com_sfp_attach(struct bfa_s *bfa)
++bfa_com_flash_attach(struct bfa_s *bfa, bfa_boolean_t mincfg)
 +{
-+	struct bfa_sfp_s	*sfp = BFA_SFP_MOD(bfa);
-+	struct bfa_mem_dma_s	*sfp_dma = BFA_MEM_SFP_DMA(bfa);
++	struct bfa_flash_s	*flash = BFA_FLASH(bfa);
++	struct bfa_mem_dma_s	*flash_dma = BFA_MEM_FLASH_DMA(bfa);
 +
-+	bfa_sfp_attach(sfp, &bfa->ioc, bfa, bfa->trcmod);
-+	bfa_sfp_memclaim(sfp, sfp_dma->kva_curp, sfp_dma->dma_curp);
++	bfa_flash_attach(flash, &bfa->ioc, bfa, bfa->trcmod, mincfg);
++	bfa_flash_memclaim(flash, flash_dma->kva_curp,
++			   flash_dma->dma_curp, mincfg);
 +}
 +
  /*
   * BFA IOC FC related definitions
   */
-@@ -1360,6 +1370,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
- 	struct bfa_mem_dma_s *port_dma = BFA_MEM_PORT_DMA(bfa);
+@@ -1371,6 +1382,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
  	struct bfa_mem_dma_s *ablk_dma = BFA_MEM_ABLK_DMA(bfa);
  	struct bfa_mem_dma_s *cee_dma = BFA_MEM_CEE_DMA(bfa);
-+	struct bfa_mem_dma_s *sfp_dma = BFA_MEM_SFP_DMA(bfa);
+ 	struct bfa_mem_dma_s *sfp_dma = BFA_MEM_SFP_DMA(bfa);
++	struct bfa_mem_dma_s *flash_dma = BFA_MEM_FLASH_DMA(bfa);
  
  	WARN_ON((cfg == NULL) || (meminfo == NULL));
  
-@@ -1378,6 +1389,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
- 	bfa_mem_dma_setup(meminfo, port_dma, bfa_port_meminfo());
+@@ -1390,6 +1402,8 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
  	bfa_mem_dma_setup(meminfo, ablk_dma, bfa_ablk_meminfo());
  	bfa_mem_dma_setup(meminfo, cee_dma, bfa_cee_meminfo());
-+	bfa_mem_dma_setup(meminfo, sfp_dma, bfa_sfp_meminfo());
+ 	bfa_mem_dma_setup(meminfo, sfp_dma, bfa_sfp_meminfo());
++	bfa_mem_dma_setup(meminfo, flash_dma,
++			  bfa_flash_meminfo(cfg->drvcfg.min_cfg));
  }
  
  /*
-@@ -1446,6 +1458,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	bfa_com_port_attach(bfa);
+@@ -1459,6 +1473,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
  	bfa_com_ablk_attach(bfa);
  	bfa_com_cee_attach(bfa);
-+	bfa_com_sfp_attach(bfa);
+ 	bfa_com_sfp_attach(bfa);
++	bfa_com_flash_attach(bfa, cfg->drvcfg.min_cfg);
  }
  
  /*
 diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index bb38265..715d9f9 100644
+index 715d9f9..97ad07c 100644
 --- a/drivers/scsi/bfa/bfa_defs.h
 +++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -130,6 +130,7 @@ enum bfa_status {
- 	BFA_STATUS_ETIMER	= 5,	/*  Timer expired - Retry, if persists,
- 					 *  contact support */
- 	BFA_STATUS_EPROTOCOL	= 6,	/*  Protocol error */
-+	BFA_STATUS_SFP_UNSUPP	= 10,	/*  Unsupported SFP - Replace SFP */
+@@ -133,6 +133,7 @@ enum bfa_status {
+ 	BFA_STATUS_SFP_UNSUPP	= 10,	/*  Unsupported SFP - Replace SFP */
  	BFA_STATUS_UNKNOWN_VFID = 11,	/*  VF_ID not found */
  	BFA_STATUS_DEVBUSY	= 13,	/*  Device busy - Retry operation */
++	BFA_STATUS_FLASH_BAD_LEN = 17,	/*  Flash bad length */
  	BFA_STATUS_UNKNOWN_LWWN = 18,	/*  LPORT PWWN not found */
-@@ -150,9 +151,11 @@ enum bfa_status {
- 	BFA_STATUS_DIAG_BUSY	= 71,	/*  diag busy */
- 	BFA_STATUS_ENOFSAVE	= 78,	/*  No saved firmware trace */
- 	BFA_STATUS_IOC_DISABLED = 82,   /* IOC is already disabled */
-+	BFA_STATUS_NO_SFP_DEV = 89,	/* No SFP device check or replace SFP */
- 	BFA_STATUS_INVALID_MAC  = 134, /*  Invalid MAC address */
- 	BFA_STATUS_PBC		= 154, /*  Operation not allowed for pre-boot
- 					*  configuration */
-+	BFA_STATUS_SFP_NOT_READY = 159,	/* SFP info is not ready. Retry */
- 	BFA_STATUS_TRUNK_ENABLED = 164, /* Trunk is already enabled on
- 					 * this adapter */
- 	BFA_STATUS_TRUNK_DISABLED  = 165, /* Trunking is disabled on
-@@ -559,6 +562,269 @@ struct bfa_ablk_cfg_inst_s {
- struct bfa_ablk_cfg_s {
- 	struct bfa_ablk_cfg_inst_s	inst[BFA_ABLK_MAX];
+ 	BFA_STATUS_UNKNOWN_RWWN = 19,	/*  RPORT PWWN not found */
+ 	BFA_STATUS_VPORT_EXISTS = 21,	/*  VPORT already exists */
+@@ -384,31 +385,39 @@ struct bfa_ioc_attr_s {
+  * All numerical fields are in big-endian format.
+  */
+ struct bfa_mfg_block_s {
+-	u8		version;	/*  manufacturing block version */
+-	u8		mfg_sig[3];	/*  characters 'M', 'F', 'G' */
+-	u16	mfgsize;	/*  mfg block size */
+-	u16	u16_chksum;	/*  old u16 checksum */
+-	char		brcd_serialnum[STRSZ(BFA_MFG_SERIALNUM_SIZE)];
+-	char		brcd_partnum[STRSZ(BFA_MFG_PARTNUM_SIZE)];
+-	u8		mfg_day;	/*  manufacturing day */
+-	u8		mfg_month;	/*  manufacturing month */
+-	u16	mfg_year;	/*  manufacturing year */
+-	wwn_t		mfg_wwn;	/*  wwn base for this adapter */
+-	u8		num_wwn;	/*  number of wwns assigned */
+-	u8		mfg_speeds;	/*  speeds allowed for this adapter */
+-	u8		rsv[2];
+-	char		supplier_id[STRSZ(BFA_MFG_SUPPLIER_ID_SIZE)];
+-	char		supplier_partnum[STRSZ(BFA_MFG_SUPPLIER_PARTNUM_SIZE)];
+-	char
+-		supplier_serialnum[STRSZ(BFA_MFG_SUPPLIER_SERIALNUM_SIZE)];
+-	char
+-		supplier_revision[STRSZ(BFA_MFG_SUPPLIER_REVISION_SIZE)];
+-	mac_t		mfg_mac;	/*  mac address */
+-	u8		num_mac;	/*  number of mac addresses */
+-	u8		rsv2;
+-	u32	mfg_type;	/*  card type */
+-	u8		rsv3[108];
+-	u8		md5_chksum[BFA_MFG_CHKSUM_SIZE]; /*  md5 checksum */
++	u8	version;    /*!< manufacturing block version */
++	u8     mfg_sig[3]; /*!< characters 'M', 'F', 'G' */
++	u16    mfgsize;    /*!< mfg block size */
++	u16    u16_chksum; /*!< old u16 checksum */
++	char        brcd_serialnum[STRSZ(BFA_MFG_SERIALNUM_SIZE)];
++	char        brcd_partnum[STRSZ(BFA_MFG_PARTNUM_SIZE)];
++	u8     mfg_day;    /*!< manufacturing day */
++	u8     mfg_month;  /*!< manufacturing month */
++	u16    mfg_year;   /*!< manufacturing year */
++	wwn_t       mfg_wwn;    /*!< wwn base for this adapter */
++	u8     num_wwn;    /*!< number of wwns assigned */
++	u8     mfg_speeds; /*!< speeds allowed for this adapter */
++	u8     rsv[2];
++	char    supplier_id[STRSZ(BFA_MFG_SUPPLIER_ID_SIZE)];
++	char    supplier_partnum[STRSZ(BFA_MFG_SUPPLIER_PARTNUM_SIZE)];
++	char    supplier_serialnum[STRSZ(BFA_MFG_SUPPLIER_SERIALNUM_SIZE)];
++	char    supplier_revision[STRSZ(BFA_MFG_SUPPLIER_REVISION_SIZE)];
++	mac_t       mfg_mac;    /*!< base mac address */
++	u8     num_mac;    /*!< number of mac addresses */
++	u8     rsv2;
++	u32    card_type;  /*!< card type          */
++	char        cap_nic;    /*!< capability nic     */
++	char        cap_cna;    /*!< capability cna     */
++	char        cap_hba;    /*!< capability hba     */
++	char        cap_fc16g;  /*!< capability fc 16g      */
++	char        cap_sriov;  /*!< capability sriov       */
++	char        cap_mezz;   /*!< capability mezz        */
++	u8     rsv3;
++	u8     mfg_nports; /*!< number of ports        */
++	char        media[8];   /*!< xfi/xaui           */
++	char        initial_mode[8]; /*!< initial mode: hba/cna/nic */
++	u8     rsv4[84];
++	u8     md5_chksum[BFA_MFG_CHKSUM_SIZE]; /*!< md5 checksum */
  };
-+
-+
+ 
+ #pragma pack()
+@@ -825,6 +834,53 @@ struct sfp_xcvr_s {
+ 	union sfp_xcvr_fc3_code_u	fc3;
+ };
+ 
 +/*
-+ *	SFP module specific
++ *	Flash module specific
 + */
-+#define SFP_DIAGMON_SIZE	10 /* num bytes of diag monitor data */
++#define BFA_FLASH_PART_ENTRY_SIZE	32	/* partition entry size */
++#define BFA_FLASH_PART_MAX		32	/* maximal # of partitions */
 +
-+enum bfa_defs_sfp_media_e {
-+	BFA_SFP_MEDIA_UNKNOWN	= 0x00,
-+	BFA_SFP_MEDIA_CU	= 0x01,
-+	BFA_SFP_MEDIA_LW	= 0x02,
-+	BFA_SFP_MEDIA_SW	= 0x03,
-+	BFA_SFP_MEDIA_EL	= 0x04,
-+	BFA_SFP_MEDIA_UNSUPPORT	= 0x05,
-+};
-+
-+/*
-+ * values for xmtr_tech above
-+ */
-+enum {
-+	SFP_XMTR_TECH_CU = (1 << 0),	/* copper FC-BaseT */
-+	SFP_XMTR_TECH_CP = (1 << 1),	/* copper passive */
-+	SFP_XMTR_TECH_CA = (1 << 2),	/* copper active */
-+	SFP_XMTR_TECH_LL = (1 << 3),	/* longwave laser */
-+	SFP_XMTR_TECH_SL = (1 << 4),	/* shortwave laser w/ OFC */
-+	SFP_XMTR_TECH_SN = (1 << 5),	/* shortwave laser w/o OFC */
-+	SFP_XMTR_TECH_EL_INTRA = (1 << 6), /* elec intra-enclosure */
-+	SFP_XMTR_TECH_EL_INTER = (1 << 7), /* elec inter-enclosure */
-+	SFP_XMTR_TECH_LC = (1 << 8),	/* longwave laser */
-+	SFP_XMTR_TECH_SA = (1 << 9)
-+};
-+
-+/*
-+ * Serial ID: Data Fields -- Address A0h
-+ * Basic ID field total 64 bytes
-+ */
-+struct sfp_srlid_base_s {
-+	u8	id;		/* 00: Identifier */
-+	u8	extid;		/* 01: Extended Identifier */
-+	u8	connector;	/* 02: Connector */
-+	u8	xcvr[8];	/* 03-10: Transceiver */
-+	u8	encoding;	/* 11: Encoding */
-+	u8	br_norm;	/* 12: BR, Nominal */
-+	u8	rate_id;	/* 13: Rate Identifier */
-+	u8	len_km;		/* 14: Length single mode km */
-+	u8	len_100m;	/* 15: Length single mode 100m */
-+	u8	len_om2;	/* 16: Length om2 fiber 10m */
-+	u8	len_om1;	/* 17: Length om1 fiber 10m */
-+	u8	len_cu;		/* 18: Length copper 1m */
-+	u8	len_om3;	/* 19: Length om3 fiber 10m */
-+	u8	vendor_name[16];/* 20-35 */
-+	u8	unalloc1;
-+	u8	vendor_oui[3];	/* 37-39 */
-+	u8	vendor_pn[16];	/* 40-55 */
-+	u8	vendor_rev[4];	/* 56-59 */
-+	u8	wavelen[2];	/* 60-61 */
-+	u8	unalloc2;
-+	u8	cc_base;	/* 63: check code for base id field */
++enum bfa_flash_part_type {
++	BFA_FLASH_PART_OPTROM   = 1,    /* option rom partition */
++	BFA_FLASH_PART_FWIMG    = 2,    /* firmware image partition */
++	BFA_FLASH_PART_FWCFG    = 3,    /* firmware tuneable config */
++	BFA_FLASH_PART_DRV      = 4,    /* IOC driver config */
++	BFA_FLASH_PART_BOOT     = 5,    /* boot config */
++	BFA_FLASH_PART_ASIC     = 6,    /* asic bootstrap configuration */
++	BFA_FLASH_PART_MFG      = 7,    /* manufacturing block partition */
++	BFA_FLASH_PART_OPTROM2  = 8,    /* 2nd option rom partition */
++	BFA_FLASH_PART_VPD      = 9,    /* vpd data of OEM info */
++	BFA_FLASH_PART_PBC      = 10,   /* pre-boot config */
++	BFA_FLASH_PART_BOOTOVL  = 11,   /* boot overlay partition */
++	BFA_FLASH_PART_LOG      = 12,   /* firmware log partition */
++	BFA_FLASH_PART_PXECFG   = 13,   /* pxe boot config partition */
++	BFA_FLASH_PART_PXEOVL   = 14,   /* pxe boot overlay partition */
++	BFA_FLASH_PART_PORTCFG  = 15,   /* port cfg partition */
++	BFA_FLASH_PART_ASICBK   = 16,   /* asic backup partition */
 +};
 +
 +/*
-+ * Serial ID: Data Fields -- Address A0h
-+ * Extended id field total 32 bytes
++ * flash partition attributes
 + */
-+struct sfp_srlid_ext_s {
-+	u8	options[2];
-+	u8	br_max;
-+	u8	br_min;
-+	u8	vendor_sn[16];
-+	u8	date_code[8];
-+	u8	diag_mon_type;  /* 92: Diagnostic Monitoring type */
-+	u8	en_options;
-+	u8	sff_8472;
-+	u8	cc_ext;
++struct bfa_flash_part_attr_s {
++	u32	part_type;      /* partition type */
++	u32	part_instance;  /* partition instance */
++	u32	part_off;       /* partition offset */
++	u32	part_size;      /* partition size */
++	u32	part_len;       /* partition content length */
++	u32	part_status;    /* partition status */
++	char	rsv[BFA_FLASH_PART_ENTRY_SIZE - 24];
 +};
 +
 +/*
-+ * Diagnostic: Data Fields -- Address A2h
-+ * Diagnostic and control/status base field total 96 bytes
++ * flash attributes
 + */
-+struct sfp_diag_base_s {
-+	/*
-+	 * Alarm and warning Thresholds 40 bytes
-+	 */
-+	u8	temp_high_alarm[2]; /* 00-01 */
-+	u8	temp_low_alarm[2];  /* 02-03 */
-+	u8	temp_high_warning[2];   /* 04-05 */
-+	u8	temp_low_warning[2];    /* 06-07 */
-+
-+	u8	volt_high_alarm[2]; /* 08-09 */
-+	u8	volt_low_alarm[2];  /* 10-11 */
-+	u8	volt_high_warning[2];   /* 12-13 */
-+	u8	volt_low_warning[2];    /* 14-15 */
-+
-+	u8	bias_high_alarm[2]; /* 16-17 */
-+	u8	bias_low_alarm[2];  /* 18-19 */
-+	u8	bias_high_warning[2];   /* 20-21 */
-+	u8	bias_low_warning[2];    /* 22-23 */
-+
-+	u8	tx_pwr_high_alarm[2];   /* 24-25 */
-+	u8	tx_pwr_low_alarm[2];    /* 26-27 */
-+	u8	tx_pwr_high_warning[2]; /* 28-29 */
-+	u8	tx_pwr_low_warning[2];  /* 30-31 */
-+
-+	u8	rx_pwr_high_alarm[2];   /* 32-33 */
-+	u8	rx_pwr_low_alarm[2];    /* 34-35 */
-+	u8	rx_pwr_high_warning[2]; /* 36-37 */
-+	u8	rx_pwr_low_warning[2];  /* 38-39 */
-+
-+	u8	unallocate_1[16];
-+
-+	/*
-+	 * ext_cal_const[36]
-+	 */
-+	u8	rx_pwr[20];
-+	u8	tx_i[4];
-+	u8	tx_pwr[4];
-+	u8	temp[4];
-+	u8	volt[4];
-+	u8	unallocate_2[3];
-+	u8	cc_dmi;
-+};
-+
-+/*
-+ * Diagnostic: Data Fields -- Address A2h
-+ * Diagnostic and control/status extended field total 24 bytes
-+ */
-+struct sfp_diag_ext_s {
-+	u8	diag[SFP_DIAGMON_SIZE];
-+	u8	unalloc1[4];
-+	u8	status_ctl;
-+	u8	rsvd;
-+	u8	alarm_flags[2];
-+	u8	unalloc2[2];
-+	u8	warning_flags[2];
-+	u8	ext_status_ctl[2];
-+};
-+
-+struct sfp_mem_s {
-+	struct sfp_srlid_base_s	srlid_base;
-+	struct sfp_srlid_ext_s	srlid_ext;
-+	struct sfp_diag_base_s	diag_base;
-+	struct sfp_diag_ext_s	diag_ext;
-+};
-+
-+/*
-+ * transceiver codes (SFF-8472 Rev 10.2 Table 3.5)
-+ */
-+union sfp_xcvr_e10g_code_u {
-+	u8		b;
-+	struct {
-+#ifdef __BIGENDIAN
-+		u8	e10g_unall:1;   /* 10G Ethernet compliance */
-+		u8	e10g_lrm:1;
-+		u8	e10g_lr:1;
-+		u8	e10g_sr:1;
-+		u8	ib_sx:1;    /* Infiniband compliance */
-+		u8	ib_lx:1;
-+		u8	ib_cu_a:1;
-+		u8	ib_cu_p:1;
-+#else
-+		u8	ib_cu_p:1;
-+		u8	ib_cu_a:1;
-+		u8	ib_lx:1;
-+		u8	ib_sx:1;    /* Infiniband compliance */
-+		u8	e10g_sr:1;
-+		u8	e10g_lr:1;
-+		u8	e10g_lrm:1;
-+		u8	e10g_unall:1;   /* 10G Ethernet compliance */
-+#endif
-+	} r;
-+};
-+
-+union sfp_xcvr_so1_code_u {
-+	u8		b;
-+	struct {
-+		u8	escon:2;    /* ESCON compliance code */
-+		u8	oc192_reach:1;  /* SONET compliance code */
-+		u8	so_reach:2;
-+		u8	oc48_reach:3;
-+	} r;
-+};
-+
-+union sfp_xcvr_so2_code_u {
-+	u8		b;
-+	struct {
-+		u8	reserved:1;
-+		u8	oc12_reach:3;   /* OC12 reach */
-+		u8	reserved1:1;
-+		u8	oc3_reach:3;    /* OC3 reach */
-+	} r;
-+};
-+
-+union sfp_xcvr_eth_code_u {
-+	u8		b;
-+	struct {
-+		u8	base_px:1;
-+		u8	base_bx10:1;
-+		u8	e100base_fx:1;
-+		u8	e100base_lx:1;
-+		u8	e1000base_t:1;
-+		u8	e1000base_cx:1;
-+		u8	e1000base_lx:1;
-+		u8	e1000base_sx:1;
-+	} r;
-+};
-+
-+struct sfp_xcvr_fc1_code_s {
-+	u8	link_len:5; /* FC link length */
-+	u8	xmtr_tech2:3;
-+	u8	xmtr_tech1:7;   /* FC transmitter technology */
-+	u8	reserved1:1;
-+};
-+
-+union sfp_xcvr_fc2_code_u {
-+	u8		b;
-+	struct {
-+		u8	tw_media:1; /* twin axial pair (tw) */
-+		u8	tp_media:1; /* shielded twisted pair (sp) */
-+		u8	mi_media:1; /* miniature coax (mi) */
-+		u8	tv_media:1; /* video coax (tv) */
-+		u8	m6_media:1; /* multimode, 62.5m (m6) */
-+		u8	m5_media:1; /* multimode, 50m (m5) */
-+		u8	reserved:1;
-+		u8	sm_media:1; /* single mode (sm) */
-+	} r;
-+};
-+
-+union sfp_xcvr_fc3_code_u {
-+	u8		b;
-+	struct {
-+#ifdef __BIGENDIAN
-+		u8	rsv4:1;
-+		u8	mb800:1;    /* 800 Mbytes/sec */
-+		u8	mb1600:1;   /* 1600 Mbytes/sec */
-+		u8	mb400:1;    /* 400 Mbytes/sec */
-+		u8	rsv2:1;
-+		u8	mb200:1;    /* 200 Mbytes/sec */
-+		u8	rsv1:1;
-+		u8	mb100:1;    /* 100 Mbytes/sec */
-+#else
-+		u8	mb100:1;    /* 100 Mbytes/sec */
-+		u8	rsv1:1;
-+		u8	mb200:1;    /* 200 Mbytes/sec */
-+		u8	rsv2:1;
-+		u8	mb400:1;    /* 400 Mbytes/sec */
-+		u8	mb1600:1;   /* 1600 Mbytes/sec */
-+		u8	mb800:1;    /* 800 Mbytes/sec */
-+		u8	rsv4:1;
-+#endif
-+	} r;
-+};
-+
-+struct sfp_xcvr_s {
-+	union sfp_xcvr_e10g_code_u	e10g;
-+	union sfp_xcvr_so1_code_u	so1;
-+	union sfp_xcvr_so2_code_u	so2;
-+	union sfp_xcvr_eth_code_u	eth;
-+	struct sfp_xcvr_fc1_code_s	fc1;
-+	union sfp_xcvr_fc2_code_u	fc2;
-+	union sfp_xcvr_fc3_code_u	fc3;
++struct bfa_flash_attr_s {
++	u32	status; /* flash overall status */
++	u32	npart;  /* num of partitions */
++	struct bfa_flash_part_attr_s part[BFA_FLASH_PART_MAX];
 +};
 +
  #pragma pack()
  
  #endif /* __BFA_DEFS_H__ */
 diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index bfe3a87..d579036 100644
+index d579036..1506073 100644
 --- a/drivers/scsi/bfa/bfa_ioc.c
 +++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -3364,3 +3364,460 @@ bfa_ablk_optrom_dis(struct bfa_ablk_s *ablk, bfa_ablk_cbfn_t cbfn, void *cbarg)
+@@ -3821,3 +3821,497 @@ bfa_sfp_speed(struct bfa_sfp_s *sfp, enum bfa_port_speed portspeed,
  
- 	return BFA_STATUS_OK;
+ 	return bfa_sfp_speed_valid(sfp, portspeed);
  }
 +
 +/*
-+ *	SFP module specific
++ *	Flash module specific
 + */
-+
-+/* forward declarations */
-+static void bfa_sfp_getdata_send(struct bfa_sfp_s *sfp);
-+static void bfa_sfp_media_get(struct bfa_sfp_s *sfp);
-+static bfa_status_t bfa_sfp_speed_valid(struct bfa_sfp_s *sfp,
-+				enum bfa_port_speed portspeed);
-+
-+static void
-+bfa_cb_sfp_show(struct bfa_sfp_s *sfp)
-+{
-+	bfa_trc(sfp, sfp->lock);
-+	if (sfp->cbfn)
-+		sfp->cbfn(sfp->cbarg, sfp->status);
-+	sfp->lock = 0;
-+	sfp->cbfn = NULL;
-+}
-+
-+static void
-+bfa_cb_sfp_state_query(struct bfa_sfp_s *sfp)
-+{
-+	bfa_trc(sfp, sfp->portspeed);
-+	if (sfp->media) {
-+		bfa_sfp_media_get(sfp);
-+		if (sfp->state_query_cbfn)
-+			sfp->state_query_cbfn(sfp->state_query_cbarg,
-+					sfp->status);
-+			sfp->media = NULL;
-+		}
-+
-+		if (sfp->portspeed) {
-+			sfp->status = bfa_sfp_speed_valid(sfp, sfp->portspeed);
-+			if (sfp->state_query_cbfn)
-+				sfp->state_query_cbfn(sfp->state_query_cbarg,
-+						sfp->status);
-+				sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
-+		}
-+
-+		sfp->state_query_lock = 0;
-+		sfp->state_query_cbfn = NULL;
-+}
 +
 +/*
-+ *	IOC event handler.
++ * FLASH DMA buffer should be big enough to hold both MFG block and
++ * asic block(64k) at the same time and also should be 2k aligned to
++ * avoid write segement to cross sector boundary.
 + */
++#define BFA_FLASH_SEG_SZ	2048
++#define BFA_FLASH_DMA_BUF_SZ	\
++	BFA_ROUNDUP(0x010000 + sizeof(struct bfa_mfg_block_s), BFA_FLASH_SEG_SZ)
++
 +static void
-+bfa_sfp_notify(void *sfp_arg, enum bfa_ioc_event_e event)
++bfa_flash_cb(struct bfa_flash_s *flash)
 +{
-+	struct bfa_sfp_s *sfp = sfp_arg;
++	flash->op_busy = 0;
++	if (flash->cbfn)
++		flash->cbfn(flash->cbarg, flash->status);
++}
 +
-+	bfa_trc(sfp, event);
-+	bfa_trc(sfp, sfp->lock);
-+	bfa_trc(sfp, sfp->state_query_lock);
++static void
++bfa_flash_notify(void *cbarg, enum bfa_ioc_event_e event)
++{
++	struct bfa_flash_s	*flash = cbarg;
 +
++	bfa_trc(flash, event);
 +	switch (event) {
 +	case BFA_IOC_E_DISABLED:
 +	case BFA_IOC_E_FAILED:
-+		if (sfp->lock) {
-+			sfp->status = BFA_STATUS_IOC_FAILURE;
-+			bfa_cb_sfp_show(sfp);
-+		}
-+
-+		if (sfp->state_query_lock) {
-+			sfp->status = BFA_STATUS_IOC_FAILURE;
-+			bfa_cb_sfp_state_query(sfp);
++		if (flash->op_busy) {
++			flash->status = BFA_STATUS_IOC_FAILURE;
++			flash->cbfn(flash->cbarg, flash->status);
++			flash->op_busy = 0;
 +		}
 +		break;
 +
@@ -457,485 +311,581 @@ index bfe3a87..d579036 100644
 +}
 +
 +/*
-+ *	SFP get data send
++ * Send flash attribute query request.
++ *
++ * @param[in] cbarg - callback argument
 + */
 +static void
-+bfa_sfp_getdata_send(struct bfa_sfp_s *sfp)
++bfa_flash_query_send(void *cbarg)
 +{
-+	struct bfi_sfp_req_s *req = (struct bfi_sfp_req_s *)sfp->mbcmd.msg;
++	struct bfa_flash_s *flash = cbarg;
++	struct bfi_flash_query_req_s *msg =
++			(struct bfi_flash_query_req_s *) flash->mb.msg;
 +
-+	bfa_trc(sfp, req->memtype);
-+
-+	/* build host command */
-+	bfi_h2i_set(req->mh, BFI_MC_SFP, BFI_SFP_H2I_SHOW,
-+			bfa_ioc_portid(sfp->ioc));
-+
-+	/* send mbox cmd */
-+	bfa_ioc_mbox_queue(sfp->ioc, &sfp->mbcmd);
++	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_QUERY_REQ,
++		bfa_ioc_portid(flash->ioc));
++	bfa_alen_set(&msg->alen, sizeof(struct bfa_flash_attr_s),
++		flash->dbuf_pa);
++	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
 +}
 +
 +/*
-+ *	SFP is valid, read sfp data
++ * Send flash write request.
++ *
++ * @param[in] cbarg - callback argument
 + */
 +static void
-+bfa_sfp_getdata(struct bfa_sfp_s *sfp, enum bfi_sfp_mem_e memtype)
++bfa_flash_write_send(struct bfa_flash_s *flash)
 +{
-+	struct bfi_sfp_req_s *req = (struct bfi_sfp_req_s *)sfp->mbcmd.msg;
++	struct bfi_flash_write_req_s *msg =
++			(struct bfi_flash_write_req_s *) flash->mb.msg;
++	u32	len;
 +
-+	WARN_ON(sfp->lock != 0);
-+	bfa_trc(sfp, sfp->state);
++	msg->type = be32_to_cpu(flash->type);
++	msg->instance = flash->instance;
++	msg->offset = be32_to_cpu(flash->addr_off + flash->offset);
++	len = (flash->residue < BFA_FLASH_DMA_BUF_SZ) ?
++		flash->residue : BFA_FLASH_DMA_BUF_SZ;
++	msg->length = be32_to_cpu(len);
 +
-+	sfp->lock = 1;
-+	sfp->memtype = memtype;
-+	req->memtype = memtype;
++	/* indicate if it's the last msg of the whole write operation */
++	msg->last = (len == flash->residue) ? 1 : 0;
 +
-+	/* Setup SG list */
-+	bfa_alen_set(&req->alen, sizeof(struct sfp_mem_s), sfp->dbuf_pa);
++	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_WRITE_REQ,
++			bfa_ioc_portid(flash->ioc));
++	bfa_alen_set(&msg->alen, len, flash->dbuf_pa);
++	memcpy(flash->dbuf_kva, flash->ubuf + flash->offset, len);
++	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
 +
-+	bfa_sfp_getdata_send(sfp);
++	flash->residue -= len;
++	flash->offset += len;
 +}
 +
 +/*
-+ * SFP show complete
++ * Send flash read request.
++ *
++ * @param[in] cbarg - callback argument
 + */
 +static void
-+bfa_sfp_show_comp(struct bfa_sfp_s *sfp, struct bfi_mbmsg_s *msg)
++bfa_flash_read_send(void *cbarg)
 +{
-+	struct bfi_sfp_rsp_s *rsp = (struct bfi_sfp_rsp_s *) msg;
++	struct bfa_flash_s *flash = cbarg;
++	struct bfi_flash_read_req_s *msg =
++			(struct bfi_flash_read_req_s *) flash->mb.msg;
++	u32	len;
 +
-+	if (!sfp->lock) {
-+		/*
-+		 * receiving response after ioc failure
-+		 */
-+		bfa_trc(sfp, sfp->lock);
++	msg->type = be32_to_cpu(flash->type);
++	msg->instance = flash->instance;
++	msg->offset = be32_to_cpu(flash->addr_off + flash->offset);
++	len = (flash->residue < BFA_FLASH_DMA_BUF_SZ) ?
++			flash->residue : BFA_FLASH_DMA_BUF_SZ;
++	msg->length = be32_to_cpu(len);
++	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_READ_REQ,
++		bfa_ioc_portid(flash->ioc));
++	bfa_alen_set(&msg->alen, len, flash->dbuf_pa);
++	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
++}
++
++/*
++ * Send flash erase request.
++ *
++ * @param[in] cbarg - callback argument
++ */
++static void
++bfa_flash_erase_send(void *cbarg)
++{
++	struct bfa_flash_s *flash = cbarg;
++	struct bfi_flash_erase_req_s *msg =
++			(struct bfi_flash_erase_req_s *) flash->mb.msg;
++
++	msg->type = be32_to_cpu(flash->type);
++	msg->instance = flash->instance;
++	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_ERASE_REQ,
++			bfa_ioc_portid(flash->ioc));
++	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
++}
++
++/*
++ * Process flash response messages upon receiving interrupts.
++ *
++ * @param[in] flasharg - flash structure
++ * @param[in] msg - message structure
++ */
++static void
++bfa_flash_intr(void *flasharg, struct bfi_mbmsg_s *msg)
++{
++	struct bfa_flash_s *flash = flasharg;
++	u32	status;
++
++	union {
++		struct bfi_flash_query_rsp_s *query;
++		struct bfi_flash_erase_rsp_s *erase;
++		struct bfi_flash_write_rsp_s *write;
++		struct bfi_flash_read_rsp_s *read;
++		struct bfi_mbmsg_s   *msg;
++	} m;
++
++	m.msg = msg;
++	bfa_trc(flash, msg->mh.msg_id);
++
++	if (!flash->op_busy && msg->mh.msg_id != BFI_FLASH_I2H_EVENT) {
++		/* receiving response after ioc failure */
++		bfa_trc(flash, 0x9999);
 +		return;
 +	}
 +
-+	bfa_trc(sfp, rsp->status);
-+	if (rsp->status == BFA_STATUS_OK) {
-+		sfp->data_valid = 1;
-+		if (sfp->state == BFA_SFP_STATE_VALID)
-+			sfp->status = BFA_STATUS_OK;
-+		else if (sfp->state == BFA_SFP_STATE_UNSUPPORT)
-+			sfp->status = BFA_STATUS_SFP_UNSUPP;
-+		else
-+			bfa_trc(sfp, sfp->state);
-+	} else {
-+		sfp->data_valid = 0;
-+		sfp->status = rsp->status;
-+		/* sfpshow shouldn't change sfp state */
-+	}
-+
-+	bfa_trc(sfp, sfp->memtype);
-+	if (sfp->memtype == BFI_SFP_MEM_DIAGEXT) {
-+		bfa_trc(sfp, sfp->data_valid);
-+		if (sfp->data_valid) {
-+			u32	size = sizeof(struct sfp_mem_s);
-+			u8 *des = (u8 *) &(sfp->sfpmem->srlid_base);
-+			memcpy(des, sfp->dbuf_kva, size);
-+		}
-+		/*
-+		 * Queue completion callback.
-+		 */
-+		bfa_cb_sfp_show(sfp);
-+	} else
-+		sfp->lock = 0;
-+
-+	bfa_trc(sfp, sfp->state_query_lock);
-+	if (sfp->state_query_lock) {
-+		sfp->state = rsp->state;
-+		/* Complete callback */
-+		bfa_cb_sfp_state_query(sfp);
-+	}
-+}
-+
-+/*
-+ *	SFP query fw sfp state
-+ */
-+static void
-+bfa_sfp_state_query(struct bfa_sfp_s *sfp)
-+{
-+	struct bfi_sfp_req_s *req = (struct bfi_sfp_req_s *)sfp->mbcmd.msg;
-+
-+	/* Should not be doing query if not in _INIT state */
-+	WARN_ON(sfp->state != BFA_SFP_STATE_INIT);
-+	WARN_ON(sfp->state_query_lock != 0);
-+	bfa_trc(sfp, sfp->state);
-+
-+	sfp->state_query_lock = 1;
-+	req->memtype = 0;
-+
-+	if (!sfp->lock)
-+		bfa_sfp_getdata(sfp, BFI_SFP_MEM_ALL);
-+}
-+
-+static void
-+bfa_sfp_media_get(struct bfa_sfp_s *sfp)
-+{
-+	enum bfa_defs_sfp_media_e *media = sfp->media;
-+
-+	*media = BFA_SFP_MEDIA_UNKNOWN;
-+
-+	if (sfp->state == BFA_SFP_STATE_UNSUPPORT)
-+		*media = BFA_SFP_MEDIA_UNSUPPORT;
-+	else if (sfp->state == BFA_SFP_STATE_VALID) {
-+		union sfp_xcvr_e10g_code_u e10g;
-+		struct sfp_mem_s *sfpmem = (struct sfp_mem_s *)sfp->dbuf_kva;
-+		u16 xmtr_tech = (sfpmem->srlid_base.xcvr[4] & 0x3) << 7 |
-+				(sfpmem->srlid_base.xcvr[5] >> 1);
-+
-+		e10g.b = sfpmem->srlid_base.xcvr[0];
-+		bfa_trc(sfp, e10g.b);
-+		bfa_trc(sfp, xmtr_tech);
-+		/* check fc transmitter tech */
-+		if ((xmtr_tech & SFP_XMTR_TECH_CU) ||
-+		    (xmtr_tech & SFP_XMTR_TECH_CP) ||
-+		    (xmtr_tech & SFP_XMTR_TECH_CA))
-+			*media = BFA_SFP_MEDIA_CU;
-+		else if ((xmtr_tech & SFP_XMTR_TECH_EL_INTRA) ||
-+			 (xmtr_tech & SFP_XMTR_TECH_EL_INTER))
-+			*media = BFA_SFP_MEDIA_EL;
-+		else if ((xmtr_tech & SFP_XMTR_TECH_LL) ||
-+			 (xmtr_tech & SFP_XMTR_TECH_LC))
-+			*media = BFA_SFP_MEDIA_LW;
-+		else if ((xmtr_tech & SFP_XMTR_TECH_SL) ||
-+			 (xmtr_tech & SFP_XMTR_TECH_SN) ||
-+			 (xmtr_tech & SFP_XMTR_TECH_SA))
-+			*media = BFA_SFP_MEDIA_SW;
-+		/* Check 10G Ethernet Compilance code */
-+		else if (e10g.b & 0x10)
-+			*media = BFA_SFP_MEDIA_SW;
-+		else if (e10g.b & 0x60)
-+			*media = BFA_SFP_MEDIA_LW;
-+		else if (e10g.r.e10g_unall & 0x80)
-+			*media = BFA_SFP_MEDIA_UNKNOWN;
-+		else
-+			bfa_trc(sfp, 0);
-+	} else
-+		bfa_trc(sfp, sfp->state);
-+}
-+
-+static bfa_status_t
-+bfa_sfp_speed_valid(struct bfa_sfp_s *sfp, enum bfa_port_speed portspeed)
-+{
-+	struct sfp_mem_s *sfpmem = (struct sfp_mem_s *)sfp->dbuf_kva;
-+	struct sfp_xcvr_s *xcvr = (struct sfp_xcvr_s *) sfpmem->srlid_base.xcvr;
-+	union sfp_xcvr_fc3_code_u fc3 = xcvr->fc3;
-+	union sfp_xcvr_e10g_code_u e10g = xcvr->e10g;
-+
-+	if (portspeed == BFA_PORT_SPEED_10GBPS) {
-+		if (e10g.r.e10g_sr || e10g.r.e10g_lr)
-+			return BFA_STATUS_OK;
-+		else {
-+			bfa_trc(sfp, e10g.b);
-+			return BFA_STATUS_UNSUPP_SPEED;
-+		}
-+	}
-+	if (((portspeed & BFA_PORT_SPEED_16GBPS) && fc3.r.mb1600) ||
-+	    ((portspeed & BFA_PORT_SPEED_8GBPS) && fc3.r.mb800) ||
-+	    ((portspeed & BFA_PORT_SPEED_4GBPS) && fc3.r.mb400) ||
-+	    ((portspeed & BFA_PORT_SPEED_2GBPS) && fc3.r.mb200) ||
-+	    ((portspeed & BFA_PORT_SPEED_1GBPS) && fc3.r.mb100))
-+		return BFA_STATUS_OK;
-+	else {
-+		bfa_trc(sfp, portspeed);
-+		bfa_trc(sfp, fc3.b);
-+		bfa_trc(sfp, e10g.b);
-+		return BFA_STATUS_UNSUPP_SPEED;
-+	}
-+}
-+
-+/*
-+ *	SFP hmbox handler
-+ */
-+void
-+bfa_sfp_intr(void *sfparg, struct bfi_mbmsg_s *msg)
-+{
-+	struct bfa_sfp_s *sfp = sfparg;
-+
 +	switch (msg->mh.msg_id) {
-+	case BFI_SFP_I2H_SHOW:
-+		bfa_sfp_show_comp(sfp, msg);
-+		break;
++	case BFI_FLASH_I2H_QUERY_RSP:
++		status = be32_to_cpu(m.query->status);
++		bfa_trc(flash, status);
++		if (status == BFA_STATUS_OK) {
++			u32	i;
++			struct bfa_flash_attr_s *attr, *f;
 +
-+	case BFI_SFP_I2H_SCN:
-+		bfa_trc(sfp, msg->mh.msg_id);
++			attr = (struct bfa_flash_attr_s *) flash->ubuf;
++			f = (struct bfa_flash_attr_s *) flash->dbuf_kva;
++			attr->status = be32_to_cpu(f->status);
++			attr->npart = be32_to_cpu(f->npart);
++			bfa_trc(flash, attr->status);
++			bfa_trc(flash, attr->npart);
++			for (i = 0; i < attr->npart; i++) {
++				attr->part[i].part_type =
++					be32_to_cpu(f->part[i].part_type);
++				attr->part[i].part_instance =
++					be32_to_cpu(f->part[i].part_instance);
++				attr->part[i].part_off =
++					be32_to_cpu(f->part[i].part_off);
++				attr->part[i].part_size =
++					be32_to_cpu(f->part[i].part_size);
++				attr->part[i].part_len =
++					be32_to_cpu(f->part[i].part_len);
++				attr->part[i].part_status =
++					be32_to_cpu(f->part[i].part_status);
++			}
++		}
++		flash->status = status;
++		bfa_flash_cb(flash);
++		break;
++	case BFI_FLASH_I2H_ERASE_RSP:
++		status = be32_to_cpu(m.erase->status);
++		bfa_trc(flash, status);
++		flash->status = status;
++		bfa_flash_cb(flash);
++		break;
++	case BFI_FLASH_I2H_WRITE_RSP:
++		status = be32_to_cpu(m.write->status);
++		bfa_trc(flash, status);
++		if (status != BFA_STATUS_OK || flash->residue == 0) {
++			flash->status = status;
++			bfa_flash_cb(flash);
++		} else {
++			bfa_trc(flash, flash->offset);
++			bfa_flash_write_send(flash);
++		}
++		break;
++	case BFI_FLASH_I2H_READ_RSP:
++		status = be32_to_cpu(m.read->status);
++		bfa_trc(flash, status);
++		if (status != BFA_STATUS_OK) {
++			flash->status = status;
++			bfa_flash_cb(flash);
++		} else {
++			u32 len = be32_to_cpu(m.read->length);
++			bfa_trc(flash, flash->offset);
++			bfa_trc(flash, len);
++			memcpy(flash->ubuf + flash->offset,
++				flash->dbuf_kva, len);
++			flash->residue -= len;
++			flash->offset += len;
++			if (flash->residue == 0) {
++				flash->status = status;
++				bfa_flash_cb(flash);
++			} else
++				bfa_flash_read_send(flash);
++		}
++		break;
++	case BFI_FLASH_I2H_BOOT_VER_RSP:
++	case BFI_FLASH_I2H_EVENT:
++		bfa_trc(flash, msg->mh.msg_id);
 +		break;
 +
 +	default:
-+		bfa_trc(sfp, msg->mh.msg_id);
 +		WARN_ON(1);
 +	}
 +}
 +
 +/*
-+ *	Return DMA memory needed by sfp module.
++ * Flash memory info API.
++ *
++ * @param[in] mincfg - minimal cfg variable
 + */
 +u32
-+bfa_sfp_meminfo(void)
++bfa_flash_meminfo(bfa_boolean_t mincfg)
 +{
-+	return BFA_ROUNDUP(sizeof(struct sfp_mem_s), BFA_DMA_ALIGN_SZ);
++	/* min driver doesn't need flash */
++	if (mincfg)
++		return 0;
++	return BFA_ROUNDUP(BFA_FLASH_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
 +}
 +
 +/*
-+ *	Attach virtual and physical memory for SFP.
++ * Flash attach API.
++ *
++ * @param[in] flash - flash structure
++ * @param[in] ioc  - ioc structure
++ * @param[in] dev  - device structure
++ * @param[in] trcmod - trace module
++ * @param[in] logmod - log module
 + */
 +void
-+bfa_sfp_attach(struct bfa_sfp_s *sfp, struct bfa_ioc_s *ioc, void *dev,
-+		struct bfa_trc_mod_s *trcmod)
++bfa_flash_attach(struct bfa_flash_s *flash, struct bfa_ioc_s *ioc, void *dev,
++		struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg)
 +{
-+	sfp->dev = dev;
-+	sfp->ioc = ioc;
-+	sfp->trcmod = trcmod;
++	flash->ioc = ioc;
++	flash->trcmod = trcmod;
++	flash->cbfn = NULL;
++	flash->cbarg = NULL;
++	flash->op_busy = 0;
 +
-+	sfp->cbfn = NULL;
-+	sfp->cbarg = NULL;
-+	sfp->sfpmem = NULL;
-+	sfp->lock = 0;
-+	sfp->data_valid = 0;
-+	sfp->state = BFA_SFP_STATE_INIT;
-+	sfp->state_query_lock = 0;
-+	sfp->state_query_cbfn = NULL;
-+	sfp->state_query_cbarg = NULL;
-+	sfp->media = NULL;
-+	sfp->portspeed = BFA_PORT_SPEED_UNKNOWN;
-+	sfp->is_elb = BFA_FALSE;
++	bfa_ioc_mbox_regisr(flash->ioc, BFI_MC_FLASH, bfa_flash_intr, flash);
++	bfa_q_qe_init(&flash->ioc_notify);
++	bfa_ioc_notify_init(&flash->ioc_notify, bfa_flash_notify, flash);
++	list_add_tail(&flash->ioc_notify.qe, &flash->ioc->notify_q);
 +
-+	bfa_ioc_mbox_regisr(sfp->ioc, BFI_MC_SFP, bfa_sfp_intr, sfp);
-+	bfa_q_qe_init(&sfp->ioc_notify);
-+	bfa_ioc_notify_init(&sfp->ioc_notify, bfa_sfp_notify, sfp);
-+	list_add_tail(&sfp->ioc_notify.qe, &sfp->ioc->notify_q);
++	/* min driver doesn't need flash */
++	if (mincfg) {
++		flash->dbuf_kva = NULL;
++		flash->dbuf_pa = 0;
++	}
 +}
 +
 +/*
-+ *	Claim Memory for SFP
++ * Claim memory for flash
++ *
++ * @param[in] flash - flash structure
++ * @param[in] dm_kva - pointer to virtual memory address
++ * @param[in] dm_pa - physical memory address
++ * @param[in] mincfg - minimal cfg variable
 + */
 +void
-+bfa_sfp_memclaim(struct bfa_sfp_s *sfp, u8 *dm_kva, u64 dm_pa)
++bfa_flash_memclaim(struct bfa_flash_s *flash, u8 *dm_kva, u64 dm_pa,
++		bfa_boolean_t mincfg)
 +{
-+	sfp->dbuf_kva   = dm_kva;
-+	sfp->dbuf_pa    = dm_pa;
-+	memset(sfp->dbuf_kva, 0, sizeof(struct sfp_mem_s));
++	if (mincfg)
++		return;
 +
-+	dm_kva += BFA_ROUNDUP(sizeof(struct sfp_mem_s), BFA_DMA_ALIGN_SZ);
-+	dm_pa += BFA_ROUNDUP(sizeof(struct sfp_mem_s), BFA_DMA_ALIGN_SZ);
++	flash->dbuf_kva = dm_kva;
++	flash->dbuf_pa = dm_pa;
++	memset(flash->dbuf_kva, 0, BFA_FLASH_DMA_BUF_SZ);
++	dm_kva += BFA_ROUNDUP(BFA_FLASH_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
++	dm_pa += BFA_ROUNDUP(BFA_FLASH_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
 +}
 +
 +/*
-+ * Show SFP eeprom content
++ * Get flash attribute.
 + *
-+ * @param[in] sfp   - bfa sfp module
++ * @param[in] flash - flash structure
++ * @param[in] attr - flash attribute structure
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
 + *
-+ * @param[out] sfpmem - sfp eeprom data
-+ *
++ * Return status.
 + */
 +bfa_status_t
-+bfa_sfp_show(struct bfa_sfp_s *sfp, struct sfp_mem_s *sfpmem,
-+		bfa_cb_sfp_t cbfn, void *cbarg)
++bfa_flash_get_attr(struct bfa_flash_s *flash, struct bfa_flash_attr_s *attr,
++		bfa_cb_flash_t cbfn, void *cbarg)
 +{
++	bfa_trc(flash, BFI_FLASH_H2I_QUERY_REQ);
 +
-+	if (!bfa_ioc_is_operational(sfp->ioc)) {
-+		bfa_trc(sfp, 0);
++	if (!bfa_ioc_is_operational(flash->ioc))
 +		return BFA_STATUS_IOC_NON_OP;
-+	}
 +
-+	if (sfp->lock) {
-+		bfa_trc(sfp, 0);
++	if (flash->op_busy) {
++		bfa_trc(flash, flash->op_busy);
 +		return BFA_STATUS_DEVBUSY;
 +	}
 +
-+	sfp->cbfn = cbfn;
-+	sfp->cbarg = cbarg;
-+	sfp->sfpmem = sfpmem;
++	flash->op_busy = 1;
++	flash->cbfn = cbfn;
++	flash->cbarg = cbarg;
++	flash->ubuf = (u8 *) attr;
++	bfa_flash_query_send(flash);
 +
-+	bfa_sfp_getdata(sfp, BFI_SFP_MEM_DIAGEXT);
 +	return BFA_STATUS_OK;
 +}
 +
 +/*
-+ * Return SFP Media type
++ * Erase flash partition.
 + *
-+ * @param[in] sfp   - bfa sfp module
++ * @param[in] flash - flash structure
++ * @param[in] type - flash partition type
++ * @param[in] instance - flash partition instance
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
 + *
-+ * @param[out] media - port speed from user
-+ *
++ * Return status.
 + */
 +bfa_status_t
-+bfa_sfp_media(struct bfa_sfp_s *sfp, enum bfa_defs_sfp_media_e *media,
-+		bfa_cb_sfp_t cbfn, void *cbarg)
++bfa_flash_erase_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
++		u8 instance, bfa_cb_flash_t cbfn, void *cbarg)
 +{
-+	if (!bfa_ioc_is_operational(sfp->ioc)) {
-+		bfa_trc(sfp, 0);
++	bfa_trc(flash, BFI_FLASH_H2I_ERASE_REQ);
++	bfa_trc(flash, type);
++	bfa_trc(flash, instance);
++
++	if (!bfa_ioc_is_operational(flash->ioc))
 +		return BFA_STATUS_IOC_NON_OP;
++
++	if (flash->op_busy) {
++		bfa_trc(flash, flash->op_busy);
++		return BFA_STATUS_DEVBUSY;
 +	}
 +
-+	sfp->media = media;
-+	if (sfp->state == BFA_SFP_STATE_INIT) {
-+		if (sfp->state_query_lock) {
-+			bfa_trc(sfp, 0);
-+			return BFA_STATUS_DEVBUSY;
-+		} else {
-+			sfp->state_query_cbfn = cbfn;
-+			sfp->state_query_cbarg = cbarg;
-+			bfa_sfp_state_query(sfp);
-+			return BFA_STATUS_SFP_NOT_READY;
-+		}
-+	}
++	flash->op_busy = 1;
++	flash->cbfn = cbfn;
++	flash->cbarg = cbarg;
++	flash->type = type;
++	flash->instance = instance;
 +
-+	bfa_sfp_media_get(sfp);
++	bfa_flash_erase_send(flash);
 +	return BFA_STATUS_OK;
 +}
 +
 +/*
-+ * Check if user set port speed is allowed by the SFP
++ * Update flash partition.
 + *
-+ * @param[in] sfp   - bfa sfp module
-+ * @param[in] portspeed - port speed from user
++ * @param[in] flash - flash structure
++ * @param[in] type - flash partition type
++ * @param[in] instance - flash partition instance
++ * @param[in] buf - update data buffer
++ * @param[in] len - data buffer length
++ * @param[in] offset - offset relative to the partition starting address
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
 + *
++ * Return status.
 + */
 +bfa_status_t
-+bfa_sfp_speed(struct bfa_sfp_s *sfp, enum bfa_port_speed portspeed,
-+		bfa_cb_sfp_t cbfn, void *cbarg)
++bfa_flash_update_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
++		u8 instance, void *buf, u32 len, u32 offset,
++		bfa_cb_flash_t cbfn, void *cbarg)
 +{
-+	WARN_ON(portspeed == BFA_PORT_SPEED_UNKNOWN);
++	bfa_trc(flash, BFI_FLASH_H2I_WRITE_REQ);
++	bfa_trc(flash, type);
++	bfa_trc(flash, instance);
++	bfa_trc(flash, len);
++	bfa_trc(flash, offset);
 +
-+	if (!bfa_ioc_is_operational(sfp->ioc))
++	if (!bfa_ioc_is_operational(flash->ioc))
 +		return BFA_STATUS_IOC_NON_OP;
 +
-+	/* For Mezz card, all speed is allowed */
-+	if (bfa_mfg_is_mezz(sfp->ioc->attr->card_type))
-+		return BFA_STATUS_OK;
++	/*
++	 * 'len' must be in word (4-byte) boundary
++	 * 'offset' must be in sector (16kb) boundary
++	 */
++	if (!len || (len & 0x03) || (offset & 0x00003FFF))
++		return BFA_STATUS_FLASH_BAD_LEN;
 +
-+	/* Check SFP state */
-+	sfp->portspeed = portspeed;
-+	if (sfp->state == BFA_SFP_STATE_INIT) {
-+		if (sfp->state_query_lock) {
-+			bfa_trc(sfp, 0);
-+			return BFA_STATUS_DEVBUSY;
-+		} else {
-+			sfp->state_query_cbfn = cbfn;
-+			sfp->state_query_cbarg = cbarg;
-+			bfa_sfp_state_query(sfp);
-+			return BFA_STATUS_SFP_NOT_READY;
-+		}
++	if (type == BFA_FLASH_PART_MFG)
++		return BFA_STATUS_EINVAL;
++
++	if (flash->op_busy) {
++		bfa_trc(flash, flash->op_busy);
++		return BFA_STATUS_DEVBUSY;
 +	}
 +
-+	if (sfp->state == BFA_SFP_STATE_REMOVED ||
-+	    sfp->state == BFA_SFP_STATE_FAILED) {
-+		bfa_trc(sfp, sfp->state);
-+		return BFA_STATUS_NO_SFP_DEV;
++	flash->op_busy = 1;
++	flash->cbfn = cbfn;
++	flash->cbarg = cbarg;
++	flash->type = type;
++	flash->instance = instance;
++	flash->residue = len;
++	flash->offset = 0;
++	flash->addr_off = offset;
++	flash->ubuf = buf;
++
++	bfa_flash_write_send(flash);
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Read flash partition.
++ *
++ * @param[in] flash - flash structure
++ * @param[in] type - flash partition type
++ * @param[in] instance - flash partition instance
++ * @param[in] buf - read data buffer
++ * @param[in] len - data buffer length
++ * @param[in] offset - offset relative to the partition starting address
++ * @param[in] cbfn - callback function
++ * @param[in] cbarg - callback argument
++ *
++ * Return status.
++ */
++bfa_status_t
++bfa_flash_read_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
++		u8 instance, void *buf, u32 len, u32 offset,
++		bfa_cb_flash_t cbfn, void *cbarg)
++{
++	bfa_trc(flash, BFI_FLASH_H2I_READ_REQ);
++	bfa_trc(flash, type);
++	bfa_trc(flash, instance);
++	bfa_trc(flash, len);
++	bfa_trc(flash, offset);
++
++	if (!bfa_ioc_is_operational(flash->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	/*
++	 * 'len' must be in word (4-byte) boundary
++	 * 'offset' must be in sector (16kb) boundary
++	 */
++	if (!len || (len & 0x03) || (offset & 0x00003FFF))
++		return BFA_STATUS_FLASH_BAD_LEN;
++
++	if (flash->op_busy) {
++		bfa_trc(flash, flash->op_busy);
++		return BFA_STATUS_DEVBUSY;
 +	}
 +
-+	if (sfp->state == BFA_SFP_STATE_INSERTED) {
-+		bfa_trc(sfp, sfp->state);
-+		return BFA_STATUS_DEVBUSY;  /* sfp is reading data */
-+	}
++	flash->op_busy = 1;
++	flash->cbfn = cbfn;
++	flash->cbarg = cbarg;
++	flash->type = type;
++	flash->instance = instance;
++	flash->residue = len;
++	flash->offset = 0;
++	flash->addr_off = offset;
++	flash->ubuf = buf;
++	bfa_flash_read_send(flash);
 +
-+	/* For eloopback, all speed is allowed */
-+	if (sfp->is_elb)
-+		return BFA_STATUS_OK;
-+
-+	return bfa_sfp_speed_valid(sfp, portspeed);
++	return BFA_STATUS_OK;
 +}
 diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 83c3f2f..1d51164 100644
+index 1d51164..c302b99 100644
 --- a/drivers/scsi/bfa/bfa_ioc.h
 +++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -367,6 +367,58 @@ struct bfa_ablk_s {
+@@ -348,6 +348,28 @@ struct bfa_ioc_hwif_s {
  };
- #define BFA_MEM_ABLK_DMA(__bfa)		(&((__bfa)->modules.ablk.ablk_dma))
  
-+/*
-+ *	SFP module specific
+ /*
++ * Queue element to wait for room in request queue. FIFO order is
++ * maintained when fullfilling requests.
 + */
-+typedef void	(*bfa_cb_sfp_t) (void *cbarg, bfa_status_t status);
-+
-+struct bfa_sfp_s {
-+	void	*dev;
-+	struct bfa_ioc_s	*ioc;
-+	struct bfa_trc_mod_s	*trcmod;
-+	struct sfp_mem_s	*sfpmem;
-+	bfa_cb_sfp_t		cbfn;
-+	void			*cbarg;
-+	enum bfi_sfp_mem_e	memtype; /* mem access type   */
-+	u32			status;
-+	struct bfa_mbox_cmd_s	mbcmd;
-+	u8			*dbuf_kva; /* dma buf virtual address */
-+	u64			dbuf_pa;   /* dma buf physical address */
-+	struct bfa_ioc_notify_s	ioc_notify;
-+	enum bfa_defs_sfp_media_e *media;
-+	enum bfa_port_speed	portspeed;
-+	bfa_cb_sfp_t		state_query_cbfn;
-+	void			*state_query_cbarg;
-+	u8			lock;
-+	u8			data_valid; /* data in dbuf is valid */
-+	u8			state;	    /* sfp state  */
-+	u8			state_query_lock;
-+	struct bfa_mem_dma_s	sfp_dma;
-+	u8			is_elb;	    /* eloopback  */
++struct bfa_reqq_wait_s {
++	struct list_head	qe;
++	void	(*qresume) (void *cbarg);
++	void	*cbarg;
 +};
 +
-+#define BFA_SFP_MOD(__bfa)	(&(__bfa)->modules.sfp)
-+#define BFA_MEM_SFP_DMA(__bfa)	(&(BFA_SFP_MOD(__bfa)->sfp_dma))
++typedef void	(*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
 +
-+u32	bfa_sfp_meminfo(void);
++/*
++ * Generic BFA callback element.
++ */
++struct bfa_cb_qe_s {
++	struct list_head	qe;
++	bfa_cb_cbfn_t	cbfn;
++	bfa_boolean_t	once;
++	void		*cbarg;
++};
 +
-+void	bfa_sfp_attach(struct bfa_sfp_s *sfp, struct bfa_ioc_s *ioc,
-+			void *dev, struct bfa_trc_mod_s *trcmod);
++/*
+  * ASIC block configurtion related
+  */
+ 
+@@ -419,6 +441,56 @@ bfa_status_t	bfa_sfp_speed(struct bfa_sfp_s *sfp,
+ 			enum bfa_port_speed portspeed,
+ 			bfa_cb_sfp_t cbfn, void *cbarg);
+ 
++/*
++ *	Flash module specific
++ */
++typedef void	(*bfa_cb_flash_t) (void *cbarg, bfa_status_t status);
 +
-+void	bfa_sfp_memclaim(struct bfa_sfp_s *diag, u8 *dm_kva, u64 dm_pa);
-+void	bfa_sfp_intr(void *bfaarg, struct bfi_mbmsg_s *msg);
++struct bfa_flash_s {
++	struct bfa_ioc_s *ioc;		/* back pointer to ioc */
++	struct bfa_trc_mod_s *trcmod;
++	u32		type;           /* partition type */
++	u8		instance;       /* partition instance */
++	u8		rsv[3];
++	u32		op_busy;        /*  operation busy flag */
++	u32		residue;        /*  residual length */
++	u32		offset;         /*  offset */
++	bfa_status_t	status;         /*  status */
++	u8		*dbuf_kva;      /*  dma buf virtual address */
++	u64		dbuf_pa;        /*  dma buf physical address */
++	struct bfa_reqq_wait_s	reqq_wait; /*  to wait for room in reqq */
++	bfa_cb_flash_t	cbfn;           /*  user callback function */
++	void		*cbarg;         /*  user callback arg */
++	u8		*ubuf;          /*  user supplied buffer */
++	struct bfa_cb_qe_s	hcb_qe; /*  comp: BFA callback qelem */
++	u32		addr_off;       /*  partition address offset */
++	struct bfa_mbox_cmd_s	mb;       /*  mailbox */
++	struct bfa_ioc_notify_s	ioc_notify; /*  ioc event notify */
++	struct bfa_mem_dma_s	flash_dma;
++};
 +
-+bfa_status_t	bfa_sfp_show(struct bfa_sfp_s *sfp, struct sfp_mem_s *sfpmem,
-+			     bfa_cb_sfp_t cbfn, void *cbarg);
++#define BFA_FLASH(__bfa)		(&(__bfa)->modules.flash)
++#define BFA_MEM_FLASH_DMA(__bfa)	(&(BFA_FLASH(__bfa)->flash_dma))
 +
-+bfa_status_t	bfa_sfp_media(struct bfa_sfp_s *sfp,
-+			enum bfa_defs_sfp_media_e *media,
-+			bfa_cb_sfp_t cbfn, void *cbarg);
-+
-+bfa_status_t	bfa_sfp_speed(struct bfa_sfp_s *sfp,
-+			enum bfa_port_speed portspeed,
-+			bfa_cb_sfp_t cbfn, void *cbarg);
++bfa_status_t bfa_flash_get_attr(struct bfa_flash_s *flash,
++			struct bfa_flash_attr_s *attr,
++			bfa_cb_flash_t cbfn, void *cbarg);
++bfa_status_t bfa_flash_erase_part(struct bfa_flash_s *flash,
++			enum bfa_flash_part_type type, u8 instance,
++			bfa_cb_flash_t cbfn, void *cbarg);
++bfa_status_t bfa_flash_update_part(struct bfa_flash_s *flash,
++			enum bfa_flash_part_type type, u8 instance,
++			void *buf, u32 len, u32 offset,
++			bfa_cb_flash_t cbfn, void *cbarg);
++bfa_status_t bfa_flash_read_part(struct bfa_flash_s *flash,
++			enum bfa_flash_part_type type, u8 instance, void *buf,
++			u32 len, u32 offset, bfa_cb_flash_t cbfn, void *cbarg);
++u32	bfa_flash_meminfo(bfa_boolean_t mincfg);
++void bfa_flash_attach(struct bfa_flash_s *flash, struct bfa_ioc_s *ioc,
++		void *dev, struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg);
++void bfa_flash_memclaim(struct bfa_flash_s *flash,
++		u8 *dm_kva, u64 dm_pa, bfa_boolean_t mincfg);
 +
  #define bfa_ioc_pcifn(__ioc)		((__ioc)->pcidev.pci_func)
  #define bfa_ioc_devid(__ioc)		((__ioc)->pcidev.device_id)
  #define bfa_ioc_bar0(__ioc)		((__ioc)->pcidev.pci_bar_kva)
 diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
-index 239aba7..d8ea708 100644
+index d8ea708..f7783f0 100644
 --- a/drivers/scsi/bfa/bfa_modules.h
 +++ b/drivers/scsi/bfa/bfa_modules.h
-@@ -39,6 +39,7 @@ struct bfa_modules_s {
- 	struct bfa_port_s	port;		/*  Physical port module     */
+@@ -40,6 +40,7 @@ struct bfa_modules_s {
  	struct bfa_ablk_s	ablk;		/*  ASIC block config module */
  	struct bfa_cee_s	cee;		/*  CEE Module	*/
-+	struct bfa_sfp_s	sfp;		/*  SFP module	*/
+ 	struct bfa_sfp_s	sfp;		/*  SFP module	*/
++	struct bfa_flash_s	flash;		/*  flash module */
  };
  
  /*
 diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 62ec237..aed0257 100644
+index aed0257..71dcf6d 100644
 --- a/drivers/scsi/bfa/bfad_bsg.c
 +++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -1066,6 +1066,49 @@ bfad_iocmd_cee_reset_stats(struct bfad_s *bfad, void *cmd)
+@@ -1109,6 +1109,111 @@ out:
  	return 0;
  }
  
 +int
-+bfad_iocmd_sfp_media(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_flash_get_attr(struct bfad_s *bfad, void *cmd)
 +{
-+	struct bfa_bsg_sfp_media_s *iocmd = (struct bfa_bsg_sfp_media_s *)cmd;
-+	struct bfad_hal_comp	fcomp;
++	struct bfa_bsg_flash_attr_s *iocmd =
++			(struct bfa_bsg_flash_attr_s *)cmd;
++	struct bfad_hal_comp fcomp;
 +	unsigned long	flags;
 +
 +	init_completion(&fcomp.comp);
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_sfp_media(BFA_SFP_MOD(&bfad->bfa), &iocmd->media,
++	iocmd->status = bfa_flash_get_attr(BFA_FLASH(&bfad->bfa), &iocmd->attr,
 +				bfad_hcb_comp, &fcomp);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	bfa_trc(bfad, iocmd->status);
-+	if (iocmd->status != BFA_STATUS_SFP_NOT_READY)
++	if (iocmd->status != BFA_STATUS_OK)
 +		goto out;
-+
 +	wait_for_completion(&fcomp.comp);
 +	iocmd->status = fcomp.status;
 +out:
@@ -943,19 +893,82 @@ index 62ec237..aed0257 100644
 +}
 +
 +int
-+bfad_iocmd_sfp_speed(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_flash_erase_part(struct bfad_s *bfad, void *cmd)
 +{
-+	struct bfa_bsg_sfp_speed_s *iocmd = (struct bfa_bsg_sfp_speed_s *)cmd;
-+	struct bfad_hal_comp	fcomp;
++	struct bfa_bsg_flash_s *iocmd = (struct bfa_bsg_flash_s *)cmd;
++	struct bfad_hal_comp fcomp;
 +	unsigned long	flags;
 +
 +	init_completion(&fcomp.comp);
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_sfp_speed(BFA_SFP_MOD(&bfad->bfa), iocmd->speed,
++	iocmd->status = bfa_flash_erase_part(BFA_FLASH(&bfad->bfa), iocmd->type,
++				iocmd->instance, bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status != BFA_STATUS_OK)
++		goto out;
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_flash_update_part(struct bfad_s *bfad, void *cmd,
++			unsigned int payload_len)
++{
++	struct bfa_bsg_flash_s *iocmd = (struct bfa_bsg_flash_s *)cmd;
++	void	*iocmd_bufptr;
++	struct bfad_hal_comp fcomp;
++	unsigned long	flags;
++
++	if (bfad_chk_iocmd_sz(payload_len,
++			sizeof(struct bfa_bsg_flash_s),
++			iocmd->bufsz) != BFA_STATUS_OK) {
++		iocmd->status = BFA_STATUS_VERSION_FAIL;
++		return 0;
++	}
++
++	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_flash_s);
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_flash_update_part(BFA_FLASH(&bfad->bfa),
++				iocmd->type, iocmd->instance, iocmd_bufptr,
++				iocmd->bufsz, 0, bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status != BFA_STATUS_OK)
++		goto out;
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_flash_read_part(struct bfad_s *bfad, void *cmd,
++			unsigned int payload_len)
++{
++	struct bfa_bsg_flash_s *iocmd = (struct bfa_bsg_flash_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	void	*iocmd_bufptr;
++	unsigned long	flags;
++
++	if (bfad_chk_iocmd_sz(payload_len,
++			sizeof(struct bfa_bsg_flash_s),
++			iocmd->bufsz) != BFA_STATUS_OK) {
++		iocmd->status = BFA_STATUS_VERSION_FAIL;
++		return 0;
++	}
++
++	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_flash_s);
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_flash_read_part(BFA_FLASH(&bfad->bfa), iocmd->type,
++				iocmd->instance, iocmd_bufptr, iocmd->bufsz, 0,
 +				bfad_hcb_comp, &fcomp);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	bfa_trc(bfad, iocmd->status);
-+	if (iocmd->status != BFA_STATUS_SFP_NOT_READY)
++	if (iocmd->status != BFA_STATUS_OK)
 +		goto out;
 +	wait_for_completion(&fcomp.comp);
 +	iocmd->status = fcomp.status;
@@ -966,115 +979,186 @@ index 62ec237..aed0257 100644
  static int
  bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
  		unsigned int payload_len)
-@@ -1194,6 +1237,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_CEE_RESET_STATS:
- 		rc = bfad_iocmd_cee_reset_stats(bfad, iocmd);
+@@ -1243,6 +1348,18 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_SFP_SPEED:
+ 		rc = bfad_iocmd_sfp_speed(bfad, iocmd);
  		break;
-+	case IOCMD_SFP_MEDIA:
-+		rc = bfad_iocmd_sfp_media(bfad, iocmd);
-+		 break;
-+	case IOCMD_SFP_SPEED:
-+		rc = bfad_iocmd_sfp_speed(bfad, iocmd);
++	case IOCMD_FLASH_GET_ATTR:
++		rc = bfad_iocmd_flash_get_attr(bfad, iocmd);
++		break;
++	case IOCMD_FLASH_ERASE_PART:
++		rc = bfad_iocmd_flash_erase_part(bfad, iocmd);
++		break;
++	case IOCMD_FLASH_UPDATE_PART:
++		rc = bfad_iocmd_flash_update_part(bfad, iocmd, payload_len);
++		break;
++	case IOCMD_FLASH_READ_PART:
++		rc = bfad_iocmd_flash_read_part(bfad, iocmd, payload_len);
 +		break;
  	default:
  		rc = EINVAL;
  		break;
 diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 5b4599a..faafd35 100644
+index faafd35..6bece6c 100644
 --- a/drivers/scsi/bfa/bfad_bsg.h
 +++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -65,6 +65,8 @@ enum {
- 	IOCMD_CEE_GET_ATTR,
- 	IOCMD_CEE_GET_STATS,
+@@ -67,6 +67,10 @@ enum {
  	IOCMD_CEE_RESET_STATS,
-+	IOCMD_SFP_MEDIA,
-+	IOCMD_SFP_SPEED,
+ 	IOCMD_SFP_MEDIA,
+ 	IOCMD_SFP_SPEED,
++	IOCMD_FLASH_GET_ATTR,
++	IOCMD_FLASH_ERASE_PART,
++	IOCMD_FLASH_UPDATE_PART,
++	IOCMD_FLASH_READ_PART,
  };
  
  struct bfa_bsg_gen_s {
-@@ -320,6 +322,20 @@ struct bfa_bsg_cee_stats_s {
- 	u64		buf_ptr;
+@@ -336,6 +340,23 @@ struct bfa_bsg_sfp_speed_s {
+ 	enum bfa_port_speed speed;
  };
  
-+struct bfa_bsg_sfp_media_s {
++struct bfa_bsg_flash_attr_s {
 +	bfa_status_t	status;
 +	u16		bfad_num;
 +	u16		rsvd;
-+	enum bfa_defs_sfp_media_e media;
++	struct bfa_flash_attr_s attr;
 +};
 +
-+struct bfa_bsg_sfp_speed_s {
++struct bfa_bsg_flash_s {
 +	bfa_status_t	status;
 +	u16		bfad_num;
-+	u16		rsvd;
-+	enum bfa_port_speed speed;
++	u8		instance;
++	u8		rsvd;
++	enum  bfa_flash_part_type type;
++	int		bufsz;
++	u64		buf_ptr;
 +};
 +
  struct bfa_bsg_fcpt_s {
  	bfa_status_t    status;
  	u16		vf_id;
 diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index 037b377..0d24998 100644
+index 0d24998..b7eb3dc 100644
 --- a/drivers/scsi/bfa/bfi.h
 +++ b/drivers/scsi/bfa/bfi.h
-@@ -206,6 +206,7 @@ enum bfi_mclass {
- 	BFI_MC_IOIM_IOCOM	= 17,	/*  good IO completion		    */
- 	BFI_MC_TSKIM		= 18,	/*  Initiator Task management	    */
- 	BFI_MC_PORT		= 21,	/*  Physical port		    */
-+	BFI_MC_SFP		= 22,	/*  SFP module	*/
- 	BFI_MC_MAX		= 32
+@@ -190,6 +190,7 @@ enum bfi_pcifn_class {
+  */
+ enum bfi_mclass {
+ 	BFI_MC_IOC		= 1,	/*  IO Controller (IOC)	    */
++	BFI_MC_FLASH		= 3,	/*  Flash message class	*/
+ 	BFI_MC_CEE		= 4,	/*  CEE	*/
+ 	BFI_MC_FCPORT		= 5,	/*  FC port			    */
+ 	BFI_MC_IOCFC		= 6,	/*  FC - IO Controller (IOC)	    */
+@@ -814,6 +815,114 @@ struct bfi_sfp_rsp_s {
+ 	u8			rsvd[2];
  };
  
-@@ -765,6 +766,54 @@ union bfi_cee_i2h_msg_u {
- 	struct bfi_cee_stats_rsp_s	stats_rsp;
- };
- 
 +/*
-+ * SFP related
++ *	FLASH module specific
 + */
-+
-+enum bfi_sfp_h2i_e {
-+	BFI_SFP_H2I_SHOW	= 1,
-+	BFI_SFP_H2I_SCN		= 2,
++enum bfi_flash_h2i_msgs {
++	BFI_FLASH_H2I_QUERY_REQ = 1,
++	BFI_FLASH_H2I_ERASE_REQ = 2,
++	BFI_FLASH_H2I_WRITE_REQ = 3,
++	BFI_FLASH_H2I_READ_REQ = 4,
++	BFI_FLASH_H2I_BOOT_VER_REQ = 5,
 +};
 +
-+enum bfi_sfp_i2h_e {
-+	BFI_SFP_I2H_SHOW = BFA_I2HM(BFI_SFP_H2I_SHOW),
-+	BFI_SFP_I2H_SCN	 = BFA_I2HM(BFI_SFP_H2I_SCN),
-+};
-+
-+/*
-+ *	SFP state
-+ */
-+enum bfa_sfp_stat_e {
-+	BFA_SFP_STATE_INIT	= 0,	/* SFP state is uninit	*/
-+	BFA_SFP_STATE_REMOVED	= 1,	/* SFP is removed	*/
-+	BFA_SFP_STATE_INSERTED	= 2,	/* SFP is inserted	*/
-+	BFA_SFP_STATE_VALID	= 3,	/* SFP is valid		*/
-+	BFA_SFP_STATE_UNSUPPORT	= 4,	/* SFP is unsupport	*/
-+	BFA_SFP_STATE_FAILED	= 5,	/* SFP i2c read fail	*/
++enum bfi_flash_i2h_msgs {
++	BFI_FLASH_I2H_QUERY_RSP = BFA_I2HM(1),
++	BFI_FLASH_I2H_ERASE_RSP = BFA_I2HM(2),
++	BFI_FLASH_I2H_WRITE_RSP = BFA_I2HM(3),
++	BFI_FLASH_I2H_READ_RSP = BFA_I2HM(4),
++	BFI_FLASH_I2H_BOOT_VER_RSP = BFA_I2HM(5),
++	BFI_FLASH_I2H_EVENT = BFA_I2HM(127),
 +};
 +
 +/*
-+ *  SFP memory access type
++ * Flash query request
 + */
-+enum bfi_sfp_mem_e {
-+	BFI_SFP_MEM_ALL		= 0x1,  /* access all data field */
-+	BFI_SFP_MEM_DIAGEXT	= 0x2,  /* access diag ext data field only */
++struct bfi_flash_query_req_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	struct bfi_alen_s alen;
 +};
 +
-+struct bfi_sfp_req_s {
-+	struct bfi_mhdr_s	mh;
-+	u8			memtype;
-+	u8			rsvd[3];
-+	struct bfi_alen_s	alen;
++/*
++ * Flash erase request
++ */
++struct bfi_flash_erase_req_s {
++	struct bfi_mhdr_s	mh;	/* Common msg header */
++	u32	type;	/* partition type */
++	u8	instance; /* partition instance */
++	u8	rsv[3];
 +};
 +
-+struct bfi_sfp_rsp_s {
-+	struct bfi_mhdr_s	mh;
-+	u8			status;
-+	u8			state;
-+	u8			rsvd[2];
++/*
++ * Flash write request
++ */
++struct bfi_flash_write_req_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	struct bfi_alen_s alen;
++	u32	type;	/* partition type */
++	u8	instance; /* partition instance */
++	u8	last;
++	u8	rsv[2];
++	u32	offset;
++	u32	length;
++};
++
++/*
++ * Flash read request
++ */
++struct bfi_flash_read_req_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	u32	type;		/* partition type */
++	u8	instance;	/* partition instance */
++	u8	rsv[3];
++	u32	offset;
++	u32	length;
++	struct bfi_alen_s alen;
++};
++
++/*
++ * Flash query response
++ */
++struct bfi_flash_query_rsp_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	u32	status;
++};
++
++/*
++ * Flash read response
++ */
++struct bfi_flash_read_rsp_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	u32	type;       /* partition type */
++	u8	instance;   /* partition instance */
++	u8	rsv[3];
++	u32	status;
++	u32	length;
++};
++
++/*
++ * Flash write response
++ */
++struct bfi_flash_write_rsp_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	u32	type;       /* partition type */
++	u8	instance;   /* partition instance */
++	u8	rsv[3];
++	u32	status;
++	u32	length;
++};
++
++/*
++ * Flash erase response
++ */
++struct bfi_flash_erase_rsp_s {
++	struct bfi_mhdr_s mh;	/* Common msg header */
++	u32	type;		/* partition type */
++	u8	instance;	/* partition instance */
++	u8	rsv[3];
++	u32	status;
 +};
 +
  #pragma pack()
