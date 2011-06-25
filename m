@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 11/15] bfa: Added support for flash configuration
-Date: Fri, 24 Jun 2011 20:27:13 -0700
-Message-ID: <1308972433-11304-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 12/15] bfa: Added HBA diagnostics support.
+Date: Fri, 24 Jun 2011 20:28:17 -0700
+Message-ID: <1308972497-12956-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57653 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752343Ab1FYD2T (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:58320 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752343Ab1FYD2j (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 23:28:19 -0400
+	Fri, 24 Jun 2011 23:28:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,290 +18,237 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added flash sub-module.
-	- Implemented the interface to read/erase/update flash partition.
+	- Added diagnostics sub-module to BFA.
+	- Implemented interface to perform memtest/loopback test
+	  and some other diagnostics tests.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa.h         |   22 --
- drivers/scsi/bfa/bfa_core.c    |   15 ++
- drivers/scsi/bfa/bfa_defs.h    |  106 +++++++--
- drivers/scsi/bfa/bfa_ioc.c     |  494 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_ioc.h     |   72 ++++++
- drivers/scsi/bfa/bfa_modules.h |    1 +
- drivers/scsi/bfa/bfad_bsg.c    |  117 ++++++++++
- drivers/scsi/bfa/bfad_bsg.h    |   21 ++
- drivers/scsi/bfa/bfi.h         |  109 +++++++++
- 9 files changed, 910 insertions(+), 47 deletions(-)
+ drivers/scsi/bfa/bfa_core.c     |   16 +-
+ drivers/scsi/bfa/bfa_defs.h     |   58 ++++
+ drivers/scsi/bfa/bfa_ioc.c      |  580 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_ioc.h      |  141 ++++++++++
+ drivers/scsi/bfa/bfa_modules.h  |    3 +
+ drivers/scsi/bfa/bfa_svc.c      |  417 ++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_svc.h      |   47 ++++
+ drivers/scsi/bfa/bfad_bsg.c     |  206 ++++++++++++++
+ drivers/scsi/bfa/bfad_bsg.h     |   83 ++++++
+ drivers/scsi/bfa/bfad_debugfs.c |   14 +-
+ drivers/scsi/bfa/bfi.h          |  109 ++++++++-
+ 11 files changed, 1665 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
-index c7cfc58..3b0af11 100644
---- a/drivers/scsi/bfa/bfa.h
-+++ b/drivers/scsi/bfa/bfa.h
-@@ -27,7 +27,6 @@
- struct bfa_s;
- 
- typedef void (*bfa_isr_func_t) (struct bfa_s *bfa, struct bfi_msg_s *m);
--typedef void    (*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
- 
- /*
-  * Interrupt message handlers
-@@ -77,16 +76,6 @@ void bfa_isr_unhandled(struct bfa_s *bfa, struct bfi_msg_s *m);
- } while (0)
- 
- /*
-- * Queue element to wait for room in request queue. FIFO order is
-- * maintained when fullfilling requests.
-- */
--struct bfa_reqq_wait_s {
--	struct list_head	qe;
--	void		(*qresume) (void *cbarg);
--	void		*cbarg;
--};
--
--/*
-  * Circular queue usage assignments
-  */
- enum {
-@@ -129,17 +118,6 @@ bfa_reqq_winit(struct bfa_reqq_wait_s *wqe, void (*qresume) (void *cbarg),
- 
- #define bfa_reqq_wcancel(__wqe)	list_del(&(__wqe)->qe)
- 
--
--/*
-- * Generic BFA callback element.
-- */
--struct bfa_cb_qe_s {
--	struct list_head         qe;
--	bfa_cb_cbfn_t  cbfn;
--	bfa_boolean_t   once;
--	void           *cbarg;
--};
--
- #define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {	\
- 		(__hcb_qe)->cbfn  = (__cbfn);      \
- 		(__hcb_qe)->cbarg = (__cbarg);      \
 diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 3ba73fa..04d3620 100644
+index 04d3620..e688ff7 100644
 --- a/drivers/scsi/bfa/bfa_core.c
 +++ b/drivers/scsi/bfa/bfa_core.c
-@@ -132,6 +132,17 @@ bfa_com_sfp_attach(struct bfa_s *bfa)
- 	bfa_sfp_memclaim(sfp, sfp_dma->kva_curp, sfp_dma->dma_curp);
+@@ -25,6 +25,7 @@ BFA_TRC_FILE(HAL, CORE);
+  * BFA module list terminated by NULL
+  */
+ static struct bfa_module_s *hal_mods[] = {
++	&hal_mod_fcdiag,
+ 	&hal_mod_sgpg,
+ 	&hal_mod_fcport,
+ 	&hal_mod_fcxp,
+@@ -41,7 +42,7 @@ static struct bfa_module_s *hal_mods[] = {
+ static bfa_isr_func_t  bfa_isrs[BFI_MC_MAX] = {
+ 	bfa_isr_unhandled,	/* NONE */
+ 	bfa_isr_unhandled,	/* BFI_MC_IOC */
+-	bfa_isr_unhandled,	/* BFI_MC_DIAG */
++	bfa_fcdiag_intr,	/* BFI_MC_DIAG */
+ 	bfa_isr_unhandled,	/* BFI_MC_FLASH */
+ 	bfa_isr_unhandled,	/* BFI_MC_CEE */
+ 	bfa_fcport_isr,		/* BFI_MC_FCPORT */
+@@ -143,6 +144,16 @@ bfa_com_flash_attach(struct bfa_s *bfa, bfa_boolean_t mincfg)
+ 			   flash_dma->dma_curp, mincfg);
  }
  
 +static void
-+bfa_com_flash_attach(struct bfa_s *bfa, bfa_boolean_t mincfg)
++bfa_com_diag_attach(struct bfa_s *bfa)
 +{
-+	struct bfa_flash_s	*flash = BFA_FLASH(bfa);
-+	struct bfa_mem_dma_s	*flash_dma = BFA_MEM_FLASH_DMA(bfa);
++	struct bfa_diag_s	*diag = BFA_DIAG_MOD(bfa);
++	struct bfa_mem_dma_s	*diag_dma = BFA_MEM_DIAG_DMA(bfa);
 +
-+	bfa_flash_attach(flash, &bfa->ioc, bfa, bfa->trcmod, mincfg);
-+	bfa_flash_memclaim(flash, flash_dma->kva_curp,
-+			   flash_dma->dma_curp, mincfg);
++	bfa_diag_attach(diag, &bfa->ioc, bfa, bfa_fcport_beacon, bfa->trcmod);
++	bfa_diag_memclaim(diag, diag_dma->kva_curp, diag_dma->dma_curp);
 +}
 +
  /*
   * BFA IOC FC related definitions
   */
-@@ -1371,6 +1382,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
- 	struct bfa_mem_dma_s *ablk_dma = BFA_MEM_ABLK_DMA(bfa);
+@@ -1383,6 +1394,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
  	struct bfa_mem_dma_s *cee_dma = BFA_MEM_CEE_DMA(bfa);
  	struct bfa_mem_dma_s *sfp_dma = BFA_MEM_SFP_DMA(bfa);
-+	struct bfa_mem_dma_s *flash_dma = BFA_MEM_FLASH_DMA(bfa);
+ 	struct bfa_mem_dma_s *flash_dma = BFA_MEM_FLASH_DMA(bfa);
++	struct bfa_mem_dma_s *diag_dma = BFA_MEM_DIAG_DMA(bfa);
  
  	WARN_ON((cfg == NULL) || (meminfo == NULL));
  
-@@ -1390,6 +1402,8 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
- 	bfa_mem_dma_setup(meminfo, ablk_dma, bfa_ablk_meminfo());
- 	bfa_mem_dma_setup(meminfo, cee_dma, bfa_cee_meminfo());
+@@ -1404,6 +1416,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
  	bfa_mem_dma_setup(meminfo, sfp_dma, bfa_sfp_meminfo());
-+	bfa_mem_dma_setup(meminfo, flash_dma,
-+			  bfa_flash_meminfo(cfg->drvcfg.min_cfg));
+ 	bfa_mem_dma_setup(meminfo, flash_dma,
+ 			  bfa_flash_meminfo(cfg->drvcfg.min_cfg));
++	bfa_mem_dma_setup(meminfo, diag_dma, bfa_diag_meminfo());
  }
  
  /*
-@@ -1459,6 +1473,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	bfa_com_ablk_attach(bfa);
+@@ -1474,6 +1487,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
  	bfa_com_cee_attach(bfa);
  	bfa_com_sfp_attach(bfa);
-+	bfa_com_flash_attach(bfa, cfg->drvcfg.min_cfg);
+ 	bfa_com_flash_attach(bfa, cfg->drvcfg.min_cfg);
++	bfa_com_diag_attach(bfa);
  }
  
  /*
 diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index 715d9f9..97ad07c 100644
+index 97ad07c..ddf13d7 100644
 --- a/drivers/scsi/bfa/bfa_defs.h
 +++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -133,6 +133,7 @@ enum bfa_status {
+@@ -132,7 +132,9 @@ enum bfa_status {
+ 	BFA_STATUS_EPROTOCOL	= 6,	/*  Protocol error */
  	BFA_STATUS_SFP_UNSUPP	= 10,	/*  Unsupported SFP - Replace SFP */
  	BFA_STATUS_UNKNOWN_VFID = 11,	/*  VF_ID not found */
++	BFA_STATUS_DATACORRUPTED = 12,  /*  Diag returned data corrupted */
  	BFA_STATUS_DEVBUSY	= 13,	/*  Device busy - Retry operation */
-+	BFA_STATUS_FLASH_BAD_LEN = 17,	/*  Flash bad length */
++	BFA_STATUS_HDMA_FAILED  = 16,   /* Host dma failed contact support */
+ 	BFA_STATUS_FLASH_BAD_LEN = 17,	/*  Flash bad length */
  	BFA_STATUS_UNKNOWN_LWWN = 18,	/*  LPORT PWWN not found */
  	BFA_STATUS_UNKNOWN_RWWN = 19,	/*  RPORT PWWN not found */
- 	BFA_STATUS_VPORT_EXISTS = 21,	/*  VPORT already exists */
-@@ -384,31 +385,39 @@ struct bfa_ioc_attr_s {
-  * All numerical fields are in big-endian format.
-  */
- struct bfa_mfg_block_s {
--	u8		version;	/*  manufacturing block version */
--	u8		mfg_sig[3];	/*  characters 'M', 'F', 'G' */
--	u16	mfgsize;	/*  mfg block size */
--	u16	u16_chksum;	/*  old u16 checksum */
--	char		brcd_serialnum[STRSZ(BFA_MFG_SERIALNUM_SIZE)];
--	char		brcd_partnum[STRSZ(BFA_MFG_PARTNUM_SIZE)];
--	u8		mfg_day;	/*  manufacturing day */
--	u8		mfg_month;	/*  manufacturing month */
--	u16	mfg_year;	/*  manufacturing year */
--	wwn_t		mfg_wwn;	/*  wwn base for this adapter */
--	u8		num_wwn;	/*  number of wwns assigned */
--	u8		mfg_speeds;	/*  speeds allowed for this adapter */
--	u8		rsv[2];
--	char		supplier_id[STRSZ(BFA_MFG_SUPPLIER_ID_SIZE)];
--	char		supplier_partnum[STRSZ(BFA_MFG_SUPPLIER_PARTNUM_SIZE)];
--	char
--		supplier_serialnum[STRSZ(BFA_MFG_SUPPLIER_SERIALNUM_SIZE)];
--	char
--		supplier_revision[STRSZ(BFA_MFG_SUPPLIER_REVISION_SIZE)];
--	mac_t		mfg_mac;	/*  mac address */
--	u8		num_mac;	/*  number of mac addresses */
--	u8		rsv2;
--	u32	mfg_type;	/*  card type */
--	u8		rsv3[108];
--	u8		md5_chksum[BFA_MFG_CHKSUM_SIZE]; /*  md5 checksum */
-+	u8	version;    /*!< manufacturing block version */
-+	u8     mfg_sig[3]; /*!< characters 'M', 'F', 'G' */
-+	u16    mfgsize;    /*!< mfg block size */
-+	u16    u16_chksum; /*!< old u16 checksum */
-+	char        brcd_serialnum[STRSZ(BFA_MFG_SERIALNUM_SIZE)];
-+	char        brcd_partnum[STRSZ(BFA_MFG_PARTNUM_SIZE)];
-+	u8     mfg_day;    /*!< manufacturing day */
-+	u8     mfg_month;  /*!< manufacturing month */
-+	u16    mfg_year;   /*!< manufacturing year */
-+	wwn_t       mfg_wwn;    /*!< wwn base for this adapter */
-+	u8     num_wwn;    /*!< number of wwns assigned */
-+	u8     mfg_speeds; /*!< speeds allowed for this adapter */
-+	u8     rsv[2];
-+	char    supplier_id[STRSZ(BFA_MFG_SUPPLIER_ID_SIZE)];
-+	char    supplier_partnum[STRSZ(BFA_MFG_SUPPLIER_PARTNUM_SIZE)];
-+	char    supplier_serialnum[STRSZ(BFA_MFG_SUPPLIER_SERIALNUM_SIZE)];
-+	char    supplier_revision[STRSZ(BFA_MFG_SUPPLIER_REVISION_SIZE)];
-+	mac_t       mfg_mac;    /*!< base mac address */
-+	u8     num_mac;    /*!< number of mac addresses */
-+	u8     rsv2;
-+	u32    card_type;  /*!< card type          */
-+	char        cap_nic;    /*!< capability nic     */
-+	char        cap_cna;    /*!< capability cna     */
-+	char        cap_hba;    /*!< capability hba     */
-+	char        cap_fc16g;  /*!< capability fc 16g      */
-+	char        cap_sriov;  /*!< capability sriov       */
-+	char        cap_mezz;   /*!< capability mezz        */
-+	u8     rsv3;
-+	u8     mfg_nports; /*!< number of ports        */
-+	char        media[8];   /*!< xfi/xaui           */
-+	char        initial_mode[8]; /*!< initial mode: hba/cna/nic */
-+	u8     rsv4[84];
-+	u8     md5_chksum[BFA_MFG_CHKSUM_SIZE]; /*!< md5 checksum */
- };
- 
- #pragma pack()
-@@ -825,6 +834,53 @@ struct sfp_xcvr_s {
- 	union sfp_xcvr_fc3_code_u	fc3;
+@@ -140,19 +142,25 @@ enum bfa_status {
+ 	BFA_STATUS_VPORT_MAX	= 22,	/*  Reached max VPORT supported limit */
+ 	BFA_STATUS_UNSUPP_SPEED	= 23,	/*  Invalid Speed Check speed setting */
+ 	BFA_STATUS_INVLD_DFSZ	= 24,	/*  Invalid Max data field size */
++	BFA_STATUS_CMD_NOTSUPP  = 26,   /*  Command/API not supported */
+ 	BFA_STATUS_FABRIC_RJT	= 29,	/*  Reject from attached fabric */
+ 	BFA_STATUS_PORT_OFFLINE = 34,	/*  Port is not online */
+ 	BFA_STATUS_VPORT_WWN_BP	= 46,	/*  WWN is same as base port's WWN */
++	BFA_STATUS_PORT_NOT_DISABLED = 47, /* Port not disabled disable port */
+ 	BFA_STATUS_NO_FCPIM_NEXUS = 52,	/* No FCP Nexus exists with the rport */
+ 	BFA_STATUS_IOC_FAILURE	= 56,	/* IOC failure - Retry, if persists
+ 					 * contact support */
+ 	BFA_STATUS_INVALID_WWN	= 57,	/*  Invalid WWN */
++	BFA_STATUS_ADAPTER_ENABLED = 60, /* Adapter is not disabled */
+ 	BFA_STATUS_IOC_NON_OP   = 61,	/* IOC is not operational */
+ 	BFA_STATUS_VERSION_FAIL = 70, /* Application/Driver version mismatch */
+ 	BFA_STATUS_DIAG_BUSY	= 71,	/*  diag busy */
++	BFA_STATUS_BEACON_ON    = 72,   /* Port Beacon already on */
+ 	BFA_STATUS_ENOFSAVE	= 78,	/*  No saved firmware trace */
+ 	BFA_STATUS_IOC_DISABLED = 82,   /* IOC is already disabled */
+ 	BFA_STATUS_NO_SFP_DEV = 89,	/* No SFP device check or replace SFP */
++	BFA_STATUS_MEMTEST_FAILED = 90, /* Memory test failed contact support */
++	BFA_STATUS_LEDTEST_OP = 109, /* LED test is operating */
+ 	BFA_STATUS_INVALID_MAC  = 134, /*  Invalid MAC address */
+ 	BFA_STATUS_PBC		= 154, /*  Operation not allowed for pre-boot
+ 					*  configuration */
+@@ -881,6 +889,56 @@ struct bfa_flash_attr_s {
+ 	struct bfa_flash_part_attr_s part[BFA_FLASH_PART_MAX];
  };
  
 +/*
-+ *	Flash module specific
++ *	DIAG module specific
 + */
-+#define BFA_FLASH_PART_ENTRY_SIZE	32	/* partition entry size */
-+#define BFA_FLASH_PART_MAX		32	/* maximal # of partitions */
++#define LB_PATTERN_DEFAULT	0xB5B5B5B5
++#define QTEST_CNT_DEFAULT	10
++#define QTEST_PAT_DEFAULT	LB_PATTERN_DEFAULT
 +
-+enum bfa_flash_part_type {
-+	BFA_FLASH_PART_OPTROM   = 1,    /* option rom partition */
-+	BFA_FLASH_PART_FWIMG    = 2,    /* firmware image partition */
-+	BFA_FLASH_PART_FWCFG    = 3,    /* firmware tuneable config */
-+	BFA_FLASH_PART_DRV      = 4,    /* IOC driver config */
-+	BFA_FLASH_PART_BOOT     = 5,    /* boot config */
-+	BFA_FLASH_PART_ASIC     = 6,    /* asic bootstrap configuration */
-+	BFA_FLASH_PART_MFG      = 7,    /* manufacturing block partition */
-+	BFA_FLASH_PART_OPTROM2  = 8,    /* 2nd option rom partition */
-+	BFA_FLASH_PART_VPD      = 9,    /* vpd data of OEM info */
-+	BFA_FLASH_PART_PBC      = 10,   /* pre-boot config */
-+	BFA_FLASH_PART_BOOTOVL  = 11,   /* boot overlay partition */
-+	BFA_FLASH_PART_LOG      = 12,   /* firmware log partition */
-+	BFA_FLASH_PART_PXECFG   = 13,   /* pxe boot config partition */
-+	BFA_FLASH_PART_PXEOVL   = 14,   /* pxe boot overlay partition */
-+	BFA_FLASH_PART_PORTCFG  = 15,   /* port cfg partition */
-+	BFA_FLASH_PART_ASICBK   = 16,   /* asic backup partition */
++struct bfa_diag_memtest_s {
++	u8	algo;
++	u8	rsvd[7];
 +};
 +
-+/*
-+ * flash partition attributes
-+ */
-+struct bfa_flash_part_attr_s {
-+	u32	part_type;      /* partition type */
-+	u32	part_instance;  /* partition instance */
-+	u32	part_off;       /* partition offset */
-+	u32	part_size;      /* partition size */
-+	u32	part_len;       /* partition content length */
-+	u32	part_status;    /* partition status */
-+	char	rsv[BFA_FLASH_PART_ENTRY_SIZE - 24];
++struct bfa_diag_memtest_result {
++	u32	status;
++	u32	addr;
++	u32	exp; /* expect value read from reg */
++	u32	act; /* actually value read */
++	u32	err_status;             /* error status reg */
++	u32	err_status1;    /* extra error info reg */
++	u32	err_addr; /* error address reg */
++	u8	algo;
++	u8	rsv[3];
 +};
 +
-+/*
-+ * flash attributes
-+ */
-+struct bfa_flash_attr_s {
-+	u32	status; /* flash overall status */
-+	u32	npart;  /* num of partitions */
-+	struct bfa_flash_part_attr_s part[BFA_FLASH_PART_MAX];
++struct bfa_diag_loopback_result_s {
++	u32	numtxmfrm;      /* no. of transmit frame */
++	u32	numosffrm;      /* no. of outstanding frame */
++	u32	numrcvfrm;      /* no. of received good frame */
++	u32	badfrminf;      /* mis-match info */
++	u32	badfrmnum;      /* mis-match fram number */
++	u8	status;         /* loopback test result */
++	u8	rsvd[3];
++};
++
++struct bfa_diag_ledtest_s {
++	u32	cmd;    /* bfa_led_op_t */
++	u32	color;  /* bfa_led_color_t */
++	u16	freq;   /* no. of blinks every 10 secs */
++	u8	led;    /* bitmap of LEDs to be tested */
++	u8	rsvd[5];
++};
++
++struct bfa_diag_loopback_s {
++	u32	loopcnt;
++	u32	pattern;
++	u8	lb_mode;    /* bfa_port_opmode_t */
++	u8	speed;      /* bfa_port_speed_t */
++	u8	rsvd[2];
 +};
 +
  #pragma pack()
  
  #endif /* __BFA_DEFS_H__ */
 diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index d579036..1506073 100644
+index 1506073..3146778 100644
 --- a/drivers/scsi/bfa/bfa_ioc.c
 +++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -3821,3 +3821,497 @@ bfa_sfp_speed(struct bfa_sfp_s *sfp, enum bfa_port_speed portspeed,
+@@ -4315,3 +4315,583 @@ bfa_flash_read_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
  
- 	return bfa_sfp_speed_valid(sfp, portspeed);
+ 	return BFA_STATUS_OK;
  }
 +
 +/*
-+ *	Flash module specific
++ *	DIAG module specific
 + */
 +
-+/*
-+ * FLASH DMA buffer should be big enough to hold both MFG block and
-+ * asic block(64k) at the same time and also should be 2k aligned to
-+ * avoid write segement to cross sector boundary.
-+ */
-+#define BFA_FLASH_SEG_SZ	2048
-+#define BFA_FLASH_DMA_BUF_SZ	\
-+	BFA_ROUNDUP(0x010000 + sizeof(struct bfa_mfg_block_s), BFA_FLASH_SEG_SZ)
++#define BFA_DIAG_MEMTEST_TOV	50000	/* memtest timeout in msec */
++#define BFA_DIAG_FWPING_TOV	1000	/* msec */
 +
++/* IOC event handler */
 +static void
-+bfa_flash_cb(struct bfa_flash_s *flash)
++bfa_diag_notify(void *diag_arg, enum bfa_ioc_event_e event)
 +{
-+	flash->op_busy = 0;
-+	if (flash->cbfn)
-+		flash->cbfn(flash->cbarg, flash->status);
-+}
++	struct bfa_diag_s *diag = diag_arg;
 +
-+static void
-+bfa_flash_notify(void *cbarg, enum bfa_ioc_event_e event)
-+{
-+	struct bfa_flash_s	*flash = cbarg;
++	bfa_trc(diag, event);
++	bfa_trc(diag, diag->block);
++	bfa_trc(diag, diag->fwping.lock);
++	bfa_trc(diag, diag->tsensor.lock);
 +
-+	bfa_trc(flash, event);
 +	switch (event) {
 +	case BFA_IOC_E_DISABLED:
 +	case BFA_IOC_E_FAILED:
-+		if (flash->op_busy) {
-+			flash->status = BFA_STATUS_IOC_FAILURE;
-+			flash->cbfn(flash->cbarg, flash->status);
-+			flash->op_busy = 0;
++		if (diag->fwping.lock) {
++			diag->fwping.status = BFA_STATUS_IOC_FAILURE;
++			diag->fwping.cbfn(diag->fwping.cbarg,
++					diag->fwping.status);
++			diag->fwping.lock = 0;
++		}
++
++		if (diag->tsensor.lock) {
++			diag->tsensor.status = BFA_STATUS_IOC_FAILURE;
++			diag->tsensor.cbfn(diag->tsensor.cbarg,
++					   diag->tsensor.status);
++			diag->tsensor.lock = 0;
++		}
++
++		if (diag->block) {
++			if (diag->timer_active) {
++				bfa_timer_stop(&diag->timer);
++				diag->timer_active = 0;
++			}
++
++			diag->status = BFA_STATUS_IOC_FAILURE;
++			diag->cbfn(diag->cbarg, diag->status);
++			diag->block = 0;
 +		}
 +		break;
 +
@@ -310,578 +257,1326 @@ index d579036..1506073 100644
 +	}
 +}
 +
-+/*
-+ * Send flash attribute query request.
-+ *
-+ * @param[in] cbarg - callback argument
-+ */
 +static void
-+bfa_flash_query_send(void *cbarg)
++bfa_diag_memtest_done(void *cbarg)
 +{
-+	struct bfa_flash_s *flash = cbarg;
-+	struct bfi_flash_query_req_s *msg =
-+			(struct bfi_flash_query_req_s *) flash->mb.msg;
++	struct bfa_diag_s *diag = cbarg;
++	struct bfa_ioc_s  *ioc = diag->ioc;
++	struct bfa_diag_memtest_result *res = diag->result;
++	u32	loff = BFI_BOOT_MEMTEST_RES_ADDR;
++	u32	pgnum, pgoff, i;
 +
-+	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_QUERY_REQ,
-+		bfa_ioc_portid(flash->ioc));
-+	bfa_alen_set(&msg->alen, sizeof(struct bfa_flash_attr_s),
-+		flash->dbuf_pa);
-+	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
++	pgnum = PSS_SMEM_PGNUM(ioc->ioc_regs.smem_pg0, loff);
++	pgoff = PSS_SMEM_PGOFF(loff);
++
++	writel(pgnum, ioc->ioc_regs.host_page_num_fn);
++
++	for (i = 0; i < (sizeof(struct bfa_diag_memtest_result) /
++			 sizeof(u32)); i++) {
++		/* read test result from smem */
++		*((u32 *) res + i) =
++			bfa_mem_read(ioc->ioc_regs.smem_page_start, loff);
++		loff += sizeof(u32);
++	}
++
++	/* Reset IOC fwstates to BFI_IOC_UNINIT */
++	bfa_ioc_reset_fwstate(ioc);
++
++	res->status = swab32(res->status);
++	bfa_trc(diag, res->status);
++
++	if (res->status == BFI_BOOT_MEMTEST_RES_SIG)
++		diag->status = BFA_STATUS_OK;
++	else {
++		diag->status = BFA_STATUS_MEMTEST_FAILED;
++		res->addr = swab32(res->addr);
++		res->exp = swab32(res->exp);
++		res->act = swab32(res->act);
++		res->err_status = swab32(res->err_status);
++		res->err_status1 = swab32(res->err_status1);
++		res->err_addr = swab32(res->err_addr);
++		bfa_trc(diag, res->addr);
++		bfa_trc(diag, res->exp);
++		bfa_trc(diag, res->act);
++		bfa_trc(diag, res->err_status);
++		bfa_trc(diag, res->err_status1);
++		bfa_trc(diag, res->err_addr);
++	}
++	diag->timer_active = 0;
++	diag->cbfn(diag->cbarg, diag->status);
++	diag->block = 0;
 +}
 +
 +/*
-+ * Send flash write request.
-+ *
-+ * @param[in] cbarg - callback argument
++ * Firmware ping
++ */
++
++/*
++ * Perform DMA test directly
 + */
 +static void
-+bfa_flash_write_send(struct bfa_flash_s *flash)
++diag_fwping_send(struct bfa_diag_s *diag)
 +{
-+	struct bfi_flash_write_req_s *msg =
-+			(struct bfi_flash_write_req_s *) flash->mb.msg;
-+	u32	len;
++	struct bfi_diag_fwping_req_s *fwping_req;
++	u32	i;
 +
-+	msg->type = be32_to_cpu(flash->type);
-+	msg->instance = flash->instance;
-+	msg->offset = be32_to_cpu(flash->addr_off + flash->offset);
-+	len = (flash->residue < BFA_FLASH_DMA_BUF_SZ) ?
-+		flash->residue : BFA_FLASH_DMA_BUF_SZ;
-+	msg->length = be32_to_cpu(len);
++	bfa_trc(diag, diag->fwping.dbuf_pa);
 +
-+	/* indicate if it's the last msg of the whole write operation */
-+	msg->last = (len == flash->residue) ? 1 : 0;
++	/* fill DMA area with pattern */
++	for (i = 0; i < (BFI_DIAG_DMA_BUF_SZ >> 2); i++)
++		*((u32 *)diag->fwping.dbuf_kva + i) = diag->fwping.data;
 +
-+	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_WRITE_REQ,
-+			bfa_ioc_portid(flash->ioc));
-+	bfa_alen_set(&msg->alen, len, flash->dbuf_pa);
-+	memcpy(flash->dbuf_kva, flash->ubuf + flash->offset, len);
-+	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
++	/* Fill mbox msg */
++	fwping_req = (struct bfi_diag_fwping_req_s *)diag->fwping.mbcmd.msg;
 +
-+	flash->residue -= len;
-+	flash->offset += len;
++	/* Setup SG list */
++	bfa_alen_set(&fwping_req->alen, BFI_DIAG_DMA_BUF_SZ,
++			diag->fwping.dbuf_pa);
++	/* Set up dma count */
++	fwping_req->count = cpu_to_be32(diag->fwping.count);
++	/* Set up data pattern */
++	fwping_req->data = diag->fwping.data;
++
++	/* build host command */
++	bfi_h2i_set(fwping_req->mh, BFI_MC_DIAG, BFI_DIAG_H2I_FWPING,
++		bfa_ioc_portid(diag->ioc));
++
++	/* send mbox cmd */
++	bfa_ioc_mbox_queue(diag->ioc, &diag->fwping.mbcmd);
++}
++
++static void
++diag_fwping_comp(struct bfa_diag_s *diag,
++		 struct bfi_diag_fwping_rsp_s *diag_rsp)
++{
++	u32	rsp_data = diag_rsp->data;
++	u8	rsp_dma_status = diag_rsp->dma_status;
++
++	bfa_trc(diag, rsp_data);
++	bfa_trc(diag, rsp_dma_status);
++
++	if (rsp_dma_status == BFA_STATUS_OK) {
++		u32	i, pat;
++		pat = (diag->fwping.count & 0x1) ? ~(diag->fwping.data) :
++			diag->fwping.data;
++		/* Check mbox data */
++		if (diag->fwping.data != rsp_data) {
++			bfa_trc(diag, rsp_data);
++			diag->fwping.result->dmastatus =
++					BFA_STATUS_DATACORRUPTED;
++			diag->fwping.status = BFA_STATUS_DATACORRUPTED;
++			diag->fwping.cbfn(diag->fwping.cbarg,
++					diag->fwping.status);
++			diag->fwping.lock = 0;
++			return;
++		}
++		/* Check dma pattern */
++		for (i = 0; i < (BFI_DIAG_DMA_BUF_SZ >> 2); i++) {
++			if (*((u32 *)diag->fwping.dbuf_kva + i) != pat) {
++				bfa_trc(diag, i);
++				bfa_trc(diag, pat);
++				bfa_trc(diag,
++					*((u32 *)diag->fwping.dbuf_kva + i));
++				diag->fwping.result->dmastatus =
++						BFA_STATUS_DATACORRUPTED;
++				diag->fwping.status = BFA_STATUS_DATACORRUPTED;
++				diag->fwping.cbfn(diag->fwping.cbarg,
++						diag->fwping.status);
++				diag->fwping.lock = 0;
++				return;
++			}
++		}
++		diag->fwping.result->dmastatus = BFA_STATUS_OK;
++		diag->fwping.status = BFA_STATUS_OK;
++		diag->fwping.cbfn(diag->fwping.cbarg, diag->fwping.status);
++		diag->fwping.lock = 0;
++	} else {
++		diag->fwping.status = BFA_STATUS_HDMA_FAILED;
++		diag->fwping.cbfn(diag->fwping.cbarg, diag->fwping.status);
++		diag->fwping.lock = 0;
++	}
 +}
 +
 +/*
-+ * Send flash read request.
-+ *
-+ * @param[in] cbarg - callback argument
++ * Temperature Sensor
 + */
-+static void
-+bfa_flash_read_send(void *cbarg)
-+{
-+	struct bfa_flash_s *flash = cbarg;
-+	struct bfi_flash_read_req_s *msg =
-+			(struct bfi_flash_read_req_s *) flash->mb.msg;
-+	u32	len;
 +
-+	msg->type = be32_to_cpu(flash->type);
-+	msg->instance = flash->instance;
-+	msg->offset = be32_to_cpu(flash->addr_off + flash->offset);
-+	len = (flash->residue < BFA_FLASH_DMA_BUF_SZ) ?
-+			flash->residue : BFA_FLASH_DMA_BUF_SZ;
-+	msg->length = be32_to_cpu(len);
-+	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_READ_REQ,
-+		bfa_ioc_portid(flash->ioc));
-+	bfa_alen_set(&msg->alen, len, flash->dbuf_pa);
-+	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
++static void
++diag_tempsensor_send(struct bfa_diag_s *diag)
++{
++	struct bfi_diag_ts_req_s *msg;
++
++	msg = (struct bfi_diag_ts_req_s *)diag->tsensor.mbcmd.msg;
++	bfa_trc(diag, msg->temp);
++	/* build host command */
++	bfi_h2i_set(msg->mh, BFI_MC_DIAG, BFI_DIAG_H2I_TEMPSENSOR,
++		bfa_ioc_portid(diag->ioc));
++	/* send mbox cmd */
++	bfa_ioc_mbox_queue(diag->ioc, &diag->tsensor.mbcmd);
 +}
 +
-+/*
-+ * Send flash erase request.
-+ *
-+ * @param[in] cbarg - callback argument
-+ */
 +static void
-+bfa_flash_erase_send(void *cbarg)
++diag_tempsensor_comp(struct bfa_diag_s *diag, bfi_diag_ts_rsp_t *rsp)
 +{
-+	struct bfa_flash_s *flash = cbarg;
-+	struct bfi_flash_erase_req_s *msg =
-+			(struct bfi_flash_erase_req_s *) flash->mb.msg;
-+
-+	msg->type = be32_to_cpu(flash->type);
-+	msg->instance = flash->instance;
-+	bfi_h2i_set(msg->mh, BFI_MC_FLASH, BFI_FLASH_H2I_ERASE_REQ,
-+			bfa_ioc_portid(flash->ioc));
-+	bfa_ioc_mbox_queue(flash->ioc, &flash->mb);
-+}
-+
-+/*
-+ * Process flash response messages upon receiving interrupts.
-+ *
-+ * @param[in] flasharg - flash structure
-+ * @param[in] msg - message structure
-+ */
-+static void
-+bfa_flash_intr(void *flasharg, struct bfi_mbmsg_s *msg)
-+{
-+	struct bfa_flash_s *flash = flasharg;
-+	u32	status;
-+
-+	union {
-+		struct bfi_flash_query_rsp_s *query;
-+		struct bfi_flash_erase_rsp_s *erase;
-+		struct bfi_flash_write_rsp_s *write;
-+		struct bfi_flash_read_rsp_s *read;
-+		struct bfi_mbmsg_s   *msg;
-+	} m;
-+
-+	m.msg = msg;
-+	bfa_trc(flash, msg->mh.msg_id);
-+
-+	if (!flash->op_busy && msg->mh.msg_id != BFI_FLASH_I2H_EVENT) {
++	if (!diag->tsensor.lock) {
 +		/* receiving response after ioc failure */
-+		bfa_trc(flash, 0x9999);
++		bfa_trc(diag, diag->tsensor.lock);
 +		return;
 +	}
 +
++	/*
++	 * ASIC junction tempsensor is a reg read operation
++	 * it will always return OK
++	 */
++	diag->tsensor.temp->temp = be16_to_cpu(rsp->temp);
++	diag->tsensor.temp->ts_junc = rsp->ts_junc;
++	diag->tsensor.temp->ts_brd = rsp->ts_brd;
++	diag->tsensor.temp->status = BFA_STATUS_OK;
++
++	if (rsp->ts_brd) {
++		if (rsp->status == BFA_STATUS_OK) {
++			diag->tsensor.temp->brd_temp =
++				be16_to_cpu(rsp->brd_temp);
++		} else {
++			bfa_trc(diag, rsp->status);
++			diag->tsensor.temp->brd_temp = 0;
++			diag->tsensor.temp->status = BFA_STATUS_DEVBUSY;
++		}
++	}
++	bfa_trc(diag, rsp->ts_junc);
++	bfa_trc(diag, rsp->temp);
++	bfa_trc(diag, rsp->ts_brd);
++	bfa_trc(diag, rsp->brd_temp);
++	diag->tsensor.cbfn(diag->tsensor.cbarg, diag->tsensor.status);
++	diag->tsensor.lock = 0;
++}
++
++/*
++ *	LED Test command
++ */
++static void
++diag_ledtest_send(struct bfa_diag_s *diag, struct bfa_diag_ledtest_s *ledtest)
++{
++	struct bfi_diag_ledtest_req_s  *msg;
++
++	msg = (struct bfi_diag_ledtest_req_s *)diag->ledtest.mbcmd.msg;
++	/* build host command */
++	bfi_h2i_set(msg->mh, BFI_MC_DIAG, BFI_DIAG_H2I_LEDTEST,
++			bfa_ioc_portid(diag->ioc));
++
++	/*
++	 * convert the freq from N blinks per 10 sec to
++	 * crossbow ontime value. We do it here because division is need
++	 */
++	if (ledtest->freq)
++		ledtest->freq = 500 / ledtest->freq;
++
++	if (ledtest->freq == 0)
++		ledtest->freq = 1;
++
++	bfa_trc(diag, ledtest->freq);
++	/* mcpy(&ledtest_req->req, ledtest, sizeof(bfa_diag_ledtest_t)); */
++	msg->cmd = (u8) ledtest->cmd;
++	msg->color = (u8) ledtest->color;
++	msg->portid = bfa_ioc_portid(diag->ioc);
++	msg->led = ledtest->led;
++	msg->freq = cpu_to_be16(ledtest->freq);
++
++	/* send mbox cmd */
++	bfa_ioc_mbox_queue(diag->ioc, &diag->ledtest.mbcmd);
++}
++
++static void
++diag_ledtest_comp(struct bfa_diag_s *diag, struct bfi_diag_ledtest_rsp_s * msg)
++{
++	bfa_trc(diag, diag->ledtest.lock);
++	diag->ledtest.lock = BFA_FALSE;
++	/* no bfa_cb_queue is needed because driver is not waiting */
++}
++
++/*
++ * Port beaconing
++ */
++static void
++diag_portbeacon_send(struct bfa_diag_s *diag, bfa_boolean_t beacon, u32 sec)
++{
++	struct bfi_diag_portbeacon_req_s *msg;
++
++	msg = (struct bfi_diag_portbeacon_req_s *)diag->beacon.mbcmd.msg;
++	/* build host command */
++	bfi_h2i_set(msg->mh, BFI_MC_DIAG, BFI_DIAG_H2I_PORTBEACON,
++		bfa_ioc_portid(diag->ioc));
++	msg->beacon = beacon;
++	msg->period = cpu_to_be32(sec);
++	/* send mbox cmd */
++	bfa_ioc_mbox_queue(diag->ioc, &diag->beacon.mbcmd);
++}
++
++static void
++diag_portbeacon_comp(struct bfa_diag_s *diag)
++{
++	bfa_trc(diag, diag->beacon.state);
++	diag->beacon.state = BFA_FALSE;
++	if (diag->cbfn_beacon)
++		diag->cbfn_beacon(diag->dev, BFA_FALSE, diag->beacon.link_e2e);
++}
++
++/*
++ *	Diag hmbox handler
++ */
++void
++bfa_diag_intr(void *diagarg, struct bfi_mbmsg_s *msg)
++{
++	struct bfa_diag_s *diag = diagarg;
++
 +	switch (msg->mh.msg_id) {
-+	case BFI_FLASH_I2H_QUERY_RSP:
-+		status = be32_to_cpu(m.query->status);
-+		bfa_trc(flash, status);
-+		if (status == BFA_STATUS_OK) {
-+			u32	i;
-+			struct bfa_flash_attr_s *attr, *f;
-+
-+			attr = (struct bfa_flash_attr_s *) flash->ubuf;
-+			f = (struct bfa_flash_attr_s *) flash->dbuf_kva;
-+			attr->status = be32_to_cpu(f->status);
-+			attr->npart = be32_to_cpu(f->npart);
-+			bfa_trc(flash, attr->status);
-+			bfa_trc(flash, attr->npart);
-+			for (i = 0; i < attr->npart; i++) {
-+				attr->part[i].part_type =
-+					be32_to_cpu(f->part[i].part_type);
-+				attr->part[i].part_instance =
-+					be32_to_cpu(f->part[i].part_instance);
-+				attr->part[i].part_off =
-+					be32_to_cpu(f->part[i].part_off);
-+				attr->part[i].part_size =
-+					be32_to_cpu(f->part[i].part_size);
-+				attr->part[i].part_len =
-+					be32_to_cpu(f->part[i].part_len);
-+				attr->part[i].part_status =
-+					be32_to_cpu(f->part[i].part_status);
-+			}
-+		}
-+		flash->status = status;
-+		bfa_flash_cb(flash);
++	case BFI_DIAG_I2H_PORTBEACON:
++		diag_portbeacon_comp(diag);
 +		break;
-+	case BFI_FLASH_I2H_ERASE_RSP:
-+		status = be32_to_cpu(m.erase->status);
-+		bfa_trc(flash, status);
-+		flash->status = status;
-+		bfa_flash_cb(flash);
++	case BFI_DIAG_I2H_FWPING:
++		diag_fwping_comp(diag, (struct bfi_diag_fwping_rsp_s *) msg);
 +		break;
-+	case BFI_FLASH_I2H_WRITE_RSP:
-+		status = be32_to_cpu(m.write->status);
-+		bfa_trc(flash, status);
-+		if (status != BFA_STATUS_OK || flash->residue == 0) {
-+			flash->status = status;
-+			bfa_flash_cb(flash);
-+		} else {
-+			bfa_trc(flash, flash->offset);
-+			bfa_flash_write_send(flash);
-+		}
++	case BFI_DIAG_I2H_TEMPSENSOR:
++		diag_tempsensor_comp(diag, (bfi_diag_ts_rsp_t *) msg);
 +		break;
-+	case BFI_FLASH_I2H_READ_RSP:
-+		status = be32_to_cpu(m.read->status);
-+		bfa_trc(flash, status);
-+		if (status != BFA_STATUS_OK) {
-+			flash->status = status;
-+			bfa_flash_cb(flash);
-+		} else {
-+			u32 len = be32_to_cpu(m.read->length);
-+			bfa_trc(flash, flash->offset);
-+			bfa_trc(flash, len);
-+			memcpy(flash->ubuf + flash->offset,
-+				flash->dbuf_kva, len);
-+			flash->residue -= len;
-+			flash->offset += len;
-+			if (flash->residue == 0) {
-+				flash->status = status;
-+				bfa_flash_cb(flash);
-+			} else
-+				bfa_flash_read_send(flash);
-+		}
++	case BFI_DIAG_I2H_LEDTEST:
++		diag_ledtest_comp(diag, (struct bfi_diag_ledtest_rsp_s *) msg);
 +		break;
-+	case BFI_FLASH_I2H_BOOT_VER_RSP:
-+	case BFI_FLASH_I2H_EVENT:
-+		bfa_trc(flash, msg->mh.msg_id);
-+		break;
-+
 +	default:
++		bfa_trc(diag, msg->mh.msg_id);
 +		WARN_ON(1);
 +	}
 +}
 +
 +/*
-+ * Flash memory info API.
++ * Gen RAM Test
 + *
-+ * @param[in] mincfg - minimal cfg variable
++ *   @param[in] *diag           - diag data struct
++ *   @param[in] *memtest        - mem test params input from upper layer,
++ *   @param[in] pattern         - mem test pattern
++ *   @param[in] *result         - mem test result
++ *   @param[in] cbfn            - mem test callback functioin
++ *   @param[in] cbarg           - callback functioin arg
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_diag_memtest(struct bfa_diag_s *diag, struct bfa_diag_memtest_s *memtest,
++		u32 pattern, struct bfa_diag_memtest_result *result,
++		bfa_cb_diag_t cbfn, void *cbarg)
++{
++	bfa_trc(diag, pattern);
++
++	if (!bfa_ioc_adapter_is_disabled(diag->ioc))
++		return BFA_STATUS_ADAPTER_ENABLED;
++
++	/* check to see if there is another destructive diag cmd running */
++	if (diag->block) {
++		bfa_trc(diag, diag->block);
++		return BFA_STATUS_DEVBUSY;
++	} else
++		diag->block = 1;
++
++	diag->result = result;
++	diag->cbfn = cbfn;
++	diag->cbarg = cbarg;
++
++	/* download memtest code and take LPU0 out of reset */
++	bfa_ioc_boot(diag->ioc, BFI_FWBOOT_TYPE_MEMTEST, BFI_FWBOOT_ENV_OS);
++
++	bfa_timer_begin(diag->ioc->timer_mod, &diag->timer,
++			bfa_diag_memtest_done, diag, BFA_DIAG_MEMTEST_TOV);
++	diag->timer_active = 1;
++	return BFA_STATUS_OK;
++}
++
++/*
++ * DIAG firmware ping command
++ *
++ *   @param[in] *diag           - diag data struct
++ *   @param[in] cnt             - dma loop count for testing PCIE
++ *   @param[in] data            - data pattern to pass in fw
++ *   @param[in] *result         - pt to bfa_diag_fwping_result_t data struct
++ *   @param[in] cbfn            - callback function
++ *   @param[in] *cbarg          - callback functioin arg
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_diag_fwping(struct bfa_diag_s *diag, u32 cnt, u32 data,
++		struct bfa_diag_results_fwping *result, bfa_cb_diag_t cbfn,
++		void *cbarg)
++{
++	bfa_trc(diag, cnt);
++	bfa_trc(diag, data);
++
++	if (!bfa_ioc_is_operational(diag->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (bfa_asic_id_ct2(bfa_ioc_devid((diag->ioc))) &&
++	    ((diag->ioc)->clscode == BFI_PCIFN_CLASS_ETH))
++		return BFA_STATUS_CMD_NOTSUPP;
++
++	/* check to see if there is another destructive diag cmd running */
++	if (diag->block || diag->fwping.lock) {
++		bfa_trc(diag, diag->block);
++		bfa_trc(diag, diag->fwping.lock);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	/* Initialization */
++	diag->fwping.lock = 1;
++	diag->fwping.cbfn = cbfn;
++	diag->fwping.cbarg = cbarg;
++	diag->fwping.result = result;
++	diag->fwping.data = data;
++	diag->fwping.count = cnt;
++
++	/* Init test results */
++	diag->fwping.result->data = 0;
++	diag->fwping.result->status = BFA_STATUS_OK;
++
++	/* kick off the first ping */
++	diag_fwping_send(diag);
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Read Temperature Sensor
++ *
++ *   @param[in] *diag           - diag data struct
++ *   @param[in] *result         - pt to bfa_diag_temp_t data struct
++ *   @param[in] cbfn            - callback function
++ *   @param[in] *cbarg          - callback functioin arg
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_diag_tsensor_query(struct bfa_diag_s *diag,
++		struct bfa_diag_results_tempsensor_s *result,
++		bfa_cb_diag_t cbfn, void *cbarg)
++{
++	/* check to see if there is a destructive diag cmd running */
++	if (diag->block || diag->tsensor.lock) {
++		bfa_trc(diag, diag->block);
++		bfa_trc(diag, diag->tsensor.lock);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	if (!bfa_ioc_is_operational(diag->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	/* Init diag mod params */
++	diag->tsensor.lock = 1;
++	diag->tsensor.temp = result;
++	diag->tsensor.cbfn = cbfn;
++	diag->tsensor.cbarg = cbarg;
++
++	/* Send msg to fw */
++	diag_tempsensor_send(diag);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * LED Test command
++ *
++ *   @param[in] *diag           - diag data struct
++ *   @param[in] *ledtest        - pt to ledtest data structure
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_diag_ledtest(struct bfa_diag_s *diag, struct bfa_diag_ledtest_s *ledtest)
++{
++	bfa_trc(diag, ledtest->cmd);
++
++	if (!bfa_ioc_is_operational(diag->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (diag->beacon.state)
++		return BFA_STATUS_BEACON_ON;
++
++	if (diag->ledtest.lock)
++		return BFA_STATUS_LEDTEST_OP;
++
++	/* Send msg to fw */
++	diag->ledtest.lock = BFA_TRUE;
++	diag_ledtest_send(diag, ledtest);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Port beaconing command
++ *
++ *   @param[in] *diag           - diag data struct
++ *   @param[in] beacon          - port beaconing 1:ON   0:OFF
++ *   @param[in] link_e2e_beacon - link beaconing 1:ON   0:OFF
++ *   @param[in] sec             - beaconing duration in seconds
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_diag_beacon_port(struct bfa_diag_s *diag, bfa_boolean_t beacon,
++		bfa_boolean_t link_e2e_beacon, uint32_t sec)
++{
++	bfa_trc(diag, beacon);
++	bfa_trc(diag, link_e2e_beacon);
++	bfa_trc(diag, sec);
++
++	if (!bfa_ioc_is_operational(diag->ioc))
++		return BFA_STATUS_IOC_NON_OP;
++
++	if (diag->ledtest.lock)
++		return BFA_STATUS_LEDTEST_OP;
++
++	if (diag->beacon.state && beacon)       /* beacon alread on */
++		return BFA_STATUS_BEACON_ON;
++
++	diag->beacon.state	= beacon;
++	diag->beacon.link_e2e	= link_e2e_beacon;
++	if (diag->cbfn_beacon)
++		diag->cbfn_beacon(diag->dev, beacon, link_e2e_beacon);
++
++	/* Send msg to fw */
++	diag_portbeacon_send(diag, beacon, sec);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * Return DMA memory needed by diag module.
 + */
 +u32
-+bfa_flash_meminfo(bfa_boolean_t mincfg)
++bfa_diag_meminfo(void)
 +{
-+	/* min driver doesn't need flash */
-+	if (mincfg)
-+		return 0;
-+	return BFA_ROUNDUP(BFA_FLASH_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
++	return BFA_ROUNDUP(BFI_DIAG_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
 +}
 +
 +/*
-+ * Flash attach API.
-+ *
-+ * @param[in] flash - flash structure
-+ * @param[in] ioc  - ioc structure
-+ * @param[in] dev  - device structure
-+ * @param[in] trcmod - trace module
-+ * @param[in] logmod - log module
++ *	Attach virtual and physical memory for Diag.
 + */
 +void
-+bfa_flash_attach(struct bfa_flash_s *flash, struct bfa_ioc_s *ioc, void *dev,
-+		struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg)
++bfa_diag_attach(struct bfa_diag_s *diag, struct bfa_ioc_s *ioc, void *dev,
++	bfa_cb_diag_beacon_t cbfn_beacon, struct bfa_trc_mod_s *trcmod)
 +{
-+	flash->ioc = ioc;
-+	flash->trcmod = trcmod;
-+	flash->cbfn = NULL;
-+	flash->cbarg = NULL;
-+	flash->op_busy = 0;
++	diag->dev = dev;
++	diag->ioc = ioc;
++	diag->trcmod = trcmod;
 +
-+	bfa_ioc_mbox_regisr(flash->ioc, BFI_MC_FLASH, bfa_flash_intr, flash);
-+	bfa_q_qe_init(&flash->ioc_notify);
-+	bfa_ioc_notify_init(&flash->ioc_notify, bfa_flash_notify, flash);
-+	list_add_tail(&flash->ioc_notify.qe, &flash->ioc->notify_q);
++	diag->block = 0;
++	diag->cbfn = NULL;
++	diag->cbarg = NULL;
++	diag->result = NULL;
++	diag->cbfn_beacon = cbfn_beacon;
 +
-+	/* min driver doesn't need flash */
-+	if (mincfg) {
-+		flash->dbuf_kva = NULL;
-+		flash->dbuf_pa = 0;
-+	}
++	bfa_ioc_mbox_regisr(diag->ioc, BFI_MC_DIAG, bfa_diag_intr, diag);
++	bfa_q_qe_init(&diag->ioc_notify);
++	bfa_ioc_notify_init(&diag->ioc_notify, bfa_diag_notify, diag);
++	list_add_tail(&diag->ioc_notify.qe, &diag->ioc->notify_q);
 +}
 +
-+/*
-+ * Claim memory for flash
-+ *
-+ * @param[in] flash - flash structure
-+ * @param[in] dm_kva - pointer to virtual memory address
-+ * @param[in] dm_pa - physical memory address
-+ * @param[in] mincfg - minimal cfg variable
-+ */
 +void
-+bfa_flash_memclaim(struct bfa_flash_s *flash, u8 *dm_kva, u64 dm_pa,
-+		bfa_boolean_t mincfg)
++bfa_diag_memclaim(struct bfa_diag_s *diag, u8 *dm_kva, u64 dm_pa)
 +{
-+	if (mincfg)
-+		return;
-+
-+	flash->dbuf_kva = dm_kva;
-+	flash->dbuf_pa = dm_pa;
-+	memset(flash->dbuf_kva, 0, BFA_FLASH_DMA_BUF_SZ);
-+	dm_kva += BFA_ROUNDUP(BFA_FLASH_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
-+	dm_pa += BFA_ROUNDUP(BFA_FLASH_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
-+}
-+
-+/*
-+ * Get flash attribute.
-+ *
-+ * @param[in] flash - flash structure
-+ * @param[in] attr - flash attribute structure
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_flash_get_attr(struct bfa_flash_s *flash, struct bfa_flash_attr_s *attr,
-+		bfa_cb_flash_t cbfn, void *cbarg)
-+{
-+	bfa_trc(flash, BFI_FLASH_H2I_QUERY_REQ);
-+
-+	if (!bfa_ioc_is_operational(flash->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	if (flash->op_busy) {
-+		bfa_trc(flash, flash->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	flash->op_busy = 1;
-+	flash->cbfn = cbfn;
-+	flash->cbarg = cbarg;
-+	flash->ubuf = (u8 *) attr;
-+	bfa_flash_query_send(flash);
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Erase flash partition.
-+ *
-+ * @param[in] flash - flash structure
-+ * @param[in] type - flash partition type
-+ * @param[in] instance - flash partition instance
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_flash_erase_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
-+		u8 instance, bfa_cb_flash_t cbfn, void *cbarg)
-+{
-+	bfa_trc(flash, BFI_FLASH_H2I_ERASE_REQ);
-+	bfa_trc(flash, type);
-+	bfa_trc(flash, instance);
-+
-+	if (!bfa_ioc_is_operational(flash->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	if (flash->op_busy) {
-+		bfa_trc(flash, flash->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	flash->op_busy = 1;
-+	flash->cbfn = cbfn;
-+	flash->cbarg = cbarg;
-+	flash->type = type;
-+	flash->instance = instance;
-+
-+	bfa_flash_erase_send(flash);
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Update flash partition.
-+ *
-+ * @param[in] flash - flash structure
-+ * @param[in] type - flash partition type
-+ * @param[in] instance - flash partition instance
-+ * @param[in] buf - update data buffer
-+ * @param[in] len - data buffer length
-+ * @param[in] offset - offset relative to the partition starting address
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_flash_update_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
-+		u8 instance, void *buf, u32 len, u32 offset,
-+		bfa_cb_flash_t cbfn, void *cbarg)
-+{
-+	bfa_trc(flash, BFI_FLASH_H2I_WRITE_REQ);
-+	bfa_trc(flash, type);
-+	bfa_trc(flash, instance);
-+	bfa_trc(flash, len);
-+	bfa_trc(flash, offset);
-+
-+	if (!bfa_ioc_is_operational(flash->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	/*
-+	 * 'len' must be in word (4-byte) boundary
-+	 * 'offset' must be in sector (16kb) boundary
-+	 */
-+	if (!len || (len & 0x03) || (offset & 0x00003FFF))
-+		return BFA_STATUS_FLASH_BAD_LEN;
-+
-+	if (type == BFA_FLASH_PART_MFG)
-+		return BFA_STATUS_EINVAL;
-+
-+	if (flash->op_busy) {
-+		bfa_trc(flash, flash->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	flash->op_busy = 1;
-+	flash->cbfn = cbfn;
-+	flash->cbarg = cbarg;
-+	flash->type = type;
-+	flash->instance = instance;
-+	flash->residue = len;
-+	flash->offset = 0;
-+	flash->addr_off = offset;
-+	flash->ubuf = buf;
-+
-+	bfa_flash_write_send(flash);
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Read flash partition.
-+ *
-+ * @param[in] flash - flash structure
-+ * @param[in] type - flash partition type
-+ * @param[in] instance - flash partition instance
-+ * @param[in] buf - read data buffer
-+ * @param[in] len - data buffer length
-+ * @param[in] offset - offset relative to the partition starting address
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_flash_read_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
-+		u8 instance, void *buf, u32 len, u32 offset,
-+		bfa_cb_flash_t cbfn, void *cbarg)
-+{
-+	bfa_trc(flash, BFI_FLASH_H2I_READ_REQ);
-+	bfa_trc(flash, type);
-+	bfa_trc(flash, instance);
-+	bfa_trc(flash, len);
-+	bfa_trc(flash, offset);
-+
-+	if (!bfa_ioc_is_operational(flash->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	/*
-+	 * 'len' must be in word (4-byte) boundary
-+	 * 'offset' must be in sector (16kb) boundary
-+	 */
-+	if (!len || (len & 0x03) || (offset & 0x00003FFF))
-+		return BFA_STATUS_FLASH_BAD_LEN;
-+
-+	if (flash->op_busy) {
-+		bfa_trc(flash, flash->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	flash->op_busy = 1;
-+	flash->cbfn = cbfn;
-+	flash->cbarg = cbarg;
-+	flash->type = type;
-+	flash->instance = instance;
-+	flash->residue = len;
-+	flash->offset = 0;
-+	flash->addr_off = offset;
-+	flash->ubuf = buf;
-+	bfa_flash_read_send(flash);
-+
-+	return BFA_STATUS_OK;
++	diag->fwping.dbuf_kva = dm_kva;
++	diag->fwping.dbuf_pa = dm_pa;
++	memset(diag->fwping.dbuf_kva, 0, BFI_DIAG_DMA_BUF_SZ);
 +}
 diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 1d51164..c302b99 100644
+index c302b99..5bcab54 100644
 --- a/drivers/scsi/bfa/bfa_ioc.h
 +++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -348,6 +348,28 @@ struct bfa_ioc_hwif_s {
- };
+@@ -491,6 +491,147 @@ void bfa_flash_attach(struct bfa_flash_s *flash, struct bfa_ioc_s *ioc,
+ void bfa_flash_memclaim(struct bfa_flash_s *flash,
+ 		u8 *dm_kva, u64 dm_pa, bfa_boolean_t mincfg);
  
- /*
-+ * Queue element to wait for room in request queue. FIFO order is
-+ * maintained when fullfilling requests.
++/*
++ *	DIAG module specific
 + */
-+struct bfa_reqq_wait_s {
-+	struct list_head	qe;
-+	void	(*qresume) (void *cbarg);
-+	void	*cbarg;
-+};
 +
-+typedef void	(*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
++typedef void (*bfa_cb_diag_t) (void *cbarg, bfa_status_t status);
++typedef void (*bfa_cb_diag_beacon_t) (void *dev, bfa_boolean_t beacon,
++			bfa_boolean_t link_e2e_beacon);
 +
 +/*
-+ * Generic BFA callback element.
++ *      Firmware ping test results
 + */
-+struct bfa_cb_qe_s {
-+	struct list_head	qe;
-+	bfa_cb_cbfn_t	cbfn;
-+	bfa_boolean_t	once;
++struct bfa_diag_results_fwping {
++	u32     data;   /* store the corrupted data */
++	u32     status;
++	u32     dmastatus;
++	u8      rsvd[4];
++};
++
++struct bfa_diag_qtest_result_s {
++	u32	status;
++	u16	count;	/* sucessful queue test count */
++	u8	queue;
++	u8	rsvd;	/* 64-bit align */
++};
++
++/*
++ * Firmware ping test results
++ */
++struct bfa_diag_fwping_s {
++	struct bfa_diag_results_fwping *result;
++	bfa_cb_diag_t  cbfn;
++	void            *cbarg;
++	u32             data;
++	u8              lock;
++	u8              rsv[3];
++	u32             status;
++	u32             count;
++	struct bfa_mbox_cmd_s   mbcmd;
++	u8              *dbuf_kva;      /* dma buf virtual address */
++	u64             dbuf_pa;        /* dma buf physical address */
++};
++
++/*
++ *      Temperature sensor query results
++ */
++struct bfa_diag_results_tempsensor_s {
++	u32     status;
++	u16     temp;           /* 10-bit A/D value */
++	u16     brd_temp;       /* 9-bit board temp */
++	u8      ts_junc;        /* show junction tempsensor   */
++	u8      ts_brd;         /* show board tempsensor      */
++	u8      rsvd[6];        /* keep 8 bytes alignment     */
++};
++
++struct bfa_diag_tsensor_s {
++	bfa_cb_diag_t   cbfn;
++	void            *cbarg;
++	struct bfa_diag_results_tempsensor_s *temp;
++	u8              lock;
++	u8              rsv[3];
++	u32             status;
++	struct bfa_mbox_cmd_s   mbcmd;
++};
++
++struct bfa_diag_sfpshow_s {
++	struct sfp_mem_s        *sfpmem;
++	bfa_cb_diag_t           cbfn;
++	void                    *cbarg;
++	u8      lock;
++	u8      static_data;
++	u8      rsv[2];
++	u32     status;
++	struct bfa_mbox_cmd_s    mbcmd;
++	u8      *dbuf_kva;      /* dma buf virtual address */
++	u64     dbuf_pa;        /* dma buf physical address */
++};
++
++struct bfa_diag_led_s {
++	struct bfa_mbox_cmd_s   mbcmd;
++	bfa_boolean_t   lock;   /* 1: ledtest is operating */
++};
++
++struct bfa_diag_beacon_s {
++	struct bfa_mbox_cmd_s   mbcmd;
++	bfa_boolean_t   state;          /* port beacon state */
++	bfa_boolean_t   link_e2e;       /* link beacon state */
++};
++
++struct bfa_diag_s {
++	void	*dev;
++	struct bfa_ioc_s		*ioc;
++	struct bfa_trc_mod_s		*trcmod;
++	struct bfa_diag_fwping_s	fwping;
++	struct bfa_diag_tsensor_s	tsensor;
++	struct bfa_diag_sfpshow_s	sfpshow;
++	struct bfa_diag_led_s		ledtest;
++	struct bfa_diag_beacon_s	beacon;
++	void	*result;
++	struct bfa_timer_s timer;
++	bfa_cb_diag_beacon_t  cbfn_beacon;
++	bfa_cb_diag_t  cbfn;
 +	void		*cbarg;
++	u8		block;
++	u8		timer_active;
++	u8		rsvd[2];
++	u32		status;
++	struct bfa_ioc_notify_s	ioc_notify;
++	struct bfa_mem_dma_s	diag_dma;
 +};
 +
-+/*
-  * ASIC block configurtion related
-  */
- 
-@@ -419,6 +441,56 @@ bfa_status_t	bfa_sfp_speed(struct bfa_sfp_s *sfp,
- 			enum bfa_port_speed portspeed,
- 			bfa_cb_sfp_t cbfn, void *cbarg);
- 
-+/*
-+ *	Flash module specific
-+ */
-+typedef void	(*bfa_cb_flash_t) (void *cbarg, bfa_status_t status);
++#define BFA_DIAG_MOD(__bfa)     (&(__bfa)->modules.diag_mod)
++#define BFA_MEM_DIAG_DMA(__bfa) (&(BFA_DIAG_MOD(__bfa)->diag_dma))
 +
-+struct bfa_flash_s {
-+	struct bfa_ioc_s *ioc;		/* back pointer to ioc */
-+	struct bfa_trc_mod_s *trcmod;
-+	u32		type;           /* partition type */
-+	u8		instance;       /* partition instance */
-+	u8		rsv[3];
-+	u32		op_busy;        /*  operation busy flag */
-+	u32		residue;        /*  residual length */
-+	u32		offset;         /*  offset */
-+	bfa_status_t	status;         /*  status */
-+	u8		*dbuf_kva;      /*  dma buf virtual address */
-+	u64		dbuf_pa;        /*  dma buf physical address */
-+	struct bfa_reqq_wait_s	reqq_wait; /*  to wait for room in reqq */
-+	bfa_cb_flash_t	cbfn;           /*  user callback function */
-+	void		*cbarg;         /*  user callback arg */
-+	u8		*ubuf;          /*  user supplied buffer */
-+	struct bfa_cb_qe_s	hcb_qe; /*  comp: BFA callback qelem */
-+	u32		addr_off;       /*  partition address offset */
-+	struct bfa_mbox_cmd_s	mb;       /*  mailbox */
-+	struct bfa_ioc_notify_s	ioc_notify; /*  ioc event notify */
-+	struct bfa_mem_dma_s	flash_dma;
-+};
-+
-+#define BFA_FLASH(__bfa)		(&(__bfa)->modules.flash)
-+#define BFA_MEM_FLASH_DMA(__bfa)	(&(BFA_FLASH(__bfa)->flash_dma))
-+
-+bfa_status_t bfa_flash_get_attr(struct bfa_flash_s *flash,
-+			struct bfa_flash_attr_s *attr,
-+			bfa_cb_flash_t cbfn, void *cbarg);
-+bfa_status_t bfa_flash_erase_part(struct bfa_flash_s *flash,
-+			enum bfa_flash_part_type type, u8 instance,
-+			bfa_cb_flash_t cbfn, void *cbarg);
-+bfa_status_t bfa_flash_update_part(struct bfa_flash_s *flash,
-+			enum bfa_flash_part_type type, u8 instance,
-+			void *buf, u32 len, u32 offset,
-+			bfa_cb_flash_t cbfn, void *cbarg);
-+bfa_status_t bfa_flash_read_part(struct bfa_flash_s *flash,
-+			enum bfa_flash_part_type type, u8 instance, void *buf,
-+			u32 len, u32 offset, bfa_cb_flash_t cbfn, void *cbarg);
-+u32	bfa_flash_meminfo(bfa_boolean_t mincfg);
-+void bfa_flash_attach(struct bfa_flash_s *flash, struct bfa_ioc_s *ioc,
-+		void *dev, struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg);
-+void bfa_flash_memclaim(struct bfa_flash_s *flash,
-+		u8 *dm_kva, u64 dm_pa, bfa_boolean_t mincfg);
++u32	bfa_diag_meminfo(void);
++void bfa_diag_memclaim(struct bfa_diag_s *diag, u8 *dm_kva, u64 dm_pa);
++void bfa_diag_attach(struct bfa_diag_s *diag, struct bfa_ioc_s *ioc, void *dev,
++		     bfa_cb_diag_beacon_t cbfn_beacon,
++		     struct bfa_trc_mod_s *trcmod);
++bfa_status_t	bfa_diag_reg_read(struct bfa_diag_s *diag, u32 offset,
++			u32 len, u32 *buf, u32 force);
++bfa_status_t	bfa_diag_reg_write(struct bfa_diag_s *diag, u32 offset,
++			u32 len, u32 value, u32 force);
++bfa_status_t	bfa_diag_tsensor_query(struct bfa_diag_s *diag,
++			struct bfa_diag_results_tempsensor_s *result,
++			bfa_cb_diag_t cbfn, void *cbarg);
++bfa_status_t	bfa_diag_fwping(struct bfa_diag_s *diag, u32 cnt,
++			u32 pattern, struct bfa_diag_results_fwping *result,
++			bfa_cb_diag_t cbfn, void *cbarg);
++bfa_status_t	bfa_diag_sfpshow(struct bfa_diag_s *diag,
++			struct sfp_mem_s *sfpmem, u8 static_data,
++			bfa_cb_diag_t cbfn, void *cbarg);
++bfa_status_t	bfa_diag_memtest(struct bfa_diag_s *diag,
++			struct bfa_diag_memtest_s *memtest, u32 pattern,
++			struct bfa_diag_memtest_result *result,
++			bfa_cb_diag_t cbfn, void *cbarg);
++bfa_status_t	bfa_diag_ledtest(struct bfa_diag_s *diag,
++			struct bfa_diag_ledtest_s *ledtest);
++bfa_status_t	bfa_diag_beacon_port(struct bfa_diag_s *diag,
++			bfa_boolean_t beacon, bfa_boolean_t link_e2e_beacon,
++			u32 sec);
 +
  #define bfa_ioc_pcifn(__ioc)		((__ioc)->pcidev.pci_func)
  #define bfa_ioc_devid(__ioc)		((__ioc)->pcidev.device_id)
  #define bfa_ioc_bar0(__ioc)		((__ioc)->pcidev.pci_bar_kva)
 diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
-index d8ea708..f7783f0 100644
+index f7783f0..c6b2fe7 100644
 --- a/drivers/scsi/bfa/bfa_modules.h
 +++ b/drivers/scsi/bfa/bfa_modules.h
-@@ -40,6 +40,7 @@ struct bfa_modules_s {
- 	struct bfa_ablk_s	ablk;		/*  ASIC block config module */
+@@ -29,6 +29,7 @@
+ #include "bfa_port.h"
+ 
+ struct bfa_modules_s {
++	struct bfa_fcdiag_s	fcdiag;		/* fcdiag module */
+ 	struct bfa_fcport_s	fcport;		/*  fc port module	      */
+ 	struct bfa_fcxp_mod_s	fcxp_mod;	/*  fcxp module	      */
+ 	struct bfa_lps_mod_s	lps_mod;	/*  fcxp module	      */
+@@ -41,6 +42,7 @@ struct bfa_modules_s {
  	struct bfa_cee_s	cee;		/*  CEE Module	*/
  	struct bfa_sfp_s	sfp;		/*  SFP module	*/
-+	struct bfa_flash_s	flash;		/*  flash module */
+ 	struct bfa_flash_s	flash;		/*  flash module */
++	struct bfa_diag_s	diag_mod;	/*  diagnostics module	*/
  };
  
  /*
+@@ -119,6 +121,7 @@ struct bfa_s {
+ };
+ 
+ extern bfa_boolean_t bfa_auto_recover;
++extern struct bfa_module_s hal_mod_fcdiag;
+ extern struct bfa_module_s hal_mod_sgpg;
+ extern struct bfa_module_s hal_mod_fcport;
+ extern struct bfa_module_s hal_mod_fcxp;
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index d7853e6..21caaef 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -21,6 +21,7 @@
+ #include "bfa_modules.h"
+ 
+ BFA_TRC_FILE(HAL, FCXP);
++BFA_MODULE(fcdiag);
+ BFA_MODULE(fcxp);
+ BFA_MODULE(sgpg);
+ BFA_MODULE(lps);
+@@ -3872,6 +3873,22 @@ bfa_fcport_get_ratelim_speed(struct bfa_s *bfa)
+ 
+ }
+ 
++void
++bfa_fcport_beacon(void *dev, bfa_boolean_t beacon,
++		  bfa_boolean_t link_e2e_beacon)
++{
++	struct bfa_s *bfa = dev;
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(bfa);
++
++	bfa_trc(bfa, beacon);
++	bfa_trc(bfa, link_e2e_beacon);
++	bfa_trc(bfa, fcport->beacon);
++	bfa_trc(bfa, fcport->link_e2e_beacon);
++
++	fcport->beacon = beacon;
++	fcport->link_e2e_beacon = link_e2e_beacon;
++}
++
+ bfa_boolean_t
+ bfa_fcport_is_linkup(struct bfa_s *bfa)
+ {
+@@ -5224,3 +5241,403 @@ bfa_uf_res_recfg(struct bfa_s *bfa, u16 num_uf_fw)
+ 		list_add_tail(qe, &mod->uf_unused_q);
+ 	}
+ }
++
++/*
++ *	BFA fcdiag module
++ */
++#define BFA_DIAG_QTEST_TOV	1000    /* msec */
++
++/*
++ *	Set port status to busy
++ */
++static void
++bfa_fcdiag_set_busy_status(struct bfa_fcdiag_s *fcdiag)
++{
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(fcdiag->bfa);
++
++	if (fcdiag->lb.lock)
++		fcport->diag_busy = BFA_TRUE;
++	else
++		fcport->diag_busy = BFA_FALSE;
++}
++
++static void
++bfa_fcdiag_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
++		struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcdiag_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++		struct bfa_pcidev_s *pcidev)
++{
++	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
++	fcdiag->bfa             = bfa;
++	fcdiag->trcmod  = bfa->trcmod;
++	/* The common DIAG attach bfa_diag_attach() will do all memory claim */
++}
++
++static void
++bfa_fcdiag_iocdisable(struct bfa_s *bfa)
++{
++	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
++	bfa_trc(fcdiag, fcdiag->lb.lock);
++	if (fcdiag->lb.lock) {
++		fcdiag->lb.status = BFA_STATUS_IOC_FAILURE;
++		fcdiag->lb.cbfn(fcdiag->lb.cbarg, fcdiag->lb.status);
++		fcdiag->lb.lock = 0;
++		bfa_fcdiag_set_busy_status(fcdiag);
++	}
++}
++
++static void
++bfa_fcdiag_detach(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcdiag_start(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcdiag_stop(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_fcdiag_queuetest_timeout(void *cbarg)
++{
++	struct bfa_fcdiag_s       *fcdiag = cbarg;
++	struct bfa_diag_qtest_result_s *res = fcdiag->qtest.result;
++
++	bfa_trc(fcdiag, fcdiag->qtest.all);
++	bfa_trc(fcdiag, fcdiag->qtest.count);
++
++	fcdiag->qtest.timer_active = 0;
++
++	res->status = BFA_STATUS_ETIMER;
++	res->count  = QTEST_CNT_DEFAULT - fcdiag->qtest.count;
++	if (fcdiag->qtest.all)
++		res->queue  = fcdiag->qtest.all;
++
++	bfa_trc(fcdiag, BFA_STATUS_ETIMER);
++	fcdiag->qtest.status = BFA_STATUS_ETIMER;
++	fcdiag->qtest.cbfn(fcdiag->qtest.cbarg, fcdiag->qtest.status);
++	fcdiag->qtest.lock = 0;
++}
++
++static bfa_status_t
++bfa_fcdiag_queuetest_send(struct bfa_fcdiag_s *fcdiag)
++{
++	u32	i;
++	struct bfi_diag_qtest_req_s *req;
++
++	req = bfa_reqq_next(fcdiag->bfa, fcdiag->qtest.queue);
++	if (!req)
++		return BFA_STATUS_DEVBUSY;
++
++	/* build host command */
++	bfi_h2i_set(req->mh, BFI_MC_DIAG, BFI_DIAG_H2I_QTEST,
++		bfa_fn_lpu(fcdiag->bfa));
++
++	for (i = 0; i < BFI_LMSG_PL_WSZ; i++)
++		req->data[i] = QTEST_PAT_DEFAULT;
++
++	bfa_trc(fcdiag, fcdiag->qtest.queue);
++	/* ring door bell */
++	bfa_reqq_produce(fcdiag->bfa, fcdiag->qtest.queue, req->mh);
++	return BFA_STATUS_OK;
++}
++
++static void
++bfa_fcdiag_queuetest_comp(struct bfa_fcdiag_s *fcdiag,
++			bfi_diag_qtest_rsp_t *rsp)
++{
++	struct bfa_diag_qtest_result_s *res = fcdiag->qtest.result;
++	bfa_status_t status = BFA_STATUS_OK;
++	int i;
++
++	/* Check timer, should still be active   */
++	if (!fcdiag->qtest.timer_active) {
++		bfa_trc(fcdiag, fcdiag->qtest.timer_active);
++		return;
++	}
++
++	/* update count */
++	fcdiag->qtest.count--;
++
++	/* Check result */
++	for (i = 0; i < BFI_LMSG_PL_WSZ; i++) {
++		if (rsp->data[i] != ~(QTEST_PAT_DEFAULT)) {
++			res->status = BFA_STATUS_DATACORRUPTED;
++			break;
++		}
++	}
++
++	if (res->status == BFA_STATUS_OK) {
++		if (fcdiag->qtest.count > 0) {
++			status = bfa_fcdiag_queuetest_send(fcdiag);
++			if (status == BFA_STATUS_OK)
++				return;
++			else
++				res->status = status;
++		} else if (fcdiag->qtest.all > 0 &&
++			fcdiag->qtest.queue < (BFI_IOC_MAX_CQS - 1)) {
++			fcdiag->qtest.count = QTEST_CNT_DEFAULT;
++			fcdiag->qtest.queue++;
++			status = bfa_fcdiag_queuetest_send(fcdiag);
++			if (status == BFA_STATUS_OK)
++				return;
++			else
++				res->status = status;
++		}
++	}
++
++	/* Stop timer when we comp all queue */
++	if (fcdiag->qtest.timer_active) {
++		bfa_timer_stop(&fcdiag->qtest.timer);
++		fcdiag->qtest.timer_active = 0;
++	}
++	res->queue = fcdiag->qtest.queue;
++	res->count = QTEST_CNT_DEFAULT - fcdiag->qtest.count;
++	bfa_trc(fcdiag, res->count);
++	bfa_trc(fcdiag, res->status);
++	fcdiag->qtest.status = res->status;
++	fcdiag->qtest.cbfn(fcdiag->qtest.cbarg, fcdiag->qtest.status);
++	fcdiag->qtest.lock = 0;
++}
++
++static void
++bfa_fcdiag_loopback_comp(struct bfa_fcdiag_s *fcdiag,
++			struct bfi_diag_lb_rsp_s *rsp)
++{
++	struct bfa_diag_loopback_result_s *res = fcdiag->lb.result;
++
++	res->numtxmfrm  = be32_to_cpu(rsp->res.numtxmfrm);
++	res->numosffrm  = be32_to_cpu(rsp->res.numosffrm);
++	res->numrcvfrm  = be32_to_cpu(rsp->res.numrcvfrm);
++	res->badfrminf  = be32_to_cpu(rsp->res.badfrminf);
++	res->badfrmnum  = be32_to_cpu(rsp->res.badfrmnum);
++	res->status     = rsp->res.status;
++	fcdiag->lb.status = rsp->res.status;
++	bfa_trc(fcdiag, fcdiag->lb.status);
++	fcdiag->lb.cbfn(fcdiag->lb.cbarg, fcdiag->lb.status);
++	fcdiag->lb.lock = 0;
++	bfa_fcdiag_set_busy_status(fcdiag);
++}
++
++static bfa_status_t
++bfa_fcdiag_loopback_send(struct bfa_fcdiag_s *fcdiag,
++			struct bfa_diag_loopback_s *loopback)
++{
++	struct bfi_diag_lb_req_s *lb_req;
++
++	lb_req = bfa_reqq_next(fcdiag->bfa, BFA_REQQ_DIAG);
++	if (!lb_req)
++		return BFA_STATUS_DEVBUSY;
++
++	/* build host command */
++	bfi_h2i_set(lb_req->mh, BFI_MC_DIAG, BFI_DIAG_H2I_LOOPBACK,
++		bfa_fn_lpu(fcdiag->bfa));
++
++	lb_req->lb_mode = loopback->lb_mode;
++	lb_req->speed = loopback->speed;
++	lb_req->loopcnt = loopback->loopcnt;
++	lb_req->pattern = loopback->pattern;
++
++	/* ring door bell */
++	bfa_reqq_produce(fcdiag->bfa, BFA_REQQ_DIAG, lb_req->mh);
++
++	bfa_trc(fcdiag, loopback->lb_mode);
++	bfa_trc(fcdiag, loopback->speed);
++	bfa_trc(fcdiag, loopback->loopcnt);
++	bfa_trc(fcdiag, loopback->pattern);
++	return BFA_STATUS_OK;
++}
++
++/*
++ *	cpe/rme intr handler
++ */
++void
++bfa_fcdiag_intr(struct bfa_s *bfa, struct bfi_msg_s *msg)
++{
++	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
++
++	switch (msg->mhdr.msg_id) {
++	case BFI_DIAG_I2H_LOOPBACK:
++		bfa_fcdiag_loopback_comp(fcdiag,
++				(struct bfi_diag_lb_rsp_s *) msg);
++		break;
++	case BFI_DIAG_I2H_QTEST:
++		bfa_fcdiag_queuetest_comp(fcdiag, (bfi_diag_qtest_rsp_t *)msg);
++		break;
++	default:
++		bfa_trc(fcdiag, msg->mhdr.msg_id);
++		WARN_ON(1);
++	}
++}
++
++/*
++ *	Loopback test
++ *
++ *   @param[in] *bfa            - bfa data struct
++ *   @param[in] opmode          - port operation mode
++ *   @param[in] speed           - port speed
++ *   @param[in] lpcnt           - loop count
++ *   @param[in] pat                     - pattern to build packet
++ *   @param[in] *result         - pt to bfa_diag_loopback_result_t data struct
++ *   @param[in] cbfn            - callback function
++ *   @param[in] cbarg           - callback functioin arg
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_fcdiag_loopback(struct bfa_s *bfa, enum bfa_port_opmode opmode,
++		enum bfa_port_speed speed, u32 lpcnt, u32 pat,
++		struct bfa_diag_loopback_result_s *result, bfa_cb_diag_t cbfn,
++		void *cbarg)
++{
++	struct  bfa_diag_loopback_s loopback;
++	struct bfa_port_attr_s attr;
++	bfa_status_t status;
++	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
++
++	if (!bfa_iocfc_is_operational(bfa))
++		return BFA_STATUS_IOC_NON_OP;
++
++	/* if port is PBC disabled, return error */
++	if (bfa_fcport_is_pbcdisabled(bfa)) {
++		bfa_trc(fcdiag, BFA_STATUS_PBC);
++		return BFA_STATUS_PBC;
++	}
++
++	if (bfa_fcport_is_disabled(bfa) == BFA_FALSE) {
++		bfa_trc(fcdiag, opmode);
++		return BFA_STATUS_PORT_NOT_DISABLED;
++	}
++
++	/* Check if the speed is supported */
++	bfa_fcport_get_attr(bfa, &attr);
++	bfa_trc(fcdiag, attr.speed_supported);
++	if (speed > attr.speed_supported)
++		return BFA_STATUS_UNSUPP_SPEED;
++
++	/* For Mezz card, port speed entered needs to be checked */
++	if (bfa_mfg_is_mezz(bfa->ioc.attr->card_type)) {
++		if (bfa_ioc_get_type(&bfa->ioc) == BFA_IOC_TYPE_FC) {
++			if ((speed == BFA_PORT_SPEED_1GBPS) &&
++			    (bfa_asic_id_ct2(bfa->ioc.pcidev.device_id)))
++				return BFA_STATUS_UNSUPP_SPEED;
++			if (!(speed == BFA_PORT_SPEED_1GBPS ||
++			      speed == BFA_PORT_SPEED_2GBPS ||
++			      speed == BFA_PORT_SPEED_4GBPS ||
++			      speed == BFA_PORT_SPEED_8GBPS ||
++			      speed == BFA_PORT_SPEED_16GBPS ||
++			      speed == BFA_PORT_SPEED_AUTO))
++				return BFA_STATUS_UNSUPP_SPEED;
++		} else {
++			if (speed != BFA_PORT_SPEED_10GBPS)
++				return BFA_STATUS_UNSUPP_SPEED;
++		}
++	}
++
++	/* check to see if there is another destructive diag cmd running */
++	if (fcdiag->lb.lock) {
++		bfa_trc(fcdiag, fcdiag->lb.lock);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	fcdiag->lb.lock = 1;
++	loopback.lb_mode = opmode;
++	loopback.speed = speed;
++	loopback.loopcnt = lpcnt;
++	loopback.pattern = pat;
++	fcdiag->lb.result = result;
++	fcdiag->lb.cbfn = cbfn;
++	fcdiag->lb.cbarg = cbarg;
++	memset(result, 0, sizeof(struct bfa_diag_loopback_result_s));
++	bfa_fcdiag_set_busy_status(fcdiag);
++
++	/* Send msg to fw */
++	status = bfa_fcdiag_loopback_send(fcdiag, &loopback);
++	return status;
++}
++
++/*
++ *	DIAG queue test command
++ *
++ *   @param[in] *bfa            - bfa data struct
++ *   @param[in] force           - 1: don't do ioc op checking
++ *   @param[in] queue           - queue no. to test
++ *   @param[in] *result         - pt to bfa_diag_qtest_result_t data struct
++ *   @param[in] cbfn            - callback function
++ *   @param[in] *cbarg          - callback functioin arg
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_fcdiag_queuetest(struct bfa_s *bfa, u32 force, u32 queue,
++		struct bfa_diag_qtest_result_s *result, bfa_cb_diag_t cbfn,
++		void *cbarg)
++{
++	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
++	bfa_status_t status;
++	bfa_trc(fcdiag, force);
++	bfa_trc(fcdiag, queue);
++
++	if (!force && !bfa_iocfc_is_operational(bfa))
++		return BFA_STATUS_IOC_NON_OP;
++
++	/* check to see if there is another destructive diag cmd running */
++	if (fcdiag->qtest.lock) {
++		bfa_trc(fcdiag, fcdiag->qtest.lock);
++		return BFA_STATUS_DEVBUSY;
++	}
++
++	/* Initialization */
++	fcdiag->qtest.lock = 1;
++	fcdiag->qtest.cbfn = cbfn;
++	fcdiag->qtest.cbarg = cbarg;
++	fcdiag->qtest.result = result;
++	fcdiag->qtest.count = QTEST_CNT_DEFAULT;
++
++	/* Init test results */
++	fcdiag->qtest.result->status = BFA_STATUS_OK;
++	fcdiag->qtest.result->count  = 0;
++
++	/* send */
++	if (queue < BFI_IOC_MAX_CQS) {
++		fcdiag->qtest.result->queue  = (u8)queue;
++		fcdiag->qtest.queue = (u8)queue;
++		fcdiag->qtest.all   = 0;
++	} else {
++		fcdiag->qtest.result->queue  = 0;
++		fcdiag->qtest.queue = 0;
++		fcdiag->qtest.all   = 1;
++	}
++	status = bfa_fcdiag_queuetest_send(fcdiag);
++
++	/* Start a timer */
++	if (status == BFA_STATUS_OK) {
++		bfa_timer_start(bfa, &fcdiag->qtest.timer,
++				bfa_fcdiag_queuetest_timeout, fcdiag,
++				BFA_DIAG_QTEST_TOV);
++		fcdiag->qtest.timer_active = 1;
++	}
++	return status;
++}
++
++/*
++ * DIAG PLB is running
++ *
++ *   @param[in] *bfa    - bfa data struct
++ *
++ *   @param[out]
++ */
++bfa_status_t
++bfa_fcdiag_lb_is_running(struct bfa_s *bfa)
++{
++	struct bfa_fcdiag_s *fcdiag = BFA_FCDIAG_MOD(bfa);
++	return fcdiag->lb.lock ?  BFA_STATUS_DIAG_BUSY : BFA_STATUS_OK;
++}
+diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
+index 4c0ac3e..fbe513a 100644
+--- a/drivers/scsi/bfa/bfa_svc.h
++++ b/drivers/scsi/bfa/bfa_svc.h
+@@ -548,6 +548,8 @@ enum bfa_port_speed bfa_fcport_get_ratelim_speed(struct bfa_s *bfa);
+ 
+ void bfa_fcport_set_tx_bbcredit(struct bfa_s *bfa, u16 tx_bbcredit, u8 bb_scn);
+ bfa_boolean_t     bfa_fcport_is_ratelim(struct bfa_s *bfa);
++void bfa_fcport_beacon(void *dev, bfa_boolean_t beacon,
++			bfa_boolean_t link_e2e_beacon);
+ bfa_boolean_t	bfa_fcport_is_linkup(struct bfa_s *bfa);
+ bfa_status_t bfa_fcport_get_stats(struct bfa_s *bfa,
+ 				  union bfa_fcport_stats_u *stats,
+@@ -662,4 +664,49 @@ bfa_status_t bfa_faa_disable(struct bfa_s *bfa,
+ bfa_status_t bfa_faa_query(struct bfa_s *bfa, struct bfa_faa_attr_s *attr,
+ 			bfa_cb_iocfc_t cbfn, void *cbarg);
+ 
++/*
++ *	FC DIAG data structure
++ */
++struct bfa_fcdiag_qtest_s {
++	struct bfa_diag_qtest_result_s *result;
++	bfa_cb_diag_t	cbfn;
++	void		*cbarg;
++	struct bfa_timer_s	timer;
++	u32	status;
++	u32	count;
++	u8	lock;
++	u8	queue;
++	u8	all;
++	u8	timer_active;
++};
++
++struct bfa_fcdiag_lb_s {
++	bfa_cb_diag_t   cbfn;
++	void            *cbarg;
++	void            *result;
++	bfa_boolean_t   lock;
++	u32        status;
++};
++
++struct bfa_fcdiag_s {
++	struct bfa_s    *bfa;           /* Back pointer to BFA */
++	struct bfa_trc_mod_s   *trcmod;
++	struct bfa_fcdiag_lb_s lb;
++	struct bfa_fcdiag_qtest_s qtest;
++};
++
++#define BFA_FCDIAG_MOD(__bfa)	(&(__bfa)->modules.fcdiag)
++
++void	bfa_fcdiag_intr(struct bfa_s *bfa, struct bfi_msg_s *msg);
++
++bfa_status_t	bfa_fcdiag_loopback(struct bfa_s *bfa,
++				enum bfa_port_opmode opmode,
++				enum bfa_port_speed speed, u32 lpcnt, u32 pat,
++				struct bfa_diag_loopback_result_s *result,
++				bfa_cb_diag_t cbfn, void *cbarg);
++bfa_status_t	bfa_fcdiag_queuetest(struct bfa_s *bfa, u32 ignore,
++			u32 queue, struct bfa_diag_qtest_result_s *result,
++			bfa_cb_diag_t cbfn, void *cbarg);
++bfa_status_t	bfa_fcdiag_lb_is_running(struct bfa_s *bfa);
++
+ #endif /* __BFA_SVC_H__ */
 diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index aed0257..71dcf6d 100644
+index 71dcf6d..9e62173 100644
 --- a/drivers/scsi/bfa/bfad_bsg.c
 +++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -1109,6 +1109,111 @@ out:
+@@ -1214,6 +1214,185 @@ out:
  	return 0;
  }
  
 +int
-+bfad_iocmd_flash_get_attr(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_diag_temp(struct bfad_s *bfad, void *cmd)
 +{
-+	struct bfa_bsg_flash_attr_s *iocmd =
-+			(struct bfa_bsg_flash_attr_s *)cmd;
++	struct bfa_bsg_diag_get_temp_s *iocmd =
++			(struct bfa_bsg_diag_get_temp_s *)cmd;
 +	struct bfad_hal_comp fcomp;
 +	unsigned long	flags;
 +
 +	init_completion(&fcomp.comp);
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_flash_get_attr(BFA_FLASH(&bfad->bfa), &iocmd->attr,
++	iocmd->status = bfa_diag_tsensor_query(BFA_DIAG_MOD(&bfad->bfa),
++				&iocmd->result, bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_trc(bfad, iocmd->status);
++	if (iocmd->status != BFA_STATUS_OK)
++		goto out;
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_diag_memtest(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_memtest_s *iocmd =
++			(struct bfa_bsg_diag_memtest_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long   flags;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_diag_memtest(BFA_DIAG_MOD(&bfad->bfa),
++				&iocmd->memtest, iocmd->pat,
++				&iocmd->result, bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_trc(bfad, iocmd->status);
++	if (iocmd->status != BFA_STATUS_OK)
++		goto out;
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_diag_loopback(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_loopback_s *iocmd =
++			(struct bfa_bsg_diag_loopback_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long   flags;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fcdiag_loopback(&bfad->bfa, iocmd->opmode,
++				iocmd->speed, iocmd->lpcnt, iocmd->pat,
++				&iocmd->result, bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_trc(bfad, iocmd->status);
++	if (iocmd->status != BFA_STATUS_OK)
++		goto out;
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_diag_fwping(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_fwping_s *iocmd =
++			(struct bfa_bsg_diag_fwping_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long   flags;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_diag_fwping(BFA_DIAG_MOD(&bfad->bfa), iocmd->cnt,
++				iocmd->pattern, &iocmd->result,
++				bfad_hcb_comp, &fcomp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_trc(bfad, iocmd->status);
++	if (iocmd->status != BFA_STATUS_OK)
++		goto out;
++	bfa_trc(bfad, 0x77771);
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_diag_queuetest(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_qtest_s *iocmd = (struct bfa_bsg_diag_qtest_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long   flags;
++
++	init_completion(&fcomp.comp);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fcdiag_queuetest(&bfad->bfa, iocmd->force,
++				iocmd->queue, &iocmd->result,
 +				bfad_hcb_comp, &fcomp);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 +	if (iocmd->status != BFA_STATUS_OK)
@@ -893,273 +1588,385 @@ index aed0257..71dcf6d 100644
 +}
 +
 +int
-+bfad_iocmd_flash_erase_part(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_diag_sfp(struct bfad_s *bfad, void *cmd)
 +{
-+	struct bfa_bsg_flash_s *iocmd = (struct bfa_bsg_flash_s *)cmd;
++	struct bfa_bsg_sfp_show_s *iocmd =
++			(struct bfa_bsg_sfp_show_s *)cmd;
 +	struct bfad_hal_comp fcomp;
-+	unsigned long	flags;
++	unsigned long   flags;
 +
 +	init_completion(&fcomp.comp);
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_flash_erase_part(BFA_FLASH(&bfad->bfa), iocmd->type,
-+				iocmd->instance, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK)
-+		goto out;
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_flash_update_part(struct bfad_s *bfad, void *cmd,
-+			unsigned int payload_len)
-+{
-+	struct bfa_bsg_flash_s *iocmd = (struct bfa_bsg_flash_s *)cmd;
-+	void	*iocmd_bufptr;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long	flags;
-+
-+	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_flash_s),
-+			iocmd->bufsz) != BFA_STATUS_OK) {
-+		iocmd->status = BFA_STATUS_VERSION_FAIL;
-+		return 0;
-+	}
-+
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_flash_s);
-+
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_flash_update_part(BFA_FLASH(&bfad->bfa),
-+				iocmd->type, iocmd->instance, iocmd_bufptr,
-+				iocmd->bufsz, 0, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK)
-+		goto out;
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_flash_read_part(struct bfad_s *bfad, void *cmd,
-+			unsigned int payload_len)
-+{
-+	struct bfa_bsg_flash_s *iocmd = (struct bfa_bsg_flash_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	void	*iocmd_bufptr;
-+	unsigned long	flags;
-+
-+	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_flash_s),
-+			iocmd->bufsz) != BFA_STATUS_OK) {
-+		iocmd->status = BFA_STATUS_VERSION_FAIL;
-+		return 0;
-+	}
-+
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_flash_s);
-+
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_flash_read_part(BFA_FLASH(&bfad->bfa), iocmd->type,
-+				iocmd->instance, iocmd_bufptr, iocmd->bufsz, 0,
++	iocmd->status = bfa_sfp_show(BFA_SFP_MOD(&bfad->bfa), &iocmd->sfp,
 +				bfad_hcb_comp, &fcomp);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_trc(bfad, iocmd->status);
 +	if (iocmd->status != BFA_STATUS_OK)
 +		goto out;
 +	wait_for_completion(&fcomp.comp);
 +	iocmd->status = fcomp.status;
++	bfa_trc(bfad, iocmd->status);
 +out:
++	return 0;
++}
++
++int
++bfad_iocmd_diag_led(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_led_s *iocmd = (struct bfa_bsg_diag_led_s *)cmd;
++	unsigned long   flags;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_diag_ledtest(BFA_DIAG_MOD(&bfad->bfa),
++				&iocmd->ledtest);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	return 0;
++}
++
++int
++bfad_iocmd_diag_beacon_lport(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_beacon_s *iocmd =
++			(struct bfa_bsg_diag_beacon_s *)cmd;
++	unsigned long	flags;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_diag_beacon_port(BFA_DIAG_MOD(&bfad->bfa),
++				iocmd->beacon, iocmd->link_e2e_beacon,
++				iocmd->second);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	return 0;
++}
++
++int
++bfad_iocmd_diag_lb_stat(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_diag_lb_stat_s *iocmd =
++			(struct bfa_bsg_diag_lb_stat_s *)cmd;
++	unsigned long	flags;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fcdiag_lb_is_running(&bfad->bfa);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	bfa_trc(bfad, iocmd->status);
++
 +	return 0;
 +}
 +
  static int
  bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
  		unsigned int payload_len)
-@@ -1243,6 +1348,18 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_SFP_SPEED:
- 		rc = bfad_iocmd_sfp_speed(bfad, iocmd);
+@@ -1360,6 +1539,33 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_FLASH_READ_PART:
+ 		rc = bfad_iocmd_flash_read_part(bfad, iocmd, payload_len);
  		break;
-+	case IOCMD_FLASH_GET_ATTR:
-+		rc = bfad_iocmd_flash_get_attr(bfad, iocmd);
++	case IOCMD_DIAG_TEMP:
++		rc = bfad_iocmd_diag_temp(bfad, iocmd);
 +		break;
-+	case IOCMD_FLASH_ERASE_PART:
-+		rc = bfad_iocmd_flash_erase_part(bfad, iocmd);
++	case IOCMD_DIAG_MEMTEST:
++		rc = bfad_iocmd_diag_memtest(bfad, iocmd);
 +		break;
-+	case IOCMD_FLASH_UPDATE_PART:
-+		rc = bfad_iocmd_flash_update_part(bfad, iocmd, payload_len);
++	case IOCMD_DIAG_LOOPBACK:
++		rc = bfad_iocmd_diag_loopback(bfad, iocmd);
 +		break;
-+	case IOCMD_FLASH_READ_PART:
-+		rc = bfad_iocmd_flash_read_part(bfad, iocmd, payload_len);
++	case IOCMD_DIAG_FWPING:
++		rc = bfad_iocmd_diag_fwping(bfad, iocmd);
++		break;
++	case IOCMD_DIAG_QUEUETEST:
++		rc = bfad_iocmd_diag_queuetest(bfad, iocmd);
++		break;
++	case IOCMD_DIAG_SFP:
++		rc = bfad_iocmd_diag_sfp(bfad, iocmd);
++		break;
++	case IOCMD_DIAG_LED:
++		rc = bfad_iocmd_diag_led(bfad, iocmd);
++		break;
++	case IOCMD_DIAG_BEACON_LPORT:
++		rc = bfad_iocmd_diag_beacon_lport(bfad, iocmd);
++		break;
++	case IOCMD_DIAG_LB_STAT:
++		rc = bfad_iocmd_diag_lb_stat(bfad, iocmd);
 +		break;
  	default:
  		rc = EINVAL;
  		break;
 diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index faafd35..6bece6c 100644
+index 6bece6c..8994277 100644
 --- a/drivers/scsi/bfa/bfad_bsg.h
 +++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -67,6 +67,10 @@ enum {
- 	IOCMD_CEE_RESET_STATS,
- 	IOCMD_SFP_MEDIA,
- 	IOCMD_SFP_SPEED,
-+	IOCMD_FLASH_GET_ATTR,
-+	IOCMD_FLASH_ERASE_PART,
-+	IOCMD_FLASH_UPDATE_PART,
-+	IOCMD_FLASH_READ_PART,
+@@ -71,6 +71,15 @@ enum {
+ 	IOCMD_FLASH_ERASE_PART,
+ 	IOCMD_FLASH_UPDATE_PART,
+ 	IOCMD_FLASH_READ_PART,
++	IOCMD_DIAG_TEMP,
++	IOCMD_DIAG_MEMTEST,
++	IOCMD_DIAG_LOOPBACK,
++	IOCMD_DIAG_FWPING,
++	IOCMD_DIAG_QUEUETEST,
++	IOCMD_DIAG_SFP,
++	IOCMD_DIAG_LED,
++	IOCMD_DIAG_BEACON_LPORT,
++	IOCMD_DIAG_LB_STAT,
  };
  
  struct bfa_bsg_gen_s {
-@@ -336,6 +340,23 @@ struct bfa_bsg_sfp_speed_s {
- 	enum bfa_port_speed speed;
+@@ -357,6 +366,80 @@ struct bfa_bsg_flash_s {
+ 	u64		buf_ptr;
  };
  
-+struct bfa_bsg_flash_attr_s {
++struct bfa_bsg_diag_get_temp_s {
 +	bfa_status_t	status;
 +	u16		bfad_num;
 +	u16		rsvd;
-+	struct bfa_flash_attr_s attr;
++	struct bfa_diag_results_tempsensor_s result;
 +};
 +
-+struct bfa_bsg_flash_s {
++struct bfa_bsg_diag_memtest_s {
 +	bfa_status_t	status;
 +	u16		bfad_num;
-+	u8		instance;
-+	u8		rsvd;
-+	enum  bfa_flash_part_type type;
-+	int		bufsz;
-+	u64		buf_ptr;
++	u16		rsvd[3];
++	u32		pat;
++	struct bfa_diag_memtest_result result;
++	struct bfa_diag_memtest_s memtest;
++};
++
++struct bfa_bsg_diag_loopback_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	enum bfa_port_opmode opmode;
++	enum bfa_port_speed speed;
++	u32		lpcnt;
++	u32		pat;
++	struct bfa_diag_loopback_result_s result;
++};
++
++struct bfa_bsg_diag_fwping_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		cnt;
++	u32		pattern;
++	struct bfa_diag_results_fwping result;
++};
++
++struct bfa_bsg_diag_qtest_s {
++	bfa_status_t	status;
++	u16	bfad_num;
++	u16	rsvd;
++	u32	force;
++	u32	queue;
++	struct bfa_diag_qtest_result_s result;
++};
++
++struct bfa_bsg_sfp_show_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	struct sfp_mem_s sfp;
++};
++
++struct bfa_bsg_diag_led_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	struct bfa_diag_ledtest_s ledtest;
++};
++
++struct bfa_bsg_diag_beacon_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	bfa_boolean_t   beacon;
++	bfa_boolean_t   link_e2e_beacon;
++	u32		second;
++};
++
++struct bfa_bsg_diag_lb_stat_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
 +};
 +
  struct bfa_bsg_fcpt_s {
  	bfa_status_t    status;
  	u16		vf_id;
+diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
+index 48be0c5..b412e03 100644
+--- a/drivers/scsi/bfa/bfad_debugfs.c
++++ b/drivers/scsi/bfa/bfad_debugfs.c
+@@ -214,10 +214,10 @@ bfad_debugfs_read(struct file *file, char __user *buf,
+ 
+ #define BFA_REG_CT_ADDRSZ	(0x40000)
+ #define BFA_REG_CB_ADDRSZ	(0x20000)
+-#define BFA_REG_ADDRSZ(__bfa)	\
+-	((bfa_ioc_devid(&(__bfa)->ioc) == BFA_PCI_DEVICE_ID_CT) ?	\
+-		BFA_REG_CT_ADDRSZ : BFA_REG_CB_ADDRSZ)
+-#define BFA_REG_ADDRMSK(__bfa)  ((u32)(BFA_REG_ADDRSZ(__bfa) - 1))
++#define BFA_REG_ADDRSZ(__ioc)	\
++	((u32)(bfa_asic_id_ctc(bfa_ioc_devid(__ioc)) ?	\
++	 BFA_REG_CT_ADDRSZ : BFA_REG_CB_ADDRSZ))
++#define BFA_REG_ADDRMSK(__ioc)	(BFA_REG_ADDRSZ(__ioc) - 1)
+ 
+ static bfa_status_t
+ bfad_reg_offset_check(struct bfa_s *bfa, u32 offset, u32 len)
+@@ -236,7 +236,7 @@ bfad_reg_offset_check(struct bfa_s *bfa, u32 offset, u32 len)
+ 			return BFA_STATUS_EINVAL;
+ 	} else {
+ 		/* CB register space 64KB */
+-		if ((offset + (len<<2)) > BFA_REG_ADDRMSK(bfa))
++		if ((offset + (len<<2)) > BFA_REG_ADDRMSK(&bfa->ioc))
+ 			return BFA_STATUS_EINVAL;
+ 	}
+ 	return BFA_STATUS_OK;
+@@ -317,7 +317,7 @@ bfad_debugfs_write_regrd(struct file *file, const char __user *buf,
+ 
+ 	bfad->reglen = len << 2;
+ 	rb = bfa_ioc_bar0(ioc);
+-	addr &= BFA_REG_ADDRMSK(bfa);
++	addr &= BFA_REG_ADDRMSK(ioc);
+ 
+ 	/* offset and len sanity check */
+ 	rc = bfad_reg_offset_check(bfa, addr, len);
+@@ -380,7 +380,7 @@ bfad_debugfs_write_regwr(struct file *file, const char __user *buf,
+ 	}
+ 	kfree(kern_buf);
+ 
+-	addr &= BFA_REG_ADDRMSK(bfa); /* offset only 17 bit and word align */
++	addr &= BFA_REG_ADDRMSK(ioc); /* offset only 17 bit and word align */
+ 
+ 	/* offset and len sanity check */
+ 	rc = bfad_reg_offset_check(bfa, addr, 1);
 diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index 0d24998..b7eb3dc 100644
+index b7eb3dc..efa41b6 100644
 --- a/drivers/scsi/bfa/bfi.h
 +++ b/drivers/scsi/bfa/bfi.h
 @@ -190,6 +190,7 @@ enum bfi_pcifn_class {
   */
  enum bfi_mclass {
  	BFI_MC_IOC		= 1,	/*  IO Controller (IOC)	    */
-+	BFI_MC_FLASH		= 3,	/*  Flash message class	*/
++	BFI_MC_DIAG		= 2,    /*  Diagnostic Msgs            */
+ 	BFI_MC_FLASH		= 3,	/*  Flash message class	*/
  	BFI_MC_CEE		= 4,	/*  CEE	*/
  	BFI_MC_FCPORT		= 5,	/*  FC port			    */
- 	BFI_MC_IOCFC		= 6,	/*  FC - IO Controller (IOC)	    */
-@@ -814,6 +815,114 @@ struct bfi_sfp_rsp_s {
- 	u8			rsvd[2];
+@@ -339,7 +340,7 @@ struct bfi_ioc_image_hdr_s {
+ 	 ((u32)(__p1_mode)))
+ 
+ #define BFI_FWBOOT_TYPE_NORMAL	0
+-#define BFI_FWBOOT_TYPE_MEMTEST	1
++#define BFI_FWBOOT_TYPE_MEMTEST	2
+ #define BFI_FWBOOT_ENV_OS       0
+ 
+ enum bfi_port_mode {
+@@ -923,6 +924,112 @@ struct bfi_flash_erase_rsp_s {
+ 	u32	status;
  };
  
 +/*
-+ *	FLASH module specific
++ *----------------------------------------------------------------------
++ *				DIAG
++ *----------------------------------------------------------------------
 + */
-+enum bfi_flash_h2i_msgs {
-+	BFI_FLASH_H2I_QUERY_REQ = 1,
-+	BFI_FLASH_H2I_ERASE_REQ = 2,
-+	BFI_FLASH_H2I_WRITE_REQ = 3,
-+	BFI_FLASH_H2I_READ_REQ = 4,
-+	BFI_FLASH_H2I_BOOT_VER_REQ = 5,
++enum bfi_diag_h2i {
++	BFI_DIAG_H2I_PORTBEACON = 1,
++	BFI_DIAG_H2I_LOOPBACK = 2,
++	BFI_DIAG_H2I_FWPING = 3,
++	BFI_DIAG_H2I_TEMPSENSOR = 4,
++	BFI_DIAG_H2I_LEDTEST = 5,
++	BFI_DIAG_H2I_QTEST      = 6,
 +};
 +
-+enum bfi_flash_i2h_msgs {
-+	BFI_FLASH_I2H_QUERY_RSP = BFA_I2HM(1),
-+	BFI_FLASH_I2H_ERASE_RSP = BFA_I2HM(2),
-+	BFI_FLASH_I2H_WRITE_RSP = BFA_I2HM(3),
-+	BFI_FLASH_I2H_READ_RSP = BFA_I2HM(4),
-+	BFI_FLASH_I2H_BOOT_VER_RSP = BFA_I2HM(5),
-+	BFI_FLASH_I2H_EVENT = BFA_I2HM(127),
++enum bfi_diag_i2h {
++	BFI_DIAG_I2H_PORTBEACON = BFA_I2HM(BFI_DIAG_H2I_PORTBEACON),
++	BFI_DIAG_I2H_LOOPBACK = BFA_I2HM(BFI_DIAG_H2I_LOOPBACK),
++	BFI_DIAG_I2H_FWPING = BFA_I2HM(BFI_DIAG_H2I_FWPING),
++	BFI_DIAG_I2H_TEMPSENSOR = BFA_I2HM(BFI_DIAG_H2I_TEMPSENSOR),
++	BFI_DIAG_I2H_LEDTEST = BFA_I2HM(BFI_DIAG_H2I_LEDTEST),
++	BFI_DIAG_I2H_QTEST      = BFA_I2HM(BFI_DIAG_H2I_QTEST),
 +};
 +
-+/*
-+ * Flash query request
-+ */
-+struct bfi_flash_query_req_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	struct bfi_alen_s alen;
++#define BFI_DIAG_MAX_SGES	2
++#define BFI_DIAG_DMA_BUF_SZ	(2 * 1024)
++#define BFI_BOOT_MEMTEST_RES_ADDR 0x900
++#define BFI_BOOT_MEMTEST_RES_SIG  0xA0A1A2A3
++
++struct bfi_diag_lb_req_s {
++	struct bfi_mhdr_s mh;
++	u32	loopcnt;
++	u32	pattern;
++	u8	lb_mode;        /*!< bfa_port_opmode_t */
++	u8	speed;          /*!< bfa_port_speed_t */
++	u8	rsvd[2];
 +};
 +
-+/*
-+ * Flash erase request
-+ */
-+struct bfi_flash_erase_req_s {
-+	struct bfi_mhdr_s	mh;	/* Common msg header */
-+	u32	type;	/* partition type */
-+	u8	instance; /* partition instance */
++struct bfi_diag_lb_rsp_s {
++	struct bfi_mhdr_s  mh;          /* 4 bytes */
++	struct bfa_diag_loopback_result_s res; /* 16 bytes */
++};
++
++struct bfi_diag_fwping_req_s {
++	struct bfi_mhdr_s mh;	/* 4 bytes */
++	struct bfi_alen_s alen; /* 12 bytes */
++	u32	data;           /* user input data pattern */
++	u32	count;          /* user input dma count */
++	u8	qtag;           /* track CPE vc */
 +	u8	rsv[3];
 +};
 +
-+/*
-+ * Flash write request
-+ */
-+struct bfi_flash_write_req_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	struct bfi_alen_s alen;
-+	u32	type;	/* partition type */
-+	u8	instance; /* partition instance */
-+	u8	last;
++struct bfi_diag_fwping_rsp_s {
++	struct bfi_mhdr_s  mh;          /* 4 bytes */
++	u32	data;           /* user input data pattern    */
++	u8	qtag;           /* track CPE vc               */
++	u8	dma_status;     /* dma status                 */
 +	u8	rsv[2];
-+	u32	offset;
-+	u32	length;
 +};
 +
 +/*
-+ * Flash read request
++ * Temperature Sensor
 + */
-+struct bfi_flash_read_req_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	u32	type;		/* partition type */
-+	u8	instance;	/* partition instance */
-+	u8	rsv[3];
-+	u32	offset;
-+	u32	length;
-+	struct bfi_alen_s alen;
++struct bfi_diag_ts_req_s {
++	struct bfi_mhdr_s mh;	/* 4 bytes */
++	u16	temp;           /* 10-bit A/D value */
++	u16	brd_temp;       /* 9-bit board temp */
++	u8	status;
++	u8	ts_junc;        /* show junction tempsensor   */
++	u8	ts_brd;         /* show board tempsensor      */
++	u8	rsv;
++};
++#define bfi_diag_ts_rsp_t struct bfi_diag_ts_req_s
++
++struct bfi_diag_ledtest_req_s {
++	struct bfi_mhdr_s  mh;  /* 4 bytes */
++	u8	cmd;
++	u8	color;
++	u8	portid;
++	u8	led;    /* bitmap of LEDs to be tested */
++	u16	freq;   /* no. of blinks every 10 secs */
++	u8	rsv[2];
 +};
 +
-+/*
-+ * Flash query response
-+ */
-+struct bfi_flash_query_rsp_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	u32	status;
++/* notify host led operation is done */
++struct bfi_diag_ledtest_rsp_s {
++	struct bfi_mhdr_s  mh;  /* 4 bytes */
 +};
 +
-+/*
-+ * Flash read response
-+ */
-+struct bfi_flash_read_rsp_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	u32	type;       /* partition type */
-+	u8	instance;   /* partition instance */
-+	u8	rsv[3];
-+	u32	status;
-+	u32	length;
++struct bfi_diag_portbeacon_req_s {
++	struct bfi_mhdr_s  mh;  /* 4 bytes */
++	u32	period; /* beaconing period */
++	u8	beacon; /* 1: beacon on */
++	u8	rsvd[3];
 +};
 +
-+/*
-+ * Flash write response
-+ */
-+struct bfi_flash_write_rsp_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	u32	type;       /* partition type */
-+	u8	instance;   /* partition instance */
-+	u8	rsv[3];
-+	u32	status;
-+	u32	length;
++/* notify host the beacon is off */
++struct bfi_diag_portbeacon_rsp_s {
++	struct bfi_mhdr_s  mh;  /* 4 bytes */
 +};
 +
-+/*
-+ * Flash erase response
-+ */
-+struct bfi_flash_erase_rsp_s {
-+	struct bfi_mhdr_s mh;	/* Common msg header */
-+	u32	type;		/* partition type */
-+	u8	instance;	/* partition instance */
-+	u8	rsv[3];
-+	u32	status;
++struct bfi_diag_qtest_req_s {
++	struct bfi_mhdr_s	mh;             /* 4 bytes */
++	u32	data[BFI_LMSG_PL_WSZ]; /* fill up tcm prefetch area */
 +};
++#define bfi_diag_qtest_rsp_t struct bfi_diag_qtest_req_s
 +
  #pragma pack()
  
