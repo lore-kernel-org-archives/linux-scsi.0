@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 08/15] bfa: Extend BSG interface.
-Date: Fri, 24 Jun 2011 20:25:15 -0700
-Message-ID: <1308972315-8296-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 09/15] bfa: Added support for CEE info and stats query.
+Date: Fri, 24 Jun 2011 20:25:36 -0700
+Message-ID: <1308972336-8752-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:58239 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:58255 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752343Ab1FYDZh (ORCPT
+	by vger.kernel.org with ESMTP id S1752343Ab1FYD00 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 23:25:37 -0400
+	Fri, 24 Jun 2011 23:26:26 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,1183 +18,828 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added support to collect driver/fw stats.
-	- Added support to perform adapter/ioc enable, disable operations.
+	- Added CEE sub-module.
+	- Added support to collect stats/cee module info
+	  using BSG interface.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa.h           |    1 +
- drivers/scsi/bfa/bfa_core.c      |   21 ++-
- drivers/scsi/bfa/bfa_defs_fcs.h  |    8 +-
- drivers/scsi/bfa/bfa_defs_svc.h  |   55 ++++-
- drivers/scsi/bfa/bfa_fcpim.c     |   72 +++++
- drivers/scsi/bfa/bfa_fcpim.h     |    4 +
- drivers/scsi/bfa/bfa_fcs.h       |    2 +
- drivers/scsi/bfa/bfa_fcs_rport.c |   40 +++-
- drivers/scsi/bfa/bfad_bsg.c      |  535 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfad_bsg.h      |  135 ++++++++++-
- drivers/scsi/bfa/bfad_drv.h      |    1 +
- 11 files changed, 867 insertions(+), 7 deletions(-)
+ drivers/scsi/bfa/bfa_core.c     |   14 ++
+ drivers/scsi/bfa/bfa_defs_svc.h |   73 ++++++++
+ drivers/scsi/bfa/bfa_modules.h  |    1 +
+ drivers/scsi/bfa/bfa_port.c     |  365 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_port.h     |   54 ++++++
+ drivers/scsi/bfa/bfad_bsg.c     |   96 ++++++++++
+ drivers/scsi/bfa/bfad_bsg.h     |   21 +++
+ drivers/scsi/bfa/bfi.h          |   59 +++++++
+ 8 files changed, 683 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
-index 67742dc..c7cfc58 100644
---- a/drivers/scsi/bfa/bfa.h
-+++ b/drivers/scsi/bfa/bfa.h
-@@ -249,6 +249,7 @@ struct bfa_iocfc_s {
- 	struct bfa_cb_qe_s	init_hcb_qe;
- 	struct bfa_cb_qe_s	stop_hcb_qe;
- 	struct bfa_cb_qe_s	dis_hcb_qe;
-+	struct bfa_cb_qe_s	en_hcb_qe;
- 	struct bfa_cb_qe_s	stats_hcb_qe;
- 	bfa_boolean_t		cfgdone;
- 
 diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 602dc35..21343c2 100644
+index 21343c2..ec98724 100644
 --- a/drivers/scsi/bfa/bfa_core.c
 +++ b/drivers/scsi/bfa/bfa_core.c
-@@ -125,6 +125,7 @@ enum {
- 	BFA_IOCFC_ACT_INIT	= 1,
- 	BFA_IOCFC_ACT_STOP	= 2,
- 	BFA_IOCFC_ACT_DISABLE	= 3,
-+	BFA_IOCFC_ACT_ENABLE	= 4,
- };
- 
- #define DEF_CFG_NUM_FABRICS		1
-@@ -678,6 +679,16 @@ bfa_iocfc_stop_cb(void *bfa_arg, bfa_boolean_t compl)
+@@ -111,6 +111,17 @@ bfa_com_ablk_attach(struct bfa_s *bfa)
+ 	bfa_ablk_memclaim(ablk, ablk_dma->kva_curp, ablk_dma->dma_curp);
  }
  
- static void
-+bfa_iocfc_enable_cb(void *bfa_arg, bfa_boolean_t compl)
++static void
++bfa_com_cee_attach(struct bfa_s *bfa)
 +{
-+	struct bfa_s	*bfa = bfa_arg;
-+	struct bfad_s *bfad = bfa->bfad;
++	struct bfa_cee_s	*cee = &bfa->modules.cee;
++	struct bfa_mem_dma_s	*cee_dma = BFA_MEM_CEE_DMA(bfa);
 +
-+	if (compl)
-+		complete(&bfad->enable_comp);
++	cee->trcmod = bfa->trcmod;
++	bfa_cee_attach(cee, &bfa->ioc, bfa);
++	bfa_cee_mem_claim(cee, cee_dma->kva_curp, cee_dma->dma_curp);
 +}
 +
-+static void
- bfa_iocfc_disable_cb(void *bfa_arg, bfa_boolean_t compl)
- {
- 	struct bfa_s  *bfa = bfa_arg;
-@@ -760,8 +771,12 @@ bfa_iocfc_cfgrsp(struct bfa_s *bfa)
+ /*
+  * BFA IOC FC related definitions
+  */
+@@ -1348,6 +1359,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+ 	int		i;
+ 	struct bfa_mem_dma_s *port_dma = BFA_MEM_PORT_DMA(bfa);
+ 	struct bfa_mem_dma_s *ablk_dma = BFA_MEM_ABLK_DMA(bfa);
++	struct bfa_mem_dma_s *cee_dma = BFA_MEM_CEE_DMA(bfa);
  
- 	if (iocfc->action == BFA_IOCFC_ACT_INIT)
- 		bfa_cb_queue(bfa, &iocfc->init_hcb_qe, bfa_iocfc_init_cb, bfa);
--	else
-+	else {
-+		if (bfa->iocfc.action == BFA_IOCFC_ACT_ENABLE)
-+			bfa_cb_queue(bfa, &bfa->iocfc.en_hcb_qe,
-+					bfa_iocfc_enable_cb, bfa);
- 		bfa_iocfc_start_submod(bfa);
-+	}
- }
- void
- bfa_iocfc_reset_queues(struct bfa_s *bfa)
-@@ -970,6 +985,9 @@ bfa_iocfc_enable_cbfn(void *bfa_arg, enum bfa_status status)
- 		if (bfa->iocfc.action == BFA_IOCFC_ACT_INIT)
- 			bfa_cb_queue(bfa, &bfa->iocfc.init_hcb_qe,
- 				     bfa_iocfc_init_cb, bfa);
-+		else if (bfa->iocfc.action == BFA_IOCFC_ACT_ENABLE)
-+			bfa_cb_queue(bfa, &bfa->iocfc.en_hcb_qe,
-+					bfa_iocfc_enable_cb, bfa);
- 		return;
- 	}
+ 	WARN_ON((cfg == NULL) || (meminfo == NULL));
  
-@@ -1236,6 +1254,7 @@ bfa_iocfc_enable(struct bfa_s *bfa)
- {
- 	bfa_plog_str(bfa->plog, BFA_PL_MID_HAL, BFA_PL_EID_MISC, 0,
- 		     "IOC Enable");
-+	bfa->iocfc.action = BFA_IOCFC_ACT_ENABLE;
- 	bfa_ioc_enable(&bfa->ioc);
+@@ -1365,6 +1377,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+ 	/* dma info setup */
+ 	bfa_mem_dma_setup(meminfo, port_dma, bfa_port_meminfo());
+ 	bfa_mem_dma_setup(meminfo, ablk_dma, bfa_ablk_meminfo());
++	bfa_mem_dma_setup(meminfo, cee_dma, bfa_cee_meminfo());
  }
  
-diff --git a/drivers/scsi/bfa/bfa_defs_fcs.h b/drivers/scsi/bfa/bfa_defs_fcs.h
-index 5e95976..3bbc583 100644
---- a/drivers/scsi/bfa/bfa_defs_fcs.h
-+++ b/drivers/scsi/bfa/bfa_defs_fcs.h
-@@ -93,9 +93,11 @@ struct bfa_lport_cfg_s {
- 	wwn_t	       pwwn;       /*  port wwn */
- 	wwn_t	       nwwn;       /*  node wwn */
- 	struct bfa_lport_symname_s  sym_name;   /*  vm port symbolic name */
--	bfa_boolean_t       preboot_vp;  /*  vport created from PBC */
--	enum bfa_lport_role     roles;      /*  FCS port roles */
--	u8	     tag[16];	/*  opaque tag from application */
-+	enum bfa_lport_role roles;      /* FCS port roles */
-+	u32     rsvd;
-+	bfa_boolean_t   preboot_vp;  /*  vport created from PBC */
-+	u8	tag[16];        /* opaque tag from application */
-+	u8	padding[4];
- };
+ /*
+@@ -1432,6 +1445,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 
+ 	bfa_com_port_attach(bfa);
+ 	bfa_com_ablk_attach(bfa);
++	bfa_com_cee_attach(bfa);
+ }
  
  /*
 diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index 7f35843..95a17ef 100644
+index 95a17ef..4b6529c 100644
 --- a/drivers/scsi/bfa/bfa_defs_svc.h
 +++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -65,8 +65,12 @@ struct bfa_iocfc_drvcfg_s {
- 	u16	    ioc_recover;	/*  IOC recovery mode		  */
- 	u16	    min_cfg;	/*  minimum configuration	  */
- 	u16        path_tov;	/*  device path timeout	  */
-+	u16		num_tio_reqs;   /*!< number of TM IO reqs	*/
-+	u8		port_mode;
-+	u8		rsvd_a;
- 	bfa_boolean_t   delay_comp; /*  delay completion of
- 							failed inflight IOs */
-+	u16		num_ttsk_reqs;	 /* TM task management requests */
- 	u32		rsvd;
+@@ -1142,4 +1142,77 @@ struct bfa_port_cfg_mode_s {
+ 	enum bfa_mode_s	mode;
  };
  
-@@ -81,7 +85,7 @@ struct bfa_iocfc_cfg_s {
- /*
-  * IOC firmware IO stats
-  */
--struct bfa_fw_io_stats_s {
-+struct bfa_fw_ioim_stats_s {
- 	u32	host_abort;		/*  IO aborted by host driver*/
- 	u32	host_cleanup;		/*  IO clean up by host driver */
- 
-@@ -151,6 +155,54 @@ struct bfa_fw_io_stats_s {
- 						 */
- };
- 
-+struct bfa_fw_tio_stats_s {
-+	u32	tio_conf_proc;	/* TIO CONF processed */
-+	u32	tio_conf_drop;      /* TIO CONF dropped */
-+	u32	tio_cleanup_req;    /* TIO cleanup requested */
-+	u32	tio_cleanup_comp;   /* TIO cleanup completed */
-+	u32	tio_abort_rsp;      /* TIO abort response */
-+	u32	tio_abort_rsp_comp; /* TIO abort rsp completed */
-+	u32	tio_abts_req;       /* TIO ABTS requested */
-+	u32	tio_abts_ack;       /* TIO ABTS ack-ed */
-+	u32	tio_abts_ack_nocomp; /* TIO ABTS ack-ed but not completed */
-+	u32	tio_abts_tmo;       /* TIO ABTS timeout */
-+	u32	tio_snsdata_dma;    /* TIO sense data DMA */
-+	u32	tio_rxwchan_wait; /* TIO waiting for RX wait channel */
-+	u32	tio_rxwchan_avail; /* TIO RX wait channel available */
-+	u32	tio_hit_bls;        /* TIO IOH BLS event */
-+	u32	tio_uf_recv;        /* TIO received UF */
-+	u32	tio_rd_invalid_sm; /* TIO read reqst in wrong state machine */
-+	u32	tio_wr_invalid_sm;/* TIO write reqst in wrong state machine */
++#pragma pack(1)
 +
-+	u32	ds_rxwchan_wait; /* DS waiting for RX wait channel */
-+	u32	ds_rxwchan_avail; /* DS RX wait channel available */
-+	u32	ds_unaligned_rd;    /* DS unaligned read */
-+	u32	ds_rdcomp_invalid_sm; /* DS read completed in wrong state machine */
-+	u32	ds_wrcomp_invalid_sm; /* DS write completed in wrong state machine */
-+	u32	ds_flush_req;       /* DS flush requested */
-+	u32	ds_flush_comp;      /* DS flush completed */
-+	u32	ds_xfrdy_exp;       /* DS XFER_RDY expired */
-+	u32	ds_seq_cnt_err;     /* DS seq cnt error */
-+	u32	ds_seq_len_err;     /* DS seq len error */
-+	u32	ds_data_oor;        /* DS data out of order */
-+	u32	ds_hit_bls;     /* DS hit BLS */
-+	u32	ds_edtov_timer_exp; /* DS edtov expired */
-+	u32	ds_cpu_owned;       /* DS cpu owned */
-+	u32	ds_hit_class2;      /* DS hit class2 */
-+	u32	ds_length_err;      /* DS length error */
-+	u32	ds_ro_ooo_err;      /* DS relative offset out-of-order error */
-+	u32	ds_rectov_timer_exp;    /* DS rectov expired */
-+	u32	ds_unexp_fr_err;    /* DS unexp frame error */
++#define BFA_CEE_LLDP_MAX_STRING_LEN	(128)
++#define BFA_CEE_DCBX_MAX_PRIORITY	(8)
++#define BFA_CEE_DCBX_MAX_PGID		(8)
++
++struct bfa_cee_lldp_str_s {
++	u8	sub_type;
++	u8	len;
++	u8	rsvd[2];
++	u8	value[BFA_CEE_LLDP_MAX_STRING_LEN];
 +};
++
++struct bfa_cee_lldp_cfg_s {
++	struct bfa_cee_lldp_str_s chassis_id;
++	struct bfa_cee_lldp_str_s port_id;
++	struct bfa_cee_lldp_str_s port_desc;
++	struct bfa_cee_lldp_str_s sys_name;
++	struct bfa_cee_lldp_str_s sys_desc;
++	struct bfa_cee_lldp_str_s mgmt_addr;
++	u16	time_to_live;
++	u16	enabled_system_cap;
++};
++
++/* CEE/DCBX parameters */
++struct bfa_cee_dcbx_cfg_s {
++	u8	pgid[BFA_CEE_DCBX_MAX_PRIORITY];
++	u8	pg_percentage[BFA_CEE_DCBX_MAX_PGID];
++	u8	pfc_primap; /* bitmap of priorties with PFC enabled */
++	u8	fcoe_primap; /* bitmap of priorities used for FcoE traffic */
++	u8	iscsi_primap; /* bitmap of priorities used for iSCSI traffic */
++	u8	dcbx_version; /* operating version:CEE or preCEE */
++	u8	lls_fcoe; /* FCoE Logical Link Status */
++	u8	lls_lan; /* LAN Logical Link Status */
++	u8	rsvd[2];
++};
++
++/* CEE Query */
++struct bfa_cee_attr_s {
++	u8	cee_status;
++	u8	error_reason;
++	struct bfa_cee_lldp_cfg_s lldp_remote;
++	struct bfa_cee_dcbx_cfg_s dcbx_remote;
++	mac_t src_mac;
++	u8	link_speed;
++	u8	nw_priority;
++	u8	filler[2];
++};
++
++/* LLDP/DCBX/CEE Statistics */
++struct bfa_cee_stats_s {
++	u32		lldp_tx_frames;		/* LLDP Tx Frames */
++	u32		lldp_rx_frames;		/* LLDP Rx Frames */
++	u32		lldp_rx_frames_invalid; /* LLDP Rx Frames invalid */
++	u32		lldp_rx_frames_new;     /* LLDP Rx Frames new */
++	u32		lldp_tlvs_unrecognized; /* LLDP Rx unrecog. TLVs */
++	u32		lldp_rx_shutdown_tlvs;  /* LLDP Rx shutdown TLVs */
++	u32		lldp_info_aged_out;     /* LLDP remote info aged */
++	u32		dcbx_phylink_ups;       /* DCBX phy link ups */
++	u32		dcbx_phylink_downs;     /* DCBX phy link downs */
++	u32		dcbx_rx_tlvs;           /* DCBX Rx TLVs */
++	u32		dcbx_rx_tlvs_invalid;   /* DCBX Rx TLVs invalid */
++	u32		dcbx_control_tlv_error; /* DCBX control TLV errors */
++	u32		dcbx_feature_tlv_error; /* DCBX feature TLV errors */
++	u32		dcbx_cee_cfg_new;       /* DCBX new CEE cfg rcvd */
++	u32		cee_status_down;        /* DCB status down */
++	u32		cee_status_up;          /* DCB status up */
++	u32		cee_hw_cfg_changed;     /* DCB hw cfg changed */
++	u32		cee_rx_invalid_cfg;     /* DCB invalid cfg */
++};
++
++#pragma pack()
++
+ #endif /* __BFA_DEFS_SVC_H__ */
+diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
+index e27fde8..239aba7 100644
+--- a/drivers/scsi/bfa/bfa_modules.h
++++ b/drivers/scsi/bfa/bfa_modules.h
+@@ -38,6 +38,7 @@ struct bfa_modules_s {
+ 	struct bfa_sgpg_mod_s	sgpg_mod;	/*  SG page module	      */
+ 	struct bfa_port_s	port;		/*  Physical port module     */
+ 	struct bfa_ablk_s	ablk;		/*  ASIC block config module */
++	struct bfa_cee_s	cee;		/*  CEE Module	*/
+ };
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
+index 8bb6d75..f382a47 100644
+--- a/drivers/scsi/bfa/bfa_port.c
++++ b/drivers/scsi/bfa/bfa_port.c
+@@ -480,3 +480,368 @@ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
+ 
+ 	bfa_trc(port, 0);
+ }
 +
 +/*
-+ * IOC firmware IO stats
++ *	CEE module specific definitions
 + */
-+struct bfa_fw_io_stats_s {
-+	struct bfa_fw_ioim_stats_s	ioim_stats;
-+	struct bfa_fw_tio_stats_s	tio_stats;
-+};
 +
- /*
-  * IOC port firmware stats
-  */
-@@ -204,6 +256,7 @@ struct bfa_fw_port_lksm_stats_s {
-     u32    nos_tx;             /*  No. of times NOS tx started         */
-     u32    hwsm_lrr_rx;        /*  No. of times LRR rx-ed by HWSM      */
-     u32    hwsm_lr_rx;         /*  No. of times LR rx-ed by HWSM      */
-+	u32	bbsc_lr;	/* LKSM LR tx for credit recovery	*/
- };
- 
- struct bfa_fw_port_snsm_stats_s {
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index 27eab36..a4e7951 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -365,6 +365,78 @@ bfa_fcpim_path_tov_get(struct bfa_s *bfa)
- 	return fcpim->path_tov / 1000;
- }
- 
-+#define bfa_fcpim_add_iostats(__l, __r, __stats)	\
-+	(__l->__stats += __r->__stats)
-+
-+void
-+bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *lstats,
-+		struct bfa_itnim_iostats_s *rstats)
++/*
++ * bfa_cee_get_attr_isr()
++ *
++ * @brief CEE ISR for get-attributes responses from f/w
++ *
++ * @param[in] cee - Pointer to the CEE module
++ *		    status - Return status from the f/w
++ *
++ * @return void
++ */
++static void
++bfa_cee_get_attr_isr(struct bfa_cee_s *cee, bfa_status_t status)
 +{
-+	bfa_fcpim_add_iostats(lstats, rstats, total_ios);
-+	bfa_fcpim_add_iostats(lstats, rstats, qresumes);
-+	bfa_fcpim_add_iostats(lstats, rstats, no_iotags);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_aborts);
-+	bfa_fcpim_add_iostats(lstats, rstats, no_tskims);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_ok);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_underrun);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_overrun);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_aborted);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_timedout);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_nexus_abort);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_proto_err);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_dif_err);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_sqer_needed);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_res_free);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_hostabrts);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_utags);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_cleanups);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_tmaborts);
-+	bfa_fcpim_add_iostats(lstats, rstats, onlines);
-+	bfa_fcpim_add_iostats(lstats, rstats, offlines);
-+	bfa_fcpim_add_iostats(lstats, rstats, creates);
-+	bfa_fcpim_add_iostats(lstats, rstats, deletes);
-+	bfa_fcpim_add_iostats(lstats, rstats, create_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, delete_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, sler_events);
-+	bfa_fcpim_add_iostats(lstats, rstats, fw_create);
-+	bfa_fcpim_add_iostats(lstats, rstats, fw_delete);
-+	bfa_fcpim_add_iostats(lstats, rstats, ioc_disabled);
-+	bfa_fcpim_add_iostats(lstats, rstats, cleanup_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_cmnds);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_fw_rsps);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_success);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_failures);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_io_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_qresumes);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_iocdowns);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_cleanups);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_cleanup_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, input_reqs);
-+	bfa_fcpim_add_iostats(lstats, rstats, output_reqs);
-+	bfa_fcpim_add_iostats(lstats, rstats, rd_throughput);
-+	bfa_fcpim_add_iostats(lstats, rstats, wr_throughput);
++	struct bfa_cee_lldp_cfg_s *lldp_cfg = &cee->attr->lldp_remote;
++
++	cee->get_attr_status = status;
++	bfa_trc(cee, 0);
++	if (status == BFA_STATUS_OK) {
++		bfa_trc(cee, 0);
++		memcpy(cee->attr, cee->attr_dma.kva,
++			sizeof(struct bfa_cee_attr_s));
++		lldp_cfg->time_to_live = be16_to_cpu(lldp_cfg->time_to_live);
++		lldp_cfg->enabled_system_cap =
++				be16_to_cpu(lldp_cfg->enabled_system_cap);
++	}
++	cee->get_attr_pending = BFA_FALSE;
++	if (cee->cbfn.get_attr_cbfn) {
++		bfa_trc(cee, 0);
++		cee->cbfn.get_attr_cbfn(cee->cbfn.get_attr_cbarg, status);
++	}
 +}
 +
-+bfa_status_t
-+bfa_fcpim_port_iostats(struct bfa_s *bfa,
-+		struct bfa_itnim_iostats_s *stats, u8 lp_tag)
++/*
++ * bfa_cee_get_stats_isr()
++ *
++ * @brief CEE ISR for get-stats responses from f/w
++ *
++ * @param[in] cee - Pointer to the CEE module
++ *	      status - Return status from the f/w
++ *
++ * @return void
++ */
++static void
++bfa_cee_get_stats_isr(struct bfa_cee_s *cee, bfa_status_t status)
 +{
-+	struct bfa_fcpim_s *fcpim = BFA_FCPIM(bfa);
-+	struct list_head *qe, *qen;
-+	struct bfa_itnim_s *itnim;
++	u32 *buffer;
++	int i;
 +
-+	/* accumulate IO stats from itnim */
-+	memset(stats, 0, sizeof(struct bfa_itnim_iostats_s));
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		if (itnim->rport->rport_info.lp_tag != lp_tag)
-+			continue;
-+		bfa_fcpim_add_stats(stats, &(itnim->stats));
++	cee->get_stats_status = status;
++	bfa_trc(cee, 0);
++	if (status == BFA_STATUS_OK) {
++		bfa_trc(cee, 0);
++		memcpy(cee->stats, cee->stats_dma.kva,
++			sizeof(struct bfa_cee_stats_s));
++		/* swap the cee stats */
++		buffer = (u32 *)cee->stats;
++		for (i = 0; i < (sizeof(struct bfa_cee_stats_s) /
++				 sizeof(u32)); i++)
++			buffer[i] = cpu_to_be32(buffer[i]);
 +	}
++	cee->get_stats_pending = BFA_FALSE;
++	bfa_trc(cee, 0);
++	if (cee->cbfn.get_stats_cbfn) {
++		bfa_trc(cee, 0);
++		cee->cbfn.get_stats_cbfn(cee->cbfn.get_stats_cbarg, status);
++	}
++}
++
++/*
++ * bfa_cee_reset_stats_isr()
++ *
++ * @brief CEE ISR for reset-stats responses from f/w
++ *
++ * @param[in] cee - Pointer to the CEE module
++ *            status - Return status from the f/w
++ *
++ * @return void
++ */
++static void
++bfa_cee_reset_stats_isr(struct bfa_cee_s *cee, bfa_status_t status)
++{
++	cee->reset_stats_status = status;
++	cee->reset_stats_pending = BFA_FALSE;
++	if (cee->cbfn.reset_stats_cbfn)
++		cee->cbfn.reset_stats_cbfn(cee->cbfn.reset_stats_cbarg, status);
++}
++
++/*
++ * bfa_cee_meminfo()
++ *
++ * @brief Returns the size of the DMA memory needed by CEE module
++ *
++ * @param[in] void
++ *
++ * @return Size of DMA region
++ */
++u32
++bfa_cee_meminfo(void)
++{
++	return BFA_ROUNDUP(sizeof(struct bfa_cee_attr_s), BFA_DMA_ALIGN_SZ) +
++		BFA_ROUNDUP(sizeof(struct bfa_cee_stats_s), BFA_DMA_ALIGN_SZ);
++}
++
++/*
++ * bfa_cee_mem_claim()
++ *
++ * @brief Initialized CEE DMA Memory
++ *
++ * @param[in] cee CEE module pointer
++ *            dma_kva Kernel Virtual Address of CEE DMA Memory
++ *            dma_pa  Physical Address of CEE DMA Memory
++ *
++ * @return void
++ */
++void
++bfa_cee_mem_claim(struct bfa_cee_s *cee, u8 *dma_kva, u64 dma_pa)
++{
++	cee->attr_dma.kva = dma_kva;
++	cee->attr_dma.pa = dma_pa;
++	cee->stats_dma.kva = dma_kva + BFA_ROUNDUP(
++			     sizeof(struct bfa_cee_attr_s), BFA_DMA_ALIGN_SZ);
++	cee->stats_dma.pa = dma_pa + BFA_ROUNDUP(
++			     sizeof(struct bfa_cee_attr_s), BFA_DMA_ALIGN_SZ);
++	cee->attr = (struct bfa_cee_attr_s *) dma_kva;
++	cee->stats = (struct bfa_cee_stats_s *) (dma_kva + BFA_ROUNDUP(
++			sizeof(struct bfa_cee_attr_s), BFA_DMA_ALIGN_SZ));
++}
++
++/*
++ * bfa_cee_get_attr()
++ *
++ * @brief
++ *   Send the request to the f/w to fetch CEE attributes.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return Status
++ */
++
++bfa_status_t
++bfa_cee_get_attr(struct bfa_cee_s *cee, struct bfa_cee_attr_s *attr,
++		 bfa_cee_get_attr_cbfn_t cbfn, void *cbarg)
++{
++	struct bfi_cee_get_req_s *cmd;
++
++	WARN_ON((cee == NULL) || (cee->ioc == NULL));
++	bfa_trc(cee, 0);
++	if (!bfa_ioc_is_operational(cee->ioc)) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_IOC_FAILURE;
++	}
++	if (cee->get_attr_pending == BFA_TRUE) {
++		bfa_trc(cee, 0);
++		return  BFA_STATUS_DEVBUSY;
++	}
++	cee->get_attr_pending = BFA_TRUE;
++	cmd = (struct bfi_cee_get_req_s *) cee->get_cfg_mb.msg;
++	cee->attr = attr;
++	cee->cbfn.get_attr_cbfn = cbfn;
++	cee->cbfn.get_attr_cbarg = cbarg;
++	bfi_h2i_set(cmd->mh, BFI_MC_CEE, BFI_CEE_H2I_GET_CFG_REQ,
++		bfa_ioc_portid(cee->ioc));
++	bfa_dma_be_addr_set(cmd->dma_addr, cee->attr_dma.pa);
++	bfa_ioc_mbox_queue(cee->ioc, &cee->get_cfg_mb);
++
 +	return BFA_STATUS_OK;
 +}
 +
- u16
- bfa_fcpim_qdepth_get(struct bfa_s *bfa)
- {
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index ccb7c6e..57b695a 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -293,6 +293,10 @@ bfa_boolean_t   bfa_itnim_hold_io(struct bfa_itnim_s *itnim);
- void	bfa_fcpim_path_tov_set(struct bfa_s *bfa, u16 path_tov);
- u16	bfa_fcpim_path_tov_get(struct bfa_s *bfa);
- u16	bfa_fcpim_qdepth_get(struct bfa_s *bfa);
-+bfa_status_t bfa_fcpim_port_iostats(struct bfa_s *bfa,
-+			struct bfa_itnim_iostats_s *stats, u8 lp_tag);
-+void bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *fcpim_stats,
-+			struct bfa_itnim_iostats_s *itnim_stats);
- 
- #define bfa_fcpim_ioredirect_enabled(__bfa)				\
- 	(((struct bfa_fcpim_s *)(BFA_FCPIM(__bfa)))->ioredirect)
-diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index e32cb19..a5f1faf 100644
---- a/drivers/scsi/bfa/bfa_fcs.h
-+++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -452,6 +452,8 @@ bfa_fcs_rport_get_halrport(struct bfa_fcs_rport_s *rport)
- /*
-  * bfa fcs rport API functions
-  */
-+void bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
-+			struct bfa_rport_attr_s *attr);
- struct bfa_fcs_rport_s *bfa_fcs_rport_lookup(struct bfa_fcs_lport_s *port,
- 					     wwn_t rpwwn);
- struct bfa_fcs_rport_s *bfa_fcs_rport_lookup_by_nwwn(
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index a42949d..2c51445 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -2536,7 +2536,45 @@ bfa_fcs_rport_prlo(struct bfa_fcs_rport_s *rport, __be16 ox_id)
- 	bfa_sm_send_event(rport, RPSM_EVENT_PRLO_RCVD);
- }
- 
--
-+void
-+bfa_fcs_rport_get_attr(struct bfa_fcs_rport_s *rport,
-+		struct bfa_rport_attr_s *rport_attr)
++/*
++ * bfa_cee_get_stats()
++ *
++ * @brief
++ *   Send the request to the f/w to fetch CEE statistics.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return Status
++ */
++
++bfa_status_t
++bfa_cee_get_stats(struct bfa_cee_s *cee, struct bfa_cee_stats_s *stats,
++		  bfa_cee_get_stats_cbfn_t cbfn, void *cbarg)
 +{
-+	struct bfa_rport_qos_attr_s qos_attr;
-+	struct bfa_fcs_lport_s *port = rport->port;
-+	bfa_port_speed_t rport_speed = rport->rpf.rpsc_speed;
++	struct bfi_cee_get_req_s *cmd;
 +
-+	memset(rport_attr, 0, sizeof(struct bfa_rport_attr_s));
-+	memset(&qos_attr, 0, sizeof(struct bfa_rport_qos_attr_s));
++	WARN_ON((cee == NULL) || (cee->ioc == NULL));
 +
-+	rport_attr->pid = rport->pid;
-+	rport_attr->pwwn = rport->pwwn;
-+	rport_attr->nwwn = rport->nwwn;
-+	rport_attr->cos_supported = rport->fc_cos;
-+	rport_attr->df_sz = rport->maxfrsize;
-+	rport_attr->state = bfa_fcs_rport_get_state(rport);
-+	rport_attr->fc_cos = rport->fc_cos;
-+	rport_attr->cisc = rport->cisc;
-+	rport_attr->scsi_function = rport->scsi_function;
-+	rport_attr->curr_speed  = rport->rpf.rpsc_speed;
-+	rport_attr->assigned_speed  = rport->rpf.assigned_speed;
++	if (!bfa_ioc_is_operational(cee->ioc)) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_IOC_FAILURE;
++	}
++	if (cee->get_stats_pending == BFA_TRUE) {
++		bfa_trc(cee, 0);
++		return  BFA_STATUS_DEVBUSY;
++	}
++	cee->get_stats_pending = BFA_TRUE;
++	cmd = (struct bfi_cee_get_req_s *) cee->get_stats_mb.msg;
++	cee->stats = stats;
++	cee->cbfn.get_stats_cbfn = cbfn;
++	cee->cbfn.get_stats_cbarg = cbarg;
++	bfi_h2i_set(cmd->mh, BFI_MC_CEE, BFI_CEE_H2I_GET_STATS_REQ,
++		bfa_ioc_portid(cee->ioc));
++	bfa_dma_be_addr_set(cmd->dma_addr, cee->stats_dma.pa);
++	bfa_ioc_mbox_queue(cee->ioc, &cee->get_stats_mb);
 +
-+	qos_attr.qos_priority = rport->bfa_rport->qos_attr.qos_priority;
-+	qos_attr.qos_flow_id =
-+		cpu_to_be32(rport->bfa_rport->qos_attr.qos_flow_id);
-+	rport_attr->qos_attr = qos_attr;
++	return BFA_STATUS_OK;
++}
 +
-+	rport_attr->trl_enforced = BFA_FALSE;
-+	if (bfa_fcport_is_ratelim(port->fcs->bfa) &&
-+	    (rport->scsi_function == BFA_RPORT_TARGET)) {
-+		if (rport_speed == BFA_PORT_SPEED_UNKNOWN)
-+			rport_speed =
-+				bfa_fcport_get_ratelim_speed(rport->fcs->bfa);
++/*
++ * bfa_cee_reset_stats()
++ *
++ * @brief Clears CEE Stats in the f/w.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return Status
++ */
 +
-+		if (rport_speed < bfa_fcs_lport_get_rport_max_speed(port))
-+			rport_attr->trl_enforced = BFA_TRUE;
++bfa_status_t
++bfa_cee_reset_stats(struct bfa_cee_s *cee,
++		    bfa_cee_reset_stats_cbfn_t cbfn, void *cbarg)
++{
++	struct bfi_cee_reset_stats_s *cmd;
++
++	WARN_ON((cee == NULL) || (cee->ioc == NULL));
++	if (!bfa_ioc_is_operational(cee->ioc)) {
++		bfa_trc(cee, 0);
++		return BFA_STATUS_IOC_FAILURE;
++	}
++	if (cee->reset_stats_pending == BFA_TRUE) {
++		bfa_trc(cee, 0);
++		return  BFA_STATUS_DEVBUSY;
++	}
++	cee->reset_stats_pending = BFA_TRUE;
++	cmd = (struct bfi_cee_reset_stats_s *) cee->reset_stats_mb.msg;
++	cee->cbfn.reset_stats_cbfn = cbfn;
++	cee->cbfn.reset_stats_cbarg = cbarg;
++	bfi_h2i_set(cmd->mh, BFI_MC_CEE, BFI_CEE_H2I_RESET_STATS,
++		bfa_ioc_portid(cee->ioc));
++	bfa_ioc_mbox_queue(cee->ioc, &cee->reset_stats_mb);
++
++	return BFA_STATUS_OK;
++}
++
++/*
++ * bfa_cee_isrs()
++ *
++ * @brief Handles Mail-box interrupts for CEE module.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ *
++ * @return void
++ */
++
++void
++bfa_cee_isr(void *cbarg, struct bfi_mbmsg_s *m)
++{
++	union bfi_cee_i2h_msg_u *msg;
++	struct bfi_cee_get_rsp_s *get_rsp;
++	struct bfa_cee_s *cee = (struct bfa_cee_s *) cbarg;
++	msg = (union bfi_cee_i2h_msg_u *) m;
++	get_rsp = (struct bfi_cee_get_rsp_s *) m;
++	bfa_trc(cee, msg->mh.msg_id);
++	switch (msg->mh.msg_id) {
++	case BFI_CEE_I2H_GET_CFG_RSP:
++		bfa_trc(cee, get_rsp->cmd_status);
++		bfa_cee_get_attr_isr(cee, get_rsp->cmd_status);
++		break;
++	case BFI_CEE_I2H_GET_STATS_RSP:
++		bfa_cee_get_stats_isr(cee, get_rsp->cmd_status);
++		break;
++	case BFI_CEE_I2H_RESET_STATS_RSP:
++		bfa_cee_reset_stats_isr(cee, get_rsp->cmd_status);
++		break;
++	default:
++		WARN_ON(1);
 +	}
 +}
- 
- /*
-  * Remote port implementation.
++
++/*
++ * bfa_cee_notify()
++ *
++ * @brief CEE module IOC event handler.
++ *
++ * @param[in] Pointer to the CEE module data structure.
++ * @param[in] IOC event type
++ *
++ * @return void
++ */
++
++void
++bfa_cee_notify(void *arg, enum bfa_ioc_event_e event)
++{
++	struct bfa_cee_s *cee = (struct bfa_cee_s *) arg;
++
++	bfa_trc(cee, event);
++
++	switch (event) {
++	case BFA_IOC_E_DISABLED:
++	case BFA_IOC_E_FAILED:
++		if (cee->get_attr_pending == BFA_TRUE) {
++			cee->get_attr_status = BFA_STATUS_FAILED;
++			cee->get_attr_pending  = BFA_FALSE;
++			if (cee->cbfn.get_attr_cbfn) {
++				cee->cbfn.get_attr_cbfn(
++					cee->cbfn.get_attr_cbarg,
++					BFA_STATUS_FAILED);
++			}
++		}
++		if (cee->get_stats_pending == BFA_TRUE) {
++			cee->get_stats_status = BFA_STATUS_FAILED;
++			cee->get_stats_pending  = BFA_FALSE;
++			if (cee->cbfn.get_stats_cbfn) {
++				cee->cbfn.get_stats_cbfn(
++				cee->cbfn.get_stats_cbarg,
++				BFA_STATUS_FAILED);
++			}
++		}
++		if (cee->reset_stats_pending == BFA_TRUE) {
++			cee->reset_stats_status = BFA_STATUS_FAILED;
++			cee->reset_stats_pending  = BFA_FALSE;
++			if (cee->cbfn.reset_stats_cbfn) {
++				cee->cbfn.reset_stats_cbfn(
++				cee->cbfn.reset_stats_cbarg,
++				BFA_STATUS_FAILED);
++			}
++		}
++		break;
++
++	default:
++		break;
++	}
++}
++
++/*
++ * bfa_cee_attach()
++ *
++ * @brief CEE module-attach API
++ *
++ * @param[in] cee - Pointer to the CEE module data structure
++ *            ioc - Pointer to the ioc module data structure
++ *            dev - Pointer to the device driver module data structure
++ *                  The device driver specific mbox ISR functions have
++ *                  this pointer as one of the parameters.
++ *
++ * @return void
++ */
++void
++bfa_cee_attach(struct bfa_cee_s *cee, struct bfa_ioc_s *ioc,
++		void *dev)
++{
++	WARN_ON(cee == NULL);
++	cee->dev = dev;
++	cee->ioc = ioc;
++
++	bfa_ioc_mbox_regisr(cee->ioc, BFI_MC_CEE, bfa_cee_isr, cee);
++	bfa_q_qe_init(&cee->ioc_notify);
++	bfa_ioc_notify_init(&cee->ioc_notify, bfa_cee_notify, cee);
++	list_add_tail(&cee->ioc_notify.qe, &cee->ioc->notify_q);
++}
+diff --git a/drivers/scsi/bfa/bfa_port.h b/drivers/scsi/bfa/bfa_port.h
+index b8bdc54..947f8973 100644
+--- a/drivers/scsi/bfa/bfa_port.h
++++ b/drivers/scsi/bfa/bfa_port.h
+@@ -66,4 +66,58 @@ bfa_status_t bfa_port_disable(struct bfa_port_s *port,
+ u32     bfa_port_meminfo(void);
+ void	     bfa_port_mem_claim(struct bfa_port_s *port,
+ 				 u8 *dma_kva, u64 dma_pa);
++
++/*
++ * CEE declaration
++ */
++typedef void (*bfa_cee_get_attr_cbfn_t) (void *dev, bfa_status_t status);
++typedef void (*bfa_cee_get_stats_cbfn_t) (void *dev, bfa_status_t status);
++typedef void (*bfa_cee_reset_stats_cbfn_t) (void *dev, bfa_status_t status);
++
++struct bfa_cee_cbfn_s {
++	bfa_cee_get_attr_cbfn_t		get_attr_cbfn;
++	void				*get_attr_cbarg;
++	bfa_cee_get_stats_cbfn_t	get_stats_cbfn;
++	void				*get_stats_cbarg;
++	bfa_cee_reset_stats_cbfn_t	reset_stats_cbfn;
++	void				*reset_stats_cbarg;
++};
++
++struct bfa_cee_s {
++	void *dev;
++	bfa_boolean_t		get_attr_pending;
++	bfa_boolean_t		get_stats_pending;
++	bfa_boolean_t		reset_stats_pending;
++	bfa_status_t		get_attr_status;
++	bfa_status_t		get_stats_status;
++	bfa_status_t		reset_stats_status;
++	struct bfa_cee_cbfn_s	cbfn;
++	struct bfa_ioc_notify_s	ioc_notify;
++	struct bfa_trc_mod_s	*trcmod;
++	struct bfa_cee_attr_s	*attr;
++	struct bfa_cee_stats_s	*stats;
++	struct bfa_dma_s	attr_dma;
++	struct bfa_dma_s	stats_dma;
++	struct bfa_ioc_s	*ioc;
++	struct bfa_mbox_cmd_s	get_cfg_mb;
++	struct bfa_mbox_cmd_s	get_stats_mb;
++	struct bfa_mbox_cmd_s	reset_stats_mb;
++	struct bfa_mem_dma_s	cee_dma;
++};
++
++#define BFA_MEM_CEE_DMA(__bfa)	(&((__bfa)->modules.cee.cee_dma))
++
++u32	bfa_cee_meminfo(void);
++void	bfa_cee_mem_claim(struct bfa_cee_s *cee, u8 *dma_kva, u64 dma_pa);
++void	bfa_cee_attach(struct bfa_cee_s *cee,
++			struct bfa_ioc_s *ioc, void *dev);
++bfa_status_t	bfa_cee_get_attr(struct bfa_cee_s *cee,
++				struct bfa_cee_attr_s *attr,
++				bfa_cee_get_attr_cbfn_t cbfn, void *cbarg);
++bfa_status_t	bfa_cee_get_stats(struct bfa_cee_s *cee,
++				struct bfa_cee_stats_s *stats,
++				bfa_cee_get_stats_cbfn_t cbfn, void *cbarg);
++bfa_status_t	bfa_cee_reset_stats(struct bfa_cee_s *cee,
++				bfa_cee_reset_stats_cbfn_t cbfn, void *cbarg);
++
+ #endif	/* __BFA_PORT_H__ */
 diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 1fbe6bb..da274e8 100644
+index da274e8..62ec237 100644
 --- a/drivers/scsi/bfa/bfad_bsg.c
 +++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -46,6 +46,55 @@ bfad_im_bsg_put_kobject(struct fc_bsg_job *job)
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
-+int
-+bfad_iocmd_ioc_enable(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
-+	int	rc = 0;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	/* If IOC is not in disabled state - return */
-+	if (!bfa_ioc_is_disabled(&bfad->bfa.ioc)) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_IOC_FAILURE;
-+		return rc;
-+	}
-+
-+	init_completion(&bfad->enable_comp);
-+	bfa_iocfc_enable(&bfad->bfa);
-+	iocmd->status = BFA_STATUS_OK;
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	wait_for_completion(&bfad->enable_comp);
-+
-+	return rc;
-+}
-+
-+int
-+bfad_iocmd_ioc_disable(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
-+	int	rc = 0;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	if (bfad->disable_active) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		return EBUSY;
-+	}
-+
-+	bfad->disable_active = BFA_TRUE;
-+	init_completion(&bfad->disable_comp);
-+	bfa_iocfc_disable(&bfad->bfa);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	wait_for_completion(&bfad->disable_comp);
-+	bfad->disable_active = BFA_FALSE;
-+	iocmd->status = BFA_STATUS_OK;
-+
-+	return rc;
-+}
-+
- static int
- bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
- {
-@@ -112,6 +161,113 @@ bfad_iocmd_ioc_get_attr(struct bfad_s *bfad, void *cmd)
+@@ -979,6 +979,93 @@ out:
  	return 0;
  }
  
 +int
-+bfad_iocmd_ioc_get_stats(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_cee_attr(struct bfad_s *bfad, void *cmd, unsigned int payload_len)
 +{
-+	struct bfa_bsg_ioc_stats_s *iocmd = (struct bfa_bsg_ioc_stats_s *)cmd;
-+
-+	bfa_ioc_get_stats(&bfad->bfa, &iocmd->ioc_stats);
-+	iocmd->status = BFA_STATUS_OK;
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_ioc_get_fwstats(struct bfad_s *bfad, void *cmd,
-+			unsigned int payload_len)
-+{
-+	struct bfa_bsg_ioc_fwstats_s *iocmd =
-+			(struct bfa_bsg_ioc_fwstats_s *)cmd;
++	struct bfa_bsg_cee_attr_s *iocmd =
++				(struct bfa_bsg_cee_attr_s *)cmd;
 +	void	*iocmd_bufptr;
++	struct bfad_hal_comp	cee_comp;
 +	unsigned long	flags;
 +
 +	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_ioc_fwstats_s),
-+			sizeof(struct bfa_fw_stats_s)) != BFA_STATUS_OK) {
-+		iocmd->status = BFA_STATUS_VERSION_FAIL;
-+		goto out;
-+	}
-+
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_ioc_fwstats_s);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_ioc_fw_stats_get(&bfad->bfa.ioc, iocmd_bufptr);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (iocmd->status != BFA_STATUS_OK) {
-+		bfa_trc(bfad, iocmd->status);
-+		goto out;
-+	}
-+out:
-+	bfa_trc(bfad, 0x6666);
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_iocfc_get_attr(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_iocfc_attr_s *iocmd = (struct bfa_bsg_iocfc_attr_s *)cmd;
-+
-+	iocmd->status = BFA_STATUS_OK;
-+	bfa_iocfc_get_attr(&bfad->bfa, &iocmd->iocfc_attr);
-+
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_iocfc_set_intr(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_iocfc_intr_s *iocmd = (struct bfa_bsg_iocfc_intr_s *)cmd;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_iocfc_israttr_set(&bfad->bfa, &iocmd->attr);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_port_enable(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long flags;
-+
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_port_enable(&bfad->bfa.modules.port,
-+					bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK) {
-+		bfa_trc(bfad, iocmd->status);
-+		return 0;
-+	}
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_port_disable(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long flags;
-+
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_port_disable(&bfad->bfa.modules.port,
-+				bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	if (iocmd->status != BFA_STATUS_OK) {
-+		bfa_trc(bfad, iocmd->status);
-+		return 0;
-+	}
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_port_get_attr(struct bfad_s *bfad, void *cmd)
- {
-@@ -140,6 +296,40 @@ bfad_iocmd_port_get_attr(struct bfad_s *bfad, void *cmd)
- 	return 0;
- }
- 
-+int
-+bfad_iocmd_port_get_stats(struct bfad_s *bfad, void *cmd,
-+			unsigned int payload_len)
-+{
-+	struct bfa_bsg_port_stats_s *iocmd = (struct bfa_bsg_port_stats_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	void	*iocmd_bufptr;
-+	unsigned long	flags;
-+
-+	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_port_stats_s),
-+			sizeof(union bfa_port_stats_u)) != BFA_STATUS_OK) {
++			sizeof(struct bfa_bsg_cee_attr_s),
++			sizeof(struct bfa_cee_attr_s)) != BFA_STATUS_OK) {
 +		iocmd->status = BFA_STATUS_VERSION_FAIL;
 +		return 0;
 +	}
 +
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_port_stats_s);
++	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_cee_attr_s);
 +
-+	init_completion(&fcomp.comp);
++	cee_comp.status = 0;
++	init_completion(&cee_comp.comp);
++	mutex_lock(&bfad_mutex);
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_port_get_stats(&bfad->bfa.modules.port,
-+				iocmd_bufptr, bfad_hcb_comp, &fcomp);
++	iocmd->status = bfa_cee_get_attr(&bfad->bfa.modules.cee, iocmd_bufptr,
++					 bfad_hcb_comp, &cee_comp);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 +	if (iocmd->status != BFA_STATUS_OK) {
-+		bfa_trc(bfad, iocmd->status);
++		mutex_unlock(&bfad_mutex);
++		bfa_trc(bfad, 0x5555);
 +		goto out;
 +	}
-+
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+out:
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_lport_get_attr(struct bfad_s *bfad, void *cmd)
- {
-@@ -163,6 +353,128 @@ out:
- 	return 0;
- }
- 
-+int
-+bfad_iocmd_lport_get_stats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_fcs_lport_s *fcs_port;
-+	struct bfa_bsg_lport_stats_s *iocmd =
-+			(struct bfa_bsg_lport_stats_s *)cmd;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->pwwn);
-+	if (fcs_port == NULL) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
-+		goto out;
-+	}
-+
-+	bfa_fcs_lport_get_stats(fcs_port, &iocmd->port_stats);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
++	wait_for_completion(&cee_comp.comp);
++	mutex_unlock(&bfad_mutex);
 +out:
 +	return 0;
 +}
 +
 +int
-+bfad_iocmd_lport_get_iostats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_fcs_lport_s *fcs_port;
-+	struct bfa_bsg_lport_iostats_s *iocmd =
-+			(struct bfa_bsg_lport_iostats_s *)cmd;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->pwwn);
-+	if (fcs_port == NULL) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
-+		goto out;
-+	}
-+
-+	bfa_fcpim_port_iostats(&bfad->bfa, &iocmd->iostats,
-+			fcs_port->lp_tag);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_lport_get_rports(struct bfad_s *bfad, void *cmd,
++bfad_iocmd_cee_get_stats(struct bfad_s *bfad, void *cmd,
 +			unsigned int payload_len)
 +{
-+	struct bfa_bsg_lport_get_rports_s *iocmd =
-+			(struct bfa_bsg_lport_get_rports_s *)cmd;
-+	struct bfa_fcs_lport_s *fcs_port;
-+	unsigned long	flags;
++	struct bfa_bsg_cee_stats_s *iocmd =
++				(struct bfa_bsg_cee_stats_s *)cmd;
 +	void	*iocmd_bufptr;
-+
-+	if (iocmd->nrports == 0)
-+		return EINVAL;
++	struct bfad_hal_comp	cee_comp;
++	unsigned long	flags;
 +
 +	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_lport_get_rports_s),
-+			sizeof(wwn_t) * iocmd->nrports) != BFA_STATUS_OK) {
++			sizeof(struct bfa_bsg_cee_stats_s),
++			sizeof(struct bfa_cee_stats_s)) != BFA_STATUS_OK) {
 +		iocmd->status = BFA_STATUS_VERSION_FAIL;
 +		return 0;
 +	}
 +
-+	iocmd_bufptr = (char *)iocmd +
-+			sizeof(struct bfa_bsg_lport_get_rports_s);
++	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_cee_stats_s);
++
++	cee_comp.status = 0;
++	init_completion(&cee_comp.comp);
++	mutex_lock(&bfad_mutex);
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->pwwn);
-+	if (fcs_port == NULL) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		bfa_trc(bfad, 0);
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
++	iocmd->status = bfa_cee_get_stats(&bfad->bfa.modules.cee, iocmd_bufptr,
++					bfad_hcb_comp, &cee_comp);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status != BFA_STATUS_OK) {
++		mutex_unlock(&bfad_mutex);
++		bfa_trc(bfad, 0x5555);
 +		goto out;
 +	}
-+
-+	bfa_fcs_lport_get_rports(fcs_port, (wwn_t *)iocmd_bufptr,
-+				&iocmd->nrports);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
++	wait_for_completion(&cee_comp.comp);
++	mutex_unlock(&bfad_mutex);
 +out:
 +	return 0;
 +}
 +
 +int
-+bfad_iocmd_rport_get_attr(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_rport_attr_s *iocmd = (struct bfa_bsg_rport_attr_s *)cmd;
-+	struct bfa_fcs_lport_s *fcs_port;
-+	struct bfa_fcs_rport_s *fcs_rport;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->pwwn);
-+	if (fcs_port == NULL) {
-+		bfa_trc(bfad, 0);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
-+		goto out;
-+	}
-+
-+	fcs_rport = bfa_fcs_rport_lookup(fcs_port, iocmd->rpwwn);
-+	if (fcs_rport == NULL) {
-+		bfa_trc(bfad, 0);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_RWWN;
-+		goto out;
-+	}
-+
-+	bfa_fcs_rport_get_attr(fcs_rport, &iocmd->attr);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
-+out:
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_rport_get_addr(struct bfad_s *bfad, void *cmd)
- {
-@@ -212,6 +524,45 @@ out:
- 	return 0;
- }
- 
-+int
-+bfad_iocmd_rport_get_stats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_rport_stats_s *iocmd =
-+			(struct bfa_bsg_rport_stats_s *)cmd;
-+	struct bfa_fcs_lport_s *fcs_port;
-+	struct bfa_fcs_rport_s *fcs_rport;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->pwwn);
-+	if (fcs_port == NULL) {
-+		bfa_trc(bfad, 0);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
-+		goto out;
-+	}
-+
-+	fcs_rport = bfa_fcs_rport_lookup(fcs_port, iocmd->rpwwn);
-+	if (fcs_rport == NULL) {
-+		bfa_trc(bfad, 0);
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_RWWN;
-+		goto out;
-+	}
-+
-+	memcpy((void *)&iocmd->stats, (void *)&fcs_rport->stats,
-+		sizeof(struct bfa_rport_stats_s));
-+	memcpy((void *)&iocmd->stats.hal_stats,
-+	       (void *)&(bfa_fcs_rport_get_halrport(fcs_rport)->stats),
-+	       sizeof(struct bfa_rport_hal_stats_s));
-+
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
-+out:
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_fabric_get_lports(struct bfad_s *bfad, void *cmd,
- 			unsigned int payload_len)
-@@ -254,6 +605,45 @@ out:
- 	return 0;
- }
- 
-+int
-+bfad_iocmd_fcpim_get_modstats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_fcpim_modstats_s *iocmd =
-+			(struct bfa_bsg_fcpim_modstats_s *)cmd;
-+	struct bfa_fcpim_s *fcpim = BFA_FCPIM(&bfad->bfa);
-+	struct list_head *qe, *qen;
-+	struct bfa_itnim_s *itnim;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	/* accumulate IO stats from itnim */
-+	memset((void *)&iocmd->modstats, 0, sizeof(struct bfa_itnim_iostats_s));
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		bfa_fcpim_add_stats(&iocmd->modstats, &(itnim->stats));
-+	}
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_fcpim_get_del_itn_stats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_fcpim_del_itn_stats_s *iocmd =
-+			(struct bfa_bsg_fcpim_del_itn_stats_s *)cmd;
-+	struct bfa_fcpim_s *fcpim = BFA_FCPIM(&bfad->bfa);
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	memcpy((void *)&iocmd->modstats, (void *)&fcpim->del_itn_stats,
-+		sizeof(struct bfa_fcpim_del_itn_stats_s));
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	iocmd->status = BFA_STATUS_OK;
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_itnim_get_attr(struct bfad_s *bfad, void *cmd)
- {
-@@ -273,6 +663,91 @@ bfad_iocmd_itnim_get_attr(struct bfad_s *bfad, void *cmd)
- 	return 0;
- }
- 
-+static int
-+bfad_iocmd_itnim_get_iostats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_itnim_iostats_s *iocmd =
-+			(struct bfa_bsg_itnim_iostats_s *)cmd;
-+	struct bfa_fcs_lport_s *fcs_port;
-+	struct bfa_fcs_itnim_s *itnim;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->lpwwn);
-+	if (!fcs_port) {
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
-+		bfa_trc(bfad, 0);
-+	} else {
-+		itnim = bfa_fcs_itnim_lookup(fcs_port, iocmd->rpwwn);
-+		if (itnim == NULL)
-+			iocmd->status = BFA_STATUS_UNKNOWN_RWWN;
-+		else {
-+			iocmd->status = BFA_STATUS_OK;
-+			memcpy((void *)&iocmd->iostats, (void *)
-+			       &(bfa_fcs_itnim_get_halitn(itnim)->stats),
-+			       sizeof(struct bfa_itnim_iostats_s));
-+		}
-+	}
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	return 0;
-+}
-+
-+static int
-+bfad_iocmd_itnim_get_itnstats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_itnim_itnstats_s *iocmd =
-+			(struct bfa_bsg_itnim_itnstats_s *)cmd;
-+	struct bfa_fcs_lport_s *fcs_port;
-+	struct bfa_fcs_itnim_s *itnim;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_port = bfa_fcs_lookup_port(&bfad->bfa_fcs,
-+				iocmd->vf_id, iocmd->lpwwn);
-+	if (!fcs_port) {
-+		iocmd->status = BFA_STATUS_UNKNOWN_LWWN;
-+		bfa_trc(bfad, 0);
-+	} else {
-+		itnim = bfa_fcs_itnim_lookup(fcs_port, iocmd->rpwwn);
-+		if (itnim == NULL)
-+			iocmd->status = BFA_STATUS_UNKNOWN_RWWN;
-+		else {
-+			iocmd->status = BFA_STATUS_OK;
-+			bfa_fcs_itnim_stats_get(fcs_port, iocmd->rpwwn,
-+					&iocmd->itnstats);
-+		}
-+	}
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_fcport_enable(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_cee_reset_stats(struct bfad_s *bfad, void *cmd)
 +{
 +	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
-+	unsigned long flags;
++	unsigned long	flags;
 +
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_fcport_enable(&bfad->bfa);
++	iocmd->status = bfa_cee_reset_stats(&bfad->bfa.modules.cee, NULL, NULL);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
++	if (iocmd->status != BFA_STATUS_OK)
++		bfa_trc(bfad, 0x5555);
 +	return 0;
 +}
 +
-+int
-+bfad_iocmd_fcport_disable(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_fcport_disable(&bfad->bfa);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+
-+	return 0;
-+}
-+
- int
- bfad_iocmd_ioc_get_pcifn_cfg(struct bfad_s *bfad, void *cmd)
- {
-@@ -511,27 +986,87 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	int rc = EINVAL;
- 
- 	switch (cmd) {
-+	case IOCMD_IOC_ENABLE:
-+		rc = bfad_iocmd_ioc_enable(bfad, iocmd);
-+		break;
-+	case IOCMD_IOC_DISABLE:
-+		rc = bfad_iocmd_ioc_disable(bfad, iocmd);
-+		break;
- 	case IOCMD_IOC_GET_INFO:
- 		rc = bfad_iocmd_ioc_get_info(bfad, iocmd);
+ static int
+ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 		unsigned int payload_len)
+@@ -1098,6 +1185,15 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_FAA_QUERY:
+ 		rc = bfad_iocmd_faa_query(bfad, iocmd);
  		break;
- 	case IOCMD_IOC_GET_ATTR:
- 		rc = bfad_iocmd_ioc_get_attr(bfad, iocmd);
- 		break;
-+	case IOCMD_IOC_GET_STATS:
-+		rc = bfad_iocmd_ioc_get_stats(bfad, iocmd);
++	case IOCMD_CEE_GET_ATTR:
++		rc = bfad_iocmd_cee_attr(bfad, iocmd, payload_len);
 +		break;
-+	case IOCMD_IOC_GET_FWSTATS:
-+		rc = bfad_iocmd_ioc_get_fwstats(bfad, iocmd, payload_len);
++	case IOCMD_CEE_GET_STATS:
++		rc = bfad_iocmd_cee_get_stats(bfad, iocmd, payload_len);
 +		break;
-+	case IOCMD_IOCFC_GET_ATTR:
-+		rc = bfad_iocmd_iocfc_get_attr(bfad, iocmd);
++	case IOCMD_CEE_RESET_STATS:
++		rc = bfad_iocmd_cee_reset_stats(bfad, iocmd);
 +		break;
-+	case IOCMD_IOCFC_SET_INTR:
-+		rc = bfad_iocmd_iocfc_set_intr(bfad, iocmd);
-+		break;
-+	case IOCMD_PORT_ENABLE:
-+		rc = bfad_iocmd_port_enable(bfad, iocmd);
-+		break;
-+	case IOCMD_PORT_DISABLE:
-+		rc = bfad_iocmd_port_disable(bfad, iocmd);
-+		break;
- 	case IOCMD_PORT_GET_ATTR:
- 		rc = bfad_iocmd_port_get_attr(bfad, iocmd);
- 		break;
-+	case IOCMD_PORT_GET_STATS:
-+		rc = bfad_iocmd_port_get_stats(bfad, iocmd, payload_len);
-+		break;
- 	case IOCMD_LPORT_GET_ATTR:
- 		rc = bfad_iocmd_lport_get_attr(bfad, iocmd);
- 		break;
-+	case IOCMD_LPORT_GET_STATS:
-+		rc = bfad_iocmd_lport_get_stats(bfad, iocmd);
-+		break;
-+	case IOCMD_LPORT_GET_IOSTATS:
-+		rc = bfad_iocmd_lport_get_iostats(bfad, iocmd);
-+		break;
-+	case IOCMD_LPORT_GET_RPORTS:
-+		rc = bfad_iocmd_lport_get_rports(bfad, iocmd, payload_len);
-+		break;
-+	case IOCMD_RPORT_GET_ATTR:
-+		rc = bfad_iocmd_rport_get_attr(bfad, iocmd);
-+		break;
- 	case IOCMD_RPORT_GET_ADDR:
- 		rc = bfad_iocmd_rport_get_addr(bfad, iocmd);
- 		break;
-+	case IOCMD_RPORT_GET_STATS:
-+		rc = bfad_iocmd_rport_get_stats(bfad, iocmd);
-+		break;
- 	case IOCMD_FABRIC_GET_LPORTS:
- 		rc = bfad_iocmd_fabric_get_lports(bfad, iocmd, payload_len);
- 		break;
-+	case IOCMD_FCPIM_MODSTATS:
-+		rc = bfad_iocmd_fcpim_get_modstats(bfad, iocmd);
-+		break;
-+	case IOCMD_FCPIM_DEL_ITN_STATS:
-+		rc = bfad_iocmd_fcpim_get_del_itn_stats(bfad, iocmd);
-+		break;
- 	case IOCMD_ITNIM_GET_ATTR:
- 		rc = bfad_iocmd_itnim_get_attr(bfad, iocmd);
- 		break;
-+	case IOCMD_ITNIM_GET_IOSTATS:
-+		rc = bfad_iocmd_itnim_get_iostats(bfad, iocmd);
-+		break;
-+	case IOCMD_ITNIM_GET_ITNSTATS:
-+		rc = bfad_iocmd_itnim_get_itnstats(bfad, iocmd);
-+		break;
-+	case IOCMD_FCPORT_ENABLE:
-+		rc = bfad_iocmd_fcport_enable(bfad, iocmd);
-+		break;
-+	case IOCMD_FCPORT_DISABLE:
-+		rc = bfad_iocmd_fcport_disable(bfad, iocmd);
-+		break;
- 	case IOCMD_IOC_PCIFN_CFG:
- 		rc = bfad_iocmd_ioc_get_pcifn_cfg(bfad, iocmd);
+ 	default:
+ 		rc = EINVAL;
  		break;
 diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 49f558f..0abb2d2 100644
+index 0abb2d2..5b4599a 100644
 --- a/drivers/scsi/bfa/bfad_bsg.h
 +++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -24,14 +24,34 @@
-  * using FC_BSG_HST_VENDOR message code.
+@@ -62,6 +62,9 @@ enum {
+ 	IOCMD_FAA_ENABLE,
+ 	IOCMD_FAA_DISABLE,
+ 	IOCMD_FAA_QUERY,
++	IOCMD_CEE_GET_ATTR,
++	IOCMD_CEE_GET_STATS,
++	IOCMD_CEE_RESET_STATS,
+ };
+ 
+ struct bfa_bsg_gen_s {
+@@ -299,6 +302,24 @@ struct bfa_bsg_faa_attr_s {
+ 	struct bfa_faa_attr_s	faa_attr;
+ };
+ 
++struct bfa_bsg_cee_attr_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		buf_size;
++	u32		rsvd1;
++	u64		buf_ptr;
++};
++
++struct bfa_bsg_cee_stats_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		buf_size;
++	u32		rsvd1;
++	u64		buf_ptr;
++};
++
+ struct bfa_bsg_fcpt_s {
+ 	bfa_status_t    status;
+ 	u16		vf_id;
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index d36c81b..037b377 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -190,6 +190,7 @@ enum bfi_pcifn_class {
   */
- enum {
--	IOCMD_IOC_GET_ATTR = 0x1,
-+	IOCMD_IOC_ENABLE = 0x1,
-+	IOCMD_IOC_DISABLE,
-+	IOCMD_IOC_GET_ATTR,
- 	IOCMD_IOC_GET_INFO,
-+	IOCMD_IOC_GET_STATS,
-+	IOCMD_IOC_GET_FWSTATS,
-+	IOCMD_IOCFC_GET_ATTR,
-+	IOCMD_IOCFC_SET_INTR,
-+	IOCMD_PORT_ENABLE,
-+	IOCMD_PORT_DISABLE,
- 	IOCMD_PORT_GET_ATTR,
-+	IOCMD_PORT_GET_STATS,
- 	IOCMD_LPORT_GET_ATTR,
-+	IOCMD_LPORT_GET_RPORTS,
-+	IOCMD_LPORT_GET_STATS,
-+	IOCMD_LPORT_GET_IOSTATS,
-+	IOCMD_RPORT_GET_ATTR,
- 	IOCMD_RPORT_GET_ADDR,
-+	IOCMD_RPORT_GET_STATS,
- 	IOCMD_FABRIC_GET_LPORTS,
-+	IOCMD_FCPIM_MODSTATS,
-+	IOCMD_FCPIM_DEL_ITN_STATS,
- 	IOCMD_ITNIM_GET_ATTR,
-+	IOCMD_ITNIM_GET_IOSTATS,
-+	IOCMD_ITNIM_GET_ITNSTATS,
- 	IOCMD_IOC_PCIFN_CFG,
-+	IOCMD_FCPORT_ENABLE,
-+	IOCMD_FCPORT_DISABLE,
- 	IOCMD_PCIFN_CREATE,
- 	IOCMD_PCIFN_DELETE,
- 	IOCMD_PCIFN_BW,
-@@ -83,6 +103,36 @@ struct bfa_bsg_ioc_attr_s {
- 	struct bfa_ioc_attr_s  ioc_attr;
+ enum bfi_mclass {
+ 	BFI_MC_IOC		= 1,	/*  IO Controller (IOC)	    */
++	BFI_MC_CEE		= 4,	/*  CEE	*/
+ 	BFI_MC_FCPORT		= 5,	/*  FC port			    */
+ 	BFI_MC_IOCFC		= 6,	/*  FC - IO Controller (IOC)	    */
+ 	BFI_MC_ABLK		= 7,	/*  ASIC block configuration	    */
+@@ -706,6 +707,64 @@ struct bfi_ablk_i2h_rsp_s {
+ 	u8			port_mode;
  };
  
-+struct bfa_bsg_ioc_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		rsvd;
-+	struct bfa_ioc_stats_s ioc_stats;
++
++/*
++ *	CEE module specific messages
++ */
++
++/* Mailbox commands from host to firmware */
++enum bfi_cee_h2i_msgs_e {
++	BFI_CEE_H2I_GET_CFG_REQ = 1,
++	BFI_CEE_H2I_RESET_STATS = 2,
++	BFI_CEE_H2I_GET_STATS_REQ = 3,
 +};
 +
-+struct bfa_bsg_ioc_fwstats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		rsvd;
-+	u32		buf_size;
-+	u32		rsvd1;
-+	u64		buf_ptr;
++enum bfi_cee_i2h_msgs_e {
++	BFI_CEE_I2H_GET_CFG_RSP = BFA_I2HM(1),
++	BFI_CEE_I2H_RESET_STATS_RSP = BFA_I2HM(2),
++	BFI_CEE_I2H_GET_STATS_RSP = BFA_I2HM(3),
 +};
 +
-+struct bfa_bsg_iocfc_attr_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		rsvd;
-+	struct bfa_iocfc_attr_s	iocfc_attr;
++/*
++ * H2I command structure for resetting the stats
++ */
++struct bfi_cee_reset_stats_s {
++	struct bfi_mhdr_s  mh;
 +};
 +
-+struct bfa_bsg_iocfc_intr_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		rsvd;
-+	struct bfa_iocfc_intr_attr_s attr;
++/*
++ * Get configuration  command from host
++ */
++struct bfi_cee_get_req_s {
++	struct bfi_mhdr_s	mh;
++	union bfi_addr_u	dma_addr;
 +};
 +
- struct bfa_bsg_port_attr_s {
- 	bfa_status_t	status;
- 	u16		bfad_num;
-@@ -90,6 +140,15 @@ struct bfa_bsg_port_attr_s {
- 	struct bfa_port_attr_s	attr;
- };
++/*
++ * Reply message from firmware
++ */
++struct bfi_cee_get_rsp_s {
++	struct bfi_mhdr_s	mh;
++	u8			cmd_status;
++	u8			rsvd[3];
++};
++
++/*
++ * Reply message from firmware
++ */
++struct bfi_cee_stats_rsp_s {
++	struct bfi_mhdr_s	mh;
++	u8			cmd_status;
++	u8			rsvd[3];
++};
++
++/* Mailbox message structures from firmware to host	*/
++union bfi_cee_i2h_msg_u {
++	struct bfi_mhdr_s		mh;
++	struct bfi_cee_get_rsp_s	get_rsp;
++	struct bfi_cee_stats_rsp_s	stats_rsp;
++};
++
+ #pragma pack()
  
-+struct bfa_bsg_port_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		rsvd;
-+	u32		buf_size;
-+	u32		rsvd1;
-+	u64		buf_ptr;
-+};
-+
- struct bfa_bsg_lport_attr_s {
- 	bfa_status_t	status;
- 	u16		bfad_num;
-@@ -98,6 +157,50 @@ struct bfa_bsg_lport_attr_s {
- 	struct bfa_lport_attr_s port_attr;
- };
- 
-+struct bfa_bsg_lport_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		pwwn;
-+	struct bfa_lport_stats_s port_stats;
-+};
-+
-+struct bfa_bsg_lport_iostats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		pwwn;
-+	struct bfa_itnim_iostats_s iostats;
-+};
-+
-+struct bfa_bsg_lport_get_rports_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		pwwn;
-+	u64		rbuf_ptr;
-+	u32		nrports;
-+	u32		rsvd;
-+};
-+
-+struct bfa_bsg_rport_attr_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		pwwn;
-+	wwn_t		rpwwn;
-+	struct bfa_rport_attr_s attr;
-+};
-+
-+struct bfa_bsg_rport_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		pwwn;
-+	wwn_t		rpwwn;
-+	struct bfa_rport_stats_s stats;
-+};
-+
- struct bfa_bsg_rport_scsi_addr_s {
- 	bfa_status_t	status;
- 	u16		bfad_num;
-@@ -119,6 +222,18 @@ struct bfa_bsg_fabric_get_lports_s {
- 	u32		rsvd;
- };
- 
-+struct bfa_bsg_fcpim_modstats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	struct bfa_itnim_iostats_s modstats;
-+};
-+
-+struct bfa_bsg_fcpim_del_itn_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	struct bfa_fcpim_del_itn_stats_s modstats;
-+};
-+
- struct bfa_bsg_itnim_attr_s {
- 	bfa_status_t	status;
- 	u16		bfad_num;
-@@ -128,6 +243,24 @@ struct bfa_bsg_itnim_attr_s {
- 	struct bfa_itnim_attr_s	attr;
- };
- 
-+struct bfa_bsg_itnim_iostats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		lpwwn;
-+	wwn_t		rpwwn;
-+	struct bfa_itnim_iostats_s iostats;
-+};
-+
-+struct bfa_bsg_itnim_itnstats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	wwn_t		lpwwn;
-+	wwn_t		rpwwn;
-+	struct bfa_itnim_stats_s itnstats;
-+};
-+
- struct bfa_bsg_pcifn_cfg_s {
- 	bfa_status_t		status;
- 	u16			bfad_num;
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 35bf0a6..6363dd7 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -194,6 +194,7 @@ struct bfad_s {
- 	void __iomem   *pci_bar2_kva;
- 	struct completion comp;
- 	struct completion suspend;
-+	struct completion enable_comp;
- 	struct completion disable_comp;
- 	bfa_boolean_t   disable_active;
- 	struct bfad_port_s     pport;	/* physical port of the BFAD */
+ #endif /* __BFI_H__ */
 -- 
 1.7.3.rc1
 
