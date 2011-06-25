@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 14/15] bfa: Driver and BSG enhancements.
-Date: Fri, 24 Jun 2011 20:29:07 -0700
-Message-ID: <1308972547-14101-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 15/15] bfa: Update the driver version to 3.0.2.1
+Date: Fri, 24 Jun 2011 20:29:27 -0700
+Message-ID: <1308972567-14518-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57691 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57733 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751782Ab1FYD31 (ORCPT
+	by vger.kernel.org with ESMTP id S1752473Ab1FYDaX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 23:29:27 -0400
+	Fri, 24 Jun 2011 23:30:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -17,337 +17,24 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Change details:
-	- Added a new module parameter max_xfer_size to
-	  set the max_sectors in the scsi_host template.
-	- Added logic to handle request_irq() failure so
-	  that msix vector resource is de-allocated immediately
-	  when failure happens.
-	- BSG enhancements to collect vHBA releated info and port log.
-	- Removed the workaround of incrementing the module refcnt on bsg request.
-
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_defs_svc.h |   13 +++++++
- drivers/scsi/bfa/bfad.c         |   16 ++++++++-
- drivers/scsi/bfa/bfad_bsg.c     |   74 +++++++++++++++++++++++----------------
- drivers/scsi/bfa/bfad_bsg.h     |   19 ++++++++++
- drivers/scsi/bfa/bfad_drv.h     |    5 ++-
- drivers/scsi/bfa/bfad_im.c      |    7 +++-
- 6 files changed, 100 insertions(+), 34 deletions(-)
+ drivers/scsi/bfa/bfad_drv.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index 4b6529c..0b97525 100644
---- a/drivers/scsi/bfa/bfa_defs_svc.h
-+++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -1043,6 +1043,19 @@ struct bfa_itnim_ioprofile_s {
- };
- 
- /*
-+ *	vHBA port attribute values.
-+ */
-+struct bfa_vhba_attr_s {
-+	wwn_t	nwwn;       /* node wwn */
-+	wwn_t	pwwn;       /* port wwn */
-+	u32	pid;        /* port ID */
-+	bfa_boolean_t       io_profile; /* get it from fcpim mod */
-+	bfa_boolean_t       plog_enabled;   /* portlog is enabled */
-+	u16	path_tov;
-+	u8	rsvd[2];
-+};
-+
-+/*
-  * FC physical port statistics.
-  */
- struct bfa_port_fc_stats_s {
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 0ed2608..beb30a7 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -56,6 +56,7 @@ int		fdmi_enable = BFA_TRUE;
- int		pcie_max_read_reqsz;
- int		bfa_debugfs_enable = 1;
- int		msix_disable_cb = 0, msix_disable_ct = 0;
-+int		max_xfer_size = BFAD_MAX_SECTORS >> 1;
- 
- /* Firmware releated */
- u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
-@@ -144,6 +145,9 @@ MODULE_PARM_DESC(pcie_max_read_reqsz, "PCIe max read request size, default=0 "
- module_param(bfa_debugfs_enable, int, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(bfa_debugfs_enable, "Enables debugfs feature, default=1,"
- 		" Range[false:0|true:1]");
-+module_param(max_xfer_size, int, S_IRUGO | S_IWUSR);
-+MODULE_PARM_DESC(max_xfer_size, "default=32MB,"
-+		" Range[64k|128k|256k|512k|1024k|2048k]");
- 
- static void
- bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event event);
-@@ -1015,6 +1019,12 @@ bfad_start_ops(struct bfad_s *bfad) {
- 	struct bfad_vport_s *vport, *vport_new;
- 	struct bfa_fcs_driver_info_s driver_info;
- 
-+	/* Limit min/max. xfer size to [64k-32MB] */
-+	if (max_xfer_size < BFAD_MIN_SECTORS >> 1)
-+		max_xfer_size = BFAD_MIN_SECTORS >> 1;
-+	if (max_xfer_size > BFAD_MAX_SECTORS >> 1)
-+		max_xfer_size = BFAD_MAX_SECTORS >> 1;
-+
- 	/* Fill the driver_info info to fcs*/
- 	memset(&driver_info, 0, sizeof(driver_info));
- 	strncpy(driver_info.version, BFAD_DRIVER_VERSION,
-@@ -1231,6 +1241,9 @@ bfad_install_msix_handler(struct bfad_s *bfad)
- 				free_irq(bfad->msix_tab[j].msix.vector,
- 						&bfad->msix_tab[j]);
- 
-+			bfad->bfad_flags &= ~BFAD_MSIX_ON;
-+			pci_disable_msix(bfad->pcidev);
-+
- 			return 1;
- 		}
- 	}
-@@ -1306,6 +1319,7 @@ line_based:
- 		/* Enable interrupt handler failed */
- 		return 1;
- 	}
-+	bfad->bfad_flags |= BFAD_INTX_ON;
- 
- 	return error;
- }
-@@ -1322,7 +1336,7 @@ bfad_remove_intr(struct bfad_s *bfad)
- 
- 		pci_disable_msix(bfad->pcidev);
- 		bfad->bfad_flags &= ~BFAD_MSIX_ON;
--	} else {
-+	} else if (bfad->bfad_flags & BFAD_INTX_ON) {
- 		free_irq(bfad->pcidev->irq, bfad);
- 	}
- }
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 31f61e6..a57f3c3 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -22,30 +22,6 @@
- 
- BFA_TRC_FILE(LDRV, BSG);
- 
--/* bfad_im_bsg_get_kobject - increment the bfa refcnt */
--static void
--bfad_im_bsg_get_kobject(struct fc_bsg_job *job)
--{
--	struct Scsi_Host *shost = job->shost;
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	__module_get(shost->dma_dev->driver->owner);
--	spin_unlock_irqrestore(shost->host_lock, flags);
--}
--
--/* bfad_im_bsg_put_kobject - decrement the bfa refcnt */
--static void
--bfad_im_bsg_put_kobject(struct fc_bsg_job *job)
--{
--	struct Scsi_Host *shost = job->shost;
--	unsigned long flags;
--
--	spin_lock_irqsave(shost->host_lock, flags);
--	module_put(shost->dma_dev->driver->owner);
--	spin_unlock_irqrestore(shost->host_lock, flags);
--}
--
- int
- bfad_iocmd_ioc_enable(struct bfad_s *bfad, void *cmd)
- {
-@@ -1468,6 +1444,25 @@ out:
- }
- 
- int
-+bfad_iocmd_vhba_query(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_vhba_attr_s *iocmd =
-+			(struct bfa_bsg_vhba_attr_s *)cmd;
-+	struct bfa_vhba_attr_s *attr = &iocmd->attr;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	attr->pwwn =  bfad->bfa.ioc.attr->pwwn;
-+	attr->nwwn =  bfad->bfa.ioc.attr->nwwn;
-+	attr->plog_enabled = (bfa_boolean_t)bfad->bfa.plog->plog_enabled;
-+	attr->io_profile = bfa_fcpim_get_io_profile(&bfad->bfa);
-+	attr->path_tov  = bfa_fcpim_path_tov_get(&bfad->bfa);
-+	iocmd->status = BFA_STATUS_OK;
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	return 0;
-+}
-+
-+int
- bfad_iocmd_phy_update(struct bfad_s *bfad, void *cmd, unsigned int payload_len)
- {
- 	struct bfa_bsg_phy_s *iocmd = (struct bfa_bsg_phy_s *)cmd;
-@@ -1497,6 +1492,25 @@ out:
- 	return 0;
- }
- 
-+int
-+bfad_iocmd_porglog_get(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_debug_s *iocmd = (struct bfa_bsg_debug_s *)cmd;
-+	void *iocmd_bufptr;
-+
-+	if (iocmd->bufsz < sizeof(struct bfa_plog_s)) {
-+		bfa_trc(bfad, sizeof(struct bfa_plog_s));
-+		iocmd->status = BFA_STATUS_EINVAL;
-+		goto out;
-+	}
-+
-+	iocmd->status = BFA_STATUS_OK;
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_debug_s);
-+	memcpy(iocmd_bufptr, (u8 *) &bfad->plog_buf, sizeof(struct bfa_plog_s));
-+out:
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 		unsigned int payload_len)
-@@ -1682,6 +1696,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_PHY_READ_FW:
- 		rc = bfad_iocmd_phy_read(bfad, iocmd, payload_len);
- 		break;
-+	case IOCMD_VHBA_QUERY:
-+		rc = bfad_iocmd_vhba_query(bfad, iocmd);
-+		break;
-+	case IOCMD_DEBUG_PORTLOG:
-+		rc = bfad_iocmd_porglog_get(bfad, iocmd);
-+		break;
- 	default:
- 		rc = EINVAL;
- 		break;
-@@ -2111,9 +2131,6 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
- {
- 	uint32_t rc = BFA_STATUS_OK;
- 
--	/* Increment the bfa module refcnt - if bsg request is in service */
--	bfad_im_bsg_get_kobject(job);
--
- 	switch (job->request->msgcode) {
- 	case FC_BSG_HST_VENDOR:
- 		/* Process BSG HST Vendor requests */
-@@ -2132,9 +2149,6 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
- 		break;
- 	}
- 
--	/* Decrement the bfa module refcnt - on completion of bsg request */
--	bfad_im_bsg_put_kobject(job);
--
- 	return rc;
- }
- 
-diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 5d89c1d..99b0e8a 100644
---- a/drivers/scsi/bfa/bfad_bsg.h
-+++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -84,6 +84,8 @@ enum {
- 	IOCMD_PHY_GET_STATS,
- 	IOCMD_PHY_UPDATE_FW,
- 	IOCMD_PHY_READ_FW,
-+	IOCMD_VHBA_QUERY,
-+	IOCMD_DEBUG_PORTLOG,
- };
- 
- struct bfa_bsg_gen_s {
-@@ -459,6 +461,16 @@ struct bfa_bsg_phy_s {
- 	u64	buf_ptr;
- };
- 
-+struct bfa_bsg_debug_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		rsvd;
-+	u32		bufsz;
-+	int		inst_no;
-+	u64		buf_ptr;
-+	u64		offset;
-+};
-+
- struct bfa_bsg_phy_stats_s {
- 	bfa_status_t	status;
- 	u16	bfad_num;
-@@ -466,6 +478,13 @@ struct bfa_bsg_phy_stats_s {
- 	struct bfa_phy_stats_s	stats;
- };
- 
-+struct bfa_bsg_vhba_attr_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		pcifn_id;
-+	struct bfa_vhba_attr_s	attr;
-+};
-+
- struct bfa_bsg_fcpt_s {
- 	bfa_status_t    status;
- 	u16		vf_id;
 diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index 6363dd7..8ec6e1d 100644
+index 8ec6e1d..48661a2 100644
 --- a/drivers/scsi/bfa/bfad_drv.h
 +++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -80,7 +80,7 @@
- #define BFAD_HAL_INIT_FAIL			0x00000100
- #define BFAD_FC4_PROBE_DONE			0x00000200
- #define BFAD_PORT_DELETE			0x00000001
--
-+#define BFAD_INTX_ON				0x00000400
- /*
-  * BFAD related definition
-  */
-@@ -93,6 +93,8 @@
-  */
- #define BFAD_LUN_QUEUE_DEPTH	32
- #define BFAD_IO_MAX_SGE		SG_ALL
-+#define BFAD_MIN_SECTORS	128 /* 64k   */
-+#define BFAD_MAX_SECTORS	0xFFFF  /* 32 MB */
+@@ -56,7 +56,7 @@
+ #ifdef BFA_DRIVER_VERSION
+ #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
+ #else
+-#define BFAD_DRIVER_VERSION    "3.0.2.0"
++#define BFAD_DRIVER_VERSION    "3.0.2.1"
+ #endif
  
- #define bfad_isr_t irq_handler_t
- 
-@@ -343,6 +345,7 @@ extern int      msix_disable_ct;
- extern int      fdmi_enable;
- extern int      supported_fc4s;
- extern int	pcie_max_read_reqsz;
-+extern int	max_xfer_size;
- extern int bfa_debugfs_enable;
- extern struct mutex bfad_mutex;
- 
-diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
-index 30ca26d..f2bf812 100644
---- a/drivers/scsi/bfa/bfad_im.c
-+++ b/drivers/scsi/bfa/bfad_im.c
-@@ -700,6 +700,9 @@ bfad_scsi_host_alloc(struct bfad_im_port_s *im_port, struct bfad_s *bfad)
- 	else
- 		sht = &bfad_im_vport_template;
- 
-+	if (max_xfer_size != BFAD_MAX_SECTORS >> 1)
-+		sht->max_sectors = max_xfer_size << 1;
-+
- 	sht->sg_tablesize = bfad->cfg_data.io_max_sge;
- 
- 	return scsi_host_alloc(sht, sizeof(unsigned long));
-@@ -777,7 +780,7 @@ struct scsi_host_template bfad_im_scsi_host_template = {
- 	.cmd_per_lun = 3,
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.shost_attrs = bfad_im_host_attrs,
--	.max_sectors = 0xFFFF,
-+	.max_sectors = BFAD_MAX_SECTORS,
- 	.vendor_id = BFA_PCI_VENDOR_ID_BROCADE,
- };
- 
-@@ -799,7 +802,7 @@ struct scsi_host_template bfad_im_vport_template = {
- 	.cmd_per_lun = 3,
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.shost_attrs = bfad_im_vport_attrs,
--	.max_sectors = 0xFFFF,
-+	.max_sectors = BFAD_MAX_SECTORS,
- };
- 
- bfa_status_t
+ #define BFAD_PROTO_NAME FCPI_NAME
 -- 
 1.7.3.rc1
 
