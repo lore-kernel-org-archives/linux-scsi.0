@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 13/15] bfa: Added support to query PHY.
-Date: Fri, 24 Jun 2011 20:28:37 -0700
-Message-ID: <1308972517-13347-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 14/15] bfa: Driver and BSG enhancements.
+Date: Fri, 24 Jun 2011 20:29:07 -0700
+Message-ID: <1308972547-14101-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:58346 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752343Ab1FYD3I (ORCPT
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57691 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751782Ab1FYD31 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 23:29:08 -0400
+	Fri, 24 Jun 2011 23:29:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,864 +18,190 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added PHY sub-module.
-	- Implemented interface to obtain stats and to
-	  read/update the fw from the PHY module.
+	- Added a new module parameter max_xfer_size to
+	  set the max_sectors in the scsi_host template.
+	- Added logic to handle request_irq() failure so
+	  that msix vector resource is de-allocated immediately
+	  when failure happens.
+	- BSG enhancements to collect vHBA releated info and port log.
+	- Removed the workaround of incrementing the module refcnt on bsg request.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_core.c    |   14 +
- drivers/scsi/bfa/bfa_defs.h    |   37 +++
- drivers/scsi/bfa/bfa_ioc.c     |  521 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_ioc.h     |   54 ++++
- drivers/scsi/bfa/bfa_modules.h |    1 +
- drivers/scsi/bfa/bfa_port.c    |    1 +
- drivers/scsi/bfa/bfad_bsg.c    |  116 +++++++++
- drivers/scsi/bfa/bfad_bsg.h    |   26 ++
- drivers/scsi/bfa/bfi.h         |   97 ++++++++
- 9 files changed, 867 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfa_defs_svc.h |   13 +++++++
+ drivers/scsi/bfa/bfad.c         |   16 ++++++++-
+ drivers/scsi/bfa/bfad_bsg.c     |   74 +++++++++++++++++++++++----------------
+ drivers/scsi/bfa/bfad_bsg.h     |   19 ++++++++++
+ drivers/scsi/bfa/bfad_drv.h     |    5 ++-
+ drivers/scsi/bfa/bfad_im.c      |    7 +++-
+ 6 files changed, 100 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index e688ff7..c38e589 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -154,6 +154,16 @@ bfa_com_diag_attach(struct bfa_s *bfa)
- 	bfa_diag_memclaim(diag, diag_dma->kva_curp, diag_dma->dma_curp);
- }
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index 4b6529c..0b97525 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -1043,6 +1043,19 @@ struct bfa_itnim_ioprofile_s {
+ };
  
-+static void
-+bfa_com_phy_attach(struct bfa_s *bfa, bfa_boolean_t mincfg)
-+{
-+	struct bfa_phy_s	*phy = BFA_PHY(bfa);
-+	struct bfa_mem_dma_s	*phy_dma = BFA_MEM_PHY_DMA(bfa);
-+
-+	bfa_phy_attach(phy, &bfa->ioc, bfa, bfa->trcmod, mincfg);
-+	bfa_phy_memclaim(phy, phy_dma->kva_curp, phy_dma->dma_curp, mincfg);
-+}
-+
  /*
-  * BFA IOC FC related definitions
++ *	vHBA port attribute values.
++ */
++struct bfa_vhba_attr_s {
++	wwn_t	nwwn;       /* node wwn */
++	wwn_t	pwwn;       /* port wwn */
++	u32	pid;        /* port ID */
++	bfa_boolean_t       io_profile; /* get it from fcpim mod */
++	bfa_boolean_t       plog_enabled;   /* portlog is enabled */
++	u16	path_tov;
++	u8	rsvd[2];
++};
++
++/*
+  * FC physical port statistics.
   */
-@@ -1395,6 +1405,7 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
- 	struct bfa_mem_dma_s *sfp_dma = BFA_MEM_SFP_DMA(bfa);
- 	struct bfa_mem_dma_s *flash_dma = BFA_MEM_FLASH_DMA(bfa);
- 	struct bfa_mem_dma_s *diag_dma = BFA_MEM_DIAG_DMA(bfa);
-+	struct bfa_mem_dma_s *phy_dma = BFA_MEM_PHY_DMA(bfa);
+ struct bfa_port_fc_stats_s {
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 0ed2608..beb30a7 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -56,6 +56,7 @@ int		fdmi_enable = BFA_TRUE;
+ int		pcie_max_read_reqsz;
+ int		bfa_debugfs_enable = 1;
+ int		msix_disable_cb = 0, msix_disable_ct = 0;
++int		max_xfer_size = BFAD_MAX_SECTORS >> 1;
  
- 	WARN_ON((cfg == NULL) || (meminfo == NULL));
+ /* Firmware releated */
+ u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
+@@ -144,6 +145,9 @@ MODULE_PARM_DESC(pcie_max_read_reqsz, "PCIe max read request size, default=0 "
+ module_param(bfa_debugfs_enable, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(bfa_debugfs_enable, "Enables debugfs feature, default=1,"
+ 		" Range[false:0|true:1]");
++module_param(max_xfer_size, int, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(max_xfer_size, "default=32MB,"
++		" Range[64k|128k|256k|512k|1024k|2048k]");
  
-@@ -1417,6 +1428,8 @@ bfa_cfg_get_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
- 	bfa_mem_dma_setup(meminfo, flash_dma,
- 			  bfa_flash_meminfo(cfg->drvcfg.min_cfg));
- 	bfa_mem_dma_setup(meminfo, diag_dma, bfa_diag_meminfo());
-+	bfa_mem_dma_setup(meminfo, phy_dma,
-+			  bfa_phy_meminfo(cfg->drvcfg.min_cfg));
+ static void
+ bfad_sm_uninit(struct bfad_s *bfad, enum bfad_sm_event event);
+@@ -1015,6 +1019,12 @@ bfad_start_ops(struct bfad_s *bfad) {
+ 	struct bfad_vport_s *vport, *vport_new;
+ 	struct bfa_fcs_driver_info_s driver_info;
+ 
++	/* Limit min/max. xfer size to [64k-32MB] */
++	if (max_xfer_size < BFAD_MIN_SECTORS >> 1)
++		max_xfer_size = BFAD_MIN_SECTORS >> 1;
++	if (max_xfer_size > BFAD_MAX_SECTORS >> 1)
++		max_xfer_size = BFAD_MAX_SECTORS >> 1;
++
+ 	/* Fill the driver_info info to fcs*/
+ 	memset(&driver_info, 0, sizeof(driver_info));
+ 	strncpy(driver_info.version, BFAD_DRIVER_VERSION,
+@@ -1231,6 +1241,9 @@ bfad_install_msix_handler(struct bfad_s *bfad)
+ 				free_irq(bfad->msix_tab[j].msix.vector,
+ 						&bfad->msix_tab[j]);
+ 
++			bfad->bfad_flags &= ~BFAD_MSIX_ON;
++			pci_disable_msix(bfad->pcidev);
++
+ 			return 1;
+ 		}
+ 	}
+@@ -1306,6 +1319,7 @@ line_based:
+ 		/* Enable interrupt handler failed */
+ 		return 1;
+ 	}
++	bfad->bfad_flags |= BFAD_INTX_ON;
+ 
+ 	return error;
  }
+@@ -1322,7 +1336,7 @@ bfad_remove_intr(struct bfad_s *bfad)
  
- /*
-@@ -1488,6 +1501,7 @@ bfa_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
- 	bfa_com_sfp_attach(bfa);
- 	bfa_com_flash_attach(bfa, cfg->drvcfg.min_cfg);
- 	bfa_com_diag_attach(bfa);
-+	bfa_com_phy_attach(bfa, cfg->drvcfg.min_cfg);
+ 		pci_disable_msix(bfad->pcidev);
+ 		bfad->bfad_flags &= ~BFAD_MSIX_ON;
+-	} else {
++	} else if (bfad->bfad_flags & BFAD_INTX_ON) {
+ 		free_irq(bfad->pcidev->irq, bfad);
+ 	}
  }
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
-index ddf13d7..ed8d31b 100644
---- a/drivers/scsi/bfa/bfa_defs.h
-+++ b/drivers/scsi/bfa/bfa_defs.h
-@@ -170,6 +170,7 @@ enum bfa_status {
- 	BFA_STATUS_TRUNK_DISABLED  = 165, /* Trunking is disabled on
- 					   * the adapter */
- 	BFA_STATUS_IOPROFILE_OFF = 175, /* IO profile OFF */
-+	BFA_STATUS_PHY_NOT_PRESENT = 183, /* PHY module not present */
- 	BFA_STATUS_FEATURE_NOT_SUPPORTED = 192,	/* Feature not supported */
- 	BFA_STATUS_FAA_ENABLED = 197,	/* FAA is already enabled */
- 	BFA_STATUS_FAA_DISABLED = 198,	/* FAA is already disabled */
-@@ -939,6 +940,42 @@ struct bfa_diag_loopback_s {
- 	u8	rsvd[2];
- };
- 
-+/*
-+ *	PHY module specific
-+ */
-+enum bfa_phy_status_e {
-+	BFA_PHY_STATUS_GOOD	= 0, /* phy is good */
-+	BFA_PHY_STATUS_NOT_PRESENT	= 1, /* phy does not exist */
-+	BFA_PHY_STATUS_BAD	= 2, /* phy is bad */
-+};
-+
-+/*
-+ * phy attributes for phy query
-+ */
-+struct bfa_phy_attr_s {
-+	u32	status;         /* phy present/absent status */
-+	u32	length;         /* firmware length */
-+	u32	fw_ver;         /* firmware version */
-+	u32	an_status;      /* AN status */
-+	u32	pma_pmd_status; /* PMA/PMD link status */
-+	u32	pma_pmd_signal; /* PMA/PMD signal detect */
-+	u32	pcs_status;     /* PCS link status */
-+};
-+
-+/*
-+ * phy stats
-+ */
-+struct bfa_phy_stats_s {
-+	u32	status;         /* phy stats status */
-+	u32	link_breaks;    /* Num of link breaks after linkup */
-+	u32	pma_pmd_fault;  /* NPMA/PMD fault */
-+	u32	pcs_fault;      /* PCS fault */
-+	u32	speed_neg;      /* Num of speed negotiation */
-+	u32	tx_eq_training; /* Num of TX EQ training */
-+	u32	tx_eq_timeout;  /* Num of TX EQ timeout */
-+	u32	crc_error;      /* Num of CRC errors */
-+};
-+
- #pragma pack()
- 
- #endif /* __BFA_DEFS_H__ */
-diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
-index 3146778..d6c2bf3 100644
---- a/drivers/scsi/bfa/bfa_ioc.c
-+++ b/drivers/scsi/bfa/bfa_ioc.c
-@@ -2159,6 +2159,7 @@ void
- bfa_ioc_detach(struct bfa_ioc_s *ioc)
- {
- 	bfa_fsm_send_event(ioc, IOC_E_DETACH);
-+	INIT_LIST_HEAD(&ioc->notify_q);
- }
- 
- /*
-@@ -3120,6 +3121,7 @@ bfa_ablk_attach(struct bfa_ablk_s *ablk, struct bfa_ioc_s *ioc)
- 	ablk->ioc = ioc;
- 
- 	bfa_ioc_mbox_regisr(ablk->ioc, BFI_MC_ABLK, bfa_ablk_isr, ablk);
-+	bfa_q_qe_init(&ablk->ioc_notify);
- 	bfa_ioc_notify_init(&ablk->ioc_notify, bfa_ablk_notify, ablk);
- 	list_add_tail(&ablk->ioc_notify.qe, &ablk->ioc->notify_q);
- }
-@@ -4895,3 +4897,522 @@ bfa_diag_memclaim(struct bfa_diag_s *diag, u8 *dm_kva, u64 dm_pa)
- 	diag->fwping.dbuf_pa = dm_pa;
- 	memset(diag->fwping.dbuf_kva, 0, BFI_DIAG_DMA_BUF_SZ);
- }
-+
-+/*
-+ *	PHY module specific
-+ */
-+#define BFA_PHY_DMA_BUF_SZ	0x02000         /* 8k dma buffer */
-+#define BFA_PHY_LOCK_STATUS	0x018878        /* phy semaphore status reg */
-+
-+static void
-+bfa_phy_ntoh32(u32 *obuf, u32 *ibuf, int sz)
-+{
-+	int i, m = sz >> 2;
-+
-+	for (i = 0; i < m; i++)
-+		obuf[i] = be32_to_cpu(ibuf[i]);
-+}
-+
-+static bfa_boolean_t
-+bfa_phy_present(struct bfa_phy_s *phy)
-+{
-+	return (phy->ioc->attr->card_type == BFA_MFG_TYPE_LIGHTNING);
-+}
-+
-+static void
-+bfa_phy_notify(void *cbarg, enum bfa_ioc_event_e event)
-+{
-+	struct bfa_phy_s *phy = cbarg;
-+
-+	bfa_trc(phy, event);
-+
-+	switch (event) {
-+	case BFA_IOC_E_DISABLED:
-+	case BFA_IOC_E_FAILED:
-+		if (phy->op_busy) {
-+			phy->status = BFA_STATUS_IOC_FAILURE;
-+			phy->cbfn(phy->cbarg, phy->status);
-+			phy->op_busy = 0;
-+		}
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
-+/*
-+ * Send phy attribute query request.
-+ *
-+ * @param[in] cbarg - callback argument
-+ */
-+static void
-+bfa_phy_query_send(void *cbarg)
-+{
-+	struct bfa_phy_s *phy = cbarg;
-+	struct bfi_phy_query_req_s *msg =
-+			(struct bfi_phy_query_req_s *) phy->mb.msg;
-+
-+	msg->instance = phy->instance;
-+	bfi_h2i_set(msg->mh, BFI_MC_PHY, BFI_PHY_H2I_QUERY_REQ,
-+		bfa_ioc_portid(phy->ioc));
-+	bfa_alen_set(&msg->alen, sizeof(struct bfa_phy_attr_s), phy->dbuf_pa);
-+	bfa_ioc_mbox_queue(phy->ioc, &phy->mb);
-+}
-+
-+/*
-+ * Send phy write request.
-+ *
-+ * @param[in] cbarg - callback argument
-+ */
-+static void
-+bfa_phy_write_send(void *cbarg)
-+{
-+	struct bfa_phy_s *phy = cbarg;
-+	struct bfi_phy_write_req_s *msg =
-+			(struct bfi_phy_write_req_s *) phy->mb.msg;
-+	u32	len;
-+	u16	*buf, *dbuf;
-+	int	i, sz;
-+
-+	msg->instance = phy->instance;
-+	msg->offset = cpu_to_be32(phy->addr_off + phy->offset);
-+	len = (phy->residue < BFA_PHY_DMA_BUF_SZ) ?
-+			phy->residue : BFA_PHY_DMA_BUF_SZ;
-+	msg->length = cpu_to_be32(len);
-+
-+	/* indicate if it's the last msg of the whole write operation */
-+	msg->last = (len == phy->residue) ? 1 : 0;
-+
-+	bfi_h2i_set(msg->mh, BFI_MC_PHY, BFI_PHY_H2I_WRITE_REQ,
-+		bfa_ioc_portid(phy->ioc));
-+	bfa_alen_set(&msg->alen, len, phy->dbuf_pa);
-+
-+	buf = (u16 *) (phy->ubuf + phy->offset);
-+	dbuf = (u16 *)phy->dbuf_kva;
-+	sz = len >> 1;
-+	for (i = 0; i < sz; i++)
-+		buf[i] = cpu_to_be16(dbuf[i]);
-+
-+	bfa_ioc_mbox_queue(phy->ioc, &phy->mb);
-+
-+	phy->residue -= len;
-+	phy->offset += len;
-+}
-+
-+/*
-+ * Send phy read request.
-+ *
-+ * @param[in] cbarg - callback argument
-+ */
-+static void
-+bfa_phy_read_send(void *cbarg)
-+{
-+	struct bfa_phy_s *phy = cbarg;
-+	struct bfi_phy_read_req_s *msg =
-+			(struct bfi_phy_read_req_s *) phy->mb.msg;
-+	u32	len;
-+
-+	msg->instance = phy->instance;
-+	msg->offset = cpu_to_be32(phy->addr_off + phy->offset);
-+	len = (phy->residue < BFA_PHY_DMA_BUF_SZ) ?
-+			phy->residue : BFA_PHY_DMA_BUF_SZ;
-+	msg->length = cpu_to_be32(len);
-+	bfi_h2i_set(msg->mh, BFI_MC_PHY, BFI_PHY_H2I_READ_REQ,
-+		bfa_ioc_portid(phy->ioc));
-+	bfa_alen_set(&msg->alen, len, phy->dbuf_pa);
-+	bfa_ioc_mbox_queue(phy->ioc, &phy->mb);
-+}
-+
-+/*
-+ * Send phy stats request.
-+ *
-+ * @param[in] cbarg - callback argument
-+ */
-+static void
-+bfa_phy_stats_send(void *cbarg)
-+{
-+	struct bfa_phy_s *phy = cbarg;
-+	struct bfi_phy_stats_req_s *msg =
-+			(struct bfi_phy_stats_req_s *) phy->mb.msg;
-+
-+	msg->instance = phy->instance;
-+	bfi_h2i_set(msg->mh, BFI_MC_PHY, BFI_PHY_H2I_STATS_REQ,
-+		bfa_ioc_portid(phy->ioc));
-+	bfa_alen_set(&msg->alen, sizeof(struct bfa_phy_stats_s), phy->dbuf_pa);
-+	bfa_ioc_mbox_queue(phy->ioc, &phy->mb);
-+}
-+
-+/*
-+ * Flash memory info API.
-+ *
-+ * @param[in] mincfg - minimal cfg variable
-+ */
-+u32
-+bfa_phy_meminfo(bfa_boolean_t mincfg)
-+{
-+	/* min driver doesn't need phy */
-+	if (mincfg)
-+		return 0;
-+
-+	return BFA_ROUNDUP(BFA_PHY_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
-+}
-+
-+/*
-+ * Flash attach API.
-+ *
-+ * @param[in] phy - phy structure
-+ * @param[in] ioc  - ioc structure
-+ * @param[in] dev  - device structure
-+ * @param[in] trcmod - trace module
-+ * @param[in] logmod - log module
-+ */
-+void
-+bfa_phy_attach(struct bfa_phy_s *phy, struct bfa_ioc_s *ioc, void *dev,
-+		struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg)
-+{
-+	phy->ioc = ioc;
-+	phy->trcmod = trcmod;
-+	phy->cbfn = NULL;
-+	phy->cbarg = NULL;
-+	phy->op_busy = 0;
-+
-+	bfa_ioc_mbox_regisr(phy->ioc, BFI_MC_PHY, bfa_phy_intr, phy);
-+	bfa_q_qe_init(&phy->ioc_notify);
-+	bfa_ioc_notify_init(&phy->ioc_notify, bfa_phy_notify, phy);
-+	list_add_tail(&phy->ioc_notify.qe, &phy->ioc->notify_q);
-+
-+	/* min driver doesn't need phy */
-+	if (mincfg) {
-+		phy->dbuf_kva = NULL;
-+		phy->dbuf_pa = 0;
-+	}
-+}
-+
-+/*
-+ * Claim memory for phy
-+ *
-+ * @param[in] phy - phy structure
-+ * @param[in] dm_kva - pointer to virtual memory address
-+ * @param[in] dm_pa - physical memory address
-+ * @param[in] mincfg - minimal cfg variable
-+ */
-+void
-+bfa_phy_memclaim(struct bfa_phy_s *phy, u8 *dm_kva, u64 dm_pa,
-+		bfa_boolean_t mincfg)
-+{
-+	if (mincfg)
-+		return;
-+
-+	phy->dbuf_kva = dm_kva;
-+	phy->dbuf_pa = dm_pa;
-+	memset(phy->dbuf_kva, 0, BFA_PHY_DMA_BUF_SZ);
-+	dm_kva += BFA_ROUNDUP(BFA_PHY_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
-+	dm_pa += BFA_ROUNDUP(BFA_PHY_DMA_BUF_SZ, BFA_DMA_ALIGN_SZ);
-+}
-+
-+bfa_boolean_t
-+bfa_phy_busy(struct bfa_ioc_s *ioc)
-+{
-+	void __iomem	*rb;
-+
-+	rb = bfa_ioc_bar0(ioc);
-+	return readl(rb + BFA_PHY_LOCK_STATUS);
-+}
-+
-+/*
-+ * Get phy attribute.
-+ *
-+ * @param[in] phy - phy structure
-+ * @param[in] attr - phy attribute structure
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_phy_get_attr(struct bfa_phy_s *phy, u8 instance,
-+		struct bfa_phy_attr_s *attr, bfa_cb_phy_t cbfn, void *cbarg)
-+{
-+	bfa_trc(phy, BFI_PHY_H2I_QUERY_REQ);
-+	bfa_trc(phy, instance);
-+
-+	if (!bfa_phy_present(phy))
-+		return BFA_STATUS_PHY_NOT_PRESENT;
-+
-+	if (!bfa_ioc_is_operational(phy->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	if (phy->op_busy || bfa_phy_busy(phy->ioc)) {
-+		bfa_trc(phy, phy->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	phy->op_busy = 1;
-+	phy->cbfn = cbfn;
-+	phy->cbarg = cbarg;
-+	phy->instance = instance;
-+	phy->ubuf = (uint8_t *) attr;
-+	bfa_phy_query_send(phy);
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Get phy stats.
-+ *
-+ * @param[in] phy - phy structure
-+ * @param[in] instance - phy image instance
-+ * @param[in] stats - pointer to phy stats
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_phy_get_stats(struct bfa_phy_s *phy, u8 instance,
-+		struct bfa_phy_stats_s *stats,
-+		bfa_cb_phy_t cbfn, void *cbarg)
-+{
-+	bfa_trc(phy, BFI_PHY_H2I_STATS_REQ);
-+	bfa_trc(phy, instance);
-+
-+	if (!bfa_phy_present(phy))
-+		return BFA_STATUS_PHY_NOT_PRESENT;
-+
-+	if (!bfa_ioc_is_operational(phy->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	if (phy->op_busy || bfa_phy_busy(phy->ioc)) {
-+		bfa_trc(phy, phy->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	phy->op_busy = 1;
-+	phy->cbfn = cbfn;
-+	phy->cbarg = cbarg;
-+	phy->instance = instance;
-+	phy->ubuf = (u8 *) stats;
-+	bfa_phy_stats_send(phy);
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Update phy image.
-+ *
-+ * @param[in] phy - phy structure
-+ * @param[in] instance - phy image instance
-+ * @param[in] buf - update data buffer
-+ * @param[in] len - data buffer length
-+ * @param[in] offset - offset relative to starting address
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_phy_update(struct bfa_phy_s *phy, u8 instance,
-+		void *buf, u32 len, u32 offset,
-+		bfa_cb_phy_t cbfn, void *cbarg)
-+{
-+	bfa_trc(phy, BFI_PHY_H2I_WRITE_REQ);
-+	bfa_trc(phy, instance);
-+	bfa_trc(phy, len);
-+	bfa_trc(phy, offset);
-+
-+	if (!bfa_phy_present(phy))
-+		return BFA_STATUS_PHY_NOT_PRESENT;
-+
-+	if (!bfa_ioc_is_operational(phy->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	/* 'len' must be in word (4-byte) boundary */
-+	if (!len || (len & 0x03))
-+		return BFA_STATUS_FAILED;
-+
-+	if (phy->op_busy || bfa_phy_busy(phy->ioc)) {
-+		bfa_trc(phy, phy->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	phy->op_busy = 1;
-+	phy->cbfn = cbfn;
-+	phy->cbarg = cbarg;
-+	phy->instance = instance;
-+	phy->residue = len;
-+	phy->offset = 0;
-+	phy->addr_off = offset;
-+	phy->ubuf = buf;
-+
-+	bfa_phy_write_send(phy);
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Read phy image.
-+ *
-+ * @param[in] phy - phy structure
-+ * @param[in] instance - phy image instance
-+ * @param[in] buf - read data buffer
-+ * @param[in] len - data buffer length
-+ * @param[in] offset - offset relative to starting address
-+ * @param[in] cbfn - callback function
-+ * @param[in] cbarg - callback argument
-+ *
-+ * Return status.
-+ */
-+bfa_status_t
-+bfa_phy_read(struct bfa_phy_s *phy, u8 instance,
-+		void *buf, u32 len, u32 offset,
-+		bfa_cb_phy_t cbfn, void *cbarg)
-+{
-+	bfa_trc(phy, BFI_PHY_H2I_READ_REQ);
-+	bfa_trc(phy, instance);
-+	bfa_trc(phy, len);
-+	bfa_trc(phy, offset);
-+
-+	if (!bfa_phy_present(phy))
-+		return BFA_STATUS_PHY_NOT_PRESENT;
-+
-+	if (!bfa_ioc_is_operational(phy->ioc))
-+		return BFA_STATUS_IOC_NON_OP;
-+
-+	/* 'len' must be in word (4-byte) boundary */
-+	if (!len || (len & 0x03))
-+		return BFA_STATUS_FAILED;
-+
-+	if (phy->op_busy || bfa_phy_busy(phy->ioc)) {
-+		bfa_trc(phy, phy->op_busy);
-+		return BFA_STATUS_DEVBUSY;
-+	}
-+
-+	phy->op_busy = 1;
-+	phy->cbfn = cbfn;
-+	phy->cbarg = cbarg;
-+	phy->instance = instance;
-+	phy->residue = len;
-+	phy->offset = 0;
-+	phy->addr_off = offset;
-+	phy->ubuf = buf;
-+	bfa_phy_read_send(phy);
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+/*
-+ * Process phy response messages upon receiving interrupts.
-+ *
-+ * @param[in] phyarg - phy structure
-+ * @param[in] msg - message structure
-+ */
-+void
-+bfa_phy_intr(void *phyarg, struct bfi_mbmsg_s *msg)
-+{
-+	struct bfa_phy_s *phy = phyarg;
-+	u32	status;
-+
-+	union {
-+		struct bfi_phy_query_rsp_s *query;
-+		struct bfi_phy_stats_rsp_s *stats;
-+		struct bfi_phy_write_rsp_s *write;
-+		struct bfi_phy_read_rsp_s *read;
-+		struct bfi_mbmsg_s   *msg;
-+	} m;
-+
-+	m.msg = msg;
-+	bfa_trc(phy, msg->mh.msg_id);
-+
-+	if (!phy->op_busy) {
-+		/* receiving response after ioc failure */
-+		bfa_trc(phy, 0x9999);
-+		return;
-+	}
-+
-+	switch (msg->mh.msg_id) {
-+	case BFI_PHY_I2H_QUERY_RSP:
-+		status = be32_to_cpu(m.query->status);
-+		bfa_trc(phy, status);
-+
-+		if (status == BFA_STATUS_OK) {
-+			struct bfa_phy_attr_s *attr =
-+				(struct bfa_phy_attr_s *) phy->ubuf;
-+			bfa_phy_ntoh32((u32 *)attr, (u32 *)phy->dbuf_kva,
-+					sizeof(struct bfa_phy_attr_s));
-+			bfa_trc(phy, attr->status);
-+			bfa_trc(phy, attr->length);
-+		}
-+
-+		phy->status = status;
-+		phy->op_busy = 0;
-+		if (phy->cbfn)
-+			phy->cbfn(phy->cbarg, phy->status);
-+		break;
-+	case BFI_PHY_I2H_STATS_RSP:
-+		status = be32_to_cpu(m.stats->status);
-+		bfa_trc(phy, status);
-+
-+		if (status == BFA_STATUS_OK) {
-+			struct bfa_phy_stats_s *stats =
-+				(struct bfa_phy_stats_s *) phy->ubuf;
-+			bfa_phy_ntoh32((u32 *)stats, (u32 *)phy->dbuf_kva,
-+				sizeof(struct bfa_phy_stats_s));
-+				bfa_trc(phy, stats->status);
-+		}
-+
-+		phy->status = status;
-+		phy->op_busy = 0;
-+		if (phy->cbfn)
-+			phy->cbfn(phy->cbarg, phy->status);
-+		break;
-+	case BFI_PHY_I2H_WRITE_RSP:
-+		status = be32_to_cpu(m.write->status);
-+		bfa_trc(phy, status);
-+
-+		if (status != BFA_STATUS_OK || phy->residue == 0) {
-+			phy->status = status;
-+			phy->op_busy = 0;
-+			if (phy->cbfn)
-+				phy->cbfn(phy->cbarg, phy->status);
-+		} else {
-+			bfa_trc(phy, phy->offset);
-+			bfa_phy_write_send(phy);
-+		}
-+		break;
-+	case BFI_PHY_I2H_READ_RSP:
-+		status = be32_to_cpu(m.read->status);
-+		bfa_trc(phy, status);
-+
-+		if (status != BFA_STATUS_OK) {
-+			phy->status = status;
-+			phy->op_busy = 0;
-+			if (phy->cbfn)
-+				phy->cbfn(phy->cbarg, phy->status);
-+		} else {
-+			u32 len = be32_to_cpu(m.read->length);
-+			u16 *buf = (u16 *)(phy->ubuf + phy->offset);
-+			u16 *dbuf = (u16 *)phy->dbuf_kva;
-+			int i, sz = len >> 1;
-+
-+			bfa_trc(phy, phy->offset);
-+			bfa_trc(phy, len);
-+
-+			for (i = 0; i < sz; i++)
-+				buf[i] = be16_to_cpu(dbuf[i]);
-+
-+			phy->residue -= len;
-+			phy->offset += len;
-+
-+			if (phy->residue == 0) {
-+				phy->status = status;
-+				phy->op_busy = 0;
-+				if (phy->cbfn)
-+					phy->cbfn(phy->cbarg, phy->status);
-+			} else
-+				bfa_phy_read_send(phy);
-+		}
-+		break;
-+	default:
-+		WARN_ON(1);
-+	}
-+}
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 5bcab54..c5ecd2e 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -632,6 +632,60 @@ bfa_status_t	bfa_diag_beacon_port(struct bfa_diag_s *diag,
- 			bfa_boolean_t beacon, bfa_boolean_t link_e2e_beacon,
- 			u32 sec);
- 
-+/*
-+ *	PHY module specific
-+ */
-+typedef void (*bfa_cb_phy_t) (void *cbarg, bfa_status_t status);
-+
-+struct bfa_phy_s {
-+	struct bfa_ioc_s *ioc;          /* back pointer to ioc */
-+	struct bfa_trc_mod_s *trcmod;   /* trace module */
-+	u8	instance;       /* port instance */
-+	u8	op_busy;        /* operation busy flag */
-+	u8	rsv[2];
-+	u32	residue;        /* residual length */
-+	u32	offset;         /* offset */
-+	bfa_status_t	status;         /* status */
-+	u8	*dbuf_kva;      /* dma buf virtual address */
-+	u64	dbuf_pa;        /* dma buf physical address */
-+	struct bfa_reqq_wait_s reqq_wait; /* to wait for room in reqq */
-+	bfa_cb_phy_t	cbfn;           /* user callback function */
-+	void		*cbarg;         /* user callback arg */
-+	u8		*ubuf;          /* user supplied buffer */
-+	struct bfa_cb_qe_s	hcb_qe; /* comp: BFA callback qelem */
-+	u32	addr_off;       /* phy address offset */
-+	struct bfa_mbox_cmd_s	mb;       /* mailbox */
-+	struct bfa_ioc_notify_s	ioc_notify; /* ioc event notify */
-+	struct bfa_mem_dma_s	phy_dma;
-+};
-+
-+#define BFA_PHY(__bfa)	(&(__bfa)->modules.phy)
-+#define BFA_MEM_PHY_DMA(__bfa)	(&(BFA_PHY(__bfa)->phy_dma))
-+
-+bfa_boolean_t bfa_phy_busy(struct bfa_ioc_s *ioc);
-+bfa_status_t bfa_phy_get_attr(struct bfa_phy_s *phy, u8 instance,
-+			struct bfa_phy_attr_s *attr,
-+			bfa_cb_phy_t cbfn, void *cbarg);
-+bfa_status_t bfa_phy_get_stats(struct bfa_phy_s *phy, u8 instance,
-+			struct bfa_phy_stats_s *stats,
-+			bfa_cb_phy_t cbfn, void *cbarg);
-+bfa_status_t bfa_phy_update(struct bfa_phy_s *phy, u8 instance,
-+			void *buf, u32 len, u32 offset,
-+			bfa_cb_phy_t cbfn, void *cbarg);
-+bfa_status_t bfa_phy_read(struct bfa_phy_s *phy, u8 instance,
-+			void *buf, u32 len, u32 offset,
-+			bfa_cb_phy_t cbfn, void *cbarg);
-+
-+u32	bfa_phy_meminfo(bfa_boolean_t mincfg);
-+void bfa_phy_attach(struct bfa_phy_s *phy, struct bfa_ioc_s *ioc,
-+		void *dev, struct bfa_trc_mod_s *trcmod, bfa_boolean_t mincfg);
-+void bfa_phy_memclaim(struct bfa_phy_s *phy,
-+		u8 *dm_kva, u64 dm_pa, bfa_boolean_t mincfg);
-+void bfa_phy_intr(void *phyarg, struct bfi_mbmsg_s *msg);
-+
-+/*
-+ *	IOC specfic macros
-+ */
- #define bfa_ioc_pcifn(__ioc)		((__ioc)->pcidev.pci_func)
- #define bfa_ioc_devid(__ioc)		((__ioc)->pcidev.device_id)
- #define bfa_ioc_bar0(__ioc)		((__ioc)->pcidev.pci_bar_kva)
-diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
-index c6b2fe7..1c6efd4 100644
---- a/drivers/scsi/bfa/bfa_modules.h
-+++ b/drivers/scsi/bfa/bfa_modules.h
-@@ -43,6 +43,7 @@ struct bfa_modules_s {
- 	struct bfa_sfp_s	sfp;		/*  SFP module	*/
- 	struct bfa_flash_s	flash;		/*  flash module */
- 	struct bfa_diag_s	diag_mod;	/*  diagnostics module	*/
-+	struct bfa_phy_s	phy;		/*  phy module		*/
- };
- 
- /*
-diff --git a/drivers/scsi/bfa/bfa_port.c b/drivers/scsi/bfa/bfa_port.c
-index f382a47..95e4ad8 100644
---- a/drivers/scsi/bfa/bfa_port.c
-+++ b/drivers/scsi/bfa/bfa_port.c
-@@ -469,6 +469,7 @@ bfa_port_attach(struct bfa_port_s *port, struct bfa_ioc_s *ioc,
- 	port->pbc_disabled = BFA_FALSE;
- 
- 	bfa_ioc_mbox_regisr(port->ioc, BFI_MC_PORT, bfa_port_isr, port);
-+	bfa_q_qe_init(&port->ioc_notify);
- 	bfa_ioc_notify_init(&port->ioc_notify, bfa_port_notify, port);
- 	list_add_tail(&port->ioc_notify.qe, &port->ioc->notify_q);
- 
 diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 9e62173..31f61e6 100644
+index 31f61e6..a57f3c3 100644
 --- a/drivers/scsi/bfa/bfad_bsg.c
 +++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -1393,6 +1393,110 @@ bfad_iocmd_diag_lb_stat(struct bfad_s *bfad, void *cmd)
+@@ -22,30 +22,6 @@
+ 
+ BFA_TRC_FILE(LDRV, BSG);
+ 
+-/* bfad_im_bsg_get_kobject - increment the bfa refcnt */
+-static void
+-bfad_im_bsg_get_kobject(struct fc_bsg_job *job)
+-{
+-	struct Scsi_Host *shost = job->shost;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	__module_get(shost->dma_dev->driver->owner);
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+-}
+-
+-/* bfad_im_bsg_put_kobject - decrement the bfa refcnt */
+-static void
+-bfad_im_bsg_put_kobject(struct fc_bsg_job *job)
+-{
+-	struct Scsi_Host *shost = job->shost;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(shost->host_lock, flags);
+-	module_put(shost->dma_dev->driver->owner);
+-	spin_unlock_irqrestore(shost->host_lock, flags);
+-}
+-
+ int
+ bfad_iocmd_ioc_enable(struct bfad_s *bfad, void *cmd)
+ {
+@@ -1468,6 +1444,25 @@ out:
+ }
+ 
+ int
++bfad_iocmd_vhba_query(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_vhba_attr_s *iocmd =
++			(struct bfa_bsg_vhba_attr_s *)cmd;
++	struct bfa_vhba_attr_s *attr = &iocmd->attr;
++	unsigned long flags;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	attr->pwwn =  bfad->bfa.ioc.attr->pwwn;
++	attr->nwwn =  bfad->bfa.ioc.attr->nwwn;
++	attr->plog_enabled = (bfa_boolean_t)bfad->bfa.plog->plog_enabled;
++	attr->io_profile = bfa_fcpim_get_io_profile(&bfad->bfa);
++	attr->path_tov  = bfa_fcpim_path_tov_get(&bfad->bfa);
++	iocmd->status = BFA_STATUS_OK;
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	return 0;
++}
++
++int
+ bfad_iocmd_phy_update(struct bfad_s *bfad, void *cmd, unsigned int payload_len)
+ {
+ 	struct bfa_bsg_phy_s *iocmd = (struct bfa_bsg_phy_s *)cmd;
+@@ -1497,6 +1492,25 @@ out:
  	return 0;
  }
  
 +int
-+bfad_iocmd_phy_get_attr(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_porglog_get(struct bfad_s *bfad, void *cmd)
 +{
-+	struct bfa_bsg_phy_attr_s *iocmd =
-+			(struct bfa_bsg_phy_attr_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long	flags;
++	struct bfa_bsg_debug_s *iocmd = (struct bfa_bsg_debug_s *)cmd;
++	void *iocmd_bufptr;
 +
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_phy_get_attr(BFA_PHY(&bfad->bfa), iocmd->instance,
-+				&iocmd->attr, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK)
++	if (iocmd->bufsz < sizeof(struct bfa_plog_s)) {
++		bfa_trc(bfad, sizeof(struct bfa_plog_s));
++		iocmd->status = BFA_STATUS_EINVAL;
 +		goto out;
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_phy_get_stats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_phy_stats_s *iocmd =
-+			(struct bfa_bsg_phy_stats_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long	flags;
-+
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_phy_get_stats(BFA_PHY(&bfad->bfa), iocmd->instance,
-+				&iocmd->stats, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK)
-+		goto out;
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_phy_read(struct bfad_s *bfad, void *cmd, unsigned int payload_len)
-+{
-+	struct bfa_bsg_phy_s *iocmd = (struct bfa_bsg_phy_s *)cmd;
-+	struct bfad_hal_comp fcomp;
-+	void	*iocmd_bufptr;
-+	unsigned long	flags;
-+
-+	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_phy_s),
-+			iocmd->bufsz) != BFA_STATUS_OK) {
-+		iocmd->status = BFA_STATUS_VERSION_FAIL;
-+		return 0;
 +	}
 +
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_phy_s);
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_phy_read(BFA_PHY(&bfad->bfa),
-+				iocmd->instance, iocmd_bufptr, iocmd->bufsz,
-+				0, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK)
-+		goto out;
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
-+	if (iocmd->status != BFA_STATUS_OK)
-+		goto out;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_phy_update(struct bfad_s *bfad, void *cmd, unsigned int payload_len)
-+{
-+	struct bfa_bsg_phy_s *iocmd = (struct bfa_bsg_phy_s *)cmd;
-+	void	*iocmd_bufptr;
-+	struct bfad_hal_comp fcomp;
-+	unsigned long	flags;
-+
-+	if (bfad_chk_iocmd_sz(payload_len,
-+			sizeof(struct bfa_bsg_phy_s),
-+			iocmd->bufsz) != BFA_STATUS_OK) {
-+		iocmd->status = BFA_STATUS_VERSION_FAIL;
-+		return 0;
-+	}
-+
-+	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_phy_s);
-+	init_completion(&fcomp.comp);
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	iocmd->status = bfa_phy_update(BFA_PHY(&bfad->bfa),
-+				iocmd->instance, iocmd_bufptr, iocmd->bufsz,
-+				0, bfad_hcb_comp, &fcomp);
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	if (iocmd->status != BFA_STATUS_OK)
-+		goto out;
-+	wait_for_completion(&fcomp.comp);
-+	iocmd->status = fcomp.status;
++	iocmd->status = BFA_STATUS_OK;
++	iocmd_bufptr = (char *)iocmd + sizeof(struct bfa_bsg_debug_s);
++	memcpy(iocmd_bufptr, (u8 *) &bfad->plog_buf, sizeof(struct bfa_plog_s));
 +out:
 +	return 0;
 +}
@@ -883,184 +209,145 @@ index 9e62173..31f61e6 100644
  static int
  bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
  		unsigned int payload_len)
-@@ -1566,6 +1670,18 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_DIAG_LB_STAT:
- 		rc = bfad_iocmd_diag_lb_stat(bfad, iocmd);
+@@ -1682,6 +1696,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_PHY_READ_FW:
+ 		rc = bfad_iocmd_phy_read(bfad, iocmd, payload_len);
  		break;
-+	case IOCMD_PHY_GET_ATTR:
-+		rc = bfad_iocmd_phy_get_attr(bfad, iocmd);
++	case IOCMD_VHBA_QUERY:
++		rc = bfad_iocmd_vhba_query(bfad, iocmd);
 +		break;
-+	case IOCMD_PHY_GET_STATS:
-+		rc = bfad_iocmd_phy_get_stats(bfad, iocmd);
-+		break;
-+	case IOCMD_PHY_UPDATE_FW:
-+		rc = bfad_iocmd_phy_update(bfad, iocmd, payload_len);
-+		break;
-+	case IOCMD_PHY_READ_FW:
-+		rc = bfad_iocmd_phy_read(bfad, iocmd, payload_len);
++	case IOCMD_DEBUG_PORTLOG:
++		rc = bfad_iocmd_porglog_get(bfad, iocmd);
 +		break;
  	default:
  		rc = EINVAL;
  		break;
+@@ -2111,9 +2131,6 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
+ {
+ 	uint32_t rc = BFA_STATUS_OK;
+ 
+-	/* Increment the bfa module refcnt - if bsg request is in service */
+-	bfad_im_bsg_get_kobject(job);
+-
+ 	switch (job->request->msgcode) {
+ 	case FC_BSG_HST_VENDOR:
+ 		/* Process BSG HST Vendor requests */
+@@ -2132,9 +2149,6 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
+ 		break;
+ 	}
+ 
+-	/* Decrement the bfa module refcnt - on completion of bsg request */
+-	bfad_im_bsg_put_kobject(job);
+-
+ 	return rc;
+ }
+ 
 diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 8994277..5d89c1d 100644
+index 5d89c1d..99b0e8a 100644
 --- a/drivers/scsi/bfa/bfad_bsg.h
 +++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -80,6 +80,10 @@ enum {
- 	IOCMD_DIAG_LED,
- 	IOCMD_DIAG_BEACON_LPORT,
- 	IOCMD_DIAG_LB_STAT,
-+	IOCMD_PHY_GET_ATTR,
-+	IOCMD_PHY_GET_STATS,
-+	IOCMD_PHY_UPDATE_FW,
-+	IOCMD_PHY_READ_FW,
+@@ -84,6 +84,8 @@ enum {
+ 	IOCMD_PHY_GET_STATS,
+ 	IOCMD_PHY_UPDATE_FW,
+ 	IOCMD_PHY_READ_FW,
++	IOCMD_VHBA_QUERY,
++	IOCMD_DEBUG_PORTLOG,
  };
  
  struct bfa_bsg_gen_s {
-@@ -440,6 +444,28 @@ struct bfa_bsg_diag_lb_stat_s {
- 	u16		rsvd;
+@@ -459,6 +461,16 @@ struct bfa_bsg_phy_s {
+ 	u64	buf_ptr;
  };
  
-+struct bfa_bsg_phy_attr_s {
++struct bfa_bsg_debug_s {
 +	bfa_status_t	status;
-+	u16	bfad_num;
-+	u16	instance;
-+	struct bfa_phy_attr_s	attr;
++	u16		bfad_num;
++	u16		rsvd;
++	u32		bufsz;
++	int		inst_no;
++	u64		buf_ptr;
++	u64		offset;
 +};
 +
-+struct bfa_bsg_phy_s {
+ struct bfa_bsg_phy_stats_s {
+ 	bfa_status_t	status;
+ 	u16	bfad_num;
+@@ -466,6 +478,13 @@ struct bfa_bsg_phy_stats_s {
+ 	struct bfa_phy_stats_s	stats;
+ };
+ 
++struct bfa_bsg_vhba_attr_s {
 +	bfa_status_t	status;
-+	u16	bfad_num;
-+	u16	instance;
-+	u64	bufsz;
-+	u64	buf_ptr;
-+};
-+
-+struct bfa_bsg_phy_stats_s {
-+	bfa_status_t	status;
-+	u16	bfad_num;
-+	u16	instance;
-+	struct bfa_phy_stats_s	stats;
++	u16		bfad_num;
++	u16		pcifn_id;
++	struct bfa_vhba_attr_s	attr;
 +};
 +
  struct bfa_bsg_fcpt_s {
  	bfa_status_t    status;
  	u16		vf_id;
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
-index efa41b6..1e258d5 100644
---- a/drivers/scsi/bfa/bfi.h
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -209,6 +209,7 @@ enum bfi_mclass {
- 	BFI_MC_TSKIM		= 18,	/*  Initiator Task management	    */
- 	BFI_MC_PORT		= 21,	/*  Physical port		    */
- 	BFI_MC_SFP		= 22,	/*  SFP module	*/
-+	BFI_MC_PHY		= 25,   /*  External PHY message class	*/
- 	BFI_MC_MAX		= 32
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index 6363dd7..8ec6e1d 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -80,7 +80,7 @@
+ #define BFAD_HAL_INIT_FAIL			0x00000100
+ #define BFAD_FC4_PROBE_DONE			0x00000200
+ #define BFAD_PORT_DELETE			0x00000001
+-
++#define BFAD_INTX_ON				0x00000400
+ /*
+  * BFAD related definition
+  */
+@@ -93,6 +93,8 @@
+  */
+ #define BFAD_LUN_QUEUE_DEPTH	32
+ #define BFAD_IO_MAX_SGE		SG_ALL
++#define BFAD_MIN_SECTORS	128 /* 64k   */
++#define BFAD_MAX_SECTORS	0xFFFF  /* 32 MB */
+ 
+ #define bfad_isr_t irq_handler_t
+ 
+@@ -343,6 +345,7 @@ extern int      msix_disable_ct;
+ extern int      fdmi_enable;
+ extern int      supported_fc4s;
+ extern int	pcie_max_read_reqsz;
++extern int	max_xfer_size;
+ extern int bfa_debugfs_enable;
+ extern struct mutex bfad_mutex;
+ 
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 30ca26d..f2bf812 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -700,6 +700,9 @@ bfad_scsi_host_alloc(struct bfad_im_port_s *im_port, struct bfad_s *bfad)
+ 	else
+ 		sht = &bfad_im_vport_template;
+ 
++	if (max_xfer_size != BFAD_MAX_SECTORS >> 1)
++		sht->max_sectors = max_xfer_size << 1;
++
+ 	sht->sg_tablesize = bfad->cfg_data.io_max_sge;
+ 
+ 	return scsi_host_alloc(sht, sizeof(unsigned long));
+@@ -777,7 +780,7 @@ struct scsi_host_template bfad_im_scsi_host_template = {
+ 	.cmd_per_lun = 3,
+ 	.use_clustering = ENABLE_CLUSTERING,
+ 	.shost_attrs = bfad_im_host_attrs,
+-	.max_sectors = 0xFFFF,
++	.max_sectors = BFAD_MAX_SECTORS,
+ 	.vendor_id = BFA_PCI_VENDOR_ID_BROCADE,
  };
  
-@@ -1030,6 +1031,102 @@ struct bfi_diag_qtest_req_s {
+@@ -799,7 +802,7 @@ struct scsi_host_template bfad_im_vport_template = {
+ 	.cmd_per_lun = 3,
+ 	.use_clustering = ENABLE_CLUSTERING,
+ 	.shost_attrs = bfad_im_vport_attrs,
+-	.max_sectors = 0xFFFF,
++	.max_sectors = BFAD_MAX_SECTORS,
  };
- #define bfi_diag_qtest_rsp_t struct bfi_diag_qtest_req_s
  
-+/*
-+ *	PHY module specific
-+ */
-+enum bfi_phy_h2i_msgs_e {
-+	BFI_PHY_H2I_QUERY_REQ = 1,
-+	BFI_PHY_H2I_STATS_REQ = 2,
-+	BFI_PHY_H2I_WRITE_REQ = 3,
-+	BFI_PHY_H2I_READ_REQ = 4,
-+};
-+
-+enum bfi_phy_i2h_msgs_e {
-+	BFI_PHY_I2H_QUERY_RSP = BFA_I2HM(1),
-+	BFI_PHY_I2H_STATS_RSP = BFA_I2HM(2),
-+	BFI_PHY_I2H_WRITE_RSP = BFA_I2HM(3),
-+	BFI_PHY_I2H_READ_RSP = BFA_I2HM(4),
-+};
-+
-+/*
-+ * External PHY query request
-+ */
-+struct bfi_phy_query_req_s {
-+	struct bfi_mhdr_s	mh;             /* Common msg header */
-+	u8			instance;
-+	u8			rsv[3];
-+	struct bfi_alen_s	alen;
-+};
-+
-+/*
-+ * External PHY stats request
-+ */
-+struct bfi_phy_stats_req_s {
-+	struct bfi_mhdr_s	mh;             /* Common msg header */
-+	u8			instance;
-+	u8			rsv[3];
-+	struct bfi_alen_s	alen;
-+};
-+
-+/*
-+ * External PHY write request
-+ */
-+struct bfi_phy_write_req_s {
-+	struct bfi_mhdr_s	mh;             /* Common msg header */
-+	u8		instance;
-+	u8		last;
-+	u8		rsv[2];
-+	u32		offset;
-+	u32		length;
-+	struct bfi_alen_s	alen;
-+};
-+
-+/*
-+ * External PHY read request
-+ */
-+struct bfi_phy_read_req_s {
-+	struct bfi_mhdr_s	mh;	/* Common msg header */
-+	u8		instance;
-+	u8		rsv[3];
-+	u32		offset;
-+	u32		length;
-+	struct bfi_alen_s	alen;
-+};
-+
-+/*
-+ * External PHY query response
-+ */
-+struct bfi_phy_query_rsp_s {
-+	struct bfi_mhdr_s	mh;	/* Common msg header */
-+	u32			status;
-+};
-+
-+/*
-+ * External PHY stats response
-+ */
-+struct bfi_phy_stats_rsp_s {
-+	struct bfi_mhdr_s	mh;	/* Common msg header */
-+	u32			status;
-+};
-+
-+/*
-+ * External PHY read response
-+ */
-+struct bfi_phy_read_rsp_s {
-+	struct bfi_mhdr_s	mh;	/* Common msg header */
-+	u32			status;
-+	u32		length;
-+};
-+
-+/*
-+ * External PHY write response
-+ */
-+struct bfi_phy_write_rsp_s {
-+	struct bfi_mhdr_s	mh;	/* Common msg header */
-+	u32			status;
-+	u32			length;
-+};
-+
- #pragma pack()
- 
- #endif /* __BFI_H__ */
+ bfa_status_t
 -- 
 1.7.3.rc1
 
