@@ -1,144 +1,93 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] isci: add ABI documentation and fixup sysfs registration for
- 'isci_id'
-Date: Fri, 24 Jun 2011 17:25:11 -0700
-Message-ID: <20110625000939.10572.28777.stgit@localhost6.localdomain6>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 00/15] bfa: Update the driver version to 3.0.2.1
+Date: Fri, 24 Jun 2011 20:22:17 -0700
+Message-ID: <1308972137-3588-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5073 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191Ab1FYAZM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Jun 2011 20:25:12 -0400
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57474 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752218Ab1FYDWa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Jun 2011 23:22:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocade.com
 
-From: Dave Jiang <dave.jiang@intel.com>
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-Adding ABI update for adding isci_id entry scsi_host sysfs entry.
-Also fixing up the sysfs registration to the scsi_host template
+Hi James,
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+	The following patch set enhances support for Brocade-1860 Fabric Adapter
 
-James,
+	and updates the Brocade BFA driver to v3.0.2.1.
 
-This touches the tree outside our driver so I wanted to get an ack before
-putting it in isci.git.
+	I have compiled & tested the code against your scsi-misc and
 
---
-Dan
+	linux-next (3.0.0-rc2-next-20110610-0.7-default).
 
- Documentation/ABI/testing/sysfs-class-scsi_host |   13 ++++++++
- drivers/scsi/isci/init.c                        |   36 ++++++++++++-----------
- 2 files changed, 31 insertions(+), 18 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-class-scsi_host
+	Please note that this patch-set needs to be applied after the one I
 
-diff --git a/Documentation/ABI/testing/sysfs-class-scsi_host b/Documentation/ABI/testing/sysfs-class-scsi_host
-new file mode 100644
-index 0000000..29a4f89
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-class-scsi_host
-@@ -0,0 +1,13 @@
-+What:		/sys/class/scsi_host/hostX/isci_id
-+Date:		June 2011
-+Contact:	Dave Jiang <dave.jiang@intel.com>
-+Description:
-+		This file contains the enumerated host ID for the Intel
-+		SCU controller. The Intel(R) C600 Series Chipset SATA/SAS
-+		Storage Control Unit embeds up to two 4-port controllers in
-+		a single PCI device.  The controllers are enumerated in order
-+		which usually means the lowest number scsi_host corresponds
-+		with the first controller, but this association is not
-+		guaranteed.  The 'isci_id' attribute unambiguously identifies
-+		the controller index: '0' for the first controller,
-+		'1' for the second.
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index bbfb6e5..1f03dbe 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -59,6 +59,7 @@
- #include <linux/firmware.h>
- #include <linux/efi.h>
- #include <asm/string.h>
-+#include <scsi/scsi_host.h>
- #include "isci.h"
- #include "task.h"
- #include "probe_roms.h"
-@@ -117,6 +118,22 @@ unsigned char max_concurr_spinup = 1;
- module_param(max_concurr_spinup, byte, 0);
- MODULE_PARM_DESC(max_concurr_spinup, "Max concurrent device spinup");
- 
-+static ssize_t isci_show_id(struct device *dev, struct device_attribute *attr, char *buf)
-+{
-+	struct Scsi_Host *shost = container_of(dev, typeof(*shost), shost_dev);
-+	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
-+	struct isci_host *ihost = container_of(sas_ha, typeof(*ihost), sas_ha);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", ihost->id);
-+}
-+
-+static DEVICE_ATTR(isci_id, S_IRUGO, isci_show_id, NULL);
-+
-+struct device_attribute *isci_host_attrs[] = {
-+	&dev_attr_isci_id,
-+	NULL
-+};
-+
- static struct scsi_host_template isci_sht = {
- 
- 	.module				= THIS_MODULE,
-@@ -142,6 +159,7 @@ static struct scsi_host_template isci_sht = {
- 	.slave_alloc			= sas_slave_alloc,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
-+	.shost_attrs			= isci_host_attrs,
- };
- 
- static struct sas_domain_function_template isci_transport_ops  = {
-@@ -236,17 +254,6 @@ static int isci_register_sas_ha(struct isci_host *isci_host)
- 	return 0;
- }
- 
--static ssize_t isci_show_id(struct device *dev, struct device_attribute *attr, char *buf)
--{
--	struct Scsi_Host *shost = container_of(dev, typeof(*shost), shost_dev);
--	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
--	struct isci_host *ihost = container_of(sas_ha, typeof(*ihost), sas_ha);
--
--	return snprintf(buf, PAGE_SIZE, "%d\n", ihost->id);
--}
--
--static DEVICE_ATTR(isci_id, S_IRUGO, isci_show_id, NULL);
--
- static void isci_unregister(struct isci_host *isci_host)
- {
- 	struct Scsi_Host *shost;
-@@ -255,7 +262,6 @@ static void isci_unregister(struct isci_host *isci_host)
- 		return;
- 
- 	shost = isci_host->shost;
--	device_remove_file(&shost->shost_dev, &dev_attr_isci_id);
- 
- 	sas_unregister_ha(&isci_host->sas_ha);
- 
-@@ -419,14 +425,8 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
- 	if (err)
- 		goto err_shost_remove;
- 
--	err = device_create_file(&shost->shost_dev, &dev_attr_isci_id);
--	if (err)
--		goto err_unregister_ha;
--
- 	return isci_host;
- 
-- err_unregister_ha:
--	sas_unregister_ha(&(isci_host->sas_ha));
-  err_shost_remove:
- 	scsi_remove_host(shost);
-  err_shost:
+	submitted on 06/13/2011:
+
+	http://marc.info/?l=linux-scsi&m=130800569632565&w=2
+
+Thanks,
+Krishna C Gudipati.
+
+Krishna Gudipati (15):
+	bfa: Enable ASIC block configuration and query.
+	bfa: IOC bug fixes.
+	bfa: Added Fabric Assigned Address(FAA) support
+	bfa: Brocade-1860 Fabric Adapter PLL init fixes
+	bfa: Brocade-1860 Fabric Adapter vHBA support
+	bfa: DMA memory allocation enhancement
+	bfa: FCS bug fixes
+	bfa: Extend BSG interface
+	bfa: Added support for CEE info and stats query
+	bfa: Added support to obtain SFP info
+	bfa: Added support for flash configuration
+	bfa: Added HBA diagnostics support
+	bfa: Added support to query PHY
+	bfa: Driver and BSG enhancements
+	bfa: Update the driver version to 3.0.2.1
+
+ drivers/scsi/bfa/bfa.h           |  117 +-
+ drivers/scsi/bfa/bfa_core.c      |  652 +++++++---
+ drivers/scsi/bfa/bfa_defs.h      |  553 ++++++++-
+ drivers/scsi/bfa/bfa_defs_fcs.h  |   27 +-
+ drivers/scsi/bfa/bfa_defs_svc.h  |  163 +++-
+ drivers/scsi/bfa/bfa_fcbuild.c   |   31 +
+ drivers/scsi/bfa/bfa_fcbuild.h   |    4 +
+ drivers/scsi/bfa/bfa_fcpim.c     |  255 +++-
+ drivers/scsi/bfa/bfa_fcpim.h     |   36 +-
+ drivers/scsi/bfa/bfa_fcs.c       |   22 +-
+ drivers/scsi/bfa/bfa_fcs.h       |   22 +-
+ drivers/scsi/bfa/bfa_fcs_fcpim.c |   10 +
+ drivers/scsi/bfa/bfa_fcs_lport.c |  174 +++-
+ drivers/scsi/bfa/bfa_fcs_rport.c |   85 ++-
+ drivers/scsi/bfa/bfa_hw_cb.c     |   12 +-
+ drivers/scsi/bfa/bfa_ioc.c       | 2679 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bfa/bfa_ioc.h       |  436 ++++++-
+ drivers/scsi/bfa/bfa_ioc_cb.c    |   15 -
+ drivers/scsi/bfa/bfa_ioc_ct.c    |  207 ++--
+ drivers/scsi/bfa/bfa_modules.h   |   20 +-
+ drivers/scsi/bfa/bfa_port.c      |  366 ++++++
+ drivers/scsi/bfa/bfa_port.h      |   57 +
+ drivers/scsi/bfa/bfa_svc.c       | 1015 +++++++++++----
+ drivers/scsi/bfa/bfa_svc.h       |  142 ++-
+ drivers/scsi/bfa/bfad.c          |  186 ++--
+ drivers/scsi/bfa/bfad_bsg.c      | 1459 ++++++++++++++++++++-
+ drivers/scsi/bfa/bfad_bsg.h      |  376 ++++++-
+ drivers/scsi/bfa/bfad_debugfs.c  |   14 +-
+ drivers/scsi/bfa/bfad_drv.h      |   24 +-
+ drivers/scsi/bfa/bfad_im.c       |    7 +-
+ drivers/scsi/bfa/bfi.h           |  544 ++++++++-
+ drivers/scsi/bfa/bfi_ms.h        |   65 +-
+ drivers/scsi/bfa/bfi_reg.h       |   11 +
+ 33 files changed, 8802 insertions(+), 984 deletions(-)
+
+-- 
+1.7.3.rc1
 
