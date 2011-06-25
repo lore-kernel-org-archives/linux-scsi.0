@@ -1,38 +1,122 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 0/3] PM: Fix up interactions between system suspend/resume and runtime PM
-Date: Sun, 26 Jun 2011 00:54:20 +0200
-Message-ID: <201106260054.20578.rjw@sisk.pl>
+Subject: [PATCH 2/3] PM / Runtime: Return special error code if runtime PM is disabled
+Date: Sun, 26 Jun 2011 00:55:52 +0200
+Message-ID: <201106260055.52859.rjw@sisk.pl>
+References: <201106260054.20578.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201106260054.20578.rjw@sisk.pl>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Linux PM mailing list <linux-pm@lists.linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+From: Rafael J. Wysocki <rjw@sisk.pl>
 
-The patches in this series are related to the interactions between system
-suspend/resume and the I/O runtime PM framework.  We've had quite some
-confusion and uncertainty in that area recently, so I'd like to clean it
-up once and for all, so that everyone knows what the rules are and why
-they are what they are.
+Some callers of pm_runtime_get_sync() and other runtime PM helper
+functions, scsi_autopm_get_host() and scsi_autopm_get_device() in
+particular, need to distinguish error codes returned when runtime PM
+is disabled (i.e. power.disable_depth is nonzero for the given
+device) from error codes returned in other situations.  For this
+reason, make the runtime PM helper functions return -EACCES when
+power.disable_depth is nonzero and ensure that this error code
+won't be returned by them in any other circumstances.  Modify
+scsi_autopm_get_host() and scsi_autopm_get_device() to check the
+error code returned by pm_runtime_get_sync() and ignore -EACCES.
 
-[1/3] - Update documentation describing interactions between runtime PM and
-        system suspend/resume.
+Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+---
+ Documentation/power/runtime_pm.txt |    6 ++++--
+ drivers/base/power/runtime.c       |    9 +++++----
+ drivers/scsi/scsi_pm.c             |    8 ++++----
+ 3 files changed, 13 insertions(+), 10 deletions(-)
 
-[2/3] - Return special error code from runtime PM helers if runtime PM is
-        disabled and make the SCSI error handling code take it into account.
-
-[3/3] - Limit race conditions between runtime PM and system suspend/resume.
-
-The patches are on top of the PM domains patchset I've just posted, which is
-available from the git branch at:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/rafael/suspend-2.6.git pm-domains
-
-Thanks,
-Rafael
-    
+Index: linux-2.6/drivers/base/power/runtime.c
+===================================================================
+--- linux-2.6.orig/drivers/base/power/runtime.c
++++ linux-2.6/drivers/base/power/runtime.c
+@@ -135,8 +135,9 @@ static int rpm_check_suspend_allowed(str
+ 
+ 	if (dev->power.runtime_error)
+ 		retval = -EINVAL;
+-	else if (atomic_read(&dev->power.usage_count) > 0
+-	    || dev->power.disable_depth > 0)
++	else if (dev->power.disable_depth > 0)
++		retval = -EACCES;
++	else if (atomic_read(&dev->power.usage_count) > 0)
+ 		retval = -EAGAIN;
+ 	else if (!pm_children_suspended(dev))
+ 		retval = -EBUSY;
+@@ -262,7 +263,7 @@ static int rpm_callback(int (*cb)(struct
+ 		spin_lock_irq(&dev->power.lock);
+ 	}
+ 	dev->power.runtime_error = retval;
+-	return retval;
++	return retval != -EACCES ? retval : -EIO;
+ }
+ 
+ /**
+@@ -458,7 +459,7 @@ static int rpm_resume(struct device *dev
+ 	if (dev->power.runtime_error)
+ 		retval = -EINVAL;
+ 	else if (dev->power.disable_depth > 0)
+-		retval = -EAGAIN;
++		retval = -EACCES;
+ 	if (retval)
+ 		goto out;
+ 
+Index: linux-2.6/drivers/scsi/scsi_pm.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/scsi_pm.c
++++ linux-2.6/drivers/scsi/scsi_pm.c
+@@ -144,9 +144,9 @@ int scsi_autopm_get_device(struct scsi_d
+ 	int	err;
+ 
+ 	err = pm_runtime_get_sync(&sdev->sdev_gendev);
+-	if (err < 0)
++	if (err < 0 && err !=-EACCES)
+ 		pm_runtime_put_sync(&sdev->sdev_gendev);
+-	else if (err > 0)
++	else
+ 		err = 0;
+ 	return err;
+ }
+@@ -173,9 +173,9 @@ int scsi_autopm_get_host(struct Scsi_Hos
+ 	int	err;
+ 
+ 	err = pm_runtime_get_sync(&shost->shost_gendev);
+-	if (err < 0)
++	if (err < 0 && err !=-EACCES)
+ 		pm_runtime_put_sync(&shost->shost_gendev);
+-	else if (err > 0)
++	else
+ 		err = 0;
+ 	return err;
+ }
+Index: linux-2.6/Documentation/power/runtime_pm.txt
+===================================================================
+--- linux-2.6.orig/Documentation/power/runtime_pm.txt
++++ linux-2.6/Documentation/power/runtime_pm.txt
+@@ -291,7 +291,8 @@ drivers/base/power/runtime.c and include
+     - execute the subsystem-level suspend callback for the device; returns 0 on
+       success, 1 if the device's run-time PM status was already 'suspended', or
+       error code on failure, where -EAGAIN or -EBUSY means it is safe to attempt
+-      to suspend the device again in future
++      to suspend the device again in future and -EACCES means that disable_depth
++      is different from 0
+ 
+   int pm_runtime_autosuspend(struct device *dev);
+     - same as pm_runtime_suspend() except that the autosuspend delay is taken
+@@ -304,7 +305,8 @@ drivers/base/power/runtime.c and include
+       success, 1 if the device's run-time PM status was already 'active' or
+       error code on failure, where -EAGAIN means it may be safe to attempt to
+       resume the device again in future, but 'power.runtime_error' should be
+-      checked additionally
++      checked additionally, and -EACCES means that disable_depth is different
++      from 0
+ 
+   int pm_request_idle(struct device *dev);
+     - submit a request to execute the subsystem-level idle callback for the
