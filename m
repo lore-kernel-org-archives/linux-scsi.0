@@ -1,56 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 1/3] PM / Runtime: Update documentation of interactions
- with system sleep
-Date: Sat, 25 Jun 2011 23:01:21 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1106252257440.10907-100000@netrider.rowland.org>
-References: <alpine.LNX.2.00.1106260055270.23991@swampdragon.chaosbits.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 35682] killing requests for dead queue
+Date: Sun, 26 Jun 2011 13:48:34 GMT
+Message-ID: <201106261348.p5QDmYui008366@demeter2.kernel.org>
+References: <bug-35682-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1106260055270.23991@swampdragon.chaosbits.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:56392 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753864Ab1FZNsf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Jun 2011 09:48:35 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p5QDmYjD008367
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 26 Jun 2011 13:48:34 GMT
+In-Reply-To: <bug-35682-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 26 Jun 2011, Jesper Juhl wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=35682
 
-> On Sun, 26 Jun 2011, Rafael J. Wysocki wrote:
-> 
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> 
-> A few tiny nit-picks..
 
-And a few more...
 
-> > The documents describing the interactions between runtime PM and
-> > system sleep generally refer to the model in which the system sleep
-> > state is entered through a global firmware or hardware operation.
-> > As a result, some recommendations given in there are not entirely
-> > suitable for systems in which this is not the case.  Update the
-> > documentation take the existence of those systems into accout.
-> > 
-> 
-> I believe this should read "... documentation to take the existence of 
-> those systems ..."
 
-Also add the missing 'n' in "account".
 
-> > +known to it.  If that is the case and none of the situations listed above takes
-> > +place (in particular, if the system is not waking up from hibernation), it may
-> > +be more efficient to leave the devices that had been suspended before the system
-> > +suspend began in the suspended state.
-> > +
-> 
-> You are refering to device*s*, so I believe this last bit should be "... 
-> in the suspended states".
+--- Comment #2 from alust@alust.homeunix.com  2011-06-26 13:48:16 ---
+Hello,
 
-No, the text is correct as it stands.  There are many devices, but
-there are only two power states: active and suspended.  For example,
-it's perfectly correct to say "All five devices are in the suspended
-state" -- and it would be wrong to say "All five are in the suspended
-states" (that makes it sound as if the states are suspended rather 
-than the devices being suspended).
+I've run into this issue too. Kernel 2.6.39 compiled from linux-source-2.6.39
+debian package.
 
-Alan Stern
+Any time I insert a flash stick or boot with the stick inserted I will got 
+
+"killing requests for dead queue" message that is followed by "lost interrupt"
+and "ide-atapi cmd 0x1e timed out".
+
+Please let me know if any additioanal information is required.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
