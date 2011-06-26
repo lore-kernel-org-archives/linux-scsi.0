@@ -1,279 +1,169 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 3/3] PM: Limit race conditions between
-	runtime PM and system sleep
-Date: Sun, 26 Jun 2011 22:21:21 +0200
-Message-ID: <201106262221.22219.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1106252249450.10907-100000@netrider.rowland.org>
+Subject: 3.0-rc4: Reported regressions from 2.6.39
+Date: Sun, 26 Jun 2011 23:18:39 +0200 (CEST)
+Message-ID: <VDRaLpg_NZ.A.tnC.JZ6BOB@chimera>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <Pine.LNX.4.44L0.1106252249450.10907-100000@netrider.rowland.org>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>
+Return-path: <dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org>
+Content-Disposition: inline
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
+	<mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+	<mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Sender: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
+Errors-To: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sunday, June 26, 2011, Alan Stern wrote:
-> On Sun, 26 Jun 2011, Rafael J. Wysocki wrote:
-> 
-> > From: Rafael J. Wysocki <rjw@sisk.pl>
-> > 
-> > One of the roles of the PM core is to prevent different PM callbacks
-> > executed for the same device object from racing with each other.
-> > Unfortunately, after commit e8665002477f0278f84f898145b1f141ba26ee26
-> > (PM: Allow pm_runtime_suspend() to succeed during system suspend)
-> > runtime PM callbacks may be executed concurrently with system
-> > suspend/resume callbacks for the same device.
-> 
-> ...
-> 
-> > Index: linux-2.6/Documentation/power/runtime_pm.txt
-> > ===================================================================
-> > --- linux-2.6.orig/Documentation/power/runtime_pm.txt
-> > +++ linux-2.6/Documentation/power/runtime_pm.txt
-> 
-> > +The PM core does its best to reduce the probability of race conditions between
-> > +the runtime PM and system suspend/resume (and hibernation) callbacks by carrying
-> > +out the following operations:
-> > +
-> > +  * During system suspend it acquires a runtime PM reference to every device
-> > +    and resume it if there's a runtime PM resume request pending right before
-> > +    executing the subsystem-level .suspend() callback for it.  In addition to
-> > +    that it disables the runtime PM framework for every device right after
-> > +    executing the subsystem-level .suspend() callback for it.
-> > +
-> > +  * During system resume it enables the runtime PM framework for all devices
-> > +    right before executing the subsystem-level .resume() callbacks for them.
-> > +    Additionally, it drops references to all devices right after executing the
-> > +    subsystem-level .resume() callbacks for them.
-> 
-> I think it would be better to be a little more specific here.  Instead 
-> of "acquires a runtime PM reference", say "calls 
-> pm_runtime_get_noresume()".  Or at least, say "increments the 
-> run-time usage counter".
-> 
-> Likewise, instead of "disables the runtime PM framework", say "calls 
-> pm_runtime_disable()" or at least "increments power.disable_depth".
+This message contains a list of some regressions from 2.6.39,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
-OK, updated patch is appended.
+If you know of any other unresolved regressions from 2.6.39, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-> Hmmm, come to think of it...  The documentation for pm_runtime_enable() 
-> and pm_runtime_disable() fails to mention power.disable_depth, which is 
-> a surprising omission.  In particular, the description of 
-> pm_runtime_enable() is wrong because it ignores the possibility of 
-> nested disables.
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
-That's a good point.  There seems to be no description of pm_runtime_barrier()
-too.  I'll prepare a separate patch for those issues.
 
-Thanks,
-Rafael
+Listed regressions statistics:
 
----
-From: Rafael J. Wysocki <rjw@sisk.pl>
-Subject: PM: Limit race conditions between runtime PM and system sleep
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2011-06-26       22       14          12
+  2011-06-12        8        7           7
 
-One of the roles of the PM core is to prevent different PM callbacks
-executed for the same device object from racing with each other.
-Unfortunately, after commit e8665002477f0278f84f898145b1f141ba26ee26
-(PM: Allow pm_runtime_suspend() to succeed during system suspend)
-runtime PM callbacks may be executed concurrently with system
-suspend/resume callbacks for the same device.
 
-The main reason for commit e8665002477f0278f84f898145b1f141ba26ee26
-was that some subsystems and device drivers wanted to use runtime PM
-helpers, pm_runtime_suspend() and pm_runtime_put_sync() in
-particular, for carrying out the suspend of devices in their
-.suspend() callbacks.  However, as it's been determined recently,
-there are multiple reasons not to do so, inlcuding:
+Unresolved regressions
+----------------------
 
- * The caller really doesn't control the runtime PM usage counters,
-   because user space can access them through sysfs and effectively
-   block runtime PM.  That means using pm_runtime_suspend() or
-   pm_runtime_get_sync() to suspend devices during system suspend
-   may or may not work.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38302
+Subject		: NFS crash in un-modified 3.0.0-rc3+, list corruption.
+Submitter	: Ben Greear <greearb@candelatech.com>
+Date		: 2011-06-20 22:42 (7 days old)
+Message-ID	: <4DFFCCDC.2070106@candelatech.com>
+References	: http://marc.info/?l=linux-kernel&m=130860979610651&w=2
 
- * If a driver calls pm_runtime_suspend() from its .suspend()
-   callback, it causes the subsystem's .runtime_suspend() callback to
-   be executed, which leads to the call sequence:
 
-   subsys->suspend(dev)
-      driver->suspend(dev)
-         pm_runtime_suspend(dev)
-            subsys->runtime_suspend(dev)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38292
+Subject		: slab vs lockdep vs debugobjects
+Submitter	: Peter Zijlstra <peterz@infradead.org>
+Date		: 2011-06-20 17:48 (7 days old)
+Message-ID	: <1308592080.26237.114.camel@twins>
+References	: http://marc.info/?l=linux-kernel&m=130859214215636&w=2
 
-   recursive from the subsystem's point of view.  For some subsystems
-   that may actually work (e.g. the platform bus type), but for some
-   it will fail in a rather spectacular fashion (e.g. PCI).  In each
-   case it means a layering violation.
 
- * Both the subsystem and the driver can provide .suspend_noirq()
-   callbacks for system suspend that can do whatever the
-   .runtime_suspend() callbacks do just fine, so it really isn't
-   necessary to call pm_runtime_suspend() during system suspend.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38152
+Subject		: acpi_power_off lockdep splat
+Submitter	: Borislav Petkov <bp@alien8.de>
+Date		: 2011-06-19 13:30 (8 days old)
+Message-ID	: <20110619133049.GA18168@liondog.tnic>
+References	: http://marc.info/?l=linux-kernel&m=130849028317365&w=2
 
- * The runtime PM's handling of wakeup devices is usually different
-   from the system suspend's one, so .runtime_suspend() may simply be
-   inappropriate for system suspend.
 
- * System suspend is supposed to work even if CONFIG_PM_RUNTIME is
-   unset.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38142
+Subject		: i915, framebuffer: wrong xoffset?
+Submitter	: Lucas De Marchi <lucas.de.marchi@gmail.com>
+Date		: 2011-06-18 16:29 (9 days old)
+Message-ID	: <BANLkTikAJEma_NNi0NYnjBEB6RkFJK3Dpg@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=130841462202826&w=2
 
- * The runtime PM workqueue is frozen before system suspend, so if
-   whatever the driver is going to do during system suspend depends
-   on it, that simply won't work.
 
-Still, there is a good reason to allow pm_runtime_resume() to
-succeed during system suspend and resume (for instance, some
-subsystems and device drivers may legitimately use it to ensure that
-their devices are in full-power states before suspending them).
-Moreover, there is no reason to prevent runtime PM callbacks from
-being executed in parallel with the system suspend/resume .prepare()
-and .complete() callbacks and the code removed by commit
-e8665002477f0278f84f898145b1f141ba26ee26 went too far in this
-respect.  On the other hand, runtime PM callbacks, including
-.runtime_resume(), must not be executed during system suspend's
-"late" stage of suspending devices and during system resume's "early"
-device resume stage.
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38122
+Subject		: 3.0-rc3 WARNING: at drivers/gpu/drm/i915/i915_drv.c:340 gen6_gt_force_wake_put+0x29/0x52 [i915]()
+Submitter	: Jens Axboe <jaxboe@fusionio.com>
+Date		: 2011-06-14 12:12 (13 days old)
+Message-ID	: <<4DE3E2C9.6060207@fusionio.com>>
+References	: http://marc.info/?l=linux-kernel&m=130805412314680&w=2
+		  https://lkml.org/lkml/2011/5/30/261
 
-Taking all of the above into consideration, make the PM core
-acquire a runtime PM reference to every device and resume it if
-there's a runtime PM resume request pending right before executing
-the subsystem-level .suspend() callback for it.  Make the PM core
-drop references to all devices right after executing the
-subsystem-level .resume() callbacks for them.  Additionally,
-make the PM core disable the runtime PM framework for all devices
-during system suspend, after executing the subsystem-level .suspend()
-callbacks for them, and enable the runtime PM framework for all
-devices during system resume, right before executing the
-subsystem-level .resume() callbacks for them.
 
-Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
----
- Documentation/power/runtime_pm.txt |   19 +++++++++++++++++++
- drivers/base/power/main.c          |   27 ++++++++++++++++++++++-----
- 2 files changed, 41 insertions(+), 5 deletions(-)
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37562
+Subject		: /scripts/depmod.sh ends up -rw-r--r-- 1 depmod.sh
+Submitter	: Andrew <atswartz@gmail.com>
+Date		: 2011-06-15 23:49 (12 days old)
 
-Index: linux-2.6/drivers/base/power/main.c
-===================================================================
---- linux-2.6.orig/drivers/base/power/main.c
-+++ linux-2.6/drivers/base/power/main.c
-@@ -505,6 +505,7 @@ static int legacy_resume(struct device *
- static int device_resume(struct device *dev, pm_message_t state, bool async)
- {
- 	int error = 0;
-+	bool put = false;
- 
- 	TRACE_DEVICE(dev);
- 	TRACE_RESUME(0);
-@@ -521,6 +522,9 @@ static int device_resume(struct device *
- 	if (!dev->power.is_suspended)
- 		goto Unlock;
- 
-+	pm_runtime_enable(dev);
-+	put = true;
-+
- 	if (dev->pm_domain) {
- 		pm_dev_dbg(dev, state, "power domain ");
- 		error = pm_op(dev, &dev->pm_domain->ops, state);
-@@ -563,6 +567,10 @@ static int device_resume(struct device *
- 	complete_all(&dev->power.completion);
- 
- 	TRACE_RESUME(error);
-+
-+	if (put)
-+		pm_runtime_put_sync(dev);
-+
- 	return error;
- }
- 
-@@ -843,16 +851,22 @@ static int __device_suspend(struct devic
- 	int error = 0;
- 
- 	dpm_wait_for_children(dev, async);
--	device_lock(dev);
- 
- 	if (async_error)
--		goto Unlock;
-+		return 0;
-+
-+	pm_runtime_get_noresume(dev);
-+	if (pm_runtime_barrier(dev) && device_may_wakeup(dev))
-+		pm_wakeup_event(dev, 0);
- 
- 	if (pm_wakeup_pending()) {
-+		pm_runtime_put_sync(dev);
- 		async_error = -EBUSY;
--		goto Unlock;
-+		return 0;
- 	}
- 
-+	device_lock(dev);
-+
- 	if (dev->pm_domain) {
- 		pm_dev_dbg(dev, state, "power domain ");
- 		error = pm_op(dev, &dev->pm_domain->ops, state);
-@@ -890,12 +904,15 @@ static int __device_suspend(struct devic
-  End:
- 	dev->power.is_suspended = !error;
- 
-- Unlock:
- 	device_unlock(dev);
- 	complete_all(&dev->power.completion);
- 
--	if (error)
-+	if (error) {
-+		pm_runtime_put_sync(dev);
- 		async_error = error;
-+	} else if (dev->power.is_suspended) {
-+		__pm_runtime_disable(dev, false);
-+	}
- 
- 	return error;
- }
-Index: linux-2.6/Documentation/power/runtime_pm.txt
-===================================================================
---- linux-2.6.orig/Documentation/power/runtime_pm.txt
-+++ linux-2.6/Documentation/power/runtime_pm.txt
-@@ -567,6 +567,11 @@ this is:
- 	pm_runtime_set_active(dev);
- 	pm_runtime_enable(dev);
- 
-+The PM core always increments the run-time usage counter before calling the
-+->suspend() callback and decrements it after calling the ->resume() callback.
-+Hence disabling run-time PM temporarily like this will not cause any run-time
-+suspend callbacks to be lost.
-+
- On some systems, however, system sleep is not entered through a global firmware
- or hardware operation.  Instead, all hardware components are put into low-power
- states directly by the kernel in a coordinated way.  Then, the system sleep
-@@ -579,6 +584,20 @@ place (in particular, if the system is n
- be more efficient to leave the devices that had been suspended before the system
- suspend began in the suspended state.
- 
-+The PM core does its best to reduce the probability of race conditions between
-+the runtime PM and system suspend/resume (and hibernation) callbacks by carrying
-+out the following operations:
-+
-+  * During system suspend it calls pm_runtime_get_noresume() and
-+    pm_runtime_barrier() for every device right before executing the
-+    subsystem-level .suspend() callback for it.  In addition to that it calls
-+    pm_runtime_disable() for every device right after executing the
-+    subsystem-level .suspend() callback for it.
-+
-+  * During system resume it calls pm_runtime_enable() and pm_runtime_put_sync()
-+    for every device right before and right after executing the subsystem-level
-+    .resume() callback for it, respectively.
-+
- 7. Generic subsystem callbacks
- 
- Subsystems may wish to conserve code space by using the set of generic power
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37482
+Subject		: Driver: i915 - Starting with kernel 3.0.0-rc3, dual monitor freezes a Dell Latitude E6410 when a second monitor is connected at boot time
+Submitter	: David Hill <hilld@binarystorm.net>
+Date		: 2011-06-14 18:42 (13 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37432
+Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
+Submitter	: Oliver Hartkopp <socketcan@hartkopp.net>
+Date		: 2011-06-07 20:06 (20 days old)
+First-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412639f1e5e0ba795a20
+References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37232
+Subject		: [3.0-rc1][NMI/DMAR][iwlagn] errors - PCI system error (SERR) for reason a1 on CPU 0
+Submitter	: Shawn Starr <shawn.starr@rogers.com>
+Date		: 2011-06-03 4:56 (24 days old)
+Message-ID	: <4478124.OuFNgaPiHS@segfault.sh0n.net>
+References	: http://marc.info/?l=linux-kernel&m=130707737616116&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36972
+Subject		: 3.0-rc1: DMAR errors from iwlagn
+Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
+Date		: 2011-05-31 21:14 (27 days old)
+Message-ID	: <4DE55A26.6040702@goop.org>
+References	: http://marc.info/?l=linux-kernel&m=130687723213857&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36452
+Subject		: Artifacts with 3.0-rc1 on SandyBridge
+Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
+Date		: 2011-06-01 13:55 (26 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=36302
+Subject		: SandyBridge can't do s2disk with linux 3.0-rc1
+Submitter	: Alex Zhavnerchik <alex.vizor@gmail.com>
+Date		: 2011-05-30 23:10 (28 days old)
+
+
+Regressions with patches
+------------------------
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=38012
+Subject		: Missing code to load firmware
+Submitter	: Larry Finger <Larry.Finger@lwfinger.net>
+Date		: 2011-06-20 21:44 (7 days old)
+Handled-By	: Larry Finger <Larry.Finger@lwfinger.net>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63002
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=37542
+Subject		: [OOPS] 3.0-rc1 cifs
+Submitter	: Martijn Uffing <mp3project@sarijopen.student.utwente.nl>
+Date		: 2011-06-09 20:15 (18 days old)
+Message-ID	: <Pine.LNX.4.64.1106092211500.19687@sarijopen.student.utwente.nl>
+References	: http://marc.info/?l=linux-kernel&m=130765235926144&w=2
+Handled-By	: Jeff Layton <jlayton@redhat.com>
+Patch		: https://bugzilla.kernel.org/attachment.cgi?id=63202
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.39,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=36912
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
