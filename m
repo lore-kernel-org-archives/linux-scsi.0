@@ -1,47 +1,88 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC PATCH] isci: filter broadcast change notifications during
- SMP phy resets
-Date: Mon, 27 Jun 2011 11:02:34 -0500
-Message-ID: <1309190554.459.3.camel@mulgrave>
-References: <20110624194109.26706.58553.stgit@localhost6.localdomain6>
-	 <4E0894EC.2010509@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Jon Mason <jdmason@kudzu.us>
+Subject: [PATCH] bfa: remove redundant PCIE set MRRS logic
+Date: Mon, 27 Jun 2011 11:13:10 -0500
+Message-ID: <1309191190-14670-1-git-send-email-jdmason@kudzu.us>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43423 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751984Ab1F0QCh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Jun 2011 12:02:37 -0400
-In-Reply-To: <4E0894EC.2010509@suse.de>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:54381 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752681Ab1F0QNP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2011 12:13:15 -0400
+Received: by pzk9 with SMTP id 9so3053801pzk.19
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2011 09:13:15 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, dmilburn@redhat.com, jack_wang@usish.com, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, yuxiangl@marvell.com, hch@lst.de
+To: Jing Huang <huangj@brocade.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2011-06-27 at 16:34 +0200, Hannes Reinecke wrote:
-> On 06/24/2011 09:48 PM, Dan Williams wrote:
-> > From: Jeff Skirvin<jeffrey.d.skirvin@intel.com>
-> >
-> > When resetting a sata device in the domain we have seen occasions where
-> > libsas prematurely marks a device gone in the time it takes for the
-> > device to re-establish the link.  This plays badly with software raid
-> > arrays.  Other libsas drivers have non-uniform delays in their reset
-> > handlers to try to cover this condition, but not sufficient to close the
-> > hole.  Given that a sata device can take many seconds to recover we
-> > filter bcns and poll for the device reattach state before notifying
-> > libsas that the port needs the domain to be rediscovered.  Once this has
-> > been proven out at the lldd level we can think about uplevelling this
-> > feature to a common implementation in libsas.
-> >
-> That's the second time something like this have come up now.
-> Wouldn't it makes sense to implement something like the dev_loss_tmo 
-> mechanism with have for FC? That should cover this situation nicely ...
+bfad_pci_init has code to set the PCIe Maximum Read Request Size, but
+this is unnecessary as this logic already exists in pcie_set_readrq.
+Remove the redundant logic and call pcie_set_readrq.
 
-It's certainly what we agreed to at LSF, yes, so it looks like a good
-idea.
+Only compile tested.
 
-James
+Signed-off-by: Jon Mason <jdmason@kudzu.us>
+---
+ drivers/scsi/bfa/bfad.c |   47 ++---------------------------------------------
+ 1 files changed, 2 insertions(+), 45 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 59b5e9b..a90aafe 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -808,51 +808,8 @@ bfad_pci_init(struct pci_dev *pdev, struct bfad_s *bfad)
+ 	bfad->pcidev = pdev;
+ 
+ 	/* Adjust PCIe Maximum Read Request Size */
+-	if (pcie_max_read_reqsz > 0) {
+-		int pcie_cap_reg;
+-		u16 pcie_dev_ctl;
+-		u16 mask = 0xffff;
+-
+-		switch (pcie_max_read_reqsz) {
+-		case 128:
+-			mask = 0x0;
+-			break;
+-		case 256:
+-			mask = 0x1000;
+-			break;
+-		case 512:
+-			mask = 0x2000;
+-			break;
+-		case 1024:
+-			mask = 0x3000;
+-			break;
+-		case 2048:
+-			mask = 0x4000;
+-			break;
+-		case 4096:
+-			mask = 0x5000;
+-			break;
+-		default:
+-			break;
+-		}
+-
+-		pcie_cap_reg = pci_find_capability(pdev, PCI_CAP_ID_EXP);
+-		if (mask != 0xffff && pcie_cap_reg) {
+-			pcie_cap_reg += 0x08;
+-			pci_read_config_word(pdev, pcie_cap_reg, &pcie_dev_ctl);
+-			if ((pcie_dev_ctl & 0x7000) != mask) {
+-				printk(KERN_WARNING "BFA[%s]: "
+-				"pcie_max_read_request_size is %d, "
+-				"reset to %d\n", bfad->pci_name,
+-				(1 << ((pcie_dev_ctl & 0x7000) >> 12)) << 7,
+-				pcie_max_read_reqsz);
+-
+-				pcie_dev_ctl &= ~0x7000;
+-				pci_write_config_word(pdev, pcie_cap_reg,
+-						pcie_dev_ctl | mask);
+-			}
+-		}
+-	}
++	if (pcie_max_read_reqsz > 0)
++		pcie_set_readrq(pdev, pcie_max_read_reqsz);
+ 
+ 	return 0;
+ 
+-- 
+1.7.5.4
 
