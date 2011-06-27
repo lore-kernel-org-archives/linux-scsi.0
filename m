@@ -1,63 +1,95 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH] isci: filter broadcast change notifications during
- SMP phy resets
-Date: Mon, 27 Jun 2011 09:27:06 -0700
-Message-ID: <BANLkTi=aSXVQ+vjOn0okojabnHaL0NbiCg@mail.gmail.com>
-References: <20110624194109.26706.58553.stgit@localhost6.localdomain6>
-	<4E0894EC.2010509@suse.de>
-	<4E08A8FD.5080305@interlog.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Jon Mason <jdmason@kudzu.us>
+Subject: [PATCH 02/19] qla2xxx: remove unnecessary reads of PCI_CAP_ID_EXP
+Date: Mon, 27 Jun 2011 12:38:27 -0500
+Message-ID: <1309196307-15706-1-git-send-email-jdmason@kudzu.us>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:46972 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752534Ab1F0Q1I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2011 12:27:08 -0400
-Received: by iyb12 with SMTP id 12so4198637iyb.19
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2011 09:27:08 -0700 (PDT)
-In-Reply-To: <4E08A8FD.5080305@interlog.com>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:37116 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752733Ab1F0Ric (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2011 13:38:32 -0400
+Received: by pvg12 with SMTP id 12so2989149pvg.19
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2011 10:38:32 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, dmilburn@redhat.com, jack_wang@usish.com, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, yuxiangl@marvell.com, hch@lst.de
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-On Mon, Jun 27, 2011 at 8:59 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> On 11-06-27 10:34 AM, Hannes Reinecke wrote:
->>
->> On 06/24/2011 09:48 PM, Dan Williams wrote:
->>>
->>> From: Jeff Skirvin<jeffrey.d.skirvin@intel.com>
->>>
->>> When resetting a sata device in the domain we have seen occasions where
->>> libsas prematurely marks a device gone in the time it takes for the
->>> device to re-establish the link. This plays badly with software raid
->>> arrays. Other libsas drivers have non-uniform delays in their reset
->>> handlers to try to cover this condition, but not sufficient to close the
->>> hole. Given that a sata device can take many seconds to recover we
->>> filter bcns and poll for the device reattach state before notifying
->>> libsas that the port needs the domain to be rediscovered. Once this has
->>> been proven out at the lldd level we can think about uplevelling this
->>> feature to a common implementation in libsas.
->>>
->> That's the second time something like this have come up now.
->> Wouldn't it makes sense to implement something like the dev_loss_tmo
->> mechanism
->> with have for FC? That should cover this situation nicely ...
->
-> "NOTE 112 - An STP initiator port should retry connection
-> requests for at least the time indicated by the STP
-> SMP I_T NEXUS LOSS TIME field in the SMP REPORT GENERAL
-> response for the STP target port to which it is trying to
-> establish a connection." [spl2r01.pdf 9.4.3.18 page 612]
->
-> The recommended value for that field is 2000 (i.e. 2 seconds).
-> So 2 seconds is not enough in some circumstances?
+The PCIE capability offset is saved during PCI bus walking.  It will
+remove an unnecessary search in the PCI configuration space if this
+value is referenced instead of reacquiring it.  Also, pci_is_pcie is a
+better way of determining if the device is PCIE or not (as it uses the
+same saved PCIE capability offset).
 
-I believe we have seen longer, but the other concern is that the
-scsi_eh kthread has no coupling with the libsas discovery thread (host
-workqueue).  So, for example, the 2 second wait that mvsas performs in
-mvs_debug_I_T_nexus_reset() (that I assume is for this purpose) does
-not preclude bcns from being processed during that time.
+Signed-off-by: Jon Mason <jdmason@kudzu.us>
+---
+ drivers/scsi/qla2xxx/qla_init.c |    4 ++--
+ drivers/scsi/qla2xxx/qla_nx.c   |    4 ++--
+ drivers/scsi/qla2xxx/qla_os.c   |    4 ++--
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
---
-Dan
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 920b76b..62adfe0 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -733,7 +733,7 @@ qla24xx_pci_config(scsi_qla_host_t *vha)
+ 		pcix_set_mmrbc(ha->pdev, 2048);
+ 
+ 	/* PCIe -- adjust Maximum Read Request Size (2048). */
+-	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
++	if (pci_is_pcie(ha->pdev))
+ 		pcie_set_readrq(ha->pdev, 2048);
+ 
+ 	pci_disable_rom(ha->pdev);
+@@ -769,7 +769,7 @@ qla25xx_pci_config(scsi_qla_host_t *vha)
+ 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
+ 
+ 	/* PCIe -- adjust Maximum Read Request Size (2048). */
+-	if (pci_find_capability(ha->pdev, PCI_CAP_ID_EXP))
++	if (pci_is_pcie(ha->pdev))
+ 		pcie_set_readrq(ha->pdev, 2048);
+ 
+ 	pci_disable_rom(ha->pdev);
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index e1138bc..fe58b85 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -1598,7 +1598,7 @@ qla82xx_pci_info_str(struct scsi_qla_host *vha, char *str)
+ 	char lwstr[6];
+ 	uint16_t lnk;
+ 
+-	pcie_reg = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
++	pcie_reg = pci_pcie_cap(ha->pdev);
+ 	pci_read_config_word(ha->pdev, pcie_reg + PCI_EXP_LNKSTA, &lnk);
+ 	ha->link_width = (lnk >> 4) & 0x3f;
+ 
+@@ -2499,7 +2499,7 @@ qla82xx_start_firmware(scsi_qla_host_t *vha)
+ 	}
+ 
+ 	/* Negotiated Link width */
+-	pcie_cap = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
++	pcie_cap = pci_pcie_cap(ha->pdev);
+ 	pci_read_config_word(ha->pdev, pcie_cap + PCI_EXP_LNKSTA, &lnk);
+ 	ha->link_width = (lnk >> 4) & 0x3f;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index f461925..b39f62e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -426,12 +426,12 @@ qla24xx_pci_info_str(struct scsi_qla_host *vha, char *str)
+ 	uint32_t pci_bus;
+ 	int pcie_reg;
+ 
+-	pcie_reg = pci_find_capability(ha->pdev, PCI_CAP_ID_EXP);
++	pcie_reg = pci_pcie_cap(ha->pdev);
+ 	if (pcie_reg) {
+ 		char lwstr[6];
+ 		uint16_t pcie_lstat, lspeed, lwidth;
+ 
+-		pcie_reg += 0x12;
++		pcie_reg += PCI_EXP_LNKCAP;
+ 		pci_read_config_word(ha->pdev, pcie_reg, &pcie_lstat);
+ 		lspeed = pcie_lstat & (BIT_0 | BIT_1 | BIT_2 | BIT_3);
+ 		lwidth = (pcie_lstat &
+-- 
+1.7.5.4
+
