@@ -1,178 +1,143 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 35682] killing requests for dead queue
-Date: Mon, 27 Jun 2011 18:33:30 GMT
-Message-ID: <201106271833.p5RIXU4u016203@demeter2.kernel.org>
-References: <bug-35682-11613@https.bugzilla.kernel.org/>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 38312] New: Oops in kmem_cache_alloc
+Date: Mon, 27 Jun 2011 13:30:07 -0700
+Message-ID: <20110627133007.f6cba848.akpm@linux-foundation.org>
+References: <bug-38312-10286@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:51261 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753094Ab1F0Sdb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Jun 2011 14:33:31 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p5RIXUDr016204
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Jun 2011 18:33:30 GMT
-In-Reply-To: <bug-35682-11613@https.bugzilla.kernel.org/>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59908 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754272Ab1F0Ue5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Jun 2011 16:34:57 -0400
+In-Reply-To: <bug-38312-10286@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=35682
-
-
-rpansky@gmail.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |rpansky@gmail.com
+To: bugme-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, sgunderson@bigfoot.com
 
 
+(switched to email.  Please respond via emailed reply-to-all, not via the
+bugzilla web interface).
 
+On Sun, 26 Jun 2011 21:48:27 GMT
+bugzilla-daemon@bugzilla.kernel.org wrote:
 
---- Comment #3 from rpansky@gmail.com  2011-06-27 18:33:18 ---
-I have encountered a similar issue. A panic happens immediately after a USB
-stick insertion (sometimes). The message "scsi: killing requests for dead
-queue" is also present. However, in some cases the message was not accompanied
-with panic.
-Notably, I could not reproduce the problem with 2.6.39.2 although that message
-was there too.
+> https://bugzilla.kernel.org/show_bug.cgi?id=38312
+> 
+>            Summary: Oops in kmem_cache_alloc
+>            Product: Memory Management
+>            Version: 2.5
+>     Kernel Version: 3.0.0-rc4
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: akpm@linux-foundation.org
+>         ReportedBy: sgunderson@bigfoot.com
+>         Regression: Yes
+> 
+> 
+> Hi,
+> 
+> 3.0.0-rc4 oopsed on me under an hour after boot. This didn't happen with -rc2,
+> nor 2.6.39 or any of the previous kernels I've been running (the machine is a
+> few years old). There were two oopses, with entirely different backtraces, so I
+> take it this is some MM bug. The oopses are
+> 
+> [ 2370.071691] general protection fault: 0000 [#1] SMP 
+> [ 2370.076925] CPU 8 
+> [ 2370.078770] Modules linked in: sha256_generic cryptd aes_x86_64 aes_generic
+> af_packet microcode ext4 jbd2 crc16 ext2 fuse dm_crypt coretemp w83627ehf
+> hwmon_vid ip_gre gre ide_generic ide_gd_mod ide_cd_mod cdrom forcedeth psmouse
+> ghes serio_raw evdev pcspkr i2c_i801 i2c_core hed rtc_cmos ext3 jbd mbcache
+> dm_mod raid456 async_pq async_xor xor async_memcpy async_raid6_recov raid6_pq
+> async_tx raid1 md_mod usbhid ide_pci_generic ide_core uhci_hcd ata_piix e1000e
+> ehci_hcd sd_mod unix [last unloaded: scsi_wait_scan]
+> [ 2370.126789] 
+> [ 2370.128495] Pid: 24783, comm: apache2 Not tainted 3.0.0-rc4 #1 Supermicro
+> X8DTL/X8DTL
+> [ 2370.136782] RIP: 0010:[<ffffffff810d14db>]  [<ffffffff810d14db>]
+> kmem_cache_alloc+0x4f/0xd7
+> [ 2370.145554] RSP: 0018:ffff8805ecc9b6d8  EFLAGS: 00010086
+> [ 2370.151067] RAX: 0000000000000000 RBX: 0000000000000000 RCX:
+> 0000000000052ffa
+> [ 2370.158394] RDX: 0000000000052ff9 RSI: 0000000000008020 RDI:
+> ffffffff812071fa
+> [ 2370.165728] RBP: ffff8805ecc9b718 R08: 0000000000000002 R09:
+> ffff8806249cb8d0
+> [ 2370.173053] R10: ffff880500000000 R11: ffff880624b86000 R12:
+> 8000000000020021
+> [ 2370.180389] R13: ffff8806270026c0 R14: 0000000000008020 R15:
+> ffff880624841400
+> [ 2370.187718] FS:  00007f0c9207a740(0000) GS:ffff88063fb00000(0000)
+> knlGS:0000000000000000
+> [ 2370.196202] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> [ 2370.202141] CR2: 00007f3125719000 CR3: 00000005be1dd000 CR4:
+> 00000000000006e0
+> [ 2370.209474] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
+> 0000000000000000
+> [ 2370.216802] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
+> 0000000000000400
+> [ 2370.224130] Process apache2 (pid: 24783, threadinfo ffff8805ecc9a000, task
+> ffff880623192ce0)
+> [ 2370.232973] Stack:
+> [ 2370.235191]  ffff8805ecc9b718 0000000000000080 ffff8805ecc9b738
+> 0000000000000000
+> [ 2370.243070]  ffffffff8158d230 0000000000000020 ffff8806249cbbd8
+> ffff880624841400
+> [ 2370.250949]  ffff8805ecc9b748 ffffffff812071fa ffff8805ecc9b798
+> 0000000000000000
+> [ 2370.258818] Call Trace:
+> [ 2370.261470]  [<ffffffff812071fa>] scsi_pool_alloc_command+0x27/0x67
+> [ 2370.267936]  [<ffffffff8120727b>] scsi_host_alloc_command+0x1c/0x67
+> [ 2370.274400]  [<ffffffff81207378>] __scsi_get_command+0x15/0x90
+> [ 2370.280431]  [<ffffffff8120742a>] scsi_get_command+0x37/0xa5
+> [ 2370.286285]  [<ffffffff8120ce5d>] scsi_setup_fs_cmnd+0x6b/0xbf
+> [ 2370.292321]  [<ffffffffa000ebdd>] sd_prep_fn+0x2cb/0xb7a [sd_mod]
+> [ 2370.298612]  [<ffffffff811770c5>] ? deadline_remove_request+0x82/0x89
+> [ 2370.305248]  [<ffffffff8116d4e9>] blk_peek_request+0xe8/0x1d2
+> [ 2370.311191]  [<ffffffff8120c4ec>] scsi_request_fn+0x86/0x49e
+> [ 2370.317046]  [<ffffffff81168fdd>] __blk_run_queue+0x16/0x18
+> [ 2370.322817]  [<ffffffff8116e66d>] queue_unplugged+0x74/0x8a
+> [ 2370.328590]  [<ffffffff8116e7c6>] blk_flush_plug_list+0x143/0x1a8
+> [ 2370.334880]  [<ffffffff8116e83e>] blk_finish_plug+0x13/0x35
+> [ 2370.340653]  [<ffffffff810a63c9>] __do_page_cache_readahead+0x1c0/0x1e3
+> 
+> [ 2370.347460]  [<ffffffff810a6408>] ra_submit+0x1c/0x20
+> [ 2370.352711]  [<ffffffff810a6668>] ondemand_readahead+0x189/0x19c
+> [ 2370.358915]  [<ffffffff810a66ef>] page_cache_async_readahead+0x74/0x7d
+> [ 2370.365642]  [<ffffffff810f9fe8>] __generic_file_splice_read+0x246/0x42f
+> [ 2370.372532]  [<ffffffff810f8172>] ? splice_from_pipe_begin+0x12/0x12
+> [ 2370.379090]  [<ffffffff812cc7fe>] ? inet_sendpage+0xa0/0xb5
+> [ 2370.384860]  [<ffffffff813420ce>] ? apic_timer_interrupt+0xe/0x20
+> [ 2370.391147]  [<ffffffff81269f11>] ? kernel_sendpage+0x48/0x59
+> [ 2370.397090]  [<ffffffff81269f58>] ? sock_sendpage+0x36/0x3a
+> [ 2370.402861]  [<ffffffff810f8eb2>] ? page_cache_pipe_buf_release+0x14/0x1c
+> [ 2370.409847]  [<ffffffff810f8eba>] ? page_cache_pipe_buf_release+0x1c/0x1c
+> [ 2370.416829]  [<ffffffff810fa218>] generic_file_splice_read+0x47/0x73
+> [ 2370.423377]  [<ffffffff810f892f>] do_splice_to+0x6f/0x7c
+> [ 2370.428886]  [<ffffffff810f8f8c>] splice_direct_to_actor+0xbe/0x189
+> [ 2370.435352]  [<ffffffff810f88a3>] ? do_splice_from+0x81/0x81
+> [ 2370.441210]  [<ffffffff81339620>] ? schedule+0x934/0x9c5
+> [ 2370.446723]  [<ffffffff810f909e>] do_splice_direct+0x47/0x5a
+> [ 2370.452577]  [<ffffffff810d89d4>] do_sendfile+0x12f/0x1b9
+> [ 2370.458171]  [<ffffffff810d8aab>] sys_sendfile64+0x4d/0x88
+> [ 2370.463852]  [<ffffffff813417bb>] system_call_fastpath+0x16/0x1b
+> [ 2370.470053] Code: 60 c4 00 00 48 8b 51 08 4c 8b 21 4d 85 e4 75 13 48 89 fa
+> 44 89 f6 4c 89 ef e8 70 fd ff ff 49 89 c4 eb 1f 49 63 45 20 48 8d 4a 01 
+> [ 2370.484262]  8b 1c 04 49 8b 75 00 4c 89 e0 65 48 0f c7 0e 0f 94 c0 84 c0 
+> [ 2370.492127] RIP  [<ffffffff810d14db>] kmem_cache_alloc+0x4f/0xd7
+> [ 2370.498355]  RSP <ffff8805ecc9b6d8>
 
-I hereby provide a panic trace for 2.6.39.1
+Could be that scsi passed a junk address into kmem_cache_alloc(). 
+There have been some recent fixes in that area, but I *think* they were
+present in 3.0-rc4.  James, do you recall?
 
-(Please note that "Tainted: W" is due to this probably harmless warning:
-WARNING: at kernel/printk.c:293 do_syslog+0xbf/0x4f0()
-Hardware name: GA-MA770-UD3
-Attempt to access syslog with CAP_SYS_ADMIN but no CAP_SYSLOG (deprecated).
-)
+Thanks.
 
-BUG: unable to handle kernel NULL pointer dereference at           (null)
-IP: [<ffffffff811a64eb>] blk_dequeue_request+0x1b/0x60
-PGD 226d7f067 PUD 226e77067 PMD 0 
-Oops: 0002 [#1] SMP 
-last sysfs file: /sys/devices/virtual/bdi/8:48/uevent
-CPU 3 
-Modules linked in: usb_storage snd_seq snd_seq_device nfsd nfs lockd sunrpc
-bridge stp llc iptable_mangle iptable_nat nf_nat nf_conntrack_ipv4
-nf_defrag_ipv4 xt_state iptable_filter xt_DSCP xt_dscp xt_owner xt_multiport
-xt_mark xt_connmark nf_conntrack ip_tables x_tables netconsole tun it87
-hwmon_vid hwmon snd_hda_codec_realtek snd_hda_intel snd_hda_codec ohci_hcd
-snd_pcm r8169 snd_timer snd ehci_hcd soundcore usbcore snd_page_alloc i2c_core
-mii
-
-Pid: 16, comm: ksoftirqd/3 Tainted: G        W   2.6.39.1 #1 Gigabyte
-Technology Co., Ltd. GA-MA770-UD3/GA-MA770-UD3
-RIP: 0010:[<ffffffff811a64eb>]  [<ffffffff811a64eb>]
-blk_dequeue_request+0x1b/0x60
-RSP: 0018:ffff88022e8afc98  EFLAGS: 00010046
-RAX: ffff88022d503408 RBX: ffff88022d502e40 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: ffff88022d502e40 RDI: ffff88022d502e40
-RBP: ffff88022d502e40 R08: 0000000000000000 R09: 0000000000000001
-R10: 0000000000000000 R11: 0000000000000400 R12: ffff88022d502878
-R13: ffff88022d502b40 R14: ffff880224d90040 R15: 0000000000000246
-FS:  00007f0465c7c700(0000) GS:ffff88022fd80000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 0000000000000000 CR3: 0000000226d7e000 CR4: 00000000000006e0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process ksoftirqd/3 (pid: 16, threadinfo ffff88022e8ae000, task
-ffff88022e86e2d0)
-Stack:
- ffffffff811a6ef9 ffff88022d502e40 ffffffff811a7d45 0000000000000808
- 0000000000000000 0000000000000286 ffff88022d502878 ffff88022d502878
- ffffffff8125192c ffff880224d90000 ffff880224d93800 ffff880224d90000
-Call Trace:
- [<ffffffff811a6ef9>] ? blk_start_request+0x9/0x40
- [<ffffffff811a7d45>] ? blk_peek_request+0xd5/0x1d0
- [<ffffffff8125192c>] ? scsi_request_fn+0x3ec/0x4a0
- [<ffffffff811a67e8>] ? blk_run_queue+0x28/0x50
- [<ffffffff81250df1>] ? scsi_run_queue+0xd1/0x270
- [<ffffffff810c500a>] ? kmem_cache_free+0x9a/0xb0
- [<ffffffff81251bfb>] ? scsi_next_command+0x3b/0x60
- [<ffffffff812527e7>] ? scsi_io_completion+0x2c7/0x5b0
- [<ffffffff811ad3cd>] ? blk_done_softirq+0x6d/0x80
- [<ffffffff8103f491>] ? __do_softirq+0x91/0x120
- [<ffffffff8103f5c5>] ? run_ksoftirqd+0xa5/0x150
- [<ffffffff8103f520>] ? __do_softirq+0x120/0x120
- [<ffffffff8103f520>] ? __do_softirq+0x120/0x120
- [<ffffffff81054136>] ? kthread+0x96/0xa0
- [<ffffffff8134be94>] ? kernel_thread_helper+0x4/0x10
- [<ffffffff810540a0>] ? kthread_worker_fn+0x120/0x120
- [<ffffffff8134be90>] ? gs_change+0xb/0xb
-Code: 02 00 00 5b c3 31 d2 e9 fb fe ff ff 0f 1f 40 00 48 8b 07 48 8b 4f 38 48
-39 c7 74 46 48 83 7f 78 00 75 3b 48 8b 57 08 48 89 50 08 
- 89 02 8b 47 40 48 89 3f 48 89 7f 08 f6 c4 40 74 1f 83 7f 44 
-RIP  [<ffffffff811a64eb>] blk_dequeue_request+0x1b/0x60
- RSP <ffff88022e8afc98>
-CR2: 0000000000000000
----[ end trace 9658ff6466e3ea44 ]---
-
-Of some interest might also be the following (tainted by nvidia proprietary
-module) trace:
-
-kernel BUG at block/blk-core.c:1935!
-invalid opcode: 0000 [#1] SMP 
-last sysfs file: /sys/devices/virtual/bdi/8:48/uevent
-CPU 0 
-Modules linked in: usb_storage nfsd nfs lockd sunrpc bridge stp llc
-iptable_mangle iptable_nat nf_nat nf_conntrack_ipv4 nf_defrag_ipv4 xt_state
-iptable_filter xt_DSCP xt_dscp xt_owner xt_multiport xt_mark xt_connmark
-nf_conntrack ip_tables x_tables snd_seq snd_seq_device netconsole tun it87
-hwmon_vid hwmon snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_pcm
-snd_timer snd ohci_hcd ehci_hcd r8169 soundcore usbcore snd_page_alloc i2c_core
-mii [last unloaded: nvidia]
-
-Pid: 3, comm: ksoftirqd/0 Tainted: P        W   2.6.39.1 #1 Gigabyte Technology
-Co., Ltd. GA-MA770-UD3/GA-MA770-UD3
-RIP: 0010:[<ffffffff811a651e>]  [<ffffffff811a651e>]
-blk_dequeue_request+0x4e/0x60
-RSP: 0018:ffff88022e881c98  EFLAGS: 00010086
-RAX: ffff88022daea2b0 RBX: ffff88022dae9ce8 RCX: 0000000000000002
-RDX: 000000008102d46e RSI: ffff88022dae9720 RDI: ffff88022dae9ce8
-RBP: 0000000000000286 R08: 0000000000000000 R09: 0000000000000001
-R10: 0000000000000000 R11: 0000000000000400 R12: ffff88022dae9720
-R13: ffff88022dae9ce8 R14: ffff880224112840 R15: 0000000000000246
-FS:  00007f6f93b08700(0000) GS:ffff88022fc00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00007fff561bc188 CR3: 00000002257ee000 CR4: 00000000000006f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process ksoftirqd/0 (pid: 3, threadinfo ffff88022e880000, task
-ffff88022e868ba0)
-Stack:
- ffffffff811a6ef9 ffffffff8111e5ef ffffffff812513cb 0000000000000000
- 0000000000000286 ffff88022dae9720 ffff88022dae9720 ffff880224112840
- ffffffff81251924 ffff88022fc11500 0000000000000086 ffff88022fc11500
-Call Trace:
- [<ffffffff811a6ef9>] ? blk_start_request+0x9/0x40
- [<ffffffff8111e5ef>] ? proc_flush_task+0xff/0x1f0
- [<ffffffff812513cb>] ? scsi_kill_request+0x2b/0x1a0
- [<ffffffff81251924>] ? scsi_request_fn+0x3e4/0x4a0
- [<ffffffff811a67e8>] ? blk_run_queue+0x28/0x50
- [<ffffffff81250df1>] ? scsi_run_queue+0xd1/0x270
- [<ffffffff810c500a>] ? kmem_cache_free+0x9a/0xb0
- [<ffffffff81251bfb>] ? scsi_next_command+0x3b/0x60
- [<ffffffff812527e7>] ? scsi_io_completion+0x2c7/0x5b0
- [<ffffffff811ad3cd>] ? blk_done_softirq+0x6d/0x80
- [<ffffffff8103f491>] ? __do_softirq+0x91/0x120
- [<ffffffff8103f5c5>] ? run_ksoftirqd+0xa5/0x150
- [<ffffffff8103f520>] ? __do_softirq+0x120/0x120
- [<ffffffff8103f520>] ? __do_softirq+0x120/0x120
- [<ffffffff81054136>] ? kthread+0x96/0xa0
- [<ffffffff8134be94>] ? kernel_thread_helper+0x4/0x10
- [<ffffffff810540a0>] ? kthread_worker_fn+0x120/0x120
- [<ffffffff8134be90>] ? gs_change+0xb/0xb
-sd 6:0:0:0: [sdd] Assuming drive cache: write through
-Code: 3f 48 89 7f 08 f6 c4 40 74 1f 83 7f 44 01 74 04 a8 40 74 15 83 e0 11 ff
-c8 0f 95 c0 83 e0 01 48 05 d8 00 00 00 ff 44 81 0c 
- sdd: sdd1
-f3 c3 <0f> 0b eb fe 0f 0b eb fe 66 2e 0f 1f 84 00 00 00 00 00 8b 4f 40 
-RIP  [<ffffffff811a651e>] blk_dequeue_request+0x4e/0x60
- RSP <ffff88022e881c98>
----[ end trace 1be76b42f53e92c7 ]---
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
