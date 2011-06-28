@@ -1,36 +1,33 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 00/12] Fix various section mismatches and build errors.
-Date: Mon, 27 Jun 2011 22:12:57 -0700 (PDT)
-Message-ID: <20110627.221257.1290251511587162468.davem@davemloft.net>
-References: <17dd5038b15d7135791aadbe80464a13c80758d3.1309182742.git.ralf@linux-mips.org>
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [PATCH][Resend] SCSI, target, loopback: Fix memory leak in
+ tcm_loop_make_scsi_hba()
+Date: Tue, 28 Jun 2011 09:22:35 +0300
+Message-ID: <20110628062235.GB14591@shale.localdomain>
+References: <alpine.LNX.2.00.1106272351520.30245@swampdragon.chaosbits.net>
+ <20110627222526.GA14591@shale.localdomain>
+ <alpine.LNX.2.00.1106280029150.30245@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <17dd5038b15d7135791aadbe80464a13c80758d3.1309182742.git.ralf@linux-mips.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: ralf@linux-mips.org
-Cc: akpm@linux-foundation.org, alan@linux.intel.com, bcasavan@sgi.com, airlied@linux.ie, grundler@parisc-linux.org, JBottomley@parallels.com, perex@perex.cz, rpurdie@rpsys.net, klassert@mathematik.tu-chemnitz.de, tj@kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:52859 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756443Ab1F1GXg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Jun 2011 02:23:36 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.00.1106280029150.30245@swampdragon.chaosbits.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Tue, Jun 28, 2011 at 12:30:17AM +0200, Jesper Juhl wrote:
+> 
+> You mean like this - right?
 
-See commit:
+Yeah.
 
-commit 948252cb9e01d65a89ecadf67be5018351eee15e
-Author: David S. Miller <davem@davemloft.net>
-Date:   Tue May 31 19:27:48 2011 -0700
+Acked-by: Dan Carpenter <error27@gmail.com>
 
-    Revert "net: fix section mismatches"
-    
-    This reverts commit e5cb966c0838e4da43a3b0751bdcac7fe719f7b4.
-    
-    It causes new build regressions with gcc-4.2 which is
-    pretty common on non-x86 platforms.
-    
-    Reported-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-    Signed-off-by: David S. Miller <davem@davemloft.net>
+regards,
+dan carpenter
 
-and postings that led to this revert including:
-
-http://marc.info/?l=linux-netdev&m=130653748205263&w=2
