@@ -1,58 +1,78 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 3/3] PM: Limit race conditions between runtime PM and system sleep
-Date: Tue, 28 Jun 2011 23:42:24 +0200
-Message-ID: <201106282342.25003.rjw@sisk.pl>
-References: <201106260054.20578.rjw@sisk.pl> <201106260056.32221.rjw@sisk.pl> <20110628235643.4cf7cff0@tom-ThinkPad-T410>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH 05/15] target: Eliminate usage of struct se_mem
+Date: Tue, 28 Jun 2011 16:22:24 -0700
+Message-ID: <4E0A6230.9040809@redhat.com>
+References: <1309289377-8029-1-git-send-email-agrover@redhat.com> <1309289377-8029-6-git-send-email-agrover@redhat.com> <20110628211228.GA7594@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:37853 "EHLO ogre.sisk.pl"
+Received: from mx1.redhat.com ([209.132.183.28]:1166 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751130Ab1F1Vlu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Jun 2011 17:41:50 -0400
-In-Reply-To: <20110628235643.4cf7cff0@tom-ThinkPad-T410>
+	id S1752597Ab1F1XW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Jun 2011 19:22:29 -0400
+In-Reply-To: <20110628211228.GA7594@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Linux PM mailing list <linux-pm@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tuesday, June 28, 2011, Ming Lei wrote:
+On 06/28/2011 02:12 PM, Christoph Hellwig wrote:
+> This code pretty much is exactly the same as allocation in
+> iscsit_alloc_buffs.  If we can't switch iscsi to use internal buffers
+> directly we should at least export this helper so it can use it.
 > 
-> Hi Rafael,
-> 
-> On Sun, 26 Jun 2011 00:56:31 +0200
-> "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> 
-> > Index: linux-2.6/Documentation/power/runtime_pm.txt
-> > ===================================================================
-> > --- linux-2.6.orig/Documentation/power/runtime_pm.txt
-> > +++ linux-2.6/Documentation/power/runtime_pm.txt
-> > @@ -567,6 +567,11 @@ this is:
-> >  	pm_runtime_set_active(dev);
-> >  	pm_runtime_enable(dev);
-> >  
-> > +The PM core always increments the run-time usage counter before calling the
-> > +->suspend() callback and decrements it after calling the ->resume() callback.
-> > +Hence disabling run-time PM temporarily like this will not cause any run-time
-> > +suspend callbacks to be lost.
-> 
-> Could you explain why the above is that "this will not cause any run-time suspend
-> callbacks to be lost"? 
-> 
-> Looks like it should be "this will not cause any run-time suspend callbacks to
-> be called", but not sure.
+> That also means killing the superflous t_mem_sg/t_mem_sg_nents members
+> in favour of t_data/t_data_nents.
 
-You're right the wording is not perfect.  The problem is that if it's done
-this way without incrementing the usage counter beforehand, the status may
-change to "suspended" right before the pm_runtime_set_active() and then the
-new status will not reflect the actual state of the device.
+Yeah I think iscsi can go back to relying on the core to allocate. I
+know it's a little weird to change it to self-allocation and then back,
+but what the move to self-allocation *really* was about was getting
+se_mem out of iscsi. Now that core no longer has se_mem, and allocating
+data buffs doesn't involve task switches, having core allocate data
+buffs sounds good again.
 
-So, it may be better to say "Hence disabling runtime PM temporarily like this
-will not cause the runtime PM status of the device to conflict with the actual
-device state".
+>> +		ret = transport_allocate_control_task(cmd);
+>> +		if (ret < 0)
+>> +			return ret;
+>> +		else
+>> +			return 1;
+> 
+> What about making transport_allocate_control_task return the expected
+> value directly?
 
-Alan, what do you think?
+Yeah you're right.
 
-Rafael
+>> @@ -4863,19 +4395,13 @@ int transport_generic_new_cmd(struct se_cmd *cmd)
+>>  	if (ret < 0)
+>>  		return ret;
+>>  
+>> -	if (cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) {
+>> -		list_for_each_entry(task, &cmd->t_task_list, t_list) {
+>> -			if (atomic_read(&task->task_sent))
+>> -				continue;
+>> -			if (!dev->transport->map_task_SG)
+>> -				continue;
+>> -
+>> -			ret = dev->transport->map_task_SG(task);
+>> -			if (ret < 0)
+>> -				return ret;
+>> -		}
+>> -	} else {
+>> -		ret = transport_map_control_cmd_to_task(cmd);
+>> +	list_for_each_entry(task, &cmd->t_task_list, t_list) {
+>> +		if (atomic_read(&task->task_sent))
+>> +			continue;
+>> +		if (!dev->transport->map_task_SG)
+>> +			continue;
+>> +  
+>> +		ret = dev->transport->map_task_SG(task);
+> 
+> transport_map_control_cmd_to_task might have called ->cdb_none
+> before.  While I'd love to kill that method I haven't seen any work
+> towards actually making that happen.  So for now I suspect you'll
+> still need the conditionally call to ->cdb_none.
+
+Whups, ok.
+
+Regards -- Andy
