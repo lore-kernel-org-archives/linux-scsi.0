@@ -1,107 +1,53 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 03/12] bnx2fc: Enable REC & CONF support for the session
-Date: Mon, 27 Jun 2011 23:30:55 -0700
-Message-ID: <1309242664-27252-4-git-send-email-bprakash@broadcom.com>
-References: <1309242664-27252-1-git-send-email-bprakash@broadcom.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 3/3] PM: Limit race conditions between
+ runtime PM and system sleep
+Date: Tue, 28 Jun 2011 23:56:43 +0800
+Message-ID: <20110628235643.4cf7cff0@tom-ThinkPad-T410>
+References: <201106260054.20578.rjw@sisk.pl> <201106260056.32221.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4259 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756761Ab1F1Gbe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Jun 2011 02:31:34 -0400
-In-Reply-To: <1309242664-27252-1-git-send-email-bprakash@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <201106260056.32221.rjw@sisk.pl>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/linux-pm>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Based on PRLI response, identify if the target is FCP-2 (seq level error
-recovery) capable, and appropriately set the corresponding CONF, REC flags when
-offloading the session.
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc.h     |    2 ++
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |   12 ++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_io.c  |    3 ++-
- drivers/scsi/bnx2fc/bnx2fc_tgt.c |    8 ++++++++
- 4 files changed, 24 insertions(+), 1 deletions(-)
+Hi Rafael,
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 6012317..d38dcc7 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -244,9 +244,11 @@ struct bnx2fc_rport {
- 	struct fc_rport_priv *rdata;
- 	void __iomem *ctx_base;
- #define DPM_TRIGER_TYPE		0x40
-+	u32 io_timeout;
- 	u32 fcoe_conn_id;
- 	u32 context_id;
- 	u32 sid;
-+	int dev_type;
- 
- 	unsigned long flags;
- #define BNX2FC_FLAG_SESSION_READY	0x1
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index ee1674b..fa263b5 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -279,6 +279,18 @@ int bnx2fc_send_session_ofld_req(struct fcoe_port *port,
- 	ofld_req3.flags |= (((rdata->sp_features & FC_SP_FT_SEQC) ? 1 : 0) <<
- 			     FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT_SHIFT);
- 
-+	/*
-+	 * Info from PRLI response, this info is used for sequence level error
-+	 * recovery support
-+	 */
-+	if (tgt->dev_type == TYPE_TAPE) {
-+		ofld_req3.flags |= 1 <<
-+				    FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ_SHIFT;
-+		ofld_req3.flags |= (((rdata->flags & FC_RP_FLAGS_REC_SUPPORTED)
-+				    ? 1 : 0) <<
-+				    FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID_SHIFT);
-+	}
-+
- 	/* vlan flag */
- 	ofld_req3.flags |= (interface->vlan_enabled <<
- 			    FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG_SHIFT);
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index e711ea3..72940b8 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1862,7 +1862,8 @@ static int bnx2fc_post_io_req(struct bnx2fc_rport *tgt,
- 	}
- 
- 	/* Time IO req */
--	bnx2fc_cmd_timer_set(io_req, BNX2FC_IO_TIMEOUT);
-+	if (tgt->io_timeout)
-+		bnx2fc_cmd_timer_set(io_req, BNX2FC_IO_TIMEOUT);
- 	/* Obtain free SQ entry */
- 	bnx2fc_add_2_sq(tgt, xid);
- 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index 263c267..7eff269 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -353,6 +353,14 @@ static int bnx2fc_init_tgt(struct bnx2fc_rport *tgt,
- 	tgt->rq_cons_idx = 0;
- 	atomic_set(&tgt->num_active_ios, 0);
- 
-+	if (rdata->flags & FC_RP_FLAGS_RETRY) {
-+		tgt->dev_type = TYPE_TAPE;
-+		tgt->io_timeout = 0; /* use default ULP timeout */
-+	} else {
-+		tgt->dev_type = TYPE_DISK;
-+		tgt->io_timeout = BNX2FC_IO_TIMEOUT;
-+	}
-+
- 	/* initialize sq doorbell */
- 	sq_db->header.header = B577XX_DOORBELL_HDR_DB_TYPE;
- 	sq_db->header.header |= B577XX_FCOE_CONNECTION_TYPE <<
+On Sun, 26 Jun 2011 00:56:31 +0200
+"Rafael J. Wysocki" <rjw@sisk.pl> wrote:
+
+> Index: linux-2.6/Documentation/power/runtime_pm.txt
+> ===================================================================
+> --- linux-2.6.orig/Documentation/power/runtime_pm.txt
+> +++ linux-2.6/Documentation/power/runtime_pm.txt
+> @@ -567,6 +567,11 @@ this is:
+>  	pm_runtime_set_active(dev);
+>  	pm_runtime_enable(dev);
+>  
+> +The PM core always increments the run-time usage counter before calling the
+> +->suspend() callback and decrements it after calling the ->resume() callback.
+> +Hence disabling run-time PM temporarily like this will not cause any run-time
+> +suspend callbacks to be lost.
+
+Could you explain why the above is that "this will not cause any run-time suspend
+callbacks to be lost"? 
+
+Looks like it should be "this will not cause any run-time suspend callbacks to
+be called", but not sure.
+
+
+thanks,
 -- 
-1.7.0.6
-
-
+Ming Lei
