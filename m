@@ -1,51 +1,80 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 05/12] bfa: Changes to support vport disable and enable
- operations.
-Date: Wed, 29 Jun 2011 15:35:46 -0500
-Message-ID: <1309379746.13937.9.camel@mulgrave>
-References: <1308005484-10483-1-git-send-email-kgudipat@brocade.com>
+From: Ankit Jain <jankit@suse.de>
+Subject: [PATCH v2][RESEND] scsi_transport_spi: Export host width and HBA
+ id
+Date: Thu, 30 Jun 2011 02:19:57 +0530
+Message-ID: <4E0B8FF5.5060906@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50394 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752570Ab1F2Uft (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2011 16:35:49 -0400
-In-Reply-To: <1308005484-10483-1-git-send-email-kgudipat@brocade.com>
+Received: from cantor2.suse.de ([195.135.220.15]:59625 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754503Ab1F2UsK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2011 16:48:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kgudipat@brocade.com
-Cc: linux-scsi@vger.kernel.org, huangj@brocade.com, adapter_linux_open_src_team@brocade.com
+To: James Bottomley <James.Bottomley@parallels.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2011-06-13 at 15:51 -0700, kgudipat@brocade.com wrote:
-> diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-> index 0371572..d43bf6a 100644
-> --- a/drivers/scsi/bfa/bfi_ms.h
-> +++ b/drivers/scsi/bfa/bfi_ms.h
-> @@ -72,12 +72,12 @@ struct bfi_iocfc_bootwwns {
->   * Queue configuration response from firmware
->   */
->  struct bfi_iocfc_qreg_s {
-> -       u32     cpe_q_ci_off[ BFI_IOC_MAX_CQS ];
-> -       u32     cpe_q_pi_off[ BFI_IOC_MAX_CQS ];
-> -       u32     cpe_qctl_off[ BFI_IOC_MAX_CQS ];
-> -       u32     rme_q_ci_off[ BFI_IOC_MAX_CQS ];
-> -       u32     rme_q_pi_off[ BFI_IOC_MAX_CQS ];
-> -       u32     rme_qctl_off[ BFI_IOC_MAX_CQS ];
-> +       u32     cpe_q_ci_off[BFI_IOC_MAX_CQS];
-> +       u32     cpe_q_pi_off[BFI_IOC_MAX_CQS];
-> +       u32     cpe_qctl_off[BFI_IOC_MAX_CQS];
-> +       u32     rme_q_ci_off[BFI_IOC_MAX_CQS];
-> +       u32     rme_q_pi_off[BFI_IOC_MAX_CQS];
-> +       u32     rme_qctl_off[BFI_IOC_MAX_CQS];
->  };
+This is a slightly updated version of the patch which Hannes had
+posted earlier. This changes the host attr name from "width" to
+"host_width", as there already exists an attribute named "width".
 
-Next time, don't try to correct style cockups introduced in one patch in
-a subsequent one ... just fix it in the actual patch.  I've done it this
-time, but I'll kick the series back next time.
+---
+Currently it's impossible to find out if the host supports
+wide SCSI unless you're committed to trawl through syslog.
+And it's near impossible to find the actual HBA id, which
+is settable for some SCSI HBAs (like aic7xxx).
+So export them via sysfs.
 
-James
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Ankit Jain <jankit@suse.de>
+---
+ drivers/scsi/scsi_transport_spi.c |   24 ++++++++++++++++++++++++
+ 1 files changed, 24 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 8a172d4..5fbeadd 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -597,6 +597,28 @@ static DEVICE_ATTR(signalling, S_IRUGO,
+ 		   show_spi_host_signalling,
+ 		   store_spi_host_signalling);
+ 
++static ssize_t show_spi_host_width(struct device *cdev,
++				      struct device_attribute *attr,
++				      char *buf)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++
++	return sprintf(buf, "%s\n", shost->max_id == 16 ? "wide" : "narrow");
++}
++static DEVICE_ATTR(host_width, S_IRUGO,
++		   show_spi_host_width, NULL);
++
++static ssize_t show_spi_host_hba_id(struct device *cdev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct Scsi_Host *shost = transport_class_to_shost(cdev);
++
++	return sprintf(buf, "%d\n", shost->this_id);
++}
++static DEVICE_ATTR(hba_id, S_IRUGO,
++		   show_spi_host_hba_id, NULL);
++
+ #define DV_SET(x, y)			\
+ 	if(i->f->set_##x)		\
+ 		i->f->set_##x(sdev->sdev_target, y)
+@@ -1380,6 +1402,8 @@ static DECLARE_ANON_TRANSPORT_CLASS(spi_device_class,
+ 
+ static struct attribute *host_attributes[] = {
+ 	&dev_attr_signalling.attr,
++	&dev_attr_host_width.attr,
++	&dev_attr_hba_id.attr,
+ 	NULL
+ };
 
+-- 
+Ankit Jain
+SUSE Labs
