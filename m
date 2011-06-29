@@ -1,33 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 8/9] [SCSI] mvsas: update comments
-Date: Wed, 29 Jun 2011 10:46:12 -0500
-Message-ID: <1309362373.2551.12.camel@mulgrave>
-References: <mvsas-comments>
-	 <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
-	 <A93C706D6A2D45248207F8826F244771@usish.com.cn>
-	 <F766E4F80769BD478052FB6533FA745D19FAD0B7B1@SC-VEXCH4.marvell.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 00/12] Fix various section mismatches and build errors.
+Date: Wed, 29 Jun 2011 17:19:21 +0100
+Message-ID: <20110629161921.GA25833@linux-mips.org>
+References: <17dd5038b15d7135791aadbe80464a13c80758d3.1309182742.git.ralf@linux-mips.org>
+ <20110627.221257.1290251511587162468.davem@davemloft.net>
+ <20110629130711.GA15649@linux-mips.org>
+ <1309355899.2551.4.camel@mulgrave>
+ <20110629151424.GD18023@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39441 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754373Ab1F2PqQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2011 11:46:16 -0400
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D19FAD0B7B1@SC-VEXCH4.marvell.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-serial-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110629151424.GD18023@kroah.com>
+Sender: linux-serial-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Miller <davem@davemloft.net>, akpm@linux-foundation.org, alan@linux.intel.com, bcasavan@sgi.com, airlied@linux.ie, grundler@parisc-linux.org, perex@perex.cz, rpurdie@rpsys.net, klassert@mathematik.tu-chemnitz.de, tj@kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Jack Wang <jack_wang@usish.com>, "yxlraid@gmail.com" <yxlraid@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-05-24 at 19:05 -0700, Xiangliang Yu wrote:
-> I find a issue in [PATCH 9/9] before committing. I will commit the
-> patch when the issue is fixed
+On Wed, Jun 29, 2011 at 08:14:24AM -0700, Greg KH wrote:
 
-So what do you want me to do here?  You still need to add the ABI file
-for GregKH in 3/9 and 9/9 still hasn't appeared yet.
+> 
+> On Wed, Jun 29, 2011 at 08:58:19AM -0500, James Bottomley wrote:
+> > I think we should simply concentrate on __init and __exit; that's where
+> > most of the discard value lies and stop expending huge efforts on the
+> > __devX stuff which adds huge complexity for no real gain.
+> 
+> I have long felt that those __devX markings should just go away as they
+> cause nothing but problems and have no real gain as you point out.
 
-James
+The suggestion to do that has been floated around before but seems to
+have missed sufficient thrust.  I'm all for it; the manual tagging with
+__devX has not been very efficient on developer time.  I just want to see
+meaningful warnings again over all that noise the current mechanisn may
+produce.
 
-
+  Ralf
