@@ -1,98 +1,83 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC v3 PATCH 1/2] bsg: Add infrastructure to send in kernel
- bsg commands.
-Date: Wed, 29 Jun 2011 16:11:11 +0900
-Message-ID: <20110629160422H.fujita.tomonori@lab.ntt.co.jp>
-References: <alpine.LFD.2.02.1106160825540.2424@localhost.localdomain>
-	<20110623104625Y.fujita.tomonori@lab.ntt.co.jp>
-	<4E03F050.5030001@panasas.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 00/12] Fix various section mismatches and build errors.
+Date: Wed, 29 Jun 2011 14:07:11 +0100
+Message-ID: <20110629130711.GA15649@linux-mips.org>
+References: <17dd5038b15d7135791aadbe80464a13c80758d3.1309182742.git.ralf@linux-mips.org>
+ <20110627.221257.1290251511587162468.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:41430 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751727Ab1F2HLU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2011 03:11:20 -0400
-In-Reply-To: <4E03F050.5030001@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <20110627.221257.1290251511587162468.davem@davemloft.net>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: David Miller <davem@davemloft.net>
+Cc: akpm@linux-foundation.org, alan@linux.intel.com, bcasavan@sgi.com, airlied@linux.ie, grundler@parisc-linux.org, JBottomley@parallels.com, perex@perex.cz, rpurdie@rpsys.net, klassert@mathematik.tu-chemnitz.de, tj@kernel.org, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, chad.dupuis@qlogic.com, linux-scsi@vger.kernel.org
 
-On Thu, 23 Jun 2011 19:02:56 -0700
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Mon, Jun 27, 2011 at 10:12:57PM -0700, David Miller wrote:
 
-> On 06/22/2011 06:51 PM, FUJITA Tomonori wrote:
-> >> @@ -965,6 +1009,40 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-> >>         }
-> >>   }
-> > 
-> > Rather than adding 'is_user' argument to everywhere, it could cleaner
-> > to add something like 'int from_kernel' in struct bsg_command? No?
-> > 
-> 
-> I agree it should be part of the bsg_command,
-> 
-> I would prefer if all these "from_kernel" or "is_user" are bool. and true/false
-> we don't do int for bool(s) in Kernel anymore.
+> commit 948252cb9e01d65a89ecadf67be5018351eee15e
+> Author: David S. Miller <davem@davemloft.net>
+> Date:   Tue May 31 19:27:48 2011 -0700
+>=20
+>     Revert "net: fix section mismatches"
+>    =20
+>     This reverts commit e5cb966c0838e4da43a3b0751bdcac7fe719f7b4.
+>    =20
+>     It causes new build regressions with gcc-4.2 which is
+>     pretty common on non-x86 platforms.
+>    =20
+>     Reported-by: James Bottomley <James.Bottomley@HansenPartnership.c=
+om>
+>     Signed-off-by: David S. Miller <davem@davemloft.net>
+>=20
+> and postings that led to this revert including:
+>=20
+> http://marc.info/?l=3Dlinux-netdev&m=3D130653748205263&w=3D2
 
-Yeah.
+Thanks for the pointers; I looked into it a bit deeper and found that t=
+he
+construct which hppa64-linux-gcc 4.2.4 doesn't like is the combination =
+of
+const and __devinitconst __devinitdata.
 
+My patches are minimalistic and don't do any constification and seem to
+work fine for PA-RISC.
 
-> >> +int bsg_private_command (struct request_queue *q, struct sg_io_v4 *hdr)
-> A question:
->   I needed to do something like this for a long time. But the way I need it I actually
->   have user_buffers at @hdr. Because I want it as part of an OSD ioctl which is filtered
->   and enhanced and then chained to here. (Like block devices chain to blk_ioctl)
-> 
->   Could we add in the future, a bool param "is_user" to this API?
+A possible alternative to allow the use of Micha=C5=82's reverted patch=
+ would
+be to conditionalize the definition of __devinitconst.  There is no
+user of __devexitconst so I left that unchanged.
 
-Why applications can't simply send bsg commands instead of ioctl?
+  Ralf
 
+Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
 
-> >> +{
-> >> +       struct request *rq;
-> >> +       struct bio *bio, *bidi_bio = NULL;
-> >> +       int at_head;
-> >> +       u8 sense[SCSI_SENSE_BUFFERSIZE];
-> >> +       fmode_t has_write_perm = 0;
-> >> +       int ret;
-> >> +
-> >> +       if (!q)
-> >> +               return -ENXIO;
-> >> +
-> >> +       /* Fake that we have write permission */
-> >> +       has_write_perm |= FMODE_WRITE;
-> >> +
-> >> +       rq = bsg_map_hdr_kern(q, hdr, has_write_perm, sense);
-> >> +
-> >> +       if (IS_ERR(rq)) {
-> >> +               return PTR_ERR(rq);
-> >> +       }
-> >> +
-> >> +       bio = rq->bio;
-> >> +       if (rq->next_rq)
-> >> +               bidi_bio = rq->next_rq->bio;
-> >> +       at_head = (0 == (hdr->flags & BSG_FLAG_Q_AT_TAIL));
-> >> +
-> >> +       blk_execute_rq(q, NULL, rq, at_head);
-> >> +       ret = blk_complete_sgv4_hdr_rq(rq, hdr, bio, bidi_bio, 0);
-> >> +
-> >> +       return ret;
-> >> +}
-> >> +EXPORT_SYMBOL(bsg_private_command);
-> > 
-> > EXPORT_SYMBOL_GPL, please.
-> > 
-> 
-> I have a question about this API:
->  From user mode we open a filehandle on the device and it is pinned down till
->  we close the handle. A kernel user API might need to take the device reference
->  somewhere. Is that true?
+ include/linux/init.h |    8 ++++++++
+ 1 files changed, 8 insertions(+), 0 deletions(-)
 
-Yeah, as I wrote at the previous submission, I still suspect that this
-patch has such problem. I guess we need to get the reference (and
-check the status) before sending in-kernel requests. And that's why I
-don't like in-kernel request support (making the reference model
-complicated).
+diff --git a/include/linux/init.h b/include/linux/init.h
+index 577671c..e12fd85 100644
+--- a/include/linux/init.h
++++ b/include/linux/init.h
+@@ -84,7 +84,15 @@
+ /* Used for HOTPLUG */
+ #define __devinit        __section(.devinit.text) __cold
+ #define __devinitdata    __section(.devinit.data)
++#if defined __GNUC__ && (__GNUC__ =3D=3D 4) && (__GNUC_MINOR__ =3D=3D =
+2)
++/*
++ * GCC 4.2 will sometimes throw an error if the combination of const a=
+nd
++ * __devinitconst is being used.  As a workaround make __devinitconst =
+a noop
++ */
++#define __devinitconst
++#else
+ #define __devinitconst   __section(.devinit.rodata)
++#endif
+ #define __devexit        __section(.devexit.text) __exitused __cold
+ #define __devexitdata    __section(.devexit.data)
+ #define __devexitconst   __section(.devexit.rodata)
