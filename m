@@ -1,127 +1,230 @@
 From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: [PATCH 2/6 v2] PM / Runtime: Return special error code if runtime PM is disabled
-Date: Wed, 29 Jun 2011 23:32:34 +0200
-Message-ID: <201106292332.35170.rjw@sisk.pl>
+Subject: [PATCH 4/6 v2] PM: Limit race conditions between runtime PM and system sleep (v2)
+Date: Wed, 29 Jun 2011 23:34:24 +0200
+Message-ID: <201106292334.24518.rjw@sisk.pl>
 References: <201106260054.20578.rjw@sisk.pl> <201106292329.04163.rjw@sisk.pl>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:41294 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757925Ab1F2Vf2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2011 17:35:28 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <201106292329.04163.rjw@sisk.pl>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linux PM mailing list <linux-pm@lists.linux-foundation.org>
 Cc: Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, Jesse Barnes <jbarnes@virtuousgeek.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Rafael J. Wysocki <rjw@sisk.pl>
 
-Some callers of pm_runtime_get_sync() and other runtime PM helper
-functions, scsi_autopm_get_host() and scsi_autopm_get_device() in
-particular, need to distinguish error codes returned when runtime PM
-is disabled (i.e. power.disable_depth is nonzero for the given
-device) from error codes returned in other situations.  For this
-reason, make the runtime PM helper functions return -EACCES when
-power.disable_depth is nonzero and ensure that this error code
-won't be returned by them in any other circumstances.  Modify
-scsi_autopm_get_host() and scsi_autopm_get_device() to check the
-error code returned by pm_runtime_get_sync() and ignore -EACCES.
+One of the roles of the PM core is to prevent different PM callbacks
+executed for the same device object from racing with each other.
+Unfortunately, after commit e8665002477f0278f84f898145b1f141ba26ee26
+(PM: Allow pm_runtime_suspend() to succeed during system suspend)
+runtime PM callbacks may be executed concurrently with system
+suspend/resume callbacks for the same device.
+
+The main reason for commit e8665002477f0278f84f898145b1f141ba26ee26
+was that some subsystems and device drivers wanted to use runtime PM
+helpers, pm_runtime_suspend() and pm_runtime_put_sync() in
+particular, for carrying out the suspend of devices in their
+.suspend() callbacks.  However, as it's been determined recently,
+there are multiple reasons not to do so, inlcuding:
+
+ * The caller really doesn't control the runtime PM usage counters,
+   because user space can access them through sysfs and effectively
+   block runtime PM.  That means using pm_runtime_suspend() or
+   pm_runtime_get_sync() to suspend devices during system suspend
+   may or may not work.
+
+ * If a driver calls pm_runtime_suspend() from its .suspend()
+   callback, it causes the subsystem's .runtime_suspend() callback to
+   be executed, which leads to the call sequence:
+
+   subsys->suspend(dev)
+      driver->suspend(dev)
+         pm_runtime_suspend(dev)
+            subsys->runtime_suspend(dev)
+
+   recursive from the subsystem's point of view.  For some subsystems
+   that may actually work (e.g. the platform bus type), but for some
+   it will fail in a rather spectacular fashion (e.g. PCI).  In each
+   case it means a layering violation.
+
+ * Both the subsystem and the driver can provide .suspend_noirq()
+   callbacks for system suspend that can do whatever the
+   .runtime_suspend() callbacks do just fine, so it really isn't
+   necessary to call pm_runtime_suspend() during system suspend.
+
+ * The runtime PM's handling of wakeup devices is usually different
+   from the system suspend's one, so .runtime_suspend() may simply be
+   inappropriate for system suspend.
+
+ * System suspend is supposed to work even if CONFIG_PM_RUNTIME is
+   unset.
+
+ * The runtime PM workqueue is frozen before system suspend, so if
+   whatever the driver is going to do during system suspend depends
+   on it, that simply won't work.
+
+Still, there is a good reason to allow pm_runtime_resume() to
+succeed during system suspend and resume (for instance, some
+subsystems and device drivers may legitimately use it to ensure that
+their devices are in full-power states before suspending them).
+Moreover, there is no reason to prevent runtime PM callbacks from
+being executed in parallel with the system suspend/resume .prepare()
+and .complete() callbacks and the code removed by commit
+e8665002477f0278f84f898145b1f141ba26ee26 went too far in this
+respect.  On the other hand, runtime PM callbacks, including
+.runtime_resume(), must not be executed during system suspend's
+"late" stage of suspending devices and during system resume's "early"
+device resume stage.
+
+Taking all of the above into consideration, make the PM core
+acquire a runtime PM reference to every device and resume it if
+there's a runtime PM resume request pending right before executing
+the subsystem-level .suspend() callback for it.  Make the PM core
+drop references to all devices right after executing the
+subsystem-level .resume() callbacks for them.  Additionally,
+make the PM core disable the runtime PM framework for all devices
+during system suspend, after executing the subsystem-level .suspend()
+callbacks for them, and enable the runtime PM framework for all
+devices during system resume, right before executing the
+subsystem-level .resume() callbacks for them.
 
 Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 ---
- Documentation/power/runtime_pm.txt |    6 ++++--
- drivers/base/power/runtime.c       |    9 +++++----
- drivers/scsi/scsi_pm.c             |    8 ++++----
- 3 files changed, 13 insertions(+), 10 deletions(-)
+ Documentation/power/runtime_pm.txt |   21 +++++++++++++++++++++
+ drivers/base/power/main.c          |   35 +++++++++++++++++++++++------------
+ 2 files changed, 44 insertions(+), 12 deletions(-)
 
-Index: linux-2.6/drivers/base/power/runtime.c
+Index: linux-2.6/drivers/base/power/main.c
 ===================================================================
---- linux-2.6.orig/drivers/base/power/runtime.c
-+++ linux-2.6/drivers/base/power/runtime.c
-@@ -135,8 +135,9 @@ static int rpm_check_suspend_allowed(str
+--- linux-2.6.orig/drivers/base/power/main.c
++++ linux-2.6/drivers/base/power/main.c
+@@ -505,6 +505,7 @@ static int legacy_resume(struct device *
+ static int device_resume(struct device *dev, pm_message_t state, bool async)
+ {
+ 	int error = 0;
++	bool put = false;
  
- 	if (dev->power.runtime_error)
- 		retval = -EINVAL;
--	else if (atomic_read(&dev->power.usage_count) > 0
--	    || dev->power.disable_depth > 0)
-+	else if (dev->power.disable_depth > 0)
-+		retval = -EACCES;
-+	else if (atomic_read(&dev->power.usage_count) > 0)
- 		retval = -EAGAIN;
- 	else if (!pm_children_suspended(dev))
- 		retval = -EBUSY;
-@@ -262,7 +263,7 @@ static int rpm_callback(int (*cb)(struct
- 		spin_lock_irq(&dev->power.lock);
+ 	TRACE_DEVICE(dev);
+ 	TRACE_RESUME(0);
+@@ -521,6 +522,9 @@ static int device_resume(struct device *
+ 	if (!dev->power.is_suspended)
+ 		goto Unlock;
+ 
++	pm_runtime_enable(dev);
++	put = true;
++
+ 	if (dev->pm_domain) {
+ 		pm_dev_dbg(dev, state, "power domain ");
+ 		error = pm_op(dev, &dev->pm_domain->ops, state);
+@@ -563,6 +567,10 @@ static int device_resume(struct device *
+ 	complete_all(&dev->power.completion);
+ 
+ 	TRACE_RESUME(error);
++
++	if (put)
++		pm_runtime_put_sync(dev);
++
+ 	return error;
+ }
+ 
+@@ -843,16 +851,22 @@ static int __device_suspend(struct devic
+ 	int error = 0;
+ 
+ 	dpm_wait_for_children(dev, async);
+-	device_lock(dev);
+ 
+ 	if (async_error)
+-		goto Unlock;
++		return 0;
++
++	pm_runtime_get_noresume(dev);
++	if (pm_runtime_barrier(dev) && device_may_wakeup(dev))
++		pm_wakeup_event(dev, 0);
+ 
+ 	if (pm_wakeup_pending()) {
++		pm_runtime_put_sync(dev);
+ 		async_error = -EBUSY;
+-		goto Unlock;
++		return 0;
  	}
- 	dev->power.runtime_error = retval;
--	return retval;
-+	return retval != -EACCES ? retval : -EIO;
+ 
++	device_lock(dev);
++
+ 	if (dev->pm_domain) {
+ 		pm_dev_dbg(dev, state, "power domain ");
+ 		error = pm_op(dev, &dev->pm_domain->ops, state);
+@@ -890,12 +904,15 @@ static int __device_suspend(struct devic
+  End:
+ 	dev->power.is_suspended = !error;
+ 
+- Unlock:
+ 	device_unlock(dev);
+ 	complete_all(&dev->power.completion);
+ 
+-	if (error)
++	if (error) {
++		pm_runtime_put_sync(dev);
+ 		async_error = error;
++	} else if (dev->power.is_suspended) {
++		__pm_runtime_disable(dev, false);
++	}
+ 
+ 	return error;
  }
+@@ -1035,13 +1052,7 @@ int dpm_prepare(pm_message_t state)
+ 		get_device(dev);
+ 		mutex_unlock(&dpm_list_mtx);
  
- /**
-@@ -458,7 +459,7 @@ static int rpm_resume(struct device *dev
- 	if (dev->power.runtime_error)
- 		retval = -EINVAL;
- 	else if (dev->power.disable_depth > 0)
--		retval = -EAGAIN;
-+		retval = -EACCES;
- 	if (retval)
- 		goto out;
+-		pm_runtime_get_noresume(dev);
+-		if (pm_runtime_barrier(dev) && device_may_wakeup(dev))
+-			pm_wakeup_event(dev, 0);
+-
+-		pm_runtime_put_sync(dev);
+-		error = pm_wakeup_pending() ?
+-				-EBUSY : device_prepare(dev, state);
++		error = device_prepare(dev, state);
  
-Index: linux-2.6/drivers/scsi/scsi_pm.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/scsi_pm.c
-+++ linux-2.6/drivers/scsi/scsi_pm.c
-@@ -144,9 +144,9 @@ int scsi_autopm_get_device(struct scsi_d
- 	int	err;
- 
- 	err = pm_runtime_get_sync(&sdev->sdev_gendev);
--	if (err < 0)
-+	if (err < 0 && err !=-EACCES)
- 		pm_runtime_put_sync(&sdev->sdev_gendev);
--	else if (err > 0)
-+	else
- 		err = 0;
- 	return err;
- }
-@@ -173,9 +173,9 @@ int scsi_autopm_get_host(struct Scsi_Hos
- 	int	err;
- 
- 	err = pm_runtime_get_sync(&shost->shost_gendev);
--	if (err < 0)
-+	if (err < 0 && err !=-EACCES)
- 		pm_runtime_put_sync(&shost->shost_gendev);
--	else if (err > 0)
-+	else
- 		err = 0;
- 	return err;
- }
+ 		mutex_lock(&dpm_list_mtx);
+ 		if (error) {
 Index: linux-2.6/Documentation/power/runtime_pm.txt
 ===================================================================
 --- linux-2.6.orig/Documentation/power/runtime_pm.txt
 +++ linux-2.6/Documentation/power/runtime_pm.txt
-@@ -291,7 +291,8 @@ drivers/base/power/runtime.c and include
-     - execute the subsystem-level suspend callback for the device; returns 0 on
-       success, 1 if the device's run-time PM status was already 'suspended', or
-       error code on failure, where -EAGAIN or -EBUSY means it is safe to attempt
--      to suspend the device again in future
-+      to suspend the device again in future and -EACCES means that
-+      'power.disable_depth' is different from 0
+@@ -567,6 +567,13 @@ this is:
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
  
-   int pm_runtime_autosuspend(struct device *dev);
-     - same as pm_runtime_suspend() except that the autosuspend delay is taken
-@@ -304,7 +305,8 @@ drivers/base/power/runtime.c and include
-       success, 1 if the device's run-time PM status was already 'active' or
-       error code on failure, where -EAGAIN means it may be safe to attempt to
-       resume the device again in future, but 'power.runtime_error' should be
--      checked additionally
-+      checked additionally, and -EACCES means that 'power.disable_depth' is
-+      different from 0
++The PM core always increments the run-time usage counter before calling the
++->suspend() callback and decrements it after calling the ->resume() callback.
++Hence disabling run-time PM temporarily like this will not cause any runtime
++suspend attempts to be permanently lost.  If the usage count goes to zero
++following the return of the ->resume() callback, the ->runtime_idle() callback
++will be invoked as usual.
++
+ On some systems, however, system sleep is not entered through a global firmware
+ or hardware operation.  Instead, all hardware components are put into low-power
+ states directly by the kernel in a coordinated way.  Then, the system sleep
+@@ -579,6 +586,20 @@ place (in particular, if the system is n
+ be more efficient to leave the devices that had been suspended before the system
+ suspend began in the suspended state.
  
-   int pm_request_idle(struct device *dev);
-     - submit a request to execute the subsystem-level idle callback for the
-
++The PM core does its best to reduce the probability of race conditions between
++the runtime PM and system suspend/resume (and hibernation) callbacks by carrying
++out the following operations:
++
++  * During system suspend it calls pm_runtime_get_noresume() and
++    pm_runtime_barrier() for every device right before executing the
++    subsystem-level .suspend() callback for it.  In addition to that it calls
++    pm_runtime_disable() for every device right after executing the
++    subsystem-level .suspend() callback for it.
++
++  * During system resume it calls pm_runtime_enable() and pm_runtime_put_sync()
++    for every device right before and right after executing the subsystem-level
++    .resume() callback for it, respectively.
++
+ 7. Generic subsystem callbacks
+ 
+ Subsystems may wish to conserve code space by using the set of generic power
