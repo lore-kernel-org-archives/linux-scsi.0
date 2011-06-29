@@ -1,64 +1,121 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 3/3] PM: Limit race conditions between runtime PM and system sleep
-Date: Wed, 29 Jun 2011 21:35:46 +0200
-Message-ID: <201106292135.47147.rjw@sisk.pl>
-References: <Pine.LNX.4.44L0.1106291004180.2064-100000@iolanthe.rowland.org>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [RFC v3 PATCH 1/2] bsg: Add infrastructure to send in kernel
+ bsg commands.
+Date: Wed, 29 Jun 2011 16:27:34 -0400
+Message-ID: <alpine.LFD.2.02.1106291623380.8334@localhost.localdomain>
+References: <alpine.LFD.2.02.1106160825540.2424@localhost.localdomain> <20110623104625Y.fujita.tomonori@lab.ntt.co.jp> <4E03F050.5030001@panasas.com> <20110629160422H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1106291004180.2064-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Ming Lei <tom.leiming@gmail.com>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:40425
+	"EHLO CH1EHSOBE018.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754754Ab1F2U1v convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Jun 2011 16:27:51 -0400
+In-Reply-To: <20110629160422H.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "bharrosh@panasas.com" <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wednesday, June 29, 2011, Alan Stern wrote:
-> On Tue, 28 Jun 2011, Rafael J. Wysocki wrote:
-> 
-> > On Tuesday, June 28, 2011, Ming Lei wrote:
-> > > 
-> > > Hi Rafael,
-> > > 
-> > > On Sun, 26 Jun 2011 00:56:31 +0200
-> > > "Rafael J. Wysocki" <rjw@sisk.pl> wrote:
-> > > 
-> > > > Index: linux-2.6/Documentation/power/runtime_pm.txt
-> > > > ===================================================================
-> > > > --- linux-2.6.orig/Documentation/power/runtime_pm.txt
-> > > > +++ linux-2.6/Documentation/power/runtime_pm.txt
-> > > > @@ -567,6 +567,11 @@ this is:
-> > > >  	pm_runtime_set_active(dev);
-> > > >  	pm_runtime_enable(dev);
-> > > >  
-> > > > +The PM core always increments the run-time usage counter before calling the
-> > > > +->suspend() callback and decrements it after calling the ->resume() callback.
-> > > > +Hence disabling run-time PM temporarily like this will not cause any run-time
-> > > > +suspend callbacks to be lost.
-> > > 
-> > > Could you explain why the above is that "this will not cause any run-time suspend
-> > > callbacks to be lost"? 
-> > > 
-> > > Looks like it should be "this will not cause any run-time suspend callbacks to
-> > > be called", but not sure.
-> > 
-> > You're right the wording is not perfect.  The problem is that if it's done
-> > this way without incrementing the usage counter beforehand, the status may
-> > change to "suspended" right before the pm_runtime_set_active() and then the
-> > new status will not reflect the actual state of the device.
-> > 
-> > So, it may be better to say "Hence disabling runtime PM temporarily like this
-> > will not cause the runtime PM status of the device to conflict with the actual
-> > device state".
-> > 
-> > Alan, what do you think?
-> 
-> How about: "... will not cause any runtime suspend attempts to be 
-> permanently lost.  If the usage count goes to zero following the return 
-> of the ->resume() callback, the ->runtime_idle() callback will be 
-> invoked as usual."
 
-That's better, thanks!
 
-Rafael
+On Wed, 29 Jun 2011, FUJITA Tomonori wrote:
+
+> On Thu, 23 Jun 2011 19:02:56 -0700
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+>
+>> On 06/22/2011 06:51 PM, FUJITA Tomonori wrote:
+>>>> @@ -965,6 +1009,40 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>>>>         }
+>>>>   }
+>>>
+>>> Rather than adding 'is_user' argument to everywhere, it could cleaner
+>>> to add something like 'int from_kernel' in struct bsg_command? No?
+>>>
+>>
+>> I agree it should be part of the bsg_command,
+>>
+>> I would prefer if all these "from_kernel" or "is_user" are bool. and true/false
+>> we don't do int for bool(s) in Kernel anymore.
+>
+> Yeah.
+>
+
+This makes sense.
+
+>
+>>>> +int bsg_private_command (struct request_queue *q, struct sg_io_v4 *hdr)
+>> A question:
+>>   I needed to do something like this for a long time. But the way I need it I actually
+>>   have user_buffers at @hdr. Because I want it as part of an OSD ioctl which is filtered
+>>   and enhanced and then chained to here. (Like block devices chain to blk_ioctl)
+>>
+>>   Could we add in the future, a bool param "is_user" to this API?
+>
+> Why applications can't simply send bsg commands instead of ioctl?
+>
+>
+>>>> +{
+>>>> +       struct request *rq;
+>>>> +       struct bio *bio, *bidi_bio = NULL;
+>>>> +       int at_head;
+>>>> +       u8 sense[SCSI_SENSE_BUFFERSIZE];
+>>>> +       fmode_t has_write_perm = 0;
+>>>> +       int ret;
+>>>> +
+>>>> +       if (!q)
+>>>> +               return -ENXIO;
+>>>> +
+>>>> +       /* Fake that we have write permission */
+>>>> +       has_write_perm |= FMODE_WRITE;
+>>>> +
+>>>> +       rq = bsg_map_hdr_kern(q, hdr, has_write_perm, sense);
+>>>> +
+>>>> +       if (IS_ERR(rq)) {
+>>>> +               return PTR_ERR(rq);
+>>>> +       }
+>>>> +
+>>>> +       bio = rq->bio;
+>>>> +       if (rq->next_rq)
+>>>> +               bidi_bio = rq->next_rq->bio;
+>>>> +       at_head = (0 == (hdr->flags & BSG_FLAG_Q_AT_TAIL));
+>>>> +
+>>>> +       blk_execute_rq(q, NULL, rq, at_head);
+>>>> +       ret = blk_complete_sgv4_hdr_rq(rq, hdr, bio, bidi_bio, 0);
+>>>> +
+>>>> +       return ret;
+>>>> +}
+>>>> +EXPORT_SYMBOL(bsg_private_command);
+>>>
+>>> EXPORT_SYMBOL_GPL, please.
+>>>
+>>
+>> I have a question about this API:
+>>  From user mode we open a filehandle on the device and it is pinned down till
+>>  we close the handle. A kernel user API might need to take the device reference
+>>  somewhere. Is that true?
+>
+> Yeah, as I wrote at the previous submission, I still suspect that this
+> patch has such problem. I guess we need to get the reference (and
+> check the status) before sending in-kernel requests. And that's why I
+> don't like in-kernel request support (making the reference model
+> complicated).
+>
+
+I presume here you mean taking a kref of bcd->ref?  So essentially
+we'd want to:
+
+kref_get(&bcd->ref);
+...
+execute command.
+...
+kref_put(&bcd->ref, bsg_kref_release_function);
+
+in bsg_private_command()?
+
+>
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
