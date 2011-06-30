@@ -1,40 +1,146 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 8/9] [SCSI] mvsas: update comments
-Date: Wed, 29 Jun 2011 19:00:17 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D19FAF4FD29@SC-VEXCH4.marvell.com>
-References: <mvsas-comments>
-	 <1306247890-6532-1-git-send-email-yxlraid@gmail.com>
-	 <A93C706D6A2D45248207F8826F244771@usish.com.cn>
-	 <F766E4F80769BD478052FB6533FA745D19FAD0B7B1@SC-VEXCH4.marvell.com>
- <1309362373.2551.12.camel@mulgrave>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH SCSI] sr: check_events() ignore GET_EVENT when TUR says
+ otherwise
+Date: Thu, 30 Jun 2011 15:03:48 +0200
+Message-ID: <20110630130348.GQ3386@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:35980 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757529Ab1F3CFN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Jun 2011 22:05:13 -0400
-In-Reply-To: <1309362373.2551.12.camel@mulgrave>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-hotplug-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-hotplug-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, maggu2810@googlemail.com, linux-hotplug@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jack Wang <jack_wang@usish.com>, "yxlraid@gmail.com" <yxlraid@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jacky Feng <jfeng@marvell.com>
 
->> I find a issue in [PATCH 9/9] before committing. I will commit the
->> patch when the issue is fixed
+From: Kay Sievers <kay.sievers@vrfy.org>
 
->So what do you want me to do here?  You still need to add the ABI file
->for GregKH in 3/9 
-Don't need to add the ABI file.
-The mail is here: http://marc.info/?l=linux-scsi&m=130683194120196&w=2
+Some broken devices indicates that media has changed on every
+GET_EVENT_STATUS_NOTIFICATION.  This translates into MEDIA_CHANGE
+uevent on every open() which lets udev run into a loop.
 
->and 9/9 still hasn't appeared yet.
-I will commit the patch tonight.
+Verify GET_EVENT result against TUR and if it generates spurious
+events for several times in a row, ignore the GET_EVENT events, and
+trust only the TUR status.
 
-If any question, please let me known.
-Thank you very much.
+This is the log of a USB stick with a (broken) fake CDROM drive:
 
+ scsi 5:0:0:0: Direct-Access     SanDisk  U3 Cruzer Micro  8.02 PQ: 0 ANSI: 0 CCS
+ sd 5:0:0:0: Attached scsi generic sg3 type 0
+ scsi 5:0:0:1: CD-ROM            SanDisk  U3 Cruzer Micro  8.02 PQ: 0 ANSI: 0
+ sd 5:0:0:0: [sdb] Attached SCSI removable disk
+ sr2: scsi3-mmc drive: 48x/48x tray
+ sr 5:0:0:1: Attached scsi CD-ROM sr2
+ sr 5:0:0:1: Attached scsi generic sg4 type 5
+ sr2: GET_EVENT and TUR disagree continuously, suppress GET_EVENT events
+ sd 5:0:0:0: [sdb] 31777279 512-byte logical blocks: (16.2 GB/15.1 GiB)
+ sd 5:0:0:0: [sdb] No Caching mode page present
+ sd 5:0:0:0: [sdb] Assuming drive cache: write through
+ sd 5:0:0:0: [sdb] No Caching mode page present
+ sd 5:0:0:0: [sdb] Assuming drive cache: write through
+ sdb: sdb1
 
+-tj: Updated to consider only spurious GET_EVENT events among
+     different types of disagreement and allow using TUR for kernel
+     event polling after GET_EVENT is ignored.
+
+Reported-By: Markus Rathgeb maggu2810@googlemail.com
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: stable@kernel.org	# >= v2.6.38, fixes udev busy looping w/ certain devices
+---
+ drivers/scsi/sr.c |   46 ++++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/sr.h |    7 +++++++
+ 2 files changed, 49 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 4778e27..5fc97d2 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -221,14 +221,33 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 		return 0;
+ 
+ 	events = sr_get_events(cd->device);
++	cd->get_event_changed |= events & DISK_EVENT_MEDIA_CHANGE;
++
++	/*
++	 * If earlier GET_EVENT_STATUS_NOTIFICATION and TUR did not agree
++	 * for several times in a row.  We rely on TUR only for this likely
++	 * broken device, to prevent generating incorrect media changed
++	 * events for every open().
++	 */
++	if (cd->ignore_get_event) {
++		events &= ~DISK_EVENT_MEDIA_CHANGE;
++		goto do_tur;
++	}
++
+ 	/*
+ 	 * GET_EVENT_STATUS_NOTIFICATION is enough unless MEDIA_CHANGE
+ 	 * is being cleared.  Note that there are devices which hang
+ 	 * if asked to execute TUR repeatedly.
+ 	 */
+-	if (!(clearing & DISK_EVENT_MEDIA_CHANGE))
+-		goto skip_tur;
++	if (cd->device->changed) {
++		events |= DISK_EVENT_MEDIA_CHANGE;
++		cd->device->changed = 0;
++		cd->tur_changed = true;
++	}
+ 
++	if (!(clearing & DISK_EVENT_MEDIA_CHANGE))
++		return events;
++do_tur:
+ 	/* let's see whether the media is there with TUR */
+ 	last_present = cd->media_present;
+ 	ret = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
+@@ -242,12 +261,31 @@ static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+ 		(scsi_sense_valid(&sshdr) && sshdr.asc != 0x3a);
+ 
+ 	if (last_present != cd->media_present)
+-		events |= DISK_EVENT_MEDIA_CHANGE;
+-skip_tur:
++		cd->device->changed = 1;
++
+ 	if (cd->device->changed) {
+ 		events |= DISK_EVENT_MEDIA_CHANGE;
+ 		cd->device->changed = 0;
++		cd->tur_changed = true;
++	}
++
++	if (cd->ignore_get_event)
++		return events;
++
++	/* check whether GET_EVENT is reporting spurious MEDIA_CHANGE */
++	if (!cd->tur_changed) {
++		if (cd->get_event_changed) {
++			if (cd->tur_mismatch++ > 8) {
++				sdev_printk(KERN_WARNING, cd->device,
++					    "GET_EVENT and TUR disagree continuously, suppress GET_EVENT events\n");
++				cd->ignore_get_event = true;
++			}
++		} else {
++			cd->tur_mismatch = 0;
++		}
+ 	}
++	cd->tur_changed = false;
++	cd->get_event_changed = false;
+ 
+ 	return events;
+ }
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index e036f1d..37c8f6b 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -41,6 +41,13 @@ typedef struct scsi_cd {
+ 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
+ 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+ 	unsigned media_present:1;	/* media is present */
++
++	/* GET_EVENT spurious event handling, blk layer guarantees exclusion */
++	int tur_mismatch;		/* nr of get_event TUR mismatches */
++	bool tur_changed:1;		/* changed according to TUR */
++	bool get_event_changed:1;	/* changed according to GET_EVENT */
++	bool ignore_get_event:1;	/* GET_EVENT is unreliable, use TUR */
++
+ 	struct cdrom_device_info cdi;
+ 	/* We hold gendisk and scsi_device references on probe and use
+ 	 * the refs on this kref to decide when to release them */
