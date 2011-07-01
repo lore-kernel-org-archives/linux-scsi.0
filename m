@@ -1,45 +1,37 @@
-From: Dave Jones <davej@redhat.com>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Fri, 1 Jul 2011 14:40:46 -0400
-Message-ID: <20110701184046.GA2118@redhat.com>
-References: <20110701170531.GA3693@tassilo.jf.intel.com>
- <20110701181406.GA1614@redhat.com>
- <20110701183227.GF23059@one.firstfloor.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
+Date: Fri, 01 Jul 2011 14:04:41 -0500
+Message-ID: <1309547081.2722.33.camel@mulgrave>
+References: <20110615112016.GA4227@osiris.boeblingen.de.ibm.com>
+	 <20110616160155.GB3843@osiris.boeblingen.de.ibm.com>
+	 <1308242275.2436.56.camel@mulgrave>
+	 <20110616184023.GA2362@osiris.boeblingen.de.ibm.com>
+	 <20110620153021.GA2572@osiris.boeblingen.de.ibm.com>
+	 <CAL1RGDVFR5eYHOX-jiUrU4_Ezw19FzNcCcyo0qKNYictK5He5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54003 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426Ab1GASlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Jul 2011 14:41:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20110701183227.GF23059@one.firstfloor.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59927 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755293Ab1GATEo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jul 2011 15:04:44 -0400
+In-Reply-To: <CAL1RGDVFR5eYHOX-jiUrU4_Ezw19FzNcCcyo0qKNYictK5He5g@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, rjw@sisk.pl
+To: Roland Dreier <roland@kernel.org>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-On Fri, Jul 01, 2011 at 08:32:27PM +0200, Andi Kleen wrote:
- > On Fri, Jul 01, 2011 at 02:14:06PM -0400, Dave Jones wrote:
- > > On Fri, Jul 01, 2011 at 10:05:31AM -0700, Andi Kleen wrote:
- > > 
- > >  > I found I can reliably crash a 3.0 system by pulling the
- > >  > USB cable of a mounted USB cdrom (or rather a USB device which
- > >  > has a builtin fake CD-ROM) 
- > >  > 
- > >  > I suspect it's a regression too.
- > > 
- > > We've been seeing a lot of similar bugs in Fedora since we pushed
- > > a 2.6.38.8 update.  Some of the traces are different, but some
- > 
- > I've also seen one with an earlier kernel where the NULL 
- > reference was in elv_.* something.  Don't have a written down backtrace
- > for this, but perhaps you have.
+On Fri, 2011-07-01 at 11:07 -0700, Roland Dreier wrote:
+> We seem to be hitting something similar, running 2.6.39.2.
+> Did anyone make any progress on this?  (I'm happy to try and
+> gather more info but I probably won't be able to seriously
+> debug until next week)
 
-We had a bazillion reports of elv_may_queue oopses that looked like
-https://bugzilla.redhat.com/show_bug.cgi?id=elv_may_queue
+The first obvious question is does it reproduce with git HEAD?  If yes,
+then it's an unfixed reference bug, if no, we forgot to backport the fix
+(we should be able to find it easily enough).
 
-That should be fixed in .39 and newer.
+James
 
-	Dave
 
