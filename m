@@ -1,36 +1,37 @@
-From: Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Sat, 2 Jul 2011 20:10:08 +0200
-Message-ID: <20110702181008.GL23059@one.firstfloor.org>
-References: <20110702060846.GH23059@one.firstfloor.org> <Pine.LNX.4.44L0.1107020837220.11097-100000@netrider.rowland.org>
+Date: Sat, 2 Jul 2011 20:11:46 +0200
+Message-ID: <20110702181146.GM23059@one.firstfloor.org>
+References: <1309609482.2554.8.camel@mulgrave> <Pine.LNX.4.44L0.1107021320180.14703-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from one.firstfloor.org ([213.235.205.2]:52296 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753106Ab1GBSLr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jul 2011 14:11:47 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1107020837220.11097-100000-pYrvlCTfrz9XsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, rjw-KKrjLPT3xs0@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <Pine.LNX.4.44L0.1107021320180.14703-100000@netrider.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: axboe@kernel.dk, James Bottomley <James.Bottomley@HansenPartnership.com>, Andi Kleen <andi@firstfloor.org>, Dave Jones <davej@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
 
-On Sat, Jul 02, 2011 at 08:38:20AM -0400, Alan Stern wrote:
-> On Sat, 2 Jul 2011, Andi Kleen wrote:
+> The problem is that blk_peek_request() calls scsi_prep_fn(), which 
+> does this:
 > 
-> > > I'm not able to reproduce it on a vanilla 3.0-rc5 system.  Can anybody
-> > > give the exact sequence of steps you went through to trigger the bug?
-> > 
-> > Connect USB storage device with builtin fake CD rom. Wait for udisk
-> > to mount it. Pull cable. udisk does umount. Oops.
-> > 
-> > I also got a log of the refcounting now if you want it.
+> 	struct scsi_device *sdev = q->queuedata;
+> 	int ret = BLKPREP_KILL;
 > 
-> Yes, please.  The excerpt that James posted isn't enough.  In 
-> particular, it doesn't show what happens during device creation.
+> 	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
+> 		ret = scsi_setup_blk_pc_cmnd(sdev, req);
+> 	return scsi_prep_return(q, req, ret);
+> 
+> It doesn't check to see if sdev is NULL, nor does 
+> scsi_setup_blk_pc_cmnd().  That accounts for this error:
 
-http://halobates.de/tmp/usb-pull-oops-ref
+I actually added a NULL check in scsi_setup_blk_pc_cmnd early on,
+but that just caused RCU CPU stalls afterwards and then eventually
+a hung system.
 
 -Andi
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
