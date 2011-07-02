@@ -1,28 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Sat, 2 Jul 2011 08:38:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1107020837220.11097-100000@netrider.rowland.org>
-References: <20110702060846.GH23059@one.firstfloor.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 36702] 2.6.39 kernel panic w/screenshots & kernel cfg link
+ provided
+Date: Sat, 2 Jul 2011 12:42:03 GMT
+Message-ID: <201107021242.p62Cg3QI020168@demeter2.kernel.org>
+References: <bug-36702-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110702060846.GH23059@one.firstfloor.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, rjw@sisk.pl, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:50294 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754478Ab1GBMmF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jul 2011 08:42:05 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p62Cg3Ha020169
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 2 Jul 2011 12:42:03 GMT
+In-Reply-To: <bug-36702-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2 Jul 2011, Andi Kleen wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=36702
 
-> > I'm not able to reproduce it on a vanilla 3.0-rc5 system.  Can anybody
-> > give the exact sequence of steps you went through to trigger the bug?
-> 
-> Connect USB storage device with builtin fake CD rom. Wait for udisk
-> to mount it. Pull cable. udisk does umount. Oops.
-> 
-> I also got a log of the refcounting now if you want it.
 
-Yes, please.  The excerpt that James posted isn't enough.  In 
-particular, it doesn't show what happens during device creation.
+Rafael J. Wysocki <rjw@sisk.pl> changed:
 
-Alan Stern
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|                            |CODE_FIX
+
+
+
+
+--- Comment #5 from Rafael J. Wysocki <rjw@sisk.pl>  2011-07-02 12:41:59 ---
+Assuming fixed.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
