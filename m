@@ -1,38 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 36702] 2.6.39 kernel panic w/screenshots & kernel cfg link
- provided
-Date: Sat, 2 Jul 2011 12:42:31 GMT
-Message-ID: <201107021242.p62CgV15020895@demeter2.kernel.org>
-References: <bug-36702-11613@https.bugzilla.kernel.org/>
+From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
+Date: Sat, 2 Jul 2011 14:48:22 +0200
+Message-ID: <201107021448.22616.rjw@sisk.pl>
+References: <1309554818.2722.48.camel@mulgrave> <Pine.LNX.4.44L0.1107012200260.4273-100000@netrider.rowland.org> <20110702060846.GH23059@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:50333 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754167Ab1GBMmb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jul 2011 08:42:31 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p62CgVj7020896
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sat, 2 Jul 2011 12:42:31 GMT
-In-Reply-To: <bug-36702-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20110702060846.GH23059-qrUzlfsMFqo/4alezvVtWx2eb7JE58TQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Andi Kleen <andi-Vw/NltI1exuRpAAqCnN02g@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, axboe-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=36702
+On Saturday, July 02, 2011, Andi Kleen wrote:
+> > I'm not able to reproduce it on a vanilla 3.0-rc5 system.  Can anybody
+> > give the exact sequence of steps you went through to trigger the bug?
+> 
+> Connect USB storage device with builtin fake CD rom. Wait for udisk
+> to mount it. Pull cable. udisk does umount. Oops.
+> 
+> I also got a log of the refcounting now if you want it.
 
+Does reverting commit e1866b33b1e89f077b7132daae3dfd9a594e9a1a help?
 
-Rafael J. Wysocki <rjw@sisk.pl> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Rafael
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
