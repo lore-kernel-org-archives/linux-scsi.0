@@ -1,53 +1,43 @@
-From: BBC ONE <0desk6@cox.net>
-Subject: *** Bestand voor Claims ***
-Date: Sun, 3 Jul 2011 12:49:45 -0400
-Message-ID: <20110703124945.8OJXI.966562.imail__8242.93491100452$1309712128$gmane$org@eastrmwml34>
-Reply-To: claim.bbcone@msn.com
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
+Date: Sun, 3 Jul 2011 20:16:15 +0200
+Message-ID: <20110703181615.GC15637@one.firstfloor.org>
+References: <1309609482.2554.8.camel@mulgrave> <Pine.LNX.4.44L0.1107021320180.14703-100000@netrider.rowland.org> <CAA9_cmd7KV_CkvbB+nsc7LHui8gECB-0d4oWt+6cA0x21=crDg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eastrmfepo101.cox.net ([68.230.241.213]:60440 "EHLO
-	eastrmfepo101.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750730Ab1GCQzS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2011 12:55:18 -0400
+Received: from one.firstfloor.org ([213.235.205.2]:52125 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751857Ab1GCSQR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2011 14:16:17 -0400
+Content-Disposition: inline
+In-Reply-To: <CAA9_cmd7KV_CkvbB+nsc7LHui8gECB-0d4oWt+6cA0x21=crDg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, axboe@kernel.dk, James Bottomley <James.Bottomley@hansenpartnership.com>, Andi Kleen <andi@firstfloor.org>, Dave Jones <davej@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
 
-http://www.bbc.co.uk/lottery/
-winning numbers *12 14 32 44 48 49 BONUS 25
+> Not sure it's related, but it sounds like the hotplug failures being
+> seen with libsas hotplug.  Have not had a chance yet to track it down
+> further with isci, but mvsas developer Xiangliang Yu is reporting:
 
-Uw e-mailadres heeft gewonnen, als je het niet begrijpt Engels bent u d=
-e e-mail hieronder vertaald naar uw eigen taal en bestand voor claims
+It looks somewhat different: he has a bad pointer, not a NULL pointer,
+and it's in elv_completed_request() (but that may be related to 
+the different request types)
 
-Dear Winner.
+> 
+> http://marc.info/?l=linux-scsi&m=130707166512002&w=2
+> 
+> He tracked it down to a suspected regression between .39-rc4 and
+> .39-rc5 but did not finalize the bisect.
 
-Your e-mail has won you =C2=A31,000, 000.00 GBP One Million Great Brita=
-in Pounds from BBC ONE LOTTERY on our 2011
-charity bonanza.The draw no.1594 brought out your e-mail address from a
-Data Base of Internet Email Users and qualified you a bonafied winner o=
-f
-the stated winning amount.
+I can check if it disappears with .39-rc4.
 
-You are to contact us via e-mail( claims@bbconeuk.co.cc )
-providing the below stated information for process of claims.
+> The isci driver sees this and other signatures all seemingly related
+> to early device tear down and only when pulling a drive with in-flight
+> i/o.
 
-=46ull Names..........
-Address.........
-Mobile No.........
-Sex.........
-Occupation.........
-Amount won.....
+In my case it's not really in flight IO, but umount after pull with an
+idle drive.
 
-Claims Manager
-
-Mrs.Ann Blair
-E-mail: claims@bbconeuk.co.cc
-
-
-http://www.bbc.co.uk/lottery/
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Andi
