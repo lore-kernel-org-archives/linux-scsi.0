@@ -1,28 +1,66 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Sun, 3 Jul 2011 03:17:58 +0200
-Message-ID: <20110703011758.GB15637@one.firstfloor.org>
-References: <20110702181146.GM23059@one.firstfloor.org> <Pine.LNX.4.44L0.1107021544550.16190-100000@netrider.rowland.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT PULL] isci: sas controller driver for 3.0
+Date: Sat, 02 Jul 2011 19:43:27 -0700
+Message-ID: <4E0FD74F.4000701@intel.com>
+References: <1309563349.19567.26.camel@dwillia2-linux> <1309646729.2554.17.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:55619 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753587Ab1GCBR7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Jul 2011 21:17:59 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1107021544550.16190-100000@netrider.rowland.org>
+Received: from mga09.intel.com ([134.134.136.24]:32856 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754840Ab1GCCn2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Jul 2011 22:43:28 -0400
+In-Reply-To: <1309646729.2554.17.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andi Kleen <andi@firstfloor.org>, axboe@kernel.dk, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Jones <davej@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, "Jiang, Dave" <dave.jiang@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, David Milburn <dmilburn@redhat.com>, Jeff Garzik <jeff@garzik.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "hare@suse.de" <hare@suse.de>
 
-> Would you like to try this patch to see if it fixes the problem?  As I 
-> said before, I'm not certain it's the best thing to do, but it worked 
-> on my system.
+On 07/02/2011 03:45 PM, James Bottomley wrote:
+> Look, this tree is unacceptable because
+>
+> A. It's not bisectable.  This is what happens when I try a bisection:
+[..]
+> make[1]: *** [drivers/scsi/isci/init.o] Error 1
 
-I can try next week.
+This was inadvertent, but breakage is breakage.
 
-Is this patch likely to fix the RCU stall?
+> And B. It's got contaminated history like this:
 
--Andi
+This was on purpose.  We were in the position of stabilizing / 
+validating the driver while carrying out the cleanups.  To minimize back 
+merges I duplicated upstream fixes/enabling in these instances.  If this 
+is de-facto unacceptable I will adjust my tree management going forward. 
+  But I don't believe it is given occasions where two maintainers take 
+the same patch through their respective trees.
+
+> I need clean history and a bisectable tree ... By Sunday, since this has
+> to be in linux-next before the next kernel release, which will likely be
+> Monday.
+
+I certainly can rebase this to address the compile breakage.  Although 
+this does throw away old commit ids which have seen validation both 
+inside and outside of Intel, but that's unavoidable at this point.
+
+The value I see in maintaining the history (even with some re-written 
+ids) is:
+
+1/ The history is available in mainline and not a side tree.  Care went 
+into the commit changelogs.  They provide driver documentation and 
+contain notes about future cleanups and improvements.
+
+2/ Code reviewers are credited with Reported-by tags for the commits 
+they generated.
+
+3/ The history is instructive of the dangers of OS abstraction drivers.
+
+> Since the tree is huge, I don't think this is fixable in the timescale,
+> so just a single patch will do ... I can construct that, but I need the
+> change log from you, please.
+
+I can go either way, but my preference is a rebase to clean up the 
+bisection.
+
+--
+Dan
