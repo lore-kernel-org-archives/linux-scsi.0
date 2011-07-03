@@ -1,38 +1,53 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Sun, 3 Jul 2011 12:06:40 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1107031201200.28411-100000@netrider.rowland.org>
-References: <Pine.LNX.4.44L0.1107031121440.28411-100000@netrider.rowland.org>
+From: BBC ONE <0desk6@cox.net>
+Subject: *** Bestand voor Claims ***
+Date: Sun, 3 Jul 2011 12:49:45 -0400
+Message-ID: <20110703124945.8OJXI.966562.imail__8242.93491100452$1309712128$gmane$org@eastrmwml34>
+Reply-To: claim.bbcone@msn.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1107031121440.28411-100000@netrider.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Jones <davej@redhat.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, axboe@kernel.dk, rjw@sisk.pl, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from eastrmfepo101.cox.net ([68.230.241.213]:60440 "EHLO
+	eastrmfepo101.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750730Ab1GCQzS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jul 2011 12:55:18 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 3 Jul 2011, Alan Stern wrote:
+http://www.bbc.co.uk/lottery/
+winning numbers *12 14 32 44 48 49 BONUS 25
 
-> > Your explanation completely contradicts what James wrote earlier.
-> 
-> Yes, it does.  I'm claiming that James was on a wrong track or looking
-> in the wrong direction.
+Uw e-mailadres heeft gewonnen, als je het niet begrijpt Engels bent u d=
+e e-mail hieronder vertaald naar uw eigen taal en bestand voor claims
 
-To amplify: James wrote:
+Dear Winner.
 
-> Right, that wouldn't work.  The sdev in question comes from
-> request_queue->queuedata.  That only goes to null when the last
-> reference to the sdev has been released.  So the root cause is something
-> in sd holding a reference to sdev without actually getting an additional
-> refcount.
+Your e-mail has won you =C2=A31,000, 000.00 GBP One Million Great Brita=
+in Pounds from BBC ONE LOTTERY on our 2011
+charity bonanza.The draw no.1594 brought out your e-mail address from a
+Data Base of Internet Email Users and qualified you a bonafied winner o=
+f
+the stated winning amount.
 
-The third sentence is clearly wrong, because queuedata is set to NULL
-when sdev is removed from visibility, not when the last reference to it
-has been released, i.e., in __scsi_remove_device() rather than
-scsi_device_dev_release_usercontext().
+You are to contact us via e-mail( claims@bbconeuk.co.cc )
+providing the below stated information for process of claims.
 
-Maybe this means the assignment to queuedata should be moved.  I don't 
-know; unlike James, I'm not an expert on the details of the SCSI stack.
+=46ull Names..........
+Address.........
+Mobile No.........
+Sex.........
+Occupation.........
+Amount won.....
 
-Alan Stern
+Claims Manager
+
+Mrs.Ann Blair
+E-mail: claims@bbconeuk.co.cc
+
+
+http://www.bbc.co.uk/lottery/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
