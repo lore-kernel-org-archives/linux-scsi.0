@@ -1,49 +1,58 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Mon, 4 Jul 2011 12:04:54 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1107041202170.12242-100000@netrider.rowland.org>
-References: <20110704112727.GA2557@osiris.boeblingen.de.ibm.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: [PATCH] mpt2sas: Remove queuecommand wrapper
+Date: Mon, 4 Jul 2011 15:27:13 -0400
+Message-ID: <20110704192713.GZ4061@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:53263 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755061Ab1GDQEz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2011 12:04:55 -0400
-In-Reply-To: <20110704112727.GA2557@osiris.boeblingen.de.ibm.com>
+Received: from mga14.intel.com ([143.182.124.37]:16096 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751356Ab1GDT1P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Jul 2011 15:27:15 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: axboe@kernel.dk, James Bottomley <James.Bottomley@HansenPartnership.com>, Andi Kleen <andi@firstfloor.org>, Dave Jones <davej@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: DL-MPTFusionLinux@lsi.com
 
-On Mon, 4 Jul 2011, Heiko Carstens wrote:
 
-> On Sat, Jul 02, 2011 at 01:37:59PM -0400, Alan Stern wrote:
-> > The second bug, which hit me but apparently not any of you, is that the 
-> > request_queue's elevator gets deallocated while it is still in use.  
-> > That's because __scsi_remove_device() calls scsi_free_queue(), which 
-> > does blk_cleanup_queue(), which calls elevator_exit(), even though the 
-> > device file is still open and more requests will be submitted when the 
-> > file is closed.
-> > 
-> > I'm not sure of the right fix for this.  One possibility is to move the 
-> > scsi_free_queue() call to scsi_device_dev_release_usercontext().  Or 
-> > maybe the elevator_exit() call should be moved to blk_release_queue().
-> > 
-> > Also, I have no idea why this shows up with USB drives but not other 
-> > SCSI transports.  A fluke of timing?
-> 
-> FWIW, I reported a bug where the request_queue's elevator got deallocated
-> while it was still in use (fc transport with device hotplug):
-> 
-> http://www.spinics.net/lists/linux-scsi/msg52879.html
+Now that mpt2sas no longer uses the serial_number, we can remove the
+wrapper that acquires the host_lock around queuecommand.  This is the
+most contended lock for one benchmark, and on a 8-socket machine this
+patch leads to a 70% application-level improvement.
 
-That does sound like the second bug I encountered.  Can you reproduce 
-it?  Does the patch here:
+Signed-off-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
 
-	http://marc.info/?l=linux-kernel&m=130963676907731&w=2
-
-fix the problem?
-
-Alan Stern
-
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index a7dbc68..67708b3 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -3680,9 +3680,9 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+  * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
+  */
+ static int
+-_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
++_scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ {
+-	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
++	struct MPT2SAS_ADAPTER *ioc = shost_priv(shost);
+ 	struct MPT2SAS_DEVICE *sas_device_priv_data;
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 	struct _raid_device *raid_device;
+@@ -3690,7 +3690,6 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	u32 mpi_control;
+ 	u16 smid;
+ 
+-	scmd->scsi_done = done;
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -3814,8 +3813,6 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ }
+ 
+-static DEF_SCSI_QCMD(_scsih_qcmd)
+-
+ /**
+  * _scsih_normalize_sense - normalize descriptor and fixed format sense data
+  * @sense_buffer: sense data returned by target
