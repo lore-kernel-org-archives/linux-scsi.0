@@ -1,43 +1,117 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [GIT PULL] isci: sas controller driver for 3.0
-Date: Mon, 4 Jul 2011 08:38:08 -0600
-Message-ID: <20110704143808.GA389@parisc-linux.org>
-References: <1309563349.19567.26.camel@dwillia2-linux> <20110704134529.GA8917@lst.de> <4E11C908.8020706@interlog.com>
+From: Ankit Jain <jankit@suse.de>
+Subject: [PATCH] ses: Handle non-unique element descriptors
+Date: Mon, 04 Jul 2011 20:46:22 +0530
+Message-ID: <4E11D946.4050307@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41488 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753459Ab1GDOiL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2011 10:38:11 -0400
-Content-Disposition: inline
-In-Reply-To: <4E11C908.8020706@interlog.com>
+Received: from cantor2.suse.de ([195.135.220.15]:33238 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754319Ab1GDPOb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Jul 2011 11:14:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Christoph Hellwig <hch@lst.de>, Dan Williams <dan.j.williams@intel.com>, James Bottomley <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, Dave Jiang <dave.jiang@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, Ed Nadolski <edmund.nadolski@intel.com>, David Milburn <dmilburn@redhat.com>, Jeff Garzik <jeff@garzik.org>, Jacek Danecki <jacek.danecki@intel.com>, hare@suse.de
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@parallels.com>, Hannes Reinecke <hare@suse.de>
 
-On Mon, Jul 04, 2011 at 04:07:04PM +0200, Douglas Gilbert wrote:
-> On 11-07-04 03:45 PM, Christoph Hellwig wrote:
->> On Fri, Jul 01, 2011 at 04:35:48PM -0700, Dan Williams wrote:
->>> James, please pull from:
->>>
->>>    git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git master
->>>
->>> ...to receive the isci driver that supports the integrated 6Gb/s SAS
->>> capabilities of the upcoming Intel(R) C600 series chipset family.  This
->>> part is targeted at standard servers / workstations and provides
->>> up to 8-ports (2x4-port controllers) of SAS beyond the traditional SATA
->>> ports (surfaced by the ahci driver).
->
-> s/surfaced/serviced/
+Some SES devices give non-unique Element Descriptors as part of the
+Element Descriptor diag page. Since we use these for creating sysfs
+entries, they need to be unique.
 
-"surfaced" seems to be a popular term within Intel.  I believe it comes
-from Windows.  It means "the ahci driver is responsible for creating
-the device entries for the SATA ports".
+Eg:
+$ sg_ses -p 7 /dev/sg0
+  FTS CORP  TXS6_SAS20BPX12   0500
+    enclosure services device
+Element descriptor In diagnostic page:
+  generation code: 0x0
+  element descriptor by type list
+    Element type: Array device, subenclosure id: 0
+      Overall descriptor: ArrayDevicesInSubEnclsr0
+      Element 1 descriptor: ArrayDevice00
+      Element 2 descriptor: ArrayDevice01
+      Element 3 descriptor: ArrayDevice02
+      Element 4 descriptor: ArrayDevice03
+      Element 5 descriptor: ArrayDevice03
+      Element 6 descriptor: ArrayDevice03
+      Element 7 descriptor: ArrayDevice03
+      Element 8 descriptor: ArrayDevice03
+      Element 9 descriptor: ArrayDevice03
+      Element 10 descriptor: ArrayDevice03
+      Element 11 descriptor: ArrayDevice03
+      Element 12 descriptor: ArrayDevice03
 
+Based on scsi-misc
+
+Signed-off-by: Ankit Jain <jankit@suse.de>
+
+---
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 00e5fca..8087055 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -239,6 +239,24 @@ static void enclosure_component_release(struct device *dev)
+ 	put_device(dev->parent);
+ }
+ 
++struct enclosure_component *
++enclosure_component_find_by_name(struct enclosure_device *edev,
++				const char *name)
++{
++	int i;
++	if (!edev || !name || !name[0])
++		return NULL;
++
++	for (i=0; i<edev->components; i++) {
++		struct enclosure_component *ecomp = &edev->component[i];
++		if (ecomp->number != -1 && !strcmp(dev_name(&ecomp->cdev), name))
++			return ecomp;
++	}
++
++	return NULL;
++}
++EXPORT_SYMBOL_GPL(enclosure_component_find_by_name);
++
+ static const struct attribute_group *enclosure_groups[];
+ 
+ /**
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index eba183c..abfd962 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -421,12 +421,17 @@ static void ses_enclosure_data_process(struct enclosure_device *edev,
+ 			if (type_ptr[0] == ENCLOSURE_COMPONENT_DEVICE ||
+ 			    type_ptr[0] == ENCLOSURE_COMPONENT_ARRAY_DEVICE) {
+ 
+-				if (create)
++				if (create) {
++					if (enclosure_component_find_by_name(edev, name))
++						/* name is not unique, already used
++						 * set to NULL, so that enclosure_component_register
++						 * will assign us a new one */
++						name = NULL;
+ 					ecomp =	enclosure_component_register(edev,
+ 									     components++,
+ 									     type_ptr[0],
+ 									     name);
+-				else
++				} else
+ 					ecomp = &edev->component[components++];
+ 
+ 				if (!IS_ERR(ecomp) && addl_desc_ptr)
+diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
+index 9a33c5f..7e48ba9 100644
+--- a/include/linux/enclosure.h
++++ b/include/linux/enclosure.h
+@@ -122,6 +122,8 @@ void enclosure_unregister(struct enclosure_device *);
+ struct enclosure_component *
+ enclosure_component_register(struct enclosure_device *, unsigned int,
+ 				 enum enclosure_component_type, const char *);
++struct enclosure_component *
++enclosure_component_find_by_name(struct enclosure_device *, const char *);
+ int enclosure_add_device(struct enclosure_device *enclosure, int component,
+ 			 struct device *dev);
+ int enclosure_remove_device(struct enclosure_device *, struct device *);
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Ankit Jain
+SUSE Labs
