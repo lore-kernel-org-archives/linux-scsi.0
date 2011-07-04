@@ -1,65 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] ses: Handle non-unique element descriptors
-Date: Mon, 04 Jul 2011 18:00:35 -0500
-Message-ID: <1309820435.2606.43.camel@mulgrave>
-References: <4E11D946.4050307@suse.de> <1309793724.2606.19.camel@mulgrave>
-	 <4E1245DF.5000403@suse.de>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [GIT PULL] scsi fixes for 3.0-rc5
+Date: Mon, 4 Jul 2011 16:55:35 -0700
+Message-ID: <20110704165535.ce364909.randy.dunlap@oracle.com>
+References: <1309813216.2606.32.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43870 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753042Ab1GDXAh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jul 2011 19:00:37 -0400
-In-Reply-To: <4E1245DF.5000403@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1309813216.2606.32.camel@mulgrave>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ankit Jain <jankit@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2011-07-05 at 04:29 +0530, Ankit Jain wrote:
-> On 07/04/2011 09:05 PM, James Bottomley wrote:
-> > On Mon, 2011-07-04 at 20:46 +0530, Ankit Jain wrote:
-> >> Some SES devices give non-unique Element Descriptors as part of the
-> >> Element Descriptor diag page. Since we use these for creating sysfs
-> >> entries, they need to be unique.
-> >>
-> >> Eg:
-> >> $ sg_ses -p 7 /dev/sg0
-> >>   FTS CORP  TXS6_SAS20BPX12   0500
-> >>     enclosure services device
-> >> Element descriptor In diagnostic page:
-> >>   generation code: 0x0
-> >>   element descriptor by type list
-> >>     Element type: Array device, subenclosure id: 0
-> >>       Overall descriptor: ArrayDevicesInSubEnclsr0
-> >>       Element 1 descriptor: ArrayDevice00
-> >>       Element 2 descriptor: ArrayDevice01
-> >>       Element 3 descriptor: ArrayDevice02
-> >>       Element 4 descriptor: ArrayDevice03
-> >>       Element 5 descriptor: ArrayDevice03
-> >>       Element 6 descriptor: ArrayDevice03
-> >>       Element 7 descriptor: ArrayDevice03
-> >>       Element 8 descriptor: ArrayDevice03
-> >>       Element 9 descriptor: ArrayDevice03
-> >>       Element 10 descriptor: ArrayDevice03
-> >>       Element 11 descriptor: ArrayDevice03
-> >>       Element 12 descriptor: ArrayDevice03
-> > 
-> > What is the external visible labelling of this topology?  It's
-> > completely weird that the enclosure would burn in non-unique names
-> > unless there's some reason for it.
+On Mon, 04 Jul 2011 16:00:16 -0500 James Bottomley wrote:
+
+> This is a couple of driver fixes and the addition of the isci intel SAS
+> driver under the new driver merge exception.  The isci tree is cleanly
+> separated with everything under drivers/scsi/isci (plus the
+> Makefile/Kconfig plumbing and one firmware file under firmware/isci).
+> The driver itself weighs in at around 23k lines, which is on the heavy
+> side, but Christoph Hellwig and I think it's ready enough to accept now
+> so that we have a working driver by the time the motherboards ship
+> (estimated to be in the 3.0 release timeframe).
 > 
-> I'm not sure what you mean by "external visible labelling". The system has a
-> SAS expanded backplane. I don't have access to the hardware now, but p7 looked
-> like this:
+> The patch is available here:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> 
+> The shortlog for just the driver fixes (lest they get lost in the flood) is:
+> 
+> Brian King (1):
+>       ibmvfc: Fix Virtual I/O failover hang
+> 
+> Stephen M. Cameron (2):
+>       hpsa: fix potential overrun while memcpy'ing sense data
+>       hpsa: fix dma unmap error in hpsa_passthru_ioctl
 
-The element descriptors usually correspond with labelling on the case of
-whatever it is the enclosure is embedded in. Their job is to describe
-the location of the device, so they usually get burned in with whatever
-the default labelling scheme for the physical device is.  So what I want
-to know is what is the labelling scheme in this case?
+Hi James,
 
-James
+Did you do anything with these 2 scsi section mismatch patches from June 21?
+I don't see them in any of your scsi git trees, although I could have
+missed them.
 
+Subject: [PATCH] scsi: fix NCR_Q720 section mismatch warning
+http://marc.info/?l=linux-scsi&m=130868730409600&w=2
+
+Subject: [PATCH] scsi: fix sim710 section mismatch warnings
+http://marc.info/?l=linux-scsi&m=130868736409676&w=2
+
+
+Thanks,
+~Randy
