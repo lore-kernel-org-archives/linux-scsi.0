@@ -1,54 +1,57 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH] mpt2sas: WarpDrive Infinite command retries due to wrong
- scsi command entry in MPI message
-Date: Tue, 5 Jul 2011 12:40:23 +0530
-Message-ID: <20110705071015.GA16092@lsi.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
+ resync
+Date: Tue, 5 Jul 2011 08:25:39 GMT
+Message-ID: <201107050825.p658Pdk6017043@demeter2.kernel.org>
+References: <bug-14534-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:57068 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753759Ab1GEGqE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2011 02:46:04 -0400
-Content-Disposition: inline
+Received: from demeter2.kernel.org ([140.211.167.42]:39486 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754642Ab1GEIZk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2011 04:25:40 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p658PdjA017044
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 5 Jul 2011 08:25:39 GMT
+In-Reply-To: <bug-14534-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: JBottomley@parallels.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Issue:
-This issue is seen on LSI H/W WarpDrive SSS6200
-When filed direct I/O is tried as volume I/O the scmd field in internal lookup 
-table get cleared and because of that the retried volume I/O never gets 
-reported as completed to SML.
+https://bugzilla.kernel.org/show_bug.cgi?id=14534
 
-Result:  
-     I/O timeout and Error handling thread will kicking off 
 
-Fix: Setting back the scmd in the lookup table before retrying the failed 
-     direct i/o
+taeuber@bbaw.de changed:
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 939f283..6abd2fc 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -4258,6 +4258,7 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	u32 log_info;
- 	struct MPT2SAS_DEVICE *sas_device_priv_data;
- 	u32 response_code = 0;
-+	unsigned long flags;
- 
- 	mpi_reply = mpt2sas_base_get_reply_virt_addr(ioc, reply);
- 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
-@@ -4282,6 +4283,9 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	 * the failed direct I/O should be redirected to volume
- 	 */
- 	if (_scsih_scsi_direct_io_get(ioc, smid)) {
-+		spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+		ioc->scsi_lookup[smid - 1].scmd = scmd;
-+		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
- 		_scsih_scsi_direct_io_set(ioc, smid, 0);
- 		memcpy(mpi_request->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
- 		mpi_request->DevHandle =
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |taeuber@bbaw.de
+
+
+
+
+--- Comment #13 from taeuber@bbaw.de  2011-07-05 08:25:37 ---
+Hello,
+
+it seems my problem is also related to the mvsas driver/scsi subsystem:
+http://thread.gmane.org/gmane.linux.kernel/1150608
+
+I can reproduce the problem with a simple:
+dd if=/dev/zero of=/dev/sdc
+
+I tested this with the newest stable kernel 2.6.39.2 and two different
+enterprise SATA drives:
+* Seagate Constellation ES
+* Hitachi Ultrastar 7k3000
+
+I'd like to help debugging this.
+Please give some instructions.
+
+Lars
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
