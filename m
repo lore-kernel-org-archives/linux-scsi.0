@@ -1,33 +1,67 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
-Date: Wed, 6 Jul 2011 12:53:08 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1107061251580.1995-100000@iolanthe.rowland.org>
-References: <CAL1RGDW41oxoES=c+g9oLdx4mriBiEtxRpv=OD7yEJ6XKdU_fQ@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] mpt2sas: Remove queuecommand wrapper
+Date: Wed, 6 Jul 2011 11:00:33 -0700
+Message-ID: <CAA9_cmdQJZUFijkbPXE64R0FAoUC+y02UX6ZEX0GsCAmaazVyw@mail.gmail.com>
+References: <20110704192713.GZ4061@linux.intel.com>
+	<B2FD678A64EAAD45B089B123FDFC3ED70157FE25D8@inbmail01.lsi.com>
+	<20110705141434.GB389@parisc-linux.org>
+	<B2FD678A64EAAD45B089B123FDFC3ED70157E70F4A@inbmail01.lsi.com>
+	<20110705152143.GB4061@linux.intel.com>
+	<B2FD678A64EAAD45B089B123FDFC3ED70157FE2667@inbmail01.lsi.com>
+	<20110705202453.GC4061@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:36837 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751987Ab1GFQxL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2011 12:53:11 -0400
-In-Reply-To: <CAL1RGDW41oxoES=c+g9oLdx4mriBiEtxRpv=OD7yEJ6XKdU_fQ@mail.gmail.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:39173 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282Ab1GFSAe convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2011 14:00:34 -0400
+Received: by iwn6 with SMTP id 6so130556iwn.19
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jul 2011 11:00:33 -0700 (PDT)
+In-Reply-To: <20110705202453.GC4061@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Doug Gilbert <dgilbert@interlog.com>
 
-On Wed, 6 Jul 2011, Roland Dreier wrote:
+On Tue, Jul 5, 2011 at 1:24 PM, Matthew Wilcox <willy@linux.intel.com> =
+wrote:
+> On Tue, Jul 05, 2011 at 10:48:00PM +0530, Desai, Kashyap wrote:
+>> I did below experiment.
+>> Since now host_lock is removed from dispatch() callback.
+>> I added sleep() inside scsih_qcmd().. Just to mimic preemption. And =
+called Host reset using
+>> "Sg_reset -h" at the sametime when driver is sleeping inside qcmd().=
+ I see the kernel crash due to invalid scsi command pointer access afte=
+r driver comes out from sleep().
+>
+> OK, but I don't think we've introduced a new race here, just expanded
+> the window.
+>
+> If you follow the path down from userspace, we get to
+> scsi_nonblockable_ioctl() (doesn't take the host_lock), then
+> scsi_reset_provider (which takes and releases the host_lock to
+> set tmf_in_progress), then scsi_try_host_reset() which calls
+> eh_host_reset_handler() without holding the host_lock.
+>
+> So it's entirely possible to hit the same race on an SMP machine alre=
+ady
+> as there's nothing to synchronise the eh_host_reset_handler call with
+> queuecommand.
+>
+> I think someone who uses sg_reset ought to be aware of the possibilit=
+y
+> that they can trash their system. =A0Doug, what do you think?
+>
 
-> On Wed, Jul 6, 2011 at 7:24 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > Problem
-> > most likely missing block guards on blk_execute_req() ... no check for
-> > QUEUE_DEAD.
-> 
-> blk_execute_req() doesn't exist.  Do you mean __blk_run_queue()?
-
-He probably meant blk_execute_rq_nowait().  The test has to be done 
-before the elevator is accessed.
-
-Alan Stern
-
+Shouldn't the reset ioctl wait for all outstanding commands to return
+to the midlayer before forcing the reset?  If all tmf routines are
+written under scsi_eh (all outstanding commands quiesced) assumptions
+it seems the ioctl path must make the same guarantees before
+triggering a tmf action in a driver?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
