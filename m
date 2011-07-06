@@ -1,47 +1,46 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 03/19] lpfc: remove unnecessary read of PCI_CAP_ID_EXP
-Date: Wed, 6 Jul 2011 10:39:48 -0400
-Message-ID: <4E1473B4.3070509@emulex.com>
-References: <1309196346-15749-1-git-send-email-jdmason@kudzu.us>
+From: Roland Dreier <roland@kernel.org>
+Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
+Date: Wed, 6 Jul 2011 09:24:56 -0700
+Message-ID: <CAL1RGDV4_th87PkobnsFNHUkn5aYiXT3uoT7wNaUvjXa4JLLOg@mail.gmail.com>
+References: <CAL1RGDXFER5v08=Wy4Pv7CX0s1RqAThJmEy_0rpDfFCP9xjTJA@mail.gmail.com>
+ <Pine.LNX.4.44L0.1107061013440.1995-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:33122 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753175Ab1GFOkI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2011 10:40:08 -0400
-In-Reply-To: <1309196346-15749-1-git-send-email-jdmason@kudzu.us>
+Received: from na3sys010aog107.obsmtp.com ([74.125.245.82]:37773 "HELO
+	na3sys010aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753093Ab1GFQZR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Jul 2011 12:25:17 -0400
+Received: by mail-qw0-f45.google.com with SMTP id 8so37326qwj.32
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Jul 2011 09:25:16 -0700 (PDT)
+In-Reply-To: <Pine.LNX.4.44L0.1107061013440.1995-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jon Mason <jdmason@kudzu.us>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>
 
-Acked-by: James Smart <james.smart@emulex.com>
+On Wed, Jul 6, 2011 at 7:20 AM, Alan Stern <stern@rowland.harvard.edu> =
+wrote:
+> Looks can be deceiving. =A0Although the scsi_free_queue() is higher u=
+p in
+> the source file, it actually runs later than this code. =A0That's bec=
+ause
+> __scsi_remove_device() -- this code -- gets called when the device is
+> unregistered from the driver core, whereas
+> scsi_device_dev_release_usercontext() -- where the scsi_free_queue() =
+is
+> moved to -- gets called when the last reference to the device is
+> dropped.
 
+OK, I see.  Sorry for the confusion, I just looked at the patch quickly=
+ and
+assumed that the line moved up in the same function.
 
-On 6/27/2011 1:39 PM, Jon Mason wrote:
-> The PCIE capability offset is saved during PCI bus walking.  It will
-> remove an unnecessary search in the PCI configuration space if this
-> value is referenced instead of reacquiring it.  Also, pci_is_pcie is a
-> better way of determining if the device is PCIE or not (as it uses the
-> same saved PCIE capability offset).
->
-> Signed-off-by: Jon Mason<jdmason@kudzu.us>
-> ---
->   drivers/scsi/lpfc/lpfc_init.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 148b98d..9000ad0 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -3970,7 +3970,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
->   	pci_save_state(pdev);
->
->   	/* PCIe EEH recovery on powerpc platforms needs fundamental reset */
-> -	if (pci_find_capability(pdev, PCI_CAP_ID_EXP))
-> +	if (pci_is_pcie(pdev))
->   		pdev->needs_freset = 1;
->
->   	return 0;
+ - R.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
