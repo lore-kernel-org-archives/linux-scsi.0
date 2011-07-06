@@ -1,56 +1,90 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
-Date: Wed, 06 Jul 2011 09:24:09 -0500
-Message-ID: <1309962249.3282.1.camel@mulgrave>
-References: <Pine.LNX.4.44L0.1107061013440.1995-100000@iolanthe.rowland.org>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: Warning: qla4xxx/qla2xxx/lpfc   : removal of PCI_CAP_ID_EXP
+Date: Wed, 6 Jul 2011 10:38:10 -0400
+Message-ID: <4E147352.3070407@emulex.com>
+References: <1309196346-15749-1-git-send-email-jdmason@kudzu.us> <4E0CDF8B.3020505@emulex.com> <4E0DDE55.30006@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40099 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752989Ab1GFOYM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2011 10:24:12 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1107061013440.1995-100000@iolanthe.rowland.org>
+Received: from exht1.emulex.com ([138.239.113.183]:33067 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752585Ab1GFOic (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jul 2011 10:38:32 -0400
+In-Reply-To: <4E0DDE55.30006@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Roland Dreier <roland@kernel.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Jon Mason <jdmason@kudzu.us>, Richard Lary <rlary@us.ibm.com>, Ravi Anand <ravi.anand@qlogic.com>, "vikas.chaudhary@qlogic.com" <vikas.chaudhary@qlogic.com>, "iscsi-driver@qlogic.com" <iscsi-driver@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Wed, 2011-07-06 at 10:20 -0400, Alan Stern wrote:
-> On Wed, 6 Jul 2011, Roland Dreier wrote:
-> 
-> > Alan Stern's patch looks a bit fishy -- the scsi_free_queue() is moved
-> > earlier than the
-> > 
-> > 	/* cause the request function to reject all I/O requests */
-> > 	sdev->request_queue->queuedata = NULL;
-> > 
-> > which seems to leave a small window where the use-after-free can
-> > happen, and it's not clear to me why the scsi_free_queue() has to move
-> > at all.
-> 
-> Looks can be deceiving.  Although the scsi_free_queue() is higher up in
-> the source file, it actually runs later than this code.  That's because
-> __scsi_remove_device() -- this code -- gets called when the device is
-> unregistered from the driver core, whereas
-> scsi_device_dev_release_usercontext() -- where the scsi_free_queue() is
-> moved to -- gets called when the last reference to the device is
-> dropped.
-> 
-> Now, one of the things I'm not sure about (it would nice if James would
-> pick up this thread again and comment) is whether queuedata should be
-> set to NULL at unregistration time or later on, when the device and the
-> queue are about to be freed.
+FYI:   after discussion of this error on linux-pci and linuxppc-dev, the error 
+was corrected in a patch checked into 2.6.33-rc6/3.0-rc6 
+(http://marc.info/?l=linux-pci&m=130992047232053&w=2)
 
-Sorry, higher priority problems at the moment.  Sorry about the
-->queuedata cockup, was thinking of sdev->request_queue. Moving the
-queue free is wrong ... it recently moved to fix another oops.  Problem
-most likely missing block guards on blk_execute_req() ... no check for
-QUEUE_DEAD.
-
-Will be back on Thursday.
-
-James
+-- james s
 
 
+
+On 7/1/2011 10:48 AM, James Smart wrote:
+> All,
+>
+> I wanted to communicate a potential warning to those drivers that had a patch
+> submitted to replace config space searches of PCI_CAP_ID_EXP with shorthand
+> options such as is_pcie and pci_is_pcie().
+>
+> Testing with the lpfc driver and AER/EEH identified cases where the short-hand
+> search options would fail on PPC platforms.  The only successful option in all
+> cases was the explicit search via PCI_CAP_ID_EXP.   Therefore, I recommend
+> that this change not be accepted until the platform level issue can be
+> identified and corrected.
+>
+> -- james s
+>
+>
+>
+> On 6/30/2011 4:41 PM, James Smart wrote:
+>> Jon,
+>>
+>> I must NACK this patch to the lpfc driver and recommend that all other patches
+>> which replace pci_find_capability(pdef, PCI_CAP_ID_EXP) with
+>> "pci_is_pcie(pdev)" are NACK'd as well.
+>>
+>> The reason is due to an issue on PPC platforms whereby use of "pdev->is_pcie"
+>> and pci_is_pcie() will erroneously fail under some conditions, but explicit
+>> search for the capability struct via pci_find_capability() is always
+>> successful.   I expect this to be due a shadowing of pci config space in the
+>> hal/platform that isn't sufficiently built up.  We detected this issue while
+>> testing AER/EEH, and are functional only if the pci_find_capability() option
+>> is used.
+>>
+>> -- james s
+>>
+>>
+>>
+>> On 6/27/2011 1:39 PM, Jon Mason wrote:
+>>> The PCIE capability offset is saved during PCI bus walking.  It will
+>>> remove an unnecessary search in the PCI configuration space if this
+>>> value is referenced instead of reacquiring it.  Also, pci_is_pcie is a
+>>> better way of determining if the device is PCIE or not (as it uses the
+>>> same saved PCIE capability offset).
+>>>
+>>> Signed-off-by: Jon Mason<jdmason@kudzu.us>
+>>> ---
+>>>     drivers/scsi/lpfc/lpfc_init.c |    2 +-
+>>>     1 files changed, 1 insertions(+), 1 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+>>> index 148b98d..9000ad0 100644
+>>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>>> @@ -3970,7 +3970,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+>>>     	pci_save_state(pdev);
+>>>
+>>>     	/* PCIe EEH recovery on powerpc platforms needs fundamental reset */
+>>> -	if (pci_find_capability(pdev, PCI_CAP_ID_EXP))
+>>> +	if (pci_is_pcie(pdev))
+>>>     		pdev->needs_freset = 1;
+>>>
+>>>     	return 0;
+>
+>
