@@ -1,76 +1,107 @@
-From: Matthew Wilcox <willy@linux.intel.com>
-Subject: Re: [PATCH] mpt2sas: Remove queuecommand wrapper
-Date: Tue, 5 Jul 2011 16:24:53 -0400
-Message-ID: <20110705202453.GC4061@linux.intel.com>
-References: <20110704192713.GZ4061@linux.intel.com>
- <B2FD678A64EAAD45B089B123FDFC3ED70157FE25D8@inbmail01.lsi.com>
- <20110705141434.GB389@parisc-linux.org>
- <B2FD678A64EAAD45B089B123FDFC3ED70157E70F4A@inbmail01.lsi.com>
- <20110705152143.GB4061@linux.intel.com>
- <B2FD678A64EAAD45B089B123FDFC3ED70157FE2667@inbmail01.lsi.com>
+From: Roland Dreier <roland@kernel.org>
+Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
+Date: Tue, 5 Jul 2011 17:34:16 -0700
+Message-ID: <CAG4TOxM=-8P495xSNvySOhOcKwqCNun99SNmkC1LTUon4jQxXQ@mail.gmail.com>
+References: <20110615112016.GA4227@osiris.boeblingen.de.ibm.com>
+ <20110616160155.GB3843@osiris.boeblingen.de.ibm.com> <1308242275.2436.56.camel@mulgrave>
+ <20110616184023.GA2362@osiris.boeblingen.de.ibm.com> <20110620153021.GA2572@osiris.boeblingen.de.ibm.com>
+ <CAL1RGDVFR5eYHOX-jiUrU4_Ezw19FzNcCcyo0qKNYictK5He5g@mail.gmail.com> <1309547081.2722.33.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9484 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754736Ab1GEUYz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Jul 2011 16:24:55 -0400
-Content-Disposition: inline
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED70157FE2667@inbmail01.lsi.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48794 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753878Ab1GFAeg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2011 20:34:36 -0400
+Received: by iwn6 with SMTP id 6so5654973iwn.19
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jul 2011 17:34:36 -0700 (PDT)
+In-Reply-To: <1309547081.2722.33.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Doug Gilbert <dgilbert@interlog.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-On Tue, Jul 05, 2011 at 10:48:00PM +0530, Desai, Kashyap wrote:
-> > -----Original Message-----
-> > From: Matthew Wilcox [mailto:willy@linux.intel.com]
-> > Sent: Tuesday, July 05, 2011 8:52 PM
-> > To: Desai, Kashyap
-> > Cc: Matthew Wilcox; linux-scsi@vger.kernel.org; DL-MPT Fusion Linux;
-> > nab@linux-iscsi.org
-> > Subject: Re: [PATCH] mpt2sas: Remove queuecommand wrapper
+On Fri, Jul 1, 2011 at 12:04 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> The first obvious question is does it reproduce with git HEAD? =A0If =
+yes,
+> then it's an unfixed reference bug, if no, we forgot to backport the =
+fix
+> (we should be able to find it easily enough).
 
-> > void scsi_eh_wakeup(struct Scsi_Host *shost)
-> > {
-> >         if (shost->host_busy == shost->host_failed) {
-> 
-> I think you are right here. 
-> 
-> I did below experiment.  
-> Since now host_lock is removed from dispatch() callback.
-> I added sleep() inside scsih_qcmd().. Just to mimic preemption. And called Host reset using
-> "Sg_reset -h" at the sametime when driver is sleeping inside qcmd(). I see the kernel crash due to invalid scsi command pointer access after driver comes out from sleep().
+Hi James,
 
-OK, but I don't think we've introduced a new race here, just expanded
-the window.
+Yes, I'm able to reproduce with v3.0-rc5-170-gba466c7.
 
-If you follow the path down from userspace, we get to
-scsi_nonblockable_ioctl() (doesn't take the host_lock), then
-scsi_reset_provider (which takes and releases the host_lock to
-set tmf_in_progress), then scsi_try_host_reset() which calls
-eh_host_reset_handler() without holding the host_lock.
+I booted with slub_debug=3DFZUP and the 6b pattern in RAX pretty much
+does prove that this is a use-after-free issue.  Any thoughts about
+how to pin this down before I muddle on in my lowbrow way?
 
-So it's entirely possible to hit the same race on an SMP machine already
-as there's nothing to synchronise the eh_host_reset_handler call with
-queuecommand.
+    general protection fault: 0000 [#1] SMP
+    CPU 7
+    Modules linked in: kvm_intel kvm serio_raw i7core_edac edac_core
+ioatdma dca pci_stub ses
+   id usb_storage qla2xxx mpt2sas ahci hid uas libahci e1000e
+scsi_transport_fc scsi_transport
+    raid_class scsi_tgt
 
-I think someone who uses sg_reset ought to be aware of the possibility
-that they can trash their system.  Doug, what do you think?
+    Pid: 12458, comm: blkid Not tainted 3.0.0-rc5+ #1
 
-> As you said, due to actual Error handling will not wake up, but if user/customer do testing using sg_tools
-> They can kick off Host reset on demand.
-> 
-> What is your input on my above test case/observation ?
-> 
-> >                 trace_scsi_eh_wakeup(shost);
-> >                 wake_up_process(shost->ehandler);
-> > 
-> > So the SCSI error handler doesn't run until host_busy == host_failed.
-> > host_busy is incremented in scsi_request_fn() (before scsi_dispatch_cmd
-> > is called).  host_failed is incremented in scsi_eh_scmd_add().  So after
-> > a command has been issued, it prevents the EH from running until it
-> > too fails.  That means queuecommand cannot be running at the same time
-> > as the EH.
-> > 
-> > That's documented in Documentation/scsi/scsi_eh.txt section [1-3].
+    RIP: 0010:[<ffffffff81233867>]  [<ffffffff81233867>]
+elv_drain_elevator+0x27/0x80
+    RSP: 0018:ffff880614e9fa48  EFLAGS: 00010096
+    RAX: 6b6b6b6b6b6b6b6b RBX: ffff880610bb0000 RCX: 0000000000000000
+    RDX: 0000000000000002 RSI: 0000000000000001 RDI: ffff880610bb0000
+    RBP: ffff880614e9fa58 R08: 0000000000000000 R09: 0000000000000001
+    R10: ffff880c0a7dca70 R11: ffff880615622440 R12: ffff880610bb0000
+    R13: 0000000000000002 R14: 0000000000000002 R15: ffff880c0db01160
+    FS:  00007fe46457a760(0000) GS:ffff880c3fc20000(0000) knlGS:0000000=
+000000000
+    CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+    CR2: 00007fe463c86330 CR3: 0000000c0cc0c000 CR4: 00000000000006e0
+    DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+    DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+    Process blkid (pid: 12458, threadinfo ffff880614e9e000, task
+ffff8806190eae20)
+    Stack:
+     ffff880c0d9f03c8 ffff880c0d9f03c8 ffff880614e9fa88 ffffffff812339a=
+8
+     ffff880c0d9f03c8 ffff880610bb0000 0000000000000002 ffffc9001bd5e04=
+0
+     ffff880614e9fab8 ffffffff812366fd ffff880614e9fad8 ffff880610bb000=
+0
+    Call Trace:
+     [<ffffffff812339a8>] __elv_add_request+0xe8/0x280
+     [<ffffffff812366fd>] add_acct_request+0x3d/0x50
+     [<ffffffff81236775>] blk_insert_cloned_request+0x65/0x90
+     [<ffffffff813b8d4e>] dm_dispatch_request+0x3e/0x70
+     [<ffffffff813ba850>] dm_request_fn+0x160/0x250
+     [<ffffffff81236e88>] queue_unplugged+0x48/0xd0
+     [<ffffffff8123b03d>] blk_flush_plug_list+0x1ed/0x250
+     [<ffffffff810e98f0>] ? sleep_on_page+0x20/0x20
+     [<ffffffff814db895>] io_schedule+0x75/0xd0
+     [<ffffffff810e98fe>] sleep_on_page_killable+0xe/0x40
+     [<ffffffff814dbf9a>] __wait_on_bit_lock+0x5a/0xc0
+     [<ffffffff810e9857>] __lock_page_killable+0x67/0x70
+     [<ffffffff8106d650>] ? autoremove_wake_function+0x40/0x40
+     [<ffffffff810eb5c5>] generic_file_aio_read+0x405/0x720
+     [<ffffffff81146962>] do_sync_read+0xd2/0x110
+     [<ffffffff8121e393>] ? security_file_permission+0x93/0xb0
+     [<ffffffff81146c81>] ? rw_verify_area+0x61/0xf0
+     [<ffffffff81147143>] vfs_read+0xc3/0x180
+     [<ffffffff81147251>] sys_read+0x51/0x90
+     [<ffffffff814e5942>] system_call_fastpath+0x16/0x1b
+    Code: c3 0f 1f 00 55 48 89 e5 53 48 83 ec 08 66 66 66 66 90 48 89
+fb 0f 1f 80 00 00 00 00
+    01 00 00 00 48 89 df 48 8b 00 <ff> 50 28 85 c0 75 ea 8b 93 f0 03
+00 00 85 d2 74 14 8b 05 f
+
+    RIP  [<ffffffff81233867>] elv_drain_elevator+0x27/0x80
+     RSP <ffff880614e9fa48>
+    ---[ end trace 5dbd03e7295023d7 ]---
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
