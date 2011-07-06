@@ -1,54 +1,139 @@
-From: Davidlohr Bueso <dave@gnu.org>
-Subject: [PATCH] ibmmca: trivial typo fixes
-Date: Tue, 05 Jul 2011 22:58:29 -0400
-Message-ID: <1309921109.3975.2.camel@offbook>
-Reply-To: dave@gnu.org
+From: Jon Mason <jdmason@kudzu.us>
+Subject: Re: Warning: qla4xxx/qla2xxx/lpfc : removal of PCI_CAP_ID_EXP
+Date: Tue, 5 Jul 2011 22:15:26 -0500
+Message-ID: <CAPoiz9xbPc_CfXj1xGwvGA9X+OJyZBvGpB-GuETLKrUhwc9-jA@mail.gmail.com>
+References: <1309196346-15749-1-git-send-email-jdmason@kudzu.us>
+	<4E0CDF8B.3020505@emulex.com>
+	<3ad06450-f7bc-4367-88de-615c530054e2@exht1.ad.emulex.com>
+	<BANLkTim0FYKz6Uu=_DScHg847LR_oJFTnQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: trivial <trivial@kernel.org>, lkml <linux-kernel@vger.kernel.org>, Michael Lang <langa2@kph.uni-mainz.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:41570 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755561Ab1GFDP3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jul 2011 23:15:29 -0400
+Received: by mail-ey0-f174.google.com with SMTP id 24so2220434eyx.19
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Jul 2011 20:15:28 -0700 (PDT)
+In-Reply-To: <BANLkTim0FYKz6Uu=_DScHg847LR_oJFTnQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Richard Lary <rlary@us.ibm.com>, Ravi Anand <ravi.anand@qlogic.com>, vikas.chaudhary@qlogic.com, iscsi-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-From: Davidlohr Bueso <dave@gnu.org>
+Per Richard Lary's testing, this is not an issue with the latest kernel=
+=2E
+http://www.spinics.net/lists/linux-pci/msg11350.html
 
-Signed-off-by: Davidlohr Bueso <dave@gnu.org>
----
- Documentation/scsi/ibmmca.txt |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Thanks,
+Jon
 
-diff --git a/Documentation/scsi/ibmmca.txt b/Documentation/scsi/ibmmca.txt
-index ac41a9f..03f0219 100644
---- a/Documentation/scsi/ibmmca.txt
-+++ b/Documentation/scsi/ibmmca.txt
-@@ -434,7 +434,7 @@
-    Dec 14 1996: More improvements to the ldn mapping.  See check_devices
-    for details.  Did more fiddling with the integrated SCSI detection,
-    but I think it's ultimately hopeless without actually testing the
--   model of the machine.  The 56, 57, 76 and 95 (ultimedia) all have
-+   model of the machine.  The 56, 57, 76 and 95 (multimedia) all have
-    different integrated SCSI register configurations.  However, the 56
-    and 57 are the only ones that have problems with forced detection.
-    - Chris Beauregard
-@@ -487,7 +487,7 @@
-    1) Submitting the extra-array ldn_is_tape[] -> to the local ld[]
-       device-array. 
-    2) CD-ROM Audio-Play seems to work now.
--   3) When using DDS-2 (120M) DAT-Tapes, mtst shows still density-code
-+   3) When using DDS-2 (120M) DAT-Tapes, must show still density-code
-       0x13 for ordinary DDS (61000 BPM) instead 0x24 for DDS-2. This appears 
-       also on Adaptec 2940 adaptor in a PCI-System. Therefore, I assume that 
-       the problem is independent of the low-level-driver/bus-architecture.
-@@ -932,7 +932,7 @@
-    January 3, 2001 (v4.0a)
-    1) A lot of complains after the 2.4.0-prerelease kernel came in about
-       the impossibility to compile the driver as a module. This problem is
--      solved. In combination with that problem, some unprecise declaration
-+      solved. In combination with that problem, some imprecise declaration
-       of the function option_setup() gave some warnings during compilation.
-       This is solved, too by a forward declaration in ibmmca.c.
-    2) #ifdef argument concerning CONFIG_SCSI_IBMMCA is no longer needed and
--- 
-1.7.4.1
+On Fri, Jul 1, 2011 at 10:10 AM, Jon Mason <jdmason@kudzu.us> wrote:
+> pci_is_pcie checks for a PCI-E capability offset that was determined
+> by calling pci_find_capability during the PCI bus walking. =A0Based o=
+n
+> the description below this should be functionally equivalent. =A0If
+> this is not safe, then the PCI bus walking code is most likely busted
+> on EEH enabled PPC systems (and that is a BIG problem). =A0I'll e-mai=
+l
+> the PPC mailing list to verify the issue.
+>
+> Thanks,
+> Jon
+>
+> On Fri, Jul 1, 2011 at 9:48 AM, James Smart <james.smart@emulex.com> =
+wrote:
+>> All,
+>>
+>> I wanted to communicate a potential warning to those drivers that ha=
+d a
+>> patch submitted to replace config space searches of PCI_CAP_ID_EXP w=
+ith
+>> shorthand options such as is_pcie and pci_is_pcie().
+>>
+>> Testing with the lpfc driver and AER/EEH identified cases where the
+>> short-hand search options would fail on PPC platforms. =A0The only s=
+uccessful
+>> option in all cases was the explicit search via PCI_CAP_ID_EXP. =A0 =
+Therefore,
+>> I recommend that this change not be accepted until the platform leve=
+l issue
+>> can be identified and corrected.
+>>
+>> -- james s
+>>
+>>
+>>
+>> On 6/30/2011 4:41 PM, James Smart wrote:
+>>>
+>>> Jon,
+>>>
+>>> I must NACK this patch to the lpfc driver and recommend that all ot=
+her
+>>> patches
+>>> which replace pci_find_capability(pdef, PCI_CAP_ID_EXP) with
+>>> "pci_is_pcie(pdev)" are NACK'd as well.
+>>>
+>>> The reason is due to an issue on PPC platforms whereby use of
+>>> "pdev->is_pcie"
+>>> and pci_is_pcie() will erroneously fail under some conditions, but
+>>> explicit
+>>> search for the capability struct via pci_find_capability() is alway=
+s
+>>> successful. =A0 I expect this to be due a shadowing of pci config s=
+pace in
+>>> the
+>>> hal/platform that isn't sufficiently built up. =A0We detected this =
+issue
+>>> while
+>>> testing AER/EEH, and are functional only if the pci_find_capability=
+()
+>>> option
+>>> is used.
+>>>
+>>> -- james s
+>>>
+>>>
+>>>
+>>> On 6/27/2011 1:39 PM, Jon Mason wrote:
+>>>>
+>>>> The PCIE capability offset is saved during PCI bus walking. =A0It =
+will
+>>>> remove an unnecessary search in the PCI configuration space if thi=
+s
+>>>> value is referenced instead of reacquiring it. =A0Also, pci_is_pci=
+e is a
+>>>> better way of determining if the device is PCIE or not (as it uses=
+ the
+>>>> same saved PCIE capability offset).
+>>>>
+>>>> Signed-off-by: Jon Mason<jdmason@kudzu.us>
+>>>> ---
+>>>> =A0 drivers/scsi/lpfc/lpfc_init.c | =A0 =A02 +-
+>>>> =A0 1 files changed, 1 insertions(+), 1 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/lpfc/lpfc_init.c
+>>>> b/drivers/scsi/lpfc/lpfc_init.c
+>>>> index 148b98d..9000ad0 100644
+>>>> --- a/drivers/scsi/lpfc/lpfc_init.c
+>>>> +++ b/drivers/scsi/lpfc/lpfc_init.c
+>>>> @@ -3970,7 +3970,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+>>>> =A0 =A0 =A0 =A0pci_save_state(pdev);
+>>>>
+>>>> =A0 =A0 =A0 =A0/* PCIe EEH recovery on powerpc platforms needs fun=
+damental reset
+>>>> */
+>>>> - =A0 =A0 =A0 if (pci_find_capability(pdev, PCI_CAP_ID_EXP))
+>>>> + =A0 =A0 =A0 if (pci_is_pcie(pdev))
+>>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0pdev->needs_freset =3D 1;
+>>>>
+>>>> =A0 =A0 =A0 =A0return 0;
+>>
+>>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
