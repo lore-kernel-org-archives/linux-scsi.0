@@ -1,118 +1,73 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [BUG] 2.6.39.1 crash in scsi_dispatch_cmd()
-Date: Thu, 07 Jul 2011 15:45:40 -0500
-Message-ID: <1310071540.3282.71.camel@mulgrave>
-References: <Pine.LNX.4.44L0.1107061432340.1995-100000@iolanthe.rowland.org>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: solved was Re: Linux 3.0 oopses when pulling a USB CDROM
+Date: Thu, 7 Jul 2011 22:47:47 +0200
+Message-ID: <20110707204747.GL15637@one.firstfloor.org>
+References: <20110702181146.GM23059@one.firstfloor.org> <Pine.LNX.4.44L0.1107021544550.16190-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42209 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751896Ab1GGUpy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2011 16:45:54 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1107061432340.1995-100000@iolanthe.rowland.org>
+Received: from one.firstfloor.org ([213.235.205.2]:41005 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751356Ab1GGUrt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jul 2011 16:47:49 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1107021544550.16190-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Roland Dreier <roland@kernel.org>, Heiko Carstens <heiko.carstens@de.ibm.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>
+Cc: Andi Kleen <andi@firstfloor.org>, axboe@kernel.dk, James Bottomley <James.Bottomley@HansenPartnership.com>, Dave Jones <davej@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
 
-On Wed, 2011-07-06 at 14:49 -0400, Alan Stern wrote:
-> On Wed, 6 Jul 2011, Roland Dreier wrote:
+> Would you like to try this patch to see if it fixes the problem?  As I 
+> said before, I'm not certain it's the best thing to do, but it worked 
+> on my system.
+
+Sorry for the delay. I can confirm this patch fixes the problem for me.
+I did a few pulls and all performed fine. Thanks!
+
+-Andi
 > 
-> > On Wed, Jul 6, 2011 at 9:53 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > > He probably meant blk_execute_rq_nowait(). The test has to be done
-> > > before the elevator is accessed.
-> > 
-> > Hmm, seems we would need the test in multiple places, since my second call
-> > trace is io_schedule -> blk_flush_plug_list -> queue_unplugged ->
-> > __blk_run_queue
-> > 
-> > So I don't think I hit blk_execute_rq_nowait in my crash.
-> > 
-> > But maybe the problem is that dm-multipath is trying to requeue the IO to an
-> > underlying sdX device that is already dead?
+> Alan Stern
 > 
-> I'm not at all familiar with the block layer.  It seems that the check
-> for a dead queue would have to be made on every path that ends up
-> calling the elevator, which would be a difficult sort of thing to
-> enforce.
 > 
-> I'm not too sure about James's comment:
 > 
-> > Moving the
-> > queue free is wrong ... it recently moved to fix another oops.
 > 
-> Apparently this refers to commit
-> e73e079bf128d68284efedeba1fbbc18d78610f9 ([SCSI] Fix oops caused by
-> queue refcounting failure).  In fact that commit does _not_ move the
-> call to scsi_free_queue().  Instead it merely takes another reference
-> to the queue, so that scsi_free_queue() doesn't actually deallocate the
-> queue.  But it does still deallocate the elevator.
+> Index: usb-3.0/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- usb-3.0.orig/drivers/scsi/scsi_lib.c
+> +++ usb-3.0/drivers/scsi/scsi_lib.c
+> @@ -1247,6 +1247,8 @@ int scsi_prep_fn(struct request_queue *q
+>  	struct scsi_device *sdev = q->queuedata;
+>  	int ret = BLKPREP_KILL;
+>  
+> +	if (!sdev)
+> +		return ret;
+>  	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
+>  		ret = scsi_setup_blk_pc_cmnd(sdev, req);
+>  	return scsi_prep_return(q, req, ret);
+> Index: usb-3.0/drivers/scsi/scsi_sysfs.c
+> ===================================================================
+> --- usb-3.0.orig/drivers/scsi/scsi_sysfs.c
+> +++ usb-3.0/drivers/scsi/scsi_sysfs.c
+> @@ -322,6 +322,8 @@ static void scsi_device_dev_release_user
+>  		kfree(evt);
+>  	}
+>  
+> +	/* Freeing the queue signals to block that we're done */
+> +	scsi_free_queue(sdev->request_queue);
+>  	blk_put_queue(sdev->request_queue);
+>  	/* NULL queue means the device can't be used */
+>  	sdev->request_queue = NULL;
+> @@ -936,8 +938,6 @@ void __scsi_remove_device(struct scsi_de
+>  	/* cause the request function to reject all I/O requests */
+>  	sdev->request_queue->queuedata = NULL;
+>  
+> -	/* Freeing the queue signals to block that we're done */
+> -	scsi_free_queue(sdev->request_queue);
+>  	put_device(dev);
+>  }
+>  
+> 
+> 
 
-Not that one, 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b
-
-> Perhaps this means the elevator shouldn't be freed until the queue is.  
-> I just don't know.  Jens and James are the experts, but Jens hasn't
-> said anything and James is currently busy.
-
-OK, back from being busy now (for a short while).
-
-This is what I think should fix it all (at least it fixes it for me now
-I've finally figured out how to reproduce it).
-
-The nasty about this is that blk_get_request() has to return NULL even
-if __GFP_WAIT is specified, if the queue is already dead.  Lots of block
-users don't check for NULL if they specify __GFP_WAIT.
-
-James
-
----
-
-diff --git a/block/blk-core.c b/block/blk-core.c
-index d2f8f40..1d49e1c 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -839,6 +839,9 @@ struct request *blk_get_request(struct request_queue *q, int rw, gfp_t gfp_mask)
- {
- 	struct request *rq;
- 
-+	if (unlikely(test_bit(QUEUE_FLAG_DEAD, &q->queue_flags)))
-+		return NULL;
-+
- 	BUG_ON(rw != READ && rw != WRITE);
- 
- 	spin_lock_irq(q->queue_lock);
-diff --git a/block/blk-exec.c b/block/blk-exec.c
-index 8a0e7ec..a1ebceb 100644
---- a/block/blk-exec.c
-+++ b/block/blk-exec.c
-@@ -50,6 +50,13 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
- {
- 	int where = at_head ? ELEVATOR_INSERT_FRONT : ELEVATOR_INSERT_BACK;
- 
-+	if (unlikely(test_bit(QUEUE_FLAG_DEAD, &q->queue_flags))) {
-+		rq->errors = -ENXIO;
-+		if (rq->end_io)
-+			rq->end_io(rq, rq->errors);
-+		return;
-+	}
-+
- 	rq->rq_disk = bd_disk;
- 	rq->end_io = done;
- 	WARN_ON(irqs_disabled());
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index ec1803a..28d9c9d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -213,6 +213,8 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 	int ret = DRIVER_ERROR << 24;
- 
- 	req = blk_get_request(sdev->request_queue, write, __GFP_WAIT);
-+	if (!req)
-+		return ret;
- 
- 	if (bufflen &&	blk_rq_map_kern(sdev->request_queue, req,
- 					buffer, bufflen, __GFP_WAIT))
-
-
+-- 
+ak@linux.intel.com -- Speaking for myself only.
