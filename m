@@ -1,1424 +1,1957 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [PATCH 03/20] target: Make all control CDBs scatter-gather
-Date: Thu,  7 Jul 2011 15:33:14 -0700
-Message-ID: <1310078011-15504-4-git-send-email-agrover@redhat.com>
+Subject: [PATCH 09/20] target: Remove custom debug macros in non-iscsi fabrics
+Date: Thu,  7 Jul 2011 15:33:20 -0700
+Message-ID: <1310078011-15504-10-git-send-email-agrover@redhat.com>
 References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19023 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:25084 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751156Ab1GGWdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Jul 2011 18:33:42 -0400
+	id S1752813Ab1GGWdp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jul 2011 18:33:45 -0400
 In-Reply-To: <1310078011-15504-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Previously, some control CDBs did not allocate memory in pages for their
-data buffer, but just did a kmalloc. This patch makes all cdbs allocate
-pages.
+pr_debug and dynamic debug messages are cool, we don't need specialized
+debug infrastructure.
 
-This has the benefit of streamlining some paths that had to behave
-differently when we used two allocation methods. The downside is that
-all accesses to the data buffer need to kmap it before use, and need to
-handle data in page-sized chunks if more than a page is needed for a given
-command's data buffer.
+Use pr_err etc. instead of printk(KERN_ERR...).
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 ---
- drivers/infiniband/ulp/srpt/ib_srpt.c           |    7 -
- drivers/scsi/qla2xxx/qla_target.c               |    3 -
- drivers/target/iscsi/iscsi_target.c             |   74 ++---------
- drivers/target/iscsi/iscsi_target_core.h        |    1 -
- drivers/target/iscsi/iscsi_target_util.c        |   11 +-
- drivers/target/target_core_alua.c               |   24 +++-
- drivers/target/target_core_cdb.c                |   49 ++++++-
- drivers/target/target_core_device.c             |    5 +-
- drivers/target/target_core_pr.c                 |   53 +++++++-
- drivers/target/target_core_pscsi.c              |   32 +----
- drivers/target/target_core_transport.c          |  158 ++++++++---------------
- drivers/target/tcm_fc/tfc_cmd.c                 |    4 +-
- drivers/target/tcm_fc/tfc_io.c                  |   61 +++-------
- drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c |   21 ---
- include/target/target_core_base.h               |    4 +-
- include/target/target_core_transport.h          |    6 +-
- 16 files changed, 207 insertions(+), 306 deletions(-)
+ drivers/target/loopback/Kconfig                   |    6 -
+ drivers/target/loopback/tcm_loop.c                |   94 +++++-----
+ drivers/target/loopback/tcm_loop.h                |    6 -
+ drivers/target/tcm_fc/tcm_fc.h                    |   24 ---
+ drivers/target/tcm_fc/tfc_cmd.c                   |   37 ++---
+ drivers/target/tcm_fc/tfc_conf.c                  |   33 ++--
+ drivers/target/tcm_fc/tfc_io.c                    |   22 ++--
+ drivers/target/tcm_fc/tfc_sess.c                  |   18 +-
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h     |    6 -
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c |  190 ++++++++++----------
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c   |   20 +-
+ drivers/target/tcm_vhost/tcm_vhost_configfs.c     |   50 +++---
+ drivers/target/tcm_vhost/tcm_vhost_fabric.c       |   10 +-
+ drivers/target/tcm_vhost/tcm_vhost_scsi.c         |    8 +-
+ 14 files changed, 239 insertions(+), 285 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.c b/drivers/infiniband/ulp/srpt/ib_srpt.c
-index b64b653..60415e1 100644
---- a/drivers/infiniband/ulp/srpt/ib_srpt.c
-+++ b/drivers/infiniband/ulp/srpt/ib_srpt.c
-@@ -1131,13 +1131,6 @@ static int srpt_map_sg_to_ib_sge(struct srpt_rdma_ch *ch,
- 		transport_do_task_sg_chain(cmd);
- 		sg = sg_orig = cmd->t_tasks_sg_chained;
- 		sg_cnt = cmd->t_tasks_sg_chained_no;
--	} else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--		/* Use task->t_tasks_sg_bounce for control CDBs. */
--		sg_init_table(&cmd->t_tasks_sg_bounce, 1);
--		sg_set_buf(&cmd->t_tasks_sg_bounce, cmd->t_task_buf,
--			   cmd->data_length);
--		sg = sg_orig = &cmd->t_tasks_sg_bounce;
--		sg_cnt = 1;
- 	} else {
- 		pr_debug("?? sg == NULL\n");
- 		ioctx->mapped_sg_count = 0;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 4d54872..360abab 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3890,9 +3890,6 @@ restart:
- 		    (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)) {
- 			cmd->sg_cnt = se_cmd->t_tasks_sg_chained_no;
- 			cmd->sg = se_cmd->t_tasks_sg_chained;
--		} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--			cmd->sg_cnt = 1;
--			cmd->sg = &se_cmd->t_tasks_sg_bounce;
- 		}
+diff --git a/drivers/target/loopback/Kconfig b/drivers/target/loopback/Kconfig
+index 57dcbc2..abe8ecb 100644
+--- a/drivers/target/loopback/Kconfig
++++ b/drivers/target/loopback/Kconfig
+@@ -3,9 +3,3 @@ config LOOPBACK_TARGET
+ 	help
+ 	  Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LLD
+ 	  fabric loopback module.
+-
+-config LOOPBACK_TARGET_CDB_DEBUG
+-	bool "TCM loopback fabric module CDB debug code"
+-	depends on LOOPBACK_TARGET
+-	help
+-	  Say Y here to enable the TCM loopback fabric module CDB debug code
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 9e9a3a8..64d85ad 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -79,7 +79,7 @@ static struct se_cmd *tcm_loop_allocate_core_cmd(
  
- 		DEBUG22(qla_printk(KERN_INFO, ha, "SRR cmd %p (se_cmd %p, tag %d, op %x), "
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 588c5dd..425caef 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -780,7 +780,6 @@ static int iscsit_allocate_iovecs(struct iscsi_cmd *cmd)
- static int iscsit_alloc_buffs(struct iscsi_cmd *cmd)
- {
- 	struct scatterlist *sgl;
--	void *buf, *cur;
- 	u32 length = cmd->se_cmd.data_length;
- 	int nents = DIV_ROUND_UP(length, PAGE_SIZE);
- 	int i = 0, ret;
-@@ -790,72 +789,25 @@ static int iscsit_alloc_buffs(struct iscsi_cmd *cmd)
+ 	tl_cmd = kmem_cache_zalloc(tcm_loop_cmd_cache, GFP_ATOMIC);
+ 	if (!tl_cmd) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_loop_cmd\n");
++		pr_err("Unable to allocate struct tcm_loop_cmd\n");
+ 		set_host_byte(sc, DID_ERROR);
+ 		return NULL;
+ 	}
+@@ -281,7 +281,7 @@ static int tcm_loop_queuecommand(
+ 	struct tcm_loop_hba *tl_hba;
+ 	struct tcm_loop_tpg *tl_tpg;
+ 
+-	TL_CDB_DEBUG("tcm_loop_queuecommand() %d:%d:%d:%d got CDB: 0x%02x"
++	pr_debug("tcm_loop_queuecommand() %d:%d:%d:%d got CDB: 0x%02x"
+ 		" scsi_buf_len: %u\n", sc->device->host->host_no,
+ 		sc->device->id, sc->device->channel, sc->device->lun,
+ 		sc->cmnd[0], scsi_bufflen(sc));
+@@ -331,7 +331,7 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
  	 */
- 	if (!length)
- 		return iscsit_allocate_iovecs(cmd);
--	/*
--	 * Allocate from slab if nonsg, but sgl should point
--	 * to the malloced mem.
--	 * We know we have to kfree it if t_mem is set.
--	 * Alloc pages if sg.
--	 */
--	if (cmd->se_cmd.se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--		int pg_off = 0, buf_size;
+ 	tl_nexus = tl_hba->tl_nexus;
+ 	if (!tl_nexus) {
+-		printk(KERN_ERR "Unable to perform device reset without"
++		pr_err("Unable to perform device reset without"
+ 				" active I_T Nexus\n");
+ 		return FAILED;
+ 	}
+@@ -344,13 +344,13 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
  
--		buf = kmalloc(length, GFP_KERNEL);
--		if (!buf)
--			return -ENOMEM;
--		/*
--		 * Allocate extra SGL for offset_in_page exceeding DIV_ROUND_UP
--		 */
--		pg_off = offset_in_page(buf);
--		if ((pg_off + length) > (PAGE_SIZE * nents))
--			nents++;
--
--		sgl = kzalloc(sizeof(*sgl) * nents, GFP_KERNEL);
--		if (!sgl)
--			return -ENOMEM;
--		sg_init_table(sgl, nents);
--
--		cur = buf;
--		while (length) {
--			if (pg_off != 0) {
--				buf_size = min_t(int, PAGE_SIZE - pg_off, length);
--				pg_off = 0;
--			} else
--				buf_size = min_t(int, length, PAGE_SIZE);
--					
--			sg_set_buf(&sgl[i], cur, buf_size);
--
--			if (sgl[i].length < 0) {
--				printk("sg_set_buf: page: %p, len: %d, offset: %d\n",
--					sg_page(&sgl[i]), sgl[i].length, sgl[i].offset);
--				BUG();
--			}
--			length -= buf_size;
--			cur += buf_size;
--			i++;
--		}
--		cmd->se_cmd.t_task_buf = buf;
--		cmd->t_mem = buf;
--
--	} else {
--		sgl = kzalloc(sizeof(*sgl) * nents, GFP_KERNEL);
--		if (!sgl)
--			return -ENOMEM;
-+	sgl = kzalloc(sizeof(*sgl) * nents, GFP_KERNEL);
-+	if (!sgl)
-+		return -ENOMEM;
- 
--		sg_init_table(sgl, nents);
-+	sg_init_table(sgl, nents);
- 
--		while (length) {
--			int buf_size = min_t(int, length, PAGE_SIZE);
--			struct page *page;
-+	while (length) {
-+		int buf_size = min_t(int, length, PAGE_SIZE);
-+		struct page *page;
- 
--			page = alloc_page(GFP_KERNEL);
--			if (!page)
--				goto page_alloc_failed;
-+		page = alloc_page(GFP_KERNEL);
-+		if (!page)
-+			goto page_alloc_failed;
- 
--			sg_set_page(&sgl[i], page, buf_size, 0);
-+		sg_set_page(&sgl[i], page, buf_size, 0);
- 
--			length -= buf_size;
--			i++;
--		}
-+		length -= buf_size;
-+		i++;
+ 	tl_cmd = kmem_cache_zalloc(tcm_loop_cmd_cache, GFP_KERNEL);
+ 	if (!tl_cmd) {
+-		printk(KERN_ERR "Unable to allocate memory for tl_cmd\n");
++		pr_err("Unable to allocate memory for tl_cmd\n");
+ 		return FAILED;
  	}
  
- 	cmd->t_mem_sg = sgl;
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index 5bf2f7a..c66a259 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -470,7 +470,6 @@ struct iscsi_cmd {
- #define ISCSI_SENSE_BUFFER_LEN          (TRANSPORT_SENSE_BUFFER + 2)
- 	unsigned char		sense_buffer[ISCSI_SENSE_BUFFER_LEN];
+ 	tl_tmr = kzalloc(sizeof(struct tcm_loop_tmr), GFP_KERNEL);
+ 	if (!tl_tmr) {
+-		printk(KERN_ERR "Unable to allocate memory for tl_tmr\n");
++		pr_err("Unable to allocate memory for tl_tmr\n");
+ 		goto release;
+ 	}
+ 	init_waitqueue_head(&tl_tmr->tl_tmr_wait);
+@@ -435,7 +435,7 @@ static int tcm_loop_driver_probe(struct device *dev)
+ 	sh = scsi_host_alloc(&tcm_loop_driver_template,
+ 			sizeof(struct tcm_loop_hba));
+ 	if (!sh) {
+-		printk(KERN_ERR "Unable to allocate struct scsi_host\n");
++		pr_err("Unable to allocate struct scsi_host\n");
+ 		return -ENODEV;
+ 	}
+ 	tl_hba->sh = sh;
+@@ -454,7 +454,7 @@ static int tcm_loop_driver_probe(struct device *dev)
  
--	void			*t_mem;
- 	struct scatterlist	*t_mem_sg;
- 	u32			t_mem_sg_nents;
+ 	error = scsi_add_host(sh, &tl_hba->dev);
+ 	if (error) {
+-		printk(KERN_ERR "%s: scsi_add_host failed\n", __func__);
++		pr_err("%s: scsi_add_host failed\n", __func__);
+ 		scsi_host_put(sh);
+ 		return -ENODEV;
+ 	}
+@@ -495,7 +495,7 @@ static int tcm_loop_setup_hba_bus(struct tcm_loop_hba *tl_hba, int tcm_loop_host
  
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index e677fa0..4260888 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -801,6 +801,7 @@ void iscsit_free_queue_reqs_for_conn(struct iscsi_conn *conn)
- void iscsit_release_cmd(struct iscsi_cmd *cmd)
- {
- 	struct iscsi_conn *conn = cmd->conn;
-+	int i;
+ 	ret = device_register(&tl_hba->dev);
+ 	if (ret) {
+-		printk(KERN_ERR "device_register() failed for"
++		pr_err("device_register() failed for"
+ 				" tl_hba->dev: %d\n", ret);
+ 		return -ENODEV;
+ 	}
+@@ -513,24 +513,24 @@ static int tcm_loop_alloc_core_bus(void)
  
- 	iscsit_free_r2ts_from_list(cmd);
- 	iscsit_free_all_datain_reqs(cmd);
-@@ -811,15 +812,9 @@ void iscsit_release_cmd(struct iscsi_cmd *cmd)
- 	kfree(cmd->tmr_req);
- 	kfree(cmd->iov_data);
+ 	tcm_loop_primary = root_device_register("tcm_loop_0");
+ 	if (IS_ERR(tcm_loop_primary)) {
+-		printk(KERN_ERR "Unable to allocate tcm_loop_primary\n");
++		pr_err("Unable to allocate tcm_loop_primary\n");
+ 		return PTR_ERR(tcm_loop_primary);
+ 	}
  
--	/* see iscsit_alloc_buffs */
--	if (cmd->t_mem) {
--		kfree(cmd->t_mem);
--	} else {
--		int i;
-+	for (i = 0; i < cmd->t_mem_sg_nents; i++)
-+		__free_page(sg_page(&cmd->t_mem_sg[i]));
+ 	ret = bus_register(&tcm_loop_lld_bus);
+ 	if (ret) {
+-		printk(KERN_ERR "bus_register() failed for tcm_loop_lld_bus\n");
++		pr_err("bus_register() failed for tcm_loop_lld_bus\n");
+ 		goto dev_unreg;
+ 	}
  
--		for (i = 0; i < cmd->t_mem_sg_nents; i++)
--			__free_page(sg_page(&cmd->t_mem_sg[i]));
--	}
- 	kfree(cmd->t_mem_sg);
+ 	ret = driver_register(&tcm_loop_driverfs);
+ 	if (ret) {
+-		printk(KERN_ERR "driver_register() failed for"
++		pr_err("driver_register() failed for"
+ 				"tcm_loop_driverfs\n");
+ 		goto bus_unreg;
+ 	}
  
- 	if (conn) {
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 2dca8d7..3f307dd 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -65,10 +65,12 @@ int core_emulate_report_target_port_groups(struct se_cmd *cmd)
- 	struct se_port *port;
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
- 	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	u32 rd_len = 0, off = 4; /* Skip over RESERVED area to first
- 				    Target port group descriptor */
+-	printk(KERN_INFO "Initialized TCM Loop Core Bus\n");
++	pr_debug("Initialized TCM Loop Core Bus\n");
+ 	return ret;
  
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	spin_lock(&su_dev->t10_alua.tg_pt_gps_lock);
- 	list_for_each_entry(tg_pt_gp, &su_dev->t10_alua.tg_pt_gps_list,
- 			tg_pt_gp_list) {
-@@ -141,6 +143,8 @@ int core_emulate_report_target_port_groups(struct se_cmd *cmd)
- 	buf[2] = ((rd_len >> 8) & 0xff);
- 	buf[3] = (rd_len & 0xff);
+ bus_unreg:
+@@ -546,7 +546,7 @@ static void tcm_loop_release_core_bus(void)
+ 	bus_unregister(&tcm_loop_lld_bus);
+ 	root_device_unregister(tcm_loop_primary);
  
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
+-	printk(KERN_INFO "Releasing TCM Loop Core BUS\n");
++	pr_debug("Releasing TCM Loop Core BUS\n");
  }
  
-@@ -157,8 +161,8 @@ int core_emulate_set_target_port_groups(struct se_cmd *cmd)
- 	struct se_node_acl *nacl = cmd->se_sess->se_node_acl;
- 	struct t10_alua_tg_pt_gp *tg_pt_gp = NULL, *l_tg_pt_gp;
- 	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem, *l_tg_pt_gp_mem;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
--	unsigned char *ptr = &buf[4]; /* Skip over RESERVED area in header */
-+	unsigned char *buf;
-+	unsigned char *ptr;
- 	u32 len = 4; /* Skip over RESERVED area in header */
- 	int alua_access_state, primary = 0, rc;
- 	u16 tg_pt_id, rtpi;
-@@ -190,6 +194,9 @@ int core_emulate_set_target_port_groups(struct se_cmd *cmd)
- 		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
- 	}
- 
-+	buf = transport_kmap_first_data_page(cmd);
-+	ptr = &buf[4]; /* Skip over RESERVED area in header */
-+
- 	while (len < cmd->data_length) {
- 		alua_access_state = (ptr[0] & 0x0f);
- 		/*
-@@ -209,6 +216,7 @@ int core_emulate_set_target_port_groups(struct se_cmd *cmd)
- 			 * REQUEST, and the additional sense code set to INVALID
- 			 * FIELD IN PARAMETER LIST.
- 			 */
-+			transport_kunmap_first_data_page(cmd);
- 			return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
- 		}
- 		rc = -1;
-@@ -260,8 +268,10 @@ int core_emulate_set_target_port_groups(struct se_cmd *cmd)
- 			 * If not matching target port group ID can be located
- 			 * throw an exception with ASCQ: INVALID_PARAMETER_LIST
- 			 */
--			if (rc != 0)
-+			if (rc != 0) {
-+				transport_kunmap_first_data_page(cmd);
- 				return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
-+			}
- 		} else {
- 			/*
- 			 * Extact the RELATIVE TARGET PORT IDENTIFIER to identify
-@@ -295,14 +305,18 @@ int core_emulate_set_target_port_groups(struct se_cmd *cmd)
- 			 * be located, throw an exception with ASCQ:
- 			 * INVALID_PARAMETER_LIST
- 			 */
--			if (rc != 0)
-+			if (rc != 0) {
-+				transport_kunmap_first_data_page(cmd);
- 				return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
-+			}
- 		}
- 
- 		ptr += 4;
- 		len += 4;
- 	}
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 09ef3f8..6c9e53f 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -66,7 +66,7 @@ target_emulate_inquiry_std(struct se_cmd *cmd)
- {
- 	struct se_lun *lun = cmd->se_lun;
- 	struct se_device *dev = cmd->se_dev;
--	unsigned char *buf = cmd->t_task_buf;
-+	unsigned char *buf;
- 
- 	/*
- 	 * Make sure we at least have 6 bytes of INQUIRY response
-@@ -78,6 +78,8 @@ target_emulate_inquiry_std(struct se_cmd *cmd)
- 		return -EINVAL;
- 	}
- 
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	buf[0] = dev->transport->get_device_type(dev);
- 	if (buf[0] == TYPE_TAPE)
- 		buf[1] = 0x80;
-@@ -111,6 +113,9 @@ target_emulate_inquiry_std(struct se_cmd *cmd)
- 	snprintf((unsigned char *)&buf[32], 4, "%s",
- 		 &dev->se_sub_dev->t10_wwn.revision[0]);
- 	buf[4] = 31; /* Set additional length to 31 */
-+
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -621,7 +626,7 @@ static int
- target_emulate_inquiry(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
--	unsigned char *buf = cmd->t_task_buf;
-+	unsigned char *buf;
- 	unsigned char *cdb = cmd->t_task_cdb;
- 
- 	if (!(cdb[1] & 0x1))
-@@ -639,6 +644,9 @@ target_emulate_inquiry(struct se_cmd *cmd)
- 			" too small for EVPD=1\n", cmd->data_length);
- 		return -EINVAL;
- 	}
-+
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	buf[0] = dev->transport->get_device_type(dev);
- 
- 	switch (cdb[2]) {
-@@ -656,9 +664,12 @@ target_emulate_inquiry(struct se_cmd *cmd)
- 		return target_emulate_evpd_b2(cmd, buf);
+ static char *tcm_loop_get_fabric_name(void)
+@@ -574,7 +574,7 @@ static u8 tcm_loop_get_fabric_proto_ident(struct se_portal_group *se_tpg)
+ 	case SCSI_PROTOCOL_ISCSI:
+ 		return iscsi_get_fabric_proto_ident(se_tpg);
  	default:
- 		printk(KERN_ERR "Unknown VPD Code: 0x%02x\n", cdb[2]);
-+		transport_kunmap_first_data_page(cmd);
+-		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++		pr_err("Unknown tl_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tl_hba->tl_proto_id);
+ 		break;
+ 	}
+@@ -630,7 +630,7 @@ static u32 tcm_loop_get_pr_transport_id(
+ 		return iscsi_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
+ 					format_code, buf);
+ 	default:
+-		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++		pr_err("Unknown tl_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tl_hba->tl_proto_id);
+ 		break;
+ 	}
+@@ -660,7 +660,7 @@ static u32 tcm_loop_get_pr_transport_id_len(
+ 		return iscsi_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
+ 					format_code);
+ 	default:
+-		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++		pr_err("Unknown tl_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tl_hba->tl_proto_id);
+ 		break;
+ 	}
+@@ -694,7 +694,7 @@ static char *tcm_loop_parse_pr_out_transport_id(
+ 		return iscsi_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
+ 					port_nexus_ptr);
+ 	default:
+-		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++		pr_err("Unknown tl_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tl_hba->tl_proto_id);
+ 		break;
+ 	}
+@@ -743,7 +743,7 @@ static struct se_node_acl *tcm_loop_tpg_alloc_fabric_acl(
+ 
+ 	tl_nacl = kzalloc(sizeof(struct tcm_loop_nacl), GFP_KERNEL);
+ 	if (!tl_nacl) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_loop_nacl\n");
++		pr_err("Unable to allocate struct tcm_loop_nacl\n");
+ 		return NULL;
+ 	}
+ 
+@@ -853,7 +853,7 @@ static int tcm_loop_queue_data_in(struct se_cmd *se_cmd)
+ 				struct tcm_loop_cmd, tl_se_cmd);
+ 	struct scsi_cmnd *sc = tl_cmd->sc;
+ 
+-	TL_CDB_DEBUG("tcm_loop_queue_data_in() called for scsi_cmnd: %p"
++	pr_debug("tcm_loop_queue_data_in() called for scsi_cmnd: %p"
+ 		     " cdb: 0x%02x\n", sc, sc->cmnd[0]);
+ 
+ 	sc->result = SAM_STAT_GOOD;
+@@ -868,7 +868,7 @@ static int tcm_loop_queue_status(struct se_cmd *se_cmd)
+ 				struct tcm_loop_cmd, tl_se_cmd);
+ 	struct scsi_cmnd *sc = tl_cmd->sc;
+ 
+-	TL_CDB_DEBUG("tcm_loop_queue_status() called for scsi_cmnd: %p"
++	pr_debug("tcm_loop_queue_status() called for scsi_cmnd: %p"
+ 			" cdb: 0x%02x\n", sc, sc->cmnd[0]);
+ 
+ 	if (se_cmd->sense_buffer &&
+@@ -943,7 +943,7 @@ static int tcm_loop_port_link(
+ 	 */
+ 	scsi_add_device(tl_hba->sh, 0, tl_tpg->tl_tpgt, lun->unpacked_lun);
+ 
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Link Successful\n");
++	pr_debug("TCM_Loop_ConfigFS: Port Link Successful\n");
+ 	return 0;
+ }
+ 
+@@ -961,7 +961,7 @@ static void tcm_loop_port_unlink(
+ 	sd = scsi_device_lookup(tl_hba->sh, 0, tl_tpg->tl_tpgt,
+ 				se_lun->unpacked_lun);
+ 	if (!sd) {
+-		printk(KERN_ERR "Unable to locate struct scsi_device for %d:%d:"
++		pr_err("Unable to locate struct scsi_device for %d:%d:"
+ 			"%d\n", 0, tl_tpg->tl_tpgt, se_lun->unpacked_lun);
+ 		return;
+ 	}
+@@ -974,7 +974,7 @@ static void tcm_loop_port_unlink(
+ 	atomic_dec(&tl_tpg->tl_tpg_port_count);
+ 	smp_mb__after_atomic_dec();
+ 
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Unlink Successful\n");
++	pr_debug("TCM_Loop_ConfigFS: Port Unlink Successful\n");
+ }
+ 
+ /* End items for tcm_loop_port_cit */
+@@ -991,14 +991,14 @@ static int tcm_loop_make_nexus(
+ 	int ret = -ENOMEM;
+ 
+ 	if (tl_tpg->tl_hba->tl_nexus) {
+-		printk(KERN_INFO "tl_tpg->tl_hba->tl_nexus already exists\n");
++		pr_debug("tl_tpg->tl_hba->tl_nexus already exists\n");
+ 		return -EEXIST;
+ 	}
+ 	se_tpg = &tl_tpg->tl_se_tpg;
+ 
+ 	tl_nexus = kzalloc(sizeof(struct tcm_loop_nexus), GFP_KERNEL);
+ 	if (!tl_nexus) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_loop_nexus\n");
++		pr_err("Unable to allocate struct tcm_loop_nexus\n");
+ 		return -ENOMEM;
+ 	}
+ 	/*
+@@ -1027,7 +1027,7 @@ static int tcm_loop_make_nexus(
+ 	__transport_register_session(se_tpg, tl_nexus->se_sess->se_node_acl,
+ 			tl_nexus->se_sess, tl_nexus);
+ 	tl_tpg->tl_hba->tl_nexus = tl_nexus;
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Established I_T Nexus to emulated"
++	pr_debug("TCM_Loop_ConfigFS: Established I_T Nexus to emulated"
+ 		" %s Initiator Port: %s\n", tcm_loop_dump_proto_id(tl_hba),
+ 		name);
+ 	return 0;
+@@ -1053,13 +1053,13 @@ static int tcm_loop_drop_nexus(
+ 		return -ENODEV;
+ 
+ 	if (atomic_read(&tpg->tl_tpg_port_count)) {
+-		printk(KERN_ERR "Unable to remove TCM_Loop I_T Nexus with"
++		pr_err("Unable to remove TCM_Loop I_T Nexus with"
+ 			" active TPG port count: %d\n",
+ 			atomic_read(&tpg->tl_tpg_port_count));
+ 		return -EPERM;
+ 	}
+ 
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Removing I_T Nexus to emulated"
++	pr_debug("TCM_Loop_ConfigFS: Removing I_T Nexus to emulated"
+ 		" %s Initiator Port: %s\n", tcm_loop_dump_proto_id(tl_hba),
+ 		tl_nexus->se_sess->se_node_acl->initiatorname);
+ 	/*
+@@ -1115,7 +1115,7 @@ static ssize_t tcm_loop_tpg_store_nexus(
+ 	 * tcm_loop_make_nexus()
+ 	 */
+ 	if (strlen(page) >= TL_WWN_ADDR_LEN) {
+-		printk(KERN_ERR "Emulated NAA Sas Address: %s, exceeds"
++		pr_err("Emulated NAA Sas Address: %s, exceeds"
+ 				" max: %d\n", page, TL_WWN_ADDR_LEN);
  		return -EINVAL;
  	}
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -666,7 +677,7 @@ static int
- target_emulate_readcapacity(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
--	unsigned char *buf = cmd->t_task_buf;
-+	unsigned char *buf;
- 	unsigned long long blocks_long = dev->transport->get_blocks(dev);
- 	u32 blocks;
- 
-@@ -675,6 +686,8 @@ target_emulate_readcapacity(struct se_cmd *cmd)
- 	else
- 		blocks = (u32)blocks_long;
- 
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	buf[0] = (blocks >> 24) & 0xff;
- 	buf[1] = (blocks >> 16) & 0xff;
- 	buf[2] = (blocks >> 8) & 0xff;
-@@ -689,6 +702,8 @@ target_emulate_readcapacity(struct se_cmd *cmd)
- 	if (dev->se_sub_dev->se_dev_attrib.emulate_tpu || dev->se_sub_dev->se_dev_attrib.emulate_tpws)
- 		put_unaligned_be32(0xFFFFFFFF, &buf[0]);
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -696,9 +711,11 @@ static int
- target_emulate_readcapacity_16(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
--	unsigned char *buf = cmd->t_task_buf;
-+	unsigned char *buf;
- 	unsigned long long blocks = dev->transport->get_blocks(dev);
- 
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	buf[0] = (blocks >> 56) & 0xff;
- 	buf[1] = (blocks >> 48) & 0xff;
- 	buf[2] = (blocks >> 40) & 0xff;
-@@ -718,6 +735,8 @@ target_emulate_readcapacity_16(struct se_cmd *cmd)
- 	if (dev->se_sub_dev->se_dev_attrib.emulate_tpu || dev->se_sub_dev->se_dev_attrib.emulate_tpws)
- 		buf[14] = 0x80;
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -832,7 +851,7 @@ target_emulate_modesense(struct se_cmd *cmd, int ten)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	char *cdb = cmd->t_task_cdb;
--	unsigned char *rbuf = cmd->t_task_buf;
-+	unsigned char *rbuf;
- 	int type = dev->transport->get_device_type(dev);
- 	int offset = (ten) ? 8 : 4;
- 	int length = 0;
-@@ -895,7 +914,10 @@ target_emulate_modesense(struct se_cmd *cmd, int ten)
- 		if ((offset + 1) > cmd->data_length)
- 			offset = cmd->data_length;
+@@ -1124,7 +1124,7 @@ static ssize_t tcm_loop_tpg_store_nexus(
+ 	ptr = strstr(i_port, "naa.");
+ 	if (ptr) {
+ 		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_SAS) {
+-			printk(KERN_ERR "Passed SAS Initiator Port %s does not"
++			pr_err("Passed SAS Initiator Port %s does not"
+ 				" match target port protoid: %s\n", i_port,
+ 				tcm_loop_dump_proto_id(tl_hba));
+ 			return -EINVAL;
+@@ -1135,7 +1135,7 @@ static ssize_t tcm_loop_tpg_store_nexus(
+ 	ptr = strstr(i_port, "fc.");
+ 	if (ptr) {
+ 		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_FCP) {
+-			printk(KERN_ERR "Passed FCP Initiator Port %s does not"
++			pr_err("Passed FCP Initiator Port %s does not"
+ 				" match target port protoid: %s\n", i_port,
+ 				tcm_loop_dump_proto_id(tl_hba));
+ 			return -EINVAL;
+@@ -1146,7 +1146,7 @@ static ssize_t tcm_loop_tpg_store_nexus(
+ 	ptr = strstr(i_port, "iqn.");
+ 	if (ptr) {
+ 		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_ISCSI) {
+-			printk(KERN_ERR "Passed iSCSI Initiator Port %s does not"
++			pr_err("Passed iSCSI Initiator Port %s does not"
+ 				" match target port protoid: %s\n", i_port,
+ 				tcm_loop_dump_proto_id(tl_hba));
+ 			return -EINVAL;
+@@ -1154,7 +1154,7 @@ static ssize_t tcm_loop_tpg_store_nexus(
+ 		port_ptr = &i_port[0];
+ 		goto check_newline;
  	}
-+
-+	rbuf = transport_kmap_first_data_page(cmd);
- 	memcpy(rbuf, buf, offset);
-+	transport_kunmap_first_data_page(cmd);
- 
- 	return 0;
- }
-@@ -904,7 +926,7 @@ static int
- target_emulate_request_sense(struct se_cmd *cmd)
- {
- 	unsigned char *cdb = cmd->t_task_cdb;
--	unsigned char *buf = cmd->t_task_buf;
-+	unsigned char *buf;
- 	u8 ua_asc = 0, ua_ascq = 0;
- 
- 	if (cdb[1] & 0x01) {
-@@ -912,6 +934,9 @@ target_emulate_request_sense(struct se_cmd *cmd)
- 			" supported\n");
- 		return PYX_TRANSPORT_INVALID_CDB_FIELD;
- 	}
-+
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	if (!(core_scsi3_ua_clear_for_request_sense(cmd, &ua_asc, &ua_ascq))) {
- 		/*
- 		 * CURRENT ERROR, UNIT ATTENTION
-@@ -924,6 +949,7 @@ target_emulate_request_sense(struct se_cmd *cmd)
- 		 */
- 		if (cmd->data_length <= 18) {
- 			buf[7] = 0x00;
-+			transport_kunmap_first_data_page(cmd);
- 			return 0;
- 		}
- 		/*
-@@ -944,6 +970,7 @@ target_emulate_request_sense(struct se_cmd *cmd)
- 		 */
- 		if (cmd->data_length <= 18) {
- 			buf[7] = 0x00;
-+			transport_kunmap_first_data_page(cmd);
- 			return 0;
- 		}
- 		/*
-@@ -953,6 +980,8 @@ target_emulate_request_sense(struct se_cmd *cmd)
- 		buf[7] = 0x0A;
- 	}
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -965,7 +994,7 @@ target_emulate_unmap(struct se_task *task)
- {
- 	struct se_cmd *cmd = task->task_se_cmd;
- 	struct se_device *dev = cmd->se_dev;
--	unsigned char *buf = cmd->t_task_buf, *ptr = NULL;
-+	unsigned char *buf, *ptr = NULL;
- 	unsigned char *cdb = &cmd->t_task_cdb[0];
- 	sector_t lba;
- 	unsigned int size = cmd->data_length, range;
-@@ -977,6 +1006,9 @@ target_emulate_unmap(struct se_task *task)
- 	size -= 8;
- 	dl = get_unaligned_be16(&cdb[0]);
- 	bd_dl = get_unaligned_be16(&cdb[2]);
-+
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	ptr = &buf[offset];
- 	printk(KERN_INFO "UNMAP: Sub: %s Using dl: %hu bd_dl: %hu size: %hu"
- 		" ptr: %p\n", dev->transport->name, dl, bd_dl, size, ptr);
-@@ -991,6 +1023,7 @@ target_emulate_unmap(struct se_task *task)
- 		if (ret < 0) {
- 			printk(KERN_ERR "blkdev_issue_discard() failed: %d\n",
- 					ret);
-+			transport_kunmap_first_data_page(cmd);
- 			return ret;
- 		}
- 
-@@ -998,6 +1031,8 @@ target_emulate_unmap(struct se_task *task)
- 		size -= 16;
- 	}
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	task->task_scsi_status = GOOD;
- 	transport_complete_task(task, 1);
- 	return 0;
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index ebf05db..fcd312b 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -658,7 +658,7 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
- 	struct se_lun *se_lun;
- 	struct se_session *se_sess = se_cmd->se_sess;
- 	struct se_task *se_task;
--	unsigned char *buf = se_cmd->t_task_buf;
-+	unsigned char *buf;
- 	u32 cdb_offset = 0, lun_count = 0, offset = 8, i;
- 
- 	list_for_each_entry(se_task, &se_cmd->t_task_list, t_list)
-@@ -669,6 +669,8 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
- 		return PYX_TRANSPORT_LU_COMM_FAILURE;
- 	}
- 
-+	buf = transport_kmap_first_data_page(se_cmd);
-+
+-	printk(KERN_ERR "Unable to locate prefix for emulated Initiator Port:"
++	pr_err("Unable to locate prefix for emulated Initiator Port:"
+ 			" %s\n", i_port);
+ 	return -EINVAL;
  	/*
- 	 * If no struct se_session pointer is present, this struct se_cmd is
- 	 * coming via a target_core_mod PASSTHROUGH op, and not through
-@@ -705,6 +707,7 @@ int transport_core_report_lun_response(struct se_cmd *se_cmd)
- 	 * See SPC3 r07, page 159.
+@@ -1194,7 +1194,7 @@ struct se_portal_group *tcm_loop_make_naa_tpg(
+ 
+ 	tpgt_str = strstr(name, "tpgt_");
+ 	if (!tpgt_str) {
+-		printk(KERN_ERR "Unable to locate \"tpgt_#\" directory"
++		pr_err("Unable to locate \"tpgt_#\" directory"
+ 				" group\n");
+ 		return ERR_PTR(-EINVAL);
+ 	}
+@@ -1202,7 +1202,7 @@ struct se_portal_group *tcm_loop_make_naa_tpg(
+ 	tpgt = (unsigned short int) simple_strtoul(tpgt_str, &end_ptr, 0);
+ 
+ 	if (tpgt >= TL_TPGS_PER_HBA) {
+-		printk(KERN_ERR "Passed tpgt: %hu exceeds TL_TPGS_PER_HBA:"
++		pr_err("Passed tpgt: %hu exceeds TL_TPGS_PER_HBA:"
+ 				" %u\n", tpgt, TL_TPGS_PER_HBA);
+ 		return ERR_PTR(-EINVAL);
+ 	}
+@@ -1218,7 +1218,7 @@ struct se_portal_group *tcm_loop_make_naa_tpg(
+ 	if (ret < 0)
+ 		return ERR_PTR(-ENOMEM);
+ 
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Allocated Emulated %s"
++	pr_debug("TCM_Loop_ConfigFS: Allocated Emulated %s"
+ 		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
+ 		config_item_name(&wwn->wwn_group.cg_item), tpgt);
+ 
+@@ -1245,7 +1245,7 @@ void tcm_loop_drop_naa_tpg(
  	 */
- done:
-+	transport_kunmap_first_data_page(se_cmd);
- 	lun_count *= 8;
- 	buf[0] = ((lun_count >> 24) & 0xff);
- 	buf[1] = ((lun_count >> 16) & 0xff);
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 4fdede8..81e50a5 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1482,7 +1482,7 @@ static int core_scsi3_decode_spec_i_port(
- 	struct list_head tid_dest_list;
- 	struct pr_transport_id_holder *tidh_new, *tidh, *tidh_tmp;
- 	struct target_core_fabric_ops *tmp_tf_ops;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	unsigned char *ptr, *i_str = NULL, proto_ident, tmp_proto_ident;
- 	char *iport_ptr = NULL, dest_iport[64], i_buf[PR_REG_ISID_ID_LEN];
- 	u32 tpdl, tid_len = 0;
-@@ -1524,6 +1524,8 @@ static int core_scsi3_decode_spec_i_port(
+ 	core_tpg_deregister(se_tpg);
+ 
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Deallocated Emulated %s"
++	pr_debug("TCM_Loop_ConfigFS: Deallocated Emulated %s"
+ 		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
+ 		config_item_name(&wwn->wwn_group.cg_item), tpgt);
+ }
+@@ -1266,7 +1266,7 @@ struct se_wwn *tcm_loop_make_scsi_hba(
+ 
+ 	tl_hba = kzalloc(sizeof(struct tcm_loop_hba), GFP_KERNEL);
+ 	if (!tl_hba) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_loop_hba\n");
++		pr_err("Unable to allocate struct tcm_loop_hba\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	/*
+@@ -1290,13 +1290,13 @@ struct se_wwn *tcm_loop_make_scsi_hba(
+ 		goto check_len;
+ 	}
+ 
+-	printk(KERN_ERR "Unable to locate prefix for emulated Target Port:"
++	pr_err("Unable to locate prefix for emulated Target Port:"
+ 			" %s\n", name);
+ 	return ERR_PTR(-EINVAL);
+ 
+ check_len:
+ 	if (strlen(name) >= TL_WWN_ADDR_LEN) {
+-		printk(KERN_ERR "Emulated NAA %s Address: %s, exceeds"
++		pr_err("Emulated NAA %s Address: %s, exceeds"
+ 			" max: %d\n", name, tcm_loop_dump_proto_id(tl_hba),
+ 			TL_WWN_ADDR_LEN);
+ 		kfree(tl_hba);
+@@ -1315,7 +1315,7 @@ check_len:
+ 
+ 	sh = tl_hba->sh;
+ 	tcm_loop_hba_no_cnt++;
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Allocated emulated Target"
++	pr_debug("TCM_Loop_ConfigFS: Allocated emulated Target"
+ 		" %s Address: %s at Linux/SCSI Host ID: %d\n",
+ 		tcm_loop_dump_proto_id(tl_hba), name, sh->host_no);
+ 
+@@ -1338,7 +1338,7 @@ void tcm_loop_drop_scsi_hba(
  	 */
- 	tidh_new->dest_local_nexus = 1;
- 	list_add_tail(&tidh_new->dest_list, &tid_dest_list);
-+
-+	buf = transport_kmap_first_data_page(cmd);
- 	/*
- 	 * For a PERSISTENT RESERVE OUT specify initiator ports payload,
- 	 * first extract TransportID Parameter Data Length, and make sure
-@@ -1760,6 +1762,9 @@ static int core_scsi3_decode_spec_i_port(
- 		tid_len = 0;
+ 	device_unregister(&tl_hba->dev);
  
- 	}
-+
-+	transport_kunmap_first_data_page(cmd);
-+
- 	/*
- 	 * Go ahead and create a registrations from tid_dest_list for the
- 	 * SPEC_I_PT provided TransportID for the *tidh referenced dest_node_acl
-@@ -1806,6 +1811,7 @@ static int core_scsi3_decode_spec_i_port(
- 
- 	return 0;
- out:
-+	transport_kunmap_first_data_page(cmd);
- 	/*
- 	 * For the failure case, release everything from tid_dest_list
- 	 * including *dest_pr_reg and the configfs dependances..
-@@ -3307,7 +3313,7 @@ static int core_scsi3_emulate_pro_register_and_move(
- 	struct target_core_fabric_ops *dest_tf_ops = NULL, *tf_ops;
- 	struct t10_pr_registration *pr_reg, *pr_res_holder, *dest_pr_reg;
- 	struct t10_reservation *pr_tmpl = &dev->se_sub_dev->t10_pr;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	unsigned char *initiator_str;
- 	char *iport_ptr = NULL, dest_iport[64], i_buf[PR_REG_ISID_ID_LEN];
- 	u32 tid_len, tmp_tid_len;
-@@ -3357,17 +3363,21 @@ static int core_scsi3_emulate_pro_register_and_move(
- 		core_scsi3_put_pr_reg(pr_reg);
- 		return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
- 	}
-+
- 	/*
- 	 * Determine the Relative Target Port Identifier where the reservation
- 	 * will be moved to for the TransportID containing SCSI initiator WWN
- 	 * information.
+-	printk(KERN_INFO "TCM_Loop_ConfigFS: Deallocated emulated Target"
++	pr_debug("TCM_Loop_ConfigFS: Deallocated emulated Target"
+ 		" SAS Address: %s at Linux/SCSI Host ID: %d\n",
+ 		config_item_name(&wwn->wwn_group.cg_item), host_no);
+ }
+@@ -1374,7 +1374,7 @@ static int tcm_loop_register_configfs(void)
  	 */
-+	buf = transport_kmap_first_data_page(cmd);
- 	rtpi = (buf[18] & 0xff) << 8;
- 	rtpi |= buf[19] & 0xff;
- 	tid_len = (buf[20] & 0xff) << 24;
- 	tid_len |= (buf[21] & 0xff) << 16;
- 	tid_len |= (buf[22] & 0xff) << 8;
- 	tid_len |= buf[23] & 0xff;
-+	transport_kunmap_first_data_page(cmd);
-+	buf = NULL;
- 
- 	if ((tid_len + 24) != cmd->data_length) {
- 		printk(KERN_ERR "SPC-3 PR: Illegal tid_len: %u + 24 byte header"
-@@ -3414,6 +3424,8 @@ static int core_scsi3_emulate_pro_register_and_move(
- 		core_scsi3_put_pr_reg(pr_reg);
- 		return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
+ 	fabric = target_fabric_configfs_init(THIS_MODULE, "loopback");
+ 	if (IS_ERR(fabric)) {
+-		printk(KERN_ERR "tcm_loop_register_configfs() failed!\n");
++		pr_err("tcm_loop_register_configfs() failed!\n");
+ 		return PTR_ERR(fabric);
  	}
-+
-+	buf = transport_kmap_first_data_page(cmd);
- 	proto_ident = (buf[24] & 0x0f);
- #if 0
- 	printk("SPC-3 PR REGISTER_AND_MOVE: Extracted Protocol Identifier:"
-@@ -3444,6 +3456,9 @@ static int core_scsi3_emulate_pro_register_and_move(
- 		goto out;
- 	}
- 
-+	transport_kunmap_first_data_page(cmd);
-+	buf = NULL;
-+
- 	printk(KERN_INFO "SPC-3 PR [%s] Extracted initiator %s identifier: %s"
- 		" %s\n", dest_tf_ops->get_fabric_name(), (iport_ptr != NULL) ?
- 		"port" : "device", initiator_str, (iport_ptr != NULL) ?
-@@ -3696,9 +3711,13 @@ after_iport_check:
- 					" REGISTER_AND_MOVE\n");
- 	}
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	core_scsi3_put_pr_reg(dest_pr_reg);
+ 	/*
+@@ -1465,7 +1465,7 @@ static int tcm_loop_register_configfs(void)
+ 	 */
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+-		printk(KERN_ERR "target_fabric_configfs_register() for"
++		pr_err("target_fabric_configfs_register() for"
+ 				" TCM_Loop failed!\n");
+ 		target_fabric_configfs_free(fabric);
+ 		return -1;
+@@ -1474,7 +1474,7 @@ static int tcm_loop_register_configfs(void)
+ 	 * Setup our local pointer to *fabric.
+ 	 */
+ 	tcm_loop_fabric_configfs = fabric;
+-	printk(KERN_INFO "TCM_LOOP[0] - Set fabric ->"
++	pr_debug("TCM_LOOP[0] - Set fabric ->"
+ 			" tcm_loop_fabric_configfs\n");
  	return 0;
- out:
-+	if (buf)
-+		transport_kunmap_first_data_page(cmd);
- 	if (dest_se_deve)
- 		core_scsi3_lunacl_undepend_item(dest_se_deve);
- 	if (dest_node_acl)
-@@ -3723,7 +3742,7 @@ static unsigned long long core_scsi3_extract_reservation_key(unsigned char *cdb)
+ }
+@@ -1486,7 +1486,7 @@ static void tcm_loop_deregister_configfs(void)
+ 
+ 	target_fabric_configfs_deregister(tcm_loop_fabric_configfs);
+ 	tcm_loop_fabric_configfs = NULL;
+-	printk(KERN_INFO "TCM_LOOP[0] - Cleared"
++	pr_debug("TCM_LOOP[0] - Cleared"
+ 				" tcm_loop_fabric_configfs\n");
+ }
+ 
+@@ -1499,7 +1499,7 @@ static int __init tcm_loop_fabric_init(void)
+ 				__alignof__(struct tcm_loop_cmd),
+ 				0, NULL);
+ 	if (!tcm_loop_cmd_cache) {
+-		printk(KERN_ERR "kmem_cache_create() for"
++		pr_err("kmem_cache_create() for"
+ 			" tcm_loop_cmd_cache failed\n");
+ 		return -ENOMEM;
+ 	}
+diff --git a/drivers/target/loopback/tcm_loop.h b/drivers/target/loopback/tcm_loop.h
+index 7e9f7ab..6b76c7a 100644
+--- a/drivers/target/loopback/tcm_loop.h
++++ b/drivers/target/loopback/tcm_loop.h
+@@ -16,12 +16,6 @@
   */
- static int core_scsi3_emulate_pr_out(struct se_cmd *cmd, unsigned char *cdb)
- {
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	u64 res_key, sa_res_key;
- 	int sa, scope, type, aptpl;
- 	int spec_i_pt = 0, all_tg_pt = 0, unreg = 0;
-@@ -3745,6 +3764,8 @@ static int core_scsi3_emulate_pr_out(struct se_cmd *cmd, unsigned char *cdb)
- 	sa = (cdb[1] & 0x1f);
- 	scope = (cdb[2] & 0xf0);
- 	type = (cdb[2] & 0x0f);
-+
-+	buf = transport_kmap_first_data_page(cmd);
- 	/*
- 	 * From PERSISTENT_RESERVE_OUT parameter list (payload)
- 	 */
-@@ -3762,6 +3783,9 @@ static int core_scsi3_emulate_pr_out(struct se_cmd *cmd, unsigned char *cdb)
- 		aptpl = (buf[17] & 0x01);
- 		unreg = (buf[17] & 0x02);
- 	}
-+	transport_kunmap_first_data_page(cmd);
-+	buf = NULL;
-+
- 	/*
- 	 * SPEC_I_PT=1 is only valid for Service action: REGISTER
- 	 */
-@@ -3830,7 +3854,7 @@ static int core_scsi3_pri_read_keys(struct se_cmd *cmd)
- 	struct se_device *se_dev = cmd->se_dev;
- 	struct se_subsystem_dev *su_dev = se_dev->se_sub_dev;
- 	struct t10_pr_registration *pr_reg;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	u32 add_len = 0, off = 8;
+ #define TL_SCSI_MAX_CMD_LEN		32
  
- 	if (cmd->data_length < 8) {
-@@ -3839,6 +3863,7 @@ static int core_scsi3_pri_read_keys(struct se_cmd *cmd)
- 		return PYX_TRANSPORT_INVALID_CDB_FIELD;
- 	}
+-#ifdef CONFIG_LOOPBACK_TARGET_CDB_DEBUG
+-# define TL_CDB_DEBUG(x...)		printk(KERN_INFO x)
+-#else
+-# define TL_CDB_DEBUG(x...)
+-#endif
+-
+ struct tcm_loop_cmd {
+ 	/* State of Linux/SCSI CDB+Data descriptor */
+ 	u32 sc_cmd_state;
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index d0405e0..334d3b2 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -23,30 +23,6 @@
+ #define FT_TPG_NAMELEN 32	/* max length of TPG name */
+ #define FT_LUN_NAMELEN 32	/* max length of LUN name */
  
-+	buf = transport_kmap_first_data_page(cmd);
- 	buf[0] = ((su_dev->t10_pr.pr_generation >> 24) & 0xff);
- 	buf[1] = ((su_dev->t10_pr.pr_generation >> 16) & 0xff);
- 	buf[2] = ((su_dev->t10_pr.pr_generation >> 8) & 0xff);
-@@ -3872,6 +3897,8 @@ static int core_scsi3_pri_read_keys(struct se_cmd *cmd)
- 	buf[6] = ((add_len >> 8) & 0xff);
- 	buf[7] = (add_len & 0xff);
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -3885,7 +3912,7 @@ static int core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 	struct se_device *se_dev = cmd->se_dev;
- 	struct se_subsystem_dev *su_dev = se_dev->se_sub_dev;
- 	struct t10_pr_registration *pr_reg;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	u64 pr_res_key;
- 	u32 add_len = 16; /* Hardcoded to 16 when a reservation is held. */
- 
-@@ -3895,6 +3922,7 @@ static int core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 		return PYX_TRANSPORT_INVALID_CDB_FIELD;
- 	}
- 
-+	buf = transport_kmap_first_data_page(cmd);
- 	buf[0] = ((su_dev->t10_pr.pr_generation >> 24) & 0xff);
- 	buf[1] = ((su_dev->t10_pr.pr_generation >> 16) & 0xff);
- 	buf[2] = ((su_dev->t10_pr.pr_generation >> 8) & 0xff);
-@@ -3913,6 +3941,7 @@ static int core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 
- 		if (cmd->data_length < 22) {
- 			spin_unlock(&se_dev->dev_reservation_lock);
-+			transport_kunmap_first_data_page(cmd);
- 			return 0;
- 		}
- 		/*
-@@ -3953,6 +3982,8 @@ static int core_scsi3_pri_read_reservation(struct se_cmd *cmd)
- 	}
- 	spin_unlock(&se_dev->dev_reservation_lock);
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -3965,7 +3996,7 @@ static int core_scsi3_pri_report_capabilities(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	struct t10_reservation *pr_tmpl = &dev->se_sub_dev->t10_pr;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	u16 add_len = 8; /* Hardcoded to 8. */
- 
- 	if (cmd->data_length < 6) {
-@@ -3974,6 +4005,8 @@ static int core_scsi3_pri_report_capabilities(struct se_cmd *cmd)
- 		return PYX_TRANSPORT_INVALID_CDB_FIELD;
- 	}
- 
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	buf[0] = ((add_len << 8) & 0xff);
- 	buf[1] = (add_len & 0xff);
- 	buf[2] |= 0x10; /* CRH: Compatible Reservation Hanlding bit. */
-@@ -4004,6 +4037,8 @@ static int core_scsi3_pri_report_capabilities(struct se_cmd *cmd)
- 	buf[4] |= 0x02; /* PR_TYPE_WRITE_EXCLUSIVE */
- 	buf[5] |= 0x01; /* PR_TYPE_EXCLUSIVE_ACCESS_ALLREG */
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-@@ -4020,7 +4055,7 @@ static int core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 	struct se_portal_group *se_tpg;
- 	struct t10_pr_registration *pr_reg, *pr_reg_tmp;
- 	struct t10_reservation *pr_tmpl = &se_dev->se_sub_dev->t10_pr;
--	unsigned char *buf = (unsigned char *)cmd->t_task_buf;
-+	unsigned char *buf;
- 	u32 add_desc_len = 0, add_len = 0, desc_len, exp_desc_len;
- 	u32 off = 8; /* off into first Full Status descriptor */
- 	int format_code = 0;
-@@ -4031,6 +4066,8 @@ static int core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 		return PYX_TRANSPORT_INVALID_CDB_FIELD;
- 	}
- 
-+	buf = transport_kmap_first_data_page(cmd);
-+
- 	buf[0] = ((su_dev->t10_pr.pr_generation >> 24) & 0xff);
- 	buf[1] = ((su_dev->t10_pr.pr_generation >> 16) & 0xff);
- 	buf[2] = ((su_dev->t10_pr.pr_generation >> 8) & 0xff);
-@@ -4150,6 +4187,8 @@ static int core_scsi3_pri_read_full_status(struct se_cmd *cmd)
- 	buf[6] = ((add_len >> 8) & 0xff);
- 	buf[7] = (add_len & 0xff);
- 
-+	transport_kunmap_first_data_page(cmd);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 3574c52..d956924 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -695,7 +695,7 @@ static int pscsi_transport_complete(struct se_task *task)
- 
- 		if (task->task_se_cmd->se_deve->lun_flags &
- 				TRANSPORT_LUNFLAGS_READ_ONLY) {
--			unsigned char *buf = task->task_se_cmd->t_task_buf;
-+			unsigned char *buf = transport_kmap_first_data_page(task->task_se_cmd);
- 
- 			if (cdb[0] == MODE_SENSE_10) {
- 				if (!(buf[3] & 0x80))
-@@ -704,6 +704,8 @@ static int pscsi_transport_complete(struct se_task *task)
- 				if (!(buf[2] & 0x80))
- 					buf[2] |= 0x80;
- 			}
-+
-+			transport_kunmap_first_data_page(task->task_se_cmd);
- 		}
- 	}
- after_mode_sense:
-@@ -1246,33 +1248,6 @@ static int pscsi_map_task_SG(struct se_task *task)
- 	return 0;
- }
- 
--/*	pscsi_map_task_non_SG():
-- *
-- *
+-/*
+- * Debug options.
 - */
--static int pscsi_map_task_non_SG(struct se_task *task)
--{
--	struct se_cmd *cmd = task->task_se_cmd;
--	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
--	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
--	int ret = 0;
+-#define FT_DEBUG_CONF	0x01	/* configuration messages */
+-#define	FT_DEBUG_SESS	0x02	/* session messages */
+-#define	FT_DEBUG_TM	0x04	/* TM operations */
+-#define	FT_DEBUG_IO	0x08	/* I/O commands */
+-#define	FT_DEBUG_DATA	0x10	/* Data transfer */
 -
--	if (pscsi_blk_get_request(task) < 0)
--		return PYX_TRANSPORT_LU_COMM_FAILURE;
+-extern unsigned int ft_debug_logging;	/* debug options */
 -
--	if (!task->task_size)
--		return 0;
+-#define FT_DEBUG(mask, fmt, args...) 					\
+-	do {								\
+-		if (ft_debug_logging & (mask))				\
+-			printk(KERN_INFO "tcm_fc: %s: " fmt, 		\
+-			       __func__, ##args);			\
+-	} while (0)
 -
--	ret = blk_rq_map_kern(pdv->pdv_sd->request_queue,
--			pt->pscsi_req, cmd->t_task_buf,
--			task->task_size, GFP_KERNEL);
--	if (ret < 0) {
--		printk(KERN_ERR "PSCSI: blk_rq_map_kern() failed: %d\n", ret);
--		return PYX_TRANSPORT_LU_COMM_FAILURE;
--	}
--	return 0;
--}
+-#define	FT_CONF_DBG(fmt, args...)	FT_DEBUG(FT_DEBUG_CONF, fmt, ##args)
+-#define	FT_SESS_DBG(fmt, args...)	FT_DEBUG(FT_DEBUG_SESS, fmt, ##args)
+-#define	FT_TM_DBG(fmt, args...)		FT_DEBUG(FT_DEBUG_TM, fmt, ##args)
+-#define	FT_IO_DBG(fmt, args...)		FT_DEBUG(FT_DEBUG_IO, fmt, ##args)
+-#define	FT_DATA_DBG(fmt, args...)	FT_DEBUG(FT_DEBUG_DATA, fmt, ##args)
 -
- static int pscsi_CDB_none(struct se_task *task)
- {
- 	return pscsi_blk_get_request(task);
-@@ -1392,7 +1367,6 @@ static struct se_subsystem_api pscsi_template = {
- 	.owner			= THIS_MODULE,
- 	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
- 	.cdb_none		= pscsi_CDB_none,
--	.map_task_non_SG	= pscsi_map_task_non_SG,
- 	.map_task_SG		= pscsi_map_task_SG,
- 	.attach_hba		= pscsi_attach_hba,
- 	.detach_hba		= pscsi_detach_hba,
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index b98f6ff..e2887c3 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -214,7 +214,7 @@ static u32 transport_allocate_tasks(struct se_cmd *cmd,
- 		unsigned long long starting_lba, u32 sectors,
- 		enum dma_data_direction data_direction,
- 		struct list_head *mem_list, int set_counts);
--static int transport_generic_get_mem(struct se_cmd *cmd, u32 length);
-+static int transport_generic_get_mem(struct se_cmd *cmd);
- static int transport_generic_remove(struct se_cmd *cmd,
- 		int session_reinstatement);
- static int transport_cmd_get_valid_sectors(struct se_cmd *cmd);
-@@ -2238,23 +2238,6 @@ static void transport_generic_request_timeout(struct se_cmd *cmd)
- 	transport_generic_remove(cmd, 0);
- }
- 
--static int
--transport_generic_allocate_buf(struct se_cmd *cmd, u32 data_length)
--{
--	unsigned char *buf;
--
--	buf = kzalloc(data_length, GFP_KERNEL);
--	if (!(buf)) {
--		printk(KERN_ERR "Unable to allocate memory for buffer\n");
--		return -ENOMEM;
--	}
--
--	cmd->t_tasks_se_num = 0;
--	cmd->t_task_buf = buf;
--
--	return 0;
--}
--
- static inline u32 transport_lba_21(unsigned char *cdb)
- {
- 	return ((cdb[1] & 0x1f) << 16) | (cdb[2] << 8) | cdb[3];
-@@ -2972,19 +2955,6 @@ static int transport_get_sense_data(struct se_cmd *cmd)
- 	return -1;
- }
- 
--static int transport_allocate_resources(struct se_cmd *cmd)
--{
--	u32 length = cmd->data_length;
--
--	if ((cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
--	    (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB))
--		return transport_generic_get_mem(cmd, length);
--	else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB)
--		return transport_generic_allocate_buf(cmd, length);
--	else
--		return 0;
--}
--
- static int
- transport_handle_reservation_conflict(struct se_cmd *cmd)
- {
-@@ -3271,7 +3241,7 @@ static int transport_generic_cmd_sequencer(
- 			/* GPCMD_SEND_KEY from multi media commands */
- 			size = (cdb[8] << 8) + cdb[9];
- 		}
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case MODE_SELECT:
- 		size = cdb[4];
-@@ -3283,7 +3253,7 @@ static int transport_generic_cmd_sequencer(
- 		break;
- 	case MODE_SENSE:
- 		size = cdb[4];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case MODE_SENSE_10:
- 	case GPCMD_READ_BUFFER_CAPACITY:
-@@ -3291,11 +3261,11 @@ static int transport_generic_cmd_sequencer(
- 	case LOG_SELECT:
- 	case LOG_SENSE:
- 		size = (cdb[7] << 8) + cdb[8];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case READ_BLOCK_LIMITS:
- 		size = READ_BLOCK_LEN;
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case GPCMD_GET_CONFIGURATION:
- 	case GPCMD_READ_FORMAT_CAPACITIES:
-@@ -3311,7 +3281,7 @@ static int transport_generic_cmd_sequencer(
- 			 SPC3_PERSISTENT_RESERVATIONS) ?
- 			core_scsi3_emulate_pr : NULL;
- 		size = (cdb[7] << 8) + cdb[8];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case GPCMD_MECHANISM_STATUS:
- 	case GPCMD_READ_DVD_STRUCTURE:
-@@ -3320,7 +3290,7 @@ static int transport_generic_cmd_sequencer(
- 		break;
- 	case READ_POSITION:
- 		size = READ_POSITION_LEN;
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case MAINTENANCE_OUT:
- 		if (dev->transport->get_device_type(dev) != TYPE_ROM) {
-@@ -3342,7 +3312,7 @@ static int transport_generic_cmd_sequencer(
- 			/* GPCMD_REPORT_KEY from multi media commands */
- 			size = (cdb[8] << 8) + cdb[9];
- 		}
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case INQUIRY:
- 		size = (cdb[3] << 8) + cdb[4];
-@@ -3352,21 +3322,21 @@ static int transport_generic_cmd_sequencer(
- 		 */
- 		if (cmd->se_dev->dev_task_attr_type == SAM_TASK_ATTR_EMULATED)
- 			cmd->sam_task_attr = MSG_HEAD_TAG;
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case READ_BUFFER:
- 		size = (cdb[6] << 16) + (cdb[7] << 8) + cdb[8];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case READ_CAPACITY:
- 		size = READ_CAP_LEN;
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case READ_MEDIA_SERIAL_NUMBER:
- 	case SECURITY_PROTOCOL_IN:
- 	case SECURITY_PROTOCOL_OUT:
- 		size = (cdb[6] << 24) | (cdb[7] << 16) | (cdb[8] << 8) | cdb[9];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case SERVICE_ACTION_IN:
- 	case ACCESS_CONTROL_IN:
-@@ -3377,36 +3347,36 @@ static int transport_generic_cmd_sequencer(
- 	case WRITE_ATTRIBUTE:
- 		size = (cdb[10] << 24) | (cdb[11] << 16) |
- 		       (cdb[12] << 8) | cdb[13];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case RECEIVE_DIAGNOSTIC:
- 	case SEND_DIAGNOSTIC:
- 		size = (cdb[3] << 8) | cdb[4];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- /* #warning FIXME: Figure out correct GPCMD_READ_CD blocksize. */
- #if 0
- 	case GPCMD_READ_CD:
- 		sectors = (cdb[6] << 16) + (cdb[7] << 8) + cdb[8];
- 		size = (2336 * sectors);
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- #endif
- 	case READ_TOC:
- 		size = cdb[8];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case REQUEST_SENSE:
- 		size = cdb[4];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case READ_ELEMENT_STATUS:
- 		size = 65536 * cdb[7] + 256 * cdb[8] + cdb[9];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case WRITE_BUFFER:
- 		size = (cdb[6] << 16) + (cdb[7] << 8) + cdb[8];
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case RESERVE:
- 	case RESERVE_10:
-@@ -3486,7 +3456,7 @@ static int transport_generic_cmd_sequencer(
- 		break;
- 	case UNMAP:
- 		size = get_unaligned_be16(&cdb[7]);
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	case WRITE_SAME_16:
- 		sectors = transport_get_sectors_16(cdb, cmd, &sector_ret);
-@@ -3553,7 +3523,7 @@ static int transport_generic_cmd_sequencer(
- 		 */
- 		if (cmd->se_dev->dev_task_attr_type == SAM_TASK_ATTR_EMULATED)
- 			cmd->sam_task_attr = MSG_HEAD_TAG;
--		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-+		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
- 		break;
- 	default:
- 		printk(KERN_WARNING "TARGET_CORE[%s]: Unsupported SCSI Opcode"
-@@ -3810,16 +3780,6 @@ static void transport_generic_complete_ok(struct se_cmd *cmd)
- 					cmd->data_length;
- 		}
- 		spin_unlock(&cmd->se_lun->lun_sep_lock);
--		/*
--		 * If enabled by TCM fabric module pre-registered SGL
--		 * memory, perform the memcpy() from the TCM internal
--		 * contiguous buffer back to the original SGL.
--		 */
--		if (cmd->se_cmd_flags & SCF_PASSTHROUGH_CONTIG_TO_SG)
--			sg_copy_from_buffer(cmd->t_task_pt_sgl,
--					    cmd->t_task_pt_sgl_num,
--					    cmd->t_task_buf,
--					    cmd->data_length);
- 
- 		ret = cmd->se_tfo->queue_data_in(cmd);
- 		if (ret == -EAGAIN)
-@@ -3905,12 +3865,6 @@ static inline void transport_free_pages(struct se_cmd *cmd)
- 	if (cmd->se_dev->transport->do_se_mem_map)
- 		free_page = 0;
- 
--	if (cmd->t_task_buf) {
--		kfree(cmd->t_task_buf);
--		cmd->t_task_buf = NULL;
--		return;
--	}
--
- 	list_for_each_entry_safe(se_mem, se_mem_tmp,
- 			&cmd->t_mem_list, se_list) {
- 		/*
-@@ -4074,25 +4028,6 @@ int transport_generic_map_mem_to_cmd(
- 			cmd->t_tasks_se_bidi_num = ret;
- 		}
- 		cmd->se_cmd_flags |= SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
--
--	} else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--		if (sgl_bidi || sgl_bidi_count) {
--			printk(KERN_ERR "BIDI-Commands not supported using "
--				"SCF_SCSI_CONTROL_NONSG_IO_CDB\n");
--			return -ENOSYS;
--		}
--		/*
--		 * For incoming CDBs using a contiguous buffer internal with TCM,
--		 * save the passed struct scatterlist memory.  After TCM storage object
--		 * processing has completed for this struct se_cmd, TCM core will call
--		 * transport_memcpy_[write,read]_contig() as necessary from
--		 * transport_generic_complete_ok() and transport_write_pending() in order
--		 * to copy the TCM buffer to/from the original passed *mem in SGL ->
--		 * struct scatterlist format.
--		 */
--		cmd->se_cmd_flags |= SCF_PASSTHROUGH_CONTIG_TO_SG;
--		cmd->t_task_pt_sgl = sgl;
--		cmd->t_task_pt_sgl_num = sgl_count;
- 	}
- 
- 	return 0;
-@@ -4190,10 +4125,41 @@ static int transport_new_cmd_obj(struct se_cmd *cmd)
- 	return 0;
- }
- 
-+void *transport_kmap_first_data_page(struct se_cmd *cmd)
-+{
-+	struct se_mem *se_mem;
-+
-+	BUG_ON(list_empty(&cmd->t_mem_list));
-+
-+	se_mem = list_first_entry(&cmd->t_mem_list, struct se_mem, se_list);
-+
-+	/*
-+	 * 1st se_mem should point to a page, and we shouldn't need more than
-+	 * that for this cmd
-+	 */
-+	BUG_ON(cmd->data_length > PAGE_SIZE);
-+
-+	return kmap(se_mem->se_page);
-+}
-+EXPORT_SYMBOL(transport_kmap_first_data_page);
-+
-+void transport_kunmap_first_data_page(struct se_cmd *cmd)
-+{
-+	struct se_mem *se_mem;
-+
-+	BUG_ON(list_empty(&cmd->t_mem_list));
-+
-+	se_mem = list_first_entry(&cmd->t_mem_list, struct se_mem, se_list);
-+
-+	kunmap(se_mem->se_page);
-+}
-+EXPORT_SYMBOL(transport_kunmap_first_data_page);
-+
- static int
--transport_generic_get_mem(struct se_cmd *cmd, u32 length)
-+transport_generic_get_mem(struct se_cmd *cmd)
- {
- 	struct se_mem *se_mem;
-+	int length = cmd->data_length;
- 
- 	/*
- 	 * If the device uses memory mapping this is enough.
-@@ -4856,10 +4822,6 @@ transport_map_control_cmd_to_task(struct se_cmd *cmd)
- 		if (dev->transport->map_task_SG)
- 			return dev->transport->map_task_SG(task);
- 		return 0;
--	} else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--		if (dev->transport->map_task_non_SG)
--			return dev->transport->map_task_non_SG(task);
--		return 0;
- 	} else if (cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
- 		if (dev->transport->cdb_none)
- 			return dev->transport->cdb_none(task);
-@@ -4892,7 +4854,7 @@ int transport_generic_new_cmd(struct se_cmd *cmd)
- 	 * cmd->t_mem_list of struct se_mem->se_page
- 	 */
- 	if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC)) {
--		ret = transport_allocate_resources(cmd);
-+		ret = transport_generic_get_mem(cmd);
- 		if (ret < 0)
- 			return ret;
- 	}
-@@ -4976,17 +4938,7 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
- 		cmd->transport_qf_callback = NULL;
- 		return 0;
- 	}
--	/*
--	 * For the TCM control CDBs using a contiguous buffer, do the memcpy
--	 * from the passed Linux/SCSI struct scatterlist located at
--	 * se_cmd->t_task_pt_sgl to the contiguous buffer at
--	 * se_cmd->t_task_buf.
--	 */
--	if (cmd->se_cmd_flags & SCF_PASSTHROUGH_CONTIG_TO_SG)
--		sg_copy_to_buffer(cmd->t_task_pt_sgl,
--				    cmd->t_task_pt_sgl_num,
--				    cmd->t_task_buf,
--				    cmd->data_length);
-+
- 	/*
- 	 * Clear the se_cmd for WRITE_PENDING status in order to set
- 	 * cmd->t_transport_active=0 so that transport_generic_handle_data
+ struct ft_transport_id {
+ 	__u8	format;
+ 	__u8	__resvd1[7];
 diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 1f2e9f5..1f8477f 100644
+index c45f4c2..cbb3858 100644
 --- a/drivers/target/tcm_fc/tfc_cmd.c
 +++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -71,9 +71,9 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
+@@ -62,22 +62,19 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
+ 	struct scatterlist *sg;
+ 	int count;
+ 
+-	if (!(ft_debug_logging & FT_DEBUG_IO))
+-		return;
+-
+ 	se_cmd = &cmd->se_cmd;
+-	printk(KERN_INFO "%s: cmd %p state %d sess %p seq %p se_cmd %p\n",
++	pr_debug("%s: cmd %p state %d sess %p seq %p se_cmd %p\n",
+ 		caller, cmd, cmd->state, cmd->sess, cmd->seq, se_cmd);
+-	printk(KERN_INFO "%s: cmd %p cdb %p\n",
++	pr_debug("%s: cmd %p cdb %p\n",
  		caller, cmd, cmd->cdb);
- 	printk(KERN_INFO "%s: cmd %p lun %d\n", caller, cmd, cmd->lun);
+-	printk(KERN_INFO "%s: cmd %p lun %d\n", caller, cmd, cmd->lun);
++	pr_debug("%s: cmd %p lun %d\n", caller, cmd, cmd->lun);
  
--	printk(KERN_INFO "%s: cmd %p se_num %u buf %p len %u se_cmd_flags <0x%x>\n",
-+	printk(KERN_INFO "%s: cmd %p se_num %u len %u se_cmd_flags <0x%x>\n",
- 	       caller, cmd, se_cmd->t_tasks_se_num,
--	       se_cmd->t_task_buf, se_cmd->data_length, se_cmd->se_cmd_flags);
-+	       se_cmd->data_length, se_cmd->se_cmd_flags);
+-	printk(KERN_INFO "%s: cmd %p data_nents %u len %u se_cmd_flags <0x%x>\n",
++	pr_debug("%s: cmd %p data_nents %u len %u se_cmd_flags <0x%x>\n",
+ 	       caller, cmd, se_cmd->t_data_nents,
+ 	       se_cmd->data_length, se_cmd->se_cmd_flags);
  
- 	list_for_each_entry(mem, &se_cmd->t_mem_list, se_list)
- 		printk(KERN_INFO "%s: cmd %p mem %p page %p "
+ 	for_each_sg(se_cmd->t_data_sg, sg, se_cmd->t_data_nents, count)
+-		printk(KERN_INFO "%s: cmd %p sg %p page %p "
++		pr_debug("%s: cmd %p sg %p page %p "
+ 		       "len 0x%x off 0x%x\n",
+ 		       caller, cmd, sg,
+ 		       sg_page(sg), sg->length, sg->offset);
+@@ -85,7 +82,7 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
+ 	sp = cmd->seq;
+ 	if (sp) {
+ 		ep = fc_seq_exch(sp);
+-		printk(KERN_INFO "%s: cmd %p sid %x did %x "
++		pr_debug("%s: cmd %p sid %x did %x "
+ 			"ox_id %x rx_id %x seq_id %x e_stat %x\n",
+ 			caller, cmd, ep->sid, ep->did, ep->oxid, ep->rxid,
+ 			sp->id, ep->esb_stat);
+@@ -321,7 +318,7 @@ static void ft_recv_seq(struct fc_seq *sp, struct fc_frame *fp, void *arg)
+ 	case FC_RCTL_DD_SOL_CTL:	/* transfer ready */
+ 	case FC_RCTL_DD_DATA_DESC:	/* transfer ready */
+ 	default:
+-		printk(KERN_INFO "%s: unhandled frame r_ctl %x\n",
++		pr_debug("%s: unhandled frame r_ctl %x\n",
+ 		       __func__, fh->fh_r_ctl);
+ 		fc_frame_free(fp);
+ 		transport_generic_free_cmd(&cmd->se_cmd, 0, 0);
+@@ -346,7 +343,7 @@ static void ft_send_resp_status(struct fc_lport *lport,
+ 	struct fcp_resp_rsp_info *info;
+ 
+ 	fh = fc_frame_header_get(rx_fp);
+-	FT_IO_DBG("FCP error response: did %x oxid %x status %x code %x\n",
++	pr_debug("FCP error response: did %x oxid %x status %x code %x\n",
+ 		  ntoh24(fh->fh_s_id), ntohs(fh->fh_ox_id), status, code);
+ 	len = sizeof(*fcp);
+ 	if (status == SAM_STAT_GOOD)
+@@ -405,7 +402,7 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ 			 * since "unable to  handle TMR request because failed
+ 			 * to get to LUN"
+ 			 */
+-			FT_TM_DBG("Failed to get LUN for TMR func %d, "
++			pr_debug("Failed to get LUN for TMR func %d, "
+ 				"se_cmd %p, unpacked_lun %d\n",
+ 				tm_func, &cmd->se_cmd, cmd->lun);
+ 			ft_dump_cmd(cmd, __func__);
+@@ -434,15 +431,15 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ 		 * FCP4r01 indicates having a combination of
+ 		 * tm_flags set is invalid.
+ 		 */
+-		FT_TM_DBG("invalid FCP tm_flags %x\n", fcp->fc_tm_flags);
++		pr_debug("invalid FCP tm_flags %x\n", fcp->fc_tm_flags);
+ 		ft_send_resp_code(cmd, FCP_CMND_FIELDS_INVALID);
+ 		return;
+ 	}
+ 
+-	FT_TM_DBG("alloc tm cmd fn %d\n", tm_func);
++	pr_debug("alloc tm cmd fn %d\n", tm_func);
+ 	tmr = core_tmr_alloc_req(&cmd->se_cmd, cmd, tm_func);
+ 	if (!tmr) {
+-		FT_TM_DBG("alloc failed\n");
++		pr_debug("alloc failed\n");
+ 		ft_send_resp_code(cmd, FCP_TMF_FAILED);
+ 		return;
+ 	}
+@@ -478,7 +475,7 @@ int ft_queue_tm_resp(struct se_cmd *se_cmd)
+ 		code = FCP_TMF_FAILED;
+ 		break;
+ 	}
+-	FT_TM_DBG("tmr fn %d resp %d fcp code %d\n",
++	pr_debug("tmr fn %d resp %d fcp code %d\n",
+ 		  tmr->function, tmr->response, code);
+ 	ft_send_resp_code(cmd, code);
+ 	return 0;
+@@ -506,7 +503,7 @@ static void ft_recv_cmd(struct ft_sess *sess, struct fc_frame *fp)
+ 	return;
+ 
+ busy:
+-	FT_IO_DBG("cmd or seq allocation failure - sending BUSY\n");
++	pr_debug("cmd or seq allocation failure - sending BUSY\n");
+ 	ft_send_resp_status(lport, fp, SAM_STAT_BUSY, 0);
+ 	fc_frame_free(fp);
+ 	ft_sess_put(sess);		/* undo get from lookup */
+@@ -531,7 +528,7 @@ void ft_recv_req(struct ft_sess *sess, struct fc_frame *fp)
+ 	case FC_RCTL_DD_DATA_DESC:	/* transfer ready */
+ 	case FC_RCTL_ELS4_REQ:		/* SRR, perhaps */
+ 	default:
+-		printk(KERN_INFO "%s: unhandled frame r_ctl %x\n",
++		pr_debug("%s: unhandled frame r_ctl %x\n",
+ 		       __func__, fh->fh_r_ctl);
+ 		fc_frame_free(fp);
+ 		ft_sess_put(sess);	/* undo get from lookup */
+@@ -626,7 +623,7 @@ static void ft_send_cmd(struct ft_cmd *cmd)
+ 
+ 	ret = transport_generic_allocate_tasks(se_cmd, cmd->cdb);
+ 
+-	FT_IO_DBG("r_ctl %x alloc task ret %d\n", fh->fh_r_ctl, ret);
++	pr_debug("r_ctl %x alloc task ret %d\n", fh->fh_r_ctl, ret);
+ 	ft_dump_cmd(cmd, __func__);
+ 
+ 	if (ret == -ENOMEM) {
+@@ -657,7 +654,7 @@ err:
+  */
+ static void ft_exec_req(struct ft_cmd *cmd)
+ {
+-	FT_IO_DBG("cmd state %x\n", cmd->state);
++	pr_debug("cmd state %x\n", cmd->state);
+ 	switch (cmd->state) {
+ 	case FC_CMD_ST_NEW:
+ 		ft_send_cmd(cmd);
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index e47e7e7..98eb96c 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -106,7 +106,7 @@ static ssize_t ft_parse_wwn(const char *name, u64 *wwn, int strict)
+ 	}
+ 	err = 4;
+ fail:
+-	FT_CONF_DBG("err %u len %zu pos %u byte %u\n",
++	pr_debug("err %u len %zu pos %u byte %u\n",
+ 		    err, cp - name, pos, byte);
+ 	return -1;
+ }
+@@ -216,7 +216,7 @@ static struct se_node_acl *ft_add_acl(
+ 	u64 wwpn;
+ 	u32 q_depth;
+ 
+-	FT_CONF_DBG("add acl %s\n", name);
++	pr_debug("add acl %s\n", name);
+ 	tpg = container_of(se_tpg, struct ft_tpg, se_tpg);
+ 
+ 	if (ft_parse_wwn(name, &wwpn, 1) < 0)
+@@ -239,11 +239,11 @@ static void ft_del_acl(struct se_node_acl *se_acl)
+ 	struct ft_node_acl *acl = container_of(se_acl,
+ 				struct ft_node_acl, se_node_acl);
+ 
+-	FT_CONF_DBG("del acl %s\n",
++	pr_debug("del acl %s\n",
+ 		config_item_name(&se_acl->acl_group.cg_item));
+ 
+ 	tpg = container_of(se_tpg, struct ft_tpg, se_tpg);
+-	FT_CONF_DBG("del acl %p se_acl %p tpg %p se_tpg %p\n",
++	pr_debug("del acl %p se_acl %p tpg %p se_tpg %p\n",
+ 		    acl, se_acl, tpg, &tpg->se_tpg);
+ 
+ 	core_tpg_del_initiator_node_acl(&tpg->se_tpg, se_acl, 1);
+@@ -260,11 +260,11 @@ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, struct fc_rport_priv *rdata)
+ 	spin_lock_bh(&se_tpg->acl_node_lock);
+ 	list_for_each_entry(se_acl, &se_tpg->acl_node_list, acl_list) {
+ 		acl = container_of(se_acl, struct ft_node_acl, se_node_acl);
+-		FT_CONF_DBG("acl %p port_name %llx\n",
++		pr_debug("acl %p port_name %llx\n",
+ 			acl, (unsigned long long)acl->node_auth.port_name);
+ 		if (acl->node_auth.port_name == rdata->ids.port_name ||
+ 		    acl->node_auth.node_name == rdata->ids.node_name) {
+-			FT_CONF_DBG("acl %p port_name %llx matched\n", acl,
++			pr_debug("acl %p port_name %llx matched\n", acl,
+ 				    (unsigned long long)rdata->ids.port_name);
+ 			found = acl;
+ 			/* XXX need to hold onto ACL */
+@@ -281,10 +281,10 @@ struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_group *se_tpg)
+ 
+ 	acl = kzalloc(sizeof(*acl), GFP_KERNEL);
+ 	if (!acl) {
+-		printk(KERN_ERR "Unable to allocate struct ft_node_acl\n");
++		pr_err("Unable to allocate struct ft_node_acl\n");
+ 		return NULL;
+ 	}
+-	FT_CONF_DBG("acl %p\n", acl);
++	pr_debug("acl %p\n", acl);
+ 	return &acl->se_node_acl;
+ }
+ 
+@@ -294,7 +294,7 @@ static void ft_tpg_release_fabric_acl(struct se_portal_group *se_tpg,
+ 	struct ft_node_acl *acl = container_of(se_acl,
+ 				struct ft_node_acl, se_node_acl);
+ 
+-	FT_CONF_DBG(KERN_INFO "acl %p\n", acl);
++	pr_debug("acl %p\n", acl);
+ 	kfree(acl);
+ }
+ 
+@@ -311,7 +311,7 @@ static struct se_portal_group *ft_add_tpg(
+ 	unsigned long index;
+ 	int ret;
+ 
+-	FT_CONF_DBG("tcm_fc: add tpg %s\n", name);
++	pr_debug("tcm_fc: add tpg %s\n", name);
+ 
+ 	/*
+ 	 * Name must be "tpgt_" followed by the index.
+@@ -354,7 +354,7 @@ static void ft_del_tpg(struct se_portal_group *se_tpg)
+ {
+ 	struct ft_tpg *tpg = container_of(se_tpg, struct ft_tpg, se_tpg);
+ 
+-	FT_CONF_DBG("del tpg %s\n",
++	pr_debug("del tpg %s\n",
+ 		config_item_name(&tpg->se_tpg.tpg_group.cg_item));
+ 
+ 	kthread_stop(tpg->thread);
+@@ -412,7 +412,7 @@ static struct se_wwn *ft_add_lport(
+ 	struct ft_lport_acl *old_lacl;
+ 	u64 wwpn;
+ 
+-	FT_CONF_DBG("add lport %s\n", name);
++	pr_debug("add lport %s\n", name);
+ 	if (ft_parse_wwn(name, &wwpn, 1) < 0)
+ 		return NULL;
+ 	lacl = kzalloc(sizeof(*lacl), GFP_KERNEL);
+@@ -441,7 +441,7 @@ static void ft_del_lport(struct se_wwn *wwn)
+ 	struct ft_lport_acl *lacl = container_of(wwn,
+ 				struct ft_lport_acl, fc_lport_wwn);
+ 
+-	FT_CONF_DBG("del lport %s\n",
++	pr_debug("del lport %s\n",
+ 			config_item_name(&wwn->wwn_group.cg_item));
+ 	mutex_lock(&ft_lport_lock);
+ 	list_del(&lacl->list);
+@@ -580,7 +580,7 @@ int ft_register_configfs(void)
+ 	 */
+ 	fabric = target_fabric_configfs_init(THIS_MODULE, "fc");
+ 	if (IS_ERR(fabric)) {
+-		printk(KERN_INFO "%s: target_fabric_configfs_init() failed!\n",
++		pr_debug("%s: target_fabric_configfs_init() failed!\n",
+ 		       __func__);
+ 		return PTR_ERR(fabric);
+ 	}
+@@ -607,10 +607,9 @@ int ft_register_configfs(void)
+ 	 */
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+-		FT_CONF_DBG("target_fabric_configfs_register() for"
++		pr_debug("target_fabric_configfs_register() for"
+ 			    " FC Target failed!\n");
+-		printk(KERN_INFO
+-		       "%s: target_fabric_configfs_register() failed!\n",
++		pr_debug("%s: target_fabric_configfs_register() failed!\n",
+ 		       __func__);
+ 		target_fabric_configfs_free(fabric);
+ 		return -1;
 diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 10192fb..d4e8d38 100644
+index c1552cf..a8ef64a 100644
 --- a/drivers/target/tcm_fc/tfc_io.c
 +++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -92,19 +92,15 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
- 	remaining = se_cmd->data_length;
- 
- 	/*
--	 * Setup to use first mem list entry if any.
-+	 * Setup to use first mem list entry, unless no data.
+@@ -39,6 +39,7 @@
+ #include <linux/configfs.h>
+ #include <linux/ctype.h>
+ #include <linux/hash.h>
++#include <linux/ratelimit.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -176,12 +177,11 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
+ 		error = lport->tt.seq_send(lport, cmd->seq, fp);
+ 		if (error) {
+ 			/* XXX For now, initiator will retry */
+-			if (printk_ratelimit())
+-				printk(KERN_ERR "%s: Failed to send frame %p, "
+-						"xid <0x%x>, remaining <0x%zx>, "
+-						"lso_max <0x%x>\n",
+-						__func__, fp, ep->xid,
+-						remaining, lport->lso_max);
++			pr_err_ratelimited("%s: Failed to send frame %p, "
++					   "xid <0x%x>, remaining <0x%zx>, "
++					   "lso_max <0x%x>\n",
++					   __func__, fp, ep->xid,
++					   remaining, lport->lso_max);
+ 		}
+ 	}
+ 	return ft_queue_status(se_cmd);
+@@ -222,10 +222,10 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
  	 */
--	if (se_cmd->t_tasks_se_num) {
-+	BUG_ON(remaining && list_empty(&se_cmd->t_mem_list));
-+	if (remaining) {
- 		mem = list_first_entry(&se_cmd->t_mem_list,
- 			 struct se_mem, se_list);
- 		mem_len = mem->se_len;
- 		mem_off = mem->se_off;
- 		page = mem->se_page;
--	} else {
--		mem = NULL;
--		mem_len = remaining;
--		mem_off = 0;
--		page = NULL;
+ 	buf = fc_frame_payload_get(fp, 1);
+ 	if (cmd->was_ddp_setup && buf) {
+-		printk(KERN_INFO "%s: When DDP was setup, not expected to"
+-				 "receive frame with payload, Payload shall be"
+-				 "copied directly to buffer instead of coming "
+-				 "via. legacy receive queues\n", __func__);
++		pr_err("%s: When DDP was setup, not expected to"
++		       "receive frame with payload, Payload shall be"
++		       "copied directly to buffer instead of coming "
++		       "via. legacy receive queues\n", __func__);
+ 		BUG_ON(buf);
  	}
  
- 	/* no scatter/gather in skb for odd word length due to fc_seq_send() */
-@@ -145,18 +141,7 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
- 		tlen = min(mem_len, frame_len);
+@@ -260,7 +260,7 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
+ 			 * this point, but just in case if required in future
+ 			 * for debugging or any other purpose
+ 			 */
+-			printk(KERN_ERR "%s: Received frame with TSI bit not"
++			pr_err("%s: Received frame with TSI bit not"
+ 					" being SET, dropping the frame, "
+ 					"cmd->sg <%p>, cmd->sg_cnt <0x%x>\n",
+ 					__func__, cmd->sg, cmd->sg_cnt);
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index 7491e21..fbcbb3d 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -198,13 +198,13 @@ static struct ft_sess *ft_sess_get(struct fc_lport *lport, u32 port_id)
+ 		if (sess->port_id == port_id) {
+ 			kref_get(&sess->kref);
+ 			rcu_read_unlock();
+-			FT_SESS_DBG("port_id %x found %p\n", port_id, sess);
++			pr_debug("port_id %x found %p\n", port_id, sess);
+ 			return sess;
+ 		}
+ 	}
+ out:
+ 	rcu_read_unlock();
+-	FT_SESS_DBG("port_id %x not found\n", port_id);
++	pr_debug("port_id %x not found\n", port_id);
+ 	return NULL;
+ }
  
- 		if (use_sg) {
--			if (!mem) {
--				BUG_ON(!se_cmd->t_task_buf);
--				page_addr = se_cmd->t_task_buf + mem_off;
--				/*
--				 * In this case, offset is 'offset_in_page' of
--				 * (t_task_buf + mem_off) instead of 'mem_off'.
--				 */
--				off_in_page = offset_in_page(page_addr);
--				page = virt_to_page(page_addr);
--				tlen = min(tlen, PAGE_SIZE - off_in_page);
--			} else
--				off_in_page = mem_off;
-+			off_in_page = mem_off;
- 			BUG_ON(!page);
- 			get_page(page);
- 			skb_fill_page_desc(fp_skb(fp),
-@@ -166,7 +151,7 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
- 			fp_skb(fp)->data_len += tlen;
- 			fp_skb(fp)->truesize +=
- 					PAGE_SIZE << compound_order(page);
--		} else if (mem) {
-+		} else {
- 			BUG_ON(!page);
- 			from = kmap_atomic(page + (mem_off >> PAGE_SHIFT),
- 					   KM_SOFTIRQ0);
-@@ -177,10 +162,6 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
- 			memcpy(to, from, tlen);
- 			kunmap_atomic(page_addr, KM_SOFTIRQ0);
- 			to += tlen;
--		} else {
--			from = se_cmd->t_task_buf + mem_off;
--			memcpy(to, from, tlen);
--			to += tlen;
+@@ -240,7 +240,7 @@ static struct ft_sess *ft_sess_create(struct ft_tport *tport, u32 port_id,
+ 	hlist_add_head_rcu(&sess->hash, head);
+ 	tport->sess_count++;
+ 
+-	FT_SESS_DBG("port_id %x sess %p\n", port_id, sess);
++	pr_debug("port_id %x sess %p\n", port_id, sess);
+ 
+ 	transport_register_session(&tport->tpg->se_tpg, &acl->se_node_acl,
+ 				   sess->se_sess, sess);
+@@ -314,7 +314,7 @@ int ft_sess_shutdown(struct se_session *se_sess)
+ {
+ 	struct ft_sess *sess = se_sess->fabric_sess_ptr;
+ 
+-	FT_SESS_DBG("port_id %x\n", sess->port_id);
++	pr_debug("port_id %x\n", sess->port_id);
+ 	return 1;
+ }
+ 
+@@ -335,7 +335,7 @@ void ft_sess_close(struct se_session *se_sess)
+ 		mutex_unlock(&ft_lport_lock);
+ 		return;
+ 	}
+-	FT_SESS_DBG("port_id %x\n", port_id);
++	pr_debug("port_id %x\n", port_id);
+ 	ft_sess_unhash(sess);
+ 	mutex_unlock(&ft_lport_lock);
+ 	transport_deregister_session_configfs(se_sess);
+@@ -348,7 +348,7 @@ void ft_sess_stop(struct se_session *se_sess, int sess_sleep, int conn_sleep)
+ {
+ 	struct ft_sess *sess = se_sess->fabric_sess_ptr;
+ 
+-	FT_SESS_DBG("port_id %x\n", sess->port_id);
++	pr_debug("port_id %x\n", sess->port_id);
+ }
+ 
+ int ft_sess_logged_in(struct se_session *se_sess)
+@@ -458,7 +458,7 @@ static int ft_prli(struct fc_rport_priv *rdata, u32 spp_len,
+ 	mutex_lock(&ft_lport_lock);
+ 	ret = ft_prli_locked(rdata, spp_len, rspp, spp);
+ 	mutex_unlock(&ft_lport_lock);
+-	FT_SESS_DBG("port_id %x flags %x ret %x\n",
++	pr_debug("port_id %x flags %x ret %x\n",
+ 	       rdata->ids.port_id, rspp ? rspp->spp_flags : 0, ret);
+ 	return ret;
+ }
+@@ -518,11 +518,11 @@ static void ft_recv(struct fc_lport *lport, struct fc_frame *fp)
+ 	struct ft_sess *sess;
+ 	u32 sid = fc_frame_sid(fp);
+ 
+-	FT_SESS_DBG("sid %x\n", sid);
++	pr_debug("sid %x\n", sid);
+ 
+ 	sess = ft_sess_get(lport, sid);
+ 	if (!sess) {
+-		FT_SESS_DBG("sid %x sess lookup failed\n", sid);
++		pr_debug("sid %x sess lookup failed\n", sid);
+ 		/* TBD XXX - if FCP_CMND, send PRLO */
+ 		fc_frame_free(fp);
+ 		return;
+diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h
+index a89a567..bb7c497 100644
+--- a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h
++++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h
+@@ -8,12 +8,6 @@
+ 
+ #include "qla_target.h"
+ 
+-#if 0
+-#define DEBUG_QLA_TGT_SESS_MAP(x...)	printk(KERN_INFO x)
+-#else
+-#define DEBUG_QLA_TGT_SESS_MAP(x...)
+-#endif
+-
+ struct tcm_qla2xxx_nacl {
+ 	/* From libfc struct fc_rport->port_id */
+ 	u16 nport_id;
+diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c
+index af81122..1e2093b 100644
+--- a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c
++++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c
+@@ -79,7 +79,7 @@ static int tcm_qla2xxx_setup_nacl_from_rport(
+ 		if (rport_wwnn != rport->node_name)
+ 			continue;
+ 
+-		DEBUG_QLA_TGT_SESS_MAP("Located existing rport_wwpn and rport->node_name:"
++		pr_debug("Located existing rport_wwpn and rport->node_name:"
+ 			" 0x%016LX, port_id: 0x%04x\n", rport->node_name,
+ 			rport->port_id);
+ 		domain = (rport->port_id >> 16) & 0xff;
+@@ -87,21 +87,21 @@ static int tcm_qla2xxx_setup_nacl_from_rport(
+ 		al_pa = rport->port_id & 0xff;
+ 		nacl->nport_id = rport->port_id;
+ 
+-		DEBUG_QLA_TGT_SESS_MAP("fc_rport domain: 0x%02x area: 0x%02x al_pa: %02x\n",
++		pr_debug("fc_rport domain: 0x%02x area: 0x%02x al_pa: %02x\n",
+ 				domain, area, al_pa);
+ 		spin_unlock_irqrestore(sh->host_lock, flags);
+ 
+ 
+ 		spin_lock_irqsave(&vha->hw->hardware_lock, flags);
+ 		d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
+-		DEBUG_QLA_TGT_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++		pr_debug("Using d: %p for domain: 0x%02x\n", d, domain);
+ 		a = &d->areas[area];
+-		DEBUG_QLA_TGT_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++		pr_debug("Using a: %p for area: 0x%02x\n", a, area);
+ 		p = &a->al_pas[al_pa];
+-		DEBUG_QLA_TGT_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
++		pr_debug("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
+ 
+ 		p->se_nacl = se_nacl;
+-		DEBUG_QLA_TGT_SESS_MAP("Setting p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
++		pr_debug("Setting p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
+ 			" port_id: 0x%04x\n", se_nacl, rport_wwnn,
+ 			nacl->nport_id);
+ 		spin_unlock_irqrestore(&vha->hw->hardware_lock, flags);
+@@ -134,18 +134,18 @@ int tcm_qla2xxx_clear_nacl_from_fcport_map(
+ 	area = (nacl->nport_id >> 8) & 0xff;
+ 	al_pa = nacl->nport_id & 0xff;
+ 
+-	DEBUG_QLA_TGT_SESS_MAP("fc_rport domain: 0x%02x area: 0x%02x al_pa: %02x\n",
++	pr_debug("fc_rport domain: 0x%02x area: 0x%02x al_pa: %02x\n",
+ 			domain, area, al_pa);
+ 
+ 	d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
+-	DEBUG_QLA_TGT_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++	pr_debug("Using d: %p for domain: 0x%02x\n", d, domain);
+ 	a = &d->areas[area];
+-	DEBUG_QLA_TGT_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++	pr_debug("Using a: %p for area: 0x%02x\n", a, area);
+ 	p = &a->al_pas[al_pa];
+-	DEBUG_QLA_TGT_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
++	pr_debug("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
+ 
+ 	p->se_nacl = NULL;
+-	DEBUG_QLA_TGT_SESS_MAP("Clearing p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
++	pr_debug("Clearing p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
+ 		" port_id: 0x%04x\n", se_nacl, nacl->nport_wwnn,
+ 		nacl->nport_id);
+ 
+@@ -241,7 +241,7 @@ static ssize_t tcm_qla2xxx_tpg_attrib_store_##name(			\
+ 									\
+ 	ret = strict_strtoul(page, 0, &val);				\
+ 	if (ret < 0) {							\
+-		printk(KERN_ERR "strict_strtoul() failed with"		\
++		pr_err("strict_strtoul() failed with"		\
+ 				" ret: %d\n", ret);			\
+ 		return -EINVAL;						\
+ 	}								\
+@@ -259,7 +259,7 @@ static int tcm_qla2xxx_set_attrib_##_name(				\
+ 	struct tcm_qla2xxx_tpg_attrib *a = &tpg->tpg_attrib;		\
+ 									\
+ 	if ((val != 0) && (val != 1)) {					\
+-		printk(KERN_ERR "Illegal boolean value %lu\n", val);	\
++		pr_err("Illegal boolean value %lu\n", val);	\
+                 return -EINVAL;						\
+ 	}								\
+ 									\
+@@ -335,7 +335,7 @@ static ssize_t tcm_qla2xxx_tpg_store_enable(
+ 
+ 	op = simple_strtoul(page, &endptr, 0);
+ 	if ((op != 1) && (op != 0)) {
+-		printk(KERN_ERR "Illegal value for tpg_enable: %u\n", op);
++		pr_err("Illegal value for tpg_enable: %u\n", op);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -344,7 +344,7 @@ static ssize_t tcm_qla2xxx_tpg_store_enable(
+ 		qla_tgt_enable_vha(vha);
+ 	} else {
+ 		if (!ha->qla_tgt) {
+-			printk(KERN_ERR "truct qla_hw_data *ha->qla_tgt is NULL\n");
++			pr_err("truct qla_hw_data *ha->qla_tgt is NULL\n");
+ 			return -ENODEV;
+ 		}
+ 		atomic_set(&tpg->lport_tpg_enabled, 0);
+@@ -378,14 +378,14 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(
+ 		return ERR_PTR(-EINVAL);
+ 	
+ 	if ((lport->qla_npiv_vp == NULL) && (tpgt != 1)) {
+-		printk(KERN_ERR "In non NPIV mode, a single TPG=1 is used for"
++		pr_err("In non NPIV mode, a single TPG=1 is used for"
+ 			" HW port mappings\n");
+ 		return ERR_PTR(-ENOSYS);
+ 	}
+ 
+ 	tpg = kzalloc(sizeof(struct tcm_qla2xxx_tpg), GFP_KERNEL);
+ 	if (!(tpg)) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_tpg\n");
++		pr_err("Unable to allocate struct tcm_qla2xxx_tpg\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	tpg->lport = lport;
+@@ -455,7 +455,7 @@ static struct se_portal_group *tcm_qla2xxx_npiv_make_tpg(
+ 
+ 	tpg = kzalloc(sizeof(struct tcm_qla2xxx_tpg), GFP_KERNEL);
+ 	if (!(tpg)) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_tpg\n");
++		pr_err("Unable to allocate struct tcm_qla2xxx_tpg\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	tpg->lport = lport;
+@@ -489,7 +489,7 @@ static struct qla_tgt_sess *tcm_qla2xxx_find_sess_by_s_id(
+ 
+ 	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
+ 	if (!lport) {
+-		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		pr_err("Unable to locate struct tcm_qla2xxx_lport\n");
+ 		dump_stack();
+ 		return NULL;
+ 	}
+@@ -498,28 +498,28 @@ static struct qla_tgt_sess *tcm_qla2xxx_find_sess_by_s_id(
+ 	area = s_id[1];
+ 	al_pa = s_id[2];
+ 
+-	DEBUG_QLA_TGT_SESS_MAP("find_sess_by_s_id: 0x%02x area: 0x%02x al_pa: %02x\n",
++	pr_debug("find_sess_by_s_id: 0x%02x area: 0x%02x al_pa: %02x\n",
+ 			domain, area, al_pa);
+ 
+ 	d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
+-	DEBUG_QLA_TGT_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++	pr_debug("Using d: %p for domain: 0x%02x\n", d, domain);
+ 	a = &d->areas[area];
+-	DEBUG_QLA_TGT_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++	pr_debug("Using a: %p for area: 0x%02x\n", a, area);
+ 	p = &a->al_pas[al_pa];
+-	DEBUG_QLA_TGT_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
++	pr_debug("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
+ 
+ 	se_nacl = p->se_nacl;
+ 	if (!se_nacl) {
+-		DEBUG_QLA_TGT_SESS_MAP("Unable to locate s_id: 0x%02x area: 0x%02x"
++		pr_debug("Unable to locate s_id: 0x%02x area: 0x%02x"
+ 			" al_pa: %02x\n", domain, area, al_pa);
+ 		return NULL;
+ 	}
+-	DEBUG_QLA_TGT_SESS_MAP("find_sess_by_s_id: located se_nacl: %p,"
++	pr_debug("find_sess_by_s_id: located se_nacl: %p,"
+ 		" initiatorname: %s\n", se_nacl, se_nacl->initiatorname);
+ 
+ 	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
+ 	if (!nacl->qla_tgt_sess) {
+-		printk(KERN_ERR "Unable to locate struct qla_tgt_sess\n");
++		pr_err("Unable to locate struct qla_tgt_sess\n");
+ 		return NULL;
+ 	}
+ 
+@@ -546,19 +546,19 @@ static void tcm_qla2xxx_set_sess_by_s_id(
+ 	domain = s_id[0];
+ 	area = s_id[1];
+ 	al_pa = s_id[2];
+-	DEBUG_QLA_TGT_SESS_MAP("set_sess_by_s_id: domain 0x%02x area: 0x%02x al_pa: %02x\n",
++	pr_debug("set_sess_by_s_id: domain 0x%02x area: 0x%02x al_pa: %02x\n",
+ 			domain, area, al_pa);
+ 
+ 	d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
+-	DEBUG_QLA_TGT_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++	pr_debug("Using d: %p for domain: 0x%02x\n", d, domain);
+ 	a = &d->areas[area];
+-	DEBUG_QLA_TGT_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++	pr_debug("Using a: %p for area: 0x%02x\n", a, area);
+ 	p = &a->al_pas[al_pa];
+-	DEBUG_QLA_TGT_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
++	pr_debug("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
+ 
+ 	saved_nacl = p->se_nacl;
+ 	if (!saved_nacl) {
+-		DEBUG_QLA_TGT_SESS_MAP("Setting up new p->se_nacl to new_se_nacl\n");
++		pr_debug("Setting up new p->se_nacl to new_se_nacl\n");
+ 		p->se_nacl = new_se_nacl;
+ 		qla_tgt_sess->se_sess = se_sess;
+ 		nacl->qla_tgt_sess = qla_tgt_sess;
+@@ -567,13 +567,13 @@ static void tcm_qla2xxx_set_sess_by_s_id(
+ 
+ 	if (nacl->qla_tgt_sess) {
+ 		if (new_se_nacl == NULL) {
+-			DEBUG_QLA_TGT_SESS_MAP("Clearing existing nacl->qla_tgt_sess"
++			pr_debug("Clearing existing nacl->qla_tgt_sess"
+ 					" and p->se_nacl\n");
+ 			p->se_nacl = NULL;
+ 			nacl->qla_tgt_sess = NULL;
+ 			return;
+ 		}
+-		DEBUG_QLA_TGT_SESS_MAP("Replacing existing nacl->qla_tgt_sess and"
++		pr_debug("Replacing existing nacl->qla_tgt_sess and"
+ 				" p->se_nacl\n");
+ 		p->se_nacl = new_se_nacl;
+ 		qla_tgt_sess->se_sess = se_sess;
+@@ -582,18 +582,18 @@ static void tcm_qla2xxx_set_sess_by_s_id(
+ 	}
+ 
+ 	if (new_se_nacl == NULL) {
+-		DEBUG_QLA_TGT_SESS_MAP("Clearing existing p->se_nacl\n");
++		pr_debug("Clearing existing p->se_nacl\n");
+ 		p->se_nacl = NULL;
+ 		return;
+ 	}
+ 
+-	DEBUG_QLA_TGT_SESS_MAP("Replacing existing p->se_nacl w/o active"
++	pr_debug("Replacing existing p->se_nacl w/o active"
+ 				" nacl->qla_tgt_sess\n");
+ 	p->se_nacl = new_se_nacl;
+ 	qla_tgt_sess->se_sess = se_sess;
+ 	nacl->qla_tgt_sess = qla_tgt_sess;
+ 
+-	DEBUG_QLA_TGT_SESS_MAP("Setup nacl->qla_tgt_sess %p by s_id for se_nacl: %p,"
++	pr_debug("Setup nacl->qla_tgt_sess %p by s_id for se_nacl: %p,"
+ 		" initiatorname: %s\n", nacl->qla_tgt_sess, new_se_nacl,
+ 		new_se_nacl->initiatorname);
+ }
+@@ -613,18 +613,18 @@ static struct qla_tgt_sess *tcm_qla2xxx_find_sess_by_loop_id(
+ 
+ 	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
+ 	if (!lport) {
+-		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		pr_err("Unable to locate struct tcm_qla2xxx_lport\n");
+ 		dump_stack();
+ 		return NULL;
+ 	}
+ 
+-	DEBUG_QLA_TGT_SESS_MAP("find_sess_by_loop_id: Using loop_id: 0x%04x\n", loop_id);
++	pr_debug("find_sess_by_loop_id: Using loop_id: 0x%04x\n", loop_id);
+ 
+ 	fc_loopid = (struct tcm_qla2xxx_fc_loopid *)&lport->lport_loopid_map[loop_id];
+ 
+ 	se_nacl = fc_loopid->se_nacl;
+ 	if (!se_nacl) {
+-		DEBUG_QLA_TGT_SESS_MAP("Unable to locate se_nacl by loop_id:"
++		pr_debug("Unable to locate se_nacl by loop_id:"
+ 				" 0x%04x\n", loop_id);
+ 		return NULL;
+ 	}
+@@ -632,7 +632,7 @@ static struct qla_tgt_sess *tcm_qla2xxx_find_sess_by_loop_id(
+ 	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
+ 
+ 	if (!nacl->qla_tgt_sess) {
+-		printk(KERN_ERR "Unable to locate struct qla_tgt_sess\n");
++		pr_err("Unable to locate struct qla_tgt_sess\n");
+ 		return NULL;
+ 	}
+ 
+@@ -653,13 +653,13 @@ static void tcm_qla2xxx_set_sess_by_loop_id(
+ 	struct se_node_acl *saved_nacl;
+ 	struct tcm_qla2xxx_fc_loopid *fc_loopid;
+ 
+-	DEBUG_QLA_TGT_SESS_MAP("set_sess_by_loop_id: Using loop_id: 0x%04x\n", loop_id);
++	pr_debug("set_sess_by_loop_id: Using loop_id: 0x%04x\n", loop_id);
+ 
+ 	fc_loopid = (struct tcm_qla2xxx_fc_loopid *)&lport->lport_loopid_map[loop_id];
+ 
+ 	saved_nacl = fc_loopid->se_nacl;
+ 	if (!saved_nacl) {
+-		DEBUG_QLA_TGT_SESS_MAP("Setting up new fc_loopid->se_nacl"
++		pr_debug("Setting up new fc_loopid->se_nacl"
+ 				" to new_se_nacl\n");
+ 		fc_loopid->se_nacl = new_se_nacl;
+ 		if (qla_tgt_sess->se_sess != se_sess)
+@@ -671,14 +671,14 @@ static void tcm_qla2xxx_set_sess_by_loop_id(
+ 
+ 	if (nacl->qla_tgt_sess) {
+ 		if (new_se_nacl == NULL) {
+-			DEBUG_QLA_TGT_SESS_MAP("Clearing nacl->qla_tgt_sess and"
++			pr_debug("Clearing nacl->qla_tgt_sess and"
+ 					" fc_loopid->se_nacl\n");
+ 			fc_loopid->se_nacl = NULL;
+ 			nacl->qla_tgt_sess = NULL;
+ 			return;
  		}
  
- 		mem_off += tlen;
-@@ -305,19 +286,15 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
- 		frame_len = se_cmd->data_length - rel_off;
- 
- 	/*
--	 * Setup to use first mem list entry if any.
-+	 * Setup to use first mem list entry, unless no data.
- 	 */
--	if (se_cmd->t_tasks_se_num) {
-+	BUG_ON(frame_len && list_empty(&se_cmd->t_mem_list));
-+	if (frame_len) {
- 		mem = list_first_entry(&se_cmd->t_mem_list,
- 				       struct se_mem, se_list);
- 		mem_len = mem->se_len;
- 		mem_off = mem->se_off;
- 		page = mem->se_page;
--	} else {
--		mem = NULL;
--		page = NULL;
--		mem_off = 0;
--		mem_len = frame_len;
+-		DEBUG_QLA_TGT_SESS_MAP("Replacing existing nacl->qla_tgt_sess and"
++		pr_debug("Replacing existing nacl->qla_tgt_sess and"
+ 				" fc_loopid->se_nacl\n");
+ 		fc_loopid->se_nacl = new_se_nacl;
+ 		if (qla_tgt_sess->se_sess != se_sess)
+@@ -689,12 +689,12 @@ static void tcm_qla2xxx_set_sess_by_loop_id(
  	}
  
- 	while (frame_len) {
-@@ -340,19 +317,15 @@ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
+ 	if (new_se_nacl == NULL) {
+-		DEBUG_QLA_TGT_SESS_MAP("Clearing fc_loopid->se_nacl\n");
++		pr_debug("Clearing fc_loopid->se_nacl\n");
+ 		fc_loopid->se_nacl = NULL;
+ 		return;
+ 	}
  
- 		tlen = min(mem_len, frame_len);
+-	DEBUG_QLA_TGT_SESS_MAP("Replacing existing fc_loopid->se_nacl w/o"
++	pr_debug("Replacing existing fc_loopid->se_nacl w/o"
+ 			" active nacl->qla_tgt_sess\n");
+ 	fc_loopid->se_nacl = new_se_nacl;
+ 	if (qla_tgt_sess->se_sess != se_sess)
+@@ -702,7 +702,7 @@ static void tcm_qla2xxx_set_sess_by_loop_id(
+ 	if (nacl->qla_tgt_sess != qla_tgt_sess)
+ 		nacl->qla_tgt_sess = qla_tgt_sess;
  
--		if (mem) {
--			to = kmap_atomic(page + (mem_off >> PAGE_SHIFT),
--					 KM_SOFTIRQ0);
--			page_addr = to;
--			to += mem_off & ~PAGE_MASK;
--			tlen = min(tlen, (size_t)(PAGE_SIZE -
--						(mem_off & ~PAGE_MASK)));
--			memcpy(to, from, tlen);
--			kunmap_atomic(page_addr, KM_SOFTIRQ0);
--		} else {
--			to = se_cmd->t_task_buf + mem_off;
--			memcpy(to, from, tlen);
--		}
-+		to = kmap_atomic(page + (mem_off >> PAGE_SHIFT),
-+				 KM_SOFTIRQ0);
-+		page_addr = to;
-+		to += mem_off & ~PAGE_MASK;
-+		tlen = min(tlen, (size_t)(PAGE_SIZE -
-+					  (mem_off & ~PAGE_MASK)));
-+		memcpy(to, from, tlen);
-+		kunmap_atomic(page_addr, KM_SOFTIRQ0);
-+
- 		from += tlen;
- 		frame_len -= tlen;
- 		mem_off += tlen;
+-	DEBUG_QLA_TGT_SESS_MAP("Setup nacl->qla_tgt_sess %p by loop_id for se_nacl: %p,"
++	pr_debug("Setup nacl->qla_tgt_sess %p by loop_id for se_nacl: %p,"
+ 		" initiatorname: %s\n", nacl->qla_tgt_sess, new_se_nacl,
+ 		new_se_nacl->initiatorname);
+ }
+@@ -719,7 +719,7 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
+ 
+ 	se_sess = sess->se_sess;
+ 	if (!se_sess) {
+-		printk(KERN_ERR "struct qla_tgt_sess->se_sess is NULL\n");
++		pr_err("struct qla_tgt_sess->se_sess is NULL\n");
+ 		dump_stack();
+ 		return;
+ 	}
+@@ -728,7 +728,7 @@ static void tcm_qla2xxx_free_session(struct qla_tgt_sess *sess)
+ 
+ 	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
+ 	if (!lport) {
+-		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		pr_err("Unable to locate struct tcm_qla2xxx_lport\n");
+ 		dump_stack();
+ 		return;
+ 	}
+@@ -780,7 +780,7 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 
+ 	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
+ 	if (!lport) {
+-		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		pr_err("Unable to locate struct tcm_qla2xxx_lport\n");
+ 		dump_stack();
+ 		return -EINVAL;
+ 	}
+@@ -789,14 +789,14 @@ static int tcm_qla2xxx_check_initiator_node_acl(
+ 	 */
+ 	tpg = lport->tpg_1;
+ 	if (!tpg) {
+-		printk(KERN_ERR "Unable to lcoate struct tcm_qla2xxx_lport->tpg_1\n");
++		pr_err("Unable to lcoate struct tcm_qla2xxx_lport->tpg_1\n");
+ 		return -EINVAL;
+ 	}
+ 	se_tpg = &tpg->se_tpg;
+ 
+ 	se_sess = transport_init_session();
+ 	if (!se_sess) {
+-		printk(KERN_ERR "Unable to initialize struct se_session\n");
++		pr_err("Unable to initialize struct se_session\n");
+ 		return -ENOMEM;
+ 	}
+ 	/*
+@@ -860,19 +860,19 @@ static int tcm_qla2xxx_init_lport(
+ 	lport->lport_fcport_map = vmalloc(
+ 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+ 	if (!(lport->lport_fcport_map)) {
+-		printk(KERN_ERR "Unable to allocate lport_fcport_map of %lu"
++		pr_err("Unable to allocate lport_fcport_map of %lu"
+ 			" bytes\n", sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+ 		return -ENOMEM;
+ 	}
+ 	memset(lport->lport_fcport_map, 0,
+ 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+-	printk(KERN_INFO "qla2xxx: Allocated lport_fcport_map of %lu bytes\n",
++	pr_debug("qla2xxx: Allocated lport_fcport_map of %lu bytes\n",
+ 			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
+ 
+ 	lport->lport_loopid_map = vmalloc(sizeof(struct tcm_qla2xxx_fc_loopid) *
+ 				65536);
+ 	if (!(lport->lport_loopid_map)) {
+-		printk(KERN_ERR "Unable to allocate lport->lport_loopid_map"
++		pr_err("Unable to allocate lport->lport_loopid_map"
+ 			" of %lu bytes\n", sizeof(struct tcm_qla2xxx_fc_loopid)
+ 			* 65536);
+ 		vfree(lport->lport_fcport_map);
+@@ -880,7 +880,7 @@ static int tcm_qla2xxx_init_lport(
+ 	}
+ 	memset(lport->lport_loopid_map, 0, sizeof(struct tcm_qla2xxx_fc_loopid)
+ 			* 65536);
+-	printk(KERN_INFO "qla2xxx: Allocated lport_loopid_map of %lu bytes\n",
++	pr_debug("qla2xxx: Allocated lport_loopid_map of %lu bytes\n",
+ 			sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
+ 	/*
+ 	 * Setup local pointer to vha, NPIV VP pointer (if present) and
+@@ -917,7 +917,7 @@ static struct se_wwn *tcm_qla2xxx_make_lport(
+ 
+ 	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
+ 	if (!(lport)) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_lport\n");
++		pr_err("Unable to allocate struct tcm_qla2xxx_lport\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	lport->lport_wwpn = wwpn;
+@@ -941,7 +941,7 @@ static struct se_wwn *tcm_qla2xxx_make_lport(
+ 
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 		if (host->active_mode & MODE_TARGET) {
+-			printk(KERN_INFO "MODE_TARGET already active on qla2xxx"
++			pr_debug("MODE_TARGET already active on qla2xxx"
+ 					"(%d)\n",  host->host_no);
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 			continue;
+@@ -949,33 +949,33 @@ static struct se_wwn *tcm_qla2xxx_make_lport(
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 		if (!scsi_host_get(host)) {
+-			printk(KERN_ERR "Unable to scsi_host_get() for"
++			pr_err("Unable to scsi_host_get() for"
+ 				" qla2xxx scsi_host\n");
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
+ 
+-		printk("qla2xxx HW vha->node_name: ");
++		pr_debug("qla2xxx HW vha->node_name: ");
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", vha->node_name[i]);
+-		printk("\n");
++			pr_debug("%02x ", vha->node_name[i]);
++		pr_debug("\n");
+ 
+-		printk("qla2xxx HW vha->port_name: ");
++		pr_debug("qla2xxx HW vha->port_name: ");
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", vha->port_name[i]);
+-		printk("\n");
++			pr_debug("%02x ", vha->port_name[i]);
++		pr_debug("\n");
+ 
+-		printk("qla2xxx passed configfs WWPN: ");
++		pr_debug("qla2xxx passed configfs WWPN: ");
+ 		put_unaligned_be64(wwpn, b);
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", b[i]);
+-		printk("\n");
++			pr_debug("%02x ", b[i]);
++		pr_debug("\n");
+ 
+ 		if (memcmp(vha->port_name, b, 8)) {
+ 			scsi_host_put(host);
+ 			continue;
+ 		}
+-		printk("qla2xxx: Found matching HW WWPN: %s for lport\n", name);
++		pr_debug("qla2xxx: Found matching HW WWPN: %s for lport\n", name);
+ 		ret = tcm_qla2xxx_init_lport(lport, vha, NULL);
+ 		break;
+ 	}
+@@ -1041,7 +1041,7 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 
+ 	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
+ 	if (!(lport)) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_lport"
++		pr_err("Unable to allocate struct tcm_qla2xxx_lport"
+ 				" for NPIV\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+@@ -1068,7 +1068,7 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 
+ 		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 		if (host->active_mode & MODE_TARGET) {
+-			printk(KERN_INFO "MODE_TARGET already active on qla2xxx"
++			pr_debug("MODE_TARGET already active on qla2xxx"
+ 					"(%d)\n",  host->host_no);
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 			continue;
+@@ -1076,33 +1076,33 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 		if (!scsi_host_get(host)) {
+-			printk(KERN_ERR "Unable to scsi_host_get() for"
++			pr_err("Unable to scsi_host_get() for"
+ 				" qla2xxx scsi_host\n");
+ 			ret = -EINVAL;
+ 			goto out;
+ 		}
+ 
+-		printk("qla2xxx HW vha->node_name: ");
++		pr_debug("qla2xxx HW vha->node_name: ");
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", vha->node_name[i]);
+-		printk("\n");
++			pr_debug("%02x ", vha->node_name[i]);
++		pr_debug("\n");
+ 
+-		printk("qla2xxx HW vha->port_name: ");
++		pr_debug("qla2xxx HW vha->port_name: ");
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", vha->port_name[i]);
+-		printk("\n");
++			pr_debug("%02x ", vha->port_name[i]);
++		pr_debug("\n");
+ 
+-		printk("qla2xxx passed configfs NPIV WWPN: ");
++		pr_debug("qla2xxx passed configfs NPIV WWPN: ");
+ 		put_unaligned_be64(npiv_wwpn, b);
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", b[i]);
+-		printk("\n");
++			pr_debug("%02x ", b[i]);
++		pr_debug("\n");
+ 
+-		printk("qla2xxx passed configfs NPIV WWNN: ");
++		pr_debug("qla2xxx passed configfs NPIV WWNN: ");
+ 		put_unaligned_be64(npiv_wwnn, b2);
+ 		for (i = 0; i < 8; i++)
+-			printk("%02x ", b2[i]);
+-		printk("\n");
++			pr_debug("%02x ", b2[i]);
++		pr_debug("\n");
+ 
+ 		spin_lock_irqsave(&ha->vport_slock, flags);
+ 		list_for_each_entry(npiv_vp, &ha->vp_list, list) {
+@@ -1116,7 +1116,7 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ #warning FIXME: Need to add atomic_inc(&npiv_vp->vref_count) before dropping ha->vport_slock..?
+ 			spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 
+-			printk("qla2xxx_npiv: Found matching NPIV WWPN+WWNN: %s "
++			pr_debug("qla2xxx_npiv: Found matching NPIV WWPN+WWNN: %s "
+ 					" for lport\n", name);
+ 			tcm_qla2xxx_init_lport(lport, vha, npiv_vp);
+ 			/*
+@@ -1134,7 +1134,7 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 			/* we only allow support on Channel 0 !!! */
+ 			vport = fc_vport_create(host, 0, &vid);
+ 			if (!vport) {
+-				printk(KERN_ERR "fc_vport_create() failed for"
++				pr_err("fc_vport_create() failed for"
+ 						" NPIV tcm_qla2xxx\n");
+ 				scsi_host_put(host);
+ 				ret = -EINVAL;
+@@ -1301,7 +1301,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	struct target_fabric_configfs *fabric, *npiv_fabric;
+ 	int ret;
+ 
+-	printk(KERN_INFO "TCM QLOGIC QLA2XXX fabric module %s on %s/%s"
++	pr_debug("TCM QLOGIC QLA2XXX fabric module %s on %s/%s"
+ 		" on "UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
+ 		utsname()->machine);
+ 	/*
+@@ -1309,7 +1309,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 */
+ 	fabric = target_fabric_configfs_init(THIS_MODULE, "qla2xxx");
+ 	if (!(fabric)) {
+-		printk(KERN_ERR "target_fabric_configfs_init() failed\n");
++		pr_err("target_fabric_configfs_init() failed\n");
+ 		return -ENOMEM;
+ 	}
+ 	/*
+@@ -1337,7 +1337,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 */
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+-		printk(KERN_ERR "target_fabric_configfs_register() failed"
++		pr_err("target_fabric_configfs_register() failed"
+ 				" for TCM_QLA2XXX\n");
+ 		return ret;
+ 	}
+@@ -1345,14 +1345,14 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 * Setup our local pointer to *fabric
+ 	 */
+ 	tcm_qla2xxx_fabric_configfs = fabric;	
+-	printk(KERN_INFO "TCM_QLA2XXX[0] - Set fabric -> tcm_qla2xxx_fabric_configfs\n");
++	pr_debug("TCM_QLA2XXX[0] - Set fabric -> tcm_qla2xxx_fabric_configfs\n");
+ 
+ 	/*
+ 	 * Register the top level struct config_item_type for NPIV with TCM core
+ 	 */
+ 	npiv_fabric = target_fabric_configfs_init(THIS_MODULE, "qla2xxx_npiv");
+ 	if (!(npiv_fabric)) {
+-		printk(KERN_ERR "target_fabric_configfs_init() failed\n");
++		pr_err("target_fabric_configfs_init() failed\n");
+ 		ret = -ENOMEM;
+ 		goto out;
+ 	}
+@@ -1377,7 +1377,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 */
+ 	ret = target_fabric_configfs_register(npiv_fabric);
+ 	if (ret < 0) {
+-		printk(KERN_ERR "target_fabric_configfs_register() failed"
++		pr_err("target_fabric_configfs_register() failed"
+ 				" for TCM_QLA2XXX\n");
+ 		goto out;;
+ 	}
+@@ -1385,7 +1385,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	 * Setup our local pointer to *npiv_fabric
+ 	 */
+ 	tcm_qla2xxx_npiv_fabric_configfs = npiv_fabric;
+-	printk(KERN_INFO "TCM_QLA2XXX[0] - Set fabric -> tcm_qla2xxx_npiv_fabric_configfs\n");
++	pr_debug("TCM_QLA2XXX[0] - Set fabric -> tcm_qla2xxx_npiv_fabric_configfs\n");
+ 
+ 	return 0;
+ out:
+@@ -1402,11 +1402,11 @@ static void tcm_qla2xxx_deregister_configfs(void)
+ 
+ 	target_fabric_configfs_deregister(tcm_qla2xxx_fabric_configfs);
+ 	tcm_qla2xxx_fabric_configfs = NULL;
+-	printk(KERN_INFO "TCM_QLA2XXX[0] - Cleared tcm_qla2xxx_fabric_configfs\n");
++	pr_debug("TCM_QLA2XXX[0] - Cleared tcm_qla2xxx_fabric_configfs\n");
+ 
+ 	target_fabric_configfs_deregister(tcm_qla2xxx_npiv_fabric_configfs);
+ 	tcm_qla2xxx_npiv_fabric_configfs = NULL;
+-	printk(KERN_INFO "TCM_QLA2XXX[0] - Cleared tcm_qla2xxx_npiv_fabric_configfs\n");
++	pr_debug("TCM_QLA2XXX[0] - Cleared tcm_qla2xxx_npiv_fabric_configfs\n");
+ }
+ 
+ static int __init tcm_qla2xxx_init(void)
 diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c
-index 1271d4e..4dacc1d 100644
+index 4dacc1d..9055366 100644
 --- a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c
 +++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c
-@@ -517,16 +517,6 @@ int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
+@@ -106,7 +106,7 @@ ssize_t tcm_qla2xxx_parse_wwn(const char *name, u64 *wwn, int strict)
+ 	}
+ 	err = 4;
+ fail:
+-	printk(KERN_INFO "err %u len %zu pos %u byte %u\n",
++	pr_debug("err %u len %zu pos %u byte %u\n",
+ 			err, cp - name, pos, byte);
+ 	return -1;
+ }
+@@ -358,7 +358,7 @@ struct se_node_acl *tcm_qla2xxx_alloc_fabric_acl(struct se_portal_group *se_tpg)
  
+ 	nacl = kzalloc(sizeof(struct tcm_qla2xxx_nacl), GFP_KERNEL);
+ 	if (!(nacl)) {
+-		printk(KERN_ERR "Unable to alocate struct tcm_qla2xxx_nacl\n");
++		pr_err("Unable to alocate struct tcm_qla2xxx_nacl\n");
+ 		return NULL;
+ 	}
+ 
+@@ -427,7 +427,7 @@ void tcm_qla2xxx_release_cmd(struct se_cmd *se_cmd)
+ 		return;
+ 
+ 	while (atomic_read(&cmd->cmd_stop_free) != 1) {
+-		printk(KERN_WARNING "Hit atomic_read(&cmd->cmd_stop_free)=1"
++		pr_warn("Hit atomic_read(&cmd->cmd_stop_free)=1"
+ 				" in tcm_qla2xxx_release_cmd\n");
+ 		cpu_relax();
+ 	}
+@@ -440,7 +440,7 @@ int tcm_qla2xxx_shutdown_session(struct se_session *se_sess)
+ 	struct qla_tgt_sess *sess = se_sess->fabric_sess_ptr;
+ 
+ 	if (!sess) {
+-		printk("se_sess->fabric_sess_ptr is NULL\n");
++		pr_err("se_sess->fabric_sess_ptr is NULL\n");
+ 		dump_stack();
+ 		return 0;
+ 	}
+@@ -457,7 +457,7 @@ void tcm_qla2xxx_close_session(struct se_session *se_sess)
+ 	unsigned long flags;
+ 
+ 	if (!sess) {
+-		printk(KERN_ERR "se_sess->fabric_sess_ptr is NULL\n");
++		pr_err("se_sess->fabric_sess_ptr is NULL\n");
+ 		dump_stack();
+ 		return;
+ 	}
+@@ -476,7 +476,7 @@ void tcm_qla2xxx_stop_session(struct se_session *se_sess, int sess_sleep , int c
+ 	unsigned long flags;
+ 
+ 	if (!sess) {
+-		printk(KERN_ERR "se_sess->fabric_sess_ptr is NULL\n");
++		pr_err("se_sess->fabric_sess_ptr is NULL\n");
+ 		dump_stack();
+ 		return;
+ 	}
+@@ -518,7 +518,7 @@ int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
  		cmd->sg_cnt = se_cmd->t_tasks_sg_chained_no;
  		cmd->sg = se_cmd->t_tasks_sg_chained;
--	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--		/*
--		 * Use se_cmd->t_task->t_tasks_sg_bounce for control CDBs
--		 * using a contiguous buffer
--		 */
--		sg_init_table(&se_cmd->t_tasks_sg_bounce, 1);
--		sg_set_buf(&se_cmd->t_tasks_sg_bounce,
--			se_cmd->t_task_buf, se_cmd->data_length);
--		cmd->sg_cnt = 1;
--		cmd->sg = &se_cmd->t_tasks_sg_bounce;
  	} else {
- 		printk(KERN_ERR "Unknown se_cmd_flags: 0x%08x in"
+-		printk(KERN_ERR "Unknown se_cmd_flags: 0x%08x in"
++		pr_err("Unknown se_cmd_flags: 0x%08x in"
  			" tcm_qla2xxx_write_pending()\n", se_cmd->se_cmd_flags);
-@@ -729,17 +719,6 @@ int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
+ 		BUG();
+ 	}
+@@ -566,13 +566,13 @@ int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
  
- 		cmd->sg_cnt = se_cmd->t_tasks_sg_chained_no;
- 		cmd->sg = se_cmd->t_tasks_sg_chained;
--	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
--		/*
--		 * Use se_cmd->t_task->t_tasks_sg_bounce for control CDBs
--		 * using a contigious buffer
--		 */
--		sg_init_table(&se_cmd->t_tasks_sg_bounce, 1);
--		sg_set_buf(&se_cmd->t_tasks_sg_bounce,
--			se_cmd->t_task_buf, se_cmd->data_length);
--
--		cmd->sg_cnt = 1;
--		cmd->sg = &se_cmd->t_tasks_sg_bounce;
- 	} else {
- 		cmd->sg_cnt = 0;
- 		cmd->sg = NULL;
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 464ecd2..91a1d93 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -109,7 +109,6 @@ enum se_cmd_flags_table {
- 	SCF_EMULATED_TASK_SENSE		= 0x00000004,
- 	SCF_SCSI_DATA_SG_IO_CDB		= 0x00000008,
- 	SCF_SCSI_CONTROL_SG_IO_CDB	= 0x00000010,
--	SCF_SCSI_CONTROL_NONSG_IO_CDB	= 0x00000020,
- 	SCF_SCSI_NON_DATA_CDB		= 0x00000040,
- 	SCF_SCSI_CDB_EXCEPTION		= 0x00000080,
- 	SCF_SCSI_RESERVATION_CONFLICT	= 0x00000100,
-@@ -516,8 +515,7 @@ struct se_cmd {
- 	struct completion	transport_lun_fe_stop_comp;
- 	struct completion	transport_lun_stop_comp;
- 	struct scatterlist	*t_tasks_sg_chained;
--	struct scatterlist	t_tasks_sg_bounce;
--	void			*t_task_buf;
-+
+ 	sess = cmd->sess;
+ 	if (!sess) {
+-		printk(KERN_ERR "Unable to locate struct qla_tgt_sess from qla_tgt_cmd\n");
++		pr_err("Unable to locate struct qla_tgt_sess from qla_tgt_cmd\n");
+ 		return -EINVAL;
+ 	}
+ 
+ 	se_sess = sess->se_sess;
+ 	if (!se_sess) {
+-		printk(KERN_ERR "Unable to locate active struct se_session\n");
++		pr_err("Unable to locate active struct se_session\n");
+ 		return -EINVAL;
+ 	}
+ 	se_tpg = se_sess->se_tpg;
+@@ -756,7 +756,7 @@ int tcm_qla2xxx_queue_tm_rsp(struct se_cmd *se_cmd)
+ 	struct qla_tgt_mgmt_cmd *mcmd = container_of(se_cmd,
+ 				struct qla_tgt_mgmt_cmd, se_cmd);
+ 
+-	printk("queue_tm_rsp: mcmd: %p func: 0x%02x response: 0x%02x\n",
++	pr_debug("queue_tm_rsp: mcmd: %p func: 0x%02x response: 0x%02x\n",
+ 			mcmd, se_tmr->function, se_tmr->response);
  	/*
- 	 * Used for pre-registered fabric SGL passthrough WRITE and READ
- 	 * with the special SCF_PASSTHROUGH_CONTIG_TO_SG case for TCM_Loop
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 2aae764..7d10fb5 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -163,6 +163,8 @@ extern void transport_init_se_cmd(struct se_cmd *,
- 					struct target_core_fabric_ops *,
- 					struct se_session *, u32, int, int,
- 					unsigned char *);
-+void *transport_kmap_first_data_page(struct se_cmd *cmd);
-+void transport_kunmap_first_data_page(struct se_cmd *cmd);
- extern void transport_free_se_cmd(struct se_cmd *);
- extern int transport_generic_allocate_tasks(struct se_cmd *, unsigned char *);
- extern int transport_generic_handle_cdb(struct se_cmd *);
-@@ -235,10 +237,6 @@ struct se_subsystem_api {
- 	 */
- 	int (*cdb_none)(struct se_task *);
+ 	 * Do translation between TCM TM response codes and
+diff --git a/drivers/target/tcm_vhost/tcm_vhost_configfs.c b/drivers/target/tcm_vhost/tcm_vhost_configfs.c
+index 6ef5cf0..2230dc3 100644
+--- a/drivers/target/tcm_vhost/tcm_vhost_configfs.c
++++ b/drivers/target/tcm_vhost/tcm_vhost_configfs.c
+@@ -153,7 +153,7 @@ static int tcm_vhost_make_nexus(
+ 	mutex_lock(&tv_tpg->tv_tpg_mutex);
+ 	if (tv_tpg->tpg_nexus) {
+ 		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+-		printk(KERN_INFO "tv_tpg->tpg_nexus already exists\n");
++		pr_debug("tv_tpg->tpg_nexus already exists\n");
+ 		return -EEXIST;
+ 	}
+ 	se_tpg = &tv_tpg->se_tpg;
+@@ -161,7 +161,7 @@ static int tcm_vhost_make_nexus(
+ 	tv_nexus = kzalloc(sizeof(struct tcm_vhost_nexus), GFP_KERNEL);
+ 	if (!tv_nexus) {
+ 		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+-		printk(KERN_ERR "Unable to allocate struct tcm_vhost_nexus\n");
++		pr_err("Unable to allocate struct tcm_vhost_nexus\n");
+ 		return -ENOMEM;
+ 	}
  	/*
--	 * For SCF_SCSI_CONTROL_NONSG_IO_CDB
--	 */
--	int (*map_task_non_SG)(struct se_task *);
--	/*
- 	 * For SCF_SCSI_DATA_SG_IO_CDB and SCF_SCSI_CONTROL_SG_IO_CDB
+@@ -182,7 +182,7 @@ static int tcm_vhost_make_nexus(
+ 				se_tpg, (unsigned char *)name);
+ 	if (!tv_nexus->tvn_se_sess->se_node_acl) {
+ 		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+-		printk(KERN_INFO "core_tpg_check_initiator_node_acl() failed"
++		pr_debug("core_tpg_check_initiator_node_acl() failed"
+ 				" for %s\n", name);
+ 		transport_free_session(tv_nexus->tvn_se_sess);
+ 		kfree(tv_nexus);
+@@ -221,20 +221,20 @@ static int tcm_vhost_drop_nexus(
+ 
+ 	if (atomic_read(&tpg->tv_tpg_port_count)) {
+ 		mutex_unlock(&tpg->tv_tpg_mutex);
+-		printk(KERN_ERR "Unable to remove TCM_vHost I_T Nexus with"
++		pr_err("Unable to remove TCM_vHost I_T Nexus with"
+ 			" active TPG port count: %d\n",
+ 			atomic_read(&tpg->tv_tpg_port_count));
+ 		return -EPERM;
+ 	}
+ 
+ 	if (atomic_read(&tpg->tv_tpg_vhost_count)) {
+-		printk(KERN_ERR "Unable to remove TCM_vHost I_T Nexus with"
++		pr_err("Unable to remove TCM_vHost I_T Nexus with"
+ 			" active TPG vhost count: %d\n",
+ 			atomic_read(&tpg->tv_tpg_vhost_count));
+ 		return -EPERM;
+ 	}
+ 
+-	printk(KERN_INFO "TCM_vHost_ConfigFS: Removing I_T Nexus to emulated"
++	pr_debug("TCM_vHost_ConfigFS: Removing I_T Nexus to emulated"
+ 		" %s Initiator Port: %s\n", tcm_vhost_dump_proto_id(tpg->tport),
+ 		tv_nexus->tvn_se_sess->se_node_acl->initiatorname);
+ 	/*
+@@ -293,7 +293,7 @@ static ssize_t tcm_vhost_tpg_store_nexus(
+ 	 * tcm_vhost_make_nexus().
  	 */
- 	int (*map_task_SG)(struct se_task *);
+ 	if (strlen(page) > TCM_VHOST_NAMELEN) {
+-		printk(KERN_ERR "Emulated NAA Sas Address: %s, exceeds"
++		pr_err("Emulated NAA Sas Address: %s, exceeds"
+ 				" max: %d\n", page, TCM_VHOST_NAMELEN);
+ 		return -EINVAL;
+ 	}
+@@ -302,7 +302,7 @@ static ssize_t tcm_vhost_tpg_store_nexus(
+ 	ptr = strstr(i_port, "naa.");
+ 	if (ptr) {
+ 		if (tport_wwn->tport_proto_id != SCSI_PROTOCOL_SAS) {
+-			printk(KERN_ERR "Passed SAS Initiator Port %s does not"
++			pr_err("Passed SAS Initiator Port %s does not"
+ 				" match target port protoid: %s\n", i_port,
+ 				tcm_vhost_dump_proto_id(tport_wwn));
+ 			return -EINVAL;
+@@ -313,7 +313,7 @@ static ssize_t tcm_vhost_tpg_store_nexus(
+ 	ptr = strstr(i_port, "fc.");
+ 	if (ptr) {
+ 		if (tport_wwn->tport_proto_id != SCSI_PROTOCOL_FCP) {
+-			printk(KERN_ERR "Passed FCP Initiator Port %s does not"
++			pr_err("Passed FCP Initiator Port %s does not"
+ 				" match target port protoid: %s\n", i_port,
+ 				tcm_vhost_dump_proto_id(tport_wwn));
+ 			return -EINVAL;
+@@ -324,7 +324,7 @@ static ssize_t tcm_vhost_tpg_store_nexus(
+ 	ptr = strstr(i_port, "iqn.");
+ 	if (ptr) {
+ 		if (tport_wwn->tport_proto_id != SCSI_PROTOCOL_ISCSI) {
+-			printk(KERN_ERR "Passed iSCSI Initiator Port %s does not"
++			pr_err("Passed iSCSI Initiator Port %s does not"
+ 				" match target port protoid: %s\n", i_port,
+ 				tcm_vhost_dump_proto_id(tport_wwn));
+ 			return -EINVAL;
+@@ -332,7 +332,7 @@ static ssize_t tcm_vhost_tpg_store_nexus(
+ 		port_ptr = &i_port[0];
+ 		goto check_newline;
+ 	}
+-	printk(KERN_ERR "Unable to locate prefix for emulated Initiator Port:"
++	pr_err("Unable to locate prefix for emulated Initiator Port:"
+ 			" %s\n", i_port);
+ 	return -EINVAL;
+ 	/*
+@@ -384,7 +384,7 @@ static ssize_t tcm_vhost_tpg_store_dev_index(
+ 	tv_nexus = tv_tpg->tpg_nexus;
+ 	if (!tv_nexus) {
+ 		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+-		printk(KERN_INFO "No active tcm_vhost_nexus exists for"
++		pr_debug("No active tcm_vhost_nexus exists for"
+ 				" this TPG\n");
+ 		return -ENODEV;
+ 	}
+@@ -394,7 +394,7 @@ static ssize_t tcm_vhost_tpg_store_dev_index(
+ 	if (!strncmp(page, "NULL", 4)) {
+ 		if (!tv_nexus->tvn_dev_index) {
+ 			mutex_unlock(&tv_tpg->tv_tpg_mutex);
+-			printk(KERN_INFO "No active tvn_dev_index association"
++			pr_debug("No active tvn_dev_index association"
+ 					" exists\n");
+ 			return -ENODEV;
+ 		}
+@@ -419,7 +419,7 @@ static ssize_t tcm_vhost_tpg_store_dev_index(
+ 	 */
+ 	ret = strict_strtoul(page, 0, &dev_index);
+ 	if (ret < 0) {
+-		printk(KERN_ERR "strict_strtoul() returned %d for"
++		pr_err("strict_strtoul() returned %d for"
+ 				" dev_index\n", ret);
+ 		mutex_unlock(&tv_tpg->tv_tpg_mutex);
+ 		return -EINVAL;
+@@ -468,7 +468,7 @@ static struct se_portal_group *tcm_vhost_make_tpg(
+ 
+ 	tpg = kzalloc(sizeof(struct tcm_vhost_tpg), GFP_KERNEL);
+ 	if (!(tpg)) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_vhost_tpg");
++		pr_err("Unable to allocate struct tcm_vhost_tpg");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	mutex_init(&tpg->tv_tpg_mutex);
+@@ -524,7 +524,7 @@ static struct se_wwn *tcm_vhost_make_tport(
+ 
+ 	tport = kzalloc(sizeof(struct tcm_vhost_tport), GFP_KERNEL);
+ 	if (!(tport)) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_vhost_tport");
++		pr_err("Unable to allocate struct tcm_vhost_tport");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	tport->tport_wwpn = wwpn;
+@@ -550,13 +550,13 @@ static struct se_wwn *tcm_vhost_make_tport(
+ 		goto check_len;
+ 	}
+ 
+-	printk(KERN_ERR "Unable to locate prefix for emulated Target Port:"
++	pr_err("Unable to locate prefix for emulated Target Port:"
+ 			" %s\n", name);
+ 	return ERR_PTR(-EINVAL);
+ 
+ check_len:
+ 	if (strlen(name) > TCM_VHOST_NAMELEN) {
+-		printk(KERN_ERR "Emulated %s Address: %s, exceeds"
++		pr_err("Emulated %s Address: %s, exceeds"
+ 			" max: %d\n", name, tcm_vhost_dump_proto_id(tport),
+ 			TCM_VHOST_NAMELEN);
+ 		kfree(tport);
+@@ -564,7 +564,7 @@ check_len:
+ 	}
+ 	snprintf(&tport->tport_name[0], TCM_VHOST_NAMELEN, "%s", &name[off]);
+ 
+-	printk(KERN_INFO "TCM_VHost_ConfigFS: Allocated emulated Target"
++	pr_debug("TCM_VHost_ConfigFS: Allocated emulated Target"
+ 		" %s Address: %s\n", tcm_vhost_dump_proto_id(tport), name);
+ 
+ 	return &tport->tport_wwn;
+@@ -575,7 +575,7 @@ static void tcm_vhost_drop_tport(struct se_wwn *wwn)
+ 	struct tcm_vhost_tport *tport = container_of(wwn,
+ 				struct tcm_vhost_tport, tport_wwn);
+ 
+-	printk(KERN_INFO "TCM_VHost_ConfigFS: Deallocating emulated Target"
++	pr_debug("TCM_VHost_ConfigFS: Deallocating emulated Target"
+ 		" %s Address: %s\n", tcm_vhost_dump_proto_id(tport),
+ 		config_item_name(&wwn->wwn_group.cg_item));
+ 
+@@ -654,7 +654,7 @@ static int tcm_vhost_register_configfs(void)
+ 	struct target_fabric_configfs *fabric;
+ 	int ret;
+ 
+-	printk(KERN_INFO "TCM_VHOST fabric module %s on %s/%s"
++	pr_debug("TCM_VHOST fabric module %s on %s/%s"
+ 		" on "UTS_RELEASE"\n",TCM_VHOST_VERSION, utsname()->sysname,
+ 		utsname()->machine);
+ 	/*
+@@ -662,7 +662,7 @@ static int tcm_vhost_register_configfs(void)
+ 	 */
+ 	fabric = target_fabric_configfs_init(THIS_MODULE, "vhost");
+ 	if (!(fabric)) {
+-		printk(KERN_ERR "target_fabric_configfs_init() failed\n");
++		pr_err("target_fabric_configfs_init() failed\n");
+ 		return -ENOMEM;
+ 	}
+ 	/*
+@@ -686,7 +686,7 @@ static int tcm_vhost_register_configfs(void)
+ 	 */
+ 	ret = target_fabric_configfs_register(fabric);
+ 	if (ret < 0) {
+-		printk(KERN_ERR "target_fabric_configfs_register() failed"
++		pr_err("target_fabric_configfs_register() failed"
+ 				" for TCM_VHOST\n");
+ 		return ret;
+ 	}
+@@ -694,7 +694,7 @@ static int tcm_vhost_register_configfs(void)
+ 	 * Setup our local pointer to *fabric
+ 	 */
+ 	tcm_vhost_fabric_configfs = fabric;
+-	printk(KERN_INFO "TCM_VHOST[0] - Set fabric -> tcm_vhost_fabric_configfs\n");
++	pr_debug("TCM_VHOST[0] - Set fabric -> tcm_vhost_fabric_configfs\n");
+ 	return 0;
+ };
+ 
+@@ -705,7 +705,7 @@ static void tcm_vhost_deregister_configfs(void)
+ 
+ 	target_fabric_configfs_deregister(tcm_vhost_fabric_configfs);
+ 	tcm_vhost_fabric_configfs = NULL;
+-	printk(KERN_INFO "TCM_VHOST[0] - Cleared tcm_vhost_fabric_configfs\n");
++	pr_debug("TCM_VHOST[0] - Cleared tcm_vhost_fabric_configfs\n");
+ };
+ 
+ static int __init tcm_vhost_init(void)
+diff --git a/drivers/target/tcm_vhost/tcm_vhost_fabric.c b/drivers/target/tcm_vhost/tcm_vhost_fabric.c
+index e9e0e6a..286c719 100644
+--- a/drivers/target/tcm_vhost/tcm_vhost_fabric.c
++++ b/drivers/target/tcm_vhost/tcm_vhost_fabric.c
+@@ -76,7 +76,7 @@ u8 tcm_vhost_get_fabric_proto_ident(struct se_portal_group *se_tpg)
+ 	case SCSI_PROTOCOL_ISCSI:
+ 		return iscsi_get_fabric_proto_ident(se_tpg);
+ 	default:
+-		printk(KERN_ERR "Unknown tport_proto_id: 0x%02x, using"
++		pr_err("Unknown tport_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tport->tport_proto_id);
+ 		break;
+ 	}
+@@ -127,7 +127,7 @@ u32 tcm_vhost_get_pr_transport_id(
+ 		return iscsi_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
+ 					format_code, buf);
+ 	default:
+-		printk(KERN_ERR "Unknown tport_proto_id: 0x%02x, using"
++		pr_err("Unknown tport_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tport->tport_proto_id);
+ 		break;	
+ 	}
+@@ -157,7 +157,7 @@ u32 tcm_vhost_get_pr_transport_id_len(
+ 		return iscsi_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
+ 					format_code);
+ 	default:
+-		printk(KERN_ERR "Unknown tport_proto_id: 0x%02x, using"
++		pr_err("Unknown tport_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tport->tport_proto_id);
+ 		break;
+ 	}
+@@ -187,7 +187,7 @@ char *tcm_vhost_parse_pr_out_transport_id(
+ 		return iscsi_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
+ 					port_nexus_ptr);
+ 	default:
+-		printk(KERN_ERR "Unknown tport_proto_id: 0x%02x, using"
++		pr_err("Unknown tport_proto_id: 0x%02x, using"
+ 			" SAS emulation\n", tport->tport_proto_id);
+ 		break;
+ 	}
+@@ -202,7 +202,7 @@ struct se_node_acl *tcm_vhost_alloc_fabric_acl(struct se_portal_group *se_tpg)
+ 
+ 	nacl = kzalloc(sizeof(struct tcm_vhost_nacl), GFP_KERNEL);
+ 	if (!(nacl)) {
+-		printk(KERN_ERR "Unable to alocate struct tcm_vhost_nacl\n");
++		pr_err("Unable to alocate struct tcm_vhost_nacl\n");
+ 		return NULL;
+ 	}
+ 
+diff --git a/drivers/target/tcm_vhost/tcm_vhost_scsi.c b/drivers/target/tcm_vhost/tcm_vhost_scsi.c
+index 45e4dd7..691c45b 100644
+--- a/drivers/target/tcm_vhost/tcm_vhost_scsi.c
++++ b/drivers/target/tcm_vhost/tcm_vhost_scsi.c
+@@ -52,14 +52,14 @@ static struct tcm_vhost_cmd *vhost_scsi_allocate_cmd(
+ 
+ 	tv_nexus = tv_tpg->tpg_nexus;
+ 	if (!tv_nexus) {
+-		printk(KERN_ERR "Unable to locate active struct tcm_vhost_nexus\n");
++		pr_err("Unable to locate active struct tcm_vhost_nexus\n");
+ 		return ERR_PTR(-EIO);
+ 	}
+ 	se_sess = tv_nexus->tvn_se_sess;
+ 
+ 	tv_cmd = kzalloc(sizeof(struct tcm_vhost_cmd), GFP_ATOMIC);
+ 	if (!tv_cmd) {
+-		printk(KERN_ERR "Unable to allocate struct tcm_vhost_cmd\n");
++		pr_err("Unable to allocate struct tcm_vhost_cmd\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+ 	tv_cmd->tvc_tag = v_header->tag;
+@@ -144,7 +144,7 @@ static void vhost_scsi_handle_vq(struct vhost_scsi *vs)
+ 		 * hardcoded max for t
+ 		 */
+ 		if (scsi_command_size(cdb) > TCM_VHOST_MAX_CDB_SIZE) {
+-			printk(KERN_ERR "Received SCSI CDB with command_size:"
++			pr_err("Received SCSI CDB with command_size:"
+ 				" %d that exceeds SCSI_MAX_VARLEN_CDB_SIZE: %d\n",
+ 				scsi_command_size(cdb), TCM_VHOST_MAX_CDB_SIZE);
+ 			break;
+@@ -294,7 +294,7 @@ static int vhost_scsi_clear_endpoint(
+ 	if (strcmp(tv_tport->tport_name, t->vhost_wwpn) ||
+ 	    (tv_tpg->tport_tpgt != t->vhost_tpgt)) {
+ 		mutex_unlock(&vq->mutex);
+-		printk(KERN_WARNING "tv_tport->tport_name: %s, tv_tpg->tport_tpgt: %hu"
++		pr_warn("tv_tport->tport_name: %s, tv_tpg->tport_tpgt: %hu"
+ 			" does not match t->vhost_wwpn: %s, t->vhost_tpgt: %hu\n",
+ 			tv_tport->tport_name, tv_tpg->tport_tpgt,
+ 			t->vhost_wwpn, t->vhost_tpgt);
 -- 
 1.7.1
 
