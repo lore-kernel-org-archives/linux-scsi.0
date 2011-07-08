@@ -1,35 +1,68 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] hpsa: do not attempt to read from a write-only register
-Date: Fri, 08 Jul 2011 14:59:26 -0500
-Message-ID: <20110708195926.3623.30375.stgit@beardog.cce.hp.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [RFC PATCH 0/4] Persistent device name using alias name
+Date: Fri, 8 Jul 2011 12:58:56 -0700
+Message-ID: <20110708195856.GA14592@kroah.com>
+References: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
+ <20110708194501.GU6418@nb.net.home>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110708194501.GU6418@nb.net.home>
 Sender: linux-kernel-owner@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+To: Karel Zak <kzak@redhat.com>
+Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On Fri, Jul 08, 2011 at 09:45:01PM +0200, Karel Zak wrote:
+> On Fri, Jul 08, 2011 at 05:45:47PM +0900, Nao Nishijima wrote:
+> > This patch series provides an "alias name" of the disk into kernel and procfs
+> > messages. The user can assign a preferred name to an alias name of the device.
+> > 
+> > Based on previous discussion (*), I changed patches as follows
+> > - This is "alias name"
+> > - An "alias name" is stored in gendisk struct
+> > - Add document to Documentation/ABI/testing/sysfs-block
+> > - When the user changes an "alias name", kernel notifies udev
+> > 
+> > (*) http://marc.info/?l=linux-scsi&m=130812625531219&w=2
+> > 
+> 
+> [...]
+> 
+> > [localhost]# cat /proc/partitions
+> > major minor  #blocks  name
+> > 
+> >    8        0   12582912 foo
+> >    8        1   12582878 foo1
+> >    8        0    8388608 sdb
+> >    8        1     512000 sdb1
+> >    8        2    7875584 sdb2
+> 
+>  If there is not /dev/foo and /sys/block/foo then the patch introduces
+>  a REGRESSION. 
+>  
+>  The names from /proc/partitions are used in many applications
+>  (libblkid, fdisk, ...) for many many years. The applications will not
+>  work as expected.
+> 
+>  It's crazy to assume that all the applications will be improved to
+>  translate the "pretty name" from /proc/partitions by /sys/block/<maj>:<min>.
+> 
+>  Note, it's pretty naive to expect that people will use the pretty
+>  names for printk()/dmesg only. I'm absolutely sure that it's will be
+>  expected (by end-users) in /etc/fstab, mount, df, fdisk, ...
+> 
+>  It's will be necessary to modify all these utils. 
 
-Most smartarrays tolerate it, but a few new ones don't.
+And it would be even easier, to just modify the utilities in the first
+place to handle the symlink names in /dev/disk that are there today, and
+leave the kernel alone.
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/scsi/hpsa.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+With the above information you provided, I don't see how we can accept
+this patch at all as it will break existing userspace utilities which is
+not allowed.
 
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 6d8dcd4..7f53cea 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -214,7 +214,7 @@ static void SA5_submit_command(struct ctlr_info *h,
- 	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
- 		c->Header.Tag.lower);
- 	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
--	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
-+	(void) readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
- 	h->commands_outstanding++;
- 	if (h->commands_outstanding > h->max_outstanding)
- 		h->max_outstanding = h->commands_outstanding;
+thanks,
+
+greg k-h
