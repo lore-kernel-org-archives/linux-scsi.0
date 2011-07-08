@@ -1,30 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Fri, 8 Jul 2011 15:41:13 +0200
-Message-ID: <20110708154113.3347eef0@stein>
-References: <1309609482.2554.8.camel@mulgrave>
-	<Pine.LNX.4.44L0.1107021320180.14703-100000@netrider.rowland.org>
-	<20110703223757.0e2b5ee0@stein>
-	<20110708153742.17121fa8@stein>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [RFC PATCH 0/4] Persistent device name using alias name
+Date: Fri, 8 Jul 2011 07:54:08 -0700
+Message-ID: <20110708145408.GA2283@kroah.com>
+References: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110708153742.17121fa8@stein>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Alan Stern <stern@rowland.harvard.edu>, axboe@kernel.dk, James Bottomley <James.Bottomley@HansenPartnership.com>, Andi Kleen <andi@firstfloor.org>, Dave Jones <davej@redhat.com>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from out5.smtp.messagingengine.com ([66.111.4.29]:34141 "EHLO
+	out5.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752129Ab1GHO5m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2011 10:57:42 -0400
+Content-Disposition: inline
+In-Reply-To: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de
 
-On Jul 08 Stefan Richter wrote:
-> But today I did get the following crash on 3.0-rc6-71-g4dd1b49 x86-64 plus
-> Alan's "USB: additional regression fix for device removal" when I powered
-> down an USB hub with an empty USB card reader attached (or when I powered
-> it up, impossible for me to say):
+On Fri, Jul 08, 2011 at 05:45:47PM +0900, Nao Nishijima wrote:
+> Hi,
+> 
+> This patch series provides an "alias name" of the disk into kernel and procfs
+> messages. The user can assign a preferred name to an alias name of the device.
+> 
+> Based on previous discussion (*), I changed patches as follows
+> - This is "alias name"
+> - An "alias name" is stored in gendisk struct
+> - Add document to Documentation/ABI/testing/sysfs-block
+> - When the user changes an "alias name", kernel notifies udev
+> 
+> (*) http://marc.info/?l=linux-scsi&m=130812625531219&w=2
 
-Judging from the missing hours in an application log, it happened at
-power down of the hub = at removal of the card reader.
--- 
-Stefan Richter
--=====-==-== -=== -=---
-http://arcgraph.de/sr/
+I don't like it and I don't think it will really solve the root problem
+you are trying to address, but as the patches don't touch any code I
+maintain, there's not much I can do to object to it.
+
+greg k-h
