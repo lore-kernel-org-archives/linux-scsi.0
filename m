@@ -1,62 +1,86 @@
-From: Karel Zak <kzak@redhat.com>
-Subject: Re: [RFC PATCH 0/4] Persistent device name using alias name
-Date: Fri, 8 Jul 2011 21:45:01 +0200
-Message-ID: <20110708194501.GU6418@nb.net.home>
-References: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 03/20] target: Make all control CDBs scatter-gather
+Date: Fri, 8 Jul 2011 15:57:55 -0400
+Message-ID: <20110708195755.GA12288@infradead.org>
+References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
+ <1310078011-15504-4-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:32862
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752655Ab1GHT54 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jul 2011 15:57:56 -0400
 Content-Disposition: inline
-In-Reply-To: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, greg@kroah.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de
+In-Reply-To: <1310078011-15504-4-git-send-email-agrover@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Jul 08, 2011 at 05:45:47PM +0900, Nao Nishijima wrote:
-> This patch series provides an "alias name" of the disk into kernel and procfs
-> messages. The user can assign a preferred name to an alias name of the device.
-> 
-> Based on previous discussion (*), I changed patches as follows
-> - This is "alias name"
-> - An "alias name" is stored in gendisk struct
-> - Add document to Documentation/ABI/testing/sysfs-block
-> - When the user changes an "alias name", kernel notifies udev
-> 
-> (*) http://marc.info/?l=linux-scsi&m=130812625531219&w=2
-> 
+> @@ -2972,19 +2955,6 @@ static int transport_get_sense_data(struct se_cmd *cmd)
+>  	return -1;
+>  }
+>  
+> -static int transport_allocate_resources(struct se_cmd *cmd)
+> -{
+> -	u32 length = cmd->data_length;
+> -
+> -	if ((cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
+> -	    (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB))
+> -		return transport_generic_get_mem(cmd, length);
+> -	else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB)
+> -		return transport_generic_allocate_buf(cmd, length);
+> -	else
+> -		return 0;
+> -}
+> -
+>  static int
+>  transport_handle_reservation_conflict(struct se_cmd *cmd)
+>  {
 
-[...]
 
-> [localhost]# cat /proc/partitions
-> major minor  #blocks  name
-> 
->    8        0   12582912 foo
->    8        1   12582878 foo1
->    8        0    8388608 sdb
->    8        1     512000 sdb1
->    8        2    7875584 sdb2
+> @@ -4892,7 +4854,7 @@ int transport_generic_new_cmd(struct se_cmd *cmd)
+>  	 * cmd->t_mem_list of struct se_mem->se_page
+>  	 */
+>  	if (!(cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC)) {
+> -		ret = transport_allocate_resources(cmd);
+> +		ret = transport_generic_get_mem(cmd);
+>  		if (ret < 0)
+>  			return ret;
+>  	}
 
- If there is not /dev/foo and /sys/block/foo then the patch introduces
- a REGRESSION. 
- 
- The names from /proc/partitions are used in many applications
- (libblkid, fdisk, ...) for many many years. The applications will not
- work as expected.
+Before transport_allocate_resources used to be a no-op for
+SCF_SCSI_NON_DATA_CDB cdbs, which got lots with your patch.  Given that
+they should have a zero length your patch should be fine, but such
+subtilities would be nice to be documented in the changelog.
 
- It's crazy to assume that all the applications will be improved to
- translate the "pretty name" from /proc/partitions by /sys/block/<maj>:<min>.
+>  			 * REQUEST, and the additional sense code set to INVALID
+>  			 * FIELD IN PARAMETER LIST.
+>  			 */
+> +			transport_kunmap_first_data_page(cmd);
+>  			return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
 
- Note, it's pretty naive to expect that people will use the pretty
- names for printk()/dmesg only. I'm absolutely sure that it's will be
- expected (by end-users) in /etc/fstab, mount, df, fdisk, ...
+I would have preferred to switch to goto based unwinding from the start.
+But it's not a major issue, so if no one else complains I'm fine with it
+beeing fixed up in a later patch.
 
- It's will be necessary to modify all these utils. 
+> +EXPORT_SYMBOL(transport_kmap_first_data_page);
 
- The patch is opening Pandora's box :-(
+> +EXPORT_SYMBOL(transport_kunmap_first_data_page);
 
-    Karel
-    
--- 
- Karel Zak  <kzak@redhat.com>
- http://karelzak.blogspot.com
+Any reason these are exported?
+
+> --- a/include/target/target_core_base.h
+> +++ b/include/target/target_core_base.h
+> @@ -109,7 +109,6 @@ enum se_cmd_flags_table {
+>  	SCF_EMULATED_TASK_SENSE		= 0x00000004,
+>  	SCF_SCSI_DATA_SG_IO_CDB		= 0x00000008,
+>  	SCF_SCSI_CONTROL_SG_IO_CDB	= 0x00000010,
+> -	SCF_SCSI_CONTROL_NONSG_IO_CDB	= 0x00000020,
+>  	SCF_SCSI_NON_DATA_CDB		= 0x00000040,
+>  	SCF_SCSI_CDB_EXCEPTION		= 0x00000080,
+>  	SCF_SCSI_RESERVATION_CONFLICT	= 0x00000100,
+
+You should be able to kill SCF_PASSTHROUGH_CONTIG_TO_SG as well.
+
