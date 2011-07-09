@@ -1,118 +1,413 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: [0/20] target: Patches for June 28 v3
-Date: Fri,  8 Jul 2011 18:18:29 -0700
-Message-ID: <1310174329-22228-1-git-send-email-agrover@redhat.com>
+Subject: [PATCH 05/20] target: Remove direct ramdisk code
+Date: Fri,  8 Jul 2011 18:18:34 -0700
+Message-ID: <1310174329-22228-6-git-send-email-agrover@redhat.com>
 References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16750 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54486 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750931Ab1GIBS4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jul 2011 21:18:56 -0400
+	id S1750931Ab1GIBS6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2011 21:18:58 -0400
 In-Reply-To: <1310078011-15504-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org
 
-Hi all,
+Instead of converting rd_dr to be se_mem-free, just remove it.
 
-Another round of patches based on hch's comments. Squashed some fixes into
-original patches. Last patch is new.
+This also lets us remove hooks like do_se_mem_map, that are in the common
+path but only implemented by rd_dr.
 
-Thanks, and have a great weekend!
+Signed-off-by: Andy Grover <agrover@redhat.com>
+---
+ drivers/target/target_core_device.c |    2 +-
+ drivers/target/target_core_rd.c     |  309 -----------------------------------
+ 2 files changed, 1 insertions(+), 310 deletions(-)
 
-Regards -- Andy
-
-The following changes since commit 2a940ce682163cd41670243c3c10b47dbb206cfd:
-
-  tcm_fc: Fix transport_lookup_tmr_lun failure usage (2011-06-22 19:51:27 -0700)
-
-are available in the git repository at:
-  git://fedorapeople.org/home/fedora/grover/public_git/linux-2.6.git for-nab
-
-Andy Grover (20):
-      target: Remove ifdeffed code in t_g_process_write
-      target: Pass 2nd param of transport_split_cdb by value
-      target: Make all control CDBs scatter-gather
-      target: Enforce 1 page max for control cdb buffer sizes
-      target: Remove direct ramdisk code
-      target: Eliminate usage of struct se_mem
-      target: Rename task_sg_num to task_sg_nents
-      target: Remove custom debug macros for pr_debug. Use pr_err().
-      target: Remove custom debug macros in non-iscsi fabrics
-      target/iscsi: Remove iscsi_target_debug.h and usage of TRACE() & printk()
-      target/iscsi: Remove SE_CMD macro
-      target: Set WSNZ=1 in block limits VPD. Abort if WRITE_SAME sectors = 0
-      target: Remove transport do_se_mem_map callback
-      target: Further simplify transport_free_pages
-      target: Redo task allocation return value handling
-      target/core: Remove extra parentheses
-      target: Extraneous paren removal in tcm_vhost and tcm_qla2xxx
-      target/iscsi: Remove unneeded parens in conditional statements
-      target/iscsi: Simplify two small bits
-      target: change alloc_task call to take *cdb, not *cmd
-
- drivers/infiniband/ulp/srpt/ib_srpt.c             |    7 -
- drivers/scsi/qla2xxx/qla_target.c                 |    3 -
- drivers/target/iscsi/Kconfig                      |    9 -
- drivers/target/iscsi/iscsi_target.c               |  493 +++----
- drivers/target/iscsi/iscsi_target_auth.c          |   84 +-
- drivers/target/iscsi/iscsi_target_configfs.c      |   76 +-
- drivers/target/iscsi/iscsi_target_core.h          |    3 -
- drivers/target/iscsi/iscsi_target_datain_values.c |   13 +-
- drivers/target/iscsi/iscsi_target_debug.h         |  113 --
- drivers/target/iscsi/iscsi_target_device.c        |    7 +-
- drivers/target/iscsi/iscsi_target_erl0.c          |   71 +-
- drivers/target/iscsi/iscsi_target_erl1.c          |   67 +-
- drivers/target/iscsi/iscsi_target_erl2.c          |   86 +-
- drivers/target/iscsi/iscsi_target_login.c         |  115 +-
- drivers/target/iscsi/iscsi_target_nego.c          |   89 +-
- drivers/target/iscsi/iscsi_target_nodeattrib.c    |   41 +-
- drivers/target/iscsi/iscsi_target_parameters.c    |  379 +++---
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |   53 +-
- drivers/target/iscsi/iscsi_target_tmr.c           |   63 +-
- drivers/target/iscsi/iscsi_target_tpg.c           |   77 +-
- drivers/target/iscsi/iscsi_target_tq.c            |   43 +-
- drivers/target/iscsi/iscsi_target_util.c          |  145 +-
- drivers/target/loopback/Kconfig                   |    6 -
- drivers/target/loopback/tcm_loop.c                |   99 +-
- drivers/target/loopback/tcm_loop.h                |    6 -
- drivers/target/target_core_alua.c                 |  210 ++--
- drivers/target/target_core_cdb.c                  |  115 +-
- drivers/target/target_core_configfs.c             |  470 +++---
- drivers/target/target_core_device.c               |  219 ++--
- drivers/target/target_core_fabric_configfs.c      |  110 +-
- drivers/target/target_core_fabric_lib.c           |   10 +-
- drivers/target/target_core_file.c                 |   98 +-
- drivers/target/target_core_file.h                 |    2 -
- drivers/target/target_core_hba.c                  |   12 +-
- drivers/target/target_core_iblock.c               |  120 +-
- drivers/target/target_core_iblock.h               |    1 -
- drivers/target/target_core_pr.c                   |  514 ++++---
- drivers/target/target_core_pscsi.c                |  217 +--
- drivers/target/target_core_pscsi.h                |    3 +-
- drivers/target/target_core_rd.c                   |  453 +-----
- drivers/target/target_core_rd.h                   |    2 -
- drivers/target/target_core_scdb.c                 |   20 +-
- drivers/target/target_core_scdb.h                 |   10 +-
- drivers/target/target_core_stgt.c                 |   62 +-
- drivers/target/target_core_tmr.c                  |   61 +-
- drivers/target/target_core_tpg.c                  |   75 +-
- drivers/target/target_core_transport.c            | 1728 ++++++---------------
- drivers/target/target_core_ua.c                   |   30 +-
- drivers/target/tcm_fc/tcm_fc.h                    |   24 -
- drivers/target/tcm_fc/tfc_cmd.c                   |   57 +-
- drivers/target/tcm_fc/tfc_conf.c                  |   33 +-
- drivers/target/tcm_fc/tfc_io.c                    |  125 +-
- drivers/target/tcm_fc/tfc_sess.c                  |   18 +-
- drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h     |    6 -
- drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c |  216 ++--
- drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c   |   43 +-
- drivers/target/tcm_vhost/tcm_vhost_configfs.c     |   62 +-
- drivers/target/tcm_vhost/tcm_vhost_fabric.c       |   18 +-
- drivers/target/tcm_vhost/tcm_vhost_scsi.c         |   15 +-
- include/target/target_core_base.h                 |   20 +-
- include/target/target_core_transport.h            |   13 +-
- 61 files changed, 2980 insertions(+), 4360 deletions(-)
- delete mode 100644 drivers/target/iscsi/iscsi_target_debug.h
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index fcd312b..875d64f 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1563,7 +1563,7 @@ int core_dev_setup_virtual_lun0(void)
+ 	char buf[16];
+ 	int ret;
+ 
+-	hba = core_alloc_hba("rd_dr", 0, HBA_FLAGS_INTERNAL_USE);
++	hba = core_alloc_hba("rd_mcp", 0, HBA_FLAGS_INTERNAL_USE);
+ 	if (IS_ERR(hba))
+ 		return PTR_ERR(hba);
+ 
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 4f9416d..3fe3562 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -44,7 +44,6 @@
+ 
+ #include "target_core_rd.h"
+ 
+-static struct se_subsystem_api rd_dr_template;
+ static struct se_subsystem_api rd_mcp_template;
+ 
+ /* #define DEBUG_RAMDISK_MCP */
+@@ -226,11 +225,6 @@ static void *rd_allocate_virtdevice(
+ 	return rd_dev;
+ }
+ 
+-static void *rd_DIRECT_allocate_virtdevice(struct se_hba *hba, const char *name)
+-{
+-	return rd_allocate_virtdevice(hba, name, 1);
+-}
+-
+ static void *rd_MEMCPY_allocate_virtdevice(struct se_hba *hba, const char *name)
+ {
+ 	return rd_allocate_virtdevice(hba, name, 0);
+@@ -270,7 +264,6 @@ static struct se_device *rd_create_virtdevice(
+ 	dev_limits.queue_depth = RD_DEVICE_QUEUE_DEPTH;
+ 
+ 	dev = transport_add_device_to_core_hba(hba,
+-			(rd_dev->rd_direct) ? &rd_dr_template :
+ 			&rd_mcp_template, se_dev, dev_flags, rd_dev,
+ 			&dev_limits, prod, rev);
+ 	if (!(dev))
+@@ -293,14 +286,6 @@ fail:
+ 	return ERR_PTR(ret);
+ }
+ 
+-static struct se_device *rd_DIRECT_create_virtdevice(
+-	struct se_hba *hba,
+-	struct se_subsystem_dev *se_dev,
+-	void *p)
+-{
+-	return rd_create_virtdevice(hba, se_dev, p, 1);
+-}
+-
+ static struct se_device *rd_MEMCPY_create_virtdevice(
+ 	struct se_hba *hba,
+ 	struct se_subsystem_dev *se_dev,
+@@ -641,273 +626,6 @@ static int rd_MEMCPY_do_task(struct se_task *task)
+ 	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
+ }
+ 
+-/*	rd_DIRECT_with_offset():
+- *
+- *
+- */
+-static int rd_DIRECT_with_offset(
+-	struct se_task *task,
+-	struct list_head *se_mem_list,
+-	u32 *se_mem_cnt,
+-	u32 *task_offset)
+-{
+-	struct rd_request *req = RD_REQ(task);
+-	struct rd_dev *dev = req->rd_dev;
+-	struct rd_dev_sg_table *table;
+-	struct se_mem *se_mem;
+-	struct scatterlist *sg_s;
+-	u32 j = 0, set_offset = 1;
+-	u32 get_next_table = 0, offset_length, table_sg_end;
+-
+-	table = rd_get_sg_table(dev, req->rd_page);
+-	if (!(table))
+-		return -EINVAL;
+-
+-	table_sg_end = (table->page_end_offset - req->rd_page);
+-	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
+-#ifdef DEBUG_RAMDISK_DR
+-	printk(KERN_INFO "%s DIRECT LBA: %llu, Size: %u Page: %u, Offset: %u\n",
+-		(task->task_data_direction == DMA_TO_DEVICE) ?
+-			"Write" : "Read",
+-		task->task_lba, req->rd_size, req->rd_page, req->rd_offset);
+-#endif
+-	while (req->rd_size) {
+-		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
+-		if (!(se_mem)) {
+-			printk(KERN_ERR "Unable to allocate struct se_mem\n");
+-			return -ENOMEM;
+-		}
+-		INIT_LIST_HEAD(&se_mem->se_list);
+-
+-		if (set_offset) {
+-			offset_length = sg_s[j].length - req->rd_offset;
+-			if (offset_length > req->rd_size)
+-				offset_length = req->rd_size;
+-
+-			se_mem->se_page = sg_page(&sg_s[j++]);
+-			se_mem->se_off = req->rd_offset;
+-			se_mem->se_len = offset_length;
+-
+-			set_offset = 0;
+-			get_next_table = (j > table_sg_end);
+-			goto check_eot;
+-		}
+-
+-		offset_length = (req->rd_size < req->rd_offset) ?
+-			req->rd_size : req->rd_offset;
+-
+-		se_mem->se_page = sg_page(&sg_s[j]);
+-		se_mem->se_len = offset_length;
+-
+-		set_offset = 1;
+-
+-check_eot:
+-#ifdef DEBUG_RAMDISK_DR
+-		printk(KERN_INFO "page: %u, size: %u, offset_length: %u, j: %u"
+-			" se_mem: %p, se_page: %p se_off: %u se_len: %u\n",
+-			req->rd_page, req->rd_size, offset_length, j, se_mem,
+-			se_mem->se_page, se_mem->se_off, se_mem->se_len);
+-#endif
+-		list_add_tail(&se_mem->se_list, se_mem_list);
+-		(*se_mem_cnt)++;
+-
+-		req->rd_size -= offset_length;
+-		if (!(req->rd_size))
+-			goto out;
+-
+-		if (!set_offset && !get_next_table)
+-			continue;
+-
+-		if (++req->rd_page <= table->page_end_offset) {
+-#ifdef DEBUG_RAMDISK_DR
+-			printk(KERN_INFO "page: %u in same page table\n",
+-					req->rd_page);
+-#endif
+-			continue;
+-		}
+-#ifdef DEBUG_RAMDISK_DR
+-		printk(KERN_INFO "getting new page table for page: %u\n",
+-				req->rd_page);
+-#endif
+-		table = rd_get_sg_table(dev, req->rd_page);
+-		if (!(table))
+-			return -EINVAL;
+-
+-		sg_s = &table->sg_table[j = 0];
+-	}
+-
+-out:
+-	task->task_se_cmd->t_tasks_se_num += *se_mem_cnt;
+-#ifdef DEBUG_RAMDISK_DR
+-	printk(KERN_INFO "RD_DR - Allocated %u struct se_mem segments for task\n",
+-			*se_mem_cnt);
+-#endif
+-	return 0;
+-}
+-
+-/*	rd_DIRECT_without_offset():
+- *
+- *
+- */
+-static int rd_DIRECT_without_offset(
+-	struct se_task *task,
+-	struct list_head *se_mem_list,
+-	u32 *se_mem_cnt,
+-	u32 *task_offset)
+-{
+-	struct rd_request *req = RD_REQ(task);
+-	struct rd_dev *dev = req->rd_dev;
+-	struct rd_dev_sg_table *table;
+-	struct se_mem *se_mem;
+-	struct scatterlist *sg_s;
+-	u32 length, j = 0;
+-
+-	table = rd_get_sg_table(dev, req->rd_page);
+-	if (!(table))
+-		return -EINVAL;
+-
+-	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
+-#ifdef DEBUG_RAMDISK_DR
+-	printk(KERN_INFO "%s DIRECT LBA: %llu, Size: %u, Page: %u\n",
+-		(task->task_data_direction == DMA_TO_DEVICE) ?
+-			"Write" : "Read",
+-		task->task_lba, req->rd_size, req->rd_page);
+-#endif
+-	while (req->rd_size) {
+-		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
+-		if (!(se_mem)) {
+-			printk(KERN_ERR "Unable to allocate struct se_mem\n");
+-			return -ENOMEM;
+-		}
+-		INIT_LIST_HEAD(&se_mem->se_list);
+-
+-		length = (req->rd_size < sg_s[j].length) ?
+-			req->rd_size : sg_s[j].length;
+-
+-		se_mem->se_page = sg_page(&sg_s[j++]);
+-		se_mem->se_len = length;
+-
+-#ifdef DEBUG_RAMDISK_DR
+-		printk(KERN_INFO "page: %u, size: %u, j: %u se_mem: %p,"
+-			" se_page: %p se_off: %u se_len: %u\n", req->rd_page,
+-			req->rd_size, j, se_mem, se_mem->se_page,
+-			se_mem->se_off, se_mem->se_len);
+-#endif
+-		list_add_tail(&se_mem->se_list, se_mem_list);
+-		(*se_mem_cnt)++;
+-
+-		req->rd_size -= length;
+-		if (!(req->rd_size))
+-			goto out;
+-
+-		if (++req->rd_page <= table->page_end_offset) {
+-#ifdef DEBUG_RAMDISK_DR
+-			printk("page: %u in same page table\n",
+-				req->rd_page);
+-#endif
+-			continue;
+-		}
+-#ifdef DEBUG_RAMDISK_DR
+-		printk(KERN_INFO "getting new page table for page: %u\n",
+-				req->rd_page);
+-#endif
+-		table = rd_get_sg_table(dev, req->rd_page);
+-		if (!(table))
+-			return -EINVAL;
+-
+-		sg_s = &table->sg_table[j = 0];
+-	}
+-
+-out:
+-	task->task_se_cmd->t_tasks_se_num += *se_mem_cnt;
+-#ifdef DEBUG_RAMDISK_DR
+-	printk(KERN_INFO "RD_DR - Allocated %u struct se_mem segments for task\n",
+-			*se_mem_cnt);
+-#endif
+-	return 0;
+-}
+-
+-/*	rd_DIRECT_do_se_mem_map():
+- *
+- *
+- */
+-static int rd_DIRECT_do_se_mem_map(
+-	struct se_task *task,
+-	struct list_head *se_mem_list,
+-	void *in_mem,
+-	struct se_mem *in_se_mem,
+-	struct se_mem **out_se_mem,
+-	u32 *se_mem_cnt,
+-	u32 *task_offset_in)
+-{
+-	struct se_cmd *cmd = task->task_se_cmd;
+-	struct rd_request *req = RD_REQ(task);
+-	u32 task_offset = *task_offset_in;
+-	unsigned long long lba;
+-	int ret;
+-	int block_size = task->se_dev->se_sub_dev->se_dev_attrib.block_size;
+-
+-	lba = task->task_lba;
+-	req->rd_page = ((task->task_lba * block_size) /	PAGE_SIZE);
+-	req->rd_offset = (do_div(lba, (PAGE_SIZE / block_size))) * block_size;
+-	req->rd_size = task->task_size;
+-
+-	if (req->rd_offset)
+-		ret = rd_DIRECT_with_offset(task, se_mem_list, se_mem_cnt,
+-				task_offset_in);
+-	else
+-		ret = rd_DIRECT_without_offset(task, se_mem_list, se_mem_cnt,
+-				task_offset_in);
+-
+-	if (ret < 0)
+-		return ret;
+-
+-	if (cmd->se_tfo->task_sg_chaining == 0)
+-		return 0;
+-	/*
+-	 * Currently prevent writers from multiple HW fabrics doing
+-	 * pci_map_sg() to RD_DR's internal scatterlist memory.
+-	 */
+-	if (cmd->data_direction == DMA_TO_DEVICE) {
+-		printk(KERN_ERR "DMA_TO_DEVICE not supported for"
+-				" RAMDISK_DR with task_sg_chaining=1\n");
+-		return -ENOSYS;
+-	}
+-	/*
+-	 * Special case for if task_sg_chaining is enabled, then
+-	 * we setup struct se_task->task_sg[], as it will be used by
+-	 * transport_do_task_sg_chain() for creating chainged SGLs
+-	 * across multiple struct se_task->task_sg[].
+-	 */
+-	ret = transport_init_task_sg(task,
+-			list_first_entry(&cmd->t_mem_list,
+-				   struct se_mem, se_list),
+-			task_offset);
+-	if (ret <= 0)
+-		return ret;
+-
+-	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
+-			list_first_entry(&cmd->t_mem_list,
+-				   struct se_mem, se_list),
+-			out_se_mem, se_mem_cnt, task_offset_in);
+-}
+-
+-/*	rd_DIRECT_do_task(): (Part of se_subsystem_api_t template)
+- *
+- *
+- */
+-static int rd_DIRECT_do_task(struct se_task *task)
+-{
+-	/*
+-	 * At this point the locally allocated RD tables have been mapped
+-	 * to struct se_mem elements in rd_DIRECT_do_se_mem_map().
+-	 */
+-	task->task_scsi_status = GOOD;
+-	transport_complete_task(task, 1);
+-
+-	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
+-}
+-
+ /*	rd_free_task(): (Part of se_subsystem_api_t template)
+  *
+  *
+@@ -1022,27 +740,6 @@ static sector_t rd_get_blocks(struct se_device *dev)
+ 	return blocks_long;
+ }
+ 
+-static struct se_subsystem_api rd_dr_template = {
+-	.name			= "rd_dr",
+-	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
+-	.attach_hba		= rd_attach_hba,
+-	.detach_hba		= rd_detach_hba,
+-	.allocate_virtdevice	= rd_DIRECT_allocate_virtdevice,
+-	.create_virtdevice	= rd_DIRECT_create_virtdevice,
+-	.free_device		= rd_free_device,
+-	.alloc_task		= rd_alloc_task,
+-	.do_task		= rd_DIRECT_do_task,
+-	.free_task		= rd_free_task,
+-	.check_configfs_dev_params = rd_check_configfs_dev_params,
+-	.set_configfs_dev_params = rd_set_configfs_dev_params,
+-	.show_configfs_dev_params = rd_show_configfs_dev_params,
+-	.get_cdb		= rd_get_cdb,
+-	.get_device_rev		= rd_get_device_rev,
+-	.get_device_type	= rd_get_device_type,
+-	.get_blocks		= rd_get_blocks,
+-	.do_se_mem_map		= rd_DIRECT_do_se_mem_map,
+-};
+-
+ static struct se_subsystem_api rd_mcp_template = {
+ 	.name			= "rd_mcp",
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
+@@ -1067,13 +764,8 @@ int __init rd_module_init(void)
+ {
+ 	int ret;
+ 
+-	ret = transport_subsystem_register(&rd_dr_template);
+-	if (ret < 0)
+-		return ret;
+-
+ 	ret = transport_subsystem_register(&rd_mcp_template);
+ 	if (ret < 0) {
+-		transport_subsystem_release(&rd_dr_template);
+ 		return ret;
+ 	}
+ 
+@@ -1082,6 +774,5 @@ int __init rd_module_init(void)
+ 
+ void rd_module_exit(void)
+ {
+-	transport_subsystem_release(&rd_dr_template);
+ 	transport_subsystem_release(&rd_mcp_template);
+ }
+-- 
+1.7.1
 
