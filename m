@@ -1,50 +1,35 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] block: Check that queue is alive in
- blk_insert_cloned_request()
-Date: Sat, 9 Jul 2011 11:05:38 +0200
-Message-ID: <20110709110538.35e1ea1e@stein>
-References: <CAG4TOxMjuntpd3Q5jgn+xDa2tgB9tq+jLcDquM_eAdFHXLDrWA@mail.gmail.com>
-	<1310166270-23196-1-git-send-email-roland@kernel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 20/20] target: change alloc_task call to take *cdb, not
+ *cmd
+Date: Sat, 9 Jul 2011 06:11:05 -0400
+Message-ID: <20110709101105.GA26456@infradead.org>
+References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
+ <1310174329-22228-21-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:37972 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826Ab1GIJHt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2011 05:07:49 -0400
-In-Reply-To: <1310166270-23196-1-git-send-email-roland@kernel.org>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:42041
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751523Ab1GIKLH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Jul 2011 06:11:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1310174329-22228-21-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Jul 08 Roland Dreier wrote:
-> This fixes crashes such as the below that I see when the storage
-> underlying a dm-multipath device is hot-removed.  The problem is that
-> dm requeues a request to a device whose block queue has already been
-> cleaned up, and blk_insert_cloned_request() doesn't check if the queue
-> is alive, but rather goes ahead and tries to queue the request.  This
-> ends up dereferencing the elevator that was already freed in
-> blk_cleanup_queue().
-[...]
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -1706,6 +1706,9 @@ int blk_insert_cloned_request(struct request_queue *q, struct request *rq)
->  		return -EIO;
->  #endif
->  
-> +	if (unlikely(test_bit(QUEUE_FLAG_DEAD, &q->queue_flags)))
-> +		return -EIO;
-> +
->  	spin_lock_irqsave(q->queue_lock, flags);
->  
->  	/*
+On Fri, Jul 08, 2011 at 06:18:49PM -0700, Andy Grover wrote:
+> The transports really don't need the entire struct se_cmd to allocate
+> the memory for the se_task. If it wasn't for pscsi, they wouldn't even
+> need the *cdb.
+> 
+> Modify pscsi to allocate space for cdb at the end of pscsi_plugin_task,
+> instead of a separate allocation.
 
-Not knowing the calling contexts or having tried to learn about them, I am
-wondering:  What prevents the elevator to be freed right after the flag
-was checked?
--- 
-Stefan Richter
--=====-==-== -=== -=--=
-http://arcgraph.de/sr/
+Nice one!  Note that except for pscsi we really don't need se_tasks
+to start with.  I'm not sure how easy it is to move the whole task
+logic into it, but just allowing the other transports to allocate a
+single se_task + se_cmd + private data in one go should avoid one
+more memory allocation.
+
