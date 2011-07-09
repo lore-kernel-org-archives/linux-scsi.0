@@ -1,58 +1,150 @@
 From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 06/20] target: Eliminate usage of struct se_mem
-Date: Fri, 08 Jul 2011 17:38:17 -0700
-Message-ID: <4E17A2F9.8090309@redhat.com>
-References: <1310078011-15504-1-git-send-email-agrover@redhat.com> <1310078011-15504-7-git-send-email-agrover@redhat.com> <20110708201331.GD12288@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH 02/20] target: Pass 2nd param of transport_split_cdb by value
+Date: Fri,  8 Jul 2011 18:18:31 -0700
+Message-ID: <1310174329-22228-3-git-send-email-agrover@redhat.com>
+References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42210 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:58085 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750717Ab1GIAiU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Jul 2011 20:38:20 -0400
-In-Reply-To: <20110708201331.GD12288@infradead.org>
+	id S1751846Ab1GIBS5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Jul 2011 21:18:57 -0400
+In-Reply-To: <1310078011-15504-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On 07/08/2011 01:13 PM, Christoph Hellwig wrote:
->> @@ -1723,10 +1707,6 @@ transport_generic_get_task(struct se_cmd *cmd,
->>  	task->se_dev = dev;
->>  	task->task_data_direction = data_direction;
->>  
->> -	spin_lock_irqsave(&cmd->t_state_lock, flags);
->> -	list_add_tail(&task->t_list, &cmd->t_task_list);
->> -	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
->> -
-> 
-> How is moving the task <-> cmd linkage related to the rest of the patch?
-> It probably should be a separate preparatory patch, but at least needs
-> some good documentation.
+Since sectors is not modified, it's more straightforward to do this.
 
-There's no clean (easy) way for me to extract this from the rest of the
-patch, so I'm just going to add some text to the changelog.
+Signed-off-by: Andy Grover <agrover@redhat.com>
+---
+ drivers/target/target_core_scdb.c      |   20 ++++++++++----------
+ drivers/target/target_core_scdb.h      |   10 +++++-----
+ drivers/target/target_core_transport.c |    3 +--
+ include/target/target_core_base.h      |    2 +-
+ 4 files changed, 17 insertions(+), 18 deletions(-)
 
-BTW I've cleaned up alloc_task some more in a follow-on patch, will post
-shortly.
+diff --git a/drivers/target/target_core_scdb.c b/drivers/target/target_core_scdb.c
+index dc6fed0..7284344 100644
+--- a/drivers/target/target_core_scdb.c
++++ b/drivers/target/target_core_scdb.c
+@@ -42,13 +42,13 @@
+  */
+ void split_cdb_XX_6(
+ 	unsigned long long lba,
+-	u32 *sectors,
++	u32 sectors,
+ 	unsigned char *cdb)
+ {
+ 	cdb[1] = (lba >> 16) & 0x1f;
+ 	cdb[2] = (lba >> 8) & 0xff;
+ 	cdb[3] = lba & 0xff;
+-	cdb[4] = *sectors & 0xff;
++	cdb[4] = sectors & 0xff;
+ }
+ 
+ /*	split_cdb_XX_10():
+@@ -57,11 +57,11 @@ void split_cdb_XX_6(
+  */
+ void split_cdb_XX_10(
+ 	unsigned long long lba,
+-	u32 *sectors,
++	u32 sectors,
+ 	unsigned char *cdb)
+ {
+ 	put_unaligned_be32(lba, &cdb[2]);
+-	put_unaligned_be16(*sectors, &cdb[7]);
++	put_unaligned_be16(sectors, &cdb[7]);
+ }
+ 
+ /*	split_cdb_XX_12():
+@@ -70,11 +70,11 @@ void split_cdb_XX_10(
+  */
+ void split_cdb_XX_12(
+ 	unsigned long long lba,
+-	u32 *sectors,
++	u32 sectors,
+ 	unsigned char *cdb)
+ {
+ 	put_unaligned_be32(lba, &cdb[2]);
+-	put_unaligned_be32(*sectors, &cdb[6]);
++	put_unaligned_be32(sectors, &cdb[6]);
+ }
+ 
+ /*	split_cdb_XX_16():
+@@ -83,11 +83,11 @@ void split_cdb_XX_12(
+  */
+ void split_cdb_XX_16(
+ 	unsigned long long lba,
+-	u32 *sectors,
++	u32 sectors,
+ 	unsigned char *cdb)
+ {
+ 	put_unaligned_be64(lba, &cdb[2]);
+-	put_unaligned_be32(*sectors, &cdb[10]);
++	put_unaligned_be32(sectors, &cdb[10]);
+ }
+ 
+ /*
+@@ -97,9 +97,9 @@ void split_cdb_XX_16(
+  */
+ void split_cdb_XX_32(
+ 	unsigned long long lba,
+-	u32 *sectors,
++	u32 sectors,
+ 	unsigned char *cdb)
+ {
+ 	put_unaligned_be64(lba, &cdb[12]);
+-	put_unaligned_be32(*sectors, &cdb[28]);
++	put_unaligned_be32(sectors, &cdb[28]);
+ }
+diff --git a/drivers/target/target_core_scdb.h b/drivers/target/target_core_scdb.h
+index 98cd1c0..48e9ccc 100644
+--- a/drivers/target/target_core_scdb.h
++++ b/drivers/target/target_core_scdb.h
+@@ -1,10 +1,10 @@
+ #ifndef TARGET_CORE_SCDB_H
+ #define TARGET_CORE_SCDB_H
+ 
+-extern void split_cdb_XX_6(unsigned long long, u32 *, unsigned char *);
+-extern void split_cdb_XX_10(unsigned long long, u32 *, unsigned char *);
+-extern void split_cdb_XX_12(unsigned long long, u32 *, unsigned char *);
+-extern void split_cdb_XX_16(unsigned long long, u32 *, unsigned char *);
+-extern void split_cdb_XX_32(unsigned long long, u32 *, unsigned char *);
++extern void split_cdb_XX_6(unsigned long long, u32, unsigned char *);
++extern void split_cdb_XX_10(unsigned long long, u32, unsigned char *);
++extern void split_cdb_XX_12(unsigned long long, u32, unsigned char *);
++extern void split_cdb_XX_16(unsigned long long, u32, unsigned char *);
++extern void split_cdb_XX_32(unsigned long long, u32, unsigned char *);
+ 
+ #endif /* TARGET_CORE_SCDB_H */
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 9d02f86..b98f6ff 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -4762,8 +4762,7 @@ static u32 transport_allocate_tasks(
+ 		       scsi_command_size(cmd->t_task_cdb));
+ 
+ 		/* Update new cdb with updated lba/sectors */
+-		cmd->transport_split_cdb(task->task_lba,
+-					 &task->task_sectors, cdb);
++		cmd->transport_split_cdb(task->task_lba, task->task_sectors, cdb);
+ 
+ 		/*
+ 		 * Perform the SE OBJ plugin and/or Transport plugin specific
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 380b4c8..464ecd2 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -480,7 +480,7 @@ struct se_cmd {
+ 	struct list_head	se_queue_node;
+ 	struct target_core_fabric_ops *se_tfo;
+ 	int (*transport_emulate_cdb)(struct se_cmd *);
+-	void (*transport_split_cdb)(unsigned long long, u32 *, unsigned char *);
++	void (*transport_split_cdb)(unsigned long long, u32, unsigned char *);
+ 	void (*transport_wait_for_tasks)(struct se_cmd *, int, int);
+ 	void (*transport_complete_callback)(struct se_cmd *);
+ 	int (*transport_qf_callback)(struct se_cmd *);
+-- 
+1.7.1
 
->> +	if (cmd->t_bidi_data_sg &&
->> +	    (dev->transport->transport_type != TRANSPORT_PLUGIN_PHBA_PDEV)) {
-> 
-> no need for braces around the comparism.
-
-True, but they're not unusual, so I left instances like this.
-
->> +		ret = transport_allocate_control_task(cmd);
->> +		if (ret < 0)
->> +			return ret;
->> +		else
->> +			return 1;
-> 
-> Any reason you don't directly return the expected value from
-> transport_allocate_control_task?
-
-See patch 16, it fixes this.
-
-Regards -- Andy
