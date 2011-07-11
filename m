@@ -1,43 +1,36 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH 20/20] target: change alloc_task call to take *cdb, not
- *cmd
-Date: Sun, 10 Jul 2011 15:41:51 -0700
-Message-ID: <4E1A2AAF.6080705@redhat.com>
-References: <1310078011-15504-1-git-send-email-agrover@redhat.com> <1310174329-22228-21-git-send-email-agrover@redhat.com> <20110709101105.GA26456@infradead.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14534] mvsas : repeatably disconnects all disks during RAID6
+ resync
+Date: Mon, 11 Jul 2011 04:56:54 GMT
+Message-ID: <201107110456.p6B4us2X029284@demeter2.kernel.org>
+References: <bug-14534-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19860 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756744Ab1GJWmA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 10 Jul 2011 18:42:00 -0400
-In-Reply-To: <20110709101105.GA26456@infradead.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:41836 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751892Ab1GKE4y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2011 00:56:54 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p6B4usDX029285
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Jul 2011 04:56:54 GMT
+In-Reply-To: <bug-14534-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 07/09/2011 03:11 AM, Christoph Hellwig wrote:
-> On Fri, Jul 08, 2011 at 06:18:49PM -0700, Andy Grover wrote:
->> The transports really don't need the entire struct se_cmd to allocate
->> the memory for the se_task. If it wasn't for pscsi, they wouldn't even
->> need the *cdb.
->>
->> Modify pscsi to allocate space for cdb at the end of pscsi_plugin_task,
->> instead of a separate allocation.
-> 
-> Nice one!  Note that except for pscsi we really don't need se_tasks
-> to start with.  I'm not sure how easy it is to move the whole task
-> logic into it, but just allowing the other transports to allocate a
-> single se_task + se_cmd + private data in one go should avoid one
-> more memory allocation.
+https://bugzilla.kernel.org/show_bug.cgi?id=14534
 
-We can assume each se_cmd only needs 1 se_task???
 
-I couldn't see where the max sectors per se_cmd was limited, therefore
-we needed to support cmds being broken up into
-se_sub_dev.max_sectors-size chunks, and therefore being >1 se_task per
-se_cmd, for all backstores not just pscsi?
 
-Regards -- Andy
+
+
+--- Comment #14 from Stonefish <iamthestonefishdammit@hotmail.com>  2011-07-11 04:56:49 ---
+Please note that I've updated to the latest firmware on the AOC-SASLP-MV8, and
+it didn't help any.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
