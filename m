@@ -1,103 +1,72 @@
-From: akpm@linux-foundation.org
-Subject: [patch for 3.0 2/3] drivers/scsi/ipr.c: reorder error handling code to include iounmap
-Date: Mon, 11 Jul 2011 14:08:25 -0700
-Message-ID: <201107112108.p6BL8PhX003563@imap1.linux-foundation.org>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH] hpsa: do not attempt to read from a write-only register
+Date: Mon, 11 Jul 2011 16:08:41 -0500
+Message-ID: <20110711210841.GC25366@beardog.cce.hp.com>
+References: <20110708195926.3623.30375.stgit@beardog.cce.hp.com> <20110711131911.31789ee0.akpm@linux-foundation.org> <20110711205124.GB25366@beardog.cce.hp.com> <20110711140450.a6f3e8be.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:32784 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750901Ab1GKVJM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Jul 2011 17:09:12 -0400
+Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:20155 "EHLO
+	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870Ab1GKVPX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2011 17:15:23 -0400
+Content-Disposition: inline
+In-Reply-To: <20110711140450.a6f3e8be.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, julia@diku.dk, brking@linux.vnet.ibm.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, mikem@beardog.cce.hp.com
 
-From: Julia Lawall <julia@diku.dk>
+On Mon, Jul 11, 2011 at 02:04:50PM -0700, Andrew Morton wrote:
+> On Mon, 11 Jul 2011 15:51:24 -0500
+> scameron@beardog.cce.hp.com wrote:
+> 
+> > On Mon, Jul 11, 2011 at 01:19:11PM -0700, Andrew Morton wrote:
+> > > On Fri, 08 Jul 2011 14:59:26 -0500
+> > > "Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
+> > > 
+> > > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > > > 
+> > > > Most smartarrays tolerate it, but a few new ones don't.
+> > > > 
+> > > > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > > > ---
+> > > >  drivers/scsi/hpsa.h |    2 +-
+> > > >  1 files changed, 1 insertions(+), 1 deletions(-)
+> > > > 
+> > > > diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+> > > > index 6d8dcd4..7f53cea 100644
+> > > > --- a/drivers/scsi/hpsa.h
+> > > > +++ b/drivers/scsi/hpsa.h
+> > > > @@ -214,7 +214,7 @@ static void SA5_submit_command(struct ctlr_info *h,
+> > > >  	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
+> > > >  		c->Header.Tag.lower);
+> > > >  	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
+> > > > -	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
+> > > > +	(void) readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
+> > > >  	h->commands_outstanding++;
+> > > >  	if (h->commands_outstanding > h->max_outstanding)
+> > > >  		h->max_outstanding = h->commands_outstanding;
+> > > 
+> > > The changelog forgot to tell us the user-visible effects of the bug. 
+> > > That was really really bad of it.  Bad changelog.  No bone for you.
+> > 
+> > Oh, sorry.  When the controller doesn't tolerate the bug, the firmware
+> > on it locks up.  No interrupts are received, no commands complete. I/o
+> > on that controller grinds to a halt.
+> 
+> OK, that was important.
+> 
+> Presumably you'd like those newer controllers to work with older
+> kernels?  In which case we should mark the patch for -stable
+> backporting?
 
-The out_msi_disable label should be before cleanup_nomem to additionally
-benefit from the call to iounmap.  Subsequent gotos are adjusted to go to
-out_msi_disable instead of cleanup_nomem, which now follows it.  This is
-safe because pci_disable_msi does nothing if pci_enable_msi was not called.
+Yes.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r@
-expression e1,e2;
-statement S;
-@@
-
-e1 = pci_ioremap_bar(...);
-... when != e1 = e2
-    when != iounmap(e1)
-    when any
-(
- if (<+...e1...+>) S
-|
- if(...) { ... return 0; }
-|
- if (...) { ... when != iounmap(e1)
-                when != if (...) { ... iounmap(e1) ... }
-* return ...;
- } else S
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/ipr.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff -puN drivers/scsi/ipr.c~drivers-scsi-iprc-reorder-error-handling-code-to-include-iounmap drivers/scsi/ipr.c
---- a/drivers/scsi/ipr.c~drivers-scsi-iprc-reorder-error-handling-code-to-include-iounmap
-+++ a/drivers/scsi/ipr.c
-@@ -8778,14 +8778,14 @@ static int __devinit ipr_probe_ioa(struc
- 	if (rc != PCIBIOS_SUCCESSFUL) {
- 		dev_err(&pdev->dev, "Failed to save PCI config space\n");
- 		rc = -EIO;
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 	}
- 
- 	if ((rc = ipr_save_pcix_cmd_reg(ioa_cfg)))
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 
- 	if ((rc = ipr_set_pcix_cmd_reg(ioa_cfg)))
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 
- 	if (ioa_cfg->sis64)
- 		ioa_cfg->cfg_table_size = (sizeof(struct ipr_config_table_hdr64)
-@@ -8800,7 +8800,7 @@ static int __devinit ipr_probe_ioa(struc
- 	if (rc < 0) {
- 		dev_err(&pdev->dev,
- 			"Couldn't allocate enough memory for device driver!\n");
--		goto cleanup_nomem;
-+		goto out_msi_disable;
- 	}
- 
- 	/*
-@@ -8845,10 +8845,10 @@ out:
- 
- cleanup_nolog:
- 	ipr_free_mem(ioa_cfg);
--cleanup_nomem:
--	iounmap(ipr_regs);
- out_msi_disable:
- 	pci_disable_msi(pdev);
-+cleanup_nomem:
-+	iounmap(ipr_regs);
- out_release_regions:
- 	pci_release_regions(pdev);
- out_scsi_host_put:
-_
+> 
+> I've done that to my copy and have updated the changelog.
+> 
+> > I can resubmit if you like.
+> 
+> I have two other needed-in-3.0 scsi patches.  I'll send all three
+> Jameswards now.
