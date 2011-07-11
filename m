@@ -1,72 +1,57 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH] hpsa: do not attempt to read from a write-only register
-Date: Mon, 11 Jul 2011 16:08:41 -0500
-Message-ID: <20110711210841.GC25366@beardog.cce.hp.com>
-References: <20110708195926.3623.30375.stgit@beardog.cce.hp.com> <20110711131911.31789ee0.akpm@linux-foundation.org> <20110711205124.GB25366@beardog.cce.hp.com> <20110711140450.a6f3e8be.akpm@linux-foundation.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH] block: Check that queue is alive in blk_insert_cloned_request()
+Date: Mon, 11 Jul 2011 18:40:11 -0400
+Message-ID: <CAMM=eLfzKuw-2vbERV6D7dAHb1BWopOKZ=dB7vWxcxSCoj6Tkw@mail.gmail.com>
+References: <CAG4TOxMjuntpd3Q5jgn+xDa2tgB9tq+jLcDquM_eAdFHXLDrWA@mail.gmail.com>
+ <1310166270-23196-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:20155 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870Ab1GKVPX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jul 2011 17:15:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20110711140450.a6f3e8be.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1310166270-23196-1-git-send-email-roland@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, mikem@beardog.cce.hp.com
 
-On Mon, Jul 11, 2011 at 02:04:50PM -0700, Andrew Morton wrote:
-> On Mon, 11 Jul 2011 15:51:24 -0500
-> scameron@beardog.cce.hp.com wrote:
-> 
-> > On Mon, Jul 11, 2011 at 01:19:11PM -0700, Andrew Morton wrote:
-> > > On Fri, 08 Jul 2011 14:59:26 -0500
-> > > "Stephen M. Cameron" <scameron@beardog.cce.hp.com> wrote:
-> > > 
-> > > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > > 
-> > > > Most smartarrays tolerate it, but a few new ones don't.
-> > > > 
-> > > > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > > ---
-> > > >  drivers/scsi/hpsa.h |    2 +-
-> > > >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-> > > > index 6d8dcd4..7f53cea 100644
-> > > > --- a/drivers/scsi/hpsa.h
-> > > > +++ b/drivers/scsi/hpsa.h
-> > > > @@ -214,7 +214,7 @@ static void SA5_submit_command(struct ctlr_info *h,
-> > > >  	dev_dbg(&h->pdev->dev, "Sending %x, tag = %x\n", c->busaddr,
-> > > >  		c->Header.Tag.lower);
-> > > >  	writel(c->busaddr, h->vaddr + SA5_REQUEST_PORT_OFFSET);
-> > > > -	(void) readl(h->vaddr + SA5_REQUEST_PORT_OFFSET);
-> > > > +	(void) readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
-> > > >  	h->commands_outstanding++;
-> > > >  	if (h->commands_outstanding > h->max_outstanding)
-> > > >  		h->max_outstanding = h->commands_outstanding;
-> > > 
-> > > The changelog forgot to tell us the user-visible effects of the bug. 
-> > > That was really really bad of it.  Bad changelog.  No bone for you.
-> > 
-> > Oh, sorry.  When the controller doesn't tolerate the bug, the firmware
-> > on it locks up.  No interrupts are received, no commands complete. I/o
-> > on that controller grinds to a halt.
-> 
-> OK, that was important.
-> 
-> Presumably you'd like those newer controllers to work with older
-> kernels?  In which case we should mark the patch for -stable
-> backporting?
+[cc'ing dm-devel, vivek and tejun]
 
-Yes.
+On Fri, Jul 8, 2011 at 7:04 PM, Roland Dreier <roland@kernel.org> wrote=
+:
+> From: Roland Dreier <roland@purestorage.com>
+>
+> This fixes crashes such as the below that I see when the storage
+> underlying a dm-multipath device is hot-removed. =A0The problem is th=
+at
+> dm requeues a request to a device whose block queue has already been
+> cleaned up, and blk_insert_cloned_request() doesn't check if the queu=
+e
+> is alive, but rather goes ahead and tries to queue the request. =A0Th=
+is
+> ends up dereferencing the elevator that was already freed in
+> blk_cleanup_queue().
 
-> 
-> I've done that to my copy and have updated the changelog.
-> 
-> > I can resubmit if you like.
-> 
-> I have two other needed-in-3.0 scsi patches.  I'll send all three
-> Jameswards now.
+Your patch looks fine to me:
+Acked-by: Mike Snitzer <snitzer@redhat.com>
+
+And I looked at various code paths to arrive at the references DM takes=
+=2E
+
+A reference is taken on the underlying devices' block_device via
+drivers/md/dm-table.c:open_dev() with blkdev_get_by_dev().  open_dev()
+also does bd_link_disk_holder(), resulting in the mpath device
+becoming a holder of the underlying devices. e.g.:
+/sys/block/sda/holders/dm-4
+
+But at no point does DM-mpath get a reference to the underlying
+devices' request_queue that gets assigned to clone->q (in
+drivers/md/dm-mpath.c:map_io).
+
+Seems we should, though AFAIK it won't help with the issue you've
+pointed out (because the hotplugged device's driver already called
+blk_cleanup_queue and nuked the elevator).
+
+So I'm not sure getting the request_queue reference actually fixes
+anything (maybe my imagination is lacking?).  But getting the
+request_queue reference is "the right thing" if we're going to be
+setting pointers to it.
