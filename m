@@ -1,64 +1,134 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: block: Check that queue is alive in blk_insert_cloned_request()
-Date: Tue, 12 Jul 2011 13:10:33 -0400
-Message-ID: <20110712171033.GG1293@redhat.com>
-References: <20110712014633.GA30965@redhat.com>
- <Pine.LNX.4.44L0.1107121120130.31381-100000@netrider.rowland.org>
+From: <jayamohan.kallickal@emulex.com>
+Subject: [PATCH 2/2] be2iscsi: Fixing the /proc/interrupts problem V3
+Date: Tue, 12 Jul 2011 10:12:35 -0700
+Message-ID: <894955a8-23e3-4553-bfb5-614b2bc8ed93@exht1.ad.emulex.com>
+References: <1310490756-2210-1-git-send-email-jayamohan.kallickal@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1107121120130.31381-100000@netrider.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Mike Snitzer <snitzer@redhat.com>, Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht1.emulex.com ([138.239.113.183]:50430 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751009Ab1GLRNL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2011 13:13:11 -0400
+In-Reply-To: <1310490756-2210-1-git-send-email-jayamohan.kallickal@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, Prarit Bhargava <prarit@redhat.com>
 
-On Tue, Jul 12, 2011 at 11:24:54AM -0400, Alan Stern wrote:
-> On Mon, 11 Jul 2011, Vivek Goyal wrote:
-> 
-> > > > There's still the issue that Stefan Richter pointed out: The test for a 
-> > > > dead queue must be made _after_ acquiring the queue lock, not _before_.
-> > > 
-> > > Yes, quite important.
-> > > 
-> > > Jens, can you tweak the patch or should Roland send a v2?
-> > 
-> > I do not think that we should do queue dead check after taking a spinlock.
-> > The reason being that there are life time issues of two objects.
-> > 
-> > - Validity of request queue pointer
-> > - Validity of q->spin_lock pointer
-> > 
-> > If the dm has taken the reference to the request queue in the beginning
-> > then it can be sure request queue pointer is valid. But spin_lock might
-> > be coming from driver and might be in one of driver allocated structures.
-> > So it might happen that driver has called blk_cleanup_queue() and freed
-> > up structures which contained the spin lock.
-> 
-> Surely this is a bug in the design of the block layer?
-> 
-> > So if queue is not dead, we know that q->spin_lock is valid. I think
-> > only race present here is that whole operation is not atomic. First
-> > we check for queue not dead flag and then go on to acquire request
-> > queue lock. So this leaves a small window for race. I think I have
-> > seen other code written in such manner (__generic_make_request()). So
-> > it proably reasonably safe to do here too.
-> 
-> "Probably reasonably safe" = "unsafe".  The fact that it will usually
-> work out okay means that when it does fail, it will be very difficult
-> to track down.
-> 
-> It needs to be fixed _now_, when people are aware of the issue.  Not 
-> five years from now, when everybody has forgotten about it.
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-I agree that fixing would be good. Frankly speaking I don't even have
-full understanding of the problem. I know little bit from request queue
-side but have no idea about referencing mechanism at device level and
-how that is supposed to work with request queue referencing.
+This patch is based on one by Prarit Bhargava. I have made minor
+changes. Also, removed the redundant check for i == 0 and adding changelog  as suggested
+by Rolf.
 
-So once we understand the problem well, probably we will have an answer
-how to go about fixing it.
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Signed-off-by: Jayamohan Kallickal <jayamohan,kallickal@emulex.com>
+---
+ drivers/scsi/be2iscsi/be_main.c |   33 +++++++++++++++++++++++++--------
+ drivers/scsi/be2iscsi/be_main.h |    3 +++
+ 2 files changed, 28 insertions(+), 8 deletions(-)
 
-Thanks
-Vivek
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 97c134a..a8a80e4 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -822,33 +822,46 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+ 	int ret, msix_vec, i, j;
+-	char desc[32];
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	phwi_context = phwi_ctrlr->phwi_ctxt;
+ 
+ 	if (phba->msix_enabled) {
+ 		for (i = 0; i < phba->num_cpus; i++) {
+-			sprintf(desc, "beiscsi_msix_%04x", i);
++			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME, GFP_KERNEL);
++			if (!phba->msi_name[i]) {
++				ret = -ENOMEM;
++				goto free_msix_irqs;
++			}
++
++			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
++				phba->shost->host_no, i);
+ 			msix_vec = phba->msix_entries[i].vector;
+-			ret = request_irq(msix_vec, be_isr_msix, 0, desc,
++			ret = request_irq(msix_vec, be_isr_msix, 0,
++					  phba->msi_name[i],
+ 					  &phwi_context->be_eq[i]);
+ 			if (ret) {
+ 				shost_printk(KERN_ERR, phba->shost,
+ 					     "beiscsi_init_irqs-Failed to"
+ 					     "register msix for i = %d\n", i);
+-				if (!i)
+-					return ret;
++				kfree(phba->msi_name[i]);
+ 				goto free_msix_irqs;
+ 			}
+ 		}
++		phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME, GFP_KERNEL);
++		if (!phba->msi_name[i]) {
++			ret = -ENOMEM;
++			goto free_msix_irqs;
++		}
++		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
++			phba->shost->host_no);
+ 		msix_vec = phba->msix_entries[i].vector;
+-		ret = request_irq(msix_vec, be_isr_mcc, 0, "beiscsi_msix_mcc",
++		ret = request_irq(msix_vec, be_isr_mcc, 0, phba->msi_name[i],
+ 				  &phwi_context->be_eq[i]);
+ 		if (ret) {
+ 			shost_printk(KERN_ERR, phba->shost, "beiscsi_init_irqs-"
+ 				     "Failed to register beiscsi_msix_mcc\n");
+-			i++;
++			kfree(phba->msi_name[i]);
+ 			goto free_msix_irqs;
+ 		}
+ 
+@@ -863,8 +876,11 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 	}
+ 	return 0;
+ free_msix_irqs:
+-	for (j = i - 1; j == 0; j++)
++	for (j = i - 1; j >= 0; j--) {
++		kfree(phba->msi_name[j]);
++		msix_vec = phba->msix_entries[j].vector;
+ 		free_irq(msix_vec, &phwi_context->be_eq[j]);
++	}
+ 	return ret;
+ }
+ 
+@@ -4125,6 +4141,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 		for (i = 0; i <= phba->num_cpus; i++) {
+ 			msix_vec = phba->msix_entries[i].vector;
+ 			free_irq(msix_vec, &phwi_context->be_eq[i]);
++			kfree(phba->msi_name[i]);
+ 		}
+ 	} else
+ 		if (phba->pcidev->irq)
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 4677de9..7b6578e 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -162,6 +162,8 @@ do {							\
+ #define PAGES_REQUIRED(x) \
+ 	((x < PAGE_SIZE) ? 1 :  ((x + PAGE_SIZE - 1) / PAGE_SIZE))
+ 
++#define BEISCSI_MSI_NAME 20 /* size of msi_name string */
++
+ enum be_mem_enum {
+ 	HWI_MEM_ADDN_CONTEXT,
+ 	HWI_MEM_WRB,
+@@ -287,6 +289,7 @@ struct beiscsi_hba {
+ 	unsigned int num_cpus;
+ 	unsigned int nxt_cqid;
+ 	struct msix_entry msix_entries[MAX_CPUS + 1];
++	char *msi_name[MAX_CPUS + 1];
+ 	bool msix_enabled;
+ 	struct be_mem_descriptor *init_mem;
+ 
+-- 
+1.7.1
+
