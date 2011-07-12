@@ -1,117 +1,52 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH] dm mpath: manage reference on request queue of underlying
- devices
-Date: Tue, 12 Jul 2011 10:58:51 -0400
-Message-ID: <20110712145851.GA17979@redhat.com>
-References: <CAG4TOxMjuntpd3Q5jgn+xDa2tgB9tq+jLcDquM_eAdFHXLDrWA@mail.gmail.com>
- <1310166270-23196-1-git-send-email-roland@kernel.org>
- <CAMM=eLfzKuw-2vbERV6D7dAHb1BWopOKZ=dB7vWxcxSCoj6Tkw@mail.gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: block: Check that queue is alive in blk_insert_cloned_request()
+Date: Tue, 12 Jul 2011 11:24:54 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1107121120130.31381-100000@netrider.rowland.org>
+References: <20110712014633.GA30965@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAMM=eLfzKuw-2vbERV6D7dAHb1BWopOKZ=dB7vWxcxSCoj6Tkw@mail.gmail.com>
+In-Reply-To: <20110712014633.GA30965@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Alasdair G. Kergon" <agk@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Vivek Goyal <vgoyal@redhat.com>, Tejun Heo <tj@kernel.org>, Roland Dreier <roland@kernel.org>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com
 List-Id: linux-scsi@vger.kernel.org
 
-When processing a request, DM-mpath's map_io() set the cloned request's
-request_queue to the appropriate underlying device's request_queue
-without getting a reference on that request_queue.
+On Mon, 11 Jul 2011, Vivek Goyal wrote:
 
-DM-mpath now maintains a reference count on the underlying devices'
-request_queue.  This change wasn't motivated by a specific report but
-code, like blk_insert_cloned_request(), will access the request_queue
-with the understanding that the request_queue is valid.
+> > > There's still the issue that Stefan Richter pointed out: The test for a 
+> > > dead queue must be made _after_ acquiring the queue lock, not _before_.
+> > 
+> > Yes, quite important.
+> > 
+> > Jens, can you tweak the patch or should Roland send a v2?
+> 
+> I do not think that we should do queue dead check after taking a spinlock.
+> The reason being that there are life time issues of two objects.
+> 
+> - Validity of request queue pointer
+> - Validity of q->spin_lock pointer
+> 
+> If the dm has taken the reference to the request queue in the beginning
+> then it can be sure request queue pointer is valid. But spin_lock might
+> be coming from driver and might be in one of driver allocated structures.
+> So it might happen that driver has called blk_cleanup_queue() and freed
+> up structures which contained the spin lock.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/md/dm-mpath.c |   33 +++++++++++++++++++++------------
- 1 files changed, 21 insertions(+), 12 deletions(-)
+Surely this is a bug in the design of the block layer?
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index eadea8e..629efa3 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -161,11 +161,14 @@ static void free_pgpaths(struct list_head *pgpaths, struct dm_target *ti)
- {
- 	struct pgpath *pgpath, *tmp;
- 	struct multipath *m = ti->private;
-+	struct request_queue *q;
- 
- 	list_for_each_entry_safe(pgpath, tmp, pgpaths, list) {
- 		list_del(&pgpath->list);
-+		q = bdev_get_queue(pgpath->path.dev->bdev);
- 		if (m->hw_handler_name)
--			scsi_dh_detach(bdev_get_queue(pgpath->path.dev->bdev));
-+			scsi_dh_detach(q);
-+		blk_put_queue(q);
- 		dm_put_device(ti, pgpath->path.dev);
- 		free_pgpath(pgpath);
- 	}
-@@ -552,6 +555,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
- {
- 	int r;
- 	struct pgpath *p;
-+	struct request_queue *q;
- 	struct multipath *m = ti->private;
- 
- 	/* we need at least a path arg */
-@@ -571,9 +575,14 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
- 		goto bad;
- 	}
- 
--	if (m->hw_handler_name) {
--		struct request_queue *q = bdev_get_queue(p->path.dev->bdev);
-+	q = bdev_get_queue(p->path.dev->bdev);
-+	r = blk_get_queue(q);
-+	if (r) {
-+		ti->error = "error getting request queue";
-+		goto bad_queue;
-+	}
- 
-+	if (m->hw_handler_name) {
- 		r = scsi_dh_attach(q, m->hw_handler_name);
- 		if (r == -EBUSY) {
- 			/*
-@@ -586,8 +595,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
- 
- 		if (r < 0) {
- 			ti->error = "error attaching hardware handler";
--			dm_put_device(ti, p->path.dev);
--			goto bad;
-+			goto bad_finish;
- 		}
- 
- 		if (m->hw_handler_params) {
-@@ -596,21 +604,22 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
- 				ti->error = "unable to set hardware "
- 							"handler parameters";
- 				scsi_dh_detach(q);
--				dm_put_device(ti, p->path.dev);
--				goto bad;
-+				goto bad_finish;
- 			}
- 		}
- 	}
- 
- 	r = ps->type->add_path(ps, &p->path, as->argc, as->argv, &ti->error);
--	if (r) {
--		dm_put_device(ti, p->path.dev);
--		goto bad;
--	}
-+	if (r)
-+		goto bad_finish;
- 
- 	return p;
- 
-- bad:
-+bad_finish:
-+	blk_put_queue(q);
-+bad_queue:
-+	dm_put_device(ti, p->path.dev);
-+bad:
- 	free_pgpath(p);
- 	return ERR_PTR(r);
- }
+> So if queue is not dead, we know that q->spin_lock is valid. I think
+> only race present here is that whole operation is not atomic. First
+> we check for queue not dead flag and then go on to acquire request
+> queue lock. So this leaves a small window for race. I think I have
+> seen other code written in such manner (__generic_make_request()). So
+> it proably reasonably safe to do here too.
+
+"Probably reasonably safe" = "unsafe".  The fact that it will usually
+work out okay means that when it does fail, it will be very difficult
+to track down.
+
+It needs to be fixed _now_, when people are aware of the issue.  Not 
+five years from now, when everybody has forgotten about it.
+
+Alan Stern
