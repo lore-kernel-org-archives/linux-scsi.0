@@ -1,78 +1,64 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] block: Check that queue is alive in blk_insert_cloned_request()
-Date: Tue, 12 Jul 2011 17:02:25 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1107121643210.8898-100000@netrider.rowland.org>
-References: <1310495298.16900.24.camel@mulgrave>
+From: "Jiang, Dave" <dave.jiang@intel.com>
+Subject: RE: rq_affinity doesn't seem to work?
+Date: Tue, 12 Jul 2011 14:17:54 -0700
+Message-ID: <D010E79907AF0D4E90B603DE907837D504CA6366F6@azsmsx504.amr.corp.intel.com>
+References: <D010E79907AF0D4E90B603DE907837D504CA6365D6@azsmsx504.amr.corp.intel.com>
+ <4E1CAEEB.8050506@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:39449 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754998Ab1GLVC0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2011 17:02:26 -0400
-In-Reply-To: <1310495298.16900.24.camel@mulgrave>
+Received: from mga03.intel.com ([143.182.124.21]:43951 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932073Ab1GLVR5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2011 17:17:57 -0400
+In-Reply-To: <4E1CAEEB.8050506@kernel.dk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>, Mike Snitzer <snitzer@redhat.com>, Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
 
-On Tue, 12 Jul 2011, James Bottomley wrote:
-
-> > I think one problem point is q->queue_lock. If driver drops its reference
-> > on queue and cleans up its data structures, then it will free up memory
-> > associated with q->queue_lock too. (If driver provided its own queue
-> > lock). In that case anything which is dependent on queue lock, needs
-> > to be freed up on blk_cleanup_queue().
+> -----Original Message-----
+> From: Jens Axboe [mailto:axboe@kernel.dk]
+> Sent: Tuesday, July 12, 2011 1:31 PM
+> To: Jiang, Dave
+> Cc: Williams, Dan J; Foong, Annie; linux-scsi@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Nadolski, Edmund; Skirvin, Jeffrey D
+> Subject: Re: rq_affinity doesn't seem to work?
 > 
-> I don't quite follow.  blk_cleanup_queue() doesn't free anything (well,
-> except the elevator).  Final put will free the queue structure which
-> contains the lock, but if it's really a final put, you have no other
-> possible references, so no-one is using the lock ... well, assuming
-> there isn't a programming error, of course ...
+> On 2011-07-12 21:03, Jiang, Dave wrote:
+> > Jens,
+> > I'm doing some performance tuning for the Intel isci SAS controller
+> > driver, and I noticed some interesting numbers with mpstat. Looking at
+> > the numbers it seems that rq_affinity is not moving the request
+> > completion to the request submission CPU. Using fio to saturate the
+> > system with 512B I/Os, I noticed that all I/Os are bound to the CPUs
+> > (CPUs 6 and 7) that service the hard irqs. I have put in a quick hack
+> > in the driver so that it records the CPU during request construction
+> > and then I try to steer the scsi->done() calls to the request CPUs.
+> > With this simple hack, mpstat shows that the soft irq contexts are now
+> > distributed. I observed significant performance increase. The iowait%
+> > gone from 30s and 40s to low single digit approaching 0. Any ideas
+> > what could be happening with the rq_affinity logic? I'm assuming
+> > rq_affinity should behave the way my hacked solution is behaving. This
+> > is running on an 8 core single CPU SandyBridge based system with
+> > hyper-threading turned off. The two MSIX interrupts on the controller
+> > are tied to CPU 6 and 7 respectively via /proc/irq/X/smp_affinity. I'm
+> > running fio with 8 SAS disks and 8 threads.
 > 
-> > If we can make sure that request queue reference will keep the spin lock
-> > alive, then i guess all cleanup part might be able to go in release
-> > queue function.
-> 
-> As I said: cleanup doesn't free the structure containing the lock,
-> release does, so that piece wouldn't be altered by putting
-> blk_cleanup_queue() elsewhere.
+> It's probably the grouping, we need to do something about that. Does the
+> below patch make it behave as you expect?
 
-It's worth taking a closer look at what happened here.  Originally
-request_queue->queuedata was set to NULL and blk_cleanup_queue() was
-called from scsi_device_dev_release_usercontext() (by way of
-scsi_free_queue()).  This caused a problem because there was a window
-in which the last reference to the scsi_device had been dropped but the
-release routine hadn't yet run, so the queue was still marked as active
-(i.e., queuedata was still non-NULL).
+Yep that is it.
 
-Commit 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b ([SCSI] put stricter 
-guards on queue dead checks) was written to fix this problem.  However 
-it moved _both_ lines from the release routine into 
-__scsi_remove_device().  There was no need for this; all that was 
-needed was to make sure queuedata was NULL before the device reference 
-was dropped.
-
-And in fact, moving the call to scsi_free_queue() has opened up another
-window for bugs.  Now it's possible for requests to get on the queue
-(submitted by drivers from another layer that still hold a reference to
-the scsi_device) even after the queue's elevator has been freed.  Yes,
-the block layer is supposed to prevent this from happening, but there
-are multiple paths and they don't all have the requisite checks.
-
-And as Vivek points out, it's questionable whether they _can_ make the 
-proper checks.  Checking requires the queue's lock, but the client may 
-have deallocated the lock at the time the queue was cleaned up.  Maybe 
-SCSI doesn't do this, but other clients of the block layer might.  The 
-block layer can't make any assumptions.  The unavoidable conclusion is 
-that the clients must be responsible for insuring that no requests are 
-added to a queue after its lock has been released.
-
-To help accomplish this in SCSI, I'm suggesting that the call to
-scsi_free_queue() be moved back to where it used to be, in
-scsi_device_dev_release_usercontext().  Then it won't be possible for
-any wayward requests to be added to the queue after it is cleaned up,
-because there won't be any outstanding references to the scsi_device.
-
-Alan Stern
-
+02:14:12 PM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
+02:14:17 PM  all   11.98    0.00   46.62    1.18    0.00   37.79    0.00    0.00    2.43
+02:14:17 PM    0   15.43    0.00   55.31    0.00    0.00   29.26    0.00    0.00    0.00
+02:14:17 PM    1   14.83    0.00   56.71    0.00    0.00   28.46    0.00    0.00    0.00
+02:14:17 PM    2   14.80    0.00   56.00    0.00    0.00   29.20    0.00    0.00    0.00
+02:14:17 PM    3   14.63    0.00   57.11    0.00    0.00   28.26    0.00    0.00    0.00
+02:14:17 PM    4   14.80    0.00   57.60    0.00    0.00   27.60    0.00    0.00    0.00
+02:14:17 PM    5   15.03    0.00   56.11    0.00    0.00   28.86    0.00    0.00    0.00
+02:14:17 PM    6    3.79    0.00   20.16    5.99    0.00   59.68    0.00    0.00   10.38
+02:14:17 PM    7    2.80    0.00   14.20    3.20    0.00   70.80    0.00    0.00    9.00
