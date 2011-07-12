@@ -1,107 +1,106 @@
-From: Jonathan McDowell <noodles@earth.li>
-Subject: Re: Linux 3.0 oopses when pulling a USB CDROM
-Date: Tue, 12 Jul 2011 19:49:43 +0100
-Message-ID: <20110712184943.GE6432@earth.li>
-References: <20110704112727.GA2557@osiris.boeblingen.de.ibm.com>
- <Pine.LNX.4.44L0.1107041202170.12242-100000@netrider.rowland.org>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [PATCH] block: Check that queue is alive in
+ blk_insert_cloned_request()
+Date: Tue, 12 Jul 2011 14:54:29 -0400
+Message-ID: <20110712185429.GK1293@redhat.com>
+References: <CAG4TOxMjuntpd3Q5jgn+xDa2tgB9tq+jLcDquM_eAdFHXLDrWA@mail.gmail.com>
+	<1310166270-23196-1-git-send-email-roland@kernel.org>
+	<CAMM=eLfzKuw-2vbERV6D7dAHb1BWopOKZ=dB7vWxcxSCoj6Tkw@mail.gmail.com>
+	<20110712170658.GF1293@redhat.com>
+	<1310492490.16900.20.camel@mulgrave>
+	<20110712180238.GJ1293@redhat.com>
+	<1310495298.16900.24.camel@mulgrave>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1107041202170.12242-100000@netrider.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, axboe@kernel.dk, James Bottomley <James.Bottomley@HansenPartnership.com>, Andi Kleen <andi@firstfloor.org>, Dave Jones <davej@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, USB list <linux-usb@vger.kernel.org>
+In-Reply-To: <1310495298.16900.24.camel@mulgrave>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, device-mapper development <dm-devel@redhat.com>, Alan Stern <stern@rowland.harvard.edu>, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 04, 2011 at 12:04:54PM -0400, Alan Stern wrote:
-> On Mon, 4 Jul 2011, Heiko Carstens wrote:
-> 
-> > On Sat, Jul 02, 2011 at 01:37:59PM -0400, Alan Stern wrote:
-> > > The second bug, which hit me but apparently not any of you, is that the 
-> > > request_queue's elevator gets deallocated while it is still in use.  
-> > > That's because __scsi_remove_device() calls scsi_free_queue(), which 
-> > > does blk_cleanup_queue(), which calls elevator_exit(), even though the 
-> > > device file is still open and more requests will be submitted when the 
-> > > file is closed.
-> > > 
-> > > I'm not sure of the right fix for this.  One possibility is to move the 
-> > > scsi_free_queue() call to scsi_device_dev_release_usercontext().  Or 
-> > > maybe the elevator_exit() call should be moved to blk_release_queue().
-> > > 
-> > > Also, I have no idea why this shows up with USB drives but not other 
-> > > SCSI transports.  A fluke of timing?
+On Tue, Jul 12, 2011 at 01:28:18PM -0500, James Bottomley wrote:
+
+[..]
+> > > I'm starting to wonder if there's actually any value to
+> > > blk_cleanup_queue() and whether its functionality wouldn't be better
+> > > assumed by the queue release function on last put.
 > > 
-> > FWIW, I reported a bug where the request_queue's elevator got deallocated
-> > while it was still in use (fc transport with device hotplug):
-> > 
-> > http://www.spinics.net/lists/linux-scsi/msg52879.html
+> > I think one problem point is q->queue_lock. If driver drops its reference
+> > on queue and cleans up its data structures, then it will free up memory
+> > associated with q->queue_lock too. (If driver provided its own queue
+> > lock). In that case anything which is dependent on queue lock, needs
+> > to be freed up on blk_cleanup_queue().
 > 
-> That does sound like the second bug I encountered.  Can you reproduce 
-> it?  Does the patch here:
+> I don't quite follow.  blk_cleanup_queue() doesn't free anything (well,
+> except the elevator).  Final put will free the queue structure which
+> contains the lock, but if it's really a final put, you have no other
+> possible references, so no-one is using the lock ... well, assuming
+> there isn't a programming error, of course ...
 > 
-> 	http://marc.info/?l=linux-kernel&m=130963676907731&w=2
+> > If we can make sure that request queue reference will keep the spin lock
+> > alive, then i guess all cleanup part might be able to go in release
+> > queue function.
 > 
-> fix the problem?
+> As I said: cleanup doesn't free the structure containing the lock,
+> release does, so that piece wouldn't be altered by putting
+> blk_cleanup_queue() elsewhere.
 
-FWIW I'm seeing crashes when FC devices go away while in use as well,
-under 2.6.39 and 3.0.0-rc6. I will try the patch linked to above, but
-the most recent Oops was:
+I thought a driver could either rely on spin lock provided by request
+queue or override that by providing its own spinlock.
 
-[71286.103409] end_request: I/O error, dev sdaw, sector 0
-[71286.113710] BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
-[71286.117681] IP: [<ffffffff81197828>] elv_completed_request+0x38/0x47
-[71286.117681] PGD 2571c8067 PUD 253b81067 PMD 0 
-[71286.117681] Oops: 0000 [#1] SMP 
-[71286.117681] CPU 0 
-[71286.117681] Modules linked in: ip6table_filter ip6_tables iptable_filter ip_tables ebtable_nat ebtables x_tables autofs4 ipv6 kvm_intel kvm nfsd nfs lockd auth_rpcgss nfs_acl sunrpc dm_round_robin dm_multipath scsi_dh ipmi_devintf ipmi_si ipmi_msghandler sg evdev processor button thermal_sys serio_raw i5k_amb i2c_i801 ioatdma i2c_core dca rng_core tpm_tis tpm tpm_bios ext3 jbd dm_mod ses enclosure ata_generic ata_piix lpfc scsi_transport_fc scsi_tgt [last unloaded: scsi_wait_scan]
-[71286.117681] 
-[71286.117681] Pid: 0, comm: swapper Not tainted 3.0.0-rc6 #15 Intel S5000PAL./S5000PAL0 
-[71286.117681] RIP: 0010:[<ffffffff81197828>]  [<ffffffff81197828>] elv_completed_request+0x38/0x47
-[71286.117681] RSP: 0018:ffff88025fc03e10  EFLAGS: 00010002
-[71286.117681] RAX: 0000000000000000 RBX: ffff880253cdc1c0 RCX: 00000000000003fe
-[71286.117681] RDX: ffff880253155840 RSI: ffff880255e37c70 RDI: ffff880253cdc1c0
-[71286.117681] RBP: ffff880255e37c70 R08: 00000001010ec65f R09: 0000000000000000
-[71286.117681] R10: ffff880255e37c70 R11: ffffffff817e3e98 R12: 00000000fffffffb
-[71286.117681] R13: 0000000000000246 R14: 0000000000000000 R15: 0000000000000000
-[71286.117681] FS:  0000000000000000(0000) GS:ffff88025fc00000(0000) knlGS:0000000000000000
-[71286.117681] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[71286.117681] CR2: 0000000000000048 CR3: 0000000257144000 CR4: 00000000000006f0
-[71286.117681] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[71286.117681] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[71286.117681] Process swapper (pid: 0, threadinfo ffffffff81600000, task ffffffff8165b020)
-[71286.117681] Stack:
-[71286.117681]  ffff880255e37c70 ffffffff8119c27e ffff880255e37c70 ffff880253cdc1c0
-[71286.117681]  00000000fffffffb ffffffff8119d0c1 0000000000000000 ffff880255d733c0
-[71286.117681]  ffff880255e37c70 0000000000000000 00000000fffffffb ffffffff8122dfbb
-[71286.117681] Call Trace:
-[71286.117681]  <IRQ> 
-[71286.117681]  [<ffffffff8119c27e>] ? __blk_put_request+0x2e/0xb0
-[71286.117681]  [<ffffffff8119d0c1>] ? blk_end_bidi_request+0x3b/0x55
-[71286.117681]  [<ffffffff8122dfbb>] ? scsi_io_completion+0x431/0x48e
-[71286.117681]  [<ffffffff811a110f>] ? blk_done_softirq+0x5f/0x6c
-[71286.117681]  [<ffffffff8103bc7d>] ? __do_softirq+0xbe/0x194
-[71286.117681]  [<ffffffff810569c6>] ? timekeeping_get_ns+0xd/0x2a
-[71286.117681]  [<ffffffff8130dc0c>] ? call_softirq+0x1c/0x30
-[71286.117681]  [<ffffffff81003fc5>] ? do_softirq+0x31/0x63
-[71286.117681]  [<ffffffff8103ba69>] ? irq_exit+0x3f/0x9f
-[71286.117681]  [<ffffffff8130d873>] ? call_function_single_interrupt+0x13/0x20
-[71286.117681]  <EOI> 
-[71286.117681]  [<ffffffffa012d0ca>] ? acpi_idle_enter_simple+0xb4/0xe2 [processor]
-[71286.117681]  [<ffffffffa012d0c5>] ? acpi_idle_enter_simple+0xaf/0xe2 [processor]
-[71286.117681]  [<ffffffff81277aba>] ? cpuidle_idle_call+0xe4/0x162
-[71286.117681]  [<ffffffff81001da4>] ? cpu_idle+0xa5/0xdb
-[71286.117681]  [<ffffffff816c1ba8>] ? start_kernel+0x38e/0x399
-[71286.117681]  [<ffffffff816c138f>] ? x86_64_start_kernel+0xee/0xf2
-[71286.117681] Code: 40 74 35 83 7e 44 01 74 04 a8 40 74 2b 83 e0 11 ff c8 0f 95 c0 83 e0 01 48 05 fc 00 00 00 ff 4c 87 04 f6 46 41 04 74 10 48 8b 02 
-[71286.117681]  8b 40 48 48 85 c0 74 04 41 58 ff e0 59 c3 48 83 ec 08 48 8d 
-[71286.117681] RIP  [<ffffffff81197828>] elv_completed_request+0x38/0x47
-[71286.117681]  RSP <ffff88025fc03e10>
-[71286.117681] CR2: 0000000000000048
-[71286.117681] ---[ end trace 242b012d98a46112 ]---
-[71286.117681] Kernel panic - not syncing: Fatal exception in interrupt
+blk_init_allocated_queue_node()
+        /* Override internal queue lock with supplied lock pointer */
+        if (lock)
+                q->queue_lock           = lock;
 
-J.
+So if driver calls blk_cleanup_queue() and drops its reference on queue, then
+it should be free to release any memory it has allocated for spinlock.
+So though queue is around there are no gurantees that q->queue_lock is
+still around. That memory might have been freed by driver and reused.
 
--- 
-Listen to the words, they tell you what to do...
+I see many drivers are providing their own locks. Some samples from
+drivers/block.
+
+/virtio_blk.c:	q = vblk->disk->queue = blk_init_queue(do_virtblk_request,
+&vblk->lock);
+./xd.c:	xd_queue = blk_init_queue(do_xd_request, &xd_lock);
+./cpqarray.c:	q = blk_init_queue(do_ida_request, &hba[i]->lock);
+./sx8.c:	q = blk_init_queue(carm_rq_fn, &host->lock);
+./sx8.c:	q = blk_init_queue(carm_oob_rq_fn, &host->lock);
+./floppy.c:	disks[dr]->queue = blk_init_queue(do_fd_request, &floppy_lock);
+./viodasd.c:	q = blk_init_queue(do_viodasd_request, &d->q_lock);
+./cciss.c:	disk->queue = blk_init_queue(do_cciss_request, &h->lock);
+./hd.c:	hd_queue = blk_init_queue(do_hd_request, &hd_lock);
+./DAC960.c:  	RequestQueue = blk_init_queue(DAC960_RequestFunction,&Controller->queue_lock);
+./z2ram.c:    z2_queue = blk_init_queue(do_z2_request, &z2ram_lock);
+./amiflop.c:	disk->queue = blk_init_queue(do_fd_request, &amiflop_lock);
+./xen-blkfront.c:	rq = blk_init_queue(do_blkif_request, &blkif_io_lock);
+./paride/pd.c:	pd_queue = blk_init_queue(do_pd_request, &pd_lock);
+./paride/pf.c:	pf_queue = blk_init_queue(do_pf_request, &pf_spin_lock);
+./paride/pcd.c:	pcd_queue = blk_init_queue(do_pcd_request, &pcd_lock);
+./mg_disk.c:	host->breq = blk_init_queue(mg_request_poll, &host->lock);
+./mg_disk.c:	host->breq = blk_init_queue(mg_request, &host->lock);
+./rbd.c:	q = blk_init_queue(rbd_rq_fn, &rbd_dev->lock);
+./sunvdc.c:	q = blk_init_queue(do_vdc_request, &port->vio.lock);
+./swim.c:	swd->queue = blk_init_queue(do_fd_request, &swd->lock);
+./xsysace.c:	ace->queue = blk_init_queue(ace_request, &ace->lock);
+./osdblk.c:	q = blk_init_queue(osdblk_rq_fn, &osdev->lock);
+./ps3disk.c:	queue = blk_init_queue(ps3disk_request, &priv->lock);
+./swim3.c:	swim3_queue = blk_init_queue(do_fd_request, &swim3_lock);
+./ub.c:	if ((q = blk_init_queue(ub_request_fn, sc->lock)) == NULL)
+./nbd.c:	disk->queue = blk_init_queue(do_nbd_request, &nbd_lock);
+
+Thanks
+Vivek
