@@ -1,57 +1,61 @@
-From: "Jiang, Dave" <dave.jiang@intel.com>
-Subject: rq_affinity doesn't seem to work?
-Date: Tue, 12 Jul 2011 12:03:34 -0700
-Message-ID: <D010E79907AF0D4E90B603DE907837D504CA6365D6@azsmsx504.amr.corp.intel.com>
+From: Rolf Eike Beer <eike@sf-mail.de>
+Subject: Re: [PATCH 2/2] be2iscsi: Fixing the /proc/interrupts problem V3
+Date: Tue, 12 Jul 2011 21:24:45 +0200
+Message-ID: <201107122124.53323.eike@sf-mail.de>
+References: <1310490756-2210-1-git-send-email-jayamohan.kallickal@emulex.com> <894955a8-23e3-4553-bfb5-614b2bc8ed93@exht1.ad.emulex.com> <1310491313.16900.12.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed;
+  boundary="nextPart2975146.z3lCfzmtN6";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:7305 "EHLO mga14.intel.com"
+Received: from mail.sf-mail.de ([62.27.20.61]:39453 "EHLO mail.sf-mail.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754951Ab1GLTDh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2011 15:03:37 -0400
-Content-Language: en-US
+	id S1754107Ab1GLTZE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Jul 2011 15:25:04 -0400
+In-Reply-To: <1310491313.16900.12.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "axboe@kernel.dk" <axboe@kernel.dk>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: jayamohan.kallickal@emulex.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, Prarit Bhargava <prarit@redhat.com>
 
-Jens,
-I'm doing some performance tuning for the Intel isci SAS controller driver, and I noticed some interesting numbers with mpstat. Looking at the numbers it seems that rq_affinity is not moving the request completion to the request submission CPU. Using fio to saturate the system with 512B I/Os, I noticed that all I/Os are bound to the CPUs (CPUs 6 and 7) that service the hard irqs. I have put in a quick hack in the driver so that it records the CPU during request construction and then I try to steer the scsi->done() calls to the request CPUs. With this simple hack, mpstat shows that the soft irq contexts are now distributed. I observed significant performance increase. The iowait% gone from 30s and 40s to low single digit approaching 0. Any ideas what could be happening with the rq_affinity 
- logic? I'm assuming rq_affinity should behave the way my hacked solution is behaving. This is running on an 8 core single CPU SandyBridge based system with hyper-threading turned off. The two MSIX interrupts on the controller are tied to CPU 6 and 7 respectively via /proc/irq/X/smp_affinity. I'm running fio with 8 SAS disks and 8 threads. 
+--nextPart2975146.z3lCfzmtN6
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-no rq_affinity:
-09:23:31 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
-09:23:36 AM  all    9.65    0.00   41.75   23.60    0.00   24.98    0.00    0.00    0.03
-09:23:36 AM    0   13.40    0.00   59.60   27.00    0.00    0.00    0.00    0.00    0.00
-09:23:36 AM    1   14.00    0.00   58.80   27.20    0.00    0.00    0.00    0.00    0.00
-09:23:36 AM    2   13.20    0.00   57.40   29.40    0.00    0.00    0.00    0.00    0.00
-09:23:36 AM    3   12.40    0.00   57.00   30.60    0.00    0.00    0.00    0.00    0.00
-09:23:36 AM    4   12.60    0.00   52.80   34.60    0.00    0.00    0.00    0.00    0.00
-09:23:36 AM    5   11.62    0.00   48.30   40.08    0.00    0.00    0.00    0.00    0.00
-09:23:36 AM    6    0.00    0.00    0.20    0.00    0.00   99.80    0.00    0.00    0.00
-09:23:36 AM    7    0.00    0.00    0.00    0.00    0.00   99.80    0.00    0.00    0.20
+Am Dienstag 12 Juli 2011, 19:21:52 schrieb James Bottomley:
+> On Tue, 2011-07-12 at 10:12 -0700, jayamohan.kallickal@emulex.com wrote:
+> > From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> >=20
+> > This patch is based on one by Prarit Bhargava. I have made minor
+> > changes. Also, removed the redundant check for i =3D=3D 0 and adding
+> > changelog  as suggested by Rolf.
+>=20
+> This changelog doesn't actually say what the patch does.  From the
+> description, it sounds like a stable candidate, but I can't really tell.
+>=20
+> Please send an actual description including what the problem was and
+> what was done to fix it.  What's above can be the last paragraph
+> recording the patch history.
 
-with rq_affinity:
-09:25:04 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
-09:25:09 AM  all    9.50    0.00   42.32   23.19    0.00   24.99    0.00    0.00    0.00
-09:25:09 AM    0   13.80    0.00   61.60   24.60    0.00    0.00    0.00    0.00    0.00
-09:25:09 AM    1   13.03    0.00   60.32   26.65    0.00    0.00    0.00    0.00    0.00
-09:25:09 AM    2   12.83    0.00   58.52   28.66    0.00    0.00    0.00    0.00    0.00
-09:25:09 AM    3   12.20    0.00   56.60   31.20    0.00    0.00    0.00    0.00    0.00
-09:25:09 AM    4   12.20    0.00   52.40   35.40    0.00    0.00    0.00    0.00    0.00
-09:25:09 AM    5   11.78    0.00   49.30   38.92    0.00    0.00    0.00    0.00    0.00
-09:25:09 AM    6    0.00    0.00    0.00    0.00    0.00  100.00    0.00    0.00    0.00
-09:25:09 AM    7    0.00    0.00    0.00    0.00    0.00  100.00    0.00    0.00    0.00
+When you change the text anyway write "Eike".
 
-with soft irq steering:
-09:31:57 AM  CPU    %usr   %nice    %sys %iowait    %irq   %soft  %steal  %guest   %idle
-09:32:02 AM  all   12.73    0.00   46.82    1.63    8.03   28.59    0.00    0.00    2.20
-09:32:02 AM    0   16.20    0.00   55.00    3.20   10.20   15.40    0.00    0.00    0.00
-09:32:02 AM    1   15.60    0.00   57.60    0.00   10.00   16.80    0.00    0.00    0.00
-09:32:02 AM    2   16.03    0.00   56.91    0.20   10.62   16.23    0.00    0.00    0.00
-09:32:02 AM    3   15.77    0.00   58.48    0.20   10.18   15.17    0.00    0.00    0.20
-09:32:02 AM    4   16.17    0.00   56.09    0.00   10.18   17.56    0.00    0.00    0.00
-09:32:02 AM    5   16.00    0.00   56.60    0.20   10.60   16.60    0.00    0.00    0.00
-09:32:02 AM    6    3.41    0.00   18.64    3.81    0.80   60.52    0.00    0.00   12.83
-09:32:02 AM    7    2.79    0.00   14.97    5.79    1.40   70.26    0.00    0.00    4.79
+Thx,
+
+Eike
+
+--nextPart2975146.z3lCfzmtN6
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.16 (GNU/Linux)
+
+iEUEABECAAYFAk4cn4UACgkQXKSJPmm5/E5XdACeKHmgqoQyOQ1IbpKMHPhPLUEj
+UzIAli5lc/z0OSK6DCFTBAGupZG28Qs=
+=YV2C
+-----END PGP SIGNATURE-----
+
+--nextPart2975146.z3lCfzmtN6--
