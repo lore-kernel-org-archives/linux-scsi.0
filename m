@@ -1,52 +1,49 @@
-From: ersatz splatt <ersatzsplatt@gmail.com>
-Subject: Re: [PATCH 0/3] RFC: libsas queuecommand fixups
-Date: Tue, 12 Jul 2011 15:10:49 -0700
-Message-ID: <CAHQAjVGMJtHu0+scbOhkHwAoW0U2AQDS2A0yGUzhxRQxUQMB+A@mail.gmail.com>
-References: <20110711184922.859239377@bombadil.infradead.org>
+From: <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [PATCH 1/2] be2iscsi: Adding shutdown routing
+Date: Tue, 12 Jul 2011 15:16:23 -0700
+Message-ID: <50725EF61B96174EB1803401F1A2E37337F57CC1E3@EXMAIL.ad.emulex.com>
+References: <9f89710f-b612-4066-94a2-b44656c7d069@exht1.ad.emulex.com>
+ <4E1CB525.2070404@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34869 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755964Ab1GLWKw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2011 18:10:52 -0400
-Received: by wwe5 with SMTP id 5so5381868wwe.1
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Jul 2011 15:10:51 -0700 (PDT)
-In-Reply-To: <20110711184922.859239377@bombadil.infradead.org>
+Received: from exht2.emulex.com ([138.239.113.184]:17189 "EHLO
+	exht2.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755451Ab1GLWQr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jul 2011 18:16:47 -0400
+In-Reply-To: <4E1CB525.2070404@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com
 
-I ran some simple tests (see the recent pm8001 e-mail for specifics)
--- fio on each of the patches applied incrementally to libsas.  This
-is only a simple "smoke test" really.
-Things seemed to work fine with the patches.
+Will modify for new changelog, rename Rolf to Eike and remove the tags. 
 
-If someone wants some more specific testing, I'm open to running it if
-you give me the details.
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Tuesday, July 12, 2011 1:57 PM
+To: Kallickal, Jayamohan
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@hansenpartnership.com
+Subject: Re: [PATCH 1/2] be2iscsi: Adding shutdown routing
 
+On 07/12/2011 12:12 PM, jayamohan.kallickal@Emulex.Com wrote:
+> From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+> 
+>   This patch adds a  shutdown routine
+> 
+> Signed-off-by: Jayamohan Kallickal <jayamohan,kallickal@emulex.com>
+> ---
+>  drivers/scsi/be2iscsi/be_cmds.c |    2 +-
+>  drivers/scsi/be2iscsi/be_main.c |   10 +
+>  drivers/scsi/be2iscsi/be_main.h |    1 +
 
+The iscsi/driver parts are ok.
 
-On Mon, Jul 11, 2011 at 11:49 AM, Christoph Hellwig <hch@infradead.org>=
- wrote:
-> Fix up some lose ends in sas_queuecommand that I noticed during the i=
-sci
-> review. =A0The first two are pretty straight forward, but the third i=
-s a bit
-> more nasty and needs some serious review and testing. =A0Note that I =
-could
-> only compile-test the bunch as I don't actually have a SAS controller
-> using libsas.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
+>  drivers/scsi/be2iscsi/tags      | 1588 +++++++++++++++++++++++++++++++++++++++
+
+You do not need want this tags part in your patch. Maybe James can just
+drop that part for you when/if he merges it.
