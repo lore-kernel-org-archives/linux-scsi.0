@@ -1,52 +1,79 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: block: Check that queue is alive in blk_insert_cloned_request()
-Date: Tue, 12 Jul 2011 11:24:54 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1107121120130.31381-100000@netrider.rowland.org>
-References: <20110712014633.GA30965@redhat.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: CONFIG_INTR_REMAP and CONFIG_DMAR dependencies?
+Date: Tue, 12 Jul 2011 09:47:47 -0700
+Message-ID: <20110712164747.GH95752@plapp.qlogic.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110712014633.GA30965@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>
+Cc: Avik Shau <avik.shau@qlogic.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 11 Jul 2011, Vivek Goyal wrote:
+All,
 
-> > > There's still the issue that Stefan Richter pointed out: The test for a 
-> > > dead queue must be made _after_ acquiring the queue lock, not _before_.
-> > 
-> > Yes, quite important.
-> > 
-> > Jens, can you tweak the patch or should Roland send a v2?
-> 
-> I do not think that we should do queue dead check after taking a spinlock.
-> The reason being that there are life time issues of two objects.
-> 
-> - Validity of request queue pointer
-> - Validity of q->spin_lock pointer
-> 
-> If the dm has taken the reference to the request queue in the beginning
-> then it can be sure request queue pointer is valid. But spin_lock might
-> be coming from driver and might be in one of driver allocated structures.
-> So it might happen that driver has called blk_cleanup_queue() and freed
-> up structures which contained the spin lock.
+We've seen a few reports logged with upstream kernels where qla2xxx is
+unable to initialize HW due to what appears to be a lack of
+interrupt routing:
 
-Surely this is a bug in the design of the block layer?
+	[ 1137.271156] qla2xxx 0000:18:00.0: Found an ISP2532, irq 52, iobase 0xffffc90000028000
+	[ 1137.271438] qla2xxx 0000:18:00.0: irq 96 for MSI/MSI-X
+	[ 1137.271447] qla2xxx 0000:18:00.0: irq 97 for MSI/MSI-X
+	[ 1137.271706] qla2xxx 0000:18:00.0: Configuring PCI space...
+	[ 1137.271725] qla2xxx 0000:18:00.0: setting latency timer to 64
+	[ 1137.271732] qla2xxx 0000:18:00.0: enabling Mem-Wr-Inval
+	[ 1137.278705] DRHD: handling fault status reg 2
+	[ 1137.278715] INTR-REMAP: Request device [[18:00.0] fault index 20
+	[ 1137.278717] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+	[ 1159.389099] qla2xxx 0000:0c:07.0: Cable is unplugged...
+	[ 1167.218478] qla2xxx 0000:18:00.0: Mailbox command timeout occurred. Scheduling ISP abort. eeh_busy: 0x0
+	[ 1167.218490] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50400/18389b000).
+	[ 1167.218496] qla2xxx 0000:18:00.0: Reverting to slow-read.
+	[ 1197.174623] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50000/18389b000).
+	[ 1197.174632] qla2xxx 0000:18:00.0: Reverting to slow-read.
+	[ 1197.190613] qla2xxx 0000:18:00.0: Configure NVRAM parameters...
+	[ 1197.198582] qla2xxx 0000:18:00.0: Verifying loaded RISC code...
+	[ 1227.142951] qla2xxx 0000:18:00.0: Failed mailbox send register test
+	[ 1227.142959] qla2xxx 0000:18:00.0: Failed to initialize adapter
 
-> So if queue is not dead, we know that q->spin_lock is valid. I think
-> only race present here is that whole operation is not atomic. First
-> we check for queue not dead flag and then go on to acquire request
-> queue lock. So this leaves a small window for race. I think I have
-> seen other code written in such manner (__generic_make_request()). So
-> it proably reasonably safe to do here too.
+It turns out that this is seen only when the kernel is configured with
+CONFIG_INTR_REMAP=y and CONFIG_DMAR=n.  When the kernel is recompiled
+with CONFIG_DMAR=y, interrupts are being routed and the driver
+operates as normal:
 
-"Probably reasonably safe" = "unsafe".  The fact that it will usually
-work out okay means that when it does fail, it will be very difficult
-to track down.
+	[   63.271529] qla2xxx 0000:18:00.0: PCI INT A -> GSI 52 (level, low) -> IRQ 52
+	[   63.271560] qla2xxx 0000:18:00.0: Found an ISP2532, irq 52, iobase 0xffffc90000028000
+	[   63.271864] qla2xxx 0000:18:00.0: irq 96 for MSI/MSI-X
+	[   63.271876] qla2xxx 0000:18:00.0: irq 97 for MSI/MSI-X
+	[   63.272095] qla2xxx 0000:18:00.0: Configuring PCI space...
+	[   63.272103] qla2xxx 0000:18:00.0: setting latency timer to 64
+	[   63.272111] qla2xxx 0000:18:00.0: enabling Mem-Wr-Inval
+	[   63.285525] qla2xxx 0000:18:00.0: Configure NVRAM parameters...
+	[   63.293880] qla2xxx 0000:18:00.0: Verifying loaded RISC code...
+	[   63.310956] qla2xxx 0000:18:00.0: FW: Loading via request-firmware...
+	[   63.342746] qla2xxx 0000:18:00.0: Allocated (64 KB) for FCE...
+	[   63.342823] qla2xxx 0000:18:00.0: Allocated (64 KB) for EFT...
+	[   63.343130] qla2xxx 0000:18:00.0: Allocated (1350 KB) for firmware dump...
+	[   63.348153] scsi2 : qla2xxx
+	[   63.348722] qla2xxx 0000:18:00.0: 
+	[   63.348723]  QLogic Fibre Channel HBA Driver: 8.03.07.03-k
+	[   63.348724]   QLogic QLE2562 - PCI-Express Dual Channel 8Gb Fibre Channel HBA
+	[   63.348726]   ISP2532: PCIe (5.0GT/s x4) @ 0000:18:00.0 hdma+, host#=2, fw=5.03.15 (d5)
 
-It needs to be fixed _now_, when people are aware of the issue.  Not 
-five years from now, when everybody has forgotten about it.
+My questions are:
 
-Alan Stern
+1) What does the following mean in the CONFIG_INTR_REMAP=y and
+   CONFIG_DMAR=n case?
+
+	[ 1137.278705] DRHD: handling fault status reg 2
+	[ 1137.278715] INTR-REMAP: Request device [[18:00.0] fault index 20
+	[ 1137.278717] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+
+2) Should CONFIG_DMAR be automatically enabled when
+   CONFIG_INTR_REMAP is set?
+
+3) If the answer to (2) is no, then what should drivers do differently
+   to avoid this 'no interrupts being routed case' scenario?
+
+Thanks, av
