@@ -1,79 +1,64 @@
 From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH] block: Check that queue is alive in
- blk_insert_cloned_request()
-Date: Tue, 12 Jul 2011 13:06:58 -0400
-Message-ID: <20110712170658.GF1293@redhat.com>
-References: <CAG4TOxMjuntpd3Q5jgn+xDa2tgB9tq+jLcDquM_eAdFHXLDrWA@mail.gmail.com>
- <1310166270-23196-1-git-send-email-roland@kernel.org>
- <CAMM=eLfzKuw-2vbERV6D7dAHb1BWopOKZ=dB7vWxcxSCoj6Tkw@mail.gmail.com>
+Subject: Re: block: Check that queue is alive in blk_insert_cloned_request()
+Date: Tue, 12 Jul 2011 13:10:33 -0400
+Message-ID: <20110712171033.GG1293@redhat.com>
+References: <20110712014633.GA30965@redhat.com>
+ <Pine.LNX.4.44L0.1107121120130.31381-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAMM=eLfzKuw-2vbERV6D7dAHb1BWopOKZ=dB7vWxcxSCoj6Tkw@mail.gmail.com>
+In-Reply-To: <Pine.LNX.4.44L0.1107121120130.31381-100000@netrider.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Mike Snitzer <snitzer@redhat.com>, Roland Dreier <roland@kernel.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.vnet.ibm.com>, "Manvanthara B. Puttashankar" <manvanth@linux.vnet.ibm.com>, Tarak Reddy <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <sesh17@linux.vnet.ibm.com>, linux-kernel@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jul 11, 2011 at 06:40:11PM -0400, Mike Snitzer wrote:
-> [cc'ing dm-devel, vivek and tejun]
->=20
-> On Fri, Jul 8, 2011 at 7:04 PM, Roland Dreier <roland@kernel.org> wro=
-te:
-> > From: Roland Dreier <roland@purestorage.com>
-> >
-> > This fixes crashes such as the below that I see when the storage
-> > underlying a dm-multipath device is hot-removed. =A0The problem is =
-that
-> > dm requeues a request to a device whose block queue has already bee=
-n
-> > cleaned up, and blk_insert_cloned_request() doesn't check if the qu=
-eue
-> > is alive, but rather goes ahead and tries to queue the request. =A0=
-This
-> > ends up dereferencing the elevator that was already freed in
-> > blk_cleanup_queue().
->=20
-> Your patch looks fine to me:
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
->=20
-> And I looked at various code paths to arrive at the references DM tak=
-es.
->=20
-> A reference is taken on the underlying devices' block_device via
-> drivers/md/dm-table.c:open_dev() with blkdev_get_by_dev().  open_dev(=
-)
-> also does bd_link_disk_holder(), resulting in the mpath device
-> becoming a holder of the underlying devices. e.g.:
-> /sys/block/sda/holders/dm-4
->=20
-> But at no point does DM-mpath get a reference to the underlying
-> devices' request_queue that gets assigned to clone->q (in
-> drivers/md/dm-mpath.c:map_io).
->=20
-> Seems we should, though AFAIK it won't help with the issue you've
-> pointed out (because the hotplugged device's driver already called
-> blk_cleanup_queue and nuked the elevator).
+On Tue, Jul 12, 2011 at 11:24:54AM -0400, Alan Stern wrote:
+> On Mon, 11 Jul 2011, Vivek Goyal wrote:
+> 
+> > > > There's still the issue that Stefan Richter pointed out: The test for a 
+> > > > dead queue must be made _after_ acquiring the queue lock, not _before_.
+> > > 
+> > > Yes, quite important.
+> > > 
+> > > Jens, can you tweak the patch or should Roland send a v2?
+> > 
+> > I do not think that we should do queue dead check after taking a spinlock.
+> > The reason being that there are life time issues of two objects.
+> > 
+> > - Validity of request queue pointer
+> > - Validity of q->spin_lock pointer
+> > 
+> > If the dm has taken the reference to the request queue in the beginning
+> > then it can be sure request queue pointer is valid. But spin_lock might
+> > be coming from driver and might be in one of driver allocated structures.
+> > So it might happen that driver has called blk_cleanup_queue() and freed
+> > up structures which contained the spin lock.
+> 
+> Surely this is a bug in the design of the block layer?
+> 
+> > So if queue is not dead, we know that q->spin_lock is valid. I think
+> > only race present here is that whole operation is not atomic. First
+> > we check for queue not dead flag and then go on to acquire request
+> > queue lock. So this leaves a small window for race. I think I have
+> > seen other code written in such manner (__generic_make_request()). So
+> > it proably reasonably safe to do here too.
+> 
+> "Probably reasonably safe" = "unsafe".  The fact that it will usually
+> work out okay means that when it does fail, it will be very difficult
+> to track down.
+> 
+> It needs to be fixed _now_, when people are aware of the issue.  Not 
+> five years from now, when everybody has forgotten about it.
 
-[Thinking loud]
+I agree that fixing would be good. Frankly speaking I don't even have
+full understanding of the problem. I know little bit from request queue
+side but have no idea about referencing mechanism at device level and
+how that is supposed to work with request queue referencing.
 
-Could it be a driver specific issue that it cleaned up the request
-queue too early?
-
-Is there any notion of device reference which higher layers take and
-that should make sure request queue is intact till somebody is holding
-device reference.
-
-If yes, what't the connection between device reference and request
-queue reference. IOW, why request queue reference is needed and why
-device reference is not sufficient. (Because there is not necessarily
-one to one mapping between request queue and device?)
-
-I seem to just have lots of question about devices and referencing.
-Hopefully somebody with more knowledge in this area be able to
-shed some light on it.
+So once we understand the problem well, probably we will have an answer
+how to go about fixing it.
 
 Thanks
 Vivek
