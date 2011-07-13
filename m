@@ -1,42 +1,67 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: rq_affinity doesn't seem to work?
-Date: Wed, 13 Jul 2011 20:00:46 +0200
-Message-ID: <4E1DDD4E.6040100@kernel.dk>
-References: <D010E79907AF0D4E90B603DE907837D504CA6365D6@azsmsx504.amr.corp.intel.com> <4E1CAEEB.8050506@kernel.dk> <20110713171011.GA11864@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110713171011.GA11864@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: "Jiang, Dave" <dave.jiang@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
+From: Ayman Elkhashab <aymane@elkhashab.com>
+Subject: [PATCH 1/1] mpt2sas:  Fixes so driver works on 32 bit powerpc with > 32 bit pci space
+Date: Wed, 13 Jul 2011 15:04:50 -0500
+Message-ID: <1310587490-31821-1-git-send-email-aymane__48279.1814524264$1310587850$gmane$org@elkhashab.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.tanisys.com ([207.114.241.63]:3696 "EHLO
+	tanisys-ex2.Tanisys.Local" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751019Ab1GMUKb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jul 2011 16:10:31 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, Kashyap Desai <kashyap.desai@lsi.com>, Greg Kroah-Hartman <gregkh@suse.de>, Eric Moore <eric.moore@lsi.com>, Nick Cheng <nick.cheng@>
+Cc: Ayman El-Khashab <ayman@elkhashab.com>
 
-On 2011-07-13 19:10, Matthew Wilcox wrote:
-> On Tue, Jul 12, 2011 at 10:30:35PM +0200, Jens Axboe wrote:
->> It's probably the grouping, we need to do something about that. Does the
->> below patch make it behave as you expect?
-> 
-> "something", absolutely.  But there is benefit from doing some aggregation
-> (we tried disabling it entirely with the "well-known OLTP benchmark" and
-> performance went down).
+From: Ayman El-Khashab <ayman@elkhashab.com>
 
-Yep, that's why the current solution is somewhat middle of the road...
+Changed the type of chip_phys from a u64 to a phys_addr_t.  Changed ifdef
+from BITS_PER_LONG to CONFIG_ARCH_DMA_ADDR_T_64BIT so that it works on
+32 bit systems that have pci address spaces larger than 32 bits.
 
-> Ideally we'd do something like "if the softirq is taking up more than 10%
-> of a core, split the grouping".  Do we have enough stats to do that kind
-> of monitoring?
+Tested on powerpc 44x with 36 bit pci space
 
-I don't think we have those stats, though it could/should be pulled from
-the ksoftirqX threads. We could have some metric, ala
+Signed-off-by: Ayman El-Khashab <ayman@elkhashab.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    4 ++--
+ drivers/scsi/mpt2sas/mpt2sas_base.h |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-        dest_cpu = get_group_completion_cpu(rq->cpu);
-        if (ksoftirqd_of(dest_cpu) >= 90% busy)
-                dest_cpu = rq->cpu;
-
-to send things completely local to the submitter of the IO, IFF the
-current CPU is close to running at full tilt.
-
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index efa0255..e5bbd0c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1251,7 +1251,7 @@ mpt2sas_base_map_resources(struct MPT2SAS_ADAPTER *ioc)
+ 	u32 pio_sz;
+ 	int i, r = 0;
+ 	u64 pio_chip = 0;
+-	u64 chip_phys = 0;
++	phys_addr_t chip_phys = 0;
+ 
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n",
+ 	    ioc->name, __func__));
+@@ -3243,7 +3243,7 @@ _base_send_ioc_init(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	mpi_request.ReplyFreeQueueDepth =
+ 	    cpu_to_le16(ioc->reply_free_queue_depth);
+ 
+-#if BITS_PER_LONG > 32
++#ifdef CONFIG_ARCH_DMA_ADDR_T_64BIT
+ 	mpi_request.SenseBufferAddressHigh =
+ 	    cpu_to_le32(ioc->sense_dma >> 32);
+ 	mpi_request.SystemReplyAddressHigh =
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index dcc289c..d5f9ed8 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -682,7 +682,7 @@ struct MPT2SAS_ADAPTER {
+ 	char		tmp_string[MPT_STRING_LENGTH];
+ 	struct pci_dev	*pdev;
+ 	Mpi2SystemInterfaceRegs_t __iomem *chip;
+-	resource_size_t	chip_phys;
++	phys_addr_t	chip_phys;
+ 	int		logging_level;
+ 	int		fwfault_debug;
+ 	u8		ir_firmware;
 -- 
-Jens Axboe
+1.7.4.3
+
