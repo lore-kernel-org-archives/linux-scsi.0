@@ -1,33 +1,36 @@
-From: Antonio Carlos Izolan <izolan@santiagonet.com.br>
-Subject: The Google-UK 12th Anniversary Celebration ( Urgent Notification!! ); Call : +44 702 409 9916
-Date: Wed, 13 Jul 2011 13:14:41 -0300 (BRT)
-Message-ID: <97b8523d-d562-4ba6-90ae-4233c6cd2274__11849.4413829923$1310575857$gmane$org@mail>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: rq_affinity doesn't seem to work?
+Date: Wed, 13 Jul 2011 11:10:11 -0600
+Message-ID: <20110713171011.GA11864@parisc-linux.org>
+References: <D010E79907AF0D4E90B603DE907837D504CA6365D6@azsmsx504.amr.corp.intel.com> <4E1CAEEB.8050506@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.santiagonet.com.br ([200.180.136.243]:44148 "EHLO
-	mail.santiagonet.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756398Ab1GMQuh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2011 12:50:37 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:56945 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932175Ab1GMRKN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2011 13:10:13 -0400
+Content-Disposition: inline
+In-Reply-To: <4E1CAEEB.8050506@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Jiang, Dave" <dave.jiang@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
 
+On Tue, Jul 12, 2011 at 10:30:35PM +0200, Jens Axboe wrote:
+> It's probably the grouping, we need to do something about that. Does the
+> below patch make it behave as you expect?
 
+"something", absolutely.  But there is benefit from doing some aggregation
+(we tried disabling it entirely with the "well-known OLTP benchmark" and
+performance went down).
 
-We urgently wish to inform you that your e-mail has w o n =C2=A3850,000=
- UK Pounds in our on-going 12th Anniversary Online Giveaway draws. E-ma=
-il w i n n i n g info: L u c k y # :12-12-23-35-40-41(12) T i c k e t #=
- :008 695 757 336 64}
+Ideally we'd do something like "if the softirq is taking up more than 10%
+of a core, split the grouping".  Do we have enough stats to do that kind
+of monitoring?
 
-=46or further information to be provided, you have to forward this noti=
-fication to our processing unit to confirm your email account is still =
-active. Processing Unit: Email : mr.grahammrbenarde@live.co.uk  Ms. Hel=
-ena Giveaway Online Announcer
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
