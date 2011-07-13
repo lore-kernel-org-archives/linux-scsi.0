@@ -1,28 +1,33 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] RESEND ibmmca: trivial typo fixes
-Date: Tue, 12 Jul 2011 21:46:24 -0700
-Message-ID: <1310532384.1662.2.camel@Joe-Laptop>
-References: <1310530933.4444.8.camel@offbook>
+From: Antonio Carlos Izolan <izolan@santiagonet.com.br>
+Subject: The Google-UK 12th Anniversary Celebration ( Urgent Notification!! ); Call : +44 702 409 9916
+Date: Wed, 13 Jul 2011 13:14:41 -0300 (BRT)
+Message-ID: <97b8523d-d562-4ba6-90ae-4233c6cd2274__11849.4413829923$1310575857$gmane$org@mail>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1310530933.4444.8.camel@offbook>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dave@gnu.org
-Cc: trivial <trivial@kernel.org>, lkml <linux-kernel@vger.kernel.org>, Michael Lang <langa2@kph.uni-mainz.de>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.santiagonet.com.br ([200.180.136.243]:44148 "EHLO
+	mail.santiagonet.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756398Ab1GMQuh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jul 2011 12:50:37 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-07-13 at 00:22 -0400, Davidlohr Bueso wrote:
-> From: Davidlohr Bueso <dave@gnu.org>
-> diff --git a/Documentation/scsi/ibmmca.txt b/Documentation/scsi/ibmmca.txt
-[]
-> @@ -487,7 +487,7 @@
->     1) Submitting the extra-array ldn_is_tape[] -> to the local ld[]
->        device-array. 
->     2) CD-ROM Audio-Play seems to work now.
-> -   3) When using DDS-2 (120M) DAT-Tapes, mtst shows still density-code
-> +   3) When using DDS-2 (120M) DAT-Tapes, must show still density-code
 
-I think the original is correct.
-mtst is a utility.
+
+We urgently wish to inform you that your e-mail has w o n =C2=A3850,000=
+ UK Pounds in our on-going 12th Anniversary Online Giveaway draws. E-ma=
+il w i n n i n g info: L u c k y # :12-12-23-35-40-41(12) T i c k e t #=
+ :008 695 757 336 64}
+
+=46or further information to be provided, you have to forward this noti=
+fication to our processing unit to confirm your email account is still =
+active. Processing Unit: Email : mr.grahammrbenarde@live.co.uk  Ms. Hel=
+ena Giveaway Online Announcer
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
