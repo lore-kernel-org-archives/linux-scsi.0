@@ -1,21 +1,21 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
 Subject: Re: [PATCH] BNX2I: Fixed kernel panic due to illegal usage of sc->request->cpu
-Date: Thu, 14 Jul 2011 02:20:09 -0500
-Message-ID: <4E1E98A9.8070907@cs.wisc.edu>
+Date: Thu, 14 Jul 2011 02:41:42 -0500
+Message-ID: <4E1E9DB6.6020200@cs.wisc.edu>
 References: <Eddie Wai <eddie.wai@broadcom.com> <1310408095-11882-1-git-send-email-eddie.wai@broadcom.com> <4E1B56F3.20507@cs.wisc.edu> <1310625223.3678.130.camel@ltirv-waie-lx1>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36437 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41288 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752994Ab1GNHRo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2011 03:17:44 -0400
+	id S1753715Ab1GNHjP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jul 2011 03:39:15 -0400
 In-Reply-To: <1310625223.3678.130.camel@ltirv-waie-lx1>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: James Bottomley <jbottomley@parallels.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+To: open-iscsi@googlegroups.com
+Cc: Eddie Wai <eddie.wai@broadcom.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
 
 On 07/14/2011 01:33 AM, Eddie Wai wrote:
 > 
@@ -83,36 +83,8 @@ On 07/14/2011 01:33 AM, Eddie Wai wrote:
 > For bnx2i, if the blk layer didn't set the request->cpu, we would want to align and complete
 > the cmd against the task_xmit issuer's CPU id unconditionally; hence the explicit get_cpu call.
 
-I actually think all this should go in the block layer. We should not
-have driver specific setting/interfaces for this. The driver should be
-able to just have the block layer complete all the IO on some soft
-irq/thread and do the right thing. Then we can have one interface in the
-block layer too.
-
-We do not want to end up with every driver adding some sysfs/modparm
-interfaces to control if we are going to complete the IO on the same
-cpu, round robin cpus, etc.
-
-I think we need to change the blkio poll code so it is usefull to
-everyone. It does not make sense for every driver to want to do some
-completion processing in a thread/softirq then have every driver create
-their own threading and completing code/policies. From there we can have
-a common interface to control the cpu completion polciy.
-
-It will be really strange to tell users that in one case we use the
-block layer policy but in another case we use the LLD policy interface.
-
-I think right now we are ending up with a mess where someone can set the
-rq_affinity, the LLD will ignore this and do round robin completion on
-its own threads, then when the block layer soft irq completion code runs
-it will complete on the cpu set by the rq_affinity code.
-
-> 
-> In the current block code, this CPU affinity code is only being called in the __make_request
-> code path. I believe the same code needs to be executed in all the other code paths where
-> the blk request is being added to the queue for execution.  This change will then properly
-> place the desired CPU to the request->cpu when the queue is defined with QUEUE_FLAG_SAME_COMP.
-> Otherwise, the request->cpu will assume the init value of -1.
-> 
-
-I am not disagreeing with that.
+Oh yeah, wrt the code we have today (so I mean ignoring my rant in the
+other mail :)), I think what you are doing in your patch is sort of ok.
+I am not sure if we want to be touching the request->cpu field in a LLD
+though. I do not think LLDs should be modifying a block layer struct
+like that probably.
