@@ -1,97 +1,293 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: [PATCH] BNX2I: Fixed kernel panic due to illegal usage of
- sc->request->cpu
-Date: Wed, 13 Jul 2011 23:33:42 -0700
-Message-ID: <1310625223.3678.130.camel@ltirv-waie-lx1>
-References: <Eddie Wai <eddie.wai@broadcom.com>
- <1310408095-11882-1-git-send-email-eddie.wai@broadcom.com>
- <4E1B56F3.20507@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: giridhar.malavali@qlogic.com
+Subject: [PATCH 3/3] qla2xxx: Cleanup of previous infrastructure.
+Date: Wed, 13 Jul 2011 23:30:56 -0700
+Message-ID: <1310625056-31793-4-git-send-email-giridhar.malavali@qlogic.com>
+References: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4442 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752308Ab1GNGdx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2011 02:33:53 -0400
-In-Reply-To: <4E1B56F3.20507@cs.wisc.edu>
+Received: from vpn.pathscale.com ([198.186.3.75]:39018 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753348Ab1GNGpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jul 2011 02:45:34 -0400
+In-Reply-To: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <jbottomley@parallels.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+To: James.Bottomley@suse.de
+Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@qlogic.com>
 
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-On Mon, 2011-07-11 at 13:02 -0700, Mike Christie wrote:
-> On 07/11/2011 01:14 PM, Eddie Wai wrote:
-> > A kernel panic was observed when passing the sc->request->cpu = -1 to
-> > retrieve the per_cpu variable pointer:
-> >  #0 [ffff880011203960] machine_kexec at ffffffff81022bc3
-> >  #1 [ffff8800112039b0] crash_kexec at ffffffff81088630
-> >  #2 [ffff880011203a80] __die at ffffffff8139ea20
-> >  #3 [ffff880011203aa0] no_context at ffffffff8102f3a7
-> >  #4 [ffff880011203ae0] __bad_area_nosemaphore at ffffffff8102f665
-> >  #5 [ffff880011203ba0] retint_signal at ffffffff8139dd1f
-> >  #6 [ffff880011203cc8] bnx2i_indicate_kcqe at ffffffffa03dc4f2
-> >  #7 [ffff880011203da8] service_kcqes at ffffffffa03cb04f
-> >  #8 [ffff880011203e68] cnic_service_bnx2x_kcq at ffffffffa03cb14a
-> >  #9 [ffff880011203e88] cnic_service_bnx2x_bh at ffffffffa03cb1b3
-> > 
-> > The problem lies in the sg_io (and perhaps sg_scsi_ioctl) call to
-> > blk_get_request->get_request/wait->blk_alloc_request->blk_rq_init which
-> > re-initializes the request->cpu to -1.  There is no assignment for cpu from
-> > that to the request_fn call to low level drivers.
-> > 
-> > When this happens, the sc->request->cpu will be using the init value of
-> > -1.  This will create a kernel panic when it hits bnx2i because the code
-> > refers it to get the per_cpu variables ptr.
-> > 
-> > This change is to put in a guard against that and also for cases when
-> > CONFIG_SMP/BIO_CPU_AFFINE is not enabled.  In those cases, the cpu
-> > affinitization code would not get run in __make_request either; hence
-> > the request->cpu will remain a -1 also.
-> > 
-> 
-> 
-> > 
-> > diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > index 5c55a75..622383d 100644
-> > --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> > @@ -1225,6 +1225,10 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
-> >  	if (!sc)
-> >  		return bnx2i_mtask_xmit(conn, task);
-> >  
-> > +	if (!blk_rq_cpu_valid(sc->request)) {
-> > +		sc->request->cpu = get_cpu();
-> > +		put_cpu();
-> > +	}
-> 
-> 
-> If I understand you right, then I think this needs to get fixed in the
-> block or scsi layer instead of each LLD.
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_dbg.c |  103 -----------------------------
+ drivers/scsi/qla2xxx/qla_dbg.h |  140 ----------------------------------------
+ 2 files changed, 0 insertions(+), 243 deletions(-)
 
-Absolutely, but this bnx2i fix is still applicable alongside the fixes I'm
-proposing in the block layer below.
-
-I think the whole idea behind the tracking of the blk req->cpu is so that the blk completion
-can be fired off from the same CPU to take advantage of the CPU's llc.  However, this is only being
-done when the queue is defined with the QUEUE_FLAG_SAME_COMP queue_flag enabled.  In the case
-when the queue is defined without this enforced, it would then be up to the blk completion
-code to complete the blk request with the current CPU of the thread.
-
-The same analogy should apply to the iSCSI LLD for cmd completion as well.  So if the
-sc->request->cpu is left at -1, the LLD should then decide how it wants the cmd completion
-to take place.  For all the other cases, the request->cpu id should be used instead.  
-For bnx2i, if the blk layer didn't set the request->cpu, we would want to align and complete
-the cmd against the task_xmit issuer's CPU id unconditionally; hence the explicit get_cpu call.
-
-In the current block code, this CPU affinity code is only being called in the __make_request
-code path. I believe the same code needs to be executed in all the other code paths where
-the blk request is being added to the queue for execution.  This change will then properly
-place the desired CPU to the request->cpu when the queue is defined with QUEUE_FLAG_SAME_COMP.
-Otherwise, the request->cpu will assume the init value of -1.
-
-Please throw in your 2 cents if anyone thinks otherwise.  I should have
-the blk layer patches submitted soon.  Thanks.
-
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 5c1e69f..2155071 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1650,109 +1650,6 @@ qla81xx_fw_dump_failed:
+ /****************************************************************************/
+ /*                         Driver Debug Functions.                          */
+ /****************************************************************************/
+-
+-void
+-qla2x00_dump_regs(scsi_qla_host_t *vha)
+-{
+-	int i;
+-	struct qla_hw_data *ha = vha->hw;
+-	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+-	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
+-	uint16_t __iomem *mbx_reg;
+-
+-	mbx_reg = IS_FWI2_CAPABLE(ha) ? &reg24->mailbox0:
+-	    MAILBOX_REG(ha, reg, 0);
+-
+-	printk("Mailbox registers:\n");
+-	for (i = 0; i < 6; i++)
+-		printk("scsi(%ld): mbox %d 0x%04x \n", vha->host_no, i,
+-		    RD_REG_WORD(mbx_reg++));
+-}
+-
+-
+-void
+-qla2x00_dump_buffer(uint8_t * b, uint32_t size)
+-{
+-	uint32_t cnt;
+-	uint8_t c;
+-
+-	printk(" 0   1   2   3   4   5   6   7   8   9  "
+-	    "Ah  Bh  Ch  Dh  Eh  Fh\n");
+-	printk("----------------------------------------"
+-	    "----------------------\n");
+-
+-	for (cnt = 0; cnt < size;) {
+-		c = *b++;
+-		printk("%02x",(uint32_t) c);
+-		cnt++;
+-		if (!(cnt % 16))
+-			printk("\n");
+-		else
+-			printk("  ");
+-	}
+-	if (cnt % 16)
+-		printk("\n");
+-}
+-
+-void
+-qla2x00_dump_buffer_zipped(uint8_t *b, uint32_t size)
+-{
+-	uint32_t cnt;
+-	uint8_t c;
+-	uint8_t  last16[16], cur16[16];
+-	uint32_t lc = 0, num_same16 = 0, j;
+-
+-	printk(KERN_DEBUG " 0   1   2   3   4   5   6   7   8   9  "
+-	    "Ah  Bh  Ch  Dh  Eh  Fh\n");
+-	printk(KERN_DEBUG "----------------------------------------"
+-	    "----------------------\n");
+-
+-	for (cnt = 0; cnt < size;) {
+-		c = *b++;
+-
+-		cur16[lc++] = c;
+-
+-		cnt++;
+-		if (cnt % 16)
+-			continue;
+-
+-		/* We have 16 now */
+-		lc = 0;
+-		if (num_same16 == 0) {
+-			memcpy(last16, cur16, 16);
+-			num_same16++;
+-			continue;
+-		}
+-		if (memcmp(cur16, last16, 16) == 0) {
+-			num_same16++;
+-			continue;
+-		}
+-		for (j = 0; j < 16; j++)
+-			printk(KERN_DEBUG "%02x  ", (uint32_t)last16[j]);
+-		printk(KERN_DEBUG "\n");
+-
+-		if (num_same16 > 1)
+-			printk(KERN_DEBUG "> prev pattern repeats (%u)"
+-			    "more times\n", num_same16-1);
+-		memcpy(last16, cur16, 16);
+-		num_same16 = 1;
+-	}
+-
+-	if (num_same16) {
+-		for (j = 0; j < 16; j++)
+-			printk(KERN_DEBUG "%02x  ", (uint32_t)last16[j]);
+-		printk(KERN_DEBUG "\n");
+-
+-		if (num_same16 > 1)
+-			printk(KERN_DEBUG "> prev pattern repeats (%u)"
+-			    "more times\n", num_same16-1);
+-	}
+-	if (lc) {
+-		for (j = 0; j < lc; j++)
+-			printk(KERN_DEBUG "%02x  ", (uint32_t)cur16[j]);
+-		printk(KERN_DEBUG "\n");
+-	}
+-}
+ /*
+  * This function is for formatting and logging debug information.
+  * It is to be used when vha is available. It formats the message
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
+index f955094..98a377b 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.h
++++ b/drivers/scsi/qla2xxx/qla_dbg.h
+@@ -8,146 +8,6 @@
+ #include "qla_def.h"
+ 
+ /*
+- * Driver debug definitions.
+- */
+-/* #define QL_DEBUG_LEVEL_1  */ /* Output register accesses to COM1 */
+-/* #define QL_DEBUG_LEVEL_2  */ /* Output error msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_3  */ /* Output function trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_4  */ /* Output NVRAM trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_5  */ /* Output ring trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_6  */ /* Output WATCHDOG timer trace to COM1 */
+-/* #define QL_DEBUG_LEVEL_7  */ /* Output RISC load trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_8  */ /* Output ring saturation msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_9  */ /* Output IOCTL trace msgs */
+-/* #define QL_DEBUG_LEVEL_10 */ /* Output IOCTL error msgs */
+-/* #define QL_DEBUG_LEVEL_11 */ /* Output Mbx Cmd trace msgs */
+-/* #define QL_DEBUG_LEVEL_12 */ /* Output IP trace msgs */
+-/* #define QL_DEBUG_LEVEL_13 */ /* Output fdmi function trace msgs */
+-/* #define QL_DEBUG_LEVEL_14 */ /* Output RSCN trace msgs */
+-/* #define QL_DEBUG_LEVEL_15 */ /* Output NPIV trace msgs */
+-/* #define QL_DEBUG_LEVEL_16 */ /* Output ISP84XX trace msgs */
+-/* #define QL_DEBUG_LEVEL_17 */ /* Output EEH trace messages */
+-/* #define QL_DEBUG_LEVEL_18 */ /* Output T10 CRC trace messages */
+-
+-/*
+-* Macros use for debugging the driver.
+-*/
+-
+-#define DEBUG(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-
+-#if defined(QL_DEBUG_LEVEL_1)
+-#define DEBUG1(x)	do {x;} while (0)
+-#else
+-#define DEBUG1(x)	do {} while (0)
+-#endif
+-
+-#define DEBUG2(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_3(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_3_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_9_10(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_13(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_16(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_17(x) 	do { if (ql2xextended_error_logging) { x; } } while (0)
+-
+-#if defined(QL_DEBUG_LEVEL_3)
+-#define DEBUG3(x)	do {x;} while (0)
+-#define DEBUG3_11(x)	do {x;} while (0)
+-#else
+-#define DEBUG3(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_4)
+-#define DEBUG4(x)	do {x;} while (0)
+-#else
+-#define DEBUG4(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_5)
+-#define DEBUG5(x)          do {x;} while (0)
+-#else
+-#define DEBUG5(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_7)
+-#define DEBUG7(x)          do {x;} while (0)
+-#else
+-#define DEBUG7(x)	   do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_9)
+-#define DEBUG9(x)       do {x;} while (0)
+-#define DEBUG9_10(x)    do {x;} while (0)
+-#else
+-#define DEBUG9(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_10)
+-#define DEBUG10(x)      do {x;} while (0)
+-#define DEBUG9_10(x)	do {x;} while (0)
+-#else
+-#define DEBUG10(x)	do {} while (0)
+-  #if !defined(DEBUG9_10)
+-  #define DEBUG9_10(x)	do {} while (0)
+-  #endif
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_11)
+-#define DEBUG11(x)      do{x;} while(0)
+-#if !defined(DEBUG3_11)
+-#define DEBUG3_11(x)    do{x;} while(0)
+-#endif
+-#else
+-#define DEBUG11(x)	do{} while(0)
+-  #if !defined(QL_DEBUG_LEVEL_3)
+-  #define DEBUG3_11(x)	do{} while(0)
+-  #endif
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_12)
+-#define DEBUG12(x)      do {x;} while (0)
+-#else
+-#define DEBUG12(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_13)
+-#define DEBUG13(x)      do {x;} while (0)
+-#else
+-#define DEBUG13(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_14)
+-#define DEBUG14(x)      do {x;} while (0)
+-#else
+-#define DEBUG14(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_15)
+-#define DEBUG15(x)      do {x;} while (0)
+-#else
+-#define DEBUG15(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_16)
+-#define DEBUG16(x)	do {x;} while (0)
+-#else
+-#define DEBUG16(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_17)
+-#define DEBUG17(x)	do {x;} while (0)
+-#else
+-#define DEBUG17(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_18)
+-#define DEBUG18(x)	do {if (ql2xextended_error_logging) x; } while (0)
+-#else
+-#define DEBUG18(x)	do {} while (0)
+-#endif
+-
+-
+-/*
+  * Firmware Dump structure definition
+  */
+ 
+-- 
+1.6.0.2
 
