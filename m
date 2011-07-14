@@ -1,456 +1,118 @@
-From: giridhar.malavali@qlogic.com
-Subject: [PATCH 1/3] qla2xxx: Basic infrastructure for dynamic logging.
-Date: Wed, 13 Jul 2011 23:30:54 -0700
-Message-ID: <1310625056-31793-2-git-send-email-giridhar.malavali@qlogic.com>
-References: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] BNX2I: Fixed kernel panic due to illegal usage of sc->request->cpu
+Date: Thu, 14 Jul 2011 02:20:09 -0500
+Message-ID: <4E1E98A9.8070907@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1310408095-11882-1-git-send-email-eddie.wai@broadcom.com> <4E1B56F3.20507@cs.wisc.edu> <1310625223.3678.130.camel@ltirv-waie-lx1>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:39019 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753358Ab1GNGpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2011 02:45:34 -0400
-In-Reply-To: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36437 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752994Ab1GNHRo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jul 2011 03:17:44 -0400
+In-Reply-To: <1310625223.3678.130.camel@ltirv-waie-lx1>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@qlogic.com>
+To: Eddie Wai <eddie.wai@broadcom.com>
+Cc: James Bottomley <jbottomley@parallels.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+On 07/14/2011 01:33 AM, Eddie Wai wrote:
+> 
+> On Mon, 2011-07-11 at 13:02 -0700, Mike Christie wrote:
+>> On 07/11/2011 01:14 PM, Eddie Wai wrote:
+>>> A kernel panic was observed when passing the sc->request->cpu = -1 to
+>>> retrieve the per_cpu variable pointer:
+>>>  #0 [ffff880011203960] machine_kexec at ffffffff81022bc3
+>>>  #1 [ffff8800112039b0] crash_kexec at ffffffff81088630
+>>>  #2 [ffff880011203a80] __die at ffffffff8139ea20
+>>>  #3 [ffff880011203aa0] no_context at ffffffff8102f3a7
+>>>  #4 [ffff880011203ae0] __bad_area_nosemaphore at ffffffff8102f665
+>>>  #5 [ffff880011203ba0] retint_signal at ffffffff8139dd1f
+>>>  #6 [ffff880011203cc8] bnx2i_indicate_kcqe at ffffffffa03dc4f2
+>>>  #7 [ffff880011203da8] service_kcqes at ffffffffa03cb04f
+>>>  #8 [ffff880011203e68] cnic_service_bnx2x_kcq at ffffffffa03cb14a
+>>>  #9 [ffff880011203e88] cnic_service_bnx2x_bh at ffffffffa03cb1b3
+>>>
+>>> The problem lies in the sg_io (and perhaps sg_scsi_ioctl) call to
+>>> blk_get_request->get_request/wait->blk_alloc_request->blk_rq_init which
+>>> re-initializes the request->cpu to -1.  There is no assignment for cpu from
+>>> that to the request_fn call to low level drivers.
+>>>
+>>> When this happens, the sc->request->cpu will be using the init value of
+>>> -1.  This will create a kernel panic when it hits bnx2i because the code
+>>> refers it to get the per_cpu variables ptr.
+>>>
+>>> This change is to put in a guard against that and also for cases when
+>>> CONFIG_SMP/BIO_CPU_AFFINE is not enabled.  In those cases, the cpu
+>>> affinitization code would not get run in __make_request either; hence
+>>> the request->cpu will remain a -1 also.
+>>>
+>>
+>>
+>>>
+>>> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>>> index 5c55a75..622383d 100644
+>>> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>>> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+>>> @@ -1225,6 +1225,10 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+>>>  	if (!sc)
+>>>  		return bnx2i_mtask_xmit(conn, task);
+>>>  
+>>> +	if (!blk_rq_cpu_valid(sc->request)) {
+>>> +		sc->request->cpu = get_cpu();
+>>> +		put_cpu();
+>>> +	}
+>>
+>>
+>> If I understand you right, then I think this needs to get fixed in the
+>> block or scsi layer instead of each LLD.
+> 
+> Absolutely, but this bnx2i fix is still applicable alongside the fixes I'm
+> proposing in the block layer below.
+> 
+> I think the whole idea behind the tracking of the blk req->cpu is so that the blk completion
+> can be fired off from the same CPU to take advantage of the CPU's llc.  However, this is only being
+> done when the queue is defined with the QUEUE_FLAG_SAME_COMP queue_flag enabled.  In the case
+> when the queue is defined without this enforced, it would then be up to the blk completion
+> code to complete the blk request with the current CPU of the thread.
+> 
+> The same analogy should apply to the iSCSI LLD for cmd completion as well.  So if the
+> sc->request->cpu is left at -1, the LLD should then decide how it wants the cmd completion
+> to take place.  For all the other cases, the request->cpu id should be used instead.  
+> For bnx2i, if the blk layer didn't set the request->cpu, we would want to align and complete
+> the cmd against the task_xmit issuer's CPU id unconditionally; hence the explicit get_cpu call.
 
-This patch adds the dynamic logging framework to the qla2xxx driver.
-The user will be able to change the logging levels on the fly i.e.
-without load/unload of the driver. This also enables logging to be enabled for
-a particular section of the driver such as initialization, device discovery etc.
+I actually think all this should go in the block layer. We should not
+have driver specific setting/interfaces for this. The driver should be
+able to just have the block layer complete all the IO on some soft
+irq/thread and do the right thing. Then we can have one interface in the
+block layer too.
 
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c  |  278 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.h  |   47 +++++++
- drivers/scsi/qla2xxx/qla_gbl.h  |    3 +
- drivers/scsi/qla2xxx/qla_init.c |    7 +-
- drivers/scsi/qla2xxx/qla_os.c   |   17 ++-
- 5 files changed, 349 insertions(+), 3 deletions(-)
+We do not want to end up with every driver adding some sysfs/modparm
+interfaces to control if we are going to complete the IO on the same
+cpu, round robin cpus, etc.
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index c53719a..dba9eed 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -4,10 +4,36 @@
-  *
-  * See LICENSE.qla2xxx for copyright and licensing details.
-  */
-+
-+/*
-+ * Table for showing the current message id in use for particular level
-+ * Change this table for addition of log/debug messages.
-+ * -----------------------------------------------------
-+ * |             Level            |   Last Value Used  |
-+ * -----------------------------------------------------
-+ * | Module Init and Probe        |       0x0109       |
-+ * | Mailbox commands             |       0x1120       |
-+ * | Device Discovery             |       0x207d       |
-+ * | Queue Command and IO tracing |       0x304f       |
-+ * | DPC Thread                   |       0x401c       |
-+ * | Async Events                 |       0x5058       |
-+ * | Timer Routines               |       0x600d       |
-+ * | User Space Interactions      |       0x70a1       |
-+ * | Task Management              |       0x8032       |
-+ * | AER/EEH                      |       0x9010       |
-+ * | Virtual Port                 |       0xa007       |
-+ * | ISP82XX Specific             |       0xb028       |
-+ * | MultiQ                       |       0xc00b       |
-+ * | Misc                         |       0xd00b       |
-+ * -----------------------------------------------------
-+ */
-+
- #include "qla_def.h"
- 
- #include <linux/delay.h>
- 
-+static uint32_t ql_dbg_offset = 0x800;
-+
- static inline void
- qla2xxx_prep_dump(struct qla_hw_data *ha, struct qla2xxx_fw_dump *fw_dump)
- {
-@@ -1722,3 +1748,255 @@ qla2x00_dump_buffer_zipped(uint8_t *b, uint32_t size)
- 		printk(KERN_DEBUG "\n");
- 	}
- }
-+/*
-+ * This function is for formatting and logging debug information.
-+ * It is to be used when vha is available. It formats the message
-+ * and logs it to the messages file.
-+ * parameters:
-+ * level: The level of the debug messages to be printed.
-+ *        If ql2xextended_error_logging value is correctly set,
-+ *        this message will appear in the messages file.
-+ * vha:   Pointer to the scsi_qla_host_t.
-+ * id:    This is a unique identifier for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+	struct pci_dev *pdev = NULL;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if ((level & ql2xextended_error_logging) == level) {
-+		if (vha != NULL) {
-+			pdev = vha->hw->pdev;
-+			/* <module-name> <pci-name> <msg-id>:<host> Message */
-+			sprintf(pbuf, "%s [%s]-%04x:%ld: ", QL_MSGHDR,
-+			    dev_name(&(pdev->dev)), id + ql_dbg_offset,
-+			    vha->host_no);
-+		} else
-+			sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+			    "0000:00:00.0", id + ql_dbg_offset);
-+
-+		len = strlen(pbuf);
-+		vsprintf(pbuf+len, msg, ap);
-+		pr_warning("%s", pbuf);
-+	}
-+
-+	va_end(ap);
-+
-+}
-+
-+/*
-+ * This function is for formatting and logging debug information.
-+ * It is to be used when vha is not available and pci is availble,
-+ * i.e., before host allocation. It formats the message and logs it
-+ * to the messages file.
-+ * parameters:
-+ * level: The level of the debug messages to be printed.
-+ *        If ql2xextended_error_logging value is correctly set,
-+ *        this message will appear in the messages file.
-+ * pdev:  Pointer to the struct pci_dev.
-+ * id:    This is a unique id for the level. It identifies the part
-+ *        of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_dbg_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+
-+	if (pdev == NULL)
-+		return;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if ((level & ql2xextended_error_logging) == level) {
-+		/* <module-name> <dev-name>:<msg-id> Message */
-+		sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+		    dev_name(&(pdev->dev)), id + ql_dbg_offset);
-+
-+		len = strlen(pbuf);
-+		vsprintf(pbuf+len, msg, ap);
-+		pr_warning("%s", pbuf);
-+	}
-+
-+	va_end(ap);
-+
-+}
-+
-+/*
-+ * This function is for formatting and logging log messages.
-+ * It is to be used when vha is available. It formats the message
-+ * and logs it to the messages file. All the messages will be logged
-+ * irrespective of value of ql2xextended_error_logging.
-+ * parameters:
-+ * level: The level of the log messages to be printed in the
-+ *        messages file.
-+ * vha:   Pointer to the scsi_qla_host_t
-+ * id:    This is a unique id for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+	struct pci_dev *pdev = NULL;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if (level <= ql_errlev) {
-+		if (vha != NULL) {
-+			pdev = vha->hw->pdev;
-+			/* <module-name> <msg-id>:<host> Message */
-+			sprintf(pbuf, "%s [%s]-%04x:%ld: ", QL_MSGHDR,
-+			    dev_name(&(pdev->dev)), id, vha->host_no);
-+		} else
-+			sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+			    "0000:00:00.0", id);
-+
-+		len = strlen(pbuf);
-+			vsprintf(pbuf+len, msg, ap);
-+
-+		switch (level) {
-+		case 0: /* FATAL LOG */
-+			pr_crit("%s", pbuf);
-+			break;
-+		case 1:
-+			pr_err("%s", pbuf);
-+			break;
-+		case 2:
-+			pr_warn("%s", pbuf);
-+			break;
-+		default:
-+			pr_info("%s", pbuf);
-+			break;
-+		}
-+	}
-+
-+	va_end(ap);
-+}
-+
-+/*
-+ * This function is for formatting and logging log messages.
-+ * It is to be used when vha is not available and pci is availble,
-+ * i.e., before host allocation. It formats the message and logs
-+ * it to the messages file. All the messages are logged irrespective
-+ * of the value of ql2xextended_error_logging.
-+ * parameters:
-+ * level: The level of the log messages to be printed in the
-+ *        messages file.
-+ * pdev:  Pointer to the struct pci_dev.
-+ * id:    This is a unique id for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_log_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+
-+	if (pdev == NULL)
-+		return;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if (level <= ql_errlev) {
-+		/* <module-name> <dev-name>:<msg-id> Message */
-+		sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+		    dev_name(&(pdev->dev)), id);
-+
-+		len = strlen(pbuf);
-+		vsprintf(pbuf+len, msg, ap);
-+		switch (level) {
-+		case 0: /* FATAL LOG */
-+			pr_crit("%s", pbuf);
-+			break;
-+		case 1:
-+			pr_err("%s", pbuf);
-+			break;
-+		case 2:
-+			pr_warn("%s", pbuf);
-+			break;
-+		default:
-+			pr_info("%s", pbuf);
-+			break;
-+		}
-+	}
-+
-+	va_end(ap);
-+}
-+
-+void
-+ql_dump_regs(uint32_t level, scsi_qla_host_t *vha, int32_t id)
-+{
-+	int i;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
-+	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
-+	struct device_reg_82xx __iomem *reg82 = &ha->iobase->isp82;
-+	uint16_t __iomem *mbx_reg;
-+
-+	if ((level & ql2xextended_error_logging) == level) {
-+
-+		if (IS_QLA82XX(ha))
-+			mbx_reg = &reg82->mailbox_in[0];
-+		else if (IS_FWI2_CAPABLE(ha))
-+			mbx_reg = &reg24->mailbox0;
-+		else
-+			mbx_reg = MAILBOX_REG(ha, reg, 0);
-+
-+		ql_dbg(level, vha, id, "Mailbox registers:\n");
-+		for (i = 0; i < 6; i++)
-+			ql_dbg(level, vha, id,
-+			    "mbox[%d] 0x%04x\n", i, RD_REG_WORD(mbx_reg++));
-+	}
-+}
-+
-+
-+void
-+ql_dump_buffer(uint32_t level, scsi_qla_host_t *vha, int32_t id,
-+	uint8_t *b, uint32_t size)
-+{
-+	uint32_t cnt;
-+	uint8_t c;
-+	if ((level & ql2xextended_error_logging) == level) {
-+
-+		ql_dbg(level, vha, id, " 0   1   2   3   4   5   6   7   8   "
-+		    "9  Ah  Bh  Ch  Dh  Eh  Fh\n");
-+		ql_dbg(level, vha, id, "----------------------------------"
-+		    "----------------------------\n");
-+
-+		ql_dbg(level, vha, id, "");
-+		for (cnt = 0; cnt < size;) {
-+			c = *b++;
-+			printk("%02x", (uint32_t) c);
-+			cnt++;
-+			if (!(cnt % 16))
-+				printk("\n");
-+			else
-+				printk("  ");
-+		}
-+		if (cnt % 16)
-+			ql_dbg(level, vha, id, "\n");
-+	}
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index 9304145..f955094 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -370,3 +370,50 @@ struct qla2xxx_fw_dump {
- 		struct qla81xx_fw_dump isp81;
- 	} isp;
- };
-+
-+#define QL_MSGHDR "qla2xxx"
-+
-+#define ql_log_fatal		0 /* display fatal errors */
-+#define ql_log_warn		1 /* display critical errors */
-+#define ql_log_info		2 /* display all recovered errors */
-+#define ql_log_all		3 /* This value is only used by ql_errlev.
-+				   * No messages will use this value.
-+				   * This should be always highest value
-+				   * as compared to other log levels.
-+				   */
-+
-+extern int ql_errlev;
-+
-+void
-+ql_dbg(uint32_t, scsi_qla_host_t *vha, int32_t, char *, ...);
-+void
-+ql_dbg_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
-+
-+void
-+ql_log(uint32_t, scsi_qla_host_t *vha, int32_t, char *, ...);
-+void
-+ql_log_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
-+
-+/* Debug Levels */
-+/* The 0x40000000 is the max value any debug level can have
-+ * as ql2xextended_error_logging is of type signed int
-+ */
-+#define ql_dbg_init	0x40000000 /* Init Debug */
-+#define ql_dbg_mbx	0x20000000 /* MBX Debug */
-+#define ql_dbg_disc	0x10000000 /* Device Discovery Debug */
-+#define ql_dbg_io	0x08000000 /* IO Tracing Debug */
-+#define ql_dbg_dpc	0x04000000 /* DPC Thead Debug */
-+#define ql_dbg_async	0x02000000 /* Async events Debug */
-+#define ql_dbg_timer	0x01000000 /* Timer Debug */
-+#define ql_dbg_user	0x00800000 /* User Space Interations Debug */
-+#define ql_dbg_taskm	0x00400000 /* Task Management Debug */
-+#define ql_dbg_aer	0x00200000 /* AER/EEH Debug */
-+#define ql_dbg_multiq	0x00100000 /* MultiQ Debug */
-+#define ql_dbg_p3p	0x00080000 /* P3P specific Debug */
-+#define ql_dbg_vport	0x00040000 /* Virtual Port Debug */
-+#define ql_dbg_buffer	0x00020000 /* For dumping the buffer/regs */
-+#define ql_dbg_misc	0x00010000 /* For dumping everything that is not
-+				    * not covered by upper categories
-+				    */
-+
-+#define QL_DBG_BUF_LEN	512
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 0b38122..38aef5d 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -439,6 +439,9 @@ extern void qla81xx_fw_dump(scsi_qla_host_t *, int);
- extern void qla2x00_dump_regs(scsi_qla_host_t *);
- extern void qla2x00_dump_buffer(uint8_t *, uint32_t);
- extern void qla2x00_dump_buffer_zipped(uint8_t *, uint32_t);
-+extern void ql_dump_regs(uint32_t, scsi_qla_host_t *, int32_t);
-+extern void ql_dump_buffer(uint32_t, scsi_qla_host_t *, int32_t,
-+	uint8_t *, uint32_t);
- 
- /*
-  * Global Function Prototypes in qla_gs.c source file.
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 920b76b..3d03845 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2382,8 +2382,13 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 	/*
- 	 * Set host adapter parameters.
- 	 */
-+
-+	/*
-+	 * BIT_7 in the host-parameters section allows for modification to
-+	 * internal driver logging.
-+	 */
- 	if (nv->host_p[0] & BIT_7)
--		ql2xextended_error_logging = 1;
-+		ql2xextended_error_logging = 0x7fffffff;
- 	ha->flags.disable_risc_code_load = ((nv->host_p[0] & BIT_4) ? 1 : 0);
- 	/* Always load RISC code on non ISP2[12]00 chips. */
- 	if (!IS_QLA2100(ha) && !IS_QLA2200(ha))
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index f461925..8aa05c8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -35,6 +35,10 @@ static struct kmem_cache *srb_cachep;
-  * CT6 CTX allocation cache
-  */
- static struct kmem_cache *ctx_cachep;
-+/*
-+ * error level for logging
-+ */
-+int ql_errlev = ql_log_all;
- 
- int ql2xlogintimeout = 20;
- module_param(ql2xlogintimeout, int, S_IRUGO);
-@@ -69,8 +73,17 @@ MODULE_PARM_DESC(ql2xallocfwdump,
- int ql2xextended_error_logging;
- module_param(ql2xextended_error_logging, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xextended_error_logging,
--		"Option to enable extended error logging, "
--		"Default is 0 - no logging. 1 - log errors.");
-+		"Option to enable extended error logging,\n"
-+		"\t\tDefault is 0 - no logging.  0x40000000 - Module Init & Probe.\n"
-+		"\t\t0x20000000 - Mailbox Cmnds. 0x10000000 - Device Discovery.\n"
-+		"\t\t0x08000000 - IO tracing.    0x04000000 - DPC Thread.\n"
-+		"\t\t0x02000000 - Async events.  0x01000000 - Timer routines.\n"
-+		"\t\t0x00800000 - User space.    0x00400000 - Task Management.\n"
-+		"\t\t0x00200000 - AER/EEH.       0x00100000 - Multi Q.\n"
-+		"\t\t0x00080000 - P3P Specific.  0x00040000 - Virtual Port.\n"
-+		"\t\t0x00020000 - Buffer Dump.   0x00010000 - Misc.\n"
-+		"\t\t0x7fffffff - For enabling all logs, can be too many logs.\n"
-+		"\t\tDo LOGICAL OR of the value to enable more than one level");
- 
- int ql2xshiftctondsd = 6;
- module_param(ql2xshiftctondsd, int, S_IRUGO);
--- 
-1.6.0.2
+I think we need to change the blkio poll code so it is usefull to
+everyone. It does not make sense for every driver to want to do some
+completion processing in a thread/softirq then have every driver create
+their own threading and completing code/policies. From there we can have
+a common interface to control the cpu completion polciy.
 
+It will be really strange to tell users that in one case we use the
+block layer policy but in another case we use the LLD policy interface.
+
+I think right now we are ending up with a mess where someone can set the
+rq_affinity, the LLD will ignore this and do round robin completion on
+its own threads, then when the block layer soft irq completion code runs
+it will complete on the cpu set by the rq_affinity code.
+
+> 
+> In the current block code, this CPU affinity code is only being called in the __make_request
+> code path. I believe the same code needs to be executed in all the other code paths where
+> the blk request is being added to the queue for execution.  This change will then properly
+> place the desired CPU to the request->cpu when the queue is defined with QUEUE_FLAG_SAME_COMP.
+> Otherwise, the request->cpu will assume the init value of -1.
+> 
+
+I am not disagreeing with that.
