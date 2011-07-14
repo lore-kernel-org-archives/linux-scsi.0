@@ -1,102 +1,102 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: rq_affinity doesn't seem to work?
-Date: Thu, 14 Jul 2011 10:02:58 -0700
-Message-ID: <CAL1RGDUDbEG4ypr0GJLLi_0PTjZK0HshMVwTs=aY+=hhFdjK5g@mail.gmail.com>
-References: <D010E79907AF0D4E90B603DE907837D504CA6365D6@azsmsx504.amr.corp.intel.com>
- <4E1CAEEB.8050506@kernel.dk> <20110713171011.GA11864@parisc-linux.org>
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: Re: [PATCH] BNX2I: Fixed kernel panic due to illegal usage of
+ sc->request->cpu
+Date: Thu, 14 Jul 2011 10:13:16 -0700
+Message-ID: <1310663597.3678.160.camel@ltirv-waie-lx1>
+References: <Eddie Wai <eddie.wai@broadcom.com>
+ <1310408095-11882-1-git-send-email-eddie.wai@broadcom.com>
+ <4E1B56F3.20507@cs.wisc.edu> <1310625223.3678.130.camel@ltirv-waie-lx1>
+ <4E1E9DB6.6020200@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog103.obsmtp.com ([74.125.245.74]:34664 "HELO
-	na3sys010aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755450Ab1GNRDT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jul 2011 13:03:19 -0400
-In-Reply-To: <20110713171011.GA11864@parisc-linux.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:1750 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932130Ab1GNRNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jul 2011 13:13:31 -0400
+In-Reply-To: <4E1E9DB6.6020200@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Jens Axboe <axboe@kernel.dk>, "Jiang, Dave" <dave.jiang@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, James Bottomley <jbottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
 
-On Wed, Jul 13, 2011 at 10:10 AM, Matthew Wilcox <matthew@wil.cx> wrote=
-:
-> On Tue, Jul 12, 2011 at 10:30:35PM +0200, Jens Axboe wrote:
->> It's probably the grouping, we need to do something about that. Does=
- the
->> below patch make it behave as you expect?
->
-> "something", absolutely. =A0But there is benefit from doing some aggr=
-egation
-> (we tried disabling it entirely with the "well-known OLTP benchmark" =
-and
-> performance went down).
->
-> Ideally we'd do something like "if the softirq is taking up more than=
- 10%
-> of a core, split the grouping". =A0Do we have enough stats to do that=
- kind
-> of monitoring?
 
-What platform was your "OLTP benchmark" on?  It seems that as the
-number of cores per package goes up, this grouping becomes too coarse,
-since almost everyone will have SCHED_MC set in the code:
+On Thu, 2011-07-14 at 00:41 -0700, Mike Christie wrote:
+> On 07/14/2011 01:33 AM, Eddie Wai wrote:
+> > 
+> > On Mon, 2011-07-11 at 13:02 -0700, Mike Christie wrote:
+> >> On 07/11/2011 01:14 PM, Eddie Wai wrote:
+> >>> A kernel panic was observed when passing the sc->request->cpu = -1 to
+> >>> retrieve the per_cpu variable pointer:
+> >>>  #0 [ffff880011203960] machine_kexec at ffffffff81022bc3
+> >>>  #1 [ffff8800112039b0] crash_kexec at ffffffff81088630
+> >>>  #2 [ffff880011203a80] __die at ffffffff8139ea20
+> >>>  #3 [ffff880011203aa0] no_context at ffffffff8102f3a7
+> >>>  #4 [ffff880011203ae0] __bad_area_nosemaphore at ffffffff8102f665
+> >>>  #5 [ffff880011203ba0] retint_signal at ffffffff8139dd1f
+> >>>  #6 [ffff880011203cc8] bnx2i_indicate_kcqe at ffffffffa03dc4f2
+> >>>  #7 [ffff880011203da8] service_kcqes at ffffffffa03cb04f
+> >>>  #8 [ffff880011203e68] cnic_service_bnx2x_kcq at ffffffffa03cb14a
+> >>>  #9 [ffff880011203e88] cnic_service_bnx2x_bh at ffffffffa03cb1b3
+> >>>
+> >>> The problem lies in the sg_io (and perhaps sg_scsi_ioctl) call to
+> >>> blk_get_request->get_request/wait->blk_alloc_request->blk_rq_init which
+> >>> re-initializes the request->cpu to -1.  There is no assignment for cpu from
+> >>> that to the request_fn call to low level drivers.
+> >>>
+> >>> When this happens, the sc->request->cpu will be using the init value of
+> >>> -1.  This will create a kernel panic when it hits bnx2i because the code
+> >>> refers it to get the per_cpu variables ptr.
+> >>>
+> >>> This change is to put in a guard against that and also for cases when
+> >>> CONFIG_SMP/BIO_CPU_AFFINE is not enabled.  In those cases, the cpu
+> >>> affinitization code would not get run in __make_request either; hence
+> >>> the request->cpu will remain a -1 also.
+> >>>
+> >>
+> >>
+> >>>
+> >>> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> >>> index 5c55a75..622383d 100644
+> >>> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> >>> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+> >>> @@ -1225,6 +1225,10 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+> >>>  	if (!sc)
+> >>>  		return bnx2i_mtask_xmit(conn, task);
+> >>>  
+> >>> +	if (!blk_rq_cpu_valid(sc->request)) {
+> >>> +		sc->request->cpu = get_cpu();
+> >>> +		put_cpu();
+> >>> +	}
+> >>
+> >>
+> >> If I understand you right, then I think this needs to get fixed in the
+> >> block or scsi layer instead of each LLD.
+> > 
+> > Absolutely, but this bnx2i fix is still applicable alongside the fixes I'm
+> > proposing in the block layer below.
+> > 
+> > I think the whole idea behind the tracking of the blk req->cpu is so that the blk completion
+> > can be fired off from the same CPU to take advantage of the CPU's llc.  However, this is only being
+> > done when the queue is defined with the QUEUE_FLAG_SAME_COMP queue_flag enabled.  In the case
+> > when the queue is defined without this enforced, it would then be up to the blk completion
+> > code to complete the blk request with the current CPU of the thread.
+> > 
+> > The same analogy should apply to the iSCSI LLD for cmd completion as well.  So if the
+> > sc->request->cpu is left at -1, the LLD should then decide how it wants the cmd completion
+> > to take place.  For all the other cases, the request->cpu id should be used instead.  
+> > For bnx2i, if the blk layer didn't set the request->cpu, we would want to align and complete
+> > the cmd against the task_xmit issuer's CPU id unconditionally; hence the explicit get_cpu call.
+> 
+> Oh yeah, wrt the code we have today (so I mean ignoring my rant in the
+> other mail :)), I think what you are doing in your patch is sort of ok.
+> I am not sure if we want to be touching the request->cpu field in a LLD
+> though. I do not think LLDs should be modifying a block layer struct
+> like that probably.
+> 
+Agreed.  sc->request->cpu should be left to -1 in this case.  I'll go
+ahead and defined a local variable to keep track of it.  Thanks.
 
-	static inline int blk_cpu_to_group(int cpu)
-	{
-		int group =3D NR_CPUS;
-	#ifdef CONFIG_SCHED_MC
-		const struct cpumask *mask =3D cpu_coregroup_mask(cpu);
-		group =3D cpumask_first(mask);
-	#elif defined(CONFIG_SCHED_SMT)
-		group =3D cpumask_first(topology_thread_cpumask(cpu));
-	#else
-		return cpu;
-	#endif
-		if (likely(group < NR_CPUS))
-			return group;
-		return cpu;
-	}
 
-and so we use cpumask_first(cpu_coregroup_mask(cpu)).  And from
 
-	const struct cpumask *cpu_coregroup_mask(int cpu)
-	{
-	        struct cpuinfo_x86 *c =3D &cpu_data(cpu);
-	        /*
-	         * For perf, we return last level cache shared map.
-	         * And for power savings, we return cpu_core_map
-	         */
-	        if ((sched_mc_power_savings || sched_smt_power_savings) &&
-	            !(cpu_has(c, X86_FEATURE_AMD_DCM)))
-	                return cpu_core_mask(cpu);
-	        else
-	                return cpu_llc_shared_mask(cpu);
-	}
-
-in the "max performance" case, we use cpu_llc_shared_mask().
-
-The problem as we've seen it is that on a dual-socket Westmere (Xeon
-56xx) system, we have two sockets with 6 cores (12 threads) each, all
-sharing L3 cache, and so we end up with all block softirqs on only 2
-out of 24 threads, which is not enough to handle all the IOPS that
-fast storage can provide.
-
-It's not clear to me what the right answer or tradeoffs are here.  It
-might make sense to use only one hyperthread per core for block
-softirqs.  As I understand the Westmere cache topology, there's not
-really an obvious intermediate step -- all the cores in a package
-share the L3, and then each core has its own L2.
-
-Limiting softirqs to 10% of a core seems a bit low, since we seem to
-be able to use more than 100% of a core handling block softirqs, and
-anyway magic numbers like that seem to always be wrong sometimes.
-Perhaps we could use the queue length on the destination CPU as a
-proxy for how busy ksoftirq is?
-
- - R.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
