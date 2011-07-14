@@ -1,293 +1,64 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 3/3] qla2xxx: Cleanup of previous infrastructure.
-Date: Wed, 13 Jul 2011 23:30:56 -0700
-Message-ID: <1310625056-31793-4-git-send-email-giridhar.malavali@qlogic.com>
-References: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 0/3] qla2xxx: Updates for scsi misc 3.0.
+Date: Wed, 13 Jul 2011 23:30:53 -0700
+Message-ID: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:39018 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:39020 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753348Ab1GNGpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753359Ab1GNGpe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 14 Jul 2011 02:45:34 -0400
-In-Reply-To: <1310625056-31793-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Saurav Kashyap <saurav.kashyap@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c |  103 -----------------------------
- drivers/scsi/qla2xxx/qla_dbg.h |  140 ----------------------------------------
- 2 files changed, 0 insertions(+), 243 deletions(-)
+James,
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 5c1e69f..2155071 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -1650,109 +1650,6 @@ qla81xx_fw_dump_failed:
- /****************************************************************************/
- /*                         Driver Debug Functions.                          */
- /****************************************************************************/
--
--void
--qla2x00_dump_regs(scsi_qla_host_t *vha)
--{
--	int i;
--	struct qla_hw_data *ha = vha->hw;
--	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
--	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
--	uint16_t __iomem *mbx_reg;
--
--	mbx_reg = IS_FWI2_CAPABLE(ha) ? &reg24->mailbox0:
--	    MAILBOX_REG(ha, reg, 0);
--
--	printk("Mailbox registers:\n");
--	for (i = 0; i < 6; i++)
--		printk("scsi(%ld): mbox %d 0x%04x \n", vha->host_no, i,
--		    RD_REG_WORD(mbx_reg++));
--}
--
--
--void
--qla2x00_dump_buffer(uint8_t * b, uint32_t size)
--{
--	uint32_t cnt;
--	uint8_t c;
--
--	printk(" 0   1   2   3   4   5   6   7   8   9  "
--	    "Ah  Bh  Ch  Dh  Eh  Fh\n");
--	printk("----------------------------------------"
--	    "----------------------\n");
--
--	for (cnt = 0; cnt < size;) {
--		c = *b++;
--		printk("%02x",(uint32_t) c);
--		cnt++;
--		if (!(cnt % 16))
--			printk("\n");
--		else
--			printk("  ");
--	}
--	if (cnt % 16)
--		printk("\n");
--}
--
--void
--qla2x00_dump_buffer_zipped(uint8_t *b, uint32_t size)
--{
--	uint32_t cnt;
--	uint8_t c;
--	uint8_t  last16[16], cur16[16];
--	uint32_t lc = 0, num_same16 = 0, j;
--
--	printk(KERN_DEBUG " 0   1   2   3   4   5   6   7   8   9  "
--	    "Ah  Bh  Ch  Dh  Eh  Fh\n");
--	printk(KERN_DEBUG "----------------------------------------"
--	    "----------------------\n");
--
--	for (cnt = 0; cnt < size;) {
--		c = *b++;
--
--		cur16[lc++] = c;
--
--		cnt++;
--		if (cnt % 16)
--			continue;
--
--		/* We have 16 now */
--		lc = 0;
--		if (num_same16 == 0) {
--			memcpy(last16, cur16, 16);
--			num_same16++;
--			continue;
--		}
--		if (memcmp(cur16, last16, 16) == 0) {
--			num_same16++;
--			continue;
--		}
--		for (j = 0; j < 16; j++)
--			printk(KERN_DEBUG "%02x  ", (uint32_t)last16[j]);
--		printk(KERN_DEBUG "\n");
--
--		if (num_same16 > 1)
--			printk(KERN_DEBUG "> prev pattern repeats (%u)"
--			    "more times\n", num_same16-1);
--		memcpy(last16, cur16, 16);
--		num_same16 = 1;
--	}
--
--	if (num_same16) {
--		for (j = 0; j < 16; j++)
--			printk(KERN_DEBUG "%02x  ", (uint32_t)last16[j]);
--		printk(KERN_DEBUG "\n");
--
--		if (num_same16 > 1)
--			printk(KERN_DEBUG "> prev pattern repeats (%u)"
--			    "more times\n", num_same16-1);
--	}
--	if (lc) {
--		for (j = 0; j < lc; j++)
--			printk(KERN_DEBUG "%02x  ", (uint32_t)cur16[j]);
--		printk(KERN_DEBUG "\n");
--	}
--}
- /*
-  * This function is for formatting and logging debug information.
-  * It is to be used when vha is available. It formats the message
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index f955094..98a377b 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -8,146 +8,6 @@
- #include "qla_def.h"
- 
- /*
-- * Driver debug definitions.
-- */
--/* #define QL_DEBUG_LEVEL_1  */ /* Output register accesses to COM1 */
--/* #define QL_DEBUG_LEVEL_2  */ /* Output error msgs to COM1 */
--/* #define QL_DEBUG_LEVEL_3  */ /* Output function trace msgs to COM1 */
--/* #define QL_DEBUG_LEVEL_4  */ /* Output NVRAM trace msgs to COM1 */
--/* #define QL_DEBUG_LEVEL_5  */ /* Output ring trace msgs to COM1 */
--/* #define QL_DEBUG_LEVEL_6  */ /* Output WATCHDOG timer trace to COM1 */
--/* #define QL_DEBUG_LEVEL_7  */ /* Output RISC load trace msgs to COM1 */
--/* #define QL_DEBUG_LEVEL_8  */ /* Output ring saturation msgs to COM1 */
--/* #define QL_DEBUG_LEVEL_9  */ /* Output IOCTL trace msgs */
--/* #define QL_DEBUG_LEVEL_10 */ /* Output IOCTL error msgs */
--/* #define QL_DEBUG_LEVEL_11 */ /* Output Mbx Cmd trace msgs */
--/* #define QL_DEBUG_LEVEL_12 */ /* Output IP trace msgs */
--/* #define QL_DEBUG_LEVEL_13 */ /* Output fdmi function trace msgs */
--/* #define QL_DEBUG_LEVEL_14 */ /* Output RSCN trace msgs */
--/* #define QL_DEBUG_LEVEL_15 */ /* Output NPIV trace msgs */
--/* #define QL_DEBUG_LEVEL_16 */ /* Output ISP84XX trace msgs */
--/* #define QL_DEBUG_LEVEL_17 */ /* Output EEH trace messages */
--/* #define QL_DEBUG_LEVEL_18 */ /* Output T10 CRC trace messages */
--
--/*
--* Macros use for debugging the driver.
--*/
--
--#define DEBUG(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--
--#if defined(QL_DEBUG_LEVEL_1)
--#define DEBUG1(x)	do {x;} while (0)
--#else
--#define DEBUG1(x)	do {} while (0)
--#endif
--
--#define DEBUG2(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_3(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_3_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_9_10(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_13(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_16(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
--#define DEBUG2_17(x) 	do { if (ql2xextended_error_logging) { x; } } while (0)
--
--#if defined(QL_DEBUG_LEVEL_3)
--#define DEBUG3(x)	do {x;} while (0)
--#define DEBUG3_11(x)	do {x;} while (0)
--#else
--#define DEBUG3(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_4)
--#define DEBUG4(x)	do {x;} while (0)
--#else
--#define DEBUG4(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_5)
--#define DEBUG5(x)          do {x;} while (0)
--#else
--#define DEBUG5(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_7)
--#define DEBUG7(x)          do {x;} while (0)
--#else
--#define DEBUG7(x)	   do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_9)
--#define DEBUG9(x)       do {x;} while (0)
--#define DEBUG9_10(x)    do {x;} while (0)
--#else
--#define DEBUG9(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_10)
--#define DEBUG10(x)      do {x;} while (0)
--#define DEBUG9_10(x)	do {x;} while (0)
--#else
--#define DEBUG10(x)	do {} while (0)
--  #if !defined(DEBUG9_10)
--  #define DEBUG9_10(x)	do {} while (0)
--  #endif
--#endif
--
--#if defined(QL_DEBUG_LEVEL_11)
--#define DEBUG11(x)      do{x;} while(0)
--#if !defined(DEBUG3_11)
--#define DEBUG3_11(x)    do{x;} while(0)
--#endif
--#else
--#define DEBUG11(x)	do{} while(0)
--  #if !defined(QL_DEBUG_LEVEL_3)
--  #define DEBUG3_11(x)	do{} while(0)
--  #endif
--#endif
--
--#if defined(QL_DEBUG_LEVEL_12)
--#define DEBUG12(x)      do {x;} while (0)
--#else
--#define DEBUG12(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_13)
--#define DEBUG13(x)      do {x;} while (0)
--#else
--#define DEBUG13(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_14)
--#define DEBUG14(x)      do {x;} while (0)
--#else
--#define DEBUG14(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_15)
--#define DEBUG15(x)      do {x;} while (0)
--#else
--#define DEBUG15(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_16)
--#define DEBUG16(x)	do {x;} while (0)
--#else
--#define DEBUG16(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_17)
--#define DEBUG17(x)	do {x;} while (0)
--#else
--#define DEBUG17(x)	do {} while (0)
--#endif
--
--#if defined(QL_DEBUG_LEVEL_18)
--#define DEBUG18(x)	do {if (ql2xextended_error_logging) x; } while (0)
--#else
--#define DEBUG18(x)	do {} while (0)
--#endif
--
--
--/*
-  * Firmware Dump structure definition
-  */
- 
--- 
-1.6.0.2
+Please apply these patches.
+
+The patch 1/3 has couple of warnings w.r.t KERN_facility level with printk.
+
+WARNING: printk() should include KERN_ facility level
+
+Using KERN facility in printk will print each buffer information in new line causing
+unreadable log messages.
+
+Here is an example
+
+With KERN facility
+Mar 23 10:05:37 linux-dcaw kernel: qla2xxx [0000:18:00.6]4:1102:
+Mar 23 10:05:37 linux-dcaw kernel: 42
+Mar 23 10:05:37 linux-dcaw kernel:
+Mar 23 10:05:37 linux-dcaw kernel: 00
+
+Without KERN facility
+Mar 21 13:07:35 linux-dcaw kernel: qla2xxx [0000:18:00.7]37:1102: 48  00  00  00  5b  f2  00
+
+Hope this should be fine since this is not an error.
+
+-- Giridhar
+Saurav Kashyap (3):
+  qla2xxx: Basic infrastructure for dynamic logging.
+  qla2xxx: Code changes to support new dynamic logging infrastructure.
+  qla2xxx: Cleanup of previous infrastructure.
+
+ drivers/scsi/qla2xxx/qla_attr.c   |  183 ++++---
+ drivers/scsi/qla2xxx/qla_bsg.c    |  441 ++++++++-------
+ drivers/scsi/qla2xxx/qla_dbg.c    |  396 ++++++++++----
+ drivers/scsi/qla2xxx/qla_dbg.h    |  187 ++-----
+ drivers/scsi/qla2xxx/qla_dfs.c    |   16 +-
+ drivers/scsi/qla2xxx/qla_gbl.h    |    8 +-
+ drivers/scsi/qla2xxx/qla_gs.c     |  371 +++++++-------
+ drivers/scsi/qla2xxx/qla_init.c   |  856 +++++++++++++++--------------
+ drivers/scsi/qla2xxx/qla_inline.h |    8 +-
+ drivers/scsi/qla2xxx/qla_iocb.c   |  120 ++---
+ drivers/scsi/qla2xxx/qla_isr.c    |  663 +++++++++++------------
+ drivers/scsi/qla2xxx/qla_mbx.c    | 1091 ++++++++++++++++++-------------------
+ drivers/scsi/qla2xxx/qla_mid.c    |  160 ++++--
+ drivers/scsi/qla2xxx/qla_nx.c     |  556 +++++++++++--------
+ drivers/scsi/qla2xxx/qla_os.c     |  747 ++++++++++++++++---------
+ drivers/scsi/qla2xxx/qla_sup.c    |  275 ++++++----
+ 16 files changed, 3258 insertions(+), 2820 deletions(-)
 
