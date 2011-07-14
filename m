@@ -1,12 +1,12 @@
 From: giridhar.malavali@qlogic.com
-Subject: [PATCH 1/5] qla2xxx: Basic infrastructure for dynamic logging.
-Date: Thu, 14 Jul 2011 12:00:12 -0700
-Message-ID: <1310670016-30216-2-git-send-email-giridhar.malavali@qlogic.com>
+Subject: [PATCH 5/5] qla2xxx: Cleanup of previous infrastructure.
+Date: Thu, 14 Jul 2011 12:00:14 -0700
+Message-ID: <1310670016-30216-4-git-send-email-giridhar.malavali@qlogic.com>
 References: <1310670016-30216-1-git-send-email-giridhar.malavali@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:42429 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:42433 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753154Ab1GNTJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753306Ab1GNTJL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 14 Jul 2011 15:09:11 -0400
 In-Reply-To: <1310670016-30216-1-git-send-email-giridhar.malavali@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,441 +16,278 @@ Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.
 
 From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-This patch adds the dynamic logging framework to the qla2xxx driver.
-The user will be able to change the logging levels on the fly i.e.
-without load/unload of the driver. This also enables logging to be enabled for
-a particular section of the driver such as initialization, device discovery etc.
-
 Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c  |  278 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.h  |   47 +++++++
- drivers/scsi/qla2xxx/qla_gbl.h  |    3 +
- drivers/scsi/qla2xxx/qla_init.c |    7 +-
- drivers/scsi/qla2xxx/qla_os.c   |   17 ++-
- 5 files changed, 349 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |  103 -----------------------------
+ drivers/scsi/qla2xxx/qla_dbg.h |  140 ----------------------------------------
+ 2 files changed, 0 insertions(+), 243 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index c53719a..dba9eed 100644
+index 5c1e69f..2155071 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.c
 +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -4,10 +4,36 @@
-  *
-  * See LICENSE.qla2xxx for copyright and licensing details.
-  */
-+
-+/*
-+ * Table for showing the current message id in use for particular level
-+ * Change this table for addition of log/debug messages.
-+ * -----------------------------------------------------
-+ * |             Level            |   Last Value Used  |
-+ * -----------------------------------------------------
-+ * | Module Init and Probe        |       0x0109       |
-+ * | Mailbox commands             |       0x1120       |
-+ * | Device Discovery             |       0x207d       |
-+ * | Queue Command and IO tracing |       0x304f       |
-+ * | DPC Thread                   |       0x401c       |
-+ * | Async Events                 |       0x5058       |
-+ * | Timer Routines               |       0x600d       |
-+ * | User Space Interactions      |       0x70a1       |
-+ * | Task Management              |       0x8032       |
-+ * | AER/EEH                      |       0x9010       |
-+ * | Virtual Port                 |       0xa007       |
-+ * | ISP82XX Specific             |       0xb028       |
-+ * | MultiQ                       |       0xc00b       |
-+ * | Misc                         |       0xd00b       |
-+ * -----------------------------------------------------
-+ */
-+
- #include "qla_def.h"
- 
- #include <linux/delay.h>
- 
-+static uint32_t ql_dbg_offset = 0x800;
-+
- static inline void
- qla2xxx_prep_dump(struct qla_hw_data *ha, struct qla2xxx_fw_dump *fw_dump)
- {
-@@ -1722,3 +1748,255 @@ qla2x00_dump_buffer_zipped(uint8_t *b, uint32_t size)
- 		printk(KERN_DEBUG "\n");
- 	}
- }
-+/*
-+ * This function is for formatting and logging debug information.
-+ * It is to be used when vha is available. It formats the message
-+ * and logs it to the messages file.
-+ * parameters:
-+ * level: The level of the debug messages to be printed.
-+ *        If ql2xextended_error_logging value is correctly set,
-+ *        this message will appear in the messages file.
-+ * vha:   Pointer to the scsi_qla_host_t.
-+ * id:    This is a unique identifier for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+	struct pci_dev *pdev = NULL;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if ((level & ql2xextended_error_logging) == level) {
-+		if (vha != NULL) {
-+			pdev = vha->hw->pdev;
-+			/* <module-name> <pci-name> <msg-id>:<host> Message */
-+			sprintf(pbuf, "%s [%s]-%04x:%ld: ", QL_MSGHDR,
-+			    dev_name(&(pdev->dev)), id + ql_dbg_offset,
-+			    vha->host_no);
-+		} else
-+			sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+			    "0000:00:00.0", id + ql_dbg_offset);
-+
-+		len = strlen(pbuf);
-+		vsprintf(pbuf+len, msg, ap);
-+		pr_warning("%s", pbuf);
-+	}
-+
-+	va_end(ap);
-+
-+}
-+
-+/*
-+ * This function is for formatting and logging debug information.
-+ * It is to be used when vha is not available and pci is availble,
-+ * i.e., before host allocation. It formats the message and logs it
-+ * to the messages file.
-+ * parameters:
-+ * level: The level of the debug messages to be printed.
-+ *        If ql2xextended_error_logging value is correctly set,
-+ *        this message will appear in the messages file.
-+ * pdev:  Pointer to the struct pci_dev.
-+ * id:    This is a unique id for the level. It identifies the part
-+ *        of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_dbg_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+
-+	if (pdev == NULL)
-+		return;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if ((level & ql2xextended_error_logging) == level) {
-+		/* <module-name> <dev-name>:<msg-id> Message */
-+		sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+		    dev_name(&(pdev->dev)), id + ql_dbg_offset);
-+
-+		len = strlen(pbuf);
-+		vsprintf(pbuf+len, msg, ap);
-+		pr_warning("%s", pbuf);
-+	}
-+
-+	va_end(ap);
-+
-+}
-+
-+/*
-+ * This function is for formatting and logging log messages.
-+ * It is to be used when vha is available. It formats the message
-+ * and logs it to the messages file. All the messages will be logged
-+ * irrespective of value of ql2xextended_error_logging.
-+ * parameters:
-+ * level: The level of the log messages to be printed in the
-+ *        messages file.
-+ * vha:   Pointer to the scsi_qla_host_t
-+ * id:    This is a unique id for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+	struct pci_dev *pdev = NULL;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if (level <= ql_errlev) {
-+		if (vha != NULL) {
-+			pdev = vha->hw->pdev;
-+			/* <module-name> <msg-id>:<host> Message */
-+			sprintf(pbuf, "%s [%s]-%04x:%ld: ", QL_MSGHDR,
-+			    dev_name(&(pdev->dev)), id, vha->host_no);
-+		} else
-+			sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+			    "0000:00:00.0", id);
-+
-+		len = strlen(pbuf);
-+			vsprintf(pbuf+len, msg, ap);
-+
-+		switch (level) {
-+		case 0: /* FATAL LOG */
-+			pr_crit("%s", pbuf);
-+			break;
-+		case 1:
-+			pr_err("%s", pbuf);
-+			break;
-+		case 2:
-+			pr_warn("%s", pbuf);
-+			break;
-+		default:
-+			pr_info("%s", pbuf);
-+			break;
-+		}
-+	}
-+
-+	va_end(ap);
-+}
-+
-+/*
-+ * This function is for formatting and logging log messages.
-+ * It is to be used when vha is not available and pci is availble,
-+ * i.e., before host allocation. It formats the message and logs
-+ * it to the messages file. All the messages are logged irrespective
-+ * of the value of ql2xextended_error_logging.
-+ * parameters:
-+ * level: The level of the log messages to be printed in the
-+ *        messages file.
-+ * pdev:  Pointer to the struct pci_dev.
-+ * id:    This is a unique id for the level. It identifies the
-+ *        part of the code from where the message originated.
-+ * msg:   The message to be displayed.
-+ */
-+void
-+ql_log_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
-+
-+	char pbuf[QL_DBG_BUF_LEN];
-+	va_list ap;
-+	uint32_t len;
-+
-+	if (pdev == NULL)
-+		return;
-+
-+	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+
-+	va_start(ap, msg);
-+
-+	if (level <= ql_errlev) {
-+		/* <module-name> <dev-name>:<msg-id> Message */
-+		sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
-+		    dev_name(&(pdev->dev)), id);
-+
-+		len = strlen(pbuf);
-+		vsprintf(pbuf+len, msg, ap);
-+		switch (level) {
-+		case 0: /* FATAL LOG */
-+			pr_crit("%s", pbuf);
-+			break;
-+		case 1:
-+			pr_err("%s", pbuf);
-+			break;
-+		case 2:
-+			pr_warn("%s", pbuf);
-+			break;
-+		default:
-+			pr_info("%s", pbuf);
-+			break;
-+		}
-+	}
-+
-+	va_end(ap);
-+}
-+
-+void
-+ql_dump_regs(uint32_t level, scsi_qla_host_t *vha, int32_t id)
-+{
-+	int i;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
-+	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
-+	struct device_reg_82xx __iomem *reg82 = &ha->iobase->isp82;
-+	uint16_t __iomem *mbx_reg;
-+
-+	if ((level & ql2xextended_error_logging) == level) {
-+
-+		if (IS_QLA82XX(ha))
-+			mbx_reg = &reg82->mailbox_in[0];
-+		else if (IS_FWI2_CAPABLE(ha))
-+			mbx_reg = &reg24->mailbox0;
-+		else
-+			mbx_reg = MAILBOX_REG(ha, reg, 0);
-+
-+		ql_dbg(level, vha, id, "Mailbox registers:\n");
-+		for (i = 0; i < 6; i++)
-+			ql_dbg(level, vha, id,
-+			    "mbox[%d] 0x%04x\n", i, RD_REG_WORD(mbx_reg++));
-+	}
-+}
-+
-+
-+void
-+ql_dump_buffer(uint32_t level, scsi_qla_host_t *vha, int32_t id,
-+	uint8_t *b, uint32_t size)
-+{
-+	uint32_t cnt;
-+	uint8_t c;
-+	if ((level & ql2xextended_error_logging) == level) {
-+
-+		ql_dbg(level, vha, id, " 0   1   2   3   4   5   6   7   8   "
-+		    "9  Ah  Bh  Ch  Dh  Eh  Fh\n");
-+		ql_dbg(level, vha, id, "----------------------------------"
-+		    "----------------------------\n");
-+
-+		ql_dbg(level, vha, id, "");
-+		for (cnt = 0; cnt < size;) {
-+			c = *b++;
-+			printk("%02x", (uint32_t) c);
-+			cnt++;
-+			if (!(cnt % 16))
-+				printk("\n");
-+			else
-+				printk("  ");
-+		}
-+		if (cnt % 16)
-+			ql_dbg(level, vha, id, "\n");
-+	}
-+}
+@@ -1650,109 +1650,6 @@ qla81xx_fw_dump_failed:
+ /****************************************************************************/
+ /*                         Driver Debug Functions.                          */
+ /****************************************************************************/
+-
+-void
+-qla2x00_dump_regs(scsi_qla_host_t *vha)
+-{
+-	int i;
+-	struct qla_hw_data *ha = vha->hw;
+-	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+-	struct device_reg_24xx __iomem *reg24 = &ha->iobase->isp24;
+-	uint16_t __iomem *mbx_reg;
+-
+-	mbx_reg = IS_FWI2_CAPABLE(ha) ? &reg24->mailbox0:
+-	    MAILBOX_REG(ha, reg, 0);
+-
+-	printk("Mailbox registers:\n");
+-	for (i = 0; i < 6; i++)
+-		printk("scsi(%ld): mbox %d 0x%04x \n", vha->host_no, i,
+-		    RD_REG_WORD(mbx_reg++));
+-}
+-
+-
+-void
+-qla2x00_dump_buffer(uint8_t * b, uint32_t size)
+-{
+-	uint32_t cnt;
+-	uint8_t c;
+-
+-	printk(" 0   1   2   3   4   5   6   7   8   9  "
+-	    "Ah  Bh  Ch  Dh  Eh  Fh\n");
+-	printk("----------------------------------------"
+-	    "----------------------\n");
+-
+-	for (cnt = 0; cnt < size;) {
+-		c = *b++;
+-		printk("%02x",(uint32_t) c);
+-		cnt++;
+-		if (!(cnt % 16))
+-			printk("\n");
+-		else
+-			printk("  ");
+-	}
+-	if (cnt % 16)
+-		printk("\n");
+-}
+-
+-void
+-qla2x00_dump_buffer_zipped(uint8_t *b, uint32_t size)
+-{
+-	uint32_t cnt;
+-	uint8_t c;
+-	uint8_t  last16[16], cur16[16];
+-	uint32_t lc = 0, num_same16 = 0, j;
+-
+-	printk(KERN_DEBUG " 0   1   2   3   4   5   6   7   8   9  "
+-	    "Ah  Bh  Ch  Dh  Eh  Fh\n");
+-	printk(KERN_DEBUG "----------------------------------------"
+-	    "----------------------\n");
+-
+-	for (cnt = 0; cnt < size;) {
+-		c = *b++;
+-
+-		cur16[lc++] = c;
+-
+-		cnt++;
+-		if (cnt % 16)
+-			continue;
+-
+-		/* We have 16 now */
+-		lc = 0;
+-		if (num_same16 == 0) {
+-			memcpy(last16, cur16, 16);
+-			num_same16++;
+-			continue;
+-		}
+-		if (memcmp(cur16, last16, 16) == 0) {
+-			num_same16++;
+-			continue;
+-		}
+-		for (j = 0; j < 16; j++)
+-			printk(KERN_DEBUG "%02x  ", (uint32_t)last16[j]);
+-		printk(KERN_DEBUG "\n");
+-
+-		if (num_same16 > 1)
+-			printk(KERN_DEBUG "> prev pattern repeats (%u)"
+-			    "more times\n", num_same16-1);
+-		memcpy(last16, cur16, 16);
+-		num_same16 = 1;
+-	}
+-
+-	if (num_same16) {
+-		for (j = 0; j < 16; j++)
+-			printk(KERN_DEBUG "%02x  ", (uint32_t)last16[j]);
+-		printk(KERN_DEBUG "\n");
+-
+-		if (num_same16 > 1)
+-			printk(KERN_DEBUG "> prev pattern repeats (%u)"
+-			    "more times\n", num_same16-1);
+-	}
+-	if (lc) {
+-		for (j = 0; j < lc; j++)
+-			printk(KERN_DEBUG "%02x  ", (uint32_t)cur16[j]);
+-		printk(KERN_DEBUG "\n");
+-	}
+-}
+ /*
+  * This function is for formatting and logging debug information.
+  * It is to be used when vha is available. It formats the message
 diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index 9304145..f955094 100644
+index f955094..98a377b 100644
 --- a/drivers/scsi/qla2xxx/qla_dbg.h
 +++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -370,3 +370,50 @@ struct qla2xxx_fw_dump {
- 		struct qla81xx_fw_dump isp81;
- 	} isp;
- };
-+
-+#define QL_MSGHDR "qla2xxx"
-+
-+#define ql_log_fatal		0 /* display fatal errors */
-+#define ql_log_warn		1 /* display critical errors */
-+#define ql_log_info		2 /* display all recovered errors */
-+#define ql_log_all		3 /* This value is only used by ql_errlev.
-+				   * No messages will use this value.
-+				   * This should be always highest value
-+				   * as compared to other log levels.
-+				   */
-+
-+extern int ql_errlev;
-+
-+void
-+ql_dbg(uint32_t, scsi_qla_host_t *vha, int32_t, char *, ...);
-+void
-+ql_dbg_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
-+
-+void
-+ql_log(uint32_t, scsi_qla_host_t *vha, int32_t, char *, ...);
-+void
-+ql_log_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
-+
-+/* Debug Levels */
-+/* The 0x40000000 is the max value any debug level can have
-+ * as ql2xextended_error_logging is of type signed int
-+ */
-+#define ql_dbg_init	0x40000000 /* Init Debug */
-+#define ql_dbg_mbx	0x20000000 /* MBX Debug */
-+#define ql_dbg_disc	0x10000000 /* Device Discovery Debug */
-+#define ql_dbg_io	0x08000000 /* IO Tracing Debug */
-+#define ql_dbg_dpc	0x04000000 /* DPC Thead Debug */
-+#define ql_dbg_async	0x02000000 /* Async events Debug */
-+#define ql_dbg_timer	0x01000000 /* Timer Debug */
-+#define ql_dbg_user	0x00800000 /* User Space Interations Debug */
-+#define ql_dbg_taskm	0x00400000 /* Task Management Debug */
-+#define ql_dbg_aer	0x00200000 /* AER/EEH Debug */
-+#define ql_dbg_multiq	0x00100000 /* MultiQ Debug */
-+#define ql_dbg_p3p	0x00080000 /* P3P specific Debug */
-+#define ql_dbg_vport	0x00040000 /* Virtual Port Debug */
-+#define ql_dbg_buffer	0x00020000 /* For dumping the buffer/regs */
-+#define ql_dbg_misc	0x00010000 /* For dumping everything that is not
-+				    * not covered by upper categories
-+				    */
-+
-+#define QL_DBG_BUF_LEN	512
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 0b38122..38aef5d 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -439,6 +439,9 @@ extern void qla81xx_fw_dump(scsi_qla_host_t *, int);
- extern void qla2x00_dump_regs(scsi_qla_host_t *);
- extern void qla2x00_dump_buffer(uint8_t *, uint32_t);
- extern void qla2x00_dump_buffer_zipped(uint8_t *, uint32_t);
-+extern void ql_dump_regs(uint32_t, scsi_qla_host_t *, int32_t);
-+extern void ql_dump_buffer(uint32_t, scsi_qla_host_t *, int32_t,
-+	uint8_t *, uint32_t);
+@@ -8,146 +8,6 @@
+ #include "qla_def.h"
  
  /*
-  * Global Function Prototypes in qla_gs.c source file.
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 920b76b..3d03845 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2382,8 +2382,13 @@ qla2x00_nvram_config(scsi_qla_host_t *vha)
- 	/*
- 	 * Set host adapter parameters.
- 	 */
-+
-+	/*
-+	 * BIT_7 in the host-parameters section allows for modification to
-+	 * internal driver logging.
-+	 */
- 	if (nv->host_p[0] & BIT_7)
--		ql2xextended_error_logging = 1;
-+		ql2xextended_error_logging = 0x7fffffff;
- 	ha->flags.disable_risc_code_load = ((nv->host_p[0] & BIT_4) ? 1 : 0);
- 	/* Always load RISC code on non ISP2[12]00 chips. */
- 	if (!IS_QLA2100(ha) && !IS_QLA2200(ha))
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index f461925..8aa05c8 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -35,6 +35,10 @@ static struct kmem_cache *srb_cachep;
-  * CT6 CTX allocation cache
+- * Driver debug definitions.
+- */
+-/* #define QL_DEBUG_LEVEL_1  */ /* Output register accesses to COM1 */
+-/* #define QL_DEBUG_LEVEL_2  */ /* Output error msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_3  */ /* Output function trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_4  */ /* Output NVRAM trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_5  */ /* Output ring trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_6  */ /* Output WATCHDOG timer trace to COM1 */
+-/* #define QL_DEBUG_LEVEL_7  */ /* Output RISC load trace msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_8  */ /* Output ring saturation msgs to COM1 */
+-/* #define QL_DEBUG_LEVEL_9  */ /* Output IOCTL trace msgs */
+-/* #define QL_DEBUG_LEVEL_10 */ /* Output IOCTL error msgs */
+-/* #define QL_DEBUG_LEVEL_11 */ /* Output Mbx Cmd trace msgs */
+-/* #define QL_DEBUG_LEVEL_12 */ /* Output IP trace msgs */
+-/* #define QL_DEBUG_LEVEL_13 */ /* Output fdmi function trace msgs */
+-/* #define QL_DEBUG_LEVEL_14 */ /* Output RSCN trace msgs */
+-/* #define QL_DEBUG_LEVEL_15 */ /* Output NPIV trace msgs */
+-/* #define QL_DEBUG_LEVEL_16 */ /* Output ISP84XX trace msgs */
+-/* #define QL_DEBUG_LEVEL_17 */ /* Output EEH trace messages */
+-/* #define QL_DEBUG_LEVEL_18 */ /* Output T10 CRC trace messages */
+-
+-/*
+-* Macros use for debugging the driver.
+-*/
+-
+-#define DEBUG(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-
+-#if defined(QL_DEBUG_LEVEL_1)
+-#define DEBUG1(x)	do {x;} while (0)
+-#else
+-#define DEBUG1(x)	do {} while (0)
+-#endif
+-
+-#define DEBUG2(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_3(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_3_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_9_10(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_11(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_13(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_16(x)	do { if (ql2xextended_error_logging) { x; } } while (0)
+-#define DEBUG2_17(x) 	do { if (ql2xextended_error_logging) { x; } } while (0)
+-
+-#if defined(QL_DEBUG_LEVEL_3)
+-#define DEBUG3(x)	do {x;} while (0)
+-#define DEBUG3_11(x)	do {x;} while (0)
+-#else
+-#define DEBUG3(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_4)
+-#define DEBUG4(x)	do {x;} while (0)
+-#else
+-#define DEBUG4(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_5)
+-#define DEBUG5(x)          do {x;} while (0)
+-#else
+-#define DEBUG5(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_7)
+-#define DEBUG7(x)          do {x;} while (0)
+-#else
+-#define DEBUG7(x)	   do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_9)
+-#define DEBUG9(x)       do {x;} while (0)
+-#define DEBUG9_10(x)    do {x;} while (0)
+-#else
+-#define DEBUG9(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_10)
+-#define DEBUG10(x)      do {x;} while (0)
+-#define DEBUG9_10(x)	do {x;} while (0)
+-#else
+-#define DEBUG10(x)	do {} while (0)
+-  #if !defined(DEBUG9_10)
+-  #define DEBUG9_10(x)	do {} while (0)
+-  #endif
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_11)
+-#define DEBUG11(x)      do{x;} while(0)
+-#if !defined(DEBUG3_11)
+-#define DEBUG3_11(x)    do{x;} while(0)
+-#endif
+-#else
+-#define DEBUG11(x)	do{} while(0)
+-  #if !defined(QL_DEBUG_LEVEL_3)
+-  #define DEBUG3_11(x)	do{} while(0)
+-  #endif
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_12)
+-#define DEBUG12(x)      do {x;} while (0)
+-#else
+-#define DEBUG12(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_13)
+-#define DEBUG13(x)      do {x;} while (0)
+-#else
+-#define DEBUG13(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_14)
+-#define DEBUG14(x)      do {x;} while (0)
+-#else
+-#define DEBUG14(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_15)
+-#define DEBUG15(x)      do {x;} while (0)
+-#else
+-#define DEBUG15(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_16)
+-#define DEBUG16(x)	do {x;} while (0)
+-#else
+-#define DEBUG16(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_17)
+-#define DEBUG17(x)	do {x;} while (0)
+-#else
+-#define DEBUG17(x)	do {} while (0)
+-#endif
+-
+-#if defined(QL_DEBUG_LEVEL_18)
+-#define DEBUG18(x)	do {if (ql2xextended_error_logging) x; } while (0)
+-#else
+-#define DEBUG18(x)	do {} while (0)
+-#endif
+-
+-
+-/*
+  * Firmware Dump structure definition
   */
- static struct kmem_cache *ctx_cachep;
-+/*
-+ * error level for logging
-+ */
-+int ql_errlev = ql_log_all;
  
- int ql2xlogintimeout = 20;
- module_param(ql2xlogintimeout, int, S_IRUGO);
-@@ -69,8 +73,17 @@ MODULE_PARM_DESC(ql2xallocfwdump,
- int ql2xextended_error_logging;
- module_param(ql2xextended_error_logging, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(ql2xextended_error_logging,
--		"Option to enable extended error logging, "
--		"Default is 0 - no logging. 1 - log errors.");
-+		"Option to enable extended error logging,\n"
-+		"\t\tDefault is 0 - no logging.  0x40000000 - Module Init & Probe.\n"
-+		"\t\t0x20000000 - Mailbox Cmnds. 0x10000000 - Device Discovery.\n"
-+		"\t\t0x08000000 - IO tracing.    0x04000000 - DPC Thread.\n"
-+		"\t\t0x02000000 - Async events.  0x01000000 - Timer routines.\n"
-+		"\t\t0x00800000 - User space.    0x00400000 - Task Management.\n"
-+		"\t\t0x00200000 - AER/EEH.       0x00100000 - Multi Q.\n"
-+		"\t\t0x00080000 - P3P Specific.  0x00040000 - Virtual Port.\n"
-+		"\t\t0x00020000 - Buffer Dump.   0x00010000 - Misc.\n"
-+		"\t\t0x7fffffff - For enabling all logs, can be too many logs.\n"
-+		"\t\tDo LOGICAL OR of the value to enable more than one level");
- 
- int ql2xshiftctondsd = 6;
- module_param(ql2xshiftctondsd, int, S_IRUGO);
 -- 
 1.6.0.2
 
