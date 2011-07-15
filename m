@@ -1,7 +1,7 @@
 From: Davidlohr Bueso <dave.bueso@gmail.com>
-Subject: [PATCH 02/16] SCSI: NCR53c406a: Remove Scsi_Cmnd
-Date: Fri, 15 Jul 2011 02:19:43 -0400
-Message-ID: <1310710783.3184.53.camel@offbook>
+Subject: [PATCH 03/16] SCSI: Atari: remove Scsi_Cmnd
+Date: Fri, 15 Jul 2011 02:19:48 -0400
+Message-ID: <1310710788.3184.54.camel@offbook>
 Reply-To: dave@gnu.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -18,39 +18,65 @@ Change this for struct scsi_cmnd.
 
 Signed-off-by: Davidlohr Bueso <dave@gnu.org>
 ---
- drivers/scsi/NCR53c406a.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/atari_scsi.c |   10 +++++-----
+ drivers/scsi/atari_scsi.h |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/NCR53c406a.c b/drivers/scsi/NCR53c406a.c
-index c91888a..62e0aaf 100644
---- a/drivers/scsi/NCR53c406a.c
-+++ b/drivers/scsi/NCR53c406a.c
-@@ -201,7 +201,7 @@ static int dma_chan;
- static int fast_pio = USE_FAST_PIO;
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 3e8658e..132445c 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -189,9 +189,9 @@ static inline void DISABLE_IRQ(void)
+ static int scsi_dma_is_ignored_buserr(unsigned char dma_stat);
+ static void atari_scsi_fetch_restbytes(void);
+ static long atari_scsi_dma_residual(struct Scsi_Host *instance);
+-static int falcon_classify_cmd(Scsi_Cmnd *cmd);
++static int falcon_classify_cmd(struct scsi_cmnd *cmd);
+ static unsigned long atari_dma_xfer_len(unsigned long wanted_len,
+-					Scsi_Cmnd *cmd, int write_flag);
++					struct scsi_cmnd *cmd, int write_flag);
  #endif
- 
--static Scsi_Cmnd *current_SC;
-+static struct scsi_cmnd *current_SC;
- static char info_msg[256];
- 
- /* ================================================================= */
-@@ -693,7 +693,7 @@ static void wait_intr(void)
+ static irqreturn_t scsi_tt_intr(int irq, void *dummy);
+ static irqreturn_t scsi_falcon_intr(int irq, void *dummy);
+@@ -778,7 +778,7 @@ void __init atari_scsi_setup(char *str, int *ints)
+ #endif
  }
- #endif
  
--static int NCR53c406a_queue_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
-+static int NCR53c406a_queue_lck(struct scsi_cmnd * SCpnt, void (*done) (struct scsi_cmnd *))
+-int atari_scsi_bus_reset(Scsi_Cmnd *cmd)
++int atari_scsi_bus_reset(struct scsi_cmnd *cmd)
  {
- 	int i;
+ 	int rv;
+ 	struct NCR5380_hostdata *hostdata =
+@@ -938,7 +938,7 @@ static long atari_scsi_dma_residual(struct Scsi_Host *instance)
+ #define	CMD_SURELY_BYTE_MODE	1
+ #define	CMD_MODE_UNKNOWN		2
  
-@@ -728,7 +728,7 @@ static int NCR53c406a_queue_lck(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
- 
- static DEF_SCSI_QCMD(NCR53c406a_queue)
- 
--static int NCR53c406a_host_reset(Scsi_Cmnd * SCpnt)
-+static int NCR53c406a_host_reset(struct scsi_cmnd * SCpnt)
+-static int falcon_classify_cmd(Scsi_Cmnd *cmd)
++static int falcon_classify_cmd(struct scsi_cmnd *cmd)
  {
- 	DEB(printk("NCR53c406a_reset called\n"));
+ 	unsigned char opcode = cmd->cmnd[0];
  
+@@ -970,7 +970,7 @@ static int falcon_classify_cmd(Scsi_Cmnd *cmd)
+  */
+ 
+ static unsigned long atari_dma_xfer_len(unsigned long wanted_len,
+-					Scsi_Cmnd *cmd, int write_flag)
++					struct scsi_cmnd *cmd, int write_flag)
+ {
+ 	unsigned long	possible_len, limit;
+ 
+diff --git a/drivers/scsi/atari_scsi.h b/drivers/scsi/atari_scsi.h
+index efadb8d..48c1e46 100644
+--- a/drivers/scsi/atari_scsi.h
++++ b/drivers/scsi/atari_scsi.h
+@@ -20,7 +20,7 @@
+ #ifndef ASM
+ int atari_scsi_detect (struct scsi_host_template *);
+ const char *atari_scsi_info (struct Scsi_Host *);
+-int atari_scsi_reset (Scsi_Cmnd *, unsigned int);
++int atari_scsi_reset (struct scsi_cmnd *, unsigned int);
+ int atari_scsi_release (struct Scsi_Host *);
+ 
+ /* The values for CMD_PER_LUN and CAN_QUEUE are somehow arbitrary. Higher
 -- 
 1.7.4.1
