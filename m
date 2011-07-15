@@ -1,7 +1,7 @@
 From: Davidlohr Bueso <dave.bueso@gmail.com>
-Subject: [PATCH 09/16] SCSI: aha1740: remove Scsi_Cmnd
-Date: Fri, 15 Jul 2011 02:20:11 -0400
-Message-ID: <1310710811.3184.60.camel@offbook>
+Subject: [PATCH 07/16] SCSI: sym53c416: remove Scsi_Cmnd
+Date: Fri, 15 Jul 2011 02:20:03 -0400
+Message-ID: <1310710803.3184.58.camel@offbook>
 Reply-To: dave@gnu.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -18,60 +18,53 @@ Change this for struct scsi_cmnd.
 
 Signed-off-by: Davidlohr Bueso <dave@gnu.org>
 ---
- drivers/scsi/aha1740.c |    8 ++++----
- drivers/scsi/aha1740.h |    4 ++--
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/sym53c416.c |    6 +++---
+ drivers/scsi/sym53c416.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
-index 1c10b79..45b7573 100644
---- a/drivers/scsi/aha1740.c
-+++ b/drivers/scsi/aha1740.c
-@@ -227,11 +227,11 @@ static int aha1740_test_port(unsigned int base)
- static irqreturn_t aha1740_intr_handle(int irq, void *dev_id)
- {
- 	struct Scsi_Host *host = (struct Scsi_Host *) dev_id;
--        void (*my_done)(Scsi_Cmnd *);
-+        void (*my_done)(struct scsi_cmnd *);
- 	int errstatus, adapstat;
- 	int number_serviced;
- 	struct ecb *ecbptr;
--	Scsi_Cmnd *SCtmp;
-+	struct scsi_cmnd *SCtmp;
- 	unsigned int base;
- 	unsigned long flags;
- 	int handled = 0;
-@@ -331,7 +331,7 @@ static irqreturn_t aha1740_intr_handle(int irq, void *dev_id)
- 	return IRQ_RETVAL(handled);
+diff --git a/drivers/scsi/sym53c416.c b/drivers/scsi/sym53c416.c
+index 012c86e..d37f985 100644
+--- a/drivers/scsi/sym53c416.c
++++ b/drivers/scsi/sym53c416.c
+@@ -225,7 +225,7 @@ static host hosts[MAXHOSTS] = {
+ 
+ static int host_index = 0;
+ static char info[120];
+-static Scsi_Cmnd *current_command = NULL;
++static struct scsi_cmnd *current_command = NULL;
+ static int fastpio = 1;
+ 
+ static int probeaddrs[] = {0x200, 0x220, 0x240, 0};
+@@ -734,7 +734,7 @@ const char *sym53c416_info(struct Scsi_Host *SChost)
+ 	return info;
  }
  
--static int aha1740_queuecommand_lck(Scsi_Cmnd * SCpnt, void (*done)(Scsi_Cmnd *))
-+static int aha1740_queuecommand_lck(struct scsi_cmnd * SCpnt, void (*done)(struct scsi_cmnd *))
+-static int sym53c416_queuecommand_lck(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
++static int sym53c416_queuecommand_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
  {
- 	unchar direction;
- 	unchar *cmd = (unchar *) SCpnt->cmnd;
-@@ -540,7 +540,7 @@ static int aha1740_biosparam(struct scsi_device *sdev,
- 	return 0;
- }
+ 	int base;
+ 	unsigned long flags = 0;
+@@ -763,7 +763,7 @@ static int sym53c416_queuecommand_lck(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *
  
--static int aha1740_eh_abort_handler (Scsi_Cmnd *dummy)
-+static int aha1740_eh_abort_handler (struct scsi_cmnd *dummy)
+ DEF_SCSI_QCMD(sym53c416_queuecommand)
+ 
+-static int sym53c416_host_reset(Scsi_Cmnd *SCpnt)
++static int sym53c416_host_reset(struct scsi_cmnd *SCpnt)
  {
- /*
-  * From Alan Cox :
-diff --git a/drivers/scsi/aha1740.h b/drivers/scsi/aha1740.h
-index af23fd6..1a3fdf7 100644
---- a/drivers/scsi/aha1740.h
-+++ b/drivers/scsi/aha1740.h
-@@ -134,8 +134,8 @@ struct ecb {			/* Enhanced Control Block 6.1 */
- /* Hardware defined portion ends here, rest is driver defined */
- 	u8 sense[MAX_SENSE];	/* Sense area */
- 	u8 status[MAX_STATUS];	/* Status area */
--	Scsi_Cmnd *SCpnt;	/* Link to the SCSI Command Block */
--	void (*done) (Scsi_Cmnd *);	/* Completion Function */
-+	struct scsi_cmnd *SCpnt;	/* Link to the SCSI Command Block */
-+	void (*done) (struct scsi_cmnd *);	/* Completion Function */
- };
- 
- #define	AHA1740CMD_NOP	 0x00	/* No OP */
+ 	int base;
+ 	int scsi_id = -1;	
+diff --git a/drivers/scsi/sym53c416.h b/drivers/scsi/sym53c416.h
+index 387de5d..d4adda0 100644
+--- a/drivers/scsi/sym53c416.h
++++ b/drivers/scsi/sym53c416.h
+@@ -26,7 +26,7 @@ static int sym53c416_detect(struct scsi_host_template *);
+ static const char *sym53c416_info(struct Scsi_Host *);
+ static int sym53c416_release(struct Scsi_Host *);
+ static int sym53c416_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+-static int sym53c416_host_reset(Scsi_Cmnd *);
++static int sym53c416_host_reset(struct scsi_cmnd *);
+ static int sym53c416_bios_param(struct scsi_device *, struct block_device *,
+ 		sector_t, int *);
+ static void sym53c416_setup(char *str, int *ints);
 -- 
 1.7.4.1
