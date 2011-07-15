@@ -1,298 +1,134 @@
 From: Davidlohr Bueso <dave.bueso@gmail.com>
-Subject: [PATCH 04/16] SCSI: gdth: Remove Scsi_Cmnd
-Date: Fri, 15 Jul 2011 02:19:52 -0400
-Message-ID: <1310710792.3184.55.camel@offbook>
+Subject: [PATCH 06/16] SCSI: ibmmca: remove Scsi_Cmnd
+Date: Fri, 15 Jul 2011 02:20:00 -0400
+Message-ID: <1310710800.3184.57.camel@offbook>
 Reply-To: dave@gnu.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Lang <langa2@kph.uni-mainz.de>
 Cc: lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Davidlohr Bueso <dave@gnu.org>
 
-Chage this for struct scsi_cmnd.
+Change this for struct scsi_cmnd
 
 Signed-off-by: Davidlohr Bueso <dave@gnu.org>
 ---
- drivers/scsi/gdth.c      |   64 +++++++++++++++++++++++-----------------------
- drivers/scsi/gdth.h      |   10 +++---
- drivers/scsi/gdth_proc.c |    2 +-
- 3 files changed, 38 insertions(+), 38 deletions(-)
+ drivers/scsi/ibmmca.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 3242bca..9685880 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -147,14 +147,14 @@ static irqreturn_t gdth_interrupt(int irq, void *dev_id);
- static irqreturn_t __gdth_interrupt(gdth_ha_str *ha,
-                                     int gdth_from_wait, int* pIndex);
- static int gdth_sync_event(gdth_ha_str *ha, int service, u8 index,
--                                                               Scsi_Cmnd *scp);
-+                                                               struct scsi_cmnd *scp);
- static int gdth_async_event(gdth_ha_str *ha);
- static void gdth_log_event(gdth_evt_data *dvr, char *buffer);
+diff --git a/drivers/scsi/ibmmca.c b/drivers/scsi/ibmmca.c
+index 67fc8ff..cb2e6d7 100644
+--- a/drivers/scsi/ibmmca.c
++++ b/drivers/scsi/ibmmca.c
+@@ -40,8 +40,8 @@
  
--static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 priority);
-+static void gdth_putq(gdth_ha_str *ha, struct scsi_cmnd *scp, u8 priority);
- static void gdth_next(gdth_ha_str *ha);
--static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 b);
--static int gdth_special_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp);
-+static int gdth_fill_raw_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp, u8 b);
-+static int gdth_special_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp);
- static gdth_evt_str *gdth_store_event(gdth_ha_str *ha, u16 source,
-                                       u16 idx, gdth_evt_data *evt);
- static int gdth_read_event(gdth_ha_str *ha, int handle, gdth_evt_str *estr);
-@@ -162,10 +162,10 @@ static void gdth_readapp_event(gdth_ha_str *ha, u8 application,
-                                gdth_evt_str *estr);
- static void gdth_clear_events(void);
+ /* Common forward declarations for all Linux-versions: */
+ static int ibmmca_queuecommand (struct Scsi_Host *, struct scsi_cmnd *);
+-static int ibmmca_abort (Scsi_Cmnd *);
+-static int ibmmca_host_reset (Scsi_Cmnd *);
++static int ibmmca_abort (struct scsi_cmnd *);
++static int ibmmca_host_reset (struct scsi_cmnd *);
+ static int ibmmca_biosparam (struct scsi_device *, struct block_device *, sector_t, int *);
+ static int ibmmca_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start, off_t offset, int length, int inout);
  
--static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-+static void gdth_copy_internal_data(gdth_ha_str *ha, struct scsi_cmnd *scp,
-                                     char *buffer, u16 count);
--static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp);
--static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, u16 hdrive);
-+static int gdth_internal_cache_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp);
-+static int gdth_fill_cache_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp, u16 hdrive);
+@@ -315,7 +315,7 @@ struct logical_device {
+ 	struct im_tsb tsb;	/* SCSI command complete status block structure */
+ 	struct im_sge sge[16];	/* scatter gather list structure */
+ 	unsigned char buf[256];	/* SCSI command return data buffer */
+-	Scsi_Cmnd *cmd;		/* SCSI-command that is currently in progress */
++	struct scsi_cmnd *cmd;	/* SCSI-command that is currently in progress */
+ 	int device_type;	/* type of the SCSI-device. See include/scsi/scsi.h
+ 				   for interpretation of the possible values */
+ 	int block_length;	/* blocksize of a particular logical SCSI-device */
+@@ -476,7 +476,7 @@ static char ibm_ansi_order = 0;
+ #endif
  
- static void gdth_enable_int(gdth_ha_str *ha);
- static int gdth_test_busy(gdth_ha_str *ha);
-@@ -447,7 +447,7 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
-                    int timeout, u32 *info)
- {
-     gdth_ha_str *ha = shost_priv(sdev->host);
--    Scsi_Cmnd *scp;
-+    struct scsi_cmnd *scp;
-     struct gdth_cmndinfo cmndinfo;
-     DECLARE_COMPLETION_ONSTACK(wait);
-     int rval;
-@@ -1991,11 +1991,11 @@ static int gdth_analyse_hdrive(gdth_ha_str *ha, u16 hdrive)
- 
- /* command queueing/sending functions */
- 
--static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 priority)
-+static void gdth_putq(gdth_ha_str *ha, struct scsi_cmnd *scp, u8 priority)
- {
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
--    register Scsi_Cmnd *pscp;
--    register Scsi_Cmnd *nscp;
-+    register struct scsi_cmnd *pscp;
-+    register struct scsi_cmnd *nscp;
-     unsigned long flags;
- 
-     TRACE(("gdth_putq() priority %d\n",priority));
-@@ -2009,11 +2009,11 @@ static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 priority)
-         scp->SCp.ptr = NULL;
-     } else {                                    /* queue not empty */
-         pscp = ha->req_first;
--        nscp = (Scsi_Cmnd *)pscp->SCp.ptr;
-+        nscp = (struct scsi_cmnd *)pscp->SCp.ptr;
-         /* priority: 0-highest,..,0xff-lowest */
-         while (nscp && gdth_cmnd_priv(nscp)->priority <= priority) {
-             pscp = nscp;
--            nscp = (Scsi_Cmnd *)pscp->SCp.ptr;
-+            nscp = (struct scsi_cmnd *)pscp->SCp.ptr;
-         }
-         pscp->SCp.ptr = (char *)scp;
-         scp->SCp.ptr  = (char *)nscp;
-@@ -2022,7 +2022,7 @@ static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 priority)
- 
- #ifdef GDTH_STATISTICS
-     flags = 0;
--    for (nscp=ha->req_first; nscp; nscp=(Scsi_Cmnd*)nscp->SCp.ptr)
-+    for (nscp=ha->req_first; nscp; nscp=(struct scsi_cmnd*)nscp->SCp.ptr)
-         ++flags;
-     if (max_rq < flags) {
-         max_rq = flags;
-@@ -2033,8 +2033,8 @@ static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 priority)
- 
- static void gdth_next(gdth_ha_str *ha)
- {
--    register Scsi_Cmnd *pscp;
--    register Scsi_Cmnd *nscp;
-+    register struct scsi_cmnd *pscp;
-+    register struct scsi_cmnd *nscp;
-     u8 b, t, l, firsttime;
-     u8 this_cmd, next_cmd;
-     unsigned long flags = 0;
-@@ -2049,10 +2049,10 @@ static void gdth_next(gdth_ha_str *ha)
-     next_cmd = gdth_polling ? FALSE:TRUE;
-     cmd_index = 0;
- 
--    for (nscp = pscp = ha->req_first; nscp; nscp = (Scsi_Cmnd *)nscp->SCp.ptr) {
-+    for (nscp = pscp = ha->req_first; nscp; nscp = (struct scsi_cmnd *)nscp->SCp.ptr) {
-         struct gdth_cmndinfo *nscp_cmndinfo = gdth_cmnd_priv(nscp);
--        if (nscp != pscp && nscp != (Scsi_Cmnd *)pscp->SCp.ptr)
--            pscp = (Scsi_Cmnd *)pscp->SCp.ptr;
-+        if (nscp != pscp && nscp != (struct scsi_cmnd *)pscp->SCp.ptr)
-+            pscp = (struct scsi_cmnd *)pscp->SCp.ptr;
-         if (!nscp_cmndinfo->internal_command) {
-             b = nscp->device->channel;
-             t = nscp->device->id;
-@@ -2259,7 +2259,7 @@ static void gdth_next(gdth_ha_str *ha)
-         if (!this_cmd)
-             break;
-         if (nscp == ha->req_first)
--            ha->req_first = pscp = (Scsi_Cmnd *)nscp->SCp.ptr;
-+            ha->req_first = pscp = (struct scsi_cmnd *)nscp->SCp.ptr;
-         else
-             pscp->SCp.ptr = nscp->SCp.ptr;
-         if (!next_cmd)
-@@ -2284,7 +2284,7 @@ static void gdth_next(gdth_ha_str *ha)
-  * gdth_copy_internal_data() - copy to/from a buffer onto a scsi_cmnd's
-  * buffers, kmap_atomic() as needed.
-  */
--static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-+static void gdth_copy_internal_data(gdth_ha_str *ha, struct scsi_cmnd *scp,
-                                     char *buffer, u16 count)
- {
-     u16 cpcount,i, max_sg = scsi_sg_count(scp);
-@@ -2326,7 +2326,7 @@ static void gdth_copy_internal_data(gdth_ha_str *ha, Scsi_Cmnd *scp,
-     }
+ static void issue_cmd(struct Scsi_Host *, unsigned long, unsigned char);
+-static void internal_done(Scsi_Cmnd * cmd);
++static void internal_done(struct scsi_cmnd * cmd);
+ static void check_devices(struct Scsi_Host *, int);
+ static int immediate_assign(struct Scsi_Host *, unsigned int, unsigned int, unsigned int, unsigned int);
+ static int immediate_feature(struct Scsi_Host *, unsigned int, unsigned int);
+@@ -503,7 +503,7 @@ static irqreturn_t interrupt_handler(int irq, void *dev_id)
+ 	unsigned int cmd_result;
+ 	unsigned int ldn;
+ 	unsigned long flags;
+-	Scsi_Cmnd *cmd;
++	struct scsi_cmnd *cmd;
+ 	int lastSCSI;
+ 	struct device *dev = dev_id;
+ 	struct Scsi_Host *shpnt = dev_get_drvdata(dev);
+@@ -726,7 +726,7 @@ static void issue_cmd(struct Scsi_Host *shpnt, unsigned long cmd_reg,
+ 	spin_unlock_irqrestore(shpnt->host_lock, flags);
  }
  
--static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
-+static int gdth_internal_cache_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp)
+-static void internal_done(Scsi_Cmnd * cmd)
++static void internal_done(struct scsi_cmnd * cmd)
  {
-     u8 t;
-     gdth_inq_data inq;
-@@ -2428,7 +2428,7 @@ static int gdth_internal_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
-     return 0;
+ 	cmd->SCp.Status++;
+ 	return;
+@@ -1691,7 +1691,7 @@ static int __devexit ibmmca_remove(struct device *dev)
  }
  
--static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, u16 hdrive)
-+static int gdth_fill_cache_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp, u16 hdrive)
+ /* The following routine is the SCSI command queue for the midlevel driver */
+-static int ibmmca_queuecommand_lck(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
++static int ibmmca_queuecommand_lck(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd *))
  {
-     register gdth_cmd_str *cmdp;
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
-@@ -2603,7 +2603,7 @@ static int gdth_fill_cache_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, u16 hdrive)
-     return cmd_index;
+ 	unsigned int ldn;
+ 	unsigned int scsi_cmd;
+@@ -1998,7 +1998,7 @@ static int ibmmca_queuecommand_lck(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 
+ static DEF_SCSI_QCMD(ibmmca_queuecommand)
+ 
+-static int __ibmmca_abort(Scsi_Cmnd * cmd)
++static int __ibmmca_abort(struct scsi_cmnd * cmd)
+ {
+ 	/* Abort does not work, as the adapter never generates an interrupt on
+ 	 * whatever situation is simulated, even when really pending commands
+@@ -2006,7 +2006,7 @@ static int __ibmmca_abort(Scsi_Cmnd * cmd)
+ 
+ 	struct Scsi_Host *shpnt;
+ 	unsigned int ldn;
+-	void (*saved_done) (Scsi_Cmnd *);
++	void (*saved_done) (struct scsi_cmnd *);
+ 	int target;
+ 	int max_pun;
+ 	unsigned long imm_command;
+@@ -2092,7 +2092,7 @@ static int __ibmmca_abort(Scsi_Cmnd * cmd)
+ 	}
  }
  
--static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 b)
-+static int gdth_fill_raw_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp, u8 b)
+-static int ibmmca_abort(Scsi_Cmnd * cmd)
++static int ibmmca_abort(struct scsi_cmnd * cmd)
  {
-     register gdth_cmd_str *cmdp;
-     u16 i;
-@@ -2776,7 +2776,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, u8 b)
-     return cmd_index;
+ 	struct Scsi_Host *shpnt = cmd->device->host;
+ 	int rc;
+@@ -2104,10 +2104,10 @@ static int ibmmca_abort(Scsi_Cmnd * cmd)
+ 	return rc;
  }
  
--static int gdth_special_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp)
-+static int gdth_special_cmd(gdth_ha_str *ha, struct scsi_cmnd *scp)
+-static int __ibmmca_host_reset(Scsi_Cmnd * cmd)
++static int __ibmmca_host_reset(struct scsi_cmnd * cmd)
  {
-     register gdth_cmd_str *cmdp;
-     struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
-@@ -2970,7 +2970,7 @@ static irqreturn_t __gdth_interrupt(gdth_ha_str *ha,
-     gdt6m_dpram_str __iomem *dp6m_ptr = NULL;
-     gdt6_dpram_str __iomem *dp6_ptr;
-     gdt2_dpram_str __iomem *dp2_ptr;
--    Scsi_Cmnd *scp;
-+    struct scsi_cmnd *scp;
-     int rval, i;
-     u8 IStatus;
-     u16 Service;
-@@ -3229,7 +3229,7 @@ static irqreturn_t gdth_interrupt(int irq, void *dev_id)
+ 	struct Scsi_Host *shpnt;
+-	Scsi_Cmnd *cmd_aid;
++	struct scsi_cmnd *cmd_aid;
+ 	int ticks, i;
+ 	unsigned long imm_command;
+ 
+@@ -2184,7 +2184,7 @@ static int __ibmmca_host_reset(Scsi_Cmnd * cmd)
+ 	return SUCCESS;
  }
  
- static int gdth_sync_event(gdth_ha_str *ha, int service, u8 index,
--                                                              Scsi_Cmnd *scp)
-+                                                              struct scsi_cmnd *scp)
+-static int ibmmca_host_reset(Scsi_Cmnd * cmd)
++static int ibmmca_host_reset(struct scsi_cmnd * cmd)
  {
-     gdth_msg_str *msg;
-     gdth_cmd_str *cmdp;
-@@ -3720,7 +3720,7 @@ static u8	gdth_timer_running;
- static void gdth_timeout(unsigned long data)
- {
-     u32 i;
--    Scsi_Cmnd *nscp;
-+    struct scsi_cmnd *nscp;
-     gdth_ha_str *ha;
-     unsigned long flags;
- 
-@@ -3736,7 +3736,7 @@ static void gdth_timeout(unsigned long data)
-         if (ha->cmd_tab[i].cmnd != UNUSED_CMND)
-             ++act_stats;
- 
--    for (act_rq=0,nscp=ha->req_first; nscp; nscp=(Scsi_Cmnd*)nscp->SCp.ptr)
-+    for (act_rq=0,nscp=ha->req_first; nscp; nscp=(struct scsi_cmnd*)nscp->SCp.ptr)
-         ++act_rq;
- 
-     TRACE2(("gdth_to(): ints %d, ios %d, act_stats %d, act_rq %d\n",
-@@ -3923,12 +3923,12 @@ static enum blk_eh_timer_return gdth_timed_out(struct scsi_cmnd *scp)
- }
- 
-
--static int gdth_eh_bus_reset(Scsi_Cmnd *scp)
-+static int gdth_eh_bus_reset(struct scsi_cmnd *scp)
- {
-     gdth_ha_str *ha = shost_priv(scp->device->host);
-     int i;
-     unsigned long flags;
--    Scsi_Cmnd *cmnd;
-+    struct scsi_cmnd *cmnd;
-     u8 b;
- 
-     TRACE2(("gdth_eh_bus_reset()\n"));
-@@ -4479,7 +4479,7 @@ free_fail:
- static int gdth_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
- {
-     gdth_ha_str *ha; 
--    Scsi_Cmnd *scp;
-+    struct scsi_cmnd *scp;
-     unsigned long flags;
-     char cmnd[MAX_COMMAND_SIZE];   
-     void __user *argp = (void __user *)arg;
-diff --git a/drivers/scsi/gdth.h b/drivers/scsi/gdth.h
-index d969855..7634362 100644
---- a/drivers/scsi/gdth.h
-+++ b/drivers/scsi/gdth.h
-@@ -170,9 +170,9 @@
- #define BIGSECS         63                      /* mapping 255*63 */
- 
- /* special command ptr. */
--#define UNUSED_CMND     ((Scsi_Cmnd *)-1)
--#define INTERNAL_CMND   ((Scsi_Cmnd *)-2)
--#define SCREEN_CMND     ((Scsi_Cmnd *)-3)
-+#define UNUSED_CMND     ((struct scsi_cmnd *)-1)
-+#define INTERNAL_CMND   ((struct scsi_cmnd *)-2)
-+#define SCREEN_CMND     ((struct scsi_cmnd *)-3)
- #define SPECIAL_SCP(p)  (p==UNUSED_CMND || p==INTERNAL_CMND || p==SCREEN_CMND)
- 
- /* controller services */
-@@ -878,7 +878,7 @@ typedef struct {
-     u16              service;                /* service/firmware ver./.. */
-     u32             info;
-     u32             info2;                  /* additional info */
--    Scsi_Cmnd           *req_first;             /* top of request queue */
-+    struct scsi_cmnd           *req_first;             /* top of request queue */
-     struct {
-         u8          present;                /* Flag: host drive present? */
-         u8          is_logdrv;              /* Flag: log. drive (master)? */
-@@ -907,7 +907,7 @@ typedef struct {
-         u32         id_list[MAXID];         /* IDs of the phys. devices */
-     } raw[MAXBUS];                              /* SCSI channels */
-     struct {
--        Scsi_Cmnd       *cmnd;                  /* pending request */
-+        struct scsi_cmnd       *cmnd;                  /* pending request */
-         u16          service;                /* service */
-     } cmd_tab[GDTH_MAXCMDS];                    /* table of pend. requests */
-     struct gdth_cmndinfo {                      /* per-command private info */
-diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
-index 6527543..054e1d2 100644
---- a/drivers/scsi/gdth_proc.c
-+++ b/drivers/scsi/gdth_proc.c
-@@ -735,7 +735,7 @@ static void gdth_wait_completion(gdth_ha_str *ha, int busnum, int id)
- {
-     unsigned long flags;
-     int i;
--    Scsi_Cmnd *scp;
-+    struct scsi_cmnd *scp;
-     struct gdth_cmndinfo *cmndinfo;
-     u8 b, t;
- 
+ 	struct Scsi_Host *shpnt = cmd->device->host;
+ 	int rc;
 -- 
 1.7.4.1
