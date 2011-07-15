@@ -1,86 +1,94 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v3] BNX2I: Fixed kernel panic due to illegal usage of
- sc->request->cpu
-Date: Fri, 15 Jul 2011 11:17:26 -0700
-Message-ID: <1310753846-4423-1-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: rq_affinity doesn't seem to work?
+Date: Fri, 15 Jul 2011 13:20:02 -0700
+Message-ID: <1310761202.18112.6.camel@dwillia2-linux>
+References: <D010E79907AF0D4E90B603DE907837D504CA6365D6@azsmsx504.amr.corp.intel.com>
+	 <4E1CAEEB.8050506@kernel.dk> <20110713171011.GA11864@parisc-linux.org>
+	 <CAL1RGDUDbEG4ypr0GJLLi_0PTjZK0HshMVwTs=aY+=hhFdjK5g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3652 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755753Ab1GOSSJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jul 2011 14:18:09 -0400
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAL1RGDUDbEG4ypr0GJLLi_0PTjZK0HshMVwTs=aY+=hhFdjK5g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Jens Axboe <axboe@kernel.dk>, "Jiang, Dave" <dave.jiang@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-A kernel panic was observed when passing the sc->request->cpu = -1 to
-retrieve the per_cpu variable pointer:
- #0 [ffff880011203960] machine_kexec at ffffffff81022bc3
- #1 [ffff8800112039b0] crash_kexec at ffffffff81088630
- #2 [ffff880011203a80] __die at ffffffff8139ea20
- #3 [ffff880011203aa0] no_context at ffffffff8102f3a7
- #4 [ffff880011203ae0] __bad_area_nosemaphore at ffffffff8102f665
- #5 [ffff880011203ba0] retint_signal at ffffffff8139dd1f
- #6 [ffff880011203cc8] bnx2i_indicate_kcqe at ffffffffa03dc4f2
- #7 [ffff880011203da8] service_kcqes at ffffffffa03cb04f
- #8 [ffff880011203e68] cnic_service_bnx2x_kcq at ffffffffa03cb14a
- #9 [ffff880011203e88] cnic_service_bnx2x_bh at ffffffffa03cb1b3
+On Thu, 2011-07-14 at 10:02 -0700, Roland Dreier wrote:
+> On Wed, Jul 13, 2011 at 10:10 AM, Matthew Wilcox <matthew@wil.cx> wrote:
+> Limiting softirqs to 10% of a core seems a bit low, since we seem to
+> be able to use more than 100% of a core handling block softirqs, and
+> anyway magic numbers like that seem to always be wrong sometimes.
+> Perhaps we could use the queue length on the destination CPU as a
+> proxy for how busy ksoftirq is?
 
-The problem lies in the slow path sg_io (and perhaps sg_scsi_ioctl) call to
-blk_get_request->get_request/wait->blk_alloc_request->blk_rq_init which
-re-initializes the request->cpu to -1.  There is no assignment for cpu from
-that to the request_fn call to low level drivers.
+This is likely too aggressive (untested / need to confirm it resolves
+the isci issue), but it's at least straightforward to determine, and I
+wonder if it prevents the regression Matthew is seeing.  It assumes that
+the once we have naturally spilled from the irq return path to ksoftirqd
+that this cpu is having trouble keeping up with the load.
 
-When this happens, the sc->request->cpu will be using the init value of
--1.  This will create a kernel panic when it hits bnx2i because the code
-refers it to get the per_cpu variables ptr.
+??
 
-This change is to put in a guard against that and also for cases when
-bio affinity/queue completion to the same cpu is not enabled.  In those
-cases, the request->cpu will remain a -1 also.
-
-This bug was created from commit:  b5cf6b63f73abdc051035f0050b367beeb2ef94c
-
-For the case when the blk layer did not setup the request->cpu, bnx2i
-will complete the sc with the current CPU of the thread.
-
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_hwi.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 54978c1..28c6693 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1901,6 +1901,7 @@ static int bnx2i_queue_scsi_cmd_resp(struct iscsi_session *session,
- 	struct iscsi_task *task;
- 	struct scsi_cmnd *sc;
- 	int rc = 0;
-+	int cpu;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index d2f8f40..9c7ba87 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1279,10 +1279,8 @@ get_rq:
+ 	init_request_from_bio(req, bio);
  
- 	spin_lock(&session->lock);
- 	task = iscsi_itt_to_task(bnx2i_conn->cls_conn->dd_data,
-@@ -1912,7 +1913,12 @@ static int bnx2i_queue_scsi_cmd_resp(struct iscsi_session *session,
- 	sc = task->sc;
- 	spin_unlock(&session->lock);
+ 	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags) ||
+-	    bio_flagged(bio, BIO_CPU_AFFINE)) {
+-		req->cpu = blk_cpu_to_group(get_cpu());
+-		put_cpu();
+-	}
++	    bio_flagged(bio, BIO_CPU_AFFINE))
++		req->cpu = smp_processor_id();
  
--	p = &per_cpu(bnx2i_percpu, sc->request->cpu);
-+	if (!blk_rq_cpu_valid(sc->request))
-+		cpu = smp_processor_id();
-+	else
-+		cpu = sc->request->cpu;
+ 	plug = current->plug;
+ 	if (plug) {
+diff --git a/block/blk-softirq.c b/block/blk-softirq.c
+index ee9c216..720918f 100644
+--- a/block/blk-softirq.c
++++ b/block/blk-softirq.c
+@@ -101,17 +101,21 @@ static struct notifier_block __cpuinitdata blk_cpu_notifier = {
+ 	.notifier_call	= blk_cpu_notify,
+ };
+ 
++DECLARE_PER_CPU(struct task_struct *, ksoftirqd);
 +
-+	p = &per_cpu(bnx2i_percpu, cpu);
- 	spin_lock(&p->p_work_lock);
- 	if (unlikely(!p->iothread)) {
- 		rc = -EINVAL;
--- 
-1.7.0.5
-
-
+ void __blk_complete_request(struct request *req)
+ {
++	int ccpu, cpu, group_ccpu, group_cpu;
+ 	struct request_queue *q = req->q;
++	struct task_struct *tsk;
+ 	unsigned long flags;
+-	int ccpu, cpu, group_cpu;
+ 
+ 	BUG_ON(!q->softirq_done_fn);
+ 
+ 	local_irq_save(flags);
+ 	cpu = smp_processor_id();
+ 	group_cpu = blk_cpu_to_group(cpu);
++	tsk = per_cpu(ksoftirqd, cpu);
+ 
+ 	/*
+ 	 * Select completion CPU
+@@ -120,8 +124,15 @@ void __blk_complete_request(struct request *req)
+ 		ccpu = req->cpu;
+ 	else
+ 		ccpu = cpu;
++	group_ccpu = blk_cpu_to_group(ccpu);
+ 
+-	if (ccpu == cpu || ccpu == group_cpu) {
++	/*
++	 * try to skip a remote softirq-trigger if the completion is
++	 * within the same group, but not if local softirqs have already
++	 * spilled to ksoftirqd
++	 */
++	if (ccpu == cpu ||
++	    (group_ccpu == group_cpu && tsk->state != TASK_RUNNING)) {
+ 		struct list_head *list;
+ do_local:
+ 		list = &__get_cpu_var(blk_cpu_done);
