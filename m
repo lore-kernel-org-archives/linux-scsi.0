@@ -1,14 +1,14 @@
 From: Davidlohr Bueso <dave.bueso@gmail.com>
-Subject: [PATCH 07/16] SCSI: sym53c416: remove Scsi_Cmnd
-Date: Fri, 15 Jul 2011 02:20:03 -0400
-Message-ID: <1310710803.3184.58.camel@offbook>
+Subject: [PATCH 10/16] SCSI: aha152x: remove Scsi_Cmnd
+Date: Fri, 15 Jul 2011 02:20:16 -0400
+Message-ID: <1310710817.3184.61.camel@offbook>
 Reply-To: dave@gnu.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Juergen E. Fischer" <fischer@norbit.de>
 Cc: lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
@@ -18,53 +18,255 @@ Change this for struct scsi_cmnd.
 
 Signed-off-by: Davidlohr Bueso <dave@gnu.org>
 ---
- drivers/scsi/sym53c416.c |    6 +++---
- drivers/scsi/sym53c416.h |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/aha152x.c |   68 ++++++++++++++++++++++++------------------------
+ 1 files changed, 34 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/sym53c416.c b/drivers/scsi/sym53c416.c
-index 012c86e..d37f985 100644
---- a/drivers/scsi/sym53c416.c
-+++ b/drivers/scsi/sym53c416.c
-@@ -225,7 +225,7 @@ static host hosts[MAXHOSTS] = {
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index c5169f0..44fdf8d 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -462,16 +462,16 @@ enum aha152x_state {
+  *
+  */
+ struct aha152x_hostdata {
+-	Scsi_Cmnd *issue_SC;
++	struct scsi_cmnd *issue_SC;
+ 		/* pending commands to issue */
  
- static int host_index = 0;
- static char info[120];
--static Scsi_Cmnd *current_command = NULL;
-+static struct scsi_cmnd *current_command = NULL;
- static int fastpio = 1;
+-	Scsi_Cmnd *current_SC;
++	struct scsi_cmnd *current_SC;
+ 		/* current command on the bus */
  
- static int probeaddrs[] = {0x200, 0x220, 0x240, 0};
-@@ -734,7 +734,7 @@ const char *sym53c416_info(struct Scsi_Host *SChost)
- 	return info;
+-	Scsi_Cmnd *disconnected_SC;
++	struct scsi_cmnd *disconnected_SC;
+ 		/* commands that disconnected */
+ 
+-	Scsi_Cmnd *done_SC;
++	struct scsi_cmnd *done_SC;
+ 		/* command that was completed */
+ 
+ 	spinlock_t lock;
+@@ -558,7 +558,7 @@ struct aha152x_hostdata {
+  *
+  */
+ struct aha152x_scdata {
+-	Scsi_Cmnd *next;	/* next sc in queue */
++	struct scsi_cmnd *next;	/* next sc in queue */
+ 	struct completion *done;/* semaphore to block on */
+ 	struct scsi_eh_save ses;
+ };
+@@ -682,7 +682,7 @@ static void done(struct Scsi_Host *shpnt, int error);
+ 
+ /* diagnostics */
+ static void disp_ports(struct Scsi_Host *shpnt);
+-static void show_command(Scsi_Cmnd * ptr);
++static void show_command(struct scsi_cmnd * ptr);
+ static void show_queues(struct Scsi_Host *shpnt);
+ static void disp_enintr(struct Scsi_Host *shpnt);
+ 
+@@ -691,9 +691,9 @@ static void disp_enintr(struct Scsi_Host *shpnt);
+  *  queue services:
+  *
+  */
+-static inline void append_SC(Scsi_Cmnd **SC, Scsi_Cmnd *new_SC)
++static inline void append_SC(struct scsi_cmnd **SC, struct scsi_cmnd *new_SC)
+ {
+-	Scsi_Cmnd *end;
++	struct scsi_cmnd *end;
+ 
+ 	SCNEXT(new_SC) = NULL;
+ 	if (!*SC)
+@@ -705,9 +705,9 @@ static inline void append_SC(Scsi_Cmnd **SC, Scsi_Cmnd *new_SC)
+ 	}
  }
  
--static int sym53c416_queuecommand_lck(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
-+static int sym53c416_queuecommand_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+-static inline Scsi_Cmnd *remove_first_SC(Scsi_Cmnd ** SC)
++static inline struct scsi_cmnd *remove_first_SC(struct scsi_cmnd ** SC)
  {
- 	int base;
- 	unsigned long flags = 0;
-@@ -763,7 +763,7 @@ static int sym53c416_queuecommand_lck(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *
+-	Scsi_Cmnd *ptr;
++	struct scsi_cmnd *ptr;
  
- DEF_SCSI_QCMD(sym53c416_queuecommand)
+ 	ptr = *SC;
+ 	if (ptr) {
+@@ -717,9 +717,9 @@ static inline Scsi_Cmnd *remove_first_SC(Scsi_Cmnd ** SC)
+ 	return ptr;
+ }
  
--static int sym53c416_host_reset(Scsi_Cmnd *SCpnt)
-+static int sym53c416_host_reset(struct scsi_cmnd *SCpnt)
+-static inline Scsi_Cmnd *remove_lun_SC(Scsi_Cmnd ** SC, int target, int lun)
++static inline struct scsi_cmnd *remove_lun_SC(struct scsi_cmnd ** SC, int target, int lun)
  {
- 	int base;
- 	int scsi_id = -1;	
-diff --git a/drivers/scsi/sym53c416.h b/drivers/scsi/sym53c416.h
-index 387de5d..d4adda0 100644
---- a/drivers/scsi/sym53c416.h
-+++ b/drivers/scsi/sym53c416.h
-@@ -26,7 +26,7 @@ static int sym53c416_detect(struct scsi_host_template *);
- static const char *sym53c416_info(struct Scsi_Host *);
- static int sym53c416_release(struct Scsi_Host *);
- static int sym53c416_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
--static int sym53c416_host_reset(Scsi_Cmnd *);
-+static int sym53c416_host_reset(struct scsi_cmnd *);
- static int sym53c416_bios_param(struct scsi_device *, struct block_device *,
- 		sector_t, int *);
- static void sym53c416_setup(char *str, int *ints);
+-	Scsi_Cmnd *ptr, *prev;
++	struct scsi_cmnd *ptr, *prev;
+ 
+ 	for (ptr = *SC, prev = NULL;
+ 	     ptr && ((ptr->device->id != target) || (ptr->device->lun != lun));
+@@ -738,9 +738,9 @@ static inline Scsi_Cmnd *remove_lun_SC(Scsi_Cmnd ** SC, int target, int lun)
+ 	return ptr;
+ }
+ 
+-static inline Scsi_Cmnd *remove_SC(Scsi_Cmnd **SC, Scsi_Cmnd *SCp)
++static inline struct scsi_cmnd *remove_SC(struct scsi_cmnd **SC, struct scsi_cmnd *SCp)
+ {
+-	Scsi_Cmnd *ptr, *prev;
++	struct scsi_cmnd *ptr, *prev;
+ 
+ 	for (ptr = *SC, prev = NULL;
+ 	     ptr && SCp!=ptr;
+@@ -972,8 +972,8 @@ static int setup_expected_interrupts(struct Scsi_Host *shpnt)
+ /* 
+  *  Queue a command and setup interrupts for a free bus.
+  */
+-static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
+-		int phase, void (*done)(Scsi_Cmnd *))
++static int aha152x_internal_queue(struct scsi_cmnd *SCpnt, struct completion *complete,
++		int phase, void (*done)(struct scsi_cmnd *))
+ {
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
+ 	unsigned long flags;
+@@ -1056,7 +1056,7 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
+  *  queue a command
+  *
+  */
+-static int aha152x_queue_lck(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
++static int aha152x_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ {
+ #if 0
+ 	if(*SCpnt->cmnd == REQUEST_SENSE) {
+@@ -1077,7 +1077,7 @@ static DEF_SCSI_QCMD(aha152x_queue)
+  *  
+  *
+  */
+-static void reset_done(Scsi_Cmnd *SCpnt)
++static void reset_done(struct scsi_cmnd *SCpnt)
+ {
+ #if 0
+ 	struct Scsi_Host *shpnt = SCpnt->host;
+@@ -1094,10 +1094,10 @@ static void reset_done(Scsi_Cmnd *SCpnt)
+  *  Abort a command
+  *
+  */
+-static int aha152x_abort(Scsi_Cmnd *SCpnt)
++static int aha152x_abort(struct scsi_cmnd *SCpnt)
+ {
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
+-	Scsi_Cmnd *ptr;
++	struct scsi_cmnd *ptr;
+ 	unsigned long flags;
+ 
+ #if defined(AHA152X_DEBUG)
+@@ -1143,7 +1143,7 @@ static int aha152x_abort(Scsi_Cmnd *SCpnt)
+  * Reset a device
+  *
+  */
+-static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
++static int aha152x_device_reset(struct scsi_cmnd * SCpnt)
+ {
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
+ 	DECLARE_COMPLETION(done);
+@@ -1208,13 +1208,13 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 	return ret;
+ }
+ 
+-static void free_hard_reset_SCs(struct Scsi_Host *shpnt, Scsi_Cmnd **SCs)
++static void free_hard_reset_SCs(struct Scsi_Host *shpnt, struct scsi_cmnd **SCs)
+ {
+-	Scsi_Cmnd *ptr;
++	struct scsi_cmnd *ptr;
+ 
+ 	ptr=*SCs;
+ 	while(ptr) {
+-		Scsi_Cmnd *next;
++		struct scsi_cmnd *next;
+ 
+ 		if(SCDATA(ptr)) {
+ 			next = SCNEXT(ptr);
+@@ -1277,7 +1277,7 @@ static int aha152x_bus_reset_host(struct Scsi_Host *shpnt)
+  * Reset the bus
+  *
+  */
+-static int aha152x_bus_reset(Scsi_Cmnd *SCpnt)
++static int aha152x_bus_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	return aha152x_bus_reset_host(SCpnt->device->host);
+ }
+@@ -1339,7 +1339,7 @@ int aha152x_host_reset_host(struct Scsi_Host *shpnt)
+  * Reset the host (bus and controller)
+  * 
+  */
+-static int aha152x_host_reset(Scsi_Cmnd *SCpnt)
++static int aha152x_host_reset(struct scsi_cmnd *SCpnt)
+ {
+ 	return aha152x_host_reset_host(SCpnt->device->host);
+ }
+@@ -1569,7 +1569,7 @@ static void busfree_run(struct Scsi_Host *shpnt)
+ 
+ 			if(!(DONE_SC->SCp.phase & not_issued)) {
+ 				struct aha152x_scdata *sc;
+-				Scsi_Cmnd *ptr = DONE_SC;
++				struct scsi_cmnd *ptr = DONE_SC;
+ 				DONE_SC=NULL;
+ #if 0
+ 				DPRINTK(debug_eh, ERR_LEAD "requesting sense\n", CMDINFO(ptr));
+@@ -1596,7 +1596,7 @@ static void busfree_run(struct Scsi_Host *shpnt)
+ 			int id=DONE_SC->device->id & 0xf;
+ 			int lun=DONE_SC->device->lun & 0x7;
+ #endif
+-			Scsi_Cmnd *ptr = DONE_SC;
++			struct scsi_cmnd *ptr = DONE_SC;
+ 			DONE_SC=NULL;
+ 
+ 			/* turn led off, when no commands are in the driver */
+@@ -2466,13 +2466,13 @@ static void parerr_run(struct Scsi_Host *shpnt)
+  */
+ static void rsti_run(struct Scsi_Host *shpnt)
+ {
+-	Scsi_Cmnd *ptr;
++	struct scsi_cmnd *ptr;
+ 
+ 	printk(KERN_NOTICE "aha152x%d: scsi reset in\n", HOSTNO);
+ 	
+ 	ptr=DISCONNECTED_SC;
+ 	while(ptr) {
+-		Scsi_Cmnd *next = SCNEXT(ptr);
++		struct scsi_cmnd *next = SCNEXT(ptr);
+ 
+ 		if (!ptr->device->soft_reset) {
+ 			remove_SC(&DISCONNECTED_SC, ptr);
+@@ -2906,7 +2906,7 @@ static void disp_enintr(struct Scsi_Host *shpnt)
+ /*
+  * Show the command data of a command
+  */
+-static void show_command(Scsi_Cmnd *ptr)
++static void show_command(struct scsi_cmnd *ptr)
+ {
+ 	scmd_printk(KERN_DEBUG, ptr, "%p: cmnd=(", ptr);
+ 
+@@ -2945,7 +2945,7 @@ static void show_command(Scsi_Cmnd *ptr)
+  */
+ static void show_queues(struct Scsi_Host *shpnt)
+ {
+-	Scsi_Cmnd *ptr;
++	struct scsi_cmnd *ptr;
+ 	unsigned long flags;
+ 
+ 	DO_LOCK(flags);
+@@ -2971,7 +2971,7 @@ static void show_queues(struct Scsi_Host *shpnt)
+ #undef SPRINTF
+ #define SPRINTF(args...) pos += sprintf(pos, ## args)
+ 
+-static int get_command(char *pos, Scsi_Cmnd * ptr)
++static int get_command(char *pos, struct scsi_cmnd * ptr)
+ {
+ 	char *start = pos;
+ 	int i;
+@@ -3321,7 +3321,7 @@ static int aha152x_proc_info(struct Scsi_Host *shpnt, char *buffer, char **start
+ {
+ 	int i;
+ 	char *pos = buffer;
+-	Scsi_Cmnd *ptr;
++	struct scsi_cmnd *ptr;
+ 	unsigned long flags;
+ 	int thislength;
+ 
 -- 
 1.7.4.1
