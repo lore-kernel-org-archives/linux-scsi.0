@@ -1,59 +1,140 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3 v2] libsas: fix sas_queuecommand return values
-Date: Sat, 16 Jul 2011 15:00:35 -0400
-Message-ID: <20110716190035.GA9500@infradead.org>
-References: <20110711184922.859239377@bombadil.infradead.org>
- <20110711185045.547083012@bombadil.infradead.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [0/20] target: Patches for June 28 v3
+Date: Sun, 17 Jul 2011 12:32:58 -0700
+Message-ID: <1310931178.26130.9.camel@haakon2.linux-iscsi.org>
+References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
+	 <1310174329-22228-1-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:33011
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751794Ab1GPTAj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Jul 2011 15:00:39 -0400
-Content-Disposition: inline
-In-Reply-To: <20110711185045.547083012@bombadil.infradead.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:55030 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754566Ab1GQTmP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jul 2011 15:42:15 -0400
+In-Reply-To: <1310174329-22228-1-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-->queuecommand must return either 0, or one of the SCSI_MLQUEUE_* return
-values.  Non-transient errors are indicated by setting cmd->result before
-calling ->scsi_done and returning 0.  Fix libsas to adhere to this calling
-convention.  Note that the DID_ERROR for returns from the low-level driver
-might not be correct for all cases, but it's the best we can do with
-the current layering in libsas.  I also suspect that the pre-existing
-handling of -SAS_QUEUE_FULL should really be SCSI_MLQUEUE_HOST_BUSY, but
-I'll leave that for a separate change.
+On Fri, 2011-07-08 at 18:18 -0700, Andy Grover wrote:
+> Hi all,
+> 
+> Another round of patches based on hch's comments. Squashed some fixes into
+> original patches. Last patch is new.
+> 
+> Thanks, and have a great weekend!
+> 
+> Regards -- Andy
+> 
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Hey Andy,
 
-Index: linux-2.6/drivers/scsi/libsas/sas_scsi_host.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/libsas/sas_scsi_host.c	2011-07-16 11:24:36.852182194 -0700
-+++ linux-2.6/drivers/scsi/libsas/sas_scsi_host.c	2011-07-16 11:24:50.022110847 -0700
-@@ -207,7 +207,7 @@ int sas_queuecommand(struct Scsi_Host *h
- 
- 	task = sas_create_task(cmd, dev, GFP_ATOMIC);
- 	if (!task)
--		return -ENOMEM;
-+		return SCSI_MLQUEUE_HOST_BUSY;
- 
- 	/* Queue up, Direct Mode or Task Collector Mode. */
- 	if (sas_ha->lldd_max_execute_num < 2)
-@@ -223,9 +223,10 @@ out_free_task:
- 	SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
- 	ASSIGN_SAS_TASK(cmd, NULL);
- 	sas_free_task(task);
--	if (res != -SAS_QUEUE_FULL)
--		return res;
--	cmd->result = DID_SOFT_ERROR << 16; /* retry */
-+	if (res == -SAS_QUEUE_FULL)
-+		cmd->result = DID_SOFT_ERROR << 16; /* retry */
-+	else
-+		cmd->result = DID_ERROR << 16;
- out_done:
- 	cmd->scsi_done(cmd);
- 	return 0;
+Thanks alot for this cleanup and simplfication effort, and apologies for
+the delay on this while catching up the last weeks..  I ended up merging
+this series, and ran into a number of issues that should (hopefully) now
+be resolved with some additional bugfixes.
+
+Following up inline on the specifics..
+
+--nab
+
+> The following changes since commit 2a940ce682163cd41670243c3c10b47dbb206cfd:
+> 
+>   tcm_fc: Fix transport_lookup_tmr_lun failure usage (2011-06-22 19:51:27 -0700)
+> 
+> are available in the git repository at:
+>   git://fedorapeople.org/home/fedora/grover/public_git/linux-2.6.git for-nab
+> 
+> Andy Grover (20):
+>       target: Remove ifdeffed code in t_g_process_write
+>       target: Pass 2nd param of transport_split_cdb by value
+>       target: Make all control CDBs scatter-gather
+>       target: Enforce 1 page max for control cdb buffer sizes
+>       target: Remove direct ramdisk code
+>       target: Eliminate usage of struct se_mem
+>       target: Rename task_sg_num to task_sg_nents
+>       target: Remove custom debug macros for pr_debug. Use pr_err().
+>       target: Remove custom debug macros in non-iscsi fabrics
+>       target/iscsi: Remove iscsi_target_debug.h and usage of TRACE() & printk()
+>       target/iscsi: Remove SE_CMD macro
+>       target: Set WSNZ=1 in block limits VPD. Abort if WRITE_SAME sectors = 0
+>       target: Remove transport do_se_mem_map callback
+>       target: Further simplify transport_free_pages
+>       target: Redo task allocation return value handling
+>       target/core: Remove extra parentheses
+>       target: Extraneous paren removal in tcm_vhost and tcm_qla2xxx
+>       target/iscsi: Remove unneeded parens in conditional statements
+>       target/iscsi: Simplify two small bits
+>       target: change alloc_task call to take *cdb, not *cmd
+> 
+>  drivers/infiniband/ulp/srpt/ib_srpt.c             |    7 -
+>  drivers/scsi/qla2xxx/qla_target.c                 |    3 -
+>  drivers/target/iscsi/Kconfig                      |    9 -
+>  drivers/target/iscsi/iscsi_target.c               |  493 +++----
+>  drivers/target/iscsi/iscsi_target_auth.c          |   84 +-
+>  drivers/target/iscsi/iscsi_target_configfs.c      |   76 +-
+>  drivers/target/iscsi/iscsi_target_core.h          |    3 -
+>  drivers/target/iscsi/iscsi_target_datain_values.c |   13 +-
+>  drivers/target/iscsi/iscsi_target_debug.h         |  113 --
+>  drivers/target/iscsi/iscsi_target_device.c        |    7 +-
+>  drivers/target/iscsi/iscsi_target_erl0.c          |   71 +-
+>  drivers/target/iscsi/iscsi_target_erl1.c          |   67 +-
+>  drivers/target/iscsi/iscsi_target_erl2.c          |   86 +-
+>  drivers/target/iscsi/iscsi_target_login.c         |  115 +-
+>  drivers/target/iscsi/iscsi_target_nego.c          |   89 +-
+>  drivers/target/iscsi/iscsi_target_nodeattrib.c    |   41 +-
+>  drivers/target/iscsi/iscsi_target_parameters.c    |  379 +++---
+>  drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |   53 +-
+>  drivers/target/iscsi/iscsi_target_tmr.c           |   63 +-
+>  drivers/target/iscsi/iscsi_target_tpg.c           |   77 +-
+>  drivers/target/iscsi/iscsi_target_tq.c            |   43 +-
+>  drivers/target/iscsi/iscsi_target_util.c          |  145 +-
+>  drivers/target/loopback/Kconfig                   |    6 -
+>  drivers/target/loopback/tcm_loop.c                |   99 +-
+>  drivers/target/loopback/tcm_loop.h                |    6 -
+>  drivers/target/target_core_alua.c                 |  210 ++--
+>  drivers/target/target_core_cdb.c                  |  115 +-
+>  drivers/target/target_core_configfs.c             |  470 +++---
+>  drivers/target/target_core_device.c               |  219 ++--
+>  drivers/target/target_core_fabric_configfs.c      |  110 +-
+>  drivers/target/target_core_fabric_lib.c           |   10 +-
+>  drivers/target/target_core_file.c                 |   98 +-
+>  drivers/target/target_core_file.h                 |    2 -
+>  drivers/target/target_core_hba.c                  |   12 +-
+>  drivers/target/target_core_iblock.c               |  120 +-
+>  drivers/target/target_core_iblock.h               |    1 -
+>  drivers/target/target_core_pr.c                   |  514 ++++---
+>  drivers/target/target_core_pscsi.c                |  217 +--
+>  drivers/target/target_core_pscsi.h                |    3 +-
+>  drivers/target/target_core_rd.c                   |  453 +-----
+>  drivers/target/target_core_rd.h                   |    2 -
+>  drivers/target/target_core_scdb.c                 |   20 +-
+>  drivers/target/target_core_scdb.h                 |   10 +-
+>  drivers/target/target_core_stgt.c                 |   62 +-
+>  drivers/target/target_core_tmr.c                  |   61 +-
+>  drivers/target/target_core_tpg.c                  |   75 +-
+>  drivers/target/target_core_transport.c            | 1728 ++++++---------------
+>  drivers/target/target_core_ua.c                   |   30 +-
+>  drivers/target/tcm_fc/tcm_fc.h                    |   24 -
+>  drivers/target/tcm_fc/tfc_cmd.c                   |   57 +-
+>  drivers/target/tcm_fc/tfc_conf.c                  |   33 +-
+>  drivers/target/tcm_fc/tfc_io.c                    |  125 +-
+>  drivers/target/tcm_fc/tfc_sess.c                  |   18 +-
+>  drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h     |    6 -
+>  drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c |  216 ++--
+>  drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c   |   43 +-
+>  drivers/target/tcm_vhost/tcm_vhost_configfs.c     |   62 +-
+>  drivers/target/tcm_vhost/tcm_vhost_fabric.c       |   18 +-
+>  drivers/target/tcm_vhost/tcm_vhost_scsi.c         |   15 +-
+>  include/target/target_core_base.h                 |   20 +-
+>  include/target/target_core_transport.h            |   13 +-
+>  61 files changed, 2980 insertions(+), 4360 deletions(-)
+>  delete mode 100644 drivers/target/iscsi/iscsi_target_debug.h
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe target-devel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
