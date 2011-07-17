@@ -1,71 +1,95 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 09/20] target: Remove custom debug macros in non-iscsi
-	fabrics
-Date: Sun, 17 Jul 2011 13:02:45 -0700
-Message-ID: <1310932965.26130.39.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 20/20] target: change alloc_task call to take *cdb, not
+	*cmd
+Date: Sun, 17 Jul 2011 13:04:55 -0700
+Message-ID: <1310933095.26130.42.camel@haakon2.linux-iscsi.org>
 References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
-	 <1310174329-22228-10-git-send-email-agrover@redhat.com>
+	 <1310174329-22228-21-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:46084 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48843 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755014Ab1GQUL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jul 2011 16:11:57 -0400
-In-Reply-To: <1310174329-22228-10-git-send-email-agrover@redhat.com>
+	with ESMTP id S1754887Ab1GQUOG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jul 2011 16:14:06 -0400
+In-Reply-To: <1310174329-22228-21-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Fri, 2011-07-08 at 18:18 -0700, Andy Grover wrote:
-> pr_debug and dynamic debug messages are cool, we don't need specialized
-> debug infrastructure.
+> The transports really don't need the entire struct se_cmd to allocate
+> the memory for the se_task. If it wasn't for pscsi, they wouldn't even
+> need the *cdb.
 > 
-> Use pr_err etc. instead of printk(KERN_ERR...).
+> Modify pscsi to allocate space for cdb at the end of pscsi_plugin_task,
+> instead of a separate allocation.
 > 
 > Signed-off-by: Andy Grover <agrover@redhat.com>
 > ---
->  drivers/target/loopback/Kconfig                   |    6 -
->  drivers/target/loopback/tcm_loop.c                |   94 +++++-----
->  drivers/target/loopback/tcm_loop.h                |    6 -
->  drivers/target/tcm_fc/tcm_fc.h                    |   24 ---
->  drivers/target/tcm_fc/tfc_cmd.c                   |   37 ++---
->  drivers/target/tcm_fc/tfc_conf.c                  |   33 ++--
->  drivers/target/tcm_fc/tfc_io.c                    |   22 ++--
->  drivers/target/tcm_fc/tfc_sess.c                  |   18 +-
->  drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h     |    6 -
->  drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c |  190 ++++++++++----------
->  drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c   |   20 +-
->  drivers/target/tcm_vhost/tcm_vhost_configfs.c     |   50 +++---
->  drivers/target/tcm_vhost/tcm_vhost_fabric.c       |   10 +-
->  drivers/target/tcm_vhost/tcm_vhost_scsi.c         |    8 +-
->  14 files changed, 239 insertions(+), 285 deletions(-)
+>  drivers/target/target_core_file.c      |    8 ++----
+>  drivers/target/target_core_file.h      |    2 -
+>  drivers/target/target_core_iblock.c    |    3 +-
+>  drivers/target/target_core_iblock.h    |    1 -
+>  drivers/target/target_core_pscsi.c     |   33 +++++--------------------------
+>  drivers/target/target_core_pscsi.h     |    3 +-
+>  drivers/target/target_core_rd.c        |    7 ++---
+>  drivers/target/target_core_rd.h        |    2 -
+>  drivers/target/target_core_transport.c |    2 +-
+>  include/target/target_core_transport.h |    2 +-
+>  10 files changed, 16 insertions(+), 47 deletions(-)
 > 
+> diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+> index 60ee94e..272d9bd 100644
+> --- a/drivers/target/target_core_file.c
+> +++ b/drivers/target/target_core_file.c
+> @@ -257,7 +257,7 @@ static inline struct fd_request *FILE_REQ(struct se_task *task)
+>  
+> 
+>  static struct se_task *
+> -fd_alloc_task(struct se_cmd *cmd)
+> +fd_alloc_task(unsigned char *cdb)
+>  {
+>  	struct fd_request *fd_req;
+>  
+> @@ -267,15 +267,13 @@ fd_alloc_task(struct se_cmd *cmd)
+>  		return NULL;
+>  	}
+>  
+> -	fd_req->fd_dev = cmd->se_dev->dev_ptr;
+> -
+>  	return &fd_req->fd_task;
+>  }
+>  
+>  static int fd_do_readv(struct se_task *task)
+>  {
+>  	struct fd_request *req = FILE_REQ(task);
+> -	struct file *fd = req->fd_dev->fd_file;
+> +	struct file *fd = req->fd_task.se_dev->dev_ptr;
+>  	struct scatterlist *sg = task->task_sg;
+>  	struct iovec *iov;
+>  	mm_segment_t old_fs;
+> @@ -326,7 +324,7 @@ static int fd_do_readv(struct se_task *task)
+>  static int fd_do_writev(struct se_task *task)
+>  {
+>  	struct fd_request *req = FILE_REQ(task);
+> -	struct file *fd = req->fd_dev->fd_file;
+> +	struct file *fd = req->fd_task.se_dev->dev_ptr;
+>  	struct scatterlist *sg = task->task_sg;
+>  	struct iovec *iov;
+>  	mm_segment_t old_fs;
 
-Great stuff, however with the amount of I/O path code that was removed
-in:
+Bogus assignments of *fd here..  Fixed up via rebase in the original
+commit:
 
-    commit 0b5660d2eebadc5853cf268d6136aeecbd251d6a
-    Author: Andy Grover <agrover@redhat.com>
-    Date:   Fri Jul 8 17:25:13 2011 -0700
-    
-        target: Make all control CDBs scatter-gather
+commit a0c6b9c4397f541e0b01bfffcaf49de0a42a9f42
+Author: Andy Grover <agrover@redhat.com>
+Date:   Fri Jul 8 16:46:30 2011 -0700
 
-and:
+    target: change alloc_task call to take *cdb, not *cmd
 
-    commit 84b6dd77a6035dff105f628589b8aac8a227031e
-    Author: Andy Grover <agrover@redhat.com>
-    Date:   Fri Jul 8 15:22:14 2011 -0700
-    
-        target: Eliminate usage of struct se_mem
-    
-really made things difficult to debug the bigger issue with this
-series..
-
-So that said, some new pr_debug() messages for the I/O path would be
-really helpful..  ;)
 
 --nab
 
