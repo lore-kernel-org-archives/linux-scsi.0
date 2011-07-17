@@ -1,140 +1,143 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [0/20] target: Patches for June 28 v3
-Date: Sun, 17 Jul 2011 12:32:58 -0700
-Message-ID: <1310931178.26130.9.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 03/20] target: Make all control CDBs scatter-gather
+Date: Sun, 17 Jul 2011 12:40:29 -0700
+Message-ID: <1310931629.26130.15.camel@haakon2.linux-iscsi.org>
 References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
-	 <1310174329-22228-1-git-send-email-agrover@redhat.com>
+	 <1310174329-22228-4-git-send-email-agrover@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55030 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:59348 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754566Ab1GQTmP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jul 2011 15:42:15 -0400
-In-Reply-To: <1310174329-22228-1-git-send-email-agrover@redhat.com>
+	with ESMTP id S1754107Ab1GQTtl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jul 2011 15:49:41 -0400
+In-Reply-To: <1310174329-22228-4-git-send-email-agrover@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andy Grover <agrover@redhat.com>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 On Fri, 2011-07-08 at 18:18 -0700, Andy Grover wrote:
-> Hi all,
+> Previously, some control CDBs did not allocate memory in pages for their
+> data buffer, but just did a kmalloc. This patch makes all cdbs allocate
+> pages.
 > 
-> Another round of patches based on hch's comments. Squashed some fixes into
-> original patches. Last patch is new.
+> This has the benefit of streamlining some paths that had to behave
+> differently when we used two allocation methods. The downside is that
+> all accesses to the data buffer need to kmap it before use, and need to
+> handle data in page-sized chunks if more than a page is needed for a given
+> command's data buffer.
 > 
-> Thanks, and have a great weekend!
+> Finally, note that cdbs with no data buffers are handled a little
+> differently. Before, SCSI_NON_DATA_CDBs would not call get_mem at all
+> (they'd be in the final else in transport_allocate_resources) but now
+> these will make it into generic_get_mem, but just not allocate any
+> buffers.
 > 
-> Regards -- Andy
+> Signed-off-by: Andy Grover <agrover@redhat.com>
+> ---
+>  drivers/infiniband/ulp/srpt/ib_srpt.c           |    7 -
+>  drivers/scsi/qla2xxx/qla_target.c               |    3 -
+>  drivers/target/iscsi/iscsi_target.c             |   74 ++---------
+>  drivers/target/iscsi/iscsi_target_core.h        |    1 -
+>  drivers/target/iscsi/iscsi_target_util.c        |   11 +-
+>  drivers/target/target_core_alua.c               |   42 +++++--
+>  drivers/target/target_core_cdb.c                |   65 +++++++--
+>  drivers/target/target_core_device.c             |    5 +-
+>  drivers/target/target_core_pr.c                 |   60 +++++++--
+>  drivers/target/target_core_pscsi.c              |   32 +----
+>  drivers/target/target_core_transport.c          |  159 ++++++++---------------
+>  drivers/target/tcm_fc/tfc_cmd.c                 |    4 +-
+>  drivers/target/tcm_fc/tfc_io.c                  |   61 +++------
+>  drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c |   21 ---
+>  include/target/target_core_base.h               |    5 +-
+>  include/target/target_core_transport.h          |    6 +-
+>  16 files changed, 232 insertions(+), 324 deletions(-)
 > 
 
-Hey Andy,
+<SNIP>
 
-Thanks alot for this cleanup and simplfication effort, and apologies for
-the delay on this while catching up the last weeks..  I ended up merging
-this series, and ran into a number of issues that should (hopefully) now
-be resolved with some additional bugfixes.
+> +void *transport_kmap_first_data_page(struct se_cmd *cmd)
+> +{
+> +	struct se_mem *se_mem;
+> +
+> +	BUG_ON(list_empty(&cmd->t_mem_list));
+> +
+> +	se_mem = list_first_entry(&cmd->t_mem_list, struct se_mem, se_list);
+> +
+> +	/*
+> +	 * 1st se_mem should point to a page, and we shouldn't need more than
+> +	 * that for this cmd
+> +	 */
+> +	BUG_ON(cmd->data_length > PAGE_SIZE);
+> +
+> +	return kmap(se_mem->se_page);
+> +}
+> +EXPORT_SYMBOL(transport_kmap_first_data_page);
+> +
 
-Following up inline on the specifics..
+So this bit was triggering memory corruption with TCM_Loop because the
+SCSI ML is using contigious buffers for certain control CDBs in
+drivers/scsi/scsi_scan.c and elsewhere:
 
---nab
+The follow patch has been committed (post se_mem removal) to honor
+sg->offset to make TCM_Loop function as expected:
 
-> The following changes since commit 2a940ce682163cd41670243c3c10b47dbb206cfd:
-> 
->   tcm_fc: Fix transport_lookup_tmr_lun failure usage (2011-06-22 19:51:27 -0700)
-> 
-> are available in the git repository at:
->   git://fedorapeople.org/home/fedora/grover/public_git/linux-2.6.git for-nab
-> 
-> Andy Grover (20):
->       target: Remove ifdeffed code in t_g_process_write
->       target: Pass 2nd param of transport_split_cdb by value
->       target: Make all control CDBs scatter-gather
->       target: Enforce 1 page max for control cdb buffer sizes
->       target: Remove direct ramdisk code
->       target: Eliminate usage of struct se_mem
->       target: Rename task_sg_num to task_sg_nents
->       target: Remove custom debug macros for pr_debug. Use pr_err().
->       target: Remove custom debug macros in non-iscsi fabrics
->       target/iscsi: Remove iscsi_target_debug.h and usage of TRACE() & printk()
->       target/iscsi: Remove SE_CMD macro
->       target: Set WSNZ=1 in block limits VPD. Abort if WRITE_SAME sectors = 0
->       target: Remove transport do_se_mem_map callback
->       target: Further simplify transport_free_pages
->       target: Redo task allocation return value handling
->       target/core: Remove extra parentheses
->       target: Extraneous paren removal in tcm_vhost and tcm_qla2xxx
->       target/iscsi: Remove unneeded parens in conditional statements
->       target/iscsi: Simplify two small bits
->       target: change alloc_task call to take *cdb, not *cmd
-> 
->  drivers/infiniband/ulp/srpt/ib_srpt.c             |    7 -
->  drivers/scsi/qla2xxx/qla_target.c                 |    3 -
->  drivers/target/iscsi/Kconfig                      |    9 -
->  drivers/target/iscsi/iscsi_target.c               |  493 +++----
->  drivers/target/iscsi/iscsi_target_auth.c          |   84 +-
->  drivers/target/iscsi/iscsi_target_configfs.c      |   76 +-
->  drivers/target/iscsi/iscsi_target_core.h          |    3 -
->  drivers/target/iscsi/iscsi_target_datain_values.c |   13 +-
->  drivers/target/iscsi/iscsi_target_debug.h         |  113 --
->  drivers/target/iscsi/iscsi_target_device.c        |    7 +-
->  drivers/target/iscsi/iscsi_target_erl0.c          |   71 +-
->  drivers/target/iscsi/iscsi_target_erl1.c          |   67 +-
->  drivers/target/iscsi/iscsi_target_erl2.c          |   86 +-
->  drivers/target/iscsi/iscsi_target_login.c         |  115 +-
->  drivers/target/iscsi/iscsi_target_nego.c          |   89 +-
->  drivers/target/iscsi/iscsi_target_nodeattrib.c    |   41 +-
->  drivers/target/iscsi/iscsi_target_parameters.c    |  379 +++---
->  drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |   53 +-
->  drivers/target/iscsi/iscsi_target_tmr.c           |   63 +-
->  drivers/target/iscsi/iscsi_target_tpg.c           |   77 +-
->  drivers/target/iscsi/iscsi_target_tq.c            |   43 +-
->  drivers/target/iscsi/iscsi_target_util.c          |  145 +-
->  drivers/target/loopback/Kconfig                   |    6 -
->  drivers/target/loopback/tcm_loop.c                |   99 +-
->  drivers/target/loopback/tcm_loop.h                |    6 -
->  drivers/target/target_core_alua.c                 |  210 ++--
->  drivers/target/target_core_cdb.c                  |  115 +-
->  drivers/target/target_core_configfs.c             |  470 +++---
->  drivers/target/target_core_device.c               |  219 ++--
->  drivers/target/target_core_fabric_configfs.c      |  110 +-
->  drivers/target/target_core_fabric_lib.c           |   10 +-
->  drivers/target/target_core_file.c                 |   98 +-
->  drivers/target/target_core_file.h                 |    2 -
->  drivers/target/target_core_hba.c                  |   12 +-
->  drivers/target/target_core_iblock.c               |  120 +-
->  drivers/target/target_core_iblock.h               |    1 -
->  drivers/target/target_core_pr.c                   |  514 ++++---
->  drivers/target/target_core_pscsi.c                |  217 +--
->  drivers/target/target_core_pscsi.h                |    3 +-
->  drivers/target/target_core_rd.c                   |  453 +-----
->  drivers/target/target_core_rd.h                   |    2 -
->  drivers/target/target_core_scdb.c                 |   20 +-
->  drivers/target/target_core_scdb.h                 |   10 +-
->  drivers/target/target_core_stgt.c                 |   62 +-
->  drivers/target/target_core_tmr.c                  |   61 +-
->  drivers/target/target_core_tpg.c                  |   75 +-
->  drivers/target/target_core_transport.c            | 1728 ++++++---------------
->  drivers/target/target_core_ua.c                   |   30 +-
->  drivers/target/tcm_fc/tcm_fc.h                    |   24 -
->  drivers/target/tcm_fc/tfc_cmd.c                   |   57 +-
->  drivers/target/tcm_fc/tfc_conf.c                  |   33 +-
->  drivers/target/tcm_fc/tfc_io.c                    |  125 +-
->  drivers/target/tcm_fc/tfc_sess.c                  |   18 +-
->  drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h     |    6 -
->  drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c |  216 ++--
->  drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c   |   43 +-
->  drivers/target/tcm_vhost/tcm_vhost_configfs.c     |   62 +-
->  drivers/target/tcm_vhost/tcm_vhost_fabric.c       |   18 +-
->  drivers/target/tcm_vhost/tcm_vhost_scsi.c         |   15 +-
->  include/target/target_core_base.h                 |   20 +-
->  include/target/target_core_transport.h            |   13 +-
->  61 files changed, 2980 insertions(+), 4360 deletions(-)
->  delete mode 100644 drivers/target/iscsi/iscsi_target_debug.h
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe target-devel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+commit f6e0c5a75a8056def88c4934e055d28499b073d2
+Author: Nicholas Bellinger <nab@linux-iscsi.org>
+Date:   Sat Jul 16 22:44:58 2011 -0700
+
+    target: Make transport_kmap_first_data_page honor sg->offset
+    
+    This patch makes transport_kmap_first_data_page() honor sg->offset, as
+    fabrics like tcm_loop need to handle this case for control CDBs generated
+    by the SCSI midlayer that are based on a contigious buffer.
+    
+    This fixes memory corruption with tcm_loop introduced with commit:
+    
+    commit 0b5660d2eebadc5853cf268d6136aeecbd251d6a
+    Author: Andy Grover <agrover@redhat.com>
+    Date:   Fri Jul 8 17:25:13 2011 -0700
+    
+        target: Make all control CDBs scatter-gather
+    
+    Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 372de32..b3c010c 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3933,9 +3933,15 @@ static int transport_new_cmd_obj(struct se_cmd *cmd)
+ 
+ void *transport_kmap_first_data_page(struct se_cmd *cmd)
+ {
+-       BUG_ON(!cmd->t_data_sg);
++       struct scatterlist *sg = cmd->t_data_sg;
+ 
+-       return kmap(sg_page(cmd->t_data_sg));
++       BUG_ON(!sg);
++       /*
++        * We need to take into account a possible offset here for fabrics like
++        * tcm_loop who may be using a contig buffer from the SCSI midlayer for
++        * control CDBs passed as SGLs via transport_generic_map_mem_to_cmd()
++        */
++       return kmap(sg_page(sg)) + sg->offset;
+ }
+ EXPORT_SYMBOL(transport_kmap_first_data_page);
+ 
+
+> +void transport_kunmap_first_data_page(struct se_cmd *cmd)
+> +{
+> +	struct se_mem *se_mem;
+> +
+> +	BUG_ON(list_empty(&cmd->t_mem_list));
+> +
+> +	se_mem = list_first_entry(&cmd->t_mem_list, struct se_mem, se_list);
+> +
+> +	kunmap(se_mem->se_page);
+> +}
+> +EXPORT_SYMBOL(transport_kunmap_first_data_page);
+> +
+
 
