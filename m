@@ -1,55 +1,47 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 06/20] target: Eliminate usage of struct se_mem
-Date: Mon, 18 Jul 2011 11:44:18 -0700
-Message-ID: <1311014658.16756.13.camel@haakon2.linux-iscsi.org>
-References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
-	 <1310174329-22228-7-git-send-email-agrover@redhat.com>
-	 <1310932648.26130.32.camel@haakon2.linux-iscsi.org>
-	 <4E246A75.5000101@redhat.com>
+From: ersatz splatt <ersatzsplatt@gmail.com>
+Subject: Looking for max iops
+Date: Mon, 18 Jul 2011 12:08:56 -0700
+Message-ID: <CAHQAjVF-58LAYWZev6zH0NB+Prmn=WudcxwtgwmiWv8jNSNQAA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39689 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753697Ab1GRSxa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jul 2011 14:53:30 -0400
-In-Reply-To: <4E246A75.5000101@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Roland Dreier <roland@purestorage.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <axboe@kernel.dk>, "Jiang, Dave" <dave.jiang@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2011-07-18 at 10:16 -0700, Andy Grover wrote:
-> On 07/17/2011 12:57 PM, Nicholas A. Bellinger wrote:
-> > Although this patch did not directly remove the memsets for newly
-> > allocated pages used with transport_generic_map_mem_to_cmd(), the issue
-> > as below of reproducable strangeness with control CDB payloads without
-> > the explict memset of allocated pages.  As much as I would have liked to
-> > leave the memset out, I don't think it's safe to do.  Added the
-> > following:
-> > 
-> > commit 7c7649750eb47035ac4fb0123f2e49c1c47c8a15
-> > Author: Nicholas Bellinger <nab@linux-iscsi.org>
-> > Date:   Sun Jul 17 00:20:07 2011 -0700
-> > 
-> >     target/iscsi: Make iscsit_alloc_buffs explict memset allocated pages
-> 
-> Hi nab, obviously if it's breaking things the memsets need to go back
-> for now, but surely it's a sign that somewhere there's a bug. You only
-> see corruption with control CDBs you say? Any more info on the
-> strangeness you're seeing?
-> 
+The HBA controller is not released yet.  I'm using an early version.
+My hope is to cobble something together for a driver before the
+hardware is in peoples' hands and give the driver to the community.
 
-The immediate case that I ran into with the very latest iscsi-target
-code was bogus output with 'sg_inq -i' (INQUIRY EVPD=0x83) in the
-'Designation descriptor number 5' field.
+I would like to know if I'm breaking new ground by trying to drive the
+number of IOPS I'm pushing now.  I don't expect to be able to get a
+million with the hardware I have.  Is anybody driving that level of
+activity now?  I'm getting nowhere near half that.  If nobody has
+shared data at these speeds then I'd be happy to do some testing if it
+is wanted.
+
+The rq_affinity change certainly helped (as I wrote before).
+
+By lockless, do you mean no host_lock?  The queuecommand has no
+host_lock use but does have some local locking.
+
+If I am to cast suspicion on locks, I suppose I should be looking at
+lock_stat (?) -- what units should I be attributing to holdtime?
+
+
+Thanks for the response Christoph,
+David
 
 
 
-
-
-
-
-
-
+On Fri, Jul 15, 2011 at 7:40 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Jul 15, 2011 at 04:43:44PM -0700, ersatz splatt wrote:
+>> I have a dual socket system with Tylersburg chipset (approximately
+>> Westmere I gather).
+>> With two Xeon X5660 packages I get this when running with more iops
+>> potential than the system can handle:
+>
+> What HBA do you use? Does it already have a lockless ->queuecommand?
+>
+>
