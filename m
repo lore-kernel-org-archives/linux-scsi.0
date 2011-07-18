@@ -1,94 +1,82 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH][Resend] SCSI, target, loopback: Fix memory leak in
-	tcm_loop_make_scsi_hba()
-Date: Sun, 17 Jul 2011 13:59:34 -0700
-Message-ID: <1310936374.26130.75.camel@haakon2.linux-iscsi.org>
-References: <alpine.LNX.2.00.1106272351520.30245@swampdragon.chaosbits.net>
-	 <20110627222526.GA14591@shale.localdomain>
-	 <alpine.LNX.2.00.1106280029150.30245@swampdragon.chaosbits.net>
-	 <20110628062235.GB14591@shale.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH 1/2] scsi: target: fix typo Assoication -> Association
+Date: Mon, 18 Jul 2011 11:27:56 +0300
+Message-ID: <f051412fa68688dea6d9445d66fbd8085a07bdb7.1310977653.git.andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110628062235.GB14591@shale.localdomain>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>
-Cc: Jesper Juhl <jj@chaosbits.net>, James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <jbottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2011-06-28 at 09:22 +0300, Dan Carpenter wrote:
-> On Tue, Jun 28, 2011 at 12:30:17AM +0200, Jesper Juhl wrote:
-> > 
-> > You mean like this - right?
-> 
-> Yeah.
-> 
-> Acked-by: Dan Carpenter <error27@gmail.com>
-> 
+Additionally this patch brings proper apply of the designator type.
+However, the original code luckily has no bug, because the association
+equals to 0.
 
-Hi Guys,
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <jbottomley@parallels.com>
+---
+ drivers/target/target_core_cdb.c      |   10 +++++-----
+ drivers/target/target_core_configfs.c |    2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Following up on some items that where missed over my summer holiday.
-
-Committed and pushed this patch into lio-core-2.6.git/master recently as
-the following.
-
-Thanks JesperJ and DanC!
-
---nab
-
---------------------------------------------------------------------
-
-commit 90e104e39aa30437a8ac4572e4499e7c3a914458
-Author: Jesper Juhl <jj@chaosbits.net>
-Date:   Tue Jun 28 00:30:17 2011 +0200
-
-    loopback: Fix memory leak in tcm_loop_make_scsi_hba()
-    
-    There is a memory leak in tcm_loop_make_scsi_hba().
-    
-    If all the strstr() calls return NULL and we end up at return ERR_PTR(-EINVAL);
-    then we'll be leaking the memory previously allocated to tl_hba as
-    that variable goes out of scope.
-    
-    This patch should fix the leak.
-    
-    Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-    Signed-off-by: Dan Carpenter <error27@gmail.com>
-    Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
-
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 5075e9b..f603698 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -1288,22 +1288,21 @@ struct se_wwn *tcm_loop_make_scsi_hba(
-                goto check_len;
-        }
-        ptr = strstr(name, "iqn.");
--       if (ptr) {
--               tl_hba->tl_proto_id = SCSI_PROTOCOL_ISCSI;
--               goto check_len;
-+       if (!ptr) {
-+               printk(KERN_ERR "Unable to locate prefix for emulated Target "
-+                               "Port: %s\n", name);
-+               ret = -EINVAL;
-+               goto out;
-        }
--
--       printk(KERN_ERR "Unable to locate prefix for emulated Target Port:"
--                       " %s\n", name);
--       return ERR_PTR(-EINVAL);
-+       tl_hba->tl_proto_id = SCSI_PROTOCOL_ISCSI;
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index 7f19c8b..4dab9f5 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -210,11 +210,11 @@ target_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 	/* CODE SET == Binary */
+ 	buf[off++] = 0x1;
  
- check_len:
-        if (strlen(name) >= TL_WWN_ADDR_LEN) {
-                printk(KERN_ERR "Emulated NAA %s Address: %s, exceeds"
-                        " max: %d\n", name, tcm_loop_dump_proto_id(tl_hba),
-                        TL_WWN_ADDR_LEN);
--               kfree(tl_hba);
--               return ERR_PTR(-EINVAL);
-+               ret = -EINVAL;
-+               goto out;
-        }
-        snprintf(&tl_hba->tl_wwn_address[0], TL_WWN_ADDR_LEN, "%s", &name[off]);
+-	/* Set ASSOICATION == addressed logical unit: 0)b */
++	/* Set ASSOCIATION == addressed logical unit: 00b */
+ 	buf[off] = 0x00;
+ 
+ 	/* Identifier/Designator type == NAA identifier */
+-	buf[off++] = 0x3;
++	buf[off++] |= 0x3;
+ 	off++;
+ 
+ 	/* Identifier/Designator length */
+@@ -315,7 +315,7 @@ check_port:
+ 			(TPG_TFO(tpg)->get_fabric_proto_ident(tpg) << 4);
+ 		buf[off++] |= 0x1; /* CODE SET == Binary */
+ 		buf[off] = 0x80; /* Set PIV=1 */
+-		/* Set ASSOICATION == target port: 01b */
++		/* Set ASSOCIATION == target port: 01b */
+ 		buf[off] |= 0x10;
+ 		/* DESIGNATOR TYPE == Relative target port identifer */
+ 		buf[off++] |= 0x4;
+@@ -360,7 +360,7 @@ check_tpgi:
+ 			(TPG_TFO(tpg)->get_fabric_proto_ident(tpg) << 4);
+ 		buf[off++] |= 0x1; /* CODE SET == Binary */
+ 		buf[off] = 0x80; /* Set PIV=1 */
+-		/* Set ASSOICATION == target port: 01b */
++		/* Set ASSOCIATION == target port: 01b */
+ 		buf[off] |= 0x10;
+ 		/* DESIGNATOR TYPE == Target port group identifier */
+ 		buf[off++] |= 0x5;
+@@ -427,7 +427,7 @@ check_scsi_name:
+ 			(TPG_TFO(tpg)->get_fabric_proto_ident(tpg) << 4);
+ 		buf[off++] |= 0x3; /* CODE SET == UTF-8 */
+ 		buf[off] = 0x80; /* Set PIV=1 */
+-		/* Set ASSOICATION == target port: 01b */
++		/* Set ASSOCIATION == target port: 01b */
+ 		buf[off] |= 0x10;
+ 		/* DESIGNATOR TYPE == SCSI name string */
+ 		buf[off++] |= 0x8;
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 25c1f49..2ad4729 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -984,7 +984,7 @@ static ssize_t target_core_dev_wwn_show_attr_##_name(			\
+ }
+ 
+ /*
+- * VPD page 0x83 Assoication: Logical Unit
++ * VPD page 0x83 Association: Logical Unit
+  */
+ DEF_DEV_WWN_ASSOC_SHOW(vpd_assoc_logical_unit, 0x00);
+ 
+-- 
+1.7.5.4
