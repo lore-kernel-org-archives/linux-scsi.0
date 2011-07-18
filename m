@@ -1,47 +1,89 @@
-From: ersatz splatt <ersatzsplatt@gmail.com>
-Subject: Looking for max iops
-Date: Mon, 18 Jul 2011 12:08:56 -0700
-Message-ID: <CAHQAjVF-58LAYWZev6zH0NB+Prmn=WudcxwtgwmiWv8jNSNQAA@mail.gmail.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: CONFIG_INTR_REMAP and CONFIG_DMAR dependencies?
+Date: Mon, 18 Jul 2011 14:16:20 -0700
+Message-ID: <20110718211620.GD4770@plapp.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Roland Dreier <roland@purestorage.com>, Matthew Wilcox <matthew@wil.cx>, Jens Axboe <axboe@kernel.dk>, "Jiang, Dave" <dave.jiang@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "Foong, Annie" <annie.foong@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-pci-owner@vger.kernel.org
+To: linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, suresh.b.siddha@intel.com, hpa@linux.intel.com
+Cc: Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The HBA controller is not released yet.  I'm using an early version.
-My hope is to cobble something together for a driver before the
-hardware is in peoples' hands and give the driver to the community.
+Suresh,
 
-I would like to know if I'm breaking new ground by trying to drive the
-number of IOPS I'm pushing now.  I don't expect to be able to get a
-million with the hardware I have.  Is anybody driving that level of
-activity now?  I'm getting nowhere near half that.  If nobody has
-shared data at these speeds then I'd be happy to do some testing if it
-is wanted.
+Any thoughts/ideas on this?  Could you help with the INTR-REMAP
+messages?
 
-The rq_affinity change certainly helped (as I wrote before).
+Thanks,
+Andrew Vasquez
 
-By lockless, do you mean no host_lock?  The queuecommand has no
-host_lock use but does have some local locking.
+----
 
-If I am to cast suspicion on locks, I suppose I should be looking at
-lock_stat (?) -- what units should I be attributing to holdtime?
+All,
 
+We've seen a few reports logged with upstream kernels where qla2xxx is
+unable to initialize HW due to what appears to be a lack of
+interrupt routing:
 
-Thanks for the response Christoph,
-David
+	[ 1137.271156] qla2xxx 0000:18:00.0: Found an ISP2532, irq 52, iobase 0xffffc90000028000
+	[ 1137.271438] qla2xxx 0000:18:00.0: irq 96 for MSI/MSI-X
+	[ 1137.271447] qla2xxx 0000:18:00.0: irq 97 for MSI/MSI-X
+	[ 1137.271706] qla2xxx 0000:18:00.0: Configuring PCI space...
+	[ 1137.271725] qla2xxx 0000:18:00.0: setting latency timer to 64
+	[ 1137.271732] qla2xxx 0000:18:00.0: enabling Mem-Wr-Inval
+	[ 1137.278705] DRHD: handling fault status reg 2
+	[ 1137.278715] INTR-REMAP: Request device [[18:00.0] fault index 20
+	[ 1137.278717] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+	[ 1159.389099] qla2xxx 0000:0c:07.0: Cable is unplugged...
+	[ 1167.218478] qla2xxx 0000:18:00.0: Mailbox command timeout occurred. Scheduling ISP abort. eeh_busy: 0x0
+	[ 1167.218490] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50400/18389b000).
+	[ 1167.218496] qla2xxx 0000:18:00.0: Reverting to slow-read.
+	[ 1197.174623] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50000/18389b000).
+	[ 1197.174632] qla2xxx 0000:18:00.0: Reverting to slow-read.
+	[ 1197.190613] qla2xxx 0000:18:00.0: Configure NVRAM parameters...
+	[ 1197.198582] qla2xxx 0000:18:00.0: Verifying loaded RISC code...
+	[ 1227.142951] qla2xxx 0000:18:00.0: Failed mailbox send register test
+	[ 1227.142959] qla2xxx 0000:18:00.0: Failed to initialize adapter
 
+It turns out that this is seen only when the kernel is configured with
+CONFIG_INTR_REMAP=y and CONFIG_DMAR=n.  When the kernel is recompiled
+with CONFIG_DMAR=y, interrupts are being routed and the driver
+operates as normal:
 
+	[   63.271529] qla2xxx 0000:18:00.0: PCI INT A -> GSI 52 (level, low) -> IRQ 52
+	[   63.271560] qla2xxx 0000:18:00.0: Found an ISP2532, irq 52, iobase 0xffffc90000028000
+	[   63.271864] qla2xxx 0000:18:00.0: irq 96 for MSI/MSI-X
+	[   63.271876] qla2xxx 0000:18:00.0: irq 97 for MSI/MSI-X
+	[   63.272095] qla2xxx 0000:18:00.0: Configuring PCI space...
+	[   63.272103] qla2xxx 0000:18:00.0: setting latency timer to 64
+	[   63.272111] qla2xxx 0000:18:00.0: enabling Mem-Wr-Inval
+	[   63.285525] qla2xxx 0000:18:00.0: Configure NVRAM parameters...
+	[   63.293880] qla2xxx 0000:18:00.0: Verifying loaded RISC code...
+	[   63.310956] qla2xxx 0000:18:00.0: FW: Loading via request-firmware...
+	[   63.342746] qla2xxx 0000:18:00.0: Allocated (64 KB) for FCE...
+	[   63.342823] qla2xxx 0000:18:00.0: Allocated (64 KB) for EFT...
+	[   63.343130] qla2xxx 0000:18:00.0: Allocated (1350 KB) for firmware dump...
+	[   63.348153] scsi2 : qla2xxx
+	[   63.348722] qla2xxx 0000:18:00.0: 
+	[   63.348723]  QLogic Fibre Channel HBA Driver: 8.03.07.03-k
+	[   63.348724]   QLogic QLE2562 - PCI-Express Dual Channel 8Gb Fibre Channel HBA
+	[   63.348726]   ISP2532: PCIe (5.0GT/s x4) @ 0000:18:00.0 hdma+, host#=2, fw=5.03.15 (d5)
 
-On Fri, Jul 15, 2011 at 7:40 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Jul 15, 2011 at 04:43:44PM -0700, ersatz splatt wrote:
->> I have a dual socket system with Tylersburg chipset (approximately
->> Westmere I gather).
->> With two Xeon X5660 packages I get this when running with more iops
->> potential than the system can handle:
->
-> What HBA do you use? Does it already have a lockless ->queuecommand?
->
->
+My questions are:
+
+1) What does the following mean in the CONFIG_INTR_REMAP=y and
+   CONFIG_DMAR=n case?
+
+	[ 1137.278705] DRHD: handling fault status reg 2
+	[ 1137.278715] INTR-REMAP: Request device [[18:00.0] fault index 20
+	[ 1137.278717] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+
+2) Should CONFIG_DMAR be automatically enabled when
+   CONFIG_INTR_REMAP is set?
+
+3) If the answer to (2) is no, then what should drivers do differently
+   to avoid this 'no interrupts being routed case' scenario?
+
+Thanks, av
