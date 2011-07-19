@@ -1,75 +1,89 @@
-From: Davidlohr Bueso <dave@gnu.org>
-Subject: Re: [PATCH 00/16] Replace Scsi_Cmnd
-Date: Tue, 19 Jul 2011 19:12:33 -0400
-Message-ID: <1311117153.3215.2.camel@offbook>
-References: <1310710771.3184.51.camel@offbook>
-Reply-To: dave@gnu.org
+From: Raju <krishnamraju-e@hcl.com>
+Subject: mkdir: cannot create directory =?utf-8?b?YC9zeXMva2VybmVsL2NvbmZpZy90YXJnZXQvaXNjc2knOg==?= Invalid argument
+Date: Tue, 19 Jul 2011 15:17:34 +0000 (UTC)
+Message-ID: <loom.20110719T170144-482@post.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hapkido.dreamhost.com ([66.33.216.122]:50367 "EHLO
-	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752054Ab1GSXNQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2011 19:13:16 -0400
-In-Reply-To: <1310710771.3184.51.camel@offbook>
+Received: from lo.gmane.org ([80.91.229.12]:42840 "EHLO lo.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750716Ab1GTEAI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jul 2011 00:00:08 -0400
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-scsi@m.gmane.org>)
+	id 1QjNx9-0004BY-5v
+	for linux-scsi@vger.kernel.org; Wed, 20 Jul 2011 06:00:07 +0200
+Received: from 128-222-37-57.emc.com ([128.222.37.57])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 06:00:07 +0200
+Received: from krishnamraju-e by 128-222-37-57.emc.com with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 06:00:07 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>, JBottomley@parallels.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi James,
+Hi,
+I can't able create an iscsi target because of some problem in configfs:
 
-Can I get some input on this?
+
+Below are the steps I followed in Debian Lenny(upgraded kernel to 2.6.39.2):
+
+#!/bin/sh
+# BEGIN CONFIG FOR CONFIGFS USAGE
+modprobe configfs
+mount -t configfs none /sys/kernel/config
+# END CONFIG FOR CONFIGFS USAGE
+
+# BEGIN CONFIGFS CODE FOR GENERIC TARGET ENGINE
+modprobe target_core_mod
+export CONFIGFS=/sys/kernel/config/
+export TARGET=/sys/kernel/config/target/core/
+export FABRIC=/sys/kernel/config/target/iscsi/
+# END CONFIGFS CODE FOR GENERIC TARGET ENGINE
+
+# START RAMDISK SUBSYSTEM PLUGIN OBJECTS
+mkdir -p $TARGET/rd_mcp_0/ramdisk
+echo rd_pages=32768 > $TARGET/rd_mcp_0/ramdisk/control
+echo 1 > $TARGET/rd_mcp_0/ramdisk/enable
+# END RAMDISK SUBSYSTEM PLUGIN OBJECTS
+
+# BEGIN CONFIGFS CODE FOR LINUX ISCSI TARGET (LIO-TARGET)
+DEF_IQN="iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0"
+# Define the first iSCSI Network Portal
+PORTAL1="10.0.0.1:3260"
+# The first mkdir(2) to $FABRIC will load iscsi_target_mod
+mkdir -p "$FABRIC/$DEF_IQN/tpgt_1/np/$PORTAL1"
+mkdir: cannot create directory `/sys/kernel/config/target/iscsi': 
+Invalid argument
+
+
+AND KERNEL LOG:
+
+[10443.799266] CORE_HBA[0] - TCM Ramdisk HBA Driver v4.0 on Generic 
+        Target CoreStack v4.0.0-rc7-ml
+[10443.799272] CORE_HBA[0] - Attached Ramdisk HBA: 0 to Generic Target 
+        Core TCQDepth: 256 MaxSectors: 1024
+[10443.799278] CORE_HBA[1] - Attached HBA to Generic Target Core
+[10443.799329] Target_Core_ConfigFS: Allocated struct se_subsystem_dev:
+        f4ee1000se_dev_su_ptr: f4e3e2c0
+[10443.800370] Missing rd_pages= parameter
+[10443.805761] Target_Core_ConfigFS: REGISTER-> group:f8552220 name:iscsi
+[10443.838505] target_core_get_fabric() failed for iscsi
+[10443.841826] Target_Core_ConfigFS: REGISTER-> group:f8552220 name:iscsi
+[10443.875313] target_core_get_fabric() failed for iscsi
+[10443.878496] Target_Core_ConfigFS: REGISTER-> group:f8552220 name:iscsi
+[10443.910039] target_core_get_fabric() failed for iscsi
+[10443.921684] Target_Core_ConfigFS: REGISTER-> group:f8552220 name:iscsi
+[10443.951926] target_core_get_fabric() failed for iscsi
+
+
+
+Please suggest any idea,
+
 
 Thanks,
-Davidlohr
-
-On Fri, 2011-07-15 at 02:19 -0400, Davidlohr Bueso wrote:
-> Hi,
-> 
-> Plenty of older drivers are still using the ugly Scsi_Cmd typedef. The
-> following patchset removes it and change it for struct scsi_cmnd.
-> 
-> drivers/scsi/NCR5380.c       |   72 +++++++++++++++++-----------------
-> drivers/scsi/NCR5380.h       |   14 +++---
-> drivers/scsi/NCR53c406a.c    |    6 +-
-> drivers/scsi/aha152x.c       |   68 ++++++++++++++++----------------
-> drivers/scsi/aha1542.c       |   28 ++++++------
-> drivers/scsi/aha1542.h       |   10 ++--
-> drivers/scsi/aha1740.c       |    8 ++--
-> drivers/scsi/aha1740.h       |    4 +-
-> drivers/scsi/atari_NCR5380.c |   90
-> +++++++++++++++++++++---------------------
-> drivers/scsi/atari_scsi.c    |   10 ++--
-> drivers/scsi/atari_scsi.h    |    2 +-
-> drivers/scsi/dtc.h           |    4 +-
-> drivers/scsi/fd_mcs.c        |   10 ++--
-> drivers/scsi/g_NCR5380.c     |   10 ++--
-> drivers/scsi/g_NCR5380.h     |    4 +-
-> drivers/scsi/gdth.c          |   64 +++++++++++++++---------------
-> drivers/scsi/gdth.h          |   10 ++--
-> drivers/scsi/gdth_proc.c     |    2 +-
-> drivers/scsi/ibmmca.c        |   26 ++++++------
-> drivers/scsi/in2000.c        |   68 ++++++++++++++++----------------
-> drivers/scsi/in2000.h        |   12 +++---
-> drivers/scsi/megaraid.c      |   28 ++++++------
-> drivers/scsi/megaraid.h      |   16 ++++----
-> drivers/scsi/nsp32_debug.c   |    2 +-
-> drivers/scsi/pas16.h         |    4 +-
-> drivers/scsi/scsi.h          |    3 -
-> drivers/scsi/scsi_typedefs.h |    2 -
-> drivers/scsi/sym53c416.c     |    6 +-
-> drivers/scsi/sym53c416.h     |    2 +-
-> drivers/scsi/wd7000.c        |    2 +-
-> 30 files changed, 291 insertions(+), 296 deletions(-) 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-> 
-
+Raju.
 
