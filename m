@@ -1,86 +1,102 @@
-From: Suresh Siddha <suresh.b.siddha@intel.com>
-Subject: Re: CONFIG_INTR_REMAP and CONFIG_DMAR dependencies?
-Date: Mon, 18 Jul 2011 21:50:33 -0700
-Message-ID: <1311051033.13685.5.camel@sbsiddha-mobl2>
-References: <20110718211620.GD4770@plapp.qlogic.org>
-	 <CAE9FiQUgbvC6TiSXK-5K9bOsxYeCePoRoU-NBvtitweVBegyEA@mail.gmail.com>
-	 <CAE9FiQVUA2bWycDNmKDysPV6SQ1tcniJHUvbSDXpufC75cFVjg@mail.gmail.com>
-Reply-To: Suresh Siddha <suresh.b.siddha@intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 06/20] target: Eliminate usage of struct se_mem
+Date: Tue, 19 Jul 2011 00:56:30 -0400
+Message-ID: <20110719045630.GA26652@infradead.org>
+References: <1310078011-15504-1-git-send-email-agrover@redhat.com>
+ <1310174329-22228-7-git-send-email-agrover@redhat.com>
+ <1310932648.26130.32.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:13382 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750974Ab1GSEwi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2011 00:52:38 -0400
-In-Reply-To: <CAE9FiQVUA2bWycDNmKDysPV6SQ1tcniJHUvbSDXpufC75cFVjg@mail.gmail.com>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:33424
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751059Ab1GSE4d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jul 2011 00:56:33 -0400
+Content-Disposition: inline
+In-Reply-To: <1310932648.26130.32.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, "hpa@linux.intel.com" <hpa@linux.intel.com>, Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Andy Grover <agrover@redhat.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2011-07-18 at 16:16 -0700, Yinghai Lu wrote:
-> ---
->  drivers/iommu/dmar.c |   11 +++++++++++
->  include/linux/dmar.h |    4 +---
->  2 files changed, 12 insertions(+), 3 deletions(-)
-
-Yinghai, Thanks for looking at this.
-
-This issue is caused by this commit:
-
-commit 9d5ce73a64be2be8112147a3e0b551ad9cd1247b
-Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date:   Tue Nov 10 19:46:16 2009 +0900
-
-    x86: intel-iommu: Convert detect_intel_iommu to use iommu_init hook
-
-So this is a regression. Also,
-
-> 
-> Index: linux-2.6/include/linux/dmar.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/dmar.h
-> +++ linux-2.6/include/linux/dmar.h
-> @@ -232,9 +232,7 @@ struct dmar_atsr_unit {
->  #define for_each_atsr_unit(atsr) \
->         list_for_each_entry(atsr, &dmar_atsr_units, list)
+On Sun, Jul 17, 2011 at 12:57:28PM -0700, Nicholas A. Bellinger wrote:
+> index 1645aab..2f89001 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -780,6 +780,7 @@ static int iscsit_allocate_iovecs(struct iscsi_cmd *cmd)
+>  static int iscsit_alloc_buffs(struct iscsi_cmd *cmd)
+>  {
+>         struct scatterlist *sgl;
+> +       unsigned char *buf;
+>         u32 length = cmd->se_cmd.data_length;
+>         int nents = DIV_ROUND_UP(length, PAGE_SIZE);
+>         int i = 0, ret;
+> @@ -804,6 +805,14 @@ static int iscsit_alloc_buffs(struct iscsi_cmd *cmd)
+>                 if (!page)
+>                         goto page_alloc_failed;
 >  
-> -extern int intel_iommu_init(void);
-> -#else /* !CONFIG_DMAR: */
-> -static inline int intel_iommu_init(void) { return -ENODEV; }
->  #endif /* CONFIG_DMAR */
-> +extern int intel_iommu_init(void);
->  
->  #endif /* __DMAR_H__ */
-> Index: linux-2.6/drivers/iommu/dmar.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/iommu/dmar.c
-> +++ linux-2.6/drivers/iommu/dmar.c
-> @@ -722,6 +722,17 @@ int __init detect_intel_iommu(void)
->         return ret ? 1 : -ENODEV;
->  }
->  
-> +#ifndef CONFIG_DMAR
-> +int __init intel_iommu_init(void)
-> +{
-> +        if (dmar_table_init()) {
-> +                return  -ENODEV;
-> +        }
+> +               buf = kmap_atomic(page, KM_IRQ0);
+> +               if (!buf) {
+> +                       pr_err("kmap_atomic failed\n");
+> +                       goto page_alloc_failed;
+> +               }
+> +               memset(buf, 0, buf_size);
+> +               kunmap_atomic(buf, KM_IRQ0);
 > +
-> +        dmar_dev_scope_init();
-> +        return  -ENODEV;
 
-I think this should be return dmar_dev_scope_init();
+This should use clear_highpage, or even better just the __GFP_ZERO flag
+to the page allocator.
 
-thanks!
+> @@ -3971,13 +3972,30 @@ transport_generic_get_mem(struct se_cmd *cmd)
+>                 u32 page_len = min_t(u32, length, PAGE_SIZE);
+>                 page = alloc_page(GFP_KERNEL);
+>                 if (!page)
+> -                       return -ENOMEM;
+> +                       goto out;
+> +
+> +               buf = kmap_atomic(page, KM_IRQ0);
+> +               if (!buf) {
+> +                       pr_err("kmap_atomic failed\n");
+> +                       goto out;
+> +               }
+> +               memset(buf, 0, page_len);
+> +               kunmap_atomic(buf, KM_IRQ0);
 
-> +}
-> +#endif
->  
->  int alloc_iommu(struct dmar_drhd_unit *drhd)
->  { 
+Same here.
+
+> > -		ret = transport_map_control_cmd_to_task(cmd);
+> > +		ret = dev->transport->map_task_SG(task);
+> >  		if (ret < 0)
+> >  			return ret;
+> 
+> Calling dev->transport->map_task_SG() here for all cases is incorrect,
+> and was triggering an OOPs during iscsi-target initial LUN scan..  Fixed
+> with the following:
+> 
+> commit 93529985c9de3cd5ab40cb322da24a4d8372ad4c
+> Author: Nicholas Bellinger <nab@linux-iscsi.org>
+> Date:   Sat Jul 16 19:27:07 2011 -0700
+> 
+>     target: Fix incorrect usage of ->map_task_SG in transport_generic_new_cmd
+>     
+>     This patch fixes incorrect usage of ->map_task_SG() for all se_cmd descriptors
+>     in transport_generic_new_cmd().  This introduced with commit:
+
+Indeed.  But why did you also commit
+
+	"target/iblock: Make iblock_map_task_SG only for SCF_SCSI_DATA_SG_IO_CDB"
+
+which is a hacky workaround for the same issue inside iblock?
 
 
+> -
+> +       /*
+> +        * Call transport_new_cmd_obj() to invoke transport_allocate_tasks()
+> +        * and perform the memory map to backend subsystem devices.
+> +        */
+>         ret = transport_new_cmd_obj(cmd);
+
+What is that comment supposed to help with?  It's rather confusing to
+be honest.
 
