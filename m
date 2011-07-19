@@ -1,84 +1,75 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] iommu: parse pci device scope even only intr remap is defined
-Date: Tue, 19 Jul 2011 10:04:31 -0700
-Message-ID: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
+From: Davidlohr Bueso <dave@gnu.org>
+Subject: Re: [PATCH 00/16] Replace Scsi_Cmnd
+Date: Tue, 19 Jul 2011 19:12:33 -0400
+Message-ID: <1311117153.3215.2.camel@offbook>
+References: <1310710771.3184.51.camel@offbook>
+Reply-To: dave@gnu.org
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=20cf3071c69002153504a86f1c8d
-Return-path: <linux-pci-owner@vger.kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
-To: Suresh Siddha <suresh.b.siddha@intel.com>, Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>, Joerg Roedel <joerg.roedel@amd.com>, Ingo Molnar <mingo@elte.hu>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, "hpa@linux.intel.com" <hpa@linux.intel.com>, Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hapkido.dreamhost.com ([66.33.216.122]:50367 "EHLO
+	hapkido.dreamhost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054Ab1GSXNQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2011 19:13:16 -0400
+In-Reply-To: <1310710771.3184.51.camel@offbook>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>, JBottomley@parallels.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>
 
---20cf3071c69002153504a86f1c8d
-Content-Type: text/plain; charset=ISO-8859-1
+Hi James,
+
+Can I get some input on this?
+
+Thanks,
+Davidlohr
+
+On Fri, 2011-07-15 at 02:19 -0400, Davidlohr Bueso wrote:
+> Hi,
+> 
+> Plenty of older drivers are still using the ugly Scsi_Cmd typedef. The
+> following patchset removes it and change it for struct scsi_cmnd.
+> 
+> drivers/scsi/NCR5380.c       |   72 +++++++++++++++++-----------------
+> drivers/scsi/NCR5380.h       |   14 +++---
+> drivers/scsi/NCR53c406a.c    |    6 +-
+> drivers/scsi/aha152x.c       |   68 ++++++++++++++++----------------
+> drivers/scsi/aha1542.c       |   28 ++++++------
+> drivers/scsi/aha1542.h       |   10 ++--
+> drivers/scsi/aha1740.c       |    8 ++--
+> drivers/scsi/aha1740.h       |    4 +-
+> drivers/scsi/atari_NCR5380.c |   90
+> +++++++++++++++++++++---------------------
+> drivers/scsi/atari_scsi.c    |   10 ++--
+> drivers/scsi/atari_scsi.h    |    2 +-
+> drivers/scsi/dtc.h           |    4 +-
+> drivers/scsi/fd_mcs.c        |   10 ++--
+> drivers/scsi/g_NCR5380.c     |   10 ++--
+> drivers/scsi/g_NCR5380.h     |    4 +-
+> drivers/scsi/gdth.c          |   64 +++++++++++++++---------------
+> drivers/scsi/gdth.h          |   10 ++--
+> drivers/scsi/gdth_proc.c     |    2 +-
+> drivers/scsi/ibmmca.c        |   26 ++++++------
+> drivers/scsi/in2000.c        |   68 ++++++++++++++++----------------
+> drivers/scsi/in2000.h        |   12 +++---
+> drivers/scsi/megaraid.c      |   28 ++++++------
+> drivers/scsi/megaraid.h      |   16 ++++----
+> drivers/scsi/nsp32_debug.c   |    2 +-
+> drivers/scsi/pas16.h         |    4 +-
+> drivers/scsi/scsi.h          |    3 -
+> drivers/scsi/scsi_typedefs.h |    2 -
+> drivers/scsi/sym53c416.c     |    6 +-
+> drivers/scsi/sym53c416.h     |    2 +-
+> drivers/scsi/wd7000.c        |    2 +-
+> 30 files changed, 291 insertions(+), 296 deletions(-) 
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+> 
 
 
-
---20cf3071c69002153504a86f1c8d
-Content-Type: text/x-patch; charset=US-ASCII; name="fix_intr_remapping.patch"
-Content-Disposition: attachment; filename="fix_intr_remapping.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gqb44cls0
-
-W1BBVENIXSBpb21tdTogcGFyc2UgcGNpIGRldmljZSBzY29wZSBldmVuIG9ubHkgaW50ciByZW1h
-cCBpcyBkZWZpbmVkLgoKQW5kcmV3IGZvdW5kIHdoZW4gQ09ORklHX0RNQVI9TiBhbmQgQ09ORklH
-X0lOVFJfUkVNQVA9WToKPiAgICAgICAgWyAxMTM3LjI3MTQ0N10gcWxhMnh4eCAwMDAwOjE4OjAw
-LjA6IGlycSA5NyBmb3IgTVNJL01TSS1YCj4gICAgICAgIFsgMTEzNy4yNzE3MDZdIHFsYTJ4eHgg
-MDAwMDoxODowMC4wOiBDb25maWd1cmluZyBQQ0kgc3BhY2UuLi4KPiAgICAgICAgWyAxMTM3LjI3
-MTcyNV0gcWxhMnh4eCAwMDAwOjE4OjAwLjA6IHNldHRpbmcgbGF0ZW5jeSB0aW1lciB0byA2NAo+
-ICAgICAgICBbIDExMzcuMjcxNzMyXSBxbGEyeHh4IDAwMDA6MTg6MDAuMDogZW5hYmxpbmcgTWVt
-LVdyLUludmFsCj4gICAgICAgIFsgMTEzNy4yNzg3MDVdIERSSEQ6IGhhbmRsaW5nIGZhdWx0IHN0
-YXR1cyByZWcgMgo+ICAgICAgICBbIDExMzcuMjc4NzE1XSBJTlRSLVJFTUFQOiBSZXF1ZXN0IGRl
-dmljZSBbWzE4OjAwLjBdIGZhdWx0IGluZGV4IDIwCj4gICAgICAgIFsgMTEzNy4yNzg3MTddIElO
-VFItUkVNQVA6W2ZhdWx0IHJlYXNvbiAzNF0gUHJlc2VudCBmaWVsZCBpbiB0aGUgSVJURSBlbnRy
-eSBpcyBjbGVhcgo+ICAgICAgICBbIDExNTkuMzg5MDk5XSBxbGEyeHh4IDAwMDA6MGM6MDcuMDog
-Q2FibGUgaXMgdW5wbHVnZ2VkLi4uCj4gICAgICAgIFsgMTE2Ny4yMTg0NzhdIHFsYTJ4eHggMDAw
-MDoxODowMC4wOiBNYWlsYm94IGNvbW1hbmQgdGltZW91dCBvY2N1cnJlZC4gU2NoZWR1bGluZyBJ
-U1AgYWJvcnQuIGVlaF9idXN5OiAweDAKPiAgICAgICAgWyAxMTY3LjIxODQ5MF0gcWxhMnh4eCAw
-MDAwOjE4OjAwLjA6IFVuYWJsZSB0byBidXJzdC1yZWFkIG9wdHJvbSBzZWdtZW50ICgxMDAvN2Zm
-NTA0MDAvMTgzODliMDAwKS4KPiAgICAgICAgWyAxMTY3LjIxODQ5Nl0gcWxhMnh4eCAwMDAwOjE4
-OjAwLjA6IFJldmVydGluZyB0byBzbG93LXJlYWQuCj4gICAgICAgIFsgMTE5Ny4xNzQ2MjNdIHFs
-YTJ4eHggMDAwMDoxODowMC4wOiBVbmFibGUgdG8gYnVyc3QtcmVhZCBvcHRyb20gc2VnbWVudCAo
-MTAwLzdmZjUwMDAwLzE4Mzg5YjAwMCkuCj4gICAgICAgIFsgMTE5Ny4xNzQ2MzJdIHFsYTJ4eHgg
-MDAwMDoxODowMC4wOiBSZXZlcnRpbmcgdG8gc2xvdy1yZWFkLgo+ICAgICAgICBbIDExOTcuMTkw
-NjEzXSBxbGEyeHh4IDAwMDA6MTg6MDAuMDogQ29uZmlndXJlIE5WUkFNIHBhcmFtZXRlcnMuLi4K
-PiAgICAgICAgWyAxMTk3LjE5ODU4Ml0gcWxhMnh4eCAwMDAwOjE4OjAwLjA6IFZlcmlmeWluZyBs
-b2FkZWQgUklTQyBjb2RlLi4uCj4gICAgICAgIFsgMTIyNy4xNDI5NTFdIHFsYTJ4eHggMDAwMDox
-ODowMC4wOiBGYWlsZWQgbWFpbGJveCBzZW5kIHJlZ2lzdGVyIHRlc3QKPiAgICAgICAgWyAxMjI3
-LjE0Mjk1OV0gcWxhMnh4eCAwMDAwOjE4OjAwLjA6IEZhaWxlZCB0byBpbml0aWFsaXplIGFkYXB0
-ZXIKCkl0IHR1cm5zIG91dCB0aGF0IHBhdGgsIHBjaSBkZXZpY2VzIHdpbGwgbm90IGJlIGxpbmsg
-dG8gZHJoZCwgc28gbGF0ZXIgYWxsIHBjaQpkZXZpY2VzIHdpbGwgcG9pbnQgdG8gZGVmYXVsdCBk
-cmhkIHdoZW4gdXNpbmcgaW50ci1yZW1hcC4KClN1cmVzaCBwb2ludGVkIG91dDoKfCBUaGlzIGlz
-c3VlIGlzIGNhdXNlZCBieSB0aGlzIGNvbW1pdDoKfAp8IGNvbW1pdCA5ZDVjZTczYTY0YmUyYmU4
-MTEyMTQ3YTNlMGI1NTFhZDljZDEyNDdiCnwgQXV0aG9yOiBGVUpJVEEgVG9tb25vcmkgPGZ1aml0
-YS50b21vbm9yaUBsYWIubnR0LmNvLmpwPgp8IERhdGU6ICAgVHVlIE5vdiAxMCAxOTo0NjoxNiAy
-MDA5ICswOTAwCnwKfCAgIHg4NjogaW50ZWwtaW9tbXU6IENvbnZlcnQgZGV0ZWN0X2ludGVsX2lv
-bW11IHRvIHVzZSBpb21tdV9pbml0IGhvb2sKfAp8IFNvIHRoaXMgaXMgYSByZWdyZXNzaW9uCgpU
-cnkgdG8gZml4IHRoZSBwYXRoIHdpdGggY2FsbGluZyBkbWFyX2Rldl9zY29wZV9pbml0KCkgaW4g
-aW50ZWxfaW9tbXVfaW5pdCgpCgpSZXBvcnRlZC1hbmQtdGVzdGVkLWJ5OiBBbmRyZXcgVmFzcXVl
-eiA8YW5kcmV3LnZhc3F1ZXpAcWxvZ2ljLmNvbT4KUmV2aWV3ZWQtYnk6IFN1cmVzaCBTaWRkaGEg
-PHN1cmVzaC5iLnNpZGRoYUBpbnRlbC5jb20+ClNpZ25lZC1vZmYtYnk6IFlpbmdoYWkgTHUgPHlp
-bmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9pb21tdS9kbWFyLmMgfCAgIDEwICsrKysr
-KysrKysKIGluY2x1ZGUvbGludXgvZG1hci5oIHwgICAgNCArLS0tCiAyIGZpbGVzIGNoYW5nZWQs
-IDExIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0pCgpJbmRleDogbGludXgtMi42L2luY2x1
-ZGUvbGludXgvZG1hci5oCj09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT0KLS0tIGxpbnV4LTIuNi5vcmlnL2luY2x1ZGUvbGlu
-dXgvZG1hci5oCisrKyBsaW51eC0yLjYvaW5jbHVkZS9saW51eC9kbWFyLmgKQEAgLTIzMiw5ICsy
-MzIsNyBAQCBzdHJ1Y3QgZG1hcl9hdHNyX3VuaXQgewogI2RlZmluZSBmb3JfZWFjaF9hdHNyX3Vu
-aXQoYXRzcikgXAogCWxpc3RfZm9yX2VhY2hfZW50cnkoYXRzciwgJmRtYXJfYXRzcl91bml0cywg
-bGlzdCkKIAotZXh0ZXJuIGludCBpbnRlbF9pb21tdV9pbml0KHZvaWQpOwotI2Vsc2UgLyogIUNP
-TkZJR19ETUFSOiAqLwotc3RhdGljIGlubGluZSBpbnQgaW50ZWxfaW9tbXVfaW5pdCh2b2lkKSB7
-IHJldHVybiAtRU5PREVWOyB9CiAjZW5kaWYgLyogQ09ORklHX0RNQVIgKi8KK2V4dGVybiBpbnQg
-aW50ZWxfaW9tbXVfaW5pdCh2b2lkKTsKIAogI2VuZGlmIC8qIF9fRE1BUl9IX18gKi8KSW5kZXg6
-IGxpbnV4LTIuNi9kcml2ZXJzL2lvbW11L2RtYXIuYwo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSBsaW51eC0yLjYu
-b3JpZy9kcml2ZXJzL2lvbW11L2RtYXIuYworKysgbGludXgtMi42L2RyaXZlcnMvaW9tbXUvZG1h
-ci5jCkBAIC03MjIsNiArNzIyLDE2IEBAIGludCBfX2luaXQgZGV0ZWN0X2ludGVsX2lvbW11KHZv
-aWQpCiAJcmV0dXJuIHJldCA/IDEgOiAtRU5PREVWOwogfQogCisjaWZuZGVmIENPTkZJR19ETUFS
-CisvKiBXaGVuIGludHIgcmVtYXBwaW5nIGlzIHVzZWQgYnV0IGRtYXIgcmVtYXBwaW5nIGlzIG5v
-dCBkZWZpbmVkICovCitpbnQgX19pbml0IGludGVsX2lvbW11X2luaXQodm9pZCkKK3sKKwlpZiAo
-ZG1hcl90YWJsZV9pbml0KCkpCisJCXJldHVybiAgLUVOT0RFVjsKKworCXJldHVybiBkbWFyX2Rl
-dl9zY29wZV9pbml0KCk7Cit9CisjZW5kaWYKIAogaW50IGFsbG9jX2lvbW11KHN0cnVjdCBkbWFy
-X2RyaGRfdW5pdCAqZHJoZCkKIHsK
---20cf3071c69002153504a86f1c8d--
