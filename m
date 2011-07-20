@@ -1,210 +1,104 @@
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: [PATCH] Use WWID from C8 page instead of Subsystem id from C4 page
- to identify storage
-Date: Wed, 20 Jul 2011 14:18:56 -0700
-Message-ID: <1311196736.5505.10775.camel@chandra-lucid.beaverton.ibm.com>
+Subject: [PATCH] Associate HBA and storage in rdac_controller to support
+ partitions in storage
+Date: Wed, 20 Jul 2011 14:22:28 -0700
+Message-ID: <1311196948.5505.10779.camel@chandra-lucid.beaverton.ibm.com>
 Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e8.ny.us.ibm.com ([32.97.182.138]:53736 "EHLO e8.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751613Ab1GTVTA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2011 17:19:00 -0400
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by e8.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6KL6Poi022343
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 17:06:25 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p6KLIxT7177742
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 17:18:59 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p6KHIk1K004994
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 14:18:46 -0300
+Received: from e36.co.us.ibm.com ([32.97.110.154]:50532 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750890Ab1GTVWg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2011 17:22:36 -0400
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by e36.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p6KLGMGS022409
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 15:16:22 -0600
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p6KLMVI8192966
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 15:22:32 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p6KFMTmW011850
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2011 09:22:30 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>, "Moger, Babu" <Babu.Moger@netapp.com>, yanling.Qi@netapp.com, "Stankey, Robert" <Robert.Stankey@netapp.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: dm-devel <dm-devel@redhat.com>, "Moger, Babu" <Babu.Moger@netapp.com>, yanling.Qi@netapp.com, "Stankey, Robert" <Robert.Stankey@netapp.com>
 
-rdac hardware handler uses "Subsystem Identifier" from C4 inquiry page
-to uniquely identify a storage. The problem with that is that if any 
-any of the bytes are non-ascii, subsys_id will all be spaces (hex
-0x20). This creates lot of problems especially when there are multiple
-rdac storages are connected to the server.
+rdac hardware handler assumes that there is one-to-one relation ship
+between the host and the controller w.r.t lun.  IOW, it does not
+support "multiple storage partitions" within a storage.
 
-Use "Storage Array Unique Identifier" from C8 inquiry page, which is the
-world wide unique identifier for the storage array, to uniquely identify
-the storage.
+Example:
+HBA1 and HBA2 see lun 0 and 1 in storage A (1)
+HBA3 and HBA4 see lun 0 and 1 in storage A (2)
+HBA5 and HBA6 see lun 0 and 1 in storage A (3)
+
+luns 0 and 1 in (1), (2) and (3) are totally different.
+
+But, rdac handler treats the lun 0s (and lun 1s) as the same when 
+sending a mode select to the controller, which is wrong.
+
+This patch makes the rdac hardware handler associate HBA and the
+storage w.r.t lun (and not the host itself).
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
+ drivers/scsi/device_handler/scsi_dh_rdac.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
+
 diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-index e7fc70d..a5d1669 100644
+index 214d7f0..67c2c99 100644
 --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
 +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-@@ -128,25 +128,7 @@ struct c4_inquiry {
- 	u8	reserved[2];
- };
- 
--struct rdac_controller {
--	u8			subsys_id[SUBSYS_ID_LEN];
--	u8			slot_id[SLOT_ID_LEN];
--	int			use_ms10;
--	struct kref		kref;
--	struct list_head	node; /* list of all controllers */
--	union			{
--		struct rdac_pg_legacy legacy;
--		struct rdac_pg_expanded expanded;
--	} mode_select;
--	u8	index;
--	u8	array_name[ARRAY_LABEL_LEN];
--	spinlock_t		ms_lock;
--	int			ms_queued;
--	struct work_struct	ms_work;
--	struct scsi_device	*ms_sdev;
--	struct list_head	ms_head;
--};
--
-+#define UNIQUE_ID_LEN 16
- struct c8_inquiry {
- 	u8	peripheral_info;
- 	u8	page_code; /* 0xC8 */
-@@ -159,12 +141,30 @@ struct c8_inquiry {
- 	u8	vol_user_label_len;
- 	u8	vol_user_label[60];
- 	u8	array_uniq_id_len;
--	u8	array_unique_id[16];
-+	u8	array_unique_id[UNIQUE_ID_LEN];
- 	u8	array_user_label_len;
- 	u8	array_user_label[60];
- 	u8	lun[8];
- };
- 
-+struct rdac_controller {
-+	u8			array_id[UNIQUE_ID_LEN];
-+	int			use_ms10;
-+	struct kref		kref;
-+	struct list_head	node; /* list of all controllers */
-+	union			{
-+		struct rdac_pg_legacy legacy;
-+		struct rdac_pg_expanded expanded;
-+	} mode_select;
-+	u8	index;
-+	u8	array_name[ARRAY_LABEL_LEN];
-+	spinlock_t		ms_lock;
-+	int			ms_queued;
-+	struct work_struct	ms_work;
-+	struct scsi_device	*ms_sdev;
-+	struct list_head	ms_head;
-+};
-+
- struct c2_inquiry {
- 	u8	peripheral_info;
- 	u8	page_code;	/* 0xC2 */
-@@ -369,16 +369,16 @@ static void release_controller(struct kref *kref)
- 	kfree(ctlr);
+@@ -149,6 +149,7 @@ struct rdac_controller {
+ 	} mode_select;
+ 	u8	index;
+ 	u8	array_name[ARRAY_LABEL_LEN];
++	struct Scsi_Host	*host;
+ 	spinlock_t		ms_lock;
+ 	int			ms_queued;
+ 	struct work_struct	ms_work;
+@@ -380,7 +381,7 @@ static void release_controller(struct kref *kref)
  }
  
--static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id,
--						char *array_name)
-+static struct rdac_controller *get_controller(int index, char *array_name,
-+						u8 *array_id)
+ static struct rdac_controller *get_controller(u8 *serial, int index,
+-		char *array_name)
++		char *array_name, struct scsi_device *sdev)
  {
  	struct rdac_controller *ctlr, *tmp;
  
- 	spin_lock(&list_lock);
+@@ -388,7 +389,8 @@ static struct rdac_controller *get_controller(u8 *serial, int index,
  
  	list_for_each_entry(tmp, &ctlr_list, node) {
--		if ((memcmp(tmp->subsys_id, subsys_id, SUBSYS_ID_LEN) == 0) &&
--			  (memcmp(tmp->slot_id, slot_id, SLOT_ID_LEN) == 0)) {
-+		if ((memcmp(tmp->array_id, array_id, UNIQUE_ID_LEN) == 0) &&
-+			  (tmp->index == index)) {
+ 		if ((memcmp(tmp->serial, serial, SERIAL_NO_LEN) == 0) &&
+-		          (tmp->index == index)) {
++		          (tmp->index == index) &&
++			  (tmp->host == sdev->host)) {
  			kref_get(&tmp->kref);
  			spin_unlock(&list_lock);
  			return tmp;
-@@ -389,16 +389,10 @@ static struct rdac_controller *get_controller(u8 *subsys_id, u8 *slot_id,
- 		goto done;
- 
- 	/* initialize fields of controller */
--	memcpy(ctlr->subsys_id, subsys_id, SUBSYS_ID_LEN);
--	memcpy(ctlr->slot_id, slot_id, SLOT_ID_LEN);
-+	memcpy(ctlr->array_id, array_id, UNIQUE_ID_LEN);
-+	ctlr->index = index;
+@@ -402,6 +404,7 @@ static struct rdac_controller *get_controller(u8 *serial, int index,
+ 	memcpy(ctlr->serial, serial, SERIAL_NO_LEN);
  	memcpy(ctlr->array_name, array_name, ARRAY_LABEL_LEN);
+ 	ctlr->index = index;
++	ctlr->host = sdev->host;
  
--	/* update the controller index */
--	if (slot_id[1] == 0x31)
--		ctlr->index = 0;
--	else
--		ctlr->index = 1;
--
  	kref_init(&ctlr->kref);
  	ctlr->use_ms10 = -1;
- 	ctlr->ms_queued = 0;
-@@ -444,7 +438,7 @@ done:
- }
- 
- static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
--			char *array_name)
-+			char *array_name, u8 *array_id)
- {
- 	int err, i;
- 	struct c8_inquiry *inqp;
-@@ -463,6 +457,8 @@ static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
- 			*(array_name+i) = inqp->array_user_label[(2*i)+1];
- 
- 		*(array_name+ARRAY_LABEL_LEN-1) = '\0';
-+		memset(array_id, 0, UNIQUE_ID_LEN);
-+		memcpy(array_id, inqp->array_unique_id, inqp->array_uniq_id_len);
- 	}
- 	return err;
- }
-@@ -504,16 +500,20 @@ static int check_ownership(struct scsi_device *sdev, struct rdac_dh_data *h)
- }
- 
- static int initialize_controller(struct scsi_device *sdev,
--				 struct rdac_dh_data *h, char *array_name)
-+		struct rdac_dh_data *h, char *array_name, u8 *array_id)
- {
--	int err;
-+	int err, index;
- 	struct c4_inquiry *inqp;
- 
- 	err = submit_inquiry(sdev, 0xC4, sizeof(struct c4_inquiry), h);
- 	if (err == SCSI_DH_OK) {
- 		inqp = &h->inq.c4;
--		h->ctlr = get_controller(inqp->subsys_id, inqp->slot_id,
--					array_name);
-+		/* get the controller index */
-+		if (inqp->slot_id[1] == 0x31)
-+			index = 0;
-+		else
-+			index = 1;
-+		h->ctlr = get_controller(index, array_name, array_id);
+@@ -525,7 +528,8 @@ static int initialize_controller(struct scsi_device *sdev,
+ 		if (err != SCSI_DH_OK)
+ 			return err;
+ 		inq_p80 = &h->inq.p80;
+-		h->ctlr = get_controller(inq_p80->serial, index, array_name);
++		h->ctlr = get_controller(inq_p80->serial, index,
++							array_name, sdev);
  		if (!h->ctlr)
  			err = SCSI_DH_RES_TEMP_UNAVAIL;
  	}
-@@ -835,6 +835,7 @@ static int rdac_bus_attach(struct scsi_device *sdev)
- 	unsigned long flags;
- 	int err;
- 	char array_name[ARRAY_LABEL_LEN];
-+	char array_id[UNIQUE_ID_LEN];
- 
- 	scsi_dh_data = kzalloc(sizeof(*scsi_dh_data)
- 			       + sizeof(*h) , GFP_KERNEL);
-@@ -849,11 +850,11 @@ static int rdac_bus_attach(struct scsi_device *sdev)
- 	h->lun = UNINITIALIZED_LUN;
- 	h->state = RDAC_STATE_ACTIVE;
- 
--	err = get_lun_info(sdev, h, array_name);
-+	err = get_lun_info(sdev, h, array_name, array_id);
- 	if (err != SCSI_DH_OK)
- 		goto failed;
- 
--	err = initialize_controller(sdev, h, array_name);
-+	err = initialize_controller(sdev, h, array_name, array_id);
- 	if (err != SCSI_DH_OK)
- 		goto failed;
- 
+-- 
+1.7.1
+
 
 
