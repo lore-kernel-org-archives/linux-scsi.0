@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 00/15] bfa: Update the driver version to 3.0.2.2
-Date: Wed, 20 Jul 2011 16:58:35 -0700
-Message-ID: <1311206315-23195-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 01/15] bfa: Add FC-transport based Asynchronous Event Notification support.
+Date: Wed, 20 Jul 2011 16:59:13 -0700
+Message-ID: <1311206353-25749-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55965 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55984 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751664Ab1GTX7P (ORCPT
+	by vger.kernel.org with ESMTP id S1751531Ab1GTX7p (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2011 19:59:15 -0400
+	Wed, 20 Jul 2011 19:59:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -17,65 +17,1289 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Hi James,
+Change details:
+	- Added support to post vendor unique events on fc_host.
+	- Supports adapter, port, ioc, flash and remote port based AEN events.
 
-	The following patch set enhances support for Brocade-1860 Fabric Adapter
-	and updates the Brocade BFA driver to v3.0.2.2.
-
-	The patch-set adds FC-transport based AEN support, extends BSG interface
-	to support more user commands and adds Initiator based lun masking feature.
-
-	I have compiled & tested the code against your scsi-misc and
-	linux-next (3.0.0-rc7-0.7-default).
-
-Thanks,
-Krishna C Gudipati.
-
-Krishna Gudipati (15):
-  bfa: Add FC-transport based Asynchronous Event Notification support.
-  bfa: BSG return value fix to be compatible with kernel convention.
-  bfa: Update RME interrupt handling.
-  bfa: Check supported speed based on port mode
-  bfa: Extend BSG to support more user commands
-  bfa: Add support for IO profiling.
-  bfa: Added support to collect and reset fcport stats
-  bfa: Add support to configure and query flash boot partition
-  bfa: Add support to configure trunking on Brocade adapter ports.
-  bfa: Added support to configure QOS and collect stats.
-  bfa: Add support to collect fabric stats.
-  bfa: Add support to store driver configuration in flash.
-  bfa: Introduced initiator based lun masking feature.
-  bfa: Added support to configure lunmasking
-  bfa: Update the driver version to 3.0.2.2
-
- drivers/scsi/bfa/bfa.h           |   51 ++-
- drivers/scsi/bfa/bfa_core.c      |   60 ++-
- drivers/scsi/bfa/bfa_defs.h      |  171 ++++++
- drivers/scsi/bfa/bfa_defs_svc.h  |   99 ++++
- drivers/scsi/bfa/bfa_fc.h        |  155 ++++++
- drivers/scsi/bfa/bfa_fcpim.c     |  736 ++++++++++++++++++++++++++-
- drivers/scsi/bfa/bfa_fcpim.h     |   45 ++-
- drivers/scsi/bfa/bfa_fcs.c       |   26 +
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_defs.h      |  143 +++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_defs_svc.h  |   48 ++++++++++
+ drivers/scsi/bfa/bfa_fcs.c       |   26 ++++++
  drivers/scsi/bfa/bfa_fcs.h       |    1 +
- drivers/scsi/bfa/bfa_fcs_fcpim.c |   37 ++-
- drivers/scsi/bfa/bfa_fcs_lport.c |   74 +++-
- drivers/scsi/bfa/bfa_fcs_rport.c |   49 ++-
- drivers/scsi/bfa/bfa_hw_cb.c     |   38 ++-
- drivers/scsi/bfa/bfa_hw_ct.c     |   25 +-
- drivers/scsi/bfa/bfa_ioc.c       |  569 ++++++++++++++++++++-
- drivers/scsi/bfa/bfa_ioc.h       |   48 ++-
- drivers/scsi/bfa/bfa_modules.h   |    3 +
- drivers/scsi/bfa/bfa_svc.c       |  249 +++++++---
- drivers/scsi/bfa/bfa_svc.h       |   29 +-
- drivers/scsi/bfa/bfad.c          |    8 +-
- drivers/scsi/bfa/bfad_bsg.c      | 1084 +++++++++++++++++++++++++++++++++++++-
- drivers/scsi/bfa/bfad_bsg.h      |  237 +++++++++
- drivers/scsi/bfa/bfad_drv.h      |    6 +-
- drivers/scsi/bfa/bfad_im.c       |   26 +
- drivers/scsi/bfa/bfad_im.h       |   22 +
- drivers/scsi/bfa/bfi.h           |   20 +
- 26 files changed, 3724 insertions(+), 144 deletions(-)
+ drivers/scsi/bfa/bfa_fcs_fcpim.c |   37 ++++++++-
+ drivers/scsi/bfa/bfa_fcs_lport.c |   74 +++++++++++++++-
+ drivers/scsi/bfa/bfa_fcs_rport.c |   49 ++++++++++-
+ drivers/scsi/bfa/bfa_ioc.c       |  176 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bfa/bfa_ioc.h       |    2 +
+ drivers/scsi/bfa/bfa_modules.h   |    1 +
+ drivers/scsi/bfa/bfa_svc.c       |   48 +++++++++--
+ drivers/scsi/bfa/bfad.c          |    8 ++-
+ drivers/scsi/bfa/bfad_bsg.c      |    1 +
+ drivers/scsi/bfa/bfad_drv.h      |    4 +
+ drivers/scsi/bfa/bfad_im.c       |   26 ++++++
+ drivers/scsi/bfa/bfad_im.h       |   22 +++++
+ drivers/scsi/bfa/bfi.h           |   20 +++++
+ 17 files changed, 668 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index ed8d31b..73e36de 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -164,6 +164,8 @@ enum bfa_status {
+ 	BFA_STATUS_INVALID_MAC  = 134, /*  Invalid MAC address */
+ 	BFA_STATUS_PBC		= 154, /*  Operation not allowed for pre-boot
+ 					*  configuration */
++	BFA_STATUS_BAD_FWCFG = 156,	/* Bad firmware configuration */
++	BFA_STATUS_INVALID_VENDOR = 158, /* Invalid switch vendor */
+ 	BFA_STATUS_SFP_NOT_READY = 159,	/* SFP info is not ready. Retry */
+ 	BFA_STATUS_TRUNK_ENABLED = 164, /* Trunk is already enabled on
+ 					 * this adapter */
+@@ -359,6 +361,139 @@ struct bfa_ioc_attr_s {
+ };
+ 
+ /*
++ *			AEN related definitions
++ */
++enum bfa_aen_category {
++	BFA_AEN_CAT_ADAPTER	= 1,
++	BFA_AEN_CAT_PORT	= 2,
++	BFA_AEN_CAT_LPORT	= 3,
++	BFA_AEN_CAT_RPORT	= 4,
++	BFA_AEN_CAT_ITNIM	= 5,
++	BFA_AEN_CAT_AUDIT	= 8,
++	BFA_AEN_CAT_IOC		= 9,
++};
++
++/* BFA adapter level events */
++enum bfa_adapter_aen_event {
++	BFA_ADAPTER_AEN_ADD	= 1,	/* New Adapter found event */
++	BFA_ADAPTER_AEN_REMOVE	= 2,	/* Adapter removed event */
++};
++
++struct bfa_adapter_aen_data_s {
++	char	serial_num[BFA_ADAPTER_SERIAL_NUM_LEN];
++	u32	nports; /* Number of NPorts */
++	wwn_t	pwwn;   /* WWN of one of its physical port */
++};
++
++/* BFA physical port Level events */
++enum bfa_port_aen_event {
++	BFA_PORT_AEN_ONLINE	= 1,    /* Physical Port online event */
++	BFA_PORT_AEN_OFFLINE	= 2,    /* Physical Port offline event */
++	BFA_PORT_AEN_RLIR	= 3,    /* RLIR event, not supported */
++	BFA_PORT_AEN_SFP_INSERT	= 4,    /* SFP inserted event */
++	BFA_PORT_AEN_SFP_REMOVE	= 5,    /* SFP removed event */
++	BFA_PORT_AEN_SFP_POM	= 6,    /* SFP POM event */
++	BFA_PORT_AEN_ENABLE	= 7,    /* Physical Port enable event */
++	BFA_PORT_AEN_DISABLE	= 8,    /* Physical Port disable event */
++	BFA_PORT_AEN_AUTH_ON	= 9,    /* Physical Port auth success event */
++	BFA_PORT_AEN_AUTH_OFF	= 10,   /* Physical Port auth fail event */
++	BFA_PORT_AEN_DISCONNECT	= 11,   /* Physical Port disconnect event */
++	BFA_PORT_AEN_QOS_NEG	= 12,   /* Base Port QOS negotiation event */
++	BFA_PORT_AEN_FABRIC_NAME_CHANGE	= 13, /* Fabric Name/WWN change */
++	BFA_PORT_AEN_SFP_ACCESS_ERROR	= 14, /* SFP read error event */
++	BFA_PORT_AEN_SFP_UNSUPPORT	= 15, /* Unsupported SFP event */
++};
++
++enum bfa_port_aen_sfp_pom {
++	BFA_PORT_AEN_SFP_POM_GREEN = 1, /* Normal */
++	BFA_PORT_AEN_SFP_POM_AMBER = 2, /* Warning */
++	BFA_PORT_AEN_SFP_POM_RED   = 3, /* Critical */
++	BFA_PORT_AEN_SFP_POM_MAX   = BFA_PORT_AEN_SFP_POM_RED
++};
++
++struct bfa_port_aen_data_s {
++	wwn_t		pwwn;		/* WWN of the physical port */
++	wwn_t		fwwn;		/* WWN of the fabric port */
++	u32		phy_port_num;	/* For SFP related events */
++	u16		ioc_type;
++	u16		level;		/* Only transitions will be informed */
++	mac_t		mac;		/* MAC address of the ethernet port */
++	u16		rsvd;
++};
++
++/* BFA AEN logical port events */
++enum bfa_lport_aen_event {
++	BFA_LPORT_AEN_NEW	= 1,		/* LPort created event */
++	BFA_LPORT_AEN_DELETE	= 2,		/* LPort deleted event */
++	BFA_LPORT_AEN_ONLINE	= 3,		/* LPort online event */
++	BFA_LPORT_AEN_OFFLINE	= 4,		/* LPort offline event */
++	BFA_LPORT_AEN_DISCONNECT = 5,		/* LPort disconnect event */
++	BFA_LPORT_AEN_NEW_PROP	= 6,		/* VPort created event */
++	BFA_LPORT_AEN_DELETE_PROP = 7,		/* VPort deleted event */
++	BFA_LPORT_AEN_NEW_STANDARD = 8,		/* VPort created event */
++	BFA_LPORT_AEN_DELETE_STANDARD = 9,	/* VPort deleted event */
++	BFA_LPORT_AEN_NPIV_DUP_WWN = 10,	/* VPort with duplicate WWN */
++	BFA_LPORT_AEN_NPIV_FABRIC_MAX = 11,	/* Max NPIV in fabric/fport */
++	BFA_LPORT_AEN_NPIV_UNKNOWN = 12,	/* Unknown NPIV Error code */
++};
++
++struct bfa_lport_aen_data_s {
++	u16	vf_id;	/* vf_id of this logical port */
++	u16	roles;	/* Logical port mode,IM/TM/IP etc */
++	u32	rsvd;
++	wwn_t	ppwwn;	/* WWN of its physical port */
++	wwn_t	lpwwn;	/* WWN of this logical port */
++};
++
++/* BFA ITNIM events */
++enum bfa_itnim_aen_event {
++	BFA_ITNIM_AEN_ONLINE	 = 1,	/* Target online */
++	BFA_ITNIM_AEN_OFFLINE	 = 2,	/* Target offline */
++	BFA_ITNIM_AEN_DISCONNECT = 3,	/* Target disconnected */
++};
++
++struct bfa_itnim_aen_data_s {
++	u16		vf_id;		/* vf_id of the IT nexus */
++	u16		rsvd[3];
++	wwn_t		ppwwn;		/* WWN of its physical port */
++	wwn_t		lpwwn;		/* WWN of logical port */
++	wwn_t		rpwwn;		/* WWN of remote(target) port */
++};
++
++/* BFA audit events */
++enum bfa_audit_aen_event {
++	BFA_AUDIT_AEN_AUTH_ENABLE	= 1,
++	BFA_AUDIT_AEN_AUTH_DISABLE	= 2,
++	BFA_AUDIT_AEN_FLASH_ERASE	= 3,
++	BFA_AUDIT_AEN_FLASH_UPDATE	= 4,
++};
++
++struct bfa_audit_aen_data_s {
++	wwn_t	pwwn;
++	int	partition_inst;
++	int	partition_type;
++};
++
++/* BFA IOC level events */
++enum bfa_ioc_aen_event {
++	BFA_IOC_AEN_HBGOOD  = 1,	/* Heart Beat restore event	*/
++	BFA_IOC_AEN_HBFAIL  = 2,	/* Heart Beat failure event	*/
++	BFA_IOC_AEN_ENABLE  = 3,	/* IOC enabled event		*/
++	BFA_IOC_AEN_DISABLE = 4,	/* IOC disabled event		*/
++	BFA_IOC_AEN_FWMISMATCH  = 5,	/* IOC firmware mismatch	*/
++	BFA_IOC_AEN_FWCFG_ERROR = 6,	/* IOC firmware config error	*/
++	BFA_IOC_AEN_INVALID_VENDOR = 7,
++	BFA_IOC_AEN_INVALID_NWWN = 8,	/* Zero NWWN			*/
++	BFA_IOC_AEN_INVALID_PWWN = 9	/* Zero PWWN			*/
++};
++
++struct bfa_ioc_aen_data_s {
++	wwn_t	pwwn;
++	u16	ioc_type;
++	mac_t	mac;
++};
++
++/*
+  * ---------------------- mfg definitions ------------
+  */
+ 
+@@ -587,6 +722,14 @@ struct bfa_ablk_cfg_s {
+  */
+ #define SFP_DIAGMON_SIZE	10 /* num bytes of diag monitor data */
+ 
++/* SFP state change notification event */
++#define BFA_SFP_SCN_REMOVED	0
++#define BFA_SFP_SCN_INSERTED	1
++#define BFA_SFP_SCN_POM		2
++#define BFA_SFP_SCN_FAILED	3
++#define BFA_SFP_SCN_UNSUPPORT	4
++#define BFA_SFP_SCN_VALID	5
++
+ enum bfa_defs_sfp_media_e {
+ 	BFA_SFP_MEDIA_UNKNOWN	= 0x00,
+ 	BFA_SFP_MEDIA_CU	= 0x01,
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index 0b97525..52866d8 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -1228,4 +1228,52 @@ struct bfa_cee_stats_s {
+ 
+ #pragma pack()
+ 
++/*
++ *			AEN related definitions
++ */
++#define BFAD_NL_VENDOR_ID (((u64)0x01 << SCSI_NL_VID_TYPE_SHIFT) \
++			   | BFA_PCI_VENDOR_ID_BROCADE)
++
++/* BFA remote port events */
++enum bfa_rport_aen_event {
++	BFA_RPORT_AEN_ONLINE     = 1,   /* RPort online event */
++	BFA_RPORT_AEN_OFFLINE    = 2,   /* RPort offline event */
++	BFA_RPORT_AEN_DISCONNECT = 3,   /* RPort disconnect event */
++	BFA_RPORT_AEN_QOS_PRIO   = 4,   /* QOS priority change event */
++	BFA_RPORT_AEN_QOS_FLOWID = 5,   /* QOS flow Id change event */
++};
++
++struct bfa_rport_aen_data_s {
++	u16             vf_id;  /* vf_id of this logical port */
++	u16             rsvd[3];
++	wwn_t           ppwwn;  /* WWN of its physical port */
++	wwn_t           lpwwn;  /* WWN of this logical port */
++	wwn_t           rpwwn;  /* WWN of this remote port */
++	union {
++		struct bfa_rport_qos_attr_s qos;
++	} priv;
++};
++
++union bfa_aen_data_u {
++	struct bfa_adapter_aen_data_s	adapter;
++	struct bfa_port_aen_data_s	port;
++	struct bfa_lport_aen_data_s	lport;
++	struct bfa_rport_aen_data_s	rport;
++	struct bfa_itnim_aen_data_s	itnim;
++	struct bfa_audit_aen_data_s	audit;
++	struct bfa_ioc_aen_data_s	ioc;
++};
++
++#define BFA_AEN_MAX_ENTRY	512
++
++struct bfa_aen_entry_s {
++	struct list_head	qe;
++	enum bfa_aen_category   aen_category;
++	u32                     aen_type;
++	union bfa_aen_data_u    aen_data;
++	struct timeval          aen_tv;
++	u32                     seq_num;
++	u32                     bfad_num;
++};
++
+ #endif /* __BFA_DEFS_SVC_H__ */
+diff --git a/drivers/scsi/bfa/bfa_fcs.c b/drivers/scsi/bfa/bfa_fcs.c
+index a9b22bc..eaac57e 100644
+--- a/drivers/scsi/bfa/bfa_fcs.c
++++ b/drivers/scsi/bfa/bfa_fcs.c
+@@ -20,6 +20,7 @@
+  */
+ 
+ #include "bfad_drv.h"
++#include "bfad_im.h"
+ #include "bfa_fcs.h"
+ #include "bfa_fcbuild.h"
+ 
+@@ -1327,6 +1328,29 @@ bfa_fcs_fabric_flogiacc_comp(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
+ 	bfa_trc(fabric->fcs, status);
+ }
+ 
++
++/*
++ * Send AEN notification
++ */
++static void
++bfa_fcs_fabric_aen_post(struct bfa_fcs_lport_s *port,
++			enum bfa_port_aen_event event)
++{
++	struct bfad_s *bfad = (struct bfad_s *)port->fabric->fcs->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.port.pwwn = bfa_fcs_lport_get_pwwn(port);
++	aen_entry->aen_data.port.fwwn = bfa_fcs_lport_get_fabric_name(port);
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++port->fcs->fcs_aen_seq,
++				  BFA_AEN_CAT_PORT, event);
++}
++
+ /*
+  *
+  * @param[in] fabric - fabric
+@@ -1358,6 +1382,8 @@ bfa_fcs_fabric_set_fabric_name(struct bfa_fcs_fabric_s *fabric,
+ 		BFA_LOG(KERN_WARNING, bfad, bfa_log_level,
+ 			"Base port WWN = %s Fabric WWN = %s\n",
+ 			pwwn_ptr, fwwn_ptr);
++		bfa_fcs_fabric_aen_post(&fabric->bport,
++				BFA_PORT_AEN_FABRIC_NAME_CHANGE);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index a5f1faf..e75e07d 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -675,6 +675,7 @@ struct bfa_fcs_s {
+ 	struct bfa_fcs_fabric_s fabric; /*  base fabric state machine */
+ 	struct bfa_fcs_stats_s	stats;	/*  FCS statistics */
+ 	struct bfa_wc_s		wc;	/*  waiting counter */
++	int			fcs_aen_seq;
+ };
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_fcs_fcpim.c b/drivers/scsi/bfa/bfa_fcs_fcpim.c
+index 29b4108..9272840 100644
+--- a/drivers/scsi/bfa/bfa_fcs_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcs_fcpim.c
+@@ -37,6 +37,8 @@ static void	bfa_fcs_itnim_prli_response(void *fcsarg,
+ 			 struct bfa_fcxp_s *fcxp, void *cbarg,
+ 			    bfa_status_t req_status, u32 rsp_len,
+ 			    u32 resid_len, struct fchs_s *rsp_fchs);
++static void	bfa_fcs_itnim_aen_post(struct bfa_fcs_itnim_s *itnim,
++			enum bfa_itnim_aen_event event);
+ 
+ /*
+  *  fcs_itnim_sm FCS itnim state machine events
+@@ -269,6 +271,7 @@ bfa_fcs_itnim_sm_hcb_online(struct bfa_fcs_itnim_s *itnim,
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"Target (WWN = %s) is online for initiator (WWN = %s)\n",
+ 		rpwwn_buf, lpwwn_buf);
++		bfa_fcs_itnim_aen_post(itnim, BFA_ITNIM_AEN_ONLINE);
+ 		break;
+ 
+ 	case BFA_FCS_ITNIM_SM_OFFLINE:
+@@ -305,14 +308,17 @@ bfa_fcs_itnim_sm_online(struct bfa_fcs_itnim_s *itnim,
+ 		bfa_itnim_offline(itnim->bfa_itnim);
+ 		wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(itnim->rport->port));
+ 		wwn2str(rpwwn_buf, itnim->rport->pwwn);
+-		if (bfa_fcs_lport_is_online(itnim->rport->port) == BFA_TRUE)
++		if (bfa_fcs_lport_is_online(itnim->rport->port) == BFA_TRUE) {
+ 			BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+ 			"Target (WWN = %s) connectivity lost for "
+ 			"initiator (WWN = %s)\n", rpwwn_buf, lpwwn_buf);
+-		else
++			bfa_fcs_itnim_aen_post(itnim, BFA_ITNIM_AEN_DISCONNECT);
++		} else {
+ 			BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Target (WWN = %s) offlined by initiator (WWN = %s)\n",
+ 			rpwwn_buf, lpwwn_buf);
++			bfa_fcs_itnim_aen_post(itnim, BFA_ITNIM_AEN_OFFLINE);
++		}
+ 		break;
+ 
+ 	case BFA_FCS_ITNIM_SM_DELETE:
+@@ -382,6 +388,33 @@ bfa_fcs_itnim_sm_initiator(struct bfa_fcs_itnim_s *itnim,
+ }
+ 
+ static void
++bfa_fcs_itnim_aen_post(struct bfa_fcs_itnim_s *itnim,
++			enum bfa_itnim_aen_event event)
++{
++	struct bfa_fcs_rport_s *rport = itnim->rport;
++	struct bfad_s *bfad = (struct bfad_s *)itnim->fcs->bfad;
++	struct bfa_aen_entry_s	*aen_entry;
++
++	/* Don't post events for well known addresses */
++	if (BFA_FCS_PID_IS_WKA(rport->pid))
++		return;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.itnim.vf_id = rport->port->fabric->vf_id;
++	aen_entry->aen_data.itnim.ppwwn = bfa_fcs_lport_get_pwwn(
++					bfa_fcs_get_base_port(itnim->fcs));
++	aen_entry->aen_data.itnim.lpwwn = bfa_fcs_lport_get_pwwn(rport->port);
++	aen_entry->aen_data.itnim.rpwwn = rport->pwwn;
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++rport->fcs->fcs_aen_seq,
++				  BFA_AEN_CAT_ITNIM, event);
++}
++
++static void
+ bfa_fcs_itnim_send_prli(void *itnim_cbarg, struct bfa_fcxp_s *fcxp_alloced)
+ {
+ 	struct bfa_fcs_itnim_s *itnim = itnim_cbarg;
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index f8251a9..d4f951f 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -16,6 +16,7 @@
+  */
+ 
+ #include "bfad_drv.h"
++#include "bfad_im.h"
+ #include "bfa_fcs.h"
+ #include "bfa_fcbuild.h"
+ #include "bfa_fc.h"
+@@ -300,6 +301,31 @@ bfa_fcs_lport_sm_deleting(
+  */
+ 
+ /*
++ * Send AEN notification
++ */
++static void
++bfa_fcs_lport_aen_post(struct bfa_fcs_lport_s *port,
++			enum bfa_lport_aen_event event)
++{
++	struct bfad_s *bfad = (struct bfad_s *)port->fabric->fcs->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.lport.vf_id = port->fabric->vf_id;
++	aen_entry->aen_data.lport.roles = port->port_cfg.roles;
++	aen_entry->aen_data.lport.ppwwn = bfa_fcs_lport_get_pwwn(
++					bfa_fcs_get_base_port(port->fcs));
++	aen_entry->aen_data.lport.lpwwn = bfa_fcs_lport_get_pwwn(port);
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++port->fcs->fcs_aen_seq,
++				  BFA_AEN_CAT_LPORT, event);
++}
++
++/*
+  * Send a LS reject
+  */
+ static void
+@@ -593,6 +619,7 @@ bfa_fcs_lport_online_actions(struct bfa_fcs_lport_s *port)
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"Logical port online: WWN = %s Role = %s\n",
+ 		lpwwn_buf, "Initiator");
++	bfa_fcs_lport_aen_post(port, BFA_LPORT_AEN_ONLINE);
+ 
+ 	bfad->bfad_flags |= BFAD_PORT_ONLINE;
+ }
+@@ -611,14 +638,17 @@ bfa_fcs_lport_offline_actions(struct bfa_fcs_lport_s *port)
+ 
+ 	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
+ 	if (bfa_sm_cmp_state(port->fabric,
+-			bfa_fcs_fabric_sm_online) == BFA_TRUE)
++			bfa_fcs_fabric_sm_online) == BFA_TRUE) {
+ 		BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+ 		"Logical port lost fabric connectivity: WWN = %s Role = %s\n",
+ 		lpwwn_buf, "Initiator");
+-	else
++		bfa_fcs_lport_aen_post(port, BFA_LPORT_AEN_DISCONNECT);
++	} else {
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"Logical port taken offline: WWN = %s Role = %s\n",
+ 		lpwwn_buf, "Initiator");
++		bfa_fcs_lport_aen_post(port, BFA_LPORT_AEN_OFFLINE);
++	}
+ 
+ 	list_for_each_safe(qe, qen, &port->rport_q) {
+ 		rport = (struct bfa_fcs_rport_s *) qe;
+@@ -676,6 +706,7 @@ bfa_fcs_lport_deleted(struct bfa_fcs_lport_s *port)
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"Logical port deleted: WWN = %s Role = %s\n",
+ 		lpwwn_buf, "Initiator");
++	bfa_fcs_lport_aen_post(port, BFA_LPORT_AEN_DELETE);
+ 
+ 	/* Base port will be deleted by the OS driver */
+ 	if (port->vport) {
+@@ -973,6 +1004,7 @@ bfa_fcs_lport_init(struct bfa_fcs_lport_s *lport,
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"New logical port created: WWN = %s Role = %s\n",
+ 		lpwwn_buf, "Initiator");
++	bfa_fcs_lport_aen_post(lport, BFA_LPORT_AEN_NEW);
+ 
+ 	bfa_sm_set_state(lport, bfa_fcs_lport_sm_uninit);
+ 	bfa_sm_send_event(lport, BFA_FCS_PORT_SM_CREATE);
+@@ -5559,6 +5591,31 @@ bfa_fcs_vport_sm_logo(struct bfa_fcs_vport_s *vport,
+  *  fcs_vport_private FCS virtual port private functions
+  */
+ /*
++ * Send AEN notification
++ */
++static void
++bfa_fcs_vport_aen_post(struct bfa_fcs_lport_s *port,
++		       enum bfa_lport_aen_event event)
++{
++	struct bfad_s *bfad = (struct bfad_s *)port->fabric->fcs->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.lport.vf_id = port->fabric->vf_id;
++	aen_entry->aen_data.lport.roles = port->port_cfg.roles;
++	aen_entry->aen_data.lport.ppwwn = bfa_fcs_lport_get_pwwn(
++					bfa_fcs_get_base_port(port->fcs));
++	aen_entry->aen_data.lport.lpwwn = bfa_fcs_lport_get_pwwn(port);
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++port->fcs->fcs_aen_seq,
++				  BFA_AEN_CAT_LPORT, event);
++}
++
++/*
+  * This routine will be called to send a FDISC command.
+  */
+ static void
+@@ -5585,8 +5642,11 @@ bfa_fcs_vport_fdisc_rejected(struct bfa_fcs_vport_s *vport)
+ 	case FC_LS_RJT_EXP_INVALID_NPORT_ID: /* by Cisco */
+ 		if (vport->fdisc_retries < BFA_FCS_VPORT_MAX_RETRIES)
+ 			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
+-		else
++		else {
++			bfa_fcs_vport_aen_post(&vport->lport,
++					BFA_LPORT_AEN_NPIV_DUP_WWN);
+ 			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_DUP_WWN);
++		}
+ 		break;
+ 
+ 	case FC_LS_RJT_EXP_INSUFF_RES:
+@@ -5596,11 +5656,17 @@ bfa_fcs_vport_fdisc_rejected(struct bfa_fcs_vport_s *vport)
+ 		 */
+ 		if (vport->fdisc_retries < BFA_FCS_VPORT_MAX_RETRIES)
+ 			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
+-		else
++		else {
++			bfa_fcs_vport_aen_post(&vport->lport,
++					BFA_LPORT_AEN_NPIV_FABRIC_MAX);
+ 			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_FAILED);
++		}
+ 		break;
+ 
+ 	default:
++		if (vport->fdisc_retries == 0)
++			bfa_fcs_vport_aen_post(&vport->lport,
++					BFA_LPORT_AEN_NPIV_UNKNOWN);
+ 		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
+ 	}
+ }
+diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
+index 2c51445..52628d5 100644
+--- a/drivers/scsi/bfa/bfa_fcs_rport.c
++++ b/drivers/scsi/bfa/bfa_fcs_rport.c
+@@ -20,6 +20,7 @@
+  */
+ 
+ #include "bfad_drv.h"
++#include "bfad_im.h"
+ #include "bfa_fcs.h"
+ #include "bfa_fcbuild.h"
+ 
+@@ -2041,6 +2042,35 @@ bfa_fcs_rport_free(struct bfa_fcs_rport_s *rport)
+ }
+ 
+ static void
++bfa_fcs_rport_aen_post(struct bfa_fcs_rport_s *rport,
++			enum bfa_rport_aen_event event,
++			struct bfa_rport_aen_data_s *data)
++{
++	struct bfa_fcs_lport_s *port = rport->port;
++	struct bfad_s *bfad = (struct bfad_s *)port->fcs->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	if (event == BFA_RPORT_AEN_QOS_PRIO)
++		aen_entry->aen_data.rport.priv.qos = data->priv.qos;
++	else if (event == BFA_RPORT_AEN_QOS_FLOWID)
++		aen_entry->aen_data.rport.priv.qos = data->priv.qos;
++
++	aen_entry->aen_data.rport.vf_id = rport->port->fabric->vf_id;
++	aen_entry->aen_data.rport.ppwwn = bfa_fcs_lport_get_pwwn(
++					bfa_fcs_get_base_port(rport->fcs));
++	aen_entry->aen_data.rport.lpwwn = bfa_fcs_lport_get_pwwn(rport->port);
++	aen_entry->aen_data.rport.rpwwn = rport->pwwn;
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++rport->fcs->fcs_aen_seq,
++				  BFA_AEN_CAT_RPORT, event);
++}
++
++static void
+ bfa_fcs_rport_online_action(struct bfa_fcs_rport_s *rport)
+ {
+ 	struct bfa_fcs_lport_s *port = rport->port;
+@@ -2063,10 +2093,12 @@ bfa_fcs_rport_online_action(struct bfa_fcs_rport_s *rport)
+ 
+ 	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
+ 	wwn2str(rpwwn_buf, rport->pwwn);
+-	if (!BFA_FCS_PID_IS_WKA(rport->pid))
++	if (!BFA_FCS_PID_IS_WKA(rport->pid)) {
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"Remote port (WWN = %s) online for logical port (WWN = %s)\n",
+ 		rpwwn_buf, lpwwn_buf);
++		bfa_fcs_rport_aen_post(rport, BFA_RPORT_AEN_ONLINE, NULL);
++	}
+ }
+ 
+ static void
+@@ -2083,16 +2115,21 @@ bfa_fcs_rport_offline_action(struct bfa_fcs_rport_s *rport)
+ 	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
+ 	wwn2str(rpwwn_buf, rport->pwwn);
+ 	if (!BFA_FCS_PID_IS_WKA(rport->pid)) {
+-		if (bfa_fcs_lport_is_online(rport->port) == BFA_TRUE)
++		if (bfa_fcs_lport_is_online(rport->port) == BFA_TRUE) {
+ 			BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+ 				"Remote port (WWN = %s) connectivity lost for "
+ 				"logical port (WWN = %s)\n",
+ 				rpwwn_buf, lpwwn_buf);
+-		else
++			bfa_fcs_rport_aen_post(rport,
++				BFA_RPORT_AEN_DISCONNECT, NULL);
++		} else {
+ 			BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 				"Remote port (WWN = %s) offlined by "
+ 				"logical port (WWN = %s)\n",
+ 				rpwwn_buf, lpwwn_buf);
++			bfa_fcs_rport_aen_post(rport,
++				BFA_RPORT_AEN_OFFLINE, NULL);
++		}
+ 	}
+ 
+ 	if (bfa_fcs_lport_is_initiator(port)) {
+@@ -2366,8 +2403,11 @@ bfa_cb_rport_qos_scn_flowid(void *cbarg,
+ 		struct bfa_rport_qos_attr_s new_qos_attr)
+ {
+ 	struct bfa_fcs_rport_s *rport = (struct bfa_fcs_rport_s *) cbarg;
++	struct bfa_rport_aen_data_s aen_data;
+ 
+ 	bfa_trc(rport->fcs, rport->pwwn);
++	aen_data.priv.qos = new_qos_attr;
++	bfa_fcs_rport_aen_post(rport, BFA_RPORT_AEN_QOS_FLOWID, &aen_data);
+ }
+ 
+ /*
+@@ -2390,8 +2430,11 @@ bfa_cb_rport_qos_scn_prio(void *cbarg,
+ 		struct bfa_rport_qos_attr_s new_qos_attr)
+ {
+ 	struct bfa_fcs_rport_s *rport = (struct bfa_fcs_rport_s *) cbarg;
++	struct bfa_rport_aen_data_s aen_data;
+ 
+ 	bfa_trc(rport->fcs, rport->pwwn);
++	aen_data.priv.qos = new_qos_attr;
++	bfa_fcs_rport_aen_post(rport, BFA_RPORT_AEN_QOS_PRIO, &aen_data);
+ }
+ 
+ /*
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index d6c2bf3..27c5565 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -16,6 +16,7 @@
+  */
+ 
+ #include "bfad_drv.h"
++#include "bfad_im.h"
+ #include "bfa_ioc.h"
+ #include "bfi_reg.h"
+ #include "bfa_defs.h"
+@@ -458,6 +459,7 @@ bfa_ioc_sm_op_entry(struct bfa_ioc_s *ioc)
+ 	ioc->cbfn->enable_cbfn(ioc->bfa, BFA_STATUS_OK);
+ 	bfa_ioc_event_notify(ioc, BFA_IOC_E_ENABLED);
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level, "IOC enabled\n");
++	bfa_ioc_aen_post(ioc, BFA_IOC_AEN_ENABLE);
+ }
+ 
+ static void
+@@ -502,6 +504,7 @@ bfa_ioc_sm_disabling_entry(struct bfa_ioc_s *ioc)
+ 	struct bfad_s *bfad = (struct bfad_s *)ioc->bfa->bfad;
+ 	bfa_fsm_send_event(&ioc->iocpf, IOCPF_E_DISABLE);
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level, "IOC disabled\n");
++	bfa_ioc_aen_post(ioc, BFA_IOC_AEN_DISABLE);
+ }
+ 
+ /*
+@@ -1966,6 +1969,7 @@ bfa_ioc_fail_notify(struct bfa_ioc_s *ioc)
+ 
+ 	BFA_LOG(KERN_CRIT, bfad, bfa_log_level,
+ 		"Heart Beat of IOC has failed\n");
++	bfa_ioc_aen_post(ioc, BFA_IOC_AEN_HBFAIL);
+ 
+ }
+ 
+@@ -1980,6 +1984,7 @@ bfa_ioc_pf_fwmismatch(struct bfa_ioc_s *ioc)
+ 	BFA_LOG(KERN_WARNING, bfad, bfa_log_level,
+ 		"Running firmware version is incompatible "
+ 		"with the driver version\n");
++	bfa_ioc_aen_post(ioc, BFA_IOC_AEN_FWMISMATCH);
+ }
+ 
+ bfa_status_t
+@@ -2679,6 +2684,43 @@ bfa_ioc_get_mfg_mac(struct bfa_ioc_s *ioc)
+ }
+ 
+ /*
++ * Send AEN notification
++ */
++void
++bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event)
++{
++	struct bfad_s *bfad = (struct bfad_s *)ioc->bfa->bfad;
++	struct bfa_aen_entry_s	*aen_entry;
++	enum bfa_ioc_type_e ioc_type;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	ioc_type = bfa_ioc_get_type(ioc);
++	switch (ioc_type) {
++	case BFA_IOC_TYPE_FC:
++		aen_entry->aen_data.ioc.pwwn = ioc->attr->pwwn;
++		break;
++	case BFA_IOC_TYPE_FCoE:
++		aen_entry->aen_data.ioc.pwwn = ioc->attr->pwwn;
++		aen_entry->aen_data.ioc.mac = bfa_ioc_get_mac(ioc);
++		break;
++	case BFA_IOC_TYPE_LL:
++		aen_entry->aen_data.ioc.mac = bfa_ioc_get_mac(ioc);
++		break;
++	default:
++		WARN_ON(ioc_type != BFA_IOC_TYPE_FC);
++		break;
++	}
++
++	/* Send the AEN notification */
++	aen_entry->aen_data.ioc.ioc_type = ioc_type;
++	bfad_im_post_vendor_event(aen_entry, bfad, ++ioc->ioc_aen_seq,
++				  BFA_AEN_CAT_IOC, event);
++}
++
++/*
+  * Retrieve saved firmware trace from a prior IOC failure.
+  */
+ bfa_status_t
+@@ -2879,6 +2921,10 @@ bfa_ioc_check_attr_wwns(struct bfa_ioc_s *ioc)
+ {
+ 	if (bfa_ioc_get_type(ioc) == BFA_IOC_TYPE_LL)
+ 		return;
++	if (ioc->attr->nwwn == 0)
++		bfa_ioc_aen_post(ioc, BFA_IOC_AEN_INVALID_NWWN);
++	if (ioc->attr->pwwn == 0)
++		bfa_ioc_aen_post(ioc, BFA_IOC_AEN_INVALID_PWWN);
+ }
+ 
+ /*
+@@ -3443,6 +3489,54 @@ bfa_sfp_notify(void *sfp_arg, enum bfa_ioc_event_e event)
+ }
+ 
+ /*
++ * SFP's State Change Notification post to AEN
++ */
++static void
++bfa_sfp_scn_aen_post(struct bfa_sfp_s *sfp, struct bfi_sfp_scn_s *rsp)
++{
++	struct bfad_s *bfad = (struct bfad_s *)sfp->ioc->bfa->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++	enum bfa_port_aen_event aen_evt = 0;
++
++	bfa_trc(sfp, (((u64)rsp->pomlvl) << 16) | (((u64)rsp->sfpid) << 8) |
++		      ((u64)rsp->event));
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.port.ioc_type = bfa_ioc_get_type(sfp->ioc);
++	aen_entry->aen_data.port.pwwn = sfp->ioc->attr->pwwn;
++	aen_entry->aen_data.port.mac = bfa_ioc_get_mac(sfp->ioc);
++
++	switch (rsp->event) {
++	case BFA_SFP_SCN_INSERTED:
++		aen_evt = BFA_PORT_AEN_SFP_INSERT;
++		break;
++	case BFA_SFP_SCN_REMOVED:
++		aen_evt = BFA_PORT_AEN_SFP_REMOVE;
++		break;
++	case BFA_SFP_SCN_FAILED:
++		aen_evt = BFA_PORT_AEN_SFP_ACCESS_ERROR;
++		break;
++	case BFA_SFP_SCN_UNSUPPORT:
++		aen_evt = BFA_PORT_AEN_SFP_UNSUPPORT;
++		break;
++	case BFA_SFP_SCN_POM:
++		aen_evt = BFA_PORT_AEN_SFP_POM;
++		aen_entry->aen_data.port.level = rsp->pomlvl;
++		break;
++	default:
++		bfa_trc(sfp, rsp->event);
++		WARN_ON(1);
++	}
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++sfp->ioc->ioc_aen_seq,
++				  BFA_AEN_CAT_PORT, aen_evt);
++}
++
++/*
+  *	SFP get data send
+  */
+ static void
+@@ -3482,6 +3576,50 @@ bfa_sfp_getdata(struct bfa_sfp_s *sfp, enum bfi_sfp_mem_e memtype)
+ }
+ 
+ /*
++ *	SFP scn handler
++ */
++static void
++bfa_sfp_scn(struct bfa_sfp_s *sfp, struct bfi_mbmsg_s *msg)
++{
++	struct bfi_sfp_scn_s *rsp = (struct bfi_sfp_scn_s *) msg;
++
++	switch (rsp->event) {
++	case BFA_SFP_SCN_INSERTED:
++		sfp->state = BFA_SFP_STATE_INSERTED;
++		sfp->data_valid = 0;
++		bfa_sfp_scn_aen_post(sfp, rsp);
++		break;
++	case BFA_SFP_SCN_REMOVED:
++		sfp->state = BFA_SFP_STATE_REMOVED;
++		sfp->data_valid = 0;
++		bfa_sfp_scn_aen_post(sfp, rsp);
++		 break;
++	case BFA_SFP_SCN_FAILED:
++		sfp->state = BFA_SFP_STATE_FAILED;
++		sfp->data_valid = 0;
++		bfa_sfp_scn_aen_post(sfp, rsp);
++		break;
++	case BFA_SFP_SCN_UNSUPPORT:
++		sfp->state = BFA_SFP_STATE_UNSUPPORT;
++		bfa_sfp_scn_aen_post(sfp, rsp);
++		if (!sfp->lock)
++			bfa_sfp_getdata(sfp, BFI_SFP_MEM_ALL);
++		break;
++	case BFA_SFP_SCN_POM:
++		bfa_sfp_scn_aen_post(sfp, rsp);
++		break;
++	case BFA_SFP_SCN_VALID:
++		sfp->state = BFA_SFP_STATE_VALID;
++		if (!sfp->lock)
++			bfa_sfp_getdata(sfp, BFI_SFP_MEM_ALL);
++		break;
++	default:
++		bfa_trc(sfp, rsp->event);
++		WARN_ON(1);
++	}
++}
++
++/*
+  * SFP show complete
+  */
+ static void
+@@ -3645,7 +3783,7 @@ bfa_sfp_intr(void *sfparg, struct bfi_mbmsg_s *msg)
+ 		break;
+ 
+ 	case BFI_SFP_I2H_SCN:
+-		bfa_trc(sfp, msg->mh.msg_id);
++		bfa_sfp_scn(sfp, msg);
+ 		break;
+ 
+ 	default:
+@@ -3838,6 +3976,26 @@ bfa_sfp_speed(struct bfa_sfp_s *sfp, enum bfa_port_speed portspeed,
+ 	BFA_ROUNDUP(0x010000 + sizeof(struct bfa_mfg_block_s), BFA_FLASH_SEG_SZ)
+ 
+ static void
++bfa_flash_aen_audit_post(struct bfa_ioc_s *ioc, enum bfa_audit_aen_event event,
++			int inst, int type)
++{
++	struct bfad_s *bfad = (struct bfad_s *)ioc->bfa->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.audit.pwwn = ioc->attr->pwwn;
++	aen_entry->aen_data.audit.partition_inst = inst;
++	aen_entry->aen_data.audit.partition_type = type;
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++ioc->ioc_aen_seq,
++				  BFA_AEN_CAT_AUDIT, event);
++}
++
++static void
+ bfa_flash_cb(struct bfa_flash_s *flash)
+ {
+ 	flash->op_busy = 0;
+@@ -3978,6 +4136,7 @@ bfa_flash_intr(void *flasharg, struct bfi_mbmsg_s *msg)
+ 		struct bfi_flash_erase_rsp_s *erase;
+ 		struct bfi_flash_write_rsp_s *write;
+ 		struct bfi_flash_read_rsp_s *read;
++		struct bfi_flash_event_s *event;
+ 		struct bfi_mbmsg_s   *msg;
+ 	} m;
+ 
+@@ -4061,8 +4220,19 @@ bfa_flash_intr(void *flasharg, struct bfi_mbmsg_s *msg)
+ 		}
+ 		break;
+ 	case BFI_FLASH_I2H_BOOT_VER_RSP:
++		break;
+ 	case BFI_FLASH_I2H_EVENT:
+-		bfa_trc(flash, msg->mh.msg_id);
++		status = be32_to_cpu(m.event->status);
++		bfa_trc(flash, status);
++		if (status == BFA_STATUS_BAD_FWCFG)
++			bfa_ioc_aen_post(flash->ioc, BFA_IOC_AEN_FWCFG_ERROR);
++		else if (status == BFA_STATUS_INVALID_VENDOR) {
++			u32 param;
++			param = be32_to_cpu(m.event->param);
++			bfa_trc(flash, param);
++			bfa_ioc_aen_post(flash->ioc,
++				BFA_IOC_AEN_INVALID_VENDOR);
++		}
+ 		break;
+ 
+ 	default:
+@@ -4204,6 +4374,8 @@ bfa_flash_erase_part(struct bfa_flash_s *flash, enum bfa_flash_part_type type,
+ 	flash->instance = instance;
+ 
+ 	bfa_flash_erase_send(flash);
++	bfa_flash_aen_audit_post(flash->ioc, BFA_AUDIT_AEN_FLASH_ERASE,
++				instance, type);
+ 	return BFA_STATUS_OK;
+ }
+ 
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index c5ecd2e..28bf6e1 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -327,6 +327,7 @@ struct bfa_ioc_s {
+ 	enum bfa_mode_s		port_mode;
+ 	u8			ad_cap_bm;	/* adapter cap bit mask */
+ 	u8			port_mode_cfg;	/* config port mode */
++	int			ioc_aen_seq;
+ };
+ 
+ struct bfa_ioc_hwif_s {
+@@ -803,6 +804,7 @@ void bfa_ioc_fwver_get(struct bfa_ioc_s *ioc,
+ 			struct bfi_ioc_image_hdr_s *fwhdr);
+ bfa_boolean_t bfa_ioc_fwver_cmp(struct bfa_ioc_s *ioc,
+ 			struct bfi_ioc_image_hdr_s *fwhdr);
++void bfa_ioc_aen_post(struct bfa_ioc_s *ioc, enum bfa_ioc_aen_event event);
+ bfa_status_t bfa_ioc_fw_stats_get(struct bfa_ioc_s *ioc, void *stats);
+ bfa_status_t bfa_ioc_fw_stats_clear(struct bfa_ioc_s *ioc);
+ 
+diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
+index 1c6efd4..cd51ddf 100644
+--- a/drivers/scsi/bfa/bfa_modules.h
++++ b/drivers/scsi/bfa/bfa_modules.h
+@@ -119,6 +119,7 @@ struct bfa_s {
+ 	struct list_head	reqq_waitq[BFI_IOC_MAX_CQS];
+ 	bfa_boolean_t		fcs;		/*  FCS is attached to BFA */
+ 	struct bfa_msix_s	msix;
++	int			bfa_aen_seq;
+ };
+ 
+ extern bfa_boolean_t bfa_auto_recover;
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 21caaef..136f5f9 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -16,6 +16,7 @@
+  */
+ 
+ #include "bfad_drv.h"
++#include "bfad_im.h"
+ #include "bfa_plog.h"
+ #include "bfa_cs.h"
+ #include "bfa_modules.h"
+@@ -2007,6 +2008,24 @@ bfa_lps_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ 	}
+ }
+ 
++static void
++bfa_fcport_aen_post(struct bfa_fcport_s *fcport, enum bfa_port_aen_event event)
++{
++	struct bfad_s *bfad = (struct bfad_s *)fcport->bfa->bfad;
++	struct bfa_aen_entry_s  *aen_entry;
++
++	bfad_get_aen_entry(bfad, aen_entry);
++	if (!aen_entry)
++		return;
++
++	aen_entry->aen_data.port.ioc_type = bfa_get_type(fcport->bfa);
++	aen_entry->aen_data.port.pwwn = fcport->pwwn;
++
++	/* Send the AEN notification */
++	bfad_im_post_vendor_event(aen_entry, bfad, ++fcport->bfa->bfa_aen_seq,
++				  BFA_AEN_CAT_PORT, event);
++}
++
+ /*
+  * FC PORT state machine functions
+  */
+@@ -2095,6 +2114,7 @@ bfa_fcport_sm_enabling_qwait(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port disabled: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISABLE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_LINKUP:
+@@ -2155,6 +2175,7 @@ bfa_fcport_sm_enabling(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port disabled: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISABLE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_STOP:
+@@ -2208,6 +2229,7 @@ bfa_fcport_sm_linkdown(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port online: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_ONLINE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_LINKDOWN:
+@@ -2234,6 +2256,7 @@ bfa_fcport_sm_linkdown(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port disabled: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISABLE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_STOP:
+@@ -2279,8 +2302,10 @@ bfa_fcport_sm_linkup(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port offline: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_OFFLINE);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port disabled: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISABLE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_LINKDOWN:
+@@ -2290,26 +2315,32 @@ bfa_fcport_sm_linkup(struct bfa_fcport_s *fcport,
+ 		bfa_plog_str(fcport->bfa->plog, BFA_PL_MID_HAL,
+ 				BFA_PL_EID_PORT_ST_CHANGE, 0, "Port Linkdown");
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+-		if (BFA_PORT_IS_DISABLED(fcport->bfa))
++		if (BFA_PORT_IS_DISABLED(fcport->bfa)) {
+ 			BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 				"Base port offline: WWN = %s\n", pwwn_buf);
+-		else
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_OFFLINE);
++		} else {
+ 			BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+ 				"Base port (WWN = %s) "
+ 				"lost fabric connectivity\n", pwwn_buf);
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISCONNECT);
++		}
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_STOP:
+ 		bfa_sm_set_state(fcport, bfa_fcport_sm_stopped);
+ 		bfa_fcport_reset_linkinfo(fcport);
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+-		if (BFA_PORT_IS_DISABLED(fcport->bfa))
++		if (BFA_PORT_IS_DISABLED(fcport->bfa)) {
+ 			BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 				"Base port offline: WWN = %s\n", pwwn_buf);
+-		else
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_OFFLINE);
++		} else {
+ 			BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+ 				"Base port (WWN = %s) "
+ 				"lost fabric connectivity\n", pwwn_buf);
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISCONNECT);
++		}
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_HWFAIL:
+@@ -2317,13 +2348,16 @@ bfa_fcport_sm_linkup(struct bfa_fcport_s *fcport,
+ 		bfa_fcport_reset_linkinfo(fcport);
+ 		bfa_fcport_scn(fcport, BFA_PORT_LINKDOWN, BFA_FALSE);
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+-		if (BFA_PORT_IS_DISABLED(fcport->bfa))
++		if (BFA_PORT_IS_DISABLED(fcport->bfa)) {
+ 			BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 				"Base port offline: WWN = %s\n", pwwn_buf);
+-		else
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_OFFLINE);
++		} else {
+ 			BFA_LOG(KERN_ERR, bfad, bfa_log_level,
+ 				"Base port (WWN = %s) "
+ 				"lost fabric connectivity\n", pwwn_buf);
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_DISCONNECT);
++		}
+ 		break;
+ 
+ 	default:
+@@ -2454,6 +2488,7 @@ bfa_fcport_sm_disabling(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port enabled: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_ENABLE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_STOP:
+@@ -2508,6 +2543,7 @@ bfa_fcport_sm_disabled(struct bfa_fcport_s *fcport,
+ 		wwn2str(pwwn_buf, fcport->pwwn);
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port enabled: WWN = %s\n", pwwn_buf);
++		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_ENABLE);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_DISABLE:
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index beb30a7..66fb725 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -1348,7 +1348,7 @@ int
+ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
+ {
+ 	struct bfad_s	*bfad;
+-	int		error = -ENODEV, retval;
++	int		error = -ENODEV, retval, i;
+ 
+ 	/* For single port cards - only claim function 0 */
+ 	if ((pdev->device == BFA_PCI_DEVICE_ID_FC_8G1P) &&
+@@ -1372,6 +1372,12 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	bfa_trc_init(bfad->trcmod);
+ 	bfa_trc(bfad, bfad_inst);
+ 
++	/* AEN INIT */
++	INIT_LIST_HEAD(&bfad->free_aen_q);
++	INIT_LIST_HEAD(&bfad->active_aen_q);
++	for (i = 0; i < BFA_AEN_MAX_ENTRY; i++)
++		list_add_tail(&bfad->aen_list[i].qe, &bfad->free_aen_q);
++
+ 	if (!(bfad_load_fwimg(pdev))) {
+ 		kfree(bfad->trcmod);
+ 		goto out_alloc_trace_failure;
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 89f863e..88bfa92 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -90,6 +90,7 @@ bfad_iocmd_ioc_get_info(struct bfad_s *bfad, void *cmd)
+ 	bfa_get_adapter_serial_num(&bfad->bfa, iocmd->serialnum);
+ 	iocmd->factorynwwn = pattr.factorynwwn;
+ 	iocmd->factorypwwn = pattr.factorypwwn;
++	iocmd->bfad_num = bfad->inst_no;
+ 	im_port = bfad->pport.im_port;
+ 	iocmd->host = im_port->shost->host_no;
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index 48661a2..e00aa03 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -224,6 +224,10 @@ struct bfad_s {
+ 	char *regdata;
+ 	u32 reglen;
+ 	struct dentry *bfad_dentry_files[5];
++	struct list_head	free_aen_q;
++	struct list_head	active_aen_q;
++	struct bfa_aen_entry_s	aen_list[BFA_AEN_MAX_ENTRY];
++	spinlock_t		bfad_aen_spinlock;
+ };
+ 
+ /* BFAD state machine events */
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index f2bf812..ae15628 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -656,6 +656,31 @@ bfad_im_port_clean(struct bfad_im_port_s *im_port)
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ }
+ 
++static void bfad_aen_im_notify_handler(struct work_struct *work)
++{
++	struct bfad_im_s *im =
++		container_of(work, struct bfad_im_s, aen_im_notify_work);
++	struct bfa_aen_entry_s *aen_entry;
++	struct bfad_s *bfad = im->bfad;
++	struct Scsi_Host *shost = bfad->pport.im_port->shost;
++	void *event_data;
++	unsigned long 	flags;
++
++	while (!list_empty(&bfad->active_aen_q)) {
++		spin_lock_irqsave(&bfad->bfad_aen_spinlock, flags);
++		bfa_q_deq(&bfad->active_aen_q, &aen_entry);
++		spin_unlock_irqrestore(&bfad->bfad_aen_spinlock, flags);
++		event_data = (char *)aen_entry + sizeof(struct list_head);
++		fc_host_post_vendor_event(shost, fc_get_event_number(),
++				sizeof(struct bfa_aen_entry_s) -
++				sizeof(struct list_head),
++				(char *)event_data, BFAD_NL_VENDOR_ID);
++		spin_lock_irqsave(&bfad->bfad_aen_spinlock, flags);
++		list_add_tail(&aen_entry->qe, &bfad->free_aen_q);
++		spin_unlock_irqrestore(&bfad->bfad_aen_spinlock, flags);
++	}
++}
++
+ bfa_status_t
+ bfad_im_probe(struct bfad_s *bfad)
+ {
+@@ -676,6 +701,7 @@ bfad_im_probe(struct bfad_s *bfad)
+ 		rc = BFA_STATUS_FAILED;
+ 	}
+ 
++	INIT_WORK(&im->aen_im_notify_work, bfad_aen_im_notify_handler);
+ ext:
+ 	return rc;
+ }
+diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
+index 4fe34d5..004b6cf 100644
+--- a/drivers/scsi/bfa/bfad_im.h
++++ b/drivers/scsi/bfa/bfad_im.h
+@@ -115,8 +115,30 @@ struct bfad_im_s {
+ 	struct bfad_s         *bfad;
+ 	struct workqueue_struct *drv_workq;
+ 	char            drv_workq_name[KOBJ_NAME_LEN];
++	struct work_struct	aen_im_notify_work;
+ };
+ 
++#define bfad_get_aen_entry(_drv, _entry) do {				\
++	unsigned long	_flags;						\
++	spin_lock_irqsave(&(_drv)->bfad_aen_spinlock, _flags);		\
++	bfa_q_deq(&(_drv)->free_aen_q, &(_entry));			\
++	if (_entry)							\
++		list_add_tail(&(_entry)->qe, &(_drv)->active_aen_q);	\
++	spin_unlock_irqrestore(&(_drv)->bfad_aen_spinlock, _flags);	\
++} while (0)
++
++/* post fc_host vendor event */
++#define bfad_im_post_vendor_event(_entry, _drv, _cnt, _cat, _evt) do {	      \
++	do_gettimeofday(&(_entry)->aen_tv);				      \
++	(_entry)->bfad_num = (_drv)->inst_no;				      \
++	(_entry)->seq_num = (_cnt);					      \
++	(_entry)->aen_category = (_cat);				      \
++	(_entry)->aen_type = (_evt);					      \
++	if ((_drv)->bfad_flags & BFAD_FC4_PROBE_DONE)			      \
++		queue_work((_drv)->im->drv_workq,			      \
++			   &(_drv)->im->aen_im_notify_work);		      \
++} while (0)
++
+ struct Scsi_Host *bfad_scsi_host_alloc(struct bfad_im_port_s *im_port,
+ 				struct bfad_s *);
+ bfa_status_t bfad_thread_workq(struct bfad_s *bfad);
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 1e258d5..b2ba0b2 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -784,6 +784,17 @@ enum bfi_sfp_i2h_e {
+ };
+ 
+ /*
++ *	SFP state change notification
++ */
++struct bfi_sfp_scn_s {
++	struct bfi_mhdr_s mhr;	/* host msg header        */
++	u8	event;
++	u8	sfpid;
++	u8	pomlvl;	/* pom level: normal/warning/alarm */
++	u8	is_elb;	/* e-loopback */
++};
++
++/*
+  *	SFP state
+  */
+ enum bfa_sfp_stat_e {
+@@ -926,6 +937,15 @@ struct bfi_flash_erase_rsp_s {
+ };
+ 
+ /*
++ * Flash event notification
++ */
++struct bfi_flash_event_s {
++	struct bfi_mhdr_s	mh;	/* Common msg header */
++	bfa_status_t		status;
++	u32			param;
++};
++
++/*
+  *----------------------------------------------------------------------
+  *				DIAG
+  *----------------------------------------------------------------------
 -- 
 1.7.3.rc1
 
