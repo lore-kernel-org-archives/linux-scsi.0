@@ -1,129 +1,40 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: Linux 3.0 oopses when pulling a USB CDROM
-Date: Wed, 20 Jul 2011 17:58:01 +0800
-Message-ID: <8E203115BDCF42ACA065296214E5B7A0@usish.com.cn>
-References: <20110702181146.GM23059@one.firstfloor.org><Pine.LNX.4.44L0.1107021544550.16190-100000@netrider.rowland.org> <CAA9_cmcPhkA5myxeR5aJWBQ=-C3VuG_M9Appp5WyrLoU5fnw2w@mail.gmail.com>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH] mptfusion : Added check for SILI bit in READ_6 CDB for DATA
+ UNDERRUN ERRATA
+Date: Wed, 20 Jul 2011 21:28:03 +0530
+Message-ID: <20110720155754.GA20840@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmcPhkA5myxeR5aJWBQ=-C3VuG_M9Appp5WyrLoU5fnw2w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, 'Alan Stern' <stern@rowland.harvard.edu>
-Cc: 'Andi Kleen' <andi@firstfloor.org>, axboe@kernel.dk, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, 'Dave Jones' <davej@redhat.com>, 'SCSI development list' <linux-scsi@vger.kernel.org>, 'Kernel development list' <linux-kernel@vger.kernel.org>, "'Rafael J. Wysocki'" <rjw@sisk.pl>, 'USB list' <linux-usb@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:44965 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751846Ab1GTPgZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jul 2011 11:36:25 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: JBottomley@parallels.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com, Nagalakshmi.Nandigama@lsi.com
 
->=20
-> On Sat, Jul 2, 2011 at 12:59 PM, Alan Stern <stern@rowland.harvard.ed=
-u>
-wrote:
-> > On Sat, 2 Jul 2011, Andi Kleen wrote:
-> >
-> >> > The problem is that blk_peek_request() calls scsi_prep_fn(), whi=
-ch
-> >> > does this:
-> >> >
-> >> > =A0 =A0 struct scsi_device *sdev =3D q->queuedata;
-> >> > =A0 =A0 int ret =3D BLKPREP_KILL;
-> >> >
-> >> > =A0 =A0 if (req->cmd_type =3D=3D REQ_TYPE_BLOCK_PC)
-> >> > =A0 =A0 =A0 =A0 =A0 =A0 ret =3D scsi_setup_blk_pc_cmnd(sdev, req=
-);
-> >> > =A0 =A0 return scsi_prep_return(q, req, ret);
-> >> >
-> >> > It doesn't check to see if sdev is NULL, nor does
-> >> > scsi_setup_blk_pc_cmnd(). =A0That accounts for this error:
-> >>
-> >> I actually added a NULL check in scsi_setup_blk_pc_cmnd early on,
-> >> but that just caused RCU CPU stalls afterwards and then eventually
-> >> a hung system.
-> >
-> > The RCU problem is likely to be a separate issue. =A0It might even =
-be a
-> > result of the use-after-free problem with the elevator.
-> >
-> > At any rate, it's clear that the crash in the refcounting log you
-> > posted occurred because scsi_setup_blk_pc_cmnd() called
-> > scsi_prep_state_check(), which tried to dereference the NULL pointe=
-r.
-> >
-> > Would you like to try this patch to see if it fixes the problem? =A0=
-As I
-> > said before, I'm not certain it's the best thing to do, but it work=
-ed
-> > on my system.
-> >
-> > Alan Stern
-> >
-> >
-> >
-> >
-> > Index: usb-3.0/drivers/scsi/scsi_lib.c
-> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > --- usb-3.0.orig/drivers/scsi/scsi_lib.c
-> > +++ usb-3.0/drivers/scsi/scsi_lib.c
-> > @@ -1247,6 +1247,8 @@ int scsi_prep_fn(struct request_queue *q
-> > =A0 =A0 =A0 =A0struct scsi_device *sdev =3D q->queuedata;
-> > =A0 =A0 =A0 =A0int ret =3D BLKPREP_KILL;
-> >
-> > + =A0 =A0 =A0 if (!sdev)
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return ret;
-> > =A0 =A0 =A0 =A0if (req->cmd_type =3D=3D REQ_TYPE_BLOCK_PC)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0ret =3D scsi_setup_blk_pc_cmnd(sdev,=
- req);
-> > =A0 =A0 =A0 =A0return scsi_prep_return(q, req, ret);
-> > Index: usb-3.0/drivers/scsi/scsi_sysfs.c
-> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> > --- usb-3.0.orig/drivers/scsi/scsi_sysfs.c
-> > +++ usb-3.0/drivers/scsi/scsi_sysfs.c
-> > @@ -322,6 +322,8 @@ static void scsi_device_dev_release_user
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0kfree(evt);
-> > =A0 =A0 =A0 =A0}
-> >
-> > + =A0 =A0 =A0 /* Freeing the queue signals to block that we're done=
- */
-> > + =A0 =A0 =A0 scsi_free_queue(sdev->request_queue);
-> > =A0 =A0 =A0 =A0blk_put_queue(sdev->request_queue);
-> > =A0 =A0 =A0 =A0/* NULL queue means the device can't be used */
-> > =A0 =A0 =A0 =A0sdev->request_queue =3D NULL;
-> > @@ -936,8 +938,6 @@ void __scsi_remove_device(struct scsi_de
-> > =A0 =A0 =A0 =A0/* cause the request function to reject all I/O requ=
-ests */
-> > =A0 =A0 =A0 =A0sdev->request_queue->queuedata =3D NULL;
-> >
-> > - =A0 =A0 =A0 /* Freeing the queue signals to block that we're done=
- */
-> > - =A0 =A0 =A0 scsi_free_queue(sdev->request_queue);
-> > =A0 =A0 =A0 =A0put_device(dev);
-> > =A0}
->=20
-> This patch seems to resolve the block/scsi null-ptr de-references in
-> our libsas/isci environment, we have yet to try James' alternative
-> [1].  Do we potentially need both?
->=20
-> Commit 86cbfb56 moved scsi_free_queue to __scsi_remove_device() but i=
-t
-> seems only the "sdev->request_queue->queuedata =3D NULL" needed to be
-> moved?
->=20
-> The conversation appeared to be awaiting test results...
->=20
-> [1]: http://marc.info/?l=3Dlinux-scsi&m=3D131007155700831&w=3D2
->=20
-> --
-> Dan
-[Jack Wang]=20
-This patch fix kernel panic issue when hot-plut disk during I/O, I test=
- it
-using pm8001 with 3.0.0-rc6 with above patch.
+When READ_6 command is issued, the setting of SILI Bit in CDB is confirmed and
+if SILI bit is off, the processing of relavent Errata is executed.
 
+Earlier we did not have check for SILI bit in READ_6 CDB.
+As described in "ssc-r22", Now Driver is checking SILI bit for READ_6.
 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+---
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index a1d4ee6..ce61a57 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -827,7 +827,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_FRAME_HDR *mf, MPT_FRAME_HDR *mr)
+ 				 * DID_SOFT_ERROR is set.
+ 				 */
+ 				if (ioc->bus_type == SPI) {
+-					if (pScsiReq->CDB[0] == READ_6  ||
++					if ((pScsiReq->CDB[0] == READ_6  && ((pScsiReq->CDB[1] & 0x02) == 0)) ||
+ 					    pScsiReq->CDB[0] == READ_10 ||
+ 					    pScsiReq->CDB[0] == READ_12 ||
+ 					    pScsiReq->CDB[0] == READ_16 ||
