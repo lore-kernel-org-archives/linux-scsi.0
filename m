@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 09/15] bfa: Add support to configure trunking on Brocade adapter ports.
-Date: Wed, 20 Jul 2011 17:02:50 -0700
-Message-ID: <1311206570-7930-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 10/15] bfa: Added support to configure QOS and collect stats.
+Date: Wed, 20 Jul 2011 17:03:09 -0700
+Message-ID: <1311206589-9097-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56074 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56078 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751996Ab1GUADJ (ORCPT
+	by vger.kernel.org with ESMTP id S1752096Ab1GUAD2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2011 20:03:09 -0400
+	Wed, 20 Jul 2011 20:03:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,46 +18,79 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added logic to enable / disable trunking on Brocade adapter ports.
-	- Added logic to query trunking info.
+	- Added support to configure QOS on Brocade adapter ports.
+	- Added support to collect / reset QOS statistics.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c |   54 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfad_bsg.h |   10 ++++++++
- 2 files changed, 64 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfa_defs_svc.h |    1 +
+ drivers/scsi/bfa/bfa_svc.c      |   10 +++
+ drivers/scsi/bfa/bfad_bsg.c     |  137 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfad_bsg.h     |   20 ++++++
+ 4 files changed, 168 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index 21e3fbf..263438b 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -469,6 +469,7 @@ struct bfa_fw_stats_s {
+  * QoS states
+  */
+ enum bfa_qos_state {
++	BFA_QOS_DISABLED = 0,		/* QoS is disabled */
+ 	BFA_QOS_ONLINE = 1,		/*  QoS is online */
+ 	BFA_QOS_OFFLINE = 2,		/*  QoS is offline */
+ };
+diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
+index 9884d6e..d0ed4dd 100644
+--- a/drivers/scsi/bfa/bfa_svc.c
++++ b/drivers/scsi/bfa/bfa_svc.c
+@@ -2230,6 +2230,11 @@ bfa_fcport_sm_linkdown(struct bfa_fcport_s *fcport,
+ 		BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 			"Base port online: WWN = %s\n", pwwn_buf);
+ 		bfa_fcport_aen_post(fcport, BFA_PORT_AEN_ONLINE);
++
++		/* If QoS is enabled and it is not online, send AEN */
++		if (fcport->cfg.qos_enabled &&
++		    fcport->qos_attr.state != BFA_QOS_ONLINE)
++			bfa_fcport_aen_post(fcport, BFA_PORT_AEN_QOS_NEG);
+ 		break;
+ 
+ 	case BFA_FCPORT_SM_LINKDOWN:
+@@ -3454,6 +3459,11 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
+ 				fcport->use_flash_cfg = BFA_FALSE;
+ 			}
+ 
++			if (fcport->cfg.qos_enabled)
++				fcport->qos_attr.state = BFA_QOS_OFFLINE;
++			else
++				fcport->qos_attr.state = BFA_QOS_DISABLED;
++
+ 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
+ 		}
+ 		break;
 diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index f782ee4..55a9180 100644
+index 55a9180..2109ed3 100644
 --- a/drivers/scsi/bfa/bfad_bsg.c
 +++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2181,6 +2181,53 @@ out:
+@@ -2228,6 +2228,127 @@ bfad_iocmd_trunk_get_attr(struct bfad_s *bfad, void *cmd)
  	return 0;
  }
  
 +int
-+bfad_iocmd_cfg_trunk(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
++bfad_iocmd_qos(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
 +{
 +	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
 +	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(&bfad->bfa);
-+	struct bfa_fcport_trunk_s *trunk = &fcport->trunk;
 +	unsigned long	flags;
 +
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+
-+	if (v_cmd == IOCMD_TRUNK_ENABLE) {
-+		trunk->attr.state = BFA_TRUNK_OFFLINE;
-+		bfa_fcport_disable(&bfad->bfa);
-+		fcport->cfg.trunked = BFA_TRUE;
-+	} else if (v_cmd == IOCMD_TRUNK_DISABLE) {
-+		trunk->attr.state = BFA_TRUNK_DISABLED;
-+		bfa_fcport_disable(&bfad->bfa);
-+		fcport->cfg.trunked = BFA_FALSE;
++	if (bfa_ioc_get_type(&bfad->bfa.ioc) == BFA_IOC_TYPE_FC) {
++		if (v_cmd == IOCMD_QOS_ENABLE)
++			fcport->cfg.qos_enabled = BFA_TRUE;
++		else if (v_cmd == IOCMD_QOS_DISABLE)
++			fcport->cfg.qos_enabled = BFA_FALSE;
 +	}
-+
-+	if (!bfa_fcport_is_disabled(&bfad->bfa))
-+		bfa_fcport_enable(&bfad->bfa);
-+
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 +
 +	iocmd->status = BFA_STATUS_OK;
@@ -65,63 +98,165 @@ index f782ee4..55a9180 100644
 +}
 +
 +int
-+bfad_iocmd_trunk_get_attr(struct bfad_s *bfad, void *cmd)
++bfad_iocmd_qos_get_attr(struct bfad_s *bfad, void *cmd)
 +{
-+	struct bfa_bsg_trunk_attr_s *iocmd = (struct bfa_bsg_trunk_attr_s *)cmd;
++	struct bfa_bsg_qos_attr_s *iocmd = (struct bfa_bsg_qos_attr_s *)cmd;
 +	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(&bfad->bfa);
-+	struct bfa_fcport_trunk_s *trunk = &fcport->trunk;
 +	unsigned long	flags;
 +
 +	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	memcpy((void *)&iocmd->attr, (void *)&trunk->attr,
-+		sizeof(struct bfa_trunk_attr_s));
-+	iocmd->attr.port_id = bfa_lps_get_base_pid(&bfad->bfa);
++	iocmd->attr.state = fcport->qos_attr.state;
++	iocmd->attr.total_bb_cr = be32_to_cpu(fcport->qos_attr.total_bb_cr);
 +	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 +
 +	iocmd->status = BFA_STATUS_OK;
++	return 0;
++}
++
++int
++bfad_iocmd_qos_get_vc_attr(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_qos_vc_attr_s *iocmd =
++				(struct bfa_bsg_qos_vc_attr_s *)cmd;
++	struct bfa_fcport_s *fcport = BFA_FCPORT_MOD(&bfad->bfa);
++	struct bfa_qos_vc_attr_s *bfa_vc_attr = &fcport->qos_vc_attr;
++	unsigned long	flags;
++	u32	i = 0;
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->attr.total_vc_count = be16_to_cpu(bfa_vc_attr->total_vc_count);
++	iocmd->attr.shared_credit  = be16_to_cpu(bfa_vc_attr->shared_credit);
++	iocmd->attr.elp_opmode_flags  =
++				be32_to_cpu(bfa_vc_attr->elp_opmode_flags);
++
++	/* Individual VC info */
++	while (i < iocmd->attr.total_vc_count) {
++		iocmd->attr.vc_info[i].vc_credit =
++				bfa_vc_attr->vc_info[i].vc_credit;
++		iocmd->attr.vc_info[i].borrow_credit =
++				bfa_vc_attr->vc_info[i].borrow_credit;
++		iocmd->attr.vc_info[i].priority =
++				bfa_vc_attr->vc_info[i].priority;
++		i++;
++	}
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++
++	iocmd->status = BFA_STATUS_OK;
++	return 0;
++}
++
++int
++bfad_iocmd_qos_get_stats(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_fcport_stats_s *iocmd =
++				(struct bfa_bsg_fcport_stats_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long	flags;
++	struct bfa_cb_pending_q_s cb_qe;
++
++	init_completion(&fcomp.comp);
++	bfa_pending_q_init(&cb_qe, (bfa_cb_cbfn_t)bfad_hcb_comp,
++			   &fcomp, &iocmd->stats);
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	WARN_ON(!bfa_ioc_get_fcmode(&bfad->bfa.ioc));
++	iocmd->status = bfa_fcport_get_stats(&bfad->bfa, &cb_qe);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status != BFA_STATUS_OK) {
++		bfa_trc(bfad, iocmd->status);
++		goto out;
++	}
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
++	return 0;
++}
++
++int
++bfad_iocmd_qos_reset_stats(struct bfad_s *bfad, void *cmd)
++{
++	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)cmd;
++	struct bfad_hal_comp fcomp;
++	unsigned long	flags;
++	struct bfa_cb_pending_q_s cb_qe;
++
++	init_completion(&fcomp.comp);
++	bfa_pending_q_init(&cb_qe, (bfa_cb_cbfn_t)bfad_hcb_comp,
++			   &fcomp, NULL);
++
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	WARN_ON(!bfa_ioc_get_fcmode(&bfad->bfa.ioc));
++	iocmd->status = bfa_fcport_clear_stats(&bfad->bfa, &cb_qe);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	if (iocmd->status != BFA_STATUS_OK) {
++		bfa_trc(bfad, iocmd->status);
++		goto out;
++	}
++	wait_for_completion(&fcomp.comp);
++	iocmd->status = fcomp.status;
++out:
 +	return 0;
 +}
 +
  static int
  bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
  		unsigned int payload_len)
-@@ -2470,6 +2517,13 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_ETHBOOT_QUERY:
- 		rc = bfad_iocmd_ethboot_query(bfad, iocmd);
+@@ -2524,6 +2645,22 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_TRUNK_GET_ATTR:
+ 		rc = bfad_iocmd_trunk_get_attr(bfad, iocmd);
  		break;
-+	case IOCMD_TRUNK_ENABLE:
-+	case IOCMD_TRUNK_DISABLE:
-+		rc = bfad_iocmd_cfg_trunk(bfad, iocmd, cmd);
++	case IOCMD_QOS_ENABLE:
++	case IOCMD_QOS_DISABLE:
++		rc = bfad_iocmd_qos(bfad, iocmd, cmd);
 +		break;
-+	case IOCMD_TRUNK_GET_ATTR:
-+		rc = bfad_iocmd_trunk_get_attr(bfad, iocmd);
++	case IOCMD_QOS_GET_ATTR:
++		rc = bfad_iocmd_qos_get_attr(bfad, iocmd);
++		break;
++	case IOCMD_QOS_GET_VC_ATTR:
++		rc = bfad_iocmd_qos_get_vc_attr(bfad, iocmd);
++		break;
++	case IOCMD_QOS_GET_STATS:
++		rc = bfad_iocmd_qos_get_stats(bfad, iocmd);
++		break;
++	case IOCMD_QOS_RESET_STATS:
++		rc = bfad_iocmd_qos_reset_stats(bfad, iocmd);
 +		break;
  	default:
  		rc = -EINVAL;
  		break;
 diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 95694ce..2268045 100644
+index 2268045..3c0ce22 100644
 --- a/drivers/scsi/bfa/bfad_bsg.h
 +++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -126,6 +126,9 @@ enum {
- 	IOCMD_PREBOOT_QUERY,
- 	IOCMD_ETHBOOT_CFG,
- 	IOCMD_ETHBOOT_QUERY,
-+	IOCMD_TRUNK_ENABLE,
-+	IOCMD_TRUNK_DISABLE,
-+	IOCMD_TRUNK_GET_ATTR,
+@@ -129,6 +129,12 @@ enum {
+ 	IOCMD_TRUNK_ENABLE,
+ 	IOCMD_TRUNK_DISABLE,
+ 	IOCMD_TRUNK_GET_ATTR,
++	IOCMD_QOS_ENABLE,
++	IOCMD_QOS_DISABLE,
++	IOCMD_QOS_GET_ATTR,
++	IOCMD_QOS_GET_VC_ATTR,
++	IOCMD_QOS_GET_STATS,
++	IOCMD_QOS_RESET_STATS,
  };
  
  struct bfa_bsg_gen_s {
-@@ -656,6 +659,13 @@ struct bfa_bsg_ethboot_s {
- 	struct  bfa_ethboot_cfg_s  cfg;
+@@ -666,6 +672,20 @@ struct bfa_bsg_trunk_attr_s {
+ 	struct bfa_trunk_attr_s attr;
  };
  
-+struct bfa_bsg_trunk_attr_s {
++struct bfa_bsg_qos_attr_s {
 +	bfa_status_t	status;
 +	u16		bfad_num;
 +	u16		rsvd;
-+	struct bfa_trunk_attr_s attr;
++	struct bfa_qos_attr_s	attr;
++};
++
++struct bfa_bsg_qos_vc_attr_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		rsvd;
++	struct bfa_qos_vc_attr_s attr;
 +};
 +
  struct bfa_bsg_fcpt_s {
