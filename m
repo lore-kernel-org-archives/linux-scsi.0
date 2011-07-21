@@ -1,15 +1,15 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 085/103] target: Remove ifdeffed code in t_g_process_write
-Date: Thu, 21 Jul 2011 00:12:08 -0700
-Message-ID: <1311232346-6674-86-git-send-email-nab@linux-iscsi.org>
-References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 046/103] target: Replace custom sg<->buf functions with lib funcs
+Date: Thu, 21 Jul 2011 00:07:58 -0700
+Message-ID: <1311232135-6653-47-git-send-email-nab@linux-iscsi.org>
+References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm1.bullet.mail.bf1.yahoo.com ([98.139.212.160]:25955 "HELO
-	nm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752326Ab1GUHJC (ORCPT
+Received: from nm19.access.bullet.mail.sp2.yahoo.com ([98.139.44.146]:25890
+	"HELO nm19.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751924Ab1GUHEM (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:09:02 -0400
-In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:04:12 -0400
+In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
@@ -17,81 +17,146 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
 From: Andy Grover <agrover@redhat.com>
 
+Use sg_copy_to/from_buffer instead of transport_memcpy_read/write_contig.
+They are the same, except we also need to track the number of sg entries,
+which we do by adding a count to se_transport_task.
+
+Also, fix some comment typos.
+
 Signed-off-by: Andy Grover <agrover@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   58 --------------------------------
- 1 files changed, 0 insertions(+), 58 deletions(-)
+ drivers/target/target_core_transport.c |   80 ++++---------------------------
+ include/target/target_core_base.h      |    1 +
+ 2 files changed, 12 insertions(+), 69 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 056c4cb..e0be171 100644
+index bf401da..887314f 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -4939,64 +4939,6 @@ EXPORT_SYMBOL(transport_generic_new_cmd);
-  */
- void transport_generic_process_write(struct se_cmd *cmd)
- {
--#if 0
--	/*
--	 * Copy SCSI Presented DTL sector(s) from received buffers allocated to
--	 * original EDTL
--	 */
--	if (cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
--		if (!cmd->t_tasks_se_num) {
--			unsigned char *dst, *buf =
--				(unsigned char *)cmd->t_task_buf;
+@@ -3542,66 +3542,6 @@ out_invalid_cdb_field:
+ 
+ static inline void transport_release_tasks(struct se_cmd *);
+ 
+-/*
+- * This function will copy a contiguous *src buffer into a destination
+- * struct scatterlist array.
+- */
+-static void transport_memcpy_write_contig(
+-	struct se_cmd *cmd,
+-	struct scatterlist *sg_d,
+-	unsigned char *src)
+-{
+-	u32 i = 0, length = 0, total_length = cmd->data_length;
+-	void *dst;
 -
--			dst = kzalloc(cmd->cmd_spdtl), GFP_KERNEL);
--			if (!(dst)) {
--				printk(KERN_ERR "Unable to allocate memory for"
--						" WRITE underflow\n");
--				transport_generic_request_failure(cmd, NULL,
--					PYX_TRANSPORT_REQ_TOO_MANY_SECTORS, 1);
--				return;
--			}
--			memcpy(dst, buf, cmd->cmd_spdtl);
+-	while (total_length) {
+-		length = sg_d[i].length;
 -
--			kfree(cmd->t_task_buf);
--			cmd->t_task_buf = dst;
--		} else {
--			struct scatterlist *sg =
--				(struct scatterlist *sg)cmd->t_task_buf;
--			struct scatterlist *orig_sg;
+-		if (length > total_length)
+-			length = total_length;
 -
--			orig_sg = kzalloc(sizeof(struct scatterlist) *
--					cmd->t_tasks_se_num,
--					GFP_KERNEL))) {
--			if (!(orig_sg)) {
--				printk(KERN_ERR "Unable to allocate memory"
--						" for WRITE underflow\n");
--				transport_generic_request_failure(cmd, NULL,
--					PYX_TRANSPORT_REQ_TOO_MANY_SECTORS, 1);
--				return;
--			}
+-		dst = sg_virt(&sg_d[i]);
 -
--			memcpy(orig_sg, cmd->t_task_buf,
--					sizeof(struct scatterlist) *
--					cmd->t_tasks_se_num);
+-		memcpy(dst, src, length);
 -
--			cmd->data_length = cmd->cmd_spdtl;
--			/*
--			 * FIXME, clear out original struct se_task and state
--			 * information.
--			 */
--			if (transport_generic_new_cmd(cmd) < 0) {
--				transport_generic_request_failure(cmd, NULL,
--					PYX_TRANSPORT_REQ_TOO_MANY_SECTORS, 1);
--				kfree(orig_sg);
--				return;
--			}
+-		if (!(total_length -= length))
+-			return;
 -
--			transport_memcpy_write_sg(cmd, orig_sg);
--		}
+-		src += length;
+-		i++;
 -	}
--#endif
- 	transport_execute_tasks(cmd);
- }
- EXPORT_SYMBOL(transport_generic_process_write);
+-}
+-
+-/*
+- * This function will copy a struct scatterlist array *sg_s into a destination
+- * contiguous *dst buffer.
+- */
+-static void transport_memcpy_read_contig(
+-	struct se_cmd *cmd,
+-	unsigned char *dst,
+-	struct scatterlist *sg_s)
+-{
+-	u32 i = 0, length = 0, total_length = cmd->data_length;
+-	void *src;
+-
+-	while (total_length) {
+-		length = sg_s[i].length;
+-
+-		if (length > total_length)
+-			length = total_length;
+-
+-		src = sg_virt(&sg_s[i]);
+-
+-		memcpy(dst, src, length);
+-
+-		if (!(total_length -= length))
+-			return;
+-
+-		dst += length;
+-		i++;
+-	}
+-}
+-
+ static void transport_memcpy_se_mem_read_contig(
+ 	struct se_cmd *cmd,
+ 	unsigned char *dst,
+@@ -3744,14 +3684,15 @@ static void transport_generic_complete_ok(struct se_cmd *cmd)
+ 		}
+ 		spin_unlock(&cmd->se_lun->lun_sep_lock);
+ 		/*
+-		 * If enabled by TCM fabirc module pre-registered SGL
++		 * If enabled by TCM fabric module pre-registered SGL
+ 		 * memory, perform the memcpy() from the TCM internal
+-		 * contigious buffer back to the original SGL.
++		 * contiguous buffer back to the original SGL.
+ 		 */
+ 		if (cmd->se_cmd_flags & SCF_PASSTHROUGH_CONTIG_TO_SG)
+-			transport_memcpy_write_contig(cmd,
+-				 cmd->t_task.t_task_pt_sgl,
+-				 cmd->t_task.t_task_buf);
++			sg_copy_from_buffer(cmd->t_task.t_task_pt_sgl,
++					    cmd->t_task.t_task_pt_sgl_num,
++					    cmd->t_task.t_task_buf,
++					    cmd->data_length);
+ 
+ 		cmd->se_tfo->queue_data_in(cmd);
+ 		break;
+@@ -4031,7 +3972,7 @@ int transport_generic_map_mem_to_cmd(
+ 		 */
+ 		cmd->se_cmd_flags |= SCF_PASSTHROUGH_CONTIG_TO_SG;
+ 		cmd->t_task.t_task_pt_sgl = sgl;
+-		/* don't need sgl count? We assume it contains cmd->data_length data */
++		cmd->t_task.t_task_pt_sgl_num = sgl_count;
+ 	}
+ 
+ 	return 0;
+@@ -5031,9 +4972,10 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
+ 	 * se_cmd->t_task.t_task_buf.
+ 	 */
+ 	if (cmd->se_cmd_flags & SCF_PASSTHROUGH_CONTIG_TO_SG)
+-		transport_memcpy_read_contig(cmd,
+-				cmd->t_task.t_task_buf,
+-				cmd->t_task.t_task_pt_sgl);
++		sg_copy_to_buffer(cmd->t_task.t_task_pt_sgl,
++				    cmd->t_task.t_task_pt_sgl_num,
++				    cmd->t_task.t_task_buf,
++				    cmd->data_length);
+ 	/*
+ 	 * Clear the se_cmd for WRITE_PENDING status in order to set
+ 	 * cmd->t_task.t_transport_active=0 so that transport_generic_handle_data
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 94c838d..ff1b461 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -452,6 +452,7 @@ struct se_transport_task {
+ 	 * and other HW target mode fabric modules.
+ 	 */
+ 	struct scatterlist	*t_task_pt_sgl;
++	u32			t_task_pt_sgl_num;
+ 	struct list_head	t_mem_list;
+ 	/* Used for BIDI READ */
+ 	struct list_head	t_mem_bidi_list;
 -- 
 1.7.6
 
