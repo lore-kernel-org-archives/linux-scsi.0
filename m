@@ -1,143 +1,354 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 037/103] target: Rename list_heads that are nodes in struct se_cmd to "*_node"
-Date: Thu, 21 Jul 2011 00:07:49 -0700
-Message-ID: <1311232135-6653-38-git-send-email-nab@linux-iscsi.org>
-References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 013/103] target: Remove hba queue depth and convert to spin_lock_irq usage
+Date: Thu, 21 Jul 2011 00:04:49 -0700
+Message-ID: <1311231979-6631-14-git-send-email-nab@linux-iscsi.org>
+References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm19.access.bullet.mail.sp2.yahoo.com ([98.139.44.146]:25497
-	"HELO nm19.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751003Ab1GUHD1 (ORCPT
+Received: from nm23-vm0.bullet.mail.bf1.yahoo.com ([98.139.212.191]:43357 "HELO
+	nm23-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751445Ab1GUHA1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:03:27 -0400
-In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:00:27 -0400
+In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
 From: Andy Grover <agrover@redhat.com>
 
-This just help make it clear that se_cmd is being placed on lots of lists,
-it doesn't have any list heads itself.
+The queue depth in the virtual hba is no longer needed, we can just
+rely on the per-device queue depth limits.
+
+Remove hba_queue_lock, since updating a single atomic no longer needs
+protection.  This patch also converts se_dev->execute_task_lock usage in
+__transport_execute_tasks to use execute_task_lock with spin_lock_irq
+
+Remove load_balance_queue, unused.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_device.c    |    2 +-
- drivers/target/target_core_transport.c |   26 +++++++++++++-------------
- include/target/target_core_base.h      |    6 +++---
- 3 files changed, 17 insertions(+), 17 deletions(-)
+ drivers/target/target_core_file.c      |    7 +----
+ drivers/target/target_core_file.h      |    2 -
+ drivers/target/target_core_hba.c       |    4 ---
+ drivers/target/target_core_iblock.c    |    7 +----
+ drivers/target/target_core_iblock.h    |    1 -
+ drivers/target/target_core_pscsi.c     |   22 +------------------
+ drivers/target/target_core_pscsi.h     |    1 -
+ drivers/target/target_core_rd.c        |    7 +----
+ drivers/target/target_core_rd.h        |    2 -
+ drivers/target/target_core_transport.c |   35 ++++++-------------------------
+ include/target/target_core_base.h      |    5 ----
+ 11 files changed, 15 insertions(+), 78 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index c7b9ef7..c8d4654 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -164,7 +164,7 @@ int transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- 	 * for tracking state of struct se_cmds during LUN shutdown events.
- 	 */
- 	spin_lock_irqsave(&se_lun->lun_cmd_lock, flags);
--	list_add_tail(&se_cmd->se_lun_list, &se_lun->lun_cmd_list);
-+	list_add_tail(&se_cmd->se_lun_node, &se_lun->lun_cmd_list);
- 	atomic_set(&se_cmd->t_task.transport_lun_active, 1);
- 	spin_unlock_irqrestore(&se_lun->lun_cmd_lock, flags);
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 40386ec..5ca1f5b 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -72,17 +72,14 @@ static int fd_attach_hba(struct se_hba *hba, u32 host_id)
  
+ 	fd_host->fd_host_id = host_id;
+ 
+-	atomic_set(&hba->left_queue_depth, FD_HBA_QUEUE_DEPTH);
+-	atomic_set(&hba->max_queue_depth, FD_HBA_QUEUE_DEPTH);
+ 	hba->hba_ptr = (void *) fd_host;
+ 
+ 	printk(KERN_INFO "CORE_HBA[%d] - TCM FILEIO HBA Driver %s on Generic"
+ 		" Target Core Stack %s\n", hba->hba_id, FD_VERSION,
+ 		TARGET_CORE_MOD_VERSION);
+ 	printk(KERN_INFO "CORE_HBA[%d] - Attached FILEIO HBA: %u to Generic"
+-		" Target Core with TCQ Depth: %d MaxSectors: %u\n",
+-		hba->hba_id, fd_host->fd_host_id,
+-		atomic_read(&hba->max_queue_depth), FD_MAX_SECTORS);
++		" MaxSectors: %u\n",
++		hba->hba_id, fd_host->fd_host_id, FD_MAX_SECTORS);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
+index ef4de2b..6386d3f 100644
+--- a/drivers/target/target_core_file.h
++++ b/drivers/target/target_core_file.h
+@@ -4,8 +4,6 @@
+ #define FD_VERSION		"4.0"
+ 
+ #define FD_MAX_DEV_NAME		256
+-/* Maximum queuedepth for the FILEIO HBA */
+-#define FD_HBA_QUEUE_DEPTH	256
+ #define FD_DEVICE_QUEUE_DEPTH	32
+ #define FD_MAX_DEVICE_QUEUE_DEPTH 128
+ #define FD_BLOCKSIZE		512
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index ddf5ae0..8f3a0c4 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -110,15 +110,11 @@ core_alloc_hba(const char *plugin_name, u32 plugin_dep_id, u32 hba_flags)
+ 
+ 	INIT_LIST_HEAD(&hba->hba_dev_list);
+ 	spin_lock_init(&hba->device_lock);
+-	spin_lock_init(&hba->hba_queue_lock);
+ 	mutex_init(&hba->hba_access_mutex);
+ 
+ 	hba->hba_index = scsi_get_new_index(SCSI_INST_INDEX);
+ 	hba->hba_flags |= hba_flags;
+ 
+-	atomic_set(&hba->max_queue_depth, 0);
+-	atomic_set(&hba->left_queue_depth, 0);
+-
+ 	hba->transport = core_get_backend(plugin_name);
+ 	if (!hba->transport) {
+ 		ret = -EINVAL;
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 5d5bd6e..5bd4f1c 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -74,17 +74,14 @@ static int iblock_attach_hba(struct se_hba *hba, u32 host_id)
+ 
+ 	ib_host->iblock_host_id = host_id;
+ 
+-	atomic_set(&hba->left_queue_depth, IBLOCK_HBA_QUEUE_DEPTH);
+-	atomic_set(&hba->max_queue_depth, IBLOCK_HBA_QUEUE_DEPTH);
+ 	hba->hba_ptr = (void *) ib_host;
+ 
+ 	printk(KERN_INFO "CORE_HBA[%d] - TCM iBlock HBA Driver %s on"
+ 		" Generic Target Core Stack %s\n", hba->hba_id,
+ 		IBLOCK_VERSION, TARGET_CORE_MOD_VERSION);
+ 
+-	printk(KERN_INFO "CORE_HBA[%d] - Attached iBlock HBA: %u to Generic"
+-		" Target Core TCQ Depth: %d\n", hba->hba_id,
+-		ib_host->iblock_host_id, atomic_read(&hba->max_queue_depth));
++	printk(KERN_INFO "CORE_HBA[%d] - Attached iBlock HBA: %u to Generic\n",
++		hba->hba_id, ib_host->iblock_host_id);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
+index 64c1f4d..6b6d17b 100644
+--- a/drivers/target/target_core_iblock.h
++++ b/drivers/target/target_core_iblock.h
+@@ -3,7 +3,6 @@
+ 
+ #define IBLOCK_VERSION		"4.0"
+ 
+-#define IBLOCK_HBA_QUEUE_DEPTH	512
+ #define IBLOCK_DEVICE_QUEUE_DEPTH	32
+ #define IBLOCK_MAX_DEVICE_QUEUE_DEPTH	128
+ #define IBLOCK_MAX_CDBS		16
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index d39226f..e221dea 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -62,7 +62,6 @@ static void pscsi_req_done(struct request *, int);
+  */
+ static int pscsi_attach_hba(struct se_hba *hba, u32 host_id)
+ {
+-	int hba_depth;
+ 	struct pscsi_hba_virt *phv;
+ 
+ 	phv = kzalloc(sizeof(struct pscsi_hba_virt), GFP_KERNEL);
+@@ -72,18 +71,14 @@ static int pscsi_attach_hba(struct se_hba *hba, u32 host_id)
+ 	}
+ 	phv->phv_host_id = host_id;
+ 	phv->phv_mode = PHV_VIRUTAL_HOST_ID;
+-	hba_depth = PSCSI_VIRTUAL_HBA_DEPTH;
+-	atomic_set(&hba->left_queue_depth, hba_depth);
+-	atomic_set(&hba->max_queue_depth, hba_depth);
+ 
+ 	hba->hba_ptr = (void *)phv;
+ 
+ 	printk(KERN_INFO "CORE_HBA[%d] - TCM SCSI HBA Driver %s on"
+ 		" Generic Target Core Stack %s\n", hba->hba_id,
+ 		PSCSI_VERSION, TARGET_CORE_MOD_VERSION);
+-	printk(KERN_INFO "CORE_HBA[%d] - Attached SCSI HBA to Generic"
+-		" Target Core with TCQ Depth: %d\n", hba->hba_id,
+-		atomic_read(&hba->max_queue_depth));
++	printk(KERN_INFO "CORE_HBA[%d] - Attached SCSI HBA to Generic\n",
++	       hba->hba_id);
+ 
+ 	return 0;
+ }
+@@ -112,7 +107,6 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
+ {
+ 	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
+ 	struct Scsi_Host *sh = phv->phv_lld_host;
+-	int hba_depth = PSCSI_VIRTUAL_HBA_DEPTH;
+ 	/*
+ 	 * Release the struct Scsi_Host
+ 	 */
+@@ -122,8 +116,6 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
+ 
+ 		phv->phv_lld_host = NULL;
+ 		phv->phv_mode = PHV_VIRUTAL_HOST_ID;
+-		atomic_set(&hba->left_queue_depth, hba_depth);
+-		atomic_set(&hba->max_queue_depth, hba_depth);
+ 
+ 		printk(KERN_INFO "CORE_HBA[%d] - Disabled pSCSI HBA Passthrough"
+ 			" %s\n", hba->hba_id, (sh->hostt->name) ?
+@@ -142,16 +134,6 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
+ 			" phv_host_id: %d\n", phv->phv_host_id);
+ 		return PTR_ERR(sh);
+ 	}
+-	/*
+-	 * Usually the SCSI LLD will use the hostt->can_queue value to define
+-	 * its HBA TCQ depth.  Some other drivers (like 2.6 megaraid) don't set
+-	 * this at all and set sh->can_queue at runtime.
+-	 */
+-	hba_depth = (sh->hostt->can_queue > sh->can_queue) ?
+-		sh->hostt->can_queue : sh->can_queue;
+-
+-	atomic_set(&hba->left_queue_depth, hba_depth);
+-	atomic_set(&hba->max_queue_depth, hba_depth);
+ 
+ 	phv->phv_lld_host = sh;
+ 	phv->phv_mode = PHV_LLD_SCSI_HOST_NO;
+diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
+index a4cd5d3..280b689 100644
+--- a/drivers/target/target_core_pscsi.h
++++ b/drivers/target/target_core_pscsi.h
+@@ -2,7 +2,6 @@
+ #define TARGET_CORE_PSCSI_H
+ 
+ #define PSCSI_VERSION		"v4.0"
+-#define PSCSI_VIRTUAL_HBA_DEPTH	2048
+ 
+ /* used in pscsi_find_alloc_len() */
+ #ifndef INQUIRY_DATA_SIZE
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 2a00f70..0a424bb 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -66,17 +66,14 @@ static int rd_attach_hba(struct se_hba *hba, u32 host_id)
+ 
+ 	rd_host->rd_host_id = host_id;
+ 
+-	atomic_set(&hba->left_queue_depth, RD_HBA_QUEUE_DEPTH);
+-	atomic_set(&hba->max_queue_depth, RD_HBA_QUEUE_DEPTH);
+ 	hba->hba_ptr = (void *) rd_host;
+ 
+ 	printk(KERN_INFO "CORE_HBA[%d] - TCM Ramdisk HBA Driver %s on"
+ 		" Generic Target Core Stack %s\n", hba->hba_id,
+ 		RD_HBA_VERSION, TARGET_CORE_MOD_VERSION);
+ 	printk(KERN_INFO "CORE_HBA[%d] - Attached Ramdisk HBA: %u to Generic"
+-		" Target Core TCQ Depth: %d MaxSectors: %u\n", hba->hba_id,
+-		rd_host->rd_host_id, atomic_read(&hba->max_queue_depth),
+-		RD_MAX_SECTORS);
++		" MaxSectors: %u\n", hba->hba_id,
++		rd_host->rd_host_id, RD_MAX_SECTORS);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/target/target_core_rd.h b/drivers/target/target_core_rd.h
+index 3ea19e2..bab9302 100644
+--- a/drivers/target/target_core_rd.h
++++ b/drivers/target/target_core_rd.h
+@@ -7,8 +7,6 @@
+ 
+ /* Largest piece of memory kmalloc can allocate */
+ #define RD_MAX_ALLOCATION_SIZE	65536
+-/* Maximum queuedepth for the Ramdisk HBA */
+-#define RD_HBA_QUEUE_DEPTH	256
+ #define RD_DEVICE_QUEUE_DEPTH	32
+ #define RD_MAX_DEVICE_QUEUE_DEPTH 128
+ #define RD_BLOCKSIZE		512
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9b76d33..bd445ff 100644
+index 99b9e33..ae153bf 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -722,7 +722,7 @@ static void transport_lun_remove_cmd(struct se_cmd *cmd)
- check_lun:
- 	spin_lock_irqsave(&lun->lun_cmd_lock, flags);
- 	if (atomic_read(&cmd->t_task.transport_lun_active)) {
--		list_del(&cmd->se_lun_list);
-+		list_del(&cmd->se_lun_node);
- 		atomic_set(&cmd->t_task.transport_lun_active, 0);
- #if 0
- 		printk(KERN_INFO "Removed ITT: 0x%08x from LUN LIST[%d]\n"
-@@ -1704,9 +1704,9 @@ void transport_init_se_cmd(
- 	int task_attr,
- 	unsigned char *sense_buffer)
- {
--	INIT_LIST_HEAD(&cmd->se_lun_list);
--	INIT_LIST_HEAD(&cmd->se_delayed_list);
--	INIT_LIST_HEAD(&cmd->se_ordered_list);
-+	INIT_LIST_HEAD(&cmd->se_lun_node);
-+	INIT_LIST_HEAD(&cmd->se_delayed_node);
-+	INIT_LIST_HEAD(&cmd->se_ordered_node);
+@@ -959,12 +959,8 @@ void transport_complete_task(struct se_task *task, int success)
+ 	printk(KERN_INFO "task: %p CDB: 0x%02x obj_ptr: %p\n", task,
+ 			T_TASK(cmd)->t_task_cdb[0], dev);
+ #endif
+-	if (dev) {
+-		spin_lock_irqsave(&SE_HBA(dev)->hba_queue_lock, flags);
++	if (dev)
+ 		atomic_inc(&dev->depth_left);
+-		atomic_inc(&SE_HBA(dev)->left_queue_depth);
+-		spin_unlock_irqrestore(&SE_HBA(dev)->hba_queue_lock, flags);
+-	}
  
- 	INIT_LIST_HEAD(&cmd->t_task.t_task_list);
- 	init_completion(&cmd->t_task.transport_lun_fe_stop_comp);
-@@ -2377,7 +2377,7 @@ static inline int transport_execute_task_attr(struct se_cmd *cmd)
- 		return 1;
- 	} else if (cmd->sam_task_attr == MSG_ORDERED_TAG) {
- 		spin_lock(&cmd->se_dev->ordered_cmd_lock);
--		list_add_tail(&cmd->se_ordered_list,
-+		list_add_tail(&cmd->se_ordered_node,
- 				&cmd->se_dev->ordered_cmd_list);
- 		spin_unlock(&cmd->se_dev->ordered_cmd_lock);
+ 	spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
+ 	atomic_set(&task->task_active, 0);
+@@ -2140,16 +2136,6 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
+ 	return ret;
+ }
  
-@@ -2414,7 +2414,7 @@ static inline int transport_execute_task_attr(struct se_cmd *cmd)
- 		 */
- 		spin_lock(&cmd->se_dev->delayed_cmd_lock);
- 		cmd->se_cmd_flags |= SCF_DELAYED_CMD_FROM_SAM_ATTR;
--		list_add_tail(&cmd->se_delayed_list,
-+		list_add_tail(&cmd->se_delayed_node,
- 				&cmd->se_dev->delayed_cmd_list);
- 		spin_unlock(&cmd->se_dev->delayed_cmd_lock);
+-static void transport_failure_reset_queue_depth(struct se_device *dev)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&SE_HBA(dev)->hba_queue_lock, flags);
+-	atomic_inc(&dev->depth_left);
+-	atomic_inc(&SE_HBA(dev)->left_queue_depth);
+-	spin_unlock_irqrestore(&SE_HBA(dev)->hba_queue_lock, flags);
+-}
+-
+ /*
+  * Handle SAM-esque emulation for generic transport request failures.
+  */
+@@ -2181,7 +2167,7 @@ static void transport_generic_request_failure(
+ 	transport_stop_all_task_timers(cmd);
  
-@@ -3652,7 +3652,7 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
- 			cmd->se_ordered_id);
- 	} else if (cmd->sam_task_attr == MSG_ORDERED_TAG) {
- 		spin_lock(&dev->ordered_cmd_lock);
--		list_del(&cmd->se_ordered_list);
-+		list_del(&cmd->se_ordered_node);
- 		atomic_dec(&dev->dev_ordered_sync);
- 		smp_mb__after_atomic_dec();
- 		spin_unlock(&dev->ordered_cmd_lock);
-@@ -3668,9 +3668,9 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
+ 	if (dev)
+-		transport_failure_reset_queue_depth(dev);
++		atomic_inc(&dev->depth_left);
+ 	/*
+ 	 * For SAM Task Attribute emulation for failed struct se_cmd
  	 */
- 	spin_lock(&dev->delayed_cmd_lock);
- 	list_for_each_entry_safe(cmd_p, cmd_tmp,
--			&dev->delayed_cmd_list, se_delayed_list) {
-+			&dev->delayed_cmd_list, se_delayed_node) {
- 
--		list_del(&cmd_p->se_delayed_list);
-+		list_del(&cmd_p->se_delayed_node);
- 		spin_unlock(&dev->delayed_cmd_lock);
- 
- 		DEBUG_STA("Calling add_tasks() for"
-@@ -5232,10 +5232,10 @@ static void __transport_clear_lun_from_sessions(struct se_lun *lun)
- 	 * Initiator Port.
+@@ -2650,26 +2636,19 @@ static int __transport_execute_tasks(struct se_device *dev)
+ 	 * struct se_transport_task's to the selected transport.
  	 */
- 	spin_lock_irqsave(&lun->lun_cmd_lock, lun_flags);
--	while (!list_empty_careful(&lun->lun_cmd_list)) {
--		cmd = list_entry(lun->lun_cmd_list.next,
--			struct se_cmd, se_lun_list);
--		list_del(&cmd->se_lun_list);
-+	while (!list_empty(&lun->lun_cmd_list)) {
-+		cmd = list_first_entry(&lun->lun_cmd_list,
-+		       struct se_cmd, se_lun_node);
-+		list_del(&cmd->se_lun_node);
+ check_depth:
+-	spin_lock_irqsave(&SE_HBA(dev)->hba_queue_lock, flags);
+-	if (!(atomic_read(&dev->depth_left)) ||
+-	    !(atomic_read(&SE_HBA(dev)->left_queue_depth))) {
+-		spin_unlock_irqrestore(&SE_HBA(dev)->hba_queue_lock, flags);
++	if (!atomic_read(&dev->depth_left))
+ 		return transport_tcq_window_closed(dev);
+-	}
++
+ 	dev->dev_tcq_window_closed = 0;
  
- 		atomic_set(&cmd->t_task.transport_lun_active, 0);
- 		/*
+-	spin_lock(&dev->execute_task_lock);
++	spin_lock_irq(&dev->execute_task_lock);
+ 	task = transport_get_task_from_execute_queue(dev);
+-	spin_unlock(&dev->execute_task_lock);
++	spin_unlock_irq(&dev->execute_task_lock);
+ 
+-	if (!task) {
+-		spin_unlock_irqrestore(&SE_HBA(dev)->hba_queue_lock, flags);
++	if (!task)
+ 		return 0;
+-	}
+ 
+ 	atomic_dec(&dev->depth_left);
+-	atomic_dec(&SE_HBA(dev)->left_queue_depth);
+-	spin_unlock_irqrestore(&SE_HBA(dev)->hba_queue_lock, flags);
+ 
+ 	cmd = TASK_CMD(task);
+ 
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 67d490f..c84afc3 100644
+index 561ac99..e35e9e4 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -523,9 +523,9 @@ struct se_cmd {
- 	atomic_t                transport_sent;
- 	/* Used for sense data */
- 	void			*sense_buffer;
--	struct list_head	se_delayed_list;
--	struct list_head	se_ordered_list;
--	struct list_head	se_lun_list;
-+	struct list_head	se_delayed_node;
-+	struct list_head	se_ordered_node;
-+	struct list_head	se_lun_node;
- 	struct se_device      *se_dev;
- 	struct se_dev_entry   *se_deve;
- 	struct se_device	*se_obj_ptr;
+@@ -837,17 +837,12 @@ struct se_hba {
+ 	/* Virtual iSCSI devices attached. */
+ 	u32			dev_count;
+ 	u32			hba_index;
+-	atomic_t		load_balance_queue;
+-	atomic_t		left_queue_depth;
+-	/* Maximum queue depth the HBA can handle. */
+-	atomic_t		max_queue_depth;
+ 	/* Pointer to transport specific host structure. */
+ 	void			*hba_ptr;
+ 	/* Linked list for struct se_device */
+ 	struct list_head	hba_dev_list;
+ 	struct list_head	hba_list;
+ 	spinlock_t		device_lock;
+-	spinlock_t		hba_queue_lock;
+ 	struct config_group	hba_group;
+ 	struct mutex		hba_access_mutex;
+ 	struct se_subsystem_api *transport;
 -- 
 1.7.6
 
