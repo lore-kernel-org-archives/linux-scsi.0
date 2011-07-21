@@ -1,13 +1,15 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 031/103] target: Rename get_lun_for_{cmd,tmr} to lookup_{cmd,tmr}_lun
-Date: Thu, 21 Jul 2011 00:07:43 -0700
-Message-ID: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 035/103] target: Embed qr in struct se_cmd
+Date: Thu, 21 Jul 2011 00:07:47 -0700
+Message-ID: <1311232135-6653-36-git-send-email-nab@linux-iscsi.org>
+References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm8.access.bullet.mail.sp2.yahoo.com ([98.139.44.135]:28119
-	"HELO nm8.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752132Ab1GUHJI (ORCPT
+Received: from nm29-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.192]:26101
+	"HELO nm29-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751970Ab1GUHDS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:09:08 -0400
+	Thu, 21 Jul 2011 03:03:18 -0400
+In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
@@ -15,118 +17,120 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
 From: Andy Grover <agrover@redhat.com>
 
-These functions don't get a lun, they lookup an existing lun (from fabric)
-and ensure it is valid.
+This saves a call to kmalloc, and means we don't need to remember to
+free the struct se_queue_req.
 
-Also, iscsi code was checking lun was less than MAX_LUNS_PER_TPG, which
-is already being checked in the transport code already.
+This also makes it possible to make transport_add_cmd_to_queue never
+return an error code, which is nice since it wasn't being checked.
+
+Removed an incorrect comment above get_qr_from_queue; cmd_queue_lock
+is acquired in the function now, not before.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/loopback/tcm_loop.c  |    4 ++--
- drivers/target/target_core_device.c |   12 ++++--------
- drivers/target/tcm_fc/tfc_cmd.c     |    4 ++--
- include/target/target_core_device.h |    4 ++--
- 4 files changed, 10 insertions(+), 14 deletions(-)
+ drivers/target/target_core_transport.c |   25 +++++--------------------
+ include/target/target_core_base.h      |    1 +
+ 2 files changed, 6 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index e1d17b9..5d7a40e 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -122,7 +122,7 @@ static struct se_cmd *tcm_loop_allocate_core_cmd(
- 	/*
- 	 * Locate the struct se_lun pointer and attach it to struct se_cmd
- 	 */
--	if (transport_get_lun_for_cmd(se_cmd, tl_cmd->sc->device->lun) < 0) {
-+	if (transport_lookup_cmd_lun(se_cmd, tl_cmd->sc->device->lun) < 0) {
- 		kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
- 		set_host_byte(sc, DID_NO_CONNECT);
- 		return NULL;
-@@ -391,7 +391,7 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
- 	/*
- 	 * Locate the underlying TCM struct se_lun from sc->device->lun
- 	 */
--	if (transport_get_lun_for_tmr(se_cmd, sc->device->lun) < 0)
-+	if (transport_lookup_tmr_lun(se_cmd, sc->device->lun) < 0)
- 		goto release;
- 	/*
- 	 * Queue the TMR to TCM Core and sleep waiting for tcm_loop_queue_tm_rsp()
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index fd92385..8b07ad2 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -59,9 +59,7 @@ static struct se_subsystem_dev *lun0_su_dev;
- /* not static, needed by tpg.c */
- struct se_device *g_lun0_dev;
- 
--int transport_get_lun_for_cmd(
--	struct se_cmd *se_cmd,
--	u32 unpacked_lun)
-+int transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- {
- 	struct se_dev_entry *deve;
- 	struct se_lun *se_lun = NULL;
-@@ -185,11 +183,9 @@ out:
- 
- 	return 0;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 8a71ad8..969cbe2 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -753,25 +753,18 @@ void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
+ 	transport_generic_remove(cmd, 0, 0);
  }
--EXPORT_SYMBOL(transport_get_lun_for_cmd);
-+EXPORT_SYMBOL(transport_lookup_cmd_lun);
  
--int transport_get_lun_for_tmr(
--	struct se_cmd *se_cmd,
--	u32 unpacked_lun)
-+int transport_lookup_tmr_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
+-static int transport_add_cmd_to_queue(
++static void transport_add_cmd_to_queue(
+ 	struct se_cmd *cmd,
+ 	int t_state)
  {
- 	struct se_device *dev = NULL;
- 	struct se_dev_entry *deve;
-@@ -240,7 +236,7 @@ int transport_get_lun_for_tmr(
+ 	struct se_device *dev = cmd->se_dev;
+ 	struct se_queue_obj *qobj = &dev->dev_queue_obj;
+-	struct se_queue_req *qr;
+ 	unsigned long flags;
  
- 	return 0;
+-	qr = kzalloc(sizeof(struct se_queue_req), GFP_ATOMIC);
+-	if (!(qr)) {
+-		printk(KERN_ERR "Unable to allocate memory for"
+-				" struct se_queue_req\n");
+-		return -ENOMEM;
+-	}
+-	INIT_LIST_HEAD(&qr->qr_list);
++	INIT_LIST_HEAD(&cmd->se_qr.qr_list);
+ 
+-	qr->cmd = cmd;
+-	qr->state = t_state;
++	cmd->se_qr.cmd = cmd;
++	cmd->se_qr.state = t_state;
+ 
+ 	if (t_state) {
+ 		spin_lock_irqsave(&cmd->t_task.t_state_lock, flags);
+@@ -781,18 +774,14 @@ static int transport_add_cmd_to_queue(
+ 	}
+ 
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
+-	list_add_tail(&qr->qr_list, &qobj->qobj_list);
++	list_add_tail(&cmd->se_qr.qr_list, &qobj->qobj_list);
+ 	atomic_inc(&cmd->t_task.t_transport_queue_active);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+ 	atomic_inc(&qobj->queue_cnt);
+ 	wake_up_interruptible(&qobj->thread_wq);
+-	return 0;
  }
--EXPORT_SYMBOL(transport_get_lun_for_tmr);
-+EXPORT_SYMBOL(transport_lookup_tmr_lun);
  
- /*
-  * This function is called from core_scsi3_emulate_pro_register_and_move()
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 19b2b99..a913e84 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -438,7 +438,7 @@ static void ft_send_tm(struct ft_cmd *cmd)
- 	switch (fcp->fc_tm_flags) {
- 	case FCP_TMF_LUN_RESET:
- 		cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
--		if (transport_get_lun_for_tmr(&cmd->se_cmd, cmd->lun) < 0) {
-+		if (transport_lookup_tmr_lun(&cmd->se_cmd, cmd->lun) < 0) {
- 			/*
- 			 * Make sure to clean up newly allocated TMR request
- 			 * since "unable to  handle TMR request because failed
-@@ -637,7 +637,7 @@ static void ft_send_cmd(struct ft_cmd *cmd)
- 	fc_seq_exch(cmd->seq)->lp->tt.seq_set_resp(cmd->seq, ft_recv_seq, cmd);
+-/*
+- * Called with struct se_queue_obj->cmd_queue_lock held.
+- */
+ static struct se_queue_req *
+ transport_get_qr_from_queue(struct se_queue_obj *qobj)
+ {
+@@ -837,7 +826,6 @@ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		atomic_dec(&qr->cmd->t_task.t_transport_queue_active);
+ 		atomic_dec(&qobj->queue_cnt);
+ 		list_del(&qr->qr_list);
+-		kfree(qr);
+ 	}
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
  
- 	cmd->lun = scsilun_to_int((struct scsi_lun *)fcp->fc_lun);
--	ret = transport_get_lun_for_cmd(&cmd->se_cmd, cmd->lun);
-+	ret = transport_lookup_cmd_lun(&cmd->se_cmd, cmd->lun);
- 	if (ret < 0) {
- 		ft_dump_cmd(cmd, __func__);
- 		transport_send_check_condition_and_sense(&cmd->se_cmd,
-diff --git a/include/target/target_core_device.h b/include/target/target_core_device.h
-index d9745bf..96586cc 100644
---- a/include/target/target_core_device.h
-+++ b/include/target/target_core_device.h
-@@ -1,8 +1,8 @@
- #ifndef TARGET_CORE_DEVICE_H
- #define TARGET_CORE_DEVICE_H
+@@ -1193,7 +1181,6 @@ static void transport_release_all_cmds(struct se_device *dev)
+ 		cmd = qr->cmd;
+ 		t_state = qr->state;
+ 		list_del(&qr->qr_list);
+-		kfree(qr);
+ 		spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock,
+ 				flags);
  
--extern int transport_get_lun_for_cmd(struct se_cmd *, u32);
--extern int transport_get_lun_for_tmr(struct se_cmd *, u32);
-+extern int transport_lookup_cmd_lun(struct se_cmd *, u32);
-+extern int transport_lookup_tmr_lun(struct se_cmd *, u32);
- extern struct se_dev_entry *core_get_se_deve_from_rtpi(
- 					struct se_node_acl *, u16);
- extern int core_free_device_list_for_node(struct se_node_acl *,
+@@ -5906,7 +5893,6 @@ static void transport_processing_shutdown(struct se_device *dev)
+ 	while ((qr = transport_get_qr_from_queue(&dev->dev_queue_obj))) {
+ 		cmd = qr->cmd;
+ 		state = qr->state;
+-		kfree(qr);
+ 
+ 		DEBUG_DO("From Device Queue: cmd: %p t_state: %d\n",
+ 				cmd, state);
+@@ -5962,7 +5948,6 @@ get_cmd:
+ 
+ 		cmd = qr->cmd;
+ 		t_state = qr->state;
+-		kfree(qr);
+ 
+ 		switch (t_state) {
+ 		case TRANSPORT_NEW_CMD_MAP:
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index bdee755..e4818cd 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -535,6 +535,7 @@ struct se_cmd {
+ 	struct se_session	*se_sess;
+ 	struct se_tmr_req	*se_tmr_req;
+ 	struct se_transport_task t_task;
++	struct se_queue_req	se_qr;
+ 	struct target_core_fabric_ops *se_tfo;
+ 	int (*transport_emulate_cdb)(struct se_cmd *);
+ 	void (*transport_split_cdb)(unsigned long long, u32 *, unsigned char *);
 -- 
 1.7.6
 
