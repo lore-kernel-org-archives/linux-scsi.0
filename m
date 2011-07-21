@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 13/15] bfa: Introduced initiator based lun masking feature.
-Date: Wed, 20 Jul 2011 17:04:03 -0700
-Message-ID: <1311206643-13045-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 14/15] bfa: Added support to configure lunmasking
+Date: Wed, 20 Jul 2011 17:04:24 -0700
+Message-ID: <1311206664-14540-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56112 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56120 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751906Ab1GUAEZ (ORCPT
+	by vger.kernel.org with ESMTP id S1751906Ab1GUAEp (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2011 20:04:25 -0400
+	Wed, 20 Jul 2011 20:04:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,1032 +18,379 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added support to enable initiator based lun masking.
-	- Initiator based Lun masking works similar to zoning where
-	  initiator port is allowed to see only those LUNs which are
-	  configured to be seen.
+	- Added support to enable / disable lunmasking on Brocade adapter ports.
+	- Added support to query / clear lunmasking configuration.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa.h          |   16 ++
- drivers/scsi/bfa/bfa_defs_svc.h |   30 +++-
- drivers/scsi/bfa/bfa_fc.h       |  156 +++++++++++++-
- drivers/scsi/bfa/bfa_fcpim.c    |  469 ++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/bfa/bfa_fcpim.h    |   12 +-
- drivers/scsi/bfa/bfa_svc.c      |   33 +++
- drivers/scsi/bfa/bfa_svc.h      |   15 ++
- 7 files changed, 726 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa_defs.h  |    4 +
+ drivers/scsi/bfa/bfa_fcpim.c |  194 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_fcpim.h |    7 ++
+ drivers/scsi/bfa/bfad_bsg.c  |   62 +++++++++++++
+ drivers/scsi/bfa/bfad_bsg.h  |   21 +++++
+ 5 files changed, 288 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
-index 76300be..a796de9 100644
---- a/drivers/scsi/bfa/bfa.h
-+++ b/drivers/scsi/bfa/bfa.h
-@@ -382,6 +382,22 @@ int bfa_iocfc_get_pbc_vports(struct bfa_s *bfa,
- #define bfa_get_fw_clock_res(__bfa)		\
- 	((__bfa)->iocfc.cfgrsp->fwcfg.fw_tick_res)
- 
-+/*
-+ * lun mask macros return NULL when min cfg is enabled and there is
-+ * no memory allocated for lunmask.
-+ */
-+#define bfa_get_lun_mask(__bfa)					\
-+	((&(__bfa)->modules.dconf_mod)->min_cfg) ? NULL :	\
-+	 (&(BFA_DCONF_MOD(__bfa)->dconf->lun_mask))
-+
-+#define bfa_get_lun_mask_list(_bfa)				\
-+	((&(_bfa)->modules.dconf_mod)->min_cfg) ? NULL :	\
-+	 (bfa_get_lun_mask(_bfa)->lun_list)
-+
-+#define bfa_get_lun_mask_status(_bfa)				\
-+	(((&(_bfa)->modules.dconf_mod)->min_cfg)		\
-+	 ? BFA_LUNMASK_MINCFG : ((bfa_get_lun_mask(_bfa))->status))
-+
- void bfa_get_pciids(struct bfa_pciid_s **pciids, int *npciids);
- void bfa_cfg_get_default(struct bfa_iocfc_cfg_s *cfg);
- void bfa_cfg_get_min(struct bfa_iocfc_cfg_s *cfg);
-diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
-index 202cb69..863c6ba 100644
---- a/drivers/scsi/bfa/bfa_defs_svc.h
-+++ b/drivers/scsi/bfa/bfa_defs_svc.h
-@@ -672,6 +672,12 @@ struct bfa_itnim_iostats_s {
- 	u32	tm_iocdowns;		/*  TM cleaned-up due to IOC down   */
- 	u32	tm_cleanups;		/*  TM cleanup requests	*/
- 	u32	tm_cleanup_comps;	/*  TM cleanup completions	*/
-+	u32	lm_lun_across_sg;	/*  LM lun is across sg data buf */
-+	u32	lm_lun_not_sup;		/*  LM lun not supported */
-+	u32	lm_rpl_data_changed;	/*  LM report-lun data changed */
-+	u32	lm_wire_residue_changed; /* LM report-lun rsp residue changed */
-+	u32	lm_small_buf_addresidue; /* LM buf smaller than reported cnt */
-+	u32	lm_lun_not_rdy;		/* LM lun not ready */
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index 75b9d91..7b3d235 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -175,11 +175,15 @@ enum bfa_status {
+ 	BFA_STATUS_IOPROFILE_OFF = 175, /* IO profile OFF */
+ 	BFA_STATUS_PHY_NOT_PRESENT = 183, /* PHY module not present */
+ 	BFA_STATUS_FEATURE_NOT_SUPPORTED = 192,	/* Feature not supported */
++	BFA_STATUS_ENTRY_EXISTS = 193,	/* Entry already exists */
++	BFA_STATUS_ENTRY_NOT_EXISTS = 194, /* Entry does not exist */
++	BFA_STATUS_NO_CHANGE = 195,	/* Feature already in that state */
+ 	BFA_STATUS_FAA_ENABLED = 197,	/* FAA is already enabled */
+ 	BFA_STATUS_FAA_DISABLED = 198,	/* FAA is already disabled */
+ 	BFA_STATUS_FAA_ACQUIRED = 199,	/* FAA is already acquired */
+ 	BFA_STATUS_FAA_ACQ_ADDR = 200,	/* Acquiring addr */
+ 	BFA_STATUS_ERROR_TRUNK_ENABLED = 203,	/* Trunk enabled on adapter */
++	BFA_STATUS_MAX_ENTRY_REACHED = 212,	/* MAX entry reached */
+ 	BFA_STATUS_MAX_VAL		/* Unknown error code */
  };
- 
- /* Modify char* port_stt[] in bfal_port.c if a new state was added */
-@@ -787,6 +793,28 @@ enum bfa_port_linkstate_rsn {
- 	CEE_ISCSI_PRI_PFC_OFF			= 42,
- 	CEE_ISCSI_PRI_OVERLAP_FCOE_PRI		= 43
- };
-+
-+#define MAX_LUN_MASK_CFG 16
-+
-+/*
-+ * Initially flash content may be fff. On making LUN mask enable and disable
-+ * state chnage.  when report lun command is being processed it goes from
-+ * BFA_LUN_MASK_ACTIVE to BFA_LUN_MASK_FETCH and comes back to
-+ * BFA_LUN_MASK_ACTIVE.
-+ */
-+enum bfa_ioim_lun_mask_state_s {
-+	BFA_IOIM_LUN_MASK_INACTIVE = 0,
-+	BFA_IOIM_LUN_MASK_ACTIVE = 1,
-+	BFA_IOIM_LUN_MASK_FETCHED = 2,
-+};
-+
-+enum bfa_lunmask_state_s {
-+	BFA_LUNMASK_DISABLED = 0x00,
-+	BFA_LUNMASK_ENABLED = 0x01,
-+	BFA_LUNMASK_MINCFG = 0x02,
-+	BFA_LUNMASK_UNINITIALIZED = 0xff,
-+};
-+
- #pragma pack(1)
- /*
-  * LUN mask configuration
-@@ -794,7 +822,7 @@ enum bfa_port_linkstate_rsn {
- struct bfa_lun_mask_s {
- 	wwn_t		lp_wwn;
- 	wwn_t		rp_wwn;
--	lun_t		lun;
-+	struct scsi_lun	lun;
- 	u8		ua;
- 	u8		rsvd[3];
- 	u16		rp_tag;
-diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
-index a007345..50b6a1c 100644
---- a/drivers/scsi/bfa/bfa_fc.h
-+++ b/drivers/scsi/bfa/bfa_fc.h
-@@ -21,7 +21,6 @@
- #include "bfad_drv.h"
- 
- typedef u64 wwn_t;
--typedef u64 lun_t;
- 
- #define WWN_NULL	(0)
- #define FC_SYMNAME_MAX	256	/*  max name server symbolic name size */
-@@ -57,6 +56,161 @@ struct scsi_cdb_s {
- 
- #define SCSI_MAX_ALLOC_LEN      0xFF    /* maximum allocarion length */
- 
-+#define SCSI_SENSE_CUR_ERR	0x70
-+#define SCSI_SENSE_DEF_ERR	0x71
-+
-+/*
-+ * SCSI additional sense codes
-+ */
-+#define SCSI_ASC_LUN_NOT_READY		0x04
-+#define SCSI_ASC_LUN_NOT_SUPPORTED	0x25
-+#define SCSI_ASC_TOCC			0x3F
-+
-+/*
-+ * SCSI additional sense code qualifiers
-+ */
-+#define SCSI_ASCQ_MAN_INTR_REQ		0x03	/* manual intervention req */
-+#define SCSI_ASCQ_RL_DATA_CHANGED	0x0E	/* report luns data changed */
-+
-+/*
-+ * Methods of reporting informational exceptions
-+ */
-+#define SCSI_MP_IEC_UNIT_ATTN		0x2	/* generate unit attention */
-+
-+struct scsi_report_luns_data_s {
-+	u32		lun_list_length;	/* length of LUN list length */
-+	u32		reserved;
-+	struct scsi_lun	lun[1];			/* first LUN in lun list */
-+};
-+
-+struct scsi_inquiry_vendor_s {
-+	u8	vendor_id[8];
-+};
-+
-+struct scsi_inquiry_prodid_s {
-+	u8	product_id[16];
-+};
-+
-+struct scsi_inquiry_prodrev_s {
-+	u8	product_rev[4];
-+};
-+
-+struct scsi_inquiry_data_s {
-+#ifdef __BIG_ENDIAN
-+	u8		peripheral_qual:3;	/* peripheral qualifier */
-+	u8		device_type:5;		/* peripheral device type */
-+	u8		rmb:1;			/* removable medium bit */
-+	u8		device_type_mod:7;	/* device type modifier */
-+	u8		version;
-+	u8		aenc:1;		/* async evt notification capability */
-+	u8		trm_iop:1;	/* terminate I/O process */
-+	u8		norm_aca:1;	/* normal ACA supported */
-+	u8		hi_support:1;	/* SCSI-3: supports REPORT LUNS */
-+	u8		rsp_data_format:4;
-+	u8		additional_len;
-+	u8		sccs:1;
-+	u8		reserved1:7;
-+	u8		reserved2:1;
-+	u8		enc_serv:1;	/* enclosure service component */
-+	u8		reserved3:1;
-+	u8		multi_port:1;	/* multi-port device */
-+	u8		m_chngr:1;	/* device in medium transport element */
-+	u8		ack_req_q:1;	/* SIP specific bit */
-+	u8		addr32:1;	/* SIP specific bit */
-+	u8		addr16:1;	/* SIP specific bit */
-+	u8		rel_adr:1;	/* relative address */
-+	u8		w_bus32:1;
-+	u8		w_bus16:1;
-+	u8		synchronous:1;
-+	u8		linked_commands:1;
-+	u8		trans_dis:1;
-+	u8		cmd_queue:1;	/* command queueing supported */
-+	u8		soft_reset:1;	/* soft reset alternative (VS) */
-+#else
-+	u8		device_type:5;	/* peripheral device type */
-+	u8		peripheral_qual:3; /* peripheral qualifier */
-+	u8		device_type_mod:7; /* device type modifier */
-+	u8		rmb:1;		/* removable medium bit */
-+	u8		version;
-+	u8		rsp_data_format:4;
-+	u8		hi_support:1;	/* SCSI-3: supports REPORT LUNS */
-+	u8		norm_aca:1;	/* normal ACA supported */
-+	u8		terminate_iop:1;/* terminate I/O process */
-+	u8		aenc:1;		/* async evt notification capability */
-+	u8		additional_len;
-+	u8		reserved1:7;
-+	u8		sccs:1;
-+	u8		addr16:1;	/* SIP specific bit */
-+	u8		addr32:1;	/* SIP specific bit */
-+	u8		ack_req_q:1;	/* SIP specific bit */
-+	u8		m_chngr:1;	/* device in medium transport element */
-+	u8		multi_port:1;	/* multi-port device */
-+	u8		reserved3:1;	/* TBD - Vendor Specific */
-+	u8		enc_serv:1;	/* enclosure service component */
-+	u8		reserved2:1;
-+	u8		soft_seset:1;	/* soft reset alternative (VS) */
-+	u8		cmd_queue:1;	/* command queueing supported */
-+	u8		trans_dis:1;
-+	u8		linked_commands:1;
-+	u8		synchronous:1;
-+	u8		w_bus16:1;
-+	u8		w_bus32:1;
-+	u8		rel_adr:1;	/* relative address */
-+#endif
-+	struct scsi_inquiry_vendor_s	vendor_id;
-+	struct scsi_inquiry_prodid_s	product_id;
-+	struct scsi_inquiry_prodrev_s	product_rev;
-+	u8		vendor_specific[20];
-+	u8		reserved4[40];
-+};
-+
-+/*
-+ *	SCSI sense data format
-+ */
-+struct scsi_sense_s {
-+#ifdef __BIG_ENDIAN
-+	u8		valid:1;
-+	u8		rsp_code:7;
-+#else
-+	u8		rsp_code:7;
-+	u8		valid:1;
-+#endif
-+	u8		seg_num;
-+#ifdef __BIG_ENDIAN
-+	u8		file_mark:1;
-+	u8		eom:1;		/* end of media */
-+	u8		ili:1;		/* incorrect length indicator */
-+	u8		reserved:1;
-+	u8		sense_key:4;
-+#else
-+	u8		sense_key:4;
-+	u8		reserved:1;
-+	u8		ili:1;		/* incorrect length indicator */
-+	u8		eom:1;		/* end of media */
-+	u8		file_mark:1;
-+#endif
-+	u8		information[4];	/* device-type or cmd specific info */
-+	u8		add_sense_length; /* additional sense length */
-+	u8		command_info[4];/* command specific information */
-+	u8		asc;		/* additional sense code */
-+	u8		ascq;		/* additional sense code qualifier */
-+	u8		fru_code;	/* field replaceable unit code */
-+#ifdef __BIG_ENDIAN
-+	u8		sksv:1;		/* sense key specific valid */
-+	u8		c_d:1;		/* command/data bit */
-+	u8		res1:2;
-+	u8		bpv:1;		/* bit pointer valid */
-+	u8		bpointer:3;	/* bit pointer */
-+#else
-+	u8		bpointer:3;	/* bit pointer */
-+	u8		bpv:1;		/* bit pointer valid */
-+	u8		res1:2;
-+	u8		c_d:1;		/* command/data bit */
-+	u8		sksv:1;		/* sense key specific valid */
-+#endif
-+	u8		fpointer[2];	/* field pointer */
-+};
-+
- /*
-  * Fibre Channel Header Structure (FCHS) definition
-  */
+ #define bfa_status_t enum bfa_status
 diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index 7bc010d..e601f17 100644
+index e601f17..e07bd47 100644
 --- a/drivers/scsi/bfa/bfa_fcpim.c
 +++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -24,6 +24,9 @@ BFA_TRC_FILE(HAL, FCPIM);
-  *  BFA ITNIM Related definitions
-  */
- static void bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim);
-+static bfa_boolean_t bfa_ioim_lm_proc_rpl_data(struct bfa_ioim_s *ioim);
-+static bfa_boolean_t bfa_ioim_lm_proc_inq_data(struct bfa_ioim_s *ioim);
-+static void bfa_ioim_lm_init(struct bfa_s *bfa);
- 
- #define BFA_ITNIM_FROM_TAG(_fcpim, _tag)                                \
- 	(((_fcpim)->itnim_arr + ((_tag) & ((_fcpim)->num_itnims - 1))))
-@@ -57,6 +60,14 @@ static void bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim);
- 	}								\
- } while (0)
- 
-+#define bfa_ioim_rp_wwn(__ioim)						\
-+	(((struct bfa_fcs_rport_s *)					\
-+	 (__ioim)->itnim->rport->rport_drv)->pwwn)
-+
-+#define bfa_ioim_lp_wwn(__ioim)						\
-+	((BFA_LPS_FROM_TAG(BFA_LPS_MOD((__ioim)->bfa),			\
-+	(__ioim)->itnim->rport->rport_info.lp_tag))->pwwn)		\
-+
- #define bfa_itnim_sler_cb(__itnim) do {					\
- 	if ((__itnim)->bfa->fcs)					\
- 		bfa_cb_itnim_sler((__itnim)->ditn);      \
-@@ -66,6 +77,18 @@ static void bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim);
- 	}								\
- } while (0)
- 
-+enum bfa_ioim_lm_status {
-+	BFA_IOIM_LM_PRESENT = 1,
-+	BFA_IOIM_LM_LUN_NOT_SUP = 2,
-+	BFA_IOIM_LM_RPL_DATA_CHANGED = 3,
-+	BFA_IOIM_LM_LUN_NOT_RDY = 4,
-+};
-+
-+enum bfa_ioim_lm_ua_status {
-+	BFA_IOIM_LM_UA_RESET = 0,
-+	BFA_IOIM_LM_UA_SET = 1,
-+};
-+
- /*
-  *  itnim state machine event
-  */
-@@ -122,6 +145,9 @@ enum bfa_ioim_event {
- 	BFA_IOIM_SM_TMDONE	= 16,	/*  IO cleanup from tskim */
- 	BFA_IOIM_SM_HWFAIL	= 17,	/*  IOC h/w failure event */
- 	BFA_IOIM_SM_IOTOV	= 18,	/*  ITN offline TOV */
-+	BFA_IOIM_SM_LM_LUN_NOT_SUP = 19,/*  lunmask lun not supported */
-+	BFA_IOIM_SM_LM_RPL_DC = 20,	/*  lunmask report-lun data changed */
-+	BFA_IOIM_SM_LM_LUN_NOT_RDY = 21,/*  lunmask lun not ready */
- };
- 
- 
-@@ -219,6 +245,9 @@ static void __bfa_cb_ioim_abort(void *cbarg, bfa_boolean_t complete);
- static void __bfa_cb_ioim_failed(void *cbarg, bfa_boolean_t complete);
- static void __bfa_cb_ioim_pathtov(void *cbarg, bfa_boolean_t complete);
- static bfa_boolean_t    bfa_ioim_is_abortable(struct bfa_ioim_s *ioim);
-+static void __bfa_cb_ioim_lm_lun_not_sup(void *cbarg, bfa_boolean_t complete);
-+static void __bfa_cb_ioim_lm_rpl_dc(void *cbarg, bfa_boolean_t complete);
-+static void __bfa_cb_ioim_lm_lun_not_rdy(void *cbarg, bfa_boolean_t complete);
- 
- /*
-  * forward declaration of BFA IO state machine
-@@ -416,6 +445,12 @@ bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *lstats,
- 	bfa_fcpim_add_iostats(lstats, rstats, output_reqs);
- 	bfa_fcpim_add_iostats(lstats, rstats, rd_throughput);
- 	bfa_fcpim_add_iostats(lstats, rstats, wr_throughput);
-+	bfa_fcpim_add_iostats(lstats, rstats, lm_lun_across_sg);
-+	bfa_fcpim_add_iostats(lstats, rstats, lm_lun_not_sup);
-+	bfa_fcpim_add_iostats(lstats, rstats, lm_rpl_data_changed);
-+	bfa_fcpim_add_iostats(lstats, rstats, lm_wire_residue_changed);
-+	bfa_fcpim_add_iostats(lstats, rstats, lm_small_buf_addresidue);
-+	bfa_fcpim_add_iostats(lstats, rstats, lm_lun_not_rdy);
- }
- 
- bfa_status_t
-@@ -1542,7 +1577,28 @@ bfa_ioim_sm_uninit(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
- 		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
- 		WARN_ON(!bfa_q_is_on_q(&ioim->itnim->pending_q, ioim));
- 		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
--				__bfa_cb_ioim_abort, ioim);
-+			__bfa_cb_ioim_abort, ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_LM_LUN_NOT_SUP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+			__bfa_cb_ioim_lm_lun_not_sup, ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_LM_RPL_DC:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+				__bfa_cb_ioim_lm_rpl_dc, ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_LM_LUN_NOT_RDY:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+			__bfa_cb_ioim_lm_lun_not_rdy, ioim);
- 		break;
- 
- 	default:
-@@ -2082,6 +2138,264 @@ bfa_ioim_sm_resfree(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+@@ -2553,6 +2553,200 @@ bfa_fcpim_lunmask_rp_update(struct bfa_s *bfa, wwn_t lp_wwn, wwn_t rp_wwn,
  	}
  }
  
 +/*
-+ * This is called from bfa_fcpim_start after the bfa_init() with flash read
-+ * is complete by driver. now invalidate the stale content of lun mask
-+ * like unit attention, rp tag and lp tag.
++ * set UA for all active luns in LM DB
 + */
 +static void
-+bfa_ioim_lm_init(struct bfa_s *bfa)
++bfa_ioim_lm_set_ua(struct bfa_s *bfa)
 +{
-+	struct bfa_lun_mask_s *lunm_list;
++	struct bfa_lun_mask_s	*lunm_list;
 +	int	i;
-+
-+	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
-+		return;
 +
 +	lunm_list = bfa_get_lun_mask_list(bfa);
 +	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
-+		lunm_list[i].ua = BFA_IOIM_LM_UA_RESET;
-+		lunm_list[i].lp_tag = BFA_LP_TAG_INVALID;
-+		lunm_list[i].rp_tag = BFA_RPORT_TAG_INVALID;
++		if (lunm_list[i].state != BFA_IOIM_LUN_MASK_ACTIVE)
++			continue;
++		lunm_list[i].ua = BFA_IOIM_LM_UA_SET;
 +	}
 +}
 +
-+/*
-+ * Validate LUN for LUN masking
-+ */
-+static enum bfa_ioim_lm_status
-+bfa_ioim_lm_check(struct bfa_ioim_s *ioim, struct bfa_lps_s *lps,
-+		struct bfa_rport_s *rp, struct scsi_lun lun)
++bfa_status_t
++bfa_fcpim_lunmask_update(struct bfa_s *bfa, u32 update)
 +{
-+	u8 i;
-+	struct bfa_lun_mask_s *lun_list = bfa_get_lun_mask_list(ioim->bfa);
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)ioim->dio;
-+	struct scsi_cdb_s *cdb = (struct scsi_cdb_s *)cmnd->cmnd;
++	struct bfa_lunmask_cfg_s	*lun_mask;
 +
-+	if ((cdb->scsi_cdb[0] == REPORT_LUNS) &&
-+	    (scsilun_to_int((struct scsi_lun *)&lun) == 0)) {
-+		ioim->proc_rsp_data = bfa_ioim_lm_proc_rpl_data;
-+		return BFA_IOIM_LM_PRESENT;
-+	}
++	bfa_trc(bfa, bfa_get_lun_mask_status(bfa));
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
++		return BFA_STATUS_FAILED;
 +
++	if (bfa_get_lun_mask_status(bfa) == update)
++		return BFA_STATUS_NO_CHANGE;
++
++	lun_mask = bfa_get_lun_mask(bfa);
++	lun_mask->status = update;
++
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_ENABLED)
++		bfa_ioim_lm_set_ua(bfa);
++
++	return  bfa_dconf_update(bfa);
++}
++
++bfa_status_t
++bfa_fcpim_lunmask_clear(struct bfa_s *bfa)
++{
++	int i;
++	struct bfa_lun_mask_s	*lunm_list;
++
++	bfa_trc(bfa, bfa_get_lun_mask_status(bfa));
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
++		return BFA_STATUS_FAILED;
++
++	lunm_list = bfa_get_lun_mask_list(bfa);
 +	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
++		if (lunm_list[i].state == BFA_IOIM_LUN_MASK_ACTIVE) {
++			if (lunm_list[i].rp_tag != BFA_RPORT_TAG_INVALID)
++				bfa_rport_unset_lunmask(bfa,
++				  BFA_RPORT_FROM_TAG(bfa, lunm_list[i].rp_tag));
++		}
++	}
 +
-+		if (lun_list[i].state != BFA_IOIM_LUN_MASK_ACTIVE)
-+			continue;
++	memset(lunm_list, 0, sizeof(struct bfa_lun_mask_s) * MAX_LUN_MASK_CFG);
++	return bfa_dconf_update(bfa);
++}
 +
-+		if ((scsilun_to_int((struct scsi_lun *)&lun_list[i].lun) ==
-+		    scsilun_to_int((struct scsi_lun *)&lun))
-+		    && (rp->rport_tag == lun_list[i].rp_tag)
-+		    && ((u8)ioim->itnim->rport->rport_info.lp_tag ==
-+						lun_list[i].lp_tag)) {
-+			bfa_trc(ioim->bfa, lun_list[i].rp_tag);
-+			bfa_trc(ioim->bfa, lun_list[i].lp_tag);
-+			bfa_trc(ioim->bfa, scsilun_to_int(
-+				(struct scsi_lun *)&lun_list[i].lun));
++bfa_status_t
++bfa_fcpim_lunmask_query(struct bfa_s *bfa, void *buf)
++{
++	struct bfa_lunmask_cfg_s *lun_mask;
 +
-+			if ((lun_list[i].ua == BFA_IOIM_LM_UA_SET) &&
-+			    ((cdb->scsi_cdb[0] != INQUIRY) ||
-+			    (cdb->scsi_cdb[0] != REPORT_LUNS))) {
-+				lun_list[i].ua = BFA_IOIM_LM_UA_RESET;
-+				return BFA_IOIM_LM_RPL_DATA_CHANGED;
++	bfa_trc(bfa, bfa_get_lun_mask_status(bfa));
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
++		return BFA_STATUS_FAILED;
++
++	lun_mask = bfa_get_lun_mask(bfa);
++	memcpy(buf, lun_mask, sizeof(struct bfa_lunmask_cfg_s));
++	return BFA_STATUS_OK;
++}
++
++bfa_status_t
++bfa_fcpim_lunmask_add(struct bfa_s *bfa, u16 vf_id, wwn_t *pwwn,
++		      wwn_t rpwwn, struct scsi_lun lun)
++{
++	struct bfa_lun_mask_s *lunm_list;
++	struct bfa_rport_s *rp = NULL;
++	int i, free_index = MAX_LUN_MASK_CFG + 1;
++	struct bfa_fcs_lport_s *port = NULL;
++	struct bfa_fcs_rport_s *rp_fcs;
++
++	bfa_trc(bfa, bfa_get_lun_mask_status(bfa));
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
++		return BFA_STATUS_FAILED;
++
++	port = bfa_fcs_lookup_port(&((struct bfad_s *)bfa->bfad)->bfa_fcs,
++				   vf_id, *pwwn);
++	if (port) {
++		*pwwn = port->port_cfg.pwwn;
++		rp_fcs = bfa_fcs_lport_get_rport_by_pwwn(port, rpwwn);
++		rp = rp_fcs->bfa_rport;
++	}
++
++	lunm_list = bfa_get_lun_mask_list(bfa);
++	/* if entry exists */
++	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
++		if (lunm_list[i].state != BFA_IOIM_LUN_MASK_ACTIVE)
++			free_index = i;
++		if ((lunm_list[i].lp_wwn == *pwwn) &&
++		    (lunm_list[i].rp_wwn == rpwwn) &&
++		    (scsilun_to_int((struct scsi_lun *)&lunm_list[i].lun) ==
++		     scsilun_to_int((struct scsi_lun *)&lun)))
++			return  BFA_STATUS_ENTRY_EXISTS;
++	}
++
++	if (free_index > MAX_LUN_MASK_CFG)
++		return BFA_STATUS_MAX_ENTRY_REACHED;
++
++	if (rp) {
++		lunm_list[free_index].lp_tag = bfa_lps_get_tag_from_pid(bfa,
++						   rp->rport_info.local_pid);
++		lunm_list[free_index].rp_tag = rp->rport_tag;
++	} else {
++		lunm_list[free_index].lp_tag = BFA_LP_TAG_INVALID;
++		lunm_list[free_index].rp_tag = BFA_RPORT_TAG_INVALID;
++	}
++
++	lunm_list[free_index].lp_wwn = *pwwn;
++	lunm_list[free_index].rp_wwn = rpwwn;
++	lunm_list[free_index].lun = lun;
++	lunm_list[free_index].state = BFA_IOIM_LUN_MASK_ACTIVE;
++
++	/* set for all luns in this rp */
++	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
++		if ((lunm_list[i].lp_wwn == *pwwn) &&
++		    (lunm_list[i].rp_wwn == rpwwn))
++			lunm_list[i].ua = BFA_IOIM_LM_UA_SET;
++	}
++
++	return bfa_dconf_update(bfa);
++}
++
++bfa_status_t
++bfa_fcpim_lunmask_delete(struct bfa_s *bfa, u16 vf_id, wwn_t *pwwn,
++			 wwn_t rpwwn, struct scsi_lun lun)
++{
++	struct bfa_lun_mask_s	*lunm_list;
++	struct bfa_rport_s	*rp = NULL;
++	struct bfa_fcs_lport_s *port = NULL;
++	struct bfa_fcs_rport_s *rp_fcs;
++	int	i;
++
++	/* in min cfg lunm_list could be NULL but  no commands should run. */
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
++		return BFA_STATUS_FAILED;
++
++	bfa_trc(bfa, bfa_get_lun_mask_status(bfa));
++	bfa_trc(bfa, *pwwn);
++	bfa_trc(bfa, rpwwn);
++	bfa_trc(bfa, scsilun_to_int((struct scsi_lun *)&lun));
++
++	if (*pwwn == 0) {
++		port = bfa_fcs_lookup_port(
++				&((struct bfad_s *)bfa->bfad)->bfa_fcs,
++				vf_id, *pwwn);
++		if (port) {
++			*pwwn = port->port_cfg.pwwn;
++			rp_fcs = bfa_fcs_lport_get_rport_by_pwwn(port, rpwwn);
++			rp = rp_fcs->bfa_rport;
++		}
++	}
++
++	lunm_list = bfa_get_lun_mask_list(bfa);
++	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
++		if ((lunm_list[i].lp_wwn == *pwwn) &&
++		    (lunm_list[i].rp_wwn == rpwwn) &&
++		    (scsilun_to_int((struct scsi_lun *)&lunm_list[i].lun) ==
++		     scsilun_to_int((struct scsi_lun *)&lun))) {
++			lunm_list[i].lp_wwn = 0;
++			lunm_list[i].rp_wwn = 0;
++			int_to_scsilun(0, &lunm_list[i].lun);
++			lunm_list[i].state = BFA_IOIM_LUN_MASK_INACTIVE;
++			if (lunm_list[i].rp_tag != BFA_RPORT_TAG_INVALID) {
++				lunm_list[i].rp_tag = BFA_RPORT_TAG_INVALID;
++				lunm_list[i].lp_tag = BFA_LP_TAG_INVALID;
 +			}
-+
-+			if (cdb->scsi_cdb[0] == REPORT_LUNS)
-+				ioim->proc_rsp_data = bfa_ioim_lm_proc_rpl_data;
-+
-+			return BFA_IOIM_LM_PRESENT;
++			return bfa_dconf_update(bfa);
 +		}
 +	}
 +
-+	if ((cdb->scsi_cdb[0] == INQUIRY) &&
-+	    (scsilun_to_int((struct scsi_lun *)&lun) == 0)) {
-+		ioim->proc_rsp_data = bfa_ioim_lm_proc_inq_data;
-+		return BFA_IOIM_LM_PRESENT;
++	/* set for all luns in this rp */
++	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
++		if ((lunm_list[i].lp_wwn == *pwwn) &&
++		    (lunm_list[i].rp_wwn == rpwwn))
++			lunm_list[i].ua = BFA_IOIM_LM_UA_SET;
 +	}
 +
-+	if (cdb->scsi_cdb[0] == TEST_UNIT_READY)
-+		return BFA_IOIM_LM_LUN_NOT_RDY;
-+
-+	return BFA_IOIM_LM_LUN_NOT_SUP;
++	return BFA_STATUS_ENTRY_NOT_EXISTS;
 +}
 +
-+static bfa_boolean_t
-+bfa_ioim_lm_proc_rsp_data_dummy(struct bfa_ioim_s *ioim)
+ static void
+ __bfa_cb_ioim_failed(void *cbarg, bfa_boolean_t complete)
+ {
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index 99fc913..1080bcb 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -416,5 +416,12 @@ void bfa_cb_tskim_done(void *bfad, struct bfad_tskim_s *dtsk,
+ 
+ void	bfa_fcpim_lunmask_rp_update(struct bfa_s *bfa, wwn_t lp_wwn,
+ 			wwn_t rp_wwn, u16 rp_tag, u8 lp_tag);
++bfa_status_t	bfa_fcpim_lunmask_update(struct bfa_s *bfa, u32 on_off);
++bfa_status_t	bfa_fcpim_lunmask_query(struct bfa_s *bfa, void *buf);
++bfa_status_t	bfa_fcpim_lunmask_delete(struct bfa_s *bfa, u16 vf_id,
++				wwn_t *pwwn, wwn_t rpwwn, struct scsi_lun lun);
++bfa_status_t	bfa_fcpim_lunmask_add(struct bfa_s *bfa, u16 vf_id,
++				wwn_t *pwwn, wwn_t rpwwn, struct scsi_lun lun);
++bfa_status_t	bfa_fcpim_lunmask_clear(struct bfa_s *bfa);
+ 
+ #endif /* __BFA_FCPIM_H__ */
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 66349bd..06fc00c 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -2394,6 +2394,56 @@ out:
+ 	return 0;
+ }
+ 
++int
++bfad_iocmd_lunmask(struct bfad_s *bfad, void *pcmd, unsigned int v_cmd)
 +{
-+	return BFA_TRUE;
-+}
++	struct bfa_bsg_gen_s *iocmd = (struct bfa_bsg_gen_s *)pcmd;
++	unsigned long	flags;
 +
-+static void
-+bfa_ioim_lm_fetch_lun(struct bfa_ioim_s *ioim, u8 *rl_data, int offset,
-+		int buf_lun_cnt)
-+{
-+	struct bfa_lun_mask_s *lun_list = bfa_get_lun_mask_list(ioim->bfa);
-+	struct scsi_lun *lun_data = (struct scsi_lun *)(rl_data + offset);
-+	struct scsi_lun lun;
-+	int i, j;
-+
-+	bfa_trc(ioim->bfa, buf_lun_cnt);
-+	for (j = 0; j < buf_lun_cnt; j++) {
-+		lun = *((struct scsi_lun *)(lun_data + j));
-+		for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
-+			if (lun_list[i].state != BFA_IOIM_LUN_MASK_ACTIVE)
-+				continue;
-+			if ((lun_list[i].rp_wwn == bfa_ioim_rp_wwn(ioim)) &&
-+			    (lun_list[i].lp_wwn == bfa_ioim_lp_wwn(ioim)) &&
-+			    (scsilun_to_int((struct scsi_lun *)&lun_list[i].lun)
-+				== scsilun_to_int((struct scsi_lun *)&lun))) {
-+				lun_list[i].state = BFA_IOIM_LUN_MASK_FETCHED;
-+				break;
-+			}
-+		} /* next lun in mask DB */
-+	} /* next lun in buf */
-+}
-+
-+static int
-+bfa_ioim_lm_update_lun_sg(struct bfa_ioim_s *ioim, u32 *pgdlen,
-+		struct scsi_report_luns_data_s *rl)
-+{
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)ioim->dio;
-+	struct scatterlist *sg = scsi_sglist(cmnd);
-+	struct bfa_lun_mask_s *lun_list = bfa_get_lun_mask_list(ioim->bfa);
-+	struct scsi_lun *prev_rl_data = NULL, *base_rl_data;
-+	int i, j, sgeid, lun_fetched_cnt = 0, prev_sg_len = 0, base_count;
-+	int lun_across_sg_bytes, bytes_from_next_buf;
-+	u64	last_lun, temp_last_lun;
-+
-+	/* fetch luns from the first sg element */
-+	bfa_ioim_lm_fetch_lun(ioim, (u8 *)(rl->lun), 0,
-+			(sg_dma_len(sg) / sizeof(struct scsi_lun)) - 1);
-+
-+	/* fetch luns from multiple sg elements */
-+	scsi_for_each_sg(cmnd, sg, scsi_sg_count(cmnd), sgeid) {
-+		if (sgeid == 0) {
-+			prev_sg_len = sg_dma_len(sg);
-+			prev_rl_data = (struct scsi_lun *)
-+					phys_to_virt(sg_dma_address(sg));
-+			continue;
-+		}
-+
-+		/* if the buf is having more data */
-+		lun_across_sg_bytes = prev_sg_len % sizeof(struct scsi_lun);
-+		if (lun_across_sg_bytes) {
-+			bfa_trc(ioim->bfa, lun_across_sg_bytes);
-+			bfa_stats(ioim->itnim, lm_lun_across_sg);
-+			bytes_from_next_buf = sizeof(struct scsi_lun) -
-+					      lun_across_sg_bytes;
-+
-+			/* from next buf take higher bytes */
-+			temp_last_lun = *((u64 *)
-+					  phys_to_virt(sg_dma_address(sg)));
-+			last_lun |= temp_last_lun >>
-+				    (lun_across_sg_bytes * BITS_PER_BYTE);
-+
-+			/* from prev buf take higher bytes */
-+			temp_last_lun = *((u64 *)(prev_rl_data +
-+					  (prev_sg_len - lun_across_sg_bytes)));
-+			temp_last_lun >>= bytes_from_next_buf * BITS_PER_BYTE;
-+			last_lun = last_lun | (temp_last_lun <<
-+				   (bytes_from_next_buf * BITS_PER_BYTE));
-+
-+			bfa_ioim_lm_fetch_lun(ioim, (u8 *)&last_lun, 0, 1);
-+		} else
-+			bytes_from_next_buf = 0;
-+
-+		*pgdlen += sg_dma_len(sg);
-+		prev_sg_len = sg_dma_len(sg);
-+		prev_rl_data = (struct scsi_lun *)
-+				phys_to_virt(sg_dma_address(sg));
-+		bfa_ioim_lm_fetch_lun(ioim, (u8 *)prev_rl_data,
-+				bytes_from_next_buf,
-+				sg_dma_len(sg) / sizeof(struct scsi_lun));
-+	}
-+
-+	/* update the report luns data - based on fetched luns */
-+	sg = scsi_sglist(cmnd);
-+	base_rl_data = (struct scsi_lun *)rl->lun;
-+	base_count = (sg_dma_len(sg) / sizeof(struct scsi_lun)) - 1;
-+	for (i = 0, j = 0; i < MAX_LUN_MASK_CFG; i++) {
-+		if (lun_list[i].state == BFA_IOIM_LUN_MASK_FETCHED) {
-+			base_rl_data[j] = lun_list[i].lun;
-+			lun_list[i].state = BFA_IOIM_LUN_MASK_ACTIVE;
-+			j++;
-+			lun_fetched_cnt++;
-+		}
-+
-+		if (j > base_count) {
-+			j = 0;
-+			sg = sg_next(sg);
-+			base_rl_data = (struct scsi_lun *)
-+					phys_to_virt(sg_dma_address(sg));
-+			base_count = sg_dma_len(sg) / sizeof(struct scsi_lun);
-+		}
-+	}
-+
-+	bfa_trc(ioim->bfa, lun_fetched_cnt);
-+	return lun_fetched_cnt;
-+}
-+
-+static bfa_boolean_t
-+bfa_ioim_lm_proc_inq_data(struct bfa_ioim_s *ioim)
-+{
-+	struct scsi_inquiry_data_s *inq;
-+	struct scatterlist *sg = scsi_sglist((struct scsi_cmnd *)ioim->dio);
-+
-+	ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
-+	inq = (struct scsi_inquiry_data_s *)phys_to_virt(sg_dma_address(sg));
-+
-+	bfa_trc(ioim->bfa, inq->device_type);
-+	inq->peripheral_qual = SCSI_INQ_PQ_NOT_CON;
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	if (v_cmd == IOCMD_FCPIM_LUNMASK_ENABLE)
++		iocmd->status = bfa_fcpim_lunmask_update(&bfad->bfa, BFA_TRUE);
++	else if (v_cmd == IOCMD_FCPIM_LUNMASK_DISABLE)
++		iocmd->status = bfa_fcpim_lunmask_update(&bfad->bfa, BFA_FALSE);
++	else if (v_cmd == IOCMD_FCPIM_LUNMASK_CLEAR)
++		iocmd->status = bfa_fcpim_lunmask_clear(&bfad->bfa);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
 +	return 0;
 +}
 +
-+static bfa_boolean_t
-+bfa_ioim_lm_proc_rpl_data(struct bfa_ioim_s *ioim)
++int
++bfad_iocmd_fcpim_lunmask_query(struct bfad_s *bfad, void *cmd)
 +{
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)ioim->dio;
-+	struct scatterlist *sg = scsi_sglist(cmnd);
-+	struct bfi_ioim_rsp_s *m;
-+	struct scsi_report_luns_data_s *rl = NULL;
-+	int lun_count = 0, lun_fetched_cnt = 0;
-+	u32 residue, pgdlen = 0;
++	struct bfa_bsg_fcpim_lunmask_query_s *iocmd =
++			(struct bfa_bsg_fcpim_lunmask_query_s *)cmd;
++	struct bfa_lunmask_cfg_s *lun_mask = &iocmd->lun_mask;
++	unsigned long	flags;
 +
-+	ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
-+	if (bfa_get_lun_mask_status(ioim->bfa) != BFA_LUNMASK_ENABLED)
-+		return BFA_TRUE;
-+
-+	m = (struct bfi_ioim_rsp_s *) &ioim->iosp->comp_rspmsg;
-+	if (m->scsi_status == SCSI_STATUS_CHECK_CONDITION)
-+		return BFA_TRUE;
-+
-+	pgdlen = sg_dma_len(sg);
-+	bfa_trc(ioim->bfa, pgdlen);
-+	rl = (struct scsi_report_luns_data_s *)phys_to_virt(sg_dma_address(sg));
-+	lun_count = cpu_to_be32(rl->lun_list_length) / sizeof(struct scsi_lun);
-+	lun_fetched_cnt = bfa_ioim_lm_update_lun_sg(ioim, &pgdlen, rl);
-+
-+	if (lun_count == lun_fetched_cnt)
-+		return BFA_TRUE;
-+
-+	bfa_trc(ioim->bfa, lun_count);
-+	bfa_trc(ioim->bfa, lun_fetched_cnt);
-+	bfa_trc(ioim->bfa, be32_to_cpu(rl->lun_list_length));
-+
-+	if (be32_to_cpu(rl->lun_list_length) <= pgdlen)
-+		rl->lun_list_length = be32_to_cpu(lun_fetched_cnt) *
-+				      sizeof(struct scsi_lun);
-+	else
-+		bfa_stats(ioim->itnim, lm_small_buf_addresidue);
-+
-+	bfa_trc(ioim->bfa, be32_to_cpu(rl->lun_list_length));
-+	bfa_trc(ioim->bfa, be32_to_cpu(m->residue));
-+
-+	residue = be32_to_cpu(m->residue);
-+	residue += (lun_count - lun_fetched_cnt) * sizeof(struct scsi_lun);
-+	bfa_stats(ioim->itnim, lm_wire_residue_changed);
-+	m->residue = be32_to_cpu(residue);
-+	bfa_trc(ioim->bfa, ioim->nsges);
-+	return BFA_FALSE;
-+}
- 
- static void
- __bfa_cb_ioim_good_comp(void *cbarg, bfa_boolean_t complete)
-@@ -2141,6 +2455,105 @@ __bfa_cb_ioim_comp(void *cbarg, bfa_boolean_t complete)
- }
- 
- static void
-+__bfa_cb_ioim_lm_lun_not_sup(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+	int sns_len = 0xD;
-+	u32 residue = scsi_bufflen((struct scsi_cmnd *)ioim->dio);
-+	struct scsi_sense_s *snsinfo;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	snsinfo = (struct scsi_sense_s *)BFA_SNSINFO_FROM_TAG(
-+					ioim->fcpim->fcp, ioim->iotag);
-+	snsinfo->rsp_code = SCSI_SENSE_CUR_ERR;
-+	snsinfo->add_sense_length = 0xa;
-+	snsinfo->asc = SCSI_ASC_LUN_NOT_SUPPORTED;
-+	snsinfo->sense_key = ILLEGAL_REQUEST;
-+	bfa_trc(ioim->bfa, residue);
-+	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_OK,
-+			SCSI_STATUS_CHECK_CONDITION, sns_len,
-+			(u8 *)snsinfo, residue);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	iocmd->status = bfa_fcpim_lunmask_query(&bfad->bfa, lun_mask);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	return 0;
 +}
 +
-+static void
-+__bfa_cb_ioim_lm_rpl_dc(void *cbarg, bfa_boolean_t complete)
++int
++bfad_iocmd_fcpim_cfg_lunmask(struct bfad_s *bfad, void *cmd, unsigned int v_cmd)
 +{
-+	struct bfa_ioim_s *ioim = cbarg;
-+	int sns_len = 0xD;
-+	u32 residue = scsi_bufflen((struct scsi_cmnd *)ioim->dio);
-+	struct scsi_sense_s *snsinfo;
++	struct bfa_bsg_fcpim_lunmask_s *iocmd =
++				(struct bfa_bsg_fcpim_lunmask_s *)cmd;
++	unsigned long	flags;
 +
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	snsinfo = (struct scsi_sense_s *)BFA_SNSINFO_FROM_TAG(ioim->fcpim->fcp,
-+						       ioim->iotag);
-+	snsinfo->rsp_code = SCSI_SENSE_CUR_ERR;
-+	snsinfo->sense_key = SCSI_MP_IEC_UNIT_ATTN;
-+	snsinfo->asc = SCSI_ASC_TOCC;
-+	snsinfo->add_sense_length = 0x6;
-+	snsinfo->ascq = SCSI_ASCQ_RL_DATA_CHANGED;
-+	bfa_trc(ioim->bfa, residue);
-+	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_OK,
-+			SCSI_STATUS_CHECK_CONDITION, sns_len,
-+			(u8 *)snsinfo, residue);
++	spin_lock_irqsave(&bfad->bfad_lock, flags);
++	if (v_cmd == IOCMD_FCPIM_LUNMASK_ADD)
++		iocmd->status = bfa_fcpim_lunmask_add(&bfad->bfa, iocmd->vf_id,
++					&iocmd->pwwn, iocmd->rpwwn, iocmd->lun);
++	else if (v_cmd == IOCMD_FCPIM_LUNMASK_DELETE)
++		iocmd->status = bfa_fcpim_lunmask_delete(&bfad->bfa,
++					iocmd->vf_id, &iocmd->pwwn,
++					iocmd->rpwwn, iocmd->lun);
++	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
++	return 0;
 +}
 +
-+static void
-+__bfa_cb_ioim_lm_lun_not_rdy(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+	int sns_len = 0xD;
-+	u32 residue = scsi_bufflen((struct scsi_cmnd *)ioim->dio);
-+	struct scsi_sense_s *snsinfo;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	snsinfo = (struct scsi_sense_s *)BFA_SNSINFO_FROM_TAG(
-+					ioim->fcpim->fcp, ioim->iotag);
-+	snsinfo->rsp_code = SCSI_SENSE_CUR_ERR;
-+	snsinfo->add_sense_length = 0xa;
-+	snsinfo->sense_key = NOT_READY;
-+	snsinfo->asc = SCSI_ASC_LUN_NOT_READY;
-+	snsinfo->ascq = SCSI_ASCQ_MAN_INTR_REQ;
-+	bfa_trc(ioim->bfa, residue);
-+	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_OK,
-+			SCSI_STATUS_CHECK_CONDITION, sns_len,
-+			(u8 *)snsinfo, residue);
-+}
-+
-+void
-+bfa_fcpim_lunmask_rp_update(struct bfa_s *bfa, wwn_t lp_wwn, wwn_t rp_wwn,
-+			u16 rp_tag, u8 lp_tag)
-+{
-+	struct bfa_lun_mask_s *lun_list;
-+	u8	i;
-+
-+	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_MINCFG)
-+		return;
-+
-+	lun_list = bfa_get_lun_mask_list(bfa);
-+	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
-+		if (lun_list[i].state == BFA_IOIM_LUN_MASK_ACTIVE) {
-+			if ((lun_list[i].lp_wwn == lp_wwn) &&
-+			    (lun_list[i].rp_wwn == rp_wwn)) {
-+				lun_list[i].rp_tag = rp_tag;
-+				lun_list[i].lp_tag = lp_tag;
-+			}
-+		}
-+	}
-+}
-+
-+static void
- __bfa_cb_ioim_failed(void *cbarg, bfa_boolean_t complete)
- {
- 	struct bfa_ioim_s *ioim = cbarg;
-@@ -2150,6 +2563,7 @@ __bfa_cb_ioim_failed(void *cbarg, bfa_boolean_t complete)
- 		return;
- 	}
- 
-+	ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
- 	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_ABORTED,
- 			  0, 0, NULL, 0);
- }
-@@ -2165,6 +2579,7 @@ __bfa_cb_ioim_pathtov(void *cbarg, bfa_boolean_t complete)
- 		return;
- 	}
- 
-+	ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
- 	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_PATHTOV,
- 			  0, 0, NULL, 0);
- }
-@@ -2179,6 +2594,7 @@ __bfa_cb_ioim_abort(void *cbarg, bfa_boolean_t complete)
- 		return;
- 	}
- 
-+	ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
- 	bfa_cb_ioim_abort(ioim->bfa->bfad, ioim->dio);
- }
- 
-@@ -2522,6 +2938,7 @@ bfa_ioim_attach(struct bfa_fcpim_s *fcpim)
- 		ioim->bfa     = fcpim->bfa;
- 		ioim->fcpim   = fcpim;
- 		ioim->iosp    = iosp;
-+		ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
- 		INIT_LIST_HEAD(&ioim->sgpg_q);
- 		bfa_reqq_winit(&ioim->iosp->reqq_wait,
- 				   bfa_ioim_qresume, ioim);
-@@ -2559,6 +2976,7 @@ bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
- 			evt = BFA_IOIM_SM_DONE;
- 		else
- 			evt = BFA_IOIM_SM_COMP;
-+		ioim->proc_rsp_data(ioim);
+ static int
+ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 		unsigned int payload_len)
+@@ -2712,6 +2762,18 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
+ 	case IOCMD_VF_RESET_STATS:
+ 		rc = bfad_iocmd_vf_clr_stats(bfad, iocmd);
  		break;
- 
- 	case BFI_IOIM_STS_TIMEDOUT:
-@@ -2594,6 +3012,7 @@ bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
- 		if (rsp->abort_tag != ioim->abort_tag) {
- 			bfa_trc(ioim->bfa, rsp->abort_tag);
- 			bfa_trc(ioim->bfa, ioim->abort_tag);
-+			ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
- 			return;
- 		}
- 
-@@ -2612,6 +3031,7 @@ bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
- 		WARN_ON(1);
- 	}
- 
-+	ioim->proc_rsp_data = bfa_ioim_lm_proc_rsp_data_dummy;
- 	bfa_sm_send_event(ioim, evt);
- }
- 
-@@ -2629,7 +3049,16 @@ bfa_ioim_good_comp_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
- 	WARN_ON(BFA_IOIM_TAG_2_ID(ioim->iotag) != iotag);
- 
- 	bfa_ioim_cb_profile_comp(fcpim, ioim);
--	bfa_sm_send_event(ioim, BFA_IOIM_SM_COMP_GOOD);
-+
-+	if (bfa_get_lun_mask_status(bfa) != BFA_LUNMASK_ENABLED)  {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_COMP_GOOD);
-+		return;
-+	}
-+
-+	if (ioim->proc_rsp_data(ioim) == BFA_TRUE)
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_COMP_GOOD);
-+	else
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_COMP);
- }
- 
- /*
-@@ -2741,6 +3170,35 @@ bfa_ioim_free(struct bfa_ioim_s *ioim)
- void
- bfa_ioim_start(struct bfa_ioim_s *ioim)
- {
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)ioim->dio;
-+	struct bfa_lps_s	*lps;
-+	enum bfa_ioim_lm_status status;
-+	struct scsi_lun scsilun;
-+
-+	if (bfa_get_lun_mask_status(ioim->bfa) == BFA_LUNMASK_ENABLED) {
-+		lps = BFA_IOIM_TO_LPS(ioim);
-+		int_to_scsilun(cmnd->device->lun, &scsilun);
-+		status = bfa_ioim_lm_check(ioim, lps,
-+				ioim->itnim->rport, scsilun);
-+		if (status == BFA_IOIM_LM_LUN_NOT_RDY) {
-+			bfa_sm_send_event(ioim, BFA_IOIM_SM_LM_LUN_NOT_RDY);
-+			bfa_stats(ioim->itnim, lm_lun_not_rdy);
-+			return;
-+		}
-+
-+		if (status == BFA_IOIM_LM_LUN_NOT_SUP) {
-+			bfa_sm_send_event(ioim, BFA_IOIM_SM_LM_LUN_NOT_SUP);
-+			bfa_stats(ioim->itnim, lm_lun_not_sup);
-+			return;
-+		}
-+
-+		if (status == BFA_IOIM_LM_RPL_DATA_CHANGED) {
-+			bfa_sm_send_event(ioim, BFA_IOIM_SM_LM_RPL_DC);
-+			bfa_stats(ioim->itnim, lm_rpl_data_changed);
-+			return;
-+		}
-+	}
-+
- 	bfa_ioim_cb_profile_start(ioim->fcpim, ioim);
- 
- 	/*
-@@ -3484,6 +3942,13 @@ bfa_fcp_detach(struct bfa_s *bfa)
- static void
- bfa_fcp_start(struct bfa_s *bfa)
- {
-+	struct bfa_fcp_mod_s *fcp = BFA_FCP_MOD(bfa);
-+
-+	/*
-+	 * bfa_init() with flash read is complete. now invalidate the stale
-+	 * content of lun mask like unit attention, rp tag and lp tag.
-+	 */
-+	bfa_ioim_lm_init(fcp->bfa);
- }
- 
- static void
-diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
-index c224987..99fc913 100644
---- a/drivers/scsi/bfa/bfa_fcpim.h
-+++ b/drivers/scsi/bfa/bfa_fcpim.h
-@@ -110,6 +110,7 @@ struct bfad_ioim_s;
- struct bfad_tskim_s;
- 
- typedef void    (*bfa_fcpim_profile_t) (struct bfa_ioim_s *ioim);
-+typedef bfa_boolean_t (*bfa_ioim_lm_proc_rsp_data_t) (struct bfa_ioim_s *ioim);
- 
- struct bfa_fcpim_s {
- 	struct bfa_s		*bfa;
-@@ -123,7 +124,7 @@ struct bfa_fcpim_s {
- 	u32			path_tov;
- 	u16			q_depth;
- 	u8			reqq;		/*  Request queue to be used */
--	u8			rsvd;
-+	u8			lun_masking_pending;
- 	struct list_head	itnim_q;	/*  queue of active itnim */
- 	struct list_head	ioim_resfree_q; /*  IOs waiting for f/w */
- 	struct list_head	ioim_comp_q;	/*  IO global comp Q	*/
-@@ -178,7 +179,9 @@ struct bfa_ioim_s {
- 	bfa_cb_cbfn_t		io_cbfn;	/*  IO completion handler */
- 	struct bfa_ioim_sp_s	*iosp;		/*  slow-path IO handling */
- 	u8			reqq;		/*  Request queue for I/O */
-+	u8			mode;		/*  IO is passthrough or not */
- 	u64			start_time;	/*  IO's Profile start val */
-+	bfa_ioim_lm_proc_rsp_data_t proc_rsp_data; /* RSP data adjust */
++	case IOCMD_FCPIM_LUNMASK_ENABLE:
++	case IOCMD_FCPIM_LUNMASK_DISABLE:
++	case IOCMD_FCPIM_LUNMASK_CLEAR:
++		rc = bfad_iocmd_lunmask(bfad, iocmd, cmd);
++		break;
++	case IOCMD_FCPIM_LUNMASK_QUERY:
++		rc = bfad_iocmd_fcpim_lunmask_query(bfad, iocmd);
++		break;
++	case IOCMD_FCPIM_LUNMASK_ADD:
++	case IOCMD_FCPIM_LUNMASK_DELETE:
++		rc = bfad_iocmd_fcpim_cfg_lunmask(bfad, iocmd, cmd);
++		break;
+ 	default:
+ 		rc = -EINVAL;
+ 		break;
+diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
+index 1e02652..e859adb 100644
+--- a/drivers/scsi/bfa/bfad_bsg.h
++++ b/drivers/scsi/bfa/bfad_bsg.h
+@@ -137,6 +137,12 @@ enum {
+ 	IOCMD_QOS_RESET_STATS,
+ 	IOCMD_VF_GET_STATS,
+ 	IOCMD_VF_RESET_STATS,
++	IOCMD_FCPIM_LUNMASK_ENABLE,
++	IOCMD_FCPIM_LUNMASK_DISABLE,
++	IOCMD_FCPIM_LUNMASK_CLEAR,
++	IOCMD_FCPIM_LUNMASK_QUERY,
++	IOCMD_FCPIM_LUNMASK_ADD,
++	IOCMD_FCPIM_LUNMASK_DELETE,
  };
  
- struct bfa_ioim_sp_s {
-@@ -258,6 +261,10 @@ struct bfa_itnim_s {
- 	(__ioim)->iotag |= k << BFA_IOIM_RETRY_TAG_OFFSET;		\
- } while (0)
+ struct bfa_bsg_gen_s {
+@@ -701,6 +707,21 @@ struct bfa_bsg_vf_reset_stats_s {
+ 	u16		vf_id;
+ };
  
-+#define BFA_IOIM_TO_LPS(__ioim)		\
-+	BFA_LPS_FROM_TAG(BFA_LPS_MOD(__ioim->bfa),	\
-+		__ioim->itnim->rport->rport_info.lp_tag)
++struct bfa_bsg_fcpim_lunmask_query_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	struct bfa_lunmask_cfg_s lun_mask;
++};
 +
- static inline bfa_boolean_t
- bfa_ioim_maxretry_reached(struct bfa_ioim_s *ioim)
- {
-@@ -407,4 +414,7 @@ void bfa_tskim_start(struct bfa_tskim_s *tskim,
- void bfa_cb_tskim_done(void *bfad, struct bfad_tskim_s *dtsk,
- 			enum bfi_tskim_status tsk_status);
- 
-+void	bfa_fcpim_lunmask_rp_update(struct bfa_s *bfa, wwn_t lp_wwn,
-+			wwn_t rp_wwn, u16 rp_tag, u8 lp_tag);
++struct bfa_bsg_fcpim_lunmask_s {
++	bfa_status_t	status;
++	u16		bfad_num;
++	u16		vf_id;
++	wwn_t		pwwn;
++	wwn_t		rpwwn;
++	struct scsi_lun	lun;
++};
 +
- #endif /* __BFA_FCPIM_H__ */
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index d0ed4dd..aa8a0ea 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -4677,6 +4677,7 @@ bfa_rport_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
- 		rp = BFA_RPORT_FROM_TAG(bfa, msg.create_rsp->bfa_handle);
- 		rp->fw_handle = msg.create_rsp->fw_handle;
- 		rp->qos_attr = msg.create_rsp->qos_attr;
-+		bfa_rport_set_lunmask(bfa, rp);
- 		WARN_ON(msg.create_rsp->status != BFA_STATUS_OK);
- 		bfa_sm_send_event(rp, BFA_RPORT_SM_FWRSP);
- 		break;
-@@ -4684,6 +4685,7 @@ bfa_rport_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
- 	case BFI_RPORT_I2H_DELETE_RSP:
- 		rp = BFA_RPORT_FROM_TAG(bfa, msg.delete_rsp->bfa_handle);
- 		WARN_ON(msg.delete_rsp->status != BFA_STATUS_OK);
-+		bfa_rport_unset_lunmask(bfa, rp);
- 		bfa_sm_send_event(rp, BFA_RPORT_SM_FWRSP);
- 		break;
- 
-@@ -4764,6 +4766,37 @@ bfa_rport_speed(struct bfa_rport_s *rport, enum bfa_port_speed speed)
- 	bfa_sm_send_event(rport, BFA_RPORT_SM_SET_SPEED);
- }
- 
-+/* Set Rport LUN Mask */
-+void
-+bfa_rport_set_lunmask(struct bfa_s *bfa, struct bfa_rport_s *rp)
-+{
-+	struct bfa_lps_mod_s	*lps_mod = BFA_LPS_MOD(bfa);
-+	wwn_t	lp_wwn, rp_wwn;
-+	u8 lp_tag = (u8)rp->rport_info.lp_tag;
-+
-+	rp_wwn = ((struct bfa_fcs_rport_s *)rp->rport_drv)->pwwn;
-+	lp_wwn = (BFA_LPS_FROM_TAG(lps_mod, rp->rport_info.lp_tag))->pwwn;
-+
-+	BFA_LPS_FROM_TAG(lps_mod, rp->rport_info.lp_tag)->lun_mask =
-+					rp->lun_mask = BFA_TRUE;
-+	bfa_fcpim_lunmask_rp_update(bfa, lp_wwn, rp_wwn, rp->rport_tag, lp_tag);
-+}
-+
-+/* Unset Rport LUN mask */
-+void
-+bfa_rport_unset_lunmask(struct bfa_s *bfa, struct bfa_rport_s *rp)
-+{
-+	struct bfa_lps_mod_s	*lps_mod = BFA_LPS_MOD(bfa);
-+	wwn_t	lp_wwn, rp_wwn;
-+
-+	rp_wwn = ((struct bfa_fcs_rport_s *)rp->rport_drv)->pwwn;
-+	lp_wwn = (BFA_LPS_FROM_TAG(lps_mod, rp->rport_info.lp_tag))->pwwn;
-+
-+	BFA_LPS_FROM_TAG(lps_mod, rp->rport_info.lp_tag)->lun_mask =
-+				rp->lun_mask = BFA_FALSE;
-+	bfa_fcpim_lunmask_rp_update(bfa, lp_wwn, rp_wwn,
-+			BFA_RPORT_TAG_INVALID, BFA_LP_TAG_INVALID);
-+}
- 
- /*
-  * SGPG related functions
-diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
-index 01db352..95adb86 100644
---- a/drivers/scsi/bfa/bfa_svc.h
-+++ b/drivers/scsi/bfa/bfa_svc.h
-@@ -297,6 +297,7 @@ struct bfa_rport_s {
- 	void		*rport_drv;	/*  fcs/driver rport object	    */
- 	u16	fw_handle;	/*  firmware rport handle	    */
- 	u16	rport_tag;	/*  BFA rport tag		    */
-+	u8	lun_mask;	/*  LUN mask flag		    */
- 	struct bfa_rport_info_s rport_info; /*  rport info from fcs/driver */
- 	struct bfa_reqq_wait_s reqq_wait; /*  to wait for room in reqq     */
- 	struct bfa_cb_qe_s hcb_qe;	/*  BFA callback qelem		    */
-@@ -404,6 +405,7 @@ struct bfa_lps_s {
- 	u8		bb_scn;		/*  local BB_SCN		*/
- 	u8		lsrjt_rsn;	/*  LSRJT reason		*/
- 	u8		lsrjt_expl;	/*  LSRJT explanation		*/
-+	u8		lun_mask;	/*  LUN mask flag		*/
- 	wwn_t		pwwn;		/*  port wwn of lport		*/
- 	wwn_t		nwwn;		/*  node wwn of lport		*/
- 	wwn_t		pr_pwwn;	/*  port wwn of lport peer	*/
-@@ -574,6 +576,19 @@ void bfa_cb_rport_qos_scn_prio(void *rport,
- 			       struct bfa_rport_qos_attr_s new_qos_attr);
- 
- /*
-+ *	Rport LUN masking related
-+ */
-+#define BFA_RPORT_TAG_INVALID	0xffff
-+#define BFA_LP_TAG_INVALID	0xff
-+void	bfa_rport_set_lunmask(struct bfa_s *bfa, struct bfa_rport_s *rp);
-+void	bfa_rport_unset_lunmask(struct bfa_s *bfa, struct bfa_rport_s *rp);
-+bfa_boolean_t	bfa_rport_lunmask_active(struct bfa_rport_s *rp);
-+wwn_t	bfa_rport_get_pwwn(struct bfa_s *bfa, struct bfa_rport_s *rp);
-+struct bfa_rport_s *bfa_rport_get_by_wwn(struct bfa_s *bfa, u16 vf_id,
-+					 wwn_t *lpwwn, wwn_t rpwwn);
-+void *bfa_cb_get_rp_by_wwn(void *arg, u16 vf_id, wwn_t *lpwwn, wwn_t rpwwn);
-+
-+/*
-  * bfa fcxp API functions
-  */
- struct bfa_fcxp_s *bfa_fcxp_alloc(void *bfad_fcxp, struct bfa_s *bfa,
+ struct bfa_bsg_fcpt_s {
+ 	bfa_status_t    status;
+ 	u16		vf_id;
 -- 
 1.7.3.rc1
 
