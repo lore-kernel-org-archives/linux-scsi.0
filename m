@@ -1,105 +1,65 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 045/103] tcm_fc: Convert to wake_up_process and schedule_timeout_interruptible
-Date: Thu, 21 Jul 2011 00:07:57 -0700
-Message-ID: <1311232135-6653-46-git-send-email-nab@linux-iscsi.org>
-References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 088/103] target: Enforce 1 page max for control cdb buffer sizes
+Date: Thu, 21 Jul 2011 00:12:11 -0700
+Message-ID: <1311232346-6674-89-git-send-email-nab@linux-iscsi.org>
+References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm4-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.110]:27986
-	"HELO nm4-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751468Ab1GUHEJ (ORCPT
+Received: from nm4.bullet.mail.bf1.yahoo.com ([98.139.212.163]:43475 "HELO
+	nm4.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752030Ab1GUHJU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:04:09 -0400
-In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:09:20 -0400
+In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Andy Grover <agrover@redhat.com>
 
-This patch converts ft_queue_cmd() to use wake_up_process() and
-ft_thread() to use schedule_timeout_interruptible(MAX_SCHEDULE_TIMEOUT)
-instead of wait_event_interruptible().  This fixes a potential race with
-the wait_event_interruptible() conditional with qobj->queue_cnt in
-ft_thread().
+Due to all cdbs' data buffers being referenced by scatterlists, buffers
+of more than a page are not contiguous. Instead of handling this in all
+control command handlers, we may be able to get away with just limiting
+control cdb data buffers to one page. The only control CDBs we handle that
+have potentially large data buffers are REPORT LUNS and UNMAP, so if we
+didn't want to live with this limitation, they would need to be modified
+to walk the pages in the data buffer's sgl.
 
-This patch also drops the unnecessary set_user_nice(current, -20) in
-ft_thread(), and drops extra () around two if (!(acl)) conditionals in
-tfc_conf.c.
-
-Reported-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Andy Grover <agrover@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/tcm_fc/tfc_cmd.c  |   17 ++++++++---------
- drivers/target/tcm_fc/tfc_conf.c |    4 ++--
- 2 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/target/target_core_transport.c |    5 +++++
+ include/target/target_core_base.h      |    1 +
+ 2 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 6d9553b..9c99402 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -96,15 +96,17 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
- 
- static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
- {
--	struct se_queue_obj *qobj;
-+	struct ft_tpg *tpg = sess->tport->tpg;
-+	struct se_queue_obj *qobj = &tpg->qobj;
- 	unsigned long flags;
- 
- 	qobj = &sess->tport->tpg->qobj;
- 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
- 	list_add_tail(&cmd->se_req.qr_list, &qobj->qobj_list);
--	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
- 	atomic_inc(&qobj->queue_cnt);
--	wake_up_interruptible(&qobj->thread_wq);
-+	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
-+
-+	wake_up_process(tpg->thread);
- }
- 
- static struct ft_cmd *ft_dequeue_cmd(struct se_queue_obj *qobj)
-@@ -696,15 +698,12 @@ int ft_thread(void *arg)
- 	struct ft_tpg *tpg = arg;
- 	struct se_queue_obj *qobj = &tpg->qobj;
- 	struct ft_cmd *cmd;
--	int ret;
--
--	set_user_nice(current, -20);
- 
- 	while (!kthread_should_stop()) {
--		ret = wait_event_interruptible(qobj->thread_wq,
--			atomic_read(&qobj->queue_cnt) || kthread_should_stop());
--		if (ret < 0 || kthread_should_stop())
-+		schedule_timeout_interruptible(MAX_SCHEDULE_TIMEOUT);
-+		if (kthread_should_stop())
- 			goto out;
-+
- 		cmd = ft_dequeue_cmd(qobj);
- 		if (cmd)
- 			ft_exec_req(cmd);
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 58e4745..e3176f5 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -223,7 +223,7 @@ static struct se_node_acl *ft_add_acl(
- 		return ERR_PTR(-EINVAL);
- 
- 	acl = kzalloc(sizeof(struct ft_node_acl), GFP_KERNEL);
--	if (!(acl))
-+	if (!acl)
- 		return ERR_PTR(-ENOMEM);
- 	acl->node_auth.port_name = wwpn;
- 
-@@ -280,7 +280,7 @@ struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_group *se_tpg)
- 	struct ft_node_acl *acl;
- 
- 	acl = kzalloc(sizeof(*acl), GFP_KERNEL);
--	if (!(acl)) {
-+	if (!acl) {
- 		printk(KERN_ERR "Unable to allocate struct ft_node_acl\n");
- 		return NULL;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 253dcd7..1eb76f4 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3562,6 +3562,11 @@ static int transport_generic_cmd_sequencer(
+ 		cmd->data_length = size;
  	}
+ 
++	/* Let's limit control cdbs to a page, for simplicity's sake. */
++	if ((cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) &&
++	    size > PAGE_SIZE)
++		goto out_invalid_cdb_field;
++
+ 	transport_set_supported_SAM_opcode(cmd);
+ 	return ret;
+ 
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index ed35624..d97618a 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -15,6 +15,7 @@
+ /* Used by transport_generic_allocate_iovecs() */
+ #define TRANSPORT_IOV_DATA_BUFFER		5
+ /* Maximum Number of LUNs per Target Portal Group */
++/* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
+ #define TRANSPORT_MAX_LUNS_PER_TPG		256
+ /*
+  * By default we use 32-byte CDBs in TCM Core and subsystem plugin code.
 -- 
 1.7.6
 
