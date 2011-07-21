@@ -1,66 +1,61 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 052/103] target: Pass sg with type scatterlist in transport_map_sg_to_mem
-Date: Thu, 21 Jul 2011 00:08:04 -0700
-Message-ID: <1311232135-6653-53-git-send-email-nab@linux-iscsi.org>
-References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH v2 resend] qla4xxx: use pci_dev->revision
+Date: Thu, 21 Jul 2011 19:37:37 +0400
+Message-ID: <201107211937.37741.sshtylyov@ru.mvista.com>
+References: <201105131904.35018.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm13-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.160]:29842
-	"HELO nm13-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752430Ab1GUHKi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:10:38 -0400
-In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:56305 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752182Ab1GUPj1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 11:39:27 -0400
+In-Reply-To: <201105131904.35018.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com, iscsi-driver@qlogic.com
 
-From: Andy Grover <agrover@redhat.com>
+Commit f4f5df23bf72208d0c2f1d8be629839924c2f4c2 ([SCSI] qla4xxx: Added support
+for ISP82XX) added code to read the PCI revision ID from the PCI configuration
+register while it's already stored by PCI subsystem in the 'revision' field of
+'struct pci_dev'...
 
-Instead of passing as void * and then casting to sg, we can just
-pass it as a struct scatterlist*.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Signed-off-by: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    3 +--
- include/target/target_core_transport.h |    2 +-
- 2 files changed, 2 insertions(+), 3 deletions(-)
+The patch is against the recent Linus' tree.
+It wasn't merged in either 2.6.39 or 3.0 time, hopefully it can be merged to
+3.1...
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9bbc626..ccc5319 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -4312,7 +4312,7 @@ static int transport_map_sg_to_mem(
- int transport_map_mem_to_sg(
- 	struct se_task *task,
- 	struct list_head *se_mem_list,
--	void *in_mem,
-+	struct scatterlist *sg,
- 	struct se_mem *in_se_mem,
- 	struct se_mem **out_se_mem,
- 	u32 *se_mem_cnt,
-@@ -4320,7 +4320,6 @@ int transport_map_mem_to_sg(
+ drivers/scsi/qla4xxx/ql4_os.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+Index: linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/qla4xxx/ql4_os.c
++++ linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1428,7 +1428,6 @@ static void qla4xxx_free_adapter(struct 
+ int qla4_8xxx_iospace_config(struct scsi_qla_host *ha)
  {
- 	struct se_cmd *se_cmd = task->task_se_cmd;
- 	struct se_mem *se_mem = in_se_mem;
--	struct scatterlist *sg = (struct scatterlist *)in_mem;
- 	u32 task_size = task->task_size, sg_no = 0;
+ 	int status = 0;
+-	uint8_t revision_id;
+ 	unsigned long mem_base, mem_len, db_base, db_len;
+ 	struct pci_dev *pdev = ha->pdev;
  
- 	if (!sg) {
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index acd5914..4bbd88b 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -184,7 +184,7 @@ extern void transport_generic_free_cmd(struct se_cmd *, int, int, int);
- extern void transport_generic_wait_for_cmds(struct se_cmd *, int);
- extern int transport_init_task_sg(struct se_task *, struct se_mem *, u32);
- extern int transport_map_mem_to_sg(struct se_task *, struct list_head *,
--					void *, struct se_mem *,
-+					struct scatterlist *, struct se_mem *,
- 					struct se_mem **, u32 *, u32 *);
- extern void transport_do_task_sg_chain(struct se_cmd *);
- extern void transport_generic_process_write(struct se_cmd *);
--- 
-1.7.6
-
+@@ -1440,10 +1439,9 @@ int qla4_8xxx_iospace_config(struct scsi
+ 		goto iospace_error_exit;
+ 	}
+ 
+-	pci_read_config_byte(pdev, PCI_REVISION_ID, &revision_id);
+ 	DEBUG2(printk(KERN_INFO "%s: revision-id=%d\n",
+-	    __func__, revision_id));
+-	ha->revision_id = revision_id;
++	    __func__, pdev->revision));
++	ha->revision_id = pdev->revision;
+ 
+ 	/* remap phys address */
+ 	mem_base = pci_resource_start(pdev, 0); /* 0 is for BAR 0 */
