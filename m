@@ -1,85 +1,80 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 075/103] target: Make transport_lookup_cmd_lun() locking IRQ-safe
-Date: Thu, 21 Jul 2011 00:11:58 -0700
-Message-ID: <1311232346-6674-76-git-send-email-nab@linux-iscsi.org>
-References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH v2 resend] mpt2sas: use pci_dev->revision
+Date: Thu, 21 Jul 2011 19:42:24 +0400
+Message-ID: <201107211942.24591.sshtylyov@ru.mvista.com>
+References: <201105131907.06187.sshtylyov@ru.mvista.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm20.bullet.mail.bf1.yahoo.com ([98.139.212.179]:45120 "HELO
-	nm20.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751926Ab1GUHID (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:08:03 -0400
-In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:46115 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752348Ab1GUPoO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 11:44:14 -0400
+In-Reply-To: <201105131907.06187.sshtylyov@ru.mvista.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>
+To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-From: Roland Dreier <roland@purestorage.com>
+The driver reads PCI revision ID from the PCI configuration register while it's
+already stored by PCI subsystem in the 'revision' field of 'struct pci_dev'...
 
-transport_lookup_cmd_lun() may be called from interrupt context (eg
-tcm_loop_allocate_core_cmd() calls it, and it has a comment that says,
-"Can be called from interrupt context"), so it needs to use
-spin_lock_irqsave() instead of spin_lock_irq() to avoid enabling
-interrupts at the wrong time.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-(And indeed the last set of lock operations, on lun_cmd_lock, were
-already using spin_lock_irqsave(), so we just need to fix the other
-two locks we take)
-
-Signed-off-by: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_device.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+The patch is against the recent Linus' tree.
+It wasn't merged in either 2.6.39 or 3.0 time, hopefully it can be merged to
+3.1...
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index c674a5d..e25df3b 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -72,7 +72,7 @@ int transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- 		return -ENODEV;
- 	}
- 
--	spin_lock_irq(&se_sess->se_node_acl->device_list_lock);
-+	spin_lock_irqsave(&se_sess->se_node_acl->device_list_lock, flags);
- 	se_cmd->se_deve = &se_sess->se_node_acl->device_list[unpacked_lun];
- 	if (se_cmd->se_deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
- 		struct se_dev_entry *deve = se_cmd->se_deve;
-@@ -88,7 +88,7 @@ int transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- 				" Access for 0x%08x\n",
- 				se_cmd->se_tfo->get_fabric_name(),
- 				unpacked_lun);
--			spin_unlock_irq(&se_sess->se_node_acl->device_list_lock);
-+			spin_unlock_irqrestore(&se_sess->se_node_acl->device_list_lock, flags);
- 			return -EACCES;
- 		}
- 
-@@ -106,7 +106,7 @@ int transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- 		se_cmd->se_orig_obj_ptr = se_cmd->se_lun->lun_se_dev;
- 		se_cmd->se_cmd_flags |= SCF_SE_LUN_CMD;
- 	}
--	spin_unlock_irq(&se_sess->se_node_acl->device_list_lock);
-+	spin_unlock_irqrestore(&se_sess->se_node_acl->device_list_lock, flags);
- 
- 	if (!se_lun) {
- 		/*
-@@ -154,13 +154,13 @@ int transport_lookup_cmd_lun(struct se_cmd *se_cmd, u32 unpacked_lun)
- 
- 	/* TODO: get rid of this and use atomics for stats */
- 	dev = se_lun->lun_se_dev;
--	spin_lock_irq(&dev->stats_lock);
-+	spin_lock_irqsave(&dev->stats_lock, flags);
- 	dev->num_cmds++;
- 	if (se_cmd->data_direction == DMA_TO_DEVICE)
- 		dev->write_bytes += se_cmd->data_length;
- 	else if (se_cmd->data_direction == DMA_FROM_DEVICE)
- 		dev->read_bytes += se_cmd->data_length;
--	spin_unlock_irq(&dev->stats_lock);
-+	spin_unlock_irqrestore(&dev->stats_lock, flags);
- 
- 	/*
- 	 * Add the iscsi_cmd_t to the struct se_lun's cmd list.  This list is used
--- 
-1.7.6
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    4 +---
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c  |    4 +---
+ 2 files changed, 2 insertions(+), 6 deletions(-)
 
+Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_base.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1806,10 +1806,8 @@ _base_display_ioc_capabilities(struct MP
+ {
+ 	int i = 0;
+ 	char desc[16];
+-	u8 revision;
+ 	u32 iounit_pg1_flags;
+ 
+-	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
+ 	strncpy(desc, ioc->manu_pg0.ChipName, 16);
+ 	printk(MPT2SAS_INFO_FMT "%s: FWVersion(%02d.%02d.%02d.%02d), "
+ 	   "ChipRevision(0x%02x), BiosVersion(%02d.%02d.%02d.%02d)\n",
+@@ -1818,7 +1816,7 @@ _base_display_ioc_capabilities(struct MP
+ 	   (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
+ 	   (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
+ 	   ioc->facts.FWVersion.Word & 0x000000FF,
+-	   revision,
++	   ioc->pdev->revision,
+ 	   (ioc->bios_pg3.BiosVersion & 0xFF000000) >> 24,
+ 	   (ioc->bios_pg3.BiosVersion & 0x00FF0000) >> 16,
+ 	   (ioc->bios_pg3.BiosVersion & 0x0000FF00) >> 8,
+Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -1027,7 +1027,6 @@ _ctl_getiocinfo(void __user *arg)
+ {
+ 	struct mpt2_ioctl_iocinfo karg;
+ 	struct MPT2SAS_ADAPTER *ioc;
+-	u8 revision;
+ 
+ 	if (copy_from_user(&karg, arg, sizeof(karg))) {
+ 		printk(KERN_ERR "failure at %s:%d/%s()!\n",
+@@ -1044,8 +1043,7 @@ _ctl_getiocinfo(void __user *arg)
+ 	karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
+ 	if (ioc->pfacts)
+ 		karg.port_number = ioc->pfacts[0].PortNumber;
+-	pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
+-	karg.hw_rev = revision;
++	karg.hw_rev = ioc->pdev->revision;
+ 	karg.pci_id = ioc->pdev->device;
+ 	karg.subsystem_device = ioc->pdev->subsystem_device;
+ 	karg.subsystem_vendor = ioc->pdev->subsystem_vendor;
