@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 02/15] bfa: BSG return value fix to be compatible with kernel convention.
-Date: Wed, 20 Jul 2011 16:59:44 -0700
-Message-ID: <1311206384-27707-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 03/15] bfa: Update RME interrupt handling.
+Date: Wed, 20 Jul 2011 17:00:45 -0700
+Message-ID: <1311206445-32096-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56020 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751531Ab1GUAAp (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59817 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751531Ab1GUABJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2011 20:00:45 -0400
+	Wed, 20 Jul 2011 20:01:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,57 +18,254 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Made changes to adhere to the kernel convention return value.
+	- Made changes to always acknowledge RME interrupt and update
+	  consumer index (CI) when RME interrupt is generated.
+	- Made changes to have ASIC specific hw_rspq_ack() handler.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/bfa/bfa.h       |   13 ++++++-------
+ drivers/scsi/bfa/bfa_core.c  |   25 +++++++++----------------
+ drivers/scsi/bfa/bfa_hw_cb.c |   38 ++++++++++++++++++++++++++++++++++----
+ drivers/scsi/bfa/bfa_hw_ct.c |   25 ++++++++++++++++++++++++-
+ 4 files changed, 73 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 88bfa92..3601508 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -56,7 +56,7 @@ bfad_iocmd_ioc_disable(struct bfad_s *bfad, void *cmd)
- 	spin_lock_irqsave(&bfad->bfad_lock, flags);
- 	if (bfad->disable_active) {
- 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
--		return EBUSY;
-+		return -EBUSY;
+diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
+index 3b0af11..6e3869a 100644
+--- a/drivers/scsi/bfa/bfa.h
++++ b/drivers/scsi/bfa/bfa.h
+@@ -177,7 +177,7 @@ struct bfa_msix_s {
+ struct bfa_hwif_s {
+ 	void (*hw_reginit)(struct bfa_s *bfa);
+ 	void (*hw_reqq_ack)(struct bfa_s *bfa, int reqq);
+-	void (*hw_rspq_ack)(struct bfa_s *bfa, int rspq);
++	void (*hw_rspq_ack)(struct bfa_s *bfa, int rspq, u32 ci);
+ 	void (*hw_msix_init)(struct bfa_s *bfa, int nvecs);
+ 	void (*hw_msix_ctrl_install)(struct bfa_s *bfa);
+ 	void (*hw_msix_queue_install)(struct bfa_s *bfa);
+@@ -268,10 +268,8 @@ struct bfa_iocfc_s {
+ 	((__bfa)->iocfc.hwif.hw_msix_queue_install(__bfa))
+ #define bfa_msix_uninstall(__bfa)					\
+ 	((__bfa)->iocfc.hwif.hw_msix_uninstall(__bfa))
+-#define bfa_isr_rspq_ack(__bfa, __queue) do {				\
+-	if ((__bfa)->iocfc.hwif.hw_rspq_ack)				\
+-		(__bfa)->iocfc.hwif.hw_rspq_ack(__bfa, __queue);	\
+-} while (0)
++#define bfa_isr_rspq_ack(__bfa, __queue, __ci)				\
++	((__bfa)->iocfc.hwif.hw_rspq_ack(__bfa, __queue, __ci))
+ #define bfa_isr_reqq_ack(__bfa, __queue) do {				\
+ 	if ((__bfa)->iocfc.hwif.hw_reqq_ack)				\
+ 		(__bfa)->iocfc.hwif.hw_reqq_ack(__bfa, __queue);	\
+@@ -311,7 +309,7 @@ void bfa_msix_rspq(struct bfa_s *bfa, int vec);
+ void bfa_msix_lpu_err(struct bfa_s *bfa, int vec);
+ 
+ void bfa_hwcb_reginit(struct bfa_s *bfa);
+-void bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq);
++void bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq, u32 ci);
+ void bfa_hwcb_msix_init(struct bfa_s *bfa, int nvecs);
+ void bfa_hwcb_msix_ctrl_install(struct bfa_s *bfa);
+ void bfa_hwcb_msix_queue_install(struct bfa_s *bfa);
+@@ -324,7 +322,8 @@ void bfa_hwcb_msix_get_rme_range(struct bfa_s *bfa, u32 *start,
+ void bfa_hwct_reginit(struct bfa_s *bfa);
+ void bfa_hwct2_reginit(struct bfa_s *bfa);
+ void bfa_hwct_reqq_ack(struct bfa_s *bfa, int rspq);
+-void bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq);
++void bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq, u32 ci);
++void bfa_hwct2_rspq_ack(struct bfa_s *bfa, int rspq, u32 ci);
+ void bfa_hwct_msix_init(struct bfa_s *bfa, int nvecs);
+ void bfa_hwct_msix_ctrl_install(struct bfa_s *bfa);
+ void bfa_hwct_msix_queue_install(struct bfa_s *bfa);
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index c38e589..0c23696 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -237,8 +237,6 @@ bfa_isr_rspq(struct bfa_s *bfa, int qid)
+ 	u32	pi, ci;
+ 	struct list_head *waitq;
+ 
+-	bfa_isr_rspq_ack(bfa, qid);
+-
+ 	ci = bfa_rspq_ci(bfa, qid);
+ 	pi = bfa_rspq_pi(bfa, qid);
+ 
+@@ -251,11 +249,9 @@ bfa_isr_rspq(struct bfa_s *bfa, int qid)
  	}
  
- 	bfad->disable_active = BFA_TRUE;
-@@ -390,7 +390,7 @@ bfad_iocmd_lport_get_rports(struct bfad_s *bfad, void *cmd,
- 	void	*iocmd_bufptr;
+ 	/*
+-	 * update CI
++	 * acknowledge RME completions and update CI
+ 	 */
+-	bfa_rspq_ci(bfa, qid) = pi;
+-	writel(pi, bfa->iocfc.bfa_regs.rme_q_ci[qid]);
+-	mmiowb();
++	bfa_isr_rspq_ack(bfa, qid, ci);
  
- 	if (iocmd->nrports == 0)
--		return EINVAL;
-+		return -EINVAL;
+ 	/*
+ 	 * Resume any pending requests in the corresponding reqq.
+@@ -325,23 +321,19 @@ bfa_intx(struct bfa_s *bfa)
+ 	int queue;
  
- 	if (bfad_chk_iocmd_sz(payload_len,
- 			sizeof(struct bfa_bsg_lport_get_rports_s),
-@@ -1516,7 +1516,7 @@ static int
- bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 		unsigned int payload_len)
- {
--	int rc = EINVAL;
-+	int rc = -EINVAL;
+ 	intr = readl(bfa->iocfc.bfa_regs.intr_status);
+-	if (!intr)
+-		return BFA_FALSE;
  
- 	switch (cmd) {
- 	case IOCMD_IOC_ENABLE:
-@@ -1704,10 +1704,10 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 		rc = bfad_iocmd_porglog_get(bfad, iocmd);
- 		break;
- 	default:
--		rc = EINVAL;
-+		rc = -EINVAL;
- 		break;
+ 	qintr = intr & (__HFN_INT_RME_MASK | __HFN_INT_CPE_MASK);
+ 	if (qintr)
+ 		writel(qintr, bfa->iocfc.bfa_regs.intr_status);
+ 
+ 	/*
+-	 * RME completion queue interrupt
++	 * Unconditional RME completion queue interrupt
+ 	 */
+-	qintr = intr & __HFN_INT_RME_MASK;
+-	if (qintr && bfa->queue_process) {
++	if (bfa->queue_process) {
+ 		for (queue = 0; queue < BFI_IOC_MAX_CQS; queue++)
+ 			bfa_isr_rspq(bfa, queue);
  	}
--	return -rc;
-+	return rc;
+ 
+-	intr &= ~qintr;
+ 	if (!intr)
+ 		return BFA_TRUE;
+ 
+@@ -432,7 +424,8 @@ bfa_msix_lpu_err(struct bfa_s *bfa, int vec)
+ 				   __HFN_INT_MBOX_LPU1_CT2);
+ 		intr    &= __HFN_INT_ERR_MASK_CT2;
+ 	} else {
+-		halt_isr = intr & __HFN_INT_LL_HALT;
++		halt_isr = bfa_asic_id_ct(bfa->ioc.pcidev.device_id) ?
++					  (intr & __HFN_INT_LL_HALT) : 0;
+ 		pss_isr  = intr & __HFN_INT_ERR_PSS;
+ 		lpu_isr  = intr & (__HFN_INT_MBOX_LPU0 | __HFN_INT_MBOX_LPU1);
+ 		intr    &= __HFN_INT_ERR_MASK;
+@@ -578,7 +571,7 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	} else {
+ 		iocfc->hwif.hw_reginit = bfa_hwcb_reginit;
+ 		iocfc->hwif.hw_reqq_ack = NULL;
+-		iocfc->hwif.hw_rspq_ack = NULL;
++		iocfc->hwif.hw_rspq_ack = bfa_hwcb_rspq_ack;
+ 		iocfc->hwif.hw_msix_init = bfa_hwcb_msix_init;
+ 		iocfc->hwif.hw_msix_ctrl_install = bfa_hwcb_msix_ctrl_install;
+ 		iocfc->hwif.hw_msix_queue_install = bfa_hwcb_msix_queue_install;
+@@ -595,7 +588,7 @@ bfa_iocfc_init_mem(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
+ 	if (bfa_asic_id_ct2(bfa_ioc_devid(&bfa->ioc))) {
+ 		iocfc->hwif.hw_reginit = bfa_hwct2_reginit;
+ 		iocfc->hwif.hw_isr_mode_set = NULL;
+-		iocfc->hwif.hw_rspq_ack = NULL;
++		iocfc->hwif.hw_rspq_ack = bfa_hwct2_rspq_ack;
+ 	}
+ 
+ 	iocfc->hwif.hw_reginit(bfa);
+@@ -685,7 +678,7 @@ bfa_iocfc_start_submod(struct bfa_s *bfa)
+ 
+ 	bfa->queue_process = BFA_TRUE;
+ 	for (i = 0; i < BFI_IOC_MAX_CQS; i++)
+-		bfa_isr_rspq_ack(bfa, i);
++		bfa_isr_rspq_ack(bfa, i, bfa_rspq_ci(bfa, i));
+ 
+ 	for (i = 0; hal_mods[i]; i++)
+ 		hal_mods[i]->start(bfa);
+diff --git a/drivers/scsi/bfa/bfa_hw_cb.c b/drivers/scsi/bfa/bfa_hw_cb.c
+index e7ffd82..ea24d4c 100644
+--- a/drivers/scsi/bfa/bfa_hw_cb.c
++++ b/drivers/scsi/bfa/bfa_hw_cb.c
+@@ -42,11 +42,36 @@ bfa_hwcb_reqq_ack_msix(struct bfa_s *bfa, int reqq)
+ 			bfa->iocfc.bfa_regs.intr_status);
  }
  
- static int
++/*
++ * Actions to respond RME Interrupt for Crossbow ASIC:
++ * - Write 1 to Interrupt Status register
++ *              INTX - done in bfa_intx()
++ *              MSIX - done in bfa_hwcb_rspq_ack_msix()
++ * - Update CI (only if new CI)
++ */
+ static void
+-bfa_hwcb_rspq_ack_msix(struct bfa_s *bfa, int rspq)
++bfa_hwcb_rspq_ack_msix(struct bfa_s *bfa, int rspq, u32 ci)
+ {
+ 	writel(__HFN_INT_RME_Q0 << RME_Q_NUM(bfa_ioc_pcifn(&bfa->ioc), rspq),
+-			bfa->iocfc.bfa_regs.intr_status);
++		bfa->iocfc.bfa_regs.intr_status);
++
++	if (bfa_rspq_ci(bfa, rspq) == ci)
++		return;
++
++	bfa_rspq_ci(bfa, rspq) = ci;
++	writel(ci, bfa->iocfc.bfa_regs.rme_q_ci[rspq]);
++	mmiowb();
++}
++
++void
++bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq, u32 ci)
++{
++	if (bfa_rspq_ci(bfa, rspq) == ci)
++		return;
++
++	bfa_rspq_ci(bfa, rspq) = ci;
++	writel(ci, bfa->iocfc.bfa_regs.rme_q_ci[rspq]);
++	mmiowb();
+ }
+ 
+ void
+@@ -149,8 +174,13 @@ bfa_hwcb_msix_uninstall(struct bfa_s *bfa)
+ void
+ bfa_hwcb_isr_mode_set(struct bfa_s *bfa, bfa_boolean_t msix)
+ {
+-	bfa->iocfc.hwif.hw_reqq_ack = bfa_hwcb_reqq_ack_msix;
+-	bfa->iocfc.hwif.hw_rspq_ack = bfa_hwcb_rspq_ack_msix;
++	if (msix) {
++		bfa->iocfc.hwif.hw_reqq_ack = bfa_hwcb_reqq_ack_msix;
++		bfa->iocfc.hwif.hw_rspq_ack = bfa_hwcb_rspq_ack_msix;
++	} else {
++		bfa->iocfc.hwif.hw_reqq_ack = NULL;
++		bfa->iocfc.hwif.hw_rspq_ack = bfa_hwcb_rspq_ack;
++	}
+ }
+ 
+ void
+diff --git a/drivers/scsi/bfa/bfa_hw_ct.c b/drivers/scsi/bfa/bfa_hw_ct.c
+index 989bbce..637527f 100644
+--- a/drivers/scsi/bfa/bfa_hw_ct.c
++++ b/drivers/scsi/bfa/bfa_hw_ct.c
+@@ -64,13 +64,36 @@ bfa_hwct_reqq_ack(struct bfa_s *bfa, int reqq)
+ 	writel(r32, bfa->iocfc.bfa_regs.cpe_q_ctrl[reqq]);
+ }
+ 
++/*
++ * Actions to respond RME Interrupt for Catapult ASIC:
++ * - Write 1 to Interrupt Status register (INTx only - done in bfa_intx())
++ * - Acknowledge by writing to RME Queue Control register
++ * - Update CI
++ */
+ void
+-bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq)
++bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq, u32 ci)
+ {
+ 	u32	r32;
+ 
+ 	r32 = readl(bfa->iocfc.bfa_regs.rme_q_ctrl[rspq]);
+ 	writel(r32, bfa->iocfc.bfa_regs.rme_q_ctrl[rspq]);
++
++	bfa_rspq_ci(bfa, rspq) = ci;
++	writel(ci, bfa->iocfc.bfa_regs.rme_q_ci[rspq]);
++	mmiowb();
++}
++
++/*
++ * Actions to respond RME Interrupt for Catapult2 ASIC:
++ * - Write 1 to Interrupt Status register (INTx only - done in bfa_intx())
++ * - Update CI
++ */
++void
++bfa_hwct2_rspq_ack(struct bfa_s *bfa, int rspq, u32 ci)
++{
++	bfa_rspq_ci(bfa, rspq) = ci;
++	writel(ci, bfa->iocfc.bfa_regs.rme_q_ci[rspq]);
++	mmiowb();
+ }
+ 
+ void
 -- 
 1.7.3.rc1
 
