@@ -1,92 +1,106 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 010/103] target: Remove pscsi_get_sh() in _pscsi.c
-Date: Thu, 21 Jul 2011 00:04:46 -0700
-Message-ID: <1311231979-6631-11-git-send-email-nab@linux-iscsi.org>
-References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 040/103] target: Add comment & cleanup transport_map_sg_to_mem()
+Date: Thu, 21 Jul 2011 00:07:52 -0700
+Message-ID: <1311232135-6653-41-git-send-email-nab@linux-iscsi.org>
+References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm4-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.129]:24475 "HELO
-	nm4-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751865Ab1GUHAP (ORCPT
+Received: from nm26-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.186]:28689
+	"HELO nm26-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752388Ab1GUHKG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:00:15 -0400
-In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:10:06 -0400
+In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
 From: Andy Grover <agrover@redhat.com>
 
-It only wrapped scsi_host_lookup, which can just be used directly
-without too much trouble.
+I initially freaked out and wrote a patch that ensured this function
+didn't return a partially allocated list (possible if a later mem
+allocation failed), and cleaned up if the second call to map_sg_to_mem
+failed. But it isn't necessary -- on error we end up eventually calling
+transport_free_pages, which walks both and frees all se_mem entries.
 
-(nab: Fix pdv_host_id usage)
+I added a comment to explain this, and also removed a second variable
+getting incremented for each loop iter, because the two would never be
+different.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_pscsi.c |   30 ++++++------------------------
- 1 files changed, 6 insertions(+), 24 deletions(-)
+ drivers/target/target_core_transport.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index fb2e8cb..d39226f 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -55,24 +55,6 @@ static struct se_subsystem_api pscsi_template;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 44f9afe..f2849ad 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -4365,14 +4365,19 @@ static int transport_map_sg_to_mem(
+ 	struct se_cmd *cmd,
+ 	struct list_head *se_mem_list,
+ 	struct scatterlist *sg,
+-	u32 *se_mem_cnt)
++	u32 *sg_count)
+ {
+ 	struct se_mem *se_mem;
+-	u32 sg_count = 1, cmd_size = cmd->data_length;
++	u32 cmd_size = cmd->data_length;
  
- static void pscsi_req_done(struct request *, int);
+ 	WARN_ON(!sg);
  
--/*	pscsi_get_sh():
-- *
-- *
-- */
--static struct Scsi_Host *pscsi_get_sh(u32 host_no)
--{
--	struct Scsi_Host *sh = NULL;
--
--	sh = scsi_host_lookup(host_no);
--	if (IS_ERR(sh)) {
--		printk(KERN_ERR "Unable to locate SCSI HBA with Host ID:"
--				" %u\n", host_no);
--		return NULL;
--	}
--
--	return sh;
--}
--
- /*	pscsi_attach_hba():
-  *
-  * 	pscsi_get_sh() used scsi_host_lookup() to locate struct Scsi_Host.
-@@ -154,11 +136,11 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
- 	 * Otherwise, locate struct Scsi_Host from the original passed
- 	 * pSCSI Host ID and enable for phba mode
- 	 */
--	sh = pscsi_get_sh(phv->phv_host_id);
--	if (!(sh)) {
-+	sh = scsi_host_lookup(phv->phv_host_id);
-+	if (IS_ERR(sh)) {
- 		printk(KERN_ERR "pSCSI: Unable to locate SCSI Host for"
- 			" phv_host_id: %d\n", phv->phv_host_id);
--		return -1;
-+		return PTR_ERR(sh);
+ 	while (cmd_size) {
++		/*
++		 * NOTE: it is safe to return -ENOMEM at any time in creating this
++		 * list because transport_free_pages() will eventually be called, and is
++		 * smart enough to deallocate all list items for sg and sg_bidi lists.
++		 */
+ 		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
+ 		if (!(se_mem)) {
+ 			printk(KERN_ERR "Unable to allocate struct se_mem\n");
+@@ -4389,26 +4394,21 @@ static int transport_map_sg_to_mem(
+ 		if (cmd_size > sg->length) {
+ 			se_mem->se_len = sg->length;
+ 			sg = sg_next(sg);
+-			sg_count++;
+ 		} else
+ 			se_mem->se_len = cmd_size;
+ 
+ 		cmd_size -= se_mem->se_len;
++		(*sg_count)++;
+ 
+-		DEBUG_MEM("sg_to_mem: *se_mem_cnt: %u cmd_size: %u\n",
+-				*se_mem_cnt, cmd_size);
++		DEBUG_MEM("sg_to_mem: sg_count: %u cmd_size: %u\n",
++				sg_count, cmd_size);
+ 		DEBUG_MEM("sg_to_mem: Final se_page: %p se_off: %d se_len: %d\n",
+ 				se_mem->se_page, se_mem->se_off, se_mem->se_len);
+ 
+ 		list_add_tail(&se_mem->se_list, se_mem_list);
+-		(*se_mem_cnt)++;
  	}
- 	/*
- 	 * Usually the SCSI LLD will use the hostt->can_queue value to define
-@@ -601,11 +583,11 @@ static struct se_device *pscsi_create_virtdevice(
- 			hba->hba_flags |= HBA_FLAGS_PSCSI_MODE;
- 			sh = phv->phv_lld_host;
- 		} else {
--			sh = pscsi_get_sh(pdv->pdv_host_id);
--			if (!(sh)) {
-+			sh = scsi_host_lookup(pdv->pdv_host_id);
-+			if (IS_ERR(sh)) {
- 				printk(KERN_ERR "pSCSI: Unable to locate"
- 					" pdv_host_id: %d\n", pdv->pdv_host_id);
--				return ERR_PTR(-ENODEV);
-+				return (struct se_device *) sh;
- 			}
- 		}
- 	} else {
+ 
+-	DEBUG_MEM("task[0] - Mapped(%u) struct scatterlist segments to(%u)"
+-		" struct se_mem\n", sg_count, *se_mem_cnt);
+-
+-	if (sg_count != *se_mem_cnt)
+-		BUG();
++	DEBUG_MEM("task[0] - Mapped(%u) struct scatterlist segments\n", sg_count);
+ 
+ 	return 0;
+ }
+@@ -4610,8 +4610,8 @@ void transport_do_task_sg_chain(struct se_cmd *cmd)
+ 	for_each_sg(cmd->t_task.t_tasks_sg_chained, sg,
+ 			cmd->t_task.t_tasks_sg_chained_no, i) {
+ 
+-		DEBUG_CMD_M("SG[%d]: %p page: %p length: %d offset: %d, magic: 0x%08x\n",
+-			i, sg, sg_page(sg), sg->length, sg->offset, sg->sg_magic);
++		DEBUG_CMD_M("SG[%d]: %p page: %p length: %d offset: %d\n",
++			i, sg, sg_page(sg), sg->length, sg->offset);
+ 		if (sg_is_chain(sg))
+ 			DEBUG_CMD_M("SG: %p sg_is_chain=1\n", sg);
+ 		if (sg_is_last(sg))
 -- 
 1.7.6
 
