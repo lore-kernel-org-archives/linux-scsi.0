@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 068/103] target: remove the unused SCF_SE_DISABLE_ONLINE_CHECK flag
-Date: Thu, 21 Jul 2011 00:11:51 -0700
-Message-ID: <1311232346-6674-69-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 067/103] target: remove the always-noop ->new_cmd_failure method
+Date: Thu, 21 Jul 2011 00:11:50 -0700
+Message-ID: <1311232346-6674-68-git-send-email-nab@linux-iscsi.org>
 References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm7.bullet.mail.bf1.yahoo.com ([98.139.212.166]:38999 "HELO
-	nm7.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752228Ab1GUHHH (ORCPT
+Received: from nm10.bullet.mail.bf1.yahoo.com ([98.139.212.169]:33143 "HELO
+	nm10.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752234Ab1GUHHE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:07:07 -0400
+	Thu, 21 Jul 2011 03:07:04 -0400
 In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,46 +20,142 @@ From: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   12 +++++-------
- include/target/target_core_base.h      |    1 -
- 2 files changed, 5 insertions(+), 8 deletions(-)
+ drivers/target/loopback/tcm_loop.c      |   11 -----------
+ drivers/target/target_core_configfs.c   |    4 ----
+ drivers/target/target_core_tmr.c        |    5 -----
+ drivers/target/target_core_transport.c  |    2 --
+ drivers/target/tcm_fc/tcm_fc.h          |    1 -
+ drivers/target/tcm_fc/tfc_cmd.c         |    6 ------
+ drivers/target/tcm_fc/tfc_conf.c        |    1 -
+ include/target/target_core_fabric_ops.h |    1 -
+ 8 files changed, 0 insertions(+), 31 deletions(-)
 
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 1e0c7ca..2c8a221 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -772,16 +772,6 @@ static u32 tcm_loop_get_inst_index(struct se_portal_group *se_tpg)
+ 	return 1;
+ }
+ 
+-static void tcm_loop_new_cmd_failure(struct se_cmd *se_cmd)
+-{
+-	/*
+-	 * Since TCM_loop is already passing struct scatterlist data from
+-	 * struct scsi_cmnd, no more Linux/SCSI failure dependent state need
+-	 * to be handled here.
+-	 */
+-	return;
+-}
+-
+ static int tcm_loop_is_state_remove(struct se_cmd *se_cmd)
+ {
+ 	/*
+@@ -1446,7 +1436,6 @@ static int tcm_loop_register_configfs(void)
+ 					&tcm_loop_set_default_node_attributes;
+ 	fabric->tf_ops.get_task_tag = &tcm_loop_get_task_tag;
+ 	fabric->tf_ops.get_cmd_state = &tcm_loop_get_cmd_state;
+-	fabric->tf_ops.new_cmd_failure = &tcm_loop_new_cmd_failure;
+ 	fabric->tf_ops.queue_data_in = &tcm_loop_queue_data_in;
+ 	fabric->tf_ops.queue_status = &tcm_loop_queue_status;
+ 	fabric->tf_ops.queue_tm_rsp = &tcm_loop_queue_tm_rsp;
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index ac7f765..aac0ee9 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -479,10 +479,6 @@ static int target_fabric_tf_ops_check(
+ 		printk(KERN_ERR "Missing tfo->get_cmd_state()\n");
+ 		return -EINVAL;
+ 	}
+-	if (!(tfo->new_cmd_failure)) {
+-		printk(KERN_ERR "Missing tfo->new_cmd_failure()\n");
+-		return -EINVAL;
+-	}
+ 	if (!(tfo->queue_data_in)) {
+ 		printk(KERN_ERR "Missing tfo->queue_data_in()\n");
+ 		return -EINVAL;
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 6667e39..5c20de3 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -356,11 +356,6 @@ int core_tmr_lun_reset(
+ 			atomic_read(&cmd->t_fe_count));
+ 		/*
+ 		 * Signal that the command has failed via cmd->se_cmd_flags,
+-		 * and call TFO->new_cmd_failure() to wakeup any fabric
+-		 * dependent code used to wait for unsolicited data out
+-		 * allocation to complete.  The fabric module is expected
+-		 * to dump any remaining unsolicited data out for the aborted
+-		 * command at this point.
+ 		 */
+ 		transport_new_cmd_failure(cmd);
+ 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index e3544c8..bd97c6a 100644
+index 6f2855d..e3544c8 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2431,14 +2431,12 @@ static int transport_execute_tasks(struct se_cmd *cmd)
- {
- 	int add_tasks;
+@@ -2586,8 +2586,6 @@ void transport_new_cmd_failure(struct se_cmd *se_cmd)
+ 	se_cmd->se_cmd_flags |= SCF_SE_CMD_FAILED;
+ 	se_cmd->se_cmd_flags |= SCF_SCSI_CDB_EXCEPTION;
+ 	spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
+-
+-	se_cmd->se_tfo->new_cmd_failure(se_cmd);
+ }
  
--	if (!(cmd->se_cmd_flags & SCF_SE_DISABLE_ONLINE_CHECK)) {
--		if (se_dev_check_online(cmd->se_orig_obj_ptr) != 0) {
--			cmd->transport_error_status =
--				PYX_TRANSPORT_LU_COMM_FAILURE;
--			transport_generic_request_failure(cmd, NULL, 0, 1);
--			return 0;
--		}
-+	if (se_dev_check_online(cmd->se_orig_obj_ptr) != 0) {
-+		cmd->transport_error_status = PYX_TRANSPORT_LU_COMM_FAILURE;
-+		transport_generic_request_failure(cmd, NULL, 0, 1);
-+		return 0;
- 	}
-+
- 	/*
- 	 * Call transport_cmd_check_stop() to see if a fabric exception
- 	 * has occurred that prevents execution.
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 71c96ce..bfcf4c2 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -116,7 +116,6 @@ enum se_cmd_flags_table {
- 	SCF_SE_CMD_FAILED		= 0x00000400,
- 	SCF_SE_LUN_CMD			= 0x00000800,
- 	SCF_SE_ALLOW_EOO		= 0x00001000,
--	SCF_SE_DISABLE_ONLINE_CHECK	= 0x00002000,
- 	SCF_SENT_CHECK_CONDITION	= 0x00004000,
- 	SCF_OVERFLOW_BIT		= 0x00008000,
- 	SCF_UNDERFLOW_BIT		= 0x00010000,
+ static void transport_nop_wait_for_tasks(struct se_cmd *, int, int);
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index 7b82f1b..8d26779 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -195,7 +195,6 @@ int ft_write_pending(struct se_cmd *);
+ int ft_write_pending_status(struct se_cmd *);
+ u32 ft_get_task_tag(struct se_cmd *);
+ int ft_get_cmd_state(struct se_cmd *);
+-void ft_new_cmd_failure(struct se_cmd *);
+ int ft_queue_tm_resp(struct se_cmd *);
+ int ft_is_state_remove(struct se_cmd *);
+ 
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 62b1226..4bf0a8f 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -294,12 +294,6 @@ int ft_is_state_remove(struct se_cmd *se_cmd)
+ 	return 0;	/* XXX TBD */
+ }
+ 
+-void ft_new_cmd_failure(struct se_cmd *se_cmd)
+-{
+-	/* XXX TBD */
+-	printk(KERN_INFO "%s: se_cmd %p\n", __func__, se_cmd);
+-}
+-
+ /*
+  * FC sequence response handler for follow-on sequences (data) and aborts.
+  */
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index e3176f5..2490e99 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -550,7 +550,6 @@ static struct target_core_fabric_ops ft_fabric_ops = {
+ 	.set_default_node_attributes =	ft_set_default_node_attr,
+ 	.get_task_tag =			ft_get_task_tag,
+ 	.get_cmd_state =		ft_get_cmd_state,
+-	.new_cmd_failure =		ft_new_cmd_failure,
+ 	.queue_data_in =		ft_queue_data_in,
+ 	.queue_status =			ft_queue_status,
+ 	.queue_tm_rsp =			ft_queue_tm_resp,
+diff --git a/include/target/target_core_fabric_ops.h b/include/target/target_core_fabric_ops.h
+index 1752ed3..eba7201 100644
+--- a/include/target/target_core_fabric_ops.h
++++ b/include/target/target_core_fabric_ops.h
+@@ -65,7 +65,6 @@ struct target_core_fabric_ops {
+ 	void (*set_default_node_attributes)(struct se_node_acl *);
+ 	u32 (*get_task_tag)(struct se_cmd *);
+ 	int (*get_cmd_state)(struct se_cmd *);
+-	void (*new_cmd_failure)(struct se_cmd *);
+ 	int (*queue_data_in)(struct se_cmd *);
+ 	int (*queue_status)(struct se_cmd *);
+ 	int (*queue_tm_rsp)(struct se_cmd *);
 -- 
 1.7.6
 
