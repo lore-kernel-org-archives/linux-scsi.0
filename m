@@ -1,366 +1,112 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 072/103] target: merge release_cmd methods
-Date: Thu, 21 Jul 2011 00:11:55 -0700
-Message-ID: <1311232346-6674-73-git-send-email-nab@linux-iscsi.org>
-References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm2-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.127]:23312 "HELO
-	nm2-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752326Ab1GUHHW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:07:22 -0400
-In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [PATCH] iommu: parse pci device scope even only intr remap is
+ defined
+Date: Thu, 21 Jul 2011 10:56:36 +0200
+Message-ID: <20110721085636.GJ9216@elte.hu>
+References: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Suresh Siddha <suresh.b.siddha@intel.com>, Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>, Joerg Roedel <joerg.roedel@amd.com>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, "hpa@linux.intel.com" <hpa@linux.intel.com>, Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-From: Christoph Hellwig <hch@infradead.org>
 
-The release_cmd_to_pool and release_cmd_direct methods are always the same.
-Merge them into a single release_cmd method, and clean up the fallout.
+* Yinghai Lu <yinghai@kernel.org> wrote:
 
-(nab: fix breakage in transport_generic_free_cmd() parameter build breakage
- in drivers/target/tcm_fc/tfc_cmd.c)
+> [PATCH] iommu: parse pci device scope even only intr remap is defined.
+> 
+> Andrew found when CONFIG_DMAR=N and CONFIG_INTR_REMAP=Y:
+> >        [ 1137.271447] qla2xxx 0000:18:00.0: irq 97 for MSI/MSI-X
+> >        [ 1137.271706] qla2xxx 0000:18:00.0: Configuring PCI space...
+> >        [ 1137.271725] qla2xxx 0000:18:00.0: setting latency timer to 64
+> >        [ 1137.271732] qla2xxx 0000:18:00.0: enabling Mem-Wr-Inval
+> >        [ 1137.278705] DRHD: handling fault status reg 2
+> >        [ 1137.278715] INTR-REMAP: Request device [[18:00.0] fault index 20
+> >        [ 1137.278717] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
+> >        [ 1159.389099] qla2xxx 0000:0c:07.0: Cable is unplugged...
+> >        [ 1167.218478] qla2xxx 0000:18:00.0: Mailbox command timeout occurred. Scheduling ISP abort. eeh_busy: 0x0
+> >        [ 1167.218490] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50400/18389b000).
+> >        [ 1167.218496] qla2xxx 0000:18:00.0: Reverting to slow-read.
+> >        [ 1197.174623] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50000/18389b000).
+> >        [ 1197.174632] qla2xxx 0000:18:00.0: Reverting to slow-read.
+> >        [ 1197.190613] qla2xxx 0000:18:00.0: Configure NVRAM parameters...
+> >        [ 1197.198582] qla2xxx 0000:18:00.0: Verifying loaded RISC code...
+> >        [ 1227.142951] qla2xxx 0000:18:00.0: Failed mailbox send register test
+> >        [ 1227.142959] qla2xxx 0000:18:00.0: Failed to initialize adapter
+> 
+> It turns out that path, pci devices will not be link to drhd, so later all pci
+> devices will point to default drhd when using intr-remap.
+> 
+> Suresh pointed out:
+> | This issue is caused by this commit:
+> |
+> | commit 9d5ce73a64be2be8112147a3e0b551ad9cd1247b
+> | Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> | Date:   Tue Nov 10 19:46:16 2009 +0900
+> |
+> |   x86: intel-iommu: Convert detect_intel_iommu to use iommu_init hook
+> |
+> | So this is a regression
+> 
+> Try to fix the path with calling dmar_dev_scope_init() in intel_iommu_init()
+> 
+> Reported-and-tested-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> Reviewed-by: Suresh Siddha <suresh.b.siddha@intel.com>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/iommu/dmar.c |   10 ++++++++++
+>  include/linux/dmar.h |    4 +---
+>  2 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> Index: linux-2.6/include/linux/dmar.h
+> ===================================================================
+> --- linux-2.6.orig/include/linux/dmar.h
+> +++ linux-2.6/include/linux/dmar.h
+> @@ -232,9 +232,7 @@ struct dmar_atsr_unit {
+>  #define for_each_atsr_unit(atsr) \
+>  	list_for_each_entry(atsr, &dmar_atsr_units, list)
+>  
+> -extern int intel_iommu_init(void);
+> -#else /* !CONFIG_DMAR: */
+> -static inline int intel_iommu_init(void) { return -ENODEV; }
+>  #endif /* CONFIG_DMAR */
+> +extern int intel_iommu_init(void);
+>  
+>  #endif /* __DMAR_H__ */
+> Index: linux-2.6/drivers/iommu/dmar.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/iommu/dmar.c
+> +++ linux-2.6/drivers/iommu/dmar.c
+> @@ -722,6 +722,16 @@ int __init detect_intel_iommu(void)
+>  	return ret ? 1 : -ENODEV;
+>  }
+>  
+> +#ifndef CONFIG_DMAR
+> +/* When intr remapping is used but dmar remapping is not defined */
+> +int __init intel_iommu_init(void)
+> +{
+> +	if (dmar_table_init())
+> +		return  -ENODEV;
+> +
+> +	return dmar_dev_scope_init();
+> +}
+> +#endif
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/loopback/tcm_loop.c      |   12 ++-----
- drivers/target/target_core_configfs.c   |    8 +---
- drivers/target/target_core_transport.c  |   53 +++++++++++--------------------
- drivers/target/tcm_fc/tfc_cmd.c         |   12 +++---
- drivers/target/tcm_fc/tfc_conf.c        |    3 +-
- include/target/target_core_fabric_ops.h |    3 +-
- include/target/target_core_transport.h  |    4 +-
- 7 files changed, 35 insertions(+), 60 deletions(-)
+So INTR_REMAP functionality really depends on dmar_table_init()?
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 2c8a221..083d6c5 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -204,13 +204,10 @@ static void tcm_loop_check_stop_free(struct se_cmd *se_cmd)
- 	 * Release the struct se_cmd, which will make a callback to release
- 	 * struct tcm_loop_cmd * in tcm_loop_deallocate_core_cmd()
- 	 */
--	transport_generic_free_cmd(se_cmd, 0, 1, 0);
-+	transport_generic_free_cmd(se_cmd, 0, 0);
- }
- 
--/*
-- * Called from struct target_core_fabric_ops->release_cmd_to_pool()
-- */
--static void tcm_loop_deallocate_core_cmd(struct se_cmd *se_cmd)
-+static void tcm_loop_release_cmd(struct se_cmd *se_cmd)
- {
- 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
- 				struct tcm_loop_cmd, tl_se_cmd);
-@@ -395,7 +392,7 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
- 		SUCCESS : FAILED;
- release:
- 	if (se_cmd)
--		transport_generic_free_cmd(se_cmd, 1, 1, 0);
-+		transport_generic_free_cmd(se_cmd, 1, 0);
- 	else
- 		kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
- 	kfree(tl_tmr);
-@@ -1418,8 +1415,7 @@ static int tcm_loop_register_configfs(void)
- 	 */
- 	fabric->tf_ops.new_cmd_map = &tcm_loop_new_cmd_map;
- 	fabric->tf_ops.check_stop_free = &tcm_loop_check_stop_free;
--	fabric->tf_ops.release_cmd_to_pool = &tcm_loop_deallocate_core_cmd;
--	fabric->tf_ops.release_cmd_direct = &tcm_loop_deallocate_core_cmd;
-+	fabric->tf_ops.release_cmd = &tcm_loop_release_cmd;
- 	fabric->tf_ops.shutdown_session = &tcm_loop_shutdown_session;
- 	fabric->tf_ops.close_session = &tcm_loop_close_session;
- 	fabric->tf_ops.stop_session = &tcm_loop_stop_session;
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index aac0ee9..63cba1e 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -427,12 +427,8 @@ static int target_fabric_tf_ops_check(
- 		printk(KERN_ERR "Missing tfo->tpg_get_inst_index()\n");
- 		return -EINVAL;
- 	}
--	if (!(tfo->release_cmd_to_pool)) {
--		printk(KERN_ERR "Missing tfo->release_cmd_to_pool()\n");
--		return -EINVAL;
--	}
--	if (!(tfo->release_cmd_direct)) {
--		printk(KERN_ERR "Missing tfo->release_cmd_direct()\n");
-+	if (!tfo->release_cmd) {
-+		printk(KERN_ERR "Missing tfo->release_cmd()\n");
- 		return -EINVAL;
- 	}
- 	if (!(tfo->shutdown_session)) {
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 43fd277..d42a98e 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -212,7 +212,7 @@ static u32 transport_allocate_tasks(struct se_cmd *cmd,
- 		struct list_head *mem_list, int set_counts);
- static int transport_generic_get_mem(struct se_cmd *cmd, u32 length);
- static int transport_generic_remove(struct se_cmd *cmd,
--		int release_to_pool, int session_reinstatement);
-+		int session_reinstatement);
- static int transport_cmd_get_valid_sectors(struct se_cmd *cmd);
- static int transport_map_sg_to_mem(struct se_cmd *cmd,
- 		struct list_head *se_mem_list, struct scatterlist *sgl);
-@@ -737,7 +737,7 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
- 	if (transport_cmd_check_stop_to_fabric(cmd))
- 		return;
- 	if (remove)
--		transport_generic_remove(cmd, 0, 0);
-+		transport_generic_remove(cmd, 0);
- }
- 
- void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
-@@ -747,7 +747,7 @@ void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
- 	if (transport_cmd_check_stop_to_fabric(cmd))
- 		return;
- 
--	transport_generic_remove(cmd, 0, 0);
-+	transport_generic_remove(cmd, 0);
- }
- 
- static void transport_add_cmd_to_queue(
-@@ -2146,7 +2146,7 @@ static void transport_generic_request_timeout(struct se_cmd *cmd)
- 	}
- 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 
--	transport_generic_remove(cmd, 0, 0);
-+	transport_generic_remove(cmd, 0);
- }
- 
- static int
-@@ -3825,13 +3825,11 @@ static void transport_release_fe_cmd(struct se_cmd *cmd)
- free_pages:
- 	transport_free_pages(cmd);
- 	transport_free_se_cmd(cmd);
--	cmd->se_tfo->release_cmd_direct(cmd);
-+	cmd->se_tfo->release_cmd(cmd);
- }
- 
--static int transport_generic_remove(
--	struct se_cmd *cmd,
--	int release_to_pool,
--	int session_reinstatement)
-+static int
-+transport_generic_remove(struct se_cmd *cmd, int session_reinstatement)
- {
- 	unsigned long flags;
- 
-@@ -3858,14 +3856,7 @@ static int transport_generic_remove(
- 
- free_pages:
- 	transport_free_pages(cmd);
--
--	if (release_to_pool) {
--		transport_release_cmd_to_pool(cmd);
--	} else {
--		transport_free_se_cmd(cmd);
--		cmd->se_tfo->release_cmd_direct(cmd);
--	}
--
-+	transport_release_cmd(cmd);
- 	return 0;
- }
- 
-@@ -4894,18 +4885,14 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
- 	return PYX_TRANSPORT_WRITE_PENDING;
- }
- 
--/*	transport_release_cmd_to_pool():
-- *
-- *
-- */
--void transport_release_cmd_to_pool(struct se_cmd *cmd)
-+void transport_release_cmd(struct se_cmd *cmd)
- {
- 	BUG_ON(!cmd->se_tfo);
- 
- 	transport_free_se_cmd(cmd);
--	cmd->se_tfo->release_cmd_to_pool(cmd);
-+	cmd->se_tfo->release_cmd(cmd);
- }
--EXPORT_SYMBOL(transport_release_cmd_to_pool);
-+EXPORT_SYMBOL(transport_release_cmd);
- 
- /*	transport_generic_free_cmd():
-  *
-@@ -4914,11 +4901,10 @@ EXPORT_SYMBOL(transport_release_cmd_to_pool);
- void transport_generic_free_cmd(
- 	struct se_cmd *cmd,
- 	int wait_for_tasks,
--	int release_to_pool,
- 	int session_reinstatement)
- {
- 	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD))
--		transport_release_cmd_to_pool(cmd);
-+		transport_release_cmd(cmd);
- 	else {
- 		core_dec_lacl_count(cmd->se_sess->se_node_acl, cmd);
- 
-@@ -4936,8 +4922,7 @@ void transport_generic_free_cmd(
- 
- 		transport_free_dev_tasks(cmd);
- 
--		transport_generic_remove(cmd, release_to_pool,
--				session_reinstatement);
-+		transport_generic_remove(cmd, session_reinstatement);
- 	}
- }
- EXPORT_SYMBOL(transport_generic_free_cmd);
-@@ -5210,7 +5195,7 @@ remove:
- 	if (!remove_cmd)
- 		return;
- 
--	transport_generic_free_cmd(cmd, 0, 0, session_reinstatement);
-+	transport_generic_free_cmd(cmd, 0, session_reinstatement);
- }
- 
- static int transport_get_sense_codes(
-@@ -5616,7 +5601,7 @@ static void transport_processing_shutdown(struct se_device *dev)
- 				transport_lun_remove_cmd(cmd);
- 
- 				if (transport_cmd_check_stop(cmd, 1, 0))
--					transport_generic_remove(cmd, 0, 0);
-+					transport_generic_remove(cmd, 0);
- 			}
- 
- 			spin_lock_irqsave(&dev->execute_task_lock, flags);
-@@ -5644,7 +5629,7 @@ static void transport_processing_shutdown(struct se_device *dev)
- 			transport_lun_remove_cmd(cmd);
- 
- 			if (transport_cmd_check_stop(cmd, 1, 0))
--				transport_generic_remove(cmd, 0, 0);
-+				transport_generic_remove(cmd, 0);
- 		}
- 
- 		spin_lock_irqsave(&dev->execute_task_lock, flags);
-@@ -5667,7 +5652,7 @@ static void transport_processing_shutdown(struct se_device *dev)
- 		} else {
- 			transport_lun_remove_cmd(cmd);
- 			if (transport_cmd_check_stop(cmd, 1, 0))
--				transport_generic_remove(cmd, 0, 0);
-+				transport_generic_remove(cmd, 0);
- 		}
- 	}
- }
-@@ -5739,10 +5724,10 @@ get_cmd:
- 			transport_generic_complete_ok(cmd);
- 			break;
- 		case TRANSPORT_REMOVE:
--			transport_generic_remove(cmd, 1, 0);
-+			transport_generic_remove(cmd, 0);
- 			break;
- 		case TRANSPORT_FREE_CMD_INTR:
--			transport_generic_free_cmd(cmd, 0, 1, 0);
-+			transport_generic_free_cmd(cmd, 0, 0);
- 			break;
- 		case TRANSPORT_PROCESS_TMR:
- 			transport_generic_do_tmr(cmd);
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 4bf0a8f..a00951c 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -149,7 +149,7 @@ void ft_release_cmd(struct se_cmd *se_cmd)
- 
- void ft_check_stop_free(struct se_cmd *se_cmd)
- {
--	transport_generic_free_cmd(se_cmd, 0, 1, 0);
-+	transport_generic_free_cmd(se_cmd, 0, 0);
- }
- 
- /*
-@@ -306,7 +306,7 @@ static void ft_recv_seq(struct fc_seq *sp, struct fc_frame *fp, void *arg)
- 		/* XXX need to find cmd if queued */
- 		cmd->se_cmd.t_state = TRANSPORT_REMOVE;
- 		cmd->seq = NULL;
--		transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
-+		transport_generic_free_cmd(&cmd->se_cmd, 0, 0);
- 		return;
- 	}
- 
-@@ -323,7 +323,7 @@ static void ft_recv_seq(struct fc_seq *sp, struct fc_frame *fp, void *arg)
- 		printk(KERN_INFO "%s: unhandled frame r_ctl %x\n",
- 		       __func__, fh->fh_r_ctl);
- 		fc_frame_free(fp);
--		transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
-+		transport_generic_free_cmd(&cmd->se_cmd, 0, 0);
- 		break;
- 	}
- }
-@@ -445,7 +445,7 @@ static void ft_send_tm(struct ft_cmd *cmd)
- 			sess = cmd->sess;
- 			transport_send_check_condition_and_sense(&cmd->se_cmd,
- 				cmd->se_cmd.scsi_sense_reason, 0);
--			transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
-+			transport_generic_free_cmd(&cmd->se_cmd, 0, 0);
- 			ft_sess_put(sess);
- 			return;
- 		}
-@@ -647,7 +647,7 @@ static void ft_send_cmd(struct ft_cmd *cmd)
- 	if (ret == -ENOMEM) {
- 		transport_send_check_condition_and_sense(se_cmd,
- 				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
--		transport_generic_free_cmd(se_cmd, 0, 1, 0);
-+		transport_generic_free_cmd(se_cmd, 0, 0);
- 		return;
- 	}
- 	if (ret == -EINVAL) {
-@@ -656,7 +656,7 @@ static void ft_send_cmd(struct ft_cmd *cmd)
- 		else
- 			transport_send_check_condition_and_sense(se_cmd,
- 					se_cmd->scsi_sense_reason, 0);
--		transport_generic_free_cmd(se_cmd, 0, 1, 0);
-+		transport_generic_free_cmd(se_cmd, 0, 0);
- 		return;
- 	}
- 	transport_generic_handle_cdb(se_cmd);
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 2490e99..ec9e40d 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -536,8 +536,7 @@ static struct target_core_fabric_ops ft_fabric_ops = {
- 	.tpg_release_fabric_acl =	ft_tpg_release_fabric_acl,
- 	.tpg_get_inst_index =		ft_tpg_get_inst_index,
- 	.check_stop_free =		ft_check_stop_free,
--	.release_cmd_to_pool =		ft_release_cmd,
--	.release_cmd_direct =		ft_release_cmd,
-+	.release_cmd =			ft_release_cmd,
- 	.shutdown_session =		ft_sess_shutdown,
- 	.close_session =		ft_sess_close,
- 	.stop_session =			ft_sess_stop,
-diff --git a/include/target/target_core_fabric_ops.h b/include/target/target_core_fabric_ops.h
-index eba7201..2de8fe9 100644
---- a/include/target/target_core_fabric_ops.h
-+++ b/include/target/target_core_fabric_ops.h
-@@ -43,8 +43,7 @@ struct target_core_fabric_ops {
- 	 * I/O descriptor in transport_cmd_check_stop()
- 	 */
- 	void (*check_stop_free)(struct se_cmd *);
--	void (*release_cmd_to_pool)(struct se_cmd *);
--	void (*release_cmd_direct)(struct se_cmd *);
-+	void (*release_cmd)(struct se_cmd *);
- 	/*
- 	 * Called with spin_lock_bh(struct se_portal_group->session_lock held.
- 	 */
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index c9846d5..604e669 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -179,8 +179,8 @@ extern int transport_clear_lun_from_sessions(struct se_lun *);
- extern int transport_check_aborted_status(struct se_cmd *, int);
- extern int transport_send_check_condition_and_sense(struct se_cmd *, u8, int);
- extern void transport_send_task_abort(struct se_cmd *);
--extern void transport_release_cmd_to_pool(struct se_cmd *);
--extern void transport_generic_free_cmd(struct se_cmd *, int, int, int);
-+extern void transport_release_cmd(struct se_cmd *);
-+extern void transport_generic_free_cmd(struct se_cmd *, int, int);
- extern void transport_generic_wait_for_cmds(struct se_cmd *, int);
- extern int transport_init_task_sg(struct se_task *, struct se_mem *, u32);
- extern int transport_map_mem_to_sg(struct se_task *, struct list_head *,
--- 
-1.7.6
+This looks very messy.
 
+CONFIG_DMAR has no clear meaning. The DMAR table parsing 
+functionality is intermixed with the DMAR feature itself. The kernel 
+code is littered with a couple of dozen CONFIG_DMAR #ifdefs with no 
+clear structure to the initialization and to the separation of 
+functionality.
+
+Thanks,
+
+	Ingo
