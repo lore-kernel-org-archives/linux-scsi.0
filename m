@@ -1,129 +1,93 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 019/103] target: Simplify scsi mib index table code
-Date: Thu, 21 Jul 2011 00:04:55 -0700
-Message-ID: <1311231979-6631-20-git-send-email-nab@linux-iscsi.org>
-References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 051/103] target: Don't pass dma_size to generic_get_mem
+Date: Thu, 21 Jul 2011 00:08:03 -0700
+Message-ID: <1311232135-6653-52-git-send-email-nab@linux-iscsi.org>
+References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm5-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.150]:25240 "HELO
-	nm5-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750973Ab1GUHAl (ORCPT
+Received: from nm13.access.bullet.mail.sp2.yahoo.com ([98.139.44.140]:26388
+	"HELO nm13.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750973Ab1GUHEk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:00:41 -0400
-In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:04:40 -0400
+In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
 From: Andy Grover <agrover@redhat.com>
 
-Taking scsi_mib_index and its lock out of the struct makes it possible to
-initialize both without code.
+Since the caller is just passing PAGE_SIZE for dma_size, we can just use
+PAGE_SIZE in the function (since we're allocating pages) and omit the
+parameter.
 
-Replace type check with BUG_ON, since only bugs will cause type to be invalid.
-Nobody checks retval, in any case.
-
-Remove wraparound protection. Will anyone really ever hit 4 billion mib
-index values?? If this is a concern, then the solution should probably be
-to make the index a u64 -- this interface wants to hand out unique values,
-and on wrap they would no longer meet that criteria, even if we skip 0.
+(hch: Add __GFP_ZERO usage to zero page)
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c  |    1 -
- drivers/target/target_core_transport.c |   28 +++++++---------------------
- include/target/target_core_base.h      |    5 -----
- include/target/target_core_transport.h |    1 -
- 4 files changed, 7 insertions(+), 28 deletions(-)
+ drivers/target/target_core_transport.c |   20 +++++---------------
+ 1 files changed, 5 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 82c8e9a..27effbc 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3140,7 +3140,6 @@ static int __init target_core_init_configfs(void)
- 
- 	INIT_LIST_HEAD(&g_tf_list);
- 	mutex_init(&g_tf_lock);
--	init_scsi_index_table();
- 	ret = init_se_kmem_caches();
- 	if (ret < 0)
- 		return ret;
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 0f084a1..4bfa61f 100644
+index da6bd74..9bbc626 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -346,18 +346,9 @@ void release_se_kmem_caches(void)
- 	kmem_cache_destroy(t10_alua_tg_pt_gp_mem_cache);
+@@ -210,8 +210,7 @@ static u32 transport_generic_get_cdb_count(struct se_cmd *cmd,
+ 		unsigned long long starting_lba, u32 sectors,
+ 		enum dma_data_direction data_direction,
+ 		struct list_head *mem_list, int set_counts);
+-static int transport_generic_get_mem(struct se_cmd *cmd, u32 length,
+-		u32 dma_size);
++static int transport_generic_get_mem(struct se_cmd *cmd, u32 length);
+ static int transport_generic_remove(struct se_cmd *cmd,
+ 		int release_to_pool, int session_reinstatement);
+ static int transport_get_sectors(struct se_cmd *cmd);
+@@ -2896,7 +2895,7 @@ static int transport_allocate_resources(struct se_cmd *cmd)
+ 
+ 	if ((cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
+ 	    (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB))
+-		return transport_generic_get_mem(cmd, length, PAGE_SIZE);
++		return transport_generic_get_mem(cmd, length);
+ 	else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB)
+ 		return transport_generic_allocate_buf(cmd, length);
+ 	else
+@@ -4070,9 +4069,8 @@ static int transport_new_cmd_obj(struct se_cmd *cmd)
  }
  
--/* SCSI statistics table index */
--static struct scsi_index_table scsi_index_table;
--
--/*
-- * Initialize the index table for allocating unique row indexes to various mib
-- * tables.
-- */
--void init_scsi_index_table(void)
--{
--	memset(&scsi_index_table, 0, sizeof(struct scsi_index_table));
--	spin_lock_init(&scsi_index_table.lock);
--}
-+/* This code ensures unique mib indexes are handed out. */
-+static DEFINE_SPINLOCK(scsi_mib_index_lock);
-+static u32 scsi_mib_index[SCSI_INDEX_TYPE_MAX];
- 
- /*
-  * Allocate a new row index for the entry type specified
-@@ -366,16 +357,11 @@ u32 scsi_get_new_index(scsi_index_t type)
+ static int
+-transport_generic_get_mem(struct se_cmd *cmd, u32 length, u32 dma_size)
++transport_generic_get_mem(struct se_cmd *cmd, u32 length)
  {
- 	u32 new_index;
+-	unsigned char *buf;
+ 	struct se_mem *se_mem;
  
--	if ((type < 0) || (type >= SCSI_INDEX_TYPE_MAX)) {
--		printk(KERN_ERR "Invalid index type %d\n", type);
--		return -EINVAL;
--	}
-+	BUG_ON((type < 0) || (type >= SCSI_INDEX_TYPE_MAX));
+ 	/*
+@@ -4089,22 +4087,14 @@ transport_generic_get_mem(struct se_cmd *cmd, u32 length, u32 dma_size)
+ 		}
  
--	spin_lock(&scsi_index_table.lock);
--	new_index = ++scsi_index_table.scsi_mib_index[type];
--	if (new_index == 0)
--		new_index = ++scsi_index_table.scsi_mib_index[type];
--	spin_unlock(&scsi_index_table.lock);
-+	spin_lock(&scsi_mib_index_lock);
-+	new_index = ++scsi_mib_index[type];
-+	spin_unlock(&scsi_mib_index_lock);
+ /* #warning FIXME Allocate contigous pages for struct se_mem elements */
+-		se_mem->se_page = alloc_pages(GFP_KERNEL, 0);
++		se_mem->se_page = alloc_pages(GFP_KERNEL | __GFP_ZERO, 0);
+ 		if (!(se_mem->se_page)) {
+ 			printk(KERN_ERR "alloc_pages() failed\n");
+ 			goto out;
+ 		}
  
- 	return new_index;
- }
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index de7bec6..23dd6b7 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -205,11 +205,6 @@ typedef enum {
- 	SCSI_INDEX_TYPE_MAX
- } scsi_index_t;
- 
--struct scsi_index_table {
--	spinlock_t	lock;
--	u32		scsi_mib_index[SCSI_INDEX_TYPE_MAX];
--} ____cacheline_aligned;
+-		buf = kmap_atomic(se_mem->se_page, KM_IRQ0);
+-		if (!(buf)) {
+-			printk(KERN_ERR "kmap_atomic() failed\n");
+-			goto out;
+-		}
+ 		INIT_LIST_HEAD(&se_mem->se_list);
+-		se_mem->se_len = (length > dma_size) ? dma_size : length;
+-		memset(buf, 0, se_mem->se_len);
+-		kunmap_atomic(buf, KM_IRQ0);
 -
- struct se_cmd;
++		se_mem->se_len = min_t(u32, length, PAGE_SIZE);
+ 		list_add_tail(&se_mem->se_list, &cmd->t_task.t_mem_list);
+ 		cmd->t_task.t_tasks_se_num++;
  
- struct t10_alua {
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 06b8900..da982e9 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -113,7 +113,6 @@ extern struct kmem_cache *se_mem_cache;
- 
- extern int init_se_kmem_caches(void);
- extern void release_se_kmem_caches(void);
--extern void init_scsi_index_table(void);
- extern u32 scsi_get_new_index(scsi_index_t);
- extern void transport_init_queue_obj(struct se_queue_obj *);
- extern int transport_subsystem_check_init(void);
 -- 
 1.7.6
 
