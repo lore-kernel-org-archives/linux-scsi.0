@@ -1,184 +1,76 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 103/103] target: remove custom hex2bin() implementation
-Date: Thu, 21 Jul 2011 07:05:35 +0000
-Message-ID: <1311231935-24635-104-git-send-email-nab@linux-iscsi.org>
-References: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 064/103] target: Make transport_generic_new_cmd() available for iscsi-target
+Date: Thu, 21 Jul 2011 00:11:47 -0700
+Message-ID: <1311232346-6674-65-git-send-email-nab@linux-iscsi.org>
+References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51715 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887Ab1GUH3t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 03:29:49 -0400
-In-Reply-To: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
+Received: from nm1.bullet.mail.bf1.yahoo.com ([98.139.212.160]:21802 "HELO
+	nm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752030Ab1GUHGw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jul 2011 03:06:52 -0400
+In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch drops transport_asciihex_to_binaryhex() in favor of proper
-hex2bin usage from include/linux/kernel.h:hex2bin()
+This patch makes transport_generic_new_cmd() defined as EXPORT_SYMBOL()
+for use with iscsi-target direct task allocation.  It then changes
+iscsi-target to use this direct method instead of the legacy
+transport_generic_handle_cdb() queue usage.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Andy Grover <agrover@redhat.com>
+Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_cdb.c        |   16 ++++------------
- drivers/target/target_core_fabric_lib.c |   17 +++++++----------
- drivers/target/target_core_transport.c  |   28 ----------------------------
- include/target/target_core_transport.h  |    1 -
- 4 files changed, 11 insertions(+), 51 deletions(-)
+ drivers/target/target_core_transport.c |    4 ++--
+ include/target/target_core_transport.h |    1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 27e6a2e..8ae09a1 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -23,6 +23,7 @@
-  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-  */
- 
-+#include <linux/kernel.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
- 
-@@ -162,11 +163,9 @@ target_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	struct t10_alua_lu_gp_member *lu_gp_mem;
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
- 	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
--	unsigned char binary, binary_new;
- 	unsigned char *prod = &dev->se_sub_dev->t10_wwn.model[0];
- 	u32 prod_len;
- 	u32 unit_serial_len, off = 0;
--	int i;
- 	u16 len = 0, id_len;
- 
- 	off = 4;
-@@ -215,16 +214,9 @@ target_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	 * VENDOR_SPECIFIC_IDENTIFIER and
- 	 * VENDOR_SPECIFIC_IDENTIFIER_EXTENTION
- 	 */
--	binary = transport_asciihex_to_binaryhex(
--				&dev->se_sub_dev->t10_wwn.unit_serial[0]);
--	buf[off++] |= (binary & 0xf0) >> 4;
--	for (i = 0; i < 24; i += 2) {
--		binary_new = transport_asciihex_to_binaryhex(
--			&dev->se_sub_dev->t10_wwn.unit_serial[i+2]);
--		buf[off] = (binary & 0x0f) << 4;
--		buf[off++] |= (binary_new & 0xf0) >> 4;
--		binary = binary_new;
--	}
-+	buf[off++] |= hex_to_bin(dev->se_sub_dev->t10_wwn.unit_serial[0]);
-+	hex2bin(&buf[off], &dev->se_sub_dev->t10_wwn.unit_serial[1], 12);
-+
- 	len = 20;
- 	off = (len + 4);
- 
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
-index a299688..c4ea3a9 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -25,6 +25,7 @@
-  *
-  ******************************************************************************/
- 
-+#include <linux/kernel.h>
- #include <linux/string.h>
- #include <linux/ctype.h>
- #include <linux/spinlock.h>
-@@ -61,9 +62,8 @@ u32 sas_get_pr_transport_id(
- 	int *format_code,
- 	unsigned char *buf)
- {
--	unsigned char binary, *ptr;
--	int i;
--	u32 off = 4;
-+	unsigned char *ptr;
-+
- 	/*
- 	 * Set PROTOCOL IDENTIFIER to 6h for SAS
- 	 */
-@@ -74,10 +74,8 @@ u32 sas_get_pr_transport_id(
- 	 */
- 	ptr = &se_nacl->initiatorname[4]; /* Skip over 'naa. prefix */
- 
--	for (i = 0; i < 16; i += 2) {
--		binary = transport_asciihex_to_binaryhex(&ptr[i]);
--		buf[off++] = binary;
--	}
-+	hex2bin(&buf[4], ptr, 8);
-+
- 	/*
- 	 * The SAS Transport ID is a hardcoded 24-byte length
- 	 */
-@@ -157,7 +155,7 @@ u32 fc_get_pr_transport_id(
- 	int *format_code,
- 	unsigned char *buf)
- {
--	unsigned char binary, *ptr;
-+	unsigned char *ptr;
- 	int i;
- 	u32 off = 8;
- 	/*
-@@ -176,8 +174,7 @@ u32 fc_get_pr_transport_id(
- 			i++;
- 			continue;
- 		}
--		binary = transport_asciihex_to_binaryhex(&ptr[i]);
--		buf[off++] = binary;
-+		hex2bin(&buf[off++], &ptr[i], 1);
- 		i += 2;
- 	}
- 	/*
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 007cfc1..46352d6 100644
+index 9bb3ac9..fbc5687 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2659,34 +2659,6 @@ static inline u32 transport_get_size(
- 	return dev->se_sub_dev->se_dev_attrib.block_size * sectors;
+@@ -1842,7 +1842,6 @@ int transport_generic_handle_cdb(
+ 		printk(KERN_ERR "cmd->se_lun is NULL\n");
+ 		return -EINVAL;
+ 	}
+-
+ 	transport_add_cmd_to_queue(cmd, TRANSPORT_NEW_CMD);
+ 	return 0;
  }
- 
--unsigned char transport_asciihex_to_binaryhex(unsigned char val[2])
--{
--	unsigned char result = 0;
--	/*
--	 * MSB
--	 */
--	if ((val[0] >= 'a') && (val[0] <= 'f'))
--		result = ((val[0] - 'a' + 10) & 0xf) << 4;
--	else
--		if ((val[0] >= 'A') && (val[0] <= 'F'))
--			result = ((val[0] - 'A' + 10) & 0xf) << 4;
--		else /* digit */
--			result = ((val[0] - '0') & 0xf) << 4;
--	/*
--	 * LSB
--	 */
--	if ((val[1] >= 'a') && (val[1] <= 'f'))
--		result |= ((val[1] - 'a' + 10) & 0xf);
--	else
--		if ((val[1] >= 'A') && (val[1] <= 'F'))
--			result |= ((val[1] - 'A' + 10) & 0xf);
--		else /* digit */
--			result |= ((val[1] - '0') & 0xf);
--
--	return result;
--}
--EXPORT_SYMBOL(transport_asciihex_to_binaryhex);
--
- static void transport_xor_callback(struct se_cmd *cmd)
+@@ -4747,7 +4746,7 @@ transport_map_control_cmd_to_task(struct se_cmd *cmd)
+ 	/*
+ 	 * Generate struct se_task(s) and/or their payloads for this CDB.
+ 	 */
+-static int transport_generic_new_cmd(struct se_cmd *cmd)
++int transport_generic_new_cmd(struct se_cmd *cmd)
  {
- 	unsigned char *buf, *addr;
+ 	struct se_portal_group *se_tpg;
+ 	struct se_task *task;
+@@ -4817,6 +4816,7 @@ static int transport_generic_new_cmd(struct se_cmd *cmd)
+ 	transport_execute_tasks(cmd);
+ 	return 0;
+ }
++EXPORT_SYMBOL(transport_generic_new_cmd);
+ 
+ /*	transport_generic_process_write():
+  *
 diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index f41b07c..46aae4f 100644
+index 4bbd88b..c9846d5 100644
 --- a/include/target/target_core_transport.h
 +++ b/include/target/target_core_transport.h
-@@ -179,7 +179,6 @@ extern void transport_new_cmd_failure(struct se_cmd *);
- extern int transport_generic_handle_tmr(struct se_cmd *);
- extern void transport_generic_free_cmd_intr(struct se_cmd *);
- extern void __transport_stop_task_timer(struct se_task *, unsigned long *);
--extern unsigned char transport_asciihex_to_binaryhex(unsigned char val[2]);
- extern int transport_generic_map_mem_to_cmd(struct se_cmd *cmd, struct scatterlist *, u32,
- 				struct scatterlist *, u32);
- extern int transport_clear_lun_from_sessions(struct se_lun *);
+@@ -188,6 +188,7 @@ extern int transport_map_mem_to_sg(struct se_task *, struct list_head *,
+ 					struct se_mem **, u32 *, u32 *);
+ extern void transport_do_task_sg_chain(struct se_cmd *);
+ extern void transport_generic_process_write(struct se_cmd *);
++extern int transport_generic_new_cmd(struct se_cmd *);
+ extern int transport_generic_do_tmr(struct se_cmd *);
+ /* From target_core_alua.c */
+ extern int core_alua_check_nonop_delay(struct se_cmd *);
 -- 
 1.7.6
 
