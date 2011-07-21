@@ -1,153 +1,105 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 015/103] target: Make struct se_queue_req.cmd type struct se_cmd *
-Date: Thu, 21 Jul 2011 00:04:51 -0700
-Message-ID: <1311231979-6631-16-git-send-email-nab@linux-iscsi.org>
-References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 045/103] tcm_fc: Convert to wake_up_process and schedule_timeout_interruptible
+Date: Thu, 21 Jul 2011 00:07:57 -0700
+Message-ID: <1311232135-6653-46-git-send-email-nab@linux-iscsi.org>
+References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm18.bullet.mail.bf1.yahoo.com ([98.139.212.177]:35522 "HELO
-	nm18.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751445Ab1GUHAc (ORCPT
+Received: from nm4-vm0.access.bullet.mail.sp2.yahoo.com ([98.139.44.110]:27986
+	"HELO nm4-vm0.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751468Ab1GUHEJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:00:32 -0400
-In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:04:09 -0400
+In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Andy Grover <agrover@redhat.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Doesn't appear to ever be used as anything but a se_cmd*, so
-it's safer to make it a pointer to a type.
+This patch converts ft_queue_cmd() to use wake_up_process() and
+ft_thread() to use schedule_timeout_interruptible(MAX_SCHEDULE_TIMEOUT)
+instead of wait_event_interruptible().  This fixes a potential race with
+the wait_event_interruptible() conditional with qobj->queue_cnt in
+ft_thread().
 
-Simplifies a few functions.
+This patch also drops the unnecessary set_user_nice(current, -20) in
+ft_thread(), and drops extra () around two if (!(acl)) conditionals in
+tfc_conf.c.
 
-Signed-off-by: Andy Grover <agrover@redhat.com>
+Reported-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   30 ++++++++++++------------------
- include/target/target_core_base.h      |    2 +-
- 2 files changed, 13 insertions(+), 19 deletions(-)
+ drivers/target/tcm_fc/tfc_cmd.c  |   17 ++++++++---------
+ drivers/target/tcm_fc/tfc_conf.c |    4 ++--
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index fffa905..002ea6f 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -817,7 +817,7 @@ static int transport_add_cmd_to_queue(
- 	}
- 	INIT_LIST_HEAD(&qr->qr_list);
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 6d9553b..9c99402 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -96,15 +96,17 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
  
--	qr->cmd = (void *)cmd;
-+	qr->cmd = cmd;
- 	qr->state = t_state;
- 
- 	if (t_state) {
-@@ -843,7 +843,6 @@ static int transport_add_cmd_to_queue(
- static struct se_queue_req *
- __transport_get_qr_from_queue(struct se_queue_obj *qobj)
+ static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
  {
--	struct se_cmd *cmd;
- 	struct se_queue_req *qr = NULL;
- 
- 	if (list_empty(&qobj->qobj_list))
-@@ -852,10 +851,9 @@ __transport_get_qr_from_queue(struct se_queue_obj *qobj)
- 	list_for_each_entry(qr, &qobj->qobj_list, qr_list)
- 		break;
- 
--	if (qr->cmd) {
--		cmd = (struct se_cmd *)qr->cmd;
--		atomic_dec(&T_TASK(cmd)->t_transport_queue_active);
--	}
-+	if (qr->cmd)
-+		atomic_dec(&T_TASK(qr->cmd)->t_transport_queue_active);
-+
- 	list_del(&qr->qr_list);
- 	atomic_dec(&qobj->queue_cnt);
- 
-@@ -865,7 +863,6 @@ __transport_get_qr_from_queue(struct se_queue_obj *qobj)
- static struct se_queue_req *
- transport_get_qr_from_queue(struct se_queue_obj *qobj)
- {
--	struct se_cmd *cmd;
- 	struct se_queue_req *qr;
+-	struct se_queue_obj *qobj;
++	struct ft_tpg *tpg = sess->tport->tpg;
++	struct se_queue_obj *qobj = &tpg->qobj;
  	unsigned long flags;
  
-@@ -878,10 +875,9 @@ transport_get_qr_from_queue(struct se_queue_obj *qobj)
- 	list_for_each_entry(qr, &qobj->qobj_list, qr_list)
- 		break;
- 
--	if (qr->cmd) {
--		cmd = (struct se_cmd *)qr->cmd;
--		atomic_dec(&T_TASK(cmd)->t_transport_queue_active);
--	}
-+	if (qr->cmd)
-+		atomic_dec(&T_TASK(qr->cmd)->t_transport_queue_active);
+ 	qobj = &sess->tport->tpg->qobj;
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
+ 	list_add_tail(&cmd->se_req.qr_list, &qobj->qobj_list);
+-	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 	atomic_inc(&qobj->queue_cnt);
+-	wake_up_interruptible(&qobj->thread_wq);
++	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
 +
- 	list_del(&qr->qr_list);
- 	atomic_dec(&qobj->queue_cnt);
- 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
-@@ -892,7 +888,6 @@ transport_get_qr_from_queue(struct se_queue_obj *qobj)
- static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
- 		struct se_queue_obj *qobj)
- {
--	struct se_cmd *q_cmd;
- 	struct se_queue_req *qr = NULL, *qr_p = NULL;
- 	unsigned long flags;
++	wake_up_process(tpg->thread);
+ }
  
-@@ -903,11 +898,10 @@ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ static struct ft_cmd *ft_dequeue_cmd(struct se_queue_obj *qobj)
+@@ -696,15 +698,12 @@ int ft_thread(void *arg)
+ 	struct ft_tpg *tpg = arg;
+ 	struct se_queue_obj *qobj = &tpg->qobj;
+ 	struct ft_cmd *cmd;
+-	int ret;
+-
+-	set_user_nice(current, -20);
+ 
+ 	while (!kthread_should_stop()) {
+-		ret = wait_event_interruptible(qobj->thread_wq,
+-			atomic_read(&qobj->queue_cnt) || kthread_should_stop());
+-		if (ret < 0 || kthread_should_stop())
++		schedule_timeout_interruptible(MAX_SCHEDULE_TIMEOUT);
++		if (kthread_should_stop())
+ 			goto out;
++
+ 		cmd = ft_dequeue_cmd(qobj);
+ 		if (cmd)
+ 			ft_exec_req(cmd);
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index 58e4745..e3176f5 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -223,7 +223,7 @@ static struct se_node_acl *ft_add_acl(
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	acl = kzalloc(sizeof(struct ft_node_acl), GFP_KERNEL);
+-	if (!(acl))
++	if (!acl)
+ 		return ERR_PTR(-ENOMEM);
+ 	acl->node_auth.port_name = wwpn;
+ 
+@@ -280,7 +280,7 @@ struct se_node_acl *ft_tpg_alloc_fabric_acl(struct se_portal_group *se_tpg)
+ 	struct ft_node_acl *acl;
+ 
+ 	acl = kzalloc(sizeof(*acl), GFP_KERNEL);
+-	if (!(acl)) {
++	if (!acl) {
+ 		printk(KERN_ERR "Unable to allocate struct ft_node_acl\n");
+ 		return NULL;
  	}
- 
- 	list_for_each_entry_safe(qr, qr_p, &qobj->qobj_list, qr_list) {
--		q_cmd = (struct se_cmd *)qr->cmd;
--		if (q_cmd != cmd)
-+		if (qr->cmd != cmd)
- 			continue;
- 
--		atomic_dec(&T_TASK(q_cmd)->t_transport_queue_active);
-+		atomic_dec(&T_TASK(qr->cmd)->t_transport_queue_active);
- 		atomic_dec(&qobj->queue_cnt);
- 		list_del(&qr->qr_list);
- 		kfree(qr);
-@@ -1287,7 +1281,7 @@ static void transport_release_all_cmds(struct se_device *dev)
- 	list_for_each_entry_safe(qr, qr_p, &dev->dev_queue_obj->qobj_list,
- 				qr_list) {
- 
--		cmd = (struct se_cmd *)qr->cmd;
-+		cmd = qr->cmd;
- 		t_state = qr->state;
- 		list_del(&qr->qr_list);
- 		kfree(qr);
-@@ -6023,7 +6017,7 @@ static void transport_processing_shutdown(struct se_device *dev)
- 	while ((qr = __transport_get_qr_from_queue(dev->dev_queue_obj))) {
- 		spin_unlock_irqrestore(
- 				&dev->dev_queue_obj->cmd_queue_lock, flags);
--		cmd = (struct se_cmd *)qr->cmd;
-+		cmd = qr->cmd;
- 		state = qr->state;
- 		kfree(qr);
- 
-@@ -6081,7 +6075,7 @@ get_cmd:
- 		if (!(qr))
- 			continue;
- 
--		cmd = (struct se_cmd *)qr->cmd;
-+		cmd = qr->cmd;
- 		t_state = qr->state;
- 		kfree(qr);
- 
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index b2b4cf9..e35338d 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -397,7 +397,7 @@ struct t10_reservation_template {
- 
- struct se_queue_req {
- 	int			state;
--	void			*cmd;
-+	struct se_cmd		*cmd;
- 	struct list_head	qr_list;
- } ____cacheline_aligned;
- 
 -- 
 1.7.6
 
