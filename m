@@ -1,86 +1,483 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 014/103] target: dev->dev_status_queue_obj is unused
-Date: Thu, 21 Jul 2011 00:04:50 -0700
-Message-ID: <1311231979-6631-15-git-send-email-nab@linux-iscsi.org>
-References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 074/103] target: Add SCF_EMULATE_QUEUE_FULL -> transport_handle_queue_full
+Date: Thu, 21 Jul 2011 00:11:57 -0700
+Message-ID: <1311232346-6674-75-git-send-email-nab@linux-iscsi.org>
+References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm7.bullet.mail.bf1.yahoo.com ([98.139.212.166]:40273 "HELO
-	nm7.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752378Ab1GUHH0 (ORCPT
+Received: from nm21.bullet.mail.bf1.yahoo.com ([98.139.212.180]:44137 "HELO
+	nm21.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752173Ab1GUHHh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:07:26 -0400
-In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:07:37 -0400
+In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Andy Grover <agrover@redhat.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Looks safe to remove.
+This patch adds SCF_EMULATE_QUEUE_FULL support using -EAGAIN failures
+via transport_handle_queue_full() to signal queue full in completion
+path TFO->queue_data_in() and TFO->queue_status() callbacks.
 
-Signed-off-by: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+This is done using a new se_cmd->transport_qf_callback() to handle
+the following queue full exception cases within target core:
+
+*) TRANSPORT_COMPLETE_OK (for completion path queue full)
+
+*) TRANSPORT_COMPLETE_QF_WP (for TRANSPORT_WRITE_PENDING queue full)
+
+*) transport_send_check_condition_and_sense() failure paths in
+   transport_generic_request_failure() and transport_generic_complete_ok()
+
+All logic is driven using se_device->qf_work_queue -> target_qf_do_work()
+to to requeue outstanding se_cmd at the head of se_dev->queue_obj->qobj_list
+for transport_processing_thread() execution.
+
+Tested using tcm_qla2xxx with MAX_OUTSTANDING_COMMANDS=128 for FCP READ
+to trigger the TRANSPORT_COMPLETE_OK queue full cases, and a simulated
+TFO->write_pending() -EAGAIN failure to trigger TRANSPORT_COMPLETE_QF_WP.
+
+Reported-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_device.c    |    1 -
- drivers/target/target_core_transport.c |   12 ------------
- include/target/target_core_base.h      |    1 -
- 3 files changed, 0 insertions(+), 14 deletions(-)
+ drivers/target/target_core_transport.c |  194 +++++++++++++++++++++++++++++---
+ include/target/target_core_base.h      |    9 ++
+ 2 files changed, 188 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 818c65b..f03e0cc 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -755,7 +755,6 @@ void se_release_device_for_hba(struct se_device *dev)
- 	core_scsi3_free_all_registrations(dev);
- 	se_release_vpd_for_dev(dev);
- 
--	kfree(dev->dev_status_queue_obj);
- 	kfree(dev->dev_queue_obj);
- 	kfree(dev);
- 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ae153bf..fffa905 100644
+index 1ae6eb7..056c4cb 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -1642,17 +1642,6 @@ struct se_device *transport_add_device_to_core_hba(
+@@ -204,6 +204,9 @@ static int transport_generic_write_pending(struct se_cmd *);
+ static int transport_processing_thread(void *param);
+ static int __transport_execute_tasks(struct se_device *dev);
+ static void transport_complete_task_attr(struct se_cmd *cmd);
++static int transport_complete_qf(struct se_cmd *cmd);
++static void transport_handle_queue_full(struct se_cmd *cmd,
++		struct se_device *dev, int (*qf_callback)(struct se_cmd *));
+ static void transport_direct_request_timeout(struct se_cmd *cmd);
+ static void transport_free_dev_tasks(struct se_cmd *cmd);
+ static u32 transport_allocate_tasks(struct se_cmd *cmd,
+@@ -768,7 +771,11 @@ static void transport_add_cmd_to_queue(
  	}
- 	transport_init_queue_obj(dev->dev_queue_obj);
  
--	dev->dev_status_queue_obj = kzalloc(sizeof(struct se_queue_obj),
--					GFP_KERNEL);
--	if (!(dev->dev_status_queue_obj)) {
--		printk(KERN_ERR "Unable to allocate memory for"
--				" dev->dev_status_queue_obj\n");
--		kfree(dev->dev_queue_obj);
--		kfree(dev);
--		return NULL;
--	}
--	transport_init_queue_obj(dev->dev_status_queue_obj);
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
+-	list_add_tail(&cmd->se_queue_node, &qobj->qobj_list);
++	if (cmd->se_cmd_flags & SCF_EMULATE_QUEUE_FULL) {
++		cmd->se_cmd_flags &= ~SCF_EMULATE_QUEUE_FULL;
++		list_add(&cmd->se_queue_node, &qobj->qobj_list);
++	} else
++		list_add_tail(&cmd->se_queue_node, &qobj->qobj_list);
+ 	atomic_inc(&cmd->t_transport_queue_active);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+@@ -1102,6 +1109,40 @@ void transport_remove_task_from_execute_queue(
+ 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+ }
+ 
++/*
++ * Handle QUEUE_FULL / -EAGAIN status
++ */
++
++static void target_qf_do_work(struct work_struct *work)
++{
++	struct se_device *dev = container_of(work, struct se_device,
++					qf_work_queue);
++	struct se_cmd *cmd, *cmd_tmp;
++
++	spin_lock_irq(&dev->qf_cmd_lock);
++	list_for_each_entry_safe(cmd, cmd_tmp, &dev->qf_cmd_list, se_qf_node) {
++
++		list_del(&cmd->se_qf_node);
++		atomic_dec(&dev->dev_qf_count);
++		smp_mb__after_atomic_dec();
++		spin_unlock_irq(&dev->qf_cmd_lock);
++
++		printk(KERN_INFO "Processing %s cmd: %p QUEUE_FULL in work queue"
++			" context: %s\n", cmd->se_tfo->get_fabric_name(), cmd,
++			(cmd->t_state == TRANSPORT_COMPLETE_OK) ? "COMPLETE_OK" :
++			(cmd->t_state == TRANSPORT_COMPLETE_QF_WP) ? "WRITE_PENDING"
++			: "UNKNOWN");
++		/*
++		 * The SCF_EMULATE_QUEUE_FULL flag will be cleared once se_cmd
++		 * has been added to head of queue
++		 */
++		transport_add_cmd_to_queue(cmd, cmd->t_state);
++
++		spin_lock_irq(&dev->qf_cmd_lock);
++	}
++	spin_unlock_irq(&dev->qf_cmd_lock);
++}
++
+ unsigned char *transport_dump_cmd_direction(struct se_cmd *cmd)
+ {
+ 	switch (cmd->data_direction) {
+@@ -1531,6 +1572,7 @@ struct se_device *transport_add_device_to_core_hba(
+ 	INIT_LIST_HEAD(&dev->delayed_cmd_list);
+ 	INIT_LIST_HEAD(&dev->ordered_cmd_list);
+ 	INIT_LIST_HEAD(&dev->state_task_list);
++	INIT_LIST_HEAD(&dev->qf_cmd_list);
+ 	spin_lock_init(&dev->execute_task_lock);
+ 	spin_lock_init(&dev->delayed_cmd_lock);
+ 	spin_lock_init(&dev->ordered_cmd_lock);
+@@ -1541,6 +1583,7 @@ struct se_device *transport_add_device_to_core_hba(
+ 	spin_lock_init(&dev->dev_status_thr_lock);
+ 	spin_lock_init(&dev->se_port_lock);
+ 	spin_lock_init(&dev->se_tmr_lock);
++	spin_lock_init(&dev->qf_cmd_lock);
+ 
+ 	dev->queue_depth	= dev_limits->queue_depth;
+ 	atomic_set(&dev->depth_left, dev->queue_depth);
+@@ -1584,7 +1627,10 @@ struct se_device *transport_add_device_to_core_hba(
+ 			dev->transport->name);
+ 		goto out;
+ 	}
 -
- 	dev->dev_flags		= device_flags;
- 	dev->dev_status		|= TRANSPORT_DEVICE_DEACTIVATED;
- 	dev->dev_ptr		= (void *) transport_dev;
-@@ -1753,7 +1742,6 @@ out:
++	/*
++	 * Setup work_queue for QUEUE_FULL
++	 */
++	INIT_WORK(&dev->qf_work_queue, target_qf_do_work);
+ 	/*
+ 	 * Preload the initial INQUIRY const values if we are doing
+ 	 * anything virtual (IBLOCK, FILEIO, RAMDISK), but not for TCM/pSCSI
+@@ -1697,6 +1743,7 @@ void transport_init_se_cmd(
+ 	INIT_LIST_HEAD(&cmd->se_lun_node);
+ 	INIT_LIST_HEAD(&cmd->se_delayed_node);
+ 	INIT_LIST_HEAD(&cmd->se_ordered_node);
++	INIT_LIST_HEAD(&cmd->se_qf_node);
  
- 	se_release_vpd_for_dev(dev);
+ 	INIT_LIST_HEAD(&cmd->t_mem_list);
+ 	INIT_LIST_HEAD(&cmd->t_mem_bidi_list);
+@@ -2019,6 +2066,8 @@ static void transport_generic_request_failure(
+ 	int complete,
+ 	int sc)
+ {
++	int ret = 0;
++
+ 	DEBUG_GRF("-----[ Storage Engine Exception for cmd: %p ITT: 0x%08x"
+ 		" CDB: 0x%02x\n", cmd, cmd->se_tfo->get_task_tag(cmd),
+ 		cmd->t_task_cdb[0]);
+@@ -2109,7 +2158,9 @@ static void transport_generic_request_failure(
+ 				cmd->orig_fe_lun, 0x2C,
+ 				ASCQ_2CH_PREVIOUS_RESERVATION_CONFLICT_STATUS);
  
--	kfree(dev->dev_status_queue_obj);
- 	kfree(dev->dev_queue_obj);
- 	kfree(dev);
+-		cmd->se_tfo->queue_status(cmd);
++		ret = cmd->se_tfo->queue_status(cmd);
++		if (ret == -EAGAIN)
++			goto queue_full;
+ 		goto check_stop;
+ 	case PYX_TRANSPORT_USE_SENSE_REASON:
+ 		/*
+@@ -2126,13 +2177,22 @@ static void transport_generic_request_failure(
  
+ 	if (!sc)
+ 		transport_new_cmd_failure(cmd);
+-	else
+-		transport_send_check_condition_and_sense(cmd,
+-			cmd->scsi_sense_reason, 0);
++	else {
++		ret = transport_send_check_condition_and_sense(cmd,
++				cmd->scsi_sense_reason, 0);
++		if (ret == -EAGAIN)
++			goto queue_full;
++	}
++
+ check_stop:
+ 	transport_lun_remove_cmd(cmd);
+ 	if (!(transport_cmd_check_stop_to_fabric(cmd)))
+ 		;
++	return;
++
++queue_full:
++	cmd->t_state = TRANSPORT_COMPLETE_OK;
++	transport_handle_queue_full(cmd, cmd->se_dev, transport_complete_qf);
+ }
+ 
+ static void transport_direct_request_timeout(struct se_cmd *cmd)
+@@ -3637,9 +3697,53 @@ static void transport_complete_task_attr(struct se_cmd *cmd)
+ 		wake_up_interruptible(&dev->dev_queue_obj.thread_wq);
+ }
+ 
++static int transport_complete_qf(struct se_cmd *cmd)
++{
++	int ret = 0;
++
++	if (cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE)
++		return cmd->se_tfo->queue_status(cmd);
++
++	switch (cmd->data_direction) {
++	case DMA_FROM_DEVICE:
++		ret = cmd->se_tfo->queue_data_in(cmd);
++		break;
++	case DMA_TO_DEVICE:
++		if (!list_empty(&cmd->t_mem_bidi_list)) {
++			ret = cmd->se_tfo->queue_data_in(cmd);
++			if (ret < 0)
++				return ret;
++		}
++		/* Fall through for DMA_TO_DEVICE */
++	case DMA_NONE:
++		ret = cmd->se_tfo->queue_status(cmd);
++		break;
++	default:
++		break;
++	}
++
++	return ret;
++}
++
++static void transport_handle_queue_full(
++	struct se_cmd *cmd,
++	struct se_device *dev,
++	int (*qf_callback)(struct se_cmd *))
++{
++	spin_lock_irq(&dev->qf_cmd_lock);
++	cmd->se_cmd_flags |= SCF_EMULATE_QUEUE_FULL;
++	cmd->transport_qf_callback = qf_callback;
++	list_add_tail(&cmd->se_qf_node, &cmd->se_dev->qf_cmd_list);
++	atomic_inc(&dev->dev_qf_count);
++	smp_mb__after_atomic_inc();
++	spin_unlock_irq(&cmd->se_dev->qf_cmd_lock);
++
++	schedule_work(&cmd->se_dev->qf_work_queue);
++}
++
+ static void transport_generic_complete_ok(struct se_cmd *cmd)
+ {
+-	int reason = 0;
++	int reason = 0, ret;
+ 	/*
+ 	 * Check if we need to move delayed/dormant tasks from cmds on the
+ 	 * delayed execution list after a HEAD_OF_QUEUE or ORDERED Task
+@@ -3648,6 +3752,21 @@ static void transport_generic_complete_ok(struct se_cmd *cmd)
+ 	if (cmd->se_dev->dev_task_attr_type == SAM_TASK_ATTR_EMULATED)
+ 		transport_complete_task_attr(cmd);
+ 	/*
++	 * Check to schedule QUEUE_FULL work, or execute an existing
++	 * cmd->transport_qf_callback()
++	 */
++	if (atomic_read(&cmd->se_dev->dev_qf_count) != 0)
++		schedule_work(&cmd->se_dev->qf_work_queue);
++
++	if (cmd->transport_qf_callback) {
++		ret = cmd->transport_qf_callback(cmd);
++		if (ret < 0)
++			goto queue_full;
++
++		cmd->transport_qf_callback = NULL;
++		goto done;
++	}
++	/*
+ 	 * Check if we need to retrieve a sense buffer from
+ 	 * the struct se_cmd in question.
+ 	 */
+@@ -3660,8 +3779,11 @@ static void transport_generic_complete_ok(struct se_cmd *cmd)
+ 		 * a non GOOD status.
+ 		 */
+ 		if (cmd->scsi_status) {
+-			transport_send_check_condition_and_sense(
++			ret = transport_send_check_condition_and_sense(
+ 					cmd, reason, 1);
++			if (ret == -EAGAIN)
++				goto queue_full;
++
+ 			transport_lun_remove_cmd(cmd);
+ 			transport_cmd_check_stop_to_fabric(cmd);
+ 			return;
+@@ -3693,7 +3815,9 @@ static void transport_generic_complete_ok(struct se_cmd *cmd)
+ 					    cmd->t_task_buf,
+ 					    cmd->data_length);
+ 
+-		cmd->se_tfo->queue_data_in(cmd);
++		ret = cmd->se_tfo->queue_data_in(cmd);
++		if (ret == -EAGAIN)
++			goto queue_full;
+ 		break;
+ 	case DMA_TO_DEVICE:
+ 		spin_lock(&cmd->se_lun->lun_sep_lock);
+@@ -3712,19 +3836,30 @@ static void transport_generic_complete_ok(struct se_cmd *cmd)
+ 					cmd->data_length;
+ 			}
+ 			spin_unlock(&cmd->se_lun->lun_sep_lock);
+-			cmd->se_tfo->queue_data_in(cmd);
++			ret = cmd->se_tfo->queue_data_in(cmd);
++			if (ret == -EAGAIN)
++				goto queue_full;
+ 			break;
+ 		}
+ 		/* Fall through for DMA_TO_DEVICE */
+ 	case DMA_NONE:
+-		cmd->se_tfo->queue_status(cmd);
++		ret = cmd->se_tfo->queue_status(cmd);
++		if (ret == -EAGAIN)
++			goto queue_full;
+ 		break;
+ 	default:
+ 		break;
+ 	}
+ 
++done:
+ 	transport_lun_remove_cmd(cmd);
+ 	transport_cmd_check_stop_to_fabric(cmd);
++	return;
++
++queue_full:
++	printk(KERN_INFO "Handling complete_ok QUEUE_FULL: se_cmd: %p,"
++		" data_direction: %d\n", cmd, cmd->data_direction);
++	transport_handle_queue_full(cmd, cmd->se_dev, transport_complete_qf);
+ }
+ 
+ static void transport_free_dev_tasks(struct se_cmd *cmd)
+@@ -4866,6 +5001,11 @@ void transport_generic_process_write(struct se_cmd *cmd)
+ }
+ EXPORT_SYMBOL(transport_generic_process_write);
+ 
++static int transport_write_pending_qf(struct se_cmd *cmd)
++{
++	return cmd->se_tfo->write_pending(cmd);
++}
++
+ /*	transport_generic_write_pending():
+  *
+  *
+@@ -4878,6 +5018,17 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	cmd->t_state = TRANSPORT_WRITE_PENDING;
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++
++	if (cmd->transport_qf_callback) {
++		ret = cmd->transport_qf_callback(cmd);
++		if (ret == -EAGAIN)
++			goto queue_full;
++		else if (ret < 0)
++			return ret;
++
++		cmd->transport_qf_callback = NULL;
++		return 0;
++	}
+ 	/*
+ 	 * For the TCM control CDBs using a contiguous buffer, do the memcpy
+ 	 * from the passed Linux/SCSI struct scatterlist located at
+@@ -4903,10 +5054,19 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
+ 	 * frontend know that WRITE buffers are ready.
+ 	 */
+ 	ret = cmd->se_tfo->write_pending(cmd);
+-	if (ret < 0)
++	if (ret == -EAGAIN)
++		goto queue_full;
++	else if (ret < 0)
+ 		return ret;
+ 
+ 	return PYX_TRANSPORT_WRITE_PENDING;
++
++queue_full:
++	printk(KERN_INFO "Handling write_pending QUEUE__FULL: se_cmd: %p\n", cmd);
++	cmd->t_state = TRANSPORT_COMPLETE_QF_WP;
++	transport_handle_queue_full(cmd, cmd->se_dev,
++			transport_write_pending_qf);
++	return ret;
+ }
+ 
+ void transport_release_cmd(struct se_cmd *cmd)
+@@ -5410,8 +5570,7 @@ int transport_send_check_condition_and_sense(
+ 	cmd->scsi_sense_length  = TRANSPORT_SENSE_BUFFER + offset;
+ 
+ after_reason:
+-	cmd->se_tfo->queue_status(cmd);
+-	return 0;
++	return cmd->se_tfo->queue_status(cmd);
+ }
+ EXPORT_SYMBOL(transport_send_check_condition_and_sense);
+ 
+@@ -5733,7 +5892,9 @@ get_cmd:
+ 			/* Fall through */
+ 		case TRANSPORT_NEW_CMD:
+ 			ret = transport_generic_new_cmd(cmd);
+-			if (ret < 0) {
++			if (ret == -EAGAIN)
++				break;
++			else if (ret < 0) {
+ 				cmd->transport_error_status = ret;
+ 				transport_generic_request_failure(cmd, NULL,
+ 					0, (cmd->data_direction !=
+@@ -5763,6 +5924,9 @@ get_cmd:
+ 			transport_stop_all_task_timers(cmd);
+ 			transport_generic_request_timeout(cmd);
+ 			break;
++		case TRANSPORT_COMPLETE_QF_WP:
++			transport_generic_write_pending(cmd);
++			break;
+ 		default:
+ 			printk(KERN_ERR "Unknown t_state: %d deferred_t_state:"
+ 				" %d for ITT: 0x%08x i_state: %d on SE LUN:"
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index e35e9e4..b2b4cf9 100644
+index 71abc4c..cd163dd 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -784,7 +784,6 @@ struct se_device {
+@@ -99,6 +99,7 @@ enum transport_state_table {
+ 	TRANSPORT_FREE		= 15,
+ 	TRANSPORT_NEW_CMD_MAP	= 16,
+ 	TRANSPORT_FREE_CMD_INTR = 17,
++	TRANSPORT_COMPLETE_QF_WP = 18,
+ };
+ 
+ /* Used for struct se_cmd->se_cmd_flags */
+@@ -125,6 +126,7 @@ enum se_cmd_flags_table {
+ 	SCF_PASSTHROUGH_CONTIG_TO_SG	= 0x00200000,
+ 	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00400000,
+ 	SCF_EMULATE_CDB_ASYNC		= 0x01000000,
++	SCF_EMULATE_QUEUE_FULL		= 0x02000000,
+ };
+ 
+ /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
+@@ -466,6 +468,7 @@ struct se_cmd {
+ 	struct list_head	se_delayed_node;
+ 	struct list_head	se_ordered_node;
+ 	struct list_head	se_lun_node;
++	struct list_head	se_qf_node;
+ 	struct se_device      *se_dev;
+ 	struct se_dev_entry   *se_deve;
+ 	struct se_device	*se_obj_ptr;
+@@ -480,6 +483,8 @@ struct se_cmd {
+ 	void (*transport_split_cdb)(unsigned long long, u32 *, unsigned char *);
+ 	void (*transport_wait_for_tasks)(struct se_cmd *, int, int);
+ 	void (*transport_complete_callback)(struct se_cmd *);
++	int (*transport_qf_callback)(struct se_cmd *);
++
+ 	unsigned char		*t_task_cdb;
+ 	unsigned char		__t_task_cdb[TCM_MAX_COMMAND_SIZE];
+ 	unsigned long long	t_task_lba;
+@@ -743,6 +748,7 @@ struct se_device {
+ 	atomic_t		dev_status_thr_count;
+ 	atomic_t		dev_hoq_count;
+ 	atomic_t		dev_ordered_sync;
++	atomic_t		dev_qf_count;
+ 	struct se_obj		dev_obj;
  	struct se_obj		dev_access_obj;
  	struct se_obj		dev_export_obj;
- 	struct se_queue_obj	*dev_queue_obj;
--	struct se_queue_obj	*dev_status_queue_obj;
- 	spinlock_t		delayed_cmd_lock;
- 	spinlock_t		ordered_cmd_lock;
- 	spinlock_t		execute_task_lock;
+@@ -758,6 +764,7 @@ struct se_device {
+ 	spinlock_t		dev_status_thr_lock;
+ 	spinlock_t		se_port_lock;
+ 	spinlock_t		se_tmr_lock;
++	spinlock_t		qf_cmd_lock;
+ 	/* Used for legacy SPC-2 reservationsa */
+ 	struct se_node_acl	*dev_reserved_node_acl;
+ 	/* Used for ALUA Logical Unit Group membership */
+@@ -771,10 +778,12 @@ struct se_device {
+ 	struct task_struct	*process_thread;
+ 	pid_t			process_thread_pid;
+ 	struct task_struct		*dev_mgmt_thread;
++	struct work_struct	qf_work_queue;
+ 	struct list_head	delayed_cmd_list;
+ 	struct list_head	ordered_cmd_list;
+ 	struct list_head	execute_task_list;
+ 	struct list_head	state_task_list;
++	struct list_head	qf_cmd_list;
+ 	/* Pointer to associated SE HBA */
+ 	struct se_hba		*se_hba;
+ 	struct se_subsystem_dev *se_sub_dev;
 -- 
 1.7.6
 
