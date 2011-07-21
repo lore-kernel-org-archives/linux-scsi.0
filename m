@@ -1,65 +1,203 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 088/103] target: Enforce 1 page max for control cdb buffer sizes
-Date: Thu, 21 Jul 2011 00:12:11 -0700
-Message-ID: <1311232346-6674-89-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 083/103] target: Fix reporting of supported VPD pages
+Date: Thu, 21 Jul 2011 00:12:06 -0700
+Message-ID: <1311232346-6674-84-git-send-email-nab@linux-iscsi.org>
 References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm4.bullet.mail.bf1.yahoo.com ([98.139.212.163]:43475 "HELO
-	nm4.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752030Ab1GUHJU (ORCPT
+Received: from nm28.bullet.mail.bf1.yahoo.com ([98.139.212.187]:47088 "HELO
+	nm28.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752035Ab1GUHIw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:09:20 -0400
+	Thu, 21 Jul 2011 03:08:52 -0400
 In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>
 
-From: Andy Grover <agrover@redhat.com>
+From: Roland Dreier <roland@purestorage.com>
 
-Due to all cdbs' data buffers being referenced by scatterlists, buffers
-of more than a page are not contiguous. Instead of handling this in all
-control command handlers, we may be able to get away with just limiting
-control cdb data buffers to one page. The only control CDBs we handle that
-have potentially large data buffers are REPORT LUNS and UNMAP, so if we
-didn't want to live with this limitation, they would need to be modified
-to walk the pages in the data buffer's sgl.
+The current handling of VPD page 00h (Supported VPD Pages) for INQUIRY
+commands has a couple of problems:
 
-Signed-off-by: Andy Grover <agrover@redhat.com>
+ - The page length field is incorrectly set to 3, so the entry for 86h
+   (Extended INQUIRY Data) is ignored since it is in the fourth slot.
+ - Even though the code handles pages B0h and B2h, those pages aren't
+   mentioned in the Supported VPD Pages list, so eg the Linux SCSI stack
+   won't actually try to use them.
+
+Fix these problems and make things more robust to avoid future problems
+by moving to a table of supported VPD pages, which means that any added
+VPD page support will automatically get reported on page 0.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    5 +++++
- include/target/target_core_base.h      |    1 +
- 2 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/target/target_core_cdb.c |   95 +++++++++++++++++++-------------------
+ 1 files changed, 47 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 253dcd7..1eb76f4 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3562,6 +3562,11 @@ static int transport_generic_cmd_sequencer(
- 		cmd->data_length = size;
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index 09ef3f8..1157e0c 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -114,31 +114,6 @@ target_emulate_inquiry_std(struct se_cmd *cmd)
+ 	return 0;
+ }
+ 
+-/* supported vital product data pages */
+-static int
+-target_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf)
+-{
+-	buf[1] = 0x00;
+-	if (cmd->data_length < 8)
+-		return 0;
+-
+-	buf[4] = 0x0;
+-	/*
+-	 * Only report the INQUIRY EVPD=1 pages after a valid NAA
+-	 * Registered Extended LUN WWN has been set via ConfigFS
+-	 * during device creation/restart.
+-	 */
+-	if (cmd->se_dev->se_sub_dev->su_dev_flags &
+-			SDF_EMULATED_VPD_UNIT_SERIAL) {
+-		buf[3] = 3;
+-		buf[5] = 0x80;
+-		buf[6] = 0x83;
+-		buf[7] = 0x86;
+-	}
+-
+-	return 0;
+-}
+-
+ /* unit serial number */
+ static int
+ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
+@@ -146,7 +121,6 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
+ 	struct se_device *dev = cmd->se_dev;
+ 	u16 len = 0;
+ 
+-	buf[1] = 0x80;
+ 	if (dev->se_sub_dev->su_dev_flags &
+ 			SDF_EMULATED_VPD_UNIT_SERIAL) {
+ 		u32 unit_serial_len;
+@@ -190,7 +164,6 @@ target_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
+ 	int i;
+ 	u16 len = 0, id_len;
+ 
+-	buf[1] = 0x83;
+ 	off = 4;
+ 
+ 	/*
+@@ -471,7 +444,6 @@ target_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
+ 	if (cmd->data_length < 60)
+ 		return 0;
+ 
+-	buf[1] = 0x86;
+ 	buf[2] = 0x3c;
+ 	/* Set HEADSUP, ORDSUP, SIMPSUP */
+ 	buf[5] = 0x07;
+@@ -512,7 +484,6 @@ target_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
  	}
  
-+	/* Let's limit control cdbs to a page, for simplicity's sake. */
-+	if ((cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) &&
-+	    size > PAGE_SIZE)
-+		goto out_invalid_cdb_field;
-+
- 	transport_set_supported_SAM_opcode(cmd);
- 	return ret;
+ 	buf[0] = dev->transport->get_device_type(dev);
+-	buf[1] = 0xb0;
+ 	buf[3] = have_tp ? 0x3c : 0x10;
  
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index ed35624..d97618a 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -15,6 +15,7 @@
- /* Used by transport_generic_allocate_iovecs() */
- #define TRANSPORT_IOV_DATA_BUFFER		5
- /* Maximum Number of LUNs per Target Portal Group */
-+/* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
- #define TRANSPORT_MAX_LUNS_PER_TPG		256
- /*
-  * By default we use 32-byte CDBs in TCM Core and subsystem plugin code.
+ 	/*
+@@ -579,7 +550,6 @@ target_emulate_evpd_b2(struct se_cmd *cmd, unsigned char *buf)
+ 	 * defined in table 162.
+ 	 */
+ 	buf[0] = dev->transport->get_device_type(dev);
+-	buf[1] = 0xb2;
+ 
+ 	/*
+ 	 * Set Hardcoded length mentioned above for DP=0
+@@ -618,11 +588,51 @@ target_emulate_evpd_b2(struct se_cmd *cmd, unsigned char *buf)
+ }
+ 
+ static int
++target_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf);
++
++static struct {
++	uint8_t		page;
++	int		(*emulate)(struct se_cmd *, unsigned char *);
++} evpd_handlers[] = {
++	{ .page = 0x00, .emulate = target_emulate_evpd_00 },
++	{ .page = 0x80, .emulate = target_emulate_evpd_80 },
++	{ .page = 0x83, .emulate = target_emulate_evpd_83 },
++	{ .page = 0x86, .emulate = target_emulate_evpd_86 },
++	{ .page = 0xb0, .emulate = target_emulate_evpd_b0 },
++	{ .page = 0xb2, .emulate = target_emulate_evpd_b2 },
++};
++
++/* supported vital product data pages */
++static int
++target_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf)
++{
++	int p;
++
++	if (cmd->data_length < 8)
++		return 0;
++	/*
++	 * Only report the INQUIRY EVPD=1 pages after a valid NAA
++	 * Registered Extended LUN WWN has been set via ConfigFS
++	 * during device creation/restart.
++	 */
++	if (cmd->se_dev->se_sub_dev->su_dev_flags &
++			SDF_EMULATED_VPD_UNIT_SERIAL) {
++		buf[3] = ARRAY_SIZE(evpd_handlers);
++		for (p = 0; p < min_t(int, ARRAY_SIZE(evpd_handlers),
++				      cmd->data_length - 4); ++p)
++			buf[p + 4] = evpd_handlers[p].page;
++	}
++
++	return 0;
++}
++
++static int
+ target_emulate_inquiry(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned char *buf = cmd->t_task_buf;
+ 	unsigned char *cdb = cmd->t_task_cdb;
++	int p;
+ 
+ 	if (!(cdb[1] & 0x1))
+ 		return target_emulate_inquiry_std(cmd);
+@@ -641,25 +651,14 @@ target_emulate_inquiry(struct se_cmd *cmd)
+ 	}
+ 	buf[0] = dev->transport->get_device_type(dev);
+ 
+-	switch (cdb[2]) {
+-	case 0x00:
+-		return target_emulate_evpd_00(cmd, buf);
+-	case 0x80:
+-		return target_emulate_evpd_80(cmd, buf);
+-	case 0x83:
+-		return target_emulate_evpd_83(cmd, buf);
+-	case 0x86:
+-		return target_emulate_evpd_86(cmd, buf);
+-	case 0xb0:
+-		return target_emulate_evpd_b0(cmd, buf);
+-	case 0xb2:
+-		return target_emulate_evpd_b2(cmd, buf);
+-	default:
+-		printk(KERN_ERR "Unknown VPD Code: 0x%02x\n", cdb[2]);
+-		return -EINVAL;
+-	}
++	for (p = 0; p < ARRAY_SIZE(evpd_handlers); ++p)
++		if (cdb[2] == evpd_handlers[p].page) {
++			buf[1] = cdb[2];
++			return evpd_handlers[p].emulate(cmd, buf);
++		}
+ 
+-	return 0;
++	printk(KERN_ERR "Unknown VPD Code: 0x%02x\n", cdb[2]);
++	return -EINVAL;
+ }
+ 
+ static int
 -- 
 1.7.6
 
