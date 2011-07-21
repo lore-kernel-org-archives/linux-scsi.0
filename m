@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 044/103] tcm_fc: Makefile cleanups
-Date: Thu, 21 Jul 2011 00:07:56 -0700
-Message-ID: <1311232135-6653-45-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 042/103] target: Fix WRITE_SAME_16 t_task_lba assignment bug
+Date: Thu, 21 Jul 2011 00:07:54 -0700
+Message-ID: <1311232135-6653-43-git-send-email-nab@linux-iscsi.org>
 References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm14.access.bullet.mail.sp2.yahoo.com ([98.139.44.141]:23200
-	"HELO nm14.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751003Ab1GUHEG (ORCPT
+Received: from nm6.access.bullet.mail.sp2.yahoo.com ([98.139.44.133]:35584
+	"HELO nm6.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752030Ab1GUHJR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:04:06 -0400
+	Thu, 21 Jul 2011 03:09:17 -0400
 In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,39 +17,28 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch removes the unnecessary EXTRA_CFLAGS includes, and drops the
-unused -DTCM_FC_DEBUG define.
+This patch fixes a bug in the assignment of cmd->t_task.t_task_lba with
+WRITE_SAME_16 to correctly use get_unaligned_be64() for the 64-bit LBA.
 
-Reported-by: Christoph Hellwig <hch@infradead.org>
+Reported-by: Chris Greiveldinger <chris.greiveldinger@rnanetworks.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/tcm_fc/Makefile |   17 ++++-------------
- 1 files changed, 4 insertions(+), 13 deletions(-)
+ drivers/target/target_core_transport.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/Makefile b/drivers/target/tcm_fc/Makefile
-index 7a5c2b6..20b14bb 100644
---- a/drivers/target/tcm_fc/Makefile
-+++ b/drivers/target/tcm_fc/Makefile
-@@ -1,15 +1,6 @@
--EXTRA_CFLAGS += -I$(srctree)/drivers/target/ \
--		-I$(srctree)/drivers/scsi/ \
--		-I$(srctree)/include/scsi/ \
--		-I$(srctree)/drivers/target/tcm_fc/
--
--tcm_fc-y +=	tfc_cmd.o \
--		tfc_conf.o \
--		tfc_io.o \
--		tfc_sess.o
-+tcm_fc-y +=		tfc_cmd.o \
-+			tfc_conf.o \
-+			tfc_io.o \
-+			tfc_sess.o
- 
- obj-$(CONFIG_TCM_FC)	+= tcm_fc.o
--
--ifdef CONFIGFS_TCM_FC_DEBUG
--EXTRA_CFLAGS	+= -DTCM_FC_DEBUG
--endif
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index d0cd601..a29f6d3 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3417,7 +3417,7 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->t_task.t_task_lba = get_unaligned_be16(&cdb[2]);
++		cmd->t_task.t_task_lba = get_unaligned_be64(&cdb[2]);
+ 		passthrough = (dev->transport->transport_type ==
+ 				TRANSPORT_PLUGIN_PHBA_PDEV);
+ 		/*
 -- 
 1.7.6
 
