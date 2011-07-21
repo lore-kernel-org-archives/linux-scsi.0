@@ -1,203 +1,62 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 083/103] target: Fix reporting of supported VPD pages
-Date: Thu, 21 Jul 2011 00:12:06 -0700
-Message-ID: <1311232346-6674-84-git-send-email-nab@linux-iscsi.org>
-References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 011/103] target: Make two runtime checks into WARN_ONs
+Date: Thu, 21 Jul 2011 00:04:47 -0700
+Message-ID: <1311231979-6631-12-git-send-email-nab@linux-iscsi.org>
+References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm28.bullet.mail.bf1.yahoo.com ([98.139.212.187]:47088 "HELO
-	nm28.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752035Ab1GUHIw (ORCPT
+Received: from nm25-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.156]:28869 "HELO
+	nm25-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752120Ab1GUHGJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:08:52 -0400
-In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
+	Thu, 21 Jul 2011 03:06:09 -0400
+In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Roland Dreier <roland@purestorage.com>
+From: Andy Grover <agrover@redhat.com>
 
-The current handling of VPD page 00h (Supported VPD Pages) for INQUIRY
-commands has a couple of problems:
+The params are checked in the calling functions, so these ones in
+transport_get_sense_data and transport_map_sg_to_mem should be unnecessary,
+unless calling code becomes buggy.
 
- - The page length field is incorrectly set to 3, so the entry for 86h
-   (Extended INQUIRY Data) is ignored since it is in the fourth slot.
- - Even though the code handles pages B0h and B2h, those pages aren't
-   mentioned in the Supported VPD Pages list, so eg the Linux SCSI stack
-   won't actually try to use them.
-
-Fix these problems and make things more robust to avoid future problems
-by moving to a table of supported VPD pages, which means that any added
-VPD page support will automatically get reported on page 0.
-
-Signed-off-by: Roland Dreier <roland@purestorage.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Andy Grover <agrover@redhat.com>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_cdb.c |   95 +++++++++++++++++++-------------------
- 1 files changed, 47 insertions(+), 48 deletions(-)
+ drivers/target/target_core_transport.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 09ef3f8..1157e0c 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -114,31 +114,6 @@ target_emulate_inquiry_std(struct se_cmd *cmd)
- 	return 0;
- }
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index edf24b4..99b9e33 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2997,10 +2997,8 @@ static int transport_get_sense_data(struct se_cmd *cmd)
+ 	unsigned long flags;
+ 	u32 offset = 0;
  
--/* supported vital product data pages */
--static int
--target_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf)
--{
--	buf[1] = 0x00;
--	if (cmd->data_length < 8)
--		return 0;
--
--	buf[4] = 0x0;
--	/*
--	 * Only report the INQUIRY EVPD=1 pages after a valid NAA
--	 * Registered Extended LUN WWN has been set via ConfigFS
--	 * during device creation/restart.
--	 */
--	if (cmd->se_dev->se_sub_dev->su_dev_flags &
--			SDF_EMULATED_VPD_UNIT_SERIAL) {
--		buf[3] = 3;
--		buf[5] = 0x80;
--		buf[6] = 0x83;
--		buf[7] = 0x86;
+-	if (!SE_LUN(cmd)) {
+-		printk(KERN_ERR "SE_LUN(cmd) is NULL\n");
+-		return -1;
 -	}
--
--	return 0;
--}
--
- /* unit serial number */
- static int
- target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
-@@ -146,7 +121,6 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
- 	struct se_device *dev = cmd->se_dev;
- 	u16 len = 0;
- 
--	buf[1] = 0x80;
- 	if (dev->se_sub_dev->su_dev_flags &
- 			SDF_EMULATED_VPD_UNIT_SERIAL) {
- 		u32 unit_serial_len;
-@@ -190,7 +164,6 @@ target_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	int i;
- 	u16 len = 0, id_len;
- 
--	buf[1] = 0x83;
- 	off = 4;
- 
- 	/*
-@@ -471,7 +444,6 @@ target_emulate_evpd_86(struct se_cmd *cmd, unsigned char *buf)
- 	if (cmd->data_length < 60)
- 		return 0;
- 
--	buf[1] = 0x86;
- 	buf[2] = 0x3c;
- 	/* Set HEADSUP, ORDSUP, SIMPSUP */
- 	buf[5] = 0x07;
-@@ -512,7 +484,6 @@ target_emulate_evpd_b0(struct se_cmd *cmd, unsigned char *buf)
- 	}
- 
- 	buf[0] = dev->transport->get_device_type(dev);
--	buf[1] = 0xb0;
- 	buf[3] = have_tp ? 0x3c : 0x10;
- 
- 	/*
-@@ -579,7 +550,6 @@ target_emulate_evpd_b2(struct se_cmd *cmd, unsigned char *buf)
- 	 * defined in table 162.
- 	 */
- 	buf[0] = dev->transport->get_device_type(dev);
--	buf[1] = 0xb2;
- 
- 	/*
- 	 * Set Hardcoded length mentioned above for DP=0
-@@ -618,11 +588,51 @@ target_emulate_evpd_b2(struct se_cmd *cmd, unsigned char *buf)
- }
- 
- static int
-+target_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf);
++	WARN_ON(!SE_LUN(cmd));
 +
-+static struct {
-+	uint8_t		page;
-+	int		(*emulate)(struct se_cmd *, unsigned char *);
-+} evpd_handlers[] = {
-+	{ .page = 0x00, .emulate = target_emulate_evpd_00 },
-+	{ .page = 0x80, .emulate = target_emulate_evpd_80 },
-+	{ .page = 0x83, .emulate = target_emulate_evpd_83 },
-+	{ .page = 0x86, .emulate = target_emulate_evpd_86 },
-+	{ .page = 0xb0, .emulate = target_emulate_evpd_b0 },
-+	{ .page = 0xb2, .emulate = target_emulate_evpd_b2 },
-+};
-+
-+/* supported vital product data pages */
-+static int
-+target_emulate_evpd_00(struct se_cmd *cmd, unsigned char *buf)
-+{
-+	int p;
-+
-+	if (cmd->data_length < 8)
-+		return 0;
-+	/*
-+	 * Only report the INQUIRY EVPD=1 pages after a valid NAA
-+	 * Registered Extended LUN WWN has been set via ConfigFS
-+	 * during device creation/restart.
-+	 */
-+	if (cmd->se_dev->se_sub_dev->su_dev_flags &
-+			SDF_EMULATED_VPD_UNIT_SERIAL) {
-+		buf[3] = ARRAY_SIZE(evpd_handlers);
-+		for (p = 0; p < min_t(int, ARRAY_SIZE(evpd_handlers),
-+				      cmd->data_length - 4); ++p)
-+			buf[p + 4] = evpd_handlers[p].page;
-+	}
-+
-+	return 0;
-+}
-+
-+static int
- target_emulate_inquiry(struct se_cmd *cmd)
- {
- 	struct se_device *dev = cmd->se_dev;
- 	unsigned char *buf = cmd->t_task_buf;
- 	unsigned char *cdb = cmd->t_task_cdb;
-+	int p;
+ 	spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
+ 	if (cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
+ 		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
+@@ -4595,10 +4593,8 @@ static int transport_map_sg_to_mem(
+ 	struct scatterlist *sg;
+ 	u32 sg_count = 1, cmd_size = cmd->data_length;
  
- 	if (!(cdb[1] & 0x1))
- 		return target_emulate_inquiry_std(cmd);
-@@ -641,25 +651,14 @@ target_emulate_inquiry(struct se_cmd *cmd)
- 	}
- 	buf[0] = dev->transport->get_device_type(dev);
- 
--	switch (cdb[2]) {
--	case 0x00:
--		return target_emulate_evpd_00(cmd, buf);
--	case 0x80:
--		return target_emulate_evpd_80(cmd, buf);
--	case 0x83:
--		return target_emulate_evpd_83(cmd, buf);
--	case 0x86:
--		return target_emulate_evpd_86(cmd, buf);
--	case 0xb0:
--		return target_emulate_evpd_b0(cmd, buf);
--	case 0xb2:
--		return target_emulate_evpd_b2(cmd, buf);
--	default:
--		printk(KERN_ERR "Unknown VPD Code: 0x%02x\n", cdb[2]);
--		return -EINVAL;
+-	if (!in_mem) {
+-		printk(KERN_ERR "No source scatterlist\n");
+-		return -1;
 -	}
-+	for (p = 0; p < ARRAY_SIZE(evpd_handlers); ++p)
-+		if (cdb[2] == evpd_handlers[p].page) {
-+			buf[1] = cdb[2];
-+			return evpd_handlers[p].emulate(cmd, buf);
-+		}
++	WARN_ON(!in_mem);
++
+ 	sg = (struct scatterlist *)in_mem;
  
--	return 0;
-+	printk(KERN_ERR "Unknown VPD Code: 0x%02x\n", cdb[2]);
-+	return -EINVAL;
- }
- 
- static int
+ 	while (cmd_size) {
 -- 
 1.7.6
 
