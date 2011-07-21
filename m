@@ -1,175 +1,64 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 101/103] target: Update QUEUE ALGORITHM MODIFIER control page default
-Date: Thu, 21 Jul 2011 07:05:33 +0000
-Message-ID: <1311231935-24635-102-git-send-email-nab@linux-iscsi.org>
-References: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 070/103] target: remove the unused SCF_EMULATE_SYNC_UNMAP flag
+Date: Thu, 21 Jul 2011 00:11:53 -0700
+Message-ID: <1311232346-6674-71-git-send-email-nab@linux-iscsi.org>
+References: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51708 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751887Ab1GUH3o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 03:29:44 -0400
-In-Reply-To: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
+Received: from nm20.bullet.mail.bf1.yahoo.com ([98.139.212.179]:42824 "HELO
+	nm20.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752284Ab1GUHHP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jul 2011 03:07:15 -0400
+In-Reply-To: <1311232346-6674-63-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Christoph Hellwig <hch@infradead.org>
 
-This patch adds the default 'Unrestricted reordering allowed' for SCSI
-control mode page QUEUE ALGORITHM MODIFIER on a per se_device basis in
-target_modesense_control() following spc4r23.  This includes a new
-emuluate_rest_reord configfs attribute that currently (only) accepts
-zero to signal 'Unrestricted reordering allowed' in control mode page
-usage by the backend target device.
-
-Reported-by: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_cdb.c       |   29 +++++++++++++++++++++++++++++
- drivers/target/target_core_configfs.c  |    4 ++++
- drivers/target/target_core_device.c    |   15 ++++++++++++++-
- include/target/target_core_base.h      |    1 +
- include/target/target_core_device.h    |    1 +
- include/target/target_core_transport.h |    2 ++
- 6 files changed, 51 insertions(+), 1 deletions(-)
+ drivers/target/target_core_transport.c |   12 ------------
+ include/target/target_core_base.h      |    1 -
+ 2 files changed, 0 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 9828300..145739b 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -775,6 +775,35 @@ target_modesense_control(struct se_device *dev, unsigned char *p)
- 	p[1] = 0x0a;
- 	p[2] = 2;
- 	/*
-+	 * From spc4r23, 7.4.7 Control mode page
-+	 *
-+	 * The QUEUE ALGORITHM MODIFIER field (see table 368) specifies
-+	 * restrictions on the algorithm used for reordering commands
-+	 * having the SIMPLE task attribute (see SAM-4).
-+	 *
-+	 *                    Table 368 -- QUEUE ALGORITHM MODIFIER field
-+	 *                         Code      Description
-+	 *                          0h       Restricted reordering
-+	 *                          1h       Unrestricted reordering allowed
-+	 *                          2h to 7h    Reserved
-+	 *                          8h to Fh    Vendor specific
-+	 *
-+	 * A value of zero in the QUEUE ALGORITHM MODIFIER field specifies that
-+	 * the device server shall order the processing sequence of commands
-+	 * having the SIMPLE task attribute such that data integrity is maintained
-+	 * for that I_T nexus (i.e., if the transmission of new SCSI transport protocol
-+	 * requests is halted at any time, the final value of all data observable
-+	 * on the medium shall be the same as if all the commands had been processed
-+	 * with the ORDERED task attribute).
-+	 *
-+	 * A value of one in the QUEUE ALGORITHM MODIFIER field specifies that the
-+	 * device server may reorder the processing sequence of commands having the
-+	 * SIMPLE task attribute in any manner. Any data integrity exposures related to
-+	 * command sequence order shall be explicitly handled by the application client
-+	 * through the selection of appropriate ommands and task attributes.
-+	 */
-+	p[3] = (dev->se_sub_dev->se_dev_attrib.emulate_rest_reord == 1) ? 0x00 : 0x10;
-+	/*
- 	 * From spc4r17, section 7.4.6 Control mode Page
- 	 *
- 	 * Unit Attention interlocks control (UN_INTLCK_CTRL) to code 00b
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index e56c39d..a92176d 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -701,6 +701,9 @@ SE_DEV_ATTR(enforce_pr_isids, S_IRUGO | S_IWUSR);
- DEF_DEV_ATTRIB(is_nonrot);
- SE_DEV_ATTR(is_nonrot, S_IRUGO | S_IWUSR);
- 
-+DEF_DEV_ATTRIB(emulate_rest_reord);
-+SE_DEV_ATTR(emulate_rest_reord, S_IRUGO | S_IWUSR);
-+
- DEF_DEV_ATTRIB_RO(hw_block_size);
- SE_DEV_ATTR_RO(hw_block_size);
- 
-@@ -750,6 +753,7 @@ static struct configfs_attribute *target_core_dev_attrib_attrs[] = {
- 	&target_core_dev_attrib_emulate_tpws.attr,
- 	&target_core_dev_attrib_enforce_pr_isids.attr,
- 	&target_core_dev_attrib_is_nonrot.attr,
-+	&target_core_dev_attrib_emulate_rest_reord.attr,
- 	&target_core_dev_attrib_hw_block_size.attr,
- 	&target_core_dev_attrib_block_size.attr,
- 	&target_core_dev_attrib_hw_max_sectors.attr,
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 81860dd..b38b6c9 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -857,6 +857,7 @@ void se_dev_set_default_attribs(
- 	dev->se_sub_dev->se_dev_attrib.emulate_alua = DA_EMULATE_ALUA;
- 	dev->se_sub_dev->se_dev_attrib.enforce_pr_isids = DA_ENFORCE_PR_ISIDS;
- 	dev->se_sub_dev->se_dev_attrib.is_nonrot = DA_IS_NONROT;
-+	dev->se_sub_dev->se_dev_attrib.emulate_rest_reord = DA_EMULATE_REST_REORD;
- 	/*
- 	 * The TPU=1 and TPWS=1 settings will be set in TCM/IBLOCK
- 	 * iblock_create_virtdevice() from struct queue_limits values
-@@ -1128,11 +1129,23 @@ int se_dev_set_is_nonrot(struct se_device *dev, int flag)
- 		return -EINVAL;
- 	}
- 	dev->se_sub_dev->se_dev_attrib.is_nonrot = flag;
--	printk(KERN_INFO "dev[%p]: SE Device is_nonrot bit: %d\n",
-+	pr_debug("dev[%p]: SE Device is_nonrot bit: %d\n",
- 	       dev, flag);
- 	return 0;
- }
- 
-+int se_dev_set_emulate_rest_reord(struct se_device *dev, int flag)
-+{
-+	if (flag != 0) {
-+		printk(KERN_ERR "dev[%p]: SE Device emulatation of restricted"
-+			" reordering not implemented\n", dev);
-+		return -ENOSYS;
-+	}
-+	dev->se_sub_dev->se_dev_attrib.emulate_rest_reord = flag;
-+	pr_debug("dev[%p]: SE Device emulate_rest_reord: %d\n", dev, flag);
-+	return 0;
-+}
-+
- /*
-  * Note, this can only be called on unexported SE Device Object.
-  */
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 6ca367d..43fd277 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3396,18 +3396,6 @@ static int transport_generic_cmd_sequencer(
+ 		break;
+ 	case UNMAP:
+ 		size = get_unaligned_be16(&cdb[7]);
+-		passthrough = (dev->transport->transport_type ==
+-				TRANSPORT_PLUGIN_PHBA_PDEV);
+-		/*
+-		 * Determine if the received UNMAP used to for direct passthrough
+-		 * into Linux/SCSI with struct request via TCM/pSCSI or we are
+-		 * signaling the use of internal transport_generic_unmap() emulation
+-		 * for UNMAP -> Linux/BLOCK disbard with TCM/IBLOCK and TCM/FILEIO
+-		 * subsystem plugin backstores.
+-		 */
+-		if (!(passthrough))
+-			cmd->se_cmd_flags |= SCF_EMULATE_SYNC_UNMAP;
+-
+ 		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
+ 		break;
+ 	case WRITE_SAME_16:
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 8204c76..86ca355 100644
+index 820ff2e..72ef4b8 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -662,6 +662,7 @@ struct se_dev_attrib {
- 	int		emulate_alua;
- 	int		enforce_pr_isids;
- 	int		is_nonrot;
-+	int		emulate_rest_reord;
- 	u32		hw_block_size;
- 	u32		block_size;
- 	u32		hw_max_sectors;
-diff --git a/include/target/target_core_device.h b/include/target/target_core_device.h
-index f3b6ae6..4657191 100644
---- a/include/target/target_core_device.h
-+++ b/include/target/target_core_device.h
-@@ -40,6 +40,7 @@ extern int se_dev_set_emulate_tpu(struct se_device *, int);
- extern int se_dev_set_emulate_tpws(struct se_device *, int);
- extern int se_dev_set_enforce_pr_isids(struct se_device *, int);
- extern int se_dev_set_is_nonrot(struct se_device *, int);
-+extern int se_dev_set_emulate_rest_reord(struct se_device *dev, int);
- extern int se_dev_set_queue_depth(struct se_device *, u32);
- extern int se_dev_set_max_sectors(struct se_device *, u32);
- extern int se_dev_set_optimal_sectors(struct se_device *, u32);
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 54af39d..f41b07c 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -103,6 +103,8 @@
- #define DA_STATUS_MAX_SECTORS_MAX		8192
- /* By default don't report non-rotating (solid state) medium */
- #define DA_IS_NONROT				0
-+/* Queue Algorithm Modifier default for restricted reordering in control mode page */
-+#define DA_EMULATE_REST_REORD			0
+@@ -126,7 +126,6 @@ enum se_cmd_flags_table {
+ 	SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC = 0x00400000,
+ 	SCF_EMULATE_SYNC_CACHE		= 0x00800000,
+ 	SCF_EMULATE_CDB_ASYNC		= 0x01000000,
+-	SCF_EMULATE_SYNC_UNMAP		= 0x02000000
+ };
  
- #define SE_MODE_PAGE_BUF			512
- 
+ /* struct se_dev_entry->lun_flags and struct se_lun->lun_access */
 -- 
 1.7.6
 
