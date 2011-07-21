@@ -1,190 +1,175 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 047/103] target: Simplify sector limiting code
-Date: Thu, 21 Jul 2011 00:07:59 -0700
-Message-ID: <1311232135-6653-48-git-send-email-nab@linux-iscsi.org>
-References: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 101/103] target: Update QUEUE ALGORITHM MODIFIER control page default
+Date: Thu, 21 Jul 2011 07:05:33 +0000
+Message-ID: <1311231935-24635-102-git-send-email-nab@linux-iscsi.org>
+References: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm20.access.bullet.mail.sp2.yahoo.com ([98.139.44.147]:29665
-	"HELO nm20.access.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752030Ab1GUHIT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:08:19 -0400
-In-Reply-To: <1311232135-6653-32-git-send-email-nab@linux-iscsi.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51708 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751887Ab1GUH3o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 03:29:44 -0400
+In-Reply-To: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Andy Grover <agrover@redhat.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-It was possible to simplify the code that checked/limited sectors, since
-it boiled down to 1) can't go beyond lun's last lba and 2) limit to
-underlying device's max_sectors attribute.
+This patch adds the default 'Unrestricted reordering allowed' for SCSI
+control mode page QUEUE ALGORITHM MODIFIER on a per se_device basis in
+target_modesense_control() following spc4r23.  This includes a new
+emuluate_rest_reord configfs attribute that currently (only) accepts
+zero to signal 'Unrestricted reordering allowed' in control mode page
+usage by the backend target device.
 
-Give each local variable in transport_generic_get_cdb_count its own line.
-
-BUG_ON(!mem_list), it should never be null now.
-
-Replace max_sectors_set check with a test if limit_task_sectors returned 0.
-
-Signed-off-by: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Reported-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
 ---
- drivers/target/target_core_transport.c |   98 +++++++++----------------------
- 1 files changed, 29 insertions(+), 69 deletions(-)
+ drivers/target/target_core_cdb.c       |   29 +++++++++++++++++++++++++++++
+ drivers/target/target_core_configfs.c  |    4 ++++
+ drivers/target/target_core_device.c    |   15 ++++++++++++++-
+ include/target/target_core_base.h      |    1 +
+ include/target/target_core_device.h    |    1 +
+ include/target/target_core_transport.h |    2 ++
+ 6 files changed, 51 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 887314f..d5df995 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -4249,59 +4249,19 @@ next:
- 	return task->task_sg_num;
- }
- 
--static inline int transport_set_tasks_sectors_disk(
--	struct se_task *task,
-+/* Reduce sectors if they are too long for the device */
-+static inline sector_t transport_limit_task_sectors(
- 	struct se_device *dev,
- 	unsigned long long lba,
--	u32 sectors,
--	int *max_sectors_set)
-+	sector_t sectors)
- {
--	if ((lba + sectors) > transport_dev_end_lba(dev)) {
--		task->task_sectors = ((transport_dev_end_lba(dev) - lba) + 1);
--
--		if (task->task_sectors > dev->se_sub_dev->se_dev_attrib.max_sectors) {
--			task->task_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
--			*max_sectors_set = 1;
--		}
--	} else {
--		if (sectors > dev->se_sub_dev->se_dev_attrib.max_sectors) {
--			task->task_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
--			*max_sectors_set = 1;
--		} else
--			task->task_sectors = sectors;
--	}
--
--	return 0;
--}
-+	sectors = min_t(sector_t, sectors, dev->se_sub_dev->se_dev_attrib.max_sectors);
- 
--static inline int transport_set_tasks_sectors_non_disk(
--	struct se_task *task,
--	struct se_device *dev,
--	unsigned long long lba,
--	u32 sectors,
--	int *max_sectors_set)
--{
--	if (sectors > dev->se_sub_dev->se_dev_attrib.max_sectors) {
--		task->task_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
--		*max_sectors_set = 1;
--	} else
--		task->task_sectors = sectors;
--
--	return 0;
--}
-+	if (dev->transport->get_device_type(dev) == TYPE_DISK)
-+		if ((lba + sectors) > transport_dev_end_lba(dev))
-+			sectors = ((transport_dev_end_lba(dev) - lba) + 1);
- 
--static inline int transport_set_tasks_sectors(
--	struct se_task *task,
--	struct se_device *dev,
--	unsigned long long lba,
--	u32 sectors,
--	int *max_sectors_set)
--{
--	return (dev->transport->get_device_type(dev) == TYPE_DISK) ?
--		transport_set_tasks_sectors_disk(task, dev, lba, sectors,
--				max_sectors_set) :
--		transport_set_tasks_sectors_non_disk(task, dev, lba, sectors,
--				max_sectors_set);
-+	return sectors;
- }
- 
- /*
-@@ -4625,6 +4585,9 @@ static int transport_do_se_mem_map(
- 				task_offset_in);
- }
- 
-+/*
-+ * Break up cmd into chunks transport can handle
-+ */
- static u32 transport_generic_get_cdb_count(
- 	struct se_cmd *cmd,
- 	unsigned long long lba,
-@@ -4635,17 +4598,18 @@ static u32 transport_generic_get_cdb_count(
- {
- 	unsigned char *cdb = NULL;
- 	struct se_task *task;
--	struct se_mem *se_mem = NULL, *se_mem_lout = NULL;
--	struct se_mem *se_mem_bidi = NULL, *se_mem_bidi_lout = NULL;
-+	struct se_mem *se_mem = NULL;
-+	struct se_mem *se_mem_lout = NULL;
-+	struct se_mem *se_mem_bidi = NULL;
-+	struct se_mem *se_mem_bidi_lout = NULL;
- 	struct se_device *dev = cmd->se_dev;
--	int max_sectors_set = 0, ret;
--	u32 task_offset_in = 0, se_mem_cnt = 0, se_mem_bidi_cnt = 0, task_cdbs = 0;
-+	int ret;
-+	u32 task_offset_in = 0;
-+	u32 se_mem_cnt = 0;
-+	u32 se_mem_bidi_cnt = 0;
-+	u32 task_cdbs = 0;
- 
--	if (!mem_list) {
--		printk(KERN_ERR "mem_list is NULL in transport_generic_get"
--				"_cdb_count()\n");
--		return 0;
--	}
-+	BUG_ON(!mem_list);
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index 9828300..145739b 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -775,6 +775,35 @@ target_modesense_control(struct se_device *dev, unsigned char *p)
+ 	p[1] = 0x0a;
+ 	p[2] = 2;
  	/*
- 	 * While using RAMDISK_DR backstores is the only case where
- 	 * mem_list will ever be empty at this point.
-@@ -4662,18 +4626,22 @@ static u32 transport_generic_get_cdb_count(
- 					struct se_mem, se_list);
++	 * From spc4r23, 7.4.7 Control mode page
++	 *
++	 * The QUEUE ALGORITHM MODIFIER field (see table 368) specifies
++	 * restrictions on the algorithm used for reordering commands
++	 * having the SIMPLE task attribute (see SAM-4).
++	 *
++	 *                    Table 368 -- QUEUE ALGORITHM MODIFIER field
++	 *                         Code      Description
++	 *                          0h       Restricted reordering
++	 *                          1h       Unrestricted reordering allowed
++	 *                          2h to 7h    Reserved
++	 *                          8h to Fh    Vendor specific
++	 *
++	 * A value of zero in the QUEUE ALGORITHM MODIFIER field specifies that
++	 * the device server shall order the processing sequence of commands
++	 * having the SIMPLE task attribute such that data integrity is maintained
++	 * for that I_T nexus (i.e., if the transmission of new SCSI transport protocol
++	 * requests is halted at any time, the final value of all data observable
++	 * on the medium shall be the same as if all the commands had been processed
++	 * with the ORDERED task attribute).
++	 *
++	 * A value of one in the QUEUE ALGORITHM MODIFIER field specifies that the
++	 * device server may reorder the processing sequence of commands having the
++	 * SIMPLE task attribute in any manner. Any data integrity exposures related to
++	 * command sequence order shall be explicitly handled by the application client
++	 * through the selection of appropriate ommands and task attributes.
++	 */
++	p[3] = (dev->se_sub_dev->se_dev_attrib.emulate_rest_reord == 1) ? 0x00 : 0x10;
++	/*
+ 	 * From spc4r17, section 7.4.6 Control mode Page
+ 	 *
+ 	 * Unit Attention interlocks control (UN_INTLCK_CTRL) to code 00b
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index e56c39d..a92176d 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -701,6 +701,9 @@ SE_DEV_ATTR(enforce_pr_isids, S_IRUGO | S_IWUSR);
+ DEF_DEV_ATTRIB(is_nonrot);
+ SE_DEV_ATTR(is_nonrot, S_IRUGO | S_IWUSR);
  
- 	while (sectors) {
-+		sector_t limited_sectors;
++DEF_DEV_ATTRIB(emulate_rest_reord);
++SE_DEV_ATTR(emulate_rest_reord, S_IRUGO | S_IWUSR);
 +
- 		DEBUG_VOL("ITT[0x%08x] LBA(%llu) SectorsLeft(%u) EOBJ(%llu)\n",
- 			cmd->se_tfo->get_task_tag(cmd), lba, sectors,
- 			transport_dev_end_lba(dev));
+ DEF_DEV_ATTRIB_RO(hw_block_size);
+ SE_DEV_ATTR_RO(hw_block_size);
  
-+		limited_sectors = transport_limit_task_sectors(dev, lba, sectors);
-+		if (!limited_sectors)
-+			break;
-+
- 		task = transport_generic_get_task(cmd, data_direction);
--		if (!(task))
-+		if (!task)
- 			goto out;
- 
--		transport_set_tasks_sectors(task, dev, lba, sectors,
--				&max_sectors_set);
--
- 		task->task_lba = lba;
-+		task->task_sectors = limited_sectors;
- 		lba += task->task_sectors;
- 		sectors -= task->task_sectors;
- 		task->task_size = (task->task_sectors *
-@@ -4722,14 +4690,6 @@ static u32 transport_generic_get_cdb_count(
- 
- 		DEBUG_VOL("Incremented task_cdbs(%u) task->task_sg_num(%u)\n",
- 				task_cdbs, task->task_sg_num);
--
--		if (max_sectors_set) {
--			max_sectors_set = 0;
--			continue;
--		}
--
--		if (!sectors)
--			break;
+@@ -750,6 +753,7 @@ static struct configfs_attribute *target_core_dev_attrib_attrs[] = {
+ 	&target_core_dev_attrib_emulate_tpws.attr,
+ 	&target_core_dev_attrib_enforce_pr_isids.attr,
+ 	&target_core_dev_attrib_is_nonrot.attr,
++	&target_core_dev_attrib_emulate_rest_reord.attr,
+ 	&target_core_dev_attrib_hw_block_size.attr,
+ 	&target_core_dev_attrib_block_size.attr,
+ 	&target_core_dev_attrib_hw_max_sectors.attr,
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 81860dd..b38b6c9 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -857,6 +857,7 @@ void se_dev_set_default_attribs(
+ 	dev->se_sub_dev->se_dev_attrib.emulate_alua = DA_EMULATE_ALUA;
+ 	dev->se_sub_dev->se_dev_attrib.enforce_pr_isids = DA_ENFORCE_PR_ISIDS;
+ 	dev->se_sub_dev->se_dev_attrib.is_nonrot = DA_IS_NONROT;
++	dev->se_sub_dev->se_dev_attrib.emulate_rest_reord = DA_EMULATE_REST_REORD;
+ 	/*
+ 	 * The TPU=1 and TPWS=1 settings will be set in TCM/IBLOCK
+ 	 * iblock_create_virtdevice() from struct queue_limits values
+@@ -1128,11 +1129,23 @@ int se_dev_set_is_nonrot(struct se_device *dev, int flag)
+ 		return -EINVAL;
  	}
+ 	dev->se_sub_dev->se_dev_attrib.is_nonrot = flag;
+-	printk(KERN_INFO "dev[%p]: SE Device is_nonrot bit: %d\n",
++	pr_debug("dev[%p]: SE Device is_nonrot bit: %d\n",
+ 	       dev, flag);
+ 	return 0;
+ }
  
- 	if (set_counts) {
++int se_dev_set_emulate_rest_reord(struct se_device *dev, int flag)
++{
++	if (flag != 0) {
++		printk(KERN_ERR "dev[%p]: SE Device emulatation of restricted"
++			" reordering not implemented\n", dev);
++		return -ENOSYS;
++	}
++	dev->se_sub_dev->se_dev_attrib.emulate_rest_reord = flag;
++	pr_debug("dev[%p]: SE Device emulate_rest_reord: %d\n", dev, flag);
++	return 0;
++}
++
+ /*
+  * Note, this can only be called on unexported SE Device Object.
+  */
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 8204c76..86ca355 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -662,6 +662,7 @@ struct se_dev_attrib {
+ 	int		emulate_alua;
+ 	int		enforce_pr_isids;
+ 	int		is_nonrot;
++	int		emulate_rest_reord;
+ 	u32		hw_block_size;
+ 	u32		block_size;
+ 	u32		hw_max_sectors;
+diff --git a/include/target/target_core_device.h b/include/target/target_core_device.h
+index f3b6ae6..4657191 100644
+--- a/include/target/target_core_device.h
++++ b/include/target/target_core_device.h
+@@ -40,6 +40,7 @@ extern int se_dev_set_emulate_tpu(struct se_device *, int);
+ extern int se_dev_set_emulate_tpws(struct se_device *, int);
+ extern int se_dev_set_enforce_pr_isids(struct se_device *, int);
+ extern int se_dev_set_is_nonrot(struct se_device *, int);
++extern int se_dev_set_emulate_rest_reord(struct se_device *dev, int);
+ extern int se_dev_set_queue_depth(struct se_device *, u32);
+ extern int se_dev_set_max_sectors(struct se_device *, u32);
+ extern int se_dev_set_optimal_sectors(struct se_device *, u32);
+diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
+index 54af39d..f41b07c 100644
+--- a/include/target/target_core_transport.h
++++ b/include/target/target_core_transport.h
+@@ -103,6 +103,8 @@
+ #define DA_STATUS_MAX_SECTORS_MAX		8192
+ /* By default don't report non-rotating (solid state) medium */
+ #define DA_IS_NONROT				0
++/* Queue Algorithm Modifier default for restricted reordering in control mode page */
++#define DA_EMULATE_REST_REORD			0
+ 
+ #define SE_MODE_PAGE_BUF			512
+ 
 -- 
 1.7.6
 
