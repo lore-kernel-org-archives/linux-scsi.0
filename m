@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 016/103] target: Remove __transport_get_qr_from_queue()
-Date: Thu, 21 Jul 2011 00:04:52 -0700
-Message-ID: <1311231979-6631-17-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 014/103] target: dev->dev_status_queue_obj is unused
+Date: Thu, 21 Jul 2011 00:04:50 -0700
+Message-ID: <1311231979-6631-15-git-send-email-nab@linux-iscsi.org>
 References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm30-vm0.bullet.mail.bf1.yahoo.com ([98.139.213.126]:26461 "HELO
-	nm30-vm0.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752290Ab1GUHHM (ORCPT
+Received: from nm7.bullet.mail.bf1.yahoo.com ([98.139.212.166]:40273 "HELO
+	nm7.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752378Ab1GUHH0 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 21 Jul 2011 03:07:12 -0400
+	Thu, 21 Jul 2011 03:07:26 -0400
 In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,68 +17,70 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "
 
 From: Andy Grover <agrover@redhat.com>
 
-The only use of it seems to be wrapped by a lock, so it should just use
-the locked version.
+Looks safe to remove.
 
 Signed-off-by: Andy Grover <agrover@redhat.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   27 +--------------------------
- 1 files changed, 1 insertions(+), 26 deletions(-)
+ drivers/target/target_core_device.c    |    1 -
+ drivers/target/target_core_transport.c |   12 ------------
+ include/target/target_core_base.h      |    1 -
+ 3 files changed, 0 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 818c65b..f03e0cc 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -755,7 +755,6 @@ void se_release_device_for_hba(struct se_device *dev)
+ 	core_scsi3_free_all_registrations(dev);
+ 	se_release_vpd_for_dev(dev);
+ 
+-	kfree(dev->dev_status_queue_obj);
+ 	kfree(dev->dev_queue_obj);
+ 	kfree(dev);
+ 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 002ea6f..56249cf 100644
+index ae153bf..fffa905 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -841,26 +841,6 @@ static int transport_add_cmd_to_queue(
-  * Called with struct se_queue_obj->cmd_queue_lock held.
-  */
- static struct se_queue_req *
--__transport_get_qr_from_queue(struct se_queue_obj *qobj)
--{
--	struct se_queue_req *qr = NULL;
--
--	if (list_empty(&qobj->qobj_list))
--		return NULL;
--
--	list_for_each_entry(qr, &qobj->qobj_list, qr_list)
--		break;
--
--	if (qr->cmd)
--		atomic_dec(&T_TASK(qr->cmd)->t_transport_queue_active);
--
--	list_del(&qr->qr_list);
--	atomic_dec(&qobj->queue_cnt);
--
--	return qr;
--}
--
--static struct se_queue_req *
- transport_get_qr_from_queue(struct se_queue_obj *qobj)
- {
- 	struct se_queue_req *qr;
-@@ -6013,10 +5993,7 @@ static void transport_processing_shutdown(struct se_device *dev)
- 	/*
- 	 * Empty the struct se_device's struct se_cmd list.
- 	 */
--	spin_lock_irqsave(&dev->dev_queue_obj->cmd_queue_lock, flags);
--	while ((qr = __transport_get_qr_from_queue(dev->dev_queue_obj))) {
--		spin_unlock_irqrestore(
--				&dev->dev_queue_obj->cmd_queue_lock, flags);
-+	while ((qr = transport_get_qr_from_queue(dev->dev_queue_obj))) {
- 		cmd = qr->cmd;
- 		state = qr->state;
- 		kfree(qr);
-@@ -6035,9 +6012,7 @@ static void transport_processing_shutdown(struct se_device *dev)
- 			if (transport_cmd_check_stop(cmd, 1, 0))
- 				transport_generic_remove(cmd, 0, 0);
- 		}
--		spin_lock_irqsave(&dev->dev_queue_obj->cmd_queue_lock, flags);
+@@ -1642,17 +1642,6 @@ struct se_device *transport_add_device_to_core_hba(
  	}
--	spin_unlock_irqrestore(&dev->dev_queue_obj->cmd_queue_lock, flags);
- }
+ 	transport_init_queue_obj(dev->dev_queue_obj);
  
- /*	transport_processing_thread():
+-	dev->dev_status_queue_obj = kzalloc(sizeof(struct se_queue_obj),
+-					GFP_KERNEL);
+-	if (!(dev->dev_status_queue_obj)) {
+-		printk(KERN_ERR "Unable to allocate memory for"
+-				" dev->dev_status_queue_obj\n");
+-		kfree(dev->dev_queue_obj);
+-		kfree(dev);
+-		return NULL;
+-	}
+-	transport_init_queue_obj(dev->dev_status_queue_obj);
+-
+ 	dev->dev_flags		= device_flags;
+ 	dev->dev_status		|= TRANSPORT_DEVICE_DEACTIVATED;
+ 	dev->dev_ptr		= (void *) transport_dev;
+@@ -1753,7 +1742,6 @@ out:
+ 
+ 	se_release_vpd_for_dev(dev);
+ 
+-	kfree(dev->dev_status_queue_obj);
+ 	kfree(dev->dev_queue_obj);
+ 	kfree(dev);
+ 
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index e35e9e4..b2b4cf9 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -784,7 +784,6 @@ struct se_device {
+ 	struct se_obj		dev_access_obj;
+ 	struct se_obj		dev_export_obj;
+ 	struct se_queue_obj	*dev_queue_obj;
+-	struct se_queue_obj	*dev_status_queue_obj;
+ 	spinlock_t		delayed_cmd_lock;
+ 	spinlock_t		ordered_cmd_lock;
+ 	spinlock_t		execute_task_lock;
 -- 
 1.7.6
 
