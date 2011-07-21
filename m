@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 11/15] bfa: Add support to collect fabric stats.
-Date: Wed, 20 Jul 2011 17:03:27 -0700
-Message-ID: <1311206607-10543-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 12/15] bfa: Add support to store driver configuration in flash.
+Date: Wed, 20 Jul 2011 17:03:46 -0700
+Message-ID: <1311206626-11829-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56091 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:56098 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751957Ab1GUADq (ORCPT
+	by vger.kernel.org with ESMTP id S1751957Ab1GUAEG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Jul 2011 20:03:46 -0400
+	Wed, 20 Jul 2011 20:04:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -18,116 +18,632 @@ Cc: huangj@brocade.com, adapter_linux_open_src_team@brocade.com, kgudipat@brocad
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Added support to collect / reset fabric stats.
+	- Added dconf (Driver Config) BFA sub-module.
+	- The dconf sub-module provides interfaces and manages flash writes
+	  to the flash DRV parition.
+	- dconf sub-module also ensures that the whole 64K DRV partition is updated
+	  on a flash write.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c |   51 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfad_bsg.h |   15 ++++++++++++
- 2 files changed, 66 insertions(+), 0 deletions(-)
+ drivers/scsi/bfa/bfa.h          |    1 +
+ drivers/scsi/bfa/bfa_core.c     |   25 ++-
+ drivers/scsi/bfa/bfa_defs_svc.h |   21 ++
+ drivers/scsi/bfa/bfa_fc.h       |    1 +
+ drivers/scsi/bfa/bfa_ioc.c      |  393 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_ioc.h      |   44 +++++-
+ drivers/scsi/bfa/bfa_modules.h  |    2 +
+ 7 files changed, 481 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 2109ed3..66349bd 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -2349,6 +2349,51 @@ out:
- 	return 0;
+diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
+index 32f4626..76300be 100644
+--- a/drivers/scsi/bfa/bfa.h
++++ b/drivers/scsi/bfa/bfa.h
+@@ -412,6 +412,7 @@ bfa_status_t bfa_iocfc_israttr_set(struct bfa_s *bfa,
+ 
+ void bfa_iocfc_enable(struct bfa_s *bfa);
+ void bfa_iocfc_disable(struct bfa_s *bfa);
++void bfa_iocfc_cb_dconf_modinit(struct bfa_s *bfa, bfa_status_t status);
+ #define bfa_timer_start(_bfa, _timer, _timercb, _arg, _timeout)		\
+ 	bfa_timer_begin(&(_bfa)->timer_mod, _timer, _timercb, _arg, _timeout)
+ 
+diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
+index 4613bdd..4bd546b 100644
+--- a/drivers/scsi/bfa/bfa_core.c
++++ b/drivers/scsi/bfa/bfa_core.c
+@@ -33,6 +33,7 @@ static struct bfa_module_s *hal_mods[] = {
+ 	&hal_mod_uf,
+ 	&hal_mod_rport,
+ 	&hal_mod_fcp,
++	&hal_mod_dconf,
+ 	NULL
+ };
+ 
+@@ -702,7 +703,7 @@ bfa_iocfc_init_cb(void *bfa_arg, bfa_boolean_t complete)
+ 	struct bfa_s	*bfa = bfa_arg;
+ 
+ 	if (complete) {
+-		if (bfa->iocfc.cfgdone)
++		if (bfa->iocfc.cfgdone && BFA_DCONF_MOD(bfa)->flashdone)
+ 			bfa_cb_init(bfa->bfad, BFA_STATUS_OK);
+ 		else
+ 			bfa_cb_init(bfa->bfad, BFA_STATUS_FAILED);
+@@ -815,9 +816,11 @@ bfa_iocfc_cfgrsp(struct bfa_s *bfa)
+ 	 */
+ 	bfa_fcport_init(bfa);
+ 
+-	if (iocfc->action == BFA_IOCFC_ACT_INIT)
+-		bfa_cb_queue(bfa, &iocfc->init_hcb_qe, bfa_iocfc_init_cb, bfa);
+-	else {
++	if (iocfc->action == BFA_IOCFC_ACT_INIT) {
++		if (BFA_DCONF_MOD(bfa)->flashdone == BFA_TRUE)
++			bfa_cb_queue(bfa, &iocfc->init_hcb_qe,
++				bfa_iocfc_init_cb, bfa);
++	} else {
+ 		if (bfa->iocfc.action == BFA_IOCFC_ACT_ENABLE)
+ 			bfa_cb_queue(bfa, &bfa->iocfc.en_hcb_qe,
+ 					bfa_iocfc_enable_cb, bfa);
+@@ -1038,6 +1041,7 @@ bfa_iocfc_enable_cbfn(void *bfa_arg, enum bfa_status status)
+ 	}
+ 
+ 	bfa_iocfc_send_cfg(bfa);
++	bfa_dconf_modinit(bfa);
  }
  
-+int
-+bfad_iocmd_vf_get_stats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_vf_stats_s *iocmd =
-+			(struct bfa_bsg_vf_stats_s *)cmd;
-+	struct bfa_fcs_fabric_s	*fcs_vf;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_vf = bfa_fcs_vf_lookup(&bfad->bfa_fcs, iocmd->vf_id);
-+	if (fcs_vf == NULL) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_VFID;
-+		goto out;
-+	}
-+	memcpy((void *)&iocmd->stats, (void *)&fcs_vf->stats,
-+		sizeof(struct bfa_vf_stats_s));
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
-+out:
-+	return 0;
-+}
-+
-+int
-+bfad_iocmd_vf_clr_stats(struct bfad_s *bfad, void *cmd)
-+{
-+	struct bfa_bsg_vf_reset_stats_s *iocmd =
-+			(struct bfa_bsg_vf_reset_stats_s *)cmd;
-+	struct bfa_fcs_fabric_s	*fcs_vf;
-+	unsigned long	flags;
-+
-+	spin_lock_irqsave(&bfad->bfad_lock, flags);
-+	fcs_vf = bfa_fcs_vf_lookup(&bfad->bfa_fcs, iocmd->vf_id);
-+	if (fcs_vf == NULL) {
-+		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+		iocmd->status = BFA_STATUS_UNKNOWN_VFID;
-+		goto out;
-+	}
-+	memset((void *)&fcs_vf->stats, 0, sizeof(struct bfa_vf_stats_s));
-+	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
-+	iocmd->status = BFA_STATUS_OK;
-+out:
-+	return 0;
-+}
-+
- static int
- bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 		unsigned int payload_len)
-@@ -2661,6 +2706,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- 	case IOCMD_QOS_RESET_STATS:
- 		rc = bfad_iocmd_qos_reset_stats(bfad, iocmd);
- 		break;
-+	case IOCMD_VF_GET_STATS:
-+		rc = bfad_iocmd_vf_get_stats(bfad, iocmd);
-+		break;
-+	case IOCMD_VF_RESET_STATS:
-+		rc = bfad_iocmd_vf_clr_stats(bfad, iocmd);
-+		break;
- 	default:
- 		rc = -EINVAL;
- 		break;
-diff --git a/drivers/scsi/bfa/bfad_bsg.h b/drivers/scsi/bfa/bfad_bsg.h
-index 3c0ce22..1e02652 100644
---- a/drivers/scsi/bfa/bfad_bsg.h
-+++ b/drivers/scsi/bfa/bfad_bsg.h
-@@ -135,6 +135,8 @@ enum {
- 	IOCMD_QOS_GET_VC_ATTR,
- 	IOCMD_QOS_GET_STATS,
- 	IOCMD_QOS_RESET_STATS,
-+	IOCMD_VF_GET_STATS,
-+	IOCMD_VF_RESET_STATS,
- };
+ /*
+@@ -1200,7 +1204,9 @@ bfa_iocfc_stop(struct bfa_s *bfa)
+ 	bfa->iocfc.action = BFA_IOCFC_ACT_STOP;
  
- struct bfa_bsg_gen_s {
-@@ -686,6 +688,19 @@ struct bfa_bsg_qos_vc_attr_s {
- 	struct bfa_qos_vc_attr_s attr;
- };
+ 	bfa->queue_process = BFA_FALSE;
+-	bfa_ioc_disable(&bfa->ioc);
++	bfa_dconf_modexit(bfa);
++	if (BFA_DCONF_MOD(bfa)->flashdone == BFA_TRUE)
++		bfa_ioc_disable(&bfa->ioc);
+ }
  
-+struct bfa_bsg_vf_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
-+	struct bfa_vf_stats_s	stats;
+ void
+@@ -1561,6 +1567,15 @@ bfa_comp_free(struct bfa_s *bfa, struct list_head *comp_q)
+ 	}
+ }
+ 
++void
++bfa_iocfc_cb_dconf_modinit(struct bfa_s *bfa, bfa_status_t status)
++{
++	if (bfa->iocfc.action == BFA_IOCFC_ACT_INIT) {
++		if (bfa->iocfc.cfgdone == BFA_TRUE)
++			bfa_cb_queue(bfa, &bfa->iocfc.init_hcb_qe,
++				bfa_iocfc_init_cb, bfa);
++	}
++}
+ 
+ /*
+  * Return the list of PCI vendor/device id lists supported by this
+diff --git a/drivers/scsi/bfa/bfa_defs_svc.h b/drivers/scsi/bfa/bfa_defs_svc.h
+index 263438b..202cb69 100644
+--- a/drivers/scsi/bfa/bfa_defs_svc.h
++++ b/drivers/scsi/bfa/bfa_defs_svc.h
+@@ -789,6 +789,27 @@ enum bfa_port_linkstate_rsn {
+ };
+ #pragma pack(1)
+ /*
++ * LUN mask configuration
++ */
++struct bfa_lun_mask_s {
++	wwn_t		lp_wwn;
++	wwn_t		rp_wwn;
++	lun_t		lun;
++	u8		ua;
++	u8		rsvd[3];
++	u16		rp_tag;
++	u8		lp_tag;
++	u8		state;
 +};
 +
-+struct bfa_bsg_vf_reset_stats_s {
-+	bfa_status_t	status;
-+	u16		bfad_num;
-+	u16		vf_id;
++#define MAX_LUN_MASK_CFG 16
++struct bfa_lunmask_cfg_s {
++	u32	status;
++	u32	rsvd;
++	struct bfa_lun_mask_s	lun_list[MAX_LUN_MASK_CFG];
 +};
 +
- struct bfa_bsg_fcpt_s {
- 	bfa_status_t    status;
- 	u16		vf_id;
++/*
+  *      Physical port configuration
+  */
+ struct bfa_port_cfg_s {
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+index 8d0b88f..a007345 100644
+--- a/drivers/scsi/bfa/bfa_fc.h
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -21,6 +21,7 @@
+ #include "bfad_drv.h"
+ 
+ typedef u64 wwn_t;
++typedef u64 lun_t;
+ 
+ #define WWN_NULL	(0)
+ #define FC_SYMNAME_MAX	256	/*  max name server symbolic name size */
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 27c5565..1ac5aec 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -5588,3 +5588,396 @@ bfa_phy_intr(void *phyarg, struct bfi_mbmsg_s *msg)
+ 		WARN_ON(1);
+ 	}
+ }
++
++/*
++ *	DCONF module specific
++ */
++
++BFA_MODULE(dconf);
++
++/*
++ * DCONF state machine events
++ */
++enum bfa_dconf_event {
++	BFA_DCONF_SM_INIT		= 1,	/* dconf Init */
++	BFA_DCONF_SM_FLASH_COMP		= 2,	/* read/write to flash */
++	BFA_DCONF_SM_WR			= 3,	/* binding change, map */
++	BFA_DCONF_SM_TIMEOUT		= 4,	/* Start timer */
++	BFA_DCONF_SM_EXIT		= 5,	/* exit dconf module */
++	BFA_DCONF_SM_IOCDISABLE		= 6,	/* IOC disable event */
++};
++
++/* forward declaration of DCONF state machine */
++static void bfa_dconf_sm_uninit(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++static void bfa_dconf_sm_flash_read(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++static void bfa_dconf_sm_ready(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++static void bfa_dconf_sm_dirty(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++static void bfa_dconf_sm_sync(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++static void bfa_dconf_sm_final_sync(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++static void bfa_dconf_sm_iocdown_dirty(struct bfa_dconf_mod_s *dconf,
++				enum bfa_dconf_event event);
++
++static void bfa_dconf_cbfn(void *dconf, bfa_status_t status);
++static void bfa_dconf_timer(void *cbarg);
++static bfa_status_t bfa_dconf_flash_write(struct bfa_dconf_mod_s *dconf);
++static void bfa_dconf_init_cb(void *arg, bfa_status_t status);
++
++/*
++ * Begining state of dconf module. Waiting for an event to start.
++ */
++static void
++bfa_dconf_sm_uninit(struct bfa_dconf_mod_s *dconf, enum bfa_dconf_event event)
++{
++	bfa_status_t bfa_status;
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_INIT:
++		if (dconf->min_cfg) {
++			bfa_trc(dconf->bfa, dconf->min_cfg);
++			return;
++		}
++		bfa_sm_set_state(dconf, bfa_dconf_sm_flash_read);
++		dconf->flashdone = BFA_FALSE;
++		bfa_trc(dconf->bfa, dconf->flashdone);
++		bfa_status = bfa_flash_read_part(BFA_FLASH(dconf->bfa),
++					BFA_FLASH_PART_DRV, dconf->instance,
++					dconf->dconf,
++					sizeof(struct bfa_dconf_s), 0,
++					bfa_dconf_init_cb, dconf->bfa);
++		if (bfa_status != BFA_STATUS_OK) {
++			bfa_dconf_init_cb(dconf->bfa, BFA_STATUS_FAILED);
++			bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
++			return;
++		}
++		break;
++	case BFA_DCONF_SM_EXIT:
++		dconf->flashdone = BFA_TRUE;
++	case BFA_DCONF_SM_IOCDISABLE:
++	case BFA_DCONF_SM_WR:
++	case BFA_DCONF_SM_FLASH_COMP:
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++/*
++ * Read flash for dconf entries and make a call back to the driver once done.
++ */
++static void
++bfa_dconf_sm_flash_read(struct bfa_dconf_mod_s *dconf,
++			enum bfa_dconf_event event)
++{
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_FLASH_COMP:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_ready);
++		break;
++	case BFA_DCONF_SM_TIMEOUT:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_ready);
++		break;
++	case BFA_DCONF_SM_EXIT:
++		dconf->flashdone = BFA_TRUE;
++		bfa_trc(dconf->bfa, dconf->flashdone);
++	case BFA_DCONF_SM_IOCDISABLE:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++/*
++ * DCONF Module is in ready state. Has completed the initialization.
++ */
++static void
++bfa_dconf_sm_ready(struct bfa_dconf_mod_s *dconf, enum bfa_dconf_event event)
++{
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_WR:
++		bfa_timer_start(dconf->bfa, &dconf->timer,
++			bfa_dconf_timer, dconf, BFA_DCONF_UPDATE_TOV);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_dirty);
++		break;
++	case BFA_DCONF_SM_EXIT:
++		dconf->flashdone = BFA_TRUE;
++		bfa_trc(dconf->bfa, dconf->flashdone);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
++		break;
++	case BFA_DCONF_SM_INIT:
++	case BFA_DCONF_SM_IOCDISABLE:
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++/*
++ * entries are dirty, write back to the flash.
++ */
++
++static void
++bfa_dconf_sm_dirty(struct bfa_dconf_mod_s *dconf, enum bfa_dconf_event event)
++{
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_TIMEOUT:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_sync);
++		bfa_dconf_flash_write(dconf);
++		break;
++	case BFA_DCONF_SM_WR:
++		bfa_timer_stop(&dconf->timer);
++		bfa_timer_start(dconf->bfa, &dconf->timer,
++			bfa_dconf_timer, dconf, BFA_DCONF_UPDATE_TOV);
++		break;
++	case BFA_DCONF_SM_EXIT:
++		bfa_timer_stop(&dconf->timer);
++		bfa_timer_start(dconf->bfa, &dconf->timer,
++			bfa_dconf_timer, dconf, BFA_DCONF_UPDATE_TOV);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_final_sync);
++		bfa_dconf_flash_write(dconf);
++		break;
++	case BFA_DCONF_SM_FLASH_COMP:
++		break;
++	case BFA_DCONF_SM_IOCDISABLE:
++		bfa_timer_stop(&dconf->timer);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_iocdown_dirty);
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++/*
++ * Sync the dconf entries to the flash.
++ */
++static void
++bfa_dconf_sm_final_sync(struct bfa_dconf_mod_s *dconf,
++			enum bfa_dconf_event event)
++{
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_IOCDISABLE:
++	case BFA_DCONF_SM_FLASH_COMP:
++		bfa_timer_stop(&dconf->timer);
++	case BFA_DCONF_SM_TIMEOUT:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
++		dconf->flashdone = BFA_TRUE;
++		bfa_trc(dconf->bfa, dconf->flashdone);
++		bfa_ioc_disable(&dconf->bfa->ioc);
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++static void
++bfa_dconf_sm_sync(struct bfa_dconf_mod_s *dconf, enum bfa_dconf_event event)
++{
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_FLASH_COMP:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_ready);
++		break;
++	case BFA_DCONF_SM_WR:
++		bfa_timer_start(dconf->bfa, &dconf->timer,
++			bfa_dconf_timer, dconf, BFA_DCONF_UPDATE_TOV);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_dirty);
++		break;
++	case BFA_DCONF_SM_EXIT:
++		bfa_timer_start(dconf->bfa, &dconf->timer,
++			bfa_dconf_timer, dconf, BFA_DCONF_UPDATE_TOV);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_final_sync);
++		break;
++	case BFA_DCONF_SM_IOCDISABLE:
++		bfa_sm_set_state(dconf, bfa_dconf_sm_iocdown_dirty);
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++static void
++bfa_dconf_sm_iocdown_dirty(struct bfa_dconf_mod_s *dconf,
++			enum bfa_dconf_event event)
++{
++	bfa_trc(dconf->bfa, event);
++
++	switch (event) {
++	case BFA_DCONF_SM_INIT:
++		bfa_timer_start(dconf->bfa, &dconf->timer,
++			bfa_dconf_timer, dconf, BFA_DCONF_UPDATE_TOV);
++		bfa_sm_set_state(dconf, bfa_dconf_sm_dirty);
++		break;
++	case BFA_DCONF_SM_EXIT:
++		dconf->flashdone = BFA_TRUE;
++		bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
++		break;
++	case BFA_DCONF_SM_IOCDISABLE:
++		break;
++	default:
++		bfa_sm_fault(dconf->bfa, event);
++	}
++}
++
++/*
++ * Compute and return memory needed by DRV_CFG module.
++ */
++static void
++bfa_dconf_meminfo(struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
++		  struct bfa_s *bfa)
++{
++	struct bfa_mem_kva_s *dconf_kva = BFA_MEM_DCONF_KVA(bfa);
++
++	if (cfg->drvcfg.min_cfg)
++		bfa_mem_kva_setup(meminfo, dconf_kva,
++				sizeof(struct bfa_dconf_hdr_s));
++	else
++		bfa_mem_kva_setup(meminfo, dconf_kva,
++				sizeof(struct bfa_dconf_s));
++}
++
++static void
++bfa_dconf_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
++		struct bfa_pcidev_s *pcidev)
++{
++	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
++
++	dconf->bfad = bfad;
++	dconf->bfa = bfa;
++	dconf->instance = bfa->ioc.port_id;
++	bfa_trc(bfa, dconf->instance);
++
++	dconf->dconf = (struct bfa_dconf_s *) bfa_mem_kva_curp(dconf);
++	if (cfg->drvcfg.min_cfg) {
++		bfa_mem_kva_curp(dconf) += sizeof(struct bfa_dconf_hdr_s);
++		dconf->min_cfg = BFA_TRUE;
++		/*
++		 * Set the flashdone flag to TRUE explicitly as no flash
++		 * write will happen in min_cfg mode.
++		 */
++		dconf->flashdone = BFA_TRUE;
++	} else {
++		dconf->min_cfg = BFA_FALSE;
++		bfa_mem_kva_curp(dconf) += sizeof(struct bfa_dconf_s);
++	}
++
++	bfa_dconf_read_data_valid(bfa) = BFA_FALSE;
++	bfa_sm_set_state(dconf, bfa_dconf_sm_uninit);
++}
++
++static void
++bfa_dconf_init_cb(void *arg, bfa_status_t status)
++{
++	struct bfa_s *bfa = arg;
++	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
++
++	dconf->flashdone = BFA_TRUE;
++	bfa_trc(bfa, dconf->flashdone);
++	bfa_iocfc_cb_dconf_modinit(bfa, status);
++	if (status == BFA_STATUS_OK) {
++		bfa_dconf_read_data_valid(bfa) = BFA_TRUE;
++		if (dconf->dconf->hdr.signature != BFI_DCONF_SIGNATURE)
++			dconf->dconf->hdr.signature = BFI_DCONF_SIGNATURE;
++		if (dconf->dconf->hdr.version != BFI_DCONF_VERSION)
++			dconf->dconf->hdr.version = BFI_DCONF_VERSION;
++	}
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_FLASH_COMP);
++}
++
++void
++bfa_dconf_modinit(struct bfa_s *bfa)
++{
++	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_INIT);
++}
++static void
++bfa_dconf_start(struct bfa_s *bfa)
++{
++}
++
++static void
++bfa_dconf_stop(struct bfa_s *bfa)
++{
++}
++
++static void bfa_dconf_timer(void *cbarg)
++{
++	struct bfa_dconf_mod_s *dconf = cbarg;
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_TIMEOUT);
++}
++static void
++bfa_dconf_iocdisable(struct bfa_s *bfa)
++{
++	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_IOCDISABLE);
++}
++
++static void
++bfa_dconf_detach(struct bfa_s *bfa)
++{
++}
++
++static bfa_status_t
++bfa_dconf_flash_write(struct bfa_dconf_mod_s *dconf)
++{
++	bfa_status_t bfa_status;
++	bfa_trc(dconf->bfa, 0);
++
++	bfa_status = bfa_flash_update_part(BFA_FLASH(dconf->bfa),
++				BFA_FLASH_PART_DRV, dconf->instance,
++				dconf->dconf,  sizeof(struct bfa_dconf_s), 0,
++				bfa_dconf_cbfn, dconf);
++	if (bfa_status != BFA_STATUS_OK)
++		WARN_ON(bfa_status);
++	bfa_trc(dconf->bfa, bfa_status);
++
++	return bfa_status;
++}
++
++bfa_status_t
++bfa_dconf_update(struct bfa_s *bfa)
++{
++	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
++	bfa_trc(dconf->bfa, 0);
++	if (bfa_sm_cmp_state(dconf, bfa_dconf_sm_iocdown_dirty))
++		return BFA_STATUS_FAILED;
++
++	if (dconf->min_cfg) {
++		bfa_trc(dconf->bfa, dconf->min_cfg);
++		return BFA_STATUS_FAILED;
++	}
++
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_WR);
++	return BFA_STATUS_OK;
++}
++
++static void
++bfa_dconf_cbfn(void *arg, bfa_status_t status)
++{
++	struct bfa_dconf_mod_s *dconf = arg;
++	WARN_ON(status);
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_FLASH_COMP);
++}
++
++void
++bfa_dconf_modexit(struct bfa_s *bfa)
++{
++	struct bfa_dconf_mod_s *dconf = BFA_DCONF_MOD(bfa);
++	BFA_DCONF_MOD(bfa)->flashdone = BFA_FALSE;
++	bfa_trc(bfa, BFA_DCONF_MOD(bfa)->flashdone);
++	bfa_sm_send_event(dconf, BFA_DCONF_SM_EXIT);
++}
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index a7463c9..546d46b 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -661,7 +661,6 @@ struct bfa_phy_s {
+ 	struct bfa_ioc_notify_s	ioc_notify; /* ioc event notify */
+ 	struct bfa_mem_dma_s	phy_dma;
+ };
+-
+ #define BFA_PHY(__bfa)	(&(__bfa)->modules.phy)
+ #define BFA_MEM_PHY_DMA(__bfa)	(&(BFA_PHY(__bfa)->phy_dma))
+ 
+@@ -687,6 +686,49 @@ void bfa_phy_memclaim(struct bfa_phy_s *phy,
+ void bfa_phy_intr(void *phyarg, struct bfi_mbmsg_s *msg);
+ 
+ /*
++ * Driver Config( dconf) specific
++ */
++#define BFI_DCONF_SIGNATURE	0xabcdabcd
++#define BFI_DCONF_VERSION	1
++
++#pragma pack(1)
++struct bfa_dconf_hdr_s {
++	u32	signature;
++	u32	version;
++};
++
++struct bfa_dconf_s {
++	struct bfa_dconf_hdr_s		hdr;
++	struct bfa_lunmask_cfg_s	lun_mask;
++};
++#pragma pack()
++
++struct bfa_dconf_mod_s {
++	bfa_sm_t		sm;
++	u8			instance;
++	bfa_boolean_t		flashdone;
++	bfa_boolean_t		read_data_valid;
++	bfa_boolean_t		min_cfg;
++	struct bfa_timer_s	timer;
++	struct bfa_s		*bfa;
++	void			*bfad;
++	void			*trcmod;
++	struct bfa_dconf_s	*dconf;
++	struct bfa_mem_kva_s	kva_seg;
++};
++
++#define BFA_DCONF_MOD(__bfa)	\
++	(&(__bfa)->modules.dconf_mod)
++#define BFA_MEM_DCONF_KVA(__bfa)	(&(BFA_DCONF_MOD(__bfa)->kva_seg))
++#define bfa_dconf_read_data_valid(__bfa)	\
++	(BFA_DCONF_MOD(__bfa)->read_data_valid)
++#define BFA_DCONF_UPDATE_TOV	5000	/* memtest timeout in msec */
++
++void	bfa_dconf_modinit(struct bfa_s *bfa);
++void	bfa_dconf_modexit(struct bfa_s *bfa);
++bfa_status_t	bfa_dconf_update(struct bfa_s *bfa);
++
++/*
+  *	IOC specfic macros
+  */
+ #define bfa_ioc_pcifn(__ioc)		((__ioc)->pcidev.pci_func)
+diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
+index cd51ddf..2d36e48 100644
+--- a/drivers/scsi/bfa/bfa_modules.h
++++ b/drivers/scsi/bfa/bfa_modules.h
+@@ -44,6 +44,7 @@ struct bfa_modules_s {
+ 	struct bfa_flash_s	flash;		/*  flash module */
+ 	struct bfa_diag_s	diag_mod;	/*  diagnostics module	*/
+ 	struct bfa_phy_s	phy;		/*  phy module		*/
++	struct bfa_dconf_mod_s	dconf_mod;	/*  DCONF common module	*/
+ };
+ 
+ /*
+@@ -131,5 +132,6 @@ extern struct bfa_module_s hal_mod_lps;
+ extern struct bfa_module_s hal_mod_uf;
+ extern struct bfa_module_s hal_mod_rport;
+ extern struct bfa_module_s hal_mod_fcp;
++extern struct bfa_module_s hal_mod_dconf;
+ 
+ #endif /* __BFA_MODULES_H__ */
 -- 
 1.7.3.rc1
 
