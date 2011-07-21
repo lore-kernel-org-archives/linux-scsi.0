@@ -1,88 +1,226 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 096/103] target: Further simplify transport_free_pages
-Date: Thu, 21 Jul 2011 07:05:28 +0000
-Message-ID: <1311231935-24635-97-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 100/103] target: ->map_task_SG conversion to ->map_control_SG and ->map_data_SG
+Date: Thu, 21 Jul 2011 07:05:32 +0000
+Message-ID: <1311231935-24635-101-git-send-email-nab@linux-iscsi.org>
 References: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51683 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51707 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905Ab1GUH3a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 03:29:30 -0400
+	with ESMTP id S1752568Ab1GUH3n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2011 03:29:43 -0400
 In-Reply-To: <1311231935-24635-90-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Andy Grover <agrover@redhat.com>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Create helper function for freeing sgls and only call it if needed.
+This patch breaks up the ->map_task_SG() backend call into two seperate
+->map_control_SG() and ->map_data_SG() in order to better address
+IBLOCK and pSCSI.  IBLOCK only allocates bios for ->map_data_SG(), and
+pSCSI will allocate a struct request for both cases.
 
-Based on suggestion from hch.
+This patch fixes incorrect usage of ->map_task_SG() for all se_cmd descriptors
+in transport_generic_new_cmd() by moving the call into it's proper location
+directly inside of transport_allocate_data_tasks()
 
-Signed-off-by: Andy Grover <agrover@redhat.com>
+Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   37 ++++++++++---------------------
- 1 files changed, 12 insertions(+), 25 deletions(-)
+ drivers/target/target_core_iblock.c    |    4 +-
+ drivers/target/target_core_pscsi.c     |   14 ++++++---
+ drivers/target/target_core_transport.c |   45 +++++++++++++++++--------------
+ include/target/target_core_transport.h |    8 ++++-
+ 4 files changed, 42 insertions(+), 29 deletions(-)
 
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 251fc66..7e12341 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -591,7 +591,7 @@ static struct bio *iblock_get_bio(
+ 	return bio;
+ }
+ 
+-static int iblock_map_task_SG(struct se_task *task)
++static int iblock_map_data_SG(struct se_task *task)
+ {
+ 	struct se_cmd *cmd = task->task_se_cmd;
+ 	struct se_device *dev = cmd->se_dev;
+@@ -755,7 +755,7 @@ static struct se_subsystem_api iblock_template = {
+ 	.name			= "iblock",
+ 	.owner			= THIS_MODULE,
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
+-	.map_task_SG		= iblock_map_task_SG,
++	.map_data_SG		= iblock_map_data_SG,
+ 	.attach_hba		= iblock_attach_hba,
+ 	.detach_hba		= iblock_detach_hba,
+ 	.allocate_virtdevice	= iblock_allocate_virtdevice,
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index a2ce599..2b7b0da 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1049,7 +1049,7 @@ static inline struct bio *pscsi_get_bio(int sg_num)
+ 	return bio;
+ }
+ 
+-static int __pscsi_map_task_SG(
++static int __pscsi_map_SG(
+ 	struct se_task *task,
+ 	struct scatterlist *task_sg,
+ 	u32 task_sg_num,
+@@ -1198,7 +1198,10 @@ fail:
+ 	return ret;
+ }
+ 
+-static int pscsi_map_task_SG(struct se_task *task)
++/*
++ * pSCSI maps both ->map_control_SG() and ->map_data_SG() to a single call.
++ */
++static int pscsi_map_SG(struct se_task *task)
+ {
+ 	int ret;
+ 
+@@ -1206,13 +1209,13 @@ static int pscsi_map_task_SG(struct se_task *task)
+ 	 * Setup the main struct request for the task->task_sg[] payload
+ 	 */
+ 
+-	ret = __pscsi_map_task_SG(task, task->task_sg, task->task_sg_nents, 0);
++	ret = __pscsi_map_SG(task, task->task_sg, task->task_sg_nents, 0);
+ 	if (ret >= 0 && task->task_sg_bidi) {
+ 		/*
+ 		 * If present, set up the extra BIDI-COMMAND SCSI READ
+ 		 * struct request and payload.
+ 		 */
+-		ret = __pscsi_map_task_SG(task, task->task_sg_bidi,
++		ret = __pscsi_map_SG(task, task->task_sg_bidi,
+ 					task->task_sg_nents, 1);
+ 	}
+ 
+@@ -1340,7 +1343,8 @@ static struct se_subsystem_api pscsi_template = {
+ 	.owner			= THIS_MODULE,
+ 	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
+ 	.cdb_none		= pscsi_CDB_none,
+-	.map_task_SG		= pscsi_map_task_SG,
++	.map_control_SG		= pscsi_map_SG,
++	.map_data_SG		= pscsi_map_SG,
+ 	.attach_hba		= pscsi_attach_hba,
+ 	.detach_hba		= pscsi_detach_hba,
+ 	.pmode_enable_hba	= pscsi_pmode_enable_hba,
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ceb7ee7..9cefdf4 100644
+index 55b6588..007cfc1 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -3723,40 +3723,27 @@ static void transport_free_dev_tasks(struct se_cmd *cmd)
- 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- }
- 
--static inline void transport_free_pages(struct se_cmd *cmd)
-+static inline void transport_free_sgl(struct scatterlist *sgl, int nents)
- {
+@@ -4081,8 +4081,7 @@ static int transport_allocate_data_tasks(
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned long flags;
+ 	sector_t sectors;
+-	int task_count;
+-	int i;
++	int task_count, i, ret;
+ 	sector_t dev_max_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
+ 	u32 sector_size = dev->se_sub_dev->se_dev_attrib.block_size;
  	struct scatterlist *sg;
--	int free_page = 1;
- 	int count;
+@@ -4129,7 +4128,7 @@ static int transport_allocate_data_tasks(
+ 			task->task_padded_sg = 1;
+ 		}
  
--	if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC)
--		free_page = 0;
-+	for_each_sg(sgl, sg, nents, count)
-+		__free_page(sg_page(sg));
- 
--	for_each_sg(cmd->t_data_sg, sg, cmd->t_data_nents, count) {
--		/*
--		 * Only called if
--		 * SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC is NOT in use,
--		 */
--		if (free_page)
--			__free_page(sg_page(sg));
-+	kfree(sgl);
-+}
- 
--	}
--	if (free_page)
--		kfree(cmd->t_data_sg);
-+static inline void transport_free_pages(struct se_cmd *cmd)
-+{
-+	if (cmd->se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC)
-+		return;
+-		task->task_sg = kmalloc(sizeof(struct scatterlist) * \
++		task->task_sg = kmalloc(sizeof(struct scatterlist) *
+ 					task->task_sg_nents, GFP_KERNEL);
+ 		if (!task->task_sg) {
+ 			cmd->se_dev->transport->free_task(task);
+@@ -4157,6 +4156,20 @@ static int transport_allocate_data_tasks(
+ 		list_add_tail(&task->t_list, &cmd->t_task_list);
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 	}
++	/*
++	 * Now perform the memory map of task->task_sg[] into backend
++	 * subsystem memory..
++	 */
++	list_for_each_entry(task, &cmd->t_task_list, t_list) {
++		if (atomic_read(&task->task_sent))
++			continue;
++		if (!dev->transport->map_data_SG)
++			continue;
 +
-+	transport_free_sgl(cmd->t_data_sg, cmd->t_data_nents);
- 	cmd->t_data_sg = NULL;
- 	cmd->t_data_nents = 0;
++		ret = dev->transport->map_data_SG(task);
++		if (ret < 0)
++			return 0;
++	}
  
--	for_each_sg(cmd->t_bidi_data_sg, sg, cmd->t_bidi_data_nents, count) {
--		/*
--		 * Only called if
--		 * SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC is NOT in use,
--		 */
--		if (free_page)
--			__free_page(sg_page(sg));
--
--	}
--	if (free_page)
--		kfree(cmd->t_bidi_data_sg);
-+	transport_free_sgl(cmd->t_bidi_data_sg, cmd->t_bidi_data_nents);
- 	cmd->t_bidi_data_sg = NULL;
- 	cmd->t_bidi_data_nents = 0;
+ 	return task_count;
  }
+@@ -4196,8 +4209,8 @@ transport_allocate_control_task(struct se_cmd *cmd)
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 
+ 	if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) {
+-		if (dev->transport->map_task_SG)
+-			ret = dev->transport->map_task_SG(task);
++		if (dev->transport->map_control_SG)
++			ret = dev->transport->map_control_SG(task);
+ 	} else if (cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
+ 		if (dev->transport->cdb_none)
+ 			ret = dev->transport->cdb_none(task);
+@@ -4239,8 +4252,6 @@ static u32 transport_allocate_tasks(
+ 	 */
+ int transport_generic_new_cmd(struct se_cmd *cmd)
+ {
+-	struct se_task *task;
+-	struct se_device *dev = cmd->se_dev;
+ 	int ret = 0;
+ 
+ 	/*
+@@ -4254,22 +4265,16 @@ int transport_generic_new_cmd(struct se_cmd *cmd)
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+-
++	/*
++	 * Call transport_new_cmd_obj() to invoke transport_allocate_tasks() for
++	 * control or data CDB types, and perform the map to backend subsystem
++	 * code from SGL memory allocated here by transport_generic_get_mem(), or
++	 * via pre-existing SGL memory setup explictly by fabric module code with
++	 * transport_generic_map_mem_to_cmd().
++	 */
+ 	ret = transport_new_cmd_obj(cmd);
+ 	if (ret < 0)
+ 		return ret;
+-
+-	list_for_each_entry(task, &cmd->t_task_list, t_list) {
+-		if (atomic_read(&task->task_sent))
+-			continue;
+-		if (!dev->transport->map_task_SG)
+-			continue;
+-
+-		ret = dev->transport->map_task_SG(task);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+ 	/*
+ 	 * For WRITEs, let the fabric know its buffer is ready..
+ 	 * This WRITE struct se_cmd (and all of its associated struct se_task's)
+diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
+index 7409576..54af39d 100644
+--- a/include/target/target_core_transport.h
++++ b/include/target/target_core_transport.h
+@@ -239,9 +239,13 @@ struct se_subsystem_api {
+ 	 */
+ 	int (*cdb_none)(struct se_task *);
+ 	/*
+-	 * For SCF_SCSI_DATA_SG_IO_CDB and SCF_SCSI_CONTROL_SG_IO_CDB
++	 * For SCF_SCSI_DATA_SG_IO_CDB
+ 	 */
+-	int (*map_task_SG)(struct se_task *);
++	int (*map_data_SG)(struct se_task *);
++	/*
++	 * For SCF_SCSI_CONTROL_SG_IO_CDB
++	 */
++	int (*map_control_SG)(struct se_task *);
+ 	/*
+ 	 * attach_hba():
+ 	 */
 -- 
 1.7.6
 
