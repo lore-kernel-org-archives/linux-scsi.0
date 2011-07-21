@@ -1,112 +1,149 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH] iommu: parse pci device scope even only intr remap is
- defined
-Date: Thu, 21 Jul 2011 10:56:36 +0200
-Message-ID: <20110721085636.GJ9216@elte.hu>
-References: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>, Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>, Joerg Roedel <joerg.roedel@amd.com>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, "hpa@linux.intel.com" <hpa@linux.intel.com>, Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 021/103] target: remove extraneous returns at end of void functions
+Date: Thu, 21 Jul 2011 00:04:57 -0700
+Message-ID: <1311231979-6631-22-git-send-email-nab@linux-iscsi.org>
+References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm15.bullet.mail.bf1.yahoo.com ([98.139.212.174]:36904 "HELO
+	nm15.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752212Ab1GUHHB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 21 Jul 2011 03:07:01 -0400
+In-Reply-To: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
+From: Andy Grover <agrover@redhat.com>
 
-* Yinghai Lu <yinghai@kernel.org> wrote:
+Signed-off-by: Andy Grover <agrover@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_configfs.c  |    3 ---
+ drivers/target/target_core_device.c    |   12 ------------
+ drivers/target/target_core_pscsi.c     |    2 --
+ drivers/target/target_core_transport.c |    2 --
+ drivers/target/tcm_fc/tfc_cmd.c        |    1 -
+ 5 files changed, 0 insertions(+), 20 deletions(-)
 
-> [PATCH] iommu: parse pci device scope even only intr remap is defined.
-> 
-> Andrew found when CONFIG_DMAR=N and CONFIG_INTR_REMAP=Y:
-> >        [ 1137.271447] qla2xxx 0000:18:00.0: irq 97 for MSI/MSI-X
-> >        [ 1137.271706] qla2xxx 0000:18:00.0: Configuring PCI space...
-> >        [ 1137.271725] qla2xxx 0000:18:00.0: setting latency timer to 64
-> >        [ 1137.271732] qla2xxx 0000:18:00.0: enabling Mem-Wr-Inval
-> >        [ 1137.278705] DRHD: handling fault status reg 2
-> >        [ 1137.278715] INTR-REMAP: Request device [[18:00.0] fault index 20
-> >        [ 1137.278717] INTR-REMAP:[fault reason 34] Present field in the IRTE entry is clear
-> >        [ 1159.389099] qla2xxx 0000:0c:07.0: Cable is unplugged...
-> >        [ 1167.218478] qla2xxx 0000:18:00.0: Mailbox command timeout occurred. Scheduling ISP abort. eeh_busy: 0x0
-> >        [ 1167.218490] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50400/18389b000).
-> >        [ 1167.218496] qla2xxx 0000:18:00.0: Reverting to slow-read.
-> >        [ 1197.174623] qla2xxx 0000:18:00.0: Unable to burst-read optrom segment (100/7ff50000/18389b000).
-> >        [ 1197.174632] qla2xxx 0000:18:00.0: Reverting to slow-read.
-> >        [ 1197.190613] qla2xxx 0000:18:00.0: Configure NVRAM parameters...
-> >        [ 1197.198582] qla2xxx 0000:18:00.0: Verifying loaded RISC code...
-> >        [ 1227.142951] qla2xxx 0000:18:00.0: Failed mailbox send register test
-> >        [ 1227.142959] qla2xxx 0000:18:00.0: Failed to initialize adapter
-> 
-> It turns out that path, pci devices will not be link to drhd, so later all pci
-> devices will point to default drhd when using intr-remap.
-> 
-> Suresh pointed out:
-> | This issue is caused by this commit:
-> |
-> | commit 9d5ce73a64be2be8112147a3e0b551ad9cd1247b
-> | Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> | Date:   Tue Nov 10 19:46:16 2009 +0900
-> |
-> |   x86: intel-iommu: Convert detect_intel_iommu to use iommu_init hook
-> |
-> | So this is a regression
-> 
-> Try to fix the path with calling dmar_dev_scope_init() in intel_iommu_init()
-> 
-> Reported-and-tested-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> Reviewed-by: Suresh Siddha <suresh.b.siddha@intel.com>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-> 
-> ---
->  drivers/iommu/dmar.c |   10 ++++++++++
->  include/linux/dmar.h |    4 +---
->  2 files changed, 11 insertions(+), 3 deletions(-)
-> 
-> Index: linux-2.6/include/linux/dmar.h
-> ===================================================================
-> --- linux-2.6.orig/include/linux/dmar.h
-> +++ linux-2.6/include/linux/dmar.h
-> @@ -232,9 +232,7 @@ struct dmar_atsr_unit {
->  #define for_each_atsr_unit(atsr) \
->  	list_for_each_entry(atsr, &dmar_atsr_units, list)
->  
-> -extern int intel_iommu_init(void);
-> -#else /* !CONFIG_DMAR: */
-> -static inline int intel_iommu_init(void) { return -ENODEV; }
->  #endif /* CONFIG_DMAR */
-> +extern int intel_iommu_init(void);
->  
->  #endif /* __DMAR_H__ */
-> Index: linux-2.6/drivers/iommu/dmar.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/iommu/dmar.c
-> +++ linux-2.6/drivers/iommu/dmar.c
-> @@ -722,6 +722,16 @@ int __init detect_intel_iommu(void)
->  	return ret ? 1 : -ENODEV;
->  }
->  
-> +#ifndef CONFIG_DMAR
-> +/* When intr remapping is used but dmar remapping is not defined */
-> +int __init intel_iommu_init(void)
-> +{
-> +	if (dmar_table_init())
-> +		return  -ENODEV;
-> +
-> +	return dmar_dev_scope_init();
-> +}
-> +#endif
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 27effbc..8196b72 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -601,7 +601,6 @@ void target_fabric_configfs_deregister(
+ 
+ 	printk("<<<<<<<<<<<<<<<<<<<<<< END FABRIC API >>>>>>>>>>>>>>>>>"
+ 			">>>>>\n");
+-	return;
+ }
+ EXPORT_SYMBOL(target_fabric_configfs_deregister);
+ 
+@@ -3304,8 +3303,6 @@ static void __exit target_core_exit_configfs(void)
+ 	core_dev_release_virtual_lun0();
+ 	rd_module_exit();
+ 	release_se_kmem_caches();
+-
+-	return;
+ }
+ 
+ MODULE_DESCRIPTION("Target_Core_Mod/ConfigFS");
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index fe5474c..ff57891 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -339,8 +339,6 @@ void core_dec_lacl_count(struct se_node_acl *se_nacl, struct se_cmd *se_cmd)
+ 	deve = &se_nacl->device_list[se_cmd->orig_fe_lun];
+ 	deve->deve_cmds--;
+ 	spin_unlock_irq(&se_nacl->device_list_lock);
+-
+-	return;
+ }
+ 
+ void core_update_device_list_access(
+@@ -360,8 +358,6 @@ void core_update_device_list_access(
+ 		deve->lun_flags |= TRANSPORT_LUNFLAGS_READ_ONLY;
+ 	}
+ 	spin_unlock_irq(&nacl->device_list_lock);
+-
+-	return;
+ }
+ 
+ /*      core_update_device_list_for_node():
+@@ -508,8 +504,6 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
+ 		spin_lock_bh(&tpg->acl_node_lock);
+ 	}
+ 	spin_unlock_bh(&tpg->acl_node_lock);
+-
+-	return;
+ }
+ 
+ static struct se_port *core_alloc_port(struct se_device *dev)
+@@ -623,8 +617,6 @@ static void core_release_port(struct se_device *dev, struct se_port *port)
+ 	list_del(&port->sep_list);
+ 	dev->dev_port_count--;
+ 	kfree(port);
+-
+-	return;
+ }
+ 
+ int core_dev_export(
+@@ -761,8 +753,6 @@ void se_release_device_for_hba(struct se_device *dev)
+ 	se_release_vpd_for_dev(dev);
+ 
+ 	kfree(dev);
+-
+-	return;
+ }
+ 
+ void se_release_vpd_for_dev(struct se_device *dev)
+@@ -776,8 +766,6 @@ void se_release_vpd_for_dev(struct se_device *dev)
+ 		kfree(vpd);
+ 	}
+ 	spin_unlock(&DEV_T10_WWN(dev)->t10_vpd_lock);
+-
+-	return;
+ }
+ 
+ /*	se_free_virtual_device():
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index e221dea..afe5f57 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -1369,8 +1369,6 @@ static inline void pscsi_process_SAM_status(
+ 		transport_complete_task(task, 0);
+ 		break;
+ 	}
+-
+-	return;
+ }
+ 
+ static void pscsi_req_done(struct request *req, int uptodate)
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 7e0d69a..473032e 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1103,8 +1103,6 @@ static void transport_add_tasks_from_cmd(struct se_cmd *cmd)
+ 		task_prev = task;
+ 	}
+ 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+-
+-	return;
+ }
+ 
+ /*	transport_get_task_from_execute_queue():
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 92a449a..5823ccf 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -670,7 +670,6 @@ static void ft_send_cmd(struct ft_cmd *cmd)
+ 
+ err:
+ 	ft_send_resp_code(cmd, FCP_CMND_FIELDS_INVALID);
+-	return;
+ }
+ 
+ /*
+-- 
+1.7.6
 
-So INTR_REMAP functionality really depends on dmar_table_init()?
-
-This looks very messy.
-
-CONFIG_DMAR has no clear meaning. The DMAR table parsing 
-functionality is intermixed with the DMAR feature itself. The kernel 
-code is littered with a couple of dozen CONFIG_DMAR #ifdefs with no 
-clear structure to the initialization and to the separation of 
-functionality.
-
-Thanks,
-
-	Ingo
