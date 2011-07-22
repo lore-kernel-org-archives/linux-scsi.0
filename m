@@ -1,159 +1,75 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 1/2] block: strict rq_affinity
-Date: Fri, 22 Jul 2011 13:59:39 -0700
-Message-ID: <20110722205938.17420.68621.stgit@localhost6.localdomain6>
+Subject: [RFC PATCH 2/2] block: adaptive rq_affinity
+Date: Fri, 22 Jul 2011 13:59:44 -0700
+Message-ID: <20110722205944.17420.78978.stgit@localhost6.localdomain6>
 References: <20110722205736.17420.41366.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:41026 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932218Ab1GVU7o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2011 16:59:44 -0400
 In-Reply-To: <20110722205736.17420.41366.stgit@localhost6.localdomain6>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jaxboe@fusionio.com
-Cc: Christoph Hellwig <hch@infradead.org>, Roland Dreier <roland@purestorage.com>, Dave Jiang <dave.jiang@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jaxboe@fusionio.com
+Cc: Roland Dreier <roland@purestorage.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-Some storage controllers benefit from completions always being steered
-to the strict requester cpu rather than the looser "per-socket" steering
-that blk_cpu_to_group() attempts by default.
+For some storage configurations the coarse grained cpu grouping (socket)
+does not supply enough cpu to keep up with the demands of high iops.
+Bypass the grouping and complete on the direct requester cpu when the
+local cpu is under softirq pressure (as measured by ksoftirqd being in
+the running state).
 
-echo 2 > /sys/block/<bdev>/queue/rq_affinity
-
+Cc: Matthew Wilcox <matthew@wil.cx>
 Cc: Christoph Hellwig <hch@infradead.org>
 Cc: Roland Dreier <roland@purestorage.com>
 Tested-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Documentation/block/queue-sysfs.txt |   10 +++++++---
- block/blk-core.c                    |    6 ++----
- block/blk-softirq.c                 |   11 +++++++----
- block/blk-sysfs.c                   |   13 +++++++++----
- include/linux/blkdev.h              |    3 ++-
- 5 files changed, 27 insertions(+), 16 deletions(-)
+ block/blk-softirq.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-diff --git a/Documentation/block/queue-sysfs.txt b/Documentation/block/queue-sysfs.txt
-index f652740..d8147b3 100644
---- a/Documentation/block/queue-sysfs.txt
-+++ b/Documentation/block/queue-sysfs.txt
-@@ -45,9 +45,13 @@ device.
- 
- rq_affinity (RW)
- ----------------
--If this option is enabled, the block layer will migrate request completions
--to the CPU that originally submitted the request. For some workloads
--this provides a significant reduction in CPU cycles due to caching effects.
-+If this option is '1', the block layer will migrate request completions to the
-+cpu "group" that originally submitted the request. For some workloads this
-+provides a significant reduction in CPU cycles due to caching effects.
-+
-+For storage configurations that need to maximize distribution of completion
-+processing setting this option to '2' forces the completion to run on the
-+requesting cpu (bypassing the "group" aggregation logic).
- 
- scheduler (RW)
- --------------
-diff --git a/block/blk-core.c b/block/blk-core.c
-index d2f8f40..9c7ba87 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -1279,10 +1279,8 @@ get_rq:
- 	init_request_from_bio(req, bio);
- 
- 	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags) ||
--	    bio_flagged(bio, BIO_CPU_AFFINE)) {
--		req->cpu = blk_cpu_to_group(get_cpu());
--		put_cpu();
--	}
-+	    bio_flagged(bio, BIO_CPU_AFFINE))
-+		req->cpu = smp_processor_id();
- 
- 	plug = current->plug;
- 	if (plug) {
 diff --git a/block/blk-softirq.c b/block/blk-softirq.c
-index ee9c216..475fab8 100644
+index 475fab8..f0cda19 100644
 --- a/block/blk-softirq.c
 +++ b/block/blk-softirq.c
-@@ -103,22 +103,25 @@ static struct notifier_block __cpuinitdata blk_cpu_notifier = {
+@@ -101,16 +101,20 @@ static struct notifier_block __cpuinitdata blk_cpu_notifier = {
+ 	.notifier_call	= blk_cpu_notify,
+ };
  
++DECLARE_PER_CPU(struct task_struct *, ksoftirqd);
++
  void __blk_complete_request(struct request *req)
  {
-+	int ccpu, cpu, group_cpu = NR_CPUS;
+ 	int ccpu, cpu, group_cpu = NR_CPUS;
  	struct request_queue *q = req->q;
++	struct task_struct *tsk;
  	unsigned long flags;
--	int ccpu, cpu, group_cpu;
  
  	BUG_ON(!q->softirq_done_fn);
  
  	local_irq_save(flags);
  	cpu = smp_processor_id();
--	group_cpu = blk_cpu_to_group(cpu);
++	tsk = per_cpu(ksoftirqd, cpu);
  
  	/*
  	 * Select completion CPU
- 	 */
--	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags) && req->cpu != -1)
-+	if (test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags) && req->cpu != -1) {
- 		ccpu = req->cpu;
--	else
-+		if (!test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags)) {
-+			ccpu = blk_cpu_to_group(ccpu);
-+			group_cpu = blk_cpu_to_group(cpu);
-+		}
-+	} else
+@@ -124,7 +128,13 @@ void __blk_complete_request(struct request *req)
+ 	} else
  		ccpu = cpu;
  
- 	if (ccpu == cpu || ccpu == group_cpu) {
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index d935bd8..0ee17b5 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -244,8 +244,9 @@ static ssize_t queue_nomerges_store(struct request_queue *q, const char *page,
- static ssize_t queue_rq_affinity_show(struct request_queue *q, char *page)
- {
- 	bool set = test_bit(QUEUE_FLAG_SAME_COMP, &q->queue_flags);
-+	bool force = test_bit(QUEUE_FLAG_SAME_FORCE, &q->queue_flags);
- 
--	return queue_var_show(set, page);
-+	return queue_var_show(set << force, page);
- }
- 
- static ssize_t
-@@ -257,10 +258,14 @@ queue_rq_affinity_store(struct request_queue *q, const char *page, size_t count)
- 
- 	ret = queue_var_store(&val, page, count);
- 	spin_lock_irq(q->queue_lock);
--	if (val)
-+	if (val) {
- 		queue_flag_set(QUEUE_FLAG_SAME_COMP, q);
--	else
--		queue_flag_clear(QUEUE_FLAG_SAME_COMP,  q);
-+		if (val == 2)
-+			queue_flag_set(QUEUE_FLAG_SAME_FORCE, q);
-+	} else {
-+		queue_flag_clear(QUEUE_FLAG_SAME_COMP, q);
-+		queue_flag_clear(QUEUE_FLAG_SAME_FORCE, q);
-+	}
- 	spin_unlock_irq(q->queue_lock);
- #endif
- 	return ret;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1a23722..b228825 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -393,7 +393,7 @@ struct request_queue
- #define QUEUE_FLAG_ELVSWITCH	6	/* don't use elevator, just do FIFO */
- #define QUEUE_FLAG_BIDI		7	/* queue supports bidi requests */
- #define QUEUE_FLAG_NOMERGES     8	/* disable merge attempts */
--#define QUEUE_FLAG_SAME_COMP	9	/* force complete on same CPU */
-+#define QUEUE_FLAG_SAME_COMP	9	/* complete on same CPU-group */
- #define QUEUE_FLAG_FAIL_IO     10	/* fake timeout */
- #define QUEUE_FLAG_STACKABLE   11	/* supports request stacking */
- #define QUEUE_FLAG_NONROT      12	/* non-rotational device (SSD) */
-@@ -403,6 +403,7 @@ struct request_queue
- #define QUEUE_FLAG_NOXMERGES   15	/* No extended merges */
- #define QUEUE_FLAG_ADD_RANDOM  16	/* Contributes to random pool */
- #define QUEUE_FLAG_SECDISCARD  17	/* supports SECDISCARD */
-+#define QUEUE_FLAG_SAME_FORCE  18	/* force complete on same CPU */
- 
- #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
- 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
+-	if (ccpu == cpu || ccpu == group_cpu) {
++	/*
++	 * try to skip a remote softirq-trigger if the completion is
++	 * within the same group, but not if local softirqs have already
++	 * spilled to ksoftirqd
++	 */
++	if (ccpu == cpu ||
++	    (ccpu == group_cpu && tsk->state != TASK_RUNNING)) {
+ 		struct list_head *list;
+ do_local:
+ 		list = &__get_cpu_var(blk_cpu_done);
+
