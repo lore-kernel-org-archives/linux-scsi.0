@@ -1,343 +1,209 @@
 From: michaelc@cs.wisc.edu
-Subject: [RFC PATCH 04/10] iscsi class: add bsg support to iscsi class
-Date: Fri, 22 Jul 2011 05:04:54 -0500
-Message-ID: <1311329100-2982-5-git-send-email-michaelc@cs.wisc.edu>
+Subject: [RFC PATCH 06/10] libfc: convert to scsi bsg lib
+Date: Fri, 22 Jul 2011 05:04:56 -0500
+Message-ID: <1311329100-2982-7-git-send-email-michaelc@cs.wisc.edu>
 References: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26306 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:45073 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753564Ab1GVKC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 06:02:29 -0400
+	id S1753783Ab1GVKC0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2011 06:02:26 -0400
 In-Reply-To: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-This patch adds bsg support to the iscsi class. There is only
-1 request, the host vendor one, supported. It is expected that
-this would be used for things like flash updates.
+This patch converts libfc to the scsi bsg lib. The differences
+visible to the driver are:
+- fc_bsg_job is now named scsi_bsg_job.
+- no rport pointer. Can access it through the device pointer.
+- the request and reply pointers on the scsi_bsg_job struct
+  are now void pointers, so you cannot do bsg_job->request->some_field.
+
+Patch is only quickly tested with fcping and made over scsi-misc.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/scsi_transport_iscsi.c |  126 ++++++++++++++++++++++++++++++++++-
- include/scsi/scsi_bsg_iscsi.h       |  110 ++++++++++++++++++++++++++++++
- include/scsi/scsi_transport_iscsi.h |    5 ++
- 3 files changed, 240 insertions(+), 1 deletions(-)
- create mode 100644 include/scsi/scsi_bsg_iscsi.h
+ drivers/scsi/libfc/fc_lport.c |   51 +++++++++++++++++++---------------------
+ include/scsi/libfc.h          |    3 +-
+ 2 files changed, 26 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 3fd16d7..7820940 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -31,6 +31,8 @@
- #include <scsi/scsi_transport_iscsi.h>
- #include <scsi/iscsi_if.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_bsg_iscsi.h>
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e008b16..a6ec58b 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -140,7 +140,7 @@ static const char *fc_lport_state_names[] = {
+  * @offset:   The offset into the response data
+  */
+ struct fc_bsg_info {
+-	struct fc_bsg_job *job;
++	struct scsi_bsg_job *job;
+ 	struct fc_lport *lport;
+ 	u16 rsp_code;
+ 	struct scatterlist *sg;
+@@ -1653,18 +1653,19 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			      void *info_arg)
+ {
+ 	struct fc_bsg_info *info = info_arg;
+-	struct fc_bsg_job *job = info->job;
++	struct scsi_bsg_job *job = info->job;
++	struct fc_bsg_reply *reply = job->reply;
+ 	struct fc_lport *lport = info->lport;
+ 	struct fc_frame_header *fh;
+ 	size_t len;
+ 	void *buf;
+ 
+ 	if (IS_ERR(fp)) {
+-		job->reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
++		reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
+ 			-ECONNABORTED : -ETIMEDOUT;
+ 		job->reply_len = sizeof(uint32_t);
+-		job->state_flags |= FC_RQST_STATE_DONE;
+-		job->job_done(job);
++		job->state_flags |= SCSI_RQST_STATE_DONE;
++		job->job_done(job, reply->result, reply->reply_payload_rcv_len);
+ 		kfree(info);
+ 		return;
+ 	}
+@@ -1681,25 +1682,25 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			(unsigned short)fc_frame_payload_op(fp);
+ 
+ 		/* Save the reply status of the job */
+-		job->reply->reply_data.ctels_reply.status =
++		reply->reply_data.ctels_reply.status =
+ 			(cmd == info->rsp_code) ?
+ 			FC_CTELS_STATUS_OK : FC_CTELS_STATUS_REJECT;
+ 	}
+ 
+-	job->reply->reply_payload_rcv_len +=
++	reply->reply_payload_rcv_len +=
+ 		fc_copy_buffer_to_sglist(buf, len, info->sg, &info->nents,
+ 					 &info->offset, KM_BIO_SRC_IRQ, NULL);
+ 
+ 	if (fr_eof(fp) == FC_EOF_T &&
+ 	    (ntoh24(fh->fh_f_ctl) & (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) ==
+ 	    (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) {
+-		if (job->reply->reply_payload_rcv_len >
++		if (reply->reply_payload_rcv_len >
+ 		    job->reply_payload.payload_len)
+-			job->reply->reply_payload_rcv_len =
++			reply->reply_payload_rcv_len =
+ 				job->reply_payload.payload_len;
+-		job->reply->result = 0;
+-		job->state_flags |= FC_RQST_STATE_DONE;
+-		job->job_done(job);
++		reply->result = 0;
++		job->state_flags |= SCSI_RQST_STATE_DONE;
++		job->job_done(job, reply->result, reply->reply_payload_rcv_len);
+ 		kfree(info);
+ 	}
+ 	fc_frame_free(fp);
+@@ -1715,7 +1716,7 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+  * Locking Note: The lport lock is expected to be held before calling
+  * this routine.
+  */
+-static int fc_lport_els_request(struct fc_bsg_job *job,
++static int fc_lport_els_request(struct scsi_bsg_job *job,
+ 				struct fc_lport *lport,
+ 				u32 did, u32 tov)
+ {
+@@ -1776,7 +1777,7 @@ static int fc_lport_els_request(struct fc_bsg_job *job,
+  * Locking Note: The lport lock is expected to be held before calling
+  * this routine.
+  */
+-static int fc_lport_ct_request(struct fc_bsg_job *job,
++static int fc_lport_ct_request(struct scsi_bsg_job *job,
+ 			       struct fc_lport *lport, u32 did, u32 tov)
+ {
+ 	struct fc_bsg_info *info;
+@@ -1832,9 +1833,11 @@ static int fc_lport_ct_request(struct fc_bsg_job *job,
+  *			    FC Passthrough requests
+  * @job: The BSG passthrough job
+  */
+-int fc_lport_bsg_request(struct fc_bsg_job *job)
++int fc_lport_bsg_request(struct scsi_bsg_job *job)
+ {
+ 	struct request *rsp = job->req->next_rq;
++	struct fc_bsg_request *req = job->request;
++	struct fc_bsg_reply *reply = job->reply;
+ 	struct Scsi_Host *shost = job->shost;
+ 	struct fc_lport *lport = shost_priv(shost);
+ 	struct fc_rport *rport;
+@@ -1842,35 +1845,29 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
+ 	int rc = -EINVAL;
+ 	u32 did;
+ 
+-	job->reply->reply_payload_rcv_len = 0;
++	reply->reply_payload_rcv_len = 0;
+ 	if (rsp)
+ 		rsp->resid_len = job->reply_payload.payload_len;
+ 
+ 	mutex_lock(&lport->lp_mutex);
+ 
+-	switch (job->request->msgcode) {
++	switch (req->msgcode) {
+ 	case FC_BSG_RPT_ELS:
+-		rport = job->rport;
+-		if (!rport)
+-			break;
+-
++		rport = dev_to_rport(job->dev);
+ 		rdata = rport->dd_data;
+ 		rc = fc_lport_els_request(job, lport, rport->port_id,
+ 					  rdata->e_d_tov);
+ 		break;
+ 
+ 	case FC_BSG_RPT_CT:
+-		rport = job->rport;
+-		if (!rport)
+-			break;
+-
++		rport = dev_to_rport(job->dev);
+ 		rdata = rport->dd_data;
+ 		rc = fc_lport_ct_request(job, lport, rport->port_id,
+ 					 rdata->e_d_tov);
+ 		break;
+ 
+ 	case FC_BSG_HST_CT:
+-		did = ntoh24(job->request->rqst_data.h_ct.port_id);
++		did = ntoh24(req->rqst_data.h_ct.port_id);
+ 		if (did == FC_FID_DIR_SERV)
+ 			rdata = lport->dns_rdata;
+ 		else
+@@ -1883,7 +1880,7 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
+ 		break;
+ 
+ 	case FC_BSG_HST_ELS_NOLOGIN:
+-		did = ntoh24(job->request->rqst_data.h_els.port_id);
++		did = ntoh24(req->rqst_data.h_els.port_id);
+ 		rc = fc_lport_els_request(job, lport, did, lport->e_d_tov);
+ 		break;
+ 	}
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 7d96829..cdad338 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -27,6 +27,7 @@
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_fc.h>
+ #include <scsi/scsi_bsg_fc.h>
 +#include <scsi/scsi_bsg.h>
  
- #define ISCSI_SESSION_ATTRS 23
- #define ISCSI_CONN_ATTRS 13
-@@ -270,6 +272,112 @@ struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle)
- }
- EXPORT_SYMBOL_GPL(iscsi_lookup_endpoint);
+ #include <scsi/fc/fc_fcp.h>
+ #include <scsi/fc/fc_ns.h>
+@@ -1055,7 +1056,7 @@ int fc_lport_reset(struct fc_lport *);
+ int fc_set_mfs(struct fc_lport *, u32 mfs);
+ struct fc_lport *libfc_vport_create(struct fc_vport *, int privsize);
+ struct fc_lport *fc_vport_id_lookup(struct fc_lport *, u32 port_id);
+-int fc_lport_bsg_request(struct fc_bsg_job *);
++int fc_lport_bsg_request(struct scsi_bsg_job *);
+ void fc_lport_set_local_id(struct fc_lport *, u32 port_id);
+ void fc_lport_iterate(void (*func)(struct fc_lport *, void *), void *);
  
-+/*
-+ * BSG support
-+ */
-+/**
-+ * iscsi_bsg_job_timeout - handler for when a bsg request timesout
-+ * @job: bsg job
-+ */
-+static int iscsi_bsg_job_timeout(struct scsi_bsg_job *job)
-+{
-+	struct Scsi_Host *shost = job->shost;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	int err = 0;
-+
-+	if (i->iscsi_transport->bsg_timeout)
-+		err = i->iscsi_transport->bsg_timeout(job);
-+	return err;
-+}
-+
-+/**
-+ * iscsi_bsg_host_dispatch - Dispatch command to LLD.
-+ * @job:	bsg job to be processed
-+ */
-+static int iscsi_bsg_host_dispatch(struct scsi_bsg_job *job)
-+{
-+	struct Scsi_Host *shost = job->shost;
-+	struct iscsi_bsg_request *req = job->request;
-+	struct iscsi_bsg_reply *reply = job->reply;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
-+	int ret;
-+
-+	/* check if we have the msgcode value at least */
-+	if (job->request_len < sizeof(uint32_t)) {
-+		ret = -ENOMSG;
-+		goto fail_host_msg;
-+	}
-+
-+	/* Validate the host command */
-+	switch (req->msgcode) {
-+	case ISCSI_BSG_HST_VENDOR:
-+		cmdlen += sizeof(struct iscsi_bsg_host_vendor);
-+		if ((shost->hostt->vendor_id == 0L) ||
-+		    (req->rqst_data.h_vendor.vendor_id !=
-+			shost->hostt->vendor_id)) {
-+			ret = -ESRCH;
-+			goto fail_host_msg;
-+		}
-+		break;
-+	default:
-+		ret = -EBADR;
-+		goto fail_host_msg;
-+	}
-+
-+	/* check if we really have all the request data needed */
-+	if (job->request_len < cmdlen) {
-+		ret = -ENOMSG;
-+		goto fail_host_msg;
-+	}
-+
-+	ret = i->iscsi_transport->bsg_request(job);
-+	if (!ret)
-+		return 0;
-+
-+fail_host_msg:
-+	/* return the errno failure code as the only status */
-+	BUG_ON(job->reply_len < sizeof(uint32_t));
-+	reply->reply_payload_rcv_len = 0;
-+	reply->result = ret;
-+	job->reply_len = sizeof(uint32_t);
-+	scsi_bsg_job_done(job, ret, 0);
-+	return 0;
-+}
-+
-+/**
-+ * iscsi_bsg_host_add - Create and add the bsg hooks to receive requests
-+ * @shost: shost for iscsi_host
-+ * @cls_host: iscsi_cls_host adding the structures to
-+ */
-+static int
-+iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
-+{
-+	struct device *dev = &shost->shost_gendev;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	struct request_queue *q;
-+	char bsg_name[20];
-+
-+	ihost->rqst_q = NULL;
-+
-+	if (!i->iscsi_transport->bsg_request)
-+		return -ENOTSUPP;
-+
-+	snprintf(bsg_name, sizeof(bsg_name),
-+		 "iscsi_host%d", shost->host_no);
-+
-+	q = scsi_bsg_add(dev, bsg_name);
-+	if (!q) {
-+		printk(KERN_ERR "iscsi_host%d: bsg interface failed to "
-+				"initialize - no request queue\n",
-+				 shost->host_no);
-+		return -ENOMEM;
-+	}
-+
-+	ihost->rqst_q = q;
-+	return 0;
-+}
-+
- static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 			    struct device *cdev)
- {
-@@ -279,13 +387,27 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 	memset(ihost, 0, sizeof(*ihost));
- 	atomic_set(&ihost->nr_scans, 0);
- 	mutex_init(&ihost->mutex);
-+
-+	iscsi_bsg_host_add(shost, ihost);
-+	/* ignore any bsg add error - we just can't do sgio */
-+
-+	return 0;
-+}
-+
-+static int iscsi_remove_host(struct transport_container *tc,
-+			     struct device *dev, struct device *cdev)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
-+
-+	scsi_bsg_remove(ihost->rqst_q);
- 	return 0;
- }
- 
- static DECLARE_TRANSPORT_CLASS(iscsi_host_class,
- 			       "iscsi_host",
- 			       iscsi_setup_host,
--			       NULL,
-+			       iscsi_remove_host,
- 			       NULL);
- 
- static DECLARE_TRANSPORT_CLASS(iscsi_session_class,
-@@ -2066,6 +2188,8 @@ iscsi_register_transport(struct iscsi_transport *tt)
- 	priv->iscsi_transport = tt;
- 	priv->t.user_scan = iscsi_user_scan;
- 	priv->t.create_work_queue = 1;
-+	priv->t.eh_bsg_job_timed_out = iscsi_bsg_job_timeout;
-+	priv->t.queue_bsg_job = iscsi_bsg_host_dispatch;
- 
- 	priv->dev.class = &iscsi_transport_class;
- 	dev_set_name(&priv->dev, "%s", tt->name);
-diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
-new file mode 100644
-index 0000000..fd5689d
---- /dev/null
-+++ b/include/scsi/scsi_bsg_iscsi.h
-@@ -0,0 +1,110 @@
-+/*
-+ *  iSCSI Transport BSG Interface
-+ *
-+ *  Copyright (C) 2009   James Smart, Emulex Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ */
-+
-+#ifndef SCSI_BSG_ISCSI_H
-+#define SCSI_BSG_ISCSI_H
-+
-+/*
-+ * This file intended to be included by both kernel and user space
-+ */
-+
-+#include <scsi/scsi.h>
-+
-+/*
-+ * iSCSI Transport SGIO v4 BSG Message Support
-+ */
-+
-+/* Default BSG request timeout (in seconds) */
-+#define ISCSI_DEFAULT_BSG_TIMEOUT      (10 * HZ)
-+
-+
-+/*
-+ * Request Message Codes supported by the iSCSI Transport
-+ */
-+
-+/* define the class masks for the message codes */
-+#define ISCSI_BSG_CLS_MASK     0xF0000000      /* find object class */
-+#define ISCSI_BSG_HST_MASK     0x80000000      /* iscsi host class */
-+
-+/* iscsi host Message Codes */
-+#define ISCSI_BSG_HST_VENDOR           (ISCSI_BSG_HST_MASK | 0x000000FF)
-+
-+
-+/*
-+ * iSCSI Host Messages
-+ */
-+
-+/* ISCSI_BSG_HST_VENDOR : */
-+
-+/* Request:
-+ * Note: When specifying vendor_id, be sure to read the Vendor Type and ID
-+ *   formatting requirements specified in scsi_netlink.h
-+ */
-+struct iscsi_bsg_host_vendor {
-+	/*
-+	 * Identifies the vendor that the message is formatted for. This
-+	 * should be the recipient of the message.
-+	 */
-+	uint64_t vendor_id;
-+
-+	/* start of vendor command area */
-+	uint32_t vendor_cmd[0];
-+};
-+
-+/* Response:
-+ */
-+struct iscsi_bsg_host_vendor_reply {
-+	/* start of vendor response area */
-+	uint32_t vendor_rsp[0];
-+};
-+
-+
-+/* request (CDB) structure of the sg_io_v4 */
-+struct iscsi_bsg_request {
-+	uint32_t msgcode;
-+	union {
-+		struct iscsi_bsg_host_vendor    h_vendor;
-+	} rqst_data;
-+} __attribute__((packed));
-+
-+
-+/* response (request sense data) structure of the sg_io_v4 */
-+struct iscsi_bsg_reply {
-+	/*
-+	 * The completion result. Result exists in two forms:
-+	 * if negative, it is an -Exxx system errno value. There will
-+	 * be no further reply information supplied.
-+	 * else, it's the 4-byte scsi error result, with driver, host,
-+	 * msg and status fields. The per-msgcode reply structure
-+	 * will contain valid data.
-+	 */
-+	uint32_t result;
-+
-+	/* If there was reply_payload, how much was recevied ? */
-+	uint32_t reply_payload_rcv_len;
-+
-+	union {
-+		struct iscsi_bsg_host_vendor_reply      vendor_reply;
-+	} reply_data;
-+};
-+
-+
-+#endif /* SCSI_BSG_ISCSI_H */
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index bf8f529..b396630 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -37,6 +37,7 @@ struct iscsi_cls_conn;
- struct iscsi_conn;
- struct iscsi_task;
- struct sockaddr;
-+struct scsi_bsg_job;
- 
- /**
-  * struct iscsi_transport - iSCSI Transport template
-@@ -137,6 +138,9 @@ struct iscsi_transport {
- 	int (*tgt_dscvr) (struct Scsi_Host *shost, enum iscsi_tgt_dscvr type,
- 			  uint32_t enable, struct sockaddr *dst_addr);
- 	int (*set_path) (struct Scsi_Host *shost, struct iscsi_path *params);
-+	/* bsg support */
-+	int (*bsg_request)(struct scsi_bsg_job *job);
-+	int (*bsg_timeout)(struct scsi_bsg_job *job);
- };
- 
- /*
-@@ -216,6 +220,7 @@ struct iscsi_cls_session {
- struct iscsi_cls_host {
- 	atomic_t nr_scans;
- 	struct mutex mutex;
-+	struct request_queue *rqst_q;	/* bsg support */
- };
- 
- extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
 -- 
 1.7.2.3
 
