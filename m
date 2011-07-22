@@ -1,164 +1,148 @@
-From: michaelc@cs.wisc.edu
-Subject: [RFC PATCH 07/10] zfcp: convert zfcp to scsi bsg lib V2
-Date: Fri, 22 Jul 2011 05:04:57 -0500
-Message-ID: <1311329100-2982-8-git-send-email-michaelc@cs.wisc.edu>
-References: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8427 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753827Ab1GVKCf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 06:02:35 -0400
-In-Reply-To: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
+Subject: [PATCH v2 0/3] Persistent device name using alias name
+Date: Fri, 22 Jul 2011 19:59:26 +0900
+Message-ID: <20110722105925.7330.6609.stgit@ltc197.sdl.hitachi.co.jp>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, coughlan@redhat.com, kzak@redhat.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com, greg@kroah.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de, joe@perches.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Hi,
 
-This patch converts zfcp to the scsi bsg lib. The differences
-visible to the driver are:
-- fc_bsg_job is now named scsi_bsg_job.
-- no rport pointer. Can access it through the device pointer.
-- the request and reply pointers on the scsi_bsg_job struct
-  are now void pointers, so you cannot do bsg_job->request->some_field.
+This patch series provide an "alias name" of the disk into kernel messages.
+Users can assign a preferred name to an alias name of the device.
 
-Patch is only compile tested and made over scsi-misc.
+A raw device name of a disk does not always point a same disk at each boot-up
+time. Therefore, users have to use persistent device names, which udev creates
+to always access the same disk. However, kernel messages still display the raw
+device names.
 
-V2:
-- Fixed fc_bsg_request jr naming to jq to match other
-  code.
+My proposal is that users can use and see persistent device names which were
+assigned by they because users expect same name to point same disk anytime.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Why need to modify kernel messages?
+- We can see mapping of device names and persistent device names in udev log.
+  If those logs output to syslog, we can search persistent device name from
+  device name, but it can cause a large amount of syslog output.
+
+- If we can use the persistent device names and can always see the same name on
+  the kernel log, we don't need to pay additional cost for searching and picking
+  a correct pair of device name and persistent device name from udev log.
+
+- Kernel messages are output to serial console when kenel crashes,
+  it's so hard to convert device name to alias name.
+
+
+Of course, I am going to modify the commands using device name so that users
+can use alias names.
+
+
+How to use:
+1. Build and install the kernel with this series, and reboot with the kernel.
+
+2. Make a script of get alias_name
+
+[localhost]# vi /lib/udev/get_alias_name
+#!/bin/sh -e
+DEVNAME=`echo $1 | sed -e 's/[0-9]//g'`
+echo "ALIAS=`cat /sys/block/$DEVNAME/alias_name`"
+exit 0
+
+And you should set an execute bit,
+[localhost]# chmod +x /lib/udev/get_alias_name
+
+3. Check disk's id
+Here is an example to get the serial id and the path of the device.
+
+[localhost]# udevadm info --query=property --path=/sys/block/sda \
+| grep ID_SERIAL=
+ID_SERIAL=0QEMU_QEMU_HARDDISK_drive-scsi0-0-1
+
+Some devices does not have the serial id. For such devices,
+you may use the device path.
+
+[localhost]# udevadm info --query=property --path=/sys/block/sr0 \
+| grep ID_PATH=
+ID_PATH=pci-0000:00:01.1-scsi-1:0:0:0
+
+
+4. Write udev rules as follows
+(The user assigns "foo" to sda and "bar" to sr0)
+We use ENV{ID_SERIAL} or ENV{ID_PATH} (get by 3) to identify a disk.
+And to assign automatically an "alias name", we use ATTR key.
+If ENV{ALIAS} is empty, we use to get an "alias_name" by get_alias_name script.
+
+[localhost]# vi /etc/udev/rules.d/70-alias_name.rules
+SUBSYSTEM!="block", GOTO="end"
+
+# write alias name for sdX
+KERNEL=="sd*[!0-9]", ACTION=="add", ATTR{alias_name}="foo", \
+ENV{ID_SERIAL}=="0QEMU_QEMU_HARDDISK_drive-scsi0-0-1"
+
+# write alias name for srX
+KERNEL=="sr[0-9]", ACTION=="add", ATTR{alias_name}="bar", \
+ENV{ID_PATH}=="pci-0000:00:01.1-scsi-1:0:0:0"
+
+# make symlink
+ENV{DEVTYPE}=="disk", ENV{ALIAS}=="?*", SYMLINK+="disk/by-alias/$env{ALIAS}"
+ENV{DEVTYPE}=="partition", ENV{ALIAS}=="", \
+IMPORT{program}="/lib/udev/get_alias_name %k"
+ENV{DEVTYPE}=="partition", ENV{ALIAS}=="?*", \
+SYMLINK+="disk/by-alias/$env{ALIAS}%n"
+
+LABEL="end"
+
+
+5. reboot
+After reboot, we can see alias name in kernel messages.
+
+[localhost]# ls -l /dev/disk/by-alias/
+total 0
+lrwxrwxrwx. 1 root root  9 Jul  1 21:21 bar -> ../../sr0
+lrwxrwxrwx. 1 root root  9 Jul  1 21:21 foo -> ../../sda
+lrwxrwxrwx. 1 root root 10 Jul  1 21:21 foo1 -> ../../sda1
+
+[localhost]# dmesg
+...
+sd 2:0:0:0: [foo] sd_init_command: block=17382146, count=56
+sd 2:0:0:0: [foo] block=17382146
+sd 2:0:0:0: [foo] reading 56/56 512 byte blocks.
+sd 2:0:0:0: [foo] Send: 0xffff88007ab1a900 
+...
+
+Currently, the user must add the naming rule manually for new devices.
+In the future, it is appended automatically, as like NIC.
+
+Changes in v2:
+- Change alias_name string to pointer
+- Change alias_name writable to write at once
+- Drop procfs patch
+
+Best regards,
+
 ---
- drivers/s390/scsi/zfcp_ext.h |    4 ++--
- drivers/s390/scsi/zfcp_fc.c  |   29 ++++++++++++++++-------------
- 2 files changed, 18 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index 03627cfd..dc9a88e 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -94,8 +94,8 @@ extern void zfcp_fc_link_test_work(struct work_struct *);
- extern void zfcp_fc_wka_ports_force_offline(struct zfcp_fc_wka_ports *);
- extern int zfcp_fc_gs_setup(struct zfcp_adapter *);
- extern void zfcp_fc_gs_destroy(struct zfcp_adapter *);
--extern int zfcp_fc_exec_bsg_job(struct fc_bsg_job *);
--extern int zfcp_fc_timeout_bsg_job(struct fc_bsg_job *);
-+extern int zfcp_fc_exec_bsg_job(struct scsi_bsg_job *);
-+extern int zfcp_fc_timeout_bsg_job(struct scsi_bsg_job *);
- extern void zfcp_fc_sym_name_update(struct work_struct *);
- 
- /* zfcp_fsf.c */
-diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-index 297e6b7..6257614 100644
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -818,23 +818,24 @@ out_free:
- 
- static void zfcp_fc_ct_els_job_handler(void *data)
- {
--	struct fc_bsg_job *job = data;
-+	struct scsi_bsg_job *job = data;
- 	struct zfcp_fsf_ct_els *zfcp_ct_els = job->dd_data;
- 	struct fc_bsg_reply *jr = job->reply;
- 
- 	jr->reply_payload_rcv_len = job->reply_payload.payload_len;
- 	jr->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
- 	jr->result = zfcp_ct_els->status ? -EIO : 0;
--	job->job_done(job);
-+	job->job_done(job, jr->result, jr->reply_payload_rcv_len);
- }
- 
--static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct fc_bsg_job *job)
-+static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct scsi_bsg_job *job)
- {
-+	struct fc_bsg_request *jq = job->request;
- 	u32 preamble_word1;
- 	u8 gs_type;
- 	struct zfcp_adapter *adapter;
- 
--	preamble_word1 = job->request->rqst_data.r_ct.preamble_word1;
-+	preamble_word1 = jq->rqst_data.r_ct.preamble_word1;
- 	gs_type = (preamble_word1 & 0xff000000) >> 24;
- 
- 	adapter = (struct zfcp_adapter *) job->shost->hostdata[0];
-@@ -857,7 +858,7 @@ static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct fc_bsg_job *job)
- 
- static void zfcp_fc_ct_job_handler(void *data)
- {
--	struct fc_bsg_job *job = data;
-+	struct scsi_bsg_job *job = data;
- 	struct zfcp_fc_wka_port *wka_port;
- 
- 	wka_port = zfcp_fc_job_wka_port(job);
-@@ -866,11 +867,12 @@ static void zfcp_fc_ct_job_handler(void *data)
- 	zfcp_fc_ct_els_job_handler(data);
- }
- 
--static int zfcp_fc_exec_els_job(struct fc_bsg_job *job,
-+static int zfcp_fc_exec_els_job(struct scsi_bsg_job *job,
- 				struct zfcp_adapter *adapter)
- {
- 	struct zfcp_fsf_ct_els *els = job->dd_data;
--	struct fc_rport *rport = job->rport;
-+	struct fc_rport *rport = fc_bsg_get_rport(job);
-+	struct fc_bsg_request *jq = job->request;
- 	struct zfcp_port *port;
- 	u32 d_id;
- 
-@@ -882,13 +884,13 @@ static int zfcp_fc_exec_els_job(struct fc_bsg_job *job,
- 		d_id = port->d_id;
- 		put_device(&port->dev);
- 	} else
--		d_id = ntoh24(job->request->rqst_data.h_els.port_id);
-+		d_id = ntoh24(jq->rqst_data.h_els.port_id);
- 
- 	els->handler = zfcp_fc_ct_els_job_handler;
- 	return zfcp_fsf_send_els(adapter, d_id, els, job->req->timeout / HZ);
- }
- 
--static int zfcp_fc_exec_ct_job(struct fc_bsg_job *job,
-+static int zfcp_fc_exec_ct_job(struct scsi_bsg_job *job,
- 			       struct zfcp_adapter *adapter)
- {
- 	int ret;
-@@ -911,13 +913,14 @@ static int zfcp_fc_exec_ct_job(struct fc_bsg_job *job,
- 	return ret;
- }
- 
--int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
-+int zfcp_fc_exec_bsg_job(struct scsi_bsg_job *job)
- {
- 	struct Scsi_Host *shost;
- 	struct zfcp_adapter *adapter;
- 	struct zfcp_fsf_ct_els *ct_els = job->dd_data;
-+	struct fc_bsg_request *jq = job->request;
- 
--	shost = job->rport ? rport_to_shost(job->rport) : job->shost;
-+	shost = job->shost;
- 	adapter = (struct zfcp_adapter *)shost->hostdata[0];
- 
- 	if (!(atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_OPEN))
-@@ -927,7 +930,7 @@ int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
- 	ct_els->resp = job->reply_payload.sg_list;
- 	ct_els->handler_data = job;
- 
--	switch (job->request->msgcode) {
-+	switch (jq->msgcode) {
- 	case FC_BSG_RPT_ELS:
- 	case FC_BSG_HST_ELS_NOLOGIN:
- 		return zfcp_fc_exec_els_job(job, adapter);
-@@ -939,7 +942,7 @@ int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
- 	}
- }
- 
--int zfcp_fc_timeout_bsg_job(struct fc_bsg_job *job)
-+int zfcp_fc_timeout_bsg_job(struct scsi_bsg_job *job)
- {
- 	/* hardware tracks timeout, reset bsg timeout to not interfere */
- 	return -EAGAIN;
--- 
-1.7.2.3
+Joe Perches (1):
+      sd: modify printk for alias name
 
+Nao Nishijima (2):
+      block: add a new attribute "alias name" in gendisk structure
+      sd: [BUGFIX] Use sd_printk instead of printk
+
+
+ Documentation/ABI/testing/sysfs-block |   15 ++++++
+ block/genhd.c                         |   84 +++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_lib.c               |   26 ++++++++++
+ drivers/scsi/sd.c                     |   30 +++++++++++-
+ drivers/scsi/sd.h                     |    8 +--
+ include/linux/genhd.h                 |    4 ++
+ include/scsi/scsi_device.h            |    8 +--
+ 7 files changed, 162 insertions(+), 13 deletions(-)
+
+
+--
+Nao Nishijima (nao.nishijima.xt@hitachi.com)
