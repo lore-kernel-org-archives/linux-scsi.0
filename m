@@ -1,30 +1,37 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/8] lpfc 8.3.25: T10 DIF Fixes
-Date: Fri, 22 Jul 2011 18:36:25 -0400
-Message-ID: <1311374186.10545.28.camel@wookie>
+Subject: [PATCH 2/8] lpfc 8.3.25: Miscellaneous Bug fixes and code cleanup
+Date: Fri, 22 Jul 2011 18:36:33 -0400
+Message-ID: <1311374208.10545.29.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:5985 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:5996 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751876Ab1GVWgt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2011 18:36:49 -0400
+	with ESMTP id S1752232Ab1GVWhO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2011 18:37:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-T10 DIF Fixes
+Miscellaneous Bug fixes and code cleanup
 
-- Fix the case where the SCSI Host supplies the CRC and driver to controller
-  protection is on.
-- Only support T10 DIF type 1. LBA always goes in ref tag and app tag is not
-  checked.
-- Change the format of the sense data passed up to the SCSI layer to match the
-  Descriptor Format Sense Data found in SPC-4 sections 4.5.2.1 and 4.5.2.2.
-- Fix Slip PDE implementation.
-- Remove BUG() in else casein lpfc_sc_to_bg_opcodes.
+- Fix 16G link speed reporting by adding check for 16G check.
+- Change the check and enforcement of MAILBOX_EXT_SIZE (2048B)
+  to the check and enforcement of BSG_MBOX_SIZE - sizeof(MAILBOX_t) (3840B).
+- Instead of waiting for a fixed amount of time after performing firmware
+  reset, the driver shall wait for the Lancer SLIPORT_STATUS register for the
+  readiness of the firmware for bring up.
+- Add logging to indicate when dynamic parameters are changed.
+- Add revision and date to the firmware image format.
+- Use revision instead of rev_name to check firmware image version.
+- Update temporary offset after memcopy is complete for firmware update.
+- Consolidated the use of the macros to get rid of duplicated register
+  offset definitions.
+- Removed the unused second parameter in routine lpfc_bsg_diag_mode_enter()
+- Enable debugfs when debugfs is enabled.
+- Update function comments for lpfc_sli4_alloc_xri and lpfc_sli4_init_rpi_hdrs.
 
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -32,246 +39,509 @@ T10 DIF Fixes
 
  ---
 
- lpfc_attr.c |    4 +-
- lpfc_scsi.c |   97 ++++++++++++++++++------------------------------------------
- 2 files changed, 33 insertions(+), 68 deletions(-)
+ lpfc.h      |    5 ++++
+ lpfc_attr.c |   67 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ lpfc_bsg.c  |   37 ++++++++++++++++++---------------
+ lpfc_hw4.h  |   21 +++++++-----------
+ lpfc_init.c |   34 +++++++++++++++++-------------
+ lpfc_sli.c  |   17 +++++++--------
+ lpfc_sli4.h |    2 +
+ 7 files changed, 129 insertions(+), 54 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2011-07-06 10:53:52.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-07-22 15:58:40.000000000 -0400
-@@ -3678,7 +3678,9 @@ LPFC_ATTR_R(enable_bg, 0, 0, 1, "Enable 
- #	- Default will result in registering capabilities for all profiles.
- #
- */
--unsigned int lpfc_prot_mask = SHOST_DIF_TYPE1_PROTECTION;
-+unsigned int lpfc_prot_mask = SHOST_DIF_TYPE1_PROTECTION |
-+                              SHOST_DIX_TYPE0_PROTECTION |
-+                              SHOST_DIX_TYPE1_PROTECTION;
- 
- module_param(lpfc_prot_mask, uint, S_IRUGO);
- MODULE_PARM_DESC(lpfc_prot_mask, "host protection mask");
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2011-07-06 10:53:52.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-07-22 15:58:40.000000000 -0400
-@@ -1302,13 +1302,13 @@ lpfc_sc_to_bg_opcodes(struct lpfc_hba *p
- 		case SCSI_PROT_NORMAL:
- 		default:
- 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
--				"9063 BLKGRD: Bad op/guard:%d/%d combination\n",
--					scsi_get_prot_op(sc), guard_type);
-+				"9063 BLKGRD: Bad op/guard:%d/IP combination\n",
-+					scsi_get_prot_op(sc));
- 			ret = 1;
- 			break;
- 
- 		}
--	} else if (guard_type == SHOST_DIX_GUARD_CRC) {
-+	} else {
- 		switch (scsi_get_prot_op(sc)) {
- 		case SCSI_PROT_READ_STRIP:
- 		case SCSI_PROT_WRITE_INSERT:
-@@ -1324,17 +1324,18 @@ lpfc_sc_to_bg_opcodes(struct lpfc_hba *p
- 
- 		case SCSI_PROT_READ_INSERT:
- 		case SCSI_PROT_WRITE_STRIP:
-+			*txop = BG_OP_IN_CRC_OUT_NODIF;
-+			*rxop = BG_OP_IN_NODIF_OUT_CRC;
-+			break;
-+
- 		case SCSI_PROT_NORMAL:
- 		default:
- 			lpfc_printf_log(phba, KERN_ERR, LOG_BG,
--				"9075 BLKGRD: Bad op/guard:%d/%d combination\n",
--					scsi_get_prot_op(sc), guard_type);
-+				"9075 BLKGRD: Bad op/guard:%d/CRC combination\n",
-+					scsi_get_prot_op(sc));
- 			ret = 1;
- 			break;
- 		}
--	} else {
--		/* unsupported format */
--		BUG();
- 	}
- 
- 	return ret;
-@@ -1352,45 +1353,6 @@ lpfc_cmd_blksize(struct scsi_cmnd *sc)
- 	return sc->device->sector_size;
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2011-07-22 15:58:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-07-22 16:45:00.000000000 -0400
+@@ -755,6 +755,47 @@ lpfc_issue_reset(struct device *dev, str
  }
  
--/**
-- * lpfc_get_cmd_dif_parms - Extract DIF parameters from SCSI command
-- * @sc:             in: SCSI command
-- * @apptagmask:     out: app tag mask
-- * @apptagval:      out: app tag value
-- * @reftag:         out: ref tag (reference tag)
-- *
-- * Description:
-- *   Extract DIF parameters from the command if possible.  Otherwise,
-- *   use default parameters.
-- *
-- **/
--static inline void
--lpfc_get_cmd_dif_parms(struct scsi_cmnd *sc, uint16_t *apptagmask,
--		uint16_t *apptagval, uint32_t *reftag)
--{
--	struct  scsi_dif_tuple *spt;
--	unsigned char op = scsi_get_prot_op(sc);
--	unsigned int protcnt = scsi_prot_sg_count(sc);
--	static int cnt;
--
--	if (protcnt && (op == SCSI_PROT_WRITE_STRIP ||
--				op == SCSI_PROT_WRITE_PASS)) {
--
--		cnt++;
--		spt = page_address(sg_page(scsi_prot_sglist(sc))) +
--			scsi_prot_sglist(sc)[0].offset;
--		*apptagmask = 0;
--		*apptagval = 0;
--		*reftag = cpu_to_be32(spt->ref_tag);
--
--	} else {
--		/* SBC defines ref tag to be lower 32bits of LBA */
--		*reftag = (uint32_t) (0xffffffff & scsi_get_lba(sc));
--		*apptagmask = 0;
--		*apptagval = 0;
--	}
--}
--
- /*
-  * This function sets up buffer list for protection groups of
-  * type LPFC_PG_TYPE_NO_DIF
-@@ -1427,9 +1389,8 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba,
- 	dma_addr_t physaddr;
- 	int i = 0, num_bde = 0, status;
- 	int datadir = sc->sc_data_direction;
--	unsigned blksize;
- 	uint32_t reftag;
--	uint16_t apptagmask, apptagval;
-+	unsigned blksize;
- 	uint8_t txop, rxop;
+ /**
++ * lpfc_sli4_pdev_status_reg_wait - Wait for pdev status register for readyness
++ * @phba: lpfc_hba pointer.
++ *
++ * Description:
++ * SLI4 interface type-2 device to wait on the sliport status register for
++ * the readyness after performing a firmware reset.
++ *
++ * Returns:
++ * zero for success
++ **/
++static int
++lpfc_sli4_pdev_status_reg_wait(struct lpfc_hba *phba)
++{
++	struct lpfc_register portstat_reg;
++	int i;
++
++
++	lpfc_readl(phba->sli4_hba.u.if_type2.STATUSregaddr,
++		   &portstat_reg.word0);
++
++	/* wait for the SLI port firmware ready after firmware reset */
++	for (i = 0; i < LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT; i++) {
++		msleep(10);
++		lpfc_readl(phba->sli4_hba.u.if_type2.STATUSregaddr,
++			   &portstat_reg.word0);
++		if (!bf_get(lpfc_sliport_status_err, &portstat_reg))
++			continue;
++		if (!bf_get(lpfc_sliport_status_rn, &portstat_reg))
++			continue;
++		if (!bf_get(lpfc_sliport_status_rdy, &portstat_reg))
++			continue;
++		break;
++	}
++
++	if (i < LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT)
++		return 0;
++	else
++		return -EIO;
++}
++
++/**
+  * lpfc_sli4_pdev_reg_request - Request physical dev to perform a register acc
+  * @phba: lpfc_hba pointer.
+  *
+@@ -805,7 +846,10 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
+ 	readl(phba->sli4_hba.conf_regs_memmap_p + LPFC_CTL_PDEV_CTL_OFFSET);
  
- 	status  = lpfc_sc_to_bg_opcodes(phba, sc, &txop, &rxop);
-@@ -1438,17 +1399,16 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba,
+ 	/* delay driver action following IF_TYPE_2 reset */
+-	msleep(100);
++	rc = lpfc_sli4_pdev_status_reg_wait(phba);
++
++	if (rc)
++		return -EIO;
  
- 	/* extract some info from the scsi command for pde*/
- 	blksize = lpfc_cmd_blksize(sc);
--	lpfc_get_cmd_dif_parms(sc, &apptagmask, &apptagval, &reftag);
-+	reftag = scsi_get_lba(sc) & 0xffffffff;
+ 	init_completion(&online_compl);
+ 	rc = lpfc_workq_post_event(phba, &status, &online_compl,
+@@ -895,6 +939,10 @@ lpfc_board_mode_store(struct device *dev
  
- 	/* setup PDE5 with what we have */
- 	pde5 = (struct lpfc_pde5 *) bpl;
- 	memset(pde5, 0, sizeof(struct lpfc_pde5));
- 	bf_set(pde5_type, pde5, LPFC_PDE5_DESCRIPTOR);
--	pde5->reftag = reftag;
+ 	if (!phba->cfg_enable_hba_reset)
+ 		return -EACCES;
++
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
++		"3050 lpfc_board_mode set to %s\n", buf);
++
+ 	init_completion(&online_compl);
  
- 	/* Endianness conversion if necessary for PDE5 */
- 	pde5->word0 = cpu_to_le32(pde5->word0);
--	pde5->reftag = cpu_to_le32(pde5->reftag);
-+	pde5->reftag = cpu_to_le32(reftag);
+ 	if(strncmp(buf, "online", sizeof("online") - 1) == 0) {
+@@ -1290,6 +1338,10 @@ lpfc_poll_store(struct device *dev, stru
+ 	if (phba->sli_rev == LPFC_SLI_REV4)
+ 		val = 0;
  
- 	/* advance bpl and increment bde count */
- 	num_bde++;
-@@ -1463,10 +1423,10 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba,
- 	if (datadir == DMA_FROM_DEVICE) {
- 		bf_set(pde6_ce, pde6, 1);
- 		bf_set(pde6_re, pde6, 1);
--		bf_set(pde6_ae, pde6, 1);
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
++		"3051 lpfc_poll changed from %d to %d\n",
++		phba->cfg_poll, val);
++
+ 	spin_lock_irq(&phba->hbalock);
+ 
+ 	old_val = phba->cfg_poll;
+@@ -1605,6 +1657,9 @@ static int \
+ lpfc_##attr##_set(struct lpfc_hba *phba, uint val) \
+ { \
+ 	if (val >= minval && val <= maxval) {\
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT, \
++			"3052 lpfc_" #attr " changed from %d to %d\n", \
++			phba->cfg_##attr, val); \
+ 		phba->cfg_##attr = val;\
+ 		return 0;\
+ 	}\
+@@ -1762,6 +1817,9 @@ static int \
+ lpfc_##attr##_set(struct lpfc_vport *vport, uint val) \
+ { \
+ 	if (val >= minval && val <= maxval) {\
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT, \
++			"3053 lpfc_" #attr " changed from %d to %d\n", \
++			vport->cfg_##attr, val); \
+ 		vport->cfg_##attr = val;\
+ 		return 0;\
+ 	}\
+@@ -2678,6 +2736,9 @@ lpfc_topology_store(struct device *dev, 
+ 		if (nolip)
+ 			return strlen(buf);
+ 
++		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
++			"3054 lpfc_topology changed from %d to %d\n",
++			prev_val, val);
+ 		err = lpfc_issue_lip(lpfc_shost_from_vport(phba->pport));
+ 		if (err) {
+ 			phba->cfg_topology = prev_val;
+@@ -3101,6 +3162,10 @@ lpfc_link_speed_store(struct device *dev
+ 	if (sscanf(val_buf, "%i", &val) != 1)
+ 		return -EINVAL;
+ 
++	lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
++		"3055 lpfc_link_speed changed from %d to %d %s\n",
++		phba->cfg_link_speed, val, nolip ? "(nolip)" : "(lip)");
++
+ 	if (((val == LPFC_USER_LINK_SPEED_1G) && !(phba->lmt & LMT_1Gb)) ||
+ 	    ((val == LPFC_USER_LINK_SPEED_2G) && !(phba->lmt & LMT_2Gb)) ||
+ 	    ((val == LPFC_USER_LINK_SPEED_4G) && !(phba->lmt & LMT_4Gb)) ||
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2011-07-06 10:53:52.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2011-07-22 16:45:05.000000000 -0400
+@@ -1471,13 +1471,12 @@ send_mgmt_rsp_exit:
+ /**
+  * lpfc_bsg_diag_mode_enter - process preparing into device diag loopback mode
+  * @phba: Pointer to HBA context object.
+- * @job: LPFC_BSG_VENDOR_DIAG_MODE
+  *
+  * This function is responsible for preparing driver for diag loopback
+  * on device.
+  */
+ static int
+-lpfc_bsg_diag_mode_enter(struct lpfc_hba *phba, struct fc_bsg_job *job)
++lpfc_bsg_diag_mode_enter(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_vport **vports;
+ 	struct Scsi_Host *shost;
+@@ -1521,7 +1520,6 @@ lpfc_bsg_diag_mode_enter(struct lpfc_hba
+ /**
+  * lpfc_bsg_diag_mode_exit - exit process from device diag loopback mode
+  * @phba: Pointer to HBA context object.
+- * @job: LPFC_BSG_VENDOR_DIAG_MODE
+  *
+  * This function is responsible for driver exit processing of setting up
+  * diag loopback mode on device.
+@@ -1586,7 +1584,7 @@ lpfc_sli3_bsg_diag_loopback_mode(struct 
+ 		goto job_error;
  	}
- 	bf_set(pde6_ai, pde6, 1);
--	bf_set(pde6_apptagval, pde6, apptagval);
-+	bf_set(pde6_ae, pde6, 0);
-+	bf_set(pde6_apptagval, pde6, 0);
  
- 	/* Endianness conversion if necessary for PDE6 */
- 	pde6->word0 = cpu_to_le32(pde6->word0);
-@@ -1551,7 +1511,6 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
- 	unsigned char pgdone = 0, alldone = 0;
- 	unsigned blksize;
- 	uint32_t reftag;
--	uint16_t apptagmask, apptagval;
- 	uint8_t txop, rxop;
- 	int num_bde = 0;
+-	rc = lpfc_bsg_diag_mode_enter(phba, job);
++	rc = lpfc_bsg_diag_mode_enter(phba);
+ 	if (rc)
+ 		goto job_error;
  
-@@ -1571,7 +1530,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
+@@ -1758,7 +1756,7 @@ lpfc_sli4_bsg_diag_loopback_mode(struct 
+ 		goto job_error;
+ 	}
  
- 	/* extract some info from the scsi command */
- 	blksize = lpfc_cmd_blksize(sc);
--	lpfc_get_cmd_dif_parms(sc, &apptagmask, &apptagval, &reftag);
-+	reftag = scsi_get_lba(sc) & 0xffffffff;
+-	rc = lpfc_bsg_diag_mode_enter(phba, job);
++	rc = lpfc_bsg_diag_mode_enter(phba);
+ 	if (rc)
+ 		goto job_error;
  
- 	split_offset = 0;
- 	do {
-@@ -1579,11 +1538,10 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
- 		pde5 = (struct lpfc_pde5 *) bpl;
- 		memset(pde5, 0, sizeof(struct lpfc_pde5));
- 		bf_set(pde5_type, pde5, LPFC_PDE5_DESCRIPTOR);
--		pde5->reftag = reftag;
+@@ -1982,7 +1980,7 @@ lpfc_sli4_bsg_link_diag_test(struct fc_b
+ 		goto job_error;
+ 	}
  
- 		/* Endianness conversion if necessary for PDE5 */
- 		pde5->word0 = cpu_to_le32(pde5->word0);
--		pde5->reftag = cpu_to_le32(pde5->reftag);
-+		pde5->reftag = cpu_to_le32(reftag);
+-	rc = lpfc_bsg_diag_mode_enter(phba, job);
++	rc = lpfc_bsg_diag_mode_enter(phba);
+ 	if (rc)
+ 		goto job_error;
  
- 		/* advance bpl and increment bde count */
- 		num_bde++;
-@@ -1597,9 +1555,9 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
- 		bf_set(pde6_oprx, pde6, rxop);
- 		bf_set(pde6_ce, pde6, 1);
- 		bf_set(pde6_re, pde6, 1);
--		bf_set(pde6_ae, pde6, 1);
- 		bf_set(pde6_ai, pde6, 1);
--		bf_set(pde6_apptagval, pde6, apptagval);
-+		bf_set(pde6_ae, pde6, 0);
-+		bf_set(pde6_apptagval, pde6, 0);
+@@ -3511,7 +3509,7 @@ lpfc_bsg_sli_cfg_read_cmd_ext(struct lpf
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
+ 				"2947 Issued SLI_CONFIG ext-buffer "
+ 				"maibox command, rc:x%x\n", rc);
+-		return 1;
++		return SLI_CONFIG_HANDLED;
+ 	}
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
+ 			"2948 Failed to issue SLI_CONFIG ext-buffer "
+@@ -3549,7 +3547,7 @@ lpfc_bsg_sli_cfg_write_cmd_ext(struct lp
+ 	LPFC_MBOXQ_t *pmboxq = NULL;
+ 	MAILBOX_t *pmb;
+ 	uint8_t *mbx;
+-	int rc = 0, i;
++	int rc = SLI_CONFIG_NOT_HANDLED, i;
  
- 		/* Endianness conversion if necessary for PDE6 */
- 		pde6->word0 = cpu_to_le32(pde6->word0);
-@@ -1621,8 +1579,8 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
- 		memset(pde7, 0, sizeof(struct lpfc_pde7));
- 		bf_set(pde7_type, pde7, LPFC_PDE7_DESCRIPTOR);
+ 	mbox_req =
+ 	   (struct dfc_mbox_req *)job->request->rqst_data.h_vendor.vendor_cmd;
+@@ -3660,7 +3658,7 @@ lpfc_bsg_sli_cfg_write_cmd_ext(struct lp
+ 			lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
+ 					"2955 Issued SLI_CONFIG ext-buffer "
+ 					"maibox command, rc:x%x\n", rc);
+-			return 1;
++			return SLI_CONFIG_HANDLED;
+ 		}
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
+ 				"2956 Failed to issue SLI_CONFIG ext-buffer "
+@@ -3668,6 +3666,11 @@ lpfc_bsg_sli_cfg_write_cmd_ext(struct lp
+ 		rc = -EPIPE;
+ 	}
  
--		pde7->addrHigh = le32_to_cpu(putPaddrLow(protphysaddr));
--		pde7->addrLow = le32_to_cpu(putPaddrHigh(protphysaddr));
-+		pde7->addrHigh = le32_to_cpu(putPaddrHigh(protphysaddr));
-+		pde7->addrLow = le32_to_cpu(putPaddrLow(protphysaddr));
++	/* wait for additoinal external buffers */
++	job->reply->result = 0;
++	job->job_done(job);
++	return SLI_CONFIG_HANDLED;
++
+ job_error:
+ 	if (pmboxq)
+ 		mempool_free(pmboxq, phba->mbox_mem_pool);
+@@ -3959,7 +3962,7 @@ lpfc_bsg_write_ebuf_set(struct lpfc_hba 
+ 			lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
+ 					"2969 Issued SLI_CONFIG ext-buffer "
+ 					"maibox command, rc:x%x\n", rc);
+-			return 1;
++			return SLI_CONFIG_HANDLED;
+ 		}
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
+ 				"2970 Failed to issue SLI_CONFIG ext-buffer "
+@@ -4039,14 +4042,14 @@ lpfc_bsg_handle_sli_cfg_ext(struct lpfc_
+ 			    struct lpfc_dmabuf *dmabuf)
+ {
+ 	struct dfc_mbox_req *mbox_req;
+-	int rc;
++	int rc = SLI_CONFIG_NOT_HANDLED;
  
- 		protgrp_blks = protgroup_len / 8;
- 		protgrp_bytes = protgrp_blks * blksize;
-@@ -1632,7 +1590,7 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *
- 			protgroup_remainder = 0x1000 - (pde7->addrLow & 0xfff);
- 			protgroup_offset += protgroup_remainder;
- 			protgrp_blks = protgroup_remainder / 8;
--			protgrp_bytes = protgroup_remainder * blksize;
-+			protgrp_bytes = protgrp_blks * blksize;
- 		} else {
- 			protgroup_offset = 0;
- 			curr_prot++;
-@@ -2006,16 +1964,21 @@ lpfc_parse_bg_err(struct lpfc_hba *phba,
- 	if (lpfc_bgs_get_hi_water_mark_present(bgstat)) {
- 		/*
- 		 * setup sense data descriptor 0 per SPC-4 as an information
--		 * field, and put the failing LBA in it
-+		 * field, and put the failing LBA in it.
-+		 * This code assumes there was also a guard/app/ref tag error
-+		 * indication.
+ 	mbox_req =
+ 	   (struct dfc_mbox_req *)job->request->rqst_data.h_vendor.vendor_cmd;
+ 
+ 	/* mbox command with/without single external buffer */
+ 	if (mbox_req->extMboxTag == 0 && mbox_req->extSeqNum == 0)
+-		return SLI_CONFIG_NOT_HANDLED;
++		return rc;
+ 
+ 	/* mbox command and first external buffer */
+ 	if (phba->mbox_ext_buf_ctx.state == LPFC_BSG_MBOX_IDLE) {
+@@ -4249,7 +4252,7 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 		 * mailbox extension size
  		 */
--		cmd->sense_buffer[8] = 0;     /* Information */
--		cmd->sense_buffer[9] = 0xa;   /* Add. length */
-+		cmd->sense_buffer[7] = 0xc;   /* Additional sense length */
-+		cmd->sense_buffer[8] = 0;     /* Information descriptor type */
-+		cmd->sense_buffer[9] = 0xa;   /* Additional descriptor length */
-+		cmd->sense_buffer[10] = 0x80; /* Validity bit */
- 		bghm /= cmd->device->sector_size;
+ 		if ((transmit_length > receive_length) ||
+-			(transmit_length > MAILBOX_EXT_SIZE)) {
++			(transmit_length > BSG_MBOX_SIZE - sizeof(MAILBOX_t))) {
+ 			rc = -ERANGE;
+ 			goto job_done;
+ 		}
+@@ -4272,7 +4275,7 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 		/* receive length cannot be greater than mailbox
+ 		 * extension size
+ 		 */
+-		if (receive_length > MAILBOX_EXT_SIZE) {
++		if (receive_length > BSG_MBOX_SIZE - sizeof(MAILBOX_t)) {
+ 			rc = -ERANGE;
+ 			goto job_done;
+ 		}
+@@ -4306,7 +4309,8 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 			bde = (struct ulp_bde64 *)&pmb->un.varWords[4];
  
- 		failing_sector = scsi_get_lba(cmd);
- 		failing_sector += bghm;
+ 			/* bde size cannot be greater than mailbox ext size */
+-			if (bde->tus.f.bdeSize > MAILBOX_EXT_SIZE) {
++			if (bde->tus.f.bdeSize >
++			    BSG_MBOX_SIZE - sizeof(MAILBOX_t)) {
+ 				rc = -ERANGE;
+ 				goto job_done;
+ 			}
+@@ -4332,7 +4336,8 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 				 * mailbox extension size
+ 				 */
+ 				if ((receive_length == 0) ||
+-				    (receive_length > MAILBOX_EXT_SIZE)) {
++				    (receive_length >
++				     BSG_MBOX_SIZE - sizeof(MAILBOX_t))) {
+ 					rc = -ERANGE;
+ 					goto job_done;
+ 				}
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2011-07-06 10:53:52.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2011-07-22 16:45:05.000000000 -0400
+@@ -20,6 +20,11 @@
+  *******************************************************************/
  
--		put_unaligned_be64(failing_sector, &cmd->sense_buffer[10]);
-+		/* Descriptor Information */
-+		put_unaligned_be64(failing_sector, &cmd->sense_buffer[12]);
+ #include <scsi/scsi_host.h>
++
++#if defined(CONFIG_DEBUG_FS) && !defined(CONFIG_SCSI_LPFC_DEBUG_FS)
++#define CONFIG_SCSI_LPFC_DEBUG_FS
++#endif
++
+ struct lpfc_sli2_slim;
+ 
+ #define LPFC_PCI_DEV_LP		0x1
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-07-06 10:53:52.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-07-22 16:45:05.000000000 -0400
+@@ -170,15 +170,8 @@ struct lpfc_sli_intf {
+ #define LPFC_PCI_FUNC3		3
+ #define LPFC_PCI_FUNC4		4
+ 
+-/* SLI4 interface type-2 control register offsets */
+-#define LPFC_CTL_PORT_SEM_OFFSET	0x400
+-#define LPFC_CTL_PORT_STA_OFFSET	0x404
+-#define LPFC_CTL_PORT_CTL_OFFSET	0x408
+-#define LPFC_CTL_PORT_ER1_OFFSET	0x40C
+-#define LPFC_CTL_PORT_ER2_OFFSET	0x410
++/* SLI4 interface type-2 PDEV_CTL register */
+ #define LPFC_CTL_PDEV_CTL_OFFSET	0x414
+-
+-/* Some SLI4 interface type-2 PDEV_CTL register bits */
+ #define LPFC_CTL_PDEV_CTL_DRST		0x00000001
+ #define LPFC_CTL_PDEV_CTL_FRST		0x00000002
+ #define LPFC_CTL_PDEV_CTL_DD		0x00000004
+@@ -515,7 +508,7 @@ struct lpfc_register {
+ /* The following BAR0 register sets are defined for if_type 0 and 2 UCNAs. */
+ #define LPFC_SLI_INTF			0x0058
+ 
+-#define LPFC_SLIPORT_IF2_SMPHR		0x0400
++#define LPFC_CTL_PORT_SEM_OFFSET	0x400
+ #define lpfc_port_smphr_perr_SHIFT	31
+ #define lpfc_port_smphr_perr_MASK	0x1
+ #define lpfc_port_smphr_perr_WORD	word0
+@@ -575,7 +568,7 @@ struct lpfc_register {
+ #define LPFC_POST_STAGE_PORT_READY			0xC000
+ #define LPFC_POST_STAGE_PORT_UE 			0xF000
+ 
+-#define LPFC_SLIPORT_STATUS		0x0404
++#define LPFC_CTL_PORT_STA_OFFSET	0x404
+ #define lpfc_sliport_status_err_SHIFT	31
+ #define lpfc_sliport_status_err_MASK	0x1
+ #define lpfc_sliport_status_err_WORD	word0
+@@ -593,7 +586,7 @@ struct lpfc_register {
+ #define lpfc_sliport_status_rdy_WORD	word0
+ #define MAX_IF_TYPE_2_RESETS	1000
+ 
+-#define LPFC_SLIPORT_CNTRL		0x0408
++#define LPFC_CTL_PORT_CTL_OFFSET	0x408
+ #define lpfc_sliport_ctrl_end_SHIFT	30
+ #define lpfc_sliport_ctrl_end_MASK	0x1
+ #define lpfc_sliport_ctrl_end_WORD	word0
+@@ -604,8 +597,8 @@ struct lpfc_register {
+ #define lpfc_sliport_ctrl_ip_WORD	word0
+ #define LPFC_SLIPORT_INIT_PORT	1
+ 
+-#define LPFC_SLIPORT_ERR_1		0x040C
+-#define LPFC_SLIPORT_ERR_2		0x0410
++#define LPFC_CTL_PORT_ER1_OFFSET	0x40C
++#define LPFC_CTL_PORT_ER2_OFFSET	0x410
+ 
+ /* The following Registers apply to SLI4 if_type 0 UCNAs. They typically
+  * reside in BAR 2.
+@@ -3198,6 +3191,8 @@ struct lpfc_grp_hdr {
+ #define lpfc_grp_hdr_id_MASK		0x000000FF
+ #define lpfc_grp_hdr_id_WORD		word2
+ 	uint8_t rev_name[128];
++	uint8_t date[12];
++	uint8_t revision[32];
+ };
+ 
+ #define FCP_COMMAND 0x0
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-07-06 10:53:52.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-07-22 16:45:05.000000000 -0400
+@@ -2927,6 +2927,8 @@ void lpfc_host_attrib_init(struct Scsi_H
+ 				 sizeof fc_host_symbolic_name(shost));
+ 
+ 	fc_host_supported_speeds(shost) = 0;
++	if (phba->lmt & LMT_16Gb)
++		fc_host_supported_speeds(shost) |= FC_PORTSPEED_16GBIT;
+ 	if (phba->lmt & LMT_10Gb)
+ 		fc_host_supported_speeds(shost) |= FC_PORTSPEED_10GBIT;
+ 	if (phba->lmt & LMT_8Gb)
+@@ -4966,17 +4968,14 @@ out_free_mem:
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to post rpi header templates to the
+- * HBA consistent with the SLI-4 interface spec.  This routine
++ * port for those SLI4 ports that do not support extents.  This routine
+  * posts a PAGE_SIZE memory region to the port to hold up to
+- * PAGE_SIZE modulo 64 rpi context headers.
+- * No locks are held here because this is an initialization routine
+- * called only from probe or lpfc_online when interrupts are not
+- * enabled and the driver is reinitializing the device.
++ * PAGE_SIZE modulo 64 rpi context headers.  This is an initialization routine
++ * and should be called only when interrupts are disabled.
+  *
+  * Return codes
+  * 	0 - successful
+- * 	-ENOMEM - No available memory
+- *      -EIO - The mailbox failed to complete successfully.
++ * 	-ERROR - otherwise.
+  **/
+ int
+ lpfc_sli4_init_rpi_hdrs(struct lpfc_hba *phba)
+@@ -5687,17 +5686,22 @@ lpfc_sli4_bar0_register_memmap(struct lp
+ 		break;
+ 	case LPFC_SLI_INTF_IF_TYPE_2:
+ 		phba->sli4_hba.u.if_type2.ERR1regaddr =
+-			phba->sli4_hba.conf_regs_memmap_p + LPFC_SLIPORT_ERR_1;
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_ER1_OFFSET;
+ 		phba->sli4_hba.u.if_type2.ERR2regaddr =
+-			phba->sli4_hba.conf_regs_memmap_p + LPFC_SLIPORT_ERR_2;
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_ER2_OFFSET;
+ 		phba->sli4_hba.u.if_type2.CTRLregaddr =
+-			phba->sli4_hba.conf_regs_memmap_p + LPFC_SLIPORT_CNTRL;
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_CTL_OFFSET;
+ 		phba->sli4_hba.u.if_type2.STATUSregaddr =
+-			phba->sli4_hba.conf_regs_memmap_p + LPFC_SLIPORT_STATUS;
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_STA_OFFSET;
+ 		phba->sli4_hba.SLIINTFregaddr =
+ 			phba->sli4_hba.conf_regs_memmap_p + LPFC_SLI_INTF;
+ 		phba->sli4_hba.PSMPHRregaddr =
+-		     phba->sli4_hba.conf_regs_memmap_p + LPFC_SLIPORT_IF2_SMPHR;
++			phba->sli4_hba.conf_regs_memmap_p +
++						LPFC_CTL_PORT_SEM_OFFSET;
+ 		phba->sli4_hba.RQDBregaddr =
+ 			phba->sli4_hba.conf_regs_memmap_p + LPFC_RQ_DOORBELL;
+ 		phba->sli4_hba.WQDBregaddr =
+@@ -8859,11 +8863,11 @@ lpfc_write_firmware(struct lpfc_hba *phb
+ 		return -EINVAL;
  	}
+ 	lpfc_decode_firmware_rev(phba, fwrev, 1);
+-	if (strncmp(fwrev, image->rev_name, strnlen(fwrev, 16))) {
++	if (strncmp(fwrev, image->revision, strnlen(image->revision, 16))) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3023 Updating Firmware. Current Version:%s "
+ 				"New Version:%s\n",
+-				fwrev, image->rev_name);
++				fwrev, image->revision);
+ 		for (i = 0; i < LPFC_MBX_WR_CONFIG_MAX_BDE; i++) {
+ 			dmabuf = kzalloc(sizeof(struct lpfc_dmabuf),
+ 					 GFP_KERNEL);
+@@ -8892,9 +8896,9 @@ lpfc_write_firmware(struct lpfc_hba *phb
+ 					       fw->size - offset);
+ 					break;
+ 				}
+-				temp_offset += SLI4_PAGE_SIZE;
+ 				memcpy(dmabuf->virt, fw->data + temp_offset,
+ 				       SLI4_PAGE_SIZE);
++				temp_offset += SLI4_PAGE_SIZE;
+ 			}
+ 			rc = lpfc_wr_object(phba, &dma_buffer_list,
+ 				    (fw->size - offset), &offset);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
+--- a/drivers/scsi/lpfc/lpfc_sli4.h	2011-07-06 10:53:53.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli4.h	2011-07-22 16:45:00.000000000 -0400
+@@ -81,6 +81,8 @@
+ 	 (fc_hdr)->fh_f_ctl[1] <<  8 | \
+ 	 (fc_hdr)->fh_f_ctl[2])
  
- 	if (!ret) {
++#define LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT 12000
++
+ enum lpfc_sli4_queue_type {
+ 	LPFC_EQ,
+ 	LPFC_GCQ,
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2011-07-06 10:53:53.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-07-22 16:45:05.000000000 -0400
+@@ -12345,19 +12345,18 @@ lpfc_sli4_post_sgl(struct lpfc_hba *phba
+ }
+ 
+ /**
+- * lpfc_sli4_init_rpi_hdrs - Post the rpi header memory region to the port
++ * lpfc_sli4_alloc_xri - Get an available rpi in the device's range
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine is invoked to post rpi header templates to the
+- * port for those SLI4 ports that do not support extents.  This routine
+- * posts a PAGE_SIZE memory region to the port to hold up to
+- * PAGE_SIZE modulo 64 rpi context headers.  This is an initialization routine
+- * and should be called only when interrupts are disabled.
++ * HBA consistent with the SLI-4 interface spec.  This routine
++ * posts a SLI4_PAGE_SIZE memory region to the port to hold up to
++ * SLI4_PAGE_SIZE modulo 64 rpi context headers.
+  *
+- * Return codes
+- *	0 - successful
+- *	-ERROR - otherwise.
+- */
++ * Returns
++ * 	A nonzero rpi defined as rpi_base <= rpi < max_rpi if successful
++ * 	LPFC_RPI_ALLOC_ERROR if no rpis are available.
++ **/
+ uint16_t
+ lpfc_sli4_alloc_xri(struct lpfc_hba *phba)
+ {
 
 
