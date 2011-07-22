@@ -1,52 +1,76 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH v2 0/3] Persistent device name using alias name
-Date: Fri, 22 Jul 2011 06:32:09 -0700
-Message-ID: <20110722133209.GA9522@kroah.com>
-References: <20110722105925.7330.6609.stgit@ltc197.sdl.hitachi.co.jp>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-pm] [RFC] Disable disk spinup during system resume
+Date: Fri, 22 Jul 2011 10:05:15 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1107220951280.1923-100000@iolanthe.rowland.org>
+References: <4E293D20.3080403@draigBrady.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110722105925.7330.6609.stgit@ltc197.sdl.hitachi.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, kay.sievers@vrfy.org, jcm@redhat.com, coughlan@redhat.com, kzak@redhat.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de, joe@perches.com
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:59242 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754452Ab1GVOFQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2011 10:05:16 -0400
+In-Reply-To: <4E293D20.3080403@draigBrady.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?UMOhZHJhaWcgQnJhZHk=?= <P@draigBrady.com>
+Cc: Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Fri, Jul 22, 2011 at 07:59:26PM +0900, Nao Nishijima wrote:
-> Hi,
-> 
-> This patch series provide an "alias name" of the disk into kernel messages.
-> Users can assign a preferred name to an alias name of the device.
-> 
-> A raw device name of a disk does not always point a same disk at each boot-up
-> time. Therefore, users have to use persistent device names, which udev creates
-> to always access the same disk. However, kernel messages still display the raw
-> device names.
-> 
-> My proposal is that users can use and see persistent device names which were
-> assigned by they because users expect same name to point same disk anytime.
-> 
-> Why need to modify kernel messages?
-> - We can see mapping of device names and persistent device names in udev log.
->   If those logs output to syslog, we can search persistent device name from
->   device name, but it can cause a large amount of syslog output.
-> 
-> - If we can use the persistent device names and can always see the same name on
->   the kernel log, we don't need to pay additional cost for searching and picking
->   a correct pair of device name and persistent device name from udev log.
-> 
-> - Kernel messages are output to serial console when kenel crashes,
->   it's so hard to convert device name to alias name.
-> 
-> 
-> Of course, I am going to modify the commands using device name so that users
-> can use alias names.
+On Fri, 22 Jul 2011, P=C3=A1draig Brady wrote:
 
-Please do that first, and then you will not need any kernel changes in
-the first place :)
+> On 21/07/11 17:49, Alan Stern wrote:
+> > On Thu, 21 Jul 2011, P=C3=A1draig Brady wrote:
+> >=20
+> >> On 21/07/11 15:49, Alan Stern wrote:
+> >>> On Thu, 21 Jul 2011, P=C3=A1draig Brady wrote:
+> >>>
+> >>>> Hi,
+> >>>>
+> >>>> I have a secondary sata disk (sda)  in my system that
+> >>>> I would like not to spinup on resume.
+> >>
+> >>
+>=20
+> > What happens if you kill all the running processes (or as many as=20
+> > possible) before starting the suspend?
+> >=20
+> > Also, how do you initiate the suspend?  Do you use a program, or do=
+ you=20
+> > simply "echo mem >/sys/power/state"?
+>=20
+> I just rebooted with init=3D/bin/sh and did
+>=20
+> sdparm -r -C STOP /dev/sda
+> echo 0 > /sys/block/sda/device/scsi_disk/*/manage_start_stop
+> echo mem > /sys/power/state
+>=20
+> When I hit the power button to resume
+> sda started spinning again :(
 
-Anyway, you all know my objections to this patch series, but again, as
-I'm not the block subsystem maintainer, I really can't do anything.
+I have no idea why.  Unless maybe the BIOS started the drive.
 
-greg k-h
+Here's another test you can try.  Before starting the suspend, make=20
+sure no filesystems are mounted on sda and do:
+
+	echo scsi remove-single-device 0 0 0 0 >/proc/scsi/scsi
+
+(replace the "0 0 0 0" with the appropriate Host, Channel, ID, and LUN=20
+values for your sda drive).  This will erase all knowledge of that=20
+drive from the kernel.  If it still spins up during resume, you can be=20
+sure the kernel isn't responsible.
+
+> There kernel logs about sata ports starting up.
+> Maybe I need to put the drive into a different
+> sleep state or something to stop it starting.
+
+I really don't know what's going on.  Maybe somebody on the linux-scsi
+mailing list can explain this.
+
+Alan Stern
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
