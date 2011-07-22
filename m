@@ -1,74 +1,89 @@
-From: =?ISO-8859-2?Q?Micha=B3_Miros=B3aw?= <mirqus-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 10/13] net: add paged frag destructor to skb_fill_page_desc()
-Date: Fri, 22 Jul 2011 23:44:05 +0200
-Message-ID: <CAHXqBF+TJrBvEo+fd4tfXxDucEx5QaCgfBWPQ2B5UPjYQUAUgg@mail.gmail.com>
-References: <1311340095.12772.57.camel@zakaz.uk.xensource.com>
- <1311340653-19336-10-git-send-email-ian.campbell@citrix.com>
- <CAHXqBFLQFKqK=ORpDQx6s2ud8mWkx=YC_AT60GVS+4XK0H61pw@mail.gmail.com> <1311368872.4027.76.camel@dagon.hellion.org.uk>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [osd-dev] [PATCH 6/8] [SCSI] osduld: use ida_simple_get to handle
+ id.
+Date: Fri, 22 Jul 2011 14:47:06 -0700
+Message-ID: <4E29EFDA.1080407@panasas.com>
+References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk> <1311352886-4047-7-git-send-email-jic23@cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1311368872.4027.76.camel-ztPmHsLffjjnO4AKDKe2m+kiAK3p4hvP@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ian Campbell <Ian.Campbell-mvvWK6WmYclDPfheJLI6IQ@public.gmane.org>
-Cc: "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, Alexey Kuznetsov <kuznet-v/Mj1YrvjDBInbfyfbPRSQ@public.gmane.org>, "Pekka Savola (ipv6)" <pekkas-UjJjq++bwZ7HOG6cAo2yLw@public.gmane.org>, James Morris <jmorris-gx6/JNMH7DfYtjvyW6yDsg@public.gmane.org>, Hideaki YOSHIFUJI <yoshfuji-VfPWfsRibaP+Ru+s062T9g@public.gmane.org>, Patrick McHardy <kaber-dcUjhNyLwpNeoWH0uzbU5w@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devel-s9riP+hp16TNLxjTenLetw@public.gmane.org" <devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1311352886-4047-7-git-send-email-jic23@cam.ac.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jonathan Cameron <jic23@cam.ac.uk>
+Cc: linux-kernel@vger.kernel.org, randy.dunlap@oracle.com, airlied@linux.ie, dri-devel@lists.freedesktop.org, guenter.roeck@ericsson.com, johnpol@2ka.mipt.ru, thellstrom@vmware.com, linux-scsi@vger.kernel.org, JBottomley@parallels.com, lm-sensors@lm-sensors.org, airlied@redhat.com, paulmck@linux.vnet.ibm.com, naota@elisp.net, rtc-linux@googlegroups.com, namhyung@gmail.com, rusty@rustcorp.com.au, khali@linux-fr.org, osd-dev@open-osd.org, akpm@linux-foundation.org, a.zummo@towertech.it, jkosina@suse.cz, cabarnes@indesign-llc.com, tj@kernel.org, bhalevy@panasas.com
 List-Id: linux-scsi@vger.kernel.org
 
-W dniu 22 lipca 2011 23:07 u=BFytkownik Ian Campbell
-<Ian.Campbell-mvvWK6WmYclDPfheJLI6IQ@public.gmane.org> napisa=B3:
-> On Fri, 2011-07-22 at 20:58 +0100, Micha=B3 Miros=B3aw wrote:
->> 2011/7/22 Ian Campbell <ian.campbell-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>:
->> > diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
->> > index 9818fe2..faee8d3 100644
->> > --- a/include/linux/skbuff.h
->> > +++ b/include/linux/skbuff.h
->> > @@ -1134,12 +1134,14 @@ static inline int skb_pagelen(const struct=
- sk_buff *skb)
->> > =A0* Does not take any additional reference on the fragment.
->> > =A0*/
->> > =A0static inline void __skb_fill_page_desc(struct sk_buff *skb, in=
-t i,
->> > - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 struct page *page, int off, int size)
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 struct page *page,
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 struct skb_frag_destructor *destroy,
->> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 int off, int size)
->> > =A0{
->> > =A0 =A0 =A0 =A0skb_frag_t *frag =3D &skb_shinfo(skb)->frags[i];
->> >
->> > =A0 =A0 =A0 =A0frag->page.p =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D page;
->> > - =A0 =A0 =A0 frag->page.destructor =A0 =A0 =3D NULL;
->> > + =A0 =A0 =A0 frag->page.destructor =A0 =A0 =3D destroy;
->> > =A0 =A0 =A0 =A0frag->page_offset =A0 =A0 =A0 =A0 =3D off;
->> > =A0 =A0 =A0 =A0frag->size =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=3D size;
->> > =A0}
->>
->> You could just rename this function to e.g.
->> __skb_fill_fragile_page_desc() (or whatever name) add an inline
->> wrapper calling it with destroy =3D=3D NULL. This will avoid touchin=
-g all
->> those drivers which won't ever need this functionality.
->
-> I could call this variant __skb_frag_init (which I think better fits
-> into the pattern of the new functions) and leave the existing
-> __skb_fill_page_desc as a compat wrapper if that's preferred but I wa=
-s
-> trying to avoid duplicating up constructors just for different sets o=
-f
-> defaults.
+On 07/22/2011 09:41 AM, Jonathan Cameron wrote:
+> This does involve additional use of the spin lock in idr.c.
+> Is this an issue?
+> 
 
-It's just Huffman coding: since most users need destroy =3D NULL, it's
-good to have a wrapper for this case as it will then take less time to
-write and understand the code (you won't need to think what is this
-NULL for in all those places).
+Actually it looks like a bug fix. I had a TODO: to add one.
 
-Best Regards,
-Micha=B3 Miros=B3aw
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Also, some error mangling was needed to keep the interface
+> the same.  Does this matter or can we return -ENOSPC instead
+> of -EBUSY?
+> 
+
+Na. -ENOSPC is just fine. All the osd Application just check for
+"any error" not a specific one.
+
+> Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
+
+Ack-by: Boaz Harrosh <bharrosh@panasas.com>
+
+> ---
+>  drivers/scsi/osd/osd_uld.c |   22 ++++++++--------------
+>  1 files changed, 8 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+> index b31a8e3..fa849bd 100644
+> --- a/drivers/scsi/osd/osd_uld.c
+> +++ b/drivers/scsi/osd/osd_uld.c
+> @@ -387,7 +387,7 @@ static void __remove(struct device *dev)
+>  
+>  	if (oud->disk)
+>  		put_disk(oud->disk);
+> -	ida_remove(&osd_minor_ida, oud->minor);
+> +	ida_simple_remove(&osd_minor_ida, oud->minor);
+>  
+>  	kfree(oud);
+>  }
+> @@ -403,18 +403,12 @@ static int osd_probe(struct device *dev)
+>  	if (scsi_device->type != TYPE_OSD)
+>  		return -ENODEV;
+>  
+> -	do {
+> -		if (!ida_pre_get(&osd_minor_ida, GFP_KERNEL))
+> -			return -ENODEV;
+> -
+> -		error = ida_get_new(&osd_minor_ida, &minor);
+> -	} while (error == -EAGAIN);
+> -
+> -	if (error)
+> -		return error;
+> -	if (minor >= SCSI_OSD_MAX_MINOR) {
+> -		error = -EBUSY;
+> -		goto err_retract_minor;
+> +	minor = ida_simple_get(&osd_minor_ida, 0,
+> +			       SCSI_OSD_MAX_MINOR, GFP_KERNEL);
+> +	if (minor < 0) {
+> +		if (minor == -ENOSPC)
+> +			return -EBUSY;
+
+Just drop the translation is fine as well
+
+> +		return minor;
+>  	}
+>  
+>  	error = -ENOMEM;
+> @@ -491,7 +485,7 @@ err_free_osd:
+>  	dev_set_drvdata(dev, NULL);
+>  	kfree(oud);
+>  err_retract_minor:
+> -	ida_remove(&osd_minor_ida, minor);
+> +	ida_simple_remove(&osd_minor_ida, minor);
+>  	return error;
+>  }
+>  
