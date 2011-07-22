@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 4/8] lpfc 8.3.25: Fabric and Target Discovery Fixes
-Date: Fri, 22 Jul 2011 18:37:06 -0400
-Message-ID: <1311374240.10545.31.camel@wookie>
+Subject: [PATCH 5/8] lpfc 8.3.25: PCI and SR-IOV Fixes
+Date: Fri, 22 Jul 2011 18:37:28 -0400
+Message-ID: <1311374256.10545.32.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,144 +9,212 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:5999 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752296Ab1GVWht (ORCPT
+	with ESMTP id S1752320Ab1GVWht (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2011 18:37:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fabric and Target Discovery Fixes
+PCI and SR-IOV Fixes
 
-- Clear FC_VPORT_NEEDS_INIT_VPI flag during completion of REG_VFI mailbox
-  command.
-- Prevent SLI3 Code from unregistering the physical VPI.
-- Add an else clause to the code that checks and sets
-  sp->cmn.request_multiple_Nport to clear the bit.
-- Remove a redundant mbox free.
-- Modified lpfc_sli4_async_fip_evt to pass in physical VPI toi
-  lpfc_find_vport_by_vpid function.
-- Modified lpfc_find_vport_by_vpid to translate physical VPI to logical VPI
-  before comparing with vport VPI.
-
+- Call pci_save_state after the pci_restore_state completes.
+- After calling pci_enable_pcie_error_reporting() and checking the return
+  value for logging messages from rc, reset rc to 0 to it will not later be
+  interpreted for error.
+- Read PCI config space SR-IOV capability to get the number of VFs supported.
+- Check for the PF's supported number of VFs before invoking PCI enable sriov
+  API call and log error message that user requested number of VFs is beyond
+  the PF capability if such request is passed in.
+- Added check for Physical function with Virtual Functions attached. If so,
+  first disable all the VFs before proceeding to device reset.
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_els.c     |   33 +++++++++++++++------------------
- lpfc_hbadisc.c |    2 +-
- lpfc_init.c    |    4 ++--
- 3 files changed, 18 insertions(+), 21 deletions(-)
+ lpfc_attr.c |   76 ++----------------------------------------------------------
+ lpfc_crtn.h |    1 
+ lpfc_init.c |   44 ++++++++++++++++++++++++++++++++++
+ lpfc_sli.c  |    1 
+ 4 files changed, 49 insertions(+), 73 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2011-07-22 16:51:58.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2011-07-22 16:53:32.000000000 -0400
-@@ -647,21 +647,15 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
- 		}
- 		lpfc_cleanup_pending_mbox(vport);
- 
--		if (phba->sli_rev == LPFC_SLI_REV4)
-+		if (phba->sli_rev == LPFC_SLI_REV4) {
- 			lpfc_sli4_unreg_all_rpis(vport);
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2011-07-22 16:45:00.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-07-22 16:54:06.000000000 -0400
+@@ -1466,80 +1466,10 @@ lpfc_sriov_hw_max_virtfn_show(struct dev
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+ 	struct lpfc_hba *phba = vport->phba;
+-	struct pci_dev *pdev = phba->pcidev;
+-	union  lpfc_sli4_cfg_shdr *shdr;
+-	uint32_t shdr_status, shdr_add_status;
+-	LPFC_MBOXQ_t *mboxq;
+-	struct lpfc_mbx_get_prof_cfg *get_prof_cfg;
+-	struct lpfc_rsrc_desc_pcie *desc;
+-	uint32_t max_nr_virtfn;
+-	uint32_t desc_count;
+-	int length, rc, i;
 -
--		if (phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) {
- 			lpfc_mbx_unreg_vpi(vport);
- 			spin_lock_irq(shost->host_lock);
- 			vport->fc_flag |= FC_VPORT_NEEDS_REG_VPI;
--			spin_unlock_irq(shost->host_lock);
+-	if ((phba->sli_rev < LPFC_SLI_REV4) ||
+-	    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
+-	     LPFC_SLI_INTF_IF_TYPE_2))
+-		return -EPERM;
+-
+-	if (!pdev->is_physfn)
+-		return snprintf(buf, PAGE_SIZE, "%d\n", 0);
+-
+-	mboxq = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+-	if (!mboxq)
+-		return -ENOMEM;
+-
+-	/* get the maximum number of virtfn support by physfn */
+-	length = (sizeof(struct lpfc_mbx_get_prof_cfg) -
+-		  sizeof(struct lpfc_sli4_cfg_mhdr));
+-	lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_COMMON,
+-			 LPFC_MBOX_OPCODE_GET_PROFILE_CONFIG,
+-			 length, LPFC_SLI4_MBX_EMBED);
+-	shdr = (union lpfc_sli4_cfg_shdr *)
+-		&mboxq->u.mqe.un.sli4_config.header.cfg_shdr;
+-	bf_set(lpfc_mbox_hdr_pf_num, &shdr->request,
+-	       phba->sli4_hba.iov.pf_number + 1);
+-
+-	get_prof_cfg = &mboxq->u.mqe.un.get_prof_cfg;
+-	bf_set(lpfc_mbx_get_prof_cfg_prof_tp, &get_prof_cfg->u.request,
+-	       LPFC_CFG_TYPE_CURRENT_ACTIVE);
+-
+-	rc = lpfc_sli_issue_mbox_wait(phba, mboxq,
+-				lpfc_mbox_tmo_val(phba, MBX_SLI4_CONFIG));
+-
+-	if (rc != MBX_TIMEOUT) {
+-		/* check return status */
+-		shdr_status = bf_get(lpfc_mbox_hdr_status, &shdr->response);
+-		shdr_add_status = bf_get(lpfc_mbox_hdr_add_status,
+-					 &shdr->response);
+-		if (shdr_status || shdr_add_status || rc)
+-			goto error_out;
+-
+-	} else
+-		goto error_out;
+-
+-	desc_count = get_prof_cfg->u.response.prof_cfg.rsrc_desc_count;
+-
+-	for (i = 0; i < LPFC_RSRC_DESC_MAX_NUM; i++) {
+-		desc = (struct lpfc_rsrc_desc_pcie *)
+-			&get_prof_cfg->u.response.prof_cfg.desc[i];
+-		if (LPFC_RSRC_DESC_TYPE_PCIE ==
+-		    bf_get(lpfc_rsrc_desc_pcie_type, desc)) {
+-			max_nr_virtfn = bf_get(lpfc_rsrc_desc_pcie_nr_virtfn,
+-					       desc);
+-			break;
 -		}
--		/*
--		 * If VPI is unreged, driver need to do INIT_VPI
--		 * before re-registering
--		 */
--		if (phba->sli_rev == LPFC_SLI_REV4) {
--			spin_lock_irq(shost->host_lock);
-+			/*
-+			* If VPI is unreged, driver need to do INIT_VPI
-+			* before re-registering
-+			*/
- 			vport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
- 			spin_unlock_irq(shost->host_lock);
- 		}
-@@ -1096,11 +1090,14 @@ lpfc_issue_els_flogi(struct lpfc_vport *
- 			/* Set the fcfi to the fcfi we registered with */
- 			elsiocb->iocb.ulpContext = phba->fcf.fcfi;
- 		}
--	} else if (phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) {
--		sp->cmn.request_multiple_Nport = 1;
--		/* For FLOGI, Let FLOGI rsp set the NPortID for VPI 0 */
--		icmd->ulpCt_h = 1;
--		icmd->ulpCt_l = 0;
-+	} else {
-+		if (phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) {
-+			sp->cmn.request_multiple_Nport = 1;
-+			/* For FLOGI, Let FLOGI rsp set the NPortID for VPI 0 */
-+			icmd->ulpCt_h = 1;
-+			icmd->ulpCt_l = 0;
-+		} else
-+			sp->cmn.request_multiple_Nport = 0;
- 	}
+-	}
+-
+-	if (i < LPFC_RSRC_DESC_MAX_NUM) {
+-		if (rc != MBX_TIMEOUT)
+-			mempool_free(mboxq, phba->mbox_mem_pool);
+-		return snprintf(buf, PAGE_SIZE, "%d\n", max_nr_virtfn);
+-	}
++	uint16_t max_nr_virtfn;
  
- 	if (phba->fc_topology != LPFC_TOPOLOGY_LOOP) {
-@@ -6608,7 +6605,7 @@ lpfc_find_vport_by_vpid(struct lpfc_hba 
- {
- 	struct lpfc_vport *vport;
- 	unsigned long flags;
--	int i;
-+	int i = 0;
+-error_out:
+-	if (rc != MBX_TIMEOUT)
+-		mempool_free(mboxq, phba->mbox_mem_pool);
+-	return -EIO;
++	max_nr_virtfn = lpfc_sli_sriov_nr_virtfn_get(phba);
++	return snprintf(buf, PAGE_SIZE, "%d\n", max_nr_virtfn);
+ }
  
- 	/* The physical ports are always vpi 0 - translate is unnecessary. */
- 	if (vpi > 0) {
-@@ -6631,7 +6628,7 @@ lpfc_find_vport_by_vpid(struct lpfc_hba 
- 
- 	spin_lock_irqsave(&phba->hbalock, flags);
- 	list_for_each_entry(vport, &phba->port_list, listentry) {
--		if (vport->vpi == vpi) {
-+		if (vport->vpi == i) {
- 			spin_unlock_irqrestore(&phba->hbalock, flags);
- 			return vport;
- 		}
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-07-06 10:53:52.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-07-22 16:53:32.000000000 -0400
-@@ -2247,7 +2247,6 @@ read_next_fcf:
- 				spin_lock_irq(&phba->hbalock);
- 				phba->fcf.fcf_flag |= FCF_REDISC_FOV;
- 				spin_unlock_irq(&phba->hbalock);
--				lpfc_sli4_mbox_cmd_free(phba, mboxq);
- 				lpfc_sli4_fcf_scan_read_fcf_rec(phba,
- 						LPFC_FCOE_FCF_GET_FIRST);
- 				return;
-@@ -2645,6 +2644,7 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
- 	vport->vpi_state |= LPFC_VPI_REGISTERED;
- 	vport->fc_flag |= FC_VFI_REGISTERED;
- 	vport->fc_flag &= ~FC_VPORT_NEEDS_REG_VPI;
-+	vport->fc_flag &= ~FC_VPORT_NEEDS_INIT_VPI;
- 	spin_unlock_irq(shost->host_lock);
- 
- 	if (vport->port_state == LPFC_FABRIC_CFG_LINK) {
+ /**
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2011-07-22 16:51:58.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2011-07-22 16:54:06.000000000 -0400
+@@ -440,3 +440,4 @@ struct lpfc_node_rrq *lpfc_get_active_rr
+ int lpfc_wr_object(struct lpfc_hba *, struct list_head *, uint32_t, uint32_t *);
+ /* functions to support SR-IOV */
+ int lpfc_sli_probe_sriov_nr_virtfn(struct lpfc_hba *, int);
++uint16_t lpfc_sli_sriov_nr_virtfn_get(struct lpfc_hba *);
 diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-07-22 16:45:05.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-07-22 16:53:32.000000000 -0400
-@@ -3649,7 +3649,7 @@ lpfc_sli4_async_fip_evt(struct lpfc_hba 
- 			" tag 0x%x\n", acqe_fip->index, acqe_fip->event_tag);
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-07-22 16:53:32.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-07-22 16:54:06.000000000 -0400
+@@ -4037,6 +4037,34 @@ lpfc_reset_hba(struct lpfc_hba *phba)
+ }
  
- 		vport = lpfc_find_vport_by_vpid(phba,
--				acqe_fip->index - phba->vpi_base);
-+						acqe_fip->index);
- 		ndlp = lpfc_sli4_perform_vport_cvl(vport);
- 		if (!ndlp)
- 			break;
-@@ -4518,7 +4518,7 @@ lpfc_sli4_driver_resource_setup(struct l
- 		}
+ /**
++ * lpfc_sli_sriov_nr_virtfn_get - Get the number of sr-iov virtual functions
++ * @phba: pointer to lpfc hba data structure.
++ *
++ * This function enables the PCI SR-IOV virtual functions to a physical
++ * function. It invokes the PCI SR-IOV api with the @nr_vfn provided to
++ * enable the number of virtual functions to the physical function. As
++ * not all devices support SR-IOV, the return code from the pci_enable_sriov()
++ * API call does not considered as an error condition for most of the device.
++ **/
++uint16_t
++lpfc_sli_sriov_nr_virtfn_get(struct lpfc_hba *phba)
++{
++	struct pci_dev *pdev = phba->pcidev;
++	uint16_t nr_virtfn;
++	int pos;
++
++	if (!pdev->is_physfn)
++		return 0;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
++	if (pos == 0)
++		return 0;
++
++	pci_read_config_word(pdev, pos + PCI_SRIOV_TOTAL_VF, &nr_virtfn);
++	return nr_virtfn;
++}
++
++/**
+  * lpfc_sli_probe_sriov_nr_virtfn - Enable a number of sr-iov virtual functions
+  * @phba: pointer to lpfc hba data structure.
+  * @nr_vfn: number of virtual functions to be enabled.
+@@ -4051,8 +4079,17 @@ int
+ lpfc_sli_probe_sriov_nr_virtfn(struct lpfc_hba *phba, int nr_vfn)
+ {
+ 	struct pci_dev *pdev = phba->pcidev;
++	uint16_t max_nr_vfn;
+ 	int rc;
+ 
++	max_nr_vfn = lpfc_sli_sriov_nr_virtfn_get(phba);
++	if (nr_vfn > max_nr_vfn) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++				"3057 Requested vfs (%d) greater than "
++				"supported vfs (%d)", nr_vfn, max_nr_vfn);
++		return -EINVAL;
++	}
++
+ 	rc = pci_enable_sriov(pdev, nr_vfn);
+ 	if (rc) {
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+@@ -9487,6 +9524,13 @@ lpfc_io_slot_reset_s4(struct pci_dev *pd
  	}
  
--	return rc;
-+	return 0;
+ 	pci_restore_state(pdev);
++
++	/*
++	 * As the new kernel behavior of pci_restore_state() API call clears
++	 * device saved_state flag, need to save the restored state again.
++	 */
++	pci_save_state(pdev);
++
+ 	if (pdev->is_busmaster)
+ 		pci_set_master(pdev);
  
- out_free_fcp_eq_hdl:
- 	kfree(phba->sli4_hba.fcp_eq_hdl);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2011-07-22 16:51:58.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-07-22 16:54:06.000000000 -0400
+@@ -5839,6 +5839,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
+ 					"Advanced Error Reporting (AER)\n");
+ 			phba->cfg_aer_support = 0;
+ 		}
++		rc = 0;
+ 	}
+ 
+ 	if (!(phba->hba_flag & HBA_FCOE_MODE)) {
 
 
