@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [RFC PATCH 02/10] scsi bsg: add scsi bsg helper lib
-Date: Fri, 22 Jul 2011 05:04:52 -0500
-Message-ID: <1311329100-2982-3-git-send-email-michaelc@cs.wisc.edu>
+Subject: [RFC PATCH 03/10] FC class: convert to scsi bsg lib
+Date: Fri, 22 Jul 2011 05:04:53 -0500
+Message-ID: <1311329100-2982-4-git-send-email-michaelc@cs.wisc.edu>
 References: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15206 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39415 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753779Ab1GVKCR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 06:02:17 -0400
+	id S1753783Ab1GVKCX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2011 06:02:23 -0400
 In-Reply-To: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,536 +16,793 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This moves the FC class bsg code to a scsi lib, so
-all drivers and classes do not have to duplicate common
-bits.
+This patch just converts the FC class to use the bsg
+lib.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/Kconfig    |    6 +
- drivers/scsi/Makefile   |    1 +
- drivers/scsi/scsi_bsg.c |  374 +++++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/Kbuild     |    1 +
- include/scsi/scsi_bsg.h |   83 +++++++++++
- 5 files changed, 465 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/scsi_bsg.c
- create mode 100644 include/scsi/scsi_bsg.h
+ drivers/scsi/scsi_transport_fc.c |  533 ++++++--------------------------------
+ include/scsi/scsi_transport_fc.h |   53 +---
+ 2 files changed, 93 insertions(+), 493 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 4a1f029..327ec7e 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -47,6 +47,11 @@ config SCSI_TGT
- 	  If you want to use SCSI target mode drivers enable this option.
- 	  If you choose M, the module will be called scsi_tgt.
- 
-+config SCSI_BSG
-+	bool
-+	default	n
-+	select BLK_DEV_BSG
-+
- config SCSI_NETLINK
- 	bool
- 	default	n
-@@ -294,6 +299,7 @@ config SCSI_FC_ATTRS
- 	tristate "FiberChannel Transport Attributes"
- 	depends on SCSI
- 	select SCSI_NETLINK
-+	select SCSI_BSG
- 	help
- 	  If you wish to export transport-specific information about
- 	  each attached FiberChannel device to sysfs, say Y.
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 7ad0b8a..0cdb572 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -162,6 +162,7 @@ scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
- 				   scsicam.o scsi_error.o scsi_lib.o
- scsi_mod-$(CONFIG_SCSI_DMA)	+= scsi_lib_dma.o
- scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
-+scsi_mod-$(CONFIG_SCSI_BSG)	+= scsi_bsg.o
- scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
- scsi_mod-$(CONFIG_SYSCTL)	+= scsi_sysctl.o
- scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
-diff --git a/drivers/scsi/scsi_bsg.c b/drivers/scsi/scsi_bsg.c
-new file mode 100644
-index 0000000..89b507e
---- /dev/null
-+++ b/drivers/scsi/scsi_bsg.c
-@@ -0,0 +1,374 @@
-+/*
-+ *  BSG helper library for scsi classes
-+ *
-+ *  Copyright (C) 2008   James Smart, Emulex Corporation
-+ *  Copyright (C) 2010   Red Hat, Inc.  All rights reserved.
-+ *  Copyright (C) 2010   Mike Christie
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ */
-+#include <linux/slab.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 1b21491..ec445aa 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -39,6 +39,7 @@
+ #include <net/netlink.h>
+ #include <scsi/scsi_netlink_fc.h>
+ #include <scsi/scsi_bsg_fc.h>
 +#include <scsi/scsi_bsg.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_transport.h>
+ #include "scsi_priv.h"
+ #include "scsi_transport_fc_internal.h"
+ 
+@@ -49,8 +50,8 @@ static int fc_vport_setup(struct Scsi_Host *shost, int channel,
+ 	struct fc_vport **vport);
+ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
+ static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
+-static void fc_bsg_remove(struct request_queue *);
+-static void fc_bsg_goose_queue(struct fc_rport *);
++static int fc_bsg_job_timed_out(struct scsi_bsg_job *);
++static int fc_bsg_dispatch(struct scsi_bsg_job *);
+ 
+ /*
+  * Module Parameters
+@@ -450,7 +451,7 @@ static int fc_host_remove(struct transport_container *tc, struct device *dev,
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+ 
+-	fc_bsg_remove(fc_host->rqst_q);
++	scsi_bsg_remove(fc_host->rqst_q);
+ 	return 0;
+ }
+ 
+@@ -2175,6 +2176,10 @@ fc_attach_transport(struct fc_function_template *ft)
+ 
+ 	i->t.user_scan = fc_user_scan;
+ 
++	i->t.bsg_job_size = ft->dd_bsg_size;
++	i->t.eh_bsg_job_timed_out = fc_bsg_job_timed_out;
++	i->t.queue_bsg_job = fc_bsg_dispatch;
 +
-+/**
-+ * scsi_destroy_bsg_job - routine to teardown/delete a bsg job
-+ * @job: scsi_bsg_job that is to be torn down
-+ */
-+static void scsi_destroy_bsg_job(struct scsi_bsg_job *job)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&job->job_lock, flags);
-+	if (job->ref_cnt) {
-+		spin_unlock_irqrestore(&job->job_lock, flags);
-+		return;
+ 	/* target-mode drivers' functions */
+ 	i->t.tsk_mgmt_response = fc_tsk_mgmt_response;
+ 	i->t.it_nexus_response = fc_it_nexus_response;
+@@ -2536,7 +2541,7 @@ fc_rport_final_delete(struct work_struct *work)
+ 	if (do_callback)
+ 		i->f->dev_loss_tmo_callbk(rport);
+ 
+-	fc_bsg_remove(rport->rqst_q);
++	scsi_bsg_remove(rport->rqst_q);
+ 
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+@@ -2792,7 +2797,8 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
+ 					spin_unlock_irqrestore(shost->host_lock,
+ 							flags);
+ 
+-				fc_bsg_goose_queue(rport);
++				scsi_bsg_goose_queue(&rport->dev,
++						     rport->rqst_q);
+ 
+ 				return rport;
+ 			}
+@@ -3514,236 +3520,38 @@ fc_vport_sched_delete(struct work_struct *work)
+  * BSG support
+  */
+ 
+-
+-/**
+- * fc_destroy_bsgjob - routine to teardown/delete a fc bsg job
+- * @job:	fc_bsg_job that is to be torn down
+- */
+-static void
+-fc_destroy_bsgjob(struct fc_bsg_job *job)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	if (job->ref_cnt) {
+-		spin_unlock_irqrestore(&job->job_lock, flags);
+-		return;
+-	}
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+-	put_device(job->dev);	/* release reference for the request */
+-
+-	kfree(job->request_payload.sg_list);
+-	kfree(job->reply_payload.sg_list);
+-	kfree(job);
+-}
+-
+-/**
+- * fc_bsg_jobdone - completion routine for bsg requests that the LLD has
+- *                  completed
+- * @job:	fc_bsg_job that is complete
+- */
+-static void
+-fc_bsg_jobdone(struct fc_bsg_job *job)
+-{
+-	struct request *req = job->req;
+-	struct request *rsp = req->next_rq;
+-	int err;
+-
+-	err = job->req->errors = job->reply->result;
+-
+-	if (err < 0)
+-		/* we're only returning the result field in the reply */
+-		job->req->sense_len = sizeof(uint32_t);
+-	else
+-		job->req->sense_len = job->reply_len;
+-
+-	/* we assume all request payload was transferred, residual == 0 */
+-	req->resid_len = 0;
+-
+-	if (rsp) {
+-		WARN_ON(job->reply->reply_payload_rcv_len > rsp->resid_len);
+-
+-		/* set reply (bidi) residual */
+-		rsp->resid_len -= min(job->reply->reply_payload_rcv_len,
+-				      rsp->resid_len);
+-	}
+-	blk_complete_request(req);
+-}
+-
+-/**
+- * fc_bsg_softirq_done - softirq done routine for destroying the bsg requests
+- * @rq:        BSG request that holds the job to be destroyed
+- */
+-static void fc_bsg_softirq_done(struct request *rq)
+-{
+-	struct fc_bsg_job *job = rq->special;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	job->state_flags |= FC_RQST_STATE_DONE;
+-	job->ref_cnt--;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+-	blk_end_request_all(rq, rq->errors);
+-	fc_destroy_bsgjob(job);
+-}
+-
+-/**
+- * fc_bsg_job_timeout - handler for when a bsg request timesout
+- * @req:	request that timed out
+- */
+-static enum blk_eh_timer_return
+-fc_bsg_job_timeout(struct request *req)
++static void fc_bsg_fail_job(struct scsi_bsg_job *job, int ret)
+ {
+-	struct fc_bsg_job *job = (void *) req->special;
+-	struct Scsi_Host *shost = job->shost;
+-	struct fc_internal *i = to_fc_internal(shost->transportt);
+-	unsigned long flags;
+-	int err = 0, done = 0;
+-
+-	if (job->rport && job->rport->port_state == FC_PORTSTATE_BLOCKED)
+-		return BLK_EH_RESET_TIMER;
+-
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	if (job->state_flags & FC_RQST_STATE_DONE)
+-		done = 1;
+-	else
+-		job->ref_cnt++;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+-	if (!done && i->f->bsg_timeout) {
+-		/* call LLDD to abort the i/o as it has timed out */
+-		err = i->f->bsg_timeout(job);
+-		if (err == -EAGAIN) {
+-			job->ref_cnt--;
+-			return BLK_EH_RESET_TIMER;
+-		} else if (err)
+-			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
+-				"abort failed with status %d\n", err);
+-	}
+-
+-	/* the blk_end_sync_io() doesn't check the error */
+-	if (done)
+-		return BLK_EH_NOT_HANDLED;
+-	else
+-		return BLK_EH_HANDLED;
+-}
+-
+-static int
+-fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
+-{
+-	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
+-
+-	BUG_ON(!req->nr_phys_segments);
+-
+-	buf->sg_list = kzalloc(sz, GFP_KERNEL);
+-	if (!buf->sg_list)
+-		return -ENOMEM;
+-	sg_init_table(buf->sg_list, req->nr_phys_segments);
+-	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
+-	buf->payload_len = blk_rq_bytes(req);
+-	return 0;
+-}
+-
+-
+-/**
+- * fc_req_to_bsgjob - Allocate/create the fc_bsg_job structure for the
+- *                   bsg request
+- * @shost:	SCSI Host corresponding to the bsg object
+- * @rport:	(optional) FC Remote Port corresponding to the bsg object
+- * @req:	BSG request that needs a job structure
+- */
+-static int
+-fc_req_to_bsgjob(struct Scsi_Host *shost, struct fc_rport *rport,
+-	struct request *req)
+-{
+-	struct fc_internal *i = to_fc_internal(shost->transportt);
+-	struct request *rsp = req->next_rq;
+-	struct fc_bsg_job *job;
+-	int ret;
+-
+-	BUG_ON(req->special);
+-
+-	job = kzalloc(sizeof(struct fc_bsg_job) + i->f->dd_bsg_size,
+-			GFP_KERNEL);
+-	if (!job)
+-		return -ENOMEM;
+-
+-	/*
+-	 * Note: this is a bit silly.
+-	 * The request gets formatted as a SGIO v4 ioctl request, which
+-	 * then gets reformatted as a blk request, which then gets
+-	 * reformatted as a fc bsg request. And on completion, we have
+-	 * to wrap return results such that SGIO v4 thinks it was a scsi
+-	 * status.  I hope this was all worth it.
+-	 */
+-
+-	req->special = job;
+-	job->shost = shost;
+-	job->rport = rport;
+-	job->req = req;
+-	if (i->f->dd_bsg_size)
+-		job->dd_data = (void *)&job[1];
+-	spin_lock_init(&job->job_lock);
+-	job->request = (struct fc_bsg_request *)req->cmd;
+-	job->request_len = req->cmd_len;
+-	job->reply = req->sense;
+-	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
+-						 * allocated */
+-	if (req->bio) {
+-		ret = fc_bsg_map_buffer(&job->request_payload, req);
+-		if (ret)
+-			goto failjob_rls_job;
+-	}
+-	if (rsp && rsp->bio) {
+-		ret = fc_bsg_map_buffer(&job->reply_payload, rsp);
+-		if (ret)
+-			goto failjob_rls_rqst_payload;
+-	}
+-	job->job_done = fc_bsg_jobdone;
+-	if (rport)
+-		job->dev = &rport->dev;
+-	else
+-		job->dev = &shost->shost_gendev;
+-	get_device(job->dev);		/* take a reference for the request */
+-
+-	job->ref_cnt = 1;
+-
+-	return 0;
+-
+-
+-failjob_rls_rqst_payload:
+-	kfree(job->request_payload.sg_list);
+-failjob_rls_job:
+-	kfree(job);
+-	return -ENOMEM;
++	struct fc_bsg_reply *bsg_reply = job->reply;
++	BUG_ON(job->reply_len < sizeof(uint32_t));
++	bsg_reply->reply_payload_rcv_len = 0;
++	/* return the errno failure code as the only status */
++	bsg_reply->result = ret;
++	job->reply_len = sizeof(uint32_t);
++	scsi_bsg_job_done(job, ret, 0);
+ }
+ 
+-
+-enum fc_dispatch_result {
+-	FC_DISPATCH_BREAK,	/* on return, q is locked, break from q loop */
+-	FC_DISPATCH_LOCKED,	/* on return, q is locked, continue on */
+-	FC_DISPATCH_UNLOCKED,	/* on return, q is unlocked, continue on */
+-};
+-
+-
+ /**
+  * fc_bsg_host_dispatch - process fc host bsg requests and dispatch to LLDD
+- * @q:		fc host request queue
+- * @shost:	scsi host rport attached to
++ * @shost:	scsi host
+  * @job:	bsg job to be processed
+  */
+-static enum fc_dispatch_result
+-fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+-			 struct fc_bsg_job *job)
++static int
++fc_bsg_host_dispatch(struct Scsi_Host *shost, struct scsi_bsg_job *job)
+ {
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
++	struct fc_bsg_request *bsg_req = job->request;
+ 	int ret;
+ 
++	/* check if we have the msgcode value at least */
++	if (job->request_len < sizeof(uint32_t)) {
++		ret = -ENOMSG;
++		goto fail_host_msg;
 +	}
-+	spin_unlock_irqrestore(&job->job_lock, flags);
 +
-+	put_device(job->dev);	/* release reference for the request */
-+
-+	kfree(job->request_payload.sg_list);
-+	kfree(job->reply_payload.sg_list);
-+	kfree(job);
-+}
-+
-+/**
-+ * scsi_bsg_job_done - completion routine for bsg requests
-+ * @job: scsi_bsg_job that is complete
-+ * @result: job reply result
-+ * @reply_payload_rcv_len: length of payload recvd
-+ */
-+void scsi_bsg_job_done(struct scsi_bsg_job *job, int result,
-+		       unsigned int reply_payload_rcv_len)
-+{
-+	struct request *req = job->req;
-+	struct request *rsp = req->next_rq;
-+	int err;
-+
-+	err = job->req->errors = result;
-+	if (err < 0)
-+		/* we're only returning the result field in the reply */
-+		job->req->sense_len = sizeof(u32);
-+	else
-+		job->req->sense_len = job->reply_len;
-+	/* we assume all request payload was transferred, residual == 0 */
-+	req->resid_len = 0;
-+
-+	if (rsp) {
-+		WARN_ON(reply_payload_rcv_len > rsp->resid_len);
-+
-+		/* set reply (bidi) residual */
-+		rsp->resid_len -= min(reply_payload_rcv_len, rsp->resid_len);
+ 	/* Validate the host command */
+-	switch (job->request->msgcode) {
++	switch (bsg_req->msgcode) {
+ 	case FC_BSG_HST_ADD_RPORT:
+ 		cmdlen += sizeof(struct fc_bsg_host_add_rport);
+ 		break;
+@@ -3775,8 +3583,8 @@ fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+ 	case FC_BSG_HST_VENDOR:
+ 		cmdlen += sizeof(struct fc_bsg_host_vendor);
+ 		if ((shost->hostt->vendor_id == 0L) ||
+-		    (job->request->rqst_data.h_vendor.vendor_id !=
+-			shost->hostt->vendor_id)) {
++		    (bsg_req->rqst_data.h_vendor.vendor_id !=
++		     shost->hostt->vendor_id)) {
+ 			ret = -ESRCH;
+ 			goto fail_host_msg;
+ 		}
+@@ -3795,54 +3603,34 @@ fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+ 
+ 	ret = i->f->bsg_request(job);
+ 	if (!ret)
+-		return FC_DISPATCH_UNLOCKED;
++		return 0;
+ 
+ fail_host_msg:
+-	/* return the errno failure code as the only status */
+-	BUG_ON(job->reply_len < sizeof(uint32_t));
+-	job->reply->reply_payload_rcv_len = 0;
+-	job->reply->result = ret;
+-	job->reply_len = sizeof(uint32_t);
+-	fc_bsg_jobdone(job);
+-	return FC_DISPATCH_UNLOCKED;
+-}
+-
+-
+-/*
+- * fc_bsg_goose_queue - restart rport queue in case it was stopped
+- * @rport:	rport to be restarted
+- */
+-static void
+-fc_bsg_goose_queue(struct fc_rport *rport)
+-{
+-	if (!rport->rqst_q)
+-		return;
+-
+-	/*
+-	 * This get/put dance makes no sense
+-	 */
+-	get_device(&rport->dev);
+-	blk_run_queue_async(rport->rqst_q);
+-	put_device(&rport->dev);
++	fc_bsg_fail_job(job, ret);
++	return 0;
+ }
+ 
+ /**
+  * fc_bsg_rport_dispatch - process rport bsg requests and dispatch to LLDD
+- * @q:		rport request queue
+  * @shost:	scsi host rport attached to
+- * @rport:	rport request destined to
+  * @job:	bsg job to be processed
+  */
+-static enum fc_dispatch_result
+-fc_bsg_rport_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+-			 struct fc_rport *rport, struct fc_bsg_job *job)
++static int
++fc_bsg_rport_dispatch(struct Scsi_Host *shost, struct scsi_bsg_job *job)
+ {
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
++	struct fc_bsg_request *bsg_req = job->request;
+ 	int ret;
+ 
++	/* check if we have the msgcode value at least */
++	if (job->request_len < sizeof(uint32_t)) {
++		ret = -ENOMSG;
++		goto fail_rport_msg;
 +	}
-+	blk_complete_request(req);
-+}
-+EXPORT_SYMBOL_GPL(scsi_bsg_job_done);
 +
-+/**
-+ * scsi_bsg_softirq_done - softirq done routine for destroying the bsg requests
-+ * @rq: BSG request that holds the job to be destroyed
-+ */
-+static void scsi_bsg_softirq_done(struct request *rq)
-+{
-+	struct scsi_bsg_job *job = rq->special;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&job->job_lock, flags);
-+	job->state_flags |= SCSI_RQST_STATE_DONE;
-+	job->ref_cnt--;
-+	spin_unlock_irqrestore(&job->job_lock, flags);
-+
-+	blk_end_request_all(rq, rq->errors);
-+	scsi_destroy_bsg_job(job);
-+}
-+
-+/**
-+ * scsi_bsg_job_timeout - handler for when a bsg request timesout
-+ * @req: request that timed out
-+ */
-+static enum blk_eh_timer_return scsi_bsg_job_timeout(struct request *req)
-+{
-+	struct scsi_bsg_job *job = req->special;
+ 	/* Validate the rport command */
+-	switch (job->request->msgcode) {
++	switch (bsg_req->msgcode) {
+ 	case FC_BSG_RPT_ELS:
+ 		cmdlen += sizeof(struct fc_bsg_rport_els);
+ 		goto check_bidi;
+@@ -3870,124 +3658,59 @@ check_bidi:
+ 
+ 	ret = i->f->bsg_request(job);
+ 	if (!ret)
+-		return FC_DISPATCH_UNLOCKED;
++		return 0;
+ 
+ fail_rport_msg:
+-	/* return the errno failure code as the only status */
+-	BUG_ON(job->reply_len < sizeof(uint32_t));
+-	job->reply->reply_payload_rcv_len = 0;
+-	job->reply->result = ret;
+-	job->reply_len = sizeof(uint32_t);
+-	fc_bsg_jobdone(job);
+-	return FC_DISPATCH_UNLOCKED;
++	fc_bsg_fail_job(job, ret);
++	return 0;
+ }
+ 
+-
+ /**
+- * fc_bsg_request_handler - generic handler for bsg requests
+- * @q:		request queue to manage
+- * @shost:	Scsi_Host related to the bsg object
+- * @rport:	FC remote port related to the bsg object (optional)
+- * @dev:	device structure for bsg object
++ * fc_bsg_dispatch - process fc bsg requests and dispatch to LLDD
++ * @job:	bsg job to be processed
+  */
+-static void
+-fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+-		       struct fc_rport *rport, struct device *dev)
++static int fc_bsg_dispatch(struct scsi_bsg_job *job)
+ {
+-	struct request *req;
+-	struct fc_bsg_job *job;
+-	enum fc_dispatch_result ret;
+-
+-	if (!get_device(dev))
+-		return;
+-
+-	while (1) {
+-		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED) &&
+-		    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
+-			break;
+-
+-		req = blk_fetch_request(q);
+-		if (!req)
+-			break;
+-
+-		if (rport && (rport->port_state != FC_PORTSTATE_ONLINE)) {
+-			req->errors = -ENXIO;
+-			spin_unlock_irq(q->queue_lock);
+-			blk_end_request_all(req, -ENXIO);
+-			spin_lock_irq(q->queue_lock);
+-			continue;
+-		}
+-
+-		spin_unlock_irq(q->queue_lock);
+-
+-		ret = fc_req_to_bsgjob(shost, rport, req);
+-		if (ret) {
+-			req->errors = ret;
+-			blk_end_request_all(req, ret);
+-			spin_lock_irq(q->queue_lock);
+-			continue;
+-		}
+-
+-		job = req->special;
+-
+-		/* check if we have the msgcode value at least */
+-		if (job->request_len < sizeof(uint32_t)) {
+-			BUG_ON(job->reply_len < sizeof(uint32_t));
+-			job->reply->reply_payload_rcv_len = 0;
+-			job->reply->result = -ENOMSG;
+-			job->reply_len = sizeof(uint32_t);
+-			fc_bsg_jobdone(job);
+-			spin_lock_irq(q->queue_lock);
+-			continue;
+-		}
+-
+-		/* the dispatch routines will unlock the queue_lock */
+-		if (rport)
+-			ret = fc_bsg_rport_dispatch(q, shost, rport, job);
+-		else
+-			ret = fc_bsg_host_dispatch(q, shost, job);
+-
+-		/* did dispatcher hit state that can't process any more */
+-		if (ret == FC_DISPATCH_BREAK)
+-			break;
+-
+-		/* did dispatcher had released the lock */
+-		if (ret == FC_DISPATCH_UNLOCKED)
+-			spin_lock_irq(q->queue_lock);
+-	}
 +	struct Scsi_Host *shost = job->shost;
-+	unsigned long flags;
-+	int err = 0, done = 0;
-+
-+	spin_lock_irqsave(&job->job_lock, flags);
-+	if (job->state_flags & SCSI_RQST_STATE_DONE)
-+		done = 1;
+ 
+-	spin_unlock_irq(q->queue_lock);
+-	put_device(dev);
+-	spin_lock_irq(q->queue_lock);
++	if (scsi_is_fc_rport(job->dev))
++		return fc_bsg_rport_dispatch(shost, job);
 +	else
-+		job->ref_cnt++;
-+	spin_unlock_irqrestore(&job->job_lock, flags);
++		return fc_bsg_host_dispatch(shost, job);
+ }
+ 
+-
+ /**
+- * fc_bsg_host_handler - handler for bsg requests for a fc host
+- * @q:		fc host request queue
++ * fc_bsg_job_timed_out - handler for when a bsg request timesout
++ * @job:       bsg job that timed out
+  */
+-static void
+-fc_bsg_host_handler(struct request_queue *q)
++static int fc_bsg_job_timed_out(struct scsi_bsg_job *job)
 +
-+	if (!done && shost->transportt->eh_bsg_job_timed_out) {
-+		/* call LLDD to abort the i/o as it has timed out */
-+		err = shost->transportt->eh_bsg_job_timed_out(job);
-+		if (err == -EAGAIN) {
-+			job->ref_cnt--;
-+			return BLK_EH_RESET_TIMER;
-+		} else if (err)
-+			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
-+				"abort failed with status %d\n", err);
-+	}
+ {
+-	struct Scsi_Host *shost = q->queuedata;
++	struct Scsi_Host *shost = job->shost;
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++	struct fc_rport *rport = fc_bsg_get_rport(job);
++	int err = 0;
+ 
+-	fc_bsg_request_handler(q, shost, NULL, &shost->shost_gendev);
++	if (rport && rport->port_state == FC_PORTSTATE_BLOCKED)
++		return -EAGAIN;
++	if (i->f->bsg_timeout)
++		err = i->f->bsg_timeout(job);
++	return err;
+ }
+ 
+-
+-/**
+- * fc_bsg_rport_handler - handler for bsg requests for a fc rport
+- * @q:		rport request queue
+- */
+-static void
+-fc_bsg_rport_handler(struct request_queue *q)
++static int fc_bsg_rport_prep(struct request_queue *q, struct request *req)
+ {
+-	struct fc_rport *rport = q->queuedata;
+-	struct Scsi_Host *shost = rport_to_shost(rport);
++	struct fc_rport *rport = dev_to_rport(q->queuedata);
+ 
+-	fc_bsg_request_handler(q, shost, rport, &rport->dev);
+-}
++	if (rport->port_state == FC_PORTSTATE_BLOCKED &&
++	    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
++		return BLKPREP_DEFER;
+ 
++	if (rport->port_state != FC_PORTSTATE_ONLINE)
++		return BLKPREP_KILL;
 +
-+	/* the blk_end_sync_io() doesn't check the error */
-+	if (done)
-+		return BLK_EH_NOT_HANDLED;
-+	else
-+		return BLK_EH_HANDLED;
++	return BLKPREP_OK;
 +}
-+
-+static int scsi_bsg_map_buffer(struct scsi_bsg_buffer *buf, struct request *req)
+ 
+ /**
+  * fc_bsg_hostadd - Create and add the bsg hooks so we can receive requests
+@@ -4000,7 +3723,6 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 	struct device *dev = &shost->shost_gendev;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct request_queue *q;
+-	int err;
+ 	char bsg_name[20];
+ 
+ 	fc_host->rqst_q = NULL;
+@@ -4008,10 +3730,9 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 	if (!i->f->bsg_request)
+ 		return -ENOTSUPP;
+ 
+-	snprintf(bsg_name, sizeof(bsg_name),
+-		 "fc_host%d", shost->host_no);
++	snprintf(bsg_name, sizeof(bsg_name), "fc_host%d", shost->host_no);
+ 
+-	q = __scsi_alloc_queue(shost, fc_bsg_host_handler);
++	q = scsi_bsg_add(dev, bsg_name);
+ 	if (!q) {
+ 		printk(KERN_ERR "fc_host%d: bsg interface failed to "
+ 				"initialize - no request queue\n",
+@@ -4019,21 +3740,6 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 		return -ENOMEM;
+ 	}
+ 
+-	q->queuedata = shost;
+-	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
+-	blk_queue_softirq_done(q, fc_bsg_softirq_done);
+-	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+-	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+-
+-	err = bsg_register_queue(q, dev, bsg_name, NULL);
+-	if (err) {
+-		printk(KERN_ERR "fc_host%d: bsg interface failed to "
+-				"initialize - register queue\n",
+-				shost->host_no);
+-		blk_cleanup_queue(q);
+-		return err;
+-	}
+-
+ 	fc_host->rqst_q = q;
+ 	return 0;
+ }
+@@ -4050,14 +3756,13 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
+ 	struct device *dev = &rport->dev;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct request_queue *q;
+-	int err;
+ 
+ 	rport->rqst_q = NULL;
+ 
+ 	if (!i->f->bsg_request)
+ 		return -ENOTSUPP;
+ 
+-	q = __scsi_alloc_queue(shost, fc_bsg_rport_handler);
++	q = scsi_bsg_add(dev, NULL);
+ 	if (!q) {
+ 		printk(KERN_ERR "%s: bsg interface failed to "
+ 				"initialize - no request queue\n",
+@@ -4065,83 +3770,11 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
+ 		return -ENOMEM;
+ 	}
+ 
+-	q->queuedata = rport;
+-	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
+-	blk_queue_softirq_done(q, fc_bsg_softirq_done);
+-	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+-	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+-
+-	err = bsg_register_queue(q, dev, NULL, NULL);
+-	if (err) {
+-		printk(KERN_ERR "%s: bsg interface failed to "
+-				"initialize - register queue\n",
+-				 dev->kobj.name);
+-		blk_cleanup_queue(q);
+-		return err;
+-	}
+-
+ 	rport->rqst_q = q;
++	blk_queue_prep_rq(q, fc_bsg_rport_prep);
+ 	return 0;
+ }
+ 
+-
+-/**
+- * fc_bsg_remove - Deletes the bsg hooks on fchosts/rports
+- * @q:	the request_queue that is to be torn down.
+- *
+- * Notes:
+- *   Before unregistering the queue empty any requests that are blocked
+- *
+- *
+- */
+-static void
+-fc_bsg_remove(struct request_queue *q)
+-{
+-	struct request *req; /* block request */
+-	int counts; /* totals for request_list count and starved */
+-
+-	if (q) {
+-		/* Stop taking in new requests */
+-		spin_lock_irq(q->queue_lock);
+-		blk_stop_queue(q);
+-
+-		/* drain all requests in the queue */
+-		while (1) {
+-			/* need the lock to fetch a request
+-			 * this may fetch the same reqeust as the previous pass
+-			 */
+-			req = blk_fetch_request(q);
+-			/* save requests in use and starved */
+-			counts = q->rq.count[0] + q->rq.count[1] +
+-				q->rq.starved[0] + q->rq.starved[1];
+-			spin_unlock_irq(q->queue_lock);
+-			/* any requests still outstanding? */
+-			if (counts == 0)
+-				break;
+-
+-			/* This may be the same req as the previous iteration,
+-			 * always send the blk_end_request_all after a prefetch.
+-			 * It is not okay to not end the request because the
+-			 * prefetch started the request.
+-			 */
+-			if (req) {
+-				/* return -ENXIO to indicate that this queue is
+-				 * going away
+-				 */
+-				req->errors = -ENXIO;
+-				blk_end_request_all(req, -ENXIO);
+-			}
+-
+-			msleep(200); /* allow bsg to possibly finish */
+-			spin_lock_irq(q->queue_lock);
+-		}
+-
+-		bsg_unregister_queue(q);
+-		blk_cleanup_queue(q);
+-	}
+-}
+-
+-
+ /* Original Author:  Martin Hicks */
+ MODULE_AUTHOR("James Smart");
+ MODULE_DESCRIPTION("FC Transport Attributes");
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 2a65167..0686c22 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -30,6 +30,8 @@
+ #include <linux/sched.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_netlink.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_bsg.h>
+ 
+ struct scsi_transport_template;
+ 
+@@ -584,47 +586,12 @@ struct fc_host_attrs {
+ #define fc_host_dev_loss_tmo(x) \
+ 	(((struct fc_host_attrs *)(x)->shost_data)->dev_loss_tmo)
+ 
+-
+-struct fc_bsg_buffer {
+-	unsigned int payload_len;
+-	int sg_cnt;
+-	struct scatterlist *sg_list;
+-};
+-
+-/* Values for fc_bsg_job->state_flags (bitflags) */
+-#define FC_RQST_STATE_INPROGRESS	0
+-#define FC_RQST_STATE_DONE		1
+-
+-struct fc_bsg_job {
+-	struct Scsi_Host *shost;
+-	struct fc_rport *rport;
+-	struct device *dev;
+-	struct request *req;
+-	spinlock_t job_lock;
+-	unsigned int state_flags;
+-	unsigned int ref_cnt;
+-	void (*job_done)(struct fc_bsg_job *);
+-
+-	struct fc_bsg_request *request;
+-	struct fc_bsg_reply *reply;
+-	unsigned int request_len;
+-	unsigned int reply_len;
+-	/*
+-	 * On entry : reply_len indicates the buffer size allocated for
+-	 * the reply.
+-	 *
+-	 * Upon completion : the message handler must set reply_len
+-	 *  to indicates the size of the reply to be returned to the
+-	 *  caller.
+-	 */
+-
+-	/* DMA payloads for the request/response */
+-	struct fc_bsg_buffer request_payload;
+-	struct fc_bsg_buffer reply_payload;
+-
+-	void *dd_data;			/* Used for driver-specific storage */
+-};
+-
++static inline struct fc_rport *fc_bsg_get_rport(struct scsi_bsg_job *job)
 +{
-+	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
-+
-+	BUG_ON(!req->nr_phys_segments);
-+
-+	buf->sg_list = kzalloc(sz, GFP_KERNEL);
-+	if (!buf->sg_list)
-+		return -ENOMEM;
-+	sg_init_table(buf->sg_list, req->nr_phys_segments);
-+	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
-+	buf->payload_len = blk_rq_bytes(req);
-+	return 0;
-+}
-+
-+/**
-+ * scsi_bsg_create_job - create the scsi_bsg_job structure for the bsg request
-+ * @shost: SCSI Host corresponding to the bsg object
-+ * @dev: device that is being sent the bsg request
-+ * @req: BSG request that needs a job structure
-+ */
-+static int scsi_bsg_create_job(struct Scsi_Host *shost, struct device *dev,
-+			       struct request *req)
-+{
-+	struct request *rsp = req->next_rq;
-+	struct scsi_bsg_job *job;
-+	int ret;
-+
-+	BUG_ON(req->special);
-+
-+	job = kzalloc(sizeof(struct scsi_bsg_job) +
-+		      shost->transportt->bsg_job_size, GFP_KERNEL);
-+	if (!job)
-+		return -ENOMEM;
-+
-+	/*
-+	 * Note: this is a bit silly.
-+	 * The request gets formatted as a SGIO v4 ioctl request, which
-+	 * then gets reformatted as a blk request, which then gets
-+	 * reformatted as a scsi bsg request. And on completion, we have
-+	 * to wrap return results such that SGIO v4 thinks it was a scsi
-+	 * status.  I hope this was all worth it.
-+	 */
-+
-+	req->special = job;
-+	job->shost = shost;
-+	job->req = req;
-+	if (shost->transportt->bsg_job_size)
-+		job->dd_data = (void *)&job[1];
-+	spin_lock_init(&job->job_lock);
-+	job->request = req->cmd;
-+	job->request_len = req->cmd_len;
-+	job->reply = req->sense;
-+	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
-+						 * allocated */
-+	if (req->bio) {
-+		ret = scsi_bsg_map_buffer(&job->request_payload, req);
-+		if (ret)
-+			goto failjob_rls_job;
-+	}
-+	if (rsp && rsp->bio) {
-+		ret = scsi_bsg_map_buffer(&job->reply_payload, rsp);
-+		if (ret)
-+			goto failjob_rls_rqst_payload;
-+	}
-+	job->job_done = scsi_bsg_job_done;
-+	job->dev = dev;
-+	/* take a reference for the request */
-+	get_device(job->dev);
-+	job->ref_cnt = 1;
-+	return 0;
-+
-+failjob_rls_rqst_payload:
-+	kfree(job->request_payload.sg_list);
-+failjob_rls_job:
-+	kfree(job);
-+	return -ENOMEM;
-+}
-+
-+/*
-+ * scsi_bsg_goose_queue - restart queue in case it was stopped
-+ * @dev: device that owns queue
-+ * @q: request q to be restarted
-+ */
-+void scsi_bsg_goose_queue(struct device *dev, struct request_queue *q)
-+{
-+	if (!q)
-+		return;
-+
-+	/*
-+	 * This get/put dance makes no sense
-+	 */
-+
-+	get_device(dev);
-+	blk_run_queue_async(q);
-+	put_device(dev);
-+}
-+EXPORT_SYMBOL_GPL(scsi_bsg_goose_queue);
-+
-+/**
-+ * scsi_bsg_request_fn - generic handler for bsg requests
-+ * @q: request queue to manage
-+ *
-+ * On error the create_bsg_job function should return a -Exyz error value
-+ * that will be set to the req->errors.
-+ */
-+static void scsi_bsg_request_fn(struct request_queue *q)
-+{
-+	struct device *dev = q->queuedata;
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct request *req;
-+	struct scsi_bsg_job *job;
-+	int ret;
-+
-+	if (!shost)
-+		return;
-+
-+	if (!get_device(dev))
-+		return;
-+
-+	while (1) {
-+		req = blk_fetch_request(q);
-+		if (!req)
-+			break;
-+		spin_unlock_irq(q->queue_lock);
-+
-+		ret = scsi_bsg_create_job(shost, dev, req);
-+		if (ret) {
-+			req->errors = ret;
-+			blk_end_request_all(req, ret);
-+			spin_lock_irq(q->queue_lock);
-+			continue;
-+		}
-+
-+		job = req->special;
-+		/* the dispatch routines will unlock the queue_lock */
-+		ret = shost->transportt->queue_bsg_job(job);
-+		spin_lock_irq(q->queue_lock);
-+		if (ret)
-+			break;
-+	}
-+
-+	spin_unlock_irq(q->queue_lock);
-+	put_device(dev);
-+	spin_lock_irq(q->queue_lock);
-+}
-+
-+/**
-+ * scsi_bsg_add - Create and add the bsg hooks so we can receive requests
-+ * @dev: device to attach bsg device to
-+ */
-+struct request_queue *scsi_bsg_add(struct device *dev, char *name)
-+{
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct request_queue *q;
-+
-+	if (!shost)
++	if (&job->shost->shost_gendev == job->dev)
 +		return NULL;
-+
-+	q = __scsi_alloc_queue(shost, scsi_bsg_request_fn);
-+	if (!q) {
-+		printk(KERN_ERR "%s: bsg interface failed to "
-+				"initialize - no request queue\n",
-+				 dev->kobj.name);
-+		return NULL;
-+	}
-+	q->queuedata = dev;
-+
-+	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
-+	blk_queue_softirq_done(q, scsi_bsg_softirq_done);
-+	blk_queue_rq_timed_out(q, scsi_bsg_job_timeout);
-+	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
-+
-+	if (bsg_register_queue(q, dev, name, NULL)) {
-+		printk(KERN_ERR "%s: bsg interface failed to "
-+		       "initialize - register queue\n", dev->kobj.name);
-+		blk_cleanup_queue(q);
-+		return NULL;
-+	}
-+
-+	return q;
++	return dev_to_rport(job->dev);
 +}
-+EXPORT_SYMBOL_GPL(scsi_bsg_add);
-+
-+/**
-+ * scsi_bsg_remove - Deletes the bsg dev from the q
-+ * @q:	the request_queue that is to be torn down.
-+ *
-+ * Notes:
-+ *   Before unregistering the queue empty any requests that are blocked
-+ */
-+void scsi_bsg_remove(struct request_queue *q)
-+{
-+	struct request *req; /* block request */
-+	int counts; /* totals for request_list count and starved */
-+
-+	if (q) {
-+		/* Stop taking in new requests */
-+		spin_lock_irq(q->queue_lock);
-+		blk_stop_queue(q);
-+
-+		/* drain all requests in the queue */
-+		while (1) {
-+			/* need the lock to fetch a request
-+			 * this may fetch the same reqeust as the previous pass
-+			 */
-+			req = blk_fetch_request(q);
-+			/* save requests in use and starved */
-+			counts = q->rq.count[0] + q->rq.count[1] +
-+				 q->rq.starved[0] + q->rq.starved[1];
-+			spin_unlock_irq(q->queue_lock);
-+			/* any requests still outstanding? */
-+			if (counts == 0)
-+				break;
-+
-+			/* This may be the same req as the previous iteration,
-+			 * always send the blk_end_request_all after a prefetch.
-+			 * It is not okay to not end the request because the
-+			 * prefetch started the request.
-+			 */
-+			if (req) {
-+				/* return -ENXIO to indicate that this queue is
-+				 * going away
-+				 */
-+				req->errors = -ENXIO;
-+				blk_end_request_all(req, -ENXIO);
-+			}
-+
-+			msleep(200); /* allow bsg to possibly finish */
-+			spin_lock_irq(q->queue_lock);
-+		}
-+		bsg_unregister_queue(q);
-+		blk_cleanup_queue(q);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(scsi_bsg_remove);
-diff --git a/include/scsi/Kbuild b/include/scsi/Kbuild
-index f2b9491..df8f159 100644
---- a/include/scsi/Kbuild
-+++ b/include/scsi/Kbuild
-@@ -1,4 +1,5 @@
- header-y += scsi_netlink.h
- header-y += scsi_netlink_fc.h
- header-y += scsi_bsg_fc.h
-+header-y += scsi_bsg_iscsi.h
- header-y += fc/
-diff --git a/include/scsi/scsi_bsg.h b/include/scsi/scsi_bsg.h
-new file mode 100644
-index 0000000..3e15ad0
---- /dev/null
-+++ b/include/scsi/scsi_bsg.h
-@@ -0,0 +1,83 @@
-+/*
-+ *  BSG helper library for scsi classes
-+ *
-+ *  Copyright (C) 2008   James Smart, Emulex Corporation
-+ *  Copyright (C) 2010   Red Hat, Inc.  All rights reserved.
-+ *  Copyright (C) 2010   Mike Christie
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ */
-+#ifndef _SCSI_BSG_
-+#define _SCSI_BSG_
-+
-+#include <linux/blkdev.h>
-+struct Scsi_Host;
-+struct request;
-+struct device;
-+struct scatterlist;
-+struct request_queue;
-+
-+struct scsi_bsg_buffer {
-+	unsigned int payload_len;
-+	int sg_cnt;
-+	struct scatterlist *sg_list;
-+};
-+
-+/* Values for scsi_bsg_job->state_flags (bitflags) */
-+#define SCSI_RQST_STATE_INPROGRESS	0
-+#define SCSI_RQST_STATE_DONE		1
-+
-+struct scsi_bsg_job {
-+	struct Scsi_Host *shost;
-+
-+	struct device *dev;
-+	struct request *req;
-+	spinlock_t job_lock;
-+	unsigned int state_flags;
-+	unsigned int ref_cnt;
-+
-+	void (*job_done)(struct scsi_bsg_job *job, int result,
-+			 unsigned int reply_payload_rcv_len);
-+
-+	/* Transport/driver specific request/reply structs */
-+	void *request;
-+	void *reply;
-+
-+	unsigned int request_len;
-+	unsigned int reply_len;
-+	/*
-+	 * On entry : reply_len indicates the buffer size allocated for
-+	 * the reply.
-+	 *
-+	 * Upon completion : the message handler must set reply_len
-+	 *  to indicates the size of the reply to be returned to the
-+	 *  caller.
-+	 */
-+
-+	/* DMA payloads for the request/response */
-+	struct scsi_bsg_buffer request_payload;
-+	struct scsi_bsg_buffer reply_payload;
-+
-+	void *dd_data;		/* Used for driver-specific storage */
-+};
-+
-+void scsi_bsg_job_done(struct scsi_bsg_job *job, int result,
-+		       unsigned int reply_payload_rcv_len);
-+struct request_queue *scsi_bsg_add(struct device *dev, char *name);
-+void scsi_bsg_remove(struct request_queue *q);
-+void scsi_bsg_goose_queue(struct device *dev, struct request_queue *q);
-+
-+#endif
+ 
+ /* The functions by which the transport class and the driver communicate */
+ struct fc_function_template {
+@@ -662,8 +629,8 @@ struct fc_function_template {
+ 	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+ 
+ 	/* bsg support */
+-	int	(*bsg_request)(struct fc_bsg_job *);
+-	int	(*bsg_timeout)(struct fc_bsg_job *);
++	int	(*bsg_request)(struct scsi_bsg_job *);
++	int	(*bsg_timeout)(struct scsi_bsg_job *);
+ 
+ 	/* allocation lengths for host-specific data */
+ 	u32	 			dd_fcrport_size;
 -- 
 1.7.2.3
 
