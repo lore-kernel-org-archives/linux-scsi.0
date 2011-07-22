@@ -1,84 +1,84 @@
 From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: [PATCH 2/8] hwmon: convert idr to ida and use ida_simple interface.
-Date: Fri, 22 Jul 2011 17:41:20 +0100
-Message-ID: <1311352886-4047-12-git-send-email-jic23@cam.ac.uk>
+Subject: Re: [PATCH 0/8] RFC: Introduce ida_simple interfaces and use them.
+Date: Fri, 22 Jul 2011 17:48:38 +0100
+Message-ID: <4E29A9E6.3080308@cam.ac.uk>
 References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: lm-sensors@lm-sensors.org, rtc-linux@googlegroups.com, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, jkosina@suse.cz, naota@elisp.net, rusty@rustcorp.com.au, paulmck@linux.vnet.ibm.com, namhyung@gmail.com, randy.dunlap@oracle.com, tj@kernel.org, cabarnes@indesign-llc.com, akpm@linux-foundation.org, airlied@redhat.com, thellstrom@vmware.com, johnpol@2ka.mipt.ru, JBottomley@parallels.com, bhalevy@panasas.com, bharrosh@panasas.com, a.zummo@towertech.it, guenter.roeck@ericsson.com, khali@linux-fr.org, airlied@linux.ie, Jonathan Cameron <jic23@cam.ac.uk>
+Cc: linux-kernel@vger.kernel.org, lm-sensors@lm-sensors.org, rtc-linux@googlegroups.com, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, jkosina@suse.cz, naota@elisp.net, rusty@rustcorp.com.au, paulmck@linux.vnet.ibm.com, namhyung@gmail.com, randy.dunlap@oracle.com, tj@kernel.org, cabarnes@indesign-llc.com, akpm@linux-foundation.org, airlied@redhat.com, thellstrom@vmware.com, johnpol@2ka.mipt.ru, JBottomley@parallels.com, bhalevy@panasas.com, bharrosh@panasas.com, a.zummo@towertech.it, guenter.roeck@ericsson.com, khali@linux-fr.org, airlied@linux.ie
 List-Id: linux-scsi@vger.kernel.org
 
-hwmon was using an idr with a NULL pointer, so convert to an
-ida which then allows use of Rusty's ida_simple_get.
+Gah,
 
-Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
----
- drivers/hwmon/hwmon.c |   32 ++++++++------------------------
- 1 files changed, 8 insertions(+), 24 deletions(-)
+Sorry all, I have no idea why this double sent.
 
-diff --git a/drivers/hwmon/hwmon.c b/drivers/hwmon/hwmon.c
-index a61e781..6460487 100644
---- a/drivers/hwmon/hwmon.c
-+++ b/drivers/hwmon/hwmon.c
-@@ -27,8 +27,7 @@
- 
- static struct class *hwmon_class;
- 
--static DEFINE_IDR(hwmon_idr);
--static DEFINE_SPINLOCK(idr_lock);
-+static DEFINE_IDA(hwmon_ida);
- 
- /**
-  * hwmon_device_register - register w/ hwmon
-@@ -42,30 +41,17 @@ static DEFINE_SPINLOCK(idr_lock);
- struct device *hwmon_device_register(struct device *dev)
- {
- 	struct device *hwdev;
--	int id, err;
--
--again:
--	if (unlikely(idr_pre_get(&hwmon_idr, GFP_KERNEL) == 0))
--		return ERR_PTR(-ENOMEM);
--
--	spin_lock(&idr_lock);
--	err = idr_get_new(&hwmon_idr, NULL, &id);
--	spin_unlock(&idr_lock);
-+	int id;
- 
--	if (unlikely(err == -EAGAIN))
--		goto again;
--	else if (unlikely(err))
--		return ERR_PTR(err);
-+	id = ida_simple_get(&hwmon_ida, 0, 0, GFP_KERNEL);
-+	if (id < 0)
-+		return ERR_PTR(id);
- 
--	id = id & MAX_ID_MASK;
- 	hwdev = device_create(hwmon_class, dev, MKDEV(0, 0), NULL,
- 			      HWMON_ID_FORMAT, id);
- 
--	if (IS_ERR(hwdev)) {
--		spin_lock(&idr_lock);
--		idr_remove(&hwmon_idr, id);
--		spin_unlock(&idr_lock);
--	}
-+	if (IS_ERR(hwdev))
-+		ida_simple_remove(&hwmon_ida, id);
- 
- 	return hwdev;
- }
-@@ -81,9 +67,7 @@ void hwmon_device_unregister(struct device *dev)
- 
- 	if (likely(sscanf(dev_name(dev), HWMON_ID_FORMAT, &id) == 1)) {
- 		device_unregister(dev);
--		spin_lock(&idr_lock);
--		idr_remove(&hwmon_idr, id);
--		spin_unlock(&idr_lock);
-+		ida_simple_remove(&hwmon_ida, id);
- 	} else
- 		dev_dbg(dev->parent,
- 			"hwmon_device_unregister() failed: bad class ID!\n");
--- 
-1.7.3.4
+Jonathan
+> Hi All,
+> 
+> Firstly sorry for the huge cc list, but this series does get about.
+> 
+> This series came out of two separate lkml threads:
+> 
+> https://lkml.org/lkml/2011/7/13/64
+> http://thread.gmane.org/gmane.linux.kernel/1148513/focus=74236
+> 
+> Basically Rusty and I both got annoyed with yet more instances
+> of the same cut and past ida allocation code for the very simple
+> case of wanting a unique id for some device. Tejun helpfully
+> joined the two threads up.
+> 
+> Anyhow, Rusty proposed more or less the first patch here (with a name
+> change requested by Tejun applied.)
+> 
+> The others patches are some of the more obvious looking cases for
+> applying this code.  My original reason was for IIO but those patches will
+> have to wait a little while for some prior changes to merge.
+> For reference, it saves about 40 lines there so I'm happy ;)
+> 
+> There are a number of other cases in tree that can be cleaned up
+> in a second series once these are sorted.
+> 
+> There are a couple of cases in here where I've carefully mangled
+> the error codes to keep consistent with the existing code.  Please
+> can people who know those subsystems well decide on whether the
+> mangling is necessary.
+> 
+> All comments welcome. I expect I've broken at least one driver
+> doing this so please take a close look.
+> 
+> Rusty, Tejun. I kept your sign of an ack for the first patch. Could
+> you quickly verify that's fine?
+> 
+> Thanks,
+> 
+> Jonathan
+> 
+> Jonathan Cameron (7):
+>   hwmon: convert idr to ida and use ida_simple interface.
+>   hwmon: ibmaem: convert idr to ida and use ida_simple_get
+>   [SCSI] use ida_simple_get and ida_simple remove in place of
+>     boilerplate code.
+>   drm/vmwgfx: use ida_simple_get for id allocation.
+>   [SCSI] osduld: use ida_simple_get to handle id.
+>   w1: ds2760 and ds2780, use ida for id and ida_simple_get to get it.
+>   rtc: class idr converted to ida and ida_simple_get used.
+> 
+> Rusty Russell (1):
+>   ida: Simplified functions for id allocation.
+> 
+>  drivers/gpu/drm/vmwgfx/vmwgfx_gmrid_manager.c |   34 +++----------
+>  drivers/hwmon/hwmon.c                         |   32 +++---------
+>  drivers/hwmon/ibmaem.c                        |   47 +++--------------
+>  drivers/rtc/class.c                           |   32 +++---------
+>  drivers/scsi/osd/osd_uld.c                    |   22 +++-----
+>  drivers/scsi/sd.c                             |   32 ++++--------
+>  drivers/w1/slaves/w1_ds2760.c                 |   48 ++---------------
+>  drivers/w1/slaves/w1_ds2780.c                 |   48 ++---------------
+>  include/linux/idr.h                           |    4 ++
+>  lib/idr.c                                     |   67 +++++++++++++++++++++++++
+>  10 files changed, 134 insertions(+), 232 deletions(-)
+> 
