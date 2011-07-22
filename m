@@ -1,77 +1,209 @@
 From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: [PATCH 0/8] RFC: Introduce ida_simple interfaces and use them.
-Date: Fri, 22 Jul 2011 17:41:09 +0100
-Message-ID: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
+Subject: [PATCH 7/8] w1: ds2760 and ds2780, use ida for id and ida_simple_get to get it.
+Date: Fri, 22 Jul 2011 17:41:16 +0100
+Message-ID: <1311352886-4047-8-git-send-email-jic23@cam.ac.uk>
+References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: lm-sensors@lm-sensors.org, rtc-linux@googlegroups.com, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, jkosina@suse.cz, naota@elisp.net, rusty@rustcorp.com.au, paulmck@linux.vnet.ibm.com, namhyung@gmail.com, randy.dunlap@oracle.com, tj@kernel.org, cabarnes@indesign-llc.com, akpm@linux-foundation.org, airlied@redhat.com, thellstrom@vmware.com, johnpol@2ka.mipt.ru, JBottomley@parallels.com, bhalevy@panasas.com, bharrosh@panasas.com, a.zummo@towertech.it, guenter.roeck@ericsson.com, khali@linux-fr.org, airlied@linux.ie, Jonathan Cameron <jic23@cam.ac.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi All,
+Straight forward.  As an aside, the ida_init calls are not needed as far
+as I can see needed. (DEFINE_IDA does the same already).
 
-Firstly sorry for the huge cc list, but this series does get about.
+Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
+---
+ drivers/w1/slaves/w1_ds2760.c |   48 +++++-----------------------------------
+ drivers/w1/slaves/w1_ds2780.c |   48 +++++-----------------------------------
+ 2 files changed, 12 insertions(+), 84 deletions(-)
 
-This series came out of two separate lkml threads:
-
-https://lkml.org/lkml/2011/7/13/64
-http://thread.gmane.org/gmane.linux.kernel/1148513/focus=74236
-
-Basically Rusty and I both got annoyed with yet more instances
-of the same cut and past ida allocation code for the very simple
-case of wanting a unique id for some device. Tejun helpfully
-joined the two threads up.
-
-Anyhow, Rusty proposed more or less the first patch here (with a name
-change requested by Tejun applied.)
-
-The others patches are some of the more obvious looking cases for
-applying this code.  My original reason was for IIO but those patches will
-have to wait a little while for some prior changes to merge.
-For reference, it saves about 40 lines there so I'm happy ;)
-
-There are a number of other cases in tree that can be cleaned up
-in a second series once these are sorted.
-
-There are a couple of cases in here where I've carefully mangled
-the error codes to keep consistent with the existing code.  Please
-can people who know those subsystems well decide on whether the
-mangling is necessary.
-
-All comments welcome. I expect I've broken at least one driver
-doing this so please take a close look.
-
-Rusty, Tejun. I kept your sign of an ack for the first patch. Could
-you quickly verify that's fine?
-
-Thanks,
-
-Jonathan
-
-Jonathan Cameron (7):
-  hwmon: convert idr to ida and use ida_simple interface.
-  hwmon: ibmaem: convert idr to ida and use ida_simple_get
-  [SCSI] use ida_simple_get and ida_simple remove in place of
-    boilerplate code.
-  drm/vmwgfx: use ida_simple_get for id allocation.
-  [SCSI] osduld: use ida_simple_get to handle id.
-  w1: ds2760 and ds2780, use ida for id and ida_simple_get to get it.
-  rtc: class idr converted to ida and ida_simple_get used.
-
-Rusty Russell (1):
-  ida: Simplified functions for id allocation.
-
- drivers/gpu/drm/vmwgfx/vmwgfx_gmrid_manager.c |   34 +++----------
- drivers/hwmon/hwmon.c                         |   32 +++---------
- drivers/hwmon/ibmaem.c                        |   47 +++--------------
- drivers/rtc/class.c                           |   32 +++---------
- drivers/scsi/osd/osd_uld.c                    |   22 +++-----
- drivers/scsi/sd.c                             |   32 ++++--------
- drivers/w1/slaves/w1_ds2760.c                 |   48 ++---------------
- drivers/w1/slaves/w1_ds2780.c                 |   48 ++---------------
- include/linux/idr.h                           |    4 ++
- lib/idr.c                                     |   67 +++++++++++++++++++++++++
- 10 files changed, 134 insertions(+), 232 deletions(-)
-
+diff --git a/drivers/w1/slaves/w1_ds2760.c b/drivers/w1/slaves/w1_ds2760.c
+index 483d451..5754c9a 100644
+--- a/drivers/w1/slaves/w1_ds2760.c
++++ b/drivers/w1/slaves/w1_ds2760.c
+@@ -114,43 +114,7 @@ static struct bin_attribute w1_ds2760_bin_attr = {
+ 	.read = w1_ds2760_read_bin,
+ };
+ 
+-static DEFINE_IDR(bat_idr);
+-static DEFINE_MUTEX(bat_idr_lock);
+-
+-static int new_bat_id(void)
+-{
+-	int ret;
+-
+-	while (1) {
+-		int id;
+-
+-		ret = idr_pre_get(&bat_idr, GFP_KERNEL);
+-		if (ret == 0)
+-			return -ENOMEM;
+-
+-		mutex_lock(&bat_idr_lock);
+-		ret = idr_get_new(&bat_idr, NULL, &id);
+-		mutex_unlock(&bat_idr_lock);
+-
+-		if (ret == 0) {
+-			ret = id & MAX_ID_MASK;
+-			break;
+-		} else if (ret == -EAGAIN) {
+-			continue;
+-		} else {
+-			break;
+-		}
+-	}
+-
+-	return ret;
+-}
+-
+-static void release_bat_id(int id)
+-{
+-	mutex_lock(&bat_idr_lock);
+-	idr_remove(&bat_idr, id);
+-	mutex_unlock(&bat_idr_lock);
+-}
++static DEFINE_IDA(bat_ida);
+ 
+ static int w1_ds2760_add_slave(struct w1_slave *sl)
+ {
+@@ -158,7 +122,7 @@ static int w1_ds2760_add_slave(struct w1_slave *sl)
+ 	int id;
+ 	struct platform_device *pdev;
+ 
+-	id = new_bat_id();
++	id = ida_simple_get(&bat_ida, 0, 0, GFP_KERNEL);
+ 	if (id < 0) {
+ 		ret = id;
+ 		goto noid;
+@@ -187,7 +151,7 @@ bin_attr_failed:
+ pdev_add_failed:
+ 	platform_device_unregister(pdev);
+ pdev_alloc_failed:
+-	release_bat_id(id);
++	ida_simple_remove(&bat_ida, id);
+ noid:
+ success:
+ 	return ret;
+@@ -199,7 +163,7 @@ static void w1_ds2760_remove_slave(struct w1_slave *sl)
+ 	int id = pdev->id;
+ 
+ 	platform_device_unregister(pdev);
+-	release_bat_id(id);
++	ida_simple_remove(&bat_ida, id);
+ 	sysfs_remove_bin_file(&sl->dev.kobj, &w1_ds2760_bin_attr);
+ }
+ 
+@@ -217,14 +181,14 @@ static int __init w1_ds2760_init(void)
+ {
+ 	printk(KERN_INFO "1-Wire driver for the DS2760 battery monitor "
+ 	       " chip  - (c) 2004-2005, Szabolcs Gyurko\n");
+-	idr_init(&bat_idr);
++	ida_init(&bat_ida);
+ 	return w1_register_family(&w1_ds2760_family);
+ }
+ 
+ static void __exit w1_ds2760_exit(void)
+ {
+ 	w1_unregister_family(&w1_ds2760_family);
+-	idr_destroy(&bat_idr);
++	ida_destroy(&bat_ida);
+ }
+ 
+ EXPORT_SYMBOL(w1_ds2760_read);
+diff --git a/drivers/w1/slaves/w1_ds2780.c b/drivers/w1/slaves/w1_ds2780.c
+index 274c8f3..a134b38 100644
+--- a/drivers/w1/slaves/w1_ds2780.c
++++ b/drivers/w1/slaves/w1_ds2780.c
+@@ -99,43 +99,7 @@ static struct bin_attribute w1_ds2780_bin_attr = {
+ 	.read = w1_ds2780_read_bin,
+ };
+ 
+-static DEFINE_IDR(bat_idr);
+-static DEFINE_MUTEX(bat_idr_lock);
+-
+-static int new_bat_id(void)
+-{
+-	int ret;
+-
+-	while (1) {
+-		int id;
+-
+-		ret = idr_pre_get(&bat_idr, GFP_KERNEL);
+-		if (ret == 0)
+-			return -ENOMEM;
+-
+-		mutex_lock(&bat_idr_lock);
+-		ret = idr_get_new(&bat_idr, NULL, &id);
+-		mutex_unlock(&bat_idr_lock);
+-
+-		if (ret == 0) {
+-			ret = id & MAX_ID_MASK;
+-			break;
+-		} else if (ret == -EAGAIN) {
+-			continue;
+-		} else {
+-			break;
+-		}
+-	}
+-
+-	return ret;
+-}
+-
+-static void release_bat_id(int id)
+-{
+-	mutex_lock(&bat_idr_lock);
+-	idr_remove(&bat_idr, id);
+-	mutex_unlock(&bat_idr_lock);
+-}
++static DEFINE_IDA(bat_ida);
+ 
+ static int w1_ds2780_add_slave(struct w1_slave *sl)
+ {
+@@ -143,7 +107,7 @@ static int w1_ds2780_add_slave(struct w1_slave *sl)
+ 	int id;
+ 	struct platform_device *pdev;
+ 
+-	id = new_bat_id();
++	id = ida_simple_get(&bat_ida, 0, 0, GFP_KERNEL);
+ 	if (id < 0) {
+ 		ret = id;
+ 		goto noid;
+@@ -172,7 +136,7 @@ bin_attr_failed:
+ pdev_add_failed:
+ 	platform_device_unregister(pdev);
+ pdev_alloc_failed:
+-	release_bat_id(id);
++	ida_simple_remove(&bat_ida, id);
+ noid:
+ 	return ret;
+ }
+@@ -183,7 +147,7 @@ static void w1_ds2780_remove_slave(struct w1_slave *sl)
+ 	int id = pdev->id;
+ 
+ 	platform_device_unregister(pdev);
+-	release_bat_id(id);
++	ida_simple_remove(&bat_ida, id);
+ 	sysfs_remove_bin_file(&sl->dev.kobj, &w1_ds2780_bin_attr);
+ }
+ 
+@@ -199,14 +163,14 @@ static struct w1_family w1_ds2780_family = {
+ 
+ static int __init w1_ds2780_init(void)
+ {
+-	idr_init(&bat_idr);
++	ida_init(&bat_ida);
+ 	return w1_register_family(&w1_ds2780_family);
+ }
+ 
+ static void __exit w1_ds2780_exit(void)
+ {
+ 	w1_unregister_family(&w1_ds2780_family);
+-	idr_destroy(&bat_idr);
++	ida_destroy(&bat_ida);
+ }
+ 
+ module_init(w1_ds2780_init);
 -- 
 1.7.3.4
