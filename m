@@ -1,129 +1,73 @@
 From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: [PATCH 3/8] hwmon: ibmaem: convert idr to ida and use ida_simple_get
-Date: Fri, 22 Jul 2011 17:41:21 +0100
-Message-ID: <1311352886-4047-13-git-send-email-jic23@cam.ac.uk>
+Subject: [PATCH 6/8] [SCSI] osduld: use ida_simple_get to handle id.
+Date: Fri, 22 Jul 2011 17:41:24 +0100
+Message-ID: <1311352886-4047-16-git-send-email-jic23@cam.ac.uk>
 References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ppsw-51.csi.cam.ac.uk ([131.111.8.151]:49962 "EHLO
-	ppsw-51.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752855Ab1GVQlb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2011 12:41:31 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: lm-sensors@lm-sensors.org, rtc-linux@googlegroups.com, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, jkosina@suse.cz, naota@elisp.net, rusty@rustcorp.com.au, paulmck@linux.vnet.ibm.com, namhyung@gmail.com, randy.dunlap@oracle.com, tj@kernel.org, cabarnes@indesign-llc.com, akpm@linux-foundation.org, airlied@redhat.com, thellstrom@vmware.com, johnpol@2ka.mipt.ru, JBottomley@parallels.com, bhalevy@panasas.com, bharrosh@panasas.com, a.zummo@towertech.it, guenter.roeck@ericsson.com, khali@linux-fr.org, airlied@linux.ie, Jonathan Cameron <jic23@cam.ac.uk>
+List-Id: linux-scsi@vger.kernel.org
 
-A straightforward looking use of idr for a device id.
+This does involve additional use of the spin lock in idr.c.
+Is this an issue?
+
+Also, some error mangling was needed to keep the interface
+the same.  Does this matter or can we return -ENOSPC instead
+of -EBUSY?
 
 Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
 ---
-Note I have even build tested this one so will definitely
-want an Ack from someone who has.
+ drivers/scsi/osd/osd_uld.c |   22 ++++++++--------------
+ 1 files changed, 8 insertions(+), 14 deletions(-)
 
- drivers/hwmon/ibmaem.c |   47 ++++++++---------------------------------------
- 1 files changed, 8 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/hwmon/ibmaem.c b/drivers/hwmon/ibmaem.c
-index 1a409c5..058e0ae 100644
---- a/drivers/hwmon/ibmaem.c
-+++ b/drivers/hwmon/ibmaem.c
-@@ -88,8 +88,7 @@
- #define AEM_MIN_POWER_INTERVAL	200
- #define UJ_PER_MJ		1000L
+diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+index b31a8e3..fa849bd 100644
+--- a/drivers/scsi/osd/osd_uld.c
++++ b/drivers/scsi/osd/osd_uld.c
+@@ -387,7 +387,7 @@ static void __remove(struct device *dev)
  
--static DEFINE_IDR(aem_idr);
--static DEFINE_SPINLOCK(aem_idr_lock);
-+static DEFINE_IDA(aem_ida);
+ 	if (oud->disk)
+ 		put_disk(oud->disk);
+-	ida_remove(&osd_minor_ida, oud->minor);
++	ida_simple_remove(&osd_minor_ida, oud->minor);
  
- static struct platform_driver aem_driver = {
- 	.driver = {
-@@ -356,38 +355,6 @@ static void aem_msg_handler(struct ipmi_recv_msg *msg, void *user_msg_data)
- 	complete(&data->read_complete);
+ 	kfree(oud);
  }
+@@ -403,18 +403,12 @@ static int osd_probe(struct device *dev)
+ 	if (scsi_device->type != TYPE_OSD)
+ 		return -ENODEV;
  
--/* ID functions */
+-	do {
+-		if (!ida_pre_get(&osd_minor_ida, GFP_KERNEL))
+-			return -ENODEV;
 -
--/* Obtain an id */
--static int aem_idr_get(int *id)
--{
--	int i, err;
+-		error = ida_get_new(&osd_minor_ida, &minor);
+-	} while (error == -EAGAIN);
 -
--again:
--	if (unlikely(!idr_pre_get(&aem_idr, GFP_KERNEL)))
--		return -ENOMEM;
--
--	spin_lock(&aem_idr_lock);
--	err = idr_get_new(&aem_idr, NULL, &i);
--	spin_unlock(&aem_idr_lock);
--
--	if (unlikely(err == -EAGAIN))
--		goto again;
--	else if (unlikely(err))
--		return err;
--
--	*id = i & MAX_ID_MASK;
--	return 0;
--}
--
--/* Release an object ID */
--static void aem_idr_put(int id)
--{
--	spin_lock(&aem_idr_lock);
--	idr_remove(&aem_idr, id);
--	spin_unlock(&aem_idr_lock);
--}
--
- /* Sensor support functions */
+-	if (error)
+-		return error;
+-	if (minor >= SCSI_OSD_MAX_MINOR) {
+-		error = -EBUSY;
+-		goto err_retract_minor;
++	minor = ida_simple_get(&osd_minor_ida, 0,
++			       SCSI_OSD_MAX_MINOR, GFP_KERNEL);
++	if (minor < 0) {
++		if (minor == -ENOSPC)
++			return -EBUSY;
++		return minor;
+ 	}
  
- /* Read a sensor value */
-@@ -525,7 +492,7 @@ static void aem_delete(struct aem_data *data)
- 	ipmi_destroy_user(data->ipmi.user);
- 	platform_set_drvdata(data->pdev, NULL);
- 	platform_device_unregister(data->pdev);
--	aem_idr_put(data->id);
-+	ida_simple_remove(&aem_ida, data->id);
- 	kfree(data);
+ 	error = -ENOMEM;
+@@ -491,7 +485,7 @@ err_free_osd:
+ 	dev_set_drvdata(dev, NULL);
+ 	kfree(oud);
+ err_retract_minor:
+-	ida_remove(&osd_minor_ida, minor);
++	ida_simple_remove(&osd_minor_ida, minor);
+ 	return error;
  }
- 
-@@ -582,7 +549,8 @@ static int aem_init_aem1_inst(struct aem_ipmi_data *probe, u8 module_handle)
- 		data->power_period[i] = AEM_DEFAULT_POWER_INTERVAL;
- 
- 	/* Create sub-device for this fw instance */
--	if (aem_idr_get(&data->id))
-+	data->id = ida_simple_get(&aem_ida, 0, 0, GFP_KERNEL);
-+	if (data->id < 0)
- 		goto id_err;
- 
- 	data->pdev = platform_device_alloc(DRVNAME, data->id);
-@@ -633,7 +601,7 @@ ipmi_err:
- 	platform_set_drvdata(data->pdev, NULL);
- 	platform_device_unregister(data->pdev);
- dev_err:
--	aem_idr_put(data->id);
-+	ida_simple_remove(&aem_ida, data->id);
- id_err:
- 	kfree(data);
- 
-@@ -715,7 +683,8 @@ static int aem_init_aem2_inst(struct aem_ipmi_data *probe,
- 		data->power_period[i] = AEM_DEFAULT_POWER_INTERVAL;
- 
- 	/* Create sub-device for this fw instance */
--	if (aem_idr_get(&data->id))
-+	data->id = ida_simple_get(&aem_ida, 0, 0, GFP_KERNEL);
-+	if (data->id < 0)
- 		goto id_err;
- 
- 	data->pdev = platform_device_alloc(DRVNAME, data->id);
-@@ -766,7 +735,7 @@ ipmi_err:
- 	platform_set_drvdata(data->pdev, NULL);
- 	platform_device_unregister(data->pdev);
- dev_err:
--	aem_idr_put(data->id);
-+	ida_simple_remove(&aem_ida, data->id);
- id_err:
- 	kfree(data);
  
 -- 
 1.7.3.4
-
