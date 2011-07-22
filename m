@@ -1,40 +1,72 @@
 From: michaelc@cs.wisc.edu
-Subject: [RFC PATCH 00/10] create scsi bsg lib
-Date: Fri, 22 Jul 2011 05:04:50 -0500
-Message-ID: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
+Subject: [RFC PATCH 01/10] scsi transport: add bsg callouts
+Date: Fri, 22 Jul 2011 05:04:51 -0500
+Message-ID: <1311329100-2982-2-git-send-email-michaelc@cs.wisc.edu>
+References: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44235 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20723 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753769Ab1GVKCI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 06:02:08 -0400
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p6MA28Ea022664
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2011 06:02:08 -0400
-Received: from meanminna.corp.redhat.com (vpn-8-191.rdu.redhat.com [10.11.8.191])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id p6MA265H018270
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jul 2011 06:02:07 -0400
+	id S1753779Ab1GVKCL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2011 06:02:11 -0400
+In-Reply-To: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-The iSCSI drivers want to use bsg for things like flash updates.
-When people were sending patches for this, they were just
-cutting and pasting the FC bsg code and renaming structs/functions,
-so the following patches move the FC bsg code to a scsi lib.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-The Qlogic developers and I have converted the FC drivers to the
-new lib, but we have not tested all the driver specific patches
-lately. In this sending we are more looking for comments
-on the updated approach.
+This patch adds a bsg queueing and timeout function
+callout to the scsi host transport template. In the
+next patches the transport classes will use this along
+with the scsi_bsg lib.
 
-What has changed since the last posting is just that instead
-of adding function pointers as args to a lot of the lib
-functions we added some fields on the scsi transport template.
-There is now 1 for queueing and 1 for timeout handling. It
-seems cleaner this way.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ include/scsi/scsi_transport.h |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-The LLD code has not changed from my last posting, so hopefully if
-the patches worked before they should still work.
-
+diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
+index 0de32cd..2167b8c 100644
+--- a/include/scsi/scsi_transport.h
++++ b/include/scsi/scsi_transport.h
+@@ -25,6 +25,8 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+ 
++struct scsi_bsg_job;
++
+ struct scsi_transport_template {
+ 	/* the attribute containers */
+ 	struct transport_container host_attrs;
+@@ -68,6 +70,27 @@ struct scsi_transport_template {
+ 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
+ 
+ 	/*
++	 * This is an optional routine that allows the transport to become
++	 * involved when a bsg req timer fires. 0 should be returned on
++	 * success and a -Exyz code should be returned on a error.
++	 * If -EAGAIN is returned we give the request more time.
++	 */
++	int (*eh_bsg_job_timed_out)(struct scsi_bsg_job *);
++
++	/*
++	 * This is optional. LLDDs should set this to the amount of space
++	 * it needs for a bsg_job that is queued to @queue_bsg_job.
++	 */
++	int bsg_job_size;
++
++	/*
++	 * This is a an optional routine that is used to queue a bsg job
++	 * to the LLDD. The LLDD should return 0 for success and a -Exyz
++	 * error code for a failure.
++	 */
++	int (*queue_bsg_job)(struct scsi_bsg_job *);
++
++	/*
+ 	 * Used as callback for the completion of i_t_nexus request
+ 	 * for target drivers.
+ 	 */
+-- 
+1.7.2.3
 
