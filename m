@@ -1,7 +1,7 @@
 From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: [PATCH 8/8] rtc: class idr converted to ida and ida_simple_get used.
-Date: Fri, 22 Jul 2011 17:41:26 +0100
-Message-ID: <1311352886-4047-18-git-send-email-jic23@cam.ac.uk>
+Subject: [PATCH 0/8] RFC: Introduce ida_simple interfaces and use them.
+Date: Fri, 22 Jul 2011 17:41:18 +0100
+Message-ID: <1311352886-4047-10-git-send-email-jic23@cam.ac.uk>
 References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
@@ -10,88 +10,70 @@ To: linux-kernel@vger.kernel.org
 Cc: lm-sensors@lm-sensors.org, rtc-linux@googlegroups.com, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, dri-devel@lists.freedesktop.org, jkosina@suse.cz, naota@elisp.net, rusty@rustcorp.com.au, paulmck@linux.vnet.ibm.com, namhyung@gmail.com, randy.dunlap@oracle.com, tj@kernel.org, cabarnes@indesign-llc.com, akpm@linux-foundation.org, airlied@redhat.com, thellstrom@vmware.com, johnpol@2ka.mipt.ru, JBottomley@parallels.com, bhalevy@panasas.com, bharrosh@panasas.com, a.zummo@towertech.it, guenter.roeck@ericsson.com, khali@linux-fr.org, airlied@linux.ie, Jonathan Cameron <jic23@cam.ac.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-This is the one use of an ida that doesn't retry on receiving -EAGAIN.
-I'm assuming do so will cause no harm and may help on a rare occasion.
+Hi All,
 
-Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
----
- drivers/rtc/class.c |   32 +++++++++-----------------------
- 1 files changed, 9 insertions(+), 23 deletions(-)
+Firstly sorry for the huge cc list, but this series does get about.
 
-diff --git a/drivers/rtc/class.c b/drivers/rtc/class.c
-index 4194e59..68ae46f 100644
---- a/drivers/rtc/class.c
-+++ b/drivers/rtc/class.c
-@@ -21,16 +21,13 @@
- #include "rtc-core.h"
- 
- 
--static DEFINE_IDR(rtc_idr);
--static DEFINE_MUTEX(idr_lock);
-+static DEFINE_IDA(rtc_ida);
- struct class *rtc_class;
- 
- static void rtc_device_release(struct device *dev)
- {
- 	struct rtc_device *rtc = to_rtc_device(dev);
--	mutex_lock(&idr_lock);
--	idr_remove(&rtc_idr, rtc->id);
--	mutex_unlock(&idr_lock);
-+	ida_simple_remove(&rtc_ida, rtc->id);
- 	kfree(rtc);
- }
- 
-@@ -115,25 +112,16 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
- 	struct rtc_wkalrm alrm;
- 	int id, err;
- 
--	if (idr_pre_get(&rtc_idr, GFP_KERNEL) == 0) {
--		err = -ENOMEM;
-+	id = ida_simple_get(&rtc_ida, 0, 0, GFP_KERNEL);
-+	if (id < 0) {
-+		err = id;
- 		goto exit;
- 	}
- 
--
--	mutex_lock(&idr_lock);
--	err = idr_get_new(&rtc_idr, NULL, &id);
--	mutex_unlock(&idr_lock);
--
--	if (err < 0)
--		goto exit;
--
--	id = id & MAX_ID_MASK;
--
- 	rtc = kzalloc(sizeof(struct rtc_device), GFP_KERNEL);
- 	if (rtc == NULL) {
- 		err = -ENOMEM;
--		goto exit_idr;
-+		goto exit_ida;
- 	}
- 
- 	rtc->id = id;
-@@ -191,10 +179,8 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
- exit_kfree:
- 	kfree(rtc);
- 
--exit_idr:
--	mutex_lock(&idr_lock);
--	idr_remove(&rtc_idr, id);
--	mutex_unlock(&idr_lock);
-+exit_ida:
-+	ida_simple_remove(&rtc_ida, id);
- 
- exit:
- 	dev_err(dev, "rtc core: unable to register %s, err = %d\n",
-@@ -245,7 +231,7 @@ static void __exit rtc_exit(void)
- {
- 	rtc_dev_exit();
- 	class_destroy(rtc_class);
--	idr_destroy(&rtc_idr);
-+	ida_destroy(&rtc_ida);
- }
- 
- subsys_initcall(rtc_init);
+This series came out of two separate lkml threads:
+
+https://lkml.org/lkml/2011/7/13/64
+http://thread.gmane.org/gmane.linux.kernel/1148513/focus=74236
+
+Basically Rusty and I both got annoyed with yet more instances
+of the same cut and past ida allocation code for the very simple
+case of wanting a unique id for some device. Tejun helpfully
+joined the two threads up.
+
+Anyhow, Rusty proposed more or less the first patch here (with a name
+change requested by Tejun applied.)
+
+The others patches are some of the more obvious looking cases for
+applying this code.  My original reason was for IIO but those patches will
+have to wait a little while for some prior changes to merge.
+For reference, it saves about 40 lines there so I'm happy ;)
+
+There are a number of other cases in tree that can be cleaned up
+in a second series once these are sorted.
+
+There are a couple of cases in here where I've carefully mangled
+the error codes to keep consistent with the existing code.  Please
+can people who know those subsystems well decide on whether the
+mangling is necessary.
+
+All comments welcome. I expect I've broken at least one driver
+doing this so please take a close look.
+
+Rusty, Tejun. I kept your sign of an ack for the first patch. Could
+you quickly verify that's fine?
+
+Thanks,
+
+Jonathan
+
+Jonathan Cameron (7):
+  hwmon: convert idr to ida and use ida_simple interface.
+  hwmon: ibmaem: convert idr to ida and use ida_simple_get
+  [SCSI] use ida_simple_get and ida_simple remove in place of
+    boilerplate code.
+  drm/vmwgfx: use ida_simple_get for id allocation.
+  [SCSI] osduld: use ida_simple_get to handle id.
+  w1: ds2760 and ds2780, use ida for id and ida_simple_get to get it.
+  rtc: class idr converted to ida and ida_simple_get used.
+
+Rusty Russell (1):
+  ida: Simplified functions for id allocation.
+
+ drivers/gpu/drm/vmwgfx/vmwgfx_gmrid_manager.c |   34 +++----------
+ drivers/hwmon/hwmon.c                         |   32 +++---------
+ drivers/hwmon/ibmaem.c                        |   47 +++--------------
+ drivers/rtc/class.c                           |   32 +++---------
+ drivers/scsi/osd/osd_uld.c                    |   22 +++-----
+ drivers/scsi/sd.c                             |   32 ++++--------
+ drivers/w1/slaves/w1_ds2760.c                 |   48 ++---------------
+ drivers/w1/slaves/w1_ds2780.c                 |   48 ++---------------
+ include/linux/idr.h                           |    4 ++
+ lib/idr.c                                     |   67 +++++++++++++++++++++++++
+ 10 files changed, 134 insertions(+), 232 deletions(-)
+
 -- 
 1.7.3.4
