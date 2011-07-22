@@ -1,75 +1,69 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 2/2] block: adaptive rq_affinity
-Date: Fri, 22 Jul 2011 13:59:44 -0700
-Message-ID: <20110722205944.17420.78978.stgit@localhost6.localdomain6>
-References: <20110722205736.17420.41366.stgit@localhost6.localdomain6>
+From: Ian Campbell <Ian.Campbell@eu.citrix.com>
+Subject: Re: [PATCH 10/13] net: add paged frag destructor to
+ skb_fill_page_desc()
+Date: Fri, 22 Jul 2011 22:07:52 +0100
+Message-ID: <1311368872.4027.76.camel@dagon.hellion.org.uk>
+References: <1311340095.12772.57.camel@zakaz.uk.xensource.com>
+	 <1311340653-19336-10-git-send-email-ian.campbell@citrix.com>
+	 <CAHXqBFLQFKqK=ORpDQx6s2ud8mWkx=YC_AT60GVS+4XK0H61pw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:41026 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932218Ab1GVU7o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 16:59:44 -0400
-In-Reply-To: <20110722205736.17420.41366.stgit@localhost6.localdomain6>
+Received: from smtp.ctxuk.citrix.com ([62.200.22.115]:44250 "EHLO
+	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932158Ab1GVVHz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2011 17:07:55 -0400
+In-Reply-To: <CAHXqBFLQFKqK=ORpDQx6s2ud8mWkx=YC_AT60GVS+4XK0H61pw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jaxboe@fusionio.com
-Cc: Roland Dreier <roland@purestorage.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: =?UTF-8?Q?Micha=C5=82_Miros=C5=82aw?= <mirqus@gmail.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, "James E.J. Bottomley" <JBottomley@parallels.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, James Morris <jmorris@namei.org>, Hideaki YOSHIFUJI <yoshfuji@linux-ipv6.org>, Patrick McHardy <kaber@trash.net>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-For some storage configurations the coarse grained cpu grouping (socket)
-does not supply enough cpu to keep up with the demands of high iops.
-Bypass the grouping and complete on the direct requester cpu when the
-local cpu is under softirq pressure (as measured by ksoftirqd being in
-the running state).
+On Fri, 2011-07-22 at 20:58 +0100, Micha=C5=82 Miros=C5=82aw wrote:
+> 2011/7/22 Ian Campbell <ian.campbell@citrix.com>:
+> > diff --git a/include/linux/skbuff.h b/include/linux/skbuff.h
+> > index 9818fe2..faee8d3 100644
+> > --- a/include/linux/skbuff.h
+> > +++ b/include/linux/skbuff.h
+> > @@ -1134,12 +1134,14 @@ static inline int skb_pagelen(const struct =
+sk_buff *skb)
+> >  * Does not take any additional reference on the fragment.
+> >  */
+> >  static inline void __skb_fill_page_desc(struct sk_buff *skb, int i=
+,
+> > -                                       struct page *page, int off,=
+ int size)
+> > +                                       struct page *page,
+> > +                                       struct skb_frag_destructor =
+*destroy,
+> > +                                       int off, int size)
+> >  {
+> >        skb_frag_t *frag =3D &skb_shinfo(skb)->frags[i];
+> >
+> >        frag->page.p              =3D page;
+> > -       frag->page.destructor     =3D NULL;
+> > +       frag->page.destructor     =3D destroy;
+> >        frag->page_offset         =3D off;
+> >        frag->size                =3D size;
+> >  }
+>=20
+> You could just rename this function to e.g.
+> __skb_fill_fragile_page_desc() (or whatever name) add an inline
+> wrapper calling it with destroy =3D=3D NULL. This will avoid touching=
+ all
+> those drivers which won't ever need this functionality.
 
-Cc: Matthew Wilcox <matthew@wil.cx>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Roland Dreier <roland@purestorage.com>
-Tested-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- block/blk-softirq.c |   12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+I could call this variant __skb_frag_init (which I think better fits
+into the pattern of the new functions) and leave the existing
+__skb_fill_page_desc as a compat wrapper if that's preferred but I was
+trying to avoid duplicating up constructors just for different sets of
+defaults.
+=20
+Ian.
 
-diff --git a/block/blk-softirq.c b/block/blk-softirq.c
-index 475fab8..f0cda19 100644
---- a/block/blk-softirq.c
-+++ b/block/blk-softirq.c
-@@ -101,16 +101,20 @@ static struct notifier_block __cpuinitdata blk_cpu_notifier = {
- 	.notifier_call	= blk_cpu_notify,
- };
- 
-+DECLARE_PER_CPU(struct task_struct *, ksoftirqd);
-+
- void __blk_complete_request(struct request *req)
- {
- 	int ccpu, cpu, group_cpu = NR_CPUS;
- 	struct request_queue *q = req->q;
-+	struct task_struct *tsk;
- 	unsigned long flags;
- 
- 	BUG_ON(!q->softirq_done_fn);
- 
- 	local_irq_save(flags);
- 	cpu = smp_processor_id();
-+	tsk = per_cpu(ksoftirqd, cpu);
- 
- 	/*
- 	 * Select completion CPU
-@@ -124,7 +128,13 @@ void __blk_complete_request(struct request *req)
- 	} else
- 		ccpu = cpu;
- 
--	if (ccpu == cpu || ccpu == group_cpu) {
-+	/*
-+	 * try to skip a remote softirq-trigger if the completion is
-+	 * within the same group, but not if local softirqs have already
-+	 * spilled to ksoftirqd
-+	 */
-+	if (ccpu == cpu ||
-+	    (ccpu == group_cpu && tsk->state != TASK_RUNNING)) {
- 		struct list_head *list;
- do_local:
- 		list = &__get_cpu_var(blk_cpu_done);
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
