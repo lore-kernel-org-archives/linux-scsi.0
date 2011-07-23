@@ -1,163 +1,126 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 01/13] iscsi: Resolve iscsi_proto.h naming conflicts
-	with drivers/target/iscsi
-Date: Sat, 23 Jul 2011 14:23:49 -0700
-Message-ID: <1311456229.31450.292.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 08/13] iscsi-target: Add CHAP Authentication support
+	using libcrypto
+Date: Sat, 23 Jul 2011 14:17:47 -0700
+Message-ID: <1311455867.31450.287.camel@haakon2.linux-iscsi.org>
 References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
-	 <1311410747-29947-2-git-send-email-nab@linux-iscsi.org>
-	 <alpine.LNX.2.00.1107231531310.3831@swampdragon.chaosbits.net>
+	 <1311410747-29947-9-git-send-email-nab@linux-iscsi.org>
+	 <1311439173.23720.14.camel@mulgrave>
+	 <CA+55aFzkEUbnoDg0KwXDRQMeCFeO5s6_4dWHTY59=hj3QHWL0w@mail.gmail.com>
+	 <1311445075.17423.13.camel@mulgrave>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1107231531310.3831@swampdragon.chaosbits.net>
+In-Reply-To: <1311445075.17423.13.camel@mulgrave>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2011-07-23 at 15:34 +0200, Jesper Juhl wrote:
-> On Sat, 23 Jul 2011, Nicholas A. Bellinger wrote:
-> 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Sat, 2011-07-23 at 22:17 +0400, James Bottomley wrote:
+> On Sat, 2011-07-23 at 10:51 -0700, Linus Torvalds wrote:
+> > On Sat, Jul 23, 2011 at 9:39 AM, James Bottomley
+> > <James.Bottomley@hansenpartnership.com> wrote:
+> > >
+> > > I've asked you twice for input on the patch doing this in userspace,
+> > > which was posted five weeks ago.  Just ignoring something is
+> > > unacceptable behaviour ... what do I have to do to get your attention?
+> > > NAK the patch set?
 > > 
-> > This patch renames the following iscsi_proto.h structures to avoid
-> > namespace issues with drivers/target/iscsi/iscsi_target_core.h:
+> > So what's the advantage of user space?
 > > 
-> > *) struct iscsi_cmd -> struct iscsi_scsi_req
-> > *) struct iscsi_cmd_rsp -> struct iscsi_scsi_rsp
-> > *) struct iscsi_login -> struct iscsi_login_req
+> > Traditionally, kernel/userspace splits have been:
+> >  - fragile as hell
+> >  - more code
+> >  - slower
+> >  - complicated to set up
+> >  - problematic with backwards compatibility issues
+> > and these days when I see some kernel functionality that needs user
+> > space support, I just go "f*ck, that's going to be a pain".
 > > 
-> > This patch includes useful ISCSI_FLAG_LOGIN_[CURRENT,NEXT]_STAGE*,
-> > and ISCSI_FLAG_SNACK_TYPE_* definitions used by iscsi_target_mod, and
-> > fixes the incorrect definition of struct iscsi_snack to following
-> > RFC-3720 Section 10.16. SNACK Request.
+> > So I think the "that part can be done in user space" argument is
+> > fundamentally crap.
 > > 
-> > Also, this patch updates libiscsi, iSER, be2iscsi, and bn2xi to
-> > use the updated structure definitions in a handful of locations.
-> > 
-> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/infiniband/ulp/iser/iser_initiator.c |    2 +-
-> >  drivers/scsi/be2iscsi/be_main.h              |    4 +-
-> >  drivers/scsi/bnx2i/bnx2i_hwi.c               |    8 +++---
-> >  drivers/scsi/libiscsi.c                      |    6 ++--
-> >  include/scsi/iscsi_proto.h                   |   30 +++++++++++++++++++-------
-> >  5 files changed, 32 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
-> > index 95a08a8..d73bab3 100644
-> > --- a/drivers/infiniband/ulp/iser/iser_initiator.c
-> > +++ b/drivers/infiniband/ulp/iser/iser_initiator.c
-> > @@ -271,7 +271,7 @@ int iser_send_command(struct iscsi_conn *conn,
-> >  	unsigned long edtl;
-> >  	int err;
-> >  	struct iser_data_buf *data_buf;
-> > -	struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
-> > +	struct iscsi_scsi_req *hdr =  (struct iscsi_scsi_req *)task->hdr;
-> >  	struct scsi_cmnd *sc  =  task->sc;
-> 
-> How about getting rid of the extra spaces around the '=' while you are at 
-> it?
+> > Now, if it is an issue of "that can be done BETTER in user space
+> > BECAUSE xyz", then that's a different issue. I haven't seen that
+> > argument, though.
 > 
 
-Fixing this up now..
+I think the 'fragile as hell' and 'complicated to set up' ring the most
+true here.  Thank you Linus..
 
-> -     struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
-> -     struct scsi_cmnd *sc  =  task->sc;
-> +     struct iscsi_scsi_req *hdr = (struct iscsi_scsi_req *)task->hdr;
-> +     struct scsi_cmnd *sc = task->sc;
-> 
-> 
-> >  	struct iser_tx_desc *tx_desc = &iser_task->desc;
-> >  
-> > diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-> > index 081c171..5ce5170 100644
-> > --- a/drivers/scsi/be2iscsi/be_main.h
-> > +++ b/drivers/scsi/be2iscsi/be_main.h
-> > @@ -397,7 +397,7 @@ struct amap_pdu_data_out {
-> >  };
-> >  
-> >  struct be_cmd_bhs {
-> > -	struct iscsi_cmd iscsi_hdr;
-> > +	struct iscsi_scsi_req iscsi_hdr;
-> >  	unsigned char pad1[16];
-> >  	struct pdu_data_out iscsi_data_pdu;
-> >  	unsigned char pad2[BE_SENSE_INFO_SIZE -
-> > @@ -428,7 +428,7 @@ struct be_nonio_bhs {
-> >  };
-> >  
-> >  struct be_status_bhs {
-> > -	struct iscsi_cmd iscsi_hdr;
-> > +	struct iscsi_scsi_req iscsi_hdr;
-> >  	unsigned char pad1[16];
-> >  	/**
-> >  	 * The plus 2 below is to hold the sense info length that gets
-> > diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> > index 372d30c..1b160e1 100644
-> > --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-> > +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-> > @@ -328,11 +328,11 @@ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
-> >  {
-> >  	struct bnx2i_cmd *bnx2i_cmd;
-> >  	struct bnx2i_login_request *login_wqe;
-> > -	struct iscsi_login *login_hdr;
-> > +	struct iscsi_login_req *login_hdr;
-> >  	u32 dword;
-> >  
-> >  	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
-> > -	login_hdr = (struct iscsi_login *)task->hdr;
-> > +	login_hdr = (struct iscsi_login_req *)task->hdr;
-> >  	login_wqe = (struct bnx2i_login_request *)
-> >  						bnx2i_conn->ep->qp.sq_prod_qe;
-> >  
-> > @@ -1344,7 +1344,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
-> >  	struct bnx2i_cmd_response *resp_cqe;
-> >  	struct bnx2i_cmd *bnx2i_cmd;
-> >  	struct iscsi_task *task;
-> > -	struct iscsi_cmd_rsp *hdr;
-> > +	struct iscsi_scsi_rsp *hdr;
-> >  	u32 datalen = 0;
-> >  
-> >  	resp_cqe = (struct bnx2i_cmd_response *)cqe;
-> > @@ -1371,7 +1371,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
-> >  	}
-> >  	bnx2i_iscsi_unmap_sg_list(bnx2i_cmd);
-> >  
-> > -	hdr = (struct iscsi_cmd_rsp *)task->hdr;
-> > +	hdr = (struct iscsi_scsi_rsp *)task->hdr;
-> >  	resp_cqe = (struct bnx2i_cmd_response *)cqe;
-> >  	hdr->opcode = resp_cqe->op_code;
-> >  	hdr->max_cmdsn = cpu_to_be32(resp_cqe->max_cmd_sn);
-> > diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> > index 0c550d5..9c3cb4e 100644
-> > --- a/drivers/scsi/libiscsi.c
-> > +++ b/drivers/scsi/libiscsi.c
-> > @@ -360,7 +360,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
-> >  	struct iscsi_conn *conn = task->conn;
-> >  	struct iscsi_session *session = conn->session;
-> >  	struct scsi_cmnd *sc = task->sc;
-> > -	struct iscsi_cmd *hdr;
-> > +	struct iscsi_scsi_req *hdr;
-> >  	unsigned hdrlength, cmd_len;
-> >  	itt_t itt;
-> >  	int rc;
-> > @@ -374,7 +374,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
-> >  		if (rc)
-> >  			return rc;
-> >  	}
-> > -	hdr = (struct iscsi_cmd *) task->hdr;
-> > +	hdr = (struct iscsi_scsi_req *) task->hdr;
-> 
-> Kill the space after the cast
-> 
-> +     hdr = (struct iscsi_scsi_req *)task->hdr;
-> 
+> Well, this is essentially the argument.  The iSCSI authentication code
+> follows a standard which originally had 4 different authentication
+> methods (of which CHAP is just one) but which is now up to about 8 I
+> think and rising.  It would be a massive amount of code to put them all
+> in kernel, plus the authentication isn't a fast path thing; it's done
+> once at login.  We already have the code to do this (although from the
+> client side, not the server side) in userspace in the initiator.
 > 
 
-Ditto.
+This is an incorrect statement.  I was very specific in May what type of
+authentication passthrough that I want for iscsi-target, and why moving
+the entire login path to userspace is a really bad idea for a
+kernel-level iscsi-target that has a configfs control plane supporting
+fully dynamic configuration.  So while I very much apprectiate the
+efforts by Tomo directed by yourself, this is *not* what I asked for,
+and is not acceptable for LIO iscsi-target code for the default login
+codepath.
 
-Thanks for your review Jesper!
+So restate what I want:  A passthrough for pushing 'optional to
+implement' iSCSI authentication payloads to userspace (like we had in
+LIO v2.x) that can be enabled optionally on a per iSCSI target endpoint
+context, and does not touch the default login path.  The specific code
+reasons for this have not changed at all in the last months, and can be
+found here for reference:
+
+http://marc.info/?l=linux-kernel&m=130661363200680&w=2
+
+> The prototype implementation, is very clean: it does the authenticated
+> login and then passes the connected socket to the kernel for operations,
+> so there's no real fragile state to pass across.
+> 
+
+I completely disagree. 
+
+> There are a couple of reasons why user space makes sense apart from the
+> existing code and the clean separation of setup from operation: some of
+> the auth methods involve complex algorithms and debugging them in
+> userspace is just easier, plus it allows easy backward compatible
+> addition of new authentication mechanisms without having to respin a
+> kernel.
+> 
+
+Again, the 'optional to implement' authentication methods are what needs
+to goto userspace in seperate authentication specific daemons, and not
+the entire login control path into a single userspace process for even
+the 'authentication disabled' case.  This is the wrong split.
+
+Also, the patch did not address any form of backwards compatability
+because it did not provide any patches for rtslib to expose the new
+functionality to application level devels and distros who are already
+integrating this package.
+
+As mentioned before, we (LIO and RTS) have no interest in breaking a
+python object library that already exposes iscsi-target functionality
+users actually want, for a last-minute split that makes the overall
+design less effective for the default cases the vast majority of people
+actually care about.
+
+> Quite a few other authentication mechanisms (like wireless and ipsec)
+> are in userspace for the setup and negotiation and in-kernel for the
+> operation, so it's a well understood paradigm.
+> 
+
+And, we have also seen historically how painful the split has been with
+open-iscsi, which in the end took much longer to get stable (and is
+still harder to debug) than if a proper login split was used to begin
+with.
+
+I have been very willing to compromise on many things throughout this
+target mode endevour, but making it more difficult for iscsi-target to
+'just work' is not what the userbase wants, and will not be changing
+this for the default two cases.
 
 --nab
