@@ -1,31 +1,67 @@
-From: 'Christoph Hellwig' <hch@infradead.org>
-Subject: Re: [PATCH 1/3] libsas: sas_queuecommand doesnt need host_lock
-Date: Fri, 22 Jul 2011 22:05:15 -0400
-Message-ID: <20110723020515.GA13022@infradead.org>
-References: <20110711184922.859239377@bombadil.infradead.org>
- <20110711185045.179355504@bombadil.infradead.org>
- <CAA9_cmeHGbdW+c-RE+Lk9+kNy0arxHjU=OPcJZZtnUTLRuH8Kw@mail.gmail.com>
- <CC21AAFDD1FD4B9F966CA47480582FF3@usish.com.cn>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH 02/10] scsi bsg: add scsi bsg helper lib
+Date: Fri, 22 Jul 2011 22:19:42 -0500
+Message-ID: <4E2A3DCE.6090605@cs.wisc.edu>
+References: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>	<1311329100-2982-3-git-send-email-michaelc@cs.wisc.edu> <20110723011924Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:54957
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750874Ab1GWCFV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 22:05:21 -0400
-Content-Disposition: inline
-In-Reply-To: <CC21AAFDD1FD4B9F966CA47480582FF3@usish.com.cn>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39918 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750949Ab1GWDTw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Jul 2011 23:19:52 -0400
+In-Reply-To: <20110723011924Q.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: 'Dan Williams' <dan.j.williams@intel.com>, 'Christoph Hellwig' <hch@infradead.org>, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, "'dave.jiang'" <dave.jiang@intel.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2011 at 04:56:22PM +0800, Jack Wang wrote:
-> [Jack Wang] 
-> I test it with pm8001, using 512b read with 12 6G sas disks bumps ~460K iops
-> from 340K iops, but using 512b write performance drops from 340K to 240K.
+On 07/22/2011 11:31 AM, FUJITA Tomonori wrote:
+>> +/**
+>> + * scsi_destroy_bsg_job - routine to teardown/delete a bsg job
+>> + * @job: scsi_bsg_job that is to be torn down
+>> + */
+>> +static void scsi_destroy_bsg_job(struct scsi_bsg_job *job)
+>> +{
+>> +	unsigned long flags;
+>> +
+>> +	spin_lock_irqsave(&job->job_lock, flags);
+>> +	if (job->ref_cnt) {
+>> +		spin_unlock_irqrestore(&job->job_lock, flags);
+>> +		return;
+>> +	}
+>> +	spin_unlock_irqrestore(&job->job_lock, flags);
+> 
+> Is this actually a reference counter? Doesn't look like how we use a
+> reference counter? If scsi_bsg_job needs it, it would be better to
+> just put kref in it?
 
-Very strange.  Is this repeatable, and did you test with just patch 1,
-or the whole series?
+Yeah, I do not think it is needed. That and the state_flags should not
+be needed (state flag seems to duplicate the request state handling). I
+have patches to remove that code. I was going to send them separately
+though, so just in case I/we are wrong it can be git reverted. I guess
+it can just be merged in this patch though.
 
+
+
+>> +void scsi_bsg_remove(struct request_queue *q)
+>> +{
+>> +	struct request *req; /* block request */
+>> +	int counts; /* totals for request_list count and starved */
+> 
+> This function looks hacky a bit (e.g. peeking at the queue internal
+> values such as count and starved). Can we do this in a different way
+> (less hacky way)?
+> 
+
+
+>> +			}
+>> +
+>> +			msleep(200); /* allow bsg to possibly finish */
+> 
+> Hmm, what's it? Do we need to fix something about bsg?
+
+James Smart had added this in 78d16341facf829a71b6f7c68ec5511b9c168060.
+I do not think it can be easily fixed. I think he is working on a better
+long term fix.
