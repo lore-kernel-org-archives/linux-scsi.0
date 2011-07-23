@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 02/13] iscsi: Add Serial Number Arithmetic LT and GT into iscsi_proto.h
-Date: Sat, 23 Jul 2011 08:45:36 +0000
-Message-ID: <1311410747-29947-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 01/13] iscsi: Resolve iscsi_proto.h naming conflicts with drivers/target/iscsi
+Date: Sat, 23 Jul 2011 08:45:35 +0000
+Message-ID: <1311410747-29947-2-git-send-email-nab@linux-iscsi.org>
 References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34236 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34228 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752051Ab1GWJJQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 05:09:16 -0400
+	with ESMTP id S1751982Ab1GWJJM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 05:09:12 -0400
 In-Reply-To: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,101 +16,209 @@ Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Rei
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the iscsi_sna_lt() and iscsi_sna_lte(), along with
-iscsi_sna_gt() and iscsi_sna_gte() from iscsi_target_mod into
-static inlines inside of include/scsi/iscsi_proto.h
+This patch renames the following iscsi_proto.h structures to avoid
+namespace issues with drivers/target/iscsi/iscsi_target_core.h:
 
-This patch also includes the ISCSI_HDR_LEN and ISCSI_CRC_LEN
-definitions.
+*) struct iscsi_cmd -> struct iscsi_scsi_req
+*) struct iscsi_cmd_rsp -> struct iscsi_scsi_rsp
+*) struct iscsi_login -> struct iscsi_login_req
 
-Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+This patch includes useful ISCSI_FLAG_LOGIN_[CURRENT,NEXT]_STAGE*,
+and ISCSI_FLAG_SNACK_TYPE_* definitions used by iscsi_target_mod, and
+fixes the incorrect definition of struct iscsi_snack to following
+RFC-3720 Section 10.16. SNACK Request.
+
+Also, this patch updates libiscsi, iSER, be2iscsi, and bn2xi to
+use the updated structure definitions in a handful of locations.
+
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libiscsi.c    |   16 ----------------
- include/scsi/iscsi_proto.h |   38 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 38 insertions(+), 16 deletions(-)
+ drivers/infiniband/ulp/iser/iser_initiator.c |    2 +-
+ drivers/scsi/be2iscsi/be_main.h              |    4 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c               |    8 +++---
+ drivers/scsi/libiscsi.c                      |    6 ++--
+ include/scsi/iscsi_proto.h                   |   30 +++++++++++++++++++-------
+ 5 files changed, 32 insertions(+), 18 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
+index 95a08a8..d73bab3 100644
+--- a/drivers/infiniband/ulp/iser/iser_initiator.c
++++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+@@ -271,7 +271,7 @@ int iser_send_command(struct iscsi_conn *conn,
+ 	unsigned long edtl;
+ 	int err;
+ 	struct iser_data_buf *data_buf;
+-	struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
++	struct iscsi_scsi_req *hdr =  (struct iscsi_scsi_req *)task->hdr;
+ 	struct scsi_cmnd *sc  =  task->sc;
+ 	struct iser_tx_desc *tx_desc = &iser_task->desc;
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 081c171..5ce5170 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -397,7 +397,7 @@ struct amap_pdu_data_out {
+ };
+ 
+ struct be_cmd_bhs {
+-	struct iscsi_cmd iscsi_hdr;
++	struct iscsi_scsi_req iscsi_hdr;
+ 	unsigned char pad1[16];
+ 	struct pdu_data_out iscsi_data_pdu;
+ 	unsigned char pad2[BE_SENSE_INFO_SIZE -
+@@ -428,7 +428,7 @@ struct be_nonio_bhs {
+ };
+ 
+ struct be_status_bhs {
+-	struct iscsi_cmd iscsi_hdr;
++	struct iscsi_scsi_req iscsi_hdr;
+ 	unsigned char pad1[16];
+ 	/**
+ 	 * The plus 2 below is to hold the sense info length that gets
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 372d30c..1b160e1 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -328,11 +328,11 @@ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
+ {
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_login_request *login_wqe;
+-	struct iscsi_login *login_hdr;
++	struct iscsi_login_req *login_hdr;
+ 	u32 dword;
+ 
+ 	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
+-	login_hdr = (struct iscsi_login *)task->hdr;
++	login_hdr = (struct iscsi_login_req *)task->hdr;
+ 	login_wqe = (struct bnx2i_login_request *)
+ 						bnx2i_conn->ep->qp.sq_prod_qe;
+ 
+@@ -1344,7 +1344,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	struct bnx2i_cmd_response *resp_cqe;
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct iscsi_task *task;
+-	struct iscsi_cmd_rsp *hdr;
++	struct iscsi_scsi_rsp *hdr;
+ 	u32 datalen = 0;
+ 
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+@@ -1371,7 +1371,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	}
+ 	bnx2i_iscsi_unmap_sg_list(bnx2i_cmd);
+ 
+-	hdr = (struct iscsi_cmd_rsp *)task->hdr;
++	hdr = (struct iscsi_scsi_rsp *)task->hdr;
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+ 	hdr->opcode = resp_cqe->op_code;
+ 	hdr->max_cmdsn = cpu_to_be32(resp_cqe->max_cmd_sn);
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 9c3cb4e..3461a03 100644
+index 0c550d5..9c3cb4e 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -84,22 +84,6 @@ MODULE_PARM_DESC(debug_libiscsi_eh,
- 					     __func__, ##arg);		\
- 	} while (0);
+@@ -360,7 +360,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 	struct iscsi_conn *conn = task->conn;
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+-	struct iscsi_cmd *hdr;
++	struct iscsi_scsi_req *hdr;
+ 	unsigned hdrlength, cmd_len;
+ 	itt_t itt;
+ 	int rc;
+@@ -374,7 +374,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 		if (rc)
+ 			return rc;
+ 	}
+-	hdr = (struct iscsi_cmd *) task->hdr;
++	hdr = (struct iscsi_scsi_req *) task->hdr;
+ 	itt = hdr->itt;
+ 	memset(hdr, 0, sizeof(*hdr));
  
--/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
--#define SNA32_CHECK 2147483648UL
--
--static int iscsi_sna_lt(u32 n1, u32 n2)
--{
--	return n1 != n2 && ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
--			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
--}
--
--/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
--static int iscsi_sna_lte(u32 n1, u32 n2)
--{
--	return n1 == n2 || ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
--			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
--}
--
- inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
+@@ -830,7 +830,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			       struct iscsi_task *task, char *data,
+ 			       int datalen)
  {
- 	struct Scsi_Host *shost = conn->session->host;
+-	struct iscsi_cmd_rsp *rhdr = (struct iscsi_cmd_rsp *)hdr;
++	struct iscsi_scsi_rsp *rhdr = (struct iscsi_scsi_rsp *)hdr;
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
 diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index a9c9058..455b03a 100644
+index dd0a52c..a9c9058 100644
 --- a/include/scsi/iscsi_proto.h
 +++ b/include/scsi/iscsi_proto.h
-@@ -29,10 +29,48 @@
- /* default iSCSI listen port for incoming connections */
- #define ISCSI_LISTEN_PORT	3260
+@@ -116,7 +116,7 @@ struct iscsi_ahs_hdr {
+ #define ISCSI_CDB_SIZE			16
  
-+/* iSCSI header length */
-+#define ISCSI_HDR_LEN		48
-+
-+/* iSCSI CRC32C length */
-+#define ISCSI_CRC_LEN		4
-+
- /* Padding word length */
- #define ISCSI_PAD_LEN		4
+ /* iSCSI PDU Header */
+-struct iscsi_cmd {
++struct iscsi_scsi_req {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	__be16 rsvd2;
+@@ -161,7 +161,7 @@ struct iscsi_ecdb_ahdr {
+ };
  
- /*
-+ * Serial Number Arithmetic, 32 bits, RFC1982
-+ */
-+
-+static inline int iscsi_sna_lt(u32 n1, u32 n2)
-+{
-+	s32 diff = n1 - n2;
-+
-+	return diff < 0;
-+}
-+
-+static inline int iscsi_sna_lte(u32 n1, u32 n2)
-+{
-+	s32 diff = n1 - n2;
-+
-+	return diff <= 0;
-+}
-+
-+static inline int iscsi_sna_gt(u32 n1, u32 n2)
-+{
-+	s32 diff = n1 - n2;
-+
-+	return diff > 0;
-+}
-+
-+static inline int iscsi_sna_gte(u32 n1, u32 n2)
-+{
-+	s32 diff = n1 - n2;
-+
-+	return diff >= 0;
-+}
-+
-+/*
-  * useful common(control and data pathes) macro
-  */
- #define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
+ /* SCSI Response Header */
+-struct iscsi_cmd_rsp {
++struct iscsi_scsi_rsp {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	uint8_t response;
+@@ -406,7 +406,7 @@ struct iscsi_text_rsp {
+ };
+ 
+ /* Login Header */
+-struct iscsi_login {
++struct iscsi_login_req {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	uint8_t max_version;	/* Max. version supported */
+@@ -427,7 +427,13 @@ struct iscsi_login {
+ #define ISCSI_FLAG_LOGIN_TRANSIT		0x80
+ #define ISCSI_FLAG_LOGIN_CONTINUE		0x40
+ #define ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK	0x0C	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE1		0x04
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE2		0x08
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE3		0x0C
+ #define ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK	0x03	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE1		0x01
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE2		0x02
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE3		0x03
+ 
+ #define ISCSI_LOGIN_CURRENT_STAGE(flags) \
+ 	((flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2)
+@@ -550,17 +556,25 @@ struct iscsi_logout_rsp {
+ struct iscsi_snack {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+-	uint8_t rsvd2[14];
++	uint8_t rsvd2[2];
++	uint8_t hlength;
++	uint8_t dlength[3];
++	uint8_t lun[8];
+ 	itt_t	 itt;
++	__be32  ttt;
++	uint8_t rsvd3[4];
++	__be32  exp_statsn;
++	uint8_t rsvd4[8];
+ 	__be32	begrun;
+ 	__be32	runlength;
+-	__be32	exp_statsn;
+-	__be32	rsvd3;
+-	__be32	exp_datasn;
+-	uint8_t rsvd6[8];
+ };
+ 
+ /* SNACK PDU flags */
++#define ISCSI_FLAG_SNACK_TYPE_DATA		0
++#define ISCSI_FLAG_SNACK_TYPE_R2T		0
++#define ISCSI_FLAG_SNACK_TYPE_STATUS		1
++#define ISCSI_FLAG_SNACK_TYPE_DATA_ACK		2
++#define ISCSI_FLAG_SNACK_TYPE_RDATA		3
+ #define ISCSI_FLAG_SNACK_TYPE_MASK	0x0F	/* 4 bits */
+ 
+ /* Reject Message Header */
 -- 
 1.7.6
 
