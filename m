@@ -1,134 +1,46 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [PATCH 02/13] iscsi: Add Serial Number Arithmetic LT and GT into
- iscsi_proto.h
-Date: Sat, 23 Jul 2011 16:25:29 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1107231535070.3831@swampdragon.chaosbits.net>
-References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org> <1311410747-29947-3-git-send-email-nab@linux-iscsi.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 08/13] iscsi-target: Add CHAP Authentication support
+ using libcrypto
+Date: Sat, 23 Jul 2011 20:39:33 +0400
+Message-ID: <1311439173.23720.14.camel@mulgrave>
+References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
+	 <1311410747-29947-9-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:15076 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752232Ab1GWOZb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 10:25:31 -0400
-In-Reply-To: <1311410747-29947-3-git-send-email-nab@linux-iscsi.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55581 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753071Ab1GWQjl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jul 2011 12:39:41 -0400
+In-Reply-To: <1311410747-29947-9-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Sat, 23 Jul 2011, Nicholas A. Bellinger wrote:
-
+On Sat, 2011-07-23 at 08:45 +0000, Nicholas A. Bellinger wrote:
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> This patch moves the iscsi_sna_lt() and iscsi_sna_lte(), along with
-> iscsi_sna_gt() and iscsi_sna_gte() from iscsi_target_mod into
-> static inlines inside of include/scsi/iscsi_proto.h
+> This patch adds support for libcrypto md5 based iSCSI CHAP authentication
+> support for iscsi_target_mod.  This includes support for mutual and one-way
+> NodeACL authentication for SessionType=Normal and SessionType=Discovery
+> via /sys/kernel/config/target/iscsi.
 > 
-> This patch also includes the ISCSI_HDR_LEN and ISCSI_CRC_LEN
-> definitions.
-> 
-> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 > ---
->  drivers/scsi/libiscsi.c    |   16 ----------------
->  include/scsi/iscsi_proto.h |   38 ++++++++++++++++++++++++++++++++++++++
->  2 files changed, 38 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> index 9c3cb4e..3461a03 100644
-> --- a/drivers/scsi/libiscsi.c
-> +++ b/drivers/scsi/libiscsi.c
-> @@ -84,22 +84,6 @@ MODULE_PARM_DESC(debug_libiscsi_eh,
->  					     __func__, ##arg);		\
->  	} while (0);
->  
-> -/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
-> -#define SNA32_CHECK 2147483648UL
-> -
-> -static int iscsi_sna_lt(u32 n1, u32 n2)
-> -{
-> -	return n1 != n2 && ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
-> -			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
-> -}
-> -
-> -/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
-> -static int iscsi_sna_lte(u32 n1, u32 n2)
-> -{
-> -	return n1 == n2 || ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
-> -			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
-> -}
-> -
->  inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
->  {
->  	struct Scsi_Host *shost = conn->session->host;
-> diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-> index a9c9058..455b03a 100644
-> --- a/include/scsi/iscsi_proto.h
-> +++ b/include/scsi/iscsi_proto.h
-> @@ -29,10 +29,48 @@
->  /* default iSCSI listen port for incoming connections */
->  #define ISCSI_LISTEN_PORT	3260
->  
-> +/* iSCSI header length */
-> +#define ISCSI_HDR_LEN		48
-> +
-> +/* iSCSI CRC32C length */
-> +#define ISCSI_CRC_LEN		4
-> +
->  /* Padding word length */
->  #define ISCSI_PAD_LEN		4
->  
->  /*
-> + * Serial Number Arithmetic, 32 bits, RFC1982
-> + */
-> +
-> +static inline int iscsi_sna_lt(u32 n1, u32 n2)
-> +{
-> +	s32 diff = n1 - n2;
-> +
-> +	return diff < 0;
-> +}
+>  drivers/target/iscsi/iscsi_target_auth.c |  490 ++++++++++++++++++++++++++++++
+>  drivers/target/iscsi/iscsi_target_auth.h |   31 ++
+>  2 files changed, 521 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
+>  create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
 
-Perhaps get rid of the variable and do
+I've asked you twice for input on the patch doing this in userspace,
+which was posted five weeks ago.  Just ignoring something is
+unacceptable behaviour ... what do I have to do to get your attention?
+NAK the patch set?
 
-  return (s32)(n1 - n2) < 0;
+James
 
- same suggestion for the other functions as well.
-
-???
-
-> +
-> +static inline int iscsi_sna_lte(u32 n1, u32 n2)
-> +{
-> +	s32 diff = n1 - n2;
-> +
-> +	return diff <= 0;
-> +}
-> +
-> +static inline int iscsi_sna_gt(u32 n1, u32 n2)
-> +{
-> +	s32 diff = n1 - n2;
-> +
-> +	return diff > 0;
-> +}
-> +
-> +static inline int iscsi_sna_gte(u32 n1, u32 n2)
-> +{
-> +	s32 diff = n1 - n2;
-> +
-> +	return diff >= 0;
-> +}
-> +
-> +/*
->   * useful common(control and data pathes) macro
->   */
->  #define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
-> 
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
 
