@@ -1,17 +1,17 @@
 From: Fubo Chen <fubo.chen@gmail.com>
 Subject: Re: [PATCH 018/103] target: Remove struct se_global
-Date: Sat, 23 Jul 2011 10:38:30 +0200
-Message-ID: <CAJAFBLAjmDs0HvUR2oZ2tk+DDw=5LcQLbE_k0jAxfcQbjAZU4A@mail.gmail.com>
+Date: Sat, 23 Jul 2011 10:40:34 +0200
+Message-ID: <CAJAFBLD9g_wfc4RizhbergOcMtYFfiwQ=s=iogK8geCajj7LgA@mail.gmail.com>
 References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
 	<1311231979-6631-19-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:58788 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722Ab1GWIib convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 04:38:31 -0400
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:52366 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722Ab1GWIkf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 04:40:35 -0400
 In-Reply-To: <1311231979-6631-19-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,27 +20,21 @@ Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.ker
 
 On Thu, Jul 21, 2011 at 9:04 AM, Nicholas A. Bellinger
 <nab@linux-iscsi.org> wrote:
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/t=
-arget_core_configfs.c
-> index 03cda0e..82c8e9a 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -37,6 +37,7 @@
-> =A0#include <linux/parser.h>
-> =A0#include <linux/syscalls.h>
-> =A0#include <linux/configfs.h>
-> +#include <linux/spinlock.h>
+> From: Andy Grover <agrover@redhat.com>
+> diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target=
+_core_tpg.c
+> index dc024c1..4e2bee9 100644
+> --- a/drivers/target/target_core_tpg.c
+> +++ b/drivers/target/target_core_tpg.c
+> @@ -44,6 +44,12 @@
+> =A0#include <target/target_core_fabric_ops.h>
 >
-> =A0#include <target/target_core_base.h>
-> =A0#include <target/target_core_device.h>
-> @@ -52,6 +53,8 @@
-> =A0#include "target_core_rd.h"
-> =A0#include "target_core_stat.h"
->
-> +extern struct t10_alua_lu_gp *default_lu_gp;
+> =A0#include "target_core_hba.h"
+> +#include "target_core_stat.h"
+> +
+> +extern struct se_device *g_lun0_dev;
 
-I see here an extern declaration in a .c file. Shouldn't instead that
-be moved to a header file ?
+Same here: another extern declaraion in a C file.
 
 =46ubo.
 --
