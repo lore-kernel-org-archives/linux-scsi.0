@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 09/13] iscsi-target: Add Sequence/PDU list + DataIN response logic
-Date: Sat, 23 Jul 2011 08:45:43 +0000
-Message-ID: <1311410747-29947-10-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 07/13] iscsi-target: Add iSCSI Login Negotiation + Parameter logic
+Date: Sat, 23 Jul 2011 08:45:41 +0000
+Message-ID: <1311410747-29947-8-git-send-email-nab@linux-iscsi.org>
 References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34301 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:34284 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265Ab1GWJJz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 05:09:55 -0400
+	with ESMTP id S1751469Ab1GWJJm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 05:09:42 -0400
 In-Reply-To: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,31 +16,39 @@ Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Rei
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds Sequence/PDU list logic used by RFC-3720 for
-DataSequenceInOrder=[Yes,No] and DataPDUInOrder=[Yes,No].  It also
-includes support for these modes of support for generating iSCSI
-DataIN response data from iscsi_target.c:iscsi_send_data_in().
+This patch adds the princple RFC-3720 compatiable iSCSI Login
+phase negotiation for iscsi_target_mod.  This also includes the
+target RX/TX thread queue logic which is called directly from iSCSI
+login associated code.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_datain_values.c |  531 ++++++++++++++++
- drivers/target/iscsi/iscsi_target_datain_values.h |   12 +
- drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |  664 +++++++++++++++++++++
- drivers/target/iscsi/iscsi_target_seq_pdu_list.h  |   86 +++
- 4 files changed, 1293 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.c
- create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.h
- create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.c
- create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.h
+ drivers/target/iscsi/iscsi_target_login.c      | 1232 +++++++++++++++
+ drivers/target/iscsi/iscsi_target_login.h      |   12 +
+ drivers/target/iscsi/iscsi_target_nego.c       | 1067 +++++++++++++
+ drivers/target/iscsi/iscsi_target_nego.h       |   17 +
+ drivers/target/iscsi/iscsi_target_parameters.c | 1905 ++++++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target_parameters.h |  269 ++++
+ drivers/target/iscsi/iscsi_target_tq.c         |  551 +++++++
+ drivers/target/iscsi/iscsi_target_tq.h         |   88 ++
+ 8 files changed, 5141 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_login.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_login.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_nego.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_nego.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_parameters.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_parameters.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tq.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tq.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_datain_values.c b/drivers/target/iscsi/iscsi_target_datain_values.c
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
 new file mode 100644
-index 0000000..8c04951
+index 0000000..bcaf82f
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_datain_values.c
-@@ -0,0 +1,531 @@
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -0,0 +1,1232 @@
 +/*******************************************************************************
-+ * This file contains the iSCSI Target DataIN value generation functions.
++ * This file contains the login functions used by the iSCSI Target driver.
 + *
 + * \u00a9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
@@ -59,546 +67,2342 @@ index 0000000..8c04951
 + * GNU General Public License for more details.
 + ******************************************************************************/
 +
++#include <linux/string.h>
++#include <linux/kthread.h>
++#include <linux/crypto.h>
 +#include <scsi/iscsi_proto.h>
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
 +
 +#include "iscsi_target_core.h"
-+#include "iscsi_target_seq_pdu_list.h"
-+#include "iscsi_target_erl1.h"
++#include "iscsi_target_tq.h"
++#include "iscsi_target_device.h"
++#include "iscsi_target_nego.h"
++#include "iscsi_target_erl0.h"
++#include "iscsi_target_erl2.h"
++#include "iscsi_target_login.h"
++#include "iscsi_target_stat.h"
++#include "iscsi_target_tpg.h"
 +#include "iscsi_target_util.h"
 +#include "iscsi_target.h"
-+#include "iscsi_target_datain_values.h"
++#include "iscsi_target_parameters.h"
 +
-+struct iscsi_datain_req *iscsit_allocate_datain_req(void)
++extern struct idr sess_idr;
++extern struct mutex auth_id_lock;
++extern spinlock_t sess_idr_lock;
++
++static int iscsi_login_init_conn(struct iscsi_conn *conn)
 +{
-+	struct iscsi_datain_req *dr;
++	INIT_LIST_HEAD(&conn->conn_list);
++	INIT_LIST_HEAD(&conn->conn_cmd_list);
++	INIT_LIST_HEAD(&conn->immed_queue_list);
++	INIT_LIST_HEAD(&conn->response_queue_list);
++	init_completion(&conn->conn_post_wait_comp);
++	init_completion(&conn->conn_wait_comp);
++	init_completion(&conn->conn_wait_rcfr_comp);
++	init_completion(&conn->conn_waiting_on_uc_comp);
++	init_completion(&conn->conn_logout_comp);
++	init_completion(&conn->rx_half_close_comp);
++	init_completion(&conn->tx_half_close_comp);
++	spin_lock_init(&conn->cmd_lock);
++	spin_lock_init(&conn->conn_usage_lock);
++	spin_lock_init(&conn->immed_queue_lock);
++	spin_lock_init(&conn->nopin_timer_lock);
++	spin_lock_init(&conn->response_queue_lock);
++	spin_lock_init(&conn->state_lock);
 +
-+	dr = kmem_cache_zalloc(lio_dr_cache, GFP_ATOMIC);
-+	if (!dr) {
++	if (!zalloc_cpumask_var(&conn->conn_cpumask, GFP_KERNEL)) {
++		pr_err("Unable to allocate conn->conn_cpumask\n");
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++/*
++ * Used by iscsi_target_nego.c:iscsi_target_locate_portal() to setup
++ * per struct iscsi_conn libcrypto contexts for crc32c and crc32-intel
++ */
++int iscsi_login_setup_crypto(struct iscsi_conn *conn)
++{
++	/*
++	 * Setup slicing by CRC32C algorithm for RX and TX libcrypto contexts
++	 * which will default to crc32c_intel.ko for cpu_has_xmm4_2, or fallback
++	 * to software 1x8 byte slicing from crc32c.ko
++	 */
++	conn->conn_rx_hash.flags = 0;
++	conn->conn_rx_hash.tfm = crypto_alloc_hash("crc32c", 0,
++						CRYPTO_ALG_ASYNC);
++	if (IS_ERR(conn->conn_rx_hash.tfm)) {
++		pr_err("crypto_alloc_hash() failed for conn_rx_tfm\n");
++		return -ENOMEM;
++	}
++
++	conn->conn_tx_hash.flags = 0;
++	conn->conn_tx_hash.tfm = crypto_alloc_hash("crc32c", 0,
++						CRYPTO_ALG_ASYNC);
++	if (IS_ERR(conn->conn_tx_hash.tfm)) {
++		pr_err("crypto_alloc_hash() failed for conn_tx_tfm\n");
++		crypto_free_hash(conn->conn_rx_hash.tfm);
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
++static int iscsi_login_check_initiator_version(
++	struct iscsi_conn *conn,
++	u8 version_max,
++	u8 version_min)
++{
++	if ((version_max != 0x00) || (version_min != 0x00)) {
++		pr_err("Unsupported iSCSI IETF Pre-RFC Revision,"
++			" version Min/Max 0x%02x/0x%02x, rejecting login.\n",
++			version_min, version_max);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_NO_VERSION);
++		return -1;
++	}
++
++	return 0;
++}
++
++int iscsi_check_for_session_reinstatement(struct iscsi_conn *conn)
++{
++	int sessiontype;
++	struct iscsi_param *initiatorname_param = NULL, *sessiontype_param = NULL;
++	struct iscsi_portal_group *tpg = conn->tpg;
++	struct iscsi_session *sess = NULL, *sess_p = NULL;
++	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
++	struct se_session *se_sess, *se_sess_tmp;
++
++	initiatorname_param = iscsi_find_param_from_key(
++			INITIATORNAME, conn->param_list);
++	if (!initiatorname_param)
++		return -1;
++
++	sessiontype_param = iscsi_find_param_from_key(
++			SESSIONTYPE, conn->param_list);
++	if (!sessiontype_param)
++		return -1;
++
++	sessiontype = (strncmp(sessiontype_param->value, NORMAL, 6)) ? 1 : 0;
++
++	spin_lock_bh(&se_tpg->session_lock);
++	list_for_each_entry_safe(se_sess, se_sess_tmp, &se_tpg->tpg_sess_list,
++			sess_list) {
++
++		sess_p = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		spin_lock(&sess_p->conn_lock);
++		if (atomic_read(&sess_p->session_fall_back_to_erl0) ||
++		    atomic_read(&sess_p->session_logout) ||
++		    (sess_p->time2retain_timer_flags & ISCSI_TF_EXPIRED)) {
++			spin_unlock(&sess_p->conn_lock);
++			continue;
++		}
++		if (!memcmp((void *)sess_p->isid, (void *)conn->sess->isid, 6) &&
++		   (!strcmp((void *)sess_p->sess_ops->InitiatorName,
++			    (void *)initiatorname_param->value) &&
++		   (sess_p->sess_ops->SessionType == sessiontype))) {
++			atomic_set(&sess_p->session_reinstatement, 1);
++			spin_unlock(&sess_p->conn_lock);
++			iscsit_inc_session_usage_count(sess_p);
++			iscsit_stop_time2retain_timer(sess_p);
++			sess = sess_p;
++			break;
++		}
++		spin_unlock(&sess_p->conn_lock);
++	}
++	spin_unlock_bh(&se_tpg->session_lock);
++	/*
++	 * If the Time2Retain handler has expired, the session is already gone.
++	 */
++	if (!sess)
++		return 0;
++
++	pr_debug("%s iSCSI Session SID %u is still active for %s,"
++		" preforming session reinstatement.\n", (sessiontype) ?
++		"Discovery" : "Normal", sess->sid,
++		sess->sess_ops->InitiatorName);
++
++	spin_lock_bh(&sess->conn_lock);
++	if (sess->session_state == TARG_SESS_STATE_FAILED) {
++		spin_unlock_bh(&sess->conn_lock);
++		iscsit_dec_session_usage_count(sess);
++		return iscsit_close_session(sess);
++	}
++	spin_unlock_bh(&sess->conn_lock);
++
++	iscsit_stop_session(sess, 1, 1);
++	iscsit_dec_session_usage_count(sess);
++
++	return iscsit_close_session(sess);
++}
++
++static void iscsi_login_set_conn_values(
++	struct iscsi_session *sess,
++	struct iscsi_conn *conn,
++	u16 cid)
++{
++	conn->sess		= sess;
++	conn->cid		= cid;
++	/*
++	 * Generate a random Status sequence number (statsn) for the new
++	 * iSCSI connection.
++	 */
++	get_random_bytes(&conn->stat_sn, sizeof(u32));
++
++	mutex_lock(&auth_id_lock);
++	conn->auth_id		= iscsit_global->auth_id++;
++	mutex_unlock(&auth_id_lock);
++}
++
++/*
++ *	This is the leading connection of a new session,
++ *	or session reinstatement.
++ */
++static int iscsi_login_zero_tsih_s1(
++	struct iscsi_conn *conn,
++	unsigned char *buf)
++{
++	struct iscsi_session *sess = NULL;
++	struct iscsi_login_req *pdu = (struct iscsi_login_req *)buf;
++
++	sess = kzalloc(sizeof(struct iscsi_session), GFP_KERNEL);
++	if (!sess) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		pr_err("Could not allocate memory for session\n");
++		return -1;
++	}
++
++	iscsi_login_set_conn_values(sess, conn, pdu->cid);
++	sess->init_task_tag	= pdu->itt;
++	memcpy((void *)&sess->isid, (void *)pdu->isid, 6);
++	sess->exp_cmd_sn	= pdu->cmdsn;
++	INIT_LIST_HEAD(&sess->sess_conn_list);
++	INIT_LIST_HEAD(&sess->sess_ooo_cmdsn_list);
++	INIT_LIST_HEAD(&sess->cr_active_list);
++	INIT_LIST_HEAD(&sess->cr_inactive_list);
++	init_completion(&sess->async_msg_comp);
++	init_completion(&sess->reinstatement_comp);
++	init_completion(&sess->session_wait_comp);
++	init_completion(&sess->session_waiting_on_uc_comp);
++	mutex_init(&sess->cmdsn_mutex);
++	spin_lock_init(&sess->conn_lock);
++	spin_lock_init(&sess->cr_a_lock);
++	spin_lock_init(&sess->cr_i_lock);
++	spin_lock_init(&sess->session_usage_lock);
++	spin_lock_init(&sess->ttt_lock);
++
++	if (!idr_pre_get(&sess_idr, GFP_KERNEL)) {
++		pr_err("idr_pre_get() for sess_idr failed\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++	spin_lock(&sess_idr_lock);
++	idr_get_new(&sess_idr, NULL, &sess->session_index);
++	spin_unlock(&sess_idr_lock);
++
++	sess->creation_time = get_jiffies_64();
++	spin_lock_init(&sess->session_stats_lock);
++	/*
++	 * The FFP CmdSN window values will be allocated from the TPG's
++	 * Initiator Node's ACL once the login has been successfully completed.
++	 */
++	sess->max_cmd_sn	= pdu->cmdsn;
++
++	sess->sess_ops = kzalloc(sizeof(struct iscsi_sess_ops), GFP_KERNEL);
++	if (!sess->sess_ops) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
 +		pr_err("Unable to allocate memory for"
-+				" struct iscsi_datain_req\n");
-+		return NULL;
++				" struct iscsi_sess_ops.\n");
++		return -1;
 +	}
-+	INIT_LIST_HEAD(&dr->dr_list);
 +
-+	return dr;
-+}
-+
-+void iscsit_attach_datain_req(struct iscsi_cmd *cmd, struct iscsi_datain_req *dr)
-+{
-+	spin_lock(&cmd->datain_lock);
-+	list_add_tail(&dr->dr_list, &cmd->datain_list);
-+	spin_unlock(&cmd->datain_lock);
-+}
-+
-+void iscsit_free_datain_req(struct iscsi_cmd *cmd, struct iscsi_datain_req *dr)
-+{
-+	spin_lock(&cmd->datain_lock);
-+	list_del(&dr->dr_list);
-+	spin_unlock(&cmd->datain_lock);
-+
-+	kmem_cache_free(lio_dr_cache, dr);
-+}
-+
-+void iscsit_free_all_datain_reqs(struct iscsi_cmd *cmd)
-+{
-+	struct iscsi_datain_req *dr, *dr_tmp;
-+
-+	spin_lock(&cmd->datain_lock);
-+	list_for_each_entry_safe(dr, dr_tmp, &cmd->datain_list, dr_list) {
-+		list_del(&dr->dr_list);
-+		kmem_cache_free(lio_dr_cache, dr);
++	sess->se_sess = transport_init_session();
++	if (!sess->se_sess) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
 +	}
-+	spin_unlock(&cmd->datain_lock);
++
++	return 0;
 +}
 +
-+struct iscsi_datain_req *iscsit_get_datain_req(struct iscsi_cmd *cmd)
++static int iscsi_login_zero_tsih_s2(
++	struct iscsi_conn *conn)
 +{
-+	struct iscsi_datain_req *dr;
++	struct iscsi_node_attrib *na;
++	struct iscsi_session *sess = conn->sess;
++	unsigned char buf[32];
 +
-+	if (list_empty(&cmd->datain_list)) {
-+		pr_err("cmd->datain_list is empty for ITT:"
-+			" 0x%08x\n", cmd->init_task_tag);
-+		return NULL;
++	sess->tpg = conn->tpg;
++
++	/*
++	 * Assign a new TPG Session Handle.  Note this is protected with
++	 * struct iscsi_portal_group->np_login_sem from iscsit_access_np().
++	 */
++	sess->tsih = ++ISCSI_TPG_S(sess)->ntsih;
++	if (!sess->tsih)
++		sess->tsih = ++ISCSI_TPG_S(sess)->ntsih;
++
++	/*
++	 * Create the default params from user defined values..
++	 */
++	if (iscsi_copy_param_list(&conn->param_list,
++				ISCSI_TPG_C(conn)->param_list, 1) < 0) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
 +	}
-+	list_for_each_entry(dr, &cmd->datain_list, dr_list)
++
++	iscsi_set_keys_to_negotiate(0, conn->param_list);
++
++	if (sess->sess_ops->SessionType)
++		return iscsi_set_keys_irrelevant_for_discovery(
++				conn->param_list);
++
++	na = iscsit_tpg_get_node_attrib(sess);
++
++	/*
++	 * Need to send TargetPortalGroupTag back in first login response
++	 * on any iSCSI connection where the Initiator provides TargetName.
++	 * See 5.3.1.  Login Phase Start
++	 *
++	 * In our case, we have already located the struct iscsi_tiqn at this point.
++	 */
++	memset(buf, 0, 32);
++	sprintf(buf, "TargetPortalGroupTag=%hu", ISCSI_TPG_S(sess)->tpgt);
++	if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++
++	/*
++	 * Workaround for Initiators that have broken connection recovery logic.
++	 *
++	 * "We would really like to get rid of this." Linux-iSCSI.org team
++	 */
++	memset(buf, 0, 32);
++	sprintf(buf, "ErrorRecoveryLevel=%d", na->default_erl);
++	if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++
++	if (iscsi_login_disable_FIM_keys(conn->param_list, conn) < 0)
++		return -1;
++
++	return 0;
++}
++
++/*
++ * Remove PSTATE_NEGOTIATE for the four FIM related keys.
++ * The Initiator node will be able to enable FIM by proposing them itself.
++ */
++int iscsi_login_disable_FIM_keys(
++	struct iscsi_param_list *param_list,
++	struct iscsi_conn *conn)
++{
++	struct iscsi_param *param;
++
++	param = iscsi_find_param_from_key("OFMarker", param_list);
++	if (!param) {
++		pr_err("iscsi_find_param_from_key() for"
++				" OFMarker failed\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++	param->state &= ~PSTATE_NEGOTIATE;
++
++	param = iscsi_find_param_from_key("OFMarkInt", param_list);
++	if (!param) {
++		pr_err("iscsi_find_param_from_key() for"
++				" IFMarker failed\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++	param->state &= ~PSTATE_NEGOTIATE;
++
++	param = iscsi_find_param_from_key("IFMarker", param_list);
++	if (!param) {
++		pr_err("iscsi_find_param_from_key() for"
++				" IFMarker failed\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++	param->state &= ~PSTATE_NEGOTIATE;
++
++	param = iscsi_find_param_from_key("IFMarkInt", param_list);
++	if (!param) {
++		pr_err("iscsi_find_param_from_key() for"
++				" IFMarker failed\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++	param->state &= ~PSTATE_NEGOTIATE;
++
++	return 0;
++}
++
++static int iscsi_login_non_zero_tsih_s1(
++	struct iscsi_conn *conn,
++	unsigned char *buf)
++{
++	struct iscsi_login_req *pdu = (struct iscsi_login_req *)buf;
++
++	iscsi_login_set_conn_values(NULL, conn, pdu->cid);
++	return 0;
++}
++
++/*
++ *	Add a new connection to an existing session.
++ */
++static int iscsi_login_non_zero_tsih_s2(
++	struct iscsi_conn *conn,
++	unsigned char *buf)
++{
++	struct iscsi_portal_group *tpg = conn->tpg;
++	struct iscsi_session *sess = NULL, *sess_p = NULL;
++	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
++	struct se_session *se_sess, *se_sess_tmp;
++	struct iscsi_login_req *pdu = (struct iscsi_login_req *)buf;
++
++	spin_lock_bh(&se_tpg->session_lock);
++	list_for_each_entry_safe(se_sess, se_sess_tmp, &se_tpg->tpg_sess_list,
++			sess_list) {
++
++		sess_p = (struct iscsi_session *)se_sess->fabric_sess_ptr;
++		if (atomic_read(&sess_p->session_fall_back_to_erl0) ||
++		    atomic_read(&sess_p->session_logout) ||
++		   (sess_p->time2retain_timer_flags & ISCSI_TF_EXPIRED))
++			continue;
++		if (!memcmp((const void *)sess_p->isid,
++		     (const void *)pdu->isid, 6) &&
++		     (sess_p->tsih == pdu->tsih)) {
++			iscsit_inc_session_usage_count(sess_p);
++			iscsit_stop_time2retain_timer(sess_p);
++			sess = sess_p;
++			break;
++		}
++	}
++	spin_unlock_bh(&se_tpg->session_lock);
++
++	/*
++	 * If the Time2Retain handler has expired, the session is already gone.
++	 */
++	if (!sess) {
++		pr_err("Initiator attempting to add a connection to"
++			" a non-existent session, rejecting iSCSI Login.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_NO_SESSION);
++		return -1;
++	}
++
++	/*
++	 * Stop the Time2Retain timer if this is a failed session, we restart
++	 * the timer if the login is not successful.
++	 */
++	spin_lock_bh(&sess->conn_lock);
++	if (sess->session_state == TARG_SESS_STATE_FAILED)
++		atomic_set(&sess->session_continuation, 1);
++	spin_unlock_bh(&sess->conn_lock);
++
++	iscsi_login_set_conn_values(sess, conn, pdu->cid);
++
++	if (iscsi_copy_param_list(&conn->param_list,
++			ISCSI_TPG_C(conn)->param_list, 0) < 0) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++
++	iscsi_set_keys_to_negotiate(0, conn->param_list);
++	/*
++	 * Need to send TargetPortalGroupTag back in first login response
++	 * on any iSCSI connection where the Initiator provides TargetName.
++	 * See 5.3.1.  Login Phase Start
++	 *
++	 * In our case, we have already located the struct iscsi_tiqn at this point.
++	 */
++	memset(buf, 0, 32);
++	sprintf(buf, "TargetPortalGroupTag=%hu", ISCSI_TPG_S(sess)->tpgt);
++	if (iscsi_change_param_value(buf, conn->param_list, 0) < 0) {
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		return -1;
++	}
++
++	return iscsi_login_disable_FIM_keys(conn->param_list, conn);
++}
++
++int iscsi_login_post_auth_non_zero_tsih(
++	struct iscsi_conn *conn,
++	u16 cid,
++	u32 exp_statsn)
++{
++	struct iscsi_conn *conn_ptr = NULL;
++	struct iscsi_conn_recovery *cr = NULL;
++	struct iscsi_session *sess = conn->sess;
++
++	/*
++	 * By following item 5 in the login table,  if we have found
++	 * an existing ISID and a valid/existing TSIH and an existing
++	 * CID we do connection reinstatement.  Currently we dont not
++	 * support it so we send back an non-zero status class to the
++	 * initiator and release the new connection.
++	 */
++	conn_ptr = iscsit_get_conn_from_cid_rcfr(sess, cid);
++	if ((conn_ptr)) {
++		pr_err("Connection exists with CID %hu for %s,"
++			" performing connection reinstatement.\n",
++			conn_ptr->cid, sess->sess_ops->InitiatorName);
++
++		iscsit_connection_reinstatement_rcfr(conn_ptr);
++		iscsit_dec_conn_usage_count(conn_ptr);
++	}
++
++	/*
++	 * Check for any connection recovery entires containing CID.
++	 * We use the original ExpStatSN sent in the first login request
++	 * to acknowledge commands for the failed connection.
++	 *
++	 * Also note that an explict logout may have already been sent,
++	 * but the response may not be sent due to additional connection
++	 * loss.
++	 */
++	if (sess->sess_ops->ErrorRecoveryLevel == 2) {
++		cr = iscsit_get_inactive_connection_recovery_entry(
++				sess, cid);
++		if ((cr)) {
++			pr_debug("Performing implicit logout"
++				" for connection recovery on CID: %hu\n",
++					conn->cid);
++			iscsit_discard_cr_cmds_by_expstatsn(cr, exp_statsn);
++		}
++	}
++
++	/*
++	 * Else we follow item 4 from the login table in that we have
++	 * found an existing ISID and a valid/existing TSIH and a new
++	 * CID we go ahead and continue to add a new connection to the
++	 * session.
++	 */
++	pr_debug("Adding CID %hu to existing session for %s.\n",
++			cid, sess->sess_ops->InitiatorName);
++
++	if ((atomic_read(&sess->nconn) + 1) > sess->sess_ops->MaxConnections) {
++		pr_err("Adding additional connection to this session"
++			" would exceed MaxConnections %d, login failed.\n",
++				sess->sess_ops->MaxConnections);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_ISID_ERROR);
++		return -1;
++	}
++
++	return 0;
++}
++
++static void iscsi_post_login_start_timers(struct iscsi_conn *conn)
++{
++	struct iscsi_session *sess = conn->sess;
++
++	if (!sess->sess_ops->SessionType)
++		iscsit_start_nopin_timer(conn);
++}
++
++static int iscsi_post_login_handler(
++	struct iscsi_np *np,
++	struct iscsi_conn *conn,
++	u8 zero_tsih)
++{
++	int stop_timer = 0;
++	struct iscsi_session *sess = conn->sess;
++	struct se_session *se_sess = sess->se_sess;
++	struct iscsi_portal_group *tpg = ISCSI_TPG_S(sess);
++	struct se_portal_group *se_tpg = &tpg->tpg_se_tpg;
++	struct iscsi_thread_set *ts;
++
++	iscsit_inc_conn_usage_count(conn);
++
++	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_SUCCESS,
++			ISCSI_LOGIN_STATUS_ACCEPT);
++
++	pr_debug("Moving to TARG_CONN_STATE_LOGGED_IN.\n");
++	conn->conn_state = TARG_CONN_STATE_LOGGED_IN;
++
++	iscsi_set_connection_parameters(conn->conn_ops, conn->param_list);
++	iscsit_set_sync_and_steering_values(conn);
++	/*
++	 * SCSI Initiator -> SCSI Target Port Mapping
++	 */
++	ts = iscsi_get_thread_set();
++	if (!zero_tsih) {
++		iscsi_set_session_parameters(sess->sess_ops,
++				conn->param_list, 0);
++		iscsi_release_param_list(conn->param_list);
++		conn->param_list = NULL;
++
++		spin_lock_bh(&sess->conn_lock);
++		atomic_set(&sess->session_continuation, 0);
++		if (sess->session_state == TARG_SESS_STATE_FAILED) {
++			pr_debug("Moving to"
++					" TARG_SESS_STATE_LOGGED_IN.\n");
++			sess->session_state = TARG_SESS_STATE_LOGGED_IN;
++			stop_timer = 1;
++		}
++
++		pr_debug("iSCSI Login successful on CID: %hu from %s to"
++			" %s:%hu,%hu\n", conn->cid, conn->login_ip, np->np_ip,
++				np->np_port, tpg->tpgt);
++
++		list_add_tail(&conn->conn_list, &sess->sess_conn_list);
++		atomic_inc(&sess->nconn);
++		pr_debug("Incremented iSCSI Connection count to %hu"
++			" from node: %s\n", atomic_read(&sess->nconn),
++			sess->sess_ops->InitiatorName);
++		spin_unlock_bh(&sess->conn_lock);
++
++		iscsi_post_login_start_timers(conn);
++		iscsi_activate_thread_set(conn, ts);
++		/*
++		 * Determine CPU mask to ensure connection's RX and TX kthreads
++		 * are scheduled on the same CPU.
++		 */
++		iscsit_thread_get_cpumask(conn);
++		conn->conn_rx_reset_cpumask = 1;
++		conn->conn_tx_reset_cpumask = 1;
++
++		iscsit_dec_conn_usage_count(conn);
++		if (stop_timer) {
++			spin_lock_bh(&se_tpg->session_lock);
++			iscsit_stop_time2retain_timer(sess);
++			spin_unlock_bh(&se_tpg->session_lock);
++		}
++		iscsit_dec_session_usage_count(sess);
++		return 0;
++	}
++
++	iscsi_set_session_parameters(sess->sess_ops, conn->param_list, 1);
++	iscsi_release_param_list(conn->param_list);
++	conn->param_list = NULL;
++
++	iscsit_determine_maxcmdsn(sess);
++
++	spin_lock_bh(&se_tpg->session_lock);
++	__transport_register_session(&sess->tpg->tpg_se_tpg,
++			se_sess->se_node_acl, se_sess, (void *)sess);
++	pr_debug("Moving to TARG_SESS_STATE_LOGGED_IN.\n");
++	sess->session_state = TARG_SESS_STATE_LOGGED_IN;
++
++	pr_debug("iSCSI Login successful on CID: %hu from %s to %s:%hu,%hu\n",
++		conn->cid, conn->login_ip, np->np_ip, np->np_port, tpg->tpgt);
++
++	spin_lock_bh(&sess->conn_lock);
++	list_add_tail(&conn->conn_list, &sess->sess_conn_list);
++	atomic_inc(&sess->nconn);
++	pr_debug("Incremented iSCSI Connection count to %hu from node:"
++		" %s\n", atomic_read(&sess->nconn),
++		sess->sess_ops->InitiatorName);
++	spin_unlock_bh(&sess->conn_lock);
++
++	sess->sid = tpg->sid++;
++	if (!sess->sid)
++		sess->sid = tpg->sid++;
++	pr_debug("Established iSCSI session from node: %s\n",
++			sess->sess_ops->InitiatorName);
++
++	tpg->nsessions++;
++	if (tpg->tpg_tiqn)
++		tpg->tpg_tiqn->tiqn_nsessions++;
++
++	pr_debug("Incremented number of active iSCSI sessions to %u on"
++		" iSCSI Target Portal Group: %hu\n", tpg->nsessions, tpg->tpgt);
++	spin_unlock_bh(&se_tpg->session_lock);
++
++	iscsi_post_login_start_timers(conn);
++	iscsi_activate_thread_set(conn, ts);
++	/*
++	 * Determine CPU mask to ensure connection's RX and TX kthreads
++	 * are scheduled on the same CPU.
++	 */
++	iscsit_thread_get_cpumask(conn);
++	conn->conn_rx_reset_cpumask = 1;
++	conn->conn_tx_reset_cpumask = 1;
++
++	iscsit_dec_conn_usage_count(conn);
++
++	return 0;
++}
++
++static void iscsi_handle_login_thread_timeout(unsigned long data)
++{
++	struct iscsi_np *np = (struct iscsi_np *) data;
++
++	spin_lock_bh(&np->np_thread_lock);
++	pr_err("iSCSI Login timeout on Network Portal %s:%hu\n",
++			np->np_ip, np->np_port);
++
++	if (np->np_login_timer_flags & ISCSI_TF_STOP) {
++		spin_unlock_bh(&np->np_thread_lock);
++		return;
++	}
++
++	if (np->np_thread)
++		send_sig(SIGINT, np->np_thread, 1);
++
++	np->np_login_timer_flags &= ~ISCSI_TF_RUNNING;
++	spin_unlock_bh(&np->np_thread_lock);
++}
++
++static void iscsi_start_login_thread_timer(struct iscsi_np *np)
++{
++	/*
++	 * This used the TA_LOGIN_TIMEOUT constant because at this
++	 * point we do not have access to ISCSI_TPG_ATTRIB(tpg)->login_timeout
++	 */
++	spin_lock_bh(&np->np_thread_lock);
++	init_timer(&np->np_login_timer);
++	np->np_login_timer.expires = (get_jiffies_64() + TA_LOGIN_TIMEOUT * HZ);
++	np->np_login_timer.data = (unsigned long)np;
++	np->np_login_timer.function = iscsi_handle_login_thread_timeout;
++	np->np_login_timer_flags &= ~ISCSI_TF_STOP;
++	np->np_login_timer_flags |= ISCSI_TF_RUNNING;
++	add_timer(&np->np_login_timer);
++
++	pr_debug("Added timeout timer to iSCSI login request for"
++			" %u seconds.\n", TA_LOGIN_TIMEOUT);
++	spin_unlock_bh(&np->np_thread_lock);
++}
++
++static void iscsi_stop_login_thread_timer(struct iscsi_np *np)
++{
++	spin_lock_bh(&np->np_thread_lock);
++	if (!(np->np_login_timer_flags & ISCSI_TF_RUNNING)) {
++		spin_unlock_bh(&np->np_thread_lock);
++		return;
++	}
++	np->np_login_timer_flags |= ISCSI_TF_STOP;
++	spin_unlock_bh(&np->np_thread_lock);
++
++	del_timer_sync(&np->np_login_timer);
++
++	spin_lock_bh(&np->np_thread_lock);
++	np->np_login_timer_flags &= ~ISCSI_TF_RUNNING;
++	spin_unlock_bh(&np->np_thread_lock);
++}
++
++int iscsi_target_setup_login_socket(
++	struct iscsi_np *np,
++	struct __kernel_sockaddr_storage *sockaddr)
++{
++	struct socket *sock;
++	int backlog = 5, ret, opt = 0, len;
++
++	switch (np->np_network_transport) {
++	case ISCSI_TCP:
++		np->np_ip_proto = IPPROTO_TCP;
++		np->np_sock_type = SOCK_STREAM;
 +		break;
++	case ISCSI_SCTP_TCP:
++		np->np_ip_proto = IPPROTO_SCTP;
++		np->np_sock_type = SOCK_STREAM;
++		break;
++	case ISCSI_SCTP_UDP:
++		np->np_ip_proto = IPPROTO_SCTP;
++		np->np_sock_type = SOCK_SEQPACKET;
++		break;
++	case ISCSI_IWARP_TCP:
++	case ISCSI_IWARP_SCTP:
++	case ISCSI_INFINIBAND:
++	default:
++		pr_err("Unsupported network_transport: %d\n",
++				np->np_network_transport);
++		return -EINVAL;
++	}
 +
-+	return dr;
++	ret = sock_create(sockaddr->ss_family, np->np_sock_type,
++			np->np_ip_proto, &sock);
++	if (ret < 0) {
++		pr_err("sock_create() failed.\n");
++		return ret;
++	}
++	np->np_socket = sock;
++	/*
++	 * The SCTP stack needs struct socket->file.
++	 */
++	if ((np->np_network_transport == ISCSI_SCTP_TCP) ||
++	    (np->np_network_transport == ISCSI_SCTP_UDP)) {
++		if (!sock->file) {
++			sock->file = kzalloc(sizeof(struct file), GFP_KERNEL);
++			if (!sock->file) {
++				pr_err("Unable to allocate struct"
++						" file for SCTP\n");
++				ret = -ENOMEM;
++				goto fail;
++			}
++			np->np_flags |= NPF_SCTP_STRUCT_FILE;
++		}
++	}
++	/*
++	 * Setup the np->np_sockaddr from the passed sockaddr setup
++	 * in iscsi_target_configfs.c code..
++	 */
++	memcpy((void *)&np->np_sockaddr, (void *)sockaddr,
++			sizeof(struct __kernel_sockaddr_storage));
++
++	if (sockaddr->ss_family == AF_INET6)
++		len = sizeof(struct sockaddr_in6);
++	else
++		len = sizeof(struct sockaddr_in);
++	/*
++	 * Set SO_REUSEADDR, and disable Nagel Algorithm with TCP_NODELAY.
++	 */
++	opt = 1;
++	if (np->np_network_transport == ISCSI_TCP) {
++		ret = kernel_setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
++				(char *)&opt, sizeof(opt));
++		if (ret < 0) {
++			pr_err("kernel_setsockopt() for TCP_NODELAY"
++				" failed: %d\n", ret);
++			goto fail;
++		}
++	}
++
++	ret = kernel_setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
++			(char *)&opt, sizeof(opt));
++	if (ret < 0) {
++		pr_err("kernel_setsockopt() for SO_REUSEADDR"
++			" failed\n");
++		goto fail;
++	}
++
++	ret = kernel_bind(sock, (struct sockaddr *)&np->np_sockaddr, len);
++	if (ret < 0) {
++		pr_err("kernel_bind() failed: %d\n", ret);
++		goto fail;
++	}
++
++	ret = kernel_listen(sock, backlog);
++	if (ret != 0) {
++		pr_err("kernel_listen() failed: %d\n", ret);
++		goto fail;
++	}
++
++	return 0;
++
++fail:
++	np->np_socket = NULL;
++	if (sock) {
++		if (np->np_flags & NPF_SCTP_STRUCT_FILE) {
++			kfree(sock->file);
++			sock->file = NULL;
++		}
++
++		sock_release(sock);
++	}
++	return ret;
 +}
 +
-+/*
-+ *	For Normal and Recovery DataSequenceInOrder=Yes and DataPDUInOrder=Yes.
-+ */
-+static struct iscsi_datain_req *iscsit_set_datain_values_yes_and_yes(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_datain *datain)
++static int __iscsi_target_login_thread(struct iscsi_np *np)
 +{
-+	u32 next_burst_len, read_data_done, read_data_left;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_datain_req *dr;
++	u8 buffer[ISCSI_HDR_LEN], iscsi_opcode, zero_tsih = 0;
++	int err, ret = 0, ip_proto, sock_type, set_sctp_conn_flag, stop;
++	struct iscsi_conn *conn = NULL;
++	struct iscsi_login *login;
++	struct iscsi_portal_group *tpg = NULL;
++	struct socket *new_sock, *sock;
++	struct kvec iov;
++	struct iscsi_login_req *pdu;
++	struct sockaddr_in sock_in;
++	struct sockaddr_in6 sock_in6;
 +
-+	dr = iscsit_get_datain_req(cmd);
-+	if (!dr)
-+		return NULL;
++	flush_signals(current);
++	set_sctp_conn_flag = 0;
++	sock = np->np_socket;
++	ip_proto = np->np_ip_proto;
++	sock_type = np->np_sock_type;
 +
-+	if (dr->recovery && dr->generate_recovery_values) {
-+		if (iscsit_create_recovery_datain_values_datasequenceinorder_yes(
-+					cmd, dr) < 0)
-+			return NULL;
-+
-+		dr->generate_recovery_values = 0;
-+	}
-+
-+	next_burst_len = (!dr->recovery) ?
-+			cmd->next_burst_len : dr->next_burst_len;
-+	read_data_done = (!dr->recovery) ?
-+			cmd->read_data_done : dr->read_data_done;
-+
-+	read_data_left = (cmd->data_length - read_data_done);
-+	if (!read_data_left) {
-+		pr_err("ITT: 0x%08x read_data_left is zero!\n",
-+				cmd->init_task_tag);
-+		return NULL;
-+	}
-+
-+	if ((read_data_left <= conn->conn_ops->MaxRecvDataSegmentLength) &&
-+	    (read_data_left <= (conn->sess->sess_ops->MaxBurstLength -
-+	     next_burst_len))) {
-+		datain->length = read_data_left;
-+
-+		datain->flags |= (ISCSI_FLAG_CMD_FINAL | ISCSI_FLAG_DATA_STATUS);
-+		if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+			datain->flags |= ISCSI_FLAG_DATA_ACK;
++	spin_lock_bh(&np->np_thread_lock);
++	if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
++		np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
++		complete(&np->np_restart_comp);
 +	} else {
-+		if ((next_burst_len +
-+		     conn->conn_ops->MaxRecvDataSegmentLength) <
-+		     conn->sess->sess_ops->MaxBurstLength) {
-+			datain->length =
-+				conn->conn_ops->MaxRecvDataSegmentLength;
-+			next_burst_len += datain->length;
-+		} else {
-+			datain->length = (conn->sess->sess_ops->MaxBurstLength -
-+					  next_burst_len);
-+			next_burst_len = 0;
++		np->np_thread_state = ISCSI_NP_THREAD_ACTIVE;
++	}
++	spin_unlock_bh(&np->np_thread_lock);
 +
-+			datain->flags |= ISCSI_FLAG_CMD_FINAL;
-+			if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+				datain->flags |= ISCSI_FLAG_DATA_ACK;
++	if (kernel_accept(sock, &new_sock, 0) < 0) {
++		spin_lock_bh(&np->np_thread_lock);
++		if (np->np_thread_state == ISCSI_NP_THREAD_RESET) {
++			spin_unlock_bh(&np->np_thread_lock);
++			complete(&np->np_restart_comp);
++			/* Get another socket */
++			return 1;
++		}
++		spin_unlock_bh(&np->np_thread_lock);
++		goto out;
++	}
++	/*
++	 * The SCTP stack needs struct socket->file.
++	 */
++	if ((np->np_network_transport == ISCSI_SCTP_TCP) ||
++	    (np->np_network_transport == ISCSI_SCTP_UDP)) {
++		if (!new_sock->file) {
++			new_sock->file = kzalloc(
++					sizeof(struct file), GFP_KERNEL);
++			if (!new_sock->file) {
++				pr_err("Unable to allocate struct"
++						" file for SCTP\n");
++				sock_release(new_sock);
++				/* Get another socket */
++				return 1;
++			}
++			set_sctp_conn_flag = 1;
 +		}
 +	}
 +
-+	datain->data_sn = (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
-+	datain->offset = read_data_done;
++	iscsi_start_login_thread_timer(np);
 +
-+	if (!dr->recovery) {
-+		cmd->next_burst_len = next_burst_len;
-+		cmd->read_data_done += datain->length;
++	conn = kzalloc(sizeof(struct iscsi_conn), GFP_KERNEL);
++	if (!conn) {
++		pr_err("Could not allocate memory for"
++			" new connection\n");
++		if (set_sctp_conn_flag) {
++			kfree(new_sock->file);
++			new_sock->file = NULL;
++		}
++		sock_release(new_sock);
++		/* Get another socket */
++		return 1;
++	}
++
++	pr_debug("Moving to TARG_CONN_STATE_FREE.\n");
++	conn->conn_state = TARG_CONN_STATE_FREE;
++	conn->sock = new_sock;
++
++	if (set_sctp_conn_flag)
++		conn->conn_flags |= CONNFLAG_SCTP_STRUCT_FILE;
++
++	pr_debug("Moving to TARG_CONN_STATE_XPT_UP.\n");
++	conn->conn_state = TARG_CONN_STATE_XPT_UP;
++
++	/*
++	 * Allocate conn->conn_ops early as a failure calling
++	 * iscsit_tx_login_rsp() below will call tx_data().
++	 */
++	conn->conn_ops = kzalloc(sizeof(struct iscsi_conn_ops), GFP_KERNEL);
++	if (!conn->conn_ops) {
++		pr_err("Unable to allocate memory for"
++			" struct iscsi_conn_ops.\n");
++		goto new_sess_out;
++	}
++	/*
++	 * Perform the remaining iSCSI connection initialization items..
++	 */
++	if (iscsi_login_init_conn(conn) < 0)
++		goto new_sess_out;
++
++	memset(buffer, 0, ISCSI_HDR_LEN);
++	memset(&iov, 0, sizeof(struct kvec));
++	iov.iov_base	= buffer;
++	iov.iov_len	= ISCSI_HDR_LEN;
++
++	if (rx_data(conn, &iov, 1, ISCSI_HDR_LEN) <= 0) {
++		pr_err("rx_data() returned an error.\n");
++		goto new_sess_out;
++	}
++
++	iscsi_opcode = (buffer[0] & ISCSI_OPCODE_MASK);
++	if (!(iscsi_opcode & ISCSI_OP_LOGIN)) {
++		pr_err("First opcode is not login request,"
++			" failing login request.\n");
++		goto new_sess_out;
++	}
++
++	pdu			= (struct iscsi_login_req *) buffer;
++	pdu->cid		= be16_to_cpu(pdu->cid);
++	pdu->tsih		= be16_to_cpu(pdu->tsih);
++	pdu->itt		= be32_to_cpu(pdu->itt);
++	pdu->cmdsn		= be32_to_cpu(pdu->cmdsn);
++	pdu->exp_statsn		= be32_to_cpu(pdu->exp_statsn);
++	/*
++	 * Used by iscsit_tx_login_rsp() for Login Resonses PDUs
++	 * when Status-Class != 0.
++	*/
++	conn->login_itt		= pdu->itt;
++
++	spin_lock_bh(&np->np_thread_lock);
++	if (np->np_thread_state != ISCSI_NP_THREAD_ACTIVE) {
++		spin_unlock_bh(&np->np_thread_lock);
++		pr_err("iSCSI Network Portal on %s:%hu currently not"
++			" active.\n", np->np_ip, np->np_port);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_SVC_UNAVAILABLE);
++		goto new_sess_out;
++	}
++	spin_unlock_bh(&np->np_thread_lock);
++
++	if (np->np_sockaddr.ss_family == AF_INET6) {
++		memset(&sock_in6, 0, sizeof(struct sockaddr_in6));
++
++		if (conn->sock->ops->getname(conn->sock,
++				(struct sockaddr *)&sock_in6, &err, 1) < 0) {
++			pr_err("sock_ops->getname() failed.\n");
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++					ISCSI_LOGIN_STATUS_TARGET_ERROR);
++			goto new_sess_out;
++		}
++#if 0
++		if (!iscsi_ntop6((const unsigned char *)
++				&sock_in6.sin6_addr.in6_u,
++				(char *)&conn->ipv6_login_ip[0],
++				IPV6_ADDRESS_SPACE)) {
++			pr_err("iscsi_ntop6() failed\n");
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++					ISCSI_LOGIN_STATUS_TARGET_ERROR);
++			goto new_sess_out;
++		}
++#else
++		pr_debug("Skipping iscsi_ntop6()\n");
++#endif
 +	} else {
-+		dr->next_burst_len = next_burst_len;
-+		dr->read_data_done += datain->length;
++		memset(&sock_in, 0, sizeof(struct sockaddr_in));
++
++		if (conn->sock->ops->getname(conn->sock,
++				(struct sockaddr *)&sock_in, &err, 1) < 0) {
++			pr_err("sock_ops->getname() failed.\n");
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++					ISCSI_LOGIN_STATUS_TARGET_ERROR);
++			goto new_sess_out;
++		}
++		sprintf(conn->login_ip, "%pI4", &sock_in.sin_addr.s_addr);
++		conn->login_port = ntohs(sock_in.sin_port);
 +	}
 +
-+	if (!dr->recovery) {
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
-+			dr->dr_complete = DATAIN_COMPLETE_NORMAL;
++	conn->network_transport = np->np_network_transport;
 +
-+		return dr;
++	pr_debug("Received iSCSI login request from %s on %s Network"
++			" Portal %s:%hu\n", conn->login_ip,
++		(conn->network_transport == ISCSI_TCP) ? "TCP" : "SCTP",
++			np->np_ip, np->np_port);
++
++	pr_debug("Moving to TARG_CONN_STATE_IN_LOGIN.\n");
++	conn->conn_state	= TARG_CONN_STATE_IN_LOGIN;
++
++	if (iscsi_login_check_initiator_version(conn, pdu->max_version,
++			pdu->min_version) < 0)
++		goto new_sess_out;
++
++	zero_tsih = (pdu->tsih == 0x0000);
++	if ((zero_tsih)) {
++		/*
++		 * This is the leading connection of a new session.
++		 * We wait until after authentication to check for
++		 * session reinstatement.
++		 */
++		if (iscsi_login_zero_tsih_s1(conn, buffer) < 0)
++			goto new_sess_out;
++	} else {
++		/*
++		 * Add a new connection to an existing session.
++		 * We check for a non-existant session in
++		 * iscsi_login_non_zero_tsih_s2() below based
++		 * on ISID/TSIH, but wait until after authentication
++		 * to check for connection reinstatement, etc.
++		 */
++		if (iscsi_login_non_zero_tsih_s1(conn, buffer) < 0)
++			goto new_sess_out;
 +	}
 +
-+	if (!dr->runlength) {
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++	/*
++	 * This will process the first login request, and call
++	 * iscsi_target_locate_portal(), and return a valid struct iscsi_login.
++	 */
++	login = iscsi_target_init_negotiation(np, conn, buffer);
++	if (!login) {
++		tpg = conn->tpg;
++		goto new_sess_out;
++	}
++
++	tpg = conn->tpg;
++	if (!tpg) {
++		pr_err("Unable to locate struct iscsi_conn->tpg\n");
++		goto new_sess_out;
++	}
++
++	if (zero_tsih) {
++		if (iscsi_login_zero_tsih_s2(conn) < 0) {
++			iscsi_target_nego_release(login, conn);
++			goto new_sess_out;
 +		}
 +	} else {
-+		if ((dr->begrun + dr->runlength) == dr->data_sn) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		if (iscsi_login_non_zero_tsih_s2(conn, buffer) < 0) {
++			iscsi_target_nego_release(login, conn);
++			goto old_sess_out;
 +		}
 +	}
 +
-+	return dr;
++	if (iscsi_target_start_negotiation(login, conn) < 0)
++		goto new_sess_out;
++
++	if (!conn->sess) {
++		pr_err("struct iscsi_conn session pointer is NULL!\n");
++		goto new_sess_out;
++	}
++
++	iscsi_stop_login_thread_timer(np);
++
++	if (signal_pending(current))
++		goto new_sess_out;
++
++	ret = iscsi_post_login_handler(np, conn, zero_tsih);
++
++	if (ret < 0)
++		goto new_sess_out;
++
++	iscsit_deaccess_np(np, tpg);
++	tpg = NULL;
++	/* Get another socket */
++	return 1;
++
++new_sess_out:
++	pr_err("iSCSI Login negotiation failed.\n");
++	iscsit_collect_login_stats(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				  ISCSI_LOGIN_STATUS_INIT_ERR);
++	if (!zero_tsih || !conn->sess)
++		goto old_sess_out;
++	if (conn->sess->se_sess)
++		transport_free_session(conn->sess->se_sess);
++	if (conn->sess->session_index != 0) {
++		spin_lock_bh(&sess_idr_lock);
++		idr_remove(&sess_idr, conn->sess->session_index);
++		spin_unlock_bh(&sess_idr_lock);
++	}
++	if (conn->sess->sess_ops)
++		kfree(conn->sess->sess_ops);
++	if (conn->sess)
++		kfree(conn->sess);
++old_sess_out:
++	iscsi_stop_login_thread_timer(np);
++	/*
++	 * If login negotiation fails check if the Time2Retain timer
++	 * needs to be restarted.
++	 */
++	if (!zero_tsih && conn->sess) {
++		spin_lock_bh(&conn->sess->conn_lock);
++		if (conn->sess->session_state == TARG_SESS_STATE_FAILED) {
++			struct se_portal_group *se_tpg =
++					&ISCSI_TPG_C(conn)->tpg_se_tpg;
++
++			atomic_set(&conn->sess->session_continuation, 0);
++			spin_unlock_bh(&conn->sess->conn_lock);
++			spin_lock_bh(&se_tpg->session_lock);
++			iscsit_start_time2retain_handler(conn->sess);
++			spin_unlock_bh(&se_tpg->session_lock);
++		} else
++			spin_unlock_bh(&conn->sess->conn_lock);
++		iscsit_dec_session_usage_count(conn->sess);
++	}
++
++	if (!IS_ERR(conn->conn_rx_hash.tfm))
++		crypto_free_hash(conn->conn_rx_hash.tfm);
++	if (!IS_ERR(conn->conn_tx_hash.tfm))
++		crypto_free_hash(conn->conn_tx_hash.tfm);
++
++	if (conn->conn_cpumask)
++		free_cpumask_var(conn->conn_cpumask);
++
++	kfree(conn->conn_ops);
++
++	if (conn->param_list) {
++		iscsi_release_param_list(conn->param_list);
++		conn->param_list = NULL;
++	}
++	if (conn->sock) {
++		if (conn->conn_flags & CONNFLAG_SCTP_STRUCT_FILE) {
++			kfree(conn->sock->file);
++			conn->sock->file = NULL;
++		}
++		sock_release(conn->sock);
++	}
++	kfree(conn);
++
++	if (tpg) {
++		iscsit_deaccess_np(np, tpg);
++		tpg = NULL;
++	}
++
++out:
++	stop = kthread_should_stop();
++	if (!stop && signal_pending(current)) {
++		spin_lock_bh(&np->np_thread_lock);
++		stop = (np->np_thread_state == ISCSI_NP_THREAD_SHUTDOWN);
++		spin_unlock_bh(&np->np_thread_lock);
++	}
++	/* Wait for another socket.. */
++	if (!stop)
++		return 1;
++
++	iscsi_stop_login_thread_timer(np);
++	spin_lock_bh(&np->np_thread_lock);
++	np->np_thread_state = ISCSI_NP_THREAD_EXIT;
++	spin_unlock_bh(&np->np_thread_lock);
++	return 0;
 +}
 +
-+/*
-+ *	For Normal and Recovery DataSequenceInOrder=No and DataPDUInOrder=Yes.
-+ */
-+static struct iscsi_datain_req *iscsit_set_datain_values_no_and_yes(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_datain *datain)
++int iscsi_target_login_thread(void *arg)
 +{
-+	u32 offset, read_data_done, read_data_left, seq_send_order;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_datain_req *dr;
-+	struct iscsi_seq *seq;
++	struct iscsi_np *np = (struct iscsi_np *)arg;
++	int ret;
 +
-+	dr = iscsit_get_datain_req(cmd);
-+	if (!dr)
-+		return NULL;
++	allow_signal(SIGINT);
 +
-+	if (dr->recovery && dr->generate_recovery_values) {
-+		if (iscsit_create_recovery_datain_values_datasequenceinorder_no(
-+					cmd, dr) < 0)
-+			return NULL;
-+
-+		dr->generate_recovery_values = 0;
++	while (!kthread_should_stop()) {
++		ret = __iscsi_target_login_thread(np);
++		/*
++		 * We break and exit here unless another sock_accept() call
++		 * is expected.
++		 */
++		if (ret != 1)
++			break;
 +	}
 +
-+	read_data_done = (!dr->recovery) ?
-+			cmd->read_data_done : dr->read_data_done;
-+	seq_send_order = (!dr->recovery) ?
-+			cmd->seq_send_order : dr->seq_send_order;
++	return 0;
++}
+diff --git a/drivers/target/iscsi/iscsi_target_login.h b/drivers/target/iscsi/iscsi_target_login.h
+new file mode 100644
+index 0000000..091dcae
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_login.h
+@@ -0,0 +1,12 @@
++#ifndef ISCSI_TARGET_LOGIN_H
++#define ISCSI_TARGET_LOGIN_H
 +
-+	read_data_left = (cmd->data_length - read_data_done);
-+	if (!read_data_left) {
-+		pr_err("ITT: 0x%08x read_data_left is zero!\n",
-+				cmd->init_task_tag);
-+		return NULL;
-+	}
++extern int iscsi_login_setup_crypto(struct iscsi_conn *);
++extern int iscsi_check_for_session_reinstatement(struct iscsi_conn *);
++extern int iscsi_login_post_auth_non_zero_tsih(struct iscsi_conn *, u16, u32);
++extern int iscsi_target_setup_login_socket(struct iscsi_np *,
++				struct __kernel_sockaddr_storage *);
++extern int iscsi_target_login_thread(void *);
++extern int iscsi_login_disable_FIM_keys(struct iscsi_param_list *, struct iscsi_conn *);
 +
-+	seq = iscsit_get_seq_holder_for_datain(cmd, seq_send_order);
-+	if (!seq)
-+		return NULL;
++#endif   /*** ISCSI_TARGET_LOGIN_H ***/
+diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+new file mode 100644
+index 0000000..713a4d2
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_nego.c
+@@ -0,0 +1,1067 @@
++/*******************************************************************************
++ * This file contains main functions related to iSCSI Parameter negotiation.
++ *
++ * \u00a9 Copyright 2007-2011 RisingTide Systems LLC.
++ *
++ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
++ *
++ * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ******************************************************************************/
 +
-+	seq->sent = 1;
++#include <linux/ctype.h>
++#include <scsi/iscsi_proto.h>
++#include <target/target_core_base.h>
++#include <target/target_core_tpg.h>
 +
-+	if (!dr->recovery && !seq->next_burst_len)
-+		seq->first_datasn = cmd->data_sn;
++#include "iscsi_target_core.h"
++#include "iscsi_target_parameters.h"
++#include "iscsi_target_login.h"
++#include "iscsi_target_nego.h"
++#include "iscsi_target_tpg.h"
++#include "iscsi_target_util.h"
++#include "iscsi_target.h"
++#include "iscsi_target_auth.h"
 +
-+	offset = (seq->offset + seq->next_burst_len);
++#define MAX_LOGIN_PDUS  7
++#define TEXT_LEN	4096
 +
-+	if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+	     cmd->data_length) {
-+		datain->length = (cmd->data_length - offset);
-+		datain->offset = offset;
++void convert_null_to_semi(char *buf, int len)
++{
++	int i;
 +
-+		datain->flags |= ISCSI_FLAG_CMD_FINAL;
-+		if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+			datain->flags |= ISCSI_FLAG_DATA_ACK;
-+
-+		seq->next_burst_len = 0;
-+		seq_send_order++;
-+	} else {
-+		if ((seq->next_burst_len +
-+		     conn->conn_ops->MaxRecvDataSegmentLength) <
-+		     conn->sess->sess_ops->MaxBurstLength) {
-+			datain->length =
-+				conn->conn_ops->MaxRecvDataSegmentLength;
-+			datain->offset = (seq->offset + seq->next_burst_len);
-+
-+			seq->next_burst_len += datain->length;
-+		} else {
-+			datain->length = (conn->sess->sess_ops->MaxBurstLength -
-+					  seq->next_burst_len);
-+			datain->offset = (seq->offset + seq->next_burst_len);
-+
-+			datain->flags |= ISCSI_FLAG_CMD_FINAL;
-+			if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+				datain->flags |= ISCSI_FLAG_DATA_ACK;
-+
-+			seq->next_burst_len = 0;
-+			seq_send_order++;
-+		}
-+	}
-+
-+	if ((read_data_done + datain->length) == cmd->data_length)
-+		datain->flags |= ISCSI_FLAG_DATA_STATUS;
-+
-+	datain->data_sn = (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
-+	if (!dr->recovery) {
-+		cmd->seq_send_order = seq_send_order;
-+		cmd->read_data_done += datain->length;
-+	} else {
-+		dr->seq_send_order = seq_send_order;
-+		dr->read_data_done += datain->length;
-+	}
-+
-+	if (!dr->recovery) {
-+		if (datain->flags & ISCSI_FLAG_CMD_FINAL)
-+			seq->last_datasn = datain->data_sn;
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
-+			dr->dr_complete = DATAIN_COMPLETE_NORMAL;
-+
-+		return dr;
-+	}
-+
-+	if (!dr->runlength) {
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
-+		}
-+	} else {
-+		if ((dr->begrun + dr->runlength) == dr->data_sn) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
-+		}
-+	}
-+
-+	return dr;
++	for (i = 0; i < len; i++)
++		if (buf[i] == '\0')
++			buf[i] = ';';
 +}
 +
-+/*
-+ *	For Normal and Recovery DataSequenceInOrder=Yes and DataPDUInOrder=No.
-+ */
-+static struct iscsi_datain_req *iscsit_set_datain_values_yes_and_no(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_datain *datain)
++int strlen_semi(char *buf)
 +{
-+	u32 next_burst_len, read_data_done, read_data_left;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_datain_req *dr;
-+	struct iscsi_pdu *pdu;
++	int i = 0;
 +
-+	dr = iscsit_get_datain_req(cmd);
-+	if (!dr)
-+		return NULL;
-+
-+	if (dr->recovery && dr->generate_recovery_values) {
-+		if (iscsit_create_recovery_datain_values_datasequenceinorder_yes(
-+					cmd, dr) < 0)
-+			return NULL;
-+
-+		dr->generate_recovery_values = 0;
++	while (buf[i] != '\0') {
++		if (buf[i] == ';')
++			return i;
++		i++;
 +	}
 +
-+	next_burst_len = (!dr->recovery) ?
-+			cmd->next_burst_len : dr->next_burst_len;
-+	read_data_done = (!dr->recovery) ?
-+			cmd->read_data_done : dr->read_data_done;
-+
-+	read_data_left = (cmd->data_length - read_data_done);
-+	if (!read_data_left) {
-+		pr_err("ITT: 0x%08x read_data_left is zero!\n",
-+				cmd->init_task_tag);
-+		return dr;
-+	}
-+
-+	pdu = iscsit_get_pdu_holder_for_seq(cmd, NULL);
-+	if (!pdu)
-+		return dr;
-+
-+	if ((read_data_done + pdu->length) == cmd->data_length) {
-+		pdu->flags |= (ISCSI_FLAG_CMD_FINAL | ISCSI_FLAG_DATA_STATUS);
-+		if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+			pdu->flags |= ISCSI_FLAG_DATA_ACK;
-+
-+		next_burst_len = 0;
-+	} else {
-+		if ((next_burst_len + conn->conn_ops->MaxRecvDataSegmentLength) <
-+		     conn->sess->sess_ops->MaxBurstLength)
-+			next_burst_len += pdu->length;
-+		else {
-+			pdu->flags |= ISCSI_FLAG_CMD_FINAL;
-+			if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+				pdu->flags |= ISCSI_FLAG_DATA_ACK;
-+
-+			next_burst_len = 0;
-+		}
-+	}
-+
-+	pdu->data_sn = (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
-+	if (!dr->recovery) {
-+		cmd->next_burst_len = next_burst_len;
-+		cmd->read_data_done += pdu->length;
-+	} else {
-+		dr->next_burst_len = next_burst_len;
-+		dr->read_data_done += pdu->length;
-+	}
-+
-+	datain->flags = pdu->flags;
-+	datain->length = pdu->length;
-+	datain->offset = pdu->offset;
-+	datain->data_sn = pdu->data_sn;
-+
-+	if (!dr->recovery) {
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
-+			dr->dr_complete = DATAIN_COMPLETE_NORMAL;
-+
-+		return dr;
-+	}
-+
-+	if (!dr->runlength) {
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
-+		}
-+	} else {
-+		if ((dr->begrun + dr->runlength) == dr->data_sn) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
-+		}
-+	}
-+
-+	return dr;
++	return -1;
 +}
 +
-+/*
-+ *	For Normal and Recovery DataSequenceInOrder=No and DataPDUInOrder=No.
-+ */
-+static struct iscsi_datain_req *iscsit_set_datain_values_no_and_no(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_datain *datain)
++int extract_param(
++	const char *in_buf,
++	const char *pattern,
++	unsigned int max_length,
++	char *out_buf,
++	unsigned char *type)
 +{
-+	u32 read_data_done, read_data_left, seq_send_order;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_datain_req *dr;
-+	struct iscsi_pdu *pdu;
-+	struct iscsi_seq *seq = NULL;
++	char *ptr;
++	int len;
 +
-+	dr = iscsit_get_datain_req(cmd);
-+	if (!dr)
-+		return NULL;
++	if (!in_buf || !pattern || !out_buf || !type)
++		return -1;
 +
-+	if (dr->recovery && dr->generate_recovery_values) {
-+		if (iscsit_create_recovery_datain_values_datasequenceinorder_no(
-+					cmd, dr) < 0)
-+			return NULL;
++	ptr = strstr(in_buf, pattern);
++	if (!ptr)
++		return -1;
 +
-+		dr->generate_recovery_values = 0;
-+	}
++	ptr = strstr(ptr, "=");
++	if (!ptr)
++		return -1;
 +
-+	read_data_done = (!dr->recovery) ?
-+			cmd->read_data_done : dr->read_data_done;
-+	seq_send_order = (!dr->recovery) ?
-+			cmd->seq_send_order : dr->seq_send_order;
-+
-+	read_data_left = (cmd->data_length - read_data_done);
-+	if (!read_data_left) {
-+		pr_err("ITT: 0x%08x read_data_left is zero!\n",
-+				cmd->init_task_tag);
-+		return NULL;
-+	}
-+
-+	seq = iscsit_get_seq_holder_for_datain(cmd, seq_send_order);
-+	if (!seq)
-+		return NULL;
-+
-+	seq->sent = 1;
-+
-+	if (!dr->recovery && !seq->next_burst_len)
-+		seq->first_datasn = cmd->data_sn;
-+
-+	pdu = iscsit_get_pdu_holder_for_seq(cmd, seq);
-+	if (!pdu)
-+		return NULL;
-+
-+	if (seq->pdu_send_order == seq->pdu_count) {
-+		pdu->flags |= ISCSI_FLAG_CMD_FINAL;
-+		if (conn->sess->sess_ops->ErrorRecoveryLevel > 0)
-+			pdu->flags |= ISCSI_FLAG_DATA_ACK;
-+
-+		seq->next_burst_len = 0;
-+		seq_send_order++;
++	ptr += 1;
++	if (*ptr == '0' && (*(ptr+1) == 'x' || *(ptr+1) == 'X')) {
++		ptr += 2; /* skip 0x */
++		*type = HEX;
 +	} else
-+		seq->next_burst_len += pdu->length;
++		*type = DECIMAL;
 +
-+	if ((read_data_done + pdu->length) == cmd->data_length)
-+		pdu->flags |= ISCSI_FLAG_DATA_STATUS;
++	len = strlen_semi(ptr);
++	if (len < 0)
++		return -1;
 +
-+	pdu->data_sn = (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
-+	if (!dr->recovery) {
-+		cmd->seq_send_order = seq_send_order;
-+		cmd->read_data_done += pdu->length;
-+	} else {
-+		dr->seq_send_order = seq_send_order;
-+		dr->read_data_done += pdu->length;
++	if (len > max_length) {
++		pr_err("Length of input: %d exeeds max_length:"
++			" %d\n", len, max_length);
++		return -1;
 +	}
++	memcpy(out_buf, ptr, len);
++	out_buf[len] = '\0';
 +
-+	datain->flags = pdu->flags;
-+	datain->length = pdu->length;
-+	datain->offset = pdu->offset;
-+	datain->data_sn = pdu->data_sn;
-+
-+	if (!dr->recovery) {
-+		if (datain->flags & ISCSI_FLAG_CMD_FINAL)
-+			seq->last_datasn = datain->data_sn;
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
-+			dr->dr_complete = DATAIN_COMPLETE_NORMAL;
-+
-+		return dr;
-+	}
-+
-+	if (!dr->runlength) {
-+		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
-+		}
-+	} else {
-+		if ((dr->begrun + dr->runlength) == dr->data_sn) {
-+			dr->dr_complete =
-+			    (dr->recovery == DATAIN_WITHIN_COMMAND_RECOVERY) ?
-+				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
-+				DATAIN_COMPLETE_CONNECTION_RECOVERY;
-+		}
-+	}
-+
-+	return dr;
++	return 0;
 +}
 +
-+struct iscsi_datain_req *iscsit_get_datain_values(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_datain *datain)
++static u32 iscsi_handle_authentication(
++	struct iscsi_conn *conn,
++	char *in_buf,
++	char *out_buf,
++	int in_length,
++	int *out_length,
++	unsigned char *authtype)
 +{
-+	struct iscsi_conn *conn = cmd->conn;
++	struct iscsi_session *sess = conn->sess;
++	struct iscsi_node_auth *auth;
++	struct iscsi_node_acl *iscsi_nacl;
++	struct se_node_acl *se_nacl;
 +
-+	if (conn->sess->sess_ops->DataSequenceInOrder &&
-+	    conn->sess->sess_ops->DataPDUInOrder)
-+		return iscsit_set_datain_values_yes_and_yes(cmd, datain);
-+	else if (!conn->sess->sess_ops->DataSequenceInOrder &&
-+		  conn->sess->sess_ops->DataPDUInOrder)
-+		return iscsit_set_datain_values_no_and_yes(cmd, datain);
-+	else if (conn->sess->sess_ops->DataSequenceInOrder &&
-+		 !conn->sess->sess_ops->DataPDUInOrder)
-+		return iscsit_set_datain_values_yes_and_no(cmd, datain);
-+	else if (!conn->sess->sess_ops->DataSequenceInOrder &&
-+		   !conn->sess->sess_ops->DataPDUInOrder)
-+		return iscsit_set_datain_values_no_and_no(cmd, datain);
++	if (!sess->sess_ops->SessionType) {
++		/*
++		 * For SessionType=Normal
++		 */
++		se_nacl = conn->sess->se_sess->se_node_acl;
++		if (!se_nacl) {
++			pr_err("Unable to locate struct se_node_acl for"
++					" CHAP auth\n");
++			return -1;
++		}
++		iscsi_nacl = container_of(se_nacl, struct iscsi_node_acl,
++				se_node_acl);
++		if (!iscsi_nacl) {
++			pr_err("Unable to locate struct iscsi_node_acl for"
++					" CHAP auth\n");
++			return -1;
++		}
++
++		auth = ISCSI_NODE_AUTH(iscsi_nacl);
++	} else {
++		/*
++		 * For SessionType=Discovery
++		 */
++		auth = &iscsit_global->discovery_acl.node_auth;
++	}
++
++	if (strstr("CHAP", authtype))
++		strcpy(conn->sess->auth_type, "CHAP");
++	else
++		strcpy(conn->sess->auth_type, NONE);
++
++	if (strstr("None", authtype))
++		return 1;
++#ifdef CANSRP
++	else if (strstr("SRP", authtype))
++		return srp_main_loop(conn, auth, in_buf, out_buf,
++				&in_length, out_length);
++#endif
++	else if (strstr("CHAP", authtype))
++		return chap_main_loop(conn, auth, in_buf, out_buf,
++				&in_length, out_length);
++	else if (strstr("SPKM1", authtype))
++		return 2;
++	else if (strstr("SPKM2", authtype))
++		return 2;
++	else if (strstr("KRB5", authtype))
++		return 2;
++	else
++		return 2;
++}
++
++static void iscsi_remove_failed_auth_entry(struct iscsi_conn *conn)
++{
++	kfree(conn->auth_protocol);
++}
++
++static int iscsi_target_check_login_request(
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	int req_csg, req_nsg, rsp_csg, rsp_nsg;
++	u32 payload_length;
++	struct iscsi_login_req *login_req;
++	struct iscsi_login_rsp *login_rsp;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	login_rsp = (struct iscsi_login_rsp *) login->rsp;
++	payload_length = ntoh24(login_req->dlength);
++
++	switch (login_req->opcode & ISCSI_OPCODE_MASK) {
++	case ISCSI_OP_LOGIN:
++		break;
++	default:
++		pr_err("Received unknown opcode 0x%02x.\n",
++				login_req->opcode & ISCSI_OPCODE_MASK);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	if ((login_req->flags & ISCSI_FLAG_LOGIN_CONTINUE) &&
++	    (login_req->flags & ISCSI_FLAG_LOGIN_TRANSIT)) {
++		pr_err("Login request has both ISCSI_FLAG_LOGIN_CONTINUE"
++			" and ISCSI_FLAG_LOGIN_TRANSIT set, protocol error.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	req_csg = (login_req->flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2;
++	rsp_csg = (login_rsp->flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2;
++	req_nsg = (login_req->flags & ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK);
++	rsp_nsg = (login_rsp->flags & ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK);
++
++	if (req_csg != login->current_stage) {
++		pr_err("Initiator unexpectedly changed login stage"
++			" from %d to %d, login failed.\n", login->current_stage,
++			req_csg);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	if ((req_nsg == 2) || (req_csg >= 2) ||
++	   ((login_req->flags & ISCSI_FLAG_LOGIN_TRANSIT) &&
++	    (req_nsg <= req_csg))) {
++		pr_err("Illegal login_req->flags Combination, CSG: %d,"
++			" NSG: %d, ISCSI_FLAG_LOGIN_TRANSIT: %d.\n", req_csg,
++			req_nsg, (login_req->flags & ISCSI_FLAG_LOGIN_TRANSIT));
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	if ((login_req->max_version != login->version_max) ||
++	    (login_req->min_version != login->version_min)) {
++		pr_err("Login request changed Version Max/Nin"
++			" unexpectedly to 0x%02x/0x%02x, protocol error\n",
++			login_req->max_version, login_req->min_version);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	if (memcmp(login_req->isid, login->isid, 6) != 0) {
++		pr_err("Login request changed ISID unexpectedly,"
++				" protocol error.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	if (login_req->itt != login->init_task_tag) {
++		pr_err("Login request changed ITT unexpectedly to"
++			" 0x%08x, protocol error.\n", login_req->itt);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_INIT_ERR);
++		return -1;
++	}
++
++	if (payload_length > MAX_KEY_VALUE_PAIRS) {
++		pr_err("Login request payload exceeds default"
++			" MaxRecvDataSegmentLength: %u, protocol error.\n",
++				MAX_KEY_VALUE_PAIRS);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int iscsi_target_check_first_request(
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	struct iscsi_param *param = NULL;
++	struct se_node_acl *se_nacl;
++
++	login->first_request = 0;
++
++	list_for_each_entry(param, &conn->param_list->param_list, p_list) {
++		if (!strncmp(param->name, SESSIONTYPE, 11)) {
++			if (!IS_PSTATE_ACCEPTOR(param)) {
++				pr_err("SessionType key not received"
++					" in first login request.\n");
++				iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++					ISCSI_LOGIN_STATUS_MISSING_FIELDS);
++				return -1;
++			}
++			if (!strncmp(param->value, DISCOVERY, 9))
++				return 0;
++		}
++
++		if (!strncmp(param->name, INITIATORNAME, 13)) {
++			if (!IS_PSTATE_ACCEPTOR(param)) {
++				if (!login->leading_connection)
++					continue;
++
++				pr_err("InitiatorName key not received"
++					" in first login request.\n");
++				iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++					ISCSI_LOGIN_STATUS_MISSING_FIELDS);
++				return -1;
++			}
++
++			/*
++			 * For non-leading connections, double check that the
++			 * received InitiatorName matches the existing session's
++			 * struct iscsi_node_acl.
++			 */
++			if (!login->leading_connection) {
++				se_nacl = conn->sess->se_sess->se_node_acl;
++				if (!se_nacl) {
++					pr_err("Unable to locate"
++						" struct se_node_acl\n");
++					iscsit_tx_login_rsp(conn,
++							ISCSI_STATUS_CLS_INITIATOR_ERR,
++							ISCSI_LOGIN_STATUS_TGT_NOT_FOUND);
++					return -1;
++				}
++
++				if (strcmp(param->value,
++						se_nacl->initiatorname)) {
++					pr_err("Incorrect"
++						" InitiatorName: %s for this"
++						" iSCSI Initiator Node.\n",
++						param->value);
++					iscsit_tx_login_rsp(conn,
++							ISCSI_STATUS_CLS_INITIATOR_ERR,
++							ISCSI_LOGIN_STATUS_TGT_NOT_FOUND);
++					return -1;
++				}
++			}
++		}
++	}
++
++	return 0;
++}
++
++static int iscsi_target_do_tx_login_io(struct iscsi_conn *conn, struct iscsi_login *login)
++{
++	u32 padding = 0;
++	struct iscsi_session *sess = conn->sess;
++	struct iscsi_login_rsp *login_rsp;
++
++	login_rsp = (struct iscsi_login_rsp *) login->rsp;
++
++	login_rsp->opcode		= ISCSI_OP_LOGIN_RSP;
++	hton24(login_rsp->dlength, login->rsp_length);
++	memcpy(login_rsp->isid, login->isid, 6);
++	login_rsp->tsih			= cpu_to_be16(login->tsih);
++	login_rsp->itt			= cpu_to_be32(login->init_task_tag);
++	login_rsp->statsn		= cpu_to_be32(conn->stat_sn++);
++	login_rsp->exp_cmdsn		= cpu_to_be32(conn->sess->exp_cmd_sn);
++	login_rsp->max_cmdsn		= cpu_to_be32(conn->sess->max_cmd_sn);
++
++	pr_debug("Sending Login Response, Flags: 0x%02x, ITT: 0x%08x,"
++		" ExpCmdSN; 0x%08x, MaxCmdSN: 0x%08x, StatSN: 0x%08x, Length:"
++		" %u\n", login_rsp->flags, ntohl(login_rsp->itt),
++		ntohl(login_rsp->exp_cmdsn), ntohl(login_rsp->max_cmdsn),
++		ntohl(login_rsp->statsn), login->rsp_length);
++
++	padding = ((-login->rsp_length) & 3);
++
++	if (iscsi_login_tx_data(
++			conn,
++			login->rsp,
++			login->rsp_buf,
++			login->rsp_length + padding) < 0)
++		return -1;
++
++	login->rsp_length		= 0;
++	login_rsp->tsih			= be16_to_cpu(login_rsp->tsih);
++	login_rsp->itt			= be32_to_cpu(login_rsp->itt);
++	login_rsp->statsn		= be32_to_cpu(login_rsp->statsn);
++	mutex_lock(&sess->cmdsn_mutex);
++	login_rsp->exp_cmdsn		= be32_to_cpu(sess->exp_cmd_sn);
++	login_rsp->max_cmdsn		= be32_to_cpu(sess->max_cmd_sn);
++	mutex_unlock(&sess->cmdsn_mutex);
++
++	return 0;
++}
++
++static int iscsi_target_do_rx_login_io(struct iscsi_conn *conn, struct iscsi_login *login)
++{
++	u32 padding = 0, payload_length;
++	struct iscsi_login_req *login_req;
++
++	if (iscsi_login_rx_data(conn, login->req, ISCSI_HDR_LEN) < 0)
++		return -1;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	payload_length			= ntoh24(login_req->dlength);
++	login_req->tsih			= be16_to_cpu(login_req->tsih);
++	login_req->itt			= be32_to_cpu(login_req->itt);
++	login_req->cid			= be16_to_cpu(login_req->cid);
++	login_req->cmdsn		= be32_to_cpu(login_req->cmdsn);
++	login_req->exp_statsn		= be32_to_cpu(login_req->exp_statsn);
++
++	pr_debug("Got Login Command, Flags 0x%02x, ITT: 0x%08x,"
++		" CmdSN: 0x%08x, ExpStatSN: 0x%08x, CID: %hu, Length: %u\n",
++		 login_req->flags, login_req->itt, login_req->cmdsn,
++		 login_req->exp_statsn, login_req->cid, payload_length);
++
++	if (iscsi_target_check_login_request(conn, login) < 0)
++		return -1;
++
++	padding = ((-payload_length) & 3);
++	memset(login->req_buf, 0, MAX_KEY_VALUE_PAIRS);
++
++	if (iscsi_login_rx_data(
++			conn,
++			login->req_buf,
++			payload_length + padding) < 0)
++		return -1;
++
++	return 0;
++}
++
++static int iscsi_target_do_login_io(struct iscsi_conn *conn, struct iscsi_login *login)
++{
++	if (iscsi_target_do_tx_login_io(conn, login) < 0)
++		return -1;
++
++	if (iscsi_target_do_rx_login_io(conn, login) < 0)
++		return -1;
++
++	return 0;
++}
++
++static int iscsi_target_get_initial_payload(
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	u32 padding = 0, payload_length;
++	struct iscsi_login_req *login_req;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	payload_length = ntoh24(login_req->dlength);
++
++	pr_debug("Got Login Command, Flags 0x%02x, ITT: 0x%08x,"
++		" CmdSN: 0x%08x, ExpStatSN: 0x%08x, Length: %u\n",
++		login_req->flags, login_req->itt, login_req->cmdsn,
++		login_req->exp_statsn, payload_length);
++
++	if (iscsi_target_check_login_request(conn, login) < 0)
++		return -1;
++
++	padding = ((-payload_length) & 3);
++
++	if (iscsi_login_rx_data(
++			conn,
++			login->req_buf,
++			payload_length + padding) < 0)
++		return -1;
++
++	return 0;
++}
++
++/*
++ *	NOTE: We check for existing sessions or connections AFTER the initiator
++ *	has been successfully authenticated in order to protect against faked
++ *	ISID/TSIH combinations.
++ */
++static int iscsi_target_check_for_existing_instances(
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	if (login->checked_for_existing)
++		return 0;
++
++	login->checked_for_existing = 1;
++
++	if (!login->tsih)
++		return iscsi_check_for_session_reinstatement(conn);
++	else
++		return iscsi_login_post_auth_non_zero_tsih(conn, login->cid,
++				login->initial_exp_statsn);
++}
++
++static int iscsi_target_do_authentication(
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	int authret;
++	u32 payload_length;
++	struct iscsi_param *param;
++	struct iscsi_login_req *login_req;
++	struct iscsi_login_rsp *login_rsp;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	login_rsp = (struct iscsi_login_rsp *) login->rsp;
++	payload_length = ntoh24(login_req->dlength);
++
++	param = iscsi_find_param_from_key(AUTHMETHOD, conn->param_list);
++	if (!param)
++		return -1;
++
++	authret = iscsi_handle_authentication(
++			conn,
++			login->req_buf,
++			login->rsp_buf,
++			payload_length,
++			&login->rsp_length,
++			param->value);
++	switch (authret) {
++	case 0:
++		pr_debug("Received OK response"
++		" from LIO Authentication, continuing.\n");
++		break;
++	case 1:
++		pr_debug("iSCSI security negotiation"
++			" completed sucessfully.\n");
++		login->auth_complete = 1;
++		if ((login_req->flags & ISCSI_FLAG_LOGIN_NEXT_STAGE1) &&
++		    (login_req->flags & ISCSI_FLAG_LOGIN_TRANSIT)) {
++			login_rsp->flags |= (ISCSI_FLAG_LOGIN_NEXT_STAGE1 |
++					     ISCSI_FLAG_LOGIN_TRANSIT);
++			login->current_stage = 1;
++		}
++		return iscsi_target_check_for_existing_instances(
++				conn, login);
++	case 2:
++		pr_err("Security negotiation"
++			" failed.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_AUTH_FAILED);
++		return -1;
++	default:
++		pr_err("Received unknown error %d from LIO"
++				" Authentication\n", authret);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_TARGET_ERROR);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int iscsi_target_handle_csg_zero(
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	int ret;
++	u32 payload_length;
++	struct iscsi_param *param;
++	struct iscsi_login_req *login_req;
++	struct iscsi_login_rsp *login_rsp;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	login_rsp = (struct iscsi_login_rsp *) login->rsp;
++	payload_length = ntoh24(login_req->dlength);
++
++	param = iscsi_find_param_from_key(AUTHMETHOD, conn->param_list);
++	if (!param)
++		return -1;
++
++	ret = iscsi_decode_text_input(
++			PHASE_SECURITY|PHASE_DECLARATIVE,
++			SENDER_INITIATOR|SENDER_RECEIVER,
++			login->req_buf,
++			payload_length,
++			conn->param_list);
++	if (ret < 0)
++		return -1;
++
++	if (ret > 0) {
++		if (login->auth_complete) {
++			pr_err("Initiator has already been"
++				" successfully authenticated, but is still"
++				" sending %s keys.\n", param->value);
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++					ISCSI_LOGIN_STATUS_INIT_ERR);
++			return -1;
++		}
++
++		goto do_auth;
++	}
++
++	if (login->first_request)
++		if (iscsi_target_check_first_request(conn, login) < 0)
++			return -1;
++
++	ret = iscsi_encode_text_output(
++			PHASE_SECURITY|PHASE_DECLARATIVE,
++			SENDER_TARGET,
++			login->rsp_buf,
++			&login->rsp_length,
++			conn->param_list);
++	if (ret < 0)
++		return -1;
++
++	if (!iscsi_check_negotiated_keys(conn->param_list)) {
++		if (ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication &&
++		    !strncmp(param->value, NONE, 4)) {
++			pr_err("Initiator sent AuthMethod=None but"
++				" Target is enforcing iSCSI Authentication,"
++					" login failed.\n");
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++					ISCSI_LOGIN_STATUS_AUTH_FAILED);
++			return -1;
++		}
++
++		if (ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication &&
++		    !login->auth_complete)
++			return 0;
++
++		if (strncmp(param->value, NONE, 4) && !login->auth_complete)
++			return 0;
++
++		if ((login_req->flags & ISCSI_FLAG_LOGIN_NEXT_STAGE1) &&
++		    (login_req->flags & ISCSI_FLAG_LOGIN_TRANSIT)) {
++			login_rsp->flags |= ISCSI_FLAG_LOGIN_NEXT_STAGE1 |
++					    ISCSI_FLAG_LOGIN_TRANSIT;
++			login->current_stage = 1;
++		}
++	}
++
++	return 0;
++do_auth:
++	return iscsi_target_do_authentication(conn, login);
++}
++
++static int iscsi_target_handle_csg_one(struct iscsi_conn *conn, struct iscsi_login *login)
++{
++	int ret;
++	u32 payload_length;
++	struct iscsi_login_req *login_req;
++	struct iscsi_login_rsp *login_rsp;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	login_rsp = (struct iscsi_login_rsp *) login->rsp;
++	payload_length = ntoh24(login_req->dlength);
++
++	ret = iscsi_decode_text_input(
++			PHASE_OPERATIONAL|PHASE_DECLARATIVE,
++			SENDER_INITIATOR|SENDER_RECEIVER,
++			login->req_buf,
++			payload_length,
++			conn->param_list);
++	if (ret < 0)
++		return -1;
++
++	if (login->first_request)
++		if (iscsi_target_check_first_request(conn, login) < 0)
++			return -1;
++
++	if (iscsi_target_check_for_existing_instances(conn, login) < 0)
++		return -1;
++
++	ret = iscsi_encode_text_output(
++			PHASE_OPERATIONAL|PHASE_DECLARATIVE,
++			SENDER_TARGET,
++			login->rsp_buf,
++			&login->rsp_length,
++			conn->param_list);
++	if (ret < 0)
++		return -1;
++
++	if (!login->auth_complete &&
++	     ISCSI_TPG_ATTRIB(ISCSI_TPG_C(conn))->authentication) {
++		pr_err("Initiator is requesting CSG: 1, has not been"
++			 " successfully authenticated, and the Target is"
++			" enforcing iSCSI Authentication, login failed.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_AUTH_FAILED);
++		return -1;
++	}
++
++	if (!iscsi_check_negotiated_keys(conn->param_list))
++		if ((login_req->flags & ISCSI_FLAG_LOGIN_NEXT_STAGE3) &&
++		    (login_req->flags & ISCSI_FLAG_LOGIN_TRANSIT))
++			login_rsp->flags |= ISCSI_FLAG_LOGIN_NEXT_STAGE3 |
++					    ISCSI_FLAG_LOGIN_TRANSIT;
++
++	return 0;
++}
++
++static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *login)
++{
++	int pdu_count = 0;
++	struct iscsi_login_req *login_req;
++	struct iscsi_login_rsp *login_rsp;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	login_rsp = (struct iscsi_login_rsp *) login->rsp;
++
++	while (1) {
++		if (++pdu_count > MAX_LOGIN_PDUS) {
++			pr_err("MAX_LOGIN_PDUS count reached.\n");
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++					ISCSI_LOGIN_STATUS_TARGET_ERROR);
++			return -1;
++		}
++
++		switch ((login_req->flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2) {
++		case 0:
++			login_rsp->flags |= (0 & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK);
++			if (iscsi_target_handle_csg_zero(conn, login) < 0)
++				return -1;
++			break;
++		case 1:
++			login_rsp->flags |= ISCSI_FLAG_LOGIN_CURRENT_STAGE1;
++			if (iscsi_target_handle_csg_one(conn, login) < 0)
++				return -1;
++			if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
++				login->tsih = conn->sess->tsih;
++				if (iscsi_target_do_tx_login_io(conn,
++						login) < 0)
++					return -1;
++				return 0;
++			}
++			break;
++		default:
++			pr_err("Illegal CSG: %d received from"
++				" Initiator, protocol error.\n",
++				(login_req->flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK)
++				>> 2);
++			break;
++		}
++
++		if (iscsi_target_do_login_io(conn, login) < 0)
++			return -1;
++
++		if (login_rsp->flags & ISCSI_FLAG_LOGIN_TRANSIT) {
++			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_TRANSIT;
++			login_rsp->flags &= ~ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK;
++		}
++	}
++
++	return 0;
++}
++
++static void iscsi_initiatorname_tolower(
++	char *param_buf)
++{
++	char *c;
++	u32 iqn_size = strlen(param_buf), i;
++
++	for (i = 0; i < iqn_size; i++) {
++		c = (char *)&param_buf[i];
++		if (!isupper(*c))
++			continue;
++
++		*c = tolower(*c);
++	}
++}
++
++/*
++ * Processes the first Login Request..
++ */
++static int iscsi_target_locate_portal(
++	struct iscsi_np *np,
++	struct iscsi_conn *conn,
++	struct iscsi_login *login)
++{
++	char *i_buf = NULL, *s_buf = NULL, *t_buf = NULL;
++	char *tmpbuf, *start = NULL, *end = NULL, *key, *value;
++	struct iscsi_session *sess = conn->sess;
++	struct iscsi_tiqn *tiqn;
++	struct iscsi_login_req *login_req;
++	struct iscsi_targ_login_rsp *login_rsp;
++	u32 payload_length;
++	int sessiontype = 0, ret = 0;
++
++	login_req = (struct iscsi_login_req *) login->req;
++	login_rsp = (struct iscsi_targ_login_rsp *) login->rsp;
++	payload_length = ntoh24(login_req->dlength);
++
++	login->first_request	= 1;
++	login->leading_connection = (!login_req->tsih) ? 1 : 0;
++	login->current_stage	=
++		(login_req->flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2;
++	login->version_min	= login_req->min_version;
++	login->version_max	= login_req->max_version;
++	memcpy(login->isid, login_req->isid, 6);
++	login->cmd_sn		= login_req->cmdsn;
++	login->init_task_tag	= login_req->itt;
++	login->initial_exp_statsn = login_req->exp_statsn;
++	login->cid		= login_req->cid;
++	login->tsih		= login_req->tsih;
++
++	if (iscsi_target_get_initial_payload(conn, login) < 0)
++		return -1;
++
++	tmpbuf = kzalloc(payload_length + 1, GFP_KERNEL);
++	if (!tmpbuf) {
++		pr_err("Unable to allocate memory for tmpbuf.\n");
++		return -1;
++	}
++
++	memcpy(tmpbuf, login->req_buf, payload_length);
++	tmpbuf[payload_length] = '\0';
++	start = tmpbuf;
++	end = (start + payload_length);
++
++	/*
++	 * Locate the initial keys expected from the Initiator node in
++	 * the first login request in order to progress with the login phase.
++	 */
++	while (start < end) {
++		if (iscsi_extract_key_value(start, &key, &value) < 0) {
++			ret = -1;
++			goto out;
++		}
++
++		if (!strncmp(key, "InitiatorName", 13))
++			i_buf = value;
++		else if (!strncmp(key, "SessionType", 11))
++			s_buf = value;
++		else if (!strncmp(key, "TargetName", 10))
++			t_buf = value;
++
++		start += strlen(key) + strlen(value) + 2;
++	}
++
++	/*
++	 * See 5.3.  Login Phase.
++	 */
++	if (!i_buf) {
++		pr_err("InitiatorName key not received"
++			" in first login request.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++			ISCSI_LOGIN_STATUS_MISSING_FIELDS);
++		ret = -1;
++		goto out;
++	}
++	/*
++	 * Convert the incoming InitiatorName to lowercase following
++	 * RFC-3720 3.2.6.1. section c) that says that iSCSI IQNs
++	 * are NOT case sensitive.
++	 */
++	iscsi_initiatorname_tolower(i_buf);
++
++	if (!s_buf) {
++		if (!login->leading_connection)
++			goto get_target;
++
++		pr_err("SessionType key not received"
++			" in first login request.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++			ISCSI_LOGIN_STATUS_MISSING_FIELDS);
++		ret = -1;
++		goto out;
++	}
++
++	/*
++	 * Use default portal group for discovery sessions.
++	 */
++	sessiontype = strncmp(s_buf, DISCOVERY, 9);
++	if (!sessiontype) {
++		conn->tpg = iscsit_global->discovery_tpg;
++		if (!login->leading_connection)
++			goto get_target;
++
++		sess->sess_ops->SessionType = 1;
++		/*
++		 * Setup crc32c modules from libcrypto
++		 */
++		if (iscsi_login_setup_crypto(conn) < 0) {
++			pr_err("iscsi_login_setup_crypto() failed\n");
++			ret = -1;
++			goto out;
++		}
++		/*
++		 * Serialize access across the discovery struct iscsi_portal_group to
++		 * process login attempt.
++		 */
++		if (iscsit_access_np(np, conn->tpg) < 0) {
++			iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_SVC_UNAVAILABLE);
++			ret = -1;
++			goto out;
++		}
++		ret = 0;
++		goto out;
++	}
++
++get_target:
++	if (!t_buf) {
++		pr_err("TargetName key not received"
++			" in first login request while"
++			" SessionType=Normal.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++			ISCSI_LOGIN_STATUS_MISSING_FIELDS);
++		ret = -1;
++		goto out;
++	}
++
++	/*
++	 * Locate Target IQN from Storage Node.
++	 */
++	tiqn = iscsit_get_tiqn_for_login(t_buf);
++	if (!tiqn) {
++		pr_err("Unable to locate Target IQN: %s in"
++			" Storage Node\n", t_buf);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_SVC_UNAVAILABLE);
++		ret = -1;
++		goto out;
++	}
++	pr_debug("Located Storage Object: %s\n", tiqn->tiqn);
++
++	/*
++	 * Locate Target Portal Group from Storage Node.
++	 */
++	conn->tpg = iscsit_get_tpg_from_np(tiqn, np);
++	if (!conn->tpg) {
++		pr_err("Unable to locate Target Portal Group"
++				" on %s\n", tiqn->tiqn);
++		iscsit_put_tiqn_for_login(tiqn);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_SVC_UNAVAILABLE);
++		ret = -1;
++		goto out;
++	}
++	pr_debug("Located Portal Group Object: %hu\n", conn->tpg->tpgt);
++	/*
++	 * Setup crc32c modules from libcrypto
++	 */
++	if (iscsi_login_setup_crypto(conn) < 0) {
++		pr_err("iscsi_login_setup_crypto() failed\n");
++		ret = -1;
++		goto out;
++	}
++	/*
++	 * Serialize access across the struct iscsi_portal_group to
++	 * process login attempt.
++	 */
++	if (iscsit_access_np(np, conn->tpg) < 0) {
++		iscsit_put_tiqn_for_login(tiqn);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_SVC_UNAVAILABLE);
++		ret = -1;
++		conn->tpg = NULL;
++		goto out;
++	}
++
++	/*
++	 * conn->sess->node_acl will be set when the referenced
++	 * struct iscsi_session is located from received ISID+TSIH in
++	 * iscsi_login_non_zero_tsih_s2().
++	 */
++	if (!login->leading_connection) {
++		ret = 0;
++		goto out;
++	}
++
++	/*
++	 * This value is required in iscsi_login_zero_tsih_s2()
++	 */
++	sess->sess_ops->SessionType = 0;
++
++	/*
++	 * Locate incoming Initiator IQN reference from Storage Node.
++	 */
++	sess->se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
++			&conn->tpg->tpg_se_tpg, i_buf);
++	if (!sess->se_sess->se_node_acl) {
++		pr_err("iSCSI Initiator Node: %s is not authorized to"
++			" access iSCSI target portal group: %hu.\n",
++				i_buf, conn->tpg->tpgt);
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_INITIATOR_ERR,
++				ISCSI_LOGIN_STATUS_TGT_FORBIDDEN);
++		ret = -1;
++		goto out;
++	}
++
++	ret = 0;
++out:
++	kfree(tmpbuf);
++	return ret;
++}
++
++struct iscsi_login *iscsi_target_init_negotiation(
++	struct iscsi_np *np,
++	struct iscsi_conn *conn,
++	char *login_pdu)
++{
++	struct iscsi_login *login;
++
++	login = kzalloc(sizeof(struct iscsi_login), GFP_KERNEL);
++	if (!login) {
++		pr_err("Unable to allocate memory for struct iscsi_login.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		goto out;
++	}
++
++	login->req = kzalloc(ISCSI_HDR_LEN, GFP_KERNEL);
++	if (!login->req) {
++		pr_err("Unable to allocate memory for Login Request.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		goto out;
++	}
++	memcpy(login->req, login_pdu, ISCSI_HDR_LEN);
++
++	login->req_buf = kzalloc(MAX_KEY_VALUE_PAIRS, GFP_KERNEL);
++	if (!login->req_buf) {
++		pr_err("Unable to allocate memory for response buffer.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		goto out;
++	}
++	/*
++	 * SessionType: Discovery
++	 *
++	 *	Locates Default Portal
++	 *
++	 * SessionType: Normal
++	 *
++	 *	Locates Target Portal from NP -> Target IQN
++	 */
++	if (iscsi_target_locate_portal(np, conn, login) < 0) {
++		pr_err("iSCSI Login negotiation failed.\n");
++		goto out;
++	}
++
++	return login;
++out:
++	kfree(login->req);
++	kfree(login->req_buf);
++	kfree(login);
 +
 +	return NULL;
 +}
-diff --git a/drivers/target/iscsi/iscsi_target_datain_values.h b/drivers/target/iscsi/iscsi_target_datain_values.h
-new file mode 100644
-index 0000000..646429a
---- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_datain_values.h
-@@ -0,0 +1,12 @@
-+#ifndef ISCSI_TARGET_DATAIN_VALUES_H
-+#define ISCSI_TARGET_DATAIN_VALUES_H
 +
-+extern struct iscsi_datain_req *iscsit_allocate_datain_req(void);
-+extern void iscsit_attach_datain_req(struct iscsi_cmd *, struct iscsi_datain_req *);
-+extern void iscsit_free_datain_req(struct iscsi_cmd *, struct iscsi_datain_req *);
-+extern void iscsit_free_all_datain_reqs(struct iscsi_cmd *);
-+extern struct iscsi_datain_req *iscsit_get_datain_req(struct iscsi_cmd *);
-+extern struct iscsi_datain_req *iscsit_get_datain_values(struct iscsi_cmd *,
-+			struct iscsi_datain *);
++int iscsi_target_start_negotiation(
++	struct iscsi_login *login,
++	struct iscsi_conn *conn)
++{
++	int ret = -1;
 +
-+#endif   /*** ISCSI_TARGET_DATAIN_VALUES_H ***/
-diff --git a/drivers/target/iscsi/iscsi_target_seq_pdu_list.c b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
++	login->rsp = kzalloc(ISCSI_HDR_LEN, GFP_KERNEL);
++	if (!login->rsp) {
++		pr_err("Unable to allocate memory for"
++				" Login Response.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		ret = -1;
++		goto out;
++	}
++
++	login->rsp_buf = kzalloc(MAX_KEY_VALUE_PAIRS, GFP_KERNEL);
++	if (!login->rsp_buf) {
++		pr_err("Unable to allocate memory for"
++			" request buffer.\n");
++		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
++				ISCSI_LOGIN_STATUS_NO_RESOURCES);
++		ret = -1;
++		goto out;
++	}
++
++	ret = iscsi_target_do_login(conn, login);
++out:
++	if (ret != 0)
++		iscsi_remove_failed_auth_entry(conn);
++
++	iscsi_target_nego_release(login, conn);
++	return ret;
++}
++
++void iscsi_target_nego_release(
++	struct iscsi_login *login,
++	struct iscsi_conn *conn)
++{
++	kfree(login->req);
++	kfree(login->rsp);
++	kfree(login->req_buf);
++	kfree(login->rsp_buf);
++	kfree(login);
++}
+diff --git a/drivers/target/iscsi/iscsi_target_nego.h b/drivers/target/iscsi/iscsi_target_nego.h
 new file mode 100644
-index 0000000..fc69408
+index 0000000..92e133a
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_seq_pdu_list.c
-@@ -0,0 +1,664 @@
++++ b/drivers/target/iscsi/iscsi_target_nego.h
+@@ -0,0 +1,17 @@
++#ifndef ISCSI_TARGET_NEGO_H
++#define ISCSI_TARGET_NEGO_H
++
++#define DECIMAL         0
++#define HEX             1
++
++extern void convert_null_to_semi(char *, int);
++extern int extract_param(const char *, const char *, unsigned int, char *,
++		unsigned char *);
++extern struct iscsi_login *iscsi_target_init_negotiation(
++		struct iscsi_np *, struct iscsi_conn *, char *);
++extern int iscsi_target_start_negotiation(
++		struct iscsi_login *, struct iscsi_conn *);
++extern void iscsi_target_nego_release(
++		struct iscsi_login *, struct iscsi_conn *);
++
++#endif /* ISCSI_TARGET_NEGO_H */
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+new file mode 100644
+index 0000000..252e246
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -0,0 +1,1905 @@
 +/*******************************************************************************
-+ * This file contains main functions related to iSCSI DataSequenceInOrder=No
-+ * and DataPDUInOrder=No.
++ * This file contains main functions related to iSCSI Parameter negotiation.
 + *
-+ \u00a9 Copyright 2007-2011 RisingTide Systems LLC.
++ * \u00a9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
 + * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
 + *
@@ -616,740 +2420,2816 @@ index 0000000..fc69408
 + ******************************************************************************/
 +
 +#include <linux/slab.h>
-+#include <linux/random.h>
 +
 +#include "iscsi_target_core.h"
 +#include "iscsi_target_util.h"
-+#include "iscsi_target_seq_pdu_list.h"
++#include "iscsi_target_parameters.h"
 +
-+#define OFFLOAD_BUF_SIZE	32768
-+
-+void iscsit_dump_seq_list(struct iscsi_cmd *cmd)
++int iscsi_login_rx_data(
++	struct iscsi_conn *conn,
++	char *buf,
++	int length)
 +{
-+	int i;
-+	struct iscsi_seq *seq;
++	int rx_got;
++	struct kvec iov;
 +
-+	pr_debug("Dumping Sequence List for ITT: 0x%08x:\n",
-+			cmd->init_task_tag);
++	memset(&iov, 0, sizeof(struct kvec));
++	iov.iov_len	= length;
++	iov.iov_base	= buf;
 +
-+	for (i = 0; i < cmd->seq_count; i++) {
-+		seq = &cmd->seq_list[i];
-+		pr_debug("i: %d, pdu_start: %d, pdu_count: %d,"
-+			" offset: %d, xfer_len: %d, seq_send_order: %d,"
-+			" seq_no: %d\n", i, seq->pdu_start, seq->pdu_count,
-+			seq->offset, seq->xfer_len, seq->seq_send_order,
-+			seq->seq_no);
-+	}
-+}
++	/*
++	 * Initial Marker-less Interval.
++	 * Add the values regardless of IFMarker/OFMarker, considering
++	 * it may not be negoitated yet.
++	 */
++	conn->of_marker += length;
 +
-+void iscsit_dump_pdu_list(struct iscsi_cmd *cmd)
-+{
-+	int i;
-+	struct iscsi_pdu *pdu;
-+
-+	pr_debug("Dumping PDU List for ITT: 0x%08x:\n",
-+			cmd->init_task_tag);
-+
-+	for (i = 0; i < cmd->pdu_count; i++) {
-+		pdu = &cmd->pdu_list[i];
-+		pr_debug("i: %d, offset: %d, length: %d,"
-+			" pdu_send_order: %d, seq_no: %d\n", i, pdu->offset,
-+			pdu->length, pdu->pdu_send_order, pdu->seq_no);
-+	}
-+}
-+
-+static void iscsit_ordered_seq_lists(
-+	struct iscsi_cmd *cmd,
-+	u8 type)
-+{
-+	u32 i, seq_count = 0;
-+
-+	for (i = 0; i < cmd->seq_count; i++) {
-+		if (cmd->seq_list[i].type != SEQTYPE_NORMAL)
-+			continue;
-+		cmd->seq_list[i].seq_send_order = seq_count++;
-+	}
-+}
-+
-+static void iscsit_ordered_pdu_lists(
-+	struct iscsi_cmd *cmd,
-+	u8 type)
-+{
-+	u32 i, pdu_send_order = 0, seq_no = 0;
-+
-+	for (i = 0; i < cmd->pdu_count; i++) {
-+redo:
-+		if (cmd->pdu_list[i].seq_no == seq_no) {
-+			cmd->pdu_list[i].pdu_send_order = pdu_send_order++;
-+			continue;
-+		}
-+		seq_no++;
-+		pdu_send_order = 0;
-+		goto redo;
-+	}
-+}
-+
-+/*
-+ *	Generate count random values into array.
-+ *	Use 0x80000000 to mark generates valued in array[].
-+ */
-+static void iscsit_create_random_array(u32 *array, u32 count)
-+{
-+	int i, j, k;
-+
-+	if (count == 1) {
-+		array[0] = 0;
-+		return;
-+	}
-+
-+	for (i = 0; i < count; i++) {
-+redo:
-+		get_random_bytes(&j, sizeof(u32));
-+		j = (1 + (int) (9999 + 1) - j) % count;
-+		for (k = 0; k < i + 1; k++) {
-+			j |= 0x80000000;
-+			if ((array[k] & 0x80000000) && (array[k] == j))
-+				goto redo;
-+		}
-+		array[i] = j;
-+	}
-+
-+	for (i = 0; i < count; i++)
-+		array[i] &= ~0x80000000;
-+}
-+
-+static int iscsit_randomize_pdu_lists(
-+	struct iscsi_cmd *cmd,
-+	u8 type)
-+{
-+	int i = 0;
-+	u32 *array, pdu_count, seq_count = 0, seq_no = 0, seq_offset = 0;
-+
-+	for (pdu_count = 0; pdu_count < cmd->pdu_count; pdu_count++) {
-+redo:
-+		if (cmd->pdu_list[pdu_count].seq_no == seq_no) {
-+			seq_count++;
-+			continue;
-+		}
-+		array = kzalloc(seq_count * sizeof(u32), GFP_KERNEL);
-+		if (!array) {
-+			pr_err("Unable to allocate memory"
-+				" for random array.\n");
-+			return -1;
-+		}
-+		iscsit_create_random_array(array, seq_count);
-+
-+		for (i = 0; i < seq_count; i++)
-+			cmd->pdu_list[seq_offset+i].pdu_send_order = array[i];
-+
-+		kfree(array);
-+
-+		seq_offset += seq_count;
-+		seq_count = 0;
-+		seq_no++;
-+		goto redo;
-+	}
-+
-+	if (seq_count) {
-+		array = kzalloc(seq_count * sizeof(u32), GFP_KERNEL);
-+		if (!array) {
-+			pr_err("Unable to allocate memory for"
-+				" random array.\n");
-+			return -1;
-+		}
-+		iscsit_create_random_array(array, seq_count);
-+
-+		for (i = 0; i < seq_count; i++)
-+			cmd->pdu_list[seq_offset+i].pdu_send_order = array[i];
-+
-+		kfree(array);
-+	}
-+
-+	return 0;
-+}
-+
-+static int iscsit_randomize_seq_lists(
-+	struct iscsi_cmd *cmd,
-+	u8 type)
-+{
-+	int i, j = 0;
-+	u32 *array, seq_count = cmd->seq_count;
-+
-+	if ((type == PDULIST_IMMEDIATE) || (type == PDULIST_UNSOLICITED))
-+		seq_count--;
-+	else if (type == PDULIST_IMMEDIATE_AND_UNSOLICITED)
-+		seq_count -= 2;
-+
-+	if (!seq_count)
-+		return 0;
-+
-+	array = kzalloc(seq_count * sizeof(u32), GFP_KERNEL);
-+	if (!array) {
-+		pr_err("Unable to allocate memory for random array.\n");
++	rx_got = rx_data(conn, &iov, 1, length);
++	if (rx_got != length) {
++		pr_err("rx_data returned %d, expecting %d.\n",
++				rx_got, length);
 +		return -1;
 +	}
-+	iscsit_create_random_array(array, seq_count);
 +
-+	for (i = 0; i < cmd->seq_count; i++) {
-+		if (cmd->seq_list[i].type != SEQTYPE_NORMAL)
-+			continue;
-+		cmd->seq_list[i].seq_send_order = array[j++];
-+	}
-+
-+	kfree(array);
-+	return 0;
++	return 0 ;
 +}
 +
-+static void iscsit_determine_counts_for_list(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_build_list *bl,
-+	u32 *seq_count,
-+	u32 *pdu_count)
++int iscsi_login_tx_data(
++	struct iscsi_conn *conn,
++	char *pdu_buf,
++	char *text_buf,
++	int text_length)
 +{
-+	int check_immediate = 0;
-+	u32 burstlength = 0, offset = 0;
-+	u32 unsolicited_data_length = 0;
-+	struct iscsi_conn *conn = cmd->conn;
++	int length, tx_sent;
++	struct kvec iov[2];
 +
-+	if ((bl->type == PDULIST_IMMEDIATE) ||
-+	    (bl->type == PDULIST_IMMEDIATE_AND_UNSOLICITED))
-+		check_immediate = 1;
++	length = (ISCSI_HDR_LEN + text_length);
 +
-+	if ((bl->type == PDULIST_UNSOLICITED) ||
-+	    (bl->type == PDULIST_IMMEDIATE_AND_UNSOLICITED))
-+		unsolicited_data_length = (cmd->data_length >
-+			conn->sess->sess_ops->FirstBurstLength) ?
-+			conn->sess->sess_ops->FirstBurstLength : cmd->data_length;
++	memset(&iov[0], 0, 2 * sizeof(struct kvec));
++	iov[0].iov_len		= ISCSI_HDR_LEN;
++	iov[0].iov_base		= pdu_buf;
++	iov[1].iov_len		= text_length;
++	iov[1].iov_base		= text_buf;
 +
-+	while (offset < cmd->data_length) {
-+		*pdu_count += 1;
++	/*
++	 * Initial Marker-less Interval.
++	 * Add the values regardless of IFMarker/OFMarker, considering
++	 * it may not be negoitated yet.
++	 */
++	conn->if_marker += length;
 +
-+		if (check_immediate) {
-+			check_immediate = 0;
-+			offset += bl->immediate_data_length;
-+			*seq_count += 1;
-+			if (unsolicited_data_length)
-+				unsolicited_data_length -=
-+					bl->immediate_data_length;
-+			continue;
-+		}
-+		if (unsolicited_data_length > 0) {
-+			if ((offset + conn->conn_ops->MaxRecvDataSegmentLength)
-+					>= cmd->data_length) {
-+				unsolicited_data_length -=
-+					(cmd->data_length - offset);
-+				offset += (cmd->data_length - offset);
-+				continue;
-+			}
-+			if ((offset + conn->conn_ops->MaxRecvDataSegmentLength)
-+					>= conn->sess->sess_ops->FirstBurstLength) {
-+				unsolicited_data_length -=
-+					(conn->sess->sess_ops->FirstBurstLength -
-+					offset);
-+				offset += (conn->sess->sess_ops->FirstBurstLength -
-+					offset);
-+				burstlength = 0;
-+				*seq_count += 1;
-+				continue;
-+			}
-+
-+			offset += conn->conn_ops->MaxRecvDataSegmentLength;
-+			unsolicited_data_length -=
-+				conn->conn_ops->MaxRecvDataSegmentLength;
-+			continue;
-+		}
-+		if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+		     cmd->data_length) {
-+			offset += (cmd->data_length - offset);
-+			continue;
-+		}
-+		if ((burstlength + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+		     conn->sess->sess_ops->MaxBurstLength) {
-+			offset += (conn->sess->sess_ops->MaxBurstLength -
-+					burstlength);
-+			burstlength = 0;
-+			*seq_count += 1;
-+			continue;
-+		}
-+
-+		burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
-+		offset += conn->conn_ops->MaxRecvDataSegmentLength;
-+	}
-+}
-+
-+
-+/*
-+ *	Builds PDU and/or Sequence list,  called while DataSequenceInOrder=No
-+ *	and DataPDUInOrder=No.
-+ */
-+static int iscsit_build_pdu_and_seq_list(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_build_list *bl)
-+{
-+	int check_immediate = 0, datapduinorder, datasequenceinorder;
-+	u32 burstlength = 0, offset = 0, i = 0;
-+	u32 pdu_count = 0, seq_no = 0, unsolicited_data_length = 0;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_pdu *pdu = cmd->pdu_list;
-+	struct iscsi_seq *seq = cmd->seq_list;
-+
-+	datapduinorder = conn->sess->sess_ops->DataPDUInOrder;
-+	datasequenceinorder = conn->sess->sess_ops->DataSequenceInOrder;
-+
-+	if ((bl->type == PDULIST_IMMEDIATE) ||
-+	    (bl->type == PDULIST_IMMEDIATE_AND_UNSOLICITED))
-+		check_immediate = 1;
-+
-+	if ((bl->type == PDULIST_UNSOLICITED) ||
-+	    (bl->type == PDULIST_IMMEDIATE_AND_UNSOLICITED))
-+		unsolicited_data_length = (cmd->data_length >
-+			conn->sess->sess_ops->FirstBurstLength) ?
-+			conn->sess->sess_ops->FirstBurstLength : cmd->data_length;
-+
-+	while (offset < cmd->data_length) {
-+		pdu_count++;
-+		if (!datapduinorder) {
-+			pdu[i].offset = offset;
-+			pdu[i].seq_no = seq_no;
-+		}
-+		if (!datasequenceinorder && (pdu_count == 1)) {
-+			seq[seq_no].pdu_start = i;
-+			seq[seq_no].seq_no = seq_no;
-+			seq[seq_no].offset = offset;
-+			seq[seq_no].orig_offset = offset;
-+		}
-+
-+		if (check_immediate) {
-+			check_immediate = 0;
-+			if (!datapduinorder) {
-+				pdu[i].type = PDUTYPE_IMMEDIATE;
-+				pdu[i++].length = bl->immediate_data_length;
-+			}
-+			if (!datasequenceinorder) {
-+				seq[seq_no].type = SEQTYPE_IMMEDIATE;
-+				seq[seq_no].pdu_count = 1;
-+				seq[seq_no].xfer_len =
-+					bl->immediate_data_length;
-+			}
-+			offset += bl->immediate_data_length;
-+			pdu_count = 0;
-+			seq_no++;
-+			if (unsolicited_data_length)
-+				unsolicited_data_length -=
-+					bl->immediate_data_length;
-+			continue;
-+		}
-+		if (unsolicited_data_length > 0) {
-+			if ((offset +
-+			     conn->conn_ops->MaxRecvDataSegmentLength) >=
-+			     cmd->data_length) {
-+				if (!datapduinorder) {
-+					pdu[i].type = PDUTYPE_UNSOLICITED;
-+					pdu[i].length =
-+						(cmd->data_length - offset);
-+				}
-+				if (!datasequenceinorder) {
-+					seq[seq_no].type = SEQTYPE_UNSOLICITED;
-+					seq[seq_no].pdu_count = pdu_count;
-+					seq[seq_no].xfer_len = (burstlength +
-+						(cmd->data_length - offset));
-+				}
-+				unsolicited_data_length -=
-+						(cmd->data_length - offset);
-+				offset += (cmd->data_length - offset);
-+				continue;
-+			}
-+			if ((offset +
-+			     conn->conn_ops->MaxRecvDataSegmentLength) >=
-+					conn->sess->sess_ops->FirstBurstLength) {
-+				if (!datapduinorder) {
-+					pdu[i].type = PDUTYPE_UNSOLICITED;
-+					pdu[i++].length =
-+					   (conn->sess->sess_ops->FirstBurstLength -
-+						offset);
-+				}
-+				if (!datasequenceinorder) {
-+					seq[seq_no].type = SEQTYPE_UNSOLICITED;
-+					seq[seq_no].pdu_count = pdu_count;
-+					seq[seq_no].xfer_len = (burstlength +
-+					   (conn->sess->sess_ops->FirstBurstLength -
-+						offset));
-+				}
-+				unsolicited_data_length -=
-+					(conn->sess->sess_ops->FirstBurstLength -
-+						offset);
-+				offset += (conn->sess->sess_ops->FirstBurstLength -
-+						offset);
-+				burstlength = 0;
-+				pdu_count = 0;
-+				seq_no++;
-+				continue;
-+			}
-+
-+			if (!datapduinorder) {
-+				pdu[i].type = PDUTYPE_UNSOLICITED;
-+				pdu[i++].length =
-+				     conn->conn_ops->MaxRecvDataSegmentLength;
-+			}
-+			burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
-+			offset += conn->conn_ops->MaxRecvDataSegmentLength;
-+			unsolicited_data_length -=
-+				conn->conn_ops->MaxRecvDataSegmentLength;
-+			continue;
-+		}
-+		if ((offset + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+		     cmd->data_length) {
-+			if (!datapduinorder) {
-+				pdu[i].type = PDUTYPE_NORMAL;
-+				pdu[i].length = (cmd->data_length - offset);
-+			}
-+			if (!datasequenceinorder) {
-+				seq[seq_no].type = SEQTYPE_NORMAL;
-+				seq[seq_no].pdu_count = pdu_count;
-+				seq[seq_no].xfer_len = (burstlength +
-+					(cmd->data_length - offset));
-+			}
-+			offset += (cmd->data_length - offset);
-+			continue;
-+		}
-+		if ((burstlength + conn->conn_ops->MaxRecvDataSegmentLength) >=
-+		     conn->sess->sess_ops->MaxBurstLength) {
-+			if (!datapduinorder) {
-+				pdu[i].type = PDUTYPE_NORMAL;
-+				pdu[i++].length =
-+					(conn->sess->sess_ops->MaxBurstLength -
-+						burstlength);
-+			}
-+			if (!datasequenceinorder) {
-+				seq[seq_no].type = SEQTYPE_NORMAL;
-+				seq[seq_no].pdu_count = pdu_count;
-+				seq[seq_no].xfer_len = (burstlength +
-+					(conn->sess->sess_ops->MaxBurstLength -
-+					burstlength));
-+			}
-+			offset += (conn->sess->sess_ops->MaxBurstLength -
-+					burstlength);
-+			burstlength = 0;
-+			pdu_count = 0;
-+			seq_no++;
-+			continue;
-+		}
-+
-+		if (!datapduinorder) {
-+			pdu[i].type = PDUTYPE_NORMAL;
-+			pdu[i++].length =
-+				conn->conn_ops->MaxRecvDataSegmentLength;
-+		}
-+		burstlength += conn->conn_ops->MaxRecvDataSegmentLength;
-+		offset += conn->conn_ops->MaxRecvDataSegmentLength;
-+	}
-+
-+	if (!datasequenceinorder) {
-+		if (bl->data_direction & ISCSI_PDU_WRITE) {
-+			if (bl->randomize & RANDOM_R2T_OFFSETS) {
-+				if (iscsit_randomize_seq_lists(cmd, bl->type)
-+						< 0)
-+					return -1;
-+			} else
-+				iscsit_ordered_seq_lists(cmd, bl->type);
-+		} else if (bl->data_direction & ISCSI_PDU_READ) {
-+			if (bl->randomize & RANDOM_DATAIN_SEQ_OFFSETS) {
-+				if (iscsit_randomize_seq_lists(cmd, bl->type)
-+						< 0)
-+					return -1;
-+			} else
-+				iscsit_ordered_seq_lists(cmd, bl->type);
-+		}
-+#if 0
-+		iscsit_dump_seq_list(cmd);
-+#endif
-+	}
-+	if (!datapduinorder) {
-+		if (bl->data_direction & ISCSI_PDU_WRITE) {
-+			if (bl->randomize & RANDOM_DATAOUT_PDU_OFFSETS) {
-+				if (iscsit_randomize_pdu_lists(cmd, bl->type)
-+						< 0)
-+					return -1;
-+			} else
-+				iscsit_ordered_pdu_lists(cmd, bl->type);
-+		} else if (bl->data_direction & ISCSI_PDU_READ) {
-+			if (bl->randomize & RANDOM_DATAIN_PDU_OFFSETS) {
-+				if (iscsit_randomize_pdu_lists(cmd, bl->type)
-+						< 0)
-+					return -1;
-+			} else
-+				iscsit_ordered_pdu_lists(cmd, bl->type);
-+		}
-+#if 0
-+		iscsit_dump_pdu_list(cmd);
-+#endif
++	tx_sent = tx_data(conn, &iov[0], 2, length);
++	if (tx_sent != length) {
++		pr_err("tx_data returned %d, expecting %d.\n",
++				tx_sent, length);
++		return -1;
 +	}
 +
 +	return 0;
 +}
 +
-+/*
-+ *	Only called while DataSequenceInOrder=No or DataPDUInOrder=No.
-+ */
-+int iscsit_do_build_list(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_build_list *bl)
++void iscsi_dump_conn_ops(struct iscsi_conn_ops *conn_ops)
 +{
-+	u32 pdu_count = 0, seq_count = 1;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_pdu *pdu = NULL;
-+	struct iscsi_seq *seq = NULL;
-+
-+	iscsit_determine_counts_for_list(cmd, bl, &seq_count, &pdu_count);
-+
-+	if (!conn->sess->sess_ops->DataSequenceInOrder) {
-+		seq = kzalloc(seq_count * sizeof(struct iscsi_seq), GFP_ATOMIC);
-+		if (!seq) {
-+			pr_err("Unable to allocate struct iscsi_seq list\n");
-+			return -1;
-+		}
-+		cmd->seq_list = seq;
-+		cmd->seq_count = seq_count;
-+	}
-+
-+	if (!conn->sess->sess_ops->DataPDUInOrder) {
-+		pdu = kzalloc(pdu_count * sizeof(struct iscsi_pdu), GFP_ATOMIC);
-+		if (!pdu) {
-+			pr_err("Unable to allocate struct iscsi_pdu list.\n");
-+			kfree(seq);
-+			return -1;
-+		}
-+		cmd->pdu_list = pdu;
-+		cmd->pdu_count = pdu_count;
-+	}
-+
-+	return iscsit_build_pdu_and_seq_list(cmd, bl);
++	pr_debug("HeaderDigest: %s\n", (conn_ops->HeaderDigest) ?
++				"CRC32C" : "None");
++	pr_debug("DataDigest: %s\n", (conn_ops->DataDigest) ?
++				"CRC32C" : "None");
++	pr_debug("MaxRecvDataSegmentLength: %u\n",
++				conn_ops->MaxRecvDataSegmentLength);
++	pr_debug("OFMarker: %s\n", (conn_ops->OFMarker) ? "Yes" : "No");
++	pr_debug("IFMarker: %s\n", (conn_ops->IFMarker) ? "Yes" : "No");
++	if (conn_ops->OFMarker)
++		pr_debug("OFMarkInt: %u\n", conn_ops->OFMarkInt);
++	if (conn_ops->IFMarker)
++		pr_debug("IFMarkInt: %u\n", conn_ops->IFMarkInt);
 +}
 +
-+struct iscsi_pdu *iscsit_get_pdu_holder(
-+	struct iscsi_cmd *cmd,
-+	u32 offset,
-+	u32 length)
++void iscsi_dump_sess_ops(struct iscsi_sess_ops *sess_ops)
 +{
-+	u32 i;
-+	struct iscsi_pdu *pdu = NULL;
++	pr_debug("InitiatorName: %s\n", sess_ops->InitiatorName);
++	pr_debug("InitiatorAlias: %s\n", sess_ops->InitiatorAlias);
++	pr_debug("TargetName: %s\n", sess_ops->TargetName);
++	pr_debug("TargetAlias: %s\n", sess_ops->TargetAlias);
++	pr_debug("TargetPortalGroupTag: %hu\n",
++			sess_ops->TargetPortalGroupTag);
++	pr_debug("MaxConnections: %hu\n", sess_ops->MaxConnections);
++	pr_debug("InitialR2T: %s\n",
++			(sess_ops->InitialR2T) ? "Yes" : "No");
++	pr_debug("ImmediateData: %s\n", (sess_ops->ImmediateData) ?
++			"Yes" : "No");
++	pr_debug("MaxBurstLength: %u\n", sess_ops->MaxBurstLength);
++	pr_debug("FirstBurstLength: %u\n", sess_ops->FirstBurstLength);
++	pr_debug("DefaultTime2Wait: %hu\n", sess_ops->DefaultTime2Wait);
++	pr_debug("DefaultTime2Retain: %hu\n",
++			sess_ops->DefaultTime2Retain);
++	pr_debug("MaxOutstandingR2T: %hu\n",
++			sess_ops->MaxOutstandingR2T);
++	pr_debug("DataPDUInOrder: %s\n",
++			(sess_ops->DataPDUInOrder) ? "Yes" : "No");
++	pr_debug("DataSequenceInOrder: %s\n",
++			(sess_ops->DataSequenceInOrder) ? "Yes" : "No");
++	pr_debug("ErrorRecoveryLevel: %hu\n",
++			sess_ops->ErrorRecoveryLevel);
++	pr_debug("SessionType: %s\n", (sess_ops->SessionType) ?
++			"Discovery" : "Normal");
++}
 +
-+	if (!cmd->pdu_list) {
-+		pr_err("struct iscsi_cmd->pdu_list is NULL!\n");
-+		return NULL;
++void iscsi_print_params(struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param;
++
++	list_for_each_entry(param, &param_list->param_list, p_list)
++		pr_debug("%s: %s\n", param->name, param->value);
++}
++
++static struct iscsi_param *iscsi_set_default_param(struct iscsi_param_list *param_list,
++		char *name, char *value, u8 phase, u8 scope, u8 sender,
++		u16 type_range, u8 use)
++{
++	struct iscsi_param *param = NULL;
++
++	param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
++	if (!param) {
++		pr_err("Unable to allocate memory for parameter.\n");
++		goto out;
++	}
++	INIT_LIST_HEAD(&param->p_list);
++
++	param->name = kzalloc(strlen(name) + 1, GFP_KERNEL);
++	if (!param->name) {
++		pr_err("Unable to allocate memory for parameter name.\n");
++		goto out;
 +	}
 +
-+	pdu = &cmd->pdu_list[0];
++	param->value = kzalloc(strlen(value) + 1, GFP_KERNEL);
++	if (!param->value) {
++		pr_err("Unable to allocate memory for parameter value.\n");
++		goto out;
++	}
 +
-+	for (i = 0; i < cmd->pdu_count; i++)
-+		if ((pdu[i].offset == offset) && (pdu[i].length == length))
-+			return &pdu[i];
++	memcpy(param->name, name, strlen(name));
++	param->name[strlen(name)] = '\0';
++	memcpy(param->value, value, strlen(value));
++	param->value[strlen(value)] = '\0';
++	param->phase		= phase;
++	param->scope		= scope;
++	param->sender		= sender;
++	param->use		= use;
++	param->type_range	= type_range;
 +
-+	pr_err("Unable to locate PDU holder for ITT: 0x%08x, Offset:"
-+		" %u, Length: %u\n", cmd->init_task_tag, offset, length);
++	switch (param->type_range) {
++	case TYPERANGE_BOOL_AND:
++		param->type = TYPE_BOOL_AND;
++		break;
++	case TYPERANGE_BOOL_OR:
++		param->type = TYPE_BOOL_OR;
++		break;
++	case TYPERANGE_0_TO_2:
++	case TYPERANGE_0_TO_3600:
++	case TYPERANGE_0_TO_32767:
++	case TYPERANGE_0_TO_65535:
++	case TYPERANGE_1_TO_65535:
++	case TYPERANGE_2_TO_3600:
++	case TYPERANGE_512_TO_16777215:
++		param->type = TYPE_NUMBER;
++		break;
++	case TYPERANGE_AUTH:
++	case TYPERANGE_DIGEST:
++		param->type = TYPE_VALUE_LIST | TYPE_STRING;
++		break;
++	case TYPERANGE_MARKINT:
++		param->type = TYPE_NUMBER_RANGE;
++		param->type_range |= TYPERANGE_1_TO_65535;
++		break;
++	case TYPERANGE_ISCSINAME:
++	case TYPERANGE_SESSIONTYPE:
++	case TYPERANGE_TARGETADDRESS:
++	case TYPERANGE_UTF8:
++		param->type = TYPE_STRING;
++		break;
++	default:
++		pr_err("Unknown type_range 0x%02x\n",
++				param->type_range);
++		goto out;
++	}
++	list_add_tail(&param->p_list, &param_list->param_list);
++
++	return param;
++out:
++	if (param) {
++		kfree(param->value);
++		kfree(param->name);
++		kfree(param);
++	}
++
 +	return NULL;
 +}
 +
-+struct iscsi_pdu *iscsit_get_pdu_holder_for_seq(
-+	struct iscsi_cmd *cmd,
-+	struct iscsi_seq *seq)
++/* #warning Add extension keys */
++int iscsi_create_default_params(struct iscsi_param_list **param_list_ptr)
 +{
-+	u32 i;
-+	struct iscsi_conn *conn = cmd->conn;
-+	struct iscsi_pdu *pdu = NULL;
++	struct iscsi_param *param = NULL;
++	struct iscsi_param_list *pl;
 +
-+	if (!cmd->pdu_list) {
-+		pr_err("struct iscsi_cmd->pdu_list is NULL!\n");
++	pl = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
++	if (!pl) {
++		pr_err("Unable to allocate memory for"
++				" struct iscsi_param_list.\n");
++		return -1 ;
++	}
++	INIT_LIST_HEAD(&pl->param_list);
++	INIT_LIST_HEAD(&pl->extra_response_list);
++
++	/*
++	 * The format for setting the initial parameter definitions are:
++	 *
++	 * Parameter name:
++	 * Initial value:
++	 * Allowable phase:
++	 * Scope:
++	 * Allowable senders:
++	 * Typerange:
++	 * Use:
++	 */
++	param = iscsi_set_default_param(pl, AUTHMETHOD, INITIAL_AUTHMETHOD,
++			PHASE_SECURITY, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_AUTH, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, HEADERDIGEST, INITIAL_HEADERDIGEST,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_DIGEST, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, DATADIGEST, INITIAL_DATADIGEST,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_DIGEST, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, MAXCONNECTIONS,
++			INITIAL_MAXCONNECTIONS, PHASE_OPERATIONAL,
++			SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_1_TO_65535, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, SENDTARGETS, INITIAL_SENDTARGETS,
++			PHASE_FFP0, SCOPE_SESSION_WIDE, SENDER_INITIATOR,
++			TYPERANGE_UTF8, 0);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, TARGETNAME, INITIAL_TARGETNAME,
++			PHASE_DECLARATIVE, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_ISCSINAME, USE_ALL);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, INITIATORNAME,
++			INITIAL_INITIATORNAME, PHASE_DECLARATIVE,
++			SCOPE_SESSION_WIDE, SENDER_INITIATOR,
++			TYPERANGE_ISCSINAME, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, TARGETALIAS, INITIAL_TARGETALIAS,
++			PHASE_DECLARATIVE, SCOPE_SESSION_WIDE, SENDER_TARGET,
++			TYPERANGE_UTF8, USE_ALL);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, INITIATORALIAS,
++			INITIAL_INITIATORALIAS, PHASE_DECLARATIVE,
++			SCOPE_SESSION_WIDE, SENDER_INITIATOR, TYPERANGE_UTF8,
++			USE_ALL);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, TARGETADDRESS,
++			INITIAL_TARGETADDRESS, PHASE_DECLARATIVE,
++			SCOPE_SESSION_WIDE, SENDER_TARGET,
++			TYPERANGE_TARGETADDRESS, USE_ALL);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, TARGETPORTALGROUPTAG,
++			INITIAL_TARGETPORTALGROUPTAG,
++			PHASE_DECLARATIVE, SCOPE_SESSION_WIDE, SENDER_TARGET,
++			TYPERANGE_0_TO_65535, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, INITIALR2T, INITIAL_INITIALR2T,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_BOOL_OR, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, IMMEDIATEDATA,
++			INITIAL_IMMEDIATEDATA, PHASE_OPERATIONAL,
++			SCOPE_SESSION_WIDE, SENDER_BOTH, TYPERANGE_BOOL_AND,
++			USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, MAXRECVDATASEGMENTLENGTH,
++			INITIAL_MAXRECVDATASEGMENTLENGTH,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_512_TO_16777215, USE_ALL);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, MAXBURSTLENGTH,
++			INITIAL_MAXBURSTLENGTH, PHASE_OPERATIONAL,
++			SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_512_TO_16777215, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, FIRSTBURSTLENGTH,
++			INITIAL_FIRSTBURSTLENGTH,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_512_TO_16777215, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, DEFAULTTIME2WAIT,
++			INITIAL_DEFAULTTIME2WAIT,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_0_TO_3600, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, DEFAULTTIME2RETAIN,
++			INITIAL_DEFAULTTIME2RETAIN,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_0_TO_3600, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, MAXOUTSTANDINGR2T,
++			INITIAL_MAXOUTSTANDINGR2T,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_1_TO_65535, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, DATAPDUINORDER,
++			INITIAL_DATAPDUINORDER, PHASE_OPERATIONAL,
++			SCOPE_SESSION_WIDE, SENDER_BOTH, TYPERANGE_BOOL_OR,
++			USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, DATASEQUENCEINORDER,
++			INITIAL_DATASEQUENCEINORDER,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_BOOL_OR, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, ERRORRECOVERYLEVEL,
++			INITIAL_ERRORRECOVERYLEVEL,
++			PHASE_OPERATIONAL, SCOPE_SESSION_WIDE, SENDER_BOTH,
++			TYPERANGE_0_TO_2, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, SESSIONTYPE, INITIAL_SESSIONTYPE,
++			PHASE_DECLARATIVE, SCOPE_SESSION_WIDE, SENDER_INITIATOR,
++			TYPERANGE_SESSIONTYPE, USE_LEADING_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, IFMARKER, INITIAL_IFMARKER,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_BOOL_AND, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, OFMARKER, INITIAL_OFMARKER,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_BOOL_AND, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, IFMARKINT, INITIAL_IFMARKINT,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_MARKINT, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	param = iscsi_set_default_param(pl, OFMARKINT, INITIAL_OFMARKINT,
++			PHASE_OPERATIONAL, SCOPE_CONNECTION_ONLY, SENDER_BOTH,
++			TYPERANGE_MARKINT, USE_INITIAL_ONLY);
++	if (!param)
++		goto out;
++
++	*param_list_ptr = pl;
++	return 0;
++out:
++	iscsi_release_param_list(pl);
++	return -1;
++}
++
++int iscsi_set_keys_to_negotiate(
++	int sessiontype,
++	struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param;
++
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		param->state = 0;
++		if (!strcmp(param->name, AUTHMETHOD)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, HEADERDIGEST)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, DATADIGEST)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, MAXCONNECTIONS)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, TARGETNAME)) {
++			continue;
++		} else if (!strcmp(param->name, INITIATORNAME)) {
++			continue;
++		} else if (!strcmp(param->name, TARGETALIAS)) {
++			if (param->value)
++				SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, INITIATORALIAS)) {
++			continue;
++		} else if (!strcmp(param->name, TARGETPORTALGROUPTAG)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, INITIALR2T)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, IMMEDIATEDATA)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, MAXBURSTLENGTH)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, FIRSTBURSTLENGTH)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, DEFAULTTIME2WAIT)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, DEFAULTTIME2RETAIN)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, MAXOUTSTANDINGR2T)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, DATAPDUINORDER)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, DATASEQUENCEINORDER)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, ERRORRECOVERYLEVEL)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, SESSIONTYPE)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, IFMARKER)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, OFMARKER)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, IFMARKINT)) {
++			SET_PSTATE_NEGOTIATE(param);
++		} else if (!strcmp(param->name, OFMARKINT)) {
++			SET_PSTATE_NEGOTIATE(param);
++		}
++	}
++
++	return 0;
++}
++
++int iscsi_set_keys_irrelevant_for_discovery(
++	struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param;
++
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!strcmp(param->name, MAXCONNECTIONS))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, INITIALR2T))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, IMMEDIATEDATA))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, MAXBURSTLENGTH))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, FIRSTBURSTLENGTH))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, MAXOUTSTANDINGR2T))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, DATAPDUINORDER))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, DATASEQUENCEINORDER))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, ERRORRECOVERYLEVEL))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, DEFAULTTIME2WAIT))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, DEFAULTTIME2RETAIN))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, IFMARKER))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, OFMARKER))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, IFMARKINT))
++			param->state &= ~PSTATE_NEGOTIATE;
++		else if (!strcmp(param->name, OFMARKINT))
++			param->state &= ~PSTATE_NEGOTIATE;
++	}
++
++	return 0;
++}
++
++int iscsi_copy_param_list(
++	struct iscsi_param_list **dst_param_list,
++	struct iscsi_param_list *src_param_list,
++	int leading)
++{
++	struct iscsi_param *new_param = NULL, *param = NULL;
++	struct iscsi_param_list *param_list = NULL;
++
++	param_list = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
++	if (!param_list) {
++		pr_err("Unable to allocate memory for"
++				" struct iscsi_param_list.\n");
++		goto err_out;
++	}
++	INIT_LIST_HEAD(&param_list->param_list);
++	INIT_LIST_HEAD(&param_list->extra_response_list);
++
++	list_for_each_entry(param, &src_param_list->param_list, p_list) {
++		if (!leading && (param->scope & SCOPE_SESSION_WIDE)) {
++			if ((strcmp(param->name, "TargetName") != 0) &&
++			    (strcmp(param->name, "InitiatorName") != 0) &&
++			    (strcmp(param->name, "TargetPortalGroupTag") != 0))
++				continue;
++		}
++
++		new_param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
++		if (!new_param) {
++			pr_err("Unable to allocate memory for"
++				" struct iscsi_param.\n");
++			goto err_out;
++		}
++
++		new_param->set_param = param->set_param;
++		new_param->phase = param->phase;
++		new_param->scope = param->scope;
++		new_param->sender = param->sender;
++		new_param->type = param->type;
++		new_param->use = param->use;
++		new_param->type_range = param->type_range;
++
++		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
++		if (!new_param->name) {
++			pr_err("Unable to allocate memory for"
++				" parameter name.\n");
++			goto err_out;
++		}
++
++		new_param->value = kzalloc(strlen(param->value) + 1,
++				GFP_KERNEL);
++		if (!new_param->value) {
++			pr_err("Unable to allocate memory for"
++				" parameter value.\n");
++			goto err_out;
++		}
++
++		memcpy(new_param->name, param->name, strlen(param->name));
++		new_param->name[strlen(param->name)] = '\0';
++		memcpy(new_param->value, param->value, strlen(param->value));
++		new_param->value[strlen(param->value)] = '\0';
++
++		list_add_tail(&new_param->p_list, &param_list->param_list);
++	}
++
++	if (!list_empty(&param_list->param_list))
++		*dst_param_list = param_list;
++	else {
++		pr_err("No parameters allocated.\n");
++		goto err_out;
++	}
++
++	return 0;
++
++err_out:
++	iscsi_release_param_list(param_list);
++	return -1;
++}
++
++static void iscsi_release_extra_responses(struct iscsi_param_list *param_list)
++{
++	struct iscsi_extra_response *er, *er_tmp;
++
++	list_for_each_entry_safe(er, er_tmp, &param_list->extra_response_list,
++			er_list) {
++		list_del(&er->er_list);
++		kfree(er);
++	}
++}
++
++void iscsi_release_param_list(struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param, *param_tmp;
++
++	list_for_each_entry_safe(param, param_tmp, &param_list->param_list,
++			p_list) {
++		list_del(&param->p_list);
++
++		kfree(param->name);
++		param->name = NULL;
++		kfree(param->value);
++		param->value = NULL;
++		kfree(param);
++		param = NULL;
++	}
++
++	iscsi_release_extra_responses(param_list);
++
++	kfree(param_list);
++}
++
++struct iscsi_param *iscsi_find_param_from_key(
++	char *key,
++	struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param;
++
++	if (!key || !param_list) {
++		pr_err("Key or parameter list pointer is NULL.\n");
 +		return NULL;
 +	}
 +
-+	if (conn->sess->sess_ops->DataSequenceInOrder) {
-+redo:
-+		pdu = &cmd->pdu_list[cmd->pdu_start];
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!strcmp(key, param->name))
++			return param;
++	}
 +
-+		for (i = 0; pdu[i].seq_no != cmd->seq_no; i++) {
++	pr_err("Unable to locate key \"%s\".\n", key);
++	return NULL;
++}
++
++int iscsi_extract_key_value(char *textbuf, char **key, char **value)
++{
++	*value = strchr(textbuf, '=');
++	if (!*value) {
++		pr_err("Unable to locate \"=\" seperator for key,"
++				" ignoring request.\n");
++		return -1;
++	}
++
++	*key = textbuf;
++	**value = '\0';
++	*value = *value + 1;
++
++	return 0;
++}
++
++int iscsi_update_param_value(struct iscsi_param *param, char *value)
++{
++	kfree(param->value);
++
++	param->value = kzalloc(strlen(value) + 1, GFP_KERNEL);
++	if (!param->value) {
++		pr_err("Unable to allocate memory for value.\n");
++		return -1;
++	}
++
++	memcpy(param->value, value, strlen(value));
++	param->value[strlen(value)] = '\0';
++
++	pr_debug("iSCSI Parameter updated to %s=%s\n",
++			param->name, param->value);
++	return 0;
++}
++
++static int iscsi_add_notunderstood_response(
++	char *key,
++	char *value,
++	struct iscsi_param_list *param_list)
++{
++	struct iscsi_extra_response *extra_response;
++
++	if (strlen(value) > VALUE_MAXLEN) {
++		pr_err("Value for notunderstood key \"%s\" exceeds %d,"
++			" protocol error.\n", key, VALUE_MAXLEN);
++		return -1;
++	}
++
++	extra_response = kzalloc(sizeof(struct iscsi_extra_response), GFP_KERNEL);
++	if (!extra_response) {
++		pr_err("Unable to allocate memory for"
++			" struct iscsi_extra_response.\n");
++		return -1;
++	}
++	INIT_LIST_HEAD(&extra_response->er_list);
++
++	strncpy(extra_response->key, key, strlen(key) + 1);
++	strncpy(extra_response->value, NOTUNDERSTOOD,
++			strlen(NOTUNDERSTOOD) + 1);
++
++	list_add_tail(&extra_response->er_list,
++			&param_list->extra_response_list);
++	return 0;
++}
++
++static int iscsi_check_for_auth_key(char *key)
++{
++	/*
++	 * RFC 1994
++	 */
++	if (!strcmp(key, "CHAP_A") || !strcmp(key, "CHAP_I") ||
++	    !strcmp(key, "CHAP_C") || !strcmp(key, "CHAP_N") ||
++	    !strcmp(key, "CHAP_R"))
++		return 1;
++
++	/*
++	 * RFC 2945
++	 */
++	if (!strcmp(key, "SRP_U") || !strcmp(key, "SRP_N") ||
++	    !strcmp(key, "SRP_g") || !strcmp(key, "SRP_s") ||
++	    !strcmp(key, "SRP_A") || !strcmp(key, "SRP_B") ||
++	    !strcmp(key, "SRP_M") || !strcmp(key, "SRP_HM"))
++		return 1;
++
++	return 0;
++}
++
++static void iscsi_check_proposer_for_optional_reply(struct iscsi_param *param)
++{
++	if (IS_TYPE_BOOL_AND(param)) {
++		if (!strcmp(param->value, NO))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++	} else if (IS_TYPE_BOOL_OR(param)) {
++		if (!strcmp(param->value, YES))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++		 /*
++		  * Required for gPXE iSCSI boot client
++		  */
++		if (!strcmp(param->name, IMMEDIATEDATA))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++	} else if (IS_TYPE_NUMBER(param)) {
++		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++		/*
++		 * The GlobalSAN iSCSI Initiator for MacOSX does
++		 * not respond to MaxBurstLength, FirstBurstLength,
++		 * DefaultTime2Wait or DefaultTime2Retain parameter keys.
++		 * So, we set them to 'reply optional' here, and assume the
++		 * the defaults from iscsi_parameters.h if the initiator
++		 * is not RFC compliant and the keys are not negotiated.
++		 */
++		if (!strcmp(param->name, MAXBURSTLENGTH))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++		if (!strcmp(param->name, FIRSTBURSTLENGTH))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++		if (!strcmp(param->name, DEFAULTTIME2WAIT))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++		if (!strcmp(param->name, DEFAULTTIME2RETAIN))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++		/*
++		 * Required for gPXE iSCSI boot client
++		 */
++		if (!strcmp(param->name, MAXCONNECTIONS))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++	} else if (IS_PHASE_DECLARATIVE(param))
++		SET_PSTATE_REPLY_OPTIONAL(param);
++}
++
++static int iscsi_check_boolean_value(struct iscsi_param *param, char *value)
++{
++	if (strcmp(value, YES) && strcmp(value, NO)) {
++		pr_err("Illegal value for \"%s\", must be either"
++			" \"%s\" or \"%s\".\n", param->name, YES, NO);
++		return -1;
++	}
++
++	return 0;
++}
++
++static int iscsi_check_numerical_value(struct iscsi_param *param, char *value_ptr)
++{
++	char *tmpptr;
++	int value = 0;
++
++	value = simple_strtoul(value_ptr, &tmpptr, 0);
++
++/* #warning FIXME: Fix this */
 +#if 0
-+			pr_debug("pdu[i].seq_no: %d, pdu[i].pdu"
-+				"_send_order: %d, pdu[i].offset: %d,"
-+				" pdu[i].length: %d\n", pdu[i].seq_no,
-+				pdu[i].pdu_send_order, pdu[i].offset,
-+				pdu[i].length);
++	if (strspn(endptr, WHITE_SPACE) != strlen(endptr)) {
++		pr_err("Illegal value \"%s\" for \"%s\".\n",
++			value, param->name);
++		return -1;
++	}
 +#endif
-+			if (pdu[i].pdu_send_order == cmd->pdu_send_order) {
-+				cmd->pdu_send_order++;
-+				return &pdu[i];
-+			}
++	if (IS_TYPERANGE_0_TO_2(param)) {
++		if ((value < 0) || (value > 2)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 0 and 2.\n", param->name);
++			return -1;
 +		}
++		return 0;
++	}
++	if (IS_TYPERANGE_0_TO_3600(param)) {
++		if ((value < 0) || (value > 3600)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 0 and 3600.\n", param->name);
++			return -1;
++		}
++		return 0;
++	}
++	if (IS_TYPERANGE_0_TO_32767(param)) {
++		if ((value < 0) || (value > 32767)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 0 and 32767.\n", param->name);
++			return -1;
++		}
++		return 0;
++	}
++	if (IS_TYPERANGE_0_TO_65535(param)) {
++		if ((value < 0) || (value > 65535)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 0 and 65535.\n", param->name);
++			return -1;
++		}
++		return 0;
++	}
++	if (IS_TYPERANGE_1_TO_65535(param)) {
++		if ((value < 1) || (value > 65535)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 1 and 65535.\n", param->name);
++			return -1;
++		}
++		return 0;
++	}
++	if (IS_TYPERANGE_2_TO_3600(param)) {
++		if ((value < 2) || (value > 3600)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 2 and 3600.\n", param->name);
++			return -1;
++		}
++		return 0;
++	}
++	if (IS_TYPERANGE_512_TO_16777215(param)) {
++		if ((value < 512) || (value > 16777215)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" between 512 and 16777215.\n", param->name);
++			return -1;
++		}
++		return 0;
++	}
 +
-+		cmd->pdu_start += cmd->pdu_send_order;
-+		cmd->pdu_send_order = 0;
-+		cmd->seq_no++;
++	return 0;
++}
 +
-+		if (cmd->pdu_start < cmd->pdu_count)
-+			goto redo;
++static int iscsi_check_numerical_range_value(struct iscsi_param *param, char *value)
++{
++	char *left_val_ptr = NULL, *right_val_ptr = NULL;
++	char *tilde_ptr = NULL, *tmp_ptr = NULL;
++	u32 left_val, right_val, local_left_val, local_right_val;
 +
-+		pr_err("Command ITT: 0x%08x unable to locate"
-+			" struct iscsi_pdu for cmd->pdu_send_order: %u.\n",
-+			cmd->init_task_tag, cmd->pdu_send_order);
-+		return NULL;
++	if (strcmp(param->name, IFMARKINT) &&
++	    strcmp(param->name, OFMARKINT)) {
++		pr_err("Only parameters \"%s\" or \"%s\" may contain a"
++		       " numerical range value.\n", IFMARKINT, OFMARKINT);
++		return -1;
++	}
++
++	if (IS_PSTATE_PROPOSER(param))
++		return 0;
++
++	tilde_ptr = strchr(value, '~');
++	if (!tilde_ptr) {
++		pr_err("Unable to locate numerical range indicator"
++			" \"~\" for \"%s\".\n", param->name);
++		return -1;
++	}
++	*tilde_ptr = '\0';
++
++	left_val_ptr = value;
++	right_val_ptr = value + strlen(left_val_ptr) + 1;
++
++	if (iscsi_check_numerical_value(param, left_val_ptr) < 0)
++		return -1;
++	if (iscsi_check_numerical_value(param, right_val_ptr) < 0)
++		return -1;
++
++	left_val = simple_strtoul(left_val_ptr, &tmp_ptr, 0);
++	right_val = simple_strtoul(right_val_ptr, &tmp_ptr, 0);
++	*tilde_ptr = '~';
++
++	if (right_val < left_val) {
++		pr_err("Numerical range for parameter \"%s\" contains"
++			" a right value which is less than the left.\n",
++				param->name);
++		return -1;
++	}
++
++	/*
++	 * For now,  enforce reasonable defaults for [I,O]FMarkInt.
++	 */
++	tilde_ptr = strchr(param->value, '~');
++	if (!tilde_ptr) {
++		pr_err("Unable to locate numerical range indicator"
++			" \"~\" for \"%s\".\n", param->name);
++		return -1;
++	}
++	*tilde_ptr = '\0';
++
++	left_val_ptr = param->value;
++	right_val_ptr = param->value + strlen(left_val_ptr) + 1;
++
++	local_left_val = simple_strtoul(left_val_ptr, &tmp_ptr, 0);
++	local_right_val = simple_strtoul(right_val_ptr, &tmp_ptr, 0);
++	*tilde_ptr = '~';
++
++	if (param->set_param) {
++		if ((left_val < local_left_val) ||
++		    (right_val < local_left_val)) {
++			pr_err("Passed value range \"%u~%u\" is below"
++				" minimum left value \"%u\" for key \"%s\","
++				" rejecting.\n", left_val, right_val,
++				local_left_val, param->name);
++			return -1;
++		}
 +	} else {
-+		if (!seq) {
-+			pr_err("struct iscsi_seq is NULL!\n");
-+			return NULL;
++		if ((left_val < local_left_val) &&
++		    (right_val < local_left_val)) {
++			pr_err("Received value range \"%u~%u\" is"
++				" below minimum left value \"%u\" for key"
++				" \"%s\", rejecting.\n", left_val, right_val,
++				local_left_val, param->name);
++			SET_PSTATE_REJECT(param);
++			if (iscsi_update_param_value(param, REJECT) < 0)
++				return -1;
 +		}
-+#if 0
-+		pr_debug("seq->pdu_start: %d, seq->pdu_count: %d,"
-+			" seq->seq_no: %d\n", seq->pdu_start, seq->pdu_count,
-+			seq->seq_no);
-+#endif
-+		pdu = &cmd->pdu_list[seq->pdu_start];
++	}
 +
-+		if (seq->pdu_send_order == seq->pdu_count) {
-+			pr_err("Command ITT: 0x%08x seq->pdu_send"
-+				"_order: %u equals seq->pdu_count: %u\n",
-+				cmd->init_task_tag, seq->pdu_send_order,
-+				seq->pdu_count);
++	return 0;
++}
++
++static int iscsi_check_string_or_list_value(struct iscsi_param *param, char *value)
++{
++	if (IS_PSTATE_PROPOSER(param))
++		return 0;
++
++	if (IS_TYPERANGE_AUTH_PARAM(param)) {
++		if (strcmp(value, KRB5) && strcmp(value, SPKM1) &&
++		    strcmp(value, SPKM2) && strcmp(value, SRP) &&
++		    strcmp(value, CHAP) && strcmp(value, NONE)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" \"%s\", \"%s\", \"%s\", \"%s\", \"%s\""
++				" or \"%s\".\n", param->name, KRB5,
++					SPKM1, SPKM2, SRP, CHAP, NONE);
++			return -1;
++		}
++	}
++	if (IS_TYPERANGE_DIGEST_PARAM(param)) {
++		if (strcmp(value, CRC32C) && strcmp(value, NONE)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" \"%s\" or \"%s\".\n", param->name,
++					CRC32C, NONE);
++			return -1;
++		}
++	}
++	if (IS_TYPERANGE_SESSIONTYPE(param)) {
++		if (strcmp(value, DISCOVERY) && strcmp(value, NORMAL)) {
++			pr_err("Illegal value for \"%s\", must be"
++				" \"%s\" or \"%s\".\n", param->name,
++					DISCOVERY, NORMAL);
++			return -1;
++		}
++	}
++
++	return 0;
++}
++
++/*
++ *	This function is used to pick a value range number,  currently just
++ *	returns the lesser of both right values.
++ */
++static char *iscsi_get_value_from_number_range(
++	struct iscsi_param *param,
++	char *value)
++{
++	char *end_ptr, *tilde_ptr1 = NULL, *tilde_ptr2 = NULL;
++	u32 acceptor_right_value, proposer_right_value;
++
++	tilde_ptr1 = strchr(value, '~');
++	if (!tilde_ptr1)
++		return NULL;
++	*tilde_ptr1++ = '\0';
++	proposer_right_value = simple_strtoul(tilde_ptr1, &end_ptr, 0);
++
++	tilde_ptr2 = strchr(param->value, '~');
++	if (!tilde_ptr2)
++		return NULL;
++	*tilde_ptr2++ = '\0';
++	acceptor_right_value = simple_strtoul(tilde_ptr2, &end_ptr, 0);
++
++	return (acceptor_right_value >= proposer_right_value) ?
++		tilde_ptr1 : tilde_ptr2;
++}
++
++static char *iscsi_check_valuelist_for_support(
++	struct iscsi_param *param,
++	char *value)
++{
++	char *tmp1 = NULL, *tmp2 = NULL;
++	char *acceptor_values = NULL, *proposer_values = NULL;
++
++	acceptor_values = param->value;
++	proposer_values = value;
++
++	do {
++		if (!proposer_values)
 +			return NULL;
++		tmp1 = strchr(proposer_values, ',');
++		if (tmp1)
++			*tmp1 = '\0';
++		acceptor_values = param->value;
++		do {
++			if (!acceptor_values) {
++				if (tmp1)
++					*tmp1 = ',';
++				return NULL;
++			}
++			tmp2 = strchr(acceptor_values, ',');
++			if (tmp2)
++				*tmp2 = '\0';
++			if (!acceptor_values || !proposer_values) {
++				if (tmp1)
++					*tmp1 = ',';
++				if (tmp2)
++					*tmp2 = ',';
++				return NULL;
++			}
++			if (!strcmp(acceptor_values, proposer_values)) {
++				if (tmp2)
++					*tmp2 = ',';
++				goto out;
++			}
++			if (tmp2)
++				*tmp2++ = ',';
++
++			acceptor_values = tmp2;
++			if (!acceptor_values)
++				break;
++		} while (acceptor_values);
++		if (tmp1)
++			*tmp1++ = ',';
++		proposer_values = tmp1;
++	} while (proposer_values);
++
++out:
++	return proposer_values;
++}
++
++static int iscsi_check_acceptor_state(struct iscsi_param *param, char *value)
++{
++	u8 acceptor_boolean_value = 0, proposer_boolean_value = 0;
++	char *negoitated_value = NULL;
++
++	if (IS_PSTATE_ACCEPTOR(param)) {
++		pr_err("Received key \"%s\" twice, protocol error.\n",
++				param->name);
++		return -1;
++	}
++
++	if (IS_PSTATE_REJECT(param))
++		return 0;
++
++	if (IS_TYPE_BOOL_AND(param)) {
++		if (!strcmp(value, YES))
++			proposer_boolean_value = 1;
++		if (!strcmp(param->value, YES))
++			acceptor_boolean_value = 1;
++		if (acceptor_boolean_value && proposer_boolean_value)
++			do {} while (0);
++		else {
++			if (iscsi_update_param_value(param, NO) < 0)
++				return -1;
++			if (!proposer_boolean_value)
++				SET_PSTATE_REPLY_OPTIONAL(param);
++		}
++	} else if (IS_TYPE_BOOL_OR(param)) {
++		if (!strcmp(value, YES))
++			proposer_boolean_value = 1;
++		if (!strcmp(param->value, YES))
++			acceptor_boolean_value = 1;
++		if (acceptor_boolean_value || proposer_boolean_value) {
++			if (iscsi_update_param_value(param, YES) < 0)
++				return -1;
++			if (proposer_boolean_value)
++				SET_PSTATE_REPLY_OPTIONAL(param);
++		}
++	} else if (IS_TYPE_NUMBER(param)) {
++		char *tmpptr, buf[10];
++		u32 acceptor_value = simple_strtoul(param->value, &tmpptr, 0);
++		u32 proposer_value = simple_strtoul(value, &tmpptr, 0);
++
++		memset(buf, 0, 10);
++
++		if (!strcmp(param->name, MAXCONNECTIONS) ||
++		    !strcmp(param->name, MAXBURSTLENGTH) ||
++		    !strcmp(param->name, FIRSTBURSTLENGTH) ||
++		    !strcmp(param->name, MAXOUTSTANDINGR2T) ||
++		    !strcmp(param->name, DEFAULTTIME2RETAIN) ||
++		    !strcmp(param->name, ERRORRECOVERYLEVEL)) {
++			if (proposer_value > acceptor_value) {
++				sprintf(buf, "%u", acceptor_value);
++				if (iscsi_update_param_value(param,
++						&buf[0]) < 0)
++					return -1;
++			} else {
++				if (iscsi_update_param_value(param, value) < 0)
++					return -1;
++			}
++		} else if (!strcmp(param->name, DEFAULTTIME2WAIT)) {
++			if (acceptor_value > proposer_value) {
++				sprintf(buf, "%u", acceptor_value);
++				if (iscsi_update_param_value(param,
++						&buf[0]) < 0)
++					return -1;
++			} else {
++				if (iscsi_update_param_value(param, value) < 0)
++					return -1;
++			}
++		} else {
++			if (iscsi_update_param_value(param, value) < 0)
++				return -1;
 +		}
 +
-+		for (i = 0; i < seq->pdu_count; i++) {
-+			if (pdu[i].pdu_send_order == seq->pdu_send_order) {
-+				seq->pdu_send_order++;
-+				return &pdu[i];
++		if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH))
++			SET_PSTATE_REPLY_OPTIONAL(param);
++	} else if (IS_TYPE_NUMBER_RANGE(param)) {
++		negoitated_value = iscsi_get_value_from_number_range(
++					param, value);
++		if (!negoitated_value)
++			return -1;
++		if (iscsi_update_param_value(param, negoitated_value) < 0)
++			return -1;
++	} else if (IS_TYPE_VALUE_LIST(param)) {
++		negoitated_value = iscsi_check_valuelist_for_support(
++					param, value);
++		if (!negoitated_value) {
++			pr_err("Proposer's value list \"%s\" contains"
++				" no valid values from Acceptor's value list"
++				" \"%s\".\n", value, param->value);
++			return -1;
++		}
++		if (iscsi_update_param_value(param, negoitated_value) < 0)
++			return -1;
++	} else if (IS_PHASE_DECLARATIVE(param)) {
++		if (iscsi_update_param_value(param, value) < 0)
++			return -1;
++		SET_PSTATE_REPLY_OPTIONAL(param);
++	}
++
++	return 0;
++}
++
++static int iscsi_check_proposer_state(struct iscsi_param *param, char *value)
++{
++	if (IS_PSTATE_RESPONSE_GOT(param)) {
++		pr_err("Received key \"%s\" twice, protocol error.\n",
++				param->name);
++		return -1;
++	}
++
++	if (IS_TYPE_NUMBER_RANGE(param)) {
++		u32 left_val = 0, right_val = 0, recieved_value = 0;
++		char *left_val_ptr = NULL, *right_val_ptr = NULL;
++		char *tilde_ptr = NULL, *tmp_ptr = NULL;
++
++		if (!strcmp(value, IRRELEVANT) || !strcmp(value, REJECT)) {
++			if (iscsi_update_param_value(param, value) < 0)
++				return -1;
++			return 0;
++		}
++
++		tilde_ptr = strchr(value, '~');
++		if (tilde_ptr) {
++			pr_err("Illegal \"~\" in response for \"%s\".\n",
++					param->name);
++			return -1;
++		}
++		tilde_ptr = strchr(param->value, '~');
++		if (!tilde_ptr) {
++			pr_err("Unable to locate numerical range"
++				" indicator \"~\" for \"%s\".\n", param->name);
++			return -1;
++		}
++		*tilde_ptr = '\0';
++
++		left_val_ptr = param->value;
++		right_val_ptr = param->value + strlen(left_val_ptr) + 1;
++		left_val = simple_strtoul(left_val_ptr, &tmp_ptr, 0);
++		right_val = simple_strtoul(right_val_ptr, &tmp_ptr, 0);
++		recieved_value = simple_strtoul(value, &tmp_ptr, 0);
++
++		*tilde_ptr = '~';
++
++		if ((recieved_value < left_val) ||
++		    (recieved_value > right_val)) {
++			pr_err("Illegal response \"%s=%u\", value must"
++				" be between %u and %u.\n", param->name,
++				recieved_value, left_val, right_val);
++			return -1;
++		}
++	} else if (IS_TYPE_VALUE_LIST(param)) {
++		char *comma_ptr = NULL, *tmp_ptr = NULL;
++
++		comma_ptr = strchr(value, ',');
++		if (comma_ptr) {
++			pr_err("Illegal \",\" in response for \"%s\".\n",
++					param->name);
++			return -1;
++		}
++
++		tmp_ptr = iscsi_check_valuelist_for_support(param, value);
++		if (!tmp_ptr)
++			return -1;
++	}
++
++	if (iscsi_update_param_value(param, value) < 0)
++		return -1;
++
++	return 0;
++}
++
++static int iscsi_check_value(struct iscsi_param *param, char *value)
++{
++	char *comma_ptr = NULL;
++
++	if (!strcmp(value, REJECT)) {
++		if (!strcmp(param->name, IFMARKINT) ||
++		    !strcmp(param->name, OFMARKINT)) {
++			/*
++			 * Reject is not fatal for [I,O]FMarkInt,  and causes
++			 * [I,O]FMarker to be reset to No. (See iSCSI v20 A.3.2)
++			 */
++			SET_PSTATE_REJECT(param);
++			return 0;
++		}
++		pr_err("Received %s=%s\n", param->name, value);
++		return -1;
++	}
++	if (!strcmp(value, IRRELEVANT)) {
++		pr_debug("Received %s=%s\n", param->name, value);
++		SET_PSTATE_IRRELEVANT(param);
++		return 0;
++	}
++	if (!strcmp(value, NOTUNDERSTOOD)) {
++		if (!IS_PSTATE_PROPOSER(param)) {
++			pr_err("Received illegal offer %s=%s\n",
++				param->name, value);
++			return -1;
++		}
++
++/* #warning FIXME: Add check for X-ExtensionKey here */
++		pr_err("Standard iSCSI key \"%s\" cannot be answered"
++			" with \"%s\", protocol error.\n", param->name, value);
++		return -1;
++	}
++
++	do {
++		comma_ptr = NULL;
++		comma_ptr = strchr(value, ',');
++
++		if (comma_ptr && !IS_TYPE_VALUE_LIST(param)) {
++			pr_err("Detected value seperator \",\", but"
++				" key \"%s\" does not allow a value list,"
++				" protocol error.\n", param->name);
++			return -1;
++		}
++		if (comma_ptr)
++			*comma_ptr = '\0';
++
++		if (strlen(value) > VALUE_MAXLEN) {
++			pr_err("Value for key \"%s\" exceeds %d,"
++				" protocol error.\n", param->name,
++				VALUE_MAXLEN);
++			return -1;
++		}
++
++		if (IS_TYPE_BOOL_AND(param) || IS_TYPE_BOOL_OR(param)) {
++			if (iscsi_check_boolean_value(param, value) < 0)
++				return -1;
++		} else if (IS_TYPE_NUMBER(param)) {
++			if (iscsi_check_numerical_value(param, value) < 0)
++				return -1;
++		} else if (IS_TYPE_NUMBER_RANGE(param)) {
++			if (iscsi_check_numerical_range_value(param, value) < 0)
++				return -1;
++		} else if (IS_TYPE_STRING(param) || IS_TYPE_VALUE_LIST(param)) {
++			if (iscsi_check_string_or_list_value(param, value) < 0)
++				return -1;
++		} else {
++			pr_err("Huh? 0x%02x\n", param->type);
++			return -1;
++		}
++
++		if (comma_ptr)
++			*comma_ptr++ = ',';
++
++		value = comma_ptr;
++	} while (value);
++
++	return 0;
++}
++
++static struct iscsi_param *__iscsi_check_key(
++	char *key,
++	int sender,
++	struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param;
++
++	if (strlen(key) > KEY_MAXLEN) {
++		pr_err("Length of key name \"%s\" exceeds %d.\n",
++			key, KEY_MAXLEN);
++		return NULL;
++	}
++
++	param = iscsi_find_param_from_key(key, param_list);
++	if (!param)
++		return NULL;
++
++	if ((sender & SENDER_INITIATOR) && !IS_SENDER_INITIATOR(param)) {
++		pr_err("Key \"%s\" may not be sent to %s,"
++			" protocol error.\n", param->name,
++			(sender & SENDER_RECEIVER) ? "target" : "initiator");
++		return NULL;
++	}
++
++	if ((sender & SENDER_TARGET) && !IS_SENDER_TARGET(param)) {
++		pr_err("Key \"%s\" may not be sent to %s,"
++			" protocol error.\n", param->name,
++			(sender & SENDER_RECEIVER) ? "initiator" : "target");
++		return NULL;
++	}
++
++	return param;
++}
++
++static struct iscsi_param *iscsi_check_key(
++	char *key,
++	int phase,
++	int sender,
++	struct iscsi_param_list *param_list)
++{
++	struct iscsi_param *param;
++	/*
++	 * Key name length must not exceed 63 bytes. (See iSCSI v20 5.1)
++	 */
++	if (strlen(key) > KEY_MAXLEN) {
++		pr_err("Length of key name \"%s\" exceeds %d.\n",
++			key, KEY_MAXLEN);
++		return NULL;
++	}
++
++	param = iscsi_find_param_from_key(key, param_list);
++	if (!param)
++		return NULL;
++
++	if ((sender & SENDER_INITIATOR) && !IS_SENDER_INITIATOR(param)) {
++		pr_err("Key \"%s\" may not be sent to %s,"
++			" protocol error.\n", param->name,
++			(sender & SENDER_RECEIVER) ? "target" : "initiator");
++		return NULL;
++	}
++	if ((sender & SENDER_TARGET) && !IS_SENDER_TARGET(param)) {
++		pr_err("Key \"%s\" may not be sent to %s,"
++				" protocol error.\n", param->name,
++			(sender & SENDER_RECEIVER) ? "initiator" : "target");
++		return NULL;
++	}
++
++	if (IS_PSTATE_ACCEPTOR(param)) {
++		pr_err("Key \"%s\" received twice, protocol error.\n",
++				key);
++		return NULL;
++	}
++
++	if (!phase)
++		return param;
++
++	if (!(param->phase & phase)) {
++		pr_err("Key \"%s\" may not be negotiated during ",
++				param->name);
++		switch (phase) {
++		case PHASE_SECURITY:
++			pr_debug("Security phase.\n");
++			break;
++		case PHASE_OPERATIONAL:
++			pr_debug("Operational phase.\n");
++		default:
++			pr_debug("Unknown phase.\n");
++		}
++		return NULL;
++	}
++
++	return param;
++}
++
++static int iscsi_enforce_integrity_rules(
++	u8 phase,
++	struct iscsi_param_list *param_list)
++{
++	char *tmpptr;
++	u8 DataSequenceInOrder = 0;
++	u8 ErrorRecoveryLevel = 0, SessionType = 0;
++	u8 IFMarker = 0, OFMarker = 0;
++	u8 IFMarkInt_Reject = 0, OFMarkInt_Reject = 0;
++	u32 FirstBurstLength = 0, MaxBurstLength = 0;
++	struct iscsi_param *param = NULL;
++
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!(param->phase & phase))
++			continue;
++		if (!strcmp(param->name, SESSIONTYPE))
++			if (!strcmp(param->value, NORMAL))
++				SessionType = 1;
++		if (!strcmp(param->name, ERRORRECOVERYLEVEL))
++			ErrorRecoveryLevel = simple_strtoul(param->value,
++					&tmpptr, 0);
++		if (!strcmp(param->name, DATASEQUENCEINORDER))
++			if (!strcmp(param->value, YES))
++				DataSequenceInOrder = 1;
++		if (!strcmp(param->name, MAXBURSTLENGTH))
++			MaxBurstLength = simple_strtoul(param->value,
++					&tmpptr, 0);
++		if (!strcmp(param->name, IFMARKER))
++			if (!strcmp(param->value, YES))
++				IFMarker = 1;
++		if (!strcmp(param->name, OFMARKER))
++			if (!strcmp(param->value, YES))
++				OFMarker = 1;
++		if (!strcmp(param->name, IFMARKINT))
++			if (!strcmp(param->value, REJECT))
++				IFMarkInt_Reject = 1;
++		if (!strcmp(param->name, OFMARKINT))
++			if (!strcmp(param->value, REJECT))
++				OFMarkInt_Reject = 1;
++	}
++
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!(param->phase & phase))
++			continue;
++		if (!SessionType && (!IS_PSTATE_ACCEPTOR(param) &&
++		     (strcmp(param->name, IFMARKER) &&
++		      strcmp(param->name, OFMARKER) &&
++		      strcmp(param->name, IFMARKINT) &&
++		      strcmp(param->name, OFMARKINT))))
++			continue;
++		if (!strcmp(param->name, MAXOUTSTANDINGR2T) &&
++		    DataSequenceInOrder && (ErrorRecoveryLevel > 0)) {
++			if (strcmp(param->value, "1")) {
++				if (iscsi_update_param_value(param, "1") < 0)
++					return -1;
++				pr_debug("Reset \"%s\" to \"%s\".\n",
++					param->name, param->value);
++			}
++		}
++		if (!strcmp(param->name, MAXCONNECTIONS) && !SessionType) {
++			if (strcmp(param->value, "1")) {
++				if (iscsi_update_param_value(param, "1") < 0)
++					return -1;
++				pr_debug("Reset \"%s\" to \"%s\".\n",
++					param->name, param->value);
++			}
++		}
++		if (!strcmp(param->name, FIRSTBURSTLENGTH)) {
++			FirstBurstLength = simple_strtoul(param->value,
++					&tmpptr, 0);
++			if (FirstBurstLength > MaxBurstLength) {
++				char tmpbuf[10];
++				memset(tmpbuf, 0, 10);
++				sprintf(tmpbuf, "%u", MaxBurstLength);
++				if (iscsi_update_param_value(param, tmpbuf))
++					return -1;
++				pr_debug("Reset \"%s\" to \"%s\".\n",
++					param->name, param->value);
++			}
++		}
++		if (!strcmp(param->name, IFMARKER) && IFMarkInt_Reject) {
++			if (iscsi_update_param_value(param, NO) < 0)
++				return -1;
++			IFMarker = 0;
++			pr_debug("Reset \"%s\" to \"%s\".\n",
++					param->name, param->value);
++		}
++		if (!strcmp(param->name, OFMARKER) && OFMarkInt_Reject) {
++			if (iscsi_update_param_value(param, NO) < 0)
++				return -1;
++			OFMarker = 0;
++			pr_debug("Reset \"%s\" to \"%s\".\n",
++					 param->name, param->value);
++		}
++		if (!strcmp(param->name, IFMARKINT) && !IFMarker) {
++			if (!strcmp(param->value, REJECT))
++				continue;
++			param->state &= ~PSTATE_NEGOTIATE;
++			if (iscsi_update_param_value(param, IRRELEVANT) < 0)
++				return -1;
++			pr_debug("Reset \"%s\" to \"%s\".\n",
++					param->name, param->value);
++		}
++		if (!strcmp(param->name, OFMARKINT) && !OFMarker) {
++			if (!strcmp(param->value, REJECT))
++				continue;
++			param->state &= ~PSTATE_NEGOTIATE;
++			if (iscsi_update_param_value(param, IRRELEVANT) < 0)
++				return -1;
++			pr_debug("Reset \"%s\" to \"%s\".\n",
++					param->name, param->value);
++		}
++	}
++
++	return 0;
++}
++
++int iscsi_decode_text_input(
++	u8 phase,
++	u8 sender,
++	char *textbuf,
++	u32 length,
++	struct iscsi_param_list *param_list)
++{
++	char *tmpbuf, *start = NULL, *end = NULL;
++
++	tmpbuf = kzalloc(length + 1, GFP_KERNEL);
++	if (!tmpbuf) {
++		pr_err("Unable to allocate memory for tmpbuf.\n");
++		return -1;
++	}
++
++	memcpy(tmpbuf, textbuf, length);
++	tmpbuf[length] = '\0';
++	start = tmpbuf;
++	end = (start + length);
++
++	while (start < end) {
++		char *key, *value;
++		struct iscsi_param *param;
++
++		if (iscsi_extract_key_value(start, &key, &value) < 0) {
++			kfree(tmpbuf);
++			return -1;
++		}
++
++		pr_debug("Got key: %s=%s\n", key, value);
++
++		if (phase & PHASE_SECURITY) {
++			if (iscsi_check_for_auth_key(key) > 0) {
++				char *tmpptr = key + strlen(key);
++				*tmpptr = '=';
++				kfree(tmpbuf);
++				return 1;
 +			}
 +		}
 +
-+		pr_err("Command ITT: 0x%08x unable to locate iscsi"
-+			"_pdu_t for seq->pdu_send_order: %u.\n",
-+			cmd->init_task_tag, seq->pdu_send_order);
-+		return NULL;
++		param = iscsi_check_key(key, phase, sender, param_list);
++		if (!param) {
++			if (iscsi_add_notunderstood_response(key,
++					value, param_list) < 0) {
++				kfree(tmpbuf);
++				return -1;
++			}
++			start += strlen(key) + strlen(value) + 2;
++			continue;
++		}
++		if (iscsi_check_value(param, value) < 0) {
++			kfree(tmpbuf);
++			return -1;
++		}
++
++		start += strlen(key) + strlen(value) + 2;
++
++		if (IS_PSTATE_PROPOSER(param)) {
++			if (iscsi_check_proposer_state(param, value) < 0) {
++				kfree(tmpbuf);
++				return -1;
++			}
++			SET_PSTATE_RESPONSE_GOT(param);
++		} else {
++			if (iscsi_check_acceptor_state(param, value) < 0) {
++				kfree(tmpbuf);
++				return -1;
++			}
++			SET_PSTATE_ACCEPTOR(param);
++		}
 +	}
 +
-+	return NULL;
++	kfree(tmpbuf);
++	return 0;
 +}
 +
-+struct iscsi_seq *iscsit_get_seq_holder(
-+	struct iscsi_cmd *cmd,
-+	u32 offset,
-+	u32 length)
++int iscsi_encode_text_output(
++	u8 phase,
++	u8 sender,
++	char *textbuf,
++	u32 *length,
++	struct iscsi_param_list *param_list)
 +{
-+	u32 i;
++	char *output_buf = NULL;
++	struct iscsi_extra_response *er;
++	struct iscsi_param *param;
 +
-+	if (!cmd->seq_list) {
-+		pr_err("struct iscsi_cmd->seq_list is NULL!\n");
++	output_buf = textbuf + *length;
++
++	if (iscsi_enforce_integrity_rules(phase, param_list) < 0)
++		return -1;
++
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!(param->sender & sender))
++			continue;
++		if (IS_PSTATE_ACCEPTOR(param) &&
++		    !IS_PSTATE_RESPONSE_SENT(param) &&
++		    !IS_PSTATE_REPLY_OPTIONAL(param) &&
++		    (param->phase & phase)) {
++			*length += sprintf(output_buf, "%s=%s",
++				param->name, param->value);
++			*length += 1;
++			output_buf = textbuf + *length;
++			SET_PSTATE_RESPONSE_SENT(param);
++			pr_debug("Sending key: %s=%s\n",
++				param->name, param->value);
++			continue;
++		}
++		if (IS_PSTATE_NEGOTIATE(param) &&
++		    !IS_PSTATE_ACCEPTOR(param) &&
++		    !IS_PSTATE_PROPOSER(param) &&
++		    (param->phase & phase)) {
++			*length += sprintf(output_buf, "%s=%s",
++				param->name, param->value);
++			*length += 1;
++			output_buf = textbuf + *length;
++			SET_PSTATE_PROPOSER(param);
++			iscsi_check_proposer_for_optional_reply(param);
++			pr_debug("Sending key: %s=%s\n",
++				param->name, param->value);
++		}
++	}
++
++	list_for_each_entry(er, &param_list->extra_response_list, er_list) {
++		*length += sprintf(output_buf, "%s=%s", er->key, er->value);
++		*length += 1;
++		output_buf = textbuf + *length;
++		pr_debug("Sending key: %s=%s\n", er->key, er->value);
++	}
++	iscsi_release_extra_responses(param_list);
++
++	return 0;
++}
++
++int iscsi_check_negotiated_keys(struct iscsi_param_list *param_list)
++{
++	int ret = 0;
++	struct iscsi_param *param;
++
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (IS_PSTATE_NEGOTIATE(param) &&
++		    IS_PSTATE_PROPOSER(param) &&
++		    !IS_PSTATE_RESPONSE_GOT(param) &&
++		    !IS_PSTATE_REPLY_OPTIONAL(param) &&
++		    !IS_PHASE_DECLARATIVE(param)) {
++			pr_err("No response for proposed key \"%s\".\n",
++					param->name);
++			ret = -1;
++		}
++	}
++
++	return ret;
++}
++
++int iscsi_change_param_value(
++	char *keyvalue,
++	struct iscsi_param_list *param_list,
++	int check_key)
++{
++	char *key = NULL, *value = NULL;
++	struct iscsi_param *param;
++	int sender = 0;
++
++	if (iscsi_extract_key_value(keyvalue, &key, &value) < 0)
++		return -1;
++
++	if (!check_key) {
++		param = __iscsi_check_key(keyvalue, sender, param_list);
++		if (!param)
++			return -1;
++	} else {
++		param = iscsi_check_key(keyvalue, 0, sender, param_list);
++		if (!param)
++			return -1;
++
++		param->set_param = 1;
++		if (iscsi_check_value(param, value) < 0) {
++			param->set_param = 0;
++			return -1;
++		}
++		param->set_param = 0;
++	}
++
++	if (iscsi_update_param_value(param, value) < 0)
++		return -1;
++
++	return 0;
++}
++
++void iscsi_set_connection_parameters(
++	struct iscsi_conn_ops *ops,
++	struct iscsi_param_list *param_list)
++{
++	char *tmpptr;
++	struct iscsi_param *param;
++
++	pr_debug("---------------------------------------------------"
++			"---------------\n");
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!IS_PSTATE_ACCEPTOR(param) && !IS_PSTATE_PROPOSER(param))
++			continue;
++		if (!strcmp(param->name, AUTHMETHOD)) {
++			pr_debug("AuthMethod:                   %s\n",
++				param->value);
++		} else if (!strcmp(param->name, HEADERDIGEST)) {
++			ops->HeaderDigest = !strcmp(param->value, CRC32C);
++			pr_debug("HeaderDigest:                 %s\n",
++				param->value);
++		} else if (!strcmp(param->name, DATADIGEST)) {
++			ops->DataDigest = !strcmp(param->value, CRC32C);
++			pr_debug("DataDigest:                   %s\n",
++				param->value);
++		} else if (!strcmp(param->name, MAXRECVDATASEGMENTLENGTH)) {
++			ops->MaxRecvDataSegmentLength =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("MaxRecvDataSegmentLength:     %s\n",
++				param->value);
++		} else if (!strcmp(param->name, OFMARKER)) {
++			ops->OFMarker = !strcmp(param->value, YES);
++			pr_debug("OFMarker:                     %s\n",
++				param->value);
++		} else if (!strcmp(param->name, IFMARKER)) {
++			ops->IFMarker = !strcmp(param->value, YES);
++			pr_debug("IFMarker:                     %s\n",
++				param->value);
++		} else if (!strcmp(param->name, OFMARKINT)) {
++			ops->OFMarkInt =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("OFMarkInt:                    %s\n",
++				param->value);
++		} else if (!strcmp(param->name, IFMARKINT)) {
++			ops->IFMarkInt =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("IFMarkInt:                    %s\n",
++				param->value);
++		}
++	}
++	pr_debug("----------------------------------------------------"
++			"--------------\n");
++}
++
++void iscsi_set_session_parameters(
++	struct iscsi_sess_ops *ops,
++	struct iscsi_param_list *param_list,
++	int leading)
++{
++	char *tmpptr;
++	struct iscsi_param *param;
++
++	pr_debug("----------------------------------------------------"
++			"--------------\n");
++	list_for_each_entry(param, &param_list->param_list, p_list) {
++		if (!IS_PSTATE_ACCEPTOR(param) && !IS_PSTATE_PROPOSER(param))
++			continue;
++		if (!strcmp(param->name, INITIATORNAME)) {
++			if (!param->value)
++				continue;
++			if (leading)
++				snprintf(ops->InitiatorName,
++						sizeof(ops->InitiatorName),
++						"%s", param->value);
++			pr_debug("InitiatorName:                %s\n",
++				param->value);
++		} else if (!strcmp(param->name, INITIATORALIAS)) {
++			if (!param->value)
++				continue;
++			snprintf(ops->InitiatorAlias,
++						sizeof(ops->InitiatorAlias),
++						"%s", param->value);
++			pr_debug("InitiatorAlias:               %s\n",
++				param->value);
++		} else if (!strcmp(param->name, TARGETNAME)) {
++			if (!param->value)
++				continue;
++			if (leading)
++				snprintf(ops->TargetName,
++						sizeof(ops->TargetName),
++						"%s", param->value);
++			pr_debug("TargetName:                   %s\n",
++				param->value);
++		} else if (!strcmp(param->name, TARGETALIAS)) {
++			if (!param->value)
++				continue;
++			snprintf(ops->TargetAlias, sizeof(ops->TargetAlias),
++					"%s", param->value);
++			pr_debug("TargetAlias:                  %s\n",
++				param->value);
++		} else if (!strcmp(param->name, TARGETPORTALGROUPTAG)) {
++			ops->TargetPortalGroupTag =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("TargetPortalGroupTag:         %s\n",
++				param->value);
++		} else if (!strcmp(param->name, MAXCONNECTIONS)) {
++			ops->MaxConnections =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("MaxConnections:               %s\n",
++				param->value);
++		} else if (!strcmp(param->name, INITIALR2T)) {
++			ops->InitialR2T = !strcmp(param->value, YES);
++			 pr_debug("InitialR2T:                   %s\n",
++				param->value);
++		} else if (!strcmp(param->name, IMMEDIATEDATA)) {
++			ops->ImmediateData = !strcmp(param->value, YES);
++			pr_debug("ImmediateData:                %s\n",
++				param->value);
++		} else if (!strcmp(param->name, MAXBURSTLENGTH)) {
++			ops->MaxBurstLength =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("MaxBurstLength:               %s\n",
++				param->value);
++		} else if (!strcmp(param->name, FIRSTBURSTLENGTH)) {
++			ops->FirstBurstLength =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("FirstBurstLength:             %s\n",
++				param->value);
++		} else if (!strcmp(param->name, DEFAULTTIME2WAIT)) {
++			ops->DefaultTime2Wait =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("DefaultTime2Wait:             %s\n",
++				param->value);
++		} else if (!strcmp(param->name, DEFAULTTIME2RETAIN)) {
++			ops->DefaultTime2Retain =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("DefaultTime2Retain:           %s\n",
++				param->value);
++		} else if (!strcmp(param->name, MAXOUTSTANDINGR2T)) {
++			ops->MaxOutstandingR2T =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("MaxOutstandingR2T:            %s\n",
++				param->value);
++		} else if (!strcmp(param->name, DATAPDUINORDER)) {
++			ops->DataPDUInOrder = !strcmp(param->value, YES);
++			pr_debug("DataPDUInOrder:               %s\n",
++				param->value);
++		} else if (!strcmp(param->name, DATASEQUENCEINORDER)) {
++			ops->DataSequenceInOrder = !strcmp(param->value, YES);
++			pr_debug("DataSequenceInOrder:          %s\n",
++				param->value);
++		} else if (!strcmp(param->name, ERRORRECOVERYLEVEL)) {
++			ops->ErrorRecoveryLevel =
++				simple_strtoul(param->value, &tmpptr, 0);
++			pr_debug("ErrorRecoveryLevel:           %s\n",
++				param->value);
++		} else if (!strcmp(param->name, SESSIONTYPE)) {
++			ops->SessionType = !strcmp(param->value, DISCOVERY);
++			pr_debug("SessionType:                  %s\n",
++				param->value);
++		}
++	}
++	pr_debug("----------------------------------------------------"
++			"--------------\n");
++
++}
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.h b/drivers/target/iscsi/iscsi_target_parameters.h
+new file mode 100644
+index 0000000..6a37fd6
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_parameters.h
+@@ -0,0 +1,269 @@
++#ifndef ISCSI_PARAMETERS_H
++#define ISCSI_PARAMETERS_H
++
++struct iscsi_extra_response {
++	char key[64];
++	char value[32];
++	struct list_head er_list;
++} ____cacheline_aligned;
++
++struct iscsi_param {
++	char *name;
++	char *value;
++	u8 set_param;
++	u8 phase;
++	u8 scope;
++	u8 sender;
++	u8 type;
++	u8 use;
++	u16 type_range;
++	u32 state;
++	struct list_head p_list;
++} ____cacheline_aligned;
++
++extern int iscsi_login_rx_data(struct iscsi_conn *, char *, int);
++extern int iscsi_login_tx_data(struct iscsi_conn *, char *, char *, int);
++extern void iscsi_dump_conn_ops(struct iscsi_conn_ops *);
++extern void iscsi_dump_sess_ops(struct iscsi_sess_ops *);
++extern void iscsi_print_params(struct iscsi_param_list *);
++extern int iscsi_create_default_params(struct iscsi_param_list **);
++extern int iscsi_set_keys_to_negotiate(int, struct iscsi_param_list *);
++extern int iscsi_set_keys_irrelevant_for_discovery(struct iscsi_param_list *);
++extern int iscsi_copy_param_list(struct iscsi_param_list **,
++			struct iscsi_param_list *, int);
++extern int iscsi_change_param_value(char *, struct iscsi_param_list *, int);
++extern void iscsi_release_param_list(struct iscsi_param_list *);
++extern struct iscsi_param *iscsi_find_param_from_key(char *, struct iscsi_param_list *);
++extern int iscsi_extract_key_value(char *, char **, char **);
++extern int iscsi_update_param_value(struct iscsi_param *, char *);
++extern int iscsi_decode_text_input(u8, u8, char *, u32, struct iscsi_param_list *);
++extern int iscsi_encode_text_output(u8, u8, char *, u32 *,
++			struct iscsi_param_list *);
++extern int iscsi_check_negotiated_keys(struct iscsi_param_list *);
++extern void iscsi_set_connection_parameters(struct iscsi_conn_ops *,
++			struct iscsi_param_list *);
++extern void iscsi_set_session_parameters(struct iscsi_sess_ops *,
++			struct iscsi_param_list *, int);
++
++#define YES				"Yes"
++#define NO				"No"
++#define ALL				"All"
++#define IRRELEVANT			"Irrelevant"
++#define NONE				"None"
++#define NOTUNDERSTOOD			"NotUnderstood"
++#define REJECT				"Reject"
++
++/*
++ * The Parameter Names.
++ */
++#define AUTHMETHOD			"AuthMethod"
++#define HEADERDIGEST			"HeaderDigest"
++#define DATADIGEST			"DataDigest"
++#define MAXCONNECTIONS			"MaxConnections"
++#define SENDTARGETS			"SendTargets"
++#define TARGETNAME			"TargetName"
++#define INITIATORNAME			"InitiatorName"
++#define TARGETALIAS			"TargetAlias"
++#define INITIATORALIAS			"InitiatorAlias"
++#define TARGETADDRESS			"TargetAddress"
++#define TARGETPORTALGROUPTAG		"TargetPortalGroupTag"
++#define INITIALR2T			"InitialR2T"
++#define IMMEDIATEDATA			"ImmediateData"
++#define MAXRECVDATASEGMENTLENGTH	"MaxRecvDataSegmentLength"
++#define MAXBURSTLENGTH			"MaxBurstLength"
++#define FIRSTBURSTLENGTH		"FirstBurstLength"
++#define DEFAULTTIME2WAIT		"DefaultTime2Wait"
++#define DEFAULTTIME2RETAIN		"DefaultTime2Retain"
++#define MAXOUTSTANDINGR2T		"MaxOutstandingR2T"
++#define DATAPDUINORDER			"DataPDUInOrder"
++#define DATASEQUENCEINORDER		"DataSequenceInOrder"
++#define ERRORRECOVERYLEVEL		"ErrorRecoveryLevel"
++#define SESSIONTYPE			"SessionType"
++#define IFMARKER			"IFMarker"
++#define OFMARKER			"OFMarker"
++#define IFMARKINT			"IFMarkInt"
++#define OFMARKINT			"OFMarkInt"
++#define X_EXTENSIONKEY			"X-com.sbei.version"
++#define X_EXTENSIONKEY_CISCO_NEW	"X-com.cisco.protocol"
++#define X_EXTENSIONKEY_CISCO_OLD	"X-com.cisco.iscsi.draft"
++
++/*
++ * For AuthMethod.
++ */
++#define KRB5				"KRB5"
++#define SPKM1				"SPKM1"
++#define SPKM2				"SPKM2"
++#define SRP				"SRP"
++#define CHAP				"CHAP"
++
++/*
++ * Initial values for Parameter Negotiation.
++ */
++#define INITIAL_AUTHMETHOD			CHAP
++#define INITIAL_HEADERDIGEST			"CRC32C,None"
++#define INITIAL_DATADIGEST			"CRC32C,None"
++#define INITIAL_MAXCONNECTIONS			"1"
++#define INITIAL_SENDTARGETS			ALL
++#define INITIAL_TARGETNAME			"LIO.Target"
++#define INITIAL_INITIATORNAME			"LIO.Initiator"
++#define INITIAL_TARGETALIAS			"LIO Target"
++#define INITIAL_INITIATORALIAS			"LIO Initiator"
++#define INITIAL_TARGETADDRESS			"0.0.0.0:0000,0"
++#define INITIAL_TARGETPORTALGROUPTAG		"1"
++#define INITIAL_INITIALR2T			YES
++#define INITIAL_IMMEDIATEDATA			YES
++#define INITIAL_MAXRECVDATASEGMENTLENGTH	"8192"
++#define INITIAL_MAXBURSTLENGTH			"262144"
++#define INITIAL_FIRSTBURSTLENGTH		"65536"
++#define INITIAL_DEFAULTTIME2WAIT		"2"
++#define INITIAL_DEFAULTTIME2RETAIN		"20"
++#define INITIAL_MAXOUTSTANDINGR2T		"1"
++#define INITIAL_DATAPDUINORDER			YES
++#define INITIAL_DATASEQUENCEINORDER		YES
++#define INITIAL_ERRORRECOVERYLEVEL		"0"
++#define INITIAL_SESSIONTYPE			NORMAL
++#define INITIAL_IFMARKER			NO
++#define INITIAL_OFMARKER			NO
++#define INITIAL_IFMARKINT			"2048~65535"
++#define INITIAL_OFMARKINT			"2048~65535"
++
++/*
++ * For [Header,Data]Digests.
++ */
++#define CRC32C				"CRC32C"
++
++/*
++ * For SessionType.
++ */
++#define DISCOVERY			"Discovery"
++#define NORMAL				"Normal"
++
++/*
++ * struct iscsi_param->use
++ */
++#define USE_LEADING_ONLY		0x01
++#define USE_INITIAL_ONLY		0x02
++#define USE_ALL				0x04
++
++#define IS_USE_LEADING_ONLY(p)		((p)->use & USE_LEADING_ONLY)
++#define IS_USE_INITIAL_ONLY(p)		((p)->use & USE_INITIAL_ONLY)
++#define IS_USE_ALL(p)			((p)->use & USE_ALL)
++
++#define SET_USE_INITIAL_ONLY(p)		((p)->use |= USE_INITIAL_ONLY)
++
++/*
++ * struct iscsi_param->sender
++ */
++#define	SENDER_INITIATOR		0x01
++#define SENDER_TARGET			0x02
++#define SENDER_BOTH			0x03
++/* Used in iscsi_check_key() */
++#define SENDER_RECEIVER			0x04
++
++#define IS_SENDER_INITIATOR(p)		((p)->sender & SENDER_INITIATOR)
++#define IS_SENDER_TARGET(p)		((p)->sender & SENDER_TARGET)
++#define IS_SENDER_BOTH(p)		((p)->sender & SENDER_BOTH)
++
++/*
++ * struct iscsi_param->scope
++ */
++#define SCOPE_CONNECTION_ONLY		0x01
++#define SCOPE_SESSION_WIDE		0x02
++
++#define IS_SCOPE_CONNECTION_ONLY(p)	((p)->scope & SCOPE_CONNECTION_ONLY)
++#define IS_SCOPE_SESSION_WIDE(p)	((p)->scope & SCOPE_SESSION_WIDE)
++
++/*
++ * struct iscsi_param->phase
++ */
++#define PHASE_SECURITY			0x01
++#define PHASE_OPERATIONAL		0x02
++#define PHASE_DECLARATIVE		0x04
++#define PHASE_FFP0			0x08
++
++#define IS_PHASE_SECURITY(p)		((p)->phase & PHASE_SECURITY)
++#define IS_PHASE_OPERATIONAL(p)		((p)->phase & PHASE_OPERATIONAL)
++#define IS_PHASE_DECLARATIVE(p)		((p)->phase & PHASE_DECLARATIVE)
++#define IS_PHASE_FFP0(p)		((p)->phase & PHASE_FFP0)
++
++/*
++ * struct iscsi_param->type
++ */
++#define TYPE_BOOL_AND			0x01
++#define TYPE_BOOL_OR			0x02
++#define TYPE_NUMBER			0x04
++#define TYPE_NUMBER_RANGE		0x08
++#define TYPE_STRING			0x10
++#define TYPE_VALUE_LIST			0x20
++
++#define IS_TYPE_BOOL_AND(p)		((p)->type & TYPE_BOOL_AND)
++#define IS_TYPE_BOOL_OR(p)		((p)->type & TYPE_BOOL_OR)
++#define IS_TYPE_NUMBER(p)		((p)->type & TYPE_NUMBER)
++#define IS_TYPE_NUMBER_RANGE(p)		((p)->type & TYPE_NUMBER_RANGE)
++#define IS_TYPE_STRING(p)		((p)->type & TYPE_STRING)
++#define IS_TYPE_VALUE_LIST(p)		((p)->type & TYPE_VALUE_LIST)
++
++/*
++ * struct iscsi_param->type_range
++ */
++#define TYPERANGE_BOOL_AND		0x0001
++#define TYPERANGE_BOOL_OR		0x0002
++#define TYPERANGE_0_TO_2		0x0004
++#define TYPERANGE_0_TO_3600		0x0008
++#define TYPERANGE_0_TO_32767		0x0010
++#define TYPERANGE_0_TO_65535		0x0020
++#define TYPERANGE_1_TO_65535		0x0040
++#define TYPERANGE_2_TO_3600		0x0080
++#define TYPERANGE_512_TO_16777215	0x0100
++#define TYPERANGE_AUTH			0x0200
++#define TYPERANGE_DIGEST		0x0400
++#define TYPERANGE_ISCSINAME		0x0800
++#define TYPERANGE_MARKINT		0x1000
++#define TYPERANGE_SESSIONTYPE		0x2000
++#define TYPERANGE_TARGETADDRESS		0x4000
++#define TYPERANGE_UTF8			0x8000
++
++#define IS_TYPERANGE_0_TO_2(p)		((p)->type_range & TYPERANGE_0_TO_2)
++#define IS_TYPERANGE_0_TO_3600(p)	((p)->type_range & TYPERANGE_0_TO_3600)
++#define IS_TYPERANGE_0_TO_32767(p)	((p)->type_range & TYPERANGE_0_TO_32767)
++#define IS_TYPERANGE_0_TO_65535(p)	((p)->type_range & TYPERANGE_0_TO_65535)
++#define IS_TYPERANGE_1_TO_65535(p)	((p)->type_range & TYPERANGE_1_TO_65535)
++#define IS_TYPERANGE_2_TO_3600(p)	((p)->type_range & TYPERANGE_2_TO_3600)
++#define IS_TYPERANGE_512_TO_16777215(p)	((p)->type_range & \
++						TYPERANGE_512_TO_16777215)
++#define IS_TYPERANGE_AUTH_PARAM(p)	((p)->type_range & TYPERANGE_AUTH)
++#define IS_TYPERANGE_DIGEST_PARAM(p)	((p)->type_range & TYPERANGE_DIGEST)
++#define IS_TYPERANGE_SESSIONTYPE(p)	((p)->type_range & \
++						TYPERANGE_SESSIONTYPE)
++
++/*
++ * struct iscsi_param->state
++ */
++#define PSTATE_ACCEPTOR			0x01
++#define PSTATE_NEGOTIATE		0x02
++#define PSTATE_PROPOSER			0x04
++#define PSTATE_IRRELEVANT		0x08
++#define PSTATE_REJECT			0x10
++#define PSTATE_REPLY_OPTIONAL		0x20
++#define PSTATE_RESPONSE_GOT		0x40
++#define PSTATE_RESPONSE_SENT		0x80
++
++#define IS_PSTATE_ACCEPTOR(p)		((p)->state & PSTATE_ACCEPTOR)
++#define IS_PSTATE_NEGOTIATE(p)		((p)->state & PSTATE_NEGOTIATE)
++#define IS_PSTATE_PROPOSER(p)		((p)->state & PSTATE_PROPOSER)
++#define IS_PSTATE_IRRELEVANT(p)		((p)->state & PSTATE_IRRELEVANT)
++#define IS_PSTATE_REJECT(p)		((p)->state & PSTATE_REJECT)
++#define IS_PSTATE_REPLY_OPTIONAL(p)	((p)->state & PSTATE_REPLY_OPTIONAL)
++#define IS_PSTATE_RESPONSE_GOT(p)	((p)->state & PSTATE_RESPONSE_GOT)
++#define IS_PSTATE_RESPONSE_SENT(p)	((p)->state & PSTATE_RESPONSE_SENT)
++
++#define SET_PSTATE_ACCEPTOR(p)		((p)->state |= PSTATE_ACCEPTOR)
++#define SET_PSTATE_NEGOTIATE(p)		((p)->state |= PSTATE_NEGOTIATE)
++#define SET_PSTATE_PROPOSER(p)		((p)->state |= PSTATE_PROPOSER)
++#define SET_PSTATE_IRRELEVANT(p)	((p)->state |= PSTATE_IRRELEVANT)
++#define SET_PSTATE_REJECT(p)		((p)->state |= PSTATE_REJECT)
++#define SET_PSTATE_REPLY_OPTIONAL(p)	((p)->state |= PSTATE_REPLY_OPTIONAL)
++#define SET_PSTATE_RESPONSE_GOT(p)	((p)->state |= PSTATE_RESPONSE_GOT)
++#define SET_PSTATE_RESPONSE_SENT(p)	((p)->state |= PSTATE_RESPONSE_SENT)
++
++#endif /* ISCSI_PARAMETERS_H */
+diff --git a/drivers/target/iscsi/iscsi_target_tq.c b/drivers/target/iscsi/iscsi_target_tq.c
+new file mode 100644
+index 0000000..0baac5b
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_tq.c
+@@ -0,0 +1,551 @@
++/*******************************************************************************
++ * This file contains the iSCSI Login Thread and Thread Queue functions.
++ *
++ * \u00a9 Copyright 2007-2011 RisingTide Systems LLC.
++ *
++ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
++ *
++ * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ******************************************************************************/
++
++#include <linux/kthread.h>
++#include <linux/list.h>
++#include <linux/bitmap.h>
++
++#include "iscsi_target_core.h"
++#include "iscsi_target_tq.h"
++#include "iscsi_target.h"
++
++static LIST_HEAD(active_ts_list);
++static LIST_HEAD(inactive_ts_list);
++static DEFINE_SPINLOCK(active_ts_lock);
++static DEFINE_SPINLOCK(inactive_ts_lock);
++static DEFINE_SPINLOCK(ts_bitmap_lock);
++
++static void iscsi_add_ts_to_active_list(struct iscsi_thread_set *ts)
++{
++	spin_lock(&active_ts_lock);
++	list_add_tail(&ts->ts_list, &active_ts_list);
++	iscsit_global->active_ts++;
++	spin_unlock(&active_ts_lock);
++}
++
++extern void iscsi_add_ts_to_inactive_list(struct iscsi_thread_set *ts)
++{
++	spin_lock(&inactive_ts_lock);
++	list_add_tail(&ts->ts_list, &inactive_ts_list);
++	iscsit_global->inactive_ts++;
++	spin_unlock(&inactive_ts_lock);
++}
++
++static void iscsi_del_ts_from_active_list(struct iscsi_thread_set *ts)
++{
++	spin_lock(&active_ts_lock);
++	list_del(&ts->ts_list);
++	iscsit_global->active_ts--;
++	spin_unlock(&active_ts_lock);
++}
++
++static struct iscsi_thread_set *iscsi_get_ts_from_inactive_list(void)
++{
++	struct iscsi_thread_set *ts;
++
++	spin_lock(&inactive_ts_lock);
++	if (list_empty(&inactive_ts_list)) {
++		spin_unlock(&inactive_ts_lock);
 +		return NULL;
 +	}
 +
-+	for (i = 0; i < cmd->seq_count; i++) {
-+#if 0
-+		pr_debug("seq_list[i].orig_offset: %d, seq_list[i]."
-+			"xfer_len: %d, seq_list[i].seq_no %u\n",
-+			cmd->seq_list[i].orig_offset, cmd->seq_list[i].xfer_len,
-+			cmd->seq_list[i].seq_no);
-+#endif
-+		if ((cmd->seq_list[i].orig_offset +
-+				cmd->seq_list[i].xfer_len) >=
-+				(offset + length))
-+			return &cmd->seq_list[i];
++	list_for_each_entry(ts, &inactive_ts_list, ts_list)
++		break;
++
++	list_del(&ts->ts_list);
++	iscsit_global->inactive_ts--;
++	spin_unlock(&inactive_ts_lock);
++
++	return ts;
++}
++
++extern int iscsi_allocate_thread_sets(u32 thread_pair_count)
++{
++	int allocated_thread_pair_count = 0, i, thread_id;
++	struct iscsi_thread_set *ts = NULL;
++
++	for (i = 0; i < thread_pair_count; i++) {
++		ts = kzalloc(sizeof(struct iscsi_thread_set), GFP_KERNEL);
++		if (!ts) {
++			pr_err("Unable to allocate memory for"
++					" thread set.\n");
++			return allocated_thread_pair_count;
++		}
++		/*
++		 * Locate the next available regision in the thread_set_bitmap
++		 */
++		spin_lock(&ts_bitmap_lock);
++		thread_id = bitmap_find_free_region(iscsit_global->ts_bitmap,
++				iscsit_global->ts_bitmap_count, get_order(1));
++		spin_unlock(&ts_bitmap_lock);
++		if (thread_id < 0) {
++			pr_err("bitmap_find_free_region() failed for"
++				" thread_set_bitmap\n");
++			kfree(ts);
++			return allocated_thread_pair_count;
++		}
++
++		ts->thread_id = thread_id;
++		ts->status = ISCSI_THREAD_SET_FREE;
++		INIT_LIST_HEAD(&ts->ts_list);
++		spin_lock_init(&ts->ts_state_lock);
++		init_completion(&ts->rx_post_start_comp);
++		init_completion(&ts->tx_post_start_comp);
++		init_completion(&ts->rx_restart_comp);
++		init_completion(&ts->tx_restart_comp);
++		init_completion(&ts->rx_start_comp);
++		init_completion(&ts->tx_start_comp);
++
++		ts->create_threads = 1;
++		ts->tx_thread = kthread_run(iscsi_target_tx_thread, ts, "%s",
++					ISCSI_TX_THREAD_NAME);
++		if (IS_ERR(ts->tx_thread)) {
++			dump_stack();
++			pr_err("Unable to start iscsi_target_tx_thread\n");
++			break;
++		}
++
++		ts->rx_thread = kthread_run(iscsi_target_rx_thread, ts, "%s",
++					ISCSI_RX_THREAD_NAME);
++		if (IS_ERR(ts->rx_thread)) {
++			kthread_stop(ts->tx_thread);
++			pr_err("Unable to start iscsi_target_rx_thread\n");
++			break;
++		}
++		ts->create_threads = 0;
++
++		iscsi_add_ts_to_inactive_list(ts);
++		allocated_thread_pair_count++;
 +	}
 +
-+	pr_err("Unable to locate Sequence holder for ITT: 0x%08x,"
-+		" Offset: %u, Length: %u\n", cmd->init_task_tag, offset,
-+		length);
-+	return NULL;
++	pr_debug("Spawned %d thread set(s) (%d total threads).\n",
++		allocated_thread_pair_count, allocated_thread_pair_count * 2);
++	return allocated_thread_pair_count;
 +}
-diff --git a/drivers/target/iscsi/iscsi_target_seq_pdu_list.h b/drivers/target/iscsi/iscsi_target_seq_pdu_list.h
++
++extern void iscsi_deallocate_thread_sets(void)
++{
++	u32 released_count = 0;
++	struct iscsi_thread_set *ts = NULL;
++
++	while ((ts = iscsi_get_ts_from_inactive_list())) {
++
++		spin_lock_bh(&ts->ts_state_lock);
++		ts->status = ISCSI_THREAD_SET_DIE;
++		spin_unlock_bh(&ts->ts_state_lock);
++
++		if (ts->rx_thread) {
++			send_sig(SIGINT, ts->rx_thread, 1);
++			kthread_stop(ts->rx_thread);
++		}
++		if (ts->tx_thread) {
++			send_sig(SIGINT, ts->tx_thread, 1);
++			kthread_stop(ts->tx_thread);
++		}
++		/*
++		 * Release this thread_id in the thread_set_bitmap
++		 */
++		spin_lock(&ts_bitmap_lock);
++		bitmap_release_region(iscsit_global->ts_bitmap,
++				ts->thread_id, get_order(1));
++		spin_unlock(&ts_bitmap_lock);
++
++		released_count++;
++		kfree(ts);
++	}
++
++	if (released_count)
++		pr_debug("Stopped %d thread set(s) (%d total threads)."
++			"\n", released_count, released_count * 2);
++}
++
++static void iscsi_deallocate_extra_thread_sets(void)
++{
++	u32 orig_count, released_count = 0;
++	struct iscsi_thread_set *ts = NULL;
++
++	orig_count = TARGET_THREAD_SET_COUNT;
++
++	while ((iscsit_global->inactive_ts + 1) > orig_count) {
++		ts = iscsi_get_ts_from_inactive_list();
++		if (!ts)
++			break;
++
++		spin_lock_bh(&ts->ts_state_lock);
++		ts->status = ISCSI_THREAD_SET_DIE;
++		spin_unlock_bh(&ts->ts_state_lock);
++
++		if (ts->rx_thread) {
++			send_sig(SIGINT, ts->rx_thread, 1);
++			kthread_stop(ts->rx_thread);
++		}
++		if (ts->tx_thread) {
++			send_sig(SIGINT, ts->tx_thread, 1);
++			kthread_stop(ts->tx_thread);
++		}
++		/*
++		 * Release this thread_id in the thread_set_bitmap
++		 */
++		spin_lock(&ts_bitmap_lock);
++		bitmap_release_region(iscsit_global->ts_bitmap,
++				ts->thread_id, get_order(1));
++		spin_unlock(&ts_bitmap_lock);
++
++		released_count++;
++		kfree(ts);
++	}
++
++	if (released_count) {
++		pr_debug("Stopped %d thread set(s) (%d total threads)."
++			"\n", released_count, released_count * 2);
++	}
++}
++
++void iscsi_activate_thread_set(struct iscsi_conn *conn, struct iscsi_thread_set *ts)
++{
++	iscsi_add_ts_to_active_list(ts);
++
++	spin_lock_bh(&ts->ts_state_lock);
++	conn->thread_set = ts;
++	ts->conn = conn;
++	spin_unlock_bh(&ts->ts_state_lock);
++	/*
++	 * Start up the RX thread and wait on rx_post_start_comp.  The RX
++	 * Thread will then do the same for the TX Thread in
++	 * iscsi_rx_thread_pre_handler().
++	 */
++	complete(&ts->rx_start_comp);
++	wait_for_completion(&ts->rx_post_start_comp);
++}
++
++struct iscsi_thread_set *iscsi_get_thread_set(void)
++{
++	int allocate_ts = 0;
++	struct completion comp;
++	struct iscsi_thread_set *ts = NULL;
++	/*
++	 * If no inactive thread set is available on the first call to
++	 * iscsi_get_ts_from_inactive_list(), sleep for a second and
++	 * try again.  If still none are available after two attempts,
++	 * allocate a set ourselves.
++	 */
++get_set:
++	ts = iscsi_get_ts_from_inactive_list();
++	if (!ts) {
++		if (allocate_ts == 2)
++			iscsi_allocate_thread_sets(1);
++
++		init_completion(&comp);
++		wait_for_completion_timeout(&comp, 1 * HZ);
++
++		allocate_ts++;
++		goto get_set;
++	}
++
++	ts->delay_inactive = 1;
++	ts->signal_sent = 0;
++	ts->thread_count = 2;
++	init_completion(&ts->rx_restart_comp);
++	init_completion(&ts->tx_restart_comp);
++
++	return ts;
++}
++
++void iscsi_set_thread_clear(struct iscsi_conn *conn, u8 thread_clear)
++{
++	struct iscsi_thread_set *ts = NULL;
++
++	if (!conn->thread_set) {
++		pr_err("struct iscsi_conn->thread_set is NULL\n");
++		return;
++	}
++	ts = conn->thread_set;
++
++	spin_lock_bh(&ts->ts_state_lock);
++	ts->thread_clear &= ~thread_clear;
++
++	if ((thread_clear & ISCSI_CLEAR_RX_THREAD) &&
++	    (ts->blocked_threads & ISCSI_BLOCK_RX_THREAD))
++		complete(&ts->rx_restart_comp);
++	else if ((thread_clear & ISCSI_CLEAR_TX_THREAD) &&
++		 (ts->blocked_threads & ISCSI_BLOCK_TX_THREAD))
++		complete(&ts->tx_restart_comp);
++	spin_unlock_bh(&ts->ts_state_lock);
++}
++
++void iscsi_set_thread_set_signal(struct iscsi_conn *conn, u8 signal_sent)
++{
++	struct iscsi_thread_set *ts = NULL;
++
++	if (!conn->thread_set) {
++		pr_err("struct iscsi_conn->thread_set is NULL\n");
++		return;
++	}
++	ts = conn->thread_set;
++
++	spin_lock_bh(&ts->ts_state_lock);
++	ts->signal_sent |= signal_sent;
++	spin_unlock_bh(&ts->ts_state_lock);
++}
++
++int iscsi_release_thread_set(struct iscsi_conn *conn)
++{
++	int thread_called = 0;
++	struct iscsi_thread_set *ts = NULL;
++
++	if (!conn || !conn->thread_set) {
++		pr_err("connection or thread set pointer is NULL\n");
++		BUG();
++	}
++	ts = conn->thread_set;
++
++	spin_lock_bh(&ts->ts_state_lock);
++	ts->status = ISCSI_THREAD_SET_RESET;
++
++	if (!strncmp(current->comm, ISCSI_RX_THREAD_NAME,
++			strlen(ISCSI_RX_THREAD_NAME)))
++		thread_called = ISCSI_RX_THREAD;
++	else if (!strncmp(current->comm, ISCSI_TX_THREAD_NAME,
++			strlen(ISCSI_TX_THREAD_NAME)))
++		thread_called = ISCSI_TX_THREAD;
++
++	if (ts->rx_thread && (thread_called == ISCSI_TX_THREAD) &&
++	   (ts->thread_clear & ISCSI_CLEAR_RX_THREAD)) {
++
++		if (!(ts->signal_sent & ISCSI_SIGNAL_RX_THREAD)) {
++			send_sig(SIGINT, ts->rx_thread, 1);
++			ts->signal_sent |= ISCSI_SIGNAL_RX_THREAD;
++		}
++		ts->blocked_threads |= ISCSI_BLOCK_RX_THREAD;
++		spin_unlock_bh(&ts->ts_state_lock);
++		wait_for_completion(&ts->rx_restart_comp);
++		spin_lock_bh(&ts->ts_state_lock);
++		ts->blocked_threads &= ~ISCSI_BLOCK_RX_THREAD;
++	}
++	if (ts->tx_thread && (thread_called == ISCSI_RX_THREAD) &&
++	   (ts->thread_clear & ISCSI_CLEAR_TX_THREAD)) {
++
++		if (!(ts->signal_sent & ISCSI_SIGNAL_TX_THREAD)) {
++			send_sig(SIGINT, ts->tx_thread, 1);
++			ts->signal_sent |= ISCSI_SIGNAL_TX_THREAD;
++		}
++		ts->blocked_threads |= ISCSI_BLOCK_TX_THREAD;
++		spin_unlock_bh(&ts->ts_state_lock);
++		wait_for_completion(&ts->tx_restart_comp);
++		spin_lock_bh(&ts->ts_state_lock);
++		ts->blocked_threads &= ~ISCSI_BLOCK_TX_THREAD;
++	}
++
++	ts->conn = NULL;
++	ts->status = ISCSI_THREAD_SET_FREE;
++	spin_unlock_bh(&ts->ts_state_lock);
++
++	return 0;
++}
++
++int iscsi_thread_set_force_reinstatement(struct iscsi_conn *conn)
++{
++	struct iscsi_thread_set *ts;
++
++	if (!conn->thread_set)
++		return -1;
++	ts = conn->thread_set;
++
++	spin_lock_bh(&ts->ts_state_lock);
++	if (ts->status != ISCSI_THREAD_SET_ACTIVE) {
++		spin_unlock_bh(&ts->ts_state_lock);
++		return -1;
++	}
++
++	if (ts->tx_thread && (!(ts->signal_sent & ISCSI_SIGNAL_TX_THREAD))) {
++		send_sig(SIGINT, ts->tx_thread, 1);
++		ts->signal_sent |= ISCSI_SIGNAL_TX_THREAD;
++	}
++	if (ts->rx_thread && (!(ts->signal_sent & ISCSI_SIGNAL_RX_THREAD))) {
++		send_sig(SIGINT, ts->rx_thread, 1);
++		ts->signal_sent |= ISCSI_SIGNAL_RX_THREAD;
++	}
++	spin_unlock_bh(&ts->ts_state_lock);
++
++	return 0;
++}
++
++static void iscsi_check_to_add_additional_sets(void)
++{
++	int thread_sets_add;
++
++	spin_lock(&inactive_ts_lock);
++	thread_sets_add = iscsit_global->inactive_ts;
++	spin_unlock(&inactive_ts_lock);
++	if (thread_sets_add == 1)
++		iscsi_allocate_thread_sets(1);
++}
++
++static int iscsi_signal_thread_pre_handler(struct iscsi_thread_set *ts)
++{
++	spin_lock_bh(&ts->ts_state_lock);
++	if ((ts->status == ISCSI_THREAD_SET_DIE) || signal_pending(current)) {
++		spin_unlock_bh(&ts->ts_state_lock);
++		return -1;
++	}
++	spin_unlock_bh(&ts->ts_state_lock);
++
++	return 0;
++}
++
++struct iscsi_conn *iscsi_rx_thread_pre_handler(struct iscsi_thread_set *ts)
++{
++	int ret;
++
++	spin_lock_bh(&ts->ts_state_lock);
++	if (ts->create_threads) {
++		spin_unlock_bh(&ts->ts_state_lock);
++		goto sleep;
++	}
++
++	flush_signals(current);
++
++	if (ts->delay_inactive && (--ts->thread_count == 0)) {
++		spin_unlock_bh(&ts->ts_state_lock);
++		iscsi_del_ts_from_active_list(ts);
++
++		if (!iscsit_global->in_shutdown)
++			iscsi_deallocate_extra_thread_sets();
++
++		iscsi_add_ts_to_inactive_list(ts);
++		spin_lock_bh(&ts->ts_state_lock);
++	}
++
++	if ((ts->status == ISCSI_THREAD_SET_RESET) &&
++	    (ts->thread_clear & ISCSI_CLEAR_RX_THREAD))
++		complete(&ts->rx_restart_comp);
++
++	ts->thread_clear &= ~ISCSI_CLEAR_RX_THREAD;
++	spin_unlock_bh(&ts->ts_state_lock);
++sleep:
++	ret = wait_for_completion_interruptible(&ts->rx_start_comp);
++	if (ret != 0)
++		return NULL;
++
++	if (iscsi_signal_thread_pre_handler(ts) < 0)
++		return NULL;
++
++	if (!ts->conn) {
++		pr_err("struct iscsi_thread_set->conn is NULL for"
++			" thread_id: %d, going back to sleep\n", ts->thread_id);
++		goto sleep;
++	}
++	iscsi_check_to_add_additional_sets();
++	/*
++	 * The RX Thread starts up the TX Thread and sleeps.
++	 */
++	ts->thread_clear |= ISCSI_CLEAR_RX_THREAD;
++	complete(&ts->tx_start_comp);
++	wait_for_completion(&ts->tx_post_start_comp);
++
++	return ts->conn;
++}
++
++struct iscsi_conn *iscsi_tx_thread_pre_handler(struct iscsi_thread_set *ts)
++{
++	int ret;
++
++	spin_lock_bh(&ts->ts_state_lock);
++	if (ts->create_threads) {
++		spin_unlock_bh(&ts->ts_state_lock);
++		goto sleep;
++	}
++
++	flush_signals(current);
++
++	if (ts->delay_inactive && (--ts->thread_count == 0)) {
++		spin_unlock_bh(&ts->ts_state_lock);
++		iscsi_del_ts_from_active_list(ts);
++
++		if (!iscsit_global->in_shutdown)
++			iscsi_deallocate_extra_thread_sets();
++
++		iscsi_add_ts_to_inactive_list(ts);
++		spin_lock_bh(&ts->ts_state_lock);
++	}
++	if ((ts->status == ISCSI_THREAD_SET_RESET) &&
++	    (ts->thread_clear & ISCSI_CLEAR_TX_THREAD))
++		complete(&ts->tx_restart_comp);
++
++	ts->thread_clear &= ~ISCSI_CLEAR_TX_THREAD;
++	spin_unlock_bh(&ts->ts_state_lock);
++sleep:
++	ret = wait_for_completion_interruptible(&ts->tx_start_comp);
++	if (ret != 0)
++		return NULL;
++
++	if (iscsi_signal_thread_pre_handler(ts) < 0)
++		return NULL;
++
++	if (!ts->conn) {
++		pr_err("struct iscsi_thread_set->conn is NULL for "
++			" thread_id: %d, going back to sleep\n",
++			ts->thread_id);
++		goto sleep;
++	}
++
++	iscsi_check_to_add_additional_sets();
++	/*
++	 * From the TX thread, up the tx_post_start_comp that the RX Thread is
++	 * sleeping on in iscsi_rx_thread_pre_handler(), then up the
++	 * rx_post_start_comp that iscsi_activate_thread_set() is sleeping on.
++	 */
++	ts->thread_clear |= ISCSI_CLEAR_TX_THREAD;
++	complete(&ts->tx_post_start_comp);
++	complete(&ts->rx_post_start_comp);
++
++	spin_lock_bh(&ts->ts_state_lock);
++	ts->status = ISCSI_THREAD_SET_ACTIVE;
++	spin_unlock_bh(&ts->ts_state_lock);
++
++	return ts->conn;
++}
++
++int iscsi_thread_set_init(void)
++{
++	int size;
++
++	iscsit_global->ts_bitmap_count = ISCSI_TS_BITMAP_BITS;
++
++	size = BITS_TO_LONGS(iscsit_global->ts_bitmap_count) * sizeof(long);
++	iscsit_global->ts_bitmap = kzalloc(size, GFP_KERNEL);
++	if (!iscsit_global->ts_bitmap) {
++		pr_err("Unable to allocate iscsit_global->ts_bitmap\n");
++		return -ENOMEM;
++	}
++
++	spin_lock_init(&active_ts_lock);
++	spin_lock_init(&inactive_ts_lock);
++	spin_lock_init(&ts_bitmap_lock);
++	INIT_LIST_HEAD(&active_ts_list);
++	INIT_LIST_HEAD(&inactive_ts_list);
++
++	return 0;
++}
++
++void iscsi_thread_set_free(void)
++{
++	kfree(iscsit_global->ts_bitmap);
++}
+diff --git a/drivers/target/iscsi/iscsi_target_tq.h b/drivers/target/iscsi/iscsi_target_tq.h
 new file mode 100644
-index 0000000..0d52a10
+index 0000000..26e6a95
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_seq_pdu_list.h
-@@ -0,0 +1,86 @@
-+#ifndef ISCSI_SEQ_AND_PDU_LIST_H
-+#define ISCSI_SEQ_AND_PDU_LIST_H
++++ b/drivers/target/iscsi/iscsi_target_tq.h
+@@ -0,0 +1,88 @@
++#ifndef ISCSI_THREAD_QUEUE_H
++#define ISCSI_THREAD_QUEUE_H
 +
-+/* struct iscsi_pdu->status */
-+#define DATAOUT_PDU_SENT			1
++/*
++ * Defines for thread sets.
++ */
++extern int iscsi_thread_set_force_reinstatement(struct iscsi_conn *);
++extern void iscsi_add_ts_to_inactive_list(struct iscsi_thread_set *);
++extern int iscsi_allocate_thread_sets(u32);
++extern void iscsi_deallocate_thread_sets(void);
++extern void iscsi_activate_thread_set(struct iscsi_conn *, struct iscsi_thread_set *);
++extern struct iscsi_thread_set *iscsi_get_thread_set(void);
++extern void iscsi_set_thread_clear(struct iscsi_conn *, u8);
++extern void iscsi_set_thread_set_signal(struct iscsi_conn *, u8);
++extern int iscsi_release_thread_set(struct iscsi_conn *);
++extern struct iscsi_conn *iscsi_rx_thread_pre_handler(struct iscsi_thread_set *);
++extern struct iscsi_conn *iscsi_tx_thread_pre_handler(struct iscsi_thread_set *);
++extern int iscsi_thread_set_init(void);
++extern void iscsi_thread_set_free(void);
 +
-+/* struct iscsi_seq->type */
-+#define SEQTYPE_IMMEDIATE			1
-+#define SEQTYPE_UNSOLICITED			2
-+#define SEQTYPE_NORMAL				3
++extern int iscsi_target_tx_thread(void *);
++extern int iscsi_target_rx_thread(void *);
 +
-+/* struct iscsi_seq->status */
-+#define DATAOUT_SEQUENCE_GOT_R2T		1
-+#define DATAOUT_SEQUENCE_WITHIN_COMMAND_RECOVERY 2
-+#define DATAOUT_SEQUENCE_COMPLETE		3
++#define TARGET_THREAD_SET_COUNT			4
 +
-+/* iscsi_determine_counts_for_list() type */
-+#define PDULIST_NORMAL				1
-+#define PDULIST_IMMEDIATE			2
-+#define PDULIST_UNSOLICITED			3
-+#define PDULIST_IMMEDIATE_AND_UNSOLICITED	4
++#define ISCSI_RX_THREAD                         1
++#define ISCSI_TX_THREAD                         2
++#define ISCSI_RX_THREAD_NAME			"iscsi_trx"
++#define ISCSI_TX_THREAD_NAME			"iscsi_ttx"
++#define ISCSI_BLOCK_RX_THREAD			0x1
++#define ISCSI_BLOCK_TX_THREAD			0x2
++#define ISCSI_CLEAR_RX_THREAD			0x1
++#define ISCSI_CLEAR_TX_THREAD			0x2
++#define ISCSI_SIGNAL_RX_THREAD			0x1
++#define ISCSI_SIGNAL_TX_THREAD			0x2
 +
-+/* struct iscsi_pdu->type */
-+#define PDUTYPE_IMMEDIATE			1
-+#define PDUTYPE_UNSOLICITED			2
-+#define PDUTYPE_NORMAL				3
++/* struct iscsi_thread_set->status */
++#define ISCSI_THREAD_SET_FREE			1
++#define ISCSI_THREAD_SET_ACTIVE			2
++#define ISCSI_THREAD_SET_DIE			3
++#define ISCSI_THREAD_SET_RESET			4
++#define ISCSI_THREAD_SET_DEALLOCATE_THREADS	5
 +
-+/* struct iscsi_pdu->status */
-+#define ISCSI_PDU_NOT_RECEIVED			0
-+#define ISCSI_PDU_RECEIVED_OK			1
-+#define ISCSI_PDU_CRC_FAILED			2
-+#define ISCSI_PDU_TIMED_OUT			3
++/* By default allow a maximum of 32K iSCSI connections */
++#define ISCSI_TS_BITMAP_BITS			32768
 +
-+/* struct iscsi_build_list->randomize */
-+#define RANDOM_DATAIN_PDU_OFFSETS		0x01
-+#define RANDOM_DATAIN_SEQ_OFFSETS		0x02
-+#define RANDOM_DATAOUT_PDU_OFFSETS		0x04
-+#define RANDOM_R2T_OFFSETS			0x08
-+
-+/* struct iscsi_build_list->data_direction */
-+#define ISCSI_PDU_READ				0x01
-+#define ISCSI_PDU_WRITE				0x02
-+
-+struct iscsi_build_list {
-+	int		data_direction;
-+	int		randomize;
-+	int		type;
-+	int		immediate_data_length;
++struct iscsi_thread_set {
++	/* flags used for blocking and restarting sets */
++	int	blocked_threads;
++	/* flag for creating threads */
++	int	create_threads;
++	/* flag for delaying readding to inactive list */
++	int	delay_inactive;
++	/* status for thread set */
++	int	status;
++	/* which threads have had signals sent */
++	int	signal_sent;
++	/* flag for which threads exited first */
++	int	thread_clear;
++	/* Active threads in the thread set */
++	int	thread_count;
++	/* Unique thread ID */
++	u32	thread_id;
++	/* pointer to connection if set is active */
++	struct iscsi_conn	*conn;
++	/* used for controlling ts state accesses */
++	spinlock_t	ts_state_lock;
++	/* Used for rx side post startup */
++	struct completion	rx_post_start_comp;
++	/* Used for tx side post startup */
++	struct completion	tx_post_start_comp;
++	/* used for restarting thread queue */
++	struct completion	rx_restart_comp;
++	/* used for restarting thread queue */
++	struct completion	tx_restart_comp;
++	/* used for normal unused blocking */
++	struct completion	rx_start_comp;
++	/* used for normal unused blocking */
++	struct completion	tx_start_comp;
++	/* OS descriptor for rx thread */
++	struct task_struct	*rx_thread;
++	/* OS descriptor for tx thread */
++	struct task_struct	*tx_thread;
++	/* struct iscsi_thread_set in list list head*/
++	struct list_head	ts_list;
 +};
 +
-+struct iscsi_pdu {
-+	int		status;
-+	int		type;
-+	u8		flags;
-+	u32		data_sn;
-+	u32		length;
-+	u32		offset;
-+	u32		pdu_send_order;
-+	u32		seq_no;
-+} ____cacheline_aligned;
-+
-+struct iscsi_seq {
-+	int		sent;
-+	int		status;
-+	int		type;
-+	u32		data_sn;
-+	u32		first_datasn;
-+	u32		last_datasn;
-+	u32		next_burst_len;
-+	u32		pdu_start;
-+	u32		pdu_count;
-+	u32		offset;
-+	u32		orig_offset;
-+	u32		pdu_send_order;
-+	u32		r2t_sn;
-+	u32		seq_send_order;
-+	u32		seq_no;
-+	u32		xfer_len;
-+} ____cacheline_aligned;
-+
-+extern int iscsit_do_build_list(struct iscsi_cmd *, struct iscsi_build_list *);
-+extern struct iscsi_pdu *iscsit_get_pdu_holder(struct iscsi_cmd *, u32, u32);
-+extern struct iscsi_pdu *iscsit_get_pdu_holder_for_seq(struct iscsi_cmd *, struct iscsi_seq *);
-+extern struct iscsi_seq *iscsit_get_seq_holder(struct iscsi_cmd *, u32, u32);
-+
-+#endif /* ISCSI_SEQ_AND_PDU_LIST_H */
++#endif   /*** ISCSI_THREAD_QUEUE_H ***/
 -- 
 1.7.6
 
