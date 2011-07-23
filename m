@@ -1,289 +1,145 @@
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.39 merge window
-Date: Sat, 23 Jul 2011 14:49:17 -0700
-Message-ID: <CA508EFE.23E58%giridhar.malavali@qlogic.com>
-References: <1311441452.23720.17.camel@mulgrave>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] iscsi-target merge for v3.1-rc1
+Date: Sat, 23 Jul 2011 16:16:15 -0700
+Message-ID: <1311462975.31450.356.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe005.messaging.microsoft.com ([216.32.181.185]:20676
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751297Ab1GWVtY convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Jul 2011 17:49:24 -0400
-In-Reply-To: <1311441452.23720.17.camel@mulgrave>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Boaz Harrosh <openosd@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-James,
+Hi Linus,
 
-Is qla2xxx changes submitted on 07/14/2011 scheduled for next round of
-submission for merge window
+So in the spirit of timely pull requests ahead of your upcoming summer
+vacation, here is the long awaited and much debated initial merge commit
+for v3.1-rc1 of drivers/target/iscsi to sync with latest bleeding edge
+LIO v4.1 codebase.
 
-Here is the pointer for the submission
-	http://marc.info/?l=linux-scsi&m=131067084700576&w=2
+As with the v3.0 merge canidate this spring, this commit contains a
+fully functional in-kernel iscsi-target that uses the mainline target
+infrastructure for a native configfs control plane, and is compatiable
+with rtslib v2.x python object library.
 
-Any update?
+Please go ahead and pull from:
 
-Thanks,
-Giridhar Malavali
+  master.kernel.org:/pub/scm/linux/kernel/git/nab/target-pending.git for-linus-merge
 
+This tree is also available from kernel.org mirrors at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-linus-merge
 
->This represents the usual round of driver updates (fcoe, bfa, mpt2sas,
->iscsi, bnx2fc) plus a couple of fixes that didn't make 3.0 including the
->USB force eject oops.
->
->The patch is available here:
->
->master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
->
->The short changelog is:
->
->Abhijeet Joglekar (2):
->      fnic: Update Maintainers list for fnic.
->      fnic: fix incorrect use of SLAB_CACHE_DMA flag
->
->Andy Grover (1):
->      iscsi: Use struct scsi_lun in iscsi structs instead of u8[8]
->
->Bhanu Prakash Gollapudi (5):
->      MAINTAINERS update for bnx2fc
->      bnx2fc: Bumped version to 1.0.2
->      bnx2fc: Fix kernel panic when deleting NPIV ports
->      bnx2fc: scsi_dma_unmap() not invoked on IO completions
->      bnx2fc: host stats show the link speed 'unknown' on NIC partitioned
->interfaces
->
->Douglas Gilbert (1):
->      ses: requesting a fault indication
->
->Eddie Wai (4):
->      bnx2i: Fixed kernel panic due to illegal usage of sc->request->cpu
->      bnx2i: Updated copyright and bump version
->      bnx2i: Modified to skip CNIC registration if iSCSI is not supported
->      bnx2i: Added the use of kthreads to handle SCSI cmd completion
->
->Geert Uytterhoeven (10):
->      sun3: Remove commented out merge_contiguous_buffers
->      sun3: Add various missing NDEBUG* definitions
->      sun3: Check for NCR_TIMEOUT being defined instead of having a value
->      sun3: Provide a dummy NCR5380_exit()
->      sun3: sun3scsi_detect() and NCR5380_init() should be __init
->      mac_scsi: Remove unused variable default_instance
->      mac_scsi: macscsi_detect() should be __init
->      atari_NCR5380: Provide a dummy NCR5380_exit()
->      atari_NCR5380: Remove obsolete variable oldto
->      sun3_NCR5380: Split NEXT() for lvalues/rvalues
->
->James Bottomley (1):
->      fix crash in scsi_dispatch_cmd()
->
->Karen Xie (1):
->      cxgb3i: fixed programing of the dma page sizes
->
->Kashyap, Desai (7):
->      mpt2sas: Bump version 09.100.00.00
->      mpt2sas: Adding support for customer specific branding
->      mpt2sas: Added DID_NO_CONNECT return when driver remove and avoid
->shutdown call
->      mpt2sas: fix broadcast AEN and task management issue
->      mpt2sas: Set max_sector count from module parameter
->      mpt2sas MPI next revision header update
->      mpt2sas: Fixed Big Indian Issues on 32 bit PPC
->
->Kay Sievers (1):
->      sr: check_events() ignore GET_EVENT when TUR says otherwise
->
->Kiran Patil (6):
->      tcm_fc: Fixing reference counting problem which was causing ft_sess
->to be deleted.
->      libfc:Fix for exchange/seq loopup failure when FCoE stack is used
->as target and connected to windows initaitor
->      fcoe: Amends previous patch, Round-robin based selection of CPU for
->post processing of incoming request for FCoE target
->      fcoe: Round-robin based selection of CPU for post-processing of
->incoming commands
->      fcoe: Unable to select the exchangeID from offload pool for storage
->targets
->      libfc: Enhancement to RPORT state machine applicable only for VN2VN
->mode
->
->Krishna Gudipati (27):
->      bfa: Update the driver version to 3.0.2.1
->      bfa: Driver and BSG enhancements.
->      bfa: Added support to query PHY.
->      bfa: Added HBA diagnostics support.
->      bfa: Added support for flash configuration
->      bfa: Added support to obtain SFP info.
->      bfa: Added support for CEE info and stats query.
->      bfa: Extend BSG interface.
->      bfa: FCS bug fixes.
->      bfa: DMA memory allocation enhancement.
->      bfa: Brocade-1860 Fabric Adapter vHBA support.
->      bfa: Brocade-1860 Fabric Adapter PLL init fixes.
->      bfa: Added Fabric Assigned Address(FAA) support
->      bfa: IOC bug fixes.
->      bfa: Enable ASIC block configuration and query.
->      bfa: Update the driver version to 3.0.2.0
->      bfa: Add BSG interface to support ELS, CT and vendor commands.
->      bfa: Driver initialization and model description fix
->      bfa: Enhancement for fcpim and IO tag handling.
->      bfa: FC credit recovery and misc bug fixes.
->      bfa: Brocade-1860 Fabric Adapter 16Gbs support and flash controller
->fixes.
->      bfa: IOC and PLL init changes for Brocade-1860 Fabric Adapter.
->      bfa: Changes to support vport disable and enable operations.
->      bfa: Brocade-1860 Fabric Adapter Hardware Enablement
->      bfa: Add pbc port disable check and fix LPS message name
->      bfa: Introduce IOC event notification mechanism.
->      bfa: Introduced generic address len pair to represent DMA memory
->chunk.
->
->Mike Christie (4):
->      libiscsi_tcp: fix LLD data allocation
->      iscsi_tcp: fix locking around iscsi sk user data
->      iscsi_ibft, be2iscsi, iscsi_boot: fix boot kobj data lifetime
->management
->      iscsi_boot_sysfs: have this module check for null on destruction
->
->Neerav Parikh (1):
->      fcoe: Rearrange fcoe port and NPIV port cleanup
->
->Ondrej Zary (1):
->      aha152x: add missing ISA PNP IDs
->
->Stephen Boyd (1):
->      lpfc: Silence DEBUG_STRICT_USER_COPY_CHECKS=y warning
->
->Vasu Dev (1):
->      libfc: post reset event on lport reset
->
->Werner Fink (1):
->      Blacklist Traxdata CDR4120 and IOMEGA Zip drive to avoid lock ups.
->
->Yi Zou (2):
->      fcoe: support ndo_fcoe_ddp_target() for DDP in FCoE targe
->      libfc, tcm_fc: add ddp_targ() to libfc function template to supprot
->FCoE DDP in target mode
->
->And the diffstat
->
-> MAINTAINERS                               |    9 +-
-> block/blk-core.c                          |    3 +
-> block/blk-exec.c                          |    7 +
-> drivers/firmware/iscsi_ibft.c             |   14 +-
-> drivers/scsi/aha152x.c                    |   17 +-
-> drivers/scsi/atari_NCR5380.c              |    6 +-
-> drivers/scsi/atari_scsi.c                 |    1 +
-> drivers/scsi/be2iscsi/be_main.c           |  199 +-
-> drivers/scsi/bfa/Makefile                 |    2 +-
-> drivers/scsi/bfa/bfa.h                    |  144 +-
-> drivers/scsi/bfa/bfa_core.c               |  878 ++++++---
-> drivers/scsi/bfa/bfa_defs.h               |  583 ++++++-
-> drivers/scsi/bfa/bfa_defs_fcs.h           |   27 +-
-> drivers/scsi/bfa/bfa_defs_svc.h           |  170 ++-
-> drivers/scsi/bfa/bfa_fc.h                 |   11 +-
-> drivers/scsi/bfa/bfa_fcbuild.c            |   49 +-
-> drivers/scsi/bfa/bfa_fcbuild.h            |   16 +-
-> drivers/scsi/bfa/bfa_fcpim.c              |  478 ++++-
-> drivers/scsi/bfa/bfa_fcpim.h              |   89 +-
-> drivers/scsi/bfa/bfa_fcs.c                |  153 ++-
-> drivers/scsi/bfa/bfa_fcs.h                |   31 +-
-> drivers/scsi/bfa/bfa_fcs_fcpim.c          |   10 +
-> drivers/scsi/bfa/bfa_fcs_lport.c          |  329 +++-
-> drivers/scsi/bfa/bfa_fcs_rport.c          |  121 +-
-> drivers/scsi/bfa/bfa_hw_cb.c              |   94 +-
-> drivers/scsi/bfa/bfa_hw_ct.c              |   89 +-
-> drivers/scsi/bfa/bfa_ioc.c                | 2992
->+++++++++++++++++++++++++++--
-> drivers/scsi/bfa/bfa_ioc.h                |  609 ++++++-
-> drivers/scsi/bfa/bfa_ioc_cb.c             |   69 +-
-> drivers/scsi/bfa/bfa_ioc_ct.c             |  516 ++++-
-> drivers/scsi/bfa/bfa_modules.h            |   27 +-
-> drivers/scsi/bfa/bfa_port.c               |  428 ++++-
-> drivers/scsi/bfa/bfa_port.h               |   62 +-
-> drivers/scsi/bfa/bfa_svc.c                | 1136 ++++++++---
-> drivers/scsi/bfa/bfa_svc.h                |  151 ++-
-> drivers/scsi/bfa/bfad.c                   |  295 ++--
-> drivers/scsi/bfa/bfad_attr.c              |   53 +-
-> drivers/scsi/bfa/bfad_bsg.c               | 2163 +++++++++++++++++++++
-> drivers/scsi/bfa/bfad_bsg.h               |  509 +++++
-> drivers/scsi/bfa/bfad_debugfs.c           |   14 +-
-> drivers/scsi/bfa/bfad_drv.h               |   26 +-
-> drivers/scsi/bfa/bfad_im.c                |   32 +-
-> drivers/scsi/bfa/bfad_im.h                |    3 +
-> drivers/scsi/bfa/bfi.h                    |  637 ++++++-
-> drivers/scsi/bfa/bfi_cbreg.h              |  305 ---
-> drivers/scsi/bfa/bfi_ctreg.h              |  636 ------
-> drivers/scsi/bfa/bfi_ms.h                 |  159 ++-
-> drivers/scsi/bfa/bfi_reg.h                |  450 +++++
-> drivers/scsi/bnx2fc/bnx2fc.h              |   10 +-
-> drivers/scsi/bnx2fc/bnx2fc_fcoe.c         |   33 +-
-> drivers/scsi/bnx2fc/bnx2fc_hwi.c          |   24 +-
-> drivers/scsi/bnx2fc/bnx2fc_io.c           |    2 +-
-> drivers/scsi/bnx2i/57xx_iscsi_constants.h |    2 +-
-> drivers/scsi/bnx2i/57xx_iscsi_hsi.h       |    2 +-
-> drivers/scsi/bnx2i/bnx2i.h                |   33 +-
-> drivers/scsi/bnx2i/bnx2i_hwi.c            |  199 ++-
-> drivers/scsi/bnx2i/bnx2i_init.c           |  153 ++-
-> drivers/scsi/bnx2i/bnx2i_iscsi.c          |   38 +-
-> drivers/scsi/bnx2i/bnx2i_sysfs.c          |    2 +-
-> drivers/scsi/cxgbi/cxgb3i/cxgb3i.c        |    4 +-
-> drivers/scsi/fcoe/fcoe.c                  |  174 ++-
-> drivers/scsi/fnic/fnic.h                  |    2 +-
-> drivers/scsi/fnic/fnic_main.c             |   21 +-
-> drivers/scsi/fnic/fnic_scsi.c             |    2 +-
-> drivers/scsi/iscsi_boot_sysfs.c           |   31 +-
-> drivers/scsi/iscsi_tcp.c                  |   61 +-
-> drivers/scsi/libfc/fc_exch.c              |   26 +-
-> drivers/scsi/libfc/fc_lport.c             |    2 +
-> drivers/scsi/libfc/fc_rport.c             |   14 +
-> drivers/scsi/libiscsi.c                   |   14 +-
-> drivers/scsi/libiscsi_tcp.c               |   14 +-
-> drivers/scsi/lpfc/lpfc_debugfs.c          |    3 +-
-> drivers/scsi/mac_scsi.c                   |   14 +-
-> drivers/scsi/mpt2sas/mpi/mpi2.h           |   12 +-
-> drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h      |   74 +-
-> drivers/scsi/mpt2sas/mpi/mpi2_init.h      |    6 +-
-> drivers/scsi/mpt2sas/mpi/mpi2_ioc.h       |    4 +-
-> drivers/scsi/mpt2sas/mpt2sas_base.c       |   84 +-
-> drivers/scsi/mpt2sas/mpt2sas_base.h       |   77 +-
-> drivers/scsi/mpt2sas/mpt2sas_ctl.c        |   12 +-
-> drivers/scsi/mpt2sas/mpt2sas_debug.h      |    2 +-
-> drivers/scsi/mpt2sas/mpt2sas_scsih.c      |  279 +++-
-> drivers/scsi/mpt2sas/mpt2sas_transport.c  |   24 +-
-> drivers/scsi/scsi_devinfo.c               |    2 +
-> drivers/scsi/scsi_lib.c                   |    2 +
-> drivers/scsi/ses.c                        |    6 +-
-> drivers/scsi/sr.c                         |   46 +-
-> drivers/scsi/sr.h                         |    7 +
-> drivers/scsi/sun3_NCR5380.c               |   98 +-
-> drivers/scsi/sun3_scsi.c                  |   11 +-
-> drivers/scsi/sun3_scsi_vme.c              |   11 +-
-> drivers/target/tcm_fc/tfc_cmd.c           |   26 +-
-> include/linux/iscsi_boot_sysfs.h          |   16 +-
-> include/scsi/iscsi_proto.h                |   18 +-
-> include/scsi/libfc.h                      |    8 +
-> include/scsi/libiscsi.h                   |    2 +-
-> 96 files changed, 13313 insertions(+), 3196 deletions(-)
-> create mode 100644 drivers/scsi/bfa/bfad_bsg.c
-> create mode 100644 drivers/scsi/bfa/bfad_bsg.h
-> delete mode 100644 drivers/scsi/bfa/bfi_cbreg.h
-> delete mode 100644 drivers/scsi/bfa/bfi_ctreg.h
-> create mode 100644 drivers/scsi/bfa/bfi_reg.h
->
->James
->
->
->--
->To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+I'll be tracking fixes from the merge canidate posted this morning, and
+considering the amount of changes from Andy and Christoph over the last
+months, this code will certainly require alot more testing throughout
+the duration of v3.1 development cycle to get all the bugs shaken out.
 
+Again, I would like to thank Andy and Christoph for pushing forward v4.1
+development.  Also big thanks to all the folks over the numerous
+releases who have helped to review and make incremental improvements to
+the codebase, all those folks who reported bugs and in some cases, drove
+the efforts to rentlessly to verify the proper fixes.
 
+Please let us know if you have any immediate concerns,
+
+Thank you!
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Andy Grover <agrover@redhat.com>
+Acked-by: Roland Dreier <roland@kernel.org>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (3):
+  iscsi: Resolve iscsi_proto.h naming conflicts with
+    drivers/target/iscsi
+  iscsi: Add Serial Number Arithmetic LT and GT into iscsi_proto.h
+  iscsi-target: Add iSCSI fabric support for target v4.1
+
+ drivers/infiniband/ulp/iser/iser_initiator.c      |    2 +-
+ drivers/scsi/be2iscsi/be_main.h                   |    4 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c                    |    8 +-
+ drivers/scsi/libiscsi.c                           |   22 +-
+ drivers/target/Kconfig                            |    1 +
+ drivers/target/Makefile                           |    2 +-
+ drivers/target/iscsi/Kconfig                      |    8 +
+ drivers/target/iscsi/Makefile                     |   20 +
+ drivers/target/iscsi/iscsi_target.c               | 4559 +++++++++++++++++++++
+ drivers/target/iscsi/iscsi_target.h               |   42 +
+ drivers/target/iscsi/iscsi_target_auth.c          |  490 +++
+ drivers/target/iscsi/iscsi_target_auth.h          |   31 +
+ drivers/target/iscsi/iscsi_target_configfs.c      | 1882 +++++++++
+ drivers/target/iscsi/iscsi_target_configfs.h      |    7 +
+ drivers/target/iscsi/iscsi_target_core.h          |  859 ++++
+ drivers/target/iscsi/iscsi_target_datain_values.c |  531 +++
+ drivers/target/iscsi/iscsi_target_datain_values.h |   12 +
+ drivers/target/iscsi/iscsi_target_device.c        |   87 +
+ drivers/target/iscsi/iscsi_target_device.h        |    9 +
+ drivers/target/iscsi/iscsi_target_erl0.c          | 1004 +++++
+ drivers/target/iscsi/iscsi_target_erl0.h          |   15 +
+ drivers/target/iscsi/iscsi_target_erl1.c          | 1299 ++++++
+ drivers/target/iscsi/iscsi_target_erl1.h          |   26 +
+ drivers/target/iscsi/iscsi_target_erl2.c          |  474 +++
+ drivers/target/iscsi/iscsi_target_erl2.h          |   18 +
+ drivers/target/iscsi/iscsi_target_login.c         | 1232 ++++++
+ drivers/target/iscsi/iscsi_target_login.h         |   12 +
+ drivers/target/iscsi/iscsi_target_nego.c          | 1067 +++++
+ drivers/target/iscsi/iscsi_target_nego.h          |   17 +
+ drivers/target/iscsi/iscsi_target_nodeattrib.c    |  263 ++
+ drivers/target/iscsi/iscsi_target_nodeattrib.h    |   14 +
+ drivers/target/iscsi/iscsi_target_parameters.c    | 1905 +++++++++
+ drivers/target/iscsi/iscsi_target_parameters.h    |  269 ++
+ drivers/target/iscsi/iscsi_target_seq_pdu_list.c  |  664 +++
+ drivers/target/iscsi/iscsi_target_seq_pdu_list.h  |   86 +
+ drivers/target/iscsi/iscsi_target_stat.c          |  950 +++++
+ drivers/target/iscsi/iscsi_target_stat.h          |   64 +
+ drivers/target/iscsi/iscsi_target_tmr.c           |  849 ++++
+ drivers/target/iscsi/iscsi_target_tmr.h           |   14 +
+ drivers/target/iscsi/iscsi_target_tpg.c           |  759 ++++
+ drivers/target/iscsi/iscsi_target_tpg.h           |   41 +
+ drivers/target/iscsi/iscsi_target_tq.c            |  551 +++
+ drivers/target/iscsi/iscsi_target_tq.h            |   88 +
+ drivers/target/iscsi/iscsi_target_util.c          | 1819 ++++++++
+ drivers/target/iscsi/iscsi_target_util.h          |   60 +
+ include/scsi/iscsi_proto.h                        |   60 +-
+ 46 files changed, 22161 insertions(+), 35 deletions(-)
+ create mode 100644 drivers/target/iscsi/Kconfig
+ create mode 100644 drivers/target/iscsi/Makefile
+ create mode 100644 drivers/target/iscsi/iscsi_target.c
+ create mode 100644 drivers/target/iscsi/iscsi_target.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_configfs.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_configfs.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_core.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_device.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_device.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl0.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl0.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl1.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl1.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl2.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_erl2.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_login.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_login.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_nego.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_nego.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_parameters.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_parameters.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_seq_pdu_list.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_stat.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_stat.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tpg.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tpg.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_tq.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tq.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_util.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_util.h
