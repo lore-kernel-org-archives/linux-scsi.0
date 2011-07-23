@@ -1,38 +1,55 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target core updates for v3.1-rc1 (round 1)
-Date: Sat, 23 Jul 2011 02:14:46 -0700
-Message-ID: <1311412486.31450.238.camel@haakon2.linux-iscsi.org>
-References: <1311326733.31450.120.camel@haakon2.linux-iscsi.org>
-	 <CAJAFBLB8EiHmVJbLkQ7PWMfEcaxe1wv-e=2P7S8h2z7rTf-pew@mail.gmail.com>
+Subject: Re: [PATCH 018/103] target: Remove struct se_global
+Date: Sat, 23 Jul 2011 02:17:17 -0700
+Message-ID: <1311412637.31450.242.camel@haakon2.linux-iscsi.org>
+References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+	 <1311231979-6631-19-git-send-email-nab@linux-iscsi.org>
+	 <CAJAFBLAjmDs0HvUR2oZ2tk+DDw=5LcQLbE_k0jAxfcQbjAZU4A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45666 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45675 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752104Ab1GWJYF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 05:24:05 -0400
-In-Reply-To: <CAJAFBLB8EiHmVJbLkQ7PWMfEcaxe1wv-e=2P7S8h2z7rTf-pew@mail.gmail.com>
+	with ESMTP id S1752104Ab1GWJ0e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 05:26:34 -0400
+In-Reply-To: <CAJAFBLAjmDs0HvUR2oZ2tk+DDw=5LcQLbE_k0jAxfcQbjAZU4A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Fubo Chen <fubo.chen@gmail.com>
-Cc: linux-iscsi-target-dev@googlegroups.com, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Madhu Iyengar <nkmi@yahoo.com>, Andrew Morton <akpm@linux-foundation.org>, Dan Carpenter <error27@gmail.com>, Jesper Juhl <jj@chaosbits.net>, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
 
-On Sat, 2011-07-23 at 10:56 +0200, Fubo Chen wrote:
-> On Fri, Jul 22, 2011 at 11:25 AM, Nicholas A. Bellinger
+On Sat, 2011-07-23 at 10:38 +0200, Fubo Chen wrote:
+> On Thu, Jul 21, 2011 at 9:04 AM, Nicholas A. Bellinger
 > <nab@linux-iscsi.org> wrote:
-> >  target: Follow up core updates from AGrover and HCH (round 4)
+> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> > index 03cda0e..82c8e9a 100644
+> > --- a/drivers/target/target_core_configfs.c
+> > +++ b/drivers/target/target_core_configfs.c
+> > @@ -37,6 +37,7 @@
+> >  #include <linux/parser.h>
+> >  #include <linux/syscalls.h>
+> >  #include <linux/configfs.h>
+> > +#include <linux/spinlock.h>
+> >
+> >  #include <target/target_core_base.h>
+> >  #include <target/target_core_device.h>
+> > @@ -52,6 +53,8 @@
+> >  #include "target_core_rd.h"
+> >  #include "target_core_stat.h"
+> >
+> > +extern struct t10_alua_lu_gp *default_lu_gp;
 > 
-> i think this one introduces bug:
-> 
-> -       if (!(task->task_flags & TF_RUNNING))
-> +       if (!task->task_flags & TF_RUNNING)
+> I see here an extern declaration in a .c file. Shouldn't instead that
+> be moved to a header file ?
 > 
 
-Good catch here Fubo.  Committed as 710b05ea1a7a into lio-core-2.6.git,
-and will get this included into a follow-up bugfixes pull for mainline.
+I don't really have a strong preference here either way, and will defer
+to Andy and Christoph for mainline style consideration on these two
+particular bits..
 
-Thanks!
+Thanks for your review!
 
 --nab
+
 
