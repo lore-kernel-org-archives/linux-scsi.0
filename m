@@ -1,84 +1,50 @@
-From: Huang Weiyi <weiyi.huang@gmail.com>
-Subject: [PATCH] tcm_fc: remove duplicated #include
-Date: Sat, 23 Jul 2011 16:21:39 +0800
-Message-ID: <1311409299-2096-1-git-send-email-weiyi.huang@gmail.com>
+From: Fubo Chen <fubo.chen@gmail.com>
+Subject: Re: [PATCH 018/103] target: Remove struct se_global
+Date: Sat, 23 Jul 2011 10:38:30 +0200
+Message-ID: <CAJAFBLAjmDs0HvUR2oZ2tk+DDw=5LcQLbE_k0jAxfcQbjAZU4A@mail.gmail.com>
+References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
+	<1311231979-6631-19-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:46215 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814Ab1GWIVv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 04:21:51 -0400
-Received: by mail-pz0-f42.google.com with SMTP id 37so4899732pzk.1
-        for <linux-scsi@vger.kernel.org>; Sat, 23 Jul 2011 01:21:51 -0700 (PDT)
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:58788 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722Ab1GWIib convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 04:38:31 -0400
+In-Reply-To: <1311231979-6631-19-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-Remove duplicated #include('s) in
-  drivers/target/tcm_fc/tfc_cmd.c
-  drivers/target/tcm_fc/tfc_conf.c
-  drivers/target/tcm_fc/tfc_io.c
-  drivers/target/tcm_fc/tfc_sess.c
+On Thu, Jul 21, 2011 at 9:04 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/t=
+arget_core_configfs.c
+> index 03cda0e..82c8e9a 100644
+> --- a/drivers/target/target_core_configfs.c
+> +++ b/drivers/target/target_core_configfs.c
+> @@ -37,6 +37,7 @@
+> =A0#include <linux/parser.h>
+> =A0#include <linux/syscalls.h>
+> =A0#include <linux/configfs.h>
+> +#include <linux/spinlock.h>
+>
+> =A0#include <target/target_core_base.h>
+> =A0#include <target/target_core_device.h>
+> @@ -52,6 +53,8 @@
+> =A0#include "target_core_rd.h"
+> =A0#include "target_core_stat.h"
+>
+> +extern struct t10_alua_lu_gp *default_lu_gp;
 
-Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
----
- drivers/target/tcm_fc/tfc_cmd.c  |    1 -
- drivers/target/tcm_fc/tfc_conf.c |    1 -
- drivers/target/tcm_fc/tfc_io.c   |    1 -
- drivers/target/tcm_fc/tfc_sess.c |    2 --
- 4 files changed, 0 insertions(+), 5 deletions(-)
+I see here an extern declaration in a .c file. Shouldn't instead that
+be moved to a header file ?
 
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index a9e9a31..2aa2d5a 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -45,7 +45,6 @@
- #include <target/target_core_device.h>
- #include <target/target_core_tpg.h>
- #include <target/target_core_configfs.h>
--#include <target/target_core_base.h>
- #include <target/target_core_tmr.h>
- #include <target/configfs_macros.h>
- 
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index d63e3dd..8781d1e 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -48,7 +48,6 @@
- #include <target/target_core_device.h>
- #include <target/target_core_tpg.h>
- #include <target/target_core_configfs.h>
--#include <target/target_core_base.h>
- #include <target/configfs_macros.h>
- 
- #include "tcm_fc.h"
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index 11e6483..8e2a46d 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -54,7 +54,6 @@
- #include <target/target_core_device.h>
- #include <target/target_core_tpg.h>
- #include <target/target_core_configfs.h>
--#include <target/target_core_base.h>
- #include <target/configfs_macros.h>
- 
- #include "tcm_fc.h"
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index fbcbb3d..dbb5eae 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -46,10 +46,8 @@
- #include <target/target_core_device.h>
- #include <target/target_core_tpg.h>
- #include <target/target_core_configfs.h>
--#include <target/target_core_base.h>
- #include <target/configfs_macros.h>
- 
--#include <scsi/libfc.h>
- #include "tcm_fc.h"
- 
- static void ft_sess_delete_all(struct ft_tport *);
--- 
-1.5.6.4
-
+=46ubo.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
