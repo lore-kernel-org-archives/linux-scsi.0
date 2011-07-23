@@ -1,40 +1,134 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 018/103] target: Remove struct se_global
-Date: Sat, 23 Jul 2011 09:36:39 -0400
-Message-ID: <20110723133639.GA32255@infradead.org>
-References: <1311231979-6631-1-git-send-email-nab@linux-iscsi.org>
- <1311231979-6631-19-git-send-email-nab@linux-iscsi.org>
- <CAJAFBLAjmDs0HvUR2oZ2tk+DDw=5LcQLbE_k0jAxfcQbjAZU4A@mail.gmail.com>
- <1311412637.31450.242.camel@haakon2.linux-iscsi.org>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: Re: [PATCH 02/13] iscsi: Add Serial Number Arithmetic LT and GT into
+ iscsi_proto.h
+Date: Sat, 23 Jul 2011 16:25:29 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1107231535070.3831@swampdragon.chaosbits.net>
+References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org> <1311410747-29947-3-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:42571
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752516Ab1GWNgl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 23 Jul 2011 09:36:41 -0400
-Content-Disposition: inline
-In-Reply-To: <1311412637.31450.242.camel@haakon2.linux-iscsi.org>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:15076 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752232Ab1GWOZb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 10:25:31 -0400
+In-Reply-To: <1311410747-29947-3-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Fubo Chen <fubo.chen@gmail.com>, linux-iscsi-target-dev@googlegroups.com, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Sat, Jul 23, 2011 at 02:17:17AM -0700, Nicholas A. Bellinger wrote:
-> > >  #include "target_core_rd.h"
-> > >  #include "target_core_stat.h"
-> > >
-> > > +extern struct t10_alua_lu_gp *default_lu_gp;
-> > 
-> > I see here an extern declaration in a .c file. Shouldn't instead that
-> > be moved to a header file ?
-> > 
+On Sat, 23 Jul 2011, Nicholas A. Bellinger wrote:
+
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> I don't really have a strong preference here either way, and will defer
-> to Andy and Christoph for mainline style consideration on these two
-> particular bits..
+> This patch moves the iscsi_sna_lt() and iscsi_sna_lte(), along with
+> iscsi_sna_gt() and iscsi_sna_gte() from iscsi_target_mod into
+> static inlines inside of include/scsi/iscsi_proto.h
+> 
+> This patch also includes the ISCSI_HDR_LEN and ISCSI_CRC_LEN
+> definitions.
+> 
+> Signed-off-by: Mark Rustad <mark.d.rustad@intel.com>
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/scsi/libiscsi.c    |   16 ----------------
+>  include/scsi/iscsi_proto.h |   38 ++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 38 insertions(+), 16 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 9c3cb4e..3461a03 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -84,22 +84,6 @@ MODULE_PARM_DESC(debug_libiscsi_eh,
+>  					     __func__, ##arg);		\
+>  	} while (0);
+>  
+> -/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
+> -#define SNA32_CHECK 2147483648UL
+> -
+> -static int iscsi_sna_lt(u32 n1, u32 n2)
+> -{
+> -	return n1 != n2 && ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
+> -			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
+> -}
+> -
+> -/* Serial Number Arithmetic, 32 bits, less than, RFC1982 */
+> -static int iscsi_sna_lte(u32 n1, u32 n2)
+> -{
+> -	return n1 == n2 || ((n1 < n2 && (n2 - n1 < SNA32_CHECK)) ||
+> -			    (n1 > n2 && (n2 - n1 < SNA32_CHECK)));
+> -}
+> -
+>  inline void iscsi_conn_queue_work(struct iscsi_conn *conn)
+>  {
+>  	struct Scsi_Host *shost = conn->session->host;
+> diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+> index a9c9058..455b03a 100644
+> --- a/include/scsi/iscsi_proto.h
+> +++ b/include/scsi/iscsi_proto.h
+> @@ -29,10 +29,48 @@
+>  /* default iSCSI listen port for incoming connections */
+>  #define ISCSI_LISTEN_PORT	3260
+>  
+> +/* iSCSI header length */
+> +#define ISCSI_HDR_LEN		48
+> +
+> +/* iSCSI CRC32C length */
+> +#define ISCSI_CRC_LEN		4
+> +
+>  /* Padding word length */
+>  #define ISCSI_PAD_LEN		4
+>  
+>  /*
+> + * Serial Number Arithmetic, 32 bits, RFC1982
+> + */
+> +
+> +static inline int iscsi_sna_lt(u32 n1, u32 n2)
+> +{
+> +	s32 diff = n1 - n2;
+> +
+> +	return diff < 0;
+> +}
 
-externs should always be in headers.  In fact sparse will complain about
-having it in the .c file.
+Perhaps get rid of the variable and do
+
+  return (s32)(n1 - n2) < 0;
+
+ same suggestion for the other functions as well.
+
+???
+
+> +
+> +static inline int iscsi_sna_lte(u32 n1, u32 n2)
+> +{
+> +	s32 diff = n1 - n2;
+> +
+> +	return diff <= 0;
+> +}
+> +
+> +static inline int iscsi_sna_gt(u32 n1, u32 n2)
+> +{
+> +	s32 diff = n1 - n2;
+> +
+> +	return diff > 0;
+> +}
+> +
+> +static inline int iscsi_sna_gte(u32 n1, u32 n2)
+> +{
+> +	s32 diff = n1 - n2;
+> +
+> +	return diff >= 0;
+> +}
+> +
+> +/*
+>   * useful common(control and data pathes) macro
+>   */
+>  #define ntoh24(p) (((p)[0] << 16) | ((p)[1] << 8) | ((p)[2]))
+> 
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
