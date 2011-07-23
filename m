@@ -1,67 +1,84 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC PATCH 02/10] scsi bsg: add scsi bsg helper lib
-Date: Fri, 22 Jul 2011 22:19:42 -0500
-Message-ID: <4E2A3DCE.6090605@cs.wisc.edu>
-References: <1311329100-2982-1-git-send-email-michaelc@cs.wisc.edu>	<1311329100-2982-3-git-send-email-michaelc@cs.wisc.edu> <20110723011924Q.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH] tcm_fc: remove duplicated #include
+Date: Sat, 23 Jul 2011 16:21:39 +0800
+Message-ID: <1311409299-2096-1-git-send-email-weiyi.huang@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39918 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949Ab1GWDTw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jul 2011 23:19:52 -0400
-In-Reply-To: <20110723011924Q.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:46215 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814Ab1GWIVv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Jul 2011 04:21:51 -0400
+Received: by mail-pz0-f42.google.com with SMTP id 37so4899732pzk.1
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Jul 2011 01:21:51 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
 
-On 07/22/2011 11:31 AM, FUJITA Tomonori wrote:
->> +/**
->> + * scsi_destroy_bsg_job - routine to teardown/delete a bsg job
->> + * @job: scsi_bsg_job that is to be torn down
->> + */
->> +static void scsi_destroy_bsg_job(struct scsi_bsg_job *job)
->> +{
->> +	unsigned long flags;
->> +
->> +	spin_lock_irqsave(&job->job_lock, flags);
->> +	if (job->ref_cnt) {
->> +		spin_unlock_irqrestore(&job->job_lock, flags);
->> +		return;
->> +	}
->> +	spin_unlock_irqrestore(&job->job_lock, flags);
-> 
-> Is this actually a reference counter? Doesn't look like how we use a
-> reference counter? If scsi_bsg_job needs it, it would be better to
-> just put kref in it?
+Remove duplicated #include('s) in
+  drivers/target/tcm_fc/tfc_cmd.c
+  drivers/target/tcm_fc/tfc_conf.c
+  drivers/target/tcm_fc/tfc_io.c
+  drivers/target/tcm_fc/tfc_sess.c
 
-Yeah, I do not think it is needed. That and the state_flags should not
-be needed (state flag seems to duplicate the request state handling). I
-have patches to remove that code. I was going to send them separately
-though, so just in case I/we are wrong it can be git reverted. I guess
-it can just be merged in this patch though.
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+---
+ drivers/target/tcm_fc/tfc_cmd.c  |    1 -
+ drivers/target/tcm_fc/tfc_conf.c |    1 -
+ drivers/target/tcm_fc/tfc_io.c   |    1 -
+ drivers/target/tcm_fc/tfc_sess.c |    2 --
+ 4 files changed, 0 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index a9e9a31..2aa2d5a 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -45,7 +45,6 @@
+ #include <target/target_core_device.h>
+ #include <target/target_core_tpg.h>
+ #include <target/target_core_configfs.h>
+-#include <target/target_core_base.h>
+ #include <target/target_core_tmr.h>
+ #include <target/configfs_macros.h>
+ 
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index d63e3dd..8781d1e 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -48,7 +48,6 @@
+ #include <target/target_core_device.h>
+ #include <target/target_core_tpg.h>
+ #include <target/target_core_configfs.h>
+-#include <target/target_core_base.h>
+ #include <target/configfs_macros.h>
+ 
+ #include "tcm_fc.h"
+diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
+index 11e6483..8e2a46d 100644
+--- a/drivers/target/tcm_fc/tfc_io.c
++++ b/drivers/target/tcm_fc/tfc_io.c
+@@ -54,7 +54,6 @@
+ #include <target/target_core_device.h>
+ #include <target/target_core_tpg.h>
+ #include <target/target_core_configfs.h>
+-#include <target/target_core_base.h>
+ #include <target/configfs_macros.h>
+ 
+ #include "tcm_fc.h"
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index fbcbb3d..dbb5eae 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -46,10 +46,8 @@
+ #include <target/target_core_device.h>
+ #include <target/target_core_tpg.h>
+ #include <target/target_core_configfs.h>
+-#include <target/target_core_base.h>
+ #include <target/configfs_macros.h>
+ 
+-#include <scsi/libfc.h>
+ #include "tcm_fc.h"
+ 
+ static void ft_sess_delete_all(struct ft_tport *);
+-- 
+1.5.6.4
 
-
->> +void scsi_bsg_remove(struct request_queue *q)
->> +{
->> +	struct request *req; /* block request */
->> +	int counts; /* totals for request_list count and starved */
-> 
-> This function looks hacky a bit (e.g. peeking at the queue internal
-> values such as count and starved). Can we do this in a different way
-> (less hacky way)?
-> 
-
-
->> +			}
->> +
->> +			msleep(200); /* allow bsg to possibly finish */
-> 
-> Hmm, what's it? Do we need to fix something about bsg?
-
-James Smart had added this in 78d16341facf829a71b6f7c68ec5511b9c168060.
-I do not think it can be easily fixed. I think he is working on a better
-long term fix.
