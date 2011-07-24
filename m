@@ -1,418 +1,208 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH RFC/RFT 01/10] block: add bsg heler library
-Date: Sun, 24 Jul 2011 03:59:15 -0500
-Message-ID: <1311497964-26842-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH RFC/RFT 02/10] iscsi class: add bsg support to iscsi class
+Date: Sun, 24 Jul 2011 03:59:16 -0500
+Message-ID: <1311497964-26842-3-git-send-email-michaelc@cs.wisc.edu>
 References: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20177 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46732 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751567Ab1GXI4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2011 04:56:32 -0400
+	id S1751677Ab1GXI4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Jul 2011 04:56:31 -0400
 In-Reply-To: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This moves the FC classes bsg code to the block layer and
-makes it a lib so that other classes like iscsi and SAS can use it.
-
-It is helpful because working with the request queue, bios,
-creating scatterlists, etc are a pain that the LLD does not
-have to worry about with normal IOs and should not have to
-worry about for bsg requests.
+This patch adds bsg support to the iscsi class. There is only
+1 request, the host vendor one, supported. It is expected that
+this would be used for things like flash updates.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Jens Axboe <jaxboe@fusionio.com>
 ---
- block/Kconfig           |   10 ++
- block/Makefile          |    1 +
- block/bsg-lib.c         |  297 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h  |    4 +
- include/linux/bsg-lib.h |   73 ++++++++++++
- 5 files changed, 385 insertions(+), 0 deletions(-)
- create mode 100644 block/bsg-lib.c
- create mode 100644 include/linux/bsg-lib.h
+ drivers/scsi/Kconfig                |    1 +
+ drivers/scsi/scsi_transport_iscsi.c |  114 ++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_bsg_iscsi.h       |  110 +++++++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |    6 ++
+ 4 files changed, 230 insertions(+), 1 deletions(-)
+ create mode 100644 include/scsi/scsi_bsg_iscsi.h
 
-diff --git a/block/Kconfig b/block/Kconfig
-index 60be1e0..e97934e 100644
---- a/block/Kconfig
-+++ b/block/Kconfig
-@@ -65,6 +65,16 @@ config BLK_DEV_BSG
- 
- 	  If unsure, say Y.
- 
-+config BLK_DEV_BSGLIB
-+	bool "Block layer SG support v4 helper lib"
-+	default n
-+	select BLK_DEV_BSG
-+	help
-+	  Subsystems will normally enable this if needed. Users will not
-+	  normally need to manually enable this.
-+
-+	  If unsure, say N.
-+
- config BLK_DEV_INTEGRITY
- 	bool "Block layer data integrity support"
- 	---help---
-diff --git a/block/Makefile b/block/Makefile
-index 0fec4b3..514c6e4 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -8,6 +8,7 @@ obj-$(CONFIG_BLOCK) := elevator.o blk-core.o blk-tag.o blk-sysfs.o \
- 			blk-iopoll.o blk-lib.o ioctl.o genhd.o scsi_ioctl.o
- 
- obj-$(CONFIG_BLK_DEV_BSG)	+= bsg.o
-+obj-$(CONFIG_BLK_DEV_BSGLIB)	+= bsg-lib.o
- obj-$(CONFIG_BLK_CGROUP)	+= blk-cgroup.o
- obj-$(CONFIG_BLK_DEV_THROTTLING)	+= blk-throttle.o
- obj-$(CONFIG_IOSCHED_NOOP)	+= noop-iosched.o
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-new file mode 100644
-index 0000000..f8c0a61
---- /dev/null
-+++ b/block/bsg-lib.c
-@@ -0,0 +1,297 @@
-+/*
-+ *  BSG helper library
-+ *
-+ *  Copyright (C) 2008   James Smart, Emulex Corporation
-+ *  Copyright (C) 2011   Red Hat, Inc.  All rights reserved.
-+ *  Copyright (C) 2011   Mike Christie
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ */
-+#include <linux/slab.h>
-+#include <linux/blkdev.h>
-+#include <linux/delay.h>
-+#include <linux/scatterlist.h>
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 8d9dae8..4a79b9d 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -309,6 +309,7 @@ config SCSI_FC_TGT_ATTRS
+ config SCSI_ISCSI_ATTRS
+ 	tristate "iSCSI Transport Attributes"
+ 	depends on SCSI && NET
++	select BLK_DEV_BSGLIB
+ 	help
+ 	  If you wish to export transport-specific information about
+ 	  each attached iSCSI device to sysfs, say Y.
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 3fd16d7..4b80fbd 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -23,6 +23,7 @@
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
 +#include <linux/bsg-lib.h>
-+#include <scsi/scsi_cmnd.h>
-+
-+/**
-+ * bsg_destroy_job - routine to teardown/delete a bsg job
-+ * @job: bsg_job that is to be torn down
-+ */
-+static void bsg_destroy_job(struct bsg_job *job)
-+{
-+	put_device(job->dev);	/* release reference for the request */
-+
-+	kfree(job->request_payload.sg_list);
-+	kfree(job->reply_payload.sg_list);
-+	kfree(job);
-+}
-+
-+/**
-+ * bsg_job_done - completion routine for bsg requests
-+ * @job: bsg_job that is complete
-+ * @result: job reply result
-+ * @reply_payload_rcv_len: length of payload recvd
-+ *
-+ * The LLD should call this when the bsg job has completed.
-+ */
-+void bsg_job_done(struct bsg_job *job, int result,
-+		  unsigned int reply_payload_rcv_len)
-+{
-+	struct request *req = job->req;
-+	struct request *rsp = req->next_rq;
-+	int err;
-+
-+	err = job->req->errors = result;
-+	if (err < 0)
-+		/* we're only returning the result field in the reply */
-+		job->req->sense_len = sizeof(u32);
-+	else
-+		job->req->sense_len = job->reply_len;
-+	/* we assume all request payload was transferred, residual == 0 */
-+	req->resid_len = 0;
-+
-+	if (rsp) {
-+		WARN_ON(reply_payload_rcv_len > rsp->resid_len);
-+
-+		/* set reply (bidi) residual */
-+		rsp->resid_len -= min(reply_payload_rcv_len, rsp->resid_len);
-+	}
-+	blk_complete_request(req);
-+}
-+EXPORT_SYMBOL_GPL(bsg_job_done);
-+
-+/**
-+ * bsg_softirq_done - softirq done routine for destroying the bsg requests
-+ * @rq: BSG request that holds the job to be destroyed
-+ */
-+static void bsg_softirq_done(struct request *rq)
-+{
-+	struct bsg_job *job = rq->special;
-+
-+	blk_end_request_all(rq, rq->errors);
-+	bsg_destroy_job(job);
-+}
-+
-+static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
-+{
-+	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
-+
-+	BUG_ON(!req->nr_phys_segments);
-+
-+	buf->sg_list = kzalloc(sz, GFP_KERNEL);
-+	if (!buf->sg_list)
-+		return -ENOMEM;
-+	sg_init_table(buf->sg_list, req->nr_phys_segments);
-+	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
-+	buf->payload_len = blk_rq_bytes(req);
-+	return 0;
-+}
-+
-+/**
-+ * bsg_create_job - create the bsg_job structure for the bsg request
-+ * @dev: device that is being sent the bsg request
-+ * @req: BSG request that needs a job structure
-+ */
-+static int bsg_create_job(struct device *dev, struct request *req)
-+{
-+	struct request *rsp = req->next_rq;
-+	struct request_queue *q = req->q;
-+	struct bsg_job *job;
-+	int ret;
-+
-+	BUG_ON(req->special);
-+
-+	job = kzalloc(sizeof(struct bsg_job) + q->bsg_job_size, GFP_KERNEL);
-+	if (!job)
-+		return -ENOMEM;
-+
-+	req->special = job;
-+	job->req = req;
-+	if (q->bsg_job_size)
-+		job->dd_data = (void *)&job[1];
-+	job->request = req->cmd;
-+	job->request_len = req->cmd_len;
-+	job->reply = req->sense;
-+	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
-+						 * allocated */
-+	if (req->bio) {
-+		ret = bsg_map_buffer(&job->request_payload, req);
-+		if (ret)
-+			goto failjob_rls_job;
-+	}
-+	if (rsp && rsp->bio) {
-+		ret = bsg_map_buffer(&job->reply_payload, rsp);
-+		if (ret)
-+			goto failjob_rls_rqst_payload;
-+	}
-+	job->dev = dev;
-+	/* take a reference for the request */
-+	get_device(job->dev);
-+	return 0;
-+
-+failjob_rls_rqst_payload:
-+	kfree(job->request_payload.sg_list);
-+failjob_rls_job:
-+	kfree(job);
-+	return -ENOMEM;
-+}
-+
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -31,6 +32,7 @@
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/iscsi_if.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_bsg_iscsi.h>
+ 
+ #define ISCSI_SESSION_ATTRS 23
+ #define ISCSI_CONN_ATTRS 13
+@@ -270,6 +272,99 @@ struct iscsi_endpoint *iscsi_lookup_endpoint(u64 handle)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_lookup_endpoint);
+ 
 +/*
-+ * bsg_goose_queue - restart queue in case it was stopped
-+ * @q: request q to be restarted
++ * BSG support
 + */
-+void bsg_goose_queue(struct request_queue *q)
-+{
-+	if (!q)
-+		return;
-+
-+	blk_run_queue_async(q);
-+}
-+EXPORT_SYMBOL_GPL(bsg_goose_queue);
-+
 +/**
-+ * bsg_request_fn - generic handler for bsg requests
-+ * @q: request queue to manage
-+ *
-+ * On error the create_bsg_job function should return a -Exyz error value
-+ * that will be set to the req->errors.
-+ *
-+ * Drivers/subsys should pass this to the queue init function.
++ * iscsi_bsg_host_dispatch - Dispatch command to LLD.
++ * @job: bsg job to be processed
 + */
-+void bsg_request_fn(struct request_queue *q)
++static int iscsi_bsg_host_dispatch(struct bsg_job *job)
 +{
-+	struct device *dev = q->queuedata;
-+	struct request *req;
-+	struct bsg_job *job;
++	struct Scsi_Host *shost = iscsi_job_to_shost(job);
++	struct iscsi_bsg_request *req = job->request;
++	struct iscsi_bsg_reply *reply = job->reply;
++	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
++	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
 +	int ret;
 +
-+	if (!get_device(dev))
-+		return;
-+
-+	while (1) {
-+		req = blk_fetch_request(q);
-+		if (!req)
-+			break;
-+		spin_unlock_irq(q->queue_lock);
-+
-+		ret = bsg_create_job(dev, req);
-+		if (ret) {
-+			req->errors = ret;
-+			blk_end_request_all(req, ret);
-+			spin_lock_irq(q->queue_lock);
-+			continue;
-+		}
-+
-+		job = req->special;
-+		ret = q->bsg_job_fn(job);
-+		spin_lock_irq(q->queue_lock);
-+		if (ret)
-+			break;
++	/* check if we have the msgcode value at least */
++	if (job->request_len < sizeof(uint32_t)) {
++		ret = -ENOMSG;
++		goto fail_host_msg;
 +	}
 +
-+	spin_unlock_irq(q->queue_lock);
-+	put_device(dev);
-+	spin_lock_irq(q->queue_lock);
++	/* Validate the host command */
++	switch (req->msgcode) {
++	case ISCSI_BSG_HST_VENDOR:
++		cmdlen += sizeof(struct iscsi_bsg_host_vendor);
++		if ((shost->hostt->vendor_id == 0L) ||
++		    (req->rqst_data.h_vendor.vendor_id !=
++			shost->hostt->vendor_id)) {
++			ret = -ESRCH;
++			goto fail_host_msg;
++		}
++		break;
++	default:
++		ret = -EBADR;
++		goto fail_host_msg;
++	}
++
++	/* check if we really have all the request data needed */
++	if (job->request_len < cmdlen) {
++		ret = -ENOMSG;
++		goto fail_host_msg;
++	}
++
++	ret = i->iscsi_transport->bsg_request(job);
++	if (!ret)
++		return 0;
++
++fail_host_msg:
++	/* return the errno failure code as the only status */
++	BUG_ON(job->reply_len < sizeof(uint32_t));
++	reply->reply_payload_rcv_len = 0;
++	reply->result = ret;
++	job->reply_len = sizeof(uint32_t);
++	bsg_job_done(job, ret, 0);
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(bsg_request_fn);
 +
 +/**
-+ * bsg_setup_queue - Create and add the bsg hooks so we can receive requests
-+ * @dev: device to attach bsg device to
-+ * @q: request queue setup by caller
-+ * @name: device to give bsg device
-+ * @job_fn: bsg job handler
-+ * @dd_job_size: size of LLD data needed for each job
-+ *
-+ * The caller should have setup the reuqest queue with bsg_request_fn
-+ * as the request_fn.
++ * iscsi_bsg_host_add - Create and add the bsg hooks to receive requests
++ * @shost: shost for iscsi_host
++ * @cls_host: iscsi_cls_host adding the structures to
 + */
-+int bsg_setup_queue(struct device *dev, struct request_queue *q,
-+		    char *name, bsg_job_fn *job_fn, int dd_job_size)
++static int
++iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
 +{
++	struct device *dev = &shost->shost_gendev;
++	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
++	struct request_queue *q;
++	char bsg_name[20];
 +	int ret;
 +
-+	q->queuedata = dev;
-+	q->bsg_job_size = dd_job_size;
-+	q->bsg_job_fn = job_fn;
-+	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
-+	blk_queue_softirq_done(q, bsg_softirq_done);
-+	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
++	if (!i->iscsi_transport->bsg_request)
++		return -ENOTSUPP;
 +
-+	ret = bsg_register_queue(q, dev, name, NULL);
++	snprintf(bsg_name, sizeof(bsg_name), "iscsi_host%d", shost->host_no);
++
++	q = __scsi_alloc_queue(shost, bsg_request_fn);
++	if (!q)
++		return -ENOMEM;
++
++	ret = bsg_setup_queue(dev, q, bsg_name, iscsi_bsg_host_dispatch, 0);
 +	if (ret) {
-+		printk(KERN_ERR "%s: bsg interface failed to "
-+		       "initialize - register queue\n", dev->kobj.name);
++		shost_printk(KERN_ERR, shost, "bsg interface failed to "
++			     "initialize - no request queue\n");
++		blk_cleanup_queue(q);
 +		return ret;
 +	}
 +
++	ihost->bsg_q = q;
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(bsg_setup_queue);
 +
-+/**
-+ * bsg_remove_queue - Deletes the bsg dev from the q
-+ * @q:	the request_queue that is to be torn down.
-+ *
-+ * Notes:
-+ *   Before unregistering the queue empty any requests that are blocked
-+ */
-+void bsg_remove_queue(struct request_queue *q)
-+{
-+	struct request *req; /* block request */
-+	int counts; /* totals for request_list count and starved */
+ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
+ 			    struct device *cdev)
+ {
+@@ -279,13 +374,30 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
+ 	memset(ihost, 0, sizeof(*ihost));
+ 	atomic_set(&ihost->nr_scans, 0);
+ 	mutex_init(&ihost->mutex);
 +
-+	if (!q)
-+		return;
++	iscsi_bsg_host_add(shost, ihost);
++	/* ignore any bsg add error - we just can't do sgio */
 +
-+	/* Stop taking in new requests */
-+	spin_lock_irq(q->queue_lock);
-+	blk_stop_queue(q);
-+
-+	/* drain all requests in the queue */
-+	while (1) {
-+		/* need the lock to fetch a request
-+		 * this may fetch the same reqeust as the previous pass
-+		 */
-+		req = blk_fetch_request(q);
-+		/* save requests in use and starved */
-+		counts = q->rq.count[0] + q->rq.count[1] +
-+			 q->rq.starved[0] + q->rq.starved[1];
-+		spin_unlock_irq(q->queue_lock);
-+		/* any requests still outstanding? */
-+		if (counts == 0)
-+			break;
-+
-+		/* This may be the same req as the previous iteration,
-+		 * always send the blk_end_request_all after a prefetch.
-+		 * It is not okay to not end the request because the
-+		 * prefetch started the request.
-+		 */
-+		if (req) {
-+			/* return -ENXIO to indicate that this queue is
-+			 * going away
-+			 */
-+			req->errors = -ENXIO;
-+			blk_end_request_all(req, -ENXIO);
-+		}
-+
-+		msleep(200); /* allow bsg to possibly finish */
-+		spin_lock_irq(q->queue_lock);
-+	}
-+	bsg_unregister_queue(q);
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(bsg_remove_queue);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 1a23722..6434d66 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -30,6 +30,7 @@ struct request_pm_state;
- struct blk_trace;
- struct request;
- struct sg_io_hdr;
-+struct bsg_job;
++
++static int iscsi_remove_host(struct transport_container *tc,
++			     struct device *dev, struct device *cdev)
++{
++	struct Scsi_Host *shost = dev_to_shost(dev);
++	struct iscsi_cls_host *ihost = shost->shost_data;
++
++	if (ihost->bsg_q) {
++		bsg_remove_queue(ihost->bsg_q);
++		blk_cleanup_queue(ihost->bsg_q);
++	}
+ 	return 0;
+ }
  
- #define BLKDEV_MIN_RQ	4
- #define BLKDEV_MAX_RQ	128	/* Default maximum */
-@@ -209,6 +210,7 @@ typedef int (merge_bvec_fn) (struct request_queue *, struct bvec_merge_data *,
- typedef void (softirq_done_fn)(struct request *);
- typedef int (dma_drain_needed_fn)(struct request *);
- typedef int (lld_busy_fn) (struct request_queue *q);
-+typedef int (bsg_job_fn) (struct bsg_job *);
+ static DECLARE_TRANSPORT_CLASS(iscsi_host_class,
+ 			       "iscsi_host",
+ 			       iscsi_setup_host,
+-			       NULL,
++			       iscsi_remove_host,
+ 			       NULL);
  
- enum blk_eh_timer_return {
- 	BLK_EH_NOT_HANDLED,
-@@ -376,6 +378,8 @@ struct request_queue
- 	struct mutex		sysfs_lock;
- 
- #if defined(CONFIG_BLK_DEV_BSG)
-+	bsg_job_fn		*bsg_job_fn;
-+	int			bsg_job_size;
- 	struct bsg_class_device bsg_dev;
- #endif
- 
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+ static DECLARE_TRANSPORT_CLASS(iscsi_session_class,
+diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
 new file mode 100644
-index 0000000..f55ab8c
+index 0000000..fd5689d
 --- /dev/null
-+++ b/include/linux/bsg-lib.h
-@@ -0,0 +1,73 @@
++++ b/include/scsi/scsi_bsg_iscsi.h
+@@ -0,0 +1,110 @@
 +/*
-+ *  BSG helper library
++ *  iSCSI Transport BSG Interface
 + *
-+ *  Copyright (C) 2008   James Smart, Emulex Corporation
-+ *  Copyright (C) 2011   Red Hat, Inc.  All rights reserved.
-+ *  Copyright (C) 2011   Mike Christie
++ *  Copyright (C) 2009   James Smart, Emulex Corporation
 + *
 + *  This program is free software; you can redistribute it and/or modify
 + *  it under the terms of the GNU General Public License as published by
@@ -429,57 +219,129 @@ index 0000000..f55ab8c
 + *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 + *
 + */
-+#ifndef _BLK_BSG_
-+#define _BLK_BSG_
 +
-+#include <linux/blkdev.h>
++#ifndef SCSI_BSG_ISCSI_H
++#define SCSI_BSG_ISCSI_H
 +
-+struct request;
-+struct device;
-+struct scatterlist;
-+struct request_queue;
++/*
++ * This file intended to be included by both kernel and user space
++ */
 +
-+struct bsg_buffer {
-+	unsigned int payload_len;
-+	int sg_cnt;
-+	struct scatterlist *sg_list;
-+};
++#include <scsi/scsi.h>
 +
-+struct bsg_job {
-+	struct device *dev;
-+	struct request *req;
++/*
++ * iSCSI Transport SGIO v4 BSG Message Support
++ */
 +
-+	/* Transport/driver specific request/reply structs */
-+	void *request;
-+	void *reply;
++/* Default BSG request timeout (in seconds) */
++#define ISCSI_DEFAULT_BSG_TIMEOUT      (10 * HZ)
 +
-+	unsigned int request_len;
-+	unsigned int reply_len;
++
++/*
++ * Request Message Codes supported by the iSCSI Transport
++ */
++
++/* define the class masks for the message codes */
++#define ISCSI_BSG_CLS_MASK     0xF0000000      /* find object class */
++#define ISCSI_BSG_HST_MASK     0x80000000      /* iscsi host class */
++
++/* iscsi host Message Codes */
++#define ISCSI_BSG_HST_VENDOR           (ISCSI_BSG_HST_MASK | 0x000000FF)
++
++
++/*
++ * iSCSI Host Messages
++ */
++
++/* ISCSI_BSG_HST_VENDOR : */
++
++/* Request:
++ * Note: When specifying vendor_id, be sure to read the Vendor Type and ID
++ *   formatting requirements specified in scsi_netlink.h
++ */
++struct iscsi_bsg_host_vendor {
 +	/*
-+	 * On entry : reply_len indicates the buffer size allocated for
-+	 * the reply.
-+	 *
-+	 * Upon completion : the message handler must set reply_len
-+	 *  to indicates the size of the reply to be returned to the
-+	 *  caller.
++	 * Identifies the vendor that the message is formatted for. This
++	 * should be the recipient of the message.
 +	 */
++	uint64_t vendor_id;
 +
-+	/* DMA payloads for the request/response */
-+	struct bsg_buffer request_payload;
-+	struct bsg_buffer reply_payload;
-+
-+	void *dd_data;		/* Used for driver-specific storage */
++	/* start of vendor command area */
++	uint32_t vendor_cmd[0];
 +};
 +
-+void bsg_job_done(struct bsg_job *job, int result,
-+		  unsigned int reply_payload_rcv_len);
-+int bsg_setup_queue(struct device *dev, struct request_queue *q, char *name,
-+		    bsg_job_fn *job_fn, int dd_job_size);
-+void bsg_request_fn(struct request_queue *q);
-+void bsg_remove_queue(struct request_queue *q);
-+void bsg_goose_queue(struct request_queue *q);
++/* Response:
++ */
++struct iscsi_bsg_host_vendor_reply {
++	/* start of vendor response area */
++	uint32_t vendor_rsp[0];
++};
 +
-+#endif
++
++/* request (CDB) structure of the sg_io_v4 */
++struct iscsi_bsg_request {
++	uint32_t msgcode;
++	union {
++		struct iscsi_bsg_host_vendor    h_vendor;
++	} rqst_data;
++} __attribute__((packed));
++
++
++/* response (request sense data) structure of the sg_io_v4 */
++struct iscsi_bsg_reply {
++	/*
++	 * The completion result. Result exists in two forms:
++	 * if negative, it is an -Exxx system errno value. There will
++	 * be no further reply information supplied.
++	 * else, it's the 4-byte scsi error result, with driver, host,
++	 * msg and status fields. The per-msgcode reply structure
++	 * will contain valid data.
++	 */
++	uint32_t result;
++
++	/* If there was reply_payload, how much was recevied ? */
++	uint32_t reply_payload_rcv_len;
++
++	union {
++		struct iscsi_bsg_host_vendor_reply      vendor_reply;
++	} reply_data;
++};
++
++
++#endif /* SCSI_BSG_ISCSI_H */
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index bf8f529..60f1a25 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -37,6 +37,7 @@ struct iscsi_cls_conn;
+ struct iscsi_conn;
+ struct iscsi_task;
+ struct sockaddr;
++struct bsg_job;
+ 
+ /**
+  * struct iscsi_transport - iSCSI Transport template
+@@ -137,6 +138,7 @@ struct iscsi_transport {
+ 	int (*tgt_dscvr) (struct Scsi_Host *shost, enum iscsi_tgt_dscvr type,
+ 			  uint32_t enable, struct sockaddr *dst_addr);
+ 	int (*set_path) (struct Scsi_Host *shost, struct iscsi_path *params);
++	int (*bsg_request)(struct bsg_job *job);
+ };
+ 
+ /*
+@@ -216,8 +218,12 @@ struct iscsi_cls_session {
+ struct iscsi_cls_host {
+ 	atomic_t nr_scans;
+ 	struct mutex mutex;
++	struct request_queue *bsg_q;
+ };
+ 
++#define iscsi_job_to_shost(_job) \
++        dev_to_shost(_job->dev)
++
+ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
+ 				void (*fn)(struct iscsi_cls_session *));
+ 
 -- 
 1.7.2.3
 
