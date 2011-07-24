@@ -1,208 +1,485 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH RFC/RFT 05/10] libfc: convert to blk bsg lib
-Date: Sun, 24 Jul 2011 03:59:19 -0500
-Message-ID: <1311497964-26842-6-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH RFC/RFT 01/10] block: add bsg heler library
+Date: Sun, 24 Jul 2011 03:59:15 -0500
+Message-ID: <1311497964-26842-2-git-send-email-michaelc@cs.wisc.edu>
 References: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55186 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:20177 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752121Ab1GXI4l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2011 04:56:41 -0400
+	id S1751567Ab1GXI4c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Jul 2011 04:56:32 -0400
 In-Reply-To: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This patch converts libfc to the blk bsg lib. The differences
-visible to the driver are:
-- fc_bsg_job is now named bsg_job.
-- no rport pointer. Can access it through the device pointer.
-- the request and reply pointers on the blk_bsg_job struct
-  are now void pointers, so you cannot do bsg_job->request->some_field.
+This moves the FC classes bsg code to the block layer and
+makes it a lib so that other classes like iscsi and SAS can use it.
 
-Patch is only quickly tested with fcping and made over scsi-misc.
+It is helpful because working with the request queue, bios,
+creating scatterlists, etc are a pain that the LLD does not
+have to worry about with normal IOs and should not have to
+worry about for bsg requests.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Robert Love <robert.w.love@intel.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>
 ---
- drivers/scsi/libfc/fc_lport.c |   51 ++++++++++++++++++----------------------
- include/scsi/libfc.h          |    3 +-
- 2 files changed, 25 insertions(+), 29 deletions(-)
+ block/Kconfig           |   10 ++
+ block/Makefile          |    1 +
+ block/bsg-lib.c         |  297 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h  |    4 +
+ include/linux/bsg-lib.h |   73 ++++++++++++
+ 5 files changed, 385 insertions(+), 0 deletions(-)
+ create mode 100644 block/bsg-lib.c
+ create mode 100644 include/linux/bsg-lib.h
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e008b16..6043173 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -140,7 +140,7 @@ static const char *fc_lport_state_names[] = {
-  * @offset:   The offset into the response data
-  */
- struct fc_bsg_info {
--	struct fc_bsg_job *job;
-+	struct bsg_job *job;
- 	struct fc_lport *lport;
- 	u16 rsp_code;
- 	struct scatterlist *sg;
-@@ -1653,18 +1653,18 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			      void *info_arg)
- {
- 	struct fc_bsg_info *info = info_arg;
--	struct fc_bsg_job *job = info->job;
-+	struct bsg_job *job = info->job;
-+	struct fc_bsg_reply *reply = job->reply;
- 	struct fc_lport *lport = info->lport;
- 	struct fc_frame_header *fh;
- 	size_t len;
- 	void *buf;
+diff --git a/block/Kconfig b/block/Kconfig
+index 60be1e0..e97934e 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -65,6 +65,16 @@ config BLK_DEV_BSG
  
- 	if (IS_ERR(fp)) {
--		job->reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
-+		reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
- 			-ECONNABORTED : -ETIMEDOUT;
- 		job->reply_len = sizeof(uint32_t);
--		job->state_flags |= FC_RQST_STATE_DONE;
--		job->job_done(job);
-+		bsg_job_done(job, reply->result, reply->reply_payload_rcv_len);
- 		kfree(info);
- 		return;
- 	}
-@@ -1681,25 +1681,24 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			(unsigned short)fc_frame_payload_op(fp);
+ 	  If unsure, say Y.
  
- 		/* Save the reply status of the job */
--		job->reply->reply_data.ctels_reply.status =
-+		reply->reply_data.ctels_reply.status =
- 			(cmd == info->rsp_code) ?
- 			FC_CTELS_STATUS_OK : FC_CTELS_STATUS_REJECT;
- 	}
++config BLK_DEV_BSGLIB
++	bool "Block layer SG support v4 helper lib"
++	default n
++	select BLK_DEV_BSG
++	help
++	  Subsystems will normally enable this if needed. Users will not
++	  normally need to manually enable this.
++
++	  If unsure, say N.
++
+ config BLK_DEV_INTEGRITY
+ 	bool "Block layer data integrity support"
+ 	---help---
+diff --git a/block/Makefile b/block/Makefile
+index 0fec4b3..514c6e4 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -8,6 +8,7 @@ obj-$(CONFIG_BLOCK) := elevator.o blk-core.o blk-tag.o blk-sysfs.o \
+ 			blk-iopoll.o blk-lib.o ioctl.o genhd.o scsi_ioctl.o
  
--	job->reply->reply_payload_rcv_len +=
-+	reply->reply_payload_rcv_len +=
- 		fc_copy_buffer_to_sglist(buf, len, info->sg, &info->nents,
- 					 &info->offset, KM_BIO_SRC_IRQ, NULL);
- 
- 	if (fr_eof(fp) == FC_EOF_T &&
- 	    (ntoh24(fh->fh_f_ctl) & (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) ==
- 	    (FC_FC_LAST_SEQ | FC_FC_END_SEQ)) {
--		if (job->reply->reply_payload_rcv_len >
-+		if (reply->reply_payload_rcv_len >
- 		    job->reply_payload.payload_len)
--			job->reply->reply_payload_rcv_len =
-+			reply->reply_payload_rcv_len =
- 				job->reply_payload.payload_len;
--		job->reply->result = 0;
--		job->state_flags |= FC_RQST_STATE_DONE;
--		job->job_done(job);
-+		reply->result = 0;
-+		bsg_job_done(job, reply->result, reply->reply_payload_rcv_len);
- 		kfree(info);
- 	}
- 	fc_frame_free(fp);
-@@ -1715,7 +1714,7 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
-  * Locking Note: The lport lock is expected to be held before calling
-  * this routine.
-  */
--static int fc_lport_els_request(struct fc_bsg_job *job,
-+static int fc_lport_els_request(struct bsg_job *job,
- 				struct fc_lport *lport,
- 				u32 did, u32 tov)
- {
-@@ -1776,7 +1775,7 @@ static int fc_lport_els_request(struct fc_bsg_job *job,
-  * Locking Note: The lport lock is expected to be held before calling
-  * this routine.
-  */
--static int fc_lport_ct_request(struct fc_bsg_job *job,
-+static int fc_lport_ct_request(struct bsg_job *job,
- 			       struct fc_lport *lport, u32 did, u32 tov)
- {
- 	struct fc_bsg_info *info;
-@@ -1832,45 +1831,41 @@ static int fc_lport_ct_request(struct fc_bsg_job *job,
-  *			    FC Passthrough requests
-  * @job: The BSG passthrough job
-  */
--int fc_lport_bsg_request(struct fc_bsg_job *job)
-+int fc_lport_bsg_request(struct bsg_job *job)
- {
- 	struct request *rsp = job->req->next_rq;
--	struct Scsi_Host *shost = job->shost;
-+	struct fc_bsg_request *req = job->request;
-+	struct fc_bsg_reply *reply = job->reply;
-+	struct Scsi_Host *shost = fc_bsg_to_shost(job);
- 	struct fc_lport *lport = shost_priv(shost);
- 	struct fc_rport *rport;
- 	struct fc_rport_priv *rdata;
- 	int rc = -EINVAL;
- 	u32 did;
- 
--	job->reply->reply_payload_rcv_len = 0;
-+	reply->reply_payload_rcv_len = 0;
- 	if (rsp)
- 		rsp->resid_len = job->reply_payload.payload_len;
- 
- 	mutex_lock(&lport->lp_mutex);
- 
--	switch (job->request->msgcode) {
-+	switch (req->msgcode) {
- 	case FC_BSG_RPT_ELS:
--		rport = job->rport;
--		if (!rport)
--			break;
--
-+		rport = dev_to_rport(job->dev);
- 		rdata = rport->dd_data;
- 		rc = fc_lport_els_request(job, lport, rport->port_id,
- 					  rdata->e_d_tov);
- 		break;
- 
- 	case FC_BSG_RPT_CT:
--		rport = job->rport;
--		if (!rport)
--			break;
--
-+		rport = dev_to_rport(job->dev);
- 		rdata = rport->dd_data;
- 		rc = fc_lport_ct_request(job, lport, rport->port_id,
- 					 rdata->e_d_tov);
- 		break;
- 
- 	case FC_BSG_HST_CT:
--		did = ntoh24(job->request->rqst_data.h_ct.port_id);
-+		did = ntoh24(req->rqst_data.h_ct.port_id);
- 		if (did == FC_FID_DIR_SERV)
- 			rdata = lport->dns_rdata;
- 		else
-@@ -1883,7 +1878,7 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
- 		break;
- 
- 	case FC_BSG_HST_ELS_NOLOGIN:
--		did = ntoh24(job->request->rqst_data.h_els.port_id);
-+		did = ntoh24(req->rqst_data.h_els.port_id);
- 		rc = fc_lport_els_request(job, lport, did, lport->e_d_tov);
- 		break;
- 	}
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 7d96829..eb7fc9f 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -23,6 +23,7 @@
- #include <linux/timer.h>
- #include <linux/if.h>
- #include <linux/percpu.h>
+ obj-$(CONFIG_BLK_DEV_BSG)	+= bsg.o
++obj-$(CONFIG_BLK_DEV_BSGLIB)	+= bsg-lib.o
+ obj-$(CONFIG_BLK_CGROUP)	+= blk-cgroup.o
+ obj-$(CONFIG_BLK_DEV_THROTTLING)	+= blk-throttle.o
+ obj-$(CONFIG_IOSCHED_NOOP)	+= noop-iosched.o
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+new file mode 100644
+index 0000000..f8c0a61
+--- /dev/null
++++ b/block/bsg-lib.c
+@@ -0,0 +1,297 @@
++/*
++ *  BSG helper library
++ *
++ *  Copyright (C) 2008   James Smart, Emulex Corporation
++ *  Copyright (C) 2011   Red Hat, Inc.  All rights reserved.
++ *  Copyright (C) 2011   Mike Christie
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ */
++#include <linux/slab.h>
++#include <linux/blkdev.h>
++#include <linux/delay.h>
++#include <linux/scatterlist.h>
 +#include <linux/bsg-lib.h>
++#include <scsi/scsi_cmnd.h>
++
++/**
++ * bsg_destroy_job - routine to teardown/delete a bsg job
++ * @job: bsg_job that is to be torn down
++ */
++static void bsg_destroy_job(struct bsg_job *job)
++{
++	put_device(job->dev);	/* release reference for the request */
++
++	kfree(job->request_payload.sg_list);
++	kfree(job->reply_payload.sg_list);
++	kfree(job);
++}
++
++/**
++ * bsg_job_done - completion routine for bsg requests
++ * @job: bsg_job that is complete
++ * @result: job reply result
++ * @reply_payload_rcv_len: length of payload recvd
++ *
++ * The LLD should call this when the bsg job has completed.
++ */
++void bsg_job_done(struct bsg_job *job, int result,
++		  unsigned int reply_payload_rcv_len)
++{
++	struct request *req = job->req;
++	struct request *rsp = req->next_rq;
++	int err;
++
++	err = job->req->errors = result;
++	if (err < 0)
++		/* we're only returning the result field in the reply */
++		job->req->sense_len = sizeof(u32);
++	else
++		job->req->sense_len = job->reply_len;
++	/* we assume all request payload was transferred, residual == 0 */
++	req->resid_len = 0;
++
++	if (rsp) {
++		WARN_ON(reply_payload_rcv_len > rsp->resid_len);
++
++		/* set reply (bidi) residual */
++		rsp->resid_len -= min(reply_payload_rcv_len, rsp->resid_len);
++	}
++	blk_complete_request(req);
++}
++EXPORT_SYMBOL_GPL(bsg_job_done);
++
++/**
++ * bsg_softirq_done - softirq done routine for destroying the bsg requests
++ * @rq: BSG request that holds the job to be destroyed
++ */
++static void bsg_softirq_done(struct request *rq)
++{
++	struct bsg_job *job = rq->special;
++
++	blk_end_request_all(rq, rq->errors);
++	bsg_destroy_job(job);
++}
++
++static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
++{
++	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
++
++	BUG_ON(!req->nr_phys_segments);
++
++	buf->sg_list = kzalloc(sz, GFP_KERNEL);
++	if (!buf->sg_list)
++		return -ENOMEM;
++	sg_init_table(buf->sg_list, req->nr_phys_segments);
++	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
++	buf->payload_len = blk_rq_bytes(req);
++	return 0;
++}
++
++/**
++ * bsg_create_job - create the bsg_job structure for the bsg request
++ * @dev: device that is being sent the bsg request
++ * @req: BSG request that needs a job structure
++ */
++static int bsg_create_job(struct device *dev, struct request *req)
++{
++	struct request *rsp = req->next_rq;
++	struct request_queue *q = req->q;
++	struct bsg_job *job;
++	int ret;
++
++	BUG_ON(req->special);
++
++	job = kzalloc(sizeof(struct bsg_job) + q->bsg_job_size, GFP_KERNEL);
++	if (!job)
++		return -ENOMEM;
++
++	req->special = job;
++	job->req = req;
++	if (q->bsg_job_size)
++		job->dd_data = (void *)&job[1];
++	job->request = req->cmd;
++	job->request_len = req->cmd_len;
++	job->reply = req->sense;
++	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
++						 * allocated */
++	if (req->bio) {
++		ret = bsg_map_buffer(&job->request_payload, req);
++		if (ret)
++			goto failjob_rls_job;
++	}
++	if (rsp && rsp->bio) {
++		ret = bsg_map_buffer(&job->reply_payload, rsp);
++		if (ret)
++			goto failjob_rls_rqst_payload;
++	}
++	job->dev = dev;
++	/* take a reference for the request */
++	get_device(job->dev);
++	return 0;
++
++failjob_rls_rqst_payload:
++	kfree(job->request_payload.sg_list);
++failjob_rls_job:
++	kfree(job);
++	return -ENOMEM;
++}
++
++/*
++ * bsg_goose_queue - restart queue in case it was stopped
++ * @q: request q to be restarted
++ */
++void bsg_goose_queue(struct request_queue *q)
++{
++	if (!q)
++		return;
++
++	blk_run_queue_async(q);
++}
++EXPORT_SYMBOL_GPL(bsg_goose_queue);
++
++/**
++ * bsg_request_fn - generic handler for bsg requests
++ * @q: request queue to manage
++ *
++ * On error the create_bsg_job function should return a -Exyz error value
++ * that will be set to the req->errors.
++ *
++ * Drivers/subsys should pass this to the queue init function.
++ */
++void bsg_request_fn(struct request_queue *q)
++{
++	struct device *dev = q->queuedata;
++	struct request *req;
++	struct bsg_job *job;
++	int ret;
++
++	if (!get_device(dev))
++		return;
++
++	while (1) {
++		req = blk_fetch_request(q);
++		if (!req)
++			break;
++		spin_unlock_irq(q->queue_lock);
++
++		ret = bsg_create_job(dev, req);
++		if (ret) {
++			req->errors = ret;
++			blk_end_request_all(req, ret);
++			spin_lock_irq(q->queue_lock);
++			continue;
++		}
++
++		job = req->special;
++		ret = q->bsg_job_fn(job);
++		spin_lock_irq(q->queue_lock);
++		if (ret)
++			break;
++	}
++
++	spin_unlock_irq(q->queue_lock);
++	put_device(dev);
++	spin_lock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL_GPL(bsg_request_fn);
++
++/**
++ * bsg_setup_queue - Create and add the bsg hooks so we can receive requests
++ * @dev: device to attach bsg device to
++ * @q: request queue setup by caller
++ * @name: device to give bsg device
++ * @job_fn: bsg job handler
++ * @dd_job_size: size of LLD data needed for each job
++ *
++ * The caller should have setup the reuqest queue with bsg_request_fn
++ * as the request_fn.
++ */
++int bsg_setup_queue(struct device *dev, struct request_queue *q,
++		    char *name, bsg_job_fn *job_fn, int dd_job_size)
++{
++	int ret;
++
++	q->queuedata = dev;
++	q->bsg_job_size = dd_job_size;
++	q->bsg_job_fn = job_fn;
++	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
++	blk_queue_softirq_done(q, bsg_softirq_done);
++	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
++
++	ret = bsg_register_queue(q, dev, name, NULL);
++	if (ret) {
++		printk(KERN_ERR "%s: bsg interface failed to "
++		       "initialize - register queue\n", dev->kobj.name);
++		return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(bsg_setup_queue);
++
++/**
++ * bsg_remove_queue - Deletes the bsg dev from the q
++ * @q:	the request_queue that is to be torn down.
++ *
++ * Notes:
++ *   Before unregistering the queue empty any requests that are blocked
++ */
++void bsg_remove_queue(struct request_queue *q)
++{
++	struct request *req; /* block request */
++	int counts; /* totals for request_list count and starved */
++
++	if (!q)
++		return;
++
++	/* Stop taking in new requests */
++	spin_lock_irq(q->queue_lock);
++	blk_stop_queue(q);
++
++	/* drain all requests in the queue */
++	while (1) {
++		/* need the lock to fetch a request
++		 * this may fetch the same reqeust as the previous pass
++		 */
++		req = blk_fetch_request(q);
++		/* save requests in use and starved */
++		counts = q->rq.count[0] + q->rq.count[1] +
++			 q->rq.starved[0] + q->rq.starved[1];
++		spin_unlock_irq(q->queue_lock);
++		/* any requests still outstanding? */
++		if (counts == 0)
++			break;
++
++		/* This may be the same req as the previous iteration,
++		 * always send the blk_end_request_all after a prefetch.
++		 * It is not okay to not end the request because the
++		 * prefetch started the request.
++		 */
++		if (req) {
++			/* return -ENXIO to indicate that this queue is
++			 * going away
++			 */
++			req->errors = -ENXIO;
++			blk_end_request_all(req, -ENXIO);
++		}
++
++		msleep(200); /* allow bsg to possibly finish */
++		spin_lock_irq(q->queue_lock);
++	}
++	bsg_unregister_queue(q);
++}
++EXPORT_SYMBOL_GPL(bsg_remove_queue);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1a23722..6434d66 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -30,6 +30,7 @@ struct request_pm_state;
+ struct blk_trace;
+ struct request;
+ struct sg_io_hdr;
++struct bsg_job;
  
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_fc.h>
-@@ -1055,7 +1056,7 @@ int fc_lport_reset(struct fc_lport *);
- int fc_set_mfs(struct fc_lport *, u32 mfs);
- struct fc_lport *libfc_vport_create(struct fc_vport *, int privsize);
- struct fc_lport *fc_vport_id_lookup(struct fc_lport *, u32 port_id);
--int fc_lport_bsg_request(struct fc_bsg_job *);
-+int fc_lport_bsg_request(struct bsg_job *);
- void fc_lport_set_local_id(struct fc_lport *, u32 port_id);
- void fc_lport_iterate(void (*func)(struct fc_lport *, void *), void *);
+ #define BLKDEV_MIN_RQ	4
+ #define BLKDEV_MAX_RQ	128	/* Default maximum */
+@@ -209,6 +210,7 @@ typedef int (merge_bvec_fn) (struct request_queue *, struct bvec_merge_data *,
+ typedef void (softirq_done_fn)(struct request *);
+ typedef int (dma_drain_needed_fn)(struct request *);
+ typedef int (lld_busy_fn) (struct request_queue *q);
++typedef int (bsg_job_fn) (struct bsg_job *);
  
+ enum blk_eh_timer_return {
+ 	BLK_EH_NOT_HANDLED,
+@@ -376,6 +378,8 @@ struct request_queue
+ 	struct mutex		sysfs_lock;
+ 
+ #if defined(CONFIG_BLK_DEV_BSG)
++	bsg_job_fn		*bsg_job_fn;
++	int			bsg_job_size;
+ 	struct bsg_class_device bsg_dev;
+ #endif
+ 
+diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+new file mode 100644
+index 0000000..f55ab8c
+--- /dev/null
++++ b/include/linux/bsg-lib.h
+@@ -0,0 +1,73 @@
++/*
++ *  BSG helper library
++ *
++ *  Copyright (C) 2008   James Smart, Emulex Corporation
++ *  Copyright (C) 2011   Red Hat, Inc.  All rights reserved.
++ *  Copyright (C) 2011   Mike Christie
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ */
++#ifndef _BLK_BSG_
++#define _BLK_BSG_
++
++#include <linux/blkdev.h>
++
++struct request;
++struct device;
++struct scatterlist;
++struct request_queue;
++
++struct bsg_buffer {
++	unsigned int payload_len;
++	int sg_cnt;
++	struct scatterlist *sg_list;
++};
++
++struct bsg_job {
++	struct device *dev;
++	struct request *req;
++
++	/* Transport/driver specific request/reply structs */
++	void *request;
++	void *reply;
++
++	unsigned int request_len;
++	unsigned int reply_len;
++	/*
++	 * On entry : reply_len indicates the buffer size allocated for
++	 * the reply.
++	 *
++	 * Upon completion : the message handler must set reply_len
++	 *  to indicates the size of the reply to be returned to the
++	 *  caller.
++	 */
++
++	/* DMA payloads for the request/response */
++	struct bsg_buffer request_payload;
++	struct bsg_buffer reply_payload;
++
++	void *dd_data;		/* Used for driver-specific storage */
++};
++
++void bsg_job_done(struct bsg_job *job, int result,
++		  unsigned int reply_payload_rcv_len);
++int bsg_setup_queue(struct device *dev, struct request_queue *q, char *name,
++		    bsg_job_fn *job_fn, int dd_job_size);
++void bsg_request_fn(struct request_queue *q);
++void bsg_remove_queue(struct request_queue *q);
++void bsg_goose_queue(struct request_queue *q);
++
++#endif
 -- 
 1.7.2.3
 
