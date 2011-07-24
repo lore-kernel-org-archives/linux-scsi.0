@@ -1,136 +1,54 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH RFC/RFT 10/10] ibmvfc: convert ibmvfc to blk bsg lib
-Date: Sun, 24 Jul 2011 03:59:24 -0500
-Message-ID: <1311497964-26842-11-git-send-email-michaelc@cs.wisc.edu>
-References: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
+From: Alex Couvrard <acouvrard2@gmail.com>
+Subject: Re: [PATCH 08/13] iscsi-target: Add CHAP Authentication support using libcrypto
+Date: Sun, 24 Jul 2011 18:32:36 +0200
+Message-ID: <CAKb08JKhXbXk4FJ=iwmBhXjirG7AJecdQfcRgkjkOU-Ei9BpVA@mail.gmail.com>
+References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
+	<1311410747-29947-9-git-send-email-nab@linux-iscsi.org>
+	<1311439173.23720.14.camel@mulgrave>
+	<CA+55aFzkEUbnoDg0KwXDRQMeCFeO5s6_4dWHTY59=hj3QHWL0w@mail.gmail.com>
+	<1311445075.17423.13.camel@mulgrave>
+	<1311455867.31450.287.camel@haakon2.linux-iscsi.org>
+	<4E2B8C98.2060601@cs.wisc.edu>
+	<CAJAFBLCXQLvyLKR5ZD_foaPqU5X6VJfLQX_VAKeaWpDLLfPWnA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62663 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752349Ab1GXI46 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2011 04:56:58 -0400
-In-Reply-To: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:57864 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432Ab1GXQch (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Jul 2011 12:32:37 -0400
+In-Reply-To: <CAJAFBLCXQLvyLKR5ZD_foaPqU5X6VJfLQX_VAKeaWpDLLfPWnA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Brian King <brking@linux.vnet.ibm.com>
+To: Mike Christie <umichaelc@cs.wisc.ed>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andrew Morton <akpm@linux-foundation.org>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Sun, Jul 24, 2011 Mike Christie wrote:
+> I think where doing a kernel/userspace split is going to be more
+> difficult is with supporting hw iscsi targets. With software iscsi you
+> can just pass down a socket and the settings more or less. With hw
+> iscsi, you want to be able to send the login related packets through the
+> iscsi port using the iscsi engine or hw/fw might be doing the actual
+> login process. But, if you are putting discovery (isns, sendtargets,
+> dhcp iscsi/isns options, slp, etc) in userspace then you have to solve
+> those issues for discovery so you can use the same interfaces for both.
 
-This patch converts ibmvfc to the bsg lib. The differences
-visible to the driver are:
-- fc_bsg_job is now named bsg_job.
-- no rport pointer. Can access it through the device pointer.
-- the request and reply pointers on the bsg_job struct
-  are now void pointers, so you cannot do bsg_job->request->some_field.
+iSCSI HBAs first appeared considerable time ago. Since then several
+new and interesting technologies appeared, e.g. iWARP and RoCE. Why
+should one spend time on supporting target mode for iSCSI HBAs instead
+of investing time in supporting iWARP HBAs or RoCE HBAs ? An
+additional advantage is that the last two options allow to use iSER
+instead of iSCSI.
 
-Patch is only compile tested and made over scsi-misc.
+In case someone is not familiar with one of the acronyms mentioned above:
+iWARP = Internet Wide Area RDMA Protocol, a technology that makes
+high-bandwidth low-latency communication possible over TCP/IP
+networks.
+RoCE = RDMA over Converged Ethernet, a technology that makes
+high-bandwidth low-latency communication possible over DCB Ethernet
+networks. Sometimes called InfiniBand over Ethernet (IBoE).
+DCB = Data Center Bridging, a set of standards that allow enhanced
+communication over an Ethernet network. DCB is sometimes called
+Converged Enhanced Ethernet (CEE).
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Brian King <brking@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.c |   44 +++++++++++++++++++++------------------
- 1 files changed, 24 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index bdfa223..48b4140 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1704,14 +1704,14 @@ static void ibmvfc_bsg_timeout_done(struct ibmvfc_event *evt)
- 
- /**
-  * ibmvfc_bsg_timeout - Handle a BSG timeout
-- * @job:	struct fc_bsg_job that timed out
-+ * @job:	struct bsg_job that timed out
-  *
-  * Returns:
-  *	0 on success / other on failure
-  **/
--static int ibmvfc_bsg_timeout(struct fc_bsg_job *job)
-+static int ibmvfc_bsg_timeout(struct bsg_job *job)
- {
--	struct ibmvfc_host *vhost = shost_priv(job->shost);
-+	struct ibmvfc_host *vhost = shost_priv(fc_bsg_to_shost(job));
- 	unsigned long port_id = (unsigned long)job->dd_data;
- 	struct ibmvfc_event *evt;
- 	struct ibmvfc_tmf *tmf;
-@@ -1817,42 +1817,46 @@ unlock_out:
- 
- /**
-  * ibmvfc_bsg_request - Handle a BSG request
-- * @job:	struct fc_bsg_job to be executed
-+ * @job:	struct bsg_job to be executed
-  *
-  * Returns:
-  *	0 on success / other on failure
-  **/
--static int ibmvfc_bsg_request(struct fc_bsg_job *job)
-+static int ibmvfc_bsg_request(struct bsg_job *job)
- {
--	struct ibmvfc_host *vhost = shost_priv(job->shost);
--	struct fc_rport *rport = job->rport;
-+	struct ibmvfc_host *vhost = shost_priv(fc_bsg_to_shost(job));
-+	struct fc_rport *rport;
-+	struct fc_bsg_request *req = job->request;
-+	struct fc_bsg_reply *reply = job->reply;
- 	struct ibmvfc_passthru_mad *mad;
- 	struct ibmvfc_event *evt;
- 	union ibmvfc_iu rsp_iu;
- 	unsigned long flags, port_id = -1;
--	unsigned int code = job->request->msgcode;
-+	unsigned int code = req->msgcode;
- 	int rc = 0, req_seg, rsp_seg, issue_login = 0;
- 	u32 fc_flags, rsp_len;
- 
- 	ENTER;
--	job->reply->reply_payload_rcv_len = 0;
--	if (rport)
--		port_id = rport->port_id;
-+	reply->reply_payload_rcv_len = 0;
- 
- 	switch (code) {
- 	case FC_BSG_HST_ELS_NOLOGIN:
--		port_id = (job->request->rqst_data.h_els.port_id[0] << 16) |
--			(job->request->rqst_data.h_els.port_id[1] << 8) |
--			job->request->rqst_data.h_els.port_id[2];
-+		port_id = (req->rqst_data.h_els.port_id[0] << 16) |
-+			(req->rqst_data.h_els.port_id[1] << 8) |
-+			req->rqst_data.h_els.port_id[2];
- 	case FC_BSG_RPT_ELS:
-+		rport = dev_to_rport(job->dev);
-+		port_id = rport->port_id;
- 		fc_flags = IBMVFC_FC_ELS;
- 		break;
- 	case FC_BSG_HST_CT:
- 		issue_login = 1;
--		port_id = (job->request->rqst_data.h_ct.port_id[0] << 16) |
--			(job->request->rqst_data.h_ct.port_id[1] << 8) |
--			job->request->rqst_data.h_ct.port_id[2];
-+		port_id = (req->rqst_data.h_ct.port_id[0] << 16) |
-+			(req->rqst_data.h_ct.port_id[1] << 8) |
-+			req->rqst_data.h_ct.port_id[2];
- 	case FC_BSG_RPT_CT:
-+		rport = dev_to_rport(job->dev);
-+		port_id = rport->port_id;
- 		fc_flags = IBMVFC_FC_CT_IU;
- 		break;
- 	default:
-@@ -1940,13 +1944,13 @@ static int ibmvfc_bsg_request(struct fc_bsg_job *job)
- 	if (rsp_iu.passthru.common.status)
- 		rc = -EIO;
- 	else
--		job->reply->reply_payload_rcv_len = rsp_len;
-+		reply->reply_payload_rcv_len = rsp_len;
- 
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	ibmvfc_free_event(evt);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
--	job->reply->result = rc;
--	job->job_done(job);
-+	reply->result = rc;
-+	bsg_job_done(job, reply->result, reply->reply_payload_rcv_len);
- 	rc = 0;
- out:
- 	dma_unmap_sg(vhost->dev, job->request_payload.sg_list,
--- 
-1.7.2.3
-
+Alex.
