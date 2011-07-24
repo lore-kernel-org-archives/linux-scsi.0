@@ -1,72 +1,62 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [GIT PULL] iscsi-target merge for v3.1-rc1
-Date: Sun, 24 Jul 2011 12:27:37 +1000
-Message-ID: <20110724122737.fbc4996c6a3a285972a1529f@canb.auug.org.au>
-References: <1311462975.31450.356.camel@haakon2.linux-iscsi.org>
-	<20110723163338.f8c08cf8.akpm@linux-foundation.org>
-	<1311466763.31450.364.camel@haakon2.linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 08/13] iscsi-target: Add CHAP Authentication support	using
+ libcrypto
+Date: Sat, 23 Jul 2011 22:08:08 -0500
+Message-ID: <4E2B8C98.2060601@cs.wisc.edu>
+References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>	 <1311410747-29947-9-git-send-email-nab@linux-iscsi.org>	 <1311439173.23720.14.camel@mulgrave>	 <CA+55aFzkEUbnoDg0KwXDRQMeCFeO5s6_4dWHTY59=hj3QHWL0w@mail.gmail.com>	 <1311445075.17423.13.camel@mulgrave> <1311455867.31450.287.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Sun__24_Jul_2011_12_27_37_+1000_2p3Z6GqjtcfVmN=e"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1311466763.31450.364.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <openosd@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36425 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751617Ab1GXDId (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Jul 2011 23:08:33 -0400
+In-Reply-To: <1311455867.31450.287.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, Andrew Morton <akpm@linux-foundation.org>
 
---Signature=_Sun__24_Jul_2011_12_27_37_+1000_2p3Z6GqjtcfVmN=e
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 07/23/2011 04:17 PM, Nicholas A. Bellinger wrote:
+> 
+> And, we have also seen historically how painful the split has been with
+> open-iscsi, which in the end took much longer to get stable (and is
+> still harder to debug) than if a proper login split was used to begin
+> with.
 
-Hi Nicholas,
+Here is my 2 cents from working on open-iscsi.
 
-On Sat, 23 Jul 2011 17:19:23 -0700 "Nicholas A. Bellinger" <nab@linux-iscsi=
-.org> wrote:
->
-> On Sat, 2011-07-23 at 16:33 -0700, Andrew Morton wrote:
-> > On Sat, 23 Jul 2011 16:16:15 -0700 "Nicholas A. Bellinger" <nab@linux-i=
-scsi.org> wrote:
-> >=20
-> > > So in the spirit of timely pull requests ahead of your upcoming summer
-> > > vacation, here is the long awaited and much debated initial merge com=
-mit
-> > > for v3.1-rc1 of drivers/target/iscsi to sync with latest bleeding edge
-> > > LIO v4.1 codebase.
-> >=20
-> > None of this is in linux-next?  How did that happen?
->=20
-> I am happy to start using linux-next for target-pending.git mainline
-> items, but unfortuately these have yet to see direct linux-next testing
-> just yet..
->=20
-> Stephen, would you pretty please add target-pending.git/for-next into
-> linux-next build testing..?
+The split did not really have much to do with the initial stability in
+the data paths. It was more due to it getting merged with very little
+real world testing.
 
-Sure, just send me the url of the git tree (and branch) and I will add it
-tomorrow (assuming this is stuff still destined for v3.1 - stuff for v3.2
-sould wait until after v3.1-rc1).
+There were stability issues with the interface because no one ever tried
+creating a hw iscsi driver for it before it got merged, because software
+iscsi does a host per session and hw drivers ended up doing a host per
+port or some pci resource, and then boot support.
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+Most bugs fixed were due to skb handling, locking/atomic issues,
+spec/rfc issues - not interface issues. But many large changes had to be
+done to make the initial code support hw iscsi.
 
---Signature=_Sun__24_Jul_2011_12_27_37_+1000_2p3Z6GqjtcfVmN=e
-Content-Type: application/pgp-signature
+I agree open-iscsi is more difficult to debug than initiators that were
+mostly in kernel like iscsi_sfnet. For open-iscsi the userspace part is
+a single process, many operations cannot block, it has a ulgy state
+model. And how it did its split does make things more difficult, because
+it breaks up every operation into a different userspace to kernel call
+(create a session is a call, create a conn is a call, pass a setting is
+a call, bind a conn to a session is call, start the conn is a call,
+etc). For software iscsi if open-iscsi just logged in to the target,
+then passed everything to the kernel in one call then it would have been
+a lot easier to debug. If Tomo's design does not have those issues then
+it seems like it would not be that bad for software iscsi.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQEcBAEBAgAGBQJOK4MZAAoJEDMEi1NhKgbsUe8H/i/55Irh71aw3nWwkLMRtVeO
-Ks3KCmabS0Og8jH5CrohEx6QdC7GYb1UvDblX/Ez000ru/jnko9OUPGQ95w1LDTO
-WHwFHgf61X9ZV0b0UpAiFhMhgM/Tnw1DSIPaJdivCCITuPJNbsgB/QN6YVRb9Sid
-1DAMh+Ktx7SrFHlZzwpSUsdYW9P6omDP/AttXMbM8k9Yp8atkKxTOOOxrrsRIpGN
-hfk72k+C5HsSttu4wIhFdyEVen+SSmJz4c65Zibuafq1hbVbFxN5cI+/xD560fzD
-J3ubItqVQ8HMyulGEB5r/yHsnRKFjLJbJkUfjp9/cIdxYGpwXCkpuSR6f07c1/E=
-=cVYY
------END PGP SIGNATURE-----
-
---Signature=_Sun__24_Jul_2011_12_27_37_+1000_2p3Z6GqjtcfVmN=e--
+I think where doing a kernel/userspace split is going to be more
+difficult is with supporting hw iscsi targets. With software iscsi you
+can just pass down a socket and the settings more or less. With hw
+iscsi, you want to be able to send the login related packets through the
+iscsi port using the iscsi engine or hw/fw might be doing the actual
+login process. But, if you are putting discovery (isns, sendtargets,
+dhcp iscsi/isns options, slp, etc) in userspace then you have to solve
+those issues for discovery so you can use the same interfaces for both.
