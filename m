@@ -1,1001 +1,847 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH RFC/RFT 06/10] qla2xxx: convert qla2xxx to blk bsg lib
-Date: Sun, 24 Jul 2011 03:59:20 -0500
-Message-ID: <1311497964-26842-7-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH RFC/RFT 04/10] FC class: convert to scsi bsg lib
+Date: Sun, 24 Jul 2011 03:59:18 -0500
+Message-ID: <1311497964-26842-5-git-send-email-michaelc@cs.wisc.edu>
 References: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7361 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36243 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751677Ab1GXI4j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2011 04:56:39 -0400
+	id S1752206Ab1GXI4q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Jul 2011 04:56:46 -0400
 In-Reply-To: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This patch converts qla2xxx to the blk bsg lib. The differences
-visible to the driver are:
-- fc_bsg_job is now named bsg_job.
-- no rport pointer. Can access it through the device pointer.
-- the request and reply pointers on the bsg_job struct
-  are now void pointers, so you cannot do bsg_job->request->some_field.
+This patch just converts the FC class to use the bsg
+lib.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c  |  241 ++++++++++++++++++++++-----------------
- drivers/scsi/qla2xxx/qla_def.h  |    3 +-
- drivers/scsi/qla2xxx/qla_gbl.h  |    4 +-
- drivers/scsi/qla2xxx/qla_iocb.c |   11 +-
- drivers/scsi/qla2xxx/qla_isr.c  |   44 ++++---
- drivers/scsi/qla2xxx/qla_os.c   |   32 +++--
- 6 files changed, 189 insertions(+), 146 deletions(-)
+ drivers/scsi/scsi_transport_fc.c |  572 ++++++++------------------------------
+ include/scsi/scsi_transport_fc.h |   50 +---
+ 2 files changed, 129 insertions(+), 493 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 8c10e2c..3031a12 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -92,16 +92,18 @@ qla24xx_fcp_prio_cfg_valid(struct qla_fcp_prio_cfg *pri_cfg, uint8_t flag)
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 1b21491..9448442 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -30,6 +30,7 @@
+ #include <linux/slab.h>
+ #include <linux/delay.h>
+ #include <linux/kernel.h>
++#include <linux/bsg-lib.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+@@ -49,8 +50,6 @@ static int fc_vport_setup(struct Scsi_Host *shost, int channel,
+ 	struct fc_vport **vport);
+ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
+ static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
+-static void fc_bsg_remove(struct request_queue *);
+-static void fc_bsg_goose_queue(struct fc_rport *);
+ 
+ /*
+  * Module Parameters
+@@ -450,7 +449,10 @@ static int fc_host_remove(struct transport_container *tc, struct device *dev,
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+ 
+-	fc_bsg_remove(fc_host->rqst_q);
++	if (fc_host->rqst_q) {
++		bsg_remove_queue(fc_host->rqst_q);
++		blk_cleanup_queue(fc_host->rqst_q);
++	}
+ 	return 0;
  }
  
- static int
--qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
-+qla24xx_proc_fcp_prio_cfg_cmd(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	int ret = 0;
- 	uint32_t len;
- 	uint32_t oper;
+@@ -2536,7 +2538,10 @@ fc_rport_final_delete(struct work_struct *work)
+ 	if (do_callback)
+ 		i->f->dev_loss_tmo_callbk(rport);
  
--	bsg_job->reply->reply_payload_rcv_len = 0;
-+	bsg_reply->reply_payload_rcv_len = 0;
+-	fc_bsg_remove(rport->rqst_q);
++	if (rport->rqst_q) {
++		bsg_remove_queue(rport->rqst_q);
++		blk_cleanup_queue(rport->rqst_q);
++	}
  
- 	if (!(IS_QLA24XX_TYPE(ha) || IS_QLA25XX(ha))) {
- 		ret = -EINVAL;
-@@ -116,7 +118,7 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 	}
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+@@ -2792,7 +2797,7 @@ fc_remote_port_add(struct Scsi_Host *shost, int channel,
+ 					spin_unlock_irqrestore(shost->host_lock,
+ 							flags);
  
- 	/* Get the sub command */
--	oper = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
-+	oper = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
+-				fc_bsg_goose_queue(rport);
++				bsg_goose_queue(rport->rqst_q);
  
- 	/* Only set config is allowed if config memory is not allocated */
- 	if (!ha->fcp_prio_cfg && (oper != QLFC_FCP_PRIO_SET_CONFIG)) {
-@@ -130,10 +132,10 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 			ha->fcp_prio_cfg->attributes &=
- 				~FCP_PRIO_ATTR_ENABLE;
- 			qla24xx_update_all_fcp_prio(vha);
--			bsg_job->reply->result = DID_OK;
-+			bsg_reply->result = DID_OK;
- 		} else {
- 			ret = -EINVAL;
--			bsg_job->reply->result = (DID_ERROR << 16);
-+			bsg_reply->result = (DID_ERROR << 16);
- 			goto exit_fcp_prio_cfg;
- 		}
- 		break;
-@@ -145,10 +147,10 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 				ha->fcp_prio_cfg->attributes |=
- 				    FCP_PRIO_ATTR_ENABLE;
- 				qla24xx_update_all_fcp_prio(vha);
--				bsg_job->reply->result = DID_OK;
-+				bsg_reply->result = DID_OK;
- 			} else {
- 				ret = -EINVAL;
--				bsg_job->reply->result = (DID_ERROR << 16);
-+				bsg_reply->result = (DID_ERROR << 16);
- 				goto exit_fcp_prio_cfg;
+ 				return rport;
  			}
- 		}
-@@ -158,12 +160,12 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 		len = bsg_job->reply_payload.payload_len;
- 		if (!len || len > FCP_PRIO_CFG_SIZE) {
- 			ret = -EINVAL;
--			bsg_job->reply->result = (DID_ERROR << 16);
-+			bsg_reply->result = (DID_ERROR << 16);
- 			goto exit_fcp_prio_cfg;
- 		}
+@@ -3514,236 +3519,38 @@ fc_vport_sched_delete(struct work_struct *work)
+  * BSG support
+  */
  
--		bsg_job->reply->result = DID_OK;
--		bsg_job->reply->reply_payload_rcv_len =
-+		bsg_reply->result = DID_OK;
-+		bsg_reply->reply_payload_rcv_len =
- 			sg_copy_from_buffer(
- 			bsg_job->reply_payload.sg_list,
- 			bsg_job->reply_payload.sg_cnt, ha->fcp_prio_cfg,
-@@ -174,7 +176,7 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 	case QLFC_FCP_PRIO_SET_CONFIG:
- 		len = bsg_job->request_payload.payload_len;
- 		if (!len || len > FCP_PRIO_CFG_SIZE) {
--			bsg_job->reply->result = (DID_ERROR << 16);
-+			bsg_reply->result = (DID_ERROR << 16);
- 			ret = -EINVAL;
- 			goto exit_fcp_prio_cfg;
- 		}
-@@ -186,7 +188,7 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 					"Unable to allocate memory "
- 					"for fcp prio config data (%x).\n",
- 					FCP_PRIO_CFG_SIZE);
--				bsg_job->reply->result = (DID_ERROR << 16);
-+				bsg_reply->result = (DID_ERROR << 16);
- 				ret = -ENOMEM;
- 				goto exit_fcp_prio_cfg;
- 			}
-@@ -201,7 +203,7 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 		if (!qla24xx_fcp_prio_cfg_valid(
- 			(struct qla_fcp_prio_cfg *)
- 			ha->fcp_prio_cfg, 1)) {
--			bsg_job->reply->result = (DID_ERROR << 16);
-+			bsg_reply->result = (DID_ERROR << 16);
- 			ret = -EINVAL;
- 			/* If buffer was invalidatic int
- 			 * fcp_prio_cfg is of no use
-@@ -215,19 +217,21 @@ qla24xx_proc_fcp_prio_cfg_cmd(struct fc_bsg_job *bsg_job)
- 		if (ha->fcp_prio_cfg->attributes & FCP_PRIO_ATTR_ENABLE)
- 			ha->flags.fcp_prio_enabled = 1;
- 		qla24xx_update_all_fcp_prio(vha);
--		bsg_job->reply->result = DID_OK;
-+		bsg_reply->result = DID_OK;
- 		break;
- 	default:
- 		ret = -EINVAL;
- 		break;
- 	}
- exit_fcp_prio_cfg:
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 	return ret;
- }
- static int
--qla2x00_process_els(struct fc_bsg_job *bsg_job)
-+qla2x00_process_els(struct bsg_job *bsg_job)
+-
+-/**
+- * fc_destroy_bsgjob - routine to teardown/delete a fc bsg job
+- * @job:	fc_bsg_job that is to be torn down
+- */
+-static void
+-fc_destroy_bsgjob(struct fc_bsg_job *job)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	if (job->ref_cnt) {
+-		spin_unlock_irqrestore(&job->job_lock, flags);
+-		return;
+-	}
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+-	put_device(job->dev);	/* release reference for the request */
+-
+-	kfree(job->request_payload.sg_list);
+-	kfree(job->reply_payload.sg_list);
+-	kfree(job);
+-}
+-
+-/**
+- * fc_bsg_jobdone - completion routine for bsg requests that the LLD has
+- *                  completed
+- * @job:	fc_bsg_job that is complete
+- */
+-static void
+-fc_bsg_jobdone(struct fc_bsg_job *job)
+-{
+-	struct request *req = job->req;
+-	struct request *rsp = req->next_rq;
+-	int err;
+-
+-	err = job->req->errors = job->reply->result;
+-
+-	if (err < 0)
+-		/* we're only returning the result field in the reply */
+-		job->req->sense_len = sizeof(uint32_t);
+-	else
+-		job->req->sense_len = job->reply_len;
+-
+-	/* we assume all request payload was transferred, residual == 0 */
+-	req->resid_len = 0;
+-
+-	if (rsp) {
+-		WARN_ON(job->reply->reply_payload_rcv_len > rsp->resid_len);
+-
+-		/* set reply (bidi) residual */
+-		rsp->resid_len -= min(job->reply->reply_payload_rcv_len,
+-				      rsp->resid_len);
+-	}
+-	blk_complete_request(req);
+-}
+-
+-/**
+- * fc_bsg_softirq_done - softirq done routine for destroying the bsg requests
+- * @rq:        BSG request that holds the job to be destroyed
+- */
+-static void fc_bsg_softirq_done(struct request *rq)
+-{
+-	struct fc_bsg_job *job = rq->special;
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	job->state_flags |= FC_RQST_STATE_DONE;
+-	job->ref_cnt--;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+-	blk_end_request_all(rq, rq->errors);
+-	fc_destroy_bsgjob(job);
+-}
+-
+-/**
+- * fc_bsg_job_timeout - handler for when a bsg request timesout
+- * @req:	request that timed out
+- */
+-static enum blk_eh_timer_return
+-fc_bsg_job_timeout(struct request *req)
+-{
+-	struct fc_bsg_job *job = (void *) req->special;
+-	struct Scsi_Host *shost = job->shost;
+-	struct fc_internal *i = to_fc_internal(shost->transportt);
+-	unsigned long flags;
+-	int err = 0, done = 0;
+-
+-	if (job->rport && job->rport->port_state == FC_PORTSTATE_BLOCKED)
+-		return BLK_EH_RESET_TIMER;
+-
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	if (job->state_flags & FC_RQST_STATE_DONE)
+-		done = 1;
+-	else
+-		job->ref_cnt++;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
+-	if (!done && i->f->bsg_timeout) {
+-		/* call LLDD to abort the i/o as it has timed out */
+-		err = i->f->bsg_timeout(job);
+-		if (err == -EAGAIN) {
+-			job->ref_cnt--;
+-			return BLK_EH_RESET_TIMER;
+-		} else if (err)
+-			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
+-				"abort failed with status %d\n", err);
+-	}
+-
+-	/* the blk_end_sync_io() doesn't check the error */
+-	if (done)
+-		return BLK_EH_NOT_HANDLED;
+-	else
+-		return BLK_EH_HANDLED;
+-}
+-
+-static int
+-fc_bsg_map_buffer(struct fc_bsg_buffer *buf, struct request *req)
+-{
+-	size_t sz = (sizeof(struct scatterlist) * req->nr_phys_segments);
+-
+-	BUG_ON(!req->nr_phys_segments);
+-
+-	buf->sg_list = kzalloc(sz, GFP_KERNEL);
+-	if (!buf->sg_list)
+-		return -ENOMEM;
+-	sg_init_table(buf->sg_list, req->nr_phys_segments);
+-	buf->sg_cnt = blk_rq_map_sg(req->q, req, buf->sg_list);
+-	buf->payload_len = blk_rq_bytes(req);
+-	return 0;
+-}
+-
+-
+-/**
+- * fc_req_to_bsgjob - Allocate/create the fc_bsg_job structure for the
+- *                   bsg request
+- * @shost:	SCSI Host corresponding to the bsg object
+- * @rport:	(optional) FC Remote Port corresponding to the bsg object
+- * @req:	BSG request that needs a job structure
+- */
+-static int
+-fc_req_to_bsgjob(struct Scsi_Host *shost, struct fc_rport *rport,
+-	struct request *req)
++static void fc_bsg_fail_job(struct bsg_job *job, int ret)
  {
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
- 	struct fc_rport *rport;
- 	fc_port_t *fcport = NULL;
- 	struct Scsi_Host *host;
-@@ -240,15 +244,15 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 	uint16_t nextlid = 0;
- 	struct srb_ctx *els;
- 
--	if (bsg_job->request->msgcode == FC_BSG_RPT_ELS) {
--		rport = bsg_job->rport;
-+	if (bsg_req->msgcode == FC_BSG_RPT_ELS) {
-+		rport = dev_to_rport(bsg_job->dev);
- 		fcport = *(fc_port_t **) rport->dd_data;
- 		host = rport_to_shost(rport);
- 		vha = shost_priv(host);
- 		ha = vha->hw;
- 		type = "FC_BSG_RPT_ELS";
- 	} else {
--		host = bsg_job->shost;
-+		host = fc_bsg_to_shost(bsg_job);
- 		vha = shost_priv(host);
- 		ha = vha->hw;
- 		type = "FC_BSG_HST_ELS_NOLOGIN";
-@@ -276,7 +280,7 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 	}
- 
- 	/* ELS request for rport */
--	if (bsg_job->request->msgcode == FC_BSG_RPT_ELS) {
-+	if (bsg_req->msgcode == FC_BSG_RPT_ELS) {
- 		/* make sure the rport is logged in,
- 		 * if not perform fabric login
- 		 */
-@@ -303,11 +307,11 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 		fcport->vha = vha;
- 		fcport->vp_idx = vha->vp_idx;
- 		fcport->d_id.b.al_pa =
--			bsg_job->request->rqst_data.h_els.port_id[0];
-+			bsg_req->rqst_data.h_els.port_id[0];
- 		fcport->d_id.b.area =
--			bsg_job->request->rqst_data.h_els.port_id[1];
-+			bsg_req->rqst_data.h_els.port_id[1];
- 		fcport->d_id.b.domain =
--			bsg_job->request->rqst_data.h_els.port_id[2];
-+			bsg_req->rqst_data.h_els.port_id[2];
- 		fcport->loop_id =
- 			(fcport->d_id.b.al_pa == 0xFD) ?
- 			NPH_FABRIC_CONTROLLER : NPH_F_PORT;
-@@ -356,17 +360,17 @@ qla2x00_process_els(struct fc_bsg_job *bsg_job)
- 
- 	els = sp->ctx;
- 	els->type =
--		(bsg_job->request->msgcode == FC_BSG_RPT_ELS ?
-+		(bsg_req->msgcode == FC_BSG_RPT_ELS ?
- 		SRB_ELS_CMD_RPT : SRB_ELS_CMD_HST);
- 	els->name =
--		(bsg_job->request->msgcode == FC_BSG_RPT_ELS ?
-+		(bsg_req->msgcode == FC_BSG_RPT_ELS ?
- 		"bsg_els_rpt" : "bsg_els_hst");
- 	els->u.bsg_job = bsg_job;
- 
- 	DEBUG2(qla_printk(KERN_INFO, ha,
- 		"scsi(%ld:%x): bsg rqst type: %s els type: %x - loop-id=%x "
- 		"portid=%02x%02x%02x.\n", vha->host_no, sp->handle, type,
--		bsg_job->request->rqst_data.h_els.command_code,
-+		bsg_req->rqst_data.h_els.command_code,
- 		fcport->loop_id, fcport->d_id.b.domain, fcport->d_id.b.area,
- 		fcport->d_id.b.al_pa));
- 
-@@ -387,17 +391,18 @@ done_unmap_sg:
- 	goto done_free_fcport;
- 
- done_free_fcport:
--	if (bsg_job->request->msgcode == FC_BSG_HST_ELS_NOLOGIN)
-+	if (bsg_req->msgcode == FC_BSG_HST_ELS_NOLOGIN)
- 		kfree(fcport);
- done:
- 	return rval;
- }
- 
- static int
--qla2x00_process_ct(struct fc_bsg_job *bsg_job)
-+qla2x00_process_ct(struct bsg_job *bsg_job)
- {
- 	srb_t *sp;
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval = (DRIVER_ERROR << 16);
-@@ -441,7 +446,7 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	}
- 
- 	loop_id =
--		(bsg_job->request->rqst_data.h_ct.preamble_word1 & 0xFF000000)
-+		(bsg_req->rqst_data.h_ct.preamble_word1 & 0xFF000000)
- 			>> 24;
- 	switch (loop_id) {
- 	case 0xFC:
-@@ -471,9 +476,9 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	/* Initialize all required  fields of fcport */
- 	fcport->vha = vha;
- 	fcport->vp_idx = vha->vp_idx;
--	fcport->d_id.b.al_pa = bsg_job->request->rqst_data.h_ct.port_id[0];
--	fcport->d_id.b.area = bsg_job->request->rqst_data.h_ct.port_id[1];
--	fcport->d_id.b.domain = bsg_job->request->rqst_data.h_ct.port_id[2];
-+	fcport->d_id.b.al_pa = bsg_req->rqst_data.h_ct.port_id[0];
-+	fcport->d_id.b.area = bsg_req->rqst_data.h_ct.port_id[1];
-+	fcport->d_id.b.domain = bsg_req->rqst_data.h_ct.port_id[2];
- 	fcport->loop_id = loop_id;
- 
- 	/* Alloc SRB structure */
-@@ -491,7 +496,7 @@ qla2x00_process_ct(struct fc_bsg_job *bsg_job)
- 	DEBUG2(qla_printk(KERN_INFO, ha,
- 		"scsi(%ld:%x): bsg rqst type: %s els type: %x - loop-id=%x "
- 		"portid=%02x%02x%02x.\n", vha->host_no, sp->handle, type,
--		(bsg_job->request->rqst_data.h_ct.preamble_word2 >> 16),
-+		(bsg_req->rqst_data.h_ct.preamble_word2 >> 16),
- 		fcport->loop_id, fcport->d_id.b.domain, fcport->d_id.b.area,
- 		fcport->d_id.b.al_pa));
- 
-@@ -608,9 +613,11 @@ done_reset_internal:
- }
- 
- static int
--qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
-+qla2x00_process_loopback(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval;
-@@ -691,7 +698,7 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 	elreq.rcv_dma = rsp_data_dma;
- 	elreq.transfer_size = req_data_len;
- 
--	elreq.options = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
-+	elreq.options = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
- 
- 	if ((ha->current_topology == ISP_CFG_F ||
- 	    (IS_QLA81XX(ha) &&
-@@ -711,8 +718,8 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 				DEBUG2(printk(KERN_ERR
- 					"%s(%lu): Get port config failed\n",
- 					__func__, vha->host_no));
--				bsg_job->reply->reply_payload_rcv_len = 0;
--				bsg_job->reply->result = (DID_ERROR << 16);
-+				bsg_reply->reply_payload_rcv_len = 0;
-+				bsg_reply->result = (DID_ERROR << 16);
- 				rval = -EPERM;
- 				goto done_free_dma_req;
- 			}
-@@ -723,10 +730,8 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 					config[0]));
- 				if (qla81xx_set_internal_loopback(vha, config,
- 					new_config)) {
--					bsg_job->reply->reply_payload_rcv_len =
--						0;
--					bsg_job->reply->result =
--						(DID_ERROR << 16);
-+					bsg_reply->reply_payload_rcv_len = 0;
-+					bsg_reply->result = (DID_ERROR << 16);
- 					rval = -EPERM;
- 					goto done_free_dma_req;
- 				}
-@@ -736,10 +741,8 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 				 */
- 				if (qla81xx_reset_internal_loopback(vha,
- 					config, 1)) {
--					bsg_job->reply->reply_payload_rcv_len =
--						0;
--					bsg_job->reply->result =
--						(DID_ERROR << 16);
-+					bsg_reply->reply_payload_rcv_len = 0;
-+					bsg_reply->result = (DID_ERROR << 16);
- 					rval = -EPERM;
- 					goto done_free_dma_req;
- 				}
-@@ -776,8 +779,8 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 					    vha->host_no);
- 				}
- 
--				bsg_job->reply->reply_payload_rcv_len = 0;
--				bsg_job->reply->result = (DID_ERROR << 16);
-+				bsg_reply->reply_payload_rcv_len = 0;
-+				bsg_reply->result = (DID_ERROR << 16);
- 				rval = -EIO;
- 				goto done_free_dma_req;
- 			}
-@@ -802,27 +805,28 @@ qla2x00_process_loopback(struct fc_bsg_job *bsg_job)
- 		fw_sts_ptr += sizeof(response);
- 		*fw_sts_ptr = command_sent;
- 		rval = 0;
--		bsg_job->reply->reply_payload_rcv_len = 0;
--		bsg_job->reply->result = (DID_ERROR << 16);
-+		bsg_reply->reply_payload_rcv_len = 0;
-+		bsg_reply->result = (DID_ERROR << 16);
- 	} else {
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 			"request %s completed\n", vha->host_no, type));
- 
- 		bsg_job->reply_len = sizeof(struct fc_bsg_reply) +
- 			sizeof(response) + sizeof(uint8_t);
--		bsg_job->reply->reply_payload_rcv_len =
-+		bsg_reply->reply_payload_rcv_len =
- 			bsg_job->reply_payload.payload_len;
- 		fw_sts_ptr = ((uint8_t *)bsg_job->req->sense) +
- 			sizeof(struct fc_bsg_reply);
- 		memcpy(fw_sts_ptr, response, sizeof(response));
- 		fw_sts_ptr += sizeof(response);
- 		*fw_sts_ptr = command_sent;
--		bsg_job->reply->result = DID_OK;
-+		bsg_reply->result = DID_OK;
- 		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
- 			bsg_job->reply_payload.sg_cnt, rsp_data,
- 			rsp_data_len);
- 	}
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 
- 	dma_free_coherent(&ha->pdev->dev, rsp_data_len,
- 		rsp_data, rsp_data_dma);
-@@ -841,9 +845,11 @@ done_unmap_req_sg:
- }
- 
- static int
--qla84xx_reset(struct fc_bsg_job *bsg_job)
-+qla84xx_reset(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval = 0;
-@@ -860,30 +866,33 @@ qla84xx_reset(struct fc_bsg_job *bsg_job)
- 		return -EINVAL;
- 	}
- 
--	flag = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
-+	flag = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
- 
- 	rval = qla84xx_reset_chip(vha, flag == A84_ISSUE_RESET_DIAG_FW);
- 
- 	if (rval) {
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 		    "request 84xx reset failed\n", vha->host_no));
--		rval = bsg_job->reply->reply_payload_rcv_len = 0;
--		bsg_job->reply->result = (DID_ERROR << 16);
-+		rval = bsg_reply->reply_payload_rcv_len = 0;
-+		bsg_reply->result = (DID_ERROR << 16);
- 
- 	} else {
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 		    "request 84xx reset completed\n", vha->host_no));
--		bsg_job->reply->result = DID_OK;
-+		bsg_reply->result = DID_OK;
- 	}
- 
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 	return rval;
- }
- 
- static int
--qla84xx_updatefw(struct fc_bsg_job *bsg_job)
-+qla84xx_updatefw(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	struct verify_chip_entry_84xx *mn = NULL;
-@@ -942,7 +951,7 @@ qla84xx_updatefw(struct fc_bsg_job *bsg_job)
- 		goto done_free_fw_buf;
- 	}
- 
--	flag = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
-+	flag = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
- 	fw_ver = le32_to_cpu(*((uint32_t *)((uint32_t *)fw_buf + 2)));
- 
- 	memset(mn, 0, sizeof(struct access_chip_84xx));
-@@ -968,18 +977,19 @@ qla84xx_updatefw(struct fc_bsg_job *bsg_job)
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 			"request 84xx updatefw failed\n", vha->host_no));
- 
--		rval = bsg_job->reply->reply_payload_rcv_len = 0;
--		bsg_job->reply->result = (DID_ERROR << 16);
-+		rval = bsg_reply->reply_payload_rcv_len = 0;
-+		bsg_reply->result = (DID_ERROR << 16);
- 
- 	} else {
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 			"request 84xx updatefw completed\n", vha->host_no));
- 
- 		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
--		bsg_job->reply->result = DID_OK;
-+		bsg_reply->result = DID_OK;
- 	}
- 
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 	dma_pool_free(ha->s_dma_pool, mn, mn_dma);
- 
- done_free_fw_buf:
-@@ -993,9 +1003,10 @@ done_unmap_sg:
- }
- 
- static int
--qla84xx_mgmt_cmd(struct fc_bsg_job *bsg_job)
-+qla84xx_mgmt_cmd(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	struct access_chip_84xx *mn = NULL;
-@@ -1159,19 +1170,19 @@ qla84xx_mgmt_cmd(struct fc_bsg_job *bsg_job)
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 			"request 84xx mgmt failed\n", vha->host_no));
- 
--		rval = bsg_job->reply->reply_payload_rcv_len = 0;
--		bsg_job->reply->result = (DID_ERROR << 16);
-+		rval = bsg_reply->reply_payload_rcv_len = 0;
-+		bsg_reply->result = (DID_ERROR << 16);
- 
- 	} else {
- 		DEBUG2(qla_printk(KERN_WARNING, ha, "scsi(%ld) Vendor "
- 			"request 84xx mgmt completed\n", vha->host_no));
- 
- 		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
--		bsg_job->reply->result = DID_OK;
-+		bsg_reply->result = DID_OK;
- 
- 		if ((ql84_mgmt->mgmt.cmd == QLA84_MGMT_READ_MEM) ||
- 			(ql84_mgmt->mgmt.cmd == QLA84_MGMT_GET_INFO)) {
--			bsg_job->reply->reply_payload_rcv_len =
-+			bsg_reply->reply_payload_rcv_len =
- 				bsg_job->reply_payload.payload_len;
- 
- 			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-@@ -1180,7 +1191,8 @@ qla84xx_mgmt_cmd(struct fc_bsg_job *bsg_job)
- 		}
- 	}
- 
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 
- done_unmap_sg:
- 	if (mgmt_b)
-@@ -1200,9 +1212,10 @@ exit_mgmt:
- }
- 
- static int
--qla24xx_iidma(struct fc_bsg_job *bsg_job)
-+qla24xx_iidma(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval = 0;
-@@ -1211,7 +1224,7 @@ qla24xx_iidma(struct fc_bsg_job *bsg_job)
- 	uint16_t mb[MAILBOX_REGISTER_COUNT];
- 	uint8_t *rsp_ptr = NULL;
- 
--	bsg_job->reply->reply_payload_rcv_len = 0;
+-	struct fc_internal *i = to_fc_internal(shost->transportt);
+-	struct request *rsp = req->next_rq;
+-	struct fc_bsg_job *job;
+-	int ret;
+-
+-	BUG_ON(req->special);
+-
+-	job = kzalloc(sizeof(struct fc_bsg_job) + i->f->dd_bsg_size,
+-			GFP_KERNEL);
+-	if (!job)
+-		return -ENOMEM;
+-
+-	/*
+-	 * Note: this is a bit silly.
+-	 * The request gets formatted as a SGIO v4 ioctl request, which
+-	 * then gets reformatted as a blk request, which then gets
+-	 * reformatted as a fc bsg request. And on completion, we have
+-	 * to wrap return results such that SGIO v4 thinks it was a scsi
+-	 * status.  I hope this was all worth it.
+-	 */
+-
+-	req->special = job;
+-	job->shost = shost;
+-	job->rport = rport;
+-	job->req = req;
+-	if (i->f->dd_bsg_size)
+-		job->dd_data = (void *)&job[1];
+-	spin_lock_init(&job->job_lock);
+-	job->request = (struct fc_bsg_request *)req->cmd;
+-	job->request_len = req->cmd_len;
+-	job->reply = req->sense;
+-	job->reply_len = SCSI_SENSE_BUFFERSIZE;	/* Size of sense buffer
+-						 * allocated */
+-	if (req->bio) {
+-		ret = fc_bsg_map_buffer(&job->request_payload, req);
+-		if (ret)
+-			goto failjob_rls_job;
+-	}
+-	if (rsp && rsp->bio) {
+-		ret = fc_bsg_map_buffer(&job->reply_payload, rsp);
+-		if (ret)
+-			goto failjob_rls_rqst_payload;
+-	}
+-	job->job_done = fc_bsg_jobdone;
+-	if (rport)
+-		job->dev = &rport->dev;
+-	else
+-		job->dev = &shost->shost_gendev;
+-	get_device(job->dev);		/* take a reference for the request */
+-
+-	job->ref_cnt = 1;
+-
+-	return 0;
+-
+-
+-failjob_rls_rqst_payload:
+-	kfree(job->request_payload.sg_list);
+-failjob_rls_job:
+-	kfree(job);
+-	return -ENOMEM;
++	struct fc_bsg_reply *bsg_reply = job->reply;
++	BUG_ON(job->reply_len < sizeof(uint32_t));
 +	bsg_reply->reply_payload_rcv_len = 0;
- 
- 	if (test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) ||
- 		test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
-@@ -1285,7 +1298,7 @@ qla24xx_iidma(struct fc_bsg_job *bsg_job)
- 			fcport->port_name[6], fcport->port_name[7], rval,
- 			fcport->fp_speed, mb[0], mb[1]));
- 		rval = 0;
--		bsg_job->reply->result = (DID_ERROR << 16);
-+		bsg_reply->result = (DID_ERROR << 16);
- 
- 	} else {
- 		if (!port_param->mode) {
-@@ -1299,26 +1312,29 @@ qla24xx_iidma(struct fc_bsg_job *bsg_job)
- 				sizeof(struct qla_port_param));
- 		}
- 
--		bsg_job->reply->result = DID_OK;
-+		bsg_reply->result = DID_OK;
- 	}
- 
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 	return rval;
++	/* return the errno failure code as the only status */
++	bsg_reply->result = ret;
++	job->reply_len = sizeof(uint32_t);
++	bsg_job_done(job, ret, 0);
  }
  
- static int
--qla2x00_optrom_setup(struct fc_bsg_job *bsg_job, struct qla_hw_data *ha,
-+qla2x00_optrom_setup(struct bsg_job *bsg_job, struct qla_hw_data *ha,
- 	uint8_t is_update)
+-
+-enum fc_dispatch_result {
+-	FC_DISPATCH_BREAK,	/* on return, q is locked, break from q loop */
+-	FC_DISPATCH_LOCKED,	/* on return, q is locked, continue on */
+-	FC_DISPATCH_UNLOCKED,	/* on return, q is unlocked, continue on */
+-};
+-
+-
+ /**
+  * fc_bsg_host_dispatch - process fc host bsg requests and dispatch to LLDD
+- * @q:		fc host request queue
+- * @shost:	scsi host rport attached to
++ * @shost:	scsi host
+  * @job:	bsg job to be processed
+  */
+-static enum fc_dispatch_result
+-fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+-			 struct fc_bsg_job *job)
++static int
++fc_bsg_host_dispatch(struct Scsi_Host *shost, struct bsg_job *job)
  {
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
- 	uint32_t start = 0;
- 	int valid = 0;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
++	struct fc_bsg_request *bsg_req = job->request;
+ 	int ret;
  
--	bsg_job->reply->reply_payload_rcv_len = 0;
-+	bsg_reply->reply_payload_rcv_len = 0;
- 
- 	if (unlikely(pci_channel_offline(ha->pdev)))
- 		return -EINVAL;
- 
--	start = bsg_job->request->rqst_data.h_vendor.vendor_cmd[1];
-+	start = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
- 	if (start > ha->optrom_size)
- 		return -EINVAL;
- 
-@@ -1371,10 +1387,11 @@ qla2x00_optrom_setup(struct fc_bsg_job *bsg_job, struct qla_hw_data *ha,
- }
- 
- static int
--qla2x00_read_optrom(struct fc_bsg_job *bsg_job)
-+qla2x00_read_optrom(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval = 0;
- 
-@@ -1389,20 +1406,22 @@ qla2x00_read_optrom(struct fc_bsg_job *bsg_job)
- 	    bsg_job->reply_payload.sg_cnt, ha->optrom_buffer,
- 	    ha->optrom_region_size);
- 
--	bsg_job->reply->reply_payload_rcv_len = ha->optrom_region_size;
--	bsg_job->reply->result = DID_OK;
-+	bsg_reply->reply_payload_rcv_len = ha->optrom_region_size;
-+	bsg_reply->result = DID_OK;
- 	vfree(ha->optrom_buffer);
- 	ha->optrom_buffer = NULL;
- 	ha->optrom_state = QLA_SWAITING;
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 	return rval;
- }
- 
- static int
--qla2x00_update_optrom(struct fc_bsg_job *bsg_job)
-+qla2x00_update_optrom(struct bsg_job *bsg_job)
- {
--	struct Scsi_Host *host = bsg_job->shost;
-+	struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
- 	scsi_qla_host_t *vha = shost_priv(host);
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
- 	struct qla_hw_data *ha = vha->hw;
- 	int rval = 0;
- 
-@@ -1417,18 +1436,23 @@ qla2x00_update_optrom(struct fc_bsg_job *bsg_job)
- 	ha->isp_ops->write_optrom(vha, ha->optrom_buffer,
- 	    ha->optrom_region_start, ha->optrom_region_size);
- 
--	bsg_job->reply->result = DID_OK;
-+	bsg_reply->result = DID_OK;
-+	bsg_reply->reply_payload_rcv_len = 0;
- 	vfree(ha->optrom_buffer);
- 	ha->optrom_buffer = NULL;
- 	ha->optrom_state = QLA_SWAITING;
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- 	return rval;
- }
- 
- static int
--qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
-+qla2x00_process_vendor_specific(struct bsg_job *bsg_job)
- {
--	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
++	/* check if we have the msgcode value at least */
++	if (job->request_len < sizeof(uint32_t)) {
++		ret = -ENOMSG;
++		goto fail_host_msg;
++	}
 +
-+	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
- 	case QL_VND_LOOPBACK:
- 		return qla2x00_process_loopback(bsg_job);
+ 	/* Validate the host command */
+-	switch (job->request->msgcode) {
++	switch (bsg_req->msgcode) {
+ 	case FC_BSG_HST_ADD_RPORT:
+ 		cmdlen += sizeof(struct fc_bsg_host_add_rport);
+ 		break;
+@@ -3775,8 +3582,8 @@ fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+ 	case FC_BSG_HST_VENDOR:
+ 		cmdlen += sizeof(struct fc_bsg_host_vendor);
+ 		if ((shost->hostt->vendor_id == 0L) ||
+-		    (job->request->rqst_data.h_vendor.vendor_id !=
+-			shost->hostt->vendor_id)) {
++		    (bsg_req->rqst_data.h_vendor.vendor_id !=
++		     shost->hostt->vendor_id)) {
+ 			ret = -ESRCH;
+ 			goto fail_host_msg;
+ 		}
+@@ -3795,54 +3602,34 @@ fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
  
-@@ -1454,18 +1478,21 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 		return qla2x00_update_optrom(bsg_job);
+ 	ret = i->f->bsg_request(job);
+ 	if (!ret)
+-		return FC_DISPATCH_UNLOCKED;
++		return 0;
  
- 	default:
--		bsg_job->reply->result = (DID_ERROR << 16);
--		bsg_job->job_done(bsg_job);
-+		bsg_reply->result = (DID_ERROR << 16);
-+		bsg_reply->reply_payload_rcv_len = 0;
-+		bsg_job_done(bsg_job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
- 		return -ENOSYS;
- 	}
+ fail_host_msg:
+-	/* return the errno failure code as the only status */
+-	BUG_ON(job->reply_len < sizeof(uint32_t));
+-	job->reply->reply_payload_rcv_len = 0;
+-	job->reply->result = ret;
+-	job->reply_len = sizeof(uint32_t);
+-	fc_bsg_jobdone(job);
+-	return FC_DISPATCH_UNLOCKED;
+-}
+-
+-
+-/*
+- * fc_bsg_goose_queue - restart rport queue in case it was stopped
+- * @rport:	rport to be restarted
+- */
+-static void
+-fc_bsg_goose_queue(struct fc_rport *rport)
+-{
+-	if (!rport->rqst_q)
+-		return;
+-
+-	/*
+-	 * This get/put dance makes no sense
+-	 */
+-	get_device(&rport->dev);
+-	blk_run_queue_async(rport->rqst_q);
+-	put_device(&rport->dev);
++	fc_bsg_fail_job(job, ret);
++	return 0;
  }
  
- int
--qla24xx_bsg_request(struct fc_bsg_job *bsg_job)
-+qla24xx_bsg_request(struct bsg_job *bsg_job)
+ /**
+  * fc_bsg_rport_dispatch - process rport bsg requests and dispatch to LLDD
+- * @q:		rport request queue
+  * @shost:	scsi host rport attached to
+- * @rport:	rport request destined to
+  * @job:	bsg job to be processed
+  */
+-static enum fc_dispatch_result
+-fc_bsg_rport_dispatch(struct request_queue *q, struct Scsi_Host *shost,
+-			 struct fc_rport *rport, struct fc_bsg_job *job)
++static int
++fc_bsg_rport_dispatch(struct Scsi_Host *shost, struct bsg_job *job)
  {
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
- 	int ret = -EINVAL;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
++	struct fc_bsg_request *bsg_req = job->request;
+ 	int ret;
  
--	switch (bsg_job->request->msgcode) {
++	/* check if we have the msgcode value at least */
++	if (job->request_len < sizeof(uint32_t)) {
++		ret = -ENOMSG;
++		goto fail_rport_msg;
++	}
++
+ 	/* Validate the rport command */
+-	switch (job->request->msgcode) {
 +	switch (bsg_req->msgcode) {
  	case FC_BSG_RPT_ELS:
- 	case FC_BSG_HST_ELS_NOLOGIN:
- 		ret = qla2x00_process_els(bsg_job);
-@@ -1487,9 +1514,11 @@ qla24xx_bsg_request(struct fc_bsg_job *bsg_job)
+ 		cmdlen += sizeof(struct fc_bsg_rport_els);
+ 		goto check_bidi;
+@@ -3870,124 +3657,86 @@ check_bidi:
+ 
+ 	ret = i->f->bsg_request(job);
+ 	if (!ret)
+-		return FC_DISPATCH_UNLOCKED;
++		return 0;
+ 
+ fail_rport_msg:
+-	/* return the errno failure code as the only status */
+-	BUG_ON(job->reply_len < sizeof(uint32_t));
+-	job->reply->reply_payload_rcv_len = 0;
+-	job->reply->result = ret;
+-	job->reply_len = sizeof(uint32_t);
+-	fc_bsg_jobdone(job);
+-	return FC_DISPATCH_UNLOCKED;
++	fc_bsg_fail_job(job, ret);
++	return 0;
  }
  
- int
--qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
-+qla24xx_bsg_timeout(struct bsg_job *bsg_job)
+-
+ /**
+- * fc_bsg_request_handler - generic handler for bsg requests
+- * @q:		request queue to manage
+- * @shost:	Scsi_Host related to the bsg object
+- * @rport:	FC remote port related to the bsg object (optional)
+- * @dev:	device structure for bsg object
++ * fc_bsg_dispatch - process fc bsg requests and dispatch to LLDD
++ * @job:	bsg job to be processed
+  */
+-static void
+-fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+-		       struct fc_rport *rport, struct device *dev)
++static int fc_bsg_dispatch(struct bsg_job *job)
  {
--	scsi_qla_host_t *vha = shost_priv(bsg_job->shost);
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	scsi_qla_host_t *vha = shost_priv(fc_bsg_to_shost(bsg_job));
- 	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	int cnt, que;
-@@ -1519,14 +1548,14 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
- 						    "abort_command failed\n",
- 						    vha->host_no));
- 						bsg_job->req->errors =
--						bsg_job->reply->result = -EIO;
-+						bsg_reply->result = -EIO;
- 					} else {
- 						DEBUG2(qla_printk(KERN_INFO, ha,
- 						    "scsi(%ld): mbx "
- 						    "abort_command success\n",
- 						    vha->host_no));
- 						bsg_job->req->errors =
--						bsg_job->reply->result = 0;
-+						bsg_reply->result = 0;
- 					}
- 					spin_lock_irqsave(&ha->hardware_lock, flags);
- 					goto done;
-@@ -1537,12 +1566,12 @@ qla24xx_bsg_timeout(struct fc_bsg_job *bsg_job)
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	DEBUG2(qla_printk(KERN_INFO, ha,
- 		"scsi(%ld) SRB not found to abort\n", vha->host_no));
--	bsg_job->req->errors = bsg_job->reply->result = -ENXIO;
-+	bsg_job->req->errors = bsg_reply->result = -ENXIO;
- 	return 0;
+-	struct request *req;
+-	struct fc_bsg_job *job;
+-	enum fc_dispatch_result ret;
++	struct Scsi_Host *shost = fc_bsg_to_shost(job);
  
- done:
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--	if (bsg_job->request->msgcode == FC_BSG_HST_CT)
-+	if (bsg_req->msgcode == FC_BSG_HST_CT)
- 		kfree(sp->fcport);
- 	kfree(sp->ctx);
- 	mempool_free(sp, ha->srb_mempool);
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index cc5a792..f7f6f0b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -25,6 +25,7 @@
- #include <linux/firmware.h>
- #include <linux/aer.h>
- #include <linux/mutex.h>
-+#include <linux/bsg-lib.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -273,7 +274,7 @@ struct srb_ctx {
- 	char *name;
- 	union {
- 		struct srb_iocb *iocb_cmd;
--		struct fc_bsg_job *bsg_job;
-+		struct bsg_job *bsg_job;
- 	} u;
- };
- 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 0b38122..71f59c4 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -568,8 +568,8 @@ extern int qla82xx_fcoe_ctx_reset(scsi_qla_host_t *);
- extern void qla82xx_chip_reset_cleanup(scsi_qla_host_t *);
- 
- /* BSG related functions */
--extern int qla24xx_bsg_request(struct fc_bsg_job *);
--extern int qla24xx_bsg_timeout(struct fc_bsg_job *);
-+extern int qla24xx_bsg_request(struct bsg_job *);
-+extern int qla24xx_bsg_timeout(struct bsg_job *);
- extern int qla84xx_reset_chip(scsi_qla_host_t *, uint16_t);
- extern int qla2x00_issue_iocb_timeout(scsi_qla_host_t *, void *,
- 	dma_addr_t, size_t, uint32_t);
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 7bac3cd..e05c0ec 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -1799,7 +1799,8 @@ qla24xx_tm_iocb(srb_t *sp, struct tsk_mgmt_entry *tsk)
- static void
- qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- {
--	struct fc_bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
-+	struct bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
- 
-         els_iocb->entry_type = ELS_IOCB_TYPE;
-         els_iocb->entry_count = 1;
-@@ -1814,8 +1815,8 @@ qla24xx_els_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- 
- 	els_iocb->opcode =
- 	    (((struct srb_ctx *)sp->ctx)->type == SRB_ELS_CMD_RPT) ?
--	    bsg_job->request->rqst_data.r_els.els_code :
--	    bsg_job->request->rqst_data.h_els.command_code;
-+	    bsg_req->rqst_data.r_els.els_code :
-+	    bsg_req->rqst_data.h_els.command_code;
-         els_iocb->port_id[0] = sp->fcport->d_id.b.al_pa;
-         els_iocb->port_id[1] = sp->fcport->d_id.b.area;
-         els_iocb->port_id[2] = sp->fcport->d_id.b.domain;
-@@ -1850,7 +1851,7 @@ qla2x00_ct_iocb(srb_t *sp, ms_iocb_entry_t *ct_iocb)
- 	uint16_t tot_dsds;
- 	scsi_qla_host_t *vha = sp->fcport->vha;
- 	struct qla_hw_data *ha = vha->hw;
--	struct fc_bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
-+	struct bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
- 	int loop_iterartion = 0;
- 	int cont_iocb_prsnt = 0;
- 	int entry_count = 1;
-@@ -1925,7 +1926,7 @@ qla24xx_ct_iocb(srb_t *sp, struct ct_entry_24xx *ct_iocb)
- 	int index;
- 	uint16_t tot_dsds;
-         scsi_qla_host_t *vha = sp->fcport->vha;
--	struct fc_bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
-+	struct bsg_job *bsg_job = ((struct srb_ctx *)sp->ctx)->u.bsg_job;
- 	int loop_iterartion = 0;
- 	int cont_iocb_prsnt = 0;
- 	int entry_count = 1;
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 1b60a95..bf50009 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1009,7 +1009,8 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	struct srb_ctx *sp_bsg;
--	struct fc_bsg_job *bsg_job;
-+	struct bsg_job *bsg_job;
-+	struct fc_bsg_reply *bsg_reply;
- 	uint16_t comp_status;
- 
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
-@@ -1018,6 +1019,7 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 
- 	sp_bsg = sp->ctx;
- 	bsg_job = sp_bsg->u.bsg_job;
-+	bsg_reply = bsg_job->reply;
- 
- 	type = NULL;
- 	switch (sp_bsg->type) {
-@@ -1036,32 +1038,32 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	/* return FC_CTELS_STATUS_OK and leave the decoding of the ELS/CT
- 	 * fc payload  to the caller
- 	 */
--	bsg_job->reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
-+	bsg_reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
- 	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
- 
- 	if (comp_status != CS_COMPLETE) {
- 		if (comp_status == CS_DATA_UNDERRUN) {
--			bsg_job->reply->result = DID_OK << 16;
--			bsg_job->reply->reply_payload_rcv_len =
-+			bsg_reply->result = DID_OK << 16;
-+			bsg_reply->reply_payload_rcv_len =
- 			    le16_to_cpu(((sts_entry_t *)pkt)->rsp_info_len);
- 
- 			DEBUG2(qla_printk(KERN_WARNING, ha,
- 			    "scsi(%ld): CT pass-through-%s error "
- 			    "comp_status-status=0x%x total_byte = 0x%x.\n",
- 			    vha->host_no, type, comp_status,
--			    bsg_job->reply->reply_payload_rcv_len));
-+			    bsg_reply->reply_payload_rcv_len));
- 		} else {
- 			DEBUG2(qla_printk(KERN_WARNING, ha,
- 			    "scsi(%ld): CT pass-through-%s error "
- 			    "comp_status-status=0x%x.\n",
- 			    vha->host_no, type, comp_status));
--			bsg_job->reply->result = DID_ERROR << 16;
--			bsg_job->reply->reply_payload_rcv_len = 0;
-+			bsg_reply->result = DID_ERROR << 16;
-+			bsg_reply->reply_payload_rcv_len = 0;
- 		}
- 		DEBUG2(qla2x00_dump_buffer((uint8_t *)pkt, sizeof(*pkt)));
- 	} else {
--		bsg_job->reply->result =  DID_OK << 16;
--		bsg_job->reply->reply_payload_rcv_len =
-+		bsg_reply->result =  DID_OK << 16;;
-+		bsg_reply->reply_payload_rcv_len =
- 		    bsg_job->reply_payload.payload_len;
- 		bsg_job->reply_len = 0;
- 	}
-@@ -1077,7 +1079,8 @@ qla2x00_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 
- 	kfree(sp->ctx);
- 	mempool_free(sp, ha->srb_mempool);
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- }
- 
- static void
-@@ -1089,7 +1092,8 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	struct qla_hw_data *ha = vha->hw;
- 	srb_t *sp;
- 	struct srb_ctx *sp_bsg;
--	struct fc_bsg_job *bsg_job;
-+	struct bsg_job *bsg_job;
-+	struct fc_bsg_reply *bsg_reply;
- 	uint16_t comp_status;
- 	uint32_t fw_status[3];
- 	uint8_t* fw_sts_ptr;
-@@ -1099,6 +1103,7 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		return;
- 	sp_bsg = sp->ctx;
- 	bsg_job = sp_bsg->u.bsg_job;
-+	bsg_reply = bsg_job->reply;
- 
- 	type = NULL;
- 	switch (sp_bsg->type) {
-@@ -1123,13 +1128,13 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 	/* return FC_CTELS_STATUS_OK and leave the decoding of the ELS/CT
- 	 * fc payload  to the caller
- 	 */
--	bsg_job->reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
-+	bsg_reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
- 	bsg_job->reply_len = sizeof(struct fc_bsg_reply) + sizeof(fw_status);
- 
- 	if (comp_status != CS_COMPLETE) {
- 		if (comp_status == CS_DATA_UNDERRUN) {
--			bsg_job->reply->result = DID_OK << 16;
--			bsg_job->reply->reply_payload_rcv_len =
-+			bsg_reply->result = DID_OK << 16;
-+			bsg_reply->reply_payload_rcv_len =
- 				le16_to_cpu(((struct els_sts_entry_24xx*)pkt)->total_byte_count);
- 
- 			DEBUG2(qla_printk(KERN_WARNING, ha,
-@@ -1147,16 +1152,16 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 				vha->host_no, sp->handle, type, comp_status,
- 				le16_to_cpu(((struct els_sts_entry_24xx*)pkt)->error_subcode_1),
- 				le16_to_cpu(((struct els_sts_entry_24xx*)pkt)->error_subcode_2)));
--			bsg_job->reply->result = DID_ERROR << 16;
--			bsg_job->reply->reply_payload_rcv_len = 0;
-+			bsg_reply->result = DID_ERROR << 16;
-+			bsg_reply->reply_payload_rcv_len = 0;
- 			fw_sts_ptr = ((uint8_t*)bsg_job->req->sense) + sizeof(struct fc_bsg_reply);
- 			memcpy( fw_sts_ptr, fw_status, sizeof(fw_status));
- 		}
- 		DEBUG2(qla2x00_dump_buffer((uint8_t *)pkt, sizeof(*pkt)));
- 	}
- 	else {
--		bsg_job->reply->result =  DID_OK << 16;
--		bsg_job->reply->reply_payload_rcv_len = bsg_job->reply_payload.payload_len;
-+		bsg_reply->result =  DID_OK << 16;;
-+		bsg_reply->reply_payload_rcv_len = bsg_job->reply_payload.payload_len;
- 		bsg_job->reply_len = 0;
- 	}
- 
-@@ -1171,7 +1176,8 @@ qla24xx_els_ct_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		kfree(sp->fcport);
- 	kfree(sp->ctx);
- 	mempool_free(sp, ha->srb_mempool);
--	bsg_job->job_done(bsg_job);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
- }
- 
- static void
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index f461925..59958fd 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1214,6 +1214,22 @@ qla2x00_loop_reset(scsi_qla_host_t *vha)
- 	return QLA_SUCCESS;
- }
- 
-+static void qla2x00_abort_bsg_job(struct qla_hw_data *ha, srb_t *sp, int res)
-+{
-+	struct srb_ctx *ctx = sp->ctx;
-+	struct bsg_job *bsg_job = ctx->u.bsg_job;
-+	struct fc_bsg_request *bsg_req = bsg_job->request;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+
-+	if (bsg_req->msgcode == FC_BSG_HST_CT)
-+		kfree(sp->fcport);
-+	bsg_job->req->errors = 0;
-+	bsg_reply->result = res;
-+	bsg_job_done(bsg_job, res, bsg_reply->reply_payload_rcv_len);
-+	kfree(sp->ctx);
-+	mempool_free(sp, ha->srb_mempool);
+-	if (!get_device(dev))
+-		return;
+-
+-	while (1) {
+-		if (rport && (rport->port_state == FC_PORTSTATE_BLOCKED) &&
+-		    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
+-			break;
+-
+-		req = blk_fetch_request(q);
+-		if (!req)
+-			break;
+-
+-		if (rport && (rport->port_state != FC_PORTSTATE_ONLINE)) {
+-			req->errors = -ENXIO;
+-			spin_unlock_irq(q->queue_lock);
+-			blk_end_request_all(req, -ENXIO);
+-			spin_lock_irq(q->queue_lock);
+-			continue;
+-		}
+-
+-		spin_unlock_irq(q->queue_lock);
+-
+-		ret = fc_req_to_bsgjob(shost, rport, req);
+-		if (ret) {
+-			req->errors = ret;
+-			blk_end_request_all(req, ret);
+-			spin_lock_irq(q->queue_lock);
+-			continue;
+-		}
+-
+-		job = req->special;
++	if (scsi_is_fc_rport(job->dev))
++		return fc_bsg_rport_dispatch(shost, job);
++	else
++		return fc_bsg_host_dispatch(shost, job);
 +}
-+
- void
- qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
+ 
+-		/* check if we have the msgcode value at least */
+-		if (job->request_len < sizeof(uint32_t)) {
+-			BUG_ON(job->reply_len < sizeof(uint32_t));
+-			job->reply->reply_payload_rcv_len = 0;
+-			job->reply->result = -ENOMSG;
+-			job->reply_len = sizeof(uint32_t);
+-			fc_bsg_jobdone(job);
+-			spin_lock_irq(q->queue_lock);
+-			continue;
+-		}
++/**
++ * fc_bsg_timed_out - handler for when a bsg request timesout
++ * @req: request that timed out
++ */
++static enum blk_eh_timer_return fc_bsg_timed_out(struct request *req)
++{
++	struct bsg_job *job = req->special;
++	struct Scsi_Host *shost = fc_bsg_to_shost(job);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++	struct fc_rport *rport = fc_bsg_to_rport(job);
++	int ret;
+ 
+-		/* the dispatch routines will unlock the queue_lock */
+-		if (rport)
+-			ret = fc_bsg_rport_dispatch(q, shost, rport, job);
++	if (rport && rport->port_state == FC_PORTSTATE_BLOCKED)
++		return BLK_EH_RESET_TIMER;
++	if (i->f->bsg_timeout) {
++		ret = i->f->bsg_timeout(job);
++		if (ret == -EAGAIN)
++			return BLK_EH_RESET_TIMER;
++		else if (!ret)
++			return BLK_EH_HANDLED;
+ 		else
+-			ret = fc_bsg_host_dispatch(q, shost, job);
++			dev_printk(KERN_ERR, job->dev, "ERROR: FC BSG request "
++				   "timeout - LLD abort failed with status "
++				   "%d\n", ret);
++	}
++	return BLK_EH_NOT_HANDLED;
++}
+ 
+-		/* did dispatcher hit state that can't process any more */
+-		if (ret == FC_DISPATCH_BREAK)
+-			break;
++static int fc_bsg_rport_prep(struct request_queue *q, struct request *req)
++{
++	struct fc_rport *rport = dev_to_rport(q->queuedata);
+ 
+-		/* did dispatcher had released the lock */
+-		if (ret == FC_DISPATCH_UNLOCKED)
+-			spin_lock_irq(q->queue_lock);
+-	}
++	if (rport->port_state == FC_PORTSTATE_BLOCKED &&
++	    !(rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT))
++		return BLKPREP_DEFER;
+ 
+-	spin_unlock_irq(q->queue_lock);
+-	put_device(dev);
+-	spin_lock_irq(q->queue_lock);
+-}
++	if (rport->port_state != FC_PORTSTATE_ONLINE)
++		return BLKPREP_KILL;
+ 
++	return BLKPREP_OK;
++}
+ 
+-/**
+- * fc_bsg_host_handler - handler for bsg requests for a fc host
+- * @q:		fc host request queue
+- */
+-static void
+-fc_bsg_host_handler(struct request_queue *q)
++struct fc_rport *fc_bsg_to_rport(struct bsg_job *job)
  {
-@@ -1243,19 +1259,9 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
- 					if (ctx->type == SRB_LOGIN_CMD ||
- 					    ctx->type == SRB_LOGOUT_CMD) {
- 						ctx->u.iocb_cmd->free(sp);
--					} else {
--						struct fc_bsg_job *bsg_job =
--						    ctx->u.bsg_job;
--						if (bsg_job->request->msgcode
--						    == FC_BSG_HST_CT)
--							kfree(sp->fcport);
--						bsg_job->req->errors = 0;
--						bsg_job->reply->result = res;
--						bsg_job->job_done(bsg_job);
--						kfree(sp->ctx);
--						mempool_free(sp,
--							ha->srb_mempool);
--					}
-+					} else
-+						qla2x00_abort_bsg_job(ha, sp,
-+								      res);
- 				}
- 			}
- 		}
+-	struct Scsi_Host *shost = q->queuedata;
++	if (!scsi_is_fc_rport(job->dev))
++		return NULL;
+ 
+-	fc_bsg_request_handler(q, shost, NULL, &shost->shost_gendev);
++	return dev_to_rport(job->dev);
+ }
++EXPORT_SYMBOL_GPL(fc_bsg_to_rport);
+ 
+-
+-/**
+- * fc_bsg_rport_handler - handler for bsg requests for a fc rport
+- * @q:		rport request queue
+- */
+-static void
+-fc_bsg_rport_handler(struct request_queue *q)
++struct Scsi_Host *fc_bsg_to_shost(struct bsg_job *job)
+ {
+-	struct fc_rport *rport = q->queuedata;
+-	struct Scsi_Host *shost = rport_to_shost(rport);
++	if (scsi_is_host_device(job->dev))
++		return dev_to_shost(job->dev);
+ 
+-	fc_bsg_request_handler(q, shost, rport, &rport->dev);
++	return rport_to_shost(dev_to_rport(job->dev));
+ }
+-
++EXPORT_SYMBOL_GPL(fc_bsg_to_shost);
+ 
+ /**
+  * fc_bsg_hostadd - Create and add the bsg hooks so we can receive requests
+@@ -4000,40 +3749,31 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 	struct device *dev = &shost->shost_gendev;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct request_queue *q;
+-	int err;
+ 	char bsg_name[20];
++	int ret;
+ 
+ 	fc_host->rqst_q = NULL;
+ 
+ 	if (!i->f->bsg_request)
+ 		return -ENOTSUPP;
+ 
+-	snprintf(bsg_name, sizeof(bsg_name),
+-		 "fc_host%d", shost->host_no);
++	snprintf(bsg_name, sizeof(bsg_name), "fc_host%d", shost->host_no);
+ 
+-	q = __scsi_alloc_queue(shost, fc_bsg_host_handler);
+-	if (!q) {
+-		printk(KERN_ERR "fc_host%d: bsg interface failed to "
+-				"initialize - no request queue\n",
+-				 shost->host_no);
++	q = __scsi_alloc_queue(shost, bsg_request_fn);
++	if (!q)
+ 		return -ENOMEM;
+-	}
+-
+-	q->queuedata = shost;
+-	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
+-	blk_queue_softirq_done(q, fc_bsg_softirq_done);
+-	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+-	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+ 
+-	err = bsg_register_queue(q, dev, bsg_name, NULL);
+-	if (err) {
++	ret = bsg_setup_queue(dev, q, bsg_name, fc_bsg_dispatch,
++			      i->f->dd_bsg_size);
++	if (ret) {
+ 		printk(KERN_ERR "fc_host%d: bsg interface failed to "
+-				"initialize - register queue\n",
+-				shost->host_no);
++		       "initialize - no request queue\n", shost->host_no);
+ 		blk_cleanup_queue(q);
+-		return err;
++		return ret;
+ 	}
+ 
++	blk_queue_rq_timed_out(q, fc_bsg_timed_out);
++	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+ 	fc_host->rqst_q = q;
+ 	return 0;
+ }
+@@ -4050,98 +3790,32 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
+ 	struct device *dev = &rport->dev;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct request_queue *q;
+-	int err;
++	int ret;
+ 
+ 	rport->rqst_q = NULL;
+ 
+ 	if (!i->f->bsg_request)
+ 		return -ENOTSUPP;
+ 
+-	q = __scsi_alloc_queue(shost, fc_bsg_rport_handler);
+-	if (!q) {
+-		printk(KERN_ERR "%s: bsg interface failed to "
+-				"initialize - no request queue\n",
+-				 dev->kobj.name);
++	q = __scsi_alloc_queue(shost, bsg_request_fn);
++	if (!q)
+ 		return -ENOMEM;
+-	}
+-
+-	q->queuedata = rport;
+-	queue_flag_set_unlocked(QUEUE_FLAG_BIDI, q);
+-	blk_queue_softirq_done(q, fc_bsg_softirq_done);
+-	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+-	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+ 
+-	err = bsg_register_queue(q, dev, NULL, NULL);
+-	if (err) {
+-		printk(KERN_ERR "%s: bsg interface failed to "
+-				"initialize - register queue\n",
+-				 dev->kobj.name);
++	ret = bsg_setup_queue(dev, q, NULL, fc_bsg_dispatch, i->f->dd_bsg_size);
++	if (ret) {
++		printk(KERN_ERR "%s: bsg interface failed to initialize - "
++		       "no request queue\n", dev->kobj.name);
+ 		blk_cleanup_queue(q);
+-		return err;
++		return ret;
+ 	}
+ 
++	blk_queue_prep_rq(q, fc_bsg_rport_prep);
++	blk_queue_rq_timed_out(q, fc_bsg_timed_out);
++	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+ 	rport->rqst_q = q;
+ 	return 0;
+ }
+ 
+-
+-/**
+- * fc_bsg_remove - Deletes the bsg hooks on fchosts/rports
+- * @q:	the request_queue that is to be torn down.
+- *
+- * Notes:
+- *   Before unregistering the queue empty any requests that are blocked
+- *
+- *
+- */
+-static void
+-fc_bsg_remove(struct request_queue *q)
+-{
+-	struct request *req; /* block request */
+-	int counts; /* totals for request_list count and starved */
+-
+-	if (q) {
+-		/* Stop taking in new requests */
+-		spin_lock_irq(q->queue_lock);
+-		blk_stop_queue(q);
+-
+-		/* drain all requests in the queue */
+-		while (1) {
+-			/* need the lock to fetch a request
+-			 * this may fetch the same reqeust as the previous pass
+-			 */
+-			req = blk_fetch_request(q);
+-			/* save requests in use and starved */
+-			counts = q->rq.count[0] + q->rq.count[1] +
+-				q->rq.starved[0] + q->rq.starved[1];
+-			spin_unlock_irq(q->queue_lock);
+-			/* any requests still outstanding? */
+-			if (counts == 0)
+-				break;
+-
+-			/* This may be the same req as the previous iteration,
+-			 * always send the blk_end_request_all after a prefetch.
+-			 * It is not okay to not end the request because the
+-			 * prefetch started the request.
+-			 */
+-			if (req) {
+-				/* return -ENXIO to indicate that this queue is
+-				 * going away
+-				 */
+-				req->errors = -ENXIO;
+-				blk_end_request_all(req, -ENXIO);
+-			}
+-
+-			msleep(200); /* allow bsg to possibly finish */
+-			spin_lock_irq(q->queue_lock);
+-		}
+-
+-		bsg_unregister_queue(q);
+-		blk_cleanup_queue(q);
+-	}
+-}
+-
+-
+ /* Original Author:  Martin Hicks */
+ MODULE_AUTHOR("James Smart");
+ MODULE_DESCRIPTION("FC Transport Attributes");
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 2a65167..55650c6 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -28,8 +28,10 @@
+ #define SCSI_TRANSPORT_FC_H
+ 
+ #include <linux/sched.h>
++#include <linux/bsg-lib.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_netlink.h>
++#include <scsi/scsi_host.h>
+ 
+ struct scsi_transport_template;
+ 
+@@ -584,48 +586,6 @@ struct fc_host_attrs {
+ #define fc_host_dev_loss_tmo(x) \
+ 	(((struct fc_host_attrs *)(x)->shost_data)->dev_loss_tmo)
+ 
+-
+-struct fc_bsg_buffer {
+-	unsigned int payload_len;
+-	int sg_cnt;
+-	struct scatterlist *sg_list;
+-};
+-
+-/* Values for fc_bsg_job->state_flags (bitflags) */
+-#define FC_RQST_STATE_INPROGRESS	0
+-#define FC_RQST_STATE_DONE		1
+-
+-struct fc_bsg_job {
+-	struct Scsi_Host *shost;
+-	struct fc_rport *rport;
+-	struct device *dev;
+-	struct request *req;
+-	spinlock_t job_lock;
+-	unsigned int state_flags;
+-	unsigned int ref_cnt;
+-	void (*job_done)(struct fc_bsg_job *);
+-
+-	struct fc_bsg_request *request;
+-	struct fc_bsg_reply *reply;
+-	unsigned int request_len;
+-	unsigned int reply_len;
+-	/*
+-	 * On entry : reply_len indicates the buffer size allocated for
+-	 * the reply.
+-	 *
+-	 * Upon completion : the message handler must set reply_len
+-	 *  to indicates the size of the reply to be returned to the
+-	 *  caller.
+-	 */
+-
+-	/* DMA payloads for the request/response */
+-	struct fc_bsg_buffer request_payload;
+-	struct fc_bsg_buffer reply_payload;
+-
+-	void *dd_data;			/* Used for driver-specific storage */
+-};
+-
+-
+ /* The functions by which the transport class and the driver communicate */
+ struct fc_function_template {
+ 	void    (*get_rport_dev_loss_tmo)(struct fc_rport *);
+@@ -662,8 +622,8 @@ struct fc_function_template {
+ 	int     (* it_nexus_response)(struct Scsi_Host *, u64, int);
+ 
+ 	/* bsg support */
+-	int	(*bsg_request)(struct fc_bsg_job *);
+-	int	(*bsg_timeout)(struct fc_bsg_job *);
++	int	(*bsg_request)(struct bsg_job *);
++	int	(*bsg_timeout)(struct bsg_job *);
+ 
+ 	/* allocation lengths for host-specific data */
+ 	u32	 			dd_fcrport_size;
+@@ -798,6 +758,8 @@ struct fc_rport *fc_remote_port_add(struct Scsi_Host *shost,
+ void fc_remote_port_delete(struct fc_rport  *rport);
+ void fc_remote_port_rolechg(struct fc_rport  *rport, u32 roles);
+ int scsi_is_fc_rport(const struct device *);
++struct fc_rport *fc_bsg_to_rport(struct bsg_job *job);
++struct Scsi_Host *fc_bsg_to_shost(struct bsg_job *job);
+ u32 fc_get_event_number(void);
+ void fc_host_post_event(struct Scsi_Host *shost, u32 event_number,
+ 		enum fc_host_event_code event_code, u32 event_data);
 -- 
 1.7.2.3
 
