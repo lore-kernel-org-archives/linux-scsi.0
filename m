@@ -1,200 +1,165 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH RFC/RFT 08/10] bfa: convert bfa to blk bsg lib
-Date: Sun, 24 Jul 2011 03:59:22 -0500
-Message-ID: <1311497964-26842-9-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH RFC/RFT 09/10] zfcp: convert zfcp to blk bsg lib
+Date: Sun, 24 Jul 2011 03:59:23 -0500
+Message-ID: <1311497964-26842-10-git-send-email-michaelc@cs.wisc.edu>
 References: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44317 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28801 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752206Ab1GXI4s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2011 04:56:48 -0400
+	id S1752217Ab1GXI4t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Jul 2011 04:56:49 -0400
 In-Reply-To: <1311497964-26842-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Krishna Gudipati <kgudipat@brocade.com>, Jing Huang <huangj@brocade.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This converts bfa to use the bsg lib. I also coverted it
-to use shost_priv in the bfa bsg code.
+This patch converts zfcp to the blk bsg lib. The differences
+visible to the driver are:
+- fc_bsg_job is now named bsg_job.
+- no rport pointer. Can access it through the device pointer.
+- the request and reply pointers on the scsi_bsg_job struct
+  are now void pointers, so you cannot do bsg_job->request->some_field.
+
+Patch is only compile tested and made over scsi-misc.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Krishna Gudipati <kgudipat@brocade.com>
-Cc: Jing Huang <huangj@brocade.com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
- drivers/scsi/bfa/bfad_bsg.c |   58 +++++++++++++++++++++++--------------------
- drivers/scsi/bfa/bfad_im.h  |    4 +-
- 2 files changed, 33 insertions(+), 29 deletions(-)
+ drivers/s390/scsi/zfcp_ext.h |    4 ++--
+ drivers/s390/scsi/zfcp_fc.c  |   33 +++++++++++++++++----------------
+ 2 files changed, 19 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index 89f863e..6414244 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -1710,11 +1710,12 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- }
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index 03627cfd..bfe6ea7 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -94,8 +94,8 @@ extern void zfcp_fc_link_test_work(struct work_struct *);
+ extern void zfcp_fc_wka_ports_force_offline(struct zfcp_fc_wka_ports *);
+ extern int zfcp_fc_gs_setup(struct zfcp_adapter *);
+ extern void zfcp_fc_gs_destroy(struct zfcp_adapter *);
+-extern int zfcp_fc_exec_bsg_job(struct fc_bsg_job *);
+-extern int zfcp_fc_timeout_bsg_job(struct fc_bsg_job *);
++extern int zfcp_fc_exec_bsg_job(struct bsg_job *);
++extern int zfcp_fc_timeout_bsg_job(struct bsg_job *);
+ extern void zfcp_fc_sym_name_update(struct work_struct *);
  
- static int
--bfad_im_bsg_vendor_request(struct fc_bsg_job *job)
-+bfad_im_bsg_vendor_request(struct bsg_job *job)
+ /* zfcp_fsf.c */
+diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
+index 297e6b7..164b0d9 100644
+--- a/drivers/s390/scsi/zfcp_fc.c
++++ b/drivers/s390/scsi/zfcp_fc.c
+@@ -818,26 +818,27 @@ out_free:
+ 
+ static void zfcp_fc_ct_els_job_handler(void *data)
  {
--	uint32_t vendor_cmd = job->request->rqst_data.h_vendor.vendor_cmd[0];
--	struct bfad_im_port_s *im_port =
--			(struct bfad_im_port_s *) job->shost->hostdata[0];
-+	struct fc_bsg_reply *reply = job->reply;
-+	struct fc_bsg_request *req = job->request;
-+	uint32_t vendor_cmd = req->rqst_data.h_vendor.vendor_cmd[0];
-+	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
- 	struct bfad_s *bfad = im_port->bfad;
- 	void *payload_kbuf;
- 	int rc = -EINVAL;
-@@ -1748,18 +1749,18 @@ bfad_im_bsg_vendor_request(struct fc_bsg_job *job)
+-	struct fc_bsg_job *job = data;
++	struct bsg_job *job = data;
+ 	struct zfcp_fsf_ct_els *zfcp_ct_els = job->dd_data;
+ 	struct fc_bsg_reply *jr = job->reply;
  
- 	/* Fill the BSG job reply data */
- 	job->reply_len = job->reply_payload.payload_len;
--	job->reply->reply_payload_rcv_len = job->reply_payload.payload_len;
--	job->reply->result = rc;
-+	reply->reply_payload_rcv_len = job->reply_payload.payload_len;
-+	reply->result = rc;
- 
+ 	jr->reply_payload_rcv_len = job->reply_payload.payload_len;
+ 	jr->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
+ 	jr->result = zfcp_ct_els->status ? -EIO : 0;
 -	job->job_done(job);
-+	bsg_job_done(job, reply->result, reply->reply_payload_rcv_len);
- 	return rc;
- error:
- 	/* free the command buffer */
- 	kfree(payload_kbuf);
- out:
--	job->reply->result = rc;
-+	reply->result = rc;
- 	job->reply_len = sizeof(uint32_t);
--	job->reply->reply_payload_rcv_len = 0;
-+	reply->reply_payload_rcv_len = 0;
- 	return rc;
++	bsg_job_done(job, jr->result, jr->reply_payload_rcv_len);
  }
  
-@@ -1885,7 +1886,7 @@ bfad_fcxp_free_mem(struct bfad_s *bfad, struct bfad_buf_info *buf_base,
- }
- 
- int
--bfad_fcxp_bsg_send(struct fc_bsg_job *job, struct bfad_fcxp *drv_fcxp,
-+bfad_fcxp_bsg_send(struct bsg_job *job, struct bfad_fcxp *drv_fcxp,
- 		   bfa_bsg_fcpt_t *bsg_fcpt)
+-static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct fc_bsg_job *job)
++static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct bsg_job *job)
  {
- 	struct bfa_fcxp_s *hal_fcxp;
-@@ -1925,27 +1926,28 @@ bfad_fcxp_bsg_send(struct fc_bsg_job *job, struct bfad_fcxp *drv_fcxp,
++	struct fc_bsg_request *jq = job->request;
+ 	u32 preamble_word1;
+ 	u8 gs_type;
+ 	struct zfcp_adapter *adapter;
+ 
+-	preamble_word1 = job->request->rqst_data.r_ct.preamble_word1;
++	preamble_word1 = jq->rqst_data.r_ct.preamble_word1;
+ 	gs_type = (preamble_word1 & 0xff000000) >> 24;
+ 
+-	adapter = (struct zfcp_adapter *) job->shost->hostdata[0];
++	adapter = shost_priv(fc_bsg_to_shost(job));
+ 
+ 	switch (gs_type) {
+ 	case FC_FST_ALIAS:
+@@ -857,7 +858,7 @@ static struct zfcp_fc_wka_port *zfcp_fc_job_wka_port(struct fc_bsg_job *job)
+ 
+ static void zfcp_fc_ct_job_handler(void *data)
+ {
+-	struct fc_bsg_job *job = data;
++	struct bsg_job *job = data;
+ 	struct zfcp_fc_wka_port *wka_port;
+ 
+ 	wka_port = zfcp_fc_job_wka_port(job);
+@@ -866,11 +867,12 @@ static void zfcp_fc_ct_job_handler(void *data)
+ 	zfcp_fc_ct_els_job_handler(data);
  }
  
- int
--bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
-+bfad_im_bsg_els_ct_request(struct bsg_job *job)
+-static int zfcp_fc_exec_els_job(struct fc_bsg_job *job,
++static int zfcp_fc_exec_els_job(struct bsg_job *job,
+ 				struct zfcp_adapter *adapter)
  {
-+	struct fc_bsg_reply *reply = job->reply;
-+	struct fc_bsg_request *req = job->request;
-+	struct bfad_im_port_s *im_port = shost_priv(fc_bsg_to_shost(job));
- 	struct bfa_bsg_data *bsg_data;
--	struct bfad_im_port_s *im_port =
--			(struct bfad_im_port_s *) job->shost->hostdata[0];
- 	struct bfad_s *bfad = im_port->bfad;
- 	bfa_bsg_fcpt_t *bsg_fcpt;
- 	struct bfad_fcxp    *drv_fcxp;
- 	struct bfa_fcs_lport_s *fcs_port;
- 	struct bfa_fcs_rport_s *fcs_rport;
--	uint32_t command_type = job->request->msgcode;
-+	uint32_t command_type = req->msgcode;
- 	unsigned long flags;
- 	struct bfad_buf_info *rsp_buf_info;
- 	void *req_kbuf = NULL, *rsp_kbuf = NULL;
- 	int rc = -EINVAL;
+ 	struct zfcp_fsf_ct_els *els = job->dd_data;
+-	struct fc_rport *rport = job->rport;
++	struct fc_rport *rport = fc_bsg_to_rport(job);
++	struct fc_bsg_request *jq = job->request;
+ 	struct zfcp_port *port;
+ 	u32 d_id;
  
- 	job->reply_len  = sizeof(uint32_t);	/* Atleast uint32_t reply_len */
--	job->reply->reply_payload_rcv_len = 0;
-+	reply->reply_payload_rcv_len = 0;
+@@ -882,13 +884,13 @@ static int zfcp_fc_exec_els_job(struct fc_bsg_job *job,
+ 		d_id = port->d_id;
+ 		put_device(&port->dev);
+ 	} else
+-		d_id = ntoh24(job->request->rqst_data.h_els.port_id);
++		d_id = ntoh24(jq->rqst_data.h_els.port_id);
  
- 	/* Get the payload passed in from userspace */
--	bsg_data = (struct bfa_bsg_data *) (((char *)job->request) +
-+	bsg_data = (struct bfa_bsg_data *) (((char *)req) +
- 					sizeof(struct fc_bsg_request));
- 	if (bsg_data == NULL)
- 		goto out;
-@@ -2086,13 +2088,13 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
- 	/* fill the job->reply data */
- 	if (drv_fcxp->req_status == BFA_STATUS_OK) {
- 		job->reply_len = drv_fcxp->rsp_len;
--		job->reply->reply_payload_rcv_len = drv_fcxp->rsp_len;
--		job->reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
-+		reply->reply_payload_rcv_len = drv_fcxp->rsp_len;
-+		reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
- 	} else {
--		job->reply->reply_payload_rcv_len =
-+		reply->reply_payload_rcv_len =
- 					sizeof(struct fc_bsg_ctels_reply);
- 		job->reply_len = sizeof(uint32_t);
--		job->reply->reply_data.ctels_reply.status =
-+		reply->reply_data.ctels_reply.status =
- 						FC_CTELS_STATUS_REJECT;
- 	}
- 
-@@ -2118,20 +2120,22 @@ out_free_mem:
- 	kfree(bsg_fcpt);
- 	kfree(drv_fcxp);
- out:
--	job->reply->result = rc;
-+	reply->result = rc;
- 
- 	if (rc == BFA_STATUS_OK)
--		job->job_done(job);
-+		bsg_job_done(job, reply->result, reply->reply_payload_rcv_len);
- 
- 	return rc;
+ 	els->handler = zfcp_fc_ct_els_job_handler;
+ 	return zfcp_fsf_send_els(adapter, d_id, els, job->req->timeout / HZ);
  }
  
- int
--bfad_im_bsg_request(struct fc_bsg_job *job)
-+bfad_im_bsg_request(struct bsg_job *job)
+-static int zfcp_fc_exec_ct_job(struct fc_bsg_job *job,
++static int zfcp_fc_exec_ct_job(struct bsg_job *job,
+ 			       struct zfcp_adapter *adapter)
  {
-+	struct fc_bsg_reply *reply = job->reply;
-+	struct fc_bsg_request *req = job->request;
- 	uint32_t rc = BFA_STATUS_OK;
+ 	int ret;
+@@ -911,14 +913,13 @@ static int zfcp_fc_exec_ct_job(struct fc_bsg_job *job,
+ 	return ret;
+ }
+ 
+-int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
++int zfcp_fc_exec_bsg_job(struct bsg_job *job)
+ {
+-	struct Scsi_Host *shost;
+ 	struct zfcp_adapter *adapter;
+ 	struct zfcp_fsf_ct_els *ct_els = job->dd_data;
++	struct fc_bsg_request *jq = job->request;
+ 
+-	shost = job->rport ? rport_to_shost(job->rport) : job->shost;
+-	adapter = (struct zfcp_adapter *)shost->hostdata[0];
++	adapter = shost_priv(fc_bsg_to_shost(job));
+ 
+ 	if (!(atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_OPEN))
+ 		return -EINVAL;
+@@ -927,7 +928,7 @@ int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
+ 	ct_els->resp = job->reply_payload.sg_list;
+ 	ct_els->handler_data = job;
  
 -	switch (job->request->msgcode) {
-+	switch (req->msgcode) {
- 	case FC_BSG_HST_VENDOR:
- 		/* Process BSG HST Vendor requests */
- 		rc = bfad_im_bsg_vendor_request(job);
-@@ -2144,8 +2148,8 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
- 		rc = bfad_im_bsg_els_ct_request(job);
- 		break;
- 	default:
--		job->reply->result = rc = -EINVAL;
--		job->reply->reply_payload_rcv_len = 0;
-+		reply->result = rc = -EINVAL;
-+		reply->reply_payload_rcv_len = 0;
- 		break;
++	switch (jq->msgcode) {
+ 	case FC_BSG_RPT_ELS:
+ 	case FC_BSG_HST_ELS_NOLOGIN:
+ 		return zfcp_fc_exec_els_job(job, adapter);
+@@ -939,7 +940,7 @@ int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
  	}
- 
-@@ -2153,7 +2157,7 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
  }
  
- int
--bfad_im_bsg_timeout(struct fc_bsg_job *job)
-+bfad_im_bsg_timeout(struct bsg_job *job)
+-int zfcp_fc_timeout_bsg_job(struct fc_bsg_job *job)
++int zfcp_fc_timeout_bsg_job(struct bsg_job *job)
  {
- 	/* Don't complete the BSG job request - return -EAGAIN
- 	 * to reset bsg job timeout : for ELS/CT pass thru we
-diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
-index 4fe34d5..d7cc6a6 100644
---- a/drivers/scsi/bfa/bfad_im.h
-+++ b/drivers/scsi/bfa/bfad_im.h
-@@ -141,7 +141,7 @@ extern struct device_attribute *bfad_im_vport_attrs[];
- 
- irqreturn_t bfad_intx(int irq, void *dev_id);
- 
--int bfad_im_bsg_request(struct fc_bsg_job *job);
--int bfad_im_bsg_timeout(struct fc_bsg_job *job);
-+int bfad_im_bsg_request(struct bsg_job *job);
-+int bfad_im_bsg_timeout(struct bsg_job *job);
- 
- #endif
+ 	/* hardware tracks timeout, reset bsg timeout to not interfere */
+ 	return -EAGAIN;
 -- 
 1.7.2.3
 
