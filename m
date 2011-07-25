@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 12/19] libiscsi: don't bugon when if user sets markers
-Date: Mon, 25 Jul 2011 13:48:48 -0500
-Message-ID: <1311619735-15323-13-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 07/19] iscsi class: sysfs group is_visible callout for session attrs
+Date: Mon, 25 Jul 2011 13:48:43 -0500
+Message-ID: <1311619735-15323-8-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18944 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:59003 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752580Ab1GYSqL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:11 -0400
+	id S1752582Ab1GYSqG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:06 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,42 +16,605 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-libiscsi does not support markers and if someone tries
-to set them the driver does a BUG(). There is not need
-to be that extreme. Just return -ENOSYS.
+The iscsi class currently does not support writable sysfs
+attrs for LLD sysfs settings. This patch converts the
+iscsi class and driver's session attrs to use the attribute
+container sysfs group and the sysfs group's is_visible callout
+to be able to support readable or writable sysfs attrs.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/infiniband/ulp/iser/iscsi_iser.c |   32 ++++---
+ drivers/scsi/be2iscsi/be_iscsi.c         |   19 ++++
+ drivers/scsi/be2iscsi/be_main.c          |   15 ---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c         |   34 ++++---
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c       |   11 --
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c       |   11 --
+ drivers/scsi/cxgbi/libcxgbi.c            |   20 ++++
+ drivers/scsi/iscsi_tcp.c                 |   34 ++++---
+ drivers/scsi/qla4xxx/ql4_os.c            |    5 +-
+ drivers/scsi/scsi_transport_iscsi.c      |  148 +++++++++++++++++++-----------
+ include/scsi/iscsi_if.h                  |   38 --------
+ include/scsi/scsi_transport_iscsi.h      |    4 +-
+ 12 files changed, 199 insertions(+), 172 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index d7a4120..49e1819 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -3179,7 +3179,6 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct iscsi_session *session = conn->session;
--	uint32_t value;
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index b16c6a1..7d9167b 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -644,6 +644,25 @@ static mode_t iser_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_PERSISTENT_PORT:
+ 		case ISCSI_PARAM_PING_TMO:
+ 		case ISCSI_PARAM_RECV_TMO:
++		case ISCSI_PARAM_INITIAL_R2T_EN:
++		case ISCSI_PARAM_MAX_R2T:
++		case ISCSI_PARAM_IMM_DATA_EN:
++		case ISCSI_PARAM_FIRST_BURST:
++		case ISCSI_PARAM_MAX_BURST:
++		case ISCSI_PARAM_PDU_INORDER_EN:
++		case ISCSI_PARAM_DATASEQ_INORDER_EN:
++		case ISCSI_PARAM_TARGET_NAME:
++		case ISCSI_PARAM_TPGT:
++		case ISCSI_PARAM_USERNAME:
++		case ISCSI_PARAM_PASSWORD:
++		case ISCSI_PARAM_USERNAME_IN:
++		case ISCSI_PARAM_PASSWORD_IN:
++		case ISCSI_PARAM_FAST_ABORT:
++		case ISCSI_PARAM_ABORT_TMO:
++		case ISCSI_PARAM_LU_RESET_TMO:
++		case ISCSI_PARAM_TGT_RESET_TMO:
++		case ISCSI_PARAM_IFACE_NAME:
++		case ISCSI_PARAM_INITIATOR_NAME:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+@@ -674,19 +693,6 @@ static struct iscsi_transport iscsi_iser_transport = {
+ 	.owner                  = THIS_MODULE,
+ 	.name                   = "iser",
+ 	.caps                   = CAP_RECOVERY_L0 | CAP_MULTI_R2T,
+-	.param_mask		= ISCSI_INITIAL_R2T_EN |
+-				  ISCSI_MAX_R2T |
+-				  ISCSI_IMM_DATA_EN |
+-				  ISCSI_FIRST_BURST |
+-				  ISCSI_MAX_BURST |
+-				  ISCSI_PDU_INORDER_EN |
+-				  ISCSI_DATASEQ_INORDER_EN |
+-				  ISCSI_TARGET_NAME | ISCSI_TPGT |
+-				  ISCSI_USERNAME | ISCSI_PASSWORD |
+-				  ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+-				  ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				  ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+-				  ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS |
+ 				  ISCSI_HOST_NETDEV_NAME |
+ 				  ISCSI_HOST_INITIATOR_NAME,
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 87b7ae1..ecd19bb 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -750,6 +750,25 @@ mode_t be2iscsi_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_PERSISTENT_PORT:
+ 		case ISCSI_PARAM_PING_TMO:
+ 		case ISCSI_PARAM_RECV_TMO:
++		case ISCSI_PARAM_INITIAL_R2T_EN:
++		case ISCSI_PARAM_MAX_R2T:
++		case ISCSI_PARAM_IMM_DATA_EN:
++		case ISCSI_PARAM_FIRST_BURST:
++		case ISCSI_PARAM_MAX_BURST:
++		case ISCSI_PARAM_PDU_INORDER_EN:
++		case ISCSI_PARAM_DATASEQ_INORDER_EN:
++		case ISCSI_PARAM_ERL:
++		case ISCSI_PARAM_TARGET_NAME:
++		case ISCSI_PARAM_TPGT:
++		case ISCSI_PARAM_USERNAME:
++		case ISCSI_PARAM_PASSWORD:
++		case ISCSI_PARAM_USERNAME_IN:
++		case ISCSI_PARAM_PASSWORD_IN:
++		case ISCSI_PARAM_FAST_ABORT:
++		case ISCSI_PARAM_ABORT_TMO:
++		case ISCSI_PARAM_LU_RESET_TMO:
++		case ISCSI_PARAM_IFACE_NAME:
++		case ISCSI_PARAM_INITIATOR_NAME:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index d2a3e4a..93a3c70 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -4364,21 +4364,6 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 	.name = DRV_NAME,
+ 	.caps = CAP_RECOVERY_L0 | CAP_HDRDGST | CAP_TEXT_NEGO |
+ 		CAP_MULTI_R2T | CAP_DATADGST | CAP_DATA_PATH_OFFLOAD,
+-	.param_mask =
+-		ISCSI_INITIAL_R2T_EN |
+-		ISCSI_MAX_R2T |
+-		ISCSI_IMM_DATA_EN |
+-		ISCSI_FIRST_BURST |
+-		ISCSI_MAX_BURST |
+-		ISCSI_PDU_INORDER_EN |
+-		ISCSI_DATASEQ_INORDER_EN |
+-		ISCSI_ERL |
+-		ISCSI_TARGET_NAME | ISCSI_TPGT |
+-		ISCSI_USERNAME | ISCSI_PASSWORD |
+-		ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+-		ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-		ISCSI_LU_RESET_TMO |
+-		ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask = ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+ 				ISCSI_HOST_INITIATOR_NAME,
+ 	.create_session = beiscsi_session_create,
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 9a42462..24f6630 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -2193,6 +2193,26 @@ static mode_t bnx2i_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_PERSISTENT_PORT:
+ 		case ISCSI_PARAM_PING_TMO:
+ 		case ISCSI_PARAM_RECV_TMO:
++		case ISCSI_PARAM_INITIAL_R2T_EN:
++		case ISCSI_PARAM_MAX_R2T:
++		case ISCSI_PARAM_IMM_DATA_EN:
++		case ISCSI_PARAM_FIRST_BURST:
++		case ISCSI_PARAM_MAX_BURST:
++		case ISCSI_PARAM_PDU_INORDER_EN:
++		case ISCSI_PARAM_DATASEQ_INORDER_EN:
++		case ISCSI_PARAM_ERL:
++		case ISCSI_PARAM_TARGET_NAME:
++		case ISCSI_PARAM_TPGT:
++		case ISCSI_PARAM_USERNAME:
++		case ISCSI_PARAM_PASSWORD:
++		case ISCSI_PARAM_USERNAME_IN:
++		case ISCSI_PARAM_PASSWORD_IN:
++		case ISCSI_PARAM_FAST_ABORT:
++		case ISCSI_PARAM_ABORT_TMO:
++		case ISCSI_PARAM_LU_RESET_TMO:
++		case ISCSI_PARAM_TGT_RESET_TMO:
++		case ISCSI_PARAM_IFACE_NAME:
++		case ISCSI_PARAM_INITIATOR_NAME:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+@@ -2231,20 +2251,6 @@ struct iscsi_transport bnx2i_iscsi_transport = {
+ 				  CAP_MULTI_R2T | CAP_DATADGST |
+ 				  CAP_DATA_PATH_OFFLOAD |
+ 				  CAP_TEXT_NEGO,
+-	.param_mask		= ISCSI_INITIAL_R2T_EN |
+-				  ISCSI_MAX_R2T |
+-				  ISCSI_IMM_DATA_EN |
+-				  ISCSI_FIRST_BURST |
+-				  ISCSI_MAX_BURST |
+-				  ISCSI_PDU_INORDER_EN |
+-				  ISCSI_DATASEQ_INORDER_EN |
+-				  ISCSI_ERL |
+-				  ISCSI_TARGET_NAME | ISCSI_TPGT |
+-				  ISCSI_USERNAME | ISCSI_PASSWORD |
+-				  ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+-				  ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				  ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+-				  ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+ 				  ISCSI_HOST_NETDEV_NAME,
+ 	.create_session		= bnx2i_session_create,
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index d2a6d73..541e14d 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -106,17 +106,6 @@ static struct iscsi_transport cxgb3i_iscsi_transport = {
+ 	.caps		= CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_HDRDGST
+ 				| CAP_DATADGST | CAP_DIGEST_OFFLOAD |
+ 				CAP_PADDING_OFFLOAD | CAP_TEXT_NEGO,
+-	.param_mask	=
+-				ISCSI_INITIAL_R2T_EN | ISCSI_MAX_R2T |
+-				ISCSI_IMM_DATA_EN | ISCSI_FIRST_BURST |
+-				ISCSI_MAX_BURST | ISCSI_PDU_INORDER_EN |
+-				ISCSI_DATASEQ_INORDER_EN | ISCSI_ERL |
+-				ISCSI_TARGET_NAME | ISCSI_TPGT |
+-				ISCSI_USERNAME | ISCSI_PASSWORD |
+-				ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+-				ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+-				ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+ 				ISCSI_HOST_INITIATOR_NAME |
+ 				ISCSI_HOST_NETDEV_NAME,
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index 7b704f6..c6f985b 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -107,17 +107,6 @@ static struct iscsi_transport cxgb4i_iscsi_transport = {
+ 	.caps		= CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_HDRDGST |
+ 				CAP_DATADGST | CAP_DIGEST_OFFLOAD |
+ 				CAP_PADDING_OFFLOAD | CAP_TEXT_NEGO,
+-	.param_mask	=
+-				ISCSI_INITIAL_R2T_EN | ISCSI_MAX_R2T |
+-				ISCSI_IMM_DATA_EN | ISCSI_FIRST_BURST |
+-				ISCSI_MAX_BURST | ISCSI_PDU_INORDER_EN |
+-				ISCSI_DATASEQ_INORDER_EN | ISCSI_ERL |
+-				ISCSI_TARGET_NAME | ISCSI_TPGT |
+-				ISCSI_USERNAME | ISCSI_PASSWORD |
+-				ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+-				ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+-				ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+ 				ISCSI_HOST_INITIATOR_NAME |
+ 				ISCSI_HOST_NETDEV_NAME,
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index f98a01b..14b3874 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -2582,6 +2582,26 @@ mode_t cxgbi_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_PERSISTENT_PORT:
+ 		case ISCSI_PARAM_PING_TMO:
+ 		case ISCSI_PARAM_RECV_TMO:
++		case ISCSI_PARAM_INITIAL_R2T_EN:
++		case ISCSI_PARAM_MAX_R2T:
++		case ISCSI_PARAM_IMM_DATA_EN:
++		case ISCSI_PARAM_FIRST_BURST:
++		case ISCSI_PARAM_MAX_BURST:
++		case ISCSI_PARAM_PDU_INORDER_EN:
++		case ISCSI_PARAM_DATASEQ_INORDER_EN:
++		case ISCSI_PARAM_ERL:
++		case ISCSI_PARAM_TARGET_NAME:
++		case ISCSI_PARAM_TPGT:
++		case ISCSI_PARAM_USERNAME:
++		case ISCSI_PARAM_PASSWORD:
++		case ISCSI_PARAM_USERNAME_IN:
++		case ISCSI_PARAM_PASSWORD_IN:
++		case ISCSI_PARAM_FAST_ABORT:
++		case ISCSI_PARAM_ABORT_TMO:
++		case ISCSI_PARAM_LU_RESET_TMO:
++		case ISCSI_PARAM_TGT_RESET_TMO:
++		case ISCSI_PARAM_IFACE_NAME:
++		case ISCSI_PARAM_INITIATOR_NAME:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 1dcb4d1..6ab2122 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -888,6 +888,26 @@ static mode_t iscsi_sw_tcp_attr_is_visible(int param_type, int param)
+ 		case ISCSI_PARAM_PERSISTENT_PORT:
+ 		case ISCSI_PARAM_PING_TMO:
+ 		case ISCSI_PARAM_RECV_TMO:
++		case ISCSI_PARAM_INITIAL_R2T_EN:
++		case ISCSI_PARAM_MAX_R2T:
++		case ISCSI_PARAM_IMM_DATA_EN:
++		case ISCSI_PARAM_FIRST_BURST:
++		case ISCSI_PARAM_MAX_BURST:
++		case ISCSI_PARAM_PDU_INORDER_EN:
++		case ISCSI_PARAM_DATASEQ_INORDER_EN:
++		case ISCSI_PARAM_ERL:
++		case ISCSI_PARAM_TARGET_NAME:
++		case ISCSI_PARAM_TPGT:
++		case ISCSI_PARAM_USERNAME:
++		case ISCSI_PARAM_PASSWORD:
++		case ISCSI_PARAM_USERNAME_IN:
++		case ISCSI_PARAM_PASSWORD_IN:
++		case ISCSI_PARAM_FAST_ABORT:
++		case ISCSI_PARAM_ABORT_TMO:
++		case ISCSI_PARAM_LU_RESET_TMO:
++		case ISCSI_PARAM_TGT_RESET_TMO:
++		case ISCSI_PARAM_IFACE_NAME:
++		case ISCSI_PARAM_INITIATOR_NAME:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+@@ -935,20 +955,6 @@ static struct iscsi_transport iscsi_sw_tcp_transport = {
+ 	.name			= "tcp",
+ 	.caps			= CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_HDRDGST
+ 				  | CAP_DATADGST,
+-	.param_mask		= ISCSI_INITIAL_R2T_EN |
+-				  ISCSI_MAX_R2T |
+-				  ISCSI_IMM_DATA_EN |
+-				  ISCSI_FIRST_BURST |
+-				  ISCSI_MAX_BURST |
+-				  ISCSI_PDU_INORDER_EN |
+-				  ISCSI_DATASEQ_INORDER_EN |
+-				  ISCSI_ERL |
+-				  ISCSI_TARGET_NAME | ISCSI_TPGT |
+-				  ISCSI_USERNAME | ISCSI_PASSWORD |
+-				  ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+-				  ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+-				  ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO |
+-				  ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
+ 				  ISCSI_HOST_INITIATOR_NAME |
+ 				  ISCSI_HOST_NETDEV_NAME,
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index f8a1506..3022c15 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -138,8 +138,6 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 	.name			= DRIVER_NAME,
+ 	.caps			= CAP_FW_DB | CAP_SENDTARGETS_OFFLOAD |
+ 				  CAP_DATA_PATH_OFFLOAD,
+-	.param_mask		= ISCSI_TARGET_NAME | ISCSI_TPGT |
+-				  ISCSI_TARGET_ALIAS,
+ 	.host_param_mask	= ISCSI_HOST_HWADDRESS |
+ 				  ISCSI_HOST_IPADDRESS |
+ 				  ISCSI_HOST_INITIATOR_NAME,
+@@ -173,6 +171,9 @@ static mode_t ql4_attr_is_visible(int param_type, int param)
+ 		switch (param) {
+ 		case ISCSI_PARAM_CONN_ADDRESS:
+ 		case ISCSI_PARAM_CONN_PORT:
++		case ISCSI_PARAM_TARGET_NAME:
++		case ISCSI_PARAM_TPGT:
++		case ISCSI_PARAM_TARGET_ALIAS:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index e9eca98..75d7f6e 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -32,8 +32,6 @@
+ #include <scsi/iscsi_if.h>
+ #include <scsi/scsi_cmnd.h>
  
- 	switch(param) {
- 	case ISCSI_PARAM_FAST_ABORT:
-@@ -3236,14 +3235,6 @@ int iscsi_set_param(struct iscsi_cls_conn *cls_conn,
- 	case ISCSI_PARAM_ERL:
- 		sscanf(buf, "%d", &session->erl);
- 		break;
--	case ISCSI_PARAM_IFMARKER_EN:
--		sscanf(buf, "%d", &value);
--		BUG_ON(value);
--		break;
--	case ISCSI_PARAM_OFMARKER_EN:
--		sscanf(buf, "%d", &value);
--		BUG_ON(value);
--		break;
- 	case ISCSI_PARAM_EXP_STATSN:
- 		sscanf(buf, "%u", &conn->exp_statsn);
- 		break;
+-#define ISCSI_SESSION_ATTRS 23
+-#define ISCSI_CONN_ATTRS 13
+ #define ISCSI_HOST_ATTRS 4
+ 
+ #define ISCSI_TRANSPORT_VERSION "2.0-870"
+@@ -79,7 +77,6 @@ struct iscsi_internal {
+ 	struct device_attribute *host_attrs[ISCSI_HOST_ATTRS + 1];
+ 	struct transport_container conn_cont;
+ 	struct transport_container session_cont;
+-	struct device_attribute *session_attrs[ISCSI_SESSION_ATTRS + 1];
+ };
+ 
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+@@ -2114,7 +2111,6 @@ show_session_param_##param(struct device *dev,				\
+ 	iscsi_session_attr_show(param, perm)				\
+ static ISCSI_CLASS_ATTR(sess, field, S_IRUGO, show_session_param_##param, \
+ 			NULL);
+-
+ iscsi_session_attr(targetname, ISCSI_PARAM_TARGET_NAME, 0);
+ iscsi_session_attr(initial_r2t, ISCSI_PARAM_INITIAL_R2T_EN, 0);
+ iscsi_session_attr(max_outstanding_r2t, ISCSI_PARAM_MAX_R2T, 0);
+@@ -2191,6 +2187,100 @@ static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUSR,		\
+ 			store_priv_session_##field)
+ iscsi_priv_session_rw_attr(recovery_tmo, "%d");
+ 
++static struct attribute *iscsi_session_attrs[] = {
++	&dev_attr_sess_initial_r2t.attr,
++	&dev_attr_sess_max_outstanding_r2t.attr,
++	&dev_attr_sess_immediate_data.attr,
++	&dev_attr_sess_first_burst_len.attr,
++	&dev_attr_sess_max_burst_len.attr,
++	&dev_attr_sess_data_pdu_in_order.attr,
++	&dev_attr_sess_data_seq_in_order.attr,
++	&dev_attr_sess_erl.attr,
++	&dev_attr_sess_targetname.attr,
++	&dev_attr_sess_tpgt.attr,
++	&dev_attr_sess_password.attr,
++	&dev_attr_sess_password_in.attr,
++	&dev_attr_sess_username.attr,
++	&dev_attr_sess_username_in.attr,
++	&dev_attr_sess_fast_abort.attr,
++	&dev_attr_sess_abort_tmo.attr,
++	&dev_attr_sess_lu_reset_tmo.attr,
++	&dev_attr_sess_tgt_reset_tmo.attr,
++	&dev_attr_sess_ifacename.attr,
++	&dev_attr_sess_initiatorname.attr,
++	&dev_attr_sess_targetalias.attr,
++	&dev_attr_priv_sess_recovery_tmo.attr,
++	&dev_attr_priv_sess_state.attr,
++	NULL,
++};
++
++static mode_t iscsi_session_attr_is_visible(struct kobject *kobj,
++					    struct attribute *attr, int i)
++{
++	struct device *cdev = container_of(kobj, struct device, kobj);
++	struct iscsi_cls_session *session = transport_class_to_session(cdev);
++	struct iscsi_transport *t = session->transport;
++	int param;
++
++	if (attr == &dev_attr_sess_initial_r2t.attr)
++		param = ISCSI_PARAM_INITIAL_R2T_EN;
++	else if (attr == &dev_attr_sess_max_outstanding_r2t.attr)
++		param = ISCSI_PARAM_MAX_R2T;
++	else if (attr == &dev_attr_sess_immediate_data.attr)
++		param = ISCSI_PARAM_IMM_DATA_EN;
++	else if (attr == &dev_attr_sess_first_burst_len.attr)
++		param = ISCSI_PARAM_FIRST_BURST;
++	else if (attr == &dev_attr_sess_max_burst_len.attr)
++		param = ISCSI_PARAM_MAX_BURST;
++	else if (attr == &dev_attr_sess_data_pdu_in_order.attr)
++		param = ISCSI_PARAM_PDU_INORDER_EN;
++	else if (attr == &dev_attr_sess_data_seq_in_order.attr)
++		param = ISCSI_PARAM_DATASEQ_INORDER_EN;
++	else if (attr == &dev_attr_sess_erl.attr)
++		param = ISCSI_PARAM_ERL;
++	else if (attr == &dev_attr_sess_targetname.attr)
++		param = ISCSI_PARAM_TARGET_NAME;
++	else if (attr == &dev_attr_sess_tpgt.attr)
++		param = ISCSI_PARAM_TPGT;
++	else if (attr == &dev_attr_sess_password.attr)
++		param = ISCSI_PARAM_USERNAME;
++	else if (attr == &dev_attr_sess_password_in.attr)
++		param = ISCSI_PARAM_USERNAME_IN;
++	else if (attr == &dev_attr_sess_username.attr)
++		param = ISCSI_PARAM_PASSWORD;
++	else if (attr == &dev_attr_sess_username_in.attr)
++		param = ISCSI_PARAM_PASSWORD_IN;
++	else if (attr == &dev_attr_sess_fast_abort.attr)
++		param = ISCSI_PARAM_FAST_ABORT;
++	else if (attr == &dev_attr_sess_abort_tmo.attr)
++		param = ISCSI_PARAM_ABORT_TMO;
++	else if (attr == &dev_attr_sess_lu_reset_tmo.attr)
++		param = ISCSI_PARAM_LU_RESET_TMO;
++	else if (attr == &dev_attr_sess_tgt_reset_tmo.attr)
++		param = ISCSI_PARAM_TGT_RESET_TMO;
++	else if (attr == &dev_attr_sess_ifacename.attr)
++		param = ISCSI_PARAM_IFACE_NAME;
++	else if (attr == &dev_attr_sess_initiatorname.attr)
++		param = ISCSI_PARAM_INITIATOR_NAME;
++	else if (attr == &dev_attr_sess_targetalias.attr)
++		param = ISCSI_PARAM_TARGET_ALIAS;
++	else if (attr == &dev_attr_priv_sess_recovery_tmo.attr)
++		return S_IRUGO | S_IWUSR;
++	else if (attr == &dev_attr_priv_sess_state.attr)
++		return S_IRUGO;
++	else {
++		WARN_ONCE(1, "Invalid session attr");
++		return 0;
++	}
++
++	return t->attr_is_visible(ISCSI_PARAM, param);
++}
++
++static struct attribute_group iscsi_session_group = {
++	.attrs = iscsi_session_attrs,
++	.is_visible = iscsi_session_attr_is_visible,
++};
++
+ /*
+  * iSCSI host attrs
+  */
+@@ -2214,26 +2304,6 @@ iscsi_host_attr(hwaddress, ISCSI_HOST_PARAM_HWADDRESS);
+ iscsi_host_attr(ipaddress, ISCSI_HOST_PARAM_IPADDRESS);
+ iscsi_host_attr(initiatorname, ISCSI_HOST_PARAM_INITIATOR_NAME);
+ 
+-#define SETUP_PRIV_SESSION_RD_ATTR(field)				\
+-do {									\
+-	priv->session_attrs[count] = &dev_attr_priv_sess_##field; \
+-	count++;							\
+-} while (0)
+-
+-#define SETUP_PRIV_SESSION_RW_ATTR(field)				\
+-do {									\
+-	priv->session_attrs[count] = &dev_attr_priv_sess_##field;	\
+-	count++;							\
+-} while (0)
+-
+-#define SETUP_SESSION_RD_ATTR(field, param_flag)			\
+-do {									\
+-	if (tt->param_mask & param_flag) {				\
+-		priv->session_attrs[count] = &dev_attr_sess_##field; \
+-		count++;						\
+-	}								\
+-} while (0)
+-
+ #define SETUP_HOST_RD_ATTR(field, param_flag)				\
+ do {									\
+ 	if (tt->host_param_mask & param_flag) {				\
+@@ -2360,39 +2430,11 @@ iscsi_register_transport(struct iscsi_transport *tt)
+ 	transport_container_register(&priv->conn_cont);
+ 
+ 	/* session parameters */
+-	priv->session_cont.ac.attrs = &priv->session_attrs[0];
+ 	priv->session_cont.ac.class = &iscsi_session_class.class;
+ 	priv->session_cont.ac.match = iscsi_session_match;
++	priv->session_cont.ac.grp = &iscsi_session_group;
+ 	transport_container_register(&priv->session_cont);
+ 
+-	SETUP_SESSION_RD_ATTR(initial_r2t, ISCSI_INITIAL_R2T_EN);
+-	SETUP_SESSION_RD_ATTR(max_outstanding_r2t, ISCSI_MAX_R2T);
+-	SETUP_SESSION_RD_ATTR(immediate_data, ISCSI_IMM_DATA_EN);
+-	SETUP_SESSION_RD_ATTR(first_burst_len, ISCSI_FIRST_BURST);
+-	SETUP_SESSION_RD_ATTR(max_burst_len, ISCSI_MAX_BURST);
+-	SETUP_SESSION_RD_ATTR(data_pdu_in_order, ISCSI_PDU_INORDER_EN);
+-	SETUP_SESSION_RD_ATTR(data_seq_in_order, ISCSI_DATASEQ_INORDER_EN);
+-	SETUP_SESSION_RD_ATTR(erl, ISCSI_ERL);
+-	SETUP_SESSION_RD_ATTR(targetname, ISCSI_TARGET_NAME);
+-	SETUP_SESSION_RD_ATTR(tpgt, ISCSI_TPGT);
+-	SETUP_SESSION_RD_ATTR(password, ISCSI_USERNAME);
+-	SETUP_SESSION_RD_ATTR(password_in, ISCSI_USERNAME_IN);
+-	SETUP_SESSION_RD_ATTR(username, ISCSI_PASSWORD);
+-	SETUP_SESSION_RD_ATTR(username_in, ISCSI_PASSWORD_IN);
+-	SETUP_SESSION_RD_ATTR(fast_abort, ISCSI_FAST_ABORT);
+-	SETUP_SESSION_RD_ATTR(abort_tmo, ISCSI_ABORT_TMO);
+-	SETUP_SESSION_RD_ATTR(lu_reset_tmo,ISCSI_LU_RESET_TMO);
+-	SETUP_SESSION_RD_ATTR(tgt_reset_tmo,ISCSI_TGT_RESET_TMO);
+-	SETUP_SESSION_RD_ATTR(ifacename, ISCSI_IFACE_NAME);
+-	SETUP_SESSION_RD_ATTR(initiatorname, ISCSI_INITIATOR_NAME);
+-	SETUP_SESSION_RD_ATTR(targetalias, ISCSI_TARGET_ALIAS);
+-	SETUP_PRIV_SESSION_RW_ATTR(recovery_tmo);
+-	SETUP_PRIV_SESSION_RD_ATTR(state);
+-
+-	BUG_ON(count > ISCSI_SESSION_ATTRS);
+-	priv->session_attrs[count] = NULL;
+-	count = 0;
+-
+ 	spin_lock_irqsave(&iscsi_transport_lock, flags);
+ 	list_add(&priv->list, &iscsi_transports);
+ 	spin_unlock_irqrestore(&iscsi_transport_lock, flags);
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index a563753..a4353ff 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -399,44 +399,6 @@ enum iscsi_param {
+ 	ISCSI_PARAM_MAX,
+ };
+ 
+-#define ISCSI_MAX_RECV_DLENGTH		(1ULL << ISCSI_PARAM_MAX_RECV_DLENGTH)
+-#define ISCSI_MAX_XMIT_DLENGTH		(1ULL << ISCSI_PARAM_MAX_XMIT_DLENGTH)
+-#define ISCSI_HDRDGST_EN		(1ULL << ISCSI_PARAM_HDRDGST_EN)
+-#define ISCSI_DATADGST_EN		(1ULL << ISCSI_PARAM_DATADGST_EN)
+-#define ISCSI_INITIAL_R2T_EN		(1ULL << ISCSI_PARAM_INITIAL_R2T_EN)
+-#define ISCSI_MAX_R2T			(1ULL << ISCSI_PARAM_MAX_R2T)
+-#define ISCSI_IMM_DATA_EN		(1ULL << ISCSI_PARAM_IMM_DATA_EN)
+-#define ISCSI_FIRST_BURST		(1ULL << ISCSI_PARAM_FIRST_BURST)
+-#define ISCSI_MAX_BURST			(1ULL << ISCSI_PARAM_MAX_BURST)
+-#define ISCSI_PDU_INORDER_EN		(1ULL << ISCSI_PARAM_PDU_INORDER_EN)
+-#define ISCSI_DATASEQ_INORDER_EN	(1ULL << ISCSI_PARAM_DATASEQ_INORDER_EN)
+-#define ISCSI_ERL			(1ULL << ISCSI_PARAM_ERL)
+-#define ISCSI_IFMARKER_EN		(1ULL << ISCSI_PARAM_IFMARKER_EN)
+-#define ISCSI_OFMARKER_EN		(1ULL << ISCSI_PARAM_OFMARKER_EN)
+-#define ISCSI_EXP_STATSN		(1ULL << ISCSI_PARAM_EXP_STATSN)
+-#define ISCSI_TARGET_NAME		(1ULL << ISCSI_PARAM_TARGET_NAME)
+-#define ISCSI_TPGT			(1ULL << ISCSI_PARAM_TPGT)
+-#define ISCSI_PERSISTENT_ADDRESS	(1ULL << ISCSI_PARAM_PERSISTENT_ADDRESS)
+-#define ISCSI_PERSISTENT_PORT		(1ULL << ISCSI_PARAM_PERSISTENT_PORT)
+-#define ISCSI_SESS_RECOVERY_TMO		(1ULL << ISCSI_PARAM_SESS_RECOVERY_TMO)
+-#define ISCSI_CONN_PORT			(1ULL << ISCSI_PARAM_CONN_PORT)
+-#define ISCSI_CONN_ADDRESS		(1ULL << ISCSI_PARAM_CONN_ADDRESS)
+-#define ISCSI_USERNAME			(1ULL << ISCSI_PARAM_USERNAME)
+-#define ISCSI_USERNAME_IN		(1ULL << ISCSI_PARAM_USERNAME_IN)
+-#define ISCSI_PASSWORD			(1ULL << ISCSI_PARAM_PASSWORD)
+-#define ISCSI_PASSWORD_IN		(1ULL << ISCSI_PARAM_PASSWORD_IN)
+-#define ISCSI_FAST_ABORT		(1ULL << ISCSI_PARAM_FAST_ABORT)
+-#define ISCSI_ABORT_TMO			(1ULL << ISCSI_PARAM_ABORT_TMO)
+-#define ISCSI_LU_RESET_TMO		(1ULL << ISCSI_PARAM_LU_RESET_TMO)
+-#define ISCSI_HOST_RESET_TMO		(1ULL << ISCSI_PARAM_HOST_RESET_TMO)
+-#define ISCSI_PING_TMO			(1ULL << ISCSI_PARAM_PING_TMO)
+-#define ISCSI_RECV_TMO			(1ULL << ISCSI_PARAM_RECV_TMO)
+-#define ISCSI_IFACE_NAME		(1ULL << ISCSI_PARAM_IFACE_NAME)
+-#define ISCSI_ISID			(1ULL << ISCSI_PARAM_ISID)
+-#define ISCSI_INITIATOR_NAME		(1ULL << ISCSI_PARAM_INITIATOR_NAME)
+-#define ISCSI_TGT_RESET_TMO		(1ULL << ISCSI_PARAM_TGT_RESET_TMO)
+-#define ISCSI_TARGET_ALIAS		(1ULL << ISCSI_PARAM_TARGET_ALIAS)
+-
+ /* iSCSI HBA params */
+ enum iscsi_host_param {
+ 	ISCSI_HOST_PARAM_HWADDRESS,
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 8918329..53eb938 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -86,7 +86,6 @@ struct iscsi_transport {
+ 	char *name;
+ 	unsigned int caps;
+ 	/* LLD sets this to indicate what values it can export to sysfs */
+-	uint64_t param_mask;
+ 	uint64_t host_param_mask;
+ 	uint64_t iface_param_mask;
+ 
+@@ -219,6 +218,9 @@ struct iscsi_cls_session {
+ #define iscsi_dev_to_session(_dev) \
+ 	container_of(_dev, struct iscsi_cls_session, dev)
+ 
++#define transport_class_to_session(_cdev) \
++	iscsi_dev_to_session(_cdev->parent)
++
+ #define iscsi_session_to_shost(_session) \
+ 	dev_to_shost(_session->dev.parent)
+ 
 -- 
 1.7.2.3
 
