@@ -1,353 +1,351 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 14/19] iscsi class: add bsg support to iscsi class
-Date: Mon, 25 Jul 2011 13:48:50 -0500
-Message-ID: <1311619735-15323-15-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 15/19] qla4xxx: add bsg support
+Date: Mon, 25 Jul 2011 13:48:51 -0500
+Message-ID: <1311619735-15323-16-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36213 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:29633 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752563Ab1GYSqO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:14 -0400
+	id S1752640Ab1GYSqQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:16 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-This patch adds bsg support to the iscsi class. There is only
-1 request, the host vendor one, supported. It is expected that
-this would be used for things like flash updates.
+This patch adds bsg support to qla4xxx.
 
-This patch is made over this one
-http://marc.info/?l=linux-scsi&m=131149780020992&w=2
-
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/Kconfig                |    1 +
- drivers/scsi/scsi_transport_iscsi.c |  114 ++++++++++++++++++++++++++++++++++-
- include/scsi/scsi_bsg_iscsi.h       |  110 +++++++++++++++++++++++++++++++++
- include/scsi/scsi_transport_iscsi.h |    7 ++-
- 4 files changed, 230 insertions(+), 2 deletions(-)
- create mode 100644 include/scsi/scsi_bsg_iscsi.h
+ drivers/scsi/qla4xxx/Makefile   |    2 +-
+ drivers/scsi/qla4xxx/ql4_bsg.c  |  209 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_bsg.h  |   14 +++
+ drivers/scsi/qla4xxx/ql4_def.h  |    8 ++
+ drivers/scsi/qla4xxx/ql4_glbl.h |    4 +
+ drivers/scsi/qla4xxx/ql4_os.c   |    2 +
+ 6 files changed, 238 insertions(+), 1 deletions(-)
+ create mode 100644 drivers/scsi/qla4xxx/ql4_bsg.c
+ create mode 100644 drivers/scsi/qla4xxx/ql4_bsg.h
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 8d9dae8..4a79b9d 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -309,6 +309,7 @@ config SCSI_FC_TGT_ATTRS
- config SCSI_ISCSI_ATTRS
- 	tristate "iSCSI Transport Attributes"
- 	depends on SCSI && NET
-+	select BLK_DEV_BSGLIB
- 	help
- 	  If you wish to export transport-specific information about
- 	  each attached iSCSI device to sysfs, say Y.
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 13f9051..cde679f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -23,6 +23,7 @@
- #include <linux/module.h>
- #include <linux/mutex.h>
- #include <linux/slab.h>
-+#include <linux/bsg-lib.h>
- #include <net/tcp.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
-@@ -31,6 +32,7 @@
- #include <scsi/scsi_transport_iscsi.h>
- #include <scsi/iscsi_if.h>
- #include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_bsg_iscsi.h>
+diff --git a/drivers/scsi/qla4xxx/Makefile b/drivers/scsi/qla4xxx/Makefile
+index 252523d..5b44139 100644
+--- a/drivers/scsi/qla4xxx/Makefile
++++ b/drivers/scsi/qla4xxx/Makefile
+@@ -1,5 +1,5 @@
+ qla4xxx-y := ql4_os.o ql4_init.o ql4_mbx.o ql4_iocb.o ql4_isr.o \
+-		ql4_nx.o ql4_nvram.o ql4_dbg.o ql4_attr.o
++		ql4_nx.o ql4_nvram.o ql4_dbg.o ql4_attr.o ql4_bsg.o
  
- #define ISCSI_TRANSPORT_VERSION "2.0-870"
+ obj-$(CONFIG_SCSI_QLA_ISCSI) += qla4xxx.o
  
-@@ -447,6 +449,99 @@ void iscsi_destroy_iface(struct iscsi_iface *iface)
- }
- EXPORT_SYMBOL_GPL(iscsi_destroy_iface);
- 
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
+new file mode 100644
+index 0000000..daa2b0f
+--- /dev/null
++++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+@@ -0,0 +1,209 @@
 +/*
-+ * BSG support
++ * QLogic iSCSI HBA Driver
++ * Copyright (c) 2011 QLogic Corporation
++ *
++ * See LICENSE.qla4xxx for copyright and licensing details.
 + */
-+/**
-+ * iscsi_bsg_host_dispatch - Dispatch command to LLD.
-+ * @job: bsg job to be processed
-+ */
-+static int iscsi_bsg_host_dispatch(struct bsg_job *job)
-+{
-+	struct Scsi_Host *shost = iscsi_job_to_shost(job);
-+	struct iscsi_bsg_request *req = job->request;
-+	struct iscsi_bsg_reply *reply = job->reply;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
-+	int ret;
 +
-+	/* check if we have the msgcode value at least */
-+	if (job->request_len < sizeof(uint32_t)) {
-+		ret = -ENOMSG;
-+		goto fail_host_msg;
-+	}
++#include "ql4_def.h"
++#include "ql4_glbl.h"
++#include "ql4_bsg.h"
 +
-+	/* Validate the host command */
-+	switch (req->msgcode) {
-+	case ISCSI_BSG_HST_VENDOR:
-+		cmdlen += sizeof(struct iscsi_bsg_host_vendor);
-+		if ((shost->hostt->vendor_id == 0L) ||
-+		    (req->rqst_data.h_vendor.vendor_id !=
-+			shost->hostt->vendor_id)) {
-+			ret = -ESRCH;
-+			goto fail_host_msg;
-+		}
-+		break;
-+	default:
-+		ret = -EBADR;
-+		goto fail_host_msg;
-+	}
-+
-+	/* check if we really have all the request data needed */
-+	if (job->request_len < cmdlen) {
-+		ret = -ENOMSG;
-+		goto fail_host_msg;
-+	}
-+
-+	ret = i->iscsi_transport->bsg_request(job);
-+	if (!ret)
-+		return 0;
-+
-+fail_host_msg:
-+	/* return the errno failure code as the only status */
-+	BUG_ON(job->reply_len < sizeof(uint32_t));
-+	reply->reply_payload_rcv_len = 0;
-+	reply->result = ret;
-+	job->reply_len = sizeof(uint32_t);
-+	bsg_job_done(job, ret, 0);
-+	return 0;
-+}
-+
-+/**
-+ * iscsi_bsg_host_add - Create and add the bsg hooks to receive requests
-+ * @shost: shost for iscsi_host
-+ * @cls_host: iscsi_cls_host adding the structures to
-+ */
 +static int
-+iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
++qla4xxx_read_flash(struct bsg_job *bsg_job)
 +{
-+	struct device *dev = &shost->shost_gendev;
-+	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
-+	struct request_queue *q;
-+	char bsg_name[20];
-+	int ret;
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	uint32_t sg_cnt;
++	uint32_t offset = 0;
++	uint32_t length = 0;
++	dma_addr_t flash_dma;
++	uint8_t *flash = NULL;
++	int rval = 0;
 +
-+	if (!i->iscsi_transport->bsg_request)
-+		return -ENOTSUPP;
++	bsg_reply->reply_payload_rcv_len = 0;
 +
-+	snprintf(bsg_name, sizeof(bsg_name), "iscsi_host%d", shost->host_no);
++	if (unlikely(pci_channel_offline(ha->pdev)))
++		return -EINVAL;
 +
-+	q = __scsi_alloc_queue(shost, bsg_request_fn);
-+	if (!q)
++	if (ha->flash_state != QLFLASH_WAITING)
++		return -EBUSY;
++
++	/* TODO: Add check for adapter online, reset active?? */
++	sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
++			    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
++
++	if (!sg_cnt)
 +		return -ENOMEM;
 +
-+	ret = bsg_setup_queue(dev, q, bsg_name, iscsi_bsg_host_dispatch, 0);
-+	if (ret) {
-+		shost_printk(KERN_ERR, shost, "bsg interface failed to "
-+			     "initialize - no request queue\n");
-+		blk_cleanup_queue(q);
-+		return ret;
++	if (sg_cnt != bsg_job->reply_payload.sg_cnt) {
++		ql4_printk(KERN_ERR, ha, "dma mapping resulted in different"
++			   " sg counts, sg_cnt: %x dma_sg_cnt: %x\n",
++			   bsg_job->reply_payload.sg_cnt, sg_cnt);
++		rval = -EAGAIN;
++		goto unmap_sg;
 +	}
 +
-+	ihost->bsg_q = q;
-+	return 0;
++	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	length = bsg_job->reply_payload.payload_len;
++
++	flash = dma_alloc_coherent(&ha->pdev->dev, length, &flash_dma,
++				   GFP_KERNEL);
++	if (!flash) {
++		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
++			   "data\n", __func__);
++		rval = -ENOMEM;
++		goto unmap_sg;
++	}
++
++	ha->flash_state = QLFLASH_READING;
++	if (qla4xxx_get_flash(ha, flash_dma, offset, length))
++		bsg_reply->result = (DID_ERROR << 16);
++	else {
++		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
++				    bsg_job->reply_payload.sg_cnt,
++				    flash, length);
++
++		bsg_reply->result = DID_OK;
++		bsg_reply->reply_payload_rcv_len = length;
++	}
++
++	if (flash)
++		dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
++
++	ha->flash_state = QLFLASH_WAITING;
++unmap_sg:
++	dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
++		     bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
++	if (!rval)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
++	return rval;
 +}
 +
- static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 			    struct device *cdev)
- {
-@@ -456,13 +551,30 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
- 	memset(ihost, 0, sizeof(*ihost));
- 	atomic_set(&ihost->nr_scans, 0);
- 	mutex_init(&ihost->mutex);
-+
-+	iscsi_bsg_host_add(shost, ihost);
-+	/* ignore any bsg add error - we just can't do sgio */
-+
-+	return 0;
-+}
-+
-+static int iscsi_remove_host(struct transport_container *tc,
-+			     struct device *dev, struct device *cdev)
++static int
++qla4xxx_update_flash(struct bsg_job *bsg_job)
 +{
-+	struct Scsi_Host *shost = dev_to_shost(dev);
-+	struct iscsi_cls_host *ihost = shost->shost_data;
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	uint32_t sg_cnt;
++	uint32_t length = 0;
++	uint32_t offset = 0;
++	uint32_t options = 0;
++	dma_addr_t flash_dma;
++	uint8_t *flash = NULL;
++	int rval = 0;
 +
-+	if (ihost->bsg_q) {
-+		bsg_remove_queue(ihost->bsg_q);
-+		blk_cleanup_queue(ihost->bsg_q);
++	bsg_reply->reply_payload_rcv_len = 0;
++
++	if (unlikely(pci_channel_offline(ha->pdev)))
++		return -EINVAL;
++
++	if (ha->flash_state != QLFLASH_WAITING)
++		return -EBUSY;
++
++	sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
++			    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
++
++	if (!sg_cnt)
++		return -ENOMEM;
++
++	if (sg_cnt != bsg_job->request_payload.sg_cnt) {
++		ql4_printk(KERN_ERR, ha, "dma mapping resulted in different "
++			   "sg counts request_sg_cnt: %x dma_request_sg_cnt: "
++			   "%x\n", bsg_job->request_payload.sg_cnt, sg_cnt);
++		rval = -EAGAIN;
++		goto unmap_sg;
 +	}
- 	return 0;
- }
- 
- static DECLARE_TRANSPORT_CLASS(iscsi_host_class,
- 			       "iscsi_host",
- 			       iscsi_setup_host,
--			       NULL,
-+			       iscsi_remove_host,
- 			       NULL);
- 
- static DECLARE_TRANSPORT_CLASS(iscsi_session_class,
-diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
++
++	length = bsg_job->request_payload.payload_len;
++	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	options = bsg_req->rqst_data.h_vendor.vendor_cmd[2];
++
++	flash = dma_alloc_coherent(&ha->pdev->dev, length, &flash_dma,
++				   GFP_KERNEL);
++	if (!flash) {
++		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
++			   "data\n", __func__);
++		rval = -ENOMEM;
++		goto unmap_sg;
++	}
++
++	ha->flash_state = QLFLASH_WRITING;
++	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
++			  bsg_job->request_payload.sg_cnt, flash, length);
++
++	if (qla4xxx_set_flash(ha, flash_dma, offset, length, options))
++		bsg_reply->result = (DID_ERROR << 16);
++	else {
++		bsg_reply->result = DID_OK;
++		bsg_reply->reply_payload_rcv_len = length;
++	}
++
++	if (flash)
++		dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
++	ha->flash_state = QLFLASH_WAITING;
++unmap_sg:
++	dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
++		     bsg_job->reply_payload.sg_cnt, DMA_TO_DEVICE);
++
++	if (!rval)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
++	return rval;
++}
++
++/**
++ * qla4xxx_process_vendor_specific - handle vendor specific bsg request
++ * @job: iscsi_bsg_job to handle
++ **/
++int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
++{
++	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++
++	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
++	case QLISCSI_VND_READ_FLASH:
++		return qla4xxx_read_flash(bsg_job);
++
++	case QLISCSI_VND_UPDATE_FLASH:
++		return qla4xxx_update_flash(bsg_job);
++
++	default:
++		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
++			   "0x%x\n", __func__, bsg_req->msgcode);
++		bsg_reply->result = (DID_ERROR << 16);
++		bsg_reply->reply_payload_rcv_len = 0;
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
++		return -ENOSYS;
++	}
++}
++
++/**
++ * qla4xxx_bsg_request - handle bsg request from ISCSI transport
++ * @job: iscsi_bsg_job to handle
++ */
++int qla4xxx_bsg_request(struct bsg_job *bsg_job)
++{
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++
++	switch (bsg_req->msgcode) {
++	case ISCSI_BSG_HST_VENDOR:
++		return qla4xxx_process_vendor_specific(bsg_job);
++
++	default:
++		ql4_printk(KERN_ERR, ha, "%s: invalid BSG command: 0x%x\n",
++			   __func__, bsg_req->msgcode);
++	}
++
++	return -ENOSYS;
++}
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
 new file mode 100644
-index 0000000..fd5689d
+index 0000000..5f6424e
 --- /dev/null
-+++ b/include/scsi/scsi_bsg_iscsi.h
-@@ -0,0 +1,110 @@
++++ b/drivers/scsi/qla4xxx/ql4_bsg.h
+@@ -0,0 +1,14 @@
 +/*
-+ *  iSCSI Transport BSG Interface
++ * QLogic iSCSI HBA Driver
++ * Copyright (c) 2011 QLogic Corporation
 + *
-+ *  Copyright (C) 2009   James Smart, Emulex Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
++ * See LICENSE.qla4xxx for copyright and licensing details.
 + */
++#ifndef __QL4_BSG_H
++#define __QL4_BSG_H
 +
-+#ifndef SCSI_BSG_ISCSI_H
-+#define SCSI_BSG_ISCSI_H
++/* BSG Vendor specific commands */
++#define QLISCSI_VND_READ_FLASH		1
++#define QLISCSI_VND_UPDATE_FLASH	2
 +
-+/*
-+ * This file intended to be included by both kernel and user space
-+ */
-+
-+#include <scsi/scsi.h>
-+
-+/*
-+ * iSCSI Transport SGIO v4 BSG Message Support
-+ */
-+
-+/* Default BSG request timeout (in seconds) */
-+#define ISCSI_DEFAULT_BSG_TIMEOUT      (10 * HZ)
-+
-+
-+/*
-+ * Request Message Codes supported by the iSCSI Transport
-+ */
-+
-+/* define the class masks for the message codes */
-+#define ISCSI_BSG_CLS_MASK     0xF0000000      /* find object class */
-+#define ISCSI_BSG_HST_MASK     0x80000000      /* iscsi host class */
-+
-+/* iscsi host Message Codes */
-+#define ISCSI_BSG_HST_VENDOR           (ISCSI_BSG_HST_MASK | 0x000000FF)
-+
-+
-+/*
-+ * iSCSI Host Messages
-+ */
-+
-+/* ISCSI_BSG_HST_VENDOR : */
-+
-+/* Request:
-+ * Note: When specifying vendor_id, be sure to read the Vendor Type and ID
-+ *   formatting requirements specified in scsi_netlink.h
-+ */
-+struct iscsi_bsg_host_vendor {
-+	/*
-+	 * Identifies the vendor that the message is formatted for. This
-+	 * should be the recipient of the message.
-+	 */
-+	uint64_t vendor_id;
-+
-+	/* start of vendor command area */
-+	uint32_t vendor_cmd[0];
-+};
-+
-+/* Response:
-+ */
-+struct iscsi_bsg_host_vendor_reply {
-+	/* start of vendor response area */
-+	uint32_t vendor_rsp[0];
-+};
-+
-+
-+/* request (CDB) structure of the sg_io_v4 */
-+struct iscsi_bsg_request {
-+	uint32_t msgcode;
-+	union {
-+		struct iscsi_bsg_host_vendor    h_vendor;
-+	} rqst_data;
-+} __attribute__((packed));
-+
-+
-+/* response (request sense data) structure of the sg_io_v4 */
-+struct iscsi_bsg_reply {
-+	/*
-+	 * The completion result. Result exists in two forms:
-+	 * if negative, it is an -Exxx system errno value. There will
-+	 * be no further reply information supplied.
-+	 * else, it's the 4-byte scsi error result, with driver, host,
-+	 * msg and status fields. The per-msgcode reply structure
-+	 * will contain valid data.
-+	 */
-+	uint32_t result;
-+
-+	/* If there was reply_payload, how much was recevied ? */
-+	uint32_t reply_payload_rcv_len;
-+
-+	union {
-+		struct iscsi_bsg_host_vendor_reply      vendor_reply;
-+	} reply_data;
-+};
-+
-+
-+#endif /* SCSI_BSG_ISCSI_H */
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 77e6dd6..4a3edee 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -38,6 +38,7 @@ struct iscsi_conn;
- struct iscsi_task;
- struct sockaddr;
- struct iscsi_iface;
-+struct bsg_job;
++#endif
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 12db992..b17f5c4 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -25,6 +25,7 @@
+ #include <linux/interrupt.h>
+ #include <linux/mutex.h>
+ #include <linux/aer.h>
++#include <linux/bsg-lib.h>
  
- /**
-  * struct iscsi_transport - iSCSI Transport template
-@@ -141,9 +142,9 @@ struct iscsi_transport {
- 				enum iscsi_param_type param_type,
- 				int param, char *buf);
- 	mode_t (*attr_is_visible)(int param_type, int param);
-+	int (*bsg_request)(struct bsg_job *job);
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
+@@ -33,6 +34,8 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_iscsi.h>
++#include <scsi/scsi_bsg_iscsi.h>
++#include <scsi/scsi_netlink.h>
+ 
+ #include "ql4_dbg.h"
+ #include "ql4_nx.h"
+@@ -599,6 +602,11 @@ struct scsi_qla_host {
+ 	uint16_t bootload_minor;
+ 	uint16_t bootload_patch;
+ 	uint16_t bootload_build;
++
++	uint32_t flash_state;
++#define	QLFLASH_WAITING		0
++#define	QLFLASH_READING		1
++#define	QLFLASH_WRITING		2
  };
  
--
- /*
-  * transport registration upcalls
-  */
-@@ -227,8 +228,12 @@ struct iscsi_cls_session {
- struct iscsi_cls_host {
- 	atomic_t nr_scans;
- 	struct mutex mutex;
-+	struct request_queue *bsg_q;
+ static inline int is_ipv4_enabled(struct scsi_qla_host *ha)
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 786274c..77539ae 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -151,6 +151,10 @@ void qla4_8xxx_need_qsnt_handler(struct scsi_qla_host *ha);
+ void qla4_8xxx_clear_drv_active(struct scsi_qla_host *ha);
+ void qla4_8xxx_set_drv_active(struct scsi_qla_host *ha);
+ 
++/* BSG Functions */
++int qla4xxx_bsg_request(struct bsg_job *bsg_job);
++int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job);
++
+ extern int ql4xextended_error_logging;
+ extern int ql4xdontresethba;
+ extern int ql4xenablemsix;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index d5f9f60..4e47bb1 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -131,6 +131,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
+ 
+ 	.max_sectors		= 0xFFFF,
+ 	.shost_attrs		= qla4xxx_host_attrs,
++	.vendor_id		= SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC,
  };
  
-+#define iscsi_job_to_shost(_job) \
-+        dev_to_shost(_job->dev)
-+
- extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
- 				void (*fn)(struct iscsi_cls_session *));
+ static struct iscsi_transport qla4xxx_iscsi_transport = {
+@@ -146,6 +147,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 	.set_iface_param	= qla4xxx_iface_set_param,
+ 	.session_recovery_timedout = qla4xxx_recovery_timedout,
+ 	.get_iface_param	= qla4xxx_get_iface_param,
++	.bsg_request		= qla4xxx_bsg_request,
+ };
  
+ static struct scsi_transport_template *qla4xxx_scsi_transport;
 -- 
 1.7.2.3
 
