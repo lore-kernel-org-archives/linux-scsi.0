@@ -1,57 +1,173 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 10/19] be2iscsi: remove host and session casts
-Date: Mon, 25 Jul 2011 13:48:46 -0500
-Message-ID: <1311619735-15323-11-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 16/19] scsi_transport_iscsi: Add conn login, kernel to user, event to support offload session login.
+Date: Mon, 25 Jul 2011 13:48:52 -0500
+Message-ID: <1311619735-15323-17-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46898 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:64362 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752582Ab1GYSqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:09 -0400
+	id S1752662Ab1GYSqR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:17 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Manish Rangankar <manish.rangankar@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Manish Rangankar <manish.rangankar@qlogic.com>
 
-iscsi_session_to_shost is a macro around dev_to_shost which returns a
-Scsi_Host so there is no need to cast.
+Offload drivers like qla4xxx will offload the sending of the login/logout
+pdus still, so this patch adds iscsi_conn_login_event which is
+used by these types of drivers to notify userspace that the connection
+has changed state.
 
-iscsi_session_to_shost is a macro around shost_priv which
-returns a void pointer so no need to cast.
+It also adds a iscsi_is_session_online helper so the lld
+can query the sessions state field.
 
+Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
+Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |   47 +++++++++++++++++++++++++++++++++++
+ include/scsi/iscsi_if.h             |   17 ++++++++++++
+ include/scsi/scsi_transport_iscsi.h |    3 ++
+ 3 files changed, 67 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index feadaa2..8b002f6 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -177,9 +177,8 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
- {
- 	struct iscsi_conn *conn = cls_conn->dd_data;
- 	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
--	struct Scsi_Host *shost =
--		(struct Scsi_Host *)iscsi_session_to_shost(cls_session);
--	struct beiscsi_hba *phba = (struct beiscsi_hba *)iscsi_host_priv(shost);
-+	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 	struct beiscsi_endpoint *beiscsi_ep;
- 	struct iscsi_endpoint *ep;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index cde679f..b85f8a4 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -693,6 +693,19 @@ int iscsi_session_chkready(struct iscsi_cls_session *session)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_session_chkready);
  
-@@ -290,7 +289,7 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
- int beiscsi_get_host_param(struct Scsi_Host *shost,
- 			   enum iscsi_host_param param, char *buf)
++int iscsi_is_session_online(struct iscsi_cls_session *session)
++{
++	unsigned long flags;
++	int ret = 0;
++
++	spin_lock_irqsave(&session->lock, flags);
++	if (session->state == ISCSI_SESSION_LOGGED_IN)
++		ret = 1;
++	spin_unlock_irqrestore(&session->lock, flags);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(iscsi_is_session_online);
++
+ static void iscsi_session_release(struct device *dev)
  {
--	struct beiscsi_hba *phba = (struct beiscsi_hba *)iscsi_host_priv(shost);
-+	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 	int status = 0;
+ 	struct iscsi_cls_session *session = iscsi_dev_to_session(dev);
+@@ -1433,6 +1446,40 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_conn_error_event);
  
- 	SE_DEBUG(DBG_LVL_8, "In beiscsi_get_host_param, param= %d\n", param);
++void iscsi_conn_login_event(struct iscsi_cls_conn *conn,
++			    enum iscsi_conn_state state)
++{
++	struct nlmsghdr *nlh;
++	struct sk_buff  *skb;
++	struct iscsi_uevent *ev;
++	struct iscsi_internal *priv;
++	int len = NLMSG_SPACE(sizeof(*ev));
++
++	priv = iscsi_if_transport_lookup(conn->transport);
++	if (!priv)
++		return;
++
++	skb = alloc_skb(len, GFP_ATOMIC);
++	if (!skb) {
++		iscsi_cls_conn_printk(KERN_ERR, conn, "gracefully ignored "
++				      "conn login (%d)\n", state);
++		return;
++	}
++
++	nlh = __nlmsg_put(skb, 0, 0, 0, (len - sizeof(*nlh)), 0);
++	ev = NLMSG_DATA(nlh);
++	ev->transport_handle = iscsi_handle(conn->transport);
++	ev->type = ISCSI_KEVENT_CONN_LOGIN_STATE;
++	ev->r.conn_login.state = state;
++	ev->r.conn_login.cid = conn->cid;
++	ev->r.conn_login.sid = iscsi_conn_get_sid(conn);
++	iscsi_multicast_skb(skb, ISCSI_NL_GRP_ISCSID, GFP_ATOMIC);
++
++	iscsi_cls_conn_printk(KERN_INFO, conn, "detected conn login (%d)\n",
++			      state);
++}
++EXPORT_SYMBOL_GPL(iscsi_conn_login_event);
++
+ static int
+ iscsi_if_send_reply(uint32_t group, int seq, int type, int done, int multi,
+ 		    void *payload, int size)
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index d3f256a..629ca42 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -71,6 +71,7 @@ enum iscsi_uevent_e {
+ 
+ 	ISCSI_KEVENT_PATH_REQ		= KEVENT_BASE + 7,
+ 	ISCSI_KEVENT_IF_DOWN		= KEVENT_BASE + 8,
++	ISCSI_KEVENT_CONN_LOGIN_STATE   = KEVENT_BASE + 9,
+ };
+ 
+ enum iscsi_tgt_dscvr {
+@@ -198,6 +199,11 @@ struct iscsi_uevent {
+ 			uint32_t	cid;
+ 			uint64_t	recv_handle;
+ 		} recv_req;
++		struct msg_conn_login {
++			uint32_t        sid;
++			uint32_t        cid;
++			uint32_t        state; /* enum iscsi_conn_state */
++		} conn_login;
+ 		struct msg_conn_error {
+ 			uint32_t	sid;
+ 			uint32_t	cid;
+@@ -309,6 +315,16 @@ enum iscsi_net_param {
+ 	ISCSI_NET_PARAM_IFACE_NAME		= 17,
+ };
+ 
++enum iscsi_conn_state {
++	ISCSI_CONN_STATE_FREE,
++	ISCSI_CONN_STATE_XPT_WAIT,
++	ISCSI_CONN_STATE_IN_LOGIN,
++	ISCSI_CONN_STATE_LOGGED_IN,
++	ISCSI_CONN_STATE_IN_LOGOUT,
++	ISCSI_CONN_STATE_LOGOUT_REQUESTED,
++	ISCSI_CONN_STATE_CLEANUP_WAIT,
++};
++
+ /*
+  * Common error codes
+  */
+@@ -421,6 +437,7 @@ enum iscsi_host_param {
+ #define CAP_DIGEST_OFFLOAD	0x1000	/* offload hdr and data digests */
+ #define CAP_PADDING_OFFLOAD	0x2000	/* offload padding insertion, removal,
+ 					 and verification */
++#define CAP_LOGIN_OFFLOAD	0x4000  /* offload session login */
+ 
+ /*
+  * These flags describes reason of stop_conn() call
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 4a3edee..3389cd5 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -156,6 +156,8 @@ extern int iscsi_unregister_transport(struct iscsi_transport *tt);
+  */
+ extern void iscsi_conn_error_event(struct iscsi_cls_conn *conn,
+ 				   enum iscsi_err error);
++extern void iscsi_conn_login_event(struct iscsi_cls_conn *conn,
++				   enum iscsi_conn_state state);
+ extern int iscsi_recv_pdu(struct iscsi_cls_conn *conn, struct iscsi_hdr *hdr,
+ 			  char *data, uint32_t data_size);
+ 
+@@ -268,6 +270,7 @@ struct iscsi_iface {
+ 	dev_printk(prefix, &(_cls_conn)->dev, fmt, ##a)
+ 
+ extern int iscsi_session_chkready(struct iscsi_cls_session *session);
++extern int iscsi_is_session_online(struct iscsi_cls_session *session);
+ extern struct iscsi_cls_session *iscsi_alloc_session(struct Scsi_Host *shost,
+ 				struct iscsi_transport *transport, int dd_size);
+ extern int iscsi_add_session(struct iscsi_cls_session *session,
 -- 
 1.7.2.3
 
