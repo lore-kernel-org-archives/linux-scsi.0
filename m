@@ -1,297 +1,188 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 05/19] qla4xxx: added support to show multiple iface in sysfs
-Date: Mon, 25 Jul 2011 13:48:41 -0500
-Message-ID: <1311619735-15323-6-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 08/19] iscsi class: remove iface param mask
+Date: Mon, 25 Jul 2011 13:48:44 -0500
+Message-ID: <1311619735-15323-9-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:32081 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:62047 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752563Ab1GYSqE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:04 -0400
+	id S1752600Ab1GYSqH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:07 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Add support for default ipv4 and ipv6 ifaces in qla4xxx.
+We can replace the iface param mask with the
+attr_is_visible callback.
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Reviewed-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
-Reviewed-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
-[make iface creation dynamic]
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/qla4xxx/ql4_def.h |    3 +
- drivers/scsi/qla4xxx/ql4_os.c  |  177 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 176 insertions(+), 4 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c       |   27 ++++++++++++--------
+ drivers/scsi/scsi_transport_iscsi.c |   45 ++++++++++++++++------------------
+ include/scsi/iscsi_if.h             |   17 -------------
+ include/scsi/scsi_transport_iscsi.h |    1 -
+ 4 files changed, 37 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 015d0a1..12db992 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -588,6 +588,9 @@ struct scsi_qla_host {
- 	struct completion mbx_intr_comp;
- 
- 	struct ipaddress_config ip_config;
-+	struct iscsi_iface *iface_ipv4;
-+	struct iscsi_iface *iface_ipv6_0;
-+	struct iscsi_iface *iface_ipv6_1;
- 
- 	/* --- From About Firmware --- */
- 	uint16_t iscsi_major;
 diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 21e4f85..32df0c5 100644
+index 3022c15..df6da3c 100644
 --- a/drivers/scsi/qla4xxx/ql4_os.c
 +++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -82,6 +82,9 @@ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
- 				  enum iscsi_host_param param, char *buf);
- static int qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data,
- 				   int count);
-+static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
-+				   enum iscsi_param_type param_type,
-+				   int param, char *buf);
- static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session);
- static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc);
- 
-@@ -140,16 +143,99 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+@@ -141,17 +141,6 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
  	.host_param_mask	= ISCSI_HOST_HWADDRESS |
  				  ISCSI_HOST_IPADDRESS |
  				  ISCSI_HOST_INITIATOR_NAME,
-+	.iface_param_mask	= ISCSI_NET_IPV4_ADDR |
-+				  ISCSI_NET_IPV4_SUBNET |
-+				  ISCSI_NET_IPV4_GW |
-+				  ISCSI_NET_IPV4_BOOTPROTO |
-+				  ISCSI_NET_IFACE_ENABLE |
-+				  ISCSI_NET_IPV6_LINKLOCAL |
-+				  ISCSI_NET_IPV6_ADDR |
-+				  ISCSI_NET_IPV6_ROUTER |
-+				  ISCSI_NET_IPV6_ADDR_AUTOCFG |
-+				  ISCSI_NET_IPV6_LINKLOCAL_AUTOCFG |
-+				  ISCSI_NET_IFACE_ENABLE,
+-	.iface_param_mask	= ISCSI_NET_IPV4_ADDR |
+-				  ISCSI_NET_IPV4_SUBNET |
+-				  ISCSI_NET_IPV4_GW |
+-				  ISCSI_NET_IPV4_BOOTPROTO |
+-				  ISCSI_NET_IFACE_ENABLE |
+-				  ISCSI_NET_IPV6_LINKLOCAL |
+-				  ISCSI_NET_IPV6_ADDR |
+-				  ISCSI_NET_IPV6_ROUTER |
+-				  ISCSI_NET_IPV6_ADDR_AUTOCFG |
+-				  ISCSI_NET_IPV6_LINKLOCAL_AUTOCFG |
+-				  ISCSI_NET_IFACE_ENABLE,
  	.tgt_dscvr		= qla4xxx_tgt_dscvr,
+ 	.attr_is_visible	= ql4_attr_is_visible,
  	.get_conn_param		= qla4xxx_conn_get_param,
- 	.get_session_param	= qla4xxx_sess_get_param,
- 	.get_host_param		= qla4xxx_host_get_param,
- 	.set_iface_param	= qla4xxx_iface_set_param,
- 	.session_recovery_timedout = qla4xxx_recovery_timedout,
-+	.get_iface_param	= qla4xxx_get_iface_param,
- };
+@@ -178,6 +167,22 @@ static mode_t ql4_attr_is_visible(int param_type, int param)
+ 		default:
+ 			return 0;
+ 		}
++	case ISCSI_NET_PARAM:
++		switch (param) {
++		case ISCSI_NET_PARAM_IPV4_ADDR:
++		case ISCSI_NET_PARAM_IPV4_SUBNET:
++		case ISCSI_NET_PARAM_IPV4_GW:
++		case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++		case ISCSI_NET_PARAM_IFACE_ENABLE:
++		case ISCSI_NET_PARAM_IPV6_LINKLOCAL:
++		case ISCSI_NET_PARAM_IPV6_ADDR:
++		case ISCSI_NET_PARAM_IPV6_ROUTER:
++		case ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG:
++		case ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG:
++			return S_IRUGO;
++		default:
++			return 0;
++		}
+ 	}
  
- static struct scsi_transport_template *qla4xxx_scsi_transport;
+ 	return 0;
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 75d7f6e..a8dd85d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -329,45 +329,42 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 	struct device *dev = container_of(kobj, struct device, kobj);
+ 	struct iscsi_iface *iface = iscsi_dev_to_iface(dev);
+ 	struct iscsi_transport *t = iface->transport;
++	int param;
  
-+static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
-+				   enum iscsi_param_type param_type,
-+				   int param, char *buf)
-+{
-+	struct Scsi_Host *shost = iscsi_iface_to_shost(iface);
-+	struct scsi_qla_host *ha = to_qla_host(shost);
-+	int len = -ENOSYS;
-+
-+	if (param_type != ISCSI_NET_PARAM)
-+		return -ENOSYS;
-+
-+	switch (param) {
-+	case ISCSI_NET_PARAM_IPV4_ADDR:
-+		len = sprintf(buf, "%pI4\n", &ha->ip_config.ip_address);
-+		break;
-+	case ISCSI_NET_PARAM_IPV4_SUBNET:
-+		len = sprintf(buf, "%pI4\n", &ha->ip_config.subnet_mask);
-+		break;
-+	case ISCSI_NET_PARAM_IPV4_GW:
-+		len = sprintf(buf, "%pI4\n", &ha->ip_config.gateway);
-+		break;
-+	case ISCSI_NET_PARAM_IFACE_ENABLE:
-+		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
-+			len = sprintf(buf, "%s\n",
-+				      (ha->ip_config.ipv4_options &
-+				       IPOPT_IPV4_PROTOCOL_ENABLE) ?
-+				      "enabled" : "disabled");
-+		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
-+			len = sprintf(buf, "%s\n",
-+				      (ha->ip_config.ipv6_options &
-+				       IPV6_OPT_IPV6_PROTOCOL_ENABLE) ?
-+				       "enabled" : "disabled");
-+		break;
-+	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
-+		len = sprintf(buf, "%s\n",
-+			      (ha->ip_config.tcp_options & TCPOPT_DHCP_ENABLE) ?
-+			      "dhcp" : "static");
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_ADDR:
-+		if (iface->iface_num == 0)
-+			len = sprintf(buf, "%pI6\n", &ha->ip_config.ipv6_addr0);
-+		if (iface->iface_num == 1)
-+			len = sprintf(buf, "%pI6\n", &ha->ip_config.ipv6_addr1);
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_LINKLOCAL:
-+		len = sprintf(buf, "%pI6\n",
-+			      &ha->ip_config.ipv6_link_local_addr);
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_ROUTER:
-+		len = sprintf(buf, "%pI6\n",
-+			      &ha->ip_config.ipv6_default_router_addr);
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG:
-+		len = sprintf(buf, "%s\n",
-+			      (ha->ip_config.ipv6_addl_options &
-+			       IPV6_ADDOPT_NEIGHBOR_DISCOVERY_ADDR_ENABLE) ?
-+			       "nd" : "static");
-+		break;
-+	case ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG:
-+		len = sprintf(buf, "%s\n",
-+			      (ha->ip_config.ipv6_addl_options &
-+			       IPV6_ADDOPT_AUTOCONFIG_LINK_LOCAL_ADDR) ?
-+			       "auto" : "static");
-+		break;
-+	default:
-+		len = -ENOSYS;
-+	}
-+
-+	return len;
-+}
-+
- static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc)
- {
- 	struct iscsi_cls_session *session;
-@@ -203,6 +289,78 @@ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
- 	return len;
+ 	if (attr == &dev_attr_iface_enabled.attr)
+-		return (t->iface_param_mask & ISCSI_NET_IFACE_ENABLE) ?
+-								S_IRUGO : 0;
++		param = ISCSI_NET_PARAM_IFACE_ENABLE;
+ 	else if (attr == &dev_attr_iface_vlan.attr)
+-		return (t->iface_param_mask & ISCSI_NET_VLAN_ID) ? S_IRUGO : 0;
+-
+-	if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
++		param = ISCSI_NET_PARAM_VLAN_ID;
++	else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
+ 		if (attr == &dev_attr_ipv4_iface_ipaddress.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV4_ADDR) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV4_ADDR;
+ 		else if (attr == &dev_attr_ipv4_iface_gateway.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV4_GW) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV4_GW;
+ 		else if (attr == &dev_attr_ipv4_iface_subnet.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV4_SUBNET) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV4_SUBNET;
+ 		else if (attr == &dev_attr_ipv4_iface_bootproto.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV4_BOOTPROTO) ?
+-								 S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV4_BOOTPROTO;
++		else
++			return 0;
+ 	} else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6) {
+ 		if (attr == &dev_attr_ipv6_iface_ipaddress.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV6_ADDR) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV6_ADDR;
+ 		else if (attr == &dev_attr_ipv6_iface_link_local_addr.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV6_LINKLOCAL) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV6_LINKLOCAL;
+ 		else if (attr == &dev_attr_ipv6_iface_router_addr.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV6_ROUTER) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV6_ROUTER;
+ 		else if (attr == &dev_attr_ipv6_iface_ipaddr_autocfg.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV6_ADDR_AUTOCFG) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG;
+ 		else if (attr == &dev_attr_ipv6_iface_linklocal_autocfg.attr)
+-			return (t->iface_param_mask & ISCSI_NET_IPV6_LINKLOCAL_AUTOCFG) ?
+-								S_IRUGO : 0;
++			param = ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG;
++		else
++			return 0;
++	} else {
++		WARN_ONCE(1, "Invalid iface attr");
++		return 0;
+ 	}
+ 
+-	return 0;
++	return t->attr_is_visible(ISCSI_NET_PARAM, param);
  }
  
-+static void qla4xxx_create_ipv4_iface(struct scsi_qla_host *ha)
-+{
-+	if (ha->iface_ipv4)
-+		return;
-+
-+	/* IPv4 */
-+	ha->iface_ipv4 = iscsi_create_iface(ha->host,
-+					    &qla4xxx_iscsi_transport,
-+					    ISCSI_IFACE_TYPE_IPV4, 0, 0);
-+	if (!ha->iface_ipv4)
-+		ql4_printk(KERN_ERR, ha, "Could not create IPv4 iSCSI "
-+			   "iface0.\n");
-+}
-+
-+static void qla4xxx_create_ipv6_iface(struct scsi_qla_host *ha)
-+{
-+	if (!ha->iface_ipv6_0)
-+		/* IPv6 iface-0 */
-+		ha->iface_ipv6_0 = iscsi_create_iface(ha->host,
-+						      &qla4xxx_iscsi_transport,
-+						      ISCSI_IFACE_TYPE_IPV6, 0,
-+						      0);
-+	if (!ha->iface_ipv6_0)
-+		ql4_printk(KERN_ERR, ha, "Could not create IPv6 iSCSI "
-+			   "iface0.\n");
-+
-+	if (!ha->iface_ipv6_1)
-+		/* IPv6 iface-1 */
-+		ha->iface_ipv6_1 = iscsi_create_iface(ha->host,
-+						      &qla4xxx_iscsi_transport,
-+						      ISCSI_IFACE_TYPE_IPV6, 1,
-+						      0);
-+	if (!ha->iface_ipv6_1)
-+		ql4_printk(KERN_ERR, ha, "Could not create IPv6 iSCSI "
-+			   "iface1.\n");
-+}
-+
-+static void qla4xxx_create_ifaces(struct scsi_qla_host *ha)
-+{
-+	if (ha->ip_config.ipv4_options & IPOPT_IPV4_PROTOCOL_ENABLE)
-+		qla4xxx_create_ipv4_iface(ha);
-+
-+	if (ha->ip_config.ipv6_options & IPV6_OPT_IPV6_PROTOCOL_ENABLE)
-+		qla4xxx_create_ipv6_iface(ha);
-+}
-+
-+static void qla4xxx_destroy_ipv4_iface(struct scsi_qla_host *ha)
-+{
-+	if (ha->iface_ipv4) {
-+		iscsi_destroy_iface(ha->iface_ipv4);
-+		ha->iface_ipv4 = NULL;
-+	}
-+}
-+
-+static void qla4xxx_destroy_ipv6_iface(struct scsi_qla_host *ha)
-+{
-+	if (ha->iface_ipv6_0) {
-+		iscsi_destroy_iface(ha->iface_ipv6_0);
-+		ha->iface_ipv6_0 = NULL;
-+	}
-+	if (ha->iface_ipv6_1) {
-+		iscsi_destroy_iface(ha->iface_ipv6_1);
-+		ha->iface_ipv6_1 = NULL;
-+	}
-+}
-+
-+static void qla4xxx_destroy_ifaces(struct scsi_qla_host *ha)
-+{
-+	qla4xxx_destroy_ipv4_iface(ha);
-+	qla4xxx_destroy_ipv6_iface(ha);
-+}
-+
- static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
- 			     struct iscsi_iface_param_info *iface_param,
- 			     struct addr_ctrl_blk *init_fw_cb)
-@@ -278,13 +436,16 @@ static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
- 			       sizeof(init_fw_cb->ipv6_dflt_rtr_addr));
- 		break;
- 	case ISCSI_NET_PARAM_IFACE_ENABLE:
--		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
-+		if (iface_param->value[0] == ISCSI_IFACE_ENABLE) {
- 			init_fw_cb->ipv6_opts |=
- 				cpu_to_le16(IPV6_OPT_IPV6_PROTOCOL_ENABLE);
--		else
-+			qla4xxx_create_ipv6_iface(ha);
-+		} else {
- 			init_fw_cb->ipv6_opts &=
- 				cpu_to_le16(~IPV6_OPT_IPV6_PROTOCOL_ENABLE &
- 					    0xFFFF);
-+			qla4xxx_destroy_ipv6_iface(ha);
-+		}
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_ID:
- 		if (iface_param->len != sizeof(init_fw_cb->ipv6_vlan_tag))
-@@ -326,13 +487,16 @@ static void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
- 			ql4_printk(KERN_ERR, ha, "Invalid IPv4 bootproto\n");
- 		break;
- 	case ISCSI_NET_PARAM_IFACE_ENABLE:
--		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
-+		if (iface_param->value[0] == ISCSI_IFACE_ENABLE) {
- 			init_fw_cb->ipv4_ip_opts |=
- 				cpu_to_le16(IPOPT_IPV4_PROTOCOL_ENABLE);
--		else
-+			qla4xxx_create_ipv4_iface(ha);
-+		} else {
- 			init_fw_cb->ipv4_ip_opts &=
- 				cpu_to_le16(~IPOPT_IPV4_PROTOCOL_ENABLE &
- 					    0xFFFF);
-+			qla4xxx_destroy_ipv4_iface(ha);
-+		}
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_ID:
- 		if (iface_param->len != sizeof(init_fw_cb->ipv4_vlan_tag))
-@@ -2081,6 +2245,8 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
- 	       ha->host_no, ha->firmware_version[0], ha->firmware_version[1],
- 	       ha->patch_number, ha->build_number);
- 	scsi_scan_host(host);
-+
-+	qla4xxx_create_ifaces(ha);
- 	return 0;
+ static struct attribute *iscsi_iface_attrs[] = {
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index a4353ff..164a753 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -300,23 +300,6 @@ enum iscsi_net_param {
+ 	ISCSI_NET_PARAM_IFACE_NAME		= 15,
+ };
  
- probe_failed:
-@@ -2150,6 +2316,9 @@ static void __devexit qla4xxx_remove_adapter(struct pci_dev *pdev)
- 	/* remove devs from iscsi_sessions to scsi_devices */
- 	qla4xxx_free_ddb_list(ha);
+-#define ISCSI_NET_IPV4_ADDR		(1ULL << ISCSI_NET_PARAM_IPV4_ADDR)
+-#define ISCSI_NET_IPV4_SUBNET		(1ULL << ISCSI_NET_PARAM_IPV4_SUBNET)
+-#define ISCSI_NET_IPV4_GW		(1ULL << ISCSI_NET_PARAM_IPV4_GW)
+-#define ISCSI_NET_IPV4_BOOTPROTO	(1ULL << ISCSI_NET_PARAM_IPV4_BOOTPROTO)
+-#define ISCSI_NET_MAC			(1ULL << ISCSI_NET_PARAM_MAC)
+-#define ISCSI_NET_IPV6_LINKLOCAL	(1ULL << ISCSI_NET_PARAM_IPV6_LINKLOCAL)
+-#define ISCSI_NET_IPV6_ADDR		(1ULL << ISCSI_NET_PARAM_IPV6_ADDR)
+-#define ISCSI_NET_IPV6_ROUTER		(1ULL << ISCSI_NET_PARAM_IPV6_ROUTER)
+-#define ISCSI_NET_IPV6_ADDR_AUTOCFG		\
+-				(1ULL << ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG)
+-#define ISCSI_NET_IPV6_LINKLOCAL_AUTOCFG	\
+-				(1ULL << ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG)
+-#define ISCSI_NET_IPV6_ROUTER_AUTOCFG		\
+-                               (1ULL << ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG)
+-#define ISCSI_NET_IFACE_ENABLE		(1ULL << ISCSI_NET_PARAM_IFACE_ENABLE)
+-#define ISCSI_NET_VLAN_ID			(1ULL << ISCSI_NET_PARAM_VLAN_ID)
+-
+ /*
+  * Common error codes
+  */
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 53eb938..b9e9ef5 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -87,7 +87,6 @@ struct iscsi_transport {
+ 	unsigned int caps;
+ 	/* LLD sets this to indicate what values it can export to sysfs */
+ 	uint64_t host_param_mask;
+-	uint64_t iface_param_mask;
  
-+	/* destroy iface from sysfs */
-+	qla4xxx_destroy_ifaces(ha);
-+
- 	scsi_remove_host(ha->host);
- 
- 	qla4xxx_free_adapter(ha);
+ 	struct iscsi_cls_session *(*create_session) (struct iscsi_endpoint *ep,
+ 					uint16_t cmds_max, uint16_t qdepth,
 -- 
 1.7.2.3
 
