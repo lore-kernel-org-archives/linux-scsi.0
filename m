@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 09/19] iscsi class: sysfs group is_visible callout for iscsi host attrs
-Date: Mon, 25 Jul 2011 13:48:45 -0500
-Message-ID: <1311619735-15323-10-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 11/19] iscsi class: expand vlan support
+Date: Mon, 25 Jul 2011 13:48:47 -0500
+Message-ID: <1311619735-15323-12-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9623 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:1584 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752563Ab1GYSqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:08 -0400
+	id S1752616Ab1GYSqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:10 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,361 +16,80 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-The iscsi class currently does not support writable sysfs
-attrs for LLD sysfs settings. This patch converts the
-iscsi class and driver's host attrs to use the attribute
-container sysfs group and the sysfs group's is_visible callout
-to be able to support readable or writable sysfs attrs.
+Add support to set vlan priority and enable/disble a vlan.
+
+Patch based on code from Vikas Chaudhary.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |   12 +++++--
- drivers/scsi/be2iscsi/be_iscsi.c         |    9 +++++
- drivers/scsi/be2iscsi/be_main.c          |    2 -
- drivers/scsi/bnx2i/bnx2i_iscsi.c         |   11 +++++-
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c       |    3 --
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c       |    3 --
- drivers/scsi/cxgbi/libcxgbi.c            |   10 +++++
- drivers/scsi/iscsi_tcp.c                 |   13 +++++--
- drivers/scsi/qla4xxx/ql4_os.c            |   12 +++++--
- drivers/scsi/scsi_transport_iscsi.c      |   58 +++++++++++++++++++----------
- include/scsi/iscsi_if.h                  |    5 ---
- include/scsi/scsi_transport_iscsi.h      |    2 -
- 12 files changed, 94 insertions(+), 46 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |    8 ++++++++
+ include/scsi/iscsi_if.h             |   13 +++++++++++--
+ 2 files changed, 19 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 7d9167b..bce8d1b 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -631,6 +631,15 @@ iscsi_iser_ep_disconnect(struct iscsi_endpoint *ep)
- static mode_t iser_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
-+	case ISCSI_HOST_PARAM:
-+		switch (param) {
-+		case ISCSI_HOST_PARAM_NETDEV_NAME:
-+		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+			return S_IRUGO;
-+		default:
-+			return 0;
-+		}
- 	case ISCSI_PARAM:
- 		switch (param) {
- 		case ISCSI_PARAM_MAX_RECV_DLENGTH:
-@@ -693,9 +702,6 @@ static struct iscsi_transport iscsi_iser_transport = {
- 	.owner                  = THIS_MODULE,
- 	.name                   = "iser",
- 	.caps                   = CAP_RECOVERY_L0 | CAP_MULTI_R2T,
--	.host_param_mask	= ISCSI_HOST_HWADDRESS |
--				  ISCSI_HOST_NETDEV_NAME |
--				  ISCSI_HOST_INITIATOR_NAME,
- 	/* session management */
- 	.create_session         = iscsi_iser_session_create,
- 	.destroy_session        = iscsi_iser_session_destroy,
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index ecd19bb..feadaa2 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -737,6 +737,15 @@ void beiscsi_ep_disconnect(struct iscsi_endpoint *ep)
- mode_t be2iscsi_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
-+	case ISCSI_HOST_PARAM:
-+		switch (param) {
-+		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_IPADDRESS:
-+		case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+			return S_IRUGO;
-+		default:
-+			return 0;
-+		}
- 	case ISCSI_PARAM:
- 		switch (param) {
- 		case ISCSI_PARAM_MAX_RECV_DLENGTH:
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 93a3c70..72ac64b 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4364,8 +4364,6 @@ struct iscsi_transport beiscsi_iscsi_transport = {
- 	.name = DRV_NAME,
- 	.caps = CAP_RECOVERY_L0 | CAP_HDRDGST | CAP_TEXT_NEGO |
- 		CAP_MULTI_R2T | CAP_DATADGST | CAP_DATA_PATH_OFFLOAD,
--	.host_param_mask = ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
--				ISCSI_HOST_INITIATOR_NAME,
- 	.create_session = beiscsi_session_create,
- 	.destroy_session = beiscsi_session_destroy,
- 	.create_conn = beiscsi_conn_create,
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 24f6630..6c7467c 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -2180,6 +2180,15 @@ static int bnx2i_nl_set_path(struct Scsi_Host *shost, struct iscsi_path *params)
- static mode_t bnx2i_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
-+	case ISCSI_HOST_PARAM:
-+		switch (param) {
-+		case ISCSI_HOST_PARAM_NETDEV_NAME:
-+		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_IPADDRESS:
-+			return S_IRUGO;
-+		default:
-+			return 0;
-+		}
- 	case ISCSI_PARAM:
- 		switch (param) {
- 		case ISCSI_PARAM_MAX_RECV_DLENGTH:
-@@ -2251,8 +2260,6 @@ struct iscsi_transport bnx2i_iscsi_transport = {
- 				  CAP_MULTI_R2T | CAP_DATADGST |
- 				  CAP_DATA_PATH_OFFLOAD |
- 				  CAP_TEXT_NEGO,
--	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
--				  ISCSI_HOST_NETDEV_NAME,
- 	.create_session		= bnx2i_session_create,
- 	.destroy_session	= bnx2i_session_destroy,
- 	.create_conn		= bnx2i_conn_create,
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 541e14d..a895ef1 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -106,9 +106,6 @@ static struct iscsi_transport cxgb3i_iscsi_transport = {
- 	.caps		= CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_HDRDGST
- 				| CAP_DATADGST | CAP_DIGEST_OFFLOAD |
- 				CAP_PADDING_OFFLOAD | CAP_TEXT_NEGO,
--	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
--				ISCSI_HOST_INITIATOR_NAME |
--				ISCSI_HOST_NETDEV_NAME,
- 	.attr_is_visible	= cxgbi_attr_is_visible,
- 	.get_host_param	= cxgbi_get_host_param,
- 	.set_host_param	= cxgbi_set_host_param,
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index c6f985b..ad95559 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -107,9 +107,6 @@ static struct iscsi_transport cxgb4i_iscsi_transport = {
- 	.caps		= CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_HDRDGST |
- 				CAP_DATADGST | CAP_DIGEST_OFFLOAD |
- 				CAP_PADDING_OFFLOAD | CAP_TEXT_NEGO,
--	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
--				ISCSI_HOST_INITIATOR_NAME |
--				ISCSI_HOST_NETDEV_NAME,
- 	.attr_is_visible	= cxgbi_attr_is_visible,
- 	.get_host_param	= cxgbi_get_host_param,
- 	.set_host_param	= cxgbi_set_host_param,
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 14b3874..a776a44 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -2569,6 +2569,16 @@ EXPORT_SYMBOL_GPL(cxgbi_iscsi_cleanup);
- mode_t cxgbi_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
-+	case ISCSI_HOST_PARAM:
-+		switch (param) {
-+		case ISCSI_HOST_PARAM_NETDEV_NAME:
-+		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_IPADDRESS:
-+		case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+			return S_IRUGO;
-+		default:
-+			return 0;
-+		}
- 	case ISCSI_PARAM:
- 		switch (param) {
- 		case ISCSI_PARAM_MAX_RECV_DLENGTH:
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 6ab2122..23e7066 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -875,6 +875,16 @@ static void iscsi_sw_tcp_session_destroy(struct iscsi_cls_session *cls_session)
- static mode_t iscsi_sw_tcp_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
-+	case ISCSI_HOST_PARAM:
-+		switch (param) {
-+		case ISCSI_HOST_PARAM_NETDEV_NAME:
-+		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_IPADDRESS:
-+		case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+			return S_IRUGO;
-+		default:
-+			return 0;
-+		}
- 	case ISCSI_PARAM:
- 		switch (param) {
- 		case ISCSI_PARAM_MAX_RECV_DLENGTH:
-@@ -955,9 +965,6 @@ static struct iscsi_transport iscsi_sw_tcp_transport = {
- 	.name			= "tcp",
- 	.caps			= CAP_RECOVERY_L0 | CAP_MULTI_R2T | CAP_HDRDGST
- 				  | CAP_DATADGST,
--	.host_param_mask	= ISCSI_HOST_HWADDRESS | ISCSI_HOST_IPADDRESS |
--				  ISCSI_HOST_INITIATOR_NAME |
--				  ISCSI_HOST_NETDEV_NAME,
- 	/* session management */
- 	.create_session		= iscsi_sw_tcp_session_create,
- 	.destroy_session	= iscsi_sw_tcp_session_destroy,
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index df6da3c..a9da315 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -138,9 +138,6 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
- 	.name			= DRIVER_NAME,
- 	.caps			= CAP_FW_DB | CAP_SENDTARGETS_OFFLOAD |
- 				  CAP_DATA_PATH_OFFLOAD,
--	.host_param_mask	= ISCSI_HOST_HWADDRESS |
--				  ISCSI_HOST_IPADDRESS |
--				  ISCSI_HOST_INITIATOR_NAME,
- 	.tgt_dscvr		= qla4xxx_tgt_dscvr,
- 	.attr_is_visible	= ql4_attr_is_visible,
- 	.get_conn_param		= qla4xxx_conn_get_param,
-@@ -156,6 +153,15 @@ static struct scsi_transport_template *qla4xxx_scsi_transport;
- static mode_t ql4_attr_is_visible(int param_type, int param)
- {
- 	switch (param_type) {
-+	case ISCSI_HOST_PARAM:
-+		switch (param) {
-+		case ISCSI_HOST_PARAM_HWADDRESS:
-+		case ISCSI_HOST_PARAM_IPADDRESS:
-+		case ISCSI_HOST_PARAM_INITIATOR_NAME:
-+			return S_IRUGO;
-+		default:
-+			return 0;
-+		}
- 	case ISCSI_PARAM:
- 		switch (param) {
- 		case ISCSI_PARAM_CONN_ADDRESS:
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index a8dd85d..2e9b682 100644
+index 2e9b682..13f9051 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -32,8 +32,6 @@
- #include <scsi/iscsi_if.h>
- #include <scsi/scsi_cmnd.h>
+@@ -319,6 +319,8 @@ iscsi_iface_net_attr(ipv6_iface, linklocal_autocfg,
+ /* common read only iface attribute */
+ iscsi_iface_net_attr(iface, enabled, ISCSI_NET_PARAM_IFACE_ENABLE);
+ iscsi_iface_net_attr(iface, vlan, ISCSI_NET_PARAM_VLAN_ID);
++iscsi_iface_net_attr(iface, vlan_priority, ISCSI_NET_PARAM_VLAN_PRIORITY);
++iscsi_iface_net_attr(iface, vlan_enabled, ISCSI_NET_PARAM_VLAN_ENABLED);
  
--#define ISCSI_HOST_ATTRS 4
--
- #define ISCSI_TRANSPORT_VERSION "2.0-870"
- 
- static int dbg_session;
-@@ -74,7 +72,6 @@ struct iscsi_internal {
- 	struct list_head list;
- 	struct device dev;
- 
--	struct device_attribute *host_attrs[ISCSI_HOST_ATTRS + 1];
- 	struct transport_container conn_cont;
- 	struct transport_container session_cont;
- };
-@@ -2301,13 +2298,42 @@ iscsi_host_attr(hwaddress, ISCSI_HOST_PARAM_HWADDRESS);
- iscsi_host_attr(ipaddress, ISCSI_HOST_PARAM_IPADDRESS);
- iscsi_host_attr(initiatorname, ISCSI_HOST_PARAM_INITIATOR_NAME);
- 
--#define SETUP_HOST_RD_ATTR(field, param_flag)				\
--do {									\
--	if (tt->host_param_mask & param_flag) {				\
--		priv->host_attrs[count] = &dev_attr_host_##field; \
--		count++;						\
--	}								\
--} while (0)
-+static struct attribute *iscsi_host_attrs[] = {
-+	&dev_attr_host_netdev.attr,
-+	&dev_attr_host_hwaddress.attr,
-+	&dev_attr_host_ipaddress.attr,
-+	&dev_attr_host_initiatorname.attr,
-+	NULL,
-+};
-+
-+static mode_t iscsi_host_attr_is_visible(struct kobject *kobj,
-+					 struct attribute *attr, int i)
-+{
-+	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct Scsi_Host *shost = transport_class_to_shost(cdev);
-+	struct iscsi_internal *priv = to_iscsi_internal(shost->transportt);
-+	int param;
-+
-+	if (attr == &dev_attr_host_netdev.attr)
-+		param = ISCSI_HOST_PARAM_NETDEV_NAME;
-+	else if (attr == &dev_attr_host_hwaddress.attr)
-+		param = ISCSI_HOST_PARAM_HWADDRESS;
-+	else if (attr == &dev_attr_host_ipaddress.attr)
-+		param = ISCSI_HOST_PARAM_IPADDRESS;
-+	else if (attr == &dev_attr_host_initiatorname.attr)
-+		param = ISCSI_HOST_PARAM_INITIATOR_NAME;
-+	else {
-+		WARN_ONCE(1, "Invalid host attr");
-+		return 0;
-+	}
-+
-+	return priv->iscsi_transport->attr_is_visible(ISCSI_HOST_PARAM, param);
-+}
-+
-+static struct attribute_group iscsi_host_group = {
-+	.attrs = iscsi_host_attrs,
-+	.is_visible = iscsi_host_attr_is_visible,
-+};
- 
- static int iscsi_session_match(struct attribute_container *cont,
- 			   struct device *dev)
-@@ -2379,7 +2405,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
- {
- 	struct iscsi_internal *priv;
- 	unsigned long flags;
--	int count = 0, err;
-+	int err;
- 
- 	BUG_ON(!tt);
- 
-@@ -2406,20 +2432,12 @@ iscsi_register_transport(struct iscsi_transport *tt)
- 		goto unregister_dev;
- 
- 	/* host parameters */
--	priv->t.host_attrs.ac.attrs = &priv->host_attrs[0];
- 	priv->t.host_attrs.ac.class = &iscsi_host_class.class;
- 	priv->t.host_attrs.ac.match = iscsi_host_match;
-+	priv->t.host_attrs.ac.grp = &iscsi_host_group;
- 	priv->t.host_size = sizeof(struct iscsi_cls_host);
- 	transport_container_register(&priv->t.host_attrs);
- 
--	SETUP_HOST_RD_ATTR(netdev, ISCSI_HOST_NETDEV_NAME);
--	SETUP_HOST_RD_ATTR(ipaddress, ISCSI_HOST_IPADDRESS);
--	SETUP_HOST_RD_ATTR(hwaddress, ISCSI_HOST_HWADDRESS);
--	SETUP_HOST_RD_ATTR(initiatorname, ISCSI_HOST_INITIATOR_NAME);
--	BUG_ON(count > ISCSI_HOST_ATTRS);
--	priv->host_attrs[count] = NULL;
--	count = 0;
--
- 	/* connection parameters */
- 	priv->conn_cont.ac.class = &iscsi_connection_class.class;
- 	priv->conn_cont.ac.match = iscsi_conn_match;
+ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 					  struct attribute *attr, int i)
+@@ -332,6 +334,10 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 		param = ISCSI_NET_PARAM_IFACE_ENABLE;
+ 	else if (attr == &dev_attr_iface_vlan.attr)
+ 		param = ISCSI_NET_PARAM_VLAN_ID;
++	else if (attr == &dev_attr_iface_vlan_priority.attr)
++		param = ISCSI_NET_PARAM_VLAN_PRIORITY;
++	else if (attr == &dev_attr_iface_vlan_enabled.attr)
++		param = ISCSI_NET_PARAM_VLAN_ENABLED;
+ 	else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
+ 		if (attr == &dev_attr_ipv4_iface_ipaddress.attr)
+ 			param = ISCSI_NET_PARAM_IPV4_ADDR;
+@@ -367,6 +373,8 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ static struct attribute *iscsi_iface_attrs[] = {
+ 	&dev_attr_iface_enabled.attr,
+ 	&dev_attr_iface_vlan.attr,
++	&dev_attr_iface_vlan_priority.attr,
++	&dev_attr_iface_vlan_enabled.attr,
+ 	&dev_attr_ipv4_iface_ipaddress.attr,
+ 	&dev_attr_ipv4_iface_gateway.attr,
+ 	&dev_attr_ipv4_iface_subnet.attr,
 diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 164a753..3753f7e 100644
+index 3753f7e..d3f256a 100644
 --- a/include/scsi/iscsi_if.h
 +++ b/include/scsi/iscsi_if.h
-@@ -391,11 +391,6 @@ enum iscsi_host_param {
- 	ISCSI_HOST_PARAM_MAX,
+@@ -281,6 +281,13 @@ struct iscsi_path {
+ #define ISCSI_IFACE_TYPE_IPV4		0x01
+ #define ISCSI_IFACE_TYPE_IPV6		0x02
+ 
++#define ISCSI_MAX_VLAN_ID		4095
++#define ISCSI_MAX_VLAN_PRIORITY		7
++
++/* iscsi vlan enable/disabled setting */
++#define ISCSI_VLAN_DISABLE	0x01
++#define ISCSI_VLAN_ENABLE	0x02
++
+ /* iSCSI network params */
+ enum iscsi_net_param {
+ 	ISCSI_NET_PARAM_IPV4_ADDR		= 1,
+@@ -296,8 +303,10 @@ enum iscsi_net_param {
+ 	ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG	= 11,
+ 	ISCSI_NET_PARAM_IFACE_ENABLE		= 12,
+ 	ISCSI_NET_PARAM_VLAN_ID			= 13,
+-	ISCSI_NET_PARAM_IFACE_TYPE		= 14,
+-	ISCSI_NET_PARAM_IFACE_NAME		= 15,
++	ISCSI_NET_PARAM_VLAN_PRIORITY		= 14,
++	ISCSI_NET_PARAM_VLAN_ENABLED		= 15,
++	ISCSI_NET_PARAM_IFACE_TYPE		= 16,
++	ISCSI_NET_PARAM_IFACE_NAME		= 17,
  };
  
--#define ISCSI_HOST_HWADDRESS		(1ULL << ISCSI_HOST_PARAM_HWADDRESS)
--#define ISCSI_HOST_INITIATOR_NAME	(1ULL << ISCSI_HOST_PARAM_INITIATOR_NAME)
--#define ISCSI_HOST_NETDEV_NAME		(1ULL << ISCSI_HOST_PARAM_NETDEV_NAME)
--#define ISCSI_HOST_IPADDRESS		(1ULL << ISCSI_HOST_PARAM_IPADDRESS)
--
- #define iscsi_ptr(_handle) ((void*)(unsigned long)_handle)
- #define iscsi_handle(_ptr) ((uint64_t)(unsigned long)_ptr)
- 
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index b9e9ef5..77e6dd6 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -85,8 +85,6 @@ struct iscsi_transport {
- 	struct module *owner;
- 	char *name;
- 	unsigned int caps;
--	/* LLD sets this to indicate what values it can export to sysfs */
--	uint64_t host_param_mask;
- 
- 	struct iscsi_cls_session *(*create_session) (struct iscsi_endpoint *ep,
- 					uint16_t cmds_max, uint16_t qdepth,
+ /*
 -- 
 1.7.2.3
 
