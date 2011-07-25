@@ -1,35 +1,630 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 00/19] iscsi feature update
-Date: Mon, 25 Jul 2011 13:48:36 -0500
-Message-ID: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 02/19] qla4xxx: add support for set_net_config
+Date: Mon, 25 Jul 2011 13:48:38 -0500
+Message-ID: <1311619735-15323-3-git-send-email-michaelc@cs.wisc.edu>
+References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55247 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60513 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751350Ab1GYSp5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:45:57 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p6PIjv2B017122
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2011 14:45:57 -0400
-Received: from meanminna.corp.redhat.com (vpn-11-33.rdu.redhat.com [10.11.11.33])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id p6PIjtBS025974
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2011 14:45:56 -0400
+	id S1752468Ab1GYSqA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:00 -0400
+In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-The following patches are made over scsi-misc and this patch
-http://marc.info/?l=linux-scsi&m=131149780020992&w=2
-which it looks like Jens is going to merge after -rc1.
-So the following patches are features and non-critical bug fixes
-for the feature window after this one we are on (so they are
-for 3.2 I guess).
+From: Mike Christie <michaelc@cs.wisc.edu>
 
+Allows user space (iscsiadm) to send down network configuration
+parameters for LLD to set private network configuration on the iSCSI
+adapters.
 
-Note: "[PATCH 17/19] qla4xxx: support iscsiadm session mgmt"
-is getting sent as UTF-8 for some reason. The patch looks fine
-and applies and compiles ok. Just the subject of the mail
-might look weird in some editors (in my mailer it looks ok).
-Is this ok? I could not figure out what is wrong with the encoding?
+Based on patches from Vikas Chaudhary.
 
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/qla4xxx/ql4_fw.h   |   77 +++++++++++
+ drivers/scsi/qla4xxx/ql4_glbl.h |   20 +++-
+ drivers/scsi/qla4xxx/ql4_mbx.c  |  119 ++++++++++++++++-
+ drivers/scsi/qla4xxx/ql4_os.c   |  282 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 494 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index 01082aa..21aa1db 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -434,6 +434,14 @@ struct qla_flt_region {
+ #define ACB_STATE_VALID		0x05
+ #define ACB_STATE_DISABLING	0x06
+ 
++/* FLASH offsets */
++#define FLASH_SEGMENT_IFCB	0x04000000
++
++#define FLASH_OPT_RMW_HOLD	0
++#define FLASH_OPT_RMW_INIT	1
++#define FLASH_OPT_COMMIT	2
++#define FLASH_OPT_RMW_COMMIT	3
++
+ /*************************************************************************/
+ 
+ /* Host Adapter Initialization Control Block (from host) */
+@@ -473,6 +481,7 @@ struct addr_ctrl_blk {
+ 
+ 	uint16_t iscsi_opts;	/* 30-31 */
+ 	uint16_t ipv4_tcp_opts;	/* 32-33 */
++#define TCPOPT_DHCP_ENABLE		0x0200
+ 	uint16_t ipv4_ip_opts;	/* 34-35 */
+ #define  IPOPT_IPv4_PROTOCOL_ENABLE	0x8000
+ 
+@@ -574,6 +583,74 @@ struct init_fw_ctrl_blk {
+ /*	struct addr_ctrl_blk sec;*/
+ };
+ 
++struct addr_ctrl_blk_def {
++	uint8_t reserved1[1];	/* 00 */
++	uint8_t control;	/* 01 */
++	uint8_t reserved2[11];	/* 02-0C */
++	uint8_t inst_num;	/* 0D */
++	uint8_t reserved3[34];	/* 0E-2F */
++	uint16_t iscsi_opts;	/* 30-31 */
++	uint16_t ipv4_tcp_opts;	/* 32-33 */
++	uint16_t ipv4_ip_opts;	/* 34-35 */
++	uint16_t iscsi_max_pdu_size;	/* 36-37 */
++	uint8_t ipv4_tos;	/* 38 */
++	uint8_t ipv4_ttl;	/* 39 */
++	uint8_t reserved4[2];	/* 3A-3B */
++	uint16_t def_timeout;	/* 3C-3D */
++	uint16_t iscsi_fburst_len;	/* 3E-3F */
++	uint8_t reserved5[4];	/* 40-43 */
++	uint16_t iscsi_max_outstnd_r2t;	/* 44-45 */
++	uint8_t reserved6[2];	/* 46-47 */
++	uint16_t ipv4_port;	/* 48-49 */
++	uint16_t iscsi_max_burst_len;	/* 4A-4B */
++	uint8_t reserved7[4];	/* 4C-4F */
++	uint8_t ipv4_addr[4];	/* 50-53 */
++	uint16_t ipv4_vlan_tag;	/* 54-55 */
++	uint8_t ipv4_addr_state;	/* 56 */
++	uint8_t ipv4_cacheid;	/* 57 */
++	uint8_t reserved8[8];	/* 58-5F */
++	uint8_t ipv4_subnet[4];	/* 60-63 */
++	uint8_t reserved9[12];	/* 64-6F */
++	uint8_t ipv4_gw_addr[4];	/* 70-73 */
++	uint8_t reserved10[84];	/* 74-C7 */
++	uint8_t abort_timer;	/* C8    */
++	uint8_t ipv4_tcp_wsf;	/* C9    */
++	uint8_t reserved11[10];	/* CA-D3 */
++	uint8_t ipv4_dhcp_vid_len;	/* D4 */
++	uint8_t ipv4_dhcp_vid[11];	/* D5-DF */
++	uint8_t reserved12[20];	/* E0-F3 */
++	uint8_t ipv4_dhcp_alt_cid_len;	/* F4 */
++	uint8_t ipv4_dhcp_alt_cid[11];	/* F5-FF */
++	uint8_t iscsi_name[224];	/* 100-1DF */
++	uint8_t reserved13[32];	/* 1E0-1FF */
++	uint32_t cookie;	/* 200-203 */
++	uint16_t ipv6_port;	/* 204-205 */
++	uint16_t ipv6_opts;	/* 206-207 */
++	uint16_t ipv6_addtl_opts;	/* 208-209 */
++	uint16_t ipv6_tcp_opts;		/* 20A-20B */
++	uint8_t ipv6_tcp_wsf;		/* 20C */
++	uint16_t ipv6_flow_lbl;		/* 20D-20F */
++	uint8_t ipv6_dflt_rtr_addr[16];	/* 210-21F */
++	uint16_t ipv6_vlan_tag;		/* 220-221 */
++	uint8_t ipv6_lnk_lcl_addr_state;	/* 222 */
++	uint8_t ipv6_addr0_state;	/* 223 */
++	uint8_t ipv6_addr1_state;	/* 224 */
++	uint8_t ipv6_dflt_rtr_state;	/* 225 */
++	uint8_t ipv6_traffic_class;	/* 226 */
++	uint8_t ipv6_hop_limit;		/* 227 */
++	uint8_t ipv6_if_id[8];		/* 228-22F */
++	uint8_t ipv6_addr0[16];		/* 230-23F */
++	uint8_t ipv6_addr1[16];		/* 240-24F */
++	uint32_t ipv6_nd_reach_time;	/* 250-253 */
++	uint32_t ipv6_nd_rexmit_timer;	/* 254-257 */
++	uint32_t ipv6_nd_stale_timeout;	/* 258-25B */
++	uint8_t ipv6_dup_addr_detect_count;	/* 25C */
++	uint8_t ipv6_cache_id;		/* 25D */
++	uint8_t reserved14[18];		/* 25E-26F */
++	uint32_t ipv6_gw_advrt_mtu;	/* 270-273 */
++	uint8_t reserved15[140];	/* 274-2FF */
++};
++
+ /*************************************************************************/
+ 
+ struct dev_db_entry {
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index a53a256..786274c 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -52,7 +52,17 @@ int qla4xxx_get_fwddb_entry(struct scsi_qla_host *ha,
+ 
+ int qla4xxx_set_ddb_entry(struct scsi_qla_host * ha, uint16_t fw_ddb_index,
+ 			  dma_addr_t fw_ddb_entry_dma);
+-
++uint8_t qla4xxx_get_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
++			 uint32_t *mbox_sts, dma_addr_t init_fw_cb_dma);
++int qla4xxx_conn_close_sess_logout(struct scsi_qla_host *ha,
++				   uint16_t fw_ddb_index,
++				   uint16_t connection_id,
++				   uint16_t option);
++int qla4xxx_disable_acb(struct scsi_qla_host *ha);
++int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
++		    uint32_t *mbox_sts, dma_addr_t acb_dma);
++int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
++		    uint32_t *mbox_sts, dma_addr_t acb_dma);
+ void qla4xxx_mark_device_missing(struct scsi_qla_host *ha,
+ 				 struct ddb_entry *ddb_entry);
+ u16 rd_nvram_word(struct scsi_qla_host *ha, int offset);
+@@ -75,7 +85,8 @@ void qla4xxx_dump_buffer(void *b, uint32_t size);
+ int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
+ 	struct ddb_entry *ddb_entry, int lun, uint16_t mrkr_mod);
+ int qla4_is_relogin_allowed(struct scsi_qla_host *ha, uint32_t conn_err);
+-
++int qla4xxx_set_flash(struct scsi_qla_host *ha, dma_addr_t dma_addr,
++		      uint32_t offset, uint32_t length, uint32_t options);
+ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+ 		uint8_t outCount, uint32_t *mbx_cmd, uint32_t *mbx_sts);
+ 
+@@ -95,6 +106,11 @@ void qla4xxx_wake_dpc(struct scsi_qla_host *ha);
+ void qla4xxx_get_conn_event_log(struct scsi_qla_host *ha);
+ void qla4xxx_mailbox_premature_completion(struct scsi_qla_host *ha);
+ void qla4xxx_dump_registers(struct scsi_qla_host *ha);
++uint8_t qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
++				  uint32_t *mbox_cmd,
++				  uint32_t *mbox_sts,
++				  struct addr_ctrl_blk *init_fw_cb,
++				  dma_addr_t init_fw_cb_dma);
+ 
+ void qla4_8xxx_pci_config(struct scsi_qla_host *);
+ int qla4_8xxx_iospace_config(struct scsi_qla_host *ha);
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index fce8289..559286d 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -303,7 +303,7 @@ qla4xxx_set_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
+ 	return QLA_SUCCESS;
+ }
+ 
+-static uint8_t
++uint8_t
+ qla4xxx_get_ifcb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
+ 		 uint32_t *mbox_sts, dma_addr_t init_fw_cb_dma)
+ {
+@@ -363,7 +363,7 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 	}
+ }
+ 
+-static uint8_t
++uint8_t
+ qla4xxx_update_local_ifcb(struct scsi_qla_host *ha,
+ 			  uint32_t *mbox_cmd,
+ 			  uint32_t *mbox_sts,
+@@ -1207,3 +1207,118 @@ exit_send_tgts_no_free:
+ 	return ret_val;
+ }
+ 
++int qla4xxx_set_flash(struct scsi_qla_host *ha, dma_addr_t dma_addr,
++		      uint32_t offset, uint32_t length, uint32_t options)
++{
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++	int status = QLA_SUCCESS;
++
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	mbox_cmd[0] = MBOX_CMD_WRITE_FLASH;
++	mbox_cmd[1] = LSDW(dma_addr);
++	mbox_cmd[2] = MSDW(dma_addr);
++	mbox_cmd[3] = offset;
++	mbox_cmd[4] = length;
++	mbox_cmd[5] = options;
++
++	status = qla4xxx_mailbox_command(ha, 6, 2, &mbox_cmd[0], &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_WRITE_FLASH "
++				  "failed w/ status %04X, mbx1 %04X\n",
++				  __func__, mbox_sts[0], mbox_sts[1]));
++	}
++	return status;
++}
++
++int qla4xxx_conn_close_sess_logout(struct scsi_qla_host *ha,
++				   uint16_t fw_ddb_index,
++				   uint16_t connection_id,
++				   uint16_t option)
++{
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++	int status = QLA_SUCCESS;
++
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	mbox_cmd[0] = MBOX_CMD_CONN_CLOSE_SESS_LOGOUT;
++	mbox_cmd[1] = fw_ddb_index;
++	mbox_cmd[2] = connection_id;
++	mbox_cmd[3] = option;
++
++	status = qla4xxx_mailbox_command(ha, 4, 2, &mbox_cmd[0], &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_CONN_CLOSE "
++				  "option %04x failed w/ status %04X %04X\n",
++				  __func__, option, mbox_sts[0], mbox_sts[1]));
++	}
++	return status;
++}
++
++int qla4xxx_disable_acb(struct scsi_qla_host *ha)
++{
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++	int status = QLA_SUCCESS;
++
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	mbox_cmd[0] = MBOX_CMD_DISABLE_ACB;
++
++	status = qla4xxx_mailbox_command(ha, 8, 5, &mbox_cmd[0], &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_DISABLE_ACB "
++				  "failed w/ status %04X %04X %04X", __func__,
++				  mbox_sts[0], mbox_sts[1], mbox_sts[2]));
++	}
++	return status;
++}
++
++int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
++		    uint32_t *mbox_sts, dma_addr_t acb_dma)
++{
++	int status = QLA_SUCCESS;
++
++	memset(mbox_cmd, 0, sizeof(mbox_cmd[0]) * MBOX_REG_COUNT);
++	memset(mbox_sts, 0, sizeof(mbox_sts[0]) * MBOX_REG_COUNT);
++	mbox_cmd[0] = MBOX_CMD_GET_ACB;
++	mbox_cmd[1] = 0; /* Primary ACB */
++	mbox_cmd[2] = LSDW(acb_dma);
++	mbox_cmd[3] = MSDW(acb_dma);
++	mbox_cmd[4] = sizeof(struct addr_ctrl_blk);
++
++	status = qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_WARNING, ha, "%s: MBOX_CMD_GET_ACB "
++				  "failed w/ status %04X\n", __func__,
++				  mbox_sts[0]));
++	}
++	return status;
++}
++
++int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
++		    uint32_t *mbox_sts, dma_addr_t acb_dma)
++{
++	int status = QLA_SUCCESS;
++
++	memset(mbox_cmd, 0, sizeof(mbox_cmd[0]) * MBOX_REG_COUNT);
++	memset(mbox_sts, 0, sizeof(mbox_sts[0]) * MBOX_REG_COUNT);
++	mbox_cmd[0] = MBOX_CMD_SET_ACB;
++	mbox_cmd[1] = 0; /* Primary ACB */
++	mbox_cmd[2] = LSDW(acb_dma);
++	mbox_cmd[3] = MSDW(acb_dma);
++	mbox_cmd[4] = sizeof(struct addr_ctrl_blk);
++
++	status = qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_WARNING, ha,  "%s: MBOX_CMD_SET_ACB "
++				  "failed w/ status %04X\n", __func__,
++				  mbox_sts[0]));
++	}
++	return status;
++}
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index f2364ec..586f12f 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -80,6 +80,8 @@ static int qla4xxx_sess_get_param(struct iscsi_cls_session *sess,
+ 				  enum iscsi_param param, char *buf);
+ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
+ 				  enum iscsi_host_param param, char *buf);
++static int qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data,
++				   int count);
+ static void qla4xxx_recovery_timedout(struct iscsi_cls_session *session);
+ static enum blk_eh_timer_return qla4xxx_eh_cmd_timed_out(struct scsi_cmnd *sc);
+ 
+@@ -142,6 +144,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
+ 	.get_conn_param		= qla4xxx_conn_get_param,
+ 	.get_session_param	= qla4xxx_sess_get_param,
+ 	.get_host_param		= qla4xxx_host_get_param,
++	.set_iface_param	= qla4xxx_iface_set_param,
+ 	.session_recovery_timedout = qla4xxx_recovery_timedout,
+ };
+ 
+@@ -202,6 +205,285 @@ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
+ 	return len;
+ }
+ 
++static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
++			     struct iscsi_iface_param_info *iface_param,
++			     struct addr_ctrl_blk *init_fw_cb)
++{
++	/*
++	 * iface_num 0 is valid for IPv6 Addr, linklocal, router, autocfg.
++	 * iface_num 1 is valid only for IPv6 Addr.
++	 */
++	switch (iface_param->param) {
++	case ISCSI_NET_PARAM_IPV6_ADDR:
++		if (iface_param->iface_num & 0x1)
++			/* IPv6 Addr 1 */
++			memcpy(init_fw_cb->ipv6_addr1, iface_param->value,
++			       sizeof(init_fw_cb->ipv6_addr1));
++		else
++			/* IPv6 Addr 0 */
++			memcpy(init_fw_cb->ipv6_addr0, iface_param->value,
++			       sizeof(init_fw_cb->ipv6_addr0));
++		break;
++	case ISCSI_NET_PARAM_IPV6_LINKLOCAL:
++		if (iface_param->iface_num & 0x1)
++			break;
++		memcpy(init_fw_cb->ipv6_if_id, &iface_param->value[8],
++		       sizeof(init_fw_cb->ipv6_if_id));
++		break;
++	case ISCSI_NET_PARAM_IPV6_ROUTER:
++		if (iface_param->iface_num & 0x1)
++			break;
++		memcpy(init_fw_cb->ipv6_dflt_rtr_addr, iface_param->value,
++		       sizeof(init_fw_cb->ipv6_dflt_rtr_addr));
++		break;
++	case ISCSI_NET_PARAM_IPV6_ADDR_AUTOCFG:
++		/* Autocfg applies to even interface */
++		if (iface_param->iface_num & 0x1)
++			break;
++
++		if (iface_param->value[0] == ISCSI_IPV6_AUTOCFG_DISABLE)
++			init_fw_cb->ipv6_addtl_opts &=
++				cpu_to_le16(
++				  ~IPV6_ADDOPT_NEIGHBOR_DISCOVERY_ADDR_ENABLE);
++		else if (iface_param->value[0] == ISCSI_IPV6_AUTOCFG_ND_ENABLE)
++			init_fw_cb->ipv6_addtl_opts |=
++				cpu_to_le16(
++				  IPV6_ADDOPT_NEIGHBOR_DISCOVERY_ADDR_ENABLE);
++		else
++			ql4_printk(KERN_ERR, ha, "Invalid autocfg setting for "
++				   "IPv6 addr\n");
++		break;
++	case ISCSI_NET_PARAM_IPV6_LINKLOCAL_AUTOCFG:
++		/* Autocfg applies to even interface */
++		if (iface_param->iface_num & 0x1)
++			break;
++
++		if (iface_param->value[0] ==
++		    ISCSI_IPV6_LINKLOCAL_AUTOCFG_ENABLE)
++			init_fw_cb->ipv6_addtl_opts |= cpu_to_le16(
++					IPV6_ADDOPT_AUTOCONFIG_LINK_LOCAL_ADDR);
++		else if (iface_param->value[0] ==
++			 ISCSI_IPV6_LINKLOCAL_AUTOCFG_DISABLE)
++			init_fw_cb->ipv6_addtl_opts &= cpu_to_le16(
++				       ~IPV6_ADDOPT_AUTOCONFIG_LINK_LOCAL_ADDR);
++		else
++			ql4_printk(KERN_ERR, ha, "Invalid autocfg setting for "
++				   "IPv6 linklocal addr\n");
++		break;
++	case ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG:
++		/* Autocfg applies to even interface */
++		if (iface_param->iface_num & 0x1)
++			break;
++
++		if (iface_param->value[0] == ISCSI_IPV6_ROUTER_AUTOCFG_ENABLE)
++			memset(init_fw_cb->ipv6_dflt_rtr_addr, 0,
++			       sizeof(init_fw_cb->ipv6_dflt_rtr_addr));
++		break;
++	case ISCSI_NET_PARAM_IFACE_ENABLE:
++		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
++			init_fw_cb->ipv6_opts |=
++				cpu_to_le16(IPV6_OPT_IPV6_PROTOCOL_ENABLE);
++		else
++			init_fw_cb->ipv6_opts &=
++				cpu_to_le16(~IPV6_OPT_IPV6_PROTOCOL_ENABLE &
++					    0xFFFF);
++		break;
++	case ISCSI_NET_PARAM_VLAN_ID:
++		if (iface_param->len != sizeof(init_fw_cb->ipv6_vlan_tag))
++			break;
++		init_fw_cb->ipv6_vlan_tag = *(uint16_t *)iface_param->value;
++		break;
++	default:
++		ql4_printk(KERN_ERR, ha, "Unknown IPv6 param = %d\n",
++			   iface_param->param);
++		break;
++	}
++}
++
++static void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
++			     struct iscsi_iface_param_info *iface_param,
++			     struct addr_ctrl_blk *init_fw_cb)
++{
++	switch (iface_param->param) {
++	case ISCSI_NET_PARAM_IPV4_ADDR:
++		memcpy(init_fw_cb->ipv4_addr, iface_param->value,
++		       sizeof(init_fw_cb->ipv4_addr));
++		break;
++	case ISCSI_NET_PARAM_IPV4_SUBNET:
++		memcpy(init_fw_cb->ipv4_subnet,	iface_param->value,
++		       sizeof(init_fw_cb->ipv4_subnet));
++		break;
++	case ISCSI_NET_PARAM_IPV4_GW:
++		memcpy(init_fw_cb->ipv4_gw_addr, iface_param->value,
++		       sizeof(init_fw_cb->ipv4_gw_addr));
++		break;
++	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
++		if (iface_param->value[0] == ISCSI_BOOTPROTO_DHCP)
++			init_fw_cb->ipv4_tcp_opts |=
++					cpu_to_le16(TCPOPT_DHCP_ENABLE);
++		else if (iface_param->value[0] == ISCSI_BOOTPROTO_STATIC)
++			init_fw_cb->ipv4_tcp_opts &=
++					cpu_to_le16(~TCPOPT_DHCP_ENABLE);
++		else
++			ql4_printk(KERN_ERR, ha, "Invalid IPv4 bootproto\n");
++		break;
++	case ISCSI_NET_PARAM_IFACE_ENABLE:
++		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
++			init_fw_cb->ipv4_ip_opts |=
++				cpu_to_le16(IPOPT_IPv4_PROTOCOL_ENABLE);
++		else
++			init_fw_cb->ipv4_ip_opts &=
++				cpu_to_le16(~IPOPT_IPv4_PROTOCOL_ENABLE &
++					    0xFFFF);
++		break;
++	case ISCSI_NET_PARAM_VLAN_ID:
++		if (iface_param->len != sizeof(init_fw_cb->ipv4_vlan_tag))
++			break;
++		init_fw_cb->ipv4_vlan_tag = *(uint16_t *)iface_param->value;
++		break;
++	default:
++		ql4_printk(KERN_ERR, ha, "Unknown IPv4 param = %d\n",
++			   iface_param->param);
++		break;
++	}
++}
++
++static void
++qla4xxx_initcb_to_acb(struct addr_ctrl_blk *init_fw_cb)
++{
++	struct addr_ctrl_blk_def *acb;
++	acb = (struct addr_ctrl_blk_def *)init_fw_cb;
++	memset(acb->reserved1, 0, sizeof(acb->reserved1));
++	memset(acb->reserved2, 0, sizeof(acb->reserved2));
++	memset(acb->reserved3, 0, sizeof(acb->reserved3));
++	memset(acb->reserved4, 0, sizeof(acb->reserved4));
++	memset(acb->reserved5, 0, sizeof(acb->reserved5));
++	memset(acb->reserved6, 0, sizeof(acb->reserved6));
++	memset(acb->reserved7, 0, sizeof(acb->reserved7));
++	memset(acb->reserved8, 0, sizeof(acb->reserved8));
++	memset(acb->reserved9, 0, sizeof(acb->reserved9));
++	memset(acb->reserved10, 0, sizeof(acb->reserved10));
++	memset(acb->reserved11, 0, sizeof(acb->reserved11));
++	memset(acb->reserved12, 0, sizeof(acb->reserved12));
++	memset(acb->reserved13, 0, sizeof(acb->reserved13));
++	memset(acb->reserved14, 0, sizeof(acb->reserved14));
++	memset(acb->reserved15, 0, sizeof(acb->reserved15));
++}
++
++static int
++qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data, int count)
++{
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	int rval = 0;
++	struct iscsi_iface_param_info *iface_param = NULL;
++	struct addr_ctrl_blk *init_fw_cb = NULL;
++	dma_addr_t init_fw_cb_dma;
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++	uint32_t total_param_count;
++	uint32_t length;
++
++	init_fw_cb = dma_alloc_coherent(&ha->pdev->dev,
++					sizeof(struct addr_ctrl_blk),
++					&init_fw_cb_dma, GFP_KERNEL);
++	if (!init_fw_cb) {
++		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc init_cb\n",
++			   __func__);
++		return -ENOMEM;
++	}
++
++	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	if (qla4xxx_get_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma)) {
++		ql4_printk(KERN_ERR, ha, "%s: get ifcb failed\n", __func__);
++		rval = -EIO;
++		goto exit_init_fw_cb;
++	}
++
++	total_param_count = count;
++	iface_param = (struct iscsi_iface_param_info *)data;
++
++	for ( ; total_param_count != 0; total_param_count--) {
++		length = iface_param->len;
++
++		if (iface_param->param_type != ISCSI_NET_PARAM)
++			continue;
++
++		switch (iface_param->iface_type) {
++		case ISCSI_IFACE_TYPE_IPV4:
++			switch (iface_param->iface_num) {
++			case 0:
++				qla4xxx_set_ipv4(ha, iface_param, init_fw_cb);
++				break;
++			default:
++				/* Cannot have more than one IPv4 interface */
++				ql4_printk(KERN_ERR, ha, "Invalid IPv4 iface "
++					   "number = %d\n",
++					   iface_param->iface_num);
++				break;
++			}
++			break;
++		case ISCSI_IFACE_TYPE_IPV6:
++			switch (iface_param->iface_num) {
++			case 0:
++			case 1:
++				qla4xxx_set_ipv6(ha, iface_param, init_fw_cb);
++				break;
++			default:
++				/* Cannot have more than two IPv6 interface */
++				ql4_printk(KERN_ERR, ha, "Invalid IPv6 iface "
++					   "number = %d\n",
++					   iface_param->iface_num);
++				break;
++			}
++			break;
++		default:
++			ql4_printk(KERN_ERR, ha, "Invalid iface type\n");
++			break;
++		}
++
++		iface_param = (struct iscsi_iface_param_info *)
++						((uint8_t *)iface_param +
++			    sizeof(struct iscsi_iface_param_info) + length);
++	}
++
++	init_fw_cb->cookie = cpu_to_le32(0x11BEAD5A);
++
++	rval = qla4xxx_set_flash(ha, init_fw_cb_dma, FLASH_SEGMENT_IFCB,
++				 sizeof(struct addr_ctrl_blk),
++				 FLASH_OPT_RMW_COMMIT);
++	if (rval != QLA_SUCCESS) {
++		ql4_printk(KERN_ERR, ha, "%s: set flash mbx failed\n",
++			   __func__);
++		rval = -EIO;
++		goto exit_init_fw_cb;
++	}
++
++	qla4xxx_disable_acb(ha);
++
++	qla4xxx_initcb_to_acb(init_fw_cb);
++
++	rval = qla4xxx_set_acb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma);
++	if (rval != QLA_SUCCESS) {
++		ql4_printk(KERN_ERR, ha, "%s: set acb mbx failed\n",
++			   __func__);
++		rval = -EIO;
++		goto exit_init_fw_cb;
++	}
++
++	memset(init_fw_cb, 0, sizeof(struct addr_ctrl_blk));
++	qla4xxx_update_local_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb,
++				  init_fw_cb_dma);
++
++exit_init_fw_cb:
++	dma_free_coherent(&ha->pdev->dev, sizeof(struct addr_ctrl_blk),
++			  init_fw_cb, init_fw_cb_dma);
++
++	return rval;
++}
++
+ static int qla4xxx_sess_get_param(struct iscsi_cls_session *sess,
+ 				  enum iscsi_param param, char *buf)
+ {
+-- 
+1.7.2.3
 
