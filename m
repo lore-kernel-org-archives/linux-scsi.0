@@ -1,56 +1,46 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [PATCH] iommu: parse pci device scope even only intr remap is
- defined
-Date: Mon, 25 Jul 2011 09:19:41 +0200
-Message-ID: <20110725071941.GA22518@elte.hu>
-References: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
- <20110721085636.GJ9216@elte.hu>
- <CAE9FiQU629jW2n8HTiA7ZZotfsUoXAkCvZ5XDOPeERubYemdzg@mail.gmail.com>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [RFC PATCH 1/2] block: strict rq_affinity
+Date: Mon, 25 Jul 2011 10:21:24 +0200
+Message-ID: <4E2D2784.3060701@fusionio.com>
+References: <20110722205736.17420.41366.stgit@localhost6.localdomain6> <20110722205938.17420.68621.stgit@localhost6.localdomain6> <4E2B15DB.4090302@fusionio.com> <CANejiEVMHhOW0N4Wn9LG0NAXMX3uOz5QzcRXZV4Ow4RTsMvN5Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAE9FiQU629jW2n8HTiA7ZZotfsUoXAkCvZ5XDOPeERubYemdzg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Suresh Siddha <suresh.b.siddha@intel.com>, Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>, Joerg Roedel <joerg.roedel@amd.com>, "H. Peter Anvin" <hpa@zytor.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, "hpa@linux.intel.com" <hpa@linux.intel.com>, Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.fusionio.com ([66.114.96.31]:33430 "EHLO mx2.fusionio.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751074Ab1GYIVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 04:21:38 -0400
+In-Reply-To: <CANejiEVMHhOW0N4Wn9LG0NAXMX3uOz5QzcRXZV4Ow4RTsMvN5Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Shaohua Li <shli@kernel.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, Roland Dreier <roland@purestorage.com>, Dave Jiang <dave.jiang@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 2011-07-25 03:14, Shaohua Li wrote:
+> 2011/7/24 Jens Axboe <jaxboe@fusionio.com>:
+>> On 2011-07-22 22:59, Dan Williams wrote:
+>>> Some storage controllers benefit from completions always being steered
+>>> to the strict requester cpu rather than the looser "per-socket" steering
+>>> that blk_cpu_to_group() attempts by default.
+>>>
+>>> echo 2 > /sys/block/<bdev>/queue/rq_affinity
+>>
+>> I have applied this one, with a modified patch description.
+>>
+>> I like the adaptive solution, but it should be rewritten to not declare
+>> and expose softirq internals. Essentially have an API from
+>> kernel/softirq.c that can return whether a given (or perhaps just local)
+>> softirq handler is busy or not.
+> Jens,
+> I posted a similar patch about two years ago(
+> http://marc.info/?l=linux-kernel&m=126136252929329&w=2).
+> At that time, you actually did a lot of tests and said the same cpu
+> approach will cause huge lock contention and bounce. Is that get fixed?
 
-* Yinghai Lu <yinghai@kernel.org> wrote:
+Yep, it's not ideal. But if we are running out of steam on a single
+processor, there's really not much of an option currently.
 
-> > This looks very messy.
-> >
-> > CONFIG_DMAR has no clear meaning. The DMAR table parsing 
-> > functionality is intermixed with the DMAR feature itself. The 
-> > kernel code is littered with a couple of dozen CONFIG_DMAR 
-> > #ifdefs with no clear structure to the initialization and to the 
-> > separation of functionality.
-> 
-> CONFIG_DMAR is actually DMA_REMAP instead DMAR table.
-> 
-> or Do you prefer to clean them up further with following depency?
-> 
-> CONFIG_DMAR_TBL for DMAR table
-> CONFIG_DMA_REMAP for DMA remapping
-> CONFIG_INTR_REMAP for Interrupt remapping
-> and XXX_REMAP will select DMAR_TBL
+-- 
+Jens Axboe
 
-'DMAR', 'TBL' and 'INTR' are all misnomers!
-
-	CONFIG_DMA_REMAP_TABLE
-	CONFIG_DMA_REMAP
-	CONFIG_IRQ_REMAP
-
-That way we'd get the 'DMAR tables' via CONFIG_DMA_REMAP_TABLE - on 
-top of which enabling CONFIG_DMA_REMAP and CONFIG_IRQ_REMAP would 
-enable and handle various hw remapping features.
-
-(Does anyone else have better/other code structure suggestions?)
-
-But yes, we should first do this rename/cleanup to clarify what it 
-all means, then fix whatever config-combos don't work perfectly yet.
-
-Thanks,
-
-	Ingo
