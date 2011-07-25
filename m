@@ -1,351 +1,57 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 15/19] qla4xxx: add bsg support
-Date: Mon, 25 Jul 2011 13:48:51 -0500
-Message-ID: <1311619735-15323-16-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 10/19] be2iscsi: remove host and session casts
+Date: Mon, 25 Jul 2011 13:48:46 -0500
+Message-ID: <1311619735-15323-11-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29633 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46898 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752640Ab1GYSqQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:16 -0400
+	id S1752582Ab1GYSqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:09 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-This patch adds bsg support to qla4xxx.
+iscsi_session_to_shost is a macro around dev_to_shost which returns a
+Scsi_Host so there is no need to cast.
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+iscsi_session_to_shost is a macro around shost_priv which
+returns a void pointer so no need to cast.
+
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/qla4xxx/Makefile   |    2 +-
- drivers/scsi/qla4xxx/ql4_bsg.c  |  209 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_bsg.h  |   14 +++
- drivers/scsi/qla4xxx/ql4_def.h  |    8 ++
- drivers/scsi/qla4xxx/ql4_glbl.h |    4 +
- drivers/scsi/qla4xxx/ql4_os.c   |    2 +
- 6 files changed, 238 insertions(+), 1 deletions(-)
- create mode 100644 drivers/scsi/qla4xxx/ql4_bsg.c
- create mode 100644 drivers/scsi/qla4xxx/ql4_bsg.h
+ drivers/scsi/be2iscsi/be_iscsi.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/Makefile b/drivers/scsi/qla4xxx/Makefile
-index 252523d..5b44139 100644
---- a/drivers/scsi/qla4xxx/Makefile
-+++ b/drivers/scsi/qla4xxx/Makefile
-@@ -1,5 +1,5 @@
- qla4xxx-y := ql4_os.o ql4_init.o ql4_mbx.o ql4_iocb.o ql4_isr.o \
--		ql4_nx.o ql4_nvram.o ql4_dbg.o ql4_attr.o
-+		ql4_nx.o ql4_nvram.o ql4_dbg.o ql4_attr.o ql4_bsg.o
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index feadaa2..8b002f6 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -177,9 +177,8 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
+ {
+ 	struct iscsi_conn *conn = cls_conn->dd_data;
+ 	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
+-	struct Scsi_Host *shost =
+-		(struct Scsi_Host *)iscsi_session_to_shost(cls_session);
+-	struct beiscsi_hba *phba = (struct beiscsi_hba *)iscsi_host_priv(shost);
++	struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	struct beiscsi_endpoint *beiscsi_ep;
+ 	struct iscsi_endpoint *ep;
  
- obj-$(CONFIG_SCSI_QLA_ISCSI) += qla4xxx.o
+@@ -290,7 +289,7 @@ int beiscsi_set_param(struct iscsi_cls_conn *cls_conn,
+ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 			   enum iscsi_host_param param, char *buf)
+ {
+-	struct beiscsi_hba *phba = (struct beiscsi_hba *)iscsi_host_priv(shost);
++	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	int status = 0;
  
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
-new file mode 100644
-index 0000000..daa2b0f
---- /dev/null
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-@@ -0,0 +1,209 @@
-+/*
-+ * QLogic iSCSI HBA Driver
-+ * Copyright (c) 2011 QLogic Corporation
-+ *
-+ * See LICENSE.qla4xxx for copyright and licensing details.
-+ */
-+
-+#include "ql4_def.h"
-+#include "ql4_glbl.h"
-+#include "ql4_bsg.h"
-+
-+static int
-+qla4xxx_read_flash(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	uint32_t sg_cnt;
-+	uint32_t offset = 0;
-+	uint32_t length = 0;
-+	dma_addr_t flash_dma;
-+	uint8_t *flash = NULL;
-+	int rval = 0;
-+
-+	bsg_reply->reply_payload_rcv_len = 0;
-+
-+	if (unlikely(pci_channel_offline(ha->pdev)))
-+		return -EINVAL;
-+
-+	if (ha->flash_state != QLFLASH_WAITING)
-+		return -EBUSY;
-+
-+	/* TODO: Add check for adapter online, reset active?? */
-+	sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
-+			    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+
-+	if (!sg_cnt)
-+		return -ENOMEM;
-+
-+	if (sg_cnt != bsg_job->reply_payload.sg_cnt) {
-+		ql4_printk(KERN_ERR, ha, "dma mapping resulted in different"
-+			   " sg counts, sg_cnt: %x dma_sg_cnt: %x\n",
-+			   bsg_job->reply_payload.sg_cnt, sg_cnt);
-+		rval = -EAGAIN;
-+		goto unmap_sg;
-+	}
-+
-+	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
-+	length = bsg_job->reply_payload.payload_len;
-+
-+	flash = dma_alloc_coherent(&ha->pdev->dev, length, &flash_dma,
-+				   GFP_KERNEL);
-+	if (!flash) {
-+		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
-+			   "data\n", __func__);
-+		rval = -ENOMEM;
-+		goto unmap_sg;
-+	}
-+
-+	ha->flash_state = QLFLASH_READING;
-+	if (qla4xxx_get_flash(ha, flash_dma, offset, length))
-+		bsg_reply->result = (DID_ERROR << 16);
-+	else {
-+		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+				    bsg_job->reply_payload.sg_cnt,
-+				    flash, length);
-+
-+		bsg_reply->result = DID_OK;
-+		bsg_reply->reply_payload_rcv_len = length;
-+	}
-+
-+	if (flash)
-+		dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
-+
-+	ha->flash_state = QLFLASH_WAITING;
-+unmap_sg:
-+	dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
-+		     bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
-+	if (!rval)
-+		bsg_job_done(bsg_job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
-+	return rval;
-+}
-+
-+static int
-+qla4xxx_update_flash(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	uint32_t sg_cnt;
-+	uint32_t length = 0;
-+	uint32_t offset = 0;
-+	uint32_t options = 0;
-+	dma_addr_t flash_dma;
-+	uint8_t *flash = NULL;
-+	int rval = 0;
-+
-+	bsg_reply->reply_payload_rcv_len = 0;
-+
-+	if (unlikely(pci_channel_offline(ha->pdev)))
-+		return -EINVAL;
-+
-+	if (ha->flash_state != QLFLASH_WAITING)
-+		return -EBUSY;
-+
-+	sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
-+			    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
-+
-+	if (!sg_cnt)
-+		return -ENOMEM;
-+
-+	if (sg_cnt != bsg_job->request_payload.sg_cnt) {
-+		ql4_printk(KERN_ERR, ha, "dma mapping resulted in different "
-+			   "sg counts request_sg_cnt: %x dma_request_sg_cnt: "
-+			   "%x\n", bsg_job->request_payload.sg_cnt, sg_cnt);
-+		rval = -EAGAIN;
-+		goto unmap_sg;
-+	}
-+
-+	length = bsg_job->request_payload.payload_len;
-+	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
-+	options = bsg_req->rqst_data.h_vendor.vendor_cmd[2];
-+
-+	flash = dma_alloc_coherent(&ha->pdev->dev, length, &flash_dma,
-+				   GFP_KERNEL);
-+	if (!flash) {
-+		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
-+			   "data\n", __func__);
-+		rval = -ENOMEM;
-+		goto unmap_sg;
-+	}
-+
-+	ha->flash_state = QLFLASH_WRITING;
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+			  bsg_job->request_payload.sg_cnt, flash, length);
-+
-+	if (qla4xxx_set_flash(ha, flash_dma, offset, length, options))
-+		bsg_reply->result = (DID_ERROR << 16);
-+	else {
-+		bsg_reply->result = DID_OK;
-+		bsg_reply->reply_payload_rcv_len = length;
-+	}
-+
-+	if (flash)
-+		dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
-+	ha->flash_state = QLFLASH_WAITING;
-+unmap_sg:
-+	dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
-+		     bsg_job->reply_payload.sg_cnt, DMA_TO_DEVICE);
-+
-+	if (!rval)
-+		bsg_job_done(bsg_job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
-+	return rval;
-+}
-+
-+/**
-+ * qla4xxx_process_vendor_specific - handle vendor specific bsg request
-+ * @job: iscsi_bsg_job to handle
-+ **/
-+int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
-+{
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+
-+	switch (bsg_req->rqst_data.h_vendor.vendor_cmd[0]) {
-+	case QLISCSI_VND_READ_FLASH:
-+		return qla4xxx_read_flash(bsg_job);
-+
-+	case QLISCSI_VND_UPDATE_FLASH:
-+		return qla4xxx_update_flash(bsg_job);
-+
-+	default:
-+		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
-+			   "0x%x\n", __func__, bsg_req->msgcode);
-+		bsg_reply->result = (DID_ERROR << 16);
-+		bsg_reply->reply_payload_rcv_len = 0;
-+		bsg_job_done(bsg_job, bsg_reply->result,
-+			     bsg_reply->reply_payload_rcv_len);
-+		return -ENOSYS;
-+	}
-+}
-+
-+/**
-+ * qla4xxx_bsg_request - handle bsg request from ISCSI transport
-+ * @job: iscsi_bsg_job to handle
-+ */
-+int qla4xxx_bsg_request(struct bsg_job *bsg_job)
-+{
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+
-+	switch (bsg_req->msgcode) {
-+	case ISCSI_BSG_HST_VENDOR:
-+		return qla4xxx_process_vendor_specific(bsg_job);
-+
-+	default:
-+		ql4_printk(KERN_ERR, ha, "%s: invalid BSG command: 0x%x\n",
-+			   __func__, bsg_req->msgcode);
-+	}
-+
-+	return -ENOSYS;
-+}
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
-new file mode 100644
-index 0000000..5f6424e
---- /dev/null
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.h
-@@ -0,0 +1,14 @@
-+/*
-+ * QLogic iSCSI HBA Driver
-+ * Copyright (c) 2011 QLogic Corporation
-+ *
-+ * See LICENSE.qla4xxx for copyright and licensing details.
-+ */
-+#ifndef __QL4_BSG_H
-+#define __QL4_BSG_H
-+
-+/* BSG Vendor specific commands */
-+#define QLISCSI_VND_READ_FLASH		1
-+#define QLISCSI_VND_UPDATE_FLASH	2
-+
-+#endif
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 12db992..b17f5c4 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -25,6 +25,7 @@
- #include <linux/interrupt.h>
- #include <linux/mutex.h>
- #include <linux/aer.h>
-+#include <linux/bsg-lib.h>
- 
- #include <net/tcp.h>
- #include <scsi/scsi.h>
-@@ -33,6 +34,8 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_iscsi.h>
-+#include <scsi/scsi_bsg_iscsi.h>
-+#include <scsi/scsi_netlink.h>
- 
- #include "ql4_dbg.h"
- #include "ql4_nx.h"
-@@ -599,6 +602,11 @@ struct scsi_qla_host {
- 	uint16_t bootload_minor;
- 	uint16_t bootload_patch;
- 	uint16_t bootload_build;
-+
-+	uint32_t flash_state;
-+#define	QLFLASH_WAITING		0
-+#define	QLFLASH_READING		1
-+#define	QLFLASH_WRITING		2
- };
- 
- static inline int is_ipv4_enabled(struct scsi_qla_host *ha)
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 786274c..77539ae 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -151,6 +151,10 @@ void qla4_8xxx_need_qsnt_handler(struct scsi_qla_host *ha);
- void qla4_8xxx_clear_drv_active(struct scsi_qla_host *ha);
- void qla4_8xxx_set_drv_active(struct scsi_qla_host *ha);
- 
-+/* BSG Functions */
-+int qla4xxx_bsg_request(struct bsg_job *bsg_job);
-+int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job);
-+
- extern int ql4xextended_error_logging;
- extern int ql4xdontresethba;
- extern int ql4xenablemsix;
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index d5f9f60..4e47bb1 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -131,6 +131,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
- 
- 	.max_sectors		= 0xFFFF,
- 	.shost_attrs		= qla4xxx_host_attrs,
-+	.vendor_id		= SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC,
- };
- 
- static struct iscsi_transport qla4xxx_iscsi_transport = {
-@@ -146,6 +147,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
- 	.set_iface_param	= qla4xxx_iface_set_param,
- 	.session_recovery_timedout = qla4xxx_recovery_timedout,
- 	.get_iface_param	= qla4xxx_get_iface_param,
-+	.bsg_request		= qla4xxx_bsg_request,
- };
- 
- static struct scsi_transport_template *qla4xxx_scsi_transport;
+ 	SE_DEBUG(DBG_LVL_8, "In beiscsi_get_host_param, param= %d\n", param);
 -- 
 1.7.2.3
 
