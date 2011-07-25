@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 11/19] iscsi class: expand vlan support
-Date: Mon, 25 Jul 2011 13:48:47 -0500
-Message-ID: <1311619735-15323-12-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 14/19] iscsi class: add bsg support to iscsi class
+Date: Mon, 25 Jul 2011 13:48:50 -0500
+Message-ID: <1311619735-15323-15-git-send-email-michaelc@cs.wisc.edu>
 References: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1584 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:36213 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752616Ab1GYSqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 14:46:10 -0400
+	id S1752563Ab1GYSqO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2011 14:46:14 -0400
 In-Reply-To: <1311619735-15323-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,80 +16,338 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-Add support to set vlan priority and enable/disble a vlan.
+This patch adds bsg support to the iscsi class. There is only
+1 request, the host vendor one, supported. It is expected that
+this would be used for things like flash updates.
 
-Patch based on code from Vikas Chaudhary.
+This patch is made over this one
+http://marc.info/?l=linux-scsi&m=131149780020992&w=2
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/scsi_transport_iscsi.c |    8 ++++++++
- include/scsi/iscsi_if.h             |   13 +++++++++++--
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/scsi/Kconfig                |    1 +
+ drivers/scsi/scsi_transport_iscsi.c |  114 ++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_bsg_iscsi.h       |  110 +++++++++++++++++++++++++++++++++
+ include/scsi/scsi_transport_iscsi.h |    7 ++-
+ 4 files changed, 230 insertions(+), 2 deletions(-)
+ create mode 100644 include/scsi/scsi_bsg_iscsi.h
 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 8d9dae8..4a79b9d 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -309,6 +309,7 @@ config SCSI_FC_TGT_ATTRS
+ config SCSI_ISCSI_ATTRS
+ 	tristate "iSCSI Transport Attributes"
+ 	depends on SCSI && NET
++	select BLK_DEV_BSGLIB
+ 	help
+ 	  If you wish to export transport-specific information about
+ 	  each attached iSCSI device to sysfs, say Y.
 diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 2e9b682..13f9051 100644
+index 13f9051..cde679f 100644
 --- a/drivers/scsi/scsi_transport_iscsi.c
 +++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -319,6 +319,8 @@ iscsi_iface_net_attr(ipv6_iface, linklocal_autocfg,
- /* common read only iface attribute */
- iscsi_iface_net_attr(iface, enabled, ISCSI_NET_PARAM_IFACE_ENABLE);
- iscsi_iface_net_attr(iface, vlan, ISCSI_NET_PARAM_VLAN_ID);
-+iscsi_iface_net_attr(iface, vlan_priority, ISCSI_NET_PARAM_VLAN_PRIORITY);
-+iscsi_iface_net_attr(iface, vlan_enabled, ISCSI_NET_PARAM_VLAN_ENABLED);
+@@ -23,6 +23,7 @@
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/slab.h>
++#include <linux/bsg-lib.h>
+ #include <net/tcp.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+@@ -31,6 +32,7 @@
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/iscsi_if.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_bsg_iscsi.h>
  
- static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- 					  struct attribute *attr, int i)
-@@ -332,6 +334,10 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- 		param = ISCSI_NET_PARAM_IFACE_ENABLE;
- 	else if (attr == &dev_attr_iface_vlan.attr)
- 		param = ISCSI_NET_PARAM_VLAN_ID;
-+	else if (attr == &dev_attr_iface_vlan_priority.attr)
-+		param = ISCSI_NET_PARAM_VLAN_PRIORITY;
-+	else if (attr == &dev_attr_iface_vlan_enabled.attr)
-+		param = ISCSI_NET_PARAM_VLAN_ENABLED;
- 	else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
- 		if (attr == &dev_attr_ipv4_iface_ipaddress.attr)
- 			param = ISCSI_NET_PARAM_IPV4_ADDR;
-@@ -367,6 +373,8 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
- static struct attribute *iscsi_iface_attrs[] = {
- 	&dev_attr_iface_enabled.attr,
- 	&dev_attr_iface_vlan.attr,
-+	&dev_attr_iface_vlan_priority.attr,
-+	&dev_attr_iface_vlan_enabled.attr,
- 	&dev_attr_ipv4_iface_ipaddress.attr,
- 	&dev_attr_ipv4_iface_gateway.attr,
- 	&dev_attr_ipv4_iface_subnet.attr,
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index 3753f7e..d3f256a 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -281,6 +281,13 @@ struct iscsi_path {
- #define ISCSI_IFACE_TYPE_IPV4		0x01
- #define ISCSI_IFACE_TYPE_IPV6		0x02
+ #define ISCSI_TRANSPORT_VERSION "2.0-870"
  
-+#define ISCSI_MAX_VLAN_ID		4095
-+#define ISCSI_MAX_VLAN_PRIORITY		7
+@@ -447,6 +449,99 @@ void iscsi_destroy_iface(struct iscsi_iface *iface)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_destroy_iface);
+ 
++/*
++ * BSG support
++ */
++/**
++ * iscsi_bsg_host_dispatch - Dispatch command to LLD.
++ * @job: bsg job to be processed
++ */
++static int iscsi_bsg_host_dispatch(struct bsg_job *job)
++{
++	struct Scsi_Host *shost = iscsi_job_to_shost(job);
++	struct iscsi_bsg_request *req = job->request;
++	struct iscsi_bsg_reply *reply = job->reply;
++	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
++	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
++	int ret;
 +
-+/* iscsi vlan enable/disabled setting */
-+#define ISCSI_VLAN_DISABLE	0x01
-+#define ISCSI_VLAN_ENABLE	0x02
++	/* check if we have the msgcode value at least */
++	if (job->request_len < sizeof(uint32_t)) {
++		ret = -ENOMSG;
++		goto fail_host_msg;
++	}
 +
- /* iSCSI network params */
- enum iscsi_net_param {
- 	ISCSI_NET_PARAM_IPV4_ADDR		= 1,
-@@ -296,8 +303,10 @@ enum iscsi_net_param {
- 	ISCSI_NET_PARAM_IPV6_ROUTER_AUTOCFG	= 11,
- 	ISCSI_NET_PARAM_IFACE_ENABLE		= 12,
- 	ISCSI_NET_PARAM_VLAN_ID			= 13,
--	ISCSI_NET_PARAM_IFACE_TYPE		= 14,
--	ISCSI_NET_PARAM_IFACE_NAME		= 15,
-+	ISCSI_NET_PARAM_VLAN_PRIORITY		= 14,
-+	ISCSI_NET_PARAM_VLAN_ENABLED		= 15,
-+	ISCSI_NET_PARAM_IFACE_TYPE		= 16,
-+	ISCSI_NET_PARAM_IFACE_NAME		= 17,
++	/* Validate the host command */
++	switch (req->msgcode) {
++	case ISCSI_BSG_HST_VENDOR:
++		cmdlen += sizeof(struct iscsi_bsg_host_vendor);
++		if ((shost->hostt->vendor_id == 0L) ||
++		    (req->rqst_data.h_vendor.vendor_id !=
++			shost->hostt->vendor_id)) {
++			ret = -ESRCH;
++			goto fail_host_msg;
++		}
++		break;
++	default:
++		ret = -EBADR;
++		goto fail_host_msg;
++	}
++
++	/* check if we really have all the request data needed */
++	if (job->request_len < cmdlen) {
++		ret = -ENOMSG;
++		goto fail_host_msg;
++	}
++
++	ret = i->iscsi_transport->bsg_request(job);
++	if (!ret)
++		return 0;
++
++fail_host_msg:
++	/* return the errno failure code as the only status */
++	BUG_ON(job->reply_len < sizeof(uint32_t));
++	reply->reply_payload_rcv_len = 0;
++	reply->result = ret;
++	job->reply_len = sizeof(uint32_t);
++	bsg_job_done(job, ret, 0);
++	return 0;
++}
++
++/**
++ * iscsi_bsg_host_add - Create and add the bsg hooks to receive requests
++ * @shost: shost for iscsi_host
++ * @cls_host: iscsi_cls_host adding the structures to
++ */
++static int
++iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
++{
++	struct device *dev = &shost->shost_gendev;
++	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
++	struct request_queue *q;
++	char bsg_name[20];
++	int ret;
++
++	if (!i->iscsi_transport->bsg_request)
++		return -ENOTSUPP;
++
++	snprintf(bsg_name, sizeof(bsg_name), "iscsi_host%d", shost->host_no);
++
++	q = __scsi_alloc_queue(shost, bsg_request_fn);
++	if (!q)
++		return -ENOMEM;
++
++	ret = bsg_setup_queue(dev, q, bsg_name, iscsi_bsg_host_dispatch, 0);
++	if (ret) {
++		shost_printk(KERN_ERR, shost, "bsg interface failed to "
++			     "initialize - no request queue\n");
++		blk_cleanup_queue(q);
++		return ret;
++	}
++
++	ihost->bsg_q = q;
++	return 0;
++}
++
+ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
+ 			    struct device *cdev)
+ {
+@@ -456,13 +551,30 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
+ 	memset(ihost, 0, sizeof(*ihost));
+ 	atomic_set(&ihost->nr_scans, 0);
+ 	mutex_init(&ihost->mutex);
++
++	iscsi_bsg_host_add(shost, ihost);
++	/* ignore any bsg add error - we just can't do sgio */
++
++	return 0;
++}
++
++static int iscsi_remove_host(struct transport_container *tc,
++			     struct device *dev, struct device *cdev)
++{
++	struct Scsi_Host *shost = dev_to_shost(dev);
++	struct iscsi_cls_host *ihost = shost->shost_data;
++
++	if (ihost->bsg_q) {
++		bsg_remove_queue(ihost->bsg_q);
++		blk_cleanup_queue(ihost->bsg_q);
++	}
+ 	return 0;
+ }
+ 
+ static DECLARE_TRANSPORT_CLASS(iscsi_host_class,
+ 			       "iscsi_host",
+ 			       iscsi_setup_host,
+-			       NULL,
++			       iscsi_remove_host,
+ 			       NULL);
+ 
+ static DECLARE_TRANSPORT_CLASS(iscsi_session_class,
+diff --git a/include/scsi/scsi_bsg_iscsi.h b/include/scsi/scsi_bsg_iscsi.h
+new file mode 100644
+index 0000000..fd5689d
+--- /dev/null
++++ b/include/scsi/scsi_bsg_iscsi.h
+@@ -0,0 +1,110 @@
++/*
++ *  iSCSI Transport BSG Interface
++ *
++ *  Copyright (C) 2009   James Smart, Emulex Corporation
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2 of the License, or
++ *  (at your option) any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; if not, write to the Free Software
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ *
++ */
++
++#ifndef SCSI_BSG_ISCSI_H
++#define SCSI_BSG_ISCSI_H
++
++/*
++ * This file intended to be included by both kernel and user space
++ */
++
++#include <scsi/scsi.h>
++
++/*
++ * iSCSI Transport SGIO v4 BSG Message Support
++ */
++
++/* Default BSG request timeout (in seconds) */
++#define ISCSI_DEFAULT_BSG_TIMEOUT      (10 * HZ)
++
++
++/*
++ * Request Message Codes supported by the iSCSI Transport
++ */
++
++/* define the class masks for the message codes */
++#define ISCSI_BSG_CLS_MASK     0xF0000000      /* find object class */
++#define ISCSI_BSG_HST_MASK     0x80000000      /* iscsi host class */
++
++/* iscsi host Message Codes */
++#define ISCSI_BSG_HST_VENDOR           (ISCSI_BSG_HST_MASK | 0x000000FF)
++
++
++/*
++ * iSCSI Host Messages
++ */
++
++/* ISCSI_BSG_HST_VENDOR : */
++
++/* Request:
++ * Note: When specifying vendor_id, be sure to read the Vendor Type and ID
++ *   formatting requirements specified in scsi_netlink.h
++ */
++struct iscsi_bsg_host_vendor {
++	/*
++	 * Identifies the vendor that the message is formatted for. This
++	 * should be the recipient of the message.
++	 */
++	uint64_t vendor_id;
++
++	/* start of vendor command area */
++	uint32_t vendor_cmd[0];
++};
++
++/* Response:
++ */
++struct iscsi_bsg_host_vendor_reply {
++	/* start of vendor response area */
++	uint32_t vendor_rsp[0];
++};
++
++
++/* request (CDB) structure of the sg_io_v4 */
++struct iscsi_bsg_request {
++	uint32_t msgcode;
++	union {
++		struct iscsi_bsg_host_vendor    h_vendor;
++	} rqst_data;
++} __attribute__((packed));
++
++
++/* response (request sense data) structure of the sg_io_v4 */
++struct iscsi_bsg_reply {
++	/*
++	 * The completion result. Result exists in two forms:
++	 * if negative, it is an -Exxx system errno value. There will
++	 * be no further reply information supplied.
++	 * else, it's the 4-byte scsi error result, with driver, host,
++	 * msg and status fields. The per-msgcode reply structure
++	 * will contain valid data.
++	 */
++	uint32_t result;
++
++	/* If there was reply_payload, how much was recevied ? */
++	uint32_t reply_payload_rcv_len;
++
++	union {
++		struct iscsi_bsg_host_vendor_reply      vendor_reply;
++	} reply_data;
++};
++
++
++#endif /* SCSI_BSG_ISCSI_H */
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 77e6dd6..4a3edee 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -38,6 +38,7 @@ struct iscsi_conn;
+ struct iscsi_task;
+ struct sockaddr;
+ struct iscsi_iface;
++struct bsg_job;
+ 
+ /**
+  * struct iscsi_transport - iSCSI Transport template
+@@ -141,9 +142,9 @@ struct iscsi_transport {
+ 				enum iscsi_param_type param_type,
+ 				int param, char *buf);
+ 	mode_t (*attr_is_visible)(int param_type, int param);
++	int (*bsg_request)(struct bsg_job *job);
  };
  
+-
  /*
+  * transport registration upcalls
+  */
+@@ -227,8 +228,12 @@ struct iscsi_cls_session {
+ struct iscsi_cls_host {
+ 	atomic_t nr_scans;
+ 	struct mutex mutex;
++	struct request_queue *bsg_q;
+ };
+ 
++#define iscsi_job_to_shost(_job) \
++        dev_to_shost(_job->dev)
++
+ extern void iscsi_host_for_each_session(struct Scsi_Host *shost,
+ 				void (*fn)(struct iscsi_cls_session *));
+ 
 -- 
 1.7.2.3
 
