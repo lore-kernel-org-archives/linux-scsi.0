@@ -1,56 +1,309 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH RESEND 00/11] bnx2fc: Version 1.0.4
-Date: Tue, 26 Jul 2011 14:51:38 -0700
-Message-ID: <1311717109-14077-1-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH RESEND 03/11] bnx2fc: Support 'sequence cleanup' task
+Date: Tue, 26 Jul 2011 14:51:41 -0700
+Message-ID: <1311717109-14077-4-git-send-email-bprakash@broadcom.com>
+References: <1311717109-14077-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2811 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2634 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753844Ab1GZVwA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2011 17:52:00 -0400
+	id S1753844Ab1GZVwH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jul 2011 17:52:07 -0400
+In-Reply-To: <1311717109-14077-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-James,
+For the devices that support sequence level error recovery, based on the REC
+response, the firmware has to be informed about the offset from which the
+retransmission should happen. Driver initiates sequence cleanup task to
+firmware so that the firmware can program the task. Upon the sequence cleanup
+completion, SRR is issued to retransmit the sequence.
 
-Resubmitting the patchset from patch 2 after merging with linux-next tree.
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc.h     |   10 ++++
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c |   97 ++++++++++++++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_io.c  |  106 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 213 insertions(+), 0 deletions(-)
 
-Thanks,
-Bhanu
-
-The following patch set contains
-        - the support for FCP-2 sequence level error recovery (patch 2-7)
-        - the support to handle vlan id changes in the switch (patch 1)
-        - enhancements/bug fixes (patch 8,9,10)
-
-Please note that this patchset has dependency on the latest bnx2x and cnic
-drivers currently in linux-next tree. These patches were compiled and tested on
-linux-next tree.
-
-
-Bhanu Prakash Gollapudi (11):
-  bnx2fc: Introduce interface structure for each vlan interface
-  bnx2fc: Enable REC & CONF support for the session
-  bnx2fc: Support 'sequence cleanup' task
-  bnx2fc: REC/SRR link service request and response handling
-  bnx2fc: Handle REC_TOV error code from firmware
-  bnx2fc: HSI changes for tape
-  bnx2fc: Enable support for sequence level error recovery
-  bnx2fc: hold tgt lock when calling cmd_release
-  bnx2fc: Do not arm CQ when there are no CQEs
-  bnx2fc: Tx BDs cache in write tasks
-  bnx2fc: Update copyright and bump version to 1.0.4
-
- drivers/scsi/bnx2fc/bnx2fc.h      |  107 ++++---
- drivers/scsi/bnx2fc/bnx2fc_els.c  |  427 +++++++++++++++++++++-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  723 +++++++++++++++++--------------------
- drivers/scsi/bnx2fc/bnx2fc_hwi.c  |  414 +++++++++++++++++-----
- drivers/scsi/bnx2fc/bnx2fc_io.c   |  170 ++++++++--
- drivers/scsi/bnx2fc/bnx2fc_tgt.c  |   27 +-
- 6 files changed, 1313 insertions(+), 555 deletions(-)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index d38dcc7..c16fa78 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -370,6 +370,7 @@ struct bnx2fc_cmd {
+ #define BNX2FC_ABTS			3
+ #define BNX2FC_ELS			4
+ #define BNX2FC_CLEANUP			5
++#define BNX2FC_SEQ_CLEANUP		6
+ 	u8 io_req_flags;
+ 	struct kref refcount;
+ 	struct fcoe_port *port;
+@@ -466,6 +467,10 @@ int bnx2fc_init_mp_req(struct bnx2fc_cmd *io_req);
+ void bnx2fc_init_cleanup_task(struct bnx2fc_cmd *io_req,
+ 			      struct fcoe_task_ctx_entry *task,
+ 			      u16 orig_xid);
++void bnx2fc_init_seq_cleanup_task(struct bnx2fc_cmd *seq_clnup_req,
++				  struct fcoe_task_ctx_entry *task,
++				  struct bnx2fc_cmd *orig_io_req,
++				  u32 offset);
+ void bnx2fc_init_mp_task(struct bnx2fc_cmd *io_req,
+ 			 struct fcoe_task_ctx_entry *task);
+ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+@@ -515,5 +520,10 @@ void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
+ 				   unsigned char *buf,
+ 				   u32 frame_len, u16 l2_oxid);
+ int bnx2fc_send_stat_req(struct bnx2fc_hba *hba);
++void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnup_req,
++				      struct fcoe_task_ctx_entry *task,
++				      u8 rx_state);
++int bnx2fc_initiate_seq_cleanup(struct bnx2fc_cmd *orig_io_req, u32 offset,
++				enum fc_rctl r_ctl);
+ 
+ #endif
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index fa263b5..03ae003 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -880,6 +880,13 @@ void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 		kref_put(&io_req->refcount, bnx2fc_cmd_release);
+ 		break;
+ 
++	case BNX2FC_SEQ_CLEANUP:
++		BNX2FC_IO_DBG(io_req, "cq_compl(0x%x) - seq cleanup resp\n",
++			      io_req->xid);
++		bnx2fc_process_seq_cleanup_compl(io_req, task, rx_state);
++		kref_put(&io_req->refcount, bnx2fc_cmd_release);
++		break;
++
+ 	default:
+ 		printk(KERN_ERR PFX "Invalid cmd_type %d\n", cmd_type);
+ 		break;
+@@ -1369,6 +1376,96 @@ void bnx2fc_return_rqe(struct bnx2fc_rport *tgt, u8 num_items)
+ 	tgt->conn_db->rq_prod = tgt->rq_prod_idx;
+ }
+ 
++void bnx2fc_init_seq_cleanup_task(struct bnx2fc_cmd *seq_clnp_req,
++				  struct fcoe_task_ctx_entry *task,
++				  struct bnx2fc_cmd *orig_io_req,
++				  u32 offset)
++{
++	struct scsi_cmnd *sc_cmd = orig_io_req->sc_cmd;
++	struct bnx2fc_rport *tgt = seq_clnp_req->tgt;
++	struct bnx2fc_interface *interface = tgt->port->priv;
++	struct fcoe_bd_ctx *bd = orig_io_req->bd_tbl->bd_tbl;
++	struct fcoe_task_ctx_entry *orig_task;
++	struct fcoe_task_ctx_entry *task_page;
++	struct fcoe_ext_mul_sges_ctx *sgl;
++	u8 task_type = FCOE_TASK_TYPE_SEQUENCE_CLEANUP;
++	u8 orig_task_type;
++	u16 orig_xid = orig_io_req->xid;
++	u32 context_id = tgt->context_id;
++	u64 phys_addr = (u64)orig_io_req->bd_tbl->bd_tbl_dma;
++	u32 orig_offset = offset;
++	int bd_count;
++	int orig_task_idx, index;
++	int i;
++
++	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
++
++	if (sc_cmd->sc_data_direction == DMA_TO_DEVICE)
++		orig_task_type = FCOE_TASK_TYPE_WRITE;
++	else
++		orig_task_type = FCOE_TASK_TYPE_READ;
++
++	/* Tx flags */
++	task->txwr_rxrd.const_ctx.tx_flags =
++				FCOE_TASK_TX_STATE_SEQUENCE_CLEANUP <<
++				FCOE_TCE_TX_WR_RX_RD_CONST_TX_STATE_SHIFT;
++	/* init flags */
++	task->txwr_rxrd.const_ctx.init_flags = task_type <<
++				FCOE_TCE_TX_WR_RX_RD_CONST_TASK_TYPE_SHIFT;
++	task->txwr_rxrd.const_ctx.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
++				FCOE_TCE_TX_WR_RX_RD_CONST_CLASS_TYPE_SHIFT;
++	task->rxwr_txrd.const_ctx.init_flags = context_id <<
++				FCOE_TCE_RX_WR_TX_RD_CONST_CID_SHIFT;
++	task->rxwr_txrd.const_ctx.init_flags = context_id <<
++				FCOE_TCE_RX_WR_TX_RD_CONST_CID_SHIFT;
++
++	task->txwr_rxrd.union_ctx.cleanup.ctx.cleaned_task_id = orig_xid;
++
++	task->txwr_rxrd.union_ctx.cleanup.ctx.rolled_tx_seq_cnt = 0;
++	task->txwr_rxrd.union_ctx.cleanup.ctx.rolled_tx_data_offset = offset;
++
++	bd_count = orig_io_req->bd_tbl->bd_valid;
++
++	/* obtain the appropriate bd entry from relative offset */
++	for (i = 0; i < bd_count; i++) {
++		if (offset < bd[i].buf_len)
++			break;
++		offset -= bd[i].buf_len;
++	}
++	phys_addr += (i * sizeof(struct fcoe_bd_ctx));
++
++	if (orig_task_type == FCOE_TASK_TYPE_WRITE) {
++		task->txwr_only.sgl_ctx.sgl.mul_sgl.cur_sge_addr.lo =
++				(u32)phys_addr;
++		task->txwr_only.sgl_ctx.sgl.mul_sgl.cur_sge_addr.hi =
++				(u32)((u64)phys_addr >> 32);
++		task->txwr_only.sgl_ctx.sgl.mul_sgl.sgl_size =
++				bd_count;
++		task->txwr_only.sgl_ctx.sgl.mul_sgl.cur_sge_off =
++				offset; /* adjusted offset */
++		task->txwr_only.sgl_ctx.sgl.mul_sgl.cur_sge_idx = i;
++	} else {
++		orig_task_idx = orig_xid / BNX2FC_TASKS_PER_PAGE;
++		index = orig_xid % BNX2FC_TASKS_PER_PAGE;
++
++		task_page = (struct fcoe_task_ctx_entry *)
++			     interface->hba->task_ctx[orig_task_idx];
++		orig_task = &(task_page[index]);
++
++		/* Multiple SGEs were used for this IO */
++		sgl = &task->rxwr_only.union_ctx.read_info.sgl_ctx.sgl;
++		sgl->mul_sgl.cur_sge_addr.lo = (u32)phys_addr;
++		sgl->mul_sgl.cur_sge_addr.hi = (u32)((u64)phys_addr >> 32);
++		sgl->mul_sgl.sgl_size = bd_count;
++		sgl->mul_sgl.cur_sge_off = offset; /*adjusted offset */
++		sgl->mul_sgl.cur_sge_idx = i;
++
++		memset(&task->rxwr_only.rx_seq_ctx, 0,
++		       sizeof(struct fcoe_rx_seq_ctx));
++		task->rxwr_only.rx_seq_ctx.low_exp_ro = orig_offset;
++		task->rxwr_only.rx_seq_ctx.high_exp_ro = orig_offset;
++	}
++}
+ void bnx2fc_init_cleanup_task(struct bnx2fc_cmd *io_req,
+ 			      struct fcoe_task_ctx_entry *task,
+ 			      u16 orig_xid)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 72940b8..9820d30 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -930,6 +930,76 @@ abts_err:
+ 	return rc;
+ }
+ 
++int bnx2fc_initiate_seq_cleanup(struct bnx2fc_cmd *orig_io_req, u32 offset,
++				enum fc_rctl r_ctl)
++{
++	struct fc_lport *lport;
++	struct bnx2fc_rport *tgt = orig_io_req->tgt;
++	struct bnx2fc_interface *interface;
++	struct fcoe_port *port;
++	struct bnx2fc_cmd *seq_clnp_req;
++	struct fcoe_task_ctx_entry *task;
++	struct fcoe_task_ctx_entry *task_page;
++	struct bnx2fc_els_cb_arg *cb_arg = NULL;
++	int task_idx, index;
++	u16 xid;
++	int rc = 0;
++
++	BNX2FC_IO_DBG(orig_io_req, "bnx2fc_initiate_seq_cleanup xid = 0x%x\n",
++		   orig_io_req->xid);
++	kref_get(&orig_io_req->refcount);
++
++	port = orig_io_req->port;
++	interface = port->priv;
++	lport = port->lport;
++
++	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		printk(KERN_ERR PFX "Unable to alloc cb_arg for seq clnup\n");
++		rc = -ENOMEM;
++		goto cleanup_err;
++	}
++
++	seq_clnp_req = bnx2fc_elstm_alloc(tgt, BNX2FC_SEQ_CLEANUP);
++	if (!seq_clnp_req) {
++		printk(KERN_ERR PFX "cleanup: couldnt allocate cmd\n");
++		rc = -ENOMEM;
++		kfree(cb_arg);
++		goto cleanup_err;
++	}
++	/* Initialize rest of io_req fields */
++	seq_clnp_req->sc_cmd = NULL;
++	seq_clnp_req->port = port;
++	seq_clnp_req->tgt = tgt;
++	seq_clnp_req->data_xfer_len = 0; /* No data transfer for cleanup */
++
++	xid = seq_clnp_req->xid;
++
++	task_idx = xid/BNX2FC_TASKS_PER_PAGE;
++	index = xid % BNX2FC_TASKS_PER_PAGE;
++
++	/* Initialize task context for this IO request */
++	task_page = (struct fcoe_task_ctx_entry *)
++		     interface->hba->task_ctx[task_idx];
++	task = &(task_page[index]);
++	cb_arg->aborted_io_req = orig_io_req;
++	cb_arg->io_req = seq_clnp_req;
++	cb_arg->r_ctl = r_ctl;
++	cb_arg->offset = offset;
++	seq_clnp_req->cb_arg = cb_arg;
++
++	printk(KERN_ERR PFX "call init_seq_cleanup_task\n");
++	bnx2fc_init_seq_cleanup_task(seq_clnp_req, task, orig_io_req, offset);
++
++	/* Obtain free SQ entry */
++	bnx2fc_add_2_sq(tgt, xid);
++
++	/* Ring doorbell */
++	bnx2fc_ring_doorbell(tgt);
++cleanup_err:
++	return rc;
++}
++
+ int bnx2fc_initiate_cleanup(struct bnx2fc_cmd *io_req)
+ {
+ 	struct fc_lport *lport;
+@@ -1156,6 +1226,42 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	return rc;
+ }
+ 
++void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
++				      struct fcoe_task_ctx_entry *task,
++				      u8 rx_state)
++{
++	struct bnx2fc_els_cb_arg *cb_arg = seq_clnp_req->cb_arg;
++	struct bnx2fc_cmd *orig_io_req = cb_arg->aborted_io_req;
++	u32 offset = cb_arg->offset;
++	enum fc_rctl r_ctl = cb_arg->r_ctl;
++	int rc = 0;
++	struct bnx2fc_rport *tgt = orig_io_req->tgt;
++
++	BNX2FC_IO_DBG(orig_io_req, "Entered process_cleanup_compl xid = 0x%x"
++			      "cmd_type = %d\n",
++		   seq_clnp_req->xid, seq_clnp_req->cmd_type);
++
++	if (rx_state == FCOE_TASK_RX_STATE_IGNORED_SEQUENCE_CLEANUP) {
++		printk(KERN_ERR PFX "seq cleanup ignored - xid = 0x%x\n",
++			seq_clnp_req->xid);
++		goto free_cb_arg;
++	}
++	kref_get(&orig_io_req->refcount);
++
++	spin_unlock_bh(&tgt->tgt_lock);
++	rc = bnx2fc_send_srr(orig_io_req, offset, r_ctl);
++	spin_lock_bh(&tgt->tgt_lock);
++
++	if (rc)
++		printk(KERN_ERR PFX "clnup_compl: Unable to send SRR"
++			" IO will abort\n");
++	seq_clnp_req->cb_arg = NULL;
++	kref_put(&orig_io_req->refcount, bnx2fc_cmd_release);
++free_cb_arg:
++	kfree(cb_arg);
++	return;
++}
++
+ void bnx2fc_process_cleanup_compl(struct bnx2fc_cmd *io_req,
+ 				  struct fcoe_task_ctx_entry *task,
+ 				  u8 num_rq)
+-- 
+1.7.0.6
 
 
