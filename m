@@ -1,53 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 02/12] bnx2fc: Introduce interface structure for each
- vlan interface
-Date: Tue, 26 Jul 2011 13:41:42 +0400
-Message-ID: <1311673302.17353.21.camel@mulgrave>
-References: <1309242664-27252-1-git-send-email-bprakash@broadcom.com>
-	 <1309242664-27252-3-git-send-email-bprakash@broadcom.com>
+From: Olivier Galibert <galibert@pobox.com>
+Subject: Re: [GIT PULL] iscsi-target merge for v3.1-rc1
+Date: Tue, 26 Jul 2011 12:08:04 +0200
+Message-ID: <20110726100804.GA6069@dspnet.fr>
+References: <1311462975.31450.356.camel@haakon2.linux-iscsi.org>
+ <20110725163739.5c19b04d.akpm@linux-foundation.org>
+ <20110725165057.9701f16b.akpm@linux-foundation.org>
+ <1311663071.17766.230.camel@haakon2.linux-iscsi.org>
+ <CA+55aFyNBaf2+=XJDLKNF1S5zMtpx38+Zd8uNd9k4ap4YpZmvw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:36859 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752994Ab1GZJlv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2011 05:41:51 -0400
-In-Reply-To: <1309242664-27252-3-git-send-email-bprakash@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyNBaf2+=XJDLKNF1S5zMtpx38+Zd8uNd9k4ap4YpZmvw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andrew Morton <akpm@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Boaz Harrosh <openosd@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu, mchan@broadcom.com, devel@open-fcoe.org
 
-On Mon, 2011-06-27 at 23:30 -0700, Bhanu Prakash Gollapudi wrote:
-> Currently, bnx2fc has a hba structure that can work with only a single vlan
-> interface.  When there is a change in vlan id, it does not have the capability
-> to switch to different vlan interface. To solve this problem, a new structure
-> called 'interface' has been introduced, and each hba can now have multiple
-> interfaces, one per vlan id.
+On Tue, Jul 26, 2011 at 12:09:40AM -0700, Linus Torvalds wrote:
+> And it just looks unnecessarily complicated. Just a simple
 > 
-> Most of the patch is a moving the interface specific fields from hba to the
-> interface structure, and appropriately modifying the dereferences. A list of
-> interfaces (if_list) is maintained along with adapter list. During a create
-> call, the interface structure is allocated and added to if_list and deleted &
-> freed on a destroy call.  Link events are propogated to all interfaces
-> belonging to the hba.
+> #define DIV_ROUND_UP_ULL(ll,d) \
+>   ({ unsigned long long _tmp = (ll)+(d)-1; do_div(_tmp, d); _tmp; })
+> 
+> looks like it would work and be simpler. Avoid the conditional, do the
+> same "add 'd-1' thing as the regular ROUND_UP().
+> 
+> Untested. And not much thinking involved.
 
-Best I can tell, the upstream prerequisites are satisfied, but I still
-can't apply this because of a conflicting upstream patch:
+Overflow risk?  Of course DIV_ROUND_UP has the same issue, and looks
+slight easier to trigger, maybe.
 
-commit 415199f2bd977fa4065d4e836b4b7543f7993bc3
-Author: Michael Chan <mchan@broadcom.com>
-Date:   Wed Jul 20 14:55:24 2011 +0000
-
-    cnic: Add VLAN ID as a parameter during netevent upcall
-
-Which actually introduces an explicit failure return for vlans.  Could
-you respin from 2 on to sort this out?
-
-Thanks,
-
-James
-
-
+  OG.
