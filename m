@@ -1,54 +1,47 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: Slower write performance in RHEL6
-Date: Tue, 26 Jul 2011 07:38:20 -0400
-Message-ID: <4E2EA72C.7030109@redhat.com>
-References: <CAMYVA_nrqA_GFnRXFFUJp=NYfYLy7z6gC7Tur8EQmgOEKvqf4Q@mail.gmail.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH] hpsa: retry commands completing with status of
+	UNSOLICITED_ABORT
+Date: Tue, 26 Jul 2011 11:08:52 -0500
+Message-ID: <20110726160852.7394.78474.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58131 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753299Ab1GZLiY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2011 07:38:24 -0400
-In-Reply-To: <CAMYVA_nrqA_GFnRXFFUJp=NYfYLy7z6gC7Tur8EQmgOEKvqf4Q@mail.gmail.com>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:14395 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751431Ab1GZQI4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2011 12:08:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Li Liu <li.liu0637@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mikem@beardog.cce.hp.com, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, stable@kernel.org
 
-On 07/26/2011 07:22 AM, Li Liu wrote:
-> Dear all,
->
->      In RHEL6(linux-2.6.32-71.el6), I added some codes in
-> scsi_softirq_done to check the result of execute scsi commands:
-> WRITE_6, WRITE_10, WRITE_12, WRITE_16 when I executed "dd if=/dev/zero
-> of=/dev/xda bs=64k count=10000". I found a lot of write error messages
-> in scsi_softirq_done, the disposition(variable) was ADD_TO_MLQUEUE and
-> the speed was 78MB/s.
->      Then I changed MPT_SCSI_CMD_PER_DEV_HIGH from 64 to 32 in
-> mptscsih_change_queue_depth, the speed was 140MB/s and none error
-> messages.
->      * /dev/xda is a scsi disk.
->      * the scsi host is LSI1064E.
->      * MPT_SCSI_CMD_PER_DEV_HIGH will be assigned to blk_queue_tag->max_depth.
->
->      My questions are:
->      Is the TCQ depth limited by hard disk, how can I get the limited?
->      Why the speed was drop to 78MB/s when MPT_SCSI_CMD_PER_DEV_HIGH was 64?
->      Could I change MPT_SCSI_CMD_PER_DEV_HIGH to 32 or 16 or 8, Will it
-> cause any problem?
->
->      Thanks for any ideas.
->
-> Thanks,
-> Alex Liu
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-When you have a vendor specific issues, it is probably best to raise a ticket 
-with the vendor's support organization....
+In a shared SAS setup, target devices may be reset by one of
+several hosts, and outstanding commands on that device will be
+completed to corresponding hosts with status of UNSOLICITED_ABORT.
+Such commands should be retried instead of being treated as i/o
+errors.  Also fixed a nearby spelling error.
 
-Thanks!
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Ric
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 6bba23a..b64b29f 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1219,8 +1219,8 @@ static void complete_scsi_command(struct CommandList *cp)
+ 		dev_warn(&h->pdev->dev, "cp %p reports abort failed\n", cp);
+ 		break;
+ 	case CMD_UNSOLICITED_ABORT:
+-		cmd->result = DID_RESET << 16;
+-		dev_warn(&h->pdev->dev, "cp %p aborted do to an unsolicited "
++		cmd->result = DID_SOFT_ERROR << 16; /* retry the command */
++		dev_warn(&h->pdev->dev, "cp %p aborted due to an unsolicited "
+ 			"abort\n", cp);
+ 		break;
+ 	case CMD_TIMEOUT:
 
