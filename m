@@ -1,49 +1,75 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [GIT PULL] iscsi-target merge for v3.1-rc1
-Date: Mon, 25 Jul 2011 18:09:18 -0700
-Message-ID: <4E2E13BE.7000909@redhat.com>
-References: <1311462975.31450.356.camel@haakon2.linux-iscsi.org>	 <20110725163739.5c19b04d.akpm@linux-foundation.org> <1311640376.17766.221.camel@haakon2.linux-iscsi.org>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: initio.c driver question?  Can read but not write; Initio
+ Corporation INI-950 SCSI Adapter (rev 02)
+Date: Mon, 25 Jul 2011 21:25:49 -0700
+Message-ID: <20110725212549.4381566b.rdunlap@xenotime.net>
+References: <87hb69ua0r.fsf@cadence.glidepath.invalid>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60747 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752219Ab1GZBJf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2011 21:09:35 -0400
-In-Reply-To: <1311640376.17766.221.camel@haakon2.linux-iscsi.org>
+Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:55823 "HELO
+	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750816Ab1GZEZw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2011 00:25:52 -0400
+In-Reply-To: <87hb69ua0r.fsf@cadence.glidepath.invalid>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <openosd@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Marc D Ronell <mronell@alumni.upenn.edu>
+Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
-On 07/25/2011 05:32 PM, Nicholas A. Bellinger wrote:
-> On Mon, 2011-07-25 at 16:37 -0700, Andrew Morton wrote:
->> On Sat, 23 Jul 2011 16:16:15 -0700
->> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
->>
->>> Please go ahead and pull from:
->>>
->>>   master.kernel.org:/pub/scm/linux/kernel/git/nab/target-pending.git for-linus-merge
->>
->> i386 allyesconfig:
->>
->> ERROR: "__udivdi3" [drivers/target/target_core_mod.ko] undefined!
->>
->> somewhere in drivers/target/target_core_transport.c:transport_allocate_data_tasks().
+[adding linux-scsi mailing list]
+
+On Mon, 25 Jul 2011 21:05:08 -0400 Marc D Ronell wrote:
+
 > 
-> Mmmm, I was under the assumption that DIV_ROUND_UP() did unsigned long
-> long division correctly for sector_t on 32-bit , but apparently not with
-> the new v4.1 transport_allocate_data_tasks() code..   Andy..?  
+> 
+> I am having trouble writing to a scsi tape drive which is connected to
+> a  startech PCISCSIUW card  that uses  the Initio  Corporation INI-950
+> chipset.  Using  the 2.6.39.3  kernel, I can  read from the  scsi tape
+> drive successfully, but  when I attempt to write,  the write fails.  I
+> am attempting  to write  as root to  avoid permission  problems.  This
+> failure seems to be potentially  a driver problem.  The tape drive and
+> tapes have been  tested earlier with a different box  and were used to
+> generate the tapes which were successfully read.
+> 
+> The failures are as follows:
+> 
+> root@myhost:~#  tar cvf /dev/st0 ~myaccount/
+> tar: Removing leading `/' from member names
+> /home/myaccount/
+> /home/myaccount/.netpanzer/
+> /home/myaccount/.netpanzer/log.txt
+> /home/myaccount/.netpanzer/config/
+> /home/myaccount/.netpanzer/config/netpanzer.xml
+> /home/myaccount/.newsrc.eld
+> /home/myaccount/2.4.24.config
+> /home/myaccount/.Xauthority
+> /home/myaccount/.xsession-errors
+> tar: /dev/st0: Cannot write: Input/output error
+> tar: Error is not recoverable: exiting now
+> 
+> The errors written to the /var/log/syslog are:
+> 
+> Jul 24 14:10:50 myhost kernel: [18806.011317] st0: Block limits 1 - 16777215 bytes.
+> Jul 24 14:11:32 myhost kernel: [18848.303903] st0: Sense Key : Illegal Request [current] 
+> Jul 24 14:11:32 myhost kernel: [18848.303909] st0: Add. Sense: Invalid command operation code
+> Jul 24 14:11:32 myhost kernel: [18848.303914] st0: Error on write filemark.
+> Jul 24 14:12:29 myhost kernel: [18905.561873] st0: Sense Key : Illegal Request [current] 
+> Jul 24 14:12:29 myhost kernel: [18905.561878] st0: Add. Sense: Invalid command operation code
+> Jul 24 14:12:51 myhost kernel: [18926.897446] st0: Sense Key : 0xf [deferred] [descriptor]
+> Jul 24 14:12:51 myhost kernel: [18926.897452] Descriptor sense data with sense descriptors (in hex):
+> Jul 24 14:12:51 myhost kernel: [18926.897455]         ff ff fe ef c9 24 a5 2d d3 29 6e 09 d0 56 00 00 
+> Jul 24 14:12:51 myhost kernel: [18926.897463]         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+> Jul 24 14:12:51 myhost kernel: [18926.897471]         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+> Jul 24 14:12:51 myhost kernel: [18926.897479]         00 00 00 00 00 
+> Jul 24 14:12:51 myhost kernel: [18926.897482] st0: <<vendor>> ASC=0xfe ASCQ=0xefASC=0xfe <<vendor>> ASCQ=0xef
+> 
+> Not sure if anyone is supporting the driver.  Thanks in advance for
+> any help or suggestions.
+> 
+> Marc
 
-sectors = DIV_ROUND_UP(cmd->data_length, sector_size);
-task_count = DIV_ROUND_UP(sectors, dev_max_sectors);
-
-sectors is a sector_t but the value will never be >32bits, since
-data_length is u32.
-
-We could just cast sectors to a u32 and be ok for this particular
-usage... DIV_ROUND_UP handling 64bit would of course also resolve the
-issue nicely.
-
-Regards -- Andy
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
