@@ -1,75 +1,102 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: initio.c driver question?  Can read but not write; Initio
- Corporation INI-950 SCSI Adapter (rev 02)
-Date: Mon, 25 Jul 2011 21:25:49 -0700
-Message-ID: <20110725212549.4381566b.rdunlap@xenotime.net>
-References: <87hb69ua0r.fsf@cadence.glidepath.invalid>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [GIT PULL] iscsi-target merge for v3.1-rc1
+Date: Mon, 25 Jul 2011 23:51:11 -0700
+Message-ID: <1311663071.17766.230.camel@haakon2.linux-iscsi.org>
+References: <1311462975.31450.356.camel@haakon2.linux-iscsi.org>
+	 <20110725163739.5c19b04d.akpm@linux-foundation.org>
+	 <20110725165057.9701f16b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oproxy3-pub.bluehost.com ([69.89.21.8]:55823 "HELO
-	oproxy3-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750816Ab1GZEZw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2011 00:25:52 -0400
-In-Reply-To: <87hb69ua0r.fsf@cadence.glidepath.invalid>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110725165057.9701f16b.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <openosd@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Marc D Ronell <mronell@alumni.upenn.edu>
-Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
-[adding linux-scsi mailing list]
+On Mon, 2011-07-25 at 16:50 -0700, Andrew Morton wrote:
+> On Mon, 25 Jul 2011 16:37:39 -0700
+> Andrew Morton <akpm@linux-foundation.org> wrote:
+> 
+> > On Sat, 23 Jul 2011 16:16:15 -0700
+> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > 
+> > > Please go ahead and pull from:
+> > > 
+> > >   master.kernel.org:/pub/scm/linux/kernel/git/nab/target-pending.git for-linus-merge
+> > 
+> > i386 allyesconfig:
+> > 
+> > ERROR: "__udivdi3" [drivers/target/target_core_mod.ko] undefined!
+> > 
+> > somewhere in drivers/target/target_core_transport.c:transport_allocate_data_tasks().
+> 
+> Probably the best place to fix this is within DIV_ROUND_UP(): make it
+> handle 64-bits on 32-bit.
+> 
+> This will have the pleasing side-effect of breaking
+> drivers/scsi/cxgbi/cxgb4i/cxgb4i.c, which felt a need to duplicate the
+> existing DIV_ROUND_UP() implementation.
+> 
 
-On Mon, 25 Jul 2011 21:05:08 -0400 Marc D Ronell wrote:
+Thanks for the input everyone.  :)
 
-> 
-> 
-> I am having trouble writing to a scsi tape drive which is connected to
-> a  startech PCISCSIUW card  that uses  the Initio  Corporation INI-950
-> chipset.  Using  the 2.6.39.3  kernel, I can  read from the  scsi tape
-> drive successfully, but  when I attempt to write,  the write fails.  I
-> am attempting  to write  as root to  avoid permission  problems.  This
-> failure seems to be potentially  a driver problem.  The tape drive and
-> tapes have been  tested earlier with a different box  and were used to
-> generate the tapes which were successfully read.
-> 
-> The failures are as follows:
-> 
-> root@myhost:~#  tar cvf /dev/st0 ~myaccount/
-> tar: Removing leading `/' from member names
-> /home/myaccount/
-> /home/myaccount/.netpanzer/
-> /home/myaccount/.netpanzer/log.txt
-> /home/myaccount/.netpanzer/config/
-> /home/myaccount/.netpanzer/config/netpanzer.xml
-> /home/myaccount/.newsrc.eld
-> /home/myaccount/2.4.24.config
-> /home/myaccount/.Xauthority
-> /home/myaccount/.xsession-errors
-> tar: /dev/st0: Cannot write: Input/output error
-> tar: Error is not recoverable: exiting now
-> 
-> The errors written to the /var/log/syslog are:
-> 
-> Jul 24 14:10:50 myhost kernel: [18806.011317] st0: Block limits 1 - 16777215 bytes.
-> Jul 24 14:11:32 myhost kernel: [18848.303903] st0: Sense Key : Illegal Request [current] 
-> Jul 24 14:11:32 myhost kernel: [18848.303909] st0: Add. Sense: Invalid command operation code
-> Jul 24 14:11:32 myhost kernel: [18848.303914] st0: Error on write filemark.
-> Jul 24 14:12:29 myhost kernel: [18905.561873] st0: Sense Key : Illegal Request [current] 
-> Jul 24 14:12:29 myhost kernel: [18905.561878] st0: Add. Sense: Invalid command operation code
-> Jul 24 14:12:51 myhost kernel: [18926.897446] st0: Sense Key : 0xf [deferred] [descriptor]
-> Jul 24 14:12:51 myhost kernel: [18926.897452] Descriptor sense data with sense descriptors (in hex):
-> Jul 24 14:12:51 myhost kernel: [18926.897455]         ff ff fe ef c9 24 a5 2d d3 29 6e 09 d0 56 00 00 
-> Jul 24 14:12:51 myhost kernel: [18926.897463]         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-> Jul 24 14:12:51 myhost kernel: [18926.897471]         00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
-> Jul 24 14:12:51 myhost kernel: [18926.897479]         00 00 00 00 00 
-> Jul 24 14:12:51 myhost kernel: [18926.897482] st0: <<vendor>> ASC=0xfe ASCQ=0xefASC=0xfe <<vendor>> ASCQ=0xef
-> 
-> Not sure if anyone is supporting the driver.  Thanks in advance for
-> any help or suggestions.
-> 
-> Marc
+How about the following to add a new DIV_ROUND_UP_ULL macro, and enable
+it's usage within the offending transport_allocate_data_tasks() change
+causing the regression in question for target_core_mod..?
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Is there anything else that should be done to avoid unnecessary 64-bit
+divide instruction slowness for generic 32-bit arch operation here..?
+
+Thank you,
+
+--nab
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index a244c90..8032e1e 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -4054,17 +4054,16 @@ static int transport_allocate_data_tasks(
+        struct se_task *task;
+        struct se_device *dev = cmd->se_dev;
+        unsigned long flags;
+-       sector_t sectors;
+        int task_count, i, ret;
+-       sector_t dev_max_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
++       sector_t sectors, dev_max_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
+        u32 sector_size = dev->se_sub_dev->se_dev_attrib.block_size;
+        struct scatterlist *sg;
+        struct scatterlist *cmd_sg;
+ 
+        WARN_ON(cmd->data_length % sector_size);
+        sectors = DIV_ROUND_UP(cmd->data_length, sector_size);
+-       task_count = DIV_ROUND_UP(sectors, dev_max_sectors);
+-
++       task_count = DIV_ROUND_UP_ULL(sectors, dev_max_sectors);
++       
+        cmd_sg = sgl;
+        for (i = 0; i < task_count; i++) {
+                unsigned int task_size;
+diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+index 953352a..d66cba7 100644
+--- a/include/linux/kernel.h
++++ b/include/linux/kernel.h
+@@ -56,6 +56,17 @@
+ 
+ #define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
+ #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
++#define DIV_ROUND_UP_ULL(n,d) (                                \
++{                                                      \
++       unsigned long long _tmp = n, _off;              \
++       int _res;                                       \
++       /* Round up using asm/div64.h:do_div */         \
++       _off = do_div(_tmp, d);                         \
++       if (_off != 0)                                  \
++               _tmp++;                                 \
++       _res = _tmp;                                    \
++}                                                      \
++)
+ 
+ /* The `const' in roundup() prevents gcc-3.3 from calling __divdi3 */
+ #define roundup(x, y) (                                        \
