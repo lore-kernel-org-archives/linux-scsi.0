@@ -1,65 +1,115 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [PATCH 02/12] bnx2fc: Introduce interface structure for
- each vlan interface
-Date: Tue, 26 Jul 2011 09:13:01 -0700
-Message-ID: <4E2EE78D.9080006@broadcom.com>
-References: <1309242664-27252-1-git-send-email-bprakash@broadcom.com>
- <1309242664-27252-3-git-send-email-bprakash@broadcom.com>
- <1311673302.17353.21.camel@mulgrave>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH] cxgb3i: ref count cdev access to prevent modification while in use
+Date: Tue, 26 Jul 2011 09:42:11 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD33409D33334@maui.asicdesigners.com>
+References: <1311623817-6417-1-git-send-email-nhorman@tuxdriver.com> <4E2DDDC5.8040405@chelsio.com> <20110726105002.GA16987@hmsreliant.think-freely.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
- charset=iso-8859-1;
- format=flowed
-Content-Transfer-Encoding: 7bit
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4790 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753552Ab1GZQNV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2011 12:13:21 -0400
-In-Reply-To: <1311673302.17353.21.camel@mulgrave>
+Received: from stargate.chelsio.com ([67.207.112.58]:12146 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753546Ab1GZQln convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2011 12:41:43 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Michael Chan <mchan@broadcom.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
+To: Neil Horman <nhorman@tuxdriver.com>, Divy Le Ray <divy@chelsio.com>
+Cc: netdev@vger.kernel.org, Steve Wise <swise@chelsio.com>, "David S. Miller" <davem@davemloft.net>, Mike Christie <michaelc@cs.wisc.edu>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On 7/26/2011 2:41 AM, James Bottomley wrote:
-> On Mon, 2011-06-27 at 23:30 -0700, Bhanu Prakash Gollapudi wrote:
->> Currently, bnx2fc has a hba structure that can work with only a single vlan
->> interface.  When there is a change in vlan id, it does not have the capability
->> to switch to different vlan interface. To solve this problem, a new structure
->> called 'interface' has been introduced, and each hba can now have multiple
->> interfaces, one per vlan id.
->>
->> Most of the patch is a moving the interface specific fields from hba to the
->> interface structure, and appropriately modifying the dereferences. A list of
->> interfaces (if_list) is maintained along with adapter list. During a create
->> call, the interface structure is allocated and added to if_list and deleted&
->> freed on a destroy call.  Link events are propogated to all interfaces
->> belonging to the hba.
->
-> Best I can tell, the upstream prerequisites are satisfied, but I still
-> can't apply this because of a conflicting upstream patch:
->
-> commit 415199f2bd977fa4065d4e836b4b7543f7993bc3
-> Author: Michael Chan<mchan@broadcom.com>
-> Date:   Wed Jul 20 14:55:24 2011 +0000
->
->      cnic: Add VLAN ID as a parameter during netevent upcall
->
-> Which actually introduces an explicit failure return for vlans.  Could
-> you respin from 2 on to sort this out?
+The patch looks good to me.
 
-Sure, will try and resolve the conflicts and re-submit the patches.
+Neil, yes, I will do that.
 
 Thanks,
-Bhanu.
+Karen
 
->
-> Thanks,
->
-> James
->
->
->
+-----Original Message-----
+From: Neil Horman [mailto:nhorman@tuxdriver.com] 
+Sent: Tuesday, July 26, 2011 3:50 AM
+To: Divy Le Ray
+Cc: netdev@vger.kernel.org; Steve Wise; David S. Miller; Karen Xie
+Subject: Re: [PATCH] cxgb3i: ref count cdev access to prevent
+modification while in use
 
+On Mon, Jul 25, 2011 at 02:19:01PM -0700, Divy Le Ray wrote:
+> On 07/25/2011 12:56 PM, Neil Horman wrote:
+> >
+> >This oops was reported recently:
+> >d:mon> e
+> >cpu 0xd: Vector: 300 (Data Access) at [c0000000fd4c7120]
+> >    pc: d00000000076f194: .t3_l2t_get+0x44/0x524 [cxgb3]
+> >    lr: d000000000b02108: .init_act_open+0x150/0x3d4 [cxgb3i]
+> >    sp: c0000000fd4c73a0
+> >   msr: 8000000000009032
+> >   dar: 0
+> > dsisr: 40000000
+> >  current = 0xc0000000fd640d40
+> >  paca    = 0xc00000000054ff80
+> >    pid   = 5085, comm = iscsid
+> >d:mon> t
+> >[c0000000fd4c7450] d000000000b02108 .init_act_open+0x150/0x3d4
+[cxgb3i]
+> >[c0000000fd4c7500] d000000000e45378 .cxgbi_ep_connect+0x784/0x8e8
+> >[libcxgbi]
+> >[c0000000fd4c7650] d000000000db33f0 .iscsi_if_rx+0x71c/0xb18
+> >[scsi_transport_iscsi2]
+> >[c0000000fd4c7740] c000000000370c9c .netlink_data_ready+0x40/0xa4
+> >[c0000000fd4c77c0] c00000000036f010 .netlink_sendskb+0x4c/0x9c
+> >[c0000000fd4c7850] c000000000370c18 .netlink_sendmsg+0x358/0x39c
+> >[c0000000fd4c7950] c00000000033be24 .sock_sendmsg+0x114/0x1b8
+> >[c0000000fd4c7b50] c00000000033d208 .sys_sendmsg+0x218/0x2ac
+> >[c0000000fd4c7d70] c00000000033f55c .sys_socketcall+0x228/0x27c
+> >[c0000000fd4c7e30] c0000000000086a4 syscall_exit+0x0/0x40
+> >--- Exception: c01 (System Call) at 00000080da560cfc
+> >
+> >The root cause was an EEH error, which sent us down the
+> >offload_close path in
+> >the cxgb3 driver, which in turn sets cdev->lldev to NULL, without
+> >regard for
+> >upper layer driver (like the cxgbi drivers) which might have
+> >execution contexts
+> >in the middle of its use. The result is the oops above, when
+> >t3_l2t_get attempts
+> >to dereference cdev->lldev right after the EEH error handler sets
+> >it to NULL.
+> >
+> >The fix is to reference count the cdev structure.  When an EEH
+> >error occurs, the
+> >shutdown path:
+>
+>t3_adapter_error->offload_close->cxgb3i_remove_clients->cxgb3i_dev_clos
+e
+> >will now block until such time as the cdev pointer has a use count
+> >of zero.
+> >This coupled with the fact that lookups will now skip finding any
+> >registered
+> >cdev's in cxgbi_device_find_by_[lldev|netdev] with the
+> >CXGBI_FLAG_ADAPTER_RESET
+> >bit set ensures that on an EEH, the setting of lldev to NULL in
+> >offload_close
+> >will only happen after there are no longer any active users of the
+data
+> >structure.
+> >
+> >This has been tested by the reporter and shown to fix the reproted
+oops
+> >
+> >Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+> >CC: Divy Le Ray <divy@chelsio.com>
+> >CC: Steve Wise <swise@chelsio.com>
+> >CC: "David S. Miller" <davem@davemloft.net>
+> >
+> 
+> Also cc-ing Karen.
+> 
+Thank you Divy. Karen, if you're going to be working on cxgb3i, would
+you mind
+updating the MAINTINERS file so I and others don't forget to CC you in
+the
+future?
+
+Thanks!
+Neil
 
