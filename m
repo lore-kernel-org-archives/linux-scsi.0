@@ -1,16 +1,15 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH RESEND v2 3/9] bnx2fc: Handle REC_TOV error code from
- firmware
-Date: Wed, 27 Jul 2011 11:32:07 -0700
-Message-ID: <1311791533-27745-4-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH RESEND v2 4/9] bnx2fc: HSI changes for tape
+Date: Wed, 27 Jul 2011 11:32:08 -0700
+Message-ID: <1311791533-27745-5-git-send-email-bprakash@broadcom.com>
 References: <1311791533-27745-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2474 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2509 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753866Ab1G0Sc3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754359Ab1G0Sc3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 27 Jul 2011 14:32:29 -0400
 In-Reply-To: <1311791533-27745-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,223 +17,90 @@ List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Driver decides to initiate REC on REC_TOV timer pop. The firmware maintains the
-REC timer and informs the driver as a firmware error message, which is an
-unsolicited event to the driver. Driver also issues REC on other unsolicited
-events from firmware that indicate data loss.
+Program the firmware task structure with init_flags indicating the device is
+'sequence level error recovery' capable.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h     |    1 +
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |  140 ++++++++++++++++++++++++++++++--------
- 2 files changed, 112 insertions(+), 29 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c |   30 ++++++++++++++++++++++++++----
+ 1 files changed, 26 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index cd506c0..b1b0b3e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -143,6 +143,7 @@
- 
- #define SRR_RETRY_COUNT			5
- #define REC_RETRY_COUNT			1
-+#define BNX2FC_NUM_ERR_BITS		63
- 
- /* bnx2fc driver uses only one instance of fcoe_percpu_s */
- extern struct fcoe_percpu_s bnx2fc_global;
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 03ae003..764c452 100644
+index 764c452..9f38c57 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -629,6 +629,8 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 	struct bnx2fc_hba *hba = interface->hba;
- 	int task_idx, index;
- 	int rc = 0;
-+	u64 err_warn_bit_map;
-+	u8 err_warn = 0xff;
+@@ -1564,7 +1564,12 @@ void bnx2fc_init_cleanup_task(struct bnx2fc_cmd *io_req,
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_TASK_TYPE_SHIFT;
+ 	task->txwr_rxrd.const_ctx.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_CLASS_TYPE_SHIFT;
+-	task->txwr_rxrd.const_ctx.init_flags |=
++	if (tgt->dev_type == TYPE_TAPE)
++		task->txwr_rxrd.const_ctx.init_flags |=
++				FCOE_TASK_DEV_TYPE_TAPE <<
++				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
++	else
++		task->txwr_rxrd.const_ctx.init_flags |=
+ 				FCOE_TASK_DEV_TYPE_DISK <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
+ 	task->txwr_rxrd.union_ctx.cleanup.ctx.cleaned_task_id = orig_xid;
+@@ -1624,7 +1629,12 @@ void bnx2fc_init_mp_task(struct bnx2fc_cmd *io_req,
+ 	/* init flags */
+ 	task->txwr_rxrd.const_ctx.init_flags = task_type <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_TASK_TYPE_SHIFT;
+-	task->txwr_rxrd.const_ctx.init_flags |=
++	if (tgt->dev_type == TYPE_TAPE)
++		task->txwr_rxrd.const_ctx.init_flags |=
++				FCOE_TASK_DEV_TYPE_TAPE <<
++				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
++	else
++		task->txwr_rxrd.const_ctx.init_flags |=
+ 				FCOE_TASK_DEV_TYPE_DISK <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
+ 	task->txwr_rxrd.const_ctx.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
+@@ -1681,6 +1691,7 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ 	struct bnx2fc_rport *tgt = io_req->tgt;
+ 	struct fcoe_cached_sge_ctx *cached_sge;
+ 	struct fcoe_ext_mul_sges_ctx *sgl;
++	int dev_type = tgt->dev_type;
+ 	u64 *fcp_cmnd;
+ 	u64 tmp_fcp_cmnd[4];
+ 	u32 context_id;
+@@ -1711,7 +1722,12 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ 	/* Init state to NORMAL */
+ 	task->txwr_rxrd.const_ctx.init_flags = task_type <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_TASK_TYPE_SHIFT;
+-	task->txwr_rxrd.const_ctx.init_flags |=
++	if (dev_type == TYPE_TAPE)
++		task->txwr_rxrd.const_ctx.init_flags |=
++				FCOE_TASK_DEV_TYPE_TAPE <<
++				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
++	else
++		task->txwr_rxrd.const_ctx.init_flags |=
+ 				FCOE_TASK_DEV_TYPE_DISK <<
+ 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
+ 	task->txwr_rxrd.const_ctx.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
+@@ -1754,7 +1770,8 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ 	cached_sge = &task->rxwr_only.union_ctx.read_info.sgl_ctx.cached_sge;
+ 	sgl = &task->rxwr_only.union_ctx.read_info.sgl_ctx.sgl;
+ 	bd_count = bd_tbl->bd_valid;
+-	if (task_type == FCOE_TASK_TYPE_READ) {
++	if (task_type == FCOE_TASK_TYPE_READ &&
++	    dev_type == TYPE_DISK) {
+ 		if (bd_count == 1) {
  
- 
- 	BNX2FC_TGT_DBG(tgt, "Entered UNSOL COMPLETION wqe = 0x%x\n", wqe);
-@@ -691,13 +693,11 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 		BNX2FC_TGT_DBG(tgt, "buf_offsets - tx = 0x%x, rx = 0x%x\n",
- 			err_entry->data.tx_buf_off, err_entry->data.rx_buf_off);
- 
--		bnx2fc_return_rqe(tgt, 1);
- 
- 		if (xid > BNX2FC_MAX_XID) {
- 			BNX2FC_TGT_DBG(tgt, "xid(0x%x) out of FW range\n",
- 				   xid);
--			spin_unlock_bh(&tgt->tgt_lock);
--			break;
-+			goto ret_err_rqe;
+ 			struct fcoe_bd_ctx *fcoe_bd_tbl = bd_tbl->bd_tbl;
+@@ -1786,6 +1803,11 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
+ 					(u32)((u64)bd_tbl->bd_tbl_dma >> 32);
+ 			sgl->mul_sgl.sgl_size = bd_count;
  		}
++	} else {
++		sgl->mul_sgl.cur_sge_addr.lo = (u32)bd_tbl->bd_tbl_dma;
++		sgl->mul_sgl.cur_sge_addr.hi =
++				(u32)((u64)bd_tbl->bd_tbl_dma >> 32);
++		sgl->mul_sgl.sgl_size = bd_count;
+ 	}
+ }
  
- 		task_idx = xid / BNX2FC_TASKS_PER_PAGE;
-@@ -707,23 +707,29 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 		task = &(task_page[index]);
- 
- 		io_req = (struct bnx2fc_cmd *)hba->cmd_mgr->cmds[xid];
--		if (!io_req) {
--			spin_unlock_bh(&tgt->tgt_lock);
--			break;
--		}
-+		if (!io_req)
-+			goto ret_err_rqe;
- 
- 		if (io_req->cmd_type != BNX2FC_SCSI_CMD) {
- 			printk(KERN_ERR PFX "err_warn: Not a SCSI cmd\n");
--			spin_unlock_bh(&tgt->tgt_lock);
--			break;
-+			goto ret_err_rqe;
- 		}
- 
- 		if (test_and_clear_bit(BNX2FC_FLAG_IO_CLEANUP,
- 				       &io_req->req_flags)) {
- 			BNX2FC_IO_DBG(io_req, "unsol_err: cleanup in "
- 					    "progress.. ignore unsol err\n");
--			spin_unlock_bh(&tgt->tgt_lock);
--			break;
-+			goto ret_err_rqe;
-+		}
-+
-+		err_warn_bit_map = (u64)
-+			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
-+			(u64)err_entry->data.err_warn_bitmap_lo;
-+		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
-+			if (err_warn_bit_map & (u64)((u64)1 << i)) {
-+				err_warn = i;
-+				break;
-+			}
- 		}
- 
- 		/*
-@@ -733,26 +739,61 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 		 * logging out the target, when the ABTS eventually
- 		 * times out.
- 		 */
--		if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS,
--				      &io_req->req_flags)) {
--			/*
--			 * Cancel the timeout_work, as we received IO
--			 * completion with FW error.
--			 */
--			if (cancel_delayed_work(&io_req->timeout_work))
--				kref_put(&io_req->refcount,
--					 bnx2fc_cmd_release); /* timer hold */
--
--			rc = bnx2fc_initiate_abts(io_req);
--			if (rc != SUCCESS) {
--				BNX2FC_IO_DBG(io_req, "err_warn: initiate_abts "
--					"failed. issue cleanup\n");
--				rc = bnx2fc_initiate_cleanup(io_req);
--				BUG_ON(rc);
--			}
--		} else
-+		if (test_bit(BNX2FC_FLAG_ISSUE_ABTS, &io_req->req_flags)) {
- 			printk(KERN_ERR PFX "err_warn: io_req (0x%x) already "
- 					    "in ABTS processing\n", xid);
-+			goto ret_err_rqe;
-+		}
-+		BNX2FC_TGT_DBG(tgt, "err = 0x%x\n", err_warn);
-+		if (tgt->dev_type != TYPE_TAPE)
-+			goto skip_rec;
-+		switch (err_warn) {
-+		case FCOE_ERROR_CODE_REC_TOV_TIMER_EXPIRATION:
-+		case FCOE_ERROR_CODE_DATA_OOO_RO:
-+		case FCOE_ERROR_CODE_COMMON_INCORRECT_SEQ_CNT:
-+		case FCOE_ERROR_CODE_DATA_SOFI3_SEQ_ACTIVE_SET:
-+		case FCOE_ERROR_CODE_FCP_RSP_OPENED_SEQ:
-+		case FCOE_ERROR_CODE_DATA_SOFN_SEQ_ACTIVE_RESET:
-+			BNX2FC_TGT_DBG(tgt, "REC TOV popped for xid - 0x%x\n",
-+				   xid);
-+			memset(&io_req->err_entry, 0,
-+			       sizeof(struct fcoe_err_report_entry));
-+			memcpy(&io_req->err_entry, err_entry,
-+			       sizeof(struct fcoe_err_report_entry));
-+			if (!test_bit(BNX2FC_FLAG_SRR_SENT,
-+				      &io_req->req_flags)) {
-+				spin_unlock_bh(&tgt->tgt_lock);
-+				rc = bnx2fc_send_rec(io_req);
-+				spin_lock_bh(&tgt->tgt_lock);
-+
-+				if (rc)
-+					goto skip_rec;
-+			} else
-+				printk(KERN_ERR PFX "SRR in progress\n");
-+			goto ret_err_rqe;
-+			break;
-+		default:
-+			break;
-+		}
-+
-+skip_rec:
-+		set_bit(BNX2FC_FLAG_ISSUE_ABTS, &io_req->req_flags);
-+		/*
-+		 * Cancel the timeout_work, as we received IO
-+		 * completion with FW error.
-+		 */
-+		if (cancel_delayed_work(&io_req->timeout_work))
-+			kref_put(&io_req->refcount, bnx2fc_cmd_release);
-+
-+		rc = bnx2fc_initiate_abts(io_req);
-+		if (rc != SUCCESS) {
-+			printk(KERN_ERR PFX "err_warn: initiate_abts "
-+				"failed xid = 0x%x. issue cleanup\n",
-+				io_req->xid);
-+			bnx2fc_initiate_cleanup(io_req);
-+		}
-+ret_err_rqe:
-+		bnx2fc_return_rqe(tgt, 1);
- 		spin_unlock_bh(&tgt->tgt_lock);
- 		break;
- 
-@@ -773,6 +814,47 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 		BNX2FC_TGT_DBG(tgt, "buf_offsets - tx = 0x%x, rx = 0x%x",
- 			err_entry->data.tx_buf_off, err_entry->data.rx_buf_off);
- 
-+		if (xid > BNX2FC_MAX_XID) {
-+			BNX2FC_TGT_DBG(tgt, "xid(0x%x) out of FW range\n", xid);
-+			goto ret_warn_rqe;
-+		}
-+
-+		err_warn_bit_map = (u64)
-+			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
-+			(u64)err_entry->data.err_warn_bitmap_lo;
-+		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
-+			if (err_warn_bit_map & (u64) (1 << i)) {
-+				err_warn = i;
-+				break;
-+			}
-+		}
-+		BNX2FC_TGT_DBG(tgt, "warn = 0x%x\n", err_warn);
-+
-+		task_idx = xid / BNX2FC_TASKS_PER_PAGE;
-+		index = xid % BNX2FC_TASKS_PER_PAGE;
-+		task_page = (struct fcoe_task_ctx_entry *)
-+			     interface->hba->task_ctx[task_idx];
-+		task = &(task_page[index]);
-+		io_req = (struct bnx2fc_cmd *)hba->cmd_mgr->cmds[xid];
-+		if (!io_req)
-+			goto ret_warn_rqe;
-+
-+		if (io_req->cmd_type != BNX2FC_SCSI_CMD) {
-+			printk(KERN_ERR PFX "err_warn: Not a SCSI cmd\n");
-+			goto ret_warn_rqe;
-+		}
-+
-+		memset(&io_req->err_entry, 0,
-+		       sizeof(struct fcoe_err_report_entry));
-+		memcpy(&io_req->err_entry, err_entry,
-+		       sizeof(struct fcoe_err_report_entry));
-+
-+		if (err_warn == FCOE_ERROR_CODE_REC_TOV_TIMER_EXPIRATION)
-+			/* REC_TOV is not a warning code */
-+			BUG_ON(1);
-+		else
-+			BNX2FC_TGT_DBG(tgt, "Unsolicited warning\n");
-+ret_warn_rqe:
- 		bnx2fc_return_rqe(tgt, 1);
- 		spin_unlock_bh(&tgt->tgt_lock);
- 		break;
 -- 
 1.7.0.6
 
