@@ -1,43 +1,35 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH RESEND v2 6/9] bnx2fc: hold tgt lock when calling
- cmd_release
-Date: Wed, 27 Jul 2011 11:32:10 -0700
-Message-ID: <1311791533-27745-7-git-send-email-bprakash@broadcom.com>
-References: <1311791533-27745-1-git-send-email-bprakash@broadcom.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: re: [SCSI] mvsas: misc improvements
+Date: Wed, 27 Jul 2011 21:54:17 +0300
+Message-ID: <20110727185417.GS3824@shale.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1055 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754712Ab1G0Sci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2011 14:32:38 -0400
-In-Reply-To: <1311791533-27745-1-git-send-email-bprakash@broadcom.com>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:57454 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751202Ab1G0S4P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 14:56:15 -0400
+Received: by yxi11 with SMTP id 11so970319yxi.19
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2011 11:56:15 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+To: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_io.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+84fbd0cea11b80 "[SCSI] mvsas: misc improvements" introduces a
+potential NULL dereference.
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 797b005..7154c44 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -752,7 +752,9 @@ retry_tmf:
- 	rc = bnx2fc_init_mp_req(io_req);
- 	if (rc == FAILED) {
- 		printk(KERN_ERR PFX "Task mgmt MP request init failed\n");
-+		spin_lock_bh(&tgt->tgt_lock);
- 		kref_put(&io_req->refcount, bnx2fc_cmd_release);
-+		spin_unlock_bh(&tgt->tgt_lock);
- 		goto tmf_err;
- 	}
+@@ -1375,6 +1385,7 @@ void mvs_dev_gone_notify(struct domain_device *dev)
+                mv_dprintk("found dev has gone.\n");
+---> mvi_dev is NULL on this path.
+        }
+        dev->lldd_dev = NULL;
++       mvi_dev->sas_device = NULL;
+---> we dereference it here.
  
--- 
-1.7.0.6
+        spin_unlock_irqrestore(&mvi->lock, flags);
+ }
 
-
+regards,
+dan carpenter
