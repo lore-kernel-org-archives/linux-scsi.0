@@ -1,59 +1,61 @@
-From: adam radford <aradford@gmail.com>
-Subject: [PATCH 1/3] megaraid_sas: Fix FastPath I/O to work on degraded raid 1
-Date: Tue, 26 Jul 2011 16:16:40 -0700
-Message-ID: <CAHtARFENmgkmNuGcJq3d1zRr3TOwPq-t_F5y2hZjVLdapEc5xQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=000e0cd56b44d1dc8d04a9011f57
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/3] target: Allow demo-mode sessions with INQUIRY 'not connected' status
+Date: Wed, 27 Jul 2011 00:45:15 +0000
+Message-ID: <1311727518-1927-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:52432 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753718Ab1GZXQl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2011 19:16:41 -0400
-Received: by iyb12 with SMTP id 12so1011454iyb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2011 16:16:40 -0700 (PDT)
+Received: from mail.linux-iscsi.org ([67.23.28.174]:52606 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab1G0BIy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jul 2011 21:08:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
+To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Roland Dreier <roland@purestorage.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
---000e0cd56b44d1dc8d04a9011f57
-Content-Type: text/plain; charset=ISO-8859-1
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-(Re-sent to fix subject line to add megaraid_sas)
+Hi Roland and Andrew,
 
-James/linux-scsi,
+Here is the series for target_core v4.1 (lio-core-2.6.git/master) to allow
+demo-mode I_T FC nexuses (struct se_session) to login without the active
+fabric Port/LUNs appearing as the default layout with generate_node_acl=1
+WWPN endpoint access.
 
-This patch for megaraid_sas fixes FastPath I/O to work on degraded raid 1.
+This also changes standard INQUIRY response to set 0x3f (not connected) status
+as recommended by Roland for those fabrics like tcm_qla2xxx that expect to have
+initiators be at least able login and recognize 'not connected' status with the
+default virtual LUN=0 device.  This is expected by modern qla2xxx initiators,
+and will currently cause ABORT -> DEVICE_RESET when we explictly disable
+demo-mode access for the WWPN and only allow explict NodeACLs+MappedLUNs to
+establish a FC Nexus.
 
-Signed-off-by: Adam Radford <aradford@gmail.com>
+The main question here is if running 'not connected' as the default for virtual LUN=0
+access is OK for all cases here.  Any comments folks..?
 
-diff -Naur scsi-misc/drivers/scsi/megaraid/megaraid_sas_fp.c
-scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_fp.c
---- scsi-misc/drivers/scsi/megaraid/megaraid_sas_fp.c	2011-07-21
-19:17:23.000000000 -0700
-+++ scsi-misc.new/drivers/scsi/megaraid/megaraid_sas_fp.c	2011-07-26
-14:13:15.518247693 -0700
-@@ -288,7 +288,6 @@
- 				/* Get dev handle from Pd */
- 				*pDevHandle = MR_PdDevHandleGet(pd, map);
- 		}
--		retval = FALSE;
- 	}
+With the series, the following lio-core-2.6.git/master commit is also being reverted
 
- 	*pdBlock += stripRef + MR_LdSpanPtrGet(ld, span, map)->startBlk;
+   commit a138af3ef3b199226ad2cc3ffb24c494302d0f4c
+   Author: Nicholas Bellinger <nab@linux-iscsi.org>
+   Date:   Mon Jul 25 22:11:43 2011 +0000
 
---000e0cd56b44d1dc8d04a9011f57
-Content-Type: application/octet-stream; name="megaraid_sas.patch1"
-Content-Disposition: attachment; filename="megaraid_sas.patch1"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gqlhfdzo0
+    tcm_qla2xxx: Remove Demo-mode by default settings
 
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19m
-cC5jIHNjc2ktbWlzYy5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mcC5j
-Ci0tLSBzY3NpLW1pc2MvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mcC5jCTIw
-MTEtMDctMjEgMTk6MTc6MjMuMDAwMDAwMDAwIC0wNzAwCisrKyBzY3NpLW1pc2MubmV3L2RyaXZl
-cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnAuYwkyMDExLTA3LTI2IDE0OjEzOjE1LjUx
-ODI0NzY5MyAtMDcwMApAQCAtMjg4LDcgKzI4OCw2IEBACiAJCQkJLyogR2V0IGRldiBoYW5kbGUg
-ZnJvbSBQZCAqLwogCQkJCSpwRGV2SGFuZGxlID0gTVJfUGREZXZIYW5kbGVHZXQocGQsIG1hcCk7
-CiAJCX0KLQkJcmV0dmFsID0gRkFMU0U7CiAJfQogCiAJKnBkQmxvY2sgKz0gc3RyaXBSZWYgKyBN
-Ul9MZFNwYW5QdHJHZXQobGQsIHNwYW4sIG1hcCktPnN0YXJ0QmxrOwo=
---000e0cd56b44d1dc8d04a9011f57--
+Thanks,
+
+Nicholas Bellinger (3):
+  target: Change TCM_NON_EXISTENT_LUN response to ASC=LOGICAL UNIT NOT
+    SUPPORTED
+  target: Make standard INQUIRY return 'not connected' for
+    tpg_virt_lun0
+  tcm_qla2xxx: Add tfo->tpg_check_demo_mode_login_only usage
+
+ drivers/target/target_core_cdb.c                  |   11 ++++++++---
+ drivers/target/target_core_tpg.c                  |   12 ++++++++++--
+ drivers/target/target_core_transport.c            |    7 +++++++
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c |    2 ++
+ include/target/target_core_fabric_ops.h           |    6 ++++++
+ 5 files changed, 33 insertions(+), 5 deletions(-)
+
+-- 
+1.7.2.5
+
