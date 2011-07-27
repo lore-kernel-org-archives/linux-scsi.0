@@ -1,125 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [smatch stuff] target: uninitialized variable in
-	iscsit_handle_text_cmd()
-Date: Wed, 27 Jul 2011 12:38:41 -0700
-Message-ID: <1311795521.6931.11.camel@haakon2.linux-iscsi.org>
-References: <20110727111230.GO3824@shale.localdomain>
+Subject: Re: [smatch stuff] iscsi-target: string size issue in
+	lio_target_call_addnptotpg()
+Date: Wed, 27 Jul 2011 12:40:46 -0700
+Message-ID: <1311795646.6931.14.camel@haakon2.linux-iscsi.org>
+References: <20110727113450.GA7382@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39737 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:39742 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974Ab1G0TsB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 15:48:01 -0400
-In-Reply-To: <20110727111230.GO3824@shale.localdomain>
+	with ESMTP id S1754661Ab1G0TuH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 15:50:07 -0400
+In-Reply-To: <20110727113450.GA7382@shale.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Dan Carpenter <error27@gmail.com>
-Cc: "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andy Grover <agrover@redhat.com>
+Cc: "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 
-On Wed, 2011-07-27 at 14:12 +0300, Dan Carpenter wrote:
-> There is an uninitialized variable in iscsit_handle_text_cmd().  I'm
-> not sure why gcc doesn't complain...
+On Wed, 2011-07-27 at 14:34 +0300, Dan Carpenter wrote:
+> Smatch complains about the string handling in lio_target_call_addnptotpg().
 > 
-> drivers/target/iscsi/iscsi_target.c +1899 iscsit_handle_text_cmd(46)
-> 	error: potentially derefencing uninitialized 'cmd'.
+> drivers/target/iscsi/iscsi_target_configfs.c +184 lio_target_call_addnptotpg(21)
+> 	error: snprintf() chops off the last chars of 'name': 257 vs 256
 > 
->   1898                  if (padding != 0) {
->   1899                          iov[niov].iov_base = cmd->pad_bytes;
->                                                      ^^^^^
+>    176          char buf[MAX_PORTAL_LEN + 1];
 > 
-> "cmd" hasn't been initialized here yet.
+> 	buffer holds 257 chars.
 > 
->   1900                          iov[niov++].iov_len  = padding;
->   1901                          rx_size += padding;
->   1902                          pr_debug("Receiving %u additional bytes"
->   1903                                          " for padding.\n", padding);
->   1904                  }
->   1905                  if (conn->conn_ops->DataDigest) {
->   1906                          iov[niov].iov_base      = &checksum;
->   1907                          iov[niov++].iov_len     = ISCSI_CRC_LEN;
->   1908                          rx_size += ISCSI_CRC_LEN;
->   1909                  }
->   1910  
->   1911                  rx_got = rx_data(conn, &iov[0], niov, rx_size);
->   1912                  if (rx_got != rx_size) {
->   1913                          kfree(text_in);
->   1914                          return -1;
->   1915                  }
->   1916  
->   1917                  if (conn->conn_ops->DataDigest) {
->   1918                          iscsit_do_crypto_hash_buf(&conn->conn_rx_hash,
->   1919                                          text_in, text_length,
->   1920                                          padding, cmd->pad_bytes,
->                                                          ^^^^^
+>    177  
+>    178          if (strlen(name) > MAX_PORTAL_LEN) {
 > 
-> Or here.
+> 	string is 256 chars plus NUL.  (257 chars).
 > 
->   1921                                          (u8 *)&data_crc);
->   1922  
+>    179                  pr_err("strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
+>    180                          (int)strlen(name), MAX_PORTAL_LEN);
+>    181                  return ERR_PTR(-EOVERFLOW);
+>    182          }
+>    183          memset(buf, 0, MAX_PORTAL_LEN + 1);
+> 
+> 	set 257 chars to NULL.
+> 
+>    184          snprintf(buf, MAX_PORTAL_LEN, "%s", name);
+> 
+> 	Copy 255 chars and write a NUL char to the second last char
+> 	in the buffer.  The last char is also NUL.
+> 
 
-Mmmm, it looks like this was introduced with the following iscsi-target
-v4.1 cleanup:
+Addressing this smatch warning with the following patch:
 
-commit e947358c9630777e51e0f123f70e4cd634aa13b1
-Author: Andy Grover <agrover@redhat.com>
-Date:   Fri May 27 10:16:37 2011 -0700
-
-    target/iscsi: use pad_bytes in cmd over local vars
-
-Re-adding the local scope usage of pad_bytes with the following patch.
-
-Thanks!
+Thanks Dan!
 
 --nab
 
----------------------------------------------------------------------
-commit b632b3512263eb767aa6356fab5dfc79341fb88b
-debian-amd64:/usr/src/lio-core-2.6.git# git show 6c1515b7d63d8
-commit 6c1515b7d63d8038a6fbea172932369f87dd0cf4
+---------------------------------------------------------------
+commit 92819a50ea5d36692aef38e5eb99d72f27e66832
 Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Wed Jul 27 12:16:22 2011 -0700
+Date:   Wed Jul 27 12:37:03 2011 -0700
 
-    iscsi-target: Fix uninitialized usage of cmd->pad_bytes
+    iscsi-target: Fix snprintf usage with MAX_PORTAL_LEN
     
-    This patch fixes an uninitialized usage of cmd->pad_bytes inside of
-    iscsit_handle_text_cmd() introduced during a v4.1 change to use cmd
-    members instead of local pad_bytes variables.
+    This patch makes lio_target_call_addnptotpg() use sprintf() with
+    MAX_PORTAL_LEN + 1 to address the following smatch warning:
+    
+    drivers/target/iscsi/iscsi_target_configfs.c +184 lio_target_call_addnptotpg(21)
+            error: snprintf() chops off the last chars of 'name': 257 vs 256
     
     Reported-by: Dan Carpenter <error27@gmail.com>
     Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 9df7f08..1025b1a 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -1857,7 +1857,7 @@ static int iscsit_handle_text_cmd(
-        char *text_ptr, *text_in;
-        int cmdsn_ret, niov = 0, rx_got, rx_size;
-        u32 checksum = 0, data_crc = 0, payload_length;
--       u32 padding = 0, text_length = 0;
-+       u32 padding = 0, pad_bytes = 0, text_length = 0;
-        struct iscsi_cmd *cmd;
-        struct kvec iov[3];
-        struct iscsi_text *hdr;
-@@ -1896,7 +1896,7 @@ static int iscsit_handle_text_cmd(
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 5599747..1466c93 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -181,7 +181,7 @@ struct se_tpg_np *lio_target_call_addnptotpg(
+                return ERR_PTR(-EOVERFLOW);
+        }
+        memset(buf, 0, MAX_PORTAL_LEN + 1);
+-       snprintf(buf, MAX_PORTAL_LEN, "%s", name);
++       snprintf(buf, MAX_PORTAL_LEN + 1, "%s", name);
  
-                padding = ((-payload_length) & 3);
-                if (padding != 0) {
--                       iov[niov].iov_base = cmd->pad_bytes;
-+                       iov[niov].iov_base = &pad_bytes;
-                        iov[niov++].iov_len  = padding;
-                        rx_size += padding;
-                        pr_debug("Receiving %u additional bytes"
-@@ -1917,7 +1917,7 @@ static int iscsit_handle_text_cmd(
-                if (conn->conn_ops->DataDigest) {
-                        iscsit_do_crypto_hash_buf(&conn->conn_rx_hash,
-                                        text_in, text_length,
--                                       padding, cmd->pad_bytes,
-+                                       padding, (u8 *)&pad_bytes,
-                                        (u8 *)&data_crc);
+        memset(&sockaddr, 0, sizeof(struct __kernel_sockaddr_storage));
  
-                        if (checksum != data_crc) {
 
 
