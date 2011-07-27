@@ -1,62 +1,52 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 07/10] libfc: Remove the reference to FCP packet from
- scsi_cmnd in case of error
-Date: Wed, 27 Jul 2011 15:10:54 -0700
-Message-ID: <20110727221054.23675.14885.stgit@localhost6.localdomain6>
+Subject: [PATCH 08/10] libfc: fix warn on in lport retry
+Date: Wed, 27 Jul 2011 15:11:00 -0700
+Message-ID: <20110727221100.23675.26287.stgit@localhost6.localdomain6>
 References: <20110727221018.23675.3551.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56632 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:46982 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755668Ab1G0WKz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2011 18:10:55 -0400
+	id S1755949Ab1G0WLC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jul 2011 18:11:02 -0400
 In-Reply-To: <20110727221018.23675.3551.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Neerav Parikh <Neerav.Parikh@intel.com>
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Vasu Dev <vasu.dev@intel.com>
 
-From: Neerav Parikh <Neerav.Parikh@intel.com>
+From: Vasu Dev <vasu.dev@intel.com>
 
-fc_queuecommand() allocates an FCP packet for each SCSI command and sends
-it out on the wire. In the process it stores the reference to the FCP packet
-in the scsi_cmnd structure.
-Now, in case under stress testing the libfc exchange layer runs out of
-exchanges the fc_queuecommand() may not be able to send out commands out on
-the wire. In such a scenario if there is an error in sending the FCP packet
-out the wire; fc_queuecommand() deletes the FCP packet from internal queue,
-releases the FCP packet and returns a SCSI_MLQUEUE_HOST_BUSY status to the
-scsi-ml. But, the reference to the FCP packet set in the scsi_cmnd is not
-removed from the scsi_cmnd in this code path.
+The lport retry timer hits warn on in case
+it has become ready in response from fip
+login from fcoe_ctlr_flogi_send(), this is
+possible but safe code path, therefore
+removing this warn on.
 
-This might lead to a crash under stress testing where the scsi_cmnd failed by
-fc_queuecommand() comes up to fc_eh_abort() via scsi eh thread. fc_eh_abort()
-will get reference to the FCP packet to be aborted from the scsi_cmnd for
-further FCP abort related processing and then try to release the FCP packet
-that has already been released.
+Jun 22 03:16:30 10.0.16.6 [488198.316517] host3: Assigned Port ID 180f02
+Jun 22 03:16:32 10.0.16.6 [488200.091561] ------------[ cut here ]------------
+Jun 22 03:16:32 10.0.16.6 [488200.091586] WARNING: at
+drivers/scsi/libfc/fc_lport.c:1355 fc_lport_timeout+0xd9/0xe0 [libfc]()
 
-This patch removes the FCP packet reference from the scsi_cmnd before returning
-back from fc_queuecommand() in case of an error in sending out the FCP packet.
-
-Signed-off-by: Neerav Parikh <Neerav.Parikh@intel.com>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/libfc/fc_lport.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 14dd121..afb63c8 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1084,6 +1084,7 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
- 	rc = lport->tt.fcp_cmd_send(lport, fsp, fc_fcp_recv);
- 	if (unlikely(rc)) {
- 		spin_lock_irqsave(&si->scsi_queue_lock, flags);
-+		fsp->cmd->SCp.ptr = NULL;
- 		list_del(&fsp->list);
- 		spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
- 	}
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e008b16..e55ed9c 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1352,7 +1352,6 @@ static void fc_lport_timeout(struct work_struct *work)
+ 		WARN_ON(1);
+ 		break;
+ 	case LPORT_ST_READY:
+-		WARN_ON(1);
+ 		break;
+ 	case LPORT_ST_RESET:
+ 		break;
 
