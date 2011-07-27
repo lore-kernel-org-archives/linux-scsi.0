@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 05/10] libfc: two minor changes in comments
-Date: Wed, 27 Jul 2011 15:10:44 -0700
-Message-ID: <20110727221044.23675.61830.stgit@localhost6.localdomain6>
+Subject: [PATCH 06/10] libfc: cleanup sending SRR request
+Date: Wed, 27 Jul 2011 15:10:49 -0700
+Message-ID: <20110727221049.23675.73918.stgit@localhost6.localdomain6>
 References: <20110727221018.23675.3551.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:24862 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:56632 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756017Ab1G0WKo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2011 18:10:44 -0400
+	id S1755398Ab1G0WKu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jul 2011 18:10:50 -0400
 In-Reply-To: <20110727221018.23675.3551.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,37 +19,31 @@ Cc: Hillf Danton <dhillf@gmail.com>
 
 From: Hillf Danton <dhillf@gmail.com>
 
-One change is to cleanup typo in comment for fc_fcp_recv(), another corrects
-the misleading comment for fc_fcp_abts_resp().
+The variable on stack, namely cdb_op, is not used but removed.
 
 [ Patch reworked by Robert Love due to invalid patch format ]
 
 Signed-off-by: Hillf Danton <dhillf@gmail.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 41f7070..57311d0 100644
+index 57311d0..14dd121 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -690,7 +690,7 @@ static int fc_fcp_send_data(struct fc_fcp_pkt *fsp, struct fc_seq *seq,
- }
+@@ -1645,12 +1645,10 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 	struct fc_seq *seq;
+ 	struct fcp_srr *srr;
+ 	struct fc_frame *fp;
+-	u8 cdb_op;
+ 	unsigned int rec_tov;
  
- /**
-- * fc_fcp_abts_resp() - Send an ABTS response
-+ * fc_fcp_abts_resp() - Receive an ABTS response
-  * @fsp: The FCP packet that is being aborted
-  * @fp:	 The response frame
-  */
-@@ -730,7 +730,7 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- }
+ 	rport = fsp->rport;
+ 	rpriv = rport->dd_data;
+-	cdb_op = fsp->cdb_cmd.fc_cdb[0];
  
- /**
-- * fc_fcp_recv() - Reveive an FCP frame
-+ * fc_fcp_recv() - Receive an FCP frame
-  * @seq: The sequence the frame is on
-  * @fp:	 The received frame
-  * @arg: The related FCP packet
+ 	if (!(rpriv->flags & FC_RP_FLAGS_RETRY) ||
+ 	    rpriv->rp_state != RPORT_ST_READY)
 
