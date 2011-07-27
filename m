@@ -1,16 +1,16 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH RESEND v2 9/9] bnx2fc: Update copyright and bump version
- to 1.0.4
-Date: Wed, 27 Jul 2011 11:32:13 -0700
-Message-ID: <1311791533-27745-10-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH RESEND v2 7/9] bnx2fc: Do not arm CQ when there are no
+ CQEs
+Date: Wed, 27 Jul 2011 11:32:11 -0700
+Message-ID: <1311791533-27745-8-git-send-email-bprakash@broadcom.com>
 References: <1311791533-27745-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1110 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1126 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754757Ab1G0Sci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754759Ab1G0Sci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 27 Jul 2011 14:32:38 -0400
 In-Reply-To: <1311791533-27745-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -20,110 +20,26 @@ Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, devel@open-fcoe.org, Bhanu Prakash
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |    4 ++--
- drivers/scsi/bnx2fc/bnx2fc_els.c  |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    4 ++--
- drivers/scsi/bnx2fc/bnx2fc_hwi.c  |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_io.c   |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_tgt.c  |    2 +-
- 6 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index b1b0b3e..42228ca 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -2,7 +2,7 @@
- #define _BNX2FC_H_
- /* bnx2fc.h: Broadcom NetXtreme II Linux FCoE offload driver.
-  *
-- * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ * Copyright (c) 2008 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -62,7 +62,7 @@
- #include "bnx2fc_constants.h"
- 
- #define BNX2FC_NAME		"bnx2fc"
--#define BNX2FC_VERSION		"1.0.3"
-+#define BNX2FC_VERSION		"1.0.4"
- 
- #define PFX			"bnx2fc: "
- 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
-index 296c6aa..d66dcbd 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_els.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
-@@ -3,7 +3,7 @@
-  * This file contains helper routines that handle ELS requests
-  * and responses.
-  *
-- * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ * Copyright (c) 2008 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 78e136f..833e912 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -3,7 +3,7 @@
-  * cnic modules to create FCoE instances, send/receive non-offloaded
-  * FIP/FCoE packets, listen to link events etc.
-  *
-- * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ * Copyright (c) 2008 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
- 
- #define DRV_MODULE_NAME		"bnx2fc"
- #define DRV_MODULE_VERSION	BNX2FC_VERSION
--#define DRV_MODULE_RELDATE	"Jun 10, 2011"
-+#define DRV_MODULE_RELDATE	"Jun 23, 2011"
- 
- 
- static char version[] __devinitdata =
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index ec89359..72cfb14 100644
+index 9f38c57..357a63d 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -2,7 +2,7 @@
-  * This file contains the code that low level functions that interact
-  * with 57712 FCoE firmware.
-  *
-- * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ * Copyright (c) 2008 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 7154c44..6cc3789 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1,7 +1,7 @@
- /* bnx2fc_io.c: Broadcom NetXtreme II Linux FCoE offload driver.
-  * IO manager and SCSI IO processing.
-  *
-- * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ * Copyright (c) 2008 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index 7eff269..d5311b5 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -2,7 +2,7 @@
-  * Handles operations such as session offload/upload etc, and manages
-  * session resources such as connection id and qp resources.
-  *
-- * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ * Copyright (c) 2008 - 2011 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
+@@ -1070,8 +1070,10 @@ unlock:
+ 				1 - tgt->cq_curr_toggle_bit;
+ 		}
+ 	}
+-	bnx2fc_arm_cq(tgt);
+-	atomic_add(num_free_sqes, &tgt->free_sqes);
++	if (num_free_sqes) {
++		bnx2fc_arm_cq(tgt);
++		atomic_add(num_free_sqes, &tgt->free_sqes);
++	}
+ 	spin_unlock_bh(&tgt->cq_lock);
+ 	return 0;
+ }
 -- 
 1.7.0.6
 
