@@ -1,63 +1,49 @@
 From: Dan Carpenter <error27@gmail.com>
-Subject: [smatch stuff] target: uninitialized variable in
- iscsit_handle_text_cmd()
-Date: Wed, 27 Jul 2011 14:12:30 +0300
-Message-ID: <20110727111230.GO3824@shale.localdomain>
+Subject: [smatch stuff] iscsi-target: string size issue in
+ lio_target_call_addnptotpg()
+Date: Wed, 27 Jul 2011 14:34:50 +0300
+Message-ID: <20110727113450.GA7382@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yi0-f46.google.com ([209.85.218.46]:45202 "EHLO
-	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754582Ab1G0LO1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 07:14:27 -0400
-Received: by yia27 with SMTP id 27so922851yia.19
-        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2011 04:14:27 -0700 (PDT)
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:49830 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752099Ab1G0Lgy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 07:36:54 -0400
+Received: by pzk37 with SMTP id 37so2578505pzk.1
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2011 04:36:54 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>
 
-There is an uninitialized variable in iscsit_handle_text_cmd().  I'm
-not sure why gcc doesn't complain...
+Smatch complains about the string handling in lio_target_call_addnptotpg().
 
-drivers/target/iscsi/iscsi_target.c +1899 iscsit_handle_text_cmd(46)
-	error: potentially derefencing uninitialized 'cmd'.
+drivers/target/iscsi/iscsi_target_configfs.c +184 lio_target_call_addnptotpg(21)
+	error: snprintf() chops off the last chars of 'name': 257 vs 256
 
-  1898                  if (padding != 0) {
-  1899                          iov[niov].iov_base = cmd->pad_bytes;
-                                                     ^^^^^
+   176          char buf[MAX_PORTAL_LEN + 1];
 
-"cmd" hasn't been initialized here yet.
+	buffer holds 257 chars.
 
-  1900                          iov[niov++].iov_len  = padding;
-  1901                          rx_size += padding;
-  1902                          pr_debug("Receiving %u additional bytes"
-  1903                                          " for padding.\n", padding);
-  1904                  }
-  1905                  if (conn->conn_ops->DataDigest) {
-  1906                          iov[niov].iov_base      = &checksum;
-  1907                          iov[niov++].iov_len     = ISCSI_CRC_LEN;
-  1908                          rx_size += ISCSI_CRC_LEN;
-  1909                  }
-  1910  
-  1911                  rx_got = rx_data(conn, &iov[0], niov, rx_size);
-  1912                  if (rx_got != rx_size) {
-  1913                          kfree(text_in);
-  1914                          return -1;
-  1915                  }
-  1916  
-  1917                  if (conn->conn_ops->DataDigest) {
-  1918                          iscsit_do_crypto_hash_buf(&conn->conn_rx_hash,
-  1919                                          text_in, text_length,
-  1920                                          padding, cmd->pad_bytes,
-                                                         ^^^^^
+   177  
+   178          if (strlen(name) > MAX_PORTAL_LEN) {
 
-Or here.
+	string is 256 chars plus NUL.  (257 chars).
 
-  1921                                          (u8 *)&data_crc);
-  1922  
+   179                  pr_err("strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
+   180                          (int)strlen(name), MAX_PORTAL_LEN);
+   181                  return ERR_PTR(-EOVERFLOW);
+   182          }
+   183          memset(buf, 0, MAX_PORTAL_LEN + 1);
+
+	set 257 chars to NULL.
+
+   184          snprintf(buf, MAX_PORTAL_LEN, "%s", name);
+
+	Copy 255 chars and write a NUL char to the second last char
+	in the buffer.  The last char is also NUL.
 
 regards,
 dan carpenter
-
