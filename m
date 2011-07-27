@@ -1,70 +1,54 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] [SCSI] libsas: remove expander from dev list on error
-Date: Wed, 27 Jul 2011 13:32:50 -0700
-Message-ID: <CAA9_cmc3RWUFsWkyO4qnTLbVTmcGv51Ab8LyJqJUbNHbnx0kCg@mail.gmail.com>
-References: <1311747048.72460.YahooMailNeo@web31810.mail.mud.yahoo.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 00/10] libfc, libfcoe and fcoe updates for scsi-misc
+Date: Wed, 27 Jul 2011 15:10:18 -0700
+Message-ID: <20110727221018.23675.3551.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:43123 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751838Ab1G0Ucv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 16:32:51 -0400
-In-Reply-To: <1311747048.72460.YahooMailNeo@web31810.mail.mud.yahoo.com>
+Received: from mga09.intel.com ([134.134.136.24]:44799 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755406Ab1G0WKT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jul 2011 18:10:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@Parallels.com" <JBottomley@parallels.com>, Jack Wang <jack_wang@usish.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Jul 26, 2011 at 11:10 PM, Luben Tuikov <ltuikov@yahoo.com> wrot=
-e:
-> If expander discovery fails (sas_discover_expander()),
-> remove the expander from the port device list
-> (sas_ex_discover_expander()), before freeing it. Else
-> the list is corrupted and, e.g., when we attempt to send
-> SMP commands to other devices, the kernel oopses.
->
-> Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
-> Reviewed-by: Jack Wang <jack_wang@usish.com>
-> ---
-> =A0drivers/scsi/libsas/sas_expander.c |=A0=A0=A0 3 +++
-> =A01 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas=
-/sas_expander.c
-> index 874e29d..f84084b 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -849,6 +849,9 @@ static struct domain_device *sas_ex_discover_expa=
-nder(
->
-> =A0=A0=A0=A0=A0=A0=A0 res =3D sas_discover_expander(child);
-> =A0=A0=A0=A0=A0=A0=A0 if (res) {
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 spin_lock_irq(&parent->po=
-rt->dev_list_lock);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 list_del(&child->dev_list=
-_node);
-> +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 spin_unlock_irq(&parent->=
-port->dev_list_lock);
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 kfree(child);
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return NULL;
+This series consists of updates for the libfc, libfcoe
+and fcoe modules. There are no features in this series,
+only bug fixes.
 
-Acked-by: Dan Williams <dan.j.williams@intel.com>
+It would be great if this code could be merged for the
+3.1 merge window.
 
-=2E..but it raises a couple questions for potential follow on patches:
+---
 
-1/ Do we need to add the device to port->dev_list prior to the
-discovery?  Seems cleaner to defer the list_add until after the
-discovery has succeeded.
+Hillf Danton (4):
+      libfc: use FC_MAX_ERROR_CNT
+      libfc: release exchg cache
+      libfc: two minor changes in comments
+      libfc: cleanup sending SRR request
 
-2/ We have unlocked list manipulations in sas_ex_discover_end_dev(),
-sas_unregister_common_dev(), and sas_ex_discover_end_dev()
+Neerav Parikh (1):
+      libfc: Remove the reference to FCP packet from scsi_cmnd in case of error
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vasu Dev (4):
+      libfc, fcoe: ignore rx frame with wrong xid info
+      libfc: fix warn on in lport retry
+      fcoe: add fip retry to avoid missing critical keep alive
+      fcoe: cleanup cpu selection for incoming requests
+
+Yi Zou (1):
+      fcoe: remove unused ptype field in fcoe_rcv_info
+
+
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    1 -
+ drivers/scsi/fcoe/fcoe.c          |   69 +++++++++++++++++--------------------
+ drivers/scsi/libfc/fc_exch.c      |    9 +++--
+ drivers/scsi/libfc/fc_fcp.c       |    9 ++---
+ drivers/scsi/libfc/fc_lport.c     |    1 -
+ include/scsi/fc_frame.h           |    1 -
+ 6 files changed, 41 insertions(+), 49 deletions(-)
+
+-- 
+Thanks, //Rob
