@@ -1,34 +1,35 @@
 From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] iscsi-target: NULL dereference on allocation failure
-Date: Wed, 27 Jul 2011 12:58:17 +0300
-Message-ID: <20110727095817.GM3824@shale.localdomain>
+Subject: [patch] target: strlen() doesn't count the terminator
+Date: Wed, 27 Jul 2011 14:11:43 +0300
+Message-ID: <20110727111143.GN3824@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:48100 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752252Ab1G0KAR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 06:00:17 -0400
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:58816 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525Ab1G0LNm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jul 2011 07:13:42 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-The "goto out" path dereferences "login" which is NULL.
+This test is off by one because the NUL terminator isn't taken into
+consideration.
 
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
-index 713a4d2..4d087ac 100644
---- a/drivers/target/iscsi/iscsi_target_nego.c
-+++ b/drivers/target/iscsi/iscsi_target_nego.c
-@@ -978,7 +978,7 @@ struct iscsi_login *iscsi_target_init_negotiation(
- 		pr_err("Unable to allocate memory for struct iscsi_login.\n");
- 		iscsit_tx_login_rsp(conn, ISCSI_STATUS_CLS_TARGET_ERR,
- 				ISCSI_LOGIN_STATUS_NO_RESOURCES);
--		goto out;
-+		return NULL;
- 	}
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 494bfa4..4793875 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -120,7 +120,7 @@ struct iscsi_tiqn *iscsit_add_tiqn(unsigned char *buf)
+ 	struct iscsi_tiqn *tiqn = NULL;
+ 	int ret;
  
- 	login->req = kzalloc(ISCSI_HDR_LEN, GFP_KERNEL);
+-	if (strlen(buf) > ISCSI_IQN_LEN) {
++	if (strlen(buf) >= ISCSI_IQN_LEN) {
+ 		pr_err("Target IQN exceeds %d bytes\n",
+ 				ISCSI_IQN_LEN);
+ 		return ERR_PTR(-EINVAL);
