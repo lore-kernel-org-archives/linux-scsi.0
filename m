@@ -1,59 +1,38 @@
-From: "Lathrop Zachary" <support@westernunion.com>
-Subject: PAYMENT
-Date: Thu, 28 Jul 2011 05:29:51 -0400
-Message-ID: <20110728092951.0bee5389@mail.newarka.edu>
-Reply-To: wumt89811@hotmail.com
+From: Fubo Chen <fubo.chen@gmail.com>
+Subject: Re: [PATCH 12/13] iscsi-target: Add misc utility logic
+Date: Thu, 28 Jul 2011 13:30:33 +0200
+Message-ID: <CAJAFBLCJVLA7RwmVBUPobzqV+j5T5GoV=uRoRqUDuQkJn41Qpw@mail.gmail.com>
+References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
+	<1311410747-29947-13-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aob111.obsmtp.com ([74.125.245.89]:38412 "HELO
-	na3sys010aob111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751838Ab1G1KRC convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 06:17:02 -0400
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:38294 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755348Ab1G1Lae convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 07:30:34 -0400
+In-Reply-To: <1311410747-29947-13-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-How are you today?
+On Sat, Jul 23, 2011 at 10:45 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> +static int iscsit_do_rx_data(
+> + =A0 =A0 =A0 struct iscsi_conn *conn,
+> + =A0 =A0 =A0 struct iscsi_data_count *count)
+> +{
+> + =A0 =A0 =A0 int data =3D count->data_length, rx_loop =3D 0, total_r=
+x =3D 0, iov_len;
+> + =A0 =A0 =A0 u32 rx_marker_val[count->ss_marker_count], rx_marker_io=
+v =3D 0;
+> + =A0 =A0 =A0 struct kvec iov[count->ss_iov_count], *iov_p;
 
-I write to inform you that we have already sent you $5,000.00USD throug=
-h Western Union as we have been given the mandate to transfer your full=
- compensation payment of $1.800, 000.00USD via Western Union Money Tran=
-sfer by the United Nations (ECOWAS). This is because the United Nations=
- and (ECOWAS) are supporting individuals due to the worldwide economy m=
-eltdown.
+How big can count->ss_iov_count be ? Can this make a stack overflow ?
 
-I would have requested for your phone number to give you the informatio=
-n through phone but Internet hackers were many. So i decided to email y=
-ou the MTCN and sender name so that you can pick up this $5,000.00USD t=
-o enable us send another $5,000.00USD by tomorrow as you know that we w=
-ill be sending you only $5,000.00USD per day. The fund was sent in the =
-name which you use in opening your e-mail address.
-
-Please pick up this information and rush to any Western Union to pick u=
-p the $5,000.00USD and send us an email back to enable us send you anot=
-her payment by tomorrow.
-
-Below is the western union information to pick up the USD5000.00 to pic=
-k up.
-
-Payment Information.
-MTCN: _______________353-825-6557
-Sender's Name: _________Brenda Martin
-Text Question: __________How Long
-Answer: _______________Immediately
-Amount Sent___________$5000.00USD
-Country: _______________Nigeria
-
-Email me once you picked up this USD5000.00 today.
-
-Announcer: Lathrop Zachary.
-
-Thanks
-Mrs. Anita Daniel.
-Email: wumt.viapaying11@yahoo.com.hk
-=C2=AEWestern Union Office.
+=46ubo.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
