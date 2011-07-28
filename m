@@ -1,128 +1,166 @@
-From: David Miller <davem@davemloft.net>
-Subject: [PATCH 2/2] mpt2sas: Fix various endianness errors.
-Date: Wed, 27 Jul 2011 23:20:49 -0700 (PDT)
-Message-ID: <20110727.232049.2024679456518886642.davem@davemloft.net>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH] [SCSI] libsas: Allow expander T-T attachments
+Date: Thu, 28 Jul 2011 14:46:04 +0800
+Message-ID: <53763DE9A1F742C9A192F448132FCBD4@usish.com.cn>
+References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:50244 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754352Ab1G1GUw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 02:20:52 -0400
+Received: from sr-smtp.usish.com ([210.5.144.203]:39940 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026Ab1G1GqO convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 02:46:14 -0400
+In-Reply-To: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Kashyap.Desai@lsi.com, eric.moore@lsi.com
+To: 'Luben Tuikov' <ltuikov@yahoo.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@Parallels.com
 
+>=20
+> Allow expander table-to-table attachments for
+> expanders that support it.
+>=20
+> Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+> ---
+> =A0drivers/scsi/libsas/sas_expander.c |=A0=A0 20 ++++++++++++++------
+> =A0include/scsi/libsas.h=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 |=A0=A0=
+=A0 3 +++
+> =A0include/scsi/sas.h=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+ |=A0=A0 14 ++++++++++++--
+> =A03 files changed, 29 insertions(+), 8 deletions(-)
+>=20
+> diff --git a/drivers/scsi/libsas/sas_expander.c
+> b/drivers/scsi/libsas/sas_expander.c
+> index f84084b..e8d0115 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -329,6 +329,7 @@ static void ex_assign_report_general(struct
+domain_device
+> *dev,
+> =A0=A0=A0=A0 dev->ex_dev.ex_change_count =3D be16_to_cpu(rg->change_c=
+ount);
+> =A0=A0=A0=A0 dev->ex_dev.max_route_indexes =3D be16_to_cpu(rg->route_=
+indexes);
+> =A0=A0=A0=A0 dev->ex_dev.num_phys =3D min(rg->num_phys, (u8)MAX_EXPAN=
+DER_PHYS);
+> +=A0=A0=A0 dev->ex_dev.t2t_supp =3D rg->t2t_supp;
+> =A0=A0=A0=A0 dev->ex_dev.conf_route_table =3D rg->conf_route_table;
+> =A0=A0=A0=A0 dev->ex_dev.configuring =3D rg->configuring;
+> =A0=A0=A0=A0 memcpy(dev->ex_dev.enclosure_logical_id, rg->enclosure_l=
+ogical_id,
+> 8);
+> @@ -1133,15 +1134,17 @@ static void sas_print_parent_topology_bug(str=
+uct
+> domain_device *child,
+> =A0=A0=A0=A0 };
+> =A0=A0=A0=A0 struct domain_device *parent =3D child->parent;
+>=20
+> -=A0=A0=A0 sas_printk("%s ex %016llx phy 0x%x <--> %s ex %016llx phy =
+0x%x "
+> -=A0=A0=A0 =A0=A0=A0 =A0=A0 "has %c:%c routing link!\n",
+> +=A0=A0=A0 sas_printk("%s ex %016llx (T2T supp:%d) phy 0x%x <--> %s e=
+x %016llx "
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0 "(T2T supp:%d) phy 0x%x has %c:%c routing=
+ link!\n",
+>=20
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 ex_type[parent->dev_type],
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 SAS_ADDR(parent->sas_addr),
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0 parent->ex_dev.t2t_supp,
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 parent_phy->phy_id,
+>=20
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 ex_type[child->dev_type],
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 SAS_ADDR(child->sas_addr),
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0 child->ex_dev.t2t_supp,
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 child_phy->phy_id,
+>=20
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 ra_char[parent_phy->routing_attr],
+> @@ -1238,10 +1241,15 @@ static int sas_check_parent_topology(struct
+> domain_device *child)
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent=
+_topology_bug(child, parent_phy,
+> child_phy);
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
+> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else if (parent_phy->routing_attr =3D=
+=3D TABLE_ROUTING &&
+> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0 child_phy->routing_at=
+tr !=3D SUBTRACTIVE_ROUTING) {
+> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent_topology_bu=
+g(child, parent_phy,
+> child_phy);
+> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else if (parent_phy->routing_attr =3D=
+=3D TABLE_ROUTING) {
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 if (child_phy->routing_attr =
+=3D=3D SUBTRACTIVE_ROUTING ||
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 (child_phy->routin=
+g_attr =3D=3D TABLE_ROUTING &&
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0=A0 child_ex->t2t_s=
+upp && parent_ex->t2t_supp)) {
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 /* All good */;
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else {
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent_t=
+opology_bug(child, parent_phy,
+> child_phy);
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
+> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 break;
+> =A0=A0=A0=A0 =A0=A0=A0 case FANOUT_DEV:
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index ee86606..793f80b 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -142,8 +142,11 @@ struct expander_device {
+> =A0=A0=A0=A0 u16=A0=A0=A0 ex_change_count;
+> =A0=A0=A0=A0 u16=A0=A0=A0 max_route_indexes;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0 num_phys;
+> +
+> +=A0=A0=A0 u8=A0=A0=A0=A0 t2t_supp:1;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0 configuring:1;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0 conf_route_table:1;
+> +
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0 enclosure_logical_id[8];
+>=20
+> =A0=A0=A0=A0 struct ex_phy *ex_phy;
+> diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+> index e9fd022..f59f182 100644
+> --- a/include/scsi/sas.h
+> +++ b/include/scsi/sas.h
+> @@ -341,7 +341,12 @@ struct report_general_resp {
+>=20
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 conf_route_table:1;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 configuring:1;
+> -=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_b:6;
+> +=A0=A0=A0 u8=A0=A0=A0 config_others:1;
+> +=A0=A0=A0 u8=A0=A0=A0 orej_retry_supp:1;
+> +=A0=A0=A0 u8=A0=A0=A0 stp_cont_awt:1;
+> +=A0=A0=A0 u8=A0=A0=A0 self_config:1;
+> +=A0=A0=A0 u8=A0=A0=A0 zone_config:1;
+> +=A0=A0=A0 u8=A0=A0=A0 t2t_supp:1;
+>=20
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_c;
+>=20
+> @@ -528,7 +533,12 @@ struct report_general_resp {
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_a;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 num_phys;
+>=20
+> -=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_b:6;
+> +=A0=A0=A0 u8=A0=A0=A0 t2t_supp:1;
+> +=A0=A0=A0 u8=A0=A0=A0 zone_config:1;
+> +=A0=A0=A0 u8=A0=A0=A0 self_config:1;
+> +=A0=A0=A0 u8=A0=A0=A0 stp_cont_awt:1;
+> +=A0=A0=A0 u8=A0=A0=A0 orej_retry_supp:1;
+> +=A0=A0=A0 u8=A0=A0=A0 config_others:1;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 configuring:1;
+> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 conf_route_table:1;
+>=20
 
-1) Manufacturing page 10's OEMSpecificFlags0 is 32-bit little endian, access
-   with le32_to_cpu().
+[Jack Wang] Looks nice to me ,thanks for doing this.
+Reviewed-by: Jack Wang <jack_wang@usish.com>
 
-2) PD Page 0's DevHandle is 16-bit little endian, access with le16_to_cpu().
-
-3) PrimaryReferenceTag is little, not big endian, 32-bit.
-
-4) SAS IO-Unit Page 1 timeouts are 8-bit, so do not run them through
-   le16_to_cpu().
-
-5) In _scsih_add_device() and _scsih_search_responding_sas_devices(), the
-   local variable "sas_address" holds cpu-endian values, so use "u64"
-   to declare it instead of __le64.
-
-6) In mpt2sas_scsih_event_callback, case MPI2_EVENT_LOG_ENTRY_ADDED, the
-   log_code area holds 32-bit little-endian values and is accessed as
-   such, therefore declare log_code as __le32 instead of u32.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c  |    2 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |   18 ++++++++----------
- 2 files changed, 9 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 543cd07..830e357 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -3781,7 +3781,7 @@ _base_make_ioc_operational(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
- 
- 	if (ioc->wait_for_port_enable_to_complete && ioc->is_warpdrive) {
- 		if (ioc->manu_pg10.OEMIdentifier  == 0x80) {
--			hide_flag = (u8) (ioc->manu_pg10.OEMSpecificFlags0 &
-+			hide_flag = (u8) (le32_to_cpu(ioc->manu_pg10.OEMSpecificFlags0) &
- 			    MFG_PAGE10_HIDE_SSDS_MASK);
- 			if (hide_flag != MFG_PAGE10_HIDE_SSDS_MASK)
- 				ioc->mfg_pg10_hide_flag = hide_flag;
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 939f283..26a7156 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -1784,7 +1784,7 @@ _scsih_init_warpdrive_properties(struct MPT2SAS_ADAPTER *ioc,
- 		if (mpt2sas_config_get_phys_disk_pg0(ioc, &mpi_reply,
- 		    &pd_pg0, MPI2_PHYSDISK_PGAD_FORM_PHYSDISKNUM,
- 		    vol_pg0->PhysDisk[count].PhysDiskNum) ||
--		    pd_pg0.DevHandle == MPT2SAS_INVALID_DEVICE_HANDLE) {
-+		    le16_to_cpu(pd_pg0.DevHandle) == MPT2SAS_INVALID_DEVICE_HANDLE) {
- 			printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is "
- 			    "disabled for the drive with handle(0x%04x) member"
- 			    "handle retrieval failed for member number=%d\n",
-@@ -3577,7 +3577,7 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
- 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
- 		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
--		    cpu_to_be32(scsi_get_lba(scmd));
-+		    cpu_to_le32(scsi_get_lba(scmd));
- 		break;
- 
- 	case SCSI_PROT_DIF_TYPE3:
-@@ -4573,10 +4573,8 @@ _scsih_sas_host_add(struct MPT2SAS_ADAPTER *ioc)
- 		goto out;
- 	}
- 
--	ioc->io_missing_delay =
--	    le16_to_cpu(sas_iounit_pg1->IODeviceMissingDelay);
--	device_missing_delay =
--	    le16_to_cpu(sas_iounit_pg1->ReportDeviceMissingDelay);
-+	ioc->io_missing_delay = sas_iounit_pg1->IODeviceMissingDelay;
-+	device_missing_delay = sas_iounit_pg1->ReportDeviceMissingDelay;
- 	if (device_missing_delay & MPI2_SASIOUNIT1_REPORT_MISSING_UNIT_16)
- 		ioc->device_missing_delay = (device_missing_delay &
- 		    MPI2_SASIOUNIT1_REPORT_MISSING_TIMEOUT_MASK) * 16;
-@@ -5010,7 +5008,7 @@ _scsih_add_device(struct MPT2SAS_ADAPTER *ioc, u16 handle, u8 phy_num, u8 is_pd)
- 	Mpi2SasEnclosurePage0_t enclosure_pg0;
- 	struct _sas_device *sas_device;
- 	u32 ioc_status;
--	__le64 sas_address;
-+	u64 sas_address;
- 	u32 device_info;
- 	unsigned long flags;
- 
-@@ -6501,7 +6499,7 @@ _scsih_search_responding_sas_devices(struct MPT2SAS_ADAPTER *ioc)
- 	Mpi2SasDevicePage0_t sas_device_pg0;
- 	Mpi2ConfigReply_t mpi_reply;
- 	u16 ioc_status;
--	__le64 sas_address;
-+	u64 sas_address;
- 	u16 handle;
- 	u32 device_info;
- 	u16 slot;
-@@ -7026,14 +7024,14 @@ mpt2sas_scsih_event_callback(struct MPT2SAS_ADAPTER *ioc, u8 msix_index,
- 	case MPI2_EVENT_LOG_ENTRY_ADDED:
- 	{
- 		Mpi2EventDataLogEntryAdded_t *log_entry;
--		u32 *log_code;
-+		__le32 *log_code;
- 
- 		if (!ioc->is_warpdrive)
- 			break;
- 
- 		log_entry = (Mpi2EventDataLogEntryAdded_t *)
- 		    mpi_reply->EventData;
--		log_code = (u32 *)log_entry->LogData;
-+		log_code = (__le32 __force *)log_entry->LogData;
- 
- 		if (le16_to_cpu(log_entry->LogEntryQualifier)
- 		    != MPT2_WARPDRIVE_LOGENTRY)
--- 
-1.7.6
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
