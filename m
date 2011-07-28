@@ -1,105 +1,50 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] [SCSI] libsas: Allow expander T-T attachments
-Date: Thu, 28 Jul 2011 07:52:05 +0000
-Message-ID: <1311839519.30253.16.camel@mulgrave>
-References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.39 merge window
+Date: Thu, 28 Jul 2011 12:49:39 +0400
+Message-ID: <1311842979.30253.29.camel@mulgrave>
+References: <1311441452.23720.17.camel@mulgrave>
+	 <20110723102719.a7f26008.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:47091 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755086Ab1G1IAU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 04:00:20 -0400
-In-Reply-To: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
-Content-Language: en-US
-Content-ID: <AA97DD317181294388FD61B018635A4F@sw.swsoft.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34609 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750734Ab1G1Ito (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2011 04:49:44 -0400
+In-Reply-To: <20110723102719.a7f26008.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-T24gV2VkLCAyMDExLTA3LTI3IGF0IDIxOjE5IC0wNzAwLCBMdWJlbiBUdWlrb3Ygd3JvdGU6DQo+
-IEFsbG93IGV4cGFuZGVyIHRhYmxlLXRvLXRhYmxlIGF0dGFjaG1lbnRzIGZvcg0KPiBleHBhbmRl
-cnMgdGhhdCBzdXBwb3J0IGl0Lg0KDQpUaGlzIGlzIGhhbGYgdGhlIGNvZGUgdG8gZG8gU0FTIDIu
-MCBleHBhbmRlcnMuICBZb3Ugc2VlbSB0byBoYXZlDQphZGRpdGlvbnMgZnJvbSB0aGUgb3RoZXIg
-aGFsZiAoc2VsZiBjb25maWd1cmluZyBleHBhbmRlcnMpIHNlZSBiZWxvdzsNCmRvZXMgdGhpcyBt
-ZWFuIHlvdSBoYXZlIGEgcGF0Y2ggZm9yIHNlbGYgY29uZmlndXJpbmcgZXhwYW5kZXJzIGluIHRo
-ZQ0Kd29ya3M/DQoNCj4gU2lnbmVkLW9mZi1ieTogTHViZW4gVHVpa292IDxsdHVpa292QHlhaG9v
-LmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRlci5jIHwgICAy
-MCArKysrKysrKysrKysrKy0tLS0tLQ0KPiAgaW5jbHVkZS9zY3NpL2xpYnNhcy5oICAgICAgICAg
-ICAgICB8ICAgIDMgKysrDQo+ICBpbmNsdWRlL3Njc2kvc2FzLmggICAgICAgICAgICAgICAgIHwg
-ICAxNCArKysrKysrKysrKystLQ0KPiAgMyBmaWxlcyBjaGFuZ2VkLCAyOSBpbnNlcnRpb25zKCsp
-LCA4IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9saWJzYXMv
-c2FzX2V4cGFuZGVyLmMgYi9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRlci5jDQo+IGlu
-ZGV4IGY4NDA4NGIuLmU4ZDAxMTUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9saWJzYXMv
-c2FzX2V4cGFuZGVyLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfZXhwYW5kZXIu
-Yw0KPiBAQCAtMzI5LDYgKzMyOSw3IEBAIHN0YXRpYyB2b2lkIGV4X2Fzc2lnbl9yZXBvcnRfZ2Vu
-ZXJhbChzdHJ1Y3QgZG9tYWluX2RldmljZSAqZGV2LA0KPiAgICAgIGRldi0+ZXhfZGV2LmV4X2No
-YW5nZV9jb3VudCA9IGJlMTZfdG9fY3B1KHJnLT5jaGFuZ2VfY291bnQpOw0KPiAgICAgIGRldi0+
-ZXhfZGV2Lm1heF9yb3V0ZV9pbmRleGVzID0gYmUxNl90b19jcHUocmctPnJvdXRlX2luZGV4ZXMp
-Ow0KPiAgICAgIGRldi0+ZXhfZGV2Lm51bV9waHlzID0gbWluKHJnLT5udW1fcGh5cywgKHU4KU1B
-WF9FWFBBTkRFUl9QSFlTKTsNCj4gKyAgICBkZXYtPmV4X2Rldi50MnRfc3VwcCA9IHJnLT50MnRf
-c3VwcDsNCj4gICAgICBkZXYtPmV4X2Rldi5jb25mX3JvdXRlX3RhYmxlID0gcmctPmNvbmZfcm91
-dGVfdGFibGU7DQo+ICAgICAgZGV2LT5leF9kZXYuY29uZmlndXJpbmcgPSByZy0+Y29uZmlndXJp
-bmc7DQo+ICAgICAgbWVtY3B5KGRldi0+ZXhfZGV2LmVuY2xvc3VyZV9sb2dpY2FsX2lkLCByZy0+
-ZW5jbG9zdXJlX2xvZ2ljYWxfaWQsIDgpOw0KPiBAQCAtMTEzMywxNSArMTEzNCwxNyBAQCBzdGF0
-aWMgdm9pZCBzYXNfcHJpbnRfcGFyZW50X3RvcG9sb2d5X2J1ZyhzdHJ1Y3QgZG9tYWluX2Rldmlj
-ZSAqY2hpbGQsDQo+ICAgICAgfTsNCj4gICAgICBzdHJ1Y3QgZG9tYWluX2RldmljZSAqcGFyZW50
-ID0gY2hpbGQtPnBhcmVudDsNCj4gIA0KPiAtICAgIHNhc19wcmludGsoIiVzIGV4ICUwMTZsbHgg
-cGh5IDB4JXggPC0tPiAlcyBleCAlMDE2bGx4IHBoeSAweCV4ICINCj4gLSAgICAgICAgICAgImhh
-cyAlYzolYyByb3V0aW5nIGxpbmshXG4iLA0KPiArICAgIHNhc19wcmludGsoIiVzIGV4ICUwMTZs
-bHggKFQyVCBzdXBwOiVkKSBwaHkgMHgleCA8LS0+ICVzIGV4ICUwMTZsbHggIg0KPiArICAgICAg
-ICAgICAiKFQyVCBzdXBwOiVkKSBwaHkgMHgleCBoYXMgJWM6JWMgcm91dGluZyBsaW5rIVxuIiwN
-Cj4gIA0KPiAgICAgICAgICAgICBleF90eXBlW3BhcmVudC0+ZGV2X3R5cGVdLA0KPiAgICAgICAg
-ICAgICBTQVNfQUREUihwYXJlbnQtPnNhc19hZGRyKSwNCj4gKyAgICAgICAgICAgcGFyZW50LT5l
-eF9kZXYudDJ0X3N1cHAsDQo+ICAgICAgICAgICAgIHBhcmVudF9waHktPnBoeV9pZCwNCj4gIA0K
-PiAgICAgICAgICAgICBleF90eXBlW2NoaWxkLT5kZXZfdHlwZV0sDQo+ICAgICAgICAgICAgIFNB
-U19BRERSKGNoaWxkLT5zYXNfYWRkciksDQo+ICsgICAgICAgICAgIGNoaWxkLT5leF9kZXYudDJ0
-X3N1cHAsDQo+ICAgICAgICAgICAgIGNoaWxkX3BoeS0+cGh5X2lkLA0KPiAgDQo+ICAgICAgICAg
-ICAgIHJhX2NoYXJbcGFyZW50X3BoeS0+cm91dGluZ19hdHRyXSwNCj4gQEAgLTEyMzgsMTAgKzEy
-NDEsMTUgQEAgc3RhdGljIGludCBzYXNfY2hlY2tfcGFyZW50X3RvcG9sb2d5KHN0cnVjdCBkb21h
-aW5fZGV2aWNlICpjaGlsZCkNCj4gICAgICAgICAgICAgICAgICAgICAgc2FzX3ByaW50X3BhcmVu
-dF90b3BvbG9neV9idWcoY2hpbGQsIHBhcmVudF9waHksIGNoaWxkX3BoeSk7DQo+ICAgICAgICAg
-ICAgICAgICAgICAgIHJlcyA9IC1FTk9ERVY7DQo+ICAgICAgICAgICAgICAgICAgfQ0KPiAtICAg
-ICAgICAgICAgfSBlbHNlIGlmIChwYXJlbnRfcGh5LT5yb3V0aW5nX2F0dHIgPT0gVEFCTEVfUk9V
-VElORyAmJg0KPiAtICAgICAgICAgICAgICAgICAgIGNoaWxkX3BoeS0+cm91dGluZ19hdHRyICE9
-IFNVQlRSQUNUSVZFX1JPVVRJTkcpIHsNCj4gLSAgICAgICAgICAgICAgICBzYXNfcHJpbnRfcGFy
-ZW50X3RvcG9sb2d5X2J1ZyhjaGlsZCwgcGFyZW50X3BoeSwgY2hpbGRfcGh5KTsNCj4gLSAgICAg
-ICAgICAgICAgICByZXMgPSAtRU5PREVWOw0KPiArICAgICAgICAgICAgfSBlbHNlIGlmIChwYXJl
-bnRfcGh5LT5yb3V0aW5nX2F0dHIgPT0gVEFCTEVfUk9VVElORykgew0KPiArICAgICAgICAgICAg
-ICAgIGlmIChjaGlsZF9waHktPnJvdXRpbmdfYXR0ciA9PSBTVUJUUkFDVElWRV9ST1VUSU5HIHx8
-DQo+ICsgICAgICAgICAgICAgICAgICAgIChjaGlsZF9waHktPnJvdXRpbmdfYXR0ciA9PSBUQUJM
-RV9ST1VUSU5HICYmDQo+ICsgICAgICAgICAgICAgICAgICAgICBjaGlsZF9leC0+dDJ0X3N1cHAg
-JiYgcGFyZW50X2V4LT50MnRfc3VwcCkpIHsNCj4gKyAgICAgICAgICAgICAgICAgICAgLyogQWxs
-IGdvb2QgKi87DQo+ICsgICAgICAgICAgICAgICAgfSBlbHNlIHsNCj4gKyAgICAgICAgICAgICAg
-ICAgICAgc2FzX3ByaW50X3BhcmVudF90b3BvbG9neV9idWcoY2hpbGQsIHBhcmVudF9waHksIGNo
-aWxkX3BoeSk7DQo+ICsgICAgICAgICAgICAgICAgICAgIHJlcyA9IC1FTk9ERVY7DQo+ICsgICAg
-ICAgICAgICAgICAgfQ0KPiAgICAgICAgICAgICAgfQ0KPiAgICAgICAgICAgICAgYnJlYWs7DQo+
-ICAgICAgICAgIGNhc2UgRkFOT1VUX0RFVjoNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvc2NzaS9s
-aWJzYXMuaCBiL2luY2x1ZGUvc2NzaS9saWJzYXMuaA0KPiBpbmRleCBlZTg2NjA2Li43OTNmODBi
-IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL3Njc2kvbGlic2FzLmgNCj4gKysrIGIvaW5jbHVkZS9z
-Y3NpL2xpYnNhcy5oDQo+IEBAIC0xNDIsOCArMTQyLDExIEBAIHN0cnVjdCBleHBhbmRlcl9kZXZp
-Y2Ugew0KPiAgICAgIHUxNiAgICBleF9jaGFuZ2VfY291bnQ7DQo+ICAgICAgdTE2ICAgIG1heF9y
-b3V0ZV9pbmRleGVzOw0KPiAgICAgIHU4ICAgICBudW1fcGh5czsNCj4gKw0KPiArICAgIHU4ICAg
-ICB0MnRfc3VwcDoxOw0KPiAgICAgIHU4ICAgICBjb25maWd1cmluZzoxOw0KPiAgICAgIHU4ICAg
-ICBjb25mX3JvdXRlX3RhYmxlOjE7DQo+ICsNCj4gICAgICB1OCAgICAgZW5jbG9zdXJlX2xvZ2lj
-YWxfaWRbOF07DQo+ICANCj4gICAgICBzdHJ1Y3QgZXhfcGh5ICpleF9waHk7DQo+IGRpZmYgLS1n
-aXQgYS9pbmNsdWRlL3Njc2kvc2FzLmggYi9pbmNsdWRlL3Njc2kvc2FzLmgNCj4gaW5kZXggZTlm
-ZDAyMi4uZjU5ZjE4MiAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9zY3NpL3Nhcy5oDQo+ICsrKyBi
-L2luY2x1ZGUvc2NzaS9zYXMuaA0KPiBAQCAtMzQxLDcgKzM0MSwxMiBAQCBzdHJ1Y3QgcmVwb3J0
-X2dlbmVyYWxfcmVzcCB7DQo+ICANCj4gICAgICB1OCAgICAgIGNvbmZfcm91dGVfdGFibGU6MTsN
-Cj4gICAgICB1OCAgICAgIGNvbmZpZ3VyaW5nOjE7DQo+IC0gICAgdTggICAgICBfcl9iOjY7DQo+
-ICsgICAgdTggICAgY29uZmlnX290aGVyczoxOw0KPiArICAgIHU4ICAgIG9yZWpfcmV0cnlfc3Vw
-cDoxOw0KPiArICAgIHU4ICAgIHN0cF9jb250X2F3dDoxOw0KPiArICAgIHU4ICAgIHNlbGZfY29u
-ZmlnOjE7DQo+ICsgICAgdTggICAgem9uZV9jb25maWc6MTsNCj4gKyAgICB1OCAgICB0MnRfc3Vw
-cDoxOw0KDQo+ICAgICAgdTggICAgICBfcl9jOw0KPiAgDQo+IEBAIC01MjgsNyArNTMzLDEyIEBA
-IHN0cnVjdCByZXBvcnRfZ2VuZXJhbF9yZXNwIHsNCj4gICAgICB1OCAgICAgIF9yX2E7DQo+ICAg
-ICAgdTggICAgICBudW1fcGh5czsNCj4gIA0KPiAtICAgIHU4ICAgICAgX3JfYjo2Ow0KPiArICAg
-IHU4ICAgIHQydF9zdXBwOjE7DQo+ICsgICAgdTggICAgem9uZV9jb25maWc6MTsNCj4gKyAgICB1
-OCAgICBzZWxmX2NvbmZpZzoxOw0KPiArICAgIHU4ICAgIHN0cF9jb250X2F3dDoxOw0KPiArICAg
-IHU4ICAgIG9yZWpfcmV0cnlfc3VwcDoxOw0KPiArICAgIHU4ICAgIGNvbmZpZ19vdGhlcnM6MTsN
-Cj4gICAgICB1OCAgICAgIGNvbmZpZ3VyaW5nOjE7DQo+ICAgICAgdTggICAgICBjb25mX3JvdXRl
-X3RhYmxlOjE7DQo+ICANCg0KVGhlc2UgYXJlIGFsbCBTQVMyLjAgYWRkaXRpb25zIHRvIHRoZSBy
-ZXNlcnZlZCBmaWVsZHMsIGJ1dCB5b3Ugb25seSBtYWtlDQp1c2Ugb2Ygb25lIG9mIHRoZW0uDQoN
-CkphbWVzDQoNCg==
+On Sat, 2011-07-23 at 10:27 -0700, Randy Dunlap wrote:
+> On Sat, 23 Jul 2011 21:17:32 +0400 James Bottomley wrote:
+> 
+> > This represents the usual round of driver updates (fcoe, bfa, mpt2sas,
+> > iscsi, bnx2fc) plus a couple of fixes that didn't make 3.0 including the
+> > USB force eject oops.
+> > 
+> > The patch is available here:
+> > 
+> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> 
+> Hi James,
+> 
+> (please fix $subject)
+
+Hmm, reusability gone too far
+
+> What has happened to these 2 patches from 2011-June-21 ?
+> 
+> Subject: [PATCH] scsi: fix NCR_Q720 section mismatch warning
+> Subject: [PATCH] scsi: fix sim710 section mismatch warnings
+
+Ralf is reworking them.  Basically there's no point mucking with
+creating work via the endless sectional annotators in obsolete drivers,
+so he was just going to strip the annotations where they cause problems.
+
+James
+
+
