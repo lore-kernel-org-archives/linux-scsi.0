@@ -1,38 +1,50 @@
-From: Fubo Chen <fubo.chen@gmail.com>
-Subject: Re: [PATCH 10/13] iscsi-target: Add iSCSI Error Recovery Hierarchy support
-Date: Thu, 28 Jul 2011 13:42:11 +0200
-Message-ID: <CAJAFBLCgOeqnrPae+GQyjnoOUkF632Nrn4Bh-3d4K3KXCezbqw@mail.gmail.com>
-References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
-	<1311410747-29947-11-git-send-email-nab@linux-iscsi.org>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.39 merge window
+Date: Thu, 28 Jul 2011 08:55:08 -0700
+Message-ID: <20110728085508.e8e00efe.rdunlap@xenotime.net>
+References: <1311441452.23720.17.camel@mulgrave>
+	<20110723102719.a7f26008.rdunlap@xenotime.net>
+	<1311842979.30253.29.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1311410747-29947-11-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <1311842979.30253.29.camel@mulgrave>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Hannes Reinecke <hare@suse.de>, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jul 23, 2011 at 10:45 AM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> This patch adds support for RFC-3720 compatiable ErrorRecoveryLevel
-> support as defined in Section 6.1.5. =A0Error Recovery Hierarchy.
->
-> This includes support for iSCSI session reinstatement, iSCSI within
-> command and within connection recovery, and explict/implict connectio=
-n
-> recovery (CSM-E and CSM-I) from state machines in Section 7 of RFC-37=
-20.
->
-> These functions are called from iscsi_target.c to handle processing
-> based on the negotiated session-wide ErrorRecoveryLevel parameter.
->
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+On Thu, 28 Jul 2011 12:49:39 +0400 James Bottomley wrote:
 
-This is interesting. Is ERL2 similar to md ? If so, when should I use
-md and when ERL2 ?
+> On Sat, 2011-07-23 at 10:27 -0700, Randy Dunlap wrote:
+> > On Sat, 23 Jul 2011 21:17:32 +0400 James Bottomley wrote:
+> > 
+> > > This represents the usual round of driver updates (fcoe, bfa, mpt2sas,
+> > > iscsi, bnx2fc) plus a couple of fixes that didn't make 3.0 including the
+> > > USB force eject oops.
+> > > 
+> > > The patch is available here:
+> > > 
+> > > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> > 
+> > Hi James,
+> > 
+> > (please fix $subject)
+> 
+> Hmm, reusability gone too far
+> 
+> > What has happened to these 2 patches from 2011-June-21 ?
+> > 
+> > Subject: [PATCH] scsi: fix NCR_Q720 section mismatch warning
+> > Subject: [PATCH] scsi: fix sim710 section mismatch warnings
+> 
+> Ralf is reworking them.  Basically there's no point mucking with
+> creating work via the endless sectional annotators in obsolete drivers,
+> so he was just going to strip the annotations where they cause problems.
 
-Thanks,
+Thanks for the info.
 
-=46ubo.
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
