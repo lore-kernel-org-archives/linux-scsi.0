@@ -1,48 +1,75 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Fix WRITE_SAME_16 lba assignment breakage
-Date: Thu, 28 Jul 2011 05:00:09 +0000
-Message-ID: <1311829209-22961-1-git-send-email-nab@linux-iscsi.org>
+From: David Miller <davem@davemloft.net>
+Subject: [PATCH 1/2] mpt2sas: MSI-X vector table is ioremap()'d memory,
+ access it as such.
+Date: Wed, 27 Jul 2011 23:20:45 -0700 (PDT)
+Message-ID: <20110727.232045.1471353054008102231.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:43608 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751734Ab1G1FXs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 01:23:48 -0400
+Received: from shards.monkeyblade.net ([198.137.202.13]:50241 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856Ab1G1GUs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 02:20:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Andy Grover <agrover@redhat.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: linux-scsi@vger.kernel.org
+Cc: Kashyap.Desai@lsi.com, eric.moore@lsi.com
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a bug in WRITE_SAME_16 LBA assignment where get_unaligned_be16()
-is incorrectly being used instead of get_unaligned_be64() for a 64-bit LBA.
+The MSI-X vector table lives in ioremap() mapped memory, therefore it
+must be accessed using readl/writel and be annotated with __iomem.
 
-This was introduced with:
-
-commit 493457e1bb90e959f137ff317717a8cae77a0229
-Author: Andy Grover <agrover@redhat.com>
-Date:   Wed May 4 15:54:58 2011 -0700
-
-    target: inline struct se_transport_task into struct se_cmd
-
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Signed-off-by: David S. Miller <davem@davemloft.net>
 ---
- drivers/target/target_core_transport.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    6 +++---
+ drivers/scsi/mpt2sas/mpt2sas_base.h |    2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ebf56cd..3ccabc6 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3326,7 +3326,7 @@ static int transport_generic_cmd_sequencer(
- 			goto out_invalid_cdb_field;
- 		}
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 83035bd..543cd07 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1096,7 +1096,7 @@ _base_save_msix_table(struct MPT2SAS_ADAPTER *ioc)
+ 		return;
  
--		cmd->t_task_lba = get_unaligned_be16(&cdb[2]);
-+		cmd->t_task_lba = get_unaligned_be64(&cdb[2]);
- 		passthrough = (dev->transport->transport_type ==
- 				TRANSPORT_PLUGIN_PHBA_PDEV);
- 		/*
+ 	for (i = 0; i < ioc->msix_vector_count; i++)
+-		ioc->msix_table_backup[i] = ioc->msix_table[i];
++		ioc->msix_table_backup[i] = readl(&ioc->msix_table[i]);
+ }
+ 
+ /**
+@@ -1113,7 +1113,7 @@ _base_restore_msix_table(struct MPT2SAS_ADAPTER *ioc)
+ 		return;
+ 
+ 	for (i = 0; i < ioc->msix_vector_count; i++)
+-		ioc->msix_table[i] = ioc->msix_table_backup[i];
++		writel(ioc->msix_table_backup[i], &ioc->msix_table[i]);
+ }
+ 
+ /**
+@@ -1144,7 +1144,7 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	/* get msix table  */
+ 	pci_read_config_dword(ioc->pdev, base + 4, &msix_table_offset);
+ 	msix_table_offset &= 0xFFFFFFF8;
+-	ioc->msix_table = (u32 *)((void *)ioc->chip + msix_table_offset);
++	ioc->msix_table = (u32 __iomem *)((void __iomem *)ioc->chip + msix_table_offset);
+ 
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "msix is supported, "
+ 	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 8d5be21..9a88fb9 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -779,7 +779,7 @@ struct MPT2SAS_ADAPTER {
+ 
+ 	u8		msix_enable;
+ 	u16		msix_vector_count;
+-	u32		*msix_table;
++	u32 __iomem	*msix_table;
+ 	u32		*msix_table_backup;
+ 	u32		ioc_reset_count;
+ 
 -- 
-1.7.2.5
+1.7.6
 
