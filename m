@@ -1,67 +1,63 @@
 From: akpm@linux-foundation.org
-Subject: [patch 2/3] drivers/scsi/megaraid.c: fix sparse warnings
-Date: Thu, 28 Jul 2011 13:58:19 -0700
-Message-ID: <201107282058.p6SKwJPX008149@imap1.linux-foundation.org>
+Subject: [patch 3/3] drivers/scsi/aacraid/commctrl.c: fix mem leak in aac_send_raw_srb()
+Date: Thu, 28 Jul 2011 13:58:20 -0700
+Message-ID: <201107282058.p6SKwK97008152@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43218 "EHLO
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:33974 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754759Ab1G1U6W (ORCPT
+	by vger.kernel.org with ESMTP id S1754882Ab1G1U6X (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 16:58:22 -0400
+	Thu, 28 Jul 2011 16:58:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rdunlap@xenotime.net, megaraidlinux@lsi.com, viro@ZenIV.linux.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jj@chaosbits.net
 
-From: Randy Dunlap <rdunlap@xenotime.net>
+From: Jesper Juhl <jj@chaosbits.net>
 
-Fix sparse warnings of right shift bigger than source value size:
+We leak in drivers/scsi/aacraid/commctrl.c::aac_send_raw_srb() :
 
-drivers/scsi/megaraid.c:311:65: warning: right shift by bigger than source value
-drivers/scsi/megaraid.c:313:65: warning: right shift by bigger than source value
-drivers/scsi/megaraid.c:317:67: warning: right shift by bigger than source value
-drivers/scsi/megaraid.c:319:67: warning: right shift by bigger than source value
+We allocate memory:
+        ...
+                        struct user_sgmap* usg;
+                        usg = kmalloc(actual_fibsize - sizeof(struct aac_srb)
+                          + sizeof(struct sgmap), GFP_KERNEL);
+and then neglect to free it:
+        ...
+                        for (i = 0; i < usg->count; i++) {
+                                u64 addr;
+                                void* p;
+                                if (usg->sg[i].count >
+                                    ((dev->adapter_info.options &
+                                     AAC_OPT_NEW_COMM) ?
+                                      (dev->scsi_host_ptr->max_sectors << 9) :
+                                      65536)) {
+                                        rcode = -EINVAL;
+                                        goto cleanup;
+        ... this 'goto' makes 'usg' go out of scope and leak the memory we
+            allocated.
+            Other exits properly kfree(usg), it's just here it is neglected.
 
-Patch suggestion from email by Al Viro:
-
-"Since both are claimed to be strings, I really suspect that this >> 8 is
-misspelled >> 4 and they have a character followed by pair of two-digit
-packed decimals in there..."
-
-Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>
-Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/aacraid/commctrl.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings
-+++ a/drivers/scsi/megaraid.c
-@@ -310,15 +310,15 @@ mega_query_adapter(adapter_t *adapter)
- 	if (adapter->product_info.subsysvid == HP_SUBSYS_VID) {
- 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
- 			 adapter->product_info.fw_version[2],
--			 adapter->product_info.fw_version[1] >> 8,
-+			 adapter->product_info.fw_version[1] >> 4,
- 			 adapter->product_info.fw_version[1] & 0x0f,
--			 adapter->product_info.fw_version[0] >> 8,
-+			 adapter->product_info.fw_version[0] >> 4,
- 			 adapter->product_info.fw_version[0] & 0x0f);
- 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
- 			 adapter->product_info.bios_version[2],
--			 adapter->product_info.bios_version[1] >> 8,
-+			 adapter->product_info.bios_version[1] >> 4,
- 			 adapter->product_info.bios_version[1] & 0x0f,
--			 adapter->product_info.bios_version[0] >> 8,
-+			 adapter->product_info.bios_version[0] >> 4,
- 			 adapter->product_info.bios_version[0] & 0x0f);
- 	} else {
- 		memcpy(adapter->fw_version,
+diff -puN drivers/scsi/aacraid/commctrl.c~drivers-scsi-aacraid-commctrlc-fix-mem-leak-in-aac_send_raw_srb drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c~drivers-scsi-aacraid-commctrlc-fix-mem-leak-in-aac_send_raw_srb
++++ a/drivers/scsi/aacraid/commctrl.c
+@@ -650,6 +650,7 @@ static int aac_send_raw_srb(struct aac_d
+ 				     AAC_OPT_NEW_COMM) ?
+ 				      (dev->scsi_host_ptr->max_sectors << 9) :
+ 				      65536)) {
++					kfree(usg);
+ 					rcode = -EINVAL;
+ 					goto cleanup;
+ 				}
 _
