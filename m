@@ -1,77 +1,54 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Handling multiple paths to enclosure devices?
-Date: Fri, 29 Jul 2011 00:33:22 +0400
-Message-ID: <1311885202.5464.14.camel@mulgrave>
-References: <1311872730-4863-1-git-send-email-roland@kernel.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 10/13] iscsi-target: Add iSCSI Error Recovery Hierarchy
+	support
+Date: Thu, 28 Jul 2011 13:30:36 -0700
+Message-ID: <1311885036.6931.218.camel@haakon2.linux-iscsi.org>
+References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
+	 <1311410747-29947-11-git-send-email-nab@linux-iscsi.org>
+	 <CAJAFBLCgOeqnrPae+GQyjnoOUkF632Nrn4Bh-3d4K3KXCezbqw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40856 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755561Ab1G1Ud2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 16:33:28 -0400
-In-Reply-To: <1311872730-4863-1-git-send-email-roland@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAJAFBLCgOeqnrPae+GQyjnoOUkF632Nrn4Bh-3d4K3KXCezbqw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@kernel.org>
-Cc: linux-scsi@vger.kernel.org, eric@purestorage.com
 
-On Thu, 2011-07-28 at 10:05 -0700, Roland Dreier wrote:
-> Hi,
+On Thu, 2011-07-28 at 13:42 +0200, Fubo Chen wrote:
+> On Sat, Jul 23, 2011 at 10:45 AM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > This patch adds support for RFC-3720 compatiable ErrorRecoveryLevel
+> > support as defined in Section 6.1.5.  Error Recovery Hierarchy.
+> >
+> > This includes support for iSCSI session reinstatement, iSCSI within
+> > command and within connection recovery, and explict/implict connection
+> > recovery (CSM-E and CSM-I) from state machines in Section 7 of RFC-3720.
+> >
+> > These functions are called from iscsi_target.c to handle processing
+> > based on the negotiated session-wide ErrorRecoveryLevel parameter.
+> >
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 > 
-> I'm seeing an issue with the current design of our enclosure
-> handling.  In a system with a bunch of drives in an enclosure, it's
-> definitely helpful to have a way to go from sdXX to which slot in the
-> enclosure that drive is in, and that's what the symlink
-> /sys/block/sdXX/device/enclosure_device:NN provides.
+> This is interesting. Is ERL2 similar to md ? If so, when should I use
+> md and when ERL2 ?
 > 
-> However, in a system with multiple paths to the enclosure, eg an HBA
-> with two external SAS ports, both connected to a SAS expander in a
-> JBOD, ie in lame ASCII graphics, something like:
-> 
->      +-----+                 /-- drv1
->      |     |       +-----+  /---  .
->      |     |==SAS==|     |-/----  .
->      | HBA |       | exp |------  .
->      |     |==SAS==|     |-\----  .
->      |     |       +-----+  \---  .
->      +-----+                 \-- drvN
 
-So this configuration should form a single wide port and thus not
-actually be multiple paths.  However, if you have two HBAs instead of
-one (or a non-SAS HBA), I grant it becomes multipath.
+I think you mean dm-multipath and not md RAID here..
 
-> we have two paths to each drive, so each gets two names, sdXX and
-> sdYY.  However, in drivers/misc/enclosure.c, the code only allows one
-> device in each component and so what happens is that sdXX gets
-> discovered, then gets an enclosure_device:NN link, then sdYY is
-> discovered, so sdXX's enclosure_device:NN link is removed and one is
-> added for sdYY.  And so if I want to figure out which enclosure slot
-> sdXX is in, I'm in for a hard time.
-> 
-> It would be a simple matter of writing code to allow all the block
-> devices in a slot to link back to that slot -- we would have to be a
-> bit more careful of keeping track of what links exist, but it should
-> be doable.
-> 
-> The wrinkle is that there are also /sys/class/enclosure/ZZZ/NN/device
-> symlinks that allow going the other way.  And it's harder to see how
-> to express multiple block devices in one enclosure slot.
-> 
-> Thoughts on how to improve our enclosure handling?
+dm-multipath with TCM's ALUA multipath code provides a fabric
+independent (iSCSI, FCoE, FC, SRP, etc) method of path failover across
+multiple target ports for LUNs with a matching IEEE Extended Registered
+WWN.
 
-My initial thought is that in a multi-path situation, as above, we get
-two enclosures appearing as well (one down each path).  If we
-incorporated the idea of topological subtrees into the identity matching
-code, we'd end up filling each of the enclosures with the path connected
-devices.  That seems to be an easy situation for multi-path drivers to
-sort out and one requiring no alteration of the existing enclosure code
-(except to do the topological subtree search).
+ERL=2 is a fabric dependent method of performing iSCSI connection
+recovery on one or more failed TCP connections, where outstanding I/O
+can be implictly retried and/or explictly migrated (TASK_REASSIGN) to an
+active connection without having to restart the iSCSI I_T Nexus, or
+notify the client side multipath layer that a I_T nexus has been lost.
 
-How does that sound?
+Their use is not mutually exclusive, and can be used together to
+complement one another.
 
-James
-
-
+--nab
