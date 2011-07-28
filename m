@@ -1,50 +1,67 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: Re: Handling multiple paths to enclosure devices?
-Date: Thu, 28 Jul 2011 13:57:33 -0700
-Message-ID: <1311886653-14193-1-git-send-email-roland@kernel.org>
-References: <1311872730-4863-1-git-send-email-roland@kernel.org>
+From: akpm@linux-foundation.org
+Subject: [patch 2/3] drivers/scsi/megaraid.c: fix sparse warnings
+Date: Thu, 28 Jul 2011 13:58:19 -0700
+Message-ID: <201107282058.p6SKwJPX008149@imap1.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ASCII
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog108.obsmtp.com ([74.125.245.84]:41894 "HELO
-	na3sys010aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754759Ab1G1U5l (ORCPT
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:43218 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754759Ab1G1U6W (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 16:57:41 -0400
-Received: by mail-pz0-f44.google.com with SMTP id 5so5769291pzk.3
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2011 13:57:40 -0700 (PDT)
-In-Reply-To: <1311885202.5464.14.camel@mulgrave>
+	Thu, 28 Jul 2011 16:58:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, eric@purestorage.com
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rdunlap@xenotime.net, megaraidlinux@lsi.com, viro@ZenIV.linux.org.uk
 
- > So this configuration should form a single wide port and thus not
- > actually be multiple paths.  However, if you have two HBAs instead of
- > one (or a non-SAS HBA), I grant it becomes multipath.
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Yeah ... actually my case is an HBA with two wide (4-lane) ports,
-where either the expander or the HBA is not able to fuse them into a
-single 8-lane port.  But clearly this can happen at least with two
-HBAs pretty easily.
+Fix sparse warnings of right shift bigger than source value size:
 
- > My initial thought is that in a multi-path situation, as above, we get
- > two enclosures appearing as well (one down each path).  If we
- > incorporated the idea of topological subtrees into the identity matching
- > code, we'd end up filling each of the enclosures with the path connected
- > devices.  That seems to be an easy situation for multi-path drivers to
- > sort out and one requiring no alteration of the existing enclosure code
- > (except to do the topological subtree search).
+drivers/scsi/megaraid.c:311:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:313:65: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:317:67: warning: right shift by bigger than source value
+drivers/scsi/megaraid.c:319:67: warning: right shift by bigger than source value
 
-Ah, good insight: we do have two copies of the expander device, and so
-it would be natural to attach each disk to the expander device on the
-same path to that disk.
+Patch suggestion from email by Al Viro:
 
-I'm a bit confused by what you mean about multi-path drivers though --
-it would seem we would need the enclosure stuff to handle this
-somehow?  It seems that if I have this situation, my HBA driver (eg
-mpt2sas) will discover the SCSI bus, hit an enclosure, trigger loading
-the ses driver (which pulls in the enclosure driver), and then
-continue discovering disks.  And it seems this code needs to get the
-topology sorted by itself -- how could a multi-path driver inject
-itself into the symlink creation in enclosure.c?
+"Since both are claimed to be strings, I really suspect that this >> 8 is
+misspelled >> 4 and they have a character followed by pair of two-digit
+packed decimals in there..."
 
- - R.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Neela Syam Kolli <megaraidlinux@lsi.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/megaraid.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff -puN drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-fix-sparse-warnings
++++ a/drivers/scsi/megaraid.c
+@@ -310,15 +310,15 @@ mega_query_adapter(adapter_t *adapter)
+ 	if (adapter->product_info.subsysvid == HP_SUBSYS_VID) {
+ 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
+ 			 adapter->product_info.fw_version[2],
+-			 adapter->product_info.fw_version[1] >> 8,
++			 adapter->product_info.fw_version[1] >> 4,
+ 			 adapter->product_info.fw_version[1] & 0x0f,
+-			 adapter->product_info.fw_version[0] >> 8,
++			 adapter->product_info.fw_version[0] >> 4,
+ 			 adapter->product_info.fw_version[0] & 0x0f);
+ 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
+ 			 adapter->product_info.bios_version[2],
+-			 adapter->product_info.bios_version[1] >> 8,
++			 adapter->product_info.bios_version[1] >> 4,
+ 			 adapter->product_info.bios_version[1] & 0x0f,
+-			 adapter->product_info.bios_version[0] >> 8,
++			 adapter->product_info.bios_version[0] >> 4,
+ 			 adapter->product_info.bios_version[0] & 0x0f);
+ 	} else {
+ 		memcpy(adapter->fw_version,
+_
