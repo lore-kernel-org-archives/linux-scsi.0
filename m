@@ -1,47 +1,77 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 12/13] iscsi-target: Add misc utility logic
-Date: Thu, 28 Jul 2011 13:19:13 -0700
-Message-ID: <1311884353.6931.206.camel@haakon2.linux-iscsi.org>
-References: <1311410747-29947-1-git-send-email-nab@linux-iscsi.org>
-	 <1311410747-29947-13-git-send-email-nab@linux-iscsi.org>
-	 <CAJAFBLCJVLA7RwmVBUPobzqV+j5T5GoV=uRoRqUDuQkJn41Qpw@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Handling multiple paths to enclosure devices?
+Date: Fri, 29 Jul 2011 00:33:22 +0400
+Message-ID: <1311885202.5464.14.camel@mulgrave>
+References: <1311872730-4863-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54243 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755829Ab1G1U2e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 16:28:34 -0400
-In-Reply-To: <CAJAFBLCJVLA7RwmVBUPobzqV+j5T5GoV=uRoRqUDuQkJn41Qpw@mail.gmail.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40856 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755561Ab1G1Ud2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2011 16:33:28 -0400
+In-Reply-To: <1311872730-4863-1-git-send-email-roland@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fubo Chen <fubo.chen@gmail.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>
+To: Roland Dreier <roland@kernel.org>
+Cc: linux-scsi@vger.kernel.org, eric@purestorage.com
 
-On Thu, 2011-07-28 at 13:30 +0200, Fubo Chen wrote:
-> On Sat, Jul 23, 2011 at 10:45 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > +static int iscsit_do_rx_data(
-> > +       struct iscsi_conn *conn,
-> > +       struct iscsi_data_count *count)
-> > +{
-> > +       int data = count->data_length, rx_loop = 0, total_rx = 0, iov_len;
-> > +       u32 rx_marker_val[count->ss_marker_count], rx_marker_iov = 0;
-> > +       struct kvec iov[count->ss_iov_count], *iov_p;
+On Thu, 2011-07-28 at 10:05 -0700, Roland Dreier wrote:
+> Hi,
 > 
-> How big can count->ss_iov_count be ? Can this make a stack overflow ?
+> I'm seeing an issue with the current design of our enclosure
+> handling.  In a system with a bunch of drives in an enclosure, it's
+> definitely helpful to have a way to go from sdXX to which slot in the
+> enclosure that drive is in, and that's what the symlink
+> /sys/block/sdXX/device/enclosure_device:NN provides.
 > 
+> However, in a system with multiple paths to the enclosure, eg an HBA
+> with two external SAS ports, both connected to a SAS expander in a
+> JBOD, ie in lame ASCII graphics, something like:
+> 
+>      +-----+                 /-- drv1
+>      |     |       +-----+  /---  .
+>      |     |==SAS==|     |-/----  .
+>      | HBA |       | exp |------  .
+>      |     |==SAS==|     |-\----  .
+>      |     |       +-----+  \---  .
+>      +-----+                 \-- drvN
 
-This is set to zero when OFMarker and IFMarker are explictly disabled
-(the default), which is the case for the vast majority of initiators.
+So this configuration should form a single wide port and thus not
+actually be multiple paths.  However, if you have two HBAs instead of
+one (or a non-SAS HBA), I grant it becomes multipath.
 
-When this is enabled, the smallest this value for OFMarkInt and
-IFMarkInt can be is 512 bytes, which on 64-bit with a 131072
-MaxRecvDataSegmentLength would mean 3k of stack usage for iov[] above..
+> we have two paths to each drive, so each gets two names, sdXX and
+> sdYY.  However, in drivers/misc/enclosure.c, the code only allows one
+> device in each component and so what happens is that sdXX gets
+> discovered, then gets an enclosure_device:NN link, then sdYY is
+> discovered, so sdXX's enclosure_device:NN link is removed and one is
+> added for sdYY.  And so if I want to figure out which enclosure slot
+> sdXX is in, I'm in for a hard time.
+> 
+> It would be a simple matter of writing code to allow all the block
+> devices in a slot to link back to that slot -- we would have to be a
+> bit more careful of keeping track of what links exist, but it should
+> be doable.
+> 
+> The wrinkle is that there are also /sys/class/enclosure/ZZZ/NN/device
+> symlinks that allow going the other way.  And it's harder to see how
+> to express multiple block devices in one enclosure slot.
+> 
+> Thoughts on how to improve our enclosure handling?
 
-In the end it might may more sense to just remove the OFMarker and
-IFMarker alltogether code than to worry about dynamic allocation here.
+My initial thought is that in a multi-path situation, as above, we get
+two enclosures appearing as well (one down each path).  If we
+incorporated the idea of topological subtrees into the identity matching
+code, we'd end up filling each of the enclosures with the path connected
+devices.  That seems to be an easy situation for multi-path drivers to
+sort out and one requiring no alteration of the existing enclosure code
+(except to do the topological subtree search).
 
---nab
+How does that sound?
+
+James
+
 
