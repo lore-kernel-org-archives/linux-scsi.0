@@ -1,50 +1,61 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.39 merge window
-Date: Thu, 28 Jul 2011 12:49:39 +0400
-Message-ID: <1311842979.30253.29.camel@mulgrave>
-References: <1311441452.23720.17.camel@mulgrave>
-	 <20110723102719.a7f26008.rdunlap@xenotime.net>
+From: "Lathrop Zachary" <support@westernunion.com>
+Subject: PAYMENT
+Date: Thu, 28 Jul 2011 05:29:51 -0400
+Message-ID: <20110728092951.0bee5389@mail.newarka.edu>
+Reply-To: wumt89811@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34609 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750734Ab1G1Ito (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 04:49:44 -0400
-In-Reply-To: <20110723102719.a7f26008.rdunlap@xenotime.net>
+Received: from na3sys010aob111.obsmtp.com ([74.125.245.89]:38412 "HELO
+	na3sys010aob111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751838Ab1G1KRC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2011 06:17:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Sat, 2011-07-23 at 10:27 -0700, Randy Dunlap wrote:
-> On Sat, 23 Jul 2011 21:17:32 +0400 James Bottomley wrote:
-> 
-> > This represents the usual round of driver updates (fcoe, bfa, mpt2sas,
-> > iscsi, bnx2fc) plus a couple of fixes that didn't make 3.0 including the
-> > USB force eject oops.
-> > 
-> > The patch is available here:
-> > 
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> 
-> Hi James,
-> 
-> (please fix $subject)
+How are you today?
 
-Hmm, reusability gone too far
+I write to inform you that we have already sent you $5,000.00USD throug=
+h Western Union as we have been given the mandate to transfer your full=
+ compensation payment of $1.800, 000.00USD via Western Union Money Tran=
+sfer by the United Nations (ECOWAS). This is because the United Nations=
+ and (ECOWAS) are supporting individuals due to the worldwide economy m=
+eltdown.
 
-> What has happened to these 2 patches from 2011-June-21 ?
-> 
-> Subject: [PATCH] scsi: fix NCR_Q720 section mismatch warning
-> Subject: [PATCH] scsi: fix sim710 section mismatch warnings
+I would have requested for your phone number to give you the informatio=
+n through phone but Internet hackers were many. So i decided to email y=
+ou the MTCN and sender name so that you can pick up this $5,000.00USD t=
+o enable us send another $5,000.00USD by tomorrow as you know that we w=
+ill be sending you only $5,000.00USD per day. The fund was sent in the =
+name which you use in opening your e-mail address.
 
-Ralf is reworking them.  Basically there's no point mucking with
-creating work via the endless sectional annotators in obsolete drivers,
-so he was just going to strip the annotations where they cause problems.
+Please pick up this information and rush to any Western Union to pick u=
+p the $5,000.00USD and send us an email back to enable us send you anot=
+her payment by tomorrow.
 
-James
+Below is the western union information to pick up the USD5000.00 to pic=
+k up.
 
+Payment Information.
+MTCN: _______________353-825-6557
+Sender's Name: _________Brenda Martin
+Text Question: __________How Long
+Answer: _______________Immediately
+Amount Sent___________$5000.00USD
+Country: _______________Nigeria
 
+Email me once you picked up this USD5000.00 today.
+
+Announcer: Lathrop Zachary.
+
+Thanks
+Mrs. Anita Daniel.
+Email: wumt.viapaying11@yahoo.com.hk
+=C2=AEWestern Union Office.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
