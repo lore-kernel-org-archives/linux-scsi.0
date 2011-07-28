@@ -1,166 +1,105 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH] [SCSI] libsas: Allow expander T-T attachments
-Date: Thu, 28 Jul 2011 14:46:04 +0800
-Message-ID: <53763DE9A1F742C9A192F448132FCBD4@usish.com.cn>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] [SCSI] libsas: Allow expander T-T attachments
+Date: Thu, 28 Jul 2011 07:52:05 +0000
+Message-ID: <1311839519.30253.16.camel@mulgrave>
 References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:39940 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026Ab1G1GqO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2011 02:46:14 -0400
+Received: from mx2.parallels.com ([64.131.90.16]:47091 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755086Ab1G1IAU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2011 04:00:20 -0400
 In-Reply-To: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
+Content-Language: en-US
+Content-ID: <AA97DD317181294388FD61B018635A4F@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Luben Tuikov' <ltuikov@yahoo.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, JBottomley@Parallels.com
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
->=20
-> Allow expander table-to-table attachments for
-> expanders that support it.
->=20
-> Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
-> ---
-> =A0drivers/scsi/libsas/sas_expander.c |=A0=A0 20 ++++++++++++++------
-> =A0include/scsi/libsas.h=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 |=A0=A0=
-=A0 3 +++
-> =A0include/scsi/sas.h=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
- |=A0=A0 14 ++++++++++++--
-> =A03 files changed, 29 insertions(+), 8 deletions(-)
->=20
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index f84084b..e8d0115 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -329,6 +329,7 @@ static void ex_assign_report_general(struct
-domain_device
-> *dev,
-> =A0=A0=A0=A0 dev->ex_dev.ex_change_count =3D be16_to_cpu(rg->change_c=
-ount);
-> =A0=A0=A0=A0 dev->ex_dev.max_route_indexes =3D be16_to_cpu(rg->route_=
-indexes);
-> =A0=A0=A0=A0 dev->ex_dev.num_phys =3D min(rg->num_phys, (u8)MAX_EXPAN=
-DER_PHYS);
-> +=A0=A0=A0 dev->ex_dev.t2t_supp =3D rg->t2t_supp;
-> =A0=A0=A0=A0 dev->ex_dev.conf_route_table =3D rg->conf_route_table;
-> =A0=A0=A0=A0 dev->ex_dev.configuring =3D rg->configuring;
-> =A0=A0=A0=A0 memcpy(dev->ex_dev.enclosure_logical_id, rg->enclosure_l=
-ogical_id,
-> 8);
-> @@ -1133,15 +1134,17 @@ static void sas_print_parent_topology_bug(str=
-uct
-> domain_device *child,
-> =A0=A0=A0=A0 };
-> =A0=A0=A0=A0 struct domain_device *parent =3D child->parent;
->=20
-> -=A0=A0=A0 sas_printk("%s ex %016llx phy 0x%x <--> %s ex %016llx phy =
-0x%x "
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0 "has %c:%c routing link!\n",
-> +=A0=A0=A0 sas_printk("%s ex %016llx (T2T supp:%d) phy 0x%x <--> %s e=
-x %016llx "
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0 "(T2T supp:%d) phy 0x%x has %c:%c routing=
- link!\n",
->=20
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 ex_type[parent->dev_type],
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 SAS_ADDR(parent->sas_addr),
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0 parent->ex_dev.t2t_supp,
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 parent_phy->phy_id,
->=20
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 ex_type[child->dev_type],
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 SAS_ADDR(child->sas_addr),
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0 child->ex_dev.t2t_supp,
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 child_phy->phy_id,
->=20
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0 ra_char[parent_phy->routing_attr],
-> @@ -1238,10 +1241,15 @@ static int sas_check_parent_topology(struct
-> domain_device *child)
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent=
-_topology_bug(child, parent_phy,
-> child_phy);
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else if (parent_phy->routing_attr =3D=
-=3D TABLE_ROUTING &&
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0 child_phy->routing_at=
-tr !=3D SUBTRACTIVE_ROUTING) {
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent_topology_bu=
-g(child, parent_phy,
-> child_phy);
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else if (parent_phy->routing_attr =3D=
-=3D TABLE_ROUTING) {
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 if (child_phy->routing_attr =
-=3D=3D SUBTRACTIVE_ROUTING ||
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 (child_phy->routin=
-g_attr =3D=3D TABLE_ROUTING &&
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0=A0 child_ex->t2t_s=
-upp && parent_ex->t2t_supp)) {
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 /* All good */;
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else {
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent_t=
-opology_bug(child, parent_phy,
-> child_phy);
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
-> =A0=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 break;
-> =A0=A0=A0=A0 =A0=A0=A0 case FANOUT_DEV:
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index ee86606..793f80b 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -142,8 +142,11 @@ struct expander_device {
-> =A0=A0=A0=A0 u16=A0=A0=A0 ex_change_count;
-> =A0=A0=A0=A0 u16=A0=A0=A0 max_route_indexes;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0 num_phys;
-> +
-> +=A0=A0=A0 u8=A0=A0=A0=A0 t2t_supp:1;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0 configuring:1;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0 conf_route_table:1;
-> +
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0 enclosure_logical_id[8];
->=20
-> =A0=A0=A0=A0 struct ex_phy *ex_phy;
-> diff --git a/include/scsi/sas.h b/include/scsi/sas.h
-> index e9fd022..f59f182 100644
-> --- a/include/scsi/sas.h
-> +++ b/include/scsi/sas.h
-> @@ -341,7 +341,12 @@ struct report_general_resp {
->=20
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 conf_route_table:1;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 configuring:1;
-> -=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_b:6;
-> +=A0=A0=A0 u8=A0=A0=A0 config_others:1;
-> +=A0=A0=A0 u8=A0=A0=A0 orej_retry_supp:1;
-> +=A0=A0=A0 u8=A0=A0=A0 stp_cont_awt:1;
-> +=A0=A0=A0 u8=A0=A0=A0 self_config:1;
-> +=A0=A0=A0 u8=A0=A0=A0 zone_config:1;
-> +=A0=A0=A0 u8=A0=A0=A0 t2t_supp:1;
->=20
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_c;
->=20
-> @@ -528,7 +533,12 @@ struct report_general_resp {
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_a;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 num_phys;
->=20
-> -=A0=A0=A0 u8=A0=A0=A0=A0=A0 _r_b:6;
-> +=A0=A0=A0 u8=A0=A0=A0 t2t_supp:1;
-> +=A0=A0=A0 u8=A0=A0=A0 zone_config:1;
-> +=A0=A0=A0 u8=A0=A0=A0 self_config:1;
-> +=A0=A0=A0 u8=A0=A0=A0 stp_cont_awt:1;
-> +=A0=A0=A0 u8=A0=A0=A0 orej_retry_supp:1;
-> +=A0=A0=A0 u8=A0=A0=A0 config_others:1;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 configuring:1;
-> =A0=A0=A0=A0 u8=A0=A0=A0=A0=A0 conf_route_table:1;
->=20
-
-[Jack Wang] Looks nice to me ,thanks for doing this.
-Reviewed-by: Jack Wang <jack_wang@usish.com>
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gV2VkLCAyMDExLTA3LTI3IGF0IDIxOjE5IC0wNzAwLCBMdWJlbiBUdWlrb3Ygd3JvdGU6DQo+
+IEFsbG93IGV4cGFuZGVyIHRhYmxlLXRvLXRhYmxlIGF0dGFjaG1lbnRzIGZvcg0KPiBleHBhbmRl
+cnMgdGhhdCBzdXBwb3J0IGl0Lg0KDQpUaGlzIGlzIGhhbGYgdGhlIGNvZGUgdG8gZG8gU0FTIDIu
+MCBleHBhbmRlcnMuICBZb3Ugc2VlbSB0byBoYXZlDQphZGRpdGlvbnMgZnJvbSB0aGUgb3RoZXIg
+aGFsZiAoc2VsZiBjb25maWd1cmluZyBleHBhbmRlcnMpIHNlZSBiZWxvdzsNCmRvZXMgdGhpcyBt
+ZWFuIHlvdSBoYXZlIGEgcGF0Y2ggZm9yIHNlbGYgY29uZmlndXJpbmcgZXhwYW5kZXJzIGluIHRo
+ZQ0Kd29ya3M/DQoNCj4gU2lnbmVkLW9mZi1ieTogTHViZW4gVHVpa292IDxsdHVpa292QHlhaG9v
+LmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRlci5jIHwgICAy
+MCArKysrKysrKysrKysrKy0tLS0tLQ0KPiAgaW5jbHVkZS9zY3NpL2xpYnNhcy5oICAgICAgICAg
+ICAgICB8ICAgIDMgKysrDQo+ICBpbmNsdWRlL3Njc2kvc2FzLmggICAgICAgICAgICAgICAgIHwg
+ICAxNCArKysrKysrKysrKystLQ0KPiAgMyBmaWxlcyBjaGFuZ2VkLCAyOSBpbnNlcnRpb25zKCsp
+LCA4IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9saWJzYXMv
+c2FzX2V4cGFuZGVyLmMgYi9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19leHBhbmRlci5jDQo+IGlu
+ZGV4IGY4NDA4NGIuLmU4ZDAxMTUgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9saWJzYXMv
+c2FzX2V4cGFuZGVyLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfZXhwYW5kZXIu
+Yw0KPiBAQCAtMzI5LDYgKzMyOSw3IEBAIHN0YXRpYyB2b2lkIGV4X2Fzc2lnbl9yZXBvcnRfZ2Vu
+ZXJhbChzdHJ1Y3QgZG9tYWluX2RldmljZSAqZGV2LA0KPiAgICAgIGRldi0+ZXhfZGV2LmV4X2No
+YW5nZV9jb3VudCA9IGJlMTZfdG9fY3B1KHJnLT5jaGFuZ2VfY291bnQpOw0KPiAgICAgIGRldi0+
+ZXhfZGV2Lm1heF9yb3V0ZV9pbmRleGVzID0gYmUxNl90b19jcHUocmctPnJvdXRlX2luZGV4ZXMp
+Ow0KPiAgICAgIGRldi0+ZXhfZGV2Lm51bV9waHlzID0gbWluKHJnLT5udW1fcGh5cywgKHU4KU1B
+WF9FWFBBTkRFUl9QSFlTKTsNCj4gKyAgICBkZXYtPmV4X2Rldi50MnRfc3VwcCA9IHJnLT50MnRf
+c3VwcDsNCj4gICAgICBkZXYtPmV4X2Rldi5jb25mX3JvdXRlX3RhYmxlID0gcmctPmNvbmZfcm91
+dGVfdGFibGU7DQo+ICAgICAgZGV2LT5leF9kZXYuY29uZmlndXJpbmcgPSByZy0+Y29uZmlndXJp
+bmc7DQo+ICAgICAgbWVtY3B5KGRldi0+ZXhfZGV2LmVuY2xvc3VyZV9sb2dpY2FsX2lkLCByZy0+
+ZW5jbG9zdXJlX2xvZ2ljYWxfaWQsIDgpOw0KPiBAQCAtMTEzMywxNSArMTEzNCwxNyBAQCBzdGF0
+aWMgdm9pZCBzYXNfcHJpbnRfcGFyZW50X3RvcG9sb2d5X2J1ZyhzdHJ1Y3QgZG9tYWluX2Rldmlj
+ZSAqY2hpbGQsDQo+ICAgICAgfTsNCj4gICAgICBzdHJ1Y3QgZG9tYWluX2RldmljZSAqcGFyZW50
+ID0gY2hpbGQtPnBhcmVudDsNCj4gIA0KPiAtICAgIHNhc19wcmludGsoIiVzIGV4ICUwMTZsbHgg
+cGh5IDB4JXggPC0tPiAlcyBleCAlMDE2bGx4IHBoeSAweCV4ICINCj4gLSAgICAgICAgICAgImhh
+cyAlYzolYyByb3V0aW5nIGxpbmshXG4iLA0KPiArICAgIHNhc19wcmludGsoIiVzIGV4ICUwMTZs
+bHggKFQyVCBzdXBwOiVkKSBwaHkgMHgleCA8LS0+ICVzIGV4ICUwMTZsbHggIg0KPiArICAgICAg
+ICAgICAiKFQyVCBzdXBwOiVkKSBwaHkgMHgleCBoYXMgJWM6JWMgcm91dGluZyBsaW5rIVxuIiwN
+Cj4gIA0KPiAgICAgICAgICAgICBleF90eXBlW3BhcmVudC0+ZGV2X3R5cGVdLA0KPiAgICAgICAg
+ICAgICBTQVNfQUREUihwYXJlbnQtPnNhc19hZGRyKSwNCj4gKyAgICAgICAgICAgcGFyZW50LT5l
+eF9kZXYudDJ0X3N1cHAsDQo+ICAgICAgICAgICAgIHBhcmVudF9waHktPnBoeV9pZCwNCj4gIA0K
+PiAgICAgICAgICAgICBleF90eXBlW2NoaWxkLT5kZXZfdHlwZV0sDQo+ICAgICAgICAgICAgIFNB
+U19BRERSKGNoaWxkLT5zYXNfYWRkciksDQo+ICsgICAgICAgICAgIGNoaWxkLT5leF9kZXYudDJ0
+X3N1cHAsDQo+ICAgICAgICAgICAgIGNoaWxkX3BoeS0+cGh5X2lkLA0KPiAgDQo+ICAgICAgICAg
+ICAgIHJhX2NoYXJbcGFyZW50X3BoeS0+cm91dGluZ19hdHRyXSwNCj4gQEAgLTEyMzgsMTAgKzEy
+NDEsMTUgQEAgc3RhdGljIGludCBzYXNfY2hlY2tfcGFyZW50X3RvcG9sb2d5KHN0cnVjdCBkb21h
+aW5fZGV2aWNlICpjaGlsZCkNCj4gICAgICAgICAgICAgICAgICAgICAgc2FzX3ByaW50X3BhcmVu
+dF90b3BvbG9neV9idWcoY2hpbGQsIHBhcmVudF9waHksIGNoaWxkX3BoeSk7DQo+ICAgICAgICAg
+ICAgICAgICAgICAgIHJlcyA9IC1FTk9ERVY7DQo+ICAgICAgICAgICAgICAgICAgfQ0KPiAtICAg
+ICAgICAgICAgfSBlbHNlIGlmIChwYXJlbnRfcGh5LT5yb3V0aW5nX2F0dHIgPT0gVEFCTEVfUk9V
+VElORyAmJg0KPiAtICAgICAgICAgICAgICAgICAgIGNoaWxkX3BoeS0+cm91dGluZ19hdHRyICE9
+IFNVQlRSQUNUSVZFX1JPVVRJTkcpIHsNCj4gLSAgICAgICAgICAgICAgICBzYXNfcHJpbnRfcGFy
+ZW50X3RvcG9sb2d5X2J1ZyhjaGlsZCwgcGFyZW50X3BoeSwgY2hpbGRfcGh5KTsNCj4gLSAgICAg
+ICAgICAgICAgICByZXMgPSAtRU5PREVWOw0KPiArICAgICAgICAgICAgfSBlbHNlIGlmIChwYXJl
+bnRfcGh5LT5yb3V0aW5nX2F0dHIgPT0gVEFCTEVfUk9VVElORykgew0KPiArICAgICAgICAgICAg
+ICAgIGlmIChjaGlsZF9waHktPnJvdXRpbmdfYXR0ciA9PSBTVUJUUkFDVElWRV9ST1VUSU5HIHx8
+DQo+ICsgICAgICAgICAgICAgICAgICAgIChjaGlsZF9waHktPnJvdXRpbmdfYXR0ciA9PSBUQUJM
+RV9ST1VUSU5HICYmDQo+ICsgICAgICAgICAgICAgICAgICAgICBjaGlsZF9leC0+dDJ0X3N1cHAg
+JiYgcGFyZW50X2V4LT50MnRfc3VwcCkpIHsNCj4gKyAgICAgICAgICAgICAgICAgICAgLyogQWxs
+IGdvb2QgKi87DQo+ICsgICAgICAgICAgICAgICAgfSBlbHNlIHsNCj4gKyAgICAgICAgICAgICAg
+ICAgICAgc2FzX3ByaW50X3BhcmVudF90b3BvbG9neV9idWcoY2hpbGQsIHBhcmVudF9waHksIGNo
+aWxkX3BoeSk7DQo+ICsgICAgICAgICAgICAgICAgICAgIHJlcyA9IC1FTk9ERVY7DQo+ICsgICAg
+ICAgICAgICAgICAgfQ0KPiAgICAgICAgICAgICAgfQ0KPiAgICAgICAgICAgICAgYnJlYWs7DQo+
+ICAgICAgICAgIGNhc2UgRkFOT1VUX0RFVjoNCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvc2NzaS9s
+aWJzYXMuaCBiL2luY2x1ZGUvc2NzaS9saWJzYXMuaA0KPiBpbmRleCBlZTg2NjA2Li43OTNmODBi
+IDEwMDY0NA0KPiAtLS0gYS9pbmNsdWRlL3Njc2kvbGlic2FzLmgNCj4gKysrIGIvaW5jbHVkZS9z
+Y3NpL2xpYnNhcy5oDQo+IEBAIC0xNDIsOCArMTQyLDExIEBAIHN0cnVjdCBleHBhbmRlcl9kZXZp
+Y2Ugew0KPiAgICAgIHUxNiAgICBleF9jaGFuZ2VfY291bnQ7DQo+ICAgICAgdTE2ICAgIG1heF9y
+b3V0ZV9pbmRleGVzOw0KPiAgICAgIHU4ICAgICBudW1fcGh5czsNCj4gKw0KPiArICAgIHU4ICAg
+ICB0MnRfc3VwcDoxOw0KPiAgICAgIHU4ICAgICBjb25maWd1cmluZzoxOw0KPiAgICAgIHU4ICAg
+ICBjb25mX3JvdXRlX3RhYmxlOjE7DQo+ICsNCj4gICAgICB1OCAgICAgZW5jbG9zdXJlX2xvZ2lj
+YWxfaWRbOF07DQo+ICANCj4gICAgICBzdHJ1Y3QgZXhfcGh5ICpleF9waHk7DQo+IGRpZmYgLS1n
+aXQgYS9pbmNsdWRlL3Njc2kvc2FzLmggYi9pbmNsdWRlL3Njc2kvc2FzLmgNCj4gaW5kZXggZTlm
+ZDAyMi4uZjU5ZjE4MiAxMDA2NDQNCj4gLS0tIGEvaW5jbHVkZS9zY3NpL3Nhcy5oDQo+ICsrKyBi
+L2luY2x1ZGUvc2NzaS9zYXMuaA0KPiBAQCAtMzQxLDcgKzM0MSwxMiBAQCBzdHJ1Y3QgcmVwb3J0
+X2dlbmVyYWxfcmVzcCB7DQo+ICANCj4gICAgICB1OCAgICAgIGNvbmZfcm91dGVfdGFibGU6MTsN
+Cj4gICAgICB1OCAgICAgIGNvbmZpZ3VyaW5nOjE7DQo+IC0gICAgdTggICAgICBfcl9iOjY7DQo+
+ICsgICAgdTggICAgY29uZmlnX290aGVyczoxOw0KPiArICAgIHU4ICAgIG9yZWpfcmV0cnlfc3Vw
+cDoxOw0KPiArICAgIHU4ICAgIHN0cF9jb250X2F3dDoxOw0KPiArICAgIHU4ICAgIHNlbGZfY29u
+ZmlnOjE7DQo+ICsgICAgdTggICAgem9uZV9jb25maWc6MTsNCj4gKyAgICB1OCAgICB0MnRfc3Vw
+cDoxOw0KDQo+ICAgICAgdTggICAgICBfcl9jOw0KPiAgDQo+IEBAIC01MjgsNyArNTMzLDEyIEBA
+IHN0cnVjdCByZXBvcnRfZ2VuZXJhbF9yZXNwIHsNCj4gICAgICB1OCAgICAgIF9yX2E7DQo+ICAg
+ICAgdTggICAgICBudW1fcGh5czsNCj4gIA0KPiAtICAgIHU4ICAgICAgX3JfYjo2Ow0KPiArICAg
+IHU4ICAgIHQydF9zdXBwOjE7DQo+ICsgICAgdTggICAgem9uZV9jb25maWc6MTsNCj4gKyAgICB1
+OCAgICBzZWxmX2NvbmZpZzoxOw0KPiArICAgIHU4ICAgIHN0cF9jb250X2F3dDoxOw0KPiArICAg
+IHU4ICAgIG9yZWpfcmV0cnlfc3VwcDoxOw0KPiArICAgIHU4ICAgIGNvbmZpZ19vdGhlcnM6MTsN
+Cj4gICAgICB1OCAgICAgIGNvbmZpZ3VyaW5nOjE7DQo+ICAgICAgdTggICAgICBjb25mX3JvdXRl
+X3RhYmxlOjE7DQo+ICANCg0KVGhlc2UgYXJlIGFsbCBTQVMyLjAgYWRkaXRpb25zIHRvIHRoZSBy
+ZXNlcnZlZCBmaWVsZHMsIGJ1dCB5b3Ugb25seSBtYWtlDQp1c2Ugb2Ygb25lIG9mIHRoZW0uDQoN
+CkphbWVzDQoNCg==
