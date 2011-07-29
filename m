@@ -1,185 +1,101 @@
-From: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Subject: Re: [PATCH v2 0/3] Persistent device name using alias name
-Date: Fri, 29 Jul 2011 18:09:29 +0900
-Message-ID: <4E3278C9.7000703@hitachi.com>
-References: <20110722105925.7330.6609.stgit@ltc197.sdl.hitachi.co.jp>
+From: Ankit Jain <jankit@suse.de>
+Subject: [PATCH v2] ses: Handle non-unique element descriptors
+Date: Fri, 29 Jul 2011 16:32:42 +0530
+Message-ID: <4E329352.1060208@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110722105925.7330.6609.stgit@ltc197.sdl.hitachi.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com, axboe@kernel.dk
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58182 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755532Ab1G2LAd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2011 07:00:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Hannes Reinecke <hare@suse.de>
 
-Hi James,
+Some SES devices give non-unique Element Descriptors as part of the
+Element Descriptor diag page. Since we use these for creating sysfs
+entries, they need to be unique. The specification doesn't require
+these to be unique.
 
-Could you review this patches?
+Eg:
+$ sg_ses -p 7 /dev/sg0
+  FTS CORP  TXS6_SAS20BPX12   0500
+    enclosure services device
+Element descriptor In diagnostic page:
+  generation code: 0x0
+  element descriptor by type list
+    Element type: Array device, subenclosure id: 0
+      Overall descriptor: ArrayDevicesInSubEnclsr0
+      Element 1 descriptor: ArrayDevice00
+      Element 2 descriptor: ArrayDevice01
+      Element 3 descriptor: ArrayDevice02
+      Element 4 descriptor: ArrayDevice03
+      Element 5 descriptor: ArrayDevice03
+      Element 6 descriptor: ArrayDevice03
+      Element 7 descriptor: ArrayDevice03
+      Element 8 descriptor: ArrayDevice03
+      Element 9 descriptor: ArrayDevice03
+      Element 10 descriptor: ArrayDevice03
+      Element 11 descriptor: ArrayDevice03
+      Element 12 descriptor: ArrayDevice03
 
-Best regards,
+Changes in v2:
+- Based on James' comments, in case of a non-unique name, it gets
+  named <elem_desc>_<elem_number>.
 
-(2011/07/22 19:59), Nao Nishijima wrote:
-> Hi,
->=20
-> This patch series provide an "alias name" of the disk into kernel mes=
-sages.
-> Users can assign a preferred name to an alias name of the device.
->=20
-> A raw device name of a disk does not always point a same disk at each=
- boot-up
-> time. Therefore, users have to use persistent device names, which ude=
-v creates
-> to always access the same disk. However, kernel messages still displa=
-y the raw
-> device names.
->=20
-> My proposal is that users can use and see persistent device names whi=
-ch were
-> assigned by they because users expect same name to point same disk an=
-ytime.
->=20
-> Why need to modify kernel messages?
-> - We can see mapping of device names and persistent device names in u=
-dev log.
->   If those logs output to syslog, we can search persistent device nam=
-e from
->   device name, but it can cause a large amount of syslog output.
->=20
-> - If we can use the persistent device names and can always see the sa=
-me name on
->   the kernel log, we don't need to pay additional cost for searching =
-and picking
->   a correct pair of device name and persistent device name from udev =
-log.
->=20
-> - Kernel messages are output to serial console when kenel crashes,
->   it's so hard to convert device name to alias name.
->=20
->=20
-> Of course, I am going to modify the commands using device name so tha=
-t users
-> can use alias names.
->=20
->=20
-> How to use:
-> 1. Build and install the kernel with this series, and reboot with the=
- kernel.
->=20
-> 2. Make a script of get alias_name
->=20
-> [localhost]# vi /lib/udev/get_alias_name
-> #!/bin/sh -e
-> DEVNAME=3D`echo $1 | sed -e 's/[0-9]//g'`
-> echo "ALIAS=3D`cat /sys/block/$DEVNAME/alias_name`"
-> exit 0
->=20
-> And you should set an execute bit,
-> [localhost]# chmod +x /lib/udev/get_alias_name
->=20
-> 3. Check disk's id
-> Here is an example to get the serial id and the path of the device.
->=20
-> [localhost]# udevadm info --query=3Dproperty --path=3D/sys/block/sda =
-\
-> | grep ID_SERIAL=3D
-> ID_SERIAL=3D0QEMU_QEMU_HARDDISK_drive-scsi0-0-1
->=20
-> Some devices does not have the serial id. For such devices,
-> you may use the device path.
->=20
-> [localhost]# udevadm info --query=3Dproperty --path=3D/sys/block/sr0 =
-\
-> | grep ID_PATH=3D
-> ID_PATH=3Dpci-0000:00:01.1-scsi-1:0:0:0
->=20
->=20
-> 4. Write udev rules as follows
-> (The user assigns "foo" to sda and "bar" to sr0)
-> We use ENV{ID_SERIAL} or ENV{ID_PATH} (get by 3) to identify a disk.
-> And to assign automatically an "alias name", we use ATTR key.
-> If ENV{ALIAS} is empty, we use to get an "alias_name" by get_alias_na=
-me script.
->=20
-> [localhost]# vi /etc/udev/rules.d/70-alias_name.rules
-> SUBSYSTEM!=3D"block", GOTO=3D"end"
->=20
-> # write alias name for sdX
-> KERNEL=3D=3D"sd*[!0-9]", ACTION=3D=3D"add", ATTR{alias_name}=3D"foo",=
- \
-> ENV{ID_SERIAL}=3D=3D"0QEMU_QEMU_HARDDISK_drive-scsi0-0-1"
->=20
-> # write alias name for srX
-> KERNEL=3D=3D"sr[0-9]", ACTION=3D=3D"add", ATTR{alias_name}=3D"bar", \
-> ENV{ID_PATH}=3D=3D"pci-0000:00:01.1-scsi-1:0:0:0"
->=20
-> # make symlink
-> ENV{DEVTYPE}=3D=3D"disk", ENV{ALIAS}=3D=3D"?*", SYMLINK+=3D"disk/by-a=
-lias/$env{ALIAS}"
-> ENV{DEVTYPE}=3D=3D"partition", ENV{ALIAS}=3D=3D"", \
-> IMPORT{program}=3D"/lib/udev/get_alias_name %k"
-> ENV{DEVTYPE}=3D=3D"partition", ENV{ALIAS}=3D=3D"?*", \
-> SYMLINK+=3D"disk/by-alias/$env{ALIAS}%n"
->=20
-> LABEL=3D"end"
->=20
->=20
-> 5. reboot
-> After reboot, we can see alias name in kernel messages.
->=20
-> [localhost]# ls -l /dev/disk/by-alias/
-> total 0
-> lrwxrwxrwx. 1 root root  9 Jul  1 21:21 bar -> ../../sr0
-> lrwxrwxrwx. 1 root root  9 Jul  1 21:21 foo -> ../../sda
-> lrwxrwxrwx. 1 root root 10 Jul  1 21:21 foo1 -> ../../sda1
->=20
-> [localhost]# dmesg
-> ...
-> sd 2:0:0:0: [foo] sd_init_command: block=3D17382146, count=3D56
-> sd 2:0:0:0: [foo] block=3D17382146
-> sd 2:0:0:0: [foo] reading 56/56 512 byte blocks.
-> sd 2:0:0:0: [foo] Send: 0xffff88007ab1a900=20
-> ...
->=20
-> Currently, the user must add the naming rule manually for new devices=
-=2E
-> In the future, it is appended automatically, as like NIC.
->=20
-> Changes in v2:
-> - Change alias_name string to pointer
-> - Change alias_name writable to write at once
-> - Drop procfs patch
->=20
-> Best regards,
->=20
-> ---
->=20
-> Joe Perches (1):
->       sd: modify printk for alias name
->=20
-> Nao Nishijima (2):
->       block: add a new attribute "alias name" in gendisk structure
->       sd: [BUGFIX] Use sd_printk instead of printk
->=20
->=20
->  Documentation/ABI/testing/sysfs-block |   15 ++++++
->  block/genhd.c                         |   84 +++++++++++++++++++++++=
-++++++++++
->  drivers/scsi/scsi_lib.c               |   26 ++++++++++
->  drivers/scsi/sd.c                     |   30 +++++++++++-
->  drivers/scsi/sd.h                     |    8 +--
->  include/linux/genhd.h                 |    4 ++
->  include/scsi/scsi_device.h            |    8 +--
->  7 files changed, 162 insertions(+), 13 deletions(-)
->=20
->=20
-> --
-> Nao Nishijima (nao.nishijima.xt@hitachi.com)
->=20
+Based on scsi-misc
 
+Signed-off-by: Ankit Jain <jankit@suse.de>
 
---=20
-Nao NISHIJIMA
-Software Platform Research Dept. Linux Technology Center
-Hitachi, Ltd., YOKOHAMA Research  Laboratory
-Email=EF=BC=9A nao.nishijima.xt@hitachi.com
+---
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 00e5fcac8..f4b53fd 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -239,6 +239,23 @@ static void enclosure_component_release(struct device *dev)
+ 	put_device(dev->parent);
+ }
+ 
++static struct enclosure_component *
++enclosure_component_find_by_name(struct enclosure_device *edev,
++				const char *name)
++{
++	int i;
++	if (!edev || !name || !name[0])
++		return NULL;
++
++	for (i=0; i<edev->components; i++) {
++		struct enclosure_component *ecomp = &edev->component[i];
++		if (ecomp->number != -1 && !strcmp(dev_name(&ecomp->cdev), name))
++			return ecomp;
++	}
++
++	return NULL;
++}
++
+ static const struct attribute_group *enclosure_groups[];
+ 
+ /**
+@@ -276,9 +293,13 @@ enclosure_component_register(struct enclosure_device *edev,
+ 	ecomp->number = number;
+ 	cdev = &ecomp->cdev;
+ 	cdev->parent = get_device(&edev->edev);
+-	if (name && name[0])
+-		dev_set_name(cdev, "%s", name);
+-	else
++
++	if (name && name[0]) {
++		if (enclosure_component_find_by_name (edev, name))
++			dev_set_name(cdev, "%s_%u", name, number);
++		else
++			dev_set_name(cdev, "%s", name);
++	} else
+ 		dev_set_name(cdev, "%u", number);
+ 
+ 	cdev->release = enclosure_component_release;
+-- 
+Ankit Jain
+SUSE Labs
