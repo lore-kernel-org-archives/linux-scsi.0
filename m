@@ -1,155 +1,105 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: Handling multiple paths to enclosure devices?
-Date: Thu, 28 Jul 2011 18:01:48 -0400
-Message-ID: <4E31DC4C.1050509@interlog.com>
-References: <1311872730-4863-1-git-send-email-roland@kernel.org> <1311885202.5464.14.camel@mulgrave>
-Reply-To: dgilbert@interlog.com
+From: Guenter Roeck <guenter.roeck@ericsson.com>
+Subject: Re: [PATCH 2/8] hwmon: convert idr to ida and use ida_simple
+	interface.
+Date: Thu, 28 Jul 2011 17:19:07 -0700
+Message-ID: <20110729001907.GA4496@ericsson.com>
+References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
+	<1311352886-4047-3-git-send-email-jic23@cam.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:48931 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753774Ab1G1WB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2011 18:01:56 -0400
-In-Reply-To: <1311885202.5464.14.camel@mulgrave>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org>
+Content-Disposition: inline
+In-Reply-To: <1311352886-4047-3-git-send-email-jic23@cam.ac.uk>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
+	<mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+	<mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Sender: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
+Errors-To: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
+To: Jonathan Cameron <jic23@cam.ac.uk>
+Cc: "randy.dunlap@oracle.com" <randy.dunlap@oracle.com>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "johnpol@2ka.mipt.ru" <johnpol@2ka.mipt.ru>, "thellstrom@vmware.com" <thellstrom@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "lm-sensors@lm-sensors.org" <lm-sensors@lm-sensors.org>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "airlied@redhat.com" <airlied@redhat.com>, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>, "naota@elisp.net" <naota@elisp.net>, "rtc-linux@googlegroups.com" <rtc-linux@googlegroups.com>, "namhyung@gmail.com" <namhyung@gmail.com>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "khali@linux-fr.org" <khali@linux-fr.org>, "osd-dev@open-osd.org" <osd-dev@open-osd.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, a.zummo
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, eric@purestorage.com
 
-On 11-07-28 04:33 PM, James Bottomley wrote:
-> On Thu, 2011-07-28 at 10:05 -0700, Roland Dreier wrote:
->> Hi,
->>
->> I'm seeing an issue with the current design of our enclosure
->> handling.  In a system with a bunch of drives in an enclosure, it's
->> definitely helpful to have a way to go from sdXX to which slot in the
->> enclosure that drive is in, and that's what the symlink
->> /sys/block/sdXX/device/enclosure_device:NN provides.
->>
->> However, in a system with multiple paths to the enclosure, eg an HBA
->> with two external SAS ports, both connected to a SAS expander in a
->> JBOD, ie in lame ASCII graphics, something like:
->>
->>       +-----+                 /-- drv1
->>       |     |       +-----+  /---  .
->>       |     |==SAS==|     |-/----  .
->>       | HBA |       | exp |------  .
->>       |     |==SAS==|     |-\----  .
->>       |     |       +-----+  \---  .
->>       +-----+                 \-- drvN
->
-> So this configuration should form a single wide port and thus not
-> actually be multiple paths.  However, if you have two HBAs instead of
-> one (or a non-SAS HBA), I grant it becomes multipath.
+On Fri, Jul 22, 2011 at 12:41:11PM -0400, Jonathan Cameron wrote:
+> hwmon was using an idr with a NULL pointer, so convert to an
+> ida which then allows use of Rusty's ida_simple_get.
+> 
+> Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
 
-Here are some conflicting results for the single HBA case.
-I tested two LSI HBAs separately, each with 8 phys and wired 5
-of those phys to a LSI SAS-2 expander.
+Looks ok to me.
 
-Here are the results for a SAS-1.1 (3 Gbps) 3444E HBA seen
-from a SMP DISCOVER on the expander:
-   phy   5:T:attached:[5001517e85c3efe5:00  t(SATA)]  3 Gbps
-   phy   7:T:attached:[5000c500215725bd:00  t(SSP)]  6 Gbps
-   phy  12:T:attached:[500605b00006f263:03  i(SSP+STP+SMP)]  3 Gbps
-   phy  20:T:attached:[500605b00006f264:04  i(SSP+STP+SMP)]  3 Gbps
-   phy  21:T:attached:[500605b00006f264:05  i(SSP+STP+SMP)]  3 Gbps
-   phy  22:T:attached:[500605b00006f264:06  i(SSP+STP+SMP)]  3 Gbps
-   phy  23:T:attached:[500605b00006f264:07  i(SSP+STP+SMP)]  3 Gbps
-   phy  24:D:attached:[5001517e85c3effd:00  V i(SSP+SMP) t(SSP)]  6 Gbps
+Acked-by: Guenter Roeck <guenter.roeck@ericsson.com>
 
-That is two ports:
-   - a narrow port [HBA phy 3 to expander phy 12]
-     note the different SAS address of HBA phy 3: 500605b00006f263
-   - a wide port [HBA phys 4-7 to expander phys 20-23]
-Should the HBA report as two hosts?? [It only reports as one host
-in my test.]
-
-So if a SAS HBA can't handle a wide port with more than
-4 phys, it can just change the SAS addresses on one or more
-phys at the HBA end.
-
-
-Here are the results for a SAS-2 (6 Gbps) 9212 HBA seen
-from a SMP DISCOVER on the same expander:
-   phy   5:T:attached:[5001517e85c3efe5:00  t(SATA)]  3 Gbps
-   phy   7:T:attached:[5000c500215725bd:00  t(SSP)]  6 Gbps
-   phy  12:T:attached:[500605b001d0d3e0:04  i(SSP+STP+SMP)]  6 Gbps
-   phy  20:T:attached:[500605b001d0d3e0:03  i(SSP+STP+SMP)]  6 Gbps
-   phy  21:T:attached:[500605b001d0d3e0:02  i(SSP+STP+SMP)]  6 Gbps
-   phy  22:T:attached:[500605b001d0d3e0:01  i(SSP+STP+SMP)]  6 Gbps
-   phy  23:T:attached:[500605b001d0d3e0:00  i(SSP+STP+SMP)]  6 Gbps
-   phy  24:D:attached:[5001517e85c3effd:00  V i(SSP+SMP) t(SSP)]  6 Gbps
-
-Now that is a single wide port (5 phys wide) since all
-5 expander phys have the same SAS address (not shown)
-and all 5 HBA phys have the same address.
-
->> we have two paths to each drive, so each gets two names, sdXX and
->> sdYY.  However, in drivers/misc/enclosure.c, the code only allows one
->> device in each component and so what happens is that sdXX gets
->> discovered, then gets an enclosure_device:NN link, then sdYY is
->> discovered, so sdXX's enclosure_device:NN link is removed and one is
->> added for sdYY.  And so if I want to figure out which enclosure slot
->> sdXX is in, I'm in for a hard time.
->>
->> It would be a simple matter of writing code to allow all the block
->> devices in a slot to link back to that slot -- we would have to be a
->> bit more careful of keeping track of what links exist, but it should
->> be doable.
->>
->> The wrinkle is that there are also /sys/class/enclosure/ZZZ/NN/device
->> symlinks that allow going the other way.  And it's harder to see how
->> to express multiple block devices in one enclosure slot.
->>
->> Thoughts on how to improve our enclosure handling?
-
-IN SAS-2 the SMP DISCOVER response should contain slot information.
-Looking at sysfs for my test system:
-
-# lsscsi
-[1:0:0:0]    disk    ATA      ST3320620AS      3.AA  /dev/sda
-[6:0:0:0]    disk    ATA      ST31000528AS     CC38  /dev/sdb
-[6:0:1:0]    disk    SEAGATE  ST32000444SS     0006  /dev/sdc
-[6:0:2:0]    enclosu Intel    RES2SV240        0600  -
-
-then fetching the corresponding SAS port addresses:
-
-# lsscsi -t
-[1:0:0:0]    disk    sata:                           /dev/sda
-[6:0:0:0]    disk    sas:0x5001517e85c3efe5          /dev/sdb
-[6:0:1:0]    disk    sas:0x5000c500215725bd          /dev/sdc
-[6:0:2:0]    enclosu sas:0x5001517e85c3effd          -
-
-Referring to the SMP DISCOVER response above, it can be seen
-that /dev/sdc is connected to expander phy 7. So getting the
-long form output for a SMP DISCOVER on phy 7 :
-
-# smp_discover -p 7 /dev/bsg/expander-6\:0
-Discover response:
-   ...
-   attached SAS address: 0x5000c500215725bd
-   attached phy identifier: 0
-   ...
-   device slot number: 255
-   device slot group number: 255
-   device slot group output connector:
-
-Sadly the value of 255 means not available. YMMV
-
-> My initial thought is that in a multi-path situation, as above, we get
-> two enclosures appearing as well (one down each path).  If we
-> incorporated the idea of topological subtrees into the identity matching
-> code, we'd end up filling each of the enclosures with the path connected
-> devices.  That seems to be an easy situation for multi-path drivers to
-> sort out and one requiring no alteration of the existing enclosure code
-> (except to do the topological subtree search).
->
-> How does that sound?
-
-Does this also solve the problem reported a few weeks back
-in which a SES logical unit reported duplicate element
-descriptor names?
-
-Doug Gilbert
+> ---
+>  drivers/hwmon/hwmon.c |   32 ++++++++------------------------
+>  1 files changed, 8 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/hwmon/hwmon.c b/drivers/hwmon/hwmon.c
+> index a61e781..6460487 100644
+> --- a/drivers/hwmon/hwmon.c
+> +++ b/drivers/hwmon/hwmon.c
+> @@ -27,8 +27,7 @@
+>  
+>  static struct class *hwmon_class;
+>  
+> -static DEFINE_IDR(hwmon_idr);
+> -static DEFINE_SPINLOCK(idr_lock);
+> +static DEFINE_IDA(hwmon_ida);
+>  
+>  /**
+>   * hwmon_device_register - register w/ hwmon
+> @@ -42,30 +41,17 @@ static DEFINE_SPINLOCK(idr_lock);
+>  struct device *hwmon_device_register(struct device *dev)
+>  {
+>  	struct device *hwdev;
+> -	int id, err;
+> -
+> -again:
+> -	if (unlikely(idr_pre_get(&hwmon_idr, GFP_KERNEL) == 0))
+> -		return ERR_PTR(-ENOMEM);
+> -
+> -	spin_lock(&idr_lock);
+> -	err = idr_get_new(&hwmon_idr, NULL, &id);
+> -	spin_unlock(&idr_lock);
+> +	int id;
+>  
+> -	if (unlikely(err == -EAGAIN))
+> -		goto again;
+> -	else if (unlikely(err))
+> -		return ERR_PTR(err);
+> +	id = ida_simple_get(&hwmon_ida, 0, 0, GFP_KERNEL);
+> +	if (id < 0)
+> +		return ERR_PTR(id);
+>  
+> -	id = id & MAX_ID_MASK;
+>  	hwdev = device_create(hwmon_class, dev, MKDEV(0, 0), NULL,
+>  			      HWMON_ID_FORMAT, id);
+>  
+> -	if (IS_ERR(hwdev)) {
+> -		spin_lock(&idr_lock);
+> -		idr_remove(&hwmon_idr, id);
+> -		spin_unlock(&idr_lock);
+> -	}
+> +	if (IS_ERR(hwdev))
+> +		ida_simple_remove(&hwmon_ida, id);
+>  
+>  	return hwdev;
+>  }
+> @@ -81,9 +67,7 @@ void hwmon_device_unregister(struct device *dev)
+>  
+>  	if (likely(sscanf(dev_name(dev), HWMON_ID_FORMAT, &id) == 1)) {
+>  		device_unregister(dev);
+> -		spin_lock(&idr_lock);
+> -		idr_remove(&hwmon_idr, id);
+> -		spin_unlock(&idr_lock);
+> +		ida_simple_remove(&hwmon_ida, id);
+>  	} else
+>  		dev_dbg(dev->parent,
+>  			"hwmon_device_unregister() failed: bad class ID!\n");
+> -- 
+> 1.7.3.4
+> 
