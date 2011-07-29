@@ -1,39 +1,108 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Re: [PATCH 7/8] lpfc 8.3.25: Add FCF priority failover functionality
-Date: Fri, 29 Jul 2011 16:26:22 -0700
-Message-ID: <323EB47A1D53E741A39C883FA25C5E220AEDF908@orsmsx511.amr.corp.intel.com>
-References: <1311374291.10545.34.camel@wookie> <4E2A27D3.2020207@cs.wisc.edu>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [RFC PATCH 0/7] FC Transport Extensions (FC sysfs)
+Date: Fri, 29 Jul 2011 16:38:23 -0700
+Message-ID: <20110729233823.12794.94487.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12089 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:10675 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753125Ab1G2X1K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2011 19:27:10 -0400
-In-Reply-To: <4E2A27D3.2020207@cs.wisc.edu>
-Content-Language: en-US
+	id S1753058Ab1G2XiX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2011 19:38:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
-Cc: "james.smart@emulex.com" <james.smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: michaelc@cs.wisc.edu, giridhar.malavali@qlogic.com, james.smart@emulex.com, linux-scsi@vger.kernel.org, hare@suse.de
+Cc: neerav.parikh@intel.com
 
-T24gRnJpLCAyMDExLTA3LTIyIGF0IDIwOjQ1IC0wNTAwLCBNaWtlIENocmlzdGllIHdyb3RlOiAK
-PiBPbiAwNy8yMi8yMDExIDA1OjM3IFBNLCBKYW1lcyBTbWFydCB3cm90ZQo+ID4gcHJpb3JpdHku
-IFRoaXMgcGF0Y2ggYWxzbyBpbnRyb2R1Y2VzIGEgbmV3IHN5c2ZzIHBhcmFtZXRlcgo+ID4gKGZj
-Zl9mYWlsb3Zlcl9wb2xpY3kpIHRvIGFsbG93IHRoZSB1c2VyIHRvIGNob29zZSB3aGljaCBGQ0Yg
-ZmFpbG92ZXIgcG9saWN5Cj4gPiB0byB1c2UuCj4gCj4gSSB0aG91Z2h0IHNvbWV0aGluZyBsaWtl
-IHRoYXQgd2FzIGdvaW5nIHRvIGdvIGluIHRoZSBzeXNmcyB0cmVlIFJvYiB3YXMKPiB3b3JraW5n
-IG9uPwoKSSBoYXZlIGEgc2VyaWVzIHRoYXQgYWRkcyBhICJGQyBQb3J0IiBhbmQgYSAiRkMgRmFi
-cmljIiB0byB0aGUgRkMKVHJhbnNwb3J0LgoKSSBoYXZlbid0IGxvb2tlZCBhdCB0aGlzIHBhdGNo
-LCBidXQgd2l0aCBteSBGQyBUcmFuc3BvcnQgYWRkaXRpb25zIEkKY3VycmVudGx5IGhhdmUgdGhl
-IEZDRiBzZWxlY3Rpb24gaGFwcGVuaW5nIGluIHRoZSBMTEQgKGxpYmZjb2UgZm9yIFNXCkZDb0Up
-LiBJIHdhcyBoYXZpbmcgYSBsb3Qgb2YgcHJvYmxlbXMgdXNpbmcgYSBsaXN0IG9mIEZDRnMgcHJv
-dGVjdGVkCnNob3N0X2xvY2sgaW4gbGliZmNvZSByZWNlaXZlIGNvbnRleHRzIHdoaWNoIGlzIG9u
-ZSByZWFzb24gd2h5IEkga2VwdAp0aGUgc2VsZWN0aW9uIGxvZ2ljIGluIHRoZSBMTEQuIEl0IG1h
-eSBiZSBkb2FibGUsIGJ1dCBpdCB3YXMgdHJvdWJsZXNvbWUKZW5vdWdoIHRoYXQgSSBkZWNpZGVk
-IHRvIHJldmlzaXQgbW92aW5nIEZDRiBzZWxlY3Rpb24gcG9saWNpZXMgaW50byB0aGUKRkMgdHJh
-bnNwb3J0IGxheWVyIGFmdGVyIHRoZSBpbml0aWFsIGltcGxlbWVudGF0aW9uLgoKSSdsbCBzZW5k
-IG91dCBhbiBSRkMgc28geW91IGd1eXMgY2FuIHNlZSB3aGVyZSBJJ20gYXQuCgpTaW5jZSBJIGhh
-dmVuJ3QgbG9va2VkIGF0IHRoaXMgcGF0Y2ggY2xvc2VseSwgc28gSSdtIG5vdCBzdXJlIGhvdyBt
-dWNoCm92ZXJsYXAgdGhlcmUgaXMuCgovL1JvYiAK
+This is a functional series of patches that adds new API
+calls to the FC Transport to allow a LLD to create FC Port
+and FC Fabric devices. This series also has a patch to add
+the usage of these new APIs to libfc, libfcoe and fcoe.
+
+This series originally started as a much larger effort.
+The original try created a FC subsystem that could link
+with SCSI as only one FC4 type. It allowed for other FC4s
+to register with the FC subsystem in the future. This
+model also created more devices than just the FC Port
+and FC Fabric. It made the vports we currently use more
+flexible and reordered the existing device tree to attach
+the Scsi_Host as a child of a FC vport device. It placed
+the vports and rports on fabrics and fabrics on ports.
+This model, although idealfrom a FC standpoint, was quite
+complicated and impractical as generally only SCSI is
+transported over FC in modern adapters. This initial
+aproach was abandoned following the last LSF conference.
+
+A second aproach was taken where there was less of a FC4
+plugin model, but the device tree was still re-arranged.
+This model also proved to be problematic mostly due to
+moving the Scsi_Host to be a child of a FC device.
+Specifically, libfc and fcoe had problems with circular
+locking around the Scsi_Host lock when dealing with the
+list of NPIV ports that was both maintained by the FC
+Transport as well as the N_Port's lport (for link events).
+Seeing that moving the Scsi_Host was being a pain I chose
+an even more simplified aproach.
+
+This series is that simplified aproach. It simply adds
+the following APIs.
+
+fc_port_add -   Adds a FC Port Device to represent the
+	        FC characteristics of a physical port
+	        capable of FC or FCoE.
+fc_port_del -   Deletes a created FC Port.
+fc_fabric_add - Adds a FC Fabric device to represent
+	        the FC characteristics of a discovered
+		FC switch, FCF or underlying fabric.
+fc_fabric_del - Deletes a created FC Fabric.
+
+These APIs are extensions and should not impact any
+implementations using the current FC Transport interface.
+
+I focused on functionality over attributes in this series.
+These patches work, under developer testing, and adding
+attributes shouldn't be too difficult. I have an idea of
+what attributes I'd like to add and there is a proposal to
+extend the HBA API that maps well to these two new devices
+that this series adds.
+
+I opted to allow libfcoe to continue to manage FCF selection,
+but that logic could move to the transport.
+
+I need to do some testing in both P2P (VN2VN) and target
+modes, but I believe that running this code as a SW FCoE
+initiator in a switched fabric environment is functional,
+including NPIV support.
+
+The first 5 patches are pre-work patches for this series
+and may be able to be merged without the FC Transport
+additions (they still need official validation).
+
+I'd be happy to share those (rough) patch series upon
+request.
+
+---
+
+Robert Love (7):
+      fcoe: Fix deadlock between fip's recv_work and rtnl
+      fcoe: Do not switch context in vport_delete callback
+      fcoe: Don't hold fcoe_config_mutex for fcoe_if_destroy or fcoe_interface_cleanup
+      fcoe: Remove reference counting on 'stuct fcoe_interface'
+      fcoe: Rename out_nomod label to out_putmod
+      FC Transport: Add API for LLDs to add FC port and FC fabric devices
+      fcoe: Use the new FC Transport APIs for FC ports and fabrics
+
+
+ drivers/scsi/fcoe/fcoe.c           |  418 +++++++++++++++-----------
+ drivers/scsi/fcoe/fcoe.h           |    6 
+ drivers/scsi/fcoe/fcoe_ctlr.c      |  310 +++++++++++++++----
+ drivers/scsi/fcoe/fcoe_transport.c |    7 
+ drivers/scsi/libfc/fc_lport.c      |    1 
+ drivers/scsi/scsi_transport_fc.c   |  578 ++++++++++++++++++++++++++++++++++++
+ include/scsi/libfcoe.h             |   34 ++
+ include/scsi/scsi_transport_fc.h   |  150 +++++++++
+ 8 files changed, 1250 insertions(+), 254 deletions(-)
+
+-- 
+Thanks, //Rob
