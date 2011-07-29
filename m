@@ -1,77 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Handling multiple paths to enclosure devices?
-Date: Fri, 29 Jul 2011 11:25:04 +0400
-Message-ID: <1311924304.8190.9.camel@mulgrave>
-References: <1311872730-4863-1-git-send-email-roland@kernel.org>
-	 <1311886653-14193-1-git-send-email-roland@kernel.org>
-	 <1311923380.8190.3.camel@mulgrave>  <4E325F94.6040104@suse.de>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] [SCSI] bfa: dereferencing freed memory in bfad_im_probe()
+Date: Fri, 29 Jul 2011 11:53:06 +0300
+Message-ID: <20110729085306.GH3752@shale.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54041 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755209Ab1G2HZJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2011 03:25:09 -0400
-In-Reply-To: <4E325F94.6040104@suse.de>
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:42023 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755659Ab1G2IzH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2011 04:55:07 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, eric@purestorage.com
+To: Jing Huang <huangj@brocade.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:BROCADE BFA FC SC..." <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-On Fri, 2011-07-29 at 09:21 +0200, Hannes Reinecke wrote:
-> On 07/29/2011 09:09 AM, James Bottomley wrote:
-> > On Thu, 2011-07-28 at 13:57 -0700, Roland Dreier wrote:
-> >>   >  My initial thought is that in a multi-path situation, as above, we get
-> >>   >  two enclosures appearing as well (one down each path).  If we
-> >>   >  incorporated the idea of topological subtrees into the identity matching
-> >>   >  code, we'd end up filling each of the enclosures with the path connected
-> >>   >  devices.  That seems to be an easy situation for multi-path drivers to
-> >>   >  sort out and one requiring no alteration of the existing enclosure code
-> >>   >  (except to do the topological subtree search).
-> >>
-> >> Ah, good insight: we do have two copies of the expander device, and so
-> >> it would be natural to attach each disk to the expander device on the
-> >> same path to that disk.
-> >>
-> >> I'm a bit confused by what you mean about multi-path drivers though --
-> >> it would seem we would need the enclosure stuff to handle this
-> >> somehow?  It seems that if I have this situation, my HBA driver (eg
-> >> mpt2sas) will discover the SCSI bus, hit an enclosure, trigger loading
-> >> the ses driver (which pulls in the enclosure driver), and then
-> >> continue discovering disks.  And it seems this code needs to get the
-> >> topology sorted by itself -- how could a multi-path driver inject
-> >> itself into the symlink creation in enclosure.c?
-> >
-> > I merely meant that our current philosophy is to layer multi-path
-> > awareness in a separate driver: dm.  There's certainly no expander
-> > awareness in dm-mp at the moment, but there could be.  It should be
-> > quite simple:  match the expanders to something like a dm-exp and then
-> > basically use the slot information in the expander to construct dm
-> > devices for each of the physicals (the rule for dm device creation would
-> > be dm-exp slot matching).
-> >
-> Doesn't help as device-mapper is only concerned with block devices,
-> what with dm devices being essentially abstract block devices.
+If bfad_thread_workq(bfad) was not BFA_STATUS_OK then we freed "im"
+and then dereferenced it.
 
-Well, all SCSI devices are effectively block devices as far as DM sees
-it because they have request queues.  It's exploiting a sick trick, I
-know, but I don't think it will be too difficult to express them in the
-current code.
+I did a little clean up because it seemed nicer to return directly
+instead of doing a superfluous goto.  I looked at other functions in
+this file and it seems like returning directly is standard.
 
-> But yes, we should stick to our current philosophy of treating 
-> multipath devices as separate trees underneath the accessing HBA.
-> We should not (and, in fact, cannot) try to map the external 
-> topology in sysfs, rather should stick to a logical view as seen 
-> from each HBA. So the enclosure class needs to be updated
-> int include the HBA number in there to avoid duplicate links.
-> 
-> The correct mapping and accessing these 'multipathed enclosures'
-> will then be left as an exercise to the reader :-)
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Agreed.  I'm agnostic as to whether we trick dm or invent something new.
-
-James
-
-
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 0131238..7f7cca0 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -685,25 +685,21 @@ bfa_status_t
+ bfad_im_probe(struct bfad_s *bfad)
+ {
+ 	struct bfad_im_s      *im;
+-	bfa_status_t    rc = BFA_STATUS_OK;
+ 
+ 	im = kzalloc(sizeof(struct bfad_im_s), GFP_KERNEL);
+-	if (im == NULL) {
+-		rc = BFA_STATUS_ENOMEM;
+-		goto ext;
+-	}
++	if (im == NULL)
++		return BFA_STATUS_ENOMEM;
+ 
+ 	bfad->im = im;
+ 	im->bfad = bfad;
+ 
+ 	if (bfad_thread_workq(bfad) != BFA_STATUS_OK) {
+ 		kfree(im);
+-		rc = BFA_STATUS_FAILED;
++		return BFA_STATUS_FAILED;
+ 	}
+ 
+ 	INIT_WORK(&im->aen_im_notify_work, bfad_aen_im_notify_handler);
+-ext:
+-	return rc;
++	return BFA_STATUS_OK;
+ }
+ 
+ void
