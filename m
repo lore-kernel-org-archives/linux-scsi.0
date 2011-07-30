@@ -1,67 +1,81 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [GIT PATCH 0/9] isci updates for 3.1
-Date: Fri, 29 Jul 2011 17:16:34 -0700
-Message-ID: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
+Subject: [PATCH 1/9] isci: fix sata response handling
+Date: Fri, 29 Jul 2011 17:16:40 -0700
+Message-ID: <20110730001639.28430.56963.stgit@localhost6.localdomain6>
+References: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56929 "EHLO mga11.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:52407 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752808Ab1G3AQf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2011 20:16:35 -0400
+	id S1752808Ab1G3AQk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2011 20:16:40 -0400
+In-Reply-To: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org
+Cc: stable@kernel.org, linux-scsi@vger.kernel.org
 
-James, please pull from:
+A bug (likely copy/paste) that has been carried from the original
+implementation.  The unsolicited frame handling structure returns the
+d2h fis in the isci_request.stp.rsp buffer.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git master
+Cc: <stable@kernel.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/isci/request.c |   18 ++++++------------
+ 1 files changed, 6 insertions(+), 12 deletions(-)
 
-...to receive primarily a collection of fixes.  The first two are tagged
-for -stable.
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index a46e07a..b4cf998 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -2399,22 +2399,19 @@ static void isci_task_save_for_upper_layer_completion(
+ 	}
+ }
+ 
+-static void isci_request_process_stp_response(struct sas_task *task,
+-					      void *response_buffer)
++static void isci_process_stp_response(struct sas_task *task, struct dev_to_host_fis *fis)
+ {
+-	struct dev_to_host_fis *d2h_reg_fis = response_buffer;
+ 	struct task_status_struct *ts = &task->task_status;
+ 	struct ata_task_resp *resp = (void *)&ts->buf[0];
+ 
+-	resp->frame_len = le16_to_cpu(*(__le16 *)(response_buffer + 6));
+-	memcpy(&resp->ending_fis[0], response_buffer + 16, 24);
++	resp->frame_len = sizeof(*fis);
++	memcpy(resp->ending_fis, fis, sizeof(*fis));
+ 	ts->buf_valid_size = sizeof(*resp);
+ 
+-	/**
+-	 * If the device fault bit is set in the status register, then
++	/* If the device fault bit is set in the status register, then
+ 	 * set the sense data and return.
+ 	 */
+-	if (d2h_reg_fis->status & ATA_DF)
++	if (fis->status & ATA_DF)
+ 		ts->stat = SAS_PROTO_RESPONSE;
+ 	else
+ 		ts->stat = SAM_STAT_GOOD;
+@@ -2428,7 +2425,6 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
+ {
+ 	struct sas_task *task = isci_request_access_task(request);
+ 	struct ssp_response_iu *resp_iu;
+-	void *resp_buf;
+ 	unsigned long task_flags;
+ 	struct isci_remote_device *idev = isci_lookup_device(task->dev);
+ 	enum service_response response       = SAS_TASK_UNDELIVERED;
+@@ -2565,9 +2561,7 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
+ 				task);
+ 
+ 			if (sas_protocol_ata(task->task_proto)) {
+-				resp_buf = &request->stp.rsp;
+-				isci_request_process_stp_response(task,
+-								  resp_buf);
++				isci_process_stp_response(task, &request->stp.rsp);
+ 			} else if (SAS_PROTOCOL_SSP == task->task_proto) {
+ 
+ 				/* crack the iu response buffer. */
 
-We still have ATAPI and SGPIO support in the works.
-
-The SGPIO support is awaiting your response on the interface from libsas
-to the driver for locally attached sgpio operation [1].  I think we can
-solve the sysfs representation of these initiators at a later date.  For
-now this just allows the driver to capture the smp sgpio request.
-
-ATAPI support is not ready for prime time, but the initial
-implementation is available on the 'testing' branch [2], and we are
-aiming to get it finalized for 3.1.
-
-[1]: http://marc.info/?l=linux-scsi&m=130876728404136&w=2
-[2]: git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git testing
-
-Dan Williams (5):
-      isci: fix sata response handling
-      isci: fix 32-bit operation when CONFIG_HIGHMEM64G=n
-      isci: dynamic interrupt coalescing
-      isci: fix event-get pointer increment
-      isci: add version number
-
-Dave Jiang (2):
-      isci: Update MAINTAINERS entry for the isci driver
-      isci: Adding documentation to API change and fixup sysfs registration
-
-Jeff Skirvin (1):
-      isci: Leave requests alone if already terminating.
-
-Marcin Tomczak (1):
-      isci: change sas phy timeouts from 54us to 59us
-
- Documentation/ABI/testing/sysfs-class-scsi_host |   13 ++++++
- MAINTAINERS                                     |   11 +++++
- drivers/scsi/isci/host.c                        |   13 ++++++-
- drivers/scsi/isci/host.h                        |    3 +
- drivers/scsi/isci/init.c                        |   47 +++++++++++++---------
- drivers/scsi/isci/phy.c                         |   13 ++++++
- drivers/scsi/isci/registers.h                   |   12 ++++++
- drivers/scsi/isci/request.c                     |   30 ++++++++-------
- drivers/scsi/isci/unsolicited_frame_control.c   |    2 +-
- drivers/scsi/isci/unsolicited_frame_control.h   |    2 +-
- 10 files changed, 110 insertions(+), 36 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-class-scsi_host
