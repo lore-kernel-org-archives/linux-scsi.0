@@ -1,54 +1,335 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 9/9] isci: add version number
-Date: Fri, 29 Jul 2011 17:17:21 -0700
-Message-ID: <20110730001721.28430.28086.stgit@localhost6.localdomain6>
-References: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
+Subject: [PATCH v3] libsas: export sas_alloc_task()
+Date: Fri, 29 Jul 2011 17:26:39 -0700
+Message-ID: <20110730002509.28735.82590.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7491 "EHLO mga01.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:20688 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753296Ab1G3ARV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2011 20:17:21 -0400
-In-Reply-To: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
+	id S1752808Ab1G3A0k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2011 20:26:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org
+Cc: Lindar Liu <lindar_liu@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Ankit Jain <jankit@suse.de>, linux-scsi@vger.kernel.org, Jack Wang <jack_wang@usish.com>
 
+Now that isci has added a 3rd open coded user of this functionality just
+share the libsas version.
+
+Acked-by: Jack Wang <jack_wang@usish.com>
+Cc: Lindar Liu <lindar_liu@usish.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: Ankit Jain <jankit@suse.de>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/init.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index e78320b..29aa34e 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -64,6 +64,14 @@
- #include "task.h"
- #include "probe_roms.h"
+Updated with Jack's ack, and now includes the removal of the open-coded
+sas_alloc_task in isci.
+
+ drivers/scsi/isci/task.c         |   29 +++--------------------------
+ drivers/scsi/libsas/sas_init.c   |   30 +++++++++++++++++++++++++++---
+ drivers/scsi/mvsas/mv_sas.c      |   29 +++--------------------------
+ drivers/scsi/pm8001/pm8001_sas.c |   38 ++++++--------------------------------
+ include/scsi/libsas.h            |   26 ++------------------------
+ 5 files changed, 41 insertions(+), 111 deletions(-)
+
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index d6bcdd0..e2d9418 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -1345,29 +1345,6 @@ static void isci_smp_task_done(struct sas_task *task)
+ 	complete(&task->completion);
+ }
  
-+#define MAJ 1
-+#define MIN 0
-+#define BUILD 0
-+#define DRV_VERSION __stringify(MAJ) "." __stringify(MIN) "." \
-+	__stringify(BUILD)
-+
-+MODULE_VERSION(DRV_VERSION);
-+
- static struct scsi_transport_template *isci_transport_template;
+-static struct sas_task *isci_alloc_task(void)
+-{
+-	struct sas_task *task = kzalloc(sizeof(*task), GFP_KERNEL);
+-
+-	if (task) {
+-		INIT_LIST_HEAD(&task->list);
+-		spin_lock_init(&task->task_state_lock);
+-		task->task_state_flags = SAS_TASK_STATE_PENDING;
+-		init_timer(&task->timer);
+-		init_completion(&task->completion);
+-	}
+-
+-	return task;
+-}
+-
+-static void isci_free_task(struct isci_host *ihost, struct sas_task  *task)
+-{
+-	if (task) {
+-		BUG_ON(!list_empty(&task->list));
+-		kfree(task);
+-	}
+-}
+-
+ static int isci_smp_execute_task(struct isci_host *ihost,
+ 				 struct domain_device *dev, void *req,
+ 				 int req_size, void *resp, int resp_size)
+@@ -1376,7 +1353,7 @@ static int isci_smp_execute_task(struct isci_host *ihost,
+ 	struct sas_task *task = NULL;
  
- static DEFINE_PCI_DEVICE_TABLE(isci_id_table) = {
-@@ -540,7 +548,8 @@ static __init int isci_init(void)
+ 	for (retry = 0; retry < 3; retry++) {
+-		task = isci_alloc_task();
++		task = sas_alloc_task(GFP_KERNEL);
+ 		if (!task)
+ 			return -ENOMEM;
+ 
+@@ -1439,13 +1416,13 @@ static int isci_smp_execute_task(struct isci_host *ihost,
+ 				SAS_ADDR(dev->sas_addr),
+ 				task->task_status.resp,
+ 				task->task_status.stat);
+-			isci_free_task(ihost, task);
++			sas_free_task(task);
+ 			task = NULL;
+ 		}
+ 	}
+ ex_err:
+ 	BUG_ON(retry == 3 && task != NULL);
+-	isci_free_task(ihost, task);
++	sas_free_task(task);
+ 	return res;
+ }
+ 
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 2dc5534..dd56ea8 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -37,7 +37,32 @@
+ 
+ #include "../scsi_sas_internal.h"
+ 
+-struct kmem_cache *sas_task_cache;
++static struct kmem_cache *sas_task_cache;
++
++struct sas_task *sas_alloc_task(gfp_t flags)
++{
++	struct sas_task *task = kmem_cache_zalloc(sas_task_cache, flags);
++
++	if (task) {
++		INIT_LIST_HEAD(&task->list);
++		spin_lock_init(&task->task_state_lock);
++		task->task_state_flags = SAS_TASK_STATE_PENDING;
++		init_timer(&task->timer);
++		init_completion(&task->completion);
++	}
++
++	return task;
++}
++EXPORT_SYMBOL_GPL(sas_alloc_task);
++
++void sas_free_task(struct sas_task *task)
++{
++	if (task) {
++		BUG_ON(!list_empty(&task->list));
++		kmem_cache_free(sas_task_cache, task);
++	}
++}
++EXPORT_SYMBOL_GPL(sas_free_task);
+ 
+ /*------------ SAS addr hash -----------*/
+ void sas_hash_addr(u8 *hashed, const u8 *sas_addr)
+@@ -293,8 +318,7 @@ EXPORT_SYMBOL_GPL(sas_domain_release_transport);
+ 
+ static int __init sas_class_init(void)
  {
- 	int err;
+-	sas_task_cache = kmem_cache_create("sas_task", sizeof(struct sas_task),
+-					   0, SLAB_HWCACHE_ALIGN, NULL);
++	sas_task_cache = KMEM_CACHE(sas_task, SLAB_HWCACHE_ALIGN);
+ 	if (!sas_task_cache)
+ 		return -ENOMEM;
  
--	pr_info("%s: Intel(R) C600 SAS Controller Driver\n", DRV_NAME);
-+	pr_info("%s: Intel(R) C600 SAS Controller Driver - version %s\n",
-+		DRV_NAME, DRV_VERSION);
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 0ef2742..7921b61 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -1518,28 +1518,6 @@ void mvs_dev_gone(struct domain_device *dev)
+ 	mvs_dev_gone_notify(dev);
+ }
  
- 	isci_transport_template = sas_domain_attach_transport(&isci_transport_ops);
- 	if (!isci_transport_template)
+-static  struct sas_task *mvs_alloc_task(void)
+-{
+-	struct sas_task *task = kzalloc(sizeof(struct sas_task), GFP_KERNEL);
+-
+-	if (task) {
+-		INIT_LIST_HEAD(&task->list);
+-		spin_lock_init(&task->task_state_lock);
+-		task->task_state_flags = SAS_TASK_STATE_PENDING;
+-		init_timer(&task->timer);
+-		init_completion(&task->completion);
+-	}
+-	return task;
+-}
+-
+-static  void mvs_free_task(struct sas_task *task)
+-{
+-	if (task) {
+-		BUG_ON(!list_empty(&task->list));
+-		kfree(task);
+-	}
+-}
+-
+ static void mvs_task_done(struct sas_task *task)
+ {
+ 	if (!del_timer(&task->timer))
+@@ -1564,7 +1542,7 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+ 	struct sas_task *task = NULL;
+ 
+ 	for (retry = 0; retry < 3; retry++) {
+-		task = mvs_alloc_task();
++		task = sas_alloc_task(GFP_KERNEL);
+ 		if (!task)
+ 			return -ENOMEM;
+ 
+@@ -1622,15 +1600,14 @@ static int mvs_exec_internal_tmf_task(struct domain_device *dev,
+ 				    SAS_ADDR(dev->sas_addr),
+ 				    task->task_status.resp,
+ 				    task->task_status.stat);
+-			mvs_free_task(task);
++			sas_free_task(task);
+ 			task = NULL;
+ 
+ 		}
+ 	}
+ ex_err:
+ 	BUG_ON(retry == 3 && task != NULL);
+-	if (task != NULL)
+-		mvs_free_task(task);
++	sas_free_task(task);
+ 	return res;
+ }
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 6ae059e..7dbbf8b 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -669,30 +669,6 @@ int pm8001_dev_found(struct domain_device *dev)
+ 	return pm8001_dev_found_notify(dev);
+ }
+ 
+-/**
+-  * pm8001_alloc_task - allocate a task structure for TMF
+-  */
+-static struct sas_task *pm8001_alloc_task(void)
+-{
+-	struct sas_task *task = kzalloc(sizeof(*task), GFP_KERNEL);
+-	if (task) {
+-		INIT_LIST_HEAD(&task->list);
+-		spin_lock_init(&task->task_state_lock);
+-		task->task_state_flags = SAS_TASK_STATE_PENDING;
+-		init_timer(&task->timer);
+-		init_completion(&task->completion);
+-	}
+-	return task;
+-}
+-
+-static void pm8001_free_task(struct sas_task *task)
+-{
+-	if (task) {
+-		BUG_ON(!list_empty(&task->list));
+-		kfree(task);
+-	}
+-}
+-
+ static void pm8001_task_done(struct sas_task *task)
+ {
+ 	if (!del_timer(&task->timer))
+@@ -728,7 +704,7 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+ 	struct pm8001_hba_info *pm8001_ha = pm8001_find_ha_by_dev(dev);
+ 
+ 	for (retry = 0; retry < 3; retry++) {
+-		task = pm8001_alloc_task();
++		task = sas_alloc_task(GFP_KERNEL);
+ 		if (!task)
+ 			return -ENOMEM;
+ 
+@@ -789,14 +765,13 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+ 				SAS_ADDR(dev->sas_addr),
+ 				task->task_status.resp,
+ 				task->task_status.stat));
+-			pm8001_free_task(task);
++			sas_free_task(task);
+ 			task = NULL;
+ 		}
+ 	}
+ ex_err:
+ 	BUG_ON(retry == 3 && task != NULL);
+-	if (task != NULL)
+-		pm8001_free_task(task);
++	sas_free_task(task);
+ 	return res;
+ }
+ 
+@@ -811,7 +786,7 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+ 	struct sas_task *task = NULL;
+ 
+ 	for (retry = 0; retry < 3; retry++) {
+-		task = pm8001_alloc_task();
++		task = sas_alloc_task(GFP_KERNEL);
+ 		if (!task)
+ 			return -ENOMEM;
+ 
+@@ -864,14 +839,13 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+ 				SAS_ADDR(dev->sas_addr),
+ 				task->task_status.resp,
+ 				task->task_status.stat));
+-			pm8001_free_task(task);
++			sas_free_task(task);
+ 			task = NULL;
+ 		}
+ 	}
+ ex_err:
+ 	BUG_ON(retry == 3 && task != NULL);
+-	if (task != NULL)
+-		pm8001_free_task(task);
++	sas_free_task(task);
+ 	return res;
+ }
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index ee86606..2517254 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -555,36 +555,14 @@ struct sas_task {
+ 	struct work_struct abort_work;
+ };
+ 
+-extern struct kmem_cache *sas_task_cache;
+-
+ #define SAS_TASK_STATE_PENDING      1
+ #define SAS_TASK_STATE_DONE         2
+ #define SAS_TASK_STATE_ABORTED      4
+ #define SAS_TASK_NEED_DEV_RESET     8
+ #define SAS_TASK_AT_INITIATOR       16
+ 
+-static inline struct sas_task *sas_alloc_task(gfp_t flags)
+-{
+-	struct sas_task *task = kmem_cache_zalloc(sas_task_cache, flags);
+-
+-	if (task) {
+-		INIT_LIST_HEAD(&task->list);
+-		spin_lock_init(&task->task_state_lock);
+-		task->task_state_flags = SAS_TASK_STATE_PENDING;
+-		init_timer(&task->timer);
+-		init_completion(&task->completion);
+-	}
+-
+-	return task;
+-}
+-
+-static inline void sas_free_task(struct sas_task *task)
+-{
+-	if (task) {
+-		BUG_ON(!list_empty(&task->list));
+-		kmem_cache_free(sas_task_cache, task);
+-	}
+-}
++extern struct sas_task *sas_alloc_task(gfp_t flags);
++extern void sas_free_task(struct sas_task *task);
+ 
+ struct sas_domain_function_template {
+ 	/* The class calls these to notify the LLDD of an event. */
 
