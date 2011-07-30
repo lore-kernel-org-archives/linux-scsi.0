@@ -1,139 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Fix bug for transport_generic_wait_for_tasks with direct operation
-Date: Sat, 30 Jul 2011 11:34:31 +0000
-Message-ID: <1312025671-17155-1-git-send-email-nab@linux-iscsi.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 9/9] isci: add version number
+Date: Sat, 30 Jul 2011 18:55:07 +0200
+Message-ID: <20110730185507.7b68c0a7@stein>
+References: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
+	<20110730001721.28430.28086.stgit@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47823 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870Ab1G3L6S (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2011 07:58:18 -0400
+Received: from einhorn.in-berlin.de ([192.109.42.8]:42904 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088Ab1G3Q4H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2011 12:56:07 -0400
+In-Reply-To: <20110730001721.28430.28086.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Jul 29 Dan Williams wrote:
+> @@ -540,7 +548,8 @@ static __init int isci_init(void)
+>  {
+>  	int err;
+>  
+> -	pr_info("%s: Intel(R) C600 SAS Controller Driver\n", DRV_NAME);
+> +	pr_info("%s: Intel(R) C600 SAS Controller Driver - version %s\n",
+> +		DRV_NAME, DRV_VERSION);
 
-This patch fixes a bug in transport_handle_cdb_direct() usage with target_core
-where transport_generic_wait_for_tasks() was bypassing active I/O + usage of
-cmd->t_transport_stop_comp because cmd->t_transport_active=1 was not being set
-before dispatching with transport_generic_new_cmd().  The fix follows existing
-usage in transport_generic_handle_cdb*() -> transport_add_cmd_to_queue() and
-set these directly, as well as handle transport_generic_new_cmd() exceptions
-for QUEUE_FULL and CHECK_CONDITION instead of propigating up to RX context
-fabric code.
+Why?  There is already a version number.  Like 2.6.39, 3.0, 3.1.
 
-The bug was manifesting itself with the following SLUB poison overwritten
-warnings with iscsi-target v4.1 LUNs using the new process context direct
-operation during session reinstatement with active I/O exception handling:
+Besides, just
 
-[885410.498267] =============================================================================
-[885410.621622] BUG lio_cmd_cache: Poison overwritten
-[885410.621791] -----------------------------------------------------------------------------
-[885410.621792]
-[885410.623420] INFO: 0xffff880000cf3750-0xffff880000cf378d. First byte 0x6a instead of 0x6b
-[885410.626332] INFO: Allocated in iscsit_allocate_cmd+0x1c/0xd4 [iscsi_target_mod] age=345 cpu=1 pid=22554
-[885411.855189] INFO: Freed in iscsit_release_cmd+0x208/0x217 [iscsi_target_mod] age=1410 cpu=1 pid=22554
-[885411.856048] INFO: Slab 0xffffea000002d480 objects=22 used=0 fp=0xffff880000cf7300 flags=0x4080
-[885411.856368] INFO: Object 0xffff880000cf33c0 @offset=13248 fp=0xffff880000cf6780
+-	pr_info("%s: Intel(R) C600 SAS Controller Driver\n", DRV_NAME);
 
-<SNIP>
-
-[885411.955678] Pid: 22554, comm: iscsi_trx Not tainted 3.0.0-rc7+ #30
-[885411.956040] Call Trace:
-[885411.957029]  [<ffffffff810e5cf9>] print_trailer+0x12e/0x137
-[885412.752879]  [<ffffffff810e61d9>] check_bytes_and_report+0xb9/0xfd
-[885412.754933]  [<ffffffff810e62d2>] check_object+0xb5/0x192
-[885412.755099]  [<ffffffff810e6445>] __free_slab+0x96/0x13a
-[885412.757008]  [<ffffffff810e652a>] discard_slab+0x41/0x43
-[885412.758171]  [<ffffffff810e7a4c>] __slab_free+0xf3/0xfe
-[885412.761027]  [<ffffffffa030a536>] ? iscsit_release_cmd+0x208/0x217 [iscsi_target_mod]
-[885412.761354]  [<ffffffff810e7e95>] kmem_cache_free+0x6f/0xac
-[885412.761536]  [<ffffffffa030a536>] iscsit_release_cmd+0x208/0x217 [iscsi_target_mod]
-[885412.762056]  [<ffffffffa020e467>] ? iblock_free_task+0x34/0x39 [target_core_iblock]
-[885412.762368]  [<ffffffffa0314131>] lio_release_cmd+0x10/0x12 [iscsi_target_mod]
-[885412.764129]  [<ffffffffa02c2254>] transport_release_cmd+0x2f/0x33 [target_core_mod]
-[885412.805024]  [<ffffffffa02c230e>] transport_generic_remove+0xb6/0xc3 [target_core_mod]
-[885412.806424]  [<ffffffff81035b5f>] ? try_to_wake_up+0x1bd/0x1bd
-[885412.809033]  [<ffffffffa02c241f>] transport_generic_free_cmd+0x75/0x7d [target_core_mod]
-[885412.810066]  [<ffffffffa02c2643>] transport_generic_wait_for_tasks+0x21c/0x22b [target_core_mod]
-[885412.811056]  [<ffffffff8139f0b1>] ? mutex_lock+0x11/0x32
-[885412.813059]  [<ffffffff8139f0b1>] ? mutex_lock+0x11/0x32
-[885412.813200]  [<ffffffffa030b81d>] iscsit_close_connection+0x1d5/0x63a [iscsi_target_mod]
-[885412.813517]  [<ffffffffa0300a82>] iscsit_take_action_for_connection_exit+0xdb/0xe0 [iscsi_target_mod]
-[885412.813851]  [<ffffffffa03111e9>] iscsi_target_rx_thread+0x11f6/0x1221 [iscsi_target_mod]
-[885412.829024]  [<ffffffff81033e8d>] ? pick_next_task_fair+0xbe/0x10e
-[885412.831010]  [<ffffffffa030fff3>] ? iscsit_handle_scsi_cmd+0x91d/0x91d [iscsi_target_mod]
-[885412.833011]  [<ffffffffa030fff3>] ? iscsit_handle_scsi_cmd+0x91d/0x91d [iscsi_target_mod]
-[885412.835010]  [<ffffffff8105388a>] kthread+0x7d/0x85
-[885412.837022]  [<ffffffff813a7124>] kernel_thread_helper+0x4/0x10
-[885412.838008]  [<ffffffff8105380d>] ? kthread_worker_fn+0x145/0x145
-[885412.840047]  [<ffffffff813a7120>] ? gs_change+0x13/0x13
-[885412.842007] FIX lio_cmd_cache: Restoring 0xffff880000cf3750-0xffff880000cf378d=0x6
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Andy Grover <agrover@redhat.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c |   31 +++++++++++++++++++++++++++++--
- 1 files changed, 29 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index f9bd88c..e9311d0 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1748,6 +1748,8 @@ int transport_generic_handle_cdb(
- }
- EXPORT_SYMBOL(transport_generic_handle_cdb);
- 
-+static void transport_generic_request_failure(struct se_cmd *,
-+			struct se_device *, int, int);
- /*
-  * Used by fabric module frontends to queue tasks directly.
-  * Many only be used from process context only
-@@ -1755,6 +1757,8 @@ EXPORT_SYMBOL(transport_generic_handle_cdb);
- int transport_handle_cdb_direct(
- 	struct se_cmd *cmd)
- {
-+	int ret;
-+
- 	if (!cmd->se_lun) {
- 		dump_stack();
- 		pr_err("cmd->se_lun is NULL\n");
-@@ -1766,8 +1770,31 @@ int transport_handle_cdb_direct(
- 				" from interrupt context\n");
- 		return -EINVAL;
- 	}
--
--	return transport_generic_new_cmd(cmd);
-+	/*
-+	 * Set TRANSPORT_NEW_CMD state and cmd->t_transport_active=1 following
-+	 * transport_generic_handle_cdb*() -> transport_add_cmd_to_queue()
-+	 * in existing usage to ensure that outstanding descriptors are handled
-+	 * correctly during shutdown via transport_generic_wait_for_tasks()
-+	 *
-+	 * Also, we don't take cmd->t_state_lock here as we only expect
-+	 * this to be called for initial descriptor submission.
-+	 */
-+	cmd->t_state = TRANSPORT_NEW_CMD;
-+	atomic_set(&cmd->t_transport_active, 1);
-+	/*
-+	 * transport_generic_new_cmd() is already handling QUEUE_FULL,
-+	 * so follow TRANSPORT_NEW_CMD processing thread context usage
-+	 * and call transport_generic_request_failure() if necessary..
-+	 */
-+	ret = transport_generic_new_cmd(cmd);
-+	if (ret == -EAGAIN)
-+		return 0;
-+	else if (ret < 0) {
-+		cmd->transport_error_status = ret;
-+		transport_generic_request_failure(cmd, NULL, 0,
-+				(cmd->data_direction != DMA_TO_DEVICE));
-+	}
-+	return 0;
- }
- EXPORT_SYMBOL(transport_handle_cdb_direct);
- 
+would be the most correct thing to do here.
 -- 
-1.7.2.5
-
+Stefan Richter
+-=====-==-== -=== ====-
+http://arcgraph.de/sr/
