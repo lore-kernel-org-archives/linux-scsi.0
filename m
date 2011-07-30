@@ -1,85 +1,43 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 7/9] isci: dynamic interrupt coalescing
-Date: Fri, 29 Jul 2011 17:17:10 -0700
-Message-ID: <20110730001710.28430.2274.stgit@localhost6.localdomain6>
+Subject: [PATCH 8/9] isci: fix event-get pointer increment
+Date: Fri, 29 Jul 2011 17:17:16 -0700
+Message-ID: <20110730001716.28430.33602.stgit@localhost6.localdomain6>
 References: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:24098 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:7491 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752808Ab1G3ARL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2011 20:17:11 -0400
+	id S1752808Ab1G3ARQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2011 20:17:16 -0400
 In-Reply-To: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: Dave Jiang <dave.jiang@intel.com>, linux-scsi@vger.kernel.org
+Cc: Kapil Karkra <kapil.karkra@intel.com>, linux-scsi@vger.kernel.org
 
-Hardware allows both an outstanding number commands and a timeout value
-(whichever occurs first) as a gate to the next interrupt generation.  This
-scheme at completion time looks at the remaining number of outstanding tasks
-and sets the timeout to maximize small transaction operation.  If transactions
-are large (take more than a few 10s of microseconds to complete) then
-performance is not interrupt processing bound, so the small timeouts this
-scheme generates are overridden by the time it takes for a completion to
-arrive.
+Hardware only increments the put pointer on event types >= 4.  Do not
+increment the get pointer for event type 3.
 
-Tested-by: Dave Jiang <dave.jiang@intel.com>
+Reported-by: Kapil Karkra <kapil.karkra@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c |   10 +++++++++-
- drivers/scsi/isci/host.h |    3 +++
- 2 files changed, 12 insertions(+), 1 deletions(-)
+ drivers/scsi/isci/host.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 26072f1..2328f98 100644
+index 2328f98..6981b77 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -1091,6 +1091,7 @@ static void isci_host_completion_routine(unsigned long data)
- 	struct isci_request *request;
- 	struct isci_request *next_request;
- 	struct sas_task     *task;
-+	u16 active;
+@@ -531,6 +531,9 @@ static void sci_controller_process_completions(struct isci_host *ihost)
+ 			break;
  
- 	INIT_LIST_HEAD(&completed_request_list);
- 	INIT_LIST_HEAD(&errored_request_list);
-@@ -1181,6 +1182,13 @@ static void isci_host_completion_routine(unsigned long data)
- 		}
- 	}
- 
-+	/* the coalesence timeout doubles at each encoding step, so
-+	 * update it based on the ilog2 value of the outstanding requests
-+	 */
-+	active = isci_tci_active(ihost);
-+	writel(SMU_ICC_GEN_VAL(NUMBER, active) |
-+	       SMU_ICC_GEN_VAL(TIMER, ISCI_COALESCE_BASE + ilog2(active)),
-+	       &ihost->smu_registers->interrupt_coalesce_control);
- }
- 
- /**
-@@ -1471,7 +1479,7 @@ static void sci_controller_ready_state_enter(struct sci_base_state_machine *sm)
- 	struct isci_host *ihost = container_of(sm, typeof(*ihost), sm);
- 
- 	/* set the default interrupt coalescence number and timeout value. */
--	sci_controller_set_interrupt_coalescence(ihost, 0x10, 250);
-+	sci_controller_set_interrupt_coalescence(ihost, 0, 0);
- }
- 
- static void sci_controller_ready_state_exit(struct sci_base_state_machine *sm)
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 062101a..9f33831 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -369,6 +369,9 @@ static inline struct isci_host *dev_to_ihost(struct domain_device *dev)
- #define ISCI_TAG_SEQ(tag) (((tag) >> 12) & (SCI_MAX_SEQ-1))
- #define ISCI_TAG_TCI(tag) ((tag) & (SCI_MAX_IO_REQUESTS-1))
- 
-+/* interrupt coalescing baseline: 9 == 3 to 5us interrupt delay per command */
-+#define ISCI_COALESCE_BASE 9
+ 		case SCU_COMPLETION_TYPE_EVENT:
++			sci_controller_event_completion(ihost, ent);
++			break;
 +
- /* expander attached sata devices require 3 rnc slots */
- static inline int sci_remote_device_node_count(struct isci_remote_device *idev)
- {
+ 		case SCU_COMPLETION_TYPE_NOTIFY: {
+ 			event_cycle ^= ((event_get+1) & SCU_MAX_EVENTS) <<
+ 				       (SMU_COMPLETION_QUEUE_GET_EVENT_CYCLE_BIT_SHIFT - SCU_MAX_EVENTS_SHIFT);
 
