@@ -1,39 +1,83 @@
-From: Anton Blanchard <anton@samba.org>
-Subject: [SCSI] mpt2sas: _scsih_smart_predicted_fault uses GFP_KERNEL in
- interrupt context
-Date: Sun, 31 Jul 2011 19:29:09 +1000
-Message-ID: <20110731192909.16bb341e@kryten>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH] Fix leak in
+ drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
+Date: Mon, 1 Aug 2011 00:28:13 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1108010017030.28695@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:33111 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751757Ab1GaJ3O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Jul 2011 05:29:14 -0400
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:10572 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997Ab1GaW2P (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Jul 2011 18:28:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kashyap.desai@lsi.com, eric.moore@lsi.com, JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+We leak memory if the allocations for 'new_param->name' or 'new_param->value' fail.
+We also do a lot of variable assignments that are completely pointless
+if the allocations fail.
+So, let's move the allocations before the assignments and also make
+sure that we free whatever was allocated to one if the allocation for
+another fails.
 
-_scsih_smart_predicted_fault is called in an interrupt and therefore
-must allocate memory using GFP_ATOMIC.
-
-Signed-off-by: Anton Blanchard <anton@samba.org>
-Cc: <stable@kernel.org>
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
+ drivers/target/iscsi/iscsi_target_parameters.c |   26 ++++++++++-------------
+ 1 files changed, 11 insertions(+), 15 deletions(-)
 
-Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2011-07-31 09:58:36.000000000 +1000
-+++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2011-07-31 17:31:53.000000000 +1000
-@@ -4210,7 +4210,7 @@ _scsih_smart_predicted_fault(struct MPT2
- 	/* insert into event log */
- 	sz = offsetof(Mpi2EventNotificationReply_t, EventData) +
- 	     sizeof(Mpi2EventDataSasDeviceStatusChange_t);
--	event_reply = kzalloc(sz, GFP_KERNEL);
-+	event_reply = kzalloc(sz, GFP_ATOMIC);
- 	if (!event_reply) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
+ compile tested only
+
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 252e246..c708092 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -572,6 +572,17 @@ int iscsi_copy_param_list(
+ 			goto err_out;
+ 		}
+ 
++		new_param->name = kmalloc(strlen(param->name) + 1, GFP_KERNEL);
++		new_param->value = kmalloc(strlen(param->value) + 1, GFP_KERNEL);
++		if (!new_param->name || !new_param->value) {
++			kfree(new_param->value);
++			kfree(new_param->name);
++			kfree(new_param);
++			pr_err("Unable to allocate memory for parameter "
++				"name/value.\n");
++			goto err_out;
++		}
++
+ 		new_param->set_param = param->set_param;
+ 		new_param->phase = param->phase;
+ 		new_param->scope = param->scope;
+@@ -580,21 +591,6 @@ int iscsi_copy_param_list(
+ 		new_param->use = param->use;
+ 		new_param->type_range = param->type_range;
+ 
+-		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
+-		if (!new_param->name) {
+-			pr_err("Unable to allocate memory for"
+-				" parameter name.\n");
+-			goto err_out;
+-		}
+-
+-		new_param->value = kzalloc(strlen(param->value) + 1,
+-				GFP_KERNEL);
+-		if (!new_param->value) {
+-			pr_err("Unable to allocate memory for"
+-				" parameter value.\n");
+-			goto err_out;
+-		}
+-
+ 		memcpy(new_param->name, param->name, strlen(param->name));
+ 		new_param->name[strlen(param->name)] = '\0';
+ 		memcpy(new_param->value, param->value, strlen(param->value));
+-- 
+1.7.6
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
+
