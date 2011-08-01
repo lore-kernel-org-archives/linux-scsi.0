@@ -1,37 +1,129 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 9/9] isci: add version number
-Date: Mon, 1 Aug 2011 20:40:00 +0200
-Message-ID: <20110801204000.6fb23b4f@stein>
-References: <20110730001320.28430.53496.stgit@localhost6.localdomain6>
-	<20110730001721.28430.28086.stgit@localhost6.localdomain6>
-	<20110730185507.7b68c0a7@stein>
-	<CAA9_cmfnSVdohf5bkfXjZvsa+O2vjvVdy2RA=f2EfVYeXdkX+Q@mail.gmail.com>
-	<20110801193806.57dc9b58@stein>
-	<1312221286.8212.29.camel@mulgrave>
-	<20110801202916.3d78752f@stein>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH v2] Fix leak in
+ drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
+Date: Mon, 1 Aug 2011 22:32:21 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1108012230080.31999@swampdragon.chaosbits.net>
+References: <alpine.LNX.2.00.1108010017030.28695@swampdragon.chaosbits.net> <1312152274.11635.8.camel@Joe-Laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:54545 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800Ab1HASkP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 14:40:15 -0400
-In-Reply-To: <20110801202916.3d78752f@stein>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:13934 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753065Ab1HAUcY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 16:32:24 -0400
+In-Reply-To: <1312152274.11635.8.camel@Joe-Laptop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dan Williams <dan.j.williams@intel.com>
+To: Joe Perches <joe@perches.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Aug 01 Stefan Richter wrote:
-> My random sample of 46 loaded modules on a desktop PC
-> contains 3 drivers whose modinfo | grep -E '^version' is nonempty
-> (pata_atiixp, sg, r8169).
+On Sun, 31 Jul 2011, Joe Perches wrote:
 
-With compiled-in drivers:  6 out of 77 feature a /sys/module/*/version
-(ahci, libata, pata_atiixp, r8169, sg, tcp_cubic; calling themselves 3.0,
-3.00, 0.4.6, 2.3LK-NAPI, 3.5.34, 2.3 although they are all at version 3.0).
+> On Mon, 2011-08-01 at 00:28 +0200, Jesper Juhl wrote:
+> > We leak memory if the allocations for 'new_param->name' or 'new_param->value' fail.
+> > We also do a lot of variable assignments that are completely pointless
+> > if the allocations fail.
+> > So, let's move the allocations before the assignments and also make
+> > sure that we free whatever was allocated to one if the allocation for
+> > another fails.
+> 
+> > diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+> []
+> > +		new_param->name = kmalloc(strlen(param->name) + 1, GFP_KERNEL);
+> > +		new_param->value = kmalloc(strlen(param->value) + 1, GFP_KERNEL);
+> []
+> >  		memcpy(new_param->name, param->name, strlen(param->name));
+> >  		new_param->name[strlen(param->name)] = '\0';
+> >  		memcpy(new_param->value, param->value, strlen(param->value));
+> 
+> kstrdup
+> 
+Right, now why didn't I think of that?  - thank you :)
+
+Here's an updated version.
+
+
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: Fix leak in drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
+
+We leak memory if the allocations for 'new_param->name' or 'new_param->value' fail.
+We also do a lot of variable assignments that are completely pointless
+if the allocations fail.
+So, let's move the allocations before the assignments and also make
+sure that we free whatever was allocated to one if the allocation fail.
+There's also a small CodingStyle fixup in there (curly braces on both
+branches of if statement) since I was in the area anyway.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ drivers/target/iscsi/iscsi_target_parameters.c |   35 +++++++++---------------
+ 1 files changed, 13 insertions(+), 22 deletions(-)
+
+  compile tested only.
+
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 252e246..2ab955d 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -572,6 +572,17 @@ int iscsi_copy_param_list(
+ 			goto err_out;
+ 		}
+ 
++		new_param->name = kstrdup(param->name, GFP_KERNEL);
++		new_param->value = kstrdup(param->value, GFP_KERNEL);
++		if (!new_param->name || !new_param->value) {
++			kfree(new_param->value);
++			kfree(new_param->name);
++			kfree(new_param);
++			pr_err("Unable to allocate memory for parameter "
++				"name/value.\n");
++			goto err_out;
++		}
++
+ 		new_param->set_param = param->set_param;
+ 		new_param->phase = param->phase;
+ 		new_param->scope = param->scope;
+@@ -580,32 +591,12 @@ int iscsi_copy_param_list(
+ 		new_param->use = param->use;
+ 		new_param->type_range = param->type_range;
+ 
+-		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
+-		if (!new_param->name) {
+-			pr_err("Unable to allocate memory for"
+-				" parameter name.\n");
+-			goto err_out;
+-		}
+-
+-		new_param->value = kzalloc(strlen(param->value) + 1,
+-				GFP_KERNEL);
+-		if (!new_param->value) {
+-			pr_err("Unable to allocate memory for"
+-				" parameter value.\n");
+-			goto err_out;
+-		}
+-
+-		memcpy(new_param->name, param->name, strlen(param->name));
+-		new_param->name[strlen(param->name)] = '\0';
+-		memcpy(new_param->value, param->value, strlen(param->value));
+-		new_param->value[strlen(param->value)] = '\0';
+-
+ 		list_add_tail(&new_param->p_list, &param_list->param_list);
+ 	}
+ 
+-	if (!list_empty(&param_list->param_list))
++	if (!list_empty(&param_list->param_list)) {
+ 		*dst_param_list = param_list;
+-	else {
++	} else {
+ 		pr_err("No parameters allocated.\n");
+ 		goto err_out;
+ 	}
 -- 
-Stefan Richter
--=====-==-== =--- ----=
-http://arcgraph.de/sr/
+1.7.6
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
+
