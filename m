@@ -1,165 +1,70 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 4/8] qla4xxx: Add get ACB state support using BSG
-Date: Mon, 1 Aug 2011 03:26:15 -0700
-Message-ID: <1312194379-9241-5-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 7/8] scsi_transport_iscsi: Added support to update initiator iscsi port
+Date: Mon, 1 Aug 2011 03:26:18 -0700
+Message-ID: <1312194379-9241-8-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:30488 "EHLO
 	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971Ab1HAKgm (ORCPT
+	with ESMTP id S1753981Ab1HAKgm (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 06:36:42 -0400
 In-Reply-To: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_bsg.c  |   60 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_bsg.h  |    1 +
- drivers/scsi/qla4xxx/ql4_glbl.h |    2 +
- drivers/scsi/qla4xxx/ql4_mbx.c  |   23 +++++++++++++++
- 4 files changed, 86 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_transport_iscsi.c |    4 ++++
+ include/scsi/iscsi_if.h             |    1 +
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
-index 15032f1..de4db29 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.c
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-@@ -139,6 +139,63 @@ leave:
- 	return rval;
- }
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index b3a2515..c58f676 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -324,6 +324,7 @@ iscsi_iface_net_attr(iface, vlan, ISCSI_NET_PARAM_VLAN_ID);
+ iscsi_iface_net_attr(iface, vlan_priority, ISCSI_NET_PARAM_VLAN_PRIORITY);
+ iscsi_iface_net_attr(iface, vlan_enabled, ISCSI_NET_PARAM_VLAN_ENABLED);
+ iscsi_iface_net_attr(iface, mtu, ISCSI_NET_PARAM_MTU);
++iscsi_iface_net_attr(iface, port, ISCSI_NET_PARAM_PORT);
  
-+static int
-+qla4xxx_get_acb_state(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	uint32_t status[MBOX_REG_COUNT];
-+	uint32_t acb_idx;
-+	uint32_t ip_idx;
-+	int rval = -EINVAL;
-+
-+	bsg_reply->reply_payload_rcv_len = 0;
-+
-+	if (unlikely(pci_channel_offline(ha->pdev)))
-+		goto leave;
-+
-+	/* Only 4022 and above adapters are supported */
-+	if (is_qla4010(ha))
-+		goto leave;
-+
-+	if (ql4xxx_reset_active(ha)) {
-+		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
-+		rval = -EBUSY;
-+		goto leave;
-+	}
-+
-+	if (bsg_job->reply_payload.payload_len < sizeof(status)) {
-+		ql4_printk(KERN_ERR, ha, "%s: invalid payload len %d\n",
-+			   __func__, bsg_job->reply_payload.payload_len);
-+		rval = -EINVAL;
-+		goto leave;
-+	}
-+
-+	acb_idx = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
-+	ip_idx = bsg_req->rqst_data.h_vendor.vendor_cmd[2];
-+
-+	rval = qla4xxx_get_ip_state(ha, acb_idx, ip_idx, status);
-+	if (rval) {
-+		ql4_printk(KERN_ERR, ha, "%s: get ip state failed\n",
-+			   __func__);
-+		bsg_reply->result = DID_ERROR << 16;
-+		rval = -EIO;
-+	} else {
-+		bsg_reply->reply_payload_rcv_len =
-+			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+					    bsg_job->reply_payload.sg_cnt,
-+					    status, sizeof(status));
-+		bsg_reply->result = DID_OK << 16;
-+	}
-+
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+leave:
-+	return rval;
-+}
-+
- /**
-  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
-  * @job: iscsi_bsg_job to handle
-@@ -157,6 +214,9 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
- 	case QLISCSI_VND_UPDATE_FLASH:
- 		return qla4xxx_update_flash(bsg_job);
+ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 					  struct attribute *attr, int i)
+@@ -343,6 +344,8 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 		param = ISCSI_NET_PARAM_VLAN_ENABLED;
+ 	else if (attr == &dev_attr_iface_mtu.attr)
+ 		param = ISCSI_NET_PARAM_MTU;
++	else if (attr == &dev_attr_iface_port.attr)
++		param = ISCSI_NET_PARAM_PORT;
+ 	else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4) {
+ 		if (attr == &dev_attr_ipv4_iface_ipaddress.attr)
+ 			param = ISCSI_NET_PARAM_IPV4_ADDR;
+@@ -390,6 +393,7 @@ static struct attribute *iscsi_iface_attrs[] = {
+ 	&dev_attr_ipv6_iface_ipaddr_autocfg.attr,
+ 	&dev_attr_ipv6_iface_linklocal_autocfg.attr,
+ 	&dev_attr_iface_mtu.attr,
++	&dev_attr_iface_port.attr,
+ 	NULL,
+ };
  
-+	case QLISCSI_VND_GET_ACB_STATE:
-+		return qla4xxx_get_acb_state(bsg_job);
-+
- 	default:
- 		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
- 			   "0x%x\n", __func__, bsg_req->msgcode);
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
-index 5f6424e..0400e1a 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.h
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.h
-@@ -10,5 +10,6 @@
- /* BSG Vendor specific commands */
- #define QLISCSI_VND_READ_FLASH		1
- #define QLISCSI_VND_UPDATE_FLASH	2
-+#define QLISCSI_VND_GET_ACB_STATE	3
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index d1f0927..706a1bb 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -314,6 +314,7 @@ enum iscsi_net_param {
+ 	ISCSI_NET_PARAM_IFACE_TYPE		= 16,
+ 	ISCSI_NET_PARAM_IFACE_NAME		= 17,
+ 	ISCSI_NET_PARAM_MTU			= 18,
++	ISCSI_NET_PARAM_PORT			= 19,
+ };
  
- #endif
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 98d4b17..5c87696 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -58,6 +58,8 @@ int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
- 		    uint32_t *mbox_sts, dma_addr_t acb_dma);
- int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
- 		    uint32_t *mbox_sts, dma_addr_t acb_dma);
-+int qla4xxx_get_ip_state(struct scsi_qla_host *ha, uint32_t acb_idx,
-+			 uint32_t ip_idx, uint32_t *sts);
- void qla4xxx_mark_device_missing(struct iscsi_cls_session *cls_session);
- u16 rd_nvram_word(struct scsi_qla_host *ha, int offset);
- u8 rd_nvram_byte(struct scsi_qla_host *ha, int offset);
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 8741cfa..aec7230 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1667,3 +1667,26 @@ int qla4xxx_get_mgmt_data(struct scsi_qla_host *ha, uint16_t fw_ddb_index,
- 	}
- 	return status;
- }
-+
-+int qla4xxx_get_ip_state(struct scsi_qla_host *ha, uint32_t acb_idx,
-+			 uint32_t ip_idx, uint32_t *sts)
-+{
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+	int status = QLA_SUCCESS;
-+
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+	mbox_cmd[0] = MBOX_CMD_GET_IP_ADDR_STATE;
-+	mbox_cmd[1] = acb_idx;
-+	mbox_cmd[2] = ip_idx;
-+
-+	status = qla4xxx_mailbox_command(ha, 3, 8, &mbox_cmd[0], &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_WARNING, ha,  "%s: "
-+				  "MBOX_CMD_GET_IP_ADDR_STATE failed w/ "
-+				  "status %04X\n", __func__, mbox_sts[0]));
-+	}
-+	memcpy(sts, mbox_sts, sizeof(mbox_sts));
-+	return status;
-+}
+ enum iscsi_conn_state {
 -- 
 1.7.6
 
