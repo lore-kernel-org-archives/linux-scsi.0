@@ -1,14 +1,14 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 6/8] qla4xxx: Added vendor specific sysfs attributes
-Date: Mon, 1 Aug 2011 03:26:17 -0700
-Message-ID: <1312194379-9241-7-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 5/8] qla4xxx: Add read/update NVRAM support for 40xx adapters using BSG
+Date: Mon, 1 Aug 2011 03:26:16 -0700
+Message-ID: <1312194379-9241-6-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:12097 "EHLO
-	TX2EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971Ab1HAKg1 (ORCPT
+Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:52324 "EHLO
+	TX2EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753690Ab1HAKg1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 06:36:27 -0400
 In-Reply-To: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -16,186 +16,293 @@ List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, michaelc@cs.wisc.edu
 Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-
-Added board_id, fw_state, phy_port_cnt, phy_port_num,
-iscsi_func_cnt, hba_model
+From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
 Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_attr.c |   76 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_def.h  |    4 ++
- drivers/scsi/qla4xxx/ql4_init.c |   21 +++++++++++
- drivers/scsi/qla4xxx/ql4_nx.c   |    5 +++
- 4 files changed, 106 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_bsg.c  |  147 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_bsg.h  |    2 +
+ drivers/scsi/qla4xxx/ql4_fw.h   |    5 ++
+ drivers/scsi/qla4xxx/ql4_glbl.h |    4 +
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   52 ++++++++++++++
+ 5 files changed, 210 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_attr.c b/drivers/scsi/qla4xxx/ql4_attr.c
-index 864d018..0b0a7d4 100644
---- a/drivers/scsi/qla4xxx/ql4_attr.c
-+++ b/drivers/scsi/qla4xxx/ql4_attr.c
-@@ -55,15 +55,91 @@ qla4xxx_optrom_version_show(struct device *dev, struct device_attribute *attr,
- 			ha->bootload_patch, ha->bootload_build);
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
+index de4db29..c475453 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.c
++++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+@@ -196,6 +196,147 @@ leave:
+ 	return rval;
  }
  
-+static ssize_t
-+qla4xxx_board_id_show(struct device *dev, struct device_attribute *attr,
-+		      char *buf)
++static int
++qla4xxx_read_nvram(struct bsg_job *bsg_job)
 +{
-+	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-+	return snprintf(buf, PAGE_SIZE, "0x%08X\n", ha->board_id);
-+}
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
++	uint32_t offset = 0;
++	uint32_t len = 0;
++	uint32_t total_len = 0;
++	dma_addr_t nvram_dma;
++	uint8_t *nvram = NULL;
++	int rval = -EINVAL;
 +
-+static ssize_t
-+qla4xxx_fw_state_show(struct device *dev, struct device_attribute *attr,
-+		      char *buf)
-+{
-+	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
++	bsg_reply->reply_payload_rcv_len = 0;
 +
-+	qla4xxx_get_firmware_state(ha);
-+	return snprintf(buf, PAGE_SIZE, "0x%08X%8X\n", ha->firmware_state,
-+			ha->addl_fw_state);
-+}
++	if (unlikely(pci_channel_offline(ha->pdev)))
++		goto leave;
 +
-+static ssize_t
-+qla4xxx_phy_port_cnt_show(struct device *dev, struct device_attribute *attr,
-+		      char *buf)
-+{
-+	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
++	/* Only 40xx adapters are supported */
++	if (!(is_qla4010(ha) || is_qla4022(ha) || is_qla4032(ha)))
++		goto leave;
 +
-+	if (!is_qla8022(ha))
-+		return -ENOSYS;
-+
-+	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_cnt);
-+}
-+
-+static ssize_t
-+qla4xxx_phy_port_num_show(struct device *dev, struct device_attribute *attr,
-+		      char *buf)
-+{
-+	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-+
-+	if (!is_qla8022(ha))
-+		return -ENOSYS;
-+
-+	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->phy_port_num);
-+}
-+
-+static ssize_t
-+qla4xxx_iscsi_func_cnt_show(struct device *dev, struct device_attribute *attr,
-+		      char *buf)
-+{
-+	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-+
-+	if (!is_qla8022(ha))
-+		return -ENOSYS;
-+
-+	return snprintf(buf, PAGE_SIZE, "0x%04X\n", ha->iscsi_pci_func_cnt);
-+}
-+
-+static ssize_t
-+qla4xxx_hba_model_show(struct device *dev, struct device_attribute *attr,
-+		       char *buf)
-+{
-+	struct scsi_qla_host *ha = to_qla_host(class_to_shost(dev));
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ha->model_name);
-+}
-+
- static DEVICE_ATTR(fw_version, S_IRUGO, qla4xxx_fw_version_show, NULL);
- static DEVICE_ATTR(serial_num, S_IRUGO, qla4xxx_serial_num_show, NULL);
- static DEVICE_ATTR(iscsi_version, S_IRUGO, qla4xxx_iscsi_version_show, NULL);
- static DEVICE_ATTR(optrom_version, S_IRUGO, qla4xxx_optrom_version_show, NULL);
-+static DEVICE_ATTR(board_id, S_IRUGO, qla4xxx_board_id_show, NULL);
-+static DEVICE_ATTR(fw_state, S_IRUGO, qla4xxx_fw_state_show, NULL);
-+static DEVICE_ATTR(phy_port_cnt, S_IRUGO, qla4xxx_phy_port_cnt_show, NULL);
-+static DEVICE_ATTR(phy_port_num, S_IRUGO, qla4xxx_phy_port_num_show, NULL);
-+static DEVICE_ATTR(iscsi_func_cnt, S_IRUGO, qla4xxx_iscsi_func_cnt_show, NULL);
-+static DEVICE_ATTR(hba_model, S_IRUGO, qla4xxx_hba_model_show, NULL);
- 
- struct device_attribute *qla4xxx_host_attrs[] = {
- 	&dev_attr_fw_version,
- 	&dev_attr_serial_num,
- 	&dev_attr_iscsi_version,
- 	&dev_attr_optrom_version,
-+	&dev_attr_board_id,
-+	&dev_attr_fw_state,
-+	&dev_attr_phy_port_cnt,
-+	&dev_attr_phy_port_num,
-+	&dev_attr_iscsi_func_cnt,
-+	&dev_attr_hba_model,
- 	NULL,
- };
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 74c71af..17a29ce 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -610,6 +610,10 @@ struct scsi_qla_host {
- #define SYSFS_FLAG_FW_SEL_BOOT 2
- 	struct iscsi_boot_kset *boot_kset;
- 	struct ql4_boot_tgt_info boot_tgt;
-+	uint16_t phy_port_num;
-+	uint16_t phy_port_cnt;
-+	uint16_t iscsi_pci_func_cnt;
-+	uint8_t model_name[16];
- };
- 
- struct ql4_task_data {
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 21f6f4b..b0bffe1 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -446,6 +446,21 @@ static int qla4xxx_init_firmware(struct scsi_qla_host *ha)
- 	return qla4xxx_get_firmware_status(ha);
- }
- 
-+static void qla4xxx_set_model_info(struct scsi_qla_host *ha)
-+{
-+	uint16_t board_id_string[8];
-+	int i;
-+	int size = sizeof(ha->nvram->isp4022.boardIdStr);
-+	int offset = offsetof(struct eeprom_data, isp4022.boardIdStr) / 2;
-+
-+	for (i = 0; i < (size / 2) ; i++) {
-+		board_id_string[i] = rd_nvram_word(ha, offset);
-+		offset += 1;
++	if (ql4xxx_reset_active(ha)) {
++		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
 +	}
 +
-+	memcpy(ha->model_name, board_id_string, size);
++	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	len = bsg_job->reply_payload.payload_len;
++	total_len = offset + len;
++
++	/* total len should not be greater than max NVRAM size */
++	if ((is_qla4010(ha) && total_len > QL4010_NVRAM_SIZE) ||
++	    ((is_qla4022(ha) || is_qla4032(ha)) &&
++	     total_len > QL40X2_NVRAM_SIZE)) {
++		ql4_printk(KERN_ERR, ha, "%s: offset+len greater than max"
++			   " nvram size, offset=%d len=%d\n",
++			   __func__, offset, len);
++		goto leave;
++	}
++
++	nvram = dma_alloc_coherent(&ha->pdev->dev, len, &nvram_dma,
++				   GFP_KERNEL);
++	if (!nvram) {
++		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for nvram "
++			   "data\n", __func__);
++		rval = -ENOMEM;
++		goto leave;
++	}
++
++	rval = qla4xxx_get_nvram(ha, nvram_dma, offset, len);
++	if (rval) {
++		ql4_printk(KERN_ERR, ha, "%s: get nvram failed\n", __func__);
++		bsg_reply->result = DID_ERROR << 16;
++		rval = -EIO;
++	} else {
++		bsg_reply->reply_payload_rcv_len =
++			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
++					    bsg_job->reply_payload.sg_cnt,
++					    nvram, len);
++		bsg_reply->result = DID_OK << 16;
++	}
++
++	bsg_job_done(bsg_job, bsg_reply->result,
++		     bsg_reply->reply_payload_rcv_len);
++	dma_free_coherent(&ha->pdev->dev, len, nvram, nvram_dma);
++leave:
++	return rval;
 +}
 +
- static int qla4xxx_config_nvram(struct scsi_qla_host *ha)
- {
- 	unsigned long flags;
-@@ -481,6 +496,12 @@ static int qla4xxx_config_nvram(struct scsi_qla_host *ha)
- 		else
- 			return QLA_ERROR;
- 	}
++static int
++qla4xxx_update_nvram(struct bsg_job *bsg_job)
++{
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
++	uint32_t offset = 0;
++	uint32_t len = 0;
++	uint32_t total_len = 0;
++	dma_addr_t nvram_dma;
++	uint8_t *nvram = NULL;
++	int rval = -EINVAL;
 +
-+	if (is_qla4022(ha) || is_qla4032(ha))
-+		qla4xxx_set_model_info(ha);
-+	else
-+		strcpy(ha->model_name, "QLA4010");
++	bsg_reply->reply_payload_rcv_len = 0;
 +
- 	DEBUG(printk("scsi%ld: %s: Setting extHwConfig to 0xFFFF%04x\n",
- 		     ha->host_no, __func__, extHwConfig.Asuint32_t));
++	if (unlikely(pci_channel_offline(ha->pdev)))
++		goto leave;
++
++	if (!(is_qla4010(ha) || is_qla4022(ha) || is_qla4032(ha)))
++		goto leave;
++
++	if (ql4xxx_reset_active(ha)) {
++		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
++	}
++
++	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	len = bsg_job->request_payload.payload_len;
++	total_len = offset + len;
++
++	/* total len should not be greater than max NVRAM size */
++	if ((is_qla4010(ha) && total_len > QL4010_NVRAM_SIZE) ||
++	    ((is_qla4022(ha) || is_qla4032(ha)) &&
++	     total_len > QL40X2_NVRAM_SIZE)) {
++		ql4_printk(KERN_ERR, ha, "%s: offset+len greater than max"
++			   " nvram size, offset=%d len=%d\n",
++			   __func__, offset, len);
++		goto leave;
++	}
++
++	nvram = dma_alloc_coherent(&ha->pdev->dev, len, &nvram_dma,
++				   GFP_KERNEL);
++	if (!nvram) {
++		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
++			   "data\n", __func__);
++		rval = -ENOMEM;
++		goto leave;
++	}
++
++	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
++			  bsg_job->request_payload.sg_cnt, nvram, len);
++
++	rval = qla4xxx_set_nvram(ha, nvram_dma, offset, len);
++	if (rval) {
++		ql4_printk(KERN_ERR, ha, "%s: set nvram failed\n", __func__);
++		bsg_reply->result = DID_ERROR << 16;
++		rval = -EIO;
++	} else
++		bsg_reply->result = DID_OK << 16;
++
++	bsg_job_done(bsg_job, bsg_reply->result,
++		     bsg_reply->reply_payload_rcv_len);
++	dma_free_coherent(&ha->pdev->dev, len, nvram, nvram_dma);
++leave:
++	return rval;
++}
++
+ /**
+  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
+  * @job: iscsi_bsg_job to handle
+@@ -217,6 +358,12 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
+ 	case QLISCSI_VND_GET_ACB_STATE:
+ 		return qla4xxx_get_acb_state(bsg_job);
  
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 52a1063..a539e17 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -2266,6 +2266,11 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
- 	    min(sizeof(ha->my_mac), sizeof(sys_info->mac_addr)));
- 	memcpy(ha->serial_number, &sys_info->serial_number,
- 	    min(sizeof(ha->serial_number), sizeof(sys_info->serial_number)));
-+	memcpy(ha->model_name, &sys_info->board_id_str,
-+	       min(sizeof(ha->model_name), sizeof(sys_info->board_id_str)));
-+	ha->phy_port_cnt = sys_info->phys_port_cnt;
-+	ha->phy_port_num = sys_info->port_num;
-+	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
++	case QLISCSI_VND_READ_NVRAM:
++		return qla4xxx_read_nvram(bsg_job);
++
++	case QLISCSI_VND_UPDATE_NVRAM:
++		return qla4xxx_update_nvram(bsg_job);
++
+ 	default:
+ 		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
+ 			   "0x%x\n", __func__, bsg_req->msgcode);
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
+index 0400e1a..71df80d 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.h
++++ b/drivers/scsi/qla4xxx/ql4_bsg.h
+@@ -11,5 +11,7 @@
+ #define QLISCSI_VND_READ_FLASH		1
+ #define QLISCSI_VND_UPDATE_FLASH	2
+ #define QLISCSI_VND_GET_ACB_STATE	3
++#define QLISCSI_VND_READ_NVRAM		4
++#define QLISCSI_VND_UPDATE_NVRAM	5
  
- 	DEBUG2(printk("scsi%ld: %s: "
- 	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
+ #endif
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index 9dc439b..581ff7e 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -201,6 +201,9 @@ static inline uint32_t clr_rmask(uint32_t val)
+ /* ISP 4022 nvram definitions */
+ #define NVR_WRITE_ENABLE			0x00000010	/* 4022 */
+ 
++#define QL4010_NVRAM_SIZE			0x200
++#define QL40X2_NVRAM_SIZE			0x800
++
+ /*  ISP port_status definitions */
+ 
+ /*  ISP Semaphore definitions */
+@@ -359,6 +362,8 @@ struct qla_flt_region {
+ #define MBOX_CMD_GET_FW_STATE			0x0069
+ #define MBOX_CMD_GET_INIT_FW_CTRL_BLOCK_DEFAULTS 0x006A
+ #define MBOX_CMD_GET_SYS_INFO			0x0078
++#define MBOX_CMD_GET_NVRAM			0x0078	/* For 40xx */
++#define MBOX_CMD_SET_NVRAM			0x0079	/* For 40xx */
+ #define MBOX_CMD_RESTORE_FACTORY_DEFAULTS	0x0087
+ #define MBOX_CMD_SET_ACB			0x0088
+ #define MBOX_CMD_GET_ACB			0x0089
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 5c87696..35bd0c1 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -162,6 +162,10 @@ int qla4xxx_bootdb_by_index(struct scsi_qla_host *ha,
+ 			    dma_addr_t fw_ddb_entry_dma, uint16_t ddb_index);
+ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username,
+ 		     char *password, uint16_t idx);
++int qla4xxx_get_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
++		      uint32_t offset, uint32_t size);
++int qla4xxx_set_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
++		      uint32_t offset, uint32_t size);
+ 
+ /* BSG Functions */
+ int qla4xxx_bsg_request(struct bsg_job *bsg_job);
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index aec7230..011c822 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1690,3 +1690,55 @@ int qla4xxx_get_ip_state(struct scsi_qla_host *ha, uint32_t acb_idx,
+ 	memcpy(sts, mbox_sts, sizeof(mbox_sts));
+ 	return status;
+ }
++
++int qla4xxx_get_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
++		      uint32_t offset, uint32_t size)
++{
++	int status = QLA_SUCCESS;
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	mbox_cmd[0] = MBOX_CMD_GET_NVRAM;
++	mbox_cmd[1] = LSDW(nvram_dma);
++	mbox_cmd[2] = MSDW(nvram_dma);
++	mbox_cmd[3] = offset;
++	mbox_cmd[4] = size;
++
++	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0],
++					 &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_ERR, ha, "scsi%ld: %s: failed "
++				  "status %04X\n", ha->host_no, __func__,
++				  mbox_sts[0]));
++	}
++	return status;
++}
++
++int qla4xxx_set_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
++		      uint32_t offset, uint32_t size)
++{
++	int status = QLA_SUCCESS;
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
++
++	mbox_cmd[0] = MBOX_CMD_SET_NVRAM;
++	mbox_cmd[1] = LSDW(nvram_dma);
++	mbox_cmd[2] = MSDW(nvram_dma);
++	mbox_cmd[3] = offset;
++	mbox_cmd[4] = size;
++
++	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0],
++					 &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_ERR, ha, "scsi%ld: %s: failed "
++				  "status %04X\n", ha->host_no, __func__,
++				  mbox_sts[0]));
++	}
++	return status;
++}
 -- 
 1.7.6
 
