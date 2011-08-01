@@ -1,123 +1,184 @@
 From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH v2] Fix leak in
- drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
-Date: Mon, 1 Aug 2011 22:32:21 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1108012230080.31999@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1108010017030.28695@swampdragon.chaosbits.net> <1312152274.11635.8.camel@Joe-Laptop>
+Subject: [PATCH][Resend] Remove unneeded version.h includes from
+ drivers/scsi/
+Date: Mon, 1 Aug 2011 23:27:12 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1108012325281.31999@swampdragon.chaosbits.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:13934 "EHLO
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:14686 "EHLO
 	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753065Ab1HAUcY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 16:32:24 -0400
-In-Reply-To: <1312152274.11635.8.camel@Joe-Laptop>
+	with ESMTP id S1752473Ab1HAV1O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 17:27:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: trivial@kernel.org, devel@open-fcoe.org, linux-scsi@vger.kernel.org, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Jing Huang <huangj@brocade.com>, Robert Love <robert.w.love@intel.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, Kashyap Desai <kashyap.desai@lsi.com>, Arnd Bergmann <arnd@arndb.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Xiangliang Yu <yuxiangl@marvell.com>
 
-On Sun, 31 Jul 2011, Joe Perches wrote:
-
-> On Mon, 2011-08-01 at 00:28 +0200, Jesper Juhl wrote:
-> > We leak memory if the allocations for 'new_param->name' or 'new_param->value' fail.
-> > We also do a lot of variable assignments that are completely pointless
-> > if the allocations fail.
-> > So, let's move the allocations before the assignments and also make
-> > sure that we free whatever was allocated to one if the allocation for
-> > another fails.
-> 
-> > diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-> []
-> > +		new_param->name = kmalloc(strlen(param->name) + 1, GFP_KERNEL);
-> > +		new_param->value = kmalloc(strlen(param->value) + 1, GFP_KERNEL);
-> []
-> >  		memcpy(new_param->name, param->name, strlen(param->name));
-> >  		new_param->name[strlen(param->name)] = '\0';
-> >  		memcpy(new_param->value, param->value, strlen(param->value));
-> 
-> kstrdup
-> 
-Right, now why didn't I think of that?  - thank you :)
-
-Here's an updated version.
-
-
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Fix leak in drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
-
-We leak memory if the allocations for 'new_param->name' or 'new_param->value' fail.
-We also do a lot of variable assignments that are completely pointless
-if the allocations fail.
-So, let's move the allocations before the assignments and also make
-sure that we free whatever was allocated to one if the allocation fail.
-There's also a small CodingStyle fixup in there (curly braces on both
-branches of if statement) since I was in the area anyway.
+It was pointed out by 'make versioncheck' that some includes of
+linux/version.h are not needed in drivers/scsi/.
+This patch removes them.
 
 Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
- drivers/target/iscsi/iscsi_target_parameters.c |   35 +++++++++---------------
- 1 files changed, 13 insertions(+), 22 deletions(-)
+ drivers/scsi/aacraid/src.c            |    1 -
+ drivers/scsi/bfa/bfad_drv.h           |    1 -
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c    |    1 -
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c    |    1 -
+ drivers/scsi/fcoe/fcoe.c              |    1 -
+ drivers/scsi/mpt2sas/mpt2sas_base.c   |    1 -
+ drivers/scsi/mpt2sas/mpt2sas_config.c |    1 -
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c    |    1 -
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c  |    1 -
+ drivers/scsi/mvsas/mv_sas.h           |    1 -
+ drivers/scsi/pmcraid.c                |    1 -
+ drivers/scsi/pmcraid.h                |    1 -
+ 12 files changed, 0 insertions(+), 12 deletions(-)
 
-  compile tested only.
-
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 252e246..2ab955d 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -572,6 +572,17 @@ int iscsi_copy_param_list(
- 			goto err_out;
- 		}
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index c204946..957595a 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -37,7 +37,6 @@
+ #include <linux/slab.h>
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+-#include <linux/version.h>
+ #include <linux/completion.h>
+ #include <linux/time.h>
+ #include <linux/interrupt.h>
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index bda999a..5e19a5f 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -27,7 +27,6 @@
+ #define __BFAD_DRV_H__
  
-+		new_param->name = kstrdup(param->name, GFP_KERNEL);
-+		new_param->value = kstrdup(param->value, GFP_KERNEL);
-+		if (!new_param->name || !new_param->value) {
-+			kfree(new_param->value);
-+			kfree(new_param->name);
-+			kfree(new_param);
-+			pr_err("Unable to allocate memory for parameter "
-+				"name/value.\n");
-+			goto err_out;
-+		}
-+
- 		new_param->set_param = param->set_param;
- 		new_param->phase = param->phase;
- 		new_param->scope = param->scope;
-@@ -580,32 +591,12 @@ int iscsi_copy_param_list(
- 		new_param->use = param->use;
- 		new_param->type_range = param->type_range;
+ #include <linux/types.h>
+-#include <linux/version.h>
+ #include <linux/pci.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/idr.h>
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index bd22041..f4aa637 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -14,7 +14,6 @@
  
--		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
--		if (!new_param->name) {
--			pr_err("Unable to allocate memory for"
--				" parameter name.\n");
--			goto err_out;
--		}
--
--		new_param->value = kzalloc(strlen(param->value) + 1,
--				GFP_KERNEL);
--		if (!new_param->value) {
--			pr_err("Unable to allocate memory for"
--				" parameter value.\n");
--			goto err_out;
--		}
--
--		memcpy(new_param->name, param->name, strlen(param->name));
--		new_param->name[strlen(param->name)] = '\0';
--		memcpy(new_param->value, param->value, strlen(param->value));
--		new_param->value[strlen(param->value)] = '\0';
--
- 		list_add_tail(&new_param->p_list, &param_list->param_list);
- 	}
+ #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
  
--	if (!list_empty(&param_list->param_list))
-+	if (!list_empty(&param_list->param_list)) {
- 		*dst_param_list = param_list;
--	else {
-+	} else {
- 		pr_err("No parameters allocated.\n");
- 		goto err_out;
- 	}
+-#include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <scsi/scsi_host.h>
+diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+index ae13c49..31c79bd 100644
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -13,7 +13,6 @@
+ 
+ #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
+ 
+-#include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <scsi/scsi_host.h>
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index ba710e3..300586d 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -18,7 +18,6 @@
+  */
+ 
+ #include <linux/module.h>
+-#include <linux/version.h>
+ #include <linux/spinlock.h>
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 83035bd..6825772 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -42,7 +42,6 @@
+  * USA.
+  */
+ 
+-#include <linux/version.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/errno.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
+index 6861244..2b11010 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_config.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
+@@ -41,7 +41,6 @@
+  * USA.
+  */
+ 
+-#include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index 38ed026..246d5fb 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -42,7 +42,6 @@
+  * USA.
+  */
+ 
+-#include <linux/version.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
+ #include <linux/errno.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 6abd2fc..5202de3 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -41,7 +41,6 @@
+  * USA.
+  */
+ 
+-#include <linux/version.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 44d7885..44b4745 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -43,7 +43,6 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/sas_ata.h>
+-#include <linux/version.h>
+ #include "mv_defs.h"
+ 
+ #define DRV_NAME		"mvsas"
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index d079f9a..b86db84 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -39,7 +39,6 @@
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/hdreg.h>
+-#include <linux/version.h>
+ #include <linux/io.h>
+ #include <linux/slab.h>
+ #include <asm/irq.h>
+diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
+index f920baf..ca496c7 100644
+--- a/drivers/scsi/pmcraid.h
++++ b/drivers/scsi/pmcraid.h
+@@ -24,7 +24,6 @@
+ #ifndef _PMCRAID_H
+ #define _PMCRAID_H
+ 
+-#include <linux/version.h>
+ #include <linux/types.h>
+ #include <linux/completion.h>
+ #include <linux/list.h>
 -- 
 1.7.6
 
