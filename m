@@ -1,51 +1,44 @@
-From: RKK <kulkarni.ravi4@gmail.com>
-Subject: understanding the SCSI Specification.
-Date: Mon, 1 Aug 2011 14:41:06 +0530
-Message-ID: <CAM=x7SY_H_+=v4QT0-is7pS4S-YfFw0+JRPcO0KjQY549_wayw@mail.gmail.com>
+From: Anton Blanchard <anton@samba.org>
+Subject: [PATCH] [SCSI] ipr: Always initiate hard reset in kdump kernel
+Date: Mon, 1 Aug 2011 19:43:45 +1000
+Message-ID: <20110801194345.12673e74@kryten>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:33042 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048Ab1HAJLH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 05:11:07 -0400
-Received: by vws1 with SMTP id 1so4276097vws.19
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2011 02:11:06 -0700 (PDT)
+Received: from ozlabs.org ([203.10.76.45]:44156 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752721Ab1HAJny (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Aug 2011 05:43:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, kernelnewbies <kernelnewbies@kernelnewbies.org>
-
-HI all,
-Im working on a storage protocol   which uses SCSI commands  set as
-the command set and also the SCSI Task Management functions for
-processing the Task Management.
-The Architectural Model is based on SAM-5. The Command set is based on
-SPC-4 and SBC-3. I have some doubts in trying to understanding some
-SCSI terms and definitions.
-
-For  using the send command transport protocol service request to
-request a initiator  the following API is defined
-
-[1]Send SCSI Command (IN (I_T_L_Q Nexus, CDB, Task Attribute, [Data-in
-Buffer Size], [Data-
-out Buffer], [Data-out Buffer Size], [CRN], [Command Priority], [First
-Burst Enabled]))
-
-Here  I want to know what relation does the I_T_L_Q tries to convey.
-from what it says in SAM-5 Specification  section 4.8 tries to define
-the Nexus as " nexus represents a relationship between a SCSI
-initiator port, a SCSI target port, optionally a logical unit,
-and optionally a command."
- how do we convey this information in the above [1].
-Also can someone help me in how to map the initiator-target relation
-to host-device  structure? thanks.
-
-Warm Regards,
-Ravi Kulkarni.
+To: wayneb@linux.vnet.ibm.com, brking@us.ibm.com, JBottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org
 
 
+During kdump testing I noticed timeouts when initialising each IPR
+adapter. While the driver has logic to detect an adapter in an
+indeterminate state, it wasn't triggering and each adapter went
+through a 5 minute timeout before finally going operational.
 
+Some analysis showed the needs_hard_reset flag wasn't getting set.
+We can check the reset_devices kernel parameter which is set by
+kdump and force a full reset. This fixes the problem.
 
+Signed-off-by: Anton Blanchard <anton@samba.org>
+Cc: <stable@kernel.org>
+---
 
-Warm Regards,
-Ravi Kulkarni.
+Index: linux-2.6/drivers/scsi/ipr.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/ipr.c	2011-07-28 13:47:17.000000000 +1000
++++ linux-2.6/drivers/scsi/ipr.c	2011-07-29 18:46:57.000000000 +1000
+@@ -8812,7 +8812,7 @@ static int __devinit ipr_probe_ioa(struc
+ 	uproc = readl(ioa_cfg->regs.sense_uproc_interrupt_reg32);
+ 	if ((mask & IPR_PCII_HRRQ_UPDATED) == 0 || (uproc & IPR_UPROCI_RESET_ALERT))
+ 		ioa_cfg->needs_hard_reset = 1;
+-	if (interrupts & IPR_PCII_ERROR_INTERRUPTS)
++	if ((interrupts & IPR_PCII_ERROR_INTERRUPTS) || reset_devices)
+ 		ioa_cfg->needs_hard_reset = 1;
+ 	if (interrupts & IPR_PCII_IOA_UNIT_CHECKED)
+ 		ioa_cfg->ioa_unit_checked = 1;
