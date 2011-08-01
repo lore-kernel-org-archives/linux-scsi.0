@@ -1,14 +1,16 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 0/8] qla4xxx feature update
-Date: Mon, 1 Aug 2011 03:26:11 -0700
-Message-ID: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 2/8] qla4xxx: Added support to update mtu
+Date: Mon, 1 Aug 2011 03:26:13 -0700
+Message-ID: <1312194379-9241-3-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:40057 "EHLO
-	TX2EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690Ab1HAKfq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 06:35:46 -0400
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:29308 "EHLO
+	TX2EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753926Ab1HAKfs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 06:35:48 -0400
+In-Reply-To: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, michaelc@cs.wisc.edu
@@ -16,37 +18,83 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-James,
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_def.h |    1 +
+ drivers/scsi/qla4xxx/ql4_mbx.c |    2 ++
+ drivers/scsi/qla4xxx/ql4_os.c  |   12 ++++++++++++
+ 3 files changed, 15 insertions(+), 0 deletions(-)
 
-Following patches are made over scsi-misc and Mike Christie's patchset
-posted here: http://marc.info/?l=linux-scsi&m=131161955801957&w=2
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 30efb6c..90dc621 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -343,6 +343,7 @@ struct ipaddress_config {
+ 	struct in6_addr ipv6_addr0;
+ 	struct in6_addr ipv6_addr1;
+ 	struct in6_addr ipv6_default_router_addr;
++	uint16_t eth_mtu_size;
+ };
+ 
+ #define QL4_CHAP_MAX_NAME_LEN 256
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 72ec7e0..8741cfa 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -333,6 +333,8 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
+ 	ha->ip_config.ipv4_options = le16_to_cpu(init_fw_cb->ipv4_ip_opts);
+ 	ha->ip_config.ipv4_addr_state =
+ 				le16_to_cpu(init_fw_cb->ipv4_addr_state);
++	ha->ip_config.eth_mtu_size =
++				le16_to_cpu(init_fw_cb->eth_mtu_size);
+ 
+ 	if (ha->acb_version == ACB_SUPPORTED) {
+ 		ha->ip_config.ipv6_options = le16_to_cpu(init_fw_cb->ipv6_opts);
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 15355f9..58a270b 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -230,6 +230,7 @@ static mode_t ql4_attr_is_visible(int param_type, int param)
+ 		case ISCSI_NET_PARAM_VLAN_ID:
+ 		case ISCSI_NET_PARAM_VLAN_PRIORITY:
+ 		case ISCSI_NET_PARAM_VLAN_ENABLED:
++		case ISCSI_NET_PARAM_MTU:
+ 			return S_IRUGO;
+ 		default:
+ 			return 0;
+@@ -335,6 +336,9 @@ static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
+ 				       IPV6_OPT_VLAN_TAGGING_ENABLE) ?
+ 				       "enabled" : "disabled");
+ 		break;
++	case ISCSI_NET_PARAM_MTU:
++		len = sprintf(buf, "%d\n", ha->ip_config.eth_mtu_size);
++		break;
+ 	default:
+ 		len = -ENOSYS;
+ 	}
+@@ -718,6 +722,10 @@ static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
+ 			init_fw_cb->ipv6_opts &=
+ 				cpu_to_le16(~IPV6_OPT_VLAN_TAGGING_ENABLE);
+ 		break;
++	case ISCSI_NET_PARAM_MTU:
++		init_fw_cb->eth_mtu_size =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
+ 	default:
+ 		ql4_printk(KERN_ERR, ha, "Unknown IPv6 param = %d\n",
+ 			   iface_param->param);
+@@ -778,6 +786,10 @@ static void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
+ 			init_fw_cb->ipv4_ip_opts &=
+ 					cpu_to_le16(~IPOPT_VLAN_TAGGING_ENABLE);
+ 		break;
++	case ISCSI_NET_PARAM_MTU:
++		init_fw_cb->eth_mtu_size =
++				cpu_to_le16(*(uint16_t *)iface_param->value);
++		break;
+ 	default:
+ 		ql4_printk(KERN_ERR, ha, "Unknown IPv4 param = %d\n",
+ 			   iface_param->param);
+-- 
+1.7.6
 
-Harish Zunjarrao (3):
-	qla4xxx: Code cleanup for read/update flash using BSG
-	qla4xxx: Add get ACB state support using BSG
-	qla4xxx: Add read/update NVRAM support for 40xx adapters using BSG
-
-Vikas Chaudhary (5):
-	scsi_transport_iscsi: Added support to update mtu
-	qla4xxx: Added support to update mtu
-	qla4xxx: Added vendor specific sysfs attributes
-	scsi_transport_iscsi: Added support to update initiator iscsi port
-	qla4xxx: added support to update initiator iscsi port
-
-drivers/scsi/qla4xxx/ql4_attr.c     |   76 ++++++++
-drivers/scsi/qla4xxx/ql4_bsg.c      |  331 +++++++++++++++++++++++++++--------
-drivers/scsi/qla4xxx/ql4_bsg.h      |    3 +
-drivers/scsi/qla4xxx/ql4_def.h      |   17 ++
-drivers/scsi/qla4xxx/ql4_fw.h       |    5 +
-drivers/scsi/qla4xxx/ql4_glbl.h     |    6 +
-drivers/scsi/qla4xxx/ql4_init.c     |   21 +++
-drivers/scsi/qla4xxx/ql4_mbx.c      |   79 +++++++++
-drivers/scsi/qla4xxx/ql4_nx.c       |    5 +
-drivers/scsi/qla4xxx/ql4_os.c       |   31 ++++
-drivers/scsi/scsi_transport_iscsi.c |    8 +
-include/scsi/iscsi_if.h             |    2 +
-
-
-Thanks,
-Vikas.
 
