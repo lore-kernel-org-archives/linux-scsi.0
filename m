@@ -1,99 +1,252 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 2/8] qla4xxx: Added support to update mtu
-Date: Mon, 1 Aug 2011 03:26:13 -0700
-Message-ID: <1312194379-9241-3-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 3/8] qla4xxx: Code cleanup for read/update flash using BSG
+Date: Mon, 1 Aug 2011 03:26:14 -0700
+Message-ID: <1312194379-9241-4-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:29308 "EHLO
 	TX2EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753926Ab1HAKfs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 06:35:48 -0400
+	with ESMTP id S1753690Ab1HAKft (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Aug 2011 06:35:49 -0400
 In-Reply-To: <1312194379-9241-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
+- Corrected return status
+- Added reset active check
+- Removed unused dma_map_sg calls
+- Added debug prints on failure
+
+Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h |    1 +
- drivers/scsi/qla4xxx/ql4_mbx.c |    2 ++
- drivers/scsi/qla4xxx/ql4_os.c  |   12 ++++++++++++
- 3 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_bsg.c |  128 +++++++++++++++++-----------------------
+ drivers/scsi/qla4xxx/ql4_def.h |   10 +++
+ 2 files changed, 65 insertions(+), 73 deletions(-)
 
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
+index daa2b0f..15032f1 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.c
++++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+@@ -16,36 +16,31 @@ qla4xxx_read_flash(struct bsg_job *bsg_job)
+ 	struct scsi_qla_host *ha = to_qla_host(host);
+ 	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
+ 	struct iscsi_bsg_request *bsg_req = bsg_job->request;
+-	uint32_t sg_cnt;
+ 	uint32_t offset = 0;
+ 	uint32_t length = 0;
+ 	dma_addr_t flash_dma;
+ 	uint8_t *flash = NULL;
+-	int rval = 0;
++	int rval = -EINVAL;
+ 
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 
+ 	if (unlikely(pci_channel_offline(ha->pdev)))
+-		return -EINVAL;
++		goto leave;
+ 
+-	if (ha->flash_state != QLFLASH_WAITING)
+-		return -EBUSY;
+-
+-	/* TODO: Add check for adapter online, reset active?? */
+-	sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
+-			    bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
+-
+-	if (!sg_cnt)
+-		return -ENOMEM;
++	if (ql4xxx_reset_active(ha)) {
++		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
++	}
+ 
+-	if (sg_cnt != bsg_job->reply_payload.sg_cnt) {
+-		ql4_printk(KERN_ERR, ha, "dma mapping resulted in different"
+-			   " sg counts, sg_cnt: %x dma_sg_cnt: %x\n",
+-			   bsg_job->reply_payload.sg_cnt, sg_cnt);
+-		rval = -EAGAIN;
+-		goto unmap_sg;
++	if (ha->flash_state != QLFLASH_WAITING) {
++		ql4_printk(KERN_ERR, ha, "%s: another flash operation "
++			   "active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
+ 	}
+ 
++	ha->flash_state = QLFLASH_READING;
+ 	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
+ 	length = bsg_job->reply_payload.payload_len;
+ 
+@@ -55,31 +50,27 @@ qla4xxx_read_flash(struct bsg_job *bsg_job)
+ 		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
+ 			   "data\n", __func__);
+ 		rval = -ENOMEM;
+-		goto unmap_sg;
++		goto leave;
+ 	}
+ 
+-	ha->flash_state = QLFLASH_READING;
+-	if (qla4xxx_get_flash(ha, flash_dma, offset, length))
+-		bsg_reply->result = (DID_ERROR << 16);
+-	else {
+-		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+-				    bsg_job->reply_payload.sg_cnt,
+-				    flash, length);
+-
+-		bsg_reply->result = DID_OK;
+-		bsg_reply->reply_payload_rcv_len = length;
++	rval = qla4xxx_get_flash(ha, flash_dma, offset, length);
++	if (rval) {
++		ql4_printk(KERN_ERR, ha, "%s: get flash failed\n", __func__);
++		bsg_reply->result = DID_ERROR << 16;
++		rval = -EIO;
++	} else {
++		bsg_reply->reply_payload_rcv_len =
++			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
++					    bsg_job->reply_payload.sg_cnt,
++					    flash, length);
++		bsg_reply->result = DID_OK << 16;
+ 	}
+ 
+-	if (flash)
+-		dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
+-
++	bsg_job_done(bsg_job, bsg_reply->result,
++		     bsg_reply->reply_payload_rcv_len);
++	dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
++leave:
+ 	ha->flash_state = QLFLASH_WAITING;
+-unmap_sg:
+-	dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
+-		     bsg_job->reply_payload.sg_cnt, DMA_FROM_DEVICE);
+-	if (!rval)
+-		bsg_job_done(bsg_job, bsg_reply->result,
+-			     bsg_reply->reply_payload_rcv_len);
+ 	return rval;
+ }
+ 
+@@ -90,36 +81,32 @@ qla4xxx_update_flash(struct bsg_job *bsg_job)
+ 	struct scsi_qla_host *ha = to_qla_host(host);
+ 	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
+ 	struct iscsi_bsg_request *bsg_req = bsg_job->request;
+-	uint32_t sg_cnt;
+ 	uint32_t length = 0;
+ 	uint32_t offset = 0;
+ 	uint32_t options = 0;
+ 	dma_addr_t flash_dma;
+ 	uint8_t *flash = NULL;
+-	int rval = 0;
++	int rval = -EINVAL;
+ 
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 
+ 	if (unlikely(pci_channel_offline(ha->pdev)))
+-		return -EINVAL;
+-
+-	if (ha->flash_state != QLFLASH_WAITING)
+-		return -EBUSY;
++		goto leave;
+ 
+-	sg_cnt = dma_map_sg(&ha->pdev->dev, bsg_job->request_payload.sg_list,
+-			    bsg_job->request_payload.sg_cnt, DMA_TO_DEVICE);
+-
+-	if (!sg_cnt)
+-		return -ENOMEM;
++	if (ql4xxx_reset_active(ha)) {
++		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
++	}
+ 
+-	if (sg_cnt != bsg_job->request_payload.sg_cnt) {
+-		ql4_printk(KERN_ERR, ha, "dma mapping resulted in different "
+-			   "sg counts request_sg_cnt: %x dma_request_sg_cnt: "
+-			   "%x\n", bsg_job->request_payload.sg_cnt, sg_cnt);
+-		rval = -EAGAIN;
+-		goto unmap_sg;
++	if (ha->flash_state != QLFLASH_WAITING) {
++		ql4_printk(KERN_ERR, ha, "%s: another flash operation "
++			   "active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
+ 	}
+ 
++	ha->flash_state = QLFLASH_WRITING;
+ 	length = bsg_job->request_payload.payload_len;
+ 	offset = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
+ 	options = bsg_req->rqst_data.h_vendor.vendor_cmd[2];
+@@ -130,30 +117,25 @@ qla4xxx_update_flash(struct bsg_job *bsg_job)
+ 		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for flash "
+ 			   "data\n", __func__);
+ 		rval = -ENOMEM;
+-		goto unmap_sg;
++		goto leave;
+ 	}
+ 
+-	ha->flash_state = QLFLASH_WRITING;
+ 	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+ 			  bsg_job->request_payload.sg_cnt, flash, length);
+ 
+-	if (qla4xxx_set_flash(ha, flash_dma, offset, length, options))
+-		bsg_reply->result = (DID_ERROR << 16);
+-	else {
+-		bsg_reply->result = DID_OK;
+-		bsg_reply->reply_payload_rcv_len = length;
+-	}
+-
+-	if (flash)
+-		dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
++	rval = qla4xxx_set_flash(ha, flash_dma, offset, length, options);
++	if (rval) {
++		ql4_printk(KERN_ERR, ha, "%s: set flash failed\n", __func__);
++		bsg_reply->result = DID_ERROR << 16;
++		rval = -EIO;
++	} else
++		bsg_reply->result = DID_OK << 16;
++
++	bsg_job_done(bsg_job, bsg_reply->result,
++		     bsg_reply->reply_payload_rcv_len);
++	dma_free_coherent(&ha->pdev->dev, length, flash, flash_dma);
++leave:
+ 	ha->flash_state = QLFLASH_WAITING;
+-unmap_sg:
+-	dma_unmap_sg(&ha->pdev->dev, bsg_job->reply_payload.sg_list,
+-		     bsg_job->reply_payload.sg_cnt, DMA_TO_DEVICE);
+-
+-	if (!rval)
+-		bsg_job_done(bsg_job, bsg_reply->result,
+-			     bsg_reply->reply_payload_rcv_len);
+ 	return rval;
+ }
+ 
 diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 30efb6c..90dc621 100644
+index 90dc621..74c71af 100644
 --- a/drivers/scsi/qla4xxx/ql4_def.h
 +++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -343,6 +343,7 @@ struct ipaddress_config {
- 	struct in6_addr ipv6_addr0;
- 	struct in6_addr ipv6_addr1;
- 	struct in6_addr ipv6_default_router_addr;
-+	uint16_t eth_mtu_size;
- };
+@@ -803,6 +803,16 @@ static inline void ql4xxx_unlock_drvr(struct scsi_qla_host *a)
+ 		ql4xxx_sem_unlock(a, QL4022_DRVR_SEM_MASK);
+ }
  
- #define QL4_CHAP_MAX_NAME_LEN 256
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 72ec7e0..8741cfa 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -333,6 +333,8 @@ qla4xxx_update_local_ip(struct scsi_qla_host *ha,
- 	ha->ip_config.ipv4_options = le16_to_cpu(init_fw_cb->ipv4_ip_opts);
- 	ha->ip_config.ipv4_addr_state =
- 				le16_to_cpu(init_fw_cb->ipv4_addr_state);
-+	ha->ip_config.eth_mtu_size =
-+				le16_to_cpu(init_fw_cb->eth_mtu_size);
++static inline int ql4xxx_reset_active(struct scsi_qla_host *ha)
++{
++	return test_bit(DPC_RESET_ACTIVE, &ha->dpc_flags) ||
++	       test_bit(DPC_RESET_HA, &ha->dpc_flags) ||
++	       test_bit(DPC_RETRY_RESET_HA, &ha->dpc_flags) ||
++	       test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags) ||
++	       test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags) ||
++	       test_bit(DPC_HA_UNRECOVERABLE, &ha->dpc_flags);
++
++}
+ /*---------------------------------------------------------------------------*/
  
- 	if (ha->acb_version == ACB_SUPPORTED) {
- 		ha->ip_config.ipv6_options = le16_to_cpu(init_fw_cb->ipv6_opts);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 15355f9..58a270b 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -230,6 +230,7 @@ static mode_t ql4_attr_is_visible(int param_type, int param)
- 		case ISCSI_NET_PARAM_VLAN_ID:
- 		case ISCSI_NET_PARAM_VLAN_PRIORITY:
- 		case ISCSI_NET_PARAM_VLAN_ENABLED:
-+		case ISCSI_NET_PARAM_MTU:
- 			return S_IRUGO;
- 		default:
- 			return 0;
-@@ -335,6 +336,9 @@ static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
- 				       IPV6_OPT_VLAN_TAGGING_ENABLE) ?
- 				       "enabled" : "disabled");
- 		break;
-+	case ISCSI_NET_PARAM_MTU:
-+		len = sprintf(buf, "%d\n", ha->ip_config.eth_mtu_size);
-+		break;
- 	default:
- 		len = -ENOSYS;
- 	}
-@@ -718,6 +722,10 @@ static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
- 			init_fw_cb->ipv6_opts &=
- 				cpu_to_le16(~IPV6_OPT_VLAN_TAGGING_ENABLE);
- 		break;
-+	case ISCSI_NET_PARAM_MTU:
-+		init_fw_cb->eth_mtu_size =
-+				cpu_to_le16(*(uint16_t *)iface_param->value);
-+		break;
- 	default:
- 		ql4_printk(KERN_ERR, ha, "Unknown IPv6 param = %d\n",
- 			   iface_param->param);
-@@ -778,6 +786,10 @@ static void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
- 			init_fw_cb->ipv4_ip_opts &=
- 					cpu_to_le16(~IPOPT_VLAN_TAGGING_ENABLE);
- 		break;
-+	case ISCSI_NET_PARAM_MTU:
-+		init_fw_cb->eth_mtu_size =
-+				cpu_to_le16(*(uint16_t *)iface_param->value);
-+		break;
- 	default:
- 		ql4_printk(KERN_ERR, ha, "Unknown IPv4 param = %d\n",
- 			   iface_param->param);
+ /* Defines for qla4xxx_initialize_adapter() and qla4xxx_recover_adapter() */
 -- 
 1.7.6
 
