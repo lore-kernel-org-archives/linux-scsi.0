@@ -1,140 +1,113 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH v3] Fix leak in
- drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
-Date: Tue, 2 Aug 2011 10:26:36 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1108021023530.1692@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1108010017030.28695@swampdragon.chaosbits.net>  <1312152274.11635.8.camel@Joe-Laptop>  <alpine.LNX.2.00.1108012230080.31999@swampdragon.chaosbits.net> <1312241542.11635.21.camel@Joe-Laptop>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1312241542.11635.21.camel@Joe-Laptop>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 9/11] drivers/target/target_core_rd.c: trivial: use BUG_ON
+Date: Tue,  2 Aug 2011 12:35:02 +0200
+Message-ID: <1312281304-11847-10-git-send-email-julia@diku.dk>
+References: <1312281304-11847-1-git-send-email-julia@diku.dk>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw2.diku.dk ([130.225.96.92]:59140 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753250Ab1HBKfR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Aug 2011 06:35:17 -0400
+In-Reply-To: <1312281304-11847-1-git-send-email-julia@diku.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, trivial@kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 1 Aug 2011, Joe Perches wrote:
+From: Julia Lawall <julia@diku.dk>
 
-> On Mon, 2011-08-01 at 22:32 +0200, Jesper Juhl wrote:
-> > diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-> []
-> > @@ -572,6 +572,17 @@ int iscsi_copy_param_list(
-> []
-> > +		if (!new_param->name || !new_param->value) {
-> []
-> > +			pr_err("Unable to allocate memory for parameter "
-> > +				"name/value.\n");
-> 
-> I know you didn't change these lines, but could you please
-> remember to coalesce formats to a single line next time?
-> 
+Use BUG_ON(x) rather than if(x) BUG();
 
-Ok, let me try once more. I hope this is now acceptable.
+The semantic patch that fixes this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
+// <smpl>
+@@ identifier x; @@
+-if (x) BUG();
++BUG_ON(x);
 
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH v3] Fix leak in drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
+@@ identifier x; @@
+-if (!x) BUG();
++BUG_ON(!x);
+// </smpl>
 
-We leak memory if the allocations for 'new_param->name' or
-'new_param->value' fail.
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
-We also do a lot of variable assignments that are completely pointless
-if the allocations fail.
-
-So, let's move the allocations before the assignments and also make
-sure that we free whatever was allocated to one if the allocation fail.
-
-There's also some small CodingStyle fixups in there (curly braces on
-both branches of if statement, only one variable per line) since I was
-in the area anyway. And finally, error messages in the function are
-put on a single line for easy grep'abillity.
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
- drivers/target/iscsi/iscsi_target_parameters.c |   43 +++++++++---------------
- 1 files changed, 16 insertions(+), 27 deletions(-)
+ drivers/target/target_core_rd.c |   24 ++++++++----------------
+ 1 file changed, 8 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 252e246..497b2e7 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -545,13 +545,13 @@ int iscsi_copy_param_list(
- 	struct iscsi_param_list *src_param_list,
- 	int leading)
- {
--	struct iscsi_param *new_param = NULL, *param = NULL;
-+	struct iscsi_param *param = NULL;
-+	struct iscsi_param *new_param = NULL;
- 	struct iscsi_param_list *param_list = NULL;
+diff -u -p a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -390,12 +390,10 @@ static int rd_MEMCPY_read(struct rd_requ
+ 				length = req->rd_size;
  
- 	param_list = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
- 	if (!param_list) {
--		pr_err("Unable to allocate memory for"
--				" struct iscsi_param_list.\n");
-+		pr_err("Unable to allocate memory for struct iscsi_param_list.\n");
- 		goto err_out;
- 	}
- 	INIT_LIST_HEAD(&param_list->param_list);
-@@ -567,8 +567,17 @@ int iscsi_copy_param_list(
+ 			dst = sg_virt(&sg_d[i++]) + dst_offset;
+-			if (!dst)
+-				BUG();
++			BUG_ON(!dst);
  
- 		new_param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
- 		if (!new_param) {
--			pr_err("Unable to allocate memory for"
--				" struct iscsi_param.\n");
-+			pr_err("Unable to allocate memory for struct iscsi_param.\n");
-+			goto err_out;
-+		}
-+
-+		new_param->name = kstrdup(param->name, GFP_KERNEL);
-+		new_param->value = kstrdup(param->value, GFP_KERNEL);
-+		if (!new_param->value || !new_param->name) {
-+			kfree(new_param->value);
-+			kfree(new_param->name);
-+			kfree(new_param);
-+			pr_err("Unable to allocate memory for parameter name/value.\n");
- 			goto err_out;
- 		}
+ 			src = sg_virt(&sg_s[j]) + src_offset;
+-			if (!src)
+-				BUG();
++			BUG_ON(!src);
  
-@@ -580,32 +589,12 @@ int iscsi_copy_param_list(
- 		new_param->use = param->use;
- 		new_param->type_range = param->type_range;
+ 			dst_offset = 0;
+ 			src_offset = length;
+@@ -415,8 +413,7 @@ static int rd_MEMCPY_read(struct rd_requ
+ 				length = req->rd_size;
  
--		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
--		if (!new_param->name) {
--			pr_err("Unable to allocate memory for"
--				" parameter name.\n");
--			goto err_out;
--		}
--
--		new_param->value = kzalloc(strlen(param->value) + 1,
--				GFP_KERNEL);
--		if (!new_param->value) {
--			pr_err("Unable to allocate memory for"
--				" parameter value.\n");
--			goto err_out;
--		}
--
--		memcpy(new_param->name, param->name, strlen(param->name));
--		new_param->name[strlen(param->name)] = '\0';
--		memcpy(new_param->value, param->value, strlen(param->value));
--		new_param->value[strlen(param->value)] = '\0';
--
- 		list_add_tail(&new_param->p_list, &param_list->param_list);
- 	}
+ 			dst = sg_virt(&sg_d[i]) + dst_offset;
+-			if (!dst)
+-				BUG();
++			BUG_ON(!dst);
  
--	if (!list_empty(&param_list->param_list))
-+	if (!list_empty(&param_list->param_list)) {
- 		*dst_param_list = param_list;
--	else {
-+	} else {
- 		pr_err("No parameters allocated.\n");
- 		goto err_out;
- 	}
--- 
-1.7.6
+ 			if (sg_d[i].length == length) {
+ 				i++;
+@@ -425,8 +422,7 @@ static int rd_MEMCPY_read(struct rd_requ
+ 				dst_offset = length;
+ 
+ 			src = sg_virt(&sg_s[j++]) + src_offset;
+-			if (!src)
+-				BUG();
++			BUG_ON(!src);
+ 
+ 			src_offset = 0;
+ 			page_end = 1;
+@@ -510,12 +506,10 @@ static int rd_MEMCPY_write(struct rd_req
+ 				length = req->rd_size;
+ 
+ 			src = sg_virt(&sg_s[i++]) + src_offset;
+-			if (!src)
+-				BUG();
++			BUG_ON(!src);
+ 
+ 			dst = sg_virt(&sg_d[j]) + dst_offset;
+-			if (!dst)
+-				BUG();
++			BUG_ON(!dst);
+ 
+ 			src_offset = 0;
+ 			dst_offset = length;
+@@ -535,8 +529,7 @@ static int rd_MEMCPY_write(struct rd_req
+ 				length = req->rd_size;
+ 
+ 			src = sg_virt(&sg_s[i]) + src_offset;
+-			if (!src)
+-				BUG();
++			BUG_ON(!src);
+ 
+ 			if (sg_s[i].length == length) {
+ 				i++;
+@@ -545,8 +538,7 @@ static int rd_MEMCPY_write(struct rd_req
+ 				src_offset = length;
+ 
+ 			dst = sg_virt(&sg_d[j++]) + dst_offset;
+-			if (!dst)
+-				BUG();
++			BUG_ON(!dst);
+ 
+ 			dst_offset = 0;
+ 			page_end = 1;
 
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
