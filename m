@@ -1,18 +1,14 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 9/11] drivers/target/target_core_rd.c: trivial: use BUG_ON
-Date: Tue,  2 Aug 2011 12:35:02 +0200
-Message-ID: <1312281304-11847-10-git-send-email-julia@diku.dk>
+Subject: [PATCH 2/11] drivers/message/fusion/mptsas.c: trivial: use BUG_ON
+Date: Tue,  2 Aug 2011 12:34:55 +0200
+Message-ID: <1312281304-11847-3-git-send-email-julia@diku.dk>
 References: <1312281304-11847-1-git-send-email-julia@diku.dk>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:59140 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753250Ab1HBKfR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Aug 2011 06:35:17 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1312281304-11847-1-git-send-email-julia@diku.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Eric Moore <Eric.Moore@lsi.com>, trivial@kernel.org
+Cc: kernel-janitors@vger.kernel.org, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, trivial@kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
@@ -34,80 +30,19 @@ The semantic patch that fixes this problem is as follows:
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/target/target_core_rd.c |   24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
+ drivers/message/fusion/mptsas.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff -u -p a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -390,12 +390,10 @@ static int rd_MEMCPY_read(struct rd_requ
- 				length = req->rd_size;
+diff -u -p a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -3410,8 +3410,7 @@ mptsas_expander_event_add(MPT_ADAPTER *i
+ 	__le64 sas_address;
  
- 			dst = sg_virt(&sg_d[i++]) + dst_offset;
--			if (!dst)
--				BUG();
-+			BUG_ON(!dst);
- 
- 			src = sg_virt(&sg_s[j]) + src_offset;
--			if (!src)
--				BUG();
-+			BUG_ON(!src);
- 
- 			dst_offset = 0;
- 			src_offset = length;
-@@ -415,8 +413,7 @@ static int rd_MEMCPY_read(struct rd_requ
- 				length = req->rd_size;
- 
- 			dst = sg_virt(&sg_d[i]) + dst_offset;
--			if (!dst)
--				BUG();
-+			BUG_ON(!dst);
- 
- 			if (sg_d[i].length == length) {
- 				i++;
-@@ -425,8 +422,7 @@ static int rd_MEMCPY_read(struct rd_requ
- 				dst_offset = length;
- 
- 			src = sg_virt(&sg_s[j++]) + src_offset;
--			if (!src)
--				BUG();
-+			BUG_ON(!src);
- 
- 			src_offset = 0;
- 			page_end = 1;
-@@ -510,12 +506,10 @@ static int rd_MEMCPY_write(struct rd_req
- 				length = req->rd_size;
- 
- 			src = sg_virt(&sg_s[i++]) + src_offset;
--			if (!src)
--				BUG();
-+			BUG_ON(!src);
- 
- 			dst = sg_virt(&sg_d[j]) + dst_offset;
--			if (!dst)
--				BUG();
-+			BUG_ON(!dst);
- 
- 			src_offset = 0;
- 			dst_offset = length;
-@@ -535,8 +529,7 @@ static int rd_MEMCPY_write(struct rd_req
- 				length = req->rd_size;
- 
- 			src = sg_virt(&sg_s[i]) + src_offset;
--			if (!src)
--				BUG();
-+			BUG_ON(!src);
- 
- 			if (sg_s[i].length == length) {
- 				i++;
-@@ -545,8 +538,7 @@ static int rd_MEMCPY_write(struct rd_req
- 				src_offset = length;
- 
- 			dst = sg_virt(&sg_d[j++]) + dst_offset;
--			if (!dst)
--				BUG();
-+			BUG_ON(!dst);
- 
- 			dst_offset = 0;
- 			page_end = 1;
-
+ 	port_info = kzalloc(sizeof(struct mptsas_portinfo), GFP_KERNEL);
+-	if (!port_info)
+-		BUG();
++	BUG_ON(!port_info);
+ 	port_info->num_phys = (expander_data->NumPhys) ?
+ 	    expander_data->NumPhys : 1;
+ 	port_info->phy_info = kcalloc(port_info->num_phys,
