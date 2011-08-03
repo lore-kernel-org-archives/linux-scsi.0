@@ -1,81 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libsas: add SMP READ/WRTIE GPIO support
-Date: Wed, 03 Aug 2011 15:53:35 -0500
-Message-ID: <1312404815.2855.82.camel@mulgrave>
-References: <20110601140203.26324.22849.stgit@gklab-128-184.igk.intel.com>
-	 <4DE64D78.6090309@interlog.com>  <4DE6708F.8080604@intel.com>
-	 <1312401763.2855.72.camel@mulgrave>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC PATCH] SCSI: Correct UA being ignored when notifying of
+ media-changed
+Date: Wed, 03 Aug 2011 17:06:05 -0500
+Message-ID: <4E39C64D.6000606@cs.wisc.edu>
+References: <1312378758-17308-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54123 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754579Ab1HCUxh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2011 16:53:37 -0400
-In-Reply-To: <1312401763.2855.72.camel@mulgrave>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57311 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754772Ab1HCWGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Aug 2011 18:06:15 -0400
+In-Reply-To: <1312378758-17308-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Artur Wojcik <artur.wojcik@intel.com>
-Cc: "dgilbert@interlog.com" <dgilbert@interlog.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Wed, 2011-08-03 at 15:02 -0500, James Bottomley wrote:
-> On Wed, 2011-06-01 at 19:02 +0200, Artur Wojcik wrote:
-> > On 06/01/2011 04:32 PM, Douglas Gilbert wrote:
-> > > On 11-06-01 10:02 AM, Artur Wojcik wrote:
-> > >> This patch enables the SMP READ/WRITE GPIO function interface in 
-> > >> libsas SMP
-> > >> host module. The interface is used to control the SGPIO initiator in 
-> > >> the SAS
-> > >> initiator. The implementation is SFF-8485 and SAS-2 compliant.
-> > >>
-> > >> There are two functions in transport class only responsible for 
-> > >> reading and
-> > >> writting GPIO registers. I decided to leave the decission about what 
-> > >> type of
-> > >> registers are supported to lldd.
-> > >>
-> > >> Now the user space application may issue SMP READ/WRITE GPIO frame to 
-> > >> HBA in
-> > >> order to read/write GPIO registers.
-> > >
-> > > Your code also accepts the somewhat mysterious READ GPIO
-> > > REGISTER ENHANCED SMP function and its WRITE equivalent.
-> > > Reference is made in sas2r16.pdf to SFF-8485 for those
-> > > functions. However the most recent version of SFF-8485
-> > > on the Seagate site is 0.7 dated February 2006, and it does
-> > > not define those ENHANCED functions.
-> > >
-> > > Could you tell us what those ENHANCED versions do?
-> > >
-> > > Doug Gilbert
-> > I have not found the description of ENHANCED frames in any publicly 
-> > available specification related to SGPIO. I took SAS-2 as the major 
-> > reference and it says SMP functions 02h (READ) and 82h (WRITE) are 
-> > obsolete. My understanding is that for the moment the new functions are 
-> > replacing the deprecated functions, but the frame format and registers 
-> > set stay the same.
+On 08/03/2011 08:39 AM, Rob Evers wrote:
+> Unit attention commands are getting ignored when a dvd is
+> replaced, resulting in errors when accessing the new dvd.
 > 
-> Then why change the function numbers?  I mean if you're keeping the call
-> and return compatible, you can just reuse the now obsoleted functions.
-> Usually you only change functions if you have to break compatibility
-> somehow (like order or length of parameters).   Since the current
-> implementation critically depends on this (because you break out the
-> fields from the frame) I'd be very wary of putting this in only to have
-> it broken again by a later revision of SFF-8485
+> This problem occurred when a system is booted in rescue
+> mode via dvd and the dvd is then replaced with another dvd.
+> Subsequent commands to a filesystem on the dvd, such as
+> 'fsck' and 'restore' report errors.
+> 
+> Solution suggested by Mike Christie.
+> 
+> Signed-off-by: Rob Evers <revers@redhat.com>
+> ---
+>  drivers/scsi/scsi_error.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index a4b9cdb..725cc11 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -294,6 +294,10 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+>  		 */
+>  		if (scmd->device->expecting_cc_ua) {
+>  			scmd->device->expecting_cc_ua = 0;
+> +				if (sdev->removable) {
+> +					sdev->changed = 1;
+> +					return SUCCESS;
+> +				}
 
-OK, I got the answer.  It's buried deeply in the 14h ballot comment
-resolutions:
+I think this 'if' block got tabbed over once too many times.
 
-http://www.t10.org/cgi-bin/ac.pl?t=d&f=08-212r8.pdf
-
-SFF-8485 v 0.7 actually has an incorrect format for the frame because it
-doesn't take into account the required request length/response length
-fields which have to occupy bytes 2 and 3, so they're going to rev
-SFF-8485 to conform to the SMP frame requirements.  That means all the
-fields will shift and your patch will be wrong. We can guess, based on
-this that the register fields will begin at offset 4.
- 
-James
-
+>  			return NEEDS_RETRY;
+>  		}
+>  		/*
 
