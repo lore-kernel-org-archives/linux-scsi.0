@@ -1,66 +1,47 @@
-From: "Herr LEWIS AWELE" <herrawel@virgilio.it>
-Subject: Lieber Freund!!!
-Date: Wed, 3 Aug 2011 15:40:44 +0600 (BDT)
-Message-ID: <42244.77.209.86.18.1312364444.squirrel@mist.edu.bd>
-Reply-To: bankas27@aim.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Rob Evers <revers@redhat.com>
+Subject: [RFC PATCH] SCSI: Correct UA being ignored when notifying of media-changed
+Date: Wed,  3 Aug 2011 09:39:18 -0400
+Message-ID: <1312378758-17308-1-git-send-email-revers@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.mist.edu.bd ([203.112.72.179]:59219 "HELO mail.mist.edu.bd"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752694Ab1HCKQ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2011 06:16:27 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:9746 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751070Ab1HCNjW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Aug 2011 09:39:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
+Unit attention commands are getting ignored when a dvd is
+replaced, resulting in errors when accessing the new dvd.
 
+This problem occurred when a system is booted in rescue
+mode via dvd and the dvd is then replaced with another dvd.
+Subsequent commands to a filesystem on the dvd, such as
+'fsck' and 'restore' report errors.
 
+Solution suggested by Mike Christie.
 
---=20
-Lieber Freund!!!
+Signed-off-by: Rob Evers <revers@redhat.com>
+---
+ drivers/scsi/scsi_error.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-Ich vermute das diese E-Mail eine =DCberraschung f=FCr Sie sein wird, a=
-ber es
-ist wahr.Ich bin bei einer routinen =DCberpr=FCfung in meiner Bank (Uni=
-on Bank
-PLC von S=FCd Afrika) wo ich arbeite, auf einem Konto gesto=DFen, was n=
-icht in
-anspruch genommen worden ist, wo derzeit USD$18.5M (Achtzehn Million, F=
-=FCnf
-Hundert Tausend, US Dollar)  gutgeschrieben sind. Dieses Konto geh=F6rt=
-e
-Herrn Peter Hartmann, der ein Kunde in unsere Bank war, der leider
-verstorben ist. Herr Hartmann war ein geb=FCrtiger Deutscher.
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index a4b9cdb..725cc11 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -294,6 +294,10 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		 */
+ 		if (scmd->device->expecting_cc_ua) {
+ 			scmd->device->expecting_cc_ua = 0;
++				if (sdev->removable) {
++					sdev->changed = 1;
++					return SUCCESS;
++				}
+ 			return NEEDS_RETRY;
+ 		}
+ 		/*
+-- 
+1.7.1
 
-
-Damit es mir m=F6glich ist dieses Geld $18,500,000 inanspruch zunehmen,
-ben=F6tige ich die zusammenarbeit eines Ausl=E4ndischen Partners wie Si=
-e,den
-ich als Verwandter und Erbe des verstorbenen Herrn Hartmann vorstellen
-kann,damit wir das Geld inanspruch nehmen k=F6nnen. F=FCr diese Unterst=
-=FCtzung
-erhalten Sie 30% der Erbschaftsumme und die restlichen 70% teile ich mi=
-r
-mit meinen zwei Arbeitskollegen, die mich bei dieser Transaktion ebenfa=
-lls
-unterst=FCtzen.Wenn Sie interessiert sind, k=F6nnen Sie mir bitte eine =
-E-Mail
-schicken, damit ich Ihnen mehr Details zukommen lassen kann.
-
-
-N.B.BITTE SENDEN SIE MIR LEWIS AWELE ANTWORT ZU durch mein E-mail: (
-herrawel@aim.com )f=DCR VERTRAULICHEN GRUND. Schicken Sie keine POST ZU
-MEINEM B=DCRO-E-MAIL. If you understand english,please kindly reply wit=
-hm
-english
-
-Mit freundlichen Gr=FC=DFen
-
-Herr LEWIS AWELE
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
