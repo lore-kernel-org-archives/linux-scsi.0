@@ -1,51 +1,82 @@
-From: Borislav Petkov <bp@amd64.org>
-Subject: Re: [RFC PATCH 0/4] Persistent device name using alias name
-Date: Wed, 3 Aug 2011 19:16:08 +0200
-Message-ID: <20110803171608.GA16116@gere.osrc.amd.com>
-References: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
- <20110708145408.GA2283@kroah.com>
- <CAPXgP10gThuxOsrxH8_wOddeRB5f2ABypW7EQui-F1hOE97dHQ@mail.gmail.com>
- <20110708154736.GA7320@kroah.com>
- <1310140451.3282.85.camel@mulgrave>
- <CAPXgP12dA72a3ja659GH6uW+ZCMfL6iECaY6ORXwOQ6S5eTvaQ@mail.gmail.com>
- <4E17F121.3030601@hitachi.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.1-rc1
+Date: Wed, 03 Aug 2011 10:23:47 -0700
+Message-ID: <1312392227.28195.28.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4E17F121.3030601@hitachi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, dle-develop@lists.sourceforge.net, yrl.pp-manager.tt@hitachi.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, Tony Luck <tony.luck@intel.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:50708 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752943Ab1HCRdu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2011 13:33:50 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, "Patil, Kiran" <kiran.patil@intel.com>, "Love, Robert W" <robert.w.love@intel.com>
 
-On Sat, Jul 09, 2011 at 03:11:45PM +0900, Masami Hiramatsu wrote:
-> BTW, I'm also interested in that structured error events, from the long
-> term view and viewpoint of tracers :)
+Hi Linus,
 
-Let me chime in a "mee too" from the HW errors perspective.
+The following are target bugfixes for v3.1-rc1 that have been brewing in
+for-next since the initial drivers/target/iscsi merge last week.
 
-> I think we could expand current TRACE_EVENT macro to define those
-> error events.
+This includes an important fix in transport_generic_wait_for_tasks() to
+address an OOPs with direct I/O submission exception handling that
+iscsi-target was triggering during testing, a tcm_fc memory corruption
+bugfix from Kiran Patil to address failures with DDP HW offload enabled
+in the ft_recv_write_data() path, along with some other minor fixes from
+various folks.
 
-Concerning structure, we can use the format file in debugfs which
-currently describes the fields of a tracepoint:
+Please pull from:
 
-/sys/kernel/debug/tracing/events/../../format
+  master.kernel.org:/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-and expand those to generic kernel events. Userspace parses the format
-and knows exactly at what data it is looking at. Also, the idea is to
-move that events hierarchy into sysfs so it will be present on every
-system.
+This tree is also available from kernel.org mirrors at:
 
-Hmm...
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
--- 
-Regards/Gruss,
-Boris.
+This series has been made against the same linux-2.6.git HEAD:
 
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-GM: Alberto Bozzo
-Reg: Dornach, Landkreis Muenchen
-HRB Nr. 43632 WEEE Registernr: 129 19551
+commit bbd9d6f7fbb0305c9a592bf05a32e87eb364a4ff
+Merge: 8e20487 5a9a436
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri Jul 22 19:02:39 2011 -0700
+
+    Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs-2.6
+
+Thanks!
+
+--nab
+
+Dan Carpenter (2):
+  iscsi-target: Fix NULL dereference on allocation failure
+  iscsi-target: strlen() doesn't count the terminator
+
+Kiran Patil (1):
+  tcm_fc: Handle DDP/SW fc_frame_payload_get failures in
+    ft_recv_write_data
+
+Nicholas Bellinger (6):
+  iscsi-target: Fix uninitialized usage of cmd->pad_bytes
+  iscsi-target: Fix snprintf usage with MAX_PORTAL_LEN
+  iscsi-target: Fix CONFIG_SMP=n and CONFIG_MODULES=n build failure
+  MAINTAINERS: Add target-devel list for drivers/target/
+  target: Fix WRITE_SAME_16 lba assignment breakage
+  target: Fix bug for transport_generic_wait_for_tasks with direct
+    operation
+
+Randy Dunlap (1):
+  target: iscsi_target depends on NET
+
+ MAINTAINERS                                  |    1 +
+ drivers/target/iscsi/Kconfig                 |    1 +
+ drivers/target/iscsi/iscsi_target.c          |   15 ++-
+ drivers/target/iscsi/iscsi_target_configfs.c |    2 +-
+ drivers/target/iscsi/iscsi_target_nego.c     |    2 +-
+ drivers/target/target_core_transport.c       |   33 +++++++-
+ drivers/target/tcm_fc/tcm_fc.h               |    5 +
+ drivers/target/tcm_fc/tfc_cmd.c              |    1 +
+ drivers/target/tcm_fc/tfc_io.c               |  121 +++++++++++++++-----------
+ 9 files changed, 122 insertions(+), 59 deletions(-)
+
+
