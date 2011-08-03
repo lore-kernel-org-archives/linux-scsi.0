@@ -1,24 +1,24 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [RFC PATCH] SCSI: Correct UA being ignored when notifying of
  media-changed
-Date: Wed, 03 Aug 2011 17:06:05 -0500
-Message-ID: <4E39C64D.6000606@cs.wisc.edu>
+Date: Wed, 03 Aug 2011 17:22:08 -0500
+Message-ID: <1312410128.2855.94.camel@mulgrave>
 References: <1312378758-17308-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57311 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754772Ab1HCWGP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2011 18:06:15 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54546 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753626Ab1HCWWM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2011 18:22:12 -0400
 In-Reply-To: <1312378758-17308-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rob Evers <revers@redhat.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-On 08/03/2011 08:39 AM, Rob Evers wrote:
+On Wed, 2011-08-03 at 09:39 -0400, Rob Evers wrote:
 > Unit attention commands are getting ignored when a dvd is
 > replaced, resulting in errors when accessing the new dvd.
 > 
@@ -47,9 +47,12 @@ On 08/03/2011 08:39 AM, Rob Evers wrote:
 > +					return SUCCESS;
 > +				}
 
-I think this 'if' block got tabbed over once too many times.
+Are you sure about this?  We only set expecting_cc_ua if the device was
+reset in error handling ... and there we definitely *don't* want to
+trigger a medium change.
 
->  			return NEEDS_RETRY;
->  		}
->  		/*
+Surely we want this at the end of the UA handling clause?
+
+James
+
 
