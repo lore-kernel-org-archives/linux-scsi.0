@@ -1,47 +1,51 @@
-From: Rob Evers <revers@redhat.com>
-Subject: [RFC PATCH] SCSI: Correct UA being ignored when notifying of media-changed
-Date: Wed,  3 Aug 2011 09:39:18 -0400
-Message-ID: <1312378758-17308-1-git-send-email-revers@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9746 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751070Ab1HCNjW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2011 09:39:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Borislav Petkov <bp@amd64.org>
+Subject: Re: [RFC PATCH 0/4] Persistent device name using alias name
+Date: Wed, 3 Aug 2011 19:16:08 +0200
+Message-ID: <20110803171608.GA16116@gere.osrc.amd.com>
+References: <20110708084547.2091.55262.stgit@ltc197.sdl.hitachi.co.jp>
+ <20110708145408.GA2283@kroah.com>
+ <CAPXgP10gThuxOsrxH8_wOddeRB5f2ABypW7EQui-F1hOE97dHQ@mail.gmail.com>
+ <20110708154736.GA7320@kroah.com>
+ <1310140451.3282.85.camel@mulgrave>
+ <CAPXgP12dA72a3ja659GH6uW+ZCMfL6iECaY6ORXwOQ6S5eTvaQ@mail.gmail.com>
+ <4E17F121.3030601@hitachi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4E17F121.3030601@hitachi.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Greg KH <greg@kroah.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, dle-develop@lists.sourceforge.net, yrl.pp-manager.tt@hitachi.com, dgilbert@interlog.com, stefanr@s5r6.in-berlin.de, hare@suse.de, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, Tony Luck <tony.luck@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com
 
-Unit attention commands are getting ignored when a dvd is
-replaced, resulting in errors when accessing the new dvd.
+On Sat, Jul 09, 2011 at 03:11:45PM +0900, Masami Hiramatsu wrote:
+> BTW, I'm also interested in that structured error events, from the long
+> term view and viewpoint of tracers :)
 
-This problem occurred when a system is booted in rescue
-mode via dvd and the dvd is then replaced with another dvd.
-Subsequent commands to a filesystem on the dvd, such as
-'fsck' and 'restore' report errors.
+Let me chime in a "mee too" from the HW errors perspective.
 
-Solution suggested by Mike Christie.
+> I think we could expand current TRACE_EVENT macro to define those
+> error events.
 
-Signed-off-by: Rob Evers <revers@redhat.com>
----
- drivers/scsi/scsi_error.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+Concerning structure, we can use the format file in debugfs which
+currently describes the fields of a tracepoint:
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a4b9cdb..725cc11 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -294,6 +294,10 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		 */
- 		if (scmd->device->expecting_cc_ua) {
- 			scmd->device->expecting_cc_ua = 0;
-+				if (sdev->removable) {
-+					sdev->changed = 1;
-+					return SUCCESS;
-+				}
- 			return NEEDS_RETRY;
- 		}
- 		/*
+/sys/kernel/debug/tracing/events/../../format
+
+and expand those to generic kernel events. Userspace parses the format
+and knows exactly at what data it is looking at. Also, the idea is to
+move that events hierarchy into sysfs so it will be present on every
+system.
+
+Hmm...
+
 -- 
-1.7.1
+Regards/Gruss,
+Boris.
 
+Advanced Micro Devices GmbH
+Einsteinring 24, 85609 Dornach
+GM: Alberto Bozzo
+Reg: Dornach, Landkreis Muenchen
+HRB Nr. 43632 WEEE Registernr: 129 19551
