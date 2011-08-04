@@ -1,16 +1,15 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 09/18] bnx2fc: Clear DESTROY_CMPL flag after firmware
- destroy
-Date: Thu, 4 Aug 2011 11:47:04 -0700
-Message-ID: <1312483633-479-10-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 13/18] bnx2fc: code cleanup in bnx2fc_offload_session
+Date: Thu, 4 Aug 2011 11:47:08 -0700
+Message-ID: <1312483633-479-14-git-send-email-bprakash@broadcom.com>
 References: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1295 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1322 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755471Ab1HDSrb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755522Ab1HDSrb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 4 Aug 2011 14:47:31 -0400
 In-Reply-To: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,37 +17,53 @@ List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Since this flag was never cleared, the driver does not wait for firmware
-destroy completions, causing missed KWQEs.
+- Free session resources before rport logoff
+- Do not free session resources in bnx2fc_alloc_session_resc() as it is handled
+  in caller's error handling path.
+- Do not call bnx2fc_free_session_resc() if bnx2fc_init_tgt() fails as cq_lock
+  is not yet initialized.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 68eda64..631c03f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -771,8 +771,8 @@ static void bnx2fc_destroy_timer(unsigned long data)
- {
- 	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)data;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index 2f7a7da..38fe85a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -83,7 +83,7 @@ static void bnx2fc_offload_session(struct fcoe_port *port,
+ 	rval = bnx2fc_alloc_session_resc(hba, tgt);
+ 	if (rval) {
+ 		printk(KERN_ERR PFX "Failed to allocate resources\n");
+-		goto ofld_err;
++		goto tgt_init_err;
+ 	}
  
--	BNX2FC_MISC_DBG("ERROR:bnx2fc_destroy_timer - "
--		   "Destroy compl not received!!\n");
-+	printk(KERN_ERR PFX "ERROR:bnx2fc_destroy_timer - "
-+	       "Destroy compl not received!!\n");
- 	set_bit(BNX2FC_FLAG_DESTROY_CMPL, &hba->flags);
- 	wake_up_interruptible(&hba->destroy_wait);
+ 	/*
+@@ -141,11 +141,12 @@ retry_ofld:
+ ofld_err:
+ 	/* couldn't offload the session. log off from this rport */
+ 	BNX2FC_TGT_DBG(tgt, "bnx2fc_offload_session - offload error\n");
+-	lport->tt.rport_logoff(rdata);
+ 	/* Free session resources */
+ 	bnx2fc_free_session_resc(hba, tgt);
++tgt_init_err:
+ 	if (tgt->fcoe_conn_id != -1)
+ 		bnx2fc_free_conn_id(hba, tgt->fcoe_conn_id);
++	lport->tt.rport_logoff(rdata);
  }
-@@ -1703,6 +1703,7 @@ static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
- 			wait_event_interruptible(hba->destroy_wait,
- 					test_bit(BNX2FC_FLAG_DESTROY_CMPL,
- 						 &hba->flags));
-+			clear_bit(BNX2FC_FLAG_DESTROY_CMPL, &hba->flags);
- 			/* This should never happen */
- 			if (signal_pending(current))
- 				flush_signals(current);
+ 
+ void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
+@@ -790,8 +791,6 @@ static int bnx2fc_alloc_session_resc(struct bnx2fc_hba *hba,
+ 	return 0;
+ 
+ mem_alloc_failure:
+-	bnx2fc_free_session_resc(hba, tgt);
+-	bnx2fc_free_conn_id(hba, tgt->fcoe_conn_id);
+ 	return -ENOMEM;
+ }
+ 
 -- 
 1.7.0.6
 
