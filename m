@@ -1,36 +1,86 @@
-From: <kashyap.desai@lsi.com>
-Subject: [PATCH] mpt2sas : Added missing mpt2sas_base_detach call from
- scsih_remove context
-Date: Thu, 4 Aug 2011 16:47:50 +0530
-Message-ID: <201108041056.p74AuXkJ007223@milmhbs0.lsil.com>
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Subject: Re: [PATCH 04/05] mptfusion: Fix for device offline while doing aggressive
+ HBA reset
+Date: Thu, 04 Aug 2011 15:09:25 +0200
+Message-ID: <4E3A9A05.8090602@itwm.fraunhofer.de>
+References: <201108041051.p74AprAP005912@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:47550 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752287Ab1HDK4h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2011 06:56:37 -0400
+Received: from mailgw1.uni-kl.de ([131.246.120.220]:54210 "EHLO
+	mailgw1.uni-kl.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753285Ab1HDNJ3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2011 09:09:29 -0400
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id p74D9QHf009948
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Aug 2011 15:09:26 +0200
+In-Reply-To: <201108041051.p74AprAP005912@milmhbs0.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com, JBottomley@parallels.com
+To: kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com, JBottomley@parallels.com
 
-mpt2sas_base_detach() call was removed from _scsih_remove() while doing some code shuffling.
-Mainly when we work on adding code for scsih_shutdown().
-I have added back mpt2sas_base_detach() which will get callled from _scsih_remove().
+On 08/04/2011 01:13 PM, kashyap.desai@lsi.com wrote:
+> Issue:
+> Device goes offline while doing aggressive HBA reset
+> along with IO using some utility.
+>
+> Root cause:
+> FW goes into bad state due to aggressive reset. Softreset does
+> not help to recover FW. And also aggressive reset open up the
+> window for Error handling thread to kicked off at the same time
+> HBA will be in constant RESET loop as part of aggressive reset
+> test case can lead Device to goes offline.
+>
+> Changes:
+> 1. Added extra check as below inside eh_timed_out call back as below.
+> if(ioc->ioc_reset_in_progress)
+>      Rc = EH_TIMER_RESET
+> 2. Removed " DOORBELL_ACTIVE" check for SAS controller from task management context.
+>     Since SAS controller uses high priority queue for task management. This check is
+>     not required for SAS controller.
+> 3. Moved SoftReset call to HardReset from Task Mgmt context.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 6abd2fc..6bb3986 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -7354,6 +7354,7 @@ _scsih_remove(struct pci_dev *pdev)
- 	}
- 
- 	sas_remove_host(shost);
-+	mpt2sas_base_detach(ioc);
- 	list_del(&ioc->list);
- 	scsi_remove_host(shost);
- 	scsi_host_put(shost);
+[...]
+
+
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1630,7 +1630,13 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel, u8 id, int lun,
+>   		return 0;
+>   	}
+>
+> -	if (ioc_raw_state&  MPI_DOORBELL_ACTIVE) {
+> +	/* DOORBELL ACTIVE check is not required if
+> +	*  MPI_IOCFACTS_CAPABILITY_HIGH_PRI_Q is supported.
+> +	*/
+> +
+> +	if (!((ioc->facts.IOCCapabilities&  MPI_IOCFACTS_CAPABILITY_HIGH_PRI_Q)
+> +		&&  (ioc->facts.MsgVersion>= MPI_VERSION_01_05))&&
+> +		(ioc_raw_state&  MPI_DOORBELL_ACTIVE)) {
+>   		printk(MYIOC_s_WARN_FMT
+>   			"TaskMgmt type=%x: ioc_state: "
+>   			"DOORBELL_ACTIVE (0x%x)!\n",
+> @@ -1729,7 +1735,7 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel, u8 id, int lun,
+>   		printk(MYIOC_s_WARN_FMT
+>   		       "Issuing Reset from %s!! doorbell=0x%08x\n",
+>   		       ioc->name, __func__, mpt_GetIocState(ioc, 0));
+> -		retval = mpt_Soft_Hard_ResetHandler(ioc, CAN_SLEEP);
+> +		retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
+>   		mpt_free_msg_frame(ioc, mf);
+>   	}
+
+Have you ever tested that with dual port 501030C parallel scsi HBAs? The 
+hard reset with those HBAs will reset *both* ports and eventually *both* 
+ports will fail. A couple of years ago I tried to convince Eric to 
+disable hard resets for those chips at all (and even sent a patch), but 
+Eric never agreed on that.
+The soft-reset handler was a workaround for that problem, but with that 
+patch the issue will re-appear. The affected systems are still in 
+production and probably will still be for the next few years.
+
+
+Thanks,
+Bernd
