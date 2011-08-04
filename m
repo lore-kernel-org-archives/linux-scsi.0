@@ -1,55 +1,61 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 00/18] bnx2fc version 1.0.5
-Date: Thu, 4 Aug 2011 11:46:55 -0700
-Message-ID: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 02/18] bnx2fc: Bug fixes in percpu_thread_create/destroy
+Date: Thu, 4 Aug 2011 11:46:57 -0700
+Message-ID: <1312483633-479-3-git-send-email-bprakash@broadcom.com>
+References: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1322 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1295 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755473Ab1HDSr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755471Ab1HDSr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 4 Aug 2011 14:47:26 -0400
+In-Reply-To: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-This patchset contains bnx2fc bug fixes.  Please note that patch 15 is
-'fcoe/libfcoe' patch, which moves LLD common code from fcoe driver to
-fcoe_transport, to enable patch 16 and 17.
+Look up p->work_list to process cq completions, and correct the error check for
+thread creation.
 
-Bhanu Prakash Gollapudi (18):
-  bnx2fc: Reset the max receive frame size
-  bnx2fc: Bug fixes in percpu_thread_create/destroy
-  bnx2fc: Enable bsg_request support for bnx2fc
-  bnx2fc: Remove erroneous kref_get on IO request
-  bnx2fc: Do not attempt destroying NPIV port twice
-  bnx2fc: Change function names of
-	  bnx2fc_netdev_setup/bnx2fc_netdev_cleanup
-  bnx2fc: Reorganize cleanup code between interface_cleanup and
-	  if_destory
-  bnx2fc: Handle NETDEV_UNREGISTER for vlan devices
-  bnx2fc: Clear DESTROY_CMPL flag after firmware destroy
-  bnx2fc: Do not reuse the fcoe connection id immediately
-  bnx2fc: IO errors when receiving unsolicited LOGO
-  bnx2fc: Fix NULL pointer deref during arm_cq.
-  bnx2fc: code cleanup in bnx2fc_offload_session
-  bnx2fc: Drop incoming ABTS
-  fcoe: Move common functions to fcoe_transport library
-  bnx2fc: Obtain WWNN/WWPN from the shared memory
-  bnx2fc: Prevent creating of NPIV port with duplicate WWN
-  bnx2fc: Bump version to 1.0.5
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
- drivers/scsi/bnx2fc/bnx2fc.h       |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |  187 ++++++++++++++++++++++++------------
- drivers/scsi/bnx2fc/bnx2fc_hwi.c   |   10 ++-
- drivers/scsi/bnx2fc/bnx2fc_io.c    |    7 --
- drivers/scsi/bnx2fc/bnx2fc_tgt.c   |   27 +++---
- drivers/scsi/fcoe/fcoe.c           |   66 +-------------
- drivers/scsi/fcoe/fcoe.h           |   10 --
- drivers/scsi/fcoe/fcoe_transport.c |   72 ++++++++++++++
- include/scsi/libfcoe.h             |    3 +
- 9 files changed, 224 insertions(+), 160 deletions(-)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index ea1e6cc..a4770d9 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -2122,7 +2122,7 @@ static void bnx2fc_percpu_thread_create(unsigned int cpu)
+ 				(void *)p,
+ 				"bnx2fc_thread/%d", cpu);
+ 	/* bind thread to the cpu */
+-	if (likely(!IS_ERR(p->iothread))) {
++	if (likely(!IS_ERR(thread))) {
+ 		kthread_bind(thread, cpu);
+ 		p->iothread = thread;
+ 		wake_up_process(thread);
+@@ -2134,7 +2134,6 @@ static void bnx2fc_percpu_thread_destroy(unsigned int cpu)
+ 	struct bnx2fc_percpu_s *p;
+ 	struct task_struct *thread;
+ 	struct bnx2fc_work *work, *tmp;
+-	LIST_HEAD(work_list);
+ 
+ 	BNX2FC_MISC_DBG("destroying io thread for CPU %d\n", cpu);
+ 
+@@ -2146,7 +2145,7 @@ static void bnx2fc_percpu_thread_destroy(unsigned int cpu)
+ 
+ 
+ 	/* Free all work in the list */
+-	list_for_each_entry_safe(work, tmp, &work_list, list) {
++	list_for_each_entry_safe(work, tmp, &p->work_list, list) {
+ 		list_del_init(&work->list);
+ 		bnx2fc_process_cq_compl(work->tgt, work->wqe);
+ 		kfree(work);
+-- 
+1.7.0.6
 
 
