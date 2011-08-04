@@ -1,64 +1,86 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 07/18] bnx2fc: Reorganize cleanup code between
- interface_cleanup and if_destory
-Date: Thu, 4 Aug 2011 11:47:02 -0700
-Message-ID: <1312483633-479-8-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 08/18] bnx2fc: Handle NETDEV_UNREGISTER for vlan devices
+Date: Thu, 4 Aug 2011 11:47:03 -0700
+Message-ID: <1312483633-479-9-git-send-email-bprakash@broadcom.com>
 References: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3925 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1301 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755495Ab1HDSr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2011 14:47:29 -0400
+	id S1755521Ab1HDSrb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2011 14:47:31 -0400
 In-Reply-To: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Move interface specific cleanup functionality to from bnx2fc_if_destroy to
-bnx2fc_interface_cleanup. Do not access interface/hba in bnx2fc_if_destroy as
-by the time this function is called interface may already be destroyed. This
-patch is in preparation to handle NETDEV_UNREGISTER on a vlan device.
+Since the driver holds the reference for vlan netdev, the reference has to be
+released by the driver when the vlan device is removed. Driver handles this in
+NETDEV_UNREGISTER event.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   47 ++++++++++++++++++-------------------
- 1 files changed, 23 insertions(+), 24 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   87 +++++++++++++++++++++++-------------
+ 1 files changed, 55 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 8760461..d87ab8d 100644
+index d87ab8d..68eda64 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1385,16 +1385,10 @@ free_blport:
+@@ -56,6 +56,7 @@ static struct scsi_host_template bnx2fc_shost_template;
+ static struct fc_function_template bnx2fc_transport_function;
+ static struct fc_function_template bnx2fc_vport_xport_function;
+ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode);
++static void __bnx2fc_destroy(struct bnx2fc_interface *interface, bool schedule);
+ static int bnx2fc_destroy(struct net_device *net_device);
+ static int bnx2fc_enable(struct net_device *netdev);
+ static int bnx2fc_disable(struct net_device *netdev);
+@@ -78,6 +79,7 @@ static void bnx2fc_destroy_work(struct work_struct *work);
+ static struct bnx2fc_hba *bnx2fc_hba_lookup(struct net_device *phys_dev);
+ static struct bnx2fc_interface *bnx2fc_interface_lookup(struct net_device
+ 							*phys_dev);
++static inline void bnx2fc_interface_put(struct bnx2fc_interface *interface);
+ static struct bnx2fc_hba *bnx2fc_find_hba_for_cnic(struct cnic_dev *cnic);
  
- static void bnx2fc_interface_cleanup(struct bnx2fc_interface *interface)
- {
--	/* Dont listen for Ethernet packets anymore */
--	__dev_remove_pack(&interface->fcoe_packet_type);
--	__dev_remove_pack(&interface->fip_packet_type);
--	synchronize_net();
--}
--
--static void bnx2fc_if_destroy(struct fc_lport *lport, struct bnx2fc_hba *hba)
--{
-+	struct fc_lport *lport = interface->ctlr.lp;
- 	struct fcoe_port *port = lport_priv(lport);
- 	struct bnx2fc_lport *blport, *tmp;
-+	struct bnx2fc_hba *hba = interface->hba;
+ static int bnx2fc_fw_init(struct bnx2fc_hba *hba);
+@@ -791,7 +793,7 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
+ 	struct fc_lport *lport;
+ 	struct fc_lport *vport;
+-	struct bnx2fc_interface *interface;
++	struct bnx2fc_interface *interface, *tmp;
+ 	int wait_for_upload = 0;
+ 	u32 link_possible = 1;
  
- 	/* Stop the transmit retry timer */
- 	del_timer_sync(&port->timer);
-@@ -1402,6 +1396,24 @@ static void bnx2fc_if_destroy(struct fc_lport *lport, struct bnx2fc_hba *hba)
- 	/* Free existing transmit skbs */
- 	fcoe_clean_pending_queue(lport);
+@@ -820,6 +822,18 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 	case NETDEV_CHANGE:
+ 		break;
  
-+	/* Dont listen for Ethernet packets anymore */
-+	__dev_remove_pack(&interface->fcoe_packet_type);
-+	__dev_remove_pack(&interface->fip_packet_type);
-+	synchronize_net();
++	case NETDEV_UNREGISTER:
++		if (!vlan_id)
++			return;
++		mutex_lock(&bnx2fc_dev_lock);
++		list_for_each_entry_safe(interface, tmp, &if_list, list) {
++			if (interface->hba != hba)
++				continue;
++			__bnx2fc_destroy(interface, true);
++		}
++		mutex_unlock(&bnx2fc_dev_lock);
++		return;
++
+ 	default:
+ 		printk(KERN_ERR PFX "Unkonwn netevent %ld", event);
+ 		return;
+@@ -1022,12 +1036,27 @@ static int bnx2fc_vport_create(struct fc_vport *vport, bool disabled)
+ 	return 0;
+ }
+ 
++static void bnx2fc_free_vport(struct bnx2fc_hba *hba, struct fc_lport *lport)
++{
++	struct bnx2fc_lport *blport, *tmp;
 +
 +	spin_lock_bh(&hba->hba_lock);
 +	list_for_each_entry_safe(blport, tmp, &hba->vports, list) {
@@ -70,15 +92,37 @@ index 8760461..d87ab8d 100644
 +	spin_unlock_bh(&hba->hba_lock);
 +}
 +
-+static void bnx2fc_if_destroy(struct fc_lport *lport)
-+{
-+
- 	/* Free queued packets for the receive thread */
- 	bnx2fc_clean_rx_queue(lport);
+ static int bnx2fc_vport_destroy(struct fc_vport *vport)
+ {
+ 	struct Scsi_Host *shost = vport_to_shost(vport);
+ 	struct fc_lport *n_port = shost_priv(shost);
+ 	struct fc_lport *vn_port = vport->dd_data;
+ 	struct fcoe_port *port = lport_priv(vn_port);
++	struct bnx2fc_interface *interface = port->priv;
+ 	struct fc_lport *v_port;
+ 	bool found = false;
  
-@@ -1418,15 +1430,6 @@ static void bnx2fc_if_destroy(struct fc_lport *lport, struct bnx2fc_hba *hba)
- 	/* Free memory used by statistical counters */
- 	fc_lport_free_stats(lport);
+@@ -1045,6 +1074,9 @@ static int bnx2fc_vport_destroy(struct fc_vport *vport)
+ 	}
+ 	list_del(&vn_port->list);
+ 	mutex_unlock(&n_port->lp_mutex);
++	bnx2fc_free_vport(interface->hba, port->lport);
++	bnx2fc_port_shutdown(port->lport);
++	bnx2fc_interface_put(interface);
+ 	queue_work(bnx2fc_wq, &port->destroy_work);
+ 	return 0;
+ }
+@@ -1387,7 +1419,6 @@ static void bnx2fc_interface_cleanup(struct bnx2fc_interface *interface)
+ {
+ 	struct fc_lport *lport = interface->ctlr.lp;
+ 	struct fcoe_port *port = lport_priv(lport);
+-	struct bnx2fc_lport *blport, *tmp;
+ 	struct bnx2fc_hba *hba = interface->hba;
+ 
+ 	/* Stop the transmit retry timer */
+@@ -1401,14 +1432,7 @@ static void bnx2fc_interface_cleanup(struct bnx2fc_interface *interface)
+ 	__dev_remove_pack(&interface->fip_packet_type);
+ 	synchronize_net();
  
 -	spin_lock_bh(&hba->hba_lock);
 -	list_for_each_entry_safe(blport, tmp, &hba->vports, list) {
@@ -88,65 +132,103 @@ index 8760461..d87ab8d 100644
 -		}
 -	}
 -	spin_unlock_bh(&hba->hba_lock);
--
- 	/* Release Scsi_Host */
++	bnx2fc_free_vport(hba, lport);
+ }
+ 
+ static void bnx2fc_if_destroy(struct fc_lport *lport)
+@@ -1434,6 +1458,23 @@ static void bnx2fc_if_destroy(struct fc_lport *lport)
  	scsi_host_put(lport->host);
  }
-@@ -1444,7 +1447,6 @@ static void bnx2fc_if_destroy(struct fc_lport *lport, struct bnx2fc_hba *hba)
+ 
++static void __bnx2fc_destroy(struct bnx2fc_interface *interface, bool schedule)
++{
++	struct fc_lport *lport = interface->ctlr.lp;
++	struct fcoe_port *port = lport_priv(lport);
++
++	bnx2fc_interface_cleanup(interface);
++	bnx2fc_stop(interface);
++
++	list_del(&interface->list);
++	lport = interface->ctlr.lp;
++	bnx2fc_interface_put(interface);
++	if (schedule)
++		queue_work(bnx2fc_wq, &port->destroy_work);
++	else
++		bnx2fc_if_destroy(lport);
++}
++
+ /**
+  * bnx2fc_destroy - Destroy a bnx2fc FCoE interface
+  *
+@@ -1447,7 +1488,6 @@ static void bnx2fc_if_destroy(struct fc_lport *lport)
  static int bnx2fc_destroy(struct net_device *netdev)
  {
  	struct bnx2fc_interface *interface = NULL;
--	struct bnx2fc_hba *hba;
- 	struct fc_lport *lport;
+-	struct fc_lport *lport;
  	int rc = 0;
  
-@@ -1458,7 +1460,6 @@ static int bnx2fc_destroy(struct net_device *netdev)
- 		goto netdev_err;
+ 	rtnl_lock();
+@@ -1461,13 +1501,8 @@ static int bnx2fc_destroy(struct net_device *netdev)
  	}
  
--	hba = interface->hba;
  
- 	bnx2fc_interface_cleanup(interface);
- 	lport = interface->ctlr.lp;
-@@ -1466,7 +1467,7 @@ static int bnx2fc_destroy(struct net_device *netdev)
- 	list_del(&interface->list);
+-	bnx2fc_interface_cleanup(interface);
+-	lport = interface->ctlr.lp;
+-	bnx2fc_stop(interface);
+-	list_del(&interface->list);
  	destroy_workqueue(interface->timer_work_queue);
- 	bnx2fc_interface_put(interface);
--	bnx2fc_if_destroy(lport, hba);
-+	bnx2fc_if_destroy(lport);
+-	bnx2fc_interface_put(interface);
+-	bnx2fc_if_destroy(lport);
++	__bnx2fc_destroy(interface, false);
  
  netdev_err:
  	mutex_unlock(&bnx2fc_dev_lock);
-@@ -1479,19 +1480,17 @@ static void bnx2fc_destroy_work(struct work_struct *work)
+@@ -1479,15 +1514,12 @@ static void bnx2fc_destroy_work(struct work_struct *work)
+ {
  	struct fcoe_port *port;
  	struct fc_lport *lport;
- 	struct bnx2fc_interface *interface;
--	struct bnx2fc_hba *hba;
+-	struct bnx2fc_interface *interface;
  
  	port = container_of(work, struct fcoe_port, destroy_work);
  	lport = port->lport;
- 	interface = port->priv;
--	hba = interface->hba;
+-	interface = port->priv;
  
  	BNX2FC_HBA_DBG(lport, "Entered bnx2fc_destroy_work\n");
  
- 	bnx2fc_port_shutdown(lport);
+-	bnx2fc_port_shutdown(lport);
  	rtnl_lock();
  	mutex_lock(&bnx2fc_dev_lock);
--	bnx2fc_if_destroy(lport, hba);
-+	bnx2fc_if_destroy(lport);
+ 	bnx2fc_if_destroy(lport);
+@@ -2032,7 +2064,6 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
+ {
+ 	struct bnx2fc_hba *hba;
+ 	struct bnx2fc_interface *interface, *tmp;
+-	struct fc_lport *lport;
+ 
+ 	BNX2FC_MISC_DBG("Entered bnx2fc_ulp_exit\n");
+ 
+@@ -2054,18 +2085,10 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
+ 	list_del_init(&hba->list);
+ 	adapter_count--;
+ 
+-	list_for_each_entry_safe(interface, tmp, &if_list, list) {
++	list_for_each_entry_safe(interface, tmp, &if_list, list)
+ 		/* destroy not called yet, move to quiesced list */
+-		if (interface->hba == hba) {
+-			bnx2fc_interface_cleanup(interface);
+-			bnx2fc_stop(interface);
+-
+-			list_del(&interface->list);
+-			lport = interface->ctlr.lp;
+-			bnx2fc_interface_put(interface);
+-			bnx2fc_if_destroy(lport);
+-		}
+-	}
++		if (interface->hba == hba)
++			__bnx2fc_destroy(interface, false);
  	mutex_unlock(&bnx2fc_dev_lock);
- 	rtnl_unlock();
- }
-@@ -2064,7 +2063,7 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
- 			list_del(&interface->list);
- 			lport = interface->ctlr.lp;
- 			bnx2fc_interface_put(interface);
--			bnx2fc_if_destroy(lport, hba);
-+			bnx2fc_if_destroy(lport);
- 		}
- 	}
- 	mutex_unlock(&bnx2fc_dev_lock);
+ 
+ 	bnx2fc_ulp_stop(hba);
 -- 
 1.7.0.6
 
