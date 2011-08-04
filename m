@@ -1,60 +1,73 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.32 available
-Date: Wed, 03 Aug 2011 19:29:37 -0400
-Message-ID: <4E39D9E1.2080301@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH 2/11] drivers/message/fusion/mptsas.c: trivial: use
+ BUG_ON
+Date: Thu, 4 Aug 2011 12:24:50 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6042ABC7D09@inbmail02.lsi.com>
+References: <1312281304-11847-1-git-send-email-julia@diku.dk>
+ <1312281304-11847-3-git-send-email-julia@diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:34099 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756125Ab1HCX3t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2011 19:29:49 -0400
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:40838 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750934Ab1HDGyQ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2011 02:54:16 -0400
+In-Reply-To: <1312281304-11847-3-git-send-email-julia@diku.dk>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>, ronnie sahlberg <ronniesahlberg@gmail.com>
+To: Julia Lawall <julia@diku.dk>, "Moore, Eric" <Eric.Moore@lsi.com>, "trivial@kernel.org" <trivial@kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Support <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series. It also has
-ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
+The patch seem to be fine. Please consider this patch as an Acked by me
 
-A new utility called sg_sanitize has been added and there has
-been a major rework of the sg_ses utility. This version tracks
-various changes made by www.t10.org since February 2011.
+Regards,
+Nagalakshmi
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The SG_IO ioctl is discussed at:
-     http://sg.danny.cz/sg/sg_io.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-A release announcement will be sent to freshmeat.net .
+-----Original Message-----
+From: Julia Lawall [mailto:julia@diku.dk] 
+Sent: Tuesday, August 02, 2011 4:05 PM
+To: Moore, Eric; trivial@kernel.org
+Cc: kernel-janitors@vger.kernel.org; Support; DL-MPT Fusion Linux; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [PATCH 2/11] drivers/message/fusion/mptsas.c: trivial: use BUG_ON
 
-Changelog for sg3_utils-1.32 [20110730] [svn: r410]
-   - sg_sanitize: new utility for command added in sb3r27
-   - sg_sat_identify: add '--ident' to output WWN
-   - sg_ses: major rework of descriptor output
-     - add --index, --descriptor, --join, --clear, --get,
-       and --set options
-   - sg_raw: exit status corrections
-   - sg_decode_sense: add --nospace and --hex options
-   - sg_logs: fix bug with large --maxlen
-     - zero response length when resid implies it is invalid
-     - add scope field to lb provisioning lpage (sb3r27)
-   - sg_inq: sync version descriptors with spc4r31
-   - sg_lib_data: sync asc/ascq codes with spc4r31
-   - sg_vpd: add LBPRZ field in LB provisioning VPD page
-   - sg_format: allow format of pdt 7 (some MO drives)
-   - sg_cmd_basic: sg_cmds_process_resp() handle status good
-     with a sense key other than no_sense (e.g. completed)
-   - add README.iscsi
+From: Julia Lawall <julia@diku.dk>
 
-Changelog for sg3_utils-1.31 [20110216] [svn: r386]
-...
+Use BUG_ON(x) rather than if(x) BUG();
 
-Doug Gilbert
+The semantic patch that fixes this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@ identifier x; @@
+-if (x) BUG();
++BUG_ON(x);
+
+@@ identifier x; @@
+-if (!x) BUG();
++BUG_ON(!x);
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/message/fusion/mptsas.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff -u -p a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -3410,8 +3410,7 @@ mptsas_expander_event_add(MPT_ADAPTER *i
+ 	__le64 sas_address;
+ 
+ 	port_info = kzalloc(sizeof(struct mptsas_portinfo), GFP_KERNEL);
+-	if (!port_info)
+-		BUG();
++	BUG_ON(!port_info);
+ 	port_info->num_phys = (expander_data->NumPhys) ?
+ 	    expander_data->NumPhys : 1;
+ 	port_info->phy_info = kcalloc(port_info->num_phys,
 
