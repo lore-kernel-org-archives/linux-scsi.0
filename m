@@ -1,79 +1,164 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: TARGET: Use ERR_CAST inlined function
-Date: Thu, 04 Aug 2011 11:00:49 -0700
-Message-ID: <1312480849.22234.6.camel@haakon2.linux-iscsi.org>
-References: <1312235902.2629.4.camel@localhost.localdomain>
+Subject: Re: [PATCH v3] Fix leak in
+	drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
+Date: Thu, 04 Aug 2011 11:04:12 -0700
+Message-ID: <1312481052.22234.10.camel@haakon2.linux-iscsi.org>
+References: <alpine.LNX.2.00.1108010017030.28695@swampdragon.chaosbits.net>
+	 <1312152274.11635.8.camel@Joe-Laptop>
+	 <alpine.LNX.2.00.1108012230080.31999@swampdragon.chaosbits.net>
+	 <1312241542.11635.21.camel@Joe-Laptop>
+	 <alpine.LNX.2.00.1108021023530.1692@swampdragon.chaosbits.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44593 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54409 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753870Ab1HDSKc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2011 14:10:32 -0400
-In-Reply-To: <1312235902.2629.4.camel@localhost.localdomain>
+	with ESMTP id S1753870Ab1HDSNq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2011 14:13:46 -0400
+In-Reply-To: <alpine.LNX.2.00.1108021023530.1692@swampdragon.chaosbits.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: linux-scsi@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: Joe Perches <joe@perches.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, target-devel <target-devel@vger.kernel.org>
 
-On Mon, 2011-08-01 at 23:58 +0200, Thomas Meyer wrote:
-> Use ERR_CAST inlined function instead of ERR_PTR(PTR_ERR(...))
+On Tue, 2011-08-02 at 10:26 +0200, Jesper Juhl wrote:
+> On Mon, 1 Aug 2011, Joe Perches wrote:
 > 
->  The semantic patch that makes this output is available
->  in scripts/coccinelle/api/err_cast.cocci.
+> > On Mon, 2011-08-01 at 22:32 +0200, Jesper Juhl wrote:
+> > > diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+> > []
+> > > @@ -572,6 +572,17 @@ int iscsi_copy_param_list(
+> > []
+> > > +		if (!new_param->name || !new_param->value) {
+> > []
+> > > +			pr_err("Unable to allocate memory for parameter "
+> > > +				"name/value.\n");
+> > 
+> > I know you didn't change these lines, but could you please
+> > remember to coalesce formats to a single line next time?
+> > 
 > 
->  More information about semantic patching is available at
->  http://coccinelle.lip6.fr/
+> Ok, let me try once more. I hope this is now acceptable.
 > 
+> 
+> From: Jesper Juhl <jj@chaosbits.net>
+> Subject: [PATCH v3] Fix leak in drivers/target/iscsi/iscsi_target_parameters.c::iscsi_copy_param_list()
+> 
+> We leak memory if the allocations for 'new_param->name' or
+> 'new_param->value' fail.
+> 
+> We also do a lot of variable assignments that are completely pointless
+> if the allocations fail.
+> 
+> So, let's move the allocations before the assignments and also make
+> sure that we free whatever was allocated to one if the allocation fail.
+> 
+> There's also some small CodingStyle fixups in there (curly braces on
+> both branches of if statement, only one variable per line) since I was
+> in the area anyway. And finally, error messages in the function are
+> put on a single line for easy grep'abillity.
+> 
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 
-Hi Thomas,
+Hi Jesper,
 
-This patch has been committed into lio-core-2.6.git/master as
-cb057fc79f, and will be queued in the next round of target updates.
-
-Also just an FYI, this patch was missing your 'Signed-off-by' line.  I
-went ahead and added this, but please remember to include this in
-subsequent patches.
+This patch has been committed as 83f8b803171 into
+lio-core-2.6.git/master, and will be queued into the next set of target
+updates.
 
 Thanks!
 
 --nab
 
-> diff -u -p a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-> --- a/drivers/target/target_core_fabric_configfs.c 2011-07-26 00:46:09.670171895 +0200
-> +++ b/drivers/target/target_core_fabric_configfs.c 2011-08-01 20:49:50.880256441 +0200
-> @@ -481,7 +481,7 @@ static struct config_group *target_fabri
->  
->  	se_nacl = tf->tf_ops.fabric_make_nodeacl(se_tpg, group, name);
->  	if (IS_ERR(se_nacl))
-> -		return ERR_PTR(PTR_ERR(se_nacl));
-> +		return ERR_CAST(se_nacl);
->  
->  	nacl_cg = &se_nacl->acl_group;
->  	nacl_cg->default_groups = se_nacl->acl_default_groups;
-> diff -u -p a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-> --- a/drivers/target/iscsi/iscsi_target_configfs.c 2011-07-28 15:32:18.326584569 +0200
-> +++ b/drivers/target/iscsi/iscsi_target_configfs.c 2011-08-01 20:49:55.393565325 +0200
-> @@ -268,7 +268,7 @@ struct se_tpg_np *lio_target_call_addnpt
->  				ISCSI_TCP);
->  	if (IS_ERR(tpg_np)) {
->  		iscsit_put_tpg(tpg);
-> -		return ERR_PTR(PTR_ERR(tpg_np));
-> +		return ERR_CAST(tpg_np);
->  	}
->  	pr_debug("LIO_Target_ConfigFS: addnptotpg done!\n");
->  
-> @@ -1285,7 +1285,7 @@ struct se_wwn *lio_target_call_coreaddti
->  
->  	tiqn = iscsit_add_tiqn((unsigned char *)name);
->  	if (IS_ERR(tiqn))
-> -		return ERR_PTR(PTR_ERR(tiqn));
-> +		return ERR_CAST(tiqn);
->  	/*
->  	 * Setup struct iscsi_wwn_stat_grps for se_wwn->fabric_stat_group.
->  	 */
+> ---
+>  drivers/target/iscsi/iscsi_target_parameters.c |   43 +++++++++---------------
+>  1 files changed, 16 insertions(+), 27 deletions(-)
 > 
+> diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+> index 252e246..497b2e7 100644
+> --- a/drivers/target/iscsi/iscsi_target_parameters.c
+> +++ b/drivers/target/iscsi/iscsi_target_parameters.c
+> @@ -545,13 +545,13 @@ int iscsi_copy_param_list(
+>  	struct iscsi_param_list *src_param_list,
+>  	int leading)
+>  {
+> -	struct iscsi_param *new_param = NULL, *param = NULL;
+> +	struct iscsi_param *param = NULL;
+> +	struct iscsi_param *new_param = NULL;
+>  	struct iscsi_param_list *param_list = NULL;
+>  
+>  	param_list = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
+>  	if (!param_list) {
+> -		pr_err("Unable to allocate memory for"
+> -				" struct iscsi_param_list.\n");
+> +		pr_err("Unable to allocate memory for struct iscsi_param_list.\n");
+>  		goto err_out;
+>  	}
+>  	INIT_LIST_HEAD(&param_list->param_list);
+> @@ -567,8 +567,17 @@ int iscsi_copy_param_list(
+>  
+>  		new_param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
+>  		if (!new_param) {
+> -			pr_err("Unable to allocate memory for"
+> -				" struct iscsi_param.\n");
+> +			pr_err("Unable to allocate memory for struct iscsi_param.\n");
+> +			goto err_out;
+> +		}
+> +
+> +		new_param->name = kstrdup(param->name, GFP_KERNEL);
+> +		new_param->value = kstrdup(param->value, GFP_KERNEL);
+> +		if (!new_param->value || !new_param->name) {
+> +			kfree(new_param->value);
+> +			kfree(new_param->name);
+> +			kfree(new_param);
+> +			pr_err("Unable to allocate memory for parameter name/value.\n");
+>  			goto err_out;
+>  		}
+>  
+> @@ -580,32 +589,12 @@ int iscsi_copy_param_list(
+>  		new_param->use = param->use;
+>  		new_param->type_range = param->type_range;
+>  
+> -		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
+> -		if (!new_param->name) {
+> -			pr_err("Unable to allocate memory for"
+> -				" parameter name.\n");
+> -			goto err_out;
+> -		}
+> -
+> -		new_param->value = kzalloc(strlen(param->value) + 1,
+> -				GFP_KERNEL);
+> -		if (!new_param->value) {
+> -			pr_err("Unable to allocate memory for"
+> -				" parameter value.\n");
+> -			goto err_out;
+> -		}
+> -
+> -		memcpy(new_param->name, param->name, strlen(param->name));
+> -		new_param->name[strlen(param->name)] = '\0';
+> -		memcpy(new_param->value, param->value, strlen(param->value));
+> -		new_param->value[strlen(param->value)] = '\0';
+> -
+>  		list_add_tail(&new_param->p_list, &param_list->param_list);
+>  	}
+>  
+> -	if (!list_empty(&param_list->param_list))
+> +	if (!list_empty(&param_list->param_list)) {
+>  		*dst_param_list = param_list;
+> -	else {
+> +	} else {
+>  		pr_err("No parameters allocated.\n");
+>  		goto err_out;
+>  	}
+> -- 
+> 1.7.6
+> 
+> 
+> -- 
+> Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+> Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+> Plain text mails only, please.
 > 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
