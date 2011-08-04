@@ -1,43 +1,55 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 04/18] bnx2fc: Remove erroneous kref_get on IO request
-Date: Thu, 4 Aug 2011 11:46:59 -0700
-Message-ID: <1312483633-479-5-git-send-email-bprakash@broadcom.com>
-References: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 00/18] bnx2fc version 1.0.5
+Date: Thu, 4 Aug 2011 11:46:55 -0700
+Message-ID: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3889 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1322 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755460Ab1HDSr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755473Ab1HDSr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 4 Aug 2011 14:47:26 -0400
-In-Reply-To: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-During sequence cleanup, an additional reference for an IO has been
-taken. Because of this, the IO is never released into the free list.
+This patchset contains bnx2fc bug fixes.  Please note that patch 15 is
+'fcoe/libfcoe' patch, which moves LLD common code from fcoe driver to
+fcoe_transport, to enable patch 16 and 17.
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_io.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Bhanu Prakash Gollapudi (18):
+  bnx2fc: Reset the max receive frame size
+  bnx2fc: Bug fixes in percpu_thread_create/destroy
+  bnx2fc: Enable bsg_request support for bnx2fc
+  bnx2fc: Remove erroneous kref_get on IO request
+  bnx2fc: Do not attempt destroying NPIV port twice
+  bnx2fc: Change function names of
+	  bnx2fc_netdev_setup/bnx2fc_netdev_cleanup
+  bnx2fc: Reorganize cleanup code between interface_cleanup and
+	  if_destory
+  bnx2fc: Handle NETDEV_UNREGISTER for vlan devices
+  bnx2fc: Clear DESTROY_CMPL flag after firmware destroy
+  bnx2fc: Do not reuse the fcoe connection id immediately
+  bnx2fc: IO errors when receiving unsolicited LOGO
+  bnx2fc: Fix NULL pointer deref during arm_cq.
+  bnx2fc: code cleanup in bnx2fc_offload_session
+  bnx2fc: Drop incoming ABTS
+  fcoe: Move common functions to fcoe_transport library
+  bnx2fc: Obtain WWNN/WWPN from the shared memory
+  bnx2fc: Prevent creating of NPIV port with duplicate WWN
+  bnx2fc: Bump version to 1.0.5
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 6cc3789..cb1791c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1251,7 +1251,6 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
- 			seq_clnp_req->xid);
- 		goto free_cb_arg;
- 	}
--	kref_get(&orig_io_req->refcount);
- 
- 	spin_unlock_bh(&tgt->tgt_lock);
- 	rc = bnx2fc_send_srr(orig_io_req, offset, r_ctl);
--- 
-1.7.0.6
+ drivers/scsi/bnx2fc/bnx2fc.h       |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c  |  187 ++++++++++++++++++++++++------------
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c   |   10 ++-
+ drivers/scsi/bnx2fc/bnx2fc_io.c    |    7 --
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c   |   27 +++---
+ drivers/scsi/fcoe/fcoe.c           |   66 +-------------
+ drivers/scsi/fcoe/fcoe.h           |   10 --
+ drivers/scsi/fcoe/fcoe_transport.c |   72 ++++++++++++++
+ include/scsi/libfcoe.h             |    3 +
+ 9 files changed, 224 insertions(+), 160 deletions(-)
 
 
