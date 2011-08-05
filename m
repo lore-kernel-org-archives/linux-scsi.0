@@ -1,16 +1,16 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH v2 16/18] bnx2fc: Obtain WWNN/WWPN from the shared
- memory
-Date: Thu, 4 Aug 2011 17:38:50 -0700
-Message-ID: <1312504732-4572-17-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH v2 17/18] bnx2fc: Prevent creating of NPIV port with
+ duplicate WWN
+Date: Thu, 4 Aug 2011 17:38:51 -0700
+Message-ID: <1312504732-4572-18-git-send-email-bprakash@broadcom.com>
 References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2397 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:2398 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920Ab1HEAjT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756053Ab1HEAjT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 4 Aug 2011 20:39:19 -0400
 In-Reply-To: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,63 +18,37 @@ List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-bnx2x driver would obtain the WWNN/WWPN from the shared memory and can be
-obtained by the bnx2fc driver via ndo_fcoe_get_wwn.
+This patch adds a validation step before allowing creation of a new NPIV port.
+It checks whether the WWPN passed for the new NPIV port to be created is unique
+for the given physical port.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   14 +++++++++-----
- 1 files changed, 9 insertions(+), 5 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   11 +++++++++++
+ 1 files changed, 11 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 62c0e94..25d3bcd 100644
+index 25d3bcd..351ca4c 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -65,7 +65,6 @@ static void bnx2fc_recv_frame(struct sk_buff *skb);
- 
- static void bnx2fc_start_disc(struct bnx2fc_interface *interface);
- static int bnx2fc_shost_config(struct fc_lport *lport, struct device *dev);
--static int bnx2fc_net_config(struct fc_lport *lp);
- static int bnx2fc_lport_config(struct fc_lport *lport);
- static int bnx2fc_em_config(struct fc_lport *lport);
- static int bnx2fc_bind_adapter_devices(struct bnx2fc_hba *hba);
-@@ -737,7 +736,7 @@ void bnx2fc_get_link_state(struct bnx2fc_hba *hba)
- 		clear_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state);
- }
- 
--static int bnx2fc_net_config(struct fc_lport *lport)
-+static int bnx2fc_net_config(struct fc_lport *lport, struct net_device *netdev)
- {
- 	struct bnx2fc_hba *hba;
- 	struct bnx2fc_interface *interface;
-@@ -763,11 +762,16 @@ static int bnx2fc_net_config(struct fc_lport *lport)
- 	bnx2fc_link_speed_update(lport);
- 
- 	if (!lport->vport) {
--		wwnn = fcoe_wwn_from_mac(interface->ctlr.ctl_src_addr, 1, 0);
-+		if (fcoe_get_wwn(netdev, &wwnn, NETDEV_FCOE_WWNN))
-+			wwnn = fcoe_wwn_from_mac(interface->ctlr.ctl_src_addr,
-+						 1, 0);
- 		BNX2FC_HBA_DBG(lport, "WWNN = 0x%llx\n", wwnn);
- 		fc_set_wwnn(lport, wwnn);
- 
--		wwpn = fcoe_wwn_from_mac(interface->ctlr.ctl_src_addr, 2, 0);
-+		if (fcoe_get_wwn(netdev, &wwpn, NETDEV_FCOE_WWPN))
-+			wwpn = fcoe_wwn_from_mac(interface->ctlr.ctl_src_addr,
-+						 2, 0);
+@@ -1020,6 +1020,17 @@ static int bnx2fc_vport_create(struct fc_vport *vport, bool disabled)
+ 	struct bnx2fc_interface *interface = port->priv;
+ 	struct net_device *netdev = interface->netdev;
+ 	struct fc_lport *vn_port;
++	int rc;
++	char buf[32];
 +
- 		BNX2FC_HBA_DBG(lport, "WWPN = 0x%llx\n", wwpn);
- 		fc_set_wwpn(lport, wwpn);
- 	}
-@@ -1367,7 +1371,7 @@ static struct fc_lport *bnx2fc_if_create(struct bnx2fc_interface *interface,
- 		fc_set_wwpn(lport, vport->port_name);
- 	}
- 	/* Configure netdev and networking properties of the lport */
--	rc = bnx2fc_net_config(lport);
-+	rc = bnx2fc_net_config(lport, interface->netdev);
- 	if (rc) {
- 		printk(KERN_ERR PFX "Error on bnx2fc_net_config\n");
- 		goto lp_config_err;
++	rc = fcoe_validate_vport_create(vport);
++	if (rc) {
++		fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
++		printk(KERN_ERR PFX "Failed to create vport, "
++		       "WWPN (0x%s) already exists\n",
++		       buf);
++		return rc;
++	}
+ 
+ 	if (!test_bit(BNX2FC_FLAG_FW_INIT_DONE, &interface->hba->flags)) {
+ 		printk(KERN_ERR PFX "vn ports cannot be created on"
 -- 
 1.7.0.6
 
