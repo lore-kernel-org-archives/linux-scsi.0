@@ -1,44 +1,90 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH v2 10/18] bnx2fc: Do not reuse the fcoe connection id
- immediately
-Date: Thu, 4 Aug 2011 17:38:44 -0700
-Message-ID: <1312504732-4572-11-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH v2 06/18] bnx2fc: Change function names of
+ bnx2fc_netdev_setup/bnx2fc_netdev_cleanup
+Date: Thu, 4 Aug 2011 17:38:40 -0700
+Message-ID: <1312504732-4572-7-git-send-email-bprakash@broadcom.com>
 References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4917 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2238 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755945Ab1HEAjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2011 20:39:11 -0400
+	id S1755938Ab1HEAjM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2011 20:39:12 -0400
 In-Reply-To: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-CFC_DELETE is issued 2 secs after CONN_TERM is completed. If the session is
-uploaded and offloaded immediately, it has to wait for the connection id to be
-available.
+Change them to bnx2fc_interface_setup/bnx2fc_interface_cleanup in preperation
+for the patches to follow. Interface specific cleanup functionality will be
+moved to bnx2fc_interface_cleanup.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_tgt.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-index d5311b5..3d28fbe 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-@@ -624,7 +624,6 @@ static void bnx2fc_free_conn_id(struct bnx2fc_hba *hba, u32 conn_id)
- 	/* called with hba mutex held */
- 	spin_lock_bh(&hba->hba_lock);
- 	hba->tgt_ofld_list[conn_id] = NULL;
--	hba->next_conn_id = conn_id;
- 	spin_unlock_bh(&hba->hba_lock);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 21792e7..407a9b8 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1064,7 +1064,7 @@ static int bnx2fc_vport_disable(struct fc_vport *vport, bool disable)
  }
  
+ 
+-static int bnx2fc_netdev_setup(struct bnx2fc_interface *interface)
++static int bnx2fc_interface_setup(struct bnx2fc_interface *interface)
+ {
+ 	struct net_device *netdev = interface->netdev;
+ 	struct net_device *physdev = interface->hba->phys_dev;
+@@ -1262,7 +1262,7 @@ struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba *hba,
+ 	interface->ctlr.get_src_addr = bnx2fc_get_src_mac;
+ 	set_bit(BNX2FC_CTLR_INIT_DONE, &interface->if_flags);
+ 
+-	rc = bnx2fc_netdev_setup(interface);
++	rc = bnx2fc_interface_setup(interface);
+ 	if (!rc)
+ 		return interface;
+ 
+@@ -1382,7 +1382,7 @@ free_blport:
+ 	return NULL;
+ }
+ 
+-static void bnx2fc_netdev_cleanup(struct bnx2fc_interface *interface)
++static void bnx2fc_interface_cleanup(struct bnx2fc_interface *interface)
+ {
+ 	/* Dont listen for Ethernet packets anymore */
+ 	__dev_remove_pack(&interface->fcoe_packet_type);
+@@ -1459,7 +1459,7 @@ static int bnx2fc_destroy(struct net_device *netdev)
+ 
+ 	hba = interface->hba;
+ 
+-	bnx2fc_netdev_cleanup(interface);
++	bnx2fc_interface_cleanup(interface);
+ 	lport = interface->ctlr.lp;
+ 	bnx2fc_stop(interface);
+ 	list_del(&interface->list);
+@@ -1938,7 +1938,7 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	if (!lport) {
+ 		printk(KERN_ERR PFX "Failed to create interface (%s)\n",
+ 			netdev->name);
+-		bnx2fc_netdev_cleanup(interface);
++		bnx2fc_interface_cleanup(interface);
+ 		rc = -EINVAL;
+ 		goto if_create_err;
+ 	}
+@@ -2057,7 +2057,7 @@ static void bnx2fc_ulp_exit(struct cnic_dev *dev)
+ 	list_for_each_entry_safe(interface, tmp, &if_list, list) {
+ 		/* destroy not called yet, move to quiesced list */
+ 		if (interface->hba == hba) {
+-			bnx2fc_netdev_cleanup(interface);
++			bnx2fc_interface_cleanup(interface);
+ 			bnx2fc_stop(interface);
+ 
+ 			list_del(&interface->list);
 -- 
 1.7.0.6
 
