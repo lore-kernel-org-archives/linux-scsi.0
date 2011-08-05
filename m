@@ -1,15 +1,16 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH v2 01/18] bnx2fc: Reset the max receive frame size
-Date: Thu, 4 Aug 2011 17:38:35 -0700
-Message-ID: <1312504732-4572-2-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH v2 04/18] bnx2fc: Remove erroneous kref_get on IO
+ request
+Date: Thu, 4 Aug 2011 17:38:38 -0700
+Message-ID: <1312504732-4572-5-git-send-email-bprakash@broadcom.com>
 References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4922 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4920 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755937Ab1HEAjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755920Ab1HEAjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 4 Aug 2011 20:39:08 -0400
 In-Reply-To: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,30 +18,26 @@ List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Reset max receive frame size every time before attempting FLOGI. Without this,
-the stale MFS value will be used.
+During sequence cleanup, an additional reference for an IO has been
+taken. Because of this, the IO is never released into the free list.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_io.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 7cb2cd4..ea1e6cc 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -1735,6 +1735,11 @@ static void bnx2fc_start_disc(struct bnx2fc_interface *interface)
- 		if (++wait_cnt > 12)
- 			break;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 6cc3789..cb1791c 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1251,7 +1251,6 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
+ 			seq_clnp_req->xid);
+ 		goto free_cb_arg;
  	}
-+
-+	/* Reset max receive frame size to default */
-+	if (fc_set_mfs(lport, BNX2FC_MFS))
-+		return;
-+
- 	fc_lport_init(lport);
- 	fc_fabric_login(lport);
- }
+-	kref_get(&orig_io_req->refcount);
+ 
+ 	spin_unlock_bh(&tgt->tgt_lock);
+ 	rc = bnx2fc_send_srr(orig_io_req, offset, r_ctl);
 -- 
 1.7.0.6
 
