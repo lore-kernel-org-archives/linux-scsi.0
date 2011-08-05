@@ -1,43 +1,44 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH v2 04/18] bnx2fc: Remove erroneous kref_get on IO
- request
-Date: Thu, 4 Aug 2011 17:38:38 -0700
-Message-ID: <1312504732-4572-5-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH v2 10/18] bnx2fc: Do not reuse the fcoe connection id
+ immediately
+Date: Thu, 4 Aug 2011 17:38:44 -0700
+Message-ID: <1312504732-4572-11-git-send-email-bprakash@broadcom.com>
 References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4920 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4917 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755920Ab1HEAjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2011 20:39:08 -0400
+	id S1755945Ab1HEAjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2011 20:39:11 -0400
 In-Reply-To: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-During sequence cleanup, an additional reference for an IO has been
-taken. Because of this, the IO is never released into the free list.
+CFC_DELETE is issued 2 secs after CONN_TERM is completed. If the session is
+uploaded and offloaded immediately, it has to wait for the connection id to be
+available.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c |    1 -
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c |    1 -
  1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 6cc3789..cb1791c 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1251,7 +1251,6 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnp_req,
- 			seq_clnp_req->xid);
- 		goto free_cb_arg;
- 	}
--	kref_get(&orig_io_req->refcount);
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+index d5311b5..3d28fbe 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_tgt.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
+@@ -624,7 +624,6 @@ static void bnx2fc_free_conn_id(struct bnx2fc_hba *hba, u32 conn_id)
+ 	/* called with hba mutex held */
+ 	spin_lock_bh(&hba->hba_lock);
+ 	hba->tgt_ofld_list[conn_id] = NULL;
+-	hba->next_conn_id = conn_id;
+ 	spin_unlock_bh(&hba->hba_lock);
+ }
  
- 	spin_unlock_bh(&tgt->tgt_lock);
- 	rc = bnx2fc_send_srr(orig_io_req, offset, r_ctl);
 -- 
 1.7.0.6
 
