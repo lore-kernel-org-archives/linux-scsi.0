@@ -1,47 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] aic7xxx: use kstrdup()
-Date: Sat, 06 Aug 2011 12:23:42 -0500
-Message-ID: <1312651422.11515.37.camel@mulgrave>
-References: <1312622577.5589.63.camel@localhost.localdomain>
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: 3Ware 9550SX on MIPS
+Date: Sat, 06 Aug 2011 16:06:39 -0500
+Message-ID: <4E3DACDF.4020008@hardwarefreak.com>
+References: <CAEdQ38FKHh2+QdEz=e9HUEUg-miRYuRe730QEwsjbZYzUF28zg@mail.gmail.com> <4E3CDCA9.1040006@hardwarefreak.com> <CAEdQ38EqfRPBFqNPgqOb4GFb=CHpPJtFy+m=DN9OJSKiG2o7pg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1312622577.5589.63.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: hare@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:33566 "EHLO
+	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755184Ab1HFVGn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2011 17:06:43 -0400
+In-Reply-To: <CAEdQ38EqfRPBFqNPgqOb4GFb=CHpPJtFy+m=DN9OJSKiG2o7pg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matt Turner <mattst88@gmail.com>
+Cc: linux-scsi@vger.kernel.org, aradford@gmail.com
 
-On Sat, 2011-08-06 at 11:22 +0200, Thomas Meyer wrote:
-> From: Thomas Meyer <thomas@m3y3r.de>
+On 8/6/2011 9:45 AM, Matt Turner wrote:
+> On Sat, Aug 6, 2011 at 2:18 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>> On 8/5/2011 4:34 PM, Matt Turner wrote:
+>>> Hi,
+>>>
+>>> I'm trying to use a 3Ware 9550SX SATA controller on a MIPS system.
+>>
+>> Just out or curiosity, which MIPS based system?
+>>
+>> --
+>> Stan
 > 
->  Use kstrdup rather than duplicating its implementation
+> It's a Broadcom "SWARM" BCM91250A development board, which is now
+> being used to maintain Gentoo's MIPS port.
 > 
->  The semantic patch that makes this output is available
->  in scripts/coccinelle/api/kstrdup.cocci.
+> http://mattst88.com/computers/bcm91250a/
 > 
->  More information about semantic patching is available at
->  http://coccinelle.lip6.fr/
-> 
-> Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
-> ---
-> 
-> diff -u -p a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c 2010-09-13 07:01:17.520528007 +0200
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c 2011-08-01 21:15:58.925094946 +0200
-> @@ -178,10 +178,9 @@ ahd_linux_pci_dev_probe(struct pci_dev *
->  		ahd_get_pci_bus(pci),
->  		ahd_get_pci_slot(pci),
->  		ahd_get_pci_function(pci));
-> -	name = kmalloc(strlen(buf) + 1, GFP_ATOMIC);
-> +	name = kstrdup(buf, GFP_ATOMIC);
->         if (name == NULL)
->                 return (-ENOMEM);
-> -       strcpy(name, buf);
+> I wish good MIPS hardware was more available.
 
-All adaptec drivers are in deep maintenance mode because the hardware
-isn't being produced any longer.  The only things we really apply to
-them now is essential bug fixes, which this isn't.
+MIPS as a general purpose (deskotp/server) computing platform pretty
+much died when SGI ditched it for Itanium almost a decade ago...sad.
 
-James
+What audience is Gentoo targeting with their MIPS port?
+
+-- 
+Stan
