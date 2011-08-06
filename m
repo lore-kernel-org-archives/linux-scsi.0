@@ -1,46 +1,33 @@
-From: Thomas Meyer <thomas@m3y3r.de>
-Subject: [PATCH] [SCSI] aic7xxx: use kstrdup()
-Date: Sat, 06 Aug 2011 11:22:53 +0200
-Message-ID: <1312622577.5589.63.camel@localhost.localdomain>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] iscsi-target: remove duplicate return
+Date: Sat, 6 Aug 2011 07:29:38 -0700
+Message-ID: <20110806142938.GD10373@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www17.your-server.de ([213.133.104.17]:34196 "EHLO
-	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752127Ab1HFJXZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2011 05:23:25 -0400
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:63062 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888Ab1HFO3h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2011 10:29:37 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hare@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Andy Grover <agrover@redhat.com>, Dan Carpenter <error27@gmail.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-From: Thomas Meyer <thomas@m3y3r.de>
+We returned on the line before already.
 
- Use kstrdup rather than duplicating its implementation
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
- The semantic patch that makes this output is available
- in scripts/coccinelle/api/kstrdup.cocci.
-
- More information about semantic patching is available at
- http://coccinelle.lip6.fr/
-
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
----
-
-diff -u -p a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
---- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c 2010-09-13 07:01:17.520528007 +0200
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c 2011-08-01 21:15:58.925094946 +0200
-@@ -178,10 +178,9 @@ ahd_linux_pci_dev_probe(struct pci_dev *
- 		ahd_get_pci_bus(pci),
- 		ahd_get_pci_slot(pci),
- 		ahd_get_pci_function(pci));
--	name = kmalloc(strlen(buf) + 1, GFP_ATOMIC);
-+	name = kstrdup(buf, GFP_ATOMIC);
- 	if (name == NULL)
- 		return (-ENOMEM);
--	strcpy(name, buf);
- 	ahd = ahd_alloc(NULL, name);
- 	if (ahd == NULL)
- 		return (-ENOMEM);
-
-
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index c24fb10..6a4ea29 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -2243,7 +2243,6 @@ static int iscsit_handle_snack(
+ 	case 0:
+ 		return iscsit_handle_recovery_datain_or_r2t(conn, buf,
+ 			hdr->itt, hdr->ttt, hdr->begrun, hdr->runlength);
+-		return 0;
+ 	case ISCSI_FLAG_SNACK_TYPE_STATUS:
+ 		return iscsit_handle_status_snack(conn, hdr->itt, hdr->ttt,
+ 			hdr->begrun, hdr->runlength);
