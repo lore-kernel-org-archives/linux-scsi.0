@@ -1,40 +1,47 @@
-From: Matt Turner <mattst88@gmail.com>
-Subject: Re: 3Ware 9550SX on MIPS
-Date: Sat, 6 Aug 2011 10:45:53 -0400
-Message-ID: <CAEdQ38EqfRPBFqNPgqOb4GFb=CHpPJtFy+m=DN9OJSKiG2o7pg@mail.gmail.com>
-References: <CAEdQ38FKHh2+QdEz=e9HUEUg-miRYuRe730QEwsjbZYzUF28zg@mail.gmail.com>
- <4E3CDCA9.1040006@hardwarefreak.com>
+From: Thomas Meyer <thomas@m3y3r.de>
+Subject: [PATCH] [SCSI] aic7xxx: use kstrdup()
+Date: Sat, 06 Aug 2011 17:32:20 +0200
+Message-ID: <1312644743.5589.133.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:47329 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752220Ab1HFOqO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2011 10:46:14 -0400
-Received: by vxi9 with SMTP id 9so1584254vxi.19
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Aug 2011 07:46:14 -0700 (PDT)
-In-Reply-To: <4E3CDCA9.1040006@hardwarefreak.com>
+Received: from www17.your-server.de ([213.133.104.17]:33315 "EHLO
+	www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751411Ab1HFPcw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2011 11:32:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: linux-scsi@vger.kernel.org, aradford@gmail.com
+To: linux-kernel@vger.kernel.org, hare@suse.de, linux-scsi@vger.kernel.org
 
-On Sat, Aug 6, 2011 at 2:18 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 8/5/2011 4:34 PM, Matt Turner wrote:
->> Hi,
->>
->> I'm trying to use a 3Ware 9550SX SATA controller on a MIPS system.
->
-> Just out or curiosity, which MIPS based system?
->
-> --
-> Stan
+From: Thomas Meyer <thomas@m3y3r.de>
 
-It's a Broadcom "SWARM" BCM91250A development board, which is now
-being used to maintain Gentoo's MIPS port.
+ Use kstrdup rather than duplicating its implementation
 
-http://mattst88.com/computers/bcm91250a/
+ The semantic patch that makes this output is available
+ in scripts/coccinelle/api/kstrdup.cocci.
 
-I wish good MIPS hardware was more available.
+ More information about semantic patching is available at
+ http://coccinelle.lip6.fr/
 
-Matt
+Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+---
+
+diff -u -p a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c 2010-09-13 07:01:17.527194675 +0200
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c 2011-08-01 21:15:57.685101664 +0200
+@@ -225,10 +225,9 @@ ahc_linux_pci_dev_probe(struct pci_dev *
+ 		ahc_get_pci_bus(pci),
+ 		ahc_get_pci_slot(pci),
+ 		ahc_get_pci_function(pci));
+-	name = kmalloc(strlen(buf) + 1, GFP_ATOMIC);
++	name = kstrdup(buf, GFP_ATOMIC);
+ 	if (name == NULL)
+ 		return (-ENOMEM);
+-	strcpy(name, buf);
+ 	ahc = ahc_alloc(NULL, name);
+ 	if (ahc == NULL)
+ 		return (-ENOMEM);
+
+
+
