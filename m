@@ -1,45 +1,51 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: 3Ware 9550SX on MIPS
-Date: Sat, 06 Aug 2011 16:06:39 -0500
-Message-ID: <4E3DACDF.4020008@hardwarefreak.com>
-References: <CAEdQ38FKHh2+QdEz=e9HUEUg-miRYuRe730QEwsjbZYzUF28zg@mail.gmail.com> <4E3CDCA9.1040006@hardwarefreak.com> <CAEdQ38EqfRPBFqNPgqOb4GFb=CHpPJtFy+m=DN9OJSKiG2o7pg@mail.gmail.com>
+From: "WESTERN UNION OFFICE" <info@westen.com>
+Subject: Pick Up
+Date: Sun, 7 Aug 2011 19:21:04 +0800
+Message-ID: <20110807112114.M30098@westen.com>
+Reply-To: western-money71@xnmsn.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=big5
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:33566 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755184Ab1HFVGn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Aug 2011 17:06:43 -0400
-In-Reply-To: <CAEdQ38EqfRPBFqNPgqOb4GFb=CHpPJtFy+m=DN9OJSKiG2o7pg@mail.gmail.com>
+Received: from mail.richfieldgroup.hk ([219.76.192.210]:49760 "EHLO
+	mailserver.richfieldgroup.hk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751918Ab1HGLjM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 7 Aug 2011 07:39:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matt Turner <mattst88@gmail.com>
-Cc: linux-scsi@vger.kernel.org, aradford@gmail.com
 
-On 8/6/2011 9:45 AM, Matt Turner wrote:
-> On Sat, Aug 6, 2011 at 2:18 AM, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->> On 8/5/2011 4:34 PM, Matt Turner wrote:
->>> Hi,
->>>
->>> I'm trying to use a 3Ware 9550SX SATA controller on a MIPS system.
->>
->> Just out or curiosity, which MIPS based system?
->>
->> --
->> Stan
-> 
-> It's a Broadcom "SWARM" BCM91250A development board, which is now
-> being used to maintain Gentoo's MIPS port.
-> 
-> http://mattst88.com/computers/bcm91250a/
-> 
-> I wish good MIPS hardware was more available.
+How are you today?
 
-MIPS as a general purpose (deskotp/server) computing platform pretty
-much died when SGI ditched it for Itanium almost a decade ago...sad.
 
-What audience is Gentoo targeting with their MIPS port?
+I write to inform you that we have already sent you $5,000.00USD
+through Western union as we have been given the mandate to transfer
+your full compensation payment of  $1.800,000.00USD via western union
+by this government.
 
--- 
-Stan
+I called to give you the information through phone as internet hackers
+were many but i cannot reach you yesterday even this morning,So I
+decided to email you the (MTCN) and sender name so that you can pick
+up this $5,000.00USD to enable us send another $5,000.00USD by
+tomorrow as you knows we will be sending you only $5,000.00USD per
+day.Please pick up this information and run to any western union
+(OUTLET) in your country and pick up this $5,000.00USD and send us an
+email back,so that we can send another $5,000.00USD by tomorrow.
+
+Manager: Mr Frank Amos
+email me on:western-money71@xnmsn.com
+call us on: +234-7031908911
+once you picked up this $5000.00USD today.
+
+Here is the western union information to pick up the $5000.00USD,
+
+MTCN :___________  MTCN 9500834460
+first name: ________Appoline
+Second Name: ____Ouedraoge
+Text Question: ____When
+Answer: ____________2Hours ago
+Amount:__________ $5,000.00 United State Dollars
+
+I am waiting for your E-mail once you pick up $5000.00USD,
+
+Thanks
+Mr Frank Amos.
