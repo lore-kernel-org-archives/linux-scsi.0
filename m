@@ -1,78 +1,32 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 7/9] drivers/target/iscsi/iscsi_target_parameters.c: add missing kfree
-Date: Mon,  8 Aug 2011 13:18:01 +0200
-Message-ID: <1312802283-9107-7-git-send-email-julia@diku.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: kernel-janitors@vger.kernel.org, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: question about sas_phy_alloc
+Date: Mon, 8 Aug 2011 15:03:06 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1108081458370.22343@ask.diku.dk>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw2.diku.dk ([130.225.96.92]:36190 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753792Ab1HHNDL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Aug 2011 09:03:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-From: Julia Lawall <julia@diku.dk>
+The definition of sas_phy_free has the comment:
 
-At this point, the new_param that has just been allocated has not been
-stored in the list, so it and new_param->name, once it is defined, have to
-be freed separately.
+ * Note:
+ *   This function must only be called on a PHY that has not
+ *   successfully been added using sas_phy_add().
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+Does this mean that the function should only be used when a call to 
+sas_phy_add has taken place and that call has failed?  Or should it also 
+be used when sas_phy_add has not yet been called and an error occurs?
 
-// <smpl>
-@exists@
-local idexpression x;
-statement S,S1;
-expression E;
-identifier fl;
-expression *ptr != NULL;
-@@
+Concretely, I am wondering about the functions 
+mpt2sas_transport_add_host_phy and mpt2sas_transport_add_expander_phy in 
+the file drivers/scsi/mpt2sas/mpt2sas_transport.c.  Each function has a 
+potential failure on _transport_set_identify before sas_phy_add is called, 
+and I wonder if sas_phy_free should be called in these cases.
 
-x = \(kmalloc\|kzalloc\|kcalloc\)(...);
-...
-if (x == NULL) S
-<... when != x
-     when != if (...) { <+...kfree(x)...+> }
-     when any
-     when != true x == NULL
-x->fl
-...>
-(
-if (x == NULL) S1
-|
-if (...) { ... when != x
-               when forall
-(
- return \(0\|<+...x...+>\|ptr\);
-|
-* return ...;
-)
-}
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/target/iscsi/iscsi_target_parameters.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
-index 252e246..b8dbe44 100644
---- a/drivers/target/iscsi/iscsi_target_parameters.c
-+++ b/drivers/target/iscsi/iscsi_target_parameters.c
-@@ -584,6 +584,7 @@ int iscsi_copy_param_list(
- 		if (!new_param->name) {
- 			pr_err("Unable to allocate memory for"
- 				" parameter name.\n");
-+			kfree(new_param);
- 			goto err_out;
- 		}
- 
-@@ -592,6 +593,8 @@ int iscsi_copy_param_list(
- 		if (!new_param->value) {
- 			pr_err("Unable to allocate memory for"
- 				" parameter value.\n");
-+			kfree(new_param->name);
-+			kfree(new_param);
- 			goto err_out;
- 		}
- 
+julia
