@@ -1,55 +1,104 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] iscsi-target: forever loop in iscsit_attach_ooo_cmdsn()
-Date: Mon, 08 Aug 2011 14:07:35 -0700
-Message-ID: <1312837655.12502.87.camel@haakon2.linux-iscsi.org>
-References: <20110806143206.GF10373@mwanda>
+Subject: Re: [PATCH 7/9] drivers/target/iscsi/iscsi_target_parameters.c:
+	add missing kfree
+Date: Mon, 08 Aug 2011 14:11:54 -0700
+Message-ID: <1312837914.12502.92.camel@haakon2.linux-iscsi.org>
+References: <1312802283-9107-7-git-send-email-julia@diku.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39263 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328Ab1HHVRL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2011 17:17:11 -0400
-In-Reply-To: <20110806143206.GF10373@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1312802283-9107-7-git-send-email-julia@diku.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <julia@diku.dk>
+Cc: kernel-janitors@vger.kernel.org, Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>
-Cc: Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-On Sat, 2011-08-06 at 07:32 -0700, Dan Carpenter wrote:
-> I was looking through the code for something unrelated and noticed
-> what looks like a forever loop here.
+On Mon, 2011-08-08 at 13:18 +0200, Julia Lawall wrote:
+> From: Julia Lawall <julia@diku.dk>
 > 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> At this point, the new_param that has just been allocated has not been
+> stored in the list, so it and new_param->name, once it is defined, have to
+> be freed separately.
+> 
+> A simplified version of the semantic match that finds this problem is as
+> follows: (http://coccinelle.lip6.fr/)
+> 
+> // <smpl>
+> @exists@
+> local idexpression x;
+> statement S,S1;
+> expression E;
+> identifier fl;
+> expression *ptr != NULL;
+> @@
+> 
+> x = \(kmalloc\|kzalloc\|kcalloc\)(...);
+> ...
+> if (x == NULL) S
+> <... when != x
+>      when != if (...) { <+...kfree(x)...+> }
+>      when any
+>      when != true x == NULL
+> x->fl
+> ...>
+> (
+> if (x == NULL) S1
+> |
+> if (...) { ... when != x
+>                when forall
+> (
+>  return \(0\|<+...x...+>\|ptr\);
+> |
+> * return ...;
+> )
+> }
+> )
+> // </smpl>
+> 
+> Signed-off-by: Julia Lawall <julia@diku.dk>
+> 
 > ---
-> I am not familiar with the subsystem and haven't tested this, so
-> please review carefully.
+>  drivers/target/iscsi/iscsi_target_parameters.c |    3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
-> index 9806507..c4c68da 100644
-> --- a/drivers/target/iscsi/iscsi_target_erl1.c
-> +++ b/drivers/target/iscsi/iscsi_target_erl1.c
-> @@ -834,7 +834,7 @@ static int iscsit_attach_ooo_cmdsn(
->  			 */
->  			list_for_each_entry(ooo_tmp, &sess->sess_ooo_cmdsn_list,
->  						ooo_list) {
-> -				while (ooo_tmp->cmdsn < ooo_cmdsn->cmdsn)
-> +				if (ooo_tmp->cmdsn < ooo_cmdsn->cmdsn)
->  					continue;
+> diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+> index 252e246..b8dbe44 100644
+> --- a/drivers/target/iscsi/iscsi_target_parameters.c
+> +++ b/drivers/target/iscsi/iscsi_target_parameters.c
+> @@ -584,6 +584,7 @@ int iscsi_copy_param_list(
+>  		if (!new_param->name) {
+>  			pr_err("Unable to allocate memory for"
+>  				" parameter name.\n");
+> +			kfree(new_param);
+>  			goto err_out;
+>  		}
 >  
->  				list_add(&ooo_cmdsn->ooo_list,
-> --
+> @@ -592,6 +593,8 @@ int iscsi_copy_param_list(
+>  		if (!new_param->value) {
+>  			pr_err("Unable to allocate memory for"
+>  				" parameter value.\n");
+> +			kfree(new_param->name);
+> +			kfree(new_param);
+>  			goto err_out;
+>  		}
+>  
+> 
 
-Mmmm, good catch.  I think this bogus while loop usage is left over from
-the pre sess->sess_ooo_cmd_list conversion, and it's definately not what
-the original logic is doing.
+Hi Julia,
 
-Committed as e7851a0e73de into lio-core-2.6.git.
+Jesper and Dan already caught this one last week, and has been resolved
+with the following patch in lio-core-2.6.git:
 
-Thanks Dan!
+commit 83f8b803171751082174162cd1fa058c67d579ab
+Author: Jesper Juhl <jj@chaosbits.net>
+Date:   Tue Aug 2 10:26:36 2011 +0200
+
+    iscsi-target: Fix leak on failure in iscsi_copy_param_list()
+
+This one is being queued for the next round of target fixes for
+mainline.
+
+Thanks for reporting!
 
 --nab
-
-
-
