@@ -1,132 +1,62 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH] /drivers/scsi/lpfc/lpfc_debugfs.c (3.0.1) - the frame
- size of 1048 bytes is larger than 1024 bytes
-Date: Mon, 8 Aug 2011 15:54:29 -0400
-Message-ID: <4E403EF5.2060604@emulex.com>
-References: <1312749297.37983.YahooMailNeo@web45812.mail.sp1.yahoo.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: [PATCH] scsi: fix sparse warnings in FlashPoint.c
+Date: Mon, 8 Aug 2011 13:43:02 -0700
+Message-ID: <20110808134302.128126e1.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:36951 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750868Ab1HHTyz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2011 15:54:55 -0400
-In-Reply-To: <1312749297.37983.YahooMailNeo@web45812.mail.sp1.yahoo.com>
+Received: from oproxy6-pub.bluehost.com ([67.222.54.6]:57958 "HELO
+	oproxy6-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753531Ab1HHUnE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2011 16:43:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Poyo VL <poyo_vl@yahoo.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: jejbscsi <jbottomley@parallels.com>
 
-Already corrected by the patch:
-http://marc.info/?l=3Dlinux-scsi&m=3D131137432401391&w=3D2
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Which is part of the lpfc 8.3.25 patchset.
+Fix sparse warnings in FlashPoint.c:
 
--- james s
+drivers/scsi/FlashPoint.c:2160:37: warning: non-ANSI function declaration of function 'FPT_SccbMgrTableInitAll'
+drivers/scsi/FlashPoint.c:906:9: warning: Using plain integer as NULL pointer
+drivers/scsi/FlashPoint.c:907:53: warning: Using plain integer as NULL pointer
+drivers/scsi/FlashPoint.c:922:1: warning: Using plain integer as NULL pointer
 
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/FlashPoint.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-
-On 8/7/2011 4:34 PM, Poyo VL wrote:
-> Hy,
->
-> When I tried to compile the 3.0.1 kernel, I got the following warning=
-:
->
-> drivers/scsi/lpfc/lpfc_debugfs.c: In function =E2=80=98T.1107=E2=80=99=
-:
-> drivers/scsi/lpfc/lpfc_debugfs.c:411: warning: the frame size of 1048=
- bytes is
-> larger than 1024 bytes
->
-> But I think if the buffer is dinamically allocated, there is no probl=
-em.
->
-> So, a simple patch would be:
->
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c 2011-08-05 07:59:21.000000000 =
-+0300
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c 2011-08-07 15:25:52.021158413 =
-+0300
-> @@ -378,7 +378,7 @@ lpfc_debugfs_dumpHBASlim_data(struct lpf
-> int len =3D 0;
-> int i, off;
-> uint32_t *ptr;
-> - char buffer[1024];
-> + char *buffer =3D kmalloc(1024, GFP_KERNEL);
->
-> off =3D 0;
-> spin_lock_irq(&phba->hbalock);
-> @@ -387,7 +387,7 @@ lpfc_debugfs_dumpHBASlim_data(struct lpf
-> lpfc_memcpy_from_slim(buffer,
-> phba->MBslimaddr + lpfc_debugfs_last_hba_slim_off, 1024);
->
-> - ptr =3D (uint32_t *)&buffer[0];
-> + ptr =3D (uint32_t *)buffer;
-> off =3D lpfc_debugfs_last_hba_slim_off;
->
-> /* Set it up for the next time */
-> @@ -407,6 +407,7 @@ lpfc_debugfs_dumpHBASlim_data(struct lpf
-> }
->
-> spin_unlock_irq(&phba->hbalock);
-> + kfree(buffer);
-> return len;
-> }
->
-> Or, better, with an allocation check:
->
-> --- a/drivers/scsi/lpfc/lpfc_debugfs.c 2011-08-05 07:59:21.000000000 =
-+0300
-> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c 2011-08-07 15:45:48.007088993 =
-+0300
-> @@ -378,7 +378,12 @@ lpfc_debugfs_dumpHBASlim_data(struct lpf
-> int len =3D 0;
-> int i, off;
-> uint32_t *ptr;
-> - char buffer[1024];
-> + char *buffer =3D kmalloc(1024, GFP_KERNEL);
-> +
-> + if(!buffer) {
-> + printk(KERN_WARNING "lpfc_debugfs_dumpHBASlim_data: Unable to alloc=
-ate
-> memory\n");
-> + return -ENOMEM;
-> + }
->
-> off =3D 0;
-> spin_lock_irq(&phba->hbalock);
-> @@ -387,7 +392,7 @@ lpfc_debugfs_dumpHBASlim_data(struct lpf
-> lpfc_memcpy_from_slim(buffer,
-> phba->MBslimaddr + lpfc_debugfs_last_hba_slim_off, 1024);
->
-> - ptr =3D (uint32_t *)&buffer[0];
-> + ptr =3D (uint32_t *)buffer;
-> off =3D lpfc_debugfs_last_hba_slim_off;
->
-> /* Set it up for the next time */
-> @@ -407,6 +412,7 @@ lpfc_debugfs_dumpHBASlim_data(struct lpf
-> }
->
-> spin_unlock_irq(&phba->hbalock);
-> + kfree(buffer);
-> return len;
-> }
->
-> Signed-off-by: Ionut Gabriel Popescu <poyo_vl@yahoo.com>
->
-> Also, buffer is a pointer, so it is not necessary a &buffer[0], it al=
-ready
-> points to the first element.
->
-> Hope this is usefull...
->
-> Have a nice day,
-> Ionut Popescu
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- lnx-31-rc1.orig/drivers/scsi/FlashPoint.c
++++ lnx-31-rc1/drivers/scsi/FlashPoint.c
+@@ -903,8 +903,8 @@ static void FPT_autoCmdCmplt(unsigned lo
+ static void FPT_autoLoadDefaultMap(unsigned long p_port);
+ 
+ static struct sccb_mgr_tar_info FPT_sccbMgrTbl[MAX_CARDS][MAX_SCSI_TAR] =
+-    { {{0}} };
+-static struct sccb_card FPT_BL_Card[MAX_CARDS] = { {0} };
++    { {{NULL}} };
++static struct sccb_card FPT_BL_Card[MAX_CARDS] = { {NULL} };
+ static SCCBSCAM_INFO FPT_scamInfo[MAX_SCSI_TAR] = { {{0}} };
+ static struct nvram_info FPT_nvRamInfo[MAX_MB_CARDS] = { {0} };
+ 
+@@ -919,7 +919,7 @@ static unsigned char FPT_scamHAString[] 
+ static unsigned short FPT_default_intena = 0;
+ 
+ static void (*FPT_s_PhaseTbl[8]) (unsigned long, unsigned char) = {
+-0};
++NULL};
+ 
+ /*---------------------------------------------------------------------
+  *
+@@ -2157,7 +2157,7 @@ static unsigned char FPT_SccbMgr_bad_isr
+  *
+  *---------------------------------------------------------------------*/
+ 
+-static void FPT_SccbMgrTableInitAll()
++static void FPT_SccbMgrTableInitAll(void)
+ {
+ 	unsigned char thisCard;
+ 
