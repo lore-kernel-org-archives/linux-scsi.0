@@ -1,131 +1,78 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: Re: [PATCH 04/05] mptfusion: Fix for device offline while doing aggressive
- HBA reset
-Date: Wed, 10 Aug 2011 17:57:28 +0100
-Message-ID: <4E42B878.4030103@mpstor.com>
-References: <201108041051.p74AprAP005912@milmhbs0.lsil.com> <4E3A9A05.8090602@itwm.fraunhofer.de> <B2FD678A64EAAD45B089B123FDFC3ED7016650A1BA@inbmail01.lsi.com> <4E3AA2FC.9030805@itwm.fraunhofer.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] Oops when SCSI device under multipath is removed
+Date: Wed, 10 Aug 2011 14:52:13 -0500
+Message-ID: <1313005933.2785.12.camel@mulgrave>
+References: <4E420941.3080601@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.blacknight.com ([78.153.203.205]:53307 "EHLO
-	relay2.blacknight.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409Ab1HJRGo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2011 13:06:44 -0400
-In-Reply-To: <4E3AA2FC.9030805@itwm.fraunhofer.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4E420941.3080601@ce.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: jaxboe@fusionio.com, roland@purestorage.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 
-On 04/08/11 14:47, Bernd Schubert wrote:
-> On 08/04/2011 03:37 PM, Desai, Kashyap wrote:
->>
->>
->>> -----Original Message-----
->>> From: Bernd Schubert [mailto:bernd.schubert@itwm.fraunhofer.de]
->>> Sent: Thursday, August 04, 2011 6:39 PM
->>> To: Desai, Kashyap
->>> Cc: linux-scsi@vger.kernel.org; Nandigama, Nagalakshmi; Prakash, 
->>> Sathya;
->>> Moore, Eric; JBottomley@parallels.com
->>> Subject: Re: [PATCH 04/05] mptfusion: Fix for device offline while 
->>> doing
->>> aggressive HBA reset
->>>
->>> On 08/04/2011 01:13 PM, kashyap.desai@lsi.com wrote:
->>>> Issue:
->>>> Device goes offline while doing aggressive HBA reset
->>>> along with IO using some utility.
->>>>
->>>> Root cause:
->>>> FW goes into bad state due to aggressive reset. Softreset does
->>>> not help to recover FW. And also aggressive reset open up the
->>>> window for Error handling thread to kicked off at the same time
->>>> HBA will be in constant RESET loop as part of aggressive reset
->>>> test case can lead Device to goes offline.
->>>>
->>>> Changes:
->>>> 1. Added extra check as below inside eh_timed_out call back as below.
->>>> if(ioc->ioc_reset_in_progress)
->>>>       Rc = EH_TIMER_RESET
->>>> 2. Removed " DOORBELL_ACTIVE" check for SAS controller from task
->>> management context.
->>>>      Since SAS controller uses high priority queue for task 
->>>> management.
->>> This check is
->>>>      not required for SAS controller.
->>>> 3. Moved SoftReset call to HardReset from Task Mgmt context.
->>>
->>> [...]
->>>
->>>
->>>> --- a/drivers/message/fusion/mptscsih.c
->>>> +++ b/drivers/message/fusion/mptscsih.c
->>>> @@ -1630,7 +1630,13 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8
->>> type, u8 channel, u8 id, int lun,
->>>>            return 0;
->>>>        }
->>>>
->>>> -    if (ioc_raw_state&   MPI_DOORBELL_ACTIVE) {
->>>> +    /* DOORBELL ACTIVE check is not required if
->>>> +    *  MPI_IOCFACTS_CAPABILITY_HIGH_PRI_Q is supported.
->>>> +    */
->>>> +
->>>> +    if (!((ioc->facts.IOCCapabilities&
->>> MPI_IOCFACTS_CAPABILITY_HIGH_PRI_Q)
->>>> + &&   (ioc->facts.MsgVersion>= MPI_VERSION_01_05))&&
->>>> +        (ioc_raw_state&   MPI_DOORBELL_ACTIVE)) {
->>>>            printk(MYIOC_s_WARN_FMT
->>>>                "TaskMgmt type=%x: ioc_state: "
->>>>                "DOORBELL_ACTIVE (0x%x)!\n",
->>>> @@ -1729,7 +1735,7 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8
->>> type, u8 channel, u8 id, int lun,
->>>>            printk(MYIOC_s_WARN_FMT
->>>>                   "Issuing Reset from %s!! doorbell=0x%08x\n",
->>>>                   ioc->name, __func__, mpt_GetIocState(ioc, 0));
->>>> -        retval = mpt_Soft_Hard_ResetHandler(ioc, CAN_SLEEP);
->>>> +        retval = mpt_HardResetHandler(ioc, CAN_SLEEP);
->>>>            mpt_free_msg_frame(ioc, mf);
->>>>        }
->>>
->>> Have you ever tested that with dual port 501030C parallel scsi HBAs? 
->>> The
->>> hard reset with those HBAs will reset *both* ports and eventually 
->>> *both*
->>> ports will fail. A couple of years ago I tried to convince Eric to
->>> disable hard resets for those chips at all (and even sent a patch), but
->>> Eric never agreed on that.
->>> The soft-reset handler was a workaround for that problem, but with that
->>> patch the issue will re-appear. The affected systems are still in
->>> production and probably will still be for the next few years.
->>
->> I did not tried with dual port 501030C parallel scsi HBA.. I remember 
->> that exact issue you have described here.
->> I can add check for ioc->bus_type == SAS to have HardReset and other 
->> case I will continue with SoftReset.
->> Just wanted to know Is this fine to avoid issue which you have 
->> mentioned ?
->>
->> Pls let me know your view on it, so that I can resend the patch.
->
-> Yes, I think adding a test for SAS would be fine and would keep the 
-> workaround for 1030C Chips.
->
-> Thanks,
-> Bernd
+On Wed, 2011-08-10 at 13:29 +0900, Jun'ichi Nomura wrote:
+> Hi James,
+> 
+> With the attached shell script, blk_insert_cloned_request will cause
+> oops with 3.1-rc1. (This is a regression introduced in 2.6.39)
+> 
+> The regression was introduced by 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b,
+> "[SCSI] put stricter guards on queue dead checks".
+> Part of the commit has moved scsi_free_queue(), which calls
+> blk_cleanup_queue(), to scsi_remove_device(), which is called while
+> the device is still open.
+> The oops occurs because blk_insert_cloned_request() is called
+> after blk_cleanup_queue() is called (which frees elevator
+> and turns on QUEUE_FLAG_DEAD).
+> 
+> 2 patches have been proposed but neither of them included:
+>   1) Add QUEUE_FLAG_DEAD check in blk_insert_cloned_request()
+>      https://lkml.org/lkml/2011/7/8/457
+>   2) SCSI to call blk_cleanup_queue() from device's ->release() callback
+>      (before 2.6.39, it used to work like this)
+>      https://lkml.org/lkml/2011/7/2/106
 
-Just a quick note: as far as I know, the hard reset will also disable 
-both ports on SAS (on 1068 chips for instance), causing one bad port to 
-take down the second port. I am unsure whether the port comes back up ok 
-after the hard reset or not.
+Well, they both have documented objections.  I asked why we destroy the
+elevator in the del case and didn't get any traction, so let me show the
+actual patch which should fix all of these issues.
 
-Regards,
-Ben.
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+Is there a good reason for not doing this as a bug fix now?
 
+James
+
+---
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b627558..cc72b7d 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -367,11 +367,6 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
+ 	mutex_unlock(&q->sysfs_lock);
+ 
+-	if (q->elevator)
+-		elevator_exit(q->elevator);
+-
+-	blk_throtl_exit(q);
+-
+ 	blk_put_queue(q);
+ }
+ EXPORT_SYMBOL(blk_cleanup_queue);
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 0ee17b5..a5a756b 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -477,6 +477,11 @@ static void blk_release_queue(struct kobject *kobj)
+ 
+ 	blk_sync_queue(q);
+ 
++	if (q->elevator)
++		elevator_exit(q->elevator);
++
++	blk_throtl_exit(q);
++
+ 	if (rl->rq_pool)
+ 		mempool_destroy(rl->rq_pool);
+ 
