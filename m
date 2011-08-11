@@ -1,118 +1,267 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [BUG] Oops when SCSI device under multipath is removed
-Date: Thu, 11 Aug 2011 12:01:05 +0900
-Message-ID: <4E4345F1.9040501@ce.jp.nec.com>
-References: <4E420941.3080601@ce.jp.nec.com> <1313005933.2785.12.camel@mulgrave> <4E432122.9050101@ce.jp.nec.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] bsg: SAS SMP pass-through documentation
+Date: Wed, 10 Aug 2011 23:35:42 -0400
+Message-ID: <4E434E0E.40704@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4E432122.9050101@ce.jp.nec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: jaxboe@fusionio.com, roland@purestorage.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Content-Type: multipart/mixed;
+ boundary="------------080307050101080009080600"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:42798 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754650Ab1HKDfy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2011 23:35:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, "Randy.Dunlap" <rdunlap@xenotime.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Hi James,
+This is a multi-part message in MIME format.
+--------------080307050101080009080600
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 08/11/11 09:24, Jun'ichi Nomura wrote:
-> On 08/11/11 04:52, James Bottomley wrote:
->> On Wed, 2011-08-10 at 13:29 +0900, Jun'ichi Nomura wrote:
->>>   2) SCSI to call blk_cleanup_queue() from device's ->release() callback
->>>      (before 2.6.39, it used to work like this)
->>>      https://lkml.org/lkml/2011/7/2/106
->>
->> Well, they both have documented objections.  I asked why we destroy the
->> elevator in the del case and didn't get any traction, so let me show the
->> actual patch which should fix all of these issues.
->>
->> Is there a good reason for not doing this as a bug fix now?
-...
-> I think it doesn't work because elevator_exit() and
-> blk_throtl_exit() take &q->queue_lock, which may be freed
-> by LLD after blk_cleanup_queue, before blk_release_queue.
+This is a patch against scsi-misc-2.6 .
 
-If the reason you moved scsi_free_queue into scsi_remove_device
-is marking the queue dead, how about the following patch?
-Do you think it's acceptable?
+ChangeLog:
+   - new documentation file for the bsg driver pass-through
+     being used to send SAS SMP functions
 
-Jun'ichi Nomura, NEC Corporation
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
+--------------080307050101080009080600
+Content-Type: text/x-patch;
+ name="bsg_smp_doco.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="bsg_smp_doco.patch"
 
-Add blk_kill_queue() for drivers which want to mark the queue dead early.
-
-blk_cleanup_queue() is an interface for LLD to notify block layer
-that LLD no longer needs the queue.
-Since q->queue_lock may point to a structure in LLD which is freed
-after blk_cleanup_queue, blk_cleanup_queue() frees subordinate structures
-like elevator, which uses q->queue_lock, to avoid invalid reference.
-
-OTOH, LLD like SCSI wants to just mark the queue dead earlier in tear
-down phase.
-
-So this patch factors out the early part of blk_cleanup_queue into
-blk_kill_queue for such drivers.
-
---- linux-3.1-rc1/include/linux/blkdev.h.orig	2011-08-11 11:19:52.585280223 +0900
-+++ linux-3.1-rc1/include/linux/blkdev.h	2011-08-11 11:20:09.482279763 +0900
-@@ -804,6 +804,7 @@ extern struct request_queue *blk_init_al
- extern struct request_queue *blk_init_queue(request_fn_proc *, spinlock_t *);
- extern struct request_queue *blk_init_allocated_queue(struct request_queue *,
- 						      request_fn_proc *, spinlock_t *);
-+extern void blk_kill_queue(struct request_queue *);
- extern void blk_cleanup_queue(struct request_queue *);
- extern void blk_queue_make_request(struct request_queue *, make_request_fn *);
- extern void blk_queue_bounce_limit(struct request_queue *, u64);
---- linux-3.1-rc1/block/blk-core.c.orig	2011-08-10 09:46:06.014043123 +0900
-+++ linux-3.1-rc1/block/blk-core.c	2011-08-11 11:19:34.551280697 +0900
-@@ -347,6 +347,17 @@ void blk_put_queue(struct request_queue 
- }
- EXPORT_SYMBOL(blk_put_queue);
- 
-+void blk_kill_queue(struct request_queue *q)
-+{
-+	blk_sync_queue(q);
+diff --git a/Documentation/scsi/bsg_sas_smp.txt b/Documentation/scsi/bsg_sas_smp.txt
+new file mode 100644
+index 0000000..12274ee
+--- /dev/null
++++ b/Documentation/scsi/bsg_sas_smp.txt
+@@ -0,0 +1,221 @@
++                       SAS SMP PASS-THROUGH VIA BSG
++                       ----------------------------
 +
-+	del_timer_sync(&q->backing_dev_info.laptop_mode_wb_timer);
-+	mutex_lock(&q->sysfs_lock);
-+	queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
-+	mutex_unlock(&q->sysfs_lock);
-+}
-+EXPORT_SYMBOL(blk_kill_queue);
++Introduction
++============
++Serial Attached SCSI (SAS) has a Serial Management Protocol (SMP) which
++is mainly used to communicate with SAS expanders. SAS expanders typically
++have between 12 and 36 phys and permit many disks (e.g. more than 8)
++to be connected to a SAS HBA or RAID controller.
 +
- /*
-  * Note: If a driver supplied the queue lock, it should not zap that lock
-  * unexpectedly as some queue cleanup components like elevator_exit() and
-@@ -360,12 +371,7 @@ void blk_cleanup_queue(struct request_qu
- 	 * are done before moving on. Going into this function, we should
- 	 * not have processes doing IO to this device.
- 	 */
--	blk_sync_queue(q);
--
--	del_timer_sync(&q->backing_dev_info.laptop_mode_wb_timer);
--	mutex_lock(&q->sysfs_lock);
--	queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
--	mutex_unlock(&q->sysfs_lock);
-+	blk_kill_queue(q);
- 
- 	if (q->elevator)
- 		elevator_exit(q->elevator);
---- linux-3.1-rc1/drivers/scsi/scsi_sysfs.c.orig	2011-08-09 18:48:13.676485115 +0900
-+++ linux-3.1-rc1/drivers/scsi/scsi_sysfs.c	2011-08-11 11:21:07.923277456 +0900
-@@ -322,6 +322,7 @@ static void scsi_device_dev_release_user
- 		kfree(evt);
- 	}
- 
-+	scsi_free_queue(sdev->request_queue);
- 	blk_put_queue(sdev->request_queue);
- 	/* NULL queue means the device can't be used */
- 	sdev->request_queue = NULL;
-@@ -937,7 +938,7 @@ void __scsi_remove_device(struct scsi_de
- 	sdev->request_queue->queuedata = NULL;
- 
- 	/* Freeing the queue signals to block that we're done */
--	scsi_free_queue(sdev->request_queue);
-+	blk_kill_queue(sdev->request_queue);
- 	put_device(dev);
- }
- 
++In SAS interconnects that include one or more expanders, the kernel uses
++SMP to discover SAS and SATA devices during boot up. The kernel also
++responds to a BROADCAST(Change) received from an expander which indicates
++some change in the disposition of connected SAS and SATA devices.
++
++SAS expanders are powerful devices and user space programs may be
++required to access and manage them. New features such as phy-based zoning
++were added in SAS-2 and this increases the need for user space programs
++to access expanders.
++
++The SAS-2 standard outlines two ways to control expanders:
++  a) via SMP from an SMP initiator which is found in most SAS HBAs and
++     and RAID controllers
++  b) an Out of Band communication method which SAS-2 does not define
++     but nominates ethernet as an example
++
++This document outlines using method a) via the "block SCSI pass-through"
++(bsg) driver to access SAS expanders.
++
++
++The bsg driver
++==============
++bsg is an acronym for Block SCSI Generic. The "block" used in the name of
++this driver is a little confusing since each bsg device node (e.g.
++/dev/bsg/0:0:0:0 corresponds to /dev/sda which is a SATA disk on this
++laptop) is actually a "char" device. The "block" term refers to the
++kernel layer which conveys both blocked data and messages to lower layers
++(such as the SCSI layer).
++
++bsg driver device nodes that can be used for SMP pass-through have names
++like /dev/bsg/expander-6:0 and /dev/bsg/sas_host6 . "expander-6:0" can be
++interpreted as the first expander (origin 0) found by (SAS) host number 6.
++There might be another SAS HBA in the machine (e.g. host 7) also connected
++to the same expander and that might lead to another bsg device node like
++/dev/bsg/expander-7:0 .
++
++There is also related information in sysfs. For example,
++/sys/class/bsg/expander-6:0/dev might contain a string like "254:2". Those
++are the major and minor device numbers of the corresponding bsg device node:
++  # ls -l /dev/bsg/expander-6:0
++  crw------- 1 root root 254, 2 Jul 29 13:11 /dev/bsg/expander-6:0
++
++Also the SAS address of the expander can be found with:
++  # cat /sys/class/sas_device/expander-6:0/sas_address
++  0x5001517e85c3efff
++
++
++SMP Frames
++==========
++SMP is a simple protocol, much simpler than the Serial SCSI protocol (SSP)
++and the Serial ATA Tunneled Protocol (STP) which are also defined in the
++SAS standards. That simplicity translates to more work for the user space
++programs using an SMP pass-through and a somewhat delicate division of work
++between the user space and the SAS HBA driver.
++
++SMP functions are sent to an SMP target (e.g. an expander) in an SMP request
++frame and the response is returned in an SMP response frame. Both request
++and response frames have a maximum size of 1028 bytes. Both request and
++response frames include a 4-byte header at the start of the frame and
++a 4-byte CRC at the end of the frame.
++
++The contents of an SMP REQUEST frame header (counting origin 0) are:
++  - [byte 0]: SMP Frame type: 0x40
++  - [byte 1]: SMP function: 0x0 to 0xbf (see SAS); 0xc0 to 0xff
++              vendor specific
++  - [byte 2] [SAS-2]: allocated response length: expected response
++              length in dwords (4-byte unit) excluding header and CRC
++  - [byte 3] [SAS-2]: request length in dwords excluding this header
++              and the CRC
++
++In SAS-1 (and SAS-1.1) bytes 2 and 3 are "reserved" which means they
++should be set to zero but are typically ignored by an SMP target. In
++this case the request and response lengths are implicit depending on the
++given SMP function (byte 1).
++
++The contents of an SMP RESPONSE frame header are:
++  - [byte 0]: SMP Frame type: 0x41
++  - [byte 1]: SMP function: echoes byte 1 in the request.
++  - [byte 2]: function result: 0x0 for success
++  - [byte 3] [SAS-2]: response length in dwords excluding this header
++              and the CRC
++
++In SAS-1 (and SAS-1.1) byte 3 is "reserved" which means it is typically
++set to zero by an SMP target. The response length is implicit depending on
++the associated SMP function (byte 1).
++
++Note that the largest request and response length is 255 (i.e. 0xff) which
++equates to 1020 bytes and when the 4-byte header and CRC are added, the
++maximum request and response frames are both 1028 bytes long.
++
++A user space program using the bsg SMP pass-through is responsible for
++setting up the request header and checking the returned response header.
++Existing bsg pass-through implementations generate and check the CRC in
++the HBA driver. This frees the user space program from that responsibility
++but leaves open the question of whether user space programs should pass
++through space for the CRC and what should be placed in that field. Current
++usage is to pass through the full frame (i.e. including the CRC) and place
++zero bytes in that field. The response frame allocation should also allow
++for the full frame (i.e. including the CRC) to be returned.
++
++
++Pass-through
++============
++Depending on the distribution the header file for the bsg driver might
++be found at one of these locations:
++  /usr/include/linux/bsg.h
++  /lib/modules/<kernel_version>/include/linux/bsg.h
++
++The first is preferred but requires a recent glibc version. The second
++one is in the kernel source and leads to a "don't use kernel source"
++warning during the C compilation that can safely be ignored.
++
++The general procedure is to open a bsg device node, use the resulting
++file descriptor to invoke an SG_IO ioctl and then close the file
++descriptor. The SG_IO ioctl sends the SMP request frame and then waits
++for the corresponding SMP response.
++
++The bsg device node should be opened O_RDWR with the open(2) system call.
++This will require root permissions (perhaps CAP_IO_RAW is sufficient). An
++instance of the sg_io_v4 structure needs to be built then a pointer to
++that instance passed as the SG_IO ioctl's third argument. Here is a small
++code fragment without error checking:
++
++    int fd;
++    struct sg_io_v4 req_resp;
++
++    memset(&req_resp, 0, sizeof(req_resp);
++    fd = open("/dev/nsg/expander-6:0", O_RDWR);
++    // place data in the fields of a_req_resp
++    ioctl(fd, SG_IO, &req_resp);
++    // check and process the response
++    close(fd);
++
++The sg_io_v4 structure was designed for SCSI commands but is general enough
++to be used with many protocols. SCSI has two types of transfers going
++from an HBA to a disk: SCSI commands (requests) and optionally data
++associated with commands like WRITE, so-called data_out. In return the
++SCSI initiator might get a single byte status, a sense buffer (response)
++and data associated with commands like READ, so-called "data_in".
++
++SMP only needs request and response frames and these are mapped to the
++sg_io_v4 structure's data_out and data_in buffers, respectively. Here is
++a code fragment to send an SMP REPORT MANUFACTURER INFORMATION function
++request and allow for its response:
++
++    unsigned char req[] = {0x40, 0x1, 0xE, 0x0, 0, 0, 0, 0};
++    unsigned char resp[(0xE * 4) + 8];    /* 64 bytes */
++    /* Note allow for CRC in request and response */
++    unsigned char cmd[16];
++
++    /* unused fields have been zeroed (e.g. by a memset() shown above) */
++    req_resp.guard = 'Q';
++    req_resp.protocol = BSG_PROTOCOL_SCSI;
++    req_resp.subprotocol = BSG_SUB_PROTOCOL_SCSI_TRANSPORT;
++
++    req_resp.request_len = sizeof(cmd);      /* unused */
++    req_resp.request = (uintptr_t) cmd;
++
++    req_resp.dout_xfer_len = sizeof(req);
++    req_resp.dout_xferp = (uintptr_t) req;
++
++    req_resp.din_xfer_len = sizeof(resp);	/* 64 */
++    req_resp.din_xferp = (uintptr_t) resp;
++
++    hdr.timeout = 20000;    /* i.e. 20 seconds in millisecond units */
++
++In SAS-2 the SMP REPORT MANUFACTURER INFORMATION response is 64 bytes
++long including header and CRC. Processing the response starts by checking
++the value returned by the ioctl() system call. If that is -1 then the
++operation has failed and errno should be checked. If the ioctl succeeded
++then the following fields in the sg_io_v4 structure instance should be
++checked: driver_status, transport_status and device_status. If they are
++all zero then the number of valid bytes in the buffer pointed to by
++din_xferp should be (din_xfer_len - din_resid).
++
++In SAS-2 the first 4 bytes of the response should be: 0x41, 0x1, 0x0, 0xe .
++If the third byte is other than 0x0 then SMP function result is indicating
++an error. If the HBA passes back the CRC field in the response then
++din_resid will most likely be 0; if the HBA does not pass back the CRC
++field then din_resid will most likely be 4; either is okay.
++
++How the HBA reports errors such as a missing expander (e.g. cable
++unexpectedly removed), transport congestion (e.g. in SSP this can lead to
++aborted commands) and timeouts has not been agreed.
++
++
++Example code
++============
++The author has written a package of command line utilities called
++smp_utils (or smp-utils using Debian conventions). The source can
++be found in the Download section of this page:
++    http://sg.danny.cz/sg/smp_utils.html
++The bsg SMP pass-through specific code is in the sgv4 directory. To
++allow the utilities to use other pass-throughs (e.g. proprietary Linux
++and other OSes such as FreeBSD's CAM extensions) an abstraction layer
++sits between each utility and the bsg SMP pass-through. The abstraction
++layer is defined in smp_utils include/smp_utils.h header (see struct
++smp_req_resp).
++
++
++Non-expander use of SMP
++=======================
++In the section on "The bsg driver" above, /dev/bsg/sas_host6 was given as
++an example of a bsg SMP device node. That is a SAS HBA itself rather than
++an expander. The reason is that miniSAS 8087 cables carry sideband signals
++using the SGPIO protocol which is somewhat like I2C. These sideband
++signals may be controlled by the SMP READ GPIO and WRITE GPIO functions.
++
++
++
++Douglas Gilbert 20110802
+
+--------------080307050101080009080600--
