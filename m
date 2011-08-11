@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/3] target: Fix SYNCHRONIZE_CACHE zero LBA + range breakage
-Date: Thu, 11 Aug 2011 01:52:48 +0000
-Message-ID: <1313027569-27640-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/3] target: Add missing DATA_SG_IO transport_cmd_get_valid_sectors check
+Date: Thu, 11 Aug 2011 01:52:49 +0000
+Message-ID: <1313027569-27640-4-git-send-email-nab@linux-iscsi.org>
 References: <1313027569-27640-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41710 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41714 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111Ab1HKCRj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2011 22:17:39 -0400
+	with ESMTP id S1751311Ab1HKCRk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2011 22:17:40 -0400
 In-Reply-To: <1313027569-27640-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,56 +16,68 @@ Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Nicholas B
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a SYNCHRONIZE_CACHE CDB handling bug with IBLOCK/FILEIO
-backends where transport_cmd_get_valid_sectors() was incorrectly rejecting
-a zero LBA + range CDB from being processed, and returning CHECK_CONDITION.
+This patch adds the missing transport_cmd_get_valid_sectors() check for
+SCF_SCSI_DATA_SG_IO_CDB type payloads to ensure that a received LBA + range
+does not exeed past the end of associated backend struct se_device.
 
-This includes changing transport_cmd_get_valid_sectors() to return '0' on
-success and '-EINVAL' on failure (this makes more sense than sectors),
-and to only check transport_cmd_get_valid_sectors() when a non zero LBA +
-range SYNCHRONIZE_CACHE operation has been receieved for the non passthrough
-case.
+This patch also fixes a bug in the failure path of transport_new_cmd_obj()
+where this check can fail, so change to use a signed 'rc' and return '-EINVAL'
+to signal proper transport_generic_request_failure() handling.
 
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/target/target_core_transport.c |   15 ++++++++-------
+ 1 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ddd6df4..0abbf08 100644
+index 0abbf08..b12b541 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2855,12 +2855,10 @@ static int transport_cmd_get_valid_sectors(struct se_cmd *cmd)
- 			" transport_dev_end_lba(): %llu\n",
- 			cmd->t_task_lba, sectors,
- 			transport_dev_end_lba(dev));
--		pr_err("  We should return CHECK_CONDITION"
--		       " but we don't yet\n");
--		return 0;
+@@ -3893,9 +3893,7 @@ EXPORT_SYMBOL(transport_generic_map_mem_to_cmd);
+ static int transport_new_cmd_obj(struct se_cmd *cmd)
+ {
+ 	struct se_device *dev = cmd->se_dev;
+-	u32 task_cdbs;
+-	u32 rc;
+-	int set_counts = 1;
++	int set_counts = 1, rc, task_cdbs;
+ 
+ 	/*
+ 	 * Setup any BIDI READ tasks and memory from
+@@ -3913,7 +3911,7 @@ static int transport_new_cmd_obj(struct se_cmd *cmd)
+ 			cmd->se_cmd_flags |= SCF_SCSI_CDB_EXCEPTION;
+ 			cmd->scsi_sense_reason =
+ 				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-			return PYX_TRANSPORT_LU_COMM_FAILURE;
++			return -EINVAL;
+ 		}
+ 		atomic_inc(&cmd->t_fe_count);
+ 		atomic_inc(&cmd->t_se_count);
+@@ -3932,7 +3930,7 @@ static int transport_new_cmd_obj(struct se_cmd *cmd)
+ 		cmd->se_cmd_flags |= SCF_SCSI_CDB_EXCEPTION;
+ 		cmd->scsi_sense_reason =
+ 			TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+-		return PYX_TRANSPORT_LU_COMM_FAILURE;
 +		return -EINVAL;
  	}
  
--	return sectors;
-+	return 0;
- }
+ 	if (set_counts) {
+@@ -4250,10 +4248,13 @@ static u32 transport_allocate_tasks(
+ 	struct scatterlist *sgl,
+ 	unsigned int sgl_nents)
+ {
+-	if (cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB)
++	if (cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) {
++		if (transport_cmd_get_valid_sectors(cmd) < 0)
++			return -EINVAL;
++
+ 		return transport_allocate_data_tasks(cmd, lba, data_direction,
+ 						     sgl, sgl_nents);
+-	else
++	} else
+ 		return transport_allocate_control_task(cmd);
  
- static int target_check_write_same_discard(unsigned char *flags, struct se_device *dev)
-@@ -3352,10 +3350,12 @@ static int transport_generic_cmd_sequencer(
- 		cmd->se_cmd_flags |= SCF_EMULATE_CDB_ASYNC;
- 		/*
- 		 * Check to ensure that LBA + Range does not exceed past end of
--		 * device.
-+		 * device for IBLOCK and FILEIO ->do_sync_cache() backend calls
- 		 */
--		if (!transport_cmd_get_valid_sectors(cmd))
--			goto out_invalid_cdb_field;
-+		if ((cmd->t_task_lba != 0) || (sectors != 0)) {
-+			if (transport_cmd_get_valid_sectors(cmd) < 0)
-+				goto out_invalid_cdb_field;
-+		}
- 		break;
- 	case UNMAP:
- 		size = get_unaligned_be16(&cdb[7]);
+ }
 -- 
 1.7.2.5
 
