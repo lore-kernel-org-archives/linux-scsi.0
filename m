@@ -1,258 +1,202 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: [PATCH] cxgb3i: ref count cdev access to prevent modification while in use (v3)
-Date: Thu, 11 Aug 2011 14:06:42 -0400
-Message-ID: <1313086002-23653-1-git-send-email-nhorman@tuxdriver.com>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] cxgb3i: ref count cdev access to prevent modification
+ while in use (v3)
+Date: Thu, 11 Aug 2011 18:36:10 +0000
+Message-ID: <1313087766.4166.27.camel@mulgrave>
+References: <1313086002-23653-1-git-send-email-nhorman@tuxdriver.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56203 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351Ab1HKSG7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 14:06:59 -0400
+Received: from mx2.parallels.com ([64.131.90.16]:38072 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750741Ab1HKSgN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2011 14:36:13 -0400
+In-Reply-To: <1313086002-23653-1-git-send-email-nhorman@tuxdriver.com>
+Content-Language: en-US
+Content-ID: <9A3025DCF5C4AC4097E07DF3D4D9E981@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Neil Horman <nhorman@tuxdriver.com>, Divy Le Ray <divy@chelsio.com>, Steve Wise <swise@chelsio.com>, Karen Xie <kxie@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <JBottomley@parallels.com>, stable-commits@vger.kernel.org
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Divy Le Ray <divy@chelsio.com>, Steve Wise <swise@chelsio.com>, Karen Xie <kxie@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>, "stable-commits@vger.kernel.org" <stable-commits@vger.kernel.org>
 
-This oops was reported recently:
-d:mon> e
-cpu 0xd: Vector: 300 (Data Access) at [c0000000fd4c7120]
-    pc: d00000000076f194: .t3_l2t_get+0x44/0x524 [cxgb3]
-    lr: d000000000b02108: .init_act_open+0x150/0x3d4 [cxgb3i]
-    sp: c0000000fd4c73a0
-   msr: 8000000000009032
-   dar: 0
- dsisr: 40000000
-  current = 0xc0000000fd640d40
-  paca    = 0xc00000000054ff80
-    pid   = 5085, comm = iscsid
-d:mon> t
-[c0000000fd4c7450] d000000000b02108 .init_act_open+0x150/0x3d4 [cxgb3i]
-[c0000000fd4c7500] d000000000e45378 .cxgbi_ep_connect+0x784/0x8e8 [libcxgbi]
-[c0000000fd4c7650] d000000000db33f0 .iscsi_if_rx+0x71c/0xb18
-[scsi_transport_iscsi2]
-[c0000000fd4c7740] c000000000370c9c .netlink_data_ready+0x40/0xa4
-[c0000000fd4c77c0] c00000000036f010 .netlink_sendskb+0x4c/0x9c
-[c0000000fd4c7850] c000000000370c18 .netlink_sendmsg+0x358/0x39c
-[c0000000fd4c7950] c00000000033be24 .sock_sendmsg+0x114/0x1b8
-[c0000000fd4c7b50] c00000000033d208 .sys_sendmsg+0x218/0x2ac
-[c0000000fd4c7d70] c00000000033f55c .sys_socketcall+0x228/0x27c
-[c0000000fd4c7e30] c0000000000086a4 syscall_exit+0x0/0x40
---- Exception: c01 (System Call) at 00000080da560cfc
-
-The root cause was an EEH error, which sent us down the offload_close path in
-the cxgb3 driver, which in turn sets cdev->lldev to NULL, without regard for
-upper layer driver (like the cxgbi drivers) which might have execution contexts
-in the middle of its use. The result is the oops above, when t3_l2t_get attempts
-to dereference cdev->lldev right after the EEH error handler sets it to NULL.
-
-The fix is to reference count the cdev structure.  When an EEH error occurs, the
-shutdown path:
-t3_adapter_error->offload_close->cxgb3i_remove_clients->cxgb3i_dev_close
-will now block until such time as the cdev pointer has a use count of zero.
-This coupled with the fact that lookups will now skip finding any registered
-cdev's in cxgbi_device_find_by_[lldev|netdev] with the CXGBI_FLAG_ADAPTER_RESET
-bit set ensures that on an EEH, the setting of lldev to NULL in offload_close
-will only happen after there are no longer any active users of the data
-structure.
-
-This has been tested by the reporter and shown to fix the reproted oops
-
-Change notes:
-
-v2) Resent because of some build warnings with the first version on request of
-JBottomley
-
-v3) Modified to use kref refcounting api. It doesn't do much for this code,
-since the purpose of refcounting is primarily to serialize the clearing of a
-pointer in another data structure in a different module, but I think it does
-look a bit cleaner.  I've built this code, but not had the chance to test it
-yet, given that I'm about to leave on vacation.  I wanted to get it posted for
-review before I left. It should work fine, since its effectively a replacement
-of the raw atomic with struct krefs.  Karen, if you could run this on some
-cxgb3i equipment to make sure I didn't inadvertently do anything stupid, I'd
-aprpeciate it.  Thanks!
-
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-CC: Divy Le Ray <divy@chelsio.com>
-CC: Steve Wise <swise@chelsio.com>
-CC: Karen Xie <kxie@chelsio.com>
-CC: Mike Christie <michaelc@cs.wisc.edu>
-CC: "James E.J. Bottomley" <JBottomley@parallels.com>
-CC: stable-commits@vger.kernel.org
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |    8 +++++++-
- drivers/scsi/cxgbi/libcxgbi.c      |   21 +++++++++++++++++----
- drivers/scsi/cxgbi/libcxgbi.h      |    5 +++++
- 3 files changed, 29 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index bd22041..855ee23 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -1303,9 +1303,13 @@ static void cxgb3i_dev_close(struct t3cdev *t3dev)
- 
- 	if (!cdev || cdev->flags & CXGBI_FLAG_ADAPTER_RESET) {
- 		pr_info("0x%p close, f 0x%x.\n", cdev, cdev ? cdev->flags : 0);
-+		if (cdev)
-+			cdev_put(cdev);
-+		while (cdev && atomic_read(&cdev->use_count.refcount) > 1)
-+			msleep(1);
- 		return;
- 	}
--
-+	cdev_put(cdev);
- 	cxgbi_device_unregister(cdev);
- }
- 
-@@ -1320,6 +1324,7 @@ static void cxgb3i_dev_open(struct t3cdev *t3dev)
- 	int i, err;
- 
- 	if (cdev) {
-+		cdev_put(cdev);
- 		pr_info("0x%p, updating.\n", cdev);
- 		return;
- 	}
-@@ -1392,6 +1397,7 @@ static void cxgb3i_dev_event_handler(struct t3cdev *t3dev, u32 event, u32 port)
- 		cdev->flags &= ~CXGBI_FLAG_ADAPTER_RESET;
- 		break;
- 	}
-+	cdev_put(cdev);
- }
- 
- /**
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 77ac217..297efaa 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -95,8 +95,10 @@ void cxgbi_device_portmap_cleanup(struct cxgbi_device *cdev)
- }
- EXPORT_SYMBOL_GPL(cxgbi_device_portmap_cleanup);
- 
--static inline void cxgbi_device_destroy(struct cxgbi_device *cdev)
-+void cxgbi_device_destroy(struct kref *kr)
- {
-+	struct cxgbi_device *cdev = container_of(kr, struct cxgbi_device, use_count);
-+
- 	log_debug(1 << CXGBI_DBG_DEV,
- 		"cdev 0x%p, p# %u.\n", cdev, cdev->nports);
- 	cxgbi_hbas_remove(cdev);
-@@ -111,6 +113,7 @@ static inline void cxgbi_device_destroy(struct cxgbi_device *cdev)
- 		cxgbi_free_big_mem(cdev->pmap.port_csk);
- 	kfree(cdev);
- }
-+EXPORT_SYMBOL_GPL(cxgbi_device_destroy);
- 
- struct cxgbi_device *cxgbi_device_register(unsigned int extra,
- 					   unsigned int nports)
-@@ -125,6 +128,7 @@ struct cxgbi_device *cxgbi_device_register(unsigned int extra,
- 		pr_warn("nport %d, OOM.\n", nports);
- 		return NULL;
- 	}
-+	kref_init(&cdev->use_count);
- 	cdev->ports = (struct net_device **)(cdev + 1);
- 	cdev->hbas = (struct cxgbi_hba **)(((char*)cdev->ports) + nports *
- 						sizeof(struct net_device *));
-@@ -151,7 +155,7 @@ void cxgbi_device_unregister(struct cxgbi_device *cdev)
- 	mutex_lock(&cdev_mutex);
- 	list_del(&cdev->list_head);
- 	mutex_unlock(&cdev_mutex);
--	cxgbi_device_destroy(cdev);
-+	cdev_put(cdev);
- }
- EXPORT_SYMBOL_GPL(cxgbi_device_unregister);
- 
-@@ -167,7 +171,7 @@ void cxgbi_device_unregister_all(unsigned int flag)
- 				cdev, cdev->nports, cdev->nports ?
- 				 cdev->ports[0]->name : "");
- 			list_del(&cdev->list_head);
--			cxgbi_device_destroy(cdev);
-+			cdev_put(cdev);
- 		}
- 	}
- 	mutex_unlock(&cdev_mutex);
-@@ -181,6 +185,9 @@ struct cxgbi_device *cxgbi_device_find_by_lldev(void *lldev)
- 	mutex_lock(&cdev_mutex);
- 	list_for_each_entry_safe(cdev, tmp, &cdev_list, list_head) {
- 		if (cdev->lldev == lldev) {
-+			if (cdev->flags & CXGBI_FLAG_ADAPTER_RESET)
-+				continue;
-+			cdev_hold(cdev);
- 			mutex_unlock(&cdev_mutex);
- 			return cdev;
- 		}
-@@ -210,7 +217,10 @@ static struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *ndev,
- 	list_for_each_entry_safe(cdev, tmp, &cdev_list, list_head) {
- 		for (i = 0; i < cdev->nports; i++) {
- 			if (ndev == cdev->ports[i]) {
-+				if (cdev->flags & CXGBI_FLAG_ADAPTER_RESET)
-+					continue;
- 				cdev->hbas[i]->vdev = vdev;
-+				cdev_hold(cdev);
- 				mutex_unlock(&cdev_mutex);
- 				if (port)
- 					*port = i;
-@@ -469,7 +479,7 @@ static struct cxgbi_sock *cxgbi_check_route(struct sockaddr *dst_addr)
- 	struct sockaddr_in *daddr = (struct sockaddr_in *)dst_addr;
- 	struct dst_entry *dst;
- 	struct net_device *ndev;
--	struct cxgbi_device *cdev;
-+	struct cxgbi_device *cdev = NULL;
- 	struct rtable *rt = NULL;
- 	struct flowi4 fl4;
- 	struct cxgbi_sock *csk = NULL;
-@@ -542,6 +552,8 @@ rel_rt:
- 	if (csk)
- 		cxgbi_sock_closed(csk);
- err_out:
-+	if (cdev)
-+		cdev_put(cdev);
- 	return ERR_PTR(err);
- }
- 
-@@ -2491,6 +2503,7 @@ struct iscsi_endpoint *cxgbi_ep_connect(struct Scsi_Host *shost,
- 	return ep;
- 
- release_conn:
-+	cdev_put(csk->cdev);
- 	cxgbi_sock_put(csk);
- 	cxgbi_sock_closed(csk);
- err_out:
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 9267844..08788ac 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -24,6 +24,7 @@
- #include <linux/scatterlist.h>
- #include <linux/skbuff.h>
- #include <linux/vmalloc.h>
-+#include <linux/kref.h>
- #include <scsi/scsi_device.h>
- #include <scsi/libiscsi_tcp.h>
- 
-@@ -514,6 +515,7 @@ struct cxgbi_device {
- 	unsigned int flags;
- 	struct net_device **ports;
- 	void *lldev;
-+	struct kref use_count;
- 	struct cxgbi_hba **hbas;
- 	const unsigned short *mtus;
- 	unsigned char nmtus;
-@@ -557,6 +559,8 @@ struct cxgbi_device {
- 	void *dd_data;
- };
- #define cxgbi_cdev_priv(cdev)	((cdev)->dd_data)
-+#define cdev_hold(x) do {kref_get(&(x)->use_count);} while(0)
-+#define cdev_put(x) do {kref_put(&(x)->use_count, cxgbi_device_destroy);} while(0)
- 
- struct cxgbi_conn {
- 	struct cxgbi_endpoint *cep;
-@@ -691,6 +695,7 @@ static inline __be32 cxgbi_get_iscsi_ipv4(struct cxgbi_hba *chba)
- struct cxgbi_device *cxgbi_device_register(unsigned int, unsigned int);
- void cxgbi_device_unregister(struct cxgbi_device *);
- void cxgbi_device_unregister_all(unsigned int flag);
-+void cxgbi_device_destroy(struct kref *kr);
- struct cxgbi_device *cxgbi_device_find_by_lldev(void *);
- int cxgbi_hbas_add(struct cxgbi_device *, unsigned int, unsigned int,
- 			struct scsi_host_template *,
--- 
-1.7.6
-
+T24gVGh1LCAyMDExLTA4LTExIGF0IDE0OjA2IC0wNDAwLCBOZWlsIEhvcm1hbiB3cm90ZToNCj4g
+VGhpcyBvb3BzIHdhcyByZXBvcnRlZCByZWNlbnRseToNCj4gZDptb24+IGUNCj4gY3B1IDB4ZDog
+VmVjdG9yOiAzMDAgKERhdGEgQWNjZXNzKSBhdCBbYzAwMDAwMDBmZDRjNzEyMF0NCj4gICAgIHBj
+OiBkMDAwMDAwMDAwNzZmMTk0OiAudDNfbDJ0X2dldCsweDQ0LzB4NTI0IFtjeGdiM10NCj4gICAg
+IGxyOiBkMDAwMDAwMDAwYjAyMTA4OiAuaW5pdF9hY3Rfb3BlbisweDE1MC8weDNkNCBbY3hnYjNp
+XQ0KPiAgICAgc3A6IGMwMDAwMDAwZmQ0YzczYTANCj4gICAgbXNyOiA4MDAwMDAwMDAwMDA5MDMy
+DQo+ICAgIGRhcjogMA0KPiAgZHNpc3I6IDQwMDAwMDAwDQo+ICAgY3VycmVudCA9IDB4YzAwMDAw
+MDBmZDY0MGQ0MA0KPiAgIHBhY2EgICAgPSAweGMwMDAwMDAwMDA1NGZmODANCj4gICAgIHBpZCAg
+ID0gNTA4NSwgY29tbSA9IGlzY3NpZA0KPiBkOm1vbj4gdA0KPiBbYzAwMDAwMDBmZDRjNzQ1MF0g
+ZDAwMDAwMDAwMGIwMjEwOCAuaW5pdF9hY3Rfb3BlbisweDE1MC8weDNkNCBbY3hnYjNpXQ0KPiBb
+YzAwMDAwMDBmZDRjNzUwMF0gZDAwMDAwMDAwMGU0NTM3OCAuY3hnYmlfZXBfY29ubmVjdCsweDc4
+NC8weDhlOCBbbGliY3hnYmldDQo+IFtjMDAwMDAwMGZkNGM3NjUwXSBkMDAwMDAwMDAwZGIzM2Yw
+IC5pc2NzaV9pZl9yeCsweDcxYy8weGIxOA0KPiBbc2NzaV90cmFuc3BvcnRfaXNjc2kyXQ0KPiBb
+YzAwMDAwMDBmZDRjNzc0MF0gYzAwMDAwMDAwMDM3MGM5YyAubmV0bGlua19kYXRhX3JlYWR5KzB4
+NDAvMHhhNA0KPiBbYzAwMDAwMDBmZDRjNzdjMF0gYzAwMDAwMDAwMDM2ZjAxMCAubmV0bGlua19z
+ZW5kc2tiKzB4NGMvMHg5Yw0KPiBbYzAwMDAwMDBmZDRjNzg1MF0gYzAwMDAwMDAwMDM3MGMxOCAu
+bmV0bGlua19zZW5kbXNnKzB4MzU4LzB4MzljDQo+IFtjMDAwMDAwMGZkNGM3OTUwXSBjMDAwMDAw
+MDAwMzNiZTI0IC5zb2NrX3NlbmRtc2crMHgxMTQvMHgxYjgNCj4gW2MwMDAwMDAwZmQ0YzdiNTBd
+IGMwMDAwMDAwMDAzM2QyMDggLnN5c19zZW5kbXNnKzB4MjE4LzB4MmFjDQo+IFtjMDAwMDAwMGZk
+NGM3ZDcwXSBjMDAwMDAwMDAwMzNmNTVjIC5zeXNfc29ja2V0Y2FsbCsweDIyOC8weDI3Yw0KPiBb
+YzAwMDAwMDBmZDRjN2UzMF0gYzAwMDAwMDAwMDAwODZhNCBzeXNjYWxsX2V4aXQrMHgwLzB4NDAN
+Cj4gLS0tIEV4Y2VwdGlvbjogYzAxIChTeXN0ZW0gQ2FsbCkgYXQgMDAwMDAwODBkYTU2MGNmYw0K
+PiANCj4gVGhlIHJvb3QgY2F1c2Ugd2FzIGFuIEVFSCBlcnJvciwgd2hpY2ggc2VudCB1cyBkb3du
+IHRoZSBvZmZsb2FkX2Nsb3NlIHBhdGggaW4NCj4gdGhlIGN4Z2IzIGRyaXZlciwgd2hpY2ggaW4g
+dHVybiBzZXRzIGNkZXYtPmxsZGV2IHRvIE5VTEwsIHdpdGhvdXQgcmVnYXJkIGZvcg0KPiB1cHBl
+ciBsYXllciBkcml2ZXIgKGxpa2UgdGhlIGN4Z2JpIGRyaXZlcnMpIHdoaWNoIG1pZ2h0IGhhdmUg
+ZXhlY3V0aW9uIGNvbnRleHRzDQo+IGluIHRoZSBtaWRkbGUgb2YgaXRzIHVzZS4gVGhlIHJlc3Vs
+dCBpcyB0aGUgb29wcyBhYm92ZSwgd2hlbiB0M19sMnRfZ2V0IGF0dGVtcHRzDQo+IHRvIGRlcmVm
+ZXJlbmNlIGNkZXYtPmxsZGV2IHJpZ2h0IGFmdGVyIHRoZSBFRUggZXJyb3IgaGFuZGxlciBzZXRz
+IGl0IHRvIE5VTEwuDQo+IA0KPiBUaGUgZml4IGlzIHRvIHJlZmVyZW5jZSBjb3VudCB0aGUgY2Rl
+diBzdHJ1Y3R1cmUuICBXaGVuIGFuIEVFSCBlcnJvciBvY2N1cnMsIHRoZQ0KPiBzaHV0ZG93biBw
+YXRoOg0KPiB0M19hZGFwdGVyX2Vycm9yLT5vZmZsb2FkX2Nsb3NlLT5jeGdiM2lfcmVtb3ZlX2Ns
+aWVudHMtPmN4Z2IzaV9kZXZfY2xvc2UNCj4gd2lsbCBub3cgYmxvY2sgdW50aWwgc3VjaCB0aW1l
+IGFzIHRoZSBjZGV2IHBvaW50ZXIgaGFzIGEgdXNlIGNvdW50IG9mIHplcm8uDQo+IFRoaXMgY291
+cGxlZCB3aXRoIHRoZSBmYWN0IHRoYXQgbG9va3VwcyB3aWxsIG5vdyBza2lwIGZpbmRpbmcgYW55
+IHJlZ2lzdGVyZWQNCj4gY2RldidzIGluIGN4Z2JpX2RldmljZV9maW5kX2J5X1tsbGRldnxuZXRk
+ZXZdIHdpdGggdGhlIENYR0JJX0ZMQUdfQURBUFRFUl9SRVNFVA0KPiBiaXQgc2V0IGVuc3VyZXMg
+dGhhdCBvbiBhbiBFRUgsIHRoZSBzZXR0aW5nIG9mIGxsZGV2IHRvIE5VTEwgaW4gb2ZmbG9hZF9j
+bG9zZQ0KPiB3aWxsIG9ubHkgaGFwcGVuIGFmdGVyIHRoZXJlIGFyZSBubyBsb25nZXIgYW55IGFj
+dGl2ZSB1c2VycyBvZiB0aGUgZGF0YQ0KPiBzdHJ1Y3R1cmUuDQo+IA0KPiBUaGlzIGhhcyBiZWVu
+IHRlc3RlZCBieSB0aGUgcmVwb3J0ZXIgYW5kIHNob3duIHRvIGZpeCB0aGUgcmVwcm90ZWQgb29w
+cw0KPiANCj4gQ2hhbmdlIG5vdGVzOg0KPiANCj4gdjIpIFJlc2VudCBiZWNhdXNlIG9mIHNvbWUg
+YnVpbGQgd2FybmluZ3Mgd2l0aCB0aGUgZmlyc3QgdmVyc2lvbiBvbiByZXF1ZXN0IG9mDQo+IEpC
+b3R0b21sZXkNCj4gDQo+IHYzKSBNb2RpZmllZCB0byB1c2Uga3JlZiByZWZjb3VudGluZyBhcGku
+IEl0IGRvZXNuJ3QgZG8gbXVjaCBmb3IgdGhpcyBjb2RlLA0KPiBzaW5jZSB0aGUgcHVycG9zZSBv
+ZiByZWZjb3VudGluZyBpcyBwcmltYXJpbHkgdG8gc2VyaWFsaXplIHRoZSBjbGVhcmluZyBvZiBh
+DQo+IHBvaW50ZXIgaW4gYW5vdGhlciBkYXRhIHN0cnVjdHVyZSBpbiBhIGRpZmZlcmVudCBtb2R1
+bGUsIGJ1dCBJIHRoaW5rIGl0IGRvZXMNCj4gbG9vayBhIGJpdCBjbGVhbmVyLiAgSSd2ZSBidWls
+dCB0aGlzIGNvZGUsIGJ1dCBub3QgaGFkIHRoZSBjaGFuY2UgdG8gdGVzdCBpdA0KPiB5ZXQsIGdp
+dmVuIHRoYXQgSSdtIGFib3V0IHRvIGxlYXZlIG9uIHZhY2F0aW9uLiAgSSB3YW50ZWQgdG8gZ2V0
+IGl0IHBvc3RlZCBmb3INCj4gcmV2aWV3IGJlZm9yZSBJIGxlZnQuIEl0IHNob3VsZCB3b3JrIGZp
+bmUsIHNpbmNlIGl0cyBlZmZlY3RpdmVseSBhIHJlcGxhY2VtZW50DQo+IG9mIHRoZSByYXcgYXRv
+bWljIHdpdGggc3RydWN0IGtyZWZzLiAgS2FyZW4sIGlmIHlvdSBjb3VsZCBydW4gdGhpcyBvbiBz
+b21lDQo+IGN4Z2IzaSBlcXVpcG1lbnQgdG8gbWFrZSBzdXJlIEkgZGlkbid0IGluYWR2ZXJ0ZW50
+bHkgZG8gYW55dGhpbmcgc3R1cGlkLCBJJ2QNCj4gYXBycGVjaWF0ZSBpdC4gIFRoYW5rcyENCg0K
+V2l0aCBhbnkgb2YgdGhlc2UgdXBkYXRlcywgZG9lc24ndCBjeGdiNGkgYWxzbyBuZWVkIHVwZGF0
+aW5nPw0KDQo+IFNpZ25lZC1vZmYtYnk6IE5laWwgSG9ybWFuIDxuaG9ybWFuQHR1eGRyaXZlci5j
+b20+DQo+IENDOiBEaXZ5IExlIFJheSA8ZGl2eUBjaGVsc2lvLmNvbT4NCj4gQ0M6IFN0ZXZlIFdp
+c2UgPHN3aXNlQGNoZWxzaW8uY29tPg0KPiBDQzogS2FyZW4gWGllIDxreGllQGNoZWxzaW8uY29t
+Pg0KPiBDQzogTWlrZSBDaHJpc3RpZSA8bWljaGFlbGNAY3Mud2lzYy5lZHU+DQo+IENDOiAiSmFt
+ZXMgRS5KLiBCb3R0b21sZXkiIDxKQm90dG9tbGV5QHBhcmFsbGVscy5jb20+DQo+IENDOiBzdGFi
+bGUtY29tbWl0c0B2Z2VyLmtlcm5lbC5vcmcNCj4gLS0tDQo+ICBkcml2ZXJzL3Njc2kvY3hnYmkv
+Y3hnYjNpL2N4Z2IzaS5jIHwgICAgOCArKysrKysrLQ0KPiAgZHJpdmVycy9zY3NpL2N4Z2JpL2xp
+YmN4Z2JpLmMgICAgICB8ICAgMjEgKysrKysrKysrKysrKysrKystLS0tDQo+ICBkcml2ZXJzL3Nj
+c2kvY3hnYmkvbGliY3hnYmkuaCAgICAgIHwgICAgNSArKysrKw0KPiAgMyBmaWxlcyBjaGFuZ2Vk
+LCAyOSBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvc2NzaS9jeGdiaS9jeGdiM2kvY3hnYjNpLmMgYi9kcml2ZXJzL3Njc2kvY3hnYmkvY3hn
+YjNpL2N4Z2IzaS5jDQo+IGluZGV4IGJkMjIwNDEuLjg1NWVlMjMgMTAwNjQ0DQo+IC0tLSBhL2Ry
+aXZlcnMvc2NzaS9jeGdiaS9jeGdiM2kvY3hnYjNpLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2N4
+Z2JpL2N4Z2IzaS9jeGdiM2kuYw0KPiBAQCAtMTMwMyw5ICsxMzAzLDEzIEBAIHN0YXRpYyB2b2lk
+IGN4Z2IzaV9kZXZfY2xvc2Uoc3RydWN0IHQzY2RldiAqdDNkZXYpDQo+ICANCj4gIAlpZiAoIWNk
+ZXYgfHwgY2Rldi0+ZmxhZ3MgJiBDWEdCSV9GTEFHX0FEQVBURVJfUkVTRVQpIHsNCj4gIAkJcHJf
+aW5mbygiMHglcCBjbG9zZSwgZiAweCV4LlxuIiwgY2RldiwgY2RldiA/IGNkZXYtPmZsYWdzIDog
+MCk7DQo+ICsJCWlmIChjZGV2KQ0KPiArCQkJY2Rldl9wdXQoY2Rldik7DQo+ICsJCXdoaWxlIChj
+ZGV2ICYmIGF0b21pY19yZWFkKCZjZGV2LT51c2VfY291bnQucmVmY291bnQpID4gMSkNCj4gKwkJ
+CW1zbGVlcCgxKTsNCg0KT0ssIHNvIHRoaXMgd2FzIHdoYXQgbGVhcHQgb3V0IHRoZSBsYXN0IHRp
+bWUgYXMgYSBiaWcgbm8tbm8uICBGaXJzdGx5LA0KZG8geW91IHJlYWxseSBoYXZlIHRvIHdhaXQg
+Zm9yIGRlc3RydWN0aW9uPyAgSWYgc28sIHVzZSBhIGNvbXBsZXRpb24uDQoNCj4gIAkJcmV0dXJu
+Ow0KPiAgCX0NCj4gLQ0KPiArCWNkZXZfcHV0KGNkZXYpOw0KPiAgCWN4Z2JpX2RldmljZV91bnJl
+Z2lzdGVyKGNkZXYpOw0KPiAgfQ0KPiAgDQo+IEBAIC0xMzIwLDYgKzEzMjQsNyBAQCBzdGF0aWMg
+dm9pZCBjeGdiM2lfZGV2X29wZW4oc3RydWN0IHQzY2RldiAqdDNkZXYpDQo+ICAJaW50IGksIGVy
+cjsNCj4gIA0KPiAgCWlmIChjZGV2KSB7DQo+ICsJCWNkZXZfcHV0KGNkZXYpOw0KPiAgCQlwcl9p
+bmZvKCIweCVwLCB1cGRhdGluZy5cbiIsIGNkZXYpOw0KDQpPdGhlciB3YXkgYXJvdW5kLCBvdGhl
+cndpc2UgaXQncyB1c2UgYWZ0ZXIgZnJlZS4NCg0KPiAgCQlyZXR1cm47DQo+ICAJfQ0KPiBAQCAt
+MTM5Miw2ICsxMzk3LDcgQEAgc3RhdGljIHZvaWQgY3hnYjNpX2Rldl9ldmVudF9oYW5kbGVyKHN0
+cnVjdCB0M2NkZXYgKnQzZGV2LCB1MzIgZXZlbnQsIHUzMiBwb3J0KQ0KPiAgCQljZGV2LT5mbGFn
+cyAmPSB+Q1hHQklfRkxBR19BREFQVEVSX1JFU0VUOw0KPiAgCQlicmVhazsNCj4gIAl9DQo+ICsJ
+Y2Rldl9wdXQoY2Rldik7DQo+ICB9DQo+ICANCj4gIC8qKg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVy
+cy9zY3NpL2N4Z2JpL2xpYmN4Z2JpLmMgYi9kcml2ZXJzL3Njc2kvY3hnYmkvbGliY3hnYmkuYw0K
+PiBpbmRleCA3N2FjMjE3Li4yOTdlZmFhIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvY3hn
+YmkvbGliY3hnYmkuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvY3hnYmkvbGliY3hnYmkuYw0KPiBA
+QCAtOTUsOCArOTUsMTAgQEAgdm9pZCBjeGdiaV9kZXZpY2VfcG9ydG1hcF9jbGVhbnVwKHN0cnVj
+dCBjeGdiaV9kZXZpY2UgKmNkZXYpDQo+ICB9DQo+ICBFWFBPUlRfU1lNQk9MX0dQTChjeGdiaV9k
+ZXZpY2VfcG9ydG1hcF9jbGVhbnVwKTsNCj4gIA0KPiAtc3RhdGljIGlubGluZSB2b2lkIGN4Z2Jp
+X2RldmljZV9kZXN0cm95KHN0cnVjdCBjeGdiaV9kZXZpY2UgKmNkZXYpDQo+ICt2b2lkIGN4Z2Jp
+X2RldmljZV9kZXN0cm95KHN0cnVjdCBrcmVmICprcikNCj4gIHsNCj4gKwlzdHJ1Y3QgY3hnYmlf
+ZGV2aWNlICpjZGV2ID0gY29udGFpbmVyX29mKGtyLCBzdHJ1Y3QgY3hnYmlfZGV2aWNlLCB1c2Vf
+Y291bnQpOw0KPiArDQo+ICAJbG9nX2RlYnVnKDEgPDwgQ1hHQklfREJHX0RFViwNCj4gIAkJImNk
+ZXYgMHglcCwgcCMgJXUuXG4iLCBjZGV2LCBjZGV2LT5ucG9ydHMpOw0KPiAgCWN4Z2JpX2hiYXNf
+cmVtb3ZlKGNkZXYpOw0KPiBAQCAtMTExLDYgKzExMyw3IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBj
+eGdiaV9kZXZpY2VfZGVzdHJveShzdHJ1Y3QgY3hnYmlfZGV2aWNlICpjZGV2KQ0KPiAgCQljeGdi
+aV9mcmVlX2JpZ19tZW0oY2Rldi0+cG1hcC5wb3J0X2Nzayk7DQo+ICAJa2ZyZWUoY2Rldik7DQo+
+ICB9DQo+ICtFWFBPUlRfU1lNQk9MX0dQTChjeGdiaV9kZXZpY2VfZGVzdHJveSk7DQoNClRoZXJl
+J3Mgbm8gY3Jvc3MgbW9kdWxlIHVzZSwgaXMgdGhlcmU/IHNvIG5vIG5lZWQgb2YgYW4gZXhwb3J0
+Lg0KDQo+ICBzdHJ1Y3QgY3hnYmlfZGV2aWNlICpjeGdiaV9kZXZpY2VfcmVnaXN0ZXIodW5zaWdu
+ZWQgaW50IGV4dHJhLA0KPiAgCQkJCQkgICB1bnNpZ25lZCBpbnQgbnBvcnRzKQ0KPiBAQCAtMTI1
+LDYgKzEyOCw3IEBAIHN0cnVjdCBjeGdiaV9kZXZpY2UgKmN4Z2JpX2RldmljZV9yZWdpc3Rlcih1
+bnNpZ25lZCBpbnQgZXh0cmEsDQo+ICAJCXByX3dhcm4oIm5wb3J0ICVkLCBPT00uXG4iLCBucG9y
+dHMpOw0KPiAgCQlyZXR1cm4gTlVMTDsNCj4gIAl9DQo+ICsJa3JlZl9pbml0KCZjZGV2LT51c2Vf
+Y291bnQpOw0KPiAgCWNkZXYtPnBvcnRzID0gKHN0cnVjdCBuZXRfZGV2aWNlICoqKShjZGV2ICsg
+MSk7DQo+ICAJY2Rldi0+aGJhcyA9IChzdHJ1Y3QgY3hnYmlfaGJhICoqKSgoKGNoYXIqKWNkZXYt
+PnBvcnRzKSArIG5wb3J0cyAqDQo+ICAJCQkJCQlzaXplb2Yoc3RydWN0IG5ldF9kZXZpY2UgKikp
+Ow0KPiBAQCAtMTUxLDcgKzE1NSw3IEBAIHZvaWQgY3hnYmlfZGV2aWNlX3VucmVnaXN0ZXIoc3Ry
+dWN0IGN4Z2JpX2RldmljZSAqY2RldikNCj4gIAltdXRleF9sb2NrKCZjZGV2X211dGV4KTsNCj4g
+IAlsaXN0X2RlbCgmY2Rldi0+bGlzdF9oZWFkKTsNCj4gIAltdXRleF91bmxvY2soJmNkZXZfbXV0
+ZXgpOw0KPiAtCWN4Z2JpX2RldmljZV9kZXN0cm95KGNkZXYpOw0KPiArCWNkZXZfcHV0KGNkZXYp
+Ow0KPiAgfQ0KPiAgRVhQT1JUX1NZTUJPTF9HUEwoY3hnYmlfZGV2aWNlX3VucmVnaXN0ZXIpOw0K
+PiAgDQo+IEBAIC0xNjcsNyArMTcxLDcgQEAgdm9pZCBjeGdiaV9kZXZpY2VfdW5yZWdpc3Rlcl9h
+bGwodW5zaWduZWQgaW50IGZsYWcpDQo+ICAJCQkJY2RldiwgY2Rldi0+bnBvcnRzLCBjZGV2LT5u
+cG9ydHMgPw0KPiAgCQkJCSBjZGV2LT5wb3J0c1swXS0+bmFtZSA6ICIiKTsNCj4gIAkJCWxpc3Rf
+ZGVsKCZjZGV2LT5saXN0X2hlYWQpOw0KPiAtCQkJY3hnYmlfZGV2aWNlX2Rlc3Ryb3koY2Rldik7
+DQo+ICsJCQljZGV2X3B1dChjZGV2KTsNCj4gIAkJfQ0KPiAgCX0NCj4gIAltdXRleF91bmxvY2so
+JmNkZXZfbXV0ZXgpOw0KPiBAQCAtMTgxLDYgKzE4NSw5IEBAIHN0cnVjdCBjeGdiaV9kZXZpY2Ug
+KmN4Z2JpX2RldmljZV9maW5kX2J5X2xsZGV2KHZvaWQgKmxsZGV2KQ0KPiAgCW11dGV4X2xvY2so
+JmNkZXZfbXV0ZXgpOw0KPiAgCWxpc3RfZm9yX2VhY2hfZW50cnlfc2FmZShjZGV2LCB0bXAsICZj
+ZGV2X2xpc3QsIGxpc3RfaGVhZCkgew0KPiAgCQlpZiAoY2Rldi0+bGxkZXYgPT0gbGxkZXYpIHsN
+Cj4gKwkJCWlmIChjZGV2LT5mbGFncyAmIENYR0JJX0ZMQUdfQURBUFRFUl9SRVNFVCkNCj4gKwkJ
+CQljb250aW51ZTsNCj4gKwkJCWNkZXZfaG9sZChjZGV2KTsNCj4gIAkJCW11dGV4X3VubG9jaygm
+Y2Rldl9tdXRleCk7DQo+ICAJCQlyZXR1cm4gY2RldjsNCj4gIAkJfQ0KPiBAQCAtMjEwLDcgKzIx
+NywxMCBAQCBzdGF0aWMgc3RydWN0IGN4Z2JpX2RldmljZSAqY3hnYmlfZGV2aWNlX2ZpbmRfYnlf
+bmV0ZGV2KHN0cnVjdCBuZXRfZGV2aWNlICpuZGV2LA0KPiAgCWxpc3RfZm9yX2VhY2hfZW50cnlf
+c2FmZShjZGV2LCB0bXAsICZjZGV2X2xpc3QsIGxpc3RfaGVhZCkgew0KPiAgCQlmb3IgKGkgPSAw
+OyBpIDwgY2Rldi0+bnBvcnRzOyBpKyspIHsNCj4gIAkJCWlmIChuZGV2ID09IGNkZXYtPnBvcnRz
+W2ldKSB7DQo+ICsJCQkJaWYgKGNkZXYtPmZsYWdzICYgQ1hHQklfRkxBR19BREFQVEVSX1JFU0VU
+KQ0KPiArCQkJCQljb250aW51ZTsNCj4gIAkJCQljZGV2LT5oYmFzW2ldLT52ZGV2ID0gdmRldjsN
+Cj4gKwkJCQljZGV2X2hvbGQoY2Rldik7DQo+ICAJCQkJbXV0ZXhfdW5sb2NrKCZjZGV2X211dGV4
+KTsNCj4gIAkJCQlpZiAocG9ydCkNCj4gIAkJCQkJKnBvcnQgPSBpOw0KPiBAQCAtNDY5LDcgKzQ3
+OSw3IEBAIHN0YXRpYyBzdHJ1Y3QgY3hnYmlfc29jayAqY3hnYmlfY2hlY2tfcm91dGUoc3RydWN0
+IHNvY2thZGRyICpkc3RfYWRkcikNCj4gIAlzdHJ1Y3Qgc29ja2FkZHJfaW4gKmRhZGRyID0gKHN0
+cnVjdCBzb2NrYWRkcl9pbiAqKWRzdF9hZGRyOw0KPiAgCXN0cnVjdCBkc3RfZW50cnkgKmRzdDsN
+Cj4gIAlzdHJ1Y3QgbmV0X2RldmljZSAqbmRldjsNCj4gLQlzdHJ1Y3QgY3hnYmlfZGV2aWNlICpj
+ZGV2Ow0KPiArCXN0cnVjdCBjeGdiaV9kZXZpY2UgKmNkZXYgPSBOVUxMOw0KPiAgCXN0cnVjdCBy
+dGFibGUgKnJ0ID0gTlVMTDsNCj4gIAlzdHJ1Y3QgZmxvd2k0IGZsNDsNCj4gIAlzdHJ1Y3QgY3hn
+Ymlfc29jayAqY3NrID0gTlVMTDsNCj4gQEAgLTU0Miw2ICs1NTIsOCBAQCByZWxfcnQ6DQo+ICAJ
+aWYgKGNzaykNCj4gIAkJY3hnYmlfc29ja19jbG9zZWQoY3NrKTsNCj4gIGVycl9vdXQ6DQo+ICsJ
+aWYgKGNkZXYpDQo+ICsJCWNkZXZfcHV0KGNkZXYpOw0KPiAgCXJldHVybiBFUlJfUFRSKGVycik7
+DQo+ICB9DQo+ICANCj4gQEAgLTI0OTEsNiArMjUwMyw3IEBAIHN0cnVjdCBpc2NzaV9lbmRwb2lu
+dCAqY3hnYmlfZXBfY29ubmVjdChzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCwNCj4gIAlyZXR1cm4g
+ZXA7DQo+ICANCj4gIHJlbGVhc2VfY29ubjoNCj4gKwljZGV2X3B1dChjc2stPmNkZXYpOw0KDQpU
+aGlzIGlzbid0IHJpZ2h0LiAgYW4gZW1iZWRkZWQgZGV2aWNlIHJlZmVyZW5jZSBzaG91bGQgYmUg
+cmVsZWFzZWQgaW4NCnRoZSBjc2sgcmVsZWFzZSBmdW5jdGlvbiAoY3hnYmlfc29ja19mcmVlKS4N
+Cg0KPiAgCWN4Z2JpX3NvY2tfcHV0KGNzayk7DQo+ICAJY3hnYmlfc29ja19jbG9zZWQoY3NrKTsN
+Cj4gIGVycl9vdXQ6DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvY3hnYmkvbGliY3hnYmku
+aCBiL2RyaXZlcnMvc2NzaS9jeGdiaS9saWJjeGdiaS5oDQo+IGluZGV4IDkyNjc4NDQuLjA4Nzg4
+YWMgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9jeGdiaS9saWJjeGdiaS5oDQo+ICsrKyBi
+L2RyaXZlcnMvc2NzaS9jeGdiaS9saWJjeGdiaS5oDQo+IEBAIC0yNCw2ICsyNCw3IEBADQo+ICAj
+aW5jbHVkZSA8bGludXgvc2NhdHRlcmxpc3QuaD4NCj4gICNpbmNsdWRlIDxsaW51eC9za2J1ZmYu
+aD4NCj4gICNpbmNsdWRlIDxsaW51eC92bWFsbG9jLmg+DQo+ICsjaW5jbHVkZSA8bGludXgva3Jl
+Zi5oPg0KPiAgI2luY2x1ZGUgPHNjc2kvc2NzaV9kZXZpY2UuaD4NCj4gICNpbmNsdWRlIDxzY3Np
+L2xpYmlzY3NpX3RjcC5oPg0KPiAgDQo+IEBAIC01MTQsNiArNTE1LDcgQEAgc3RydWN0IGN4Z2Jp
+X2RldmljZSB7DQo+ICAJdW5zaWduZWQgaW50IGZsYWdzOw0KPiAgCXN0cnVjdCBuZXRfZGV2aWNl
+ICoqcG9ydHM7DQo+ICAJdm9pZCAqbGxkZXY7DQo+ICsJc3RydWN0IGtyZWYgdXNlX2NvdW50Ow0K
+PiAgCXN0cnVjdCBjeGdiaV9oYmEgKipoYmFzOw0KPiAgCWNvbnN0IHVuc2lnbmVkIHNob3J0ICpt
+dHVzOw0KPiAgCXVuc2lnbmVkIGNoYXIgbm10dXM7DQo+IEBAIC01NTcsNiArNTU5LDggQEAgc3Ry
+dWN0IGN4Z2JpX2RldmljZSB7DQo+ICAJdm9pZCAqZGRfZGF0YTsNCj4gIH07DQo+ICAjZGVmaW5l
+IGN4Z2JpX2NkZXZfcHJpdihjZGV2KQkoKGNkZXYpLT5kZF9kYXRhKQ0KPiArI2RlZmluZSBjZGV2
+X2hvbGQoeCkgZG8ge2tyZWZfZ2V0KCYoeCktPnVzZV9jb3VudCk7fSB3aGlsZSgwKQ0KDQpob2xk
+IGlzIG5vbiBzdGFuZGFyZCwgdXNlIHB1dCBpbnN0ZWFkLg0KDQo+ICsjZGVmaW5lIGNkZXZfcHV0
+KHgpIGRvIHtrcmVmX3B1dCgmKHgpLT51c2VfY291bnQsIGN4Z2JpX2RldmljZV9kZXN0cm95KTt9
+IHdoaWxlKDApDQo+ICANCj4gIHN0cnVjdCBjeGdiaV9jb25uIHsNCj4gIAlzdHJ1Y3QgY3hnYmlf
+ZW5kcG9pbnQgKmNlcDsNCj4gQEAgLTY5MSw2ICs2OTUsNyBAQCBzdGF0aWMgaW5saW5lIF9fYmUz
+MiBjeGdiaV9nZXRfaXNjc2lfaXB2NChzdHJ1Y3QgY3hnYmlfaGJhICpjaGJhKQ0KPiAgc3RydWN0
+IGN4Z2JpX2RldmljZSAqY3hnYmlfZGV2aWNlX3JlZ2lzdGVyKHVuc2lnbmVkIGludCwgdW5zaWdu
+ZWQgaW50KTsNCj4gIHZvaWQgY3hnYmlfZGV2aWNlX3VucmVnaXN0ZXIoc3RydWN0IGN4Z2JpX2Rl
+dmljZSAqKTsNCj4gIHZvaWQgY3hnYmlfZGV2aWNlX3VucmVnaXN0ZXJfYWxsKHVuc2lnbmVkIGlu
+dCBmbGFnKTsNCj4gK3ZvaWQgY3hnYmlfZGV2aWNlX2Rlc3Ryb3koc3RydWN0IGtyZWYgKmtyKTsN
+Cj4gIHN0cnVjdCBjeGdiaV9kZXZpY2UgKmN4Z2JpX2RldmljZV9maW5kX2J5X2xsZGV2KHZvaWQg
+Kik7DQo+ICBpbnQgY3hnYmlfaGJhc19hZGQoc3RydWN0IGN4Z2JpX2RldmljZSAqLCB1bnNpZ25l
+ZCBpbnQsIHVuc2lnbmVkIGludCwNCj4gIAkJCXN0cnVjdCBzY3NpX2hvc3RfdGVtcGxhdGUgKiwN
+Cg0K
