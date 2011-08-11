@@ -1,48 +1,56 @@
-From: "Maxin B. John" <maxin.john@gmail.com>
-Subject: [PATCH] SCSI: OSD: Kconfig: Select SHA1 and HMAC for OSD Initiator
- library
-Date: Thu, 11 Aug 2011 17:27:50 +0300
-Message-ID: <20110811142749.GA26109@maxin>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] Oops when SCSI device under multipath is removed
+Date: Thu, 11 Aug 2011 09:33:47 -0500
+Message-ID: <1313073227.4166.6.camel@mulgrave>
+References: <4E420941.3080601@ce.jp.nec.com>
+	 <1313005933.2785.12.camel@mulgrave> <4E432122.9050101@ce.jp.nec.com>
+	 <4E4345F1.9040501@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:40635 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752566Ab1HKO1z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 10:27:55 -0400
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57887 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751217Ab1HKOdu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2011 10:33:50 -0400
+In-Reply-To: <4E4345F1.9040501@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rdunlap@xenotime.net
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Benny Halevy <bhalevy@panasas.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: jaxboe@fusionio.com, roland@purestorage.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 
-SCSI_OSD_INITIATOR should select CRYPTO_SHA1 and CRYPTO_HMAC. Express this
-in Kconfig so that the requirements are met automatically. 
+On Thu, 2011-08-11 at 12:01 +0900, Jun'ichi Nomura wrote:
+> Hi James,
+> 
+> On 08/11/11 09:24, Jun'ichi Nomura wrote:
+> > On 08/11/11 04:52, James Bottomley wrote:
+> >> On Wed, 2011-08-10 at 13:29 +0900, Jun'ichi Nomura wrote:
+> >>>   2) SCSI to call blk_cleanup_queue() from device's ->release() callback
+> >>>      (before 2.6.39, it used to work like this)
+> >>>      https://lkml.org/lkml/2011/7/2/106
+> >>
+> >> Well, they both have documented objections.  I asked why we destroy the
+> >> elevator in the del case and didn't get any traction, so let me show the
+> >> actual patch which should fix all of these issues.
+> >>
+> >> Is there a good reason for not doing this as a bug fix now?
+> ...
+> > I think it doesn't work because elevator_exit() and
+> > blk_throtl_exit() take &q->queue_lock, which may be freed
+> > by LLD after blk_cleanup_queue, before blk_release_queue.
+> 
+> If the reason you moved scsi_free_queue into scsi_remove_device
+> is marking the queue dead, how about the following patch?
+> Do you think it's acceptable?
 
-Signed-off-by: Maxin B. John <maxin.john@gmail.com>
----
-diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
-index 861b5ce..1535fe1 100644
---- a/drivers/scsi/osd/Kconfig
-+++ b/drivers/scsi/osd/Kconfig
-@@ -11,17 +11,16 @@
- # it under the terms of the GNU General Public version 2 License as
- # published by the Free Software Foundation
- #
--# FIXME: SCSI_OSD_INITIATOR should select CONFIG (HMAC) SHA1 somehow.
--#        How is it done properly?
- #
- 
- config SCSI_OSD_INITIATOR
- 	tristate "OSD-Initiator library"
- 	depends on SCSI
-+	select CRYPTO
-+	select CRYPTO_SHA1
-+	select CRYPTO_HMAC
- 	help
- 		Enable the OSD-Initiator library (libosd.ko).
--		NOTE: You must also select CRYPTO_SHA1 + CRYPTO_HMAC and their
--		dependencies
- 
- config SCSI_OSD_ULD
- 	tristate "OSD Upper Level driver"
+Well, it's just hiding the problem.  The essential problem is that only
+block has the correctly refcounted knowledge to know the last release of
+the queue reference.  Until that time, the holder of the reference can
+use the queue regardless of whether blk_cleanup_queue() has been called.
+This is the race you complain about since use of the queue involves the
+lock which should be guarded by QUEUE_DEAD checks.
+
+This is essentially unfixable with function calls.  The only way to fix
+it is to have a callback model for freeing the external lock.
+
