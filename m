@@ -1,140 +1,57 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] cxgb3i: ref count cdev access to prevent modification
- while in use (v2)
-Date: Thu, 11 Aug 2011 15:11:57 +0000
-Message-ID: <1313075518.4166.12.camel@mulgrave>
-References: <1313074511-11431-1-git-send-email-nhorman@tuxdriver.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [BUG] Oops when SCSI device under multipath is removed
+Date: Thu, 11 Aug 2011 11:16:17 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1108111112280.1958-100000@iolanthe.rowland.org>
+References: <1313075131.4166.10.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:53618 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751473Ab1HKPMC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2011 11:12:02 -0400
-In-Reply-To: <1313074511-11431-1-git-send-email-nhorman@tuxdriver.com>
-Content-Language: en-US
-Content-ID: <7376D2A22DE2AA42892103E073C1BE72@sw.swsoft.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54587 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752288Ab1HKPQS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 11:16:18 -0400
+In-Reply-To: <1313075131.4166.10.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Neil Horman <nhorman@tuxdriver.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Divy Le Ray <divy@chelsio.com>, Steve Wise <swise@chelsio.com>, Karen Xie <kxie@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, jaxboe@fusionio.com, roland@purestorage.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 
-T24gVGh1LCAyMDExLTA4LTExIGF0IDEwOjU1IC0wNDAwLCBOZWlsIEhvcm1hbiB3cm90ZToNCj4g
-VGhpcyBvb3BzIHdhcyByZXBvcnRlZCByZWNlbnRseToNCj4gZDptb24+IGUNCj4gY3B1IDB4ZDog
-VmVjdG9yOiAzMDAgKERhdGEgQWNjZXNzKSBhdCBbYzAwMDAwMDBmZDRjNzEyMF0NCj4gICAgIHBj
-OiBkMDAwMDAwMDAwNzZmMTk0OiAudDNfbDJ0X2dldCsweDQ0LzB4NTI0IFtjeGdiM10NCj4gICAg
-IGxyOiBkMDAwMDAwMDAwYjAyMTA4OiAuaW5pdF9hY3Rfb3BlbisweDE1MC8weDNkNCBbY3hnYjNp
-XQ0KPiAgICAgc3A6IGMwMDAwMDAwZmQ0YzczYTANCj4gICAgbXNyOiA4MDAwMDAwMDAwMDA5MDMy
-DQo+ICAgIGRhcjogMA0KPiAgZHNpc3I6IDQwMDAwMDAwDQo+ICAgY3VycmVudCA9IDB4YzAwMDAw
-MDBmZDY0MGQ0MA0KPiAgIHBhY2EgICAgPSAweGMwMDAwMDAwMDA1NGZmODANCj4gICAgIHBpZCAg
-ID0gNTA4NSwgY29tbSA9IGlzY3NpZA0KPiBkOm1vbj4gdA0KPiBbYzAwMDAwMDBmZDRjNzQ1MF0g
-ZDAwMDAwMDAwMGIwMjEwOCAuaW5pdF9hY3Rfb3BlbisweDE1MC8weDNkNCBbY3hnYjNpXQ0KPiBb
-YzAwMDAwMDBmZDRjNzUwMF0gZDAwMDAwMDAwMGU0NTM3OCAuY3hnYmlfZXBfY29ubmVjdCsweDc4
-NC8weDhlOCBbbGliY3hnYmldDQo+IFtjMDAwMDAwMGZkNGM3NjUwXSBkMDAwMDAwMDAwZGIzM2Yw
-IC5pc2NzaV9pZl9yeCsweDcxYy8weGIxOA0KPiBbc2NzaV90cmFuc3BvcnRfaXNjc2kyXQ0KPiBb
-YzAwMDAwMDBmZDRjNzc0MF0gYzAwMDAwMDAwMDM3MGM5YyAubmV0bGlua19kYXRhX3JlYWR5KzB4
-NDAvMHhhNA0KPiBbYzAwMDAwMDBmZDRjNzdjMF0gYzAwMDAwMDAwMDM2ZjAxMCAubmV0bGlua19z
-ZW5kc2tiKzB4NGMvMHg5Yw0KPiBbYzAwMDAwMDBmZDRjNzg1MF0gYzAwMDAwMDAwMDM3MGMxOCAu
-bmV0bGlua19zZW5kbXNnKzB4MzU4LzB4MzljDQo+IFtjMDAwMDAwMGZkNGM3OTUwXSBjMDAwMDAw
-MDAwMzNiZTI0IC5zb2NrX3NlbmRtc2crMHgxMTQvMHgxYjgNCj4gW2MwMDAwMDAwZmQ0YzdiNTBd
-IGMwMDAwMDAwMDAzM2QyMDggLnN5c19zZW5kbXNnKzB4MjE4LzB4MmFjDQo+IFtjMDAwMDAwMGZk
-NGM3ZDcwXSBjMDAwMDAwMDAwMzNmNTVjIC5zeXNfc29ja2V0Y2FsbCsweDIyOC8weDI3Yw0KPiBb
-YzAwMDAwMDBmZDRjN2UzMF0gYzAwMDAwMDAwMDAwODZhNCBzeXNjYWxsX2V4aXQrMHgwLzB4NDAN
-Cj4gLS0tIEV4Y2VwdGlvbjogYzAxIChTeXN0ZW0gQ2FsbCkgYXQgMDAwMDAwODBkYTU2MGNmYw0K
-PiANCj4gVGhlIHJvb3QgY2F1c2Ugd2FzIGFuIEVFSCBlcnJvciwgd2hpY2ggc2VudCB1cyBkb3du
-IHRoZSBvZmZsb2FkX2Nsb3NlIHBhdGggaW4NCj4gdGhlIGN4Z2IzIGRyaXZlciwgd2hpY2ggaW4g
-dHVybiBzZXRzIGNkZXYtPmxsZGV2IHRvIE5VTEwsIHdpdGhvdXQgcmVnYXJkIGZvcg0KPiB1cHBl
-ciBsYXllciBkcml2ZXIgKGxpa2UgdGhlIGN4Z2JpIGRyaXZlcnMpIHdoaWNoIG1pZ2h0IGhhdmUg
-ZXhlY3V0aW9uIGNvbnRleHRzDQo+IGluIHRoZSBtaWRkbGUgb2YgaXRzIHVzZS4gVGhlIHJlc3Vs
-dCBpcyB0aGUgb29wcyBhYm92ZSwgd2hlbiB0M19sMnRfZ2V0IGF0dGVtcHRzDQo+IHRvIGRlcmVm
-ZXJlbmNlIGNkZXYtPmxsZGV2IHJpZ2h0IGFmdGVyIHRoZSBFRUggZXJyb3IgaGFuZGxlciBzZXRz
-IGl0IHRvIE5VTEwuDQo+IA0KPiBUaGUgZml4IGlzIHRvIHJlZmVyZW5jZSBjb3VudCB0aGUgY2Rl
-diBzdHJ1Y3R1cmUuICBXaGVuIGFuIEVFSCBlcnJvciBvY2N1cnMsIHRoZQ0KPiBzaHV0ZG93biBw
-YXRoOg0KPiB0M19hZGFwdGVyX2Vycm9yLT5vZmZsb2FkX2Nsb3NlLT5jeGdiM2lfcmVtb3ZlX2Ns
-aWVudHMtPmN4Z2IzaV9kZXZfY2xvc2UNCj4gd2lsbCBub3cgYmxvY2sgdW50aWwgc3VjaCB0aW1l
-IGFzIHRoZSBjZGV2IHBvaW50ZXIgaGFzIGEgdXNlIGNvdW50IG9mIHplcm8uDQo+IFRoaXMgY291
-cGxlZCB3aXRoIHRoZSBmYWN0IHRoYXQgbG9va3VwcyB3aWxsIG5vdyBza2lwIGZpbmRpbmcgYW55
-IHJlZ2lzdGVyZWQNCj4gY2RldidzIGluIGN4Z2JpX2RldmljZV9maW5kX2J5X1tsbGRldnxuZXRk
-ZXZdIHdpdGggdGhlIENYR0JJX0ZMQUdfQURBUFRFUl9SRVNFVA0KPiBiaXQgc2V0IGVuc3VyZXMg
-dGhhdCBvbiBhbiBFRUgsIHRoZSBzZXR0aW5nIG9mIGxsZGV2IHRvIE5VTEwgaW4gb2ZmbG9hZF9j
-bG9zZQ0KPiB3aWxsIG9ubHkgaGFwcGVuIGFmdGVyIHRoZXJlIGFyZSBubyBsb25nZXIgYW55IGFj
-dGl2ZSB1c2VycyBvZiB0aGUgZGF0YQ0KPiBzdHJ1Y3R1cmUuDQo+IA0KPiBUaGlzIGhhcyBiZWVu
-IHRlc3RlZCBieSB0aGUgcmVwb3J0ZXIgYW5kIHNob3duIHRvIGZpeCB0aGUgcmVwcm90ZWQgb29w
-cw0KPiANCj4gQ2hhbmdlIG5vdGVzOg0KPiANCj4gdjIpIFJlc2VudCBiZWNhdXNlIG9mIHNvbWUg
-YnVpbGQgd2FybmluZ3Mgd2l0aCB0aGUgZmlyc3QgdmVyc2lvbiBvbiByZXF1ZXN0IG9mDQo+IEpC
-b3R0b21sZXkNCj4gDQo+IFNpZ25lZC1vZmYtYnk6IE5laWwgSG9ybWFuIDxuaG9ybWFuQHR1eGRy
-aXZlci5jb20+DQo+IENDOiBEaXZ5IExlIFJheSA8ZGl2eUBjaGVsc2lvLmNvbT4NCj4gQ0M6IFN0
-ZXZlIFdpc2UgPHN3aXNlQGNoZWxzaW8uY29tPg0KPiBDQzogS2FyZW4gWGllIDxreGllQGNoZWxz
-aW8uY29tPg0KPiBDQzogTWlrZSBDaHJpc3RpZSA8bWljaGFlbGNAY3Mud2lzYy5lZHU+DQo+IEND
-OiAiSmFtZXMgRS5KLiBCb3R0b21sZXkiIDxKQm90dG9tbGV5QHBhcmFsbGVscy5jb20+DQo+IEND
-OiBzdGFibGVAdmdlci5rZXJuZWwub3JnDQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL2N4Z2JpL2N4
-Z2IzaS9jeGdiM2kuYyB8ICAgIDggKysrKysrKy0NCj4gIGRyaXZlcnMvc2NzaS9jeGdiaS9saWJj
-eGdiaS5jICAgICAgfCAgIDExICsrKysrKysrKystDQo+ICBkcml2ZXJzL3Njc2kvY3hnYmkvbGli
-Y3hnYmkuaCAgICAgIHwgICAgMyArKysNCj4gIDMgZmlsZXMgY2hhbmdlZCwgMjAgaW5zZXJ0aW9u
-cygrKSwgMiBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvY3hn
-YmkvY3hnYjNpL2N4Z2IzaS5jIGIvZHJpdmVycy9zY3NpL2N4Z2JpL2N4Z2IzaS9jeGdiM2kuYw0K
-PiBpbmRleCBiZDIyMDQxLi5kMDRlMTY3IDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvY3hn
-YmkvY3hnYjNpL2N4Z2IzaS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9jeGdiaS9jeGdiM2kvY3hn
-YjNpLmMNCj4gQEAgLTEzMDMsOSArMTMwMywxMyBAQCBzdGF0aWMgdm9pZCBjeGdiM2lfZGV2X2Ns
-b3NlKHN0cnVjdCB0M2NkZXYgKnQzZGV2KQ0KPiAgDQo+ICAJaWYgKCFjZGV2IHx8IGNkZXYtPmZs
-YWdzICYgQ1hHQklfRkxBR19BREFQVEVSX1JFU0VUKSB7DQo+ICAJCXByX2luZm8oIjB4JXAgY2xv
-c2UsIGYgMHgleC5cbiIsIGNkZXYsIGNkZXYgPyBjZGV2LT5mbGFncyA6IDApOw0KPiArCQlpZiAo
-Y2RldikNCj4gKwkJCWNkZXZfcHV0KGNkZXYpOw0KPiArCQl3aGlsZSAoY2RldiAmJiBhdG9taWNf
-cmVhZCgmY2Rldi0+dXNlX2NvdW50KSAhPSAwKQ0KPiArCQkJbXNsZWVwKDEpOw0KPiAgCQlyZXR1
-cm47DQo+ICAJfQ0KPiAtDQo+ICsJY2Rldl9wdXQoY2Rldik7DQo+ICAJY3hnYmlfZGV2aWNlX3Vu
-cmVnaXN0ZXIoY2Rldik7DQo+ICB9DQo+ICANCj4gQEAgLTEzMjAsNiArMTMyNCw3IEBAIHN0YXRp
-YyB2b2lkIGN4Z2IzaV9kZXZfb3BlbihzdHJ1Y3QgdDNjZGV2ICp0M2RldikNCj4gIAlpbnQgaSwg
-ZXJyOw0KPiAgDQo+ICAJaWYgKGNkZXYpIHsNCj4gKwkJY2Rldl9wdXQoY2Rldik7DQo+ICAJCXBy
-X2luZm8oIjB4JXAsIHVwZGF0aW5nLlxuIiwgY2Rldik7DQo+ICAJCXJldHVybjsNCj4gIAl9DQo+
-IEBAIC0xMzkyLDYgKzEzOTcsNyBAQCBzdGF0aWMgdm9pZCBjeGdiM2lfZGV2X2V2ZW50X2hhbmRs
-ZXIoc3RydWN0IHQzY2RldiAqdDNkZXYsIHUzMiBldmVudCwgdTMyIHBvcnQpDQo+ICAJCWNkZXYt
-PmZsYWdzICY9IH5DWEdCSV9GTEFHX0FEQVBURVJfUkVTRVQ7DQo+ICAJCWJyZWFrOw0KPiAgCX0N
-Cj4gKwljZGV2X3B1dChjZGV2KTsNCj4gIH0NCj4gIA0KPiAgLyoqDQo+IGRpZmYgLS1naXQgYS9k
-cml2ZXJzL3Njc2kvY3hnYmkvbGliY3hnYmkuYyBiL2RyaXZlcnMvc2NzaS9jeGdiaS9saWJjeGdi
-aS5jDQo+IGluZGV4IDc3YWMyMTcuLjA4OTA3MjggMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2Nz
-aS9jeGdiaS9saWJjeGdiaS5jDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9jeGdiaS9saWJjeGdiaS5j
-DQo+IEBAIC0xODEsNiArMTgxLDkgQEAgc3RydWN0IGN4Z2JpX2RldmljZSAqY3hnYmlfZGV2aWNl
-X2ZpbmRfYnlfbGxkZXYodm9pZCAqbGxkZXYpDQo+ICAJbXV0ZXhfbG9jaygmY2Rldl9tdXRleCk7
-DQo+ICAJbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKGNkZXYsIHRtcCwgJmNkZXZfbGlzdCwgbGlz
-dF9oZWFkKSB7DQo+ICAJCWlmIChjZGV2LT5sbGRldiA9PSBsbGRldikgew0KPiArCQkJaWYgKGNk
-ZXYtPmZsYWdzICYgQ1hHQklfRkxBR19BREFQVEVSX1JFU0VUKQ0KPiArCQkJCWNvbnRpbnVlOw0K
-PiArCQkJY2Rldl9ob2xkKGNkZXYpOw0KPiAgCQkJbXV0ZXhfdW5sb2NrKCZjZGV2X211dGV4KTsN
-Cj4gIAkJCXJldHVybiBjZGV2Ow0KPiAgCQl9DQo+IEBAIC0yMTAsNyArMjEzLDEwIEBAIHN0YXRp
-YyBzdHJ1Y3QgY3hnYmlfZGV2aWNlICpjeGdiaV9kZXZpY2VfZmluZF9ieV9uZXRkZXYoc3RydWN0
-IG5ldF9kZXZpY2UgKm5kZXYsDQo+ICAJbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKGNkZXYsIHRt
-cCwgJmNkZXZfbGlzdCwgbGlzdF9oZWFkKSB7DQo+ICAJCWZvciAoaSA9IDA7IGkgPCBjZGV2LT5u
-cG9ydHM7IGkrKykgew0KPiAgCQkJaWYgKG5kZXYgPT0gY2Rldi0+cG9ydHNbaV0pIHsNCj4gKwkJ
-CQlpZiAoY2Rldi0+ZmxhZ3MgJiBDWEdCSV9GTEFHX0FEQVBURVJfUkVTRVQpDQo+ICsJCQkJCWNv
-bnRpbnVlOw0KPiAgCQkJCWNkZXYtPmhiYXNbaV0tPnZkZXYgPSB2ZGV2Ow0KPiArCQkJCWNkZXZf
-aG9sZChjZGV2KTsNCj4gIAkJCQltdXRleF91bmxvY2soJmNkZXZfbXV0ZXgpOw0KPiAgCQkJCWlm
-IChwb3J0KQ0KPiAgCQkJCQkqcG9ydCA9IGk7DQo+IEBAIC00NjksNyArNDc1LDcgQEAgc3RhdGlj
-IHN0cnVjdCBjeGdiaV9zb2NrICpjeGdiaV9jaGVja19yb3V0ZShzdHJ1Y3Qgc29ja2FkZHIgKmRz
-dF9hZGRyKQ0KPiAgCXN0cnVjdCBzb2NrYWRkcl9pbiAqZGFkZHIgPSAoc3RydWN0IHNvY2thZGRy
-X2luICopZHN0X2FkZHI7DQo+ICAJc3RydWN0IGRzdF9lbnRyeSAqZHN0Ow0KPiAgCXN0cnVjdCBu
-ZXRfZGV2aWNlICpuZGV2Ow0KPiAtCXN0cnVjdCBjeGdiaV9kZXZpY2UgKmNkZXY7DQo+ICsJc3Ry
-dWN0IGN4Z2JpX2RldmljZSAqY2RldiA9IE5VTEw7DQo+ICAJc3RydWN0IHJ0YWJsZSAqcnQgPSBO
-VUxMOw0KPiAgCXN0cnVjdCBmbG93aTQgZmw0Ow0KPiAgCXN0cnVjdCBjeGdiaV9zb2NrICpjc2sg
-PSBOVUxMOw0KPiBAQCAtNTQyLDYgKzU0OCw4IEBAIHJlbF9ydDoNCj4gIAlpZiAoY3NrKQ0KPiAg
-CQljeGdiaV9zb2NrX2Nsb3NlZChjc2spOw0KPiAgZXJyX291dDoNCj4gKwlpZiAoY2RldikNCj4g
-KwkJY2Rldl9wdXQoY2Rldik7DQo+ICAJcmV0dXJuIEVSUl9QVFIoZXJyKTsNCj4gIH0NCj4gIA0K
-PiBAQCAtMjQ5MSw2ICsyNDk5LDcgQEAgc3RydWN0IGlzY3NpX2VuZHBvaW50ICpjeGdiaV9lcF9j
-b25uZWN0KHN0cnVjdCBTY3NpX0hvc3QgKnNob3N0LA0KPiAgCXJldHVybiBlcDsNCj4gIA0KPiAg
-cmVsZWFzZV9jb25uOg0KPiArCWNkZXZfcHV0KGNzay0+Y2Rldik7DQo+ICAJY3hnYmlfc29ja19w
-dXQoY3NrKTsNCj4gIAljeGdiaV9zb2NrX2Nsb3NlZChjc2spOw0KPiAgZXJyX291dDoNCj4gZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9jeGdiaS9saWJjeGdiaS5oIGIvZHJpdmVycy9zY3NpL2N4
-Z2JpL2xpYmN4Z2JpLmgNCj4gaW5kZXggOTI2Nzg0NC4uYWFkMTc0OSAxMDA2NDQNCj4gLS0tIGEv
-ZHJpdmVycy9zY3NpL2N4Z2JpL2xpYmN4Z2JpLmgNCj4gKysrIGIvZHJpdmVycy9zY3NpL2N4Z2Jp
-L2xpYmN4Z2JpLmgNCj4gQEAgLTUxNCw2ICs1MTQsNyBAQCBzdHJ1Y3QgY3hnYmlfZGV2aWNlIHsN
-Cj4gIAl1bnNpZ25lZCBpbnQgZmxhZ3M7DQo+ICAJc3RydWN0IG5ldF9kZXZpY2UgKipwb3J0czsN
-Cj4gIAl2b2lkICpsbGRldjsNCj4gKwlhdG9taWNfdCB1c2VfY291bnQ7DQo+ICAJc3RydWN0IGN4
-Z2JpX2hiYSAqKmhiYXM7DQo+ICAJY29uc3QgdW5zaWduZWQgc2hvcnQgKm10dXM7DQo+ICAJdW5z
-aWduZWQgY2hhciBubXR1czsNCj4gQEAgLTU1Nyw2ICs1NTgsOCBAQCBzdHJ1Y3QgY3hnYmlfZGV2
-aWNlIHsNCj4gIAl2b2lkICpkZF9kYXRhOw0KPiAgfTsNCj4gICNkZWZpbmUgY3hnYmlfY2Rldl9w
-cml2KGNkZXYpCSgoY2RldiktPmRkX2RhdGEpDQo+ICsjZGVmaW5lIGNkZXZfaG9sZCh4KSBkbyB7
-YXRvbWljX2luYygmeC0+dXNlX2NvdW50KTt9IHdoaWxlKDApDQo+ICsjZGVmaW5lIGNkZXZfcHV0
-KHgpIGRvIHthdG9taWNfZGVjKCZ4LT51c2VfY291bnQpO30gd2hpbGUoMCkNCg0KT0ssIHNvIG5v
-dyBJIHJlYWQgdGhlIHBhdGNoLCB0aGlzIGlzIG9idmlvdXNseSB3cm9uZyBiZWNhdXNlIHlvdSdy
-ZSBoYW5kDQpyb2xsaW5nIHJlZmNvdW50aW5nIHdpdGggYXRvbWljcy4NCg0KU3VyZWx5IHdoYXQg
-Y3hnYmlfZGV2aWNlIHdhbnRzIGlzIGFuIGVtYmVkZGVkIGtyZWYgd2hpY2ggY2FsbHMNCmN4Z2Jp
-X2RldmljZV9kZXN0cm95KCkgb24gZmluYWwgcHV0Pw0KDQpKYW1lcw0KDQo=
+On Thu, 11 Aug 2011, James Bottomley wrote:
+
+> > > Well, it's just hiding the problem.  The essential problem is that only
+> > > block has the correctly refcounted knowledge to know the last release of
+> > > the queue reference.  Until that time, the holder of the reference can
+> > > use the queue regardless of whether blk_cleanup_queue() has been called.
+> > > This is the race you complain about since use of the queue involves the
+> > > lock which should be guarded by QUEUE_DEAD checks.
+> > > 
+> > > This is essentially unfixable with function calls.  The only way to fix
+> > > it is to have a callback model for freeing the external lock.
+> > 
+> > Assuming the queue is associated with a device, the queue could take a
+> > reference to the device, dropping that reference when the queue is
+> > freed.  Then the lock could safely be freed at the same time as the 
+> > device.
+> 
+> If that assumption is correct, there's no point refcounting the queue at
+> all because its use is entirely subordinated to the lifecycle of the
+> associated device.
+
+That's true.  Why wasn't it done that way originally?  Are there queues 
+that aren't associated with devices?
+
+>  Plus all the wittering about my previous patch is
+> pointless, because blk_cleanup_queue() has to do the final put of the
+> queue in the lock free path (otherwise the assumption is violated).
+> 
+> However, much as I'd like to accept this rosy view, the original oops
+> that started all of this in 2.6.38 was someone caught something with a
+> reference to a SCSI queue after the device release function had been
+> called.
+
+Not according to your commit log.  You wrote that the reference was
+taken after scsi_remove_device() had been called -- but the device
+release function is scsi_device_dev_release_usercontext().
+
+Alan Stern
+
