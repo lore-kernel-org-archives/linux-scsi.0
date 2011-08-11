@@ -1,33 +1,38 @@
-From: Neil Horman <nhorman@tuxdriver.com>
-Subject: Re: [PATCH] cxgb3i: ref count cdev access to prevent modification
- while in use (v3)
-Date: Thu, 11 Aug 2011 16:25:47 -0400
-Message-ID: <20110811202547.GD23747@hmsreliant.think-freely.org>
-References: <1313086002-23653-1-git-send-email-nhorman@tuxdriver.com>
- <1313087766.4166.27.camel@mulgrave>
- <20110811191147.GC23747@hmsreliant.think-freely.org>
- <8A71B368A89016469F72CD08050AD33409F0F0D5@maui.asicdesigners.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH] bsg: SAS SMP pass-through documentation
+Date: Thu, 11 Aug 2011 13:50:44 -0700
+Message-ID: <20110811135044.ef369cec.rdunlap@xenotime.net>
+References: <4E434E0E.40704@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:37903 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753347Ab1HKUZ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 16:25:58 -0400
-Content-Disposition: inline
-In-Reply-To: <8A71B368A89016469F72CD08050AD33409F0F0D5@maui.asicdesigners.com>
+Received: from oproxy9.bluehost.com ([69.89.24.6]:49771 "HELO
+	oproxy9.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753652Ab1HKUuq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 16:50:46 -0400
+In-Reply-To: <4E434E0E.40704@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, Divy Le Ray <divy@chelsio.com>, Steve Wise <swise@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>, stable-commits@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Thu, Aug 11, 2011 at 12:47:23PM -0700, Karen Xie wrote:
-> Hi, Neil,
+On Wed, 10 Aug 2011 23:35:42 -0400 Douglas Gilbert wrote:
+
+> This is a patch against scsi-misc-2.6 .
 > 
-> Do you mind if I take this patch and modify it for both cxgb3i/4i
-> drivers?
+> ChangeLog:
+>    - new documentation file for the bsg driver pass-through
+>      being used to send SAS SMP functions
 > 
-If you would like, by all means, go ahead
-Thanks
-Neil
-> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
+Acked-by: Randy Dunlap <rdunlap@xenotime.net>
+
+James usually merges Documentation/scsi/ patches, so I'll leave it for
+him unless he wants me to merge it.
+
+Thanks,
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
