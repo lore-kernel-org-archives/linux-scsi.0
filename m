@@ -1,70 +1,39 @@
-From: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>
-Subject: Good SAS adapters for 6 Gb/s SATA SSD's (with TRIM)?
-Date: Thu, 11 Aug 2011 17:18:27 +0200
-Message-ID: <4E43F2C3.9000808@computerix.info>
+From: =?UTF-8?B?R29vZ2xl4oSi?= <patrick.pulice@numericable.fr>
+Subject: =?UTF-8?B?QW1hemluZyBOZXdzIEZvciBZb3XihKI=?=
+Date: Thu, 11 Aug 2011 18:46:40 +0200 (CEST)
+Message-ID: <ea-mime-4e440770-4eee-45c2894@webmail.numericable.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www74.your-server.de ([213.133.104.74]:55002 "EHLO
-	www74.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752288Ab1HKPlM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 11:41:12 -0400
-Received: from [78.46.5.203] (helo=sslproxy01.your-server.de)
-	by www74.your-server.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.72)
-	(envelope-from <klaus.kusche@computerix.info>)
-	id 1QrX1s-0006Y2-2r
-	for linux-scsi@vger.kernel.org; Thu, 11 Aug 2011 17:18:40 +0200
-Received: from [195.243.195.230] (helo=[10.10.0.222])
-	by sslproxy01.your-server.de with esmtpsa (TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69)
-	(envelope-from <klaus.kusche@computerix.info>)
-	id 1QrX7C-0003NB-2P
-	for linux-scsi@vger.kernel.org; Thu, 11 Aug 2011 17:24:10 +0200
+Received: from fb2.tech.numericable.fr ([82.216.111.50]:55296 "EHLO
+	fb2.tech.numericable.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230Ab1HKQqy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2011 12:46:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: info@lottry.com
 
-I'm looking for ways to hook up fast 6 Gb/s SATA SSD's (non-RAID!)
-to (server or i-X58) mainboards which do not have native 6 Gb/s SATA.
 
- From the reviews I've read so far, two things became obvious:
-* The SSD's I'm looking at really want a working SATA TRIM command.
-* All the onboard Marvell 88SE9128 (or ASmedia) solutions
-seriuosly lack performance, as do PCIe cards based on those chips.
 
-So basically, there seem to be two choices:
-1.) LSI 2008
-2.) Marvell 9485
 
-1.) seems to be fast, reliable and well-supported,
-but as far as I can tell, it doesn't support TRIM at all:
-It neither maps SCSI unmap to SATA TRIM,
-nor accepts TRIM as a SATA passthrough command.
 
-Is that true?
+Having been verified & confirmed the owner of this e-mail address attac=
+hed to the award file G0218 has been declared as a winner of 700,000POU=
+NDS in Google=E2=84=A2 UK 12th=E2=84=A2 Year Anniversary. Reward MUST b=
+e claimed by this ID owner ONLY. Forward your details below to this ema=
+il: gog.prom@gsjm.net  for claim.
 
-I didn't find much about 2.)
-* The only cards based on this chip are the HighPoint 27xx,
-or did I miss something?
-* Running a 27xx with the mvsas driver was reported to have stability
-problems or random errors. Are these problems solved?
-* Is the 27xx fast (with SATA SSD's & mvsas driver),
-i.e. significantly faster than onboard SATA 3 Gb/s ports?
-* Does the 27xx+mvsas support TRIM when connected to SATA drives?
+=46ull Name:
+Sex:
+Address/Nationality:
+Date Of Birth:
+Occupation:
+Mobile Number
 
-Are there any other solutions?
+Regards
+Mrs Tina Goodman
 
---=20
-Prof. Dr. Klaus Kusche
-Private address: Rainstra=DFe 9/1, 88316 Isny, Germany
-+49 7562 6211377 Klaus.Kusche@computerix.info http://www.computerix.inf=
-o
-Office address: NTA Isny gGmbH, Seidenstra=DFe 12-35, 88316 Isny, Germa=
-ny
-+49 7562 9707 36 kusche@nta-isny.de http://www.nta-isny.de
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
