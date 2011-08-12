@@ -1,31 +1,39 @@
-From: "Rose" <william_rose55@yahoo.com>
-Subject: =?UTF-8?Q?HELLO=20my=20=20=E4=BD=A0=E5=A5=BD=EF=BC=8C=E6=88=91?=
-Date: Fri, 12 Aug 2011 20:29:39 +0200
-Message-ID: <20110812202939.18A83956__48870.2400624335$1313173794$gmane$org@centrum.sk>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/4] qla4xxx feature updates
+Date: Fri, 12 Aug 2011 14:04:58 -0500
+Message-ID: <4E45795A.9010700@cs.wisc.edu>
+References: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gmmr2.centrum.cz ([90.183.38.158]:53286 "EHLO gmmr2.centrum.cz"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41435 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753755Ab1HLS3l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 14:29:41 -0400
+	id S1753707Ab1HLTFJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2011 15:05:09 -0400
+In-Reply-To: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
+On 08/12/2011 04:51 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com> 
+> 
+> James,
+> 
+> Following patches are made over scsi-misc and our ealier patchset
+> posted here: http://marc.info/?l=linux-scsi&m=131219494805315&w=2
+> 
+> Harish Zunjarrao (2):
+> 	qla4xxx: Added restore factory defaults support using BSG
+> 	qla4xxx: Added Get ACB support using BSG
+> 
+> Vikas Chaudhary (2):
+> 	scsi: Added support for adapter and firmware reset
+> 	qla4xxx: Added support for adapter and firmware reset
+> 
 
-HELLO
-My name is Rose,i and became intrested in you, i will also like to know=
- you more,and i want you to send an email to my email address so i can =
-give you my picture for you to know whom i am. Here is my email address=
-(william_rose55@yahoo.com)I believe we can move from here!
-I am waiting for your mail to my email address above..
-(Remeber the distance or colour does not matter but love matters alot i=
-n life)
-Thanks Rose=C2=A0 please contact me now through my email address
-(william_rose55@yahoo.com)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Patches look ok.
+
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
