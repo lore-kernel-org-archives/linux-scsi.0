@@ -1,161 +1,75 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 1/4] qla4xxx: Added restore factory defaults support using BSG
-Date: Fri, 12 Aug 2011 02:51:26 -0700
-Message-ID: <1313142689-13388-2-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: Good SAS adapters for 6 Gb/s SATA SSD's (with TRIM)?
+Date: Fri, 12 Aug 2011 13:14:42 +0200 (CEST)
+Message-ID: <alpine.LFD.2.00.1108121309490.3088@dhcp-27-109.brq.redhat.com>
+References: <4E43F2C3.9000808@computerix.info> <4E4434A4.7010808@interlog.com> <4E449BB1.3060300@interlog.com> <4E44DE8E.3070809@computerix.info> <4E44E13B.2050503@gmail.com> <4E44E8E5.4040707@computerix.info> <4E44EBF4.8050801@gmail.com> <4E44F14F.1020206@computerix.info>
+ <4E44F3C9.4030708@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:50065
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752830Ab1HLKBX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 06:01:23 -0400
-In-Reply-To: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55064 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753565Ab1HLLPO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2011 07:15:14 -0400
+In-Reply-To: <4E44F3C9.4030708@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>, dgilbert@interlog.com, linux-scsi@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, Mark Lord <mlord@pobox.com>
 
-From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
+On Fri, 12 Aug 2011, Ric Wheeler wrote:
 
-This command will causes the firmware to update all
-configurations to pre-defined factory default settings.
+> On 08/12/2011 10:24 AM, Prof. Dr. Klaus Kusche wrote:
+> > On 2011-08-12 11:01, Ric Wheeler wrote:
+> > > Lukas has a more generic bulk tool that should do the job and has the
+> > > advantage that it does not have to fill the file system first (it can
+> > > lock regions and do its work).
+> > 
+> > Any pointers to that?
+> 
+> I think that the easiest (and most natural way) to do this is through the
+> updated fsck (-K) tool which will discard the unused block ranges when you
+> fsck a file system.
+> 
+> Lukas can add in details about versions, etc :)
 
-Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_bsg.c  |   47 +++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_bsg.h  |    1 +
- drivers/scsi/qla4xxx/ql4_glbl.h |    3 ++
- drivers/scsi/qla4xxx/ql4_mbx.c  |   26 +++++++++++++++++++++
- 4 files changed, 77 insertions(+), 0 deletions(-)
+Yes, you can use e2fsck to discard unused parst of the file system,
+hence reclaiming the space. This feature has been added with
+v1.41.12-162-gefa1a35 into e2fsprogs. Note that even though this
+operation should be safe, because we do discard at the end of the pass 5
+and only if there was not any errors on the file system before, however
+this is relatively new feature and has not been extensively tested with
+corrupted images.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
-index c475453..4704a52 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.c
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-@@ -337,6 +337,50 @@ leave:
- 	return rval;
- }
- 
-+static int
-+qla4xxx_restore_defaults(struct bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
-+	struct scsi_qla_host *ha = to_qla_host(host);
-+	struct iscsi_bsg_request *bsg_req = bsg_job->request;
-+	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	uint32_t region = 0;
-+	uint32_t field0 = 0;
-+	uint32_t field1 = 0;
-+	int rval = -EINVAL;
-+
-+	bsg_reply->reply_payload_rcv_len = 0;
-+
-+	if (unlikely(pci_channel_offline(ha->pdev)))
-+		goto leave;
-+
-+	if (is_qla4010(ha))
-+		goto leave;
-+
-+	if (ql4xxx_reset_active(ha)) {
-+		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
-+		rval = -EBUSY;
-+		goto leave;
-+	}
-+
-+	region = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
-+	field0 = bsg_req->rqst_data.h_vendor.vendor_cmd[2];
-+	field1 = bsg_req->rqst_data.h_vendor.vendor_cmd[3];
-+
-+	rval = qla4xxx_restore_factory_defaults(ha, region, field0, field1);
-+	if (rval) {
-+		ql4_printk(KERN_ERR, ha, "%s: set nvram failed\n", __func__);
-+		bsg_reply->result = DID_ERROR << 16;
-+		rval = -EIO;
-+	} else
-+		bsg_reply->result = DID_OK << 16;
-+
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+		     bsg_reply->reply_payload_rcv_len);
-+leave:
-+	return rval;
-+}
-+
- /**
-  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
-  * @job: iscsi_bsg_job to handle
-@@ -364,6 +408,9 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
- 	case QLISCSI_VND_UPDATE_NVRAM:
- 		return qla4xxx_update_nvram(bsg_job);
- 
-+	case QLISCSI_VND_RESTORE_DEFAULTS:
-+		return qla4xxx_restore_defaults(bsg_job);
-+
- 	default:
- 		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
- 			   "0x%x\n", __func__, bsg_req->msgcode);
-diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
-index 71df80d..84a1391 100644
---- a/drivers/scsi/qla4xxx/ql4_bsg.h
-+++ b/drivers/scsi/qla4xxx/ql4_bsg.h
-@@ -13,5 +13,6 @@
- #define QLISCSI_VND_GET_ACB_STATE	3
- #define QLISCSI_VND_READ_NVRAM		4
- #define QLISCSI_VND_UPDATE_NVRAM	5
-+#define QLISCSI_VND_RESTORE_DEFAULTS	6
- 
- #endif
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 35bd0c1..1a0f601 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -166,6 +166,9 @@ int qla4xxx_get_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
- 		      uint32_t offset, uint32_t size);
- int qla4xxx_set_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
- 		      uint32_t offset, uint32_t size);
-+int qla4xxx_restore_factory_defaults(struct scsi_qla_host *ha,
-+				     uint32_t region, uint32_t field0,
-+				     uint32_t field1);
- 
- /* BSG Functions */
- int qla4xxx_bsg_request(struct bsg_job *bsg_job);
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index e843758..dfc38aa 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1744,3 +1744,29 @@ int qla4xxx_set_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
- 	}
- 	return status;
- }
-+
-+int qla4xxx_restore_factory_defaults(struct scsi_qla_host *ha,
-+				     uint32_t region, uint32_t field0,
-+				     uint32_t field1)
-+{
-+	int status = QLA_SUCCESS;
-+	uint32_t mbox_cmd[MBOX_REG_COUNT];
-+	uint32_t mbox_sts[MBOX_REG_COUNT];
-+
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
-+	mbox_cmd[0] = MBOX_CMD_RESTORE_FACTORY_DEFAULTS;
-+	mbox_cmd[3] = region;
-+	mbox_cmd[4] = field0;
-+	mbox_cmd[5] = field1;
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 3, &mbox_cmd[0],
-+					 &mbox_sts[0]);
-+	if (status != QLA_SUCCESS) {
-+		DEBUG2(ql4_printk(KERN_ERR, ha, "scsi%ld: %s: failed "
-+				  "status %04X\n", ha->host_no, __func__,
-+				  mbox_sts[0]));
-+	}
-+	return status;
-+}
--- 
-1.7.6
+Hmm, I really should write up this stuff into the web article somewhere
+:).
+
+Thanks!
+-Lukas
 
 
+> 
+> > 
+> > Thanks!
+> > 
+> > > Note that discard is not just for physical devices like SCSI or ATA, it
+> > > is also useful for "software" stacks like various device mapper targets,
+> > > virtual block devices, etc so we should be keeping the abstraction at a
+> > > high level for our tooling.
+> > 
+> > I agree, but wiper.sh has been the first such tool and is widespread
+> > and well-known. I'm not aware of alternatives using the generic fstrim
+> > command (which is still missing on some major distributions)
+> > or FITRIM ioctl.
+> > 
+> 
+> FITRIM is somewhat misnamed. It will end up issuing a discard to the storage
+> stack, not an ATA specific TRIM command (invoking sb_issue_discard()).
+> 
+> Anything that uses FITRIM should work if I followed the code correctly,
+> 
+> Ric
+> 
+> 
+> 
+> 
