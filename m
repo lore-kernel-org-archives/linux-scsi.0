@@ -1,44 +1,58 @@
-From: Artem Bokhan <aptem@ngs.ru>
+From: Ric Wheeler <ricwheeler@gmail.com>
 Subject: Re: Good SAS adapters for 6 Gb/s SATA SSD's (with TRIM)?
-Date: Fri, 12 Aug 2011 16:34:13 +0700
-Message-ID: <4E44F395.4010502@ngs.ru>
-References: <4E43F2C3.9000808@computerix.info> <4E44EFAE.9010800@ngs.ru>
+Date: Fri, 12 Aug 2011 10:35:05 +0100
+Message-ID: <4E44F3C9.4030708@gmail.com>
+References: <4E43F2C3.9000808@computerix.info> <4E4434A4.7010808@interlog.com> <4E449BB1.3060300@interlog.com> <4E44DE8E.3070809@computerix.info> <4E44E13B.2050503@gmail.com> <4E44E8E5.4040707@computerix.info> <4E44EBF4.8050801@gmail.com> <4E44F14F.1020206@computerix.info>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpout4.ngs.ru ([195.93.186.210]:4794 "EHLO smtpout.ngs.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751951Ab1HLJek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 05:34:40 -0400
-In-Reply-To: <4E44EFAE.9010800@ngs.ru>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:54246 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786Ab1HLJfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2011 05:35:11 -0400
+Received: by qyk34 with SMTP id 34so1684601qyk.19
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2011 02:35:10 -0700 (PDT)
+In-Reply-To: <4E44F14F.1020206@computerix.info>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>
-Cc: linux-scsi@vger.kernel.org
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org, Lukas Czerner <lczerner@redhat.com>, Mark Lord <mlord@pobox.com>
 
-http://www.google.ru/url?sa=t&source=web&cd=3&ved=0CC0QFjAC&url=http%3A%2F%2Fkb.lsi.com%2FExportPDF16515.aspx&rct=j&q=lsi%20trim&ei=PPNETuzgLIfMtAaoyKy4Bw&usg=AFQjCNFo139XTAeHefm4nnvHbrW52OZ7ug&cad=rja 
-<http://www.google.ru/url?sa=t&source=web&cd=3&ved=0CC0QFjAC&url=http%3A%2F%2Fkb.lsi.com%2FExportPDF16515.aspx&rct=j&q=lsi%20trim&ei=PPNETuzgLIfMtAaoyKy4Bw&usg=AFQjCNFo139XTAeHefm4nnvHbrW52OZ7ug&cad=rja>
-
-On 12.08.2011 16:17, Artem Bokhan wrote:
-> On 11.08.2011 22:18, Prof. Dr. Klaus Kusche wrote:
->> I'm looking for ways to hook up fast 6 Gb/s SATA SSD's (non-RAID!)
->> to (server or i-X58) mainboards which do not have native 6 Gb/s SATA.
->>
->> From the reviews I've read so far, two things became obvious:
->> * The SSD's I'm looking at really want a working SATA TRIM command.
->> * All the onboard Marvell 88SE9128 (or ASmedia) solutions
->> seriuosly lack performance, as do PCIe cards based on those chips.
->>
->> So basically, there seem to be two choices:
->> 1.) LSI 2008
+On 08/12/2011 10:24 AM, Prof. Dr. Klaus Kusche wrote:
+> On 2011-08-12 11:01, Ric Wheeler wrote:
+>> Lukas has a more generic bulk tool that should do the job and has the
+>> advantage that it does not have to fill the file system first (it can
+>> lock regions and do its work).
 >
-> IT firmware supports TRIM. You may use 
-> ftp://ftp.supermicro.com/driver/SAS/LSI/2008/ tools to flash IR firmware 
-> instead of iMR (megaraid), then flash to IT firmware. Then you may flash 
-> latest IT firmware to ensure that TRIM is supported.
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Any pointers to that?
+
+I think that the easiest (and most natural way) to do this is through the 
+updated fsck (-K) tool which will discard the unused block ranges when you fsck 
+a file system.
+
+Lukas can add in details about versions, etc :)
+
+>
+> Thanks!
+>
+>> Note that discard is not just for physical devices like SCSI or ATA, it
+>> is also useful for "software" stacks like various device mapper targets,
+>> virtual block devices, etc so we should be keeping the abstraction at a
+>> high level for our tooling.
+>
+> I agree, but wiper.sh has been the first such tool and is widespread
+> and well-known. I'm not aware of alternatives using the generic fstrim
+> command (which is still missing on some major distributions)
+> or FITRIM ioctl.
+>
+
+FITRIM is somewhat misnamed. It will end up issuing a discard to the storage 
+stack, not an ATA specific TRIM command (invoking sb_issue_discard()).
+
+Anything that uses FITRIM should work if I followed the code correctly,
+
+Ric
+
+
 
