@@ -1,120 +1,179 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 3/4] scsi: Added support for adapter and firmware reset
-Date: Fri, 12 Aug 2011 02:51:28 -0700
-Message-ID: <1313142689-13388-4-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 2/4] qla4xxx: Added Get ACB support using BSG
+Date: Fri, 12 Aug 2011 02:51:27 -0700
+Message-ID: <1313142689-13388-3-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:47488
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752655Ab1HLKBV (ORCPT
+	by vger.kernel.org with ESMTP id S1752810Ab1HLKBW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 06:01:21 -0400
+	Fri, 12 Aug 2011 06:01:22 -0400
 In-Reply-To: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-Added new sysfs attr 'host_reset' in scsi_sysfs.c to
-perform adapter or firmware reset as suggested by
-Mike Christie here:
-http://marc.info/?l=linux-scsi&m=127359347111167&w=2
+This command is used to read ACB params from firmware
 
-user/application can write "adapter" or "firmware" on
-this attr and it will call newly added function hook
-in scsi_host_template to call LDD adapter or firmware
-reset implementation.
-
+Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/scsi_sysfs.c |   38 ++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_host.h  |   13 +++++++++++++
- 2 files changed, 51 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_bsg.c  |   68 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_bsg.h  |    1 +
+ drivers/scsi/qla4xxx/ql4_glbl.h |    4 +-
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   15 +++++---
+ 4 files changed, 80 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index e0bd3f7..04c2a27 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -246,6 +246,43 @@ show_shost_active_mode(struct device *dev,
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
+index 4704a52..8acdc58 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.c
++++ b/drivers/scsi/qla4xxx/ql4_bsg.c
+@@ -381,6 +381,71 @@ leave:
+ 	return rval;
+ }
  
- static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR, show_shost_active_mode, NULL);
- 
-+static int check_reset_type(char *str)
++static int
++qla4xxx_bsg_get_acb(struct bsg_job *bsg_job)
 +{
-+	if (strncmp(str, "adapter", 10) == 0)
-+		return SCSI_ADAPTER_RESET;
-+	else if (strncmp(str, "firmware", 10) == 0)
-+		return SCSI_FIRMWARE_RESET;
-+	else
-+		return 0;
++	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
++	struct scsi_qla_host *ha = to_qla_host(host);
++	struct iscsi_bsg_request *bsg_req = bsg_job->request;
++	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
++	uint32_t acb_type = 0;
++	uint32_t len = 0;
++	dma_addr_t acb_dma;
++	uint8_t *acb = NULL;
++	int rval = -EINVAL;
++
++	bsg_reply->reply_payload_rcv_len = 0;
++
++	if (unlikely(pci_channel_offline(ha->pdev)))
++		goto leave;
++
++	/* Only 4022 and above adapters are supported */
++	if (is_qla4010(ha))
++		goto leave;
++
++	if (ql4xxx_reset_active(ha)) {
++		ql4_printk(KERN_ERR, ha, "%s: reset active\n", __func__);
++		rval = -EBUSY;
++		goto leave;
++	}
++
++	acb_type = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	len = bsg_job->reply_payload.payload_len;
++	if (len < sizeof(struct addr_ctrl_blk)) {
++		ql4_printk(KERN_ERR, ha, "%s: invalid acb len %d\n",
++			   __func__, len);
++		rval = -EINVAL;
++		goto leave;
++	}
++
++	acb = dma_alloc_coherent(&ha->pdev->dev, len, &acb_dma, GFP_KERNEL);
++	if (!acb) {
++		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for acb "
++			   "data\n", __func__);
++		rval = -ENOMEM;
++		goto leave;
++	}
++
++	rval = qla4xxx_get_acb(ha, acb_dma, acb_type, len);
++	if (rval) {
++		ql4_printk(KERN_ERR, ha, "%s: get acb failed\n", __func__);
++		bsg_reply->result = DID_ERROR << 16;
++		rval = -EIO;
++	} else {
++		bsg_reply->reply_payload_rcv_len =
++			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
++					    bsg_job->reply_payload.sg_cnt,
++					    acb, len);
++		bsg_reply->result = DID_OK << 16;
++	}
++
++	bsg_job_done(bsg_job, bsg_reply->result,
++		     bsg_reply->reply_payload_rcv_len);
++	dma_free_coherent(&ha->pdev->dev, len, acb, acb_dma);
++leave:
++	return rval;
 +}
 +
-+static ssize_t
-+store_host_reset(struct device *dev, struct device_attribute *attr,
-+		const char *buf, size_t count)
-+{
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct scsi_host_template *sht = shost->hostt;
-+	int ret = -EINVAL;
-+	char str[10];
-+	int type;
-+
-+	sscanf(buf, "%s", str);
-+	type = check_reset_type(str);
-+
-+	if (!type)
-+		goto exit_store_host_reset;
-+
-+	if (sht->host_reset)
-+		ret = sht->host_reset(shost, type);
-+
-+exit_store_host_reset:
-+	if (ret == 0)
-+		ret = count;
-+	return ret;
-+}
-+
-+static DEVICE_ATTR(host_reset, S_IWUSR, NULL, store_host_reset);
-+
- shost_rd_attr(unique_id, "%u\n");
- shost_rd_attr(host_busy, "%hu\n");
- shost_rd_attr(cmd_per_lun, "%hd\n");
-@@ -272,6 +309,7 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
- 	&dev_attr_active_mode.attr,
- 	&dev_attr_prot_capabilities.attr,
- 	&dev_attr_prot_guard_type.attr,
-+	&dev_attr_host_reset.attr,
- 	NULL
- };
+ /**
+  * qla4xxx_process_vendor_specific - handle vendor specific bsg request
+  * @job: iscsi_bsg_job to handle
+@@ -411,6 +476,9 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
+ 	case QLISCSI_VND_RESTORE_DEFAULTS:
+ 		return qla4xxx_restore_defaults(bsg_job);
  
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index f1f2644..fc22ad9 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -355,6 +355,19 @@ struct scsi_host_template {
- 	 */
- 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
++	case QLISCSI_VND_GET_ACB:
++		return qla4xxx_bsg_get_acb(bsg_job);
++
+ 	default:
+ 		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
+ 			   "0x%x\n", __func__, bsg_req->msgcode);
+diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
+index 84a1391..c6a03645 100644
+--- a/drivers/scsi/qla4xxx/ql4_bsg.h
++++ b/drivers/scsi/qla4xxx/ql4_bsg.h
+@@ -14,5 +14,6 @@
+ #define QLISCSI_VND_READ_NVRAM		4
+ #define QLISCSI_VND_UPDATE_NVRAM	5
+ #define QLISCSI_VND_RESTORE_DEFAULTS	6
++#define QLISCSI_VND_GET_ACB		7
  
-+	/* This is an optional routine that allows transport to initiate
-+	 * LLD adapter or firmware reset using sysfs attribute.
-+	 *
-+	 * Return values: 0 on success, -ve value on failure.
-+	 *
-+	 * Status: OPTIONAL
-+	 */
+ #endif
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 1a0f601..160db9d 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -56,8 +56,8 @@ int qla4xxx_conn_close_sess_logout(struct scsi_qla_host *ha,
+ int qla4xxx_disable_acb(struct scsi_qla_host *ha);
+ int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
+ 		    uint32_t *mbox_sts, dma_addr_t acb_dma);
+-int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
+-		    uint32_t *mbox_sts, dma_addr_t acb_dma);
++int qla4xxx_get_acb(struct scsi_qla_host *ha, dma_addr_t acb_dma,
++		    uint32_t acb_type, uint32_t len);
+ int qla4xxx_get_ip_state(struct scsi_qla_host *ha, uint32_t acb_idx,
+ 			 uint32_t ip_idx, uint32_t *sts);
+ void qla4xxx_mark_device_missing(struct iscsi_cls_session *cls_session);
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index dfc38aa..de733a7 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1425,18 +1425,21 @@ int qla4xxx_disable_acb(struct scsi_qla_host *ha)
+ 	return status;
+ }
+ 
+-int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
+-		    uint32_t *mbox_sts, dma_addr_t acb_dma)
++int qla4xxx_get_acb(struct scsi_qla_host *ha, dma_addr_t acb_dma,
++		    uint32_t acb_type, uint32_t len)
+ {
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
+ 	int status = QLA_SUCCESS;
+ 
+-	memset(mbox_cmd, 0, sizeof(mbox_cmd[0]) * MBOX_REG_COUNT);
+-	memset(mbox_sts, 0, sizeof(mbox_sts[0]) * MBOX_REG_COUNT);
++	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
++	memset(&mbox_sts, 0, sizeof(mbox_sts));
 +
-+	int (*host_reset)(struct Scsi_Host *shost, int reset_type);
-+#define SCSI_ADAPTER_RESET	1
-+#define SCSI_FIRMWARE_RESET	2
-+
-+
- 	/*
- 	 * Name of proc directory
- 	 */
+ 	mbox_cmd[0] = MBOX_CMD_GET_ACB;
+-	mbox_cmd[1] = 0; /* Primary ACB */
++	mbox_cmd[1] = acb_type;
+ 	mbox_cmd[2] = LSDW(acb_dma);
+ 	mbox_cmd[3] = MSDW(acb_dma);
+-	mbox_cmd[4] = sizeof(struct addr_ctrl_blk);
++	mbox_cmd[4] = len;
+ 
+ 	status = qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]);
+ 	if (status != QLA_SUCCESS) {
 -- 
 1.7.6
 
