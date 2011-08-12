@@ -1,15 +1,15 @@
 From: "Rose" <william_rose55@yahoo.com>
 Subject: =?UTF-8?Q?HELLO=20my=20=20=E4=BD=A0=E5=A5=BD=EF=BC=8C=E6=88=91?=
-Date: Fri, 12 Aug 2011 20:29:15 +0200
-Message-ID: <20110812202915.5407F0B0__22921.5867504992$1313173766$gmane$org@centrum.sk>
+Date: Fri, 12 Aug 2011 20:29:39 +0200
+Message-ID: <20110812202939.18A83956__48870.2400624335$1313173794$gmane$org@centrum.sk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gmmr5.centrum.cz ([90.183.38.152]:48883 "EHLO gmmr5.centrum.cz"
+Received: from gmmr2.centrum.cz ([90.183.38.158]:53286 "EHLO gmmr2.centrum.cz"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753755Ab1HLS3Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 14:29:16 -0400
+	id S1753755Ab1HLS3l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2011 14:29:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
