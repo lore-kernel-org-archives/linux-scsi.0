@@ -1,45 +1,29 @@
-From: =?ISO-8859-15?Q?Stefan_/*St0fF*/_H=FCbner?=
-	<stefan.huebner@stud.tu-ilmenau.de>
+From: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>
 Subject: Re: Good SAS adapters for 6 Gb/s SATA SSD's (with TRIM)?
-Date: Fri, 12 Aug 2011 09:16:24 +0200
-Message-ID: <4E44D348.30003@stud.tu-ilmenau.de>
+Date: Fri, 12 Aug 2011 10:04:30 +0200
+Message-ID: <4E44DE8E.3070809@computerix.info>
 References: <4E43F2C3.9000808@computerix.info> <4E4434A4.7010808@interlog.com> <4E449BB1.3060300@interlog.com>
-Reply-To: stefan.huebner@stud.tu-ilmenau.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wega.rz.tu-ilmenau.de ([141.24.4.159]:57284 "EHLO
-	wega.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751259Ab1HLHkf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2011 03:40:35 -0400
+Received: from www74.your-server.de ([213.133.104.74]:35008 "EHLO
+	www74.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791Ab1HLIEi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2011 04:04:38 -0400
 In-Reply-To: <4E449BB1.3060300@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: dgilbert@interlog.com
-Cc: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-Douglas,
-
-have you double-checked to use the IT (Initiator Mode) Firmware from
-LSI?  I mean we build up systems based on the X8SI6-F mainboard from
-Supermicro which has a LSI SAS2008 with 8 Lanes on-board.  If using
-HW-RAID (Modes 0, 1, 1E, ...) on those, we have to flash the "IR"
-firmware.  If using the chip as HBA for Linux software RAID, we flash
-the "IT" firmware, and if the customer needs HW-RAID5-Support, they get
-an extra chip onto the board and we have to flash "iMR" firmware...
-
-So you have 3 different firmware versions.  IT would be the way to go
-here...
-
-Greets,
-Stefan
-
-Am 12.08.2011 05:19, schrieb Douglas Gilbert:
+On 2011-08-12 05:19, Douglas Gilbert wrote:
 > On 11-08-11 03:59 PM, Douglas Gilbert wrote:
 >> On 11-08-11 11:18 AM, Prof. Dr. Klaus Kusche wrote:
 >>> I'm looking for ways to hook up fast 6 Gb/s SATA SSD's (non-RAID!)
->>> to (server or i-X58) mainboards which do not have native 6 Gb/s SATA.
+>>> to (server or i-X58) mainboards which do not have native 6 Gb/s SAT=
+A.
 >>>
 >>> From the reviews I've read so far, two things became obvious:
 >>> * The SSD's I'm looking at really want a working SATA TRIM command.
@@ -78,38 +62,50 @@ Am 12.08.2011 05:19, schrieb Douglas Gilbert:
 >> command and it was also rejected.
 >>
 >> LSI have some more work to do on their firmware.
-> 
+>
 > I did check the LSI support page for my HBA just before sending
 > my original reply. And the version 9 firmware was showing at the
 > top of the list. Alas, that page had been alpha sorted on the
 > file names so that version 10 of the firmware (May 2011) was
 > hiding further down the page :-)
-> 
+>
 > So I installed the newest firmware and redid the above tests.
 > Now the SCSI WRITE SAME (16) with the UNMAP bit set works on
 > that SSD. The SCSI UNMAP command was rejected and I did not
 > test sending the ATA DATA SET MANAGEMENT command through
 > the pass-through (but I expect that would work).
-> 
-> So Linux file systems will be able "discard" (="unmap"(SCSI);
-> ="trim"(ATA)) data using LSI HBAs based the LSI 2008 chip
+>
+> So Linux file systems will be able "discard" (=3D"unmap"(SCSI);
+> =3D"trim"(ATA)) data using LSI HBAs based the LSI 2008 chip
 > which are running recent firmware.
-> 
-> Doug Gilbert
-> 
->>> I didn't find much about 2.)
->>> * The only cards based on this chip are the HighPoint 27xx,
->>> or did I miss something?
->>> * Running a 27xx with the mvsas driver was reported to have stability
->>> problems or random errors. Are these problems solved?
->>> * Is the 27xx fast (with SATA SSD's & mvsas driver),
->>> i.e. significantly faster than onboard SATA 3 Gb/s ports?
->>> * Does the 27xx+mvsas support TRIM when connected to SATA drives?
->>>
->>> Are there any other solutions?
-> 
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Was that with the RAID or the non-RAID firmware?
+
+I've asked LSI sales/support about UNMAP/TRIM being supported.
+They've opened a case, but I got zero response up to now.
+So it doesn't seem to be on the official feature list,
+and it seems to be unknown at least in the Munich LSI office.
+
+Am I correct that this would support online trimming (mount discard),
+but not batch trimming with wiper.sh or similar tools/scripts,
+because they issue TRIM or UNMAP directly, not WRITE SAME UNMAP?
+(what's the SCSI equivalent to the wiper.sh script?)
+
+Nobody having any info's about Marvell / mvsas?
+
+Klaus.
+
+--=20
+Prof. Dr. Klaus Kusche
+Private address: Rainstra=DFe 9/1, 88316 Isny, Germany
++49 7562 6211377 Klaus.Kusche@computerix.info http://www.computerix.inf=
+o
+Office address: NTA Isny gGmbH, Seidenstra=DFe 12-35, 88316 Isny, Germa=
+ny
++49 7562 9707 36 kusche@nta-isny.de http://www.nta-isny.de
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
