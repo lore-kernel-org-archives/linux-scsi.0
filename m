@@ -1,66 +1,92 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] iommu: parse pci device scope even only intr remap is
- defined
-Date: Thu, 11 Aug 2011 16:26:46 -0700
-Message-ID: <20110811232646.GI76347@plapp.qlogic.org>
-References: <CAE9FiQV0pnJW2BYdNSH3J-ZJ1JBtQ8qKf8HAfk1A98U3onn92A@mail.gmail.com>
- <20110721085636.GJ9216@elte.hu>
- <CAE9FiQU629jW2n8HTiA7ZZotfsUoXAkCvZ5XDOPeERubYemdzg@mail.gmail.com>
- <20110725071941.GA22518@elte.hu>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Good SAS adapters for 6 Gb/s SATA SSD's (with TRIM)?
+Date: Thu, 11 Aug 2011 23:19:13 -0400
+Message-ID: <4E449BB1.3060300@interlog.com>
+References: <4E43F2C3.9000808@computerix.info> <4E4434A4.7010808@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110725071941.GA22518@elte.hu>
-Sender: linux-pci-owner@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Yinghai Lu <yinghai@kernel.org>, Suresh Siddha <suresh.b.siddha@intel.com>, Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>, Joerg Roedel <joerg.roedel@amd.com>, "H. Peter Anvin" <hpa@zytor.com>, linux scsi dev <linux-scsi@vger.kernel.org>, linux pci <linux-pci@vger.kernel.org>, "hpa@linux.intel.com" <hpa@linux.intel.com>, Avik Shau <avik.shau@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:47019 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753171Ab1HLDTW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2011 23:19:22 -0400
+In-Reply-To: <4E4434A4.7010808@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 25 Jul 2011, Ingo Molnar wrote:
+On 11-08-11 03:59 PM, Douglas Gilbert wrote:
+> On 11-08-11 11:18 AM, Prof. Dr. Klaus Kusche wrote:
+>> I'm looking for ways to hook up fast 6 Gb/s SATA SSD's (non-RAID!)
+>> to (server or i-X58) mainboards which do not have native 6 Gb/s SATA.
+>>
+>> From the reviews I've read so far, two things became obvious:
+>> * The SSD's I'm looking at really want a working SATA TRIM command.
+>> * All the onboard Marvell 88SE9128 (or ASmedia) solutions
+>> seriuosly lack performance, as do PCIe cards based on those chips.
+>>
+>> So basically, there seem to be two choices:
+>> 1.) LSI 2008
+>> 2.) Marvell 9485
+>>
+>> 1.) seems to be fast, reliable and well-supported,
+>> but as far as I can tell, it doesn't support TRIM at all:
+>> It neither maps SCSI unmap to SATA TRIM,
+>> nor accepts TRIM as a SATA passthrough command.
+>>
+>> Is that true?
+>
+> What counts in Linux for "trim" support on a SSD (SATA,
+> SAS or FC) is correctly processing the SCSI WRITE SAME (16)
+> with the UNMAP bit set. In the case of a SATA SSD, a SCSI
+> to ATA Translation Layer (SATL) should map that SCSI WRITE
+> SAME (16) with the UNMAP bit set to the ATA DATA SET
+> MANAGEMENT command with the TRIM attribute set.
+>
+> Many Linux SATA low level drivers use libata which
+> implements the above mapping. However some SAS HBAs
+> (e.g. LSI MPT Fusion 3 and 6 Gbps) implement the SATL
+> in their own HBA firmware.
+>
+> I tested a LSI SAS 9212-4i4e HBA running its most recent
+> firmware (9.0 from Feb 26, 2011) with a Intel SSDSA2M080
+> which does support trim. I used my ddpt utility and the
+> SCSI WRITE SAME (16) with the UNMAP bit set was rejected
+> as an "illegal request". With the UNMAP bit clear it
+> accepted the command. I also checked the SCSI UNMAP
+> command and it was also rejected.
+>
+> LSI have some more work to do on their firmware.
 
-> * Yinghai Lu <yinghai@kernel.org> wrote:
-> 
-> > > This looks very messy.
-> > >
-> > > CONFIG_DMAR has no clear meaning. The DMAR table parsing 
-> > > functionality is intermixed with the DMAR feature itself. The 
-> > > kernel code is littered with a couple of dozen CONFIG_DMAR 
-> > > #ifdefs with no clear structure to the initialization and to the 
-> > > separation of functionality.
-> > 
-> > CONFIG_DMAR is actually DMA_REMAP instead DMAR table.
-> > 
-> > or Do you prefer to clean them up further with following depency?
-> > 
-> > CONFIG_DMAR_TBL for DMAR table
-> > CONFIG_DMA_REMAP for DMA remapping
-> > CONFIG_INTR_REMAP for Interrupt remapping
-> > and XXX_REMAP will select DMAR_TBL
-> 
-> 'DMAR', 'TBL' and 'INTR' are all misnomers!
-> 
-> 	CONFIG_DMA_REMAP_TABLE
-> 	CONFIG_DMA_REMAP
-> 	CONFIG_IRQ_REMAP
-> 
-> That way we'd get the 'DMAR tables' via CONFIG_DMA_REMAP_TABLE - on 
-> top of which enabling CONFIG_DMA_REMAP and CONFIG_IRQ_REMAP would 
-> enable and handle various hw remapping features.
-> 
-> (Does anyone else have better/other code structure suggestions?)
-> 
-> But yes, we should first do this rename/cleanup to clarify what it 
-> all means, then fix whatever config-combos don't work perfectly yet.
+I did check the LSI support page for my HBA just before sending
+my original reply. And the version 9 firmware was showing at the
+top of the list. Alas, that page had been alpha sorted on the
+file names so that version 10 of the firmware (May 2011) was
+hiding further down the page :-)
 
-All,
+So I installed the newest firmware and redid the above tests.
+Now the SCSI WRITE SAME (16) with the UNMAP bit set works on
+that SSD. The SCSI UNMAP command was rejected and I did not
+test sending the ATA DATA SET MANAGEMENT command through
+the pass-through (but I expect that would work).
 
-Is this re-work effort going to make it into 3.1?  With 3.1.0-rc1, we
-are seeing the same 'no interupts being routed' issue.  Applying
-Yinghai's patch to 3.1-rc1:
+So Linux file systems will be able "discard" (="unmap"(SCSI);
+="trim"(ATA)) data using LSI HBAs based the LSI 2008 chip
+which are running recent firmware.
 
-	http://www.spinics.net/lists/linux-scsi/msg53416.html
+Doug Gilbert
 
-get's interrupts routing again....
+>> I didn't find much about 2.)
+>> * The only cards based on this chip are the HighPoint 27xx,
+>> or did I miss something?
+>> * Running a 27xx with the mvsas driver was reported to have stability
+>> problems or random errors. Are these problems solved?
+>> * Is the 27xx fast (with SATA SSD's & mvsas driver),
+>> i.e. significantly faster than onboard SATA 3 Gb/s ports?
+>> * Does the 27xx+mvsas support TRIM when connected to SATA drives?
+>>
+>> Are there any other solutions?
 
-Thanks, AV
