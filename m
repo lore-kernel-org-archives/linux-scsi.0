@@ -1,16 +1,16 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 2/4] qla4xxx: Added Get ACB support using BSG
-Date: Fri, 12 Aug 2011 02:51:27 -0700
-Message-ID: <1313142689-13388-3-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 1/4] qla4xxx: Added restore factory defaults support using BSG
+Date: Fri, 12 Aug 2011 02:51:26 -0700
+Message-ID: <1313142689-13388-2-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:47488
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:50065
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752810Ab1HLKBW (ORCPT
+	by vger.kernel.org with ESMTP id S1752830Ab1HLKBX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 06:01:22 -0400
+	Fri, 12 Aug 2011 06:01:23 -0400
 In-Reply-To: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,36 +19,36 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 
-This command is used to read ACB params from firmware
+This command will causes the firmware to update all
+configurations to pre-defined factory default settings.
 
 Signed-off-by: Harish Zunjarrao <harish.zunjarrao@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_bsg.c  |   68 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_bsg.c  |   47 +++++++++++++++++++++++++++++++++++++++
  drivers/scsi/qla4xxx/ql4_bsg.h  |    1 +
- drivers/scsi/qla4xxx/ql4_glbl.h |    4 +-
- drivers/scsi/qla4xxx/ql4_mbx.c  |   15 +++++---
- 4 files changed, 80 insertions(+), 8 deletions(-)
+ drivers/scsi/qla4xxx/ql4_glbl.h |    3 ++
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   26 +++++++++++++++++++++
+ 4 files changed, 77 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/qla4xxx/ql4_bsg.c b/drivers/scsi/qla4xxx/ql4_bsg.c
-index 4704a52..8acdc58 100644
+index c475453..4704a52 100644
 --- a/drivers/scsi/qla4xxx/ql4_bsg.c
 +++ b/drivers/scsi/qla4xxx/ql4_bsg.c
-@@ -381,6 +381,71 @@ leave:
+@@ -337,6 +337,50 @@ leave:
  	return rval;
  }
  
 +static int
-+qla4xxx_bsg_get_acb(struct bsg_job *bsg_job)
++qla4xxx_restore_defaults(struct bsg_job *bsg_job)
 +{
 +	struct Scsi_Host *host = iscsi_job_to_shost(bsg_job);
 +	struct scsi_qla_host *ha = to_qla_host(host);
 +	struct iscsi_bsg_request *bsg_req = bsg_job->request;
 +	struct iscsi_bsg_reply *bsg_reply = bsg_job->reply;
-+	uint32_t acb_type = 0;
-+	uint32_t len = 0;
-+	dma_addr_t acb_dma;
-+	uint8_t *acb = NULL;
++	uint32_t region = 0;
++	uint32_t field0 = 0;
++	uint32_t field1 = 0;
 +	int rval = -EINVAL;
 +
 +	bsg_reply->reply_payload_rcv_len = 0;
@@ -56,7 +56,6 @@ index 4704a52..8acdc58 100644
 +	if (unlikely(pci_channel_offline(ha->pdev)))
 +		goto leave;
 +
-+	/* Only 4022 and above adapters are supported */
 +	if (is_qla4010(ha))
 +		goto leave;
 +
@@ -66,39 +65,20 @@ index 4704a52..8acdc58 100644
 +		goto leave;
 +	}
 +
-+	acb_type = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
-+	len = bsg_job->reply_payload.payload_len;
-+	if (len < sizeof(struct addr_ctrl_blk)) {
-+		ql4_printk(KERN_ERR, ha, "%s: invalid acb len %d\n",
-+			   __func__, len);
-+		rval = -EINVAL;
-+		goto leave;
-+	}
++	region = bsg_req->rqst_data.h_vendor.vendor_cmd[1];
++	field0 = bsg_req->rqst_data.h_vendor.vendor_cmd[2];
++	field1 = bsg_req->rqst_data.h_vendor.vendor_cmd[3];
 +
-+	acb = dma_alloc_coherent(&ha->pdev->dev, len, &acb_dma, GFP_KERNEL);
-+	if (!acb) {
-+		ql4_printk(KERN_ERR, ha, "%s: dma alloc failed for acb "
-+			   "data\n", __func__);
-+		rval = -ENOMEM;
-+		goto leave;
-+	}
-+
-+	rval = qla4xxx_get_acb(ha, acb_dma, acb_type, len);
++	rval = qla4xxx_restore_factory_defaults(ha, region, field0, field1);
 +	if (rval) {
-+		ql4_printk(KERN_ERR, ha, "%s: get acb failed\n", __func__);
++		ql4_printk(KERN_ERR, ha, "%s: set nvram failed\n", __func__);
 +		bsg_reply->result = DID_ERROR << 16;
 +		rval = -EIO;
-+	} else {
-+		bsg_reply->reply_payload_rcv_len =
-+			sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+					    bsg_job->reply_payload.sg_cnt,
-+					    acb, len);
++	} else
 +		bsg_reply->result = DID_OK << 16;
-+	}
 +
 +	bsg_job_done(bsg_job, bsg_reply->result,
 +		     bsg_reply->reply_payload_rcv_len);
-+	dma_free_coherent(&ha->pdev->dev, len, acb, acb_dma);
 +leave:
 +	return rval;
 +}
@@ -106,74 +86,75 @@ index 4704a52..8acdc58 100644
  /**
   * qla4xxx_process_vendor_specific - handle vendor specific bsg request
   * @job: iscsi_bsg_job to handle
-@@ -411,6 +476,9 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
- 	case QLISCSI_VND_RESTORE_DEFAULTS:
- 		return qla4xxx_restore_defaults(bsg_job);
+@@ -364,6 +408,9 @@ int qla4xxx_process_vendor_specific(struct bsg_job *bsg_job)
+ 	case QLISCSI_VND_UPDATE_NVRAM:
+ 		return qla4xxx_update_nvram(bsg_job);
  
-+	case QLISCSI_VND_GET_ACB:
-+		return qla4xxx_bsg_get_acb(bsg_job);
++	case QLISCSI_VND_RESTORE_DEFAULTS:
++		return qla4xxx_restore_defaults(bsg_job);
 +
  	default:
  		ql4_printk(KERN_ERR, ha, "%s: invalid BSG vendor command: "
  			   "0x%x\n", __func__, bsg_req->msgcode);
 diff --git a/drivers/scsi/qla4xxx/ql4_bsg.h b/drivers/scsi/qla4xxx/ql4_bsg.h
-index 84a1391..c6a03645 100644
+index 71df80d..84a1391 100644
 --- a/drivers/scsi/qla4xxx/ql4_bsg.h
 +++ b/drivers/scsi/qla4xxx/ql4_bsg.h
-@@ -14,5 +14,6 @@
+@@ -13,5 +13,6 @@
+ #define QLISCSI_VND_GET_ACB_STATE	3
  #define QLISCSI_VND_READ_NVRAM		4
  #define QLISCSI_VND_UPDATE_NVRAM	5
- #define QLISCSI_VND_RESTORE_DEFAULTS	6
-+#define QLISCSI_VND_GET_ACB		7
++#define QLISCSI_VND_RESTORE_DEFAULTS	6
  
  #endif
 diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 1a0f601..160db9d 100644
+index 35bd0c1..1a0f601 100644
 --- a/drivers/scsi/qla4xxx/ql4_glbl.h
 +++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -56,8 +56,8 @@ int qla4xxx_conn_close_sess_logout(struct scsi_qla_host *ha,
- int qla4xxx_disable_acb(struct scsi_qla_host *ha);
- int qla4xxx_set_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
- 		    uint32_t *mbox_sts, dma_addr_t acb_dma);
--int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
--		    uint32_t *mbox_sts, dma_addr_t acb_dma);
-+int qla4xxx_get_acb(struct scsi_qla_host *ha, dma_addr_t acb_dma,
-+		    uint32_t acb_type, uint32_t len);
- int qla4xxx_get_ip_state(struct scsi_qla_host *ha, uint32_t acb_idx,
- 			 uint32_t ip_idx, uint32_t *sts);
- void qla4xxx_mark_device_missing(struct iscsi_cls_session *cls_session);
+@@ -166,6 +166,9 @@ int qla4xxx_get_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
+ 		      uint32_t offset, uint32_t size);
+ int qla4xxx_set_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
+ 		      uint32_t offset, uint32_t size);
++int qla4xxx_restore_factory_defaults(struct scsi_qla_host *ha,
++				     uint32_t region, uint32_t field0,
++				     uint32_t field1);
+ 
+ /* BSG Functions */
+ int qla4xxx_bsg_request(struct bsg_job *bsg_job);
 diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index dfc38aa..de733a7 100644
+index e843758..dfc38aa 100644
 --- a/drivers/scsi/qla4xxx/ql4_mbx.c
 +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1425,18 +1425,21 @@ int qla4xxx_disable_acb(struct scsi_qla_host *ha)
+@@ -1744,3 +1744,29 @@ int qla4xxx_set_nvram(struct scsi_qla_host *ha, dma_addr_t nvram_dma,
+ 	}
  	return status;
  }
- 
--int qla4xxx_get_acb(struct scsi_qla_host *ha, uint32_t *mbox_cmd,
--		    uint32_t *mbox_sts, dma_addr_t acb_dma)
-+int qla4xxx_get_acb(struct scsi_qla_host *ha, dma_addr_t acb_dma,
-+		    uint32_t acb_type, uint32_t len)
- {
++
++int qla4xxx_restore_factory_defaults(struct scsi_qla_host *ha,
++				     uint32_t region, uint32_t field0,
++				     uint32_t field1)
++{
++	int status = QLA_SUCCESS;
 +	uint32_t mbox_cmd[MBOX_REG_COUNT];
 +	uint32_t mbox_sts[MBOX_REG_COUNT];
- 	int status = QLA_SUCCESS;
- 
--	memset(mbox_cmd, 0, sizeof(mbox_cmd[0]) * MBOX_REG_COUNT);
--	memset(mbox_sts, 0, sizeof(mbox_sts[0]) * MBOX_REG_COUNT);
++
 +	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
 +	memset(&mbox_sts, 0, sizeof(mbox_sts));
 +
- 	mbox_cmd[0] = MBOX_CMD_GET_ACB;
--	mbox_cmd[1] = 0; /* Primary ACB */
-+	mbox_cmd[1] = acb_type;
- 	mbox_cmd[2] = LSDW(acb_dma);
- 	mbox_cmd[3] = MSDW(acb_dma);
--	mbox_cmd[4] = sizeof(struct addr_ctrl_blk);
-+	mbox_cmd[4] = len;
- 
- 	status = qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]);
- 	if (status != QLA_SUCCESS) {
++	mbox_cmd[0] = MBOX_CMD_RESTORE_FACTORY_DEFAULTS;
++	mbox_cmd[3] = region;
++	mbox_cmd[4] = field0;
++	mbox_cmd[5] = field1;
++
++	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 3, &mbox_cmd[0],
++					 &mbox_sts[0]);
++	if (status != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_ERR, ha, "scsi%ld: %s: failed "
++				  "status %04X\n", ha->host_no, __func__,
++				  mbox_sts[0]));
++	}
++	return status;
++}
 -- 
 1.7.6
 
