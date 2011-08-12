@@ -1,35 +1,219 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 0/4] qla4xxx feature updates
-Date: Fri, 12 Aug 2011 02:51:25 -0700
-Message-ID: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 4/4] qla4xxx: Added support for adapter and firmware reset
+Date: Fri, 12 Aug 2011 02:51:29 -0700
+Message-ID: <1313142689-13388-5-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:46309
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:50039
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752537Ab1HLKBR (ORCPT
+	by vger.kernel.org with ESMTP id S1752537Ab1HLKBV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2011 06:01:17 -0400
+	Fri, 12 Aug 2011 06:01:21 -0400
+In-Reply-To: <1313142689-13388-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, michaelc@cs.wisc.edu
 Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com> 
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-James,
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_def.h |    2 +
+ drivers/scsi/qla4xxx/ql4_fw.h  |    3 +
+ drivers/scsi/qla4xxx/ql4_isr.c |    2 +
+ drivers/scsi/qla4xxx/ql4_os.c  |  107 ++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 114 insertions(+), 0 deletions(-)
 
-Following patches are made over scsi-misc and our ealier patchset
-posted here: http://marc.info/?l=linux-scsi&m=131219494805315&w=2
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index c3190eb..d2f7cd6 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -172,6 +172,7 @@
+ #define RELOGIN_TOV			18
+ #define ISNS_DEREG_TOV			5
+ #define HBA_ONLINE_TOV			30
++#define DISABLE_ACB_TOV			30
+ 
+ #define MAX_RESET_HA_RETRIES		2
+ 
+@@ -616,6 +617,7 @@ struct scsi_qla_host {
+ 	uint16_t phy_port_cnt;
+ 	uint16_t iscsi_pci_func_cnt;
+ 	uint8_t model_name[16];
++	struct completion disable_acb_comp;
+ };
+ 
+ struct ql4_task_data {
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index 581ff7e..0e24c7a 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -605,6 +605,9 @@ struct init_fw_ctrl_blk {
+ /*	struct addr_ctrl_blk sec;*/
+ };
+ 
++#define PRIMARI_ACB		0
++#define SECONDARY_ACB		1
++
+ struct addr_ctrl_blk_def {
+ 	uint8_t reserved1[1];	/* 00 */
+ 	uint8_t control;	/* 01 */
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index ee1104a..827e930 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -619,6 +619,8 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 			else if ((mbox_sts[3] == ACB_STATE_ACQUIRING) &&
+ 			    (mbox_sts[2] == ACB_STATE_VALID))
+ 				set_bit(DPC_RESET_HA, &ha->dpc_flags);
++			else if ((mbox_sts[3] == ACB_STATE_UNCONFIGURED))
++				complete(&ha->disable_acb_comp);
+ 			break;
+ 
+ 		case MBOX_ASTS_MAC_ADDRESS_CHANGED:
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 489d7cd..456cd6f 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -121,6 +121,7 @@ static int qla4xxx_slave_alloc(struct scsi_device *device);
+ static int qla4xxx_slave_configure(struct scsi_device *device);
+ static void qla4xxx_slave_destroy(struct scsi_device *sdev);
+ static mode_t ql4_attr_is_visible(int param_type, int param);
++static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type);
+ 
+ static struct qla4_8xxx_legacy_intr_set legacy_intr[] =
+     QLA82XX_LEGACY_INTR_CONFIG;
+@@ -148,6 +149,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
+ 
+ 	.max_sectors		= 0xFFFF,
+ 	.shost_attrs		= qla4xxx_host_attrs,
++	.host_reset		= qla4xxx_host_reset,
+ 	.vendor_id		= SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_QLOGIC,
+ };
+ 
+@@ -3133,6 +3135,7 @@ static int __devinit qla4xxx_probe_adapter(struct pci_dev *pdev,
+ 
+ 	mutex_init(&ha->mbox_sem);
+ 	init_completion(&ha->mbx_intr_comp);
++	init_completion(&ha->disable_acb_comp);
+ 
+ 	spin_lock_init(&ha->hardware_lock);
+ 
+@@ -3761,6 +3764,110 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ 	return return_status;
+ }
+ 
++static int qla4xxx_context_reset(struct scsi_qla_host *ha)
++{
++	uint32_t mbox_cmd[MBOX_REG_COUNT];
++	uint32_t mbox_sts[MBOX_REG_COUNT];
++	struct addr_ctrl_blk_def *acb = NULL;
++	uint32_t acb_len = sizeof(struct addr_ctrl_blk_def);
++	int rval = QLA_SUCCESS;
++	dma_addr_t acb_dma;
++
++	acb = dma_alloc_coherent(&ha->pdev->dev,
++				 sizeof(struct addr_ctrl_blk_def),
++				 &acb_dma, GFP_KERNEL);
++	if (!acb) {
++		ql4_printk(KERN_ERR, ha, "%s: Unable to alloc acb\n",
++			   __func__);
++		rval = -ENOMEM;
++		goto exit_port_reset;
++	}
++
++	memset(acb, 0, acb_len);
++
++	rval = qla4xxx_get_acb(ha, acb_dma, PRIMARI_ACB, acb_len);
++	if (rval != QLA_SUCCESS) {
++		rval = -EIO;
++		goto exit_free_acb;
++	}
++
++	rval = qla4xxx_disable_acb(ha);
++	if (rval != QLA_SUCCESS) {
++		rval = -EIO;
++		goto exit_free_acb;
++	}
++
++	wait_for_completion_timeout(&ha->disable_acb_comp,
++				    DISABLE_ACB_TOV * HZ);
++
++	rval = qla4xxx_set_acb(ha, &mbox_cmd[0], &mbox_sts[0], acb_dma);
++	if (rval != QLA_SUCCESS) {
++		rval = -EIO;
++		goto exit_free_acb;
++	}
++
++exit_free_acb:
++	dma_free_coherent(&ha->pdev->dev, sizeof(struct addr_ctrl_blk_def),
++			  acb, acb_dma);
++exit_port_reset:
++	DEBUG2(ql4_printk(KERN_INFO, ha, "%s %s\n", __func__,
++			  rval == QLA_SUCCESS ? "SUCCEEDED" : "FAILED"));
++	return rval;
++}
++
++static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type)
++{
++	struct scsi_qla_host *ha = to_qla_host(shost);
++	int rval = QLA_SUCCESS;
++
++	if (ql4xdontresethba) {
++		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: Don't Reset HBA\n",
++				  __func__));
++		rval = -EPERM;
++		goto exit_host_reset;
++	}
++
++	rval = qla4xxx_wait_for_hba_online(ha);
++	if (rval != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: Unable to reset host "
++				  "adapter\n", __func__));
++		rval = -EIO;
++		goto exit_host_reset;
++	}
++
++	if (test_bit(DPC_RESET_HA, &ha->dpc_flags))
++		goto recover_adapter;
++
++	switch (reset_type) {
++	case SCSI_ADAPTER_RESET:
++		set_bit(DPC_RESET_HA, &ha->dpc_flags);
++		break;
++	case SCSI_FIRMWARE_RESET:
++		if (!test_bit(DPC_RESET_HA, &ha->dpc_flags)) {
++			if (is_qla8022(ha))
++				/* set firmware context reset */
++				set_bit(DPC_RESET_HA_FW_CONTEXT,
++					&ha->dpc_flags);
++			else {
++				rval = qla4xxx_context_reset(ha);
++				goto exit_host_reset;
++			}
++		}
++		break;
++	}
++
++recover_adapter:
++	rval = qla4xxx_recover_adapter(ha);
++	if (rval != QLA_SUCCESS) {
++		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: recover adapter fail\n",
++				  __func__));
++		rval = -EIO;
++	}
++
++exit_host_reset:
++	return rval;
++}
++
+ /* PCI AER driver recovers from all correctable errors w/o
+  * driver intervention. For uncorrectable errors PCI AER
+  * driver calls the following device driver's callbacks
+-- 
+1.7.6
 
-Harish Zunjarrao (2):
-	qla4xxx: Added restore factory defaults support using BSG
-	qla4xxx: Added Get ACB support using BSG
-
-Vikas Chaudhary (2):
-	scsi: Added support for adapter and firmware reset
-	qla4xxx: Added support for adapter and firmware reset
-
-Thanks,
-Vikas.
 
