@@ -1,27 +1,64 @@
-From: Nicolle Smith <nismith@tanner.org>
-Subject: Let op Let op! Te activeren! Webmail Quota Limiet
-Date: Fri, 12 Aug 2011 20:23:37 -0400
-Message-ID: <76A7ECD1A4104A4EB27A334A52BDC3BE01A99D46FC__1115.7036213719$1313196585$gmane$org@EX2007MAIL.ths.local>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] hpsa: add heartbeat sysfs host attribute
+Date: Fri, 12 Aug 2011 19:01:47 -0700
+Message-ID: <20110813020147.GB15554@kroah.com>
+References: <20110812180314.21808.59261.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pem.tanner.org ([208.73.81.103]:1891 "EHLO smtp.tanner.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753178Ab1HMAtL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2011 20:49:11 -0400
-Content-Language: en-US
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:53872 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751093Ab1HMCDm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2011 22:03:42 -0400
+Content-Disposition: inline
+In-Reply-To: <20110812180314.21808.59261.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 
-Uw mailbox heeft overschreden de limiet van 1GB, die zo
-gedefinieerd door de beheerder, bent u draait op 5.9GB, mag u niet
-kunnen verzenden of ontvangen nieuwe berichten totdat u opnieuw valideren van uw
-mailbox. Om revalidates uw mailbox,
-Klik op onderstaande link:
+On Fri, Aug 12, 2011 at 01:03:14PM -0500, Stephen M. Cameron wrote:
+> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> 
+> The cciss driver had a CCISS_HEARTBEAT ioctl which
+> was not implemented in hpsa.  This ioctl returned a
+> counter from a register on the Smart Array which the
+> firmware would periodically update.  It can be used
+> to detect certain kinds of faults (e.g. controller
+> lockup) by noticing when the value remains constant
+> for more than a second or two.
+> 
+> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> ---
+>  Documentation/scsi/hpsa.txt |    8 ++++++++
+>  drivers/scsi/hpsa.c         |   18 ++++++++++++++++++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/scsi/hpsa.txt b/Documentation/scsi/hpsa.txt
+> index 891435a..0dac1e0 100644
+> --- a/Documentation/scsi/hpsa.txt
+> +++ b/Documentation/scsi/hpsa.txt
+> @@ -47,6 +47,7 @@ HPSA specific entries in /sys
+>    /sys/class/scsi_host/host*/firmware_revision
+>    /sys/class/scsi_host/host*/resettable
+>    /sys/class/scsi_host/host*/transport_mode
+> +  /sys/class/scsi_host/host*/heartbeat
+>  
+>    the host "rescan" attribute is a write only attribute.  Writing to this
+>    attribute will cause the driver to scan for new, changed, or removed devices
+> @@ -78,6 +79,13 @@ HPSA specific entries in /sys
+>    kexec tools to warn the user if they attempt to designate a device which is
+>    unable to honor the reset_devices kernel parameter as a dump device.
+>  
+> +  The "heartbeat" read-only attribute returns the value of a heartbeat
+> +  counter register on a Smart Array controller as a 32 bit unsigned
+> +  hexadecimal integer (e.g: "0x12345678").  The value should change
+> +  periodically, not less than once per second.  If this value fails to
+> +  change for a period longer than one second, it means something has
+> +  gone wrong (e.g. Smart Array controller firmware has locked up.)
+> +
 
-http://sindicato2.com/form/use/please/form1.html
+This all belongs in Documentation/ABI/ care to move it there instead?
 
-dank U
-Webmail System Administrator
-2011 ITS Help Desk.
+greg k-h
