@@ -1,245 +1,171 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: 3.1-rc1-git9: Reported regressions 2.6.39 -> 3.0
-Date: Sun, 14 Aug 2011 21:02:27 +0200 (CEST)
-Message-ID: <xuTC4jRtHbB.A.l4H.gMCSOB@chimera>
+From: =?ISO-8859-15?Q?Stefan_H=FCbner?=
+	<stefan.huebner@stud.tu-ilmenau.de>
+Subject: Re: Good SAS adapters for 6 Gb/s SATA SSD's (with TRIM)?
+Date: Sun, 14 Aug 2011 21:59:55 +0200
+Message-ID: <4E48293B.5050209@stud.tu-ilmenau.de>
+References: <4E43F2C3.9000808@computerix.info> <4E4434A4.7010808@interlog.com> <4E449BB1.3060300@interlog.com> <4E44D348.30003@stud.tu-ilmenau.de> <4E452DC7.7060004@interlog.com>
+Reply-To: stefan.huebner@stud.tu-ilmenau.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wega.rz.tu-ilmenau.de ([141.24.4.159]:36701 "EHLO
+	wega.rz.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755139Ab1HNUAb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2011 16:00:31 -0400
+In-Reply-To: <4E452DC7.7060004@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: "Prof. Dr. Klaus Kusche" <klaus.kusche@computerix.info>, linux-scsi@vger.kernel.org
 
-[NOTE:
- We already have a bug entry for tracking regressions from 3.0:
+Hi Doug,
 
- http://bugzilla.kernel.org/show_bug.cgi?id=3D40982
+that indeed is right - it's kind of a pita and took me some time to mak=
+e
+a well-suited DOS-bootstick for basic hardware initialization...
 
- but there are no reports linked to it, mostly because Maciej is on vac=
-ation,
- but also because the frequency of reporting regressions has been low
- recently.  So, if you're seeing a regression from 3.0, please let us k=
-now.]
+But actually Supermicro.nl at least provides good support and how-to's
+(via mail if you ask support@supermicro.nl).  And there should have bee
+a correct script for flashing from IR to IT (including the erase-option=
+,
+if you took the Supermicro-package).
 
-This message contains a list of some post-2.6.39 regressions introduced=
- before
-3.0, for which there are no fixes in the mainline known to the tracking=
- team.
-If any of them have been fixed already, please let us know.
+Cheers,
+Stefan
 
-If you know of any other unresolved post-2.6.39 regressions, please let=
- us know
-either and we'll add them to the list.  Also, please let us know if any
-of the entries below are invalid.
+Am 12.08.2011 15:42, schrieb Douglas Gilbert:
+> Stefan,
+> My test was done with IT firmware.
+>=20
+> Actually I switched from IR (initiator raid?) to IT
+> (initiator target) firmware in the process of upgrading
+> from 9 to 10. [Wouldn't it be great if someone would
+> hookup these controllers in target mode to the Linux
+> kernel's new target infrastructure.]
+>=20
+> As far as I have seen, most LSI SAS HBAs come with IR
+> firmware on them. Switching IR to IT firmware with
+> their sas2flash tool is a bit of a pain. First sas2flash
+> didn't work on a AMD 64 bit platform (DOS to the rescue),
+> then it refuses to load IT over IR firmware. The latter
+> problem is solved by clearing the flash ("-o -e 6" was
+> the magic for the clear (in the past when I did
+> "-o -e 7" I had to program the controller's SAS address
+> back in by hand)).
+>=20
+> Doug Gilbert
+>=20
+>=20
+> On 11-08-12 03:16 AM, Stefan /*St0fF*/ H=FCbner wrote:
+>> Douglas,
+>>
+>> have you double-checked to use the IT (Initiator Mode) Firmware from
+>> LSI?  I mean we build up systems based on the X8SI6-F mainboard from
+>> Supermicro which has a LSI SAS2008 with 8 Lanes on-board.  If using
+>> HW-RAID (Modes 0, 1, 1E, ...) on those, we have to flash the "IR"
+>> firmware.  If using the chip as HBA for Linux software RAID, we flas=
+h
+>> the "IT" firmware, and if the customer needs HW-RAID5-Support, they =
+get
+>> an extra chip onto the board and we have to flash "iMR" firmware...
+>>
+>> So you have 3 different firmware versions.  IT would be the way to g=
+o
+>> here...
+>>
+>> Greets,
+>> Stefan
+>>
+>> Am 12.08.2011 05:19, schrieb Douglas Gilbert:
+>>> On 11-08-11 03:59 PM, Douglas Gilbert wrote:
+>>>> On 11-08-11 11:18 AM, Prof. Dr. Klaus Kusche wrote:
+>>>>> I'm looking for ways to hook up fast 6 Gb/s SATA SSD's (non-RAID!=
+)
+>>>>> to (server or i-X58) mainboards which do not have native 6 Gb/s S=
+ATA.
+>>>>>
+>>>>>  From the reviews I've read so far, two things became obvious:
+>>>>> * The SSD's I'm looking at really want a working SATA TRIM comman=
+d.
+>>>>> * All the onboard Marvell 88SE9128 (or ASmedia) solutions
+>>>>> seriuosly lack performance, as do PCIe cards based on those chips=
+=2E
+>>>>>
+>>>>> So basically, there seem to be two choices:
+>>>>> 1.) LSI 2008
+>>>>> 2.) Marvell 9485
+>>>>>
+>>>>> 1.) seems to be fast, reliable and well-supported,
+>>>>> but as far as I can tell, it doesn't support TRIM at all:
+>>>>> It neither maps SCSI unmap to SATA TRIM,
+>>>>> nor accepts TRIM as a SATA passthrough command.
+>>>>>
+>>>>> Is that true?
+>>>>
+>>>> What counts in Linux for "trim" support on a SSD (SATA,
+>>>> SAS or FC) is correctly processing the SCSI WRITE SAME (16)
+>>>> with the UNMAP bit set. In the case of a SATA SSD, a SCSI
+>>>> to ATA Translation Layer (SATL) should map that SCSI WRITE
+>>>> SAME (16) with the UNMAP bit set to the ATA DATA SET
+>>>> MANAGEMENT command with the TRIM attribute set.
+>>>>
+>>>> Many Linux SATA low level drivers use libata which
+>>>> implements the above mapping. However some SAS HBAs
+>>>> (e.g. LSI MPT Fusion 3 and 6 Gbps) implement the SATL
+>>>> in their own HBA firmware.
+>>>>
+>>>> I tested a LSI SAS 9212-4i4e HBA running its most recent
+>>>> firmware (9.0 from Feb 26, 2011) with a Intel SSDSA2M080
+>>>> which does support trim. I used my ddpt utility and the
+>>>> SCSI WRITE SAME (16) with the UNMAP bit set was rejected
+>>>> as an "illegal request". With the UNMAP bit clear it
+>>>> accepted the command. I also checked the SCSI UNMAP
+>>>> command and it was also rejected.
+>>>>
+>>>> LSI have some more work to do on their firmware.
+>>>
+>>> I did check the LSI support page for my HBA just before sending
+>>> my original reply. And the version 9 firmware was showing at the
+>>> top of the list. Alas, that page had been alpha sorted on the
+>>> file names so that version 10 of the firmware (May 2011) was
+>>> hiding further down the page :-)
+>>>
+>>> So I installed the newest firmware and redid the above tests.
+>>> Now the SCSI WRITE SAME (16) with the UNMAP bit set works on
+>>> that SSD. The SCSI UNMAP command was rejected and I did not
+>>> test sending the ATA DATA SET MANAGEMENT command through
+>>> the pass-through (but I expect that would work).
+>>>
+>>> So Linux file systems will be able "discard" (=3D"unmap"(SCSI);
+>>> =3D"trim"(ATA)) data using LSI HBAs based the LSI 2008 chip
+>>> which are running recent firmware.
+>>>
+>>> Doug Gilbert
+>>>
+>>>>> I didn't find much about 2.)
+>>>>> * The only cards based on this chip are the HighPoint 27xx,
+>>>>> or did I miss something?
+>>>>> * Running a 27xx with the mvsas driver was reported to have stabi=
+lity
+>>>>> problems or random errors. Are these problems solved?
+>>>>> * Is the 27xx fast (with SATA SSD's&  mvsas driver),
+>>>>> i.e. significantly faster than onboard SATA 3 Gb/s ports?
+>>>>> * Does the 27xx+mvsas support TRIM when connected to SATA drives?
+>>>>>
+>>>>> Are there any other solutions?
+>>>
+>>> --=20
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scs=
+i" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>>
+>=20
 
-Each entry from the list will be sent additionally in an automatic repl=
-y to
-this message with CCs to the people involved in reporting and handling =
-the
-issue.
-
-
-Listed regressions statistics:
-
-  Date          Total  Pending  Unresolved
-  ----------------------------------------
-  2011-08-14       63       22          19
-
-
-Unresolved regressions
-----------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D40282
-Subject		: IP forwarding regression since 3.0-rc6
-Submitter	: Stephan Seitz <stse+lkml-S0d6l+6kcjrOGKtSYHEJQ9HuzzzSOjJt@public.gmane.org>
-Date		: 2011-07-25 12:51 (21 days old)
-Message-ID	: <20110725T141145.GA.2ae38.stse-S0d6l+6kcjrOGKtSYHEJQ9HuzzzSOjJt@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131159880004908&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D40172
-Subject		: lockdep trace from post 3.0.
-Submitter	: Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Date		: 2011-07-24 1:32 (22 days old)
-Message-ID	: <20110724013257.GA6777-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131147120206819&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D40092
-Subject		: RCU stall in linux-3.0.0
-Submitter	: Philip Armstrong <phil-awZZuG094qgqdlJmJB21zg@public.gmane.org>
-Date		: 2011-07-25 21:44 (21 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D40072
-Subject		: suspend/resume problems w/ kernel 3.0 and a *docked* ThinkPa=
-d T400, unless iwlagn unloaded
-Submitter	: Toralf F=C3=B6rster <toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
-Date		: 2011-07-23 19:27 (23 days old)
-Message-ID	: <201107232127.34255.toralf.foerster-Mmb7MZpHnFY@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131144928023465&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39972
-Subject		: [regression] Radeon multi-screen
-Submitter	: Robert Piasek <dagger-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
-Date		: 2011-07-25 14:04 (21 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39922
-Subject		: WIFI becomes EXTREMELY slow ( ath9k ) making the connection =
-unusable
-Submitter	: Lukasz Olszewski <lcpak-tIkWECEXGi3VItvQsEIGlw@public.gmane.org>
-Date		: 2011-07-24 09:20 (22 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39912
-Subject		: WARNING: at drivers/tty/tty_ldisc.c:766 tty_ldisc_reinit+0x7=
-d/0x90()
-Submitter	: Vegard Nossum <vegard.nossum-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-07-19 11:33 (27 days old)
-Message-ID	: <CAOMGZ=3DHS2EPkYD=3D5HfkSPpwPqHB5V3q0vaFmoZ8Hh+pMM9phrQ@m=
-ail.gmail.com>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131107522914558&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39902
-Subject		: ath: Unable to reset channel (2412 MHz), reset status -5
-Submitter	: Justin P. Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-07-19 6:13 (27 days old)
-Message-ID	: <4E252076.1050309-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131105603428323&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39832
-Subject		: HDA ATI HDMI: no sound with 3.0 - 2.6.39.3 works
-Submitter	: Andreas Steinmetz <ast-sy9/ueDX/ME@public.gmane.org>
-Date		: 2011-07-23 01:36 (23 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39732
-Subject		: JBD: Spotted dirty metadata buffer (dev =3D dm-2, blocknr =3D=
- 2512725). There's a risk of filesystem corruption in case of system cr=
-ash.
-Submitter	: Witold Baryluk <baryluk-W6Hso+/wx31C2Nf1M/Lcnw@public.gmane.org>
-Date		: 2011-07-22 04:22 (24 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39412
-Subject		: Win Vista and Win2K8 guests' network breaks down
-Submitter	: Jay Ren <yongjie.ren-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Date		: 2011-07-15 15:31 (31 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39342
-Subject		: [3.0.0-rc6-git7] possible recursive locking at cache_alloc_r=
-efill
-Submitter	: Tetsuo Handa <penguin-kernel-1yMVhJb1mP/7nzcFbJAaVXf5DAMn2ifp@public.gmane.org>
-Date		: 2011-07-11 12:37 (35 days old)
-Message-ID	: <201107112137.FAD00545.SHtLOFOJOMFQFV-JPay3/Yim36HaxMnTkn67Xf5DAMn2ifp@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131038788902151&w=3D=
-2
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39192
-Subject		: firmware_install fails with parallel make
-Submitter	: Ambroz Bizjak <ambrop7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-07-12 09:35 (34 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39132
-Subject		: Starting with 3.0.0-rc6, masquerading seems to be broken.
-Submitter	: David Hill <hilld-HTiBYHdybX7UkGsOFmftXw@public.gmane.org>
-Date		: 2011-07-10 19:45 (36 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D38922
-Subject		: Lenovo T420 (Sandy Bridge) Crashes on SD Card gpt partition =
-writing and io errors on insert
-Submitter	: Peter Vollmer <vollmerpeter-gM/Ye1E23mwN+BqQ9rBEUg@public.gmane.org>
-Date		: 2011-07-07 17:33 (39 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/a3c7778f8153b9e4eceea67=
-38973280b9e63c618
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D38622
-Subject		: [radeon cayman regresion] artefacts on screen
-Submitter	: Marek Hobler, &apos;neutrinus&apos; <kernellist@neutrinus.c=
-om>
-Date		: 2011-07-01 09:35 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D38612
-Subject		: Boot time warnings in APIC
-Submitter	: Bill Huey <bill.huey-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-07-01 06:44 (45 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D38582
-Subject		: T510 43495KG won't resume with 32bit installation
-Submitter	: Marc Koschewski <marc-e1Wt+8K1Ta8ZEwqihLH0+Q@public.gmane.org>
-Date		: 2011-06-30 22:39 (46 days old)
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D37432
-Subject		: sdhci-pci fails on 3.0.0-rc1 on Dell E6510
-Submitter	: Oliver Hartkopp <socketcan-fJ+pQTUTwRTk1uMJSBkQmQ@public.gmane.org>
-Date		: 2011-06-07 20:06 (69 days old)
-=46irst-Bad-Commit: http://git.kernel.org/linus/da7822e5ad71ec9b745b412=
-639f1e5e0ba795a20
-References	: http://article.gmane.org/gmane.linux.kernel.mmc/8442
-		  https://lkml.org/lkml/2011/6/23/660
-
-
-Regressions with patches
-------------------------
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D40062
-Subject		: USB related "unable to handle kernel paging request" in 3.0.=
-0-rc7
-Submitter	: Tino Keitel <tino.keitel-rAwCM5oiXHA@public.gmane.org>
-Date		: 2011-07-22 19:27 (24 days old)
-Message-ID	: <20110722192722.GA9369-dW8JlKMZij8@public.gmane.org>
-References	: http://marc.info/?l=3Dlinux-kernel&m=3D131136334621623&w=3D=
-2
-Patch		: https://lkml.org/lkml/2011/8/2/174
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D39882
-Subject		: Kernel oops when turning bluetooth mouse on
-Submitter	: Lamarque V. Souza <lamarque-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Date		: 2011-07-24 02:09 (22 days old)
-Patch		: https://bugzilla.kernel.org/attachment.cgi?id=3D66632
-
-
-Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D37872
-Subject		: CPU lockup during boot
-Submitter	: Bruno Wolff III <bruno-bdMChIhFSYk@public.gmane.org>
-Date		: 2011-06-19 15:00 (57 days old)
-Patch		: https://bugzilla.kernel.org/show_bug.cgi?id=3D37872#c16
-
-
-=46or details, please visit the bug entries and follow the links given =
-in
-references.
-
-As you can see, there is a Bugzilla entry for each of the listed regres=
-sions.
-There also is a Bugzilla entry used for tracking the regressions introd=
-uced
-between 2.6.39 and 3.0, unresolved as well as resolved, at:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3D36912
-
-Please let the tracking team know if there are any Bugzilla entries tha=
-t
-should be added to the list in there.
-
-Thanks!
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
