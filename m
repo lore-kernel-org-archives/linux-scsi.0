@@ -1,20 +1,27 @@
-From: bmw@info.com
-Subject: AWARDN WINNER RPOMO
-Date: Fri, 12 Aug 2011 06:03:10 -0700
-Message-ID: <20110812130725.03E7262B656@mail.netown.org.tw>
-Reply-To: mr_owens@live.com
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [patch] target: use after free in error handling
+Date: Sun, 14 Aug 2011 22:10:20 +0300
+Message-ID: <20110814191020.GB10560@shale.localdomain>
+References: <20110809123006.GJ7659@shale.localdomain>
+ <1313300165.16439.45.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.netown.org.tw ([61.56.111.66]:52737 "EHLO
-	mail.netown.org.tw" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753541Ab1HNQoz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2011 12:44:55 -0400
-Content-Description: Mail message body
+Received: from mail-pz0-f42.google.com ([209.85.210.42]:51420 "EHLO
+	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754653Ab1HNTMf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Aug 2011 15:12:35 -0400
+Content-Disposition: inline
+In-Reply-To: <1313300165.16439.45.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <bmw@info.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Andy Grover <agrover@redhat.com>, Roland Dreier <roland@kernel.org>, Christoph Hellwig <hch@lst.de>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-Your e-mail won you 750,000.00 pounds in the ongoing BMW Lottery Award without you applying for any draws. Send your Name?.Address?.Mobile
-no?.Occupation?.Sex?.Age?.State?.Country?.To Dr. Owen Simpson via email: yobt@msn.com and Call Phone: (+44)-701-760-2403.?
+Ah yes...  I should have caught the missing goto out.  I hardly feel
+like I deserve the Author tag for this one but I'm always happy to
+take credit for other people's hard work.  Moving up the corporate
+ladder and all that.
+
+regards,
+dan carpenter
