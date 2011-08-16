@@ -1,45 +1,1714 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 05/12] qla2xxx: check for marker IOCB during response queue processing.
-Date: Tue, 16 Aug 2011 11:31:48 -0700
-Message-ID: <1313519515-23122-6-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 01/12] qla2xxx: Add support for ISP82xx to capture dump (minidump) on failure.
+Date: Tue, 16 Aug 2011 11:31:44 -0700
+Message-ID: <1313519515-23122-2-git-send-email-chad.dupuis@qlogic.com>
 References: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:58348 "EHLO
-	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753159Ab1HPSpY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:45:24 -0400
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:50221 "EHLO
+	TX2EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168Ab1HPSp2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:45:28 -0400
 In-Reply-To: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Minidump allows us to catpure a snapshot of the firmware/hardware states at the
+time of failure for further analysis.
+
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   50 ++-
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h  |    9 +-
+ drivers/scsi/qla2xxx/qla_gbl.h  |   14 +
+ drivers/scsi/qla2xxx/qla_init.c |   10 +-
+ drivers/scsi/qla2xxx/qla_mbx.c  |   89 ++++
+ drivers/scsi/qla2xxx/qla_nx.c   |  909 +++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_nx.h   |  254 +++++++++++-
+ drivers/scsi/qla2xxx/qla_os.c   |   27 +-
+ 9 files changed, 1314 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 646fc52..156530f 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2060,6 +2060,11 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
-                 case ELS_IOCB_TYPE:
- 			qla24xx_els_ct_entry(vha, rsp->req, pkt, ELS_IOCB_TYPE);
- 			break;
-+		case MARKER_TYPE:
-+			/* Do nothing in this case, this check is to prevent it
-+			 * from falling into default case
-+			 */
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index a31e05f..df0002f 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -23,11 +23,23 @@ qla2x00_sysfs_read_fw_dump(struct file *filp, struct kobject *kobj,
+ 	struct scsi_qla_host *vha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	struct qla_hw_data *ha = vha->hw;
++	int rval = 0;
+ 
+ 	if (ha->fw_dump_reading == 0)
+ 		return 0;
+ 
+-	return memory_read_from_buffer(buf, count, &off, ha->fw_dump,
++	if (IS_QLA82XX(ha)) {
++		if (off < ha->md_template_size) {
++			rval = memory_read_from_buffer(buf, count,
++			    &off, ha->md_tmplt_hdr, ha->md_template_size);
++			return rval;
++		}
++		off -= ha->md_template_size;
++		rval = memory_read_from_buffer(buf, count,
++		    &off, ha->md_dump, ha->md_dump_size);
++		return rval;
++	} else
++		return memory_read_from_buffer(buf, count, &off, ha->fw_dump,
+ 					ha->fw_dump_len);
+ }
+ 
+@@ -41,12 +53,6 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, struct kobject *kobj,
+ 	struct qla_hw_data *ha = vha->hw;
+ 	int reading;
+ 
+-	if (IS_QLA82XX(ha)) {
+-		ql_dbg(ql_dbg_user, vha, 0x705b,
+-		    "Firmware dump not supported for ISP82xx\n");
+-		return count;
+-	}
+-
+ 	if (off != 0)
+ 		return (0);
+ 
+@@ -59,6 +65,10 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, struct kobject *kobj,
+ 		ql_log(ql_log_info, vha, 0x705d,
+ 		    "Firmware dump cleared on (%ld).\n", vha->host_no);
+ 
++		if (IS_QLA82XX(vha->hw)) {
++			qla82xx_md_free(vha);
++			qla82xx_md_prep(vha);
++		}
+ 		ha->fw_dump_reading = 0;
+ 		ha->fw_dumped = 0;
+ 		break;
+@@ -75,7 +85,26 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, struct kobject *kobj,
+ 		qla2x00_alloc_fw_dump(vha);
+ 		break;
+ 	case 3:
+-		qla2x00_system_error(vha);
++		if (IS_QLA82XX(ha)) {
++			qla82xx_idc_lock(ha);
++			qla82xx_set_reset_owner(vha);
++			qla82xx_idc_unlock(ha);
++		} else
++			qla2x00_system_error(vha);
++		break;
++	case 4:
++		if (IS_QLA82XX(ha)) {
++			if (ha->md_tmplt_hdr)
++				ql_dbg(ql_dbg_user, vha, 0x705b,
++				    "MiniDump supported with this firmware.\n");
++			else
++				ql_dbg(ql_dbg_user, vha, 0x709d,
++				    "MiniDump not supported with this firmware.\n");
++		}
++		break;
++	case 5:
++		if (IS_QLA82XX(ha))
++			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
+ 		break;
+ 	}
+ 	return (count);
+@@ -546,6 +575,11 @@ qla2x00_sysfs_write_reset(struct file *filp, struct kobject *kobj,
+ 
+ 		scsi_block_requests(vha->host);
+ 		set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++		if (IS_QLA82XX(ha)) {
++			qla82xx_idc_lock(ha);
++			qla82xx_set_reset_owner(vha);
++			qla82xx_idc_unlock(ha);
++		}
+ 		qla2xxx_wake_dpc(vha);
+ 		qla2x00_wait_for_chip_reset(vha);
+ 		scsi_unblock_requests(vha->host);
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index d79cd8a..238bc91 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -403,7 +403,7 @@ qla25xx_copy_mq(struct qla_hw_data *ha, void *ptr, uint32_t **last_chain)
+ 	return ptr + sizeof(struct qla2xxx_mq_chain);
+ }
+ 
+-static void
++void
+ qla2xxx_dump_post_process(scsi_qla_host_t *vha, int rval)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index a03eaf4..fcf052c 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2438,7 +2438,8 @@ struct qla_hw_data {
+ 		uint32_t	quiesce_owner:1;
+ 		uint32_t	thermal_supported:1;
+ 		uint32_t	isp82xx_reset_hdlr_active:1;
+-		/* 26 bits */
++		uint32_t	isp82xx_reset_owner:1;
++		/* 28 bits */
+ 	} flags;
+ 
+ 	/* This spinlock is used to protect "io transactions", you must
+@@ -2822,6 +2823,12 @@ struct qla_hw_data {
+ 
+ 	uint8_t fw_type;
+ 	__le32 file_prd_off;	/* File firmware product offset */
++
++	uint32_t	md_template_size;
++	void		*md_tmplt_hdr;
++	dma_addr_t      md_tmplt_hdr_dma;
++	void            *md_dump;
++	uint32_t	md_dump_size;
+ };
+ 
+ /*
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 29b1a3e..df58e24 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -104,6 +104,8 @@ extern int ql2xenablehba_err_chk;
+ extern int ql2xtargetreset;
+ extern int ql2xdontresethba;
+ extern unsigned int ql2xmaxlun;
++extern int ql2xmdcapmask;
++extern int ql2xmdenable;
+ 
+ extern int qla2x00_loop_reset(scsi_qla_host_t *);
+ extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+@@ -442,6 +444,7 @@ extern void qla2x00_dump_buffer_zipped(uint8_t *, uint32_t);
+ extern void ql_dump_regs(uint32_t, scsi_qla_host_t *, int32_t);
+ extern void ql_dump_buffer(uint32_t, scsi_qla_host_t *, int32_t,
+ 	uint8_t *, uint32_t);
++extern void qla2xxx_dump_post_process(scsi_qla_host_t *, int);
+ 
+ /*
+  * Global Function Prototypes in qla_gs.c source file.
+@@ -570,6 +573,7 @@ extern int qla82xx_mbx_intr_disable(scsi_qla_host_t *);
+ extern void qla82xx_start_iocbs(srb_t *);
+ extern int qla82xx_fcoe_ctx_reset(scsi_qla_host_t *);
+ extern void qla82xx_chip_reset_cleanup(scsi_qla_host_t *);
++extern char *qdev_state(uint32_t);
+ 
+ /* BSG related functions */
+ extern int qla24xx_bsg_request(struct fc_bsg_job *);
+@@ -579,4 +583,14 @@ extern int qla2x00_issue_iocb_timeout(scsi_qla_host_t *, void *,
+ 	dma_addr_t, size_t, uint32_t);
+ extern int qla2x00_get_idma_speed(scsi_qla_host_t *, uint16_t,
+ 	uint16_t *, uint16_t *);
++
++/* Minidump related functions */
++extern int qla82xx_md_get_template_size(scsi_qla_host_t *);
++extern int qla82xx_md_get_template(scsi_qla_host_t *);
++extern int qla82xx_md_alloc(scsi_qla_host_t *);
++extern void qla82xx_md_free(scsi_qla_host_t *);
++extern int qla82xx_md_collect(scsi_qla_host_t *);
++extern void qla82xx_md_prep(scsi_qla_host_t *);
++extern void qla82xx_set_reset_owner(scsi_qla_host_t *);
++
+ #endif /* _QLA_GBL_H */
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 37da04d..2375e38 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1503,10 +1503,8 @@ enable_82xx_npiv:
+ 				    &ha->fw_xcb_count, NULL, NULL,
+ 				    &ha->max_npiv_vports, NULL);
+ 
+-				if (!fw_major_version && ql2xallocfwdump) {
+-					if (!IS_QLA82XX(ha))
+-						qla2x00_alloc_fw_dump(vha);
+-				}
++				if (!fw_major_version && ql2xallocfwdump)
++					qla2x00_alloc_fw_dump(vha);
+ 			}
+ 		} else {
+ 			ql_log(ql_log_fatal, vha, 0x00cd,
+@@ -1924,7 +1922,7 @@ qla2x00_fw_ready(scsi_qla_host_t *vha)
+ 					rval = qla84xx_init_chip(vha);
+ 					if (rval != QLA_SUCCESS) {
+ 						ql_log(ql_log_warn,
+-						    vha, 0x8043,
++						    vha, 0x8026,
+ 						    "Init chip failed.\n");
+ 						break;
+ 					}
+@@ -1933,7 +1931,7 @@ qla2x00_fw_ready(scsi_qla_host_t *vha)
+ 					cs84xx_time = jiffies - cs84xx_time;
+ 					wtime += cs84xx_time;
+ 					mtime += cs84xx_time;
+-					ql_dbg(ql_dbg_taskm, vha, 0x8042,
++					ql_dbg(ql_dbg_taskm, vha, 0x8025,
+ 					    "Increasing wait time by %ld. "
+ 					    "New time %ld.\n", cs84xx_time,
+ 					    wtime);
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index f7604ea..a411374 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4186,3 +4186,92 @@ qla82xx_mbx_intr_disable(scsi_qla_host_t *vha)
+ 
+ 	return rval;
+ }
++
++int
++qla82xx_md_get_template_size(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++	int rval = QLA_FUNCTION_FAILED;
++
++	ql_dbg(ql_dbg_mbx, vha, 0x111f, "Entered %s.\n", __func__);
++
++	memset(mcp->mb, 0 , sizeof(mcp->mb));
++	mcp->mb[0] = LSW(MBC_DIAGNOSTIC_MINIDUMP_TEMPLATE);
++	mcp->mb[1] = MSW(MBC_DIAGNOSTIC_MINIDUMP_TEMPLATE);
++	mcp->mb[2] = LSW(RQST_TMPLT_SIZE);
++	mcp->mb[3] = MSW(RQST_TMPLT_SIZE);
++
++	mcp->out_mb = MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_14|MBX_13|MBX_12|MBX_11|MBX_10|MBX_9|MBX_8|
++	    MBX_7|MBX_6|MBX_5|MBX_4|MBX_3|MBX_2|MBX_1|MBX_0;
++
++	mcp->flags = MBX_DMA_OUT|MBX_DMA_IN|IOCTL_CMD;
++	mcp->tov = MBX_TOV_SECONDS;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	/* Always copy back return mailbox values. */
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1120,
++		    "mailbox command FAILED=0x%x, subcode=%x.\n",
++		    (mcp->mb[1] << 16) | mcp->mb[0],
++		    (mcp->mb[3] << 16) | mcp->mb[2]);
++	} else {
++		ql_dbg(ql_dbg_mbx, vha, 0x1121, "Done %s.\n", __func__);
++		ha->md_template_size = ((mcp->mb[3] << 16) | mcp->mb[2]);
++		if (!ha->md_template_size) {
++			ql_dbg(ql_dbg_mbx, vha, 0x1122,
++			    "Null template size obtained.\n");
++			rval = QLA_FUNCTION_FAILED;
++		}
++	}
++	return rval;
++}
++
++int
++qla82xx_md_get_template(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++	int rval = QLA_FUNCTION_FAILED;
++
++	ql_dbg(ql_dbg_mbx, vha, 0x1123, "Entered %s.\n", __func__);
++
++	ha->md_tmplt_hdr = dma_alloc_coherent(&ha->pdev->dev,
++	   ha->md_template_size, &ha->md_tmplt_hdr_dma, GFP_KERNEL);
++	if (!ha->md_tmplt_hdr) {
++		ql_log(ql_log_warn, vha, 0x1124,
++		    "Unable to allocate memory for Minidump template.\n");
++		return rval;
++	}
++
++	memset(mcp->mb, 0 , sizeof(mcp->mb));
++	mcp->mb[0] = LSW(MBC_DIAGNOSTIC_MINIDUMP_TEMPLATE);
++	mcp->mb[1] = MSW(MBC_DIAGNOSTIC_MINIDUMP_TEMPLATE);
++	mcp->mb[2] = LSW(RQST_TMPLT);
++	mcp->mb[3] = MSW(RQST_TMPLT);
++	mcp->mb[4] = LSW(LSD(ha->md_tmplt_hdr_dma));
++	mcp->mb[5] = MSW(LSD(ha->md_tmplt_hdr_dma));
++	mcp->mb[6] = LSW(MSD(ha->md_tmplt_hdr_dma));
++	mcp->mb[7] = MSW(MSD(ha->md_tmplt_hdr_dma));
++	mcp->mb[8] = LSW(ha->md_template_size);
++	mcp->mb[9] = MSW(ha->md_template_size);
++
++	mcp->flags = MBX_DMA_OUT|MBX_DMA_IN|IOCTL_CMD;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->out_mb = MBX_11|MBX_10|MBX_9|MBX_8|
++	    MBX_7|MBX_6|MBX_5|MBX_4|MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_3|MBX_2|MBX_1|MBX_0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1125,
++		    "mailbox command FAILED=0x%x, subcode=%x.\n",
++		    ((mcp->mb[1] << 16) | mcp->mb[0]),
++		    ((mcp->mb[3] << 16) | mcp->mb[2]));
++	} else
++		ql_dbg(ql_dbg_mbx, vha, 0x1126, "Done %s.\n", __func__);
++	return rval;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 049807c..073b84f 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -7,6 +7,7 @@
+ #include "qla_def.h"
+ #include <linux/delay.h>
+ #include <linux/pci.h>
++#include <linux/ratelimit.h>
+ #include <scsi/scsi_tcq.h>
+ 
+ #define MASK(n)			((1ULL<<(n))-1)
+@@ -328,7 +329,7 @@ unsigned qla82xx_crb_hub_agt[64] = {
+ };
+ 
+ /* Device states */
+-char *qdev_state[] = {
++char *q_dev_state[] = {
+ 	 "Unknown",
+ 	"Cold",
+ 	"Initializing",
+@@ -339,6 +340,11 @@ char *qdev_state[] = {
+ 	"Quiescent",
+ };
+ 
++char *qdev_state(uint32_t dev_state)
++{
++	return q_dev_state[dev_state];
++}
++
+ /*
+  * In: 'off' is offset from CRB space in 128M pci map
+  * Out: 'off' is 2M pci map addr
+@@ -2355,9 +2361,13 @@ qla82xx_need_reset(struct qla_hw_data *ha)
+ 	uint32_t drv_state;
+ 	int rval;
+ 
+-	drv_state = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_STATE);
+-	rval = drv_state & (QLA82XX_DRVST_RST_RDY << (ha->portnum * 4));
+-	return rval;
++	if (ha->flags.isp82xx_reset_owner)
++		return 1;
++	else {
++		drv_state = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_STATE);
++		rval = drv_state & (QLA82XX_DRVST_RST_RDY << (ha->portnum * 4));
++		return rval;
++	}
+ }
+ 
+ static inline void
+@@ -2374,8 +2384,8 @@ qla82xx_set_rst_ready(struct qla_hw_data *ha)
+ 		drv_state = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_STATE);
+ 	}
+ 	drv_state |= (QLA82XX_DRVST_RST_RDY << (ha->portnum * 4));
+-	ql_log(ql_log_info, vha, 0x00bb,
+-	    "drv_state = 0x%x.\n", drv_state);
++	ql_dbg(ql_dbg_init, vha, 0x00bb,
++	    "drv_state = 0x%08x.\n", drv_state);
+ 	qla82xx_wr_32(ha, QLA82XX_CRB_DRV_STATE, drv_state);
+ }
+ 
+@@ -3528,7 +3538,7 @@ qla82xx_dev_failed_handler(scsi_qla_host_t *vha)
+ static void
+ qla82xx_need_reset_handler(scsi_qla_host_t *vha)
+ {
+-	uint32_t dev_state, drv_state, drv_active;
++	uint32_t dev_state, drv_state, drv_active, active_mask;
+ 	unsigned long reset_timeout;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct req_que *req = ha->req_q_map[0];
+@@ -3541,15 +3551,32 @@ qla82xx_need_reset_handler(scsi_qla_host_t *vha)
+ 		qla82xx_idc_lock(ha);
+ 	}
+ 
+-	qla82xx_set_rst_ready(ha);
++	drv_active = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_ACTIVE);
++	if (!ha->flags.isp82xx_reset_owner) {
++		ql_dbg(ql_dbg_p3p, vha, 0xb028,
++		    "reset_acknowledged by 0x%x\n", ha->portnum);
++		qla82xx_set_rst_ready(ha);
++	} else {
++		active_mask = ~(QLA82XX_DRV_ACTIVE << (ha->portnum * 4));
++		drv_active &= active_mask;
++		ql_dbg(ql_dbg_p3p, vha, 0xb029,
++		    "active_mask: 0x%08x\n", active_mask);
++	}
+ 
+ 	/* wait for 10 seconds for reset ack from all functions */
+ 	reset_timeout = jiffies + (ha->nx_reset_timeout * HZ);
+ 
+ 	drv_state = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_STATE);
+ 	drv_active = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_ACTIVE);
++	dev_state = qla82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 
+-	while (drv_state != drv_active) {
++	ql_dbg(ql_dbg_p3p, vha, 0xb02a,
++	    "drv_state: 0x%08x, drv_active: 0x%08x, "
++	    "dev_state: 0x%08x, active_mask: 0x%08x\n",
++	    drv_state, drv_active, dev_state, active_mask);
++
++	while (drv_state != drv_active &&
++	    dev_state != QLA82XX_DEV_INITIALIZING) {
+ 		if (time_after_eq(jiffies, reset_timeout)) {
+ 			ql_log(ql_log_warn, vha, 0x00b5,
+ 			    "Reset timeout.\n");
+@@ -3560,22 +3587,78 @@ qla82xx_need_reset_handler(scsi_qla_host_t *vha)
+ 		qla82xx_idc_lock(ha);
+ 		drv_state = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_STATE);
+ 		drv_active = qla82xx_rd_32(ha, QLA82XX_CRB_DRV_ACTIVE);
++		if (ha->flags.isp82xx_reset_owner)
++			drv_active &= active_mask;
++		dev_state = qla82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+ 	}
+ 
+-	dev_state = qla82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
++	ql_dbg(ql_dbg_p3p, vha, 0xb02b,
++	    "drv_state: 0x%08x, drv_active: 0x%08x, "
++	    "dev_state: 0x%08x, active_mask: 0x%08x\n",
++	    drv_state, drv_active, dev_state, active_mask);
++
+ 	ql_log(ql_log_info, vha, 0x00b6,
+ 	    "Device state is 0x%x = %s.\n",
+ 	    dev_state,
+-	    dev_state < MAX_STATES ? qdev_state[dev_state] : "Unknown");
++	    dev_state < MAX_STATES ? qdev_state(dev_state) : "Unknown");
+ 
+ 	/* Force to DEV_COLD unless someone else is starting a reset */
+-	if (dev_state != QLA82XX_DEV_INITIALIZING) {
++	if (dev_state != QLA82XX_DEV_INITIALIZING &&
++	    dev_state != QLA82XX_DEV_COLD) {
+ 		ql_log(ql_log_info, vha, 0x00b7,
+ 		    "HW State: COLD/RE-INIT.\n");
+ 		qla82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE, QLA82XX_DEV_COLD);
++		if (ql2xmdenable) {
++			if (qla82xx_md_collect(vha))
++				ql_log(ql_log_warn, vha, 0xb02c,
++				    "Not able to collect minidump.\n");
++		} else
++			ql_log(ql_log_warn, vha, 0xb04f,
++			    "Minidump disabled.\n");
+ 	}
+ }
+ 
++static void
++qla82xx_check_md_needed(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint16_t fw_major_version, fw_minor_version, fw_subminor_version;
++	uint16_t fw_attributes;
++	uint32_t fw_memory_size, mpi_capabilities;
++	uint8_t	mpi_version[3], phy_version[3];
++
++	if (!ha->fw_dumped) {
++		qla2x00_get_fw_version(vha,
++		    &fw_major_version,
++		    &fw_minor_version,
++		    &fw_subminor_version,
++		    &fw_attributes, &fw_memory_size,
++		    mpi_version, &mpi_capabilities,
++		    phy_version);
++
++		if (fw_major_version != ha->fw_major_version ||
++		    fw_minor_version != ha->fw_minor_version ||
++		    fw_subminor_version != ha->fw_subminor_version) {
++			ql_log(ql_log_info, vha, 0xb02d,
++			    "Firmware version differs "
++			    "Previous version: %d:%d:%d - "
++			    "New version: %d:%d:%d\n",
++			    ha->fw_major_version,
++			    ha->fw_minor_version, ha->fw_subminor_version,
++			    fw_major_version, fw_minor_version,
++			    fw_subminor_version);
++			/* Release MiniDump resources */
++			qla82xx_md_free(vha);
++			/* ALlocate MiniDump resources */
++			qla82xx_md_prep(vha);
++		}
++	} else
++		ql_log(ql_log_info, vha, 0xb02e,
++		    "Firmware dump available to retrieve\n",
++		    vha->host_no);
++}
++
++
+ int
+ qla82xx_check_fw_alive(scsi_qla_host_t *vha)
+ {
+@@ -3637,7 +3720,7 @@ qla82xx_device_state_handler(scsi_qla_host_t *vha)
+ 	ql_log(ql_log_info, vha, 0x009b,
+ 	    "Device state is 0x%x = %s.\n",
+ 	    dev_state,
+-	    dev_state < MAX_STATES ? qdev_state[dev_state] : "Unknown");
++	    dev_state < MAX_STATES ? qdev_state(dev_state) : "Unknown");
+ 
+ 	/* wait for 30 seconds for device to go ready */
+ 	dev_init_timeout = jiffies + (ha->nx_dev_init_timeout * HZ);
+@@ -3659,16 +3742,18 @@ qla82xx_device_state_handler(scsi_qla_host_t *vha)
+ 			ql_log(ql_log_info, vha, 0x009d,
+ 			    "Device state is 0x%x = %s.\n",
+ 			    dev_state,
+-			    dev_state < MAX_STATES ? qdev_state[dev_state] :
++			    dev_state < MAX_STATES ? qdev_state(dev_state) :
+ 			    "Unknown");
+ 		}
+ 
+ 		switch (dev_state) {
+ 		case QLA82XX_DEV_READY:
++			qla82xx_check_md_needed(vha);
++			ha->flags.isp82xx_reset_owner = 0;
+ 			goto exit;
+ 		case QLA82XX_DEV_COLD:
+ 			rval = qla82xx_device_bootstrap(vha);
+-			goto exit;
 +			break;
- 		default:
- 			/* Type Not Supported. */
- 			ql_dbg(ql_dbg_async, vha, 0x5042,
+ 		case QLA82XX_DEV_INITIALIZING:
+ 			qla82xx_idc_unlock(ha);
+ 			msleep(1000);
+@@ -3791,6 +3876,28 @@ int qla82xx_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+ 	return rval;
+ }
+ 
++void
++qla82xx_set_reset_owner(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t dev_state;
++
++	dev_state = qla82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
++	if (dev_state == QLA82XX_DEV_READY) {
++		ql_log(ql_log_info, vha, 0xb02f,
++		    "HW State: NEED RESET\n");
++		qla82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
++			QLA82XX_DEV_NEED_RESET);
++		ha->flags.isp82xx_reset_owner = 1;
++		ql_dbg(ql_dbg_p3p, vha, 0xb030,
++		    "reset_owner is 0x%x\n", ha->portnum);
++	} else
++		ql_log(ql_log_info, vha, 0xb031,
++		    "Device state is 0x%x = %s.\n",
++		    dev_state,
++		    dev_state < MAX_STATES ? qdev_state(dev_state) : "Unknown");
++}
++
+ /*
+  *  qla82xx_abort_isp
+  *      Resets ISP and aborts all outstanding commands.
+@@ -3806,7 +3913,6 @@ qla82xx_abort_isp(scsi_qla_host_t *vha)
+ {
+ 	int rval;
+ 	struct qla_hw_data *ha = vha->hw;
+-	uint32_t dev_state;
+ 
+ 	if (vha->device_flags & DFLG_DEV_FAILED) {
+ 		ql_log(ql_log_warn, vha, 0x8024,
+@@ -3816,16 +3922,7 @@ qla82xx_abort_isp(scsi_qla_host_t *vha)
+ 	ha->flags.isp82xx_reset_hdlr_active = 1;
+ 
+ 	qla82xx_idc_lock(ha);
+-	dev_state = qla82xx_rd_32(ha, QLA82XX_CRB_DEV_STATE);
+-	if (dev_state == QLA82XX_DEV_READY) {
+-		ql_log(ql_log_info, vha, 0x8025,
+-		    "HW State: NEED RESET.\n");
+-		qla82xx_wr_32(ha, QLA82XX_CRB_DEV_STATE,
+-			QLA82XX_DEV_NEED_RESET);
+-	} else
+-		ql_log(ql_log_info, vha, 0x8026,
+-		    "Hw State: %s.\n", dev_state < MAX_STATES ?
+-		    qdev_state[dev_state] : "Unknown");
++	qla82xx_set_reset_owner(vha);
+ 	qla82xx_idc_unlock(ha);
+ 
+ 	rval = qla82xx_device_state_handler(vha);
+@@ -4016,3 +4113,763 @@ qla82xx_chip_reset_cleanup(scsi_qla_host_t *vha)
+ 		}
+ 	}
+ }
++
++/* Minidump related functions */
++int
++qla82xx_md_rw_32(struct qla_hw_data *ha, uint32_t off, u32 data, uint8_t flag)
++{
++	uint32_t  off_value, rval = 0;
++
++	WRT_REG_DWORD((void *)(CRB_WINDOW_2M + ha->nx_pcibase),
++	    (off & 0xFFFF0000));
++
++	/* Read back value to make sure write has gone through */
++	RD_REG_DWORD((void *)(CRB_WINDOW_2M + ha->nx_pcibase));
++	off_value  = (off & 0x0000FFFF);
++
++	if (flag)
++		WRT_REG_DWORD((void *)
++		    (off_value + CRB_INDIRECT_2M + ha->nx_pcibase),
++		    data);
++	else
++		rval = RD_REG_DWORD((void *)
++		    (off_value + CRB_INDIRECT_2M + ha->nx_pcibase));
++
++	return rval;
++}
++
++static int
++qla82xx_minidump_process_control(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct qla82xx_md_entry_crb *crb_entry;
++	uint32_t read_value, opcode, poll_time;
++	uint32_t addr, index, crb_addr;
++	unsigned long wtime;
++	struct qla82xx_md_template_hdr *tmplt_hdr;
++	uint32_t rval = QLA_SUCCESS;
++	int i;
++
++	tmplt_hdr = (struct qla82xx_md_template_hdr *)ha->md_tmplt_hdr;
++	crb_entry = (struct qla82xx_md_entry_crb *)entry_hdr;
++	crb_addr = crb_entry->addr;
++
++	for (i = 0; i < crb_entry->op_count; i++) {
++		opcode = crb_entry->crb_ctrl.opcode;
++		if (opcode & QLA82XX_DBG_OPCODE_WR) {
++			qla82xx_md_rw_32(ha, crb_addr,
++			    crb_entry->value_1, 1);
++			opcode &= ~QLA82XX_DBG_OPCODE_WR;
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_RW) {
++			read_value = qla82xx_md_rw_32(ha, crb_addr, 0, 0);
++			qla82xx_md_rw_32(ha, crb_addr, read_value, 1);
++			opcode &= ~QLA82XX_DBG_OPCODE_RW;
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_AND) {
++			read_value = qla82xx_md_rw_32(ha, crb_addr, 0, 0);
++			read_value &= crb_entry->value_2;
++			opcode &= ~QLA82XX_DBG_OPCODE_AND;
++			if (opcode & QLA82XX_DBG_OPCODE_OR) {
++				read_value |= crb_entry->value_3;
++				opcode &= ~QLA82XX_DBG_OPCODE_OR;
++			}
++			qla82xx_md_rw_32(ha, crb_addr, read_value, 1);
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_OR) {
++			read_value = qla82xx_md_rw_32(ha, crb_addr, 0, 0);
++			read_value |= crb_entry->value_3;
++			qla82xx_md_rw_32(ha, crb_addr, read_value, 1);
++			opcode &= ~QLA82XX_DBG_OPCODE_OR;
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_POLL) {
++			poll_time = crb_entry->crb_strd.poll_timeout;
++			wtime = jiffies + poll_time;
++			read_value = qla82xx_md_rw_32(ha, crb_addr, 0, 0);
++
++			do {
++				if ((read_value & crb_entry->value_2)
++				    == crb_entry->value_1)
++					break;
++				else if (time_after_eq(jiffies, wtime)) {
++					/* capturing dump failed */
++					rval = QLA_FUNCTION_FAILED;
++					break;
++				} else
++					read_value = qla82xx_md_rw_32(ha,
++					    crb_addr, 0, 0);
++			} while (1);
++			opcode &= ~QLA82XX_DBG_OPCODE_POLL;
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_RDSTATE) {
++			if (crb_entry->crb_strd.state_index_a) {
++				index = crb_entry->crb_strd.state_index_a;
++				addr = tmplt_hdr->saved_state_array[index];
++			} else
++				addr = crb_addr;
++
++			read_value = qla82xx_md_rw_32(ha, addr, 0, 0);
++			index = crb_entry->crb_ctrl.state_index_v;
++			tmplt_hdr->saved_state_array[index] = read_value;
++			opcode &= ~QLA82XX_DBG_OPCODE_RDSTATE;
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_WRSTATE) {
++			if (crb_entry->crb_strd.state_index_a) {
++				index = crb_entry->crb_strd.state_index_a;
++				addr = tmplt_hdr->saved_state_array[index];
++			} else
++				addr = crb_addr;
++
++			if (crb_entry->crb_ctrl.state_index_v) {
++				index = crb_entry->crb_ctrl.state_index_v;
++				read_value =
++				    tmplt_hdr->saved_state_array[index];
++			} else
++				read_value = crb_entry->value_1;
++
++			qla82xx_md_rw_32(ha, addr, read_value, 1);
++			opcode &= ~QLA82XX_DBG_OPCODE_WRSTATE;
++		}
++
++		if (opcode & QLA82XX_DBG_OPCODE_MDSTATE) {
++			index = crb_entry->crb_ctrl.state_index_v;
++			read_value = tmplt_hdr->saved_state_array[index];
++			read_value <<= crb_entry->crb_ctrl.shl;
++			read_value >>= crb_entry->crb_ctrl.shr;
++			if (crb_entry->value_2)
++				read_value &= crb_entry->value_2;
++			read_value |= crb_entry->value_3;
++			read_value += crb_entry->value_1;
++			tmplt_hdr->saved_state_array[index] = read_value;
++			opcode &= ~QLA82XX_DBG_OPCODE_MDSTATE;
++		}
++		crb_addr += crb_entry->crb_strd.addr_stride;
++	}
++	return rval;
++}
++
++static void
++qla82xx_minidump_process_rdocm(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t r_addr, r_stride, loop_cnt, i, r_value;
++	struct qla82xx_md_entry_rdocm *ocm_hdr;
++	uint32_t *data_ptr = *d_ptr;
++
++	ocm_hdr = (struct qla82xx_md_entry_rdocm *)entry_hdr;
++	r_addr = ocm_hdr->read_addr;
++	r_stride = ocm_hdr->read_addr_stride;
++	loop_cnt = ocm_hdr->op_count;
++
++	for (i = 0; i < loop_cnt; i++) {
++		r_value = RD_REG_DWORD((void *)(r_addr + ha->nx_pcibase));
++		*data_ptr++ = cpu_to_le32(r_value);
++		r_addr += r_stride;
++	}
++	*d_ptr = data_ptr;
++}
++
++static void
++qla82xx_minidump_process_rdmux(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t r_addr, s_stride, s_addr, s_value, loop_cnt, i, r_value;
++	struct qla82xx_md_entry_mux *mux_hdr;
++	uint32_t *data_ptr = *d_ptr;
++
++	mux_hdr = (struct qla82xx_md_entry_mux *)entry_hdr;
++	r_addr = mux_hdr->read_addr;
++	s_addr = mux_hdr->select_addr;
++	s_stride = mux_hdr->select_value_stride;
++	s_value = mux_hdr->select_value;
++	loop_cnt = mux_hdr->op_count;
++
++	for (i = 0; i < loop_cnt; i++) {
++		qla82xx_md_rw_32(ha, s_addr, s_value, 1);
++		r_value = qla82xx_md_rw_32(ha, r_addr, 0, 0);
++		*data_ptr++ = cpu_to_le32(s_value);
++		*data_ptr++ = cpu_to_le32(r_value);
++		s_value += s_stride;
++	}
++	*d_ptr = data_ptr;
++}
++
++static void
++qla82xx_minidump_process_rdcrb(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t r_addr, r_stride, loop_cnt, i, r_value;
++	struct qla82xx_md_entry_crb *crb_hdr;
++	uint32_t *data_ptr = *d_ptr;
++
++	crb_hdr = (struct qla82xx_md_entry_crb *)entry_hdr;
++	r_addr = crb_hdr->addr;
++	r_stride = crb_hdr->crb_strd.addr_stride;
++	loop_cnt = crb_hdr->op_count;
++
++	for (i = 0; i < loop_cnt; i++) {
++		r_value = qla82xx_md_rw_32(ha, r_addr, 0, 0);
++		*data_ptr++ = cpu_to_le32(r_addr);
++		*data_ptr++ = cpu_to_le32(r_value);
++		r_addr += r_stride;
++	}
++	*d_ptr = data_ptr;
++}
++
++static int
++qla82xx_minidump_process_l2tag(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t addr, r_addr, c_addr, t_r_addr;
++	uint32_t i, k, loop_count, t_value, r_cnt, r_value;
++	unsigned long p_wait, w_time, p_mask;
++	uint32_t c_value_w, c_value_r;
++	struct qla82xx_md_entry_cache *cache_hdr;
++	int rval = QLA_FUNCTION_FAILED;
++	uint32_t *data_ptr = *d_ptr;
++
++	cache_hdr = (struct qla82xx_md_entry_cache *)entry_hdr;
++	loop_count = cache_hdr->op_count;
++	r_addr = cache_hdr->read_addr;
++	c_addr = cache_hdr->control_addr;
++	c_value_w = cache_hdr->cache_ctrl.write_value;
++
++	t_r_addr = cache_hdr->tag_reg_addr;
++	t_value = cache_hdr->addr_ctrl.init_tag_value;
++	r_cnt = cache_hdr->read_ctrl.read_addr_cnt;
++	p_wait = cache_hdr->cache_ctrl.poll_wait;
++	p_mask = cache_hdr->cache_ctrl.poll_mask;
++
++	for (i = 0; i < loop_count; i++) {
++		qla82xx_md_rw_32(ha, t_r_addr, t_value, 1);
++		if (c_value_w)
++			qla82xx_md_rw_32(ha, c_addr, c_value_w, 1);
++
++		if (p_mask) {
++			w_time = jiffies + p_wait;
++			do {
++				c_value_r = qla82xx_md_rw_32(ha, c_addr, 0, 0);
++				if ((c_value_r & p_mask) == 0)
++					break;
++				else if (time_after_eq(jiffies, w_time)) {
++					/* capturing dump failed */
++					ql_dbg(ql_dbg_p3p, vha, 0xb032,
++					    "c_value_r: 0x%x, poll_mask: 0x%lx, "
++					    "w_time: 0x%lx\n",
++					    c_value_r, p_mask, w_time);
++					return rval;
++				}
++			} while (1);
++		}
++
++		addr = r_addr;
++		for (k = 0; k < r_cnt; k++) {
++			r_value = qla82xx_md_rw_32(ha, addr, 0, 0);
++			*data_ptr++ = cpu_to_le32(r_value);
++			addr += cache_hdr->read_ctrl.read_addr_stride;
++		}
++		t_value += cache_hdr->addr_ctrl.tag_value_stride;
++	}
++	*d_ptr = data_ptr;
++	return QLA_SUCCESS;
++}
++
++static void
++qla82xx_minidump_process_l1cache(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t addr, r_addr, c_addr, t_r_addr;
++	uint32_t i, k, loop_count, t_value, r_cnt, r_value;
++	uint32_t c_value_w;
++	struct qla82xx_md_entry_cache *cache_hdr;
++	uint32_t *data_ptr = *d_ptr;
++
++	cache_hdr = (struct qla82xx_md_entry_cache *)entry_hdr;
++	loop_count = cache_hdr->op_count;
++	r_addr = cache_hdr->read_addr;
++	c_addr = cache_hdr->control_addr;
++	c_value_w = cache_hdr->cache_ctrl.write_value;
++
++	t_r_addr = cache_hdr->tag_reg_addr;
++	t_value = cache_hdr->addr_ctrl.init_tag_value;
++	r_cnt = cache_hdr->read_ctrl.read_addr_cnt;
++
++	for (i = 0; i < loop_count; i++) {
++		qla82xx_md_rw_32(ha, t_r_addr, t_value, 1);
++		qla82xx_md_rw_32(ha, c_addr, c_value_w, 1);
++		addr = r_addr;
++		for (k = 0; k < r_cnt; k++) {
++			r_value = qla82xx_md_rw_32(ha, addr, 0, 0);
++			*data_ptr++ = cpu_to_le32(r_value);
++			addr += cache_hdr->read_ctrl.read_addr_stride;
++		}
++		t_value += cache_hdr->addr_ctrl.tag_value_stride;
++	}
++	*d_ptr = data_ptr;
++}
++
++static void
++qla82xx_minidump_process_queue(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t s_addr, r_addr;
++	uint32_t r_stride, r_value, r_cnt, qid = 0;
++	uint32_t i, k, loop_cnt;
++	struct qla82xx_md_entry_queue *q_hdr;
++	uint32_t *data_ptr = *d_ptr;
++
++	q_hdr = (struct qla82xx_md_entry_queue *)entry_hdr;
++	s_addr = q_hdr->select_addr;
++	r_cnt = q_hdr->rd_strd.read_addr_cnt;
++	r_stride = q_hdr->rd_strd.read_addr_stride;
++	loop_cnt = q_hdr->op_count;
++
++	for (i = 0; i < loop_cnt; i++) {
++		qla82xx_md_rw_32(ha, s_addr, qid, 1);
++		r_addr = q_hdr->read_addr;
++		for (k = 0; k < r_cnt; k++) {
++			r_value = qla82xx_md_rw_32(ha, r_addr, 0, 0);
++			*data_ptr++ = cpu_to_le32(r_value);
++			r_addr += r_stride;
++		}
++		qid += q_hdr->q_strd.queue_id_stride;
++	}
++	*d_ptr = data_ptr;
++}
++
++static void
++qla82xx_minidump_process_rdrom(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t r_addr, r_value;
++	uint32_t i, loop_cnt;
++	struct qla82xx_md_entry_rdrom *rom_hdr;
++	uint32_t *data_ptr = *d_ptr;
++
++	rom_hdr = (struct qla82xx_md_entry_rdrom *)entry_hdr;
++	r_addr = rom_hdr->read_addr;
++	loop_cnt = rom_hdr->read_data_size/sizeof(uint32_t);
++
++	for (i = 0; i < loop_cnt; i++) {
++		qla82xx_md_rw_32(ha, MD_DIRECT_ROM_WINDOW,
++		    (r_addr & 0xFFFF0000), 1);
++		r_value = qla82xx_md_rw_32(ha,
++		    MD_DIRECT_ROM_READ_BASE +
++		    (r_addr & 0x0000FFFF), 0, 0);
++		*data_ptr++ = cpu_to_le32(r_value);
++		r_addr += sizeof(uint32_t);
++	}
++	*d_ptr = data_ptr;
++}
++
++static int
++qla82xx_minidump_process_rdmem(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, uint32_t **d_ptr)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint32_t r_addr, r_value, r_data;
++	uint32_t i, j, loop_cnt;
++	struct qla82xx_md_entry_rdmem *m_hdr;
++	unsigned long flags;
++	int rval = QLA_FUNCTION_FAILED;
++	uint32_t *data_ptr = *d_ptr;
++
++	m_hdr = (struct qla82xx_md_entry_rdmem *)entry_hdr;
++	r_addr = m_hdr->read_addr;
++	loop_cnt = m_hdr->read_data_size/16;
++
++	if (r_addr & 0xf) {
++		ql_log(ql_log_warn, vha, 0xb033,
++		    "Read addr 0x%x not 16 bytes alligned\n", r_addr);
++		return rval;
++	}
++
++	if (m_hdr->read_data_size % 16) {
++		ql_log(ql_log_warn, vha, 0xb034,
++		    "Read data[0x%x] not multiple of 16 bytes\n",
++		    m_hdr->read_data_size);
++		return rval;
++	}
++
++	ql_dbg(ql_dbg_p3p, vha, 0xb035,
++	    "[%s]: rdmem_addr: 0x%x, read_data_size: 0x%x, loop_cnt: 0x%x\n",
++	    __func__, r_addr, m_hdr->read_data_size, loop_cnt);
++
++	write_lock_irqsave(&ha->hw_lock, flags);
++	for (i = 0; i < loop_cnt; i++) {
++		qla82xx_md_rw_32(ha, MD_MIU_TEST_AGT_ADDR_LO, r_addr, 1);
++		r_value = 0;
++		qla82xx_md_rw_32(ha, MD_MIU_TEST_AGT_ADDR_HI, r_value, 1);
++		r_value = MIU_TA_CTL_ENABLE;
++		qla82xx_md_rw_32(ha, MD_MIU_TEST_AGT_CTRL, r_value, 1);
++		r_value = MIU_TA_CTL_START | MIU_TA_CTL_ENABLE;
++		qla82xx_md_rw_32(ha, MD_MIU_TEST_AGT_CTRL, r_value, 1);
++
++		for (j = 0; j < MAX_CTL_CHECK; j++) {
++			r_value = qla82xx_md_rw_32(ha,
++			    MD_MIU_TEST_AGT_CTRL, 0, 0);
++			if ((r_value & MIU_TA_CTL_BUSY) == 0)
++				break;
++		}
++
++		if (j >= MAX_CTL_CHECK) {
++			printk_ratelimited(KERN_ERR
++			    "failed to read through agent\n");
++			write_unlock_irqrestore(&ha->hw_lock, flags);
++			return rval;
++		}
++
++		for (j = 0; j < 4; j++) {
++			r_data = qla82xx_md_rw_32(ha,
++			    MD_MIU_TEST_AGT_RDDATA[j], 0, 0);
++			*data_ptr++ = cpu_to_le32(r_data);
++		}
++		r_addr += 16;
++	}
++	write_unlock_irqrestore(&ha->hw_lock, flags);
++	*d_ptr = data_ptr;
++	return QLA_SUCCESS;
++}
++
++static int
++qla82xx_validate_template_chksum(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	uint64_t chksum = 0;
++	uint32_t *d_ptr = (uint32_t *)ha->md_tmplt_hdr;
++	int count = ha->md_template_size/sizeof(uint32_t);
++
++	while (count-- > 0)
++		chksum += *d_ptr++;
++	while (chksum >> 32)
++		chksum = (chksum & 0xFFFFFFFF) + (chksum >> 32);
++	return ~chksum;
++}
++
++static void
++qla82xx_mark_entry_skipped(scsi_qla_host_t *vha,
++	qla82xx_md_entry_hdr_t *entry_hdr, int index)
++{
++	entry_hdr->d_ctrl.driver_flags |= QLA82XX_DBG_SKIPPED_FLAG;
++	ql_dbg(ql_dbg_p3p, vha, 0xb036,
++	    "Skipping entry[%d]: "
++	    "ETYPE[0x%x]-ELEVEL[0x%x]\n",
++	    index, entry_hdr->entry_type,
++	    entry_hdr->d_ctrl.entry_capture_mask);
++}
++
++int
++qla82xx_md_collect(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	int no_entry_hdr = 0;
++	qla82xx_md_entry_hdr_t *entry_hdr;
++	struct qla82xx_md_template_hdr *tmplt_hdr;
++	uint32_t *data_ptr;
++	uint32_t total_data_size = 0, f_capture_mask, data_collected = 0;
++	int i = 0, rval = QLA_FUNCTION_FAILED;
++
++	tmplt_hdr = (struct qla82xx_md_template_hdr *)ha->md_tmplt_hdr;
++	data_ptr = (uint32_t *)ha->md_dump;
++
++	if (ha->fw_dumped) {
++		ql_log(ql_log_info, vha, 0xb037,
++		    "Firmware dump available to retrive\n");
++		goto md_failed;
++	}
++
++	ha->fw_dumped = 0;
++
++	if (!ha->md_tmplt_hdr || !ha->md_dump) {
++		ql_log(ql_log_warn, vha, 0xb038,
++		    "Memory not allocated for minidump capture\n");
++		goto md_failed;
++	}
++
++	if (qla82xx_validate_template_chksum(vha)) {
++		ql_log(ql_log_info, vha, 0xb039,
++		    "Template checksum validation error\n");
++		goto md_failed;
++	}
++
++	no_entry_hdr = tmplt_hdr->num_of_entries;
++	ql_dbg(ql_dbg_p3p, vha, 0xb03a,
++	    "No of entry headers in Template: 0x%x\n", no_entry_hdr);
++
++	ql_dbg(ql_dbg_p3p, vha, 0xb03b,
++	    "Capture Mask obtained: 0x%x\n", tmplt_hdr->capture_debug_level);
++
++	f_capture_mask = tmplt_hdr->capture_debug_level & 0xFF;
++
++	/* Validate whether required debug level is set */
++	if ((f_capture_mask & 0x3) != 0x3) {
++		ql_log(ql_log_warn, vha, 0xb03c,
++		    "Minimum required capture mask[0x%x] level not set\n",
++		    f_capture_mask);
++		goto md_failed;
++	}
++	tmplt_hdr->driver_capture_mask = ql2xmdcapmask;
++
++	tmplt_hdr->driver_info[0] = vha->host_no;
++	tmplt_hdr->driver_info[1] = (QLA_DRIVER_MAJOR_VER << 24) |
++	    (QLA_DRIVER_MINOR_VER << 16) | (QLA_DRIVER_PATCH_VER << 8) |
++	    QLA_DRIVER_BETA_VER;
++
++	total_data_size = ha->md_dump_size;
++
++	ql_dbg(ql_log_info, vha, 0xb03d,
++	    "Total minidump data_size 0x%x to be captured\n", total_data_size);
++
++	/* Check whether template obtained is valid */
++	if (tmplt_hdr->entry_type != QLA82XX_TLHDR) {
++		ql_log(ql_log_warn, vha, 0xb04e,
++		    "Bad template header entry type: 0x%x obtained\n",
++		    tmplt_hdr->entry_type);
++		goto md_failed;
++	}
++
++	entry_hdr = (qla82xx_md_entry_hdr_t *) \
++	    (((uint8_t *)ha->md_tmplt_hdr) + tmplt_hdr->first_entry_offset);
++
++	/* Walk through the entry headers */
++	for (i = 0; i < no_entry_hdr; i++) {
++
++		if (data_collected > total_data_size) {
++			ql_log(ql_log_warn, vha, 0xb03e,
++			    "More MiniDump data collected: [0x%x]\n",
++			    data_collected);
++			goto md_failed;
++		}
++
++		if (!(entry_hdr->d_ctrl.entry_capture_mask &
++		    ql2xmdcapmask)) {
++			entry_hdr->d_ctrl.driver_flags |=
++			    QLA82XX_DBG_SKIPPED_FLAG;
++			ql_dbg(ql_dbg_p3p, vha, 0xb03f,
++			    "Skipping entry[%d]: "
++			    "ETYPE[0x%x]-ELEVEL[0x%x]\n",
++			    i, entry_hdr->entry_type,
++			    entry_hdr->d_ctrl.entry_capture_mask);
++			goto skip_nxt_entry;
++		}
++
++		ql_dbg(ql_dbg_p3p, vha, 0xb040,
++		    "[%s]: data ptr[%d]: %p, entry_hdr: %p\n"
++		    "entry_type: 0x%x, captrue_mask: 0x%x\n",
++		    __func__, i, data_ptr, entry_hdr,
++		    entry_hdr->entry_type,
++		    entry_hdr->d_ctrl.entry_capture_mask);
++
++		ql_dbg(ql_dbg_p3p, vha, 0xb041,
++		    "Data collected: [0x%x], Dump size left:[0x%x]\n",
++		    data_collected, (ha->md_dump_size - data_collected));
++
++		/* Decode the entry type and take
++		 * required action to capture debug data */
++		switch (entry_hdr->entry_type) {
++		case QLA82XX_RDEND:
++			qla82xx_mark_entry_skipped(vha, entry_hdr, i);
++			break;
++		case QLA82XX_CNTRL:
++			rval = qla82xx_minidump_process_control(vha,
++			    entry_hdr, &data_ptr);
++			if (rval != QLA_SUCCESS) {
++				qla82xx_mark_entry_skipped(vha, entry_hdr, i);
++				goto md_failed;
++			}
++			break;
++		case QLA82XX_RDCRB:
++			qla82xx_minidump_process_rdcrb(vha,
++			    entry_hdr, &data_ptr);
++			break;
++		case QLA82XX_RDMEM:
++			rval = qla82xx_minidump_process_rdmem(vha,
++			    entry_hdr, &data_ptr);
++			if (rval != QLA_SUCCESS) {
++				qla82xx_mark_entry_skipped(vha, entry_hdr, i);
++				goto md_failed;
++			}
++			break;
++		case QLA82XX_BOARD:
++		case QLA82XX_RDROM:
++			qla82xx_minidump_process_rdrom(vha,
++			    entry_hdr, &data_ptr);
++			break;
++		case QLA82XX_L2DTG:
++		case QLA82XX_L2ITG:
++		case QLA82XX_L2DAT:
++		case QLA82XX_L2INS:
++			rval = qla82xx_minidump_process_l2tag(vha,
++			    entry_hdr, &data_ptr);
++			if (rval != QLA_SUCCESS) {
++				qla82xx_mark_entry_skipped(vha, entry_hdr, i);
++				goto md_failed;
++			}
++			break;
++		case QLA82XX_L1DAT:
++		case QLA82XX_L1INS:
++			qla82xx_minidump_process_l1cache(vha,
++			    entry_hdr, &data_ptr);
++			break;
++		case QLA82XX_RDOCM:
++			qla82xx_minidump_process_rdocm(vha,
++			    entry_hdr, &data_ptr);
++			break;
++		case QLA82XX_RDMUX:
++			qla82xx_minidump_process_rdmux(vha,
++			    entry_hdr, &data_ptr);
++			break;
++		case QLA82XX_QUEUE:
++			qla82xx_minidump_process_queue(vha,
++			    entry_hdr, &data_ptr);
++			break;
++		case QLA82XX_RDNOP:
++		default:
++			qla82xx_mark_entry_skipped(vha, entry_hdr, i);
++			break;
++		}
++
++		ql_dbg(ql_dbg_p3p, vha, 0xb042,
++		    "[%s]: data ptr[%d]: %p\n", __func__, i, data_ptr);
++
++		data_collected = (uint8_t *)data_ptr -
++		    (uint8_t *)ha->md_dump;
++skip_nxt_entry:
++		entry_hdr = (qla82xx_md_entry_hdr_t *) \
++		    (((uint8_t *)entry_hdr) + entry_hdr->entry_size);
++	}
++
++	if (data_collected != total_data_size) {
++		ql_dbg(ql_log_warn, vha, 0xb043,
++		    "MiniDump data mismatch: Data collected: [0x%x],"
++		    "total_data_size:[0x%x]\n",
++		    data_collected, total_data_size);
++		goto md_failed;
++	}
++
++	ql_log(ql_log_info, vha, 0xb044,
++	    "Firmware dump saved to temp buffer (%ld/%p %ld/%p).\n",
++	    vha->host_no, ha->md_tmplt_hdr, vha->host_no, ha->md_dump);
++	ha->fw_dumped = 1;
++	qla2x00_post_uevent_work(vha, QLA_UEVENT_CODE_FW_DUMP);
++
++md_failed:
++	return rval;
++}
++
++int
++qla82xx_md_alloc(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	int i, k;
++	struct qla82xx_md_template_hdr *tmplt_hdr;
++
++	tmplt_hdr = (struct qla82xx_md_template_hdr *)ha->md_tmplt_hdr;
++
++	if (ql2xmdcapmask < 0x3 || ql2xmdcapmask > 0x7F) {
++		ql2xmdcapmask = tmplt_hdr->capture_debug_level & 0xFF;
++		ql_log(ql_log_info, vha, 0xb045,
++		    "Forcing driver capture mask to firmware default capture mask: 0x%x.\n",
++		    ql2xmdcapmask);
++	}
++
++	for (i = 0x2, k = 1; (i & QLA82XX_DEFAULT_CAP_MASK); i <<= 1, k++) {
++		if (i & ql2xmdcapmask)
++			ha->md_dump_size += tmplt_hdr->capture_size_array[k];
++	}
++
++	if (ha->md_dump) {
++		ql_log(ql_log_warn, vha, 0xb046,
++		    "Firmware dump previously allocated.\n");
++		return 1;
++	}
++
++	ha->md_dump = vmalloc(ha->md_dump_size);
++	if (ha->md_dump == NULL) {
++		ql_log(ql_log_warn, vha, 0xb047,
++		    "Unable to allocate memory for Minidump size "
++		    "(0x%x).\n", ha->md_dump_size);
++		return 1;
++	}
++	return 0;
++}
++
++void
++qla82xx_md_free(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++
++	/* Release the template header allocated */
++	if (ha->md_tmplt_hdr) {
++		ql_log(ql_log_info, vha, 0xb048,
++		    "Free MiniDump template: %p, size (%d KB)\n",
++		    ha->md_tmplt_hdr, ha->md_template_size / 1024);
++		dma_free_coherent(&ha->pdev->dev, ha->md_template_size,
++		    ha->md_tmplt_hdr, ha->md_tmplt_hdr_dma);
++		ha->md_tmplt_hdr = 0;
++	}
++
++	/* Release the template data buffer allocated */
++	if (ha->md_dump) {
++		ql_log(ql_log_info, vha, 0xb049,
++		    "Free MiniDump memory: %p, size (%d KB)\n",
++		    ha->md_dump, ha->md_dump_size / 1024);
++		vfree(ha->md_dump);
++		ha->md_dump_size = 0;
++		ha->md_dump = 0;
++	}
++}
++
++void
++qla82xx_md_prep(scsi_qla_host_t *vha)
++{
++	struct qla_hw_data *ha = vha->hw;
++	int rval;
++
++	/* Get Minidump template size */
++	rval = qla82xx_md_get_template_size(vha);
++	if (rval == QLA_SUCCESS) {
++		ql_log(ql_log_info, vha, 0xb04a,
++		    "MiniDump Template size obtained (%d KB)\n",
++		    ha->md_template_size / 1024);
++
++		/* Get Minidump template */
++		rval = qla82xx_md_get_template(vha);
++		if (rval == QLA_SUCCESS) {
++			ql_dbg(ql_dbg_p3p, vha, 0xb04b,
++			    "MiniDump Template obtained\n");
++
++			/* Allocate memory for minidump */
++			rval = qla82xx_md_alloc(vha);
++			if (rval == QLA_SUCCESS)
++				ql_log(ql_log_info, vha, 0xb04c,
++				    "MiniDump memory allocated (%d KB)\n",
++				    ha->md_dump_size / 1024);
++			else {
++				ql_log(ql_log_info, vha, 0xb04d,
++				    "Free MiniDump template: %p, size: (%d KB)\n",
++				    ha->md_tmplt_hdr,
++				    ha->md_template_size / 1024);
++				dma_free_coherent(&ha->pdev->dev,
++				    ha->md_template_size,
++				    ha->md_tmplt_hdr, ha->md_tmplt_hdr_dma);
++				ha->md_tmplt_hdr = 0;
++			}
++
++		}
++	}
++}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index 8a21832..97ee250 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -484,8 +484,6 @@
+ #define QLA82XX_ADDR_OCM1		(0x0000000200400000ULL)
+ #define QLA82XX_ADDR_OCM1_MAX		(0x00000002004fffffULL)
+ #define QLA82XX_ADDR_QDR_NET		(0x0000000300000000ULL)
+-
+-#define QLA82XX_P2_ADDR_QDR_NET_MAX	(0x00000003001fffffULL)
+ #define QLA82XX_P3_ADDR_QDR_NET_MAX	(0x0000000303ffffffULL)
+ 
+ #define QLA82XX_PCI_CRBSPACE		(unsigned long)0x06000000
+@@ -922,4 +920,256 @@ struct ct6_dsd {
+ #define M25P_INSTR_DP		0xb9
+ #define M25P_INSTR_RES		0xab
+ 
++/* Minidump related */
++
++/*
++ * Version of the template
++ * 4 Bytes
++ * X.Major.Minor.RELEASE
++ */
++#define QLA82XX_MINIDUMP_VERSION         0x10101
++
++/*
++ * Entry Type Defines
++ */
++#define QLA82XX_RDNOP                   0
++#define QLA82XX_RDCRB                   1
++#define QLA82XX_RDMUX                   2
++#define QLA82XX_QUEUE                   3
++#define QLA82XX_BOARD                   4
++#define QLA82XX_RDSRE                   5
++#define QLA82XX_RDOCM                   6
++#define QLA82XX_CACHE                  10
++#define QLA82XX_L1DAT                  11
++#define QLA82XX_L1INS                  12
++#define QLA82XX_L2DTG                  21
++#define QLA82XX_L2ITG                  22
++#define QLA82XX_L2DAT                  23
++#define QLA82XX_L2INS                  24
++#define QLA82XX_RDROM                  71
++#define QLA82XX_RDMEM                  72
++#define QLA82XX_CNTRL                  98
++#define QLA82XX_TLHDR                  99
++#define QLA82XX_RDEND                  255
++
++/*
++ * Opcodes for Control Entries.
++ * These Flags are bit fields.
++ */
++#define QLA82XX_DBG_OPCODE_WR        0x01
++#define QLA82XX_DBG_OPCODE_RW        0x02
++#define QLA82XX_DBG_OPCODE_AND       0x04
++#define QLA82XX_DBG_OPCODE_OR        0x08
++#define QLA82XX_DBG_OPCODE_POLL      0x10
++#define QLA82XX_DBG_OPCODE_RDSTATE   0x20
++#define QLA82XX_DBG_OPCODE_WRSTATE   0x40
++#define QLA82XX_DBG_OPCODE_MDSTATE   0x80
++
++/*
++ * Template Header and Entry Header definitions start here.
++ */
++
++/*
++ * Template Header
++ * Parts of the template header can be modified by the driver.
++ * These include the saved_state_array, capture_debug_level, driver_timestamp
++ */
++
++#define QLA82XX_DBG_STATE_ARRAY_LEN        16
++#define QLA82XX_DBG_CAP_SIZE_ARRAY_LEN     8
++#define QLA82XX_DBG_RSVD_ARRAY_LEN         8
++
++/*
++ * Driver Flags
++ */
++#define QLA82XX_DBG_SKIPPED_FLAG	0x80	/* driver skipped this entry */
++#define	QLA82XX_DEFAULT_CAP_MASK	0xFF	/* default capture mask */
++
++struct qla82xx_md_template_hdr {
++	uint32_t entry_type;
++	uint32_t first_entry_offset;
++	uint32_t size_of_template;
++	uint32_t capture_debug_level;
++
++	uint32_t num_of_entries;
++	uint32_t version;
++	uint32_t driver_timestamp;
++	uint32_t template_checksum;
++
++	uint32_t driver_capture_mask;
++	uint32_t driver_info[3];
++
++	uint32_t saved_state_array[QLA82XX_DBG_STATE_ARRAY_LEN];
++	uint32_t capture_size_array[QLA82XX_DBG_CAP_SIZE_ARRAY_LEN];
++
++	/*  markers_array used to capture some special locations on board */
++	uint32_t markers_array[QLA82XX_DBG_RSVD_ARRAY_LEN];
++	uint32_t num_of_free_entries;	/* For internal use */
++	uint32_t free_entry_offset;	/* For internal use */
++	uint32_t total_table_size;	/*  For internal use */
++	uint32_t bkup_table_offset;	/*  For internal use */
++} __packed;
++
++/*
++ * Entry Header:  Common to All Entry Types
++ */
++
++/*
++ * Driver Code is for driver to write some info about the entry.
++ * Currently not used.
++ */
++typedef struct qla82xx_md_entry_hdr {
++	uint32_t entry_type;
++	uint32_t entry_size;
++	uint32_t entry_capture_size;
++	struct {
++		uint8_t entry_capture_mask;
++		uint8_t entry_code;
++		uint8_t driver_code;
++		uint8_t driver_flags;
++	} d_ctrl;
++} __packed qla82xx_md_entry_hdr_t;
++
++/*
++ *  Read CRB entry header
++ */
++struct qla82xx_md_entry_crb {
++	qla82xx_md_entry_hdr_t h;
++	uint32_t addr;
++	struct {
++		uint8_t addr_stride;
++		uint8_t state_index_a;
++		uint16_t poll_timeout;
++	} crb_strd;
++
++	uint32_t data_size;
++	uint32_t op_count;
++
++	struct {
++		uint8_t opcode;
++		uint8_t state_index_v;
++		uint8_t shl;
++		uint8_t shr;
++	} crb_ctrl;
++
++	uint32_t value_1;
++	uint32_t value_2;
++	uint32_t value_3;
++} __packed;
++
++/*
++ * Cache entry header
++ */
++struct qla82xx_md_entry_cache {
++	qla82xx_md_entry_hdr_t h;
++
++	uint32_t tag_reg_addr;
++	struct {
++		uint16_t tag_value_stride;
++		uint16_t init_tag_value;
++	} addr_ctrl;
++
++	uint32_t data_size;
++	uint32_t op_count;
++
++	uint32_t control_addr;
++	struct {
++		uint16_t write_value;
++		uint8_t poll_mask;
++		uint8_t poll_wait;
++	} cache_ctrl;
++
++	uint32_t read_addr;
++	struct {
++		uint8_t read_addr_stride;
++		uint8_t read_addr_cnt;
++		uint16_t rsvd_1;
++	} read_ctrl;
++} __packed;
++
++/*
++ * Read OCM
++ */
++struct qla82xx_md_entry_rdocm {
++	qla82xx_md_entry_hdr_t h;
++
++	uint32_t rsvd_0;
++	uint32_t rsvd_1;
++	uint32_t data_size;
++	uint32_t op_count;
++
++	uint32_t rsvd_2;
++	uint32_t rsvd_3;
++	uint32_t read_addr;
++	uint32_t read_addr_stride;
++	uint32_t read_addr_cntrl;
++} __packed;
++
++/*
++ * Read Memory
++ */
++struct qla82xx_md_entry_rdmem {
++	qla82xx_md_entry_hdr_t h;
++	uint32_t rsvd[6];
++	uint32_t read_addr;
++	uint32_t read_data_size;
++} __packed;
++
++/*
++ * Read ROM
++ */
++struct qla82xx_md_entry_rdrom {
++	qla82xx_md_entry_hdr_t h;
++	uint32_t rsvd[6];
++	uint32_t read_addr;
++	uint32_t read_data_size;
++} __packed;
++
++struct qla82xx_md_entry_mux {
++	qla82xx_md_entry_hdr_t h;
++
++	uint32_t select_addr;
++	uint32_t rsvd_0;
++	uint32_t data_size;
++	uint32_t op_count;
++
++	uint32_t select_value;
++	uint32_t select_value_stride;
++	uint32_t read_addr;
++	uint32_t rsvd_1;
++} __packed;
++
++struct qla82xx_md_entry_queue {
++	qla82xx_md_entry_hdr_t h;
++
++	uint32_t select_addr;
++	struct {
++		uint16_t queue_id_stride;
++		uint16_t rsvd_0;
++	} q_strd;
++
++	uint32_t data_size;
++	uint32_t op_count;
++	uint32_t rsvd_1;
++	uint32_t rsvd_2;
++
++	uint32_t read_addr;
++	struct {
++		uint8_t read_addr_stride;
++		uint8_t read_addr_cnt;
++		uint16_t rsvd_3;
++	} rd_strd;
++} __packed;
++
++#define MBC_DIAGNOSTIC_MINIDUMP_TEMPLATE 0x129
++#define RQST_TMPLT_SIZE	0x0
++#define RQST_TMPLT 0x1
++#define MD_DIRECT_ROM_WINDOW	0x42110030
++#define MD_DIRECT_ROM_READ_BASE	0x42150000
++#define MD_MIU_TEST_AGT_CTRL		0x41000090
++#define MD_MIU_TEST_AGT_ADDR_LO		0x41000094
++#define MD_MIU_TEST_AGT_ADDR_HI		0x41000098
++
++static const int MD_MIU_TEST_AGT_RDDATA[] = { 0x410000A8, 0x410000AC,
++	0x410000B8, 0x410000BC };
+ #endif
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 4cace3f..e37556c 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -160,9 +160,9 @@ MODULE_PARM_DESC(ql2xetsenable,
+ int ql2xdbwr = 1;
+ module_param(ql2xdbwr, int, S_IRUGO);
+ MODULE_PARM_DESC(ql2xdbwr,
+-	"Option to specify scheme for request queue posting.\n"
+-	" 0 -- Regular doorbell.\n"
+-	" 1 -- CAMRAM doorbell (faster).\n");
++		"Option to specify scheme for request queue posting.\n"
++		" 0 -- Regular doorbell.\n"
++		" 1 -- CAMRAM doorbell (faster).\n");
+ 
+ int ql2xtargetreset = 1;
+ module_param(ql2xtargetreset, int, S_IRUGO);
+@@ -185,9 +185,9 @@ MODULE_PARM_DESC(ql2xasynctmfenable,
+ int ql2xdontresethba;
+ module_param(ql2xdontresethba, int, S_IRUGO);
+ MODULE_PARM_DESC(ql2xdontresethba,
+-	"Option to specify reset behaviour.\n"
+-	" 0 (Default) -- Reset on failure.\n"
+-	" 1 -- Do not reset on failure.\n");
++		"Option to specify reset behaviour.\n"
++		" 0 (Default) -- Reset on failure.\n"
++		" 1 -- Do not reset on failure.\n");
+ 
+ uint ql2xmaxlun = MAX_LUNS;
+ module_param(ql2xmaxlun, uint, S_IRUGO);
+@@ -195,6 +195,19 @@ MODULE_PARM_DESC(ql2xmaxlun,
+ 		"Defines the maximum LU number to register with the SCSI "
+ 		"midlayer. Default is 65535.");
+ 
++int ql2xmdcapmask = 0x1F;
++module_param(ql2xmdcapmask, int, S_IRUGO);
++MODULE_PARM_DESC(ql2xmdcapmask,
++		"Set the Minidump driver capture mask level. "
++		"Default is 0x7F - Can be set to 0x3, 0x7, 0xF, 0x1F, 0x7F.");
++
++int ql2xmdenable;
++module_param(ql2xmdenable, int, S_IRUGO);
++MODULE_PARM_DESC(ql2xmdenable,
++		"Enable/disable MiniDump. "
++		"0 (Default) - MiniDump disabled. "
++		"1 - MiniDump enabled.");
++
+ /*
+  * SCSI host template entry points
+  */
+@@ -2669,6 +2682,8 @@ qla2x00_free_device(scsi_qla_host_t *vha)
+ 
+ 	qla2x00_mem_free(ha);
+ 
++	qla82xx_md_free(vha);
++
+ 	qla2x00_free_queues(ha);
+ }
+ 
 -- 
 1.6.0.2
 
