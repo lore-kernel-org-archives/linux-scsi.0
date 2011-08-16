@@ -1,259 +1,45 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 09/12] qla2xxx: Provide method for updating I2C attached VPD.
-Date: Tue, 16 Aug 2011 11:31:52 -0700
-Message-ID: <1313519515-23122-10-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 05/12] qla2xxx: check for marker IOCB during response queue processing.
+Date: Tue, 16 Aug 2011 11:31:48 -0700
+Message-ID: <1313519515-23122-6-git-send-email-chad.dupuis@qlogic.com>
 References: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:34301 "EHLO
-	TX2EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084Ab1HPSpQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:45:16 -0400
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:58348 "EHLO
+	TX2EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753159Ab1HPSpY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:45:24 -0400
 In-Reply-To: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-Provide bsg interface for updating VPD attached on the I2C serial bus.
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c |  151 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_bsg.h |   42 +++++++++++
- 2 files changed, 193 insertions(+), 0 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index e5954a4..8b641a8 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -1448,6 +1448,148 @@ qla2x00_update_optrom(struct fc_bsg_job *bsg_job)
- }
- 
- static int
-+qla2x00_update_fru_versions(struct fc_bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = bsg_job->shost;
-+	scsi_qla_host_t *vha = shost_priv(host);
-+	struct qla_hw_data *ha = vha->hw;
-+	int rval = 0;
-+	uint8_t bsg[DMA_POOL_SIZE];
-+	struct qla_image_version_list *list = (void *)bsg;
-+	struct qla_image_version *image;
-+	uint32_t count;
-+	dma_addr_t sfp_dma;
-+	void *sfp = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
-+	if (!sfp) {
-+		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+		    EXT_STATUS_NO_MEMORY;
-+		goto done;
-+	}
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, list, sizeof(bsg));
-+
-+	image = list->version;
-+	count = list->count;
-+	while (count--) {
-+		memcpy(sfp, &image->field_info, sizeof(image->field_info));
-+		rval = qla2x00_write_sfp(vha, sfp_dma, sfp,
-+		    image->field_address.device, image->field_address.offset,
-+		    sizeof(image->field_info), image->field_address.option);
-+		if (rval) {
-+			bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+			    EXT_STATUS_MAILBOX;
-+			goto dealloc;
-+		}
-+		image++;
-+	}
-+
-+	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = 0;
-+
-+dealloc:
-+	dma_pool_free(ha->s_dma_pool, sfp, sfp_dma);
-+
-+done:
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job->reply->result = DID_OK << 16;
-+	bsg_job->job_done(bsg_job);
-+
-+	return 0;
-+}
-+
-+static int
-+qla2x00_read_fru_status(struct fc_bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = bsg_job->shost;
-+	scsi_qla_host_t *vha = shost_priv(host);
-+	struct qla_hw_data *ha = vha->hw;
-+	int rval = 0;
-+	uint8_t bsg[DMA_POOL_SIZE];
-+	struct qla_status_reg *sr = (void *)bsg;
-+	dma_addr_t sfp_dma;
-+	uint8_t *sfp = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
-+	if (!sfp) {
-+		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+		    EXT_STATUS_NO_MEMORY;
-+		goto done;
-+	}
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, sr, sizeof(*sr));
-+
-+	rval = qla2x00_read_sfp(vha, sfp_dma, sfp,
-+	    sr->field_address.device, sr->field_address.offset,
-+	    sizeof(sr->status_reg), sr->field_address.option);
-+	sr->status_reg = *sfp;
-+
-+	if (rval) {
-+		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+		    EXT_STATUS_MAILBOX;
-+		goto dealloc;
-+	}
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+	    bsg_job->reply_payload.sg_cnt, sr, sizeof(*sr));
-+
-+	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = 0;
-+
-+dealloc:
-+	dma_pool_free(ha->s_dma_pool, sfp, sfp_dma);
-+
-+done:
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job->reply->reply_payload_rcv_len = sizeof(*sr);
-+	bsg_job->reply->result = DID_OK << 16;
-+	bsg_job->job_done(bsg_job);
-+
-+	return 0;
-+}
-+
-+static int
-+qla2x00_write_fru_status(struct fc_bsg_job *bsg_job)
-+{
-+	struct Scsi_Host *host = bsg_job->shost;
-+	scsi_qla_host_t *vha = shost_priv(host);
-+	struct qla_hw_data *ha = vha->hw;
-+	int rval = 0;
-+	uint8_t bsg[DMA_POOL_SIZE];
-+	struct qla_status_reg *sr = (void *)bsg;
-+	dma_addr_t sfp_dma;
-+	uint8_t *sfp = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL, &sfp_dma);
-+	if (!sfp) {
-+		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+		    EXT_STATUS_NO_MEMORY;
-+		goto done;
-+	}
-+
-+	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-+	    bsg_job->request_payload.sg_cnt, sr, sizeof(*sr));
-+
-+	*sfp = sr->status_reg;
-+	rval = qla2x00_write_sfp(vha, sfp_dma, sfp,
-+	    sr->field_address.device, sr->field_address.offset,
-+	    sizeof(sr->status_reg), sr->field_address.option);
-+
-+	if (rval) {
-+		bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] =
-+		    EXT_STATUS_MAILBOX;
-+		goto dealloc;
-+	}
-+
-+	bsg_job->reply->reply_data.vendor_reply.vendor_rsp[0] = 0;
-+
-+dealloc:
-+	dma_pool_free(ha->s_dma_pool, sfp, sfp_dma);
-+
-+done:
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job->reply->result = DID_OK << 16;
-+	bsg_job->job_done(bsg_job);
-+
-+	return 0;
-+}
-+
-+static int
- qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- {
- 	switch (bsg_job->request->rqst_data.h_vendor.vendor_cmd[0]) {
-@@ -1475,6 +1617,15 @@ qla2x00_process_vendor_specific(struct fc_bsg_job *bsg_job)
- 	case QL_VND_UPDATE_FLASH:
- 		return qla2x00_update_optrom(bsg_job);
- 
-+	case QL_VND_SET_FRU_VERSION:
-+		return qla2x00_update_fru_versions(bsg_job);
-+
-+	case QL_VND_READ_FRU_STATUS:
-+		return qla2x00_read_fru_status(bsg_job);
-+
-+	case QL_VND_WRITE_FRU_STATUS:
-+		return qla2x00_write_fru_status(bsg_job);
-+
- 	default:
- 		bsg_job->reply->result = (DID_ERROR << 16);
- 		bsg_job->job_done(bsg_job);
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index 0f0f54e..70caa63 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -16,6 +16,16 @@
- #define QL_VND_FCP_PRIO_CFG_CMD	0x06
- #define QL_VND_READ_FLASH	0x07
- #define QL_VND_UPDATE_FLASH	0x08
-+#define QL_VND_SET_FRU_VERSION	0x0B
-+#define QL_VND_READ_FRU_STATUS	0x0C
-+#define QL_VND_WRITE_FRU_STATUS	0x0D
-+
-+/* BSG Vendor specific subcode returns */
-+#define EXT_STATUS_OK			0
-+#define EXT_STATUS_ERR			1
-+#define EXT_STATUS_INVALID_PARAM	6
-+#define EXT_STATUS_MAILBOX		11
-+#define EXT_STATUS_NO_MEMORY		17
- 
- /* BSG definations for interpreting CommandSent field */
- #define INT_DEF_LB_LOOPBACK_CMD         0
-@@ -141,4 +151,36 @@ struct qla_port_param {
- 	uint16_t mode;
- 	uint16_t speed;
- } __attribute__ ((packed));
-+
-+
-+/* FRU VPD */
-+
-+#define MAX_FRU_SIZE	36
-+
-+struct qla_field_address {
-+	uint16_t offset;
-+	uint16_t device;
-+	uint16_t option;
-+} __packed;
-+
-+struct qla_field_info {
-+	uint8_t version[MAX_FRU_SIZE];
-+} __packed;
-+
-+struct qla_image_version {
-+	struct qla_field_address field_address;
-+	struct qla_field_info field_info;
-+} __packed;
-+
-+struct qla_image_version_list {
-+	uint32_t count;
-+	struct qla_image_version version[0];
-+} __packed;
-+
-+struct qla_status_reg {
-+	struct qla_field_address field_address;
-+	uint8_t status_reg;
-+	uint8_t reserved[7];
-+} __packed;
-+
- #endif
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 646fc52..156530f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2060,6 +2060,11 @@ void qla24xx_process_response_queue(struct scsi_qla_host *vha,
+                 case ELS_IOCB_TYPE:
+ 			qla24xx_els_ct_entry(vha, rsp->req, pkt, ELS_IOCB_TYPE);
+ 			break;
++		case MARKER_TYPE:
++			/* Do nothing in this case, this check is to prevent it
++			 * from falling into default case
++			 */
++			break;
+ 		default:
+ 			/* Type Not Supported. */
+ 			ql_dbg(ql_dbg_async, vha, 0x5042,
 -- 
 1.6.0.2
 
