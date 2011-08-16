@@ -1,68 +1,63 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 7/9] qla2xxx: Correct inadvertent loop state transitions during port-update handling.
-Date: Tue, 16 Aug 2011 11:29:28 -0700
-Message-ID: <1313519370-22963-8-git-send-email-chad.dupuis@qlogic.com>
-References: <1313519370-22963-1-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 00/12] qla2xxx: Patches for scsi-misc
+Date: Tue, 16 Aug 2011 11:31:43 -0700
+Message-ID: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:6160 "EHLO
-	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752941Ab1HPSmK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:42:10 -0400
-In-Reply-To: <1313519370-22963-1-git-send-email-chad.dupuis@qlogic.com>
+Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:26067 "EHLO
+	TX2EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753000Ab1HPSmW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Aug 2011 14:42:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Hi James,
 
-Transitioning to a LOOP_UPDATE loop-state could cause the driver
-to miss normal link/target processing.  LOOP_UPDATE is a crufty
-artifact leftover from at time the driver performed it's own
-internal command-queuing.  Safely remove this state.
+Please apply the following patches to scsi-misc for inclusion in a future mainline release at the earliest convenient opportunity.
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_init.c |    3 ---
- drivers/scsi/qla2xxx/qla_isr.c  |    1 -
- 2 files changed, 0 insertions(+), 4 deletions(-)
+Thanks,
+Chad
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index def6942..37da04d 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -3838,15 +3838,12 @@ qla2x00_loop_resync(scsi_qla_host_t *vha)
- 		req = vha->req;
- 	rsp = req->rsp;
- 
--	atomic_set(&vha->loop_state, LOOP_UPDATE);
- 	clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
- 	if (vha->flags.online) {
- 		if (!(rval = qla2x00_fw_ready(vha))) {
- 			/* Wait at most MAX_TARGET RSCNs for a stable link. */
- 			wait_time = 256;
- 			do {
--				atomic_set(&vha->loop_state, LOOP_UPDATE);
--
- 				/* Issue a marker after FW becomes ready. */
- 				qla2x00_marker(vha, req, rsp, 0, 0,
- 					MK_SYNC_ALL);
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 477767f..646fc52 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -719,7 +719,6 @@ skip_rio:
- 			vha->flags.rscn_queue_overflow = 1;
- 		}
- 
--		atomic_set(&vha->loop_state, LOOP_UPDATE);
- 		atomic_set(&vha->loop_down_timer, 0);
- 		vha->flags.management_server_logged_in = 0;
- 
--- 
-1.6.0.2
+Chad Dupuis (2):
+  qla2xxx: Enable write permission to some debug related module
+    parameters to be changed dynamically.
+  qla2xxx: Fix "active_mask" may be used uninitialized warning.
+
+Giridhar Malavali (2):
+  qla2xxx: Add support for ISP82xx to capture dump (minidump) on
+    failure.
+  qla2xxx: Issue mailbox command only when firmware hung bit is reset
+    for ISP82xx.
+
+Joe Carnuccio (3):
+  qla2xxx: Correction to sysfs edc interface.
+  qla2xxx: Provide method for updating I2C attached VPD.
+  qla2xxx: Return sysfs error codes appropriate to conditions.
+
+Saurav Kashyap (5):
+  qla2xxx: Implemeted beacon on/off for ISP82XX.
+  qla2xxx: Prevent CPU lockups when "ql2xdontresethba" module param is
+    set.
+  qla2xxx: check for marker IOCB during response queue processing.
+  qla2xxx: Fix array out of bound warning.
+  qla2xxx: During loopdown perform Diagnostic loopback.
+
+ drivers/scsi/qla2xxx/qla_attr.c |  111 +++--
+ drivers/scsi/qla2xxx/qla_bsg.c  |  152 ++++++
+ drivers/scsi/qla2xxx/qla_bsg.h  |   42 ++
+ drivers/scsi/qla2xxx/qla_dbg.c  |    6 +-
+ drivers/scsi/qla2xxx/qla_def.h  |    9 +-
+ drivers/scsi/qla2xxx/qla_gbl.h  |   18 +
+ drivers/scsi/qla2xxx/qla_init.c |   36 +-
+ drivers/scsi/qla2xxx/qla_isr.c  |    5 +
+ drivers/scsi/qla2xxx/qla_mbx.c  |  127 +++++
+ drivers/scsi/qla2xxx/qla_nx.c   |  971 +++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_nx.h   |  255 ++++++++++-
+ drivers/scsi/qla2xxx/qla_os.c   |   46 ++-
+ 12 files changed, 1672 insertions(+), 106 deletions(-)
 
 
