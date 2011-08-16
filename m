@@ -1,284 +1,216 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 10/12] qla2xxx: Return sysfs error codes appropriate to conditions.
-Date: Tue, 16 Aug 2011 11:31:53 -0700
-Message-ID: <1313519515-23122-11-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 02/12] qla2xxx: Implemeted beacon on/off for ISP82XX.
+Date: Tue, 16 Aug 2011 11:31:45 -0700
+Message-ID: <1313519515-23122-3-git-send-email-chad.dupuis@qlogic.com>
 References: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:27116 "EHLO
-	TX2EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753030Ab1HPSnF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2011 14:43:05 -0400
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:9349 "EHLO
+	TX2EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753045Ab1HPSnS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:43:18 -0400
 In-Reply-To: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Saurav Kashyap <saurav.kashyap@qlogic.com>
 
-Return sysfs error codes that match the conditions encountered.
-This prevents sysfs from retrying a request which is conditioned
-to fail under the current circumstance.
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |   59 +++++++++++++++++++--------------------
- 1 files changed, 29 insertions(+), 30 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c |    4 +-
+ drivers/scsi/qla2xxx/qla_gbl.h |    3 ++
+ drivers/scsi/qla2xxx/qla_mbx.c |   38 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_nx.c  |   42 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_nx.h  |    1 +
+ drivers/scsi/qla2xxx/qla_os.c  |   13 +++++++----
+ 6 files changed, 94 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index c9c42a6..ac326c4 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -107,7 +107,7 @@ qla2x00_sysfs_write_fw_dump(struct file *filp, struct kobject *kobj,
- 			set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
- 		break;
- 	}
--	return (count);
-+	return -EINVAL;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index 238bc91..9df4787 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -12,7 +12,7 @@
+  * |             Level            |   Last Value Used  |     Holes	|
+  * ----------------------------------------------------------------------
+  * | Module Init and Probe        |       0x0116       |  		|
+- * | Mailbox commands             |       0x1126       |		|
++ * | Mailbox commands             |       0x1129       |		|
+  * | Device Discovery             |       0x2083       |		|
+  * | Queue Command and IO tracing |       0x302e       |     0x3008     |
+  * | DPC Thread                   |       0x401c       |		|
+@@ -22,7 +22,7 @@
+  * | Task Management              |       0x8041       |    		|
+  * | AER/EEH                      |       0x900f       |		|
+  * | Virtual Port                 |       0xa007       |		|
+- * | ISP82XX Specific             |       0xb04f       |    		|
++ * | ISP82XX Specific             |       0xb051       |    		|
+  * | MultiQ                       |       0xc00b       |		|
+  * | Misc                         |       0xd00b       |		|
+  * ----------------------------------------------------------------------
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index df58e24..e1aebae 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -409,6 +409,8 @@ extern void qla2x00_beacon_blink(struct scsi_qla_host *);
+ extern int qla24xx_beacon_on(struct scsi_qla_host *);
+ extern int qla24xx_beacon_off(struct scsi_qla_host *);
+ extern void qla24xx_beacon_blink(struct scsi_qla_host *);
++extern int qla82xx_beacon_on(struct scsi_qla_host *);
++extern int qla82xx_beacon_off(struct scsi_qla_host *);
+ 
+ extern uint8_t *qla2x00_read_optrom_data(struct scsi_qla_host *, uint8_t *,
+     uint32_t, uint32_t);
+@@ -573,6 +575,7 @@ extern int qla82xx_mbx_intr_disable(scsi_qla_host_t *);
+ extern void qla82xx_start_iocbs(srb_t *);
+ extern int qla82xx_fcoe_ctx_reset(scsi_qla_host_t *);
+ extern void qla82xx_chip_reset_cleanup(scsi_qla_host_t *);
++extern int qla82xx_mbx_beacon_ctl(scsi_qla_host_t *, int);
+ extern char *qdev_state(uint32_t);
+ 
+ /* BSG related functions */
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index a411374..3b3cec9 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4275,3 +4275,41 @@ qla82xx_md_get_template(scsi_qla_host_t *vha)
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1126, "Done %s.\n", __func__);
+ 	return rval;
  }
- 
- static struct bin_attribute sysfs_fw_dump_attr = {
-@@ -151,7 +151,7 @@ qla2x00_sysfs_write_nvram(struct file *filp, struct kobject *kobj,
- 
- 	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != ha->nvram_size ||
- 	    !ha->isp_ops->write_nvram)
--		return 0;
-+		return -EINVAL;
- 
- 	/* Checksum NVRAM. */
- 	if (IS_FWI2_CAPABLE(ha)) {
-@@ -194,7 +194,7 @@ qla2x00_sysfs_write_nvram(struct file *filp, struct kobject *kobj,
- 	qla2xxx_wake_dpc(vha);
- 	qla2x00_wait_for_chip_reset(vha);
- 
--	return (count);
-+	return count;
- }
- 
- static struct bin_attribute sysfs_nvram_attr = {
-@@ -268,10 +268,10 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 	int val, valid;
- 
- 	if (off)
--		return 0;
-+		return -EINVAL;
- 
- 	if (unlikely(pci_channel_offline(ha->pdev)))
--		return 0;
-+		return -EAGAIN;
- 
- 	if (sscanf(buf, "%d:%x:%x", &val, &start, &size) < 1)
- 		return -EINVAL;
-@@ -282,7 +282,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 	case 0:
- 		if (ha->optrom_state != QLA_SREADING &&
- 		    ha->optrom_state != QLA_SWRITING)
--			break;
-+			return -EINVAL;
- 
- 		ha->optrom_state = QLA_SWAITING;
- 
-@@ -295,7 +295,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		break;
- 	case 1:
- 		if (ha->optrom_state != QLA_SWAITING)
--			break;
-+			return -EINVAL;
- 
- 		ha->optrom_region_start = start;
- 		ha->optrom_region_size = start + size > ha->optrom_size ?
-@@ -309,7 +309,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 			    "(%x).\n", ha->optrom_region_size);
- 
- 			ha->optrom_state = QLA_SWAITING;
--			return count;
-+			return -ENOMEM;
- 		}
- 
- 		if (qla2x00_wait_for_hba_online(vha) != QLA_SUCCESS) {
-@@ -328,7 +328,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		break;
- 	case 2:
- 		if (ha->optrom_state != QLA_SWAITING)
--			break;
-+			return -EINVAL;
- 
- 		/*
- 		 * We need to be more restrictive on which FLASH regions are
-@@ -376,7 +376,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 			    "(%x)\n", ha->optrom_region_size);
- 
- 			ha->optrom_state = QLA_SWAITING;
--			return count;
-+			return -ENOMEM;
- 		}
- 
- 		ql_dbg(ql_dbg_user, vha, 0x7067,
-@@ -387,7 +387,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		break;
- 	case 3:
- 		if (ha->optrom_state != QLA_SWRITING)
--			break;
-+			return -ENOMEM;
- 
- 		if (qla2x00_wait_for_hba_online(vha) != QLA_SUCCESS) {
- 			ql_log(ql_log_warn, vha, 0x7068,
-@@ -403,7 +403,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
- 		    ha->optrom_region_start, ha->optrom_region_size);
- 		break;
- 	default:
--		count = -EINVAL;
-+		return -EINVAL;
- 	}
- 	return count;
- }
-@@ -427,10 +427,10 @@ qla2x00_sysfs_read_vpd(struct file *filp, struct kobject *kobj,
- 	struct qla_hw_data *ha = vha->hw;
- 
- 	if (unlikely(pci_channel_offline(ha->pdev)))
--		return 0;
-+		return -EAGAIN;
- 
- 	if (!capable(CAP_SYS_ADMIN))
--		return 0;
-+		return -EINVAL;
- 
- 	if (IS_NOCACHE_VPD_TYPE(ha))
- 		ha->isp_ops->read_optrom(vha, ha->vpd, ha->flt_region_vpd << 2,
-@@ -467,17 +467,17 @@ qla2x00_sysfs_write_vpd(struct file *filp, struct kobject *kobj,
- 
- 	/* Update flash version information for 4Gb & above. */
- 	if (!IS_FWI2_CAPABLE(ha))
--		goto done;
-+		return -EINVAL;
- 
- 	tmp_data = vmalloc(256);
- 	if (!tmp_data) {
- 		ql_log(ql_log_warn, vha, 0x706b,
- 		    "Unable to allocate memory for VPD information update.\n");
--		goto done;
-+		return -ENOMEM;
- 	}
- 	ha->isp_ops->get_flash_version(vha, tmp_data);
- 	vfree(tmp_data);
--done:
 +
- 	return count;
++int
++qla82xx_mbx_beacon_ctl(scsi_qla_host_t *vha, int enable)
++{
++	int rval;
++	struct qla_hw_data *ha = vha->hw;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++
++	if (!IS_QLA82XX(ha))
++		return QLA_FUNCTION_FAILED;
++
++	ql_dbg(ql_dbg_mbx, vha, 0x1127,
++		"Entered %s.\n", __func__);
++
++	memset(mcp, 0, sizeof(mbx_cmd_t));
++	mcp->mb[0] = MBC_SET_LED_CONFIG;
++	if (enable)
++		mcp->mb[7] = 0xE;
++	else
++		mcp->mb[7] = 0xD;
++
++	mcp->out_mb = MBX_7|MBX_0;
++	mcp->in_mb = MBX_0;
++	mcp->tov = 30;
++	mcp->flags = 0;
++
++	rval = qla2x00_mailbox_command(vha, mcp);
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1128,
++		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
++	} else {
++		ql_dbg(ql_dbg_mbx, vha, 0x1129,
++		    "Done %s.\n", __func__);
++	}
++
++	return rval;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index 073b84f..2bc134b 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -4873,3 +4873,45 @@ qla82xx_md_prep(scsi_qla_host_t *vha)
+ 		}
+ 	}
  }
++
++int
++qla82xx_beacon_on(struct scsi_qla_host *vha)
++{
++
++	int rval;
++	struct qla_hw_data *ha = vha->hw;
++	qla82xx_idc_lock(ha);
++	rval = qla82xx_mbx_beacon_ctl(vha, 1);
++
++	if (rval)
++	{
++		ql_log(ql_log_warn, vha, 0xb050,
++		    "mbx set led config failed in %s\n", __func__);
++		goto exit;
++	}
++	ha->beacon_blink_led = 1;
++exit:
++	qla82xx_idc_unlock(ha);
++	return rval;
++}
++
++int
++qla82xx_beacon_off(struct scsi_qla_host *vha)
++{
++
++	int rval;
++	struct qla_hw_data *ha = vha->hw;
++	qla82xx_idc_lock(ha);
++	rval = qla82xx_mbx_beacon_ctl(vha, 0);
++
++	if (rval)
++	{
++		ql_log(ql_log_warn, vha, 0xb051,
++		    "mbx set led config failed in %s\n", __func__);
++		goto exit;
++	}
++	ha->beacon_blink_led = 0;
++exit:
++	qla82xx_idc_unlock(ha);
++	return rval;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index 97ee250..57820c1 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -888,6 +888,7 @@ struct ct6_dsd {
+ };
  
-@@ -534,8 +534,7 @@ do_read:
- 			    "Unable to read SFP data (%x/%x/%x).\n", rval,
- 			    addr, offset);
+ #define MBC_TOGGLE_INTERRUPT	0x10
++#define MBC_SET_LED_CONFIG	0x125
  
--			count = 0;
--			break;
-+			return -EIO;
- 		}
- 		memcpy(buf, ha->sfp_data, SFP_BLOCK_SIZE);
- 		buf += SFP_BLOCK_SIZE;
-@@ -565,7 +564,7 @@ qla2x00_sysfs_write_reset(struct file *filp, struct kobject *kobj,
- 	int type;
+ /* Flash  offset */
+ #define FLT_REG_BOOTLOAD_82XX	0x72
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index e37556c..ca9c76e 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1762,9 +1762,9 @@ static struct isp_operations qla82xx_isp_ops = {
+ 	.read_nvram		= qla24xx_read_nvram_data,
+ 	.write_nvram		= qla24xx_write_nvram_data,
+ 	.fw_dump		= qla24xx_fw_dump,
+-	.beacon_on		= qla24xx_beacon_on,
+-	.beacon_off		= qla24xx_beacon_off,
+-	.beacon_blink		= qla24xx_beacon_blink,
++	.beacon_on		= qla82xx_beacon_on,
++	.beacon_off		= qla82xx_beacon_off,
++	.beacon_blink		= NULL,
+ 	.read_optrom		= qla82xx_read_optrom_data,
+ 	.write_optrom		= qla82xx_write_optrom_data,
+ 	.get_flash_version	= qla24xx_get_flash_version,
+@@ -3917,8 +3917,11 @@ qla2x00_timer(scsi_qla_host_t *vha)
  
- 	if (off != 0)
--		return 0;
-+		return -EINVAL;
- 
- 	type = simple_strtol(buf, NULL, 10);
- 	switch (type) {
-@@ -586,7 +585,7 @@ qla2x00_sysfs_write_reset(struct file *filp, struct kobject *kobj,
- 		break;
- 	case 0x2025d:
- 		if (!IS_QLA81XX(ha))
--			break;
-+			return -EPERM;
- 
- 		ql_log(ql_log_info, vha, 0x706f,
- 		    "Issuing MPI reset.\n");
-@@ -605,7 +604,7 @@ qla2x00_sysfs_write_reset(struct file *filp, struct kobject *kobj,
- 		if (!IS_QLA82XX(ha) || vha != base_vha) {
- 			ql_log(ql_log_info, vha, 0x7071,
- 			    "FCoE ctx reset no supported.\n");
--			return count;
-+			return -EPERM;
- 		}
- 
- 		ql_log(ql_log_info, vha, 0x7072,
-@@ -641,7 +640,7 @@ qla2x00_sysfs_write_edc(struct file *filp, struct kobject *kobj,
- 	ha->edc_data_len = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN) || off != 0 || count < 8)
--		return 0;
-+		return -EINVAL;
- 
- 	if (!ha->edc_data) {
- 		ha->edc_data = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
-@@ -649,7 +648,7 @@ qla2x00_sysfs_write_edc(struct file *filp, struct kobject *kobj,
- 		if (!ha->edc_data) {
- 			ql_log(ql_log_warn, vha, 0x7073,
- 			    "Unable to allocate memory for EDC write.\n");
--			return 0;
-+			return -ENOMEM;
- 		}
+ 	/* Check if beacon LED needs to be blinked for physical host only */
+ 	if (!vha->vp_idx && (ha->beacon_blink_led == 1)) {
+-		set_bit(BEACON_BLINK_NEEDED, &vha->dpc_flags);
+-		start_dpc++;
++		/* There is no beacon_blink function for ISP82xx */
++		if (!IS_QLA82XX(ha)) {
++			set_bit(BEACON_BLINK_NEEDED, &vha->dpc_flags);
++			start_dpc++;
++		}
  	}
  
-@@ -670,7 +669,7 @@ qla2x00_sysfs_write_edc(struct file *filp, struct kobject *kobj,
- 		ql_log(ql_log_warn, vha, 0x7074,
- 		    "Unable to write EDC (%x) %02x:%04x:%02x:%02hhx\n",
- 		    rval, dev, adr, opt, len, buf[8]);
--		return -EINVAL;
-+		return -EIO;
- 	}
- 
- 	return count;
-@@ -699,7 +698,7 @@ qla2x00_sysfs_write_edc_status(struct file *filp, struct kobject *kobj,
- 	ha->edc_data_len = 0;
- 
- 	if (!capable(CAP_SYS_ADMIN) || off != 0 || count < 8)
--		return 0;
-+		return -EINVAL;
- 
- 	if (!ha->edc_data) {
- 		ha->edc_data = dma_pool_alloc(ha->s_dma_pool, GFP_KERNEL,
-@@ -707,7 +706,7 @@ qla2x00_sysfs_write_edc_status(struct file *filp, struct kobject *kobj,
- 		if (!ha->edc_data) {
- 			ql_log(ql_log_warn, vha, 0x708c,
- 			    "Unable to allocate memory for EDC status.\n");
--			return 0;
-+			return -ENOMEM;
- 		}
- 	}
- 
-@@ -727,7 +726,7 @@ qla2x00_sysfs_write_edc_status(struct file *filp, struct kobject *kobj,
- 		ql_log(ql_log_info, vha, 0x7075,
- 		    "Unable to write EDC status (%x) %02x:%04x:%02x.\n",
- 		    rval, dev, adr, opt, len);
--		return -EINVAL;
-+		return -EIO;
- 	}
- 
- 	ha->edc_data_len = len;
-@@ -839,7 +838,7 @@ qla2x00_sysfs_read_dcbx_tlv(struct file *filp, struct kobject *kobj,
- 	if (!ha->dcbx_tlv) {
- 		ql_log(ql_log_warn, vha, 0x7078,
- 		    "Unable to allocate memory for DCBX TLV read-data.\n");
--		return 0;
-+		return -ENOMEM;
- 	}
- 
- do_read:
-@@ -851,7 +850,7 @@ do_read:
- 	if (rval != QLA_SUCCESS) {
- 		ql_log(ql_log_warn, vha, 0x7079,
- 		    "Unable to read DCBX TLV (%x).\n", rval);
--		count = 0;
-+		return -EIO;
- 	}
- 
- 	memcpy(buf, ha->dcbx_tlv, count);
+ 	/* Process any deferred work. */
 -- 
 1.6.0.2
 
