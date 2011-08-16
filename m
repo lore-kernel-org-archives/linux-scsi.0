@@ -1,51 +1,72 @@
-From: Eric Seppanen <eric@purestorage.com>
-Subject: [PATCH 1/2] block: Fix queue_flag update when rq_affinity goes from 2 to 1
-Date: Mon, 15 Aug 2011 23:02:19 -0700
-Message-ID: <1313474539-5540-1-git-send-email-eric@purestorage.com>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [BUG] Oops when SCSI device under multipath is removed
+Date: Tue, 16 Aug 2011 20:26:40 +0900
+Message-ID: <4E4A53F0.9040104@ce.jp.nec.com>
+References: <Pine.LNX.4.44L0.1108111112280.1958-100000@iolanthe.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1108111112280.1958-100000@iolanthe.rowland.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Roland Dreier <roland@purestorage.com>, Eric Seppanen <eric@purestorage.com>, Dan Williams <dan.j.williams@intel.com>, Christoph Hellwig <hch@infradead.org>, Dave Jiang <dave.jiang@intel.com>, Jens Axboe <jaxboe@fusionio.com>
+To: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, roland@purestorage.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Eric Seppanen <eric@purestorage.com>
+Hi,
 
-Commit 5757a6d76cdf added the QUEUE_FLAG_SAME_FORCE flag, but fails to
-clear that flag when the current state is '2' (SAME_COMP + SAME_FORCE)
-and the new state is '1' (SAME_COMP).
+On 08/12/11 00:16, Alan Stern wrote:
+> On Thu, 11 Aug 2011, James Bottomley wrote:
+>> However, much as I'd like to accept this rosy view, the original oops
+>> that started all of this in 2.6.38 was someone caught something with a
+>> reference to a SCSI queue after the device release function had been
+>> called.
+> 
+> Not according to your commit log.  You wrote that the reference was
+> taken after scsi_remove_device() had been called -- but the device
+> release function is scsi_device_dev_release_usercontext().
 
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Jens Axboe <jaxboe@fusionio.com>
-Reviewed-by: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Eric Seppanen <eric@purestorage.com>
+The commit log of 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b
+("[SCSI] put stricter guards on queue dead checks") does not
+explain about the move of scsi_free_queue().
 
----
- block/blk-sysfs.c |   10 ++++++----
- 1 files changed, 6 insertions(+), 4 deletions(-)
+But according to the discussion below, it seems
+the move was motivated to solve the following self-deadlock:
+https://lkml.org/lkml/2011/4/12/9
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 0ee17b5..e681805 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -258,11 +258,13 @@ queue_rq_affinity_store(struct request_queue *q, const char *page, size_t count)
+  [in the context of kblockd_workqueue]
+  blk_delay_work
+    __blk_run_queue
+      scsi_request_fn
+        put_device
+          (puts final sdev refcount)
+             scsi_device_dev_release
+               execute_in_process_context(scsi_device_dev_release_usercontext)
+                 [execute immediately because it's in process context]
+                    scsi_device_dev_release_usercontext
+                      scsi_free_queue
+                        blk_cleanup_queue
+                          blk_sync_queue
+                            (wait for blk_delay_work to complete...)
+
+James, is my understanding correct?
+
+If so, isn't it possible to move the scsi_free_queue back to
+the original place and solve the deadlock instead by
+avoiding the wait in the same context?
+
+@@ -338,8 +339,8 @@ static void scsi_device_dev_release_user
+ static void scsi_device_dev_release(struct device *dev)
+ {
+ 	struct scsi_device *sdp = to_scsi_device(dev);
+-	execute_in_process_context(scsi_device_dev_release_usercontext,
+-				   &sdp->ew);
++	INIT_WORK(&sdp->ew.work, scsi_device_dev_release_usercontext);
++	schedule_work(&sdp->ew.work);
+ }
  
- 	ret = queue_var_store(&val, page, count);
- 	spin_lock_irq(q->queue_lock);
--	if (val) {
-+	if (val == 2) {
- 		queue_flag_set(QUEUE_FLAG_SAME_COMP, q);
--		if (val == 2)
--			queue_flag_set(QUEUE_FLAG_SAME_FORCE, q);
--	} else {
-+		queue_flag_set(QUEUE_FLAG_SAME_FORCE, q);
-+	} else if (val == 1) {
-+		queue_flag_set(QUEUE_FLAG_SAME_COMP, q);
-+		queue_flag_clear(QUEUE_FLAG_SAME_FORCE, q);
-+	} else if (val == 0) {
- 		queue_flag_clear(QUEUE_FLAG_SAME_COMP, q);
- 		queue_flag_clear(QUEUE_FLAG_SAME_FORCE, q);
- 	}
+ static struct class sdev_class = {
+
+Thanks,
 -- 
-1.7.4.1
+Jun'ichi Nomura, NEC Corporation
