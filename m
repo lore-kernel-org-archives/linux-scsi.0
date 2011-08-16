@@ -1,344 +1,67 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 2/9] qla2xxx: T10 DIF - Fix incorrect error reporting.
-Date: Tue, 16 Aug 2011 11:29:23 -0700
-Message-ID: <1313519370-22963-3-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 7/9] qla2xxx: Correct inadvertent loop state transitions during port-update handling.
+Date: Tue, 16 Aug 2011 11:29:28 -0700
+Message-ID: <1313519370-22963-8-git-send-email-chad.dupuis@qlogic.com>
 References: <1313519370-22963-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:27647 "EHLO
-	TX2EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752927Ab1HPSmL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:42:11 -0400
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:6160 "EHLO
+	TX2EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941Ab1HPSmK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:42:10 -0400
 In-Reply-To: <1313519370-22963-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Arun Easi <arun.easi@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-This fix:
-    - Disables app tag peeking; correct tag check will be added when the
-      SCSI API is available.
-    - Always derive ref_tag from scsi_get_lba()
-    - Removes incorrect swap of FCP_LUN in FCP_CMND
-    - Moves app-tag error check before ref-tag check. The reason being,
-      currently there is no interface in SCSI to retrieve the app-tag
-      for protection I/Os, so driver puts zero for app-tag in the
-      firmware interface, but requests not to validate it, but when a
-      ref-tag error is detected by firmware, it would put
-      expected/actual tags for all the protection tags (guard/app/ref).
-      As driver checks for app tag error first, a ref-tag error is
-      incorrectly flagged as app-tag error.
-    - Convert HBA specific checks to capability based.
+Transitioning to a LOOP_UPDATE loop-state could cause the driver
+to miss normal link/target processing.  LOOP_UPDATE is a crufty
+artifact leftover from at time the driver performed it's own
+internal command-queuing.  Safely remove this state.
 
-Signed-off-by: Arun Easi <arun.easi@qlogic.com>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c   |    2 +-
- drivers/scsi/qla2xxx/qla_dbg.c    |   36 ++++++++++++------------
- drivers/scsi/qla2xxx/qla_def.h    |    2 +
- drivers/scsi/qla2xxx/qla_inline.h |   12 +++++++-
- drivers/scsi/qla2xxx/qla_iocb.c   |   55 ++++++++++++++-----------------------
- drivers/scsi/qla2xxx/qla_isr.c    |   13 +++++----
- drivers/scsi/qla2xxx/qla_mid.c    |    2 +-
- drivers/scsi/qla2xxx/qla_os.c     |    4 +-
- 8 files changed, 62 insertions(+), 64 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c |    3 ---
+ drivers/scsi/qla2xxx/qla_isr.c  |    1 -
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 8100670..a31e05f 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1786,7 +1786,7 @@ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
- 			fc_vport_set_state(fc_vport, FC_VPORT_LINKDOWN);
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index def6942..37da04d 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3838,15 +3838,12 @@ qla2x00_loop_resync(scsi_qla_host_t *vha)
+ 		req = vha->req;
+ 	rsp = req->rsp;
  
--	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && ql2xenabledif) {
-+	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
- 		if (ha->fw_attributes & BIT_4) {
- 			int prot = 0;
- 			vha->flags.difdix_supported = 1;
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 2155071..d79cd8a 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -8,24 +8,24 @@
- /*
-  * Table for showing the current message id in use for particular level
-  * Change this table for addition of log/debug messages.
-- * -----------------------------------------------------
-- * |             Level            |   Last Value Used  |
-- * -----------------------------------------------------
-- * | Module Init and Probe        |       0x0116       |
-- * | Mailbox commands             |       0x111e       |
-- * | Device Discovery             |       0x2083       |
-- * | Queue Command and IO tracing |       0x302e       |
-- * | DPC Thread                   |       0x401c       |
-- * | Async Events                 |       0x5059       |
-- * | Timer Routines               |       0x600d       |
-- * | User Space Interactions      |       0x709c       |
-- * | Task Management              |       0x8043       |
-- * | AER/EEH                      |       0x900f       |
-- * | Virtual Port                 |       0xa007       |
-- * | ISP82XX Specific             |       0xb027       |
-- * | MultiQ                       |       0xc00b       |
-- * | Misc                         |       0xd00b       |
-- * -----------------------------------------------------
-+ * ----------------------------------------------------------------------
-+ * |             Level            |   Last Value Used  |     Holes	|
-+ * ----------------------------------------------------------------------
-+ * | Module Init and Probe        |       0x0116       |  		|
-+ * | Mailbox commands             |       0x1126       |		|
-+ * | Device Discovery             |       0x2083       |		|
-+ * | Queue Command and IO tracing |       0x302e       |     0x3008     |
-+ * | DPC Thread                   |       0x401c       |		|
-+ * | Async Events                 |       0x5059       |		|
-+ * | Timer Routines               |       0x600d       |		|
-+ * | User Space Interactions      |       0x709d       |		|
-+ * | Task Management              |       0x8041       |    		|
-+ * | AER/EEH                      |       0x900f       |		|
-+ * | Virtual Port                 |       0xa007       |		|
-+ * | ISP82XX Specific             |       0xb04f       |    		|
-+ * | MultiQ                       |       0xc00b       |		|
-+ * | Misc                         |       0xd00b       |		|
-+ * ----------------------------------------------------------------------
-  */
- 
- #include "qla_def.h"
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index cc5a792..a03eaf4 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2529,6 +2529,7 @@ struct qla_hw_data {
- #define DT_ISP8021			BIT_14
- #define DT_ISP_LAST			(DT_ISP8021 << 1)
- 
-+#define DT_T10_PI                       BIT_25
- #define DT_IIDMA                        BIT_26
- #define DT_FWI2                         BIT_27
- #define DT_ZIO_SUPPORTED                BIT_28
-@@ -2572,6 +2573,7 @@ struct qla_hw_data {
- #define IS_NOCACHE_VPD_TYPE(ha)	(IS_QLA81XX(ha))
- #define IS_ALOGIO_CAPABLE(ha)	(IS_QLA23XX(ha) || IS_FWI2_CAPABLE(ha))
- 
-+#define IS_T10_PI_CAPABLE(ha)   ((ha)->device_type & DT_T10_PI)
- #define IS_IIDMA_CAPABLE(ha)    ((ha)->device_type & DT_IIDMA)
- #define IS_FWI2_CAPABLE(ha)     ((ha)->device_type & DT_FWI2)
- #define IS_ZIO_SUPPORTED(ha)    ((ha)->device_type & DT_ZIO_SUPPORTED)
-diff --git a/drivers/scsi/qla2xxx/qla_inline.h b/drivers/scsi/qla2xxx/qla_inline.h
-index c06e5f9..9902834 100644
---- a/drivers/scsi/qla2xxx/qla_inline.h
-+++ b/drivers/scsi/qla2xxx/qla_inline.h
-@@ -104,9 +104,17 @@ qla2x00_set_fcport_state(fc_port_t *fcport, int state)
- }
- 
- static inline int
--qla2x00_hba_err_chk_enabled(unsigned char op)
-+qla2x00_hba_err_chk_enabled(srb_t *sp)
- {
--	switch (op) {
-+	/*
-+	 * Uncomment when corresponding SCSI changes are done.
-+	 *
-+	if (!sp->cmd->prot_chk)
-+		return 0;
-+	 *
-+	 */
-+
-+	switch (scsi_get_prot_op(sp->cmd)) {
- 	case SCSI_PROT_READ_STRIP:
- 	case SCSI_PROT_WRITE_INSERT:
- 		if (ql2xenablehba_err_chk >= 1)
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 09ad3ce..dbec896 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -709,12 +709,11 @@ struct fw_dif_context {
-  *
-  */
- static inline void
--qla24xx_set_t10dif_tags(struct scsi_cmnd *cmd, struct fw_dif_context *pkt,
-+qla24xx_set_t10dif_tags(srb_t *sp, struct fw_dif_context *pkt,
-     unsigned int protcnt)
- {
--	struct sd_dif_tuple *spt;
-+	struct scsi_cmnd *cmd = sp->cmd;
- 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
--	unsigned char op = scsi_get_prot_op(cmd);
- 
- 	switch (scsi_get_prot_type(cmd)) {
- 	case SCSI_PROT_DIF_TYPE0:
-@@ -724,6 +723,10 @@ qla24xx_set_t10dif_tags(struct scsi_cmnd *cmd, struct fw_dif_context *pkt,
- 		 */
- 		pkt->ref_tag = cpu_to_le32((uint32_t)
- 		    (0xffffffff & scsi_get_lba(cmd)));
-+
-+		if (!qla2x00_hba_err_chk_enabled(sp))
-+			break;
-+
- 		pkt->ref_tag_mask[0] = 0xff;
- 		pkt->ref_tag_mask[1] = 0xff;
- 		pkt->ref_tag_mask[2] = 0xff;
-@@ -735,20 +738,16 @@ qla24xx_set_t10dif_tags(struct scsi_cmnd *cmd, struct fw_dif_context *pkt,
- 	 * match LBA in CDB + N
- 	 */
- 	case SCSI_PROT_DIF_TYPE2:
--		if (!qla2x00_hba_err_chk_enabled(op))
--			break;
+-	atomic_set(&vha->loop_state, LOOP_UPDATE);
+ 	clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
+ 	if (vha->flags.online) {
+ 		if (!(rval = qla2x00_fw_ready(vha))) {
+ 			/* Wait at most MAX_TARGET RSCNs for a stable link. */
+ 			wait_time = 256;
+ 			do {
+-				atomic_set(&vha->loop_state, LOOP_UPDATE);
 -
--		if (scsi_prot_sg_count(cmd)) {
--			spt = page_address(sg_page(scsi_prot_sglist(cmd))) +
--			    scsi_prot_sglist(cmd)[0].offset;
--			pkt->app_tag = swab32(spt->app_tag);
--			pkt->app_tag_mask[0] =  0xff;
--			pkt->app_tag_mask[1] =  0xff;
--		}
-+		pkt->app_tag = __constant_cpu_to_le16(0);
-+		pkt->app_tag_mask[0] = 0x0;
-+		pkt->app_tag_mask[1] = 0x0;
- 
- 		pkt->ref_tag = cpu_to_le32((uint32_t)
- 		    (0xffffffff & scsi_get_lba(cmd)));
- 
-+		if (!qla2x00_hba_err_chk_enabled(sp))
-+			break;
-+
- 		/* enable ALL bytes of the ref tag */
- 		pkt->ref_tag_mask[0] = 0xff;
- 		pkt->ref_tag_mask[1] = 0xff;
-@@ -768,26 +767,15 @@ qla24xx_set_t10dif_tags(struct scsi_cmnd *cmd, struct fw_dif_context *pkt,
- 	 * 16 bit app tag.
- 	 */
- 	case SCSI_PROT_DIF_TYPE1:
--		if (!qla2x00_hba_err_chk_enabled(op))
-+		pkt->ref_tag = cpu_to_le32((uint32_t)
-+		    (0xffffffff & scsi_get_lba(cmd)));
-+		pkt->app_tag = __constant_cpu_to_le16(0);
-+		pkt->app_tag_mask[0] = 0x0;
-+		pkt->app_tag_mask[1] = 0x0;
-+
-+		if (!qla2x00_hba_err_chk_enabled(sp))
- 			break;
- 
--		if (protcnt && (op == SCSI_PROT_WRITE_STRIP ||
--		    op == SCSI_PROT_WRITE_PASS)) {
--			spt = page_address(sg_page(scsi_prot_sglist(cmd))) +
--			    scsi_prot_sglist(cmd)[0].offset;
--			ql_dbg(ql_dbg_io, vha, 0x3008,
--			    "LBA from user %p, lba = 0x%x for cmd=%p.\n",
--			    spt, (int)spt->ref_tag, cmd);
--			pkt->ref_tag = swab32(spt->ref_tag);
--			pkt->app_tag_mask[0] = 0x0;
--			pkt->app_tag_mask[1] = 0x0;
--		} else {
--			pkt->ref_tag = cpu_to_le32((uint32_t)
--			    (0xffffffff & scsi_get_lba(cmd)));
--			pkt->app_tag = __constant_cpu_to_le16(0);
--			pkt->app_tag_mask[0] = 0x0;
--			pkt->app_tag_mask[1] = 0x0;
--		}
- 		/* enable ALL bytes of the ref tag */
- 		pkt->ref_tag_mask[0] = 0xff;
- 		pkt->ref_tag_mask[1] = 0xff;
-@@ -1208,7 +1196,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
- 
- 	INIT_LIST_HEAD(&crc_ctx_pkt->dsd_list);
- 
--	qla24xx_set_t10dif_tags(cmd, (struct fw_dif_context *)
-+	qla24xx_set_t10dif_tags(sp, (struct fw_dif_context *)
- 	    &crc_ctx_pkt->ref_tag, tot_prot_dsds);
- 
- 	cmd_pkt->crc_context_address[0] = cpu_to_le32(LSD(crc_ctx_dma));
-@@ -1237,7 +1225,6 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
- 		fcp_cmnd->additional_cdb_len |= 2;
- 
- 	int_to_scsilun(sp->cmd->device->lun, &fcp_cmnd->lun);
--	host_to_fcp_swap((uint8_t *)&fcp_cmnd->lun, sizeof(fcp_cmnd->lun));
- 	memcpy(fcp_cmnd->cdb, cmd->cmnd, cmd->cmd_len);
- 	cmd_pkt->fcp_cmnd_dseg_len = cpu_to_le16(fcp_cmnd_len);
- 	cmd_pkt->fcp_cmnd_dseg_address[0] = cpu_to_le32(
-@@ -1289,7 +1276,7 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
- 	    BUG();
- 	}
- 
--	if (!qla2x00_hba_err_chk_enabled(scsi_get_prot_op(cmd)))
-+	if (!qla2x00_hba_err_chk_enabled(sp))
- 		fw_prot_opts |= 0x10; /* Disable Guard tag checking */
- 
- 	if (!bundling) {
+ 				/* Issue a marker after FW becomes ready. */
+ 				qla2x00_marker(vha, req, rsp, 0, 0,
+ 					MK_SYNC_ALL);
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 53339f1..ec53e87 100644
+index 477767f..646fc52 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1534,25 +1534,26 @@ qla2x00_handle_dif_error(srb_t *sp, struct sts_entry_24xx *sts24)
- 		return 1;
- 	}
+@@ -719,7 +719,6 @@ skip_rio:
+ 			vha->flags.rscn_queue_overflow = 1;
+ 		}
  
--	/* check appl tag */
--	if (e_app_tag != a_app_tag) {
-+	/* check ref tag */
-+	if (e_ref_tag != a_ref_tag) {
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
--		    0x10, 0x2);
-+		    0x10, 0x3);
- 		set_driver_byte(cmd, DRIVER_SENSE);
- 		set_host_byte(cmd, DID_ABORT);
- 		cmd->result |= SAM_STAT_CHECK_CONDITION << 1;
- 		return 1;
- 	}
+-		atomic_set(&vha->loop_state, LOOP_UPDATE);
+ 		atomic_set(&vha->loop_down_timer, 0);
+ 		vha->flags.management_server_logged_in = 0;
  
--	/* check ref tag */
--	if (e_ref_tag != a_ref_tag) {
-+	/* check appl tag */
-+	if (e_app_tag != a_app_tag) {
- 		scsi_build_sense_buffer(1, cmd->sense_buffer, ILLEGAL_REQUEST,
--		    0x10, 0x3);
-+		    0x10, 0x2);
- 		set_driver_byte(cmd, DRIVER_SENSE);
- 		set_host_byte(cmd, DID_ABORT);
- 		cmd->result |= SAM_STAT_CHECK_CONDITION << 1;
- 		return 1;
- 	}
-+
- 	return 1;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index c706ed3..f488cc6 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -472,7 +472,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
- 	host->can_queue = base_vha->req->length + 128;
- 	host->this_id = 255;
- 	host->cmd_per_lun = 3;
--	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && ql2xenabledif)
-+	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif)
- 		host->max_cmd_len = 32;
- 	else
- 		host->max_cmd_len = MAX_CMDSZ;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d65a300..f57c292 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2255,7 +2255,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	host->this_id = 255;
- 	host->cmd_per_lun = 3;
- 	host->unique_id = host->host_no;
--	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && ql2xenabledif)
-+	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif)
- 		host->max_cmd_len = 32;
- 	else
- 		host->max_cmd_len = MAX_CMDSZ;
-@@ -2382,7 +2382,7 @@ skip_dpc:
- 	    "Detected hba at address=%p.\n",
- 	    ha);
- 
--	if ((IS_QLA25XX(ha) || IS_QLA81XX(ha)) && ql2xenabledif) {
-+	if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
- 		if (ha->fw_attributes & BIT_4) {
- 			int prot = 0;
- 			base_vha->flags.difdix_supported = 1;
 -- 
 1.6.0.2
 
