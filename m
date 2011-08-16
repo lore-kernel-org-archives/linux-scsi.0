@@ -1,216 +1,177 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 02/12] qla2xxx: Implemeted beacon on/off for ISP82XX.
-Date: Tue, 16 Aug 2011 11:31:45 -0700
-Message-ID: <1313519515-23122-3-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 11/12] qla2xxx: Issue mailbox command only when firmware hung bit is reset for ISP82xx.
+Date: Tue, 16 Aug 2011 11:31:54 -0700
+Message-ID: <1313519515-23122-12-git-send-email-chad.dupuis@qlogic.com>
 References: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:9349 "EHLO
-	TX2EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753045Ab1HPSnS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:43:18 -0400
+Received: from tx2ehsobe003.messaging.microsoft.com ([65.55.88.13]:47121 "EHLO
+	TX2EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050Ab1HPSna (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2011 14:43:30 -0400
 In-Reply-To: <1313519515-23122-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Saurav Kashyap <saurav.kashyap@qlogic.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |    4 +-
- drivers/scsi/qla2xxx/qla_gbl.h |    3 ++
- drivers/scsi/qla2xxx/qla_mbx.c |   38 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_nx.c  |   42 ++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_nx.h  |    1 +
- drivers/scsi/qla2xxx/qla_os.c  |   13 +++++++----
- 6 files changed, 94 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_gbl.h  |    1 +
+ drivers/scsi/qla2xxx/qla_init.c |   26 +++++++------
+ drivers/scsi/qla2xxx/qla_nx.c   |   74 +++++++++++++++++++++-----------------
+ 3 files changed, 56 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 238bc91..9df4787 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -12,7 +12,7 @@
-  * |             Level            |   Last Value Used  |     Holes	|
-  * ----------------------------------------------------------------------
-  * | Module Init and Probe        |       0x0116       |  		|
-- * | Mailbox commands             |       0x1126       |		|
-+ * | Mailbox commands             |       0x1129       |		|
-  * | Device Discovery             |       0x2083       |		|
-  * | Queue Command and IO tracing |       0x302e       |     0x3008     |
-  * | DPC Thread                   |       0x401c       |		|
-@@ -22,7 +22,7 @@
-  * | Task Management              |       0x8041       |    		|
-  * | AER/EEH                      |       0x900f       |		|
-  * | Virtual Port                 |       0xa007       |		|
-- * | ISP82XX Specific             |       0xb04f       |    		|
-+ * | ISP82XX Specific             |       0xb051       |    		|
-  * | MultiQ                       |       0xc00b       |		|
-  * | Misc                         |       0xd00b       |		|
-  * ----------------------------------------------------------------------
 diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index df58e24..e1aebae 100644
+index e1aebae..ce32d81 100644
 --- a/drivers/scsi/qla2xxx/qla_gbl.h
 +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -409,6 +409,8 @@ extern void qla2x00_beacon_blink(struct scsi_qla_host *);
- extern int qla24xx_beacon_on(struct scsi_qla_host *);
- extern int qla24xx_beacon_off(struct scsi_qla_host *);
- extern void qla24xx_beacon_blink(struct scsi_qla_host *);
-+extern int qla82xx_beacon_on(struct scsi_qla_host *);
-+extern int qla82xx_beacon_off(struct scsi_qla_host *);
- 
- extern uint8_t *qla2x00_read_optrom_data(struct scsi_qla_host *, uint8_t *,
-     uint32_t, uint32_t);
-@@ -573,6 +575,7 @@ extern int qla82xx_mbx_intr_disable(scsi_qla_host_t *);
+@@ -574,6 +574,7 @@ extern int qla82xx_mbx_intr_enable(scsi_qla_host_t *);
+ extern int qla82xx_mbx_intr_disable(scsi_qla_host_t *);
  extern void qla82xx_start_iocbs(srb_t *);
  extern int qla82xx_fcoe_ctx_reset(scsi_qla_host_t *);
++extern int qla82xx_check_md_needed(scsi_qla_host_t *);
  extern void qla82xx_chip_reset_cleanup(scsi_qla_host_t *);
-+extern int qla82xx_mbx_beacon_ctl(scsi_qla_host_t *, int);
+ extern int qla82xx_mbx_beacon_ctl(scsi_qla_host_t *, int);
  extern char *qdev_state(uint32_t);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2375e38..f03e915 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1480,13 +1480,19 @@ qla2x00_setup_chip(scsi_qla_host_t *vha)
+ 			if (rval == QLA_SUCCESS) {
+ enable_82xx_npiv:
+ 				fw_major_version = ha->fw_major_version;
+-				rval = qla2x00_get_fw_version(vha,
+-				    &ha->fw_major_version,
+-				    &ha->fw_minor_version,
+-				    &ha->fw_subminor_version,
+-				    &ha->fw_attributes, &ha->fw_memory_size,
+-				    ha->mpi_version, &ha->mpi_capabilities,
+-				    ha->phy_version);
++				if (IS_QLA82XX(ha))
++					qla82xx_check_md_needed(vha);
++				else {
++					rval = qla2x00_get_fw_version(vha,
++					    &ha->fw_major_version,
++					    &ha->fw_minor_version,
++					    &ha->fw_subminor_version,
++					    &ha->fw_attributes,
++					    &ha->fw_memory_size,
++					    ha->mpi_version,
++					    &ha->mpi_capabilities,
++					    ha->phy_version);
++				}
+ 				if (rval != QLA_SUCCESS)
+ 					goto failed;
+ 				ha->flags.npiv_supported = 0;
+@@ -5441,11 +5447,7 @@ qla82xx_restart_isp(scsi_qla_host_t *vha)
+ 		clear_bit(ISP_ABORT_RETRY, &vha->dpc_flags);
  
- /* BSG related functions */
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index a411374..3b3cec9 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -4275,3 +4275,41 @@ qla82xx_md_get_template(scsi_qla_host_t *vha)
- 		ql_dbg(ql_dbg_mbx, vha, 0x1126, "Done %s.\n", __func__);
- 	return rval;
- }
-+
-+int
-+qla82xx_mbx_beacon_ctl(scsi_qla_host_t *vha, int enable)
-+{
-+	int rval;
-+	struct qla_hw_data *ha = vha->hw;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+
-+	if (!IS_QLA82XX(ha))
-+		return QLA_FUNCTION_FAILED;
-+
-+	ql_dbg(ql_dbg_mbx, vha, 0x1127,
-+		"Entered %s.\n", __func__);
-+
-+	memset(mcp, 0, sizeof(mbx_cmd_t));
-+	mcp->mb[0] = MBC_SET_LED_CONFIG;
-+	if (enable)
-+		mcp->mb[7] = 0xE;
-+	else
-+		mcp->mb[7] = 0xD;
-+
-+	mcp->out_mb = MBX_7|MBX_0;
-+	mcp->in_mb = MBX_0;
-+	mcp->tov = 30;
-+	mcp->flags = 0;
-+
-+	rval = qla2x00_mailbox_command(vha, mcp);
-+	if (rval != QLA_SUCCESS) {
-+		ql_dbg(ql_dbg_mbx, vha, 0x1128,
-+		    "Failed=%x mb[0]=%x.\n", rval, mcp->mb[0]);
-+	} else {
-+		ql_dbg(ql_dbg_mbx, vha, 0x1129,
-+		    "Done %s.\n", __func__);
-+	}
-+
-+	return rval;
-+}
+ 		/* Update the firmware version */
+-		qla2x00_get_fw_version(vha, &ha->fw_major_version,
+-		    &ha->fw_minor_version, &ha->fw_subminor_version,
+-		    &ha->fw_attributes, &ha->fw_memory_size,
+-		    ha->mpi_version, &ha->mpi_capabilities,
+-		    ha->phy_version);
++		status = qla82xx_check_md_needed(vha);
+ 
+ 		if (ha->fce) {
+ 			ha->flags.fce_enabled = 1;
 diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
-index 073b84f..2bc134b 100644
+index 8620cb4..18e6874 100644
 --- a/drivers/scsi/qla2xxx/qla_nx.c
 +++ b/drivers/scsi/qla2xxx/qla_nx.c
-@@ -4873,3 +4873,45 @@ qla82xx_md_prep(scsi_qla_host_t *vha)
- 		}
+@@ -3618,44 +3618,52 @@ qla82xx_need_reset_handler(scsi_qla_host_t *vha)
  	}
  }
-+
+ 
+-static void
 +int
-+qla82xx_beacon_on(struct scsi_qla_host *vha)
-+{
+ qla82xx_check_md_needed(scsi_qla_host_t *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	uint16_t fw_major_version, fw_minor_version, fw_subminor_version;
+-	uint16_t fw_attributes;
+-	uint32_t fw_memory_size, mpi_capabilities;
+-	uint8_t	mpi_version[3], phy_version[3];
+-
+-	if (!ha->fw_dumped) {
+-		qla2x00_get_fw_version(vha,
+-		    &fw_major_version,
+-		    &fw_minor_version,
+-		    &fw_subminor_version,
+-		    &fw_attributes, &fw_memory_size,
+-		    mpi_version, &mpi_capabilities,
+-		    phy_version);
+-
+-		if (fw_major_version != ha->fw_major_version ||
+-		    fw_minor_version != ha->fw_minor_version ||
+-		    fw_subminor_version != ha->fw_subminor_version) {
+-			ql_log(ql_log_info, vha, 0xb02d,
+-			    "Firmware version differs "
+-			    "Previous version: %d:%d:%d - "
+-			    "New version: %d:%d:%d\n",
+-			    ha->fw_major_version,
+-			    ha->fw_minor_version, ha->fw_subminor_version,
+-			    fw_major_version, fw_minor_version,
+-			    fw_subminor_version);
+-			/* Release MiniDump resources */
+-			qla82xx_md_free(vha);
+-			/* ALlocate MiniDump resources */
+-			qla82xx_md_prep(vha);
++	int rval = QLA_SUCCESS;
 +
-+	int rval;
-+	struct qla_hw_data *ha = vha->hw;
-+	qla82xx_idc_lock(ha);
-+	rval = qla82xx_mbx_beacon_ctl(vha, 1);
++	fw_major_version = ha->fw_major_version;
++	fw_minor_version = ha->fw_minor_version;
++	fw_subminor_version = ha->fw_subminor_version;
 +
-+	if (rval)
-+	{
-+		ql_log(ql_log_warn, vha, 0xb050,
-+		    "mbx set led config failed in %s\n", __func__);
-+		goto exit;
++	rval = qla2x00_get_fw_version(vha, &ha->fw_major_version,
++	    &ha->fw_minor_version, &ha->fw_subminor_version,
++	    &ha->fw_attributes, &ha->fw_memory_size,
++	    ha->mpi_version, &ha->mpi_capabilities,
++	    ha->phy_version);
++
++	if (rval != QLA_SUCCESS)
++		return rval;
++
++	if (ql2xmdenable) {
++		if (!ha->fw_dumped) {
++			if (fw_major_version != ha->fw_major_version ||
++			    fw_minor_version != ha->fw_minor_version ||
++			    fw_subminor_version != ha->fw_subminor_version) {
++
++				ql_log(ql_log_info, vha, 0xb02d,
++				    "Firmware version differs "
++				    "Previous version: %d:%d:%d - "
++				    "New version: %d:%d:%d\n",
++				    ha->fw_major_version,
++				    ha->fw_minor_version,
++				    ha->fw_subminor_version,
++				    fw_major_version, fw_minor_version,
++				    fw_subminor_version);
++				/* Release MiniDump resources */
++				qla82xx_md_free(vha);
++				/* ALlocate MiniDump resources */
++				qla82xx_md_prep(vha);
++			} else
++				ql_log(ql_log_info, vha, 0xb02e,
++				    "Firmware dump available to retrieve\n",
++				    vha->host_no);
+ 		}
+-	} else
+-		ql_log(ql_log_info, vha, 0xb02e,
+-		    "Firmware dump available to retrieve\n",
+-		    vha->host_no);
 +	}
-+	ha->beacon_blink_led = 1;
-+exit:
-+	qla82xx_idc_unlock(ha);
 +	return rval;
-+}
-+
-+int
-+qla82xx_beacon_off(struct scsi_qla_host *vha)
-+{
-+
-+	int rval;
-+	struct qla_hw_data *ha = vha->hw;
-+	qla82xx_idc_lock(ha);
-+	rval = qla82xx_mbx_beacon_ctl(vha, 0);
-+
-+	if (rval)
-+	{
-+		ql_log(ql_log_warn, vha, 0xb051,
-+		    "mbx set led config failed in %s\n", __func__);
-+		goto exit;
-+	}
-+	ha->beacon_blink_led = 0;
-+exit:
-+	qla82xx_idc_unlock(ha);
-+	return rval;
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
-index 97ee250..57820c1 100644
---- a/drivers/scsi/qla2xxx/qla_nx.h
-+++ b/drivers/scsi/qla2xxx/qla_nx.h
-@@ -888,6 +888,7 @@ struct ct6_dsd {
- };
+ }
  
- #define MBC_TOGGLE_INTERRUPT	0x10
-+#define MBC_SET_LED_CONFIG	0x125
  
- /* Flash  offset */
- #define FLT_REG_BOOTLOAD_82XX	0x72
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index e37556c..ca9c76e 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1762,9 +1762,9 @@ static struct isp_operations qla82xx_isp_ops = {
- 	.read_nvram		= qla24xx_read_nvram_data,
- 	.write_nvram		= qla24xx_write_nvram_data,
- 	.fw_dump		= qla24xx_fw_dump,
--	.beacon_on		= qla24xx_beacon_on,
--	.beacon_off		= qla24xx_beacon_off,
--	.beacon_blink		= qla24xx_beacon_blink,
-+	.beacon_on		= qla82xx_beacon_on,
-+	.beacon_off		= qla82xx_beacon_off,
-+	.beacon_blink		= NULL,
- 	.read_optrom		= qla82xx_read_optrom_data,
- 	.write_optrom		= qla82xx_write_optrom_data,
- 	.get_flash_version	= qla24xx_get_flash_version,
-@@ -3917,8 +3917,11 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 
- 	/* Check if beacon LED needs to be blinked for physical host only */
- 	if (!vha->vp_idx && (ha->beacon_blink_led == 1)) {
--		set_bit(BEACON_BLINK_NEEDED, &vha->dpc_flags);
--		start_dpc++;
-+		/* There is no beacon_blink function for ISP82xx */
-+		if (!IS_QLA82XX(ha)) {
-+			set_bit(BEACON_BLINK_NEEDED, &vha->dpc_flags);
-+			start_dpc++;
-+		}
- 	}
- 
- 	/* Process any deferred work. */
 -- 
 1.6.0.2
 
