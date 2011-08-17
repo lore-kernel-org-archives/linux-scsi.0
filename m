@@ -1,55 +1,236 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 08/21] target: Fix write payload exception handling with ->new_cmd_map
-Date: Wed, 17 Aug 2011 23:17:12 +0000
-Message-ID: <1313623045-15916-9-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 09/21] target: Add WRITE_SAME (10) parsing and refactor passthrough checks
+Date: Wed, 17 Aug 2011 23:17:13 +0000
+Message-ID: <1313623045-15916-10-git-send-email-nab@linux-iscsi.org>
 References: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58321 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58323 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754424Ab1HQXm3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:29 -0400
+	with ESMTP id S1754467Ab1HQXmb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:31 -0400
 In-Reply-To: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, Christoph Hellwig <hch@lst.de>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a bug for fabrics using tfo->new_cmd_map() that
-are expect transport_generic_request_failure() to be calling
-transport_send_check_condition_and_sense() for both READ and WRITE,
-instead of only for READ exceptions.
+This patch adds initial WRITE_SAME (10) w/ UNMAP=1 support following updates in
+sbcr26 to allow UNMAP=1 for the non 16 + 32 byte CDB case.  It also refactors
+current pSCSI passthrough passthrough checks into target_check_write_same_discard()
+ahead of UNMAP=0 w/ write payload support into target_core_iblock.c.
 
-This was originally observed with a failed WRITE_SAME_16 w/ unmap=0
-using tcm_loop.
+This includes the support for handling WRITE_SAME in transport_emulate_control_cdb(),
+and converts target_emulate_write_same to accept num_blocks directly for
+WRITE_SAME, WRITE_SAME_16 and WRITE_SAME_32.
 
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Reported-by: Eric Seppanen <eric@purestorage.com>
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
 ---
- drivers/target/target_core_transport.c |   10 ++++++++--
- 1 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/target/target_core_cdb.c       |   28 +++++----
+ drivers/target/target_core_transport.c |  102 ++++++++++++++++++--------------
+ 2 files changed, 73 insertions(+), 57 deletions(-)
 
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index d095408..4c1d3a9 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -1090,24 +1090,17 @@ err:
+  * Note this is not used for TCM/pSCSI passthrough
+  */
+ static int
+-target_emulate_write_same(struct se_task *task, int write_same32)
++target_emulate_write_same(struct se_task *task, u32 num_blocks)
+ {
+ 	struct se_cmd *cmd = task->task_se_cmd;
+ 	struct se_device *dev = cmd->se_dev;
+ 	sector_t range;
+ 	sector_t lba = cmd->t_task_lba;
+-	unsigned int num_blocks;
+ 	int ret;
+ 	/*
+-	 * Extract num_blocks from the WRITE_SAME_* CDB.  Then use the explict
+-	 * range when non zero is supplied, otherwise calculate the remaining
+-	 * range based on ->get_blocks() - starting LBA.
++	 * Use the explicit range when non zero is supplied, otherwise calculate
++	 * the remaining range based on ->get_blocks() - starting LBA.
+ 	 */
+-	if (write_same32)
+-		num_blocks = get_unaligned_be32(&cmd->t_task_cdb[28]);
+-	else
+-		num_blocks = get_unaligned_be32(&cmd->t_task_cdb[10]);
+-
+ 	if (num_blocks != 0)
+ 		range = num_blocks;
+ 	else
+@@ -1170,13 +1163,23 @@ transport_emulate_control_cdb(struct se_task *task)
+ 		}
+ 		ret = target_emulate_unmap(task);
+ 		break;
++	case WRITE_SAME:
++		if (!dev->transport->do_discard) {
++			pr_err("WRITE_SAME emulation not supported"
++					" for: %s\n", dev->transport->name);
++			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
++		}
++		ret = target_emulate_write_same(task,
++				get_unaligned_be16(&cmd->t_task_cdb[7]));
++		break;
+ 	case WRITE_SAME_16:
+ 		if (!dev->transport->do_discard) {
+ 			pr_err("WRITE_SAME_16 emulation not supported"
+ 					" for: %s\n", dev->transport->name);
+ 			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
+ 		}
+-		ret = target_emulate_write_same(task, 0);
++		ret = target_emulate_write_same(task,
++				get_unaligned_be32(&cmd->t_task_cdb[10]));
+ 		break;
+ 	case VARIABLE_LENGTH_CMD:
+ 		service_action =
+@@ -1189,7 +1192,8 @@ transport_emulate_control_cdb(struct se_task *task)
+ 					dev->transport->name);
+ 				return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
+ 			}
+-			ret = target_emulate_write_same(task, 1);
++			ret = target_emulate_write_same(task,
++				get_unaligned_be32(&cmd->t_task_cdb[28]));
+ 			break;
+ 		default:
+ 			pr_err("Unsupported VARIABLE_LENGTH_CMD SA:"
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index cc5a339..fd7d451 100644
+index fd7d451..eb8055a 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2053,8 +2053,14 @@ static void transport_generic_request_failure(
- 		cmd->scsi_sense_reason = TCM_UNSUPPORTED_SCSI_OPCODE;
- 		break;
- 	}
--
--	if (!sc)
+@@ -2861,6 +2861,38 @@ static int transport_cmd_get_valid_sectors(struct se_cmd *cmd)
+ 	return sectors;
+ }
+ 
++static int target_check_write_same_discard(unsigned char *flags, struct se_device *dev)
++{
 +	/*
-+	 * If a fabric does not define a cmd->se_tfo->new_cmd_map caller,
-+	 * make the call to transport_send_check_condition_and_sense()
-+	 * directly.  Otherwise expect the fabric to make the call to
-+	 * transport_send_check_condition_and_sense() after handling
-+	 * possible unsoliticied write data payloads.
++	 * Determine if the received WRITE_SAME is used to for direct
++	 * passthrough into Linux/SCSI with struct request via TCM/pSCSI
++	 * or we are signaling the use of internal WRITE_SAME + UNMAP=1
++	 * emulation for -> Linux/BLOCK disbard with TCM/IBLOCK code.
 +	 */
-+	if (!sc && !cmd->se_tfo->new_cmd_map)
- 		transport_new_cmd_failure(cmd);
- 	else {
- 		ret = transport_send_check_condition_and_sense(cmd,
++	int passthrough = (dev->transport->transport_type ==
++				TRANSPORT_PLUGIN_PHBA_PDEV);
++
++	if (!passthrough) {
++		if ((flags[0] & 0x04) || (flags[0] & 0x02)) {
++			pr_err("WRITE_SAME PBDATA and LBDATA"
++				" bits not supported for Block Discard"
++				" Emulation\n");
++			return -ENOSYS;
++		}
++		/*
++		 * Currently for the emulated case we only accept
++		 * tpws with the UNMAP=1 bit set.
++		 */
++		if (!(flags[0] & 0x08)) {
++			pr_err("WRITE_SAME w/o UNMAP bit not"
++				" supported for Block Discard Emulation\n");
++			return -ENOSYS;
++		}
++	}
++
++	return 0;
++}
++
+ /*	transport_generic_cmd_sequencer():
+  *
+  *	Generic Command Sequencer that should work for most DAS transport
+@@ -3081,27 +3113,9 @@ static int transport_generic_cmd_sequencer(
+ 			cmd->t_task_lba = get_unaligned_be64(&cdb[12]);
+ 			cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
+ 
+-			/*
+-			 * Skip the remaining assignments for TCM/PSCSI passthrough
+-			 */
+-			if (passthrough)
+-				break;
+-
+-			if ((cdb[10] & 0x04) || (cdb[10] & 0x02)) {
+-				pr_err("WRITE_SAME PBDATA and LBDATA"
+-					" bits not supported for Block Discard"
+-					" Emulation\n");
++			if (target_check_write_same_discard(&cdb[10], dev) < 0)
+ 				goto out_invalid_cdb_field;
+-			}
+-			/*
+-			 * Currently for the emulated case we only accept
+-			 * tpws with the UNMAP=1 bit set.
+-			 */
+-			if (!(cdb[10] & 0x08)) {
+-				pr_err("WRITE_SAME w/o UNMAP bit not"
+-					" supported for Block Discard Emulation\n");
+-				goto out_invalid_cdb_field;
+-			}
++
+ 			break;
+ 		default:
+ 			pr_err("VARIABLE_LENGTH_CMD service action"
+@@ -3358,33 +3372,31 @@ static int transport_generic_cmd_sequencer(
+ 		}
+ 
+ 		cmd->t_task_lba = get_unaligned_be64(&cdb[2]);
+-		passthrough = (dev->transport->transport_type ==
+-				TRANSPORT_PLUGIN_PHBA_PDEV);
+-		/*
+-		 * Determine if the received WRITE_SAME_16 is used to for direct
+-		 * passthrough into Linux/SCSI with struct request via TCM/pSCSI
+-		 * or we are signaling the use of internal WRITE_SAME + UNMAP=1
+-		 * emulation for -> Linux/BLOCK disbard with TCM/IBLOCK and
+-		 * TCM/FILEIO subsystem plugin backstores.
+-		 */
+-		if (!passthrough) {
+-			if ((cdb[1] & 0x04) || (cdb[1] & 0x02)) {
+-				pr_err("WRITE_SAME PBDATA and LBDATA"
+-					" bits not supported for Block Discard"
+-					" Emulation\n");
+-				goto out_invalid_cdb_field;
+-			}
+-			/*
+-			 * Currently for the emulated case we only accept
+-			 * tpws with the UNMAP=1 bit set.
+-			 */
+-			if (!(cdb[1] & 0x08)) {
+-				pr_err("WRITE_SAME w/o UNMAP bit not "
+-					" supported for Block Discard Emulation\n");
+-				goto out_invalid_cdb_field;
+-			}
++		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
++
++		if (target_check_write_same_discard(&cdb[1], dev) < 0)
++			goto out_invalid_cdb_field;
++		break;
++	case WRITE_SAME:
++		sectors = transport_get_sectors_10(cdb, cmd, &sector_ret);
++		if (sector_ret)
++			goto out_unsupported_cdb;
++
++		if (sectors)
++			size = transport_get_size(sectors, cdb, cmd);
++		else {
++			pr_err("WSNZ=1, WRITE_SAME w/sectors=0 not supported\n");
++			goto out_invalid_cdb_field;
+ 		}
++
++		cmd->t_task_lba = get_unaligned_be32(&cdb[2]);
+ 		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
++		/*
++		 * Follow sbcr26 with WRITE_SAME (10) and check for the existence
++		 * of byte 1 bit 3 UNMAP instead of original reserved field
++		 */
++		if (target_check_write_same_discard(&cdb[1], dev) < 0)
++			goto out_invalid_cdb_field;
+ 		break;
+ 	case ALLOW_MEDIUM_REMOVAL:
+ 	case GPCMD_CLOSE_TRACK:
 -- 
 1.7.6
 
