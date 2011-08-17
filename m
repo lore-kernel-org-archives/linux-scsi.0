@@ -1,59 +1,45 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 17/21] iscsi-target: Fix iscsit_allocate_se_cmd_for_tmr failure path bugs
-Date: Wed, 17 Aug 2011 23:17:21 +0000
-Message-ID: <1313623045-15916-18-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 18/21] target: Print subpage too for unhandled MODE SENSE pages
+Date: Wed, 17 Aug 2011 23:17:22 +0000
+Message-ID: <1313623045-15916-19-git-send-email-nab@linux-iscsi.org>
 References: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58348 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58351 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754617Ab1HQXmn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:43 -0400
+	with ESMTP id S1754617Ab1HQXmq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:46 -0400
 In-Reply-To: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Dan Carpenter <error27@gmail.com>
+Cc: Roland Dreier <roland@purestorage.com>
 
-From: Dan Carpenter <error27@gmail.com>
+From: Roland Dreier <roland@purestorage.com>
 
-This patch fixes two bugs in allocation failure handling in
-iscsit_allocate_se_cmd_for_tmr():
+Make a log message more useful by printing both the page and subpage
+that an initiator is requesting.
 
-This first reported by DanC is a free-after call to transport_free_se_cmd(), this
-patch drops the transport_free_se_cmd() call all together, as iscsit_release_cmd()
-will release existing allocations as expected.
-
-The second is a bug where iscsi_cmd_t was being leaked on a cmd->tmr_req allocation
-failure, so make this jump to iscsit_release_cmd() as well.
-
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+Signed-off-by: Roland Dreier <roland@purestorage.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_util.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/target/target_core_cdb.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index a1acb01..a0d23bc 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -243,7 +243,7 @@ struct iscsi_cmd *iscsit_allocate_se_cmd_for_tmr(
- 	if (!cmd->tmr_req) {
- 		pr_err("Unable to allocate memory for"
- 			" Task Management command!\n");
--		return NULL;
-+		goto out;
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index 40ad142..89ae923 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -920,8 +920,8 @@ target_emulate_modesense(struct se_cmd *cmd, int ten)
+ 		length += target_modesense_control(dev, &buf[offset+length]);
+ 		break;
+ 	default:
+-		pr_err("Got Unknown Mode Page: 0x%02x\n",
+-				cdb[2] & 0x3f);
++		pr_err("MODE SENSE: unimplemented page/subpage: 0x%02x/0x%02x\n",
++		       cdb[2] & 0x3f, cdb[3]);
+ 		return PYX_TRANSPORT_UNKNOWN_MODE_PAGE;
  	}
- 	/*
- 	 * TASK_REASSIGN for ERL=2 / connection stays inside of
-@@ -298,8 +298,6 @@ struct iscsi_cmd *iscsit_allocate_se_cmd_for_tmr(
- 	return cmd;
- out:
- 	iscsit_release_cmd(cmd);
--	if (se_cmd)
--		transport_free_se_cmd(se_cmd);
- 	return NULL;
- }
- 
+ 	offset += length;
 -- 
 1.7.6
 
