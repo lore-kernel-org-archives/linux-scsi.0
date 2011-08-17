@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 06/21] iscsi-target: remove duplicate return
-Date: Wed, 17 Aug 2011 23:17:10 +0000
-Message-ID: <1313623045-15916-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 07/21] iscsi-target: forever loop bug in iscsit_attach_ooo_cmdsn()
+Date: Wed, 17 Aug 2011 23:17:11 +0000
+Message-ID: <1313623045-15916-8-git-send-email-nab@linux-iscsi.org>
 References: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58306 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58319 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751234Ab1HQXmY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:24 -0400
+	with ESMTP id S1751234Ab1HQXm1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:27 -0400
 In-Reply-To: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,26 +16,29 @@ Cc: Dan Carpenter <error27@gmail.com>
 
 From: Dan Carpenter <error27@gmail.com>
 
-We returned on the line before already.
+This patch fixes a forever loop bug in iscsit_attach_ooo_cmdsn()
+while walking sess->sess_ooo_cmdsn_list when the received
+CmdSN is less than the tail of the list.
 
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+ drivers/target/iscsi/iscsi_target_erl1.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index c24fb10..6a4ea29 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -2243,7 +2243,6 @@ static int iscsit_handle_snack(
- 	case 0:
- 		return iscsit_handle_recovery_datain_or_r2t(conn, buf,
- 			hdr->itt, hdr->ttt, hdr->begrun, hdr->runlength);
--		return 0;
- 	case ISCSI_FLAG_SNACK_TYPE_STATUS:
- 		return iscsit_handle_status_snack(conn, hdr->itt, hdr->ttt,
- 			hdr->begrun, hdr->runlength);
+diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
+index 9806507..c4c68da 100644
+--- a/drivers/target/iscsi/iscsi_target_erl1.c
++++ b/drivers/target/iscsi/iscsi_target_erl1.c
+@@ -834,7 +834,7 @@ static int iscsit_attach_ooo_cmdsn(
+ 			 */
+ 			list_for_each_entry(ooo_tmp, &sess->sess_ooo_cmdsn_list,
+ 						ooo_list) {
+-				while (ooo_tmp->cmdsn < ooo_cmdsn->cmdsn)
++				if (ooo_tmp->cmdsn < ooo_cmdsn->cmdsn)
+ 					continue;
+ 
+ 				list_add(&ooo_cmdsn->ooo_list,
 -- 
 1.7.6
 
