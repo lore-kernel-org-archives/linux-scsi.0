@@ -1,61 +1,153 @@
-From: Peter Chang <dpf@google.com>
-Subject: Re: mpt2sas driver behaving strange with a failed SATA disk behind
- SAS expander.
-Date: Wed, 17 Aug 2011 10:08:09 -0700
-Message-ID: <CAF2xp_FOjZOxs1fbhvCsB3=uqvQG4=1cqkfiO0BptH_5oQvCaw@mail.gmail.com>
-References: <4E4BCF54.8090408@swip.net>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH] scsi: document generic scsi host sysfs attributes
+Date: Wed, 17 Aug 2011 13:20:47 -0500
+Message-ID: <20110817182047.8821.55211.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:62719 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273Ab1HQRIc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 13:08:32 -0400
-Received: from hpaq2.eem.corp.google.com (hpaq2.eem.corp.google.com [172.25.149.2])
-	by smtp-out.google.com with ESMTP id p7HH8UIZ030810
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Aug 2011 10:08:31 -0700
-Received: from ywf9 (ywf9.prod.google.com [10.192.6.9])
-	by hpaq2.eem.corp.google.com with ESMTP id p7HH7dKg031240
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Aug 2011 10:08:29 -0700
-Received: by ywf9 with SMTP id 9so1015672ywf.32
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Aug 2011 10:08:29 -0700 (PDT)
-In-Reply-To: <4E4BCF54.8090408@swip.net>
+Received: from g6t0187.atlanta.hp.com ([15.193.32.64]:39536 "EHLO
+	g6t0187.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798Ab1HQSUt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 14:20:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fredrik Lindgren <fli@swip.net>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: james.bottomley@hansenpartnership.com
+Cc: stephenmcameron@gmail.com, akpm@linux-foundation.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Le 17 ao=FBt 2011 07:25, Fredrik Lindgren <fli@swip.net> a =E9crit :
-> When doing disk IO on the disks (they are all configured in MD raids)
-> suddenly IO will
-> stop and these messages are printed on the console about once every s=
-econd:
->
-> mpt2sas0: log_info(0x31110610): originator(PL), code(0x11), sub_code(=
-0x0610)
->
-> From what I understand this means:
->
-> PL_LOGINFO_CODE_RESET (0x00110000)
-> PL_LOGINFO_SUB_CODE_SATA_NON_NCQ_RW_ERR_BIT_SET (0x00000600)
->
-> So a disk is acting up, generating errors? What does the last "10" me=
-an in
-> the sub_code,
-> is that an identifier for which disk it is?
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-no, the bottom bts are still part of the error code.
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ Documentation/ABI/testing/sysfs-bus-scsi |  121 ++++++++++++++++++++++++++++++
+ 1 files changed, 121 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-bus-scsi
 
-i haven't run w/ your exact fw/driver setup, but i think you'll find
-that you're in a 'loop' where the driver is returning DID_RESET and
-the scsi layer is retrying w/o going through the retry counter logic
-(the command that fails is one that the firmware issued).
+diff --git a/Documentation/ABI/testing/sysfs-bus-scsi b/Documentation/ABI/testing/sysfs-bus-scsi
+new file mode 100644
+index 0000000..fe4d36e
+--- /dev/null
++++ b/Documentation/ABI/testing/sysfs-bus-scsi
+@@ -0,0 +1,121 @@
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/unique_id
++Date:		February, 2003
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only unsigned integer uniquely identifying the SCSI host
++		within the system.  This value is assigned by the low level
++		driver.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/host_busy
++Date:		February 2003
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only unsigned short integer indicating whether the SCSI
++		host is busy.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/cmd_per_lun
++Date:		February 2003
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only short integer indicating how many concurrent
++		commands per logical unit the SCSI host supports.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/can_queue
++Date:		October, 2006
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only short integer indicating the total number of
++		concurrent commands the SCSI host supports.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/sg_tablesize
++Date:		February, 2003
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only unsigned short integer indicating how many scatter
++		gather entries are available for each command.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/sg_prot_tablesize
++Date:		September, 2010
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only unsigned short integer which indicates how many
++		scatter gather entries are available for DIX integrity data.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/unchecked_isa_dma
++Date:		February, 2003
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/proc_name
++Date:		March, 2004
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/scan
++Date:		August, 2003
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only integer which indicates whether the host is an
++		ancient ISA device which therefore requires extra bounce
++		buffering.
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/hstate
++Date:		February, 2008
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		String value which indicates the state of the SCSI host.
++		Possible values are: "created", "running", "cancel",
++		"deleted", "recovery", "cancel/recovery" and "deleted/recovery"
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/supported_mode
++Date:		October, 2007
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only string value which indicates the supported modes of
++		the SCSI host.  Possible modes are: "Initiator" and "Target".
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/active_mode
++Date:		October, 2007
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only string value which indicates the currently active
++		mode of the SCSI host.  Possible values are "Initiator",
++		"Target" and "unknown".
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/prot_capabilities
++Date:		July, 2008
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only unsigned integer bitmap which indicates what
++		data integrity capabilities the SCSI host supports.
++		Bit 0: T10 DIF type 1
++		Bit 1: T10 DIF type 2
++		Bit 2: T10 DIF type 3
++		Bit 3: DIX between OS and HBA only.
++		Bit 4: DIX with DIF type 1
++		Bit 5: DIX with DIF type 2
++		Bit 6: DIX with DIF type 3
++
++What:		/sys/bus/scsi/devices/host*/scsi_host/host*/prot_guard_type
++Date:		July, 2008
++KernelVersion:	Unknown
++Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		Read only unsigned short bitmap value which indicates what
++		checksums DIX capable controllers implement.
++		Bit 0: DIX guard CRC.
++		Bit 1: DIX guard IP.
++
 
-\p
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
