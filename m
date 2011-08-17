@@ -1,71 +1,117 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 03/21] target: Use ERR_CAST inlined function
-Date: Wed, 17 Aug 2011 23:17:07 +0000
-Message-ID: <1313623045-15916-4-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 04/21] iscsi-target: Fix leak on failure in iscsi_copy_param_list()
+Date: Wed, 17 Aug 2011 23:17:08 +0000
+Message-ID: <1313623045-15916-5-git-send-email-nab@linux-iscsi.org>
 References: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58296 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58299 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752976Ab1HQXmS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:18 -0400
+	with ESMTP id S1751682Ab1HQXmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:20 -0400
 In-Reply-To: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Thomas Meyer <thomas@m3y3r.de>
+Cc: Jesper Juhl <jj@chaosbits.net>
 
-From: Thomas Meyer <thomas@m3y3r.de>
+From: Jesper Juhl <jj@chaosbits.net>
 
-Use ERR_CAST inlined function instead of ERR_PTR(PTR_ERR(...))
+We leak memory if the allocations for 'new_param->name' or
+'new_param->value' fail in iscsi_target_parameters.c::iscsi_copy_param_list()
 
-The semantic patch that makes this output is available
-in scripts/coccinelle/api/err_cast.cocci.
+We also do a lot of variable assignments that are completely pointless
+if the allocations fail.
 
-More information about semantic patching is available at
-http://coccinelle.lip6.fr/
+So, let's move the allocations before the assignments and also make
+sure that we free whatever was allocated to one if the allocation fail.
 
-Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+There's also some small CodingStyle fixups in there (curly braces on
+both branches of if statement, only one variable per line) since I was
+in the area anyway. And finally, error messages in the function are
+put on a single line for easy grep'abillity.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c |    4 ++--
- drivers/target/target_core_fabric_configfs.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/target/iscsi/iscsi_target_parameters.c |   43 +++++++++---------------
+ 1 files changed, 16 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index f095e65..f1643db 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -268,7 +268,7 @@ struct se_tpg_np *lio_target_call_addnptotpg(
- 				ISCSI_TCP);
- 	if (IS_ERR(tpg_np)) {
- 		iscsit_put_tpg(tpg);
--		return ERR_PTR(PTR_ERR(tpg_np));
-+		return ERR_CAST(tpg_np);
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 252e246..497b2e7 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -545,13 +545,13 @@ int iscsi_copy_param_list(
+ 	struct iscsi_param_list *src_param_list,
+ 	int leading)
+ {
+-	struct iscsi_param *new_param = NULL, *param = NULL;
++	struct iscsi_param *param = NULL;
++	struct iscsi_param *new_param = NULL;
+ 	struct iscsi_param_list *param_list = NULL;
+ 
+ 	param_list = kzalloc(sizeof(struct iscsi_param_list), GFP_KERNEL);
+ 	if (!param_list) {
+-		pr_err("Unable to allocate memory for"
+-				" struct iscsi_param_list.\n");
++		pr_err("Unable to allocate memory for struct iscsi_param_list.\n");
+ 		goto err_out;
  	}
- 	pr_debug("LIO_Target_ConfigFS: addnptotpg done!\n");
+ 	INIT_LIST_HEAD(&param_list->param_list);
+@@ -567,8 +567,17 @@ int iscsi_copy_param_list(
  
-@@ -1285,7 +1285,7 @@ struct se_wwn *lio_target_call_coreaddtiqn(
+ 		new_param = kzalloc(sizeof(struct iscsi_param), GFP_KERNEL);
+ 		if (!new_param) {
+-			pr_err("Unable to allocate memory for"
+-				" struct iscsi_param.\n");
++			pr_err("Unable to allocate memory for struct iscsi_param.\n");
++			goto err_out;
++		}
++
++		new_param->name = kstrdup(param->name, GFP_KERNEL);
++		new_param->value = kstrdup(param->value, GFP_KERNEL);
++		if (!new_param->value || !new_param->name) {
++			kfree(new_param->value);
++			kfree(new_param->name);
++			kfree(new_param);
++			pr_err("Unable to allocate memory for parameter name/value.\n");
+ 			goto err_out;
+ 		}
  
- 	tiqn = iscsit_add_tiqn((unsigned char *)name);
- 	if (IS_ERR(tiqn))
--		return ERR_PTR(PTR_ERR(tiqn));
-+		return ERR_CAST(tiqn);
- 	/*
- 	 * Setup struct iscsi_wwn_stat_grps for se_wwn->fabric_stat_group.
- 	 */
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index f165469..55bbe08 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -481,7 +481,7 @@ static struct config_group *target_fabric_make_nodeacl(
+@@ -580,32 +589,12 @@ int iscsi_copy_param_list(
+ 		new_param->use = param->use;
+ 		new_param->type_range = param->type_range;
  
- 	se_nacl = tf->tf_ops.fabric_make_nodeacl(se_tpg, group, name);
- 	if (IS_ERR(se_nacl))
--		return ERR_PTR(PTR_ERR(se_nacl));
-+		return ERR_CAST(se_nacl);
+-		new_param->name = kzalloc(strlen(param->name) + 1, GFP_KERNEL);
+-		if (!new_param->name) {
+-			pr_err("Unable to allocate memory for"
+-				" parameter name.\n");
+-			goto err_out;
+-		}
+-
+-		new_param->value = kzalloc(strlen(param->value) + 1,
+-				GFP_KERNEL);
+-		if (!new_param->value) {
+-			pr_err("Unable to allocate memory for"
+-				" parameter value.\n");
+-			goto err_out;
+-		}
+-
+-		memcpy(new_param->name, param->name, strlen(param->name));
+-		new_param->name[strlen(param->name)] = '\0';
+-		memcpy(new_param->value, param->value, strlen(param->value));
+-		new_param->value[strlen(param->value)] = '\0';
+-
+ 		list_add_tail(&new_param->p_list, &param_list->param_list);
+ 	}
  
- 	nacl_cg = &se_nacl->acl_group;
- 	nacl_cg->default_groups = se_nacl->acl_default_groups;
+-	if (!list_empty(&param_list->param_list))
++	if (!list_empty(&param_list->param_list)) {
+ 		*dst_param_list = param_list;
+-	else {
++	} else {
+ 		pr_err("No parameters allocated.\n");
+ 		goto err_out;
+ 	}
 -- 
 1.7.6
 
