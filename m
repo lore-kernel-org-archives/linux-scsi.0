@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 14/21] target: Fix task count > 1 handling breakage and use max_sector page alignment
-Date: Wed, 17 Aug 2011 23:17:18 +0000
-Message-ID: <1313623045-15916-15-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 15/21] target: Fix task SGL chaining breakage with transport_allocate_data_tasks
+Date: Wed, 17 Aug 2011 23:17:19 +0000
+Message-ID: <1313623045-15916-16-git-send-email-nab@linux-iscsi.org>
 References: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58334 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58340 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754452Ab1HQXmj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:39 -0400
+	with ESMTP id S1754598Ab1HQXmk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:40 -0400
 In-Reply-To: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,113 +16,111 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Kiran Patil <kiran.patil@intel.com
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch addresses recent breakage with multiple se_task (task_count > 1)
-operation following backend dev->se_sub_dev->se_dev_attrib.max_sectors in new
-transport_allocate_data_tasks() code.  The initial bug here was a bogus
-task->task_sg_nents assignment in transport_allocate_data_tasks() based on
-the passed parameter, which now uses DIV_ROUND_UP(task_size, PAGE_SIZE) to
-determine the proper number of per task SGL entries for the (task_count > 1)
-case.
+This patch fixes two bugs associated with transport_do_task_sg_chain()
+operation where transport_allocate_data_tasks() was incorrectly setting
+task_padded_sg for all tasks, and causing bogus task->task_sg_nents
+assignments + OOPsen with fabrics depending upon this code.  The first bit
+here adds a task_sg_nents_padded check in transport_allocate_data_tasks()
+to include an extra SGL vector when necessary for tasks that expect to
+be linked using sg_chain().
 
-This also means we now need to enforce a PAGE_SIZE aligned max_sector count
-value for this to work as expected without bringing back the pre v3.1
-transport_map_mem_to_sg() logic to handle SGL offsets across multiple tasks.
-So this patch adds se_dev_align_max_sectors() to round down max_sectors as
-necessary to ensure this alignment via se_dev_set_default_attribs() and
-se_dev_align_max_sectors() and keeps it simple for (task_count > 1)
-operation.
+The second change involves making transport_do_task_sg_chain() properly
+account for the extra SGL vector when task->task_padded_sg is set for
+the non trailing ->task_sg or single ->task_sg allocations.  Note this
+patch also removes the BUG_ON(!task->task_padded_sg) check within
+transport_do_task_sg_chain() as we expect this to happen normally
+with the updated logic in transport_allocate_data_tasks(), along with
+being bogus for CONTROL_SG_IO_CDB type payloads.
 
-So far this bugfix has been tested with (task_count > 1) operation
-using iscsi-target and iblock backends.
+So far this bugfix has been tested with tcm_qla2xxx and iblock backends
+in (task_count > 1)( and (task_count == 1) operation.
 
-Reported-by: Chris Boot <bootc@bootc.net>
+Reported-by: Kiran Patil <kiran.patil@intel.com>
 Cc: Kiran Patil <kiran.patil@intel.com>
 Cc: Andy Grover <agrover@redhat.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_device.c    |   28 ++++++++++++++++++++++++++++
- drivers/target/target_core_transport.c |    7 +++++--
- 2 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/target/target_core_transport.c |   34 +++++++++++++++++++------------
+ 1 files changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index b38b6c9..2f5d65f 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -839,6 +839,24 @@ int se_dev_check_shutdown(struct se_device *dev)
- 	return ret;
- }
- 
-+u32 se_dev_align_max_sectors(u32 max_sectors, u32 block_size)
-+{
-+	u32 tmp, aligned_max_sectors;
-+	/*
-+	 * Limit max_sectors to a PAGE_SIZE aligned value for modern
-+	 * transport_allocate_data_tasks() operation.
-+	 */
-+	tmp = rounddown((max_sectors * block_size), PAGE_SIZE);
-+	aligned_max_sectors = (tmp / block_size);
-+	if (max_sectors != aligned_max_sectors) {
-+		printk(KERN_INFO "Rounding down aligned max_sectors from %u"
-+				" to %u\n", max_sectors, aligned_max_sectors);
-+		return aligned_max_sectors;
-+	}
-+
-+	return max_sectors;
-+}
-+
- void se_dev_set_default_attribs(
- 	struct se_device *dev,
- 	struct se_dev_limits *dev_limits)
-@@ -878,6 +896,11 @@ void se_dev_set_default_attribs(
- 	 * max_sectors is based on subsystem plugin dependent requirements.
- 	 */
- 	dev->se_sub_dev->se_dev_attrib.hw_max_sectors = limits->max_hw_sectors;
-+	/*
-+	 * Align max_sectors down to PAGE_SIZE to follow transport_allocate_data_tasks()
-+	 */
-+	limits->max_sectors = se_dev_align_max_sectors(limits->max_sectors,
-+						limits->logical_block_size);
- 	dev->se_sub_dev->se_dev_attrib.max_sectors = limits->max_sectors;
- 	/*
- 	 * Set optimal_sectors from max_sectors, which can be lowered via
-@@ -1242,6 +1265,11 @@ int se_dev_set_max_sectors(struct se_device *dev, u32 max_sectors)
- 			return -EINVAL;
- 		}
- 	}
-+	/*
-+	 * Align max_sectors down to PAGE_SIZE to follow transport_allocate_data_tasks()
-+	 */
-+	max_sectors = se_dev_align_max_sectors(max_sectors,
-+				dev->se_sub_dev->se_dev_attrib.block_size);
- 
- 	dev->se_sub_dev->se_dev_attrib.max_sectors = max_sectors;
- 	pr_debug("dev[%p]: SE Device max_sectors changed to %u\n",
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ab61c55..efac6a9 100644
+index efac6a9..9cc49d1 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -4126,7 +4126,11 @@ static int transport_allocate_data_tasks(
+@@ -4044,8 +4044,6 @@ void transport_do_task_sg_chain(struct se_cmd *cmd)
+ 		if (!task->task_sg)
+ 			continue;
  
- 		/* Update new cdb with updated lba/sectors */
- 		cmd->transport_split_cdb(task->task_lba, task->task_sectors, cdb);
+-		BUG_ON(!task->task_padded_sg);
 -
+ 		if (!sg_first) {
+ 			sg_first = task->task_sg;
+ 			chained_nents = task->task_sg_nents;
+@@ -4053,9 +4051,19 @@ void transport_do_task_sg_chain(struct se_cmd *cmd)
+ 			sg_chain(sg_prev, sg_prev_nents, task->task_sg);
+ 			chained_nents += task->task_sg_nents;
+ 		}
 +		/*
-+		 * This now assumes that passed sg_ents are in PAGE_SIZE chunks
-+		 * in order to calculate the number per task SGL entries
++		 * For the padded tasks, use the extra SGL vector allocated
++		 * in transport_allocate_data_tasks() for the sg_prev_nents
++		 * offset into sg_chain() above..  The last task of a
++		 * multi-task list, or a single task will not have
++		 * task->task_sg_padded set..
 +		 */
-+		task->task_sg_nents = DIV_ROUND_UP(task->task_size, PAGE_SIZE);
- 		/*
++		if (task->task_padded_sg)
++			sg_prev_nents = (task->task_sg_nents + 1);
++		else
++			sg_prev_nents = task->task_sg_nents;
+ 
+ 		sg_prev = task->task_sg;
+-		sg_prev_nents = task->task_sg_nents;
+ 	}
+ 	/*
+ 	 * Setup the starting pointer and total t_tasks_sg_linked_no including
+@@ -4107,7 +4115,7 @@ static int transport_allocate_data_tasks(
+ 	
+ 	cmd_sg = sgl;
+ 	for (i = 0; i < task_count; i++) {
+-		unsigned int task_size;
++		unsigned int task_size, task_sg_nents_padded;
+ 		int count;
+ 
+ 		task = transport_generic_get_task(cmd, data_direction);
+@@ -4135,24 +4143,24 @@ static int transport_allocate_data_tasks(
  		 * Check if the fabric module driver is requesting that all
  		 * struct se_task->task_sg[] be chained together..  If so,
-@@ -4136,7 +4140,6 @@ static int transport_allocate_data_tasks(
- 		 * It's so much easier and only a waste when task_count > 1.
- 		 * That is extremely rare.
+ 		 * then allocate an extra padding SG entry for linking and
+-		 * marking the end of the chained SGL.
+-		 * Possibly over-allocate task sgl size by using cmd sgl size.
+-		 * It's so much easier and only a waste when task_count > 1.
+-		 * That is extremely rare.
++		 * marking the end of the chained SGL for every task except
++		 * the last one for (task_count > 1) operation, or skipping
++		 * the extra padding for the (task_count == 1) case.
  		 */
--		task->task_sg_nents = sgl_nents;
- 		if (cmd->se_tfo->task_sg_chaining) {
- 			task->task_sg_nents++;
+-		if (cmd->se_tfo->task_sg_chaining) {
+-			task->task_sg_nents++;
++		if (cmd->se_tfo->task_sg_chaining && (i < (task_count - 1))) {
++			task_sg_nents_padded = (task->task_sg_nents + 1);
  			task->task_padded_sg = 1;
+-		}
++		} else
++			task_sg_nents_padded = task->task_sg_nents;
+ 
+ 		task->task_sg = kmalloc(sizeof(struct scatterlist) *
+-					task->task_sg_nents, GFP_KERNEL);
++					task_sg_nents_padded, GFP_KERNEL);
+ 		if (!task->task_sg) {
+ 			cmd->se_dev->transport->free_task(task);
+ 			return -ENOMEM;
+ 		}
+ 
+-		sg_init_table(task->task_sg, task->task_sg_nents);
++		sg_init_table(task->task_sg, task_sg_nents_padded);
+ 
+ 		task_size = task->task_size;
+ 
 -- 
 1.7.6
 
