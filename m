@@ -1,46 +1,36 @@
-From: "Mr.Sani Mohammed" <info@yahoo.com>
-Subject: Attention
-Date: Wed, 17 Aug 2011 03:26:48 +0200
-Message-ID: <20110817032648.39176jfkc2qwp0xs__25184.3065875166$1313547979$gmane$org@webmail.tu-darmstadt.de>
-Reply-To: sani_moh9090@yahoo.com.my
+From: Bob Zhang <zhanglinbao@gmail.com>
+Subject: xen-kernel and EDD
+Date: Wed, 17 Aug 2011 13:11:17 +0800
+Message-ID: <CAKdQVUb7s6_1RyMDyCkBZWHdAvDy1yPY4nQarqNbSspi4uHC2w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=ISO-8859-1;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lnx500.hrz.tu-darmstadt.de ([130.83.156.225]:35875 "EHLO
-	lnx500.hrz.tu-darmstadt.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751771Ab1HQC0H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2011 22:26:07 -0400
-Content-Disposition: inline
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:40872 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119Ab1HQFLS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 01:11:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Cc: Bob Zhang <2004.zhang@gmail.com>
 
+Now , I am using RHEL5.7's xen-kernel, I must add "edd=3Doff" ,
+otherwise ,it will print this error :
+1706-Smart Array Controller EBDA Memory Corrupted  =A3=ACINT 13h BIOS
+Cannot Coninue - Sytem Halted
 
-I wrote to know if this is your valid email. Please, let me know if
-this Email is valid. I have information to pass to you. The G-20
-meeting that was hold recently in France has appointed you through an
-email electronic ballot system selection. That makes you the beneficiary
-of 1.2 Million USD, in this year?s annual financial meeting for the  
-development
-of your geographical area that will enhance the economic growth of the  
-society.
+RHEL said that their RHEL5.7 xen-kernel must make edd off ; while
+non-xen kernel doesn't need to make edd off.
 
-Please confirm your email to the G-20 Secretarial in Malaysia.
+why ?
+for community XEN developing , is there limit regarding to
+EDD(Enhanced Disk Drive)  ?
 
-Please notify us if your email is valid by providing the below details.
-
-Full Name:
-Country:
-
-Email: sani_moh9090@yahoo.com.my
-
-Mr.Sani Mohammed
-Tele: +601116300759
-
-
-
-
+welcome your comments .thanks .
+-Bob
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
