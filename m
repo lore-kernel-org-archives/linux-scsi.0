@@ -1,167 +1,120 @@
-From: Benjamin ESTRABAUD <be@mpstor.com>
-Subject: mpt2sas: /sysfs sas_address entries do not show individual port sas
- addresses.
-Date: Wed, 17 Aug 2011 11:42:12 +0100
-Message-ID: <4E4B9B04.10302@mpstor.com>
+From: Fredrik Lindgren <fli@swip.net>
+Subject: mpt2sas driver behaving strange with a failed SATA disk behind SAS
+ expander.
+Date: Wed, 17 Aug 2011 16:25:24 +0200
+Message-ID: <4E4BCF54.8090408@swip.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay3.blacknight.com ([78.153.203.206]:52222 "EHLO
-	relay3.blacknight.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271Ab1HQKmU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 06:42:20 -0400
+Received: from mailfe08.swip.net ([212.247.154.225]:41778 "EHLO swip.net"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753930Ab1HQOa1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Aug 2011 10:30:27 -0400
+Received: from [192.71.219.1] (account fli@swip.net HELO [10.156.17.120])
+  by mailfe08.swip.net (CommuniGate Pro SMTP 5.2.19)
+  with ESMTPSA id 167298817 for linux-scsi@vger.kernel.org; Wed, 17 Aug 2011 16:25:25 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Brian Caball <bc@mpstor.com>
 
-Hi,
+Hello,
 
-I am seing a bug with the mpt2sas driver from the "Release 2.6.35.11" 
-kernel (commit d6c90f5b218c1ddf1496045e3939b1c960c7cb9f, tag v2.6.35.11, 
-long term support kernel).
+I'm seeing something strange on a Supermicro 847E16-R1400. It has SAS 
+expanders
+with SATA disks behind them (Seagate Barracuda XT). The SAS card is a 
+LSI SAS9211-8i.
 
-I have a system that has both a LSI 1068e B3 (3G) based HBA (a SAS3801E) 
-as well as a LSI SAS 2008 03 (6G) HBA (a SAS9200-8e). They both work as 
-expected, but I am seeing a major difference in their respective /sysfs 
-structure, especially regarding their phy's "sas_address" field, which 
-seems to be a bug.
+When doing disk IO on the disks (they are all configured in MD raids) 
+suddenly IO will
+stop and these messages are printed on the console about once every second:
 
-The 3G HBA's SAS addresses are associated to a specific port in sysfs, 
-while the 6G one are associated to the actual HBA.
+mpt2sas0: log_info(0x31110610): originator(PL), code(0x11), sub_code(0x0610)
 
-The 3G HBA is configured to have two wide ports, made up of 4 phys each, 
-port 0 and port 1, and same configuration applies for the 6G HBA.
-The ports are not in "auto" nor in narrow.
-There are only two enabled ports on each HBA.
+ From what I understand this means:
 
+PL_LOGINFO_CODE_RESET (0x00110000)
+PL_LOGINFO_SUB_CODE_SATA_NON_NCQ_RW_ERR_BIT_SET (0x00000600)
 
-I get the following sysfs entries regarding the 3G one:
+So a disk is acting up, generating errors? What does the last "10" mean 
+in the sub_code,
+is that an identifier for which disk it is?
 
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:0/sas_phy\:phy-5\:0/sas_address
-0x50015b2a2000060f
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:1/sas_phy\:phy-5\:1/sas_address
-0x50015b2a2000060f
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:2/sas_phy\:phy-5\:2/sas_address
-0x50015b2a2000060f
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:3/sas_phy\:phy-5\:3/sas_address
-0x50015b2a2000060f
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:4/sas_phy\:phy-5\:4/sas_address
-0x50015b2a20000613
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:5/sas_phy\:phy-5\:5/sas_address
-0x50015b2a20000613
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:6/sas_phy\:phy-5\:6/sas_address
-0x50015b2a20000613
-# cat 
-/sys/class/sas_host/host5/device/phy-5\:7/sas_phy\:phy-5\:7/sas_address
-0x50015b2a20000613
+After some time, the message changed:
 
-And these ones on the 6G:
+mpt2sas0: log info(0x31111000): originator(PL), code(0x11), sub code(0x1000)
 
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:0/sas_phy\:phy-0\:0/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:1/sas_phy\:phy-0\:1/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:2/sas_phy\:phy-0\:2/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:3/sas_phy\:phy-0\:3/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:4/sas_phy\:phy-0\:4/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:5/sas_phy\:phy-0\:5/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:6/sas_phy\:phy-0\:6/sas_address
-0x500605b002c99150
-# cat 
-/sys/class/sas_host/host0/device/phy-0\:7/sas_phy\:phy-0\:7/sas_address
-0x500605b002c99150
+Now the disk seems to have died completely?
 
-As we can see above, the 3G HBA's phy "sas_address" sysfs entry displays 
-correct information: A single SAS address for phy 0-3 and a single one 
-for phy 4-7.
+PL_LOGINFO_CODE_RESET (0x00110000)
+PL_LOGINFO_SUB_CODE_DSCVRY_SATA_INIT_TIMEOUT (0x00001000)
 
-As we can also see using LSIUtil, each phy is numbered from a base 
-address and incremented.
-Also, the port sas address corresponds to the address of the starting 
-phy of the port.
-Port0's sas address is "0x50015b2a2000060f", which corresponds to the 
-HBA's phy0 sas address.
-Port1's sas address is "0x50015b2a20000613" which corresponds to the 
-HBA's phy3 sas address, the starting phys for each of these ports.
+What bothers me is that the machine is just hanging there with IO 
+blocking for the disk
+in question (I guess, this was gong on for several hours) there was no 
+SCSI-errors and the
+drive in question was not ejected from the MD array. After rebooting it 
+started to rebuild
+the MD array, promptly got stuck again and just sat there until the disk 
+was removed from
+the array and it was restarted again.
 
-Output of menu "16" from LSIUtil on the 3G HBA (1068e):
-
-  B___T     SASAddress     PhyNum  Handle  Parent  Type
-         50015b2a2000060f           0001           SAS Initiator
-         50015b2a20000610           0002           SAS Initiator
-         50015b2a20000611           0003           SAS Initiator
-         50015b2a20000612           0004           SAS Initiator
-         50015b2a20000613           0005           SAS Initiator
-         50015b2a20000614           0006           SAS Initiator
-         50015b2a20000615           0007           SAS Initiator
-         50015b2a20000616           0008           SAS Initiator
-
-However, when looking at the 6G HBA's sysfs information above, we can 
-see that all phy's SAS address are identical, like if there was a single 
-port made up of the entire 8 phys from the HBA.
-
-When looking at LSIUtil below, we get more strangeness, where all phys 
-have exactly the same SAS address:
-
-Output of menu "16" from LSIUtil on the 6G HBA (2008):
-
-  B___T     SASAddress     PhyNum  Handle  Parent  Type
-         500605b002c99150           0001           SAS Initiator
-         500605b002c99150           0002           SAS Initiator
-         500605b002c99150           0003           SAS Initiator
-         500605b002c99150           0004           SAS Initiator
-         500605b002c99150           0005           SAS Initiator
-         500605b002c99150           0006           SAS Initiator
-         500605b002c99150           0007           SAS Initiator
-         500605b002c99150           0008           SAS Initiator
-
-But looking at LSIUtil's menu "13" on the 6G HBA proves that we indeed 
-have 2 ports on that HBA:
-
-PhyNum  Link      MinRate  MaxRate  Initiator  Target    Port
-    0    Enabled     1.5      6.0    Enabled    Disabled    0
-    1    Enabled     1.5      6.0    Enabled    Disabled    0
-    2    Enabled     1.5      6.0    Enabled    Disabled    0
-    3    Enabled     1.5      6.0    Enabled    Disabled    0
-    4    Enabled     1.5      6.0    Enabled    Disabled    1
-    5    Enabled     1.5      6.0    Enabled    Disabled    1
-    6    Enabled     1.5      6.0    Enabled    Disabled    1
-    7    Enabled     1.5      6.0    Enabled    Disabled    1
-
-Somehow, on the 6G HBA using mpt2sas, all phys from a HBA seem to have 
-the same SAS address, and all ports on that HBA, whether narrow (1Phy) 
-or wide (4Phys), will seemingly have the same SAS address.
-
-This is causing a good few issues with our system scripting, as we 
-relied on SAS addresses to identify ports.
-
-I searched on Google extensively before posting and couldn't find any 
-mention of this issue.
-
-Is this a known issue? If so, will this be resolved in a later version 
-of the driver?
-
-Thanks a lot in advance for your reply.
+This was with a stock Debian Squeeze kernel 
+(linux-image-2.6.32-5-amd64). I got the exact same
+thing with a vanilla 3.0.1 from kernel.org.
 
 Regards,
-Ben.
+   Fredrik Lindgren
+
+----
+
+dmesg from 3.0.1:
+
+mpt2sas version 08.100.00.02 loaded
+mpt2sas 0000:06:00.0: PCI INT A -> GSI 26 (level, low) -> IRQ 26
+mpt2sas 0000:06:00.0: setting latency timer to 64
+mpt2sas0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (49559612 kB)
+mpt2sas 0000:06:00.0: irq 72 for MSI/MSI-X
+mpt2sas0: PCI-MSI-X enabled: IRQ 72
+mpt2sas0: iomem(0x00000000fbc3c000), mapped(0xffffc90006068000), size(16384)
+mpt2sas0: ioport(0x000000000000d000), size(256)
+mpt2sas0: sending diag reset !!
+mpt2sas0: diag reset: SUCCESS
+mpt2sas0: Allocated physical memory: size(3971 kB)
+mpt2sas0: Current Controller Queue Depth(1739), Max Controller Queue 
+Depth(2000)
+mpt2sas0: Scatter Gather Elements per IO(128)
+mpt2sas0: LSISAS2008: FWVersion(09.00.00.00), ChipRevision(0x03), 
+BiosVersion(07.17.00.00)
+mpt2sas0: Protocol=(Initiator,Target), 
+Capabilities=(Raid,TLR,EEDP,Snapshot Buffer,Diag Trace Buffer,Task Set 
+Full,NCQ)
+mpt2sas0: sending port enable !!
+mpt2sas0: host_add: handle(0x0001), sas_addr(0x500605b0034da7c0), phys(8)
+mpt2sas0: expander_add: handle(0x0009), parent(0x0001), 
+sas_addr(0x5003048001016e7f), phys(38)
+mpt2sas0: expander_add: handle(0x0023), parent(0x0002), 
+sas_addr(0x5003048000f6b57f), phys(30)
+mpt2sas0: port enable: SUCCESS
+
+root@weathergirl:~# smp_rep_manufacturer /dev/bsg/expander-6\:0
+Report manufacturer response:
+   Expander change count: 85
+   SAS-1.1 format: 1
+   vendor identification: LSI CORP
+   product identification: SAS2X36
+   product revision level: 0717
+   component vendor identification: LSI
+   component id: 547
+   component revision level: 5
+root@weathergirl:~# smp_rep_manufacturer /dev/bsg/expander-6\:1
+Report manufacturer response:
+   Expander change count: 67
+   SAS-1.1 format: 1
+   vendor identification: LSI CORP
+   product identification: SAS2X28
+   product revision level: 0717
+   component vendor identification: LSI
+   component id: 545
+   component revision level: 5
+
