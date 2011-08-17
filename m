@@ -1,58 +1,98 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: Document generic scsi device attributes
-Date: Wed, 17 Aug 2011 13:35:06 -0700
-Message-ID: <1313613307.6345.8.camel@mulgrave>
-References: <20110817182055.8848.75862.stgit@beardog.cce.hp.com>
-	 <1313610306.6345.4.camel@mulgrave>
-	 <20110817200028.GB8422@beardog.cce.hp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 00/21] target: Pending fixes for v3.1-rc3
+Date: Wed, 17 Aug 2011 23:17:04 +0000
+Message-ID: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46712 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751919Ab1HQUfJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Aug 2011 16:35:09 -0400
-In-Reply-To: <20110817200028.GB8422@beardog.cce.hp.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58285 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234Ab1HQXmK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scameron@beardog.cce.hp.com
-Cc: stephenmcameron@gmail.com, akpm@linux-foundation.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Wed, 2011-08-17 at 15:00 -0500, scameron@beardog.cce.hp.com wrote:
-> On Wed, Aug 17, 2011 at 12:45:06PM -0700, James Bottomley wrote:
-> > On Wed, 2011-08-17 at 13:20 -0500, Stephen M. Cameron wrote:
-> > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > 
-> > > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > > ---
-> > >  Documentation/ABI/testing/sysfs-class-scsi_devices |  123 ++++++++++++++++++++
-> > >  1 files changed, 123 insertions(+), 0 deletions(-)
-> > >  create mode 100644 Documentation/ABI/testing/sysfs-class-scsi_devices
-> > > 
-> > > diff --git a/Documentation/ABI/testing/sysfs-class-scsi_devices b/Documentation/ABI/testing/sysfs-class-scsi_devices
-> > > new file mode 100644
-> > > index 0000000..ad2d36b
-> > > --- /dev/null
-> > > +++ b/Documentation/ABI/testing/sysfs-class-scsi_devices
-> > > @@ -0,0 +1,123 @@
-> > > +What:           /sys/class/scsi_device/..../device/device_blocked
-> > > +Date:           December, 2002
-> > > +KernelVersion:  Unknown
-> > > +Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
-> > 
-> > Hmm, so I get fingered for every screw up in our sysfs ABI? nice wide
-> > receiver buck pass move.
-> 
-> Uh, sorry if that wasn't the right thing to do, which it sounds
-> like it wasn't.  I just put your name there because you're the SCSI
-> maintainer.  I can dig through all the commits and see who added what
-> if that's preferable.  Or leave the names out?  or something else?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-No, don't worry, the patch is the right thing to do ... I was just
-slightly amused to see my name down for all of it.
+Hello from LinuxCon,
 
-James
+The following is the current pending series of target fixes for -rc3 that
+includes a number of important bugfixes to what's currently in mainline -rc2.
+This big items are fixes for a handful of control CDBs broken during the big
+-rc1 merge, breakage with multi se_task support, and SGL chaining logic used
+by one in tree driver and a number of in-flight HW target mode drivers..
 
+At this point there is still two outstanding issues not addressed in this
+series related to some recent NAA IEEE Registered Extended designator format
+breakage reported with VMFS, and breakage with LUN discovery in tcm_fc(fcoe)
+These bugs are still being discussed and addressed, and will be sent out in a
+seperate series.
+
+These patches will be going to Linus in pull request form in the next days,
+so please have a look and let us know if anything needs more attention.
+
+Thank you,
+
+--nab
+
+Chris Boot (1):
+  iscsi-target: Implement iSCSI target IPv6 address printing.
+
+Dan Carpenter (3):
+  iscsi-target: remove duplicate return
+  iscsi-target: forever loop bug in iscsit_attach_ooo_cmdsn()
+  iscsi-target: Fix iscsit_allocate_se_cmd_for_tmr failure path bugs
+
+Jesper Juhl (1):
+  iscsi-target: Fix leak on failure in iscsi_copy_param_list()
+
+Julia Lawall (1):
+  target: Convert target_core_rd.c to use use BUG_ON
+
+Nicholas Bellinger (10):
+  target: Change TCM_NON_EXISTENT_LUN response to ASC=LOGICAL UNIT NOT
+    SUPPORTED
+  target: Make standard INQUIRY return 'not connected' for
+    tpg_virt_lun0
+  target: Fix write payload exception handling with ->new_cmd_map
+  target: Add WRITE_SAME (10) parsing and refactor passthrough checks
+  target: Fix WRITE_SAME usage with transport_get_size
+  target: Remove duplicate task completions in
+    transport_emulate_control_cdb
+  target: Fix SYNCHRONIZE_CACHE zero LBA + range breakage
+  target: Add missing DATA_SG_IO transport_cmd_get_valid_sectors check
+  target: Fix task count > 1 handling breakage and use max_sector page
+    alignment
+  target: Fix task SGL chaining breakage with
+    transport_allocate_data_tasks
+
+Roland Dreier (4):
+  target: Print subpage too for unhandled MODE SENSE pages
+  tcm_fc: init/exit functions should not be protected by "#ifdef
+    MODULE"
+  target: Make locking in transport_deregister_session() IRQ safe
+  target: Convert acl_node_lock to be IRQ-disabling
+
+Thomas Meyer (1):
+  target: Use ERR_CAST inlined function
+
+ drivers/target/iscsi/iscsi_target.c            |    1 -
+ drivers/target/iscsi/iscsi_target_configfs.c   |    4 +-
+ drivers/target/iscsi/iscsi_target_erl1.c       |    2 +-
+ drivers/target/iscsi/iscsi_target_login.c      |   16 +--
+ drivers/target/iscsi/iscsi_target_parameters.c |   43 ++---
+ drivers/target/iscsi/iscsi_target_util.c       |    4 +-
+ drivers/target/target_core_cdb.c               |   57 ++++---
+ drivers/target/target_core_device.c            |   44 ++++-
+ drivers/target/target_core_fabric_configfs.c   |    2 +-
+ drivers/target/target_core_pr.c                |    8 +-
+ drivers/target/target_core_rd.c                |   24 +--
+ drivers/target/target_core_tpg.c               |   64 ++++----
+ drivers/target/target_core_transport.c         |  206 ++++++++++++++----------
+ drivers/target/tcm_fc/tfc_conf.c               |    6 +-
+ include/target/target_core_fabric_ops.h        |    6 +
+ 15 files changed, 272 insertions(+), 215 deletions(-)
+
+-- 
+1.7.6
 
