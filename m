@@ -1,43 +1,36 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] scsi: Document generic scsi device attributes
-Date: Thu, 18 Aug 2011 14:58:53 +0200
-Message-ID: <20110818145853.7bf4ae3e@stein>
-References: <20110817182055.8848.75862.stgit@beardog.cce.hp.com>
+From: Clemens Ladisch <clemens@ladisch.de>
+Subject: Re: FireWire/SBP2 Target mode
+Date: Thu, 18 Aug 2011 18:19:20 +0200
+Message-ID: <4E4D3B88.30003@ladisch.de>
+References: <4E4BD560.4010806@bootc.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:40918 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755817Ab1HRM74 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2011 08:59:56 -0400
-In-Reply-To: <20110817182055.8848.75862.stgit@beardog.cce.hp.com>
+Received: from out2.smtp.messagingengine.com ([66.111.4.26]:38760 "EHLO
+	out2.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755228Ab1HRQTW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Aug 2011 12:19:22 -0400
+In-Reply-To: <4E4BD560.4010806@bootc.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: james.bottomley@hansenpartnership.com, stephenmcameron@gmail.com, akpm@linux-foundation.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Chris Boot <bootc@bootc.net>, target-devel@vger.kernel.org
+Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
 
-On Aug 17 Stephen M. Cameron wrote:
-> +What:           /sys/class/scsi_device/..../device/type
-> +Date:           December, 2002
-> +KernelVersion:  Unknown
-> +Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
-> +Description:
-> +		This read only decimal integer value indicates the
-> +		SCSI device type.
-> +
-> +What:           /sys/class/scsi_device/..../device/scsi_level
-> +Date:           January, 2003
-> +KernelVersion:  Unknown
-> +Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
-> +Description:
-> +		This read only decimal integer value indicates the
-> +		SCSI revision level the device claims to support.
+Chris Boot wrote:
+> Now that we have a nice SCSI target framework in the kernel, and drivers
+> either in-tree or being worked on for iSCSI, FC, FCoE, SAS and iSER, I
+> was wondering about the possibility of adding FireWire to that list.
 
-Perhaps a reference to the pertaining SCSI specifications would be good
-to have at these two attribute descriptions.  (I am too lazy to look those
-up right now though.)
--- 
-Stefan Richter
--=====-==-== =--- =--=-
-http://arcgraph.de/sr/
+As far as I can tell from briefly looking at the framework, this would
+require both a fabric module (which is nicely abstracted) and a new
+protocol (which doesn't seem to be).
+
+Is there any documentation of how to add a new LIO protocol?
+
+And what is the difference between a protocol and a fabric?
+
+
+Regards,
+Clemens
