@@ -1,345 +1,41 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 21/21] target: Convert acl_node_lock to be IRQ-disabling
-Date: Wed, 17 Aug 2011 23:17:25 +0000
-Message-ID: <1313623045-15916-22-git-send-email-nab@linux-iscsi.org>
-References: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
+From: "Mr. Vincent Cheng" <idormien@usp.br>
+Subject: (unknown)
+Date: Wed, 17 Aug 2011 22:23:10 -0300
+Message-ID: <20110817222310.87663gim447sbrsu@webmail.usp.br>
+Reply-To: choi_chu08@yahoo.co.jp
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=ISO-8859-1;
+ DelSp="Yes";
+ format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58375 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754617Ab1HQXmw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 19:42:52 -0400
-In-Reply-To: <1313623045-15916-1-git-send-email-nab@linux-iscsi.org>
+Received: from sarigua.uspnet.usp.br ([200.144.190.149]:51974 "EHLO
+	sarigua.uspnet.usp.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752982Ab1HRB37 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 21:29:59 -0400
+Subject: 
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Roland Dreier <roland@purestorage.com>
 
-From: Roland Dreier <roland@purestorage.com>
 
-With qla2xxx, acl_node_lock is taken inside qla2xxx's hardware_lock,
-which is taken in hardirq context.  This means acl_node_lock must become
-an IRQ-disabling lock; in particular this fixes lockdep warnings along
-the lines of
+I am Mr. Vincent Cheng Hoi Chuen, GBS, JP Chairman of the Hong Kong  
+and Shanghai Banking Corporation Limited.i have a business proposal of  
+Twenty Two million Five Hundred Thousand United State Dollars only for  
+you to  transact with me from my bank to your country.
 
-    ======================================================
-    [ INFO: HARDIRQ-safe -> HARDIRQ-unsafe lock order detected ]
+All confirmable documents to back up the claims will be made available  
+to you prior to your acceptance and as soon as I receive your return  
+mail Via my email address:choi_chu08@yahoo.co.jp and I will let you  
+know what is required of you.
 
-     (&(&se_tpg->acl_node_lock)->rlock){+.....}, at: [<ffffffffa026f872>] transport_deregister_session+0x92/0x140 [target_core_mod]
+Your earliest response to this letter will be appreciated.
 
-    and this task is already holding:
-     (&(&ha->hardware_lock)->rlock){-.-...}, at: [<ffffffffa017c5e7>] qla_tgt_stop_phase1+0x57/0x2c0 [qla2xxx]
-    which would create a new lock dependency:
-     (&(&ha->hardware_lock)->rlock){-.-...} -> (&(&se_tpg->acl_node_lock)->rlock){+.....}
+Best Regards,
+Mr. Vincent Cheng
 
-    but this new dependency connects a HARDIRQ-irq-safe lock:
-     (&(&ha->hardware_lock)->rlock){-.-...}
 
-    to a HARDIRQ-irq-unsafe lock:
-     (&(&se_tpg->acl_node_lock)->rlock){+.....}
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c |   16 +++++-----
- drivers/target/target_core_pr.c     |    8 +++---
- drivers/target/target_core_tpg.c    |   52 +++++++++++++++++-----------------
- drivers/target/tcm_fc/tfc_conf.c    |    4 +-
- 4 files changed, 40 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 2f5d65f..91e467d 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -472,9 +472,9 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- 	struct se_dev_entry *deve;
- 	u32 i;
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	list_for_each_entry(nacl, &tpg->acl_node_list, acl_list) {
--		spin_unlock_bh(&tpg->acl_node_lock);
-+		spin_unlock_irq(&tpg->acl_node_lock);
- 
- 		spin_lock_irq(&nacl->device_list_lock);
- 		for (i = 0; i < TRANSPORT_MAX_LUNS_PER_TPG; i++) {
-@@ -491,9 +491,9 @@ void core_clear_lun_from_tpg(struct se_lun *lun, struct se_portal_group *tpg)
- 		}
- 		spin_unlock_irq(&nacl->device_list_lock);
- 
--		spin_lock_bh(&tpg->acl_node_lock);
-+		spin_lock_irq(&tpg->acl_node_lock);
- 	}
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- }
- 
- static struct se_port *core_alloc_port(struct se_device *dev)
-@@ -1372,15 +1372,15 @@ struct se_lun *core_dev_add_lun(
- 	 */
- 	if (tpg->se_tpg_tfo->tpg_check_demo_mode(tpg)) {
- 		struct se_node_acl *acl;
--		spin_lock_bh(&tpg->acl_node_lock);
-+		spin_lock_irq(&tpg->acl_node_lock);
- 		list_for_each_entry(acl, &tpg->acl_node_list, acl_list) {
- 			if (acl->dynamic_node_acl) {
--				spin_unlock_bh(&tpg->acl_node_lock);
-+				spin_unlock_irq(&tpg->acl_node_lock);
- 				core_tpg_add_node_to_devs(acl, tpg);
--				spin_lock_bh(&tpg->acl_node_lock);
-+				spin_lock_irq(&tpg->acl_node_lock);
- 			}
- 		}
--		spin_unlock_bh(&tpg->acl_node_lock);
-+		spin_unlock_irq(&tpg->acl_node_lock);
- 	}
- 
- 	return lun_p;
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 1c1b849..7fd3a16 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1598,14 +1598,14 @@ static int core_scsi3_decode_spec_i_port(
- 			 * from the decoded fabric module specific TransportID
- 			 * at *i_str.
- 			 */
--			spin_lock_bh(&tmp_tpg->acl_node_lock);
-+			spin_lock_irq(&tmp_tpg->acl_node_lock);
- 			dest_node_acl = __core_tpg_get_initiator_node_acl(
- 						tmp_tpg, i_str);
- 			if (dest_node_acl) {
- 				atomic_inc(&dest_node_acl->acl_pr_ref_count);
- 				smp_mb__after_atomic_inc();
- 			}
--			spin_unlock_bh(&tmp_tpg->acl_node_lock);
-+			spin_unlock_irq(&tmp_tpg->acl_node_lock);
- 
- 			if (!dest_node_acl) {
- 				core_scsi3_tpg_undepend_item(tmp_tpg);
-@@ -3496,14 +3496,14 @@ after_iport_check:
- 	/*
- 	 * Locate the destination struct se_node_acl from the received Transport ID
- 	 */
--	spin_lock_bh(&dest_se_tpg->acl_node_lock);
-+	spin_lock_irq(&dest_se_tpg->acl_node_lock);
- 	dest_node_acl = __core_tpg_get_initiator_node_acl(dest_se_tpg,
- 				initiator_str);
- 	if (dest_node_acl) {
- 		atomic_inc(&dest_node_acl->acl_pr_ref_count);
- 		smp_mb__after_atomic_inc();
- 	}
--	spin_unlock_bh(&dest_se_tpg->acl_node_lock);
-+	spin_unlock_irq(&dest_se_tpg->acl_node_lock);
- 
- 	if (!dest_node_acl) {
- 		pr_err("Unable to locate %s dest_node_acl for"
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index 718ccd1..162b736 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -137,15 +137,15 @@ struct se_node_acl *core_tpg_get_initiator_node_acl(
- {
- 	struct se_node_acl *acl;
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	list_for_each_entry(acl, &tpg->acl_node_list, acl_list) {
- 		if (!strcmp(acl->initiatorname, initiatorname) &&
- 		    !acl->dynamic_node_acl) {
--			spin_unlock_bh(&tpg->acl_node_lock);
-+			spin_unlock_irq(&tpg->acl_node_lock);
- 			return acl;
- 		}
- 	}
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- 	return NULL;
- }
-@@ -309,10 +309,10 @@ struct se_node_acl *core_tpg_check_initiator_node_acl(
- 	else
- 		core_tpg_add_node_to_devs(acl, tpg);
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	list_add_tail(&acl->acl_list, &tpg->acl_node_list);
- 	tpg->num_node_acls++;
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- 	pr_debug("%s_TPG[%u] - Added DYNAMIC ACL with TCQ Depth: %d for %s"
- 		" Initiator Node: %s\n", tpg->se_tpg_tfo->get_fabric_name(),
-@@ -362,7 +362,7 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
- {
- 	struct se_node_acl *acl = NULL;
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
- 	if (acl) {
- 		if (acl->dynamic_node_acl) {
-@@ -370,7 +370,7 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
- 			pr_debug("%s_TPG[%u] - Replacing dynamic ACL"
- 				" for %s\n", tpg->se_tpg_tfo->get_fabric_name(),
- 				tpg->se_tpg_tfo->tpg_get_tag(tpg), initiatorname);
--			spin_unlock_bh(&tpg->acl_node_lock);
-+			spin_unlock_irq(&tpg->acl_node_lock);
- 			/*
- 			 * Release the locally allocated struct se_node_acl
- 			 * because * core_tpg_add_initiator_node_acl() returned
-@@ -386,10 +386,10 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
- 			" Node %s already exists for TPG %u, ignoring"
- 			" request.\n",  tpg->se_tpg_tfo->get_fabric_name(),
- 			initiatorname, tpg->se_tpg_tfo->tpg_get_tag(tpg));
--		spin_unlock_bh(&tpg->acl_node_lock);
-+		spin_unlock_irq(&tpg->acl_node_lock);
- 		return ERR_PTR(-EEXIST);
- 	}
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- 	if (!se_nacl) {
- 		pr_err("struct se_node_acl pointer is NULL\n");
-@@ -426,10 +426,10 @@ struct se_node_acl *core_tpg_add_initiator_node_acl(
- 		return ERR_PTR(-EINVAL);
- 	}
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	list_add_tail(&acl->acl_list, &tpg->acl_node_list);
- 	tpg->num_node_acls++;
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- done:
- 	pr_debug("%s_TPG[%hu] - Added ACL with TCQ Depth: %d for %s"
-@@ -453,14 +453,14 @@ int core_tpg_del_initiator_node_acl(
- 	struct se_session *sess, *sess_tmp;
- 	int dynamic_acl = 0;
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	if (acl->dynamic_node_acl) {
- 		acl->dynamic_node_acl = 0;
- 		dynamic_acl = 1;
- 	}
- 	list_del(&acl->acl_list);
- 	tpg->num_node_acls--;
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- 	spin_lock_bh(&tpg->session_lock);
- 	list_for_each_entry_safe(sess, sess_tmp,
-@@ -511,21 +511,21 @@ int core_tpg_set_initiator_node_queue_depth(
- 	struct se_node_acl *acl;
- 	int dynamic_acl = 0;
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	acl = __core_tpg_get_initiator_node_acl(tpg, initiatorname);
- 	if (!acl) {
- 		pr_err("Access Control List entry for %s Initiator"
- 			" Node %s does not exists for TPG %hu, ignoring"
- 			" request.\n", tpg->se_tpg_tfo->get_fabric_name(),
- 			initiatorname, tpg->se_tpg_tfo->tpg_get_tag(tpg));
--		spin_unlock_bh(&tpg->acl_node_lock);
-+		spin_unlock_irq(&tpg->acl_node_lock);
- 		return -ENODEV;
- 	}
- 	if (acl->dynamic_node_acl) {
- 		acl->dynamic_node_acl = 0;
- 		dynamic_acl = 1;
- 	}
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- 	spin_lock_bh(&tpg->session_lock);
- 	list_for_each_entry(sess, &tpg->tpg_sess_list, sess_list) {
-@@ -541,10 +541,10 @@ int core_tpg_set_initiator_node_queue_depth(
- 				tpg->se_tpg_tfo->get_fabric_name(), initiatorname);
- 			spin_unlock_bh(&tpg->session_lock);
- 
--			spin_lock_bh(&tpg->acl_node_lock);
-+			spin_lock_irq(&tpg->acl_node_lock);
- 			if (dynamic_acl)
- 				acl->dynamic_node_acl = 1;
--			spin_unlock_bh(&tpg->acl_node_lock);
-+			spin_unlock_irq(&tpg->acl_node_lock);
- 			return -EEXIST;
- 		}
- 		/*
-@@ -579,10 +579,10 @@ int core_tpg_set_initiator_node_queue_depth(
- 		if (init_sess)
- 			tpg->se_tpg_tfo->close_session(init_sess);
- 
--		spin_lock_bh(&tpg->acl_node_lock);
-+		spin_lock_irq(&tpg->acl_node_lock);
- 		if (dynamic_acl)
- 			acl->dynamic_node_acl = 1;
--		spin_unlock_bh(&tpg->acl_node_lock);
-+		spin_unlock_irq(&tpg->acl_node_lock);
- 		return -EINVAL;
- 	}
- 	spin_unlock_bh(&tpg->session_lock);
-@@ -598,10 +598,10 @@ int core_tpg_set_initiator_node_queue_depth(
- 		initiatorname, tpg->se_tpg_tfo->get_fabric_name(),
- 		tpg->se_tpg_tfo->tpg_get_tag(tpg));
- 
--	spin_lock_bh(&tpg->acl_node_lock);
-+	spin_lock_irq(&tpg->acl_node_lock);
- 	if (dynamic_acl)
- 		acl->dynamic_node_acl = 1;
--	spin_unlock_bh(&tpg->acl_node_lock);
-+	spin_unlock_irq(&tpg->acl_node_lock);
- 
- 	return 0;
- }
-@@ -725,20 +725,20 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
- 	 * not been released because of TFO->tpg_check_demo_mode_cache() == 1
- 	 * in transport_deregister_session().
- 	 */
--	spin_lock_bh(&se_tpg->acl_node_lock);
-+	spin_lock_irq(&se_tpg->acl_node_lock);
- 	list_for_each_entry_safe(nacl, nacl_tmp, &se_tpg->acl_node_list,
- 			acl_list) {
- 		list_del(&nacl->acl_list);
- 		se_tpg->num_node_acls--;
--		spin_unlock_bh(&se_tpg->acl_node_lock);
-+		spin_unlock_irq(&se_tpg->acl_node_lock);
- 
- 		core_tpg_wait_for_nacl_pr_ref(nacl);
- 		core_free_device_list_for_node(nacl, se_tpg);
- 		se_tpg->se_tpg_tfo->tpg_release_fabric_acl(se_tpg, nacl);
- 
--		spin_lock_bh(&se_tpg->acl_node_lock);
-+		spin_lock_irq(&se_tpg->acl_node_lock);
- 	}
--	spin_unlock_bh(&se_tpg->acl_node_lock);
-+	spin_unlock_irq(&se_tpg->acl_node_lock);
- 
- 	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL)
- 		core_tpg_release_virtual_lun0(se_tpg);
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 520a8ba..b15879d 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -256,7 +256,7 @@ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, struct fc_rport_priv *rdata)
- 	struct se_portal_group *se_tpg = &tpg->se_tpg;
- 	struct se_node_acl *se_acl;
- 
--	spin_lock_bh(&se_tpg->acl_node_lock);
-+	spin_lock_irq(&se_tpg->acl_node_lock);
- 	list_for_each_entry(se_acl, &se_tpg->acl_node_list, acl_list) {
- 		acl = container_of(se_acl, struct ft_node_acl, se_node_acl);
- 		pr_debug("acl %p port_name %llx\n",
-@@ -270,7 +270,7 @@ struct ft_node_acl *ft_acl_get(struct ft_tpg *tpg, struct fc_rport_priv *rdata)
- 			break;
- 		}
- 	}
--	spin_unlock_bh(&se_tpg->acl_node_lock);
-+	spin_unlock_irq(&se_tpg->acl_node_lock);
- 	return found;
- }
- 
--- 
-1.7.6
 
