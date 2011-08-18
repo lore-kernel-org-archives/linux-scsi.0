@@ -1,48 +1,42 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] scsi: document generic scsi host sysfs attributes
-Date: Thu, 18 Aug 2011 14:55:59 +0200
-Message-ID: <20110818145559.37cd9e67@stein>
-References: <20110817182047.8821.55211.stgit@beardog.cce.hp.com>
+Subject: Re: [PATCH] scsi: Document generic scsi device attributes
+Date: Thu, 18 Aug 2011 14:58:53 +0200
+Message-ID: <20110818145853.7bf4ae3e@stein>
+References: <20110817182055.8848.75862.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110817182047.8821.55211.stgit@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:40918 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755817Ab1HRM74 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2011 08:59:56 -0400
+In-Reply-To: <20110817182055.8848.75862.stgit@beardog.cce.hp.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
 Cc: james.bottomley@hansenpartnership.com, stephenmcameron@gmail.com, akpm@linux-foundation.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 On Aug 17 Stephen M. Cameron wrote:
-> What:		/sys/bus/scsi/devices/host*/scsi_host/host*/unchecked_isa_dma
-> +Date:		February, 2003
-> +KernelVersion:	Unknown
-> +Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
+> +What:           /sys/class/scsi_device/..../device/type
+> +Date:           December, 2002
+> +KernelVersion:  Unknown
+> +Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 > +Description:
+> +		This read only decimal integer value indicates the
+> +		SCSI device type.
 > +
-> +What:		/sys/bus/scsi/devices/host*/scsi_host/host*/proc_name
-> +Date:		March, 2004
-> +KernelVersion:	Unknown
-> +Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
+> +What:           /sys/class/scsi_device/..../device/scsi_level
+> +Date:           January, 2003
+> +KernelVersion:  Unknown
+> +Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 > +Description:
-> +
-> +What:		/sys/bus/scsi/devices/host*/scsi_host/host*/scan
-> +Date:		August, 2003
-> +KernelVersion:	Unknown
-> +Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
-> +Description:
-> +		Read only integer which indicates whether the host is an
-> +		ancient ISA device which therefore requires extra bounce
-> +		buffering.
+> +		This read only decimal integer value indicates the
+> +		SCSI revision level the device claims to support.
 
-The last description obviously belongs to unchecked_isa_dma.
-
-scan is a write-only attribute that may or may not initiate a bus rescan,
-I suppose.
-
-proc_name is the "name of proc directory" of a driver, if the driver
-maintained one; though it seems all drivers provide proc_name
-independently of the obsolete proc interface for driver data.
+Perhaps a reference to the pertaining SCSI specifications would be good
+to have at these two attribute descriptions.  (I am too lazy to look those
+up right now though.)
 -- 
 Stefan Richter
 -=====-==-== =--- =--=-
