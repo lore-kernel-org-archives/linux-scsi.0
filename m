@@ -1,41 +1,60 @@
-From: "Mr. Vincent Cheng" <idormien@usp.br>
-Subject: (unknown)
-Date: Wed, 17 Aug 2011 22:23:10 -0300
-Message-ID: <20110817222310.87663gim447sbrsu@webmail.usp.br>
-Reply-To: choi_chu08@yahoo.co.jp
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [BUG] Oops when SCSI device under multipath is removed
+Date: Thu, 18 Aug 2011 18:11:19 +0900
+Message-ID: <4E4CD737.4020402@ce.jp.nec.com>
+References: <Pine.LNX.4.44L0.1108111112280.1958-100000@iolanthe.rowland.org> <4E4A53F0.9040104@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=ISO-8859-1;
- DelSp="Yes";
- format="flowed"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sarigua.uspnet.usp.br ([200.144.190.149]:51974 "EHLO
-	sarigua.uspnet.usp.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752982Ab1HRB37 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Aug 2011 21:29:59 -0400
-Subject: 
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4E4A53F0.9040104@ce.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, jaxboe@fusionio.com, roland@purestorage.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Hi James,
 
-I am Mr. Vincent Cheng Hoi Chuen, GBS, JP Chairman of the Hong Kong  
-and Shanghai Banking Corporation Limited.i have a business proposal of  
-Twenty Two million Five Hundred Thousand United State Dollars only for  
-you to  transact with me from my bank to your country.
+On 08/16/11 20:26, Jun'ichi Nomura wrote:
+> The commit log of 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b
+> ("[SCSI] put stricter guards on queue dead checks") does not
+> explain about the move of scsi_free_queue().
+> 
+> But according to the discussion below, it seems
+> the move was motivated to solve the following self-deadlock:
+> https://lkml.org/lkml/2011/4/12/9
+> 
+>   [in the context of kblockd_workqueue]
+>   blk_delay_work
+>     __blk_run_queue
+>       scsi_request_fn
+>         put_device
+>           (puts final sdev refcount)
+>              scsi_device_dev_release
+>                execute_in_process_context(scsi_device_dev_release_usercontext)
+>                  [execute immediately because it's in process context]
+>                     scsi_device_dev_release_usercontext
+>                       scsi_free_queue
+>                         blk_cleanup_queue
+>                           blk_sync_queue
+>                             (wait for blk_delay_work to complete...)
+> 
+> James, is my understanding correct?
+> 
+> If so, isn't it possible to move the scsi_free_queue back to
+> the original place and solve the deadlock instead by
+> avoiding the wait in the same context?
 
-All confirmable documents to back up the claims will be made available  
-to you prior to your acceptance and as soon as I receive your return  
-mail Via my email address:choi_chu08@yahoo.co.jp and I will let you  
-know what is required of you.
+Actually, Tejun has posted a patch to replace
+execute_in_process_context() with queue_work()
+and asking your review:
 
-Your earliest response to this letter will be appreciated.
+  [PATCH RESEND] scsi: don't use execute_in_process_context()
+  https://lkml.org/lkml/2011/4/30/87
 
-Best Regards,
-Mr. Vincent Cheng
+Do you think you can take the patch and revert the move
+of scsi_free_queue()?
 
-
-
-
-
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
