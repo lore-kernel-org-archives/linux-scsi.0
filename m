@@ -1,78 +1,132 @@
-From: Bryan Donlan <bdonlan@gmail.com>
-Subject: Re: contention on long-held spinlock
-Date: Fri, 19 Aug 2011 15:25:30 -0400
-Message-ID: <CAF_S4t_5qfx1H+nm+fvYd24k4ezF__JDFLvg6gv_so8SeVqKvA@mail.gmail.com>
-References: <4E4E2B2A.40100@odi.ch>
+From: Ric Wheeler <ricwheeler@gmail.com>
+Subject: Fwd: FAST '12 Call for Papers Submission Deadline Approaching (50110)
+Date: Fri, 19 Aug 2011 20:37:15 +0100
+Message-ID: <4E4EBB6B.8090404@gmail.com>
+References: <201108191926.p7JJQPxv016433@voyager.usenix.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:60744 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755684Ab1HST0L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2011 15:26:11 -0400
-In-Reply-To: <4E4E2B2A.40100@odi.ch>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <201108191926.p7JJQPxv016433@voyager.usenix.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Ortwin_Gl=FCck?= <odi@odi.ch>
-Cc: linux-kernel@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
 
-2011/8/19 Ortwin Gl=FCck <odi@odi.ch>:
-> Hi,
->
-> I have observed a bad behaviour that is likely caused by spinlocks in=
- the
-> qla2xxx driver. This is a QLogic Fibre Channel storage driver.
 
-Please CC the relevant maintainers when reporting driver bugs (I'm
-adding them in this reply); it will help make sure the right people
-notice. Maintainer addresses can be found in the MAINTAINERS file at
-the root of the linux source tree.
+If anyone has interest in publishing in an academic forum, FAST is a great 
+conference for file and storage related work.
 
-What version of the kernel are you using? It would also help to
-provide dmesg output from when the problem is occurring, if anything
-out of the ordinary can be found there (if you've already rebooted,
-check /var/log/kern.log - or wherever your distribution puts the
-kernel log)
+Regards,
 
-> Somehow the attached SAN had a problem and became unresponsive. Many
-> processes queued up waiting to write to the device. The processes wer=
-e doing
-> nothing but wait, but system load increased to insane values (40 and =
-above
-> on a 4 core machine). The system was very sluggish and unresponsive, =
-making
-> it very hard and slow to see what actually was the problem.
->
-> I didn't run an indepth analysis, but this is my guess: I see that ql=
-a2xxx
-> uses spinlocks to guard the HW against concurrent access. So if the H=
-W
-> becomes unresponsive all waiters would busy spin and burn resources, =
-right?
-> Those spinlocks are superfast as long as the HW responds well, but be=
-come a
-> CPU burner once the HW becomes slow.
->
-> I wonder if spinlocks could be made aware of such a situation and rel=
-ax.
-> Something like if spinning for more than 1000 times, perform a simple
-> backoff and sleep. A spinlock should never spin busy for several seco=
-nds,
-> right?
+Ric
 
-That's what mutexes are for. Note, however, that interrupt handlers
-cannot use mutexes as they cannot sleep, nor can they wait for lock
-holders which may themselves sleep.
 
-Also note that holding spinlocks for a long time is more likely to
-result in lockups than a slowdown - a CPU attempting to grab a
-spinlock disables migration and preemption, so on your four CPU
-system, four processes waiting on spinlocks is enough to completely
-lock up the system (unless you're using the real-time branch's kernel,
-which converts most spinlocks to mutexes).
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-------- Original Message --------
+Subject: 	FAST '12 Call for Papers Submission Deadline Approaching (50110)
+Date: 	Fri, 19 Aug 2011 12:26:25 -0700 (PDT)
+From: 	Jason.Flinn@usenix.org
+Reply-To: 	Jason.Flinn@usenix.org
+To: 	ricwheeler@gmail.com
+
+
+
+Dear Ric Wheeler,
+
+We're writing to remind you that the submission deadline for the 10th
+USENIX Conference on File and Storage Technologies (FAST '12) is
+approaching. Please submit all paper titles and abstracts by Tuesday,
+September 20, 2011, at 11:59 p.m. EDT, and complete papers by Tuesday,
+September 27, 2011, at 11:59 p.m. EDT.
+
+http://www.usenix.org/fast12/cfpb/
+
+FAST '12 brings together storage system researchers and practitioners to
+explore the latest in file and storage technology. In addition to a new
+short-paper track, the conference will consist of technical
+presentations, including refereed papers, Work-in-Progress (WiP)
+reports, poster sessions, and tutorials.
+
+Beginning this year, FAST will also feature a short-paper track. Short
+papers must represent completed work and will be reviewed to the same
+quality standards as full papers. They should describe smaller ideas
+that can be fully expressed in half the space of a full-length paper.
+Short papers will be published in the proceedings, and authors will be
+allocated a (shorter) talk slot during the conference. The program
+committee will not accept a full paper on the condition that it is cut
+down to fit in a short paper slot, nor will it invite short papers to
+be extended to full length.
+
+Topics of interest include but are not limited to:
+
+* Archival storage systems
+* Auditing and provenance
+* Caching, replication, and consistency
+* Cloud storage
+* Data-intensive applications
+* Database storage
+* Distributed I/O (wide-area, grid, peer-to-peer)
+* Empirical evaluation of storage systems
+* Experience with deployed systems
+* File-system design
+* Key-value and "nosql" storage
+* Mobile and personal storage
+* Parallel I/O
+* Power-aware storage architectures
+* Reliability, availability, and disaster tolerance
+* Search and data retrieval
+* Solid state storage technologies and uses (e.g., flash, PCM)
+* Storage for virtualized environments
+* Storage management
+* Storage networking
+* Storage performance and QoS
+* Storage security
+* The challenges of "big data"
+
+For more details on the submission process, please see the complete Call
+for Papers at http://www.usenix.org/fast12/cfpb/
+
+We look forward to receiving your submissions!
+
+William J. Bolosky, Microsoft Research
+Jason Flinn, University of Michigan
+FAST '12 Program Co-Chairs
+fast12chairs@usenix.org
+
+---------------------------------
+Call for Papers
+10th USENIX Conference on File and Storage Technologies
+February 14-17, 2012
+San Jose, CA
+http://www.usenix.org/fast12/cfpb/
+Paper titles and abstracts due: September 20, 2011, 11:59 p.m. EDT
+Paper submissions due: September 27, 2011, 11:59 p.m. EDT (Hard
+deadline, no extensions)
+---------------------------------
+
+About this mailing list:
+
+USENIX never shares, sells, rents, or exchanges email addresses of
+its members or conference attendees.
+
+We would like to continue sending you occasional email announcements
+like this one. However, if you do not wish to receive these
+announcements, please reply to this message and include the word
+REMOVE in the body. Please do not alter the subject line, as we need
+your ID number in order to process your request.
+
+Please use fast12chairs@usenix.org to contact William J. Bolosky or
+Jason Flinn. Jason.Flinn@usenix.org is for automated list management
+only.
+
+To change your contact information, please visit:
+
+http://www.usenix.org/membership/
+
+If you have any questions about the mailing list, please send email
+to office@usenix.org. We may also be reached via postal mail at:
+
+USENIX Association
+2560 9th Street, Suite 215
+Berkeley CA 94710
+(510) 528-8649
+
