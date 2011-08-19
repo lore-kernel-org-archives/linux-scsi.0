@@ -1,212 +1,27 @@
-From: WANG Cong <amwang@redhat.com>
-Subject: [Patch] target: remove needless include of version.h
-Date: Fri, 19 Aug 2011 14:53:33 +0800
-Message-ID: <1313736815-27234-1-git-send-email-amwang@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60688 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358Ab1HSGzV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Aug 2011 02:55:21 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: Re: [Patch] target: remove needless include of version.h
+Date: Fri, 19 Aug 2011 09:07:25 +0200 (CEST)
+Message-ID: <alpine.LNX.2.00.1108190906280.31857@swampdragon.chaosbits.net>
+References: <1313736815-27234-1-git-send-email-amwang@redhat.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1313736815-27234-1-git-send-email-amwang@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: WANG Cong <amwang@redhat.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, James Bottomley <JBottomley@Parallels.com>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>, Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org, WANG Cong <amwang@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andy Grover <agrover@redhat.com>, James Bottomley <JBottomley@Parallels.com>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>, Yi Zou <yi.zou@intel.com>, Dan Carpenter <error27@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-They don't version.h to be compiled. Compiling tested.
+On Fri, 19 Aug 2011, WANG Cong wrote:
 
-Signed-off-by: WANG Cong <amwang@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+> They don't version.h to be compiled. Compiling tested.
+> 
 
----
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 98c98a3..007c6c2 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -24,7 +24,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/configfs.h>
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index b2575d8..f37e2b9 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -23,7 +23,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index f165469..3ba7512 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -22,7 +22,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index bc1b336..99c9db0 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -26,7 +26,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 7e12341..7f0cc53 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -27,7 +27,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 1c1b849..c05d93b 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -25,7 +25,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/list.h>
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 2b7b0da..77d7258 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -26,7 +26,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 3dd81d2..b43cc405 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -27,7 +27,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index a8d6e1d..874152a 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -32,7 +32,6 @@
- #include <linux/delay.h>
- #include <linux/timer.h>
- #include <linux/string.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/proc_fs.h>
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 27d4925..662473c 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -24,7 +24,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/list.h>
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 8976032..3c55ce5 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -26,7 +26,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/net.h>
- #include <linux/delay.h>
- #include <linux/string.h>
-diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
-index 31e3c65..50a480d 100644
---- a/drivers/target/target_core_ua.c
-+++ b/drivers/target/target_core_ua.c
-@@ -24,7 +24,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <scsi/scsi.h>
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 5654dc2..3633f69 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -19,7 +19,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 8781d1e..d526896 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -23,7 +23,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index c37f4cd..ea0e7af 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -28,7 +28,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index dbb5eae..3269213 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -19,7 +19,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
+Looks more or less identical to the patch I submitted on Aug 1 (and 
+earlier) : https://lkml.org/lkml/2011/8/1/309
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
