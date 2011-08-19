@@ -1,161 +1,157 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] scsi: document generic scsi host sysfs attributes
-Date: Fri, 19 Aug 2011 09:44:24 -0500
-Message-ID: <20110819144424.15165.6621.stgit@beardog.cce.hp.com>
+Subject: [PATCH] scsi: Document generic scsi device attributes
+Date: Fri, 19 Aug 2011 09:44:27 -0500
+Message-ID: <20110819144427.15191.54676.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g6t0187.atlanta.hp.com ([15.193.32.64]:15529 "EHLO
-	g6t0187.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753139Ab1HSOo1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2011 10:44:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: stephenmcameron@gmail.com, akpm@linux-foundation.org, gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- Documentation/ABI/testing/sysfs-bus-scsi |  129 ++++++++++++++++++++++++++++++
- 1 files changed, 129 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-bus-scsi
+ Documentation/ABI/testing/sysfs-class-scsi_devices |  130 ++++++++++++++++++++
+ 1 files changed, 130 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-scsi_devices
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-scsi b/Documentation/ABI/testing/sysfs-bus-scsi
+diff --git a/Documentation/ABI/testing/sysfs-class-scsi_devices b/Documentation/ABI/testing/sysfs-class-scsi_devices
 new file mode 100644
-index 0000000..088d16a
+index 0000000..cee5619
 --- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-bus-scsi
-@@ -0,0 +1,129 @@
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/unique_id
-+Date:		February, 2003
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++++ b/Documentation/ABI/testing/sysfs-class-scsi_devices
+@@ -0,0 +1,130 @@
++What:           /sys/class/scsi_device/..../device/device_blocked
++Date:           December, 2002
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only unsigned integer uniquely identifying the SCSI host
-+		within the system.  This value is assigned by the low level
-+		driver.
++		This read only integer attribute indicates whether the
++		device is blocked.  A non-zero value indicates the device
++		is blocked, zero indicates the device is not blocked.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/host_busy
-+Date:		February 2003
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/type
++Date:           December, 2002
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only unsigned short integer indicating whether the SCSI
-+		host is busy.
++		This read only decimal integer value indicates the
++		SCSI device type.  See also table 47 in section 8.2.5.1
++		"Standard INQUIRY data" of the SCSI-2 specification.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/cmd_per_lun
-+Date:		February 2003
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/scsi_level
++Date:           January, 2003
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only short integer indicating how many concurrent
-+		commands per logical unit the SCSI host supports.
++		This read only decimal integer value indicates the
++		SCSI revision level the device claims to support.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/can_queue
-+Date:		October, 2006
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/vendor
++Date:           December, 2002
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only short integer indicating the total number of
-+		concurrent commands the SCSI host supports.
++		This read only string attribute contains the vendor of the SCSI
++		device.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/sg_tablesize
-+Date:		February, 2003
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/model
++Date:           December 2002
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only unsigned short integer indicating how many scatter
-+		gather entries are available for each command.
++		This read only string attribute contains the model of the SCSI
++		device.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/sg_prot_tablesize
-+Date:		September, 2010
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/rev
++Date:           December, 2002
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only unsigned short integer which indicates how many
-+		scatter gather entries are available for DIX integrity data.
++		This read only string attribute contains the product revision
++		of the SCSI device.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/unchecked_isa_dma
-+Date:		February, 2003
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/rescan
++Date:           March, 2003
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only integer which indicates whether the host is an
-+		ancient ISA device which therefore requires extra bounce
-+		buffering.
++		When written to, this write-only attribute causes the 
++		target device driver to rescan the device if the target
++		driver implements any sort of rescan -- currently only the
++		sd driver does.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/proc_name
-+Date:		March, 2004
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/delete
++Date:           August, 2003
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only string which indicates the name of the proc
-+		directory of a driver
++		Writing to this write only attribute causes the SCSI device to
++		be removed from the SCSI midlayer.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/scan
-+Date:		August, 2003
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/state
++Date:           April, 2004
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Write only attribute which causes the SCSI mid layer to
-+		scan the SCSI host at the specified channel, bus, and id for
-+		devices.  The integer decimal value of -1 interpreted as
-+		an unsigned integer (4294967295 on most architectures) may
-+		be used as a wild card.  For example:
-+		echo 4294967295 4294967295 4294967295 > /sys/.../scan
++		This read/write string attribute allows setting or retrieving
++		the current state of the SCSI device.  Possible values are
++		"created", "running", "cancel", "deleted", "quiesce", "offline",
++		"blocked" and "created-blocked"
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/hstate
-+Date:		February, 2008
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/timeout
++Date:           May, 2004
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		String value which indicates the state of the SCSI host.
-+		Possible values are: "created", "running", "cancel",
-+		"deleted", "recovery", "cancel/recovery" and "deleted/recovery"
++		This read/write decimal integer attribute contains the number
++		of seconds which may elapse after sending a command to the
++		device before that command is considered to have timed out.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/supported_mode
-+Date:		October, 2007
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/iocounterbits
++Date:           March, 2005
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only string value which indicates the supported modes of
-+		the SCSI host.  Possible modes are: "Initiator" and "Target".
++		This read only integer value shows the number of bits
++		used to represent the various I/O counters.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/active_mode
-+Date:		October, 2007
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/iorequest_cnt
++Date:           March, 2005
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only string value which indicates the currently active
-+		mode of the SCSI host.  Possible values are "Initiator",
-+		"Target" and "unknown".
++		This read only integer value indicates how many I/O requests
++		have been submitted to the SCSI device.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/prot_capabilities
-+Date:		July, 2008
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/iodone_cnt
++Date:           March, 2005
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only unsigned integer bitmap which indicates what
-+		data integrity capabilities the SCSI host supports.
-+		Bit 0: T10 DIF type 1
-+		Bit 1: T10 DIF type 2
-+		Bit 2: T10 DIF type 3
-+		Bit 3: DIX between OS and HBA only.
-+		Bit 4: DIX with DIF type 1
-+		Bit 5: DIX with DIF type 2
-+		Bit 6: DIX with DIF type 3
++		This read only integer value indicates how many I/O requests
++		have been completed by the SCSI device.
 +
-+What:		/sys/bus/scsi/devices/host*/scsi_host/host*/prot_guard_type
-+Date:		July, 2008
-+KernelVersion:	Unknown
-+Contact:	James Bottomley <James.Bottomley@HansenPartnership.com>
++What:           /sys/class/scsi_device/..../device/ioerr_cnt
++Date:           March, 2005
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
 +Description:
-+		Read only unsigned short bitmap value which indicates what
-+		checksums DIX capable controllers implement.
-+		Bit 0: DIX guard CRC.
-+		Bit 1: DIX guard IP.
++		This read only integer value indicates how many I/O requests
++		have been completed with errors by the SCSI device.
 +
-
++What:           /sys/class/scsi_device/..../device/modalias
++Date:           April, 2007
++KernelVersion:  Unknown
++Contact:        James Bottomley <James.Bottomley@HansenPartnership.com>
++Description:
++		This read only string value contains a string of the form
++		"scsi:t-0xXX" where "XX" are two hex digits representing the
++		SCSI device type.  See also the "type" attribute and table 47
++		in section 8.2.5.1 "Standard INQUIRY data" of the SCSI-2
++		specification.
++
