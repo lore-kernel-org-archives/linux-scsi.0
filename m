@@ -1,132 +1,183 @@
-From: Ric Wheeler <ricwheeler@gmail.com>
-Subject: Fwd: FAST '12 Call for Papers Submission Deadline Approaching (50110)
-Date: Fri, 19 Aug 2011 20:37:15 +0100
-Message-ID: <4E4EBB6B.8090404@gmail.com>
-References: <201108191926.p7JJQPxv016433@voyager.usenix.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: mpt2sas: /sysfs sas_address entries do not show individual port
+ sas addresses.
+Date: Sat, 20 Aug 2011 21:05:57 -0400
+Message-ID: <4E5059F5.30908@interlog.com>
+References: <4E4B9B04.10302@mpstor.com> <4E4BDFD7.3060109@interlog.com> <4E4D529F.9090908@oracle.com> <4E4D6D78.6040106@interlog.com> <4E4E5780.5000705@mpstor.com> <4E4EB442.20903@oracle.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <201108191926.p7JJQPxv016433@voyager.usenix.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:44812 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751478Ab1HUBGI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Aug 2011 21:06:08 -0400
+In-Reply-To: <4E4EB442.20903@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ravi Shankar <ravi.v.shankar@oracle.com>
+Cc: Benjamin ESTRABAUD <be@mpstor.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 11-08-19 03:06 PM, Ravi Shankar wrote:
+>
+>>
+>> Hi Douglas, Ravi,
+>>
+>> According to the SAS specs, (ISO/IEC 14776-152:200x, sas2r15.pdf), on page 45,
+>> they state that that a port is formed by a unique tuple of the SAS Phy address
+>> and the attached SAS Phy address.
+>>
+>> For instance, if you take 2 * 2 phy wide ports, where all 4 phys from these
+>> two ports have the same sas address, let's call it "A" and connect them each
+>> to another port that each has a different address, "B" and "C", they state
+>> that two ports will be formed, one connecting "A" to "B" and one connecting
+>> "A" to "C".
+>>
+>> This is what Douglas is saying with the SAS disks for instance, that are
+>> typically given two separate SAS addresses to avoid forming a wide port with
+>> the expander (since the expander will have the same sas address on all phys),
+>> and to allow for dual expander multiplexing for redundancy.
+>>
+>> But what I don't understand is that, in the context of two HBAs connected
+>> together, things seem to be different:
+>>
+>> I configured a 9200-8e HBA (8Phys) and changed all its SAS phys addresses from
+>> being the same to being incremental, therefore the last byte of each SAS phy
+>> address changed from:
+>>
+>> 0 1 2 3 4 5 6 7
+>> b0 b0 b0 b0 b0 b0 b0 b0
+>> to:
+>> b0 b1 b2 b3 b4 b5 b6 b7
+>>
+>> I also changed the "ports" setup from "Auto" to "Wide", making two 4*phys ports:
+>>
+>> Port 0 | Port 1
+>> b0 b1 b2 b3 | b4 b5 b6 b7
+>>
+>> I also set all these ports to Target.
+>>
+>> I then connected this HBA to another 9200-8e HBA, which was left setup as
+>> default:
+>>
+>> Auto
+>> Initiator
+>> 0 1 2 3 4 5 6 7
+>> 10 10 10 10 10 10 10 10
+>>
+>> However, when I looked up the SAS topology on either side in LSIUtil, I saw
+>> that there was two ports connected on each HBAs, one connected on phy 0 and
+>> one on phy 4.
+>>
+>> On the second (Initiator) HBA, the two ports appeared as b0 and b4, with two
+>> separate handles.
+>>
+>> On the first (Target) HBA, both ports appeared as 10, with two separate handles.
+>>
+>> What I don't understand above, is since all phys on the Target HBAs have a
+>> different SAS address, and all the ones on the Initiator one have the same, 8
+>> narrow ports should have been created there.
+>>
+>> However, there is a separate notion of "port" in LSIUtil, does that mean that
+>> agglomerating 4 phys with different SAS addresses in a logical LSIUtil "port"
+>> forces the HBA FW to transmit the same sas address on these 4 Phys, to make
+>> them look like a single port? Or is there an extra separate notion of "port",
+>> that does not rely on the phy SAS address and its attached SAS address?
+>>
+>> I guess my question is: Is there an extra information ontop of phy sas address
+>> and phy id that is transmitted in SAS, like a "port" id or a handle?
+>>
+>> Also, in the above case, if we assume that the HBA FW was transmitting the
+>> same phys for phy 0-3 and phy 4-8 on the Target HBA, it would make sense that
+>> we have two ports, since there is two pairs of SAS addresses / attached SAS
+>> addresses here.
+>>
+> Ben,
+>
+> Port 0 | Port 1
+> b0 b1 b2 b3 | b4 b5 b6 b7
+>
+> In above configuration you are assigning different SAS Address for each PHY but
+> over riding with WIDE port clause. After
+> individual PHY are reset, it transmits IDENTIFICATION address frames as part of
+> identification sequence so down stream devices
+> know the attributes of the attached devices.
+>
+> PHY 0-3: Transmit Identification frame with SAS address xxxxxxxxb0
+>
+> PHY 4-7: Transmit identification frame with SAS address xxxxxxxxb4
+>
+> The second HBA (with SAS address xxxxxxxx10 with Auto mode) receives above
+> identification frame on PHY 0-3 and 4-7 respectively. So this
+> essentially forms x4 wide port instead of narrow as you expected.
+>
+> As far I know there are no port id or handle transmitted on the fabric.
+>
+> Couple of interesting question regarding wide port. From bandwidth perspective,
+> x4 port are termed as 24 Gb/sec ( 6 Gb/s * 4). But do we
+> really get 24 Gb/sec bandwidth ?. I see questions being raised that SSD disks
+> need wide ports for bandwidth aggregation. SAS protocol
+> and Expander has following limitation which could be problematic depending on
+> topology.
+>
+> 1) Unlike FC, SAS is a connection oriented protocol (full duplex Class 1 vs
+> Class 3 FC)
+> 2) Flow control primitives (K words) are transmitted inside connection (without
+> being packetized).
+> 3) When connecting through Expanders, typically only x4 or x8 physical links are
+> used. If there are hundreds of Initiator/Target exist in such
+> fabric, the number of active I/O transfers across devices are limited to number
+> of links between Expanders (due to Class 1 protocol).
+>
+> My understanding for SSD disks with wide ports the HBA and Disks can queue
+> several commands using Tagged Queuing. This way we can
+> maximize number of commands and data frames across devices.
 
-If anyone has interest in publishing in an academic forum, FAST is a great 
-conference for file and storage related work.
+spl2r02.pdf section 6.18.2 [link layer, SSP, Full duplex]:
+   "SSP is a full duplex protocol. An SSP phy may receive
+    an SSP frame or primitive in a connection while it is
+    transmitting an SSP frame or primitive in the same
+    connection. A wide SSP port may send and/or receive
+    SSP frames or primitives concurrently on different
+    connections (i.e., on different phys)."
 
-Regards,
+For a SCSI command like READ(10) a connection consumes
+one initiator phy and one target phy plus the pathway
+between them until it is closed. Typically a READ
+would have two connections: one to send the CDB and a
+second connection later to return the data and response
+(SCSI status and possibly sense data). For a spinning
+disk there could be milliseconds between those two
+connections; with an SSD less (do they use only one
+connection?).
 
-Ric
+Due to the full duplex nature of a connection, DATA
+frames associated with a WRITE could overlap with DATA
+frames associated with an READ CDB sent earlier.
 
+In SAS-2, a single READ's maximum data rate is 6 Gbps.
+If a 2-phy wide link is available (along the whole pathway
+(see Figure 129 in spl2r02.pdf)) then two READs, sent one
+after the other or concurrently, could have their DATA
+frames returned concurrently. So the combined maximum
+data rate of the two READs would be 12 Gbps.
 
--------- Original Message --------
-Subject: 	FAST '12 Call for Papers Submission Deadline Approaching (50110)
-Date: 	Fri, 19 Aug 2011 12:26:25 -0700 (PDT)
-From: 	Jason.Flinn@usenix.org
-Reply-To: 	Jason.Flinn@usenix.org
-To: 	ricwheeler@gmail.com
+Expanders don't change what is stated above. Pathways
+become an interconnection of links. A small latency is
+added to the opening of connections. And there is the
+possibility that no links are available to establish a
+connection (e.g. target to expander has available link(s)
+but all expander to initiator links are occupied).
 
+> Wondering has anyone measured performance under such scenario ?. It would be
+> great to see Expanders terminating SSP frames to over come
+> some of above limitation. Links between HBA and Expander and Expander to Disk
+> can be still Class 1.
 
+Not sure I follow. Expanders come into play when
+connections are being established.
 
-Dear Ric Wheeler,
+Doug Gilbert
 
-We're writing to remind you that the submission deadline for the 10th
-USENIX Conference on File and Storage Technologies (FAST '12) is
-approaching. Please submit all paper titles and abstracts by Tuesday,
-September 20, 2011, at 11:59 p.m. EDT, and complete papers by Tuesday,
-September 27, 2011, at 11:59 p.m. EDT.
-
-http://www.usenix.org/fast12/cfpb/
-
-FAST '12 brings together storage system researchers and practitioners to
-explore the latest in file and storage technology. In addition to a new
-short-paper track, the conference will consist of technical
-presentations, including refereed papers, Work-in-Progress (WiP)
-reports, poster sessions, and tutorials.
-
-Beginning this year, FAST will also feature a short-paper track. Short
-papers must represent completed work and will be reviewed to the same
-quality standards as full papers. They should describe smaller ideas
-that can be fully expressed in half the space of a full-length paper.
-Short papers will be published in the proceedings, and authors will be
-allocated a (shorter) talk slot during the conference. The program
-committee will not accept a full paper on the condition that it is cut
-down to fit in a short paper slot, nor will it invite short papers to
-be extended to full length.
-
-Topics of interest include but are not limited to:
-
-* Archival storage systems
-* Auditing and provenance
-* Caching, replication, and consistency
-* Cloud storage
-* Data-intensive applications
-* Database storage
-* Distributed I/O (wide-area, grid, peer-to-peer)
-* Empirical evaluation of storage systems
-* Experience with deployed systems
-* File-system design
-* Key-value and "nosql" storage
-* Mobile and personal storage
-* Parallel I/O
-* Power-aware storage architectures
-* Reliability, availability, and disaster tolerance
-* Search and data retrieval
-* Solid state storage technologies and uses (e.g., flash, PCM)
-* Storage for virtualized environments
-* Storage management
-* Storage networking
-* Storage performance and QoS
-* Storage security
-* The challenges of "big data"
-
-For more details on the submission process, please see the complete Call
-for Papers at http://www.usenix.org/fast12/cfpb/
-
-We look forward to receiving your submissions!
-
-William J. Bolosky, Microsoft Research
-Jason Flinn, University of Michigan
-FAST '12 Program Co-Chairs
-fast12chairs@usenix.org
-
----------------------------------
-Call for Papers
-10th USENIX Conference on File and Storage Technologies
-February 14-17, 2012
-San Jose, CA
-http://www.usenix.org/fast12/cfpb/
-Paper titles and abstracts due: September 20, 2011, 11:59 p.m. EDT
-Paper submissions due: September 27, 2011, 11:59 p.m. EDT (Hard
-deadline, no extensions)
----------------------------------
-
-About this mailing list:
-
-USENIX never shares, sells, rents, or exchanges email addresses of
-its members or conference attendees.
-
-We would like to continue sending you occasional email announcements
-like this one. However, if you do not wish to receive these
-announcements, please reply to this message and include the word
-REMOVE in the body. Please do not alter the subject line, as we need
-your ID number in order to process your request.
-
-Please use fast12chairs@usenix.org to contact William J. Bolosky or
-Jason Flinn. Jason.Flinn@usenix.org is for automated list management
-only.
-
-To change your contact information, please visit:
-
-http://www.usenix.org/membership/
-
-If you have any questions about the mailing list, please send email
-to office@usenix.org. We may also be reached via postal mail at:
-
-USENIX Association
-2560 9th Street, Suite 215
-Berkeley CA 94710
-(510) 528-8649
 
