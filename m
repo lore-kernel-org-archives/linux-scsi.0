@@ -1,235 +1,122 @@
-From: Mark Petersen <mpete_06@hotmail.com>
-Subject: RE: [Bugme-new] [Bug 41552] New: Performance of writing and reading
- from multiple drives decreases by 40% when going from Linux Kernel 2.6.36.4
- to 2.6.37 (and beyond)
-Date: Mon, 22 Aug 2011 15:32:38 -0500
-Message-ID: <BLU165-W344B2B1CD9DC44A9DABA5DFF2F0@phx.gbl>
-References: <bug-41552-10286@https.bugzilla.kernel.org/>,<20110822122443.c04839c8.akpm@linux-foundation.org>,<20110822194854.GA15087@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v3.1-rc3
+Date: Mon, 22 Aug 2011 13:38:53 -0700
+Message-ID: <1314045533.12514.32.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: multipart/alternative;
-	boundary="_214b1252-cb0c-4b79-a5c2-b40d0ced4b6c_"
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20110822194854.GA15087@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: vgoyal@redhat.com
-Cc: bugme-daemon@bugzilla.kernel.org, axboe@kernel.dk, linux-mm@kvack.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
---_214b1252-cb0c-4b79-a5c2-b40d0ced4b6c_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Hi Linus,
 
+The following is the current set of pending target fixes for -rc3 that
+address a number of issues with -rc1 target code.  These fixes have been
+stewing in lio-core-2.6.git for the last two weeks, and have been
+re-posted to the list last week for additional review.
 
-We were using the default CFQ scheduler.  I will change it to deadline and =
-see what happens.  Also=2C we are not using a file system to perform the wr=
-ites=2C rather we are sending SCSI commands directly to the devices=2C nor =
-are we doing anything special to the disks with a device mapper.  We simply=
- write to each one on a different thread one sector at a time.
+Note that the series was rebased this morning to include a missing bit
+in one of the existing patches, but other than this minor item the
+current series remains unchanged and has been seeing a fair amount of
+testing from users over the last week.
 
-I will attempt to get the trace and will add it if I can.
+This series includes the following major fixes:
 
-Thanks=2C
-Mark
+*) Make INQUIRY return 'non connected' status to address breakge with
+   certain initiators (reported + extra fix by Roland)
+*) Fix write payload exception handling with ->new_cmd_map
+*) Fix CDB emulation handling for WRITE_SAME
+*) Fix CDB emulation handling for SYNCHRONIZE_CACHE zero LBA + range   
+   breakage
+*) Fix multiple se_task handling bug (reported by Chris Boot)
+*) Fix task SGL chaining breakage with transport_allocate_data_tasks
 
-> Date: Mon=2C 22 Aug 2011 15:48:54 -0400
-> From: vgoyal@redhat.com
-> To: mpete_06@hotmail.com
-> CC: bugme-daemon@bugzilla.kernel.org=3B axboe@kernel.dk=3B linux-mm@kvack=
-.org=3B linux-scsi@vger.kernel.org=3B akpm@linux-foundation.org
-> Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing and read=
-ing from multiple drives decreases by 40% when going from Linux Kernel 2.6.=
-36.4 to 2.6.37 (and beyond)
->=20
-> On Mon=2C Aug 22=2C 2011 at 12:24:43PM -0700=2C Andrew Morton wrote:
-> >=20
-> > (switched to email.  Please respond via emailed reply-to-all=2C not via=
- the
-> > bugzilla web interface).
-> >=20
-> > On Mon=2C 22 Aug 2011 15:20:41 GMT
-> > bugzilla-daemon@bugzilla.kernel.org wrote:
-> >=20
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=3D41552
-> > >=20
-> > >            Summary: Performance of writing and reading from multiple
-> > >                     drives decreases by 40% when going from Linux Ker=
-nel
-> > >                     2.6.36.4 to 2.6.37 (and beyond)
-> > >            Product: IO/Storage
-> > >            Version: 2.5
-> > >     Kernel Version: 2.6.37
-> > >           Platform: All
-> > >         OS/Version: Linux
-> > >               Tree: Mainline
-> > >             Status: NEW
-> > >           Severity: normal
-> > >           Priority: P1
-> > >          Component: SCSI
-> > >         AssignedTo: linux-scsi@vger.kernel.org
-> > >         ReportedBy: mpete_06@hotmail.com
-> > >         Regression: No
-> > >=20
-> > >=20
-> > > We have an application that will write and read from every sector on =
-a drive.=20
-> > > The application can perform these tasks on multiple drives at the sam=
-e time.=20
-> > > It is designed to run on top of the Linux Kernel=2C which we periodic=
-ally update
-> > > so that we can get the latest device drivers.  When performing the la=
-st update
-> > > from 2.6.33.2 to 2.6.37=2C we found that the performance of a set of =
-drives
-> > > decreased by some 40% (took 3 hours and 11 minutes to write and read =
-from 5
-> > > drives on 2.6.37 versus 2 hours and 12 minutes on 2.6.33.3).  I was a=
-ble to
-> > > determine that the issue was in the 2.6.37 Kernel as I was able to ru=
-n it with
-> > > the 2.6.36.4 kernel=2C and it had the better performance.   After see=
-ing that I/O
-> > > throttling was introduced in the 2.6.37 Kernel=2C I naturally suspect=
-ed that.=20
-> > > However=2C by default=2C all the throttling was turned off (I attache=
-d the actual
-> > > .config that was used to build the kernel).  I then tried to turn on =
-the
-> > > throttling and set it to a high number to see what would happen.  Whe=
-n I did
-> > > that=2C I was able to reduce the time from 3 hours and 11 minutes to =
-2 hours and
-> > > 50 minutes.  There seems to be something there that changed that is i=
-mpacting
-> > > performance on multiple drives.  When we do this same test with only =
-one drive=2C
-> > > the performance is identical between the systems.  This issue still o=
-ccurs on
-> > > Kernel 3.0.2.
-> > >=20
-> >=20
-> > Are you able to determine whether this regression is due to slower
-> > reading=2C to slower writing or to both?
->=20
-> Mark=2C
->=20
-> As your initial comment says that you see 40% regression even when block
-> throttling infrastructure is not enabled=2C I think it is not related to
-> throttling as blk_throtl_bio() is null when BLK_DEV_THROTTLING=3Dn.
->=20
-> What IO scheduler are you using? Can you try switching IO scheduler to
-> deadline and see if regression is still there. Trying to figure out if
-> it has anything to do with IO scheduler.
->=20
-> What file system are you using with what options? Are you using device
-> mapper to create some special configuration on multiple disks?
->=20
-> Also can you take a trace (blktrace) of any of the disks for 30 seconds
-> both without regression and after regression and upload it somewhere.
-> Staring at it might give some clues.=20
->=20
-> Thanks
-> Vivek
- 		 	   		  =
+At this point there is still two outstanding issues not addressed in
+this series related to some recent NAA IEEE Registered Extended
+designator format breakage reported with VMFS, and breakage with LUN
+discovery in tcm_fc(fcoe).  These bugs are still being discussed and
+addressed, and will be sent out in a seperate series for -rc4.
 
---_214b1252-cb0c-4b79-a5c2-b40d0ced4b6c_
-Content-Type: text/html; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+The series is available directly here:
 
-<html>
-<head>
-<style><!--
-.hmmessage P
-{
-margin:0px=3B
-padding:0px
-}
-body.hmmessage
-{
-font-size: 10pt=3B
-font-family:Tahoma
-}
---></style>
-</head>
-<body class=3D'hmmessage'><div dir=3D'ltr'>
-We were using the default CFQ scheduler.&nbsp=3B I will change it to deadli=
-ne and see what happens.&nbsp=3B Also=2C we are not using a file system to =
-perform the writes=2C rather we are sending SCSI commands directly to the d=
-evices=2C nor are we doing anything special to the disks with a device mapp=
-er.&nbsp=3B We simply write to each one on a different thread one sector at=
- a time.<br><br>I will attempt to get the trace and will add it if I can.<b=
-r><br>Thanks=2C<br>Mark<br><br><div>&gt=3B Date: Mon=2C 22 Aug 2011 15:48:5=
-4 -0400<br>&gt=3B From: vgoyal@redhat.com<br>&gt=3B To: mpete_06@hotmail.co=
-m<br>&gt=3B CC: bugme-daemon@bugzilla.kernel.org=3B axboe@kernel.dk=3B linu=
-x-mm@kvack.org=3B linux-scsi@vger.kernel.org=3B akpm@linux-foundation.org<b=
-r>&gt=3B Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing a=
-nd reading from multiple drives decreases by 40% when going from Linux Kern=
-el 2.6.36.4 to 2.6.37 (and beyond)<br>&gt=3B <br>&gt=3B On Mon=2C Aug 22=2C=
- 2011 at 12:24:43PM -0700=2C Andrew Morton wrote:<br>&gt=3B &gt=3B <br>&gt=
-=3B &gt=3B (switched to email.  Please respond via emailed reply-to-all=2C =
-not via the<br>&gt=3B &gt=3B bugzilla web interface).<br>&gt=3B &gt=3B <br>=
-&gt=3B &gt=3B On Mon=2C 22 Aug 2011 15:20:41 GMT<br>&gt=3B &gt=3B bugzilla-=
-daemon@bugzilla.kernel.org wrote:<br>&gt=3B &gt=3B <br>&gt=3B &gt=3B &gt=3B=
- https://bugzilla.kernel.org/show_bug.cgi?id=3D41552<br>&gt=3B &gt=3B &gt=
-=3B <br>&gt=3B &gt=3B &gt=3B            Summary: Performance of writing and=
- reading from multiple<br>&gt=3B &gt=3B &gt=3B                     drives d=
-ecreases by 40% when going from Linux Kernel<br>&gt=3B &gt=3B &gt=3B       =
-              2.6.36.4 to 2.6.37 (and beyond)<br>&gt=3B &gt=3B &gt=3B      =
-      Product: IO/Storage<br>&gt=3B &gt=3B &gt=3B            Version: 2.5<b=
-r>&gt=3B &gt=3B &gt=3B     Kernel Version: 2.6.37<br>&gt=3B &gt=3B &gt=3B  =
-         Platform: All<br>&gt=3B &gt=3B &gt=3B         OS/Version: Linux<br=
->&gt=3B &gt=3B &gt=3B               Tree: Mainline<br>&gt=3B &gt=3B &gt=3B =
-            Status: NEW<br>&gt=3B &gt=3B &gt=3B           Severity: normal<=
-br>&gt=3B &gt=3B &gt=3B           Priority: P1<br>&gt=3B &gt=3B &gt=3B     =
-     Component: SCSI<br>&gt=3B &gt=3B &gt=3B         AssignedTo: linux-scsi=
-@vger.kernel.org<br>&gt=3B &gt=3B &gt=3B         ReportedBy: mpete_06@hotma=
-il.com<br>&gt=3B &gt=3B &gt=3B         Regression: No<br>&gt=3B &gt=3B &gt=
-=3B <br>&gt=3B &gt=3B &gt=3B <br>&gt=3B &gt=3B &gt=3B We have an applicatio=
-n that will write and read from every sector on a drive. <br>&gt=3B &gt=3B =
-&gt=3B The application can perform these tasks on multiple drives at the sa=
-me time. <br>&gt=3B &gt=3B &gt=3B It is designed to run on top of the Linux=
- Kernel=2C which we periodically update<br>&gt=3B &gt=3B &gt=3B so that we =
-can get the latest device drivers.  When performing the last update<br>&gt=
-=3B &gt=3B &gt=3B from 2.6.33.2 to 2.6.37=2C we found that the performance =
-of a set of drives<br>&gt=3B &gt=3B &gt=3B decreased by some 40% (took 3 ho=
-urs and 11 minutes to write and read from 5<br>&gt=3B &gt=3B &gt=3B drives =
-on 2.6.37 versus 2 hours and 12 minutes on 2.6.33.3).  I was able to<br>&gt=
-=3B &gt=3B &gt=3B determine that the issue was in the 2.6.37 Kernel as I wa=
-s able to run it with<br>&gt=3B &gt=3B &gt=3B the 2.6.36.4 kernel=2C and it=
- had the better performance.   After seeing that I/O<br>&gt=3B &gt=3B &gt=
-=3B throttling was introduced in the 2.6.37 Kernel=2C I naturally suspected=
- that. <br>&gt=3B &gt=3B &gt=3B However=2C by default=2C all the throttling=
- was turned off (I attached the actual<br>&gt=3B &gt=3B &gt=3B .config that=
- was used to build the kernel).  I then tried to turn on the<br>&gt=3B &gt=
-=3B &gt=3B throttling and set it to a high number to see what would happen.=
-  When I did<br>&gt=3B &gt=3B &gt=3B that=2C I was able to reduce the time =
-from 3 hours and 11 minutes to 2 hours and<br>&gt=3B &gt=3B &gt=3B 50 minut=
-es.  There seems to be something there that changed that is impacting<br>&g=
-t=3B &gt=3B &gt=3B performance on multiple drives.  When we do this same te=
-st with only one drive=2C<br>&gt=3B &gt=3B &gt=3B the performance is identi=
-cal between the systems.  This issue still occurs on<br>&gt=3B &gt=3B &gt=
-=3B Kernel 3.0.2.<br>&gt=3B &gt=3B &gt=3B <br>&gt=3B &gt=3B <br>&gt=3B &gt=
-=3B Are you able to determine whether this regression is due to slower<br>&=
-gt=3B &gt=3B reading=2C to slower writing or to both?<br>&gt=3B <br>&gt=3B =
-Mark=2C<br>&gt=3B <br>&gt=3B As your initial comment says that you see 40% =
-regression even when block<br>&gt=3B throttling infrastructure is not enabl=
-ed=2C I think it is not related to<br>&gt=3B throttling as blk_throtl_bio()=
- is null when BLK_DEV_THROTTLING=3Dn.<br>&gt=3B <br>&gt=3B What IO schedule=
-r are you using? Can you try switching IO scheduler to<br>&gt=3B deadline a=
-nd see if regression is still there. Trying to figure out if<br>&gt=3B it h=
-as anything to do with IO scheduler.<br>&gt=3B <br>&gt=3B What file system =
-are you using with what options? Are you using device<br>&gt=3B mapper to c=
-reate some special configuration on multiple disks?<br>&gt=3B <br>&gt=3B Al=
-so can you take a trace (blktrace) of any of the disks for 30 seconds<br>&g=
-t=3B both without regression and after regression and upload it somewhere.<=
-br>&gt=3B Staring at it might give some clues. <br>&gt=3B <br>&gt=3B Thanks=
-<br>&gt=3B Vivek<br></div> 		 	   		  </div></body>
-</html>=
+  master.kernel.org:/pub/scm/linux/kernel/git/nab/target-pending.git 3.1-rc-fixes
 
---_214b1252-cb0c-4b79-a5c2-b40d0ced4b6c_--
+This tree is also available from kernel.org mirrors at:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git 3.1-rc-fixes
+
+The series has been made against the following upstream HEAD:
+
+commit 93ee7a9340d64f20295aacc3fb6a22b759323280
+Author: Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Sun Aug 14 15:09:08 2011 -0700
+
+    Linux 3.1-rc2
+
+Thanks!
+
+--nab
+
+Chris Boot (1):
+  iscsi-target: Implement iSCSI target IPv6 address printing.
+
+Dan Carpenter (3):
+  iscsi-target: remove duplicate return
+  iscsi-target: forever loop bug in iscsit_attach_ooo_cmdsn()
+  iscsi-target: Fix iscsit_allocate_se_cmd_for_tmr failure path bugs
+
+Jesper Juhl (1):
+  iscsi-target: Fix leak on failure in iscsi_copy_param_list()
+
+Julia Lawall (1):
+  target: Convert target_core_rd.c to use use BUG_ON
+
+Nicholas Bellinger (10):
+  target: Change TCM_NON_EXISTENT_LUN response to ASC=LOGICAL UNIT NOT
+    SUPPORTED
+  target: Make standard INQUIRY return 'not connected' for
+    tpg_virt_lun0
+  target: Fix write payload exception handling with ->new_cmd_map
+  target: Add WRITE_SAME (10) parsing and refactor passthrough checks
+  target: Fix WRITE_SAME usage with transport_get_size
+  target: Remove duplicate task completions in
+    transport_emulate_control_cdb
+  target: Fix SYNCHRONIZE_CACHE zero LBA + range breakage
+  target: Add missing DATA_SG_IO transport_cmd_get_valid_sectors check
+  target: Fix task count > 1 handling breakage and use max_sector page
+    alignment
+  target: Fix task SGL chaining breakage with
+    transport_allocate_data_tasks
+
+Roland Dreier (4):
+  target: Print subpage too for unhandled MODE SENSE pages
+  tcm_fc: init/exit functions should not be protected by "#ifdef
+    MODULE"
+  target: Make locking in transport_deregister_session() IRQ safe
+  target: Convert acl_node_lock to be IRQ-disabling
+
+Thomas Meyer (1):
+  target: Use ERR_CAST inlined function
+
+ drivers/target/iscsi/iscsi_target.c            |    1 -
+ drivers/target/iscsi/iscsi_target_configfs.c   |    4 +-
+ drivers/target/iscsi/iscsi_target_erl1.c       |    2 +-
+ drivers/target/iscsi/iscsi_target_login.c      |   16 +--
+ drivers/target/iscsi/iscsi_target_parameters.c |   43 ++---
+ drivers/target/iscsi/iscsi_target_util.c       |    4 +-
+ drivers/target/target_core_cdb.c               |   57 ++++---
+ drivers/target/target_core_device.c            |   48 +++++-
+ drivers/target/target_core_fabric_configfs.c   |    2 +-
+ drivers/target/target_core_pr.c                |    8 +-
+ drivers/target/target_core_rd.c                |   24 +--
+ drivers/target/target_core_tpg.c               |   64 ++++----
+ drivers/target/target_core_transport.c         |  206 ++++++++++++++----------
+ drivers/target/tcm_fc/tfc_conf.c               |    6 +-
+ include/target/target_core_fabric_ops.h        |    6 +
+ 15 files changed, 275 insertions(+), 216 deletions(-)
+
+-- 
+1.7.6
