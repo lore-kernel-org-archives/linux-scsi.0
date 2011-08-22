@@ -1,31 +1,36 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/4] lpfc 8.3.26: Fix issues pertaining to SCSI/FC protocol.
-Date: Sun, 21 Aug 2011 21:48:13 -0400
-Message-ID: <1313977695.21906.4.camel@ogier>
+Subject: [PATCH 2/4] lpfc 8.3.26: Fix HBA initialization issues
+Date: Sun, 21 Aug 2011 21:48:49 -0400
+Message-ID: <1313977730.21906.5.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:6392 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:6398 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756367Ab1HVBsq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:48:46 -0400
+	with ESMTP id S1756391Ab1HVBtS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:49:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix issues pertaining to SCSI/FC protocol.
+Fix HBA initialization issues
 
-- Allow frames destined to 0xFFFFFE to be processed by the driver by matching
-  that DID with the physical port.
-- Call lpfc_sli_issue_iocb with context1 set to ndlp
-- In echo command accept function, adjust memcpy to limit memcpy to 1K
-- Set LPFC_SLI3_BG_ENABLED properly upon completion.
-- Skip the INIT_VFI call in lpfc_register_fcf if the FCF is already
-  registered and go immediately to initial flogi.
-- use "status" variable instead of "ret" variable to hold the return of the
-  fc_block_scsi_eh.
+- Swap all values that come from the firmware image on little endian systems.
+  Created a new bf_get_be macro that does the same as the bf_get_le macro but
+  for big endian data instead of little endian data.
+- Moved the incrementing of temp_offset after the copy
+  fixed the write object loop to use temp_offset to figure out where the end
+  of the image is instead of offset.
+- Added the necessary codes for properly bringing the driver instance offline
+  and then trying to bring the port back online with the PCI function IP reset.
+  If it fails to bring the SLI port back online, it will fall through to
+  bringing the SLI port to HBA error offline.
+- Add a call in the probe_one_s3 and probe_one_s4 routines to get the Modeldesc
+- Change OCe50100 to OCe15100
+- Made the error log also include the PCI BAR bitmap returned from kernel call
+  pci_select_bars().
 
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -33,118 +38,165 @@ Fix issues pertaining to SCSI/FC protocol.
 
  ---
 
- lpfc_els.c     |   11 +++++------
- lpfc_hbadisc.c |    2 +-
- lpfc_scsi.c    |   11 ++++++-----
- lpfc_sli.c     |   13 +++++++++----
- 4 files changed, 21 insertions(+), 16 deletions(-)
+ lpfc_hw4.h  |    2 ++
+ lpfc_init.c |   60 +++++++++++++++++++++++++++++++++---------------------------
+ 2 files changed, 35 insertions(+), 27 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2011-08-10 14:34:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2011-08-19 23:23:33.000000000 -0400
-@@ -4082,9 +4082,6 @@ lpfc_els_rsp_rnid_acc(struct lpfc_vport 
- 
- 	phba->fc_stat.elsXmitACC++;
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
--	lpfc_nlp_put(ndlp);
--	elsiocb->context1 = NULL;  /* Don't need ndlp for cmpl,
--				    * it could be freed */
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (rc == IOCB_ERROR) {
-@@ -4166,6 +4163,11 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport 
- 	psli = &phba->sli;
- 	cmdsize = oldiocb->iocb.unsli3.rcvsli3.acc_len;
- 
-+	/* The accumulated length can exceed the BPL_SIZE.  For
-+	 * now, use this as the limit
-+	 */
-+	if (cmdsize > LPFC_BPL_SIZE)
-+		cmdsize = LPFC_BPL_SIZE;
- 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_ACC);
- 	if (!elsiocb)
-@@ -4189,9 +4191,6 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport 
- 
- 	phba->fc_stat.elsXmitACC++;
- 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
--	lpfc_nlp_put(ndlp);
--	elsiocb->context1 = NULL;  /* Don't need ndlp for cmpl,
--				    * it could be freed */
- 
- 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
- 	if (rc == IOCB_ERROR) {
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-08-10 14:34:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-08-19 23:23:33.000000000 -0400
-@@ -1412,7 +1412,7 @@ lpfc_register_fcf(struct lpfc_hba *phba)
- 		if (phba->pport->port_state != LPFC_FLOGI) {
- 			phba->hba_flag |= FCF_RR_INPROG;
- 			spin_unlock_irq(&phba->hbalock);
--			lpfc_issue_init_vfi(phba->pport);
-+			lpfc_initial_flogi(phba->pport);
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-08-19 23:24:18.000000000 -0400
+@@ -41,6 +41,8 @@
+  * Or clear that bit field:
+  *	bf_set(example_bit_field, &t1, 0);
+  */
++#define bf_get_be32(name, ptr) \
++	((be32_to_cpu((ptr)->name##_WORD) >> name##_SHIFT) & name##_MASK)
+ #define bf_get_le32(name, ptr) \
+ 	((le32_to_cpu((ptr)->name##_WORD) >> name##_SHIFT) & name##_MASK)
+ #define bf_get(name, ptr) \
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-08-19 23:24:18.000000000 -0400
+@@ -1481,15 +1481,18 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
  			return;
  		}
- 		spin_unlock_irq(&phba->hbalock);
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2011-08-10 14:34:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-08-19 23:23:33.000000000 -0400
-@@ -3056,8 +3056,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *
+ 		if (bf_get(lpfc_sliport_status_rn, &portstat_reg)) {
+-			/*
+-			 * TODO: Attempt port recovery via a port reset.
+-			 * When fully implemented, the driver should
+-			 * attempt to recover the port here and return.
+-			 * For now, log an error and take the port offline.
+-			 */
++			/* need reset: attempt for port recovery */
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"2887 Port Error: Attempting "
+ 					"Port Recovery\n");
++			lpfc_offline_prep(phba);
++			lpfc_offline(phba);
++			lpfc_sli_brdrestart(phba);
++			if (lpfc_online(phba) == 0) {
++				lpfc_unblock_mgmt_io(phba);
++				return;
++			}
++			/* fall through for not able to recover */
+ 		}
+ 		lpfc_sli4_offline_eratt(phba);
+ 		break;
+@@ -1958,7 +1961,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 	case PCI_DEVICE_ID_LANCER_FCOE:
+ 	case PCI_DEVICE_ID_LANCER_FCOE_VF:
+ 		oneConnect = 1;
+-		m = (typeof(m)){"OCe50100", "PCIe", "FCoE"};
++		m = (typeof(m)){"OCe15100", "PCIe", "FCoE"};
+ 		break;
+ 	default:
+ 		m = (typeof(m)){"Unknown", "", ""};
+@@ -3949,7 +3952,7 @@ static int
+ lpfc_enable_pci_dev(struct lpfc_hba *phba)
+ {
+ 	struct pci_dev *pdev;
+-	int bars;
++	int bars = 0;
+ 
+ 	/* Obtain PCI device reference */
+ 	if (!phba->pcidev)
+@@ -3978,6 +3981,8 @@ lpfc_enable_pci_dev(struct lpfc_hba *phb
+ out_disable_device:
+ 	pci_disable_device(pdev);
+ out_error:
++	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++			"1401 Failed to enable pci device, bars:x%x\n", bars);
+ 	return -ENODEV;
+ }
+ 
+@@ -8271,11 +8276,8 @@ lpfc_pci_probe_one_s3(struct pci_dev *pd
+ 
+ 	/* Perform generic PCI device enabling operation */
+ 	error = lpfc_enable_pci_dev(phba);
+-	if (error) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"1401 Failed to enable pci device.\n");
++	if (error)
+ 		goto out_free_phba;
+-	}
+ 
+ 	/* Set up SLI API function jump table for PCI-device group-0 HBAs */
+ 	error = lpfc_api_table_setup(phba, LPFC_PCI_DEV_LP);
+@@ -8322,6 +8324,9 @@ lpfc_pci_probe_one_s3(struct pci_dev *pd
+ 		goto out_free_iocb_list;
  	}
- 	ndlp = rdata->pnode;
  
--	if (!(phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
--		scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) {
-+	if ((scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) &&
-+		(!(phba->sli3_options & LPFC_SLI3_BG_ENABLED) ||
-+		(phba->sli_rev == LPFC_SLI_REV4))) {
++	/* Get the default values for Model Name and Description */
++	lpfc_get_hba_model_desc(phba, phba->ModelName, phba->ModelDesc);
++
+ 	/* Create SCSI host to the physical port */
+ 	error = lpfc_create_shost(phba);
+ 	if (error) {
+@@ -8885,16 +8890,17 @@ lpfc_write_firmware(struct lpfc_hba *phb
+ 	uint32_t offset = 0, temp_offset = 0;
  
- 		lpfc_printf_log(phba, KERN_ERR, LOG_BG,
- 				"9058 BLKGRD: ERROR: rcvd protected cmd:%02x"
-@@ -3691,9 +3692,9 @@ lpfc_bus_reset_handler(struct scsi_cmnd 
- 	fc_host_post_vendor_event(shost, fc_get_event_number(),
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+ 	INIT_LIST_HEAD(&dma_buffer_list);
+-	if ((image->magic_number != LPFC_GROUP_OJECT_MAGIC_NUM) ||
+-	    (bf_get(lpfc_grp_hdr_file_type, image) != LPFC_FILE_TYPE_GROUP) ||
+-	    (bf_get(lpfc_grp_hdr_id, image) != LPFC_FILE_ID_GROUP) ||
+-	    (image->size != fw->size)) {
++	if ((be32_to_cpu(image->magic_number) != LPFC_GROUP_OJECT_MAGIC_NUM) ||
++	    (bf_get_be32(lpfc_grp_hdr_file_type, image) !=
++	     LPFC_FILE_TYPE_GROUP) ||
++	    (bf_get_be32(lpfc_grp_hdr_id, image) != LPFC_FILE_ID_GROUP) ||
++	    (be32_to_cpu(image->size) != fw->size)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3022 Invalid FW image found. "
+-				"Magic:%d Type:%x ID:%x\n",
+-				image->magic_number,
+-				bf_get(lpfc_grp_hdr_file_type, image),
+-				bf_get(lpfc_grp_hdr_id, image));
++				"Magic:%x Type:%x ID:%x\n",
++				be32_to_cpu(image->magic_number),
++				bf_get_be32(lpfc_grp_hdr_file_type, image),
++				bf_get_be32(lpfc_grp_hdr_id, image));
+ 		return -EINVAL;
+ 	}
+ 	lpfc_decode_firmware_rev(phba, fwrev, 1);
+@@ -8924,11 +8930,11 @@ lpfc_write_firmware(struct lpfc_hba *phb
+ 		while (offset < fw->size) {
+ 			temp_offset = offset;
+ 			list_for_each_entry(dmabuf, &dma_buffer_list, list) {
+-				if (offset + SLI4_PAGE_SIZE > fw->size) {
+-					temp_offset += fw->size - offset;
++				if (temp_offset + SLI4_PAGE_SIZE > fw->size) {
+ 					memcpy(dmabuf->virt,
+ 					       fw->data + temp_offset,
+-					       fw->size - offset);
++					       fw->size - temp_offset);
++					temp_offset = fw->size;
+ 					break;
+ 				}
+ 				memcpy(dmabuf->virt, fw->data + temp_offset,
+@@ -8995,11 +9001,8 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
  
--	ret = fc_block_scsi_eh(cmnd);
--	if (ret)
--		return ret;
-+	status = fc_block_scsi_eh(cmnd);
-+	if (status)
-+		return status;
+ 	/* Perform generic PCI device enabling operation */
+ 	error = lpfc_enable_pci_dev(phba);
+-	if (error) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-				"1409 Failed to enable pci device.\n");
++	if (error)
+ 		goto out_free_phba;
+-	}
  
- 	/*
- 	 * Since the driver manages a single bus device, reset all
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2011-08-10 14:34:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-08-19 23:23:33.000000000 -0400
-@@ -5818,9 +5818,13 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
- 	 * then turn off the global config parameters to disable the
- 	 * feature in the driver.  This is not a fatal error.
- 	 */
--	if ((phba->cfg_enable_bg) &&
--	    !(bf_get(lpfc_mbx_rq_ftr_rsp_dif, &mqe->un.req_ftrs)))
--		ftr_rsp++;
-+	phba->sli3_options &= ~LPFC_SLI3_BG_ENABLED;
-+	if (phba->cfg_enable_bg) {
-+		if (bf_get(lpfc_mbx_rq_ftr_rsp_dif, &mqe->un.req_ftrs))
-+			phba->sli3_options |= LPFC_SLI3_BG_ENABLED;
-+		else
-+			ftr_rsp++;
-+	}
+ 	/* Set up SLI API function jump table for PCI-device group-1 HBAs */
+ 	error = lpfc_api_table_setup(phba, LPFC_PCI_DEV_OC);
+@@ -9054,6 +9057,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
+ 		goto out_free_iocb_list;
+ 	}
  
- 	if (phba->max_vpi && phba->cfg_enable_npiv &&
- 	    !(bf_get(lpfc_mbx_rq_ftr_rsp_npiv, &mqe->un.req_ftrs)))
-@@ -13296,7 +13300,8 @@ lpfc_fc_frame_to_vport(struct lpfc_hba *
- 	uint32_t did = (fc_hdr->fh_d_id[0] << 16 |
- 			fc_hdr->fh_d_id[1] << 8 |
- 			fc_hdr->fh_d_id[2]);
--
-+	if (did == Fabric_DID)
-+		return phba->pport;
- 	vports = lpfc_create_vport_work_array(phba);
- 	if (vports != NULL)
- 		for (i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
++	/* Get the default values for Model Name and Description */
++	lpfc_get_hba_model_desc(phba, phba->ModelName, phba->ModelDesc);
++
+ 	/* Create SCSI host to the physical port */
+ 	error = lpfc_create_shost(phba);
+ 	if (error) {
 
 
 
