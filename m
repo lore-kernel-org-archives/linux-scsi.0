@@ -1,20 +1,20 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 41552] Performance of writing and reading from multiple drives
  decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
-Date: Mon, 22 Aug 2011 15:22:23 GMT
-Message-ID: <201108221522.p7MFMNlD031498@demeter1.kernel.org>
+Date: Mon, 22 Aug 2011 15:22:49 GMT
+Message-ID: <201108221522.p7MFMn7X031730@demeter1.kernel.org>
 References: <bug-41552-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:46099 "EHLO
+Received: from demeter1.kernel.org ([140.211.167.39]:46175 "EHLO
 	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752544Ab1HVPWX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 11:22:23 -0400
+	with ESMTP id S1751480Ab1HVPWt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 11:22:49 -0400
 Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7MFMNIL031499
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7MFMnI8031731
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 15:22:23 GMT
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 15:22:49 GMT
 In-Reply-To: <bug-41552-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,10 +26,10 @@ https://bugzilla.kernel.org/show_bug.cgi?id=41552
 
 
 
---- Comment #2 from Mark Petersen <mpete_06@hotmail.com>  2011-08-22 15:22:04 ---
-Created an attachment (id=69632)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=69632)
-The log of system where performance was good
+--- Comment #3 from Mark Petersen <mpete_06@hotmail.com>  2011-08-22 15:22:47 ---
+Created an attachment (id=69642)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=69642)
+The log of system where performance was degraded.
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
