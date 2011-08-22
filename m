@@ -1,20 +1,20 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 41552] Performance of writing and reading from multiple drives
  decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
-Date: Mon, 22 Aug 2011 20:21:37 GMT
-Message-ID: <201108222021.p7MKLb4t016869@demeter1.kernel.org>
+Date: Mon, 22 Aug 2011 20:24:22 GMT
+Message-ID: <201108222024.p7MKOMIQ018089@demeter1.kernel.org>
 References: <bug-41552-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:41570 "EHLO
+Received: from demeter1.kernel.org ([140.211.167.39]:41847 "EHLO
 	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602Ab1HVUVh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 16:21:37 -0400
+	with ESMTP id S1751053Ab1HVUYY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 16:24:24 -0400
 Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7MKLbu2016870
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7MKOMNI018090
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 20:21:37 GMT
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 20:24:23 GMT
 In-Reply-To: <bug-41552-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,10 +26,18 @@ https://bugzilla.kernel.org/show_bug.cgi?id=41552
 
 
 
---- Comment #6 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2011-08-22 20:21:35 ---
-Reply-To: vgoyal@redhat.com
+--- Comment #7 from Mark Petersen <mpete_06@hotmail.com>  2011-08-22 20:24:20 ---
+The majority of the slowdown we found is coming during the writing as we were
+doing limited reading for the purpose of the testing.  It may be that it
+happens in both areas, but we did not do extensive testing with the reading
+portion of it.
 
-On Mon, Aug 22, 2011 at 12:24:43PM -0700, Andrew Morton wrote:
+> Date: Mon, 22 Aug 2011 12:24:43 -0700
+> From: akpm@linux-foundation.org
+> To: mpete_06@hotmail.com
+> CC: bugme-daemon@bugzilla.kernel.org; axboe@kernel.dk; vgoyal@redhat.com; linux-mm@kvack.org; linux-scsi@vger.kernel.org
+> Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing and reading from multiple drives decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
+> 
 > 
 > (switched to email.  Please respond via emailed reply-to-all, not via the
 > bugzilla web interface).
@@ -79,26 +87,8 @@ On Mon, Aug 22, 2011 at 12:24:43PM -0700, Andrew Morton wrote:
 > 
 > Are you able to determine whether this regression is due to slower
 > reading, to slower writing or to both?
-
-Mark,
-
-As your initial comment says that you see 40% regression even when block
-throttling infrastructure is not enabled, I think it is not related to
-throttling as blk_throtl_bio() is null when BLK_DEV_THROTTLING=n.
-
-What IO scheduler are you using? Can you try switching IO scheduler to
-deadline and see if regression is still there. Trying to figure out if
-it has anything to do with IO scheduler.
-
-What file system are you using with what options? Are you using device
-mapper to create some special configuration on multiple disks?
-
-Also can you take a trace (blktrace) of any of the disks for 30 seconds
-both without regression and after regression and upload it somewhere.
-Staring at it might give some clues. 
-
-Thanks
-Vivek
+> 
+> Thanks.
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
