@@ -1,81 +1,150 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 0/4] lpfc 8.3.26: Update lpfc to revision 8.3.26
-Date: Sun, 21 Aug 2011 21:47:28 -0400
-Message-ID: <1313977649.21906.3.camel@ogier>
+Subject: [PATCH 1/4] lpfc 8.3.26: Fix issues pertaining to SCSI/FC protocol.
+Date: Sun, 21 Aug 2011 21:48:13 -0400
+Message-ID: <1313977695.21906.4.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:6384 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:6392 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752891Ab1HVBsE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:48:04 -0400
+	with ESMTP id S1756367Ab1HVBsq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:48:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch set updates the lpfc driver to revision 8.3.26.
+Fix issues pertaining to SCSI/FC protocol.
 
-The patches for 8.3.26. contain:
-
-
-- Fix issues pertaining to SCSI/FC protocol.
-  - Allow frames destined to 0xFFFFFE to be processed by the driver by matching
-    that DID with the physical port.
-  - Call lpfc_sli_issue_iocb with context1 set to ndlp
-  - In echo command accept function, adjust memcpy to limit memcpy to 1K
-  - Set LPFC_SLI3_BG_ENABLED properly upon completion.
-  - Skip the INIT_VFI call in lpfc_register_fcf if the FCF is already
-    registered and go immediately to initial flogi.
-  - use "status" variable instead of "ret" variable to hold the return of the
-    fc_block_scsi_eh.
-
-- Fix HBA initialization issues.
-  - Swap all values that come from the firmware image on little endian systems.
-  - Moved the incrementing of temp_offset after the copy
-    fixed the write object loop to use temp_offset to figure out where the end
-    of the image is instead of offset.
-  - Added the necessary codes for properly bringing the driver instance offline
-    and then trying to bring the port back online with the PCI function IP
-    reset. If it fails to bring the SLI port back online, it will fall through
-    to bringing the SLI port to HBA error offline.
-  - Add a call in the probe_one_s3 and probe_one_s4 routines to get the
-    Modeldesc
-  - Change OCe50100 to OCe15100
-  - Made the error log also include the PCI BAR bitmap returned from kernel call
-    pci_select_bars().
+- Allow frames destined to 0xFFFFFE to be processed by the driver by matching
+  that DID with the physical port.
+- Call lpfc_sli_issue_iocb with context1 set to ndlp
+- In echo command accept function, adjust memcpy to limit memcpy to 1K
+- Set LPFC_SLI3_BG_ENABLED properly upon completion.
+- Skip the INIT_VFI call in lpfc_register_fcf if the FCF is already
+  registered and go immediately to initial flogi.
+- use "status" variable instead of "ret" variable to hold the return of the
+  fc_block_scsi_eh.
 
 
-- Fix SYSFS interface issues.
-  - In the lpfc_sli4_pdev_status_reg_wait() routine, after initial 100ms delay
-    following write to PHYSDEV_CONTROL register for the firmware reaction, check
-    the RN bit and ERR bit of the SLIPORT_STATUS register. If none of them
-    became 1, the previous PHYSDEV_CONTROL register should be considered failed
-    due to lack of privilege and error for no permission should be returned
-    immediately without getting into the wait for RDY bits on the SLIPORT_STATUS
-    register.
-  - Remove the driver check on dev->is_physfn before proceed to perform the
-    PHYSDEV_CONTROL register write, and let the PCI function's privilege
-    setting and driver handling of PHYSDEV_CONTROL register write failure to
-    handle the reset-ability through the SLI port.
-  - Added key to ctlreg_write to prevent unauthorized or unexpected write to
-    the control register.
-  - Change return to EACCES for sysfs access that are failed because hba_reset
-    is disabled.
+ Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
+ Signed-off-by: James Smart <james.smart@emulex.com>
 
-- Change driver version to 8.3.26
+ ---
+
+ lpfc_els.c     |   11 +++++------
+ lpfc_hbadisc.c |    2 +-
+ lpfc_scsi.c    |   11 ++++++-----
+ lpfc_sli.c     |   13 +++++++++----
+ 4 files changed, 21 insertions(+), 16 deletions(-)
 
 
-The patches were cut against scsi-misc-2.6
-
--- james s
-
-
-  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
-  Signed-off-by: James Smart <james.smart@emulex.com>
-
-
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_els.c	2011-08-19 23:23:33.000000000 -0400
+@@ -4082,9 +4082,6 @@ lpfc_els_rsp_rnid_acc(struct lpfc_vport 
+ 
+ 	phba->fc_stat.elsXmitACC++;
+ 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
+-	lpfc_nlp_put(ndlp);
+-	elsiocb->context1 = NULL;  /* Don't need ndlp for cmpl,
+-				    * it could be freed */
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	if (rc == IOCB_ERROR) {
+@@ -4166,6 +4163,11 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport 
+ 	psli = &phba->sli;
+ 	cmdsize = oldiocb->iocb.unsli3.rcvsli3.acc_len;
+ 
++	/* The accumulated length can exceed the BPL_SIZE.  For
++	 * now, use this as the limit
++	 */
++	if (cmdsize > LPFC_BPL_SIZE)
++		cmdsize = LPFC_BPL_SIZE;
+ 	elsiocb = lpfc_prep_els_iocb(vport, 0, cmdsize, oldiocb->retry, ndlp,
+ 				     ndlp->nlp_DID, ELS_CMD_ACC);
+ 	if (!elsiocb)
+@@ -4189,9 +4191,6 @@ lpfc_els_rsp_echo_acc(struct lpfc_vport 
+ 
+ 	phba->fc_stat.elsXmitACC++;
+ 	elsiocb->iocb_cmpl = lpfc_cmpl_els_rsp;
+-	lpfc_nlp_put(ndlp);
+-	elsiocb->context1 = NULL;  /* Don't need ndlp for cmpl,
+-				    * it could be freed */
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	if (rc == IOCB_ERROR) {
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-08-19 23:23:33.000000000 -0400
+@@ -1412,7 +1412,7 @@ lpfc_register_fcf(struct lpfc_hba *phba)
+ 		if (phba->pport->port_state != LPFC_FLOGI) {
+ 			phba->hba_flag |= FCF_RR_INPROG;
+ 			spin_unlock_irq(&phba->hbalock);
+-			lpfc_issue_init_vfi(phba->pport);
++			lpfc_initial_flogi(phba->pport);
+ 			return;
+ 		}
+ 		spin_unlock_irq(&phba->hbalock);
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-08-19 23:23:33.000000000 -0400
+@@ -3056,8 +3056,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *
+ 	}
+ 	ndlp = rdata->pnode;
+ 
+-	if (!(phba->sli3_options & LPFC_SLI3_BG_ENABLED) &&
+-		scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) {
++	if ((scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) &&
++		(!(phba->sli3_options & LPFC_SLI3_BG_ENABLED) ||
++		(phba->sli_rev == LPFC_SLI_REV4))) {
+ 
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_BG,
+ 				"9058 BLKGRD: ERROR: rcvd protected cmd:%02x"
+@@ -3691,9 +3692,9 @@ lpfc_bus_reset_handler(struct scsi_cmnd 
+ 	fc_host_post_vendor_event(shost, fc_get_event_number(),
+ 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+ 
+-	ret = fc_block_scsi_eh(cmnd);
+-	if (ret)
+-		return ret;
++	status = fc_block_scsi_eh(cmnd);
++	if (status)
++		return status;
+ 
+ 	/*
+ 	 * Since the driver manages a single bus device, reset all
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-08-19 23:23:33.000000000 -0400
+@@ -5818,9 +5818,13 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
+ 	 * then turn off the global config parameters to disable the
+ 	 * feature in the driver.  This is not a fatal error.
+ 	 */
+-	if ((phba->cfg_enable_bg) &&
+-	    !(bf_get(lpfc_mbx_rq_ftr_rsp_dif, &mqe->un.req_ftrs)))
+-		ftr_rsp++;
++	phba->sli3_options &= ~LPFC_SLI3_BG_ENABLED;
++	if (phba->cfg_enable_bg) {
++		if (bf_get(lpfc_mbx_rq_ftr_rsp_dif, &mqe->un.req_ftrs))
++			phba->sli3_options |= LPFC_SLI3_BG_ENABLED;
++		else
++			ftr_rsp++;
++	}
+ 
+ 	if (phba->max_vpi && phba->cfg_enable_npiv &&
+ 	    !(bf_get(lpfc_mbx_rq_ftr_rsp_npiv, &mqe->un.req_ftrs)))
+@@ -13296,7 +13300,8 @@ lpfc_fc_frame_to_vport(struct lpfc_hba *
+ 	uint32_t did = (fc_hdr->fh_d_id[0] << 16 |
+ 			fc_hdr->fh_d_id[1] << 8 |
+ 			fc_hdr->fh_d_id[2]);
+-
++	if (did == Fabric_DID)
++		return phba->pport;
+ 	vports = lpfc_create_vport_work_array(phba);
+ 	if (vports != NULL)
+ 		for (i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
 
 
 
