@@ -1,69 +1,81 @@
-From: dann frazier <dann.frazier@canonical.com>
-Subject: [PATCH] Add documentation to describe SCSI warm plug operations
-Date: Sun, 21 Aug 2011 12:44:27 -0600
-Message-ID: <1313952267-31572-1-git-send-email-dann.frazier@canonical.com>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/4] lpfc 8.3.26: Update lpfc to revision 8.3.26
+Date: Sun, 21 Aug 2011 21:47:28 -0400
+Message-ID: <1313977649.21906.3.camel@ogier>
+Reply-To: james.smart@emulex.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from complete.lackof.org ([198.49.126.79]:45434 "EHLO
-	complete.lackof.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab1HUSuM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 14:50:12 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by complete.lackof.org (Postfix) with ESMTP id DBFDA33E0256
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Aug 2011 12:44:27 -0600 (MDT)
-Received: from complete.lackof.org ([127.0.0.1])
-	by localhost (complete.lackof.org [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id r8yIiVQE3uaN for <linux-scsi@vger.kernel.org>;
-	Sun, 21 Aug 2011 12:44:27 -0600 (MDT)
-Received: from fluid.dannf (localhost [127.0.0.1])
-	by complete.lackof.org (Postfix) with ESMTP id BB01833E0188
-	for <linux-scsi@vger.kernel.org>; Sun, 21 Aug 2011 12:44:27 -0600 (MDT)
+Received: from exht1.emulex.com ([138.239.113.183]:6384 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752891Ab1HVBsE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:48:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-From: dann frazier <dannf@debian.org>
+This patch set updates the lpfc driver to revision 8.3.26.
 
-There doesn't appear to be any canonical documentation for adding/removing
-SCSI devices for Linux 2.6. We document this procedure for IDE in
-Documentation/ide/warm-plug-howto.txt, so I propose we include a SCSI
-counterpart doc as well.
+The patches for 8.3.26. contain:
 
-The best online resource I found for this was Red Hat's Online Storage
-Reconfiguration Guide, so I'm using the procedure described there
-(but not their text).
 
-Signed-off-by: dann frazier <dann.frazier@canonical.com>
----
- Documentation/scsi/warm-plug-howto.txt |   20 ++++++++++++++++++++
- 1 files changed, 20 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/scsi/warm-plug-howto.txt
+- Fix issues pertaining to SCSI/FC protocol.
+  - Allow frames destined to 0xFFFFFE to be processed by the driver by matching
+    that DID with the physical port.
+  - Call lpfc_sli_issue_iocb with context1 set to ndlp
+  - In echo command accept function, adjust memcpy to limit memcpy to 1K
+  - Set LPFC_SLI3_BG_ENABLED properly upon completion.
+  - Skip the INIT_VFI call in lpfc_register_fcf if the FCF is already
+    registered and go immediately to initial flogi.
+  - use "status" variable instead of "ret" variable to hold the return of the
+    fc_block_scsi_eh.
 
-diff --git a/Documentation/scsi/warm-plug-howto.txt b/Documentation/scsi/warm-plug-howto.txt
-new file mode 100644
-index 0000000..7907cc8
---- /dev/null
-+++ b/Documentation/scsi/warm-plug-howto.txt
-@@ -0,0 +1,20 @@
-+
-+SCSI warm-plug HOWTO
-+====================
-+
-+To detect and enumerate any new devices that have been physically added to
-+the system on host controller 'hostX':
-+
-+# echo '- - -' > /sys/class/scsi_host/hostX/scan
-+
-+To prepare the system to safely remove a device 'sdX':
-+
-+ 1) Make sure that partitions on sdX are unmounted and that there are
-+    no other active references to devices.
-+ 2) Flush any outstanding I/O on device sdX:
-+     # blockdev --flushbufs /dev/sdX
-+ 3) Deactivate the device:
-+     # echo 1 > /sys/block/sdX/device/delete
-+
-+At this point it should be safe to remove the physical sdX device from the
-+system.
--- 
-1.7.5.4
+- Fix HBA initialization issues.
+  - Swap all values that come from the firmware image on little endian systems.
+  - Moved the incrementing of temp_offset after the copy
+    fixed the write object loop to use temp_offset to figure out where the end
+    of the image is instead of offset.
+  - Added the necessary codes for properly bringing the driver instance offline
+    and then trying to bring the port back online with the PCI function IP
+    reset. If it fails to bring the SLI port back online, it will fall through
+    to bringing the SLI port to HBA error offline.
+  - Add a call in the probe_one_s3 and probe_one_s4 routines to get the
+    Modeldesc
+  - Change OCe50100 to OCe15100
+  - Made the error log also include the PCI BAR bitmap returned from kernel call
+    pci_select_bars().
+
+
+- Fix SYSFS interface issues.
+  - In the lpfc_sli4_pdev_status_reg_wait() routine, after initial 100ms delay
+    following write to PHYSDEV_CONTROL register for the firmware reaction, check
+    the RN bit and ERR bit of the SLIPORT_STATUS register. If none of them
+    became 1, the previous PHYSDEV_CONTROL register should be considered failed
+    due to lack of privilege and error for no permission should be returned
+    immediately without getting into the wait for RDY bits on the SLIPORT_STATUS
+    register.
+  - Remove the driver check on dev->is_physfn before proceed to perform the
+    PHYSDEV_CONTROL register write, and let the PCI function's privilege
+    setting and driver handling of PHYSDEV_CONTROL register write failure to
+    handle the reset-ability through the SLI port.
+  - Added key to ctlreg_write to prevent unauthorized or unexpected write to
+    the control register.
+  - Change return to EACCES for sysfs access that are failed because hba_reset
+    is disabled.
+
+- Change driver version to 8.3.26
+
+
+The patches were cut against scsi-misc-2.6
+
+-- james s
+
+
+  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
+  Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
 
