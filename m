@@ -1,122 +1,123 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v3.1-rc3
-Date: Mon, 22 Aug 2011 13:38:53 -0700
-Message-ID: <1314045533.12514.32.camel@haakon2.linux-iscsi.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 41552] Performance of writing and reading from multiple drives
+ decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
+Date: Mon, 22 Aug 2011 21:02:31 GMT
+Message-ID: <201108222102.p7ML2VU6003843@demeter1.kernel.org>
+References: <bug-41552-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter1.kernel.org ([140.211.167.39]:48808 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637Ab1HVVCc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 17:02:32 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7ML2VRr003844
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 21:02:31 GMT
+In-Reply-To: <bug-41552-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Linus,
+https://bugzilla.kernel.org/show_bug.cgi?id=41552
 
-The following is the current set of pending target fixes for -rc3 that
-address a number of issues with -rc1 target code.  These fixes have been
-stewing in lio-core-2.6.git for the last two weeks, and have been
-re-posted to the list last week for additional review.
 
-Note that the series was rebased this morning to include a missing bit
-in one of the existing patches, but other than this minor item the
-current series remains unchanged and has been seeing a fair amount of
-testing from users over the last week.
 
-This series includes the following major fixes:
 
-*) Make INQUIRY return 'non connected' status to address breakge with
-   certain initiators (reported + extra fix by Roland)
-*) Fix write payload exception handling with ->new_cmd_map
-*) Fix CDB emulation handling for WRITE_SAME
-*) Fix CDB emulation handling for SYNCHRONIZE_CACHE zero LBA + range   
-   breakage
-*) Fix multiple se_task handling bug (reported by Chris Boot)
-*) Fix task SGL chaining breakage with transport_allocate_data_tasks
 
-At this point there is still two outstanding issues not addressed in
-this series related to some recent NAA IEEE Registered Extended
-designator format breakage reported with VMFS, and breakage with LUN
-discovery in tcm_fc(fcoe).  These bugs are still being discussed and
-addressed, and will be sent out in a seperate series for -rc4.
+--- Comment #8 from Mark Petersen <mpete_06@hotmail.com>  2011-08-22 21:02:29 ---
+The writes we are performing are SCSI commands directly to the device, one
+sector at a time.  The only thing we changed between our updates was the Kernel
+itself, which we leave everything in there at its default value if it is
+enabled (we disable a great many things we don't need).  The latest version I
+tried that still showed the issue was v3.0.1.
 
-The series is available directly here:
+Thanks,
+Mark
 
-  master.kernel.org:/pub/scm/linux/kernel/git/nab/target-pending.git 3.1-rc-fixes
-
-This tree is also available from kernel.org mirrors at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git 3.1-rc-fixes
-
-The series has been made against the following upstream HEAD:
-
-commit 93ee7a9340d64f20295aacc3fb6a22b759323280
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Sun Aug 14 15:09:08 2011 -0700
-
-    Linux 3.1-rc2
-
-Thanks!
-
---nab
-
-Chris Boot (1):
-  iscsi-target: Implement iSCSI target IPv6 address printing.
-
-Dan Carpenter (3):
-  iscsi-target: remove duplicate return
-  iscsi-target: forever loop bug in iscsit_attach_ooo_cmdsn()
-  iscsi-target: Fix iscsit_allocate_se_cmd_for_tmr failure path bugs
-
-Jesper Juhl (1):
-  iscsi-target: Fix leak on failure in iscsi_copy_param_list()
-
-Julia Lawall (1):
-  target: Convert target_core_rd.c to use use BUG_ON
-
-Nicholas Bellinger (10):
-  target: Change TCM_NON_EXISTENT_LUN response to ASC=LOGICAL UNIT NOT
-    SUPPORTED
-  target: Make standard INQUIRY return 'not connected' for
-    tpg_virt_lun0
-  target: Fix write payload exception handling with ->new_cmd_map
-  target: Add WRITE_SAME (10) parsing and refactor passthrough checks
-  target: Fix WRITE_SAME usage with transport_get_size
-  target: Remove duplicate task completions in
-    transport_emulate_control_cdb
-  target: Fix SYNCHRONIZE_CACHE zero LBA + range breakage
-  target: Add missing DATA_SG_IO transport_cmd_get_valid_sectors check
-  target: Fix task count > 1 handling breakage and use max_sector page
-    alignment
-  target: Fix task SGL chaining breakage with
-    transport_allocate_data_tasks
-
-Roland Dreier (4):
-  target: Print subpage too for unhandled MODE SENSE pages
-  tcm_fc: init/exit functions should not be protected by "#ifdef
-    MODULE"
-  target: Make locking in transport_deregister_session() IRQ safe
-  target: Convert acl_node_lock to be IRQ-disabling
-
-Thomas Meyer (1):
-  target: Use ERR_CAST inlined function
-
- drivers/target/iscsi/iscsi_target.c            |    1 -
- drivers/target/iscsi/iscsi_target_configfs.c   |    4 +-
- drivers/target/iscsi/iscsi_target_erl1.c       |    2 +-
- drivers/target/iscsi/iscsi_target_login.c      |   16 +--
- drivers/target/iscsi/iscsi_target_parameters.c |   43 ++---
- drivers/target/iscsi/iscsi_target_util.c       |    4 +-
- drivers/target/target_core_cdb.c               |   57 ++++---
- drivers/target/target_core_device.c            |   48 +++++-
- drivers/target/target_core_fabric_configfs.c   |    2 +-
- drivers/target/target_core_pr.c                |    8 +-
- drivers/target/target_core_rd.c                |   24 +--
- drivers/target/target_core_tpg.c               |   64 ++++----
- drivers/target/target_core_transport.c         |  206 ++++++++++++++----------
- drivers/target/tcm_fc/tfc_conf.c               |    6 +-
- include/target/target_core_fabric_ops.h        |    6 +
- 15 files changed, 275 insertions(+), 216 deletions(-)
+> Date: Mon, 22 Aug 2011 15:56:51 -0400
+> From: vgoyal@redhat.com
+> To: mpete_06@hotmail.com
+> CC: akpm@linux-foundation.org; bugme-daemon@bugzilla.kernel.org; axboe@kernel.dk; linux-mm@kvack.org; linux-scsi@vger.kernel.org
+> Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing and reading from multiple drives decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
+> 
+> On Mon, Aug 22, 2011 at 02:49:56PM -0500, Mark Petersen wrote:
+> > 
+> > The majority of the slowdown we found is coming during the writing as we were doing limited reading for the purpose of the testing.  It may be that it happens in both areas, but we did not do extensive testing with the reading portion of it.
+> 
+> What kind of writes these are? Write slowdown by 40%. Somehow now a days
+> barriers/flush/fua comes to my mind. Any changes there w.r.t your setup?
+> 
+> Recently Jeff moyer and Mike Snitzer had discovered and fixed a slowdown
+> in a dm-multipath and disks not having write caches. I guess that's not
+> your setup. Though mentioning it does not harm.
+> 
+> Thanks
+> Vivek
+> 
+>  
+> > 
+> > > Date: Mon, 22 Aug 2011 12:24:43 -0700
+> > > From: akpm@linux-foundation.org
+> > > To: mpete_06@hotmail.com
+> > > CC: bugme-daemon@bugzilla.kernel.org; axboe@kernel.dk; vgoyal@redhat.com; linux-mm@kvack.org; linux-scsi@vger.kernel.org
+> > > Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing and reading from multiple drives decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
+> > > 
+> > > 
+> > > (switched to email.  Please respond via emailed reply-to-all, not via the
+> > > bugzilla web interface).
+> > > 
+> > > On Mon, 22 Aug 2011 15:20:41 GMT
+> > > bugzilla-daemon@bugzilla.kernel.org wrote:
+> > > 
+> > > > https://bugzilla.kernel.org/show_bug.cgi?id=41552
+> > > > 
+> > > >            Summary: Performance of writing and reading from multiple
+> > > >                     drives decreases by 40% when going from Linux Kernel
+> > > >                     2.6.36.4 to 2.6.37 (and beyond)
+> > > >            Product: IO/Storage
+> > > >            Version: 2.5
+> > > >     Kernel Version: 2.6.37
+> > > >           Platform: All
+> > > >         OS/Version: Linux
+> > > >               Tree: Mainline
+> > > >             Status: NEW
+> > > >           Severity: normal
+> > > >           Priority: P1
+> > > >          Component: SCSI
+> > > >         AssignedTo: linux-scsi@vger.kernel.org
+> > > >         ReportedBy: mpete_06@hotmail.com
+> > > >         Regression: No
+> > > > 
+> > > > 
+> > > > We have an application that will write and read from every sector on a drive. 
+> > > > The application can perform these tasks on multiple drives at the same time. 
+> > > > It is designed to run on top of the Linux Kernel, which we periodically update
+> > > > so that we can get the latest device drivers.  When performing the last update
+> > > > from 2.6.33.2 to 2.6.37, we found that the performance of a set of drives
+> > > > decreased by some 40% (took 3 hours and 11 minutes to write and read from 5
+> > > > drives on 2.6.37 versus 2 hours and 12 minutes on 2.6.33.3).  I was able to
+> > > > determine that the issue was in the 2.6.37 Kernel as I was able to run it with
+> > > > the 2.6.36.4 kernel, and it had the better performance.   After seeing that I/O
+> > > > throttling was introduced in the 2.6.37 Kernel, I naturally suspected that. 
+> > > > However, by default, all the throttling was turned off (I attached the actual
+> > > > .config that was used to build the kernel).  I then tried to turn on the
+> > > > throttling and set it to a high number to see what would happen.  When I did
+> > > > that, I was able to reduce the time from 3 hours and 11 minutes to 2 hours and
+> > > > 50 minutes.  There seems to be something there that changed that is impacting
+> > > > performance on multiple drives.  When we do this same test with only one drive,
+> > > > the performance is identical between the systems.  This issue still occurs on
+> > > > Kernel 3.0.2.
+> > > > 
+> > > 
+> > > Are you able to determine whether this regression is due to slower
+> > > reading, to slower writing or to both?
+> > > 
+> > > Thanks.
+> >
 
 -- 
-1.7.6
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
