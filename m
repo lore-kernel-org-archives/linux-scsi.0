@@ -1,37 +1,61 @@
-From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Subject: be2iscsi: Patches for inclusion
-Date: Mon, 22 Aug 2011 10:08:30 -0700
-Message-ID: <96709bd9-2cb7-49da-ab13-54442c855f48@exht1.ad.emulex.com>
-References: <1314032910-2304-1-git-send-email-jayamohan.kallickal@emulex.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/3] be2iscsi: Fixing the /proc/interrupts problem V3
+Date: Mon, 22 Aug 2011 19:24:53 +0200
+Message-ID: <1396323.bvOCfZ5kpa@donald.sf-tec.de>
+References: <f9809cab-6759-4b13-b095-d2d799fd7ca1@exht1.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; boundary="nextPart2355958.mvt5XXGCp5"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:17366 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752029Ab1HVRJH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 13:09:07 -0400
-In-Reply-To: <1314032910-2304-1-git-send-email-jayamohan.kallickal@emulex.com>
+Received: from mail.sf-mail.de ([62.27.20.61]:46481 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752549Ab1HVRZX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Aug 2011 13:25:23 -0400
+In-Reply-To: <f9809cab-6759-4b13-b095-d2d799fd7ca1@exht1.ad.emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: James.Bottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
 
-Hi
 
-  	These set of patches have been made on 
-latest scsi-misc tree
+--nextPart2355958.mvt5XXGCp5
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
 
-Jayamohan Kallickal (3):
-	be2iscsi: Fixing the /proc/interrupts problem to avoid
-		  corruption in /proc/interrupts
-	be2iscsi: Adding a shutdown routine as be2iscsi was not doing a
-		  cleanup during kexec
-	be2iscsi: Add call to pci_disable device during rmmod and shutdown
+Jayamohan Kallickal wrote:
+> Problem description, debugging and original patch from Prarit Bhargava:
+> 
+> Fix be2iscsi driver to use a separate pointer for each irq action->name
+> field and avoid display corruption in /proc/interrupts. The be2iscsi driver
+> was using a single static array in a function for the irq action->name
+> field. This results in /proc/interrupts output like:
+> 
+> 156:  0          0          0          0          0          0
+> 0
+> 0          0          0          0          0          0          0
+> 0
+>         0          0          0          0          0          0
+> 0
+>      0          0       PCI-MSI-X
 
-Thanks
-Jayamohan Kallickal
+I think it's enough to tell in words here that the rest is random stack data 
+or whatever. Including these 8bit mess will only screw up the commit message 
+viewers for no benefit.
 
-Signed off by:  Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Greetings,
 
----
+Eike
+--nextPart2355958.mvt5XXGCp5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAk5SkOUACgkQXKSJPmm5/E62HACeMcAljm3ve5RnoVegBCgWHRwf
+AGwAoKK6ruwusjvFFyt/PKAHC2ujz3TD
+=mRU6
+-----END PGP SIGNATURE-----
+
+--nextPart2355958.mvt5XXGCp5--
 
