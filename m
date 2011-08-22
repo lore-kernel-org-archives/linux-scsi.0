@@ -1,386 +1,232 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [RFC PATCH v2 09/10] FC Transport: Add FC Port Attributes
-Date: Mon, 22 Aug 2011 15:49:09 -0700
-Message-ID: <20110822224909.1854.21481.stgit@localhost6.localdomain6>
+Subject: [RFC PATCH v2 10/10] libfcoe, fcoe: Use FC Port Attributes
+Date: Mon, 22 Aug 2011 15:49:14 -0700
+Message-ID: <20110822224914.1854.77120.stgit@localhost6.localdomain6>
 References: <20110822224822.1854.81079.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:61235 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:7359 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754227Ab1HVWtJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2011 18:49:09 -0400
+	id S1754192Ab1HVWtO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Aug 2011 18:49:14 -0400
 In-Reply-To: <20110822224822.1854.81079.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch adds additional attributes to the FC Port
-structure. These attributes are mostly FCoE related and
-were chosen because they were members of 'struct fcoe_ctlr'
-that is used in libfcoe.
+This patch allows the SW FCoE kernel module to expose
+FCoE properties through the fc_port's sysfs attributes.
 
-Previous attributes on 'struct fc_port' were for fixed
-features of the port. This patch adds "FIP controller"
-members to 'strcut fc_port' and exposes them to the user
-as r-- attributes.
-
-An alternative aproach would be to create a "controller"
-device that could be attached to the fc_host and exposed
-as a separate device in sysfs.
-
-The fc_host, fc_port and "controller" are all 1:1 in
-regards to eachother. Is there a reason to keep these
-devices separate? Should all port and controller attributes
-be merged into the fc_host?
+Helper routines were added to libfcoe to update the
+'struct fc_port' fields with their 'struct fcoe_ctlr'
+conterparts. Other drivers that use libfcoe for FIP
+management can make use of these routines when they
+support the new sysfs extensions.
 
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/scsi_transport_fc.c |  180 +++++++++++++++++++++++++++++++-------
- include/scsi/scsi_transport_fc.h |   54 +++++++++++
- 2 files changed, 202 insertions(+), 32 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |   60 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe_ctlr.c |   57 +++++++++++++++++++++++++++++++++++++++
+ include/scsi/libfcoe.h        |   10 +++++++
+ 3 files changed, 127 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 8a28be9..4ee4640 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -122,6 +122,17 @@ static int get_fc_##title##_match(const char *table_key,		\
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 4825c0a..b336487 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -160,6 +160,21 @@ static int fcoe_fabric_destroy(struct fc_port *port,
+ 	return fcoe_ctlr_fabric_destroy(fip, fcf);
  }
  
- static struct {
-+	enum mac_mode value;
-+	char          *name;
-+} mac_mode_names[] = {
-+	{ MAC_MODE_UNKNOWN, "Unknown" },
-+	{ MAC_MODE_SPMA,    "SPMA" },
-+	{ MAC_MODE_FPMA,    "FPMA" },
-+};
-+fc_enum_name_search(mac_mode, mac_mode, mac_mode_names)
-+#define MAC_MODE_MAX_NAMELEN 50
-+
-+static struct {
- 	enum fabric_state value;
- 	char              *name;
- } fabric_state_names[] = {
-@@ -334,7 +345,7 @@ static void fc_scsi_scan_rport(struct work_struct *work);
- #define FC_RPORT_NUM_ATTRS	10
- #define FC_VPORT_NUM_ATTRS	9
- #define FC_HOST_NUM_ATTRS	22
--#define FC_PORT_NUM_ATTRS       2
-+#define FC_PORT_NUM_ATTRS       13
- #define FC_FABRIC_NUM_ATTRS     13
- 
- struct fc_internal {
-@@ -543,31 +554,6 @@ static int fc_str_to_dev_loss(const char *buf, unsigned long *val)
- 	return 0;
- }
- 
--#define fc_private_port_show_function(field, format_string, sz, cast)	\
--static ssize_t								\
--show_fc_port_##field(struct device *dev,				\
--		     struct device_attribute *attr, char *buf)		\
--{									\
--	struct fc_port *port = transport_class_to_port(dev);		\
--	return snprintf(buf, sz, format_string, cast port->field);	\
--}
--
--#define fc_private_port_rd_attr(field, format_string, sz)		\
--	fc_private_port_show_function(field, format_string, sz, )	\
--	static FC_DEVICE_ATTR(port, field, S_IRUGO,			\
--		      show_fc_port_##field, NULL)
--
--#define SETUP_PORT_ATTRIBUTE_RD(field)					\
--	i->private_port_attrs[count] = device_attr_port_##field;	\
--	i->private_port_attrs[count].attr.mode = S_IRUGO;		\
--	i->private_port_attrs[count].store = NULL;			\
--	i->port_attrs[count] = &i->private_port_attrs[count];		\
--	if (i->f->show_port_##field)					\
--		count++
--
--fc_private_port_rd_attr(maxframe_size, "%u bytes\n", 20);
--
--
- #define fc_fabric_show_function(field, format_string, sz, cast)		\
- static ssize_t								\
- show_fc_fabric_##field(struct device *dev,				\
-@@ -606,11 +592,11 @@ show_fc_fabric_##field(struct device *dev,				\
- 	count++;							\
- }
- 
--#define SETUP_PRIVATE_FABRIC_ATTRIBUTE_RD(field)                       \
--	i->private_fabric_attrs[count] = device_attr_fabric_##field;    \
--	i->private_fabric_attrs[count].attr.mode = S_IRUGO;             \
--	i->private_fabric_attrs[count].store = NULL;                    \
--	i->fabric_attrs[count] = &i->private_fabric_attrs[count];       \
-+#define SETUP_PRIVATE_FABRIC_ATTRIBUTE_RD(field)			\
-+	i->private_fabric_attrs[count] = device_attr_fabric_##field;	\
-+	i->private_fabric_attrs[count].attr.mode = S_IRUGO;		\
-+	i->private_fabric_attrs[count].store = NULL;			\
-+	i->fabric_attrs[count] = &i->private_fabric_attrs[count];	\
- 	count++
- 
- fc_fabric_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
-@@ -693,13 +679,122 @@ static FC_DEVICE_ATTR(fabric, dev_loss_tmo, S_IRUGO | S_IWUSR,
- 		      show_fc_fabric_dev_loss_tmo,
- 		      store_fc_fabric_dev_loss_tmo);
- 
-+#define fc_port_show_function(field, format_string, sz, cast)		\
-+static ssize_t								\
-+show_fc_port_##field(struct device *dev,				\
-+		     struct device_attribute *attr, char *buf)		\
-+{									\
-+	struct fc_port *port = transport_class_to_port(dev);		\
-+	struct fc_internal *i = to_fc_internal(port->t);		\
-+	if (i->f->get_port_##field)					\
-+		i->f->get_port_##field(port);				\
-+	return snprintf(buf, sz, format_string,				\
-+			cast fc_port_##field(port));			\
++#define fcoe_get_port_attr_from_ctlr(field)			\
++static void fcoe_get_##field(struct fc_port *port)	\
++{							\
++	struct fcoe_interface *fcoe = fc_port_priv(port);	\
++	return fcoe_get_port_##field(port, &fcoe->ctlr);	\
 +}
 +
-+#define fc_port_rd_attr(field, format_string, sz)			\
-+	fc_port_show_function(field, format_string, sz, )		\
-+	static FC_DEVICE_ATTR(port, field, S_IRUGO,			\
-+			      show_fc_port_##field, NULL)
++fcoe_get_port_attr_from_ctlr(sol_time)
++fcoe_get_port_attr_from_ctlr(sel_time)
++fcoe_get_port_attr_from_ctlr(port_ka_time)
++fcoe_get_port_attr_from_ctlr(ctlr_ka_time)
++fcoe_get_port_attr_from_ctlr(probe_tries)
++fcoe_get_port_attr_from_ctlr(port_dest_addr)
++fcoe_get_port_attr_from_ctlr(ctlr_src_addr)
 +
-+#define fc_private_port_show_function(field, format_string, sz, cast)	\
-+static ssize_t								\
-+show_fc_port_##field(struct device *dev,				\
-+		     struct device_attribute *attr, char *buf)		\
-+{									\
-+	struct fc_port *port = transport_class_to_port(dev);		\
-+	return snprintf(buf, sz, format_string, cast port->field);	\
-+}
+ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ 	.frame_send = fcoe_xmit,
+ 	.ddp_setup = fcoe_ddp_setup,
+@@ -173,6 +188,23 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ struct fc_function_template fcoe_nport_fc_functions = {
+ 	.dd_fcport_size = sizeof(struct fcoe_interface),
+ 	.show_port_maxframe_size = 1,
++	.show_port_supported_classes = 1,
++	.show_port_supported_fc4s = 1,
++	.show_port_supported_speeds = 1,
++	.show_port_sol_time = 1,
++	.show_port_sel_time = 1,
++	.show_port_port_ka_time = 1,
++	.show_port_ctlr_ka_time = 1,
++	.show_port_port_dest_addr = 1,
++	.show_port_ctlr_src_addr = 1,
 +
-+#define fc_private_port_rd_attr(field, format_string, sz)		\
-+	fc_private_port_show_function(field, format_string, sz, )	\
-+	static FC_DEVICE_ATTR(port, field, S_IRUGO,			\
-+		      show_fc_port_##field, NULL)
-+
-+#define SETUP_PORT_ATTRIBUTE_RD(field)					\
-+	i->private_port_attrs[count] = device_attr_port_##field;	\
-+	i->private_port_attrs[count].attr.mode = S_IRUGO;		\
-+	i->private_port_attrs[count].store = NULL;			\
-+	i->port_attrs[count] = &i->private_port_attrs[count];		\
-+	if (i->f->show_port_##field)					\
-+		count++
-+
- #define SETUP_PRIVATE_PORT_ATTRIBUTE_RW(field)				\
--{								\
-+{									\
- 	i->private_port_attrs[count] = device_attr_port_##field;	\
- 	i->port_attrs[count] = &i->private_port_attrs[count];		\
- 	count++;							\
- }
++	.get_port_sol_time = fcoe_get_sol_time,
++	.get_port_sel_time = fcoe_get_sel_time,
++	.get_port_port_ka_time = fcoe_get_port_ka_time,
++	.get_port_ctlr_ka_time = fcoe_get_ctlr_ka_time,
++	.get_port_probe_tries = fcoe_get_probe_tries,
++	.get_port_port_dest_addr = fcoe_get_port_dest_addr,
++	.get_port_ctlr_src_addr = fcoe_get_ctlr_src_addr,
  
-+#define SETUP_PRIVATE_PORT_ATTRIBUTE_RD(field)				\
-+	i->private_port_attrs[count] = device_attr_port_##field;	\
-+	i->private_port_attrs[count].attr.mode = S_IRUGO;		\
-+	i->private_port_attrs[count].store = NULL;			\
-+	i->port_attrs[count] = &i->private_port_attrs[count];		\
-+	count++
+ 	.dd_fcfabric_size = sizeof(struct fcoe_fcf),
+ 	.fabric_match = fcoe_fabric_match,
+@@ -180,6 +212,7 @@ struct fc_function_template fcoe_nport_fc_functions = {
+ 	.get_fabric_r_a_tov = fcoe_get_fabric_ra_tov,
+ 	.get_fabric_e_d_tov = fcoe_get_fabric_ed_tov,
+ 	.get_fabric_selected = fcoe_get_fabric_selected,
 +
-+fc_private_port_rd_attr(maxframe_size, "%u bytes\n", 20);
-+
-+fc_port_rd_attr(sol_time, "%lu\n", 20);
-+fc_port_rd_attr(sel_time, "%lu\n", 20);
-+fc_port_rd_attr(port_ka_time, "%lu\n", 20);
-+fc_port_rd_attr(ctlr_ka_time, "%lu\n", 20);
-+fc_port_rd_attr(probe_tries, "%u\n", 20);
-+fc_port_rd_attr(port_dest_addr, "%pM\n", 20);
-+fc_port_rd_attr(ctlr_src_addr, "%pM\n", 20);
-+
-+static ssize_t
-+show_mac_mode(struct device *dev, struct device_attribute *attr,
-+	      char *buf)
-+{
-+	struct fc_port *port = transport_class_to_port(dev);
-+	const char *name;
-+	name = get_fc_mac_mode_name(port->mode);
-+	if (!name)
-+		return -EINVAL;
-+	return snprintf(buf, MAC_MODE_MAX_NAMELEN, "%s\n", name);
-+}
-+static FC_DEVICE_ATTR(port, mac_mode, S_IRUGO, show_mac_mode, NULL);
-+
-+static ssize_t
-+show_fc_port_supported_classes(struct device *dev,
-+			       struct device_attribute *attr,
-+			       char *buf)
-+{
-+	struct fc_port *port = transport_class_to_port(dev);
-+
-+	if (fc_port_supported_classes(port) == FC_COS_UNSPECIFIED)
-+		return snprintf(buf, 20, "unspecified\n");
-+
-+	return get_fc_cos_names(fc_port_supported_classes(port), buf);
-+}
-+static FC_DEVICE_ATTR(port, supported_classes, S_IRUGO,
-+		      show_fc_port_supported_classes, NULL);
-+
-+static ssize_t
-+show_fc_port_supported_fc4s(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
-+{
-+	struct fc_port *port = transport_class_to_port(dev);
-+	return (ssize_t)show_fc_fc4s(buf, fc_port_supported_fc4s(port));
-+}
-+static FC_DEVICE_ATTR(port, supported_fc4s, S_IRUGO,
-+		      show_fc_port_supported_fc4s, NULL);
-+
-+static ssize_t
-+show_fc_port_supported_speeds(struct device *dev,
-+			      struct device_attribute *attr, char *buf)
-+{
-+	struct fc_port *port = transport_class_to_port(dev);
-+
-+	if (fc_port_supported_speeds(port) == FC_PORTSPEED_UNKNOWN)
-+		return snprintf(buf, 20, "unknown\n");
-+
-+	return get_fc_port_speed_names(fc_port_supported_speeds(port), buf);
-+}
-+static FC_DEVICE_ATTR(port, supported_speeds, S_IRUGO,
-+		      show_fc_port_supported_speeds, NULL);
-+
- static ssize_t
- store_fc_private_port_fab_dev_loss_tmo(struct device *dev,
- 				       struct device_attribute *attr,
-@@ -2514,7 +2609,19 @@ fc_attach_transport(struct fc_function_template *ft)
- 	 * Setup FC Port Attributes.
- 	 */
- 	count = 0;
-+	SETUP_PORT_ATTRIBUTE_RD(supported_classes);
-+	SETUP_PORT_ATTRIBUTE_RD(supported_fc4s);
-+	SETUP_PORT_ATTRIBUTE_RD(supported_speeds);
- 	SETUP_PORT_ATTRIBUTE_RD(maxframe_size);
-+	SETUP_PORT_ATTRIBUTE_RD(sol_time);
-+	SETUP_PORT_ATTRIBUTE_RD(sel_time);
-+	SETUP_PORT_ATTRIBUTE_RD(port_ka_time);
-+	SETUP_PORT_ATTRIBUTE_RD(ctlr_ka_time);
-+	SETUP_PORT_ATTRIBUTE_RD(probe_tries);
-+	SETUP_PORT_ATTRIBUTE_RD(port_dest_addr);
-+	SETUP_PORT_ATTRIBUTE_RD(ctlr_src_addr);
-+
-+	SETUP_PRIVATE_PORT_ATTRIBUTE_RD(mac_mode);
- 	SETUP_PRIVATE_PORT_ATTRIBUTE_RW(fab_dev_loss_tmo);
- 	BUG_ON(count > FC_PORT_NUM_ATTRS);
+ 	.show_fabric_fabric_name = 1,
+ 	.show_fabric_switch_name = 1,
+ 	.show_fabric_fc_map = 1,
+@@ -194,6 +227,7 @@ struct fc_function_template fcoe_nport_fc_functions = {
  
-@@ -2535,6 +2642,7 @@ fc_attach_transport(struct fc_function_template *ft)
- 	SETUP_FABRIC_ATTRIBUTE_RD(r_a_tov);
- 	SETUP_FABRIC_ATTRIBUTE_RD(csp_flags);
- 	SETUP_FABRIC_ATTRIBUTE_RD(selected);
-+
- 	SETUP_PRIVATE_FABRIC_ATTRIBUTE_RD(state);
- 	SETUP_PRIVATE_FABRIC_ATTRIBUTE_RW(dev_loss_tmo);
- 	BUG_ON(count > FC_FABRIC_NUM_ATTRS);
-@@ -3957,6 +4065,14 @@ struct fc_port *fc_port_add(struct Scsi_Host *shost)
- 	       sizeof(fcport->active_fc4s));
- 	memset(fcport->serial_number, 0,
- 	       sizeof(fcport->serial_number));
-+	fcport->sol_time = 0;
-+	fcport->sel_time = 0;
-+	fcport->port_ka_time = 0;
-+	fcport->ctlr_ka_time = 0;
-+	fcport->probe_tries = 0;
-+	memset(fcport->port_dest_addr, 0, sizeof(*fcport->port_dest_addr));
-+	memset(fcport->ctlr_src_addr, 0, sizeof(*fcport->ctlr_src_addr));
-+	fcport->mode = MAC_MODE_UNKNOWN;
+ 	.fabric_create = fcoe_fabric_create,
+ 	.fabric_destroy = fcoe_fabric_destroy,
++	.set_fabric_dev_loss_tmo = fcoe_set_fabric_dev_loss_tmo,
  
- 	/* Setup internal structures */
- 	fcport->id = atomic_inc_return(&fc_port_next_id) - 1;
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 81f96ba..b6df11e 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -193,6 +193,12 @@ struct fc_vport_identifiers {
- 	char symbolic_name[FC_VPORT_SYMBOLIC_NAMELEN];
- };
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+@@ -387,6 +421,7 @@ static struct fcoe_interface *fcoe_interface_create(struct Scsi_Host *shost,
+ {
+ 	struct fc_port *port;
+ 	struct fcoe_interface *fcoe;
++	struct ethtool_cmd ecmd;
+ 	int err;
  
-+enum mac_mode {
-+	MAC_MODE_UNKNOWN = 0,
-+	MAC_MODE_SPMA,
-+	MAC_MODE_FPMA,
-+};
-+
- struct fc_port {
- 	u32                             id;
- 	struct device                   dev;
-@@ -208,6 +214,16 @@ struct fc_port {
- 	u8 active_fc4s[FC_FC4_LIST_SIZE];
- 	char system_hostname[FC_SYMBOLIC_NAME_SIZE];
+ 	if (!try_module_get(THIS_MODULE)) {
+@@ -405,8 +440,33 @@ static struct fcoe_interface *fcoe_interface_create(struct Scsi_Host *shost,
  
-+	unsigned long sol_time;
-+	unsigned long sel_time;
-+	unsigned long port_ka_time;
-+	unsigned long ctlr_ka_time;
+ 	fcoe = fc_port_priv(port);
+ 
++	/* Initialize the FC Port fixed attributes */
++	memset(fc_port_supported_fc4s(port), 0,
++	       sizeof(fc_port_supported_fc4s(port)));
++	fc_port_supported_fc4s(port)[2] = 1;
++	fc_port_supported_fc4s(port)[7] = 1;
++	fc_port_supported_classes(port) = FC_COS_CLASS3;
 +
-+	enum mac_mode mode;
-+	u8 probe_tries;
-+	u8 port_dest_addr[ETH_ALEN]; /* Redundant? */
-+	u8 ctlr_src_addr[ETH_ALEN]; /* Redundant? */
+ 	dev_hold(netdev);
+ 
++	/* TODO: Can this be folded into another routine?
++	 * fcoe_link_speed_update - per-lport, delay in
++	 * populating sysfs.
++	 * fcoe_interface_setup - currently takes a
++	 * fcoe_interface, already has the netdev held.
++	 * This is probably best candidate.
++	 */
++	fc_port_supported_speeds(port) = 0;
++	if (!dev_ethtool_get_settings(netdev, &ecmd)) {
++		if (ecmd.supported & (SUPPORTED_1000baseT_Half |
++				      SUPPORTED_1000baseT_Full))
++			fc_port_supported_speeds(port) |=
++				FC_PORTSPEED_1GBIT;
++		if (ecmd.supported & SUPPORTED_10000baseT_Full)
++			fc_port_supported_speeds(port) |=
++				FC_PORTSPEED_10GBIT;
++	}
 +
  	/*
- 	 * FCoE supported_speeds and speed can change on
- 	 * a link event so they are dynamic.
-@@ -237,6 +253,22 @@ struct fc_port {
- 	((x)->active_fc4s)
- #define fc_port_system_hostname(x)		\
- 	((x)->system_hostname)
-+#define fc_port_sol_time(x)			\
-+	((x)->sol_time)
-+#define fc_port_sel_time(x)			\
-+	((x)->sel_time)
-+#define fc_port_port_ka_time(x)			\
-+	((x)->port_ka_time)
-+#define fc_port_ctlr_ka_time(x)			\
-+	((x)->ctlr_ka_time)
-+#define fc_port_mode(x)				\
-+	((x)->mode)
-+#define fc_port_probe_tries(x)			\
-+	((x)->probe_tries)
-+#define fc_port_port_dest_addr(x)		\
-+	((x)->port_dest_addr)
-+#define fc_port_ctlr_src_addr(x)		\
-+	((x)->ctlr_src_addr)
- #define fc_port_supported_speeds(x)		\
- 	((x)->supported_speeds)
- #define fc_port_speed(x)			\
-@@ -772,6 +804,14 @@ struct fc_function_template {
- 	void	(*set_fabric_dev_loss_tmo)(struct fc_fabric *, u32);
- 	void    (*get_fabric_selected)(struct fc_fabric *);
- 
-+	void    (*get_port_sol_time)(struct fc_port *);
-+	void    (*get_port_sel_time)(struct fc_port *);
-+	void    (*get_port_port_ka_time)(struct fc_port *);
-+	void    (*get_port_ctlr_ka_time)(struct fc_port *);
-+	void    (*get_port_probe_tries)(struct fc_port *);
-+	void    (*get_port_port_dest_addr)(struct fc_port *);
-+	void    (*get_port_ctlr_src_addr)(struct fc_port *);
-+
- 	void    (*get_rport_dev_loss_tmo)(struct fc_rport *);
- 	void	(*set_rport_dev_loss_tmo)(struct fc_rport *, u32);
- 
-@@ -828,8 +868,22 @@ struct fc_function_template {
+ 	 * Initialize FIP.
  	 */
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index d731ca9..4a887e1 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2897,6 +2897,63 @@ unlock:
+ }
  
- 	/* port fixed attributes */
-+	unsigned long show_port_supported_classes:1;
-+	unsigned long show_port_supported_fc4s:1;
-+	unsigned long show_port_supported_speeds:1;
- 	unsigned long show_port_maxframe_size:1;
- 
-+	/* port dynamic attributes */
-+	unsigned long show_port_sol_time:1;
-+	unsigned long show_port_sel_time:1;
-+	unsigned long show_port_port_ka_time:1;
-+	unsigned long show_port_ctlr_ka_time:1;
-+	unsigned long show_port_map_dest:1;
-+	unsigned long show_port_spma:1;
-+	unsigned long show_port_probe_tries:1;
-+	unsigned long show_port_port_dest_addr:1;
-+	unsigned long show_port_ctlr_src_addr:1;
+ /**
++ * fcoe_set_fabric_dev_loss_tmo() - Set the fabric's timeout period
++ * @fabric:  The fabric who'se timout value is to be updated
++ * @timeout: The new timout period
++ */
++void fcoe_set_fabric_dev_loss_tmo(struct fc_fabric *fabric, u32 timeout)
++{
++	if (timeout)
++		fabric->dev_loss_tmo = timeout;
++	else
++		fabric->dev_loss_tmo = 1;
++}
++EXPORT_SYMBOL(fcoe_set_fabric_dev_loss_tmo);
 +
- 	/* fabric fixed attributes */
- 	int  (*fabric_match)(struct fc_fabric *, struct fc_fabric *);
- 	unsigned long show_fabric_fabric_name:1;
++void fcoe_get_port_sol_time(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	port->sol_time = fip->sol_time;
++}
++EXPORT_SYMBOL(fcoe_get_port_sol_time);
++
++void fcoe_get_port_sel_time(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	port->sel_time = fip->sel_time;
++}
++EXPORT_SYMBOL(fcoe_get_port_sel_time);
++
++void fcoe_get_port_port_ka_time(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	port->port_ka_time = fip->port_ka_time;
++}
++EXPORT_SYMBOL(fcoe_get_port_port_ka_time);
++
++void fcoe_get_port_ctlr_ka_time(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	port->ctlr_ka_time = fip->ctlr_ka_time;
++}
++EXPORT_SYMBOL(fcoe_get_port_ctlr_ka_time);
++
++void fcoe_get_port_probe_tries(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	port->probe_tries = fip->probe_tries;
++}
++EXPORT_SYMBOL(fcoe_get_port_probe_tries);
++
++void fcoe_get_port_port_dest_addr(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	memcpy(port->port_dest_addr, fip->dest_addr, ETH_ALEN);
++}
++EXPORT_SYMBOL(fcoe_get_port_port_dest_addr);
++
++void fcoe_get_port_ctlr_src_addr(struct fc_port *port, struct fcoe_ctlr *fip)
++{
++	memcpy(port->ctlr_src_addr, fip->ctl_src_addr, ETH_ALEN);
++	printk(KERN_ERR "ctlr_src_addr\n");
++}
++EXPORT_SYMBOL(fcoe_get_port_ctlr_src_addr);
++
++/**
+  * fcoe_libfc_config() - Sets up libfc related properties for local port
+  * @lport:    The local port to configure libfc for
+  * @fip:      The FCoE controller in use by the local port
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index bc5ff13..acfd56c 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -369,6 +369,16 @@ void fcoe_get_fabric_pri(struct fc_fabric *);
+ void fcoe_get_fabric_ed_tov(struct fc_fabric *);
+ void fcoe_get_fabric_ra_tov(struct fc_fabric *);
+ void fcoe_get_fabric_selected(struct fc_fabric *);
++void fcoe_get_fabric_state(struct fc_fabric *);
++void fcoe_set_fabric_dev_loss_tmo(struct fc_fabric *, u32);
++
++void fcoe_get_port_sol_time(struct fc_port *, struct fcoe_ctlr *);
++void fcoe_get_port_sel_time(struct fc_port *, struct fcoe_ctlr *);
++void fcoe_get_port_port_ka_time(struct fc_port *, struct fcoe_ctlr *);
++void fcoe_get_port_ctlr_ka_time(struct fc_port *, struct fcoe_ctlr *);
++void fcoe_get_port_probe_tries(struct fc_port *, struct fcoe_ctlr *);
++void fcoe_get_port_port_dest_addr(struct fc_port *, struct fcoe_ctlr *);
++void fcoe_get_port_ctlr_src_addr(struct fc_port *, struct fcoe_ctlr *);
+ 
+ /* fcoe transports registration and deregistration */
+ int fcoe_transport_attach(struct fcoe_transport *ft);
 
