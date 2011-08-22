@@ -1,121 +1,143 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 41552] Performance of writing and reading from multiple drives
- decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
-Date: Mon, 22 Aug 2011 21:07:06 GMT
-Message-ID: <201108222107.p7ML767K019660@demeter2.kernel.org>
-References: <bug-41552-11613@https.bugzilla.kernel.org/>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [RFC PATCH v2 00/10] FC Transport Extensions (FC sysfs)
+Date: Mon, 22 Aug 2011 15:48:22 -0700
+Message-ID: <20110822224822.1854.81079.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:34709 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789Ab1HVVHG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 17:07:06 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p7ML76f6019661
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 21:07:06 GMT
-In-Reply-To: <bug-41552-11613@https.bugzilla.kernel.org/>
+Received: from mga09.intel.com ([134.134.136.24]:54839 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754098Ab1HVWsW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Aug 2011 18:48:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=41552
+v2 -
+
+This update adds some attributes to the FC port and
+FC fabric devices that the original series defined. The
+newly exposed attributes were mostly chosen because they
+are members of libfcoe.ko and fcoe.ko's
+'struct fcoe_interface' and 'struct fcoe_fcf'. These two
+structures are now allocated with the 'struct fc_port'
+and 'struct fc_fabric', respectively. I've also put some
+FIP controller attributes on the fc_port.
+
+There is a SMHBA FCoE extension proposal that defines more
+devices than I have in this series. That proposal defines
+ports, phys, fabrics, and controllers. This series defines
+only ports and fabrics. I think that the attibutes for the
+ports, controllers and the host may be able to be added to
+a single device in sysfs. Should that just be the
+shost/fc_host? Phy(s) complicate this, but maybe there could
+just be a phy count on within 'struct fc_host_attrs'.
+
+Before reading the SMHBA proposal I had the fc_port
+representing the fixed characteristics of the port
+(i.e. its capabilities) and the host's attributes describing
+the runtime properties of an N_Port or VN_Port. In this
+v2 series that distinction is not as clear as it was originally
+envisioned, mostly because I've added controller attributes
+to the fc_port.
+
+====
+
+v1 -
+
+This is a functional series of patches that adds new API
+calls to the FC Transport to allow a LLD to create FC Port
+and FC Fabric devices. This series also has a patch to add
+the usage of these new APIs to libfc, libfcoe and fcoe.
+
+This series originally started as a much larger effort.
+The original try created a FC subsystem that could link
+with SCSI as only one FC4 type. It allowed for other FC4s
+to register with the FC subsystem in the future. This
+model also created more devices than just the FC Port
+and FC Fabric. It made the vports we currently use more
+flexible and reordered the existing device tree to attach
+the Scsi_Host as a child of a FC vport device. It placed
+the vports and rports on fabrics and fabrics on ports.
+This model, although ideal from a FC standpoint, was quite
+complicated and impractical as generally only SCSI is
+transported over FC in modern adapters. This initial
+approach was abandoned following the last LSF conference.
+
+A second approach was taken where there was less of a FC4
+plug-in model, but the device tree was still re-arranged.
+This model also proved to be problematic mostly due to
+moving the Scsi_Host to be a child of a FC device.
+Specifically, libfc and fcoe had problems with circular
+locking around the Scsi_Host lock when dealing with the
+list of NPIV ports that was both maintained by the FC
+Transport as well as the N_Port's lport (for link events).
+Seeing that moving the Scsi_Host was being a pain I chose
+an even more simplified approach.
+
+This series is that simplified approach. It simply adds
+the following APIs.
+
+fc_port_add -   Adds a FC Port Device to represent the
+	            FC characteristics of a physical port
+		            capable of FC or FCoE.
+fc_port_del -   Deletes a created FC Port.
+fc_fabric_add - Adds a FC Fabric device to represent
+	              the FC characteristics of a discovered
+		      	  FC switch, FCF or underlying fabric.
+fc_fabric_del - Deletes a created FC Fabric.
+
+These APIs are extensions and should not impact any
+implementations using the current FC Transport interface.
+
+I focused on functionality over attributes in this series.
+These patches work, under developer testing, and adding
+attributes shouldn't be too difficult. I have an idea of
+what attributes I'd like to add and there is a proposal to
+extend the HBA API that maps well to these two new devices
+that this series adds.
+
+I opted to allow libfcoe to continue to manage FCF selection,
+but that logic could move to the transport.
+
+I need to do some testing in both P2P (VN2VN) and target
+modes, but I believe that running this code as a SW FCoE
+initiator in a switched fabric environment is functional,
+including NPIV support.
+
+The first 5 patches are pre-work patches for this series
+and may be able to be merged without the FC Transport
+additions (they still need official validation).
+
+I'd be happy to share those (rough) patch series upon
+request.
+
+---
+
+Robert Love (10):
+      fcoe: Do not switch context in vport_delete callback
+      fcoe: Don't hold fcoe_config_mutex for fcoe_if_destroy or fcoe_interface_cleanup
+      fcoe: Remove reference counting on 'stuct fcoe_interface'
+      fcoe: Rename out_nomod label to out_putmod
+      FC Transport: Add API for LLDs to add FC port and FC fabric devices
+      fcoe: Use the new FC Transport APIs for FC ports and fabrics
+      FC Transport: Add Fabric Attributes
+      fcoe: Use fabric attributes
+      FC Transport: Add FC Port Attributes
+      libfcoe, fcoe: Use FC Port Attributes
 
 
-
-
-
---- Comment #9 from Mark Petersen <mpete_06@hotmail.com>  2011-08-22 21:07:03 ---
-We were using the default CFQ scheduler.  I will change it to deadline and see
-what happens.  Also, we are not using a file system to perform the writes,
-rather we are sending SCSI commands directly to the devices, nor are we doing
-anything special to the disks with a device mapper.  We simply write to each
-one on a different thread one sector at a time.
-
-I will attempt to get the trace and will add it if I can.
-
-Thanks,
-Mark
-
-> Date: Mon, 22 Aug 2011 15:48:54 -0400
-> From: vgoyal@redhat.com
-> To: mpete_06@hotmail.com
-> CC: bugme-daemon@bugzilla.kernel.org; axboe@kernel.dk; linux-mm@kvack.org; linux-scsi@vger.kernel.org; akpm@linux-foundation.org
-> Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing and reading from multiple drives decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
-> 
-> On Mon, Aug 22, 2011 at 12:24:43PM -0700, Andrew Morton wrote:
-> > 
-> > (switched to email.  Please respond via emailed reply-to-all, not via the
-> > bugzilla web interface).
-> > 
-> > On Mon, 22 Aug 2011 15:20:41 GMT
-> > bugzilla-daemon@bugzilla.kernel.org wrote:
-> > 
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=41552
-> > > 
-> > >            Summary: Performance of writing and reading from multiple
-> > >                     drives decreases by 40% when going from Linux Kernel
-> > >                     2.6.36.4 to 2.6.37 (and beyond)
-> > >            Product: IO/Storage
-> > >            Version: 2.5
-> > >     Kernel Version: 2.6.37
-> > >           Platform: All
-> > >         OS/Version: Linux
-> > >               Tree: Mainline
-> > >             Status: NEW
-> > >           Severity: normal
-> > >           Priority: P1
-> > >          Component: SCSI
-> > >         AssignedTo: linux-scsi@vger.kernel.org
-> > >         ReportedBy: mpete_06@hotmail.com
-> > >         Regression: No
-> > > 
-> > > 
-> > > We have an application that will write and read from every sector on a drive. 
-> > > The application can perform these tasks on multiple drives at the same time. 
-> > > It is designed to run on top of the Linux Kernel, which we periodically update
-> > > so that we can get the latest device drivers.  When performing the last update
-> > > from 2.6.33.2 to 2.6.37, we found that the performance of a set of drives
-> > > decreased by some 40% (took 3 hours and 11 minutes to write and read from 5
-> > > drives on 2.6.37 versus 2 hours and 12 minutes on 2.6.33.3).  I was able to
-> > > determine that the issue was in the 2.6.37 Kernel as I was able to run it with
-> > > the 2.6.36.4 kernel, and it had the better performance.   After seeing that I/O
-> > > throttling was introduced in the 2.6.37 Kernel, I naturally suspected that. 
-> > > However, by default, all the throttling was turned off (I attached the actual
-> > > .config that was used to build the kernel).  I then tried to turn on the
-> > > throttling and set it to a high number to see what would happen.  When I did
-> > > that, I was able to reduce the time from 3 hours and 11 minutes to 2 hours and
-> > > 50 minutes.  There seems to be something there that changed that is impacting
-> > > performance on multiple drives.  When we do this same test with only one drive,
-> > > the performance is identical between the systems.  This issue still occurs on
-> > > Kernel 3.0.2.
-> > > 
-> > 
-> > Are you able to determine whether this regression is due to slower
-> > reading, to slower writing or to both?
-> 
-> Mark,
-> 
-> As your initial comment says that you see 40% regression even when block
-> throttling infrastructure is not enabled, I think it is not related to
-> throttling as blk_throtl_bio() is null when BLK_DEV_THROTTLING=n.
-> 
-> What IO scheduler are you using? Can you try switching IO scheduler to
-> deadline and see if regression is still there. Trying to figure out if
-> it has anything to do with IO scheduler.
-> 
-> What file system are you using with what options? Are you using device
-> mapper to create some special configuration on multiple disks?
-> 
-> Also can you take a trace (blktrace) of any of the disks for 30 seconds
-> both without regression and after regression and upload it somewhere.
-> Staring at it might give some clues. 
-> 
-> Thanks
-> Vivek
+ drivers/scsi/fcoe/fcoe.c           |  483 +++++++++++++-------
+ drivers/scsi/fcoe/fcoe.h           |    6 
+ drivers/scsi/fcoe/fcoe_ctlr.c      |  412 ++++++++++++++---
+ drivers/scsi/fcoe/fcoe_transport.c |    7 
+ drivers/scsi/libfc/fc_lport.c      |    2 
+ drivers/scsi/scsi_transport_fc.c   |  871 +++++++++++++++++++++++++++++++++++-
+ include/scsi/libfc.h               |    1 
+ include/scsi/libfcoe.h             |   50 ++
+ include/scsi/scsi_transport_fc.h   |  236 ++++++++++
+ 9 files changed, 1795 insertions(+), 273 deletions(-)
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Thanks, //Rob
