@@ -1,78 +1,64 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: Re: [PATCH 2/4] drivers/scsi/fcoe/fcoe.c: add missing test
-Date: Mon, 22 Aug 2011 16:49:35 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1108221648560.10948@ask.diku.dk>
-References: <1314021636-11528-2-git-send-email-julia@diku.dk>
- <alpine.LNX.2.00.1108221632130.9774@swampdragon.chaosbits.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 41552] New: Performance of writing and reading from multiple
+ drives decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and
+ beyond)
+Date: Mon, 22 Aug 2011 15:20:41 GMT
+Message-ID: <bug-41552-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1108221632130.9774@swampdragon.chaosbits.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: Robert Love <robert.w.love@intel.com>, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter1.kernel.org ([140.211.167.39]:45799 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752598Ab1HVPUm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 11:20:42 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7MFKfM3030636
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 15:20:41 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
->From nobody Mon Aug 22 15:57:42 CEST 2011
-From: Julia Lawall <julia@diku.dk>
-To: Robert Love <robert.w.love@intel.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>,devel@open-fcoe.org,linux-scsi@vger.kernel.org,linux-kernel@vger.kernel.org
-Subject: [PATCH 2/4] drivers/scsi/fcoe/fcoe.c: add missing test
+https://bugzilla.kernel.org/show_bug.cgi?id=41552
 
-From: Julia Lawall <julia@diku.dk>
+           Summary: Performance of writing and reading from multiple
+                    drives decreases by 40% when going from Linux Kernel
+                    2.6.36.4 to 2.6.37 (and beyond)
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.37
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: mpete_06@hotmail.com
+        Regression: No
 
-The initializations of both fcoe_nport_scsi_transport and
-fcoe_vport_scsi_transport can fail, so test both of them.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+We have an application that will write and read from every sector on a drive. 
+The application can perform these tasks on multiple drives at the same time. 
+It is designed to run on top of the Linux Kernel, which we periodically update
+so that we can get the latest device drivers.  When performing the last update
+from 2.6.33.2 to 2.6.37, we found that the performance of a set of drives
+decreased by some 40% (took 3 hours and 11 minutes to write and read from 5
+drives on 2.6.37 versus 2 hours and 12 minutes on 2.6.33.3).  I was able to
+determine that the issue was in the 2.6.37 Kernel as I was able to run it with
+the 2.6.36.4 kernel, and it had the better performance.   After seeing that I/O
+throttling was introduced in the 2.6.37 Kernel, I naturally suspected that. 
+However, by default, all the throttling was turned off (I attached the actual
+.config that was used to build the kernel).  I then tried to turn on the
+throttling and set it to a high number to see what would happen.  When I did
+that, I was able to reduce the time from 3 hours and 11 minutes to 2 hours and
+50 minutes.  There seems to be something there that changed that is impacting
+performance on multiple drives.  When we do this same test with only one drive,
+the performance is identical between the systems.  This issue still occurs on
+Kernel 3.0.2.
 
-// <smpl>
-@r@
-identifier x,y,f!={PTR_ERR,ERR_PTR,ERR_CAST};
-statement S;
-@@
-
-x = f(...);
-(
-if (\(x == NULL\|IS_ERR(x)\)) S
-|
-*if (\(y == NULL\|IS_ERR(y)\))
- { ... when != x
-   return ...; }
-)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
- drivers/scsi/fcoe/fcoe.c |   13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index ba710e3..9f2e2f4 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1093,11 +1093,20 @@ static int __init fcoe_if_init(void)
- 	/* attach to scsi transport */
- 	fcoe_nport_scsi_transport =
- 		fc_attach_transport(&fcoe_nport_fc_functions);
-+
-+	if (!fcoe_nport_scsi_transport) {
-+		printk(KERN_ERR
-+		       "fcoe_nport: Failed to attach to the FC transport\n");
-+		return -ENODEV;
-+	}
-+
- 	fcoe_vport_scsi_transport =
- 		fc_attach_transport(&fcoe_vport_fc_functions);
- 
--	if (!fcoe_nport_scsi_transport) {
--		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
-+	if (!fcoe_vport_scsi_transport) {
-+		printk(KERN_ERR
-+		       "fcoe_vport: Failed to attach to the FC transport\n");
-+		fc_release_transport(fcoe_nport_scsi_transport);
- 		return -ENODEV;
- 	}
- 
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
