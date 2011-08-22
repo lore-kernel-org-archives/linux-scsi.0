@@ -1,143 +1,98 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [RFC PATCH v2 00/10] FC Transport Extensions (FC sysfs)
-Date: Mon, 22 Aug 2011 15:48:22 -0700
-Message-ID: <20110822224822.1854.81079.stgit@localhost6.localdomain6>
+Subject: [RFC PATCH v2 01/10] fcoe: Do not switch context in vport_delete
+ callback
+Date: Mon, 22 Aug 2011 15:48:27 -0700
+Message-ID: <20110822224827.1854.15112.stgit@localhost6.localdomain6>
+References: <20110822224822.1854.81079.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54839 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:31527 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754098Ab1HVWsW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2011 18:48:22 -0400
+	id S1754125Ab1HVWs1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Aug 2011 18:48:27 -0400
+In-Reply-To: <20110822224822.1854.81079.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-v2 -
+Currently all port deletion is routed though the FCoE
+workqueue (fcoe_wq). When fc_remove_host is called on
+an N_Port (for example, from fcoe_destroy) the vports
+are queued into a FC Transport workqueue. fc_remove_host
+flushes that queue and each vport is passed to fcoe's
+fcoe_vport_destroy, which simply queues the associated
+fcoe_ports for later deletion. This queue cannot be
+flushed within the N_Ports destroy path because of
+circular locking issues. The result is that the NPIV
+ports are destroyed after the N_Port, which is reverse
+of how they are created.
 
-This update adds some attributes to the FC port and
-FC fabric devices that the original series defined. The
-newly exposed attributes were mostly chosen because they
-are members of libfcoe.ko and fcoe.ko's
-'struct fcoe_interface' and 'struct fcoe_fcf'. These two
-structures are now allocated with the 'struct fc_port'
-and 'struct fc_fabric', respectively. I've also put some
-FIP controller attributes on the fc_port.
+This quirk causes fcoe to keep references on the
+fcoe_interface shared by each of these ports (N_Port
+and NPIV). This in itself is goofy, but isn't a problem
+until new APIs are added to allow LLDs to create a
+FC Port device. fcoe wants to allocate the fcoe_interface
+as driver data of the FC Transport's FC Port. The odd
+ordering creates locking problems between the Scsi_Host
+mutex and the fcoe_config_mutex when destroying the
+FC Port and freeing this LLD shared object.
 
-There is a SMHBA FCoE extension proposal that defines more
-devices than I have in this series. That proposal defines
-ports, phys, fabrics, and controllers. This series defines
-only ports and fabrics. I think that the attibutes for the
-ports, controllers and the host may be able to be added to
-a single device in sysfs. Should that just be the
-shost/fc_host? Phy(s) complicate this, but maybe there could
-just be a phy count on within 'struct fc_host_attrs'.
+This patch simply allows fcoe_vport_destory to destroy
+NPIV ports without deferring them to a workqueue context.
+This ensures that when fc_remove_host is called the
+NPIV ports will be destroyed first before the N_Port and
+allows reference counting on the fcoe's fcoe_interface
+to be remove in a later patch.
 
-Before reading the SMHBA proposal I had the fc_port
-representing the fixed characteristics of the port
-(i.e. its capabilities) and the host's attributes describing
-the runtime properties of an N_Port or VN_Port. In this
-v2 series that distinction is not as clear as it was originally
-envisioned, mostly because I've added controller attributes
-to the fc_port.
-
-====
-
-v1 -
-
-This is a functional series of patches that adds new API
-calls to the FC Transport to allow a LLD to create FC Port
-and FC Fabric devices. This series also has a patch to add
-the usage of these new APIs to libfc, libfcoe and fcoe.
-
-This series originally started as a much larger effort.
-The original try created a FC subsystem that could link
-with SCSI as only one FC4 type. It allowed for other FC4s
-to register with the FC subsystem in the future. This
-model also created more devices than just the FC Port
-and FC Fabric. It made the vports we currently use more
-flexible and reordered the existing device tree to attach
-the Scsi_Host as a child of a FC vport device. It placed
-the vports and rports on fabrics and fabrics on ports.
-This model, although ideal from a FC standpoint, was quite
-complicated and impractical as generally only SCSI is
-transported over FC in modern adapters. This initial
-approach was abandoned following the last LSF conference.
-
-A second approach was taken where there was less of a FC4
-plug-in model, but the device tree was still re-arranged.
-This model also proved to be problematic mostly due to
-moving the Scsi_Host to be a child of a FC device.
-Specifically, libfc and fcoe had problems with circular
-locking around the Scsi_Host lock when dealing with the
-list of NPIV ports that was both maintained by the FC
-Transport as well as the N_Port's lport (for link events).
-Seeing that moving the Scsi_Host was being a pain I chose
-an even more simplified approach.
-
-This series is that simplified approach. It simply adds
-the following APIs.
-
-fc_port_add -   Adds a FC Port Device to represent the
-	            FC characteristics of a physical port
-		            capable of FC or FCoE.
-fc_port_del -   Deletes a created FC Port.
-fc_fabric_add - Adds a FC Fabric device to represent
-	              the FC characteristics of a discovered
-		      	  FC switch, FCF or underlying fabric.
-fc_fabric_del - Deletes a created FC Fabric.
-
-These APIs are extensions and should not impact any
-implementations using the current FC Transport interface.
-
-I focused on functionality over attributes in this series.
-These patches work, under developer testing, and adding
-attributes shouldn't be too difficult. I have an idea of
-what attributes I'd like to add and there is a proposal to
-extend the HBA API that maps well to these two new devices
-that this series adds.
-
-I opted to allow libfcoe to continue to manage FCF selection,
-but that logic could move to the transport.
-
-I need to do some testing in both P2P (VN2VN) and target
-modes, but I believe that running this code as a SW FCoE
-initiator in a switched fabric environment is functional,
-including NPIV support.
-
-The first 5 patches are pre-work patches for this series
-and may be able to be merged without the FC Transport
-additions (they still need official validation).
-
-I'd be happy to share those (rough) patch series upon
-request.
-
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
+ drivers/scsi/fcoe/fcoe.c |   15 ++++++---------
+ 1 files changed, 6 insertions(+), 9 deletions(-)
 
-Robert Love (10):
-      fcoe: Do not switch context in vport_delete callback
-      fcoe: Don't hold fcoe_config_mutex for fcoe_if_destroy or fcoe_interface_cleanup
-      fcoe: Remove reference counting on 'stuct fcoe_interface'
-      fcoe: Rename out_nomod label to out_putmod
-      FC Transport: Add API for LLDs to add FC port and FC fabric devices
-      fcoe: Use the new FC Transport APIs for FC ports and fabrics
-      FC Transport: Add Fabric Attributes
-      fcoe: Use fabric attributes
-      FC Transport: Add FC Port Attributes
-      libfcoe, fcoe: Use FC Port Attributes
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 781fbaa..0f621d3 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1943,20 +1943,14 @@ static void fcoe_destroy_work(struct work_struct *work)
+ {
+ 	struct fcoe_port *port;
+ 	struct fcoe_interface *fcoe;
+-	int npiv = 0;
+ 
+ 	port = container_of(work, struct fcoe_port, destroy_work);
+ 	mutex_lock(&fcoe_config_mutex);
+ 
+-	/* set if this is an NPIV port */
+-	npiv = port->lport->vport ? 1 : 0;
+-
+ 	fcoe = port->priv;
+ 	fcoe_if_destroy(port->lport);
+ 
+-	/* Do not tear down the fcoe interface for NPIV port */
+-	if (!npiv)
+-		fcoe_interface_cleanup(fcoe);
++	fcoe_interface_cleanup(fcoe);
+ 
+ 	mutex_unlock(&fcoe_config_mutex);
+ }
+@@ -2485,12 +2479,15 @@ static int fcoe_vport_destroy(struct fc_vport *vport)
+ 	struct Scsi_Host *shost = vport_to_shost(vport);
+ 	struct fc_lport *n_port = shost_priv(shost);
+ 	struct fc_lport *vn_port = vport->dd_data;
+-	struct fcoe_port *port = lport_priv(vn_port);
+ 
+ 	mutex_lock(&n_port->lp_mutex);
+ 	list_del(&vn_port->list);
+ 	mutex_unlock(&n_port->lp_mutex);
+-	queue_work(fcoe_wq, &port->destroy_work);
++
++	mutex_lock(&fcoe_config_mutex);
++	fcoe_if_destroy(vn_port);
++	mutex_unlock(&fcoe_config_mutex);
++
+ 	return 0;
+ }
+ 
 
-
- drivers/scsi/fcoe/fcoe.c           |  483 +++++++++++++-------
- drivers/scsi/fcoe/fcoe.h           |    6 
- drivers/scsi/fcoe/fcoe_ctlr.c      |  412 ++++++++++++++---
- drivers/scsi/fcoe/fcoe_transport.c |    7 
- drivers/scsi/libfc/fc_lport.c      |    2 
- drivers/scsi/scsi_transport_fc.c   |  871 +++++++++++++++++++++++++++++++++++-
- include/scsi/libfc.h               |    1 
- include/scsi/libfcoe.h             |   50 ++
- include/scsi/scsi_transport_fc.h   |  236 ++++++++++
- 9 files changed, 1795 insertions(+), 273 deletions(-)
-
--- 
-Thanks, //Rob
