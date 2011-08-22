@@ -1,21 +1,33 @@
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [Bugme-new] [Bug 41552] New: Performance of writing and reading
- from multiple drives decreases by 40% when going from Linux Kernel 2.6.36.4
- to 2.6.37 (and beyond)
-Date: Mon, 22 Aug 2011 15:56:51 -0400
-Message-ID: <20110822195651.GB15087@redhat.com>
-References: <bug-41552-10286@https.bugzilla.kernel.org/>
- <20110822122443.c04839c8.akpm@linux-foundation.org>
- <BLU165-W518E4E2216B3E0FE0248EFFF2F0@phx.gbl>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 41552] Performance of writing and reading from multiple drives
+ decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
+Date: Mon, 22 Aug 2011 20:21:16 GMT
+Message-ID: <201108222021.p7MKLG9l016672@demeter1.kernel.org>
+References: <bug-41552-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <BLU165-W518E4E2216B3E0FE0248EFFF2F0@phx.gbl>
-Sender: owner-linux-mm@kvack.org
-To: Mark Petersen <mpete_06@hotmail.com>
-Cc: akpm@linux-foundation.org, bugme-daemon@bugzilla.kernel.org, axboe@kernel.dk, linux-mm@kvack.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter1.kernel.org ([140.211.167.39]:41522 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753520Ab1HVUVQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 16:21:16 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.4) with ESMTP id p7MKLGbU016673
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 20:21:16 GMT
+In-Reply-To: <bug-41552-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=41552
+
+
+
+
+
+--- Comment #5 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2011-08-22 20:21:13 ---
+Reply-To: vgoyal@redhat.com
 
 On Mon, Aug 22, 2011 at 02:49:56PM -0500, Mark Petersen wrote:
 > 
@@ -31,7 +43,7 @@ your setup. Though mentioning it does not harm.
 Thanks
 Vivek
 
- 
+
 > 
 > > Date: Mon, 22 Aug 2011 12:24:43 -0700
 > > From: akpm@linux-foundation.org
@@ -90,11 +102,9 @@ Vivek
 > > reading, to slower writing or to both?
 > > 
 > > Thanks.
->  		 	   		  
+>
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
