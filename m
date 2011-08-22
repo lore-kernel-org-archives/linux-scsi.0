@@ -1,36 +1,37 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 2/4] lpfc 8.3.26: Fix HBA initialization issues
-Date: Sun, 21 Aug 2011 21:48:49 -0400
-Message-ID: <1313977730.21906.5.camel@ogier>
+Subject: [PATCH 3/4] lpfc 8.3.26: Fix SYSFS interface issues
+Date: Sun, 21 Aug 2011 21:49:16 -0400
+Message-ID: <1313977757.21906.6.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:6398 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:6402 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756391Ab1HVBtS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:49:18 -0400
+	with ESMTP id S1756360Ab1HVBtq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:49:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix HBA initialization issues
+Fix SYSFS interface issues.
 
-- Swap all values that come from the firmware image on little endian systems.
-  Created a new bf_get_be macro that does the same as the bf_get_le macro but
-  for big endian data instead of little endian data.
-- Moved the incrementing of temp_offset after the copy
-  fixed the write object loop to use temp_offset to figure out where the end
-  of the image is instead of offset.
-- Added the necessary codes for properly bringing the driver instance offline
-  and then trying to bring the port back online with the PCI function IP reset.
-  If it fails to bring the SLI port back online, it will fall through to
-  bringing the SLI port to HBA error offline.
-- Add a call in the probe_one_s3 and probe_one_s4 routines to get the Modeldesc
-- Change OCe50100 to OCe15100
-- Made the error log also include the PCI BAR bitmap returned from kernel call
-  pci_select_bars().
+- In the lpfc_sli4_pdev_status_reg_wait() routine, after initial 100ms delay
+  following write to PHYSDEV_CONTROL register for the firmware reaction, check
+  the RN bit and ERR bit of the SLIPORT_STATUS register. If none of them
+  became 1, the previous PHYSDEV_CONTROL register should be considered failed
+  due to lack of privilege and error for no permission should be returned
+  immediately without getting into the wait for RDY bits on the SLIPORT_STATUS
+  register.
+- Remove the driver check on dev->is_physfn before proceed to perform the
+  PHYSDEV_CONTROL register write, and let the PCI function's privilege
+  setting and driver handling of PHYSDEV_CONTROL register write failure to
+  handle the reset-ability through the SLI port.
+- Added key to ctlreg_write to prevent unauthorized or unexpected write to
+  the control register.
+- Change return to EACCES for sysfs access that are failed because hba_reset
+  is disabled.
 
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -38,165 +39,136 @@ Fix HBA initialization issues
 
  ---
 
- lpfc_hw4.h  |    2 ++
- lpfc_init.c |   60 +++++++++++++++++++++++++++++++++---------------------------
- 2 files changed, 35 insertions(+), 27 deletions(-)
+ lpfc_attr.c |   42 ++++++++++++++++++++++++++++--------------
+ lpfc_init.c |    3 ---
+ 2 files changed, 28 insertions(+), 17 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-08-10 14:34:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-08-19 23:24:18.000000000 -0400
-@@ -41,6 +41,8 @@
-  * Or clear that bit field:
-  *	bf_set(example_bit_field, &t1, 0);
-  */
-+#define bf_get_be32(name, ptr) \
-+	((be32_to_cpu((ptr)->name##_WORD) >> name##_SHIFT) & name##_MASK)
- #define bf_get_le32(name, ptr) \
- 	((le32_to_cpu((ptr)->name##_WORD) >> name##_SHIFT) & name##_MASK)
- #define bf_get(name, ptr) \
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-08-10 14:34:51.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-08-19 23:24:18.000000000 -0400
-@@ -1481,15 +1481,18 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 			return;
- 		}
- 		if (bf_get(lpfc_sliport_status_rn, &portstat_reg)) {
--			/*
--			 * TODO: Attempt port recovery via a port reset.
--			 * When fully implemented, the driver should
--			 * attempt to recover the port here and return.
--			 * For now, log an error and take the port offline.
--			 */
-+			/* need reset: attempt for port recovery */
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 					"2887 Port Error: Attempting "
- 					"Port Recovery\n");
-+			lpfc_offline_prep(phba);
-+			lpfc_offline(phba);
-+			lpfc_sli_brdrestart(phba);
-+			if (lpfc_online(phba) == 0) {
-+				lpfc_unblock_mgmt_io(phba);
-+				return;
-+			}
-+			/* fall through for not able to recover */
- 		}
- 		lpfc_sli4_offline_eratt(phba);
- 		break;
-@@ -1958,7 +1961,7 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
- 	case PCI_DEVICE_ID_LANCER_FCOE:
- 	case PCI_DEVICE_ID_LANCER_FCOE_VF:
- 		oneConnect = 1;
--		m = (typeof(m)){"OCe50100", "PCIe", "FCoE"};
-+		m = (typeof(m)){"OCe15100", "PCIe", "FCoE"};
- 		break;
- 	default:
- 		m = (typeof(m)){"Unknown", "", ""};
-@@ -3949,7 +3952,7 @@ static int
- lpfc_enable_pci_dev(struct lpfc_hba *phba)
- {
- 	struct pci_dev *pdev;
--	int bars;
-+	int bars = 0;
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2011-08-10 14:34:50.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-08-21 21:26:11.000000000 -0400
+@@ -52,6 +52,13 @@
+ #define LPFC_MIN_DEVLOSS_TMO 1
+ #define LPFC_MAX_DEVLOSS_TMO 255
  
- 	/* Obtain PCI device reference */
- 	if (!phba->pcidev)
-@@ -3978,6 +3981,8 @@ lpfc_enable_pci_dev(struct lpfc_hba *phb
- out_disable_device:
- 	pci_disable_device(pdev);
- out_error:
-+	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+			"1401 Failed to enable pci device, bars:x%x\n", bars);
- 	return -ENODEV;
++/*
++ * Write key size should be multiple of 4. If write key is changed
++ * make sure that library write key is also changed.
++ */
++#define LPFC_REG_WRITE_KEY_SIZE	4
++#define LPFC_REG_WRITE_KEY	"EMLX"
++
+ /**
+  * lpfc_jedec_to_ascii - Hex to ascii convertor according to JEDEC rules
+  * @incr: integer to convert.
+@@ -693,7 +700,7 @@ lpfc_selective_reset(struct lpfc_hba *ph
+ 	int rc;
+ 
+ 	if (!phba->cfg_enable_hba_reset)
+-		return -EIO;
++		return -EACCES;
+ 
+ 	status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
+ 
+@@ -768,13 +775,18 @@ lpfc_issue_reset(struct device *dev, str
+ static int
+ lpfc_sli4_pdev_status_reg_wait(struct lpfc_hba *phba)
+ {
+-	struct lpfc_register portstat_reg;
++	struct lpfc_register portstat_reg = {0};
+ 	int i;
+ 
+-
++	msleep(100);
+ 	lpfc_readl(phba->sli4_hba.u.if_type2.STATUSregaddr,
+ 		   &portstat_reg.word0);
+ 
++	/* verify if privilaged for the request operation */
++	if (!bf_get(lpfc_sliport_status_rn, &portstat_reg) &&
++	    !bf_get(lpfc_sliport_status_err, &portstat_reg))
++		return -EPERM;
++
+ 	/* wait for the SLI port firmware ready after firmware reset */
+ 	for (i = 0; i < LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT; i++) {
+ 		msleep(10);
+@@ -816,16 +828,13 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
+ 	int rc;
+ 
+ 	if (!phba->cfg_enable_hba_reset)
+-		return -EIO;
++		return -EACCES;
+ 
+ 	if ((phba->sli_rev < LPFC_SLI_REV4) ||
+ 	    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
+ 	     LPFC_SLI_INTF_IF_TYPE_2))
+ 		return -EPERM;
+ 
+-	if (!pdev->is_physfn)
+-		return -EPERM;
+-
+ 	/* Disable SR-IOV virtual functions if enabled */
+ 	if (phba->cfg_sriov_nr_virtfn) {
+ 		pci_disable_sriov(pdev);
+@@ -858,7 +867,7 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
+ 	rc = lpfc_sli4_pdev_status_reg_wait(phba);
+ 
+ 	if (rc)
+-		return -EIO;
++		return rc;
+ 
+ 	init_completion(&online_compl);
+ 	rc = lpfc_workq_post_event(phba, &status, &online_compl,
+@@ -984,7 +993,7 @@ lpfc_board_mode_store(struct device *dev
+ 	if (!status)
+ 		return strlen(buf);
+ 	else
+-		return -EIO;
++		return status;
  }
  
-@@ -8271,11 +8276,8 @@ lpfc_pci_probe_one_s3(struct pci_dev *pd
+ /**
+@@ -3885,18 +3894,23 @@ sysfs_ctlreg_write(struct file *filp, st
+ 	if ((off + count) > FF_REG_AREA_SIZE)
+ 		return -ERANGE;
  
- 	/* Perform generic PCI device enabling operation */
- 	error = lpfc_enable_pci_dev(phba);
--	if (error) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"1401 Failed to enable pci device.\n");
-+	if (error)
- 		goto out_free_phba;
--	}
+-	if (count == 0) return 0;
++	if (count <= LPFC_REG_WRITE_KEY_SIZE)
++		return 0;
  
- 	/* Set up SLI API function jump table for PCI-device group-0 HBAs */
- 	error = lpfc_api_table_setup(phba, LPFC_PCI_DEV_LP);
-@@ -8322,6 +8324,9 @@ lpfc_pci_probe_one_s3(struct pci_dev *pd
- 		goto out_free_iocb_list;
- 	}
- 
-+	/* Get the default values for Model Name and Description */
-+	lpfc_get_hba_model_desc(phba, phba->ModelName, phba->ModelDesc);
-+
- 	/* Create SCSI host to the physical port */
- 	error = lpfc_create_shost(phba);
- 	if (error) {
-@@ -8885,16 +8890,17 @@ lpfc_write_firmware(struct lpfc_hba *phb
- 	uint32_t offset = 0, temp_offset = 0;
- 
- 	INIT_LIST_HEAD(&dma_buffer_list);
--	if ((image->magic_number != LPFC_GROUP_OJECT_MAGIC_NUM) ||
--	    (bf_get(lpfc_grp_hdr_file_type, image) != LPFC_FILE_TYPE_GROUP) ||
--	    (bf_get(lpfc_grp_hdr_id, image) != LPFC_FILE_ID_GROUP) ||
--	    (image->size != fw->size)) {
-+	if ((be32_to_cpu(image->magic_number) != LPFC_GROUP_OJECT_MAGIC_NUM) ||
-+	    (bf_get_be32(lpfc_grp_hdr_file_type, image) !=
-+	     LPFC_FILE_TYPE_GROUP) ||
-+	    (bf_get_be32(lpfc_grp_hdr_id, image) != LPFC_FILE_ID_GROUP) ||
-+	    (be32_to_cpu(image->size) != fw->size)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"3022 Invalid FW image found. "
--				"Magic:%d Type:%x ID:%x\n",
--				image->magic_number,
--				bf_get(lpfc_grp_hdr_file_type, image),
--				bf_get(lpfc_grp_hdr_id, image));
-+				"Magic:%x Type:%x ID:%x\n",
-+				be32_to_cpu(image->magic_number),
-+				bf_get_be32(lpfc_grp_hdr_file_type, image),
-+				bf_get_be32(lpfc_grp_hdr_id, image));
+ 	if (off % 4 || count % 4 || (unsigned long)buf % 4)
  		return -EINVAL;
- 	}
- 	lpfc_decode_firmware_rev(phba, fwrev, 1);
-@@ -8924,11 +8930,11 @@ lpfc_write_firmware(struct lpfc_hba *phb
- 		while (offset < fw->size) {
- 			temp_offset = offset;
- 			list_for_each_entry(dmabuf, &dma_buffer_list, list) {
--				if (offset + SLI4_PAGE_SIZE > fw->size) {
--					temp_offset += fw->size - offset;
-+				if (temp_offset + SLI4_PAGE_SIZE > fw->size) {
- 					memcpy(dmabuf->virt,
- 					       fw->data + temp_offset,
--					       fw->size - offset);
-+					       fw->size - temp_offset);
-+					temp_offset = fw->size;
- 					break;
- 				}
- 				memcpy(dmabuf->virt, fw->data + temp_offset,
-@@ -8995,11 +9001,8 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
  
- 	/* Perform generic PCI device enabling operation */
- 	error = lpfc_enable_pci_dev(phba);
--	if (error) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"1409 Failed to enable pci device.\n");
-+	if (error)
- 		goto out_free_phba;
+-	if (!(vport->fc_flag & FC_OFFLINE_MODE)) {
++	/* This is to protect HBA registers from accidental writes. */
++	if (memcmp(buf, LPFC_REG_WRITE_KEY, LPFC_REG_WRITE_KEY_SIZE))
++		return -EINVAL;
++
++	if (!(vport->fc_flag & FC_OFFLINE_MODE))
+ 		return -EPERM;
 -	}
  
- 	/* Set up SLI API function jump table for PCI-device group-1 HBAs */
- 	error = lpfc_api_table_setup(phba, LPFC_PCI_DEV_OC);
-@@ -9054,6 +9057,9 @@ lpfc_pci_probe_one_s4(struct pci_dev *pd
- 		goto out_free_iocb_list;
- 	}
+ 	spin_lock_irq(&phba->hbalock);
+-	for (buf_off = 0; buf_off < count; buf_off += sizeof(uint32_t))
+-		writel(*((uint32_t *)(buf + buf_off)),
++	for (buf_off = 0; buf_off < count - LPFC_REG_WRITE_KEY_SIZE;
++			buf_off += sizeof(uint32_t))
++		writel(*((uint32_t *)(buf + buf_off + LPFC_REG_WRITE_KEY_SIZE)),
+ 		       phba->ctrl_regs_memmap_p + off + buf_off);
  
-+	/* Get the default values for Model Name and Description */
-+	lpfc_get_hba_model_desc(phba, phba->ModelName, phba->ModelDesc);
-+
- 	/* Create SCSI host to the physical port */
- 	error = lpfc_create_shost(phba);
- 	if (error) {
+ 	spin_unlock_irq(&phba->hbalock);
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-08-21 21:25:26.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-08-21 21:25:46.000000000 -0400
+@@ -4056,9 +4056,6 @@ lpfc_sli_sriov_nr_virtfn_get(struct lpfc
+ 	uint16_t nr_virtfn;
+ 	int pos;
+ 
+-	if (!pdev->is_physfn)
+-		return 0;
+-
+ 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
+ 	if (pos == 0)
+ 		return 0;
 
 
 
