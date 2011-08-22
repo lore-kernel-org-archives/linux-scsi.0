@@ -1,61 +1,39 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 1/3] be2iscsi: Fixing the /proc/interrupts problem V3
-Date: Mon, 22 Aug 2011 19:24:53 +0200
-Message-ID: <1396323.bvOCfZ5kpa@donald.sf-tec.de>
-References: <f9809cab-6759-4b13-b095-d2d799fd7ca1@exht1.ad.emulex.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 41552] Performance of writing and reading from multiple drives
+ decreases by 40% when going from Linux Kernel 2.6.36.4 to 2.6.37 (and beyond)
+Date: Mon, 22 Aug 2011 19:25:05 GMT
+Message-ID: <201108221925.p7MJP5Ap020438@demeter2.kernel.org>
+References: <bug-41552-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2355958.mvt5XXGCp5"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:46481 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752549Ab1HVRZX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Aug 2011 13:25:23 -0400
-In-Reply-To: <f9809cab-6759-4b13-b095-d2d799fd7ca1@exht1.ad.emulex.com>
+Received: from demeter2.kernel.org ([140.211.167.42]:49791 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752878Ab1HVTZH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2011 15:25:07 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p7MJP5x6020439
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2011 19:25:05 GMT
+In-Reply-To: <bug-41552-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: James.Bottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=41552
 
 
---nextPart2355958.mvt5XXGCp5
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
+Andrew Morton <akpm@linux-foundation.org> changed:
 
-Jayamohan Kallickal wrote:
-> Problem description, debugging and original patch from Prarit Bhargava:
-> 
-> Fix be2iscsi driver to use a separate pointer for each irq action->name
-> field and avoid display corruption in /proc/interrupts. The be2iscsi driver
-> was using a single static array in a function for the irq action->name
-> field. This results in /proc/interrupts output like:
-> 
-> 156:  0          0          0          0          0          0
-> 0
-> 0          0          0          0          0          0          0
-> 0
->         0          0          0          0          0          0
-> 0
->      0          0       PCI-MSI-X
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |akpm@linux-foundation.org
+         Regression|No                          |Yes
 
-I think it's enough to tell in words here that the rest is random stack data 
-or whatever. Including these 8bit mess will only screw up the commit message 
-viewers for no benefit.
 
-Greetings,
 
-Eike
---nextPart2355958.mvt5XXGCp5
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAk5SkOUACgkQXKSJPmm5/E62HACeMcAljm3ve5RnoVegBCgWHRwf
-AGwAoKK6ruwusjvFFyt/PKAHC2ujz3TD
-=mRU6
------END PGP SIGNATURE-----
-
---nextPart2355958.mvt5XXGCp5--
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
