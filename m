@@ -1,37 +1,21 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 3/4] lpfc 8.3.26: Fix SYSFS interface issues
-Date: Sun, 21 Aug 2011 21:49:16 -0400
-Message-ID: <1313977757.21906.6.camel@ogier>
+Subject: [PATCH 4/4] lpfc 8.3.26: Change driver version to 8.3.26
+Date: Sun, 21 Aug 2011 21:49:49 -0400
+Message-ID: <1313977790.21906.7.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:6402 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:6407 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756360Ab1HVBtq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:49:46 -0400
+	with ESMTP id S1756367Ab1HVBuQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Aug 2011 21:50:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix SYSFS interface issues.
-
-- In the lpfc_sli4_pdev_status_reg_wait() routine, after initial 100ms delay
-  following write to PHYSDEV_CONTROL register for the firmware reaction, check
-  the RN bit and ERR bit of the SLIPORT_STATUS register. If none of them
-  became 1, the previous PHYSDEV_CONTROL register should be considered failed
-  due to lack of privilege and error for no permission should be returned
-  immediately without getting into the wait for RDY bits on the SLIPORT_STATUS
-  register.
-- Remove the driver check on dev->is_physfn before proceed to perform the
-  PHYSDEV_CONTROL register write, and let the PCI function's privilege
-  setting and driver handling of PHYSDEV_CONTROL register write failure to
-  handle the reset-ability through the SLI port.
-- Added key to ctlreg_write to prevent unauthorized or unexpected write to
-  the control register.
-- Change return to EACCES for sysfs access that are failed because hba_reset
-  is disabled.
+Change driver version to 8.3.26
 
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -39,136 +23,23 @@ Fix SYSFS interface issues.
 
  ---
 
- lpfc_attr.c |   42 ++++++++++++++++++++++++++++--------------
- lpfc_init.c |    3 ---
- 2 files changed, 28 insertions(+), 17 deletions(-)
+ lpfc_version.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2011-08-10 14:34:50.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-08-21 21:26:11.000000000 -0400
-@@ -52,6 +52,13 @@
- #define LPFC_MIN_DEVLOSS_TMO 1
- #define LPFC_MAX_DEVLOSS_TMO 255
+diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+--- a/drivers/scsi/lpfc/lpfc_version.h	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_version.h	2011-08-19 23:25:08.000000000 -0400
+@@ -18,7 +18,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
-+/*
-+ * Write key size should be multiple of 4. If write key is changed
-+ * make sure that library write key is also changed.
-+ */
-+#define LPFC_REG_WRITE_KEY_SIZE	4
-+#define LPFC_REG_WRITE_KEY	"EMLX"
-+
- /**
-  * lpfc_jedec_to_ascii - Hex to ascii convertor according to JEDEC rules
-  * @incr: integer to convert.
-@@ -693,7 +700,7 @@ lpfc_selective_reset(struct lpfc_hba *ph
- 	int rc;
- 
- 	if (!phba->cfg_enable_hba_reset)
--		return -EIO;
-+		return -EACCES;
- 
- 	status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
- 
-@@ -768,13 +775,18 @@ lpfc_issue_reset(struct device *dev, str
- static int
- lpfc_sli4_pdev_status_reg_wait(struct lpfc_hba *phba)
- {
--	struct lpfc_register portstat_reg;
-+	struct lpfc_register portstat_reg = {0};
- 	int i;
- 
--
-+	msleep(100);
- 	lpfc_readl(phba->sli4_hba.u.if_type2.STATUSregaddr,
- 		   &portstat_reg.word0);
- 
-+	/* verify if privilaged for the request operation */
-+	if (!bf_get(lpfc_sliport_status_rn, &portstat_reg) &&
-+	    !bf_get(lpfc_sliport_status_err, &portstat_reg))
-+		return -EPERM;
-+
- 	/* wait for the SLI port firmware ready after firmware reset */
- 	for (i = 0; i < LPFC_FW_RESET_MAXIMUM_WAIT_10MS_CNT; i++) {
- 		msleep(10);
-@@ -816,16 +828,13 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
- 	int rc;
- 
- 	if (!phba->cfg_enable_hba_reset)
--		return -EIO;
-+		return -EACCES;
- 
- 	if ((phba->sli_rev < LPFC_SLI_REV4) ||
- 	    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
- 	     LPFC_SLI_INTF_IF_TYPE_2))
- 		return -EPERM;
- 
--	if (!pdev->is_physfn)
--		return -EPERM;
--
- 	/* Disable SR-IOV virtual functions if enabled */
- 	if (phba->cfg_sriov_nr_virtfn) {
- 		pci_disable_sriov(pdev);
-@@ -858,7 +867,7 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
- 	rc = lpfc_sli4_pdev_status_reg_wait(phba);
- 
- 	if (rc)
--		return -EIO;
-+		return rc;
- 
- 	init_completion(&online_compl);
- 	rc = lpfc_workq_post_event(phba, &status, &online_compl,
-@@ -984,7 +993,7 @@ lpfc_board_mode_store(struct device *dev
- 	if (!status)
- 		return strlen(buf);
- 	else
--		return -EIO;
-+		return status;
- }
- 
- /**
-@@ -3885,18 +3894,23 @@ sysfs_ctlreg_write(struct file *filp, st
- 	if ((off + count) > FF_REG_AREA_SIZE)
- 		return -ERANGE;
- 
--	if (count == 0) return 0;
-+	if (count <= LPFC_REG_WRITE_KEY_SIZE)
-+		return 0;
- 
- 	if (off % 4 || count % 4 || (unsigned long)buf % 4)
- 		return -EINVAL;
- 
--	if (!(vport->fc_flag & FC_OFFLINE_MODE)) {
-+	/* This is to protect HBA registers from accidental writes. */
-+	if (memcmp(buf, LPFC_REG_WRITE_KEY, LPFC_REG_WRITE_KEY_SIZE))
-+		return -EINVAL;
-+
-+	if (!(vport->fc_flag & FC_OFFLINE_MODE))
- 		return -EPERM;
--	}
- 
- 	spin_lock_irq(&phba->hbalock);
--	for (buf_off = 0; buf_off < count; buf_off += sizeof(uint32_t))
--		writel(*((uint32_t *)(buf + buf_off)),
-+	for (buf_off = 0; buf_off < count - LPFC_REG_WRITE_KEY_SIZE;
-+			buf_off += sizeof(uint32_t))
-+		writel(*((uint32_t *)(buf + buf_off + LPFC_REG_WRITE_KEY_SIZE)),
- 		       phba->ctrl_regs_memmap_p + off + buf_off);
- 
- 	spin_unlock_irq(&phba->hbalock);
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-08-21 21:25:26.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-08-21 21:25:46.000000000 -0400
-@@ -4056,9 +4056,6 @@ lpfc_sli_sriov_nr_virtfn_get(struct lpfc
- 	uint16_t nr_virtfn;
- 	int pos;
- 
--	if (!pdev->is_physfn)
--		return 0;
--
- 	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_SRIOV);
- 	if (pos == 0)
- 		return 0;
+-#define LPFC_DRIVER_VERSION "8.3.25"
++#define LPFC_DRIVER_VERSION "8.3.26"
+ #define LPFC_DRIVER_NAME		"lpfc"
+ #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
+ #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
+
 
 
 
