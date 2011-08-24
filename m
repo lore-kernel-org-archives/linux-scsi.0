@@ -1,224 +1,244 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [kernel.org users] [KORG] Panics on master backend
-Date: Wed, 24 Aug 2011 11:59:52 +0200
-Message-ID: <1314179992.24121.3.camel@twins>
-References: <4E53ECEF.7040109@kernel.org>  <1314129133.8002.102.camel@twins>
-	 <1314135173.14326.42.camel@mulgrave>
+From: Benjamin ESTRABAUD <be@mpstor.com>
+Subject: Re: mpt2sas: /sysfs sas_address entries do not show individual port
+ sas addresses.
+Date: Wed, 24 Aug 2011 15:12:22 +0100
+Message-ID: <4E5506C6.8040401@mpstor.com>
+References: <4E4B9B04.10302@mpstor.com> <4E4BDFD7.3060109@interlog.com> <4E4D529F.9090908@oracle.com> <4E4D6D78.6040106@interlog.com> <4E4E5780.5000705@mpstor.com> <4E4EB442.20903@oracle.com> <4E5059F5.30908@interlog.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-IQmm4Pftg6df3XV88hOc"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:40811 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412Ab1HXKDS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2011 06:03:18 -0400
-In-Reply-To: <1314135173.14326.42.camel@mulgrave>
+Received: from relay2.blacknight.com ([78.153.203.205]:35540 "EHLO
+	relay2.blacknight.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030Ab1HXOMZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2011 10:12:25 -0400
+In-Reply-To: <4E5059F5.30908@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Frank Rowand <frank.rowand@am.sony.com>, Oleg Nesterov <oleg@redhat.com>, linux-kernel <linux-kernel@vger.kernel.org>, hch <hch@infradead.org>, "yong.zhang0" <yong.zhang0@gmail.com>, scameron@beardog.cce.hp.com, Jens Axboe <jaxboe@fusionio.com>, Thomas Gleixner <tglx@linutronix.de>, users@kernel.org
+To: dgilbert@interlog.com
+Cc: Ravi Shankar <ravi.v.shankar@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 21/08/11 02:05, Douglas Gilbert wrote:
+> On 11-08-19 03:06 PM, Ravi Shankar wrote:
+>>
+>>>
+>>> Hi Douglas, Ravi,
+>>>
+>>> According to the SAS specs, (ISO/IEC 14776-152:200x, sas2r15.pdf), 
+>>> on page 45,
+>>> they state that that a port is formed by a unique tuple of the SAS 
+>>> Phy address
+>>> and the attached SAS Phy address.
+>>>
+>>> For instance, if you take 2 * 2 phy wide ports, where all 4 phys 
+>>> from these
+>>> two ports have the same sas address, let's call it "A" and connect 
+>>> them each
+>>> to another port that each has a different address, "B" and "C", they 
+>>> state
+>>> that two ports will be formed, one connecting "A" to "B" and one 
+>>> connecting
+>>> "A" to "C".
+>>>
+>>> This is what Douglas is saying with the SAS disks for instance, that 
+>>> are
+>>> typically given two separate SAS addresses to avoid forming a wide 
+>>> port with
+>>> the expander (since the expander will have the same sas address on 
+>>> all phys),
+>>> and to allow for dual expander multiplexing for redundancy.
+>>>
+>>> But what I don't understand is that, in the context of two HBAs 
+>>> connected
+>>> together, things seem to be different:
+>>>
+>>> I configured a 9200-8e HBA (8Phys) and changed all its SAS phys 
+>>> addresses from
+>>> being the same to being incremental, therefore the last byte of each 
+>>> SAS phy
+>>> address changed from:
+>>>
+>>> 0 1 2 3 4 5 6 7
+>>> b0 b0 b0 b0 b0 b0 b0 b0
+>>> to:
+>>> b0 b1 b2 b3 b4 b5 b6 b7
+>>>
+>>> I also changed the "ports" setup from "Auto" to "Wide", making two 
+>>> 4*phys ports:
+>>>
+>>> Port 0 | Port 1
+>>> b0 b1 b2 b3 | b4 b5 b6 b7
+>>>
+>>> I also set all these ports to Target.
+>>>
+>>> I then connected this HBA to another 9200-8e HBA, which was left 
+>>> setup as
+>>> default:
+>>>
+>>> Auto
+>>> Initiator
+>>> 0 1 2 3 4 5 6 7
+>>> 10 10 10 10 10 10 10 10
+>>>
+>>> However, when I looked up the SAS topology on either side in 
+>>> LSIUtil, I saw
+>>> that there was two ports connected on each HBAs, one connected on 
+>>> phy 0 and
+>>> one on phy 4.
+>>>
+>>> On the second (Initiator) HBA, the two ports appeared as b0 and b4, 
+>>> with two
+>>> separate handles.
+>>>
+>>> On the first (Target) HBA, both ports appeared as 10, with two 
+>>> separate handles.
+>>>
+>>> What I don't understand above, is since all phys on the Target HBAs 
+>>> have a
+>>> different SAS address, and all the ones on the Initiator one have 
+>>> the same, 8
+>>> narrow ports should have been created there.
+>>>
+>>> However, there is a separate notion of "port" in LSIUtil, does that 
+>>> mean that
+>>> agglomerating 4 phys with different SAS addresses in a logical 
+>>> LSIUtil "port"
+>>> forces the HBA FW to transmit the same sas address on these 4 Phys, 
+>>> to make
+>>> them look like a single port? Or is there an extra separate notion 
+>>> of "port",
+>>> that does not rely on the phy SAS address and its attached SAS address?
+>>>
+>>> I guess my question is: Is there an extra information ontop of phy 
+>>> sas address
+>>> and phy id that is transmitted in SAS, like a "port" id or a handle?
+>>>
+>>> Also, in the above case, if we assume that the HBA FW was 
+>>> transmitting the
+>>> same phys for phy 0-3 and phy 4-8 on the Target HBA, it would make 
+>>> sense that
+>>> we have two ports, since there is two pairs of SAS addresses / 
+>>> attached SAS
+>>> addresses here.
+>>>
+>> Ben,
+>>
+>> Port 0 | Port 1
+>> b0 b1 b2 b3 | b4 b5 b6 b7
+>>
+>> In above configuration you are assigning different SAS Address for 
+>> each PHY but
+>> over riding with WIDE port clause. After
+>> individual PHY are reset, it transmits IDENTIFICATION address frames 
+>> as part of
+>> identification sequence so down stream devices
+>> know the attributes of the attached devices.
+>>
+>> PHY 0-3: Transmit Identification frame with SAS address xxxxxxxxb0
+>>
+>> PHY 4-7: Transmit identification frame with SAS address xxxxxxxxb4
+>>
+>> The second HBA (with SAS address xxxxxxxx10 with Auto mode) receives 
+>> above
+>> identification frame on PHY 0-3 and 4-7 respectively. So this
+>> essentially forms x4 wide port instead of narrow as you expected.
+>>
+>> As far I know there are no port id or handle transmitted on the fabric.
+>>
+>> Couple of interesting question regarding wide port. From bandwidth 
+>> perspective,
+>> x4 port are termed as 24 Gb/sec ( 6 Gb/s * 4). But do we
+>> really get 24 Gb/sec bandwidth ?. I see questions being raised that 
+>> SSD disks
+>> need wide ports for bandwidth aggregation. SAS protocol
+>> and Expander has following limitation which could be problematic 
+>> depending on
+>> topology.
+>>
+>> 1) Unlike FC, SAS is a connection oriented protocol (full duplex 
+>> Class 1 vs
+>> Class 3 FC)
+>> 2) Flow control primitives (K words) are transmitted inside 
+>> connection (without
+>> being packetized).
+>> 3) When connecting through Expanders, typically only x4 or x8 
+>> physical links are
+>> used. If there are hundreds of Initiator/Target exist in such
+>> fabric, the number of active I/O transfers across devices are limited 
+>> to number
+>> of links between Expanders (due to Class 1 protocol).
+>>
+>> My understanding for SSD disks with wide ports the HBA and Disks can 
+>> queue
+>> several commands using Tagged Queuing. This way we can
+>> maximize number of commands and data frames across devices.
+>
+> spl2r02.pdf section 6.18.2 [link layer, SSP, Full duplex]:
+>   "SSP is a full duplex protocol. An SSP phy may receive
+>    an SSP frame or primitive in a connection while it is
+>    transmitting an SSP frame or primitive in the same
+>    connection. A wide SSP port may send and/or receive
+>    SSP frames or primitives concurrently on different
+>    connections (i.e., on different phys)."
+>
+> For a SCSI command like READ(10) a connection consumes
+> one initiator phy and one target phy plus the pathway
+> between them until it is closed. Typically a READ
+> would have two connections: one to send the CDB and a
+> second connection later to return the data and response
+> (SCSI status and possibly sense data). For a spinning
+> disk there could be milliseconds between those two
+> connections; with an SSD less (do they use only one
+> connection?).
+>
+> Due to the full duplex nature of a connection, DATA
+> frames associated with a WRITE could overlap with DATA
+> frames associated with an READ CDB sent earlier.
+>
+> In SAS-2, a single READ's maximum data rate is 6 Gbps.
+> If a 2-phy wide link is available (along the whole pathway
+> (see Figure 129 in spl2r02.pdf)) then two READs, sent one
+> after the other or concurrently, could have their DATA
+> frames returned concurrently. So the combined maximum
+> data rate of the two READs would be 12 Gbps.
+>
+> Expanders don't change what is stated above. Pathways
+> become an interconnection of links. A small latency is
+> added to the opening of connections. And there is the
+> possibility that no links are available to establish a
+> connection (e.g. target to expander has available link(s)
+> but all expander to initiator links are occupied).
+>
+Hi,
 
---=-IQmm4Pftg6df3XV88hOc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Thank you both for your replies.
 
-On Tue, 2011-08-23 at 16:32 -0500, James Bottomley wrote:
-> > scsi_request_fn(), which does:
-> >=20
-> >                 /*
-> >                  * XXX(hch): This is rather suboptimal, scsi_dispatch_c=
-md will
-> >                  *              take the lock again.
-> >                  */
-> >                 spin_unlock_irq(shost->host_lock);
->=20
-> Um, that one looks like a mistake missed in cleanup (probably years
-> ago).   The other host_lock acquisitions aren't _irq, so this one
-> shouldn't be either.  I can patch it up (or you can).
+I understand now a bit more how this works and how LSI is making it work.
 
-I would much appreciate if someone who knows that whole stack would
-audit it, my preferred solution is removing that blk plug stuff from the
-scheduler guts since clearly nobody bothered making sure its sane.
+Regarding the performances, hooking up a 6G HBA to one 6G expander 
+hosting a lot of SSDs (maybe 20) using 4phy wide links got us 2000MB/sec 
+IO performance, pretty much line speed.
 
+So the performance is achievable.
 
-Something like the three patches below, lifted from -rt:
+Regard,
+Ben.
+>> Wondering has anyone measured performance under such scenario ?. It 
+>> would be
+>> great to see Expanders terminating SSP frames to over come
+>> some of above limitation. Links between HBA and Expander and Expander 
+>> to Disk
+>> can be still Class 1.
+>
+> Not sure I follow. Expanders come into play when
+> connections are being established.
+>
+> Doug Gilbert
+>
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
-sched-separate-the-scheduler-entry-for-preemption.patch
-sched-move-blk_schedule_flush_plug-out-of-__schedule.patch
-block-shorten-interrupt-disabled-regions.patch
-
-
---=-IQmm4Pftg6df3XV88hOc
-Content-Disposition: attachment; filename="block-shorten-interrupt-disabled-regions.patch"
-Content-Type: text/x-patch; name="block-shorten-interrupt-disabled-regions.patch";
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
-
-U3ViamVjdDogYmxvY2s6IFNob3J0ZW4gaW50ZXJydXB0IGRpc2FibGVkIHJlZ2lvbnMNCkZyb206
-IFRob21hcyBHbGVpeG5lciA8dGdseEBsaW51dHJvbml4LmRlPg0KRGF0ZTogV2VkLCAyMiBKdW4g
-MjAxMSAxOTo0NzowMiArMDIwMA0KDQpNb3ZpbmcgdGhlIGJsa19zY2hlZF9mbHVzaF9wbHVnKCkg
-Y2FsbCBvdXQgb2YgdGhlIGludGVycnVwdC9wcmVlbXB0DQpkaXNhYmxlZCByZWdpb24gaW4gdGhl
-IHNjaGVkdWxlciBhbGxvd3MgdXMgdG8gcmVwbGFjZQ0KbG9jYWxfaXJxX3NhdmUvcmVzdG9yZShm
-bGFncykgYnkgbG9jYWxfaXJxX2Rpc2FibGUvZW5hYmxlKCkgaW4NCmJsa19mbHVzaF9wbHVnKCku
-DQoNCk5vdyBpbnN0ZWFkIG9mIGRvaW5nIHRoaXMgd2UgZGlzYWJsZSBpbnRlcnJ1cHRzIGV4cGxp
-Y2l0ZWx5IHdoZW4gd2UNCmxvY2sgdGhlIHJlcXVlc3RfcXVldWUgYW5kIHJlZW5hYmxlIHRoZW0g
-d2hlbiB3ZSBkcm9wIHRoZSBsb2NrLiBUaGF0DQphbGxvd3MgaW50ZXJydXB0cyB0byBiZSBoYW5k
-bGVkIHdoZW4gdGhlIHBsdWcgbGlzdCBjb250YWlucyByZXF1ZXN0cw0KZm9yIG1vcmUgdGhhbiBv
-bmUgcXVldWUuDQoNCkFzaWRlIG9mIHRoYXQgdGhpcyBjaGFuZ2UgbWFrZXMgdGhlIHNjb3BlIG9m
-IHRoZSBpcnEgZGlzYWJsZWQgcmVnaW9uDQptb3JlIG9idmlvdXMuIFRoZSBjdXJyZW50IGNvZGUg
-Y29uZnVzZWQgdGhlIGhlbGwgb3V0IG9mIG1lIHdoZW4NCmxvb2tpbmcgYXQ6DQoNCiBsb2NhbF9p
-cnFfc2F2ZShmbGFncyk7DQogICBzcGluX2xvY2socS0+cXVldWVfbG9jayk7DQogICAuLi4NCiAg
-IHF1ZXVlX3VucGx1Z2dlZChxLi4uKTsNCiAgICAgc2NzaV9yZXF1ZXN0X2ZuKCk7DQogICAgICAg
-c3Bpbl91bmxvY2socS0+cXVldWVfbG9jayk7DQogICAgICAgc3Bpbl9sb2NrKHNob3N0LT5ob3N0
-X2xvY2spOw0KICAgICAgIHNwaW5fdW5sb2NrX2lycShzaG9zdC0+aG9zdF9sb2NrKTsNCg0KLS0t
-LS0tLS0tLS0tLS0tLS0tLV5eXiA/Pz8/DQoNCiAgICAgICBzcGluX2xvY2tfaXJxKHEtPnF1ZXVl
-X2xvY2spOw0KICAgICAgIHNwaW5fdW5sb2NrKHEtPmxvY2spOw0KIGxvY2FsX2lycV9yZXN0b3Jl
-KGZsYWdzKTsNCg0KQWxzbyBhZGQgYSBjb21tZW50IHRvIF9fYmxrX3J1bl9xdWV1ZSgpIGRvY3Vt
-ZW50aW5nIHRoYXQNCnEtPnJlcXVlc3RfZm4oKSBjYW4gZHJvcCBxLT5xdWV1ZV9sb2NrIGFuZCBy
-ZWVuYWJsZSBpbnRlcnJ1cHRzLCBidXQNCm11c3QgcmV0dXJuIHdpdGggcS0+cXVldWVfbG9jayBo
-ZWxkIGFuZCBpbnRlcnJ1cHRzIGRpc2FibGVkLg0KDQpTaWduZWQtb2ZmLWJ5OiBUaG9tYXMgR2xl
-aXhuZXIgPHRnbHhAbGludXRyb25peC5kZT4NCkNjOiBQZXRlciBaaWpsc3RyYSA8cGV0ZXJ6QGlu
-ZnJhZGVhZC5vcmc+DQpDYzogVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPg0KQ2M6IEplbnMgQXhi
-b2UgPGF4Ym9lQGtlcm5lbC5kaz4NCkNjOiBMaW51cyBUb3J2YWxkcyA8dG9ydmFsZHNAbGludXgt
-Zm91bmRhdGlvbi5vcmc+DQpMaW5rOiBodHRwOi8vbGttbC5rZXJuZWwub3JnL3IvMjAxMTA2MjIx
-NzQ5MTkuMDI1NDQ2NDMyQGxpbnV0cm9uaXguZGUNClNpZ25lZC1vZmYtYnk6IFRob21hcyBHbGVp
-eG5lciA8dGdseEBsaW51dHJvbml4LmRlPg0KLS0tDQogYmxvY2svYmxrLWNvcmUuYyB8ICAgMjAg
-KysrKysrKystLS0tLS0tLS0tLS0NCiAxIGZpbGUgY2hhbmdlZCwgOCBpbnNlcnRpb25zKCspLCAx
-MiBkZWxldGlvbnMoLSkNCg0KSW5kZXg6IGxpbnV4LTIuNi9ibG9jay9ibGstY29yZS5jDQo9PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09DQotLS0gbGludXgtMi42Lm9yaWcvYmxvY2svYmxrLWNvcmUuYw0KKysrIGxpbnV4LTIu
-Ni9ibG9jay9ibGstY29yZS5jDQpAQCAtMzAxLDcgKzMwMSwxMSBAQCB2b2lkIF9fYmxrX3J1bl9x
-dWV1ZShzdHJ1Y3QgcmVxdWVzdF9xdWV1DQogew0KIAlpZiAodW5saWtlbHkoYmxrX3F1ZXVlX3N0
-b3BwZWQocSkpKQ0KIAkJcmV0dXJuOw0KLQ0KKwkvKg0KKwkgKiBxLT5yZXF1ZXN0X2ZuKCkgY2Fu
-IGRyb3AgcS0+cXVldWVfbG9jayBhbmQgcmVlbmFibGUNCisJICogaW50ZXJydXB0cywgYnV0IG11
-c3QgcmV0dXJuIHdpdGggcS0+cXVldWVfbG9jayBoZWxkIGFuZA0KKwkgKiBpbnRlcnJ1cHRzIGRp
-c2FibGVkLg0KKwkgKi8NCiAJcS0+cmVxdWVzdF9mbihxKTsNCiB9DQogRVhQT1JUX1NZTUJPTChf
-X2Jsa19ydW5fcXVldWUpOw0KQEAgLTI2NjcsMTEgKzI2NzEsMTEgQEAgc3RhdGljIHZvaWQgcXVl
-dWVfdW5wbHVnZ2VkKHN0cnVjdCByZXF1ZQ0KIAkgKiB0aGlzIGxvY2spLg0KIAkgKi8NCiAJaWYg
-KGZyb21fc2NoZWR1bGUpIHsNCi0JCXNwaW5fdW5sb2NrKHEtPnF1ZXVlX2xvY2spOw0KKwkJc3Bp
-bl91bmxvY2tfaXJxKHEtPnF1ZXVlX2xvY2spOw0KIAkJYmxrX3J1bl9xdWV1ZV9hc3luYyhxKTsN
-CiAJfSBlbHNlIHsNCiAJCV9fYmxrX3J1bl9xdWV1ZShxKTsNCi0JCXNwaW5fdW5sb2NrKHEtPnF1
-ZXVlX2xvY2spOw0KKwkJc3Bpbl91bmxvY2tfaXJxKHEtPnF1ZXVlX2xvY2spOw0KIAl9DQogDQog
-fQ0KQEAgLTI2OTcsNyArMjcwMSw2IEBAIHN0YXRpYyB2b2lkIGZsdXNoX3BsdWdfY2FsbGJhY2tz
-KHN0cnVjdCANCiB2b2lkIGJsa19mbHVzaF9wbHVnX2xpc3Qoc3RydWN0IGJsa19wbHVnICpwbHVn
-LCBib29sIGZyb21fc2NoZWR1bGUpDQogew0KIAlzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcTsNCi0J
-dW5zaWduZWQgbG9uZyBmbGFnczsNCiAJc3RydWN0IHJlcXVlc3QgKnJxOw0KIAlMSVNUX0hFQUQo
-bGlzdCk7DQogCXVuc2lnbmVkIGludCBkZXB0aDsNCkBAIC0yNzE4LDExICsyNzIxLDYgQEAgdm9p
-ZCBibGtfZmx1c2hfcGx1Z19saXN0KHN0cnVjdCBibGtfcGx1Zw0KIAlxID0gTlVMTDsNCiAJZGVw
-dGggPSAwOw0KIA0KLQkvKg0KLQkgKiBTYXZlIGFuZCBkaXNhYmxlIGludGVycnVwdHMgaGVyZSwg
-dG8gYXZvaWQgZG9pbmcgaXQgZm9yIGV2ZXJ5DQotCSAqIHF1ZXVlIGxvY2sgd2UgaGF2ZSB0byB0
-YWtlLg0KLQkgKi8NCi0JbG9jYWxfaXJxX3NhdmUoZmxhZ3MpOw0KIAl3aGlsZSAoIWxpc3RfZW1w
-dHkoJmxpc3QpKSB7DQogCQlycSA9IGxpc3RfZW50cnlfcnEobGlzdC5uZXh0KTsNCiAJCWxpc3Rf
-ZGVsX2luaXQoJnJxLT5xdWV1ZWxpc3QpOw0KQEAgLTI3MzUsNyArMjczMyw3IEBAIHZvaWQgYmxr
-X2ZsdXNoX3BsdWdfbGlzdChzdHJ1Y3QgYmxrX3BsdWcNCiAJCQkJcXVldWVfdW5wbHVnZ2VkKHEs
-IGRlcHRoLCBmcm9tX3NjaGVkdWxlKTsNCiAJCQlxID0gcnEtPnE7DQogCQkJZGVwdGggPSAwOw0K
-LQkJCXNwaW5fbG9jayhxLT5xdWV1ZV9sb2NrKTsNCisJCQlzcGluX2xvY2tfaXJxKHEtPnF1ZXVl
-X2xvY2spOw0KIAkJfQ0KIAkJLyoNCiAJCSAqIHJxIGlzIGFscmVhZHkgYWNjb3VudGVkLCBzbyB1
-c2UgcmF3IGluc2VydA0KQEAgLTI3NTMsOCArMjc1MSw2IEBAIHZvaWQgYmxrX2ZsdXNoX3BsdWdf
-bGlzdChzdHJ1Y3QgYmxrX3BsdWcNCiAJICovDQogCWlmIChxKQ0KIAkJcXVldWVfdW5wbHVnZ2Vk
-KHEsIGRlcHRoLCBmcm9tX3NjaGVkdWxlKTsNCi0NCi0JbG9jYWxfaXJxX3Jlc3RvcmUoZmxhZ3Mp
-Ow0KIH0NCiANCiB2b2lkIGJsa19maW5pc2hfcGx1ZyhzdHJ1Y3QgYmxrX3BsdWcgKnBsdWcpDQoN
-Cg0KDQo=
-
-
---=-IQmm4Pftg6df3XV88hOc
-Content-Disposition: attachment;
-	filename="sched-move-blk_schedule_flush_plug-out-of-__schedule.patch"
-Content-Type: text/x-patch;
-	name="sched-move-blk_schedule_flush_plug-out-of-__schedule.patch";
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
-
-U3ViamVjdDogc2NoZWQ6IE1vdmUgYmxrX3NjaGVkdWxlX2ZsdXNoX3BsdWcoKSBvdXQgb2YgX19z
-Y2hlZHVsZSgpDQpGcm9tOiBUaG9tYXMgR2xlaXhuZXIgPHRnbHhAbGludXRyb25peC5kZT4NCkRh
-dGU6IFdlZCwgMjIgSnVuIDIwMTEgMTk6NDc6MDEgKzAyMDANCg0KVGhlcmUgaXMgbm8gcmVhbCBy
-ZWFzb24gdG8gcnVuIGJsa19zY2hlZHVsZV9mbHVzaF9wbHVnKCkgd2l0aA0KaW50ZXJydXB0cyBh
-bmQgcHJlZW1wdGlvbiBkaXNhYmxlZC4NCg0KTW92ZSBpdCBpbnRvIHNjaGVkdWxlKCkgYW5kIGNh
-bGwgaXQgd2hlbiB0aGUgdGFzayBpcyBnb2luZyB2b2x1bnRhcmlseQ0KdG8gc2xlZXAuIFRoZXJl
-IG1pZ2h0IGJlIGZhbHNlIHBvc2l0aXZlcyB3aGVuIHRoZSB0YXNrIGlzIHdva2VuDQpiZXR3ZWVu
-IHRoYXQgY2FsbCBhbmQgYWN0dWFsbHkgc2NoZWR1bGluZywgYnV0IHRoYXQncyBub3QgcmVhbGx5
-DQpkaWZmZXJlbnQgZnJvbSBiZWluZyB3b2tlbiBpbW1lZGlhdGVseSBhZnRlciBzd2l0Y2hpbmcg
-YXdheS4NCg0KU2lnbmVkLW9mZi1ieTogVGhvbWFzIEdsZWl4bmVyIDx0Z2x4QGxpbnV0cm9uaXgu
-ZGU+DQpDYzogUGV0ZXIgWmlqbHN0cmEgPHBldGVyekBpbmZyYWRlYWQub3JnPg0KQ2M6IFRlanVu
-IEhlbyA8dGpAa2VybmVsLm9yZz4NCkNjOiBKZW5zIEF4Ym9lIDxheGJvZUBrZXJuZWwuZGs+DQpD
-YzogTGludXMgVG9ydmFsZHMgPHRvcnZhbGRzQGxpbnV4LWZvdW5kYXRpb24ub3JnPg0KTGluazog
-aHR0cDovL2xrbWwua2VybmVsLm9yZy9yLzIwMTEwNjIyMTc0OTE4LjkxNzIzNjE5OEBsaW51dHJv
-bml4LmRlDQpTaWduZWQtb2ZmLWJ5OiBUaG9tYXMgR2xlaXhuZXIgPHRnbHhAbGludXRyb25peC5k
-ZT4NCi0tLQ0KIGtlcm5lbC9zY2hlZC5jIHwgICAyNSArKysrKysrKysrKysrKystLS0tLS0tLS0t
-DQogMSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDEwIGRlbGV0aW9ucygtKQ0KDQpJ
-bmRleDogbGludXgtMi42L2tlcm5lbC9zY2hlZC5jDQo9PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09DQotLS0gbGludXgtMi42
-Lm9yaWcva2VybmVsL3NjaGVkLmMNCisrKyBsaW51eC0yLjYva2VybmVsL3NjaGVkLmMNCkBAIC00
-MjUzLDE2ICs0MjUzLDYgQEAgbmVlZF9yZXNjaGVkOg0KIAkJCQlpZiAodG9fd2FrZXVwKQ0KIAkJ
-CQkJdHJ5X3RvX3dha2VfdXBfbG9jYWwodG9fd2FrZXVwKTsNCiAJCQl9DQotDQotCQkJLyoNCi0J
-CQkgKiBJZiB3ZSBhcmUgZ29pbmcgdG8gc2xlZXAgYW5kIHdlIGhhdmUgcGx1Z2dlZCBJTw0KLQkJ
-CSAqIHF1ZXVlZCwgbWFrZSBzdXJlIHRvIHN1Ym1pdCBpdCB0byBhdm9pZCBkZWFkbG9ja3MuDQot
-CQkJICovDQotCQkJaWYgKGJsa19uZWVkc19mbHVzaF9wbHVnKHByZXYpKSB7DQotCQkJCXJhd19z
-cGluX3VubG9jaygmcnEtPmxvY2spOw0KLQkJCQlibGtfc2NoZWR1bGVfZmx1c2hfcGx1ZyhwcmV2
-KTsNCi0JCQkJcmF3X3NwaW5fbG9jaygmcnEtPmxvY2spOw0KLQkJCX0NCiAJCX0NCiAJCXN3aXRj
-aF9jb3VudCA9ICZwcmV2LT5udmNzdzsNCiAJfQ0KQEAgLTQzMDEsOCArNDI5MSwyMyBAQCBuZWVk
-X3Jlc2NoZWQ6DQogCQlnb3RvIG5lZWRfcmVzY2hlZDsNCiB9DQogDQorc3RhdGljIGlubGluZSB2
-b2lkIHNjaGVkX3N1Ym1pdF93b3JrKHN0cnVjdCB0YXNrX3N0cnVjdCAqdHNrKQ0KK3sNCisJaWYg
-KCF0c2stPnN0YXRlKQ0KKwkJcmV0dXJuOw0KKwkvKg0KKwkgKiBJZiB3ZSBhcmUgZ29pbmcgdG8g
-c2xlZXAgYW5kIHdlIGhhdmUgcGx1Z2dlZCBJTyBxdWV1ZWQsDQorCSAqIG1ha2Ugc3VyZSB0byBz
-dWJtaXQgaXQgdG8gYXZvaWQgZGVhZGxvY2tzLg0KKwkgKi8NCisJaWYgKGJsa19uZWVkc19mbHVz
-aF9wbHVnKHRzaykpDQorCQlibGtfc2NoZWR1bGVfZmx1c2hfcGx1Zyh0c2spOw0KK30NCisNCiBh
-c21saW5rYWdlIHZvaWQgc2NoZWR1bGUodm9pZCkNCiB7DQorCXN0cnVjdCB0YXNrX3N0cnVjdCAq
-dHNrID0gY3VycmVudDsNCisNCisJc2NoZWRfc3VibWl0X3dvcmsodHNrKTsNCiAJX19zY2hlZHVs
-ZSgpOw0KIH0NCiBFWFBPUlRfU1lNQk9MKHNjaGVkdWxlKTsNCg0KDQoNCg==
-
-
---=-IQmm4Pftg6df3XV88hOc
-Content-Disposition: attachment;
-	filename="sched-separate-the-scheduler-entry-for-preemption.patch"
-Content-Type: text/x-patch;
-	name="sched-separate-the-scheduler-entry-for-preemption.patch";
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
-
-U3ViamVjdDogc2NoZWQ6IFNlcGFyYXRlIHRoZSBzY2hlZHVsZXIgZW50cnkgZm9yIHByZWVtcHRp
-b24NCkZyb206IFRob21hcyBHbGVpeG5lciA8dGdseEBsaW51dHJvbml4LmRlPg0KRGF0ZTogV2Vk
-LCAyMiBKdW4gMjAxMSAxOTo0NzowMCArMDIwMA0KDQpCbG9jay1JTyBhbmQgd29ya3F1ZXVlcyBj
-YWxsIGludG8gbm90aWZpZXIgZnVuY3Rpb25zIGZyb20gdGhlDQpzY2hlZHVsZXIgY29yZSBjb2Rl
-IHdpdGggaW50ZXJydXB0cyBhbmQgcHJlZW1wdGlvbiBkaXNhYmxlZC4gVGhlc2UNCmNhbGxzIHNo
-b3VsZCBiZSBtYWRlIGJlZm9yZSBlbnRlcmluZyB0aGUgc2NoZWR1bGVyIGNvcmUuDQoNClRvIHNp
-bXBsaWZ5IHRoaXMsIHNlcGFyYXRlIHRoZSBzY2hlZHVsZXIgY29yZSBjb2RlIGludG8NCl9fc2No
-ZWR1bGUoKS4gX19zY2hlZHVsZSgpIGlzIGRpcmVjdGx5IGNhbGxlZCBmcm9tIHRoZSBwbGFjZXMg
-d2hpY2gNCnNldCBQUkVFTVBUX0FDVElWRSBhbmQgZnJvbSBzY2hlZHVsZSgpLiBUaGlzIGFsbG93
-cyB1cyB0byBhZGQgdGhlIHdvcmsNCmNoZWNrcyBpbnRvIHNjaGVkdWxlKCksIHNvIHRoZXkgYXJl
-IG9ubHkgY2FsbGVkIHdoZW4gYSB0YXNrIHZvbHVudGFyeQ0KZ29lcyB0byBzbGVlcC4NCg0KU2ln
-bmVkLW9mZi1ieTogVGhvbWFzIEdsZWl4bmVyIDx0Z2x4QGxpbnV0cm9uaXguZGU+DQpDYzogUGV0
-ZXIgWmlqbHN0cmEgPHBldGVyekBpbmZyYWRlYWQub3JnPg0KQ2M6IFRlanVuIEhlbyA8dGpAa2Vy
-bmVsLm9yZz4NCkNjOiBKZW5zIEF4Ym9lIDxheGJvZUBrZXJuZWwuZGs+DQpDYzogTGludXMgVG9y
-dmFsZHMgPHRvcnZhbGRzQGxpbnV4LWZvdW5kYXRpb24ub3JnPg0KTGluazogaHR0cDovL2xrbWwu
-a2VybmVsLm9yZy9yLzIwMTEwNjIyMTc0OTE4LjgxMzI1ODMyMUBsaW51dHJvbml4LmRlDQpTaWdu
-ZWQtb2ZmLWJ5OiBUaG9tYXMgR2xlaXhuZXIgPHRnbHhAbGludXRyb25peC5kZT4NCi0tLQ0KIGtl
-cm5lbC9zY2hlZC5jIHwgICAxNSArKysrKysrKysrLS0tLS0NCiAxIGZpbGUgY2hhbmdlZCwgMTAg
-aW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCg0KSW5kZXg6IGxpbnV4LTIuNi9rZXJuZWwv
-c2NoZWQuYw0KPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PQ0KLS0tIGxpbnV4LTIuNi5vcmlnL2tlcm5lbC9zY2hlZC5jDQor
-KysgbGludXgtMi42L2tlcm5lbC9zY2hlZC5jDQpAQCAtNDIxMCw5ICs0MjEwLDkgQEAgcGlja19u
-ZXh0X3Rhc2soc3RydWN0IHJxICpycSkNCiB9DQogDQogLyoNCi0gKiBzY2hlZHVsZSgpIGlzIHRo
-ZSBtYWluIHNjaGVkdWxlciBmdW5jdGlvbi4NCisgKiBfX3NjaGVkdWxlKCkgaXMgdGhlIG1haW4g
-c2NoZWR1bGVyIGZ1bmN0aW9uLg0KICAqLw0KLWFzbWxpbmthZ2Ugdm9pZCBfX3NjaGVkIHNjaGVk
-dWxlKHZvaWQpDQorc3RhdGljIHZvaWQgX19zY2hlZCBfX3NjaGVkdWxlKHZvaWQpDQogew0KIAlz
-dHJ1Y3QgdGFza19zdHJ1Y3QgKnByZXYsICpuZXh0Ow0KIAl1bnNpZ25lZCBsb25nICpzd2l0Y2hf
-Y291bnQ7DQpAQCAtNDMwMCw2ICs0MzAwLDExIEBAIG5lZWRfcmVzY2hlZDoNCiAJaWYgKG5lZWRf
-cmVzY2hlZCgpKQ0KIAkJZ290byBuZWVkX3Jlc2NoZWQ7DQogfQ0KKw0KK2FzbWxpbmthZ2Ugdm9p
-ZCBzY2hlZHVsZSh2b2lkKQ0KK3sNCisJX19zY2hlZHVsZSgpOw0KK30NCiBFWFBPUlRfU1lNQk9M
-KHNjaGVkdWxlKTsNCiANCiAjaWZkZWYgQ09ORklHX01VVEVYX1NQSU5fT05fT1dORVINCkBAIC00
-MzczLDcgKzQzNzgsNyBAQCBhc21saW5rYWdlIHZvaWQgX19zY2hlZCBub3RyYWNlIHByZWVtcHRf
-DQogDQogCWRvIHsNCiAJCWFkZF9wcmVlbXB0X2NvdW50X25vdHJhY2UoUFJFRU1QVF9BQ1RJVkUp
-Ow0KLQkJc2NoZWR1bGUoKTsNCisJCV9fc2NoZWR1bGUoKTsNCiAJCXN1Yl9wcmVlbXB0X2NvdW50
-X25vdHJhY2UoUFJFRU1QVF9BQ1RJVkUpOw0KIA0KIAkJLyoNCkBAIC00NDAxLDcgKzQ0MDYsNyBA
-QCBhc21saW5rYWdlIHZvaWQgX19zY2hlZCBwcmVlbXB0X3NjaGVkdWxlDQogCWRvIHsNCiAJCWFk
-ZF9wcmVlbXB0X2NvdW50KFBSRUVNUFRfQUNUSVZFKTsNCiAJCWxvY2FsX2lycV9lbmFibGUoKTsN
-Ci0JCXNjaGVkdWxlKCk7DQorCQlfX3NjaGVkdWxlKCk7DQogCQlsb2NhbF9pcnFfZGlzYWJsZSgp
-Ow0KIAkJc3ViX3ByZWVtcHRfY291bnQoUFJFRU1QVF9BQ1RJVkUpOw0KIA0KQEAgLTU1MjYsNyAr
-NTUzMSw3IEBAIHN0YXRpYyBpbmxpbmUgaW50IHNob3VsZF9yZXNjaGVkKHZvaWQpDQogc3RhdGlj
-IHZvaWQgX19jb25kX3Jlc2NoZWQodm9pZCkNCiB7DQogCWFkZF9wcmVlbXB0X2NvdW50KFBSRUVN
-UFRfQUNUSVZFKTsNCi0Jc2NoZWR1bGUoKTsNCisJX19zY2hlZHVsZSgpOw0KIAlzdWJfcHJlZW1w
-dF9jb3VudChQUkVFTVBUX0FDVElWRSk7DQogfQ0KIA0KDQoNCg0K
-
-
---=-IQmm4Pftg6df3XV88hOc--
