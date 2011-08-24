@@ -1,46 +1,54 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
- is quiet
-Date: Wed, 24 Aug 2011 16:50:01 GMT
-Message-ID: <201108241650.p7OGo16o026369@demeter2.kernel.org>
-References: <bug-26692-11613@https.bugzilla.kernel.org/>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH v2 00/18] bnx2fc version 1.0.5
+Date: Wed, 24 Aug 2011 11:29:41 -0700
+Message-ID: <4E554315.5020609@broadcom.com>
+References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
+ <1314156445.4813.7.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+ charset=utf-8;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:52661 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751486Ab1HXQuC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2011 12:50:02 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p7OGo193026370
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2011 16:50:01 GMT
-In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
+Received: from mms3.broadcom.com ([216.31.210.19]:4064 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753607Ab1HXS3w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2011 14:29:52 -0400
+In-Reply-To: <1314156445.4813.7.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Michael Chan <mchan@broadcom.com>, "robert.w.love@intel.com" <robert.w.love@intel.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D26692
+On 8/23/2011 10:48 PM, James Bottomley wrote:
+> On Thu, 2011-08-04 at 17:38 -0700, Bhanu Prakash Gollapudi wrote:
+>> v2 submittal:
+>> Minor changes to patch 5, 8 and patch 13.
+>> Patch 5  - Removed unnecessary printk
+>> Patch 8  - Added code to ignore netdev events other than UNREGISTER for vlan interface
+>> patch 13 - Error handling fixed for tgt_init_err.
+>> --------
+>>
+>> This patchset contains bnx2fc bug fixes.  Please note that patch 15 is
+>> 'fcoe/libfcoe' patch, which moves LLD common code from fcoe driver to
+>> fcoe_transport, to enable patch 16 and 17.
+>
+> So this is a nice mix of features and bug fixes ... what do I have to do
+> exactly to persuade you to submit the two things separately ... so they
+> can go through separate trees and be tagged for backport to stable if
+> necessary?
+>
+> However, it's late and I'm tired, so I just put them in SCSI misc.  This
+> means that if you can separate out the bug fixes, you can submit them to
+> stable manually.
+>
+> James
+
+James, in future, I'll make sure to submit enhancements and bug fixes in 
+separate patchsets. For not, it is okay if they are merged to 3.2.
+
+Thanks,
+Bhanu
+>
 
 
-
-
-
---- Comment #3 from Ferenc W=C3=A1gner <wferi@niif.hu>  2011-08-24 16:4=
-9:59 ---
-I rechecked the issue with pristine 3.1.0-rc3, and everything is the sa=
-me: the
-'quiet' kernel parameter introduces delays in the boot process. I will =
-add
-printks here and there, but some guidance would be most useful in that.
-
---=20
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
-l
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
