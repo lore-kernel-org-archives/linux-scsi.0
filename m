@@ -1,36 +1,146 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH 1/2] megaraid_sas: Remove the shutdown_controller call
-Date: Wed, 24 Aug 2011 13:55:16 -0700
-Message-ID: <CAHtARFF1iwy2NR1G01hFqBo2hoYxAbG+0DQ0UJNSS3JO_s5qbg@mail.gmail.com>
-References: <1314200130-28890-1-git-send-email-thenzl@redhat.com>
-	<1314200130-28890-2-git-send-email-thenzl@redhat.com>
+From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Subject: [PATCH 1/3] be2iscsi: Fixing the /proc/interrupts problem V3
+Date: Wed, 24 Aug 2011 16:05:30 -0700
+Message-ID: <cfc23c84-77ba-42e6-9465-ee567eabdb93@exht1.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:58465 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752042Ab1HXUzS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2011 16:55:18 -0400
-Received: by gxk21 with SMTP id 21so1183859gxk.19
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2011 13:55:17 -0700 (PDT)
-In-Reply-To: <1314200130-28890-2-git-send-email-thenzl@redhat.com>
+Received: from exht1.emulex.com ([138.239.113.183]:5729 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751821Ab1HXXGR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2011 19:06:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, steve.masters@lsi.com, michael.benz@lsi.com, bo.yang@lsi.com
+To: James.Bottomley@parallels.com, linux-scsi@vger.kernel.org, michaelc@cs.wisc.edu
+Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 
-On Wed, Aug 24, 2011 at 8:35 AM, Tomas Henzl <thenzl@redhat.com> wrote:
-> Remove the call to megasas_shutdown_controller in the megasas_shutdown.
+Fix be2iscsi driver to use a separate pointer for each irq action->name
+field and avoid display corruption in /proc/interrupts. The be2iscsi driver
+was using a single static array in a function for the irq action->name field.
+This results in garbage output from  /proc/interrupts
 
-NACK.   The call to megasas_shutdown_controller() should not be removed.
+The pointer for action->name is garbage and scribbles the output on the screen.
 
-megasas_shutdown_controller() does 3 things:
+This patch fixes the problem:
 
-1. Cancels pended AEN command in firmware.
-2. Cancels pended map update command in firmware.
-3. Fires a MR_DCMD_CTRL_SHUTDOWN to notify firmware there was a clean
-shutdown.  Without this, FW will think there was an 'unclean shutdown'
-on the next restart, which will cause rebuilds and other background FW
-activity to kick on every shutdown/reboot.
+156:          0          0          0          0          0          0
+0          0          0          0          0          0          0
+0          0          0          0          0          0          0
+0          0          0          0       PCI-MSI-X  beiscsi_msix_0017
 
--Adam
+This patch is based on Prarit's patch here:
+http://www.spinics.net/lists/linux-scsi/msg52325.html
+but I have fixed up the failure paths and removed
+redundant check for !i suggested by Eike.
+
+Signed-off-by: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/be2iscsi/be_main.c |   34 ++++++++++++++++++++++++++--------
+ drivers/scsi/be2iscsi/be_main.h |    3 +++
+ 2 files changed, 29 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 72ac64b..04970eb 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -822,33 +822,47 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+ 	int ret, msix_vec, i, j;
+-	char desc[32];
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 	phwi_context = phwi_ctrlr->phwi_ctxt;
+ 
+ 	if (phba->msix_enabled) {
+ 		for (i = 0; i < phba->num_cpus; i++) {
+-			sprintf(desc, "beiscsi_msix_%04x", i);
++			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
++						    GFP_KERNEL);
++			if (!phba->msi_name[i]) {
++				ret = -ENOMEM;
++				goto free_msix_irqs;
++			}
++
++			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
++				phba->shost->host_no, i);
+ 			msix_vec = phba->msix_entries[i].vector;
+-			ret = request_irq(msix_vec, be_isr_msix, 0, desc,
++			ret = request_irq(msix_vec, be_isr_msix, 0,
++					  phba->msi_name[i],
+ 					  &phwi_context->be_eq[i]);
+ 			if (ret) {
+ 				shost_printk(KERN_ERR, phba->shost,
+ 					     "beiscsi_init_irqs-Failed to"
+ 					     "register msix for i = %d\n", i);
+-				if (!i)
+-					return ret;
++				kfree(phba->msi_name[i]);
+ 				goto free_msix_irqs;
+ 			}
+ 		}
++		phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME, GFP_KERNEL);
++		if (!phba->msi_name[i]) {
++			ret = -ENOMEM;
++			goto free_msix_irqs;
++		}
++		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
++			phba->shost->host_no);
+ 		msix_vec = phba->msix_entries[i].vector;
+-		ret = request_irq(msix_vec, be_isr_mcc, 0, "beiscsi_msix_mcc",
++		ret = request_irq(msix_vec, be_isr_mcc, 0, phba->msi_name[i],
+ 				  &phwi_context->be_eq[i]);
+ 		if (ret) {
+ 			shost_printk(KERN_ERR, phba->shost, "beiscsi_init_irqs-"
+ 				     "Failed to register beiscsi_msix_mcc\n");
+-			i++;
++			kfree(phba->msi_name[i]);
+ 			goto free_msix_irqs;
+ 		}
+ 
+@@ -863,8 +877,11 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 	}
+ 	return 0;
+ free_msix_irqs:
+-	for (j = i - 1; j == 0; j++)
++	for (j = i - 1; j >= 0; j--) {
++		kfree(phba->msi_name[j]);
++		msix_vec = phba->msix_entries[j].vector;
+ 		free_irq(msix_vec, &phwi_context->be_eq[j]);
++	}
+ 	return ret;
+ }
+ 
+@@ -4125,6 +4142,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 		for (i = 0; i <= phba->num_cpus; i++) {
+ 			msix_vec = phba->msix_entries[i].vector;
+ 			free_irq(msix_vec, &phwi_context->be_eq[i]);
++			kfree(phba->msi_name[i]);
+ 		}
+ 	} else
+ 		if (phba->pcidev->irq)
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 5ce5170..be0e0bd 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -162,6 +162,8 @@ do {							\
+ #define PAGES_REQUIRED(x) \
+ 	((x < PAGE_SIZE) ? 1 :  ((x + PAGE_SIZE - 1) / PAGE_SIZE))
+ 
++#define BEISCSI_MSI_NAME 20 /* size of msi_name string */
++
+ enum be_mem_enum {
+ 	HWI_MEM_ADDN_CONTEXT,
+ 	HWI_MEM_WRB,
+@@ -287,6 +289,7 @@ struct beiscsi_hba {
+ 	unsigned int num_cpus;
+ 	unsigned int nxt_cqid;
+ 	struct msix_entry msix_entries[MAX_CPUS + 1];
++	char *msi_name[MAX_CPUS + 1];
+ 	bool msix_enabled;
+ 	struct be_mem_descriptor *init_mem;
+ 
+-- 
+1.7.1
+
