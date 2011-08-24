@@ -1,37 +1,60 @@
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: [PATCH] [SCSI] megaraid_sas: Fix mismatch in megasas_reset_fusion mutex lock-unlock
-Date: Thu, 25 Aug 2011 00:39:25 +0400
-Message-ID: <1314218365-12295-1-git-send-email-khoroshilov@ispras.ru>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Neela Syam Kolli <megaraidlinux@lsi.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@ispras.ru
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH 08/18] bnx2fc: Handle NETDEV_UNREGISTER for vlan
+ devices
+Date: Wed, 24 Aug 2011 13:40:55 -0700
+Message-ID: <4E5561D7.7010003@broadcom.com>
+References: <1312483633-479-1-git-send-email-bprakash@broadcom.com>
+ <1312483633-479-9-git-send-email-bprakash@broadcom.com>
+ <1313711526.9128.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+ charset=windows-1252;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:3440 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752732Ab1HXUlC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2011 16:41:02 -0400
+In-Reply-To: <1313711526.9128.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Michael Chan <mchan@broadcom.com>
 
-In case of MEGASAS_HW_CRITICAL_ERROR goto out is invalid since
-we have not locked mutex and have not set MEGASAS_FUSION_IN_RESET bit yet.
-The patch replaces goto by immediate return.
+On 8/18/2011 4:52 PM, Bhanu Gollapudi wrote:
+> On Thu, 2011-08-04 at 11:47 -0700, Bhanu Prakash Gollapudi wrote:
+>> Since the driver holds the reference for vlan netdev, the reference has to be
+>> released by the driver when the vlan device is removed. Driver handles this in
+>> NETDEV_UNREGISTER event.
+>>
+>> Signed-off-by: Bhanu Prakash Gollapudi<bprakash@broadcom.com>
+>
+> As per Mike Christie's comments, we need not call __bnx2fc_destroy()
+> with schedule parameter, because we are already in the right context
+> with indicate_netevent being called with rtnl_lock().
+>
+> Re-spinning this patch alone with 'schedule' parameter removed from
+> __bnx2fc_destroy().
 
-Found by Linux Driver Verification project (linuxtesting.org).
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+James, I realize that the modified patch has not been picked up by you. 
+I will submit a follow-on patch with specific changes shortly.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f13e7ab..8b59fb9 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2057,8 +2057,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost)
- 	if (instance->adprecovery == MEGASAS_HW_CRITICAL_ERROR) {
- 		printk(KERN_WARNING "megaraid_sas: Hardware critical error, "
- 		       "returning FAILED.\n");
--		retval = FAILED;
--		goto out;
-+		return FAILED;
- 	}
- 
- 	mutex_lock(&instance->reset_mutex);
--- 
-1.7.4.1
+Thanks.
+
+>
+> ------------------------
+>
+> Since the driver holds the reference for vlan netdev, the reference has to be
+> released by the driver when the vlan device is removed. Driver handles this in
+> NETDEV_UNREGISTER event.
+>
+> Signed-off-by: Bhanu Prakash Gollapudi<bprakash@broadcom.com>
+> ---
+>   drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   87 ++++++++++++++++++++++---------------
+>   1 files changed, 52 insertions(+), 35 deletions(-)
+>
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> index 673c97c..9a7077b 100644
+
