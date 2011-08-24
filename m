@@ -1,42 +1,46 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 1/2] megaraid_sas: Remove the shutdown_controller call
-Date: Wed, 24 Aug 2011 17:35:29 +0200
-Message-ID: <1314200130-28890-2-git-send-email-thenzl@redhat.com>
-References: <1314200130-28890-1-git-send-email-thenzl@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 26692] Fusion MPT SPI bringup takes 80 seconds when the kernel
+ is quiet
+Date: Wed, 24 Aug 2011 16:50:01 GMT
+Message-ID: <201108241650.p7OGo16o026369@demeter2.kernel.org>
+References: <bug-26692-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56614 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752044Ab1HXPfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2011 11:35:55 -0400
-In-Reply-To: <1314200130-28890-1-git-send-email-thenzl@redhat.com>
+Received: from demeter2.kernel.org ([140.211.167.42]:52661 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751486Ab1HXQuC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2011 12:50:02 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.4) with ESMTP id p7OGo193026370
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2011 16:50:01 GMT
+In-Reply-To: <bug-26692-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: steve.masters@lsi.com, michael.benz@lsi.com, aradford@gmail.com, bo.yang@lsi.com, Tomas Henzl <thenzl@redhat.com>
 
-Remove the call to megasas_shutdown_controller in the megasas_shutdown.
-It's unclear why it should be needed, flushing the cache and disabling ints 
-seems to be enough, because the system is likely going to be switched off
-or restarted anyway. The main reason for removing this is a errant message
-sent sometimes to the driver when the card is shut down.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D26692
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index a58f84a..14c33f6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4532,7 +4532,6 @@ static void megasas_shutdown(struct pci_dev *pdev)
- 	struct megasas_instance *instance = pci_get_drvdata(pdev);
- 	instance->unload = 1;
- 	megasas_flush_cache(instance);
--	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
- 	instance->instancet->disable_intr(instance->reg_set);
- 	free_irq(instance->msi_flag ? instance->msixentry.vector :
- 		 instance->pdev->irq, instance);
--- 
-1.7.6
 
+
+
+--- Comment #3 from Ferenc W=C3=A1gner <wferi@niif.hu>  2011-08-24 16:4=
+9:59 ---
+I rechecked the issue with pristine 3.1.0-rc3, and everything is the sa=
+me: the
+'quiet' kernel parameter introduces delays in the boot process. I will =
+add
+printks here and there, but some guidance would be most useful in that.
+
+--=20
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=3Demai=
+l
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
