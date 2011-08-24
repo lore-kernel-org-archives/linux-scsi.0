@@ -1,30 +1,66 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 0/2] megaraid_sas: Fix an errant command from hw
-Date: Wed, 24 Aug 2011 17:35:28 +0200
-Message-ID: <1314200130-28890-1-git-send-email-thenzl@redhat.com>
+Subject: [PATCH 2/2] megaraid_sas: Initialize the cmd field to a known value
+Date: Wed, 24 Aug 2011 17:35:30 +0200
+Message-ID: <1314200130-28890-3-git-send-email-thenzl@redhat.com>
+References: <1314200130-28890-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45873 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57208 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752044Ab1HXPfy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Aug 2011 11:35:54 -0400
+	id S1752044Ab1HXPf5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Aug 2011 11:35:57 -0400
+In-Reply-To: <1314200130-28890-1-git-send-email-thenzl@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: steve.masters@lsi.com, michael.benz@lsi.com, aradford@gmail.com, bo.yang@lsi.com, Tomas Henzl <thenzl@redhat.com>
 
-The following patch series provides a partial fix for a problem
-seen in kdump after saving vmcore when the driver shuts down.
+When the command is returned to the pool initialize it with a known value,
+this helps to recognize an errant (non-initialized) command and skip it later.
 
-For unknown reason the card sends a command to the driver with a random values, 
-we can then sometimes see this -
-BUG: unable to handle kernel NULL pointer dereference at 00000090
-....
-The proper solution is to prevent this, maybe a firmware change is needed?
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |    4 ++++
+ drivers/scsi/megaraid/megaraid_sas_base.c |    5 +++++
+ 2 files changed, 9 insertions(+), 0 deletions(-)
 
-The first patch initializes the cmd field to a dummy value so the 'ghost' command
-can be recognized.
-The second patch removes the call to the megasas_shutdown_controller
-in the megasas_shutdown_controller, because the errant cmd is sent while the controller
-is shut down and it seems to be enough to only flush cache and disable interrupts.
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 3cdb769..edc0117 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -138,6 +138,10 @@
+ #define MFI_CMD_ABORT				0x06
+ #define MFI_CMD_SMP				0x07
+ #define MFI_CMD_STP				0x08
++#define MFI_CMD_GHOST				0x09
++/*
++ * Ghost command - used to catch unexpected messages from the hardware
++ */
+ 
+ #define MR_DCMD_CTRL_GET_INFO			0x01010000
+ #define MR_DCMD_LD_GET_LIST			0x03010000
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 14c33f6..4b8f457 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -212,6 +212,7 @@ megasas_return_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ 
+ 	cmd->scmd = NULL;
+ 	cmd->frame_count = 0;
++	cmd->frame->hdr.cmd = MFI_CMD_GHOST;
+ 	list_add_tail(&cmd->list, &instance->cmd_pool);
+ 
+ 	spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
+@@ -2288,6 +2289,10 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 		megasas_complete_abort(instance, cmd);
+ 		break;
+ 
++	case MFI_CMD_GHOST:
++		printk("megasas: Ghost command arrived, this really shoudn't happen!\n");
++		break;
++
+ 	default:
+ 		printk("megasas: Unknown command completed! [0x%X]\n",
+ 		       hdr->cmd);
+-- 
+1.7.6
 
-Tomas
