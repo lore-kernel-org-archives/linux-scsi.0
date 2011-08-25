@@ -1,70 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [-v3 PATCH 0/3] Persistent device name using alias
-Date: Thu, 25 Aug 2011 12:16:02 +0200
-Message-ID: <20110825101602.GI3286@htj.dyndns.org>
-References: <20110825090359.2288.91057.stgit@ltc197.sdl.hitachi.co.jp>
+From: Maxin B John <maxin.john@gmail.com>
+Subject: Re: [PATCH] SCSI: OSD: Kconfig: Select SHA1 and HMAC for OSD
+ Initiator library
+Date: Thu, 25 Aug 2011 16:10:38 +0300
+Message-ID: <CAMhs6YyBj-AsjChnHhqbx1L58Wq0MCM3GN1iPn9QO+f=FHHtFw@mail.gmail.com>
+References: <20110811142749.GA26109@maxin>
+	<CAMhs6Yy_O33jZ5N7E5UuAtjoRyyEcUG8s4-PQwooX-TJ3Wh=2A@mail.gmail.com>
+	<4E4968F0.9050108@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110825090359.2288.91057.stgit@ltc197.sdl.hitachi.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nao Nishijima <nao.nishijima.xt@hitachi.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James.Bottomley@HansenPartnership.com, dle-develop@lists.sourceforge.net, Masami Hiramatsu <masami.hiramatsu.pt@hitachi.com>, yrl.pp-manager.tt@hitachi.com
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:40284 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919Ab1HYNKl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2011 09:10:41 -0400
+In-Reply-To: <4E4968F0.9050108@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: rdunlap@xenotime.net, Benny Halevy <bhalevy@panasas.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+Hi,
 
-On Thu, Aug 25, 2011 at 06:03:59PM +0900, Nao Nishijima wrote:
-> This patch series provide an "alias" of the disk into kernel messages.
-> 
-> A raw device name of a disk does not always point a same disk at each boot-up
-> time. Therefore, users have to use persistent device names, which udev creates
-> to always access the same disk. However, kernel messages still display the raw
-> device names.
-> 
-> My proposal is that users can use and see persistent device names which were
-> assigned by themselves because users expect same name to point same disk
-> anytime.
-> 
-> Why need to modify kernel messages?
-> - We can see mapping of device names and persistent device names in udev log.
->   If those logs output to syslog, we can search persistent device name from
->   device name, but it can cause a large amount of syslog output.
-> 
-> - If we can use the persistent device names and can always see the same name on
->   the kernel log, we don't need to pay additional cost for searching and picking
->   a correct pair of device name and persistent device name from udev log.
-> 
-> - Kernel messages are output to serial console when kenel crashes, it's so hard
->   to convert a device name to the alias.
+On Mon, Aug 15, 2011 at 9:44 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> On 08/14/2011 04:18 PM, Maxin B John wrote:
+>> On Thu, Aug 11, 2011 at 5:27 PM, Maxin B. John <maxin.john@gmail.com> wrote:
+>>> SCSI_OSD_INITIATOR should select CRYPTO_SHA1 and CRYPTO_HMAC. Express this
+>>> in Kconfig so that the requirements are met automatically.
+>>>
+>>> Signed-off-by: Maxin B. John <maxin.john@gmail.com>
+>
+> OK So actually current osd_initiator code does not use these libraries.
+> It should, and I have very old code that started on that (hence the comment),
+> but it was never submitted to Kernel. The OSD protocol calls for all kind of
+> security levels that use these, but the current code only supports NO_SEC.
+>
+> I will keep your patch for when security code goes in. Meanwhile I should
+> at least remove the stale comment.
 
-Just some general comments.  This may already be a horse which is
-beaten to death but anyways...
+Sorry for the delay in reply. Yes, this makes perfect sense to me.
 
-I'm not really convinced this is something we need.  What we're
-missing is structured error reporting which can be understood,
-processed, presented and reacted by programs implementing system
-management policies.  Such facility would be useful in general but for
-block devices I think it's a must that we're sorely missing.
-
-Free format kernel message is a very undiscoverable way of
-communicating these information.  For developing and debugging, it's
-fine.  It's easy, flexible and you don't really have to think too much
-about what should be presented how.  For anything else, it's basically
-horrible.
-
-I don't really see what the point of this feature is.  For developing
-and debugging, pretty names might be nice but almost completely
-unnecessary.  For anything else, this falls way too short and can be
-easily replaced by some smart scripting from userland.  After all,
-matching different device names is the least of the worries when
-trying to use kernel log for general management and post-processing w/
-good amount of heuristics is necessary to be useful anyway.
-
-So, FWIW, I object.
-
-Thank you.
-
--- 
-tejun
+Cheers,
+Maxin
