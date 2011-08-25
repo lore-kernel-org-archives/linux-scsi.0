@@ -1,70 +1,70 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/4] libfc: block SCSI eh thread for blocked rports
-Date: Thu, 25 Aug 2011 12:40:57 -0700
-Message-ID: <20110825194057.9599.20554.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/4] libfc: fix referencing to fc_fcp_pkt from the frame
+ pointer via fr_fsp()
+Date: Thu, 25 Aug 2011 12:41:03 -0700
+Message-ID: <20110825194102.9599.58746.stgit@localhost6.localdomain6>
 References: <20110825194042.9599.50292.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:2320 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:36185 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751653Ab1HYTk6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2011 15:40:58 -0400
+	id S1751653Ab1HYTlE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2011 15:41:04 -0400
 In-Reply-To: <20110825194042.9599.50292.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Vasu Dev <vasu.dev@intel.com>, Yi Zou <yi.zou@intel.com>
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Yi Zou <yi.zou@intel.com>
 
-From: Vasu Dev <vasu.dev@intel.com>
+From: Yi Zou <yi.zou@intel.com>
 
-Call fc_block_scsi_eh() in all fcoe eh to blocks
-the scsi_eh thread for blocked rports.
+In commit 6a716a8, while releasing the DDP context in case frame_send() failed,
+the frame may already be freed, so we should store the pointer to fc_fcp_pkt and
+release the DDP context using the locally stored fsp instead of getting fsp from
+the fr_fsp(fp) on a frame.
 
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Reported-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
-Reviewed-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |    8 ++++++--
+ 1 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index afb63c8..4c41ee8 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -2019,6 +2019,11 @@ int fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 	struct fc_fcp_internal *si;
- 	int rc = FAILED;
- 	unsigned long flags;
-+	int rval;
-+
-+	rval = fc_block_scsi_eh(sc_cmd);
-+	if (rval)
-+		return rval;
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 744fefe..d261e98 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -1981,6 +1981,7 @@ static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
+ 	struct fc_exch *ep;
+ 	struct fc_seq *sp = NULL;
+ 	struct fc_frame_header *fh;
++	struct fc_fcp_pkt *fsp = NULL;
+ 	int rc = 1;
  
- 	lport = shost_priv(sc_cmd->device->host);
- 	if (lport->state != LPORT_ST_READY)
-@@ -2068,9 +2073,9 @@ int fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
- 	int rc = FAILED;
- 	int rval;
+ 	ep = fc_exch_alloc(lport, fp);
+@@ -2003,8 +2004,10 @@ static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
+ 	fc_exch_setup_hdr(ep, fp, ep->f_ctl);
+ 	sp->cnt++;
  
--	rval = fc_remote_port_chkready(rport);
-+	rval = fc_block_scsi_eh(sc_cmd);
- 	if (rval)
--		goto out;
-+		return rval;
+-	if (ep->xid <= lport->lro_xid && fh->fh_r_ctl == FC_RCTL_DD_UNSOL_CMD)
++	if (ep->xid <= lport->lro_xid && fh->fh_r_ctl == FC_RCTL_DD_UNSOL_CMD) {
++		fsp = fr_fsp(fp);
+ 		fc_fcp_ddp_setup(fr_fsp(fp), ep->xid);
++	}
  
- 	lport = shost_priv(sc_cmd->device->host);
- 
-@@ -2116,6 +2121,8 @@ int fc_eh_host_reset(struct scsi_cmnd *sc_cmd)
- 
- 	FC_SCSI_DBG(lport, "Resetting host\n");
- 
-+	fc_block_scsi_eh(sc_cmd);
-+
- 	lport->tt.lport_reset(lport);
- 	wait_tmo = jiffies + FC_HOST_RESET_TIMEOUT;
- 	while (!fc_fcp_lport_queue_ready(lport) && time_before(jiffies,
+ 	if (unlikely(lport->tt.frame_send(lport, fp)))
+ 		goto err;
+@@ -2018,7 +2021,8 @@ static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
+ 	spin_unlock_bh(&ep->ex_lock);
+ 	return sp;
+ err:
+-	fc_fcp_ddp_done(fr_fsp(fp));
++	if (fsp)
++		fc_fcp_ddp_done(fsp);
+ 	rc = fc_exch_done_locked(ep);
+ 	spin_unlock_bh(&ep->ex_lock);
+ 	if (!rc)
 
