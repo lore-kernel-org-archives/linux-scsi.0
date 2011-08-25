@@ -1,64 +1,73 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Flood of SCSI retries when a port is in transitioning
-Date: Thu, 25 Aug 2011 15:36:07 +0200
-Message-ID: <4E564FC7.10507@suse.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] osd: Kconfig remove wrong FIXME
+Date: Thu, 25 Aug 2011 09:25:26 -0700
+Message-ID: <4E567776.5040304@panasas.com>
+References: <20110811142749.GA26109@maxin> <CAMhs6Yy_O33jZ5N7E5UuAtjoRyyEcUG8s4-PQwooX-TJ3Wh=2A@mail.gmail.com> <4E4968F0.9050108@panasas.com> <4E496D15.1010404@panasas.com> <CAMhs6YzUaZat4LyUJBCf8XN+OELvmbDk6bxYjbMSg7=JGEZetA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53943 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750703Ab1HYNgJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2011 09:36:09 -0400
+Received: from natasha.panasas.com ([67.152.220.90]:41706 "EHLO
+	natasha.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194Ab1HYQZs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2011 12:25:48 -0400
+In-Reply-To: <CAMhs6YzUaZat4LyUJBCf8XN+OELvmbDk6bxYjbMSg7=JGEZetA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Martin George <Martin.George@netapp.com>
+To: Maxin B John <maxin.john@gmail.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, rdunlap@xenotime.net, osd-dev@open-osd.org, linux-scsi@vger.kernel.org
 
-Hi all,
+On 08/25/2011 06:15 AM, Maxin B John wrote:
+> Hi,
+> 
+> On Mon, Aug 15, 2011 at 10:01 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>
+>> The OSD protocol calls for all kind of security levels that use
+>> CRYPTO_HMAC and SH1, but the current code only supports NO_SEC,
+>> which does not use any of these.
+>>
+>> Remove a wrong FIXME that calls for them. Thanks Maxin for
+>> reporting on this.
+>>
+>> CC: "Maxin B. John" <maxin.john@gmail.com>
+>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>> ---
+>>  drivers/scsi/osd/Kconfig |    4 ----
+>>  1 files changed, 0 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/scsi/osd/Kconfig b/drivers/scsi/osd/Kconfig
+>> index 861b5ce..a070351 100644
+>> --- a/drivers/scsi/osd/Kconfig
+>> +++ b/drivers/scsi/osd/Kconfig
+>> @@ -11,10 +11,6 @@
+>>  # it under the terms of the GNU General Public version 2 License as
+>>  # published by the Free Software Foundation
+>>  #
+>> -# FIXME: SCSI_OSD_INITIATOR should select CONFIG (HMAC) SHA1 somehow.
+>> -#        How is it done properly?
+>> -#
+>> -
+>>  config SCSI_OSD_INITIATOR
+>>        tristate "OSD-Initiator library"
+>>        depends on SCSI
+>> --
+>> 1.7.6
+>>
+> 
+> Adding the "Reported-by", if it's not too late:
+> 
+> Reported-by: Maxin B. John <maxin.john@gmail.com>
+> 
 
-our friends from NetApp discovered a SCSI retry flood when a remote=20
-port is in ALUA 'transitioning' state.
+Sure I will add it. It's not to late
 
-The device will then return
-Not ready/LUN Not Accessible - ALUA state transition
-which will be evaluated in scsi_dh_alua.c:alua_check_sense()
-as ADD_TO_MLQUEUE.
-This will cause an immediate retry of the command and hence the=20
-target will be pounded with a flood of retries.
+Boaz
 
-I have now tried to alleviate this by returning 'NEEDS_RETRY',
+> Cheers,
+> Maxin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -451,7 +451,7 @@ static int alua_check_sense(struct scsi_device=20
-*sdev,
-                         /*
-                          * LUN Not Accessible - ALUA state transition
-                          */
--                       return ADD_TO_MLQUEUE;
-+                       return NEEDS_RETRY;
-                 if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D=
- 0x0b)
-                         /*
-                          * LUN Not Accessible -- Target port in=20
-standby state
-
-but then the command will be aborted after the retry count has been=20
-exhausted. Which will then cause I/O errors. Also not good.
-Is there a way of forcing a delayed retry, like BLKPREP_DEFER does?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
