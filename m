@@ -1,41 +1,49 @@
-From: "Barnes, Clifton A." <cabarnes@indesign-llc.com>
-Subject: Re: [PATCH 7/8] w1: ds2760 and ds2780,
- use ida for id and ida_simple_get to get it.
-Date: Wed, 24 Aug 2011 17:22:46 +0000
-Message-ID: <A8DC7EA93EFCBD4498E3857AFE65E5F1A5A2B9C8@IND07.indesign.net>
-References: <1311352886-4047-1-git-send-email-jic23@cam.ac.uk>
-	<1311352886-4047-17-git-send-email-jic23@cam.ac.uk>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1/2] megaraid_sas: Remove the shutdown_controller call
+Date: Thu, 25 Aug 2011 10:17:42 +0200
+Message-ID: <4E560526.5060601@redhat.com>
+References: <1314200130-28890-1-git-send-email-thenzl@redhat.com> <1314200130-28890-2-git-send-email-thenzl@redhat.com> <CAHtARFF1iwy2NR1G01hFqBo2hoYxAbG+0DQ0UJNSS3JO_s5qbg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <lm-sensors-bounces@lm-sensors.org>
-In-Reply-To: <1311352886-4047-17-git-send-email-jic23@cam.ac.uk>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.lm-sensors.org/mailman/options/lm-sensors>,
-	<mailto:lm-sensors-request@lm-sensors.org?subject=unsubscribe>
-List-Archive: <http://lists.lm-sensors.org/pipermail/lm-sensors/>
-List-Post: <mailto:lm-sensors@lm-sensors.org>
-List-Help: <mailto:lm-sensors-request@lm-sensors.org?subject=help>
-List-Subscribe: <http://lists.lm-sensors.org/mailman/listinfo/lm-sensors>,
-	<mailto:lm-sensors-request@lm-sensors.org?subject=subscribe>
-Sender: lm-sensors-bounces@lm-sensors.org
-Errors-To: lm-sensors-bounces@lm-sensors.org
-To: Jonathan Cameron <jic23@cam.ac.uk>
-Cc: "randy.dunlap@oracle.com" <randy.dunlap@oracle.com>, "airlied@linux.ie" <airlied@linux.ie>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "johnpol@2ka.mipt.ru" <johnpol@2ka.mipt.ru>, "thellstrom@vmware.com" <thellstrom@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "lm-sensors@lm-sensors.org" <lm-sensors@lm-sensors.org>, "bharrosh@panasas.com" <bharrosh@panasas.com>, "airlied@redhat.com" <airlied@redhat.com>, "paulmck@linux.vnet.ibm.com" <paulmck@linux.vnet.ibm.com>, "naota@elisp.net" <naota@elisp.net>, "rtc-linux@googlegroups.com" <rtc-linux@googlegroups.com>, "namhyung@gmail.com" <namhyung@gmail.com>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "tj@kernel.org" <tj@kernel.org>, "osd-dev@open-osd.org" <osd-dev@open-osd.org>, "bhalevy@panasas.com" <bhalevy@panasas.com>, "a.zummo@towertech.it" <a.zummo@towertech.it>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:3915 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750903Ab1HYIRq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2011 04:17:46 -0400
+In-Reply-To: <CAHtARFF1iwy2NR1G01hFqBo2hoYxAbG+0DQ0UJNSS3JO_s5qbg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi@vger.kernel.org, steve.masters@lsi.com, michael.benz@lsi.com, bo.yang@lsi.com
 
-On Fri 7/22/2011 12:41 PM, Jonathan Cameron wrote:
+On 08/24/2011 10:55 PM, adam radford wrote:
+> On Wed, Aug 24, 2011 at 8:35 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>> Remove the call to megasas_shutdown_controller in the megasas_shutdown.
+> NACK.   The call to megasas_shutdown_controller() should not be removed.
+>
+> megasas_shutdown_controller() does 3 things:
+>
+> 1. Cancels pended AEN command in firmware.
+> 2. Cancels pended map update command in firmware.
+> 3. Fires a MR_DCMD_CTRL_SHUTDOWN to notify firmware there was a clean
+> shutdown.  Without this, FW will think there was an 'unclean shutdown'
+> on the next restart, which will cause rebuilds and other background FW
+> activity to kick on every shutdown/reboot.
+OK, from what I have seen the problem happens as a response to MR_DCMD_CTRL_SHUTDOWN
+(it means we could let the 1+2 pass and remove only the third point),
+but nobody wants 'background FW activity...' etc so let s skip patch.
+We need to find a better method for this problem.
 
-> Straight forward.  As an aside, the ida_init calls are not needed as far
-> as I can see needed. (DEFINE_IDA does the same already).
+In the meantime - I've sent two patches, what do you think about the second one?
+It solves(hides) the problem too.
+ 
+Tomas
 
-> Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
+>
+> -Adam
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Checked out ok here for ds2780.
-
-Acked-by: Clifton Barnes <cabarnes@indesign-llc.com>
-
-_______________________________________________
-lm-sensors mailing list
-lm-sensors@lm-sensors.org
-http://lists.lm-sensors.org/mailman/listinfo/lm-sensors
