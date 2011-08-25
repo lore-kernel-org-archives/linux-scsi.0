@@ -1,59 +1,64 @@
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: [PATCH] [SCSI] fusion: ensure NUL-termination of MptCallbacksName elements
-Date: Thu, 25 Aug 2011 14:44:57 +0200
-Message-ID: <cd21dfb714e3a89aadd8eda1fda1748dec9ed7aa.1314276422.git.wferi@niif.hu>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Flood of SCSI retries when a port is in transitioning
+Date: Thu, 25 Aug 2011 15:36:07 +0200
+Message-ID: <4E564FC7.10507@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tac.ki.iif.hu ([193.6.222.43]:35033 "EHLO tac.ki.iif.hu"
+Received: from cantor2.suse.de ([195.135.220.15]:53943 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164Ab1HYN3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2011 09:29:08 -0400
+	id S1750703Ab1HYNgJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2011 09:36:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap@tac.ki.iif.hu, Desai <kashyap.desai@lsi.com>, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Martin George <Martin.George@netapp.com>
 
-Signed-off-by: Ferenc Wagner <wferi@niif.hu>
----
- drivers/message/fusion/mptbase.c |    5 ++---
- drivers/message/fusion/mptbase.h |    1 +
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Hi all,
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 7956a10..eb906e2 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -113,7 +113,7 @@ module_param(mpt_fwfault_debug, int, 0600);
- MODULE_PARM_DESC(mpt_fwfault_debug,
- 		 "Enable detection of Firmware fault and halt Firmware on fault - (default=0)");
- 
--static char	MptCallbacksName[MPT_MAX_PROTOCOL_DRIVERS][50];
-+static char	MptCallbacksName[MPT_MAX_PROTOCOL_DRIVERS][MPT_MAX_CALLBACKNAME_LEN+1];
- 
- #ifdef MFCNT
- static int mfcounter = 0;
-@@ -656,8 +656,7 @@ mpt_register(MPT_CALLBACK cbfunc, MPT_DRIVER_CLASS dclass, char *func_name)
- 			MptDriverClass[cb_idx] = dclass;
- 			MptEvHandlers[cb_idx] = NULL;
- 			last_drv_idx = cb_idx;
--			memcpy(MptCallbacksName[cb_idx], func_name,
--			    strlen(func_name) > 50 ? 50 : strlen(func_name));
-+			strlcpy(MptCallbacksName[cb_idx], func_name, MPT_MAX_CALLBACKNAME_LEN+1);
- 			break;
- 		}
- 	}
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index fe90233..c10416d 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -89,6 +89,7 @@
-  */
- #define MPT_MAX_ADAPTERS		18
- #define MPT_MAX_PROTOCOL_DRIVERS	16
-+#define MPT_MAX_CALLBACKNAME_LEN	49
- #define MPT_MAX_BUS			1	/* Do not change */
- #define MPT_MAX_FC_DEVICES		255
- #define MPT_MAX_SCSI_DEVICES		16
--- 
-1.6.5
+our friends from NetApp discovered a SCSI retry flood when a remote=20
+port is in ALUA 'transitioning' state.
 
+The device will then return
+Not ready/LUN Not Accessible - ALUA state transition
+which will be evaluated in scsi_dh_alua.c:alua_check_sense()
+as ADD_TO_MLQUEUE.
+This will cause an immediate retry of the command and hence the=20
+target will be pounded with a flood of retries.
+
+I have now tried to alleviate this by returning 'NEEDS_RETRY',
+
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -451,7 +451,7 @@ static int alua_check_sense(struct scsi_device=20
+*sdev,
+                         /*
+                          * LUN Not Accessible - ALUA state transition
+                          */
+-                       return ADD_TO_MLQUEUE;
++                       return NEEDS_RETRY;
+                 if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D=
+ 0x0b)
+                         /*
+                          * LUN Not Accessible -- Target port in=20
+standby state
+
+but then the command will be aborted after the retry count has been=20
+exhausted. Which will then cause I/O errors. Also not good.
+Is there a way of forcing a delayed retry, like BLKPREP_DEFER does?
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
