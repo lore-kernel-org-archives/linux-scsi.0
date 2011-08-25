@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 2/4] libfc: fix fc_eh_host_reset
-Date: Thu, 25 Aug 2011 12:40:52 -0700
-Message-ID: <20110825194052.9599.64246.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/4] libfc: block SCSI eh thread for blocked rports
+Date: Thu, 25 Aug 2011 12:40:57 -0700
+Message-ID: <20110825194057.9599.20554.stgit@localhost6.localdomain6>
 References: <20110825194042.9599.50292.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45122 "EHLO mga09.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:2320 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752109Ab1HYTkx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2011 15:40:53 -0400
+	id S1751653Ab1HYTk6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2011 15:40:58 -0400
 In-Reply-To: <20110825194042.9599.50292.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,178 +19,52 @@ Cc: Ross Brattain <ross.b.brattain@intel.com>, Vasu Dev <vasu.dev@intel.com>, Yi
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Current fc_eh_host_reset leaves lport offline
-permanently  due to FLOGI response getting
-handled by LOGO response from last reset as both
-had same exchange id.
-
-So fix this by having end to end exches clean-up
-using exchange abort along exches reset
-done from fc_eh_host_reset. This would avoid
-exchanges collision between the sessions across
-the reset. In this case implicit login should have
-done that but no aborting support for FIP
-frames, so just wait till lport->r_a_tov before
-restarting next flogi to ensure all exchanges
-are good to use again for next session.
-
-Below is the trace of LOGO from older session
-coming ahead of FLOGI response with same exche id
-0x203:-
-
-617  86.435165     4e.00.0b -> ff.ff.fc     FC ELS LOGO 0x203
-618  86.435195     4e.00.0b -> b6.02.00     FC ELS LOGO 0x213
-619  86.435220     4e.00.0b -> 18.03.00     FC ELS LOGO 0x223
-620  86.435244     4e.00.0b -> 18.02.00     FC ELS LOGO 0x233
-621  86.435267     4e.00.0b -> 18.01.00     FC ELS LOGO 0x243
-622  86.435349     00.00.00 -> ff.ff.fe     FC ELS FLOGI 0x203
-623  86.435549     ff.ff.fc -> 4e.00.0b     FC ELS ACC (LOGO) 0x203
-624  86.438721     ff.ff.fe -> 4e.00.0b     FC ELS ACC (FLOGI) 0x203
-625  86.442059     18.03.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x223
-626  86.443683     b6.02.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x213
-627  86.447693     18.01.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x243
-628  86.453499     18.02.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x233
+Call fc_block_scsi_eh() in all fcoe eh to blocks
+the scsi_eh thread for blocked rports.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Reviewed-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_exch.c  |   51 ++++++++++++++++++++++++++++-------------
- drivers/scsi/libfc/fc_lport.c |   11 ++++++++-
- 2 files changed, 45 insertions(+), 17 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 01ff082..744fefe 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -494,6 +494,9 @@ static int fc_seq_send(struct fc_lport *lport, struct fc_seq *sp,
- 	 */
- 	error = lport->tt.frame_send(lport, fp);
- 
-+	if (fh->fh_type == FC_TYPE_BLS)
-+		return error;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index afb63c8..4c41ee8 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -2019,6 +2019,11 @@ int fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 	struct fc_fcp_internal *si;
+ 	int rc = FAILED;
+ 	unsigned long flags;
++	int rval;
 +
- 	/*
- 	 * Update the exchange and sequence flags,
- 	 * assuming all frames for the sequence have been sent.
-@@ -575,42 +578,35 @@ static void fc_seq_set_resp(struct fc_seq *sp,
- }
++	rval = fc_block_scsi_eh(sc_cmd);
++	if (rval)
++		return rval;
  
- /**
-- * fc_seq_exch_abort() - Abort an exchange and sequence
-- * @req_sp:	The sequence to be aborted
-+ * fc_exch_abort_locked() - Abort an exchange
-+ * @ep:	The exchange to be aborted
-  * @timer_msec: The period of time to wait before aborting
-  *
-- * Generally called because of a timeout or an abort from the upper layer.
-+ * Locking notes:  Called with exch lock held
-+ *
-+ * Return value: 0 on success else error code
-  */
--static int fc_seq_exch_abort(const struct fc_seq *req_sp,
--			     unsigned int timer_msec)
-+static int fc_exch_abort_locked(struct fc_exch *ep,
-+				unsigned int timer_msec)
- {
- 	struct fc_seq *sp;
--	struct fc_exch *ep;
- 	struct fc_frame *fp;
- 	int error;
+ 	lport = shost_priv(sc_cmd->device->host);
+ 	if (lport->state != LPORT_ST_READY)
+@@ -2068,9 +2073,9 @@ int fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ 	int rc = FAILED;
+ 	int rval;
  
--	ep = fc_seq_exch(req_sp);
--
--	spin_lock_bh(&ep->ex_lock);
- 	if (ep->esb_stat & (ESB_ST_COMPLETE | ESB_ST_ABNORMAL) ||
--	    ep->state & (FC_EX_DONE | FC_EX_RST_CLEANUP)) {
--		spin_unlock_bh(&ep->ex_lock);
-+	    ep->state & (FC_EX_DONE | FC_EX_RST_CLEANUP))
- 		return -ENXIO;
--	}
+-	rval = fc_remote_port_chkready(rport);
++	rval = fc_block_scsi_eh(sc_cmd);
+ 	if (rval)
+-		goto out;
++		return rval;
  
- 	/*
- 	 * Send the abort on a new sequence if possible.
- 	 */
- 	sp = fc_seq_start_next_locked(&ep->seq);
--	if (!sp) {
--		spin_unlock_bh(&ep->ex_lock);
-+	if (!sp)
- 		return -ENOMEM;
--	}
+ 	lport = shost_priv(sc_cmd->device->host);
  
- 	ep->esb_stat |= ESB_ST_SEQ_INIT | ESB_ST_ABNORMAL;
- 	if (timer_msec)
- 		fc_exch_timer_set_locked(ep, timer_msec);
--	spin_unlock_bh(&ep->ex_lock);
+@@ -2116,6 +2121,8 @@ int fc_eh_host_reset(struct scsi_cmnd *sc_cmd)
  
- 	/*
- 	 * If not logged into the fabric, don't send ABTS but leave
-@@ -633,6 +629,28 @@ static int fc_seq_exch_abort(const struct fc_seq *req_sp,
- }
+ 	FC_SCSI_DBG(lport, "Resetting host\n");
  
- /**
-+ * fc_seq_exch_abort() - Abort an exchange and sequence
-+ * @req_sp:	The sequence to be aborted
-+ * @timer_msec: The period of time to wait before aborting
-+ *
-+ * Generally called because of a timeout or an abort from the upper layer.
-+ *
-+ * Return value: 0 on success else error code
-+ */
-+static int fc_seq_exch_abort(const struct fc_seq *req_sp,
-+			     unsigned int timer_msec)
-+{
-+	struct fc_exch *ep;
-+	int error;
++	fc_block_scsi_eh(sc_cmd);
 +
-+	ep = fc_seq_exch(req_sp);
-+	spin_lock_bh(&ep->ex_lock);
-+	error = fc_exch_abort_locked(ep, timer_msec);
-+	spin_unlock_bh(&ep->ex_lock);
-+	return error;
-+}
-+
-+/**
-  * fc_exch_timeout() - Handle exchange timer expiration
-  * @work: The work_struct identifying the exchange that timed out
-  */
-@@ -1715,6 +1733,7 @@ static void fc_exch_reset(struct fc_exch *ep)
- 	int rc = 1;
- 
- 	spin_lock_bh(&ep->ex_lock);
-+	fc_exch_abort_locked(ep, 0);
- 	ep->state |= FC_EX_RST_CLEANUP;
- 	if (cancel_delayed_work(&ep->timeout_work))
- 		atomic_dec(&ep->ex_refcnt);	/* drop hold for timer */
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e55ed9c..628f347 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -88,6 +88,7 @@
-  */
- 
- #include <linux/timer.h>
-+#include <linux/delay.h>
- #include <linux/slab.h>
- #include <asm/unaligned.h>
- 
-@@ -1029,8 +1030,16 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
- 			   FCH_EVT_LIPRESET, 0);
- 	fc_vports_linkchange(lport);
- 	fc_lport_reset_locked(lport);
--	if (lport->link_up)
-+	if (lport->link_up) {
-+		/*
-+		 * Wait upto resource allocation time out before
-+		 * doing re-login since incomplete FIP exchanged
-+		 * from last session may collide with exchanges
-+		 * in new session.
-+		 */
-+		msleep(lport->r_a_tov);
- 		fc_lport_enter_flogi(lport);
-+	}
- }
- 
- /**
+ 	lport->tt.lport_reset(lport);
+ 	wait_tmo = jiffies + FC_HOST_RESET_TIMEOUT;
+ 	while (!fc_fcp_lport_queue_ready(lport) && time_before(jiffies,
 
