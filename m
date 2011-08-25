@@ -1,274 +1,196 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 1/4] fcoe: Fix deadlock between fip's recv_work and rtnl
-Date: Thu, 25 Aug 2011 12:40:47 -0700
-Message-ID: <20110825194047.9599.74848.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/4] libfc: fix fc_eh_host_reset
+Date: Thu, 25 Aug 2011 12:40:52 -0700
+Message-ID: <20110825194052.9599.64246.stgit@localhost6.localdomain6>
 References: <20110825194042.9599.50292.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:34155 "EHLO mga03.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:45122 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752085Ab1HYTks (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Aug 2011 15:40:48 -0400
+	id S1752109Ab1HYTkx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Aug 2011 15:40:53 -0400
 In-Reply-To: <20110825194042.9599.50292.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Yi Zou <yi.zou@intel.com>
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Vasu Dev <vasu.dev@intel.com>, Yi Zou <yi.zou@intel.com>
 
-The rtnl cannot be held durrng the fcoe_interface_put.
-If it is the last reference on the fcoe_interface the
-fcoe_ctlr_destroy will be called as a part of the
-cleanup, ultimately calling cancel_work_sync(&fip->recv_work);
+From: Vasu Dev <vasu.dev@intel.com>
 
-If we are processing a flogi response we will be in
-the recv_work context and we will lock the rtnl to
-add a new unicast MAC address. This is how the deadlock
-can occur.
+Current fc_eh_host_reset leaves lport offline
+permanently  due to FLOGI response getting
+handled by LOGO response from last reset as both
+had same exchange id.
 
-The fix is simply to move the rtnl_lock/unlock into
-fcoe_interface_cleanup so that it can be unlocked before
-fcoe_interface_put is called.
+So fix this by having end to end exches clean-up
+using exchange abort along exches reset
+done from fc_eh_host_reset. This would avoid
+exchanges collision between the sessions across
+the reset. In this case implicit login should have
+done that but no aborting support for FIP
+frames, so just wait till lport->r_a_tov before
+restarting next flogi to ensure all exchanges
+are good to use again for next session.
 
-Here is the lockdep report:
+Below is the trace of LOGO from older session
+coming ahead of FLOGI response with same exche id
+0x203:-
 
-Jul 21 11:26:35 bubba [  223.870702]
-ul 21 11:26:35 bubba [  223.870704] =======================================================
-Jul 21 11:26:35 bubba [  223.871255] [ INFO: possible circular locking dependency detected ]
-Jul 21 11:26:35 bubba [  223.871530] 3.0.0-rc7+ #1
-Jul 21 11:26:35 bubba [  223.871797] -------------------------------------------------------
-Jul 21 11:26:35 bubba [  223.872072] lockdeptest.sh/3464 is trying to acquire lock:
-Jul 21 11:26:35 bubba [  223.872345]  ((&fip->recv_work)
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffff810531f1>] wait_on_work+0x0/0xbd
-Jul 21 11:26:35 bubba [  223.873022]
-Jul 21 11:26:35 bubba [  223.873023] but task is already holding lock:
-Jul 21 11:26:35 bubba [  223.873555]  (rtnl_mutex
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffff813e8233>] rtnl_lock+0x12/0x14
-Jul 21 11:26:35 bubba [  223.874229]
-Jul 21 11:26:35 bubba [  223.874230] which lock already depends on the new lock.
-Jul 21 11:26:35 bubba [  223.874231]
-Jul 21 11:26:35 bubba [  223.875032]
-Jul 21 11:26:35 bubba [  223.875033] the existing dependency chain (in reverse order) is:
-Jul 21 11:26:35 bubba [  223.875573]
-Jul 21 11:26:35 bubba [  223.875573] -> #1
-Jul 21 11:26:35 bubba (rtnl_mutex
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba :
-Jul 21 11:26:35 bubba [  223.876301]
-Jul 21 11:26:35 bubba [<ffffffff8106c14a>] lock_acquire+0xd2/0xf7
-Jul 21 11:26:35 bubba [  223.876645]
-Jul 21 11:26:35 bubba [<ffffffff8151d975>] __mutex_lock_common+0x47/0x30d
-Jul 21 11:26:35 bubba [  223.876991]
-Jul 21 11:26:35 bubba [<ffffffff8151dd36>] mutex_lock_nested+0x3b/0x40
-Jul 21 11:26:35 bubba [  223.877334]
-Jul 21 11:26:35 bubba [<ffffffff813e8233>] rtnl_lock+0x12/0x14
-Jul 21 11:26:35 bubba [  223.877675]
-Jul 21 11:26:35 bubba [<ffffffffa003d5a0>] fcoe_update_src_mac+0x2b/0x80 [fcoe]
-Jul 21 11:26:35 bubba [  223.878022]
-Jul 21 11:26:35 bubba [<ffffffffa003d698>] fcoe_flogi_resp+0x5e/0x79 [fcoe]
-Jul 21 11:26:35 bubba [  223.878366]
-Jul 21 11:26:35 bubba [<ffffffffa001566f>] fc_exch_recv+0x7f5/0x9da [libfc]
-Jul 21 11:26:35 bubba [  223.878713]
-Jul 21 11:26:35 bubba [<ffffffffa00327d8>] fcoe_ctlr_recv_work+0x71f/0x10dc [libfcoe]
-Jul 21 11:26:35 bubba [  223.879258]
-Jul 21 11:26:35 bubba [<ffffffff81053761>] process_one_work+0x1d7/0x347
-Jul 21 11:26:35 bubba [  223.879601]
-Jul 21 11:26:35 bubba [<ffffffff81054ade>] worker_thread+0xf8/0x17c
-Jul 21 11:26:35 bubba [  223.879944]
-Jul 21 11:26:35 bubba [<ffffffff81058184>] kthread+0x7d/0x85
-Jul 21 11:26:35 bubba [  223.880287]
-Jul 21 11:26:35 bubba [<ffffffff81526414>] kernel_thread_helper+0x4/0x10
-Jul 21 11:26:35 bubba [  223.880634]
-Jul 21 11:26:35 bubba [  223.880635] -> #0
-Jul 21 11:26:35 bubba ((&fip->recv_work)
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba :
-Jul 21 11:26:35 bubba [  223.881357]
-Jul 21 11:26:35 bubba [<ffffffff8106b93e>] __lock_acquire+0xb1d/0xe2c
-Jul 21 11:26:35 bubba [  223.881695]
-Jul 21 11:26:35 bubba [<ffffffff8106c14a>] lock_acquire+0xd2/0xf7
-Jul 21 11:26:35 bubba [  223.882033]
-Jul 21 11:26:35 bubba [<ffffffff81053241>] wait_on_work+0x50/0xbd
-Jul 21 11:26:35 bubba [  223.882378]
-Jul 21 11:26:35 bubba [<ffffffff81053b32>] __cancel_work_timer+0xb6/0xf4
-Jul 21 11:26:35 bubba [  223.882718]
-Jul 21 11:26:35 bubba [<ffffffff81053b8a>] cancel_work_sync+0xb/0xd
-Jul 21 11:26:35 bubba [  223.883057]
-Jul 21 11:26:35 bubba [<ffffffffa00317e6>] fcoe_ctlr_destroy+0x1d/0x67 [libfcoe]
-Jul 21 11:26:35 bubba [  223.883399]
-Jul 21 11:26:35 bubba [<ffffffffa003e51e>] fcoe_interface_release+0x21/0x45 [fcoe]
-Jul 21 11:26:35 bubba [  223.883940]
-Jul 21 11:26:35 bubba [<ffffffff811fbbe6>] kref_put+0x43/0x4d
-Jul 21 11:26:35 bubba [  223.884280]
-Jul 21 11:26:35 bubba [<ffffffffa003ebba>] fcoe_interface_put+0x17/0x19 [fcoe]
-Jul 21 11:26:35 bubba [  223.884624]
-Jul 21 11:26:35 bubba [<ffffffffa003f2a6>] fcoe_interface_cleanup+0x188/0x193 [fcoe]
-Jul 21 11:26:35 bubba [  223.885163]
-Jul 21 11:26:35 bubba [<ffffffffa003f303>] fcoe_destroy+0x52/0x72 [fcoe]
-Jul 21 11:26:35 bubba [  223.885502]
-Jul 21 11:26:35 bubba [<ffffffffa00340a4>] fcoe_transport_destroy+0xab/0x110 [libfcoe]
-Jul 21 11:26:35 bubba [  223.886045]
-Jul 21 11:26:35 bubba [<ffffffff81056153>] param_attr_store+0x43/0x62
-Jul 21 11:26:35 bubba [  223.886385]
-Jul 21 11:26:35 bubba [<ffffffff8105602d>] module_attr_store+0x21/0x25
-Jul 21 11:26:35 bubba [  223.886728]
-Jul 21 11:26:35 bubba [<ffffffff8114c23d>] sysfs_write_file+0x103/0x13f
-Jul 21 11:26:35 bubba [  223.887068]
-Jul 21 11:26:35 bubba [<ffffffff810f3e7b>] vfs_write+0xa7/0xfa
-Jul 21 11:26:35 bubba [  223.887406]
-Jul 21 11:26:35 bubba [<ffffffff810f4073>] sys_write+0x45/0x69
-Jul 21 11:26:35 bubba [  223.887742]
-Jul 21 11:26:35 bubba [<ffffffff815252bb>] system_call_fastpath+0x16/0x1b
-Jul 21 11:26:35 bubba [  223.888083]
-Jul 21 11:26:35 bubba [  223.888084] other info that might help us debug this:
-Jul 21 11:26:35 bubba [  223.888085]
-Jul 21 11:26:35 bubba [  223.888879]  Possible unsafe locking scenario:
-Jul 21 11:26:35 bubba [  223.888881]
-Jul 21 11:26:35 bubba [  223.889411]        CPU0                    CPU1
-Jul 21 11:26:35 bubba [  223.889683]        ----                    ----
-Jul 21 11:26:35 bubba [  223.889955]   lock(
-Jul 21 11:26:35 bubba rtnl_mutex
-Jul 21 11:26:35 bubba );
-Jul 21 11:26:35 bubba [  223.890349]                                lock(
-Jul 21 11:26:35 bubba (&fip->recv_work)
-Jul 21 11:26:35 bubba );
-Jul 21 11:26:35 bubba [  223.890751]                                lock(
-Jul 21 11:26:35 bubba rtnl_mutex
-Jul 21 11:26:35 bubba );
-Jul 21 11:26:35 bubba [  223.891154]   lock(
-Jul 21 11:26:35 bubba (&fip->recv_work)
-Jul 21 11:26:35 bubba );
-Jul 21 11:26:35 bubba [  223.891549]
-Jul 21 11:26:35 bubba [  223.891550]  *** DEADLOCK ***
-Jul 21 11:26:35 bubba [  223.891551]
-Jul 21 11:26:35 bubba [  223.892347] 6 locks held by lockdeptest.sh/3464:
-Jul 21 11:26:35 bubba [  223.892621]  #0:
-Jul 21 11:26:35 bubba (&buffer->mutex
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffff8114c171>] sysfs_write_file+0x37/0x13f
-Jul 21 11:26:35 bubba [  223.893359]  #1:
-Jul 21 11:26:35 bubba (s_active
-Jul 21 11:26:35 bubba ){++++.+}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffff8114c21c>] sysfs_write_file+0xe2/0x13f
-Jul 21 11:26:35 bubba [  223.894094]  #2:
-Jul 21 11:26:35 bubba (param_lock
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffff81056146>] param_attr_store+0x36/0x62
-Jul 21 11:26:35 bubba [  223.894835]  #3:
-Jul 21 11:26:35 bubba (ft_mutex
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffffa0034017>] fcoe_transport_destroy+0x1e/0x110 [libfcoe]
-Jul 21 11:26:35 bubba [  223.895574]  #4:
-Jul 21 11:26:35 bubba (fcoe_config_mutex
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffffa003f2c9>] fcoe_destroy+0x18/0x72 [fcoe]
-Jul 21 11:26:35 bubba [  223.896314]  #5:
-Jul 21 11:26:35 bubba (rtnl_mutex
-Jul 21 11:26:35 bubba ){+.+.+.}
-Jul 21 11:26:35 bubba , at:
-Jul 21 11:26:35 bubba [<ffffffff813e8233>] rtnl_lock+0x12/0x14
-Jul 21 11:26:35 bubba [  223.897047]
-Jul 21 11:26:35 bubba [  223.897048] stack backtrace:
-Jul 21 11:26:35 bubba [  223.897578] Pid: 3464, comm: lockdeptest.sh Not tainted 3.0.0-rc7+ #1
-Jul 21 11:26:35 bubba [  223.897853] Call Trace:
-Jul 21 11:26:35 bubba [  223.898128]  [<ffffffff81068e16>] print_circular_bug+0x1f8/0x209
-Jul 21 11:26:35 bubba [  223.898416]  [<ffffffff8106b93e>] __lock_acquire+0xb1d/0xe2c
-Jul 21 11:26:35 bubba [  223.898699]  [<ffffffff810531f1>] ? wait_on_cpu_work+0xe6/0xe6
-Jul 21 11:26:35 bubba [  223.898982]  [<ffffffff8106c14a>] lock_acquire+0xd2/0xf7
-Jul 21 11:26:35 bubba [  223.899263]  [<ffffffff810531f1>] ? wait_on_cpu_work+0xe6/0xe6
-Jul 21 11:26:35 bubba [  223.899547]  [<ffffffff8104a097>] ? mod_timer+0x8f/0x98
-Jul 21 11:26:35 bubba [  223.899827]  [<ffffffff81053241>] wait_on_work+0x50/0xbd
-Jul 21 11:26:35 bubba [  223.900108]  [<ffffffff810531f1>] ? wait_on_cpu_work+0xe6/0xe6
-Jul 21 11:26:35 bubba [  223.900390]  [<ffffffff81053b32>] __cancel_work_timer+0xb6/0xf4
-Jul 21 11:26:35 bubba [  223.900671]  [<ffffffff81053b8a>] cancel_work_sync+0xb/0xd
-Jul 21 11:26:35 bubba [  223.900953]  [<ffffffffa00317e6>] fcoe_ctlr_destroy+0x1d/0x67 [libfcoe]
-Jul 21 11:26:35 bubba [  223.901237]  [<ffffffffa003e51e>] fcoe_interface_release+0x21/0x45 [fcoe]
-Jul 21 11:26:35 bubba [  223.901522]  [<ffffffffa003e4fd>] ? fcoe_enable+0x6b/0x6b [fcoe]
-Jul 21 11:26:35 bubba [  223.901803]  [<ffffffff811fbbe6>] kref_put+0x43/0x4d
-Jul 21 11:26:35 bubba [  223.902083]  [<ffffffffa003ebba>] fcoe_interface_put+0x17/0x19 [fcoe]
-Jul 21 11:26:35 bubba [  223.902367]  [<ffffffffa003f2a6>] fcoe_interface_cleanup+0x188/0x193 [fcoe]
-Jul 21 11:26:35 bubba [  223.902653]  [<ffffffff8151dd36>] ? mutex_lock_nested+0x3b/0x40
-Jul 21 11:26:35 bubba [  223.902939]  [<ffffffffa003f303>] fcoe_destroy+0x52/0x72 [fcoe]
-Jul 21 11:26:35 bubba [  223.903223]  [<ffffffffa00340a4>] fcoe_transport_destroy+0xab/0x110 [libfcoe]
-Jul 21 11:26:35 bubba [  223.903508]  [<ffffffff81056153>] param_attr_store+0x43/0x62
-Jul 21 11:26:35 bubba [  223.903792]  [<ffffffff8105602d>] module_attr_store+0x21/0x25
-Jul 21 11:26:35 bubba [  223.904075]  [<ffffffff8114c23d>] sysfs_write_file+0x103/0x13f
-Jul 21 11:26:35 bubba [  223.904357]  [<ffffffff810f3e7b>] vfs_write+0xa7/0xfa
-Jul 21 11:26:35 bubba [  223.904642]  [<ffffffff810f51d6>] ? fget_light+0x35/0x96
-Jul 21 11:26:35 bubba [  223.904923]  [<ffffffff810f4073>] sys_write+0x45/0x69
-Jul 21 11:26:35 bubba [  223.905204]  [<ffffffff815252bb>] system_call_fastpath+0x16/0x1b
-Jul 21 11:26:36 bubba [  223.964438] ixgbe 0000:05:00.0: eth3: detected SFP+: 5
-Jul 21 11:26:37 bubba [  225.196702] ixgbe 0000:05:00.0: eth3: NIC Link is Up 10 Gbps, Flow Control: None
+617  86.435165     4e.00.0b -> ff.ff.fc     FC ELS LOGO 0x203
+618  86.435195     4e.00.0b -> b6.02.00     FC ELS LOGO 0x213
+619  86.435220     4e.00.0b -> 18.03.00     FC ELS LOGO 0x223
+620  86.435244     4e.00.0b -> 18.02.00     FC ELS LOGO 0x233
+621  86.435267     4e.00.0b -> 18.01.00     FC ELS LOGO 0x243
+622  86.435349     00.00.00 -> ff.ff.fe     FC ELS FLOGI 0x203
+623  86.435549     ff.ff.fc -> 4e.00.0b     FC ELS ACC (LOGO) 0x203
+624  86.438721     ff.ff.fe -> 4e.00.0b     FC ELS ACC (FLOGI) 0x203
+625  86.442059     18.03.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x223
+626  86.443683     b6.02.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x213
+627  86.447693     18.01.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x243
+628  86.453499     18.02.00 -> 4e.00.0b     FC ELS ACC (LOGO) 0x233
 
-Signed-off-by: Robert Love <robert.w.love@intel.com>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Reviewed-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/libfc/fc_exch.c  |   51 ++++++++++++++++++++++++++++-------------
+ drivers/scsi/libfc/fc_lport.c |   11 ++++++++-
+ 2 files changed, 45 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index c30fa27..b5538e8 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -431,6 +431,8 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 	u8 flogi_maddr[ETH_ALEN];
- 	const struct net_device_ops *ops;
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 01ff082..744fefe 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -494,6 +494,9 @@ static int fc_seq_send(struct fc_lport *lport, struct fc_seq *sp,
+ 	 */
+ 	error = lport->tt.frame_send(lport, fp);
  
-+	rtnl_lock();
++	if (fh->fh_type == FC_TYPE_BLS)
++		return error;
 +
  	/*
- 	 * Don't listen for Ethernet packets anymore.
- 	 * synchronize_net() ensures that the packet handlers are not running
-@@ -460,6 +462,8 @@ void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- 					" specific feature for LLD.\n");
- 	}
- 
-+	rtnl_unlock();
-+
- 	/* Release the self-reference taken during fcoe_interface_create() */
- 	fcoe_interface_put(fcoe);
+ 	 * Update the exchange and sequence flags,
+ 	 * assuming all frames for the sequence have been sent.
+@@ -575,42 +578,35 @@ static void fc_seq_set_resp(struct fc_seq *sp,
  }
-@@ -1933,11 +1937,8 @@ static void fcoe_destroy_work(struct work_struct *work)
- 	fcoe_if_destroy(port->lport);
  
- 	/* Do not tear down the fcoe interface for NPIV port */
--	if (!npiv) {
--		rtnl_lock();
-+	if (!npiv)
- 		fcoe_interface_cleanup(fcoe);
--		rtnl_unlock();
+ /**
+- * fc_seq_exch_abort() - Abort an exchange and sequence
+- * @req_sp:	The sequence to be aborted
++ * fc_exch_abort_locked() - Abort an exchange
++ * @ep:	The exchange to be aborted
+  * @timer_msec: The period of time to wait before aborting
+  *
+- * Generally called because of a timeout or an abort from the upper layer.
++ * Locking notes:  Called with exch lock held
++ *
++ * Return value: 0 on success else error code
+  */
+-static int fc_seq_exch_abort(const struct fc_seq *req_sp,
+-			     unsigned int timer_msec)
++static int fc_exch_abort_locked(struct fc_exch *ep,
++				unsigned int timer_msec)
+ {
+ 	struct fc_seq *sp;
+-	struct fc_exch *ep;
+ 	struct fc_frame *fp;
+ 	int error;
+ 
+-	ep = fc_seq_exch(req_sp);
+-
+-	spin_lock_bh(&ep->ex_lock);
+ 	if (ep->esb_stat & (ESB_ST_COMPLETE | ESB_ST_ABNORMAL) ||
+-	    ep->state & (FC_EX_DONE | FC_EX_RST_CLEANUP)) {
+-		spin_unlock_bh(&ep->ex_lock);
++	    ep->state & (FC_EX_DONE | FC_EX_RST_CLEANUP))
+ 		return -ENXIO;
 -	}
  
- 	mutex_unlock(&fcoe_config_mutex);
- }
-@@ -1991,8 +1992,9 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 		printk(KERN_ERR "fcoe: Failed to create interface (%s)\n",
- 		       netdev->name);
- 		rc = -EIO;
-+		rtnl_unlock();
- 		fcoe_interface_cleanup(fcoe);
--		goto out_nodev;
-+		goto out_nortnl;
- 	}
+ 	/*
+ 	 * Send the abort on a new sequence if possible.
+ 	 */
+ 	sp = fc_seq_start_next_locked(&ep->seq);
+-	if (!sp) {
+-		spin_unlock_bh(&ep->ex_lock);
++	if (!sp)
+ 		return -ENOMEM;
+-	}
  
- 	/* Make this the "master" N_Port */
-@@ -2009,6 +2011,7 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	ep->esb_stat |= ESB_ST_SEQ_INIT | ESB_ST_ABNORMAL;
+ 	if (timer_msec)
+ 		fc_exch_timer_set_locked(ep, timer_msec);
+-	spin_unlock_bh(&ep->ex_lock);
  
- out_nodev:
- 	rtnl_unlock();
-+out_nortnl:
- 	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
+ 	/*
+ 	 * If not logged into the fabric, don't send ABTS but leave
+@@ -633,6 +629,28 @@ static int fc_seq_exch_abort(const struct fc_seq *req_sp,
  }
+ 
+ /**
++ * fc_seq_exch_abort() - Abort an exchange and sequence
++ * @req_sp:	The sequence to be aborted
++ * @timer_msec: The period of time to wait before aborting
++ *
++ * Generally called because of a timeout or an abort from the upper layer.
++ *
++ * Return value: 0 on success else error code
++ */
++static int fc_seq_exch_abort(const struct fc_seq *req_sp,
++			     unsigned int timer_msec)
++{
++	struct fc_exch *ep;
++	int error;
++
++	ep = fc_seq_exch(req_sp);
++	spin_lock_bh(&ep->ex_lock);
++	error = fc_exch_abort_locked(ep, timer_msec);
++	spin_unlock_bh(&ep->ex_lock);
++	return error;
++}
++
++/**
+  * fc_exch_timeout() - Handle exchange timer expiration
+  * @work: The work_struct identifying the exchange that timed out
+  */
+@@ -1715,6 +1733,7 @@ static void fc_exch_reset(struct fc_exch *ep)
+ 	int rc = 1;
+ 
+ 	spin_lock_bh(&ep->ex_lock);
++	fc_exch_abort_locked(ep, 0);
+ 	ep->state |= FC_EX_RST_CLEANUP;
+ 	if (cancel_delayed_work(&ep->timeout_work))
+ 		atomic_dec(&ep->ex_refcnt);	/* drop hold for timer */
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e55ed9c..628f347 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -88,6 +88,7 @@
+  */
+ 
+ #include <linux/timer.h>
++#include <linux/delay.h>
+ #include <linux/slab.h>
+ #include <asm/unaligned.h>
+ 
+@@ -1029,8 +1030,16 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
+ 			   FCH_EVT_LIPRESET, 0);
+ 	fc_vports_linkchange(lport);
+ 	fc_lport_reset_locked(lport);
+-	if (lport->link_up)
++	if (lport->link_up) {
++		/*
++		 * Wait upto resource allocation time out before
++		 * doing re-login since incomplete FIP exchanged
++		 * from last session may collide with exchanges
++		 * in new session.
++		 */
++		msleep(lport->r_a_tov);
+ 		fc_lport_enter_flogi(lport);
++	}
+ }
+ 
+ /**
 
