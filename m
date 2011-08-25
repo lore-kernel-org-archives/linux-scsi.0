@@ -1,39 +1,57 @@
-From: Ian Campbell <Ian.Campbell-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/9] skb fragment API: convert non-network drivers
-Date: Thu, 25 Aug 2011 09:28:01 +0100
-Message-ID: <1314260881.10283.48.camel@zakaz.uk.xensource.com>
+From: Ian Campbell <ian.campbell@citrix.com>
+Subject: [PATCH 9/9] fcoe: convert to SKB paged frag API.
+Date: Thu, 25 Aug 2011 09:28:15 +0100
+Message-ID: <1314260895-15936-9-git-send-email-ian.campbell@citrix.com>
+References: <1314260881.10283.48.camel@zakaz.uk.xensource.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-atm-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1314260881.10283.48.camel@zakaz.uk.xensource.com>
+Sender: netdev-owner@vger.kernel.org
+To: netdev@vger.kernel.org
+Cc: Ian Campbell <ian.campbell@citrix.com>, Robert Love <robert.w.love@intel.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The following series converts some non-network drivers to the SKB pages
-fragment API introduced in 131ea6675c76. Included are ATM, Infiniband,
-and FibreChannel. I also included the broadcom network drivers since I
-was touching the related FC driver.
+Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
+Reviewed-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Robert Love <robert.w.love@intel.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: devel@open-fcoe.org
+Cc: linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org
+---
+ drivers/scsi/fcoe/fcoe.c           |    2 +-
+ drivers/scsi/fcoe/fcoe_transport.c |    5 +++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-This is part of my series to enable visibility into SKB paged fragment's
-lifecycles, [0] contains some more background and rationale but
-basically the completed series will allow entities which inject pages
-into the networking stack to receive a notification when the stack has
-really finished with those pages (i.e. including retransmissions,
-clones, pull-ups etc) and not just when the original skb is finished
-with, which is beneficial to many subsystems which wish to inject pages
-into the network stack without giving up full ownership of those page's
-lifecycle. It implements something broadly along the lines of what was
-described in [1].
-
-Cheers,
-Ian.
-
-[0] http://marc.info/?l=linux-netdev&m=131072801125521&w=2
-[1] http://marc.info/?l=linux-netdev&m=130925719513084&w=2
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index ba710e3..3416ab6 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1514,7 +1514,7 @@ int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
+ 			return -ENOMEM;
+ 		}
+ 		frag = &skb_shinfo(skb)->frags[skb_shinfo(skb)->nr_frags - 1];
+-		cp = kmap_atomic(frag->page, KM_SKB_DATA_SOFTIRQ)
++		cp = kmap_atomic(skb_frag_page(frag), KM_SKB_DATA_SOFTIRQ)
+ 			+ frag->page_offset;
+ 	} else {
+ 		cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 41068e8..f6613f9 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -108,8 +108,9 @@ u32 fcoe_fc_crc(struct fc_frame *fp)
+ 		len = frag->size;
+ 		while (len > 0) {
+ 			clen = min(len, PAGE_SIZE - (off & ~PAGE_MASK));
+-			data = kmap_atomic(frag->page + (off >> PAGE_SHIFT),
+-					   KM_SKB_DATA_SOFTIRQ);
++			data = kmap_atomic(
++				skb_frag_page(frag) + (off >> PAGE_SHIFT),
++				KM_SKB_DATA_SOFTIRQ);
+ 			crc = crc32(crc, data + (off & ~PAGE_MASK), clen);
+ 			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
+ 			off += clen;
+-- 
+1.7.2.5
