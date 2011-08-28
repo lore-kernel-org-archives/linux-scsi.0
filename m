@@ -1,61 +1,46 @@
-From: correo =?iso-8859-1?Q?electr=F3nico_del_administracion?=
-	<webmaster.cpanel@w.cn>
-Subject: =?iso-8859-1?Q?atenci=F3n!?=
-Date: Sat, 27 Aug 2011 17:10:42 -0300 (ART)
-Message-ID: <15f568a74932c3c8bda19e128a3461a5.squirrel@mail.ifir-conicet.gov.ar>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: sysfs attributes of SCSI hosts
+Date: Sun, 28 Aug 2011 15:08:23 +0200
+Message-ID: <CAO+b5-q=yyuoeBCZFzpTDWpsr8KGQQDJ-B3s6X68=BoDD1=2Pw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.rosario-conicet.gov.ar ([168.96.15.28]:36220 "EHLO
-	mail.rosario-conicet.gov.ar" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751780Ab1H0XYY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Aug 2011 19:24:24 -0400
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:41618 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751122Ab1H1NIo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Aug 2011 09:08:44 -0400
+Received: by vws1 with SMTP id 1so4014416vws.19
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Aug 2011 06:08:43 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
+Hello,
 
+Recently I had a closer look at how SCSI host sysfs attributes are
+created. As far as I can see the attributes that apply to all SCSI
+hosts are declared in the scsi_sdev_attrs array in
+drivers/scsi_sysfs.c (device_blocked, type, scsi_level, vendor, model,
+...). These are created by the driver core before the KOBJ_ADD event
+is generated. However, the driver-specific attributes defined in
+scsi_host_template.shost_attrs are instantiated by the
+scsi_sysfs_add_sdev() function by invoking device_create_file() after
+the KOBJ_ADD event has been generated.
 
+A popular way to set default values for sysfs attributes is by
+defining a udev rule that sets the proper value. As an example, years
+ago the following rules were present in 50-udev-default.rules:
 
-La atenci=F3n de nuestros usuarios con valores de Webmail!
+SUBSYSTEM=="scsi", KERNEL=="[0-9]*:[0-9]*",ACTION=="add",
+ATTR{type}=="0|7|14", ATTR{timeout}="60"
+SUBSYSTEM=="scsi", KERNEL=="[0-9]*:[0-9]*",ACTION=="add",
+ATTR{type}=="1", ATTR{timeout}="900"
 
-Este es un mensaje autom=E1tico generado por este servidor de correo we=
-b
-que monitorea constantemente el tama=F1o de su buz=F3n de correo.
+Does that mean that udev rules similar to the above will work for
+setting the value of the default SCSI host attributes but that any
+attempt to use a similar rule for any attribute defined via
+shost_attrs is racy ? Has anyone been looking into this before ?
 
-Esto es para se=F1alar a su atenci=F3n que ha superado el tama=F1o m=E1=
-ximo
-establecido para su buz=F3n.
-Es muy importante que aumenta el tama=F1o de ahora para evitar el cierr=
-e de
-esta cuenta.
+Thanks,
 
-Lamentamos mucho que que hay ahora, de lo contrario no ser=E1
-capaz de acceder a su cuenta de correo web la pr=F3xima vez, ya que ser=
-=E1
-eliminado para evitar
-todos los problemas t=E9cnicos en el servidor.
-
-Haga clic en este enlace para aumentar el tama=F1o de su buz=F3n de cor=
-reo al
-instante
-http://angloroofing.co.uk/forms/use/webmail-account-mailbox-increase/fo=
-rm1.html
-
-=DAltima advertencia: la imposibilidad de aumentar el tama=F1o del buz=F3=
-n en
-este momento sin duda dar=E1 lugar a
-incapacidad permanente para acceder a su bandeja de entrada y la
-desactivaci=F3n de esta cuenta de correo web en tres d=EDas.
-Por favor, tomen nota!
-
-Pedimos disculpas por las molestias!
-
-CopyRight =A9 Mail.Admin
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
