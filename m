@@ -1,51 +1,44 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [patch] [SCSI] mptfusion: unlock on error in mpt_config()
-Date: Tue, 30 Aug 2011 16:18:23 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6042AD54397@inbmail02.lsi.com>
-References: <20110827095930.GK3775@shale.localdomain>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH] lpfc: properly factor out debugfs code
+Date: Tue, 30 Aug 2011 11:41:18 -0400
+Message-ID: <a464b126-7dec-4f4c-95e5-5d2fd31bd2d9@exht1.ad.emulex.com>
+References: <20110826093737.GA22411@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:33658 "EHLO
-	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750768Ab1H3Ksc convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2011 06:48:32 -0400
-In-Reply-To: <20110827095930.GK3775@shale.localdomain>
-Content-Language: en-US
+Received: from exht1.emulex.com ([138.239.113.183]:1531 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755210Ab1H3Pls (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2011 11:41:48 -0400
+In-Reply-To: <20110826093737.GA22411@logfs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: Support <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "open list:LSILOGIC MPT FUSI..." <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: =?UTF-8?B?SsO2cm4gRW5nZWw=?= <joern@logfs.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Iannicelli, Alex" <Alex.Iannicelli@Emulex.Com>, James Bottomley <JBottomley@Parallels.com>, James Smart <James.Smart@emulex.com>
 
-The patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Yes, I'll look into it.   The reg_val warning was a lapse in the compil=
+er,=20
+which can't detect setting of fields as the macros accessed the element=
+ by=20
+address.  We did submit a patch to quiet the compiler.
+
+-- james s
 
 
-Regards,
-Nagalakshmi
 
-
------Original Message-----
-From: Dan Carpenter [mailto:error27@gmail.com] 
-Sent: Saturday, August 27, 2011 3:30 PM
-To: Moore, Eric; Desai, Kashyap
-Cc: Support; DL-MPT Fusion Linux; open list:LSILOGIC MPT FUSI...; kernel-janitors@vger.kernel.org
-Subject: [patch] [SCSI] mptfusion: unlock on error in mpt_config()
-
-We introduced a new return here and forgot to unlock the mutex.
-
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index e9c6a60..e72320e 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -6482,6 +6482,7 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS *pCfg)
- 				printk(MYIOC_s_INFO_FMT "%s: host reset in"
- 					" progress mpt_config timed out.!!\n",
- 					__func__, ioc->name);
-+				mutex_unlock(&ioc->mptbase_cmds.mutex);
- 				return -EFAULT;
- 			}
- 			spin_unlock_irqrestore(&ioc->taskmgmt_lock, flags);
+On 8/26/2011 5:37 AM, J=C3=B6rn Engel wrote:
+> Hello James!
+>
+> I'm currently preparing a janitorial patch series and noticed that
+> this one already collides with some of your changes.  Can I leave it
+> to you to fix up the collision and send on?
+>
+> J=C3=B6rn
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
