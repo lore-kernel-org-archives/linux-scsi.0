@@ -1,97 +1,109 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 3/8] bnx2fc: No abort issued for REC when it times out
-Date: Tue, 30 Aug 2011 15:54:49 -0700
-Message-ID: <1314744894-24710-4-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 2/8] bnx2fc: Send solicitation only after vlan discovery
+ is complete
+Date: Tue, 30 Aug 2011 15:54:48 -0700
+Message-ID: <1314744894-24710-3-git-send-email-bprakash@broadcom.com>
 References: <1314744894-24710-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3579 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3854 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753516Ab1H3WzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2011 18:55:08 -0400
+	id S1753596Ab1H3WzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2011 18:55:09 -0400
 In-Reply-To: <1314744894-24710-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, nsujir@broadcom.com, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-ABTS was not issued for timed out REC, as REC completion handler exits out if
-the IO completed. Check for timed out REC and issue ABTS before proceeding with
-further processing in REC completion handler. Also, initialize rec_retry and
-srr_retry before starting the IO.
+Link up event is generated to the driver even before vlan discovery has
+started. Because of this driver can send discovery solicitation on a stale
+vlan. Call fcoe_ctlr_link_up() only when the driver is in enabled state, which
+implies the vlan discovery is complete before sending solicitation.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_els.c |   26 ++++++++++++++------------
- drivers/scsi/bnx2fc/bnx2fc_hwi.c |    6 ++++--
- 2 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h      |    1 +
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   21 +++++++++++++++++----
+ 2 files changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
-index d66dcbd..fd382fe 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_els.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
-@@ -391,18 +391,6 @@ void bnx2fc_rec_compl(struct bnx2fc_els_cb_arg *cb_arg)
- 	BNX2FC_IO_DBG(rec_req, "rec_compl: orig xid = 0x%x", orig_io_req->xid);
- 	tgt = orig_io_req->tgt;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 903e8f6..02535e8 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -224,6 +224,7 @@ struct bnx2fc_interface {
+ 	struct fcoe_ctlr ctlr;
+ 	u8 vlan_enabled;
+ 	int vlan_id;
++	bool enabled;
+ };
  
--	if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags)) {
--		BNX2FC_IO_DBG(rec_req, "completed"
--		       "orig_io - 0x%x\n",
--			orig_io_req->xid);
--		goto rec_compl_done;
--	}
--	if (test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
--		BNX2FC_IO_DBG(rec_req, "abts in prog "
--		       "orig_io - 0x%x\n",
--			orig_io_req->xid);
--		goto rec_compl_done;
--	}
- 	/* Handle REC timeout case */
- 	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &rec_req->req_flags)) {
- 		BNX2FC_IO_DBG(rec_req, "timed out, abort "
-@@ -433,6 +421,20 @@ void bnx2fc_rec_compl(struct bnx2fc_els_cb_arg *cb_arg)
- 		}
- 		goto rec_compl_done;
+ #define bnx2fc_from_ctlr(fip) container_of(fip, struct bnx2fc_interface, ctlr)
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 6387067..ba88ddb 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -865,8 +865,11 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
+ 		if (link_possible && !bnx2fc_link_ok(lport)) {
+ 			/* Reset max recv frame size to default */
+ 			fc_set_mfs(lport, BNX2FC_MFS);
+-			printk(KERN_ERR "indicate_netevent: ctlr_link_up\n");
+-			fcoe_ctlr_link_up(&interface->ctlr);
++			/*
++			 * ctlr link up will only be handled during
++			 * enable to avoid sending discovery solicitation
++			 * on a stale vlan
++			 */
+ 		} else if (fcoe_ctlr_link_down(&interface->ctlr)) {
+ 			mutex_lock(&lport->lp_mutex);
+ 			list_for_each_entry(vport, &lport->vports, list)
+@@ -1784,7 +1787,7 @@ static void bnx2fc_start_disc(struct bnx2fc_interface *interface)
+ 	lport = interface->ctlr.lp;
+ 	BNX2FC_HBA_DBG(lport, "calling fc_fabric_login\n");
+ 
+-	if (!bnx2fc_link_ok(lport)) {
++	if (!bnx2fc_link_ok(lport) && interface->enabled) {
+ 		BNX2FC_HBA_DBG(lport, "ctlr_link_up\n");
+ 		fcoe_ctlr_link_up(&interface->ctlr);
+ 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
+@@ -1866,6 +1869,7 @@ static int bnx2fc_disable(struct net_device *netdev)
+ 		rc = -ENODEV;
+ 		printk(KERN_ERR PFX "bnx2fc_disable: interface or lport not found\n");
+ 	} else {
++		interface->enabled = false;
+ 		fcoe_ctlr_link_down(&interface->ctlr);
+ 		fcoe_clean_pending_queue(interface->ctlr.lp);
  	}
-+
-+	if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags)) {
-+		BNX2FC_IO_DBG(rec_req, "completed"
-+		       "orig_io - 0x%x\n",
-+			orig_io_req->xid);
-+		goto rec_compl_done;
+@@ -1888,8 +1892,10 @@ static int bnx2fc_enable(struct net_device *netdev)
+ 	if (!interface || !interface->ctlr.lp) {
+ 		rc = -ENODEV;
+ 		printk(KERN_ERR PFX "bnx2fc_enable: interface or lport not found\n");
+-	} else if (!bnx2fc_link_ok(interface->ctlr.lp))
++	} else if (!bnx2fc_link_ok(interface->ctlr.lp)) {
+ 		fcoe_ctlr_link_up(&interface->ctlr);
++		interface->enabled = true;
 +	}
-+	if (test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
-+		BNX2FC_IO_DBG(rec_req, "abts in prog "
-+		       "orig_io - 0x%x\n",
-+			orig_io_req->xid);
-+		goto rec_compl_done;
+ 
+ 	mutex_unlock(&bnx2fc_dev_lock);
+ 	rtnl_unlock();
+@@ -2002,8 +2008,15 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
+ 	/* Make this master N_port */
+ 	interface->ctlr.lp = lport;
+ 
++	if (!bnx2fc_link_ok(lport)) {
++		fcoe_ctlr_link_up(&interface->ctlr);
++		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
++		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
 +	}
 +
- 	mp_req = &(rec_req->mp_req);
- 	fc_hdr = &(mp_req->resp_fc_hdr);
- 	resp_len = mp_req->resp_len;
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index b241f3d..1923a25 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1743,11 +1743,13 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- 	/* Init state to NORMAL */
- 	task->txwr_rxrd.const_ctx.init_flags |= task_type <<
- 				FCOE_TCE_TX_WR_RX_RD_CONST_TASK_TYPE_SHIFT;
--	if (dev_type == TYPE_TAPE)
-+	if (dev_type == TYPE_TAPE) {
- 		task->txwr_rxrd.const_ctx.init_flags |=
- 				FCOE_TASK_DEV_TYPE_TAPE <<
- 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
--	else
-+		io_req->rec_retry = 0;
-+		io_req->rec_retry = 0;
-+	} else
- 		task->txwr_rxrd.const_ctx.init_flags |=
- 				FCOE_TASK_DEV_TYPE_DISK <<
- 				FCOE_TCE_TX_WR_RX_RD_CONST_DEV_TYPE_SHIFT;
+ 	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
+ 	bnx2fc_start_disc(interface);
++	interface->enabled = true;
+ 	/*
+ 	 * Release from kref_init in bnx2fc_interface_setup, on success
+ 	 * lport should be holding a reference taken in bnx2fc_if_create
 -- 
 1.7.0.6
 
