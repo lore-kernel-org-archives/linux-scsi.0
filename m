@@ -1,43 +1,55 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 1/8] bnx2fc: Reset max receive frame size during link up
-Date: Tue, 30 Aug 2011 15:54:47 -0700
-Message-ID: <1314744894-24710-2-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 8/8] bnx2fc: Bumped version to 1.0.6
+Date: Tue, 30 Aug 2011 15:54:54 -0700
+Message-ID: <1314744894-24710-9-git-send-email-bprakash@broadcom.com>
 References: <1314744894-24710-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3851 "EHLO MMS3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3372 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753584Ab1H3WzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2011 18:55:09 -0400
+	id S1753572Ab1H3WzI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2011 18:55:08 -0400
 In-Reply-To: <1314744894-24710-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, nsujir@broadcom.com, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-If the max receive frame size is changed during link down, the driver uses the
-same value after linkup unless it is reset to default.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+index 02535e8..8dd5d4a 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc.h
++++ b/drivers/scsi/bnx2fc/bnx2fc.h
+@@ -62,7 +62,7 @@
+ #include "bnx2fc_constants.h"
+ 
+ #define BNX2FC_NAME		"bnx2fc"
+-#define BNX2FC_VERSION		"1.0.5"
++#define BNX2FC_VERSION		"1.0.6"
+ 
+ #define PFX			"bnx2fc: "
+ 
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 24e7071..6387067 100644
+index 330f9f0..eb28446 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -863,6 +863,8 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 		bnx2fc_link_speed_update(lport);
+@@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
  
- 		if (link_possible && !bnx2fc_link_ok(lport)) {
-+			/* Reset max recv frame size to default */
-+			fc_set_mfs(lport, BNX2FC_MFS);
- 			printk(KERN_ERR "indicate_netevent: ctlr_link_up\n");
- 			fcoe_ctlr_link_up(&interface->ctlr);
- 		} else if (fcoe_ctlr_link_down(&interface->ctlr)) {
+ #define DRV_MODULE_NAME		"bnx2fc"
+ #define DRV_MODULE_VERSION	BNX2FC_VERSION
+-#define DRV_MODULE_RELDATE	"Aug 03, 2011"
++#define DRV_MODULE_RELDATE	"Aug 30, 2011"
+ 
+ 
+ static char version[] __devinitdata =
 -- 
 1.7.0.6
 
