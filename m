@@ -1,109 +1,65 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 2/8] bnx2fc: Send solicitation only after vlan discovery
- is complete
-Date: Tue, 30 Aug 2011 15:54:48 -0700
-Message-ID: <1314744894-24710-3-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 5/8] bnx2fc: Avoid calling bnx2fc_if_destroy with
+ unnecessary locks
+Date: Tue, 30 Aug 2011 15:54:51 -0700
+Message-ID: <1314744894-24710-6-git-send-email-bprakash@broadcom.com>
 References: <1314744894-24710-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:3854 "EHLO MMS3.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3372 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753596Ab1H3WzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2011 18:55:09 -0400
+	id S1753518Ab1H3WzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2011 18:55:06 -0400
 In-Reply-To: <1314744894-24710-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, nsujir@broadcom.com, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-Link up event is generated to the driver even before vlan discovery has
-started. Because of this driver can send discovery solicitation on a stale
-vlan. Call fcoe_ctlr_link_up() only when the driver is in enabled state, which
-implies the vlan discovery is complete before sending solicitation.
+It is not required to hold rtnl_lock and bnx2fc_dev_lock when calling
+bnx2fc_if_destroy, as the locking is only required to serialize creation and
+deletion of fcoe instances. More importantly, this unnecessary locking causes
+deadlock as bnx2fc_if_destroy calls fc_remove_host holding rtnl_lock.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |    1 +
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   21 +++++++++++++++++----
- 2 files changed, 18 insertions(+), 4 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    8 ++------
+ 1 files changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 903e8f6..02535e8 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -224,6 +224,7 @@ struct bnx2fc_interface {
- 	struct fcoe_ctlr ctlr;
- 	u8 vlan_enabled;
- 	int vlan_id;
-+	bool enabled;
- };
- 
- #define bnx2fc_from_ctlr(fip) container_of(fip, struct bnx2fc_interface, ctlr)
 diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 6387067..ba88ddb 100644
+index 886938d..a5111f3 100644
 --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -865,8 +865,11 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event,
- 		if (link_possible && !bnx2fc_link_ok(lport)) {
- 			/* Reset max recv frame size to default */
- 			fc_set_mfs(lport, BNX2FC_MFS);
--			printk(KERN_ERR "indicate_netevent: ctlr_link_up\n");
--			fcoe_ctlr_link_up(&interface->ctlr);
-+			/*
-+			 * ctlr link up will only be handled during
-+			 * enable to avoid sending discovery solicitation
-+			 * on a stale vlan
-+			 */
- 		} else if (fcoe_ctlr_link_down(&interface->ctlr)) {
- 			mutex_lock(&lport->lp_mutex);
- 			list_for_each_entry(vport, &lport->vports, list)
-@@ -1784,7 +1787,7 @@ static void bnx2fc_start_disc(struct bnx2fc_interface *interface)
- 	lport = interface->ctlr.lp;
- 	BNX2FC_HBA_DBG(lport, "calling fc_fabric_login\n");
+@@ -1487,13 +1487,13 @@ static void bnx2fc_if_destroy(struct fc_lport *lport)
+ static void __bnx2fc_destroy(struct bnx2fc_interface *interface)
+ {
+ 	struct fc_lport *lport = interface->ctlr.lp;
++	struct fcoe_port *port = lport_priv(lport);
  
--	if (!bnx2fc_link_ok(lport)) {
-+	if (!bnx2fc_link_ok(lport) && interface->enabled) {
- 		BNX2FC_HBA_DBG(lport, "ctlr_link_up\n");
- 		fcoe_ctlr_link_up(&interface->ctlr);
- 		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
-@@ -1866,6 +1869,7 @@ static int bnx2fc_disable(struct net_device *netdev)
- 		rc = -ENODEV;
- 		printk(KERN_ERR PFX "bnx2fc_disable: interface or lport not found\n");
- 	} else {
-+		interface->enabled = false;
- 		fcoe_ctlr_link_down(&interface->ctlr);
- 		fcoe_clean_pending_queue(interface->ctlr.lp);
- 	}
-@@ -1888,8 +1892,10 @@ static int bnx2fc_enable(struct net_device *netdev)
- 	if (!interface || !interface->ctlr.lp) {
- 		rc = -ENODEV;
- 		printk(KERN_ERR PFX "bnx2fc_enable: interface or lport not found\n");
--	} else if (!bnx2fc_link_ok(interface->ctlr.lp))
-+	} else if (!bnx2fc_link_ok(interface->ctlr.lp)) {
- 		fcoe_ctlr_link_up(&interface->ctlr);
-+		interface->enabled = true;
-+	}
+ 	bnx2fc_interface_cleanup(interface);
+ 	bnx2fc_stop(interface);
+ 	list_del(&interface->list);
+-	lport = interface->ctlr.lp;
+ 	bnx2fc_interface_put(interface);
+-	bnx2fc_if_destroy(lport);
++	queue_work(bnx2fc_wq, &port->destroy_work);
+ }
  
- 	mutex_unlock(&bnx2fc_dev_lock);
- 	rtnl_unlock();
-@@ -2002,8 +2008,15 @@ static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode)
- 	/* Make this master N_port */
- 	interface->ctlr.lp = lport;
+ /**
+@@ -1541,11 +1541,7 @@ static void bnx2fc_destroy_work(struct work_struct *work)
  
-+	if (!bnx2fc_link_ok(lport)) {
-+		fcoe_ctlr_link_up(&interface->ctlr);
-+		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
-+		set_bit(ADAPTER_STATE_READY, &interface->hba->adapter_state);
-+	}
-+
- 	BNX2FC_HBA_DBG(lport, "create: START DISC\n");
- 	bnx2fc_start_disc(interface);
-+	interface->enabled = true;
- 	/*
- 	 * Release from kref_init in bnx2fc_interface_setup, on success
- 	 * lport should be holding a reference taken in bnx2fc_if_create
+ 	BNX2FC_HBA_DBG(lport, "Entered bnx2fc_destroy_work\n");
+ 
+-	rtnl_lock();
+-	mutex_lock(&bnx2fc_dev_lock);
+ 	bnx2fc_if_destroy(lport);
+-	mutex_unlock(&bnx2fc_dev_lock);
+-	rtnl_unlock();
+ }
+ 
+ static void bnx2fc_unbind_adapter_devices(struct bnx2fc_hba *hba)
 -- 
 1.7.0.6
 
