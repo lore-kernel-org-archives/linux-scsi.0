@@ -1,67 +1,66 @@
 From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] drivers/scsi/mpt2sas/mpt2sas_transport.c: add missing
- sas_phy_free
-Date: Tue, 30 Aug 2011 16:12:31 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6042AD54391@inbmail02.lsi.com>
-References: <1312975933-18277-1-git-send-email-julia@diku.dk>
+Subject: RE: [PATCH] [SCSI] mpt2sas: Fix mismatch in
+ mpt2sas_base_hard_reset_handler() mutex lock-unlock
+Date: Tue, 30 Aug 2011 16:14:35 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6042AD54393@inbmail02.lsi.com>
+References: <1314304583-19856-1-git-send-email-khoroshilov@ispras.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:57215 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750768Ab1H3Kml convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2011 06:42:41 -0400
-In-Reply-To: <1312975933-18277-1-git-send-email-julia@diku.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1314304583-19856-1-git-send-email-khoroshilov@ispras.ru>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ldv-project@ispras.ru" <ldv-project@ispras.ru>
 List-Id: linux-scsi@vger.kernel.org
-To: Julia Lawall <julia@diku.dk>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
 The patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+
 
 Regards,
 Nagalakshmi
 
 
 -----Original Message-----
-From: Julia Lawall [mailto:julia@diku.dk] 
-Sent: Wednesday, August 10, 2011 5:02 PM
-To: James E.J. Bottomley
-Cc: kernel-janitors@vger.kernel.org; Desai, Kashyap; James Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH] drivers/scsi/mpt2sas/mpt2sas_transport.c: add missing sas_phy_free
+From: Alexey Khoroshilov [mailto:khoroshilov@ispras.ru] 
+Sent: Friday, August 26, 2011 2:06 AM
+To: Desai, Kashyap
+Cc: Alexey Khoroshilov; DL-MPT Fusion Linux; James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; ldv-project@ispras.ru
+Subject: [PATCH] [SCSI] mpt2sas: Fix mismatch in mpt2sas_base_hard_reset_handler() mutex lock-unlock
 
-From: Julia Lawall <julia@diku.dk>
+If ioc->pci_error_recovery is set, goto out in mpt2sas_base_hard_reset_handler()
+leads to unlock unheld ioc->reset_in_progress_mutex.
 
-In each case, sas_phy_add has not yet been successfully applied, so use
-sas_phy_free to free phy.
+The patch fixes the issue by jumping afer mutex_unlock() call.
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Found by Linux Driver Verification project (linuxtesting.org).
 
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 ---
- drivers/scsi/mpt2sas/mpt2sas_transport.c |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-index 15c7980..762f05e 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
-@@ -857,6 +857,7 @@ mpt2sas_transport_add_host_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
- 	    &mpt2sas_phy->identify))) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-+		sas_phy_free(phy);
- 		return -1;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 83035bd..906c63a 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -4130,7 +4130,7 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
+ 		printk(MPT2SAS_ERR_FMT "%s: pci error recovery reset\n",
+ 		    ioc->name, __func__);
+ 		r = 0;
+-		goto out;
++		goto out_unlocked;
  	}
- 	phy->identify = mpt2sas_phy->identify;
-@@ -923,6 +924,7 @@ mpt2sas_transport_add_expander_phy(struct MPT2SAS_ADAPTER *ioc, struct _sas_phy
- 	    &mpt2sas_phy->identify))) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
-+		sas_phy_free(phy);
- 		return -1;
- 	}
- 	phy->identify = mpt2sas_phy->identify;
-
+ 
+ 	if (mpt2sas_fwfault_debug)
+@@ -4186,6 +4186,7 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
+ 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
+ 	mutex_unlock(&ioc->reset_in_progress_mutex);
+ 
++ out_unlocked:
+ 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: exit\n", ioc->name,
+ 	    __func__));
+ 	return r;
+-- 
+1.7.4.1
