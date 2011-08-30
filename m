@@ -1,19 +1,23 @@
 From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] [SCSI] mpt2sas: Fix mismatch in
- mpt2sas_base_hard_reset_handler() mutex lock-unlock
-Date: Tue, 30 Aug 2011 16:14:35 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6042AD54393@inbmail02.lsi.com>
-References: <1314304583-19856-1-git-send-email-khoroshilov@ispras.ru>
+Subject: RE: [patch] [SCSI] mptfusion: unlock on error in mpt_config()
+Date: Tue, 30 Aug 2011 16:18:23 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6042AD54397@inbmail02.lsi.com>
+References: <20110827095930.GK3775@shale.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1314304583-19856-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:33658 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750768Ab1H3Ksc convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2011 06:48:32 -0400
+In-Reply-To: <20110827095930.GK3775@shale.localdomain>
 Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "ldv-project@ispras.ru" <ldv-project@ispras.ru>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <error27@gmail.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: Support <support@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "open list:LSILOGIC MPT FUSI..." <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
 The patch seem to be fine. Please consider this patch as Acked-by: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
 
@@ -23,44 +27,25 @@ Nagalakshmi
 
 
 -----Original Message-----
-From: Alexey Khoroshilov [mailto:khoroshilov@ispras.ru] 
-Sent: Friday, August 26, 2011 2:06 AM
-To: Desai, Kashyap
-Cc: Alexey Khoroshilov; DL-MPT Fusion Linux; James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; ldv-project@ispras.ru
-Subject: [PATCH] [SCSI] mpt2sas: Fix mismatch in mpt2sas_base_hard_reset_handler() mutex lock-unlock
+From: Dan Carpenter [mailto:error27@gmail.com] 
+Sent: Saturday, August 27, 2011 3:30 PM
+To: Moore, Eric; Desai, Kashyap
+Cc: Support; DL-MPT Fusion Linux; open list:LSILOGIC MPT FUSI...; kernel-janitors@vger.kernel.org
+Subject: [patch] [SCSI] mptfusion: unlock on error in mpt_config()
 
-If ioc->pci_error_recovery is set, goto out in mpt2sas_base_hard_reset_handler()
-leads to unlock unheld ioc->reset_in_progress_mutex.
+We introduced a new return here and forgot to unlock the mutex.
 
-The patch fixes the issue by jumping afer mutex_unlock() call.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 83035bd..906c63a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -4130,7 +4130,7 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
- 		printk(MPT2SAS_ERR_FMT "%s: pci error recovery reset\n",
- 		    ioc->name, __func__);
- 		r = 0;
--		goto out;
-+		goto out_unlocked;
- 	}
- 
- 	if (mpt2sas_fwfault_debug)
-@@ -4186,6 +4186,7 @@ mpt2sas_base_hard_reset_handler(struct MPT2SAS_ADAPTER *ioc, int sleep_flag,
- 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 	mutex_unlock(&ioc->reset_in_progress_mutex);
- 
-+ out_unlocked:
- 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: exit\n", ioc->name,
- 	    __func__));
- 	return r;
--- 
-1.7.4.1
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index e9c6a60..e72320e 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -6482,6 +6482,7 @@ mpt_config(MPT_ADAPTER *ioc, CONFIGPARMS *pCfg)
+ 				printk(MYIOC_s_INFO_FMT "%s: host reset in"
+ 					" progress mpt_config timed out.!!\n",
+ 					__func__, ioc->name);
++				mutex_unlock(&ioc->mptbase_cmds.mutex);
+ 				return -EFAULT;
+ 			}
+ 			spin_unlock_irqrestore(&ioc->taskmgmt_lock, flags);
