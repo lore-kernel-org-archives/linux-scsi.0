@@ -1,155 +1,201 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] [SCSI] libsas: remove expander from dev list on error
-Date: Wed, 31 Aug 2011 09:52:26 -0700 (PDT)
-Message-ID: <1314809546.41862.YahooMailNeo@web31808.mail.mud.yahoo.com>
-References: <1311747048.72460.YahooMailNeo@web31810.mail.mud.yahoo.com> <CAA9_cmc3RWUFsWkyO4qnTLbVTmcGv51Ab8LyJqJUbNHbnx0kCg@mail.gmail.com>
+Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
+Date: Wed, 31 Aug 2011 10:43:28 -0700 (PDT)
+Message-ID: <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
+References: <20110730002509.28735.82590.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com>
 Reply-To: Luben Tuikov <ltuikov@yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm1.bullet.mail.sp2.yahoo.com ([98.139.91.71]:32613 "HELO
-	nm1.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756808Ab1HaQw2 convert rfc822-to-8bit
+Received: from nm25.bullet.mail.ac4.yahoo.com ([98.139.52.222]:21780 "HELO
+	nm25.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756877Ab1HaRna convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Aug 2011 12:52:28 -0400
-In-Reply-To: <CAA9_cmc3RWUFsWkyO4qnTLbVTmcGv51Ab8LyJqJUbNHbnx0kCg@mail.gmail.com>
+	Wed, 31 Aug 2011 13:43:30 -0400
+In-Reply-To: <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "JBottomley@Parallels.com" <JBottomley@parallels.com>, Jack Wang <jack_wang@usish.com>
+To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Darrick J Wong <djwong@us.ibm.com>, James Bottomley <jbottomley@parallels.com>
 
 ----- Original Message -----
 
-> From: Dan Williams <dan.j.williams@intel.com>
-> To: Luben Tuikov <ltuikov@yahoo.com>
-> Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>; "linux=
--kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>; "JBottomley@Pa=
-rallels.com" <JBottomley@parallels.com>; Jack Wang <jack_wang@usish.com=
+> From: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+> To: linux-scsi@vger.kernel.org
+> Cc: Luben Tuikov <ltuikov@yahoo.com>; Darrick J Wong <djwong@us.ibm.c=
+om>; James Bottomley <jbottomley@parallels.com>
+> Sent: Wednesday, August 31, 2011 6:44 AM
+> Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
+>=20
+> Since Luben's patch on July 28th 2011 went nowhere, as there was an
+> unanswered question regarding the future-proofing that Luben added in=
+=2E
+
+Are you saying that the patch I posted,
+http://marc.info/?t=3D131182720200001&r=3D1&w=3D2, didn't go in
+because I didn't entertain Bottomley's unrelated question therein?
+Or are you saying that it did go in based on TECHNICAL CONTENT? I.e. it
+was buggy, or wrong, etc?
+
+> I decided to submit a simplified focussed patch we have been using fo=
+r the
+
+By "simplified, focused" you mean one which doesn't define 2 out of 3 f=
+lags of=20
+REPORT GENERAL SMP response?
+
+> past year testing with the Xyratex enclosures (5U84, 2U24, chained wi=
+th
+> *many* peered expanders with Table to Table routing) that should
+> hopefully expedite things and will be on hot standby to refactor as
+> requested (including tossing this baby and refactoring Luben's patch
+> should he be too busy, no hair off my back)
+
+Now onto technical matter:
+1) I'd call the flag "t2t_supp" to a) fit in with the rest of the spiri=
+t of the
+code as other fields are also called "_supp", and to b) actually convey
+=A0the meaning of "table-to-table supported. Your naming of this flag
+"table_to_table" implicitly means "table to table supported".
+2) Please also add the debug output as my patch did. People will
+be wondering what went wrong if their domain didn't work, and the
+debug print in my original patch would tell them that.
+3) You don't check that the parent also supports T2T. That's a bug.
+4) Your patch logically does this: P=3DT && C!=3DS && (C is T2T || C!=3D=
+T),
+which after expansion is equivalent to:
+(P=3D=3DT) && ((C!=3DS && C!=3DT2T) || C=3D=3DD) =3D=3D> fail
+where the outmost parens are an if (). Albeit from not being entirely c=
+orrect,
+it also obfuscates what is being sought after. I chose to use the negat=
+ion for
+successful check to make it more clear:
+(P=3D=3DT) && (C=3D=3DS || (C=3D=3DT && P=3D=3DT2T && C=3D=3DT2T)) =3D=3D=
+> success,
+Translates to
+"If parent phy is T, and If child phy is S OR (child is T and child and=
+ parent
+both support table to table) then we're okay, else report an error."
+Which is: T<-S is okay, and T<-T is okay if both parent and child suppo=
+rt it.
+
+Alternatively, Bottomley could just add my patch upstream.
+
+> Please note, as I am *stuck* on Outlook as per company policy, the
+> following inline content will likely not patch clean even emailed as
+> 'Plain Text', the enclosed attached file should do the job. I have=20
+> Cc'd
+> all the folks that originated the files in libsas, as there was no
+> listed MAINTAINERs.
+>=20
+> NB: this patch (and Luben's independent patch) results in an ABI brea=
+k
+> as the structures change 'shape' and thus result in a different set o=
+f
+> libsas export signatures. I have an internal patch I use that preserv=
+es
+> the structure shapes and thus the ABI; but would be considered
+> inappropriate for the pristine trees. Said alternate patch would work
+> fine for a Distribution tree where ABI concerns are an issue.
+>=20
+> Checkpatch.pl reports clean.
+>=20
+> Sincerely -- Mark Salyzyn
+>=20
+> Cc: Luben Tuikov <tuikov@yahoo.com>
+> Cc: Darrick J Wong <djwong@us.ibm.com>
+> Cc: James Bottomley <jbottomley@parallels.com>
+>=20
+> Signed-off-by: Mark Salyzyn <msalyzyn@us.xyratex.com>
+>=20
+> drivers/scsi/libsas/sas_expander.c |=A0 =A0 6 +++++-
+> include/scsi/libsas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 |=A0 =A0 1 +
+> include/scsi/sas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  |=A0 =A0 6 ++++--
+> 3 files changed, 10 insertions(+), 3 deletions(-)
+>=20
+> diff -ru scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c
+> scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
+> --- scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c=A0=A0=A0 2011-08=
+-31
+> 08:32:21.000000000 -0400
+> +++ scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
+> 2011-08-31 09:07:31.000000000 -0400
+> @@ -331,6 +331,7 @@
+> =A0=A0=A0 dev->ex_dev.num_phys =3D min(rg->num_phys, (u8)MAX_EXPANDER=
+_PHYS);
+> =A0=A0=A0 dev->ex_dev.conf_route_table =3D rg->conf_route_table;
+> =A0=A0=A0 dev->ex_dev.configuring =3D rg->configuring;
+> +=A0=A0=A0 dev->ex_dev.table_to_table =3D rg->table_to_table;
+> =A0=A0=A0 memcpy(dev->ex_dev.enclosure_logical_id,
+> rg->enclosure_logical_id, 8);
+> }
+>=20
+> @@ -1239,7 +1240,10 @@
+> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
+> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
+> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else if (parent_phy->routing_attr =3D=
+=3D
+> TABLE_ROUTING &&
+> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0  child_phy->routing_attr=
+ !=3D
+> SUBTRACTIVE_ROUTING) {
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0  child_phy->routing_attr=
+ !=3D
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 SUBTRACTIVE_ROUTIN=
+G &&
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0  (child_ex->table_to_tab=
+le =3D=3D 0 ||
+> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0 =A0 child_phy->routing_a=
+ttr !=3D
+> TABLE_ROUTING)) {
+> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent_topology_bug=
+(child,
+> parent_phy, child_phy);
+> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
+> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
+> diff -ru scsi-misc-2.6/include/scsi/libsas.h
+> scsi-misc-2.6.new/include/scsi/libsas.h
+> --- scsi-misc-2.6/include/scsi/libsas.h=A0=A0=A0 2011-08-31 08:32:22.=
+000000000
+> -0400
+> +++ scsi-misc-2.6.new/include/scsi/libsas.h=A0=A0=A0 2011-08-31
+> 09:07:31.000000000 -0400
+> @@ -144,6 +144,7 @@
+> =A0=A0=A0 u8=A0 =A0  num_phys;
+> =A0=A0=A0 u8=A0 =A0  configuring:1;
+> =A0=A0=A0 u8=A0 =A0  conf_route_table:1;
+> +=A0=A0=A0 u8=A0 =A0  table_to_table:1;
+> =A0=A0=A0 u8=A0 =A0  enclosure_logical_id[8];
+>=20
+> =A0=A0=A0 struct ex_phy *ex_phy;
+> diff -ru scsi-misc-2.6/include/scsi/sas.h
+> scsi-misc-2.6.new/include/scsi/sas.h
+> --- scsi-misc-2.6/include/scsi/sas.h=A0=A0=A0 2011-08-31 08:32:22.000=
+000000
+> -0400
+> +++ scsi-misc-2.6.new/include/scsi/sas.h=A0=A0=A0 2011-08-31
+> 09:07:31.000000000 -0400
+> @@ -341,7 +341,8 @@
+>=20
+> =A0=A0=A0 u8=A0 =A0 =A0 conf_route_table:1;
+> =A0=A0=A0 u8=A0 =A0 =A0 configuring:1;
+> -=A0=A0=A0 u8=A0 =A0 =A0 _r_b:6;
+> +=A0=A0=A0 u8=A0 =A0 =A0 _r_b:5;
+> +=A0=A0=A0 u8=A0 =A0 =A0 table_to_table:1;
+>=20
+> =A0=A0=A0 u8=A0 =A0 =A0 _r_c;
+>=20
+> @@ -528,7 +529,8 @@
+> =A0=A0=A0 u8=A0 =A0 =A0 _r_a;
+> =A0=A0=A0 u8=A0 =A0 =A0 num_phys;
+>=20
+> -=A0=A0=A0 u8=A0 =A0 =A0 _r_b:6;
+> +=A0=A0=A0 u8=A0 =A0 =A0 table_to_table:1;
+> +=A0=A0=A0 u8=A0 =A0 =A0 _r_b:5;
+> =A0=A0=A0 u8=A0 =A0 =A0 configuring:1;
+> =A0=A0=A0 u8=A0 =A0 =A0 conf_route_table:1;
 >
-> Sent: Wednesday, July 27, 2011 1:32 PM
-> Subject: Re: [PATCH] [SCSI] libsas: remove expander from dev list on =
-error
->=20
-> On Tue, Jul 26, 2011 at 11:10 PM, Luben Tuikov <ltuikov@yahoo.com> wr=
-ote:
->>  If expander discovery fails (sas_discover_expander()),
->>  remove the expander from the port device list
->>  (sas_ex_discover_expander()), before freeing it. Else
->>  the list is corrupted and, e.g., when we attempt to send
->>  SMP commands to other devices, the kernel oopses.
->>=20
->>  Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
->>  Reviewed-by: Jack Wang <jack_wang@usish.com>
->>  ---
->>  =A0drivers/scsi/libsas/sas_expander.c |=A0=A0=A0 3 +++
->>  =A01 files changed, 3 insertions(+), 0 deletions(-)
->>=20
->>  diff --git a/drivers/scsi/libsas/sas_expander.c=20
-> b/drivers/scsi/libsas/sas_expander.c
->>  index 874e29d..f84084b 100644
->>  --- a/drivers/scsi/libsas/sas_expander.c
->>  +++ b/drivers/scsi/libsas/sas_expander.c
->>  @@ -849,6 +849,9 @@ static struct domain_device *sas_ex_discover_ex=
-pander(
->>=20
->>  =A0=A0=A0=A0=A0=A0=A0 res =3D sas_discover_expander(child);
->>  =A0=A0=A0=A0=A0=A0=A0 if (res) {
->>  +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 spin_lock_irq(&parent->=
-port->dev_list_lock);
->>  +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 list_del(&child->dev_li=
-st_node);
->>  +=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 spin_unlock_irq(&parent=
-->port->dev_list_lock);
->>  =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 kfree(child);
->>  =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 return NULL;
->=20
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
->=20
-> ...but it raises a couple questions for potential follow on patches:
->=20
-> 1/ Do we need to add the device to port->dev_list prior to the
-> discovery?=A0 Seems cleaner to defer the list_add until after the
-> discovery has succeeded.
-
-In my original SAS Transport layer, devices were added to the
-port device list in one and only one place, after discovery,
-at sas_kobj_set() (which doesn't exist now because my code was
-edited off-line before being submitted into the kernel by Bottomley).
-Thus due to the architecture of the code, this bug doesn't exist in my =
-original
-implementation, but was introduced in the version submitted by Bottomle=
-y,
-when devices are being added to the port list in more than one place.
-
-My development git history was removed as the code was taken
-off my git trees, edited off line, off git, and then submitted, thus er=
-asing
-its original state or its development history (in git). So it's now imp=
-ossible
-for a 3rd party to see what bugs were introduced due to those off-line
-changes before submission.
-
-And as you can see, there are bugs. The bugs are, as I can see, stemmin=
-g
-from the current _explicitness_ of libsas, a la, just-in-place fix, as =
-if
-someone has been studying the code by line-stepping it with a debugger,
-and then going "A-ha! Here is where we can stick this in." SATA support
-seems to have been added in a similar manner, "where can we stick this
-to get it to work". I.e. there is no grand architecture, no vision.
-
-The original code, was much more implicit: you had to pull back to see
-what was happening.
-
-It was designed as a transport layer. For example, for a new SAS
-controller, you'd only need to write a PCI device driver which exposed
-the ASIC's particular domain access implementation in a structure
-of function pointers, that the PCI LLDD fills in, and the SAS Transport
-Layer (SAS TL) fills in, and this is how both communicate. Then,
-the SAS TL would register with the SCSI layer. It was a beautiful solut=
-ion
-of enterprise quality and design. SATA support was added in 2006 which
-is _not_ libsata, but also a layer of abstraction with a structure of f=
-unction
-pointers, in effect allowing you to register a SATA device on _any_ tra=
-nsport
-protocol, not only SAS, as a matter of filling in the stubs of a few fu=
-nction pointers.
-(Thus also allowing you to easily emulate a SATA device if you so desir=
-e.)
-
-The original SAS TL, also represented the whole SAS domain in sysfs,
-exactly as it would look like in the physical world and was thus really
-easy to do "tree -d" and then look at your work bench or rack and see
-what is connected to what or what is missing or has been added.
-See this http://marc.info/?l=3Dlinux-scsi&m=3D112629509826900&w=3D2,
-for example.
-
-The event infrastructure, removed by Bottomley, allowed for an infinite=
- number
-of events in a finite amount of memory. Removing it, introduced a few b=
-ugs, which
-were I believe fixed back then, but it is impossible to know how many m=
-ore there are.
-
-> 2/ We have unlocked list manipulations in sas_ex_discover_end_dev(),
-> sas_unregister_common_dev(), and sas_ex_discover_end_dev()
-
-Yes, I can see that and that is very unfortunate. And as I mentioned, t=
-his
-doesn't exist in the original design of the code. The point is that aft=
-er
-the changes offline people using Linux end up with substandard
-and mediocre implementation of SAS.
-
-Locking and coherency were achieved via the kobj infrastructure which w=
-as
-a beautiful thing at the time, but has seen its number of changes begin=
-ning
-in 06-07 (git can help there).
-
-=A0=A0 Luben
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
