@@ -1,248 +1,107 @@
-From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
-Subject: RE: [PATCH] [SCSI]: Allow expander T-T attachments
-Date: Wed, 31 Aug 2011 10:51:46 -0700
-Message-ID: <FC1F9E38C0703341A1A750524E2525A901853EFC@XYUS-EX22.xyus.xyratex.com>
-References: <20110730002509.28735.82590.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com> <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Subject: Re: [BUG] Oops when SCSI device under multipath is removed
+Date: Wed, 31 Aug 2011 16:50:22 -0300
+Message-ID: <20110831195022.GE4004@oc1711230544.ibm.com>
+References: <Pine.LNX.4.44L0.1108111112280.1958-100000@iolanthe.rowland.org>
+ <4E4A53F0.9040104@ce.jp.nec.com>
+ <4E4CD737.4020402@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:53251 "EHLO
-	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756921Ab1HaRv5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Aug 2011 13:51:57 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
+Received: from e24smtp02.br.ibm.com ([32.104.18.86]:46033 "EHLO
+	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753484Ab1HaTud (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2011 15:50:33 -0400
+Content-Disposition: inline
+In-Reply-To: <4E4CD737.4020402@ce.jp.nec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>, linux-scsi@vger.kernel.org
-Cc: Darrick J Wong <djwong@us.ibm.com>, James Bottomley <jbottomley@parallels.com>
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, jaxboe@fusionio.com, roland@purestorage.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.ne>
 
-We will need James to chime in why your patch did not go in. My assumpt=
-ion is the lack of response to his question left it in limbo.
+On Thu, Aug 18, 2011 at 06:11:19PM +0900, Jun'ichi Nomura wrote:
+> Hi James,
+> 
+> On 08/16/11 20:26, Jun'ichi Nomura wrote:
+> > The commit log of 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b
+> > ("[SCSI] put stricter guards on queue dead checks") does not
+> > explain about the move of scsi_free_queue().
+> > 
+> > But according to the discussion below, it seems
+> > the move was motivated to solve the following self-deadlock:
+> > https://lkml.org/lkml/2011/4/12/9
+> > 
+> >   [in the context of kblockd_workqueue]
+> >   blk_delay_work
+> >     __blk_run_queue
+> >       scsi_request_fn
+> >         put_device
+> >           (puts final sdev refcount)
+> >              scsi_device_dev_release
+> >                execute_in_process_context(scsi_device_dev_release_usercontext)
+> >                  [execute immediately because it's in process context]
+> >                     scsi_device_dev_release_usercontext
+> >                       scsi_free_queue
+> >                         blk_cleanup_queue
+> >                           blk_sync_queue
+> >                             (wait for blk_delay_work to complete...)
+> > 
+> > James, is my understanding correct?
+> > 
+> > If so, isn't it possible to move the scsi_free_queue back to
+> > the original place and solve the deadlock instead by
+> > avoiding the wait in the same context?
+> 
+> Actually, Tejun has posted a patch to replace
+> execute_in_process_context() with queue_work()
+> and asking your review:
+> 
+>   [PATCH RESEND] scsi: don't use execute_in_process_context()
+>   https://lkml.org/lkml/2011/4/30/87
+> 
+> Do you think you can take the patch and revert the move
+> of scsi_free_queue()?
+> 
+> Thanks,
+> -- 
+> Jun'ichi Nomura, NEC Corporation
+> --
 
-The likely modification to your patch would be to remove all the unused=
- added flags rather than staking out the territory.
+I've tested with your suggestion (reverting the move of scsi_free_queue)
+and it works like a charm. I did not get any oops after that. I tested
+with a multipath setup on top of two iscsi targets. Using dd after
+logging out of some of one of the iscsi targets would trigger the oops.
+With this patch, it could not be triggered anymore.
 
-What kind of testing was involved in your patch? I have not merged your=
-s in here to try it out on our enclosures. Either way, I want to see so=
-me movement; James any directions?
+Best regards,
+Cascardo.
 
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-=46rom: Luben Tuikov [mailto:ltuikov@yahoo.com]=20
-Sent: Wednesday, August 31, 2011 1:43 PM
-To: Mark Salyzyn; linux-scsi@vger.kernel.org
-Cc: Darrick J Wong; James Bottomley
-Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
-
------ Original Message -----
-
-> From: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
-> To: linux-scsi@vger.kernel.org
-> Cc: Luben Tuikov <ltuikov@yahoo.com>; Darrick J Wong <djwong@us.ibm.c=
-om>; James Bottomley <jbottomley@parallels.com>
-> Sent: Wednesday, August 31, 2011 6:44 AM
-> Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
->=20
-> Since Luben's patch on July 28th 2011 went nowhere, as there was an
-> unanswered question regarding the future-proofing that Luben added in=
-=2E
-
-Are you saying that the patch I posted,
-http://marc.info/?t=3D131182720200001&r=3D1&w=3D2, didn't go in
-because I didn't entertain Bottomley's unrelated question therein?
-Or are you saying that it did go in based on TECHNICAL CONTENT? I.e. it
-was buggy, or wrong, etc?
-
-> I decided to submit a simplified focussed patch we have been using fo=
-r the
-
-By "simplified, focused" you mean one which doesn't define 2 out of 3 f=
-lags of=20
-REPORT GENERAL SMP response?
-
-> past year testing with the Xyratex enclosures (5U84, 2U24, chained wi=
-th
-> *many* peered expanders with Table to Table routing) that should
-> hopefully expedite things and will be on hot standby to refactor as
-> requested (including tossing this baby and refactoring Luben's patch
-> should he be too busy, no hair off my back)
-
-Now onto technical matter:
-1) I'd call the flag "t2t_supp" to a) fit in with the rest of the spiri=
-t of the
-code as other fields are also called "_supp", and to b) actually convey
-=A0the meaning of "table-to-table supported. Your naming of this flag
-"table_to_table" implicitly means "table to table supported".
-2) Please also add the debug output as my patch did. People will
-be wondering what went wrong if their domain didn't work, and the
-debug print in my original patch would tell them that.
-3) You don't check that the parent also supports T2T. That's a bug.
-4) Your patch logically does this: P=3DT && C!=3DS && (C is T2T || C!=3D=
-T),
-which after expansion is equivalent to:
-(P=3D=3DT) && ((C!=3DS && C!=3DT2T) || C=3D=3DD) =3D=3D> fail
-where the outmost parens are an if (). Albeit from not being entirely c=
-orrect,
-it also obfuscates what is being sought after. I chose to use the negat=
-ion for
-successful check to make it more clear:
-(P=3D=3DT) && (C=3D=3DS || (C=3D=3DT && P=3D=3DT2T && C=3D=3DT2T)) =3D=3D=
-> success,
-Translates to
-"If parent phy is T, and If child phy is S OR (child is T and child and=
- parent
-both support table to table) then we're okay, else report an error."
-Which is: T<-S is okay, and T<-T is okay if both parent and child suppo=
-rt it.
-
-Alternatively, Bottomley could just add my patch upstream.
-
-> Please note, as I am *stuck* on Outlook as per company policy, the
-> following inline content will likely not patch clean even emailed as
-> 'Plain Text', the enclosed attached file should do the job. I have=20
-> Cc'd
-> all the folks that originated the files in libsas, as there was no
-> listed MAINTAINERs.
->=20
-> NB: this patch (and Luben's independent patch) results in an ABI brea=
-k
-> as the structures change 'shape' and thus result in a different set o=
-f
-> libsas export signatures. I have an internal patch I use that preserv=
-es
-> the structure shapes and thus the ABI; but would be considered
-> inappropriate for the pristine trees. Said alternate patch would work
-> fine for a Distribution tree where ABI concerns are an issue.
->=20
-> Checkpatch.pl reports clean.
->=20
-> Sincerely -- Mark Salyzyn
->=20
-> Cc: Luben Tuikov <tuikov@yahoo.com>
-> Cc: Darrick J Wong <djwong@us.ibm.com>
-> Cc: James Bottomley <jbottomley@parallels.com>
->=20
-> Signed-off-by: Mark Salyzyn <msalyzyn@us.xyratex.com>
->=20
-> drivers/scsi/libsas/sas_expander.c |=A0 =A0 6 +++++-
-> include/scsi/libsas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 |=A0 =A0 1 +
-> include/scsi/sas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  |=A0 =A0 6 ++++--
-> 3 files changed, 10 insertions(+), 3 deletions(-)
->=20
-> diff -ru scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c
-> scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
-> --- scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c=A0=A0=A0 2011-08=
--31
-> 08:32:21.000000000 -0400
-> +++ scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
-> 2011-08-31 09:07:31.000000000 -0400
-> @@ -331,6 +331,7 @@
-> =A0=A0=A0 dev->ex_dev.num_phys =3D min(rg->num_phys, (u8)MAX_EXPANDER=
-_PHYS);
-> =A0=A0=A0 dev->ex_dev.conf_route_table =3D rg->conf_route_table;
-> =A0=A0=A0 dev->ex_dev.configuring =3D rg->configuring;
-> +=A0=A0=A0 dev->ex_dev.table_to_table =3D rg->table_to_table;
-> =A0=A0=A0 memcpy(dev->ex_dev.enclosure_logical_id,
-> rg->enclosure_logical_id, 8);
-> }
->=20
-> @@ -1239,7 +1240,10 @@
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 } else if (parent_phy->routing_attr =3D=
-=3D
-> TABLE_ROUTING &&
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0  child_phy->routing_attr=
- !=3D
-> SUBTRACTIVE_ROUTING) {
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0  child_phy->routing_attr=
- !=3D
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 SUBTRACTIVE_ROUTIN=
-G &&
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0  (child_ex->table_to_tab=
-le =3D=3D 0 ||
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0 =A0 child_phy->routing_a=
-ttr !=3D
-> TABLE_ROUTING)) {
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 sas_print_parent_topology_bug=
-(child,
-> parent_phy, child_phy);
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D -ENODEV;
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 }
-> diff -ru scsi-misc-2.6/include/scsi/libsas.h
-> scsi-misc-2.6.new/include/scsi/libsas.h
-> --- scsi-misc-2.6/include/scsi/libsas.h=A0=A0=A0 2011-08-31 08:32:22.=
-000000000
-> -0400
-> +++ scsi-misc-2.6.new/include/scsi/libsas.h=A0=A0=A0 2011-08-31
-> 09:07:31.000000000 -0400
-> @@ -144,6 +144,7 @@
-> =A0=A0=A0 u8=A0 =A0  num_phys;
-> =A0=A0=A0 u8=A0 =A0  configuring:1;
-> =A0=A0=A0 u8=A0 =A0  conf_route_table:1;
-> +=A0=A0=A0 u8=A0 =A0  table_to_table:1;
-> =A0=A0=A0 u8=A0 =A0  enclosure_logical_id[8];
->=20
-> =A0=A0=A0 struct ex_phy *ex_phy;
-> diff -ru scsi-misc-2.6/include/scsi/sas.h
-> scsi-misc-2.6.new/include/scsi/sas.h
-> --- scsi-misc-2.6/include/scsi/sas.h=A0=A0=A0 2011-08-31 08:32:22.000=
-000000
-> -0400
-> +++ scsi-misc-2.6.new/include/scsi/sas.h=A0=A0=A0 2011-08-31
-> 09:07:31.000000000 -0400
-> @@ -341,7 +341,8 @@
->=20
-> =A0=A0=A0 u8=A0 =A0 =A0 conf_route_table:1;
-> =A0=A0=A0 u8=A0 =A0 =A0 configuring:1;
-> -=A0=A0=A0 u8=A0 =A0 =A0 _r_b:6;
-> +=A0=A0=A0 u8=A0 =A0 =A0 _r_b:5;
-> +=A0=A0=A0 u8=A0 =A0 =A0 table_to_table:1;
->=20
-> =A0=A0=A0 u8=A0 =A0 =A0 _r_c;
->=20
-> @@ -528,7 +529,8 @@
-> =A0=A0=A0 u8=A0 =A0 =A0 _r_a;
-> =A0=A0=A0 u8=A0 =A0 =A0 num_phys;
->=20
-> -=A0=A0=A0 u8=A0 =A0 =A0 _r_b:6;
-> +=A0=A0=A0 u8=A0 =A0 =A0 table_to_table:1;
-> +=A0=A0=A0 u8=A0 =A0 =A0 _r_b:5;
-> =A0=A0=A0 u8=A0 =A0 =A0 configuring:1;
-> =A0=A0=A0 u8=A0 =A0 =A0 conf_route_table:1;
->
-______________________________________________________________________
-This email may contain privileged or confidential information, which sh=
-ould only be used for the purpose for which it was sent by Xyratex. No =
-further rights or licenses are granted to use such information. If you =
-are not the intended recipient of this message, please notify the sende=
-r by return and delete it. You may not use, copy, disclose or rely on t=
-he information contained in it.
-=20
-Internet email is susceptible to data corruption, interception and unau=
-thorised amendment for which Xyratex does not accept liability. While w=
-e have taken reasonable precautions to ensure that this email is free o=
-f viruses, Xyratex does not accept liability for the presence of any co=
-mputer viruses in this email, nor for any losses caused as a result of =
-viruses.
-=20
-Xyratex Technology Limited (03134912), Registered in England & Wales, R=
-egistered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
-=20
-The Xyratex group of companies also includes, Xyratex Ltd, registered i=
-n Bermuda, Xyratex International Inc, registered in California, Xyratex=
- (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) C=
-o Ltd registered in The People's Republic of China and Xyratex Japan Li=
-mited registered in Japan.
-______________________________________________________________________
-=20
-=0D
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index e0bd3f7..a6eb6f1 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -322,7 +322,11 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 		kfree(evt);
+ 	}
+ 
++	/* Freeing the queue signals to block that we're done */
++	scsi_free_queue(sdev->request_queue);
++
+ 	blk_put_queue(sdev->request_queue);
++
+ 	/* NULL queue means the device can't be used */
+ 	sdev->request_queue = NULL;
+ 
+@@ -936,8 +940,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	/* cause the request function to reject all I/O requests */
+ 	sdev->request_queue->queuedata = NULL;
+ 
+-	/* Freeing the queue signals to block that we're done */
+-	scsi_free_queue(sdev->request_queue);
+ 	put_device(dev);
+ }
+ 
+---
+
