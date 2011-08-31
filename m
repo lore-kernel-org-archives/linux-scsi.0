@@ -1,45 +1,36 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH 1/2] alua: clarify messages when blk_execute_rq fails
-Date: Tue, 30 Aug 2011 21:12:47 -0400
-Message-ID: <4E5D8A8F.6000104@redhat.com>
-References: <1313182877-31377-1-git-send-email-revers@redhat.com>	 <4E5D4318.6010809@redhat.com> <1314740248.7613.1.camel@dabdike.conference.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: mpt2sas losing reset events with cable pulls?
+Date: Tue, 30 Aug 2011 22:41:14 -0400
+Message-ID: <4E5D9F4A.80009@interlog.com>
+References: <1314751868-1112-1-git-send-email-roland@kernel.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7078 "EHLO mx1.redhat.com"
+Received: from smtp.infotech.no ([82.134.31.41]:34298 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754368Ab1HaBMs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Aug 2011 21:12:48 -0400
-In-Reply-To: <1314740248.7613.1.camel@dabdike.conference.net>
+	id S1754895Ab1HaClW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Aug 2011 22:41:22 -0400
+In-Reply-To: <1314751868-1112-1-git-send-email-roland@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: Kashyap Desai <kashyap.desai@lsi.com>, Eric Moore <eric.moore@lsi.com>, eric@purestorage.com, linux-scsi@vger.kernel.org
 
-  On 08/30/2011 05:37 PM, James Bottomley wrote:
-> On Tue, 2011-08-30 at 16:07 -0400, Rob Evers wrote:
->> On 08/12/2011 05:01 PM, Rob Evers wrote:
->>> replace numeric messages with string error messages when blk_execute_rq
->>> fails.  Also add printing of sense info.
->>>
->>> Mike Christie suggested adding printing of sense info here
->>>
->>> Signed-off-by: Rob Evers<revers@redhat.com>
->>>
->> Hi James,
->>
->> Do you have any feedback on these patches?
->>
->> (I already noticed the 2nd patch is a reply to the first)
->>
->> I didn't see them in the last update of scsi-misc.
-> I don't really see any point in removing messages.
+On 11-08-30 08:51 PM, Roland Dreier wrote:
+> Hi!
+>
+> We have a system with mpt2sas driver from the upstream kernel --
+>
+>      #define MPT2SAS_DRIVER_VERSION              "09.100.00.00"
+>
+> and hardware:
+>
+>      mpt2sas1: LSISAS2008: FWVersion(09.00.00.00), ChipRevision(0x03), BiosVersion(07.17.00.00)
 
-"Unhandled error/sense code" can be interpreted as something going
-wrong when nothing actually went wrong.
+Most LSI HBA's based on the LSISAS2008 chip are now at
+firmware version 10.00 . Perhaps you could retest with
+that firmware.
 
-For lack of ideas that were accurate, yet not alarming, removing the 
-message
-altogether seemed like the right option.
-
+Doug Gilbert
