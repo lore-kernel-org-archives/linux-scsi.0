@@ -1,23 +1,42 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
-Date: Wed, 31 Aug 2011 10:43:28 -0700 (PDT)
-Message-ID: <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
-References: <20110730002509.28735.82590.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com>
-Reply-To: Luben Tuikov <ltuikov@yahoo.com>
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH] [SCSI]: Allow expander T-T attachments
+Date: Wed, 31 Aug 2011 10:51:46 -0700
+Message-ID: <FC1F9E38C0703341A1A750524E2525A901853EFC@XYUS-EX22.xyus.xyratex.com>
+References: <20110730002509.28735.82590.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com> <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm25.bullet.mail.ac4.yahoo.com ([98.139.52.222]:21780 "HELO
-	nm25.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756877Ab1HaRna convert rfc822-to-8bit
+Received: from eu1sys200aog113.obsmtp.com ([207.126.144.135]:53251 "EHLO
+	eu1sys200aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756921Ab1HaRv5 convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Aug 2011 13:43:30 -0400
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com>
+	Wed, 31 Aug 2011 13:51:57 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Luben Tuikov <ltuikov@yahoo.com>, linux-scsi@vger.kernel.org
 Cc: Darrick J Wong <djwong@us.ibm.com>, James Bottomley <jbottomley@parallels.com>
+
+We will need James to chime in why your patch did not go in. My assumpt=
+ion is the lack of response to his question left it in limbo.
+
+The likely modification to your patch would be to remove all the unused=
+ added flags rather than staking out the territory.
+
+What kind of testing was involved in your patch? I have not merged your=
+s in here to try it out on our enclosures. Either way, I want to see so=
+me movement; James any directions?
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+=46rom: Luben Tuikov [mailto:ltuikov@yahoo.com]=20
+Sent: Wednesday, August 31, 2011 1:43 PM
+To: Mark Salyzyn; linux-scsi@vger.kernel.org
+Cc: Darrick J Wong; James Bottomley
+Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
 
 ----- Original Message -----
 
@@ -196,6 +215,32 @@ ttr !=3D
 > =A0=A0=A0 u8=A0 =A0 =A0 configuring:1;
 > =A0=A0=A0 u8=A0 =A0 =A0 conf_route_table:1;
 >
+______________________________________________________________________
+This email may contain privileged or confidential information, which sh=
+ould only be used for the purpose for which it was sent by Xyratex. No =
+further rights or licenses are granted to use such information. If you =
+are not the intended recipient of this message, please notify the sende=
+r by return and delete it. You may not use, copy, disclose or rely on t=
+he information contained in it.
+=20
+Internet email is susceptible to data corruption, interception and unau=
+thorised amendment for which Xyratex does not accept liability. While w=
+e have taken reasonable precautions to ensure that this email is free o=
+f viruses, Xyratex does not accept liability for the presence of any co=
+mputer viruses in this email, nor for any losses caused as a result of =
+viruses.
+=20
+Xyratex Technology Limited (03134912), Registered in England & Wales, R=
+egistered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+=20
+The Xyratex group of companies also includes, Xyratex Ltd, registered i=
+n Bermuda, Xyratex International Inc, registered in California, Xyratex=
+ (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) C=
+o Ltd registered in The People's Republic of China and Xyratex Japan Li=
+mited registered in Japan.
+______________________________________________________________________
+=20
+=0D
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
