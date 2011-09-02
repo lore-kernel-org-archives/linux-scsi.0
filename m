@@ -1,55 +1,44 @@
-From: "Chauhan, Vijay" <Vijay.Chauhan@netapp.com>
-Subject: [RESEND][PATCH] scsi_dh_rdac: Adding NetApp as a brand name for rdac
-Date: Fri, 2 Sep 2011 13:26:32 +0530
-Message-ID: <EE2129A8E578DC4E94D643D6C1C1C67D05D03C9A@BTCMVEXC2-PRD.hq.netapp.com>
+From: Eric Dumazet <eric.dumazet@gmail.com>
+Subject: Re: [BUG] scsi: hpsa: how to destroy your files
+Date: Fri, 02 Sep 2011 11:39:48 +0200
+Message-ID: <1314956388.2573.7.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+References: <20110721181605.31672.36250.stgit@beardog.cce.hp.com>
+	 <1314890642.2823.27.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	 <20110901160724.GN9189@beardog.cce.hp.com>
+	 <1314898815.2823.33.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
+	 <CAL1RGDWu4mBE3=0BC3iNnvfSSuT2pfGrXsBZBU-VB+tqZx7DeA@mail.gmail.com>
+	 <1314903038.3067.27.camel@dabdike>
+	 <20110901125938.7cb1da85@jbarnes-desktop>
+	 <20110901200349.GO9189@beardog.cce.hp.com>
+	 <20110901130930.5caec2d4@jbarnes-desktop>
+	 <20110901204419.GY8422@beardog.cce.hp.com>
+	 <CAMaF-rOG9gNf3g8rOXiKMq3TXrfJf5dFwN6q6uQqvMruUm4VQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:2323 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756953Ab1IBH4y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2011 03:56:54 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <CAMaF-rOG9gNf3g8rOXiKMq3TXrfJf5dFwN6q6uQqvMruUm4VQg@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jon Mason <mason@myri.com>
+Cc: scameron@beardog.cce.hp.com, Jesse Barnes <jbarnes@virtuousgeek.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com, linux-pci@vger.kernel.org, Roland Dreier <roland@purestorage.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: "Moger, Babu" <Babu.Moger@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>
 
-Resending this patch. Previous post had indentation issue due to my mail settings. 
+Le jeudi 01 septembre 2011 =C3=A0 16:50 -0500, Jon Mason a =C3=A9crit :
 
-On September 02 2011 12:44 PM, Vijay Chauhan Wrote:
-> - * Engenio/LSI RDAC SCSI Device Handler
-> + * LSI/Engenio/NetApp E-Series RDAC SCSI Device Handler
->   *
->   * Copyright (C) 2005 Mike Christie. All rights reserved.
->   * Copyright (C) Chandra Seetharaman, IBM Corp. 2007 @@ -941,7 +941,7 @@ static void __exit rdac_exit(void)  module_init(rdac_init);  
-> module_exit(rdac_exit);
+> I believe modifying the MRRS values is what is causing the issues.
+> Can you try the attached patch and verify that it also resolves the
+> issue?
 
----
-Adding NetApp as brand name for RDAC.
+I tested this patch and can confirm this solves the corruption problem.
 
-Signed-off-by: Vijay Chauhan <Vijay.chauhan@netapp.com>
-Reviewed-by: Bob Stankey <Robert.stankey@netapp.com>
-Reviewed-by: Babu Moger <Babu.moger@netapp.com>
+But my disk is _much_ slower than before
 
----
---- linux-3.0.3-orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-08-17 23:27:16.000000000 +0530
-+++ linux-3.0.3/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-08-30 19:10:49.000000000 +0530
-@@ -1,5 +1,5 @@
- /*
-- * Engenio/LSI RDAC SCSI Device Handler
-+ * LSI/Engenio/NetApp E-Series RDAC SCSI Device Handler
-  *
-  * Copyright (C) 2005 Mike Christie. All rights reserved.
-  * Copyright (C) Chandra Seetharaman, IBM Corp. 2007
-@@ -941,7 +941,7 @@ static void __exit rdac_exit(void)
- module_init(rdac_init);
- module_exit(rdac_exit);
- 
--MODULE_DESCRIPTION("Multipath LSI/Engenio RDAC driver");
-+MODULE_DESCRIPTION("Multipath LSI/Engenio/NetApp E-Series RDAC driver");
- MODULE_AUTHOR("Mike Christie, Chandra Seetharaman");
- MODULE_VERSION("01.00.0000.0000");
- MODULE_LICENSE("GPL");
---
+# hdparm -t /dev/sda1
+
+Before :
+
+ Timing buffered disk reads: 254 MB in  3.02 seconds =3D  84.16 MB/sec
+
+After :
+
+ Timing buffered disk reads: 120 MB in  3.04 seconds =3D  39.42 MB/sec
