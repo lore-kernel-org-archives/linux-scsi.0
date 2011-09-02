@@ -1,49 +1,217 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 0/3] basic sgpio write support
-Date: Thu, 01 Sep 2011 21:18:15 -0700
-Message-ID: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
+Subject: [PATCH 1/3] libsas: sgpio write support
+Date: Thu, 01 Sep 2011 21:18:20 -0700
+Message-ID: <20110902041820.27608.10815.stgit@localhost6.localdomain6>
+References: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:34240 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:60408 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750696Ab1IBESQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Sep 2011 00:18:16 -0400
+	id S1750696Ab1IBESV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Sep 2011 00:18:21 -0400
+In-Reply-To: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: linux-scsi@vger.kernel.org, jacek.danecki@intel.com
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Artur Wojcik <artur.wojcik@intel.com>, linux-scsi@vger.kernel.org, jacek.danecki@intel.com
 
-Just enough infrastructure to get raw-bitstream writes operational.  With a
-common decode implementation in libsas.  SAS-2 support is deferred as SFF-8485
-remains at v0.7 [1].  Read support and the "non-raw" tx registers are deferred
-until the general approach is accepted.
+Add SFF-8485 v0.7 / SAS-1 smp-write-gpio register support to libsas.
+Defer SAS-2 support unless/until it defines an sgpio interface.
 
-For future patches it might be useful to register a 'sgpio' interface in sysfs
-for all local phys to accept IBPI commands like "identify" or "fail".  Although,
-the driver has no way of verifying if phy0 is routed to sgpio-device0. 
+Minimum implementation needed to get the lights blinking.
+try_test_sas_gpio_gp_bit() provides a common method to parse the
+incoming write data (raw bitstream), and the to_sas_gpio_gp_bit() helper
+routine can be used as a basis for the set/clear operations for the
+'read' implementation.  Host implementations parse as many bits
+(ODx.[012]) as are locally supported and report the number of registers
+successfully written.  If the submitted data overruns the internal
+number of registers available report the write as a success with the
+number of bytes remaining reported in ->resid_len.
 
-Until then this interface just uses the sas_host bsg device as shown in patch1.
+Example (assuming an active backplane) set the "identify" pattern for
+the first 21 devices:
 
---
-Dan
+smp_write_gpio --count=2 --data=92,49,24,92,24,92,49,24 -t 4 --index=1 /dev/bsg/sas_hostX
 
-[1]: http://marc.info/?l=linux-scsi&m=130693695829154&w=2
-
+Cc: Artur Wojcik <artur.wojcik@intel.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/libsas/sas_host_smp.c |  103 +++++++++++++++++++++++++++++++++++-
+ include/scsi/libsas.h              |   11 ++++
+ include/scsi/sas.h                 |    8 +++
+ 3 files changed, 120 insertions(+), 2 deletions(-)
 
-Dan Williams (3):
-      libsas: sgpio write support
-      isci: fix sgpio register definitions
-      isci: initial sgpio write support
+diff --git a/drivers/scsi/libsas/sas_host_smp.c b/drivers/scsi/libsas/sas_host_smp.c
+index 04ad8dd..e1aa178 100644
+--- a/drivers/scsi/libsas/sas_host_smp.c
++++ b/drivers/scsi/libsas/sas_host_smp.c
+@@ -51,6 +51,91 @@ static void sas_host_smp_discover(struct sas_ha_struct *sas_ha, u8 *resp_data,
+ 	resp_data[15] = rphy->identify.target_port_protocols;
+ }
+ 
++/**
++ * to_sas_gpio_gp_bit - given the gpio frame data find the byte/bit position of 'od'
++ * @od: od bit to find
++ * @data: incoming bitstream (from frame)
++ * @index: requested data register index (from frame)
++ * @count: total number of registers in the bitstream (from frame)
++ * @bit: bit position of 'od' in the returned byte
++ *
++ * returns NULL if 'od' is not in 'data'
++ *
++ * From SFF-8485 v0.7:
++ * "In GPIO_TX[1], bit 0 of byte 3 contains the first bit (i.e., OD0.0)
++ *  and bit 7 of byte 0 contains the 32nd bit (i.e., OD10.1).
++ *
++ *  In GPIO_TX[2], bit 0 of byte 3 contains the 33rd bit (i.e., OD10.2)
++ *  and bit 7 of byte 0 contains the 64th bit (i.e., OD21.0)."
++ *
++ * The general-purpose (raw-bitstream) RX registers have the same layout
++ * although 'od' is renamed 'id' for 'input data'.
++ *
++ * SFF-8489 defines the behavior of the LEDs in response to the 'od' values.
++ */
++static u8 *to_sas_gpio_gp_bit(unsigned int od, u8 *data, u8 index, u8 count, u8 *bit)
++{
++	unsigned int reg;
++	u8 byte;
++
++	/* gp registers start at index 1 */
++	if (index == 0)
++		return NULL;
++
++	index--; /* make index 0-based */
++	if (od < index * 32)
++		return NULL;
++
++	od -= index * 32;
++	reg = od >> 5;
++
++	if (reg >= count)
++		return NULL;
++
++	od &= (1 << 5) - 1;
++	byte = 3 - (od >> 3);
++	*bit = od & ((1 << 3) - 1);
++
++	return &data[reg * 4 + byte];
++}
++
++int try_test_sas_gpio_gp_bit(unsigned int od, u8 *data, u8 index, u8 count)
++{
++	u8 *byte;
++	u8 bit;
++
++	byte = to_sas_gpio_gp_bit(od, data, index, count, &bit);
++	if (!byte)
++		return -1;
++
++	return (*byte >> bit) & 1;
++}
++EXPORT_SYMBOL(try_test_sas_gpio_gp_bit);
++
++static int sas_host_smp_write_gpio(struct sas_ha_struct *sas_ha, u8 *resp_data,
++				   u8 reg_type, u8 reg_index, u8 reg_count,
++				   u8 *req_data)
++{
++	struct sas_internal *i = to_sas_internal(sas_ha->core.shost->transportt);
++	int written;
++
++	if (i->dft->lldd_write_gpio == NULL) {
++		resp_data[2] = SMP_RESP_FUNC_UNK;
++		return 0;
++	}
++
++	written = i->dft->lldd_write_gpio(sas_ha, reg_type, reg_index,
++					  reg_count, req_data);
++
++	if (written < 0) {
++		resp_data[2] = SMP_RESP_FUNC_FAILED;
++		written = 0;
++	} else
++		resp_data[2] = SMP_RESP_FUNC_ACC;
++
++	return written;
++}
++
+ static void sas_report_phy_sata(struct sas_ha_struct *sas_ha, u8 *resp_data,
+ 				u8 phy_id)
+ {
+@@ -230,9 +315,23 @@ int sas_smp_host_handler(struct Scsi_Host *shost, struct request *req,
+ 		/* Can't implement; hosts have no routes */
+ 		break;
+ 
+-	case SMP_WRITE_GPIO_REG:
+-		/* FIXME: need GPIO support in the transport class */
++	case SMP_WRITE_GPIO_REG: {
++		/* SFF-8485 v0.7 */
++		const int base_frame_size = 11;
++		int to_write = req_data[4];
++
++		if (blk_rq_bytes(req) < base_frame_size + to_write * 4 ||
++		    req->resid_len < base_frame_size + to_write * 4) {
++			resp_data[2] = SMP_RESP_INV_FRM_LEN;
++			break;
++		}
++
++		to_write = sas_host_smp_write_gpio(sas_ha, resp_data, req_data[2],
++						   req_data[3], to_write, &req_data[8]);
++		req->resid_len -= base_frame_size + to_write * 4;
++		rsp->resid_len -= 8;
+ 		break;
++	}
+ 
+ 	case SMP_CONF_ROUTE_INFO:
+ 		/* Can't implement; hosts have no routes */
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index ee86606..2d9ff0a 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -405,6 +405,13 @@ static inline void sas_phy_disconnected(struct asd_sas_phy *phy)
+ 	phy->linkrate = SAS_LINK_RATE_UNKNOWN;
+ }
+ 
++static inline unsigned int to_sas_gpio_od(int device, int bit)
++{
++	return 3 * device + bit;
++}
++
++int try_test_sas_gpio_gp_bit(unsigned int od, u8 *data, u8 index, u8 count);
++
+ /* ---------- Tasks ---------- */
+ /*
+       service_response |  SAS_TASK_COMPLETE  |  SAS_TASK_UNDELIVERED |
+@@ -614,6 +621,10 @@ struct sas_domain_function_template {
+ 
+ 	/* Phy management */
+ 	int (*lldd_control_phy)(struct asd_sas_phy *, enum phy_func, void *);
++
++	/* GPIO support */
++	int (*lldd_write_gpio)(struct sas_ha_struct *, u8 reg_type,
++			       u8 reg_index, u8 reg_count, u8 *write_data);
+ };
+ 
+ extern int sas_register_ha(struct sas_ha_struct *);
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index e9fd022..a3001ad 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -195,6 +195,14 @@ enum sas_open_rej_reason {
+ 	SAS_OREJ_RSVD_RETRY = 18,
+ };
+ 
++enum sas_gpio_reg_type {
++	SAS_GPIO_REG_CFG   = 0,
++	SAS_GPIO_REG_RX    = 1,
++	SAS_GPIO_REG_RX_GP = 2,
++	SAS_GPIO_REG_TX    = 3,
++	SAS_GPIO_REG_TX_GP = 4,
++};
++
+ struct  dev_to_host_fis {
+ 	u8     fis_type;	  /* 0x34 */
+ 	u8     flags;
 
-
- drivers/scsi/isci/host.c           |   69 ++++++++++++++++++++
- drivers/scsi/isci/host.h           |   15 ++++
- drivers/scsi/isci/init.c           |    3 +
- drivers/scsi/isci/registers.h      |  122 +-----------------------------------
- drivers/scsi/libsas/sas_host_smp.c |  103 ++++++++++++++++++++++++++++++
- include/scsi/libsas.h              |   11 +++
- include/scsi/sas.h                 |    8 ++
- 7 files changed, 211 insertions(+), 120 deletions(-)
