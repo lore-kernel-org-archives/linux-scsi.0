@@ -1,178 +1,36 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 3/3] isci: initial sgpio write support
-Date: Thu, 01 Sep 2011 21:18:31 -0700
-Message-ID: <20110902041831.27608.85266.stgit@localhost6.localdomain6>
-References: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
+From: Mike Galbraith <efault@gmx.de>
+Subject: Re: [BUG] scsi: hpsa: how to destroy your files
+Date: Fri, 02 Sep 2011 07:18:36 +0200
+Message-ID: <1314940716.6336.8.camel@marge.simson.net>
+References: <20110721181605.31672.36250.stgit@beardog.cce.hp.com>
+	 <1314890642.2823.27.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1772 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751007Ab1IBESd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Sep 2011 00:18:33 -0400
-In-Reply-To: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
+Received: from mailout-de.gmx.net ([213.165.64.22]:51669 "HELO
+	mailout-de.gmx.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750904Ab1IBFSm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2011 01:18:42 -0400
+In-Reply-To: <1314890642.2823.27.camel@edumazet-HP-Compaq-6005-Pro-SFF-PC>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com
-Cc: Artur Wojcik <artur.wojcik@intel.com>, linux-scsi@vger.kernel.org, jacek.danecki@intel.com
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, stephenmcameron@gmail.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 
-Basic support to initialize the gpio unit, accept an incomming
-SAS_GPIO_REG_TX_GP bitstream, and translate it to the ODx.n fields in
-the hardware registers.  If register indexes outside the supported range
-are specified in the SMP frame we simply accept the write and return how
-many registers (SFF-8485) were written (libsas reports this as residue
-in the request).
+On Thu, 2011-09-01 at 17:24 +0200, Eric Dumazet wrote:
+> Stephen,
+> 
+> Current linux-3.1-rc4+ is a total disaster on my BL460c G6
+> 
+> 
+> Few seconds after boot, I get "cmd_alloc returned NULL" messages
+> or "hpsa 0000:0c:00.0: resetting device 0:0:0:0"
 
-Cc: Artur Wojcik <artur.wojcik@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/isci/host.c |   69 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/isci/host.h |   15 ++++++++++
- drivers/scsi/isci/init.c |    3 ++
- 3 files changed, 87 insertions(+), 0 deletions(-)
+Bingo.
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 6981b77..f07f30f 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -1263,6 +1263,10 @@ void isci_host_deinit(struct isci_host *ihost)
- {
- 	int i;
- 
-+	/* disable output data selects */
-+	for (i = 0; i < isci_gpio_count(ihost); i++)
-+		writel(SGPIO_HW_CONTROL, &ihost->scu_registers->peg0.sgpio.output_data_select[i]);
-+
- 	isci_host_change_state(ihost, isci_stopping);
- 	for (i = 0; i < SCI_MAX_PORTS; i++) {
- 		struct isci_port *iport = &ihost->ports[i];
-@@ -1281,6 +1285,12 @@ void isci_host_deinit(struct isci_host *ihost)
- 	spin_unlock_irq(&ihost->scic_lock);
- 
- 	wait_for_stop(ihost);
-+
-+	/* disable sgpio: where the above wait should give time for the
-+	 * enclosure to sample the gpios going inactive
-+	 */
-+	writel(0, &ihost->scu_registers->peg0.sgpio.interface_control);
-+
- 	sci_controller_reset(ihost);
- 
- 	/* Cancel any/all outstanding port timers */
-@@ -2365,6 +2375,12 @@ int isci_host_init(struct isci_host *ihost)
- 	for (i = 0; i < SCI_MAX_PHYS; i++)
- 		isci_phy_init(&ihost->phys[i], ihost, i);
- 
-+	/* enable sgpio */
-+	writel(1, &ihost->scu_registers->peg0.sgpio.interface_control);
-+	for (i = 0; i < isci_gpio_count(ihost); i++)
-+		writel(SGPIO_HW_CONTROL, &ihost->scu_registers->peg0.sgpio.output_data_select[i]);
-+	writel(0, &ihost->scu_registers->peg0.sgpio.vendor_specific_code);
-+
- 	for (i = 0; i < SCI_MAX_REMOTE_DEVICES; i++) {
- 		struct isci_remote_device *idev = &ihost->devices[i];
- 
-@@ -2760,3 +2776,56 @@ enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
- 
- 	return status;
- }
-+
-+static int sci_write_gpio_tx_gp(struct isci_host *ihost, u8 reg_index, u8 reg_count, u8 *write_data)
-+{
-+	int d;
-+
-+	/* no support for TX_GP_CFG */
-+	if (reg_index == 0)
-+		return -EINVAL;
-+
-+	for (d = 0; d < isci_gpio_count(ihost); d++) {
-+		u32 val = 0x444; /* all ODx.n clear */
-+		int i;
-+
-+		for (i = 0; i < 3; i++) {
-+			int bit = (i << 2) + 2;
-+
-+			bit = try_test_sas_gpio_gp_bit(to_sas_gpio_od(d, i),
-+						       write_data, reg_index,
-+						       reg_count);
-+			if (bit < 0)
-+				break;
-+
-+			/* if od is set, clear the 'invert' bit */
-+			val &= ~(bit << ((i << 2) + 2));
-+		}
-+
-+		if (i < 3)
-+			break;
-+		writel(val, &ihost->scu_registers->peg0.sgpio.output_data_select[d]);
-+	}
-+
-+	/* unless reg_index is > 1, we should always be able to write at
-+	 * least one register
-+	 */
-+	return d > 0;
-+}
-+
-+int isci_gpio_write(struct sas_ha_struct *sas_ha, u8 reg_type, u8 reg_index,
-+		    u8 reg_count, u8 *write_data)
-+{
-+	struct isci_host *ihost = sas_ha->lldd_ha;
-+	int written;
-+
-+	switch (reg_type) {
-+	case SAS_GPIO_REG_TX_GP:
-+		written = sci_write_gpio_tx_gp(ihost, reg_index, reg_count, write_data);
-+		break;
-+	default:
-+		written = -EINVAL;
-+	}
-+
-+	return written;
-+}
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 9f33831..646051a 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -440,6 +440,18 @@ static inline bool is_c0(struct pci_dev *pdev)
- 	return false;
- }
- 
-+/* set hw control for 'activity', even though active enclosures seem to drive
-+ * the activity led on their own.  Skip setting FSENG control on 'status' due
-+ * to unexpected operation and 'error' due to not being a supported automatic
-+ * FSENG output
-+ */
-+#define SGPIO_HW_CONTROL 0x00000443
-+
-+static inline int isci_gpio_count(struct isci_host *ihost)
-+{
-+	return ARRAY_SIZE(ihost->scu_registers->peg0.sgpio.output_data_select);
-+}
-+
- void sci_controller_post_request(struct isci_host *ihost,
- 				      u32 request);
- void sci_controller_release_frame(struct isci_host *ihost,
-@@ -542,4 +554,7 @@ void sci_port_configuration_agent_construct(
- enum sci_status sci_port_configuration_agent_initialize(
- 	struct isci_host *ihost,
- 	struct sci_port_configuration_agent *port_agent);
-+
-+int isci_gpio_write(struct sas_ha_struct *, u8 reg_type, u8 reg_index,
-+		    u8 reg_count, u8 *write_data);
- #endif
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 29aa34e..43fe840 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -192,6 +192,9 @@ static struct sas_domain_function_template isci_transport_ops  = {
- 
- 	/* Phy management */
- 	.lldd_control_phy	= isci_phy_control,
-+
-+	/* GPIO support */
-+	.lldd_write_gpio	= isci_gpio_write,
- };
- 
- 
+> Usually lot of files are corrupted, fsck needed, and full distro
+> reinstall as well.
+
+(I put tip-rt11 on a DL980 three times.. munched fs each time)
 
