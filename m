@@ -1,172 +1,178 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/3] isci: fix sgpio register definitions
-Date: Thu, 01 Sep 2011 21:18:26 -0700
-Message-ID: <20110902041826.27608.84386.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/3] isci: initial sgpio write support
+Date: Thu, 01 Sep 2011 21:18:31 -0700
+Message-ID: <20110902041831.27608.85266.stgit@localhost6.localdomain6>
 References: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:19690 "EHLO mga11.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:1772 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750696Ab1IBES0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Sep 2011 00:18:26 -0400
+	id S1751007Ab1IBESd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Sep 2011 00:18:33 -0400
 In-Reply-To: <20110902041637.27608.29757.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
 Cc: Artur Wojcik <artur.wojcik@intel.com>, linux-scsi@vger.kernel.org, jacek.danecki@intel.com
 
-output_data_select registers are off by one u32
+Basic support to initialize the gpio unit, accept an incomming
+SAS_GPIO_REG_TX_GP bitstream, and translate it to the ODx.n fields in
+the hardware registers.  If register indexes outside the supported range
+are specified in the SMP frame we simply accept the write and return how
+many registers (SFF-8485) were written (libsas reports this as residue
+in the request).
 
-delete the macros we will never use.
-
-Reported-by: Artur Wojcik <artur.wojcik@intel.com>
+Cc: Artur Wojcik <artur.wojcik@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/registers.h |  122 +----------------------------------------
- 1 files changed, 4 insertions(+), 118 deletions(-)
+ drivers/scsi/isci/host.c |   69 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/isci/host.h |   15 ++++++++++
+ drivers/scsi/isci/init.c |    3 ++
+ 3 files changed, 87 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/isci/registers.h b/drivers/scsi/isci/registers.h
-index 00afc73..eaa541a 100644
---- a/drivers/scsi/isci/registers.h
-+++ b/drivers/scsi/isci/registers.h
-@@ -875,122 +875,6 @@ struct scu_iit_entry {
- #define SCU_PTSxSR_GEN_BIT(name) \
- 	SCU_GEN_BIT(SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_ ## name)
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index 6981b77..f07f30f 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1263,6 +1263,10 @@ void isci_host_deinit(struct isci_host *ihost)
+ {
+ 	int i;
  
--
--/*
-- * *****************************************************************************
-- * * SGPIO Register shift and mask values
-- * ***************************************************************************** */
--#define SCU_SGPIO_CONTROL_SGPIO_ENABLE_SHIFT                    (0)
--#define SCU_SGPIO_CONTROL_SGPIO_ENABLE_MASK                     (0x00000001)
--#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_CLOCK_SELECT_SHIFT       (1)
--#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_CLOCK_SELECT_MASK        (0x00000002)
--#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_SHIFT_WIDTH_SELECT_SHIFT (2)
--#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_SHIFT_WIDTH_SELECT_MASK  (0x00000004)
--#define SCU_SGPIO_CONTROL_SGPIO_TEST_BIT_SHIFT                  (15)
--#define SCU_SGPIO_CONTROL_SGPIO_TEST_BIT_MASK                   (0x00008000)
--#define SCU_SGPIO_CONTROL_SGPIO_RESERVED_MASK                   (0xFFFF7FF8)
--
--#define SCU_SGICRx_GEN_BIT(name) \
--	SCU_GEN_BIT(SCU_SGPIO_CONTROL_SGPIO_ ## name)
--
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R0_SHIFT      (0)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R0_MASK       (0x0000000F)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R1_SHIFT      (4)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R1_MASK       (0x000000F0)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R2_SHIFT      (8)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R2_MASK       (0x00000F00)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R3_SHIFT      (12)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R3_MASK       (0x0000F000)
--#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_RESERVED_MASK (0xFFFF0000)
--
--#define SCU_SGPBRx_GEN_VAL(name, value)	\
--	SCU_GEN_VALUE(SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_ ## name, value)
--
--#define SCU_SGPIO_START_DRIVE_LOWER_R0_SHIFT        (0)
--#define SCU_SGPIO_START_DRIVE_LOWER_R0_MASK         (0x00000003)
--#define SCU_SGPIO_START_DRIVE_LOWER_R1_SHIFT        (4)
--#define SCU_SGPIO_START_DRIVE_LOWER_R1_MASK         (0x00000030)
--#define SCU_SGPIO_START_DRIVE_LOWER_R2_SHIFT        (8)
--#define SCU_SGPIO_START_DRIVE_LOWER_R2_MASK         (0x00000300)
--#define SCU_SGPIO_START_DRIVE_LOWER_R3_SHIFT        (12)
--#define SCU_SGPIO_START_DRIVE_LOWER_R3_MASK         (0x00003000)
--#define SCU_SGPIO_START_DRIVE_LOWER_RESERVED_MASK   (0xFFFF8888)
--
--#define SCU_SGSDLRx_GEN_VAL(name, value) \
--	SCU_GEN_VALUE(SCU_SGPIO_START_DRIVE_LOWER_ ## name, value)
--
--#define SCU_SGPIO_START_DRIVE_UPPER_R0_SHIFT        (0)
--#define SCU_SGPIO_START_DRIVE_UPPER_R0_MASK         (0x00000003)
--#define SCU_SGPIO_START_DRIVE_UPPER_R1_SHIFT        (4)
--#define SCU_SGPIO_START_DRIVE_UPPER_R1_MASK         (0x00000030)
--#define SCU_SGPIO_START_DRIVE_UPPER_R2_SHIFT        (8)
--#define SCU_SGPIO_START_DRIVE_UPPER_R2_MASK         (0x00000300)
--#define SCU_SGPIO_START_DRIVE_UPPER_R3_SHIFT        (12)
--#define SCU_SGPIO_START_DRIVE_UPPER_R3_MASK         (0x00003000)
--#define SCU_SGPIO_START_DRIVE_UPPER_RESERVED_MASK   (0xFFFF8888)
--
--#define SCU_SGSDURx_GEN_VAL(name, value) \
--	SCU_GEN_VALUE(SCU_SGPIO_START_DRIVE_LOWER_ ## name, value)
--
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D0_SHIFT      (0)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D0_MASK       (0x00000003)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D1_SHIFT      (4)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D1_MASK       (0x00000030)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D2_SHIFT      (8)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D2_MASK       (0x00000300)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D3_SHIFT      (12)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D3_MASK       (0x00003000)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_RESERVED_MASK (0xFFFF8888)
--
--#define SCU_SGSIDLRx_GEN_VAL(name, value) \
--	SCU_GEN_VALUE(SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_ ## name, value)
--
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D0_SHIFT      (0)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D0_MASK       (0x00000003)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D1_SHIFT      (4)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D1_MASK       (0x00000030)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D2_SHIFT      (8)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D2_MASK       (0x00000300)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D3_SHIFT      (12)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D3_MASK       (0x00003000)
--#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_RESERVED_MASK (0xFFFF8888)
--
--#define SCU_SGSIDURx_GEN_VAL(name, value) \
--	SCU_GEN_VALUE(SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_ ## name, value)
--
--#define SCU_SGPIO_VENDOR_SPECIFIC_CODE_SHIFT            (0)
--#define SCU_SGPIO_VENDOR_SPECIFIC_CODE_MASK             (0x0000000F)
--#define SCU_SGPIO_VENDOR_SPECIFIC_CODE_RESERVED_MASK    (0xFFFFFFF0)
--
--#define SCU_SGVSCR_GEN_VAL(value) \
--	SCU_GEN_VALUE(SCU_SGPIO_VENDOR_SPECIFIC_CODE ## name, value)
--
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA0_SHIFT           (0)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA0_MASK            (0x00000003)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA0_SHIFT    (2)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA0_MASK     (0x00000004)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA0_SHIFT      (3)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA0_MASK       (0x00000008)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA1_SHIFT           (4)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA1_MASK            (0x00000030)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA1_SHIFT    (6)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA1_MASK     (0x00000040)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA1_SHIFT      (7)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA1_MASK       (0x00000080)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA2_SHIFT           (8)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA2_MASK            (0x00000300)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA2_SHIFT    (10)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA2_MASK     (0x00000400)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA2_SHIFT      (11)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA2_MASK       (0x00000800)
--#define SCU_SGPIO_OUPUT_DATA_SELECT_RESERVED_MASK               (0xFFFFF000)
--
--#define SCU_SGODSR_GEN_VAL(name, value)	\
--	SCU_GEN_VALUE(SCU_SGPIO_OUPUT_DATA_SELECT_ ## name, value)
--
--#define SCU_SGODSR_GEN_BIT(name) \
--	SCU_GEN_BIT(SCU_SGPIO_OUPUT_DATA_SELECT_ ## name)
--
- /*
-  * *****************************************************************************
-  * * SMU Registers
-@@ -1529,10 +1413,12 @@ struct scu_sgpio_registers {
- 	u32 serial_input_upper;
- /* 0x0018 SGPIO_SGVSCR */
- 	u32 vendor_specific_code;
-+/* 0x001C Reserved */
-+	u32 reserved_001c;
- /* 0x0020 SGPIO_SGODSR */
--	u32 ouput_data_select[8];
-+	u32 output_data_select[8];
- /* Remainder of memory space 256 bytes */
--	u32 reserved_1444_14ff[0x31];
-+	u32 reserved_1444_14ff[0x30];
++	/* disable output data selects */
++	for (i = 0; i < isci_gpio_count(ihost); i++)
++		writel(SGPIO_HW_CONTROL, &ihost->scu_registers->peg0.sgpio.output_data_select[i]);
++
+ 	isci_host_change_state(ihost, isci_stopping);
+ 	for (i = 0; i < SCI_MAX_PORTS; i++) {
+ 		struct isci_port *iport = &ihost->ports[i];
+@@ -1281,6 +1285,12 @@ void isci_host_deinit(struct isci_host *ihost)
+ 	spin_unlock_irq(&ihost->scic_lock);
  
+ 	wait_for_stop(ihost);
++
++	/* disable sgpio: where the above wait should give time for the
++	 * enclosure to sample the gpios going inactive
++	 */
++	writel(0, &ihost->scu_registers->peg0.sgpio.interface_control);
++
+ 	sci_controller_reset(ihost);
+ 
+ 	/* Cancel any/all outstanding port timers */
+@@ -2365,6 +2375,12 @@ int isci_host_init(struct isci_host *ihost)
+ 	for (i = 0; i < SCI_MAX_PHYS; i++)
+ 		isci_phy_init(&ihost->phys[i], ihost, i);
+ 
++	/* enable sgpio */
++	writel(1, &ihost->scu_registers->peg0.sgpio.interface_control);
++	for (i = 0; i < isci_gpio_count(ihost); i++)
++		writel(SGPIO_HW_CONTROL, &ihost->scu_registers->peg0.sgpio.output_data_select[i]);
++	writel(0, &ihost->scu_registers->peg0.sgpio.vendor_specific_code);
++
+ 	for (i = 0; i < SCI_MAX_REMOTE_DEVICES; i++) {
+ 		struct isci_remote_device *idev = &ihost->devices[i];
+ 
+@@ -2760,3 +2776,56 @@ enum sci_task_status sci_controller_start_task(struct isci_host *ihost,
+ 
+ 	return status;
+ }
++
++static int sci_write_gpio_tx_gp(struct isci_host *ihost, u8 reg_index, u8 reg_count, u8 *write_data)
++{
++	int d;
++
++	/* no support for TX_GP_CFG */
++	if (reg_index == 0)
++		return -EINVAL;
++
++	for (d = 0; d < isci_gpio_count(ihost); d++) {
++		u32 val = 0x444; /* all ODx.n clear */
++		int i;
++
++		for (i = 0; i < 3; i++) {
++			int bit = (i << 2) + 2;
++
++			bit = try_test_sas_gpio_gp_bit(to_sas_gpio_od(d, i),
++						       write_data, reg_index,
++						       reg_count);
++			if (bit < 0)
++				break;
++
++			/* if od is set, clear the 'invert' bit */
++			val &= ~(bit << ((i << 2) + 2));
++		}
++
++		if (i < 3)
++			break;
++		writel(val, &ihost->scu_registers->peg0.sgpio.output_data_select[d]);
++	}
++
++	/* unless reg_index is > 1, we should always be able to write at
++	 * least one register
++	 */
++	return d > 0;
++}
++
++int isci_gpio_write(struct sas_ha_struct *sas_ha, u8 reg_type, u8 reg_index,
++		    u8 reg_count, u8 *write_data)
++{
++	struct isci_host *ihost = sas_ha->lldd_ha;
++	int written;
++
++	switch (reg_type) {
++	case SAS_GPIO_REG_TX_GP:
++		written = sci_write_gpio_tx_gp(ihost, reg_index, reg_count, write_data);
++		break;
++	default:
++		written = -EINVAL;
++	}
++
++	return written;
++}
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 9f33831..646051a 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -440,6 +440,18 @@ static inline bool is_c0(struct pci_dev *pdev)
+ 	return false;
+ }
+ 
++/* set hw control for 'activity', even though active enclosures seem to drive
++ * the activity led on their own.  Skip setting FSENG control on 'status' due
++ * to unexpected operation and 'error' due to not being a supported automatic
++ * FSENG output
++ */
++#define SGPIO_HW_CONTROL 0x00000443
++
++static inline int isci_gpio_count(struct isci_host *ihost)
++{
++	return ARRAY_SIZE(ihost->scu_registers->peg0.sgpio.output_data_select);
++}
++
+ void sci_controller_post_request(struct isci_host *ihost,
+ 				      u32 request);
+ void sci_controller_release_frame(struct isci_host *ihost,
+@@ -542,4 +554,7 @@ void sci_port_configuration_agent_construct(
+ enum sci_status sci_port_configuration_agent_initialize(
+ 	struct isci_host *ihost,
+ 	struct sci_port_configuration_agent *port_agent);
++
++int isci_gpio_write(struct sas_ha_struct *, u8 reg_type, u8 reg_index,
++		    u8 reg_count, u8 *write_data);
+ #endif
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 29aa34e..43fe840 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -192,6 +192,9 @@ static struct sas_domain_function_template isci_transport_ops  = {
+ 
+ 	/* Phy management */
+ 	.lldd_control_phy	= isci_phy_control,
++
++	/* GPIO support */
++	.lldd_write_gpio	= isci_gpio_write,
  };
+ 
  
 
