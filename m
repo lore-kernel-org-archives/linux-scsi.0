@@ -1,13 +1,22 @@
 From: Jiri Pirko <jpirko@redhat.com>
-Subject: [patch net-next-2.6] net: consolidate and fix ethtool_ops->get_settings calling
-Date: Thu,  1 Sep 2011 21:28:24 +0200
-Message-ID: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
-Return-path: <linux-mips-bounce@linux-mips.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
+Subject: [patch net-next-2.6 v2] net: consolidate and fix
+ ethtool_ops->get_settings calling
+Date: Fri, 2 Sep 2011 14:26:30 +0200
+Message-ID: <20110902122630.GC1991@minipsycho>
+References: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32145 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750860Ab1IBM1O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Sep 2011 08:27:14 -0400
+Content-Disposition: inline
+In-Reply-To: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: netdev@vger.kernel.org
 Cc: ralf@linux-mips.org, fubar@us.ibm.com, andy@greyhouse.net, kaber@trash.net, bprakash@broadcom.com, JBottomley@parallels.com, robert.w.love@intel.com, davem@davemloft.net, shemminger@linux-foundation.org, decot@google.com, bhutchings@solarflare.com, mirq-linux@rere.qmqm.pl, alexander.h.duyck@intel.com, amit.salecha@qlogic.com, eric.dumazet@gmail.com, therbert@google.com, paulmck@linux.vnet.ibm.com, laijs@cn.fujitsu.com, xiaosuo@gmail.com, greearb@candelatech.com, loke.chetan@gmail.com, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org, bridge@lists.linux-foundation.org
-List-Id: linux-scsi@vger.kernel.org
 
 This patch does several things:
 - introduces __ethtool_get_settings which is called from ethtool code and
@@ -21,10 +30,13 @@ This patch does several things:
   so bnx2fc_if_create() and fcoe_if_create() are called locked as they
   are from other places.
 - prb_calc_retire_blk_tmo() in af_packet.c was not calling get_settings
-  with rtnl_lock. So use dev_ethtool_get_settings here.
+  with rntl_lock. So use dev_ethtool_get_settings here.
 - use __ethtool_get_settings() in bonding code
 
 Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+
+v1->v2:
+	add missing export_symbol 
 ---
  arch/mips/txx9/generic/setup_tx4939.c |    2 +-
  drivers/net/bonding/bond_main.c       |   13 ++++------
@@ -35,10 +47,10 @@ Signed-off-by: Jiri Pirko <jpirko@redhat.com>
  net/8021q/vlan_dev.c                  |    3 +-
  net/bridge/br_if.c                    |    2 +-
  net/core/dev.c                        |   17 +++++---------
- net/core/ethtool.c                    |   17 +++++++++----
+ net/core/ethtool.c                    |   18 ++++++++++----
  net/core/net-sysfs.c                  |    4 +-
  net/packet/af_packet.c                |   41 +++++++++++++++-----------------
- 12 files changed, 59 insertions(+), 54 deletions(-)
+ 12 files changed, 60 insertions(+), 54 deletions(-)
 
 diff --git a/arch/mips/txx9/generic/setup_tx4939.c b/arch/mips/txx9/generic/setup_tx4939.c
 index e9f95dc..ba3cec3 100644
@@ -234,10 +246,10 @@ index 11b0fc7..abdc0e3 100644
  EXPORT_SYMBOL(dev_ethtool_get_settings);
  
 diff --git a/net/core/ethtool.c b/net/core/ethtool.c
-index 6cdba5f..94326d4 100644
+index 6cdba5f..307297c 100644
 --- a/net/core/ethtool.c
 +++ b/net/core/ethtool.c
-@@ -569,15 +569,22 @@ int __ethtool_set_flags(struct net_device *dev, u32 data)
+@@ -569,15 +569,23 @@ int __ethtool_set_flags(struct net_device *dev, u32 data)
  	return 0;
  }
  
@@ -250,6 +262,7 @@ index 6cdba5f..94326d4 100644
 +	cmd->cmd = ETHTOOL_GSET;
 +	return dev->ethtool_ops->get_settings(dev, cmd);
 +}
++EXPORT_SYMBOL(__ethtool_get_settings);
 +
  static int ethtool_get_settings(struct net_device *dev, void __user *useraddr)
  {
@@ -346,3 +359,4 @@ index 2ea3d63..1bcc794 100644
  
 -- 
 1.7.6
+
