@@ -1,54 +1,411 @@
-From: =?utf-8?B?5q+P5aSp6YO95pyJ5paw5Lmw5a62?= <user@arborgage.com>
-Subject: =?utf-8?B?5pyA5paw5bm/5Lqk5Lya5Lmw5a625bqTKzUwMOS4h+a1t+WkluS5sOWutui1hOa6kCs=?=
-	=?utf-8?B?6YKu5Lu25Y+R6YCB5pa55qGIPeavj+WkqemDveacieaWsOS5sOWutuWbnuWkje+8gQ==?=
-Date: Sat, 3 Sep 2011 07:52:15 +0000 (UTC)
-Message-ID: <20110930155250453650@arborgage.com>
-Reply-To: <1339625218@qq.com>
+From: Jiri Pirko <jpirko@redhat.com>
+Subject: [patch net-next-2.6 v3] net: consolidate and fix
+ ethtool_ops->get_settings calling
+Date: Sat, 3 Sep 2011 15:34:30 +0200
+Message-ID: <20110903133428.GA2821@minipsycho>
+References: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
+ <20110902122630.GC1991@minipsycho>
+ <1314989161.3419.5.camel@bwh-desktop>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:57031 "HELO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751921Ab1ICHwL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2011 03:52:11 -0400
-Date: Fri, 30 Sep 2011 15:52:42 +0800
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <1314989161.3419.5.camel@bwh-desktop>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Ben Hutchings <bhutchings@solarflare.com>
+Cc: netdev@vger.kernel.org, ralf@linux-mips.org, fubar@us.ibm.com, andy@greyhouse.net, kaber@trash.net, bprakash@broadcom.com, JBottomley@parallels.com, robert.w.love@intel.com, davem@davemloft.net, shemminger@linux-foundation.org, decot@google.com, mirq-linux@rere.qmqm.pl, alexander.h.duyck@intel.com, amit.salecha@qlogic.com, eric.dumazet@gmail.com, therbert@google.com, paulmck@linux.vnet.ibm.com, laijs@cn.fujitsu.com, xiaosuo@gmail.com, greearb@candelatech.com, loke.chetan@gmail.com, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org, bridge@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-NTAw5LiH5rW35aSW5Lmw5a626LWE5rqQK+mCruS7tuWPkemAgeaWueahiCvmtbflpJbkubDlrrZF
-bWFpbOaQnOe0ouacuj3mr4/lpKnpg73mnInlrqLmiLflm57lpI3vvIENCjUwMOS4h+a1t+WkluS5
-sOWutui1hOa6kCvpgq7ku7blj5HpgIHmlrnmoYgr5rW35aSW5Lmw5a62RW1haWzmkJzntKLmnLo9
-5q+P5aSp6YO95pyJ5a6i5oi35Zue5aSN77yBDQoNCjHjgIE1MDDkuIfkubDlrrbotYTmupDvvJog
-6LWg6YCB55qENTAw5LiH5Lmw5a626LWE5rqQ5bqT77yM5pu05pawICjlj6/ku6XmjInnhafmgqjn
-moTkuqflk4Hmj5Dlj5blh7rmnaXvvIzmm7Tnsr7lh4blvIDlj5Ep44CCIA0KMuOAgei2hee6p+a1
-t+WkluS5sOWutkVtYWls5pCc57Si5py677yaIOWGhee9ruS6hjYwMOS4h+ihjOS4muWFs+mUruiv
-je+8jOagueaNrumVv+WwvuivjeaQnOe0ou+8jOe7k+aenOabtOeyvuehruWMuemFje+8m+avj+Wk
-qeiDveaQnOe0ojEtMuS4h+S7peS4iuS5sOWutuecn+WunkVNQUlM77yM5oiQ5Y2V546H6auY44CC
-IA0KM+OAgee+pOWPkei9r+S7tu+8miDmk43kvZznroDljZXvvIzlip/og73lvLrlpKfvvIzmqKHk
-u7/kurrlt6Xmk43kvZzmqKHlvI/vvIzliLDovr7njofpq5jvvIzml6Xlj5HpgIE15LiH5bCB5Lul
-5LiK44CCIA0KIA0K5pSv5oyB5pSv5LuY5a6d5ouF5L+d5Lqk5piTICjlhYjlj5HotKflubblrono
-o4Xorr7nva7nvqTlj5Hova/ku7bvvIznhLblkI7ku5jmrL4pIOW9u+W6leaJk+a2iOaCqOeahCDp
-ob7omZHjgIINCg0K6K+36IGU57O777yaDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUy
-MThAcXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThAcXEuY29tDQpRUTox
-MzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThAcXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1h
-aWw6IDEzMzk2MjUyMThAcXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThA
-cXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThAcXEuY29tDQoNCuWFjei0
-uei1oOmAgToNCjHjgIHotoXnuqfmtbflpJbkubDlrrbmkJzntKLmnLos5Y+v5Lul6L275p2+5omr
-5o+P5Ye6IDUwMC0xMDAw5LiH5Lmw5a62RW1haWzvvIzlu7rnq4voh6rlt7HnmoTokKXplIDmlbDm
-ja7lupPjgIINCjLjgIEyMDA55bm05rW35YWz5o+Q5Y2V5pWw5o2ucGllcnPniYjmlbDmja4gMeWN
-g+S4h+OAgg0KM+OAgTIwMTHmmKXlraMxMDnlsYrlub/kuqTkvJrkubDlrrbnjrDlnLror6Lnm5jm
-lbDmja7lupPmlrDpspzlh7rngonvvIzotoXnuqfmlrDpspzkubDlrrbvvIzmlrDpspzmlbDmja7v
-vIzlrrnmmJPmiJDljZXvvIEgDQo044CBMjAwOOW5tOiHszIwMTDlubQg5pil5a2jK+eni+Wto+W5
-v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQgMTA1IDEwNiAxMDcgMTA4IOWFseWFreWxiu+8
-jOWFsTEyMC425LiH5pWw5o2u44CCIA0KNeOAgeacgOaWsOWFqOeQg+S5sOWutuW6kyzlhbE0NTE2
-NjDmnaHmlbDmja7vvIzmr4/kuKrlnYfmnIlFbWFpbOOAgg0KNuOAgTIwMTDlubTlm73pmYXkv4Pp
-lIDljY/kvJrvvIhQUEFJ77yJ5oiQ5ZGY5ZCN5Y2VIFBQQUkgTWVtYmVycyBEaXJlY3RvcnnvvIzp
-nZ7luLjph43opoHnmoTlpKfkubDlrrbjgIINCjfjgIEyMDEw5bm05Yiw6aaZ5riv6YeH6LSt55qE
-5Zu95aSW5a6i5Lq65ZCN5b2VKOmmmea4r+i0uOWPkeWxgOaPkOS+mynvvIzlhbE3LjLkuIfmlbDm
-ja7vvIzotoXnuqfph43opoHnmoTkubDlrrbjgIINCjjjgIExMDDkuIfmnaHlm73lpJbotLjmmJPo
-r6Lnm5jvvIzmr4/kuKrlnYfmnIlFbWFpbOOAgg0KOeOAgeS5sOWutui1hOa6kOabtOaWsOS4reOA
-guOAguOAgg0K5YWo6YOo6YO95pyJ44CCDQogDQo=
+This patch does several things:
+- introduces __ethtool_get_settings which is called from ethtool code and
+  from drivers as well. Put ASSERT_RTNL there.
+- dev_ethtool_get_settings() is replaced by __ethtool_get_settings()
+- changes calling in drivers so rtnl locking is respected. In
+  iboe_get_rate was previously ->get_settings() called unlocked. This
+  fixes it. Also prb_calc_retire_blk_tmo() in af_packet.c had the same
+  problem. Also fixed by calling __dev_get_by_index() instead of
+  dev_get_by_index() and holding rtnl_lock for both calls.
+- introduces rtnl_lock in bnx2fc_vport_create() and fcoe_vport_create()
+  so bnx2fc_if_create() and fcoe_if_create() are called locked as they
+  are from other places.
+- use __ethtool_get_settings() in bonding code
 
+Signed-off-by: Jiri Pirko <jpirko@redhat.com>
 
+v2->v3:
+	-removed dev_ethtool_get_settings()
+	-added ASSERT_RTNL into __ethtool_get_settings()
+	-prb_calc_retire_blk_tmo - use __dev_get_by_index() and lock
+	 around it and __ethtool_get_settings() call
+v1->v2:
+        add missing export_symbol 
+ 
+---
+ arch/mips/txx9/generic/setup_tx4939.c |    2 +-
+ drivers/net/bonding/bond_main.c       |   13 +++-----
+ drivers/net/macvlan.c                 |    3 +-
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c     |    4 ++-
+ drivers/scsi/fcoe/fcoe.c              |    4 ++-
+ include/linux/ethtool.h               |    3 ++
+ include/linux/netdevice.h             |    3 --
+ include/rdma/ib_addr.h                |    6 +++-
+ net/8021q/vlan_dev.c                  |    3 +-
+ net/bridge/br_if.c                    |    2 +-
+ net/core/dev.c                        |   24 ---------------
+ net/core/ethtool.c                    |   20 +++++++++---
+ net/core/net-sysfs.c                  |    4 +-
+ net/packet/af_packet.c                |   52 +++++++++++++++++----------------
+ 14 files changed, 69 insertions(+), 74 deletions(-)
+
+diff --git a/arch/mips/txx9/generic/setup_tx4939.c b/arch/mips/txx9/generic/setup_tx4939.c
+index e9f95dc..ba3cec3 100644
+--- a/arch/mips/txx9/generic/setup_tx4939.c
++++ b/arch/mips/txx9/generic/setup_tx4939.c
+@@ -321,7 +321,7 @@ void __init tx4939_sio_init(unsigned int sclk, unsigned int cts_mask)
+ static u32 tx4939_get_eth_speed(struct net_device *dev)
+ {
+ 	struct ethtool_cmd cmd;
+-	if (dev_ethtool_get_settings(dev, &cmd))
++	if (__ethtool_get_settings(dev, &cmd))
+ 		return 100;	/* default 100Mbps */
+ 
+ 	return ethtool_cmd_speed(&cmd);
+diff --git a/drivers/net/bonding/bond_main.c b/drivers/net/bonding/bond_main.c
+index 8cb75a6..1dcb07c 100644
+--- a/drivers/net/bonding/bond_main.c
++++ b/drivers/net/bonding/bond_main.c
+@@ -557,7 +557,7 @@ down:
+ static int bond_update_speed_duplex(struct slave *slave)
+ {
+ 	struct net_device *slave_dev = slave->dev;
+-	struct ethtool_cmd etool = { .cmd = ETHTOOL_GSET };
++	struct ethtool_cmd ecmd;
+ 	u32 slave_speed;
+ 	int res;
+ 
+@@ -565,18 +565,15 @@ static int bond_update_speed_duplex(struct slave *slave)
+ 	slave->speed = SPEED_100;
+ 	slave->duplex = DUPLEX_FULL;
+ 
+-	if (!slave_dev->ethtool_ops || !slave_dev->ethtool_ops->get_settings)
+-		return -1;
+-
+-	res = slave_dev->ethtool_ops->get_settings(slave_dev, &etool);
++	res = __ethtool_get_settings(slave_dev, &ecmd);
+ 	if (res < 0)
+ 		return -1;
+ 
+-	slave_speed = ethtool_cmd_speed(&etool);
++	slave_speed = ethtool_cmd_speed(&ecmd);
+ 	if (slave_speed == 0 || slave_speed == ((__u32) -1))
+ 		return -1;
+ 
+-	switch (etool.duplex) {
++	switch (ecmd.duplex) {
+ 	case DUPLEX_FULL:
+ 	case DUPLEX_HALF:
+ 		break;
+@@ -585,7 +582,7 @@ static int bond_update_speed_duplex(struct slave *slave)
+ 	}
+ 
+ 	slave->speed = slave_speed;
+-	slave->duplex = etool.duplex;
++	slave->duplex = ecmd.duplex;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/macvlan.c b/drivers/net/macvlan.c
+index 836e13f..b100c90 100644
+--- a/drivers/net/macvlan.c
++++ b/drivers/net/macvlan.c
+@@ -543,7 +543,8 @@ static int macvlan_ethtool_get_settings(struct net_device *dev,
+ 					struct ethtool_cmd *cmd)
+ {
+ 	const struct macvlan_dev *vlan = netdev_priv(dev);
+-	return dev_ethtool_get_settings(vlan->lowerdev, cmd);
++
++	return __ethtool_get_settings(vlan->lowerdev, cmd);
+ }
+ 
+ static const struct ethtool_ops macvlan_ethtool_ops = {
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index 2c780a7..820a184 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -673,7 +673,7 @@ static void bnx2fc_link_speed_update(struct fc_lport *lport)
+ 	struct net_device *netdev = interface->netdev;
+ 	struct ethtool_cmd ecmd;
+ 
+-	if (!dev_ethtool_get_settings(netdev, &ecmd)) {
++	if (!__ethtool_get_settings(netdev, &ecmd)) {
+ 		lport->link_supported_speeds &=
+ 			~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
+ 		if (ecmd.supported & (SUPPORTED_1000baseT_Half |
+@@ -1001,9 +1001,11 @@ static int bnx2fc_vport_create(struct fc_vport *vport, bool disabled)
+ 			"this interface\n");
+ 		return -EIO;
+ 	}
++	rtnl_lock();
+ 	mutex_lock(&bnx2fc_dev_lock);
+ 	vn_port = bnx2fc_if_create(interface, &vport->dev, 1);
+ 	mutex_unlock(&bnx2fc_dev_lock);
++	rtnl_unlock();
+ 
+ 	if (IS_ERR(vn_port)) {
+ 		printk(KERN_ERR PFX "bnx2fc_vport_create (%s) failed\n",
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 3416ab6..83aa3ac 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2043,7 +2043,7 @@ int fcoe_link_speed_update(struct fc_lport *lport)
+ 	struct net_device *netdev = fcoe_netdev(lport);
+ 	struct ethtool_cmd ecmd;
+ 
+-	if (!dev_ethtool_get_settings(netdev, &ecmd)) {
++	if (!__ethtool_get_settings(netdev, &ecmd)) {
+ 		lport->link_supported_speeds &=
+ 			~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
+ 		if (ecmd.supported & (SUPPORTED_1000baseT_Half |
+@@ -2452,7 +2452,9 @@ static int fcoe_vport_create(struct fc_vport *vport, bool disabled)
+ 	}
+ 
+ 	mutex_lock(&fcoe_config_mutex);
++	rtnl_lock();
+ 	vn_port = fcoe_if_create(fcoe, &vport->dev, 1);
++	rtnl_unlock();
+ 	mutex_unlock(&fcoe_config_mutex);
+ 
+ 	if (IS_ERR(vn_port)) {
+diff --git a/include/linux/ethtool.h b/include/linux/ethtool.h
+index 3829712..8571f18 100644
+--- a/include/linux/ethtool.h
++++ b/include/linux/ethtool.h
+@@ -728,6 +728,9 @@ enum ethtool_sfeatures_retval_bits {
+ /* needed by dev_disable_lro() */
+ extern int __ethtool_set_flags(struct net_device *dev, u32 flags);
+ 
++extern int __ethtool_get_settings(struct net_device *dev,
++				  struct ethtool_cmd *cmd);
++
+ /**
+  * enum ethtool_phys_id_state - indicator state for physical identification
+  * @ETHTOOL_ID_INACTIVE: Physical ID indicator should be deactivated
+diff --git a/include/linux/netdevice.h b/include/linux/netdevice.h
+index dad7e4d..8b1080b 100644
+--- a/include/linux/netdevice.h
++++ b/include/linux/netdevice.h
+@@ -2600,9 +2600,6 @@ static inline int netif_is_bond_slave(struct net_device *dev)
+ 
+ extern struct pernet_operations __net_initdata loopback_net_ops;
+ 
+-int dev_ethtool_get_settings(struct net_device *dev,
+-			     struct ethtool_cmd *cmd);
+-
+ static inline u32 dev_ethtool_get_rx_csum(struct net_device *dev)
+ {
+ 	if (dev->features & NETIF_F_RXCSUM)
+diff --git a/include/rdma/ib_addr.h b/include/rdma/ib_addr.h
+index ae8c68f..639a449 100644
+--- a/include/rdma/ib_addr.h
++++ b/include/rdma/ib_addr.h
+@@ -218,8 +218,12 @@ static inline int iboe_get_rate(struct net_device *dev)
+ {
+ 	struct ethtool_cmd cmd;
+ 	u32 speed;
++	int err;
+ 
+-	if (dev_ethtool_get_settings(dev, &cmd))
++	rtnl_lock();
++	err = __ethtool_get_settings(dev, &cmd);
++	rtnl_unlock();
++	if (err)
+ 		return IB_RATE_PORT_CURRENT;
+ 
+ 	speed = ethtool_cmd_speed(&cmd);
+diff --git a/net/8021q/vlan_dev.c b/net/8021q/vlan_dev.c
+index eba705b..c8cf939 100644
+--- a/net/8021q/vlan_dev.c
++++ b/net/8021q/vlan_dev.c
+@@ -610,7 +610,8 @@ static int vlan_ethtool_get_settings(struct net_device *dev,
+ 				     struct ethtool_cmd *cmd)
+ {
+ 	const struct vlan_dev_info *vlan = vlan_dev_info(dev);
+-	return dev_ethtool_get_settings(vlan->real_dev, cmd);
++
++	return __ethtool_get_settings(vlan->real_dev, cmd);
+ }
+ 
+ static void vlan_ethtool_get_drvinfo(struct net_device *dev,
+diff --git a/net/bridge/br_if.c b/net/bridge/br_if.c
+index b365bba..043a5eb 100644
+--- a/net/bridge/br_if.c
++++ b/net/bridge/br_if.c
+@@ -35,7 +35,7 @@ static int port_cost(struct net_device *dev)
+ {
+ 	struct ethtool_cmd ecmd;
+ 
+-	if (!dev_ethtool_get_settings(dev, &ecmd)) {
++	if (!__ethtool_get_settings(dev, &ecmd)) {
+ 		switch (ethtool_cmd_speed(&ecmd)) {
+ 		case SPEED_10000:
+ 			return 2;
+diff --git a/net/core/dev.c b/net/core/dev.c
+index 11b0fc7..94f3254 100644
+--- a/net/core/dev.c
++++ b/net/core/dev.c
+@@ -4566,30 +4566,6 @@ void dev_set_rx_mode(struct net_device *dev)
+ }
+ 
+ /**
+- *	dev_ethtool_get_settings - call device's ethtool_ops::get_settings()
+- *	@dev: device
+- *	@cmd: memory area for ethtool_ops::get_settings() result
+- *
+- *      The cmd arg is initialized properly (cleared and
+- *      ethtool_cmd::cmd field set to ETHTOOL_GSET).
+- *
+- *	Return device's ethtool_ops::get_settings() result value or
+- *	-EOPNOTSUPP when device doesn't expose
+- *	ethtool_ops::get_settings() operation.
+- */
+-int dev_ethtool_get_settings(struct net_device *dev,
+-			     struct ethtool_cmd *cmd)
+-{
+-	if (!dev->ethtool_ops || !dev->ethtool_ops->get_settings)
+-		return -EOPNOTSUPP;
+-
+-	memset(cmd, 0, sizeof(struct ethtool_cmd));
+-	cmd->cmd = ETHTOOL_GSET;
+-	return dev->ethtool_ops->get_settings(dev, cmd);
+-}
+-EXPORT_SYMBOL(dev_ethtool_get_settings);
+-
+-/**
+  *	dev_get_flags - get flags reported to userspace
+  *	@dev: device
+  *
+diff --git a/net/core/ethtool.c b/net/core/ethtool.c
+index 6cdba5f..f444817 100644
+--- a/net/core/ethtool.c
++++ b/net/core/ethtool.c
+@@ -569,15 +569,25 @@ int __ethtool_set_flags(struct net_device *dev, u32 data)
+ 	return 0;
+ }
+ 
+-static int ethtool_get_settings(struct net_device *dev, void __user *useraddr)
++int __ethtool_get_settings(struct net_device *dev, struct ethtool_cmd *cmd)
+ {
+-	struct ethtool_cmd cmd = { .cmd = ETHTOOL_GSET };
+-	int err;
++	ASSERT_RTNL();
+ 
+-	if (!dev->ethtool_ops->get_settings)
++	if (!dev->ethtool_ops || !dev->ethtool_ops->get_settings)
+ 		return -EOPNOTSUPP;
+ 
+-	err = dev->ethtool_ops->get_settings(dev, &cmd);
++	memset(cmd, 0, sizeof(struct ethtool_cmd));
++	cmd->cmd = ETHTOOL_GSET;
++	return dev->ethtool_ops->get_settings(dev, cmd);
++}
++EXPORT_SYMBOL(__ethtool_get_settings);
++
++static int ethtool_get_settings(struct net_device *dev, void __user *useraddr)
++{
++	int err;
++	struct ethtool_cmd cmd;
++
++	err = __ethtool_get_settings(dev, &cmd);
+ 	if (err < 0)
+ 		return err;
+ 
+diff --git a/net/core/net-sysfs.c b/net/core/net-sysfs.c
+index 90fdb46..48e6279 100644
+--- a/net/core/net-sysfs.c
++++ b/net/core/net-sysfs.c
+@@ -172,7 +172,7 @@ static ssize_t show_speed(struct device *dev,
+ 
+ 	if (netif_running(netdev)) {
+ 		struct ethtool_cmd cmd;
+-		if (!dev_ethtool_get_settings(netdev, &cmd))
++		if (!__ethtool_get_settings(netdev, &cmd))
+ 			ret = sprintf(buf, fmt_udec, ethtool_cmd_speed(&cmd));
+ 	}
+ 	rtnl_unlock();
+@@ -190,7 +190,7 @@ static ssize_t show_duplex(struct device *dev,
+ 
+ 	if (netif_running(netdev)) {
+ 		struct ethtool_cmd cmd;
+-		if (!dev_ethtool_get_settings(netdev, &cmd))
++		if (!__ethtool_get_settings(netdev, &cmd))
+ 			ret = sprintf(buf, "%s\n",
+ 				      cmd.duplex ? "full" : "half");
+ 	}
+diff --git a/net/packet/af_packet.c b/net/packet/af_packet.c
+index 2ea3d63..25e68f5 100644
+--- a/net/packet/af_packet.c
++++ b/net/packet/af_packet.c
+@@ -530,33 +530,35 @@ static int prb_calc_retire_blk_tmo(struct packet_sock *po,
+ {
+ 	struct net_device *dev;
+ 	unsigned int mbits = 0, msec = 0, div = 0, tmo = 0;
++	struct ethtool_cmd ecmd;
++	int err;
+ 
+-	dev = dev_get_by_index(sock_net(&po->sk), po->ifindex);
+-	if (unlikely(dev == NULL))
++	rtnl_lock();
++	dev = __dev_get_by_index(sock_net(&po->sk), po->ifindex);
++	if (unlikely(!dev)) {
++		rtnl_unlock();
+ 		return DEFAULT_PRB_RETIRE_TOV;
+-
+-	if (dev->ethtool_ops && dev->ethtool_ops->get_settings) {
+-		struct ethtool_cmd ecmd = { .cmd = ETHTOOL_GSET, };
+-
+-		if (!dev->ethtool_ops->get_settings(dev, &ecmd)) {
+-			switch (ecmd.speed) {
+-			case SPEED_10000:
+-				msec = 1;
+-				div = 10000/1000;
+-				break;
+-			case SPEED_1000:
+-				msec = 1;
+-				div = 1000/1000;
+-				break;
+-			/*
+-			 * If the link speed is so slow you don't really
+-			 * need to worry about perf anyways
+-			 */
+-			case SPEED_100:
+-			case SPEED_10:
+-			default:
+-				return DEFAULT_PRB_RETIRE_TOV;
+-			}
++	}
++	err = __ethtool_get_settings(dev, &ecmd);
++	rtnl_unlock();
++	if (!err) {
++		switch (ecmd.speed) {
++		case SPEED_10000:
++			msec = 1;
++			div = 10000/1000;
++			break;
++		case SPEED_1000:
++			msec = 1;
++			div = 1000/1000;
++			break;
++		/*
++		 * If the link speed is so slow you don't really
++		 * need to worry about perf anyways
++		 */
++		case SPEED_100:
++		case SPEED_10:
++		default:
++			return DEFAULT_PRB_RETIRE_TOV;
+ 		}
+ 	}
+ 
+-- 
+1.7.6
