@@ -1,47 +1,38 @@
-From: Ben Hutchings <bhutchings@solarflare.com>
-Subject: Re: [patch net-next-2.6 v3] net: consolidate and fix
- ethtool_ops->get_settings calling
-Date: Sat, 03 Sep 2011 14:46:47 +0100
-Message-ID: <1315057614.3092.160.camel@deadeye>
-References: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
-	 <20110902122630.GC1991@minipsycho> <1314989161.3419.5.camel@bwh-desktop>
-	 <20110903133428.GA2821@minipsycho>
+From: Haiyan Fan-Hagenstein <hfan-hagenstein@claflin.edu>
+Subject: ATTENTION WEB-MAIL USER
+Date: Sat, 3 Sep 2011 17:54:32 -0400
+Message-ID: <B057D4055A079D44B5B1AA6CE7A00F9717A6CB2585@cu-ex-staff.claflin.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.solarflare.com ([216.237.3.220]:15308 "EHLO
-	exchange.solarflare.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751625Ab1ICNq5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2011 09:46:57 -0400
-In-Reply-To: <20110903133428.GA2821@minipsycho>
+Received: from msx.claflin.edu ([65.83.118.39]:7990 "EHLO msx.claflin.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751558Ab1ICWAD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2011 18:00:03 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Pirko <jpirko@redhat.com>
-Cc: netdev@vger.kernel.org, ralf@linux-mips.org, fubar@us.ibm.com, andy@greyhouse.net, kaber@trash.net, bprakash@broadcom.com, JBottomley@parallels.com, robert.w.love@intel.com, davem@davemloft.net, shemminger@linux-foundation.org, decot@google.com, mirq-linux@rere.qmqm.pl, alexander.h.duyck@intel.com, amit.salecha@qlogic.com, eric.dumazet@gmail.com, therbert@google.com, paulmck@linux.vnet.ibm.com, laijs@cn.fujitsu.com, xiaosuo@gmail.com, greearb@candelatech.com, loke.chetan@gmail.com, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org, bridge@lists.linux-foundation.org
 
-On Sat, 2011-09-03 at 15:34 +0200, Jiri Pirko wrote:
-> This patch does several things:
-> - introduces __ethtool_get_settings which is called from ethtool code and
->   from drivers as well. Put ASSERT_RTNL there.
-> - dev_ethtool_get_settings() is replaced by __ethtool_get_settings()
-> - changes calling in drivers so rtnl locking is respected. In
->   iboe_get_rate was previously ->get_settings() called unlocked. This
->   fixes it. Also prb_calc_retire_blk_tmo() in af_packet.c had the same
->   problem. Also fixed by calling __dev_get_by_index() instead of
->   dev_get_by_index() and holding rtnl_lock for both calls.
-> - introduces rtnl_lock in bnx2fc_vport_create() and fcoe_vport_create()
->   so bnx2fc_if_create() and fcoe_if_create() are called locked as they
->   are from other places.
-> - use __ethtool_get_settings() in bonding code
-> 
-> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
-Reviewed-by: Ben Hutchings <bhutchings@solarflare.com> [except FCoE bits]
+WEBMASTER EMAIL ACCOUNT UPGRADE
 
-Ben.
+ATTENTION WEB-MAIL USER
 
--- 
-Ben Hutchings, Staff Engineer, Solarflare
-Not speaking for my employer; that's the marketing department's job.
-They asked us to note that Solarflare product names are trademarked.
+Your E-mail Box has reached its maximum limit of  50MB storage and your=
+ account will be deactivated if you do not upgrade it now. To upgrade y=
+our web-mail account, kindly click on the below link and follow the ins=
+tructions to upgrade space for more storage.
 
+CLICK HERE :  http://klosterscheuer.de/phpform/use/ConTaCtUs/form1.html
+
+Your account shall remain active after you have successfully confirmed =
+your account.
+
+Copyright =A9 2011 #  =95 ALL RIGHTS RESERVED =95
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
