@@ -1,29 +1,54 @@
-From: Peter Chow <petertse26@netvigator.com>
-Subject: Dear Friend Can I Trust You?
-Date: Sun, 4 Sep 2011 11:28:51 +0800 (HKT)
-Message-ID: <1367523858.823826.1315106931381.JavaMail.root__22288.893236737$1315107683$gmane$org@yzbmbs01>
-Reply-To: Peter Chow <pchoww56@yahoo.com.hk>
+From: =?utf-8?B?5q+P5aSp6YO95pyJ5paw5Lmw5a62?= <admin@brentonasia.com>
+Subject: =?utf-8?B?5pyA5paw5bm/5Lqk5Lya5Lmw5a625bqTKzUwMOS4h+a1t+WkluS5sOWutui1hOa6kCs=?=
+	=?utf-8?B?6YKu5Lu25Y+R6YCB5pa55qGIPeavj+WkqemDveacieaWsOS5sOWutuWbnuWkje+8gQ==?=
+Date: Sun, 4 Sep 2011 10:20:20 +0000 (UTC)
+Message-ID: <20111001172655880316@brentonasia.com>
+Reply-To: <1339625218@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wobosm02.netvigator.com ([219.76.94.18]:41351 "EHLO
-	wobosm02.netvigator.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753052Ab1IDDkw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2011 23:40:52 -0400
+Received: from [183.63.203.40] ([183.63.203.40]:60784 "HELO brentonasia.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753030Ab1IDKUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 4 Sep 2011 06:20:18 -0400
+Date: Sat, 1 Oct 2011 17:26:49 +0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Dear Friend,
+NTAw5LiH5rW35aSW5Lmw5a626LWE5rqQK+mCruS7tuWPkemAgeaWueahiCvmtbflpJbkubDlrrZF
+bWFpbOaQnOe0ouacuj3mr4/lpKnpg73mnInlrqLmiLflm57lpI3vvIENCjUwMOS4h+a1t+WkluS5
+sOWutui1hOa6kCvpgq7ku7blj5HpgIHmlrnmoYgr5rW35aSW5Lmw5a62RW1haWzmkJzntKLmnLo9
+5q+P5aSp6YO95pyJ5a6i5oi35Zue5aSN77yBDQoNCjHjgIE1MDDkuIfkubDlrrbotYTmupDvvJog
+6LWg6YCB55qENTAw5LiH5Lmw5a626LWE5rqQ5bqT77yM5pu05pawICjlj6/ku6XmjInnhafmgqjn
+moTkuqflk4Hmj5Dlj5blh7rmnaXvvIzmm7Tnsr7lh4blvIDlj5Ep44CCIA0KMuOAgei2hee6p+a1
+t+WkluS5sOWutkVtYWls5pCc57Si5py677yaIOWGhee9ruS6hjYwMOS4h+ihjOS4muWFs+mUruiv
+je+8jOagueaNrumVv+WwvuivjeaQnOe0ou+8jOe7k+aenOabtOeyvuehruWMuemFje+8m+avj+Wk
+qeiDveaQnOe0ojEtMuS4h+S7peS4iuS5sOWutuecn+WunkVNQUlM77yM5oiQ5Y2V546H6auY44CC
+IA0KM+OAgee+pOWPkei9r+S7tu+8miDmk43kvZznroDljZXvvIzlip/og73lvLrlpKfvvIzmqKHk
+u7/kurrlt6Xmk43kvZzmqKHlvI/vvIzliLDovr7njofpq5jvvIzml6Xlj5HpgIE15LiH5bCB5Lul
+5LiK44CCIA0KIA0K5pSv5oyB5pSv5LuY5a6d5ouF5L+d5Lqk5piTICjlhYjlj5HotKflubblrono
+o4Xorr7nva7nvqTlj5Hova/ku7bvvIznhLblkI7ku5jmrL4pIOW9u+W6leaJk+a2iOaCqOeahCDp
+ob7omZHjgIINCg0K6K+36IGU57O777yaDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUy
+MThAcXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThAcXEuY29tDQpRUTox
+MzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThAcXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1h
+aWw6IDEzMzk2MjUyMThAcXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThA
+cXEuY29tDQpRUToxMzM5NjI1MjE4ICAgZW1haWw6IDEzMzk2MjUyMThAcXEuY29tDQoNCuWFjei0
+uei1oOmAgToNCjHjgIHotoXnuqfmtbflpJbkubDlrrbmkJzntKLmnLos5Y+v5Lul6L275p2+5omr
+5o+P5Ye6IDUwMC0xMDAw5LiH5Lmw5a62RW1haWzvvIzlu7rnq4voh6rlt7HnmoTokKXplIDmlbDm
+ja7lupPjgIINCjLjgIEyMDA55bm05rW35YWz5o+Q5Y2V5pWw5o2ucGllcnPniYjmlbDmja4gMeWN
+g+S4h+OAgg0KM+OAgTIwMTHmmKXlraMxMDnlsYrlub/kuqTkvJrkubDlrrbnjrDlnLror6Lnm5jm
+lbDmja7lupPmlrDpspzlh7rngonvvIzotoXnuqfmlrDpspzkubDlrrbvvIzmlrDpspzmlbDmja7v
+vIzlrrnmmJPmiJDljZXvvIEgDQo044CBMjAwOOW5tOiHszIwMTDlubQg5pil5a2jK+eni+Wto+W5
+v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQgMTA1IDEwNiAxMDcgMTA4IOWFseWFreWxiu+8
+jOWFsTEyMC425LiH5pWw5o2u44CCIA0KNeOAgeacgOaWsOWFqOeQg+S5sOWutuW6kyzlhbE0NTE2
+NjDmnaHmlbDmja7vvIzmr4/kuKrlnYfmnIlFbWFpbOOAgg0KNuOAgTIwMTDlubTlm73pmYXkv4Pp
+lIDljY/kvJrvvIhQUEFJ77yJ5oiQ5ZGY5ZCN5Y2VIFBQQUkgTWVtYmVycyBEaXJlY3RvcnnvvIzp
+nZ7luLjph43opoHnmoTlpKfkubDlrrbjgIINCjfjgIEyMDEw5bm05Yiw6aaZ5riv6YeH6LSt55qE
+5Zu95aSW5a6i5Lq65ZCN5b2VKOmmmea4r+i0uOWPkeWxgOaPkOS+mynvvIzlhbE3LjLkuIfmlbDm
+ja7vvIzotoXnuqfph43opoHnmoTkubDlrrbjgIINCjjjgIExMDDkuIfmnaHlm73lpJbotLjmmJPo
+r6Lnm5jvvIzmr4/kuKrlnYfmnIlFbWFpbOOAgg0KOeOAgeS5sOWutui1hOa6kOabtOaWsOS4reOA
+guOAguOAgg0K5YWo6YOo6YO95pyJ44CCDQogDQo=
 
-I bring you greetings. I am PETER CHOW, I work with BANK OF CHINA, HONG KONG. I have a Business Proposal of $17.3M for you to handle with me from my bank.I need you to assist me in executing this Business Project from Hong Kong to your country.I need to know if you will be able to handle this with me before I explain to you in details. Should you be interested please send me the required information below;
 
-(1). Full Names:
-(2). Current Residential Address/Country:
-(3). Private Telephone Number:
-(4). Age:
-
-I will want you to reach me on my private e-mail : (pchoww56@yahoo.com.hk) .Finally after that I shall provide you with more information.
-
-Regards,
-Peter Chow
