@@ -1,38 +1,29 @@
-From: Haiyan Fan-Hagenstein <hfan-hagenstein@claflin.edu>
-Subject: ATTENTION WEB-MAIL USER
-Date: Sat, 3 Sep 2011 17:54:32 -0400
-Message-ID: <B057D4055A079D44B5B1AA6CE7A00F9717A6CB2585@cu-ex-staff.claflin.edu>
+From: Peter Chow <petertse26@netvigator.com>
+Subject: Dear Friend Can I Trust You?
+Date: Sun, 4 Sep 2011 11:28:51 +0800 (HKT)
+Message-ID: <1367523858.823826.1315106931381.JavaMail.root__22288.893236737$1315107683$gmane$org@yzbmbs01>
+Reply-To: Peter Chow <pchoww56@yahoo.com.hk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from msx.claflin.edu ([65.83.118.39]:7990 "EHLO msx.claflin.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558Ab1ICWAD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2011 18:00:03 -0400
-Content-Language: en-US
+Received: from wobosm02.netvigator.com ([219.76.94.18]:41351 "EHLO
+	wobosm02.netvigator.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753052Ab1IDDkw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Sep 2011 23:40:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-WEBMASTER EMAIL ACCOUNT UPGRADE
+Dear Friend,
 
-ATTENTION WEB-MAIL USER
+I bring you greetings. I am PETER CHOW, I work with BANK OF CHINA, HONG KONG. I have a Business Proposal of $17.3M for you to handle with me from my bank.I need you to assist me in executing this Business Project from Hong Kong to your country.I need to know if you will be able to handle this with me before I explain to you in details. Should you be interested please send me the required information below;
 
-Your E-mail Box has reached its maximum limit of  50MB storage and your=
- account will be deactivated if you do not upgrade it now. To upgrade y=
-our web-mail account, kindly click on the below link and follow the ins=
-tructions to upgrade space for more storage.
+(1). Full Names:
+(2). Current Residential Address/Country:
+(3). Private Telephone Number:
+(4). Age:
 
-CLICK HERE :  http://klosterscheuer.de/phpform/use/ConTaCtUs/form1.html
+I will want you to reach me on my private e-mail : (pchoww56@yahoo.com.hk) .Finally after that I shall provide you with more information.
 
-Your account shall remain active after you have successfully confirmed =
-your account.
-
-Copyright =A9 2011 #  =95 ALL RIGHTS RESERVED =95
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Peter Chow
