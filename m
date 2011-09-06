@@ -1,330 +1,295 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
-Date: Tue, 6 Sep 2011 09:47:15 -0700 (PDT)
-Message-ID: <1315327635.36823.YahooMailNeo@web31811.mail.mud.yahoo.com>
-References: <20110730002509.28735.82590.stgit@localhost6.localdomain6>
-	 <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com>
-	 <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
-	 <FC1F9E38C0703341A1A750524E2525A901853EFC@XYUS-EX22.xyus.xyratex.com> <1314891245.3067.11.camel@dabdike>
-Reply-To: Luben Tuikov <ltuikov@yahoo.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Neil Horman <nhorman@tuxdriver.com>
+Subject: [PATCH] cxgb3i: convert cdev->l2opt to use rcu to prevent NULL dereference (v2)
+Date: Tue,  6 Sep 2011 13:59:13 -0400
+Message-ID: <1315331953-11456-1-git-send-email-nhorman@tuxdriver.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm24.bullet.mail.ac4.yahoo.com ([98.139.52.221]:26452 "HELO
-	nm24.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751418Ab1IFQrS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Sep 2011 12:47:18 -0400
-In-Reply-To: <1314891245.3067.11.camel@dabdike>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:53090 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751585Ab1IFR7a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2011 13:59:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Darrick J Wong <djwong@us.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: Neil Horman <nhorman@tuxdriver.com>, Divy Le Ray <divy@chelsio.com>, Steve Wise <swise@chelsio.com>, Karen Xie <kxie@chelsio.com>, Mike Christie <michaelc@cs.wisc.edu>, stable-commits@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
------ Original Message -----
+This oops was reported recently:
+d:mon> e
+cpu 0xd: Vector: 300 (Data Access) at [c0000000fd4c7120]
+    pc: d00000000076f194: .t3_l2t_get+0x44/0x524 [cxgb3]
+    lr: d000000000b02108: .init_act_open+0x150/0x3d4 [cxgb3i]
+    sp: c0000000fd4c73a0
+   msr: 8000000000009032
+   dar: 0
+ dsisr: 40000000
+  current = 0xc0000000fd640d40
+  paca    = 0xc00000000054ff80
+    pid   = 5085, comm = iscsid
+d:mon> t
+[c0000000fd4c7450] d000000000b02108 .init_act_open+0x150/0x3d4 [cxgb3i]
+[c0000000fd4c7500] d000000000e45378 .cxgbi_ep_connect+0x784/0x8e8 [libcxgbi]
+[c0000000fd4c7650] d000000000db33f0 .iscsi_if_rx+0x71c/0xb18
+[scsi_transport_iscsi2]
+[c0000000fd4c7740] c000000000370c9c .netlink_data_ready+0x40/0xa4
+[c0000000fd4c77c0] c00000000036f010 .netlink_sendskb+0x4c/0x9c
+[c0000000fd4c7850] c000000000370c18 .netlink_sendmsg+0x358/0x39c
+[c0000000fd4c7950] c00000000033be24 .sock_sendmsg+0x114/0x1b8
+[c0000000fd4c7b50] c00000000033d208 .sys_sendmsg+0x218/0x2ac
+[c0000000fd4c7d70] c00000000033f55c .sys_socketcall+0x228/0x27c
+[c0000000fd4c7e30] c0000000000086a4 syscall_exit+0x0/0x40
+--- Exception: c01 (System Call) at 00000080da560cfc
 
->>  We will need James to chime in why your patch did not go in. My
->>  assumption is the lack of response to his question left it in limbo=
-=2E
->=20
-> That's a good assumption.=A0 A maintainers list folder is usually sor=
-ted
-> by thread and by activity.=A0 I mark patches for inclusion, but if a
-> thread is expecting a reply I don't do anything since it comes back t=
-o
-> the top again once there's activity on it.
+The root cause was an EEH error, which sent us down the offload_close path in
+the cxgb3 driver, which in turn sets cdev->l2opt to NULL, without regard for
+upper layer driver (like the cxgbi drivers) which might have execution contexts
+in the middle of its use. The result is the oops above, when t3_l2t_get attempts
+to dereference L2DATA(cdev)->nentries in arp_hash right after the EEH error handler sets it to NULL.
 
-This kernel business shouldn't be about you. It should be about
-making the kernel better today than it is tomorrow, so that people can
-use it and can use it with more devices, without bugs.
+The fix is to prevent the setting of the NULL pointer until after there are no
+further users of it.  The t3cdev->l2opt pointer is now converted to be an rcu
+pointer and the L2DATA macro is now called under the protection of the
+rcu_read_lock().  When the EEH error path:
+t3_adapter_error->offload_close->cxgb3_offload_deactivate
+Is exectured, setting of that l2opt pointer to NULL, is now gated on an rcu
+quiescence point, preventing, allowing L2DATA callers to safely check for a NULL
+pointer without concern that the underlying data will be freeded before the
+pointer is dereferenced.
 
->>  The likely modification to your patch would be to remove all the
->>  unused added flags rather than staking out the territory.
->=20
-> Well, yes, but the question is broader than that.=A0 In theory we can=
-'t
-> support SAS2.0 expanders until we support all of their features.
+This has been tested by the reporter and shown to fix the reproted oops
 
-That's strictly _your_ theory and what it does, it excludes functionali=
-ty
-from the kernel instead of enabling it.=A0 When two vendors send you
-a patch that enables the same functionality and ask for it to be
-included into the kernel, because people are using this functionality,
-you should listen and include it.
+Note: I had attempted to post a fix for this bug previously.  While it solved
+the issue, James B. pointed out that it really didn't make much sense, and on
+closer inspection I agree. Some internal structures to this affected pointer are
+already refcounted and so all we should need to do is prevent the race that
+arises between the reading of the affected pointer and its setting to NULL.
 
-> Table
-> to Table routing is one, but self configuration is another.
+Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
+CC: Divy Le Ray <divy@chelsio.com>
+CC: Steve Wise <swise@chelsio.com>
+CC: Karen Xie <kxie@chelsio.com>
+CC: Mike Christie <michaelc@cs.wisc.edu>
+CC: stable-commits@vger.kernel.org
+CC: James.Bottomley@HansenPartnership.com
+---
+ drivers/infiniband/hw/cxgb3/iwch_cm.c |   10 +++++-----
+ drivers/net/cxgb3/cxgb3_offload.c     |   23 ++++++++++++++++++-----
+ drivers/net/cxgb3/l2t.c               |   11 +++++++++--
+ drivers/net/cxgb3/l2t.h               |   16 ++++++++++++----
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c    |    2 +-
+ 5 files changed, 45 insertions(+), 17 deletions(-)
 
-That's a very uninformed statement.=A0 It shows your utter lack of fami=
-liarity
-of the SAS protocol.
+diff --git a/drivers/infiniband/hw/cxgb3/iwch_cm.c b/drivers/infiniband/hw/cxgb3/iwch_cm.c
+index 17bf9d9..6cd642a 100644
+--- a/drivers/infiniband/hw/cxgb3/iwch_cm.c
++++ b/drivers/infiniband/hw/cxgb3/iwch_cm.c
+@@ -287,7 +287,7 @@ void __free_ep(struct kref *kref)
+ 	if (test_bit(RELEASE_RESOURCES, &ep->com.flags)) {
+ 		cxgb3_remove_tid(ep->com.tdev, (void *)ep, ep->hwtid);
+ 		dst_release(ep->dst);
+-		l2t_release(L2DATA(ep->com.tdev), ep->l2t);
++		l2t_release(ep->com.tdev, ep->l2t);
+ 	}
+ 	kfree(ep);
+ }
+@@ -1178,7 +1178,7 @@ static int act_open_rpl(struct t3cdev *tdev, struct sk_buff *skb, void *ctx)
+ 		release_tid(ep->com.tdev, GET_TID(rpl), NULL);
+ 	cxgb3_free_atid(ep->com.tdev, ep->atid);
+ 	dst_release(ep->dst);
+-	l2t_release(L2DATA(ep->com.tdev), ep->l2t);
++	l2t_release(ep->com.tdev, ep->l2t);
+ 	put_ep(&ep->com);
+ 	return CPL_RET_BUF_DONE;
+ }
+@@ -1377,7 +1377,7 @@ static int pass_accept_req(struct t3cdev *tdev, struct sk_buff *skb, void *ctx)
+ 	if (!child_ep) {
+ 		printk(KERN_ERR MOD "%s - failed to allocate ep entry!\n",
+ 		       __func__);
+-		l2t_release(L2DATA(tdev), l2t);
++		l2t_release(tdev, l2t);
+ 		dst_release(dst);
+ 		goto reject;
+ 	}
+@@ -1956,7 +1956,7 @@ int iwch_connect(struct iw_cm_id *cm_id, struct iw_cm_conn_param *conn_param)
+ 	if (!err)
+ 		goto out;
+ 
+-	l2t_release(L2DATA(h->rdev.t3cdev_p), ep->l2t);
++	l2t_release(h->rdev.t3cdev_p, ep->l2t);
+ fail4:
+ 	dst_release(ep->dst);
+ fail3:
+@@ -2127,7 +2127,7 @@ int iwch_ep_redirect(void *ctx, struct dst_entry *old, struct dst_entry *new,
+ 	PDBG("%s ep %p redirect to dst %p l2t %p\n", __func__, ep, new,
+ 	     l2t);
+ 	dst_hold(new);
+-	l2t_release(L2DATA(ep->com.tdev), ep->l2t);
++	l2t_release(ep->com.tdev, ep->l2t);
+ 	ep->l2t = l2t;
+ 	dst_release(old);
+ 	ep->dst = new;
+diff --git a/drivers/net/cxgb3/cxgb3_offload.c b/drivers/net/cxgb3/cxgb3_offload.c
+index 805076c..da5a5d9 100644
+--- a/drivers/net/cxgb3/cxgb3_offload.c
++++ b/drivers/net/cxgb3/cxgb3_offload.c
+@@ -1146,12 +1146,14 @@ static void cxgb_redirect(struct dst_entry *old, struct dst_entry *new)
+ 		if (te && te->ctx && te->client && te->client->redirect) {
+ 			update_tcb = te->client->redirect(te->ctx, old, new, e);
+ 			if (update_tcb) {
++				rcu_read_lock();
+ 				l2t_hold(L2DATA(tdev), e);
++				rcu_read_unlock();
+ 				set_l2t_ix(tdev, tid, e);
+ 			}
+ 		}
+ 	}
+-	l2t_release(L2DATA(tdev), e);
++	l2t_release(tdev, e);
+ }
+ 
+ /*
+@@ -1264,7 +1266,7 @@ int cxgb3_offload_activate(struct adapter *adapter)
+ 		goto out_free;
+ 
+ 	err = -ENOMEM;
+-	L2DATA(dev) = t3_init_l2t(l2t_capacity);
++	RCU_INIT_POINTER(dev->l2opt, t3_init_l2t(l2t_capacity));
+ 	if (!L2DATA(dev))
+ 		goto out_free;
+ 
+@@ -1298,16 +1300,24 @@ int cxgb3_offload_activate(struct adapter *adapter)
+ 
+ out_free_l2t:
+ 	t3_free_l2t(L2DATA(dev));
+-	L2DATA(dev) = NULL;
++	rcu_assign_pointer(dev->l2opt, NULL);
+ out_free:
+ 	kfree(t);
+ 	return err;
+ }
+ 
++static void clean_l2_data(struct rcu_head *head)
++{
++	struct l2t_data *d = container_of(head, struct l2t_data, rcu_head);
++	t3_free_l2t(d);
++}
++
++
+ void cxgb3_offload_deactivate(struct adapter *adapter)
+ {
+ 	struct t3cdev *tdev = &adapter->tdev;
+ 	struct t3c_data *t = T3C_DATA(tdev);
++	struct l2t_data *d;
+ 
+ 	remove_adapter(adapter);
+ 	if (list_empty(&adapter_list))
+@@ -1315,8 +1325,11 @@ void cxgb3_offload_deactivate(struct adapter *adapter)
+ 
+ 	free_tid_maps(&t->tid_maps);
+ 	T3C_DATA(tdev) = NULL;
+-	t3_free_l2t(L2DATA(tdev));
+-	L2DATA(tdev) = NULL;
++	rcu_read_lock();
++	d = L2DATA(tdev);
++	rcu_read_unlock();
++	rcu_assign_pointer(tdev->l2opt, NULL);
++	call_rcu(&d->rcu_head, clean_l2_data);
+ 	if (t->nofail_skb)
+ 		kfree_skb(t->nofail_skb);
+ 	kfree(t);
+diff --git a/drivers/net/cxgb3/l2t.c b/drivers/net/cxgb3/l2t.c
+index f452c40..3808f99 100644
+--- a/drivers/net/cxgb3/l2t.c
++++ b/drivers/net/cxgb3/l2t.c
+@@ -300,14 +300,19 @@ static inline void reuse_entry(struct l2t_entry *e, struct neighbour *neigh)
+ struct l2t_entry *t3_l2t_get(struct t3cdev *cdev, struct neighbour *neigh,
+ 			     struct net_device *dev)
+ {
+-	struct l2t_entry *e;
+-	struct l2t_data *d = L2DATA(cdev);
++	struct l2t_entry *e = NULL;
++	struct l2t_data *d;
+ 	u32 addr = *(u32 *) neigh->primary_key;
+ 	int ifidx = neigh->dev->ifindex;
+ 	int hash = arp_hash(addr, ifidx, d);
+ 	struct port_info *p = netdev_priv(dev);
+ 	int smt_idx = p->port_id;
+ 
++	rcu_read_lock();
++	d = L2DATA(cdev);
++	if (!d)
++		goto done_rcu;
++
+ 	write_lock_bh(&d->lock);
+ 	for (e = d->l2tab[hash].first; e; e = e->next)
+ 		if (e->addr == addr && e->ifindex == ifidx &&
+@@ -338,6 +343,8 @@ struct l2t_entry *t3_l2t_get(struct t3cdev *cdev, struct neighbour *neigh,
+ 	}
+ done:
+ 	write_unlock_bh(&d->lock);
++done_rcu:
++	rcu_read_unlock();
+ 	return e;
+ }
+ 
+diff --git a/drivers/net/cxgb3/l2t.h b/drivers/net/cxgb3/l2t.h
+index 7a12d52..c5f5479 100644
+--- a/drivers/net/cxgb3/l2t.h
++++ b/drivers/net/cxgb3/l2t.h
+@@ -76,6 +76,7 @@ struct l2t_data {
+ 	atomic_t nfree;		/* number of free entries */
+ 	rwlock_t lock;
+ 	struct l2t_entry l2tab[0];
++	struct rcu_head rcu_head;	/* to handle rcu cleanup */
+ };
+ 
+ typedef void (*arp_failure_handler_func)(struct t3cdev * dev,
+@@ -99,7 +100,7 @@ static inline void set_arp_failure_handler(struct sk_buff *skb,
+ /*
+  * Getting to the L2 data from an offload device.
+  */
+-#define L2DATA(dev) ((dev)->l2opt)
++#define L2DATA(cdev) (rcu_dereference((cdev)->l2opt))
+ 
+ #define W_TCB_L2T_IX    0
+ #define S_TCB_L2T_IX    7
+@@ -126,15 +127,22 @@ static inline int l2t_send(struct t3cdev *dev, struct sk_buff *skb,
+ 	return t3_l2t_send_slow(dev, skb, e);
+ }
+ 
+-static inline void l2t_release(struct l2t_data *d, struct l2t_entry *e)
++static inline void l2t_release(struct t3cdev *t, struct l2t_entry *e)
+ {
+-	if (atomic_dec_and_test(&e->refcnt))
++	struct l2t_data *d;
++
++	rcu_read_lock();
++	d = L2DATA(t);
++
++	if (atomic_dec_and_test(&e->refcnt) && d)
+ 		t3_l2e_free(d, e);
++
++	rcu_read_unlock();
+ }
+ 
+ static inline void l2t_hold(struct l2t_data *d, struct l2t_entry *e)
+ {
+-	if (atomic_add_return(1, &e->refcnt) == 1)	/* 0 -> 1 transition */
++	if (d && atomic_add_return(1, &e->refcnt) == 1)	/* 0 -> 1 transition */
+ 		atomic_dec(&d->nfree);
+ }
+ 
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index bd22041..f586448 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -913,7 +913,7 @@ static void l2t_put(struct cxgbi_sock *csk)
+ 	struct t3cdev *t3dev = (struct t3cdev *)csk->cdev->lldev;
+ 
+ 	if (csk->l2t) {
+-		l2t_release(L2DATA(t3dev), csk->l2t);
++		l2t_release(t3dev, csk->l2t);
+ 		csk->l2t = NULL;
+ 		cxgbi_sock_put(csk);
+ 	}
+-- 
+1.7.6
 
-> If there
-> are no current self configuring expanders, I'm OK with just doing tab=
-le
-> to table ... but the extra bits made me wonder.
-
-Yes, you should simply include the patch.
-
->=20
-> James
->=20
->=20
->>  What kind of testing was involved in your patch? I have not merged
->>  yours in here to try it out on our enclosures. Either way, I want t=
-o
->>  see some movement; James any directions?
->>=20
->>  Sincerely -- Mark Salyzyn
->>=20
->>  -----Original Message-----
->>  From: Luben Tuikov [mailto:ltuikov@yahoo.com]=20
->>  Sent: Wednesday, August 31, 2011 1:43 PM
->>  To: Mark Salyzyn; linux-scsi@vger.kernel.org
->>  Cc: Darrick J Wong; James Bottomley
->>  Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
->>=20
->>  ----- Original Message -----
->>=20
->>  > From: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
->>  > To: linux-scsi@vger.kernel.org
->>  > Cc: Luben Tuikov <ltuikov@yahoo.com>; Darrick J Wong=20
-> <djwong@us.ibm.com>; James Bottomley <jbottomley@parallels.com>
->>  > Sent: Wednesday, August 31, 2011 6:44 AM
->>  > Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
->>  >=20
->>  > Since Luben's patch on July 28th 2011 went nowhere, as there was=20
-> an
->>  > unanswered question regarding the future-proofing that Luben adde=
-d in.
->>=20
->>  Are you saying that the patch I posted,
->>  http://marc.info/?t=3D131182720200001&r=3D1&w=3D2, didn't go in
->>  because I didn't entertain Bottomley's unrelated question therein?
->>  Or are you saying that it did go in based on TECHNICAL CONTENT? I.e=
-=2E it
->>  was buggy, or wrong, etc?
->>=20
->>  > I decided to submit a simplified focussed patch we have been usin=
-g for=20
-> the
->>=20
->>  By "simplified, focused" you mean one which doesn't define 2=20
-> out of 3 flags of=20
->>  REPORT GENERAL SMP response?
->>=20
->>  > past year testing with the Xyratex enclosures (5U84, 2U24, chaine=
-d=20
-> with
->>  > *many* peered expanders with Table to Table routing) that should
->>  > hopefully expedite things and will be on hot standby to refactor =
-as
->>  > requested (including tossing this baby and refactoring Luben's=20
-> patch
->>  > should he be too busy, no hair off my back)
->>=20
->>  Now onto technical matter:
->>  1) I'd call the flag "t2t_supp" to a) fit in with the rest of=20
-> the spirit of the
->>  code as other fields are also called "_supp", and to b) actually=20
-> convey
->> =A0 the meaning of "table-to-table supported. Your naming of this fl=
-ag
->>  "table_to_table" implicitly means "table to table=20
-> supported".
->>  2) Please also add the debug output as my patch did. People will
->>  be wondering what went wrong if their domain didn't work, and the
->>  debug print in my original patch would tell them that.
->>  3) You don't check that the parent also supports T2T. That's a bug.
->>  4) Your patch logically does this: P=3DT && C!=3DS && (C is T2T=20
-> || C!=3DT),
->>  which after expansion is equivalent to:
->>  (P=3D=3DT) && ((C!=3DS && C!=3DT2T) || C=3D=3DD) =3D=3D> fail
->>  where the outmost parens are an if (). Albeit from not being entire=
-ly=20
-> correct,
->>  it also obfuscates what is being sought after. I chose to use the n=
-egation=20
-> for
->>  successful check to make it more clear:
->>  (P=3D=3DT) && (C=3D=3DS || (C=3D=3DT && P=3D=3DT2T && C=3D=3DT2T))=20
-> =3D=3D> success,
->>  Translates to
->>  "If parent phy is T, and If child phy is S OR (child is T and child=
-=20
-> and parent
->>  both support table to table) then we're okay, else report an=20
-> error."
->>  Which is: T<-S is okay, and T<-T is okay if both parent and child=20
-> support it.
->>=20
->>  Alternatively, Bottomley could just add my patch upstream.
->>=20
->>  > Please note, as I am *stuck* on Outlook as per company policy, th=
-e
->>  > following inline content will likely not patch clean even emailed=
- as
->>  > 'Plain Text', the enclosed attached file should do the job. I=20
-> have=20
->>  > Cc'd
->>  > all the folks that originated the files in libsas, as there was n=
-o
->>  > listed MAINTAINERs.
->>  >=20
->>  > NB: this patch (and Luben's independent patch) results in an ABI=20
-> break
->>  > as the structures change 'shape' and thus result in a=20
-> different set of
->>  > libsas export signatures. I have an internal patch I use that=20
-> preserves
->>  > the structure shapes and thus the ABI; but would be considered
->>  > inappropriate for the pristine trees. Said alternate patch would =
-work
->>  > fine for a Distribution tree where ABI concerns are an issue.
->>  >=20
->>  > Checkpatch.pl reports clean.
->>  >=20
->>  > Sincerely -- Mark Salyzyn
->>  >=20
->>  > Cc: Luben Tuikov <tuikov@yahoo.com>
->>  > Cc: Darrick J Wong <djwong@us.ibm.com>
->>  > Cc: James Bottomley <jbottomley@parallels.com>
->>  >=20
->>  > Signed-off-by: Mark Salyzyn <msalyzyn@us.xyratex.com>
->>  >=20
->>  > drivers/scsi/libsas/sas_expander.c |=A0 =A0 6 +++++-
->>  > include/scsi/libsas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 |=A0 =A0 1 +
->>  > include/scsi/sas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  |=A0 =A0 6 +++=
-+--
->>  > 3 files changed, 10 insertions(+), 3 deletions(-)
->>  >=20
->>  > diff -ru scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c
->>  > scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
->>  > --- scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c=A0 =A0 2011-=
-08-31
->>  > 08:32:21.000000000 -0400
->>  > +++ scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
->>  > 2011-08-31 09:07:31.000000000 -0400
->>  > @@ -331,6 +331,7 @@
->>  >=A0 =A0  dev->ex_dev.num_phys =3D min(rg->num_phys,=20
-> (u8)MAX_EXPANDER_PHYS);
->>  >=A0 =A0  dev->ex_dev.conf_route_table =3D rg->conf_route_table;
->>  >=A0 =A0  dev->ex_dev.configuring =3D rg->configuring;
->>  > +=A0 =A0 dev->ex_dev.table_to_table =3D rg->table_to_table;
->>  >=A0 =A0  memcpy(dev->ex_dev.enclosure_logical_id,
->>  > rg->enclosure_logical_id, 8);
->>  > }
->>  >=20
->>  > @@ -1239,7 +1240,10 @@
->>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  res =3D -ENODEV;
->>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  }
->>  >=A0 =A0 =A0 =A0 =A0 =A0  } else if (parent_phy->routing_attr =3D=3D
->>  > TABLE_ROUTING &&
->>  > -=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  child_phy->routing_attr !=3D
->>  > SUBTRACTIVE_ROUTING) {
->>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  child_phy->routing_attr !=3D
->>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 SUBTRACTIVE_ROUTING &&
->>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  (child_ex->table_to_table =3D=
-=3D 0 ||
->>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 child_phy->routing_attr =
-!=3D
->>  > TABLE_ROUTING)) {
->>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  sas_print_parent_topology_bug(chi=
-ld,
->>  > parent_phy, child_phy);
->>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  res =3D -ENODEV;
->>  >=A0 =A0 =A0 =A0 =A0 =A0  }
->>  > diff -ru scsi-misc-2.6/include/scsi/libsas.h
->>  > scsi-misc-2.6.new/include/scsi/libsas.h
->>  > --- scsi-misc-2.6/include/scsi/libsas.h=A0 =A0 2011-08-31=20
-> 08:32:22.000000000
->>  > -0400
->>  > +++ scsi-misc-2.6.new/include/scsi/libsas.h=A0 =A0 2011-08-31
->>  > 09:07:31.000000000 -0400
->>  > @@ -144,6 +144,7 @@
->>  >=A0 =A0  u8=A0 =A0  num_phys;
->>  >=A0 =A0  u8=A0 =A0  configuring:1;
->>  >=A0 =A0  u8=A0 =A0  conf_route_table:1;
->>  > +=A0 =A0 u8=A0 =A0  table_to_table:1;
->>  >=A0 =A0  u8=A0 =A0  enclosure_logical_id[8];
->>  >=20
->>  >=A0 =A0  struct ex_phy *ex_phy;
->>  > diff -ru scsi-misc-2.6/include/scsi/sas.h
->>  > scsi-misc-2.6.new/include/scsi/sas.h
->>  > --- scsi-misc-2.6/include/scsi/sas.h=A0 =A0 2011-08-31 08:32:22.0=
-00000000
->>  > -0400
->>  > +++ scsi-misc-2.6.new/include/scsi/sas.h=A0 =A0 2011-08-31
->>  > 09:07:31.000000000 -0400
->>  > @@ -341,7 +341,8 @@
->>  >=20
->>  >=A0 =A0  u8=A0 =A0 =A0 conf_route_table:1;
->>  >=A0 =A0  u8=A0 =A0 =A0 configuring:1;
->>  > -=A0 =A0 u8=A0 =A0 =A0 _r_b:6;
->>  > +=A0 =A0 u8=A0 =A0 =A0 _r_b:5;
->>  > +=A0 =A0 u8=A0 =A0 =A0 table_to_table:1;
->>  >=20
->>  >=A0 =A0  u8=A0 =A0 =A0 _r_c;
->>  >=20
->>  > @@ -528,7 +529,8 @@
->>  >=A0 =A0  u8=A0 =A0 =A0 _r_a;
->>  >=A0 =A0  u8=A0 =A0 =A0 num_phys;
->>  >=20
->>  > -=A0 =A0 u8=A0 =A0 =A0 _r_b:6;
->>  > +=A0 =A0 u8=A0 =A0 =A0 table_to_table:1;
->>  > +=A0 =A0 u8=A0 =A0 =A0 _r_b:5;
->>  >=A0 =A0  u8=A0 =A0 =A0 configuring:1;
->>  >=A0 =A0  u8=A0 =A0 =A0 conf_route_table:1;
->>  >
->>  ___________________________________________________________________=
-___
->>  This email may contain privileged or confidential information, whic=
-h should=20
-> only be used for the purpose for which it was sent by Xyratex. No fur=
-ther rights=20
-> or licenses are granted to use such information. If you are not the i=
-ntended=20
-> recipient of this message, please notify the sender by return and del=
-ete it. You=20
-> may not use, copy, disclose or rely on the information contained in i=
-t.
->> =A0=20
->>  Internet email is susceptible to data corruption, interception and=20
-> unauthorised amendment for which Xyratex does not accept liability. W=
-hile we=20
-> have taken reasonable precautions to ensure that this email is free o=
-f viruses,=20
-> Xyratex does not accept liability for the presence of any computer vi=
-ruses in=20
-> this email, nor for any losses caused as a result of viruses.
->> =A0=20
->>  Xyratex Technology Limited (03134912), Registered in England & Wale=
-s,=20
-> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
->> =A0=20
->>  The Xyratex group of companies also includes, Xyratex Ltd, register=
-ed in=20
-> Bermuda, Xyratex International Inc, registered in California, Xyratex=
- (Malaysia)=20
-> Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd regi=
-stered in=20
-> The People's Republic of China and Xyratex Japan Limited registered i=
-n=20
-> Japan.
->>  ___________________________________________________________________=
-___
->> =A0=20
->>=20
->>  --
->>  To unsubscribe from this list: send the line "unsubscribe=20
-> linux-scsi" in
->>  the body of a message to majordomo@vger.kernel.org
->>  More majordomo info at=A0 http://vger.kernel.org/majordomo-info.htm=
-l
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
