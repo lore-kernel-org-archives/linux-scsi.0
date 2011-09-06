@@ -1,44 +1,63 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/2] megaraid_sas: Remove the shutdown_controller call
-Date: Mon, 05 Sep 2011 16:17:39 +0200
-Message-ID: <4E64DA03.4090409@redhat.com>
-References: <1314200130-28890-1-git-send-email-thenzl@redhat.com> <1314200130-28890-2-git-send-email-thenzl@redhat.com> <CAHtARFF1iwy2NR1G01hFqBo2hoYxAbG+0DQ0UJNSS3JO_s5qbg@mail.gmail.com> <4E560526.5060601@redhat.com> <CAHtARFE+pbaVgbEyxrdF6qyFgu4Km4QOi28wUzfVtc5_SRayAg@mail.gmail.com>
+From: "Zou, Yi" <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [patch net-next-2.6 v3] net: consolidate and fix
+ ethtool_ops->get_settings calling
+Date: Mon, 5 Sep 2011 20:25:39 -0700
+Message-ID: <5A9BD224CEA58D4CB62235967D650C160A1B7D1C@orsmsx509.amr.corp.intel.com>
+References: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
+	<20110902122630.GC1991@minipsycho>
+	<1314989161.3419.5.camel@bwh-desktop>
+	<20110903133428.GA2821@minipsycho> <1315057614.3092.160.camel@deadeye>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40461 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752386Ab1IEORp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 5 Sep 2011 10:17:45 -0400
-In-Reply-To: <CAHtARFE+pbaVgbEyxrdF6qyFgu4Km4QOi28wUzfVtc5_SRayAg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1315057614.3092.160.camel@deadeye>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.open-fcoe.org/mailman/options/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Jiri Pirko <jpirko-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "amit.salecha-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org" <amit.salecha-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, "bridge-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <bridge-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "decot-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <decot-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "shemminger-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org" <shemminger-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "andy-QlMahl40kYEqcZcGjlUOXw@public.gmane.org" <andy-QlMahl40kYEqcZcGjlUOXw@public.gmane.org>, "therbert-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org" <therbert-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, "eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <eric.dumazet-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "fubar-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org" <fubar-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, "xiaosuo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <xiaosuo-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org" <paulmck-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Duyck, Alexander H" <alexander.h.duyck-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "mirq-linux-CoA6ZxLDdyEEUmgCuDUIdw@public.gmane.org" <mirq-linux-CoA6ZxLDdyEEUmgCuDUIdw@public.gmane.org>, "greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org" <greearb-my8/4N5VtI7c+919tysfdA@public.gmane.org>, "laijs-BthXqXjhjHXQFUHtdCDX3A@public.gmane.org" <laijs-BthXqXjhjHX1P9xLtpHBDw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi@vger.kernel.org, steve.masters@lsi.com, michael.benz@lsi.com, bo.yang@lsi.com
 
-On 08/26/2011 02:00 AM, adam radford wrote:
-> On Thu, Aug 25, 2011 at 1:17 AM, Tomas Henzl <thenzl@redhat.com> wrote:
->> In the meantime - I've sent two patches, what do you think about the second one?
->> It solves(hides) the problem too.
-> Here are my thoughts on your patches:
->
-> 1. You are not checking if (reset_devices) around these code changes
-> to determine if you are in the kdump kernel, which is the only place
-> you are seeing this issue.
-> 2. You should only change behavior for the device ID's you are having
-> issue with.
-> 3. We need to update your PERC5 controller to the latest firmware,
-> then try to reproduce.
-This problem is fixed in firmware thanks to Adam (LSI), so neither patch is needed.
+> 
+> On Sat, 2011-09-03 at 15:34 +0200, Jiri Pirko wrote:
+> > This patch does several things:
+> > - introduces __ethtool_get_settings which is called from ethtool code
+> and
+> >   from drivers as well. Put ASSERT_RTNL there.
+> > - dev_ethtool_get_settings() is replaced by __ethtool_get_settings()
+> > - changes calling in drivers so rtnl locking is respected. In
+> >   iboe_get_rate was previously ->get_settings() called unlocked. This
+> >   fixes it. Also prb_calc_retire_blk_tmo() in af_packet.c had the same
+> >   problem. Also fixed by calling __dev_get_by_index() instead of
+> >   dev_get_by_index() and holding rtnl_lock for both calls.
+> > - introduces rtnl_lock in bnx2fc_vport_create() and fcoe_vport_create()
+> >   so bnx2fc_if_create() and fcoe_if_create() are called locked as they
+> >   are from other places.
+> > - use __ethtool_get_settings() in bonding code
+> >
+> > Signed-off-by: Jiri Pirko <jpirko-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Reviewed-by: Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org> [except FCoE bits]
+> 
+> Ben.
+FCoE bits look ok to me. Thanks,
 
-Tomas
+Reviewed-by: Yi Zou <yi.zou-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 
-
->
-> -Adam
+> 
+> --
+> Ben Hutchings, Staff Engineer, Solarflare
+> Not speaking for my employer; that's the marketing department's job.
+> They asked us to note that Solarflare product names are trademarked.
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
