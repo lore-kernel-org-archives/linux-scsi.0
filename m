@@ -1,167 +1,328 @@
-From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
-Subject: RE: [PATCH] [SCSI]: libsas failure to revalidate domain for anything but the first expander child.
-Date: Tue, 6 Sep 2011 07:56:05 -0700
-Message-ID: <FC1F9E38C0703341A1A750524E2525A9018540CA@XYUS-EX22.xyus.xyratex.com>
-References: <20110730002509.28735.82590.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com> <FC1F9E38C0703341A1A750524E2525A901853F74@XYUS-EX22.xyus.xyratex.com> <1314897501.64142.YahooMailNeo@web31807.mail.mud.yahoo.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
+Date: Tue, 6 Sep 2011 09:47:15 -0700 (PDT)
+Message-ID: <1315327635.36823.YahooMailNeo@web31811.mail.mud.yahoo.com>
+References: <20110730002509.28735.82590.stgit@localhost6.localdomain6>
+	 <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com>
+	 <1314812608.95574.YahooMailNeo@web31804.mail.mud.yahoo.com>
+	 <FC1F9E38C0703341A1A750524E2525A901853EFC@XYUS-EX22.xyus.xyratex.com> <1314891245.3067.11.camel@dabdike>
+Reply-To: Luben Tuikov <ltuikov@yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:44008 "EHLO
-	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754257Ab1IFPAd convert rfc822-to-8bit
+Received: from nm24.bullet.mail.ac4.yahoo.com ([98.139.52.221]:26452 "HELO
+	nm24.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751418Ab1IFQrS convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Sep 2011 11:00:33 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1314897501.64142.YahooMailNeo@web31807.mail.mud.yahoo.com>
+	Tue, 6 Sep 2011 12:47:18 -0400
+In-Reply-To: <1314891245.3067.11.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>, linux-scsi@vger.kernel.org
-Cc: Darrick J Wong <djwong@us.ibm.com>, James Bottomley <jbottomley@parallels.com>
-
-So are you suggesting a larger/different fix, or do you see this minor =
-change as an acceptable means of resolving the specific issue of the re=
-validation not going beyond the first child expander? At least with thi=
-s fix it will go to the first expander with a change. It was a code-bug=
- from fumble-fingers, missing a '*', not a request to revamp ;->
-
-I know that by spec it should not stop at the first discovered change, =
-ignoring changes in other children, but that is a much finer corner cas=
-e requiring discovery events at a higher frequency than the revalidatio=
-n period can handle. Not sure if I have the stomach to wait for a rewri=
-te of libsas ... Besides I feel libsas 'mostly works' and for today jus=
-t needs a few tweaks (evolution, not revolution).
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-=46rom: Luben Tuikov [mailto:ltuikov@yahoo.com]=20
-Sent: Thursday, September 01, 2011 1:18 PM
-To: Mark Salyzyn; linux-scsi@vger.kernel.org
-Cc: Darrick J Wong; James Bottomley
-Subject: Re: [PATCH] [SCSI]: libsas failure to revalidate domain for an=
-ything but the first expander child.
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Darrick J Wong <djwong@us.ibm.com>
 
 ----- Original Message -----
 
-> In an enclosure model where there are chaining expanders to a large b=
-ody
-> of storage, it was discovered that libsas, responding to a broadcast
-> event change, would only revalidate the domain of first child expande=
-r
-> in the list.
->=20
-> The issue is that the pointer value to the discovered source device w=
-as
-> used to break out of the loop, rather than the content of the pointer=
+>>  We will need James to chime in why your patch did not go in. My
+>>  assumption is the lack of response to his question left it in limbo=
 =2E
 >=20
-> This still remains non-compliant as the revalidate domain code is
-> supposed to loop through all child expanders, and not stop at the fir=
-st
-> one it finds that reports a change count. However, the design of this
-> routine does not allow multiple device discoveries and that would be =
-a
-> more complicated set of patches reserved for another day. We are fixi=
-ng
-> the glaring bug rather than refactoring the code.
+> That's a good assumption.=A0 A maintainers list folder is usually sor=
+ted
+> by thread and by activity.=A0 I mark patches for inclusion, but if a
+> thread is expecting a reply I don't do anything since it comes back t=
+o
+> the top again once there's activity on it.
 
-Obviously I've tested this both when I was at Adaptec and at Vitesse. I=
-'d connect
-7-8 expanders, run iogen with 1000 threads to say 30-40 disks, and then=
- unplug
-the port between a level 1 and 2 expander and the I/O would quiesce, io=
-gen would
-report a subset of the disks missing, and then when the port was reesta=
-blished,
-I/O would restart. However I'm not sure that Bottomley tested this scen=
-ario after
-changing my code off-line before submitting it into the Linux kernel.
+This kernel business shouldn't be about you. It should be about
+making the kernel better today than it is tomorrow, so that people can
+use it and can use it with more devices, without bugs.
 
-Now a few notes to mention: Your patch patches a function called
-sas_find_bcast_dev(). My original code does NOT have such a function.
-Revalidation is much more subtle and the code looks simpler in my origi=
-nal
-version. In my original code there is a lot more recursion, symmetry an=
-d
-code mirroring. Granted, while such code is shorter, and simpler, it is=
- harder
-to figure out what it does, and I feel this is exactly why we see the c=
-urrent
-state of libsas to be so explicit, simplistic and introducing bugs. See=
- this:
-http://marc.info/?l=3Dlinux-scsi&m=3D131480962006471&w=3D2 where I desc=
-ribed
-the state of libsas recently.
+>>  The likely modification to your patch would be to remove all the
+>>  unused added flags rather than staking out the territory.
+>=20
+> Well, yes, but the question is broader than that.=A0 In theory we can=
+'t
+> support SAS2.0 expanders until we support all of their features.
 
-> Please note, as I am *stuck* on Outlook as per company policy, the
-> following inline content will likely not patch clean even emailed as
-> 'Plain Text', the enclosed attached file should do the job. I have=20
-> Cc'd
-> all the folks that originated the files in libsas, as there was no
-> listed MAINTAINERs.
+That's strictly _your_ theory and what it does, it excludes functionali=
+ty
+from the kernel instead of enabling it.=A0 When two vendors send you
+a patch that enables the same functionality and ask for it to be
+included into the kernel, because people are using this functionality,
+you should listen and include it.
+
+> Table
+> to Table routing is one, but self configuration is another.
+
+That's a very uninformed statement.=A0 It shows your utter lack of fami=
+liarity
+of the SAS protocol.
+
+> If there
+> are no current self configuring expanders, I'm OK with just doing tab=
+le
+> to table ... but the extra bits made me wonder.
+
+Yes, you should simply include the patch.
+
 >=20
-> Checkpatch.pl reports clean. Patch applies cleanly to a WIDE variety =
-of
-> kernels up to latest.
+> James
 >=20
-> Sincerely -- Mark Salyzyn
 >=20
-> Cc: Luben Tuikov <tuikov@yahoo.com>
-> Cc: Darrick J Wong <djwong@us.ibm.com>
-> Cc: James Bottomley <jbottomley@parallels.com>
->=20
-> Signed-off-by: Mark Salyzyn <msalyzyn@us.xyratex.com>
->=20
-> sas_expander.c |=A0 =A0 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff -ru scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c
-> scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
-> --- scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c=A0=A0=A0 2011-08=
--31
-> 08:32:21.000000000 -0400
-> +++ scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
-> 2011-09-01 08:57:55.000000000 -0400
-> @@ -1721,7 +1721,7 @@
-> =A0=A0=A0 list_for_each_entry(ch, &ex->children, siblings) {
-> =A0=A0=A0 =A0=A0=A0 if (ch->dev_type =3D=3D EDGE_DEV || ch->dev_type =
-=3D=3D
-> FANOUT_DEV) {
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D sas_find_bcast_dev(ch, src_dev)=
-;
-> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 if (src_dev)
-> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 if (*src_dev)
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 return res;
-> =A0=A0=A0 =A0=A0=A0 }
-> =A0=A0=A0 }
+>>  What kind of testing was involved in your patch? I have not merged
+>>  yours in here to try it out on our enclosures. Either way, I want t=
+o
+>>  see some movement; James any directions?
+>>=20
+>>  Sincerely -- Mark Salyzyn
+>>=20
+>>  -----Original Message-----
+>>  From: Luben Tuikov [mailto:ltuikov@yahoo.com]=20
+>>  Sent: Wednesday, August 31, 2011 1:43 PM
+>>  To: Mark Salyzyn; linux-scsi@vger.kernel.org
+>>  Cc: Darrick J Wong; James Bottomley
+>>  Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
+>>=20
+>>  ----- Original Message -----
+>>=20
+>>  > From: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+>>  > To: linux-scsi@vger.kernel.org
+>>  > Cc: Luben Tuikov <ltuikov@yahoo.com>; Darrick J Wong=20
+> <djwong@us.ibm.com>; James Bottomley <jbottomley@parallels.com>
+>>  > Sent: Wednesday, August 31, 2011 6:44 AM
+>>  > Subject: Re: [PATCH] [SCSI]: Allow expander T-T attachments
+>>  >=20
+>>  > Since Luben's patch on July 28th 2011 went nowhere, as there was=20
+> an
+>>  > unanswered question regarding the future-proofing that Luben adde=
+d in.
+>>=20
+>>  Are you saying that the patch I posted,
+>>  http://marc.info/?t=3D131182720200001&r=3D1&w=3D2, didn't go in
+>>  because I didn't entertain Bottomley's unrelated question therein?
+>>  Or are you saying that it did go in based on TECHNICAL CONTENT? I.e=
+=2E it
+>>  was buggy, or wrong, etc?
+>>=20
+>>  > I decided to submit a simplified focussed patch we have been usin=
+g for=20
+> the
+>>=20
+>>  By "simplified, focused" you mean one which doesn't define 2=20
+> out of 3 flags of=20
+>>  REPORT GENERAL SMP response?
+>>=20
+>>  > past year testing with the Xyratex enclosures (5U84, 2U24, chaine=
+d=20
+> with
+>>  > *many* peered expanders with Table to Table routing) that should
+>>  > hopefully expedite things and will be on hot standby to refactor =
+as
+>>  > requested (including tossing this baby and refactoring Luben's=20
+> patch
+>>  > should he be too busy, no hair off my back)
+>>=20
+>>  Now onto technical matter:
+>>  1) I'd call the flag "t2t_supp" to a) fit in with the rest of=20
+> the spirit of the
+>>  code as other fields are also called "_supp", and to b) actually=20
+> convey
+>> =A0 the meaning of "table-to-table supported. Your naming of this fl=
+ag
+>>  "table_to_table" implicitly means "table to table=20
+> supported".
+>>  2) Please also add the debug output as my patch did. People will
+>>  be wondering what went wrong if their domain didn't work, and the
+>>  debug print in my original patch would tell them that.
+>>  3) You don't check that the parent also supports T2T. That's a bug.
+>>  4) Your patch logically does this: P=3DT && C!=3DS && (C is T2T=20
+> || C!=3DT),
+>>  which after expansion is equivalent to:
+>>  (P=3D=3DT) && ((C!=3DS && C!=3DT2T) || C=3D=3DD) =3D=3D> fail
+>>  where the outmost parens are an if (). Albeit from not being entire=
+ly=20
+> correct,
+>>  it also obfuscates what is being sought after. I chose to use the n=
+egation=20
+> for
+>>  successful check to make it more clear:
+>>  (P=3D=3DT) && (C=3D=3DS || (C=3D=3DT && P=3D=3DT2T && C=3D=3DT2T))=20
+> =3D=3D> success,
+>>  Translates to
+>>  "If parent phy is T, and If child phy is S OR (child is T and child=
+=20
+> and parent
+>>  both support table to table) then we're okay, else report an=20
+> error."
+>>  Which is: T<-S is okay, and T<-T is okay if both parent and child=20
+> support it.
+>>=20
+>>  Alternatively, Bottomley could just add my patch upstream.
+>>=20
+>>  > Please note, as I am *stuck* on Outlook as per company policy, th=
+e
+>>  > following inline content will likely not patch clean even emailed=
+ as
+>>  > 'Plain Text', the enclosed attached file should do the job. I=20
+> have=20
+>>  > Cc'd
+>>  > all the folks that originated the files in libsas, as there was n=
+o
+>>  > listed MAINTAINERs.
+>>  >=20
+>>  > NB: this patch (and Luben's independent patch) results in an ABI=20
+> break
+>>  > as the structures change 'shape' and thus result in a=20
+> different set of
+>>  > libsas export signatures. I have an internal patch I use that=20
+> preserves
+>>  > the structure shapes and thus the ABI; but would be considered
+>>  > inappropriate for the pristine trees. Said alternate patch would =
+work
+>>  > fine for a Distribution tree where ABI concerns are an issue.
+>>  >=20
+>>  > Checkpatch.pl reports clean.
+>>  >=20
+>>  > Sincerely -- Mark Salyzyn
+>>  >=20
+>>  > Cc: Luben Tuikov <tuikov@yahoo.com>
+>>  > Cc: Darrick J Wong <djwong@us.ibm.com>
+>>  > Cc: James Bottomley <jbottomley@parallels.com>
+>>  >=20
+>>  > Signed-off-by: Mark Salyzyn <msalyzyn@us.xyratex.com>
+>>  >=20
+>>  > drivers/scsi/libsas/sas_expander.c |=A0 =A0 6 +++++-
+>>  > include/scsi/libsas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 |=A0 =A0 1 +
+>>  > include/scsi/sas.h=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  |=A0 =A0 6 +++=
++--
+>>  > 3 files changed, 10 insertions(+), 3 deletions(-)
+>>  >=20
+>>  > diff -ru scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c
+>>  > scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
+>>  > --- scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c=A0 =A0 2011-=
+08-31
+>>  > 08:32:21.000000000 -0400
+>>  > +++ scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
+>>  > 2011-08-31 09:07:31.000000000 -0400
+>>  > @@ -331,6 +331,7 @@
+>>  >=A0 =A0  dev->ex_dev.num_phys =3D min(rg->num_phys,=20
+> (u8)MAX_EXPANDER_PHYS);
+>>  >=A0 =A0  dev->ex_dev.conf_route_table =3D rg->conf_route_table;
+>>  >=A0 =A0  dev->ex_dev.configuring =3D rg->configuring;
+>>  > +=A0 =A0 dev->ex_dev.table_to_table =3D rg->table_to_table;
+>>  >=A0 =A0  memcpy(dev->ex_dev.enclosure_logical_id,
+>>  > rg->enclosure_logical_id, 8);
+>>  > }
+>>  >=20
+>>  > @@ -1239,7 +1240,10 @@
+>>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  res =3D -ENODEV;
+>>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  }
+>>  >=A0 =A0 =A0 =A0 =A0 =A0  } else if (parent_phy->routing_attr =3D=3D
+>>  > TABLE_ROUTING &&
+>>  > -=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  child_phy->routing_attr !=3D
+>>  > SUBTRACTIVE_ROUTING) {
+>>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  child_phy->routing_attr !=3D
+>>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 SUBTRACTIVE_ROUTING &&
+>>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  (child_ex->table_to_table =3D=
+=3D 0 ||
+>>  > +=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 child_phy->routing_attr =
+!=3D
+>>  > TABLE_ROUTING)) {
+>>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  sas_print_parent_topology_bug(chi=
+ld,
+>>  > parent_phy, child_phy);
+>>  >=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0  res =3D -ENODEV;
+>>  >=A0 =A0 =A0 =A0 =A0 =A0  }
+>>  > diff -ru scsi-misc-2.6/include/scsi/libsas.h
+>>  > scsi-misc-2.6.new/include/scsi/libsas.h
+>>  > --- scsi-misc-2.6/include/scsi/libsas.h=A0 =A0 2011-08-31=20
+> 08:32:22.000000000
+>>  > -0400
+>>  > +++ scsi-misc-2.6.new/include/scsi/libsas.h=A0 =A0 2011-08-31
+>>  > 09:07:31.000000000 -0400
+>>  > @@ -144,6 +144,7 @@
+>>  >=A0 =A0  u8=A0 =A0  num_phys;
+>>  >=A0 =A0  u8=A0 =A0  configuring:1;
+>>  >=A0 =A0  u8=A0 =A0  conf_route_table:1;
+>>  > +=A0 =A0 u8=A0 =A0  table_to_table:1;
+>>  >=A0 =A0  u8=A0 =A0  enclosure_logical_id[8];
+>>  >=20
+>>  >=A0 =A0  struct ex_phy *ex_phy;
+>>  > diff -ru scsi-misc-2.6/include/scsi/sas.h
+>>  > scsi-misc-2.6.new/include/scsi/sas.h
+>>  > --- scsi-misc-2.6/include/scsi/sas.h=A0 =A0 2011-08-31 08:32:22.0=
+00000000
+>>  > -0400
+>>  > +++ scsi-misc-2.6.new/include/scsi/sas.h=A0 =A0 2011-08-31
+>>  > 09:07:31.000000000 -0400
+>>  > @@ -341,7 +341,8 @@
+>>  >=20
+>>  >=A0 =A0  u8=A0 =A0 =A0 conf_route_table:1;
+>>  >=A0 =A0  u8=A0 =A0 =A0 configuring:1;
+>>  > -=A0 =A0 u8=A0 =A0 =A0 _r_b:6;
+>>  > +=A0 =A0 u8=A0 =A0 =A0 _r_b:5;
+>>  > +=A0 =A0 u8=A0 =A0 =A0 table_to_table:1;
+>>  >=20
+>>  >=A0 =A0  u8=A0 =A0 =A0 _r_c;
+>>  >=20
+>>  > @@ -528,7 +529,8 @@
+>>  >=A0 =A0  u8=A0 =A0 =A0 _r_a;
+>>  >=A0 =A0  u8=A0 =A0 =A0 num_phys;
+>>  >=20
+>>  > -=A0 =A0 u8=A0 =A0 =A0 _r_b:6;
+>>  > +=A0 =A0 u8=A0 =A0 =A0 table_to_table:1;
+>>  > +=A0 =A0 u8=A0 =A0 =A0 _r_b:5;
+>>  >=A0 =A0  u8=A0 =A0 =A0 configuring:1;
+>>  >=A0 =A0  u8=A0 =A0 =A0 conf_route_table:1;
+>>  >
+>>  ___________________________________________________________________=
+___
+>>  This email may contain privileged or confidential information, whic=
+h should=20
+> only be used for the purpose for which it was sent by Xyratex. No fur=
+ther rights=20
+> or licenses are granted to use such information. If you are not the i=
+ntended=20
+> recipient of this message, please notify the sender by return and del=
+ete it. You=20
+> may not use, copy, disclose or rely on the information contained in i=
+t.
+>> =A0=20
+>>  Internet email is susceptible to data corruption, interception and=20
+> unauthorised amendment for which Xyratex does not accept liability. W=
+hile we=20
+> have taken reasonable precautions to ensure that this email is free o=
+f viruses,=20
+> Xyratex does not accept liability for the presence of any computer vi=
+ruses in=20
+> this email, nor for any losses caused as a result of viruses.
+>> =A0=20
+>>  Xyratex Technology Limited (03134912), Registered in England & Wale=
+s,=20
+> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+>> =A0=20
+>>  The Xyratex group of companies also includes, Xyratex Ltd, register=
+ed in=20
+> Bermuda, Xyratex International Inc, registered in California, Xyratex=
+ (Malaysia)=20
+> Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd regi=
+stered in=20
+> The People's Republic of China and Xyratex Japan Limited registered i=
+n=20
+> Japan.
+>>  ___________________________________________________________________=
+___
+>> =A0=20
+>>=20
+>>  --
+>>  To unsubscribe from this list: send the line "unsubscribe=20
+> linux-scsi" in
+>>  the body of a message to majordomo@vger.kernel.org
+>>  More majordomo info at=A0 http://vger.kernel.org/majordomo-info.htm=
+l
 >
-______________________________________________________________________
-This email may contain privileged or confidential information, which sh=
-ould only be used for the purpose for which it was sent by Xyratex. No =
-further rights or licenses are granted to use such information. If you =
-are not the intended recipient of this message, please notify the sende=
-r by return and delete it. You may not use, copy, disclose or rely on t=
-he information contained in it.
-=20
-Internet email is susceptible to data corruption, interception and unau=
-thorised amendment for which Xyratex does not accept liability. While w=
-e have taken reasonable precautions to ensure that this email is free o=
-f viruses, Xyratex does not accept liability for the presence of any co=
-mputer viruses in this email, nor for any losses caused as a result of =
-viruses.
-=20
-Xyratex Technology Limited (03134912), Registered in England & Wales, R=
-egistered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
-=20
-The Xyratex group of companies also includes, Xyratex Ltd, registered i=
-n Bermuda, Xyratex International Inc, registered in California, Xyratex=
- (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) C=
-o Ltd registered in The People's Republic of China and Xyratex Japan Li=
-mited registered in Japan.
-______________________________________________________________________
-=20
-=0D
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
