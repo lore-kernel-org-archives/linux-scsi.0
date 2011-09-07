@@ -1,169 +1,189 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [RFC] pci: Rework config space blocking services
-Date: Wed, 07 Sep 2011 08:46:23 -0500
-Message-ID: <4E6775AF.40606@linux.vnet.ibm.com>
-References: <20110829150552.GA6851@redhat.com> <4E5BB358.3060705@siemens.com> <4E5BDEAB.5000405@siemens.com> <20110829191858.GA9415@redhat.com> <4E608A51.70509@siemens.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] [SCSI]: libsas failure to revalidate domain for anything but the first expander child.
+Date: Wed, 7 Sep 2011 10:03:16 -0700 (PDT)
+Message-ID: <1315414996.90012.YahooMailNeo@web31802.mail.mud.yahoo.com>
+References: <20110730002509.28735.82590.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A901853EC8@XYUS-EX22.xyus.xyratex.com> <FC1F9E38C0703341A1A750524E2525A901853F74@XYUS-EX22.xyus.xyratex.com> <1314897501.64142.YahooMailNeo@web31807.mail.mud.yahoo.com> <FC1F9E38C0703341A1A750524E2525A9018540CA@XYUS-EX22.xyus.xyratex.com>
+Reply-To: Luben Tuikov <ltuikov@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <kvm-owner@vger.kernel.org>
-In-Reply-To: <4E608A51.70509@siemens.com>
-Sender: kvm-owner@vger.kernel.org
-To: Jan Kiszka <jan.kiszka@siemens.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>, Jesse Barnes <jbarnes@virtuousgeek.org>, Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "Hans J. Koch" <hjk@hansjkoch.de>, Greg Kroah-Hartman <gregkh@suse.de>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm30-vm1.bullet.mail.bf1.yahoo.com ([98.139.213.54]:33743 "HELO
+	nm30-vm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754832Ab1IGRDS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Sep 2011 13:03:18 -0400
+In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018540CA@XYUS-EX22.xyus.xyratex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Darrick J Wong <djwong@us.ibm.com>, James Bottomley <jbottomley@parallels.com>
 
-Here is how I would prefer to rework ipr. 
-
-Thanks,
-
-Brian
-
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+>So are you suggesting a larger/different fix, or do you see this minor=
+ change as an acceptable means of resolving the specific issue of the r=
+evalidation not going beyond the first child expander? At least with th=
+is fix it will go to the first expander with a change. It was a code-bu=
+g from fumble-fingers, missing a '*', not a request to revamp ;->
+>
 
 
+Neither. I was merely stating a fact, history.
 
-The PCI config space blocking API has changed to better
-allow for multiple users. Update ipr to use the new API.
+I don't mind this patch.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
 
- drivers/scsi/ipr.c |   66 +++++++++++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/ipr.h |    1 
- 2 files changed, 60 insertions(+), 7 deletions(-)
+>I know that by spec it should not stop at the first discovered change,=
+ ignoring changes in other children, but that is a much finer corner ca=
+se requiring discovery events at a higher frequency than the revalidati=
+on period can handle. Not sure if I have the stomach to wait for a rewr=
+ite of libsas ... Besides I feel libsas 'mostly works' and for today ju=
+st needs a few tweaks (evolution, not revolution).
+>
 
-diff -puN drivers/scsi/ipr.c~ipr_new_pci_block drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_new_pci_block	2011-09-06 16:52:47.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2011-09-07 08:34:54.000000000 -0500
-@@ -7639,8 +7639,12 @@ static int ipr_reset_restore_cfg_space(s
-  **/
- static int ipr_reset_bist_done(struct ipr_cmnd *ipr_cmd)
- {
-+	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-+
- 	ENTER;
--	pci_unblock_user_cfg_access(ipr_cmd->ioa_cfg->pdev);
-+	if (ioa_cfg->ucfg_blocked)
-+		pci_unblock_cfg_access(ioa_cfg->pdev);
-+	ioa_cfg->ucfg_blocked = 0;
- 	ipr_cmd->job_step = ipr_reset_restore_cfg_space;
- 	LEAVE;
- 	return IPR_RC_JOB_CONTINUE;
-@@ -7661,8 +7665,6 @@ static int ipr_reset_start_bist(struct i
- 	int rc = PCIBIOS_SUCCESSFUL;
- 
- 	ENTER;
--	pci_block_user_cfg_access(ioa_cfg->pdev);
--
- 	if (ioa_cfg->ipr_chip->bist_method == IPR_MMIO)
- 		writel(IPR_UPROCI_SIS64_START_BIST,
- 		       ioa_cfg->regs.set_uproc_interrupt_reg32);
-@@ -7674,7 +7676,9 @@ static int ipr_reset_start_bist(struct i
- 		ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
- 		rc = IPR_RC_JOB_RETURN;
- 	} else {
--		pci_unblock_user_cfg_access(ipr_cmd->ioa_cfg->pdev);
-+		if (ioa_cfg->ucfg_blocked)
-+			pci_unblock_cfg_access(ipr_cmd->ioa_cfg->pdev);
-+		ioa_cfg->ucfg_blocked = 0;
- 		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
- 		rc = IPR_RC_JOB_CONTINUE;
- 	}
-@@ -7717,7 +7721,6 @@ static int ipr_reset_slot_reset(struct i
- 	struct pci_dev *pdev = ioa_cfg->pdev;
- 
- 	ENTER;
--	pci_block_user_cfg_access(pdev);
- 	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
- 	ipr_cmd->job_step = ipr_reset_slot_reset_done;
- 	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
-@@ -7726,6 +7729,55 @@ static int ipr_reset_slot_reset(struct i
- }
- 
- /**
-+ * ipr_reset_block_config_access_wait - Wait for permission to block config access
-+ * @ipr_cmd:	ipr command struct
-+ *
-+ * Description: This attempts to block config access to the IOA.
-+ *
-+ * Return value:
-+ * 	IPR_RC_JOB_CONTINUE / IPR_RC_JOB_RETURN
-+ **/
-+static int ipr_reset_block_config_access_wait(struct ipr_cmnd *ipr_cmd)
-+{
-+	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
-+	int rc = IPR_RC_JOB_CONTINUE;
-+
-+	if (pci_block_cfg_access_in_atomic(ioa_cfg->pdev)) {
-+		if (ipr_cmd->u.time_left) {
-+			rc = IPR_RC_JOB_RETURN;
-+			ipr_cmd->u.time_left -= IPR_CHECK_FOR_RESET_TIMEOUT;
-+			ipr_reset_start_timer(ipr_cmd, IPR_CHECK_FOR_RESET_TIMEOUT);
-+		} else {
-+			ipr_cmd->job_step = ioa_cfg->reset;
-+			dev_err(&ioa_cfg->pdev->dev,
-+				"Timed out waiting to block config access. Resetting anyway.\n");
-+		}
-+	} else {
-+		ioa_cfg->ucfg_blocked = 1;
-+		ipr_cmd->job_step = ioa_cfg->reset;
-+	}
-+
-+	return rc;
-+}
-+
-+/**
-+ * ipr_reset_block_config_access - Block config access to the IOA
-+ * @ipr_cmd:	ipr command struct
-+ *
-+ * Description: This attempts to block config access to the IOA
-+ *
-+ * Return value:
-+ * 	IPR_RC_JOB_CONTINUE
-+ **/
-+static int ipr_reset_block_config_access(struct ipr_cmnd *ipr_cmd)
-+{
-+	ipr_cmd->ioa_cfg->ucfg_blocked = 0;
-+	ipr_cmd->job_step = ipr_reset_block_config_access_wait;
-+	ipr_cmd->u.time_left = IPR_WAIT_FOR_RESET_TIMEOUT;
-+	return IPR_RC_JOB_CONTINUE;
-+}
-+
-+/**
-  * ipr_reset_allowed - Query whether or not IOA can be reset
-  * @ioa_cfg:	ioa config struct
-  *
-@@ -7764,7 +7816,7 @@ static int ipr_reset_wait_to_start_bist(
- 		ipr_cmd->u.time_left -= IPR_CHECK_FOR_RESET_TIMEOUT;
- 		ipr_reset_start_timer(ipr_cmd, IPR_CHECK_FOR_RESET_TIMEOUT);
- 	} else {
--		ipr_cmd->job_step = ioa_cfg->reset;
-+		ipr_cmd->job_step = ipr_reset_block_config_access;
- 		rc = IPR_RC_JOB_CONTINUE;
- 	}
- 
-@@ -7797,7 +7849,7 @@ static int ipr_reset_alert(struct ipr_cm
- 		writel(IPR_UPROCI_RESET_ALERT, ioa_cfg->regs.set_uproc_interrupt_reg32);
- 		ipr_cmd->job_step = ipr_reset_wait_to_start_bist;
- 	} else {
--		ipr_cmd->job_step = ioa_cfg->reset;
-+		ipr_cmd->job_step = ipr_reset_block_config_access;
- 	}
- 
- 	ipr_cmd->u.time_left = IPR_WAIT_FOR_RESET_TIMEOUT;
-diff -puN drivers/scsi/ipr.h~ipr_new_pci_block drivers/scsi/ipr.h
---- linux-2.6/drivers/scsi/ipr.h~ipr_new_pci_block	2011-09-07 07:29:20.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.h	2011-09-07 08:10:29.000000000 -0500
-@@ -1384,6 +1384,7 @@ struct ipr_ioa_cfg {
- 	u8 needs_warm_reset:1;
- 	u8 msi_received:1;
- 	u8 sis64:1;
-+	u8 ucfg_blocked:1;
- 
- 	u8 revid;
- 
-_
+Yes. My original code did handle all this as event management used a cl=
+ever technique to handle infinite number of events (of finite number of=
+ type of event) in finite amount of memory. Bottomley and his gang (290=
+8d778ab3e244900c310974e1fc1c69066e450) ripped that out and added the ut=
+terly naive way or processing events as you currently see in libsas. Th=
+e result is a buggy, substandard and mediocre implementation.
+
+
+>Sincerely -- Mark Salyzyn
+>
+>-----Original Message-----
+>From: Luben Tuikov [mailto:ltuikov@yahoo.com]=20
+>Sent: Thursday, September 01, 2011 1:18 PM
+>To: Mark Salyzyn; linux-scsi@vger.kernel.org
+>Cc: Darrick J Wong; James Bottomley
+>Subject: Re: [PATCH] [SCSI]: libsas failure to revalidate domain for a=
+nything but the first expander child.
+>
+>----- Original Message -----
+>
+>> In an enclosure model where there are chaining expanders to a large =
+body
+>> of storage, it was discovered that libsas, responding to a broadcast
+>> event change, would only revalidate the domain of first child expand=
+er
+>> in the list.
+>>=20
+>> The issue is that the pointer value to the discovered source device =
+was
+>> used to break out of the loop, rather than the content of the pointe=
+r.
+>>=20
+>> This still remains non-compliant as the revalidate domain code is
+>> supposed to loop through all child expanders, and not stop at the fi=
+rst
+>> one it finds that reports a change count. However, the design of thi=
+s
+>> routine does not allow multiple device discoveries and that would be=
+ a
+>> more complicated set of patches reserved for another day. We are fix=
+ing
+>> the glaring bug rather than refactoring the code.
+>
+>Obviously I've tested this both when I was at Adaptec and at Vitesse. =
+I'd connect
+>7-8 expanders, run iogen with 1000 threads to say 30-40 disks, and the=
+n unplug
+>the port between a level 1 and 2 expander and the I/O would quiesce, i=
+ogen would
+>report a subset of the disks missing, and then when the port was reest=
+ablished,
+>I/O would restart. However I'm not sure that Bottomley tested this sce=
+nario after
+>changing my code off-line before submitting it into the Linux kernel.
+>
+>Now a few notes to mention: Your patch patches a function called
+>sas_find_bcast_dev(). My original code does NOT have such a function.
+>Revalidation is much more subtle and the code looks simpler in my orig=
+inal
+>version. In my original code there is a lot more recursion, symmetry a=
+nd
+>code mirroring. Granted, while such code is shorter, and simpler, it i=
+s harder
+>to figure out what it does, and I feel this is exactly why we see the =
+current
+>state of libsas to be so explicit, simplistic and introducing bugs. Se=
+e this:
+>http://marc.info/?l=3Dlinux-scsi&m=3D131480962006471&w=3D2 where I des=
+cribed
+>the state of libsas recently.
+>
+>> Please note, as I am *stuck* on Outlook as per company policy, the
+>> following inline content will likely not patch clean even emailed as
+>> 'Plain Text', the enclosed attached file should do the job. I have=20
+>> Cc'd
+>> all the folks that originated the files in libsas, as there was no
+>> listed MAINTAINERs.
+>>=20
+>> Checkpatch.pl reports clean. Patch applies cleanly to a WIDE variety=
+ of
+>> kernels up to latest.
+>>=20
+>> Sincerely -- Mark Salyzyn
+>>=20
+>> Cc: Luben Tuikov <tuikov@yahoo.com>
+>> Cc: Darrick J Wong <djwong@us.ibm.com>
+>> Cc: James Bottomley <jbottomley@parallels.com>
+>>=20
+>> Signed-off-by: Mark Salyzyn <msalyzyn@us.xyratex.com>
+>>=20
+>> sas_expander.c |=A0 =A0 2 +-
+>> 1 file changed, 1 insertion(+), 1 deletion(-)
+>>=20
+>> diff -ru scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c
+>> scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
+>> --- scsi-misc-2.6/drivers/scsi/libsas/sas_expander.c=A0=A0=A0 2011-0=
+8-31
+>> 08:32:21.000000000 -0400
+>> +++ scsi-misc-2.6.new/drivers/scsi/libsas/sas_expander.c
+>> 2011-09-01 08:57:55.000000000 -0400
+>> @@ -1721,7 +1721,7 @@
+>> =A0=A0=A0 list_for_each_entry(ch, &ex->children, siblings) {
+>> =A0=A0=A0 =A0=A0=A0 if (ch->dev_type =3D=3D EDGE_DEV || ch->dev_type=
+ =3D=3D
+>> FANOUT_DEV) {
+>> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 res =3D sas_find_bcast_dev(ch, src_dev=
+);
+>> -=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 if (src_dev)
+>> +=A0=A0=A0 =A0=A0=A0 =A0=A0=A0 if (*src_dev)
+>> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 =A0=A0=A0 return res;
+>> =A0=A0=A0 =A0=A0=A0 }
+>> =A0=A0=A0 }
+>>
+>______________________________________________________________________
+>This email may contain privileged or confidential information, which s=
+hould only be used for the purpose for which it was sent by Xyratex. No=
+ further rights or licenses are granted to use such information. If you=
+ are not the intended recipient of this message, please notify the send=
+er by return and delete it. You may not use, copy, disclose or rely on =
+the information contained in it.
+>
+>Internet email is susceptible to data corruption, interception and una=
+uthorised amendment for which Xyratex does not accept liability. While =
+we have taken reasonable precautions to ensure that this email is free =
+of viruses, Xyratex does not accept liability for the presence of any c=
+omputer viruses in this email, nor for any losses caused as a result of=
+ viruses.
+>
+>Xyratex Technology Limited (03134912), Registered in England & Wales, =
+Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+>
+>The Xyratex group of companies also includes, Xyratex Ltd, registered =
+in Bermuda, Xyratex International Inc, registered in California, Xyrate=
+x (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) =
+Co Ltd registered in The People's Republic of China and Xyratex Japan L=
+imited registered in Japan.
+>______________________________________________________________________
+>
+>
+>
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
