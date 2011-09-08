@@ -1,54 +1,59 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [BUG] Oops when SCSI device under multipath is removed
-Date: Thu, 08 Sep 2011 09:00:58 +0900
-Message-ID: <4E6805BA.9040402@ce.jp.nec.com>
-References: <Pine.LNX.4.44L0.1108111112280.1958-100000@iolanthe.rowland.org> <4E4A53F0.9040104@ce.jp.nec.com> <4E4CD737.4020402@ce.jp.nec.com> <20110831195022.GE4004@oc1711230544.ibm.com>
+From: Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org>
+Subject: [ANNOUNCE]: Released version 2.1 of SCST core, target drivers iSCSI-SCST,
+ qla2x00t (QLogic FC), ib_srpt (InfiniBand SRP) and scst_local with scstadmin
+ utility and fileio_tgt user space backend handler
+Date: Wed, 07 Sep 2011 22:29:21 -0400
+Message-ID: <4E682881.7040900@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:37278 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757509Ab1IHAEE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2011 20:04:04 -0400
-In-Reply-To: <20110831195022.GE4004@oc1711230544.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: scst-devel <scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Richard Sharpe <realrichardsharpe-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Bart Van Assche <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Mark Buechler <mark.buechler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, jaxboe@fusionio.com, roland@purestorage.com, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.ne>
 
-Hello,
+I'm glad to announce stable release 2.1 of SCST, the most advanced, features rich
+and the highest performance SCSI target stack for Linux with target drivers for
+iSCSI (iSCSI-SCST), QLogic Fibre Channel 22xx/23xx/24xx/25xx (qla2x00t),
+InfiniBand SRP (ib_srpt), scst_local as well as user space scstadmin management
+utility and fileio_tgt user space backend handler.
 
-On 09/01/11 04:50, Thadeu Lima de Souza Cascardo wrote:
-> On Thu, Aug 18, 2011 at 06:11:19PM +0900, Jun'ichi Nomura wrote:
->> Actually, Tejun has posted a patch to replace
->> execute_in_process_context() with queue_work()
->> and asking your review:
->>
->>   [PATCH RESEND] scsi: don't use execute_in_process_context()
->>   https://lkml.org/lkml/2011/4/30/87
->>
->> Do you think you can take the patch and revert the move
->> of scsi_free_queue()?
-> 
-> I've tested with your suggestion (reverting the move of scsi_free_queue)
-> and it works like a charm. I did not get any oops after that. I tested
-> with a multipath setup on top of two iscsi targets. Using dd after
-> logging out of some of one of the iscsi targets would trigger the oops.
-> With this patch, it could not be triggered anymore.
+SCST allows creation of sophisticated storage devices, which provide advanced
+functionality, like replication, thin provisioning, deduplication, high
+availability, automatic backup, etc. Another class of such devices are Virtual
+Tape Libraries (VTL) as well as other disk-based backup solutions. SCST created
+devices not limited by IP network interface only, but they can use any link
+supporting SCSI-style data exchange, including Fibre Channel, SAS and parallel
+SCSI. It might well be that your favorite storage appliance running SCST in the
+firmware.
 
-Thank you for testing and the report.
+More info about SCST core and modules you can find on:
 
-Since scsi_free_queue() frees elevator, calling it while there
-still is a user of the elevator has no way to work.
-Either we should call it later (like the above suggestion)
-or change scsi_free_queue not to free the elevator
-(James posted a patch early in this thread).
+   - SCST core: http://scst.sourceforge.net
 
-I think the latter approach could be nice if it worked.
-But if not, the former approach should be taken.
-Without fix, a path failure can cause a panic. This is bad...
+   - iSCSI target driver iSCSI-SCST: http://iscsi-scst.sourceforge.net/index.html
 
-Best regards,
--- 
-Jun'ichi Nomura, NEC Corporation
+   - QLogic 22xx/23xx/24xx/25xx Fibre Channel target driver:
+http://scst.sourceforge.net/target_qla2x00t.html
+
+   - InfiniBand SRP: http://scst.sourceforge.net/target_srp.html
+
+   - scst_local: http://scst.sourceforge.net/target_local.html
+
+   - fileio_tgt backend handler:
+http://scst.sourceforge.net/handler_fileio_tgt.html.
+
+You can download SCST core and modules from
+http://scst.sourceforge.net/downloads.html.
+
+Thanks to all who made it happen, especially to Bart Van Assche for ib_srpt
+development and a lot of other SCST activities and Mark Buechler for great
+scstadmin tool!
+
+Vlad
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
