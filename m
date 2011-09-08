@@ -1,134 +1,39 @@
-From: Joe Jin <joe.jin@oracle.com>
-Subject: [PATCH] [SCSI] mptsas: enable driver multi-threaded probe
-Date: Thu, 08 Sep 2011 15:10:00 +0800
-Message-ID: <4E686A48.2020004@oracle.com>
+From: <nagalakshmi.nandigama@lsi.com>
+Subject: [[PATCH] mpt2sas: Bump driver version 09.100.00.01
+Date: Thu, 8 Sep 2011 07:13:35 +0530
+Message-ID: <201109080746.p887kw2R010297@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, Greg Marsden <greg.marsden@oracle.com>, linux-kernel@vger.kernel.org, Joe Jin <joe.jin@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:38959 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932192Ab1IHHrE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2011 03:47:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
+Cc: JBottomley@parallels.com
 
-When server installed some mptsas controller, kernel took long time to
-initialized and probe the disks. This patch will create a probe thread for
-each device.
+Bumped driver vesion to 09.100.00.01
 
-By our test, server with 4 LSI controllers, after applied this patch, saved
-40s(60 vs 20) for boot time.
-
-Signed-off-by: Joe Jin <joe.jin@oracle.com>
-Cc: Eric Moore <Eric.Moore@lsi.com>
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
- drivers/message/fusion/mptsas.c |   52 +++++++++++++++++++++++++++++++++++---
- 1 files changed, 47 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 7596aec..6c29efc 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -51,6 +51,7 @@
- #include <linux/jiffies.h>
- #include <linux/workqueue.h>
- #include <linux/delay.h>	/* for mdelay */
-+#include <linux/kthread.h>
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 051da49..59354db 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -69,11 +69,11 @@
+ #define MPT2SAS_DRIVER_NAME		"mpt2sas"
+ #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+ #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
+-#define MPT2SAS_DRIVER_VERSION		"09.100.00.00"
++#define MPT2SAS_DRIVER_VERSION		"09.100.00.01"
+ #define MPT2SAS_MAJOR_VERSION		09
+ #define MPT2SAS_MINOR_VERSION		100
+ #define MPT2SAS_BUILD_VERSION		00
+-#define MPT2SAS_RELEASE_VERSION		00
++#define MPT2SAS_RELEASE_VERSION		01
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -85,6 +86,10 @@ module_param(mpt_pt_clear, int, 0);
- MODULE_PARM_DESC(mpt_pt_clear,
- 		" Clear persistency table: enable=1  "
- 		"(default=MPTSCSIH_PT_CLEAR=0)");
-+static bool mptsas_multiprobe = 1;
-+module_param(mptsas_multiprobe, bool, 0);
-+MODULE_PARM_DESC(mptsas_multiprobe, " Probe disks by per-device, "
-+		"default enabled");
- 
- /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
- #define MPTSAS_MAX_LUN (16895)
-@@ -5118,9 +5123,17 @@ static void mptsas_volume_delete(MPT_ADAPTER *ioc, u8 id)
- 	scsi_device_put(sdev);
- }
- 
-+struct mptsas_mtprobe_structure {
-+	struct pci_dev *pdev;
-+	struct pci_device_id *id;
-+};
-+
- static int
--mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+__mptsas_probe(void *void_data)
- {
-+	struct mptsas_mtprobe_structure *data = void_data;
-+	struct pci_dev		*pdev = data->pdev;
-+	struct pci_device_id	*id = data->id;
- 	struct Scsi_Host	*sh;
- 	MPT_SCSI_HOST		*hd;
- 	MPT_ADAPTER 		*ioc;
-@@ -5134,7 +5147,7 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	r = mpt_attach(pdev,id);
- 	if (r)
--		return r;
-+		goto done;
- 
- 	ioc = pci_get_drvdata(pdev);
- 	mptsas_fw_event_off(ioc);
-@@ -5172,7 +5185,8 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		printk(MYIOC_s_WARN_FMT
- 			"Skipping ioc=%p because SCSI Initiator mode "
- 			"is NOT enabled!\n", ioc->name, ioc);
--		return 0;
-+		r = 0;
-+		goto done;
- 	}
- 
- 	sh = scsi_host_alloc(&mptsas_driver_template, sizeof(MPT_SCSI_HOST));
-@@ -5282,14 +5296,42 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ioc->old_sas_discovery_protocal = 1;
- 	mptsas_scan_sas_topology(ioc);
- 	mptsas_fw_event_on(ioc);
--	return 0;
-+	r = 0;
-+ done:
-+	kfree(void_data);
-+	return r;
- 
-  out_mptsas_probe:
--
-+	kfree(void_data);
- 	mptscsih_remove(pdev);
- 	return error;
- }
- 
-+static int
-+mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+{
-+	struct mptsas_mtprobe_structure	*data;
-+	struct task_struct		*t;
-+	int ret = 0;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	data->pdev = pdev;
-+	data->id = id;
-+
-+	if (mptsas_multiprobe) {
-+		t = kthread_run(__mptsas_probe, data,
-+				"mptsas_probe-%d", pci_name(pdev));
-+		if (IS_ERR(t))
-+			ret = __mptsas_probe(data);
-+	} else
-+		ret = __mptsas_probe(data);
-+
-+	return ret;
-+}
-+
- void
- mptsas_shutdown(struct pci_dev *pdev)
- {
--- 
-1.7.6
+ /*
+  * Set MPT2SAS_SG_DEPTH value based on user input.
