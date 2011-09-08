@@ -1,39 +1,91 @@
-From: <nagalakshmi.nandigama@lsi.com>
-Subject: [[PATCH] mpt2sas: Bump driver version 09.100.00.01
-Date: Thu, 8 Sep 2011 07:13:35 +0530
-Message-ID: <201109080746.p887kw2R010297@milmhbs0.lsil.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH v2 15/18] fcoe: Move common functions to fcoe_transport
+ library
+Date: Thu, 08 Sep 2011 06:11:09 -0500
+Message-ID: <4E68A2CD.5020804@cs.wisc.edu>
+References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com> <1312504732-4572-16-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:38959 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932192Ab1IHHrE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2011 03:47:04 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39597 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758206Ab1IHLGm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2011 07:06:42 -0400
+In-Reply-To: <1312504732-4572-16-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
-Cc: JBottomley@parallels.com
+To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, mchan@broadcom.com, robert.w.love@intel.com, devel@open-fcoe.org
 
-Bumped driver vesion to 09.100.00.01
+On 08/04/2011 07:38 PM, Bhanu Prakash Gollapudi wrote:
+>  /**
+> - * fcoe_get_wwn() - Get the world wide name from LLD if it supports =
+it
+> - * @netdev: the associated net device
+> - * @wwn: the output WWN
+> - * @type: the type of WWN (WWPN or WWNN)
+> - *
+> - * Returns: 0 for success
+> - */
+> -static int fcoe_get_wwn(struct net_device *netdev, u64 *wwn, int typ=
+e)
+> -{
+> -	const struct net_device_ops *ops =3D netdev->netdev_ops;
+> -
+> -	if (ops->ndo_fcoe_get_wwn)
+> -		return ops->ndo_fcoe_get_wwn(netdev, wwn, type);
+> -	return -EINVAL;
+> -}
+> -
+> -/**
 
-Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 051da49..59354db 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -69,11 +69,11 @@
- #define MPT2SAS_DRIVER_NAME		"mpt2sas"
- #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
- #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
--#define MPT2SAS_DRIVER_VERSION		"09.100.00.00"
-+#define MPT2SAS_DRIVER_VERSION		"09.100.00.01"
- #define MPT2SAS_MAJOR_VERSION		09
- #define MPT2SAS_MINOR_VERSION		100
- #define MPT2SAS_BUILD_VERSION		00
--#define MPT2SAS_RELEASE_VERSION		00
-+#define MPT2SAS_RELEASE_VERSION		01
- 
- /*
-  * Set MPT2SAS_SG_DEPTH value based on user input.
+
+
+> +/**
+> + * fcoe_get_wwn() - Get the world wide name from LLD if it supports =
+it
+> + * @netdev: the associated net device
+> + * @wwn: the output WWN
+> + * @type: the type of WWN (WWPN or WWNN)
+> + *
+> + * Returns: 0 for success
+> + */
+> +int fcoe_get_wwn(struct net_device *netdev, u64 *wwn, int type)
+> +{
+> +	const struct net_device_ops *ops =3D netdev->netdev_ops;
+> +
+> +	if (ops->ndo_fcoe_get_wwn)
+> +		return ops->ndo_fcoe_get_wwn(netdev, wwn, type);
+> +	return -EINVAL;
+> +}
+> +EXPORT_SYMBOL_GPL(fcoe_get_wwn);
+> +
+>
+
+I got a report that this is going to be a problem because the fcoe ops
+like ndo_fcoe_get_wwn are defined when CONFIG_FCOE is set. That is set
+for fcoe.ko. If you move functions calling those callouts to libfcoe
+then it is possible CONFIG_FCOE is not set (if you were just using
+bnx2fc.ko and not using fcoe.ko for example), and the build fails like =
+this:
+
+
+drivers/scsi/fcoe/fcoe_transport.c: In function =91fcoe_get_wwn=92:
+drivers/scsi/fcoe/fcoe_transport.c:152: error: =91const struct
+net_device_ops=92 has no member named =91ndo_fcoe_get_wwn=92
+drivers/scsi/fcoe/fcoe_transport.c:153: error: =91const struct
+net_device_ops=92 has no member named =91ndo_fcoe_get_wwn=92
+make[3]: *** [drivers/scsi/fcoe/fcoe_transport.o] Error 1
+
+
+Do we need some ifdefs in libfcoe around the ops use or should there be
+some sort of lower level transport module callouts (or whatever modules
+like bnxfc and fcoe are called) that libfcoe calls into so those driver=
+s
+can call into something like the netdev callouts if they use them?
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
