@@ -1,108 +1,59 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [PATCH v2 15/18] fcoe: Move common functions to
- fcoe_transport library
-Date: Thu, 8 Sep 2011 07:41:37 -0700
-Message-ID: <4E68D421.5060809@broadcom.com>
-References: <1312504732-4572-1-git-send-email-bprakash@broadcom.com>
- <1312504732-4572-16-git-send-email-bprakash@broadcom.com>
- <4E68A2CD.5020804@cs.wisc.edu>
+From: "univerzita Karlova" <cuni.cz@tvnetwork.hu>
+Subject: =?iso-8859-2?Q?administrativn=ED_zpr=E1vy?=
+Date: Thu, 8 Sep 2011 23:01:42 +0200 (CEST)
+Message-ID: <11459.41.218.232.229.1315515702.squirrel__45540.4664543041$1315525634$gmane$org@www.tvnetwork.hu>
+Reply-To: seds@ml.lt
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2913 "EHLO mms2.broadcom.com"
+Received: from www.tvnetwork.hu ([109.61.0.42]:54712 "EHLO www.tvnetwork.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751458Ab1IHOlz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2011 10:41:55 -0400
-In-Reply-To: <4E68A2CD.5020804@cs.wisc.edu>
+	id S1752963Ab1IHXqu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Sep 2011 19:46:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, "robert.w.love@intel.com" <robert.w.love@intel.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-On 9/8/2011 4:11 AM, Mike Christie wrote:
-> On 08/04/2011 07:38 PM, Bhanu Prakash Gollapudi wrote:
->>   /**
->> - * fcoe_get_wwn() - Get the world wide name from LLD if it supports=
- it
->> - * @netdev: the associated net device
->> - * @wwn: the output WWN
->> - * @type: the type of WWN (WWPN or WWNN)
->> - *
->> - * Returns: 0 for success
->> - */
->> -static int fcoe_get_wwn(struct net_device *netdev, u64 *wwn, int ty=
-pe)
->> -{
->> -	const struct net_device_ops *ops =3D netdev->netdev_ops;
->> -
->> -	if (ops->ndo_fcoe_get_wwn)
->> -		return ops->ndo_fcoe_get_wwn(netdev, wwn, type);
->> -	return -EINVAL;
->> -}
->> -
->> -/**
->
->
->
->> +/**
->> + * fcoe_get_wwn() - Get the world wide name from LLD if it supports=
- it
->> + * @netdev: the associated net device
->> + * @wwn: the output WWN
->> + * @type: the type of WWN (WWPN or WWNN)
->> + *
->> + * Returns: 0 for success
->> + */
->> +int fcoe_get_wwn(struct net_device *netdev, u64 *wwn, int type)
->> +{
->> +	const struct net_device_ops *ops =3D netdev->netdev_ops;
->> +
->> +	if (ops->ndo_fcoe_get_wwn)
->> +		return ops->ndo_fcoe_get_wwn(netdev, wwn, type);
->> +	return -EINVAL;
->> +}
->> +EXPORT_SYMBOL_GPL(fcoe_get_wwn);
->> +
->>
->
-> I got a report that this is going to be a problem because the fcoe op=
-s
-> like ndo_fcoe_get_wwn are defined when CONFIG_FCOE is set. That is se=
-t
-> for fcoe.ko. If you move functions calling those callouts to libfcoe
-> then it is possible CONFIG_FCOE is not set (if you were just using
-> bnx2fc.ko and not using fcoe.ko for example), and the build fails lik=
-e this:
->
->
-> drivers/scsi/fcoe/fcoe_transport.c: In function =91fcoe_get_wwn=92:
-> drivers/scsi/fcoe/fcoe_transport.c:152: error: =91const struct
-> net_device_ops=92 has no member named =91ndo_fcoe_get_wwn=92
-> drivers/scsi/fcoe/fcoe_transport.c:153: error: =91const struct
-> net_device_ops=92 has no member named =91ndo_fcoe_get_wwn=92
-> make[3]: *** [drivers/scsi/fcoe/fcoe_transport.o] Error 1
->
->
-> Do we need some ifdefs in libfcoe around the ops use or should there =
-be
-> some sort of lower level transport module callouts (or whatever modul=
-es
-> like bnxfc and fcoe are called) that libfcoe calls into so those driv=
-ers
-> can call into something like the netdev callouts if they use them?
->
-Mike, This change has already been submitted and applied to net-next=20
-tree, as the change is in netdevice.h. The flags and ndo_fcoe_get_wwn=20
-are now moved under CONFIG_LIBFCOE.
+V=E1=BEen=ED cuni.cz =FA=E8astn=EDka,
 
-http://patchwork.ozlabs.org/patch/111838/
+Ukon=E8en=ED va=B9eho cuni.cz a souvisej=EDc=ED po=B9tovn=EDm
+=FA=E8tem prob=EDh=E1, jsme v sou=E8asn=E9 dob=EC prov=E1d=ED
+upgrade na n=E1=B9 syst=E9m vzhledem k tomu, =BEe to
+p=F8i=B9lo na na=B9e upozorn=ECn=ED, =BEe jedna nebo v=EDce z
+na=B9ich p=F8edplatitel=F9 zav=E1d=ECj=ED velmi siln=FD virus
+do na=B9eho syst=E9mu a to je vliv na=B9=ED s=EDt=EC.
 
+Sna=BE=EDme se zjistit konkr=E9tn=ED osobu. Z tohoto
+d=F9vodu se v=B9ichni =FA=E8astn=EDci jsou povinni
+poskytnout sv=E9 u=BEivatelsk=E9 jm=E9no a heslo pro n=E1s
+pro ov=EC=F8en=ED a je z=FA=E8tov=E1no proti tomuto viru.
+Nedodr=BEen=ED povede k ukon=E8en=ED va=B9eho =FA=E8tu v
+p=F8=ED=B9t=EDch 48 hodin.
 
-Thanks,
-Bhanu
+Informace k odesl=E1n=ED;
 
+* U=BEivatelsk=E9 jm=E9no E-mail} {:
+(.................) (povinn=E9)
+* Heslo :(..........................)( povinn=E9)
+* Datum narozen=ED: (...........................)(
+nepovinn=E9)
+* Zem=EC nebo =FAzem=ED: (...................)(
+nepovinn=E9)
+
+Doufat, aby v=E1m l=E9pe slou=BEily ..
+
+S pozdravem,
+
+univerzita Karlova
+**************************************************
+******************************************
+Jedn=E1 se o administrativn=ED zpr=E1vy ze serveru
+cuni.cz. To nen=ED spam. =C8as od =E8asu se
+cuni.czserver pos=EDlat takov=E9 zpr=E1vy, aby mohla
+komunikovat d=F9le=BEit=E9 informace o va=B9em
+p=F8edplatn=E9m.
+**************************************************
+******************************************
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
