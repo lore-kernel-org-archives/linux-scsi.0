@@ -1,16 +1,15 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH] mpt2sas: Added NUNA IO support in driver which uses
- multi-reply queue support of the HBA
-Date: Thu, 8 Sep 2011 06:18:50 +0530
-Message-ID: <201109080652.p886qCQU025123@milmhbs0.lsil.com>
+Subject: [PATCH] mpt2sas: Bump driver version 0A.100.00.00
+Date: Thu, 8 Sep 2011 06:26:38 +0530
+Message-ID: <201109080700.p887016F027454@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:54379 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756246Ab1IHGwR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2011 02:52:17 -0400
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:34136 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758050Ab1IHHAG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2011 03:00:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
