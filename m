@@ -1,56 +1,54 @@
-From: Stefan Priebe <s.priebe@profihost.ag>
-Subject: Re: system freezing with 3.0.4
-Date: Fri, 9 Sep 2011 11:18:15 +0200
-Message-ID: <0A5D57A3-50CB-4AE2-90DE-EF6C9D8F0C55@profihost.ag>
-References: <4E69A496.9040707@profihost.ag>
-Mime-Version: 1.0 (iPhone Mail 8H7)
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <4E69A496.9040707@profihost.ag>
-Sender: owner-linux-mm@kvack.org
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: LKML <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "efault@gmx.de" <efault@gmx.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: target userspace utils (rtsadmin) project is dysfunctional
+Date: Fri, 09 Sep 2011 10:14:06 -0400
+Message-ID: <4E6A1F2E.6080601@interlog.com>
+References: <4E69BB29.2030800@redhat.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:57415 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758326Ab1IIOOT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Sep 2011 10:14:19 -0400
+In-Reply-To: <4E69BB29.2030800@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Jerome Martin <jxm@risingtidesystems.com>, Nicholas Bellinger <nab@risingtidesystems.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+On 11-09-09 03:07 AM, Andy Grover wrote:
+> Hi Jerome and Nick,
+>
+> I happened upon this website:
+>
+> http://www.theopensourceway.org/book/The_Open_Source_Way-How_to_tell_if_a_FLOSS_project_is_doomed_to_FAIL.html
 
-here a better sysrq w trigger output.
+I totted up 70 each for my open source packages so I
+reckon that list should be taken with a large grain
+of salt.
 
-http://pastebin.com/JWjrbrh4
+This one amused me:
+  "Your code tries to install into /opt or /usr/local [ +10 points of FAIL ]"
+Installing into /usr/local is the default for autotools.
 
-> Hi list,
->=20
-> here's an updated post of my one yesterday.
->=20
-> We've updated some systems from 2.6.32 to 3.0.4 vanilla kernel. Since then=
- we're expecting freezes every now and then. All in memory apps are still wo=
-rking but nothing which reads or writes from or to disk (at least it seems l=
-ike that).
->=20
-> If you're already conncted via ssh and running top suddenly idle is 99-100=
-% and loads goes up to 500. I then cannot write to disk anymore. I've seen t=
-his for now on 2-5 of 20 servers i've updated. I can't believe they are all d=
-amaged. Also every night there comes another one where the same happens. Als=
-o running them on 2.6.32 again works fine.
->=20
-> Luckily i was able to trigger a sysrq on one machine fast enough:
-> echo t >/proc/sysrq-trigger
->=20
-> sysrq output is attached
->=20
-> I hope somebody can help.
->=20
-> Please CC me i'm not on list.
->=20
-> Stefan
->=20
-> <sysrqtrigger.txt>
+> According to my calculations (available upon request), rtsadmin comes in
+> at 220 points: "so much fail, your code should have its own reality TV
+> show".
+>
+> I could also add some more like "primary developer never responds to
+> email", "CLA discourages external contributions", and "uses executable
+> name as corporate marketing tool".
+>
+> Admittedly rtsadmin is a nice piece of code, thanks btw, but your
+> company is falling short of accepted standards for stewardship of a
+> FLOSS project. Please tell me why we all wouldn't be better off if I
+> forked rtsadmin tomorrow.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+One reason from the above link:
+   "Your code is a fork of another project [ +10 points of FAIL ]"
+:-)
+
+Doug Gilbert
+
