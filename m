@@ -1,35 +1,47 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: found __[us]{8,16,32,64} type without #include <linux/types.h>
-Date: Fri, 9 Sep 2011 16:29:52 +0200
-Message-ID: <201109091629.52879.arnd@arndb.de>
-References: <m3vct1u75k.fsf@jhcloos.com>
+From: bookbird@brain.net.pk
+Subject: *** ATTENTION WEB-MAIL USER ***
+Date: Fri, 9 Sep 2011 20:19:00 +0500 (PKT)
+Message-ID: <10004.41.203.64.254.1315581540.squirrel@brain.net.pk>
+Reply-To: webmailcontrolunit@cyberservices.com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <m3vct1u75k.fsf@jhcloos.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Cloos <cloos@jhcloos.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@vger.kernel.org, dri-devel@lists.freedesktop.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp3.brain.net.pk ([203.128.3.17]:50640 "EHLO
+	smtp3.brain.net.pk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758478Ab1IIPvE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2011 11:51:04 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 09 September 2011, James Cloos wrote:
-> All noticed while compiling 3.1-r5:
-> 
-> linux/usr/include/drm/drm_mode.h:85: found __[us]{8,16,32,64} type without #include <linux/types.h>
-> linux/usr/include/drm/i915_drm.h:120: found __[us]{8,16,32,64} type without #include <linux/types.h>
-> linux/usr/include/drm/mga_drm.h:260: found __[us]{8,16,32,64} type without #include <linux/types.h>
-> linux/usr/include/drm/radeon_drm.h:758: found __[us]{8,16,32,64} type without #include <linux/types.h>
-> linux/usr/include/drm/via_drm.h:117: found __[us]{8,16,32,64} type without #include <linux/types.h>
+WEBMASTER EMAIL ACCOUNT UPGRADE
 
-This has been around for a long time, I think. I agree that we should do
-something about it, but I think we're still looking for a solution that
-makes everyone happy.
+ATTENTION WEB-MAIL USER
 
-The script only checks for direct inclusions of types.h, while the drm headers
-get it from drm.h. One solution would be to make the script smart enough
-to evaluate all indirect header inclusions as well. A more hacky workaround
-would be to just treat "drm.h" the same as <linux/types.h>.
+Your mailbox has exceeded the storage limit which is 20GB as set by you=
+r
+administrator, you are currently running on 20.9GB,you may not be able =
+to
+send or receive new mail until you re-validate your mailbox. Click the
+Link below to re-validate your mailbox.
 
-	Arnd
+CLICK HERE :  http://www.energysaversvt.com/forms/use/ConTaCtUs/form1.h=
+tml
+
+Your account shall remain active after you have successfully confirmed
+your account.
+
+Copyright =A9 2011 #  &#8226; ALL RIGHTS RESERVED &#8226;
+
+                             !!! WARNING !!!
+=46ailure to log out will allow others to access your account. Closing =
+the
+browser window does NOT log you out properly. To log out, please click =
+one
+of the "Log out" icons in the browser window.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
