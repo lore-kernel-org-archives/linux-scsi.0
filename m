@@ -1,59 +1,131 @@
-From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <test@amidress.com>
-Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
-	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
-Date: Sun, 11 Sep 2011 02:29:10 +0000 (UTC)
-Message-ID: <20111211045802585808@amidress.com>
-Reply-To: <1339625218@qq.com>
+From: Jerome Martin <jxm@risingtidesystems.com>
+Subject: Re: target userspace utils (rtsadmin) project is dysfunctional
+Date: Sun, 11 Sep 2011 08:37:04 +0300
+Message-ID: <CAN4SboA8z1drZxbs0CtKPLtQ+n4bY0UqrRSVt_ZB-4TgdBKtBA@mail.gmail.com>
+References: <4E69BB29.2030800@redhat.com>
+	<CAN4SboCi7C9iB+GNH85yfMkvDQdf4BN4CunUuJjvc+a-cfaCFQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 184.172.211.66-static.reverse.softlayer.com ([184.172.211.66]:2654
-	"HELO amidress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758890Ab1IKC3C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Sep 2011 22:29:02 -0400
-Date: Sun, 11 Dec 2011 04:57:57 +0800
+Received: from mail-yi0-f46.google.com ([209.85.218.46]:44733 "EHLO
+	mail-yi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751330Ab1IKFhF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2011 01:37:05 -0400
+In-Reply-To: <CAN4SboCi7C9iB+GNH85yfMkvDQdf4BN4CunUuJjvc+a-cfaCFQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: Nicholas Bellinger <nab@risingtidesystems.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
-ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
-DQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5
-sOWutuWbnuWkjeOAgg0KDQoNCjHjgIHnvqTlj5Hova/ku7bvvJog5pON5L2c566A5Y2V77yM5Yqf
-6IO95by65aSn77yM5qih5Lu/5Lq65bel5pON5L2c5qih5byP77yM5Yiw6L6+546H6auY77yM5pel
-5Y+R6YCBNeS4h+WwgeS7peS4iuOAgiANCjLjgIE1MDDkuIfkubDlrrbotYTmupDvvJog6LWg6YCB
-55qENTAw5LiH5Lmw5a626LWE5rqQ5bqT77yM5pu05pawICjlj6/ku6XmjInnhafmgqjnmoTkuqfl
-k4Hmj5Dlj5blh7rmnaXvvIzmm7Tnsr7lh4blvIDlj5Ep44CCIA0KM+OAgei2hee6p+a1t+WkluS5
-sOWutkVtYWls5pCc57Si5py677yaIOWGhee9ruS6hjYwMOS4h+ihjOS4muWFs+mUruivje+8jOag
-ueaNrumVv+WwvuivjeaQnOe0ou+8jOe7k+aenOabtOeyvuehruWMuemFje+8m+avj+WkqeiDveaQ
-nOe0ojEtMuS4h+S7peS4iuS5sOWutuecn+WunkVNQUlM77yM5oiQ5Y2V546H6auY44CCIA0KIA0K
-DQropoHnmoTmipPntKfogZTns7tRUTogMTMzOTYyNTIxOCAgIOaIluiAheeri+WNs+WbnuWkjemC
-rueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1MjE4
-ICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFxLmNvbQ0K6KaB55qE5oqT
-57Sn6IGU57O7UVE6IDEzMzk2MjUyMTggICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDEzMzk2
-MjUyMThAcXEuY29tDQogDQrlhY3otLnotaDpgIE6DQrkuIDlhbE45Liq5YyFKOaVsOaNruaYr+WF
-qOihjOS4mueahO+8jOaMieeFp+ihjOS4muWIhuWlveexu++8jOW5tuS4lOWPr+S7peaMieeFp+WF
-s+mUruivjeafpeivoueahCnvvJogDQox77yMMjAxMeaYpeWtozEwOeWxiuW5v+S6pOS8muS5sOWu
-tueOsOWcuuivouebmOaVsOaNruW6k+aWsOmynOWHuueCie+8jOi2hee6p+aWsOmynOS5sOWutu+8
-jOaWsOmynOaVsOaNru+8jOWuueaYk+aIkOWNle+8gSANCjLvvIzotK3kubDlkI7lj6/ku6XlhY3o
-tLnmm7TmlrAyMDEx56eL5a2j5bm/5Lqk5LyaKzIwMTLmmKXlraPlub/kuqTkvJrkubDlrrbmlbDm
-ja7jgILlpKrotoXlgLzkuobjgIINCjPvvIzmnIDmlrDlhajnkIPkubDlrrblupMs5YWxNDUxNjYw
-5p2h5pWw5o2u44CCICjmnIDmlrDmm7TmlrDml6XmnJ8gMjAxMS0wNS0xNuaXpSkNCjTvvIwyMDA4
-5bm0LDIwMDnlubQsMjAxMOW5tCDmmKXlraMr56eL5a2j5bm/5Lqk5Lya5Lmw5a625ZCN5b2V77yM
-MTAzIDEwNCAxMDUgMTA2IDEwNyAxMDgg5YWx5YWt5bGKIOWFsTEyMC425LiH5pWw5o2u44CCDQo1
-77yMMjAxMOW5tOWbvemZheS/g+mUgOWNj+S8mu+8iFBQQUnvvInmiJDlkZjlkI3ljZUgUFBBSSBN
-ZW1iZXJzIERpcmVjdG9yee+8jOmdnuW4uOmHjeimgeeahOWkp+S5sOWutuOAgg0KNu+8jDIwMTDl
-ubTliLDpppnmuK/ph4fotK3nmoTlm73lpJblrqLkurrlkI3lvZUo6aaZ5riv6LS45Y+R5bGA5o+Q
-5L6bKe+8jOWFsTcuMuS4h+aVsOaNru+8jOi2hee6p+mHjeimgeeahOS5sOWutuOAgg0KN++8jDQ4
-LjY45LiH5p2h5pyA5paw5Lmw5a626K+i55uY77yM6LSt5Lmw5ZCO5q+P5pyI5pu05pawIDEtMuS4
-h+adoe+8jOWMheaLrDLpg6jliIbvvIwx77yM5pyA5paw55qE6K+i55uYIDLvvIzmnIDmlrDnmoTl
-sZXkvJrkubDlrrbjgILlhY3otLnmm7TmlrAzNuS4quaciOOAgg0KOO+8jDIwMDnlubTmtbflhbPm
-j5DljZXmlbDmja5waWVyc+eJiOaVsOaNriAx5Y2D5LiH44CCDQoNCg0K6K+a5L+h5Li65pys77yM
-5pSv5oyB5pSv5LuY5a6d5ouF5L+d5Lqk5piTICjlhYjlj5HotKflubblronoo4Xorr7nva7nvqTl
-j5Hova/ku7bvvIznhLblkI7ku5jmrL4pIOW9u+W6leaJk+a2iOaCqOeahCDpob7omZHjgIINCg0K
-IA0KDQoNCiANCg0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaI
-kOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2u
-LeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K
+Repost including target-devel and linux-scsi lists.
+Sorry for the noise.
+
+On Sat, Sep 10, 2011 at 10:30 PM, Jerome Martin
+<jxm@risingtidesystems.com> wrote:
+> Hi Andy,
+> I am not so much interested in your "calculation" than on having a li=
+st of
+> checkpoints that you feel would be important to improve in order to h=
+ave a
+> better OSS project. In all good faith, I can assure you this is all I=
+ (we)
+> are looking for, within the limits of time & resources available.
+> As for the emails I did not (never, really ?) answer, apart from the
+> vacation pointed out by Nic, I guess I must have erased part of my ma=
+ilbox
+> inadvertently then, because I do not have them in my todo box, in whi=
+ch I
+> normally have everything not handled yet.
+>
+> Anyway, thanks for saying rtsadmin is a nice piece of code, I hope we=
+ can
+> improve it with as much enlightened (read from people using it ;-) ) =
+input
+> as possible.
+> And again, I really am eager to take your suggestions about how to im=
+prove
+> the docs and processes, these are vast topics and the best places to =
+start
+> might not be always intuitive when you are deep into the code itself.=
+ I
+> engaged huge efforts in making rtsadmin self-documenting as possible,=
+ with a
+> lot of documentation in the code itself, but clearly this is not enou=
+gh. I
+> assume there might be some easy to do pieces of doc that could improv=
+e
+> dramatically the user experience, but am unsure what they are (instal=
+l ?
+> packaging ? building from source ? quickstart ? so many things to do.=
+=2E.).
+> As for what's planned, the next items on my community todo are to ada=
+pt the
+> build process to export a versioned tarball so distros and everyone e=
+lse can
+> get a fixed version release without having to go through the git-depe=
+ndent
+> build process, fix the tags exports to the community repository (some=
+ script
+> is blocking somewhere in the chain of autocommits) and write a quick =
+"how to
+> build packages" howto. Do those sound reasonable to you or would you =
+put
+> something higher on the priority list ?
+> One last thing I need to say is that the company as a whole as a very
+> favorable view of anything that can improve the community experience,=
+ so
+> every misimplementation of that policy is to blame on me. Unfortunate=
+ly I
+> might have a hard time managing priorities and workload, and this app=
+arently
+> led to regrettable effects on the OSS project.
+> Thanks for both the kind and critical words, but now you've said too =
+much to
+> withhold the constructive mentoring any longer ;-)
+> Kind Regards,
+> Jerome
+> On Fri, Sep 9, 2011 at 10:07 AM, Andy Grover <agrover@redhat.com> wro=
+te:
+>>
+>> Hi Jerome and Nick,
+>>
+>> I happened upon this website:
+>>
+>>
+>> http://www.theopensourceway.org/book/The_Open_Source_Way-How_to_tell=
+_if_a_FLOSS_project_is_doomed_to_FAIL.html
+>>
+>> According to my calculations (available upon request), rtsadmin come=
+s in
+>> at 220 points: "so much fail, your code should have its own reality =
+TV
+>> show".
+>>
+>> I could also add some more like "primary developer never responds to
+>> email", "CLA discourages external contributions", and "uses executab=
+le
+>> name as corporate marketing tool".
+>>
+>> Admittedly rtsadmin is a nice piece of code, thanks btw, but your
+>> company is falling short of accepted standards for stewardship of a
+>> FLOSS project. Please tell me why we all wouldn't be better off if I
+>> forked rtsadmin tomorrow.
+>>
+>> Regards -- Andy
+>
+>
+>
+> --
+> J=E9r=F4me Martin
+>
 
 
+
+--=20
+J=E9r=F4me Martin
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
