@@ -1,43 +1,34 @@
-From: Alexey Dobriyan <adobriyan@gmail.com>
-Subject: 3.1.0-rc4: oops at elv_put_request()
-Date: Mon, 12 Sep 2011 00:36:35 +0300
-Message-ID: <20110911213634.GA3065@p183.telecom.by>
+From: "Mr. Daniel Tsai" <danieltsai0@aol.com>
+Subject: Business transaction.
+Date: Sun, 11 Sep 2011 17:07:15 +0200
+Message-ID: <20110911150716.EDEEA4276C5_E6CCEA4F__2999.74815357036$1315796886$gmane$org@radon.cen.brad.ac.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="Windows-1251"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:59910 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257Ab1IKVgk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2011 17:36:40 -0400
-Content-Disposition: inline
+Received: from hydrogen.cen.brad.ac.uk ([143.53.238.3]:38205 "EHLO
+	hydrogen.cen.brad.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753416Ab1ILDHt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2011 23:07:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk, jbottomley@parallels.com, torvalds@linux-foundation.org, akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: danieltsai0@aol.com
 
-Caught this one, there was no real load at the moment.
-FWIW, setup is ext4 over RAID-6 across 4 disks.
+Hello my friend. My name is Daniel Tsai and
 
-	elv_put_request
-	__blk_put_request
-	blk_put_request
-	scsi_execute
-	scsi_execute_req
-	scsi_test_unit_ready
-	sd_check_events
-	disk_events_workfn
-	process_one_work
-	worker_thread
-	kthread
-	kernel_thread_helper
+I live in Hong Kong. I want you to be my
 
-$ addr2line -e vmlinux 0xffffffff811bcbbb
-block/elevator.c:772
+partner in a business transaction of 44.5Million USD.
 
-   768	void elv_put_request(struct request_queue *q, struct request *rq)
-   769	{
-   770		struct elevator_queue *e = q->elevator;
-   771	
-   772	===>	if (e->ops->elevator_put_req_fn)	<===
-   773			e->ops->elevator_put_req_fn(rq);
-   774	}
+If you are interested for more details,
+
+you MUST reply me to my private email address:
+
+danieltsai11@yahoo.com.hk or danieltsai95@aol.com
+
+when I get your message, I will tell you what
+
+to do next. Thank you.
+
+Mr. Daniel Tsai
