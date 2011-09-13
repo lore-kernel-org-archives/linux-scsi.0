@@ -1,57 +1,111 @@
-From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <test@amidress.com>
-Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
-	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
-Date: Tue, 13 Sep 2011 18:41:54 +0000 (UTC)
-Message-ID: <20111213091116260371@amidress.com>
-Reply-To: <1339625218@qq.com>
+From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
+Subject: [PATCH] bnx2fc: Add driver documentation
+Date: Tue, 13 Sep 2011 11:55:14 -0700
+Message-ID: <1315940114-988-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 184.172.211.66-static.reverse.softlayer.com ([184.172.211.66]:2102
-	"HELO amidress.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932282Ab1IMSlv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Sep 2011 14:41:51 -0400
-Date: Tue, 13 Dec 2011 09:11:11 +0800
+Received: from mms2.broadcom.com ([216.31.210.18]:2911 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932092Ab1IMSz2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Sep 2011 14:55:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, mchan@broadcom.com, Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 
-576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
-ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
-DQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5
-sOWutuWbnuWkjeOAgg0KDQoNCjHjgIHnvqTlj5Hova/ku7bvvJog5pON5L2c566A5Y2V77yM5Yqf
-6IO95by65aSn77yM5qih5Lu/5Lq65bel5pON5L2c5qih5byP77yM5Yiw6L6+546H6auY77yM5pel
-5Y+R6YCBNeS4h+WwgeS7peS4iuOAgiANCjLjgIE1MDDkuIfkubDlrrbotYTmupDvvJog6LWg6YCB
-55qENTAw5LiH5Lmw5a626LWE5rqQ5bqT77yM5q+P5pyI5pu05pawIOOAgiANCjPjgIHotoXnuqfm
-tbflpJbkubDlrrZFbWFpbOaQnOe0ouacuu+8miDmr4/lpKnog73mkJzntKIxLTLkuIfku6XkuIrk
-ubDlrrbnnJ/lrp5FTUFJTO+8jOaIkOWNleeOh+mrmOOAgiANCiANCg0K6KaB55qE5oqT57Sn6IGU
-57O7UVE6IDEzMzk2MjUyMTggICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDEzMzk2MjUyMThA
-cXEuY29tDQropoHnmoTmipPntKfogZTns7tRUTogMTMzOTYyNTIxOCAgIOaIluiAheeri+WNs+Wb
-nuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5
-NjI1MjE4ICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFxLmNvbQ0KDQrl
-hY3otLnotaDpgIE6DQrkuIDlhbE45Liq5YyFKOaVsOaNruaYr+WFqOihjOS4mueahO+8jOaMieeF
-p+ihjOS4muWIhuWlveexu++8jOW5tuS4lOWPr+S7peaMieeFp+WFs+mUruivjeafpeivoueahCnv
-vJogDQox77yMMjAxMeaYpeWtozEwOeWxiuW5v+S6pOS8muS5sOWutueOsOWcuuivouebmOaVsOaN
-ruW6k+aWsOmynOWHuueCie+8jOi2hee6p+aWsOmynOS5sOWutu+8jOaWsOmynOaVsOaNru+8jOWu
-ueaYk+aIkOWNle+8gSANCjLvvIzotK3kubDlkI7lj6/ku6XlhY3otLnmm7TmlrAyMDEx56eL5a2j
-5bm/5Lqk5LyaKzIwMTLmmKXlraPlub/kuqTkvJrkubDlrrbmlbDmja7jgILlpKrotoXlgLzkuobj
-gIINCjPvvIzmnIDmlrDlhajnkIPkubDlrrblupMs5YWxNDUxNjYw5p2h5pWw5o2u44CCICjmnIDm
-lrDmm7TmlrDml6XmnJ8gMjAxMS0wNS0xNuaXpSkNCjTvvIwyMDA45bm0LDIwMDnlubQsMjAxMOW5
-tCDmmKXlraMr56eL5a2j5bm/5Lqk5Lya5Lmw5a625ZCN5b2V77yMMTAzIDEwNCAxMDUgMTA2IDEw
-NyAxMDgg5YWx5YWt5bGKIOWFsTEyMC425LiH5pWw5o2u44CCDQo177yMMjAxMOW5tOWbvemZheS/
-g+mUgOWNj+S8mu+8iFBQQUnvvInmiJDlkZjlkI3ljZUgUFBBSSBNZW1iZXJzIERpcmVjdG9yee+8
-jOmdnuW4uOmHjeimgeeahOWkp+S5sOWutuOAgg0KNu+8jDIwMTDlubTliLDpppnmuK/ph4fotK3n
-moTlm73lpJblrqLkurrlkI3lvZUo6aaZ5riv6LS45Y+R5bGA5o+Q5L6bKe+8jOWFsTcuMuS4h+aV
-sOaNru+8jOi2hee6p+mHjeimgeeahOS5sOWutuOAgg0KN++8jDQ4LjY45LiH5p2h5pyA5paw5Lmw
-5a626K+i55uY77yM6LSt5Lmw5ZCO5q+P5pyI5pu05pawIDEtMuS4h+adoe+8jOWMheaLrDLpg6jl
-iIbvvIwx77yM5pyA5paw55qE6K+i55uYIDLvvIzmnIDmlrDnmoTlsZXkvJrkubDlrrbjgILlhY3o
-tLnmm7TmlrAzNuS4quaciOOAgg0KOO+8jDIwMDnlubTmtbflhbPmj5DljZXmlbDmja5waWVyc+eJ
-iOaVsOaNriAx5Y2D5LiH44CCDQoNCg0K6K+a5L+h5Li65pys77yM5pSv5oyB5pSv5LuY5a6d5ouF
-5L+d5Lqk5piTICjlhYjlj5HotKflubblronoo4Xorr7nva7nvqTlj5Hova/ku7bvvIznhLblkI7k
-u5jmrL4pIOW9u+W6leaJk+a2iOaCqOeahCDpob7omZHjgIINCg0KIA0KDQoNCiANCg0K57K+5YeG
-5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+
-5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K
-57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K
+bnx2fc.txt outlines the driver usage model.
+
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ Documentation/scsi/bnx2fc.txt |   76 +++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 76 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/scsi/bnx2fc.txt
+
+diff --git a/Documentation/scsi/bnx2fc.txt b/Documentation/scsi/bnx2fc.txt
+new file mode 100644
+index 0000000..59e218c
+--- /dev/null
++++ b/Documentation/scsi/bnx2fc.txt
+@@ -0,0 +1,76 @@
++Operating FCoE using bnx2fc
++===========================
++Broadcom FCoE offload through bnx2fc is full stateful hardware offload that
++cooperates with all interfaces provided by the Linux ecosystem for FC/FCoE and
++SCSI controllers.  As such, FCoE functionality, once enabled is largely
++transparent. Devices discovered on the SAN will be registered and unregistered
++automatically with the upper storage layers.
++
++Despite the fact that the Broadcom's FCoE offload is fully offloaded, it does
++depend on the state of the network interfaces to operate. As such, the network
++interface (e.g. eth0) associated with the FCoE offload initiator must be 'up'.
++It is recommended that the network interfaces be configured to be brought up
++automatically at boot time.
++
++Furthermore, the Broadcom FCoE offload solution creates VLAN interfaces to
++support the VLANs that have been discovered for FCoE operation (e.g.
++eth0.1001-fcoe).  Do not delete or disable these interfaces or FCoE operation
++will be disrupted.
++
++Driver Usage Model:
++===================
++
++1. Ensure that fcoe-utils package is installed.
++
++2. Configure the interfaces on which bnx2fc driver has to operate on.
++Here are the steps to configure:
++	a. cd /etc/fcoe
++	b. copy cfg-ethx to cfg-eth5 if FCoE has to be enabled on eth5.
++	c. Repeat this for all the interfaces where FCoE has to be enabled.
++	d. Edit all the cfg-eth files to set "no" for DCB_REQUIRED** field, and
++	   "yes" for AUTO_VLAN.
++	e. Other configuration parameters should be left as default
++
++3. Ensure that "bnx2fc" is in SUPPORTED_DRIVERS list in /etc/fcoe/config.
++
++4. Start fcoe service. (service fcoe start). If Broadcom devices are present in
++the system, bnx2fc driver would automatically claim the interfaces, starts vlan
++discovery and log into the targets.
++
++5. "Symbolic Name" in 'fcoeadm -i' output would display if bnx2fc has claimed
++the interface.
++Eg:
++[root@bh2 ~]# fcoeadm -i
++    Description:      NetXtreme II BCM57712 10 Gigabit Ethernet
++    Revision:         01
++    Manufacturer:     Broadcom Corporation
++    Serial Number:    0010186FD558
++    Driver:           bnx2x 1.70.00-0
++    Number of Ports:  2
++
++        Symbolic Name:     bnx2fc v1.0.5 over eth5.4
++        OS Device Name:    host11
++        Node Name:         0x10000010186FD559
++        Port Name:         0x20000010186FD559
++        FabricName:        0x2001000DECB3B681
++        Speed:             10 Gbit
++        Supported Speed:   10 Gbit
++        MaxFrameSize:      2048
++        FC-ID (Port ID):   0x0F0377
++        State:             Online
++
++6. Verify the vlan discovery is performed by running ifconfig and notice
++<INTERFACE>.<VLAN>-fcoe interfaces are automatically created.
++
++Refer to fcoeadm manpage for more information on fcoeadm operations to
++create/destroy interfaces or to display lun/target information.
++
++NOTE:
++====
++** Broadcom FCoE capable devices implement a DCBX/LLDP client on-chip. Only one
++LLDP client is allowed per interface. For proper operation all host software
++based DCBX/LLDP clients (e.g. lldpad) must be disabled. To disable lldpad on a
++given interface, run the following command:
++
++lldptool set-lldp -i <interface_name> adminStatus=disabled
++
+-- 
+1.7.0.6
 
 
