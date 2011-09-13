@@ -1,74 +1,39 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH] scsi: qla4xxx driver depends on NET
-Date: Mon, 12 Sep 2011 15:31:34 -0700
-Message-ID: <CA93D5F9.8FBF%vikas.chaudhary@qlogic.com>
-References: <4E6BFD2E.4020908@xenotime.net>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Subject: Re: system freezing with 3.0.4
+Date: Tue, 13 Sep 2011 08:07:12 +0200
+Message-ID: <4E6EF310.7060603@profihost.ag>
+References: <4E69A496.9040707@profihost.ag> <20110912201606.GA24927@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:30689
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755334Ab1ILWde convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Sep 2011 18:33:34 -0400
-In-Reply-To: <4E6BFD2E.4020908@xenotime.net>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20110912201606.GA24927@infradead.org>
+Sender: owner-linux-mm@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>, scsi <linux-scsi@vger.kernel.org>
-Cc: "JBottomley@parallels.com" <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>, Ravi Anand <ravi.anand@qlogic.com>, Dept_iscsi_driver <iscsi-driver@qlogic.com>
 
+Hi,
 
-
-On 10/09/11 5:13 PM, "Randy Dunlap" <rdunlap@xenotime.net> wrote:
-
->From: Randy Dunlap <rdunlap@xenotime.net>
+> On Fri, Sep 09, 2011 at 07:31:02AM +0200, Stefan Priebe - Profihost AG wrote:
+>> Hi list,
+>>
+>> here's an updated post of my one yesterday.
+>>
+>> We've updated some systems from 2.6.32 to 3.0.4 vanilla kernel.
+>> Since then we're expecting freezes every now and then. All in memory
+>> apps are still working but nothing which reads or writes from or to
+>> disk (at least it seems like that).
 >
->When CONFIG_NET is disabled, SCSI_QLA_ISCSI selects SCSI_ISCSI_ATTRS,
->which uses network interfaces, so the build fails with multiple errors:
->
->warning: (ISCSI_TCP && SCSI_CXGB3_ISCSI && SCSI_CXGB4_ISCSI &&
->SCSI_QLA_ISCSI && INFINIBAND_ISER) selects SCSI_ISCSI_ATTRS which has
->unmet direct dependencies (SCSI && NET)
->
->ERROR: "skb_trim" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->ERROR: "netlink_kernel_create" [drivers/scsi/scsi_transport_iscsi.ko]
->undefined!
->ERROR: "netlink_kernel_release" [drivers/scsi/scsi_transport_iscsi.ko]
->undefined!
->ERROR: "skb_pull" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->ERROR: "init_net" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->ERROR: "__alloc_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->ERROR: "netlink_broadcast" [drivers/scsi/scsi_transport_iscsi.ko]
->undefined!
->ERROR: "kfree_skb" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->ERROR: "skb_put" [drivers/scsi/scsi_transport_iscsi.ko] undefined!
->ERROR: "sysfs_format_mac" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
->
->so make SCSI_QLA_ISCSI also depend on NET to prevent the build errors.
->
->Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
->Cc:    Ravi Anand <ravi.anand@qlogic.com>
->Cc:    Vikas Chaudhary <vikas.chaudhary@qlogic.com>
->Cc:    iscsi-driver@qlogic.com
->---
-> drivers/scsi/qla4xxx/Kconfig |    2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->
->--- lnx-31-rc5.orig/drivers/scsi/qla4xxx/Kconfig
->+++ lnx-31-rc5/drivers/scsi/qla4xxx/Kconfig
->@@ -1,6 +1,6 @@
-> config SCSI_QLA_ISCSI
->     tristate "QLogic ISP4XXX and ISP82XX host adapter family support"
->-    depends on PCI && SCSI
->+    depends on PCI && SCSI && NET
->     select SCSI_ISCSI_ATTRS
->     ---help---
->     This driver supports the QLogic 40xx (ISP4XXX) and 8022 (ISP82XX)
+> What storage driver(s) do you use?
 
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+aacraid - but i'm also seeing this on other systems.
 
+Stefan
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
