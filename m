@@ -1,44 +1,47 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: 3.1.0-rc4: oops at elv_put_request()
-Date: Wed, 14 Sep 2011 00:02:00 -0700
-Message-ID: <CA+55aFwEjVL6QH8x1=nS1g=tfdZKO2uN-nbMBaKcAThVfpDJXQ@mail.gmail.com>
-References: <20110911213634.GA3065@p183.telecom.by> <CA+55aFxL3aK9kDOdfGUSVzcXJcotFKaQnmJXt4rqgBFL6oo52Q@mail.gmail.com>
+From: "Abhilash  Sankar - ERS, HCL Tech" <Abhilash.S@hcl.com>
+Subject: LIO performance Issue
+Date: Wed, 14 Sep 2011 19:30:36 +0530
+Message-ID: <EF8AD1CD95CD1E4DBF423FF61CCFC5A9E4E199860C@NDA-HCLT-EVS04.HCLT.CORP.HCL.IN>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:63713 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754781Ab1INHCV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2011 03:02:21 -0400
-In-Reply-To: <CA+55aFxL3aK9kDOdfGUSVzcXJcotFKaQnmJXt4rqgBFL6oo52Q@mail.gmail.com>
+Received: from gws06.hcl.com ([203.105.185.25]:21772 "EHLO gws06.hcl.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756550Ab1INOBg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2011 10:01:36 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: axboe@kernel.dk, jbottomley@parallels.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-iscsi-target-dev@googlegroups.com" <linux-iscsi-target-dev@googlegroups.com>, "Yuvarani C - ERS , HCLTech" <yuvaranic@hcl.com>, "Bagavathy Kumar Mahendran - ERS, HCL Tech" <bagavathykumar.m@hcl.com>
 
-Re-sending selected emails that apparently never went out. But others
-are likely just lost forever..
 
-On Sun, Sep 11, 2011 at 2:47 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Sun, Sep 11, 2011 at 2:36 PM, Alexey Dobriyan <adobriyan@gmail.com=
-> wrote:
->> Caught this one, there was no real load at the moment.
->> FWIW, setup is ext4 over RAID-6 across 4 disks.
->
-> Do you have the register state and oops address? Is it a NULL pointer=
-,
-> or a case of PAGE_ALLOC_DEBUG or what?
->
-> There's commit 94007751bb02 that fixes one md-related oops ("Avoid
-> dereferencing a 'request_queue' after last close") but that doesn't
-> seem to be the case for you (it needs a __blkdev_put()).
->
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 Linus
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hi all,
+
+My name is Abhilash, I am new to this community, I am trying to do a performance study of LIO-iSCSI and SCST using robocopy (I/O Tool).
+I have successfully ported LIO to my Debian OS. Based on my initial analysis, SCST had shown a better write performance than LIO.
+
+Read performance seems to be almost similar for both the stack. But write performance for file based LIO-iSCSI has degraded more than 50%
+while compared to SCST stack in my setup.
+
+I am using LIO 4.0, file based IO and Windows 7 initiator.
+
+It would be much helpful if anyone could give me some suggestion to improve the LIO write performance.
+
+Regards,
+Abhilash
+
+
+::DISCLAIMER::
+-----------------------------------------------------------------------------------------------------------------------
+
+The contents of this e-mail and any attachment(s) are confidential and intended for the named recipient(s) only.
+It shall not attach any liability on the originator or HCL or its affiliates. Any views or opinions presented in
+this email are solely those of the author and may not necessarily reflect the opinions of HCL or its affiliates.
+Any form of reproduction, dissemination, copying, disclosure, modification, distribution and / or publication of
+this message without the prior written consent of the author of this e-mail is strictly prohibited. If you have
+received this email in error please delete it and notify the sender immediately. Before opening any mail and
+attachments please check them for viruses and defect.
+
+-----------------------------------------------------------------------------------------------------------------------
