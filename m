@@ -1,41 +1,30 @@
-From: James Bottomley <jbottomley@parallels.com>
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: [PATCH 20/27] Initconst section fixes for SCSI
-Date: Thu, 15 Sep 2011 20:18:48 +0000
-Message-ID: <1316117927.2983.74.camel@dabdike.hansenpartnership.com>
-References: <1316117394-21666-1-git-send-email-andi@firstfloor.org>
-	 <1316117394-21666-21-git-send-email-andi@firstfloor.org>
+Date: Thu, 15 Sep 2011 22:30:57 +0200
+Message-ID: <20110915203057.GA7761@one.firstfloor.org>
+References: <1316117394-21666-1-git-send-email-andi@firstfloor.org> <1316117394-21666-21-git-send-email-andi@firstfloor.org> <1316117927.2983.74.camel@dabdike.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1316117394-21666-21-git-send-email-andi@firstfloor.org>
-Content-Language: en-US
-Content-ID: <FE0726A6EB1CDA4E936E908973B98468@sw.swsoft.com>
+Content-Disposition: inline
+In-Reply-To: <1316117927.2983.74.camel@dabdike.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andi Kleen <ak@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Andi Kleen <andi@firstfloor.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andi Kleen <ak@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDExLTA5LTE1IGF0IDEzOjA5IC0wNzAwLCBBbmRpIEtsZWVuIHdyb3RlOg0KPiBG
-cm9tOiBBbmRpIEtsZWVuIDxha0BsaW51eC5pbnRlbC5jb20+DQoNCkkgZG9uJ3Qga25vdyB3aHkg
-eW91J3JlIGRvaW5nIHRoaXMgd2l0aG91dCBhIGRlc2NyaXB0aW9uIChhbmQgcGxlYXNlIGNjDQph
-dCBsZWFzdCBsaW51eC1zY3NpIG9uIFNDU0kgcGF0Y2hlcykuDQoNCj4gQ2M6IEpCb3R0b21sZXlA
-cGFyYWxsZWxzLmNvbQ0KPiBTaWduZWQtb2ZmLWJ5OiBBbmRpIEtsZWVuIDxha0BsaW51eC5pbnRl
-bC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYyAgICAgICAgfCAg
-ICAyICstDQo+ICBkcml2ZXJzL3Njc2kvYWljOTR4eC9haWM5NHh4X2luaXQuYyB8ICAgIDIgKy0N
-Cj4gIDIgZmlsZXMgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQ0KPiAN
-Cj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMgYi9kcml2ZXJzL3Nj
-c2kvYWFjcmFpZC9saW5pdC5jDQo+IGluZGV4IDMzODI0NzUuLjljOGQwMDAgMTAwNjQ0DQo+IC0t
-LSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYw0KPiBAQCAtOTIsNyArOTIsNyBAQCBzdGF0aWMgREVDTEFSRV9QQ0lfREVW
-SUNFX1RBQkxFKGFhY19wY2lfdGJsKSA9IHsNCj4gICNlbGlmIGRlZmluZWQoX19kZXZpbml0Y29u
-c3QpDQo+ICBzdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9kZXZpY2VfaWQgYWFjX3BjaV90YmxbXSBf
-X2RldmluaXRjb25zdCA9IHsNCj4gICNlbHNlDQo+IC1zdGF0aWMgY29uc3Qgc3RydWN0IHBjaV9k
-ZXZpY2VfaWQgYWFjX3BjaV90YmxbXSBfX2RldmluaXRkYXRhID0gew0KPiArc3RhdGljIGNvbnN0
-IHN0cnVjdCBwY2lfZGV2aWNlX2lkIGFhY19wY2lfdGJsW10gX19kZXZpbml0Y29uc3QgPSB7DQoN
-CkhvdyBjYW4gdGhpcyBwb3NzaWJseSBiZSBjb3JyZWN0PyAgWW91IGp1c3QgY2hlY2tlZCBpbiB0
-aGUgcHJlY2VkaW5nDQojZWxpZiBkZWZpbmVkKCkgdGhhdCBfX2RldmluaXRjb25zdCB3YXNuJ3Qg
-ZGVmaW5lZCBmb3IgdGhpcyBsZWcsIHNvIGlmDQppdCdzIHRha2VuIHRoZXJlJ2xsIGJlIGFuIGlu
-c3RhbnQgY29tcGlsZSBmYWlsdXJlLg0KDQpJZiB5b3Ugd2FudCB0byBhcmd1ZSB0aGUgd2hvbGUg
-b2YgdGhlICNpZmRlZiBjb25zdHJ1Y3Qgc2hvdWxkIGJlIHJlbW92ZWQNCnRoZW4gSSdkIGJlIGlu
-dGVyZXN0ZWQuDQoNCkphbWVzDQoNCg==
+> How can this possibly be correct?  You just checked in the preceding
+> #elif defined() that __devinitconst wasn't defined for this leg, so if
+> it's taken there'll be an instant compile failure.
+
+It just came out of my grep. But you're right since this is dead code
+it does not need to be fixed.
+
+I'll drop the patch.
+
+Thanks,
+-Andi
+
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
