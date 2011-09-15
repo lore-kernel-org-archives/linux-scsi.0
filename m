@@ -1,30 +1,38 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: [PATCH 20/27] Initconst section fixes for SCSI
-Date: Thu, 15 Sep 2011 22:30:57 +0200
-Message-ID: <20110915203057.GA7761@one.firstfloor.org>
-References: <1316117394-21666-1-git-send-email-andi@firstfloor.org> <1316117394-21666-21-git-send-email-andi@firstfloor.org> <1316117927.2983.74.camel@dabdike.hansenpartnership.com>
+From: David Miller <davem@redhat.com>
+Subject: Re: [patch net-next-2.6] net: consolidate and fix
+ ethtool_ops->get_settings calling
+Date: Thu, 15 Sep 2011 17:33:39 -0400 (EDT)
+Message-ID: <20110915.173339.254712565622264560.davem@redhat.com>
+References: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1316117927.2983.74.camel@dabdike.hansenpartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Andi Kleen <andi@firstfloor.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Andi Kleen <ak@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: jpirko@redhat.com
+Cc: netdev@vger.kernel.org, ralf@linux-mips.org, fubar@us.ibm.com, andy@greyhouse.net, kaber@trash.net, bprakash@broadcom.com, JBottomley@parallels.com, robert.w.love@intel.com, shemminger@linux-foundation.org, decot@google.com, bhutchings@solarflare.com, mirq-linux@rere.qmqm.pl, alexander.h.duyck@intel.com, amit.salecha@qlogic.com, eric.dumazet@gmail.com, therbert@google.com, paulmck@linux.vnet.ibm.com, laijs@cn.fujitsu.com, xiaosuo@gmail.com, greearb@candelatech.com, loke.chetan@gmail.com, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org, bridge@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-> How can this possibly be correct?  You just checked in the preceding
-> #elif defined() that __devinitconst wasn't defined for this leg, so if
-> it's taken there'll be an instant compile failure.
+From: Jiri Pirko <jpirko@redhat.com>
+Date: Thu,  1 Sep 2011 21:28:24 +0200
 
-It just came out of my grep. But you're right since this is dead code
-it does not need to be fixed.
+> This patch does several things:
+> - introduces __ethtool_get_settings which is called from ethtool code and
+>   from dev_ethtool_get_settings() as well.
+> - dev_ethtool_get_settings() becomes rtnl wrapper for
+>   __ethtool_get_settings()
+> - changes calling in drivers so rtnl locking is respected. In
+>   iboe_get_rate was previously ->get_settings() called unlocked. This
+>   fixes it
+> - introduces rtnl_lock in bnx2fc_vport_create() and fcoe_vport_create()
+>   so bnx2fc_if_create() and fcoe_if_create() are called locked as they
+>   are from other places.
+> - prb_calc_retire_blk_tmo() in af_packet.c was not calling get_settings
+>   with rtnl_lock. So use dev_ethtool_get_settings here.
+> - use __ethtool_get_settings() in bonding code
+> 
+> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
 
-I'll drop the patch.
-
-Thanks,
--Andi
-
-
--- 
-ak@linux.intel.com -- Speaking for myself only.
+Applied, thanks.
