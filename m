@@ -1,69 +1,44 @@
-From: "Dan Pereira" <danp_48@yahoo.com>
-Subject: Build-a-home-based-business-on-Auto-Pilot-
-Date: Wed, 14 Sep 2011 04:57:52 -0700 (PDT)
-Message-ID: <201109141157.p8EBvq7a054372@mail3.spagack2.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Temporary location for some of the SCSI trees
+Date: Thu, 15 Sep 2011 10:37:33 -0500
+Message-ID: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail3.spagack2.com ([74.122.159.222]:52250 "EHLO
-	mail3.spagack2.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755275Ab1IOHww (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2011 03:52:52 -0400
-Received: from mail3.spagack2.com (localhost.mail3.spagack2.com [127.0.0.1])
-	by mail3.spagack2.com (8.13.8/8.12.7) with ESMTP id p8EBvq6Y054388
-	for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2011 04:57:52 -0700 (PDT)
-	(envelope-from u789mobs@reliablecontact.com)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-next-owner@vger.kernel.org>
+Sender: linux-next-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+I've relocated the scsi-rc-fixes and scsi-misc trees on to my own
+infrastructure while master.kernel.org is down.  The locations are:
 
+git://bedivere.hansenpartnership.com/git/scsi-rc-fixes-2.6.git
+git://bedivere.hansenpartnership.com/git/scsi-misc-2.6.git
 
-Hello Everyone,
+Since we're not currently using the scsi-postmerge tree, I haven't yet
+done a replacement for it.
 
-Discover how average people who have never made a cent in the past
-Are now making $1,000+ every month,=20
-With the Potential of making $50,000 a month
-Just "Plug In"... to Your
-Own Fully Automated=20
-  Turn Key...Global Marketing $ystem
-Receive $500-$3,500 Monthly or MORE
-Not MLM...and
-No Selling...
-No Cold Phone Calling.=20
-Complete plug-in-system!
+The current tree tops are
 
-Check-it-Out!
+scsi-misc:
 
-http://trckrs.com/48184/rc1
+  linus      ba8f318 m68k: fix __page_to_pfn for a const struct page argument
+  master     ebd1f64 [SCSI] scsi_dh_alua: Decrease retry interval
+  merge-base 7ca3c80 [SCSI] qla2xxx: Update version number to 8.03.07.07-k.
 
-It=92s surprisingly cool!
+scsi-fixes:
 
-Dan and Noel
+  linus  003f6c9 lib/sha1.c: quiet sparse noise about symbol not declared
+  master 610602f [SCSI] bnx2i: Fixed the endian on TTT for NOP out transmission
 
+Could you add these to linux-next, please (until master comes back at least)?
 
-His was a Com.Merical adv.Sent to you by:Dan Pereira, 11383 Golf Road, =
-Turlock, CA 95380
-In compliance with Federal law, should you choose to Un.Subscribe from =
-our network, you may do so using theUn.Subscribe instruction found belo=
-w.  We are fully compliant with CAN-SPAM Act of 2005-Please use the Un.=
-Subscribe link provided:
+For SCSI people, I still don't have any machinery for notifications or
+an ftp site for the combined patch sets and change logs yet.  When I get
+that sorted out, I'll begin adding commits again.
 
+Thanks,
 
-
-
-
-
-
-
-To remove this email address from further mailings click on  the link b=
-elow  while connected to the internet.
-http://www.reliablecontact.com/cgi-bin/maxsponder/maxuseradmin.cgi?func=
-tion=3Dmanualdelete3&email=3Dlinux-scsi*vger.kernel.org&un=3Drichardper=
-eira
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
