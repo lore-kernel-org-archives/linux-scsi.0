@@ -1,38 +1,65 @@
-From: David Miller <davem@redhat.com>
-Subject: Re: [patch net-next-2.6] net: consolidate and fix
- ethtool_ops->get_settings calling
-Date: Thu, 15 Sep 2011 17:33:39 -0400 (EDT)
-Message-ID: <20110915.173339.254712565622264560.davem@redhat.com>
-References: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi: qla4xxx needs libiscsi.o
+Date: Thu, 15 Sep 2011 16:41:41 -0500
+Message-ID: <4E727115.8060603@cs.wisc.edu>
+References: <20110831150137.acb3b3805bd599ac57ce96c8@canb.auug.org.au> <20110831150200.54bec12e.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <1314905304-16485-1-git-send-email-jpirko@redhat.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: jpirko@redhat.com
-Cc: netdev@vger.kernel.org, ralf@linux-mips.org, fubar@us.ibm.com, andy@greyhouse.net, kaber@trash.net, bprakash@broadcom.com, JBottomley@parallels.com, robert.w.love@intel.com, shemminger@linux-foundation.org, decot@google.com, bhutchings@solarflare.com, mirq-linux@rere.qmqm.pl, alexander.h.duyck@intel.com, amit.salecha@qlogic.com, eric.dumazet@gmail.com, therbert@google.com, paulmck@linux.vnet.ibm.com, laijs@cn.fujitsu.com, xiaosuo@gmail.com, greearb@candelatech.com, loke.chetan@gmail.com, linux-mips@linux-mips.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org, bridge@lists.linux-foundation.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:36078 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935035Ab1IOVhV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Sep 2011 17:37:21 -0400
+In-Reply-To: <20110831150200.54bec12e.rdunlap@xenotime.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, iscsi-driver@qlogic.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, jejbscsi <jbottomley@parallels.com>, akpm <akpm@linux-foundation.org>
 
-From: Jiri Pirko <jpirko@redhat.com>
-Date: Thu,  1 Sep 2011 21:28:24 +0200
-
-> This patch does several things:
-> - introduces __ethtool_get_settings which is called from ethtool code and
->   from dev_ethtool_get_settings() as well.
-> - dev_ethtool_get_settings() becomes rtnl wrapper for
->   __ethtool_get_settings()
-> - changes calling in drivers so rtnl locking is respected. In
->   iboe_get_rate was previously ->get_settings() called unlocked. This
->   fixes it
-> - introduces rtnl_lock in bnx2fc_vport_create() and fcoe_vport_create()
->   so bnx2fc_if_create() and fcoe_if_create() are called locked as they
->   are from other places.
-> - prb_calc_retire_blk_tmo() in af_packet.c was not calling get_settings
->   with rtnl_lock. So use dev_ethtool_get_settings here.
-> - use __ethtool_get_settings() in bonding code
+On 08/31/2011 05:02 PM, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@xenotime.net>
 > 
-> Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+> qla4xxx driver needs to be linked with libiscsi.o to fix
+> build errors.  This happens when no other drivers that use
+> libiscsi.o are enabled.
+> 
+> Found in linux-next but applies to mainline also.
+> 
+> ERROR: "iscsi_conn_stop" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_conn_get_addr_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_session_teardown" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_host_alloc" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_conn_start" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_conn_send_pdu" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_session_get_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_conn_get_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_set_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_session_failure" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_complete_pdu" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_session_setup" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_conn_bind" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_conn_setup" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> ERROR: "iscsi_itt_to_task" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> ---
+>  drivers/scsi/Makefile |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> --- linux-next-20110831.orig/drivers/scsi/Makefile
+> +++ linux-next-20110831/drivers/scsi/Makefile
+> @@ -88,7 +88,7 @@ obj-$(CONFIG_SCSI_QLOGIC_FAS)	+= qlogicf
+>  obj-$(CONFIG_PCMCIA_QLOGIC)	+= qlogicfas408.o
+>  obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla1280.o 
+>  obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
+> -obj-$(CONFIG_SCSI_QLA_ISCSI)	+= qla4xxx/
+> +obj-$(CONFIG_SCSI_QLA_ISCSI)	+= libiscsi.o qla4xxx/
+>  obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
+>  obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
+>  obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
 
-Applied, thanks.
+
+Sorry. Mixed this patch up with the other one sent that day. Looks ok.
+
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
