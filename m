@@ -1,150 +1,375 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 4/5] target: Skip non hex characters for EVPD=0x83 NAA IEEE Registered Extended
-Date: Fri, 16 Sep 2011 10:38:25 +0000
-Message-ID: <1316169506-4441-5-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 5/5] iscsi-target: Disable markers + remove dangerous local scope array usage
+Date: Fri, 16 Sep 2011 10:38:26 +0000
+Message-ID: <1316169506-4441-6-git-send-email-nab@linux-iscsi.org>
 References: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54913 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54922 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752810Ab1IPLEx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2011 07:04:53 -0400
+	with ESMTP id S1752810Ab1IPLEz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2011 07:04:55 -0400
 In-Reply-To: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Martin Svec <martin.svec@zoner.cz>, Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <jbottomley@parallels.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Dan Carpenter <error27@gmail.com>, Mike Christie <mchristi@redhat.com>, Hannes Reinecke <hare@suse.de>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds target_parse_naa_6h_vendor_specific() to address a bug where the
-conversion of PRODUCT SERIAL NUMBER to use hex2bin() in target_emulate_evpd_83()
-was not doing proper isxdigit() checking.  This conversion of the vpd_unit_serial
-configifs attribute is done while generating a EVPD=0x83 NAA IEEE Registered
-Extended DESIGNATOR format's 100 bits of unique VENDOR SPECIFIC IDENTIFIER +
-VENDOR SPECIFIC IDENTIFIER EXTENSION area.
+This patch makes iscsi-target explictly disable OFMarker=Yes and IFMarker=yes
+parameter key usage during iscsi login by setting IFMarkInt_Reject and
+OFMarkInt_Reject values in iscsi_enforce_integrity_rules() to effectively
+disable iscsi marker usage.  With this patch, an initiator proposer asking
+to enable either marker parameter keys will be issued a 'No' response, and
+the target sets OFMarkInt + IFMarkInt parameter key response to 'Irrelevant'.
 
-This patch allows vpd_unit_serial (EVPD=0x80) and the T10 Vendor ID DESIGNATOR
-format (EVPD=0x83) to continue to use free-form variable length ASCII values,
-and now skips any non hex characters for fixed length NAA IEEE Registered Extended
-DESIGNATOR format (EVPD=0x83) requring the binary conversion.
+With markers disabled during iscsi login, this patch removes the problematic
+on-stack local-scope array for marker intervals in iscsit_do_rx_data() +
+iscsit_do_tx_data(), and other related marker code in iscsi_target_util.c.
+This fixes a potentional stack smashing scenario with small range markers
+enabled and a large MRDSL as reported by DanC here:
 
-This was originally reported by Martin after the v3.1-rc1 change to use hex2bin()
-in commit 11650b859681e03fdbf26277fcfc5f1f62186703 where the use of non hex
-characters in vpd_unit_serial generated different values than the original
-v3.0 internal hex -> binary code.  This v3.1 change caused a problem with
-filesystems who write a NAA DESIGNATOR onto it's ondisk metadata, and this patch
-will (again) change existing values to ensure that non hex characters are not
-included in the fixed length NAA DESIGNATOR.
+[bug report] target: stack can be smashed
+http://www.spinics.net/lists/target-devel/msg00453.html
 
-Note this patch still expects vpd_unit_serial to be set via existing userspace
-methods of uuid generation, and does not do strict formatting via configfs input.
-
-The original bug report and thread can be found here:
-
-NAA breakage
-http://www.spinics.net/lists/target-devel/msg00477.html
-
-The v3.1-rc1 formatting of EVPD=0x83 w/o this patch:
-
-VPD INQUIRY: Device Identification page
-  Designation descriptor number 1, descriptor length: 20
-    designator_type: NAA,  code_set: Binary
-    associated with the addressed logical unit
-      NAA 6, IEEE Company_id: 0x1405
-      Vendor Specific Identifier: 0xffde35ebf
-      Vendor Specific Identifier Extension: 0x3092f498ffa820f9
-      [0x6001405ffde35ebf3092f498ffa820f9]
-  Designation descriptor number 2, descriptor length: 56
-    designator_type: T10 vendor identification,  code_set: ASCII
-    associated with the addressed logical unit
-      vendor id: LIO-ORG
-      vendor specific: IBLOCK:ffde35ec-3092-4980-a820-917636ca54f1
-
-The v3.1-final formatting of EVPD=0x83 w/ this patch:
-
-VPD INQUIRY: Device Identification page
-  Designation descriptor number 1, descriptor length: 20
-    designator_type: NAA,  code_set: Binary
-    associated with the addressed logical unit
-      NAA 6, IEEE Company_id: 0x1405
-      Vendor Specific Identifier: 0xffde35ec3
-      Vendor Specific Identifier Extension: 0x924980a82091763
-      [0x6001405ffde35ec30924980a82091763]
-  Designation descriptor number 2, descriptor length: 56
-    designator_type: T10 vendor identification,  code_set: ASCII
-    associated with the addressed logical unit
-      vendor id: LIO-ORG
-      vendor specific: IBLOCK:ffde35ec-3092-4980-a820-917636ca54f1
-
-Reported-by: Martin Svec <martin.svec@zoner.cz>
-Cc: Martin Svec <martin.svec@zoner.cz>
-Cc: Douglas Gilbert <dgilbert@interlog.com>
-Cc: James Bottomley <jbottomley@parallels.com>
+Reported-by: Dan Carpenter <error27@gmail.com>
+Cc: Dan Carpenter <error27@gmail.com>
+Cc: Mike Christie <mchristi@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_cdb.c |   35 +++++++++++++++++++++++++++++++++--
- 1 files changed, 33 insertions(+), 2 deletions(-)
+ drivers/target/iscsi/iscsi_target_parameters.c |    2 +-
+ drivers/target/iscsi/iscsi_target_util.c       |  248 +-----------------------
+ 2 files changed, 7 insertions(+), 243 deletions(-)
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 89ae923..08bda0c 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -24,6 +24,7 @@
-  */
+diff --git a/drivers/target/iscsi/iscsi_target_parameters.c b/drivers/target/iscsi/iscsi_target_parameters.c
+index 497b2e7..5b77316 100644
+--- a/drivers/target/iscsi/iscsi_target_parameters.c
++++ b/drivers/target/iscsi/iscsi_target_parameters.c
+@@ -1430,7 +1430,7 @@ static int iscsi_enforce_integrity_rules(
+ 	u8 DataSequenceInOrder = 0;
+ 	u8 ErrorRecoveryLevel = 0, SessionType = 0;
+ 	u8 IFMarker = 0, OFMarker = 0;
+-	u8 IFMarkInt_Reject = 0, OFMarkInt_Reject = 0;
++	u8 IFMarkInt_Reject = 1, OFMarkInt_Reject = 1;
+ 	u32 FirstBurstLength = 0, MaxBurstLength = 0;
+ 	struct iscsi_param *param = NULL;
  
- #include <linux/kernel.h>
-+#include <linux/ctype.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
- 
-@@ -154,6 +155,37 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
- 	return 0;
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index a0d23bc..1d1b4fe 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -875,40 +875,6 @@ void iscsit_inc_session_usage_count(struct iscsi_session *sess)
  }
  
-+static void
-+target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
-+{
-+	unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
-+	unsigned char *buf = buf_off;
-+	int cnt = 0, next = 1;
-+	/*
-+	 * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
-+	 * byte 3 bit 4 for NAA IEEE Registered Extended DESIGNATOR field
-+	 * format, followed by 64 bits of VENDOR SPECIFIC IDENTIFIER EXTENSION
-+	 * to complete the payload.  These are based from VPD=0x80 PRODUCT SERIAL
-+	 * NUMBER set via vpd_unit_serial in target_core_configfs.c  to to ensure
-+	 * per device uniqeness.
-+	 */
-+	while (p != NULL) {
-+		if (cnt >= 13)
-+			break;
-+		if (!isxdigit(*p)) {
-+			p++;
-+			continue;
-+		}
-+		if (next != 0) {
-+			buf[cnt++] |= hex_to_bin(*p++);
-+			next = 0;
-+		} else {
-+			buf[cnt] |= hex_to_bin(*p++) << 4;
-+			next = 1;
-+		}
-+	}
-+}
-+
  /*
-  * Device identification VPD, for a complete list of
-  * DESIGNATOR TYPEs see spc4r17 Table 459.
-@@ -219,8 +251,7 @@ target_emulate_evpd_83(struct se_cmd *cmd, unsigned char *buf)
- 	 * VENDOR_SPECIFIC_IDENTIFIER and
- 	 * VENDOR_SPECIFIC_IDENTIFIER_EXTENTION
- 	 */
--	buf[off++] |= hex_to_bin(dev->se_sub_dev->t10_wwn.unit_serial[0]);
--	hex2bin(&buf[off], &dev->se_sub_dev->t10_wwn.unit_serial[1], 12);
-+	target_parse_naa_6h_vendor_specific(dev, &buf[off]);
+- *	Used before iscsi_do[rx,tx]_data() to determine iov and [rx,tx]_marker
+- *	array counts needed for sync and steering.
+- */
+-static int iscsit_determine_sync_and_steering_counts(
+-	struct iscsi_conn *conn,
+-	struct iscsi_data_count *count)
+-{
+-	u32 length = count->data_length;
+-	u32 marker, markint;
+-
+-	count->sync_and_steering = 1;
+-
+-	marker = (count->type == ISCSI_RX_DATA) ?
+-			conn->of_marker : conn->if_marker;
+-	markint = (count->type == ISCSI_RX_DATA) ?
+-			(conn->conn_ops->OFMarkInt * 4) :
+-			(conn->conn_ops->IFMarkInt * 4);
+-	count->ss_iov_count = count->iov_count;
+-
+-	while (length > 0) {
+-		if (length >= marker) {
+-			count->ss_iov_count += 3;
+-			count->ss_marker_count += 2;
+-
+-			length -= marker;
+-			marker = markint;
+-		} else
+-			length = 0;
+-	}
+-
+-	return 0;
+-}
+-
+-/*
+  *	Setup conn->if_marker and conn->of_marker values based upon
+  *	the initial marker-less interval. (see iSCSI v19 A.2)
+  */
+@@ -1431,8 +1397,7 @@ static int iscsit_do_rx_data(
+ 	struct iscsi_data_count *count)
+ {
+ 	int data = count->data_length, rx_loop = 0, total_rx = 0, iov_len;
+-	u32 rx_marker_val[count->ss_marker_count], rx_marker_iov = 0;
+-	struct kvec iov[count->ss_iov_count], *iov_p;
++	struct kvec *iov_p;
+ 	struct msghdr msg;
  
- 	len = 20;
- 	off = (len + 4);
+ 	if (!conn || !conn->sock || !conn->conn_ops)
+@@ -1440,93 +1405,8 @@ static int iscsit_do_rx_data(
+ 
+ 	memset(&msg, 0, sizeof(struct msghdr));
+ 
+-	if (count->sync_and_steering) {
+-		int size = 0;
+-		u32 i, orig_iov_count = 0;
+-		u32 orig_iov_len = 0, orig_iov_loc = 0;
+-		u32 iov_count = 0, per_iov_bytes = 0;
+-		u32 *rx_marker, old_rx_marker = 0;
+-		struct kvec *iov_record;
+-
+-		memset(&rx_marker_val, 0,
+-				count->ss_marker_count * sizeof(u32));
+-		memset(&iov, 0, count->ss_iov_count * sizeof(struct kvec));
+-
+-		iov_record = count->iov;
+-		orig_iov_count = count->iov_count;
+-		rx_marker = &conn->of_marker;
+-
+-		i = 0;
+-		size = data;
+-		orig_iov_len = iov_record[orig_iov_loc].iov_len;
+-		while (size > 0) {
+-			pr_debug("rx_data: #1 orig_iov_len %u,"
+-			" orig_iov_loc %u\n", orig_iov_len, orig_iov_loc);
+-			pr_debug("rx_data: #2 rx_marker %u, size"
+-				" %u\n", *rx_marker, size);
+-
+-			if (orig_iov_len >= *rx_marker) {
+-				iov[iov_count].iov_len = *rx_marker;
+-				iov[iov_count++].iov_base =
+-					(iov_record[orig_iov_loc].iov_base +
+-						per_iov_bytes);
+-
+-				iov[iov_count].iov_len = (MARKER_SIZE / 2);
+-				iov[iov_count++].iov_base =
+-					&rx_marker_val[rx_marker_iov++];
+-				iov[iov_count].iov_len = (MARKER_SIZE / 2);
+-				iov[iov_count++].iov_base =
+-					&rx_marker_val[rx_marker_iov++];
+-				old_rx_marker = *rx_marker;
+-
+-				/*
+-				 * OFMarkInt is in 32-bit words.
+-				 */
+-				*rx_marker = (conn->conn_ops->OFMarkInt * 4);
+-				size -= old_rx_marker;
+-				orig_iov_len -= old_rx_marker;
+-				per_iov_bytes += old_rx_marker;
+-
+-				pr_debug("rx_data: #3 new_rx_marker"
+-					" %u, size %u\n", *rx_marker, size);
+-			} else {
+-				iov[iov_count].iov_len = orig_iov_len;
+-				iov[iov_count++].iov_base =
+-					(iov_record[orig_iov_loc].iov_base +
+-						per_iov_bytes);
+-
+-				per_iov_bytes = 0;
+-				*rx_marker -= orig_iov_len;
+-				size -= orig_iov_len;
+-
+-				if (size)
+-					orig_iov_len =
+-					iov_record[++orig_iov_loc].iov_len;
+-
+-				pr_debug("rx_data: #4 new_rx_marker"
+-					" %u, size %u\n", *rx_marker, size);
+-			}
+-		}
+-		data += (rx_marker_iov * (MARKER_SIZE / 2));
+-
+-		iov_p	= &iov[0];
+-		iov_len	= iov_count;
+-
+-		if (iov_count > count->ss_iov_count) {
+-			pr_err("iov_count: %d, count->ss_iov_count:"
+-				" %d\n", iov_count, count->ss_iov_count);
+-			return -1;
+-		}
+-		if (rx_marker_iov > count->ss_marker_count) {
+-			pr_err("rx_marker_iov: %d, count->ss_marker"
+-				"_count: %d\n", rx_marker_iov,
+-				count->ss_marker_count);
+-			return -1;
+-		}
+-	} else {
+-		iov_p = count->iov;
+-		iov_len	= count->iov_count;
+-	}
++	iov_p = count->iov;
++	iov_len	= count->iov_count;
+ 
+ 	while (total_rx < data) {
+ 		rx_loop = kernel_recvmsg(conn->sock, &msg, iov_p, iov_len,
+@@ -1541,16 +1421,6 @@ static int iscsit_do_rx_data(
+ 				rx_loop, total_rx, data);
+ 	}
+ 
+-	if (count->sync_and_steering) {
+-		int j;
+-		for (j = 0; j < rx_marker_iov; j++) {
+-			pr_debug("rx_data: #5 j: %d, offset: %d\n",
+-				j, rx_marker_val[j]);
+-			conn->of_marker_offset = rx_marker_val[j];
+-		}
+-		total_rx -= (rx_marker_iov * (MARKER_SIZE / 2));
+-	}
+-
+ 	return total_rx;
+ }
+ 
+@@ -1559,8 +1429,7 @@ static int iscsit_do_tx_data(
+ 	struct iscsi_data_count *count)
+ {
+ 	int data = count->data_length, total_tx = 0, tx_loop = 0, iov_len;
+-	u32 tx_marker_val[count->ss_marker_count], tx_marker_iov = 0;
+-	struct kvec iov[count->ss_iov_count], *iov_p;
++	struct kvec *iov_p;
+ 	struct msghdr msg;
+ 
+ 	if (!conn || !conn->sock || !conn->conn_ops)
+@@ -1573,98 +1442,8 @@ static int iscsit_do_tx_data(
+ 
+ 	memset(&msg, 0, sizeof(struct msghdr));
+ 
+-	if (count->sync_and_steering) {
+-		int size = 0;
+-		u32 i, orig_iov_count = 0;
+-		u32 orig_iov_len = 0, orig_iov_loc = 0;
+-		u32 iov_count = 0, per_iov_bytes = 0;
+-		u32 *tx_marker, old_tx_marker = 0;
+-		struct kvec *iov_record;
+-
+-		memset(&tx_marker_val, 0,
+-			count->ss_marker_count * sizeof(u32));
+-		memset(&iov, 0, count->ss_iov_count * sizeof(struct kvec));
+-
+-		iov_record = count->iov;
+-		orig_iov_count = count->iov_count;
+-		tx_marker = &conn->if_marker;
+-
+-		i = 0;
+-		size = data;
+-		orig_iov_len = iov_record[orig_iov_loc].iov_len;
+-		while (size > 0) {
+-			pr_debug("tx_data: #1 orig_iov_len %u,"
+-			" orig_iov_loc %u\n", orig_iov_len, orig_iov_loc);
+-			pr_debug("tx_data: #2 tx_marker %u, size"
+-				" %u\n", *tx_marker, size);
+-
+-			if (orig_iov_len >= *tx_marker) {
+-				iov[iov_count].iov_len = *tx_marker;
+-				iov[iov_count++].iov_base =
+-					(iov_record[orig_iov_loc].iov_base +
+-						per_iov_bytes);
+-
+-				tx_marker_val[tx_marker_iov] =
+-						(size - *tx_marker);
+-				iov[iov_count].iov_len = (MARKER_SIZE / 2);
+-				iov[iov_count++].iov_base =
+-					&tx_marker_val[tx_marker_iov++];
+-				iov[iov_count].iov_len = (MARKER_SIZE / 2);
+-				iov[iov_count++].iov_base =
+-					&tx_marker_val[tx_marker_iov++];
+-				old_tx_marker = *tx_marker;
+-
+-				/*
+-				 * IFMarkInt is in 32-bit words.
+-				 */
+-				*tx_marker = (conn->conn_ops->IFMarkInt * 4);
+-				size -= old_tx_marker;
+-				orig_iov_len -= old_tx_marker;
+-				per_iov_bytes += old_tx_marker;
+-
+-				pr_debug("tx_data: #3 new_tx_marker"
+-					" %u, size %u\n", *tx_marker, size);
+-				pr_debug("tx_data: #4 offset %u\n",
+-					tx_marker_val[tx_marker_iov-1]);
+-			} else {
+-				iov[iov_count].iov_len = orig_iov_len;
+-				iov[iov_count++].iov_base
+-					= (iov_record[orig_iov_loc].iov_base +
+-						per_iov_bytes);
+-
+-				per_iov_bytes = 0;
+-				*tx_marker -= orig_iov_len;
+-				size -= orig_iov_len;
+-
+-				if (size)
+-					orig_iov_len =
+-					iov_record[++orig_iov_loc].iov_len;
+-
+-				pr_debug("tx_data: #5 new_tx_marker"
+-					" %u, size %u\n", *tx_marker, size);
+-			}
+-		}
+-
+-		data += (tx_marker_iov * (MARKER_SIZE / 2));
+-
+-		iov_p = &iov[0];
+-		iov_len = iov_count;
+-
+-		if (iov_count > count->ss_iov_count) {
+-			pr_err("iov_count: %d, count->ss_iov_count:"
+-				" %d\n", iov_count, count->ss_iov_count);
+-			return -1;
+-		}
+-		if (tx_marker_iov > count->ss_marker_count) {
+-			pr_err("tx_marker_iov: %d, count->ss_marker"
+-				"_count: %d\n", tx_marker_iov,
+-				count->ss_marker_count);
+-			return -1;
+-		}
+-	} else {
+-		iov_p = count->iov;
+-		iov_len = count->iov_count;
+-	}
++	iov_p = count->iov;
++	iov_len = count->iov_count;
+ 
+ 	while (total_tx < data) {
+ 		tx_loop = kernel_sendmsg(conn->sock, &msg, iov_p, iov_len,
+@@ -1679,9 +1458,6 @@ static int iscsit_do_tx_data(
+ 					tx_loop, total_tx, data);
+ 	}
+ 
+-	if (count->sync_and_steering)
+-		total_tx -= (tx_marker_iov * (MARKER_SIZE / 2));
+-
+ 	return total_tx;
+ }
+ 
+@@ -1702,12 +1478,6 @@ int rx_data(
+ 	c.data_length = data;
+ 	c.type = ISCSI_RX_DATA;
+ 
+-	if (conn->conn_ops->OFMarker &&
+-	   (conn->conn_state >= TARG_CONN_STATE_LOGGED_IN)) {
+-		if (iscsit_determine_sync_and_steering_counts(conn, &c) < 0)
+-			return -1;
+-	}
+-
+ 	return iscsit_do_rx_data(conn, &c);
+ }
+ 
+@@ -1728,12 +1498,6 @@ int tx_data(
+ 	c.data_length = data;
+ 	c.type = ISCSI_TX_DATA;
+ 
+-	if (conn->conn_ops->IFMarker &&
+-	   (conn->conn_state >= TARG_CONN_STATE_LOGGED_IN)) {
+-		if (iscsit_determine_sync_and_steering_counts(conn, &c) < 0)
+-			return -1;
+-	}
+-
+ 	return iscsit_do_tx_data(conn, &c);
+ }
+ 
 -- 
 1.5.6.5
 
