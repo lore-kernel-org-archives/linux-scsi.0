@@ -1,41 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 4/5] target: Skip non hex characters for EVPD=0x83 NAA
- IEEE Registered Extended
-Date: Fri, 16 Sep 2011 12:38:14 -0700
-Message-ID: <1316201894.12820.379.camel@haakon2.linux-iscsi.org>
-References: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
-	 <1316169506-4441-5-git-send-email-nab@linux-iscsi.org>
-	 <4E73562D.9060205@zoner.cz>  <4E735B05.4000307@interlog.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: mkdir: cannot create directory
+ `/sys/kernel/config/target/iscsi': Invalid argument
+Date: Fri, 16 Sep 2011 15:41:59 -0400
+Message-ID: <1316202119.20864.25.camel@dabdike.cust.hotspot.t-mobile.com>
+References: <loom.20110719T170144-482@post.gmane.org>
+	 <4E7374B1.8040502@interlog.com>  <4E7381BF.7020802@interlog.com>
+	 <1316201341.12820.370.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55927 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932155Ab1IPTiR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2011 15:38:17 -0400
-In-Reply-To: <4E735B05.4000307@interlog.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37534 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932073Ab1IPTmF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Sep 2011 15:42:05 -0400
+In-Reply-To: <1316201341.12820.370.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Martin Svec <martin.svec@zoner.cz>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, James Bottomley <jbottomley@parallels.com>
+To: nab@risingtidesystems.com
+Cc: dgilbert@interlog.com, linux-scsi@vger.kernel.org, Jerome Martin <jxm@risingtidesystems.com>
 
-On Fri, 2011-09-16 at 10:19 -0400, Douglas Gilbert wrote:
-> A documentation note: it should be "VPD=0x83" not "EVPD=0x83"
-> in the subject line and elsewhere.
+On Fri, 2011-09-16 at 12:29 -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2011-09-16 at 13:05 -0400, Douglas Gilbert wrote:
+> > Well I can answer my own question.
+> > configfs doesn't seem to be mounted at /sys/kernel/config
+> > and even when it is, superuser cannot create a directory
+> > there. So mount configfs somewhere else:
+> > 
+> > mount -t configfs none /tmp/config
 > 
-> The "E" stands for "enable" and EVPD refers to a bit field in a
-> INQUIRY cdb. When it is set the response should be a VPD page
-> corresponding to the "page code" field in the cdb.
+> This should actually be:
 > 
-> I made the same mistake in my tools but I hope that has all
-> been cleaned up now.
-> 
+> mount -t configfs configfs /sys/kernel/config
 
-Ah yes, fixing this up in the commit and comments now.
+Well, not really; they're both equally valid.  For pseudo mounts which
+have no underlying device, the standard
 
-Thanks Doug!
+mount -t <type> <device> <mount point>
 
---nab
+Convention has 'none' as the <device> because <device> is just ignored
+by the kernel.  The only reason for not choosing 'none' is that the
+error messages tend to use the <device> (which does go into the mtab),
+so if you later try to umount and something is using the mount point you
+can get a funny looking error message
+
+none busy
+
+However, most versions of umount have been fixed to report the <mount
+point> instead, so even this potential issue is moot.
+
+James
 
 
