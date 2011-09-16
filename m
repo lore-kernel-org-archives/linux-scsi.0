@@ -1,55 +1,49 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: Temporary location for some of the SCSI trees
-Date: Fri, 16 Sep 2011 10:57:20 +1000
-Message-ID: <20110916105720.3d852aa5419255f6d7a20fe2@canb.auug.org.au>
-References: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 3/4] drivers/scsi/mpt2sas/mpt2sas_transport.c: take size of pointed value, not pointer
+Date: Fri, 16 Sep 2011 08:57:34 +0200
+Message-ID: <1316156255-19509-3-git-send-email-julia@diku.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: kernel-janitors@vger.kernel.org, Kashyap Desai <kashyap.desai@lsi.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
---Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Julia Lawall <julia@diku.dk>
 
-Hi James,
+Sizeof a pointer-typed expression returns the size of the pointer, not that
+of the pointed data.
 
-On Thu, 15 Sep 2011 10:37:33 -0500 James Bottomley <James.Bottomley@HansenP=
-artnership.com> wrote:
->
-> I've relocated the scsi-rc-fixes and scsi-misc trees on to my own
-> infrastructure while master.kernel.org is down.  The locations are:
->=20
-> git://bedivere.hansenpartnership.com/git/scsi-rc-fixes-2.6.git
-> git://bedivere.hansenpartnership.com/git/scsi-misc-2.6.git
+The semantic patch that fixes this problem is as follows:
+(http://coccinelle.lip6.fr/)
 
-OK, I will swicth to these trees from today.
+// <smpl>
+@@
+expression *e;
+type T;
+identifier f;
+@@
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+f(...,(T)e,...,
+-sizeof(e)
++sizeof(*e)
+,...)
+// </smpl>
 
---Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH
-Content-Type: application/pgp-signature
+Signed-off-by: Julia Lawall <julia@diku.dk>
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-iQEcBAEBAgAGBQJOcp7wAAoJEDMEi1NhKgbsYiwH/3EzoCvC9TWohZK6sCA0q3eB
-zLqFeas7bxpP95YLryokYTsXfivBQJoSWhjmBWre0YPQp8jU8Z+Bpy/pYEI/MJSU
-TW1lPIxgnyvXdZ3kLiaAOUmhcMuhT456nOQdJHmKVUCPkHY5KTRTTaIbv5eo1Dfx
-K9pARHvmEjiz3NOs2IBllci56vWDf/2t5HXBS9w5fKxzQb4ooDjTfnoTAIwalgnR
-oK5iTdHe/3XucqsCPKTp/lFIqq8YnbvS3u1AyiuWacMy37i+JjZLmV3vQQILlr15
-IM2TCAUHNx1PYHwFcsriN6a/NnS1wwl6zyFdw6tdXKgYz1nG2DTZPYoSgkjZv1A=
-=zUm/
------END PGP SIGNATURE-----
-
---Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH--
+diff -u -p a/drivers/scsi/mpt2sas/mpt2sas_transport.c b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_transport.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_transport.c
+@@ -163,7 +163,7 @@ _transport_set_identify(struct MPT2SAS_A
+ 		return -EIO;
+ 	}
+ 
+-	memset(identify, 0, sizeof(identify));
++	memset(identify, 0, sizeof(*identify));
+ 	device_info = le32_to_cpu(sas_device_pg0.DeviceInfo);
+ 
+ 	/* sas_address */
