@@ -1,74 +1,87 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/5] target: Bugfixes for v3.1-rc6
-Date: Fri, 16 Sep 2011 10:38:21 +0000
-Message-ID: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 1/5] target: Fix race between multiple invocations of target_qf_do_work()
+Date: Fri, 16 Sep 2011 10:38:22 +0000
+Message-ID: <1316169506-4441-2-git-send-email-nab@linux-iscsi.org>
+References: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54891 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:54896 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436Ab1IPLEk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2011 07:04:40 -0400
+	with ESMTP id S1752811Ab1IPLEn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Sep 2011 07:04:43 -0400
+In-Reply-To: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Roland Dreier <roland@purestorage.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Roland Dreier <roland@purestorage.com>
 
-Hi Folks,
+When work is scheduled with schedule_work(), the work can end up
+running on multiple CPUs at the same time -- this happens if
+the work is already running on one CPU and schedule_work() is called
+on another CPU.  This leads to list corruption with target_qf_do_work(),
+which is roughly doing:
 
-The following series contains the (hopefully) last set of target v3.1-rc6
-bugfixes to address outstanding regressions, and a handful other issues
-related to v3.1 mainline target core + iscsi-target code.  This includes:
+	spin_lock(...);
+	list_for_each_entry_safe(...) {
+		list_del(...);
+		spin_unlock(...);
 
-*) A bugfix from Christoph to use a work queue to address breakage in the
-   current tcm_fc(fcoe) I/O path
-*) A bugfix from Kiran to fix tcm_fc(fcoe) DDP offload error conditions
-*) A bugfix from Roland to address list corruption in target core handling of
-   QUEUE_FULL status.
-*) A change to use only hex characters in the binary conversion of
-   vpd_unit_serial for EVPD=0x83 NAA IEEE Registered Extended in target core
-   to address a bug with internal hex2bin() usage, and finally,
-*) A change to explictly disable iSCSI marker parameter key usage in order to
-   remove a potentially dangerous local scope array allocation with markers
-   enabled in the main iscsi-target I/O path.
+		// do stuff
 
-Please go ahead and have a final look, and if there are no complaints they will
-be headed to Linus in [GIT PULL] format soon to make next weeks -rc7 / -final
-release.
+		spin_lock(...);
+	}
+
+With multiple CPUs running this code, one CPU can end up deleting the
+list entry that the other CPU is about to work on.
+
+Fix this by splicing the list entries onto a local list and then
+operating on that in the work function.  This way, each invocation of
+target_qf_do_work() operates on its own local list and so multiple
+invocations don't corrupt each other's list.  This also avoids dropping
+and reacquiring the lock for each list entry.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 8d0c58e..a4b0a8d 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -977,15 +977,17 @@ static void target_qf_do_work(struct work_struct *work)
+ {
+ 	struct se_device *dev = container_of(work, struct se_device,
+ 					qf_work_queue);
++	LIST_HEAD(qf_cmd_list);
+ 	struct se_cmd *cmd, *cmd_tmp;
  
-This can be pulled directly from a temporary new target-pending.git tree based
-upon the latest github v3.1-rc6 while kernel.org infrastructure is down:
-
-    git://linux-iscsi.org/target-pending.git 3.1-rc-fixes
-
-Thank you,
-
---nab
-
-Christoph Hellwig (1):
-  tcm_fc: Work queue based approach instead of managing own thread and
-    event based mechanism
-
-Kiran Patil (1):
-  tcm_fc: Invalidation of DDP context for FCoE target in error
-    conditions
-
-Nicholas Bellinger (2):
-  target: Skip non hex characters for EVPD=0x83 NAA IEEE Registered
-    Extended
-  iscsi-target: Disable markers + remove dangerous local scope array
-    usage
-
-Roland Dreier (1):
-  target: Fix race between multiple invocations of target_qf_do_work()
-
- drivers/target/iscsi/iscsi_target_parameters.c |    2 +-
- drivers/target/iscsi/iscsi_target_util.c       |  248 +-----------------------
- drivers/target/target_core_cdb.c               |   35 +++-
- drivers/target/target_core_transport.c         |    9 +-
- drivers/target/tcm_fc/tcm_fc.h                 |   12 +-
- drivers/target/tcm_fc/tfc_cmd.c                |   90 +--------
- drivers/target/tcm_fc/tfc_conf.c               |    7 +-
- drivers/target/tcm_fc/tfc_io.c                 |   62 +++---
- 8 files changed, 90 insertions(+), 375 deletions(-)
+ 	spin_lock_irq(&dev->qf_cmd_lock);
+-	list_for_each_entry_safe(cmd, cmd_tmp, &dev->qf_cmd_list, se_qf_node) {
++	list_splice_init(&dev->qf_cmd_list, &qf_cmd_list);
++	spin_unlock_irq(&dev->qf_cmd_lock);
+ 
++	list_for_each_entry_safe(cmd, cmd_tmp, &qf_cmd_list, se_qf_node) {
+ 		list_del(&cmd->se_qf_node);
+ 		atomic_dec(&dev->dev_qf_count);
+ 		smp_mb__after_atomic_dec();
+-		spin_unlock_irq(&dev->qf_cmd_lock);
+ 
+ 		pr_debug("Processing %s cmd: %p QUEUE_FULL in work queue"
+ 			" context: %s\n", cmd->se_tfo->get_fabric_name(), cmd,
+@@ -997,10 +999,7 @@ static void target_qf_do_work(struct work_struct *work)
+ 		 * has been added to head of queue
+ 		 */
+ 		transport_add_cmd_to_queue(cmd, cmd->t_state);
+-
+-		spin_lock_irq(&dev->qf_cmd_lock);
+ 	}
+-	spin_unlock_irq(&dev->qf_cmd_lock);
+ }
+ 
+ unsigned char *transport_dump_cmd_direction(struct se_cmd *cmd)
+-- 
+1.5.6.5
 
