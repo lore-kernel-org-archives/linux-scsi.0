@@ -1,65 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] scsi: qla4xxx needs libiscsi.o
-Date: Thu, 15 Sep 2011 16:41:41 -0500
-Message-ID: <4E727115.8060603@cs.wisc.edu>
-References: <20110831150137.acb3b3805bd599ac57ce96c8@canb.auug.org.au> <20110831150200.54bec12e.rdunlap@xenotime.net>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: Temporary location for some of the SCSI trees
+Date: Fri, 16 Sep 2011 10:57:20 +1000
+Message-ID: <20110916105720.3d852aa5419255f6d7a20fe2@canb.auug.org.au>
+References: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36078 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935035Ab1IOVhV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Sep 2011 17:37:21 -0400
-In-Reply-To: <20110831150200.54bec12e.rdunlap@xenotime.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH"
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, iscsi-driver@qlogic.com, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, jejbscsi <jbottomley@parallels.com>, akpm <akpm@linux-foundation.org>
 
-On 08/31/2011 05:02 PM, Randy Dunlap wrote:
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> qla4xxx driver needs to be linked with libiscsi.o to fix
-> build errors.  This happens when no other drivers that use
-> libiscsi.o are enabled.
-> 
-> Found in linux-next but applies to mainline also.
-> 
-> ERROR: "iscsi_conn_stop" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_conn_get_addr_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_session_teardown" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_host_alloc" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_conn_start" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_conn_send_pdu" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_session_get_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_conn_get_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_set_param" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_session_failure" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_complete_pdu" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_session_setup" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_conn_bind" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_conn_setup" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> ERROR: "iscsi_itt_to_task" [drivers/scsi/qla4xxx/qla4xxx.ko] undefined!
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> ---
->  drivers/scsi/Makefile |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- linux-next-20110831.orig/drivers/scsi/Makefile
-> +++ linux-next-20110831/drivers/scsi/Makefile
-> @@ -88,7 +88,7 @@ obj-$(CONFIG_SCSI_QLOGIC_FAS)	+= qlogicf
->  obj-$(CONFIG_PCMCIA_QLOGIC)	+= qlogicfas408.o
->  obj-$(CONFIG_SCSI_QLOGIC_1280)	+= qla1280.o 
->  obj-$(CONFIG_SCSI_QLA_FC)	+= qla2xxx/
-> -obj-$(CONFIG_SCSI_QLA_ISCSI)	+= qla4xxx/
-> +obj-$(CONFIG_SCSI_QLA_ISCSI)	+= libiscsi.o qla4xxx/
->  obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
->  obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
->  obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
+--Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hi James,
 
-Sorry. Mixed this patch up with the other one sent that day. Looks ok.
+On Thu, 15 Sep 2011 10:37:33 -0500 James Bottomley <James.Bottomley@HansenP=
+artnership.com> wrote:
+>
+> I've relocated the scsi-rc-fixes and scsi-misc trees on to my own
+> infrastructure while master.kernel.org is down.  The locations are:
+>=20
+> git://bedivere.hansenpartnership.com/git/scsi-rc-fixes-2.6.git
+> git://bedivere.hansenpartnership.com/git/scsi-misc-2.6.git
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+OK, I will swicth to these trees from today.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQEcBAEBAgAGBQJOcp7wAAoJEDMEi1NhKgbsYiwH/3EzoCvC9TWohZK6sCA0q3eB
+zLqFeas7bxpP95YLryokYTsXfivBQJoSWhjmBWre0YPQp8jU8Z+Bpy/pYEI/MJSU
+TW1lPIxgnyvXdZ3kLiaAOUmhcMuhT456nOQdJHmKVUCPkHY5KTRTTaIbv5eo1Dfx
+K9pARHvmEjiz3NOs2IBllci56vWDf/2t5HXBS9w5fKxzQb4ooDjTfnoTAIwalgnR
+oK5iTdHe/3XucqsCPKTp/lFIqq8YnbvS3u1AyiuWacMy37i+JjZLmV3vQQILlr15
+IM2TCAUHNx1PYHwFcsriN6a/NnS1wwl6zyFdw6tdXKgYz1nG2DTZPYoSgkjZv1A=
+=zUm/
+-----END PGP SIGNATURE-----
+
+--Signature=_Fri__16_Sep_2011_10_57_20_+1000_JPNNZ4YEY/0rDegH--
