@@ -1,39 +1,44 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: Re: iommu_iova leak [inside 3w-9xxx]
-Date: Sat, 17 Sep 2011 21:17:51 +0100
-Message-ID: <4E75006F.2090909@bootc.net>
-References: <4E734467.3040703@bootc.net> <1316256305.24257.25.camel@shinybook.infradead.org> <AD4B8103-C98F-4BC5-9F7F-496D220781F3@bootc.net> <3A4FADE6-3653-46C5-B225-8200F9DCE35B@bootc.net> <CAHtARFHfxpU1JKu4092ZshvhsrRY-hx_pfnL3_+T32B3ncgWvg@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/5] target: Fix race between multiple invocations of
+ target_qf_do_work()
+Date: Sat, 17 Sep 2011 18:59:56 -0400
+Message-ID: <20110917225956.GA31197@infradead.org>
+References: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org>
+ <1316169506-4441-2-git-send-email-nab@linux-iscsi.org>
+ <CA+55aFx+NAovTWxDdPtC4U+v6eUUGfAX_Gt2LNutF6+42BE-gQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHtARFHfxpU1JKu4092ZshvhsrRY-hx_pfnL3_+T32B3ncgWvg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: "Woodhouse, David" <david.woodhouse@intel.com>, lkml <linux-kernel@vger.kernel.org>, Adam Radford <linuxraid@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:59414
+	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755317Ab1IQXAA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 17 Sep 2011 19:00:00 -0400
+Content-Disposition: inline
+In-Reply-To: <CA+55aFx+NAovTWxDdPtC4U+v6eUUGfAX_Gt2LNutF6+42BE-gQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Tejun Heo <tj@kernel.org>
 
-On 17/09/2011 20:22, adam radford wrote:
-> On Sat, Sep 17, 2011 at 7:29 AM, Chris Boot<bootc@bootc.net>  wrote:
->> On 17 Sep 2011, at 12:57, Chris Boot wrote:
->>> On 17 Sep 2011, at 11:45, Woodhouse, David wrote:
->>>> I suppose it's vaguely possible that we're leaking them in such a way
->>>> that they remain on the rbtree, perhaps if the deferred unmap is never
->>>> actually happening... but I think it's a whole lot more likely that the
->>>> PCI driver is just never bothering to unmap the pages it maps.
-> If you think 3w-9xxx is not unmapping pages it maps, please re-run with
-> CONFIG_PCI_DMA_DEBUG=y
+On Sat, Sep 17, 2011 at 12:23:36PM -0700, Linus Torvalds wrote:
+> > With multiple CPUs running this code, one CPU can end up deleting the
+> > list entry that the other CPU is about to work on.
+> >
+> > Fix this by splicing the list entries onto a local list and then
+> > operating on that in the work function.
+> 
+> Umm. It sounds like what you really want is just a single-threaded workqueue.
+> 
+> Wouldn't it be better to do the alloc_workqueue with WQ_UNBOUND, and a
+> max limit of a single thread? There's a helper function for it:
+> alloc_ordered_workqueue().
+> 
+> I dunno. Maybe there's a reason why you actually do want threaded
+> workqueues, but your description makes it sound like this would be
+> better resolved by simply using an ordered on.
 
-I can't find a CONFIG_PCI_DMA_DEBUG to enable in 3.1-rc6. Did you mean 
-CONFIG_DMA_API_DEBUG?
+The right fix is to restructure the code at an higher level, and queue
+up each individual command to the workqueue, thus killing the list
+entirely.  But that's not really in scope for 3.1 at this point.
 
-And as David Woodhouse mentions, the 3ware card houses my root 
-filesystem - is there a way I can debug without unloading the module? If 
-not I guess I can try to work around it but it would be difficult.
-
-Cheers,
-Chris
-
--- 
-Chris Boot
-bootc@bootc.net
