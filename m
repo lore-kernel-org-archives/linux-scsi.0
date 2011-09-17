@@ -1,29 +1,63 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: iommu_iova leak [inside 3w-9xxx]
-Date: Sat, 17 Sep 2011 12:22:12 -0700
-Message-ID: <CAHtARFHfxpU1JKu4092ZshvhsrRY-hx_pfnL3_+T32B3ncgWvg@mail.gmail.com>
-References: <4E734467.3040703@bootc.net>
-	<1316256305.24257.25.camel@shinybook.infradead.org>
-	<AD4B8103-C98F-4BC5-9F7F-496D220781F3@bootc.net>
-	<3A4FADE6-3653-46C5-B225-8200F9DCE35B@bootc.net>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH 1/5] target: Fix race between multiple invocations of target_qf_do_work()
+Date: Sat, 17 Sep 2011 12:23:36 -0700
+Message-ID: <CA+55aFx+NAovTWxDdPtC4U+v6eUUGfAX_Gt2LNutF6+42BE-gQ@mail.gmail.com>
+References: <1316169506-4441-1-git-send-email-nab@linux-iscsi.org> <1316169506-4441-2-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3A4FADE6-3653-46C5-B225-8200F9DCE35B@bootc.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Boot <bootc@bootc.net>
-Cc: "Woodhouse, David" <david.woodhouse@intel.com>, lkml <linux-kernel@vger.kernel.org>, Adam Radford <linuxraid@lsi.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:47246 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708Ab1IQTX5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Sep 2011 15:23:57 -0400
+In-Reply-To: <1316169506-4441-2-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Tejun Heo <tj@kernel.org>
 
-On Sat, Sep 17, 2011 at 7:29 AM, Chris Boot <bootc@bootc.net> wrote:
-> On 17 Sep 2011, at 12:57, Chris Boot wrote:
->> On 17 Sep 2011, at 11:45, Woodhouse, David wrote:
->>> I suppose it's vaguely possible that we're leaking them in such a way
->>> that they remain on the rbtree, perhaps if the deferred unmap is never
->>> actually happening... but I think it's a whole lot more likely that the
->>> PCI driver is just never bothering to unmap the pages it maps.
+On Fri, Sep 16, 2011 at 3:38 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> From: Roland Dreier <roland@purestorage.com>
+>
+> When work is scheduled with schedule_work(), the work can end up
+> running on multiple CPUs at the same time -- this happens if
+> the work is already running on one CPU and schedule_work() is called
+> on another CPU. =A0This leads to list corruption with target_qf_do_wo=
+rk(),
+> which is roughly doing:
+>
+> =A0 =A0 =A0 =A0spin_lock(...);
+> =A0 =A0 =A0 =A0list_for_each_entry_safe(...) {
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0list_del(...);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_unlock(...);
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0// do stuff
+>
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock(...);
+> =A0 =A0 =A0 =A0}
+>
+> With multiple CPUs running this code, one CPU can end up deleting the
+> list entry that the other CPU is about to work on.
+>
+> Fix this by splicing the list entries onto a local list and then
+> operating on that in the work function.
 
-If you think 3w-9xxx is not unmapping pages it maps, please re-run with
-CONFIG_PCI_DMA_DEBUG=y
+Umm. It sounds like what you really want is just a single-threaded work=
+queue.
 
--Adam
+Wouldn't it be better to do the alloc_workqueue with WQ_UNBOUND, and a
+max limit of a single thread? There's a helper function for it:
+alloc_ordered_workqueue().
+
+I dunno. Maybe there's a reason why you actually do want threaded
+workqueues, but your description makes it sound like this would be
+better resolved by simply using an ordered on.
+
+                      Linus
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
