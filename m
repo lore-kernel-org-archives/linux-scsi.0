@@ -1,18 +1,21 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Another SCSI/block layer bug
-Date: Sun, 18 Sep 2011 11:11:32 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1109181048330.703-100000@netrider.rowland.org>
+Subject: Another SCSI/block layer bug [resend]
+Date: Sun, 18 Sep 2011 11:15:36 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1109181112570.703-100000@netrider.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:57868 "HELO
+Received: from netrider.rowland.org ([192.131.102.5]:59838 "HELO
 	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753291Ab1IRPLe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Sep 2011 11:11:34 -0400
+	with SMTP id S1754251Ab1IRPPg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Sep 2011 11:15:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>
 Cc: Rocko Requin <rockorequin@hotmail.com>, Theodore Tso <tytso@mit.edu>, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
+
+[Resending because of an incorrect email address for James last time -- 
+sorry!]
 
 James and Jens:
 
@@ -181,5 +184,4 @@ Second oops:
 [   56.290483]  RSP <ffff88003da51c80>
 [   56.290483] CR2: 0000000000000000
 [   56.290483] ---[ end trace 997383ef5eb9fbd0 ]---
-
 
