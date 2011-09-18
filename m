@@ -1,74 +1,58 @@
-From: Chris Boot <bootc@bootc.net>
-Subject: Re: iommu_iova leak [inside 3w-9xxx]
-Date: Sun, 18 Sep 2011 17:19:55 +0100
-Message-ID: <4E761A2B.1020509@bootc.net>
-References: <4E734467.3040703@bootc.net>  <1316256305.24257.25.camel@shinybook.infradead.org>  <AD4B8103-C98F-4BC5-9F7F-496D220781F3@bootc.net>  <3A4FADE6-3653-46C5-B225-8200F9DCE35B@bootc.net>  <CAHtARFHfxpU1JKu4092ZshvhsrRY-hx_pfnL3_+T32B3ncgWvg@mail.gmail.com>  <B4A636AC-B127-42DD-BC8C-419D07A83FBD@bootc.net>  <1316353140.12001.15.camel@shinybook.infradead.org>  <1316354509.27722.1.camel@dabdike>  <B008530A-B1B1-49D2-A3B4-9CD929D948FB@bootc.net>  <1316355934.27722.6.camel@dabdike> <1316357780.27722.9.camel@dabdike>
+From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <test@setretekstil.com>
+Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
+	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
+Date: Sun, 18 Sep 2011 22:19:28 +0000 (UTC)
+Message-ID: <20120919060739528554@setretekstil.com>
+Reply-To: <1339625218@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1316357780.27722.9.camel@dabdike>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Woodhouse, David" <david.woodhouse@intel.com>, adam radford <aradford@gmail.com>, lkml <linux-kernel@vger.kernel.org>, Adam Radford <linuxraid@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 130.35.154.212.colo.turk.net ([212.154.35.130]:55027 "EHLO
+	mail.proj-e.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932589Ab1IRWTO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Sep 2011 18:19:14 -0400
+Date: Wed, 19 Sep 2012 06:07:30 +0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linkbrosderek@yahoo.com, linker94@ymail.com, links@bridaljewelryoutlet.com, links111@yahoo.com, linlanhappy@foxmail.com, linneide94@hotmail.com, linqiaoqiao@gmail.com
 
-On 18/09/2011 15:56, James Bottomley wrote:
-> On Sun, 2011-09-18 at 18:25 +0400, James Bottomley wrote:
->> On Sun, 2011-09-18 at 15:05 +0100, Chris Boot wrote:
->>>> Hardly ... all it's saying is that twa_exit doesn't wait for pending I/O
->>>> to complete, so when you remove the module it tears down in the middle
->>>> of an I/O.  A bug, yes, but it's not indicative of any sort of leak in
->>>> the maps/unmaps.
->>>
->>> James,
->>>
->>> I don't think that's the case - I had unmounted all filesystems, deactivated all volume groups, and performed a sync before waiting a few seconds and running rmmod. Next time I'll also 'echo 1>  /sys/block/sdX/device/delete' if that's helpful.
->> Actually, I take all that back: the driver has a bug in QUEUE_FULL
->> handling: twa_scsi_queue() calls twa_scsiop_execute_scsi(), which maps
->> the dma buffer, but if the card responds QUEUE_FULL it just returns
->> SCSI_MLQUEUE_HOST_BUSY without ever unmapping.  That leg in the code
->> frees the request but also doesn't unmap it.  In fact any error return
->> from twa_scsiop_execute_scsi() seems to have the same problem (but
->> QUEUE_FULL is the only silent one).
->>
->> I trust Adam will fix this.
-> Actually, while Adam's mulling this, try the following.  It should at
-> least confirm we're on the right track.
->
-> James
->
-> ---
->
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index b7bd5b0..3868ab2 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -1800,10 +1800,12 @@ static int twa_scsi_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
->   	switch (retval) {
->   	case SCSI_MLQUEUE_HOST_BUSY:
->   		twa_free_request_id(tw_dev, request_id);
-> +		twa_unmap_scsi_data(tw_dev, request_id);
->   		break;
->   	case 1:
->   		tw_dev->state[request_id] = TW_S_COMPLETED;
->   		twa_free_request_id(tw_dev, request_id);
-> +		twa_unmap_scsi_data(tw_dev, request_id);
->   		SCpnt->result = (DID_ERROR<<  16);
->   		done(SCpnt);
->   		retval = 0;
+576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
+ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
+DQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5
+sOWutuWbnuWkjeOAgg0KDQoNCjHjgIHnvqTlj5Hova/ku7bvvJog5pON5L2c566A5Y2V77yM5Yqf
+6IO95by65aSn77yM5qih5Lu/5Lq65bel5pON5L2c5qih5byP77yM5Yiw6L6+546H6auY77yM5pel
+5Y+R6YCBNeS4h+WwgeS7peS4iuOAgiANCjLjgIE1MDDkuIflub/kuqTkvJrkubDlrrbotYTmupDv
+vJog6LWg6YCB55qENTAw5LiH5Lmw5a626LWE5rqQ5bqT77yM5q+P5pyI5pu05pawIOOAgiANCjPj
+gIHotoXnuqfmtbflpJbkubDlrrZFbWFpbOaQnOe0ouacuu+8miDmr4/lpKnog73mkJzntKIxLTLk
+uIfku6XkuIrkubDlrrbnnJ/lrp5FTUFJTO+8jOaIkOWNleeOh+mrmOOAgiANCiANCg0K6KaB55qE
+5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUyMTggICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDEz
+Mzk2MjUyMThAcXEuY29tDQropoHnmoTmipPntKfogZTns7tRUTogMTMzOTYyNTIxOCAgIOaIluiA
+heeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOez
+u1FROiAxMzM5NjI1MjE4ICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFx
+LmNvbQ0KDQrlhY3otLnotaDpgIE6DQrkuIDlhbE45Liq5YyFKOaVsOaNruaYr+WFqOihjOS4muea
+hO+8jOaMieeFp+ihjOS4muWIhuWlveexu++8jOW5tuS4lOWPr+S7peaMieeFp+WFs+mUruivjeaf
+peivoueahCnvvJogDQox77yMMjAxMeaYpeWtozEwOeWxiuW5v+S6pOS8muS5sOWutueOsOWcuuiv
+ouebmOaVsOaNruW6k+aWsOmynOWHuueCie+8jOi2hee6p+aWsOmynOS5sOWutu+8jOaWsOmynOaV
+sOaNru+8jOWuueaYk+aIkOWNle+8gSANCjLvvIzotK3kubDlkI7lj6/ku6XlhY3otLnmm7TmlrAy
+MDEx56eL5a2j5bm/5Lqk5LyaKzIwMTLmmKXlraPlub/kuqTkvJrkubDlrrbmlbDmja7jgILlpKro
+toXlgLzkuobjgIINCjPvvIzmnIDmlrDlhajnkIPkubDlrrblupMs5YWxNDUxNjYw5p2h5pWw5o2u
+44CCICjmnIDmlrDmm7TmlrDml6XmnJ8gMjAxMS0wNS0xNuaXpSkNCjTvvIwyMDA45bm0LDIwMDnl
+ubQsMjAxMOW5tCDmmKXlraMr56eL5a2j5bm/5Lqk5Lya5Lmw5a625ZCN5b2V77yMMTAzIDEwNCAx
+MDUgMTA2IDEwNyAxMDgg5YWx5YWt5bGKIOWFsTEyMC425LiH5pWw5o2u44CCDQo177yMMjAxMOW5
+tOWbvemZheS/g+mUgOWNj+S8mu+8iFBQQUnvvInmiJDlkZjlkI3ljZUgUFBBSSBNZW1iZXJzIERp
+cmVjdG9yee+8jOmdnuW4uOmHjeimgeeahOWkp+S5sOWutuOAgg0KNu+8jDIwMTDlubTliLDpppnm
+uK/ph4fotK3nmoTlm73lpJblrqLkurrlkI3lvZUo6aaZ5riv6LS45Y+R5bGA5o+Q5L6bKe+8jOWF
+sTcuMuS4h+aVsOaNru+8jOi2hee6p+mHjeimgeeahOS5sOWutuOAgg0KN++8jDQ4LjY45LiH5p2h
+5pyA5paw5Lmw5a626K+i55uY77yM6LSt5Lmw5ZCO5q+P5pyI5pu05pawIDEtMuS4h+adoe+8jOWM
+heaLrDLpg6jliIbvvIwx77yM5pyA5paw55qE6K+i55uYIDLvvIzmnIDmlrDnmoTlsZXkvJrkubDl
+rrbjgILlhY3otLnmm7TmlrAzNuS4quaciOOAgg0KOO+8jDIwMDnlubTmtbflhbPmj5DljZXmlbDm
+ja5waWVyc+eJiOaVsOaNriAx5Y2D5LiH44CCDQoNCg0K6K+a5L+h5Li65pys77yM5pSv5oyB5pSv
+5LuY5a6d5ouF5L+d5Lqk5piTICjlhYjlj5HotKflubblronoo4Xorr7nva7nvqTlj5Hova/ku7bv
+vIznhLblkI7ku5jmrL4pIOW9u+W6leaJk+a2iOaCqOeahCDpob7omZHjgIINCg0KIA0KDQoNCiAN
+Cg0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+ae
+gemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeO
+h+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K
 
-James,
 
-After testing quite thoroughly on my test install (lots of parallel 
-e2fsck and an rsync from one LV to another) I couldn't trigger the 
-warning. It's probably too early to tell for sure if this fixes things 
-on my normal workload (I'll be able to tell definitely tomorrow), but it 
-certainly seems much better right now. I'll keep you posted.
-
-Thanks,
-Chris
-
--- 
-Chris Boot
-bootc@bootc.net
