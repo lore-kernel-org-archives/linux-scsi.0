@@ -1,79 +1,59 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH] target: simplify target_parse_naa_6h_vendor_specific()
-Date: Mon, 19 Sep 2011 11:11:21 +0300
-Message-ID: <9d522de8482ec20816be2b68b2d37ab8406f6876.1316419814.git.andriy.shevchenko@linux.intel.com>
-References: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@valexkorea.com>
+Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
+	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
+Date: Mon, 19 Sep 2011 09:02:21 +0000 (UTC)
+Message-ID: <20120919163009583045@valexkorea.com>
+Reply-To: <1339625218@qq.com>
+Mime-Version: 1.0
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [211.195.73.250] ([211.195.73.250]:34061 "EHLO
+	valexkoreabackup.valexkorea.com" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752975Ab1ISJBk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Sep 2011 05:01:40 -0400
+Date: Wed, 19 Sep 2012 16:30:03 +0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linda.m.merrill@gmail.com, linkalert.conlan@addons.mozilla.com, linux-scsi@vger.kernel.org, linux-uvc-devel@lists.berlios.de, linxdev@gmail.com, linyacui@163.com, linz3416
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_cdb.c |   30 +++++++++++++-----------------
- 1 files changed, 13 insertions(+), 17 deletions(-)
+576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
+ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
+DQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5
+sOWutuWbnuWkjeOAgg0KDQoNCjHjgIHnvqTlj5Hova/ku7bvvJog5pON5L2c566A5Y2V77yM5Yqf
+6IO95by65aSn77yM5qih5Lu/5Lq65bel5pON5L2c5qih5byP77yM5Yiw6L6+546H6auY77yM5pel
+5Y+R6YCBNeS4h+WwgeS7peS4iuOAgiANCjLjgIE1MDDkuIflub/kuqTkvJrkubDlrrbotYTmupDv
+vJog6LWg6YCB55qENTAw5LiH5Lmw5a626LWE5rqQ5bqT77yM5q+P5pyI5pu05pawIOOAgiANCjPj
+gIHotoXnuqfmtbflpJbkubDlrrZFbWFpbOaQnOe0ouacuu+8miDmr4/lpKnog73mkJzntKIxLTLk
+uIfku6XkuIrkubDlrrbnnJ/lrp5FTUFJTO+8jOaIkOWNleeOh+mrmOOAgiANCiANCg0K6KaB55qE
+5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUyMTggICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDEz
+Mzk2MjUyMThAcXEuY29tDQropoHnmoTmipPntKfogZTns7tRUTogMTMzOTYyNTIxOCAgIOaIluiA
+heeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOez
+u1FROiAxMzM5NjI1MjE4ICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFx
+LmNvbQ0KDQrlhY3otLnotaDpgIE6DQrkuIDlhbE45Liq5YyFKOaVsOaNruaYr+WFqOihjOS4muea
+hO+8jOaMieeFp+ihjOS4muWIhuWlveexu++8jOW5tuS4lOWPr+S7peaMieeFp+WFs+mUruivjeaf
+peivoueahCnvvJogDQox77yMMjAxMeaYpeWtozEwOeWxiuW5v+S6pOS8muS5sOWutueOsOWcuuiv
+ouebmOaVsOaNruW6k+aWsOmynOWHuueCie+8jOi2hee6p+aWsOmynOS5sOWutu+8jOaWsOmynOaV
+sOaNru+8jOWuueaYk+aIkOWNle+8gSANCjLvvIzotK3kubDlkI7lj6/ku6XlhY3otLnmm7TmlrAy
+MDEx56eL5a2j5bm/5Lqk5LyaKzIwMTLmmKXlraPlub/kuqTkvJrkubDlrrbmlbDmja7jgILlpKro
+toXlgLzkuobjgIINCjPvvIzmnIDmlrDlhajnkIPkubDlrrblupMs5YWxNDUxNjYw5p2h5pWw5o2u
+44CCICjmnIDmlrDmm7TmlrDml6XmnJ8gMjAxMS0wNS0xNuaXpSkNCjTvvIwyMDA45bm0LDIwMDnl
+ubQsMjAxMOW5tCDmmKXlraMr56eL5a2j5bm/5Lqk5Lya5Lmw5a625ZCN5b2V77yMMTAzIDEwNCAx
+MDUgMTA2IDEwNyAxMDgg5YWx5YWt5bGKIOWFsTEyMC425LiH5pWw5o2u44CCDQo177yMMjAxMOW5
+tOWbvemZheS/g+mUgOWNj+S8mu+8iFBQQUnvvInmiJDlkZjlkI3ljZUgUFBBSSBNZW1iZXJzIERp
+cmVjdG9yee+8jOmdnuW4uOmHjeimgeeahOWkp+S5sOWutuOAgg0KNu+8jDIwMTDlubTliLDpppnm
+uK/ph4fotK3nmoTlm73lpJblrqLkurrlkI3lvZUo6aaZ5riv6LS45Y+R5bGA5o+Q5L6bKe+8jOWF
+sTcuMuS4h+aVsOaNru+8jOi2hee6p+mHjeimgeeahOS5sOWutuOAgg0KN++8jDQ4LjY45LiH5p2h
+5pyA5paw5Lmw5a626K+i55uY77yM6LSt5Lmw5ZCO5q+P5pyI5pu05pawIDEtMuS4h+adoe+8jOWM
+heaLrDLpg6jliIbvvIwx77yM5pyA5paw55qE6K+i55uYIDLvvIzmnIDmlrDnmoTlsZXkvJrkubDl
+rrbjgILlhY3otLnmm7TmlrAzNuS4quaciOOAgg0KOO+8jDIwMDnlubTmtbflhbPmj5DljZXmlbDm
+ja5waWVyc+eJiOaVsOaNriAx5Y2D5LiH44CCDQoNCg0K6K+a5L+h5Li65pys77yM5pSv5oyB5pSv
+5LuY5a6d5ouF5L+d5Lqk5piTICjlhYjlj5HotKflubblronoo4Xorr7nva7nvqTlj5Hova/ku7bv
+vIznhLblkI7ku5jmrL4pIOW9u+W6leaJk+a2iOaCqOeahCDpob7omZHjgIINCg0KIA0KDQoNCiAN
+Cg0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+ae
+gemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeO
+h+aegemrmA0K57K+5YeG5pWw5o2uLeaIkOWNleeOh+aegemrmA0K
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index f04d4ef..b796115 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -24,7 +24,6 @@
-  */
- 
- #include <linux/kernel.h>
--#include <linux/ctype.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
- 
-@@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
- }
- 
- static void
--target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
-+target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
- {
- 	unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
--	unsigned char *buf = buf_off;
--	int cnt = 0, next = 1;
-+	int cnt;
-+	bool next = true;
-+
- 	/*
- 	 * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
- 	 * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
-@@ -169,20 +169,16 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
- 	 * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
- 	 * per device uniqeness.
- 	 */
--	while (*p != '\0') {
--		if (cnt >= 13)
--			break;
--		if (!isxdigit(*p)) {
--			p++;
-+	for (cnt = 0; *p && cnt < 13; next = !next) {
-+		int val = hex_to_bin(*p++);
-+
-+		if (val < 0)
- 			continue;
--		}
--		if (next != 0) {
--			buf[cnt++] |= hex_to_bin(*p++);
--			next = 0;
--		} else {
--			buf[cnt] = hex_to_bin(*p++) << 4;
--			next = 1;
--		}
-+
-+		if (next)
-+			buf[cnt++] |= val;
-+		else
-+			buf[cnt] = val << 4;
- 	}
- }
- 
--- 
-1.7.5.4
 
