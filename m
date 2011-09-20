@@ -1,98 +1,85 @@
 From: akpm@google.com
-Subject: [patch 4/8] drivers/scsi/sd.c: use ida_simple_get() and ida_simple_remove() in place of boilerplate code
-Date: Tue, 20 Sep 2011 14:20:14 -0700
-Message-ID: <201109202120.p8KLKE0A011806@hpaq5.eem.corp.google.com>
+Subject: [patch 5/8] drivers/scsi/osd/osd_uld.c: use ida_simple_get() to handle id
+Date: Tue, 20 Sep 2011 14:20:18 -0700
+Message-ID: <201109202120.p8KLKIUa000949@wpaz13.hot.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:3210 "EHLO
+Received: from smtp-out.google.com ([74.125.121.67]:55193 "EHLO
 	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560Ab1ITVVM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 17:21:12 -0400
+	with ESMTP id S1751560Ab1ITVVR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 17:21:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@google.com, jic23@cam.ac.uk, guenter.roeck@ericsson.com, rusty@rustcorp.com.au, tj@kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@google.com, jic23@cam.ac.uk, bhalevy@panasas.com, bharrosh@panasas.com, rusty@rustcorp.com.au, tj@kernel.org
 
 From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: drivers/scsi/sd.c: use ida_simple_get() and ida_simple_remove() in place of boilerplate code
+Subject: drivers/scsi/osd/osd_uld.c: use ida_simple_get() to handle id
 
-Some mangling of errors was necessary to maintain current interface.
+This does involve additional use of the spin lock in idr.c.  Is this an
+issue?
+
+Also, some error mangling was needed to keep the interface the same.  Does
+this matter or can we return -ENOSPC instead of -EBUSY?
 
 Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
 Cc: Rusty Russell <rusty@rustcorp.com.au>
 Cc: Tejun Heo <tj@kernel.org>
-Cc: Guenter Roeck <guenter.roeck@ericsson.com>
 Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Benny Halevy <bhalevy@panasas.com>
 Signed-off-by: Andrew Morton <akpm@google.com>
 ---
 
- drivers/scsi/sd.c |   32 ++++++++++----------------------
- 1 file changed, 10 insertions(+), 22 deletions(-)
+ drivers/scsi/osd/osd_uld.c |   22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
-diff -puN drivers/scsi/sd.c~drivers-scsi-sdc-use-ida_simple_get-and-ida_simple_remove-in-place-of-boilerplate-code drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~drivers-scsi-sdc-use-ida_simple_get-and-ida_simple_remove-in-place-of-boilerplate-code
-+++ a/drivers/scsi/sd.c
-@@ -111,7 +111,6 @@ static void scsi_disk_release(struct dev
- static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
- static void sd_print_result(struct scsi_disk *, int);
+diff -puN drivers/scsi/osd/osd_uld.c~drivers-scsi-osd-osd_uldc-use-ida_simple_get-to-handle-id drivers/scsi/osd/osd_uld.c
+--- a/drivers/scsi/osd/osd_uld.c~drivers-scsi-osd-osd_uldc-use-ida_simple_get-to-handle-id
++++ a/drivers/scsi/osd/osd_uld.c
+@@ -387,7 +387,7 @@ static void __remove(struct device *dev)
  
--static DEFINE_SPINLOCK(sd_index_lock);
- static DEFINE_IDA(sd_index_ida);
+ 	if (oud->disk)
+ 		put_disk(oud->disk);
+-	ida_remove(&osd_minor_ida, oud->minor);
++	ida_simple_remove(&osd_minor_ida, oud->minor);
  
- /* This semaphore is used to mediate the 0->1 reference get in the
-@@ -2581,22 +2580,15 @@ static int sd_probe(struct device *dev)
- 	if (!gd)
- 		goto out_free;
+ 	kfree(oud);
+ }
+@@ -403,18 +403,12 @@ static int osd_probe(struct device *dev)
+ 	if (scsi_device->type != TYPE_OSD)
+ 		return -ENODEV;
  
 -	do {
--		if (!ida_pre_get(&sd_index_ida, GFP_KERNEL))
--			goto out_put;
+-		if (!ida_pre_get(&osd_minor_ida, GFP_KERNEL))
+-			return -ENODEV;
 -
--		spin_lock(&sd_index_lock);
--		error = ida_get_new(&sd_index_ida, &index);
--		spin_unlock(&sd_index_lock);
+-		error = ida_get_new(&osd_minor_ida, &minor);
 -	} while (error == -EAGAIN);
 -
 -	if (error)
-+	index = ida_simple_get(&sd_index_ida, 0, SD_MAX_DISKS, GFP_KERNEL);
-+	if (index < 0) {
-+		error = index;
-+		if (error == -ENOSPC) {
-+			sdev_printk(KERN_WARNING, sdp,
-+				    "SCSI disk (sd) name space exhausted.\n");
-+			error = -ENODEV;
-+		}
- 		goto out_put;
--
--	if (index >= SD_MAX_DISKS) {
--		error = -ENODEV;
--		sdev_printk(KERN_WARNING, sdp, "SCSI disk (sd) name space exhausted.\n");
--		goto out_free_index;
+-		return error;
+-	if (minor >= SCSI_OSD_MAX_MINOR) {
+-		error = -EBUSY;
+-		goto err_retract_minor;
++	minor = ida_simple_get(&osd_minor_ida, 0,
++			       SCSI_OSD_MAX_MINOR, GFP_KERNEL);
++	if (minor < 0) {
++		if (minor == -ENOSPC)
++			return -EBUSY;
++		return minor;
  	}
  
- 	error = sd_format_disk_name("sd", index, gd->disk_name, DISK_NAME_LEN);
-@@ -2634,9 +2626,7 @@ static int sd_probe(struct device *dev)
- 	return 0;
+ 	error = -ENOMEM;
+@@ -491,7 +485,7 @@ err_free_osd:
+ 	dev_set_drvdata(dev, NULL);
+ 	kfree(oud);
+ err_retract_minor:
+-	ida_remove(&osd_minor_ida, minor);
++	ida_simple_remove(&osd_minor_ida, minor);
+ 	return error;
+ }
  
-  out_free_index:
--	spin_lock(&sd_index_lock);
--	ida_remove(&sd_index_ida, index);
--	spin_unlock(&sd_index_lock);
-+	ida_simple_remove(&sd_index_ida, index);
-  out_put:
- 	put_disk(gd);
-  out_free:
-@@ -2692,9 +2682,7 @@ static void scsi_disk_release(struct dev
- 	struct scsi_disk *sdkp = to_scsi_disk(dev);
- 	struct gendisk *disk = sdkp->disk;
- 	
--	spin_lock(&sd_index_lock);
--	ida_remove(&sd_index_ida, sdkp->index);
--	spin_unlock(&sd_index_lock);
-+	ida_simple_remove(&sd_index_ida, sdkp->index);
- 
- 	disk->private_data = NULL;
- 	put_disk(disk);
 _
