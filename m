@@ -1,52 +1,38 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH] [SCSI]: libsas failure to revalidate domain for
- anything but the first expander child.
-Date: Mon, 19 Sep 2011 23:17:21 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D1A1150A00E@SC-VEXCH4.marvell.com>
-References: <FC1F9E38C0703341A1A750524E2525A9018AE0ED@XYUS-EX22.xyus.xyratex.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch 1/2] SCSI: advansys: handle errors from scsi_dma_map()
+Date: Tue, 20 Sep 2011 09:47:15 +0300
+Message-ID: <20110920064715.GA28892@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:37655 "EHLO
-	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752136Ab1ITGXA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2011 02:23:00 -0400
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE0ED@XYUS-EX22.xyus.xyratex.com>
-Content-Language: en-US
+Received: from rcsinet15.oracle.com ([148.87.113.117]:63424 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735Ab1ITGra (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 02:47:30 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, Darrick J Wong <djwong@us.ibm.com>, James Bottomley <jbottomley@parallels.com>, Jack Wang <jack_wang@usish.com>, Dan Williams <dan.j.williams@intel.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:ADVANSYS SCSI DRIVER" <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
 
-> Subject: Re: [PATCH] [SCSI]: libsas failure to revalidate domain for anything
-> but the first expander child.
-> 
-> Three weeks, and this simple and obvious patch has had two positive
-> reviews and no propagation. Who do I have to buy a Pint of Guinness for
-> to get this moving upstream? ;-}
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
-> Behalf Of Dan Williams
-> Sent: Wednesday, September 07, 2011 3:26 PM
-> To: Mark Salyzyn
-> Cc: linux-scsi@vger.kernel.org; Luben Tuikov; Darrick J Wong; James
-> Bottomley; Xiangliang Yu; Jack Wang
-> Subject: Re: [PATCH] [SCSI]: libsas failure to revalidate domain for
-> anything but the first expander child.
-> 
-> . . .
-> 
-> Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> . . .
-> 
-> Reviewed-by: Luben Tuikov <ltuikov@yahoo.com>
-> I don't mind this patch.
+scsi_dma_map() returns -ENOMEM on error.
 
-It's fine for me.
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index bfd618a..04035af 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -8427,6 +8427,12 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 
+ 	/* Build ASC_SCSI_Q */
+ 	use_sg = scsi_dma_map(scp);
++	if (use_sg < 0) {
++		scsi_dma_unmap(scp);
++		scp->result = HOST_BYTE(DID_SOFT_ERROR);
++		return ASC_ERROR;
++	}
++
+ 	if (use_sg != 0) {
+ 		int sgcnt;
+ 		struct scatterlist *slp;
