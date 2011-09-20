@@ -1,85 +1,50 @@
-From: akpm@google.com
-Subject: [patch 5/8] drivers/scsi/osd/osd_uld.c: use ida_simple_get() to handle id
-Date: Tue, 20 Sep 2011 14:20:18 -0700
-Message-ID: <201109202120.p8KLKIUa000949@wpaz13.hot.corp.google.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
+Date: Tue, 20 Sep 2011 15:10:03 -0700
+Message-ID: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([74.125.121.67]:55193 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560Ab1ITVVR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 17:21:17 -0400
+Received: from mga01.intel.com ([192.55.52.88]:37247 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751150Ab1ITWKE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Sep 2011 18:10:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@google.com, jic23@cam.ac.uk, bhalevy@panasas.com, bharrosh@panasas.com, rusty@rustcorp.com.au, tj@kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jgarzik@pobox.com, JBottomley@parallels.com
 
-From: Jonathan Cameron <jic23@cam.ac.uk>
-Subject: drivers/scsi/osd/osd_uld.c: use ida_simple_get() to handle id
+While enabling atapi device support for isci we encountered a condition
+whereby multiple srX devices (one for every possible LUN) were exported
+by the midlayer.  Looking at other drivers showed that they had a local
+workaround for this and other conditions in custom
+->slave_{alloc|configure} methods.  Rather than add custom workaround
+for isci this patchset uplevels those workarounds to libsas proper.
 
-This does involve additional use of the spin lock in idr.c.  Is this an
-issue?
+Patch 3/5 is tagged RFC as I do not know the original history behind
+hard limiting libsas end devices to a queue_depth of 32.  At least mvsas
+has been bumping this up to 64 on its own.
 
-Also, some error mangling was needed to keep the interface the same.  Does
-this matter or can we return -ENOSPC instead of -EBUSY?
-
-Signed-off-by: Jonathan Cameron <jic23@cam.ac.uk>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Benny Halevy <bhalevy@panasas.com>
-Signed-off-by: Andrew Morton <akpm@google.com>
 ---
 
- drivers/scsi/osd/osd_uld.c |   22 ++++++++--------------
- 1 file changed, 8 insertions(+), 14 deletions(-)
+Dan Williams (5):
+      libsas: disable scanning lun > 0 on ata devices
+      libsas: fix ->change_queue_{depth|type} for sata devices
+      libsas: dynamic queue depth
+      mvsas: remove mvs_slave_{alloc|configure}
+      pm8001: remove pm8001_slave_{alloc|configure}
 
-diff -puN drivers/scsi/osd/osd_uld.c~drivers-scsi-osd-osd_uldc-use-ida_simple_get-to-handle-id drivers/scsi/osd/osd_uld.c
---- a/drivers/scsi/osd/osd_uld.c~drivers-scsi-osd-osd_uldc-use-ida_simple_get-to-handle-id
-+++ a/drivers/scsi/osd/osd_uld.c
-@@ -387,7 +387,7 @@ static void __remove(struct device *dev)
- 
- 	if (oud->disk)
- 		put_disk(oud->disk);
--	ida_remove(&osd_minor_ida, oud->minor);
-+	ida_simple_remove(&osd_minor_ida, oud->minor);
- 
- 	kfree(oud);
- }
-@@ -403,18 +403,12 @@ static int osd_probe(struct device *dev)
- 	if (scsi_device->type != TYPE_OSD)
- 		return -ENODEV;
- 
--	do {
--		if (!ida_pre_get(&osd_minor_ida, GFP_KERNEL))
--			return -ENODEV;
--
--		error = ida_get_new(&osd_minor_ida, &minor);
--	} while (error == -EAGAIN);
--
--	if (error)
--		return error;
--	if (minor >= SCSI_OSD_MAX_MINOR) {
--		error = -EBUSY;
--		goto err_retract_minor;
-+	minor = ida_simple_get(&osd_minor_ida, 0,
-+			       SCSI_OSD_MAX_MINOR, GFP_KERNEL);
-+	if (minor < 0) {
-+		if (minor == -ENOSPC)
-+			return -EBUSY;
-+		return minor;
- 	}
- 
- 	error = -ENOMEM;
-@@ -491,7 +485,7 @@ err_free_osd:
- 	dev_set_drvdata(dev, NULL);
- 	kfree(oud);
- err_retract_minor:
--	ida_remove(&osd_minor_ida, minor);
-+	ida_simple_remove(&osd_minor_ida, minor);
- 	return error;
- }
- 
-_
+
+ drivers/ata/libata-core.c           |    1 +
+ drivers/ata/libata-scsi.c           |   44 +++++++++++++++++++++++------------
+ drivers/scsi/libsas/sas_scsi_host.c |   42 +++++++++++++++++++--------------
+ drivers/scsi/mvsas/mv_init.c        |    4 ++-
+ drivers/scsi/mvsas/mv_sas.c         |   30 ------------------------
+ drivers/scsi/mvsas/mv_sas.h         |    2 --
+ drivers/scsi/pm8001/pm8001_init.c   |    4 ++-
+ drivers/scsi/pm8001/pm8001_sas.c    |   31 +------------------------
+ drivers/scsi/pm8001/pm8001_sas.h    |    2 --
+ drivers/scsi/scsi_transport_sas.c   |   10 ++++++--
+ include/linux/libata.h              |    2 ++
+ 11 files changed, 69 insertions(+), 103 deletions(-)
