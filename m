@@ -1,54 +1,79 @@
-From: Jerome Martin <jxm@risingtidesystems.com>
-Subject: rtsadmin is now targetcli, new git repo.
-Date: Tue, 20 Sep 2011 12:05:56 +0200
-Message-ID: <CAN4SboBR5KpSEBaESij0tX6Kz6twSVuKLYeOfbvspdBSBC0h2w@mail.gmail.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [dm-devel] [RESEND][PATCH] scsi_dh_rdac: Adding NetApp as a
+ brand name for rdac
+Date: Tue, 20 Sep 2011 08:17:36 -0500
+Message-ID: <1316524656.9298.54.camel@chandra-lucid.austin.ibm.com>
+References: <EE2129A8E578DC4E94D643D6C1C1C67D05D03C9A@BTCMVEXC2-PRD.hq.netapp.com>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:51580 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754406Ab1ITKF5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 06:05:57 -0400
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:54083 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750713Ab1ITNU3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Sep 2011 09:20:29 -0400
+Received: from /spool/local
+	by us.ibm.com with XMail ESMTP
+	for <linux-scsi@vger.kernel.org> from <sekharan@us.ibm.com>;
+	Tue, 20 Sep 2011 09:20:16 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p8KDHcdo271084
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2011 09:17:38 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p8KDHcS3024697
+	for <linux-scsi@vger.kernel.org>; Tue, 20 Sep 2011 09:17:38 -0400
+In-Reply-To: <EE2129A8E578DC4E94D643D6C1C1C67D05D03C9A@BTCMVEXC2-PRD.hq.netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@>
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-scsi@vger.kernel.org, "Moger, Babu" <Babu.Moger@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>
 
-Hello everyone,
+Acked-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-As discussed on the target-devel mailing-list, and at community
-request, the target administration tool previously known as "rtsadmin
-community edition" is now simply named "targetcli". License (AGPLv3)
-is unchanged.
+On Fri, 2011-09-02 at 13:26 +0530, Chauhan, Vijay wrote:
+> Resending this patch. Previous post had indentation issue due to my mail settings. 
+> 
+> On September 02 2011 12:44 PM, Vijay Chauhan Wrote:
+> > - * Engenio/LSI RDAC SCSI Device Handler
+> > + * LSI/Engenio/NetApp E-Series RDAC SCSI Device Handler
+> >   *
+> >   * Copyright (C) 2005 Mike Christie. All rights reserved.
+> >   * Copyright (C) Chandra Seetharaman, IBM Corp. 2007 @@ -941,7 +941,7 @@ static void __exit rdac_exit(void)  module_init(rdac_init);  
+> > module_exit(rdac_exit);
+> 
+> ---
+> Adding NetApp as brand name for RDAC.
+> 
+> Signed-off-by: Vijay Chauhan <Vijay.chauhan@netapp.com>
+> Reviewed-by: Bob Stankey <Robert.stankey@netapp.com>
+> Reviewed-by: Babu Moger <Babu.moger@netapp.com>
+> 
+> ---
+> --- linux-3.0.3-orig/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-08-17 23:27:16.000000000 +0530
+> +++ linux-3.0.3/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-08-30 19:10:49.000000000 +0530
+> @@ -1,5 +1,5 @@
+>  /*
+> - * Engenio/LSI RDAC SCSI Device Handler
+> + * LSI/Engenio/NetApp E-Series RDAC SCSI Device Handler
+>   *
+>   * Copyright (C) 2005 Mike Christie. All rights reserved.
+>   * Copyright (C) Chandra Seetharaman, IBM Corp. 2007
+> @@ -941,7 +941,7 @@ static void __exit rdac_exit(void)
+>  module_init(rdac_init);
+>  module_exit(rdac_exit);
+> 
+> -MODULE_DESCRIPTION("Multipath LSI/Engenio RDAC driver");
+> +MODULE_DESCRIPTION("Multipath LSI/Engenio/NetApp E-Series RDAC driver");
+>  MODULE_AUTHOR("Mike Christie, Chandra Seetharaman");
+>  MODULE_VERSION("01.00.0000.0000");
+>  MODULE_LICENSE("GPL");
+> --
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
+> 
 
-The name change has been propagated to the source code, package names
-and directory structure.
-The previous "rtsadmin" git repository at
-http://www.risingtidesystems.com/git/ still exists but is now obsolete
-and won't be updated. It will be deleted soon.
 
-The new repository is:
-
-* GitWeb: targetcli on http://www.risingtidesystems.com/git/
-* Git: git://risingtidesystems.com/targetcli.git or
-git://linux-iscsi.org/targetcli.git
-
-Please test the new repository to make sure I did not break too many
-things during the name change, and update your pointers. The next
-change to that repo will be a split Makefile, the one in git main tree
-will take care of generating an official versioned out-of-tree tarball
-for distributions package maintainers use, and the one inside the
-tarball will provide expected package building targets. The currently
-empty documentation package will also be removed from that next
-version.
-
-Once those changes are done and tested, I expect tagging version 2.0.
-
-Best Regards,
---=20
-J=E9r=F4me Martin
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
