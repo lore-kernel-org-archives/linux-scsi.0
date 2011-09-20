@@ -1,103 +1,106 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 3/5] libsas: dynamic queue depth
-Date: Tue, 20 Sep 2011 15:10:46 -0700
-Message-ID: <20110920221038.1094.7832.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/5] mvsas: remove mvs_slave_{alloc|configure}
+Date: Tue, 20 Sep 2011 15:10:55 -0700
+Message-ID: <20110920221051.1094.39578.stgit@localhost6.localdomain6>
 References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:12314 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752110Ab1ITWKr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2011 18:10:47 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Mark Salyzyn <msalyzyn@us.xyratex.com>, Christoph Hellwig <hch@lst.de>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>, jgarzik@pobox.com, JBottomley@parallels.com
+List-Id: linux-scsi@vger.kernel.org
 
-The queue-depth for libsas-attached devices initializes to 32 and can
-only be increased manually via sysfs to a max of 64, while mpt2sas
-attached devices initialize to 254 and dynamically float via the
-midlayer ->change_queue_depth interface.
+libsas now handles:
+1/ limiting ata scanning to lun0
+2/ maximizing the queue_depth of sas devices (up to 256, mvsas only
+   supports 64)
+3/ changes to /sys/block/<sdX>/device/queue_depth for ata devices
 
-No performance regression was observed with this change on the isci
-driver.
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
 Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Jack Wang <jack_wang@usish.com>
-Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>
-Tested-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |   39 ++++++++++++++++-------------------
- 1 files changed, 18 insertions(+), 21 deletions(-)
+ drivers/scsi/mvsas/mv_init.c |    4 ++--
+ drivers/scsi/mvsas/mv_sas.c  |   30 ------------------------------
+ drivers/scsi/mvsas/mv_sas.h  |    2 --
+ 3 files changed, 2 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 4c6923c..fe08ef0 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -784,8 +784,7 @@ int sas_target_alloc(struct scsi_target *starget)
- 	return 0;
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 4e9af66..052861b 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -59,7 +59,7 @@ static struct scsi_host_template mvs_sht = {
+ 	.name			= DRV_NAME,
+ 	.queuecommand		= sas_queuecommand,
+ 	.target_alloc		= sas_target_alloc,
+-	.slave_configure	= mvs_slave_configure,
++	.slave_configure	= sas_slave_configure,
+ 	.slave_destroy		= sas_slave_destroy,
+ 	.scan_finished		= mvs_scan_finished,
+ 	.scan_start		= mvs_scan_start,
+@@ -74,7 +74,7 @@ static struct scsi_host_template mvs_sht = {
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+-	.slave_alloc		= mvs_slave_alloc,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ 	.shost_attrs		= mvst_host_attrs,
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 4196eee..f2ac01f 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -276,36 +276,6 @@ static void mvs_bytes_dmaed(struct mvs_info *mvi, int i)
+ 				   PORTE_BYTES_DMAED);
  }
  
--#define SAS_DEF_QD 32
--#define SAS_MAX_QD 64
-+#define SAS_DEF_QD 256
- 
- int sas_slave_configure(struct scsi_device *scsi_dev)
- {
-@@ -828,31 +827,29 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
- 		dev->sata_dev.ap->link.device[0].class = ATA_DEV_NONE;
- }
- 
--int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth,
--			   int reason)
-+int sas_change_queue_depth(struct scsi_device *sdev, int depth, int reason)
- {
+-int mvs_slave_alloc(struct scsi_device *scsi_dev)
+-{
 -	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--	int res = min(new_depth, SAS_MAX_QD);
-+	struct domain_device *dev = sdev_to_domain_dev(sdev);
- 
- 	if (dev_is_sata(dev))
--		return __ata_change_queue_depth(dev->sata_dev.ap, scsi_dev,
--						new_depth, reason);
+-	if (dev_is_sata(dev)) {
+-		/* We don't need to rescan targets
+-		 * if REPORT_LUNS request is failed
+-		 */
+-		if (scsi_dev->lun > 0)
+-			return -ENXIO;
+-		scsi_dev->tagged_supported = 1;
+-	}
 -
--	if (reason != SCSI_QDEPTH_DEFAULT)
-+		return __ata_change_queue_depth(dev->sata_dev.ap, sdev, depth,
-+						reason);
-+
-+	switch (reason) {
-+	case SCSI_QDEPTH_DEFAULT:
-+	case SCSI_QDEPTH_RAMP_UP:
-+		if (!sdev->tagged_supported)
-+			depth = 1;
-+		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
-+		break;
-+	case SCSI_QDEPTH_QFULL:
-+		scsi_track_queue_full(sdev, depth);
-+		break;
-+	default:
- 		return -EOPNOTSUPP;
+-	return sas_slave_alloc(scsi_dev);
+-}
 -
--	if (scsi_dev->tagged_supported)
--		scsi_adjust_queue_depth(scsi_dev, scsi_get_tag_type(scsi_dev),
--					res);
--	else {
--		sas_printk("device %llx LUN %x queue depth changed to 1\n",
--			   SAS_ADDR(dev->sas_addr),
--			   scsi_dev->lun);
--		scsi_adjust_queue_depth(scsi_dev, 0, 1);
--		res = 1;
- 	}
- 
--	return res;
-+	return depth;
- }
- 
- int sas_change_queue_type(struct scsi_device *scsi_dev, int qt)
+-int mvs_slave_configure(struct scsi_device *sdev)
+-{
+-	struct domain_device *dev = sdev_to_domain_dev(sdev);
+-	int ret = sas_slave_configure(sdev);
+-
+-	if (ret)
+-		return ret;
+-	if (!dev_is_sata(dev)) {
+-		sas_change_queue_depth(sdev,
+-			MVS_QUEUE_SIZE,
+-			SCSI_QDEPTH_DEFAULT);
+-	}
+-	return 0;
+-}
+-
+ void mvs_scan_start(struct Scsi_Host *shost)
+ {
+ 	int i, j;
+diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
+index 44d7885..21ee8b0 100644
+--- a/drivers/scsi/mvsas/mv_sas.h
++++ b/drivers/scsi/mvsas/mv_sas.h
+@@ -459,8 +459,6 @@ int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 			void *funcdata);
+ void __devinit mvs_set_sas_addr(struct mvs_info *mvi, int port_id,
+ 				u32 off_lo, u32 off_hi, u64 sas_addr);
+-int mvs_slave_alloc(struct scsi_device *scsi_dev);
+-int mvs_slave_configure(struct scsi_device *sdev);
+ void mvs_scan_start(struct Scsi_Host *shost);
+ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time);
+ int mvs_queue_command(struct sas_task *task, const int num,
 
