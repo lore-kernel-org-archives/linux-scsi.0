@@ -1,46 +1,70 @@
 From: akpm@google.com
-Subject: [patch 1/8] scsi: fix a header to include linux/types.h
-Date: Tue, 20 Sep 2011 14:20:05 -0700
-Message-ID: <201109202120.p8KLK5CW019714@hpaq2.eem.corp.google.com>
+Subject: [patch 8/8] drivers/message/fusion/mptbase.c: ensure NUL-termination of MptCallbacksName elements
+Date: Tue, 20 Sep 2011 14:20:25 -0700
+Message-ID: <201109202120.p8KLKQPN018641@hpaq1.eem.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.44.51]:2708 "EHLO
+Received: from smtp-out.google.com ([74.125.121.67]:54878 "EHLO
 	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752077Ab1ITVUS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 17:20:18 -0400
+	with ESMTP id S1751825Ab1ITVUh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 17:20:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@google.com, virtuoso@slind.org
+Cc: linux-scsi@vger.kernel.org, akpm@google.com, wferi@niif.hu, kashyap.desai@lsi.com
 
-From: Alexander Shishkin <virtuoso@slind.org>
-Subject: scsi: fix a header to include linux/types.h
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: drivers/message/fusion/mptbase.c: ensure NUL-termination of MptCallbacksName elements
 
-For headers that get exported to userland and make use of u32 style
-type names, it is advised to include linux/types.h.
+I just stumbled upon this while pondering over
+https://bugzilla.kernel.org/show_bug.cgi?id=26692 and thought this could
+be made better.
 
-This fixes a headers_check warning.
-
-Signed-off-by: Alexander Shishkin <virtuoso@slind.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+[akpm@linux-foundation.org: coding-style fixes]
+Signed-off-by: Ferenc Wagner <wferi@niif.hu>
+Cc: Desai <kashyap.desai@lsi.com>
 Signed-off-by: Andrew Morton <akpm@google.com>
 ---
 
- include/scsi/scsi_netlink.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/fusion/mptbase.c |    7 ++++---
+ drivers/message/fusion/mptbase.h |    1 +
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN include/scsi/scsi_netlink.h~scsi-fix-a-header-to-include-linux-typesh include/scsi/scsi_netlink.h
---- a/include/scsi/scsi_netlink.h~scsi-fix-a-header-to-include-linux-typesh
-+++ a/include/scsi/scsi_netlink.h
-@@ -23,7 +23,7 @@
- #define SCSI_NETLINK_H
+diff -puN drivers/message/fusion/mptbase.c~drivers-message-fusion-mptbasec-ensure-nul-termination-of-mptcallbacksname-elements drivers/message/fusion/mptbase.c
+--- a/drivers/message/fusion/mptbase.c~drivers-message-fusion-mptbasec-ensure-nul-termination-of-mptcallbacksname-elements
++++ a/drivers/message/fusion/mptbase.c
+@@ -115,7 +115,8 @@ module_param(mpt_fwfault_debug, int, 060
+ MODULE_PARM_DESC(mpt_fwfault_debug,
+ 		 "Enable detection of Firmware fault and halt Firmware on fault - (default=0)");
  
- #include <linux/netlink.h>
--
-+#include <linux/types.h>
+-static char	MptCallbacksName[MPT_MAX_PROTOCOL_DRIVERS][50];
++static char
++MptCallbacksName[MPT_MAX_PROTOCOL_DRIVERS][MPT_MAX_CALLBACKNAME_LEN + 1];
  
- /*
-  * This file intended to be included by both kernel and user space
+ #ifdef MFCNT
+ static int mfcounter = 0;
+@@ -717,8 +718,8 @@ mpt_register(MPT_CALLBACK cbfunc, MPT_DR
+ 			MptDriverClass[cb_idx] = dclass;
+ 			MptEvHandlers[cb_idx] = NULL;
+ 			last_drv_idx = cb_idx;
+-			memcpy(MptCallbacksName[cb_idx], func_name,
+-			    strlen(func_name) > 50 ? 50 : strlen(func_name));
++			strlcpy(MptCallbacksName[cb_idx], func_name,
++				MPT_MAX_CALLBACKNAME_LEN+1);
+ 			break;
+ 		}
+ 	}
+diff -puN drivers/message/fusion/mptbase.h~drivers-message-fusion-mptbasec-ensure-nul-termination-of-mptcallbacksname-elements drivers/message/fusion/mptbase.h
+--- a/drivers/message/fusion/mptbase.h~drivers-message-fusion-mptbasec-ensure-nul-termination-of-mptcallbacksname-elements
++++ a/drivers/message/fusion/mptbase.h
+@@ -89,6 +89,7 @@
+  */
+ #define MPT_MAX_ADAPTERS		18
+ #define MPT_MAX_PROTOCOL_DRIVERS	16
++#define MPT_MAX_CALLBACKNAME_LEN	49
+ #define MPT_MAX_BUS			1	/* Do not change */
+ #define MPT_MAX_FC_DEVICES		255
+ #define MPT_MAX_SCSI_DEVICES		16
 _
