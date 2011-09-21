@@ -1,65 +1,116 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
-Date: Wed, 21 Sep 2011 09:13:22 +0800
-Message-ID: <D08979F49ABE4A0D9992E8E7B5D34C2D@usish.com.cn>
-References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
+Subject: Re: [RFC PATCH 3/5] libsas: dynamic queue depth
+Date: Wed, 21 Sep 2011 09:17:13 +0800
+Message-ID: <2322D79A36774450A5F0769E26A15C6B@usish.com.cn>
+References: <20110920220819.1094.12265.stgit@localhost6.localdomain6> <20110920221038.1094.7832.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:56896 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:39668 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050Ab1IUBNT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 21:13:19 -0400
-In-Reply-To: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
+	with ESMTP id S1750711Ab1IUBRF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 21:17:05 -0400
+In-Reply-To: <20110920221038.1094.7832.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Dan Williams' <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: jgarzik@pobox.com, JBottomley@parallels.com
+Cc: 'Dave Jiang' <dave.jiang@intel.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, 'Xiangliang Yu' <yuxiangl@marvell.com>, 'Mark Salyzyn' <msalyzyn@us.xyratex.com>, 'Christoph Hellwig' <hch@lst.de>
 
-Hi Dan
-
-Thanks for doing this, I'm OK with the patchset.
-Reviewed-by: Jack Wang <jack_wang@usish.com>
-
- [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
+I suppose to prepare a similar patch, thanks for ding this.
+ [RFC PATCH 3/5] libsas: dynamic queue depth
 > 
-> While enabling atapi device support for isci we encountered a condition
-> whereby multiple srX devices (one for every possible LUN) were exported
-> by the midlayer.  Looking at other drivers showed that they had a local
-> workaround for this and other conditions in custom
-> ->slave_{alloc|configure} methods.  Rather than add custom workaround
-> for isci this patchset uplevels those workarounds to libsas proper.
+> The queue-depth for libsas-attached devices initializes to 32 and can
+> only be increased manually via sysfs to a max of 64, while mpt2sas
+> attached devices initialize to 254 and dynamically float via the
+> midlayer ->change_queue_depth interface.
 > 
-> Patch 3/5 is tagged RFC as I do not know the original history behind
-> hard limiting libsas end devices to a queue_depth of 32.  At least mvsas
-> has been bumping this up to 64 on its own.
+> No performance regression was observed with this change on the isci
+> driver.
 > 
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
+> Cc: Xiangliang Yu <yuxiangl@marvell.com>
+> Cc: Jack Wang <jack_wang@usish.com>
+> Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
+> Cc: Luben Tuikov <ltuikov@yahoo.com>
+> Tested-by: Dave Jiang <dave.jiang@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
+>  drivers/scsi/libsas/sas_scsi_host.c |   39
+> ++++++++++++++++-------------------
+>  1 files changed, 18 insertions(+), 21 deletions(-)
 > 
-> Dan Williams (5):
->       libsas: disable scanning lun > 0 on ata devices
->       libsas: fix ->change_queue_{depth|type} for sata devices
->       libsas: dynamic queue depth
->       mvsas: remove mvs_slave_{alloc|configure}
->       pm8001: remove pm8001_slave_{alloc|configure}
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+> b/drivers/scsi/libsas/sas_scsi_host.c
+> index 4c6923c..fe08ef0 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -784,8 +784,7 @@ int sas_target_alloc(struct scsi_target *starget)
+>  	return 0;
+>  }
 > 
+> -#define SAS_DEF_QD 32
+> -#define SAS_MAX_QD 64
+> +#define SAS_DEF_QD 256
 > 
->  drivers/ata/libata-core.c           |    1 +
->  drivers/ata/libata-scsi.c           |   44
-> +++++++++++++++++++++++------------
->  drivers/scsi/libsas/sas_scsi_host.c |   42
-> +++++++++++++++++++--------------
->  drivers/scsi/mvsas/mv_init.c        |    4 ++-
->  drivers/scsi/mvsas/mv_sas.c         |   30 ------------------------
->  drivers/scsi/mvsas/mv_sas.h         |    2 --
->  drivers/scsi/pm8001/pm8001_init.c   |    4 ++-
->  drivers/scsi/pm8001/pm8001_sas.c    |   31 +------------------------
->  drivers/scsi/pm8001/pm8001_sas.h    |    2 --
->  drivers/scsi/scsi_transport_sas.c   |   10 ++++++--
->  include/linux/libata.h              |    2 ++
->  11 files changed, 69 insertions(+), 103 deletions(-)
+>  int sas_slave_configure(struct scsi_device *scsi_dev)
+>  {
+> @@ -828,31 +827,29 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
+>  		dev->sata_dev.ap->link.device[0].class = ATA_DEV_NONE;
+>  }
+> 
+> -int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth,
+> -			   int reason)
+> +int sas_change_queue_depth(struct scsi_device *sdev, int depth, int
+reason)
+>  {
+> -	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
+> -	int res = min(new_depth, SAS_MAX_QD);
+> +	struct domain_device *dev = sdev_to_domain_dev(sdev);
+> 
+>  	if (dev_is_sata(dev))
+> -		return __ata_change_queue_depth(dev->sata_dev.ap, scsi_dev,
+> -						new_depth, reason);
+> -
+> -	if (reason != SCSI_QDEPTH_DEFAULT)
+> +		return __ata_change_queue_depth(dev->sata_dev.ap, sdev,
+depth,
+> +						reason);
+> +
+> +	switch (reason) {
+> +	case SCSI_QDEPTH_DEFAULT:
+> +	case SCSI_QDEPTH_RAMP_UP:
+> +		if (!sdev->tagged_supported)
+> +			depth = 1;
+> +		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev),
+depth);
+> +		break;
+> +	case SCSI_QDEPTH_QFULL:
+> +		scsi_track_queue_full(sdev, depth);
+> +		break;
+> +	default:
+>  		return -EOPNOTSUPP;
+> -
+> -	if (scsi_dev->tagged_supported)
+> -		scsi_adjust_queue_depth(scsi_dev,
+scsi_get_tag_type(scsi_dev),
+> -					res);
+> -	else {
+> -		sas_printk("device %llx LUN %x queue depth changed to 1\n",
+> -			   SAS_ADDR(dev->sas_addr),
+> -			   scsi_dev->lun);
+> -		scsi_adjust_queue_depth(scsi_dev, 0, 1);
+> -		res = 1;
+>  	}
+> 
+> -	return res;
+> +	return depth;
+>  }
+> 
+>  int sas_change_queue_type(struct scsi_device *scsi_dev, int qt)
+> 
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
