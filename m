@@ -1,32 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH 3/5] libsas: dynamic queue depth
-Date: Tue, 20 Sep 2011 18:18:08 -0400
-Message-ID: <20110920221808.GC2530@infradead.org>
-References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
- <20110920221038.1094.7832.stgit@localhost6.localdomain6>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] [SCSI] libsas: Allow expander T-T attachments
+Date: Tue, 20 Sep 2011 17:50:42 -0700
+Message-ID: <CAA9_cme=OUJcQB+GaJVWSvkg1ha7cmqotuMeZiRda1hzODHuOg@mail.gmail.com>
+References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
+	<1311839519.30253.16.camel@mulgrave>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:40504
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752468Ab1ITWSJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Sep 2011 18:18:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20110920221038.1094.7832.stgit@localhost6.localdomain6>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:42597 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750838Ab1IUAuo convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 20:50:44 -0400
+In-Reply-To: <1311839519.30253.16.camel@mulgrave>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Mark Salyzyn <msalyzyn@us.xyratex.com>, Christoph Hellwig <hch@lst.de>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>
 
-On Tue, Sep 20, 2011 at 03:10:46PM -0700, Dan Williams wrote:
-> The queue-depth for libsas-attached devices initializes to 32 and can
-> only be increased manually via sysfs to a max of 64, while mpt2sas
-> attached devices initialize to 254 and dynamically float via the
-> midlayer ->change_queue_depth interface.
-> 
-> No performance regression was observed with this change on the isci
-> driver.
+On Thu, Jul 28, 2011 at 12:52 AM, James Bottomley
+<jbottomley@parallels.com> wrote:
+> On Wed, 2011-07-27 at 21:19 -0700, Luben Tuikov wrote:
+>> Allow expander table-to-table attachments for
+>> expanders that support it.
+>
+> This is half the code to do SAS 2.0 expanders. =A0You seem to have
+> additions from the other half (self configuring expanders) see below;
+> does this mean you have a patch for self configuring expanders in the
+> works?
 
-Looks reasonable to me.
+I'd like to see that as well, but in the meantime support for the
+other SAS-2 fields does not block basic operation like the lack of
+table-to-table support does.
 
+Can we also tag this for -stable?  It's akin to a pci device id update
+in terms of impact.
+
+Acked-by: Dan Williams <dan.j.williams@intel.com>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
