@@ -1,44 +1,67 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] [SCSI] libsas: Allow expander T-T attachments
-Date: Tue, 20 Sep 2011 17:50:42 -0700
-Message-ID: <CAA9_cme=OUJcQB+GaJVWSvkg1ha7cmqotuMeZiRda1hzODHuOg@mail.gmail.com>
-References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
-	<1311839519.30253.16.camel@mulgrave>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: Re: [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
+Date: Wed, 21 Sep 2011 09:13:22 +0800
+Message-ID: <D08979F49ABE4A0D9992E8E7B5D34C2D@usish.com.cn>
+References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f181.google.com ([209.85.216.181]:42597 "EHLO
-	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838Ab1IUAuo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 20:50:44 -0400
-In-Reply-To: <1311839519.30253.16.camel@mulgrave>
+Received: from sr-smtp.usish.com ([210.5.144.203]:56896 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751050Ab1IUBNT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Sep 2011 21:13:19 -0400
+In-Reply-To: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: jgarzik@pobox.com, JBottomley@parallels.com
 
-On Thu, Jul 28, 2011 at 12:52 AM, James Bottomley
-<jbottomley@parallels.com> wrote:
-> On Wed, 2011-07-27 at 21:19 -0700, Luben Tuikov wrote:
->> Allow expander table-to-table attachments for
->> expanders that support it.
->
-> This is half the code to do SAS 2.0 expanders. =A0You seem to have
-> additions from the other half (self configuring expanders) see below;
-> does this mean you have a patch for self configuring expanders in the
-> works?
+Hi Dan
 
-I'd like to see that as well, but in the meantime support for the
-other SAS-2 fields does not block basic operation like the lack of
-table-to-table support does.
+Thanks for doing this, I'm OK with the patchset.
+Reviewed-by: Jack Wang <jack_wang@usish.com>
 
-Can we also tag this for -stable?  It's akin to a pci device id update
-in terms of impact.
+ [PATCH 0/5] libsas fixes discovered via isci-atapi enabling effort
+> 
+> While enabling atapi device support for isci we encountered a condition
+> whereby multiple srX devices (one for every possible LUN) were exported
+> by the midlayer.  Looking at other drivers showed that they had a local
+> workaround for this and other conditions in custom
+> ->slave_{alloc|configure} methods.  Rather than add custom workaround
+> for isci this patchset uplevels those workarounds to libsas proper.
+> 
+> Patch 3/5 is tagged RFC as I do not know the original history behind
+> hard limiting libsas end devices to a queue_depth of 32.  At least mvsas
+> has been bumping this up to 64 on its own.
+> 
+> ---
+> 
+> Dan Williams (5):
+>       libsas: disable scanning lun > 0 on ata devices
+>       libsas: fix ->change_queue_{depth|type} for sata devices
+>       libsas: dynamic queue depth
+>       mvsas: remove mvs_slave_{alloc|configure}
+>       pm8001: remove pm8001_slave_{alloc|configure}
+> 
+> 
+>  drivers/ata/libata-core.c           |    1 +
+>  drivers/ata/libata-scsi.c           |   44
+> +++++++++++++++++++++++------------
+>  drivers/scsi/libsas/sas_scsi_host.c |   42
+> +++++++++++++++++++--------------
+>  drivers/scsi/mvsas/mv_init.c        |    4 ++-
+>  drivers/scsi/mvsas/mv_sas.c         |   30 ------------------------
+>  drivers/scsi/mvsas/mv_sas.h         |    2 --
+>  drivers/scsi/pm8001/pm8001_init.c   |    4 ++-
+>  drivers/scsi/pm8001/pm8001_sas.c    |   31 +------------------------
+>  drivers/scsi/pm8001/pm8001_sas.h    |    2 --
+>  drivers/scsi/scsi_transport_sas.c   |   10 ++++++--
+>  include/linux/libata.h              |    2 ++
+>  11 files changed, 69 insertions(+), 103 deletions(-)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Acked-by: Dan Williams <dan.j.williams@intel.com>
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
