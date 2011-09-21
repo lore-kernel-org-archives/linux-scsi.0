@@ -1,38 +1,62 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: HighPoint RocketRaid 620 vs. RocketRaid 640 -- supported?
-Date: Wed, 21 Sep 2011 07:28:26 -0400 (EDT)
-Message-ID: <alpine.DEB.2.02.1109210726250.31360@p34.internal.lan>
-References: <alpine.DEB.2.02.1109191754531.7938@p34.internal.lan>
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH 1/5] libsas: disable scanning lun > 0 on ata devices
+Date: Wed, 21 Sep 2011 05:28:07 -0700
+Message-ID: <FC1F9E38C0703341A1A750524E2525A9018AE1E2@XYUS-EX22.xyus.xyratex.com>
+References: <20110920220819.1094.12265.stgit@localhost6.localdomain6> <20110920221008.1094.34064.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.02.1109191754531.7938@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:37302 "EHLO
+	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753384Ab1IUMfo convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Sep 2011 08:35:44 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20110920221008.1094.34064.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Luben Tuikov <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Darrick Wong <djwong@us.ibm.com>
 
-Hi,
+Good Stuff
 
-Incase anyone is wondering the same thing, I contacted Highpoint and they 
-said (confirmed) the 620 support (which I am using now) is built-in to the 
-kernel and the 640 is not, so unless you like compiling kernel modules/out 
-of tree drivers for a _boot_ volume and want a regular SATA 6.0gbps 
-controller that supports TRIM, I'd go for the 620 even though it maxes out 
-around 390-420MiB/s read where a real SAS controller supports 490-500MiB/s 
-for an Intel 510 SSD, but remember, SAS controllers (at least the one I 
-tested with does not support TRIM and there is no Intel SSD optimizer for 
-Linux.
+-----Original Message-----
+From: Dan Williams [mailto:dan.j.williams@intel.com] 
+Sent: Tuesday, September 20, 2011 6:10 PM
+To: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+Cc: Luben Tuikov; jgarzik@pobox.com; JBottomley@parallels.com; Jack
+Wang; Xiangliang Yu; Mark Salyzyn; Darrick Wong
+Subject: [PATCH 1/5] libsas: disable scanning lun > 0 on ata devices
 
-Justin.
+Currently mvsas and pm8001 have custom ->slave_alloc implementations to
+achieve this.  Uplevel it for all libsas drivers as isci encounters
+problems
+with atapi devices when scanning past lun0.
 
-On Mon, 19 Sep 2011, Justin Piszcz wrote:
+Just do what Darrick suggested [1], and limit the scan for ata devices.
 
-> Hi,
->
-> I have a HighPoint RocketRaid 620 and it works fine with 3.0+.
-> The HighPoint RocketRaid 640 also has a Marvell 88SE9128, can anyne confirm 
-> whether this (x4) PCI-e 2.0 card works in Linux with the built-in kernel 
-> driver?
->
-> Justin.
->
+[1] http://marc.info/?l=linux-scsi&m=116604101119861&w=2
+
+Cc: Darrick Wong <djwong@us.ibm.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: Jack Wang <jack_wang@usish.com>
+Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
+Cc: Luben Tuikov <ltuikov@yahoo.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/scsi_transport_sas.c |   10 ++++++++--
+ 1 files changed, 8 insertions(+), 2 deletions(-)
+______________________________________________________________________
+This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
+ 
+Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
+ 
+Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+ 
+The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
+______________________________________________________________________
+ 
+
+
