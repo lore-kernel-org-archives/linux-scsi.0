@@ -1,89 +1,108 @@
-From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
-Subject: RE: [RFC PATCH 3/5] libsas: dynamic queue depth
-Date: Wed, 21 Sep 2011 05:37:02 -0700
-Message-ID: <FC1F9E38C0703341A1A750524E2525A9018AE1E3@XYUS-EX22.xyus.xyratex.com>
-References: <20110920220819.1094.12265.stgit@localhost6.localdomain6> <20110920221038.1094.7832.stgit@localhost6.localdomain6>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Stop reading adapter dump prematurely
+Date: Wed, 21 Sep 2011 08:51:11 -0500
+Message-ID: <201109211351.p8LDp3Oi010340@d03av02.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog110.obsmtp.com ([207.126.144.129]:41590 "EHLO
-	eu1sys200aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752529Ab1IUMhe convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Sep 2011 08:37:34 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20110920221038.1094.7832.stgit@localhost6.localdomain6>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:35888 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282Ab1IUN5l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2011 09:57:41 -0400
+Received: from /spool/local
+	by us.ibm.com with XMail ESMTP
+	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Wed, 21 Sep 2011 07:51:42 -0600
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p8LDpCr7194926
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2011 07:51:13 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p8LDp7Ps010488
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Sep 2011 07:51:12 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Dave Jiang <dave.jiang@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Christoph Hellwig <hch@lst.de>
+To: James.Bottomley@parallels.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-Good Stuff, 'cept I am worried about the host max queue depth of 128 on
-the pm8001 driver resulting in starvation. I defer to Jack Wang's
-judgement on that point (and will explore separately how we can increase
-the host queue depth reliably on the pm8001).
 
-Consider this an Ack from me that has an interlock on Jack Wang's Ack
-... 
+When the ipr driver decides to dump the adapter, it changes the
+sdt_state to GET_DUMP, then prepares the adapter so that the dump
+can be read. However, if the ipr worker thread wakes up for some
+reason before the driver has put the adapter in a state where it
+can succesfully dump the adapter, the driver will start dumping
+the adapter too early, which can potentially trigger a BUG check
+in the pci config blocking API. Fix this by adding a new
+sdt_state to differentiate between the ipr driver wanting to dump
+the adapter in the near future and wanting to dump the adapter now.
 
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: Dan Williams [mailto:dan.j.williams@intel.com] 
-Sent: Tuesday, September 20, 2011 6:11 PM
-To: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
-Cc: Dave Jiang; Luben Tuikov; jgarzik@pobox.com;
-JBottomley@parallels.com; Jack Wang; Xiangliang Yu; Mark Salyzyn;
-Christoph Hellwig
-Subject: [RFC PATCH 3/5] libsas: dynamic queue depth
-
-The queue-depth for libsas-attached devices initializes to 32 and can
-only be increased manually via sysfs to a max of 64, while mpt2sas
-attached devices initialize to 254 and dynamically float via the
-midlayer ->change_queue_depth interface.
-
-No performance regression was observed with this change on the isci
-driver.
-
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Jack Wang <jack_wang@usish.com>
-Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>
-Tested-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |   39
-++++++++++++++++-------------------
- 1 files changed, 18 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c
-b/drivers/scsi/libsas/sas_scsi_host.c
-index 4c6923c..fe08ef0 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -784,8 +784,7 @@ int sas_target_alloc(struct scsi_target *starget)
- 	return 0;
- }
- 
--#define SAS_DEF_QD 32
--#define SAS_MAX_QD 64
-+#define SAS_DEF_QD 256
- 
- int sas_slave_configure(struct scsi_device *scsi_dev)
- {
-______________________________________________________________________
-This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
- 
-Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
- 
-Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
- 
-The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
-______________________________________________________________________
- 
+ drivers/scsi/ipr.c |   15 +++++++++++----
+ drivers/scsi/ipr.h |    1 +
+ 2 files changed, 12 insertions(+), 4 deletions(-)
 
+diff -puN drivers/scsi/ipr.h~ipr_dump_state_fix drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_dump_state_fix	2011-09-13 10:40:58.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2011-09-13 10:40:58.000000000 -0500
+@@ -1360,6 +1360,7 @@ enum ipr_sdt_state {
+ 	INACTIVE,
+ 	WAIT_FOR_DUMP,
+ 	GET_DUMP,
++	READ_DUMP,
+ 	ABORT_DUMP,
+ 	DUMP_OBTAINED
+ };
+diff -puN drivers/scsi/ipr.c~ipr_dump_state_fix drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_dump_state_fix	2011-09-13 10:40:58.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2011-09-13 10:40:58.000000000 -0500
+@@ -2901,7 +2901,7 @@ static void ipr_get_ioa_dump(struct ipr_
+ 
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	if (ioa_cfg->sdt_state != GET_DUMP) {
++	if (ioa_cfg->sdt_state != READ_DUMP) {
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 		return;
+ 	}
+@@ -3097,7 +3097,7 @@ static void ipr_worker_thread(struct wor
+ 	ENTER;
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
+ 
+-	if (ioa_cfg->sdt_state == GET_DUMP) {
++	if (ioa_cfg->sdt_state == READ_DUMP) {
+ 		dump = ioa_cfg->dump;
+ 		if (!dump) {
+ 			spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+@@ -7449,6 +7449,8 @@ static int ipr_reset_wait_for_dump(struc
+ 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+ 
+ 	if (ioa_cfg->sdt_state == GET_DUMP)
++		ioa_cfg->sdt_state = WAIT_FOR_DUMP;
++	else if (ioa_cfg->sdt_state == READ_DUMP)
+ 		ioa_cfg->sdt_state = ABORT_DUMP;
+ 
+ 	ipr_cmd->job_step = ipr_reset_alert;
+@@ -7614,6 +7616,7 @@ static int ipr_reset_restore_cfg_space(s
+ 		ipr_cmd->job_step = ipr_reset_enable_ioa;
+ 
+ 		if (GET_DUMP == ioa_cfg->sdt_state) {
++			ioa_cfg->sdt_state = READ_DUMP;
+ 			if (ioa_cfg->sis64)
+ 				ipr_reset_start_timer(ipr_cmd, IPR_SIS64_DUMP_TIMEOUT);
+ 			else
+@@ -8003,8 +8006,12 @@ static void ipr_initiate_ioa_reset(struc
+ 	if (ioa_cfg->ioa_is_dead)
+ 		return;
+ 
+-	if (ioa_cfg->in_reset_reload && ioa_cfg->sdt_state == GET_DUMP)
+-		ioa_cfg->sdt_state = ABORT_DUMP;
++	if (ioa_cfg->in_reset_reload) {
++		if (ioa_cfg->sdt_state == GET_DUMP)
++			ioa_cfg->sdt_state = WAIT_FOR_DUMP;
++		else if (ioa_cfg->sdt_state == READ_DUMP)
++			ioa_cfg->sdt_state = ABORT_DUMP;
++	}
+ 
+ 	if (ioa_cfg->reset_retries++ >= IPR_NUM_RESET_RELOAD_RETRIES) {
+ 		dev_err(&ioa_cfg->pdev->dev,
+_
 
