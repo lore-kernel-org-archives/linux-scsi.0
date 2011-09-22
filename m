@@ -1,109 +1,97 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [RFC PATCH 3/5] libsas: dynamic queue depth
-Date: Thu, 22 Sep 2011 09:38:54 +0800
-Message-ID: <152AA3A5AB22434CBD95AE30281CA2F0@usish.com.cn>
-References: <20110920220819.1094.12265.stgit@localhost6.localdomain6> <20110920221038.1094.7832.stgit@localhost6.localdomain6> <FC1F9E38C0703341A1A750524E2525A9018AE1E3@XYUS-EX22.xyus.xyratex.com>
+Subject: [PATCH] pm8001: raise host can queue
+Date: Thu, 22 Sep 2011 10:05:45 +0800
+Message-ID: <CE155251DF87469DA8F1A8290EDCF361@usish.com.cn>
 Mime-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_006B_01CC790F.3205E820"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:54355 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737Ab1IVCFW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2011 22:05:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, JBottomley@parallels.com
+Cc: 'lindar_liu' <lindar_liu@usish.com>, crystal_yu@usish.com, john_gong@usish.com, mark_salyzyn@us.xyratex.com
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_006B_01CC790F.3205E820
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE1E3@XYUS-EX22.xyus.xyratex.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Dan Williams' <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: 'Dave Jiang' <dave.jiang@intel.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, jgarzik@pobox.com, JBottomley@parallels.com, 'Xiangliang Yu' <yuxiangl@marvell.com>, 'Christoph Hellwig' <hch@lst.de>
-List-Id: linux-scsi@vger.kernel.org
 
-Thanks Mark, I 'll post a patch to raise the default host can queue value,
-I'm OK with his change!
---Jack
-RE: [RFC PATCH 3/5] libsas: dynamic queue depth
-> 
-> Good Stuff, 'cept I am worried about the host max queue depth of 128 on
-> the pm8001 driver resulting in starvation. I defer to Jack Wang's
-> judgement on that point (and will explore separately how we can increase
-> the host queue depth reliably on the pm8001).
-> 
-> Consider this an Ack from me that has an interlock on Jack Wang's Ack
-> ...
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: Dan Williams [mailto:dan.j.williams@intel.com]
-> Sent: Tuesday, September 20, 2011 6:11 PM
-> To: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
-> Cc: Dave Jiang; Luben Tuikov; jgarzik@pobox.com;
-> JBottomley@parallels.com; Jack Wang; Xiangliang Yu; Mark Salyzyn;
-> Christoph Hellwig
-> Subject: [RFC PATCH 3/5] libsas: dynamic queue depth
-> 
-> The queue-depth for libsas-attached devices initializes to 32 and can
-> only be increased manually via sysfs to a max of 64, while mpt2sas
-> attached devices initialize to 254 and dynamically float via the
-> midlayer ->change_queue_depth interface.
-> 
-> No performance regression was observed with this change on the isci
-> driver.
-> 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-> Cc: Xiangliang Yu <yuxiangl@marvell.com>
-> Cc: Jack Wang <jack_wang@usish.com>
-> Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-> Cc: Luben Tuikov <ltuikov@yahoo.com>
-> Tested-by: Dave Jiang <dave.jiang@intel.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/libsas/sas_scsi_host.c |   39
-> ++++++++++++++++-------------------
->  1 files changed, 18 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
-> b/drivers/scsi/libsas/sas_scsi_host.c
-> index 4c6923c..fe08ef0 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -784,8 +784,7 @@ int sas_target_alloc(struct scsi_target *starget)
->  	return 0;
->  }
-> 
-> -#define SAS_DEF_QD 32
-> -#define SAS_MAX_QD 64
-> +#define SAS_DEF_QD 256
-> 
->  int sas_slave_configure(struct scsi_device *scsi_dev)
->  {
-> ______________________________________________________________________
-> This email may contain privileged or confidential information, which
-should
-> only be used for the purpose for which it was sent by Xyratex. No further
-rights
-> or licenses are granted to use such information. If you are not the
-intended
-> recipient of this message, please notify the sender by return and delete
-it.
-> You may not use, copy, disclose or rely on the information contained in
-it.
-> 
-> Internet email is susceptible to data corruption, interception and
-> unauthorised amendment for which Xyratex does not accept liability. While
-we
-> have taken reasonable precautions to ensure that this email is free of
-viruses,
-> Xyratex does not accept liability for the presence of any computer viruses
-in
-> this email, nor for any losses caused as a result of viruses.
-> 
-> Xyratex Technology Limited (03134912), Registered in England & Wales,
-> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
-> 
-> The Xyratex group of companies also includes, Xyratex Ltd, registered in
-> Bermuda, Xyratex International Inc, registered in California, Xyratex
-> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
-Ltd
-> registered in The People's Republic of China and Xyratex Japan Limited
-> registered in Japan.
-> ______________________________________________________________________
-> 
+Hi James,
+
+Because Dan change device queue depth to 256, and as point by Mark this may
+result in starvation, so I bump the host can queue value to 510.
+
+Best regards!
+
+Jack
+
+>From 3647cde88d66760ca336ad127a5b1fdf5c1d28f7 Mon Sep 17 00:00:00 2001
+From: Jack Wang <jack_wang@usish.com>
+Date: Thu, 22 Sep 2011 09:50:54 +0800
+Subject: [PATCH] bump host can queue to follow libsas queue depth change
+
+Signed-off-by: Jack Wang <jack_wang@usish.com>
+---
+ pm8001_defs.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/pm8001_defs.h b/pm8001_defs.h
+index 944afad..704b492 100644
+--- a/pm8001_defs.h
++++ b/pm8001_defs.h
+@@ -68,7 +68,7 @@ enum port_type {
+ #define	PM8001_MAX_CCB		 512	/* max ccbs supported */
+ #define	PM8001_MAX_INB_NUM	 1
+ #define	PM8001_MAX_OUTB_NUM	 1
+-#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */
++#define	PM8001_CAN_QUEUE	 510	/* SCSI Queue depth */
+ 
+ /* unchangeable hardware details */
+ #define	PM8001_MAX_PHYS		 8	/* max. possible phys */
+-- 
+1.7.4.msysgit.0
+
+
+
+------=_NextPart_000_006B_01CC790F.3205E820
+Content-Type: application/octet-stream;
+	name="0001-bump-host-can-queue-to-follow-libsas-queue-depth-cha.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0001-bump-host-can-queue-to-follow-libsas-queue-depth-cha.patch"
+
+>From 3647cde88d66760ca336ad127a5b1fdf5c1d28f7 Mon Sep 17 00:00:00 2001=0A=
+From: Jack Wang <jack_wang@usish.com>=0A=
+Date: Thu, 22 Sep 2011 09:50:54 +0800=0A=
+Subject: [PATCH] bump host can queue to follow libsas queue depth change=0A=
+=0A=
+Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
+---=0A=
+ pm8001_defs.h |    2 +-=0A=
+ 1 files changed, 1 insertions(+), 1 deletions(-)=0A=
+=0A=
+diff --git a/pm8001_defs.h b/pm8001_defs.h=0A=
+index 944afad..704b492 100644=0A=
+--- a/pm8001_defs.h=0A=
++++ b/pm8001_defs.h=0A=
+@@ -68,7 +68,7 @@ enum port_type {=0A=
+ #define	PM8001_MAX_CCB		 512	/* max ccbs supported */=0A=
+ #define	PM8001_MAX_INB_NUM	 1=0A=
+ #define	PM8001_MAX_OUTB_NUM	 1=0A=
+-#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */=0A=
++#define	PM8001_CAN_QUEUE	 510	/* SCSI Queue depth */=0A=
+ =0A=
+ /* unchangeable hardware details */=0A=
+ #define	PM8001_MAX_PHYS		 8	/* max. possible phys */=0A=
+-- =0A=
+1.7.4.msysgit.0=0A=
+=0A=
+
+------=_NextPart_000_006B_01CC790F.3205E820--
 
