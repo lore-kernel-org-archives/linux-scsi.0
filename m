@@ -1,17 +1,79 @@
-From: Ganesri india <ganesri@gmail.com>
-Subject: Story of the Linux
-Date: Thu, 22 Sep 2011 18:45:46 +0530
-Message-ID: <CADGTBXzsNMJNBPpz=gR+QXoH9r=K+kGOyuGGbFfuc+AbW8Wf+g@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] block: Free queue resources at blk_release_queue()
+Date: Thu, 22 Sep 2011 15:18:33 +0200
+Message-ID: <201109221318.p8MDIXPP020015@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54510 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752191Ab1IVNSh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Sep 2011 09:18:37 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@parallels.com>
+Cc: jaxboe@fusionio.com, linux-scsi@vger.kernel.org
 
-Once upon a time, a mad monkey named Linus Torvalds tied a knot with a
-thread. Day after the day more mad monkeys started tying knot over the
-knot and today it became so complicated that none can figure out the
-tail and head of the thread.
 
-Moral of the story : Keep it simple silly.
+A kernel crash is observed when a mounted ext3/ext4 filesystem
+is physically removed.
+The problem is that blk_cleanup_queue() frees up some resources
+eg by calling elevator_exit(), which are not checked for in
+normal operation.
+So we should rather move these calls to the destructor function
+blk_release_queue() as at that point all remaining references
+are gone.
+However, in doing so we have to ensure that any externally
+supplied queue_lock is disconnected as the driver might
+free up the lock after the call of blk_cleanup_queue(),
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 90e1ffd..81a431b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -348,9 +348,10 @@ void blk_put_queue(struct request_queue *q)
+ EXPORT_SYMBOL(blk_put_queue);
+ 
+ /*
+- * Note: If a driver supplied the queue lock, it should not zap that lock
+- * unexpectedly as some queue cleanup components like elevator_exit() and
+- * blk_throtl_exit() need queue lock.
++ * Note: If a driver supplied the queue lock, it is disconnected
++ * by this function. The actual state of the lock doesn't matter
++ * here as the request_queue isn't accessible after this point
++ * (QUEUE_FLAG_DEAD is set) and no other requests will be queued.
+  */
+ void blk_cleanup_queue(struct request_queue *q)
+ {
+@@ -367,10 +368,8 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
+ 	mutex_unlock(&q->sysfs_lock);
+ 
+-	if (q->elevator)
+-		elevator_exit(q->elevator);
+-
+-	blk_throtl_exit(q);
++	if (q->queue_lock != &q->__queue_lock)
++		q->queue_lock = &q->__queue_lock;
+ 
+ 	blk_put_queue(q);
+ }
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 0ee17b5..a5a756b 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -477,6 +477,11 @@ static void blk_release_queue(struct kobject *kobj)
+ 
+ 	blk_sync_queue(q);
+ 
++	if (q->elevator)
++		elevator_exit(q->elevator);
++
++	blk_throtl_exit(q);
++
+ 	if (rl->rq_pool)
+ 		mempool_destroy(rl->rq_pool);
+ 
