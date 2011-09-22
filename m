@@ -1,126 +1,107 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [Bug 25832] kernel crashes when a mounted ext3/4 file system
- is physically removed
-Date: Thu, 22 Sep 2011 18:32:26 +0200
-Message-ID: <4E7B631A.20605@suse.de>
-References: <4E7B296D.8020900@suse.de> <Pine.LNX.4.44L0.1109221113380.2137-100000@iolanthe.rowland.org> <20110922162047.GD3431@oc1711230544.ibm.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] [SCSI] libsas: Allow expander T-T attachments
+Date: Thu, 22 Sep 2011 09:35:19 -0700 (PDT)
+Message-ID: <1316709319.79868.YahooMailNeo@web31804.mail.mud.yahoo.com>
+References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com> <1316691000.10571.6.camel@dabdike> <FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com>
+Reply-To: Luben Tuikov <ltuikov@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43248 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750874Ab1IVQ2Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2011 12:28:24 -0400
-In-Reply-To: <20110922162047.GD3431@oc1711230544.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>, James Bottomley <jbottomley@parallels.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Darrick Wong <djwong@us.ibm.com>, Xiangliang Yu <yuxiangl@marvell.com>, Jack Wang <jack_wang@usish.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Rocko Requin <rockorequin@hotmail.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Ben Hutchings <ben@decadent.org.uk>, jaxboe@fusionio.com, James Bottomley <James.Bottomley@HansenPartnership.com>, tytso@mit.edu, Kernel development list <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 09/22/2011 06:20 PM, Thadeu Lima de Souza Cascardo wrote:
-> On Thu, Sep 22, 2011 at 11:16:30AM -0400, Alan Stern wrote:
->> Rocko:
->>
->> Can you try testing this patch instead of all the patches I sent to=20
->> you (but keep Ted's patch)?
->>
->> Alan Stern
->>
->> On Thu, 22 Sep 2011, Hannes Reinecke wrote:
->>
->>> On 09/20/2011 09:32 AM, Jun'ichi Nomura wrote:
->>>> On 09/19/11 08:00, Ben Hutchings wrote:
->>> [ .. ]
->>>>>
->>>>> There have been reports of this in Debian going back to 2.6.39:
->>>>>
->>>>> http://bugs.debian.org/631187
->>>>> http://bugs.debian.org/636263
->>>>> http://bugs.debian.org/642043
->>>>>
->>>>> Plus possibly related crashes in elv_put_request after CD-ROM rem=
-oval:
->>>>>
->>>>> http://bugs.debian.org/633890
->>>>> http://bugs.debian.org/634681
->>>>> http://bugs.debian.org/636103
->>>>>
->>>>> The former was also reported in Ubuntu since their 2.6.38-10:
->>>>>
->>>>> https://bugs.launchpad.net/debian/+source/linux-2.6/+bug/793796
->>>>>
->>>>> The result of the discussion there was that it appeared to be a
->>>>> regression due to commit 86cbfb5607d4b81b1a993ff689bbd2addd5d3a9b=
+Salyzyn, DON'T do this any more with mine or anybody else's patches. OK=
+AY?
+
+
+
+----- Original Message -----
+> From: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+> To: James Bottomley <jbottomley@parallels.com>; Luben Tuikov <ltuikov=
+@yahoo.com>
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Darrick=
+ Wong <djwong@us.ibm.com>; Xiangliang Yu <yuxiangl@marvell.com>; Jack W=
+ang <jack_wang@usish.com>
+> Sent: Thursday, September 22, 2011 8:04 AM
+> Subject: RE: [PATCH] [SCSI] libsas: Allow expander T-T attachments
+>=20
+> Enclosed is an updated patch that passes checkpatch.pl (a few 80-char=
+acter line=20
+> errors in the original), maintain existing indent mechanics and conta=
+ins my=20
+> 'Ack' and the recommended Cc list.
+>=20
+> Wait for Luben's Ack or Override (despite the fact I took the liberty=
+ of=20
+> adding his Signed-off-by on the checkpatch required adjustments).
+>=20
+> Sincerely -- Mark Salyzyn=20
+>=20
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.=
+kernel.org]=20
+> On Behalf Of James Bottomley
+> Sent: Thursday, September 22, 2011 7:30 AM
+> To: Luben Tuikov
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] [SCSI] libsas: Allow expander T-T attachments
+>=20
+> On Wed, 2011-07-27 at 21:19 -0700, Luben Tuikov wrote:
+>>  Allow expander table-to-table attachments for
+>>  expanders that support it.
+>>=20
+>>  Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+>=20
+> OK, so now I need an applyable patch, please.=C2=A0 It looks like the=
+ mail
+> server has mapped all tabs to spaces.=C2=A0 If you can't fix the mail=
+er, just
+> sending the patch as an attachment is fine.
+>=20
+> James
+>=20
+> NrybX=C7=A7v^)=DE=BA{.n+{"{ay=CA=87=DA=99,j fhzwj:+vwjm zZ+=DD=A2j"!
+>=20
+> _____________________________________________________________________=
+_
+> This email may contain privileged or confidential information, which =
+should only=20
+> be used for the purpose for which it was sent by Xyratex. No further =
+rights or=20
+> licenses are granted to use such information. If you are not the inte=
+nded=20
+> recipient of this message, please notify the sender by return and del=
+ete it. You=20
+> may not use, copy, disclose or rely on the information contained in i=
+t.
+>=20
+> Internet email is susceptible to data corruption, interception and un=
+authorised=20
+> amendment for which Xyratex does not accept liability. While we have =
+taken=20
+> reasonable precautions to ensure that this email is free of viruses, =
+Xyratex=20
+> does not accept liability for the presence of any computer viruses in=
+ this=20
+> email, nor for any losses caused as a result of viruses.
+>=20
+> Xyratex Technology Limited (03134912), Registered in England & Wales,=
 =20
->>>>> ("[SCSI] put stricter guards on queue dead checks") which was als=
-o
->>>>> included in a stable update for 2.6.38.
->>>>>
->>>>> There was also a report on bugzilla.kernel.org, though no-one can=
- see
->>>>> quite what that says now:
->>>>>
->>>>> https://bugzilla.kernel.org/show_bug.cgi?id=3D38842
->>>>>
->>>>> I also reported most of the above to James Bottomley and linux-sc=
-si
->>>>> nearly 2 months ago, to no response.
->>>>
->>>> I've reported a similar oops related to the above commit:
->>>>   [BUG] Oops when SCSI device under multipath is removed
->>>>   https://lkml.org/lkml/2011/8/10/11
->>>>
->>>> Elevator being removed is the core of the problem.
->>>> And the essential issue seems 2 different models of queue/driver r=
-elation
->>>> implied by queue_lock.
->>>>
->>>> If reverting the commit is not an option,
->>>> until somebody comes up to fix the essential issue,
->>>> the patch below should close the regressions introduced by the com=
-mit.
->>>>
->>> Why do you have to do it that complicated?
->>> Couldn't we just state that any external lock is being disconnected=
- from
->>> queue_lock after blk_cleanup_queue()?
->>>
->>> Then something like this should suffice here:
->>
->>
->>
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index 90e1ffd..a4ac005 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -367,10 +367,8 @@ void blk_cleanup_queue(struct request_queue *q)
->>         queue_flag_set_unlocked(QUEUE_FLAG_DEAD, q);
->>         mutex_unlock(&q->sysfs_lock);
->>
->> -       if (q->elevator)
->> -               elevator_exit(q->elevator);
->> -
->> -       blk_throtl_exit(q);
->> +       if (q->queue_lock !=3D q->__queue_lock)
->> +               q->queue_lock =3D q->__queue_lock;
+> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
 >=20
-> That should be &q->__queue_lock.
->=20
-Why, but of course.
-It's been fixed with the official patch
-(cf block: Free queue resources at blk_release_queue())
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke              zSeries & Storage
-hare@suse.de                  +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> The Xyratex group of companies also includes, Xyratex Ltd, registered=
+ in=20
+> Bermuda, Xyratex International Inc, registered in California, Xyratex=
+ (Malaysia)=20
+> Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd regi=
+stered in=20
+> The People's Republic of China and Xyratex Japan Limited registered i=
+n=20
+> Japan.
+> _____________________________________________________________________=
+_
+>
