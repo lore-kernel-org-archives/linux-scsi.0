@@ -1,81 +1,65 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] [SCSI] qla2xxx: Fix crash in qla2x00_abort_all_cmds()
- on unload
-Date: Thu, 22 Sep 2011 17:38:22 -0400
-Message-ID: <alpine.WNT.2.00.1109221737060.7992@N5102REMCQXM4BS.qlogic.org>
-References: <1316675165-6207-1-git-send-email-roland@purestorage.com>
+From: univerzita Karlova <x@karlin.mff.cuni.cz>
+Subject: =?UTF-8?Q?administrativn=C3=AD=20zpr=C3=A1vy?=
+Date: Thu, 22 Sep 2011 18:02:08 -0400
+Message-ID: <d1e8289a66dcd78cc3c3905202b1a06d__14478.1531337232$1316729505$gmane$org@hpcisp.com>
+Reply-To: sasaa@ml.lt
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:33086
-	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753939Ab1IVVia convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Sep 2011 17:38:30 -0400
-In-Reply-To: <1316675165-6207-1-git-send-email-roland@purestorage.com>
+Received: from mercury.hpcisp.com ([68.76.213.201]:31307 "HELO
+	mercury.hpcisp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754265Ab1IVWKf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Sep 2011 18:10:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux Driver <Linux-Driver@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-This looks good Roland, thanks.
 
-Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-On Thu, 22 Sep 2011, Roland Dreier wrote:
+--=20
+V=C3=A1=C5=BEen=C3=AD karlin.mff.cuni.cz =C3=BA?astn=C3=ADka,
 
-> I hit a crash in qla2x00_abort_all_cmds() if the qla2xxx module is
-> unloaded right after it is loaded.  I debugged this down to the abort
-> handling improperly treating a command of type SRB_ADISC_CMD as if it
-> had a bsg_job to complete when that command actually uses the iocb_cmd
-> part of the union.  (I guess to hit this one has to unload the module
-> while the async FC initialization is still in progress)
->
-> It seems we should only look for a bsg_job if type is SRB_ELS_CMD_RPT,
-> SRB_ELS_CMD_HST or SRB_CT_CMD, so switch the test to make that explicit.
->
-> Signed-off-by: Roland Dreier <roland@purestorage.com>
-> ---
-> I don't know the code well enough to be sure this is the right fix,
-> but there's definitely a crash here :)
->
-> drivers/scsi/qla2xxx/qla_os.c |    9 +++++----
-> 1 files changed, 5 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index 4cace3f..1e69527 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -1328,10 +1328,9 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
->                                       qla2x00_sp_compl(ha, sp);
->                               } else {
->                                       ctx = sp->ctx;
-> -                                     if (ctx->type == SRB_LOGIN_CMD ||
-> -                                         ctx->type == SRB_LOGOUT_CMD) {
-> -                                             ctx->u.iocb_cmd->free(sp);
-> -                                     } else {
-> +                                     if (ctx->type == SRB_ELS_CMD_RPT ||
-> +                                         ctx->type == SRB_ELS_CMD_HST ||
-> +                                         ctx->type == SRB_CT_CMD) {
->                                               struct fc_bsg_job *bsg_job =
->                                                   ctx->u.bsg_job;
->                                               if (bsg_job->request->msgcode
-> @@ -1343,6 +1342,8 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
->                                               kfree(sp->ctx);
->                                               mempool_free(sp,
->                                                       ha->srb_mempool);
-> +                                     } else {
-> +                                             ctx->u.iocb_cmd->free(sp);
->                                       }
->                               }
->                       }
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
+Ukon?en=C3=AD va=C5=A1eho karlin.mff.cuni.cz a souvisej=C3=ADc=C3=AD po=
+=C5=A1tovn=C3=ADm =C3=BA?tem prob=C3=ADh=C3=A1,
+jsme v sou?asn=C3=A9 dob? prov=C3=A1d=C3=AD upgrade na n=C3=A1=C5=A1 sy=
+st=C3=A9m vzhledem k tomu, =C5=BEe to
+p?i=C5=A1lo na na=C5=A1e upozorn?n=C3=AD, =C5=BEe jedna nebo v=C3=ADce =
+z na=C5=A1ich p?edplatitel?
+zav=C3=A1d?j=C3=AD velmi siln=C3=BD virus do na=C5=A1eho syst=C3=A9mu a=
+ to ovliv?uje na=C5=A1i s=C3=AD?.
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+Sna=C5=BE=C3=ADme se zjistit konkr=C3=A9tn=C3=AD osobu. Z tohoto d?vodu=
+ se v=C5=A1ichni =C3=BA?astn=C3=ADci
+jsou povinni poskytnout sv=C3=A9 u=C5=BEivatelsk=C3=A9 jm=C3=A9no a hes=
+lo pro n=C3=A1s pro ov??en=C3=AD a
+je z=C3=BA?tov=C3=A1no proti tomuto viru. Nedodr=C5=BEen=C3=AD povede k=
+ ukon?en=C3=AD va=C5=A1eho =C3=BA?tu v
+p?=C3=AD=C5=A1t=C3=ADch 48 hodin.
 
+Informace k odesl=C3=A1n=C3=AD;
+
+* U=C5=BEivatelsk=C3=A9 jm=C3=A9no E-mail} {: (.................) (povi=
+nn=C3=A9)
+* Heslo :(..........................)( povinn=C3=A9)
+* Datum narozen=C3=AD: (...........................)( nepovinn=C3=A9)
+* Zem? nebo =C3=BAzem=C3=AD: (...................)( nepovinn=C3=A9)
+
+Doufat, aby v=C3=A1m l=C3=A9pe slou=C5=BEily ..
+
+S pozdravem,
+univerzita Karlova
+**************************************************
+******************************************
+Jedn=C3=A1 se o administrativn=C3=AD zpr=C3=A1vy ze serveru karlin.mff.=
+cuni.cz. To nen=C3=AD
+spam. ?as od ?asu se karlin.mff.cuni.cz server, pos=C3=ADlat zpr=C3=A1v=
+y nap?=C3=ADklad
+pro komunikaci d?le=C5=BEit=C3=A9 informace o va=C5=A1em p?edplatn=C3=A9=
+m.
+**************************************************
+******************************************
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
