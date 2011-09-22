@@ -1,70 +1,57 @@
-From: Xiangliang Yu <yuxiangl@marvell.com>
-Subject: RE: [PATCH 4/5] mvsas: remove mvs_slave_{alloc|configure}
-Date: Wed, 21 Sep 2011 19:26:47 -0700
-Message-ID: <F766E4F80769BD478052FB6533FA745D1A1150A607@SC-VEXCH4.marvell.com>
-References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
- <20110920221051.1094.39578.stgit@localhost6.localdomain6>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [PATCH 1/5] libsas: disable scanning lun > 0 on ata devices
+Date: Wed, 21 Sep 2011 22:29:19 -0400
+Message-ID: <4E7A9D7F.1030003@pobox.com>
+References: <20110920220819.1094.12265.stgit@localhost6.localdomain6> <20110920221008.1094.34064.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20110920221051.1094.39578.stgit@localhost6.localdomain6>
-Content-Language: en-US
+In-Reply-To: <20110920221008.1094.34064.stgit@localhost6.localdomain6>
 Sender: linux-ide-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>, JBottomley@parallels.com, Jack Wang <jack_wang@usish.com>, Xiangliang Yu <yuxiangl@marvell.com>, Mark Salyzyn <msalyzyn@us.xyratex.com>, Darrick Wong <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-> Subject: [PATCH 4/5] mvsas: remove mvs_slave_{alloc|configure}
-> 
-> libsas now handles:
-> 1/ limiting ata scanning to lun0
-> 2/ maximizing the queue_depth of sas devices (up to 256, mvsas only
->    supports 64)
-> 3/ changes to /sys/block/<sdX>/device/queue_depth for ata devices
-> 
-> Cc: Xiangliang Yu <yuxiangl@marvell.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+On 09/20/2011 06:10 PM, Dan Williams wrote:
+> Currently mvsas and pm8001 have custom ->slave_alloc implementations to
+> achieve this.  Uplevel it for all libsas drivers as isci encounters problems
+> with atapi devices when scanning past lun0.
+>
+> Just do what Darrick suggested [1], and limit the scan for ata devices.
+>
+> [1] http://marc.info/?l=linux-scsi&m=116604101119861&w=2
+>
+> Cc: Darrick Wong<djwong@us.ibm.com>
+> Cc: Xiangliang Yu<yuxiangl@marvell.com>
+> Cc: Jack Wang<jack_wang@usish.com>
+> Cc: Mark Salyzyn<msalyzyn@us.xyratex.com>
+> Cc: Luben Tuikov<ltuikov@yahoo.com>
+> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
 > ---
->  drivers/scsi/mvsas/mv_init.c |    4 ++--
->  drivers/scsi/mvsas/mv_sas.c  |   30 ------------------------------
->  drivers/scsi/mvsas/mv_sas.h  |    2 --
->  3 files changed, 2 insertions(+), 34 deletions(-)
-> 
-> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-> index 4e9af66..052861b 100644
-> --- a/drivers/scsi/mvsas/mv_init.c
-> +++ b/drivers/scsi/mvsas/mv_init.c
-> @@ -59,7 +59,7 @@ static struct scsi_host_template mvs_sht = {
->  	.name			= DRV_NAME,
->  	.queuecommand		= sas_queuecommand,
->  	.target_alloc		= sas_target_alloc,
-> -	.slave_configure	= mvs_slave_configure,
-> +	.slave_configure	= sas_slave_configure,
->  	.slave_destroy		= sas_slave_destroy,
->  	.scan_finished		= mvs_scan_finished,
->  	.scan_start		= mvs_scan_start,
-> @@ -74,7 +74,7 @@ static struct scsi_host_template mvs_sht = {
->  	.use_clustering		= ENABLE_CLUSTERING,
->  	.eh_device_reset_handler = sas_eh_device_reset_handler,
->  	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
-> -	.slave_alloc		= mvs_slave_alloc,
-> +	.slave_alloc		= sas_slave_alloc,
->  	.target_destroy		= sas_target_destroy,
-> -int mvs_slave_configure(struct scsi_device *sdev)
-> -{
-> -	struct domain_device *dev = sdev_to_domain_dev(sdev);
-> -	int ret = sas_slave_configure(sdev);
-> -
-> -	if (ret)
-> -		return ret;
-> -	if (!dev_is_sata(dev)) {
-> -		sas_change_queue_depth(sdev,
-> -			MVS_QUEUE_SIZE,
-> -			SCSI_QDEPTH_DEFAULT);
-> -	}
-> -	return 0;
-Can you don't remove mvs_slave_configure function? Someday it will be useful, such as fixing some issue.
-Thanks!
+>   drivers/scsi/scsi_transport_sas.c |   10 ++++++++--
+>   1 files changed, 8 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+> index c6fcf76..9d9330a 100644
+> --- a/drivers/scsi/scsi_transport_sas.c
+> +++ b/drivers/scsi/scsi_transport_sas.c
+> @@ -1545,8 +1545,14 @@ int sas_rphy_add(struct sas_rphy *rphy)
+>
+>   	if (identify->device_type == SAS_END_DEVICE&&
+>   	rphy->scsi_target_id != -1) {
+> -		scsi_scan_target(&rphy->dev, 0,
+> -				rphy->scsi_target_id, SCAN_WILD_CARD, 0);
+> +		int lun;
+> +
+> +		if (identify->target_port_protocols&  SAS_PROTOCOL_SSP)
+> +			lun = SCAN_WILD_CARD;
+> +		else
+> +			lun = 0;
+> +
+> +		scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id, lun, 0);
+
+Acked-by: Jeff Garzik <jgarzik@redhat.com>
+
+
 
