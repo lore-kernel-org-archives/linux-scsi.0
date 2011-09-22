@@ -1,97 +1,70 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: [PATCH] pm8001: raise host can queue
-Date: Thu, 22 Sep 2011 10:05:45 +0800
-Message-ID: <CE155251DF87469DA8F1A8290EDCF361@usish.com.cn>
+From: Xiangliang Yu <yuxiangl@marvell.com>
+Subject: RE: [PATCH 4/5] mvsas: remove mvs_slave_{alloc|configure}
+Date: Wed, 21 Sep 2011 19:26:47 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D1A1150A607@SC-VEXCH4.marvell.com>
+References: <20110920220819.1094.12265.stgit@localhost6.localdomain6>
+ <20110920221051.1094.39578.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_006B_01CC790F.3205E820"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:54355 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737Ab1IVCFW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Sep 2011 22:05:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20110920221051.1094.39578.stgit@localhost6.localdomain6>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "jgarzik@pobox.com" <jgarzik@pobox.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, JBottomley@parallels.com
-Cc: 'lindar_liu' <lindar_liu@usish.com>, crystal_yu@usish.com, john_gong@usish.com, mark_salyzyn@us.xyratex.com
-
-This is a multi-part message in MIME format.
-
-------=_NextPart_000_006B_01CC790F.3205E820
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-
-Hi James,
-
-Because Dan change device queue depth to 256, and as point by Mark this may
-result in starvation, so I bump the host can queue value to 510.
-
-Best regards!
-
-Jack
-
->From 3647cde88d66760ca336ad127a5b1fdf5c1d28f7 Mon Sep 17 00:00:00 2001
-From: Jack Wang <jack_wang@usish.com>
-Date: Thu, 22 Sep 2011 09:50:54 +0800
-Subject: [PATCH] bump host can queue to follow libsas queue depth change
-
-Signed-off-by: Jack Wang <jack_wang@usish.com>
----
- pm8001_defs.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/pm8001_defs.h b/pm8001_defs.h
-index 944afad..704b492 100644
---- a/pm8001_defs.h
-+++ b/pm8001_defs.h
-@@ -68,7 +68,7 @@ enum port_type {
- #define	PM8001_MAX_CCB		 512	/* max ccbs supported */
- #define	PM8001_MAX_INB_NUM	 1
- #define	PM8001_MAX_OUTB_NUM	 1
--#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */
-+#define	PM8001_CAN_QUEUE	 510	/* SCSI Queue depth */
- 
- /* unchangeable hardware details */
- #define	PM8001_MAX_PHYS		 8	/* max. possible phys */
--- 
-1.7.4.msysgit.0
 
 
-
-------=_NextPart_000_006B_01CC790F.3205E820
-Content-Type: application/octet-stream;
-	name="0001-bump-host-can-queue-to-follow-libsas-queue-depth-cha.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0001-bump-host-can-queue-to-follow-libsas-queue-depth-cha.patch"
-
->From 3647cde88d66760ca336ad127a5b1fdf5c1d28f7 Mon Sep 17 00:00:00 2001=0A=
-From: Jack Wang <jack_wang@usish.com>=0A=
-Date: Thu, 22 Sep 2011 09:50:54 +0800=0A=
-Subject: [PATCH] bump host can queue to follow libsas queue depth change=0A=
-=0A=
-Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
----=0A=
- pm8001_defs.h |    2 +-=0A=
- 1 files changed, 1 insertions(+), 1 deletions(-)=0A=
-=0A=
-diff --git a/pm8001_defs.h b/pm8001_defs.h=0A=
-index 944afad..704b492 100644=0A=
---- a/pm8001_defs.h=0A=
-+++ b/pm8001_defs.h=0A=
-@@ -68,7 +68,7 @@ enum port_type {=0A=
- #define	PM8001_MAX_CCB		 512	/* max ccbs supported */=0A=
- #define	PM8001_MAX_INB_NUM	 1=0A=
- #define	PM8001_MAX_OUTB_NUM	 1=0A=
--#define	PM8001_CAN_QUEUE	 128	/* SCSI Queue depth */=0A=
-+#define	PM8001_CAN_QUEUE	 510	/* SCSI Queue depth */=0A=
- =0A=
- /* unchangeable hardware details */=0A=
- #define	PM8001_MAX_PHYS		 8	/* max. possible phys */=0A=
--- =0A=
-1.7.4.msysgit.0=0A=
-=0A=
-
-------=_NextPart_000_006B_01CC790F.3205E820--
+> Subject: [PATCH 4/5] mvsas: remove mvs_slave_{alloc|configure}
+> 
+> libsas now handles:
+> 1/ limiting ata scanning to lun0
+> 2/ maximizing the queue_depth of sas devices (up to 256, mvsas only
+>    supports 64)
+> 3/ changes to /sys/block/<sdX>/device/queue_depth for ata devices
+> 
+> Cc: Xiangliang Yu <yuxiangl@marvell.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  drivers/scsi/mvsas/mv_init.c |    4 ++--
+>  drivers/scsi/mvsas/mv_sas.c  |   30 ------------------------------
+>  drivers/scsi/mvsas/mv_sas.h  |    2 --
+>  3 files changed, 2 insertions(+), 34 deletions(-)
+> 
+> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> index 4e9af66..052861b 100644
+> --- a/drivers/scsi/mvsas/mv_init.c
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -59,7 +59,7 @@ static struct scsi_host_template mvs_sht = {
+>  	.name			= DRV_NAME,
+>  	.queuecommand		= sas_queuecommand,
+>  	.target_alloc		= sas_target_alloc,
+> -	.slave_configure	= mvs_slave_configure,
+> +	.slave_configure	= sas_slave_configure,
+>  	.slave_destroy		= sas_slave_destroy,
+>  	.scan_finished		= mvs_scan_finished,
+>  	.scan_start		= mvs_scan_start,
+> @@ -74,7 +74,7 @@ static struct scsi_host_template mvs_sht = {
+>  	.use_clustering		= ENABLE_CLUSTERING,
+>  	.eh_device_reset_handler = sas_eh_device_reset_handler,
+>  	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
+> -	.slave_alloc		= mvs_slave_alloc,
+> +	.slave_alloc		= sas_slave_alloc,
+>  	.target_destroy		= sas_target_destroy,
+> -int mvs_slave_configure(struct scsi_device *sdev)
+> -{
+> -	struct domain_device *dev = sdev_to_domain_dev(sdev);
+> -	int ret = sas_slave_configure(sdev);
+> -
+> -	if (ret)
+> -		return ret;
+> -	if (!dev_is_sata(dev)) {
+> -		sas_change_queue_depth(sdev,
+> -			MVS_QUEUE_SIZE,
+> -			SCSI_QDEPTH_DEFAULT);
+> -	}
+> -	return 0;
+Can you don't remove mvs_slave_configure function? Someday it will be useful, such as fixing some issue.
+Thanks!
 
