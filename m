@@ -1,33 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: lio-core-2.6.git tree clone
-Date: Fri, 23 Sep 2011 13:35:08 -0700
-Message-ID: <1316810108.18678.227.camel@haakon2.linux-iscsi.org>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: [PATCH] scsi: fix qla2xxx printk format warning
+Date: Fri, 23 Sep 2011 15:40:50 -0700
+Message-ID: <4E7D0AF2.7020401@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from oproxy8-pub.bluehost.com ([69.89.22.20]:41313 "HELO
+	oproxy8-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751583Ab1IWWkx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 18:40:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: JBottomley@parallels.com, linux-driver@qlogic.com, Andrew Vasquez <andrew.vasquez@qlogic.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Hi folks,
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-Just a heads up that a copy of the lio-core-2.6.git tree has been made
-available here:
+sector_t can be different types, so cast it to its largest
+possible type.
 
-http://www.risingtidesystems.com/git/?p=lio-core-2.6.git;a=summary
+drivers/scsi/qla2xxx/qla_isr.c:1509:5: warning: format '%lx' expects type 'long unsigned int', but argument 5 has type 'sector_t'
 
-Note this tree is still based on v3.0 with the latest bugfixes that have
-gone into v3.1-rc7, as i've been waiting for kernel.org to come back
-online in order to push the big v3.1-rc qla_dbg.h conversion for
-qla_target.c still sitting on inaccessible kernel.org infrastructure.
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/qla2xxx/qla_isr.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Please feel free to cut patches against this tree for out-of-tree code,
-or target-pending.git (also available on www.risingtidesystems.com/git)
-for mainline bits.
-
-Thanks,
-
---nab 
-
+--- lnx-31-rc7.orig/drivers/scsi/qla2xxx/qla_isr.c
++++ lnx-31-rc7/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1507,8 +1507,8 @@ qla2x00_handle_dif_error(srb_t *sp, stru
+ 
+ 			if (k != blocks_done) {
+ 				qla_printk(KERN_WARNING, sp->fcport->vha->hw,
+-				    "unexpected tag values tag:lba=%x:%lx)\n",
+-				    e_ref_tag, lba_s);
++				    "unexpected tag values tag:lba=%x:%llx)\n",
++				    e_ref_tag, (unsigned long long)lba_s);
+ 				return 1;
+ 			}
+ 
