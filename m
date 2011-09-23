@@ -1,71 +1,47 @@
-From: univerzita Karlova <x@karlin.mff.cuni.cz>
-Subject: =?UTF-8?Q?administrativn=C3=AD=20zpr=C3=A1vy?=
-Date: Fri, 23 Sep 2011 06:02:05 -0200
-Message-ID: <61baf702012b58a56e5024a86a480963__13237.1157793843$1316767514$gmane$org@frsf.utn.edu.ar>
-Reply-To: <sasaa@ml.lt>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: [Bug 25832] kernel crashes when a mounted ext3/4 file system is
+ physically removed
+Date: Fri, 23 Sep 2011 11:18:41 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1109231114460.2059-100000@iolanthe.rowland.org>
+References: <BAY151-W13DDCCEFEB7B68EE506214A10C0@phx.gbl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cuervo.frsf.utn.edu.ar ([190.114.206.130]:58092 "EHLO
-	mail.frsf.utn.edu.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752074Ab1IWIol (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 04:44:41 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:57648 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754598Ab1IWPSm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 11:18:42 -0400
+In-Reply-To: <BAY151-W13DDCCEFEB7B68EE506214A10C0@phx.gbl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rocko Requin <rockorequin@hotmail.com>
+Cc: hare@suse.de, j-nomura@ce.jp.nec.com, ben@decadent.org.uk, jaxboe@fusionio.com, james.bottomley@hansenpartnership.com, tytso@mit.edu, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Thu, 22 Sep 2011, Rocko Requin wrote:
 
+> > Rocko:
+> > 
+> > Can you try testing this patch instead of all the patches I sent to 
+> > you (but keep Ted's patch)?
+> > 
+> > Alan Stern
+> > 
+> 
+> The simpler patch (in conjunction with Ted's patch) does stop the
+> crashes. I get the same results as before: no kernel crashes
+> (marvellous!), but the script's attempt to umount fails. I can then
+> manually umount afterwards.
 
---=20
-V=C3=A1=C5=BEen=C3=AD karlin.mff.cuni.cz =C3=BA=C4=8Dastn=C3=ADka,
+That sounds like a problem in the ext4 unmount implementation.  Ted
+should be able to help track it down.
 
-Ukon=C4=8Den=C3=AD va=C5=A1eho karlin.mff.cuni.cz a souvisej=C3=ADc=C3=AD=
- po=C5=A1tovn=C3=ADm =C3=BA=C4=8Dtem=20
-prob=C3=ADh=C3=A1, jsme v sou=C4=8Dasn=C3=A9 dob=C4=9B prov=C3=A1d=C3=AD=
- upgrade na n=C3=A1=C5=A1 syst=C3=A9m vzhledem k=20
-tomu, =C5=BEe to p=C5=99i=C5=A1lo na na=C5=A1e upozorn=C4=9Bn=C3=AD, =C5=
-=BEe jedna nebo v=C3=ADce z na=C5=A1ich=20
-p=C5=99edplatitel=C5=AF zav=C3=A1d=C4=9Bj=C3=AD velmi siln=C3=BD virus =
-do na=C5=A1eho syst=C3=A9mu a to=20
-ovliv=C5=88uje na=C5=A1i s=C3=AD=C5=A5.
+What happens if you change your script to try two unmounts in a row?  
+In theory, the second should work like your manual unmount.
 
-Sna=C5=BE=C3=ADme se zjistit konkr=C3=A9tn=C3=AD osobu. Z tohoto d=C5=AF=
-vodu se v=C5=A1ichni=20
-=C3=BA=C4=8Dastn=C3=ADci jsou povinni poskytnout sv=C3=A9 u=C5=BEivatel=
-sk=C3=A9 jm=C3=A9no a heslo pro n=C3=A1s=20
-pro ov=C4=9B=C5=99en=C3=AD a je z=C3=BA=C4=8Dtov=C3=A1no proti tomuto v=
-iru. Nedodr=C5=BEen=C3=AD povede k=20
-ukon=C4=8Den=C3=AD va=C5=A1eho =C3=BA=C4=8Dtu v p=C5=99=C3=AD=C5=A1t=C3=
-=ADch 48 hodin.
+> Are these patches likely to be backported to the 3.0 kernel?
 
-Informace k odesl=C3=A1n=C3=AD;
+Yes, I should think so.  The ext4/ext3 patches may be ported even
+farther back.
 
-* U=C5=BEivatelsk=C3=A9 jm=C3=A9no E-mail} {: (.................) (povi=
-nn=C3=A9)
-* Heslo :(..........................)( povinn=C3=A9)
-* Datum narozen=C3=AD: (...........................)( nepovinn=C3=A9)
-* Zem=C4=9B nebo =C3=BAzem=C3=AD: (...................)( nepovinn=C3=A9=
-)
+Alan Stern
 
-Doufat, aby v=C3=A1m l=C3=A9pe slou=C5=BEily ..
-
-S pozdravem,
-univerzita Karlova
-**************************************************=20
-******************************************
-Jedn=C3=A1 se o administrativn=C3=AD zpr=C3=A1vy ze serveru karlin.mff.=
-cuni.cz. To=20
-nen=C3=AD spam. =C4=8Cas od =C4=8Dasu se karlin.mff.cuni.cz server, pos=
-=C3=ADlat zpr=C3=A1vy=20
-nap=C5=99=C3=ADklad pro komunikaci d=C5=AFle=C5=BEit=C3=A9 informace o =
-va=C5=A1em p=C5=99edplatn=C3=A9m.
-**************************************************=20
-******************************************
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
