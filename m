@@ -1,95 +1,71 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: [PATCH] libsas: set sas_address and device type of rphy
-Date: Fri, 23 Sep 2011 14:32:32 +0800
-Message-ID: <67EFB401F0334372A629F8C2A4AFADDD@usish.com.cn>
+From: univerzita Karlova <x@karlin.mff.cuni.cz>
+Subject: =?UTF-8?Q?administrativn=C3=AD=20zpr=C3=A1vy?=
+Date: Fri, 23 Sep 2011 06:02:05 -0200
+Message-ID: <61baf702012b58a56e5024a86a480963__13237.1157793843$1316767514$gmane$org@frsf.utn.edu.ar>
+Reply-To: <sasaa@ml.lt>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_00C7_01CC79FD.A1EF8EE0"
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:36605 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752366Ab1IWGcS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 02:32:18 -0400
+Received: from cuervo.frsf.utn.edu.ar ([190.114.206.130]:58092 "EHLO
+	mail.frsf.utn.edu.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752074Ab1IWIol (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 04:44:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
-Cc: 'Dan Williams' <dan.j.williams@intel.com>, 'Xiangliang Yu' <yuxiangl@marvell.com>, 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, lindar_liu@usish.com, =?gb2312?B?J9PasK67qic=?= <crystal_yu@usish.com>
 
-This is a multi-part message in MIME format.
 
-------=_NextPart_000_00C7_01CC79FD.A1EF8EE0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: 7bit
 
-Hi James,
+--=20
+V=C3=A1=C5=BEen=C3=AD karlin.mff.cuni.cz =C3=BA=C4=8Dastn=C3=ADka,
 
-Libsas forget to set the sas_address and device type of rphy lead to file
-under /sys/class/sas_x show wrong value, fix that.
+Ukon=C4=8Den=C3=AD va=C5=A1eho karlin.mff.cuni.cz a souvisej=C3=ADc=C3=AD=
+ po=C5=A1tovn=C3=ADm =C3=BA=C4=8Dtem=20
+prob=C3=ADh=C3=A1, jsme v sou=C4=8Dasn=C3=A9 dob=C4=9B prov=C3=A1d=C3=AD=
+ upgrade na n=C3=A1=C5=A1 syst=C3=A9m vzhledem k=20
+tomu, =C5=BEe to p=C5=99i=C5=A1lo na na=C5=A1e upozorn=C4=9Bn=C3=AD, =C5=
+=BEe jedna nebo v=C3=ADce z na=C5=A1ich=20
+p=C5=99edplatitel=C5=AF zav=C3=A1d=C4=9Bj=C3=AD velmi siln=C3=BD virus =
+do na=C5=A1eho syst=C3=A9mu a to=20
+ovliv=C5=88uje na=C5=A1i s=C3=AD=C5=A5.
 
->From 976849ae6da4bc454a89d91b98824c915d3c99a2 Mon Sep 17 00:00:00 2001
-From: Jack Wang <jack_wang@usish.com>
-Date: Fri, 23 Sep 2011 14:19:24 +0800
-Subject: [PATCH] set rphy sas_address and device type correctly
+Sna=C5=BE=C3=ADme se zjistit konkr=C3=A9tn=C3=AD osobu. Z tohoto d=C5=AF=
+vodu se v=C5=A1ichni=20
+=C3=BA=C4=8Dastn=C3=ADci jsou povinni poskytnout sv=C3=A9 u=C5=BEivatel=
+sk=C3=A9 jm=C3=A9no a heslo pro n=C3=A1s=20
+pro ov=C4=9B=C5=99en=C3=AD a je z=C3=BA=C4=8Dtov=C3=A1no proti tomuto v=
+iru. Nedodr=C5=BEen=C3=AD povede k=20
+ukon=C4=8Den=C3=AD va=C5=A1eho =C3=BA=C4=8Dtu v p=C5=99=C3=AD=C5=A1t=C3=
+=ADch 48 hodin.
 
-Signed-off-by: Jack Wang <jack_wang@usish.com>
-Tested-by: Crystal Yu <crystal_yu@usish.com>
----
- sas_expander.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Informace k odesl=C3=A1n=C3=AD;
 
-diff --git a/sas_expander.c b/sas_expander.c
-index 874e29d..4ad0a40 100644
---- a/sas_expander.c
-+++ b/sas_expander.c
-@@ -199,6 +199,8 @@ static void sas_set_ex_phy(struct domain_device *dev,
-int phy_id,
- 	phy->virtual = dr->virtual;
- 	phy->last_da_index = -1;
- 
-+	phy->phy->identify.sas_address = SAS_ADDR(phy->attached_sas_addr);
-+	phy->phy->identify.device_type = phy->attached_dev_type;
- 	phy->phy->identify.initiator_port_protocols = phy->attached_iproto;
- 	phy->phy->identify.target_port_protocols = phy->attached_tproto;
- 	phy->phy->identify.phy_identifier = phy_id;
--- 
-1.7.4.msysgit.0
+* U=C5=BEivatelsk=C3=A9 jm=C3=A9no E-mail} {: (.................) (povi=
+nn=C3=A9)
+* Heslo :(..........................)( povinn=C3=A9)
+* Datum narozen=C3=AD: (...........................)( nepovinn=C3=A9)
+* Zem=C4=9B nebo =C3=BAzem=C3=AD: (...................)( nepovinn=C3=A9=
+)
 
-------=_NextPart_000_00C7_01CC79FD.A1EF8EE0
-Content-Type: application/octet-stream;
-	name="0001-set-rphy-sas_address-and-device-type-correctly.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
-	filename="0001-set-rphy-sas_address-and-device-type-correctly.patch"
+Doufat, aby v=C3=A1m l=C3=A9pe slou=C5=BEily ..
 
->From 976849ae6da4bc454a89d91b98824c915d3c99a2 Mon Sep 17 00:00:00 2001=0A=
-From: Jack Wang <jack_wang@usish.com>=0A=
-Date: Fri, 23 Sep 2011 14:19:24 +0800=0A=
-Subject: [PATCH] set rphy sas_address and device type correctly=0A=
-=0A=
-Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
-Tested-by: Crystal Yu <crystal_yu@usish.com>=0A=
----=0A=
- sas_expander.c |    2 ++=0A=
- 1 files changed, 2 insertions(+), 0 deletions(-)=0A=
-=0A=
-diff --git a/sas_expander.c b/sas_expander.c=0A=
-index 874e29d..4ad0a40 100644=0A=
---- a/sas_expander.c=0A=
-+++ b/sas_expander.c=0A=
-@@ -199,6 +199,8 @@ static void sas_set_ex_phy(struct domain_device =
-*dev, int phy_id,=0A=
- 	phy->virtual =3D dr->virtual;=0A=
- 	phy->last_da_index =3D -1;=0A=
- =0A=
-+	phy->phy->identify.sas_address =3D SAS_ADDR(phy->attached_sas_addr);=0A=
-+	phy->phy->identify.device_type =3D phy->attached_dev_type;=0A=
- 	phy->phy->identify.initiator_port_protocols =3D phy->attached_iproto;=0A=
- 	phy->phy->identify.target_port_protocols =3D phy->attached_tproto;=0A=
- 	phy->phy->identify.phy_identifier =3D phy_id;=0A=
--- =0A=
-1.7.4.msysgit.0=0A=
-=0A=
+S pozdravem,
+univerzita Karlova
+**************************************************=20
+******************************************
+Jedn=C3=A1 se o administrativn=C3=AD zpr=C3=A1vy ze serveru karlin.mff.=
+cuni.cz. To=20
+nen=C3=AD spam. =C4=8Cas od =C4=8Dasu se karlin.mff.cuni.cz server, pos=
+=C3=ADlat zpr=C3=A1vy=20
+nap=C5=99=C3=ADklad pro komunikaci d=C5=AFle=C5=BEit=C3=A9 informace o =
+va=C5=A1em p=C5=99edplatn=C3=A9m.
+**************************************************=20
+******************************************
 
-------=_NextPart_000_00C7_01CC79FD.A1EF8EE0--
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
