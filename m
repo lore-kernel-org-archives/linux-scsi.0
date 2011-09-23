@@ -1,47 +1,83 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: RE: [Bug 25832] kernel crashes when a mounted ext3/4 file system is
- physically removed
-Date: Fri, 23 Sep 2011 11:18:41 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1109231114460.2059-100000@iolanthe.rowland.org>
-References: <BAY151-W13DDCCEFEB7B68EE506214A10C0@phx.gbl>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] Make scsi_free_queue() kill pending SCSI commands
+Date: Fri, 23 Sep 2011 19:48:18 +0200
+Message-ID: <201109231948.18850.bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57648 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754598Ab1IWPSm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 11:18:42 -0400
-In-Reply-To: <BAY151-W13DDCCEFEB7B68EE506214A10C0@phx.gbl>
+Received: from jester.euphonynet.be ([212.87.96.13]:46785 "EHLO
+	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361Ab1IWSTO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 14:19:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rocko Requin <rockorequin@hotmail.com>
-Cc: hare@suse.de, j-nomura@ce.jp.nec.com, ben@decadent.org.uk, jaxboe@fusionio.com, james.bottomley@hansenpartnership.com, tytso@mit.edu, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On Thu, 22 Sep 2011, Rocko Requin wrote:
+Make sure that SCSI device removal via scsi_remove_host() does finish
+all pending SCSI commands. Currently that's not the case and hence
+removal of a SCSI host during I/O can cause a deadlock. See also
+"blkdev_issue_discard() hangs forever if underlying storage device is
+removed" (http://bugzilla.kernel.org/show_bug.cgi?id=40472). See also
+http://lkml.org/lkml/2011/8/27/6.
 
-> > Rocko:
-> > 
-> > Can you try testing this patch instead of all the patches I sent to 
-> > you (but keep Ted's patch)?
-> > 
-> > Alan Stern
-> > 
-> 
-> The simpler patch (in conjunction with Ted's patch) does stop the
-> crashes. I get the same results as before: no kernel crashes
-> (marvellous!), but the script's attempt to umount fails. I can then
-> manually umount afterwards.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: James Bottomley <jbottomley@parallels.com>
+Cc: <stable@kernel.org>
+---
+ drivers/scsi/hosts.c    |    9 ++++++---
+ drivers/scsi/scsi_lib.c |    9 +++++++++
+ 2 files changed, 15 insertions(+), 3 deletions(-)
 
-That sounds like a problem in the ext4 unmount implementation.  Ted
-should be able to help track it down.
-
-What happens if you change your script to try two unmounts in a row?  
-In theory, the second should work like your manual unmount.
-
-> Are these patches likely to be backported to the 3.0 kernel?
-
-Yes, I should think so.  The ext4/ext3 patches may be ported even
-farther back.
-
-Alan Stern
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 4f7a582..351dc0b 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -286,6 +286,7 @@ static void scsi_host_dev_release(struct device *dev)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct device *parent = dev->parent;
++	struct request_queue *q;
+ 
+ 	scsi_proc_hostdir_rm(shost->hostt);
+ 
+@@ -293,9 +294,11 @@ static void scsi_host_dev_release(struct device *dev)
+ 		kthread_stop(shost->ehandler);
+ 	if (shost->work_q)
+ 		destroy_workqueue(shost->work_q);
+-	if (shost->uspace_req_q) {
+-		kfree(shost->uspace_req_q->queuedata);
+-		scsi_free_queue(shost->uspace_req_q);
++	q = shost->uspace_req_q;
++	if (q) {
++		kfree(q->queuedata);
++		q->queuedata = NULL;
++		scsi_free_queue(q);
+ 	}
+ 
+ 	scsi_destroy_command_freelist(shost);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index fc3f168..b4d43ae 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1698,6 +1698,15 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
+ 
+ void scsi_free_queue(struct request_queue *q)
+ {
++	unsigned long flags;
++
++	WARN_ON(q->queuedata);
++
++	/* cause scsi_request_fn() to kill all non-finished requests */
++	spin_lock_irqsave(q->queue_lock, flags);
++	q->request_fn(q);
++	spin_unlock_irqrestore(q->queue_lock, flags);
++
+ 	blk_cleanup_queue(q);
+ }
+ 
+-- 
+1.7.3.4
 
