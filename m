@@ -1,83 +1,63 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH] scsi: SCSI_ISCI needs to select SCSI_SAS_HOST_SMP, fixes
- build error
-Date: Fri, 23 Sep 2011 17:23:33 -0700
-Message-ID: <4E7D2305.8080408@xenotime.net>
-References: <4E7D0BAA.3080900@xenotime.net> <CAA9_cmcJv_A4SgpGFMpwBYLJ8NEzHKw-LOnQwWKFZRTTLRCO5Q@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libsas: fix warnings when checking sata/stp protocol
+Date: Fri, 23 Sep 2011 18:09:11 -0700
+Message-ID: <20110924010830.5292.26480.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oproxy4-pub.bluehost.com ([69.89.21.11]:52307 "HELO
-	oproxy4-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750802Ab1IXAXh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Sep 2011 20:23:37 -0400
-In-Reply-To: <CAA9_cmcJv_A4SgpGFMpwBYLJ8NEzHKw-LOnQwWKFZRTTLRCO5Q@mail.gmail.com>
+Received: from mga02.intel.com ([134.134.136.20]:48798 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751032Ab1IXBJM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 23 Sep 2011 21:09:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, JBottomley@parallels.com, Andrew Morton <akpm@linux-foundation.org>, intel-linux-scu@intel.com, Linus Torvalds <torvalds@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
+Cc: Xiangliang Yu <yuxiangl@marvell.com>, Jack Wang <jack_wang@usish.com>
 
-On 09/23/2011 04:43 PM, Dan Williams wrote:
-> On Fri, Sep 23, 2011 at 3:43 PM, Randy Dunlap <rdunlap@xenotime.net> wrote:
->> From: Randy Dunlap <rdunlap@xenotime.net>
->>
->> SCSI_ISCI needs to select SCSI_SAS_HOST_SMP to ensure that all
->> needed symbols are available to it.
->>
->> Fixes this build error:
->> ERROR: "try_test_sas_gpio_gp_bit" [drivers/scsi/isci/isci.ko] undefined!
->>
->> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> Thanks Randy!
-> 
-> Here's a replacement patch (also attached), that just stubs out that
-> routine in the !SCSI_SAS_HOST_SMP case.
+Several sas drivers legitimately check the protocol against the union o=
+f
+SAS_PROTOCOL_SATA and SAS_PROTOCOL_STP.  Provide a SAS_PROTOCOL_STP_ALL
+to silence warnings like:
 
-Yes, that works too.
+drivers/scsi/pm8001/pm8001_sas.c:438:3: warning: case value =E2=80=985=E2=
+=80=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wsw=
+itch]
+drivers/scsi/mvsas/mv_sas.c:798:2: warning: case value =E2=80=985=E2=80=
+=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wswitc=
+h]
+drivers/scsi/mvsas/mv_sas.c:1783:2: warning: case value =E2=80=985=E2=80=
+=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wswitc=
+h]
+drivers/scsi/mvsas/mv_sas.c:1886:2: warning: case value =E2=80=985=E2=80=
+=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wswitc=
+h]
+drivers/scsi/isci/request.c:3565:2: warning: case value =E2=80=985=E2=80=
+=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wswitc=
+h]
 
-Acked-by: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: Jack Wang <jack_wang@usish.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ include/scsi/sas.h |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Thanks.
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index 9038d40..3a00297 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -108,6 +108,7 @@ enum sas_protocol {
+ 	SAS_PROTOCOL_STP		=3D 0x04,
+ 	SAS_PROTOCOL_SSP		=3D 0x08,
+ 	SAS_PROTOCOL_ALL		=3D 0x0E,
++	SAS_PROTOCOL_STP_ALL		=3D SAS_PROTOCOL_STP|SAS_PROTOCOL_SATA,
+ };
+=20
+ /* From the spec; local phys only */
 
-> From 645ea60066251c2728197bf7a1048d885626936f Mon Sep 17 00:00:00 2001
-> From: Dan Williams <dan.j.williams@intel.com>
-> Date: Fri, 23 Sep 2011 16:28:53 -0700
-> Subject: [PATCH] libsas: fix try_test_sas_gpio_gp_bit() build error
-> 
-> If the user has disabled CONFIG_SCSI_SAS_HOST_SMP then libsas drivers
-> will not be receiving smp-gpio frames and do not need this lookup code.
-> 
-> Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  include/scsi/libsas.h |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 44f5634..0d78bfa 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -407,7 +407,14 @@ static inline unsigned int to_sas_gpio_od(int
-> device, int bit)
->  	return 3 * device + bit;
->  }
-> 
-> +#ifdef CONFIG_SCSI_SAS_HOST_SMP
->  int try_test_sas_gpio_gp_bit(unsigned int od, u8 *data, u8 index, u8 count);
-> +#else
-> +static inline int try_test_sas_gpio_gp_bit(unsigned int od, u8 *data,
-> u8 index, u8 count)
-> +{
-> +	return -1;
-> +}
-> +#endif
-> 
->  /* ---------- Tasks ---------- */
->  /*
-
-
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
