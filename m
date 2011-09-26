@@ -1,86 +1,59 @@
-From: Namhyung Kim <namhyung@gmail.com>
-Subject: [PATCH RESEND] [SCSI] sd: consolidate sector size alignment check in sd_prep_fn
-Date: Mon, 26 Sep 2011 13:50:11 +0900
-Message-ID: <1317012611-4916-1-git-send-email-namhyung@gmail.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] [SCSI] be2iscsi: cleanup a min_t() call
+Date: Mon, 26 Sep 2011 09:23:37 +0300
+Message-ID: <20110926062337.GD11832@elgon.mountain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:57256 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750887Ab1IZEuQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2011 00:50:16 -0400
-Received: by gyg10 with SMTP id 10so3861381gyg.19
-        for <linux-scsi@vger.kernel.org>; Sun, 25 Sep 2011 21:50:16 -0700 (PDT)
+Received: from rcsinet15.oracle.com ([148.87.113.117]:27415 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274Ab1IZI3W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2011 04:29:22 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-Generalize common code to reduce code duplication.
+"sense_len" was declared as int type but actually it only stores a
+u16 value that comes from hardware.  The cast to u16 in min_t()
+confuses static analysis because it truncates the int to u16 so I've
+fixed the declaration to reflect that "sense_len" is just a u16.
 
-Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+Also there was a call to cpu_to_be16() which I've changed to
+be16_to_cpu().  The functions are equivalent, but obviously the
+hardware is big endian and we're doing the min_t() comparison on CPU
+endian values.
+
+This whole patch is just a cleanup and doesn't affect how the code
+works.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
- drivers/scsi/sd.c |   36 ++++++++++++------------------------
- 1 files changed, 12 insertions(+), 24 deletions(-)
+Compile tested only.  Sorry.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 953773cb26d9..fb9d997ece9d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -651,6 +651,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	unsigned int this_count = blk_rq_sectors(rq);
- 	int ret, host_dif;
- 	unsigned char protect;
-+	int sector_shift;
- 
- 	/*
- 	 * Discard request come in as REQ_TYPE_FS but we turn them into
-@@ -735,36 +736,23 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	 * and not force the scsi disk driver to use bounce buffers
- 	 * for this.
- 	 */
--	if (sdp->sector_size == 1024) {
--		if ((block & 1) || (blk_rq_sectors(rq) & 1)) {
-+	sector_shift = 0;
-+	switch (sdp->sector_size) {
-+	case 4096: sector_shift++;	/* fall through */
-+	case 2048: sector_shift++;	/* fall through */
-+	case 1024: sector_shift++;
-+
-+		if (!IS_ALIGNED(block, 1 << sector_shift) ||
-+		    !IS_ALIGNED(blk_rq_sectors(rq), 1 << sector_shift)) {
- 			scmd_printk(KERN_ERR, SCpnt,
- 				    "Bad block number requested\n");
- 			goto out;
- 		} else {
--			block = block >> 1;
--			this_count = this_count >> 1;
--		}
--	}
--	if (sdp->sector_size == 2048) {
--		if ((block & 3) || (blk_rq_sectors(rq) & 3)) {
--			scmd_printk(KERN_ERR, SCpnt,
--				    "Bad block number requested\n");
--			goto out;
--		} else {
--			block = block >> 2;
--			this_count = this_count >> 2;
--		}
--	}
--	if (sdp->sector_size == 4096) {
--		if ((block & 7) || (blk_rq_sectors(rq) & 7)) {
--			scmd_printk(KERN_ERR, SCpnt,
--				    "Bad block number requested\n");
--			goto out;
--		} else {
--			block = block >> 3;
--			this_count = this_count >> 3;
-+			block = block >> sector_shift;
-+			this_count = this_count >> sector_shift;
- 		}
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 57fea38..344af8d 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -1104,7 +1104,6 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
+ 	struct be_status_bhs *sts_bhs =
+ 				(struct be_status_bhs *)io_task->cmd_bhs;
+ 	struct iscsi_conn *conn = beiscsi_conn->conn;
+-	unsigned int sense_len;
+ 	unsigned char *sense;
+ 	u32 resid = 0, exp_cmdsn, max_cmdsn;
+ 	u8 rsp, status, flags;
+@@ -1147,9 +1146,11 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
  	}
+ 
+ 	if (status == SAM_STAT_CHECK_CONDITION) {
++		u16 sense_len;
+ 		unsigned short *slen = (unsigned short *)sts_bhs->sense_info;
 +
- 	if (rq_data_dir(rq) == WRITE) {
- 		if (!sdp->writeable) {
- 			goto out;
--- 
-1.7.6
-
+ 		sense = sts_bhs->sense_info + sizeof(unsigned short);
+-		sense_len =  cpu_to_be16(*slen);
++		sense_len = be16_to_cpu(*slen);
+ 		memcpy(task->sc->sense_buffer, sense,
+ 		       min_t(u16, sense_len, SCSI_SENSE_BUFFERSIZE));
+ 	}
