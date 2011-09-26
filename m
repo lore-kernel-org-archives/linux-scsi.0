@@ -1,59 +1,64 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] be2iscsi: cleanup a min_t() call
-Date: Mon, 26 Sep 2011 09:23:37 +0300
-Message-ID: <20110926062337.GD11832@elgon.mountain>
+From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <user@candlelightcab.com>
+Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
+	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
+Date: Mon, 26 Sep 2011 10:52:37 +0000 (UTC)
+Message-ID: <113809E02B1D7E881EE9F96820C6A001@sjm>
+Reply-To: <911585605@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:27415 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751274Ab1IZI3W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2011 04:29:22 -0400
-Content-Disposition: inline
+Received: from host-216-153-136-107.buf.choiceone.net ([216.153.136.107]:30132
+	"EHLO Exch01.candlelightcab.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751339Ab1IZKwb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Sep 2011 06:52:31 -0400
+Date: Wed, 26 Sep 2012 18:30:38 +0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: links@parkgrills.com, linstef@aol.com, linting@siliconbd.com, linus@bl7-129-104.dsl.telepac.pt, linux01@c-69-251-247-222.hsd1.md.com, linux-scsi@vger.kernel.org, linxu@dr
 
-"sense_len" was declared as int type but actually it only stores a
-u16 value that comes from hardware.  The cast to u16 in min_t()
-confuses static analysis because it truncates the int to u16 so I've
-fixed the declaration to reflect that "sense_len" is just a u16.
+576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
+ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
+DQrnvqTlj5Hova/ku7YrMTA55bGK5bm/5Lqk5Lya5Lmw5a6244CB5rW35YWz5pWw5o2u44CB5pCc
+57Si5byV5pOO5Lmw5a62LEIyQuivouebmOS5sOWutuWFsTUwMOS4hyzku4UxMOWFg+avj+WkqeOA
+giANCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ
+5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KMeOA
+gee+pOWPkei9r+S7tu+8miDmk43kvZznroDljZXvvIzlip/og73lvLrlpKfvvIzmqKHku7/kurrl
+t6Xmk43kvZzmqKHlvI/vvIzliLDovr7njofpq5jvvIzml6Xlj5HpgIE15LiH5bCB5Lul5LiK44CC
+IA0KMuOAgTUwMOS4h+S5sOWutui1hOa6kO+8miDotaDpgIHnmoQ1MDDkuIfkubDlrrbotYTmupDl
+upPvvIzmm7TmlrAgKOWPr+S7peaMieeFp+aCqOeahOS6p+WTgeaPkOWPluWHuuadpe+8jOabtOey
+vuWHhuW8gOWPkSnjgIIgDQoz44CB6LaF57qn5rW35aSW5Lmw5a62RW1haWzmkJzntKLmnLrvvJog
+5YaF572u5LqGNjAw5LiH6KGM5Lia5YWz6ZSu6K+N77yM5qC55o2u6ZW/5bC+6K+N5pCc57Si77yM
+57uT5p6c5pu057K+56Gu5Yy56YWN77yb5q+P5aSp6IO95pCc57SiMS0y5LiH5Lul5LiK5Lmw5a62
+55yf5a6eRU1BSUzvvIzmiJDljZXnjofpq5jjgIIgDQogDQoNCuimgeeahOaKk+e0p+iBlOezu1FR
+OiA5MTE1ODU2MDUgICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDkxMTU4NTYwNUBxcS5jb20N
+CuimgeeahOaKk+e0p+iBlOezu1FROiA5MTE1ODU2MDUgICDmiJbogIXnq4vljbPlm57lpI3pgq7n
+rrE6IDkxMTU4NTYwNUBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiA5MTE1ODU2MDUgICDm
+iJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDkxMTU4NTYwNUBxcS5jb20NCiANCuWFjei0uei1oOmA
+gToNCuS4gOWFsTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn6KGM5Lia5YiG
+5aW957G777yM5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8miANCjHvvIwy
+MDEx5pil5a2jMTA55bGK5bm/5Lqk5Lya5Lmw5a62546w5Zy66K+i55uY5pWw5o2u5bqT5paw6bKc
+5Ye654KJ77yM6LaF57qn5paw6bKc5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a655piT5oiQ5Y2V
+77yBIA0KMu+8jOi0reS5sOWQjuWPr+S7peWFjei0ueabtOaWsDIwMTHnp4vlraPlub/kuqTkvJor
+MjAxMuaYpeWto+W5v+S6pOS8muS5sOWutuaVsOaNruOAguWkqui2heWAvOS6huOAgg0KM++8jOac
+gOaWsOWFqOeQg+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgKOacgOaWsOabtOaWsOaX
+peacnyAyMDExLTA1LTE25pelKQ0KNO+8jDIwMDjlubQsMjAwOeW5tCwyMDEw5bm0IOaYpeWtoyvn
+p4vlraPlub/kuqTkvJrkubDlrrblkI3lvZXvvIwxMDMgMTA0IDEwNSAxMDYgMTA3IDEwOCDlhbHl
+ha3lsYog5YWxMTIwLjbkuIfmlbDmja7jgIINCjXvvIwyMDEw5bm05Zu96ZmF5L+D6ZSA5Y2P5Lya
+77yIUFBBSe+8ieaIkOWRmOWQjeWNlSBQUEFJIE1lbWJlcnMgRGlyZWN0b3J577yM6Z2e5bi46YeN
+6KaB55qE5aSn5Lmw5a6244CCDQo277yMMjAxMOW5tOWIsOmmmea4r+mHh+i0reeahOWbveWkluWu
+ouS6uuWQjeW9lSjpppnmuK/otLjlj5HlsYDmj5Dkvpsp77yM5YWxNy4y5LiH5pWw5o2u77yM6LaF
+57qn6YeN6KaB55qE5Lmw5a6244CCDQo377yMNDguNjjkuIfmnaHmnIDmlrDkubDlrrbor6Lnm5jv
+vIzotK3kubDlkI7mr4/mnIjmm7TmlrAgMS0y5LiH5p2h77yM5YyF5ousMumDqOWIhu+8jDHvvIzm
+nIDmlrDnmoTor6Lnm5ggMu+8jOacgOaWsOeahOWxleS8muS5sOWutuOAguWFjei0ueabtOaWsDM2
+5Liq5pyI44CCDQo477yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBpZXJz54mI5pWw5o2uIDHl
+jYPkuIfjgIINCg0KDQror5rkv6HkuLrmnKzvvIzmlK/mjIHmlK/ku5jlrp3mi4Xkv53kuqTmmJMg
+KOWFiOWPkei0p+W5tuWuieijheiuvue9rue+pOWPkei9r+S7tu+8jOeEtuWQjuS7mOasvikg5b27
+5bqV5omT5raI5oKo55qEIOmhvuiZkeOAgg0KDQogDQoNCg0KIA0KDQrnsr7lh4bmlbDmja4t5oiQ
+5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t
+5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDm
+ja4t5oiQ5Y2V546H5p6B6auYDQo=
 
-Also there was a call to cpu_to_be16() which I've changed to
-be16_to_cpu().  The functions are equivalent, but obviously the
-hardware is big endian and we're doing the min_t() comparison on CPU
-endian values.
 
-This whole patch is just a cleanup and doesn't affect how the code
-works.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-Compile tested only.  Sorry.
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 57fea38..344af8d 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -1104,7 +1104,6 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
- 	struct be_status_bhs *sts_bhs =
- 				(struct be_status_bhs *)io_task->cmd_bhs;
- 	struct iscsi_conn *conn = beiscsi_conn->conn;
--	unsigned int sense_len;
- 	unsigned char *sense;
- 	u32 resid = 0, exp_cmdsn, max_cmdsn;
- 	u8 rsp, status, flags;
-@@ -1147,9 +1146,11 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
- 	}
- 
- 	if (status == SAM_STAT_CHECK_CONDITION) {
-+		u16 sense_len;
- 		unsigned short *slen = (unsigned short *)sts_bhs->sense_info;
-+
- 		sense = sts_bhs->sense_info + sizeof(unsigned short);
--		sense_len =  cpu_to_be16(*slen);
-+		sense_len = be16_to_cpu(*slen);
- 		memcpy(task->sc->sense_buffer, sense,
- 		       min_t(u16, sense_len, SCSI_SENSE_BUFFERSIZE));
- 	}
