@@ -1,132 +1,86 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH] [SCSI] pm8001 DEV_IS_GONE infinite retry
-Date: Mon, 26 Sep 2011 10:20:39 +0800
-Message-ID: <5675343CD6004372A7AB259CFE619A9D@usish.com.cn>
-References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com> <1316691000.10571.6.camel@dabdike> <FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com> <FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com> <FC1F9E38C0703341A1A750524E2525A9018AE2D8@XYUS-EX22.xyus.xyratex.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH RESEND] [SCSI] sd: consolidate sector size alignment check in sd_prep_fn
+Date: Mon, 26 Sep 2011 13:50:11 +0900
+Message-ID: <1317012611-4916-1-git-send-email-namhyung@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:52181 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750856Ab1IZCUT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Sep 2011 22:20:19 -0400
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE2D8@XYUS-EX22.xyus.xyratex.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:57256 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887Ab1IZEuQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2011 00:50:16 -0400
+Received: by gyg10 with SMTP id 10so3861381gyg.19
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Sep 2011 21:50:16 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, linux-scsi@vger.kernel.org
-Cc: 'James Bottomley' <jbottomley@parallels.com>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Mark
+Generalize common code to reduce code duplication.
 
-Thanks for your fix. You can add my acked.
-Acked-by: Jack Wang <jack_wang@usish.com>.
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+---
+ drivers/scsi/sd.c |   36 ++++++++++++------------------------
+ 1 files changed, 12 insertions(+), 24 deletions(-)
 
-Ps, your signed-off-by mail addr is not same with your sender mail address,
-is this a mistake?
-
-Re [PATCH] [SCSI] pm8001 DEV_IS_GONE infinite retry
-> 
-> On the pm8001, when a device is in the process of going away (device
-> power off or hot plug), depending on the timing, the driver would return
-> SAS_PHY_DOWN as the return value to the queuecommand DEV_IS_GONE logic.
-> The net result is an near infinite retry (especially if SAS debugging is
-> enabled), the logs will fill with:
-> 
-> kernel: mpi_ssp_completion 2119:e21:SSP IO status 0x13 tag 0xcc1c0000
-> dlen=90 param=0xe
-> kernel: wwn=5000c50034069e86  cdb=12 00 00 00 5a 00 00 00 00 00 00 00 00
-> 00 00 00
-> kernel: sas: lldd_execute_task returned: 138
-> kernel: sas: lldd_execute_task returned: 138
-> kernel: sas: lldd_execute_task returned: 138
-> kernel: sas: lldd_execute_task returned: 138
-> kernel: sas: lldd_execute_task returned: 138
-> kernel: sas: lldd_execute_task returned: 138
-> kernel: sas: lldd_execute_task returned: 138
-> . . .
-> 
-> This patch changes to leverage the port_attached logic to complete the
-> command with a status of PHY_DOWN so that the disposition can be handled
-> immediately and correctly.
-> 
-> The real patch is enclosed as an attachment since Outlook is my current
-> MTA.
-> 
-> Signed-off-by: Mark Salyzyn <mark_salyzyn@xyus.xyratex.com>
-> Cc: James Bottomley <jbottomley@parallels.com>
-> Cc: Jack Wang <jack_wang@usish.com>
-> 
->  pm8001_sas.c |   15 +--------------
->  1 file changed, 1 insertion(+), 14 deletions(-)
-> 
-> diff -ru scsi-misc-2.6/drivers/scsi/pm8001/pm8001_sas.c
-> scsi-misc-2.6.new/drivers/scsi/pm8001/pm8001_sas.c
-> --- scsi-misc-2.6/drivers/scsi/pm8001/pm8001_sas.c	2011-08-31
-> 08:32:21.000000000 -0400
-> +++ scsi-misc-2.6.new/drivers/scsi/pm8001/pm8001_sas.c	2011-09-22
-> 11:36:24.000000000 -0400
-> @@ -385,21 +385,8 @@
->  	do {
->  		dev = t->dev;
->  		pm8001_dev = dev->lldd_dev;
-> -		if (DEV_IS_GONE(pm8001_dev)) {
-> -			if (pm8001_dev) {
-> -				PM8001_IO_DBG(pm8001_ha,
-> -					pm8001_printk("device %d not
-> ready.\n",
-> -					pm8001_dev->device_id));
-> -			} else {
-> -				PM8001_IO_DBG(pm8001_ha,
-> -					pm8001_printk("device %016llx
-> not "
-> -					"ready.\n",
-> SAS_ADDR(dev->sas_addr)));
-> -			}
-> -			rc = SAS_PHY_DOWN;
-> -			goto out_done;
-> -		}
->  		port = &pm8001_ha->port[sas_find_local_port_id(dev)];
-> -		if (!port->port_attached) {
-> +		if (DEV_IS_GONE(pm8001_dev) || !port->port_attached) {
->  			if (sas_protocol_ata(t->task_proto)) {
->  				struct task_status_struct *ts =
-> &t->task_status;
->  				ts->resp = SAS_TASK_UNDELIVERED;
-> 
-> ______________________________________________________________________
-> This email may contain privileged or confidential information, which
-should
-> only be used for the purpose for which it was sent by Xyratex. No further
-rights
-> or licenses are granted to use such information. If you are not the
-intended
-> recipient of this message, please notify the sender by return and delete
-it.
-> You may not use, copy, disclose or rely on the information contained in
-it.
-> 
-> Internet email is susceptible to data corruption, interception and
-> unauthorised amendment for which Xyratex does not accept liability. While
-we
-> have taken reasonable precautions to ensure that this email is free of
-viruses,
-> Xyratex does not accept liability for the presence of any computer viruses
-in
-> this email, nor for any losses caused as a result of viruses.
-> 
-> Xyratex Technology Limited (03134912), Registered in England & Wales,
-> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
-> 
-> The Xyratex group of companies also includes, Xyratex Ltd, registered in
-> Bermuda, Xyratex International Inc, registered in California, Xyratex
-> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
-Ltd
-> registered in The People's Republic of China and Xyratex Japan Limited
-> registered in Japan.
-> ______________________________________________________________________
-> 
-> 
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 953773cb26d9..fb9d997ece9d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -651,6 +651,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	unsigned int this_count = blk_rq_sectors(rq);
+ 	int ret, host_dif;
+ 	unsigned char protect;
++	int sector_shift;
+ 
+ 	/*
+ 	 * Discard request come in as REQ_TYPE_FS but we turn them into
+@@ -735,36 +736,23 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 	 * and not force the scsi disk driver to use bounce buffers
+ 	 * for this.
+ 	 */
+-	if (sdp->sector_size == 1024) {
+-		if ((block & 1) || (blk_rq_sectors(rq) & 1)) {
++	sector_shift = 0;
++	switch (sdp->sector_size) {
++	case 4096: sector_shift++;	/* fall through */
++	case 2048: sector_shift++;	/* fall through */
++	case 1024: sector_shift++;
++
++		if (!IS_ALIGNED(block, 1 << sector_shift) ||
++		    !IS_ALIGNED(blk_rq_sectors(rq), 1 << sector_shift)) {
+ 			scmd_printk(KERN_ERR, SCpnt,
+ 				    "Bad block number requested\n");
+ 			goto out;
+ 		} else {
+-			block = block >> 1;
+-			this_count = this_count >> 1;
+-		}
+-	}
+-	if (sdp->sector_size == 2048) {
+-		if ((block & 3) || (blk_rq_sectors(rq) & 3)) {
+-			scmd_printk(KERN_ERR, SCpnt,
+-				    "Bad block number requested\n");
+-			goto out;
+-		} else {
+-			block = block >> 2;
+-			this_count = this_count >> 2;
+-		}
+-	}
+-	if (sdp->sector_size == 4096) {
+-		if ((block & 7) || (blk_rq_sectors(rq) & 7)) {
+-			scmd_printk(KERN_ERR, SCpnt,
+-				    "Bad block number requested\n");
+-			goto out;
+-		} else {
+-			block = block >> 3;
+-			this_count = this_count >> 3;
++			block = block >> sector_shift;
++			this_count = this_count >> sector_shift;
+ 		}
+ 	}
++
+ 	if (rq_data_dir(rq) == WRITE) {
+ 		if (!sdp->writeable) {
+ 			goto out;
+-- 
+1.7.6
 
