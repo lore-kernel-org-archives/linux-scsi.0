@@ -1,82 +1,63 @@
-From: Neil Horman <nhorman@tuxdriver.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [SCSI] cxgb3i: convert cdev->l2opt to use rcu to prevent NULL
  dereference (v2)
-Date: Mon, 26 Sep 2011 10:20:52 -0400
-Message-ID: <20110926142052.GA18283@hmsreliant.think-freely.org>
+Date: Mon, 26 Sep 2011 09:31:15 -0500
+Message-ID: <1317047476.9560.0.camel@dabdike>
 References: <20110926134048.GA10999@longonot.mountain>
+	 <20110926142052.GA18283@hmsreliant.think-freely.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110926134048.GA10999@longonot.mountain>
-Sender: netdev-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37409 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751160Ab1IZObT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Sep 2011 10:31:19 -0400
+In-Reply-To: <20110926142052.GA18283@hmsreliant.think-freely.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Neil Horman <nhorman@tuxdriver.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Sep 26, 2011 at 04:40:48PM +0300, Dan Carpenter wrote:
-> Hi Neil,
+On Mon, 2011-09-26 at 10:20 -0400, Neil Horman wrote:
+> On Mon, Sep 26, 2011 at 04:40:48PM +0300, Dan Carpenter wrote:
+> > Hi Neil,
+> > 
+> > c98bc57ee65b6 "[SCSI] cxgb3i: convert cdev->l2opt to use rcu to
+> > prevent NULL dereference (v2)" from linux-next introduces a usinging
+> > uninitialized variable bug.
+> > 
+> >  struct l2t_entry *t3_l2t_get(struct t3cdev *cdev, struct neighbour *neigh,
+> >                              struct net_device *dev)
+> >  {
+> > -       struct l2t_entry *e;
+> > -       struct l2t_data *d = L2DATA(cdev);
+> > +       struct l2t_entry *e = NULL;
+> > +       struct l2t_data *d;
+> >         u32 addr = *(u32 *) neigh->primary_key;
+> >         int ifidx = neigh->dev->ifindex;
+> >         int hash = arp_hash(addr, ifidx, d);
+> >                                          ^
+> > Uninitialized variable.
+> > 
+> >         struct port_info *p = netdev_priv(dev);
+> >         int smt_idx = p->port_id;
+> >  
+> > +       rcu_read_lock();
+> > +       d = L2DATA(cdev);
+> > +       if (!d)
+> > +               goto done_rcu;
+> > +
+> > 
+> > regards,
+> > dan carpenter
+> > 
 > 
-> c98bc57ee65b6 "[SCSI] cxgb3i: convert cdev->l2opt to use rcu to
-> prevent NULL dereference (v2)" from linux-next introduces a usinging
-> uninitialized variable bug.
-> 
->  struct l2t_entry *t3_l2t_get(struct t3cdev *cdev, struct neighbour *neigh,
->                              struct net_device *dev)
->  {
-> -       struct l2t_entry *e;
-> -       struct l2t_data *d = L2DATA(cdev);
-> +       struct l2t_entry *e = NULL;
-> +       struct l2t_data *d;
->         u32 addr = *(u32 *) neigh->primary_key;
->         int ifidx = neigh->dev->ifindex;
->         int hash = arp_hash(addr, ifidx, d);
->                                          ^
-> Uninitialized variable.
-> 
->         struct port_info *p = netdev_priv(dev);
->         int smt_idx = p->port_id;
->  
-> +       rcu_read_lock();
-> +       d = L2DATA(cdev);
-> +       if (!d)
-> +               goto done_rcu;
-> +
-> 
-> regards,
-> dan carpenter
-> 
+> Yup, thanks, you need this to9 fix the uninitalized var.
 
-Yup, thanks, you need this to9 fix the uninitalized var.
+I rolled this into the original.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Neil Horman <nhorman@tuxdriver.com>
-
- l2t.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+James
 
 
-diff --git a/drivers/net/cxgb3/l2t.c b/drivers/net/cxgb3/l2t.c
-index 3808f99..4154097 100644
---- a/drivers/net/cxgb3/l2t.c
-+++ b/drivers/net/cxgb3/l2t.c
-@@ -302,9 +302,9 @@ struct l2t_entry *t3_l2t_get(struct t3cdev *cdev, struct neighbour *neigh,
- {
- 	struct l2t_entry *e = NULL;
- 	struct l2t_data *d;
-+	int hash;
- 	u32 addr = *(u32 *) neigh->primary_key;
- 	int ifidx = neigh->dev->ifindex;
--	int hash = arp_hash(addr, ifidx, d);
- 	struct port_info *p = netdev_priv(dev);
- 	int smt_idx = p->port_id;
- 
-@@ -313,6 +313,8 @@ struct l2t_entry *t3_l2t_get(struct t3cdev *cdev, struct neighbour *neigh,
- 	if (!d)
- 		goto done_rcu;
- 
-+	hash = arp_hash(addr, ifidx, d);
-+
- 	write_lock_bh(&d->lock);
- 	for (e = d->l2tab[hash].first; e; e = e->next)
- 		if (e->addr == addr && e->ifindex == ifidx &&
