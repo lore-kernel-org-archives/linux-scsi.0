@@ -1,58 +1,69 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH] libsas: set sas_address and device type of rphy
-Date: Mon, 26 Sep 2011 08:47:42 +0800
-Message-ID: <FDD03A452EDF4547818E22F25EDC647F@usish.com.cn>
-References: <67EFB401F0334372A629F8C2A4AFADDD@usish.com.cn> <CAA9_cmdgV_2DWiLCAcEoda_wajcVXZ23gVPQYru=PagA=B-odw@mail.gmail.com>
+Subject: Re: [PATCH] libsas: fix warnings when checking sata/stp protocol
+Date: Mon, 26 Sep 2011 08:48:26 +0800
+Message-ID: <BC3378113C6840C28E9ACA1767507ED2@usish.com.cn>
+References: <20110924010830.5292.26480.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="UTF-8"
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:34314 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:35042 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753121Ab1IZAr0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Sep 2011 20:47:26 -0400
-In-Reply-To: <CAA9_cmdgV_2DWiLCAcEoda_wajcVXZ23gVPQYru=PagA=B-odw@mail.gmail.com>
+	with ESMTP id S1753121Ab1IZAsF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Sep 2011 20:48:05 -0400
+In-Reply-To: <20110924010830.5292.26480.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>
-Cc: 'James Bottomley' <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, 'Xiangliang Yu' <yuxiangl@marvell.com>, 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, lindar_liu@usish.com, =?UTF-8?B?J+S6jueIseWNjic=?= <crystal_yu@usish.com>
+To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
+Cc: 'Xiangliang Yu' <yuxiangl@marvell.com>
 
-Hi Dan,
+It's OK for me.
 
-Sorry for my mistake and thanks for your fix.
-Re: [PATCH] libsas: set sas_address and device type of rphy
+[PATCH] libsas: fix warnings when checking sata/stp protocol
 > 
-> 2011/9/22 Jack Wang <jack_wang@usish.com>:
-> > Hi James,
-> >
-> > Libsas forget to set the sas_address and device type of rphy lead to file
-> > under /sys/class/sas_x show wrong value, fix that.
-> >
-> > From 976849ae6da4bc454a89d91b98824c915d3c99a2 Mon Sep 17 00:00:00 2001
-> > From: Jack Wang <jack_wang@usish.com>
-> > Date: Fri, 23 Sep 2011 14:19:24 +0800
-> > Subject: [PATCH] set rphy sas_address and device type correctly
-> >
-> > Signed-off-by: Jack Wang <jack_wang@usish.com>
-> > Tested-by: Crystal Yu <crystal_yu@usish.com>
-> > ---
-> >  sas_expander.c |    2 ++
-> >  1 files changed, 2 insertions(+), 0 deletions(-)
+> Several sas drivers legitimately check the protocol against the union of
+> SAS_PROTOCOL_SATA and SAS_PROTOCOL_STP.  Provide a SAS_PROTOCOL_STP_ALL
+> to silence warnings like:
 > 
-> Hi Jack, quick note, this patch does not apply...
+> drivers/scsi/pm8001/pm8001_sas.c:438:3: warning: case value '5' not in
+> enumerated type 'enum sas_protocol' [-Wswitch]
+> drivers/scsi/mvsas/mv_sas.c:798:2: warning: case value '5' not in
+enumerated
+> type 'enum sas_protocol' [-Wswitch]
+> drivers/scsi/mvsas/mv_sas.c:1783:2: warning: case value '5' not in
+enumerated
+> type 'enum sas_protocol' [-Wswitch]
+> drivers/scsi/mvsas/mv_sas.c:1886:2: warning: case value '5' not in
+enumerated
+> type 'enum sas_protocol' [-Wswitch]
+> drivers/scsi/isci/request.c:3565:2: warning: case value '5' not in
+enumerated
+> type 'enum sas_protocol' [-Wswitch]
 > 
-> > diff --git a/sas_expander.c b/sas_expander.c
-> > index 874e29d..4ad0a40 100644
-> > --- a/sas_expander.c
-> > +++ b/sas_expander.c
+> Cc: Xiangliang Yu <yuxiangl@marvell.com>
+> Cc: Jack Wang <jack_wang@usish.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  include/scsi/sas.h |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
 > 
-> ...should be:
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
+> diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+> index 9038d40..3a00297 100644
+> --- a/include/scsi/sas.h
+> +++ b/include/scsi/sas.h
+> @@ -108,6 +108,7 @@ enum sas_protocol {
+>  	SAS_PROTOCOL_STP		= 0x04,
+>  	SAS_PROTOCOL_SSP		= 0x08,
+>  	SAS_PROTOCOL_ALL		= 0x0E,
+> +	SAS_PROTOCOL_STP_ALL		=
+SAS_PROTOCOL_STP|SAS_PROTOCOL_SATA,
+>  };
 > 
-> I went ahead and fixed this up.
+>  /* From the spec; local phys only */
 > 
 > --
-> Dan
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
