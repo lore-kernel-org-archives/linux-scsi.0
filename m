@@ -1,43 +1,46 @@
-From: United Nation Donation <info@unf.org>
-Subject: CONGRATULATION!!!
-Date: Tue, 27 Sep 2011 09:35:00 +0800
-Message-ID: <20110927093500.4604h2cm4ggo400g__13881.0079465204$1317087537$gmane$org@cltv.tinp.net.tw>
-Reply-To: torobindesk@blumail.org
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] Pass information about device open/close to low-level
+ driver
+Date: Mon, 26 Sep 2011 21:39:07 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1109262134130.29772-100000@netrider.rowland.org>
+References: <20110926201216.GA18666@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset=BIG5;
-	DelSp="Yes";
-	format="flowed"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cltv.tinp.net.tw ([58.99.32.3]:36785 "EHLO cltv.tinp.net.tw"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387Ab1I0Bic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Sep 2011 21:38:32 -0400
-Content-Disposition: inline
+Received: from netrider.rowland.org ([192.131.102.5]:34212 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751373Ab1I0BjJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2011 21:39:09 -0400
+In-Reply-To: <20110926201216.GA18666@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <htejun@gmail.com>, Hans de Goede <hdegoede@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
+[Sorry for using an old email address for James -- fixed now.]
 
+On Mon, 26 Sep 2011, Christoph Hellwig wrote:
 
-We are pleased to inform you that You have been chosen by the U.N  
-Foundation to
-receive a Grant Aid surpport Donation of $1,000,000.00 USD.Your Qualification
-Numbers (G-999-747,UZ-900-77) For Claims contact Mr robin steven with this
-information below
+> On Mon, Sep 26, 2011 at 04:10:32PM -0400, Alan Stern wrote:
+> > James:
+> > 
+> > Something like the patch below has been requested by the virtualization
+> > people.
+> 
+> Who are "the virtualization people"?
 
-CLAIMS VERIFICATION FORM:
+In this case, Hans de Goede and other people he is in contact with at 
+VMware.  He can provide further details.
 
-1. Full Name:
-2. Contact Address:
-3. Telephone Number:
-4.Country:
-5. Sex/Age:
-6. Occupation:
+> Either way this idea is a really bad one, and if you check history long
+> enough you'd notice we had all that crap in kernel before 2.6 and got
+> rid of it all.
 
-Sincerely,
-Mr. Robin steven
+Sorry, I don't have enough time to wade through hundreds of megabytes
+of kernel history to sort this out.
 
-----------------------------------------------------------------
-TINP http://www.tinp.net.tw/
+Can you list any specific objections?  Or suggest an alternative 
+strategy to accomplish the same result?
+
+Alan Stern
 
