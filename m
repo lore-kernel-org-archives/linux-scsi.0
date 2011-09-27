@@ -1,7 +1,7 @@
 From: United Nation Donation <info@unf.org>
 Subject: CONGRATULATION!!!
-Date: Tue, 27 Sep 2011 09:08:24 +0800
-Message-ID: <20110927090824.2132yw75wgss48s0__3817.43652183122$1317087588$gmane$org@cltv.tinp.net.tw>
+Date: Tue, 27 Sep 2011 11:20:14 +0800
+Message-ID: <20110927112014.kz4w47yyyos040c8@cltv.tinp.net.tw>
 Reply-To: torobindesk@blumail.org
 Mime-Version: 1.0
 Content-Type: text/plain;
@@ -10,15 +10,15 @@ Content-Type: text/plain;
 	format="flowed"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cltv.tinp.net.tw ([58.99.32.3]:37288 "EHLO cltv.tinp.net.tw"
+Received: from cltv.tinp.net.tw ([58.99.32.3]:56749 "EHLO cltv.tinp.net.tw"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751708Ab1I0Bjb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Sep 2011 21:39:31 -0400
+	id S1752086Ab1I0DVA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Sep 2011 23:21:00 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-CONGRATULATION!!!
+
 
 We are pleased to inform you that You have been chosen by the U.N  
 Foundation to
