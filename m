@@ -1,22 +1,39 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: Re: mpt2sas errors help
-Date: Tue, 27 Sep 2011 06:56:34 -0400
-Message-ID: <20110927105634.GD10514@animx.eu.org>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: mpt2sas errors help
+Date: Tue, 27 Sep 2011 17:42:54 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6042AE85B80@inbmail02.lsi.com>
 References: <7863850E8C98C748980632D9D3B7C1990A275C6AA6@inbmail02.lsi.com>
  <A6888A6805518E4EA4AF7072A28264A6042AE85B1B@inbmail02.lsi.com>
+ <20110927105634.GD10514@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tn-76-7-162-101.sta.embarqhsd.net ([76.7.162.101]:54173 "EHLO
-	animx.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843Ab1I0K4h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Sep 2011 06:56:37 -0400
-Content-Disposition: inline
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6042AE85B1B@inbmail02.lsi.com>
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:41859 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753655Ab1I0MNE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Sep 2011 08:13:04 -0400
+In-Reply-To: <20110927105634.GD10514@animx.eu.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+To: Wakko Warner <wakko@animx.eu.org>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+Request to upgrade your controller card to latest firmware and test.
+The latest firmware can be downloaded from http://www.lsi.com/channel/products/storagecomponents/Pages/HBAs.aspx
+
+Regards,
+Nagalakshmi
+
+
+-----Original Message-----
+From: Wakko Warner [mailto:wakko@animx.eu.org]
+Sent: Tuesday, September 27, 2011 4:27 PM
+To: Nandigama, Nagalakshmi
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: mpt2sas errors help
 
 Nandigama, Nagalakshmi wrote:
 > Can you provide the dmesg when the driver is loaded. We need to know the firmware version.
@@ -52,7 +69,7 @@ Here's the relevent dmesg.  The driver is compiled into the kernel.
 > Sent: Saturday, September 24, 2011 5:47 PM
 > To: linux-scsi@vger.kernel.org
 > Subject: Re: mpt2sas errors help
-> 
+>
 > Wakko Warner wrote:
 > > I'm seeing tons of these ever 2-4 minutes during a raid rebuild (new raid on
 > > new disks)
@@ -68,9 +85,9 @@ Here's the relevent dmesg.  The driver is compiled into the kernel.
 > > I assume the link on these devices are 6.0gb.
 > >
 > > Can someone tell me what is happening?
-> 
+>
 > Noone?
-> 
+>
 > > Here's the dmesg:
 > > [6938625.516581] sd 0:0:8:0: attempting task abort! scmd(ffff8802ede2fc80)
 > > [6938625.516588] sd 0:0:8:0: [sdg] CDB: cdb[0]=0x2a: 2a 00 2c 05 cf 90 00 00 30 00
@@ -320,6 +337,6 @@ Here's the relevent dmesg.  The driver is compiled into the kernel.
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
+--
  Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
  million bugs.
