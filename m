@@ -1,63 +1,86 @@
-From: =?utf-8?B?5L+d6K+B5pyJ5Lmw5a625Zue5aSN?= <admin@pmlimited.com.hk>
-Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuivmnIDmlrDlub/kuqTkvJrkubDlrrbjgIHmtbc=?=
-	=?utf-8?B?5YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
-Date: Tue, 27 Sep 2011 06:00:40 +0000 (UTC)
-Message-ID: <20120927134907303003@pmlimited.com.hk>
-Reply-To: <1339625218@qq.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [RFC] Pass information about device open/close to low-level driver
+Date: Tue, 27 Sep 2011 09:19:30 +0200
+Message-ID: <4E817902.3050605@redhat.com>
+References: <Pine.LNX.4.44L0.1109261543240.1773-100000@iolanthe.rowland.org> <20110926201216.GA18666@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.pmlimited.com.hk ([210.17.212.122]:60185 "EHLO
-	pmlsrv.pmlimited.com.hk" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752858Ab1I0GAe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2011 02:00:34 -0400
-Date: Thu, 27 Sep 2012 13:48:54 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:63010 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751052Ab1I0HTr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Sep 2011 03:19:47 -0400
+In-Reply-To: <20110926201216.GA18666@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lineswest@aol.com, lingsu86@hotmail.com, link@yahoo.com.cn, linkjed@yahoo.com, links@the-cover-store.com, linn_shio@msn.com, linronlrk@aol.com, lintonelectronicstores@h
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <htejun@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrbjgIHlsZXk
-vJrkubDlrrbjgIHmtbflhbPmlbDmja4sQjJC6K+i55uY5Lmw5a62NTAw5LiH44CCDQoNCuS4gOWF
-sTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn6KGM5Lia5YiG5aW957G777yM
-5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8miANCjHvvIwyMDEx5pil5a2j
-MTA55bGK5bm/5Lqk5Lya5Lmw5a625pWw5o2u5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc
-5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a655piT5oiQ5Y2V77yBIA0KMu+8jOacgOaWsOWFqOeQ
-g+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgDQoz77yMMjAwOOW5tCwyMDA55bm0LDIw
-MTDlubQg5pil5a2jK+eni+Wto+W5v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQgMTA1IDEw
-NiAxMDcgMTA4IOWFseWFreWxiiDlhbExMjAuNuS4h+aVsOaNruOAgg0KNO+8jDIwMTDlubTlm73p
-mYXkv4PplIDljY/kvJrvvIhQUEFJ77yJ5oiQ5ZGY5ZCN5Y2VIFBQQUkgTWVtYmVycyBEaXJlY3Rv
-cnnvvIzpnZ7luLjph43opoHnmoTlpKfkubDlrrbjgIINCjXvvIwyMDEw5bm05Yiw6aaZ5riv6YeH
-6LSt55qE5Zu95aSW5a6i5Lq65ZCN5b2VKOmmmea4r+i0uOWPkeWxgOaPkOS+mynvvIzlhbE3LjLk
-uIfmlbDmja7vvIzotoXnuqfph43opoHnmoTkubDlrrbjgIINCjbvvIw2MC445LiH5p2h5pyA5paw
-5Zu95aSWQjJC5Lmw5a626K+i55uY44CCDQo377yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBp
-ZXJz54mI5pWw5o2uIDHljYPkuIfjgIINCjjvvIznvqTlj5Hova/ku7bvvIznvqTlj5Hova/ku7bn
-moTpg6jnvbLkuI7lronoo4XjgIINCg0K5YWxIDUwMOS4h+S4quS5sOWutu+8jOavj+S4quWdh+ac
-iUVtYWlsLiANCg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/l
-pKnpg73mnInkubDlrrblm57lpI3jgIINCg0K6KaB55qE5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUy
-MTggICDmiJbogIXnq4vljbPlm57lpI3pgq7nrrE6IDEzMzk2MjUyMThAcXEuY29tDQropoHnmoTm
-ipPntKfogZTns7tRUTogMTMzOTYyNTIxOCAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMz
-OTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1MjE4ICAg5oiW6ICF
-56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFxLmNvbQ0KDQoNCuivmuS/oeS4uuacrO+8
-jOWmguaenOS4jeS/oeS7u+acrOS6uizlj6/ku6XotbDmt5jlrp3kuqTmmJMs5pS26LSn6aqM6K+B
-5ZCO5YaN5LuY5qy+LOi/meaYr+WvueaCqOacgOWlveeahOS/nemanOS6huOAgiANCg0K5L+d6K+B
-5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57l
-pI3jgIINCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0KDQoNCg0KDQrlub/kuqTk
-vJrkubDlrrbmjInkuqflk4HnsbvliKvliIbnsbvvvIzliIbkuLrku6XkuIvlh6DnsbvvvJoNCjEg
-5Yqe5YWs6K6+5aSHDQoyIOe8lue7h+WPiuiXpOmTgeW3peiJuuWTgQ0KMyDnjrvnkoMNCjQg6aSQ
-5Y6o55So5YW3DQo1IOi9pui+hg0KNiDlpKflnovmnLrmorDlj4rorr7lpIcNCjcg55S15a2Q55S1
-5rCUDQo4IOeUteWtkOa2iOi0ueWTgQ0KOSDnurrnu4cNCjEwIOacjeijhQ0KMTEg5Liq5Lq65oqk
-55CGDQoxMiDlt6XnqIvmnLrmorANCjEzIOW3peWFtw0KMTQg5YyW5belDQoxNSDorqHnrpfmnLrl
-j4rpgJrorq8NCjE2IOWutuWxheeUqOWTgQ0KMTcg5a625bGF6KOF6aWwDQoxOCDlrrblhbcNCjE5
-IOWutueUqOeUteWZqA0KMjAg5bu6562R5Y+K6KOF6aWw5p2Q5paZDQoyMSDoioLml6XnlKjlk4EN
-CjIyIOekvOWTgeWPiui1oOWTgQ0KMjMg5pGp5omY6L2mDQoyNCDmsb3ovabphY3ku7YNCjI1IOmj
-n+WTgQ0KMjYg6Zm255O3DQoyNyDpk4Hnn7MNCjI4IOeOqeWFtw0KMjkg5Y2r5rW0DQozMCDkupTp
-h5ENCjMxIOWwj+Wei+acuuaisA0KMzIg6Z6LDQozMyDkvJHpl7LnlKjlk4ENCjM0IOWMu+eWlw0K
-MzUg5rW05a6k5Lqn5ZOBDQozNiDlm63mnpcNCjM3IOeFp+aYjuS6p+WTgQ0KMzgg6ZKf6KGo55y8
-6ZWcDQozOSDoh6rooYzovaYNCjQwIOWMhQ0KDQoNCuS/neivgeavj+WkqemDveacieS5sOWutuWb
-nuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnp
-g73mnInkubDlrrblm57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K
-5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQo=
+Hi,
 
+On 09/26/2011 10:12 PM, Christoph Hellwig wrote:
+> On Mon, Sep 26, 2011 at 04:10:32PM -0400, Alan Stern wrote:
+>> James:
+>>
+>> Something like the patch below has been requested by the virtualization
+>> people.
+>
+> Who are "the virtualization people"?
+>
+> Either way this idea is a really bad one, and if you check history long
+> enough you'd notice we had all that crap in kernel before 2.6 and got
+> rid of it all.
 
+That would be me. A small correction to Alan's reply to this I'm not
+in contact with vmware about this although I'm sure they would like to
+have this functionality too.
+
+The problem these patches try to address is that currently it is possible
+to disconnect a usb device driver from a usb device through usbfs / the unbind
+sysfs attribute, making the device driver see the device in essence get
+unplugged. There is no way for the driver to cancel this, since it is just
+like a real unplug.
+
+However since this is a software disconnect not a hardware disconnect it
+would be very convenient if the driver could say, no not right now I'm busy.
+
+The use case for this is redirection of usb devices to virtual machines. I'm
+working on this for qemu and qemu+spice, when a usb device on a linux host /
+linux spice client gets redirected to a vm, we currently start by making
+a disconnect ioctl to the usbfs device node, to detach the kernel driver
+so that qemu or the spice client can take over the device. This causes
+problems when a user first copies a bunch of large files to a usb stick, and
+then immediately afterwards selects redirect this usb stick to the vm.
+Usually the user does this without first unmounting the stick. So the usb mass
+storage driver (and the scsi subsystem after it) see a device disconnect while
+some buffered writes still needed flushing -> not good!
+
+For use cases where userspace takes over from a kernel device driver it would
+be very nice if userspace could ask the kernel driver nicely to disconnect,
+for this a new try_disconnect ioctl would be added to the usbfs ioctls.
+
+In order for the usb mass storage driver to implement this try_disconnect, it
+needs to know if its "downstream" scsi devices are in use or not, that is what
+this patch is for.
+
+There have already been a lot of discussions on other lists about this, so
+let me try to address this biggest complaint against this patch set so far:
+"why not do this in userspace".
+
+4 reasons:
+1) This is hardware resource management, hw resource management is the kernels task
+2) It cannot be done race free in userspace, one can parse sysfs, figure out which
+    block devices belong to the usb device, and see if they are mounted, but between
+    the check and the disconnect ioctl they may get mounted
+3) One needs to not only check for mounts but also for fsck / mkfs / fdisk on
+    the block device nodes, this means parsing lsof output for all processes,
+    something the userspace process in question likely will not have the rights
+    for
+4) If you look at the entirety of the patchset Alan posted for this it is quite small
+    the code to implement 2 + 3 *which won't even work properly* will be one or more
+    orders larger and more complex
+
+Thanks & Regards,
+
+Hans
