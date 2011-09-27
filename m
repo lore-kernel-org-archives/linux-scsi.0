@@ -1,32 +1,43 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] Pass information about device open/close to low-level
- driver
-Date: Mon, 26 Sep 2011 16:12:16 -0400
-Message-ID: <20110926201216.GA18666@infradead.org>
-References: <Pine.LNX.4.44L0.1109261543240.1773-100000@iolanthe.rowland.org>
+From: United Nation Donation <info@unf.org>
+Subject: CONGRATULATION!!!
+Date: Tue, 27 Sep 2011 09:35:00 +0800
+Message-ID: <20110927093500.4604h2cm4ggo400g__13881.0079465204$1317087537$gmane$org@cltv.tinp.net.tw>
+Reply-To: torobindesk@blumail.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset=BIG5;
+	DelSp="Yes";
+	format="flowed"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 173-166-109-252-newengland.hfc.comcastbusiness.net ([173.166.109.252]:45519
-	"EHLO bombadil.infradead.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753030Ab1IZUM0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Sep 2011 16:12:26 -0400
+Received: from cltv.tinp.net.tw ([58.99.32.3]:36785 "EHLO cltv.tinp.net.tw"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751387Ab1I0Bic (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 26 Sep 2011 21:38:32 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1109261543240.1773-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>, Tejun Heo <htejun@gmail.com>, Hans de Goede <hdegoede@redhat.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 26, 2011 at 04:10:32PM -0400, Alan Stern wrote:
-> James:
-> 
-> Something like the patch below has been requested by the virtualization
-> people.
 
-Who are "the virtualization people"?
 
-Either way this idea is a really bad one, and if you check history long
-enough you'd notice we had all that crap in kernel before 2.6 and got
-rid of it all.
+We are pleased to inform you that You have been chosen by the U.N  
+Foundation to
+receive a Grant Aid surpport Donation of $1,000,000.00 USD.Your Qualification
+Numbers (G-999-747,UZ-900-77) For Claims contact Mr robin steven with this
+information below
+
+CLAIMS VERIFICATION FORM:
+
+1. Full Name:
+2. Contact Address:
+3. Telephone Number:
+4.Country:
+5. Sex/Age:
+6. Occupation:
+
+Sincerely,
+Mr. Robin steven
+
+----------------------------------------------------------------
+TINP http://www.tinp.net.tw/
+
