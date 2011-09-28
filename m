@@ -1,71 +1,67 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: BUG in kernel: Wrong Handling of USB =?UTF-8?Q?HDD=E2=80=99s?=
- in scsiglue(slave_configure) and scsi/sd(sd_read_cache_type)
-Date: Wed, 28 Sep 2011 16:29:43 -0500
-Message-ID: <1317245383.22022.23.camel@dabdike.hansenpartnership.com>
-References: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
-	 <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Wed, 28 Sep 2011 18:34:49 -0400
+Message-ID: <20110928223449.GD21628@redhat.com>
+References: <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
+ <4E832A55.30709@kernel.dk>
+ <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
+ <4E832BD2.50409@kernel.dk>
+ <CA+55aFyFht3njKVep+aT_m5URxRxayZyb6K2ukW6+kazHf8EKA@mail.gmail.com>
+ <1317224616.19034.41.camel@dabdike.hansenpartnership.com>
+ <20110928174859.GA21628@redhat.com>
+ <20110928175304.GA3985@infradead.org>
+ <20110928180905.GB21628@redhat.com>
+ <20110928181649.GA27441@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20110928181649.GA27441@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-09-28 at 21:27 +0530, Amit Sahrawat wrote:
-> Marking mail to linux-scsi.
->=20
-> Thanks Christoph.
->=20
-> Regards,
-> Amit Sahrawat
->=20
-> On Wed, Sep 28, 2011 at 9:12 PM, Amit Sahrawat
-> <amit.sahrawat83@gmail.com> wrote:
-> > When a USB HDD is connected to the device, it invokes slave_configu=
-re
-> > to configure the USB HDD. In this function, whenever there is a SCS=
-I
-> > device of type TYPE_DISK, it sets:
-> >        /* A number of devices have problems with MODE SENSE for
-> >                 * page x08, so we will skip it. */
-> >                sdev->skip_ms_page_8 =3D 1;
-> >
-> > Now, as a part of SCSI device probing, in the function
-> > sd_revalidate_disk()-->sd_read_cache_type(), there is a condition
-> > if (sdp->skip_ms_page_8)
-> >                goto defaults;
-> > which becomes always true for all the USB HDD=E2=80=99s =E2=80=93 t=
-he net result is
-> > that the Write Cache is never considered for USB HDD(WCE =3D 0) =E2=
-=80=93
-> > =E2=80=9CAssuming drive cache: write through=E2=80=9D
-> >
-> > What=E2=80=99s more =E2=80=93 the QUEUE ordering which is marked fo=
-r WCE=3D0 is
-> > QUEUE_ORDERED_DRAIN, instead of QUEUE_ORDERED_DRAIN_FLUSH
-> > This means there is no flushing of USB HDD internal cache (although
-> > SYNCHRONIZE_CACHE is implemented as passed as command in
-> > sd_prepare_flush) =E2=80=93 queue_flush()(called in function
-> > blk_do_ordered()-->start_ordered()) does not gets called in case of
-> > QUEUE_ORDERED_DRAIN.
-> >
-> > This causes a serious impact on USB HDD=E2=80=99s.
-> >
-> > Please let me know in case I have missed something in my observatio=
-ns.
+On Wed, Sep 28, 2011 at 02:16:49PM -0400, Christoph Hellwig wrote:
+> On Wed, Sep 28, 2011 at 02:09:05PM -0400, Vivek Goyal wrote:
+> > I had thought of implementing a separate lock for throttling. Then I
+> > noticed few operations like checking for queue flags where I would
+> > be required to hold queue locks.
+> 
+> Can you do a writeup of these issues?  E.g. if the flags are throtteling
+> specific we can move them to a separate flags field, if not we can
+> see if we can make them atomic or similar.
 
-This should be working in 3.0 ... what version of the kernel are you
-testing.  The actual patch that relaxes the caching mode page check is
-this one:
+Sure. I am going through the code and trying to list down some of the
+dependencies.
 
-commit 0bcaa11154f07502e68375617e5650173eea8e50
-Author: Luben Tuikov <ltuikov@yahoo.com>
-Date:   Thu May 19 00:00:58 2011 -0700
+But before that I would say that tyring to optimize the throttling code
+to reduce the queue lock contention should be last on the priority list.
+The simple reason being that in common case it does not incur any locking
+cost. One needs to have IO cgroup configured and needs to have some
+throttling rules put in place only then queue lock cost will come into
+picture. And for most of the people, I don't think that's the common
+case.
 
-    [SCSI] Retrieve the Caching mode page (version 2)
+Now coming back to question of dependencies. We take some services from
+request queue which needs to happen under queue lock.
 
-James
+- Looks like in current code I am only accessing QUEUE_FLAG_DEAD. I see
+  that flag is not synchronized using queue lock. So it probably is not
+  a concern.
+
+- I am using tracing functionality. blk_add_trace_msg(). I guess it is
+  not required to take queue lock for this. But I am not sure.
+
+- I am accessing q->backing_dev_info to get to associated devices's
+  major and minor number.
+
+That's it I guess. That's what a quick look tells me. So looks like
+it is not too hard to convert existing blk throttle code to use its
+own lock. That will also get rid of dependency on queue lock and
+in turn uncertainity associated with queue lock being valid (if
+driver provided the lock).
+
+Thanks
+Vivek
