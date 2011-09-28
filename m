@@ -1,30 +1,31 @@
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: bnx2i kthread madness
-Date: Wed, 28 Sep 2011 19:33:14 +0200
-Message-ID: <CAO+b5-r68WC7_noWohbRKyCsrzEpdXxHmhD4s1pT4bJ685Gs9Q@mail.gmail.com>
-References: <1317222318.24040.46.camel@twins> <1317230982.3678.1000.camel@ltirv-waie-lx1>
+Date: Wed, 28 Sep 2011 12:47:06 -0500
+Message-ID: <1317232026.22022.11.camel@dabdike.hansenpartnership.com>
+References: <1317222318.24040.46.camel@twins>
+	 <1317230982.3678.1000.camel@ltirv-waie-lx1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:57968 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754552Ab1I1Rdh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2011 13:33:37 -0400
-Received: by wwf22 with SMTP id 22so9264969wwf.1
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2011 10:33:36 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47785 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751377Ab1I1RrI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2011 13:47:08 -0400
 In-Reply-To: <1317230982.3678.1000.camel@ltirv-waie-lx1>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Peter Zijlstra <peterz@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@parisc-linux.org>
 
-On Wed, Sep 28, 2011 at 7:29 PM, Eddie Wai <eddie.wai@broadcom.com> wro=
-te:
+On Wed, 2011-09-28 at 10:29 -0700, Eddie Wai wrote:
 > On Wed, 2011-09-28 at 08:05 -0700, Peter Zijlstra wrote:
+> > Hi,
+> > 
 > > I accidentally looked at all kthreads in existence on my system and
 > > found I had:
-> >
+> > 
 > > [iscsi_eh]
 > > [bnx2i_thread/0]
 > > [bnx2i_thread/1]
@@ -50,47 +51,28 @@ te:
 > > [bnx2i_thread/21]
 > > [bnx2i_thread/22]
 > > [bnx2i_thread/23]
-> >
-> > This left me wondering why, because I most certainly am not using i=
-SCSI.
-> > I don't even know why its enabled in my .config (and it won't be lo=
-ng).
-> >
+> > 
+> > This left me wondering why, because I most certainly am not using iSCSI.
+> > I don't even know why its enabled in my .config (and it won't be long). 
+> > 
 > > Please fix this muck to not create useless threads.
->
-> Point noted. =A0In the current bnx2i driver, one kthread is created p=
-er
-> cpu core upon module init (and destroyed upon module exit). =A0The
+> 
+> Hello Peter,
+> 
+> Point noted.  In the current bnx2i driver, one kthread is created per
+> cpu core upon module init (and destroyed upon module exit).  The
 > kthreads are meant only to improve I/O performance when iSCSI is
-> employed. =A0Otherwise, I agree that they should not exist.
+> employed.  Otherwise, I agree that they should not exist.
 
-Why doesn't bnx2i use one of the system work queues defined in
-<linux/workqueue.h> ?
+So if I look at the code, you seem to be trying to direct outbound
+commands via the CPU specified in the request?  I assume this is because
+we need to access the data to generate things like the checksum, in
+which case the command data needs to be CPU hot in the outbound path?
+(although I thought the bnx2 had a hardware engine that can do this).
 
-$ git grep system include/linux/workqueue.h|cat
-include/linux/workqueue.h: * system_wq is the one used by
-schedule[_delayed]_work[_on]().
-include/linux/workqueue.h: * system_long_wq is similar to system_wq
-but may host long running
-include/linux/workqueue.h: * system_nrt_wq is non-reentrant and
-guarantees that any given work
-include/linux/workqueue.h: * system_unbound_wq is unbound workqueue.
-Workers are not bound to
-include/linux/workqueue.h: * system_freezable_wq is equivalent to
-system_wq except that it's
-include/linux/workqueue.h:extern struct workqueue_struct *system_wq;
-include/linux/workqueue.h:extern struct workqueue_struct *system_long_w=
-q;
-include/linux/workqueue.h:extern struct workqueue_struct *system_nrt_wq=
-;
-include/linux/workqueue.h:extern struct workqueue_struct *system_unboun=
-d_wq;
-include/linux/workqueue.h:extern struct workqueue_struct *system_freeza=
-ble_wq;
+If we genuinely need to do something like this, the interface
+work_on_cpu() was defined for something like this purpose.
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+James
+
+
