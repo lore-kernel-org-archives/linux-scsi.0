@@ -1,57 +1,63 @@
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Subject: =?windows-1252?Q?Re=3A_BUG_in_kernel=3A_Wrong_Handling_of_USB_HDD=92s_in_?=
-	=?windows-1252?Q?scsiglue=28slave=5Fconfigure=29_and_scsi=2Fsd=28sd=5Fread=5Fcache=5Ftype=29?=
-Date: Wed, 28 Sep 2011 21:27:23 +0530
-Message-ID: <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
-References: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
+From: Pete Lancashire <xyzzypdx@gmail.com>
+Subject: Pete Lancashire wants to chat
+Date: Wed, 28 Sep 2011 08:58:20 -0700
+Message-ID: <CAA-F0u8p2+nkgzJ2pAebwWp7qTZ0xyr8FZaH645Hmps_9D50pg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yi0-f74.google.com ([209.85.218.74]:65527 "EHLO
+	mail-yi0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751633Ab1I1Q2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2011 12:28:46 -0400
+Received: by yib25 with SMTP id 25so1071143yib.1
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2011 09:28:46 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Marking mail to linux-scsi.
+-----------------------------------------------------------------------
 
-Thanks Christoph.
+Pete Lancashire wants to stay in better touch using some of Google's coolest new
+products.
 
-Regards,
-Amit Sahrawat
+If you already have Gmail or Google Talk, visit:
+http://mail.google.com/mail/b-5272c93fa5-53da9b9f62-RJXIOkfLXxHSigns7nP6hD1kFIk
+You'll need to click this link to be able to chat with Pete Lancashire.
 
-On Wed, Sep 28, 2011 at 9:12 PM, Amit Sahrawat
-<amit.sahrawat83@gmail.com> wrote:
-> When a USB HDD is connected to the device, it invokes slave_configure
-> to configure the USB HDD. In this function, whenever there is a SCSI
-> device of type TYPE_DISK, it sets:
-> =A0 =A0 =A0 =A0/* A number of devices have problems with MODE SENSE f=
-or
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * page x08, so we will skip it. */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sdev->skip_ms_page_8 =3D 1;
->
-> Now, as a part of SCSI device probing, in the function
-> sd_revalidate_disk()-->sd_read_cache_type(), there is a condition
-> if (sdp->skip_ms_page_8)
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto defaults;
-> which becomes always true for all the USB HDD=92s =96 the net result =
-is
-> that the Write Cache is never considered for USB HDD(WCE =3D 0) =96
-> =93Assuming drive cache: write through=94
->
-> What=92s more =96 the QUEUE ordering which is marked for WCE=3D0 is
-> QUEUE_ORDERED_DRAIN, instead of QUEUE_ORDERED_DRAIN_FLUSH
-> This means there is no flushing of USB HDD internal cache (although
-> SYNCHRONIZE_CACHE is implemented as passed as command in
-> sd_prepare_flush) =96 queue_flush()(called in function
-> blk_do_ordered()-->start_ordered()) does not gets called in case of
-> QUEUE_ORDERED_DRAIN.
->
-> This causes a serious impact on USB HDD=92s.
->
-> Please let me know in case I have missed something in my observations=
-=2E
->
-> Thanks & Regards,
-> Amit Sahrawat
->
+To get Gmail - a free email account from Google with over 2,800 megabytes of
+storage - and chat with Pete Lancashire, visit:
+http://mail.google.com/mail/a-5272c93fa5-53da9b9f62-RJXIOkfLXxHSigns7nP6hD1kFIk
+
+Gmail offers:
+- Instant messaging right inside Gmail
+- Powerful spam protection
+- Built-in search for finding your messages and a helpful way of organizing
+  emails into "conversations"
+- No pop-up ads or untargeted banners - just text ads and related information
+  that are relevant to the content of your messages
+
+All this, and its yours for free. But wait, there's more! By opening a Gmail
+account, you also get access to Google Talk, Google's instant messaging
+service:
+
+http://www.google.com/talk/
+
+Google Talk offers:
+- Web-based chat that you can use anywhere, without a download
+- A contact list that's synchronized with your Gmail account
+- Free, high quality PC-to-PC voice calls when you download the Google Talk
+  client
+
+We're working hard to add new features and make improvements, so we might also
+ask for your comments and suggestions periodically. We appreciate your help in
+making our products even better!
+
+Thanks,
+The Google Team
+
+To learn more about Gmail and Google Talk, visit:
+http://mail.google.com/mail/help/about.html
+http://www.google.com/talk/about.html
+
+(If clicking the URLs in this message does not work, copy and paste them into
+the address bar of your browser).
