@@ -1,7 +1,7 @@
 From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH 2/6] libfc: cache align struct fc_fcp_pkt fields
-Date: Tue, 27 Sep 2011 21:37:57 -0700
-Message-ID: <20110928043757.13004.46435.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/6] libfc: cache align struct fc_exch fields
+Date: Tue, 27 Sep 2011 21:38:02 -0700
+Message-ID: <20110928043802.13004.31463.stgit@localhost6.localdomain6>
 References: <20110928043601.13004.92207.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,8 +9,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga11.intel.com ([192.55.52.93]:39434 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751770Ab1I1ErJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2011 00:47:09 -0400
+	id S1752333Ab1I1ErO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2011 00:47:14 -0400
 In-Reply-To: <20110928043601.13004.92207.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,129 +19,67 @@ Cc: Vasu Dev <vasu.dev@intel.com>, Yi Zou <yi.zou@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Re-arrange its fields to avoid padding and have better
-cacheline alignments.
-
-Removed not used start_time, end_time and last_pkt_time
-fields.
-
-This all reduced this struct size to 448 from 480 and
-that also reduced one cacheline on x86_64 beside
-eliminating 8 pads. However kept logical fields together.
+cache aligned xid and ex_lock beside
+removing holes.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 ---
 
- drivers/scsi/libfc/fc_fcp.c |    2 --
- include/scsi/libfc.h        |   49 ++++++++++++++++++-------------------------
- 2 files changed, 21 insertions(+), 30 deletions(-)
+ include/scsi/libfc.h |   27 ++++++++++++---------------
+ 1 files changed, 12 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 4c41ee8..221875e 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -759,7 +759,6 @@ static void fc_fcp_recv(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 		goto out;
- 	if (fc_fcp_lock_pkt(fsp))
- 		goto out;
--	fsp->last_pkt_time = jiffies;
- 
- 	if (fh->fh_type == FC_TYPE_BLS) {
- 		fc_fcp_abts_resp(fsp, fp);
-@@ -1148,7 +1147,6 @@ static int fc_fcp_cmd_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
- 		rc = -1;
- 		goto unlock;
- 	}
--	fsp->last_pkt_time = jiffies;
- 	fsp->seq_ptr = seq;
- 	fc_fcp_pkt_hold(fsp);	/* hold for fc_fcp_pkt_destroy */
- 
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 7d96829..05e2583 100644
+index 05e2583..5d1a758 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -281,9 +281,6 @@ struct fc_seq_els_data {
-  * @timer:           The command timer
-  * @tm_done:         Completion indicator
-  * @wait_for_comp:   Indicator to wait for completion of the I/O (in jiffies)
-- * @start_time:      Timestamp indicating the start of the I/O (in jiffies)
-- * @end_time:        Timestamp indicating the end of the I/O (in jiffies)
-- * @last_pkt_time:   Timestamp of the last frame received (in jiffies)
-  * @data_len:        The length of the data
-  * @cdb_cmd:         The CDB command
-  * @xfer_len:        The transfer length
-@@ -304,50 +301,46 @@ struct fc_seq_els_data {
-  * @recov_seq:       The sequence for REC or SRR
+@@ -406,35 +406,32 @@ struct fc_seq {
+  *	sequence allocation
   */
- struct fc_fcp_pkt {
--	/* Housekeeping information */
--	struct fc_lport   *lp;
--	u16		  state;
--	atomic_t	  ref_cnt;
- 	spinlock_t	  scsi_pkt_lock;
-+	atomic_t	  ref_cnt;
-+
-+	/* SCSI command and data transfer information */
-+	u32		  data_len;
- 
- 	/* SCSI I/O related information */
- 	struct scsi_cmnd  *cmd;
- 	struct list_head  list;
- 
--	/* Timeout related information */
--	struct timer_list timer;
--	struct completion tm_done;
--	int	          wait_for_comp;
--	unsigned long	  start_time;
--	unsigned long	  end_time;
--	unsigned long	  last_pkt_time;
+ struct fc_exch {
++	spinlock_t	    ex_lock;
++	atomic_t	    ex_refcnt;
++	enum fc_class	    class;
+ 	struct fc_exch_mgr  *em;
+ 	struct fc_exch_pool *pool;
+-	u32		    state;
+-	u16		    xid;
+ 	struct list_head    ex_list;
+-	spinlock_t	    ex_lock;
+-	atomic_t	    ex_refcnt;
+-	struct delayed_work timeout_work;
+ 	struct fc_lport	    *lp;
++	u32		    esb_stat;
++	u8		    state;
++	u8		    fh_type;
++	u8		    seq_id;
++	u8		    encaps;
++	u16		    xid;
+ 	u16		    oxid;
+ 	u16		    rxid;
+ 	u32		    oid;
+ 	u32		    sid;
+ 	u32		    did;
+-	u32		    esb_stat;
+ 	u32		    r_a_tov;
+-	u8		    seq_id;
+-	u8		    encaps;
+ 	u32		    f_ctl;
+-	u8		    fh_type;
+-	enum fc_class	    class;
+-	struct fc_seq	    seq;
 -
--	/* SCSI command and data transfer information */
--	u32		  data_len;
++	struct fc_seq       seq;
+ 	void		    (*resp)(struct fc_seq *, struct fc_frame *, void *);
+ 	void		    *arg;
 -
--	/* Transport related veriables */
--	struct fcp_cmnd   cdb_cmd;
--	size_t		  xfer_len;
--	u16		  xfer_ddp;
--	u32		  xfer_contig_end;
--	u16		  max_payload;
-+	/* Housekeeping information */
-+	struct fc_lport   *lp;
-+	u8		  state;
- 
- 	/* SCSI/FCP return status */
--	u32		  io_status;
- 	u8		  cdb_status;
- 	u8		  status_code;
- 	u8		  scsi_comp_flags;
-+	u32		  io_status;
- 	u32		  req_flags;
- 	u32		  scsi_resid;
- 
-+	/* Transport related veriables */
-+	size_t		  xfer_len;
-+	struct fcp_cmnd   cdb_cmd;
-+	u32		  xfer_contig_end;
-+	u16		  max_payload;
-+	u16		  xfer_ddp;
-+
- 	/* Associated structures */
- 	struct fc_rport	  *rport;
- 	struct fc_seq	  *seq_ptr;
- 
--	/* Error Processing information */
--	u8		  recov_retry;
-+	/* Timeout/error related information */
-+	struct timer_list timer;
-+	int	          wait_for_comp;
-+	u32		  recov_retry;
- 	struct fc_seq	  *recov_seq;
+ 	void		    (*destructor)(struct fc_seq *, void *);
+-
 -};
-+	struct completion tm_done;
++	struct delayed_work timeout_work;
 +} ____cacheline_aligned_in_smp;
+ #define	fc_seq_exch(sp) container_of(sp, struct fc_exch, seq)
  
- /*
-  * Structure and function definitions for managing Fibre Channel Exchanges
+ 
 
