@@ -1,94 +1,63 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: bnx2i kthread madness
-Date: Wed, 28 Sep 2011 11:03:23 -0700
-Message-ID: <1317233005.3678.1012.camel@ltirv-waie-lx1>
-References: <1317222318.24040.46.camel@twins>
- <1317230982.3678.1000.camel@ltirv-waie-lx1>
- <1317232026.22022.11.camel@dabdike.hansenpartnership.com>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Wed, 28 Sep 2011 14:09:05 -0400
+Message-ID: <20110928180905.GB21628@redhat.com>
+References: <4E82751C.9050908@kernel.dk>
+ <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
+ <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
+ <4E832A55.30709@kernel.dk>
+ <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
+ <4E832BD2.50409@kernel.dk>
+ <CA+55aFyFht3njKVep+aT_m5URxRxayZyb6K2ukW6+kazHf8EKA@mail.gmail.com>
+ <1317224616.19034.41.camel@dabdike.hansenpartnership.com>
+ <20110928174859.GA21628@redhat.com>
+ <20110928175304.GA3985@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3485 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753737Ab1I1SDd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2011 14:03:33 -0400
-In-Reply-To: <1317232026.22022.11.camel@dabdike.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110928175304.GA3985@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Peter Zijlstra <peterz@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@parisc-linux.org>
 
-
-On Wed, 2011-09-28 at 10:47 -0700, James Bottomley wrote:
-> On Wed, 2011-09-28 at 10:29 -0700, Eddie Wai wrote:
-> > On Wed, 2011-09-28 at 08:05 -0700, Peter Zijlstra wrote:
-> > > Hi,
-> > > 
-> > > I accidentally looked at all kthreads in existence on my system and
-> > > found I had:
-> > > 
-> > > [iscsi_eh]
-> > > [bnx2i_thread/0]
-> > > [bnx2i_thread/1]
-> > > [bnx2i_thread/2]
-> > > [bnx2i_thread/3]
-> > > [bnx2i_thread/4]
-> > > [bnx2i_thread/5]
-> > > [bnx2i_thread/6]
-> > > [bnx2i_thread/7]
-> > > [bnx2i_thread/8]
-> > > [bnx2i_thread/9]
-> > > [bnx2i_thread/10]
-> > > [bnx2i_thread/11]
-> > > [bnx2i_thread/12]
-> > > [bnx2i_thread/13]
-> > > [bnx2i_thread/14]
-> > > [bnx2i_thread/15]
-> > > [bnx2i_thread/16]
-> > > [bnx2i_thread/17]
-> > > [bnx2i_thread/18]
-> > > [bnx2i_thread/19]
-> > > [bnx2i_thread/20]
-> > > [bnx2i_thread/21]
-> > > [bnx2i_thread/22]
-> > > [bnx2i_thread/23]
-> > > 
-> > > This left me wondering why, because I most certainly am not using iSCSI.
-> > > I don't even know why its enabled in my .config (and it won't be long). 
-> > > 
-> > > Please fix this muck to not create useless threads.
+On Wed, Sep 28, 2011 at 01:53:04PM -0400, Christoph Hellwig wrote:
+> On Wed, Sep 28, 2011 at 01:48:59PM -0400, Vivek Goyal wrote:
+> > I am wondering if we should retain blk_throtl_exit() in blk_cleanup_queue()
+> > before lock swap and just move elevator cleanup in blk_release_queue().
 > > 
-> > Hello Peter,
-> > 
-> > Point noted.  In the current bnx2i driver, one kthread is created per
-> > cpu core upon module init (and destroyed upon module exit).  The
-> > kthreads are meant only to improve I/O performance when iSCSI is
-> > employed.  Otherwise, I agree that they should not exist.
+> > A note to myself, I should probably enhance blk_throtl_exit() to look for any
+> > queued throttled bio and single their completion with error (-ENODEV) or
+> > something like that.
 > 
-> So if I look at the code, you seem to be trying to direct outbound
-> commands via the CPU specified in the request?  I assume this is because
-> we need to access the data to generate things like the checksum, in
-> which case the command data needs to be CPU hot in the outbound path?
-> (although I thought the bnx2 had a hardware engine that can do this).
-The design goal was to align the cmd completions to the cmd request cpu
-so we can take advantage of not only the cpu cache content but also to
-complete the I/Os in parallel (instead of how we did it previously in
-the bh serially).  From our test environment, we were able to see a
-noticeable performance boost on IOPS across small I/Os.
+> The root of this evil is how queue_lock is implemented and (ab)used.
+> Instead of letting the driver assign a pointer to make the core use
+> its locks we really need to make the queue_lock a lock embedded directly
+> into the queue, and drivers may or may not use that lock for their
+> internal data structures.  For high performance drivers they preferable
+> should use their own locks as queue_lock is far too contended already
+> for any high IOPS device.   The same applies to throtteling btw -
+> instead of overloading an already highly contended lock it really
+> should have its own.
 
-> If we genuinely need to do something like this, the interface
-> work_on_cpu() was defined for something like this purpose.
-Not familiar with work_on_cpu(), let me see how this can be used
-instead.  Thanks.
-> 
-> James
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+I had thought of implementing a separate lock for throttling. Then I
+noticed few operations like checking for queue flags where I would
+be required to hold queue locks.
 
+So I could do lock nesting.
 
+hold throttling_lock;
+   hold queue_lock;
+
+IIRC, I also had noticed some operations where queue might want to call
+into throttling with queue lock held and that would have led to lock
+order problems.
+
+So I had given up on the idea and continued to use queue lock for
+throttling. Thought it could still probably be done if one could
+justify additional complexity.
+
+Thanks
+Vivek
