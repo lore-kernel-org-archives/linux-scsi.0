@@ -1,72 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Wed, 28 Sep 2011 10:43:36 -0500
-Message-ID: <1317224616.19034.41.camel@dabdike.hansenpartnership.com>
-References: <201109221318.p8MDIXPP020015@pentland.suse.de>
-	 <20110928004722.GA27421@kernel.dk>
-	 <CA+55aFznvejXWe68BpjsJqCWnDizbHWBOzKLY_H+YqhRiK42sQ@mail.gmail.com>
-	 <4E82751C.9050908@kernel.dk>
-	 <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
-	 <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
-	 <4E832A55.30709@kernel.dk>
-	 <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
-	 <4E832BD2.50409@kernel.dk>
-	 <CA+55aFyFht3njKVep+aT_m5URxRxayZyb6K2ukW6+kazHf8EKA@mail.gmail.com>
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: =?windows-1252?Q?Re=3A_BUG_in_kernel=3A_Wrong_Handling_of_USB_HDD=92s_in_?=
+	=?windows-1252?Q?scsiglue=28slave=5Fconfigure=29_and_scsi=2Fsd=28sd=5Fread=5Fcache=5Ftype=29?=
+Date: Wed, 28 Sep 2011 21:27:23 +0530
+Message-ID: <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
+References: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFyFht3njKVep+aT_m5URxRxayZyb6K2ukW6+kazHf8EKA@mail.gmail.com>
+In-Reply-To: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-09-28 at 08:22 -0700, Linus Torvalds wrote:
-> On Wed, Sep 28, 2011 at 7:14 AM, Jens Axboe <axboe@kernel.dk> wrote:
-> >
-> >  /*
-> > - * Note: If a driver supplied the queue lock, it should not zap that lock
-> > - * unexpectedly as some queue cleanup components like elevator_exit() and
-> > - * blk_throtl_exit() need queue lock.
-> > + * Note: If a driver supplied the queue lock, it is disconnected
-> > + * by this function. The actual state of the lock doesn't matter
-> > + * here as the request_queue isn't accessible after this point
-> > + * (QUEUE_FLAG_DEAD is set) and no other requests will be queued.
-> >  */
-> 
-> So quite frankly, I just don't believe in that comment.
-> 
-> If no more requests will be queued or completed, then the queue lock
-> is irrelevant and should not be changed.
+Marking mail to linux-scsi.
 
-That was my original argument for my patch.  I lost it because you can
-still hold a queue reference in the sysfs code for block, which means
-that the put in blk_cleanup_queue() won't be the final one and you'll
-get a use after free of the lock when the sysfs directory is exited
-because we take the lock again as we destroy the elevator.
+Thanks Christoph.
 
-> More importantly, if no more requests are queued or completed after
-> blk_cleanup_queue(), then we wouldn't have had the bug that we clearly
-> had with the elevator accesses, now would we? So the comment seems to
-> be obviously bogus and wrong.
+Regards,
+Amit Sahrawat
 
-So this I agree with.  blk_cleanup_queue() prevents any new access to
-the queue, but we still have the old reference holders to contend with.
-They can submit requests, although we try to error them again with the
-queue guards check.
-
-> I pulled this, but I think the "just move the teardown" would have
-> been the safer option. What  happens if a request completes on another
-> CPU just as we are changing locks, and we lock one lock and then
-> unlock another?!
-
-The only code for which this could be true is code where we use the
-block supplied lock, so effectively it never changes.  The drivers which
-supply their own lock are supposed to have already ensured that the
-queue is unused.  I don't really believe this given the sysfs example
-above, but this fix is no worse than the use after free that would have
-resulted with the previous code.
-
-James
+On Wed, Sep 28, 2011 at 9:12 PM, Amit Sahrawat
+<amit.sahrawat83@gmail.com> wrote:
+> When a USB HDD is connected to the device, it invokes slave_configure
+> to configure the USB HDD. In this function, whenever there is a SCSI
+> device of type TYPE_DISK, it sets:
+> =A0 =A0 =A0 =A0/* A number of devices have problems with MODE SENSE f=
+or
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 * page x08, so we will skip it. */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0sdev->skip_ms_page_8 =3D 1;
+>
+> Now, as a part of SCSI device probing, in the function
+> sd_revalidate_disk()-->sd_read_cache_type(), there is a condition
+> if (sdp->skip_ms_page_8)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0goto defaults;
+> which becomes always true for all the USB HDD=92s =96 the net result =
+is
+> that the Write Cache is never considered for USB HDD(WCE =3D 0) =96
+> =93Assuming drive cache: write through=94
+>
+> What=92s more =96 the QUEUE ordering which is marked for WCE=3D0 is
+> QUEUE_ORDERED_DRAIN, instead of QUEUE_ORDERED_DRAIN_FLUSH
+> This means there is no flushing of USB HDD internal cache (although
+> SYNCHRONIZE_CACHE is implemented as passed as command in
+> sd_prepare_flush) =96 queue_flush()(called in function
+> blk_do_ordered()-->start_ordered()) does not gets called in case of
+> QUEUE_ORDERED_DRAIN.
+>
+> This causes a serious impact on USB HDD=92s.
+>
+> Please let me know in case I have missed something in my observations=
+=2E
+>
+> Thanks & Regards,
+> Amit Sahrawat
+>
