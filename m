@@ -1,101 +1,71 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: simplify target_parse_naa_6h_vendor_specific()
-Date: Wed, 28 Sep 2011 14:04:59 -0700
-Message-ID: <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
-References: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
-	 <9d522de8482ec20816be2b68b2d37ab8406f6876.1316419814.git.andriy.shevchenko@linux.intel.com>
-	 <CAHp75Vdp6MpUQKeg1LM3Gn+R21ZfV66dg9Q78QUj=BVLM0t1DQ@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: BUG in kernel: Wrong Handling of USB =?UTF-8?Q?HDD=E2=80=99s?=
+ in scsiglue(slave_configure) and scsi/sd(sd_read_cache_type)
+Date: Wed, 28 Sep 2011 16:29:43 -0500
+Message-ID: <1317245383.22022.23.camel@dabdike.hansenpartnership.com>
+References: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
+	 <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:48559 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751632Ab1I1VFE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2011 17:05:04 -0400
-In-Reply-To: <CAHp75Vdp6MpUQKeg1LM3Gn+R21ZfV66dg9Q78QUj=BVLM0t1DQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-09-27 at 13:48 +0300, Andy Shevchenko wrote:
-> On Mon, Sep 19, 2011 at 11:11 AM, Andy Shevchenko
-> <andriy.shevchenko@linux.intel.com> wrote:
-> > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/target/target_core_cdb.c |   30 +++++++++++++-----------------
-> >  1 files changed, 13 insertions(+), 17 deletions(-)
+On Wed, 2011-09-28 at 21:27 +0530, Amit Sahrawat wrote:
+> Marking mail to linux-scsi.
+>=20
+> Thanks Christoph.
+>=20
+> Regards,
+> Amit Sahrawat
+>=20
+> On Wed, Sep 28, 2011 at 9:12 PM, Amit Sahrawat
+> <amit.sahrawat83@gmail.com> wrote:
+> > When a USB HDD is connected to the device, it invokes slave_configu=
+re
+> > to configure the USB HDD. In this function, whenever there is a SCS=
+I
+> > device of type TYPE_DISK, it sets:
+> >        /* A number of devices have problems with MODE SENSE for
+> >                 * page x08, so we will skip it. */
+> >                sdev->skip_ms_page_8 =3D 1;
 > >
-> > diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-> > index f04d4ef..b796115 100644
-> > --- a/drivers/target/target_core_cdb.c
-> > +++ b/drivers/target/target_core_cdb.c
-> > @@ -24,7 +24,6 @@
-> >  */
+> > Now, as a part of SCSI device probing, in the function
+> > sd_revalidate_disk()-->sd_read_cache_type(), there is a condition
+> > if (sdp->skip_ms_page_8)
+> >                goto defaults;
+> > which becomes always true for all the USB HDD=E2=80=99s =E2=80=93 t=
+he net result is
+> > that the Write Cache is never considered for USB HDD(WCE =3D 0) =E2=
+=80=93
+> > =E2=80=9CAssuming drive cache: write through=E2=80=9D
 > >
-> >  #include <linux/kernel.h>
-> > -#include <linux/ctype.h>
-> >  #include <asm/unaligned.h>
-> >  #include <scsi/scsi.h>
+> > What=E2=80=99s more =E2=80=93 the QUEUE ordering which is marked fo=
+r WCE=3D0 is
+> > QUEUE_ORDERED_DRAIN, instead of QUEUE_ORDERED_DRAIN_FLUSH
+> > This means there is no flushing of USB HDD internal cache (although
+> > SYNCHRONIZE_CACHE is implemented as passed as command in
+> > sd_prepare_flush) =E2=80=93 queue_flush()(called in function
+> > blk_do_ordered()-->start_ordered()) does not gets called in case of
+> > QUEUE_ORDERED_DRAIN.
 > >
-> > @@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
-> >  }
+> > This causes a serious impact on USB HDD=E2=80=99s.
 > >
-> >  static void
-> > -target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
-> > +target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
-> >  {
-> >        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
-> > -       unsigned char *buf = buf_off;
-> > -       int cnt = 0, next = 1;
-> > +       int cnt;
-> > +       bool next = true;
-> > +
-> >        /*
-> >         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
-> >         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
-> > @@ -169,20 +169,16 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
-> >         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
-> >         * per device uniqeness.
-> >         */
-> > -       while (*p != '\0') {
-> > -               if (cnt >= 13)
-> > -                       break;
-> > -               if (!isxdigit(*p)) {
-> > -                       p++;
-> > +       for (cnt = 0; *p && cnt < 13; next = !next) {
-> > +               int val = hex_to_bin(*p++);
-> > +
-> > +               if (val < 0)
-> >                        continue;
-> > -               }
-> > -               if (next != 0) {
-> > -                       buf[cnt++] |= hex_to_bin(*p++);
-> > -                       next = 0;
-> > -               } else {
-> > -                       buf[cnt] = hex_to_bin(*p++) << 4;
-> > -                       next = 1;
-> > -               }
-> > +
-> > +               if (next)
-> > +                       buf[cnt++] |= val;
-> > +               else
-> > +                       buf[cnt] = val << 4;
-> >        }
-> >  }
-> >
-> 
-> Nicholas, any comment on this?
-> 
+> > Please let me know in case I have missed something in my observatio=
+ns.
 
-Hi Andy,
+This should be working in 3.0 ... what version of the kernel are you
+testing.  The actual patch that relaxes the caching mode page check is
+this one:
 
-This simplification is fine with me, and will plan to queue this for
-v3.2.
+commit 0bcaa11154f07502e68375617e5650173eea8e50
+Author: Luben Tuikov <ltuikov@yahoo.com>
+Date:   Thu May 19 00:00:58 2011 -0700
 
-Thanks again!
+    [SCSI] Retrieve the Caching mode page (version 2)
 
---nab
-
+James
