@@ -1,35 +1,29 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: Linus Torvalds <torvalds@linux-foundation.org>
 Subject: Re: [PATCH] block: Free queue resources at blk_release_queue()
-Date: Wed, 28 Sep 2011 02:47:23 +0200
-Message-ID: <20110928004722.GA27421@kernel.dk>
-References: <201109221318.p8MDIXPP020015@pentland.suse.de>
+Date: Tue, 27 Sep 2011 17:55:24 -0700
+Message-ID: <CA+55aFznvejXWe68BpjsJqCWnDizbHWBOzKLY_H+YqhRiK42sQ@mail.gmail.com>
+References: <201109221318.p8MDIXPP020015@pentland.suse.de> <20110928004722.GA27421@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201109221318.p8MDIXPP020015@pentland.suse.de>
+In-Reply-To: <20110928004722.GA27421@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 22 2011, Hannes Reinecke wrote:
-> 
-> A kernel crash is observed when a mounted ext3/ext4 filesystem
-> is physically removed.
-> The problem is that blk_cleanup_queue() frees up some resources
-> eg by calling elevator_exit(), which are not checked for in
-> normal operation.
-> So we should rather move these calls to the destructor function
-> blk_release_queue() as at that point all remaining references
-> are gone.
-> However, in doing so we have to ensure that any externally
-> supplied queue_lock is disconnected as the driver might
-> free up the lock after the call of blk_cleanup_queue(),
+On Tue, Sep 27, 2011 at 5:47 PM, Jens Axboe <axboe@kernel.dk> wrote:
+>
+> Do we have acks from the people who saw this oops, that this really does
+> fix it for them? I ask since this fix is vastly cleaner than the other
+> patch floating around, so I'd much rather pull this one in.
 
-Do we have acks from the people who saw this oops, that this really does
-fix it for them? I ask since this fix is vastly cleaner than the other
-patch floating around, so I'd much rather pull this one in.
+I don't think I can't test it, since it seems to be some hard-to-hit
+race condition. It certainly doesn't seem to happen all the time -
+today was the first time I've seen it on one of my computers.
 
--- 
-Jens Axboe
+But if you forward the actual patch to me (the one I see on lkml seems
+to be broken and doesn't compile cleanly because it's assiging a
+structure to a pointer), I'll try it out anyway.
+
+                     Linus
