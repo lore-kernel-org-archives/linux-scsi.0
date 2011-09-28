@@ -1,55 +1,77 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Wed, 28 Sep 2011 15:14:39 -0400
-Message-ID: <20110928191439.GA9534@infradead.org>
-References: <4E832A55.30709@kernel.dk>
- <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
- <4E832BD2.50409@kernel.dk>
- <CA+55aFyFht3njKVep+aT_m5URxRxayZyb6K2ukW6+kazHf8EKA@mail.gmail.com>
- <1317224616.19034.41.camel@dabdike.hansenpartnership.com>
- <20110928174859.GA21628@redhat.com>
- <20110928175304.GA3985@infradead.org>
- <20110928180905.GB21628@redhat.com>
- <20110928181649.GA27441@infradead.org>
- <CADOQvuM2VP1TsLMAOL+NC-zEypDS2NJGmiN6RFCxmjUT6LqaPA@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: bnx2i kthread madness
+Date: Wed, 28 Sep 2011 15:07:02 -0500
+Message-ID: <4E837E66.3040306@cs.wisc.edu>
+References: <1317222318.24040.46.camel@twins> <1317230982.3678.1000.camel@ltirv-waie-lx1> <CAO+b5-r68WC7_noWohbRKyCsrzEpdXxHmhD4s1pT4bJ685Gs9Q@mail.gmail.com> <1317234379.3678.1020.camel@ltirv-waie-lx1>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CADOQvuM2VP1TsLMAOL+NC-zEypDS2NJGmiN6RFCxmjUT6LqaPA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Seppanen <eric@purestorage.com>
-Cc: Vivek Goyal <vgoyal@redhat.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57209 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754332Ab1I1UHn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2011 16:07:43 -0400
+In-Reply-To: <1317234379.3678.1020.camel@ltirv-waie-lx1>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eddie Wai <eddie.wai@broadcom.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Peter Zijlstra <peterz@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 28, 2011 at 12:05:10PM -0700, Eric Seppanen wrote:
-> I agree: queue lock is the worst performance killer when hw can do
-> >100K IOPS per block device.
+On 09/28/2011 01:26 PM, Eddie Wai wrote:
 > 
-> Rather than just being chased away from the request queue due to
-> performance issues, I could argue there's very little point to having
-> a queue for devices that
-> (a) have no seek penalty (and always use noop elevator)
-> (b) have hardware queues at least as deep as the default request queue
-> (c) don't benefit from merging
-> 
-> (c) is maybe debatable, but if a device can saturate its bus bandwidth
-> on 4KB IO, the latency is probably not worth it.
+> On Wed, 2011-09-28 at 10:33 -0700, Bart Van Assche wrote:
+>> On Wed, Sep 28, 2011 at 7:29 PM, Eddie Wai <eddie.wai@broadcom.com> wrote:
+>>> On Wed, 2011-09-28 at 08:05 -0700, Peter Zijlstra wrote:
+>>>> I accidentally looked at all kthreads in existence on my system and
+>>>> found I had:
+>>>>
+>>>> [iscsi_eh]
+>>>> [bnx2i_thread/0]
+>>>> [bnx2i_thread/1]
+>>>> [bnx2i_thread/2]
+>>>> [bnx2i_thread/3]
+>>>> [bnx2i_thread/4]
+>>>> [bnx2i_thread/5]
+>>>> [bnx2i_thread/6]
+>>>> [bnx2i_thread/7]
+>>>> [bnx2i_thread/8]
+>>>> [bnx2i_thread/9]
+>>>> [bnx2i_thread/10]
+>>>> [bnx2i_thread/11]
+>>>> [bnx2i_thread/12]
+>>>> [bnx2i_thread/13]
+>>>> [bnx2i_thread/14]
+>>>> [bnx2i_thread/15]
+>>>> [bnx2i_thread/16]
+>>>> [bnx2i_thread/17]
+>>>> [bnx2i_thread/18]
+>>>> [bnx2i_thread/19]
+>>>> [bnx2i_thread/20]
+>>>> [bnx2i_thread/21]
+>>>> [bnx2i_thread/22]
+>>>> [bnx2i_thread/23]
+>>>>
+>>>> This left me wondering why, because I most certainly am not using iSCSI.
+>>>> I don't even know why its enabled in my .config (and it won't be long).
+>>>>
+>>>> Please fix this muck to not create useless threads.
+>>>
+>>> Point noted.  In the current bnx2i driver, one kthread is created per
+>>> cpu core upon module init (and destroyed upon module exit).  The
+>>> kthreads are meant only to improve I/O performance when iSCSI is
+>>> employed.  Otherwise, I agree that they should not exist.
+>>
+>> Why doesn't bnx2i use one of the system work queues defined in
+>> <linux/workqueue.h> ?
+> We defined our own kthreads instead is mainly because we felt that work
+> queues might not have the response time we like to handle I/O
+> completions under heavy stress environments as we migrated from
+> tasklets.  Although we really haven't yet quantified this assumption.
 
-In theory, yes.  But at some point we will be able to saturate them,
-and then people want proportional I/O, light amounts of queueing, etc.
 
-And I really don't want to reinvent that for every little device.  The
-other problem is that we a single driver might driver totally different
-types of devices, already today we have iSCSI or FC accessibly high
-IOPS devices, there are good PCI-e flash devices masquerading as AHCI,
-and my current problem is that the queue_lock really hurts me in
-virtio-blk when using a PCIe flash device underneath.
+bnx2fc and fcoe have the same issue. qla2xxx seems to use workqueues and
+is ok.
 
-So we really need some infrastructure that allows a generic interface
-to the driver, and allow us to plug in merging, scheduling, queueing
-on an as needed basis.
-
-That is my long term plan - making request_lock suck a little less,
-and improving the driver interface is a good first step, though.
+If perf is a issue then like have I said before when this patch was
+submitted, and when the fcoe and bnx2fc ones were too, :) I think you
+need to change blkiopoll to do what you actually want.
