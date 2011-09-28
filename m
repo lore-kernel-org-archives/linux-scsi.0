@@ -1,54 +1,59 @@
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: bnx2i kthread madness
-Date: Wed, 28 Sep 2011 17:05:18 +0200
-Message-ID: <1317222318.24040.46.camel@twins>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Wed, 28 Sep 2011 08:22:46 -0700
+Message-ID: <CA+55aFyFht3njKVep+aT_m5URxRxayZyb6K2ukW6+kazHf8EKA@mail.gmail.com>
+References: <201109221318.p8MDIXPP020015@pentland.suse.de> <20110928004722.GA27421@kernel.dk>
+ <CA+55aFznvejXWe68BpjsJqCWnDizbHWBOzKLY_H+YqhRiK42sQ@mail.gmail.com>
+ <4E82751C.9050908@kernel.dk> <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
+ <1317183038.17578.9.camel@dabdike.hansenpartnership.com> <4E832A55.30709@kernel.dk>
+ <1317219074.19034.4.camel@dabdike.hansenpartnership.com> <4E832BD2.50409@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:43624 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668Ab1I1PFy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2011 11:05:54 -0400
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:39211 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752965Ab1I1PXH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2011 11:23:07 -0400
+In-Reply-To: <4E832BD2.50409@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@parisc-linux.org>, Eddie Wai <eddie.wai@broadcom.com>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
 
-Hi,
+On Wed, Sep 28, 2011 at 7:14 AM, Jens Axboe <axboe@kernel.dk> wrote:
+>
+> =A0/*
+> - * Note: If a driver supplied the queue lock, it should not zap that=
+ lock
+> - * unexpectedly as some queue cleanup components like elevator_exit(=
+) and
+> - * blk_throtl_exit() need queue lock.
+> + * Note: If a driver supplied the queue lock, it is disconnected
+> + * by this function. The actual state of the lock doesn't matter
+> + * here as the request_queue isn't accessible after this point
+> + * (QUEUE_FLAG_DEAD is set) and no other requests will be queued.
+> =A0*/
 
-I accidentally looked at all kthreads in existence on my system and
-found I had:
+So quite frankly, I just don't believe in that comment.
 
-[iscsi_eh]
-[bnx2i_thread/0]
-[bnx2i_thread/1]
-[bnx2i_thread/2]
-[bnx2i_thread/3]
-[bnx2i_thread/4]
-[bnx2i_thread/5]
-[bnx2i_thread/6]
-[bnx2i_thread/7]
-[bnx2i_thread/8]
-[bnx2i_thread/9]
-[bnx2i_thread/10]
-[bnx2i_thread/11]
-[bnx2i_thread/12]
-[bnx2i_thread/13]
-[bnx2i_thread/14]
-[bnx2i_thread/15]
-[bnx2i_thread/16]
-[bnx2i_thread/17]
-[bnx2i_thread/18]
-[bnx2i_thread/19]
-[bnx2i_thread/20]
-[bnx2i_thread/21]
-[bnx2i_thread/22]
-[bnx2i_thread/23]
+If no more requests will be queued or completed, then the queue lock
+is irrelevant and should not be changed.
 
-This left me wondering why, because I most certainly am not using iSCSI.
-I don't even know why its enabled in my .config (and it won't be long). 
+More importantly, if no more requests are queued or completed after
+blk_cleanup_queue(), then we wouldn't have had the bug that we clearly
+had with the elevator accesses, now would we? So the comment seems to
+be obviously bogus and wrong.
 
-Please fix this muck to not create useless threads.
+I pulled this, but I think the "just move the teardown" would have
+been the safer option. What  happens if a request completes on another
+CPU just as we are changing locks, and we lock one lock and then
+unlock another?!
 
-
+                              Linus
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
