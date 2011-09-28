@@ -1,43 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] block: Free queue resources at blk_release_queue()
-Date: Tue, 27 Sep 2011 23:10:38 -0500
-Message-ID: <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
-References: <201109221318.p8MDIXPP020015@pentland.suse.de>
-	 <20110928004722.GA27421@kernel.dk>
-	 <CA+55aFznvejXWe68BpjsJqCWnDizbHWBOzKLY_H+YqhRiK42sQ@mail.gmail.com>
-	 <4E82751C.9050908@kernel.dk>
-	 <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
+From: Yi Zou <yi.zou@intel.com>
+Subject: [PATCH 0/6] Open-FCoE.org libfc and fcoe updates for scsi-misc
+Date: Tue, 27 Sep 2011 21:37:46 -0700
+Message-ID: <20110928043601.13004.92207.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:33150 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751719Ab1I1Eq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2011 00:46:59 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2011-09-27 at 18:59 -0700, Linus Torvalds wrote:
-> On Tue, Sep 27, 2011 at 6:15 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> >>
-> >> But if you forward the actual patch to me (the one I see on lkml seems
-> >> to be broken and doesn't compile cleanly because it's assiging a
-> >> structure to a pointer), I'll try it out anyway.
-> >
-> > Thanks, that would be great. It's inlined below.
-> 
-> Well, I did several USB eject events, and nothing bad happened.
-> 
-> But as mentioned, I don't think that means much. Have you tried this
-> with slub debugging and poisoning? It might be worth some extra
-> testing that way.
+This series consists of updates for the libfc and fcoe modules. There are no
+features in this series and most patches are performance improvement related
+bug fixes.
 
-I've been testing a simpler version:
+Thanks,
+yi
 
-http://marc.info/?l=linux-kernel&m=131300594629839
+---
 
-For a long time now with great success.  The only difference is the
-locking cleanup, but SCSI doesn't need that since it doesn't supply its
-own lock, so I've been voting for this as the final fix for a while now.
+Eric Dumazet (1):
+      fcoe: use kthread_create_on_node
 
-James
+Vasu Dev (5):
+      fcoe: setup default initial value for DDP threshold
+      fcoe: use real dev in case of HW vlan acceleration
+      libfc: cache align fc_exch_pool
+      libfc: cache align struct fc_exch fields
+      libfc: cache align struct fc_fcp_pkt fields
+
+
+ drivers/scsi/fcoe/fcoe.c     |   16 +++++++--
+ drivers/scsi/fcoe/fcoe.h     |    1 +
+ drivers/scsi/libfc/fc_exch.c |   11 +++---
+ drivers/scsi/libfc/fc_fcp.c  |    2 -
+ include/scsi/libfc.h         |   76 ++++++++++++++++++------------------------
+ 5 files changed, 51 insertions(+), 55 deletions(-)
+
+-- 
+Signature: Yi Zou <yi.zou@intel.com>
