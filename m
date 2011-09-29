@@ -1,587 +1,391 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [GIT PULL] libsas updates for 3.2
-Date: Wed, 28 Sep 2011 19:01:04 -0700
-Message-ID: <1317261664.22593.15.camel@dwillia2-linux>
+Subject: [GIT PULL] libsas fixes for 3.1-rc
+Date: Wed, 28 Sep 2011 19:10:14 -0700
+Message-ID: <1317262215.22593.22.camel@dwillia2-linux>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60865 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:11699 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754074Ab1I2CBF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2011 22:01:05 -0400
+	id S1753724Ab1I2CKQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2011 22:10:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Dave Jiang <dave.jiang@intel.com>, David Milburn <dmilburn@redhat.com>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-The following changes since commit 41e9a69641fb3fa86fa9277a179f3ad261d072f7:
+The following changes since commit 96067723e46b0dd24ae7b934085ab4eff4d2=
+6a1b:
 
-  [SCSI] ipr: Stop reading adapter dump prematurely (2011-09-22 15:30:28 +0400)
+  [SCSI] 3w-9xxx: fix iommu_iova leak (2011-09-26 09:28:58 -0500)
 
 are available in the git repository at:
-  git://github.com:djbw/linux.git libsas
+  git://github.com/djbw/linux.git libsas-fixes
 
-These have all appeared on the mailing list previously save for the last
-one "libsas: remove unused ata_task_resp fields" (just a cleanup).
+If there are going to be anymore scsi pulls for 3.1-rc here are some
+collected candidates.  All of these have been on the list previously.
 
-Just a convenience branch since isci's atapi support needed the lun
-scanning fixup as a baseline.
+Dan Williams (2):
+      libsas: fix warnings when checking sata/stp protocol
+      libsas: fix port->dev_list locking
 
-Dan Williams (7):
-      libsas: disable scanning lun > 0 on ata devices
-      libsas: fix ->change_queue_{depth|type} for sata devices
-      libsas: dynamic queue depth
-      mvsas: remove mvs_slave_{alloc|configure}
-      pm8001: remove pm8001_slave_{alloc|configure}
-      libsas: fix try_test_sas_gpio_gp_bit() build error
-      libsas: remove unused ata_task_resp fields
+Jack Wang (1):
+      libsas: set rphy sas_address and device type correctly
 
- drivers/ata/libata-core.c           |    1 +
- drivers/ata/libata-scsi.c           |   44 +++++++++++++++++++++++------------
- drivers/scsi/libsas/sas_ata.c       |    4 ---
- drivers/scsi/libsas/sas_scsi_host.c |   42 +++++++++++++++++++--------------
- drivers/scsi/mvsas/mv_init.c        |    4 +-
- drivers/scsi/mvsas/mv_sas.c         |   30 -----------------------
- drivers/scsi/mvsas/mv_sas.h         |    2 -
- drivers/scsi/pm8001/pm8001_init.c   |    4 +-
- drivers/scsi/pm8001/pm8001_sas.c    |   31 +-----------------------
- drivers/scsi/pm8001/pm8001_sas.h    |    2 -
- drivers/scsi/scsi_transport_sas.c   |   10 ++++++-
- include/linux/libata.h              |    2 +
- include/scsi/libsas.h               |   14 +++++-----
- 13 files changed, 76 insertions(+), 114 deletions(-)
+Luben Tuikov (1):
+      libsas: Allow expander T-T attachments
 
-commit 7705375e944ea94be7941b740efd0a77bb109cb1
-Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Thu Sep 29 09:01:39 2011 +0000
+ drivers/scsi/libsas/sas_discover.c |   13 +++++++----
+ drivers/scsi/libsas/sas_expander.c |   37 ++++++++++++++++++++++++----=
+-------
+ include/scsi/libsas.h              |    5 +++-
+ include/scsi/sas.h                 |   15 ++++++++++++-
+ 4 files changed, 50 insertions(+), 20 deletions(-)
 
-    libsas: remove unused ata_task_resp fields
-    
-    Commit 1e34c838 "libsas: remove spurious sata control register read/write"
-    removed the routines to retrieve the sata control register, now remove the
-    unused data structure fields to remove any remaining confusion.
-    
+commit 339484f5e5a726a26188ca6cb10dca864d0c4b2f
+Author: Jack Wang <jack_wang@usish.com>
+Date:   Sat Sep 24 09:47:23 2011 +0000
+
+    libsas: set rphy sas_address and device type correctly
+   =20
+    Before:
+    # cat /sys/class/sas_phy/phy-6\:0\:6/device_type
+    none
+    # cat /sys/class/sas_phy/phy-6\:0\:6/sas_address
+    0x0000000000000000
+   =20
+    After:
+    # cat /sys/class/sas_phy/phy-6\:0\:6/device_type
+    end device
+    # cat /sys/class/sas_phy/phy-6\:0\:6/sas_address
+    0x500000e0191ce732
+   =20
+    Signed-off-by: Jack Wang <jack_wang@usish.com>
+    Tested-by: Crystal Yu <crystal_yu@usish.com>
     Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-commit f285bc55c2a465b8a93109cceeb300a3d7352ef0
+commit 0051c3753833995b4e26be70033d9ba8e2e89de9
 Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Sat Sep 24 07:44:19 2011 +0000
+Date:   Wed Sep 21 07:47:16 2011 +0000
 
-    libsas: fix try_test_sas_gpio_gp_bit() build error
-    
-    If the user has disabled CONFIG_SCSI_SAS_HOST_SMP then libsas drivers
-    will not be receiving smp-gpio frames and do not need this lookup code.
-    
-    Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-    Acked-by: Randy Dunlap <rdunlap@xenotime.net>
-
-commit 5927faeffe630f55037abd2056bdb9509224c9ff
-Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Wed Sep 21 08:06:51 2011 +0000
-
-    pm8001: remove pm8001_slave_{alloc|configure}
-    
-    libsas handles:
-    1/ limiting ata scanning to lun0
-    2/ changes to /sys/block/<sdX>/device/queue_depth for ata devices
-    
-    libata handles turning off ncq globally via kernel command line
-    (libata.force=noncq) or sysfs (echo 1 >
-    /sys/block/<sdX>/device/queue_depth).  A lldd specific compile option is
-    not necessary.
-    
-    Cc: Jack Wang <jack_wang@usish.com>
-    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-    Reviewed-by: Jack Wang <jack_wang@usish.com>
-
-commit fd56b6575a84348210d8c54e3a1789e10a38080e
-Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Wed Sep 21 08:06:45 2011 +0000
-
-    mvsas: remove mvs_slave_{alloc|configure}
-    
-    libsas now handles:
-    1/ limiting ata scanning to lun0
-    2/ maximizing the queue_depth of sas devices (up to 256, mvsas only
-       supports 64)
-    3/ changes to /sys/block/<sdX>/device/queue_depth for ata devices
-    
-    Cc: Xiangliang Yu <yuxiangl@marvell.com>
-    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-    Reviewed-by: Jack Wang <jack_wang@usish.com>
-
-commit bcee480902f491143823e3fb18a25aa675f63f26
-Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Wed Sep 21 08:06:40 2011 +0000
-
-    libsas: dynamic queue depth
-    
-    The queue-depth for libsas-attached devices initializes to 32 and can
-    only be increased manually via sysfs to a max of 64, while mpt2sas
-    attached devices initialize to 254 and dynamically float via the
-    midlayer ->change_queue_depth interface.
-    
-    No performance regression was observed with this change on the isci
-    driver.
-    
-    Cc: Christoph Hellwig <hch@lst.de>
-    Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-    Cc: Xiangliang Yu <yuxiangl@marvell.com>
-    Cc: Jack Wang <jack_wang@usish.com>
-    Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-    Cc: Luben Tuikov <ltuikov@yahoo.com>
-    Tested-by: Dave Jiang <dave.jiang@intel.com>
-    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-    Acked-by: Christoph Hellwig <hch@infradead.org>
-    Reviewed-by: Jack Wang <jack_wang@usish.com>
-    Acked-by: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
-
-commit e68549cb99499cbbc7a110cf7050df254adbc994
-Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Wed Sep 21 08:06:35 2011 +0000
-
-    libsas: fix ->change_queue_{depth|type} for sata devices
-    
-    Pass queue_depth change requests to libata, and prevent queue_type
-    changes for ATA devices.
-    
-    Otherwise:
-    1/ we do not honor the libata specific restrictions on the queue depth
-    2/ libsas drivers that do not set sdev->tagged_supported are unable to
-       change the queue_depth of ata devices via sysfs
-    
-    Cc: Tejun Heo <tj@kernel.org>
-    Cc: Xiangliang Yu <yuxiangl@marvell.com>
-    Cc: Jack Wang <jack_wang@usish.com>
-    Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
-    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-    Acked-by: Christoph Hellwig <hch@infradead.org>
-    Reviewed-by: Jack Wang <jack_wang@usish.com>
-    Acked-by: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
-    Acked-by: Jeff Garzik <jgarzik@redhat.com>
-
-commit 3d4a22cc894df33ab0d9d63a799118d4732e92da
-Author: Dan Williams <dan.j.williams@intel.com>
-Date:   Wed Sep 21 08:06:30 2011 +0000
-
-    libsas: disable scanning lun > 0 on ata devices
-    
-    Currently mvsas and pm8001 have custom ->slave_alloc implementations to
-    achieve this.  Uplevel it for all libsas drivers as isci encounters problems
-    with atapi devices when scanning past lun0.
-    
-    Just do what Darrick suggested [1], and limit the scan for ata devices.
-    
-    [1] http://marc.info/?l=linux-scsi&m=116604101119861&w=2
-    
-    Cc: Darrick Wong <djwong@us.ibm.com>
+    libsas: fix port->dev_list locking
+   =20
+    port->dev_list maintains a list of devices attached to a given sas =
+root port.
+    It needs to be mutated under a lock as contexts outside of the
+    single-threaded-libsas-workqueue access the list via sas_find_dev_b=
+y_rphy().
+    Fixup locations where the list was being mutated without a lock.
+   =20
+    This is a follow-up to commit 5911e963 "[SCSI] libsas: remove expan=
+der
+    from dev list on error", where Luben noted [1]:
+   =20
+        > 2/ We have unlocked list manipulations in sas_ex_discover_end=
+_dev(),
+        > sas_unregister_common_dev(), and sas_ex_discover_end_dev()
+   =20
+        Yes, I can see that and that is very unfortunate.
+   =20
+    [1]: http://marc.info/?l=3Dlinux-scsi&m=3D131480962006471&w=3D2
+   =20
     Cc: Xiangliang Yu <yuxiangl@marvell.com>
     Cc: Jack Wang <jack_wang@usish.com>
     Cc: Mark Salyzyn <msalyzyn@us.xyratex.com>
     Cc: Luben Tuikov <ltuikov@yahoo.com>
     Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-    Acked-by: Christoph Hellwig <hch@infradead.org>
-    Reviewed-by: Jack Wang <jack_wang@usish.com>
-    Acked-by: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
-    Acked-by: Jeff Garzik <jgarzik@redhat.com>
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4a3a5ae..d26c7f4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6713,6 +6713,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_queuecmd);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_config);
- EXPORT_SYMBOL_GPL(ata_scsi_slave_destroy);
- EXPORT_SYMBOL_GPL(ata_scsi_change_queue_depth);
-+EXPORT_SYMBOL_GPL(__ata_change_queue_depth);
- EXPORT_SYMBOL_GPL(sata_scr_valid);
- EXPORT_SYMBOL_GPL(sata_scr_read);
- EXPORT_SYMBOL_GPL(sata_scr_write);
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 46d087f..19ba770 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1215,25 +1215,15 @@ void ata_scsi_slave_destroy(struct scsi_device *sdev)
- }
- 
- /**
-- *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-- *	@sdev: SCSI device to configure queue depth for
-- *	@queue_depth: new queue depth
-- *	@reason: calling context
-- *
-- *	This is libata standard hostt->change_queue_depth callback.
-- *	SCSI will call into this callback when user tries to set queue
-- *	depth via sysfs.
-+ *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
-  *
-- *	LOCKING:
-- *	SCSI layer (we don't care)
-+ *	libsas and libata have different approaches for associating a sdev to
-+ *	its ata_port.
-  *
-- *	RETURNS:
-- *	Newly configured queue depth.
-  */
--int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth,
--				int reason)
-+int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
-+			     int queue_depth, int reason)
+commit 3c6006693b1e5e4a8c7f19623092dee95a377916
+Author: Dan Williams <dan.j.williams@intel.com>
+Date:   Sat Sep 24 09:07:38 2011 +0000
+
+    libsas: fix warnings when checking sata/stp protocol
+   =20
+    Several sas drivers legitimately check the protocol against the uni=
+on of
+    SAS_PROTOCOL_SATA and SAS_PROTOCOL_STP.  Provide a SAS_PROTOCOL_STP=
+_ALL
+    to silence warnings like:
+   =20
+    drivers/scsi/pm8001/pm8001_sas.c:438:3: warning: case value =E2=80=98=
+5=E2=80=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [=
+-Wswitch]
+    drivers/scsi/mvsas/mv_sas.c:798:2: warning: case value =E2=80=985=E2=
+=80=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wsw=
+itch]
+    drivers/scsi/mvsas/mv_sas.c:1783:2: warning: case value =E2=80=985=E2=
+=80=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wsw=
+itch]
+    drivers/scsi/mvsas/mv_sas.c:1886:2: warning: case value =E2=80=985=E2=
+=80=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wsw=
+itch]
+    drivers/scsi/isci/request.c:3565:2: warning: case value =E2=80=985=E2=
+=80=99 not in enumerated type =E2=80=98enum sas_protocol=E2=80=99 [-Wsw=
+itch]
+   =20
+    Cc: Xiangliang Yu <yuxiangl@marvell.com>
+    Cc: Jack Wang <jack_wang@usish.com>
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+    Acked-by: Jack Wang <jack_wang@usish.com>
+
+commit ef6be00f9fc3351beb3ceb9e7117f6f036f0f64e
+Author: Luben Tuikov <ltuikov@yahoo.com>
+Date:   Sat Sep 24 09:02:13 2011 +0000
+
+    libsas: Allow expander T-T attachments
+   =20
+    Allow expander table-to-table attachments for
+    expanders that support it.
+   =20
+    Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+    Cc: <stable@kernel.org>
+    Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+    Acked-by: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+    Acked-by: Jack Wang <jack_wang@usish.com>
+
+
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/s=
+as_discover.c
+index f583193..54a5199 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -219,17 +219,20 @@ out_err2:
+=20
+ /* ---------- Device registration and unregistration ---------- */
+=20
+-static inline void sas_unregister_common_dev(struct domain_device *dev=
+)
++static void sas_unregister_common_dev(struct asd_sas_port *port, struc=
+t domain_device *dev)
  {
--	struct ata_port *ap = ata_shost_to_port(sdev->host);
- 	struct ata_device *dev;
- 	unsigned long flags;
- 
-@@ -1269,6 +1259,30 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth,
+ 	sas_notify_lldd_dev_gone(dev);
+ 	if (!dev->parent)
+ 		dev->port->port_dev =3D NULL;
+ 	else
+ 		list_del_init(&dev->siblings);
++
++	spin_lock_irq(&port->dev_list_lock);
+ 	list_del_init(&dev->dev_list_node);
++	spin_unlock_irq(&port->dev_list_lock);
  }
- 
- /**
-+ *	ata_scsi_change_queue_depth - SCSI callback for queue depth config
-+ *	@sdev: SCSI device to configure queue depth for
-+ *	@queue_depth: new queue depth
-+ *	@reason: calling context
-+ *
-+ *	This is libata standard hostt->change_queue_depth callback.
-+ *	SCSI will call into this callback when user tries to set queue
-+ *	depth via sysfs.
-+ *
-+ *	LOCKING:
-+ *	SCSI layer (we don't care)
-+ *
-+ *	RETURNS:
-+ *	Newly configured queue depth.
-+ */
-+int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth,
-+				int reason)
-+{
-+	struct ata_port *ap = ata_shost_to_port(sdev->host);
+=20
+-void sas_unregister_dev(struct domain_device *dev)
++void sas_unregister_dev(struct asd_sas_port *port, struct domain_devic=
+e *dev)
+ {
+ 	if (dev->rphy) {
+ 		sas_remove_children(&dev->rphy->dev);
+@@ -241,15 +244,15 @@ void sas_unregister_dev(struct domain_device *dev=
+)
+ 		kfree(dev->ex_dev.ex_phy);
+ 		dev->ex_dev.ex_phy =3D NULL;
+ 	}
+-	sas_unregister_common_dev(dev);
++	sas_unregister_common_dev(port, dev);
+ }
+=20
+ void sas_unregister_domain_devices(struct asd_sas_port *port)
+ {
+ 	struct domain_device *dev, *n;
+=20
+-	list_for_each_entry_safe_reverse(dev,n,&port->dev_list,dev_list_node)
+-		sas_unregister_dev(dev);
++	list_for_each_entry_safe_reverse(dev, n, &port->dev_list, dev_list_no=
+de)
++		sas_unregister_dev(port, dev);
+=20
+ 	port->port->rphy =3D NULL;
+=20
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/s=
+as_expander.c
+index c9e3dc0..7fbb7c5 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -199,6 +199,8 @@ static void sas_set_ex_phy(struct domain_device *de=
+v, int phy_id,
+ 	phy->virtual =3D dr->virtual;
+ 	phy->last_da_index =3D -1;
+=20
++	phy->phy->identify.sas_address =3D SAS_ADDR(phy->attached_sas_addr);
++	phy->phy->identify.device_type =3D phy->attached_dev_type;
+ 	phy->phy->identify.initiator_port_protocols =3D phy->attached_iproto;
+ 	phy->phy->identify.target_port_protocols =3D phy->attached_tproto;
+ 	phy->phy->identify.phy_identifier =3D phy_id;
+@@ -329,6 +331,7 @@ static void ex_assign_report_general(struct domain_=
+device *dev,
+ 	dev->ex_dev.ex_change_count =3D be16_to_cpu(rg->change_count);
+ 	dev->ex_dev.max_route_indexes =3D be16_to_cpu(rg->route_indexes);
+ 	dev->ex_dev.num_phys =3D min(rg->num_phys, (u8)MAX_EXPANDER_PHYS);
++	dev->ex_dev.t2t_supp =3D rg->t2t_supp;
+ 	dev->ex_dev.conf_route_table =3D rg->conf_route_table;
+ 	dev->ex_dev.configuring =3D rg->configuring;
+ 	memcpy(dev->ex_dev.enclosure_logical_id, rg->enclosure_logical_id, 8)=
+;
+@@ -751,7 +754,10 @@ static struct domain_device *sas_ex_discover_end_d=
+ev(
+  out_list_del:
+ 	sas_rphy_free(child->rphy);
+ 	child->rphy =3D NULL;
 +
-+	return __ata_change_queue_depth(ap, sdev, queue_depth, reason);
-+}
-+
-+/**
-  *	ata_scsi_start_stop_xlat - Translate SCSI START STOP UNIT command
-  *	@qc: Storage for translated ATA taskfile
-  *
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index db9238f..83118d0 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -121,10 +121,6 @@ static void sas_ata_task_done(struct sas_task *task)
- 			if (unlikely(link->eh_info.err_mask))
- 				qc->flags |= ATA_QCFLAG_FAILED;
++	spin_lock_irq(&parent->port->dev_list_lock);
+ 	list_del(&child->dev_list_node);
++	spin_unlock_irq(&parent->port->dev_list_lock);
+  out_free:
+ 	sas_port_delete(phy->port);
+  out_err:
+@@ -1133,15 +1139,17 @@ static void sas_print_parent_topology_bug(struc=
+t domain_device *child,
+ 	};
+ 	struct domain_device *parent =3D child->parent;
+=20
+-	sas_printk("%s ex %016llx phy 0x%x <--> %s ex %016llx phy 0x%x "
+-		   "has %c:%c routing link!\n",
++	sas_printk("%s ex %016llx (T2T supp:%d) phy 0x%x <--> %s ex %016llx "
++		   "(T2T supp:%d) phy 0x%x has %c:%c routing link!\n",
+=20
+ 		   ex_type[parent->dev_type],
+ 		   SAS_ADDR(parent->sas_addr),
++		   parent->ex_dev.t2t_supp,
+ 		   parent_phy->phy_id,
+=20
+ 		   ex_type[child->dev_type],
+ 		   SAS_ADDR(child->sas_addr),
++		   child->ex_dev.t2t_supp,
+ 		   child_phy->phy_id,
+=20
+ 		   ra_char[parent_phy->routing_attr],
+@@ -1238,10 +1246,15 @@ static int sas_check_parent_topology(struct dom=
+ain_device *child)
+ 					sas_print_parent_topology_bug(child, parent_phy, child_phy);
+ 					res =3D -ENODEV;
+ 				}
+-			} else if (parent_phy->routing_attr =3D=3D TABLE_ROUTING &&
+-				   child_phy->routing_attr !=3D SUBTRACTIVE_ROUTING) {
+-				sas_print_parent_topology_bug(child, parent_phy, child_phy);
+-				res =3D -ENODEV;
++			} else if (parent_phy->routing_attr =3D=3D TABLE_ROUTING) {
++				if (child_phy->routing_attr =3D=3D SUBTRACTIVE_ROUTING ||
++				    (child_phy->routing_attr =3D=3D TABLE_ROUTING &&
++				     child_ex->t2t_supp && parent_ex->t2t_supp)) {
++					/* All good */;
++				} else {
++					sas_print_parent_topology_bug(child, parent_phy, child_phy);
++					res =3D -ENODEV;
++				}
+ 			}
+ 			break;
+ 		case FANOUT_DEV:
+@@ -1729,7 +1742,7 @@ out:
+ 	return res;
+ }
+=20
+-static void sas_unregister_ex_tree(struct domain_device *dev)
++static void sas_unregister_ex_tree(struct asd_sas_port *port, struct d=
+omain_device *dev)
+ {
+ 	struct expander_device *ex =3D &dev->ex_dev;
+ 	struct domain_device *child, *n;
+@@ -1738,11 +1751,11 @@ static void sas_unregister_ex_tree(struct domai=
+n_device *dev)
+ 		child->gone =3D 1;
+ 		if (child->dev_type =3D=3D EDGE_DEV ||
+ 		    child->dev_type =3D=3D FANOUT_DEV)
+-			sas_unregister_ex_tree(child);
++			sas_unregister_ex_tree(port, child);
+ 		else
+-			sas_unregister_dev(child);
++			sas_unregister_dev(port, child);
+ 	}
+-	sas_unregister_dev(dev);
++	sas_unregister_dev(port, dev);
+ }
+=20
+ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+@@ -1759,9 +1772,9 @@ static void sas_unregister_devs_sas_addr(struct d=
+omain_device *parent,
+ 				child->gone =3D 1;
+ 				if (child->dev_type =3D=3D EDGE_DEV ||
+ 				    child->dev_type =3D=3D FANOUT_DEV)
+-					sas_unregister_ex_tree(child);
++					sas_unregister_ex_tree(parent->port, child);
+ 				else
+-					sas_unregister_dev(child);
++					sas_unregister_dev(parent->port, child);
+ 				break;
+ 			}
  		}
--
--		dev->sata_dev.sstatus = resp->sstatus;
--		dev->sata_dev.serror = resp->serror;
--		dev->sata_dev.scontrol = resp->scontrol;
- 	} else {
- 		ac = sas_to_ata_err(stat);
- 		if (ac) {
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index d625577..ebd1417 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -761,8 +761,7 @@ int sas_target_alloc(struct scsi_target *starget)
- 	return 0;
- }
- 
--#define SAS_DEF_QD 32
--#define SAS_MAX_QD 64
-+#define SAS_DEF_QD 256
- 
- int sas_slave_configure(struct scsi_device *scsi_dev)
- {
-@@ -805,31 +804,38 @@ void sas_slave_destroy(struct scsi_device *scsi_dev)
- 		dev->sata_dev.ap->link.device[0].class = ATA_DEV_NONE;
- }
- 
--int sas_change_queue_depth(struct scsi_device *scsi_dev, int new_depth,
--			   int reason)
-+int sas_change_queue_depth(struct scsi_device *sdev, int depth, int reason)
- {
--	int res = min(new_depth, SAS_MAX_QD);
-+	struct domain_device *dev = sdev_to_domain_dev(sdev);
- 
--	if (reason != SCSI_QDEPTH_DEFAULT)
-+	if (dev_is_sata(dev))
-+		return __ata_change_queue_depth(dev->sata_dev.ap, sdev, depth,
-+						reason);
-+
-+	switch (reason) {
-+	case SCSI_QDEPTH_DEFAULT:
-+	case SCSI_QDEPTH_RAMP_UP:
-+		if (!sdev->tagged_supported)
-+			depth = 1;
-+		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
-+		break;
-+	case SCSI_QDEPTH_QFULL:
-+		scsi_track_queue_full(sdev, depth);
-+		break;
-+	default:
- 		return -EOPNOTSUPP;
--
--	if (scsi_dev->tagged_supported)
--		scsi_adjust_queue_depth(scsi_dev, scsi_get_tag_type(scsi_dev),
--					res);
--	else {
--		struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--		sas_printk("device %llx LUN %x queue depth changed to 1\n",
--			   SAS_ADDR(dev->sas_addr),
--			   scsi_dev->lun);
--		scsi_adjust_queue_depth(scsi_dev, 0, 1);
--		res = 1;
- 	}
- 
--	return res;
-+	return depth;
- }
- 
- int sas_change_queue_type(struct scsi_device *scsi_dev, int qt)
- {
-+	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
-+
-+	if (dev_is_sata(dev))
-+		return -EINVAL;
-+
- 	if (!scsi_dev->tagged_supported)
- 		return 0;
- 
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 4e9af66..052861b 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -59,7 +59,7 @@ static struct scsi_host_template mvs_sht = {
- 	.name			= DRV_NAME,
- 	.queuecommand		= sas_queuecommand,
- 	.target_alloc		= sas_target_alloc,
--	.slave_configure	= mvs_slave_configure,
-+	.slave_configure	= sas_slave_configure,
- 	.slave_destroy		= sas_slave_destroy,
- 	.scan_finished		= mvs_scan_finished,
- 	.scan_start		= mvs_scan_start,
-@@ -74,7 +74,7 @@ static struct scsi_host_template mvs_sht = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
--	.slave_alloc		= mvs_slave_alloc,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- 	.shost_attrs		= mvst_host_attrs,
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 4196eee..f2ac01f 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -276,36 +276,6 @@ static void mvs_bytes_dmaed(struct mvs_info *mvi, int i)
- 				   PORTE_BYTES_DMAED);
- }
- 
--int mvs_slave_alloc(struct scsi_device *scsi_dev)
--{
--	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--	if (dev_is_sata(dev)) {
--		/* We don't need to rescan targets
--		 * if REPORT_LUNS request is failed
--		 */
--		if (scsi_dev->lun > 0)
--			return -ENXIO;
--		scsi_dev->tagged_supported = 1;
--	}
--
--	return sas_slave_alloc(scsi_dev);
--}
--
--int mvs_slave_configure(struct scsi_device *sdev)
--{
--	struct domain_device *dev = sdev_to_domain_dev(sdev);
--	int ret = sas_slave_configure(sdev);
--
--	if (ret)
--		return ret;
--	if (!dev_is_sata(dev)) {
--		sas_change_queue_depth(sdev,
--			MVS_QUEUE_SIZE,
--			SCSI_QDEPTH_DEFAULT);
--	}
--	return 0;
--}
--
- void mvs_scan_start(struct Scsi_Host *shost)
- {
- 	int i, j;
-diff --git a/drivers/scsi/mvsas/mv_sas.h b/drivers/scsi/mvsas/mv_sas.h
-index 44d7885..21ee8b0 100644
---- a/drivers/scsi/mvsas/mv_sas.h
-+++ b/drivers/scsi/mvsas/mv_sas.h
-@@ -459,8 +459,6 @@ int mvs_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 			void *funcdata);
- void __devinit mvs_set_sas_addr(struct mvs_info *mvi, int port_id,
- 				u32 off_lo, u32 off_hi, u64 sas_addr);
--int mvs_slave_alloc(struct scsi_device *scsi_dev);
--int mvs_slave_configure(struct scsi_device *sdev);
- void mvs_scan_start(struct Scsi_Host *shost);
- int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time);
- int mvs_queue_command(struct sas_task *task, const int num,
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 172cefb..c21a216 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -61,7 +61,7 @@ static struct scsi_host_template pm8001_sht = {
- 	.name			= DRV_NAME,
- 	.queuecommand		= sas_queuecommand,
- 	.target_alloc		= sas_target_alloc,
--	.slave_configure	= pm8001_slave_configure,
-+	.slave_configure	= sas_slave_configure,
- 	.slave_destroy		= sas_slave_destroy,
- 	.scan_finished		= pm8001_scan_finished,
- 	.scan_start		= pm8001_scan_start,
-@@ -76,7 +76,7 @@ static struct scsi_host_template pm8001_sht = {
- 	.use_clustering		= ENABLE_CLUSTERING,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_bus_reset_handler	= sas_eh_bus_reset_handler,
--	.slave_alloc		= pm8001_slave_alloc,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- 	.shost_attrs		= pm8001_host_attrs,
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 7dbbf8b..9068f12 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -216,20 +216,6 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 	return rc;
- }
- 
--int pm8001_slave_alloc(struct scsi_device *scsi_dev)
--{
--	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--	if (dev_is_sata(dev)) {
--		/* We don't need to rescan targets
--		* if REPORT_LUNS request is failed
--		*/
--		if (scsi_dev->lun > 0)
--			return -ENXIO;
--		scsi_dev->tagged_supported = 1;
--	}
--	return sas_slave_alloc(scsi_dev);
--}
--
- /**
-   * pm8001_scan_start - we should enable all HBA phys by sending the phy_start
-   * command to HBA.
-@@ -314,22 +300,7 @@ static int pm8001_task_prep_ssp(struct pm8001_hba_info *pm8001_ha,
- {
- 	return PM8001_CHIP_DISP->ssp_io_req(pm8001_ha, ccb);
- }
--int pm8001_slave_configure(struct scsi_device *sdev)
--{
--	struct domain_device *dev = sdev_to_domain_dev(sdev);
--	int ret = sas_slave_configure(sdev);
--	if (ret)
--		return ret;
--	if (dev_is_sata(dev)) {
--	#ifdef PM8001_DISABLE_NCQ
--		struct ata_port *ap = dev->sata_dev.ap;
--		struct ata_device *adev = ap->link.device;
--		adev->flags |= ATA_DFLAG_NCQ_OFF;
--		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, 1);
--	#endif
--	}
--	return 0;
--}
-+
-  /* Find the local port id that's attached to this device */
- static int sas_find_local_port_id(struct domain_device *dev)
- {
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index b97c8ab..93959fe 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -471,8 +471,6 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
- 	struct sas_task *task, struct pm8001_ccb_info *ccb, u32 ccb_idx);
- int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 	void *funcdata);
--int pm8001_slave_alloc(struct scsi_device *scsi_dev);
--int pm8001_slave_configure(struct scsi_device *sdev);
- void pm8001_scan_start(struct Scsi_Host *shost);
- int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time);
- int pm8001_queue_command(struct sas_task *task, const int num,
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index c6fcf76..9d9330a 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1545,8 +1545,14 @@ int sas_rphy_add(struct sas_rphy *rphy)
- 
- 	if (identify->device_type == SAS_END_DEVICE &&
- 	    rphy->scsi_target_id != -1) {
--		scsi_scan_target(&rphy->dev, 0,
--				rphy->scsi_target_id, SCAN_WILD_CARD, 0);
-+		int lun;
-+
-+		if (identify->target_port_protocols & SAS_PROTOCOL_SSP)
-+			lun = SCAN_WILD_CARD;
-+		else
-+			lun = 0;
-+
-+		scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id, lun, 0);
- 	}
- 
- 	return 0;
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index efd6f98..23fa829 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1052,6 +1052,8 @@ extern int ata_scsi_slave_config(struct scsi_device *sdev);
- extern void ata_scsi_slave_destroy(struct scsi_device *sdev);
- extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
- 				       int queue_depth, int reason);
-+extern int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
-+				    int queue_depth, int reason);
- extern struct ata_device *ata_dev_pair(struct ata_device *adev);
- extern int ata_do_set_mode(struct ata_link *link, struct ata_device **r_failed_dev);
- extern void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap);
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index af0a1de..0d78bfa 100644
+index ee86606..67be7f5 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -168,9 +168,6 @@ struct sata_device {
- 	struct ata_port *ap;
- 	struct ata_host ata_host;
- 	struct ata_taskfile tf;
--	u32 sstatus;
--	u32 serror;
--	u32 scontrol;
+@@ -142,8 +142,11 @@ struct expander_device {
+ 	u16    ex_change_count;
+ 	u16    max_route_indexes;
+ 	u8     num_phys;
++
++	u8     t2t_supp:1;
+ 	u8     configuring:1;
+ 	u8     conf_route_table:1;
++
+ 	u8     enclosure_logical_id[8];
+=20
+ 	struct ex_phy *ex_phy;
+@@ -652,7 +655,7 @@ int  sas_discover_event(struct asd_sas_port *, enum=
+ discover_event ev);
+ int  sas_discover_sata(struct domain_device *);
+ int  sas_discover_end_dev(struct domain_device *);
+=20
+-void sas_unregister_dev(struct domain_device *);
++void sas_unregister_dev(struct asd_sas_port *port, struct domain_devic=
+e *);
+=20
+ void sas_init_dev(struct domain_device *);
+=20
+diff --git a/include/scsi/sas.h b/include/scsi/sas.h
+index e9fd022..3a00297 100644
+--- a/include/scsi/sas.h
++++ b/include/scsi/sas.h
+@@ -108,6 +108,7 @@ enum sas_protocol {
+ 	SAS_PROTOCOL_STP		=3D 0x04,
+ 	SAS_PROTOCOL_SSP		=3D 0x08,
+ 	SAS_PROTOCOL_ALL		=3D 0x0E,
++	SAS_PROTOCOL_STP_ALL		=3D SAS_PROTOCOL_STP|SAS_PROTOCOL_SATA,
  };
- 
- /* ---------- Domain device ---------- */
-@@ -410,7 +407,14 @@ static inline unsigned int to_sas_gpio_od(int device, int bit)
- 	return 3 * device + bit;
- }
- 
-+#ifdef CONFIG_SCSI_SAS_HOST_SMP
- int try_test_sas_gpio_gp_bit(unsigned int od, u8 *data, u8 index, u8 count);
-+#else
-+static inline int try_test_sas_gpio_gp_bit(unsigned int od, u8 *data, u8 index, u8 count)
-+{
-+	return -1;
-+}
-+#endif
- 
- /* ---------- Tasks ---------- */
- /*
-@@ -472,10 +476,6 @@ enum exec_status {
- struct ata_task_resp {
- 	u16  frame_len;
- 	u8   ending_fis[24];	  /* dev to host or data-in */
--	u32  sstatus;
--	u32  serror;
--	u32  scontrol;
--	u32  sactive;
- };
- 
- #define SAS_STATUS_BUF_SIZE 96
+=20
+ /* From the spec; local phys only */
+@@ -341,7 +342,12 @@ struct report_general_resp {
+=20
+ 	u8      conf_route_table:1;
+ 	u8      configuring:1;
+-	u8      _r_b:6;
++	u8      config_others:1;
++	u8      orej_retry_supp:1;
++	u8      stp_cont_awt:1;
++	u8      self_config:1;
++	u8      zone_config:1;
++	u8      t2t_supp:1;
+=20
+ 	u8      _r_c;
+=20
+@@ -528,7 +534,12 @@ struct report_general_resp {
+ 	u8      _r_a;
+ 	u8      num_phys;
+=20
+-	u8      _r_b:6;
++	u8      t2t_supp:1;
++	u8      zone_config:1;
++	u8      self_config:1;
++	u8      stp_cont_awt:1;
++	u8      orej_retry_supp:1;
++	u8      config_others:1;
+ 	u8      configuring:1;
+ 	u8      conf_route_table:1;
+=20
 
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
