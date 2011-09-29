@@ -1,163 +1,46 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 1/2] isci: fix support for large smp requests
-Date: Wed, 28 Sep 2011 18:35:27 -0700
-Message-ID: <20110929013527.23410.99807.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/2] isci: fix missed unlock in apc_agent_timeout()
+Date: Wed, 28 Sep 2011 18:35:32 -0700
+Message-ID: <20110929013532.23410.10656.stgit@localhost6.localdomain6>
 References: <20110929013227.23410.28489.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45875 "EHLO mga09.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:2838 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753706Ab1I2Bf1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Sep 2011 21:35:27 -0400
+	id S1753706Ab1I2Bfd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Sep 2011 21:35:33 -0400
 In-Reply-To: <20110929013227.23410.28489.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com
-Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, Derick Marks <derick.w.marks@intel.com>, dmilburn@redhat.com, hare@suse.de, stable@kernel.org
+Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, dmilburn@redhat.com, hare@suse.de, stable@kernel.org
 
-Kill the local smp response buffer.
+From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-Besides being unnecessary, it is too small (currently truncates
-responses to 60 bytes).  The mid-layer will have already allocated a
-sufficiently sized buffer, just kmap and copy into it directly.
+Needed to jump to scic_lock unlock.
 
+Also spotted by coccicheck.
+
+Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Cc: <stable@kernel.org>
-Reported-by: Derick Marks <derick.w.marks@intel.com>
-Tested-by: Derick Marks <derick.w.marks@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/isci.h    |    2 +-
- drivers/scsi/isci/request.c |   49 ++++++++++++++++++-------------------------
- drivers/scsi/isci/request.h |    3 ---
- drivers/scsi/isci/sas.h     |    2 --
- 4 files changed, 21 insertions(+), 35 deletions(-)
+ drivers/scsi/isci/port_config.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/isci/isci.h b/drivers/scsi/isci/isci.h
-index d1de633..8efeb6b 100644
---- a/drivers/scsi/isci/isci.h
-+++ b/drivers/scsi/isci/isci.h
-@@ -97,7 +97,7 @@
- #define SCU_MAX_COMPLETION_QUEUE_SHIFT	  (ilog2(SCU_MAX_COMPLETION_QUEUE_ENTRIES))
+diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
+index 486b113..38a99d2 100644
+--- a/drivers/scsi/isci/port_config.c
++++ b/drivers/scsi/isci/port_config.c
+@@ -678,7 +678,7 @@ static void apc_agent_timeout(unsigned long data)
+ 	configure_phy_mask = ~port_agent->phy_configured_mask & port_agent->phy_ready_mask;
  
- #define SCU_ABSOLUTE_MAX_UNSOLICITED_FRAMES (4096)
--#define SCU_UNSOLICITED_FRAME_BUFFER_SIZE   (1024)
-+#define SCU_UNSOLICITED_FRAME_BUFFER_SIZE   (1024U)
- #define SCU_INVALID_FRAME_INDEX             (0xFFFF)
+ 	if (!configure_phy_mask)
+-		return;
++		goto done;
  
- #define SCU_IO_REQUEST_MAX_SGE_SIZE         (0x00FFFFFF)
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index b5d3a8c..225b196 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -1490,29 +1490,30 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- 		return SCI_SUCCESS;
- 
- 	case SCI_REQ_SMP_WAIT_RESP: {
--		struct smp_resp *rsp_hdr = &ireq->smp.rsp;
--		void *frame_header;
-+		struct sas_task *task = isci_request_access_task(ireq);
-+		struct scatterlist *sg = &task->smp_task.smp_resp;
-+		void *frame_header, *kaddr;
-+		u8 *rsp;
- 
- 		sci_unsolicited_frame_control_get_header(&ihost->uf_control,
--							      frame_index,
--							      &frame_header);
--
--		/* byte swap the header. */
--		word_cnt = SMP_RESP_HDR_SZ / sizeof(u32);
--		sci_swab32_cpy(rsp_hdr, frame_header, word_cnt);
-+							 frame_index,
-+							 &frame_header);
-+		kaddr = kmap_atomic(sg_page(sg), KM_IRQ0);
-+		rsp = kaddr + sg->offset;
-+		sci_swab32_cpy(rsp, frame_header, 1);
- 
--		if (rsp_hdr->frame_type == SMP_RESPONSE) {
-+		if (rsp[0] == SMP_RESPONSE) {
- 			void *smp_resp;
- 
- 			sci_unsolicited_frame_control_get_buffer(&ihost->uf_control,
--								      frame_index,
--								      &smp_resp);
-+								 frame_index,
-+								 &smp_resp);
- 
--			word_cnt = (sizeof(struct smp_resp) - SMP_RESP_HDR_SZ) /
--				sizeof(u32);
--
--			sci_swab32_cpy(((u8 *) rsp_hdr) + SMP_RESP_HDR_SZ,
--				       smp_resp, word_cnt);
-+			word_cnt = (sg->length/4)-1;
-+			if (word_cnt > 0)
-+				word_cnt = min_t(unsigned int, word_cnt,
-+						 SCU_UNSOLICITED_FRAME_BUFFER_SIZE/4);
-+			sci_swab32_cpy(rsp + 4, smp_resp, word_cnt);
- 
- 			ireq->scu_status = SCU_TASK_DONE_GOOD;
- 			ireq->sci_status = SCI_SUCCESS;
-@@ -1528,12 +1529,13 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- 				__func__,
- 				ireq,
- 				frame_index,
--				rsp_hdr->frame_type);
-+				rsp[0]);
- 
- 			ireq->scu_status = SCU_TASK_DONE_SMP_FRM_TYPE_ERR;
- 			ireq->sci_status = SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR;
- 			sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
- 		}
-+		kunmap_atomic(kaddr, KM_IRQ0);
- 
- 		sci_controller_release_frame(ihost, frame_index);
- 
-@@ -2603,18 +2605,7 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
- 			status   = SAM_STAT_GOOD;
- 			set_bit(IREQ_COMPLETE_IN_TARGET, &request->flags);
- 
--			if (task->task_proto == SAS_PROTOCOL_SMP) {
--				void *rsp = &request->smp.rsp;
--
--				dev_dbg(&ihost->pdev->dev,
--					"%s: SMP protocol completion\n",
--					__func__);
--
--				sg_copy_from_buffer(
--					&task->smp_task.smp_resp, 1,
--					rsp, sizeof(struct smp_resp));
--			} else if (completion_status
--				   == SCI_IO_SUCCESS_IO_DONE_EARLY) {
-+			if (completion_status == SCI_IO_SUCCESS_IO_DONE_EARLY) {
- 
- 				/* This was an SSP / STP / SATA transfer.
- 				 * There is a possibility that less data than
-diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
-index 7a1d5a9..58d70b6 100644
---- a/drivers/scsi/isci/request.h
-+++ b/drivers/scsi/isci/request.h
-@@ -174,9 +174,6 @@ struct isci_request {
- 			};
- 		} ssp;
- 		struct {
--			struct smp_resp rsp;
--		} smp;
--		struct {
- 			struct isci_stp_request req;
- 			struct host_to_dev_fis cmd;
- 			struct dev_to_host_fis rsp;
-diff --git a/drivers/scsi/isci/sas.h b/drivers/scsi/isci/sas.h
-index 462b151..dc26b4a 100644
---- a/drivers/scsi/isci/sas.h
-+++ b/drivers/scsi/isci/sas.h
-@@ -204,8 +204,6 @@ struct smp_req {
- 	u8 req_data[0];
- }  __packed;
- 
--#define SMP_RESP_HDR_SZ	4
--
- /*
-  * struct sci_sas_address - This structure depicts how a SAS address is
-  *    represented by SCI.
+ 	for (index = 0; index < SCI_MAX_PHYS; index++) {
+ 		if ((configure_phy_mask & (1 << index)) == 0)
 
