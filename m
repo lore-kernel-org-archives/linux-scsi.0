@@ -1,63 +1,54 @@
-From: Pete Lancashire <xyzzypdx@gmail.com>
-Subject: Pete Lancashire wants to chat
-Date: Wed, 28 Sep 2011 08:58:20 -0700
-Message-ID: <CAA-F0u8p2+nkgzJ2pAebwWp7qTZ0xyr8FZaH645Hmps_9D50pg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yi0-f74.google.com ([209.85.218.74]:65527 "EHLO
-	mail-yi0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633Ab1I1Q2q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2011 12:28:46 -0400
-Received: by yib25 with SMTP id 25so1071143yib.1
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2011 09:28:46 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: yxlraid@gmail.com
+Subject: [PATCH 1/8] [SCSI] mvsas: fix expander link error
+Date: Thu, 29 Sep 2011 00:32:37 -0700
+Message-ID: <4e834c52.6539440a.62a1.fffffe53@mx.google.com>
+References: <mvsas>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <mvsas>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@parallels.com
+Cc: jack_wang@usish.com, lucas.demarchi@profusion.mobi, maciej.trela@intel.com, dan.j.williams@intel.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
------------------------------------------------------------------------
+From: Xiangliang Yu <yuxiangl@marvell.com>
 
-Pete Lancashire wants to stay in better touch using some of Google's coolest new
-products.
+-- fix expander link error
 
-If you already have Gmail or Google Talk, visit:
-http://mail.google.com/mail/b-5272c93fa5-53da9b9f62-RJXIOkfLXxHSigns7nP6hD1kFIk
-You'll need to click this link to be able to chat with Pete Lancashire.
+Signed-off-by: Xiangliang Yu <yuxiangl@marvell.com>
+---
+ drivers/scsi/mvsas/mv_sas.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-To get Gmail - a free email account from Google with over 2,800 megabytes of
-storage - and chat with Pete Lancashire, visit:
-http://mail.google.com/mail/a-5272c93fa5-53da9b9f62-RJXIOkfLXxHSigns7nP6hD1kFIk
-
-Gmail offers:
-- Instant messaging right inside Gmail
-- Powerful spam protection
-- Built-in search for finding your messages and a helpful way of organizing
-  emails into "conversations"
-- No pop-up ads or untargeted banners - just text ads and related information
-  that are relevant to the content of your messages
-
-All this, and its yours for free. But wait, there's more! By opening a Gmail
-account, you also get access to Google Talk, Google's instant messaging
-service:
-
-http://www.google.com/talk/
-
-Google Talk offers:
-- Web-based chat that you can use anywhere, without a download
-- A contact list that's synchronized with your Gmail account
-- Free, high quality PC-to-PC voice calls when you download the Google Talk
-  client
-
-We're working hard to add new features and make improvements, so we might also
-ask for your comments and suggestions periodically. We appreciate your help in
-making our products even better!
-
-Thanks,
-The Google Team
-
-To learn more about Gmail and Google Talk, visit:
-http://mail.google.com/mail/help/about.html
-http://www.google.com/talk/about.html
-
-(If clicking the URLs in this message does not work, copy and paste them into
-the address bar of your browser).
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 4958fef..86847c6 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -426,7 +426,7 @@ static int mvs_task_prep_smp(struct mvs_info *mvi,
+ 	/* generate open address frame hdr (first 12 bytes) */
+ 	/* initiator, SMP, ftype 1h */
+ 	buf_oaf[0] = (1 << 7) | (PROTOCOL_SMP << 4) | 0x01;
+-	buf_oaf[1] = dev->linkrate & 0xf;
++	buf_oaf[1] = min(sas_port->linkrate, dev->linkrate) & 0xf;
+ 	*(u16 *)(buf_oaf + 2) = 0xFFFF;		/* SAS SPEC */
+ 	memcpy(buf_oaf + 4, dev->sas_addr, SAS_ADDR_SIZE);
+ 
+@@ -571,7 +571,7 @@ static int mvs_task_prep_ata(struct mvs_info *mvi,
+ 	/* generate open address frame hdr (first 12 bytes) */
+ 	/* initiator, STP, ftype 1h */
+ 	buf_oaf[0] = (1 << 7) | (PROTOCOL_STP << 4) | 0x1;
+-	buf_oaf[1] = dev->linkrate & 0xf;
++	buf_oaf[1] = min(sas_port->linkrate, dev->linkrate) & 0xf;
+ 	*(u16 *)(buf_oaf + 2) = cpu_to_be16(mvi_dev->device_id + 1);
+ 	memcpy(buf_oaf + 4, dev->sas_addr, SAS_ADDR_SIZE);
+ 
+@@ -679,7 +679,7 @@ static int mvs_task_prep_ssp(struct mvs_info *mvi,
+ 	/* generate open address frame hdr (first 12 bytes) */
+ 	/* initiator, SSP, ftype 1h */
+ 	buf_oaf[0] = (1 << 7) | (PROTOCOL_SSP << 4) | 0x1;
+-	buf_oaf[1] = dev->linkrate & 0xf;
++	buf_oaf[1] = min(sas_port->linkrate, dev->linkrate) & 0xf;
+ 	*(u16 *)(buf_oaf + 2) = cpu_to_be16(mvi_dev->device_id + 1);
+ 	memcpy(buf_oaf + 4, dev->sas_addr, SAS_ADDR_SIZE);
+ 
+-- 
+1.7.4.4
