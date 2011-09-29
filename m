@@ -1,57 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: BUG in kernel: Wrong Handling of USB =?UTF-8?Q?HDD=E2=80=99s?=
- in scsiglue(slave_configure) and scsi/sd(sd_read_cache_type)
-Date: Thu, 29 Sep 2011 13:31:17 -0500
-Message-ID: <1317321077.3190.71.camel@dabdike.hansenpartnership.com>
-References: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
-	 <CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
-	 <1317245383.22022.23.camel@dabdike.hansenpartnership.com>
-	 <CADDb1s0naC9bKYDuvxMK1R+ey9KB+Sh8e-9KNJXH-EuTNueueQ@mail.gmail.com>
-	 <1317320825.3190.70.camel@dabdike.hansenpartnership.com>
+From: Andrew Morton <akpm00@gmail.com>
+Subject: Re: PATCH [1/1] cciss: auto engage scsi subsystem for tape support
+Date: Thu, 29 Sep 2011 16:54:17 -0700
+Message-ID: <20110929165417.59fc03c7.akpm00@gmail.com>
+References: <20110916213200.GA24786@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1317320825.3190.70.camel@dabdike.hansenpartnership.com>
+In-Reply-To: <20110916213200.GA24786@beardog.cce.hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Mike Miller <mike.miller@hp.com>
+Cc: Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, scameron@beardog.cce.hp.com, thenzel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2011-09-29 at 13:27 -0500, James Bottomley wrote:
-> On Thu, 2011-09-29 at 14:49 +0530, Amit Sahrawat wrote:
-> > The patch did not work, although it did get pass the earlier condit=
-ion
-> > which I mentioned- but still Write Cache is not taken into account =
-=E2=80=93
-> > seems mode sensing in sd_read_cache_type() does not send proper
-> > request to the device =E2=80=93 or does not read in proper bytes fo=
-r this(as
-> > per hdparm command analysis):
-> >=20
-> > Logs After Connecting:
-> > scsi 0:0:0:0: Direct-Access     Seagate  Portable         0130 PQ: =
-0 ANSI: 4
-> > sd 0:0:0:0: [sda] 488397168 512-byte logical blocks: (250 GB/232 Gi=
-B)
-> > sd 0:0:0:0: [sda] Write Protect is off
-> > sd 0:0:0:0: [sda] No Caching mode page present
->=20
-> This line means that a request for page 0x0 didn't turn up the cachin=
-g
-> mode page in the list of supported pages.
->=20
-> What does
->=20
-> sg_inq  --page=3D0x0 /dev/sda
+On Fri, 16 Sep 2011 16:32:00 -0500
+Mike Miller <mike.miller@hp.com> wrote:
 
-Um, lets try that again, this time with the correct information.  What
-we're looking for is the list of mode pages, so=20
+> 
+> commit 608b0262ce818901b931d7e6534aad375c698924
+> Author: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> Date:   Mon Aug 29 13:27:46 2011 -0500
+> 
+>     cciss: auto engage scsi mid-layer
+> 
+> Acked-by: Mike Miller <mike.miller@hp.com>
 
-sg_modes --page=3D0x3f /dev/sda
+Nobody seems to have applied this to anything.
 
-Should return it.
+The patch has no signoffs.
 
-Thanks,
+The changelog is awful.  What are the end-user-visible effects of this
+change?  How is anyone supposed to tell?
 
-James
+> --- a/drivers/block/cciss_scsi.c
+> +++ b/drivers/block/cciss_scsi.c
+> @@ -1720,5 +1720,6 @@ static int  cciss_eh_abort_handler(struct scsi_cmnd *scsicmd)
+>  /* If no tape support, then these become defined out of existence */
+>  
+>  #define cciss_scsi_setup(cntl_num)
+> +#define cciss_engage_scsi(h)
+>  
+>  #endif /* CONFIG_CISS_SCSI_TAPE */
+
+cciss #includes .c files?  I can't believe you did that :(
