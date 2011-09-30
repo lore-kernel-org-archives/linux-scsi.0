@@ -1,247 +1,184 @@
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Subject: =?windows-1252?Q?Re=3A_BUG_in_kernel=3A_Wrong_Handling_of_USB_HDD=92s_in_?=
-	=?windows-1252?Q?scsiglue=28slave=5Fconfigure=29_and_scsi=2Fsd=28sd=5Fread=5Fcache=5Ftype=29?=
-Date: Fri, 30 Sep 2011 12:26:31 +0530
-Message-ID: <CADDb1s3CSvmqNGA48sHyOJ-pGpB1ix3WEVd0KV4b+s5yE3abLw@mail.gmail.com>
+From: NamJae Jeon <linkinjeon@gmail.com>
+Subject: =?UTF-8?Q?Re=3A_BUG_in_kernel=3A_Wrong_Handling_of_USB_HDD=E2=80=99s_in_?=
+	=?UTF-8?Q?scsiglue=28slave=5Fconfigure=29_and_scsi=2Fsd=28sd=5Fread=5Fcache=5Ftype=29?=
+Date: Fri, 30 Sep 2011 16:06:15 +0900
+Message-ID: <CAKYAXd9=XPJAM57Mt2XokFissd-KZKdo0X8gX7cLzBwQdv47nA@mail.gmail.com>
 References: <CADDb1s2Qhy1dNmjk+DhU=rf46A4X6kPdQ2rdpwK9zinY4Yv1mw@mail.gmail.com>
 	<CADDb1s3KjMugBGwLmjoPv93hJVBCjkD81o8F0CZxJXXt+-Fk2A@mail.gmail.com>
 	<1317245383.22022.23.camel@dabdike.hansenpartnership.com>
 	<CADDb1s0naC9bKYDuvxMK1R+ey9KB+Sh8e-9KNJXH-EuTNueueQ@mail.gmail.com>
 	<1317320825.3190.70.camel@dabdike.hansenpartnership.com>
 	<1317321077.3190.71.camel@dabdike.hansenpartnership.com>
+	<CADDb1s3CSvmqNGA48sHyOJ-pGpB1ix3WEVd0KV4b+s5yE3abLw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1317321077.3190.71.camel@dabdike.hansenpartnership.com>
+In-Reply-To: <CADDb1s3CSvmqNGA48sHyOJ-pGpB1ix3WEVd0KV4b+s5yE3abLw@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
-
-[root@localhost Tools]# sg_inq --page=3D0x0 /dev/sdb
- Only hex output supported. sg_vpd decodes more pages.
-VPD INQUIRY, page code=3D0x00:
-   [PQual=3D0  Peripheral device type: disk]
-   Supported VPD pages:
-     0x1f
-[root@localhost Tools]#
-
-
-
-[root@localhost Tools]# sg_modes --page=3D0x3f /dev/sdb
-    SAMSUNG   HM501IX              peripheral_type: disk [0x0]
-Mode parameter header from MODE SENSE(10):
-  Mode data length=3D66, medium type=3D0x00, WP=3D0, DpoFua=3D0, longlb=
-a=3D0
-  Block descriptor length=3D0
->> Read-Write error recovery, page_control: current
- 00     01 0a 00 00 00 00 00 00  00 00 00 00
->> Flexible geometry (obsolete), page_control: current
- 00     05 0a ff ff 10 3f 02 00  3f ff 00 00
->> Caching, page_control: current
- 00     08 12 00 00 00 00 00 00  00 00 00 00 01 00 00 00
- 10     00 00 00 00
->> page_code: 0x1b, page_control: current
- 00     1b 0a 00 01 00 00 00 00  00 00 00 00
->> Unit Attention condition [vendor specific format], page_control: cur=
-rent
- 00     00 00
-[root@localhost Tools]#
-
-
-
-[root@localhost Tools]# sginfo -A /dev/sdb
-INQUIRY response (cmd: 0x12)
-----------------------------
-Device Type                        0
-Vendor:                    SAMSUNG
-Product:                   HM501IX
-Revision level:
-
-No serial number (bad format for supported VPDs)
-
-Read-Write Error Recovery mode page (0x1)
------------------------------------------
-AWRE                               0
-ARRE                               0
-TB                                 0
-RC                                 0
-EER                                0
-PER                                0
-DTE                                0
-DCR                                0
-Read Retry Count                   0
-Correction Span                    0
-Head Offset Count                  0
-Data Strobe Offset Count           0
-Write Retry Count                  0
-Recovery Time Limit (ms)           0
-
-mode page: 0x05   [Flexible Disk]
----------------
-0x02                               0xff
-0x03                               0xff
-0x04                               0x10
-0x05                               0x3f
-0x06                               0x02
-0x07                               0x00
-0x08                               0x3f
-0x09                               0xff
-0x0a                               0x00
-0x0b                               0x00
-
-Caching mode page (0x8)
------------------------
-Initiator Control                  0
-ABPF                               0
-CAP                                0
-DISC                               0
-SIZE                               0
-Write Cache Enabled                0
-MF                                 0
-Read Cache Disabled                0
-Demand Read Retention Priority     0
-Demand Write Retention Priority    0
-Disable Pre-fetch Transfer Length  0
-Minimum Pre-fetch                  0
-Maximum Pre-fetch                  0
-Maximum Pre-fetch Ceiling          0
-=46SW                                0
-LBCSS                              0
-DRA                                0
-NV_DIS                             1
-Number of Cache Segments           0
-Cache Segment size                 0
-Non-Cache Segment size             0
-
-mode page: 0x1b
----------------
-0x02                               0x00
-0x03                               0x01
-0x04                               0x00
-0x05                               0x00
-0x06                               0x00
-0x07                               0x00
-0x08                               0x00
-0x09                               0x00
-0x0a                               0x00
-0x0b                               0x00
-
-mode page: 0x00   [Vendor (non-page format)]
----------------
-0x00                               0x00
-0x01                               0x00
-
-[root@localhost Tools]#
-
-Comparision for USB HDD and Normal Hard disk connected to system.(For
-USB HDD it showing Write Cache - False, for normal Hard disk - Write
-Cache - True)
-[root@localhost Tools]# sg_modes --page=3D0x3f /dev/sdb
-    SAMSUNG   HM501IX              peripheral_type: disk [0x0]
-Mode parameter header from MODE SENSE(10):
-  Mode data length=3D66, medium type=3D0x00, WP=3D0, DpoFua=3D0, longlb=
-a=3D0
-  Block descriptor length=3D0
->> Read-Write error recovery, page_control: current
- 00     01 0a 00 00 00 00 00 00  00 00 00 00
->> Flexible geometry (obsolete), page_control: current
- 00     05 0a ff ff 10 3f 02 00  3f ff 00 00
->> Caching, page_control: current
- 00     08 12 00 00 00 00 00 00  00 00 00 00 01 00 00 00
- 10     00 00 00 00
->> page_code: 0x1b, page_control: current
- 00     1b 0a 00 01 00 00 00 00  00 00 00 00
->> Unit Attention condition [vendor specific format], page_control: cur=
-rent
- 00     00 00
-[root@localhost Tools]# sg_modes --page=3D0x3f /dev/sda
-    ATA       SAMSUNG HD502HJ   1AJ1   peripheral_type: disk [0x0]
-Mode parameter header from MODE SENSE(10):
-  Mode data length=3D60, medium type=3D0x00, WP=3D0, DpoFua=3D0, longlb=
-a=3D0
-  Block descriptor length=3D8
-> Direct access device block descriptors:
-   Density code=3D0x0
- 00     00 00 00 00 00 00 02 00
-
->> Read-Write error recovery, page_control: current
- 00     01 0a 80 00 00 00 00 00  00 00 00 00
->> Caching, page_control: current
- 00     08 12 04 00 00 00 00 00  00 00 00 00 00 00 00 00
- 10     00 00 00 00
->> Control, page_control: current
- 00     0a 0a 02 00 00 00 00 00  ff ff 00 1e
-[root@localhost Tools]#
-
-Now, for the USB HDD which do have write cache - sginfo is showing
-them to Write Cache Enabled as false.
-Why do the result of hdparm identification and sginfo varies- (I know
-they have different interface to work with and hdparm takes care of
-that by using SG_IO interface from it's code)? hdparm showed me
-correct results - that lead me to digging in the kernel code and
-checking the performance for USB HDD with Write cache enabled/disabled
-- which also showed that QUEUE ordering chosen for USB HDD is not
-correct.
-I have a large number of USB HDD's - with different vendors, and for
-all of them - it is showing Write Cache Enabled as false.
-The code works only for the Pen Drives or the USB HDD which do not
-have internal cache.
-
-Also, for journalling filesystem being used on USB HDD - it does
-becomes a cause of concern.
-
-Please share your opinion, I guess we need a change for mode sensing
-in the kernel code for USB HDD.
-
-Thanks & Regards,
-Amit Sahrawat
-
-
-
-On Fri, Sep 30, 2011 at 12:01 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Thu, 2011-09-29 at 13:27 -0500, James Bottomley wrote:
->> On Thu, 2011-09-29 at 14:49 +0530, Amit Sahrawat wrote:
->> > The patch did not work, although it did get pass the earlier condi=
-tion
->> > which I mentioned- but still Write Cache is not taken into account=
- =96
->> > seems mode sensing in sd_read_cache_type() does not send proper
->> > request to the device =96 or does not read in proper bytes for thi=
-s(as
->> > per hdparm command analysis):
->> >
->> > Logs After Connecting:
->> > scsi 0:0:0:0: Direct-Access =A0 =A0 Seagate =A0Portable =A0 =A0 =A0=
- =A0 0130 PQ: 0 ANSI: 4
->> > sd 0:0:0:0: [sda] 488397168 512-byte logical blocks: (250 GB/232 G=
-iB)
->> > sd 0:0:0:0: [sda] Write Protect is off
->> > sd 0:0:0:0: [sda] No Caching mode page present
->>
->> This line means that a request for page 0x0 didn't turn up the cachi=
-ng
->> mode page in the list of supported pages.
->>
->> What does
->>
->> sg_inq =A0--page=3D0x0 /dev/sda
->
-> Um, lets try that again, this time with the correct information. =A0W=
-hat
-> we're looking for is the list of mode pages, so
->
-> sg_modes --page=3D0x3f /dev/sda
->
-> Should return it.
->
-> Thanks,
->
-> James
->
->
->
+MjAxMS85LzMwIEFtaXQgU2FocmF3YXQgPGFtaXQuc2FocmF3YXQ4M0BnbWFpbC5jb20+Ogo+IEhp
+IEphbWVzLAo+Cj4gW3Jvb3RAbG9jYWxob3N0IFRvb2xzXSMgc2dfaW5xIC0tcGFnZT0weDAgL2Rl
+di9zZGIKPiDCoE9ubHkgaGV4IG91dHB1dCBzdXBwb3J0ZWQuIHNnX3ZwZCBkZWNvZGVzIG1vcmUg
+cGFnZXMuCj4gVlBEIElOUVVJUlksIHBhZ2UgY29kZT0weDAwOgo+IMKgIFtQUXVhbD0wIMKgUGVy
+aXBoZXJhbCBkZXZpY2UgdHlwZTogZGlza10KPiDCoCBTdXBwb3J0ZWQgVlBEIHBhZ2VzOgo+IMKg
+IMKgIDB4MWYKPiBbcm9vdEBsb2NhbGhvc3QgVG9vbHNdIwo+Cj4KPgo+IFtyb290QGxvY2FsaG9z
+dCBUb29sc10jIHNnX21vZGVzIC0tcGFnZT0weDNmIC9kZXYvc2RiCj4gwqAgwqBTQU1TVU5HIMKg
+IEhNNTAxSVggwqAgwqAgwqAgwqAgwqAgwqAgwqBwZXJpcGhlcmFsX3R5cGU6IGRpc2sgWzB4MF0K
+PiBNb2RlIHBhcmFtZXRlciBoZWFkZXIgZnJvbSBNT0RFIFNFTlNFKDEwKToKPiDCoE1vZGUgZGF0
+YSBsZW5ndGg9NjYsIG1lZGl1bSB0eXBlPTB4MDAsIFdQPTAsIERwb0Z1YT0wLCBsb25nbGJhPTAK
+PiDCoEJsb2NrIGRlc2NyaXB0b3IgbGVuZ3RoPTAKPj4+IFJlYWQtV3JpdGUgZXJyb3IgcmVjb3Zl
+cnksIHBhZ2VfY29udHJvbDogY3VycmVudAo+IMKgMDAgwqAgwqAgMDEgMGEgMDAgMDAgMDAgMDAg
+MDAgMDAgwqAwMCAwMCAwMCAwMAo+Pj4gRmxleGlibGUgZ2VvbWV0cnkgKG9ic29sZXRlKSwgcGFn
+ZV9jb250cm9sOiBjdXJyZW50Cj4gwqAwMCDCoCDCoCAwNSAwYSBmZiBmZiAxMCAzZiAwMiAwMCDC
+oDNmIGZmIDAwIDAwCj4+PiBDYWNoaW5nLCBwYWdlX2NvbnRyb2w6IGN1cnJlbnQKPiDCoDAwIMKg
+IMKgIDA4IDEyIDAwIDAwIDAwIDAwIDAwIDAwIMKgMDAgMDAgMDAgMDAgMDEgMDAgMDAgMDAKPiDC
+oDEwIMKgIMKgIDAwIDAwIDAwIDAwCj4+PiBwYWdlX2NvZGU6IDB4MWIsIHBhZ2VfY29udHJvbDog
+Y3VycmVudAo+IMKgMDAgwqAgwqAgMWIgMGEgMDAgMDEgMDAgMDAgMDAgMDAgwqAwMCAwMCAwMCAw
+MAo+Pj4gVW5pdCBBdHRlbnRpb24gY29uZGl0aW9uIFt2ZW5kb3Igc3BlY2lmaWMgZm9ybWF0XSwg
+cGFnZV9jb250cm9sOiBjdXJyZW50Cj4gwqAwMCDCoCDCoCAwMCAwMAo+IFtyb290QGxvY2FsaG9z
+dCBUb29sc10jCj4KPgo+Cj4gW3Jvb3RAbG9jYWxob3N0IFRvb2xzXSMgc2dpbmZvIC1BIC9kZXYv
+c2RiCj4gSU5RVUlSWSByZXNwb25zZSAoY21kOiAweDEyKQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0KPiBEZXZpY2UgVHlwZSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oDAKPiBWZW5kb3I6IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgU0FNU1VORwo+IFByb2R1
+Y3Q6IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIEhNNTAxSVgKPiBSZXZpc2lvbiBsZXZlbDoK
+Pgo+IE5vIHNlcmlhbCBudW1iZXIgKGJhZCBmb3JtYXQgZm9yIHN1cHBvcnRlZCBWUERzKQo+Cj4g
+UmVhZC1Xcml0ZSBFcnJvciBSZWNvdmVyeSBtb2RlIHBhZ2UgKDB4MSkKPiAtLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+IEFXUkUgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMAo+IEFSUkUgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgMAo+IFRCIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIDAKPiBSQyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCAwCj4gRUVSIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgMAo+IFBFUiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoDAKPiBEVEUgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAwCj4gRENSIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgIMKgIMKgMAo+IFJlYWQgUmV0cnkgQ291bnQgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+MAo+IENvcnJlY3Rpb24gU3BhbiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDAKPiBIZWFk
+IE9mZnNldCBDb3VudCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDAKPiBEYXRhIFN0cm9iZSBP
+ZmZzZXQgQ291bnQgwqAgwqAgwqAgwqAgwqAgMAo+IFdyaXRlIFJldHJ5IENvdW50IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgMAo+IFJlY292ZXJ5IFRpbWUgTGltaXQgKG1zKSDCoCDCoCDCoCDC
+oCDCoCAwCj4KPiBtb2RlIHBhZ2U6IDB4MDUgwqAgW0ZsZXhpYmxlIERpc2tdCj4gLS0tLS0tLS0t
+LS0tLS0tCj4gMHgwMiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweGZmCj4gMHgwMyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweGZmCj4gMHgwNCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDEwCj4gMHgwNSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDNmCj4gMHgwNiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDAyCj4gMHgwNyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDAwCj4gMHgwOCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDNmCj4gMHgwOSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweGZmCj4gMHgwYSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDAwCj4gMHgwYiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCAweDAwCj4KPiBDYWNoaW5nIG1vZGUgcGFnZSAoMHg4KQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tCj4gSW5pdGlhdG9yIENvbnRyb2wgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAwCj4gQUJQ
+RiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCAwCj4gQ0FQIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgMAo+IERJU0MgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMAo+IFNJWkUgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMAo+IFdyaXRlIENhY2hlIEVu
+YWJsZWQgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAwCj4gTUYgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMAo+IFJlYWQgQ2FjaGUgRGlzYWJsZWQgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAwCj4gRGVtYW5kIFJlYWQgUmV0ZW50aW9uIFByaW9yaXR5IMKgIMKg
+IDAKPiBEZW1hbmQgV3JpdGUgUmV0ZW50aW9uIFByaW9yaXR5IMKgIMKgMAo+IERpc2FibGUgUHJl
+LWZldGNoIFRyYW5zZmVyIExlbmd0aCDCoDAKPiBNaW5pbXVtIFByZS1mZXRjaCDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoDAKPiBNYXhpbXVtIFByZS1mZXRjaCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCDCoDAKPiBNYXhpbXVtIFByZS1mZXRjaCBDZWlsaW5nIMKgIMKgIMKgIMKgIMKgMAo+IEZT
+VyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDAKPiBMQkNT
+UyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoDAKPiBEUkEgwqAg
+wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAwCj4gTlZfRElTIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDEKPiBOdW1iZXIgb2YgQ2Fj
+aGUgU2VnbWVudHMgwqAgwqAgwqAgwqAgwqAgMAo+IENhY2hlIFNlZ21lbnQgc2l6ZSDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCAwCj4gTm9uLUNhY2hlIFNlZ21lbnQgc2l6ZSDCoCDCoCDCoCDCoCDC
+oCDCoCAwCj4KPiBtb2RlIHBhZ2U6IDB4MWIKPiAtLS0tLS0tLS0tLS0tLS0KPiAweDAyIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDAzIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDEKPiAweDA0IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDA1IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDA2IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDA3IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDA4IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDA5IMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDBhIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPiAweDBiIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIDB4MDAKPgo+IG1vZGUgcGFn
+ZTogMHgwMCDCoCBbVmVuZG9yIChub24tcGFnZSBmb3JtYXQpXQo+IC0tLS0tLS0tLS0tLS0tLQo+
+IDB4MDAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMHgwMAo+
+IDB4MDEgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgMHgwMAo+
+Cj4gW3Jvb3RAbG9jYWxob3N0IFRvb2xzXSMKPgo+IENvbXBhcmlzaW9uIGZvciBVU0IgSEREIGFu
+ZCBOb3JtYWwgSGFyZCBkaXNrIGNvbm5lY3RlZCB0byBzeXN0ZW0uKEZvcgo+IFVTQiBIREQgaXQg
+c2hvd2luZyBXcml0ZSBDYWNoZSAtIEZhbHNlLCBmb3Igbm9ybWFsIEhhcmQgZGlzayAtIFdyaXRl
+Cj4gQ2FjaGUgLSBUcnVlKQo+IFtyb290QGxvY2FsaG9zdCBUb29sc10jIHNnX21vZGVzIC0tcGFn
+ZT0weDNmIC9kZXYvc2RiCj4gwqAgwqBTQU1TVU5HIMKgIEhNNTAxSVggwqAgwqAgwqAgwqAgwqAg
+wqAgwqBwZXJpcGhlcmFsX3R5cGU6IGRpc2sgWzB4MF0KPiBNb2RlIHBhcmFtZXRlciBoZWFkZXIg
+ZnJvbSBNT0RFIFNFTlNFKDEwKToKPiDCoE1vZGUgZGF0YSBsZW5ndGg9NjYsIG1lZGl1bSB0eXBl
+PTB4MDAsIFdQPTAsIERwb0Z1YT0wLCBsb25nbGJhPTAKPiDCoEJsb2NrIGRlc2NyaXB0b3IgbGVu
+Z3RoPTAKPj4+IFJlYWQtV3JpdGUgZXJyb3IgcmVjb3ZlcnksIHBhZ2VfY29udHJvbDogY3VycmVu
+dAo+IMKgMDAgwqAgwqAgMDEgMGEgMDAgMDAgMDAgMDAgMDAgMDAgwqAwMCAwMCAwMCAwMAo+Pj4g
+RmxleGlibGUgZ2VvbWV0cnkgKG9ic29sZXRlKSwgcGFnZV9jb250cm9sOiBjdXJyZW50Cj4gwqAw
+MCDCoCDCoCAwNSAwYSBmZiBmZiAxMCAzZiAwMiAwMCDCoDNmIGZmIDAwIDAwCj4+PiBDYWNoaW5n
+LCBwYWdlX2NvbnRyb2w6IGN1cnJlbnQKPiDCoDAwIMKgIMKgIDA4IDEyIDAwIDAwIDAwIDAwIDAw
+IDAwIMKgMDAgMDAgMDAgMDAgMDEgMDAgMDAgMDAKPiDCoDEwIMKgIMKgIDAwIDAwIDAwIDAwCj4+
+PiBwYWdlX2NvZGU6IDB4MWIsIHBhZ2VfY29udHJvbDogY3VycmVudAo+IMKgMDAgwqAgwqAgMWIg
+MGEgMDAgMDEgMDAgMDAgMDAgMDAgwqAwMCAwMCAwMCAwMAo+Pj4gVW5pdCBBdHRlbnRpb24gY29u
+ZGl0aW9uIFt2ZW5kb3Igc3BlY2lmaWMgZm9ybWF0XSwgcGFnZV9jb250cm9sOiBjdXJyZW50Cj4g
+wqAwMCDCoCDCoCAwMCAwMAo+IFtyb290QGxvY2FsaG9zdCBUb29sc10jIHNnX21vZGVzIC0tcGFn
+ZT0weDNmIC9kZXYvc2RhCj4gwqAgwqBBVEEgwqAgwqAgwqAgU0FNU1VORyBIRDUwMkhKIMKgIDFB
+SjEgwqAgcGVyaXBoZXJhbF90eXBlOiBkaXNrIFsweDBdCj4gTW9kZSBwYXJhbWV0ZXIgaGVhZGVy
+IGZyb20gTU9ERSBTRU5TRSgxMCk6Cj4gwqBNb2RlIGRhdGEgbGVuZ3RoPTYwLCBtZWRpdW0gdHlw
+ZT0weDAwLCBXUD0wLCBEcG9GdWE9MCwgbG9uZ2xiYT0wCj4gwqBCbG9jayBkZXNjcmlwdG9yIGxl
+bmd0aD04Cj4+IERpcmVjdCBhY2Nlc3MgZGV2aWNlIGJsb2NrIGRlc2NyaXB0b3JzOgo+IMKgIERl
+bnNpdHkgY29kZT0weDAKPiDCoDAwIMKgIMKgIDAwIDAwIDAwIDAwIDAwIDAwIDAyIDAwCj4KPj4+
+IFJlYWQtV3JpdGUgZXJyb3IgcmVjb3ZlcnksIHBhZ2VfY29udHJvbDogY3VycmVudAo+IMKgMDAg
+wqAgwqAgMDEgMGEgODAgMDAgMDAgMDAgMDAgMDAgwqAwMCAwMCAwMCAwMAo+Pj4gQ2FjaGluZywg
+cGFnZV9jb250cm9sOiBjdXJyZW50Cj4gwqAwMCDCoCDCoCAwOCAxMiAwNCAwMCAwMCAwMCAwMCAw
+MCDCoDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwCj4gwqAxMCDCoCDCoCAwMCAwMCAwMCAwMAo+Pj4g
+Q29udHJvbCwgcGFnZV9jb250cm9sOiBjdXJyZW50Cj4gwqAwMCDCoCDCoCAwYSAwYSAwMiAwMCAw
+MCAwMCAwMCAwMCDCoGZmIGZmIDAwIDFlCj4gW3Jvb3RAbG9jYWxob3N0IFRvb2xzXSMKPgo+IE5v
+dywgZm9yIHRoZSBVU0IgSEREIHdoaWNoIGRvIGhhdmUgd3JpdGUgY2FjaGUgLSBzZ2luZm8gaXMg
+c2hvd2luZwo+IHRoZW0gdG8gV3JpdGUgQ2FjaGUgRW5hYmxlZCBhcyBmYWxzZS4KPiBXaHkgZG8g
+dGhlIHJlc3VsdCBvZiBoZHBhcm0gaWRlbnRpZmljYXRpb24gYW5kIHNnaW5mbyB2YXJpZXMtIChJ
+IGtub3cKPiB0aGV5IGhhdmUgZGlmZmVyZW50IGludGVyZmFjZSB0byB3b3JrIHdpdGggYW5kIGhk
+cGFybSB0YWtlcyBjYXJlIG9mCj4gdGhhdCBieSB1c2luZyBTR19JTyBpbnRlcmZhY2UgZnJvbSBp
+dCdzIGNvZGUpPyBoZHBhcm0gc2hvd2VkIG1lCj4gY29ycmVjdCByZXN1bHRzIC0gdGhhdCBsZWFk
+IG1lIHRvIGRpZ2dpbmcgaW4gdGhlIGtlcm5lbCBjb2RlIGFuZAo+IGNoZWNraW5nIHRoZSBwZXJm
+b3JtYW5jZSBmb3IgVVNCIEhERCB3aXRoIFdyaXRlIGNhY2hlIGVuYWJsZWQvZGlzYWJsZWQKPiAt
+IHdoaWNoIGFsc28gc2hvd2VkIHRoYXQgUVVFVUUgb3JkZXJpbmcgY2hvc2VuIGZvciBVU0IgSERE
+IGlzIG5vdAo+IGNvcnJlY3QuCj4gSSBoYXZlIGEgbGFyZ2UgbnVtYmVyIG9mIFVTQiBIREQncyAt
+IHdpdGggZGlmZmVyZW50IHZlbmRvcnMsIGFuZCBmb3IKPiBhbGwgb2YgdGhlbSAtIGl0IGlzIHNo
+b3dpbmcgV3JpdGUgQ2FjaGUgRW5hYmxlZCBhcyBmYWxzZS4KPiBUaGUgY29kZSB3b3JrcyBvbmx5
+IGZvciB0aGUgUGVuIERyaXZlcyBvciB0aGUgVVNCIEhERCB3aGljaCBkbyBub3QKPiBoYXZlIGlu
+dGVybmFsIGNhY2hlLgo+Cj4gQWxzbywgZm9yIGpvdXJuYWxsaW5nIGZpbGVzeXN0ZW0gYmVpbmcg
+dXNlZCBvbiBVU0IgSEREIC0gaXQgZG9lcwo+IGJlY29tZXMgYSBjYXVzZSBvZiBjb25jZXJuLgpG
+aWxlc3lzdGVtIGNhbiBub3QgcHJldmVudCBpbXBvcnRhbnQgZGF0YShleCwgam91bmFsIGRhdGEp
+IGJ5IHdydGl0ZQpiYXJyaWVyIG9uIHRoaXMgaXNzdWUuCndyaXRlIGJhcnJpZXIgc2hvdWxkIGJl
+IGFsc28gc3VwcG9ydCBvbiBVU0IgSEREKHVzYiBkcml2ZXIpIGxpa2UgQVRBIGRyaXZlci4KPgo+
+IFBsZWFzZSBzaGFyZSB5b3VyIG9waW5pb24sIEkgZ3Vlc3Mgd2UgbmVlZCBhIGNoYW5nZSBmb3Ig
+bW9kZSBzZW5zaW5nCj4gaW4gdGhlIGtlcm5lbCBjb2RlIGZvciBVU0IgSERELgo+Cj4gVGhhbmtz
+ICYgUmVnYXJkcywKPiBBbWl0IFNhaHJhd2F0Cj4KPgo+Cj4gT24gRnJpLCBTZXAgMzAsIDIwMTEg
+YXQgMTI6MDEgQU0sIEphbWVzIEJvdHRvbWxleQo+IDxKYW1lcy5Cb3R0b21sZXlAaGFuc2VucGFy
+dG5lcnNoaXAuY29tPiB3cm90ZToKPj4gT24gVGh1LCAyMDExLTA5LTI5IGF0IDEzOjI3IC0wNTAw
+LCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6Cj4+PiBPbiBUaHUsIDIwMTEtMDktMjkgYXQgMTQ6NDkg
+KzA1MzAsIEFtaXQgU2FocmF3YXQgd3JvdGU6Cj4+PiA+IFRoZSBwYXRjaCBkaWQgbm90IHdvcmss
+IGFsdGhvdWdoIGl0IGRpZCBnZXQgcGFzcyB0aGUgZWFybGllciBjb25kaXRpb24KPj4+ID4gd2hp
+Y2ggSSBtZW50aW9uZWQtIGJ1dCBzdGlsbCBXcml0ZSBDYWNoZSBpcyBub3QgdGFrZW4gaW50byBh
+Y2NvdW50IOKAkwo+Pj4gPiBzZWVtcyBtb2RlIHNlbnNpbmcgaW4gc2RfcmVhZF9jYWNoZV90eXBl
+KCkgZG9lcyBub3Qgc2VuZCBwcm9wZXIKPj4+ID4gcmVxdWVzdCB0byB0aGUgZGV2aWNlIOKAkyBv
+ciBkb2VzIG5vdCByZWFkIGluIHByb3BlciBieXRlcyBmb3IgdGhpcyhhcwo+Pj4gPiBwZXIgaGRw
+YXJtIGNvbW1hbmQgYW5hbHlzaXMpOgo+Pj4gPgo+Pj4gPiBMb2dzIEFmdGVyIENvbm5lY3Rpbmc6
+Cj4+PiA+IHNjc2kgMDowOjA6MDogRGlyZWN0LUFjY2VzcyDCoCDCoCBTZWFnYXRlIMKgUG9ydGFi
+bGUgwqAgwqAgwqAgwqAgMDEzMCBQUTogMCBBTlNJOiA0Cj4+PiA+IHNkIDA6MDowOjA6IFtzZGFd
+IDQ4ODM5NzE2OCA1MTItYnl0ZSBsb2dpY2FsIGJsb2NrczogKDI1MCBHQi8yMzIgR2lCKQo+Pj4g
+PiBzZCAwOjA6MDowOiBbc2RhXSBXcml0ZSBQcm90ZWN0IGlzIG9mZgo+Pj4gPiBzZCAwOjA6MDow
+OiBbc2RhXSBObyBDYWNoaW5nIG1vZGUgcGFnZSBwcmVzZW50Cj4+Pgo+Pj4gVGhpcyBsaW5lIG1l
+YW5zIHRoYXQgYSByZXF1ZXN0IGZvciBwYWdlIDB4MCBkaWRuJ3QgdHVybiB1cCB0aGUgY2FjaGlu
+Zwo+Pj4gbW9kZSBwYWdlIGluIHRoZSBsaXN0IG9mIHN1cHBvcnRlZCBwYWdlcy4KPj4+Cj4+PiBX
+aGF0IGRvZXMKPj4+Cj4+PiBzZ19pbnEgwqAtLXBhZ2U9MHgwIC9kZXYvc2RhCj4+Cj4+IFVtLCBs
+ZXRzIHRyeSB0aGF0IGFnYWluLCB0aGlzIHRpbWUgd2l0aCB0aGUgY29ycmVjdCBpbmZvcm1hdGlv
+bi4gwqBXaGF0Cj4+IHdlJ3JlIGxvb2tpbmcgZm9yIGlzIHRoZSBsaXN0IG9mIG1vZGUgcGFnZXMs
+IHNvCj4+Cj4+IHNnX21vZGVzIC0tcGFnZT0weDNmIC9kZXYvc2RhCj4+Cj4+IFNob3VsZCByZXR1
+cm4gaXQuCj4+Cj4+IFRoYW5rcywKPj4KPj4gSmFtZXMKPj4KPj4KPj4KPiAtLQo+IFRvIHVuc3Vi
+c2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1r
+ZXJuZWwiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5l
+bC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0IMKgaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
+YWpvcmRvbW8taW5mby5odG1sCj4gUGxlYXNlIHJlYWQgdGhlIEZBUSBhdCDCoGh0dHA6Ly93d3cu
+dHV4Lm9yZy9sa21sLwo+Cg==
