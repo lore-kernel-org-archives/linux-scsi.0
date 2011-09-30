@@ -1,46 +1,150 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/4] target: LUN_RESET bugfixes for HW target mode
-Date: Fri, 30 Sep 2011 04:55:07 +0000
-Message-ID: <1317358511-10664-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 1/4] target: Prevent cmd->se_queue_node double add
+Date: Fri, 30 Sep 2011 04:55:08 +0000
+Message-ID: <1317358511-10664-2-git-send-email-nab@linux-iscsi.org>
+References: <1317358511-10664-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1317358511-10664-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Roland Dreier <roland@purestorage.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Roland Dreier <roland@purestorage.com>
 
-Hi folks,
+This patch addresses a bug with the lio-core-2.6.git conversion of
+transport_add_cmd_to_queue() to use a single embedded list_head, instead
+of individual struct se_queue_req allocations allowing a single se_cmd to
+be added to the queue mulitple times.  This was changed in the following:
 
-This patch series addresses a number of issues that have come up recently for
-TMR LUN_RESET operation with HW target mode + qla2xxx/tcm_qla2xxx code.  Aside
-from the various bugfixes in this series, the big change is the re-org of
-core_tmr_lun_reset() logic to prevent possible list corruption while scanning
-the various lists and breaking this out of this code into seperate functions.
+commit 2a9e4d5ca5d99f4c600578d6285d45142e7e5208
+Author: Andy Grover <agrover@redhat.com>
+Date:   Tue Apr 26 17:45:51 2011 -0700
 
-I know the re-org patch diff is very difficult to read without more context, so
-apologies ahead of time for that.  At this point it makes sense to queue these
-for v3.2, and CC stable to ensure they are also picked up for v3.1 target code
-as well.
+    target: Embed qr in struct se_cmd
 
-Please let us know if you have any comments.
+The problem is that some target code still assumes performing multiple
+adds is allowed via transport_add_cmd_to_queue(), which ends up causing
+list corruption in qobj->qobj_list code.  This patch addresses this
+by removing an existing struct se_cmd from the list before the add, and
+removes an unnecessary list walk in transport_remove_cmd_from_queue()
 
-Thank you,
+It also changes cmd->t_transport_queue_active to use explict sets intead
+of increment/decrement to prevent confusion during exception path handling.
 
---nab
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Cc: Andy Grover <agrover@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
+---
+ drivers/target/target_core_tmr.c       |    2 +-
+ drivers/target/target_core_transport.c |   31 +++++++++++++++----------------
+ 2 files changed, 16 insertions(+), 17 deletions(-)
 
-Nicholas Bellinger (3):
-  target: Re-org of core_tmr_lun_reset + FREE_CMD_INTR bugfix
-  target: Fix transport_cmd_finish_abort queue removal bug
-  target: Prevent transport_send_task_abort when CHECK_CONDITION status
-
-Roland Dreier (1):
-  target: Prevent cmd->se_queue_node double add
-
- drivers/target/target_core_tmr.c       |  228 ++++++++++++++++++++------------
- drivers/target/target_core_transport.c |   45 ++++---
- 2 files changed, 169 insertions(+), 104 deletions(-)
-
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 27d4925..7bce92f 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -340,7 +340,7 @@ int core_tmr_lun_reset(
+ 
+ 		atomic_dec(&cmd->t_transport_queue_active);
+ 		atomic_dec(&qobj->queue_cnt);
+-		list_del(&cmd->se_queue_node);
++		list_del_init(&cmd->se_queue_node);
+ 		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+ 		pr_debug("LUN_RESET: %s from Device Queue: cmd: %p t_state:"
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 315790e..86470b7 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -624,8 +624,6 @@ static void transport_add_cmd_to_queue(
+ 	struct se_queue_obj *qobj = &dev->dev_queue_obj;
+ 	unsigned long flags;
+ 
+-	INIT_LIST_HEAD(&cmd->se_queue_node);
+-
+ 	if (t_state) {
+ 		spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 		cmd->t_state = t_state;
+@@ -634,15 +632,21 @@ static void transport_add_cmd_to_queue(
+ 	}
+ 
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
++
++	/* If the cmd is already on the list, remove it before we add it */
++	if (!list_empty(&cmd->se_queue_node))
++		list_del(&cmd->se_queue_node);
++	else
++		atomic_inc(&qobj->queue_cnt);
++
+ 	if (cmd->se_cmd_flags & SCF_EMULATE_QUEUE_FULL) {
+ 		cmd->se_cmd_flags &= ~SCF_EMULATE_QUEUE_FULL;
+ 		list_add(&cmd->se_queue_node, &qobj->qobj_list);
+ 	} else
+ 		list_add_tail(&cmd->se_queue_node, &qobj->qobj_list);
+-	atomic_inc(&cmd->t_transport_queue_active);
++	atomic_set(&cmd->t_transport_queue_active, 1);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+-	atomic_inc(&qobj->queue_cnt);
+ 	wake_up_interruptible(&qobj->thread_wq);
+ }
+ 
+@@ -659,9 +663,9 @@ transport_get_cmd_from_queue(struct se_queue_obj *qobj)
+ 	}
+ 	cmd = list_first_entry(&qobj->qobj_list, struct se_cmd, se_queue_node);
+ 
+-	atomic_dec(&cmd->t_transport_queue_active);
++	atomic_set(&cmd->t_transport_queue_active, 0);
+ 
+-	list_del(&cmd->se_queue_node);
++	list_del_init(&cmd->se_queue_node);
+ 	atomic_dec(&qobj->queue_cnt);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+@@ -671,7 +675,6 @@ transport_get_cmd_from_queue(struct se_queue_obj *qobj)
+ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		struct se_queue_obj *qobj)
+ {
+-	struct se_cmd *t;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
+@@ -679,14 +682,9 @@ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 		return;
+ 	}
+-
+-	list_for_each_entry(t, &qobj->qobj_list, se_queue_node)
+-		if (t == cmd) {
+-			atomic_dec(&cmd->t_transport_queue_active);
+-			atomic_dec(&qobj->queue_cnt);
+-			list_del(&cmd->se_queue_node);
+-			break;
+-		}
++	atomic_set(&cmd->t_transport_queue_active, 0);
++	atomic_dec(&qobj->queue_cnt);
++	list_del_init(&cmd->se_queue_node);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+ 	if (atomic_read(&cmd->t_transport_queue_active)) {
+@@ -1070,7 +1068,7 @@ static void transport_release_all_cmds(struct se_device *dev)
+ 	list_for_each_entry_safe(cmd, tcmd, &dev->dev_queue_obj.qobj_list,
+ 				 se_queue_node) {
+ 		t_state = cmd->t_state;
+-		list_del(&cmd->se_queue_node);
++		list_del_init(&cmd->se_queue_node);
+ 		spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock,
+ 				flags);
+ 
+@@ -1601,6 +1599,7 @@ void transport_init_se_cmd(
+ 	INIT_LIST_HEAD(&cmd->se_delayed_node);
+ 	INIT_LIST_HEAD(&cmd->se_ordered_node);
+ 	INIT_LIST_HEAD(&cmd->se_qf_node);
++	INIT_LIST_HEAD(&cmd->se_queue_node);
+ 
+ 	INIT_LIST_HEAD(&cmd->t_task_list);
+ 	init_completion(&cmd->transport_lun_fe_stop_comp);
 -- 
 1.7.2.5
 
