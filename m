@@ -1,103 +1,143 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT PULL] libsas updates for 3.2
-Date: Fri, 30 Sep 2011 19:04:04 -0700
-Message-ID: <CAA9_cmfVABbV5Y-tsn5BESmgoxiF=2cgUzmcmfDu0_M9v2dwqA@mail.gmail.com>
-References: <1317261664.22593.15.camel@dwillia2-linux>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 03/26] scsi/mvsas: use proper namespace for IRQ_* symbols
+Date: Sat,  1 Oct 2011 22:03:35 +0200
+Message-ID: <1317499438-14058-4-git-send-email-arnd@arndb.de>
+References: <1317499438-14058-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:56392 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009Ab1JACEF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2011 22:04:05 -0400
-Received: by qadb15 with SMTP id b15so698022qad.19
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Sep 2011 19:04:05 -0700 (PDT)
-In-Reply-To: <1317261664.22593.15.camel@dwillia2-linux>
+Received: from moutng.kundenserver.de ([212.227.126.171]:57499 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958Ab1JAUE7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Oct 2011 16:04:59 -0400
+In-Reply-To: <1317499438-14058-1-git-send-email-arnd@arndb.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@parallels.com>
-Cc: Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>, Dave Jiang <dave.jiang@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Eric Miao <eric.y.miao@gmail.com>
+Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Jason Chagas <jason.chagas@marvell.com>, Haojian Zhuang <haojian.zhuang@marvell.com>, Arnd Bergmann <arnd@arndb.de>, Xiangliang Yu <yuxiangl@marvell.com>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On Wed, Sep 28, 2011 at 7:01 PM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> The following changes since commit 41e9a69641fb3fa86fa9277a179f3ad261=
-d072f7:
->
-> =A0[SCSI] ipr: Stop reading adapter dump prematurely (2011-09-22 15:3=
-0:28 +0400)
->
-> are available in the git repository at:
-> =A0git://github.com:djbw/linux.git libsas
->
-> These have all appeared on the mailing list previously save for the l=
-ast
-> one "libsas: remove unused ata_task_resp fields" (just a cleanup).
->
-> Just a convenience branch since isci's atapi support needed the lun
-> scanning fixup as a baseline.
->
+The identifiers in the mvsas driver conflict with platform specific
+interrupt definitions of the same name, so better prefix them
+with MVS_ to avoid the collision.
 
-Given that none of the patches on the libsas-fixes branch would pass
-Linus' "does this fix a known regression" test for late rc changes I
-have gone ahead and moved those patches over to the libsas branch.  No
-other changes have been made.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
+Cc: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/mvsas/mv_94xx.c |   10 +++---
+ drivers/scsi/mvsas/mv_94xx.h |   58 +++++++++++++++++++++---------------------
+ 2 files changed, 34 insertions(+), 34 deletions(-)
 
-The locking fix might be a consideration, but since it has been this
-way for quite a few releases we can wait for the 3.2 merge and submit
-it to -stable.
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index 3501291..9c12e03 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -534,7 +534,7 @@ static void mvs_94xx_interrupt_enable(struct mvs_info *mvi)
+ 	u32 tmp;
+ 
+ 	tmp = mr32(MVS_GBL_CTL);
+-	tmp |= (IRQ_SAS_A | IRQ_SAS_B);
++	tmp |= (MVS_IRQ_SAS_A | MVS_IRQ_SAS_B);
+ 	mw32(MVS_GBL_INT_STAT, tmp);
+ 	writel(tmp, regs + 0x0C);
+ 	writel(tmp, regs + 0x10);
+@@ -550,7 +550,7 @@ static void mvs_94xx_interrupt_disable(struct mvs_info *mvi)
+ 
+ 	tmp = mr32(MVS_GBL_CTL);
+ 
+-	tmp &= ~(IRQ_SAS_A | IRQ_SAS_B);
++	tmp &= ~(MVS_IRQ_SAS_A | MVS_IRQ_SAS_B);
+ 	mw32(MVS_GBL_INT_STAT, tmp);
+ 	writel(tmp, regs + 0x0C);
+ 	writel(tmp, regs + 0x10);
+@@ -566,7 +566,7 @@ static u32 mvs_94xx_isr_status(struct mvs_info *mvi, int irq)
+ 	if (!(mvi->flags & MVF_FLAG_SOC)) {
+ 		stat = mr32(MVS_GBL_INT_STAT);
+ 
+-		if (!(stat & (IRQ_SAS_A | IRQ_SAS_B)))
++		if (!(stat & (MVS_IRQ_SAS_A | MVS_IRQ_SAS_B)))
+ 			return 0;
+ 	}
+ 	return stat;
+@@ -576,8 +576,8 @@ static irqreturn_t mvs_94xx_isr(struct mvs_info *mvi, int irq, u32 stat)
+ {
+ 	void __iomem *regs = mvi->regs;
+ 
+-	if (((stat & IRQ_SAS_A) && mvi->id == 0) ||
+-			((stat & IRQ_SAS_B) && mvi->id == 1)) {
++	if (((stat & MVS_IRQ_SAS_A) && mvi->id == 0) ||
++			((stat & MVS_IRQ_SAS_B) && mvi->id == 1)) {
+ 		mw32_f(MVS_INT_STAT, CINT_DONE);
+ 
+ 		spin_lock(&mvi->lock);
+diff --git a/drivers/scsi/mvsas/mv_94xx.h b/drivers/scsi/mvsas/mv_94xx.h
+index 8f7eb4f..5bc7656 100644
+--- a/drivers/scsi/mvsas/mv_94xx.h
++++ b/drivers/scsi/mvsas/mv_94xx.h
+@@ -150,35 +150,35 @@ enum chip_register_bits {
+ 
+ enum pci_interrupt_cause {
+ 	/*  MAIN_IRQ_CAUSE (R10200) Bits*/
+-	IRQ_COM_IN_I2O_IOP0            = (1 << 0),
+-	IRQ_COM_IN_I2O_IOP1            = (1 << 1),
+-	IRQ_COM_IN_I2O_IOP2            = (1 << 2),
+-	IRQ_COM_IN_I2O_IOP3            = (1 << 3),
+-	IRQ_COM_OUT_I2O_HOS0           = (1 << 4),
+-	IRQ_COM_OUT_I2O_HOS1           = (1 << 5),
+-	IRQ_COM_OUT_I2O_HOS2           = (1 << 6),
+-	IRQ_COM_OUT_I2O_HOS3           = (1 << 7),
+-	IRQ_PCIF_TO_CPU_DRBL0          = (1 << 8),
+-	IRQ_PCIF_TO_CPU_DRBL1          = (1 << 9),
+-	IRQ_PCIF_TO_CPU_DRBL2          = (1 << 10),
+-	IRQ_PCIF_TO_CPU_DRBL3          = (1 << 11),
+-	IRQ_PCIF_DRBL0                 = (1 << 12),
+-	IRQ_PCIF_DRBL1                 = (1 << 13),
+-	IRQ_PCIF_DRBL2                 = (1 << 14),
+-	IRQ_PCIF_DRBL3                 = (1 << 15),
+-	IRQ_XOR_A                      = (1 << 16),
+-	IRQ_XOR_B                      = (1 << 17),
+-	IRQ_SAS_A                      = (1 << 18),
+-	IRQ_SAS_B                      = (1 << 19),
+-	IRQ_CPU_CNTRL                  = (1 << 20),
+-	IRQ_GPIO                       = (1 << 21),
+-	IRQ_UART                       = (1 << 22),
+-	IRQ_SPI                        = (1 << 23),
+-	IRQ_I2C                        = (1 << 24),
+-	IRQ_SGPIO                      = (1 << 25),
+-	IRQ_COM_ERR                    = (1 << 29),
+-	IRQ_I2O_ERR                    = (1 << 30),
+-	IRQ_PCIE_ERR                   = (1 << 31),
++	MVS_IRQ_COM_IN_I2O_IOP0            = (1 << 0),
++	MVS_IRQ_COM_IN_I2O_IOP1            = (1 << 1),
++	MVS_IRQ_COM_IN_I2O_IOP2            = (1 << 2),
++	MVS_IRQ_COM_IN_I2O_IOP3            = (1 << 3),
++	MVS_IRQ_COM_OUT_I2O_HOS0           = (1 << 4),
++	MVS_IRQ_COM_OUT_I2O_HOS1           = (1 << 5),
++	MVS_IRQ_COM_OUT_I2O_HOS2           = (1 << 6),
++	MVS_IRQ_COM_OUT_I2O_HOS3           = (1 << 7),
++	MVS_IRQ_PCIF_TO_CPU_DRBL0          = (1 << 8),
++	MVS_IRQ_PCIF_TO_CPU_DRBL1          = (1 << 9),
++	MVS_IRQ_PCIF_TO_CPU_DRBL2          = (1 << 10),
++	MVS_IRQ_PCIF_TO_CPU_DRBL3          = (1 << 11),
++	MVS_IRQ_PCIF_DRBL0                 = (1 << 12),
++	MVS_IRQ_PCIF_DRBL1                 = (1 << 13),
++	MVS_IRQ_PCIF_DRBL2                 = (1 << 14),
++	MVS_IRQ_PCIF_DRBL3                 = (1 << 15),
++	MVS_IRQ_XOR_A                      = (1 << 16),
++	MVS_IRQ_XOR_B                      = (1 << 17),
++	MVS_IRQ_SAS_A                      = (1 << 18),
++	MVS_IRQ_SAS_B                      = (1 << 19),
++	MVS_IRQ_CPU_CNTRL                  = (1 << 20),
++	MVS_IRQ_GPIO                       = (1 << 21),
++	MVS_IRQ_UART                       = (1 << 22),
++	MVS_IRQ_SPI                        = (1 << 23),
++	MVS_IRQ_I2C                        = (1 << 24),
++	MVS_IRQ_SGPIO                      = (1 << 25),
++	MVS_IRQ_COM_ERR                    = (1 << 29),
++	MVS_IRQ_I2O_ERR                    = (1 << 30),
++	MVS_IRQ_PCIE_ERR                   = (1 << 31),
+ };
+ 
+ union reg_phy_cfg {
+-- 
+1.7.5.4
 
---
-Dan
-
-The following changes since commit 41e9a69641fb3fa86fa9277a179f3ad261d0=
-72f7:
-
-  [SCSI] ipr: Stop reading adapter dump prematurely (2011-09-22 15:30:2=
-8 +0400)
-
-are available in the git repository at:
-  git://github.com/djbw/linux.git libsas
-
-Dan Williams (9):
-      libsas: disable scanning lun > 0 on ata devices
-      libsas: fix ->change_queue_{depth|type} for sata devices
-      libsas: dynamic queue depth
-      mvsas: remove mvs_slave_{alloc|configure}
-      pm8001: remove pm8001_slave_{alloc|configure}
-      libsas: fix try_test_sas_gpio_gp_bit() build error
-      libsas: remove unused ata_task_resp fields
-      libsas: fix warnings when checking sata/stp protocol
-      libsas: fix port->dev_list locking
-
-Jack Wang (1):
-      libsas: set rphy sas_address and device type correctly
-
-Luben Tuikov (1):
-      libsas: Allow expander T-T attachments
-
- drivers/ata/libata-core.c           |    1 +
- drivers/ata/libata-scsi.c           |   44 +++++++++++++++++++++++----=
---------
- drivers/scsi/libsas/sas_ata.c       |    4 ---
- drivers/scsi/libsas/sas_discover.c  |   13 ++++++----
- drivers/scsi/libsas/sas_expander.c  |   37 +++++++++++++++++++--------=
--
- drivers/scsi/libsas/sas_scsi_host.c |   42 +++++++++++++++++++--------=
-------
- drivers/scsi/mvsas/mv_init.c        |    4 +-
- drivers/scsi/mvsas/mv_sas.c         |   30 -----------------------
- drivers/scsi/mvsas/mv_sas.h         |    2 -
- drivers/scsi/pm8001/pm8001_init.c   |    4 +-
- drivers/scsi/pm8001/pm8001_sas.c    |   31 +-----------------------
- drivers/scsi/pm8001/pm8001_sas.h    |    2 -
- drivers/scsi/scsi_transport_sas.c   |   10 ++++++-
- include/linux/libata.h              |    2 +
- include/scsi/libsas.h               |   19 ++++++++------
- include/scsi/sas.h                  |   15 ++++++++++-
- 16 files changed, 126 insertions(+), 134 deletions(-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
