@@ -1,43 +1,41 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target: unlock on error in pscsi_create_virtdevice()
-Date: Sun, 2 Oct 2011 01:59:13 +0300
-Message-ID: <20111001225913.GA15072@elgon.mountain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFT PATCH] libsas: fix port->dev_list locking
+Date: Sun, 02 Oct 2011 12:18:53 -0500
+Message-ID: <1317575933.5067.7.camel@dabdike.int.hansenpartnership.com>
+References: <20110922050125.32188.27056.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:57336 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035Ab1JAW7Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 1 Oct 2011 18:59:24 -0400
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57778 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751596Ab1JBRS4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Oct 2011 13:18:56 -0400
+In-Reply-To: <20110922050125.32188.27056.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>, Mark Salyzyn <msalyzyn@us.xyratex.com>, Christoph Hellwig <hch@lst.de>, Luben Tuikov <ltuikov@yahoo.com>, Jack Wang <jack_wang@usish.com>
 
-This function should take the lock on success but on the error cases
-it doesn't.
+On Wed, 2011-09-21 at 22:05 -0700, Dan Williams wrote:
+> port->dev_list maintains a list of devices attached to a given sas root port.
+> It needs to be mutated under a lock as contexts outside of the
+> single-threaded-libsas-workqueue access the list via sas_find_dev_by_rphy().
+> Fixup locations where the list was being mutated without a lock.
+> 
+> This is a follow-up to commit 5911e963 "[SCSI] libsas: remove expander
+> from dev list on error", where Luben noted [1]:
+> 
+>     > 2/ We have unlocked list manipulations in sas_ex_discover_end_dev(),
+>     > sas_unregister_common_dev(), and sas_ex_discover_end_dev()
+> 
+>     Yes, I can see that and that is very unfortunate.
+> 
+> [1]: http://marc.info/?l=linux-scsi&m=131480962006471&w=2
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Since this call for testing was issued 11 days ago, did anyone actually
+test this patch?
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index ba9e94d..b619596 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -567,7 +567,7 @@ static struct se_device *pscsi_create_virtdevice(
- 			if (IS_ERR(sh)) {
- 				pr_err("pSCSI: Unable to locate"
- 					" pdv_host_id: %d\n", pdv->pdv_host_id);
--				return (struct se_device *) sh;
-+				return ERR_CAST(sh);
- 			}
- 		}
- 	} else {
-@@ -609,6 +609,7 @@ static struct se_device *pscsi_create_virtdevice(
- 				hba->hba_flags &= ~HBA_FLAGS_PSCSI_MODE;
- 			}
- 			pdv->pdv_sd = NULL;
-+			spin_unlock_irq(sh->host_lock);
- 			return ERR_PTR(-ENODEV);
- 		}
- 		return dev;
+James
+
+
