@@ -1,58 +1,55 @@
-From: Dave Kleikamp <dave.kleikamp@oracle.com>
-Subject: [PATCH] [SCSI] remove arbitrary SD_MAX_DISKS namespace limit
-Date: Mon, 03 Oct 2011 11:47:29 -0500
-Message-ID: <4E89E721.7000308@oracle.com>
+From: <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 01/13] qla4xxx: Add new FLT firmware region
+Date: Mon, 3 Oct 2011 10:29:15 -0700
+Message-ID: <1317662967-30110-2-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1317662967-30110-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:56385 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751640Ab1JCQrk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 12:47:40 -0400
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:44835
+	"EHLO DB3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756202Ab1JCRky (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 13:40:54 -0400
+In-Reply-To: <1317662967-30110-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Nilesh Javali <nilesh.javali@qlogic.com>
 
-I see no reason to limit the SCSI disk namespace to sdXXX. We test
-systems with more than 18278 LUNs.
+From: Nilesh Javali <nilesh.javali@qlogic.com>
 
-Signed-off-by: Dave Kleikamp <dave.kleikamp@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_fw.h |    1 +
+ drivers/scsi/qla4xxx/ql4_nx.c |    1 +
+ 2 files changed, 2 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 953773c..741c7f7 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2592,12 +2592,6 @@ static int sd_probe(struct device *dev)
- 	if (error)
- 		goto out_put;
- 
--	if (index >= SD_MAX_DISKS) {
--		error = -ENODEV;
--		sdev_printk(KERN_WARNING, sdp, "SCSI disk (sd) name space exhausted.\n");
--		goto out_free_index;
--	}
--
- 	error = sd_format_disk_name("sd", index, gd->disk_name, DISK_NAME_LEN);
- 	if (error)
- 		goto out_free_index;
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 6ad798b..4163f29 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -9,12 +9,6 @@
- #define SD_MAJORS	16
- 
- /*
-- * This is limited by the naming scheme enforced in sd_probe,
-- * add another character to it if you really need more disks.
-- */
--#define SD_MAX_DISKS	(((26 * 26) + 26 + 1) * 26)
--
--/*
-  * Time out in seconds for disks and Magneto-opticals (which are slower).
-  */
- #define SD_TIMEOUT		(30 * HZ)
+diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
+index 0e24c7a..597875f 100644
+--- a/drivers/scsi/qla4xxx/ql4_fw.h
++++ b/drivers/scsi/qla4xxx/ql4_fw.h
+@@ -306,6 +306,7 @@ struct qla_flt_header {
+ #define FLT_REG_FLT		0x1c
+ #define FLT_REG_BOOTLOAD_82	0x72
+ #define FLT_REG_FW_82		0x74
++#define FLT_REG_FW_82_1		0x97
+ #define FLT_REG_GOLD_FW_82	0x75
+ #define FLT_REG_BOOT_CODE_82	0x78
+ #define FLT_REG_ISCSI_PARAM	0x65
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index a539e17..84c254a 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -2015,6 +2015,7 @@ qla4_8xxx_get_flt_info(struct scsi_qla_host *ha, uint32_t flt_addr)
+ 			hw->flt_region_boot = start;
+ 			break;
+ 		case FLT_REG_FW_82:
++		case FLT_REG_FW_82_1:
+ 			hw->flt_region_fw = start;
+ 			break;
+ 		case FLT_REG_BOOTLOAD_82:
+-- 
+1.7.6
+
+
