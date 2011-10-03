@@ -1,145 +1,95 @@
-From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
-Subject: RE: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
-Date: Mon, 3 Oct 2011 08:58:29 -0700
-Message-ID: <FC1F9E38C0703341A1A750524E2525A9018AE726@XYUS-EX22.xyus.xyratex.com>
-References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com><1316691000.10571.6.camel@dabdike><FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com><A94E3BEBF01D46D5B15046388D9F7DE7@usish.com.cn> <CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com> <FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: =?windows-1252?Q?Re=3A_BUG_in_kernel=3A_Wrong_Handling?=
+ =?windows-1252?Q?_of_USB_HDD=92s_in_scsiglue=28slave=5Fconfigu?=
+ =?windows-1252?Q?re=29_and_scsi/sd=28sd=5Fread=5Fcache=5Ftype=29?=
+Date: Mon, 03 Oct 2011 18:06:17 +0200
+Message-ID: <4E89DD79.6020306@interlog.com>
+References: <Pine.LNX.4.44L0.1110031008190.1882-100000@iolanthe.rowland.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog106.obsmtp.com ([207.126.144.121]:55640 "EHLO
-	eu1sys200aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756249Ab1JCP6t convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 3 Oct 2011 11:58:49 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com>
+Received: from smtp.infotech.no ([82.134.31.41]:38383 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751291Ab1JCQGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Oct 2011 12:06:22 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1110031008190.1882-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Jack Wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, Darrick Wong <djwong@us.ibm.com>, Xiangliang Yu <yuxiangl@marvell.com>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <jbottomley@parallels.com>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 
-I am talking to myself ;->. Dan (et al), I inspected deeper and I
-*think* I see the culprit in sas_deform_port().
-
-Could the problem be that the code should have been refactored to:
-
-+	BUG_ON(!phy->port);
-	sas_port_delete_phy(phy->port, phy->phy);
--	if (phy->port->num_phys == 0)
-+	if (phy->port->num_phys == 0) {
-	        sas_port_delete(phy->port);
--	phy->port = NULL;
-+		phy->port = NULL;
-+	}
-
-And also fixed up is sas_ex_discover_end_dev() at out_err (this is on
-soft territory, need to dig into sas_port_delete):
-
- out_free:
--       sas_port_delete(phy->port);
-+	  if (phy->port->num_phys == 0) {
-+	       sas_port_delete(phy->port);
- out_err:
--       phy->port = NULL;
-+	       phy->port = NULL;
-+	  }
-
-And finally in sas_prot.c at sas_deform_port() (simplified, I still view
-this as split-brained though):
-
-        if (port->num_phys == 1) {
-                if (dev && gone)
-                        dev->gone = 1;
-                sas_unregister_domain_devices(port);
-                sas_port_delete(port->port);
-                port->port = NULL;
--       } else
-+	  } else {
-                sas_port_delete_phy(port->port, phy->phy);
-+		    if (si->dft->lldd_port_deformed)
-+				si->dfp->lldd_port_deformed(phy);
-+		    return;
-+	  }
-
-        if (si->dft->lldd_port_deformed)
-                si->dft->lldd_port_deformed(phy);
-
-        spin_lock_irqsave(&sas_ha->phy_port_lock, flags);
-        spin_lock(&port->phy_list_lock);
-
-        list_del_init(&phy->port_phy_el);
-        phy->port = NULL;
-        port->num_phys--;
-        port->phy_mask &= ~(1U << phy->id);
-
-        if (port->num_phys == 0) {
-                INIT_LIST_HEAD(&port->phy_list);
-                memset(port->sas_addr, 0, SAS_ADDR_SIZE);
-                memset(port->attached_sas_addr, 0, SAS_ADDR_SIZE);
-                port->class = 0;
-                port->iproto = 0;
-                port->tproto = 0;
-                port->oob_mode = 0;
-                port->phy_mask = 0;
-        }
-        spin_unlock(&port->phy_list_lock);
-        spin_unlock_irqrestore(&sas_ha->phy_port_lock, flags);
-
-        return;
-
-The way I see it, sas_deform_port() is the culprit that is clearing out
-phy->port when the num_phys is equal to two, falling through and
-decrementing the count one more time.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Mark Salyzyn
-Sent: Monday, October 03, 2011 9:08 AM
-To: Dan Williams; Jack Wang
-Cc: linux-scsi@vger.kernel.org; Darrick Wong; Xiangliang Yu; Luben
-Tuikov; James Bottomley
-Subject: RE: [PATCH] [SCSI] libsas panic when single phy disabled on a
-wide port
-
-100% agree with Dan! In fact it is my fault for not digging deeper when
-I had the duplication relatively close at hand (but production pressures
-had me move on, in my defense). I definitely attacked the symptom. The
-patch is a piece of hardening, which can remain as paranoia after the
-root cause has properly been discovered (turned into a BUG() likely).
-
-I have lost the resources to duplicate this problem at the moment.
-
-Sincerely -- Mark Salyzyn
-
------Original Message-----
-From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
-Behalf Of Dan Williams
-Sent: Friday, September 30, 2011 9:43 PM
-To: Jack Wang
-Cc: Mark Salyzyn; linux-scsi@vger.kernel.org; Darrick Wong; Xiangliang
-Yu; Luben Tuikov; James Bottomley
-Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a
-wide port
-
-On Thu, Sep 29, 2011 at 7:21 PM, Jack Wang <jack_wang@usish.com> wrote:
-> I can reproduce this bug, so I'm ok to get this fix in.
+On 11-10-03 04:25 PM, Alan Stern wrote:
+> On Mon, 3 Oct 2011, Amit Sahrawat wrote:
 >
+>> Hi,
+>>
+>> Please find the USB Analyzer - logs for '6' USB based Mass Storage
+>> devices attached.
+>
+> Too bad the analyzer log presents only the response, not the command.
+>
+>> So, only for one of the USB HDD(Seagate - Free Agent), the response
+>> obtained is correct.
+>
+> I don't understand the format of the Seagate Free Agent MODE SENSE
+> data.  Maybe someone else can interpret it; here it is for reference:
+>
+> SCSI Op(3) ADDR(4) Tag(0x00000004) SCSI CDB MODE SENSE(6)
+> _______| Data(
+> __ 000: 1C 00 00 00 86 0B 00 02 00 00 12 A1 9E B0 3C 01 00 1A 0A 00 01 00 00 00 00 00 00 0B B8 00 00 00
+> __ 032: 00 00 00 00 1A 0A 00 01 00 00 00 00 00 00 0B B8 A2 06 00 00 00 00 00 00 78 20 55 53 42 32 2E 30
+> __ 064: 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 20 7F FF 00 00 00 00 80 FA 0B C2 50 21 4E 41 30 42
+> __ 096: 36 58 33 4C 00 30 00 00 00 32 43 46 45 39 42 00 70 F5 12 00 74 FF 00 00 00 00 00 00 00 00 00 00
+> __ 128: 3C 00 00 0B B8 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 02 50 01
+> __ 160: 46 72 65 65 41 67 65 6E 74 20 47 6F 46 6C 65 78 10 50 11 46 72 65 65 41 67 65 6E 74 20 47 6F 46)
 
-Mark admits this is a band aid.  I'd like to understand the root cause
-of why the port is NULL here.
-______________________________________________________________________
-This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
- 
-Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
- 
-Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
- 
-The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
-______________________________________________________________________
- 
+The RBC device parameters mode page followed by a Power
+Condition mode page. The RBC device parameters mode page
+is the only SCSI page I have seen (mode, log, VPD, etc)
+with a 5 byte field!
+
+Decoded response to a probable MODE SENSE(6) "fetch all
+pages" command:
+   RBC device parameters mpage:
+     WCD=0 [double negative: write cache enabled]
+     Logical block size: 512 bytes
+     Number of logical blocks: 0x12A19EB0 *** [160 GB]
+     Power/performance: 0x3c
+     READD: 0 [READ enabled]
+     WRITED: 0 [WRITE enabled]
+     FORMATD: 0 [FORMAT UNIT enabled]
+     LOCKD: 1 [media cannot be locked]
+   Power Condition mpage:
+     IDLE=0
+     STANDBY=1
+     IDLE_CONDITION_TIMER=0
+     STANDBY_CONDITION_TIMER=0xbb8 [300 seconds]
+
+References: rbc-r10a.pdf [1999] + spc3r26 [2005]
+
+Hopefully Seagate will switch to UAS(P) in the near future.
 
 
+*** That is _not_ the address of the last valid LB as in
+     the SCSI READ CAPACITY command!
+
+> For the other devices this seems clear enough.  In most of the cases,
+> the data doesn't include the Caching page.  The Samsung and Transcend
+> devices _do_ provide their Caching pages, and in both of them the data
+> says that write caching is disabled.  (In the Samsung case this is
+> wrong undoubtedly because of the JMicron bridge -- JMicron's firmware
+> is notoriously buggy.)
+>
+> If you can suggest a robust way of determining whether or not a drive
+> supports SAT (one which won't cause non-supporting devices to crash),
+> it could be added.  In the meantime, I'm not sure what else we can do.
+>
+> Would it make sense to assume write caching is present and enabled if
+> the drive does not provide a Caching page?
+
+No. You need to also take into account the RBC
+device parameters mode page if present. See above.
+
+Doug Gilbert
