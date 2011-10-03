@@ -1,59 +1,35 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 00/13] qla4xxx: Patches for scsi-misc
-Date: Mon, 3 Oct 2011 10:29:14 -0700
-Message-ID: <1317662967-30110-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] [SCSI] remove arbitrary SD_MAX_DISKS namespace limit
+Date: Mon, 03 Oct 2011 12:57:59 -0500
+Message-ID: <1317664679.3041.48.camel@dabdike.int.hansenpartnership.com>
+References: <4E89E721.7000308@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from db3ehsobe001.messaging.microsoft.com ([213.199.154.139]:57116
-	"EHLO DB3EHSOBE001.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932159Ab1JCRl7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 13:41:59 -0400
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60074 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756694Ab1JCR6C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 13:58:02 -0400
+In-Reply-To: <4E89E721.7000308@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: Dave Kleikamp <dave.kleikamp@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+On Mon, 2011-10-03 at 11:47 -0500, Dave Kleikamp wrote:
+> I see no reason to limit the SCSI disk namespace to sdXXX. We test
+> systems with more than 18278 LUNs.
 
-James,
+I suppose we kept the old limit for historical reasons, so I've no real
+objection to raising it, except the error messages now need to be beefed
+up.  We need one for the ida_get_new() failure and the original
+exhaustion messages needs to move to the sd_format_disk_name() check ...
+that's now what checks we don't go over the possible size in
+DISK_NAME_LEN (I know at 32 it's way beyond INT_MAX ... but just in case
+someone decides to lower it) ... probably it's the same error message
+(but better make it unique for the static checkers).
 
-Please apply the following patches to scsi-misc for inclusion in mainline.
+James
 
-Lalit Chandivade (4):
-      qla4xxx: Fix bidirectional CHAP
-      qla4xxx: Do not add duplicate CHAP entry in FLASH
-      qla4xxx: Fix exporting boot targets to sysfs
-      qla4xxx: Free Device Database (DDB) reserved by FW
-
-Manish Rangankar (6):
-      qla4xxx: Clear DDB map index on the basis of AEN.
-      qla4xxx: Fixed session destroy issue on link up-down.
-      qla4xxx: Fixed device blocked issue on link up-down.
-      qla4xxx: Fixed active session re-open issue.
-      qla4xxx: Fixed target discovery failed issue.
-      qla4xxx: updated device id check for BFS.
-
-Nilesh Javali (1):
-      qla4xxx: Add new FLT firmware region
-
-Vikas Chaudhary (2):
-      qla4xxx: Update license
-      qla4xxx: Update driver version to 5.02.00-k8
-
- Documentation/scsi/00-INDEX        |    2 +
- Documentation/scsi/LICENSE.qla4xxx |  310 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_def.h     |   13 ++-
- drivers/scsi/qla4xxx/ql4_fw.h      |    6 +
- drivers/scsi/qla4xxx/ql4_init.c    |   69 ++++++++-
- drivers/scsi/qla4xxx/ql4_iocb.c    |    2 +-
- drivers/scsi/qla4xxx/ql4_mbx.c     |  135 +++++++++++++----
- drivers/scsi/qla4xxx/ql4_nx.c      |    8 +
- drivers/scsi/qla4xxx/ql4_os.c      |  206 +++++++++++++++++++-----
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
- 10 files changed, 682 insertions(+), 71 deletions(-)
- create mode 100644 Documentation/scsi/LICENSE.qla4xxx
-
-Thanks,
-Vikas.
 
