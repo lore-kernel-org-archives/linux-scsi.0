@@ -1,65 +1,41 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: =?windows-1252?Q?Re=3A_BUG_in_kernel=3A_Wrong_Handling?=
- =?windows-1252?Q?_of_USB_HDD=92s_in_scsiglue=28slave=5Fconfigu?=
- =?windows-1252?Q?re=29_and_scsi/sd=28sd=5Fread=5Fcache=5Ftype=29?=
-Date: Mon, 3 Oct 2011 14:10:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1110031408420.1882-100000@iolanthe.rowland.org>
-References: <4E89DD79.6020306@interlog.com>
+From: Dave Kleikamp <dave.kleikamp@oracle.com>
+Subject: Re: [PATCH] [SCSI] remove arbitrary SD_MAX_DISKS namespace limit
+Date: Mon, 03 Oct 2011 13:29:24 -0500
+Message-ID: <4E89FF04.4040208@oracle.com>
+References: <4E89E721.7000308@oracle.com> <1317664679.3041.48.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:43717 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932317Ab1JCSKy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 14:10:54 -0400
-In-Reply-To: <4E89DD79.6020306@interlog.com>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:39473 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932264Ab1JCS3f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 14:29:35 -0400
+In-Reply-To: <1317664679.3041.48.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 3 Oct 2011, Douglas Gilbert wrote:
+On 10/03/2011 12:57 PM, James Bottomley wrote:
+> On Mon, 2011-10-03 at 11:47 -0500, Dave Kleikamp wrote:
+>> I see no reason to limit the SCSI disk namespace to sdXXX. We test
+>> systems with more than 18278 LUNs.
+>
+> I suppose we kept the old limit for historical reasons, so I've no real
+> objection to raising it, except the error messages now need to be beefed
+> up.  We need one for the ida_get_new() failure and the original
+> exhaustion messages needs to move to the sd_format_disk_name() check ...
+> that's now what checks we don't go over the possible size in
+> DISK_NAME_LEN (I know at 32 it's way beyond INT_MAX ... but just in case
+> someone decides to lower it) ... probably it's the same error message
+> (but better make it unique for the static checkers).
 
-> The RBC device parameters mode page followed by a Power
-> Condition mode page. The RBC device parameters mode page
-> is the only SCSI page I have seen (mode, log, VPD, etc)
-> with a 5 byte field!
-> 
-> Decoded response to a probable MODE SENSE(6) "fetch all
-> pages" command:
->    RBC device parameters mpage:
->      WCD=0 [double negative: write cache enabled]
->      Logical block size: 512 bytes
->      Number of logical blocks: 0x12A19EB0 *** [160 GB]
->      Power/performance: 0x3c
->      READD: 0 [READ enabled]
->      WRITED: 0 [WRITE enabled]
->      FORMATD: 0 [FORMAT UNIT enabled]
->      LOCKD: 1 [media cannot be locked]
->    Power Condition mpage:
->      IDLE=0
->      STANDBY=1
->      IDLE_CONDITION_TIMER=0
->      STANDBY_CONDITION_TIMER=0xbb8 [300 seconds]
-> 
-> References: rbc-r10a.pdf [1999] + spc3r26 [2005]
-> 
-> Hopefully Seagate will switch to UAS(P) in the near future.
-> 
-> 
-> *** That is _not_ the address of the last valid LB as in
->      the SCSI READ CAPACITY command!
+I'll defer to your judgment on how to fix this. I didn't look at your
+git tree, just mainline. Just bumping up SD_MAX_DISKS is sufficient.
+Wrapping the calculation in another (( ...) + 1) * 26 should get us
+through another decade, I would think. :-) Or any reasonably high
+number. INT_MAX?
 
-Thanks for the explanation.
-
-> > Would it make sense to assume write caching is present and enabled if
-> > the drive does not provide a Caching page?
-> 
-> No. You need to also take into account the RBC
-> device parameters mode page if present. See above.
-
-All right, suppose neither page is present.  Does it then make sense to 
-assume by default that write caching is enabled?
-
-Alan Stern
-
+Thanks,
+Shaggy
