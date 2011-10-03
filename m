@@ -1,69 +1,60 @@
-From: "Herr LEWIS AWELE" <herrawel@virgilio.it>
-Subject: Lieber Freund!!!
-Date: Sun, 2 Oct 2011 20:02:49 +0600 (BDT)
-Message-ID: <2436.83.54.210.14.1317564169.squirrel@mist.edu.bd>
-Reply-To: bankas27@aim.com
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
+Date: Mon, 3 Oct 2011 06:07:47 -0700
+Message-ID: <FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com>
+References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com><1316691000.10571.6.camel@dabdike><FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com><A94E3BEBF01D46D5B15046388D9F7DE7@usish.com.cn> <CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.mist.edu.bd ([203.112.72.179]:56210 "HELO mail.mist.edu.bd"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751344Ab1JBWja (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Oct 2011 18:39:30 -0400
+Received: from eu1sys200aog120.obsmtp.com ([207.126.144.149]:42312 "EHLO
+	eu1sys200aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932081Ab1JCNIR convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Oct 2011 09:08:17 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Jack Wang <jack_wang@usish.com>
+Cc: linux-scsi@vger.kernel.org, Darrick Wong <djwong@us.ibm.com>, Xiangliang Yu <yuxiangl@marvell.com>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <jbottomley@parallels.com>
+
+100% agree with Dan! In fact it is my fault for not digging deeper when
+I had the duplication relatively close at hand (but production pressures
+had me move on, in my defense). I definitely attacked the symptom. The
+patch is a piece of hardening, which can remain as paranoia after the
+root cause has properly been discovered (turned into a BUG() likely).
+
+I have lost the resources to duplicate this problem at the moment.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
+Behalf Of Dan Williams
+Sent: Friday, September 30, 2011 9:43 PM
+To: Jack Wang
+Cc: Mark Salyzyn; linux-scsi@vger.kernel.org; Darrick Wong; Xiangliang
+Yu; Luben Tuikov; James Bottomley
+Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a
+wide port
+
+On Thu, Sep 29, 2011 at 7:21 PM, Jack Wang <jack_wang@usish.com> wrote:
+> I can reproduce this bug, so I'm ok to get this fix in.
+>
+
+Mark admits this is a band aid.  I'd like to understand the root cause
+of why the port is NULL here.
+______________________________________________________________________
+This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
+ 
+Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
+ 
+Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+ 
+The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
+______________________________________________________________________
+ 
 
 
-
-
---=20
-Lieber Freund!!!
-
-Ich vermute das diese E-Mail eine =DCberraschung f=FCr Sie sein wird, a=
-ber es
-ist wahr.Ich bin bei einer routinen =DCberpr=FCfung in meiner Bank (Uni=
-on Bank
-PLC von S=FCd Afrika) wo ich arbeite, auf einem Konto gesto=DFen, was n=
-icht in
-anspruch genommen worden ist, wo derzeit USD$18.5M (Achtzehn Million, F=
-=FCnf
-Hundert Tausend, US Dollar)  gutgeschrieben sind. Dieses Konto geh=F6rt=
-e
-Herrn Peter Hartmann, der ein Kunde in unsere Bank war, der leider
-verstorben ist. Herr Hartmann war ein geb=FCrtiger Deutscher.
-
-
-Damit es mir m=F6glich ist dieses Geld $18,500,000 inanspruch
-zunehmen,ben=F6tige ich die zusammenarbeit eines Ausl=E4ndischen Partne=
-rs wie
-Sie,den ich als Verwandter und Erbe des verstorbenen Herrn Hartmann
-vorstellen kann,damit wir das Geld inanspruch nehmen k=F6nnen. F=FCr di=
-ese
-Unterst=FCtzung erhalten Sie 30% der Erbschaftsumme und die restlichen =
-70%
-teile ich mir mit meinen zwei Arbeitskollegen, die mich bei dieser
-Transaktion ebenfalls unterst=FCtzen.Wenn Sie interessiert sind, k=F6nn=
-en Sie
-mir bitte eine E-Mail schicken, damit ich Ihnen mehr Details zukommen
-lassen kann.
-
-
-N.B.BITTE SENDEN SIE MIR LEWIS AWELE ANTWORT ZU durch mein E-mail:
-(herrawel@aim.com )f=DCR VERTRAULICHEN GRUND. Schicken Sie keine POST Z=
-U
-MEINEM B=DCRO-E-MAIL. If you understand english,please kindly reply wit=
-h
-english
-
-
-Mit freundlichen Gr=FC=DFen
-
-
-Herr LEWIS AWELE
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
