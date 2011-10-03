@@ -1,35 +1,60 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 05/13] qla4xxx: Fix exporting boot targets to sysfs
-Date: Mon, 03 Oct 2011 15:44:15 -0500
-Message-ID: <1317674655.3041.60.camel@dabdike.int.hansenpartnership.com>
-References: <1317662967-30110-1-git-send-email-vikas.chaudhary@qlogic.com>
-	 <1317662967-30110-6-git-send-email-vikas.chaudhary@qlogic.com>
-	 <4E8A1F40.2030208@cs.wisc.edu>
+From: Pasi =?iso-8859-1?Q?K=E4rkk=E4inen?= <pasik@iki.fi>
+Subject: Re: HighPoint RocketRaid 620 vs. RocketRaid 640 -- supported?
+Date: Mon, 3 Oct 2011 23:13:16 +0300
+Message-ID: <20111003201315.GD12984@reaktio.net>
+References: <alpine.DEB.2.02.1109191754531.7938@p34.internal.lan> <alpine.DEB.2.02.1109210726250.31360@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60559 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932195Ab1JCUoS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 16:44:18 -0400
-In-Reply-To: <4E8A1F40.2030208@cs.wisc.edu>
+Received: from smtp.tele.fi ([192.89.123.25]:34149 "EHLO
+	vulpes-int.media.sonera.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755033Ab1JCUuV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Oct 2011 16:50:21 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.02.1109210726250.31360@p34.internal.lan>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: vikas.chaudhary@qlogic.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 2011-10-03 at 15:46 -0500, Mike Christie wrote:
-> You can probably just ask James if it would be ok to send a patch to
-> fix
-> them all up over this patchset so you do not have to resend patches.
+On Wed, Sep 21, 2011 at 07:28:26AM -0400, Justin Piszcz wrote:
+> Hi,
+>
+> Incase anyone is wondering the same thing, I contacted Highpoint and they 
+> said (confirmed) the 620 support (which I am using now) is built-in to 
+> the kernel and the 640 is not, so unless you like compiling kernel 
+> modules/out of tree drivers for a _boot_ volume and want a regular SATA 
+> 6.0gbps controller that supports TRIM, I'd go for the 620 even though it 
+> maxes out around 390-420MiB/s read where a real SAS controller supports 
+> 490-500MiB/s for an Intel 510 SSD, but remember, SAS controllers (at 
+> least the one I tested with does not support TRIM and there is no Intel 
+> SSD optimizer for Linux.
+>
 
-As long as it's tracked correctly (as in is a reply to the original
-patch) and doesn't get too complex for my tiny mind, I can track
-incremental update patches: that means a couple of update patches,
-yes ... after that I'd like a clean resend just to make sure nothing
-gets missed.
+Hmm.. does SAS "SCSI UNMAP" automatically get translated to 
+ATA TRIM if you hook up SATA disk to SAS HBA ?
 
-James
+Is the ATA<->SCSI translation being done by the HBA firmware, 
+or is it handled in the driver? 
+
+-- Pasi (who is too lazy to grep in the driver right now ;)
 
 
+> Justin.
+>
+> On Mon, 19 Sep 2011, Justin Piszcz wrote:
+>
+>> Hi,
+>>
+>> I have a HighPoint RocketRaid 620 and it works fine with 3.0+.
+>> The HighPoint RocketRaid 640 also has a Marvell 88SE9128, can anyne 
+>> confirm whether this (x4) PCI-e 2.0 card works in Linux with the 
+>> built-in kernel driver?
+>>
+>> Justin.
+>>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
