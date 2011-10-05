@@ -1,51 +1,58 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] pm8001: Fix for sata io circular lock dependency.
-Date: Wed, 5 Oct 2011 09:25:13 +0300
-Message-ID: <20111005062513.GC32513@elgon.mountain>
+From: "Rolf Eike Beer" <eike-kernel@sf-tec.de>
+Subject: Re: [patch] [SCSI] aacraid: use lower snprintf() limit
+Date: Wed, 5 Oct 2011 09:35:13 +0200
+Message-ID: <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
+References: <20111005055046.GD32077@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:26538 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756210Ab1JEGZf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2011 02:25:35 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111005055046.GD32077@elgon.mountain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jack wang <jack_wang@usish.com>, James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
 
-The locking in 9e79e12554d "[SCSI] pm8001: Fix for sata io circular
-lock dependency." is wrong.  We should revert this patch.
+> This is just a cleanup, to silence static checker warnings.  It
+> doesn't change how the code works.
+>
+> buf[] can either be BUF_SIZE if this is called from sysfs, or it can
+> be 16 if it's called from aac_get_adapter_info() via
+> aac_get_serial_number().  We use the smaller limit here.
+>
+> sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo) is 12 so there
+> is actually no chance of hitting either limit.
+>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>
+> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+> index 3382475..ea8d96e 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -894,15 +894,20 @@ static ssize_t aac_show_serial_number(struct device
+> *device,
+>  	int len = 0;
+>
+>  	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
+> -		len = snprintf(buf, PAGE_SIZE, "%06X\n",
+> +		len = snprintf(buf, 16, "%06X\n",
+>  		  le32_to_cpu(dev->adapter_info.serial[0]));
+>  	if (len &&
+>  	  !memcmp(&dev->supplement_adapter_info.MfgPcbaSerialNo[
+>  	    sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo)-len],
+>  	  buf, len-1))
+> -		len = snprintf(buf, PAGE_SIZE, "%.*s\n",
+> +		len = snprintf(buf, 16, "%.*s\n",
+>  		  (int)sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo),
+>  		  dev->supplement_adapter_info.MfgPcbaSerialNo);
+> +
+> +
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index a3de306..68695b7 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -1901,7 +1901,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- {
-        struct sas_task *t;
-        struct pm8001_ccb_info *ccb;
--       unsigned long flags;
-+       unsigned long flags = 0;
-        u32 param;
-        u32 status;
-        u32 tag;
-@@ -2040,7 +2040,9 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
-                        ts->stat = SAS_QUEUE_FULL;
-                        pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
-                        mb();/*in order to force CPU ordering*/
-+                       spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-                        t->task_done(t);
-+                       spin_lock_irqsave(&pm8001_ha->lock, flags);
-                        return;
-                }
-                break;
+One newline too much.
 
-We can't just call spin_unlock_irqrestore(&pm8001_ha->lock, 0);
-It makes no sense to call spin_lock_irqsave() and then return
-immediately.  We could call spin_lock_irq() if we don't plan to
-restore the state of flags.
+> +	if (len > 16)
+> +		len = 16;
 
-regards,
-dan carpenter
+max()?
+
+Eike
