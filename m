@@ -1,75 +1,57 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [net-next 1/1] bna: Multiple Definition and Interface Setup Fix
-Date: Wed, 5 Oct 2011 19:26:01 +1100
-Message-ID: <20111005192601.fa947a78b188f4a021042a5e@canb.auug.org.au>
-References: <1317781880-26515-1-git-send-email-rmody@brocade.com>
-	<20111004.232713.1345786533613742751.davem@davemloft.net>
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
+Date: Wed, 5 Oct 2011 05:10:12 -0700
+Message-ID: <FC1F9E38C0703341A1A750524E2525A9018AE847@XYUS-EX22.xyus.xyratex.com>
+References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com><1316691000.10571.6.camel@dabdike><FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com><A94E3BEBF01D46D5B15046388D9F7DE7@usish.com.cn><CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com><FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE726@XYUS-EX22.xyus.xyratex.com> <CAA9_cmdAx7pw-2scX=mYP=i4zpAH+fAF-0WNM4cg97Ng6xFNAw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Wed__5_Oct_2011_19_26_01_+1100_SQp.ZCGy9p2wn1mz"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111004.232713.1345786533613742751.davem@davemloft.net>
-Sender: linux-next-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: rmody@brocade.com, netdev@vger.kernel.org, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rdunlap@xenotime.net, huangj@brocade.com, adapter_linux_open_src_team@brocade.com
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:52843 "EHLO
+	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934506Ab1JEMLJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Oct 2011 08:11:09 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <CAA9_cmdAx7pw-2scX=mYP=i4zpAH+fAF-0WNM4cg97Ng6xFNAw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jack Wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, Darrick Wong <djwong@us.ibm.com>, Xiangliang Yu <yuxiangl@marvell.com>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <jbottomley@parallels.com>
 
---Signature=_Wed__5_Oct_2011_19_26_01_+1100_SQp.ZCGy9p2wn1mz
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Our duplication is to send an out-of-band CLI command to a downstream
+expander's Firmware and tell it to disable one of it's phys. Sounds
+simple, but not when someone else has all the customized pieces and
+serial cables ;-/ and the duplicator has moved on in priority.
 
-On Tue, 04 Oct 2011 23:27:13 -0400 (EDT) David Miller <davem@davemloft.net>=
- wrote:
->
-> From: Rasesh Mody <rmody@brocade.com>
-> Date: Tue, 4 Oct 2011 19:31:20 -0700
->=20
-> > drivers/net/built-in.o: In function `bfa_ioc_ct2_poweron':
-> > (.text+0xcdc90): multiple definition of `bfa_ioc_ct2_poweron'
-> > drivers/scsi/built-in.o:(.text+0x17f9a0): first defined here
-> >=20
-> > This patch renames bfa_ioc_ct2_poweron() to bfa_nw_ioc_ct2_poweron() to=
- avoid
-> > multiple definition with Brocade scsi driver. It also modifies asic spe=
-cific
-> > interface setup to allocate MSIX resources at power on in case of 1860 =
-HW with
-> > no asic block and warns if the asic gen is neither BFI_ASIC_GEN_CT nor
-> > BFI_ASIC_GEN_CT2.
-> >=20
-> > Reported-by: Randy Dunlap <rdunlap@xenotime.net>
-> > Signed-off-by: Rasesh Mody <rmody@brocade.com>
->=20
-> Applied, thanks.
+Pregnant thought, smp_phy_control --phy=? --op=dis (wrong side, probably
+too 'wide' of an aim) has not been tried ...
 
-I also manually applied this to linux-next today.
+Sincerely -- Mark Salyzyn
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+-----Original Message-----
+From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
+Behalf Of Dan Williams
+Sent: Tuesday, October 04, 2011 7:31 PM
+To: Mark Salyzyn
+Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a
+wide port
 
---Signature=_Wed__5_Oct_2011_19_26_01_+1100_SQp.ZCGy9p2wn1mz
-Content-Type: application/pgp-signature
+. . .
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+What is your reproduction scenario for this bug?  We see this in our
+larger topology hotplug tests, but I don't think we have a simple
+reproducer.
+______________________________________________________________________
+This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
+ 
+Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
+ 
+Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+ 
+The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
+______________________________________________________________________
+ 
 
-iQIcBAEBCAAGBQJOjBSZAAoJEECxmPOUX5FEP3IP/R0Z9V/eP3U4G2DXmMzyzwsH
-kcjAoSwVEikENiQbSRh4FnIapD9CkL8VqY0Vov5oP6KqOB7QtouaeR2fmXF/vwsH
-WK6vpBfarrfFQw2Ye4CXsmKrJGOOyaHixROnQE4XKuM/KkB8TheqIC3EzDTHVeRX
-aDpiCimIsBU7hjepy0gaAZ33/SHSUjqJqfoONBJGN082tMBDOae29MgOMlrM7esN
-/czw3U5JIXzz9XiSJBySCBDq8WgurZzSwTKZHEyl1X6T10W9Np0k0B0SkkKMxAum
-0o9+WrN7wwZVpb1OW3vKZsy5iQ3BtGpJ/GjlLvI3LJ2RRLXI25Ribt6WH/oC7Lu1
-9W2SNS6gHrTyKqDiAE1w5r7dcxWyfr3XT+qZRvrMW8MYIdwj/mjDGi27iHuYh6P3
-ebe6VBeEf5S5cZBKuwu1BGIhB3jZtZlTshJWyMcKIwnV2IRpR+ml2zoQyhw8Gei3
-n4nm27CsIIzZdmbHyE/2Jn3OQkTIs77Ua6Dbzd3J1RF+uHoG/Excv7zmt8cludbV
-7e+xBw7n3EHk1/ZqEAKSLElNX1BrG6PkUi5x/kdC6P5dG29TR0c4KrJVuJDysxhC
-Pbdxf8aZ5ojqe/bXgqY8TyXWG8bPkjrV5V6rsY2YYh8mhnc3OWQBD7G9lrQvOXnm
-F0dVhoLdh3UQm9G71UbZ
-=1R/c
------END PGP SIGNATURE-----
 
---Signature=_Wed__5_Oct_2011_19_26_01_+1100_SQp.ZCGy9p2wn1mz--
