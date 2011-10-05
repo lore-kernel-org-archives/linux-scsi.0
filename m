@@ -1,49 +1,75 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
-Date: Tue, 4 Oct 2011 16:38:21 -0700
-Message-ID: <CAA9_cmeXEHgpEsZOoUYfQyrAcS2hQr8Qqm2Zai=KPXnoVaVUAA@mail.gmail.com>
-References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com>
-	<1316691000.10571.6.camel@dabdike>
-	<FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com>
-	<FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com>
-	<A94E3BEBF01D46D5B15046388D9F7DE7@usish.com.cn>
-	<CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com>
-	<FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com>
-	<FC1F9E38C0703341A1A750524E2525A9018AE726@XYUS-EX22.xyus.xyratex.com>
-	<CAA9_cmdAx7pw-2scX=mYP=i4zpAH+fAF-0WNM4cg97Ng6xFNAw@mail.gmail.com>
+From: Rasesh Mody <rmody@brocade.com>
+Subject: [net-next 1/1] bna: Multiple Definition and Interface Setup Fix
+Date: Tue, 4 Oct 2011 19:31:20 -0700
+Message-ID: <1317781880-26515-1-git-send-email-rmody@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:55888 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933299Ab1JDXiW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2011 19:38:22 -0400
-Received: by qadb15 with SMTP id b15so824918qad.19
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Oct 2011 16:38:21 -0700 (PDT)
-In-Reply-To: <CAA9_cmdAx7pw-2scX=mYP=i4zpAH+fAF-0WNM4cg97Ng6xFNAw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: davem@davemloft.net, netdev@vger.kernel.org
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rdunlap@xenotime.net, sfr@canb.auug.org.au, huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Rasesh Mody <rmody@brocade.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
-Cc: Jack Wang <jack_wang@usish.com>, linux-scsi@vger.kernel.org, Darrick Wong <djwong@us.ibm.com>, Xiangliang Yu <yuxiangl@marvell.com>, Luben Tuikov <ltuikov@yahoo.com>, James Bottomley <jbottomley@parallels.com>
 
-On Tue, Oct 4, 2011 at 4:30 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> That initially looked convincing... but on closer look
-> sas_port_delete_phy is reducing the number of phys in the transport
-> class representation of the port (struct sas_port), while the
-> decrement that sas_deform port is doing is operating the on the
-> host-local port (struct asd_sas_port).
+drivers/net/built-in.o: In function `bfa_ioc_ct2_poweron':
+(.text+0xcdc90): multiple definition of `bfa_ioc_ct2_poweron'
+drivers/scsi/built-in.o:(.text+0x17f9a0): first defined here
 
-This confusion happens so often for me as well.  Maybe it is time to
-rename these structures and local variable instances, something like:
+This patch renames bfa_ioc_ct2_poweron() to bfa_nw_ioc_ct2_poweron() to avoid
+multiple definition with Brocade scsi driver. It also modifies asic specific
+interface setup to allocate MSIX resources at power on in case of 1860 HW with
+no asic block and warns if the asic gen is neither BFI_ASIC_GEN_CT nor
+BFI_ASIC_GEN_CT2.
 
-asd_sas_port --> host_sas_port
-asd_sas_phy --> host_sas_phy
+Reported-by: Randy Dunlap <rdunlap@xenotime.net>
+Signed-off-by: Rasesh Mody <rmody@brocade.com>
+---
+ drivers/net/ethernet/brocade/bna/bfa_ioc.c    |    5 ++++-
+ drivers/net/ethernet/brocade/bna/bfa_ioc.h    |    2 +-
+ drivers/net/ethernet/brocade/bna/bfa_ioc_ct.c |    2 +-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-...and:
-
-port --> hport
-phy --> hphy
-
-...for the local variable instances.
-
-??
+diff --git a/drivers/net/ethernet/brocade/bna/bfa_ioc.c b/drivers/net/ethernet/brocade/bna/bfa_ioc.c
+index e02d607..b0307a0 100644
+--- a/drivers/net/ethernet/brocade/bna/bfa_ioc.c
++++ b/drivers/net/ethernet/brocade/bna/bfa_ioc.c
+@@ -2006,8 +2006,11 @@ bfa_nw_ioc_pci_init(struct bfa_ioc *ioc, struct bfa_pcidev *pcidev,
+ 	 */
+ 	if (ioc->asic_gen == BFI_ASIC_GEN_CT)
+ 		bfa_nw_ioc_set_ct_hwif(ioc);
+-	else
++	else {
++		WARN_ON(ioc->asic_gen != BFI_ASIC_GEN_CT2);
+ 		bfa_nw_ioc_set_ct2_hwif(ioc);
++		bfa_nw_ioc_ct2_poweron(ioc);
++	}
+ 
+ 	bfa_ioc_map_port(ioc);
+ 	bfa_ioc_reg_init(ioc);
+diff --git a/drivers/net/ethernet/brocade/bna/bfa_ioc.h b/drivers/net/ethernet/brocade/bna/bfa_ioc.h
+index d5a21f4..ca158d1 100644
+--- a/drivers/net/ethernet/brocade/bna/bfa_ioc.h
++++ b/drivers/net/ethernet/brocade/bna/bfa_ioc.h
+@@ -281,7 +281,7 @@ void bfa_nw_ioc_mbox_regisr(struct bfa_ioc *ioc, enum bfi_mclass mc,
+ 
+ void bfa_nw_ioc_set_ct_hwif(struct bfa_ioc *ioc);
+ void bfa_nw_ioc_set_ct2_hwif(struct bfa_ioc *ioc);
+-void bfa_ioc_ct2_poweron(struct bfa_ioc *ioc);
++void bfa_nw_ioc_ct2_poweron(struct bfa_ioc *ioc);
+ 
+ void bfa_nw_ioc_attach(struct bfa_ioc *ioc, void *bfa,
+ 		struct bfa_ioc_cbfn *cbfn);
+diff --git a/drivers/net/ethernet/brocade/bna/bfa_ioc_ct.c b/drivers/net/ethernet/brocade/bna/bfa_ioc_ct.c
+index c2d3b1a..348479b 100644
+--- a/drivers/net/ethernet/brocade/bna/bfa_ioc_ct.c
++++ b/drivers/net/ethernet/brocade/bna/bfa_ioc_ct.c
+@@ -454,7 +454,7 @@ bfa_ioc_ct2_lpu_read_stat(struct bfa_ioc *ioc)
+ #define __MSIX_VT_NUMVT_(_v)		((_v) << __MSIX_VT_NUMVT__SH)
+ #define __MSIX_VT_OFST_			0x000007ff
+ void
+-bfa_ioc_ct2_poweron(struct bfa_ioc *ioc)
++bfa_nw_ioc_ct2_poweron(struct bfa_ioc *ioc)
+ {
+ 	void __iomem *rb = ioc->pcidev.pci_bar_kva;
+ 	u32 r32;
+-- 
+1.7.1
