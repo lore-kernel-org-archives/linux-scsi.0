@@ -1,49 +1,37 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [net-next 1/1] bna: Multiple Definition and Interface Setup Fix
-Date: Wed, 05 Oct 2011 10:09:17 -0700
-Message-ID: <4E8C8F3D.8040605@xenotime.net>
-References: <1317781880-26515-1-git-send-email-rmody@brocade.com>	<20111004.232713.1345786533613742751.davem@davemloft.net> <20111005192601.fa947a78b188f4a021042a5e@canb.auug.org.au>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Re: Re: BUG in kernel: Wrong Handling of USB
+ =?UTF-8?Q?HDD=E2=80=99s?= in scsiglue(slave_configure) and
+ scsi/sd(sd_read_cache_type)
+Date: Wed, 05 Oct 2011 10:24:02 -0700
+Message-ID: <1317835442.7238.8.camel@dabdike>
+References: <CADDb1s0ZnHzM72sDnFmRrM=GFJtxj5JkYUSPo6GdyQ_=7L2m9A@mail.gmail.com>
+	 <Pine.LNX.4.44L0.1110041007070.1954-100000@iolanthe.rowland.org>
+	 <CADDb1s0taBR2=xpKE5rLJTWJBMbXijS8b_GEA-MbZvWKFDFvYg@mail.gmail.com>
+	 <CADDb1s3sPxpfNi-OD=QvVT+JWO9kUeTAmb8ZGyN0YCuBKWd4rg@mail.gmail.com>
+	 <CADDb1s3FN4Ft2yXs-L8LfhoJEDP+KhSCrG8GGbOUgn_GXEr0yA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111005192601.fa947a78b188f4a021042a5e@canb.auug.org.au>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: David Miller <davem@davemloft.net>, rmody@brocade.com, netdev@vger.kernel.org, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, huangj@brocade.com, adapter_linux_open_src_team@brocade.com, Mauro Carvalho Chehab <mchehab@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CADDb1s3FN4Ft2yXs-L8LfhoJEDP+KhSCrG8GGbOUgn_GXEr0yA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/05/11 01:26, Stephen Rothwell wrote:
-> On Tue, 04 Oct 2011 23:27:13 -0400 (EDT) David Miller <davem@davemloft.net> wrote:
->>
->> From: Rasesh Mody <rmody@brocade.com>
->> Date: Tue, 4 Oct 2011 19:31:20 -0700
->>
->>> drivers/net/built-in.o: In function `bfa_ioc_ct2_poweron':
->>> (.text+0xcdc90): multiple definition of `bfa_ioc_ct2_poweron'
->>> drivers/scsi/built-in.o:(.text+0x17f9a0): first defined here
->>>
->>> This patch renames bfa_ioc_ct2_poweron() to bfa_nw_ioc_ct2_poweron() to avoid
->>> multiple definition with Brocade scsi driver. It also modifies asic specific
->>> interface setup to allocate MSIX resources at power on in case of 1860 HW with
->>> no asic block and warns if the asic gen is neither BFI_ASIC_GEN_CT nor
->>> BFI_ASIC_GEN_CT2.
->>>
->>> Reported-by: Randy Dunlap <rdunlap@xenotime.net>
->>> Signed-off-by: Rasesh Mody <rmody@brocade.com>
->>
->> Applied, thanks.
+On Wed, 2011-10-05 at 22:29 +0530, Amit Sahrawat wrote:
+> Can anyone suggest what is the way ahead to detect the presence of
+> Write Cache in these kind of USB HDD and proceed accordingly by
+> assigning proper flushing method.
+> Please share some opinions on this.
 
-Thanks for the patch.
+We're a bit out of ideas.  We've already established that we do exactly
+what windows does in this situation, which is usually what we aim for.
+Realistically, if the disks lie how do we know when not to believe them?
 
-> I also manually applied this to linux-next today.
+The best we could probably offer is an interface to turn on the WCE bit
+in software (technically, you can do this today
+in /scsi/class/scsi_disk/<disk>/cache_type, it's just that it will try
+to commit the change as a MODE_SELECT which will presumably fail).
 
-We could also stand to have this patch applied to linux-next since
-it doesn't seem to be merged anywhere else yet: (for drivers/media/video)
-
-http://marc.info/?l=linux-next&m=131741851601754&w=2
-
-
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+James
