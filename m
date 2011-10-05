@@ -1,83 +1,37 @@
-From: "Achim Leubner" <Achim_Leubner@pmc-sierra.com>
-Subject: RE: [patch] [SCSI] aacraid: use lower snprintf() limit
-Date: Wed, 5 Oct 2011 05:19:12 -0700
-Message-ID: <FD2BDBE06AC58549AE9E16C08B45675D05D8ED9E@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <20111005055046.GD32077@elgon.mountain> <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: Add support to flash FPGA and flash back DRAM
+ images
+Date: Wed, 05 Oct 2011 07:53:45 -0500
+Message-ID: <4E8C5359.4090103@linux.vnet.ibm.com>
+References: <20111004035136.190411310@linux.vnet.ibm.com> <4E8A837D.5090206@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>, Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:45276 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934367Ab1JEMxy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Oct 2011 08:53:54 -0400
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p95BWa1h019893
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Oct 2011 07:32:36 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p95CrqMe1167524
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Oct 2011 08:53:52 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p95Crpcf032450
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Oct 2011 09:53:52 -0300
+In-Reply-To: <4E8A837D.5090206@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi <linux-scsi@vger.kernel.org>, Kleber Sacilotto de Souza <klebers@br.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>
 
-Looks good so far. But do we really need the last two lines?
-> +	if (len > 16)
-> +		len = 16;
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Acked-by: Achim Leubner <Achim_Leubner@pmc-sierra.com> 
-
-Thanks,
-Achim
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Rolf Eike Beer
-Sent: Mittwoch, 5. Oktober 2011 09:35
-To: Dan Carpenter
-Cc: Adaptec OEM Raid Solutions; James E.J. Bottomley;
-linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-kernel-janitors@vger.kernel.org
-Subject: Re: [patch] [SCSI] aacraid: use lower snprintf() limit
-
-> This is just a cleanup, to silence static checker warnings.  It
-> doesn't change how the code works.
->
-> buf[] can either be BUF_SIZE if this is called from sysfs, or it can
-> be 16 if it's called from aac_get_adapter_info() via
-> aac_get_serial_number().  We use the smaller limit here.
->
-> sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo) is 12 so there
-> is actually no chance of hitting either limit.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/scsi/aacraid/linit.c
-b/drivers/scsi/aacraid/linit.c
-> index 3382475..ea8d96e 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -894,15 +894,20 @@ static ssize_t aac_show_serial_number(struct
-device
-> *device,
->  	int len = 0;
->
->  	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
-> -		len = snprintf(buf, PAGE_SIZE, "%06X\n",
-> +		len = snprintf(buf, 16, "%06X\n",
->  		  le32_to_cpu(dev->adapter_info.serial[0]));
->  	if (len &&
->  	  !memcmp(&dev->supplement_adapter_info.MfgPcbaSerialNo[
->  	    sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo)-len],
->  	  buf, len-1))
-> -		len = snprintf(buf, PAGE_SIZE, "%.*s\n",
-> +		len = snprintf(buf, 16, "%.*s\n",
->
-(int)sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo),
->  		  dev->supplement_adapter_info.MfgPcbaSerialNo);
-> +
-> +
-
-One newline too much.
-
-> +	if (len > 16)
-> +		len = 16;
-
-max()?
-
-Eike
