@@ -1,26 +1,140 @@
 From: michaelc@cs.wisc.edu
-Subject: iscsi changes for scsi-misc
-Date: Thu,  6 Oct 2011 03:56:56 -0500
-Message-ID: <1317891420-7116-1-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 3/4] qla4xxx: fix data alignment and use nl helpers
+Date: Thu,  6 Oct 2011 03:56:59 -0500
+Message-ID: <1317891420-7116-4-git-send-email-michaelc@cs.wisc.edu>
+References: <1317891420-7116-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14674 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:29558 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757058Ab1JFIvm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Oct 2011 04:51:42 -0400
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p968pg38011323
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Thu, 6 Oct 2011 04:51:42 -0400
-Received: from meanminna.corp.redhat.com (vpn-8-125.rdu.redhat.com [10.11.8.125])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id p968peOm008312
-	for <linux-scsi@vger.kernel.org>; Thu, 6 Oct 2011 04:51:41 -0400
+	id S1757131Ab1JFIvu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Oct 2011 04:51:50 -0400
+In-Reply-To: <1317891420-7116-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-The following patches fix several bugs in the iscsi iface interface
-that is being added in scsi-misc-2.6. It also has a patch to use
-the IDA code instead of our own loops to find target ids.
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Patches were made over scsi-misc.
+This has the driver use helpers for a common operation and fixes
+a issue where if multiple iscsi params are sent they could be
+sent at offsets that cause unaligned accesses. The nla helpers
+account for the padding needed to align properly for the driver.
+
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/qla4xxx/ql4_os.c       |   21 +++++++--------------
+ drivers/scsi/scsi_transport_iscsi.c |    8 ++++----
+ include/scsi/scsi_transport_iscsi.h |    3 ++-
+ 3 files changed, 13 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index ce391d5..f1bdc56 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -78,8 +78,8 @@ static int qla4xxx_conn_get_param(struct iscsi_cls_conn *conn,
+ 				  enum iscsi_param param, char *buf);
+ static int qla4xxx_host_get_param(struct Scsi_Host *shost,
+ 				  enum iscsi_host_param param, char *buf);
+-static int qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data,
+-				   int count);
++static int qla4xxx_iface_set_param(struct Scsi_Host *shost, void *data,
++				   uint32_t len);
+ static int qla4xxx_get_iface_param(struct iscsi_iface *iface,
+ 				   enum iscsi_param_type param_type,
+ 				   int param, char *buf);
+@@ -842,7 +842,7 @@ qla4xxx_initcb_to_acb(struct addr_ctrl_blk *init_fw_cb)
+ }
+ 
+ static int
+-qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data, int count)
++qla4xxx_iface_set_param(struct Scsi_Host *shost, void *data, uint32_t len)
+ {
+ 	struct scsi_qla_host *ha = to_qla_host(shost);
+ 	int rval = 0;
+@@ -851,8 +851,8 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data, int count)
+ 	dma_addr_t init_fw_cb_dma;
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+-	uint32_t total_param_count;
+-	uint32_t length;
++	uint32_t rem = len;
++	struct nlattr *attr;
+ 
+ 	init_fw_cb = dma_alloc_coherent(&ha->pdev->dev,
+ 					sizeof(struct addr_ctrl_blk),
+@@ -873,11 +873,8 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data, int count)
+ 		goto exit_init_fw_cb;
+ 	}
+ 
+-	total_param_count = count;
+-	iface_param = (struct iscsi_iface_param_info *)data;
+-
+-	for ( ; total_param_count != 0; total_param_count--) {
+-		length = iface_param->len;
++	nla_for_each_attr(attr, data, len, rem) {
++		iface_param = nla_data(attr);
+ 
+ 		if (iface_param->param_type != ISCSI_NET_PARAM)
+ 			continue;
+@@ -914,10 +911,6 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost, char *data, int count)
+ 			ql4_printk(KERN_ERR, ha, "Invalid iface type\n");
+ 			break;
+ 		}
+-
+-		iface_param = (struct iscsi_iface_param_info *)
+-						((uint8_t *)iface_param +
+-			    sizeof(struct iscsi_iface_param_info) + length);
+ 	}
+ 
+ 	init_fw_cb->cookie = cpu_to_le32(0x11BEAD5A);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 522423b..142a09a 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1890,7 +1890,7 @@ iscsi_set_path(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ 
+ static int
+ iscsi_set_iface_params(struct iscsi_transport *transport,
+-		       struct iscsi_uevent *ev)
++		       struct iscsi_uevent *ev, uint32_t len)
+ {
+ 	char *data = (char *)ev + sizeof(*ev);
+ 	struct Scsi_Host *shost;
+@@ -1906,8 +1906,7 @@ iscsi_set_iface_params(struct iscsi_transport *transport,
+ 		return -ENODEV;
+ 	}
+ 
+-	err = transport->set_iface_param(shost, data,
+-					 ev->u.set_iface_params.count);
++	err = transport->set_iface_param(shost, data, len);
+ 	scsi_host_put(shost);
+ 	return err;
+ }
+@@ -2052,7 +2051,8 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 		err = iscsi_set_path(transport, ev);
+ 		break;
+ 	case ISCSI_UEVENT_SET_IFACE_PARAMS:
+-		err = iscsi_set_iface_params(transport, ev);
++		err = iscsi_set_iface_params(transport, ev,
++					     nlmsg_attrlen(nlh, sizeof(*ev)));
+ 		break;
+ 	default:
+ 		err = -ENOSYS;
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index a498cce..5994bcc 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -137,7 +137,8 @@ struct iscsi_transport {
+ 	int (*tgt_dscvr) (struct Scsi_Host *shost, enum iscsi_tgt_dscvr type,
+ 			  uint32_t enable, struct sockaddr *dst_addr);
+ 	int (*set_path) (struct Scsi_Host *shost, struct iscsi_path *params);
+-	int (*set_iface_param) (struct Scsi_Host *shost, char *data, int count);
++	int (*set_iface_param) (struct Scsi_Host *shost, void *data,
++				uint32_t len);
+ 	int (*get_iface_param) (struct iscsi_iface *iface,
+ 				enum iscsi_param_type param_type,
+ 				int param, char *buf);
+-- 
+1.7.6
 
