@@ -1,42 +1,85 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Re: Re: BUG in kernel: Wrong Handling of USB
- =?UTF-8?Q?HDD=E2=80=99s?= in scsiglue(slave_configure) and
- scsi/sd(sd_read_cache_type)
-Date: Wed, 05 Oct 2011 13:08:15 -0700
-Message-ID: <1317845295.7238.15.camel@dabdike>
-References: <CADDb1s0ZnHzM72sDnFmRrM=GFJtxj5JkYUSPo6GdyQ_=7L2m9A@mail.gmail.com>
-	 <Pine.LNX.4.44L0.1110041007070.1954-100000@iolanthe.rowland.org>
-	 <CADDb1s0taBR2=xpKE5rLJTWJBMbXijS8b_GEA-MbZvWKFDFvYg@mail.gmail.com>
-	 <CADDb1s3sPxpfNi-OD=QvVT+JWO9kUeTAmb8ZGyN0YCuBKWd4rg@mail.gmail.com>
-	 <CADDb1s3FN4Ft2yXs-L8LfhoJEDP+KhSCrG8GGbOUgn_GXEr0yA@mail.gmail.com>
-	 <1317835442.7238.8.camel@dabdike>
-	 <CADDb1s031VX65+G-Uq-12y4qWq98-OS6DKz7mUCo=8AQkVQVTQ@mail.gmail.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
+Date: Thu, 6 Oct 2011 11:33:39 +0800
+Message-ID: <3E77BEE6906C427E9E625AE343FB0D70@usish.com.cn>
+References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com><1316691000.10571.6.camel@dabdike><FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com><A94E3BEBF01D46D5B15046388D9F7DE7@usish.com.cn><CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com><FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE726@XYUS-EX22.xyus.xyratex.com> <CAA9_cmdAx7pw-2scX=mYP=i4zpAH+fAF-0WNM4cg97Ng6xFNAw@mail.gmail.com> <FC1F9E38C0703341A1A750524E2525A9018AE847@XYUS-EX22.xyus.xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CADDb1s031VX65+G-Uq-12y4qWq98-OS6DKz7mUCo=8AQkVQVTQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Douglas Gilbert <dgilbert@interlog.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:43959 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753223Ab1JFDdN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2011 23:33:13 -0400
+In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE847@XYUS-EX22.xyus.xyratex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Dan Williams' <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, 'Darrick Wong' <djwong@us.ibm.com>, 'Xiangliang Yu' <yuxiangl@marvell.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, 'James Bottomley' <jbottomley@parallels.com>
 
-On Thu, 2011-10-06 at 01:21 +0530, Amit Sahrawat wrote:
-> > The best we could probably offer is an interface to turn on the WCE bit
-> > in software (technically, you can do this today
-> > in /scsi/class/scsi_disk/<disk>/cache_type, it's just that it will try
-> > to commit the change as a MODE_SELECT which will presumably fail).
-> Thanks James, is this related with SCSI command MODE_SELECT? and this
-> is to be passed when there is some failure?
-> or simply doing an "echo <value>" to
-> /scsi/class/scsi_disk/<disk>/cache_type? can you please elaborate a
-> little
+I reproduce this when echo 1/0 > /sys/class/sas_phy/phyxxx/enable phyxxx is
+one in a wide port.
+RE: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
+> 
+> Our duplication is to send an out-of-band CLI command to a downstream
+> expander's Firmware and tell it to disable one of it's phys. Sounds
+> simple, but not when someone else has all the customized pieces and
+> serial cables ;-/ and the duplicator has moved on in priority.
+> 
+> Pregnant thought, smp_phy_control --phy=? --op=dis (wrong side, probably
+> too 'wide' of an aim) has not been tried ...
+> 
+> Sincerely -- Mark Salyzyn
+> 
+> -----Original Message-----
+> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
+> Behalf Of Dan Williams
+> Sent: Tuesday, October 04, 2011 7:31 PM
+> To: Mark Salyzyn
+> Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a
+> wide port
+> 
+> . . .
+> 
+> What is your reproduction scenario for this bug?  We see this in our
+> larger topology hotplug tests, but I don't think we have a simple
+> reproducer.
+> ______________________________________________________________________
+> This email may contain privileged or confidential information, which
+should
+> only be used for the purpose for which it was sent by Xyratex. No further
+rights
+> or licenses are granted to use such information. If you are not the
+intended
+> recipient of this message, please notify the sender by return and delete
+it.
+> You may not use, copy, disclose or rely on the information contained in
+it.
+> 
+> Internet email is susceptible to data corruption, interception and
+> unauthorised amendment for which Xyratex does not accept liability. While
+we
+> have taken reasonable precautions to ensure that this email is free of
+viruses,
+> Xyratex does not accept liability for the presence of any computer viruses
+in
+> this email, nor for any losses caused as a result of viruses.
+> 
+> Xyratex Technology Limited (03134912), Registered in England & Wales,
+> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+> 
+> The Xyratex group of companies also includes, Xyratex Ltd, registered in
+> Bermuda, Xyratex International Inc, registered in California, Xyratex
+> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
+Ltd
+> registered in The People's Republic of China and Xyratex Japan Limited
+> registered in Japan.
+> ______________________________________________________________________
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-You tell me since you have the device.  What that echo does is that it
-does try to make the change permanent with a mode select ... that likely
-won't work and the cache change only takes if the revalidated disk says
-the write back has been enabled (which I really think it won't).  So I
-think you need an additional software bit to flip for the case where the
-device lies.
-
-James
