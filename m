@@ -1,53 +1,95 @@
-From: Mike Miller <mike.miller@hp.com>
-Subject: [PATCH 1/1] cciss: 2nd resubmit: add delay into kdump reset
-Date: Thu, 6 Oct 2011 16:13:38 -0500
-Message-ID: <20111006211338.GA2640@beardog.cce.hp.com>
+From: Rob Evers <revers@redhat.com>
+Subject: Re: [PATCH 1/2] alua: clarify messages when blk_execute_rq fails
+Date: Thu, 06 Oct 2011 18:07:27 -0400
+Message-ID: <4E8E269F.4020901@redhat.com>
+References: <1313182877-31377-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <axboe@kernel.dk>
-Cc: LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, tony.camuso@hp.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:2082 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932475Ab1JFWHc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Oct 2011 18:07:32 -0400
+In-Reply-To: <1313182877-31377-1-git-send-email-revers@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-PATCH 1 of 1
+  On 08/12/2011 05:01 PM, Rob Evers wrote:
+> replace numeric messages with string error messages when blk_execute_rq
+> fails.  Also add printing of sense info.
+>
+> Mike Christie suggested adding printing of sense info here
+>
+> Signed-off-by: Rob Evers<revers@redhat.com>
+> ---
+>   drivers/scsi/device_handler/scsi_dh_alua.c |   27 ++++++++++++++++++---------
+>   1 files changed, 18 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 6fec9fe..58fdf64 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -24,6 +24,7 @@
+>   #include<scsi/scsi.h>
+>   #include<scsi/scsi_eh.h>
+>   #include<scsi/scsi_dh.h>
+> +#include<scsi/scsi_dbg.h>
+>
+>   #define ALUA_DH_NAME "alua"
+>   #define ALUA_DH_VER "1.3"
+> @@ -153,9 +154,12 @@ static int submit_std_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+>
+>   	err = blk_execute_rq(rq->q, NULL, rq, 1);
+>   	if (err == -EIO) {
+> -		sdev_printk(KERN_INFO, sdev,
+> -			    "%s: std inquiry failed with %x\n",
+> -			    ALUA_DH_NAME, rq->errors);
+> +		sdev_printk(KERN_INFO, sdev, "%s: std inquiry failed\n",
+> +			    ALUA_DH_NAME);
+> +		scsi_show_result(rq->errors);
+> +		if (driver_byte(rq->errors)&&  DRIVER_SENSE)
+> +			__scsi_print_sense("alua std_inquiry", rq->sense,
+> +					   rq->sense_len);
+>   		h->senselen = rq->sense_len;
+>   		err = SCSI_DH_IO;
+>   	}
+> @@ -190,9 +194,12 @@ static int submit_vpd_inquiry(struct scsi_device *sdev, struct alua_dh_data *h)
+>
+>   	err = blk_execute_rq(rq->q, NULL, rq, 1);
+>   	if (err == -EIO) {
+> -		sdev_printk(KERN_INFO, sdev,
+> -			    "%s: evpd inquiry failed with %x\n",
+> -			    ALUA_DH_NAME, rq->errors);
+> +		sdev_printk(KERN_INFO, sdev, "%s: evpd inquiry failed\n",
+> +			    ALUA_DH_NAME);
+> +		scsi_show_result(rq->errors);
+> +		if (driver_byte(rq->errors)&&  DRIVER_SENSE)
+> +			__scsi_print_sense("alua vpd_inquiry", rq->sense,
+> +					   rq->sense_len);
+>   		h->senselen = rq->sense_len;
+>   		err = SCSI_DH_IO;
+>   	}
+> @@ -229,9 +236,11 @@ static unsigned submit_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+>
+>   	err = blk_execute_rq(rq->q, NULL, rq, 1);
+>   	if (err == -EIO) {
+> -		sdev_printk(KERN_INFO, sdev,
+> -			    "%s: rtpg failed with %x\n",
+> -			    ALUA_DH_NAME, rq->errors);
+> +		sdev_printk(KERN_INFO, sdev, "%s: rtpg failed\n", ALUA_DH_NAME);
+> +		scsi_show_result(rq->errors);
+> +		if (driver_byte(rq->errors)&&  DRIVER_SENSE)
+> +			__scsi_print_sense("alua submit_rtpg", rq->sense,
+> +					   rq->sense_len);
+>   		h->senselen = rq->sense_len;
+>   		err = SCSI_DH_IO;
+>   	}
 
-From: Mike Miller <mike.miller@hp.com>
+Hannes,
 
-cciss: add delay back to PCI Power Management reset
+Did you get a chance to take a look at this patch?
 
-When we change states from D0 to D3Hot and back to D0 we need a small delay.
-Otherwise we may think the board has failed to reset and we bail. This
-change affects the Smart Array P600.
-
-Please ignore the previous patch that did this. I made it against the wrong
-code base resulting in an offset. My apologies.
-
-Another submission. I don't see this patch in the mailing list archives. I
-only see the first submission which had an offset.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
----
- drivers/block/cciss.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 8f4ef65..a70c6dd 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -4526,13 +4526,13 @@ static int cciss_controller_hard_reset(struct pci_dev *pdev,
- 		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
- 		pmcsr |= PCI_D3hot;
- 		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
--
- 		msleep(500);
- 
- 		/* enter the D0 power management state */
- 		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
- 		pmcsr |= PCI_D0;
- 		pci_write_config_word(pdev, pos + PCI_PM_CTRL, pmcsr);
-+		msleep(500);
- 	}
- 	return 0;
- }
+Thanks, Rob
