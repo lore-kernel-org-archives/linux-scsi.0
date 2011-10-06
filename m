@@ -1,85 +1,26 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
-Date: Thu, 6 Oct 2011 11:33:39 +0800
-Message-ID: <3E77BEE6906C427E9E625AE343FB0D70@usish.com.cn>
-References: <1311826792.28583.YahooMailNeo@web31811.mail.mud.yahoo.com><1316691000.10571.6.camel@dabdike><FC1F9E38C0703341A1A750524E2525A9018AE2C6@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE2CF@XYUS-EX22.xyus.xyratex.com><A94E3BEBF01D46D5B15046388D9F7DE7@usish.com.cn><CAA9_cmdq455AZJUPNdjCrn7JT90AXZtZbGGejcpLDX3zYfu+2A@mail.gmail.com><FC1F9E38C0703341A1A750524E2525A9018AE711@XYUS-EX22.xyus.xyratex.com><FC1F9E38C0703341A1A750524E2525A9018AE726@XYUS-EX22.xyus.xyratex.com> <CAA9_cmdAx7pw-2scX=mYP=i4zpAH+fAF-0WNM4cg97Ng6xFNAw@mail.gmail.com> <FC1F9E38C0703341A1A750524E2525A9018AE847@XYUS-EX22.xyus.xyratex.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: iscsi changes for scsi-misc
+Date: Thu,  6 Oct 2011 03:56:56 -0500
+Message-ID: <1317891420-7116-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:43959 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753223Ab1JFDdN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2011 23:33:13 -0400
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A9018AE847@XYUS-EX22.xyus.xyratex.com>
+Received: from mx1.redhat.com ([209.132.183.28]:14674 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757058Ab1JFIvm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Oct 2011 04:51:42 -0400
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p968pg38011323
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Oct 2011 04:51:42 -0400
+Received: from meanminna.corp.redhat.com (vpn-8-125.rdu.redhat.com [10.11.8.125])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id p968peOm008312
+	for <linux-scsi@vger.kernel.org>; Thu, 6 Oct 2011 04:51:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Dan Williams' <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, 'Darrick Wong' <djwong@us.ibm.com>, 'Xiangliang Yu' <yuxiangl@marvell.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, 'James Bottomley' <jbottomley@parallels.com>
+To: linux-scsi@vger.kernel.org
 
-I reproduce this when echo 1/0 > /sys/class/sas_phy/phyxxx/enable phyxxx is
-one in a wide port.
-RE: [PATCH] [SCSI] libsas panic when single phy disabled on a wide port
-> 
-> Our duplication is to send an out-of-band CLI command to a downstream
-> expander's Firmware and tell it to disable one of it's phys. Sounds
-> simple, but not when someone else has all the customized pieces and
-> serial cables ;-/ and the duplicator has moved on in priority.
-> 
-> Pregnant thought, smp_phy_control --phy=? --op=dis (wrong side, probably
-> too 'wide' of an aim) has not been tried ...
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> -----Original Message-----
-> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On
-> Behalf Of Dan Williams
-> Sent: Tuesday, October 04, 2011 7:31 PM
-> To: Mark Salyzyn
-> Subject: Re: [PATCH] [SCSI] libsas panic when single phy disabled on a
-> wide port
-> 
-> . . .
-> 
-> What is your reproduction scenario for this bug?  We see this in our
-> larger topology hotplug tests, but I don't think we have a simple
-> reproducer.
-> ______________________________________________________________________
-> This email may contain privileged or confidential information, which
-should
-> only be used for the purpose for which it was sent by Xyratex. No further
-rights
-> or licenses are granted to use such information. If you are not the
-intended
-> recipient of this message, please notify the sender by return and delete
-it.
-> You may not use, copy, disclose or rely on the information contained in
-it.
-> 
-> Internet email is susceptible to data corruption, interception and
-> unauthorised amendment for which Xyratex does not accept liability. While
-we
-> have taken reasonable precautions to ensure that this email is free of
-viruses,
-> Xyratex does not accept liability for the presence of any computer viruses
-in
-> this email, nor for any losses caused as a result of viruses.
-> 
-> Xyratex Technology Limited (03134912), Registered in England & Wales,
-> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
-> 
-> The Xyratex group of companies also includes, Xyratex Ltd, registered in
-> Bermuda, Xyratex International Inc, registered in California, Xyratex
-> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
-Ltd
-> registered in The People's Republic of China and Xyratex Japan Limited
-> registered in Japan.
-> ______________________________________________________________________
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The following patches fix several bugs in the iscsi iface interface
+that is being added in scsi-misc-2.6. It also has a patch to use
+the IDA code instead of our own loops to find target ids.
+
+Patches were made over scsi-misc.
 
