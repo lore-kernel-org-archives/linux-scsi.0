@@ -1,115 +1,66 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2 06/14] qla4xxx: Fix getting BIDI CHAP for boot targets
-Date: Fri, 7 Oct 2011 16:55:44 -0700
-Message-ID: <1318031752-3836-7-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH v2 00/14] qla4xxx: Patches for scsi-misc
+Date: Fri, 7 Oct 2011 16:55:38 -0700
+Message-ID: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:43614
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:23524
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754777Ab1JHAH1 (ORCPT
+	by vger.kernel.org with ESMTP id S1754785Ab1JHAH1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:27 -0400
-In-Reply-To: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
 Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Lalit Chandivade <lalit.chandivade@qlogic.com>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-If a boot target has a BIDI CHAP enabled, then read the user/secret from
-CHAP table. Do not assume BIDI chap at peer CHAP index + 1
+James,
 
-JIRA Key: UPSISCSI-156
+This patchset address all the comments posted here:
+ - http://www.spinics.net/lists/linux-scsi/msg54819.html
+ - http://www.spinics.net/lists/linux-scsi/msg54813.html
+ - http://www.spinics.net/lists/linux-scsi/msg54815.html
 
-Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_os.c |   62 ++++++++++++++++++++++++++++++++++++++--
- 1 files changed, 58 insertions(+), 4 deletions(-)
+Please apply the following patches to scsi-misc for inclusion in mainline.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 0bcb6fd..5266d97 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -2877,6 +2877,60 @@ exit_boot_info:
- 	return ret;
- }
- 
-+/**
-+ * qla4xxx_get_bidi_chap - Get a BIDI CHAP user and password
-+ * @ha: pointer to adapter structure
-+ * @username: CHAP username to be returned
-+ * @password: CHAP password to be returned
-+ *
-+ * If a boot entry has BIDI CHAP enabled then we need to set the BIDI CHAP
-+ * user and password in the sysfs entry in /sys/firmware/iscsi_boot#/.
-+ * So from the CHAP cache find the first BIDI CHAP entry and set it
-+ * to the boot record in sysfs.
-+ **/
-+static int qla4xxx_get_bidi_chap(struct scsi_qla_host *ha, char *username,
-+			    char *password)
-+{
-+	int i, ret = -EINVAL;
-+	int max_chap_entries = 0;
-+	struct ql4_chap_table *chap_table;
-+
-+	if (is_qla8022(ha))
-+		max_chap_entries = (ha->hw.flt_chap_size / 2) /
-+						sizeof(struct ql4_chap_table);
-+	else
-+		max_chap_entries = MAX_CHAP_ENTRIES_40XX;
-+
-+	if (!ha->chap_list) {
-+		ql4_printk(KERN_ERR, ha, "Do not have CHAP table cache\n");
-+		return ret;
-+	}
-+
-+	mutex_lock(&ha->chap_sem);
-+	for (i = 0; i < max_chap_entries; i++) {
-+		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
-+		if (chap_table->cookie !=
-+		    __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
-+			continue;
-+		}
-+
-+		if (chap_table->flags & BIT_7) /* local */
-+			continue;
-+
-+		if (!(chap_table->flags & BIT_6)) /* Not BIDI */
-+			continue;
-+
-+		strncpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
-+		strncpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
-+		ret = 0;
-+		break;
-+	}
-+	mutex_unlock(&ha->chap_sem);
-+
-+	return ret;
-+}
-+
-+
- static int qla4xxx_get_boot_target(struct scsi_qla_host *ha,
- 				   struct ql4_boot_session_info *boot_sess,
- 				   uint16_t ddb_index)
-@@ -2948,10 +3002,10 @@ static int qla4xxx_get_boot_target(struct scsi_qla_host *ha,
- 
- 		DEBUG2(ql4_printk(KERN_INFO, ha, "Setting BIDI chap\n"));
- 
--		ret = qla4xxx_get_chap(ha, (char *)&boot_conn->chap.
--				       intr_chap_name,
--				       (char *)&boot_conn->chap.intr_secret,
--				       (idx + 1));
-+		ret = qla4xxx_get_bidi_chap(ha,
-+				    (char *)&boot_conn->chap.intr_chap_name,
-+				    (char *)&boot_conn->chap.intr_secret);
-+
- 		if (ret) {
- 			ql4_printk(KERN_ERR, ha, "Failed to set BIDI chap\n");
- 			ret = QLA_ERROR;
--- 
-1.7.6
+Lalit Chandivade (5):
+      qla4xxx: Fix bidirectional CHAP.
+      qla4xxx: Do not add duplicate CHAP entry in FLASH
+      qla4xxx: Fix exporting boot targets to sysfs
+      qla4xxx: Fix getting BIDI CHAP for boot targets
+      qla4xxx: Free Device Database (DDB) reserved by FW
 
+Manish Rangankar (6):
+      qla4xxx: Clear DDB map index on the basis of AEN.
+      qla4xxx: Fixed session destroy issue on link up-down.
+      qla4xxx: Fixed device blocked issue on link up-down.
+      qla4xxx: Fixed active session re-open issue.
+      qla4xxx: Fixed target discovery failed issue.
+      qla4xxx: updated device id check for BFS.
+
+Nilesh Javali (1):
+      qla4xxx: Add new FLT firmware region
+
+Vikas Chaudhary (2):
+      qla4xxx: Update license
+      qla4xxx: Update driver version to 5.02.00-k8
+
+ Documentation/scsi/00-INDEX        |    2 +
+ Documentation/scsi/LICENSE.qla4xxx |  310 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_def.h     |   13 ++-
+ drivers/scsi/qla4xxx/ql4_fw.h      |    6 +
+ drivers/scsi/qla4xxx/ql4_init.c    |   70 ++++++++-
+ drivers/scsi/qla4xxx/ql4_iocb.c    |    2 +-
+ drivers/scsi/qla4xxx/ql4_mbx.c     |  140 +++++++++++++----
+ drivers/scsi/qla4xxx/ql4_nx.c      |    8 +
+ drivers/scsi/qla4xxx/ql4_os.c      |  207 +++++++++++++++++++-----
+ drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+ 10 files changed, 683 insertions(+), 77 deletions(-)
+ create mode 100644 Documentation/scsi/LICENSE.qla4xxx
+
+
+Thanks,
+Vikas.
 
