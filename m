@@ -1,111 +1,65 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/2] alua: clarify messages when blk_execute_rq fails
-Date: Fri, 07 Oct 2011 08:12:15 +0200
-Message-ID: <4E8E983F.10804@suse.de>
-References: <1313182877-31377-1-git-send-email-revers@redhat.com> <4E8E269F.4020901@redhat.com>
+Subject: Re: [PATCH] scsi_io_completion: soften unhandled error and sense
+ messages
+Date: Fri, 07 Oct 2011 09:29:48 +0200
+Message-ID: <4E8EAA6C.90102@suse.de>
+References: <1317938931-6532-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42120 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:46128 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751362Ab1JGGMR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Oct 2011 02:12:17 -0400
-In-Reply-To: <4E8E269F.4020901@redhat.com>
+	id S1751652Ab1JGH3t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Oct 2011 03:29:49 -0400
+In-Reply-To: <1317938931-6532-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rob Evers <revers@redhat.com>
 Cc: linux-scsi@vger.kernel.org
 
-On 10/07/2011 12:07 AM, Rob Evers wrote:
-> On 08/12/2011 05:01 PM, Rob Evers wrote:
->> replace numeric messages with string error messages when
->> blk_execute_rq
->> fails. Also add printing of sense info.
->>
->> Mike Christie suggested adding printing of sense info here
->>
->> Signed-off-by: Rob Evers<revers@redhat.com>
->> ---
->> drivers/scsi/device_handler/scsi_dh_alua.c | 27
->> ++++++++++++++++++---------
->> 1 files changed, 18 insertions(+), 9 deletions(-)
->>
->> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
->> b/drivers/scsi/device_handler/scsi_dh_alua.c
->> index 6fec9fe..58fdf64 100644
->> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->> @@ -24,6 +24,7 @@
->> #include<scsi/scsi.h>
->> #include<scsi/scsi_eh.h>
->> #include<scsi/scsi_dh.h>
->> +#include<scsi/scsi_dbg.h>
->>
->> #define ALUA_DH_NAME "alua"
->> #define ALUA_DH_VER "1.3"
->> @@ -153,9 +154,12 @@ static int submit_std_inquiry(struct
->> scsi_device *sdev, struct alua_dh_data *h)
->>
->> err =3D blk_execute_rq(rq->q, NULL, rq, 1);
->> if (err =3D=3D -EIO) {
->> - sdev_printk(KERN_INFO, sdev,
->> - "%s: std inquiry failed with %x\n",
->> - ALUA_DH_NAME, rq->errors);
->> + sdev_printk(KERN_INFO, sdev, "%s: std inquiry failed\n",
->> + ALUA_DH_NAME);
->> + scsi_show_result(rq->errors);
->> + if (driver_byte(rq->errors)&& DRIVER_SENSE)
->> + __scsi_print_sense("alua std_inquiry", rq->sense,
->> + rq->sense_len);
->> h->senselen =3D rq->sense_len;
->> err =3D SCSI_DH_IO;
->> }
->> @@ -190,9 +194,12 @@ static int submit_vpd_inquiry(struct
->> scsi_device *sdev, struct alua_dh_data *h)
->>
->> err =3D blk_execute_rq(rq->q, NULL, rq, 1);
->> if (err =3D=3D -EIO) {
->> - sdev_printk(KERN_INFO, sdev,
->> - "%s: evpd inquiry failed with %x\n",
->> - ALUA_DH_NAME, rq->errors);
->> + sdev_printk(KERN_INFO, sdev, "%s: evpd inquiry failed\n",
->> + ALUA_DH_NAME);
->> + scsi_show_result(rq->errors);
->> + if (driver_byte(rq->errors)&& DRIVER_SENSE)
->> + __scsi_print_sense("alua vpd_inquiry", rq->sense,
->> + rq->sense_len);
->> h->senselen =3D rq->sense_len;
->> err =3D SCSI_DH_IO;
->> }
->> @@ -229,9 +236,11 @@ static unsigned submit_rtpg(struct
->> scsi_device *sdev, struct alua_dh_data *h)
->>
->> err =3D blk_execute_rq(rq->q, NULL, rq, 1);
->> if (err =3D=3D -EIO) {
->> - sdev_printk(KERN_INFO, sdev,
->> - "%s: rtpg failed with %x\n",
->> - ALUA_DH_NAME, rq->errors);
->> + sdev_printk(KERN_INFO, sdev, "%s: rtpg failed\n", ALUA_DH_NAME);
->> + scsi_show_result(rq->errors);
->> + if (driver_byte(rq->errors)&& DRIVER_SENSE)
->> + __scsi_print_sense("alua submit_rtpg", rq->sense,
->> + rq->sense_len);
->> h->senselen =3D rq->sense_len;
->> err =3D SCSI_DH_IO;
->> }
+On 10/07/2011 12:08 AM, Rob Evers wrote:
+> We are receiving reports that users are seeing error messages during
+> fabric faults, but the systems are not malfunctioning.  I previously
+> submitted a patch which simply removed the offending messages but
+> James Bottomley rejected this as we were losing error information.
 >
-> Hannes,
+> This patch softens the messages such that they don't appear to
+> be error indications from the user perspective.
 >
-> Did you get a chance to take a look at this patch?
+> new messages suggested by Mike Christie
 >
-Yes, I did.
-
-And found it's actually not quite correct; we'll need to evaluate=20
-the sense code here to do a possible retry.
-
-I'll be updating the patch.
+> Signed-off-by: Rob Evers<revers@redhat.com>
+> ---
+>   drivers/scsi/scsi_lib.c |    5 +++--
+>   1 files changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index fc3f168..ef2a8a1 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -920,12 +920,13 @@ void scsi_io_completion(struct scsi_cmnd *cmd, =
+unsigned int good_bytes)
+>   			action =3D ACTION_FAIL;
+>   			break;
+>   		default:
+> -			description =3D "Unhandled sense code";
+> +			description =3D
+> +				"Extended sense description not available";
+>   			action =3D ACTION_FAIL;
+>   			break;
+>   		}
+>   	} else {
+> -		description =3D "Unhandled error code";
+> +		description =3D "Extended error description not available";
+>   		action =3D ACTION_FAIL;
+>   	}
+>
+Actually, I would prefer having this message routed via the=20
+scsi_logging mechanism. Then it wouldn't bother the unsuspecting=20
+user and we still would retain the information if scsi_logging is=20
+enabled.
 
 Cheers,
 
