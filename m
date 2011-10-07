@@ -1,54 +1,114 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2 01/14] qla4xxx: Add new FLT firmware region
-Date: Fri, 7 Oct 2011 16:55:39 -0700
-Message-ID: <1318031752-3836-2-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH v2 06/14] qla4xxx: Fix getting BIDI CHAP for boot targets
+Date: Fri, 7 Oct 2011 16:55:44 -0700
+Message-ID: <1318031752-3836-7-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:22722
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:43614
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754776Ab1JHAH0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:26 -0400
+	by vger.kernel.org with ESMTP id S1754777Ab1JHAH1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:27 -0400
 In-Reply-To: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Nilesh Javali <nilesh.javali@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-From: Nilesh Javali <nilesh.javali@qlogic.com>
+From: Lalit Chandivade <lalit.chandivade@qlogic.com>
 
-Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
+If a boot target has a BIDI CHAP enabled, then read the user/secret from
+CHAP table. Do not assume BIDI chap at peer CHAP index + 1
+
+JIRA Key: UPSISCSI-156
+
+Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_fw.h |    1 +
- drivers/scsi/qla4xxx/ql4_nx.c |    1 +
- 2 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |   62 ++++++++++++++++++++++++++++++++++++++--
+ 1 files changed, 58 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index 0e24c7a..597875f 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -306,6 +306,7 @@ struct qla_flt_header {
- #define FLT_REG_FLT		0x1c
- #define FLT_REG_BOOTLOAD_82	0x72
- #define FLT_REG_FW_82		0x74
-+#define FLT_REG_FW_82_1		0x97
- #define FLT_REG_GOLD_FW_82	0x75
- #define FLT_REG_BOOT_CODE_82	0x78
- #define FLT_REG_ISCSI_PARAM	0x65
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index a539e17..84c254a 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -2015,6 +2015,7 @@ qla4_8xxx_get_flt_info(struct scsi_qla_host *ha, uint32_t flt_addr)
- 			hw->flt_region_boot = start;
- 			break;
- 		case FLT_REG_FW_82:
-+		case FLT_REG_FW_82_1:
- 			hw->flt_region_fw = start;
- 			break;
- 		case FLT_REG_BOOTLOAD_82:
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 0bcb6fd..5266d97 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -2877,6 +2877,60 @@ exit_boot_info:
+ 	return ret;
+ }
+ 
++/**
++ * qla4xxx_get_bidi_chap - Get a BIDI CHAP user and password
++ * @ha: pointer to adapter structure
++ * @username: CHAP username to be returned
++ * @password: CHAP password to be returned
++ *
++ * If a boot entry has BIDI CHAP enabled then we need to set the BIDI CHAP
++ * user and password in the sysfs entry in /sys/firmware/iscsi_boot#/.
++ * So from the CHAP cache find the first BIDI CHAP entry and set it
++ * to the boot record in sysfs.
++ **/
++static int qla4xxx_get_bidi_chap(struct scsi_qla_host *ha, char *username,
++			    char *password)
++{
++	int i, ret = -EINVAL;
++	int max_chap_entries = 0;
++	struct ql4_chap_table *chap_table;
++
++	if (is_qla8022(ha))
++		max_chap_entries = (ha->hw.flt_chap_size / 2) /
++						sizeof(struct ql4_chap_table);
++	else
++		max_chap_entries = MAX_CHAP_ENTRIES_40XX;
++
++	if (!ha->chap_list) {
++		ql4_printk(KERN_ERR, ha, "Do not have CHAP table cache\n");
++		return ret;
++	}
++
++	mutex_lock(&ha->chap_sem);
++	for (i = 0; i < max_chap_entries; i++) {
++		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
++		if (chap_table->cookie !=
++		    __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++			continue;
++		}
++
++		if (chap_table->flags & BIT_7) /* local */
++			continue;
++
++		if (!(chap_table->flags & BIT_6)) /* Not BIDI */
++			continue;
++
++		strncpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
++		strncpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
++		ret = 0;
++		break;
++	}
++	mutex_unlock(&ha->chap_sem);
++
++	return ret;
++}
++
++
+ static int qla4xxx_get_boot_target(struct scsi_qla_host *ha,
+ 				   struct ql4_boot_session_info *boot_sess,
+ 				   uint16_t ddb_index)
+@@ -2948,10 +3002,10 @@ static int qla4xxx_get_boot_target(struct scsi_qla_host *ha,
+ 
+ 		DEBUG2(ql4_printk(KERN_INFO, ha, "Setting BIDI chap\n"));
+ 
+-		ret = qla4xxx_get_chap(ha, (char *)&boot_conn->chap.
+-				       intr_chap_name,
+-				       (char *)&boot_conn->chap.intr_secret,
+-				       (idx + 1));
++		ret = qla4xxx_get_bidi_chap(ha,
++				    (char *)&boot_conn->chap.intr_chap_name,
++				    (char *)&boot_conn->chap.intr_secret);
++
+ 		if (ret) {
+ 			ql4_printk(KERN_ERR, ha, "Failed to set BIDI chap\n");
+ 			ret = QLA_ERROR;
 -- 
 1.7.6
 
