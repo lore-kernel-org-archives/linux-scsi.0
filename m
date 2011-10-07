@@ -1,66 +1,82 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2 00/14] qla4xxx: Patches for scsi-misc
-Date: Fri, 7 Oct 2011 16:55:38 -0700
-Message-ID: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH v2 09/14] qla4xxx: Fixed session destroy issue on link up-down.
+Date: Fri, 7 Oct 2011 16:55:47 -0700
+Message-ID: <1318031752-3836-10-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:23524
+Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:46245
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754785Ab1JHAH1 (ORCPT
+	by vger.kernel.org with ESMTP id S1754791Ab1JHAH1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:27 -0400
+In-Reply-To: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Rangankar <manish.rangankar@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Manish Rangankar <manish.rangankar@qlogic.com>
 
-James,
+During link down, iscsid tries to do re-login to failed session. In case of
+link down-up-down, LLD was sending connection login failed event to iscsid,
+which is destroying the session, instead we have to continue re-login by
+sending connection err event.
 
-This patchset address all the comments posted here:
- - http://www.spinics.net/lists/linux-scsi/msg54819.html
- - http://www.spinics.net/lists/linux-scsi/msg54813.html
- - http://www.spinics.net/lists/linux-scsi/msg54815.html
+JIRA Key: UPSISCSI-134
 
-Please apply the following patches to scsi-misc for inclusion in mainline.
+Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_init.c |   16 ++++++++++++++++
+ drivers/scsi/qla4xxx/ql4_os.c   |    6 +++++-
+ 2 files changed, 21 insertions(+), 1 deletions(-)
 
-Lalit Chandivade (5):
-      qla4xxx: Fix bidirectional CHAP.
-      qla4xxx: Do not add duplicate CHAP entry in FLASH
-      qla4xxx: Fix exporting boot targets to sysfs
-      qla4xxx: Fix getting BIDI CHAP for boot targets
-      qla4xxx: Free Device Database (DDB) reserved by FW
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index ca155bb..cc10bac 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -931,6 +931,22 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 			break;
+ 		}
+ 		break;
++	case DDB_DS_SESSION_FAILED:
++		switch (state) {
++		case DDB_DS_SESSION_ACTIVE:
++		case DDB_DS_DISCOVERY:
++			iscsi_conn_login_event(ddb_entry->conn,
++					       ISCSI_CONN_STATE_LOGGED_IN);
++			qla4xxx_update_session_conn_param(ha, ddb_entry);
++			status = QLA_SUCCESS;
++			break;
++		case DDB_DS_SESSION_FAILED:
++			iscsi_session_failure(ddb_entry->sess->dd_data,
++					      ISCSI_ERR_CONN_FAILED);
++			status = QLA_SUCCESS;
++			break;
++		}
++		break;
+ 	default:
+ 		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: Unknown Event\n",
+ 				__func__));
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index bea78a7..af83e6f 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1158,7 +1158,11 @@ static int qla4xxx_conn_start(struct iscsi_cls_conn *cls_conn)
+ 		goto exit_conn_start;
+ 	}
+ 
+-	ddb_entry->fw_ddb_device_state = DDB_DS_LOGIN_IN_PROCESS;
++	if (ddb_entry->fw_ddb_device_state == DDB_DS_NO_CONNECTION_ACTIVE)
++		ddb_entry->fw_ddb_device_state = DDB_DS_LOGIN_IN_PROCESS;
++
++	DEBUG2(printk(KERN_INFO "%s: DDB state [%d]\n", __func__,
++		      ddb_entry->fw_ddb_device_state));
+ 
+ exit_set_param:
+ 	iscsi_conn_start(cls_conn);
+-- 
+1.7.6
 
-Manish Rangankar (6):
-      qla4xxx: Clear DDB map index on the basis of AEN.
-      qla4xxx: Fixed session destroy issue on link up-down.
-      qla4xxx: Fixed device blocked issue on link up-down.
-      qla4xxx: Fixed active session re-open issue.
-      qla4xxx: Fixed target discovery failed issue.
-      qla4xxx: updated device id check for BFS.
-
-Nilesh Javali (1):
-      qla4xxx: Add new FLT firmware region
-
-Vikas Chaudhary (2):
-      qla4xxx: Update license
-      qla4xxx: Update driver version to 5.02.00-k8
-
- Documentation/scsi/00-INDEX        |    2 +
- Documentation/scsi/LICENSE.qla4xxx |  310 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla4xxx/ql4_def.h     |   13 ++-
- drivers/scsi/qla4xxx/ql4_fw.h      |    6 +
- drivers/scsi/qla4xxx/ql4_init.c    |   70 ++++++++-
- drivers/scsi/qla4xxx/ql4_iocb.c    |    2 +-
- drivers/scsi/qla4xxx/ql4_mbx.c     |  140 +++++++++++++----
- drivers/scsi/qla4xxx/ql4_nx.c      |    8 +
- drivers/scsi/qla4xxx/ql4_os.c      |  207 +++++++++++++++++++-----
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
- 10 files changed, 683 insertions(+), 77 deletions(-)
- create mode 100644 Documentation/scsi/LICENSE.qla4xxx
-
-
-Thanks,
-Vikas.
 
