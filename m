@@ -1,33 +1,22 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2] qlogicpti: fix timeout
-Date: Fri, 07 Oct 2011 11:13:23 -0400 (EDT)
-Message-ID: <20111007.111323.497093696267353976.davem@davemloft.net>
-References: <alpine.SOC.1.00.1110071050080.648@math.ut.ee>
-	<alpine.SOC.1.00.1110071800120.29152@math.ut.ee>
+From: "Sinicropi-Wallace, Suzanne" <SSinicropi@WSWHEBOCES.ORG>
+Subject: Mail Box Quota Exceeded
+Date: Fri, 7 Oct 2011 12:00:03 -0400
+Message-ID: <A8FB32A30476394D885BA35A5213701353E2CBEE03__7852.54078587076$1318003943$gmane$org@exchange07>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:45708 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906Ab1JGPN2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 11:13:28 -0400
-In-Reply-To: <alpine.SOC.1.00.1110071800120.29152@math.ut.ee>
+Received: from exchange07.wswheboces.org ([163.153.20.111]:19542 "EHLO
+	exchange07.wswheboces.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751203Ab1JGQMP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 12:12:15 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mroos@linux.ee
-Cc: James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org
 
-From: Meelis Roos <mroos@linux.ee>
-Date: Fri, 7 Oct 2011 18:05:08 +0300 (EEST)
-
-> qlogicpti times out for some tape library operations (like mtx 
-> inventory). It seems SCSI command timeout is hardcoded into the driver. 
-> Fix it by propagating the timeout from scsi request to the controller as 
-> suggested by James Bottomley.
-> 
-> Tested on Sun Ultra 1 with Sun StorEdge L8 Autoloader.
-> 
-> Signed-off-by: Meelis Roos <mroos@linux.ee>
-
-Acked-by: David S. Miller <davem@davemloft.net>
+Your web mail quota has exceeded the set quota which is 3GB. you are
+currently running on 3.9 GB.To re-activate and increase your web mail quota please click the link below.
+https://docs.google.com/spreadsheet/viewform?formkey=dGE1UnkwQVRNLXVqbG5Tem5wQzE0UVE6MQ
+Failure to do so may result in the cancellation of your web mail account.
+Thanks, and sorry for the inconvenience
+Local-host.
