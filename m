@@ -1,14 +1,14 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2 09/14] qla4xxx: Fixed session destroy issue on link up-down.
-Date: Fri, 7 Oct 2011 16:55:47 -0700
-Message-ID: <1318031752-3836-10-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH v2 08/14] qla4xxx: Clear DDB map index on the basis of AEN.
+Date: Fri, 7 Oct 2011 16:55:46 -0700
+Message-ID: <1318031752-3836-9-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe001.messaging.microsoft.com ([216.32.181.181]:46245
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:59316
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754791Ab1JHAH1 (ORCPT
+	by vger.kernel.org with ESMTP id S1754808Ab1JHAH1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:27 -0400
 In-Reply-To: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,64 +18,92 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Manish Rangankar <manish.rangankar@qlogic.com>
 
-During link down, iscsid tries to do re-login to failed session. In case of
-link down-up-down, LLD was sending connection login failed event to iscsid,
-which is destroying the session, instead we have to continue re-login by
-sending connection err event.
+Unable to login to session if login-logout issued consecutively for
+multiple sessions. Solution is to clear idx in DDB map on the basis
+of no-active connection asynchronous event (AEN).
 
-JIRA Key: UPSISCSI-134
+JIRA Key: UPSISCSI-135
 
 Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_init.c |   16 ++++++++++++++++
- drivers/scsi/qla4xxx/ql4_os.c   |    6 +++++-
- 2 files changed, 21 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |   12 +++++++++++-
+ drivers/scsi/qla4xxx/ql4_os.c   |   11 +++--------
+ 2 files changed, 14 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index ca155bb..cc10bac 100644
+index 064a3a3..ca155bb 100644
 --- a/drivers/scsi/qla4xxx/ql4_init.c
 +++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -931,6 +931,22 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
- 			break;
- 		}
- 		break;
-+	case DDB_DS_SESSION_FAILED:
-+		switch (state) {
-+		case DDB_DS_SESSION_ACTIVE:
-+		case DDB_DS_DISCOVERY:
-+			iscsi_conn_login_event(ddb_entry->conn,
-+					       ISCSI_CONN_STATE_LOGGED_IN);
-+			qla4xxx_update_session_conn_param(ha, ddb_entry);
-+			status = QLA_SUCCESS;
-+			break;
-+		case DDB_DS_SESSION_FAILED:
-+			iscsi_session_failure(ddb_entry->sess->dd_data,
-+					      ISCSI_ERR_CONN_FAILED);
-+			status = QLA_SUCCESS;
-+			break;
-+		}
-+		break;
- 	default:
- 		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: Unknown Event\n",
- 				__func__));
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index bea78a7..af83e6f 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1158,7 +1158,11 @@ static int qla4xxx_conn_start(struct iscsi_cls_conn *cls_conn)
- 		goto exit_conn_start;
+@@ -880,6 +880,10 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 	if (ddb_entry == NULL) {
+ 		ql4_printk(KERN_ERR, ha, "%s: No ddb_entry at FW index [%d]\n",
+ 			   __func__, fw_ddb_index);
++
++		if (state == DDB_DS_NO_CONNECTION_ACTIVE)
++			clear_bit(fw_ddb_index, ha->ddb_idx_map);
++
+ 		goto exit_ddb_event;
  	}
  
--	ddb_entry->fw_ddb_device_state = DDB_DS_LOGIN_IN_PROCESS;
-+	if (ddb_entry->fw_ddb_device_state == DDB_DS_NO_CONNECTION_ACTIVE)
-+		ddb_entry->fw_ddb_device_state = DDB_DS_LOGIN_IN_PROCESS;
+@@ -910,7 +914,8 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 		}
+ 		break;
+ 	case DDB_DS_SESSION_ACTIVE:
+-		if (state == DDB_DS_SESSION_FAILED) {
++		switch (state) {
++		case DDB_DS_SESSION_FAILED:
+ 			/*
+ 			 * iscsi_session failure  will cause userspace to
+ 			 * stop the connection which in turn would block the
+@@ -919,6 +924,11 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
+ 			iscsi_session_failure(ddb_entry->sess->dd_data,
+ 					      ISCSI_ERR_CONN_FAILED);
+ 			status = QLA_SUCCESS;
++			break;
++		case DDB_DS_NO_CONNECTION_ACTIVE:
++			clear_bit(fw_ddb_index, ha->ddb_idx_map);
++			status = QLA_SUCCESS;
++			break;
+ 		}
+ 		break;
+ 	default:
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 5266d97..bea78a7 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1004,6 +1004,7 @@ qla4xxx_session_create(struct iscsi_endpoint *ep,
+ 	qla_ep = ep->dd_data;
+ 	dst_addr = (struct sockaddr *)&qla_ep->dst_addr;
+ 	ha = to_qla_host(qla_ep->host);
 +
-+	DEBUG2(printk(KERN_INFO "%s: DDB state [%d]\n", __func__,
-+		      ddb_entry->fw_ddb_device_state));
+ get_ddb_index:
+ 	ddb_index = find_first_zero_bit(ha->ddb_idx_map, MAX_DDB_ENTRIES);
  
- exit_set_param:
- 	iscsi_conn_start(cls_conn);
+@@ -1063,6 +1064,8 @@ static void qla4xxx_session_destroy(struct iscsi_cls_session *cls_sess)
+ 	ddb_entry = sess->dd_data;
+ 	ha = ddb_entry->ha;
+ 
++	qla4xxx_clear_ddb_entry(ha, ddb_entry->fw_ddb_index);
++
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	qla4xxx_free_ddb(ha, ddb_entry);
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+@@ -1183,14 +1186,6 @@ static void qla4xxx_conn_destroy(struct iscsi_cls_conn *cls_conn)
+ 	options = LOGOUT_OPTION_CLOSE_SESSION;
+ 	if (qla4xxx_session_logout_ddb(ha, ddb_entry, options) == QLA_ERROR)
+ 		ql4_printk(KERN_ERR, ha, "%s: Logout failed\n", __func__);
+-	else
+-		qla4xxx_clear_ddb_entry(ha, ddb_entry->fw_ddb_index);
+-
+-	/*
+-	 * Clear the DDB bit so that next login can use the bit
+-	 * if FW is not clearing the DDB entry then set DDB will fail anyways
+-	 */
+-	clear_bit(ddb_entry->fw_ddb_index, ha->ddb_idx_map);
+ }
+ 
+ static void qla4xxx_task_work(struct work_struct *wdata)
 -- 
 1.7.6
 
