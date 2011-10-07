@@ -1,38 +1,104 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2 14/14] qla4xxx: Update driver version to 5.02.00-k8
-Date: Fri, 7 Oct 2011 16:55:52 -0700
-Message-ID: <1318031752-3836-15-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH v2 12/14] qla4xxx: Fixed target discovery failed issue.
+Date: Fri, 7 Oct 2011 16:55:50 -0700
+Message-ID: <1318031752-3836-13-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:8031
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:32590
 	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759113Ab1JHAHa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:30 -0400
+	by vger.kernel.org with ESMTP id S1754777Ab1JHAHb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2011 20:07:31 -0400
 In-Reply-To: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Manish Rangankar <manish.rangankar@qlogic.com>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+From: Manish Rangankar <manish.rangankar@qlogic.com>
 
+When sendtargets response is greater then max receive data segment length,
+the passthrough IOCB failed with data overrun status. Solution is to
+allocate space for iSCSI header in the IOCB response buffer.
+
+JIRA Key: UPSISCSI-147
+
+Signed-off-by: Manish Rangankar <manish.rangankar@qlogic.com>
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h  |    1 +
+ drivers/scsi/qla4xxx/ql4_iocb.c |    2 +-
+ drivers/scsi/qla4xxx/ql4_os.c   |    9 +++++----
+ 3 files changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 6104928..c15347d 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index fcb1dff..ace637b 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -631,6 +631,7 @@ struct ql4_task_data {
+ 	dma_addr_t data_dma;
+ 	void *req_buffer;
+ 	dma_addr_t req_dma;
++	uint32_t req_len;
+ 	void *resp_buffer;
+ 	dma_addr_t resp_dma;
+ 	uint32_t resp_len;
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index ad40a61..4106693 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -407,7 +407,7 @@ int qla4xxx_send_passthru0(struct iscsi_task *task)
+ 	passthru_iocb->timeout = cpu_to_le16(PT_DEFAULT_TIMEOUT);
  
--#define QLA4XXX_DRIVER_VERSION	"5.02.00-k7"
-+#define QLA4XXX_DRIVER_VERSION	"5.02.00-k8"
+ 	/* Setup the out & in DSDs */
+-	if (task->data_count) {
++	if (task_data->req_len) {
+ 		memcpy((uint8_t *)task_data->req_buffer +
+ 		       sizeof(struct iscsi_hdr), task->data, task->data_count);
+ 		ctrl_flags |= PT_FLAG_SEND_BUFFER;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 8ed3e2f..fca3d2b 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1272,7 +1272,7 @@ static int qla4xxx_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "%s: MaxRecvLen %u, iscsi hrd %d\n",
+ 		      __func__, task->conn->max_recv_dlength, hdr_len));
+ 
+-	task_data->resp_len = task->conn->max_recv_dlength;
++	task_data->resp_len = task->conn->max_recv_dlength + hdr_len;
+ 	task_data->resp_buffer = dma_alloc_coherent(&ha->pdev->dev,
+ 						    task_data->resp_len,
+ 						    &task_data->resp_dma,
+@@ -1280,8 +1280,9 @@ static int qla4xxx_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 	if (!task_data->resp_buffer)
+ 		goto exit_alloc_pdu;
+ 
++	task_data->req_len = task->data_count + hdr_len;
+ 	task_data->req_buffer = dma_alloc_coherent(&ha->pdev->dev,
+-						   task->data_count + hdr_len,
++						   task_data->req_len,
+ 						   &task_data->req_dma,
+ 						   GFP_ATOMIC);
+ 	if (!task_data->req_buffer)
+@@ -1299,7 +1300,7 @@ exit_alloc_pdu:
+ 				  task_data->resp_buffer, task_data->resp_dma);
+ 
+ 	if (task_data->req_buffer)
+-		dma_free_coherent(&ha->pdev->dev, task->data_count + hdr_len,
++		dma_free_coherent(&ha->pdev->dev, task_data->req_len,
+ 				  task_data->req_buffer, task_data->req_dma);
+ 	return -ENOMEM;
+ }
+@@ -1328,7 +1329,7 @@ static void qla4xxx_task_cleanup(struct iscsi_task *task)
+ 
+ 	dma_free_coherent(&ha->pdev->dev, task_data->resp_len,
+ 			  task_data->resp_buffer, task_data->resp_dma);
+-	dma_free_coherent(&ha->pdev->dev, task->data_count + hdr_len,
++	dma_free_coherent(&ha->pdev->dev, task_data->req_len,
+ 			  task_data->req_buffer, task_data->req_dma);
+ 	return;
+ }
 -- 
 1.7.6
 
