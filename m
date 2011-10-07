@@ -1,98 +1,63 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH] log unhandled scsi error and sense messages via SCSI_LOG
-Date: Fri, 07 Oct 2011 15:42:32 -0400
-Message-ID: <4E8F5628.1070605@redhat.com>
-References: <1318010370-26976-1-git-send-email-revers@redhat.com> <1318011808.5071.90.camel@dabdike.int.hansenpartnership.com>
+From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@jj-port.com>
+Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuivmnIDmlrDlub/kuqTkvJrkubDlrrbjgIHmtbc=?=
+	=?utf-8?B?5YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
+Date: Fri, 7 Oct 2011 19:54:16 +0000 (UTC)
+Message-ID: <20121008033931186102@jj-port.com>
+Reply-To: <1339625218@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58405 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752739Ab1JGTmg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Oct 2011 15:42:36 -0400
-In-Reply-To: <1318011808.5071.90.camel@dabdike.int.hansenpartnership.com>
+Received: from [218.65.3.196] ([218.65.3.196]:19005 "EHLO mail.jj-port.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751680Ab1JGTyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Oct 2011 15:54:12 -0400
+Date: Mon, 8 Oct 2012 03:39:21 +0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, hare@suse.de
+To: line@pandora.be, lastride_81@hotmail.com, linux-scsi@vger.kernel.org, lataenten@gmail.com, linzo_anderson@msn.com, lion01@pillowmachinery.com, laterior@ymail.com, latha
 
-  On 10/07/2011 02:23 PM, James Bottomley wrote:
-> On Fri, 2011-10-07 at 13:59 -0400, Rob Evers wrote:
->> ---
->>   drivers/scsi/scsi_lib.c |    6 ++++--
->>   1 files changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index fc3f168..9905e2f 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -920,12 +920,14 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->>   			action = ACTION_FAIL;
->>   			break;
->>   		default:
->> -			description = "Unhandled sense code";
->> +			SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, cmd,
->> +							   "Unhandled sense code\n"));
->>   			action = ACTION_FAIL;
->>   			break;
->>   		}
->>   	} else {
->> -		description = "Unhandled error code";
->> +		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, cmd,
->> +						   "Unhandled error code\n"));
-> I just don't understand the necessity of this.  We're going to fail the
-> command and we'd like someone to understand why.
+576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrbjgIHlsZXk
+vJrkubDlrrbjgIHmtbflhbPmlbDmja4sQjJC6K+i55uY5Lmw5a62NTAw5LiH44CCDQoNCuS4gOWF
+sTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn6KGM5Lia5YiG5aW957G777yM
+5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8miANCjHvvIwyMDEx5pil5a2j
+MTA55bGK5bm/5Lqk5Lya5Lmw5a625pWw5o2u5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc
+5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a655piT5oiQ5Y2V77yBIA0KMu+8jOacgOaWsOWFqOeQ
+g+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgDQoz77yMMjAwOOW5tCwyMDA55bm0LDIw
+MTDlubQg5pil5a2jK+eni+Wto+W5v+S6pOS8muS5sOWutuWQjeW9le+8jDEwMyAxMDQgMTA1IDEw
+NiAxMDcgMTA4IOWFseWFreWxiiDlhbExMjAuNuS4h+aVsOaNruOAgg0KNO+8jDIwMTDlubTlm73p
+mYXkv4PplIDljY/kvJrvvIhQUEFJ77yJ5oiQ5ZGY5ZCN5Y2VIFBQQUkgTWVtYmVycyBEaXJlY3Rv
+cnnvvIzpnZ7luLjph43opoHnmoTlpKfkubDlrrbjgIINCjXvvIwyMDEw5bm05Yiw6aaZ5riv6YeH
+6LSt55qE5Zu95aSW5a6i5Lq65ZCN5b2VKOmmmea4r+i0uOWPkeWxgOaPkOS+mynvvIzlhbE3LjLk
+uIfmlbDmja7vvIzotoXnuqfph43opoHnmoTkubDlrrbjgIINCjbvvIw2MC445LiH5p2h5pyA5paw
+5Zu95aSWQjJC5Lmw5a626K+i55uY44CCDQo377yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBp
+ZXJz54mI5pWw5o2uIDHljYPkuIfjgIINCjjvvIznvqTlj5Hova/ku7bvvIznvqTlj5Hova/ku7bn
+moTpg6jnvbLkuI7lronoo4XjgIINCg0K5YWxIDUwMOS4h+S4quS5sOWutu+8jOavj+S4quWdh+ac
+iUVtYWlsLiANCg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/l
+pKnpg73mnInkubDlrrblm57lpI3jgIINCg0K6KaB55qE5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUy
+MTggICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFxLmNvbQ0K6KaB55qE
+5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUyMTggICAg5oiW6ICF56uL5Y2z5Zue5aSN6YKu566xOiAx
+MzM5NjI1MjE4QHFxLmNvbQ0K6KaB55qE5oqT57Sn6IGU57O7UVE6IDEzMzk2MjUyMTggICAg5oiW
+6ICF56uL5Y2z5Zue5aSN6YKu566xOiAxMzM5NjI1MjE4QHFxLmNvbQ0KDQror5rkv6HkuLrmnKzv
+vIzlpoLmnpzkuI3kv6Hku7vmnKzkuros5Y+v5Lul6LWw5reY5a6d5Lqk5piTLOaUtui0p+mqjOiv
+geWQjuWGjeS7mOasvizov5nmmK/lr7nmgqjmnIDlpb3nmoTkv53pmpzkuobjgIIgDQoNCuS/neiv
+geavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ5Lmw5a625Zue
+5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KDQoNCg0K5bm/5Lqk
+5Lya5Lmw5a625oyJ5Lqn5ZOB57G75Yir5YiG57G777yM5YiG5Li65Lul5LiL5Yeg57G777yaDQox
+IOWKnuWFrOiuvuWkhw0KMiDnvJbnu4flj4rol6Tpk4Hlt6Xoibrlk4ENCjMg546755KDDQo0IOmk
+kOWOqOeUqOWFtw0KNSDovabovoYNCjYg5aSn5Z6L5py65qKw5Y+K6K6+5aSHDQo3IOeUteWtkOeU
+teawlA0KOCDnlLXlrZDmtojotLnlk4ENCjkg57q657uHDQoxMCDmnI3oo4UNCjExIOS4quS6uuaK
+pOeQhg0KMTIg5bel56iL5py65qKwDQoxMyDlt6XlhbcNCjE0IOWMluW3pQ0KMTUg6K6h566X5py6
+5Y+K6YCa6K6vDQoxNiDlrrblsYXnlKjlk4ENCjE3IOWutuWxheijhemlsA0KMTgg5a625YW3DQox
+OSDlrrbnlKjnlLXlmagNCjIwIOW7uuetkeWPiuijhemlsOadkOaWmQ0KMjEg6IqC5pel55So5ZOB
+DQoyMiDnpLzlk4Hlj4rotaDlk4ENCjIzIOaRqeaJmOi9pg0KMjQg5rG96L2m6YWN5Lu2DQoyNSDp
+o5/lk4ENCjI2IOmZtueTtw0KMjcg6ZOB55+zDQoyOCDnjqnlhbcNCjI5IOWNq+a1tA0KMzAg5LqU
+6YeRDQozMSDlsI/lnovmnLrmorANCjMyIOmeiw0KMzMg5LyR6Zey55So5ZOBDQozNCDljLvnlpcN
+CjM1IOa1tOWupOS6p+WTgQ0KMzYg5Zut5p6XDQozNyDnhafmmI7kuqflk4ENCjM4IOmSn+ihqOec
+vOmVnA0KMzkg6Ieq6KGM6L2mDQo0MCDljIUNCg0KDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrbl
+m57lpI3jgIINCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp
+6YO95pyJ5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIIN
+CuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K
 
-As someone who looks at this code and try's to understand what
-happens, I agree but this is not always the case with our general
-consumers of this code.
 
-> Before this patch we print
->
-> sdX: Unhandled sense code
-> sdX:<sense information>
-> sdX:<command information>
->
-> Which hopefully causes someone to investigate what the actual problem
-> is.
->
-> If I apply this patch we're going to print
->
-> sdX:<sense information>
-> sdX:<command information>
->
-> Which is even less helpful.
->
-> If you're seeing some error or sense code that's causing a common retry,
-> then perhaps we should add it to the codes we check for instead of
-> trying to hide it?
-
-I only currently have one example of multiple unhandled error and sense 
-conditions.
-
-Perhaps I could collect the others.
-
-> James
->
->
-
-According to the report I got, there is no functional problem, just
-noise in /var/log/messages when fabric faults are occurring.
-
-This is occurring for both un-handled error and un-handled sense codes.
-
-I've been asked to reduce the noise as "Unhandled error code" and
-"Unhandled sense code" seem to be causing some concern.
-
-Can you suggest something to reduce the user concerns but doesn't
-loose the information as to what code path is executing before other
-informational prints occur?
-
-This is what I was trying to get at in the previous post where Mike
-Christie suggested the message be 'softened' but then Hannes suggested
-the change I have here.  Perhaps softening is the best course until all the
-cases are collected and appropriate decisions are made regarding
-the types of messages for each of them?
-
-Rob
