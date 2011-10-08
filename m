@@ -1,45 +1,64 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH] log unhandled scsi error and sense messages via SCSI_LOG
-Date: Fri, 07 Oct 2011 18:37:08 -0400
-Message-ID: <4E8F7F14.6090407@redhat.com>
-References: <1318010370-26976-1-git-send-email-revers@redhat.com> <1318011808.5071.90.camel@dabdike.int.hansenpartnership.com> <4E8F52EB.3070000@cs.wisc.edu> <4E8F5485.3090008@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30299 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758737Ab1JGWhP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Oct 2011 18:37:15 -0400
-In-Reply-To: <4E8F5485.3090008@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: [PATCH] mv_sas: OCZ RevoDrive3/zDrive R4 support (completely untested)
+Date: Fri,  7 Oct 2011 17:00:26 -0700
+Message-ID: <1318032026-21913-1-git-send-email-robbat2@gentoo.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "Robin H. Johnson" <robbat2@gentoo.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, hare@suse.de
 
-  On 10/07/2011 03:35 PM, Mike Christie wrote:
-> On 10/07/2011 02:28 PM, Mike Christie wrote:
->> On 10/07/2011 01:23 PM, James Bottomley wrote:
->>> If you're seeing some error or sense code that's causing a common retry,
->>> then perhaps we should add it to the codes we check for instead of
->>> trying to hide it?
->> We get questions about pretty much all of the error codes that do not
->> have a extra string and can get failed here.
->>
->> The problem is with the use of the word unhandled. Users think for
->> retryable errors we did not retry, or they think it means even if they
->> have multipath/raid that the error is going to the application or FS so
->> they get worried and make extra support requests.
->>
->> Was the patch that just changed the strings to ""Extended sense
->> description not available" and "Extended error description not available":
->> http://www.spinics.net/lists/linux-scsi/msg54874.html
->> ok?
->>
->> I think in the end Rob is just trying to get out of having to figure out
->> strings for all the error codes :)
+From: "Robin H. Johnson" <robbat2@gentoo.org>
 
-What's the worst that could happen?
+NOT FOR COMMIT USE; TESTING ONLY; NO WARRANTY; DANGER!
 
-Thanks, I'll give it a try.
+A friend recently bought a OCZ RevoDrive3 and was surprised by the lack
+of Linux support. I glanced at the Windows driver .inf file for the
+device, as well as the Windows driver for the zDrive R4, it looks like
+rebranded mvsas (mostly based on earlier versions of the Windows driver
+that include PCI IDs already found in the mvsas code).
 
+I constructed this patch for my friend to test, completely blind.
+I haven't heard back from him at all yet, but I thought that the wider
+community might find it useful for testing as well. I think it _should_
+work, just need to figure out what the correct chip variant is.
+
+Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+---
+ drivers/scsi/mvsas/mv_init.c |   10 ++++++++++
+ include/linux/pci_ids.h      |    2 ++
+ 2 files changed, 12 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 4e9af66..babb4a1 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -723,6 +723,16 @@ static struct pci_device_id __devinitdata mvs_pci_table[] = {
+ 		.class_mask	= 0,
+ 		.driver_data	= chip_9485,
+ 	},
++	{ PCI_VDEVICE(OCZ, 0x1021), chip_9485}, /* OCZ RevoDrive3/zDriveR4, 120GB */
++	{ PCI_VDEVICE(OCZ, 0x1022), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1040), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1041), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1042), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1043), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1044), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1080), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1083), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
++	{ PCI_VDEVICE(OCZ, 0x1084), chip_9485}, /* OCZ RevoDrive3/zDriveR4, ??? */
+ 
+ 	{ }	/* terminate list */
+ };
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index ae96bbe..3fe46e9 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2868,3 +2868,5 @@
+ 
+ #define PCI_VENDOR_ID_XEN		0x5853
+ #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
++
++#define PCI_VENDOR_ID_OCZ		0x1b85
+-- 
+1.7.7
