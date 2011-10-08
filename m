@@ -1,55 +1,168 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch v2] [SCSI] aacraid: use lower snprintf() limit
-Date: Sat, 8 Oct 2011 13:45:07 +0300
-Message-ID: <20111008104507.GP30887@longonot.mountain>
-References: <20111005055046.GD32077@elgon.mountain>
- <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: simplify target_parse_naa_6h_vendor_specific()
+Date: Sat, 08 Oct 2011 15:47:40 -0700
+Message-ID: <1318114060.4978.41.camel@haakon2.linux-iscsi.org>
+References: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
+	 <9d522de8482ec20816be2b68b2d37ab8406f6876.1316419814.git.andriy.shevchenko@linux.intel.com>
+	 <CAHp75Vdp6MpUQKeg1LM3Gn+R21ZfV66dg9Q78QUj=BVLM0t1DQ@mail.gmail.com>
+	 <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This is just a cleanup, to silence static checker warnings.  It
-doesn't change how the code works.
+On Wed, 2011-09-28 at 14:04 -0700, Nicholas A. Bellinger wrote:
+> On Tue, 2011-09-27 at 13:48 +0300, Andy Shevchenko wrote:
+> > On Mon, Sep 19, 2011 at 11:11 AM, Andy Shevchenko
+> > <andriy.shevchenko@linux.intel.com> wrote:
+> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > > Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > ---
+> > >  drivers/target/target_core_cdb.c |   30 +++++++++++++-----------------
+> > >  1 files changed, 13 insertions(+), 17 deletions(-)
+> > >
+> > > diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+> > > index f04d4ef..b796115 100644
+> > > --- a/drivers/target/target_core_cdb.c
+> > > +++ b/drivers/target/target_core_cdb.c
+> > > @@ -24,7 +24,6 @@
+> > >  */
+> > >
+> > >  #include <linux/kernel.h>
+> > > -#include <linux/ctype.h>
+> > >  #include <asm/unaligned.h>
+> > >  #include <scsi/scsi.h>
+> > >
+> > > @@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
+> > >  }
+> > >
+> > >  static void
+> > > -target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
+> > > +target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
+> > >  {
+> > >        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
+> > > -       unsigned char *buf = buf_off;
+> > > -       int cnt = 0, next = 1;
+> > > +       int cnt;
+> > > +       bool next = true;
+> > > +
+> > >        /*
+> > >         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
+> > >         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
+> > > @@ -169,20 +169,16 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
+> > >         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
+> > >         * per device uniqeness.
+> > >         */
+> > > -       while (*p != '\0') {
+> > > -               if (cnt >= 13)
+> > > -                       break;
+> > > -               if (!isxdigit(*p)) {
+> > > -                       p++;
+> > > +       for (cnt = 0; *p && cnt < 13; next = !next) {
+> > > +               int val = hex_to_bin(*p++);
+> > > +
+> > > +               if (val < 0)
+> > >                        continue;
+> > > -               }
+> > > -               if (next != 0) {
+> > > -                       buf[cnt++] |= hex_to_bin(*p++);
+> > > -                       next = 0;
+> > > -               } else {
+> > > -                       buf[cnt] = hex_to_bin(*p++) << 4;
+> > > -                       next = 1;
+> > > -               }
+> > > +
+> > > +               if (next)
+> > > +                       buf[cnt++] |= val;
+> > > +               else
+> > > +                       buf[cnt] = val << 4;
+> > >        }
+> > >  }
+> > >
+> > 
+> > Nicholas, any comment on this?
+> > 
+> 
+> Hi Andy,
+> 
+> This simplification is fine with me, and will plan to queue this for
+> v3.2.
+> 
 
-buf[] can either be BUF_SIZE if this is called from sysfs, or it can
-be 16 if it's called from aac_get_adapter_info() via
-aac_get_serial_number().  We use the smaller limit here.
+Hi Andy,
 
-sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo) is 12 so there
-is actually no chance of hitting either limit.
+So I finally got around to testing this patch, but unfortunately it does
+not produce the same results as the original code.  The problem is due
+to the 'next = !next' assignment in the above for loop, which causes the
+value to be reset even when hex_to_bin() detects an non hex character..
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-v2:  fix a whitespace issue, and use the min() macro.
+Here is an updated patch that I will be commiting into lio-core-2.6.git.
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 3382475..4aa76d6 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -894,16 +894,17 @@ static ssize_t aac_show_serial_number(struct device *device,
- 	int len = 0;
+Thanks,
+
+--nab
+
+
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index f04d4ef..0d02391 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -24,7 +24,6 @@
+  */
  
- 	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
--		len = snprintf(buf, PAGE_SIZE, "%06X\n",
-+		len = snprintf(buf, 16, "%06X\n",
- 		  le32_to_cpu(dev->adapter_info.serial[0]));
- 	if (len &&
- 	  !memcmp(&dev->supplement_adapter_info.MfgPcbaSerialNo[
- 	    sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo)-len],
- 	  buf, len-1))
--		len = snprintf(buf, PAGE_SIZE, "%.*s\n",
-+		len = snprintf(buf, 16, "%.*s\n",
- 		  (int)sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo),
- 		  dev->supplement_adapter_info.MfgPcbaSerialNo);
--	return len;
-+
-+	return min(len, 16);
+ #include <linux/kernel.h>
+-#include <linux/ctype.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ 
+@@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
  }
  
- static ssize_t aac_show_max_channel(struct device *device,
+ static void
+-target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
++target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
+ {
+        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
+-       unsigned char *buf = buf_off;
+-       int cnt = 0, next = 1;
++       int cnt;
++       bool next = true;
++
+        /*
+         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
+         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
+@@ -169,19 +169,18 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
+         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
+         * per device uniqeness.
+         */
+-       while (*p != '\0') {
+-               if (cnt >= 13)
+-                       break;
+-               if (!isxdigit(*p)) {
+-                       p++;
++       for (cnt = 0; *p && cnt < 13; p++) {
++               int val = hex_to_bin(*p);
++
++               if (val < 0)
+                        continue;
+-               }
+-               if (next != 0) {
+-                       buf[cnt++] |= hex_to_bin(*p++);
+-                       next = 0;
++
++               if (next) {
++                       next = false;
++                       buf[cnt++] |= val;
+                } else {
+-                       buf[cnt] = hex_to_bin(*p++) << 4;
+-                       next = 1;
++                       next = true;
++                       buf[cnt] = val << 4;
+                }
+        }
+ }
