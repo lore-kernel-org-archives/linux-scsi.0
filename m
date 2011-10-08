@@ -1,57 +1,55 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 00/14] qla4xxx: Patches for scsi-misc
-Date: Sat, 08 Oct 2011 00:52:13 -0500
-Message-ID: <4E8FE50D.6000603@cs.wisc.edu>
-References: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch v2] [SCSI] aacraid: use lower snprintf() limit
+Date: Sat, 8 Oct 2011 13:45:07 +0300
+Message-ID: <20111008104507.GP30887@longonot.mountain>
+References: <20111005055046.GD32077@elgon.mountain>
+ <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50733 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751392Ab1JHFwY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Oct 2011 01:52:24 -0400
-In-Reply-To: <1318031752-3836-1-git-send-email-vikas.chaudhary@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <d97a34694e741dc6a2a71fbcd49bab49.squirrel@webmail.sf-mail.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On 10/07/2011 06:55 PM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> 
-> James,
-> 
-> This patchset address all the comments posted here:
->  - http://www.spinics.net/lists/linux-scsi/msg54819.html
->  - http://www.spinics.net/lists/linux-scsi/msg54813.html
->  - http://www.spinics.net/lists/linux-scsi/msg54815.html
-> 
-> Please apply the following patches to scsi-misc for inclusion in mainline.
-> 
-> Lalit Chandivade (5):
->       qla4xxx: Fix bidirectional CHAP.
->       qla4xxx: Do not add duplicate CHAP entry in FLASH
->       qla4xxx: Fix exporting boot targets to sysfs
->       qla4xxx: Fix getting BIDI CHAP for boot targets
->       qla4xxx: Free Device Database (DDB) reserved by FW
-> 
-> Manish Rangankar (6):
->       qla4xxx: Clear DDB map index on the basis of AEN.
->       qla4xxx: Fixed session destroy issue on link up-down.
->       qla4xxx: Fixed device blocked issue on link up-down.
->       qla4xxx: Fixed active session re-open issue.
->       qla4xxx: Fixed target discovery failed issue.
->       qla4xxx: updated device id check for BFS.
-> 
-> Nilesh Javali (1):
->       qla4xxx: Add new FLT firmware region
-> 
-> Vikas Chaudhary (2):
->       qla4xxx: Update license
->       qla4xxx: Update driver version to 5.02.00-k8
-> 
+This is just a cleanup, to silence static checker warnings.  It
+doesn't change how the code works.
 
-Looks ok.
+buf[] can either be BUF_SIZE if this is called from sysfs, or it can
+be 16 if it's called from aac_get_adapter_info() via
+aac_get_serial_number().  We use the smaller limit here.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo) is 12 so there
+is actually no chance of hitting either limit.
+
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+v2:  fix a whitespace issue, and use the min() macro.
+
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3382475..4aa76d6 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -894,16 +894,17 @@ static ssize_t aac_show_serial_number(struct device *device,
+ 	int len = 0;
+ 
+ 	if (le32_to_cpu(dev->adapter_info.serial[0]) != 0xBAD0)
+-		len = snprintf(buf, PAGE_SIZE, "%06X\n",
++		len = snprintf(buf, 16, "%06X\n",
+ 		  le32_to_cpu(dev->adapter_info.serial[0]));
+ 	if (len &&
+ 	  !memcmp(&dev->supplement_adapter_info.MfgPcbaSerialNo[
+ 	    sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo)-len],
+ 	  buf, len-1))
+-		len = snprintf(buf, PAGE_SIZE, "%.*s\n",
++		len = snprintf(buf, 16, "%.*s\n",
+ 		  (int)sizeof(dev->supplement_adapter_info.MfgPcbaSerialNo),
+ 		  dev->supplement_adapter_info.MfgPcbaSerialNo);
+-	return len;
++
++	return min(len, 16);
+ }
+ 
+ static ssize_t aac_show_max_channel(struct device *device,
