@@ -1,168 +1,85 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: simplify target_parse_naa_6h_vendor_specific()
-Date: Sat, 08 Oct 2011 15:47:40 -0700
-Message-ID: <1318114060.4978.41.camel@haakon2.linux-iscsi.org>
-References: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
-	 <9d522de8482ec20816be2b68b2d37ab8406f6876.1316419814.git.andriy.shevchenko@linux.intel.com>
-	 <CAHp75Vdp6MpUQKeg1LM3Gn+R21ZfV66dg9Q78QUj=BVLM0t1DQ@mail.gmail.com>
-	 <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
+Subject: Re: [patch] target: unlock on error in pscsi_create_virtdevice()
+Date: Sat, 08 Oct 2011 18:06:41 -0700
+Message-ID: <1318122401.4978.55.camel@haakon2.linux-iscsi.org>
+References: <20111001225913.GA15072@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
+In-Reply-To: <20111001225913.GA15072@elgon.mountain>
 Sender: target-devel-owner@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-09-28 at 14:04 -0700, Nicholas A. Bellinger wrote:
-> On Tue, 2011-09-27 at 13:48 +0300, Andy Shevchenko wrote:
-> > On Mon, Sep 19, 2011 at 11:11 AM, Andy Shevchenko
-> > <andriy.shevchenko@linux.intel.com> wrote:
-> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > ---
-> > >  drivers/target/target_core_cdb.c |   30 +++++++++++++-----------------
-> > >  1 files changed, 13 insertions(+), 17 deletions(-)
-> > >
-> > > diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-> > > index f04d4ef..b796115 100644
-> > > --- a/drivers/target/target_core_cdb.c
-> > > +++ b/drivers/target/target_core_cdb.c
-> > > @@ -24,7 +24,6 @@
-> > >  */
-> > >
-> > >  #include <linux/kernel.h>
-> > > -#include <linux/ctype.h>
-> > >  #include <asm/unaligned.h>
-> > >  #include <scsi/scsi.h>
-> > >
-> > > @@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
-> > >  }
-> > >
-> > >  static void
-> > > -target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
-> > > +target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
-> > >  {
-> > >        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
-> > > -       unsigned char *buf = buf_off;
-> > > -       int cnt = 0, next = 1;
-> > > +       int cnt;
-> > > +       bool next = true;
-> > > +
-> > >        /*
-> > >         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
-> > >         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
-> > > @@ -169,20 +169,16 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
-> > >         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
-> > >         * per device uniqeness.
-> > >         */
-> > > -       while (*p != '\0') {
-> > > -               if (cnt >= 13)
-> > > -                       break;
-> > > -               if (!isxdigit(*p)) {
-> > > -                       p++;
-> > > +       for (cnt = 0; *p && cnt < 13; next = !next) {
-> > > +               int val = hex_to_bin(*p++);
-> > > +
-> > > +               if (val < 0)
-> > >                        continue;
-> > > -               }
-> > > -               if (next != 0) {
-> > > -                       buf[cnt++] |= hex_to_bin(*p++);
-> > > -                       next = 0;
-> > > -               } else {
-> > > -                       buf[cnt] = hex_to_bin(*p++) << 4;
-> > > -                       next = 1;
-> > > -               }
-> > > +
-> > > +               if (next)
-> > > +                       buf[cnt++] |= val;
-> > > +               else
-> > > +                       buf[cnt] = val << 4;
-> > >        }
-> > >  }
-> > >
-> > 
-> > Nicholas, any comment on this?
-> > 
+On Sun, 2011-10-02 at 01:59 +0300, Dan Carpenter wrote:
+> This function should take the lock on success but on the error cases
+> it doesn't.
 > 
-> Hi Andy,
-> 
-> This simplification is fine with me, and will plan to queue this for
-> v3.2.
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
 
-Hi Andy,
+Hi Dan,
 
-So I finally got around to testing this patch, but unfortunately it does
-not produce the same results as the original code.  The problem is due
-to the 'next = !next' assignment in the above for loop, which causes the
-value to be reset even when hex_to_bin() detects an non hex character..
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index ba9e94d..b619596 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -567,7 +567,7 @@ static struct se_device *pscsi_create_virtdevice(
+>  			if (IS_ERR(sh)) {
+>  				pr_err("pSCSI: Unable to locate"
+>  					" pdv_host_id: %d\n", pdv->pdv_host_id);
+> -				return (struct se_device *) sh;
+> +				return ERR_CAST(sh);
+>  			}
+>  		}
+>  	} else {
+> @@ -609,6 +609,7 @@ static struct se_device *pscsi_create_virtdevice(
+>  				hba->hba_flags &= ~HBA_FLAGS_PSCSI_MODE;
+>  			}
+>  			pdv->pdv_sd = NULL;
+> +			spin_unlock_irq(sh->host_lock);
+>  			return ERR_PTR(-ENODEV);
+>  		}
+>  		return dev;
+> --
 
-Here is an updated patch that I will be commiting into lio-core-2.6.git.
+So the additional of an unlock in the failure path above is actually a
+duplicate.  pscsi_create_type_*() will already do the unlocking before
+returning back into pscsi_create_virtdevice()..  I know this is slightly
+confusing, but we need to keep host_lock held before calling into
+scsi_device_get() for type_disk and type_rom.
+
+So that said, i'm commiting a following revised version of your patch to
+add the correct ERR_CAST usage above.
 
 Thanks,
 
 --nab
 
+commit 8c206dce8ccf83e2b3e121e89074d841edd43536
+Author: Dan Carpenter <dan.carpenter@oracle.com>
+Date:   Sun Oct 2 01:59:13 2011 +0300
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index f04d4ef..0d02391 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -24,7 +24,6 @@
-  */
- 
- #include <linux/kernel.h>
--#include <linux/ctype.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
- 
-@@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
- }
- 
- static void
--target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
-+target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
- {
-        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
--       unsigned char *buf = buf_off;
--       int cnt = 0, next = 1;
-+       int cnt;
-+       bool next = true;
-+
-        /*
-         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
-         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
-@@ -169,19 +169,18 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
-         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
-         * per device uniqeness.
-         */
--       while (*p != '\0') {
--               if (cnt >= 13)
--                       break;
--               if (!isxdigit(*p)) {
--                       p++;
-+       for (cnt = 0; *p && cnt < 13; p++) {
-+               int val = hex_to_bin(*p);
-+
-+               if (val < 0)
-                        continue;
--               }
--               if (next != 0) {
--                       buf[cnt++] |= hex_to_bin(*p++);
--                       next = 0;
-+
-+               if (next) {
-+                       next = false;
-+                       buf[cnt++] |= val;
-                } else {
--                       buf[cnt] = hex_to_bin(*p++) << 4;
--                       next = 1;
-+                       next = true;
-+                       buf[cnt] = val << 4;
+    target: Make pscsi_create_virtdevice use ERR_CAST
+    
+    This patch changes pscsi_create_virtdevice() to properly return ERR_CAST
+    instead of a raw pointer upon scsi_host_lookup() failure.
+    
+    Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+    Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index c4509e3..e72a638 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -567,7 +567,7 @@ static struct se_device *pscsi_create_virtdevice(
+                        if (IS_ERR(sh)) {
+                                pr_err("pSCSI: Unable to locate"
+                                        " pdv_host_id: %d\n", pdv->pdv_host_id);
+-                               return (struct se_device *) sh;
++                               return ERR_CAST(sh);
+                        }
                 }
-        }
- }
+        } else {
