@@ -1,802 +1,870 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 7/10] megaraid_sas: Add support for MegaRAID 9360/9380 12GB/s controllers
-Date: Sat, 8 Oct 2011 18:15:06 -0700
-Message-ID: <CAHtARFHZCGBbaHEQOOydB7J8DeYgKgT=9FwHmiP7h7THcWMF=w@mail.gmail.com>
+Subject: [PATCH 8/10] megaraid_sas: Add multiple MSI-X vector/multiple reply
+ queue support
+Date: Sat, 8 Oct 2011 18:15:13 -0700
+Message-ID: <CAHtARFHqcciVUFN2FAt0eAfdW184spbHfSzQ+UOTpij7BF9e9Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0016e6de03a4a16dea04aed36718
+Content-Type: multipart/mixed; boundary=0016e64c393a02037d04aed3687b
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-wy0-f174.google.com ([74.125.82.174]:62149 "EHLO
 	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751158Ab1JIBPH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Oct 2011 21:15:07 -0400
+	with ESMTP id S1751158Ab1JIBPO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Oct 2011 21:15:14 -0400
 Received: by mail-wy0-f174.google.com with SMTP id 34so4924347wyg.19
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Oct 2011 18:15:06 -0700 (PDT)
+        for <linux-scsi@vger.kernel.org>; Sat, 08 Oct 2011 18:15:13 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---0016e6de03a4a16dea04aed36718
+--0016e64c393a02037d04aed3687b
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/linux-scsi,
 
-The following patch for megaraid_sas adds support for MegaRAID
-9360/9380 12GB/s SAS-RAID controllers.
+The following patch for megaraid_sas adds multiple MSI-X vector and
+multiple reply queue support.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
 diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
 scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c
 --- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-08
-14:16:11.739236563 -0700
+15:28:51.698330861 -0700
 +++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-08
-13:32:11.415175492 -0700
-@@ -114,6 +114,8 @@
- 	/* xscale IOP */
- 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_FUSION)},
- 	/* Fusion */
-+	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_INVADER)},
-+	/* Invader */
- 	{}
- };
-
-@@ -1583,7 +1585,8 @@
- {
- 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
- 	    (instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
--	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION)) {
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)) {
- 		writel(MFI_STOP_ADP, &instance->reg_set->doorbell);
- 	} else {
- 		writel(MFI_STOP_ADP, &instance->reg_set->inbound_doorbell);
-@@ -1957,7 +1960,8 @@
- 	/*
- 	 * First wait for all commands to complete
- 	 */
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION)
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
- 		ret = megasas_reset_fusion(scmd->device->host);
- 	else
- 		ret = megasas_generic_reset(scmd);
-@@ -2656,7 +2660,9 @@
- 				(instance->pdev->device ==
- 				 PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
- 				(instance->pdev->device ==
--				 PCI_DEVICE_ID_LSI_FUSION)) {
-+				 PCI_DEVICE_ID_LSI_FUSION) ||
-+				(instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_INVADER)) {
- 				writel(
- 				  MFI_INIT_CLEAR_HANDSHAKE|MFI_INIT_HOTPLUG,
- 				  &instance->reg_set->doorbell);
-@@ -2676,7 +2682,9 @@
- 				(instance->pdev->device ==
- 				 PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
- 			    (instance->pdev->device ==
--			     PCI_DEVICE_ID_LSI_FUSION)) {
-+			     PCI_DEVICE_ID_LSI_FUSION) ||
-+			    (instance->pdev->device ==
-+			     PCI_DEVICE_ID_LSI_INVADER)) {
- 				writel(MFI_INIT_HOTPLUG,
- 				       &instance->reg_set->doorbell);
- 			} else
-@@ -2697,11 +2705,15 @@
- 				(instance->pdev->device ==
- 				PCI_DEVICE_ID_LSI_SAS0071SKINNY)  ||
- 				(instance->pdev->device
--					== PCI_DEVICE_ID_LSI_FUSION)) {
-+					== PCI_DEVICE_ID_LSI_FUSION) ||
-+				(instance->pdev->device
-+					== PCI_DEVICE_ID_LSI_INVADER)) {
- 				writel(MFI_RESET_FLAGS,
- 					&instance->reg_set->doorbell);
--				if (instance->pdev->device ==
--				    PCI_DEVICE_ID_LSI_FUSION) {
-+				if ((instance->pdev->device ==
-+				    PCI_DEVICE_ID_LSI_FUSION) ||
-+				    (instance->pdev->device ==
-+				     PCI_DEVICE_ID_LSI_INVADER)) {
- 					for (i = 0; i < (10 * 1000); i += 20) {
- 						if (readl(
- 							    &instance->
-@@ -3498,6 +3510,7 @@
-
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
-+	case PCI_DEVICE_ID_LSI_INVADER:
- 		instance->instancet = &megasas_instance_template_fusion;
- 		break;
- 	case PCI_DEVICE_ID_LSI_SAS1078R:
-@@ -3894,7 +3907,8 @@
- 	host->max_cmd_len = 16;
-
- 	/* Fusion only supports host reset */
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) {
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)) {
- 		host->hostt->eh_device_reset_handler = NULL;
- 		host->hostt->eh_bus_reset_handler = NULL;
+15:18:29.354267547 -0700
+@@ -2536,7 +2536,7 @@
+ 						instance->reg_set)
+ 						) == 0) {
+ 		/* Hardware may not set outbound_intr_status in MSI-X mode */
+-		if (!instance->msi_flag)
++		if (!instance->msix_vectors)
+ 			return IRQ_NONE;
  	}
-@@ -4004,6 +4018,7 @@
 
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
-+	case PCI_DEVICE_ID_LSI_INVADER:
- 	{
- 		struct fusion_context *fusion;
+@@ -2594,16 +2594,14 @@
+  */
+ static irqreturn_t megasas_isr(int irq, void *devp)
+ {
+-	struct megasas_instance *instance;
++	struct megasas_irq_context *irq_context = devp;
++	struct megasas_instance *instance = irq_context->instance;
+ 	unsigned long flags;
+ 	irqreturn_t	rc;
 
-@@ -4096,7 +4111,8 @@
- 	instance->last_time = 0;
- 	instance->disableOnlineCtrlReset = 1;
+-	if (atomic_read(
+-		&(((struct megasas_instance *)devp)->fw_reset_no_pci_access)))
++	if (atomic_read(&instance->fw_reset_no_pci_access))
+ 		return IRQ_HANDLED;
 
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION)
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
- 		INIT_WORK(&instance->work_init, megasas_fusion_ocr_wq);
- 	else
- 		INIT_WORK(&instance->work_init, process_fw_state_change_wq);
-@@ -4161,7 +4177,8 @@
- 	free_irq(instance->msi_flag ? instance->msixentry.vector :
- 		 instance->pdev->irq, instance);
+-	instance = (struct megasas_instance *)devp;
+-
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+ 	rc =  megasas_deplete_reply_queue(instance, DID_OK);
+ 	spin_unlock_irqrestore(&instance->hba_lock, flags);
+@@ -3488,6 +3486,7 @@
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct megasas_ctrl_info *ctrl_info;
+ 	unsigned long bar_list;
++	int i;
+
+ 	/* Find first memory bar */
+ 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
+@@ -3541,9 +3540,33 @@
+ 	/* Check if MSI-X is supported while in ready state */
+ 	msix_enable = (instance->instancet->read_fw_status_reg(reg_set) &
+ 		       0x4000000) >> 0x1a;
+-	if (msix_enable && !msix_disable &&
+-	    !pci_enable_msix(instance->pdev, &instance->msixentry, 1))
+-		instance->msi_flag = 1;
++	if (msix_enable && !msix_disable) {
++		/* Check max MSI-X vectors */
++		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
++		    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)) {
++			instance->msix_vectors = (readl(&instance->reg_set->
++							outbound_scratch_pad_2
++							  ) & 0x1F) + 1;
++		} else
++			instance->msix_vectors = 1;
++		/* Don't bother allocating more MSI-X vectors than cpus */
++		instance->msix_vectors = min(instance->msix_vectors,
++					     (unsigned int)num_online_cpus());
++		for (i = 0; i < instance->msix_vectors; i++)
++			instance->msixentry[i].entry = i;
++		i = pci_enable_msix(instance->pdev, instance->msixentry,
++				    instance->msix_vectors);
++		if (i >= 0) {
++			if (i) {
++				if (!pci_enable_msix(instance->pdev,
++						     instance->msixentry, i))
++					instance->msix_vectors = i;
++				else
++					instance->msix_vectors = 0;
++			}
++		} else
++			instance->msix_vectors = 0;
++	}
+
+ 	/* Get operational params, sge flags, send init cmd to controller */
+ 	if (instance->instancet->init_adapter(instance))
+@@ -3958,7 +3981,7 @@
+ static int __devinit
+ megasas_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	int rval, pos;
++	int rval, pos, i, j;
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+ 	u16 control = 0;
+@@ -4126,11 +4149,32 @@
+ 	/*
+ 	 * Register IRQ
+ 	 */
+-	if (request_irq(instance->msi_flag ? instance->msixentry.vector :
+-			pdev->irq, instance->instancet->service_isr,
+-			IRQF_SHARED, "megasas", instance)) {
+-		printk(KERN_DEBUG "megasas: Failed to register IRQ\n");
+-		goto fail_irq;
++	if (instance->msix_vectors) {
++		for (i = 0 ; i < instance->msix_vectors; i++) {
++			instance->irq_context[i].instance = instance;
++			instance->irq_context[i].MSIxIndex = i;
++			if (request_irq(instance->msixentry[i].vector,
++					instance->instancet->service_isr, 0,
++					"megasas",
++					&instance->irq_context[i])) {
++				printk(KERN_DEBUG "megasas: Failed to "
++				       "register IRQ for vector %d.\n", i);
++				for (j = 0 ; j < i ; j++)
++					free_irq(
++						instance->msixentry[j].vector,
++						&instance->irq_context[j]);
++				goto fail_irq;
++			}
++		}
++	} else {
++		instance->irq_context[0].instance = instance;
++		instance->irq_context[0].MSIxIndex = 0;
++		if (request_irq(pdev->irq, instance->instancet->service_isr,
++				IRQF_SHARED, "megasas",
++				&instance->irq_context[0])) {
++			printk(KERN_DEBUG "megasas: Failed to register IRQ\n");
++			goto fail_irq;
++		}
+ 	}
+
+ 	instance->instancet->enable_intr(instance->reg_set);
+@@ -4174,8 +4218,12 @@
+
+ 	pci_set_drvdata(pdev, NULL);
+ 	instance->instancet->disable_intr(instance->reg_set);
+-	free_irq(instance->msi_flag ? instance->msixentry.vector :
+-		 instance->pdev->irq, instance);
++	if (instance->msix_vectors)
++		for (i = 0 ; i < instance->msix_vectors; i++)
++			free_irq(instance->msixentry[i].vector,
++				 &instance->irq_context[i]);
++	else
++		free_irq(instance->pdev->irq, &instance->irq_context[0]);
  fail_irq:
--	if (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION)
-+	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
-+	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
- 		megasas_release_fusion(instance);
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
+ 	    (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER))
+@@ -4183,7 +4231,7 @@
  	else
  		megasas_release_mfi(instance);
-@@ -4368,6 +4385,7 @@
+       fail_init_mfi:
+-	if (instance->msi_flag)
++	if (instance->msix_vectors)
+ 		pci_disable_msix(instance->pdev);
+       fail_alloc_dma_buf:
+ 	if (instance->evt_detail)
+@@ -4299,6 +4347,7 @@
+ {
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
++	int i;
+
+ 	instance = pci_get_drvdata(pdev);
+ 	host = instance->host;
+@@ -4322,9 +4371,14 @@
+
+ 	pci_set_drvdata(instance->pdev, instance);
+ 	instance->instancet->disable_intr(instance->reg_set);
+-	free_irq(instance->msi_flag ? instance->msixentry.vector :
+-		 instance->pdev->irq, instance);
+-	if (instance->msi_flag)
++
++	if (instance->msix_vectors)
++		for (i = 0 ; i < instance->msix_vectors; i++)
++			free_irq(instance->msixentry[i].vector,
++				 &instance->irq_context[i]);
++	else
++		free_irq(instance->pdev->irq, &instance->irq_context[0]);
++	if (instance->msix_vectors)
+ 		pci_disable_msix(instance->pdev);
+
+ 	pci_save_state(pdev);
+@@ -4342,7 +4396,7 @@
+ static int
+ megasas_resume(struct pci_dev *pdev)
+ {
+-	int rval;
++	int rval, i, j;
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+
+@@ -4380,8 +4434,9 @@
+ 		goto fail_ready_state;
+
+ 	/* Now re-enable MSI-X */
+-	if (instance->msi_flag)
+-		pci_enable_msix(instance->pdev, &instance->msixentry, 1);
++	if (instance->msix_vectors)
++		pci_enable_msix(instance->pdev, instance->msixentry,
++				instance->msix_vectors);
 
  	switch (instance->pdev->device) {
  	case PCI_DEVICE_ID_LSI_FUSION:
-+	case PCI_DEVICE_ID_LSI_INVADER:
- 	{
- 		megasas_reset_reply_desc(instance);
- 		if (megasas_ioc_init_fusion(instance)) {
-@@ -4501,6 +4519,7 @@
-
- 	switch (instance->pdev->device) {
- 	case PCI_DEVICE_ID_LSI_FUSION:
-+	case PCI_DEVICE_ID_LSI_INVADER:
- 		megasas_release_fusion(instance);
- 		for (i = 0; i < 2 ; i++)
- 			if (fusion->ld_map[i])
-diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fp.c
-scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fp.c
---- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fp.c	2011-10-08
-14:16:11.739236563 -0700
-+++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fp.c	2011-10-08
-13:38:06.168176264 -0700
-@@ -52,6 +52,7 @@
- #include <scsi/scsi_host.h>
-
- #include "megaraid_sas_fusion.h"
-+#include "megaraid_sas.h"
- #include <asm/div64.h>
-
- #define ABS_DIFF(a, b)   (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
-@@ -226,8 +227,9 @@
- *    span          - Span number
- *    block         - Absolute Block number in the physical disk
- */
--u8 MR_GetPhyParams(u32 ld, u64 stripRow, u16 stripRef, u64 *pdBlock,
--		   u16 *pDevHandle, struct RAID_CONTEXT *pRAID_Context,
-+u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
-+		   u16 stripRef, u64 *pdBlock, u16 *pDevHandle,
-+		   struct RAID_CONTEXT *pRAID_Context,
- 		   struct MR_FW_RAID_MAP_ALL *map)
- {
- 	struct MR_LD_RAID  *raid = MR_LdRaidGet(ld, map);
-@@ -279,7 +281,8 @@
- 		*pDevHandle = MR_PdDevHandleGet(pd, map);
- 	else {
- 		*pDevHandle = MR_PD_INVALID; /* set dev handle as invalid. */
--		if (raid->level >= 5)
-+		if ((raid->level >= 5) &&
-+		    (instance->pdev->device != PCI_DEVICE_ID_LSI_INVADER))
- 			pRAID_Context->regLockFlags = REGION_TYPE_EXCLUSIVE;
- 		else if (raid->level == 1) {
- 			/* Get alternate Pd. */
-@@ -306,7 +309,8 @@
- * This function will return 0 if region lock was acquired OR return num strips
- */
- u8
--MR_BuildRaidContext(struct IO_REQUEST_INFO *io_info,
-+MR_BuildRaidContext(struct megasas_instance *instance,
-+		    struct IO_REQUEST_INFO *io_info,
- 		    struct RAID_CONTEXT *pRAID_Context,
- 		    struct MR_FW_RAID_MAP_ALL *map)
- {
-@@ -394,8 +398,12 @@
+@@ -4411,11 +4466,32 @@
+ 	/*
+ 	 * Register IRQ
+ 	 */
+-	if (request_irq(instance->msi_flag ? instance->msixentry.vector :
+-			pdev->irq, instance->instancet->service_isr,
+-			IRQF_SHARED, "megasas", instance)) {
+-		printk(KERN_ERR "megasas: Failed to register IRQ\n");
+-		goto fail_irq;
++	if (instance->msix_vectors) {
++		for (i = 0 ; i < instance->msix_vectors; i++) {
++			instance->irq_context[i].instance = instance;
++			instance->irq_context[i].MSIxIndex = i;
++			if (request_irq(instance->msixentry[i].vector,
++					instance->instancet->service_isr, 0,
++					"megasas",
++					&instance->irq_context[i])) {
++				printk(KERN_DEBUG "megasas: Failed to "
++				       "register IRQ for vector %d.\n", i);
++				for (j = 0 ; j < i ; j++)
++					free_irq(
++						instance->msixentry[j].vector,
++						&instance->irq_context[j]);
++				goto fail_irq;
++			}
++		}
++	} else {
++		instance->irq_context[0].instance = instance;
++		instance->irq_context[0].MSIxIndex = 0;
++		if (request_irq(pdev->irq, instance->instancet->service_isr,
++				IRQF_SHARED, "megasas",
++				&instance->irq_context[0])) {
++			printk(KERN_DEBUG "megasas: Failed to register IRQ\n");
++			goto fail_irq;
++		}
  	}
 
- 	pRAID_Context->timeoutValue     = map->raidMap.fpPdIoTimeoutSec;
--	pRAID_Context->regLockFlags     = (isRead) ? REGION_TYPE_SHARED_READ :
--		raid->regTypeReqOnWrite;
-+	if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER)
-+		pRAID_Context->regLockFlags = (isRead) ?
-+			raid->regTypeReqOnRead : raid->regTypeReqOnWrite;
+ 	instance->instancet->enable_intr(instance->reg_set);
+@@ -4512,9 +4588,13 @@
+
+ 	instance->instancet->disable_intr(instance->reg_set);
+
+-	free_irq(instance->msi_flag ? instance->msixentry.vector :
+-		 instance->pdev->irq, instance);
+-	if (instance->msi_flag)
++	if (instance->msix_vectors)
++		for (i = 0 ; i < instance->msix_vectors; i++)
++			free_irq(instance->msixentry[i].vector,
++				 &instance->irq_context[i]);
 +	else
-+		pRAID_Context->regLockFlags = (isRead) ?
-+			REGION_TYPE_SHARED_READ : raid->regTypeReqOnWrite;
- 	pRAID_Context->VirtualDiskTgtId = raid->targetId;
- 	pRAID_Context->regLockRowLBA    = regStart;
- 	pRAID_Context->regLockLength    = regSize;
-@@ -404,7 +412,8 @@
- 	/*Get Phy Params only if FP capable, or else leave it to MR firmware
- 	  to do the calculation.*/
- 	if (io_info->fpOkForIo) {
--		retval = MR_GetPhyParams(ld, start_strip, ref_in_start_stripe,
-+		retval = MR_GetPhyParams(instance, ld, start_strip,
-+					 ref_in_start_stripe,
- 					 &io_info->pdBlock,
- 					 &io_info->devHandle, pRAID_Context,
- 					 map);
-@@ -415,7 +424,8 @@
- 	} else if (isRead) {
- 		uint stripIdx;
- 		for (stripIdx = 0; stripIdx < num_strips; stripIdx++) {
--			if (!MR_GetPhyParams(ld, start_strip + stripIdx,
-+			if (!MR_GetPhyParams(instance, ld,
-+					     start_strip + stripIdx,
- 					     ref_in_start_stripe,
- 					     &io_info->pdBlock,
- 					     &io_info->devHandle,
++		free_irq(instance->pdev->irq, &instance->irq_context[0]);
++	if (instance->msix_vectors)
+ 		pci_disable_msix(instance->pdev);
+
+ 	switch (instance->pdev->device) {
+@@ -4560,14 +4640,20 @@
+  */
+ static void megasas_shutdown(struct pci_dev *pdev)
+ {
++	int i;
+ 	struct megasas_instance *instance = pci_get_drvdata(pdev);
++
+ 	instance->unload = 1;
+ 	megasas_flush_cache(instance);
+ 	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
+ 	instance->instancet->disable_intr(instance->reg_set);
+-	free_irq(instance->msi_flag ? instance->msixentry.vector :
+-		 instance->pdev->irq, instance);
+-	if (instance->msi_flag)
++	if (instance->msix_vectors)
++		for (i = 0 ; i < instance->msix_vectors; i++)
++			free_irq(instance->msixentry[i].vector,
++				 &instance->irq_context[i]);
++	else
++		free_irq(instance->pdev->irq, &instance->irq_context[0]);
++	if (instance->msix_vectors)
+ 		pci_disable_msix(instance->pdev);
+ }
+
 diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c
 scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.c
 --- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-10-08
-14:16:11.740236506 -0700
+15:28:51.699330817 -0700
 +++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-10-08
-14:15:52.176174272 -0700
-@@ -74,7 +74,8 @@
- 		     struct megasas_cmd *cmd);
-
- u8
--MR_BuildRaidContext(struct IO_REQUEST_INFO *io_info,
-+MR_BuildRaidContext(struct megasas_instance *instance,
-+		    struct IO_REQUEST_INFO *io_info,
- 		    struct RAID_CONTEXT *pRAID_Context,
- 		    struct MR_FW_RAID_MAP_ALL *map);
- u16 MR_TargetIdToLdGet(u32 ldTgtId, struct MR_FW_RAID_MAP_ALL *map);
-@@ -1038,7 +1039,9 @@
- 	case MFI_STAT_DEVICE_NOT_FOUND:
- 		cmd->scmd->result = DID_BAD_TARGET << 16;
- 		break;
--
-+	case MFI_STAT_CONFIG_SEQ_MISMATCH:
-+		cmd->scmd->result = DID_IMM_RETRY << 16;
-+		break;
- 	default:
- 		printk(KERN_DEBUG "megasas: FW status %#x\n", status);
- 		cmd->scmd->result = DID_ERROR << 16;
-@@ -1061,14 +1064,17 @@
- 			struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr,
- 			struct megasas_cmd_fusion *cmd)
+15:28:31.213333058 -0700
+@@ -385,7 +385,7 @@
+ int
+ megasas_alloc_cmds_fusion(struct megasas_instance *instance)
  {
--	int i, sg_processed;
--	int sge_count, sge_idx;
-+	int i, sg_processed, sge_count;
- 	struct scatterlist *os_sgl;
+-	int i, j;
++	int i, j, count;
+ 	u32 max_cmd, io_frames_sz;
  	struct fusion_context *fusion;
+ 	struct megasas_cmd_fusion *cmd;
+@@ -409,9 +409,10 @@
+ 		goto fail_req_desc;
+ 	}
+
++	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
+ 	fusion->reply_frames_desc_pool =
+ 		pci_pool_create("reply_frames pool", instance->pdev,
+-				fusion->reply_alloc_sz, 16, 0);
++				fusion->reply_alloc_sz * count, 16, 0);
+
+ 	if (!fusion->reply_frames_desc_pool) {
+ 		printk(KERN_ERR "megasas; Could not allocate memory for "
+@@ -430,7 +431,7 @@
+ 	}
+
+ 	reply_desc = fusion->reply_frames_desc;
+-	for (i = 0; i < fusion->reply_q_depth; i++, reply_desc++)
++	for (i = 0; i < fusion->reply_q_depth * count; i++, reply_desc++)
+ 		reply_desc->Words = ULLONG_MAX;
+
+ 	io_frames_sz = fusion->io_frames_alloc_sz;
+@@ -633,7 +634,9 @@
+ 		fusion->reply_frames_desc_phys;
+ 	IOCInitMessage->SystemRequestFrameBaseAddress =
+ 		fusion->io_request_frames_phys;
+-
++	/* Set to 0 for none or 1 MSI-X vectors */
++	IOCInitMessage->HostMSIxVectors = (instance->msix_vectors > 0 ?
++					   instance->msix_vectors : 0);
+ 	init_frame = (struct megasas_init_frame *)cmd->frame;
+ 	memset(init_frame, 0, MEGAMFI_FRAME_SIZE);
+
+@@ -877,7 +880,7 @@
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct fusion_context *fusion;
+ 	u32 max_cmd;
+-	int i = 0;
++	int i = 0, count;
 
  	fusion = instance->ctrl_context;
 
--	cmd->io_request->ChainOffset = 0;
-+	if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+		struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr_end = sgl_ptr;
-+		sgl_ptr_end += fusion->max_sge_in_main_msg - 1;
-+		sgl_ptr_end->Flags = 0;
-+	}
+@@ -929,7 +932,9 @@
+ 		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE -
+ 		 sizeof(union MPI2_SGE_IO_UNION))/16;
 
- 	sge_count = scsi_dma_map(scp);
+-	fusion->last_reply_idx = 0;
++	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++	for (i = 0 ; i < count; i++)
++		fusion->last_reply_idx[i] = 0;
 
-@@ -1077,16 +1083,14 @@
- 	if (sge_count > instance->max_num_sge || !sge_count)
- 		return sge_count;
-
--	if (sge_count > fusion->max_sge_in_main_msg) {
--		/* One element to store the chain info */
--		sge_idx = fusion->max_sge_in_main_msg - 1;
--	} else
--		sge_idx = sge_count;
--
- 	scsi_for_each_sg(scp, os_sgl, sge_count, i) {
- 		sgl_ptr->Length = sg_dma_len(os_sgl);
- 		sgl_ptr->Address = sg_dma_address(os_sgl);
- 		sgl_ptr->Flags = 0;
-+		if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+			if (i == sge_count - 1)
-+				sgl_ptr->Flags = IEEE_SGE_FLAGS_END_OF_LIST;
-+		}
- 		sgl_ptr++;
-
- 		sg_processed = i + 1;
-@@ -1095,13 +1099,30 @@
- 		    (sge_count > fusion->max_sge_in_main_msg)) {
-
- 			struct MPI25_IEEE_SGE_CHAIN64 *sg_chain;
--			cmd->io_request->ChainOffset =
--				fusion->chain_offset_io_request;
-+			if (instance->pdev->device ==
-+			    PCI_DEVICE_ID_LSI_INVADER) {
-+				if ((cmd->io_request->IoFlags &
-+				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH) !=
-+				MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH)
-+					cmd->io_request->ChainOffset =
-+						fusion->
-+						chain_offset_io_request;
-+				else
-+					cmd->io_request->ChainOffset = 0;
-+			} else
-+				cmd->io_request->ChainOffset =
-+					fusion->chain_offset_io_request;
-+
- 			sg_chain = sgl_ptr;
- 			/* Prepare chain element */
- 			sg_chain->NextChainOffset = 0;
--			sg_chain->Flags = (IEEE_SGE_FLAGS_CHAIN_ELEMENT |
--					   MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR);
-+			if (instance->pdev->device ==
-+			    PCI_DEVICE_ID_LSI_INVADER)
-+				sg_chain->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT;
-+			else
-+				sg_chain->Flags =
-+					(IEEE_SGE_FLAGS_CHAIN_ELEMENT |
-+					 MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR);
- 			sg_chain->Length =  (sizeof(union MPI2_SGE_IO_UNION)
- 					     *(sge_count - sg_processed));
- 			sg_chain->Address = cmd->sg_frame_phys_addr;
-@@ -1394,7 +1415,8 @@
- 		io_request->RaidContext.regLockFlags  = 0;
- 		fp_possible = 0;
- 	} else {
--		if (MR_BuildRaidContext(&io_info, &io_request->RaidContext,
-+		if (MR_BuildRaidContext(instance, &io_info,
-+					&io_request->RaidContext,
- 					local_map_ptr))
+ 	/*
+ 	 * Allocate memory for descriptors
+@@ -1421,6 +1426,12 @@
  			fp_possible = io_info.fpOkForIo;
  	}
-@@ -1407,6 +1429,20 @@
- 		cmd->request_desc->SCSIIO.RequestFlags =
- 			(MPI2_REQ_DESCRIPT_FLAGS_HIGH_PRIORITY
- 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-+		if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+			if (io_request->RaidContext.regLockFlags ==
-+			    REGION_TYPE_UNUSED)
-+				cmd->request_desc->SCSIIO.RequestFlags =
-+					(MEGASAS_REQ_DESCRIPT_FLAGS_NO_LOCK <<
-+					MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-+			io_request->RaidContext.Type = MPI2_TYPE_CUDA;
-+			io_request->RaidContext.nseg = 0x1;
-+			io_request->IoFlags |=
-+			  MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH;
-+			io_request->RaidContext.regLockFlags |=
-+			  (MR_RL_FLAGS_GRANT_DESTINATION_CUDA |
-+			   MR_RL_FLAGS_SEQ_NUM_ENABLE);
-+		}
- 		if ((fusion->load_balance_info[device_id].loadBalanceFlag) &&
- 		    (io_info.isRead)) {
- 			io_info.devHandle =
-@@ -1421,11 +1457,23 @@
- 	} else {
- 		io_request->RaidContext.timeoutValue =
- 			local_map_ptr->raidMap.fpPdIoTimeoutSec;
--		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
--		io_request->DevHandle = device_id;
- 		cmd->request_desc->SCSIIO.RequestFlags =
- 			(MEGASAS_REQ_DESCRIPT_FLAGS_LD_IO
- 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-+		if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+			if (io_request->RaidContext.regLockFlags ==
-+			    REGION_TYPE_UNUSED)
-+				cmd->request_desc->SCSIIO.RequestFlags =
-+					(MEGASAS_REQ_DESCRIPT_FLAGS_NO_LOCK <<
-+					MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-+			io_request->RaidContext.Type = MPI2_TYPE_CUDA;
-+			io_request->RaidContext.regLockFlags |=
-+				(MR_RL_FLAGS_GRANT_DESTINATION_CPU0 |
-+				 MR_RL_FLAGS_SEQ_NUM_ENABLE);
-+			io_request->RaidContext.nseg = 0x1;
-+		}
-+		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
-+		io_request->DevHandle = device_id;
- 	} /* Not FP */
+
++	/* Use smp_processor_id() for now until cmd->request->cpu is CPU
++	   id by default, not CPU group id, otherwise all MSI-X queues won't
++	   be utilized */
++	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
++		smp_processor_id() % instance->msix_vectors : 0;
++
+ 	if (fp_possible) {
+ 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+ 				   local_map_ptr, start_lba_lo);
+@@ -1691,7 +1702,7 @@
+  * Completes all commands that is in reply descriptor queue
+  */
+ int
+-complete_cmd_fusion(struct megasas_instance *instance)
++complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ {
+ 	union MPI2_REPLY_DESCRIPTORS_UNION *desc;
+ 	struct MPI2_SCSI_IO_SUCCESS_REPLY_DESCRIPTOR *reply_desc;
+@@ -1711,7 +1722,9 @@
+ 		return IRQ_HANDLED;
+
+ 	desc = fusion->reply_frames_desc;
+-	desc += fusion->last_reply_idx;
++	desc += ((MSIxIndex * fusion->reply_alloc_sz)/
++		 sizeof(union MPI2_REPLY_DESCRIPTORS_UNION)) +
++		fusion->last_reply_idx[MSIxIndex];
+
+ 	reply_desc = (struct MPI2_SCSI_IO_SUCCESS_REPLY_DESCRIPTOR *)desc;
+
+@@ -1784,16 +1797,19 @@
+ 			break;
+ 		}
+
+-		fusion->last_reply_idx++;
+-		if (fusion->last_reply_idx >= fusion->reply_q_depth)
+-			fusion->last_reply_idx = 0;
++		fusion->last_reply_idx[MSIxIndex]++;
++		if (fusion->last_reply_idx[MSIxIndex] >=
++		    fusion->reply_q_depth)
++			fusion->last_reply_idx[MSIxIndex] = 0;
+
+ 		desc->Words = ULLONG_MAX;
+ 		num_completed++;
+
+ 		/* Get the next reply descriptor */
+-		if (!fusion->last_reply_idx)
+-			desc = fusion->reply_frames_desc;
++		if (!fusion->last_reply_idx[MSIxIndex])
++			desc = fusion->reply_frames_desc +
++				((MSIxIndex * fusion->reply_alloc_sz)/
++				 sizeof(union MPI2_REPLY_DESCRIPTORS_UNION));
+ 		else
+ 			desc++;
+
+@@ -1813,7 +1829,7 @@
+ 		return IRQ_NONE;
+
+ 	wmb();
+-	writel(fusion->last_reply_idx,
++	writel((MSIxIndex << 24) | fusion->last_reply_idx[MSIxIndex],
+ 	       &instance->reg_set->reply_post_host_index);
+ 	megasas_check_and_restore_queue_depth(instance);
+ 	return IRQ_HANDLED;
+@@ -1831,6 +1847,9 @@
+ 	struct megasas_instance *instance =
+ 		(struct megasas_instance *)instance_addr;
+ 	unsigned long flags;
++	u32 count, MSIxIndex;
++
++	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
+
+ 	/* If we have already declared adapter dead, donot complete cmds */
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+@@ -1841,7 +1860,8 @@
+ 	spin_unlock_irqrestore(&instance->hba_lock, flags);
+
+ 	spin_lock_irqsave(&instance->completion_lock, flags);
+-	complete_cmd_fusion(instance);
++	for (MSIxIndex = 0 ; MSIxIndex < count; MSIxIndex++)
++		complete_cmd_fusion(instance, MSIxIndex);
+ 	spin_unlock_irqrestore(&instance->completion_lock, flags);
  }
 
-@@ -1508,8 +1556,10 @@
- 	io_request->EEDPFlags = 0;
- 	io_request->Control = 0;
- 	io_request->EEDPBlockSize = 0;
--	io_request->IoFlags = 0;
-+	io_request->ChainOffset = 0;
- 	io_request->RaidContext.RAIDFlags = 0;
-+	io_request->RaidContext.Type = 0;
-+	io_request->RaidContext.nseg = 0;
+@@ -1850,10 +1870,11 @@
+  */
+ irqreturn_t megasas_isr_fusion(int irq, void *devp)
+ {
+-	struct megasas_instance *instance = (struct megasas_instance *)devp;
++	struct megasas_irq_context *irq_context = devp;
++	struct megasas_instance *instance = irq_context->instance;
+ 	u32 mfiStatus, fw_state;
 
- 	memcpy(io_request->CDB.CDB32, scp->cmnd, scp->cmd_len);
- 	/*
-@@ -1863,6 +1913,14 @@
+-	if (!instance->msi_flag) {
++	if (!instance->msix_vectors) {
+ 		mfiStatus = instance->instancet->clear_intr(instance->reg_set);
+ 		if (!mfiStatus)
+ 			return IRQ_NONE;
+@@ -1865,7 +1886,7 @@
+ 		return IRQ_HANDLED;
+ 	}
+
+-	if (!complete_cmd_fusion(instance)) {
++	if (!complete_cmd_fusion(instance, irq_context->MSIxIndex)) {
+ 		instance->instancet->clear_intr(instance->reg_set);
+ 		/* If we didn't complete any commands, check for FW fault */
+ 		fw_state = instance->instancet->read_fw_status_reg(
+@@ -2081,14 +2102,16 @@
+
+ void  megasas_reset_reply_desc(struct megasas_instance *instance)
+ {
+-	int i;
++	int i, count;
+ 	struct fusion_context *fusion;
+ 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_desc;
 
  	fusion = instance->ctrl_context;
- 	io_req = cmd->io_request;
-+
-+	if (instance->pdev->device == PCI_DEVICE_ID_LSI_INVADER) {
-+		struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr_end =
-+			(struct MPI25_IEEE_SGE_CHAIN64 *)&io_req->SGL;
-+		sgl_ptr_end += fusion->max_sge_in_main_msg - 1;
-+		sgl_ptr_end->Flags = 0;
-+	}
-+
- 	mpi25_ieee_chain =
- 	  (struct MPI25_IEEE_SGE_CHAIN64 *)&io_req->SGL.IeeeChain;
+-	fusion->last_reply_idx = 0;
++	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++	for (i = 0 ; i < count ; i++)
++		fusion->last_reply_idx[i] = 0;
+ 	reply_desc = fusion->reply_frames_desc;
+-	for (i = 0 ; i < fusion->reply_q_depth; i++, reply_desc++)
++	for (i = 0 ; i < fusion->reply_q_depth * count; i++, reply_desc++)
+ 		reply_desc->Words = ULLONG_MAX;
+ }
 
 diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.h
 scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.h
 --- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.h	2011-10-08
-14:16:11.741236471 -0700
+15:28:51.699330817 -0700
 +++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.h	2011-10-08
-13:54:41.306174922 -0700
-@@ -44,6 +44,14 @@
+15:07:04.816269266 -0700
+@@ -43,6 +43,7 @@
+ #define HOST_DIAG_WRITE_ENABLE			    0x80
  #define HOST_DIAG_RESET_ADAPTER			    0x4
  #define MEGASAS_FUSION_MAX_RESET_TRIES		    3
++#define MAX_MSIX_QUEUES_FUSION			    16
 
-+/* Invader defines */
-+#define MPI2_TYPE_CUDA				    0x2
-+#define MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH   0x4000
-+#define	MR_RL_FLAGS_GRANT_DESTINATION_CPU0	    0x00
-+#define	MR_RL_FLAGS_GRANT_DESTINATION_CPU1	    0x10
-+#define	MR_RL_FLAGS_GRANT_DESTINATION_CUDA	    0x80
-+#define MR_RL_FLAGS_SEQ_NUM_ENABLE		    0x8
-+
- /* T10 PI defines */
- #define MR_PROT_INFO_TYPE_CONTROLLER                0x8
- #define MEGASAS_SCSI_VARIABLE_LENGTH_CMD            0x7f
-@@ -70,7 +78,7 @@
-  */
- #define MEGASAS_REQ_DESCRIPT_FLAGS_LD_IO           0x7
- #define MEGASAS_REQ_DESCRIPT_FLAGS_MFA             0x1
--
-+#define MEGASAS_REQ_DESCRIPT_FLAGS_NO_LOCK	   0x2
- #define MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT      1
+ /* Invader defines */
+ #define MPI2_TYPE_CUDA				    0x2
+@@ -673,7 +674,7 @@
+ 	union MPI2_REPLY_DESCRIPTORS_UNION *reply_frames_desc;
+ 	struct dma_pool *reply_frames_desc_pool;
 
- #define MEGASAS_FP_CMD_LEN	16
-@@ -82,7 +90,9 @@
-  */
+-	u16 last_reply_idx;
++	u16 last_reply_idx[MAX_MSIX_QUEUES_FUSION];
 
- struct RAID_CONTEXT {
--	u16     resvd0;
-+	u8	Type:4;
-+	u8	nseg:4;
-+	u8	resvd0;
- 	u16     timeoutValue;
- 	u8      regLockFlags;
- 	u8      resvd1;
-@@ -527,7 +537,7 @@
- 	u8      ldState;
- 	u8      regTypeReqOnWrite;
- 	u8      modFactor;
--	u8      reserved2[1];
-+	u8	regTypeReqOnRead;
- 	u16     seqNum;
-
- 	struct {
+ 	u32 reply_q_depth;
+ 	u32 request_alloc_sz;
 diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas.h
 scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas.h
 --- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas.h	2011-10-08
-14:16:11.742236470 -0700
+15:28:51.700330765 -0700
 +++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas.h	2011-10-08
-13:55:57.919176024 -0700
-@@ -48,6 +48,7 @@
- #define	PCI_DEVICE_ID_LSI_SAS0073SKINNY		0x0073
- #define	PCI_DEVICE_ID_LSI_SAS0071SKINNY		0x0071
- #define	PCI_DEVICE_ID_LSI_FUSION		0x005b
-+#define PCI_DEVICE_ID_LSI_INVADER		0x005d
+15:09:19.378268539 -0700
+@@ -757,6 +757,7 @@
+ #define MEGASAS_INT_CMDS			32
+ #define MEGASAS_SKINNY_INT_CMDS			5
 
++#define MEGASAS_MAX_MSIX_QUEUES			16
  /*
-  * =====================================
-@@ -221,6 +222,7 @@
- 	MFI_STAT_RESERVATION_IN_PROGRESS = 0x36,
- 	MFI_STAT_I2C_ERRORS_DETECTED = 0x37,
- 	MFI_STAT_PCI_ERRORS_DETECTED = 0x38,
-+	MFI_STAT_CONFIG_SEQ_MISMATCH = 0x67,
-
- 	MFI_STAT_INVALID_STATUS = 0xFF
+  * FW can accept both 32 and 64 bit SGLs. We want to allocate 32/64 bit
+  * SGLs based on the size of dma_addr_t
+@@ -1278,6 +1279,11 @@
+ 	struct megasas_instance *instance;
  };
 
---0016e6de03a4a16dea04aed36718
-Content-Type: application/octet-stream; name="megaraid_sas.patch7"
-Content-Disposition: attachment; filename="megaraid_sas.patch7"
++struct megasas_irq_context {
++	struct megasas_instance *instance;
++	u32 MSIxIndex;
++};
++
+ struct megasas_instance {
+
+ 	u32 *producer;
+@@ -1351,8 +1357,9 @@
+
+ 	/* Ptr to hba specific information */
+ 	void *ctrl_context;
+-	u8	msi_flag;
+-	struct msix_entry msixentry;
++	unsigned int msix_vectors;
++	struct msix_entry msixentry[MEGASAS_MAX_MSIX_QUEUES];
++	struct megasas_irq_context irq_context[MEGASAS_MAX_MSIX_QUEUES];
+ 	u64 map_id;
+ 	struct megasas_cmd *map_update_cmd;
+ 	unsigned long bar;
+
+--0016e64c393a02037d04aed3687b
+Content-Type: application/octet-stream; name="megaraid_sas.patch8"
+Content-Disposition: attachment; filename="megaraid_sas.patch8"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gtjbzufz0
+X-Attachment-Id: f_gtjc39ff0
 
 ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
 YXNfYmFzZS5jIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
 ZF9zYXNfYmFzZS5jCi0tLSBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
-cmFpZF9zYXNfYmFzZS5jCTIwMTEtMTAtMDggMTQ6MTY6MTEuNzM5MjM2NTYzIC0wNzAwCisrKyBz
+cmFpZF9zYXNfYmFzZS5jCTIwMTEtMTAtMDggMTU6Mjg6NTEuNjk4MzMwODYxIC0wNzAwCisrKyBz
 Y3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2Uu
-YwkyMDExLTEwLTA4IDEzOjMyOjExLjQxNTE3NTQ5MiAtMDcwMApAQCAtMTE0LDYgKzExNCw4IEBA
-CiAJLyogeHNjYWxlIElPUCAqLwogCXtQQ0lfREVWSUNFKFBDSV9WRU5ET1JfSURfTFNJX0xPR0lD
-LCBQQ0lfREVWSUNFX0lEX0xTSV9GVVNJT04pfSwKIAkvKiBGdXNpb24gKi8KKwl7UENJX0RFVklD
-RShQQ0lfVkVORE9SX0lEX0xTSV9MT0dJQywgUENJX0RFVklDRV9JRF9MU0lfSU5WQURFUil9LAor
-CS8qIEludmFkZXIgKi8KIAl7fQogfTsKIApAQCAtMTU4Myw3ICsxNTg1LDggQEAKIHsKIAlpZiAo
-KGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lfU0FTMDA3M1NLSU5O
-WSkgfHwKIAkgICAgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lf
-U0FTMDA3MVNLSU5OWSkgfHwKLQkgICAgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RF
-VklDRV9JRF9MU0lfRlVTSU9OKSkgeworCSAgICAoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQ
-Q0lfREVWSUNFX0lEX0xTSV9GVVNJT04pIHx8CisJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNl
-ID09IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIpKSB7CiAJCXdyaXRlbChNRklfU1RPUF9BRFAs
-ICZpbnN0YW5jZS0+cmVnX3NldC0+ZG9vcmJlbGwpOwogCX0gZWxzZSB7CiAJCXdyaXRlbChNRklf
-U1RPUF9BRFAsICZpbnN0YW5jZS0+cmVnX3NldC0+aW5ib3VuZF9kb29yYmVsbCk7CkBAIC0xOTU3
-LDcgKzE5NjAsOCBAQAogCS8qCiAJICogRmlyc3Qgd2FpdCBmb3IgYWxsIGNvbW1hbmRzIHRvIGNv
-bXBsZXRlCiAJICovCi0JaWYgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9J
-RF9MU0lfRlVTSU9OKQorCWlmICgoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNF
-X0lEX0xTSV9GVVNJT04pIHx8CisJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09IFBDSV9E
-RVZJQ0VfSURfTFNJX0lOVkFERVIpKQogCQlyZXQgPSBtZWdhc2FzX3Jlc2V0X2Z1c2lvbihzY21k
-LT5kZXZpY2UtPmhvc3QpOwogCWVsc2UKIAkJcmV0ID0gbWVnYXNhc19nZW5lcmljX3Jlc2V0KHNj
-bWQpOwpAQCAtMjY1Niw3ICsyNjYwLDkgQEAKIAkJCQkoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9
-PQogCQkJCSBQQ0lfREVWSUNFX0lEX0xTSV9TQVMwMDcxU0tJTk5ZKSB8fAogCQkJCShpbnN0YW5j
-ZS0+cGRldi0+ZGV2aWNlID09Ci0JCQkJIFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lPTikpIHsKKwkJ
-CQkgUENJX0RFVklDRV9JRF9MU0lfRlVTSU9OKSB8fAorCQkJCShpbnN0YW5jZS0+cGRldi0+ZGV2
-aWNlID09CisJCQkJUENJX0RFVklDRV9JRF9MU0lfSU5WQURFUikpIHsKIAkJCQl3cml0ZWwoCiAJ
-CQkJICBNRklfSU5JVF9DTEVBUl9IQU5EU0hBS0V8TUZJX0lOSVRfSE9UUExVRywKIAkJCQkgICZp
-bnN0YW5jZS0+cmVnX3NldC0+ZG9vcmJlbGwpOwpAQCAtMjY3Niw3ICsyNjgyLDkgQEAKIAkJCQko
-aW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PQogCQkJCSBQQ0lfREVWSUNFX0lEX0xTSV9TQVMwMDcx
-U0tJTk5ZKSB8fAogCQkJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09Ci0JCQkgICAgIFBD
-SV9ERVZJQ0VfSURfTFNJX0ZVU0lPTikpIHsKKwkJCSAgICAgUENJX0RFVklDRV9JRF9MU0lfRlVT
-SU9OKSB8fAorCQkJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09CisJCQkgICAgIFBDSV9E
-RVZJQ0VfSURfTFNJX0lOVkFERVIpKSB7CiAJCQkJd3JpdGVsKE1GSV9JTklUX0hPVFBMVUcsCiAJ
-CQkJICAgICAgICZpbnN0YW5jZS0+cmVnX3NldC0+ZG9vcmJlbGwpOwogCQkJfSBlbHNlCkBAIC0y
-Njk3LDExICsyNzA1LDE1IEBACiAJCQkJKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0KIAkJCQlQ
-Q0lfREVWSUNFX0lEX0xTSV9TQVMwMDcxU0tJTk5ZKSAgfHwKIAkJCQkoaW5zdGFuY2UtPnBkZXYt
-PmRldmljZQotCQkJCQk9PSBQQ0lfREVWSUNFX0lEX0xTSV9GVVNJT04pKSB7CisJCQkJCT09IFBD
-SV9ERVZJQ0VfSURfTFNJX0ZVU0lPTikgfHwKKwkJCQkoaW5zdGFuY2UtPnBkZXYtPmRldmljZQor
-CQkJCQk9PSBQQ0lfREVWSUNFX0lEX0xTSV9JTlZBREVSKSkgewogCQkJCXdyaXRlbChNRklfUkVT
-RVRfRkxBR1MsCiAJCQkJCSZpbnN0YW5jZS0+cmVnX3NldC0+ZG9vcmJlbGwpOwotCQkJCWlmIChp
-bnN0YW5jZS0+cGRldi0+ZGV2aWNlID09Ci0JCQkJICAgIFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lP
-TikgeworCQkJCWlmICgoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PQorCQkJCSAgICBQQ0lfREVW
-SUNFX0lEX0xTSV9GVVNJT04pIHx8CisJCQkJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09
-CisJCQkJICAgICBQQ0lfREVWSUNFX0lEX0xTSV9JTlZBREVSKSkgewogCQkJCQlmb3IgKGkgPSAw
-OyBpIDwgKDEwICogMTAwMCk7IGkgKz0gMjApIHsKIAkJCQkJCWlmIChyZWFkbCgKIAkJCQkJCQkg
-ICAgJmluc3RhbmNlLT4KQEAgLTM0OTgsNiArMzUxMCw3IEBACiAKIAlzd2l0Y2ggKGluc3RhbmNl
-LT5wZGV2LT5kZXZpY2UpIHsKIAljYXNlIFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lPTjoKKwljYXNl
-IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVI6CiAJCWluc3RhbmNlLT5pbnN0YW5jZXQgPSAmbWVn
-YXNhc19pbnN0YW5jZV90ZW1wbGF0ZV9mdXNpb247CiAJCWJyZWFrOwogCWNhc2UgUENJX0RFVklD
-RV9JRF9MU0lfU0FTMTA3OFI6CkBAIC0zODk0LDcgKzM5MDcsOCBAQAogCWhvc3QtPm1heF9jbWRf
-bGVuID0gMTY7CiAKIAkvKiBGdXNpb24gb25seSBzdXBwb3J0cyBob3N0IHJlc2V0ICovCi0JaWYg
-KGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lfRlVTSU9OKSB7CisJ
-aWYgKChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lPTikg
-fHwKKwkgICAgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lfSU5W
-QURFUikpIHsKIAkJaG9zdC0+aG9zdHQtPmVoX2RldmljZV9yZXNldF9oYW5kbGVyID0gTlVMTDsK
-IAkJaG9zdC0+aG9zdHQtPmVoX2J1c19yZXNldF9oYW5kbGVyID0gTlVMTDsKIAl9CkBAIC00MDA0
-LDYgKzQwMTgsNyBAQAogCiAJc3dpdGNoIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlKSB7CiAJY2Fz
-ZSBQQ0lfREVWSUNFX0lEX0xTSV9GVVNJT046CisJY2FzZSBQQ0lfREVWSUNFX0lEX0xTSV9JTlZB
-REVSOgogCXsKIAkJc3RydWN0IGZ1c2lvbl9jb250ZXh0ICpmdXNpb247CiAKQEAgLTQwOTYsNyAr
-NDExMSw4IEBACiAJaW5zdGFuY2UtPmxhc3RfdGltZSA9IDA7CiAJaW5zdGFuY2UtPmRpc2FibGVP
-bmxpbmVDdHJsUmVzZXQgPSAxOwogCi0JaWYgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJ
-X0RFVklDRV9JRF9MU0lfRlVTSU9OKQorCWlmICgoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQ
-Q0lfREVWSUNFX0lEX0xTSV9GVVNJT04pIHx8CisJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNl
-ID09IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIpKQogCQlJTklUX1dPUksoJmluc3RhbmNlLT53
-b3JrX2luaXQsIG1lZ2FzYXNfZnVzaW9uX29jcl93cSk7CiAJZWxzZQogCQlJTklUX1dPUksoJmlu
-c3RhbmNlLT53b3JrX2luaXQsIHByb2Nlc3NfZndfc3RhdGVfY2hhbmdlX3dxKTsKQEAgLTQxNjEs
-NyArNDE3Nyw4IEBACiAJZnJlZV9pcnEoaW5zdGFuY2UtPm1zaV9mbGFnID8gaW5zdGFuY2UtPm1z
-aXhlbnRyeS52ZWN0b3IgOgogCQkgaW5zdGFuY2UtPnBkZXYtPmlycSwgaW5zdGFuY2UpOwogZmFp
-bF9pcnE6Ci0JaWYgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lf
-RlVTSU9OKQorCWlmICgoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX0xT
-SV9GVVNJT04pIHx8CisJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0Vf
-SURfTFNJX0lOVkFERVIpKQogCQltZWdhc2FzX3JlbGVhc2VfZnVzaW9uKGluc3RhbmNlKTsKIAll
-bHNlCiAJCW1lZ2FzYXNfcmVsZWFzZV9tZmkoaW5zdGFuY2UpOwpAQCAtNDM2OCw2ICs0Mzg1LDcg
-QEAKIAogCXN3aXRjaCAoaW5zdGFuY2UtPnBkZXYtPmRldmljZSkgewogCWNhc2UgUENJX0RFVklD
-RV9JRF9MU0lfRlVTSU9OOgorCWNhc2UgUENJX0RFVklDRV9JRF9MU0lfSU5WQURFUjoKIAl7CiAJ
-CW1lZ2FzYXNfcmVzZXRfcmVwbHlfZGVzYyhpbnN0YW5jZSk7CiAJCWlmIChtZWdhc2FzX2lvY19p
-bml0X2Z1c2lvbihpbnN0YW5jZSkpIHsKQEAgLTQ1MDEsNiArNDUxOSw3IEBACiAKIAlzd2l0Y2gg
-KGluc3RhbmNlLT5wZGV2LT5kZXZpY2UpIHsKIAljYXNlIFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lP
-TjoKKwljYXNlIFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVI6CiAJCW1lZ2FzYXNfcmVsZWFzZV9m
-dXNpb24oaW5zdGFuY2UpOwogCQlmb3IgKGkgPSAwOyBpIDwgMiA7IGkrKykKIAkJCWlmIChmdXNp
-b24tPmxkX21hcFtpXSkKZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXNfZnAuYyBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVn
-YXJhaWQvbWVnYXJhaWRfc2FzX2ZwLmMKLS0tIHNjc2ktbWlzYy0yLjYvZHJpdmVycy9zY3NpL21l
-Z2FyYWlkL21lZ2FyYWlkX3Nhc19mcC5jCTIwMTEtMTAtMDggMTQ6MTY6MTEuNzM5MjM2NTYzIC0w
+YwkyMDExLTEwLTA4IDE1OjE4OjI5LjM1NDI2NzU0NyAtMDcwMApAQCAtMjUzNiw3ICsyNTM2LDcg
+QEAKIAkJCQkJCWluc3RhbmNlLT5yZWdfc2V0KQogCQkJCQkJKSA9PSAwKSB7CiAJCS8qIEhhcmR3
+YXJlIG1heSBub3Qgc2V0IG91dGJvdW5kX2ludHJfc3RhdHVzIGluIE1TSS1YIG1vZGUgKi8KLQkJ
+aWYgKCFpbnN0YW5jZS0+bXNpX2ZsYWcpCisJCWlmICghaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykK
+IAkJCXJldHVybiBJUlFfTk9ORTsKIAl9CiAKQEAgLTI1OTQsMTYgKzI1OTQsMTQgQEAKICAqLwog
+c3RhdGljIGlycXJldHVybl90IG1lZ2FzYXNfaXNyKGludCBpcnEsIHZvaWQgKmRldnApCiB7Ci0J
+c3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlOworCXN0cnVjdCBtZWdhc2FzX2lycV9j
+b250ZXh0ICppcnFfY29udGV4dCA9IGRldnA7CisJc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmlu
+c3RhbmNlID0gaXJxX2NvbnRleHQtPmluc3RhbmNlOwogCXVuc2lnbmVkIGxvbmcgZmxhZ3M7CiAJ
+aXJxcmV0dXJuX3QJcmM7CiAKLQlpZiAoYXRvbWljX3JlYWQoCi0JCSYoKChzdHJ1Y3QgbWVnYXNh
+c19pbnN0YW5jZSAqKWRldnApLT5md19yZXNldF9ub19wY2lfYWNjZXNzKSkpCisJaWYgKGF0b21p
+Y19yZWFkKCZpbnN0YW5jZS0+ZndfcmVzZXRfbm9fcGNpX2FjY2VzcykpCiAJCXJldHVybiBJUlFf
+SEFORExFRDsKIAotCWluc3RhbmNlID0gKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICopZGV2cDsK
+LQogCXNwaW5fbG9ja19pcnFzYXZlKCZpbnN0YW5jZS0+aGJhX2xvY2ssIGZsYWdzKTsKIAlyYyA9
+ICBtZWdhc2FzX2RlcGxldGVfcmVwbHlfcXVldWUoaW5zdGFuY2UsIERJRF9PSyk7CiAJc3Bpbl91
+bmxvY2tfaXJxcmVzdG9yZSgmaW5zdGFuY2UtPmhiYV9sb2NrLCBmbGFncyk7CkBAIC0zNDg4LDYg
+KzM0ODYsNyBAQAogCXN0cnVjdCBtZWdhc2FzX3JlZ2lzdGVyX3NldCBfX2lvbWVtICpyZWdfc2V0
+OwogCXN0cnVjdCBtZWdhc2FzX2N0cmxfaW5mbyAqY3RybF9pbmZvOwogCXVuc2lnbmVkIGxvbmcg
+YmFyX2xpc3Q7CisJaW50IGk7CiAKIAkvKiBGaW5kIGZpcnN0IG1lbW9yeSBiYXIgKi8KIAliYXJf
+bGlzdCA9IHBjaV9zZWxlY3RfYmFycyhpbnN0YW5jZS0+cGRldiwgSU9SRVNPVVJDRV9NRU0pOwpA
+QCAtMzU0MSw5ICszNTQwLDMzIEBACiAJLyogQ2hlY2sgaWYgTVNJLVggaXMgc3VwcG9ydGVkIHdo
+aWxlIGluIHJlYWR5IHN0YXRlICovCiAJbXNpeF9lbmFibGUgPSAoaW5zdGFuY2UtPmluc3RhbmNl
+dC0+cmVhZF9md19zdGF0dXNfcmVnKHJlZ19zZXQpICYKIAkJICAgICAgIDB4NDAwMDAwMCkgPj4g
+MHgxYTsKLQlpZiAobXNpeF9lbmFibGUgJiYgIW1zaXhfZGlzYWJsZSAmJgotCSAgICAhcGNpX2Vu
+YWJsZV9tc2l4KGluc3RhbmNlLT5wZGV2LCAmaW5zdGFuY2UtPm1zaXhlbnRyeSwgMSkpCi0JCWlu
+c3RhbmNlLT5tc2lfZmxhZyA9IDE7CisJaWYgKG1zaXhfZW5hYmxlICYmICFtc2l4X2Rpc2FibGUp
+IHsKKwkJLyogQ2hlY2sgbWF4IE1TSS1YIHZlY3RvcnMgKi8KKwkJaWYgKChpbnN0YW5jZS0+cGRl
+di0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lPTikgfHwKKwkJICAgIChpbnN0YW5j
+ZS0+cGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIpKSB7CisJCQlpbnN0
+YW5jZS0+bXNpeF92ZWN0b3JzID0gKHJlYWRsKCZpbnN0YW5jZS0+cmVnX3NldC0+CisJCQkJCQkJ
+b3V0Ym91bmRfc2NyYXRjaF9wYWRfMgorCQkJCQkJCSAgKSAmIDB4MUYpICsgMTsKKwkJfSBlbHNl
+CisJCQlpbnN0YW5jZS0+bXNpeF92ZWN0b3JzID0gMTsKKwkJLyogRG9uJ3QgYm90aGVyIGFsbG9j
+YXRpbmcgbW9yZSBNU0ktWCB2ZWN0b3JzIHRoYW4gY3B1cyAqLworCQlpbnN0YW5jZS0+bXNpeF92
+ZWN0b3JzID0gbWluKGluc3RhbmNlLT5tc2l4X3ZlY3RvcnMsCisJCQkJCSAgICAgKHVuc2lnbmVk
+IGludCludW1fb25saW5lX2NwdXMoKSk7CisJCWZvciAoaSA9IDA7IGkgPCBpbnN0YW5jZS0+bXNp
+eF92ZWN0b3JzOyBpKyspCisJCQlpbnN0YW5jZS0+bXNpeGVudHJ5W2ldLmVudHJ5ID0gaTsKKwkJ
+aSA9IHBjaV9lbmFibGVfbXNpeChpbnN0YW5jZS0+cGRldiwgaW5zdGFuY2UtPm1zaXhlbnRyeSwK
+KwkJCQkgICAgaW5zdGFuY2UtPm1zaXhfdmVjdG9ycyk7CisJCWlmIChpID49IDApIHsKKwkJCWlm
+IChpKSB7CisJCQkJaWYgKCFwY2lfZW5hYmxlX21zaXgoaW5zdGFuY2UtPnBkZXYsCisJCQkJCQkg
+ICAgIGluc3RhbmNlLT5tc2l4ZW50cnksIGkpKQorCQkJCQlpbnN0YW5jZS0+bXNpeF92ZWN0b3Jz
+ID0gaTsKKwkJCQllbHNlCisJCQkJCWluc3RhbmNlLT5tc2l4X3ZlY3RvcnMgPSAwOworCQkJfQor
+CQl9IGVsc2UKKwkJCWluc3RhbmNlLT5tc2l4X3ZlY3RvcnMgPSAwOworCX0KIAogCS8qIEdldCBv
+cGVyYXRpb25hbCBwYXJhbXMsIHNnZSBmbGFncywgc2VuZCBpbml0IGNtZCB0byBjb250cm9sbGVy
+ICovCiAJaWYgKGluc3RhbmNlLT5pbnN0YW5jZXQtPmluaXRfYWRhcHRlcihpbnN0YW5jZSkpCkBA
+IC0zOTU4LDcgKzM5ODEsNyBAQAogc3RhdGljIGludCBfX2RldmluaXQKIG1lZ2FzYXNfcHJvYmVf
+b25lKHN0cnVjdCBwY2lfZGV2ICpwZGV2LCBjb25zdCBzdHJ1Y3QgcGNpX2RldmljZV9pZCAqaWQp
+CiB7Ci0JaW50IHJ2YWwsIHBvczsKKwlpbnQgcnZhbCwgcG9zLCBpLCBqOwogCXN0cnVjdCBTY3Np
+X0hvc3QgKmhvc3Q7CiAJc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlOwogCXUxNiBj
+b250cm9sID0gMDsKQEAgLTQxMjYsMTEgKzQxNDksMzIgQEAKIAkvKgogCSAqIFJlZ2lzdGVyIElS
+UQogCSAqLwotCWlmIChyZXF1ZXN0X2lycShpbnN0YW5jZS0+bXNpX2ZsYWcgPyBpbnN0YW5jZS0+
+bXNpeGVudHJ5LnZlY3RvciA6Ci0JCQlwZGV2LT5pcnEsIGluc3RhbmNlLT5pbnN0YW5jZXQtPnNl
+cnZpY2VfaXNyLAotCQkJSVJRRl9TSEFSRUQsICJtZWdhc2FzIiwgaW5zdGFuY2UpKSB7Ci0JCXBy
+aW50ayhLRVJOX0RFQlVHICJtZWdhc2FzOiBGYWlsZWQgdG8gcmVnaXN0ZXIgSVJRXG4iKTsKLQkJ
+Z290byBmYWlsX2lycTsKKwlpZiAoaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykgeworCQlmb3IgKGkg
+PSAwIDsgaSA8IGluc3RhbmNlLT5tc2l4X3ZlY3RvcnM7IGkrKykgeworCQkJaW5zdGFuY2UtPmly
+cV9jb250ZXh0W2ldLmluc3RhbmNlID0gaW5zdGFuY2U7CisJCQlpbnN0YW5jZS0+aXJxX2NvbnRl
+eHRbaV0uTVNJeEluZGV4ID0gaTsKKwkJCWlmIChyZXF1ZXN0X2lycShpbnN0YW5jZS0+bXNpeGVu
+dHJ5W2ldLnZlY3RvciwKKwkJCQkJaW5zdGFuY2UtPmluc3RhbmNldC0+c2VydmljZV9pc3IsIDAs
+CisJCQkJCSJtZWdhc2FzIiwKKwkJCQkJJmluc3RhbmNlLT5pcnFfY29udGV4dFtpXSkpIHsKKwkJ
+CQlwcmludGsoS0VSTl9ERUJVRyAibWVnYXNhczogRmFpbGVkIHRvICIKKwkJCQkgICAgICAgInJl
+Z2lzdGVyIElSUSBmb3IgdmVjdG9yICVkLlxuIiwgaSk7CisJCQkJZm9yIChqID0gMCA7IGogPCBp
+IDsgaisrKQorCQkJCQlmcmVlX2lycSgKKwkJCQkJCWluc3RhbmNlLT5tc2l4ZW50cnlbal0udmVj
+dG9yLAorCQkJCQkJJmluc3RhbmNlLT5pcnFfY29udGV4dFtqXSk7CisJCQkJZ290byBmYWlsX2ly
+cTsKKwkJCX0KKwkJfQorCX0gZWxzZSB7CisJCWluc3RhbmNlLT5pcnFfY29udGV4dFswXS5pbnN0
+YW5jZSA9IGluc3RhbmNlOworCQlpbnN0YW5jZS0+aXJxX2NvbnRleHRbMF0uTVNJeEluZGV4ID0g
+MDsKKwkJaWYgKHJlcXVlc3RfaXJxKHBkZXYtPmlycSwgaW5zdGFuY2UtPmluc3RhbmNldC0+c2Vy
+dmljZV9pc3IsCisJCQkJSVJRRl9TSEFSRUQsICJtZWdhc2FzIiwKKwkJCQkmaW5zdGFuY2UtPmly
+cV9jb250ZXh0WzBdKSkgeworCQkJcHJpbnRrKEtFUk5fREVCVUcgIm1lZ2FzYXM6IEZhaWxlZCB0
+byByZWdpc3RlciBJUlFcbiIpOworCQkJZ290byBmYWlsX2lycTsKKwkJfQogCX0KIAogCWluc3Rh
+bmNlLT5pbnN0YW5jZXQtPmVuYWJsZV9pbnRyKGluc3RhbmNlLT5yZWdfc2V0KTsKQEAgLTQxNzQs
+OCArNDIxOCwxMiBAQAogCiAJcGNpX3NldF9kcnZkYXRhKHBkZXYsIE5VTEwpOwogCWluc3RhbmNl
+LT5pbnN0YW5jZXQtPmRpc2FibGVfaW50cihpbnN0YW5jZS0+cmVnX3NldCk7Ci0JZnJlZV9pcnEo
+aW5zdGFuY2UtPm1zaV9mbGFnID8gaW5zdGFuY2UtPm1zaXhlbnRyeS52ZWN0b3IgOgotCQkgaW5z
+dGFuY2UtPnBkZXYtPmlycSwgaW5zdGFuY2UpOworCWlmIChpbnN0YW5jZS0+bXNpeF92ZWN0b3Jz
+KQorCQlmb3IgKGkgPSAwIDsgaSA8IGluc3RhbmNlLT5tc2l4X3ZlY3RvcnM7IGkrKykKKwkJCWZy
+ZWVfaXJxKGluc3RhbmNlLT5tc2l4ZW50cnlbaV0udmVjdG9yLAorCQkJCSAmaW5zdGFuY2UtPmly
+cV9jb250ZXh0W2ldKTsKKwllbHNlCisJCWZyZWVfaXJxKGluc3RhbmNlLT5wZGV2LT5pcnEsICZp
+bnN0YW5jZS0+aXJxX2NvbnRleHRbMF0pOwogZmFpbF9pcnE6CiAJaWYgKChpbnN0YW5jZS0+cGRl
+di0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lPTikgfHwKIAkgICAgKGluc3RhbmNl
+LT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9MU0lfSU5WQURFUikpCkBAIC00MTgzLDcg
+KzQyMzEsNyBAQAogCWVsc2UKIAkJbWVnYXNhc19yZWxlYXNlX21maShpbnN0YW5jZSk7CiAgICAg
+ICBmYWlsX2luaXRfbWZpOgotCWlmIChpbnN0YW5jZS0+bXNpX2ZsYWcpCisJaWYgKGluc3RhbmNl
+LT5tc2l4X3ZlY3RvcnMpCiAJCXBjaV9kaXNhYmxlX21zaXgoaW5zdGFuY2UtPnBkZXYpOwogICAg
+ICAgZmFpbF9hbGxvY19kbWFfYnVmOgogCWlmIChpbnN0YW5jZS0+ZXZ0X2RldGFpbCkKQEAgLTQy
+OTksNiArNDM0Nyw3IEBACiB7CiAJc3RydWN0IFNjc2lfSG9zdCAqaG9zdDsKIAlzdHJ1Y3QgbWVn
+YXNhc19pbnN0YW5jZSAqaW5zdGFuY2U7CisJaW50IGk7CiAKIAlpbnN0YW5jZSA9IHBjaV9nZXRf
+ZHJ2ZGF0YShwZGV2KTsKIAlob3N0ID0gaW5zdGFuY2UtPmhvc3Q7CkBAIC00MzIyLDkgKzQzNzEs
+MTQgQEAKIAogCXBjaV9zZXRfZHJ2ZGF0YShpbnN0YW5jZS0+cGRldiwgaW5zdGFuY2UpOwogCWlu
+c3RhbmNlLT5pbnN0YW5jZXQtPmRpc2FibGVfaW50cihpbnN0YW5jZS0+cmVnX3NldCk7Ci0JZnJl
+ZV9pcnEoaW5zdGFuY2UtPm1zaV9mbGFnID8gaW5zdGFuY2UtPm1zaXhlbnRyeS52ZWN0b3IgOgot
+CQkgaW5zdGFuY2UtPnBkZXYtPmlycSwgaW5zdGFuY2UpOwotCWlmIChpbnN0YW5jZS0+bXNpX2Zs
+YWcpCisKKwlpZiAoaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykKKwkJZm9yIChpID0gMCA7IGkgPCBp
+bnN0YW5jZS0+bXNpeF92ZWN0b3JzOyBpKyspCisJCQlmcmVlX2lycShpbnN0YW5jZS0+bXNpeGVu
+dHJ5W2ldLnZlY3RvciwKKwkJCQkgJmluc3RhbmNlLT5pcnFfY29udGV4dFtpXSk7CisJZWxzZQor
+CQlmcmVlX2lycShpbnN0YW5jZS0+cGRldi0+aXJxLCAmaW5zdGFuY2UtPmlycV9jb250ZXh0WzBd
+KTsKKwlpZiAoaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykKIAkJcGNpX2Rpc2FibGVfbXNpeChpbnN0
+YW5jZS0+cGRldik7CiAKIAlwY2lfc2F2ZV9zdGF0ZShwZGV2KTsKQEAgLTQzNDIsNyArNDM5Niw3
+IEBACiBzdGF0aWMgaW50CiBtZWdhc2FzX3Jlc3VtZShzdHJ1Y3QgcGNpX2RldiAqcGRldikKIHsK
+LQlpbnQgcnZhbDsKKwlpbnQgcnZhbCwgaSwgajsKIAlzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0Owog
+CXN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZTsKIApAQCAtNDM4MCw4ICs0NDM0LDkg
+QEAKIAkJZ290byBmYWlsX3JlYWR5X3N0YXRlOwogCiAJLyogTm93IHJlLWVuYWJsZSBNU0ktWCAq
+LwotCWlmIChpbnN0YW5jZS0+bXNpX2ZsYWcpCi0JCXBjaV9lbmFibGVfbXNpeChpbnN0YW5jZS0+
+cGRldiwgJmluc3RhbmNlLT5tc2l4ZW50cnksIDEpOworCWlmIChpbnN0YW5jZS0+bXNpeF92ZWN0
+b3JzKQorCQlwY2lfZW5hYmxlX21zaXgoaW5zdGFuY2UtPnBkZXYsIGluc3RhbmNlLT5tc2l4ZW50
+cnksCisJCQkJaW5zdGFuY2UtPm1zaXhfdmVjdG9ycyk7CiAKIAlzd2l0Y2ggKGluc3RhbmNlLT5w
+ZGV2LT5kZXZpY2UpIHsKIAljYXNlIFBDSV9ERVZJQ0VfSURfTFNJX0ZVU0lPTjoKQEAgLTQ0MTEs
+MTEgKzQ0NjYsMzIgQEAKIAkvKgogCSAqIFJlZ2lzdGVyIElSUQogCSAqLwotCWlmIChyZXF1ZXN0
+X2lycShpbnN0YW5jZS0+bXNpX2ZsYWcgPyBpbnN0YW5jZS0+bXNpeGVudHJ5LnZlY3RvciA6Ci0J
+CQlwZGV2LT5pcnEsIGluc3RhbmNlLT5pbnN0YW5jZXQtPnNlcnZpY2VfaXNyLAotCQkJSVJRRl9T
+SEFSRUQsICJtZWdhc2FzIiwgaW5zdGFuY2UpKSB7Ci0JCXByaW50ayhLRVJOX0VSUiAibWVnYXNh
+czogRmFpbGVkIHRvIHJlZ2lzdGVyIElSUVxuIik7Ci0JCWdvdG8gZmFpbF9pcnE7CisJaWYgKGlu
+c3RhbmNlLT5tc2l4X3ZlY3RvcnMpIHsKKwkJZm9yIChpID0gMCA7IGkgPCBpbnN0YW5jZS0+bXNp
+eF92ZWN0b3JzOyBpKyspIHsKKwkJCWluc3RhbmNlLT5pcnFfY29udGV4dFtpXS5pbnN0YW5jZSA9
+IGluc3RhbmNlOworCQkJaW5zdGFuY2UtPmlycV9jb250ZXh0W2ldLk1TSXhJbmRleCA9IGk7CisJ
+CQlpZiAocmVxdWVzdF9pcnEoaW5zdGFuY2UtPm1zaXhlbnRyeVtpXS52ZWN0b3IsCisJCQkJCWlu
+c3RhbmNlLT5pbnN0YW5jZXQtPnNlcnZpY2VfaXNyLCAwLAorCQkJCQkibWVnYXNhcyIsCisJCQkJ
+CSZpbnN0YW5jZS0+aXJxX2NvbnRleHRbaV0pKSB7CisJCQkJcHJpbnRrKEtFUk5fREVCVUcgIm1l
+Z2FzYXM6IEZhaWxlZCB0byAiCisJCQkJICAgICAgICJyZWdpc3RlciBJUlEgZm9yIHZlY3RvciAl
+ZC5cbiIsIGkpOworCQkJCWZvciAoaiA9IDAgOyBqIDwgaSA7IGorKykKKwkJCQkJZnJlZV9pcnEo
+CisJCQkJCQlpbnN0YW5jZS0+bXNpeGVudHJ5W2pdLnZlY3RvciwKKwkJCQkJCSZpbnN0YW5jZS0+
+aXJxX2NvbnRleHRbal0pOworCQkJCWdvdG8gZmFpbF9pcnE7CisJCQl9CisJCX0KKwl9IGVsc2Ug
+eworCQlpbnN0YW5jZS0+aXJxX2NvbnRleHRbMF0uaW5zdGFuY2UgPSBpbnN0YW5jZTsKKwkJaW5z
+dGFuY2UtPmlycV9jb250ZXh0WzBdLk1TSXhJbmRleCA9IDA7CisJCWlmIChyZXF1ZXN0X2lycShw
+ZGV2LT5pcnEsIGluc3RhbmNlLT5pbnN0YW5jZXQtPnNlcnZpY2VfaXNyLAorCQkJCUlSUUZfU0hB
+UkVELCAibWVnYXNhcyIsCisJCQkJJmluc3RhbmNlLT5pcnFfY29udGV4dFswXSkpIHsKKwkJCXBy
+aW50ayhLRVJOX0RFQlVHICJtZWdhc2FzOiBGYWlsZWQgdG8gcmVnaXN0ZXIgSVJRXG4iKTsKKwkJ
+CWdvdG8gZmFpbF9pcnE7CisJCX0KIAl9CiAKIAlpbnN0YW5jZS0+aW5zdGFuY2V0LT5lbmFibGVf
+aW50cihpbnN0YW5jZS0+cmVnX3NldCk7CkBAIC00NTEyLDkgKzQ1ODgsMTMgQEAKIAogCWluc3Rh
+bmNlLT5pbnN0YW5jZXQtPmRpc2FibGVfaW50cihpbnN0YW5jZS0+cmVnX3NldCk7CiAKLQlmcmVl
+X2lycShpbnN0YW5jZS0+bXNpX2ZsYWcgPyBpbnN0YW5jZS0+bXNpeGVudHJ5LnZlY3RvciA6Ci0J
+CSBpbnN0YW5jZS0+cGRldi0+aXJxLCBpbnN0YW5jZSk7Ci0JaWYgKGluc3RhbmNlLT5tc2lfZmxh
+ZykKKwlpZiAoaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykKKwkJZm9yIChpID0gMCA7IGkgPCBpbnN0
+YW5jZS0+bXNpeF92ZWN0b3JzOyBpKyspCisJCQlmcmVlX2lycShpbnN0YW5jZS0+bXNpeGVudHJ5
+W2ldLnZlY3RvciwKKwkJCQkgJmluc3RhbmNlLT5pcnFfY29udGV4dFtpXSk7CisJZWxzZQorCQlm
+cmVlX2lycShpbnN0YW5jZS0+cGRldi0+aXJxLCAmaW5zdGFuY2UtPmlycV9jb250ZXh0WzBdKTsK
+KwlpZiAoaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykKIAkJcGNpX2Rpc2FibGVfbXNpeChpbnN0YW5j
+ZS0+cGRldik7CiAKIAlzd2l0Y2ggKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UpIHsKQEAgLTQ1NjAs
+MTQgKzQ2NDAsMjAgQEAKICAqLwogc3RhdGljIHZvaWQgbWVnYXNhc19zaHV0ZG93bihzdHJ1Y3Qg
+cGNpX2RldiAqcGRldikKIHsKKwlpbnQgaTsKIAlzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5z
+dGFuY2UgPSBwY2lfZ2V0X2RydmRhdGEocGRldik7CisKIAlpbnN0YW5jZS0+dW5sb2FkID0gMTsK
+IAltZWdhc2FzX2ZsdXNoX2NhY2hlKGluc3RhbmNlKTsKIAltZWdhc2FzX3NodXRkb3duX2NvbnRy
+b2xsZXIoaW5zdGFuY2UsIE1SX0RDTURfQ1RSTF9TSFVURE9XTik7CiAJaW5zdGFuY2UtPmluc3Rh
+bmNldC0+ZGlzYWJsZV9pbnRyKGluc3RhbmNlLT5yZWdfc2V0KTsKLQlmcmVlX2lycShpbnN0YW5j
+ZS0+bXNpX2ZsYWcgPyBpbnN0YW5jZS0+bXNpeGVudHJ5LnZlY3RvciA6Ci0JCSBpbnN0YW5jZS0+
+cGRldi0+aXJxLCBpbnN0YW5jZSk7Ci0JaWYgKGluc3RhbmNlLT5tc2lfZmxhZykKKwlpZiAoaW5z
+dGFuY2UtPm1zaXhfdmVjdG9ycykKKwkJZm9yIChpID0gMCA7IGkgPCBpbnN0YW5jZS0+bXNpeF92
+ZWN0b3JzOyBpKyspCisJCQlmcmVlX2lycShpbnN0YW5jZS0+bXNpeGVudHJ5W2ldLnZlY3RvciwK
+KwkJCQkgJmluc3RhbmNlLT5pcnFfY29udGV4dFtpXSk7CisJZWxzZQorCQlmcmVlX2lycShpbnN0
+YW5jZS0+cGRldi0+aXJxLCAmaW5zdGFuY2UtPmlycV9jb250ZXh0WzBdKTsKKwlpZiAoaW5zdGFu
+Y2UtPm1zaXhfdmVjdG9ycykKIAkJcGNpX2Rpc2FibGVfbXNpeChpbnN0YW5jZS0+cGRldik7CiB9
+CiAKZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfZnVzaW9uLmMgc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
+Z2FyYWlkX3Nhc19mdXNpb24uYwotLS0gc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvbWVnYXJh
+aWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jCTIwMTEtMTAtMDggMTU6Mjg6NTEuNjk5MzMwODE3IC0w
 NzAwCisrKyBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRf
-c2FzX2ZwLmMJMjAxMS0xMC0wOCAxMzozODowNi4xNjgxNzYyNjQgLTA3MDAKQEAgLTUyLDYgKzUy
-LDcgQEAKICNpbmNsdWRlIDxzY3NpL3Njc2lfaG9zdC5oPgogCiAjaW5jbHVkZSAibWVnYXJhaWRf
-c2FzX2Z1c2lvbi5oIgorI2luY2x1ZGUgIm1lZ2FyYWlkX3Nhcy5oIgogI2luY2x1ZGUgPGFzbS9k
-aXY2NC5oPgogCiAjZGVmaW5lIEFCU19ESUZGKGEsIGIpICAgKCgoYSkgPiAoYikpID8gKChhKSAt
-IChiKSkgOiAoKGIpIC0gKGEpKSkKQEAgLTIyNiw4ICsyMjcsOSBAQAogKiAgICBzcGFuICAgICAg
-ICAgIC0gU3BhbiBudW1iZXIKICogICAgYmxvY2sgICAgICAgICAtIEFic29sdXRlIEJsb2NrIG51
-bWJlciBpbiB0aGUgcGh5c2ljYWwgZGlzawogKi8KLXU4IE1SX0dldFBoeVBhcmFtcyh1MzIgbGQs
-IHU2NCBzdHJpcFJvdywgdTE2IHN0cmlwUmVmLCB1NjQgKnBkQmxvY2ssCi0JCSAgIHUxNiAqcERl
-dkhhbmRsZSwgc3RydWN0IFJBSURfQ09OVEVYVCAqcFJBSURfQ29udGV4dCwKK3U4IE1SX0dldFBo
-eVBhcmFtcyhzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsIHUzMiBsZCwgdTY0IHN0
-cmlwUm93LAorCQkgICB1MTYgc3RyaXBSZWYsIHU2NCAqcGRCbG9jaywgdTE2ICpwRGV2SGFuZGxl
-LAorCQkgICBzdHJ1Y3QgUkFJRF9DT05URVhUICpwUkFJRF9Db250ZXh0LAogCQkgICBzdHJ1Y3Qg
-TVJfRldfUkFJRF9NQVBfQUxMICptYXApCiB7CiAJc3RydWN0IE1SX0xEX1JBSUQgICpyYWlkID0g
-TVJfTGRSYWlkR2V0KGxkLCBtYXApOwpAQCAtMjc5LDcgKzI4MSw4IEBACiAJCSpwRGV2SGFuZGxl
-ID0gTVJfUGREZXZIYW5kbGVHZXQocGQsIG1hcCk7CiAJZWxzZSB7CiAJCSpwRGV2SGFuZGxlID0g
-TVJfUERfSU5WQUxJRDsgLyogc2V0IGRldiBoYW5kbGUgYXMgaW52YWxpZC4gKi8KLQkJaWYgKHJh
-aWQtPmxldmVsID49IDUpCisJCWlmICgocmFpZC0+bGV2ZWwgPj0gNSkgJiYKKwkJICAgIChpbnN0
-YW5jZS0+cGRldi0+ZGV2aWNlICE9IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIpKQogCQkJcFJB
-SURfQ29udGV4dC0+cmVnTG9ja0ZsYWdzID0gUkVHSU9OX1RZUEVfRVhDTFVTSVZFOwogCQllbHNl
-IGlmIChyYWlkLT5sZXZlbCA9PSAxKSB7CiAJCQkvKiBHZXQgYWx0ZXJuYXRlIFBkLiAqLwpAQCAt
-MzA2LDcgKzMwOSw4IEBACiAqIFRoaXMgZnVuY3Rpb24gd2lsbCByZXR1cm4gMCBpZiByZWdpb24g
-bG9jayB3YXMgYWNxdWlyZWQgT1IgcmV0dXJuIG51bSBzdHJpcHMKICovCiB1OAotTVJfQnVpbGRS
-YWlkQ29udGV4dChzdHJ1Y3QgSU9fUkVRVUVTVF9JTkZPICppb19pbmZvLAorTVJfQnVpbGRSYWlk
-Q29udGV4dChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UsCisJCSAgICBzdHJ1Y3Qg
-SU9fUkVRVUVTVF9JTkZPICppb19pbmZvLAogCQkgICAgc3RydWN0IFJBSURfQ09OVEVYVCAqcFJB
-SURfQ29udGV4dCwKIAkJICAgIHN0cnVjdCBNUl9GV19SQUlEX01BUF9BTEwgKm1hcCkKIHsKQEAg
-LTM5NCw4ICszOTgsMTIgQEAKIAl9CiAKIAlwUkFJRF9Db250ZXh0LT50aW1lb3V0VmFsdWUgICAg
-ID0gbWFwLT5yYWlkTWFwLmZwUGRJb1RpbWVvdXRTZWM7Ci0JcFJBSURfQ29udGV4dC0+cmVnTG9j
-a0ZsYWdzICAgICA9IChpc1JlYWQpID8gUkVHSU9OX1RZUEVfU0hBUkVEX1JFQUQgOgotCQlyYWlk
-LT5yZWdUeXBlUmVxT25Xcml0ZTsKKwlpZiAoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQQ0lf
-REVWSUNFX0lEX0xTSV9JTlZBREVSKQorCQlwUkFJRF9Db250ZXh0LT5yZWdMb2NrRmxhZ3MgPSAo
-aXNSZWFkKSA/CisJCQlyYWlkLT5yZWdUeXBlUmVxT25SZWFkIDogcmFpZC0+cmVnVHlwZVJlcU9u
-V3JpdGU7CisJZWxzZQorCQlwUkFJRF9Db250ZXh0LT5yZWdMb2NrRmxhZ3MgPSAoaXNSZWFkKSA/
-CisJCQlSRUdJT05fVFlQRV9TSEFSRURfUkVBRCA6IHJhaWQtPnJlZ1R5cGVSZXFPbldyaXRlOwog
-CXBSQUlEX0NvbnRleHQtPlZpcnR1YWxEaXNrVGd0SWQgPSByYWlkLT50YXJnZXRJZDsKIAlwUkFJ
-RF9Db250ZXh0LT5yZWdMb2NrUm93TEJBICAgID0gcmVnU3RhcnQ7CiAJcFJBSURfQ29udGV4dC0+
-cmVnTG9ja0xlbmd0aCAgICA9IHJlZ1NpemU7CkBAIC00MDQsNyArNDEyLDggQEAKIAkvKkdldCBQ
-aHkgUGFyYW1zIG9ubHkgaWYgRlAgY2FwYWJsZSwgb3IgZWxzZSBsZWF2ZSBpdCB0byBNUiBmaXJt
-d2FyZQogCSAgdG8gZG8gdGhlIGNhbGN1bGF0aW9uLiovCiAJaWYgKGlvX2luZm8tPmZwT2tGb3JJ
-bykgewotCQlyZXR2YWwgPSBNUl9HZXRQaHlQYXJhbXMobGQsIHN0YXJ0X3N0cmlwLCByZWZfaW5f
-c3RhcnRfc3RyaXBlLAorCQlyZXR2YWwgPSBNUl9HZXRQaHlQYXJhbXMoaW5zdGFuY2UsIGxkLCBz
-dGFydF9zdHJpcCwKKwkJCQkJIHJlZl9pbl9zdGFydF9zdHJpcGUsCiAJCQkJCSAmaW9faW5mby0+
-cGRCbG9jaywKIAkJCQkJICZpb19pbmZvLT5kZXZIYW5kbGUsIHBSQUlEX0NvbnRleHQsCiAJCQkJ
-CSBtYXApOwpAQCAtNDE1LDcgKzQyNCw4IEBACiAJfSBlbHNlIGlmIChpc1JlYWQpIHsKIAkJdWlu
-dCBzdHJpcElkeDsKIAkJZm9yIChzdHJpcElkeCA9IDA7IHN0cmlwSWR4IDwgbnVtX3N0cmlwczsg
-c3RyaXBJZHgrKykgewotCQkJaWYgKCFNUl9HZXRQaHlQYXJhbXMobGQsIHN0YXJ0X3N0cmlwICsg
-c3RyaXBJZHgsCisJCQlpZiAoIU1SX0dldFBoeVBhcmFtcyhpbnN0YW5jZSwgbGQsCisJCQkJCSAg
-ICAgc3RhcnRfc3RyaXAgKyBzdHJpcElkeCwKIAkJCQkJICAgICByZWZfaW5fc3RhcnRfc3RyaXBl
-LAogCQkJCQkgICAgICZpb19pbmZvLT5wZEJsb2NrLAogCQkJCQkgICAgICZpb19pbmZvLT5kZXZI
-YW5kbGUsCmRpZmYgLU5hdXIgc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
-YXJhaWRfc2FzX2Z1c2lvbi5jIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMKLS0tIHNjc2ktbWlzYy0yLjYvZHJpdmVycy9zY3NpL21l
-Z2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYwkyMDExLTEwLTA4IDE0OjE2OjExLjc0MDIzNjUw
-NiAtMDcwMAorKysgc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
-YWlkX3Nhc19mdXNpb24uYwkyMDExLTEwLTA4IDE0OjE1OjUyLjE3NjE3NDI3MiAtMDcwMApAQCAt
-NzQsNyArNzQsOCBAQAogCQkgICAgIHN0cnVjdCBtZWdhc2FzX2NtZCAqY21kKTsKIAogdTgKLU1S
-X0J1aWxkUmFpZENvbnRleHQoc3RydWN0IElPX1JFUVVFU1RfSU5GTyAqaW9faW5mbywKK01SX0J1
-aWxkUmFpZENvbnRleHQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLAorCQkgICAg
-c3RydWN0IElPX1JFUVVFU1RfSU5GTyAqaW9faW5mbywKIAkJICAgIHN0cnVjdCBSQUlEX0NPTlRF
-WFQgKnBSQUlEX0NvbnRleHQsCiAJCSAgICBzdHJ1Y3QgTVJfRldfUkFJRF9NQVBfQUxMICptYXAp
-OwogdTE2IE1SX1RhcmdldElkVG9MZEdldCh1MzIgbGRUZ3RJZCwgc3RydWN0IE1SX0ZXX1JBSURf
-TUFQX0FMTCAqbWFwKTsKQEAgLTEwMzgsNyArMTAzOSw5IEBACiAJY2FzZSBNRklfU1RBVF9ERVZJ
-Q0VfTk9UX0ZPVU5EOgogCQljbWQtPnNjbWQtPnJlc3VsdCA9IERJRF9CQURfVEFSR0VUIDw8IDE2
-OwogCQlicmVhazsKLQorCWNhc2UgTUZJX1NUQVRfQ09ORklHX1NFUV9NSVNNQVRDSDoKKwkJY21k
-LT5zY21kLT5yZXN1bHQgPSBESURfSU1NX1JFVFJZIDw8IDE2OworCQlicmVhazsKIAlkZWZhdWx0
-OgogCQlwcmludGsoS0VSTl9ERUJVRyAibWVnYXNhczogRlcgc3RhdHVzICUjeFxuIiwgc3RhdHVz
-KTsKIAkJY21kLT5zY21kLT5yZXN1bHQgPSBESURfRVJST1IgPDwgMTY7CkBAIC0xMDYxLDE0ICsx
-MDY0LDE3IEBACiAJCQlzdHJ1Y3QgTVBJMjVfSUVFRV9TR0VfQ0hBSU42NCAqc2dsX3B0ciwKIAkJ
-CXN0cnVjdCBtZWdhc2FzX2NtZF9mdXNpb24gKmNtZCkKIHsKLQlpbnQgaSwgc2dfcHJvY2Vzc2Vk
-OwotCWludCBzZ2VfY291bnQsIHNnZV9pZHg7CisJaW50IGksIHNnX3Byb2Nlc3NlZCwgc2dlX2Nv
-dW50OwogCXN0cnVjdCBzY2F0dGVybGlzdCAqb3Nfc2dsOwogCXN0cnVjdCBmdXNpb25fY29udGV4
-dCAqZnVzaW9uOwogCiAJZnVzaW9uID0gaW5zdGFuY2UtPmN0cmxfY29udGV4dDsKIAotCWNtZC0+
-aW9fcmVxdWVzdC0+Q2hhaW5PZmZzZXQgPSAwOworCWlmIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNl
-ID09IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIpIHsKKwkJc3RydWN0IE1QSTI1X0lFRUVfU0dF
-X0NIQUlONjQgKnNnbF9wdHJfZW5kID0gc2dsX3B0cjsKKwkJc2dsX3B0cl9lbmQgKz0gZnVzaW9u
-LT5tYXhfc2dlX2luX21haW5fbXNnIC0gMTsKKwkJc2dsX3B0cl9lbmQtPkZsYWdzID0gMDsKKwl9
-CiAKIAlzZ2VfY291bnQgPSBzY3NpX2RtYV9tYXAoc2NwKTsKIApAQCAtMTA3NywxNiArMTA4Mywx
-NCBAQAogCWlmIChzZ2VfY291bnQgPiBpbnN0YW5jZS0+bWF4X251bV9zZ2UgfHwgIXNnZV9jb3Vu
-dCkKIAkJcmV0dXJuIHNnZV9jb3VudDsKIAotCWlmIChzZ2VfY291bnQgPiBmdXNpb24tPm1heF9z
-Z2VfaW5fbWFpbl9tc2cpIHsKLQkJLyogT25lIGVsZW1lbnQgdG8gc3RvcmUgdGhlIGNoYWluIGlu
-Zm8gKi8KLQkJc2dlX2lkeCA9IGZ1c2lvbi0+bWF4X3NnZV9pbl9tYWluX21zZyAtIDE7Ci0JfSBl
-bHNlCi0JCXNnZV9pZHggPSBzZ2VfY291bnQ7Ci0KIAlzY3NpX2Zvcl9lYWNoX3NnKHNjcCwgb3Nf
-c2dsLCBzZ2VfY291bnQsIGkpIHsKIAkJc2dsX3B0ci0+TGVuZ3RoID0gc2dfZG1hX2xlbihvc19z
-Z2wpOwogCQlzZ2xfcHRyLT5BZGRyZXNzID0gc2dfZG1hX2FkZHJlc3Mob3Nfc2dsKTsKIAkJc2ds
-X3B0ci0+RmxhZ3MgPSAwOworCQlpZiAoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQQ0lfREVW
-SUNFX0lEX0xTSV9JTlZBREVSKSB7CisJCQlpZiAoaSA9PSBzZ2VfY291bnQgLSAxKQorCQkJCXNn
-bF9wdHItPkZsYWdzID0gSUVFRV9TR0VfRkxBR1NfRU5EX09GX0xJU1Q7CisJCX0KIAkJc2dsX3B0
-cisrOwogCiAJCXNnX3Byb2Nlc3NlZCA9IGkgKyAxOwpAQCAtMTA5NSwxMyArMTA5OSwzMCBAQAog
-CQkgICAgKHNnZV9jb3VudCA+IGZ1c2lvbi0+bWF4X3NnZV9pbl9tYWluX21zZykpIHsKIAogCQkJ
-c3RydWN0IE1QSTI1X0lFRUVfU0dFX0NIQUlONjQgKnNnX2NoYWluOwotCQkJY21kLT5pb19yZXF1
-ZXN0LT5DaGFpbk9mZnNldCA9Ci0JCQkJZnVzaW9uLT5jaGFpbl9vZmZzZXRfaW9fcmVxdWVzdDsK
-KwkJCWlmIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09CisJCQkgICAgUENJX0RFVklDRV9JRF9M
-U0lfSU5WQURFUikgeworCQkJCWlmICgoY21kLT5pb19yZXF1ZXN0LT5Jb0ZsYWdzICYKKwkJCQlN
-UEkyNV9TQVNfREVWSUNFMF9GTEFHU19FTkFCTEVEX0ZBU1RfUEFUSCkgIT0KKwkJCQlNUEkyNV9T
-QVNfREVWSUNFMF9GTEFHU19FTkFCTEVEX0ZBU1RfUEFUSCkKKwkJCQkJY21kLT5pb19yZXF1ZXN0
-LT5DaGFpbk9mZnNldCA9CisJCQkJCQlmdXNpb24tPgorCQkJCQkJY2hhaW5fb2Zmc2V0X2lvX3Jl
-cXVlc3Q7CisJCQkJZWxzZQorCQkJCQljbWQtPmlvX3JlcXVlc3QtPkNoYWluT2Zmc2V0ID0gMDsK
-KwkJCX0gZWxzZQorCQkJCWNtZC0+aW9fcmVxdWVzdC0+Q2hhaW5PZmZzZXQgPQorCQkJCQlmdXNp
-b24tPmNoYWluX29mZnNldF9pb19yZXF1ZXN0OworCiAJCQlzZ19jaGFpbiA9IHNnbF9wdHI7CiAJ
-CQkvKiBQcmVwYXJlIGNoYWluIGVsZW1lbnQgKi8KIAkJCXNnX2NoYWluLT5OZXh0Q2hhaW5PZmZz
-ZXQgPSAwOwotCQkJc2dfY2hhaW4tPkZsYWdzID0gKElFRUVfU0dFX0ZMQUdTX0NIQUlOX0VMRU1F
-TlQgfAotCQkJCQkgICBNUEkyX0lFRUVfU0dFX0ZMQUdTX0lPQ1BMQk5UQV9BRERSKTsKKwkJCWlm
-IChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09CisJCQkgICAgUENJX0RFVklDRV9JRF9MU0lfSU5W
-QURFUikKKwkJCQlzZ19jaGFpbi0+RmxhZ3MgPSBJRUVFX1NHRV9GTEFHU19DSEFJTl9FTEVNRU5U
-OworCQkJZWxzZQorCQkJCXNnX2NoYWluLT5GbGFncyA9CisJCQkJCShJRUVFX1NHRV9GTEFHU19D
-SEFJTl9FTEVNRU5UIHwKKwkJCQkJIE1QSTJfSUVFRV9TR0VfRkxBR1NfSU9DUExCTlRBX0FERFIp
-OwogCQkJc2dfY2hhaW4tPkxlbmd0aCA9ICAoc2l6ZW9mKHVuaW9uIE1QSTJfU0dFX0lPX1VOSU9O
-KQogCQkJCQkgICAgICooc2dlX2NvdW50IC0gc2dfcHJvY2Vzc2VkKSk7CiAJCQlzZ19jaGFpbi0+
-QWRkcmVzcyA9IGNtZC0+c2dfZnJhbWVfcGh5c19hZGRyOwpAQCAtMTM5NCw3ICsxNDE1LDggQEAK
-IAkJaW9fcmVxdWVzdC0+UmFpZENvbnRleHQucmVnTG9ja0ZsYWdzICA9IDA7CiAJCWZwX3Bvc3Np
-YmxlID0gMDsKIAl9IGVsc2UgewotCQlpZiAoTVJfQnVpbGRSYWlkQ29udGV4dCgmaW9faW5mbywg
-JmlvX3JlcXVlc3QtPlJhaWRDb250ZXh0LAorCQlpZiAoTVJfQnVpbGRSYWlkQ29udGV4dChpbnN0
-YW5jZSwgJmlvX2luZm8sCisJCQkJCSZpb19yZXF1ZXN0LT5SYWlkQ29udGV4dCwKIAkJCQkJbG9j
-YWxfbWFwX3B0cikpCiAJCQlmcF9wb3NzaWJsZSA9IGlvX2luZm8uZnBPa0ZvcklvOwogCX0KQEAg
-LTE0MDcsNiArMTQyOSwyMCBAQAogCQljbWQtPnJlcXVlc3RfZGVzYy0+U0NTSUlPLlJlcXVlc3RG
-bGFncyA9CiAJCQkoTVBJMl9SRVFfREVTQ1JJUFRfRkxBR1NfSElHSF9QUklPUklUWQogCQkJIDw8
-IE1FR0FTQVNfUkVRX0RFU0NSSVBUX0ZMQUdTX1RZUEVfU0hJRlQpOworCQlpZiAoaW5zdGFuY2Ut
-PnBkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX0xTSV9JTlZBREVSKSB7CisJCQlpZiAoaW9f
-cmVxdWVzdC0+UmFpZENvbnRleHQucmVnTG9ja0ZsYWdzID09CisJCQkgICAgUkVHSU9OX1RZUEVf
-VU5VU0VEKQorCQkJCWNtZC0+cmVxdWVzdF9kZXNjLT5TQ1NJSU8uUmVxdWVzdEZsYWdzID0KKwkJ
-CQkJKE1FR0FTQVNfUkVRX0RFU0NSSVBUX0ZMQUdTX05PX0xPQ0sgPDwKKwkJCQkJTUVHQVNBU19S
-RVFfREVTQ1JJUFRfRkxBR1NfVFlQRV9TSElGVCk7CisJCQlpb19yZXF1ZXN0LT5SYWlkQ29udGV4
-dC5UeXBlID0gTVBJMl9UWVBFX0NVREE7CisJCQlpb19yZXF1ZXN0LT5SYWlkQ29udGV4dC5uc2Vn
-ID0gMHgxOworCQkJaW9fcmVxdWVzdC0+SW9GbGFncyB8PQorCQkJICBNUEkyNV9TQVNfREVWSUNF
-MF9GTEFHU19FTkFCTEVEX0ZBU1RfUEFUSDsKKwkJCWlvX3JlcXVlc3QtPlJhaWRDb250ZXh0LnJl
-Z0xvY2tGbGFncyB8PQorCQkJICAoTVJfUkxfRkxBR1NfR1JBTlRfREVTVElOQVRJT05fQ1VEQSB8
-CisJCQkgICBNUl9STF9GTEFHU19TRVFfTlVNX0VOQUJMRSk7CisJCX0KIAkJaWYgKChmdXNpb24t
-PmxvYWRfYmFsYW5jZV9pbmZvW2RldmljZV9pZF0ubG9hZEJhbGFuY2VGbGFnKSAmJgogCQkgICAg
-KGlvX2luZm8uaXNSZWFkKSkgewogCQkJaW9faW5mby5kZXZIYW5kbGUgPQpAQCAtMTQyMSwxMSAr
-MTQ1NywyMyBAQAogCX0gZWxzZSB7CiAJCWlvX3JlcXVlc3QtPlJhaWRDb250ZXh0LnRpbWVvdXRW
-YWx1ZSA9CiAJCQlsb2NhbF9tYXBfcHRyLT5yYWlkTWFwLmZwUGRJb1RpbWVvdXRTZWM7Ci0JCWlv
-X3JlcXVlc3QtPkZ1bmN0aW9uID0gTUVHQVNBU19NUEkyX0ZVTkNUSU9OX0xEX0lPX1JFUVVFU1Q7
-Ci0JCWlvX3JlcXVlc3QtPkRldkhhbmRsZSA9IGRldmljZV9pZDsKIAkJY21kLT5yZXF1ZXN0X2Rl
-c2MtPlNDU0lJTy5SZXF1ZXN0RmxhZ3MgPQogCQkJKE1FR0FTQVNfUkVRX0RFU0NSSVBUX0ZMQUdT
-X0xEX0lPCiAJCQkgPDwgTUVHQVNBU19SRVFfREVTQ1JJUFRfRkxBR1NfVFlQRV9TSElGVCk7CisJ
-CWlmIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIp
-IHsKKwkJCWlmIChpb19yZXF1ZXN0LT5SYWlkQ29udGV4dC5yZWdMb2NrRmxhZ3MgPT0KKwkJCSAg
-ICBSRUdJT05fVFlQRV9VTlVTRUQpCisJCQkJY21kLT5yZXF1ZXN0X2Rlc2MtPlNDU0lJTy5SZXF1
-ZXN0RmxhZ3MgPQorCQkJCQkoTUVHQVNBU19SRVFfREVTQ1JJUFRfRkxBR1NfTk9fTE9DSyA8PAor
-CQkJCQlNRUdBU0FTX1JFUV9ERVNDUklQVF9GTEFHU19UWVBFX1NISUZUKTsKKwkJCWlvX3JlcXVl
-c3QtPlJhaWRDb250ZXh0LlR5cGUgPSBNUEkyX1RZUEVfQ1VEQTsKKwkJCWlvX3JlcXVlc3QtPlJh
-aWRDb250ZXh0LnJlZ0xvY2tGbGFncyB8PQorCQkJCShNUl9STF9GTEFHU19HUkFOVF9ERVNUSU5B
-VElPTl9DUFUwIHwKKwkJCQkgTVJfUkxfRkxBR1NfU0VRX05VTV9FTkFCTEUpOworCQkJaW9fcmVx
-dWVzdC0+UmFpZENvbnRleHQubnNlZyA9IDB4MTsKKwkJfQorCQlpb19yZXF1ZXN0LT5GdW5jdGlv
-biA9IE1FR0FTQVNfTVBJMl9GVU5DVElPTl9MRF9JT19SRVFVRVNUOworCQlpb19yZXF1ZXN0LT5E
-ZXZIYW5kbGUgPSBkZXZpY2VfaWQ7CiAJfSAvKiBOb3QgRlAgKi8KIH0KIApAQCAtMTUwOCw4ICsx
-NTU2LDEwIEBACiAJaW9fcmVxdWVzdC0+RUVEUEZsYWdzID0gMDsKIAlpb19yZXF1ZXN0LT5Db250
-cm9sID0gMDsKIAlpb19yZXF1ZXN0LT5FRURQQmxvY2tTaXplID0gMDsKLQlpb19yZXF1ZXN0LT5J
-b0ZsYWdzID0gMDsKKwlpb19yZXF1ZXN0LT5DaGFpbk9mZnNldCA9IDA7CiAJaW9fcmVxdWVzdC0+
-UmFpZENvbnRleHQuUkFJREZsYWdzID0gMDsKKwlpb19yZXF1ZXN0LT5SYWlkQ29udGV4dC5UeXBl
-ID0gMDsKKwlpb19yZXF1ZXN0LT5SYWlkQ29udGV4dC5uc2VnID0gMDsKIAogCW1lbWNweShpb19y
-ZXF1ZXN0LT5DREIuQ0RCMzIsIHNjcC0+Y21uZCwgc2NwLT5jbWRfbGVuKTsKIAkvKgpAQCAtMTg2
-Myw2ICsxOTEzLDE0IEBACiAKIAlmdXNpb24gPSBpbnN0YW5jZS0+Y3RybF9jb250ZXh0OwogCWlv
-X3JlcSA9IGNtZC0+aW9fcmVxdWVzdDsKKworCWlmIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09
-IFBDSV9ERVZJQ0VfSURfTFNJX0lOVkFERVIpIHsKKwkJc3RydWN0IE1QSTI1X0lFRUVfU0dFX0NI
-QUlONjQgKnNnbF9wdHJfZW5kID0KKwkJCShzdHJ1Y3QgTVBJMjVfSUVFRV9TR0VfQ0hBSU42NCAq
-KSZpb19yZXEtPlNHTDsKKwkJc2dsX3B0cl9lbmQgKz0gZnVzaW9uLT5tYXhfc2dlX2luX21haW5f
-bXNnIC0gMTsKKwkJc2dsX3B0cl9lbmQtPkZsYWdzID0gMDsKKwl9CisKIAltcGkyNV9pZWVlX2No
-YWluID0KIAkgIChzdHJ1Y3QgTVBJMjVfSUVFRV9TR0VfQ0hBSU42NCAqKSZpb19yZXEtPlNHTC5J
-ZWVlQ2hhaW47CiAKZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmggc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21l
-Z2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uaAotLS0gc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Nj
-c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5oCTIwMTEtMTAtMDggMTQ6MTY6MTEuNzQx
-MjM2NDcxIC0wNzAwCisrKyBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQv
-bWVnYXJhaWRfc2FzX2Z1c2lvbi5oCTIwMTEtMTAtMDggMTM6NTQ6NDEuMzA2MTc0OTIyIC0wNzAw
-CkBAIC00NCw2ICs0NCwxNCBAQAogI2RlZmluZSBIT1NUX0RJQUdfUkVTRVRfQURBUFRFUgkJCSAg
-ICAweDQKICNkZWZpbmUgTUVHQVNBU19GVVNJT05fTUFYX1JFU0VUX1RSSUVTCQkgICAgMwogCisv
-KiBJbnZhZGVyIGRlZmluZXMgKi8KKyNkZWZpbmUgTVBJMl9UWVBFX0NVREEJCQkJICAgIDB4Mgor
-I2RlZmluZSBNUEkyNV9TQVNfREVWSUNFMF9GTEFHU19FTkFCTEVEX0ZBU1RfUEFUSCAgIDB4NDAw
-MAorI2RlZmluZQlNUl9STF9GTEFHU19HUkFOVF9ERVNUSU5BVElPTl9DUFUwCSAgICAweDAwCisj
-ZGVmaW5lCU1SX1JMX0ZMQUdTX0dSQU5UX0RFU1RJTkFUSU9OX0NQVTEJICAgIDB4MTAKKyNkZWZp
-bmUJTVJfUkxfRkxBR1NfR1JBTlRfREVTVElOQVRJT05fQ1VEQQkgICAgMHg4MAorI2RlZmluZSBN
-Ul9STF9GTEFHU19TRVFfTlVNX0VOQUJMRQkJICAgIDB4OAorCiAvKiBUMTAgUEkgZGVmaW5lcyAq
-LwogI2RlZmluZSBNUl9QUk9UX0lORk9fVFlQRV9DT05UUk9MTEVSICAgICAgICAgICAgICAgIDB4
-OAogI2RlZmluZSBNRUdBU0FTX1NDU0lfVkFSSUFCTEVfTEVOR1RIX0NNRCAgICAgICAgICAgIDB4
-N2YKQEAgLTcwLDcgKzc4LDcgQEAKICAqLwogI2RlZmluZSBNRUdBU0FTX1JFUV9ERVNDUklQVF9G
-TEFHU19MRF9JTyAgICAgICAgICAgMHg3CiAjZGVmaW5lIE1FR0FTQVNfUkVRX0RFU0NSSVBUX0ZM
-QUdTX01GQSAgICAgICAgICAgICAweDEKLQorI2RlZmluZSBNRUdBU0FTX1JFUV9ERVNDUklQVF9G
-TEFHU19OT19MT0NLCSAgIDB4MgogI2RlZmluZSBNRUdBU0FTX1JFUV9ERVNDUklQVF9GTEFHU19U
-WVBFX1NISUZUICAgICAgMQogCiAjZGVmaW5lIE1FR0FTQVNfRlBfQ01EX0xFTgkxNgpAQCAtODIs
-NyArOTAsOSBAQAogICovCiAKIHN0cnVjdCBSQUlEX0NPTlRFWFQgewotCXUxNiAgICAgcmVzdmQw
-OworCXU4CVR5cGU6NDsKKwl1OAluc2VnOjQ7CisJdTgJcmVzdmQwOwogCXUxNiAgICAgdGltZW91
-dFZhbHVlOwogCXU4ICAgICAgcmVnTG9ja0ZsYWdzOwogCXU4ICAgICAgcmVzdmQxOwpAQCAtNTI3
-LDcgKzUzNyw3IEBACiAJdTggICAgICBsZFN0YXRlOwogCXU4ICAgICAgcmVnVHlwZVJlcU9uV3Jp
-dGU7CiAJdTggICAgICBtb2RGYWN0b3I7Ci0JdTggICAgICByZXNlcnZlZDJbMV07CisJdTgJcmVn
-VHlwZVJlcU9uUmVhZDsKIAl1MTYgICAgIHNlcU51bTsKIAogCXN0cnVjdCB7CmRpZmYgLU5hdXIg
-c2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmggc2NzaS1t
-aXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oCi0tLSBzY3Np
-LW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAkyMDExLTEwLTA4
-IDE0OjE2OjExLjc0MjIzNjQ3MCAtMDcwMAorKysgc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9z
-Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oCTIwMTEtMTAtMDggMTM6NTU6NTcuOTE5MTc2MDI0
-IC0wNzAwCkBAIC00OCw2ICs0OCw3IEBACiAjZGVmaW5lCVBDSV9ERVZJQ0VfSURfTFNJX1NBUzAw
-NzNTS0lOTlkJCTB4MDA3MwogI2RlZmluZQlQQ0lfREVWSUNFX0lEX0xTSV9TQVMwMDcxU0tJTk5Z
-CQkweDAwNzEKICNkZWZpbmUJUENJX0RFVklDRV9JRF9MU0lfRlVTSU9OCQkweDAwNWIKKyNkZWZp
-bmUgUENJX0RFVklDRV9JRF9MU0lfSU5WQURFUgkJMHgwMDVkCiAKIC8qCiAgKiA9PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09CkBAIC0yMjEsNiArMjIyLDcgQEAKIAlNRklfU1RB
-VF9SRVNFUlZBVElPTl9JTl9QUk9HUkVTUyA9IDB4MzYsCiAJTUZJX1NUQVRfSTJDX0VSUk9SU19E
-RVRFQ1RFRCA9IDB4MzcsCiAJTUZJX1NUQVRfUENJX0VSUk9SU19ERVRFQ1RFRCA9IDB4MzgsCisJ
-TUZJX1NUQVRfQ09ORklHX1NFUV9NSVNNQVRDSCA9IDB4NjcsCiAKIAlNRklfU1RBVF9JTlZBTElE
-X1NUQVRVUyA9IDB4RkYKIH07Cg==
---0016e6de03a4a16dea04aed36718--
+c2FzX2Z1c2lvbi5jCTIwMTEtMTAtMDggMTU6Mjg6MzEuMjEzMzMzMDU4IC0wNzAwCkBAIC0zODUs
+NyArMzg1LDcgQEAKIGludAogbWVnYXNhc19hbGxvY19jbWRzX2Z1c2lvbihzdHJ1Y3QgbWVnYXNh
+c19pbnN0YW5jZSAqaW5zdGFuY2UpCiB7Ci0JaW50IGksIGo7CisJaW50IGksIGosIGNvdW50Owog
+CXUzMiBtYXhfY21kLCBpb19mcmFtZXNfc3o7CiAJc3RydWN0IGZ1c2lvbl9jb250ZXh0ICpmdXNp
+b247CiAJc3RydWN0IG1lZ2FzYXNfY21kX2Z1c2lvbiAqY21kOwpAQCAtNDA5LDkgKzQwOSwxMCBA
+QAogCQlnb3RvIGZhaWxfcmVxX2Rlc2M7CiAJfQogCisJY291bnQgPSBpbnN0YW5jZS0+bXNpeF92
+ZWN0b3JzID4gMCA/IGluc3RhbmNlLT5tc2l4X3ZlY3RvcnMgOiAxOwogCWZ1c2lvbi0+cmVwbHlf
+ZnJhbWVzX2Rlc2NfcG9vbCA9CiAJCXBjaV9wb29sX2NyZWF0ZSgicmVwbHlfZnJhbWVzIHBvb2wi
+LCBpbnN0YW5jZS0+cGRldiwKLQkJCQlmdXNpb24tPnJlcGx5X2FsbG9jX3N6LCAxNiwgMCk7CisJ
+CQkJZnVzaW9uLT5yZXBseV9hbGxvY19zeiAqIGNvdW50LCAxNiwgMCk7CiAKIAlpZiAoIWZ1c2lv
+bi0+cmVwbHlfZnJhbWVzX2Rlc2NfcG9vbCkgewogCQlwcmludGsoS0VSTl9FUlIgIm1lZ2FzYXM7
+IENvdWxkIG5vdCBhbGxvY2F0ZSBtZW1vcnkgZm9yICIKQEAgLTQzMCw3ICs0MzEsNyBAQAogCX0K
+IAogCXJlcGx5X2Rlc2MgPSBmdXNpb24tPnJlcGx5X2ZyYW1lc19kZXNjOwotCWZvciAoaSA9IDA7
+IGkgPCBmdXNpb24tPnJlcGx5X3FfZGVwdGg7IGkrKywgcmVwbHlfZGVzYysrKQorCWZvciAoaSA9
+IDA7IGkgPCBmdXNpb24tPnJlcGx5X3FfZGVwdGggKiBjb3VudDsgaSsrLCByZXBseV9kZXNjKysp
+CiAJCXJlcGx5X2Rlc2MtPldvcmRzID0gVUxMT05HX01BWDsKIAogCWlvX2ZyYW1lc19zeiA9IGZ1
+c2lvbi0+aW9fZnJhbWVzX2FsbG9jX3N6OwpAQCAtNjMzLDcgKzYzNCw5IEBACiAJCWZ1c2lvbi0+
+cmVwbHlfZnJhbWVzX2Rlc2NfcGh5czsKIAlJT0NJbml0TWVzc2FnZS0+U3lzdGVtUmVxdWVzdEZy
+YW1lQmFzZUFkZHJlc3MgPQogCQlmdXNpb24tPmlvX3JlcXVlc3RfZnJhbWVzX3BoeXM7Ci0KKwkv
+KiBTZXQgdG8gMCBmb3Igbm9uZSBvciAxIE1TSS1YIHZlY3RvcnMgKi8KKwlJT0NJbml0TWVzc2Fn
+ZS0+SG9zdE1TSXhWZWN0b3JzID0gKGluc3RhbmNlLT5tc2l4X3ZlY3RvcnMgPiAwID8KKwkJCQkJ
+ICAgaW5zdGFuY2UtPm1zaXhfdmVjdG9ycyA6IDApOwogCWluaXRfZnJhbWUgPSAoc3RydWN0IG1l
+Z2FzYXNfaW5pdF9mcmFtZSAqKWNtZC0+ZnJhbWU7CiAJbWVtc2V0KGluaXRfZnJhbWUsIDAsIE1F
+R0FNRklfRlJBTUVfU0laRSk7CiAKQEAgLTg3Nyw3ICs4ODAsNyBAQAogCXN0cnVjdCBtZWdhc2Fz
+X3JlZ2lzdGVyX3NldCBfX2lvbWVtICpyZWdfc2V0OwogCXN0cnVjdCBmdXNpb25fY29udGV4dCAq
+ZnVzaW9uOwogCXUzMiBtYXhfY21kOwotCWludCBpID0gMDsKKwlpbnQgaSA9IDAsIGNvdW50Owog
+CiAJZnVzaW9uID0gaW5zdGFuY2UtPmN0cmxfY29udGV4dDsKIApAQCAtOTI5LDcgKzkzMiw5IEBA
+CiAJCShNRUdBX01QSTJfUkFJRF9ERUZBVUxUX0lPX0ZSQU1FX1NJWkUgLQogCQkgc2l6ZW9mKHVu
+aW9uIE1QSTJfU0dFX0lPX1VOSU9OKSkvMTY7CiAKLQlmdXNpb24tPmxhc3RfcmVwbHlfaWR4ID0g
+MDsKKwljb3VudCA9IGluc3RhbmNlLT5tc2l4X3ZlY3RvcnMgPiAwID8gaW5zdGFuY2UtPm1zaXhf
+dmVjdG9ycyA6IDE7CisJZm9yIChpID0gMCA7IGkgPCBjb3VudDsgaSsrKQorCQlmdXNpb24tPmxh
+c3RfcmVwbHlfaWR4W2ldID0gMDsKIAogCS8qCiAJICogQWxsb2NhdGUgbWVtb3J5IGZvciBkZXNj
+cmlwdG9ycwpAQCAtMTQyMSw2ICsxNDI2LDEyIEBACiAJCQlmcF9wb3NzaWJsZSA9IGlvX2luZm8u
+ZnBPa0ZvcklvOwogCX0KIAorCS8qIFVzZSBzbXBfcHJvY2Vzc29yX2lkKCkgZm9yIG5vdyB1bnRp
+bCBjbWQtPnJlcXVlc3QtPmNwdSBpcyBDUFUKKwkgICBpZCBieSBkZWZhdWx0LCBub3QgQ1BVIGdy
+b3VwIGlkLCBvdGhlcndpc2UgYWxsIE1TSS1YIHF1ZXVlcyB3b24ndAorCSAgIGJlIHV0aWxpemVk
+ICovCisJY21kLT5yZXF1ZXN0X2Rlc2MtPlNDU0lJTy5NU0l4SW5kZXggPSBpbnN0YW5jZS0+bXNp
+eF92ZWN0b3JzID8KKwkJc21wX3Byb2Nlc3Nvcl9pZCgpICUgaW5zdGFuY2UtPm1zaXhfdmVjdG9y
+cyA6IDA7CisKIAlpZiAoZnBfcG9zc2libGUpIHsKIAkJbWVnYXNhc19zZXRfcGRfbGJhKGlvX3Jl
+cXVlc3QsIHNjcC0+Y21kX2xlbiwgJmlvX2luZm8sIHNjcCwKIAkJCQkgICBsb2NhbF9tYXBfcHRy
+LCBzdGFydF9sYmFfbG8pOwpAQCAtMTY5MSw3ICsxNzAyLDcgQEAKICAqIENvbXBsZXRlcyBhbGwg
+Y29tbWFuZHMgdGhhdCBpcyBpbiByZXBseSBkZXNjcmlwdG9yIHF1ZXVlCiAgKi8KIGludAotY29t
+cGxldGVfY21kX2Z1c2lvbihzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpCitjb21w
+bGV0ZV9jbWRfZnVzaW9uKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgdTMyIE1T
+SXhJbmRleCkKIHsKIAl1bmlvbiBNUEkyX1JFUExZX0RFU0NSSVBUT1JTX1VOSU9OICpkZXNjOwog
+CXN0cnVjdCBNUEkyX1NDU0lfSU9fU1VDQ0VTU19SRVBMWV9ERVNDUklQVE9SICpyZXBseV9kZXNj
+OwpAQCAtMTcxMSw3ICsxNzIyLDkgQEAKIAkJcmV0dXJuIElSUV9IQU5ETEVEOwogCiAJZGVzYyA9
+IGZ1c2lvbi0+cmVwbHlfZnJhbWVzX2Rlc2M7Ci0JZGVzYyArPSBmdXNpb24tPmxhc3RfcmVwbHlf
+aWR4OworCWRlc2MgKz0gKChNU0l4SW5kZXggKiBmdXNpb24tPnJlcGx5X2FsbG9jX3N6KS8KKwkJ
+IHNpemVvZih1bmlvbiBNUEkyX1JFUExZX0RFU0NSSVBUT1JTX1VOSU9OKSkgKworCQlmdXNpb24t
+Pmxhc3RfcmVwbHlfaWR4W01TSXhJbmRleF07CiAKIAlyZXBseV9kZXNjID0gKHN0cnVjdCBNUEky
+X1NDU0lfSU9fU1VDQ0VTU19SRVBMWV9ERVNDUklQVE9SICopZGVzYzsKIApAQCAtMTc4NCwxNiAr
+MTc5NywxOSBAQAogCQkJYnJlYWs7CiAJCX0KIAotCQlmdXNpb24tPmxhc3RfcmVwbHlfaWR4Kys7
+Ci0JCWlmIChmdXNpb24tPmxhc3RfcmVwbHlfaWR4ID49IGZ1c2lvbi0+cmVwbHlfcV9kZXB0aCkK
+LQkJCWZ1c2lvbi0+bGFzdF9yZXBseV9pZHggPSAwOworCQlmdXNpb24tPmxhc3RfcmVwbHlfaWR4
+W01TSXhJbmRleF0rKzsKKwkJaWYgKGZ1c2lvbi0+bGFzdF9yZXBseV9pZHhbTVNJeEluZGV4XSA+
+PQorCQkgICAgZnVzaW9uLT5yZXBseV9xX2RlcHRoKQorCQkJZnVzaW9uLT5sYXN0X3JlcGx5X2lk
+eFtNU0l4SW5kZXhdID0gMDsKIAogCQlkZXNjLT5Xb3JkcyA9IFVMTE9OR19NQVg7CiAJCW51bV9j
+b21wbGV0ZWQrKzsKIAogCQkvKiBHZXQgdGhlIG5leHQgcmVwbHkgZGVzY3JpcHRvciAqLwotCQlp
+ZiAoIWZ1c2lvbi0+bGFzdF9yZXBseV9pZHgpCi0JCQlkZXNjID0gZnVzaW9uLT5yZXBseV9mcmFt
+ZXNfZGVzYzsKKwkJaWYgKCFmdXNpb24tPmxhc3RfcmVwbHlfaWR4W01TSXhJbmRleF0pCisJCQlk
+ZXNjID0gZnVzaW9uLT5yZXBseV9mcmFtZXNfZGVzYyArCisJCQkJKChNU0l4SW5kZXggKiBmdXNp
+b24tPnJlcGx5X2FsbG9jX3N6KS8KKwkJCQkgc2l6ZW9mKHVuaW9uIE1QSTJfUkVQTFlfREVTQ1JJ
+UFRPUlNfVU5JT04pKTsKIAkJZWxzZQogCQkJZGVzYysrOwogCkBAIC0xODEzLDcgKzE4MjksNyBA
+QAogCQlyZXR1cm4gSVJRX05PTkU7CiAKIAl3bWIoKTsKLQl3cml0ZWwoZnVzaW9uLT5sYXN0X3Jl
+cGx5X2lkeCwKKwl3cml0ZWwoKE1TSXhJbmRleCA8PCAyNCkgfCBmdXNpb24tPmxhc3RfcmVwbHlf
+aWR4W01TSXhJbmRleF0sCiAJICAgICAgICZpbnN0YW5jZS0+cmVnX3NldC0+cmVwbHlfcG9zdF9o
+b3N0X2luZGV4KTsKIAltZWdhc2FzX2NoZWNrX2FuZF9yZXN0b3JlX3F1ZXVlX2RlcHRoKGluc3Rh
+bmNlKTsKIAlyZXR1cm4gSVJRX0hBTkRMRUQ7CkBAIC0xODMxLDYgKzE4NDcsOSBAQAogCXN0cnVj
+dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSA9CiAJCShzdHJ1Y3QgbWVnYXNhc19pbnN0YW5j
+ZSAqKWluc3RhbmNlX2FkZHI7CiAJdW5zaWduZWQgbG9uZyBmbGFnczsKKwl1MzIgY291bnQsIE1T
+SXhJbmRleDsKKworCWNvdW50ID0gaW5zdGFuY2UtPm1zaXhfdmVjdG9ycyA+IDAgPyBpbnN0YW5j
+ZS0+bXNpeF92ZWN0b3JzIDogMTsKIAogCS8qIElmIHdlIGhhdmUgYWxyZWFkeSBkZWNsYXJlZCBh
+ZGFwdGVyIGRlYWQsIGRvbm90IGNvbXBsZXRlIGNtZHMgKi8KIAlzcGluX2xvY2tfaXJxc2F2ZSgm
+aW5zdGFuY2UtPmhiYV9sb2NrLCBmbGFncyk7CkBAIC0xODQxLDcgKzE4NjAsOCBAQAogCXNwaW5f
+dW5sb2NrX2lycXJlc3RvcmUoJmluc3RhbmNlLT5oYmFfbG9jaywgZmxhZ3MpOwogCiAJc3Bpbl9s
+b2NrX2lycXNhdmUoJmluc3RhbmNlLT5jb21wbGV0aW9uX2xvY2ssIGZsYWdzKTsKLQljb21wbGV0
+ZV9jbWRfZnVzaW9uKGluc3RhbmNlKTsKKwlmb3IgKE1TSXhJbmRleCA9IDAgOyBNU0l4SW5kZXgg
+PCBjb3VudDsgTVNJeEluZGV4KyspCisJCWNvbXBsZXRlX2NtZF9mdXNpb24oaW5zdGFuY2UsIE1T
+SXhJbmRleCk7CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaW5zdGFuY2UtPmNvbXBsZXRpb25f
+bG9jaywgZmxhZ3MpOwogfQogCkBAIC0xODUwLDEwICsxODcwLDExIEBACiAgKi8KIGlycXJldHVy
+bl90IG1lZ2FzYXNfaXNyX2Z1c2lvbihpbnQgaXJxLCB2b2lkICpkZXZwKQogewotCXN0cnVjdCBt
+ZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSA9IChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqKWRl
+dnA7CisJc3RydWN0IG1lZ2FzYXNfaXJxX2NvbnRleHQgKmlycV9jb250ZXh0ID0gZGV2cDsKKwlz
+dHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UgPSBpcnFfY29udGV4dC0+aW5zdGFuY2U7
+CiAJdTMyIG1maVN0YXR1cywgZndfc3RhdGU7CiAKLQlpZiAoIWluc3RhbmNlLT5tc2lfZmxhZykg
+eworCWlmICghaW5zdGFuY2UtPm1zaXhfdmVjdG9ycykgewogCQltZmlTdGF0dXMgPSBpbnN0YW5j
+ZS0+aW5zdGFuY2V0LT5jbGVhcl9pbnRyKGluc3RhbmNlLT5yZWdfc2V0KTsKIAkJaWYgKCFtZmlT
+dGF0dXMpCiAJCQlyZXR1cm4gSVJRX05PTkU7CkBAIC0xODY1LDcgKzE4ODYsNyBAQAogCQlyZXR1
+cm4gSVJRX0hBTkRMRUQ7CiAJfQogCi0JaWYgKCFjb21wbGV0ZV9jbWRfZnVzaW9uKGluc3RhbmNl
+KSkgeworCWlmICghY29tcGxldGVfY21kX2Z1c2lvbihpbnN0YW5jZSwgaXJxX2NvbnRleHQtPk1T
+SXhJbmRleCkpIHsKIAkJaW5zdGFuY2UtPmluc3RhbmNldC0+Y2xlYXJfaW50cihpbnN0YW5jZS0+
+cmVnX3NldCk7CiAJCS8qIElmIHdlIGRpZG4ndCBjb21wbGV0ZSBhbnkgY29tbWFuZHMsIGNoZWNr
+IGZvciBGVyBmYXVsdCAqLwogCQlmd19zdGF0ZSA9IGluc3RhbmNlLT5pbnN0YW5jZXQtPnJlYWRf
+Zndfc3RhdHVzX3JlZygKQEAgLTIwODEsMTQgKzIxMDIsMTYgQEAKIAogdm9pZCAgbWVnYXNhc19y
+ZXNldF9yZXBseV9kZXNjKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSkKIHsKLQlp
+bnQgaTsKKwlpbnQgaSwgY291bnQ7CiAJc3RydWN0IGZ1c2lvbl9jb250ZXh0ICpmdXNpb247CiAJ
+dW5pb24gTVBJMl9SRVBMWV9ERVNDUklQVE9SU19VTklPTiAqcmVwbHlfZGVzYzsKIAogCWZ1c2lv
+biA9IGluc3RhbmNlLT5jdHJsX2NvbnRleHQ7Ci0JZnVzaW9uLT5sYXN0X3JlcGx5X2lkeCA9IDA7
+CisJY291bnQgPSBpbnN0YW5jZS0+bXNpeF92ZWN0b3JzID4gMCA/IGluc3RhbmNlLT5tc2l4X3Zl
+Y3RvcnMgOiAxOworCWZvciAoaSA9IDAgOyBpIDwgY291bnQgOyBpKyspCisJCWZ1c2lvbi0+bGFz
+dF9yZXBseV9pZHhbaV0gPSAwOwogCXJlcGx5X2Rlc2MgPSBmdXNpb24tPnJlcGx5X2ZyYW1lc19k
+ZXNjOwotCWZvciAoaSA9IDAgOyBpIDwgZnVzaW9uLT5yZXBseV9xX2RlcHRoOyBpKyssIHJlcGx5
+X2Rlc2MrKykKKwlmb3IgKGkgPSAwIDsgaSA8IGZ1c2lvbi0+cmVwbHlfcV9kZXB0aCAqIGNvdW50
+OyBpKyssIHJlcGx5X2Rlc2MrKykKIAkJcmVwbHlfZGVzYy0+V29yZHMgPSBVTExPTkdfTUFYOwog
+fQogCmRpZmYgLU5hdXIgc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
+aWRfc2FzX2Z1c2lvbi5oIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
+ZWdhcmFpZF9zYXNfZnVzaW9uLmgKLS0tIHNjc2ktbWlzYy0yLjYvZHJpdmVycy9zY3NpL21lZ2Fy
+YWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uaAkyMDExLTEwLTA4IDE1OjI4OjUxLjY5OTMzMDgxNyAt
+MDcwMAorKysgc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlk
+X3Nhc19mdXNpb24uaAkyMDExLTEwLTA4IDE1OjA3OjA0LjgxNjI2OTI2NiAtMDcwMApAQCAtNDMs
+NiArNDMsNyBAQAogI2RlZmluZSBIT1NUX0RJQUdfV1JJVEVfRU5BQkxFCQkJICAgIDB4ODAKICNk
+ZWZpbmUgSE9TVF9ESUFHX1JFU0VUX0FEQVBURVIJCQkgICAgMHg0CiAjZGVmaW5lIE1FR0FTQVNf
+RlVTSU9OX01BWF9SRVNFVF9UUklFUwkJICAgIDMKKyNkZWZpbmUgTUFYX01TSVhfUVVFVUVTX0ZV
+U0lPTgkJCSAgICAxNgogCiAvKiBJbnZhZGVyIGRlZmluZXMgKi8KICNkZWZpbmUgTVBJMl9UWVBF
+X0NVREEJCQkJICAgIDB4MgpAQCAtNjczLDcgKzY3NCw3IEBACiAJdW5pb24gTVBJMl9SRVBMWV9E
+RVNDUklQVE9SU19VTklPTiAqcmVwbHlfZnJhbWVzX2Rlc2M7CiAJc3RydWN0IGRtYV9wb29sICpy
+ZXBseV9mcmFtZXNfZGVzY19wb29sOwogCi0JdTE2IGxhc3RfcmVwbHlfaWR4OworCXUxNiBsYXN0
+X3JlcGx5X2lkeFtNQVhfTVNJWF9RVUVVRVNfRlVTSU9OXTsKIAogCXUzMiByZXBseV9xX2RlcHRo
+OwogCXUzMiByZXF1ZXN0X2FsbG9jX3N6OwpkaWZmIC1OYXVyIHNjc2ktbWlzYy0yLjYvZHJpdmVy
+cy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMv
+c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAotLS0gc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Nj
+c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgJMjAxMS0xMC0wOCAxNToyODo1MS43MDAzMzA3NjUg
+LTA3MDAKKysrIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXMuaAkyMDExLTEwLTA4IDE1OjA5OjE5LjM3ODI2ODUzOSAtMDcwMApAQCAtNzU3LDYgKzc1
+Nyw3IEBACiAjZGVmaW5lIE1FR0FTQVNfSU5UX0NNRFMJCQkzMgogI2RlZmluZSBNRUdBU0FTX1NL
+SU5OWV9JTlRfQ01EUwkJCTUKIAorI2RlZmluZSBNRUdBU0FTX01BWF9NU0lYX1FVRVVFUwkJCTE2
+CiAvKgogICogRlcgY2FuIGFjY2VwdCBib3RoIDMyIGFuZCA2NCBiaXQgU0dMcy4gV2Ugd2FudCB0
+byBhbGxvY2F0ZSAzMi82NCBiaXQKICAqIFNHTHMgYmFzZWQgb24gdGhlIHNpemUgb2YgZG1hX2Fk
+ZHJfdApAQCAtMTI3OCw2ICsxMjc5LDExIEBACiAJc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmlu
+c3RhbmNlOwogfTsKIAorc3RydWN0IG1lZ2FzYXNfaXJxX2NvbnRleHQgeworCXN0cnVjdCBtZWdh
+c2FzX2luc3RhbmNlICppbnN0YW5jZTsKKwl1MzIgTVNJeEluZGV4OworfTsKKwogc3RydWN0IG1l
+Z2FzYXNfaW5zdGFuY2UgewogCiAJdTMyICpwcm9kdWNlcjsKQEAgLTEzNTEsOCArMTM1Nyw5IEBA
+CiAKIAkvKiBQdHIgdG8gaGJhIHNwZWNpZmljIGluZm9ybWF0aW9uICovCiAJdm9pZCAqY3RybF9j
+b250ZXh0OwotCXU4CW1zaV9mbGFnOwotCXN0cnVjdCBtc2l4X2VudHJ5IG1zaXhlbnRyeTsKKwl1
+bnNpZ25lZCBpbnQgbXNpeF92ZWN0b3JzOworCXN0cnVjdCBtc2l4X2VudHJ5IG1zaXhlbnRyeVtN
+RUdBU0FTX01BWF9NU0lYX1FVRVVFU107CisJc3RydWN0IG1lZ2FzYXNfaXJxX2NvbnRleHQgaXJx
+X2NvbnRleHRbTUVHQVNBU19NQVhfTVNJWF9RVUVVRVNdOwogCXU2NCBtYXBfaWQ7CiAJc3RydWN0
+IG1lZ2FzYXNfY21kICptYXBfdXBkYXRlX2NtZDsKIAl1bnNpZ25lZCBsb25nIGJhcjsK
+--0016e64c393a02037d04aed3687b--
