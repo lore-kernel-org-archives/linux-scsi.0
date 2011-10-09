@@ -1,115 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/4] target: Fix transport_cmd_finish_abort queue
- removal bug
-Date: Sun, 09 Oct 2011 02:06:45 -0700
-Message-ID: <1318151205.4978.137.camel@haakon2.linux-iscsi.org>
-References: <1317358511-10664-1-git-send-email-nab@linux-iscsi.org>
-	 <1317358511-10664-4-git-send-email-nab@linux-iscsi.org>
-	 <20111009013326.GC32104@infradead.org>
-	 <1318125812.4978.106.camel@haakon2.linux-iscsi.org>
-	 <20111009022749.GB7948@infradead.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 0/10] megaraid_sas: Updates for scsi-misc
+Date: Sun, 09 Oct 2011 09:56:35 -0400
+Message-ID: <4E91A813.1070003@interlog.com>
+References: <CAHtARFGh5i6M8SMqjeUnpUP=dWNdwdmDhGo+z4h4qE8r18xhWA@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20111009022749.GB7948@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:60278 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751021Ab1JIN4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Oct 2011 09:56:42 -0400
+In-Reply-To: <CAHtARFGh5i6M8SMqjeUnpUP=dWNdwdmDhGo+z4h4qE8r18xhWA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-On Sat, 2011-10-08 at 22:27 -0400, Christoph Hellwig wrote:
-> On Sat, Oct 08, 2011 at 07:03:32PM -0700, Nicholas A. Bellinger wrote:
-> > The reordering in transport_cmd_finish_abort() was not the issue here,
-> > but the calling transport_remove_cmd_from_queue() when 'remove == 0'.
-> >
-> > This should not be a problem in transport_cmd_finish_abort_tmr() as we
-> > always expect to release the tmr associated command.
-> 
-> I know, but I'd really not have subtily different calling conventions
-> between the two.
-> 
-> Right now transport_cmd_finish_abort and transport_cmd_finish_abort_tmr
-> only differ in:
-> 
->  - transport_cmd_finish_abort calling transport_lun_remove_cmd
->  - transport_cmd_finish_abort having the remove flag to make the
->    transport_put_cmd (and with your patch the
->    transport_remove_cmd_from_queue) call optional.
-> 
-> I'd much rather add a conditional on the command beeing a TMR and merge
-> the two into a single helper than having them diverge further.
+On 11-10-08 09:14 PM, adam radford wrote:
+> James/Linux-scsi,
+>
+> The following patch series for megaraid_sas brings the driver up to v6.12-rc1:
+>
+> 1. Continue booting immediately if FW in FAULT at driver load time.
+> 2. Increase default cmds per lun to 256.
+> 3. Fix mismatch in megasas_reset_fusion() mutex lock-unlock.
+> 4. Remove some un-necessary code.
+> 5. Clear state change interrupts for Fusion/Invader.
+> 6. Clear FUSION_IN_RESET before enabling interrupts.
+> 7. Add support for MegaRAID 9360/9380 12GB/s controllers.
+> 8. Add multiple MSI-X vector/multiple reply queue support.
+> 9. Add driver workaround for PERC5/1068 kdump kernel panic.
+> 10. Version and Changelog update.
 
-Fair enough..  Merging the two with the following patch.
+I haven't checked all SAS HBAs in Linux but of those that I
+have checked only one doesn't support the SMP pass-through
+in the bsg driver. And that HBA driver is megaraid_sas **.
 
-commit c2b6a8188ccece6ac225e8e8a72f91bcb7dc295a
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Sun Oct 9 02:02:51 2011 -0700
+The SMP pass-through allows user space programs to monitor
+and change advanced features in SAS expanders such as
+zoning. SMP (Serial Management Protocol) is one of the three
+SAS transport protocols defined by t10.org (the other two are
+SSP and STP). All SAS HBAs, including MegaRaid SAS HBAs,
+support SMP "under the covers" otherwise they would not be
+able to discover disks connected via SAS expanders.
 
-    target: Merge transport_cmd_finish_abort_tmr into transport_cmd_finish_abort
-    
-    This patch merges transport_cmd_finish_abort_tmr() logic into a single
-    transport_cmd_finish_abort() function by adding a cmd->se_tmr_req check
-    around transport_lun_remove_cmd(), and updates the single caller within
-    core_tmr_drain_tmr_list().
-    
-    Reported-by: Christoph Hellwig <hch@lst.de>
-    Cc: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+Doug Gilbert
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 527e96b..79e26a4 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -162,7 +162,7 @@ static void core_tmr_drain_tmr_list(
-                        (preempt_and_abort_list) ? "Preempt" : "", tmr,
-                        tmr->function, tmr->response, cmd->t_state);
-                
--               transport_cmd_finish_abort_tmr(cmd);
-+               transport_cmd_finish_abort(cmd, 1);
-        }
- }
- 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 73856dc..db41eb9 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -595,7 +595,8 @@ check_lun:
- 
- void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
- {
--       transport_lun_remove_cmd(cmd);
-+       if (!cmd->se_tmr_req)
-+               transport_lun_remove_cmd(cmd);
- 
-        if (transport_cmd_check_stop_to_fabric(cmd))
-                return;
-@@ -605,16 +606,6 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
-        }
- }
- 
--void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
--{
--       transport_remove_cmd_from_queue(cmd, &cmd->se_dev->dev_queue_obj);
--
--       if (transport_cmd_check_stop_to_fabric(cmd))
--               return;
--
--       transport_put_cmd(cmd);
--}
--
- static void transport_add_cmd_to_queue(
-        struct se_cmd *cmd,
-        int t_state)
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 7f41fb2..065fb65 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -134,7 +134,6 @@ extern void transport_free_session(struct se_session *);
- extern void transport_deregister_session_configfs(struct se_session *);
- extern void transport_deregister_session(struct se_session *);
- extern void transport_cmd_finish_abort(struct se_cmd *, int);
--extern void transport_cmd_finish_abort_tmr(struct se_cmd *);
- extern void transport_complete_sync_cache(struct se_cmd *, int);
- extern void transport_complete_task(struct se_task *, int);
- extern void transport_add_task_to_execute_queue(struct se_task *,
+
+** I'm not aware of any proprietary SMP pass-through interface
+    accessible in Linux for megaraid_sas either
+
+
