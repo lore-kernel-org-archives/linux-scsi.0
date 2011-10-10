@@ -1,99 +1,152 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/10] megaraid_sas: Updates for scsi-misc
-Date: Mon, 10 Oct 2011 09:02:23 +0200
-Message-ID: <4E92987F.8030507@suse.de>
-References: <CAHtARFGh5i6M8SMqjeUnpUP=dWNdwdmDhGo+z4h4qE8r18xhWA@mail.gmail.com>	 <4E91A813.1070003@interlog.com> <1318169420.2998.6.camel@dabdike.int.hansenpartnership.com> <4E9242DB.7040401@interlog.com>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH] target: simplify target_parse_naa_6h_vendor_specific()
+Date: Mon, 10 Oct 2011 12:30:17 +0300
+Message-ID: <1318239017.13889.3.camel@smile>
+References: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
+	 <9d522de8482ec20816be2b68b2d37ab8406f6876.1316419814.git.andriy.shevchenko@linux.intel.com>
+	 <CAHp75Vdp6MpUQKeg1LM3Gn+R21ZfV66dg9Q78QUj=BVLM0t1DQ@mail.gmail.com>
+	 <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
+	 <1318114060.4978.41.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38651 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752272Ab1JJHC1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Oct 2011 03:02:27 -0400
-In-Reply-To: <4E9242DB.7040401@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1318114060.4978.41.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-On 10/10/2011 02:56 AM, Douglas Gilbert wrote:
-> On 11-10-09 10:10 AM, James Bottomley wrote:
->> On Sun, 2011-10-09 at 09:56 -0400, Douglas Gilbert wrote:
->>> On 11-10-08 09:14 PM, adam radford wrote:
->>>> James/Linux-scsi,
->>>>
->>>> The following patch series for megaraid_sas brings the driver up
->>>> to v6.12-rc1:
->>>>
->>>> 1. Continue booting immediately if FW in FAULT at driver load time=
-=2E
->>>> 2. Increase default cmds per lun to 256.
->>>> 3. Fix mismatch in megasas_reset_fusion() mutex lock-unlock.
->>>> 4. Remove some un-necessary code.
->>>> 5. Clear state change interrupts for Fusion/Invader.
->>>> 6. Clear FUSION_IN_RESET before enabling interrupts.
->>>> 7. Add support for MegaRAID 9360/9380 12GB/s controllers.
->>>> 8. Add multiple MSI-X vector/multiple reply queue support.
->>>> 9. Add driver workaround for PERC5/1068 kdump kernel panic.
->>>> 10. Version and Changelog update.
->>>
->>> I haven't checked all SAS HBAs in Linux but of those that I
->>> have checked only one doesn't support the SMP pass-through
->>> in the bsg driver. And that HBA driver is megaraid_sas **.
->>
->> Technically the megaraid_sas isn't really a SAS HBA, it's a RAID one
->> that just happens to have SAS/SATA disk attachments. None of the RAI=
-D
->> HBA's (including the IBM power raid) expose a BSG interface or even
->> attach properly to the in-kernel SAS interfaces.
->
-> In JBOD mode MegaRaid SAS controllers are SAS HBAs
-> (marketing BS aside). Their firmware has the same
-> SMP pass-through as LSI's MPT SAS Fusion controllers.
->
-> There is no reason why a MegaRaid controller user
-> couldn't place a SAS-2 expander in front of an array
-> of disks and make some disks available to a MegaRaid
-> volume. Other array disks could be used by other
-> machines and the different sets could be isolated
-> from each other with SAS-2 zoning. The problem then
-> would be that via a MegaRaid SAS controller a user
-> could not monitor or control that zoning. Seems a
-> bit wasteful to add a "real" SAS HBA just to get
-> that capability.
->
-Yes, true. But that's the megaraid SAS design.
-It's actually the same with every other RAID controller.
-Everyone (well, every reasonably recent one) supports SAS, but
-virtually no-one exposes them as such.
+On Sat, 2011-10-08 at 15:47 -0700, Nicholas A. Bellinger wrote: 
+> On Wed, 2011-09-28 at 14:04 -0700, Nicholas A. Bellinger wrote:
+> > On Tue, 2011-09-27 at 13:48 +0300, Andy Shevchenko wrote:
+> > > On Mon, Sep 19, 2011 at 11:11 AM, Andy Shevchenko
+> > > <andriy.shevchenko@linux.intel.com> wrote:
+> > > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > > > Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > > ---
+> > > >  drivers/target/target_core_cdb.c |   30 +++++++++++++-----------------
+> > > >  1 files changed, 13 insertions(+), 17 deletions(-)
+> > > >
+> > > > diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+> > > > index f04d4ef..b796115 100644
+> > > > --- a/drivers/target/target_core_cdb.c
+> > > > +++ b/drivers/target/target_core_cdb.c
+> > > > @@ -24,7 +24,6 @@
+> > > >  */
+> > > >
+> > > >  #include <linux/kernel.h>
+> > > > -#include <linux/ctype.h>
+> > > >  #include <asm/unaligned.h>
+> > > >  #include <scsi/scsi.h>
+> > > >
+> > > > @@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
+> > > >  }
+> > > >
+> > > >  static void
+> > > > -target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
+> > > > +target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
+> > > >  {
+> > > >        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
+> > > > -       unsigned char *buf = buf_off;
+> > > > -       int cnt = 0, next = 1;
+> > > > +       int cnt;
+> > > > +       bool next = true;
+> > > > +
+> > > >        /*
+> > > >         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
+> > > >         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
+> > > > @@ -169,20 +169,16 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
+> > > >         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
+> > > >         * per device uniqeness.
+> > > >         */
+> > > > -       while (*p != '\0') {
+> > > > -               if (cnt >= 13)
+> > > > -                       break;
+> > > > -               if (!isxdigit(*p)) {
+> > > > -                       p++;
+> > > > +       for (cnt = 0; *p && cnt < 13; next = !next) {
+> > > > +               int val = hex_to_bin(*p++);
+> > > > +
+> > > > +               if (val < 0)
+> > > >                        continue;
+> > > > -               }
+> > > > -               if (next != 0) {
+> > > > -                       buf[cnt++] |= hex_to_bin(*p++);
+> > > > -                       next = 0;
+> > > > -               } else {
+> > > > -                       buf[cnt] = hex_to_bin(*p++) << 4;
+> > > > -                       next = 1;
+> > > > -               }
+> > > > +
+> > > > +               if (next)
+> > > > +                       buf[cnt++] |= val;
+> > > > +               else
+> > > > +                       buf[cnt] = val << 4;
+> > > >        }
+> > > >  }
+> > > >
+> > > 
+> > > Nicholas, any comment on this?
+> > > 
+> > 
+> > Hi Andy,
+> > 
+> > This simplification is fine with me, and will plan to queue this for
+> > v3.2.
+> > 
+> 
+> Hi Andy,
+> 
+> So I finally got around to testing this patch, but unfortunately it does
+> not produce the same results as the original code.  The problem is due
+> to the 'next = !next' assignment in the above for loop, which causes the
+> value to be reset even when hex_to_bin() detects an non hex character..
+Yeah, you right.
 
-Problem here is that the RAID controller have invented
-their own command set to talk to the RAID firmware.
-Most RAID firmware have support for SCSI passthrough
-commands (that's how we managed to get rid of cciss :-)
-but virtually none of those have support for transport-specific
-passthrough commands.
+> 
+> Here is an updated patch that I will be commiting into lio-core-2.6.git.
+Actually one minor comment.
 
-So yes, they are using the same SAS cores as 'normal'
-SAS HBAs do. But no, there is no way how you could get
-through to them. Or, at least, no documented one.
+> @@ -169,19 +169,18 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
+>          * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
+>          * per device uniqeness.
+>          */
+> -       while (*p != '\0') {
+> -               if (cnt >= 13)
+> -                       break;
+> -               if (!isxdigit(*p)) {
+> -                       p++;
+> +       for (cnt = 0; *p && cnt < 13; p++) {
+> +               int val = hex_to_bin(*p);
+> +
+> +               if (val < 0)
+>                         continue;
+> -               }
+> -               if (next != 0) {
+> -                       buf[cnt++] |= hex_to_bin(*p++);
+> -                       next = 0;
+> +
+> +               if (next) {
+> +                       next = false;
+(1) 
+> +                       buf[cnt++] |= val;
+>                 } else {
+> -                       buf[cnt] = hex_to_bin(*p++) << 4;
+> -                       next = 1;
+> +                       next = true;
+(2) 
+> +                       buf[cnt] = val << 4;
+>                 }
 
-Would be cool to have them, but you could _severely_ screw up=20
-operations by using them.
+next = !next;
+here instead of (1) and (2).
 
-Cheers,
+> }
+>  }
+> 
+> 
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
