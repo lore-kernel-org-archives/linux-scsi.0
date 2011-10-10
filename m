@@ -1,83 +1,67 @@
-From: Ian Campbell <ian.campbell@citrix.com>
-Subject: [PATCH 5/9] cxgbi: convert to SKB paged frag API.
-Date: Mon, 10 Oct 2011 12:11:37 +0100
-Message-ID: <1318245101-16890-5-git-send-email-ian.campbell@citrix.com>
-References: <1318245076.21903.408.camel@zakaz.uk.xensource.com>
+From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@aimer.com.cn>
+Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
+	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
+Date: Mon, 10 Oct 2011 12:40:39 +0000 (UTC)
+Message-ID: <20121010202040282766@aimer.com.cn>
+Reply-To: <1339625218@qq.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1318245076.21903.408.camel@zakaz.uk.xensource.com>
-Sender: netdev-owner@vger.kernel.org
-To: netdev@vger.kernel.org
-Cc: Ian Campbell <ian.campbell@citrix.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "David S. Miller" <davem@davemloft.net>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Karen Xie <kxie@chelsio.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [218.241.153.9] ([218.241.153.9]:2765 "EHLO aimer.com.cn"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752643Ab1JJMkh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Oct 2011 08:40:37 -0400
+Received: from amdzzabz by aimer.com.cn (MDaemon PRO v10.1.1)
+	with ESMTP id md50000024923.msg
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Oct 2011 20:19:51 +0800
+Date: Wed, 10 Oct 2012 20:20:32 +0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linsir688@hotmail.com, linuschicago@aol.com, linux-scsi@vger.kernel.org, liny_20062000@hotmail.com, linzonii@msn.com, liona29@anantes-257-1-169-2.w86-195.abo.wanadoo.fr
 
-Signed-off-by: Ian Campbell <ian.campbell@citrix.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: Karen Xie <kxie@chelsio.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/scsi/cxgbi/libcxgbi.c |   16 +++++++++-------
- drivers/scsi/cxgbi/libcxgbi.h |    2 +-
- 2 files changed, 10 insertions(+), 8 deletions(-)
+576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
+ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
+DQrnvqTlj5Hova/ku7YrMTA55bGK5bm/5Lqk5Lya5Lmw5a6244CB5rW35YWz5pWw5o2u44CB5pCc
+57Si5byV5pOO5Lmw5a62LEIyQuivouebmOS5sOWutuWFsTUwMOS4hyzku4UxMOWFg+avj+WkqeOA
+giANCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ
+5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KMeOA
+gee+pOWPkei9r+S7tu+8miDmk43kvZznroDljZXvvIzlip/og73lvLrlpKfvvIzmqKHku7/kurrl
+t6Xmk43kvZzmqKHlvI/vvIzliLDovr7njofpq5jvvIzml6Xlj5HpgIE15LiH5bCB5Lul5LiK44CC
+IA0KMuOAgTUwMOS4h+S5sOWutui1hOa6kO+8miDotaDpgIHnmoQ1MDDkuIfkubDlrrbotYTmupDl
+upPvvIzmm7TmlrAgKOWPr+S7peaMieeFp+aCqOeahOS6p+WTgeaPkOWPluWHuuadpe+8jOabtOey
+vuWHhuW8gOWPkSnjgIIgDQoz44CB6LaF57qn5rW35aSW5Lmw5a62RW1haWzmkJzntKLmnLrvvJog
+5YaF572u5LqGNjAw5LiH6KGM5Lia5YWz6ZSu6K+N77yM5qC55o2u6ZW/5bC+6K+N5pCc57Si77yM
+57uT5p6c5pu057K+56Gu5Yy56YWN77yb5q+P5aSp6IO95pCc57SiMS0y5LiH5Lul5LiK5Lmw5a62
+55yf5a6eRU1BSUzvvIzmiJDljZXnjofpq5jjgIIgDQogDQoNCuimgeeahOaKk+e0p+iBlOezu1FR
+OiAxMzM5NjI1MjE4ICAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5j
+b20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1MjE4ICAgIOaIluiAheeri+WNs+WbnuWk
+jemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1
+MjE4ICAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCiANCuWF
+jei0uei1oOmAgToNCuS4gOWFsTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn
+6KGM5Lia5YiG5aW957G777yM5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8
+miANCjHvvIwyMDEx5pil5a2jMTA55bGK5bm/5Lqk5Lya5Lmw5a62546w5Zy66K+i55uY5pWw5o2u
+5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a65
+5piT5oiQ5Y2V77yBIA0KMu+8jOi0reS5sOWQjuWPr+S7peWFjei0ueabtOaWsDIwMTHnp4vlraPl
+ub/kuqTkvJorMjAxMuaYpeWto+W5v+S6pOS8muS5sOWutuaVsOaNruOAguWkqui2heWAvOS6huOA
+gg0KM++8jOacgOaWsOWFqOeQg+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgKOacgOaW
+sOabtOaWsOaXpeacnyAyMDExLTA1LTE25pelKQ0KNO+8jDIwMDjlubQsMjAwOeW5tCwyMDEw5bm0
+IOaYpeWtoyvnp4vlraPlub/kuqTkvJrkubDlrrblkI3lvZXvvIwxMDMgMTA0IDEwNSAxMDYgMTA3
+IDEwOCDlhbHlha3lsYog5YWxMTIwLjbkuIfmlbDmja7jgIINCjXvvIwyMDEw5bm05Zu96ZmF5L+D
+6ZSA5Y2P5Lya77yIUFBBSe+8ieaIkOWRmOWQjeWNlSBQUEFJIE1lbWJlcnMgRGlyZWN0b3J577yM
+6Z2e5bi46YeN6KaB55qE5aSn5Lmw5a6244CCDQo277yMMjAxMOW5tOWIsOmmmea4r+mHh+i0reea
+hOWbveWkluWuouS6uuWQjeW9lSjpppnmuK/otLjlj5HlsYDmj5Dkvpsp77yM5YWxNy4y5LiH5pWw
+5o2u77yM6LaF57qn6YeN6KaB55qE5Lmw5a6244CCDQo377yMNDguNjjkuIfmnaHmnIDmlrDkubDl
+rrbor6Lnm5jvvIzotK3kubDlkI7mr4/mnIjmm7TmlrAgMS0y5LiH5p2h77yM5YyF5ousMumDqOWI
+hu+8jDHvvIzmnIDmlrDnmoTor6Lnm5ggMu+8jOacgOaWsOeahOWxleS8muS5sOWutuOAguWFjei0
+ueabtOaWsDM25Liq5pyI44CCDQo477yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBpZXJz54mI
+5pWw5o2uIDHljYPkuIfjgIINCg0KDQror5rkv6HkuLrmnKzvvIzmlK/mjIHmlK/ku5jlrp3mi4Xk
+v53kuqTmmJMgKOWFiOWPkei0p+W5tuWuieijheiuvue9rue+pOWPkei9r+S7tu+8jOeEtuWQjuS7
+mOasvikg5b275bqV5omT5raI5oKo55qEIOmhvuiZkeOAgg0KDQogDQoNCg0KIA0KDQrnsr7lh4bm
+lbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7l
+h4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrn
+sr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQo=
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 77ac217..628b23d 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -1787,7 +1787,7 @@ static int sgl_seek_offset(struct scatterlist *sgl, unsigned int sgcnt,
- }
- 
- static int sgl_read_to_frags(struct scatterlist *sg, unsigned int sgoffset,
--				unsigned int dlen, skb_frag_t *frags,
-+				unsigned int dlen, struct subpage *frags,
- 				int frag_max)
- {
- 	unsigned int datalen = dlen;
-@@ -1944,7 +1944,7 @@ int cxgbi_conn_init_pdu(struct iscsi_task *task, unsigned int offset,
- 		if (tdata->nr_frags > MAX_SKB_FRAGS ||
- 		    (padlen && tdata->nr_frags == MAX_SKB_FRAGS)) {
- 			char *dst = skb->data + task->hdr_len;
--			skb_frag_t *frag = tdata->frags;
-+			struct subpage *frag = tdata->frags;
- 
- 			/* data fits in the skb's headroom */
- 			for (i = 0; i < tdata->nr_frags; i++, frag++) {
-@@ -1962,11 +1962,13 @@ int cxgbi_conn_init_pdu(struct iscsi_task *task, unsigned int offset,
- 			skb_put(skb, count + padlen);
- 		} else {
- 			/* data fit into frag_list */
--			for (i = 0; i < tdata->nr_frags; i++)
--				get_page(tdata->frags[i].page);
--
--			memcpy(skb_shinfo(skb)->frags, tdata->frags,
--				sizeof(skb_frag_t) * tdata->nr_frags);
-+			for (i = 0; i < tdata->nr_frags; i++) {
-+				__skb_fill_page_desc(skb, i,
-+						tdata->frags[i].page,
-+						tdata->frags[i].page_offset,
-+						tdata->frags[i].size);
-+				skb_frag_ref(skb, i);
-+			}
- 			skb_shinfo(skb)->nr_frags = tdata->nr_frags;
- 			skb->len += count;
- 			skb->data_len += count;
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 9267844..9406759 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -574,7 +574,7 @@ struct cxgbi_endpoint {
- #define MAX_PDU_FRAGS	((ULP2_MAX_PDU_PAYLOAD + 512 - 1) / 512)
- struct cxgbi_task_data {
- 	unsigned short nr_frags;
--	skb_frag_t frags[MAX_PDU_FRAGS];
-+	struct subpage frags[MAX_PDU_FRAGS];
- 	struct sk_buff *skb;
- 	unsigned int offset;
- 	unsigned int count;
--- 
-1.7.2.5
+
+
