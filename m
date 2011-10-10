@@ -1,152 +1,68 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH] target: simplify target_parse_naa_6h_vendor_specific()
-Date: Mon, 10 Oct 2011 12:30:17 +0300
-Message-ID: <1318239017.13889.3.camel@smile>
-References: <1316413492.3622.91.camel@haakon2.linux-iscsi.org>
-	 <9d522de8482ec20816be2b68b2d37ab8406f6876.1316419814.git.andriy.shevchenko@linux.intel.com>
-	 <CAHp75Vdp6MpUQKeg1LM3Gn+R21ZfV66dg9Q78QUj=BVLM0t1DQ@mail.gmail.com>
-	 <1317243899.27352.238.camel@haakon2.linux-iscsi.org>
-	 <1318114060.4978.41.camel@haakon2.linux-iscsi.org>
+From: Ian Campbell <Ian.Campbell@citrix.com>
+Subject: [PATCH 0/9] skb fragment API: convert network drivers (part V)
+Date: Mon, 10 Oct 2011 12:11:16 +0100
+Message-ID: <1318245076.21903.408.camel@zakaz.uk.xensource.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1318114060.4978.41.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.ctxuk.citrix.com ([62.200.22.115]:18145 "EHLO
+	SMTP.EU.CITRIX.COM" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567Ab1JJLLR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2011 07:11:17 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-On Sat, 2011-10-08 at 15:47 -0700, Nicholas A. Bellinger wrote: 
-> On Wed, 2011-09-28 at 14:04 -0700, Nicholas A. Bellinger wrote:
-> > On Tue, 2011-09-27 at 13:48 +0300, Andy Shevchenko wrote:
-> > > On Mon, Sep 19, 2011 at 11:11 AM, Andy Shevchenko
-> > > <andriy.shevchenko@linux.intel.com> wrote:
-> > > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > > Cc: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > > ---
-> > > >  drivers/target/target_core_cdb.c |   30 +++++++++++++-----------------
-> > > >  1 files changed, 13 insertions(+), 17 deletions(-)
-> > > >
-> > > > diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-> > > > index f04d4ef..b796115 100644
-> > > > --- a/drivers/target/target_core_cdb.c
-> > > > +++ b/drivers/target/target_core_cdb.c
-> > > > @@ -24,7 +24,6 @@
-> > > >  */
-> > > >
-> > > >  #include <linux/kernel.h>
-> > > > -#include <linux/ctype.h>
-> > > >  #include <asm/unaligned.h>
-> > > >  #include <scsi/scsi.h>
-> > > >
-> > > > @@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
-> > > >  }
-> > > >
-> > > >  static void
-> > > > -target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
-> > > > +target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
-> > > >  {
-> > > >        unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
-> > > > -       unsigned char *buf = buf_off;
-> > > > -       int cnt = 0, next = 1;
-> > > > +       int cnt;
-> > > > +       bool next = true;
-> > > > +
-> > > >        /*
-> > > >         * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
-> > > >         * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
-> > > > @@ -169,20 +169,16 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
-> > > >         * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
-> > > >         * per device uniqeness.
-> > > >         */
-> > > > -       while (*p != '\0') {
-> > > > -               if (cnt >= 13)
-> > > > -                       break;
-> > > > -               if (!isxdigit(*p)) {
-> > > > -                       p++;
-> > > > +       for (cnt = 0; *p && cnt < 13; next = !next) {
-> > > > +               int val = hex_to_bin(*p++);
-> > > > +
-> > > > +               if (val < 0)
-> > > >                        continue;
-> > > > -               }
-> > > > -               if (next != 0) {
-> > > > -                       buf[cnt++] |= hex_to_bin(*p++);
-> > > > -                       next = 0;
-> > > > -               } else {
-> > > > -                       buf[cnt] = hex_to_bin(*p++) << 4;
-> > > > -                       next = 1;
-> > > > -               }
-> > > > +
-> > > > +               if (next)
-> > > > +                       buf[cnt++] |= val;
-> > > > +               else
-> > > > +                       buf[cnt] = val << 4;
-> > > >        }
-> > > >  }
-> > > >
-> > > 
-> > > Nicholas, any comment on this?
-> > > 
-> > 
-> > Hi Andy,
-> > 
-> > This simplification is fine with me, and will plan to queue this for
-> > v3.2.
-> > 
-> 
-> Hi Andy,
-> 
-> So I finally got around to testing this patch, but unfortunately it does
-> not produce the same results as the original code.  The problem is due
-> to the 'next = !next' assignment in the above for loop, which causes the
-> value to be reset even when hex_to_bin() detects an non hex character..
-Yeah, you right.
+The following series converts a fifth (and hopefully final) batch of
+network drivers to the SKB pages fragment API introduced in
+131ea6675c76.
 
-> 
-> Here is an updated patch that I will be commiting into lio-core-2.6.git.
-Actually one minor comment.
+There are four drivers here (mlx4, cxgb4, cxgb4vf and cxgbi) which used
+skb_frag_t as part of their internal datastructures which meant that
+they are impacted by changes to that type more than most drivers. To
+break this dependency I added a "struct subpage" (struct page + offset +
+len) and converted them to use it. These conversions are a little less
+trivial than most of the preceding ones and I have only been able to
+compile test them.
 
-> @@ -169,19 +169,18 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
->          * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
->          * per device uniqeness.
->          */
-> -       while (*p != '\0') {
-> -               if (cnt >= 13)
-> -                       break;
-> -               if (!isxdigit(*p)) {
-> -                       p++;
-> +       for (cnt = 0; *p && cnt < 13; p++) {
-> +               int val = hex_to_bin(*p);
-> +
-> +               if (val < 0)
->                         continue;
-> -               }
-> -               if (next != 0) {
-> -                       buf[cnt++] |= hex_to_bin(*p++);
-> -                       next = 0;
-> +
-> +               if (next) {
-> +                       next = false;
-(1) 
-> +                       buf[cnt++] |= val;
->                 } else {
-> -                       buf[cnt] = hex_to_bin(*p++) << 4;
-> -                       next = 1;
-> +                       next = true;
-(2) 
-> +                       buf[cnt] = val << 4;
->                 }
+I think "struct subpage" is a generally useful tuple I added to a
+central location (mm_types.h) rather than somewhere networking or driver
+specific but I can trivially move if preferred.
 
-next = !next;
-here instead of (1) and (2).
+The remaining three drivers in the series (ehea, emac, ll_temac) are
+normal conversions which I either missed in my first pass or which have
+had direct uses of the fragment pages added since then.
 
-> }
->  }
-> 
-> 
+The final patch here wraps the page member of skb_frag_t in a structure,
+this is a precursor to adding the destructor here (those patches need a
+little more work, arising from comments made at LPC, I'll post regarding
+those shortly). This should help ensure that no direct uses of the page
+get introduced in the meantime.
 
--- 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Intel Finland Oy
+I have run an allmodconfig build on a boatload architectures[2] on a
+baseline of current net-next/master (88c5100c28b0) and with this series.
+Although the baseline didn't build for most architectures I used "make
+-k" and confirmed that this series added no new warnings or errors.
+
+This is part of my series to enable visibility into SKB paged fragment's
+lifecycles, [0] contains some more background and rationale but
+basically the completed series will allow entities which inject pages
+into the networking stack to receive a notification when the stack has
+really finished with those pages (i.e. including retransmissions,
+clones, pull-ups etc) and not just when the original skb is finished
+with, which is beneficial to many subsystems which wish to inject pages
+into the network stack without giving up full ownership of those page's
+lifecycle. It implements something broadly along the lines of what was
+described in [1].
+
+Cheers,
+Ian.
+
+[0] http://marc.info/?l=linux-netdev&m=131072801125521&w=2
+[1] http://marc.info/?l=linux-netdev&m=130925719513084&w=2
+[2] arm amd64 blackfin cris i386 ia64 m68k mips64 mips powerpc64 powerpc
+s390x sh4 sparc64 sparc xtensa 
+
+
