@@ -1,67 +1,83 @@
-From: =?utf-8?B?5LuFMTDlhYPmr4/lpKk=?= <admin@aimer.com.cn>
-Subject: =?utf-8?B?576k5Y+R6L2v5Lu2K+S5sOWutuaQnOe0ouacuisxMDnlsYrlub/kuqTkvJrkubDlrrY=?=
-	=?utf-8?B?44CB5rW35YWz5pWw5o2uLEIyQuivouebmOS5sOWutjUwMOS4h+OAgg==?=
-Date: Mon, 10 Oct 2011 12:40:39 +0000 (UTC)
-Message-ID: <20121010202040282766@aimer.com.cn>
-Reply-To: <1339625218@qq.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/10] megaraid_sas: Updates for scsi-misc
+Date: Mon, 10 Oct 2011 09:07:45 -0500
+Message-ID: <1318255665.3005.7.camel@dabdike.int.hansenpartnership.com>
+References: <CAHtARFGh5i6M8SMqjeUnpUP=dWNdwdmDhGo+z4h4qE8r18xhWA@mail.gmail.com>
+	 <4E91A813.1070003@interlog.com>
+	 <1318169420.2998.6.camel@dabdike.int.hansenpartnership.com>
+	 <4E9242DB.7040401@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [218.241.153.9] ([218.241.153.9]:2765 "EHLO aimer.com.cn"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752643Ab1JJMkh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Oct 2011 08:40:37 -0400
-Received: from amdzzabz by aimer.com.cn (MDaemon PRO v10.1.1)
-	with ESMTP id md50000024923.msg
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Oct 2011 20:19:51 +0800
-Date: Wed, 10 Oct 2012 20:20:32 +0800
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58508 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754209Ab1JJOHs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Oct 2011 10:07:48 -0400
+In-Reply-To: <4E9242DB.7040401@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linsir688@hotmail.com, linuschicago@aol.com, linux-scsi@vger.kernel.org, liny_20062000@hotmail.com, linzonii@msn.com, liona29@anantes-257-1-169-2.w86-195.abo.wanadoo.fr
+To: dgilbert@interlog.com
+Cc: adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-576k5Y+R6L2v5Lu2KzEwOeWxiuW5v+S6pOS8muS5sOWutuOAgea1t+WFs+aVsOaNruOAgeaQnOe0
-ouW8leaTjuS5sOWutixCMkLor6Lnm5jkubDlrrblhbE1MDDkuIcs5LuFMTDlhYPmr4/lpKnjgIIg
-DQrnvqTlj5Hova/ku7YrMTA55bGK5bm/5Lqk5Lya5Lmw5a6244CB5rW35YWz5pWw5o2u44CB5pCc
-57Si5byV5pOO5Lmw5a62LEIyQuivouebmOS5sOWutuWFsTUwMOS4hyzku4UxMOWFg+avj+WkqeOA
-giANCuS/neivgeavj+WkqemDveacieS5sOWutuWbnuWkjeOAgg0K5L+d6K+B5q+P5aSp6YO95pyJ
-5Lmw5a625Zue5aSN44CCDQrkv53or4Hmr4/lpKnpg73mnInkubDlrrblm57lpI3jgIINCg0KMeOA
-gee+pOWPkei9r+S7tu+8miDmk43kvZznroDljZXvvIzlip/og73lvLrlpKfvvIzmqKHku7/kurrl
-t6Xmk43kvZzmqKHlvI/vvIzliLDovr7njofpq5jvvIzml6Xlj5HpgIE15LiH5bCB5Lul5LiK44CC
-IA0KMuOAgTUwMOS4h+S5sOWutui1hOa6kO+8miDotaDpgIHnmoQ1MDDkuIfkubDlrrbotYTmupDl
-upPvvIzmm7TmlrAgKOWPr+S7peaMieeFp+aCqOeahOS6p+WTgeaPkOWPluWHuuadpe+8jOabtOey
-vuWHhuW8gOWPkSnjgIIgDQoz44CB6LaF57qn5rW35aSW5Lmw5a62RW1haWzmkJzntKLmnLrvvJog
-5YaF572u5LqGNjAw5LiH6KGM5Lia5YWz6ZSu6K+N77yM5qC55o2u6ZW/5bC+6K+N5pCc57Si77yM
-57uT5p6c5pu057K+56Gu5Yy56YWN77yb5q+P5aSp6IO95pCc57SiMS0y5LiH5Lul5LiK5Lmw5a62
-55yf5a6eRU1BSUzvvIzmiJDljZXnjofpq5jjgIIgDQogDQoNCuimgeeahOaKk+e0p+iBlOezu1FR
-OiAxMzM5NjI1MjE4ICAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5j
-b20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1MjE4ICAgIOaIluiAheeri+WNs+WbnuWk
-jemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCuimgeeahOaKk+e0p+iBlOezu1FROiAxMzM5NjI1
-MjE4ICAgIOaIluiAheeri+WNs+WbnuWkjemCrueusTogMTMzOTYyNTIxOEBxcS5jb20NCiANCuWF
-jei0uei1oOmAgToNCuS4gOWFsTjkuKrljIUo5pWw5o2u5piv5YWo6KGM5Lia55qE77yM5oyJ54Wn
-6KGM5Lia5YiG5aW957G777yM5bm25LiU5Y+v5Lul5oyJ54Wn5YWz6ZSu6K+N5p+l6K+i55qEKe+8
-miANCjHvvIwyMDEx5pil5a2jMTA55bGK5bm/5Lqk5Lya5Lmw5a62546w5Zy66K+i55uY5pWw5o2u
-5bqT5paw6bKc5Ye654KJ77yM6LaF57qn5paw6bKc5Lmw5a6277yM5paw6bKc5pWw5o2u77yM5a65
-5piT5oiQ5Y2V77yBIA0KMu+8jOi0reS5sOWQjuWPr+S7peWFjei0ueabtOaWsDIwMTHnp4vlraPl
-ub/kuqTkvJorMjAxMuaYpeWto+W5v+S6pOS8muS5sOWutuaVsOaNruOAguWkqui2heWAvOS6huOA
-gg0KM++8jOacgOaWsOWFqOeQg+S5sOWutuW6kyzlhbE0NTE2NjDmnaHmlbDmja7jgIIgKOacgOaW
-sOabtOaWsOaXpeacnyAyMDExLTA1LTE25pelKQ0KNO+8jDIwMDjlubQsMjAwOeW5tCwyMDEw5bm0
-IOaYpeWtoyvnp4vlraPlub/kuqTkvJrkubDlrrblkI3lvZXvvIwxMDMgMTA0IDEwNSAxMDYgMTA3
-IDEwOCDlhbHlha3lsYog5YWxMTIwLjbkuIfmlbDmja7jgIINCjXvvIwyMDEw5bm05Zu96ZmF5L+D
-6ZSA5Y2P5Lya77yIUFBBSe+8ieaIkOWRmOWQjeWNlSBQUEFJIE1lbWJlcnMgRGlyZWN0b3J577yM
-6Z2e5bi46YeN6KaB55qE5aSn5Lmw5a6244CCDQo277yMMjAxMOW5tOWIsOmmmea4r+mHh+i0reea
-hOWbveWkluWuouS6uuWQjeW9lSjpppnmuK/otLjlj5HlsYDmj5Dkvpsp77yM5YWxNy4y5LiH5pWw
-5o2u77yM6LaF57qn6YeN6KaB55qE5Lmw5a6244CCDQo377yMNDguNjjkuIfmnaHmnIDmlrDkubDl
-rrbor6Lnm5jvvIzotK3kubDlkI7mr4/mnIjmm7TmlrAgMS0y5LiH5p2h77yM5YyF5ousMumDqOWI
-hu+8jDHvvIzmnIDmlrDnmoTor6Lnm5ggMu+8jOacgOaWsOeahOWxleS8muS5sOWutuOAguWFjei0
-ueabtOaWsDM25Liq5pyI44CCDQo477yMMjAwOeW5tOa1t+WFs+aPkOWNleaVsOaNrnBpZXJz54mI
-5pWw5o2uIDHljYPkuIfjgIINCg0KDQror5rkv6HkuLrmnKzvvIzmlK/mjIHmlK/ku5jlrp3mi4Xk
-v53kuqTmmJMgKOWFiOWPkei0p+W5tuWuieijheiuvue9rue+pOWPkei9r+S7tu+8jOeEtuWQjuS7
-mOasvikg5b275bqV5omT5raI5oKo55qEIOmhvuiZkeOAgg0KDQogDQoNCg0KIA0KDQrnsr7lh4bm
-lbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7l
-h4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrnsr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQrn
-sr7lh4bmlbDmja4t5oiQ5Y2V546H5p6B6auYDQo=
+On Sun, 2011-10-09 at 20:56 -0400, Douglas Gilbert wrote:
+> On 11-10-09 10:10 AM, James Bottomley wrote:
+> > On Sun, 2011-10-09 at 09:56 -0400, Douglas Gilbert wrote:
+> >> On 11-10-08 09:14 PM, adam radford wrote:
+> >>> James/Linux-scsi,
+> >>>
+> >>> The following patch series for megaraid_sas brings the driver up to v6.12-rc1:
+> >>>
+> >>> 1. Continue booting immediately if FW in FAULT at driver load time.
+> >>> 2. Increase default cmds per lun to 256.
+> >>> 3. Fix mismatch in megasas_reset_fusion() mutex lock-unlock.
+> >>> 4. Remove some un-necessary code.
+> >>> 5. Clear state change interrupts for Fusion/Invader.
+> >>> 6. Clear FUSION_IN_RESET before enabling interrupts.
+> >>> 7. Add support for MegaRAID 9360/9380 12GB/s controllers.
+> >>> 8. Add multiple MSI-X vector/multiple reply queue support.
+> >>> 9. Add driver workaround for PERC5/1068 kdump kernel panic.
+> >>> 10. Version and Changelog update.
+> >>
+> >> I haven't checked all SAS HBAs in Linux but of those that I
+> >> have checked only one doesn't support the SMP pass-through
+> >> in the bsg driver. And that HBA driver is megaraid_sas **.
+> >
+> > Technically the megaraid_sas isn't really a SAS HBA, it's a RAID one
+> > that just happens to have SAS/SATA disk attachments.  None of the RAID
+> > HBA's (including the IBM power raid) expose a BSG interface or even
+> > attach properly to the in-kernel SAS interfaces.
+> 
+> In JBOD mode MegaRaid SAS controllers are SAS HBAs
+> (marketing BS aside). Their firmware has the same
+> SMP pass-through as LSI's MPT SAS Fusion controllers.
+> 
+> There is no reason why a MegaRaid controller user
+> couldn't place a SAS-2 expander in front of an array
+> of disks and make some disks available to a MegaRaid
+> volume. Other array disks could be used by other
+> machines and the different sets could be isolated
+> from each other with SAS-2 zoning. The problem then
+> would be that via a MegaRaid SAS controller a user
+> could not monitor or control that zoning. Seems a
+> bit wasteful to add a "real" SAS HBA just to get
+> that capability.
 
+I agree: ipr is used in precisely this way.  It even uses libata for
+SATA devices but doesn't attach to the libsas transport class which
+means it's dragging us for moving to the new_eh in libata.
+
+The problem in the IPR case (and I assume the megaraid case) is that it
+takes extra work to get the attachment which no-one seems willing to do.
+
+> Many SAS HBAs (including MPT SAS Fusion controllers)
+> do RAID 0 and 1 (and 10?) so they could be viewed as
+> "RAID" controllers that expose a BSG interface.
+
+fusion is more a SCSI controller with RAID wedged into a spare piece in
+the firmware ... it wasn't really designed as a RAID controller.
+
+James
 
 
