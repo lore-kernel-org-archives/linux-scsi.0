@@ -1,62 +1,150 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: SCSI trees moved back to kernel.org
-Date: Wed, 12 Oct 2011 09:44:13 +1100
-Message-ID: <20111012094413.316ecd636261d45266459fdb@canb.auug.org.au>
-References: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
-	<1318351928.2992.19.camel@dabdike.int.hansenpartnership.com>
-	<20111012092618.e35391f58873edb1cc0bb5cb@canb.auug.org.au>
-	<1318372516.2992.32.camel@dabdike.int.hansenpartnership.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/4] iscsi class: fix vlan configuration
+Date: Tue, 11 Oct 2011 17:55:11 -0500
+Message-ID: <4E94C94F.1000304@cs.wisc.edu>
+References: <1317891420-7116-1-git-send-email-michaelc@cs.wisc.edu> <1317891420-7116-5-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA256";
- boundary="Signature=_Wed__12_Oct_2011_09_44_13_+1100_jCzuZEm1xIlzr/ZZ"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1318372516.2992.32.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed;
+ boundary="------------050903010601070402050006"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48186 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623Ab1JKWtu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Oct 2011 18:49:50 -0400
+In-Reply-To: <1317891420-7116-5-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org
 
---Signature=_Wed__12_Oct_2011_09_44_13_+1100_jCzuZEm1xIlzr/ZZ
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This is a multi-part message in MIME format.
+--------------050903010601070402050006
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Hi James,
+On 10/06/2011 03:57 AM, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> Userspace was sending the priority/id part of the vlan tag
+> and sysfs was displaying the id in the vlan file. This
+> renames the vlan sysfs file to vlan_id to reflect that it
+> was showing the id and to match the vlan_priority file.
+> This also adds a ISCSI_NET_PARAM_VLAN_TAG iscsi nl command
+> to relfect that we are sending down the vlan/priority
+> part of the tag.
 
-On Tue, 11 Oct 2011 17:35:16 -0500 James Bottomley <James.Bottomley@HansenP=
-artnership.com> wrote:
->
-> Um, sorry, fixed I think.  That's what comes of trying to create the
-> tree without actually having access to the old one.
+I really messed up this patch. I think I sent the wrong one. This
+version of the patch is bad. It does not convert the qla4xxx ipv4 path
+and I forgot my signed off.
 
-Its empty anyway, so no harm done.
+Please use the v2 version of the patch attached.
 
-Thanks.
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+--------------050903010601070402050006
+Content-Type: text/plain;
+ name="0001-iscsi-class-fix-vlan-configuration-v2.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-iscsi-class-fix-vlan-configuration-v2.patch"
 
---Signature=_Wed__12_Oct_2011_09_44_13_+1100_jCzuZEm1xIlzr/ZZ
-Content-Type: application/pgp-signature
+>From 3cd1fad791eb63734d3eeb9df8cd17fb6274f352 Mon Sep 17 00:00:00 2001
+From: Mike Christie <michaelc@cs.wisc.edu>
+Date: Tue, 11 Oct 2011 17:51:44 -0500
+Subject: [PATCH 1/1]  iscsi class: fix vlan configuration v2
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Userspace was sending the priority/id part of the vlan tag
+and sysfs was displaying the id in the vlan file. This
+renames the vlan sysfs file to vlan_id to reflect that it
+was showing the id and to match the vlan_priority file.
+This also adds a ISCSI_NET_PARAM_VLAN_TAG iscsi nl command
+to relfect that we are sending down the vlan/priority
+part of the tag.
 
-iQIcBAEBCAAGBQJOlMa9AAoJEECxmPOUX5FEOVEP/1n+qtF0yW1h0xK/lEnahxCf
-ry0tieHVYIHUTSjBOVq/TjZRNGtiAD+ZqXfglySRZ3l+E9aYLAMUYNq6pqs0Ea13
-rEv8ovBDiYWXT2zVjxuhNAWaexpy/aW42vumTbPWV4trpbxZ6SYAtz/Q4lZaN92L
-xr7nnCKqP25L6Lxje6XU/Clo8rQpU9Rx2w1KM1rDjbu9vexhydQkFGY1zsM7y8Dz
-x5H3exI+aS6lkfG9p7d/UBg+2XD+1DyBHW+pmjYKMXucjbojGZSpUQ7ogZsFTIh7
-I1RSH6yCukBMyl+y2Qy2aJzAoyK1cK96Y+t1PtOqMt6G/R4qvKyC+WBbpCt/ZFwN
-qeC19Mwc5ZGcmk5ACOdnRvf5cImt42yY9b6oygdFnAeYeSl8brh4Wulh1nxDzwYa
-Yx3T63DtqjX/5ubfkPloUze9f5cJ+EJFRaUldv+Pldj7t3Y6onUQ/wSJF3YG/1Z0
-XdCmIvU6yXJZKoCVG4d9yMq2MiR850v+el8c+1+d4vgNkoZY/6DSYLDlzvt17/gu
-F86X6ZWvj55YZpYXBO6nE5ixdxSyzZztiBnzkbjIUP+0g930oLKCATyyAbAeDmPk
-eNZNY57NTPMVicGnoBWPuazNGDCvBDHjFRoqDF9NbhAir8mThco5HQN4SNYiw7k9
-5reY55dNgJsMBuJd5ZU0
-=jvO3
------END PGP SIGNATURE-----
+v2:
+- convert both qla4xx ipv4 and ipv6 paths.
+- add signed off
 
---Signature=_Wed__12_Oct_2011_09_44_13_+1100_jCzuZEm1xIlzr/ZZ--
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/qla4xxx/ql4_os.c       |    4 ++--
+ drivers/scsi/scsi_transport_iscsi.c |    6 +++---
+ include/scsi/iscsi_if.h             |    9 +++++----
+ 3 files changed, 10 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index f1bdc56..7f55109 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -718,7 +718,7 @@ static void qla4xxx_set_ipv6(struct scsi_qla_host *ha,
+ 			qla4xxx_destroy_ipv6_iface(ha);
+ 		}
+ 		break;
+-	case ISCSI_NET_PARAM_VLAN_ID:
++	case ISCSI_NET_PARAM_VLAN_TAG:
+ 		if (iface_param->len != sizeof(init_fw_cb->ipv6_vlan_tag))
+ 			break;
+ 		init_fw_cb->ipv6_vlan_tag =
+@@ -790,7 +790,7 @@ static void qla4xxx_set_ipv4(struct scsi_qla_host *ha,
+ 			qla4xxx_destroy_ipv4_iface(ha);
+ 		}
+ 		break;
+-	case ISCSI_NET_PARAM_VLAN_ID:
++	case ISCSI_NET_PARAM_VLAN_TAG:
+ 		if (iface_param->len != sizeof(init_fw_cb->ipv4_vlan_tag))
+ 			break;
+ 		init_fw_cb->ipv4_vlan_tag =
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 142a09a..1bcd65a 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -322,7 +322,7 @@ iscsi_iface_net_attr(ipv6_iface, link_local_autocfg,
+ 
+ /* common read only iface attribute */
+ iscsi_iface_net_attr(iface, enabled, ISCSI_NET_PARAM_IFACE_ENABLE);
+-iscsi_iface_net_attr(iface, vlan, ISCSI_NET_PARAM_VLAN_ID);
++iscsi_iface_net_attr(iface, vlan_id, ISCSI_NET_PARAM_VLAN_ID);
+ iscsi_iface_net_attr(iface, vlan_priority, ISCSI_NET_PARAM_VLAN_PRIORITY);
+ iscsi_iface_net_attr(iface, vlan_enabled, ISCSI_NET_PARAM_VLAN_ENABLED);
+ iscsi_iface_net_attr(iface, mtu, ISCSI_NET_PARAM_MTU);
+@@ -338,7 +338,7 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 
+ 	if (attr == &dev_attr_iface_enabled.attr)
+ 		param = ISCSI_NET_PARAM_IFACE_ENABLE;
+-	else if (attr == &dev_attr_iface_vlan.attr)
++	else if (attr == &dev_attr_iface_vlan_id.attr)
+ 		param = ISCSI_NET_PARAM_VLAN_ID;
+ 	else if (attr == &dev_attr_iface_vlan_priority.attr)
+ 		param = ISCSI_NET_PARAM_VLAN_PRIORITY;
+@@ -382,7 +382,7 @@ static mode_t iscsi_iface_attr_is_visible(struct kobject *kobj,
+ 
+ static struct attribute *iscsi_iface_attrs[] = {
+ 	&dev_attr_iface_enabled.attr,
+-	&dev_attr_iface_vlan.attr,
++	&dev_attr_iface_vlan_id.attr,
+ 	&dev_attr_iface_vlan_priority.attr,
+ 	&dev_attr_iface_vlan_enabled.attr,
+ 	&dev_attr_ipv4_iface_ipaddress.attr,
+diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
+index 706a1bb..2703e3b 100644
+--- a/include/scsi/iscsi_if.h
++++ b/include/scsi/iscsi_if.h
+@@ -311,10 +311,11 @@ enum iscsi_net_param {
+ 	ISCSI_NET_PARAM_VLAN_ID			= 13,
+ 	ISCSI_NET_PARAM_VLAN_PRIORITY		= 14,
+ 	ISCSI_NET_PARAM_VLAN_ENABLED		= 15,
+-	ISCSI_NET_PARAM_IFACE_TYPE		= 16,
+-	ISCSI_NET_PARAM_IFACE_NAME		= 17,
+-	ISCSI_NET_PARAM_MTU			= 18,
+-	ISCSI_NET_PARAM_PORT			= 19,
++	ISCSI_NET_PARAM_VLAN_TAG		= 16,
++	ISCSI_NET_PARAM_IFACE_TYPE		= 17,
++	ISCSI_NET_PARAM_IFACE_NAME		= 18,
++	ISCSI_NET_PARAM_MTU			= 19,
++	ISCSI_NET_PARAM_PORT			= 20,
+ };
+ 
+ enum iscsi_conn_state {
+-- 
+1.7.6
+
+
+--------------050903010601070402050006--
