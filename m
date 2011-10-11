@@ -1,64 +1,101 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: oops with tcm_loop
-Date: Mon, 10 Oct 2011 20:14:26 -0700
-Message-ID: <1318302866.32435.309.camel@haakon2.linux-iscsi.org>
-References: <j6hi8k$hg3$1@dough.gmane.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] loopback: Prevent uninitialized use of tl_tpg in tcm_loop_queuecommand
+Date: Tue, 11 Oct 2011 03:16:34 +0000
+Message-ID: <1318302994-26345-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <j6hi8k$hg3$1@dough.gmane.org>
 Sender: target-devel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: target-devel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-10-05 at 14:23 +0200, Paolo Bonzini wrote:
-> When I do this:
-> 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hey Paolo,
+This patch fixes a bug with tcm_loop where performing a scsi_host rescan was
+causing an oops due to a received scsi_cmnd->device->id value not matching a
+previously configured tcm_loop_tpg entry in tcm_loop_hba->tl_hba_tpgs[]
+obtained from within tcm_loop_queuecommand() code.
 
-> modprobe tcm_loop
-> mount -t configfs configfs /sys/kernel/config/
-> 
-> cd /sys/kernel/config/target/core
-> mkdir fileio_0
-> mkdir fileio_0/fileio
-> echo 'fd_dev_name='$HOME/test2.img',fd_dev_size=5368709120' > fileio_0/fileio/control
-> echo 1 > fileio_0/fileio/enable
-> 
-> cd /sys/kernel/config/target
-> mkdir -p loopback/naa.600140554cf3a18e/tpgt_1
-> mkdir -p loopback/naa.600140554cf3a18e/tpgt_1/lun/lun_1
-> cd loopback/naa.600140554cf3a18e/tpgt_1
-> # "Obvious" error here: need to set up nexus before virtual_scsi_port!
-> ln -sf ../../../core/fileio_0/fileio lun/lun_1/virtual_scsi_port
-> echo naa.60014053226f0388 > nexus
-> echo '- - -' > /sys/bus/tcm_loop_bus/drivers/tcm_loop/tcm_loop_adapter_0/host*/scsi_host/host*/scan
-> 
-> ... I get the following two OOPSes:
-> 
-> [  264.135309] BUG: unable to handle kernel NULL pointer dereference at 0000000000000090
-> [  264.136279] IP: [<ffffffffa0510498>] transport_processing_thread+0x61b/0xc8b [target_core_mod]
+This fix adds an explict check for tcm_loop_tpg->tl_hba in order to ensure
+tcm_loop_make_naa_tpg() has already been invoked to initialize a given
+tcm_loop_tpg entry, and also adds an explict clear of tcm_loop_tpg->tl_hba
+from within the tcm_loop_drop_naa_tpg() release path.
 
-<SNIP>
+This bug was manifesting itself with the following OOPs:
 
-> 
-> Reproduced with both 3.0.3 and 3.1.0-rc8.
-> 
+[176289.430909] BUG: unable to handle kernel NULL pointer dereference at 0000000000000090
+[176289.431337] IP: [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
+[176289.431399] PGD 22e9b067 PUD 23375067 PMD 0
+[176289.431399] Oops: 0000 [#1] SMP
+[176289.431815] CPU 1
+[176289.431815] Modules linked in: tcm_loop target_core_stgt target_core_pscsi target_core_file target_core_iblock target_core_mod crc32c ib_cm ib_sa ib_mad ib_core qla2xxx scsi_tgt configfs fcoe libfcoe libfc scsi_transport_fc ipv6 iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi sr_mod cdrom sd_mod ata_piix libata e1000 mptspi mptscsih mptbase [last unloaded: target_core_mod]
+[176289.431815]
+[176289.431815] Pid: 12339, comm: LIO_iblock Tainted: G        W   3.1.0-rc8+
+[176289.431815] RIP: 0010:[<ffffffffa0395617>]  [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
+[176289.431815] RSP: 0018:ffff880023bfbe10  EFLAGS: 00010283
+[176289.431815] RAX: 0000000000000000 RBX: ffff88002d600040 RCX: ffff88002d600108
+[176289.431815] RDX: ffff88000c9e50bc RSI: 0000000000000246 RDI: 0000000000000246
+[176289.431815] RBP: ffff880023bfbee0 R08: ffff88002d600108 R09: 0000000000000000
+[176289.431815] R10: ffff88002fc8cc80 R11: ffffffff81671b60 R12: ffff88002d600108
+[176289.431815] R13: ffff88000c9e4f38 R14: ffff88000c9e50b8 R15: 0000000000000000
+[176289.431815] FS:  0000000000000000(0000) GS:ffff88002fc80000(0000) knlGS:0000000000000000
+[176289.431815] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[176289.431815] CR2: 0000000000000090 CR3: 000000002a33f000 CR4: 00000000000006e0
+[176289.431815] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[176289.431815] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[176289.431815] Process LIO_iblock (pid: 12339, threadinfo ffff880023bfa000, task ffff88002a2e0000)
+[176289.431815] Stack:
+[176289.431815]  0000000000011280 0000000000000246 ffff88002a2e0000 ffff880023a58900
+[176289.431815]  ffff880023bfbed0 ffff880023bfa000 ffff880023bfa000 ffff88000c9e50d0
+[176289.431815]  ffff88000c9e50c0 ffff88000c9e50bc ffff880023bfa000 ffff880023bfbfd8
+[176289.431815] Call Trace:
+[176289.431815]  [<ffffffff81056657>] ? wake_up_bit+0x25/0x25
+[176289.431815]  [<ffffffffa0395434>] ? transport_handle_cdb_direct+0x92/0x92 [target_core_mod]
+[176289.431815]  [<ffffffff8105619a>] kthread+0x7d/0x85
+[176289.431815]  [<ffffffff813cbcb4>] kernel_thread_helper+0x4/0x10
+[176289.431815]  [<ffffffff8105611d>] ? kthread_worker_fn+0x16d/0x16d
+[176289.431815]  [<ffffffff813cbcb0>] ? gs_change+0x13/0x13
+[176289.431815] Code: 67 05 00 00 41 8b 84 24 4c ff ff ff ff c8 83 f8 11 0f 87 f0 04 00 00 89 c0 ff 24 c5 b0 c6 39 a0 0f 0b eb fe 48 8b 83 d8 00 00 00
+[176289.431815] RIP  [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
+[176289.431815]  RSP <ffff880023bfbe10>
+[176289.431815] CR2: 0000000000000090
+[176295.041004] ---[ end trace 85dc6865b23b8f3e ]---
 
-I've been able to track this down to an issue with the explict rescan
-sending down scsi_cmnd->device->id == 0 values referencing an
-tcm_loop_tpg endpoint from tcm_loop_hba->tl_hba_tpgs[] within
-tcm_loop_queuecommand() that has not been configured.
+Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/loopback/tcm_loop.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-The issue is not directly related to the ordering of the nexus vs.
-Port/LUNs, and (unfortuately) can be triggered directly using the
-explict rescan.  Anyways, I'm sending out a bugfix patch shortly, and
-will make sure this is included in the v3.2-rc1 target patches w/ a Cc
-to stable@kernel.org to ensure it's picked up by v3.1.1 and v3.0.5
-
-Thanks alot for reporting!
-
---nab
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 6d4f200..01fb171 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -290,6 +290,15 @@ static int tcm_loop_queuecommand(
+ 	 */
+ 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
+ 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
++	/*
++	 * Ensure that this tl_tpg reference from the incoming sc->device->id
++	 * has already been configured via tcm_loop_make_naa_tpg().
++	 */
++	if (!tl_tpg->tl_hba) {
++		set_host_byte(sc, DID_NO_CONNECT);
++		sc->scsi_done(sc);
++		return 0;
++	}
+ 	se_tpg = &tl_tpg->tl_se_tpg;
+ 	/*
+ 	 * Determine the SAM Task Attribute and allocate tl_cmd and
+@@ -1245,6 +1254,9 @@ void tcm_loop_drop_naa_tpg(
+ 	 */
+ 	core_tpg_deregister(se_tpg);
+ 
++	tl_tpg->tl_hba = NULL;
++	tl_tpg->tl_tpgt = 0;
++
+ 	pr_debug("TCM_Loop_ConfigFS: Deallocated Emulated %s"
+ 		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
+ 		config_item_name(&wwn->wwn_group.cg_item), tpgt);
+-- 
+1.7.2.5
