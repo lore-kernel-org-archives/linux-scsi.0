@@ -1,85 +1,65 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: [PATCH] mv_sas: OCZ RevoDrive3 & zDrive R4 support
-Date: Tue, 11 Oct 2011 21:21:43 +0000
-Message-ID: <robbat2-20111011T211421-450808012Z@orbis-terrarum.net>
-References: <1318032026-21913-1-git-send-email-robbat2@gentoo.org>
- <1318132024-12426-1-git-send-email-robbat2@gentoo.org>
- <robbat2-20111011T204841-021218330Z@orbis-terrarum.net>
- <1318366663.2992.29.camel@dabdike.int.hansenpartnership.com>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: SCSI trees moved back to kernel.org
+Date: Wed, 12 Oct 2011 09:26:18 +1100
+Message-ID: <20111012092618.e35391f58873edb1cc0bb5cb@canb.auug.org.au>
+References: <1316101053.2983.42.camel@dabdike.hansenpartnership.com>
+	<1318351928.2992.19.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="aF3LVLvitz/VQU3c"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:36722 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750838Ab1JKVVo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Oct 2011 17:21:44 -0400
-Received: from grubbs.orbis-terrarum.net (localhost [127.0.0.1])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp.gentoo.org (Postfix) with ESMTPS id 687A41B403D
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Oct 2011 21:21:44 +0000 (UTC)
-Content-Disposition: inline
-In-Reply-To: <1318366663.2992.29.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Wed__12_Oct_2011_09_26_18_+1100_11aiN1g+=zbuB7Yq"
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1318351928.2992.19.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org
-Cc: "	Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
---aF3LVLvitz/VQU3c
-Content-Type: text/plain; charset=us-ascii
+--Signature=_Wed__12_Oct_2011_09_26_18_+1100_11aiN1g+=zbuB7Yq
+Content-Type: text/plain; charset=US-ASCII
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Oct 11, 2011 at 03:57:43PM -0500,  James Bottomley wrote:
-> Well, when you put things like
->=20
-> "NOT FOR COMMIT USE; TESTING ONLY; NO WARRANTY; DANGER!"
->=20
-> and
->=20
-> "I constructed this patch for my friend to test, completely blind.
-> I haven't heard back from him at all yet, but I thought that the wider
-> community might find it useful for testing as well. I think it _should_
-> work, just need to figure out what the correct chip variant is."
->=20
-> On the patch it tends to make maintainers exercise extreme caution.
-> Thus comments from others (preferably successful test reports) or acks
-> from Marvell or Vertex would be very helpful.
-Both of those were on the first version of the patch, when I'd written
-the code and not run it at all. After that, I got access to a RevoDrive3
-remotely, and run about 5TiB of data through it for testing.
+Hi James,
 
-The second version of the patch removed those warnings, and described
-some of my testing:
-http://thread.gmane.org/gmane.linux.kernel/1200731/focus=3D50312
+On Tue, 11 Oct 2011 11:52:08 -0500 James Bottomley <James.Bottomley@HansenP=
+artnership.com> wrote:
+>
+> OK, all the trees are back in their usual locations on kernel.org,
+> that's
+>=20
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-post-merge-2.6.git
 
-Some fio performance numbers:
-http://paste.pocoo.org/show/489716/
+OK, I have switched to use those.  However the last one gives:
 
-dmesg/hdparm/smartctl:
-http://www.ocztechnologyforum.com/forum/showthread.php?95151-Linux-patch-su=
-pport-for-RevoDrive3-RevoDrive3-X2-zDrive-R4&p=3D686054&viewfull=3D1#post68=
-6054
+fatal: Couldn't find remote ref refs/heads/merge-base
 
 --=20
-Robin Hugh Johnson
-Gentoo Linux: Developer, Trustee & Infrastructure Lead
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11AC BA4F 4778 E3F6 E4ED  F38E B27B 944E 3488 4E85
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
---aF3LVLvitz/VQU3c
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+--Signature=_Wed__12_Oct_2011_09_26_18_+1100_11aiN1g+=zbuB7Yq
+Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-Comment: Robbat2 @ Orbis-Terrarum Networks - The text below is a digital signature. If it doesn't make any sense to you, ignore it.
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iEYEARECAAYFAk6Us2cACgkQPpIsIjIzwiyS4ACfTl9WChJbrfzIxgrbaXiNWDB+
-9LEAn3QUlUISMBzeh3E91F11LbKX3yXi
-=h3y7
+iQIcBAEBCAAGBQJOlMKKAAoJEECxmPOUX5FE2gAQAJjIjHoCoTrTYPwLuraaejBB
+ZhcK74q4UqtiDrfrc9m7eXumbf7wLya+6jzqZB6X6c5i30xCLV52SXF/GUBkKpl4
+UgHEUeG8u6tjGLnsFPCE6cytPfD4dcoU57I+X9LVtlAuMn5xKXlj1g7NNkKjKGjO
+09JWlrTT8gY1wBLrjhksJY0bnywwdq9E7/IZA0p/h2rdH7M84QHFSHxCMKgPXJZg
+qEIp4xBV0x3fT+z4cE5bXoy2RGO0BzXpz9IqQsNTZ+NUSor39xkDYbfiwh/rG4tL
+db22es4DhfwU1Q7zA36b6T93BBH89OmNktln7Vn/+9xo0+UtQ2zkbKyfVmEFATBh
+Lf9UpF7471x9sptQJYbUXHFxCMEnyAQjkKGQuAvxREJhI1eQY5BXPsRl8z41Bh+z
+zkb2596KylDAdoSEbxwPLg4xqrKKolWmMVub4XLPDd/z6bMBV2y5w5kN/QnqG4cW
+Cj08RN7KkZ4ZkNuxPidwvrBZ5IY7BMRBN8UfLU9Xj/q+vPkMVa8oonhioEh5/R6P
+4ZX9wcaOrTekjxYrXUfRT4cX4dG/b4TrE2v8yMeJpeq6XbXOdzA/UVKpUTYGBk93
+ab1sJox7j1ICbR2y3I0aNaEgvGXH9pvwxRQnKAPNzMWB31mxBRvs7sw9MsrSDrSU
+sBYLioR9927w3ckzluN6
+=pOc1
 -----END PGP SIGNATURE-----
 
---aF3LVLvitz/VQU3c--
+--Signature=_Wed__12_Oct_2011_09_26_18_+1100_11aiN1g+=zbuB7Yq--
