@@ -1,45 +1,83 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: ib_srpt status
-Date: Thu, 13 Oct 2011 15:07:22 -0700
-Message-ID: <1318543642.30891.44.camel@haakon2.linux-iscsi.org>
-References: <20111012092318.GA9405@lst.de>
-	 <CAL1RGDWDa+RiEx2zn9PbsNRdqOOg6nX=z0RAgZM2uH4OLWcxvQ@mail.gmail.com>
+From: adam radford <aradford@gmail.com>
+Subject: [PATCH 1/1] megaraid_sas: Fix instance access in megasas_reset_timer
+Date: Thu, 13 Oct 2011 16:01:12 -0700
+Message-ID: <CAHtARFFVAUwTw9R=9OFcgu7=L6LgmZBnKViL4xmnPzuPiOhLHA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAL1RGDWDa+RiEx2zn9PbsNRdqOOg6nX=z0RAgZM2uH4OLWcxvQ@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Roland Dreier <roland@purestorage.com>
-Cc: Christoph Hellwig <hch@lst.de>, Barn Van Assche <bvanassche@acm.org>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: multipart/mixed; boundary=0016e65c8ddaf27c0304af361da4
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:43173 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755835Ab1JMXBN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 19:01:13 -0400
+Received: by wwf22 with SMTP id 22so2561373wwf.1
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2011 16:01:12 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
+Cc: stable@kernel.org
 
-On Wed, 2011-10-12 at 09:17 -0700, Roland Dreier wrote:
-> On Wed, Oct 12, 2011 at 2:23 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > Hi Roland, hi Nick,
-> >
-> > what is the status of queueing up ib_srpt for mainline?  It's a very
-> > clean looking driver that was submitted 8 month ago and after an initial
-> > round of fixes only saw updates for changing core APIs.
-> >
-> > Keeping it out of tree for so long is a very discuraging story for
-> > contributors.
-> 
-> Where is the latest patch?  I would like to review it and at least
-> get it into linux-next...
-> 
-> I seem to recall having some concerns about the interface -- ie
-> some things were done through module params and I don't want
-> to be stuck supporting those module params forever.
-> 
-> Other than that it is likely to be fine to merge.
-> 
+--0016e65c8ddaf27c0304af361da4
+Content-Type: text/plain; charset=ISO-8859-1
 
-Hey guys,
+CC: stable
 
-I'll post the latest version of ib_srpt in a bit after merging
-Christoph's remaining patches..  However, this will be against the v3.2
-queued patches in target-pending.git/for-next, as the core cleanups in
-the se_cmd release path also effect current ib_srpt code.
+James/linux-scsi,
 
---nab
+The following patch for scsi-misc-2.6 for megaraid_sas will fix a
+potential bad pointer access in megasas_reset_timer(), when a MegaRAID
+9265/9285 or 9360/9380 gets a timeout.  megasas_build_io_fusion() sets
+SCp.ptr to be a struct megasas_cmd_fusion *, but then
+megasas_reset_timer() was casting SCp.ptr to be a struct megasas_cmd
+*, then trying to access cmd->instance, which is invalid.
+
+Just loading instance from scmd->device->host->hostdata in
+megasas_reset_timer() fixes the issue.
+
+Signed-off-by: Adam Radford <aradford@gmail.com>
+
+diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
+scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c
+--- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-13
+15:35:39.563245479 -0700
++++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-13
+15:38:15.711245124 -0700
+@@ -1914,7 +1914,6 @@
+ static enum
+ blk_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
+ {
+-	struct megasas_cmd *cmd = (struct megasas_cmd *)scmd->SCp.ptr;
+ 	struct megasas_instance *instance;
+ 	unsigned long flags;
+
+@@ -1923,7 +1922,7 @@
+ 		return BLK_EH_NOT_HANDLED;
+ 	}
+
+-	instance = cmd->instance;
++	instance = (struct megasas_instance *)scmd->device->host->hostdata;
+ 	if (!(instance->flag & MEGASAS_FW_BUSY)) {
+ 		/* FW is busy, throttle IO */
+ 		spin_lock_irqsave(instance->host->host_lock, flags);
+
+--0016e65c8ddaf27c0304af361da4
+Content-Type: application/octet-stream; name="megaraid_sas.patch11"
+Content-Disposition: attachment; filename="megaraid_sas.patch11"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gtqcp46g0
+
+ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
+YXNfYmFzZS5jIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfYmFzZS5jCi0tLSBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
+cmFpZF9zYXNfYmFzZS5jCTIwMTEtMTAtMTMgMTU6MzU6MzkuNTYzMjQ1NDc5IC0wNzAwCisrKyBz
+Y3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2Uu
+YwkyMDExLTEwLTEzIDE1OjM4OjE1LjcxMTI0NTEyNCAtMDcwMApAQCAtMTkxNCw3ICsxOTE0LDYg
+QEAKIHN0YXRpYyBlbnVtCiBibGtfZWhfdGltZXJfcmV0dXJuIG1lZ2FzYXNfcmVzZXRfdGltZXIo
+c3RydWN0IHNjc2lfY21uZCAqc2NtZCkKIHsKLQlzdHJ1Y3QgbWVnYXNhc19jbWQgKmNtZCA9IChz
+dHJ1Y3QgbWVnYXNhc19jbWQgKilzY21kLT5TQ3AucHRyOwogCXN0cnVjdCBtZWdhc2FzX2luc3Rh
+bmNlICppbnN0YW5jZTsKIAl1bnNpZ25lZCBsb25nIGZsYWdzOwogCkBAIC0xOTIzLDcgKzE5MjIs
+NyBAQAogCQlyZXR1cm4gQkxLX0VIX05PVF9IQU5ETEVEOwogCX0KIAotCWluc3RhbmNlID0gY21k
+LT5pbnN0YW5jZTsKKwlpbnN0YW5jZSA9IChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqKXNjbWQt
+PmRldmljZS0+aG9zdC0+aG9zdGRhdGE7CiAJaWYgKCEoaW5zdGFuY2UtPmZsYWcgJiBNRUdBU0FT
+X0ZXX0JVU1kpKSB7CiAJCS8qIEZXIGlzIGJ1c3ksIHRocm90dGxlIElPICovCiAJCXNwaW5fbG9j
+a19pcnFzYXZlKGluc3RhbmNlLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsK
+--0016e65c8ddaf27c0304af361da4--
