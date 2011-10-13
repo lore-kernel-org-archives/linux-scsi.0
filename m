@@ -1,69 +1,54 @@
-From: "Herr LEWIS AWELE" <herrawel@virgilio.it>
-Subject: Lieber Freund!!!
-Date: Thu, 13 Oct 2011 20:00:55 +0600 (BDT)
-Message-ID: <1369.88.0.111.104.1318514455.squirrel__4646.40243812955$1318516193$gmane$org@mist.edu.bd>
-Reply-To: bankas27@aim.com
+From: Mike Miller <mike.miller@hp.com>
+Subject: [PATCH 1/1] hpsa: change confusing comment to more clear
+Date: Thu, 13 Oct 2011 11:44:06 -0500
+Message-ID: <20111013164406.GA17444@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.mist.edu.bd ([203.112.72.179]:52547 "HELO mail.mist.edu.bd"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753122Ab1JMO3j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Oct 2011 10:29:39 -0400
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:14544 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932067Ab1JMQoK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 12:44:10 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: thenzl@redhat.com, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, scameron@beardog.cce.hp.com
 
+Patch 1 of 1
+hpsa: clarify comment in kdump reset code
 
+From: Mike Miller <mike.miller@hp.com>
 
+The following warning message may be confusing to some users:
 
---=20
-Lieber Freund!!!
+dev_warn(&pdev->dev, "Controller claims that "
+		"'Bit 2 doorbell reset' is "
+		"supported, but not 'bit 5 doorbell reset'.  "
+		"Firmware update is recommended.\n");
 
-Ich vermute das diese E-Mail eine =DCberraschung f=FCr Sie sein wird, a=
-ber es
-ist wahr.Ich bin bei einer routinen =DCberpr=FCfung in meiner Bank (Uni=
-on Bank
-PLC von S=FCd Afrika) wo ich arbeite, auf einem Konto gesto=DFen, was n=
-icht in
-anspruch genommen worden ist, wo derzeit USD$18.5M (Achtzehn Million, F=
-=FCnf
-Hundert Tausend, US Dollar)  gutgeschrieben sind. Dieses Konto geh=F6rt=
-e
-Herrn Peter Hartmann, der ein Kunde in unsere Bank war, der leider
-verstorben ist. Herr Hartmann war ein geb=FCrtiger Deutscher.
+Most users don't know or care what bit we may be hitting. Also change
+"recommended" to "required."
 
+Signed-off-by: Mike Miller <mike.miller@hp.com>
+---
+ drivers/scsi/hpsa.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-Damit es mir m=F6glich ist dieses Geld $18,500,000 inanspruch
-zunehmen,ben=F6tige ich die zusammenarbeit eines Ausl=E4ndischen Partne=
-rs wie
-Sie,den ich als Verwandter und Erbe des verstorbenen Herrn Hartmann
-vorstellen kann,damit wir das Geld inanspruch nehmen k=F6nnen. F=FCr di=
-ese
-Unterst=FCtzung erhalten Sie 30% der Erbschaftsumme und die restlichen =
-70%
-teile ich mir mit meinen zwei Arbeitskollegen, die mich bei dieser
-Transaktion ebenfalls unterst=FCtzen.Wenn Sie interessiert sind, k=F6nn=
-en Sie
-mir bitte eine E-Mail schicken, damit ich Ihnen mehr Details zukommen
-lassen kann.
-
-
-N.B.BITTE SENDEN SIE MIR LEWIS AWELE ANTWORT ZU durch mein E-mail: (=20
-herrawel@aim.com  )f=DCR VERTRAULICHEN GRUND. Schicken Sie keine POST Z=
-U
-MEINEM B=DCRO-E-MAIL. If you understand english,please kindly reply wit=
-h
-english
-
-
-Mit freundlichen Gr=FC=DFen
-
-
-Herr LEWIS AWELE
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 311bf7a..f7a569e 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -3450,10 +3450,8 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	} else {
+ 		use_doorbell = misc_fw_support & MISC_FW_DOORBELL_RESET;
+ 		if (use_doorbell) {
+-			dev_warn(&pdev->dev, "Controller claims that "
+-				"'Bit 2 doorbell reset' is "
+-				"supported, but not 'bit 5 doorbell reset'.  "
+-				"Firmware update is recommended.\n");
++			dev_warn(&pdev->dev, "Soft reset not supported. "
++				"Firmware update is required.\n");
+ 			rc = -ENOTSUPP; /* try soft reset */
+ 			goto unmap_cfgtable;
+ 		}
