@@ -1,165 +1,328 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 36/37] target: replace ->get_cdb with a target_get_task_cdb helper
-Date: Fri, 14 Oct 2011 00:42:08 +0000
-Message-ID: <1318552929-13341-37-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 37/37] target: remove the ->transport_split_cdb callback in se_cmd
+Date: Fri, 14 Oct 2011 00:42:09 +0000
+Message-ID: <1318552929-13341-38-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:33529 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755111Ab1JNAqQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:46:16 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Instead of calling out to the backends from the core to get a per-task
-CDB and then modify it for the LBA/len pair used for this CDB provide
-a helper that writes the adjusted CDB into a provided buffer and call
-this method from ->do_task in pscsi.
+Add a switch statement implementing the CDB LBA/len update directly
+in target_get_task_cdb and remove the old ->transport_split_cdb
+callback and all its implementations.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_cdb.c       |   16 ++++++++++++++++
- drivers/target/target_core_pscsi.c     |   15 ++-------------
- drivers/target/target_core_transport.c |   18 ------------------
- include/target/target_core_transport.h |    5 +----
- 4 files changed, 19 insertions(+), 35 deletions(-)
+ drivers/target/Makefile                |    1 -
+ drivers/target/target_core_cdb.c       |   39 +++++++++++-
+ drivers/target/target_core_scdb.c      |  105 --------------------------------
+ drivers/target/target_core_scdb.h      |   10 ---
+ drivers/target/target_core_transport.c |   11 ---
+ include/target/target_core_base.h      |    1 -
+ 6 files changed, 36 insertions(+), 131 deletions(-)
+ delete mode 100644 drivers/target/target_core_scdb.c
+ delete mode 100644 drivers/target/target_core_scdb.h
 
+diff --git a/drivers/target/Makefile b/drivers/target/Makefile
+index 1060c7b..62e5405 100644
+--- a/drivers/target/Makefile
++++ b/drivers/target/Makefile
+@@ -6,7 +6,6 @@ target_core_mod-y		:= target_core_configfs.o \
+ 				   target_core_hba.o \
+ 				   target_core_pr.o \
+ 				   target_core_alua.o \
+-				   target_core_scdb.o \
+ 				   target_core_tmr.o \
+ 				   target_core_tpg.o \
+ 				   target_core_transport.o \
 diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 0d02391..fb0b630 100644
+index fb0b630..575cf72 100644
 --- a/drivers/target/target_core_cdb.c
 +++ b/drivers/target/target_core_cdb.c
-@@ -1265,3 +1265,19 @@ transport_emulate_control_cdb(struct se_task *task)
+@@ -1273,11 +1273,44 @@ transport_emulate_control_cdb(struct se_task *task)
+ void target_get_task_cdb(struct se_task *task, unsigned char *cdb)
+ {
+ 	struct se_cmd *cmd = task->task_se_cmd;
++	unsigned int cdb_len = scsi_command_size(cmd->t_task_cdb);
  
- 	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
+-	memcpy(cdb, cmd->t_task_cdb, scsi_command_size(cmd->t_task_cdb));
++	memcpy(cdb, cmd->t_task_cdb, cdb_len);
+ 	if (cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) {
+-		cmd->transport_split_cdb(task->task_lba, task->task_sectors,
+-					 cdb);
++		unsigned long long lba = task->task_lba;
++		u32 sectors = task->task_sectors;
++
++		switch (cdb_len) {
++		case 6:
++			/* 21-bit LBA and 8-bit sectors */
++			cdb[1] = (lba >> 16) & 0x1f;
++			cdb[2] = (lba >> 8) & 0xff;
++			cdb[3] = lba & 0xff;
++			cdb[4] = sectors & 0xff;
++			break;
++		case 10:
++			/* 32-bit LBA and 16-bit sectors */
++			put_unaligned_be32(lba, &cdb[2]);
++			put_unaligned_be16(sectors, &cdb[7]);
++			break;
++		case 12:
++			/* 32-bit LBA and 32-bit sectors */
++			put_unaligned_be32(lba, &cdb[2]);
++			put_unaligned_be32(sectors, &cdb[6]);
++			break;
++		case 16:
++			/* 64-bit LBA and 32-bit sectors */
++			put_unaligned_be64(lba, &cdb[2]);
++			put_unaligned_be32(sectors, &cdb[10]);
++			break;
++		case 32:
++			/* 64-bit LBA and 32-bit sectors, extended CDB */
++			put_unaligned_be64(lba, &cdb[12]);
++			put_unaligned_be32(sectors, &cdb[28]);
++			break;
++		default:
++			BUG();
++		}
+ 	}
  }
-+
-+/*
-+ * Write a CDB into @cdb that is based on the one the intiator sent us,
-+ * but updated to only cover the sectors that the current task handles.
-+ */
-+void target_get_task_cdb(struct se_task *task, unsigned char *cdb)
-+{
-+	struct se_cmd *cmd = task->task_se_cmd;
-+
-+	memcpy(cdb, cmd->t_task_cdb, scsi_command_size(cmd->t_task_cdb));
-+	if (cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) {
-+		cmd->transport_split_cdb(task->task_lba, task->task_sectors,
-+					 cdb);
-+	}
-+}
-+EXPORT_SYMBOL(target_get_task_cdb);
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index b347862..936b9fe 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -1068,6 +1068,8 @@ static int pscsi_do_task(struct se_task *task)
- 	struct bio *hbio;
- 	int ret;
- 
-+	target_get_task_cdb(task, pt->pscsi_cdb);
-+
- 	if (task->task_se_cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
- 		req = blk_get_request(pdv->pdv_sd->request_queue,
- 				(task->task_data_direction == DMA_TO_DEVICE),
-@@ -1150,18 +1152,6 @@ fail:
- 	return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
- }
- 
+ EXPORT_SYMBOL(target_get_task_cdb);
+diff --git a/drivers/target/target_core_scdb.c b/drivers/target/target_core_scdb.c
+deleted file mode 100644
+index 7284344..0000000
+--- a/drivers/target/target_core_scdb.c
++++ /dev/null
+@@ -1,105 +0,0 @@
+-/*******************************************************************************
+- * Filename:  target_core_scdb.c
+- *
+- * This file contains the generic target engine Split CDB related functions.
+- *
+- * Copyright (c) 2004-2005 PyX Technologies, Inc.
+- * Copyright (c) 2005, 2006, 2007 SBE, Inc.
+- * Copyright (c) 2007-2010 Rising Tide Systems
+- * Copyright (c) 2008-2010 Linux-iSCSI.org
+- *
+- * Nicholas A. Bellinger <nab@kernel.org>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+- *
+- ******************************************************************************/
 -
--/*	pscsi_get_cdb():
+-#include <linux/net.h>
+-#include <linux/string.h>
+-#include <scsi/scsi.h>
+-#include <asm/unaligned.h>
+-
+-#include <target/target_core_base.h>
+-#include <target/target_core_transport.h>
+-
+-#include "target_core_scdb.h"
+-
+-/*	split_cdb_XX_6():
 - *
-- *
+- *      21-bit LBA w/ 8-bit SECTORS
 - */
--static unsigned char *pscsi_get_cdb(struct se_task *task)
+-void split_cdb_XX_6(
+-	unsigned long long lba,
+-	u32 sectors,
+-	unsigned char *cdb)
 -{
--	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
--
--	return pt->pscsi_cdb;
+-	cdb[1] = (lba >> 16) & 0x1f;
+-	cdb[2] = (lba >> 8) & 0xff;
+-	cdb[3] = lba & 0xff;
+-	cdb[4] = sectors & 0xff;
 -}
 -
- /*	pscsi_get_sense_buffer():
-  *
-  *
-@@ -1276,7 +1266,6 @@ static struct se_subsystem_api pscsi_template = {
- 	.check_configfs_dev_params = pscsi_check_configfs_dev_params,
- 	.set_configfs_dev_params = pscsi_set_configfs_dev_params,
- 	.show_configfs_dev_params = pscsi_show_configfs_dev_params,
--	.get_cdb		= pscsi_get_cdb,
- 	.get_sense_buffer	= pscsi_get_sense_buffer,
- 	.get_device_rev		= pscsi_get_device_rev,
- 	.get_device_type	= pscsi_get_device_type,
+-/*	split_cdb_XX_10():
+- *
+- *	32-bit LBA w/ 16-bit SECTORS
+- */
+-void split_cdb_XX_10(
+-	unsigned long long lba,
+-	u32 sectors,
+-	unsigned char *cdb)
+-{
+-	put_unaligned_be32(lba, &cdb[2]);
+-	put_unaligned_be16(sectors, &cdb[7]);
+-}
+-
+-/*	split_cdb_XX_12():
+- *
+- *	32-bit LBA w/ 32-bit SECTORS
+- */
+-void split_cdb_XX_12(
+-	unsigned long long lba,
+-	u32 sectors,
+-	unsigned char *cdb)
+-{
+-	put_unaligned_be32(lba, &cdb[2]);
+-	put_unaligned_be32(sectors, &cdb[6]);
+-}
+-
+-/*	split_cdb_XX_16():
+- *
+- *	64-bit LBA w/ 32-bit SECTORS
+- */
+-void split_cdb_XX_16(
+-	unsigned long long lba,
+-	u32 sectors,
+-	unsigned char *cdb)
+-{
+-	put_unaligned_be64(lba, &cdb[2]);
+-	put_unaligned_be32(sectors, &cdb[10]);
+-}
+-
+-/*
+- *	split_cdb_XX_32():
+- *
+- * 	64-bit LBA w/ 32-bit SECTORS such as READ_32, WRITE_32 and emulated XDWRITEREAD_32
+- */
+-void split_cdb_XX_32(
+-	unsigned long long lba,
+-	u32 sectors,
+-	unsigned char *cdb)
+-{
+-	put_unaligned_be64(lba, &cdb[12]);
+-	put_unaligned_be32(sectors, &cdb[28]);
+-}
+diff --git a/drivers/target/target_core_scdb.h b/drivers/target/target_core_scdb.h
+deleted file mode 100644
+index 48e9ccc..0000000
+--- a/drivers/target/target_core_scdb.h
++++ /dev/null
+@@ -1,10 +0,0 @@
+-#ifndef TARGET_CORE_SCDB_H
+-#define TARGET_CORE_SCDB_H
+-
+-extern void split_cdb_XX_6(unsigned long long, u32, unsigned char *);
+-extern void split_cdb_XX_10(unsigned long long, u32, unsigned char *);
+-extern void split_cdb_XX_12(unsigned long long, u32, unsigned char *);
+-extern void split_cdb_XX_16(unsigned long long, u32, unsigned char *);
+-extern void split_cdb_XX_32(unsigned long long, u32, unsigned char *);
+-
+-#endif /* TARGET_CORE_SCDB_H */
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 8959696..3025a6f 100644
+index 3025a6f..cb022a1 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -3958,17 +3958,6 @@ static int transport_allocate_data_tasks(
- 		task->task_sectors = min(sectors, dev_max_sectors);
- 		task->task_size = task->task_sectors * sector_size;
+@@ -54,7 +54,6 @@
+ #include "target_core_alua.h"
+ #include "target_core_hba.h"
+ #include "target_core_pr.h"
+-#include "target_core_scdb.h"
+ #include "target_core_ua.h"
  
--		if (dev->transport->get_cdb) {
--			unsigned char *cdb = dev->transport->get_cdb(task);
--
--			memcpy(cdb, cmd->t_task_cdb,
--			       scsi_command_size(cmd->t_task_cdb));
--
--			/* Update new cdb with updated lba/sectors */
--			cmd->transport_split_cdb(task->task_lba,
--						 task->task_sectors, cdb);
--		}
--
- 		/*
- 		 * This now assumes that passed sg_ents are in PAGE_SIZE chunks
- 		 * in order to calculate the number per task SGL entries
-@@ -4022,7 +4011,6 @@ static int transport_allocate_data_tasks(
- static int
- transport_allocate_control_task(struct se_cmd *cmd)
- {
--	struct se_device *dev = cmd->se_dev;
- 	struct se_task *task;
- 	unsigned long flags;
+ static int sub_api_initialized;
+@@ -2851,7 +2850,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_6;
+ 		cmd->t_task_lba = transport_lba_21(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+ 		break;
+@@ -2860,7 +2858,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_10;
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+ 		break;
+@@ -2869,7 +2866,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_12;
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+ 		break;
+@@ -2878,7 +2874,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_16;
+ 		cmd->t_task_lba = transport_lba_64(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+ 		break;
+@@ -2887,7 +2882,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_6;
+ 		cmd->t_task_lba = transport_lba_21(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+ 		break;
+@@ -2896,7 +2890,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_10;
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->t_tasks_fua = (cdb[1] & 0x8);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+@@ -2906,7 +2899,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_12;
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->t_tasks_fua = (cdb[1] & 0x8);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+@@ -2916,7 +2908,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_16;
+ 		cmd->t_task_lba = transport_lba_64(cdb);
+ 		cmd->t_tasks_fua = (cdb[1] & 0x8);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+@@ -2929,7 +2920,6 @@ static int transport_generic_cmd_sequencer(
+ 		if (sector_ret)
+ 			goto out_unsupported_cdb;
+ 		size = transport_get_size(sectors, cdb, cmd);
+-		cmd->transport_split_cdb = &split_cdb_XX_10;
+ 		cmd->t_task_lba = transport_lba_32(cdb);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
+ 		passthrough = (dev->transport->transport_type ==
+@@ -2964,7 +2954,6 @@ static int transport_generic_cmd_sequencer(
+ 			 * Use WRITE_32 and READ_32 opcodes for the emulated
+ 			 * XDWRITE_READ_32 logic.
+ 			 */
+-			cmd->transport_split_cdb = &split_cdb_XX_32;
+ 			cmd->t_task_lba = transport_lba_64_ext(cdb);
+ 			cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
  
-@@ -4030,12 +4018,6 @@ transport_allocate_control_task(struct se_cmd *cmd)
- 	if (!task)
- 		return -ENOMEM;
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index a6c2348..16d7a49 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -470,7 +470,6 @@ struct se_cmd {
+ 	struct list_head	se_queue_node;
+ 	struct target_core_fabric_ops *se_tfo;
+ 	int (*transport_emulate_cdb)(struct se_cmd *);
+-	void (*transport_split_cdb)(unsigned long long, u32, unsigned char *);
+ 	void (*transport_complete_callback)(struct se_cmd *);
+ 	int (*transport_qf_callback)(struct se_cmd *);
  
--	if (dev->transport->get_cdb) {
--		unsigned char *cdb = dev->transport->get_cdb(task);
--
--		memcpy(cdb, cmd->t_task_cdb, scsi_command_size(cmd->t_task_cdb));
--	}
--
- 	task->task_sg = kmalloc(sizeof(struct scatterlist) * cmd->t_data_nents,
- 				GFP_KERNEL);
- 	if (!task->task_sg) {
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index c5eb259..171c235 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -190,6 +190,7 @@ extern int transport_generic_do_tmr(struct se_cmd *);
- extern int core_alua_check_nonop_delay(struct se_cmd *);
- /* From target_core_cdb.c */
- extern int transport_emulate_control_cdb(struct se_task *);
-+extern void target_get_task_cdb(struct se_task *task, unsigned char *cdb);
- 
- /*
-  * Each se_transport_task_t can have N number of possible struct se_task's
-@@ -309,10 +310,6 @@ struct se_subsystem_api {
- 	ssize_t (*show_configfs_dev_params)(struct se_hba *, struct se_subsystem_dev *,
- 						char *);
- 	/*
--	 * get_cdb():
--	 */
--	unsigned char *(*get_cdb)(struct se_task *);
--	/*
- 	 * get_device_rev():
- 	 */
- 	u32 (*get_device_rev)(struct se_device *);
 -- 
 1.5.6.5
-
