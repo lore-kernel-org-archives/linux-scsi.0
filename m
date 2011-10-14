@@ -1,83 +1,125 @@
-From: adam radford <aradford@gmail.com>
-Subject: [PATCH 1/1] megaraid_sas: Fix instance access in megasas_reset_timer
-Date: Thu, 13 Oct 2011 16:01:12 -0700
-Message-ID: <CAHtARFFVAUwTw9R=9OFcgu7=L6LgmZBnKViL4xmnPzuPiOhLHA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0016e65c8ddaf27c0304af361da4
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 00/37] target: Updates for v3.2-rc1 (round one)
+Date: Fri, 14 Oct 2011 00:41:32 +0000
+Message-ID: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:43173 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755835Ab1JMXBN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 19:01:13 -0400
-Received: by wwf22 with SMTP id 22so2561373wwf.1
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2011 16:01:12 -0700 (PDT)
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33346 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751332Ab1JNAnL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:43:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
-Cc: stable@kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 
---0016e65c8ddaf27c0304af361da4
-Content-Type: text/plain; charset=ISO-8859-1
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-CC: stable
+Hi folks,
 
-James/linux-scsi,
+This is the current set of target patches in the queue for v3.2-rc1.  This
+includes a number of cleanups from Christoph and various folks, and a handful
+of bugfixes from Roland & Co. that will eventually need to be queued to stable
+as well.  There are really no controversial changes this time around, but
+please have a look and let us know if anything needs more attention.
 
-The following patch for scsi-misc-2.6 for megaraid_sas will fix a
-potential bad pointer access in megasas_reset_timer(), when a MegaRAID
-9265/9285 or 9360/9380 gets a timeout.  megasas_build_io_fusion() sets
-SCp.ptr to be a struct megasas_cmd_fusion *, but then
-megasas_reset_timer() was casting SCp.ptr to be a struct megasas_cmd
-*, then trying to access cmd->instance, which is invalid.
+I'll plan to send a PULL request for these next week once the v3.2 window
+offically opens up.
 
-Just loading instance from scmd->device->host->hostdata in
-megasas_reset_timer() fixes the issue.
+Thank you,
 
-Signed-off-by: Adam Radford <aradford@gmail.com>
+--nab
 
-diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
-scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c
---- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-13
-15:35:39.563245479 -0700
-+++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-13
-15:38:15.711245124 -0700
-@@ -1914,7 +1914,6 @@
- static enum
- blk_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
- {
--	struct megasas_cmd *cmd = (struct megasas_cmd *)scmd->SCp.ptr;
- 	struct megasas_instance *instance;
- 	unsigned long flags;
+Andy Shevchenko (3):
+  target: simplify target_parse_naa_6h_vendor_specific()
+  iscsi-target: use native hex2bin for chap_string_to_hex
+  tcm_fc: remove custom hex_to_bin in ft_parse_wwn
 
-@@ -1923,7 +1922,7 @@
- 		return BLK_EH_NOT_HANDLED;
- 	}
+Christoph Hellwig (20):
+  tfm_fc: use transport_handle_cdb_direct
+  iscsi-target: always call transport_handle_cdb_direct
+  target: remove transport_generic_handle_cdb
+  target: don't opencode transport_release_cmd in
+    transport_release_fe_cmd
+  target: remove transport_free_se_cmd
+  target: simplify transport_generic_remove
+  target: simplify transport_put_cmd
+  target: remove transport_generic_remove
+  target: push session reinstatement out of transport_generic_free_cmd
+  target: cleanup iblock bio submission
+  target: cleanup pscsi request submission
+  target: remove unused se_subsystem_api methods
+  target: Cleanup unused target_core_base.h bits
+  target: Cleanup unused se_task bits
+  target: make more use of the task_flags field in se_task
+  target: Remove unnecessary se_task members
+  target: pack struct se_task more tightly
+  target: make the ->get_cdb method optional
+  target: replace ->get_cdb with a target_get_task_cdb helper
+  target: remove the ->transport_split_cdb callback in se_cmd
 
--	instance = cmd->instance;
-+	instance = (struct megasas_instance *)scmd->device->host->hostdata;
- 	if (!(instance->flag & MEGASAS_FW_BUSY)) {
- 		/* FW is busy, throttle IO */
- 		spin_lock_irqsave(instance->host->host_lock, flags);
+Dan Carpenter (1):
+  target: Make pscsi_create_virtdevice use ERR_CAST
 
---0016e65c8ddaf27c0304af361da4
-Content-Type: application/octet-stream; name="megaraid_sas.patch11"
-Content-Disposition: attachment; filename="megaraid_sas.patch11"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gtqcp46g0
+Jesper Juhl (1):
+  target: Remove unneeded version.h includes
 
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
-YXNfYmFzZS5jIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXNfYmFzZS5jCi0tLSBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
-cmFpZF9zYXNfYmFzZS5jCTIwMTEtMTAtMTMgMTU6MzU6MzkuNTYzMjQ1NDc5IC0wNzAwCisrKyBz
-Y3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2Uu
-YwkyMDExLTEwLTEzIDE1OjM4OjE1LjcxMTI0NTEyNCAtMDcwMApAQCAtMTkxNCw3ICsxOTE0LDYg
-QEAKIHN0YXRpYyBlbnVtCiBibGtfZWhfdGltZXJfcmV0dXJuIG1lZ2FzYXNfcmVzZXRfdGltZXIo
-c3RydWN0IHNjc2lfY21uZCAqc2NtZCkKIHsKLQlzdHJ1Y3QgbWVnYXNhc19jbWQgKmNtZCA9IChz
-dHJ1Y3QgbWVnYXNhc19jbWQgKilzY21kLT5TQ3AucHRyOwogCXN0cnVjdCBtZWdhc2FzX2luc3Rh
-bmNlICppbnN0YW5jZTsKIAl1bnNpZ25lZCBsb25nIGZsYWdzOwogCkBAIC0xOTIzLDcgKzE5MjIs
-NyBAQAogCQlyZXR1cm4gQkxLX0VIX05PVF9IQU5ETEVEOwogCX0KIAotCWluc3RhbmNlID0gY21k
-LT5pbnN0YW5jZTsKKwlpbnN0YW5jZSA9IChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqKXNjbWQt
-PmRldmljZS0+aG9zdC0+aG9zdGRhdGE7CiAJaWYgKCEoaW5zdGFuY2UtPmZsYWcgJiBNRUdBU0FT
-X0ZXX0JVU1kpKSB7CiAJCS8qIEZXIGlzIGJ1c3ksIHRocm90dGxlIElPICovCiAJCXNwaW5fbG9j
-a19pcnFzYXZlKGluc3RhbmNlLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsK
---0016e65c8ddaf27c0304af361da4--
+Nicholas Bellinger (10):
+  target: Re-org of core_tmr_lun_reset
+  target: Prevent TRANSPORT_FREE_CMD_INTR processing in
+    core_tmr_drain_cmd_list
+  target: Fix transport_cmd_finish_abort queue removal bug
+  target: Prevent transport_send_task_abort when CHECK_CONDITION status
+  target: Remove session_reinstatement parameter from
+    ->transport_wait_for_tasks
+  target: Convert ->transport_wait_for_tasks usage to
+    transport_generic_free_cmd
+  iscsi-target: Remove SCF_SE_LUN_CMD flag abuses
+  target: Merge transport_cmd_finish_abort_tmr into
+    transport_cmd_finish_abort
+  target: Remove legacy + unused device active I/O shutdown code
+  loopback: Prevent uninitialized use of tl_tpg in
+    tcm_loop_queuecommand
+
+Roland Dreier (2):
+  target: Prevent cmd->se_queue_node double add
+  target: Have core_tmr_alloc_req() take an explicit GFP_xxx flag
+
+ drivers/target/Makefile                      |    1 -
+ drivers/target/iscsi/iscsi_target.c          |   39 +--
+ drivers/target/iscsi/iscsi_target_auth.c     |   34 +--
+ drivers/target/iscsi/iscsi_target_core.h     |    3 +
+ drivers/target/iscsi/iscsi_target_erl2.c     |   49 +--
+ drivers/target/iscsi/iscsi_target_tmr.c      |    2 +-
+ drivers/target/iscsi/iscsi_target_util.c     |   20 +-
+ drivers/target/iscsi/iscsi_target_util.h     |    1 +
+ drivers/target/loopback/tcm_loop.c           |   18 +-
+ drivers/target/target_core_alua.c            |    1 -
+ drivers/target/target_core_cdb.c             |   78 +++-
+ drivers/target/target_core_configfs.c        |    1 -
+ drivers/target/target_core_fabric_configfs.c |    1 -
+ drivers/target/target_core_file.c            |   23 +-
+ drivers/target/target_core_file.h            |    4 +-
+ drivers/target/target_core_iblock.c          |  203 ++-----
+ drivers/target/target_core_iblock.h          |    2 -
+ drivers/target/target_core_pr.c              |    1 -
+ drivers/target/target_core_pscsi.c           |  281 ++++-------
+ drivers/target/target_core_pscsi.h           |    1 -
+ drivers/target/target_core_rd.c              |   19 +-
+ drivers/target/target_core_rd.h              |    2 -
+ drivers/target/target_core_scdb.c            |  105 ----
+ drivers/target/target_core_scdb.h            |   10 -
+ drivers/target/target_core_stat.c            |    1 -
+ drivers/target/target_core_tmr.c             |  224 +++++---
+ drivers/target/target_core_transport.c       |  751 ++++++--------------------
+ drivers/target/target_core_ua.c              |    1 -
+ drivers/target/tcm_fc/tfc_cmd.c              |   17 +-
+ drivers/target/tcm_fc/tfc_conf.c             |   13 +-
+ drivers/target/tcm_fc/tfc_io.c               |    1 -
+ drivers/target/tcm_fc/tfc_sess.c             |    1 -
+ include/target/target_core_base.h            |   55 +--
+ include/target/target_core_tmr.h             |    2 +-
+ include/target/target_core_transport.h       |   35 +-
+ 35 files changed, 640 insertions(+), 1360 deletions(-)
+ delete mode 100644 drivers/target/target_core_scdb.c
+ delete mode 100644 drivers/target/target_core_scdb.h
+
