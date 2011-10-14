@@ -1,46 +1,39 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 06/37] target: Prevent transport_send_task_abort when CHECK_CONDITION status
-Date: Fri, 14 Oct 2011 00:41:38 +0000
-Message-ID: <1318552929-13341-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 07/37] tfm_fc: use transport_handle_cdb_direct
+Date: Fri, 14 Oct 2011 00:41:39 +0000
+Message-ID: <1318552929-13341-8-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Kiran Patil <kiran.patil@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Christoph Hellwig <hch@lst.de>
 
-This patch fixes a bug where transport_send_task_abort() could be called
-during LUN_RESET to return SAM_STAT_TASK_ABORTED + tfo->queue_status(), when
-SCF_SENT_CHECK_CONDITION -> tfo->queue_status() has already been sent from
-within another context via transport_send_check_condition_and_sense().
+ft_send_work is always called from workqueue context, which means we can
+handle the CDB directly instead of doing another context switch.
 
-Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Cc: Kiran Patil <kiran.patil@intel.com>
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    9 +++++++++
- 1 files changed, 9 insertions(+), 0 deletions(-)
+ drivers/target/tcm_fc/tfc_cmd.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 009547b..af1e0a5 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -4919,6 +4919,15 @@ EXPORT_SYMBOL(transport_check_aborted_status);
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 3c6c5a1..c2d148d 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -639,7 +639,7 @@ static void ft_send_work(struct work_struct *work)
+ 		transport_generic_free_cmd(se_cmd, 0, 0);
+ 		return;
+ 	}
+-	transport_generic_handle_cdb(se_cmd);
++	transport_handle_cdb_direct(se_cmd);
+ 	return;
  
- void transport_send_task_abort(struct se_cmd *cmd)
- {
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	if (cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+		return;
-+	}
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+
- 	/*
- 	 * If there are still expected incoming fabric WRITEs, we wait
- 	 * until until they have completed before sending a TASK_ABORTED
+ err:
 -- 
 1.5.6.5
