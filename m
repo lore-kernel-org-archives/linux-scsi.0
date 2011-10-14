@@ -1,49 +1,49 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 04/37] target: Prevent TRANSPORT_FREE_CMD_INTR processing in core_tmr_drain_cmd_list
-Date: Fri, 14 Oct 2011 00:41:36 +0000
-Message-ID: <1318552929-13341-5-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 05/37] target: Fix transport_cmd_finish_abort queue removal bug
+Date: Fri, 14 Oct 2011 00:41:37 +0000
+Message-ID: <1318552929-13341-6-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Roland Dreier <roland@purestorage.com>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch contains a bugfix for TMR LUN_RESET related to TRANSPORT_FREE_CMD_INTR
-operation, where core_tmr_drain_cmd_list() will now skip processing for this
-case to prevent an ABORT_TASK status from being returned for descriptors that
-are already queued up to be released by processing thread context.
+This patch fixes a bug in LUN_RESET operation with transport_cmd_finish_abort()
+where transport_remove_cmd_from_queue() was incorrectly being called, causing
+descriptors with t_state == TRANSPORT_FREE_CMD_INTR to be incorrectly removed
+from qobj->qobj_list during process context release.  This change ensures the
+descriptor is only removed via transport_remove_cmd_from_queue() when doing a
+direct release via transport_generic_remove().
 
-Cc: Roland Dreier <roland@purestorage.com>
-Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
 ---
- drivers/target/target_core_tmr.c |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
+ drivers/target/target_core_transport.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index ed0b1ff..d04cc10 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -339,6 +339,16 @@ static void core_tmr_drain_cmd_list(
- 		 */
- 		if (prout_cmd == cmd)
- 			continue;
-+		/*
-+		 * Skip direct processing of TRANSPORT_FREE_CMD_INTR for
-+		 * HW target mode fabrics.
-+		 */
-+		spin_lock(&cmd->t_state_lock);
-+		if (cmd->t_state == TRANSPORT_FREE_CMD_INTR) {
-+			spin_unlock(&cmd->t_state_lock);
-+			continue;
-+		}
-+		spin_unlock(&cmd->t_state_lock);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 046da7f..009547b 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -593,13 +593,14 @@ check_lun:
  
- 		atomic_set(&cmd->t_transport_queue_active, 0);
- 		atomic_dec(&qobj->queue_cnt);
+ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+ {
+-	transport_remove_cmd_from_queue(cmd, &cmd->se_dev->dev_queue_obj);
+ 	transport_lun_remove_cmd(cmd);
+ 
+ 	if (transport_cmd_check_stop_to_fabric(cmd))
+ 		return;
+-	if (remove)
++	if (remove) {
++		transport_remove_cmd_from_queue(cmd, &cmd->se_dev->dev_queue_obj);
+ 		transport_generic_remove(cmd, 0);
++	}
+ }
+ 
+ void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
 -- 
 1.5.6.5
