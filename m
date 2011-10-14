@@ -1,67 +1,38 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 22/37] tcm_fc: remove custom hex_to_bin in ft_parse_wwn
-Date: Fri, 14 Oct 2011 00:41:54 +0000
-Message-ID: <1318552929-13341-23-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 23/37] target: Make pscsi_create_virtdevice use ERR_CAST
+Date: Fri, 14 Oct 2011 00:41:55 +0000
+Message-ID: <1318552929-13341-24-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Dan Carpenter <dan.carpenter@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
 
-This patch converts ft_parse_wwn() to use hex_to_bin() instead of custom
-conversion code.
+This patch changes pscsi_create_virtdevice() to properly return ERR_CAST
+instead of a raw pointer upon scsi_host_lookup() failure.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/tcm_fc/tfc_conf.c |   12 +++++-------
- 1 files changed, 5 insertions(+), 7 deletions(-)
+ drivers/target/target_core_pscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index b30eace..3c9d19a 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -31,6 +31,7 @@
- #include <linux/types.h>
- #include <linux/string.h>
- #include <linux/configfs.h>
-+#include <linux/kernel.h>
- #include <linux/ctype.h>
- #include <asm/unaligned.h>
- #include <scsi/scsi.h>
-@@ -70,10 +71,10 @@ static ssize_t ft_parse_wwn(const char *name, u64 *wwn, int strict)
- {
- 	const char *cp;
- 	char c;
--	u32 nibble;
- 	u32 byte = 0;
- 	u32 pos = 0;
- 	u32 err;
-+	int val;
- 
- 	*wwn = 0;
- 	for (cp = name; cp < &name[FT_NAMELEN - 1]; cp++) {
-@@ -94,13 +95,10 @@ static ssize_t ft_parse_wwn(const char *name, u64 *wwn, int strict)
- 			return cp - name;
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index b6d6093..3898fb7 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -566,7 +566,7 @@ static struct se_device *pscsi_create_virtdevice(
+ 			if (IS_ERR(sh)) {
+ 				pr_err("pSCSI: Unable to locate"
+ 					" pdv_host_id: %d\n", pdv->pdv_host_id);
+-				return (struct se_device *) sh;
++				return ERR_CAST(sh);
+ 			}
  		}
- 		err = 3;
--		if (isdigit(c))
--			nibble = c - '0';
--		else if (isxdigit(c) && (islower(c) || !strict))
--			nibble = tolower(c) - 'a' + 10;
--		else
-+		val = hex_to_bin(c);
-+		if (val < 0)
- 			goto fail;
--		*wwn = (*wwn << 4) | nibble;
-+		*wwn = (*wwn << 4) | val;
- 	}
- 	err = 4;
- fail:
+ 	} else {
 -- 
 1.5.6.5
