@@ -1,127 +1,151 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 13/37] target: simplify transport_put_cmd
-Date: Fri, 14 Oct 2011 00:41:45 +0000
-Message-ID: <1318552929-13341-14-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 14/37] target: remove transport_generic_remove
+Date: Fri, 14 Oct 2011 00:41:46 +0000
+Message-ID: <1318552929-13341-15-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:33413 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753350Ab1JNAoR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:44:17 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@lst.de>
 
-Inline two simple functions only used by it, and replace a goto
-with a simple if else construct.
-
-Note that the code moved from transport_dec_and_check seems fairly
-buggy - the atomic_read check on a variable where we'd do an
-atomic_dec_and_test looks racy if we'll ever get someone increment
-it without the lock held around them (which it looks like we do),
-and not decrementing the second counter if the first one doesn't
-hit zero also at least needs an explanation.
-
-(nab: Fix transport_put_cmd breakage)
+All callers that never have the session_reinstatement flag set can trivially
+be converted to transport_put_cmd.  Opencode the session reinstatement code
+in transport_generic_free_cmd, which was the only caller ever asking for it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   61 ++++++++++---------------------
- 1 files changed, 20 insertions(+), 41 deletions(-)
+ drivers/target/target_core_transport.c |   44 +++++++++++---------------------
+ 1 files changed, 15 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index bee923f..a650100 100644
+index a650100..4f21b88 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -3732,36 +3732,6 @@ static inline void transport_free_pages(struct se_cmd *cmd)
- 	cmd->t_bidi_data_nents = 0;
+@@ -86,8 +86,6 @@ static u32 transport_allocate_tasks(struct se_cmd *cmd,
+ 		enum dma_data_direction data_direction,
+ 		struct scatterlist *sgl, unsigned int nents);
+ static int transport_generic_get_mem(struct se_cmd *cmd);
+-static int transport_generic_remove(struct se_cmd *cmd,
+-		int session_reinstatement);
+ static bool transport_put_cmd(struct se_cmd *cmd);
+ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		struct se_queue_obj *qobj);
+@@ -599,7 +597,7 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
+ 		return;
+ 	if (remove) {
+ 		transport_remove_cmd_from_queue(cmd, &cmd->se_dev->dev_queue_obj);
+-		transport_generic_remove(cmd, 0);
++		transport_put_cmd(cmd);
+ 	}
  }
  
--static inline void transport_release_tasks(struct se_cmd *cmd)
--{
--	transport_free_dev_tasks(cmd);
--}
--
--static inline int transport_dec_and_check(struct se_cmd *cmd)
+@@ -610,7 +608,7 @@ void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
+ 	if (transport_cmd_check_stop_to_fabric(cmd))
+ 		return;
+ 
+-	transport_generic_remove(cmd, 0);
++	transport_put_cmd(cmd);
+ }
+ 
+ static void transport_add_cmd_to_queue(
+@@ -2072,7 +2070,7 @@ static void transport_generic_request_timeout(struct se_cmd *cmd)
+ 	unsigned long flags;
+ 
+ 	/*
+-	 * Reset cmd->t_se_count to allow transport_generic_remove()
++	 * Reset cmd->t_se_count to allow transport_put_cmd()
+ 	 * to allow last call to free memory resources.
+ 	 */
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+@@ -2083,7 +2081,7 @@ static void transport_generic_request_timeout(struct se_cmd *cmd)
+ 	}
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 
+-	transport_generic_remove(cmd, 0);
++	transport_put_cmd(cmd);
+ }
+ 
+ static inline u32 transport_lba_21(unsigned char *cdb)
+@@ -3772,24 +3770,6 @@ out_busy:
+ 	return false;
+ }
+ 
+-static int
+-transport_generic_remove(struct se_cmd *cmd, int session_reinstatement)
 -{
 -	unsigned long flags;
 -
--	spin_lock_irqsave(&cmd->t_state_lock, flags);
--	if (atomic_read(&cmd->t_fe_count)) {
--		if (!atomic_dec_and_test(&cmd->t_fe_count)) {
+-	if (!transport_put_cmd(cmd)) {
+-		if (session_reinstatement) {
+-			spin_lock_irqsave(&cmd->t_state_lock, flags);
+-			transport_all_task_dev_remove_state(cmd);
 -			spin_unlock_irqrestore(&cmd->t_state_lock,
 -					flags);
--			return 1;
 -		}
+-		return 1;
 -	}
--
--	if (atomic_read(&cmd->t_se_count)) {
--		if (!atomic_dec_and_test(&cmd->t_se_count)) {
--			spin_unlock_irqrestore(&cmd->t_state_lock,
--					flags);
--			return 1;
--		}
--	}
--	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
 -
 -	return 0;
 -}
 -
- /**
-  * transport_put_cmd - release a reference to a command
-  * @cmd:       command to release
-@@ -3771,26 +3741,35 @@ static inline int transport_dec_and_check(struct se_cmd *cmd)
- static bool transport_put_cmd(struct se_cmd *cmd)
- {
- 	unsigned long flags;
--
--	if (transport_dec_and_check(cmd))
--		return false;
-+	int free_tasks = 0;
+ /*
+  * transport_generic_map_mem_to_cmd - Use fabric-alloced pages instead of
+  * allocating in the core.
+@@ -4379,7 +4359,13 @@ void transport_generic_free_cmd(
  
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
--	if (!atomic_read(&cmd->transport_dev_active)) {
--		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
--		goto free_pages;
-+	if (atomic_read(&cmd->t_fe_count)) {
-+		if (!atomic_dec_and_test(&cmd->t_fe_count))
-+			goto out_busy;
-+	}
+ 		transport_free_dev_tasks(cmd);
+ 
+-		transport_generic_remove(cmd, session_reinstatement);
++		if (!transport_put_cmd(cmd) && session_reinstatement) {
++			unsigned long flags;
 +
-+	if (atomic_read(&cmd->t_se_count)) {
-+		if (!atomic_dec_and_test(&cmd->t_se_count))
-+			goto out_busy;
-+	}
-+
-+	if (atomic_read(&cmd->transport_dev_active)) {
-+		atomic_set(&cmd->transport_dev_active, 0);
-+		transport_all_task_dev_remove_state(cmd);
-+		free_tasks = 1;
++			spin_lock_irqsave(&cmd->t_state_lock, flags);
++			transport_all_task_dev_remove_state(cmd);
++			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
++		}
  	}
--	atomic_set(&cmd->transport_dev_active, 0);
--	transport_all_task_dev_remove_state(cmd);
- 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 
--	transport_release_tasks(cmd);
--	return true;
-+	if (free_tasks != 0)
-+		transport_free_dev_tasks(cmd);
- 
--free_pages:
- 	transport_free_pages(cmd);
- 	transport_release_cmd(cmd);
- 	return true;
-+out_busy:
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+	return false;
  }
+ EXPORT_SYMBOL(transport_generic_free_cmd);
+@@ -5066,7 +5052,7 @@ static void transport_processing_shutdown(struct se_device *dev)
+ 				transport_lun_remove_cmd(cmd);
  
- static int
+ 				if (transport_cmd_check_stop(cmd, 1, 0))
+-					transport_generic_remove(cmd, 0);
++					transport_put_cmd(cmd);
+ 			}
+ 
+ 			spin_lock_irqsave(&dev->execute_task_lock, flags);
+@@ -5094,7 +5080,7 @@ static void transport_processing_shutdown(struct se_device *dev)
+ 			transport_lun_remove_cmd(cmd);
+ 
+ 			if (transport_cmd_check_stop(cmd, 1, 0))
+-				transport_generic_remove(cmd, 0);
++				transport_put_cmd(cmd);
+ 		}
+ 
+ 		spin_lock_irqsave(&dev->execute_task_lock, flags);
+@@ -5117,7 +5103,7 @@ static void transport_processing_shutdown(struct se_device *dev)
+ 		} else {
+ 			transport_lun_remove_cmd(cmd);
+ 			if (transport_cmd_check_stop(cmd, 1, 0))
+-				transport_generic_remove(cmd, 0);
++				transport_put_cmd(cmd);
+ 		}
+ 	}
+ }
+@@ -5192,7 +5178,7 @@ get_cmd:
+ 			transport_generic_complete_ok(cmd);
+ 			break;
+ 		case TRANSPORT_REMOVE:
+-			transport_generic_remove(cmd, 0);
++			transport_put_cmd(cmd);
+ 			break;
+ 		case TRANSPORT_FREE_CMD_INTR:
+ 			transport_generic_free_cmd(cmd, 0, 0);
 -- 
 1.5.6.5
-
