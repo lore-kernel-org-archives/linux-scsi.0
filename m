@@ -1,291 +1,108 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 28/37] target: Remove legacy + unused device active I/O shutdown code
-Date: Fri, 14 Oct 2011 00:42:00 +0000
-Message-ID: <1318552929-13341-29-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 29/37] loopback: Prevent uninitialized use of tl_tpg in tcm_loop_queuecommand
+Date: Fri, 14 Oct 2011 00:42:01 +0000
+Message-ID: <1318552929-13341-30-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33493 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753717Ab1JNApd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:45:33 -0400
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Paolo Bonzini <pbonzini@redhat.com>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch removes the legacy device active I/O shutdown code that was
-originally called from transport_processing_thread() context during shutdown
-including transport_processing_shutdown() and transport_release_all_cmds().
+This patch fixes a bug with tcm_loop where performing a scsi_host rescan was
+causing an oops due to a received scsi_cmnd->device->id value not matching a
+previously configured tcm_loop_tpg entry in tcm_loop_hba->tl_hba_tpgs[]
+obtained from within tcm_loop_queuecommand() code.
 
-This is due to the fact that in modern configfs control plane code by the
-time shutdown of an se_device instance in transport_processing_thread()
-is allowed to occur via:
+This fix adds an explict check for tcm_loop_tpg->tl_hba in order to ensure
+tcm_loop_make_naa_tpg() has already been invoked to initialize a given
+tcm_loop_tpg entry, and also adds an explict clear of tcm_loop_tpg->tl_hba
+from within the tcm_loop_drop_naa_tpg() release path.
 
-	rmdir /sys/kernel/config/target/core/$HBA/$DEV
+This bug was manifesting itself with the following OOPs:
 
-all active I/O will already have been ceased while removing active configfs
-fabric Port/LUN symlinks.  Eg: the removal of an active se_device is protected
-by inter-module VFS references from active Port/LUN symlinks.
+[176289.430909] BUG: unable to handle kernel NULL pointer dereference at 0000000000000090
+[176289.431337] IP: [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
+[176289.431399] PGD 22e9b067 PUD 23375067 PMD 0
+[176289.431399] Oops: 0000 [#1] SMP
+[176289.431815] CPU 1
+[176289.431815] Modules linked in: tcm_loop target_core_stgt target_core_pscsi target_core_file target_core_iblock target_core_mod crc32c ib_cm ib_sa ib_mad ib_core qla2xxx scsi_tgt configfs fcoe libfcoe libfc scsi_transport_fc ipv6 iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi sr_mod cdrom sd_mod ata_piix libata e1000 mptspi mptscsih mptbase [last unloaded: target_core_mod]
+[176289.431815]
+[176289.431815] Pid: 12339, comm: LIO_iblock Tainted: G        W   3.1.0-rc8+
+[176289.431815] RIP: 0010:[<ffffffffa0395617>]  [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
+[176289.431815] RSP: 0018:ffff880023bfbe10  EFLAGS: 00010283
+[176289.431815] RAX: 0000000000000000 RBX: ffff88002d600040 RCX: ffff88002d600108
+[176289.431815] RDX: ffff88000c9e50bc RSI: 0000000000000246 RDI: 0000000000000246
+[176289.431815] RBP: ffff880023bfbee0 R08: ffff88002d600108 R09: 0000000000000000
+[176289.431815] R10: ffff88002fc8cc80 R11: ffffffff81671b60 R12: ffff88002d600108
+[176289.431815] R13: ffff88000c9e4f38 R14: ffff88000c9e50b8 R15: 0000000000000000
+[176289.431815] FS:  0000000000000000(0000) GS:ffff88002fc80000(0000) knlGS:0000000000000000
+[176289.431815] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[176289.431815] CR2: 0000000000000090 CR3: 000000002a33f000 CR4: 00000000000006e0
+[176289.431815] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[176289.431815] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[176289.431815] Process LIO_iblock (pid: 12339, threadinfo ffff880023bfa000, task ffff88002a2e0000)
+[176289.431815] Stack:
+[176289.431815]  0000000000011280 0000000000000246 ffff88002a2e0000 ffff880023a58900
+[176289.431815]  ffff880023bfbed0 ffff880023bfa000 ffff880023bfa000 ffff88000c9e50d0
+[176289.431815]  ffff88000c9e50c0 ffff88000c9e50bc ffff880023bfa000 ffff880023bfbfd8
+[176289.431815] Call Trace:
+[176289.431815]  [<ffffffff81056657>] ? wake_up_bit+0x25/0x25
+[176289.431815]  [<ffffffffa0395434>] ? transport_handle_cdb_direct+0x92/0x92 [target_core_mod]
+[176289.431815]  [<ffffffff8105619a>] kthread+0x7d/0x85
+[176289.431815]  [<ffffffff813cbcb4>] kernel_thread_helper+0x4/0x10
+[176289.431815]  [<ffffffff8105611d>] ? kthread_worker_fn+0x16d/0x16d
+[176289.431815]  [<ffffffff813cbcb0>] ? gs_change+0x13/0x13
+[176289.431815] Code: 67 05 00 00 41 8b 84 24 4c ff ff ff ff c8 83 f8 11 0f 87 f0 04 00 00 89 c0 ff 24 c5 b0 c6 39 a0 0f 0b eb fe 48 8b 83 d8 00 00 00
+[176289.431815] RIP  [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
+[176289.431815]  RSP <ffff880023bfbe10>
+[176289.431815] CR2: 0000000000000090
+[176295.041004] ---[ end trace 85dc6865b23b8f3e ]---
 
-Two WARN_ON() checks have been added in their place before exiting
-transport_processing_thread() to watch out for any leaked descriptors.
-
-Cc: Christoph Hellwig <hch@lst.de>
+Reported-by: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |  220 +-------------------------------
- 1 files changed, 2 insertions(+), 218 deletions(-)
+ drivers/target/loopback/tcm_loop.c |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 36fb39c..ee73f10 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1040,41 +1040,6 @@ void transport_dump_dev_state(
- 	*bl += sprintf(b + *bl, "        ");
- }
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 5b870c3..b15d8cb 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -290,6 +290,15 @@ static int tcm_loop_queuecommand(
+ 	 */
+ 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
+ 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
++	/*
++	 * Ensure that this tl_tpg reference from the incoming sc->device->id
++	 * has already been configured via tcm_loop_make_naa_tpg().
++	 */
++	if (!tl_tpg->tl_hba) {
++		set_host_byte(sc, DID_NO_CONNECT);
++		sc->scsi_done(sc);
++		return 0;
++	}
+ 	se_tpg = &tl_tpg->tl_se_tpg;
+ 	/*
+ 	 * Determine the SAM Task Attribute and allocate tl_cmd and
+@@ -1245,6 +1254,9 @@ void tcm_loop_drop_naa_tpg(
+ 	 */
+ 	core_tpg_deregister(se_tpg);
  
--/*	transport_release_all_cmds():
-- *
-- *
-- */
--static void transport_release_all_cmds(struct se_device *dev)
--{
--	struct se_cmd *cmd, *tcmd;
--	int bug_out = 0, t_state;
--	unsigned long flags;
--
--	spin_lock_irqsave(&dev->dev_queue_obj.cmd_queue_lock, flags);
--	list_for_each_entry_safe(cmd, tcmd, &dev->dev_queue_obj.qobj_list,
--				se_queue_node) {
--		t_state = cmd->t_state;
--		list_del_init(&cmd->se_queue_node);
--		spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock,
--				flags);
--
--		pr_err("Releasing ITT: 0x%08x, i_state: %u,"
--			" t_state: %u directly\n",
--			cmd->se_tfo->get_task_tag(cmd),
--			cmd->se_tfo->get_cmd_state(cmd), t_state);
--
--		transport_put_cmd(cmd);
--		bug_out = 1;
--
--		spin_lock_irqsave(&dev->dev_queue_obj.cmd_queue_lock, flags);
--	}
--	spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock, flags);
--#if 0
--	if (bug_out)
--		BUG();
--#endif
--}
--
- void transport_dump_vpd_proto_id(
- 	struct t10_vpd *vpd,
- 	unsigned char *p_buf,
-@@ -4859,180 +4824,6 @@ int transport_generic_do_tmr(struct se_cmd *cmd)
- 	return 0;
- }
- 
--/*
-- *	Called with spin_lock_irq(&dev->execute_task_lock); held
-- *
-- */
--static struct se_task *
--transport_get_task_from_state_list(struct se_device *dev)
--{
--	struct se_task *task;
--
--	if (list_empty(&dev->state_task_list))
--		return NULL;
--
--	list_for_each_entry(task, &dev->state_task_list, t_state_list)
--		break;
--
--	list_del(&task->t_state_list);
--	atomic_set(&task->task_state_active, 0);
--
--	return task;
--}
--
--static void transport_processing_shutdown(struct se_device *dev)
--{
--	struct se_cmd *cmd;
--	struct se_task *task;
--	unsigned long flags;
--	/*
--	 * Empty the struct se_device's struct se_task state list.
--	 */
--	spin_lock_irqsave(&dev->execute_task_lock, flags);
--	while ((task = transport_get_task_from_state_list(dev))) {
--		if (!task->task_se_cmd) {
--			pr_err("task->task_se_cmd is NULL!\n");
--			continue;
--		}
--		cmd = task->task_se_cmd;
--
--		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
--
--		spin_lock_irqsave(&cmd->t_state_lock, flags);
--
--		pr_debug("PT: cmd: %p task: %p ITT: 0x%08x,"
--			" i_state: %d, t_state/def_t_state:"
--			" %d/%d cdb: 0x%02x\n", cmd, task,
--			cmd->se_tfo->get_task_tag(cmd),
--			cmd->se_tfo->get_cmd_state(cmd),
--			cmd->t_state, cmd->deferred_t_state,
--			cmd->t_task_cdb[0]);
--		pr_debug("PT: ITT[0x%08x] - t_tasks: %d t_task_cdbs_left:"
--			" %d t_task_cdbs_sent: %d -- t_transport_active: %d"
--			" t_transport_stop: %d t_transport_sent: %d\n",
--			cmd->se_tfo->get_task_tag(cmd),
--			cmd->t_task_list_num,
--			atomic_read(&cmd->t_task_cdbs_left),
--			atomic_read(&cmd->t_task_cdbs_sent),
--			atomic_read(&cmd->t_transport_active),
--			atomic_read(&cmd->t_transport_stop),
--			atomic_read(&cmd->t_transport_sent));
--
--		if (atomic_read(&task->task_active)) {
--			atomic_set(&task->task_stop, 1);
--			spin_unlock_irqrestore(
--				&cmd->t_state_lock, flags);
--
--			pr_debug("Waiting for task: %p to shutdown for dev:"
--				" %p\n", task, dev);
--			wait_for_completion(&task->task_stop_comp);
--			pr_debug("Completed task: %p shutdown for dev: %p\n",
--				task, dev);
--
--			spin_lock_irqsave(&cmd->t_state_lock, flags);
--			atomic_dec(&cmd->t_task_cdbs_left);
--
--			atomic_set(&task->task_active, 0);
--			atomic_set(&task->task_stop, 0);
--		} else {
--			if (atomic_read(&task->task_execute_queue) != 0)
--				transport_remove_task_from_execute_queue(task, dev);
--		}
--		__transport_stop_task_timer(task, &flags);
--
--		if (!atomic_dec_and_test(&cmd->t_task_cdbs_ex_left)) {
--			spin_unlock_irqrestore(
--					&cmd->t_state_lock, flags);
--
--			pr_debug("Skipping task: %p, dev: %p for"
--				" t_task_cdbs_ex_left: %d\n", task, dev,
--				atomic_read(&cmd->t_task_cdbs_ex_left));
--
--			spin_lock_irqsave(&dev->execute_task_lock, flags);
--			continue;
--		}
--
--		if (atomic_read(&cmd->t_transport_active)) {
--			pr_debug("got t_transport_active = 1 for task: %p, dev:"
--					" %p\n", task, dev);
--
--			if (atomic_read(&cmd->t_fe_count)) {
--				spin_unlock_irqrestore(
--					&cmd->t_state_lock, flags);
--				transport_send_check_condition_and_sense(
--					cmd, TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE,
--					0);
--				transport_remove_cmd_from_queue(cmd,
--					&cmd->se_dev->dev_queue_obj);
--
--				transport_lun_remove_cmd(cmd);
--				transport_cmd_check_stop(cmd, 1, 0);
--			} else {
--				spin_unlock_irqrestore(
--					&cmd->t_state_lock, flags);
--
--				transport_remove_cmd_from_queue(cmd,
--					&cmd->se_dev->dev_queue_obj);
--
--				transport_lun_remove_cmd(cmd);
--
--				if (transport_cmd_check_stop(cmd, 1, 0))
--					transport_put_cmd(cmd);
--			}
--
--			spin_lock_irqsave(&dev->execute_task_lock, flags);
--			continue;
--		}
--		pr_debug("Got t_transport_active = 0 for task: %p, dev: %p\n",
--				task, dev);
--
--		if (atomic_read(&cmd->t_fe_count)) {
--			spin_unlock_irqrestore(
--				&cmd->t_state_lock, flags);
--			transport_send_check_condition_and_sense(cmd,
--				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
--			transport_remove_cmd_from_queue(cmd,
--				&cmd->se_dev->dev_queue_obj);
--
--			transport_lun_remove_cmd(cmd);
--			transport_cmd_check_stop(cmd, 1, 0);
--		} else {
--			spin_unlock_irqrestore(
--				&cmd->t_state_lock, flags);
--
--			transport_remove_cmd_from_queue(cmd,
--				&cmd->se_dev->dev_queue_obj);
--			transport_lun_remove_cmd(cmd);
--
--			if (transport_cmd_check_stop(cmd, 1, 0))
--				transport_put_cmd(cmd);
--		}
--
--		spin_lock_irqsave(&dev->execute_task_lock, flags);
--	}
--	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
--	/*
--	 * Empty the struct se_device's struct se_cmd list.
--	 */
--	while ((cmd = transport_get_cmd_from_queue(&dev->dev_queue_obj))) {
--
--		pr_debug("From Device Queue: cmd: %p t_state: %d\n",
--				cmd, cmd->t_state);
--
--		if (atomic_read(&cmd->t_fe_count)) {
--			transport_send_check_condition_and_sense(cmd,
--				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
--
--			transport_lun_remove_cmd(cmd);
--			transport_cmd_check_stop(cmd, 1, 0);
--		} else {
--			transport_lun_remove_cmd(cmd);
--			if (transport_cmd_check_stop(cmd, 1, 0))
--				transport_put_cmd(cmd);
--		}
--	}
--}
--
- /*	transport_processing_thread():
-  *
-  *
-@@ -5052,14 +4843,6 @@ static int transport_processing_thread(void *param)
- 		if (ret < 0)
- 			goto out;
- 
--		spin_lock_irq(&dev->dev_status_lock);
--		if (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN) {
--			spin_unlock_irq(&dev->dev_status_lock);
--			transport_processing_shutdown(dev);
--			continue;
--		}
--		spin_unlock_irq(&dev->dev_status_lock);
--
- get_cmd:
- 		__transport_execute_tasks(dev);
- 
-@@ -5135,7 +4918,8 @@ get_cmd:
- 	}
- 
- out:
--	transport_release_all_cmds(dev);
-+	WARN_ON(!list_empty(&dev->state_task_list));
-+	WARN_ON(!list_empty(&dev->dev_queue_obj.qobj_list));
- 	dev->process_thread = NULL;
- 	return 0;
- }
++	tl_tpg->tl_hba = NULL;
++	tl_tpg->tl_tpgt = 0;
++
+ 	pr_debug("TCM_Loop_ConfigFS: Deallocated Emulated %s"
+ 		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
+ 		config_item_name(&wwn->wwn_group.cg_item), tpgt);
 -- 
 1.5.6.5
+
