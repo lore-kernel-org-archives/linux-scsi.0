@@ -1,45 +1,70 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH 19/21] scsi: drop unused Kconfig symbol
-Date: Fri, 14 Oct 2011 14:30:47 +0200
-Message-ID: <1318595447.6132.78.camel@x61.thuisdomein>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Fri, 14 Oct 2011 11:03:04 -0500
+Message-ID: <1318608184.3018.42.camel@dabdike.int.hansenpartnership.com>
+References: <201109221318.p8MDIXPP020015@pentland.suse.de>
+	 <20110928004722.GA27421@kernel.dk>
+	 <CA+55aFznvejXWe68BpjsJqCWnDizbHWBOzKLY_H+YqhRiK42sQ@mail.gmail.com>
+	 <4E82751C.9050908@kernel.dk>
+	 <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
+	 <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
+	 <4E832A55.30709@kernel.dk>
+	 <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
+	 <4E832BD2.50409@kernel.dk>  <4E96E2FF.6070601@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4E96E2FF.6070601@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
- drivers/scsi/Kconfig |   14 --------------
- 1 files changed, 0 insertions(+), 14 deletions(-)
+On Thu, 2011-10-13 at 15:09 +0200, Steffen Maier wrote:
+> This fix also went into 3.0.5 via
+> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=releases/3.0.5/block-free-queue-resources-at-blk_release_queue.patch
+> (originated at http://marc.info/?l=linux-scsi&m=131669751909474&w=2 and 
+> http://marc.info/?l=linux-scsi&m=131669414205696&w=2)
+> 
+> However, it seems we still have a use-after-free bug, now causing the 
+> following oops with kernel 3.0.6 when removing paths to storage while 
+> generating load on device-mapper multipath disks:
+> 
+> > Unable to handle kernel pointer dereference at virtual kernel address 6b6b6b6b6b6b6000
+> > Oops: 0038 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+> > Modules linked in: iptable_filter ip_tables x_tables dm_round_robin sunrpc qeth_l3 binfmt_misc dm_multipath scsi_dh dm_mod ipv6 qeth ccwgroup [last unloaded: scsi_wait_scan]
+> > CPU: 1 Not tainted 3.0.6-50.x.20111006-s390xdefault #1
+> > Process blast.LzS_64_SL (pid: 26613, task: 0000000063e2a398, ksp: 0000000064de3560)
+> > Krnl PSW : 0704100180000000 000000000048a038 (scsi_print_command+0x44/0xf8)
+> >            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:0 CC:1 PM:0 EA:3
+> > Krnl GPRS: 000000000000006b 6b6b6b6b6b6b6b6b 000000006717f800 000000000094f2e0
+> >            000000000061242e 000000000062bd88 0000000066fb90d8 0000000065391ad7
+> >            000000006717f800 000000006717f800 000000006716a090 000000006717f800
+> >            0000000000000004 0000000000672f88 0000000064de3838 0000000064de3808
+> > Krnl Code: 000000000048a026: f0b80004ebbf        srp     4(12,%r0),3007(%r14),8
+> >            000000000048a02c: f0a0000407f4        srp     4(11,%r0),2036,0
+> >            000000000048a032: e31020800004        lg      %r1,128(%r2)
+> >           >000000000048a038: e31010b00004        lg      %r1,176(%r1)
+> >            000000000048a03e: b9020011            ltgr    %r1,%r1
+> >            000000000048a042: a7840032            brc     8,48a0a6
+> >            000000000048a046: e33020000004        lg      %r3,0(%r2)
+> >            000000000048a04c: c04000182f4c        larl    %r4,78fee4
+> > Call Trace:
+> > ([<000000006717f800>] 0x6717f800)
+> >  [<0000000000487f28>] scsi_log_send+0xf0/0x130
+> >  [<000000000048824c>] scsi_dispatch_cmd+0xc8/0x4bc
+> >  [<0000000000490694>] scsi_request_fn+0x3b8/0x480
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3878b73..8a1a23f 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -607,20 +607,6 @@ config SCSI_ARCMSR
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called arcmsr (modprobe arcmsr).
- 
--config SCSI_ARCMSR_AER
--	bool "Enable PCI Error Recovery Capability in Areca Driver(ARCMSR)"
--	depends on SCSI_ARCMSR && PCIEAER
--	default n
--	help
--	  The advanced error reporting(AER) capability is "NOT" provided by
--	  ARC1200/1201/1202 SATA RAID controllers cards.
--	  If your card is one of ARC1200/1201/1202, please use the default setting, n.
--	  If your card is other models, you could pick it
--	  on condition that the kernel version is greater than 2.6.19.
--	  This function is maintained driver by Nick Cheng. If you have any
--	  problems or suggestion, you are welcome to contact with <nick.cheng@areca.com.tw>.
--	  To enable this function, choose Y here.
--
- source "drivers/scsi/megaraid/Kconfig.megaraid"
- source "drivers/scsi/mpt2sas/Kconfig"
- 
--- 
-1.7.4.4
+Correct me if I'm wrong, but this seems to be saying that struct
+scsi_cmnd was used after free.  This looks to be a different problem
+because the command has a separate refcounting model which wasn't
+impacted by the change ... it could be we've just exposed yet another
+refcounting problem outside of the queue one.
+
+If I had to guess, I'd say a bio got cloned with a SCSI command already
+attached, but the ref count on the SCSI command wasn't correctly
+adjusted.
+
+James
