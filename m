@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 32/37] target: make more use of the task_flags field in se_task
-Date: Fri, 14 Oct 2011 00:42:04 +0000
-Message-ID: <1318552929-13341-33-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 33/37] target: Remove unnecessary se_task members
+Date: Fri, 14 Oct 2011 00:42:05 +0000
+Message-ID: <1318552929-13341-34-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
@@ -12,281 +12,238 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Replace various atomic_t variables that were mostly under t_state_lock
-with new flags in task_flags.  Note that the execution error path
-didn't take t_state_lock before, so add it there.
+This is a squashed version of the following unnecessary se_task structure
+member removal patches:
+
+target: remove the task_execute_queue field in se_task
+
+    Instead of using a separate flag we can simply do list_emptry checks
+    on t_execute_list if we make sure to always use list_del_init to remove
+    a task from the list.  Also factor some duplicate code into a new
+    __transport_remove_task_from_execute_queue helper.
+
+target: remove the read-only task_no field in se_task
+
+    The task_no field never was initialized and only used in debug printks,
+    so kill it.
+
+target: remove the task_padded_sg field in se_task
+
+    This field is only check in one place and not actually needed there.
+
+    Rationale:
+    - transport_do_task_sg_chain asserts that we have task_sg_chaining
+      set early on
+    - we only make use of the sg_prev_nents field we calculate based on it
+      if there is another sg list that gets chained onto this one, which
+      never happens for the last (or only) task.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tmr.c       |    9 ++--
- drivers/target/target_core_transport.c |   64 ++++++++++++++++----------------
- include/target/target_core_base.h      |   14 +++---
- 3 files changed, 43 insertions(+), 44 deletions(-)
+ drivers/target/target_core_tmr.c       |    7 +---
+ drivers/target/target_core_transport.c |   59 +++++++++++++-------------------
+ include/target/target_core_base.h      |    3 --
+ include/target/target_core_transport.h |    2 +
+ 4 files changed, 28 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index b8dc10f..b5c1864 100644
+index b5c1864..b8a780f 100644
 --- a/drivers/target/target_core_tmr.c
 +++ b/drivers/target/target_core_tmr.c
-@@ -259,8 +259,8 @@ static void core_tmr_drain_task_list(
- 			atomic_read(&cmd->t_transport_stop),
- 			atomic_read(&cmd->t_transport_sent));
- 
--		if (atomic_read(&task->task_active)) {
--			atomic_set(&task->task_stop, 1);
-+		if (task->task_flags & TF_ACTIVE) {
-+			task->task_flags |= TF_REQUEST_STOP;
- 			spin_unlock_irqrestore(
- 				&cmd->t_state_lock, flags);
- 
-@@ -269,11 +269,10 @@ static void core_tmr_drain_task_list(
- 			wait_for_completion(&task->task_stop_comp);
- 			pr_debug("LUN_RESET Completed task: %p shutdown for"
- 				" dev: %p\n", task, dev);
-+
- 			spin_lock_irqsave(&cmd->t_state_lock, flags);
- 			atomic_dec(&cmd->t_task_cdbs_left);
--
--			atomic_set(&task->task_active, 0);
--			atomic_set(&task->task_stop, 0);
-+			task->task_flags &= ~(TF_ACTIVE | TF_REQUEST_STOP);
- 		}
- 		__transport_stop_task_timer(task, &flags);
+@@ -226,11 +226,8 @@ static void core_tmr_drain_task_list(
+ 		/*
+ 		 * Remove from task execute list before processing drain_task_list
+ 		 */
+-		if (atomic_read(&task->task_execute_queue) != 0) {
+-			list_del(&task->t_execute_list);
+-			atomic_set(&task->task_execute_queue, 0);
+-			atomic_dec(&dev->execute_tasks);
+-		}
++		if (!list_empty(&task->t_execute_list))
++			__transport_remove_task_from_execute_queue(task, dev);
+ 	}
+ 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
  
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index c935c72..165a60c 100644
+index 165a60c..4a787a0 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -440,7 +440,7 @@ static void transport_all_task_dev_remove_state(struct se_cmd *cmd)
- 		return;
+@@ -915,38 +915,36 @@ static void transport_add_tasks_from_cmd(struct se_cmd *cmd)
  
+ 	spin_lock_irqsave(&dev->execute_task_lock, flags);
  	list_for_each_entry(task, &cmd->t_task_list, t_list) {
--		if (atomic_read(&task->task_active))
-+		if (task->task_flags & TF_ACTIVE)
+-		if (atomic_read(&task->task_execute_queue))
++		if (!list_empty(&task->t_execute_list))
  			continue;
- 
- 		if (!atomic_read(&task->task_state_active))
-@@ -718,7 +718,7 @@ void transport_complete_task(struct se_task *task, int success)
- 		atomic_inc(&dev->depth_left);
- 
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
--	atomic_set(&task->task_active, 0);
-+	task->task_flags &= ~TF_ACTIVE;
- 
- 	/*
- 	 * See if any sense data exists, if so set the TASK_SENSE flag.
-@@ -737,14 +737,14 @@ void transport_complete_task(struct se_task *task, int success)
- 	 * See if we are waiting for outstanding struct se_task
- 	 * to complete for an exception condition
- 	 */
--	if (atomic_read(&task->task_stop)) {
-+	if (task->task_flags & TF_REQUEST_STOP) {
  		/*
- 		 * Decrement cmd->t_se_count if this task had
- 		 * previously thrown its timeout exception handler.
+ 		 * __transport_add_task_to_execute_queue() handles the
+ 		 * SAM Task Attribute emulation if enabled
  		 */
--		if (atomic_read(&task->task_timeout)) {
-+		if (task->task_flags & TF_TIMEOUT) {
- 			atomic_dec(&cmd->t_se_count);
--			atomic_set(&task->task_timeout, 0);
-+			task->task_flags &= ~TF_TIMEOUT;
- 		}
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 
-@@ -756,7 +756,7 @@ void transport_complete_task(struct se_task *task, int success)
- 	 * left counter to determine when the struct se_cmd is ready to be queued to
- 	 * the processing thread.
- 	 */
--	if (atomic_read(&task->task_timeout)) {
-+	if (task->task_flags & TF_TIMEOUT) {
- 		if (!atomic_dec_and_test(
- 				&cmd->t_task_cdbs_timeout_left)) {
- 			spin_unlock_irqrestore(&cmd->t_state_lock,
-@@ -1793,8 +1793,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- 		 * If the struct se_task has not been sent and is not active,
- 		 * remove the struct se_task from the execution queue.
- 		 */
--		if (!atomic_read(&task->task_sent) &&
--		    !atomic_read(&task->task_active)) {
-+		if (!(task->task_flags & (TF_ACTIVE | TF_SENT))) {
- 			spin_unlock_irqrestore(&cmd->t_state_lock,
- 					flags);
- 			transport_remove_task_from_execute_queue(task,
-@@ -1810,8 +1809,8 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- 		 * If the struct se_task is active, sleep until it is returned
- 		 * from the plugin.
- 		 */
--		if (atomic_read(&task->task_active)) {
--			atomic_set(&task->task_stop, 1);
-+		if (task->task_flags & TF_ACTIVE) {
-+			task->task_flags |= TF_REQUEST_STOP;
- 			spin_unlock_irqrestore(&cmd->t_state_lock,
- 					flags);
- 
-@@ -1823,9 +1822,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- 
- 			spin_lock_irqsave(&cmd->t_state_lock, flags);
- 			atomic_dec(&cmd->t_task_cdbs_left);
--
--			atomic_set(&task->task_active, 0);
--			atomic_set(&task->task_stop, 0);
-+			task->task_flags &= ~(TF_ACTIVE | TF_REQUEST_STOP);
- 		} else {
- 			pr_debug("task_no[%d] - Did nothing\n", task->task_no);
- 			ret++;
-@@ -2074,18 +2071,18 @@ static void transport_task_timeout_handler(unsigned long data)
- 	pr_debug("transport task timeout fired! task: %p cmd: %p\n", task, cmd);
- 
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
--	if (task->task_flags & TF_STOP) {
-+	if (task->task_flags & TF_TIMER_STOP) {
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 		return;
+ 		__transport_add_task_to_execute_queue(task, task_prev, dev);
+-		atomic_set(&task->task_execute_queue, 1);
+ 		task_prev = task;
  	}
--	task->task_flags &= ~TF_RUNNING;
-+	task->task_flags &= ~TF_TIMER_RUNNING;
- 
- 	/*
- 	 * Determine if transport_complete_task() has already been called.
- 	 */
--	if (!atomic_read(&task->task_active)) {
--		pr_debug("transport task: %p cmd: %p timeout task_active"
--				" == 0\n", task, cmd);
-+	if (!(task->task_flags & TF_ACTIVE)) {
-+		pr_debug("transport task: %p cmd: %p timeout !TF_ACTIVE\n",
-+			 task, cmd);
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 		return;
- 	}
-@@ -2094,12 +2091,12 @@ static void transport_task_timeout_handler(unsigned long data)
- 	atomic_inc(&cmd->t_transport_timeout);
- 	cmd->t_tasks_failed = 1;
- 
--	atomic_set(&task->task_timeout, 1);
-+	task->task_flags |= TF_TIMEOUT;
- 	task->task_error_status = PYX_TRANSPORT_TASK_TIMEOUT;
- 	task->task_scsi_status = 1;
- 
--	if (atomic_read(&task->task_stop)) {
--		pr_debug("transport task: %p cmd: %p timeout task_stop"
-+	if (task->task_flags & TF_REQUEST_STOP) {
-+		pr_debug("transport task: %p cmd: %p timeout TF_REQUEST_STOP"
- 				" == 1\n", task, cmd);
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 		complete(&task->task_stop_comp);
-@@ -2129,7 +2126,7 @@ static void transport_start_task_timer(struct se_task *task)
- 	struct se_device *dev = task->task_se_cmd->se_dev;
- 	int timeout;
- 
--	if (task->task_flags & TF_RUNNING)
-+	if (task->task_flags & TF_TIMER_RUNNING)
- 		return;
- 	/*
- 	 * If the task_timeout is disabled, exit now.
-@@ -2143,7 +2140,7 @@ static void transport_start_task_timer(struct se_task *task)
- 	task->task_timer.data = (unsigned long) task;
- 	task->task_timer.function = transport_task_timeout_handler;
- 
--	task->task_flags |= TF_RUNNING;
-+	task->task_flags |= TF_TIMER_RUNNING;
- 	add_timer(&task->task_timer);
- #if 0
- 	pr_debug("Starting task timer for cmd: %p task: %p seconds:"
-@@ -2158,17 +2155,17 @@ void __transport_stop_task_timer(struct se_task *task, unsigned long *flags)
- {
- 	struct se_cmd *cmd = task->task_se_cmd;
- 
--	if (!task->task_flags & TF_RUNNING)
-+	if (!(task->task_flags & TF_TIMER_RUNNING))
- 		return;
- 
--	task->task_flags |= TF_STOP;
-+	task->task_flags |= TF_TIMER_STOP;
- 	spin_unlock_irqrestore(&cmd->t_state_lock, *flags);
- 
- 	del_timer_sync(&task->task_timer);
- 
- 	spin_lock_irqsave(&cmd->t_state_lock, *flags);
--	task->task_flags &= ~TF_RUNNING;
--	task->task_flags &= ~TF_STOP;
-+	task->task_flags &= ~TF_TIMER_RUNNING;
-+	task->task_flags &= ~TF_TIMER_STOP;
+ 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
  }
  
- static void transport_stop_all_task_timers(struct se_cmd *cmd)
-@@ -2360,8 +2357,7 @@ check_depth:
- 	cmd = task->task_se_cmd;
+-/*	transport_remove_task_from_execute_queue():
+- *
+- *
+- */
++void __transport_remove_task_from_execute_queue(struct se_task *task,
++		struct se_device *dev)
++{
++	list_del_init(&task->t_execute_list);
++	atomic_dec(&dev->execute_tasks);
++}
++
+ void transport_remove_task_from_execute_queue(
+ 	struct se_task *task,
+ 	struct se_device *dev)
+ {
+ 	unsigned long flags;
  
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
--	atomic_set(&task->task_active, 1);
--	atomic_set(&task->task_sent, 1);
-+	task->task_flags |= (TF_ACTIVE | TF_SENT);
- 	atomic_inc(&cmd->t_task_cdbs_sent);
+-	if (atomic_read(&task->task_execute_queue) == 0) {
+-		dump_stack();
++	if (WARN_ON(list_empty(&task->t_execute_list)))
+ 		return;
+-	}
  
- 	if (atomic_read(&cmd->t_task_cdbs_sent) ==
-@@ -2379,7 +2375,9 @@ check_depth:
- 		error = cmd->transport_emulate_cdb(cmd);
- 		if (error != 0) {
- 			cmd->transport_error_status = error;
--			atomic_set(&task->task_active, 0);
-+			spin_lock_irqsave(&cmd->t_state_lock, flags);
-+			task->task_flags &= ~TF_ACTIVE;
-+			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 			atomic_set(&cmd->transport_sent, 0);
- 			transport_stop_tasks_for_cmd(cmd);
- 			transport_generic_request_failure(cmd, dev, 0, 1);
-@@ -2415,7 +2413,9 @@ check_depth:
+ 	spin_lock_irqsave(&dev->execute_task_lock, flags);
+-	list_del(&task->t_execute_list);
+-	atomic_set(&task->task_execute_queue, 0);
+-	atomic_dec(&dev->execute_tasks);
++	__transport_remove_task_from_execute_queue(task, dev);
+ 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+ }
  
- 		if (error != 0) {
- 			cmd->transport_error_status = error;
--			atomic_set(&task->task_active, 0);
-+			spin_lock_irqsave(&cmd->t_state_lock, flags);
-+			task->task_flags &= ~TF_ACTIVE;
-+			spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 			atomic_set(&cmd->transport_sent, 0);
- 			transport_stop_tasks_for_cmd(cmd);
- 			transport_generic_request_failure(cmd, dev, 0, 1);
-@@ -3613,7 +3613,7 @@ static void transport_free_dev_tasks(struct se_cmd *cmd)
+@@ -1787,8 +1785,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
  	spin_lock_irqsave(&cmd->t_state_lock, flags);
  	list_for_each_entry_safe(task, task_tmp,
  				&cmd->t_task_list, t_list) {
--		if (atomic_read(&task->task_active))
-+		if (task->task_flags & TF_ACTIVE)
- 			continue;
+-		pr_debug("task_no[%d] - Processing task %p\n",
+-				task->task_no, task);
++		pr_debug("Processing task %p\n", task);
+ 		/*
+ 		 * If the struct se_task has not been sent and is not active,
+ 		 * remove the struct se_task from the execution queue.
+@@ -1799,8 +1796,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
+ 			transport_remove_task_from_execute_queue(task,
+ 					cmd->se_dev);
  
- 		kfree(task->task_sg_bidi);
+-			pr_debug("task_no[%d] - Removed from execute queue\n",
+-				task->task_no);
++			pr_debug("Task %p removed from execute queue\n", task);
+ 			spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 			continue;
+ 		}
+@@ -1814,17 +1810,15 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
+ 			spin_unlock_irqrestore(&cmd->t_state_lock,
+ 					flags);
+ 
+-			pr_debug("task_no[%d] - Waiting to complete\n",
+-				task->task_no);
++			pr_debug("Task %p waiting to complete\n", task);
+ 			wait_for_completion(&task->task_stop_comp);
+-			pr_debug("task_no[%d] - Stopped successfully\n",
+-				task->task_no);
++			pr_debug("Task %p stopped successfully\n", task);
+ 
+ 			spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 			atomic_dec(&cmd->t_task_cdbs_left);
+ 			task->task_flags &= ~(TF_ACTIVE | TF_REQUEST_STOP);
+ 		} else {
+-			pr_debug("task_no[%d] - Did nothing\n", task->task_no);
++			pr_debug("Task %p - did nothing\n", task);
+ 			ret++;
+ 		}
+ 
+@@ -2347,9 +2341,7 @@ check_depth:
+ 	}
+ 	task = list_first_entry(&dev->execute_task_list,
+ 				struct se_task, t_execute_list);
+-	list_del(&task->t_execute_list);
+-	atomic_set(&task->task_execute_queue, 0);
+-	atomic_dec(&dev->execute_tasks);
++	__transport_remove_task_from_execute_queue(task, dev);
+ 	spin_unlock_irq(&dev->execute_task_lock);
+ 
+ 	atomic_dec(&dev->depth_left);
+@@ -2681,9 +2673,9 @@ static int transport_get_sense_data(struct se_cmd *cmd)
+ 
+ 		sense_buffer = dev->transport->get_sense_buffer(task);
+ 		if (!sense_buffer) {
+-			pr_err("ITT[0x%08x]_TASK[%d]: Unable to locate"
++			pr_err("ITT[0x%08x]_TASK[%p]: Unable to locate"
+ 				" sense buffer for task with sense\n",
+-				cmd->se_tfo->get_task_tag(cmd), task->task_no);
++				cmd->se_tfo->get_task_tag(cmd), task);
+ 			continue;
+ 		}
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+@@ -3897,15 +3889,13 @@ void transport_do_task_sg_chain(struct se_cmd *cmd)
+ 		/*
+ 		 * For the padded tasks, use the extra SGL vector allocated
+ 		 * in transport_allocate_data_tasks() for the sg_prev_nents
+-		 * offset into sg_chain() above..  The last task of a
+-		 * multi-task list, or a single task will not have
+-		 * task->task_sg_padded set..
++		 * offset into sg_chain() above.
++		 *
++		 * We do not need the padding for the last task (or a single
++		 * task), but in that case we will never use the sg_prev_nents
++		 * value below which would be incorrect.
+ 		 */
+-		if (task->task_padded_sg)
+-			sg_prev_nents = (task->task_sg_nents + 1);
+-		else
+-			sg_prev_nents = task->task_sg_nents;
+-
++		sg_prev_nents = (task->task_sg_nents + 1);
+ 		sg_prev = task->task_sg;
+ 	}
+ 	/*
+@@ -3992,7 +3982,6 @@ static int transport_allocate_data_tasks(
+ 		 */
+ 		if (cmd->se_tfo->task_sg_chaining && (i < (task_count - 1))) {
+ 			task_sg_nents_padded = (task->task_sg_nents + 1);
+-			task->task_padded_sg = 1;
+ 		} else
+ 			task_sg_nents_padded = task->task_sg_nents;
+ 
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 6c49db4..5e3dd14 100644
+index 5e3dd14..45291b2 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -72,9 +72,13 @@ enum transport_tpg_type_table {
- };
- 
- /* Used for generate timer flags */
--enum timer_flags_table {
--	TF_RUNNING	= 0x01,
--	TF_STOP		= 0x02,
-+enum se_task_flags {
-+	TF_ACTIVE		= (1 << 0),
-+	TF_SENT			= (1 << 1),
-+	TF_TIMEOUT		= (1 << 2),
-+	TF_REQUEST_STOP		= (1 << 3),
-+	TF_TIMER_RUNNING	= (1 << 4),
-+	TF_TIMER_STOP		= (1 << 5),
- };
- 
- /* Special transport agnostic struct se_cmd->t_states */
-@@ -413,11 +417,7 @@ struct se_task {
+@@ -409,15 +409,12 @@ struct se_task {
+ 	u8		task_scsi_status;
+ 	u8		task_flags;
+ 	int		task_error_status;
+-	bool		task_padded_sg;
+ 	unsigned long long	task_lba;
+-	u32		task_no;
+ 	u32		task_sectors;
+ 	u32		task_size;
  	enum dma_data_direction	task_data_direction;
  	struct se_cmd *task_se_cmd;
  	struct completion	task_stop_comp;
--	atomic_t	task_active;
- 	atomic_t	task_execute_queue;
--	atomic_t	task_timeout;
--	atomic_t	task_sent;
--	atomic_t	task_stop;
+-	atomic_t	task_execute_queue;
  	atomic_t	task_state_active;
  	struct timer_list	task_timer;
  	struct list_head t_list;
+diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
+index c93cf0a..c5eb259 100644
+--- a/include/target/target_core_transport.h
++++ b/include/target/target_core_transport.h
+@@ -135,6 +135,8 @@ extern void transport_add_task_to_execute_queue(struct se_task *,
+ 						struct se_device *);
+ extern void transport_remove_task_from_execute_queue(struct se_task *,
+ 						struct se_device *);
++extern void __transport_remove_task_from_execute_queue(struct se_task *,
++						struct se_device *);
+ unsigned char *transport_dump_cmd_direction(struct se_cmd *);
+ extern void transport_dump_dev_state(struct se_device *, char *, int *);
+ extern void transport_dump_dev_info(struct se_device *, struct se_lun *,
 -- 
 1.5.6.5
