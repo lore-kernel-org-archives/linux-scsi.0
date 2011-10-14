@@ -1,233 +1,149 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 01/37] target: Remove unneeded version.h includes
-Date: Fri, 14 Oct 2011 00:41:33 +0000
-Message-ID: <1318552929-13341-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 02/37] target: Prevent cmd->se_queue_node double add
+Date: Fri, 14 Oct 2011 00:41:34 +0000
+Message-ID: <1318552929-13341-3-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jesper Juhl <jj@chaosbits.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Andy Grover <agrover@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jesper Juhl <jj@chaosbits.net>
+From: Roland Dreier <roland@purestorage.com>
 
-It was pointed out by 'make versioncheck' that some includes of
-linux/version.h are not needed in drivers/target/.
-This patch removes them.
+This patch addresses a bug with the lio-core-2.6.git conversion of
+transport_add_cmd_to_queue() to use a single embedded list_head, instead
+of individual struct se_queue_req allocations allowing a single se_cmd to
+be added to the queue mulitple times.  This was changed in the following:
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+commit 2a9e4d5ca5d99f4c600578d6285d45142e7e5208
+Author: Andy Grover <agrover@redhat.com>
+Date:   Tue Apr 26 17:45:51 2011 -0700
+
+    target: Embed qr in struct se_cmd
+
+The problem is that some target code still assumes performing multiple
+adds is allowed via transport_add_cmd_to_queue(), which ends up causing
+list corruption in qobj->qobj_list code.  This patch addresses this
+by removing an existing struct se_cmd from the list before the add, and
+removes an unnecessary list walk in transport_remove_cmd_from_queue()
+
+It also changes cmd->t_transport_queue_active to use explict sets intead
+of increment/decrement to prevent confusion during exception path handling.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+Cc: Andy Grover <agrover@redhat.com>
+Signed-off-by: Nicholas Bellinger <nab@risingtidesystems.com>
 ---
- drivers/target/target_core_alua.c            |    1 -
- drivers/target/target_core_configfs.c        |    1 -
- drivers/target/target_core_fabric_configfs.c |    1 -
- drivers/target/target_core_file.c            |    1 -
- drivers/target/target_core_iblock.c          |    1 -
- drivers/target/target_core_pr.c              |    1 -
- drivers/target/target_core_pscsi.c           |    1 -
- drivers/target/target_core_rd.c              |    1 -
- drivers/target/target_core_stat.c            |    1 -
- drivers/target/target_core_tmr.c             |    1 -
- drivers/target/target_core_transport.c       |    1 -
- drivers/target/target_core_ua.c              |    1 -
- drivers/target/tcm_fc/tfc_cmd.c              |    1 -
- drivers/target/tcm_fc/tfc_conf.c             |    1 -
- drivers/target/tcm_fc/tfc_io.c               |    1 -
- drivers/target/tcm_fc/tfc_sess.c             |    1 -
- 16 files changed, 0 insertions(+), 16 deletions(-)
+ drivers/target/target_core_tmr.c       |    2 +-
+ drivers/target/target_core_transport.c |   31 +++++++++++++++----------------
+ 2 files changed, 16 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 98c98a3..007c6c2 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -24,7 +24,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/configfs.h>
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index b2575d8..f37e2b9 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -23,7 +23,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 55bbe08..09b6f87 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -22,7 +22,6 @@
- 
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index bc1b336..99c9db0 100644
---- a/drivers/target/target_core_file.c
-+++ b/drivers/target/target_core_file.c
-@@ -26,7 +26,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 7e12341..7f0cc53 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -27,7 +27,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 7fd3a16..0c4f783 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -25,7 +25,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/list.h>
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 2b7b0da..77d7258 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -26,7 +26,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index e567e12..1ab69f3 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -27,7 +27,6 @@
-  *
-  ******************************************************************************/
- 
--#include <linux/version.h>
- #include <linux/string.h>
- #include <linux/parser.h>
- #include <linux/timer.h>
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index a8d6e1d..874152a 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -32,7 +32,6 @@
- #include <linux/delay.h>
- #include <linux/timer.h>
- #include <linux/string.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/proc_fs.h>
 diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 27d4925..662473c 100644
+index 662473c..98b12a8 100644
 --- a/drivers/target/target_core_tmr.c
 +++ b/drivers/target/target_core_tmr.c
-@@ -24,7 +24,6 @@
-  *
-  ******************************************************************************/
+@@ -339,7 +339,7 @@ int core_tmr_lun_reset(
  
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <linux/list.h>
+ 		atomic_dec(&cmd->t_transport_queue_active);
+ 		atomic_dec(&qobj->queue_cnt);
+-		list_del(&cmd->se_queue_node);
++		list_del_init(&cmd->se_queue_node);
+ 		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+ 		pr_debug("LUN_RESET: %s from Device Queue: cmd: %p t_state:"
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index a4b0a8d..4b2d6bf 100644
+index 4b2d6bf..046da7f 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -26,7 +26,6 @@
-  *
-  ******************************************************************************/
+@@ -620,8 +620,6 @@ static void transport_add_cmd_to_queue(
+ 	struct se_queue_obj *qobj = &dev->dev_queue_obj;
+ 	unsigned long flags;
  
--#include <linux/version.h>
- #include <linux/net.h>
- #include <linux/delay.h>
- #include <linux/string.h>
-diff --git a/drivers/target/target_core_ua.c b/drivers/target/target_core_ua.c
-index 31e3c65..50a480d 100644
---- a/drivers/target/target_core_ua.c
-+++ b/drivers/target/target_core_ua.c
-@@ -24,7 +24,6 @@
-  *
-  ******************************************************************************/
+-	INIT_LIST_HEAD(&cmd->se_queue_node);
+-
+ 	if (t_state) {
+ 		spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 		cmd->t_state = t_state;
+@@ -630,15 +628,21 @@ static void transport_add_cmd_to_queue(
+ 	}
  
--#include <linux/version.h>
- #include <linux/slab.h>
- #include <linux/spinlock.h>
- #include <scsi/scsi.h>
-diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
-index 80fbcde..3c6c5a1 100644
---- a/drivers/target/tcm_fc/tfc_cmd.c
-+++ b/drivers/target/tcm_fc/tfc_cmd.c
-@@ -19,7 +19,6 @@
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
++
++	/* If the cmd is already on the list, remove it before we add it */
++	if (!list_empty(&cmd->se_queue_node))
++		list_del(&cmd->se_queue_node);
++	else
++		atomic_inc(&qobj->queue_cnt);
++
+ 	if (cmd->se_cmd_flags & SCF_EMULATE_QUEUE_FULL) {
+ 		cmd->se_cmd_flags &= ~SCF_EMULATE_QUEUE_FULL;
+ 		list_add(&cmd->se_queue_node, &qobj->qobj_list);
+ 	} else
+ 		list_add_tail(&cmd->se_queue_node, &qobj->qobj_list);
+-	atomic_inc(&cmd->t_transport_queue_active);
++	atomic_set(&cmd->t_transport_queue_active, 1);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
  
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
-index 8fa39b7..b30eace 100644
---- a/drivers/target/tcm_fc/tfc_conf.c
-+++ b/drivers/target/tcm_fc/tfc_conf.c
-@@ -23,7 +23,6 @@
+-	atomic_inc(&qobj->queue_cnt);
+ 	wake_up_interruptible(&qobj->thread_wq);
+ }
  
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
-index d35ea5a..1369b1c 100644
---- a/drivers/target/tcm_fc/tfc_io.c
-+++ b/drivers/target/tcm_fc/tfc_io.c
-@@ -28,7 +28,6 @@
+@@ -655,9 +659,9 @@ transport_get_cmd_from_queue(struct se_queue_obj *qobj)
+ 	}
+ 	cmd = list_first_entry(&qobj->qobj_list, struct se_cmd, se_queue_node);
  
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
-diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
-index dbb5eae..3269213 100644
---- a/drivers/target/tcm_fc/tfc_sess.c
-+++ b/drivers/target/tcm_fc/tfc_sess.c
-@@ -19,7 +19,6 @@
+-	atomic_dec(&cmd->t_transport_queue_active);
++	atomic_set(&cmd->t_transport_queue_active, 0);
  
- #include <linux/module.h>
- #include <linux/moduleparam.h>
--#include <linux/version.h>
- #include <generated/utsrelease.h>
- #include <linux/utsname.h>
- #include <linux/init.h>
+-	list_del(&cmd->se_queue_node);
++	list_del_init(&cmd->se_queue_node);
+ 	atomic_dec(&qobj->queue_cnt);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+@@ -667,7 +671,6 @@ transport_get_cmd_from_queue(struct se_queue_obj *qobj)
+ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		struct se_queue_obj *qobj)
+ {
+-	struct se_cmd *t;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
+@@ -675,14 +678,9 @@ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 		return;
+ 	}
+-
+-	list_for_each_entry(t, &qobj->qobj_list, se_queue_node)
+-		if (t == cmd) {
+-			atomic_dec(&cmd->t_transport_queue_active);
+-			atomic_dec(&qobj->queue_cnt);
+-			list_del(&cmd->se_queue_node);
+-			break;
+-		}
++	atomic_set(&cmd->t_transport_queue_active, 0);
++	atomic_dec(&qobj->queue_cnt);
++	list_del_init(&cmd->se_queue_node);
+ 	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
+ 
+ 	if (atomic_read(&cmd->t_transport_queue_active)) {
+@@ -1066,7 +1064,7 @@ static void transport_release_all_cmds(struct se_device *dev)
+ 	list_for_each_entry_safe(cmd, tcmd, &dev->dev_queue_obj.qobj_list,
+ 				se_queue_node) {
+ 		t_state = cmd->t_state;
+-		list_del(&cmd->se_queue_node);
++		list_del_init(&cmd->se_queue_node);
+ 		spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock,
+ 				flags);
+ 
+@@ -1597,6 +1595,7 @@ void transport_init_se_cmd(
+ 	INIT_LIST_HEAD(&cmd->se_delayed_node);
+ 	INIT_LIST_HEAD(&cmd->se_ordered_node);
+ 	INIT_LIST_HEAD(&cmd->se_qf_node);
++	INIT_LIST_HEAD(&cmd->se_queue_node);
+ 
+ 	INIT_LIST_HEAD(&cmd->t_task_list);
+ 	init_completion(&cmd->transport_lun_fe_stop_comp);
 -- 
 1.5.6.5
