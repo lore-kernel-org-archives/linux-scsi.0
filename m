@@ -1,108 +1,117 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 29/37] loopback: Prevent uninitialized use of tl_tpg in tcm_loop_queuecommand
-Date: Fri, 14 Oct 2011 00:42:01 +0000
-Message-ID: <1318552929-13341-30-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 30/37] target: Cleanup unused target_core_base.h bits
+Date: Fri, 14 Oct 2011 00:42:02 +0000
+Message-ID: <1318552929-13341-31-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:33493 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717Ab1JNApd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:45:33 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Christoph Hellwig <hch@infradead.org>
 
-This patch fixes a bug with tcm_loop where performing a scsi_host rescan was
-causing an oops due to a received scsi_cmnd->device->id value not matching a
-previously configured tcm_loop_tpg entry in tcm_loop_hba->tl_hba_tpgs[]
-obtained from within tcm_loop_queuecommand() code.
+This is a squashed version of the following target_core_base.h
+cleanup patches:
 
-This fix adds an explict check for tcm_loop_tpg->tl_hba in order to ensure
-tcm_loop_make_naa_tpg() has already been invoked to initialize a given
-tcm_loop_tpg entry, and also adds an explict clear of tcm_loop_tpg->tl_hba
-from within the tcm_loop_drop_naa_tpg() release path.
+    target: remove the unused SHUTDOWN_SIGS defintion
+    target: remove unused se_mem leftovers
+    target: remove the unused map_func_t typedef
+    target: move TRANSPORT_IOV_DATA_BUFFER to the iscsi-specific code
 
-This bug was manifesting itself with the following OOPs:
-
-[176289.430909] BUG: unable to handle kernel NULL pointer dereference at 0000000000000090
-[176289.431337] IP: [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
-[176289.431399] PGD 22e9b067 PUD 23375067 PMD 0
-[176289.431399] Oops: 0000 [#1] SMP
-[176289.431815] CPU 1
-[176289.431815] Modules linked in: tcm_loop target_core_stgt target_core_pscsi target_core_file target_core_iblock target_core_mod crc32c ib_cm ib_sa ib_mad ib_core qla2xxx scsi_tgt configfs fcoe libfcoe libfc scsi_transport_fc ipv6 iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi sr_mod cdrom sd_mod ata_piix libata e1000 mptspi mptscsih mptbase [last unloaded: target_core_mod]
-[176289.431815]
-[176289.431815] Pid: 12339, comm: LIO_iblock Tainted: G        W   3.1.0-rc8+
-[176289.431815] RIP: 0010:[<ffffffffa0395617>]  [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
-[176289.431815] RSP: 0018:ffff880023bfbe10  EFLAGS: 00010283
-[176289.431815] RAX: 0000000000000000 RBX: ffff88002d600040 RCX: ffff88002d600108
-[176289.431815] RDX: ffff88000c9e50bc RSI: 0000000000000246 RDI: 0000000000000246
-[176289.431815] RBP: ffff880023bfbee0 R08: ffff88002d600108 R09: 0000000000000000
-[176289.431815] R10: ffff88002fc8cc80 R11: ffffffff81671b60 R12: ffff88002d600108
-[176289.431815] R13: ffff88000c9e4f38 R14: ffff88000c9e50b8 R15: 0000000000000000
-[176289.431815] FS:  0000000000000000(0000) GS:ffff88002fc80000(0000) knlGS:0000000000000000
-[176289.431815] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[176289.431815] CR2: 0000000000000090 CR3: 000000002a33f000 CR4: 00000000000006e0
-[176289.431815] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[176289.431815] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[176289.431815] Process LIO_iblock (pid: 12339, threadinfo ffff880023bfa000, task ffff88002a2e0000)
-[176289.431815] Stack:
-[176289.431815]  0000000000011280 0000000000000246 ffff88002a2e0000 ffff880023a58900
-[176289.431815]  ffff880023bfbed0 ffff880023bfa000 ffff880023bfa000 ffff88000c9e50d0
-[176289.431815]  ffff88000c9e50c0 ffff88000c9e50bc ffff880023bfa000 ffff880023bfbfd8
-[176289.431815] Call Trace:
-[176289.431815]  [<ffffffff81056657>] ? wake_up_bit+0x25/0x25
-[176289.431815]  [<ffffffffa0395434>] ? transport_handle_cdb_direct+0x92/0x92 [target_core_mod]
-[176289.431815]  [<ffffffff8105619a>] kthread+0x7d/0x85
-[176289.431815]  [<ffffffff813cbcb4>] kernel_thread_helper+0x4/0x10
-[176289.431815]  [<ffffffff8105611d>] ? kthread_worker_fn+0x16d/0x16d
-[176289.431815]  [<ffffffff813cbcb0>] ? gs_change+0x13/0x13
-[176289.431815] Code: 67 05 00 00 41 8b 84 24 4c ff ff ff ff c8 83 f8 11 0f 87 f0 04 00 00 89 c0 ff 24 c5 b0 c6 39 a0 0f 0b eb fe 48 8b 83 d8 00 00 00
-[176289.431815] RIP  [<ffffffffa0395617>] transport_processing_thread+0x1e3/0x794 [target_core_mod]
-[176289.431815]  RSP <ffff880023bfbe10>
-[176289.431815] CR2: 0000000000000090
-[176295.041004] ---[ end trace 85dc6865b23b8f3e ]---
-
-Reported-by: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/loopback/tcm_loop.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+ drivers/target/iscsi/iscsi_target.c      |    2 +-
+ drivers/target/iscsi/iscsi_target_core.h |    3 +++
+ drivers/target/target_core_transport.c   |    3 ---
+ include/target/target_core_base.h        |    3 ---
+ include/target/target_core_transport.h   |    7 -------
+ 5 files changed, 4 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 5b870c3..b15d8cb 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -290,6 +290,15 @@ static int tcm_loop_queuecommand(
- 	 */
- 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
- 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
-+	/*
-+	 * Ensure that this tl_tpg reference from the incoming sc->device->id
-+	 * has already been configured via tcm_loop_make_naa_tpg().
-+	 */
-+	if (!tl_tpg->tl_hba) {
-+		set_host_byte(sc, DID_NO_CONNECT);
-+		sc->scsi_done(sc);
-+		return 0;
-+	}
- 	se_tpg = &tl_tpg->tl_se_tpg;
- 	/*
- 	 * Determine the SAM Task Attribute and allocate tl_cmd and
-@@ -1245,6 +1254,9 @@ void tcm_loop_drop_naa_tpg(
- 	 */
- 	core_tpg_deregister(se_tpg);
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index d86e18d..4d01768 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -765,7 +765,7 @@ static int iscsit_allocate_iovecs(struct iscsi_cmd *cmd)
+ 	u32 iov_count = (cmd->se_cmd.t_data_nents == 0) ? 1 :
+ 				cmd->se_cmd.t_data_nents;
  
-+	tl_tpg->tl_hba = NULL;
-+	tl_tpg->tl_tpgt = 0;
+-	iov_count += TRANSPORT_IOV_DATA_BUFFER;
++	iov_count += ISCSI_IOV_DATA_BUFFER;
+ 
+ 	cmd->iov_data = kzalloc(iov_count * sizeof(struct kvec), GFP_KERNEL);
+ 	if (!cmd->iov_data) {
+diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
+index 470ed55..84818d7 100644
+--- a/drivers/target/iscsi/iscsi_target_core.h
++++ b/drivers/target/iscsi/iscsi_target_core.h
+@@ -57,6 +57,9 @@
+ #define TA_PROD_MODE_WRITE_PROTECT	0
+ #define TA_CACHE_CORE_NPS		0
+ 
 +
- 	pr_debug("TCM_Loop_ConfigFS: Deallocated Emulated %s"
- 		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
- 		config_item_name(&wwn->wwn_group.cg_item), tpgt);
++#define ISCSI_IOV_DATA_BUFFER		5
++
+ enum tpg_np_network_transport_table {
+ 	ISCSI_TCP				= 0,
+ 	ISCSI_SCTP_TCP				= 1,
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index ee73f10..89b85dd 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -69,9 +69,6 @@ struct kmem_cache *t10_alua_lu_gp_mem_cache;
+ struct kmem_cache *t10_alua_tg_pt_gp_cache;
+ struct kmem_cache *t10_alua_tg_pt_gp_mem_cache;
+ 
+-/* Used for transport_dev_get_map_*() */
+-typedef int (*map_func_t)(struct se_task *, u32);
+-
+ static int transport_generic_write_pending(struct se_cmd *);
+ static int transport_processing_thread(void *param);
+ static int __transport_execute_tasks(struct se_device *dev);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 872cafc..c00224e 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -10,10 +10,7 @@
+ #include <net/tcp.h>
+ 
+ #define TARGET_CORE_MOD_VERSION		"v4.1.0-rc1-ml"
+-#define SHUTDOWN_SIGS	(sigmask(SIGKILL)|sigmask(SIGINT)|sigmask(SIGABRT))
+ 
+-/* Used by transport_generic_allocate_iovecs() */
+-#define TRANSPORT_IOV_DATA_BUFFER		5
+ /* Maximum Number of LUNs per Target Portal Group */
+ /* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
+ #define TRANSPORT_MAX_LUNS_PER_TPG		256
+diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
+index c915169..ccd85b3 100644
+--- a/include/target/target_core_transport.h
++++ b/include/target/target_core_transport.h
+@@ -110,11 +110,8 @@
+ 
+ #define MOD_MAX_SECTORS(ms, bs)			(ms % (PAGE_SIZE / bs))
+ 
+-struct se_mem;
+ struct se_subsystem_api;
+ 
+-extern struct kmem_cache *se_mem_cache;
+-
+ extern int init_se_kmem_caches(void);
+ extern void release_se_kmem_caches(void);
+ extern u32 scsi_get_new_index(scsi_index_t);
+@@ -186,10 +183,6 @@ extern void transport_send_task_abort(struct se_cmd *);
+ extern void transport_release_cmd(struct se_cmd *);
+ extern void transport_generic_free_cmd(struct se_cmd *, int);
+ extern void transport_generic_wait_for_cmds(struct se_cmd *, int);
+-extern int transport_init_task_sg(struct se_task *, struct se_mem *, u32);
+-extern int transport_map_mem_to_sg(struct se_task *, struct list_head *,
+-					struct scatterlist *, struct se_mem *,
+-					struct se_mem **, u32 *, u32 *);
+ extern void transport_do_task_sg_chain(struct se_cmd *);
+ extern void transport_generic_process_write(struct se_cmd *);
+ extern int transport_generic_new_cmd(struct se_cmd *);
 -- 
 1.5.6.5
-
