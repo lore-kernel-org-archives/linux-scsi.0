@@ -1,114 +1,88 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 20/37] target: remove unused se_subsystem_api methods
-Date: Fri, 14 Oct 2011 00:41:52 +0000
-Message-ID: <1318552929-13341-21-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 21/37] iscsi-target: use native hex2bin for chap_string_to_hex
+Date: Fri, 14 Oct 2011 00:41:53 +0000
+Message-ID: <1318552929-13341-22-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33452 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443Ab1JNAow (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:44:52 -0400
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-The cdb_none, map_data_SG and map_control_SG methods have no callers left
-and can be removed now.
+This patch converts chap_string_to_hex() to use hex2bin() instead of
+the internal chap_asciihex_to_binaryhex().
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+(nab: Fix up minor compile breakage)
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   32 ++------------------------------
- include/target/target_core_transport.h |   12 ------------
- 2 files changed, 2 insertions(+), 42 deletions(-)
+ drivers/target/iscsi/iscsi_target_auth.c |   34 ++---------------------------
+ 1 files changed, 3 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index e590526..ae1efc7 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -4023,7 +4023,7 @@ static int transport_allocate_data_tasks(
- 	struct se_task *task;
- 	struct se_device *dev = cmd->se_dev;
- 	unsigned long flags;
--	int task_count, i, ret;
-+	int task_count, i;
- 	sector_t sectors, dev_max_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
- 	u32 sector_size = dev->se_sub_dev->se_dev_attrib.block_size;
- 	struct scatterlist *sg;
-@@ -4101,20 +4101,6 @@ static int transport_allocate_data_tasks(
- 		list_add_tail(&task->t_list, &cmd->t_task_list);
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 	}
+diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
+index 11fd743..907d663 100644
+--- a/drivers/target/iscsi/iscsi_target_auth.c
++++ b/drivers/target/iscsi/iscsi_target_auth.c
+@@ -18,6 +18,7 @@
+  * GNU General Public License for more details.
+  ******************************************************************************/
+ 
++#include <linux/kernel.h>
+ #include <linux/string.h>
+ #include <linux/crypto.h>
+ #include <linux/err.h>
+@@ -27,40 +28,11 @@
+ #include "iscsi_target_nego.h"
+ #include "iscsi_target_auth.h"
+ 
+-static unsigned char chap_asciihex_to_binaryhex(unsigned char val[2])
+-{
+-	unsigned char result = 0;
 -	/*
--	 * Now perform the memory map of task->task_sg[] into backend
--	 * subsystem memory..
+-	 * MSB
 -	 */
--	list_for_each_entry(task, &cmd->t_task_list, t_list) {
--		if (atomic_read(&task->task_sent))
--			continue;
--		if (!dev->transport->map_data_SG)
--			continue;
+-	if ((val[0] >= 'a') && (val[0] <= 'f'))
+-		result = ((val[0] - 'a' + 10) & 0xf) << 4;
+-	else
+-		if ((val[0] >= 'A') && (val[0] <= 'F'))
+-			result = ((val[0] - 'A' + 10) & 0xf) << 4;
+-		else /* digit */
+-			result = ((val[0] - '0') & 0xf) << 4;
+-	/*
+-	 * LSB
+-	 */
+-	if ((val[1] >= 'a') && (val[1] <= 'f'))
+-		result |= ((val[1] - 'a' + 10) & 0xf);
+-	else
+-		if ((val[1] >= 'A') && (val[1] <= 'F'))
+-			result |= ((val[1] - 'A' + 10) & 0xf);
+-		else /* digit */
+-			result |= ((val[1] - '0') & 0xf);
 -
--		ret = dev->transport->map_data_SG(task);
--		if (ret < 0)
--			return 0;
--	}
- 
- 	return task_count;
- }
-@@ -4126,7 +4112,6 @@ transport_allocate_control_task(struct se_cmd *cmd)
- 	unsigned char *cdb;
- 	struct se_task *task;
- 	unsigned long flags;
--	int ret = 0;
- 
- 	task = transport_generic_get_task(cmd, cmd->data_direction);
- 	if (!task)
-@@ -4153,21 +4138,8 @@ transport_allocate_control_task(struct se_cmd *cmd)
- 	list_add_tail(&task->t_list, &cmd->t_task_list);
- 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- 
--	if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) {
--		if (dev->transport->map_control_SG)
--			ret = dev->transport->map_control_SG(task);
--	} else if (cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
--		if (dev->transport->cdb_none)
--			ret = dev->transport->cdb_none(task);
--	} else {
--		pr_err("target: Unknown control cmd type!\n");
--		BUG();
--	}
+-	return result;
+-}
 -
- 	/* Success! Return number of tasks allocated */
--	if (ret == 0)
--		return 1;
--	return ret;
-+	return 1;
- }
+ static int chap_string_to_hex(unsigned char *dst, unsigned char *src, int len)
+ {
+-	int i, j = 0;
++	int j = DIV_ROUND_UP(len, 2);
  
- static u32 transport_allocate_tasks(
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index e67feeb..549b6b3 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -234,18 +234,6 @@ struct se_subsystem_api {
- 	 */
- 	struct list_head sub_api_list;
- 	/*
--	 * For SCF_SCSI_NON_DATA_CDB
--	 */
--	int (*cdb_none)(struct se_task *);
--	/*
--	 * For SCF_SCSI_DATA_SG_IO_CDB
--	 */
--	int (*map_data_SG)(struct se_task *);
--	/*
--	 * For SCF_SCSI_CONTROL_SG_IO_CDB
--	 */
--	int (*map_control_SG)(struct se_task *);
--	/*
- 	 * attach_hba():
- 	 */
- 	int (*attach_hba)(struct se_hba *, u32);
+-	for (i = 0; i < len; i += 2) {
+-		dst[j++] = (unsigned char) chap_asciihex_to_binaryhex(&src[i]);
+-	}
++	hex2bin(dst, src, len);
+ 
+ 	dst[j] = '\0';
+ 	return j;
 -- 
 1.5.6.5
+
