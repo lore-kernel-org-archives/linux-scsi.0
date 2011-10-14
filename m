@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 33/37] target: Remove unnecessary se_task members
-Date: Fri, 14 Oct 2011 00:42:05 +0000
-Message-ID: <1318552929-13341-34-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 34/37] target: pack struct se_task more tightly
+Date: Fri, 14 Oct 2011 00:42:06 +0000
+Message-ID: <1318552929-13341-35-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
@@ -12,238 +12,59 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-This is a squashed version of the following unnecessary se_task structure
-member removal patches:
-
-target: remove the task_execute_queue field in se_task
-
-    Instead of using a separate flag we can simply do list_emptry checks
-    on t_execute_list if we make sure to always use list_del_init to remove
-    a task from the list.  Also factor some duplicate code into a new
-    __transport_remove_task_from_execute_queue helper.
-
-target: remove the read-only task_no field in se_task
-
-    The task_no field never was initialized and only used in debug printks,
-    so kill it.
-
-target: remove the task_padded_sg field in se_task
-
-    This field is only check in one place and not actually needed there.
-
-    Rationale:
-    - transport_do_task_sg_chain asserts that we have task_sg_chaining
-      set early on
-    - we only make use of the sg_prev_nents field we calculate based on it
-      if there is another sg list that gets chained onto this one, which
-      never happens for the last (or only) task.
+Rearrange the fields in se_task to avoid holes.  Also increase the
+flags field to 16 bits as we have the space for it, and this makes
+adding new flags safer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tmr.c       |    7 +---
- drivers/target/target_core_transport.c |   59 +++++++++++++-------------------
- include/target/target_core_base.h      |    3 --
- include/target/target_core_transport.h |    2 +
- 4 files changed, 28 insertions(+), 43 deletions(-)
+ include/target/target_core_base.h |   30 +++++++++++++++---------------
+ 1 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index b5c1864..b8a780f 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -226,11 +226,8 @@ static void core_tmr_drain_task_list(
- 		/*
- 		 * Remove from task execute list before processing drain_task_list
- 		 */
--		if (atomic_read(&task->task_execute_queue) != 0) {
--			list_del(&task->t_execute_list);
--			atomic_set(&task->task_execute_queue, 0);
--			atomic_dec(&dev->execute_tasks);
--		}
-+		if (!list_empty(&task->t_execute_list))
-+			__transport_remove_task_from_execute_queue(task, dev);
- 	}
- 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
- 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 165a60c..4a787a0 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -915,38 +915,36 @@ static void transport_add_tasks_from_cmd(struct se_cmd *cmd)
- 
- 	spin_lock_irqsave(&dev->execute_task_lock, flags);
- 	list_for_each_entry(task, &cmd->t_task_list, t_list) {
--		if (atomic_read(&task->task_execute_queue))
-+		if (!list_empty(&task->t_execute_list))
- 			continue;
- 		/*
- 		 * __transport_add_task_to_execute_queue() handles the
- 		 * SAM Task Attribute emulation if enabled
- 		 */
- 		__transport_add_task_to_execute_queue(task, task_prev, dev);
--		atomic_set(&task->task_execute_queue, 1);
- 		task_prev = task;
- 	}
- 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
- }
- 
--/*	transport_remove_task_from_execute_queue():
-- *
-- *
-- */
-+void __transport_remove_task_from_execute_queue(struct se_task *task,
-+		struct se_device *dev)
-+{
-+	list_del_init(&task->t_execute_list);
-+	atomic_dec(&dev->execute_tasks);
-+}
-+
- void transport_remove_task_from_execute_queue(
- 	struct se_task *task,
- 	struct se_device *dev)
- {
- 	unsigned long flags;
- 
--	if (atomic_read(&task->task_execute_queue) == 0) {
--		dump_stack();
-+	if (WARN_ON(list_empty(&task->t_execute_list)))
- 		return;
--	}
- 
- 	spin_lock_irqsave(&dev->execute_task_lock, flags);
--	list_del(&task->t_execute_list);
--	atomic_set(&task->task_execute_queue, 0);
--	atomic_dec(&dev->execute_tasks);
-+	__transport_remove_task_from_execute_queue(task, dev);
- 	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
- }
- 
-@@ -1787,8 +1785,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
- 	list_for_each_entry_safe(task, task_tmp,
- 				&cmd->t_task_list, t_list) {
--		pr_debug("task_no[%d] - Processing task %p\n",
--				task->task_no, task);
-+		pr_debug("Processing task %p\n", task);
- 		/*
- 		 * If the struct se_task has not been sent and is not active,
- 		 * remove the struct se_task from the execution queue.
-@@ -1799,8 +1796,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- 			transport_remove_task_from_execute_queue(task,
- 					cmd->se_dev);
- 
--			pr_debug("task_no[%d] - Removed from execute queue\n",
--				task->task_no);
-+			pr_debug("Task %p removed from execute queue\n", task);
- 			spin_lock_irqsave(&cmd->t_state_lock, flags);
- 			continue;
- 		}
-@@ -1814,17 +1810,15 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
- 			spin_unlock_irqrestore(&cmd->t_state_lock,
- 					flags);
- 
--			pr_debug("task_no[%d] - Waiting to complete\n",
--				task->task_no);
-+			pr_debug("Task %p waiting to complete\n", task);
- 			wait_for_completion(&task->task_stop_comp);
--			pr_debug("task_no[%d] - Stopped successfully\n",
--				task->task_no);
-+			pr_debug("Task %p stopped successfully\n", task);
- 
- 			spin_lock_irqsave(&cmd->t_state_lock, flags);
- 			atomic_dec(&cmd->t_task_cdbs_left);
- 			task->task_flags &= ~(TF_ACTIVE | TF_REQUEST_STOP);
- 		} else {
--			pr_debug("task_no[%d] - Did nothing\n", task->task_no);
-+			pr_debug("Task %p - did nothing\n", task);
- 			ret++;
- 		}
- 
-@@ -2347,9 +2341,7 @@ check_depth:
- 	}
- 	task = list_first_entry(&dev->execute_task_list,
- 				struct se_task, t_execute_list);
--	list_del(&task->t_execute_list);
--	atomic_set(&task->task_execute_queue, 0);
--	atomic_dec(&dev->execute_tasks);
-+	__transport_remove_task_from_execute_queue(task, dev);
- 	spin_unlock_irq(&dev->execute_task_lock);
- 
- 	atomic_dec(&dev->depth_left);
-@@ -2681,9 +2673,9 @@ static int transport_get_sense_data(struct se_cmd *cmd)
- 
- 		sense_buffer = dev->transport->get_sense_buffer(task);
- 		if (!sense_buffer) {
--			pr_err("ITT[0x%08x]_TASK[%d]: Unable to locate"
-+			pr_err("ITT[0x%08x]_TASK[%p]: Unable to locate"
- 				" sense buffer for task with sense\n",
--				cmd->se_tfo->get_task_tag(cmd), task->task_no);
-+				cmd->se_tfo->get_task_tag(cmd), task);
- 			continue;
- 		}
- 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-@@ -3897,15 +3889,13 @@ void transport_do_task_sg_chain(struct se_cmd *cmd)
- 		/*
- 		 * For the padded tasks, use the extra SGL vector allocated
- 		 * in transport_allocate_data_tasks() for the sg_prev_nents
--		 * offset into sg_chain() above..  The last task of a
--		 * multi-task list, or a single task will not have
--		 * task->task_sg_padded set..
-+		 * offset into sg_chain() above.
-+		 *
-+		 * We do not need the padding for the last task (or a single
-+		 * task), but in that case we will never use the sg_prev_nents
-+		 * value below which would be incorrect.
- 		 */
--		if (task->task_padded_sg)
--			sg_prev_nents = (task->task_sg_nents + 1);
--		else
--			sg_prev_nents = task->task_sg_nents;
--
-+		sg_prev_nents = (task->task_sg_nents + 1);
- 		sg_prev = task->task_sg;
- 	}
- 	/*
-@@ -3992,7 +3982,6 @@ static int transport_allocate_data_tasks(
- 		 */
- 		if (cmd->se_tfo->task_sg_chaining && (i < (task_count - 1))) {
- 			task_sg_nents_padded = (task->task_sg_nents + 1);
--			task->task_padded_sg = 1;
- 		} else
- 			task_sg_nents_padded = task->task_sg_nents;
- 
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 5e3dd14..45291b2 100644
+index 45291b2..a6c2348 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -409,15 +409,12 @@ struct se_task {
- 	u8		task_scsi_status;
- 	u8		task_flags;
- 	int		task_error_status;
--	bool		task_padded_sg;
+@@ -402,24 +402,24 @@ struct se_queue_obj {
+ } ____cacheline_aligned;
+ 
+ struct se_task {
+-	unsigned char	task_sense;
+-	struct scatterlist *task_sg;
+-	u32		task_sg_nents;
+-	struct scatterlist *task_sg_bidi;
+-	u8		task_scsi_status;
+-	u8		task_flags;
+-	int		task_error_status;
  	unsigned long long	task_lba;
--	u32		task_no;
- 	u32		task_sectors;
- 	u32		task_size;
+-	u32		task_sectors;
+-	u32		task_size;
++	u32			task_sectors;
++	u32			task_size;
++	struct se_cmd		*task_se_cmd;
++	struct scatterlist	*task_sg;
++	struct scatterlist	*task_sg_bidi;
++	u32			task_sg_nents;
++	u16			task_flags;
++	u8			task_sense;
++	u8			task_scsi_status;
++	int			task_error_status;
  	enum dma_data_direction	task_data_direction;
- 	struct se_cmd *task_se_cmd;
- 	struct completion	task_stop_comp;
--	atomic_t	task_execute_queue;
- 	atomic_t	task_state_active;
+-	struct se_cmd *task_se_cmd;
+-	struct completion	task_stop_comp;
+-	atomic_t	task_state_active;
++	atomic_t		task_state_active;
  	struct timer_list	task_timer;
- 	struct list_head t_list;
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index c93cf0a..c5eb259 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -135,6 +135,8 @@ extern void transport_add_task_to_execute_queue(struct se_task *,
- 						struct se_device *);
- extern void transport_remove_task_from_execute_queue(struct se_task *,
- 						struct se_device *);
-+extern void __transport_remove_task_from_execute_queue(struct se_task *,
-+						struct se_device *);
- unsigned char *transport_dump_cmd_direction(struct se_cmd *);
- extern void transport_dump_dev_state(struct se_device *, char *, int *);
- extern void transport_dump_dev_info(struct se_device *, struct se_lun *,
+-	struct list_head t_list;
+-	struct list_head t_execute_list;
+-	struct list_head t_state_list;
++	struct list_head	t_list;
++	struct list_head	t_execute_list;
++	struct list_head	t_state_list;
++	struct completion	task_stop_comp;
+ } ____cacheline_aligned;
+ 
+ struct se_cmd {
 -- 
 1.5.6.5
