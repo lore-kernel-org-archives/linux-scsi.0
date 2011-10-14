@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 30/37] target: Cleanup unused target_core_base.h bits
-Date: Fri, 14 Oct 2011 00:42:02 +0000
-Message-ID: <1318552929-13341-31-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 31/37] target: Cleanup unused se_task bits
+Date: Fri, 14 Oct 2011 00:42:03 +0000
+Message-ID: <1318552929-13341-32-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
@@ -12,106 +12,308 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-This is a squashed version of the following target_core_base.h
-cleanup patches:
+This is a squashed version of the following se_task cleanup patches:
 
-    target: remove the unused SHUTDOWN_SIGS defintion
-    target: remove unused se_mem leftovers
-    target: remove the unused map_func_t typedef
-    target: move TRANSPORT_IOV_DATA_BUFFER to the iscsi-specific code
+    target: remove the unused task_state_flags field in se_task
+    target: remove the unused se_obj_ptr field in se_task
+    target: remove the se_dev field in se_task
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c      |    2 +-
- drivers/target/iscsi/iscsi_target_core.h |    3 +++
- drivers/target/target_core_transport.c   |    3 ---
- include/target/target_core_base.h        |    3 ---
- include/target/target_core_transport.h   |    7 -------
- 5 files changed, 4 insertions(+), 14 deletions(-)
+ drivers/target/target_core_file.c      |   10 +++++---
+ drivers/target/target_core_iblock.c    |    4 +-
+ drivers/target/target_core_pscsi.c     |    6 ++--
+ drivers/target/target_core_rd.c        |    6 ++--
+ drivers/target/target_core_transport.c |   36 +++++++++++--------------------
+ include/target/target_core_base.h      |    3 --
+ include/target/target_core_transport.h |    3 --
+ 7 files changed, 27 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index d86e18d..4d01768 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -765,7 +765,7 @@ static int iscsit_allocate_iovecs(struct iscsi_cmd *cmd)
- 	u32 iov_count = (cmd->se_cmd.t_data_nents == 0) ? 1 :
- 				cmd->se_cmd.t_data_nents;
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 99c9db0..524f41a 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -272,13 +272,14 @@ fd_alloc_task(unsigned char *cdb)
+ static int fd_do_readv(struct se_task *task)
+ {
+ 	struct fd_request *req = FILE_REQ(task);
+-	struct fd_dev *dev = req->fd_task.se_dev->dev_ptr;
++	struct se_device *se_dev = req->fd_task.task_se_cmd->se_dev;
++	struct fd_dev *dev = se_dev->dev_ptr;
+ 	struct file *fd = dev->fd_file;
+ 	struct scatterlist *sg = task->task_sg;
+ 	struct iovec *iov;
+ 	mm_segment_t old_fs;
+ 	loff_t pos = (task->task_lba *
+-		      task->se_dev->se_sub_dev->se_dev_attrib.block_size);
++		      se_dev->se_sub_dev->se_dev_attrib.block_size);
+ 	int ret = 0, i;
  
--	iov_count += TRANSPORT_IOV_DATA_BUFFER;
-+	iov_count += ISCSI_IOV_DATA_BUFFER;
+ 	iov = kzalloc(sizeof(struct iovec) * task->task_sg_nents, GFP_KERNEL);
+@@ -324,13 +325,14 @@ static int fd_do_readv(struct se_task *task)
+ static int fd_do_writev(struct se_task *task)
+ {
+ 	struct fd_request *req = FILE_REQ(task);
+-	struct fd_dev *dev = req->fd_task.se_dev->dev_ptr;
++	struct se_device *se_dev = req->fd_task.task_se_cmd->se_dev;
++	struct fd_dev *dev = se_dev->dev_ptr;
+ 	struct file *fd = dev->fd_file;
+ 	struct scatterlist *sg = task->task_sg;
+ 	struct iovec *iov;
+ 	mm_segment_t old_fs;
+ 	loff_t pos = (task->task_lba *
+-		      task->se_dev->se_sub_dev->se_dev_attrib.block_size);
++		      se_dev->se_sub_dev->se_dev_attrib.block_size);
+ 	int ret, i = 0;
  
- 	cmd->iov_data = kzalloc(iov_count * sizeof(struct kvec), GFP_KERNEL);
- 	if (!cmd->iov_data) {
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index 470ed55..84818d7 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -57,6 +57,9 @@
- #define TA_PROD_MODE_WRITE_PROTECT	0
- #define TA_CACHE_CORE_NPS		0
+ 	iov = kzalloc(sizeof(struct iovec) * task->task_sg_nents, GFP_KERNEL);
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index dcf93f8..21a3677 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -499,7 +499,7 @@ static ssize_t iblock_show_configfs_dev_params(
+ static void iblock_bio_destructor(struct bio *bio)
+ {
+ 	struct se_task *task = bio->bi_private;
+-	struct iblock_dev *ib_dev = task->se_dev->dev_ptr;
++	struct iblock_dev *ib_dev = task->task_se_cmd->se_dev->dev_ptr;
  
-+
-+#define ISCSI_IOV_DATA_BUFFER		5
-+
- enum tpg_np_network_transport_table {
- 	ISCSI_TCP				= 0,
- 	ISCSI_SCTP_TCP				= 1,
+ 	bio_free(bio, ib_dev->ibd_bio_set);
+ }
+@@ -507,7 +507,7 @@ static void iblock_bio_destructor(struct bio *bio)
+ static struct bio *
+ iblock_get_bio(struct se_task *task, sector_t lba, u32 sg_num)
+ {
+-	struct iblock_dev *ib_dev = task->se_dev->dev_ptr;
++	struct iblock_dev *ib_dev = task->task_se_cmd->se_dev->dev_ptr;
+ 	struct iblock_req *ib_req = IBLOCK_REQ(task);
+ 	struct bio *bio;
+ 
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 3898fb7..b347862 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -676,7 +676,7 @@ static inline struct pscsi_plugin_task *PSCSI_TASK(struct se_task *task)
+  */
+ static int pscsi_transport_complete(struct se_task *task)
+ {
+-	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
++	struct pscsi_dev_virt *pdv = task->task_se_cmd->se_dev->dev_ptr;
+ 	struct scsi_device *sd = pdv->pdv_sd;
+ 	int result;
+ 	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
+@@ -962,7 +962,7 @@ static inline struct bio *pscsi_get_bio(int sg_num)
+ static int pscsi_map_sg(struct se_task *task, struct scatterlist *task_sg,
+ 		struct bio **hbio)
+ {
+-	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
++	struct pscsi_dev_virt *pdv = task->task_se_cmd->se_dev->dev_ptr;
+ 	u32 task_sg_num = task->task_sg_nents;
+ 	struct bio *bio = NULL, *tbio = NULL;
+ 	struct page *page;
+@@ -1062,7 +1062,7 @@ fail:
+ 
+ static int pscsi_do_task(struct se_task *task)
+ {
+-	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
++	struct pscsi_dev_virt *pdv = task->task_se_cmd->se_dev->dev_ptr;
+ 	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
+ 	struct request *req;
+ 	struct bio *hbio;
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 1ab69f3..daf95db 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -350,7 +350,7 @@ static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
+ static int rd_MEMCPY_read(struct rd_request *req)
+ {
+ 	struct se_task *task = &req->rd_task;
+-	struct rd_dev *dev = req->rd_task.se_dev->dev_ptr;
++	struct rd_dev *dev = req->rd_task.task_se_cmd->se_dev->dev_ptr;
+ 	struct rd_dev_sg_table *table;
+ 	struct scatterlist *sg_d, *sg_s;
+ 	void *dst, *src;
+@@ -466,7 +466,7 @@ static int rd_MEMCPY_read(struct rd_request *req)
+ static int rd_MEMCPY_write(struct rd_request *req)
+ {
+ 	struct se_task *task = &req->rd_task;
+-	struct rd_dev *dev = req->rd_task.se_dev->dev_ptr;
++	struct rd_dev *dev = req->rd_task.task_se_cmd->se_dev->dev_ptr;
+ 	struct rd_dev_sg_table *table;
+ 	struct scatterlist *sg_d, *sg_s;
+ 	void *dst, *src;
+@@ -581,7 +581,7 @@ static int rd_MEMCPY_write(struct rd_request *req)
+  */
+ static int rd_MEMCPY_do_task(struct se_task *task)
+ {
+-	struct se_device *dev = task->se_dev;
++	struct se_device *dev = task->task_se_cmd->se_dev;
+ 	struct rd_request *req = RD_REQ(task);
+ 	unsigned long long lba;
+ 	int ret;
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ee73f10..89b85dd 100644
+index 89b85dd..c935c72 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -69,9 +69,6 @@ struct kmem_cache *t10_alua_lu_gp_mem_cache;
- struct kmem_cache *t10_alua_tg_pt_gp_cache;
- struct kmem_cache *t10_alua_tg_pt_gp_mem_cache;
+@@ -432,15 +432,14 @@ EXPORT_SYMBOL(transport_deregister_session);
+  */
+ static void transport_all_task_dev_remove_state(struct se_cmd *cmd)
+ {
+-	struct se_device *dev;
++	struct se_device *dev = cmd->se_dev;
+ 	struct se_task *task;
+ 	unsigned long flags;
  
--/* Used for transport_dev_get_map_*() */
--typedef int (*map_func_t)(struct se_task *, u32);
+-	list_for_each_entry(task, &cmd->t_task_list, t_list) {
+-		dev = task->se_dev;
+-		if (!dev)
+-			continue;
++	if (!dev)
++		return;
+ 
++	list_for_each_entry(task, &cmd->t_task_list, t_list) {
+ 		if (atomic_read(&task->task_active))
+ 			continue;
+ 
+@@ -708,7 +707,7 @@ EXPORT_SYMBOL(transport_complete_sync_cache);
+ void transport_complete_task(struct se_task *task, int success)
+ {
+ 	struct se_cmd *cmd = task->task_se_cmd;
+-	struct se_device *dev = task->se_dev;
++	struct se_device *dev = cmd->se_dev;
+ 	int t_state;
+ 	unsigned long flags;
+ #if 0
+@@ -886,14 +885,12 @@ static void __transport_add_task_to_execute_queue(
+ 
+ static void transport_add_tasks_to_state_queue(struct se_cmd *cmd)
+ {
+-	struct se_device *dev;
++	struct se_device *dev = cmd->se_dev;
+ 	struct se_task *task;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	list_for_each_entry(task, &cmd->t_task_list, t_list) {
+-		dev = task->se_dev;
 -
- static int transport_generic_write_pending(struct se_cmd *);
- static int transport_processing_thread(void *param);
- static int __transport_execute_tasks(struct se_device *dev);
+ 		if (atomic_read(&task->task_state_active))
+ 			continue;
+ 
+@@ -1522,7 +1519,6 @@ transport_generic_get_task(struct se_cmd *cmd,
+ 	INIT_LIST_HEAD(&task->t_state_list);
+ 	init_completion(&task->task_stop_comp);
+ 	task->task_se_cmd = cmd;
+-	task->se_dev = dev;
+ 	task->task_data_direction = data_direction;
+ 
+ 	return task;
+@@ -1802,7 +1798,7 @@ static int transport_stop_tasks_for_cmd(struct se_cmd *cmd)
+ 			spin_unlock_irqrestore(&cmd->t_state_lock,
+ 					flags);
+ 			transport_remove_task_from_execute_queue(task,
+-					task->se_dev);
++					cmd->se_dev);
+ 
+ 			pr_debug("task_no[%d] - Removed from execute queue\n",
+ 				task->task_no);
+@@ -2130,7 +2126,7 @@ static void transport_task_timeout_handler(unsigned long data)
+  */
+ static void transport_start_task_timer(struct se_task *task)
+ {
+-	struct se_device *dev = task->se_dev;
++	struct se_device *dev = task->task_se_cmd->se_dev;
+ 	int timeout;
+ 
+ 	if (task->task_flags & TF_RUNNING)
+@@ -2656,13 +2652,16 @@ out:
+ static int transport_get_sense_data(struct se_cmd *cmd)
+ {
+ 	unsigned char *buffer = cmd->sense_buffer, *sense_buffer = NULL;
+-	struct se_device *dev;
++	struct se_device *dev = cmd->se_dev;
+ 	struct se_task *task = NULL, *task_tmp;
+ 	unsigned long flags;
+ 	u32 offset = 0;
+ 
+ 	WARN_ON(!cmd->se_lun);
+ 
++	if (!dev)
++		return 0;
++
+ 	spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	if (cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+@@ -2671,14 +2670,9 @@ static int transport_get_sense_data(struct se_cmd *cmd)
+ 
+ 	list_for_each_entry_safe(task, task_tmp,
+ 				&cmd->t_task_list, t_list) {
+-
+ 		if (!task->task_sense)
+ 			continue;
+ 
+-		dev = task->se_dev;
+-		if (!dev)
+-			continue;
+-
+ 		if (!dev->transport->get_sense_buffer) {
+ 			pr_err("dev->transport->get_sense_buffer"
+ 					" is NULL\n");
+@@ -3628,11 +3622,7 @@ static void transport_free_dev_tasks(struct se_cmd *cmd)
+ 		list_del(&task->t_list);
+ 
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+-		if (task->se_dev)
+-			task->se_dev->transport->free_task(task);
+-		else
+-			pr_err("task[%u] - task->se_dev is NULL\n",
+-				task->task_no);
++		cmd->se_dev->transport->free_task(task);
+ 		spin_lock_irqsave(&cmd->t_state_lock, flags);
+ 	}
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
 diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 872cafc..c00224e 100644
+index c00224e..6c49db4 100644
 --- a/include/target/target_core_base.h
 +++ b/include/target/target_core_base.h
-@@ -10,10 +10,7 @@
- #include <net/tcp.h>
- 
- #define TARGET_CORE_MOD_VERSION		"v4.1.0-rc1-ml"
--#define SHUTDOWN_SIGS	(sigmask(SIGKILL)|sigmask(SIGINT)|sigmask(SIGABRT))
- 
--/* Used by transport_generic_allocate_iovecs() */
--#define TRANSPORT_IOV_DATA_BUFFER		5
- /* Maximum Number of LUNs per Target Portal Group */
- /* Don't raise above 511 or REPORT_LUNS needs to handle >1 page */
- #define TRANSPORT_MAX_LUNS_PER_TPG		256
+@@ -405,7 +405,6 @@ struct se_task {
+ 	u8		task_scsi_status;
+ 	u8		task_flags;
+ 	int		task_error_status;
+-	int		task_state_flags;
+ 	bool		task_padded_sg;
+ 	unsigned long long	task_lba;
+ 	u32		task_no;
+@@ -413,7 +412,6 @@ struct se_task {
+ 	u32		task_size;
+ 	enum dma_data_direction	task_data_direction;
+ 	struct se_cmd *task_se_cmd;
+-	struct se_device	*se_dev;
+ 	struct completion	task_stop_comp;
+ 	atomic_t	task_active;
+ 	atomic_t	task_execute_queue;
+@@ -422,7 +420,6 @@ struct se_task {
+ 	atomic_t	task_stop;
+ 	atomic_t	task_state_active;
+ 	struct timer_list	task_timer;
+-	struct se_device *se_obj_ptr;
+ 	struct list_head t_list;
+ 	struct list_head t_execute_list;
+ 	struct list_head t_state_list;
 diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index c915169..ccd85b3 100644
+index ccd85b3..c93cf0a 100644
 --- a/include/target/target_core_transport.h
 +++ b/include/target/target_core_transport.h
-@@ -110,11 +110,8 @@
+@@ -45,9 +45,6 @@
+ #define TRANSPORT_TIMEOUT_TYPE_TAPE		600
+ #define TRANSPORT_TIMEOUT_TYPE_OTHER		300
  
- #define MOD_MAX_SECTORS(ms, bs)			(ms % (PAGE_SIZE / bs))
- 
--struct se_mem;
- struct se_subsystem_api;
- 
--extern struct kmem_cache *se_mem_cache;
+-/* For se_task->task_state_flags */
+-#define TSF_EXCEPTION_CLEARED			0x01
 -
- extern int init_se_kmem_caches(void);
- extern void release_se_kmem_caches(void);
- extern u32 scsi_get_new_index(scsi_index_t);
-@@ -186,10 +183,6 @@ extern void transport_send_task_abort(struct se_cmd *);
- extern void transport_release_cmd(struct se_cmd *);
- extern void transport_generic_free_cmd(struct se_cmd *, int);
- extern void transport_generic_wait_for_cmds(struct se_cmd *, int);
--extern int transport_init_task_sg(struct se_task *, struct se_mem *, u32);
--extern int transport_map_mem_to_sg(struct se_task *, struct list_head *,
--					struct scatterlist *, struct se_mem *,
--					struct se_mem **, u32 *, u32 *);
- extern void transport_do_task_sg_chain(struct se_cmd *);
- extern void transport_generic_process_write(struct se_cmd *);
- extern int transport_generic_new_cmd(struct se_cmd *);
+ /*
+  * struct se_subsystem_dev->su_dev_flags
+ */
 -- 
 1.5.6.5
