@@ -1,260 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 16/37] target: Remove session_reinstatement parameter from ->transport_wait_for_tasks
-Date: Fri, 14 Oct 2011 00:41:48 +0000
-Message-ID: <1318552929-13341-17-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 17/37] target: simplify target_parse_naa_6h_vendor_specific()
+Date: Fri, 14 Oct 2011 00:41:49 +0000
+Message-ID: <1318552929-13341-18-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-This patch removes the unnecessary session_reinstatement parameter from
-se_cmd->transport_wait_for_tasks(), logic in transport_generic_wait_for_tasks,
-and usage within iscsi-target code.
+This patch adds a minor simplfication in target_parse_naa_6h_vendor_specific()
+to remove direct isxdigit() + ctype.h usage.
 
-This also includes the removal of the 'bool' return from transport_put_cmd() +
-transport_generic_free_cmd() that is no longer necessary.
+(nab: Fix next assignment breakage in for loop)
 
-Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c      |    4 +-
- drivers/target/iscsi/iscsi_target_erl2.c |   15 ++++++-------
- drivers/target/target_core_transport.c   |   33 ++++++++++--------------------
- include/target/target_core_base.h        |    2 +-
- include/target/target_core_transport.h   |    2 +-
- 5 files changed, 22 insertions(+), 34 deletions(-)
+ drivers/target/target_core_cdb.c |   29 ++++++++++++++---------------
+ 1 files changed, 14 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 7dc2cfe..354a833 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3960,7 +3960,7 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
- 			 * iscsit_get_lun_for_cmd() in iscsit_handle_scsi_cmd().
- 			 */
- 			if (cmd->tmr_req && se_cmd->transport_wait_for_tasks)
--				se_cmd->transport_wait_for_tasks(se_cmd, 1, 1);
-+				se_cmd->transport_wait_for_tasks(se_cmd, 1);
- 			else if (cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD)
- 				transport_release_cmd(se_cmd);
- 			else
-@@ -3976,7 +3976,7 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
- 		se_cmd = &cmd->se_cmd;
- 
- 		if (se_cmd->transport_wait_for_tasks)
--			se_cmd->transport_wait_for_tasks(se_cmd, 1, 1);
-+			se_cmd->transport_wait_for_tasks(se_cmd, 1);
- 
- 		spin_lock_bh(&conn->cmd_lock);
- 	}
-diff --git a/drivers/target/iscsi/iscsi_target_erl2.c b/drivers/target/iscsi/iscsi_target_erl2.c
-index 91a4d17..000356b 100644
---- a/drivers/target/iscsi/iscsi_target_erl2.c
-+++ b/drivers/target/iscsi/iscsi_target_erl2.c
-@@ -148,7 +148,7 @@ void iscsit_free_connection_recovery_entires(struct iscsi_session *sess)
- 				iscsit_release_cmd(cmd);
- 			else
- 				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1, 1);
-+						&cmd->se_cmd, 1);
- 			spin_lock(&cr->conn_recovery_cmd_lock);
- 		}
- 		spin_unlock(&cr->conn_recovery_cmd_lock);
-@@ -175,7 +175,7 @@ void iscsit_free_connection_recovery_entires(struct iscsi_session *sess)
- 				iscsit_release_cmd(cmd);
- 			else
- 				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1, 1);
-+						&cmd->se_cmd, 1);
- 			spin_lock(&cr->conn_recovery_cmd_lock);
- 		}
- 		spin_unlock(&cr->conn_recovery_cmd_lock);
-@@ -265,7 +265,7 @@ void iscsit_discard_cr_cmds_by_expstatsn(
- 			iscsit_release_cmd(cmd);
- 		else
- 			cmd->se_cmd.transport_wait_for_tasks(
--					&cmd->se_cmd, 1, 0);
-+					&cmd->se_cmd, 1);
- 		spin_lock(&cr->conn_recovery_cmd_lock);
- 	}
- 	spin_unlock(&cr->conn_recovery_cmd_lock);
-@@ -324,7 +324,7 @@ int iscsit_discard_unacknowledged_ooo_cmdsns_for_conn(struct iscsi_conn *conn)
- 			iscsit_release_cmd(cmd);
- 		else
- 			cmd->se_cmd.transport_wait_for_tasks(
--					&cmd->se_cmd, 1, 1);
-+					&cmd->se_cmd, 1);
- 		spin_lock_bh(&conn->cmd_lock);
- 	}
- 	spin_unlock_bh(&conn->cmd_lock);
-@@ -383,7 +383,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
- 				iscsit_release_cmd(cmd);
- 			else
- 				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1, 0);
-+						&cmd->se_cmd, 1);
- 			spin_lock_bh(&conn->cmd_lock);
- 			continue;
- 		}
-@@ -409,7 +409,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
- 				iscsit_release_cmd(cmd);
- 			else
- 				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1, 1);
-+						&cmd->se_cmd, 1);
- 			spin_lock_bh(&conn->cmd_lock);
- 			continue;
- 		}
-@@ -436,8 +436,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
- 
- 		if ((cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) &&
- 		     cmd->se_cmd.transport_wait_for_tasks)
--			cmd->se_cmd.transport_wait_for_tasks(&cmd->se_cmd,
--					0, 0);
-+			cmd->se_cmd.transport_wait_for_tasks(&cmd->se_cmd, 0);
- 		/*
- 		 * Add the struct iscsi_cmd to the connection recovery cmd list
- 		 */
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index db2f898..e590526 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -86,7 +86,7 @@ static u32 transport_allocate_tasks(struct se_cmd *cmd,
- 		enum dma_data_direction data_direction,
- 		struct scatterlist *sgl, unsigned int nents);
- static int transport_generic_get_mem(struct se_cmd *cmd);
--static bool transport_put_cmd(struct se_cmd *cmd);
-+static void transport_put_cmd(struct se_cmd *cmd);
- static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
- 		struct se_queue_obj *qobj);
- static int transport_set_sense_codes(struct se_cmd *cmd, u8 asc, u8 ascq);
-@@ -1638,7 +1638,7 @@ static int transport_check_alloc_task_attr(struct se_cmd *cmd)
- 	return 0;
- }
- 
--static void transport_generic_wait_for_tasks(struct se_cmd *, int, int);
-+static void transport_generic_wait_for_tasks(struct se_cmd *, int);
- 
- /*	transport_generic_allocate_tasks():
-  *
-@@ -2504,7 +2504,7 @@ void transport_new_cmd_failure(struct se_cmd *se_cmd)
- 	spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
- }
- 
--static void transport_nop_wait_for_tasks(struct se_cmd *, int, int);
-+static void transport_nop_wait_for_tasks(struct se_cmd *, int);
- 
- static inline u32 transport_get_sectors_6(
- 	unsigned char *cdb,
-@@ -3736,7 +3736,7 @@ static inline void transport_free_pages(struct se_cmd *cmd)
-  *
-  * This routine releases our reference to the command and frees it if possible.
+diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
+index f04d4ef..0d02391 100644
+--- a/drivers/target/target_core_cdb.c
++++ b/drivers/target/target_core_cdb.c
+@@ -24,7 +24,6 @@
   */
--static bool transport_put_cmd(struct se_cmd *cmd)
-+static void transport_put_cmd(struct se_cmd *cmd)
- {
- 	unsigned long flags;
- 	int free_tasks = 0;
-@@ -3764,10 +3764,9 @@ static bool transport_put_cmd(struct se_cmd *cmd)
  
- 	transport_free_pages(cmd);
- 	transport_release_cmd(cmd);
--	return true;
-+	return;
- out_busy:
- 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
--	return false;
+ #include <linux/kernel.h>
+-#include <linux/ctype.h>
+ #include <asm/unaligned.h>
+ #include <scsi/scsi.h>
+ 
+@@ -156,11 +155,12 @@ target_emulate_evpd_80(struct se_cmd *cmd, unsigned char *buf)
  }
  
- /*
-@@ -4331,7 +4330,7 @@ void transport_release_cmd(struct se_cmd *cmd)
- }
- EXPORT_SYMBOL(transport_release_cmd);
- 
--bool transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
-+void transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
+ static void
+-target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_off)
++target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf)
  {
- 	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD))
- 		transport_release_cmd(cmd);
-@@ -4342,21 +4341,18 @@ bool transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
- 			transport_lun_remove_cmd(cmd);
- 
- 		if (wait_for_tasks && cmd->transport_wait_for_tasks)
--			cmd->transport_wait_for_tasks(cmd, 0, 0);
-+			cmd->transport_wait_for_tasks(cmd, 0);
- 
- 		transport_free_dev_tasks(cmd);
- 
--		return transport_put_cmd(cmd);
-+		transport_put_cmd(cmd);
+ 	unsigned char *p = &dev->se_sub_dev->t10_wwn.unit_serial[0];
+-	unsigned char *buf = buf_off;
+-	int cnt = 0, next = 1;
++	int cnt;
++	bool next = true;
++
+ 	/*
+ 	 * Generate up to 36 bits of VENDOR SPECIFIC IDENTIFIER starting on
+ 	 * byte 3 bit 3-0 for NAA IEEE Registered Extended DESIGNATOR field
+@@ -169,19 +169,18 @@ target_parse_naa_6h_vendor_specific(struct se_device *dev, unsigned char *buf_of
+ 	 * NUMBER set via vpd_unit_serial in target_core_configfs.c to ensure
+ 	 * per device uniqeness.
+ 	 */
+-	while (*p != '\0') {
+-		if (cnt >= 13)
+-			break;
+-		if (!isxdigit(*p)) {
+-			p++;
++	for (cnt = 0; *p && cnt < 13; p++) {
++		int val = hex_to_bin(*p);
++
++		if (val < 0)
+ 			continue;
+-		}
+-		if (next != 0) {
+-			buf[cnt++] |= hex_to_bin(*p++);
+-			next = 0;
++
++		if (next) {
++			next = false;
++			buf[cnt++] |= val;
+ 		} else {
+-			buf[cnt] = hex_to_bin(*p++) << 4;
+-			next = 1;
++			next = true;
++			buf[cnt] = val << 4;
+ 		}
  	}
--
--	return true;
  }
- EXPORT_SYMBOL(transport_generic_free_cmd);
- 
- static void transport_nop_wait_for_tasks(
- 	struct se_cmd *cmd,
--	int remove_cmd,
--	int session_reinstatement)
-+	int remove_cmd)
- {
- 	return;
- }
-@@ -4537,8 +4533,7 @@ int transport_clear_lun_from_sessions(struct se_lun *lun)
-  */
- static void transport_generic_wait_for_tasks(
- 	struct se_cmd *cmd,
--	int remove_cmd,
--	int session_reinstatement)
-+	int remove_cmd)
- {
- 	unsigned long flags;
- 
-@@ -4614,13 +4609,7 @@ remove:
- 	if (!remove_cmd)
- 		return;
- 
--	if (!transport_generic_free_cmd(cmd, 0) && session_reinstatement) {
--		unsigned long flags;
--
--		spin_lock_irqsave(&cmd->t_state_lock, flags);
--		transport_all_task_dev_remove_state(cmd);
--		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
--	}
-+	transport_generic_free_cmd(cmd, 0);
- }
- 
- static int transport_get_sense_codes(
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 2704065..c10e351 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -480,7 +480,7 @@ struct se_cmd {
- 	struct target_core_fabric_ops *se_tfo;
- 	int (*transport_emulate_cdb)(struct se_cmd *);
- 	void (*transport_split_cdb)(unsigned long long, u32, unsigned char *);
--	void (*transport_wait_for_tasks)(struct se_cmd *, int, int);
-+	void (*transport_wait_for_tasks)(struct se_cmd *, int);
- 	void (*transport_complete_callback)(struct se_cmd *);
- 	int (*transport_qf_callback)(struct se_cmd *);
- 
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index a113129..e67feeb 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -184,7 +184,7 @@ extern int transport_check_aborted_status(struct se_cmd *, int);
- extern int transport_send_check_condition_and_sense(struct se_cmd *, u8, int);
- extern void transport_send_task_abort(struct se_cmd *);
- extern void transport_release_cmd(struct se_cmd *);
--extern bool transport_generic_free_cmd(struct se_cmd *, int);
-+extern void transport_generic_free_cmd(struct se_cmd *, int);
- extern void transport_generic_wait_for_cmds(struct se_cmd *, int);
- extern int transport_init_task_sg(struct se_task *, struct se_mem *, u32);
- extern int transport_map_mem_to_sg(struct se_task *, struct list_head *,
 -- 
 1.5.6.5
