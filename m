@@ -1,422 +1,225 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 25/37] target: Convert ->transport_wait_for_tasks usage to transport_generic_free_cmd
-Date: Fri, 14 Oct 2011 00:41:57 +0000
-Message-ID: <1318552929-13341-26-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 26/37] iscsi-target: Remove SCF_SE_LUN_CMD flag abuses
+Date: Fri, 14 Oct 2011 00:41:58 +0000
+Message-ID: <1318552929-13341-27-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33479 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443Ab1JNApQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:45:16 -0400
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts se_cmd->transport_wait_for_tasks(se_cmd, 1) usage to use
-transport_generic_free_cmd() directly in target-core and iscsi-target fabric
-usage.  The includes:
+This patch removes a number of SCF_SE_LUN_CMD flag abuses within iscsi-target
+code to determine when iscsit_release_cmd() or transport_generic_free_cmd()
+should be called while releasing an individual iscsi_cmd descriptor.
 
-*) Removal of the optional transport_generic_free_cmd() call from within
-   transport_generic_wait_for_tasks()
-*) Usage of existing SCF_SUPPORTED_SAM_OPCODE to determine when
-   transport_generic_wait_for_tasks() processing may occur instead of
-   checking se_cmd->transport_wait_for_tasks()
-*) Move transport_generic_wait_for_tasks() call ahead of core_dec_lacl_count()
-   and transport_lun_remove_cmd() in transport_generic_free_cmd() to follow
-   existing logic for iscsi-target w/ se_cmd->transport_wait_for_tasks(se_cmd, 1)
-*) Removal of se_cmd->transport_wait_for_tasks() function pointer
-*) Rename transport_generic_wait_for_tasks() -> transport_wait_for_tasks(), and
-   add docbook comment.
-*) Add EXPORT_SYMBOL for transport_wait_for_tasks()
+In the place of SCF_SE_LUN_CMD checks, this patch converts existing code to
+use a new iscsit_free_cmd() that inspects iscsi_cmd->iscsi_opcode types to
+determine which of the above functions should be invoked.  It also removes the
+now unnecessary special case checking in iscsit_release_commands_from_conn().
 
-For the case in iscsi_target_erl2.c:iscsit_prepare_cmds_for_realligance()
-where se_cmd->transport_wait_for_tasks(se_cmd, 0) is called, this patch
-adds a direct call to transport_wait_for_tasks().
-
-(hch: Fix transport_generic_free_cmd() usage in iscsit_release_commands_from_conn)
-(nab: Add patch: Ensure that TMRs hit wait_for_tasks logic during release)
+(hch: Use iscsit_free_cmd instead of open-coded alternative)
 
 Reported-by: Christoph Hellwig <hch@lst.de>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target.c      |   12 +---
- drivers/target/iscsi/iscsi_target_erl2.c |   41 +++++----------
- drivers/target/target_core_transport.c   |   82 ++++++++++++------------------
- include/target/target_core_base.h        |    1 -
- include/target/target_core_transport.h   |    1 +
- 5 files changed, 51 insertions(+), 86 deletions(-)
+ drivers/target/iscsi/iscsi_target.c      |   31 ++------------------------
+ drivers/target/iscsi/iscsi_target_erl2.c |   35 ++++++------------------------
+ drivers/target/iscsi/iscsi_target_util.c |   17 ++++++++++++++
+ drivers/target/iscsi/iscsi_target_util.h |    1 +
+ 4 files changed, 28 insertions(+), 56 deletions(-)
 
 diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 354a833..e4b9ba2 100644
+index e4b9ba2..d86e18d 100644
 --- a/drivers/target/iscsi/iscsi_target.c
 +++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3940,7 +3940,6 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
- {
- 	struct iscsi_cmd *cmd = NULL, *cmd_tmp = NULL;
- 	struct iscsi_session *sess = conn->sess;
--	struct se_cmd *se_cmd;
- 	/*
- 	 * We expect this function to only ever be called from either RX or TX
- 	 * thread context via iscsit_close_connection() once the other context
-@@ -3953,16 +3952,13 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
- 			list_del(&cmd->i_list);
- 			spin_unlock_bh(&conn->cmd_lock);
- 			iscsit_increment_maxcmdsn(cmd, sess);
--			se_cmd = &cmd->se_cmd;
- 			/*
- 			 * Special cases for active iSCSI TMR, and
- 			 * transport_lookup_cmd_lun() failing from
- 			 * iscsit_get_lun_for_cmd() in iscsit_handle_scsi_cmd().
- 			 */
--			if (cmd->tmr_req && se_cmd->transport_wait_for_tasks)
--				se_cmd->transport_wait_for_tasks(se_cmd, 1);
--			else if (cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD)
--				transport_release_cmd(se_cmd);
-+			if (cmd->tmr_req)
-+				transport_generic_free_cmd(&cmd->se_cmd, 1);
- 			else
- 				iscsit_release_cmd(cmd);
+@@ -3538,16 +3538,8 @@ get_immediate:
+ 				spin_lock_bh(&conn->cmd_lock);
+ 				list_del(&cmd->i_list);
+ 				spin_unlock_bh(&conn->cmd_lock);
+-				/*
+-				 * Determine if a struct se_cmd is assoicated with
+-				 * this struct iscsi_cmd.
+-				 */
+-				if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) &&
+-				    !(cmd->tmr_req))
+-					iscsit_release_cmd(cmd);
+-				else
+-					transport_generic_free_cmd(&cmd->se_cmd,
+-								1);
++
++				iscsit_free_cmd(cmd);
+ 				goto get_immediate;
+ 			case ISTATE_SEND_NOPIN_WANT_RESPONSE:
+ 				spin_unlock_bh(&cmd->istate_lock);
+@@ -3947,30 +3939,13 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+ 	 */
+ 	spin_lock_bh(&conn->cmd_lock);
+ 	list_for_each_entry_safe(cmd, cmd_tmp, &conn->conn_cmd_list, i_list) {
+-		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD)) {
+-
+-			list_del(&cmd->i_list);
+-			spin_unlock_bh(&conn->cmd_lock);
+-			iscsit_increment_maxcmdsn(cmd, sess);
+-			/*
+-			 * Special cases for active iSCSI TMR, and
+-			 * transport_lookup_cmd_lun() failing from
+-			 * iscsit_get_lun_for_cmd() in iscsit_handle_scsi_cmd().
+-			 */
+-			if (cmd->tmr_req)
+-				transport_generic_free_cmd(&cmd->se_cmd, 1);
+-			else
+-				iscsit_release_cmd(cmd);
  
-@@ -3973,10 +3969,8 @@ static void iscsit_release_commands_from_conn(struct iscsi_conn *conn)
+-			spin_lock_bh(&conn->cmd_lock);
+-			continue;
+-		}
+ 		list_del(&cmd->i_list);
  		spin_unlock_bh(&conn->cmd_lock);
  
  		iscsit_increment_maxcmdsn(cmd, sess);
--		se_cmd = &cmd->se_cmd;
  
--		if (se_cmd->transport_wait_for_tasks)
--			se_cmd->transport_wait_for_tasks(se_cmd, 1);
-+		transport_generic_free_cmd(&cmd->se_cmd, 1);
+-		transport_generic_free_cmd(&cmd->se_cmd, 1);
++		iscsit_free_cmd(cmd);
  
  		spin_lock_bh(&conn->cmd_lock);
  	}
 diff --git a/drivers/target/iscsi/iscsi_target_erl2.c b/drivers/target/iscsi/iscsi_target_erl2.c
-index 000356b..c3803b2 100644
+index c3803b2..0b8404c 100644
 --- a/drivers/target/iscsi/iscsi_target_erl2.c
 +++ b/drivers/target/iscsi/iscsi_target_erl2.c
-@@ -143,12 +143,10 @@ void iscsit_free_connection_recovery_entires(struct iscsi_session *sess)
+@@ -143,10 +143,7 @@ void iscsit_free_connection_recovery_entires(struct iscsi_session *sess)
  			list_del(&cmd->i_list);
  			cmd->conn = NULL;
  			spin_unlock(&cr->conn_recovery_cmd_lock);
--			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) ||
--			    !(cmd->se_cmd.transport_wait_for_tasks))
-+			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
- 				iscsit_release_cmd(cmd);
- 			else
--				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1);
-+				transport_generic_free_cmd(&cmd->se_cmd, 1);
+-			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
+-				iscsit_release_cmd(cmd);
+-			else
+-				transport_generic_free_cmd(&cmd->se_cmd, 1);
++			iscsit_free_cmd(cmd);
  			spin_lock(&cr->conn_recovery_cmd_lock);
  		}
  		spin_unlock(&cr->conn_recovery_cmd_lock);
-@@ -170,12 +168,10 @@ void iscsit_free_connection_recovery_entires(struct iscsi_session *sess)
+@@ -168,10 +165,7 @@ void iscsit_free_connection_recovery_entires(struct iscsi_session *sess)
  			list_del(&cmd->i_list);
  			cmd->conn = NULL;
  			spin_unlock(&cr->conn_recovery_cmd_lock);
--			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) ||
--			    !(cmd->se_cmd.transport_wait_for_tasks))
-+			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
- 				iscsit_release_cmd(cmd);
- 			else
--				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1);
-+				transport_generic_free_cmd(&cmd->se_cmd, 1);
+-			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
+-				iscsit_release_cmd(cmd);
+-			else
+-				transport_generic_free_cmd(&cmd->se_cmd, 1);
++			iscsit_free_cmd(cmd);
  			spin_lock(&cr->conn_recovery_cmd_lock);
  		}
  		spin_unlock(&cr->conn_recovery_cmd_lock);
-@@ -260,12 +256,10 @@ void iscsit_discard_cr_cmds_by_expstatsn(
+@@ -256,10 +250,7 @@ void iscsit_discard_cr_cmds_by_expstatsn(
  		iscsit_remove_cmd_from_connection_recovery(cmd, sess);
  
  		spin_unlock(&cr->conn_recovery_cmd_lock);
--		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) ||
--		    !(cmd->se_cmd.transport_wait_for_tasks))
-+		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
- 			iscsit_release_cmd(cmd);
- 		else
--			cmd->se_cmd.transport_wait_for_tasks(
--					&cmd->se_cmd, 1);
-+			transport_generic_free_cmd(&cmd->se_cmd, 1);
+-		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
+-			iscsit_release_cmd(cmd);
+-		else
+-			transport_generic_free_cmd(&cmd->se_cmd, 1);
++		iscsit_free_cmd(cmd);
  		spin_lock(&cr->conn_recovery_cmd_lock);
  	}
  	spin_unlock(&cr->conn_recovery_cmd_lock);
-@@ -319,12 +313,10 @@ int iscsit_discard_unacknowledged_ooo_cmdsns_for_conn(struct iscsi_conn *conn)
+@@ -313,10 +304,7 @@ int iscsit_discard_unacknowledged_ooo_cmdsns_for_conn(struct iscsi_conn *conn)
  		list_del(&cmd->i_list);
  
  		spin_unlock_bh(&conn->cmd_lock);
--		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) ||
--		    !(cmd->se_cmd.transport_wait_for_tasks))
-+		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
- 			iscsit_release_cmd(cmd);
- 		else
--			cmd->se_cmd.transport_wait_for_tasks(
--					&cmd->se_cmd, 1);
-+			transport_generic_free_cmd(&cmd->se_cmd, 1);
+-		if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
+-			iscsit_release_cmd(cmd);
+-		else
+-			transport_generic_free_cmd(&cmd->se_cmd, 1);
++		iscsit_free_cmd(cmd);
  		spin_lock_bh(&conn->cmd_lock);
  	}
  	spin_unlock_bh(&conn->cmd_lock);
-@@ -378,12 +370,10 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
+@@ -369,11 +357,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
+ 
  			list_del(&cmd->i_list);
  			spin_unlock_bh(&conn->cmd_lock);
- 
--			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) ||
--			    !(cmd->se_cmd.transport_wait_for_tasks))
-+			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
- 				iscsit_release_cmd(cmd);
- 			else
--				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1);
-+				transport_generic_free_cmd(&cmd->se_cmd, 1);
+-
+-			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
+-				iscsit_release_cmd(cmd);
+-			else
+-				transport_generic_free_cmd(&cmd->se_cmd, 1);
++			iscsit_free_cmd(cmd);
  			spin_lock_bh(&conn->cmd_lock);
  			continue;
  		}
-@@ -404,12 +394,10 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
+@@ -393,11 +377,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
+ 		     (cmd->cmd_sn >= conn->sess->exp_cmd_sn)) {
  			list_del(&cmd->i_list);
  			spin_unlock_bh(&conn->cmd_lock);
- 
--			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) ||
--			    !(cmd->se_cmd.transport_wait_for_tasks))
-+			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
- 				iscsit_release_cmd(cmd);
- 			else
--				cmd->se_cmd.transport_wait_for_tasks(
--						&cmd->se_cmd, 1);
-+				transport_generic_free_cmd(&cmd->se_cmd, 1);
+-
+-			if (!(cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD))
+-				iscsit_release_cmd(cmd);
+-			else
+-				transport_generic_free_cmd(&cmd->se_cmd, 1);
++			iscsit_free_cmd(cmd);
  			spin_lock_bh(&conn->cmd_lock);
  			continue;
  		}
-@@ -434,9 +422,8 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
+@@ -422,8 +402,7 @@ int iscsit_prepare_cmds_for_realligance(struct iscsi_conn *conn)
  
  		iscsit_free_all_datain_reqs(cmd);
  
--		if ((cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD) &&
--		     cmd->se_cmd.transport_wait_for_tasks)
--			cmd->se_cmd.transport_wait_for_tasks(&cmd->se_cmd, 0);
-+		if (cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD)
-+			transport_wait_for_tasks(&cmd->se_cmd);
+-		if (cmd->se_cmd.se_cmd_flags & SCF_SE_LUN_CMD)
+-			transport_wait_for_tasks(&cmd->se_cmd);
++		transport_wait_for_tasks(&cmd->se_cmd);
  		/*
  		 * Add the struct iscsi_cmd to the connection recovery cmd list
  		 */
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index ae1efc7..f8de042 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1638,8 +1638,6 @@ static int transport_check_alloc_task_attr(struct se_cmd *cmd)
- 	return 0;
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index c4be622..02348f7 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -840,6 +840,23 @@ void iscsit_release_cmd(struct iscsi_cmd *cmd)
+ 	kmem_cache_free(lio_cmd_cache, cmd);
  }
  
--static void transport_generic_wait_for_tasks(struct se_cmd *, int);
--
- /*	transport_generic_allocate_tasks():
-  *
-  *	Called from fabric RX Thread.
-@@ -1651,12 +1649,6 @@ int transport_generic_allocate_tasks(
- 	int ret;
- 
- 	transport_generic_prepare_cdb(cdb);
--
--	/*
--	 * This is needed for early exceptions.
--	 */
--	cmd->transport_wait_for_tasks = &transport_generic_wait_for_tasks;
--
- 	/*
- 	 * Ensure that the received CDB is less than the max (252 + 8) bytes
- 	 * for VARIABLE_LENGTH_CMD
-@@ -1739,7 +1731,7 @@ int transport_handle_cdb_direct(
- 	 * Set TRANSPORT_NEW_CMD state and cmd->t_transport_active=1 following
- 	 * transport_generic_handle_cdb*() -> transport_add_cmd_to_queue()
- 	 * in existing usage to ensure that outstanding descriptors are handled
--	 * correctly during shutdown via transport_generic_wait_for_tasks()
-+	 * correctly during shutdown via transport_wait_for_tasks()
- 	 *
- 	 * Also, we don't take cmd->t_state_lock here as we only expect
- 	 * this to be called for initial descriptor submission.
-@@ -1819,11 +1811,6 @@ EXPORT_SYMBOL(transport_generic_handle_data);
- int transport_generic_handle_tmr(
- 	struct se_cmd *cmd)
- {
--	/*
--	 * This is needed for early exceptions.
--	 */
--	cmd->transport_wait_for_tasks = &transport_generic_wait_for_tasks;
--
- 	transport_add_cmd_to_queue(cmd, TRANSPORT_PROCESS_TMR);
- 	return 0;
- }
-@@ -2504,8 +2491,6 @@ void transport_new_cmd_failure(struct se_cmd *se_cmd)
- 	spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
- }
- 
--static void transport_nop_wait_for_tasks(struct se_cmd *, int);
--
- static inline u32 transport_get_sectors_6(
- 	unsigned char *cdb,
- 	struct se_cmd *cmd,
-@@ -2780,7 +2765,6 @@ static int transport_get_sense_data(struct se_cmd *cmd)
- static int
- transport_handle_reservation_conflict(struct se_cmd *cmd)
- {
--	cmd->transport_wait_for_tasks = &transport_nop_wait_for_tasks;
- 	cmd->se_cmd_flags |= SCF_SCSI_CDB_EXCEPTION;
- 	cmd->se_cmd_flags |= SCF_SCSI_RESERVATION_CONFLICT;
- 	cmd->scsi_status = SAM_STAT_RESERVATION_CONFLICT;
-@@ -2881,8 +2865,6 @@ static int transport_generic_cmd_sequencer(
- 	 * Check for an existing UNIT ATTENTION condition
- 	 */
- 	if (core_scsi3_ua_check(cmd, cdb) < 0) {
--		cmd->transport_wait_for_tasks =
--				&transport_nop_wait_for_tasks;
- 		cmd->se_cmd_flags |= SCF_SCSI_CDB_EXCEPTION;
- 		cmd->scsi_sense_reason = TCM_CHECK_CONDITION_UNIT_ATTENTION;
- 		return -EINVAL;
-@@ -2892,7 +2874,6 @@ static int transport_generic_cmd_sequencer(
- 	 */
- 	ret = su_dev->t10_alua.alua_state_check(cmd, cdb, &alua_ascq);
- 	if (ret != 0) {
--		cmd->transport_wait_for_tasks = &transport_nop_wait_for_tasks;
- 		/*
- 		 * Set SCSI additional sense code (ASC) to 'LUN Not Accessible';
- 		 * The ALUA additional sense code qualifier (ASCQ) is determined
-@@ -3396,7 +3377,6 @@ static int transport_generic_cmd_sequencer(
- 		pr_warn("TARGET_CORE[%s]: Unsupported SCSI Opcode"
- 			" 0x%02x, sending CHECK_CONDITION.\n",
- 			cmd->se_tfo->get_fabric_name(), cdb[0]);
--		cmd->transport_wait_for_tasks = &transport_nop_wait_for_tasks;
- 		goto out_unsupported_cdb;
- 	}
- 
-@@ -4304,17 +4284,20 @@ EXPORT_SYMBOL(transport_release_cmd);
- 
- void transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
- {
--	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD))
-+	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD)) {
-+		if (wait_for_tasks && cmd->se_tmr_req)
-+			 transport_wait_for_tasks(cmd);
-+
- 		transport_release_cmd(cmd);
--	else {
-+	} else {
-+		if (wait_for_tasks)
-+			transport_wait_for_tasks(cmd);
-+
- 		core_dec_lacl_count(cmd->se_sess->se_node_acl, cmd);
- 
- 		if (cmd->se_lun)
- 			transport_lun_remove_cmd(cmd);
- 
--		if (wait_for_tasks && cmd->transport_wait_for_tasks)
--			cmd->transport_wait_for_tasks(cmd, 0);
--
- 		transport_free_dev_tasks(cmd);
- 
- 		transport_put_cmd(cmd);
-@@ -4322,13 +4305,6 @@ void transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
- }
- EXPORT_SYMBOL(transport_generic_free_cmd);
- 
--static void transport_nop_wait_for_tasks(
--	struct se_cmd *cmd,
--	int remove_cmd)
--{
--	return;
--}
--
- /*	transport_lun_wait_for_tasks():
-  *
-  *	Called from ConfigFS context to stop the passed struct se_cmd to allow
-@@ -4498,21 +4474,30 @@ int transport_clear_lun_from_sessions(struct se_lun *lun)
- 	return 0;
- }
- 
--/*	transport_generic_wait_for_tasks():
-+/**
-+ * transport_wait_for_tasks - wait for completion to occur
-+ * @cmd:	command to wait
-  *
-- *	Called from frontend or passthrough context to wait for storage engine
-- *	to pause and/or release frontend generated struct se_cmd.
-+ * Called from frontend fabric context to wait for storage engine
-+ * to pause and/or release frontend generated struct se_cmd.
-  */
--static void transport_generic_wait_for_tasks(
--	struct se_cmd *cmd,
--	int remove_cmd)
-+void transport_wait_for_tasks(struct se_cmd *cmd)
- {
- 	unsigned long flags;
- 
--	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD) && !(cmd->se_tmr_req))
--		return;
--
- 	spin_lock_irqsave(&cmd->t_state_lock, flags);
-+	if (!(cmd->se_cmd_flags & SCF_SE_LUN_CMD) && !(cmd->se_tmr_req)) {
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+		return;
-+	}
++void iscsit_free_cmd(struct iscsi_cmd *cmd)
++{
 +	/*
-+	 * Only perform a possible wait_for_tasks if SCF_SUPPORTED_SAM_OPCODE
-+	 * has been set in transport_set_supported_SAM_opcode().
++	 * Determine if a struct se_cmd is assoicated with
++	 * this struct iscsi_cmd.
 +	 */
-+	if (!(cmd->se_cmd_flags & SCF_SUPPORTED_SAM_OPCODE) && !cmd->se_tmr_req) {
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+		return;
++	switch (cmd->iscsi_opcode) {
++	case ISCSI_OP_SCSI_CMD:
++	case ISCSI_OP_SCSI_TMFUNC:
++		transport_generic_free_cmd(&cmd->se_cmd, 1);
++		break;
++	default:
++		iscsit_release_cmd(cmd);
++		break;
 +	}
- 	/*
- 	 * If we are already stopped due to an external event (ie: LUN shutdown)
- 	 * sleep until the connection can have the passed struct se_cmd back.
-@@ -4552,8 +4537,10 @@ static void transport_generic_wait_for_tasks(
- 		atomic_set(&cmd->transport_lun_stop, 0);
- 	}
- 	if (!atomic_read(&cmd->t_transport_active) ||
--	     atomic_read(&cmd->t_transport_aborted))
--		goto remove;
-+	     atomic_read(&cmd->t_transport_aborted)) {
-+		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
-+		return;
-+	}
- 
- 	atomic_set(&cmd->t_transport_stop, 1);
- 
-@@ -4576,13 +4563,10 @@ static void transport_generic_wait_for_tasks(
- 	pr_debug("wait_for_tasks: Stopped wait_for_compltion("
- 		"&cmd->t_transport_stop_comp) for ITT: 0x%08x\n",
- 		cmd->se_tfo->get_task_tag(cmd));
--remove:
--	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
--	if (!remove_cmd)
--		return;
- 
--	transport_generic_free_cmd(cmd, 0);
-+	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
- }
-+EXPORT_SYMBOL(transport_wait_for_tasks);
- 
- static int transport_get_sense_codes(
- 	struct se_cmd *cmd,
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index c10e351..872cafc 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -480,7 +480,6 @@ struct se_cmd {
- 	struct target_core_fabric_ops *se_tfo;
- 	int (*transport_emulate_cdb)(struct se_cmd *);
- 	void (*transport_split_cdb)(unsigned long long, u32, unsigned char *);
--	void (*transport_wait_for_tasks)(struct se_cmd *, int);
- 	void (*transport_complete_callback)(struct se_cmd *);
- 	int (*transport_qf_callback)(struct se_cmd *);
- 
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 549b6b3..371c24a 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -180,6 +180,7 @@ extern void __transport_stop_task_timer(struct se_task *, unsigned long *);
- extern int transport_generic_map_mem_to_cmd(struct se_cmd *cmd, struct scatterlist *, u32,
- 				struct scatterlist *, u32);
- extern int transport_clear_lun_from_sessions(struct se_lun *);
-+extern void transport_wait_for_tasks(struct se_cmd *);
- extern int transport_check_aborted_status(struct se_cmd *, int);
- extern int transport_send_check_condition_and_sense(struct se_cmd *, u8, int);
- extern void transport_send_task_abort(struct se_cmd *);
++}
++
+ int iscsit_check_session_usage_count(struct iscsi_session *sess)
+ {
+ 	spin_lock_bh(&sess->session_usage_lock);
+diff --git a/drivers/target/iscsi/iscsi_target_util.h b/drivers/target/iscsi/iscsi_target_util.h
+index 2cd49d6..835bf7d 100644
+--- a/drivers/target/iscsi/iscsi_target_util.h
++++ b/drivers/target/iscsi/iscsi_target_util.h
+@@ -30,6 +30,7 @@ extern struct iscsi_queue_req *iscsit_get_cmd_from_response_queue(struct iscsi_c
+ extern void iscsit_remove_cmd_from_tx_queues(struct iscsi_cmd *, struct iscsi_conn *);
+ extern void iscsit_free_queue_reqs_for_conn(struct iscsi_conn *);
+ extern void iscsit_release_cmd(struct iscsi_cmd *);
++extern void iscsit_free_cmd(struct iscsi_cmd *);
+ extern int iscsit_check_session_usage_count(struct iscsi_session *);
+ extern void iscsit_dec_session_usage_count(struct iscsi_session *);
+ extern void iscsit_inc_session_usage_count(struct iscsi_session *);
 -- 
 1.5.6.5
+
