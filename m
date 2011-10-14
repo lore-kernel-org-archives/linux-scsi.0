@@ -1,91 +1,291 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 27/37] target: Merge transport_cmd_finish_abort_tmr into transport_cmd_finish_abort
-Date: Fri, 14 Oct 2011 00:41:59 +0000
-Message-ID: <1318552929-13341-28-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 28/37] target: Remove legacy + unused device active I/O shutdown code
+Date: Fri, 14 Oct 2011 00:42:00 +0000
+Message-ID: <1318552929-13341-29-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:33482 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717Ab1JNApW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2011 20:45:22 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch merges transport_cmd_finish_abort_tmr() logic into a single
-transport_cmd_finish_abort() function by adding a cmd->se_tmr_req check
-around transport_lun_remove_cmd(), and updates the single caller within
-core_tmr_drain_tmr_list().
+This patch removes the legacy device active I/O shutdown code that was
+originally called from transport_processing_thread() context during shutdown
+including transport_processing_shutdown() and transport_release_all_cmds().
 
-Reported-by: Christoph Hellwig <hch@lst.de>
+This is due to the fact that in modern configfs control plane code by the
+time shutdown of an se_device instance in transport_processing_thread()
+is allowed to occur via:
+
+	rmdir /sys/kernel/config/target/core/$HBA/$DEV
+
+all active I/O will already have been ceased while removing active configfs
+fabric Port/LUN symlinks.  Eg: the removal of an active se_device is protected
+by inter-module VFS references from active Port/LUN symlinks.
+
+Two WARN_ON() checks have been added in their place before exiting
+transport_processing_thread() to watch out for any leaked descriptors.
+
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_tmr.c       |    2 +-
- drivers/target/target_core_transport.c |   13 ++-----------
- include/target/target_core_transport.h |    1 -
- 3 files changed, 3 insertions(+), 13 deletions(-)
+ drivers/target/target_core_transport.c |  220 +-------------------------------
+ 1 files changed, 2 insertions(+), 218 deletions(-)
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index efc5ec7..b8dc10f 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -161,7 +161,7 @@ static void core_tmr_drain_tmr_list(
- 			(preempt_and_abort_list) ? "Preempt" : "", tmr,
- 			tmr->function, tmr->response, cmd->t_state);
- 
--		transport_cmd_finish_abort_tmr(cmd);
-+		transport_cmd_finish_abort(cmd, 1);
- 	}
- }
- 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index f8de042..36fb39c 100644
+index 36fb39c..ee73f10 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -591,7 +591,8 @@ check_lun:
- 
- void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
- {
--	transport_lun_remove_cmd(cmd);
-+	if (!cmd->se_tmr_req)
-+		transport_lun_remove_cmd(cmd);
- 
- 	if (transport_cmd_check_stop_to_fabric(cmd))
- 		return;
-@@ -601,16 +602,6 @@ void transport_cmd_finish_abort(struct se_cmd *cmd, int remove)
- 	}
+@@ -1040,41 +1040,6 @@ void transport_dump_dev_state(
+ 	*bl += sprintf(b + *bl, "        ");
  }
  
--void transport_cmd_finish_abort_tmr(struct se_cmd *cmd)
+-/*	transport_release_all_cmds():
+- *
+- *
+- */
+-static void transport_release_all_cmds(struct se_device *dev)
 -{
--	transport_remove_cmd_from_queue(cmd, &cmd->se_dev->dev_queue_obj);
+-	struct se_cmd *cmd, *tcmd;
+-	int bug_out = 0, t_state;
+-	unsigned long flags;
 -
--	if (transport_cmd_check_stop_to_fabric(cmd))
--		return;
+-	spin_lock_irqsave(&dev->dev_queue_obj.cmd_queue_lock, flags);
+-	list_for_each_entry_safe(cmd, tcmd, &dev->dev_queue_obj.qobj_list,
+-				se_queue_node) {
+-		t_state = cmd->t_state;
+-		list_del_init(&cmd->se_queue_node);
+-		spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock,
+-				flags);
 -
--	transport_put_cmd(cmd);
+-		pr_err("Releasing ITT: 0x%08x, i_state: %u,"
+-			" t_state: %u directly\n",
+-			cmd->se_tfo->get_task_tag(cmd),
+-			cmd->se_tfo->get_cmd_state(cmd), t_state);
+-
+-		transport_put_cmd(cmd);
+-		bug_out = 1;
+-
+-		spin_lock_irqsave(&dev->dev_queue_obj.cmd_queue_lock, flags);
+-	}
+-	spin_unlock_irqrestore(&dev->dev_queue_obj.cmd_queue_lock, flags);
+-#if 0
+-	if (bug_out)
+-		BUG();
+-#endif
 -}
 -
- static void transport_add_cmd_to_queue(
- 	struct se_cmd *cmd,
- 	int t_state)
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 371c24a..c915169 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -134,7 +134,6 @@ extern void transport_free_session(struct se_session *);
- extern void transport_deregister_session_configfs(struct se_session *);
- extern void transport_deregister_session(struct se_session *);
- extern void transport_cmd_finish_abort(struct se_cmd *, int);
--extern void transport_cmd_finish_abort_tmr(struct se_cmd *);
- extern void transport_complete_sync_cache(struct se_cmd *, int);
- extern void transport_complete_task(struct se_task *, int);
- extern void transport_add_task_to_execute_queue(struct se_task *,
+ void transport_dump_vpd_proto_id(
+ 	struct t10_vpd *vpd,
+ 	unsigned char *p_buf,
+@@ -4859,180 +4824,6 @@ int transport_generic_do_tmr(struct se_cmd *cmd)
+ 	return 0;
+ }
+ 
+-/*
+- *	Called with spin_lock_irq(&dev->execute_task_lock); held
+- *
+- */
+-static struct se_task *
+-transport_get_task_from_state_list(struct se_device *dev)
+-{
+-	struct se_task *task;
+-
+-	if (list_empty(&dev->state_task_list))
+-		return NULL;
+-
+-	list_for_each_entry(task, &dev->state_task_list, t_state_list)
+-		break;
+-
+-	list_del(&task->t_state_list);
+-	atomic_set(&task->task_state_active, 0);
+-
+-	return task;
+-}
+-
+-static void transport_processing_shutdown(struct se_device *dev)
+-{
+-	struct se_cmd *cmd;
+-	struct se_task *task;
+-	unsigned long flags;
+-	/*
+-	 * Empty the struct se_device's struct se_task state list.
+-	 */
+-	spin_lock_irqsave(&dev->execute_task_lock, flags);
+-	while ((task = transport_get_task_from_state_list(dev))) {
+-		if (!task->task_se_cmd) {
+-			pr_err("task->task_se_cmd is NULL!\n");
+-			continue;
+-		}
+-		cmd = task->task_se_cmd;
+-
+-		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+-
+-		spin_lock_irqsave(&cmd->t_state_lock, flags);
+-
+-		pr_debug("PT: cmd: %p task: %p ITT: 0x%08x,"
+-			" i_state: %d, t_state/def_t_state:"
+-			" %d/%d cdb: 0x%02x\n", cmd, task,
+-			cmd->se_tfo->get_task_tag(cmd),
+-			cmd->se_tfo->get_cmd_state(cmd),
+-			cmd->t_state, cmd->deferred_t_state,
+-			cmd->t_task_cdb[0]);
+-		pr_debug("PT: ITT[0x%08x] - t_tasks: %d t_task_cdbs_left:"
+-			" %d t_task_cdbs_sent: %d -- t_transport_active: %d"
+-			" t_transport_stop: %d t_transport_sent: %d\n",
+-			cmd->se_tfo->get_task_tag(cmd),
+-			cmd->t_task_list_num,
+-			atomic_read(&cmd->t_task_cdbs_left),
+-			atomic_read(&cmd->t_task_cdbs_sent),
+-			atomic_read(&cmd->t_transport_active),
+-			atomic_read(&cmd->t_transport_stop),
+-			atomic_read(&cmd->t_transport_sent));
+-
+-		if (atomic_read(&task->task_active)) {
+-			atomic_set(&task->task_stop, 1);
+-			spin_unlock_irqrestore(
+-				&cmd->t_state_lock, flags);
+-
+-			pr_debug("Waiting for task: %p to shutdown for dev:"
+-				" %p\n", task, dev);
+-			wait_for_completion(&task->task_stop_comp);
+-			pr_debug("Completed task: %p shutdown for dev: %p\n",
+-				task, dev);
+-
+-			spin_lock_irqsave(&cmd->t_state_lock, flags);
+-			atomic_dec(&cmd->t_task_cdbs_left);
+-
+-			atomic_set(&task->task_active, 0);
+-			atomic_set(&task->task_stop, 0);
+-		} else {
+-			if (atomic_read(&task->task_execute_queue) != 0)
+-				transport_remove_task_from_execute_queue(task, dev);
+-		}
+-		__transport_stop_task_timer(task, &flags);
+-
+-		if (!atomic_dec_and_test(&cmd->t_task_cdbs_ex_left)) {
+-			spin_unlock_irqrestore(
+-					&cmd->t_state_lock, flags);
+-
+-			pr_debug("Skipping task: %p, dev: %p for"
+-				" t_task_cdbs_ex_left: %d\n", task, dev,
+-				atomic_read(&cmd->t_task_cdbs_ex_left));
+-
+-			spin_lock_irqsave(&dev->execute_task_lock, flags);
+-			continue;
+-		}
+-
+-		if (atomic_read(&cmd->t_transport_active)) {
+-			pr_debug("got t_transport_active = 1 for task: %p, dev:"
+-					" %p\n", task, dev);
+-
+-			if (atomic_read(&cmd->t_fe_count)) {
+-				spin_unlock_irqrestore(
+-					&cmd->t_state_lock, flags);
+-				transport_send_check_condition_and_sense(
+-					cmd, TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE,
+-					0);
+-				transport_remove_cmd_from_queue(cmd,
+-					&cmd->se_dev->dev_queue_obj);
+-
+-				transport_lun_remove_cmd(cmd);
+-				transport_cmd_check_stop(cmd, 1, 0);
+-			} else {
+-				spin_unlock_irqrestore(
+-					&cmd->t_state_lock, flags);
+-
+-				transport_remove_cmd_from_queue(cmd,
+-					&cmd->se_dev->dev_queue_obj);
+-
+-				transport_lun_remove_cmd(cmd);
+-
+-				if (transport_cmd_check_stop(cmd, 1, 0))
+-					transport_put_cmd(cmd);
+-			}
+-
+-			spin_lock_irqsave(&dev->execute_task_lock, flags);
+-			continue;
+-		}
+-		pr_debug("Got t_transport_active = 0 for task: %p, dev: %p\n",
+-				task, dev);
+-
+-		if (atomic_read(&cmd->t_fe_count)) {
+-			spin_unlock_irqrestore(
+-				&cmd->t_state_lock, flags);
+-			transport_send_check_condition_and_sense(cmd,
+-				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+-			transport_remove_cmd_from_queue(cmd,
+-				&cmd->se_dev->dev_queue_obj);
+-
+-			transport_lun_remove_cmd(cmd);
+-			transport_cmd_check_stop(cmd, 1, 0);
+-		} else {
+-			spin_unlock_irqrestore(
+-				&cmd->t_state_lock, flags);
+-
+-			transport_remove_cmd_from_queue(cmd,
+-				&cmd->se_dev->dev_queue_obj);
+-			transport_lun_remove_cmd(cmd);
+-
+-			if (transport_cmd_check_stop(cmd, 1, 0))
+-				transport_put_cmd(cmd);
+-		}
+-
+-		spin_lock_irqsave(&dev->execute_task_lock, flags);
+-	}
+-	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
+-	/*
+-	 * Empty the struct se_device's struct se_cmd list.
+-	 */
+-	while ((cmd = transport_get_cmd_from_queue(&dev->dev_queue_obj))) {
+-
+-		pr_debug("From Device Queue: cmd: %p t_state: %d\n",
+-				cmd, cmd->t_state);
+-
+-		if (atomic_read(&cmd->t_fe_count)) {
+-			transport_send_check_condition_and_sense(cmd,
+-				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
+-
+-			transport_lun_remove_cmd(cmd);
+-			transport_cmd_check_stop(cmd, 1, 0);
+-		} else {
+-			transport_lun_remove_cmd(cmd);
+-			if (transport_cmd_check_stop(cmd, 1, 0))
+-				transport_put_cmd(cmd);
+-		}
+-	}
+-}
+-
+ /*	transport_processing_thread():
+  *
+  *
+@@ -5052,14 +4843,6 @@ static int transport_processing_thread(void *param)
+ 		if (ret < 0)
+ 			goto out;
+ 
+-		spin_lock_irq(&dev->dev_status_lock);
+-		if (dev->dev_status & TRANSPORT_DEVICE_SHUTDOWN) {
+-			spin_unlock_irq(&dev->dev_status_lock);
+-			transport_processing_shutdown(dev);
+-			continue;
+-		}
+-		spin_unlock_irq(&dev->dev_status_lock);
+-
+ get_cmd:
+ 		__transport_execute_tasks(dev);
+ 
+@@ -5135,7 +4918,8 @@ get_cmd:
+ 	}
+ 
+ out:
+-	transport_release_all_cmds(dev);
++	WARN_ON(!list_empty(&dev->state_task_list));
++	WARN_ON(!list_empty(&dev->dev_queue_obj.qobj_list));
+ 	dev->process_thread = NULL;
+ 	return 0;
+ }
 -- 
 1.5.6.5
-
