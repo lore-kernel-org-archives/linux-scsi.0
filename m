@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 18/37] target: cleanup iblock bio submission
-Date: Fri, 14 Oct 2011 00:41:50 +0000
-Message-ID: <1318552929-13341-19-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 19/37] target: cleanup pscsi request submission
+Date: Fri, 14 Oct 2011 00:41:51 +0000
+Message-ID: <1318552929-13341-20-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
@@ -12,312 +12,372 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Move the entirely bio allocation, mapping and submission into ->do_task.
+Move the entirely request allocation, mapping and submission into ->do_task.
 This
 
  a) avoids blocking the I/O submission thread unessecarily, and
  b) simplifies the code greatly
 
+Note that the code seems to have various error handling issues, mostly
+related to bidi handling in the current form.  I've added comments about
+those but not tried to fix them in this commit.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_iblock.c |  194 +++++++++++------------------------
- drivers/target/target_core_iblock.h |    1 -
- 2 files changed, 59 insertions(+), 136 deletions(-)
+ drivers/target/target_core_pscsi.c |  265 +++++++++++++-----------------------
+ drivers/target/target_core_pscsi.h |    1 -
+ 2 files changed, 92 insertions(+), 174 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 7f0cc53..dcf93f8 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -374,45 +374,6 @@ static int iblock_emulated_fua_read(struct se_device *dev)
- 	return 0;
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 77d7258..b6d6093 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -776,95 +776,6 @@ pscsi_alloc_task(unsigned char *cdb)
+ 	return &pt->pscsi_task;
  }
  
--static int iblock_do_task(struct se_task *task)
+-static inline void pscsi_blk_init_request(
+-	struct se_task *task,
+-	struct pscsi_plugin_task *pt,
+-	struct request *req,
+-	int bidi_read)
 -{
--	struct se_device *dev = task->task_se_cmd->se_dev;
--	struct iblock_req *req = IBLOCK_REQ(task);
--	struct bio *bio = req->ib_bio, *nbio = NULL;
--	struct blk_plug plug;
--	int rw;
+-	/*
+-	 * Defined as "scsi command" in include/linux/blkdev.h.
+-	 */
+-	req->cmd_type = REQ_TYPE_BLOCK_PC;
+-	/*
+-	 * For the extra BIDI-COMMAND READ struct request we do not
+-	 * need to setup the remaining structure members
+-	 */
+-	if (bidi_read)
+-		return;
+-	/*
+-	 * Setup the done function pointer for struct request,
+-	 * also set the end_io_data pointer.to struct se_task.
+-	 */
+-	req->end_io = pscsi_req_done;
+-	req->end_io_data = task;
+-	/*
+-	 * Load the referenced struct se_task's SCSI CDB into
+-	 * include/linux/blkdev.h:struct request->cmd
+-	 */
+-	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
+-	req->cmd = &pt->pscsi_cdb[0];
+-	/*
+-	 * Setup pointer for outgoing sense data.
+-	 */
+-	req->sense = &pt->pscsi_sense[0];
+-	req->sense_len = 0;
+-}
 -
--	if (task->task_data_direction == DMA_TO_DEVICE) {
--		/*
--		 * Force data to disk if we pretend to not have a volatile
--		 * write cache, or the initiator set the Force Unit Access bit.
--		 */
--		if (dev->se_sub_dev->se_dev_attrib.emulate_write_cache == 0 ||
--		    (dev->se_sub_dev->se_dev_attrib.emulate_fua_write > 0 &&
--		     task->task_se_cmd->t_tasks_fua))
--			rw = WRITE_FUA;
--		else
--			rw = WRITE;
--	} else {
--		rw = READ;
+-/*
+- * Used for pSCSI data payloads for all *NON* SCF_SCSI_DATA_SG_IO_CDB
+-*/
+-static int pscsi_blk_get_request(struct se_task *task)
+-{
+-	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
+-	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
+-
+-	pt->pscsi_req = blk_get_request(pdv->pdv_sd->request_queue,
+-			(task->task_data_direction == DMA_TO_DEVICE),
+-			GFP_KERNEL);
+-	if (!pt->pscsi_req || IS_ERR(pt->pscsi_req)) {
+-		pr_err("PSCSI: blk_get_request() failed: %ld\n",
+-				IS_ERR(pt->pscsi_req));
+-		return PYX_TRANSPORT_LU_COMM_FAILURE;
 -	}
+-	/*
+-	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
+-	 * and setup rq callback, CDB and sense.
+-	 */
+-	pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
+-	return 0;
+-}
 -
--	blk_start_plug(&plug);
--	while (bio) {
--		nbio = bio->bi_next;
--		bio->bi_next = NULL;
--		pr_debug("Calling submit_bio() task: %p bio: %p"
--			" bio->bi_sector: %llu\n", task, bio,
--			 (unsigned long long)bio->bi_sector);
+-/*      pscsi_do_task(): (Part of se_subsystem_api_t template)
+- *
+- *
+- */
+-static int pscsi_do_task(struct se_task *task)
+-{
+-	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
+-	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
+-	/*
+-	 * Set the struct request->timeout value based on peripheral
+-	 * device type from SCSI.
+-	 */
+-	if (pdv->pdv_sd->type == TYPE_DISK)
+-		pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
+-	else
+-		pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
 -
--		submit_bio(rw, bio);
--		bio = nbio;
--	}
--	blk_finish_plug(&plug);
+-	pt->pscsi_req->retries = PS_RETRY;
+-	/*
+-	 * Queue the struct request into the struct scsi_device->request_queue.
+-	 * Also check for HEAD_OF_QUEUE SAM TASK attr from received se_cmd
+-	 * descriptor
+-	 */
+-	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, pt->pscsi_req,
+-			(task->task_se_cmd->sam_task_attr == MSG_HEAD_TAG),
+-			pscsi_req_done);
 -
 -	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
 -}
 -
- static int iblock_do_discard(struct se_device *dev, sector_t lba, u32 range)
+ static void pscsi_free_task(struct se_task *task)
  {
- 	struct iblock_dev *ibd = dev->dev_ptr;
-@@ -424,20 +385,7 @@ static int iblock_do_discard(struct se_device *dev, sector_t lba, u32 range)
- 
- static void iblock_free_task(struct se_task *task)
- {
--	struct iblock_req *req = IBLOCK_REQ(task);
--	struct bio *bio, *hbio = req->ib_bio;
--	/*
--	 * We only release the bio(s) here if iblock_bio_done() has not called
--	 * bio_put() -> iblock_bio_destructor().
--	 */
--	while (hbio != NULL) {
--		bio = hbio;
--		hbio = hbio->bi_next;
--		bio->bi_next = NULL;
--		bio_put(bio);
--	}
--
--	kfree(req);
-+	kfree(IBLOCK_REQ(task));
- }
- 
- enum {
-@@ -556,20 +504,16 @@ static void iblock_bio_destructor(struct bio *bio)
- 	bio_free(bio, ib_dev->ibd_bio_set);
- }
- 
--static struct bio *iblock_get_bio(
--	struct se_task *task,
--	struct iblock_req *ib_req,
--	struct iblock_dev *ib_dev,
--	int *ret,
--	sector_t lba,
--	u32 sg_num)
-+static struct bio *
-+iblock_get_bio(struct se_task *task, sector_t lba, u32 sg_num)
- {
-+	struct iblock_dev *ib_dev = task->se_dev->dev_ptr;
-+	struct iblock_req *ib_req = IBLOCK_REQ(task);
- 	struct bio *bio;
- 
- 	bio = bio_alloc_bioset(GFP_NOIO, sg_num, ib_dev->ibd_bio_set);
- 	if (!bio) {
- 		pr_err("Unable to allocate memory for bio\n");
--		*ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
- 		return NULL;
- 	}
- 
-@@ -590,17 +534,33 @@ static struct bio *iblock_get_bio(
+ 	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
+@@ -1048,15 +959,12 @@ static inline struct bio *pscsi_get_bio(int sg_num)
  	return bio;
  }
  
--static int iblock_map_data_SG(struct se_task *task)
-+static int iblock_do_task(struct se_task *task)
+-static int __pscsi_map_SG(
+-	struct se_task *task,
+-	struct scatterlist *task_sg,
+-	u32 task_sg_num,
+-	int bidi_read)
++static int pscsi_map_sg(struct se_task *task, struct scatterlist *task_sg,
++		struct bio **hbio)
  {
- 	struct se_cmd *cmd = task->task_se_cmd;
- 	struct se_device *dev = cmd->se_dev;
--	struct iblock_dev *ib_dev = task->se_dev->dev_ptr;
--	struct iblock_req *ib_req = IBLOCK_REQ(task);
+-	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
+ 	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
 -	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-+	struct bio *bio;
-+	struct bio_list list;
++	u32 task_sg_num = task->task_sg_nents;
++	struct bio *bio = NULL, *tbio = NULL;
+ 	struct page *page;
  	struct scatterlist *sg;
--	int ret = 0;
- 	u32 i, sg_num = task->task_sg_nents;
- 	sector_t block_lba;
-+	struct blk_plug plug;
-+	int rw;
-+
-+	if (task->task_data_direction == DMA_TO_DEVICE) {
-+		/*
-+		 * Force data to disk if we pretend to not have a volatile
-+		 * write cache, or the initiator set the Force Unit Access bit.
-+		 */
-+		if (dev->se_sub_dev->se_dev_attrib.emulate_write_cache == 0 ||
-+		    (dev->se_sub_dev->se_dev_attrib.emulate_fua_write > 0 &&
-+		     task->task_se_cmd->t_tasks_fua))
-+			rw = WRITE_FUA;
-+		else
-+			rw = WRITE;
-+	} else {
-+		rw = READ;
-+	}
-+
- 	/*
- 	 * Do starting conversion up from non 512-byte blocksize with
- 	 * struct se_task SCSI blocksize into Linux/Block 512 units for BIO.
-@@ -619,63 +579,43 @@ static int iblock_map_data_SG(struct se_task *task)
- 		return PYX_TRANSPORT_LU_COMM_FAILURE;
- 	}
+ 	u32 data_len = task->task_size, i, len, bytes, off;
+@@ -1065,19 +973,8 @@ static int __pscsi_map_SG(
+ 	int nr_vecs = 0, rc, ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
+ 	int rw = (task->task_data_direction == DMA_TO_DEVICE);
  
--	bio = iblock_get_bio(task, ib_req, ib_dev, &ret, block_lba, sg_num);
-+	bio = iblock_get_bio(task, block_lba, sg_num);
- 	if (!bio)
--		return ret;
-+		return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
-+
-+	bio_list_init(&list);
-+	bio_list_add(&list, bio);
- 
--	ib_req->ib_bio = bio;
--	hbio = tbio = bio;
+-	if (!task->task_size)
+-		return 0;
 -	/*
--	 * Use fs/bio.c:bio_add_pages() to setup the bio_vec maplist
--	 * from task->task_sg -> struct scatterlist memory.
+-	 * For SCF_SCSI_DATA_SG_IO_CDB, Use fs/bio.c:bio_add_page() to setup
+-	 * the bio_vec maplist from task->task_sg ->
+-	 * struct scatterlist memory.  The struct se_task->task_sg[] currently needs
+-	 * to be attached to struct bios for submission to Linux/SCSI using
+-	 * struct request to struct scsi_device->request_queue.
+-	 *
+-	 * Note that this will be changing post v2.6.28 as Target_Core_Mod/pSCSI
+-	 * is ported to upstream SCSI passthrough functionality that accepts
+-	 * struct scatterlist->page_link or struct page as a paraemeter.
 -	 */
- 	for_each_sg(task->task_sg, sg, task->task_sg_nents, i) {
--		pr_debug("task: %p bio: %p Calling bio_add_page(): page:"
--			" %p len: %u offset: %u\n", task, bio, sg_page(sg),
--				sg->length, sg->offset);
--again:
--		ret = bio_add_page(bio, sg_page(sg), sg->length, sg->offset);
--		if (ret != sg->length) {
--
--			pr_debug("*** Set bio->bi_sector: %llu\n",
--				 (unsigned long long)bio->bi_sector);
--			pr_debug("** task->task_size: %u\n",
--					task->task_size);
--			pr_debug("*** bio->bi_max_vecs: %u\n",
--					bio->bi_max_vecs);
--			pr_debug("*** bio->bi_vcnt: %u\n",
--					bio->bi_vcnt);
--
--			bio = iblock_get_bio(task, ib_req, ib_dev, &ret,
--						block_lba, sg_num);
-+		/*
-+		 * XXX: if the length the device accepts is shorter than the
-+		 *	length of the S/G list entry this will cause and
-+		 *	endless loop.  Better hope no driver uses huge pages.
-+		 */
-+		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
-+				!= sg->length) {
-+			bio = iblock_get_bio(task, block_lba, sg_num);
- 			if (!bio)
- 				goto fail;
--
--			tbio = tbio->bi_next = bio;
--			pr_debug("-----------------> Added +1 bio: %p to"
--				" list, Going to again\n", bio);
--			goto again;
-+			bio_list_add(&list, bio);
- 		}
++	*hbio = NULL;
 +
- 		/* Always in 512 byte units for Linux/Block */
- 		block_lba += sg->length >> IBLOCK_LBA_SHIFT;
- 		sg_num--;
--		pr_debug("task: %p bio-add_page() passed!, decremented"
--			" sg_num to %u\n", task, sg_num);
--		pr_debug("task: %p bio_add_page() passed!, increased lba"
--			 " to %llu\n", task, (unsigned long long)block_lba);
--		pr_debug("task: %p bio_add_page() passed!, bio->bi_vcnt:"
--				" %u\n", task, bio->bi_vcnt);
- 	}
+ 	pr_debug("PSCSI: nr_pages: %d\n", nr_pages);
  
--	return 0;
-+	blk_start_plug(&plug);
-+	while ((bio = bio_list_pop(&list)))
-+		submit_bio(rw, bio);
-+	blk_finish_plug(&plug);
-+
-+	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
-+
+ 	for_each_sg(task_sg, sg, task_sg_num, i) {
+@@ -1114,8 +1011,8 @@ static int __pscsi_map_SG(
+ 				 * bios need to be added to complete a given
+ 				 * struct se_task
+ 				 */
+-				if (!hbio)
+-					hbio = tbio = bio;
++				if (!*hbio)
++					*hbio = tbio = bio;
+ 				else
+ 					tbio = tbio->bi_next = bio;
+ 			}
+@@ -1151,83 +1048,109 @@ static int __pscsi_map_SG(
+ 			off = 0;
+ 		}
+ 	}
+-	/*
+-	 * Setup the primary pt->pscsi_req used for non BIDI and BIDI-COMMAND
+-	 * primary SCSI WRITE poayload mapped for struct se_task->task_sg[]
+-	 */
+-	if (!bidi_read) {
+-		/*
+-		 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
+-		 * allocate the pSCSI task a struct request.
+-		 */
+-		pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
+-					hbio, GFP_KERNEL);
+-		if (!pt->pscsi_req) {
+-			pr_err("pSCSI: blk_make_request() failed\n");
+-			goto fail;
+-		}
+-		/*
+-		 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
+-		 * and setup rq callback, CDB and sense.
+-		 */
+-		pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
+-
+-		return task->task_sg_nents;
+-	}
+-	/*
+-	 * Setup the secondary pt->pscsi_req->next_rq used for the extra BIDI-COMMAND
+-	 * SCSI READ paylaod mapped for struct se_task->task_sg_bidi[]
+-	 */
+-	pt->pscsi_req->next_rq = blk_make_request(pdv->pdv_sd->request_queue,
+-					hbio, GFP_KERNEL);
+-	if (!pt->pscsi_req->next_rq) {
+-		pr_err("pSCSI: blk_make_request() failed for BIDI\n");
+-		goto fail;
+-	}
+-	pscsi_blk_init_request(task, pt, pt->pscsi_req->next_rq, 1);
+ 
+ 	return task->task_sg_nents;
  fail:
 -	while (hbio) {
 -		bio = hbio;
 -		hbio = hbio->bi_next;
--		bio->bi_next = NULL;
-+	while ((bio = bio_list_pop(&list)))
- 		bio_put(bio);
--	}
--	return ret;
++	while (*hbio) {
++		bio = *hbio;
++		*hbio = (*hbio)->bi_next;
+ 		bio->bi_next = NULL;
+-		bio_endio(bio, 0);
++		bio_endio(bio, 0);	/* XXX: should be error */
+ 	}
+ 	return ret;
+ }
+ 
+-/*
+- * pSCSI maps both ->map_control_SG() and ->map_data_SG() to a single call.
+- */
+-static int pscsi_map_SG(struct se_task *task)
++static int pscsi_do_task(struct se_task *task)
+ {
++	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
++	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
++	struct request *req;
++	struct bio *hbio;
+ 	int ret;
+ 
+-	/*
+-	 * Setup the main struct request for the task->task_sg[] payload
+-	 */
++	if (task->task_se_cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
++		req = blk_get_request(pdv->pdv_sd->request_queue,
++				(task->task_data_direction == DMA_TO_DEVICE),
++				GFP_KERNEL);
++		if (!req || IS_ERR(req)) {
++			pr_err("PSCSI: blk_get_request() failed: %ld\n",
++					req ? IS_ERR(req) : -ENOMEM);
++			return PYX_TRANSPORT_LU_COMM_FAILURE;
++		}
++	} else {
++		BUG_ON(!task->task_size);
+ 
+-	ret = __pscsi_map_SG(task, task->task_sg, task->task_sg_nents, 0);
+-	if (ret >= 0 && task->task_sg_bidi) {
+ 		/*
+-		 * If present, set up the extra BIDI-COMMAND SCSI READ
+-		 * struct request and payload.
++		 * Setup the main struct request for the task->task_sg[] payload
+ 		 */
+-		ret = __pscsi_map_SG(task, task->task_sg_bidi,
+-					task->task_sg_nents, 1);
++		ret = pscsi_map_sg(task, task->task_sg, &hbio);
++		if (ret < 0)
++			return PYX_TRANSPORT_LU_COMM_FAILURE;
++
++		req = blk_make_request(pdv->pdv_sd->request_queue, hbio,
++				       GFP_KERNEL);
++		if (!req) {
++			pr_err("pSCSI: blk_make_request() failed\n");
++			goto fail;
++		}
++
++		if (task->task_sg_bidi) {
++			/*
++			 * If present, set up the extra BIDI-COMMAND SCSI READ
++			 * struct request and payload.
++			 */
++			ret = pscsi_map_sg(task, task->task_sg_bidi, &hbio);
++			if (ret < 0) {
++				/* XXX: free the main request? */
++				return PYX_TRANSPORT_LU_COMM_FAILURE;
++			}
++
++			/*
++			 * Setup the secondary pt->pscsi_req->next_rq used for the extra
++			 * BIDI READ payload.
++			 */
++			req->next_rq = blk_make_request(pdv->pdv_sd->request_queue,
++							hbio, GFP_KERNEL);
++			if (!req) {
++				pr_err("pSCSI: blk_make_request() failed for BIDI\n");
++				/* XXX: free the main request? */
++				goto fail;
++			}
++
++			req->next_rq->cmd_type = REQ_TYPE_BLOCK_PC;
++		}
+ 	}
+ 
+-	if (ret < 0)
+-		return PYX_TRANSPORT_LU_COMM_FAILURE;
+-	return 0;
+-}
++	req->cmd_type = REQ_TYPE_BLOCK_PC;
++	req->end_io = pscsi_req_done;
++	req->end_io_data = task;
++	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
++	req->cmd = &pt->pscsi_cdb[0];
++	req->sense = &pt->pscsi_sense[0];
++	req->sense_len = 0;
++	if (pdv->pdv_sd->type == TYPE_DISK)
++		req->timeout = PS_TIMEOUT_DISK;
++	else
++		req->timeout = PS_TIMEOUT_OTHER;
++	req->retries = PS_RETRY;
+ 
+-static int pscsi_CDB_none(struct se_task *task)
+-{
+-	return pscsi_blk_get_request(task);
++	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, req,
++			(task->task_se_cmd->sam_task_attr == MSG_HEAD_TAG),
++			pscsi_req_done);
++
++	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
++
++fail:
++	while (hbio) {
++		struct bio *bio = hbio;
++		hbio = hbio->bi_next;
++		bio->bi_next = NULL;
++		bio_endio(bio, 0);	/* XXX: should be error */
++	}
 +	return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
  }
  
- static unsigned char *iblock_get_cdb(struct se_task *task)
-@@ -706,6 +646,7 @@ static void iblock_bio_done(struct bio *bio, int err)
- {
- 	struct se_task *task = bio->bi_private;
- 	struct iblock_req *ibr = IBLOCK_REQ(task);
 +
- 	/*
- 	 * Set -EIO if !BIO_UPTODATE and the passed is still err=0
- 	 */
-@@ -720,41 +661,24 @@ static void iblock_bio_done(struct bio *bio, int err)
- 		 */
- 		atomic_inc(&ibr->ib_bio_err_cnt);
- 		smp_mb__after_atomic_inc();
--		bio_put(bio);
--		/*
--		 * Wait to complete the task until the last bio as completed.
--		 */
--		if (!atomic_dec_and_test(&ibr->ib_bio_cnt))
--			return;
--
--		ibr->ib_bio = NULL;
--		transport_complete_task(task, 0);
--		return;
- 	}
--	pr_debug("done[%p] bio: %p task_lba: %llu bio_lba: %llu err=%d\n",
--		 task, bio, task->task_lba, (unsigned long long)bio->bi_sector, err);
--	/*
--	 * bio_put() will call iblock_bio_destructor() to release the bio back
--	 * to ibr->ib_bio_set.
--	 */
-+
- 	bio_put(bio);
--	/*
--	 * Wait to complete the task until the last bio as completed.
--	 */
-+
- 	if (!atomic_dec_and_test(&ibr->ib_bio_cnt))
- 		return;
--	/*
--	 * Return GOOD status for task if zero ib_bio_err_cnt exists.
--	 */
--	ibr->ib_bio = NULL;
--	transport_complete_task(task, (!atomic_read(&ibr->ib_bio_err_cnt)));
-+
-+	pr_debug("done[%p] bio: %p task_lba: %llu bio_lba: %llu err=%d\n",
-+		 task, bio, task->task_lba,
-+		 (unsigned long long)bio->bi_sector, err);
-+
-+	transport_complete_task(task, !atomic_read(&ibr->ib_bio_err_cnt));
+ /*	pscsi_get_cdb():
+  *
+  *
+@@ -1334,16 +1257,12 @@ static void pscsi_req_done(struct request *req, int uptodate)
+ 		__blk_put_request(req->q, req->next_rq);
+ 
+ 	__blk_put_request(req->q, req);
+-	pt->pscsi_req = NULL;
  }
  
- static struct se_subsystem_api iblock_template = {
- 	.name			= "iblock",
+ static struct se_subsystem_api pscsi_template = {
+ 	.name			= "pscsi",
  	.owner			= THIS_MODULE,
- 	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
--	.map_data_SG		= iblock_map_data_SG,
- 	.attach_hba		= iblock_attach_hba,
- 	.detach_hba		= iblock_detach_hba,
- 	.allocate_virtdevice	= iblock_allocate_virtdevice,
-diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
-index a121cd1..7a76f66 100644
---- a/drivers/target/target_core_iblock.h
-+++ b/drivers/target/target_core_iblock.h
-@@ -11,7 +11,6 @@ struct iblock_req {
- 	unsigned char ib_scsi_cdb[TCM_MAX_COMMAND_SIZE];
- 	atomic_t ib_bio_cnt;
- 	atomic_t ib_bio_err_cnt;
--	struct bio *ib_bio;
+ 	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
+-	.cdb_none		= pscsi_CDB_none,
+-	.map_control_SG		= pscsi_map_SG,
+-	.map_data_SG		= pscsi_map_SG,
+ 	.attach_hba		= pscsi_attach_hba,
+ 	.detach_hba		= pscsi_detach_hba,
+ 	.pmode_enable_hba	= pscsi_pmode_enable_hba,
+diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
+index ebf4f1a..fdc17b6 100644
+--- a/drivers/target/target_core_pscsi.h
++++ b/drivers/target/target_core_pscsi.h
+@@ -27,7 +27,6 @@ struct pscsi_plugin_task {
+ 	int	pscsi_direction;
+ 	int	pscsi_result;
+ 	u32	pscsi_resid;
+-	struct request *pscsi_req;
+ 	unsigned char pscsi_cdb[0];
  } ____cacheline_aligned;
  
- #define IBDF_HAS_UDEV_PATH		0x01
 -- 
 1.5.6.5
