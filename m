@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 19/37] target: cleanup pscsi request submission
-Date: Fri, 14 Oct 2011 00:41:51 +0000
-Message-ID: <1318552929-13341-20-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 20/37] target: remove unused se_subsystem_api methods
+Date: Fri, 14 Oct 2011 00:41:52 +0000
+Message-ID: <1318552929-13341-21-git-send-email-nab@linux-iscsi.org>
 References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
@@ -12,372 +12,103 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Move the entirely request allocation, mapping and submission into ->do_task.
-This
-
- a) avoids blocking the I/O submission thread unessecarily, and
- b) simplifies the code greatly
-
-Note that the code seems to have various error handling issues, mostly
-related to bidi handling in the current form.  I've added comments about
-those but not tried to fix them in this commit.
+The cdb_none, map_data_SG and map_control_SG methods have no callers left
+and can be removed now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_pscsi.c |  265 +++++++++++++-----------------------
- drivers/target/target_core_pscsi.h |    1 -
- 2 files changed, 92 insertions(+), 174 deletions(-)
+ drivers/target/target_core_transport.c |   32 ++------------------------------
+ include/target/target_core_transport.h |   12 ------------
+ 2 files changed, 2 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 77d7258..b6d6093 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -776,95 +776,6 @@ pscsi_alloc_task(unsigned char *cdb)
- 	return &pt->pscsi_task;
- }
- 
--static inline void pscsi_blk_init_request(
--	struct se_task *task,
--	struct pscsi_plugin_task *pt,
--	struct request *req,
--	int bidi_read)
--{
--	/*
--	 * Defined as "scsi command" in include/linux/blkdev.h.
--	 */
--	req->cmd_type = REQ_TYPE_BLOCK_PC;
--	/*
--	 * For the extra BIDI-COMMAND READ struct request we do not
--	 * need to setup the remaining structure members
--	 */
--	if (bidi_read)
--		return;
--	/*
--	 * Setup the done function pointer for struct request,
--	 * also set the end_io_data pointer.to struct se_task.
--	 */
--	req->end_io = pscsi_req_done;
--	req->end_io_data = task;
--	/*
--	 * Load the referenced struct se_task's SCSI CDB into
--	 * include/linux/blkdev.h:struct request->cmd
--	 */
--	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
--	req->cmd = &pt->pscsi_cdb[0];
--	/*
--	 * Setup pointer for outgoing sense data.
--	 */
--	req->sense = &pt->pscsi_sense[0];
--	req->sense_len = 0;
--}
--
--/*
-- * Used for pSCSI data payloads for all *NON* SCF_SCSI_DATA_SG_IO_CDB
--*/
--static int pscsi_blk_get_request(struct se_task *task)
--{
--	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
--	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
--
--	pt->pscsi_req = blk_get_request(pdv->pdv_sd->request_queue,
--			(task->task_data_direction == DMA_TO_DEVICE),
--			GFP_KERNEL);
--	if (!pt->pscsi_req || IS_ERR(pt->pscsi_req)) {
--		pr_err("PSCSI: blk_get_request() failed: %ld\n",
--				IS_ERR(pt->pscsi_req));
--		return PYX_TRANSPORT_LU_COMM_FAILURE;
--	}
--	/*
--	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
--	 * and setup rq callback, CDB and sense.
--	 */
--	pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
--	return 0;
--}
--
--/*      pscsi_do_task(): (Part of se_subsystem_api_t template)
-- *
-- *
-- */
--static int pscsi_do_task(struct se_task *task)
--{
--	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
--	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
--	/*
--	 * Set the struct request->timeout value based on peripheral
--	 * device type from SCSI.
--	 */
--	if (pdv->pdv_sd->type == TYPE_DISK)
--		pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
--	else
--		pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
--
--	pt->pscsi_req->retries = PS_RETRY;
--	/*
--	 * Queue the struct request into the struct scsi_device->request_queue.
--	 * Also check for HEAD_OF_QUEUE SAM TASK attr from received se_cmd
--	 * descriptor
--	 */
--	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, pt->pscsi_req,
--			(task->task_se_cmd->sam_task_attr == MSG_HEAD_TAG),
--			pscsi_req_done);
--
--	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
--}
--
- static void pscsi_free_task(struct se_task *task)
- {
- 	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-@@ -1048,15 +959,12 @@ static inline struct bio *pscsi_get_bio(int sg_num)
- 	return bio;
- }
- 
--static int __pscsi_map_SG(
--	struct se_task *task,
--	struct scatterlist *task_sg,
--	u32 task_sg_num,
--	int bidi_read)
-+static int pscsi_map_sg(struct se_task *task, struct scatterlist *task_sg,
-+		struct bio **hbio)
- {
--	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
- 	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
--	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-+	u32 task_sg_num = task->task_sg_nents;
-+	struct bio *bio = NULL, *tbio = NULL;
- 	struct page *page;
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index e590526..ae1efc7 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -4023,7 +4023,7 @@ static int transport_allocate_data_tasks(
+ 	struct se_task *task;
+ 	struct se_device *dev = cmd->se_dev;
+ 	unsigned long flags;
+-	int task_count, i, ret;
++	int task_count, i;
+ 	sector_t sectors, dev_max_sectors = dev->se_sub_dev->se_dev_attrib.max_sectors;
+ 	u32 sector_size = dev->se_sub_dev->se_dev_attrib.block_size;
  	struct scatterlist *sg;
- 	u32 data_len = task->task_size, i, len, bytes, off;
-@@ -1065,19 +973,8 @@ static int __pscsi_map_SG(
- 	int nr_vecs = 0, rc, ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
- 	int rw = (task->task_data_direction == DMA_TO_DEVICE);
- 
--	if (!task->task_size)
--		return 0;
--	/*
--	 * For SCF_SCSI_DATA_SG_IO_CDB, Use fs/bio.c:bio_add_page() to setup
--	 * the bio_vec maplist from task->task_sg ->
--	 * struct scatterlist memory.  The struct se_task->task_sg[] currently needs
--	 * to be attached to struct bios for submission to Linux/SCSI using
--	 * struct request to struct scsi_device->request_queue.
--	 *
--	 * Note that this will be changing post v2.6.28 as Target_Core_Mod/pSCSI
--	 * is ported to upstream SCSI passthrough functionality that accepts
--	 * struct scatterlist->page_link or struct page as a paraemeter.
--	 */
-+	*hbio = NULL;
-+
- 	pr_debug("PSCSI: nr_pages: %d\n", nr_pages);
- 
- 	for_each_sg(task_sg, sg, task_sg_num, i) {
-@@ -1114,8 +1011,8 @@ static int __pscsi_map_SG(
- 				 * bios need to be added to complete a given
- 				 * struct se_task
- 				 */
--				if (!hbio)
--					hbio = tbio = bio;
-+				if (!*hbio)
-+					*hbio = tbio = bio;
- 				else
- 					tbio = tbio->bi_next = bio;
- 			}
-@@ -1151,83 +1048,109 @@ static int __pscsi_map_SG(
- 			off = 0;
- 		}
+@@ -4101,20 +4101,6 @@ static int transport_allocate_data_tasks(
+ 		list_add_tail(&task->t_list, &cmd->t_task_list);
+ 		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
  	}
 -	/*
--	 * Setup the primary pt->pscsi_req used for non BIDI and BIDI-COMMAND
--	 * primary SCSI WRITE poayload mapped for struct se_task->task_sg[]
+-	 * Now perform the memory map of task->task_sg[] into backend
+-	 * subsystem memory..
 -	 */
--	if (!bidi_read) {
--		/*
--		 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
--		 * allocate the pSCSI task a struct request.
--		 */
--		pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
--					hbio, GFP_KERNEL);
--		if (!pt->pscsi_req) {
--			pr_err("pSCSI: blk_make_request() failed\n");
--			goto fail;
--		}
--		/*
--		 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
--		 * and setup rq callback, CDB and sense.
--		 */
--		pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
+-	list_for_each_entry(task, &cmd->t_task_list, t_list) {
+-		if (atomic_read(&task->task_sent))
+-			continue;
+-		if (!dev->transport->map_data_SG)
+-			continue;
 -
--		return task->task_sg_nents;
+-		ret = dev->transport->map_data_SG(task);
+-		if (ret < 0)
+-			return 0;
 -	}
--	/*
--	 * Setup the secondary pt->pscsi_req->next_rq used for the extra BIDI-COMMAND
--	 * SCSI READ paylaod mapped for struct se_task->task_sg_bidi[]
--	 */
--	pt->pscsi_req->next_rq = blk_make_request(pdv->pdv_sd->request_queue,
--					hbio, GFP_KERNEL);
--	if (!pt->pscsi_req->next_rq) {
--		pr_err("pSCSI: blk_make_request() failed for BIDI\n");
--		goto fail;
+ 
+ 	return task_count;
+ }
+@@ -4126,7 +4112,6 @@ transport_allocate_control_task(struct se_cmd *cmd)
+ 	unsigned char *cdb;
+ 	struct se_task *task;
+ 	unsigned long flags;
+-	int ret = 0;
+ 
+ 	task = transport_generic_get_task(cmd, cmd->data_direction);
+ 	if (!task)
+@@ -4153,21 +4138,8 @@ transport_allocate_control_task(struct se_cmd *cmd)
+ 	list_add_tail(&task->t_list, &cmd->t_task_list);
+ 	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+ 
+-	if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) {
+-		if (dev->transport->map_control_SG)
+-			ret = dev->transport->map_control_SG(task);
+-	} else if (cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
+-		if (dev->transport->cdb_none)
+-			ret = dev->transport->cdb_none(task);
+-	} else {
+-		pr_err("target: Unknown control cmd type!\n");
+-		BUG();
 -	}
--	pscsi_blk_init_request(task, pt, pt->pscsi_req->next_rq, 1);
- 
- 	return task->task_sg_nents;
- fail:
--	while (hbio) {
--		bio = hbio;
--		hbio = hbio->bi_next;
-+	while (*hbio) {
-+		bio = *hbio;
-+		*hbio = (*hbio)->bi_next;
- 		bio->bi_next = NULL;
--		bio_endio(bio, 0);
-+		bio_endio(bio, 0);	/* XXX: should be error */
- 	}
- 	return ret;
+-
+ 	/* Success! Return number of tasks allocated */
+-	if (ret == 0)
+-		return 1;
+-	return ret;
++	return 1;
  }
  
--/*
-- * pSCSI maps both ->map_control_SG() and ->map_data_SG() to a single call.
-- */
--static int pscsi_map_SG(struct se_task *task)
-+static int pscsi_do_task(struct se_task *task)
- {
-+	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	struct request *req;
-+	struct bio *hbio;
- 	int ret;
- 
--	/*
--	 * Setup the main struct request for the task->task_sg[] payload
+ static u32 transport_allocate_tasks(
+diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
+index e67feeb..549b6b3 100644
+--- a/include/target/target_core_transport.h
++++ b/include/target/target_core_transport.h
+@@ -234,18 +234,6 @@ struct se_subsystem_api {
+ 	 */
+ 	struct list_head sub_api_list;
+ 	/*
+-	 * For SCF_SCSI_NON_DATA_CDB
 -	 */
-+	if (task->task_se_cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
-+		req = blk_get_request(pdv->pdv_sd->request_queue,
-+				(task->task_data_direction == DMA_TO_DEVICE),
-+				GFP_KERNEL);
-+		if (!req || IS_ERR(req)) {
-+			pr_err("PSCSI: blk_get_request() failed: %ld\n",
-+					req ? IS_ERR(req) : -ENOMEM);
-+			return PYX_TRANSPORT_LU_COMM_FAILURE;
-+		}
-+	} else {
-+		BUG_ON(!task->task_size);
- 
--	ret = __pscsi_map_SG(task, task->task_sg, task->task_sg_nents, 0);
--	if (ret >= 0 && task->task_sg_bidi) {
- 		/*
--		 * If present, set up the extra BIDI-COMMAND SCSI READ
--		 * struct request and payload.
-+		 * Setup the main struct request for the task->task_sg[] payload
- 		 */
--		ret = __pscsi_map_SG(task, task->task_sg_bidi,
--					task->task_sg_nents, 1);
-+		ret = pscsi_map_sg(task, task->task_sg, &hbio);
-+		if (ret < 0)
-+			return PYX_TRANSPORT_LU_COMM_FAILURE;
-+
-+		req = blk_make_request(pdv->pdv_sd->request_queue, hbio,
-+				       GFP_KERNEL);
-+		if (!req) {
-+			pr_err("pSCSI: blk_make_request() failed\n");
-+			goto fail;
-+		}
-+
-+		if (task->task_sg_bidi) {
-+			/*
-+			 * If present, set up the extra BIDI-COMMAND SCSI READ
-+			 * struct request and payload.
-+			 */
-+			ret = pscsi_map_sg(task, task->task_sg_bidi, &hbio);
-+			if (ret < 0) {
-+				/* XXX: free the main request? */
-+				return PYX_TRANSPORT_LU_COMM_FAILURE;
-+			}
-+
-+			/*
-+			 * Setup the secondary pt->pscsi_req->next_rq used for the extra
-+			 * BIDI READ payload.
-+			 */
-+			req->next_rq = blk_make_request(pdv->pdv_sd->request_queue,
-+							hbio, GFP_KERNEL);
-+			if (!req) {
-+				pr_err("pSCSI: blk_make_request() failed for BIDI\n");
-+				/* XXX: free the main request? */
-+				goto fail;
-+			}
-+
-+			req->next_rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+		}
- 	}
- 
--	if (ret < 0)
--		return PYX_TRANSPORT_LU_COMM_FAILURE;
--	return 0;
--}
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->end_io = pscsi_req_done;
-+	req->end_io_data = task;
-+	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
-+	req->cmd = &pt->pscsi_cdb[0];
-+	req->sense = &pt->pscsi_sense[0];
-+	req->sense_len = 0;
-+	if (pdv->pdv_sd->type == TYPE_DISK)
-+		req->timeout = PS_TIMEOUT_DISK;
-+	else
-+		req->timeout = PS_TIMEOUT_OTHER;
-+	req->retries = PS_RETRY;
- 
--static int pscsi_CDB_none(struct se_task *task)
--{
--	return pscsi_blk_get_request(task);
-+	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, req,
-+			(task->task_se_cmd->sam_task_attr == MSG_HEAD_TAG),
-+			pscsi_req_done);
-+
-+	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
-+
-+fail:
-+	while (hbio) {
-+		struct bio *bio = hbio;
-+		hbio = hbio->bi_next;
-+		bio->bi_next = NULL;
-+		bio_endio(bio, 0);	/* XXX: should be error */
-+	}
-+	return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
- }
- 
-+
- /*	pscsi_get_cdb():
-  *
-  *
-@@ -1334,16 +1257,12 @@ static void pscsi_req_done(struct request *req, int uptodate)
- 		__blk_put_request(req->q, req->next_rq);
- 
- 	__blk_put_request(req->q, req);
--	pt->pscsi_req = NULL;
- }
- 
- static struct se_subsystem_api pscsi_template = {
- 	.name			= "pscsi",
- 	.owner			= THIS_MODULE,
- 	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
--	.cdb_none		= pscsi_CDB_none,
--	.map_control_SG		= pscsi_map_SG,
--	.map_data_SG		= pscsi_map_SG,
- 	.attach_hba		= pscsi_attach_hba,
- 	.detach_hba		= pscsi_detach_hba,
- 	.pmode_enable_hba	= pscsi_pmode_enable_hba,
-diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
-index ebf4f1a..fdc17b6 100644
---- a/drivers/target/target_core_pscsi.h
-+++ b/drivers/target/target_core_pscsi.h
-@@ -27,7 +27,6 @@ struct pscsi_plugin_task {
- 	int	pscsi_direction;
- 	int	pscsi_result;
- 	u32	pscsi_resid;
--	struct request *pscsi_req;
- 	unsigned char pscsi_cdb[0];
- } ____cacheline_aligned;
- 
+-	int (*cdb_none)(struct se_task *);
+-	/*
+-	 * For SCF_SCSI_DATA_SG_IO_CDB
+-	 */
+-	int (*map_data_SG)(struct se_task *);
+-	/*
+-	 * For SCF_SCSI_CONTROL_SG_IO_CDB
+-	 */
+-	int (*map_control_SG)(struct se_task *);
+-	/*
+ 	 * attach_hba():
+ 	 */
+ 	int (*attach_hba)(struct se_hba *, u32);
 -- 
 1.5.6.5
