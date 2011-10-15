@@ -1,59 +1,82 @@
-From: Univerzita Karlova <mdiaz@frch.utn.edu.ar>
-Subject: =?UTF-8?Q?administrativn=C3=AD=20zpr=C3=A1vy?=
-Date: Sat, 15 Oct 2011 18:08:11 +0100
-Message-ID: <870cd95985e6d924c05da186df11e657__28479.1827587926$1318698920$gmane$org@mail.frch.utn.edu.ar>
-Reply-To: wen@auto.lt
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of staging
+Date: Sat, 15 Oct 2011 16:27:27 -0500
+Message-ID: <1318714047.7271.49.camel@dabdike.int.hansenpartnership.com>
+References: <1318660132-21529-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.frch.utn.edu.ar ([190.114.208.70]:53822 "EHLO
-	mail.frch.utn.edu.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753391Ab1JORO4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Oct 2011 13:14:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1318660132-21529-1-git-send-email-kys@microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, linux-scsi@vger.kernel.org, hch@infradead.org, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Fri, 2011-10-14 at 23:28 -0700, K. Y. Srinivasan wrote:
+> In preparation for moving the storage driver out of staging, seek community
+> review of the storage  driver code.
+
+That's not exactly a very descriptive commit message for me to put into
+SCSI.  It doesn't have to be huge, just something like "driver to enable
+hyperv windows guest on Linux" or something.
 
 
+>  drivers/scsi/Kconfig             |    7 +
+>  drivers/scsi/Makefile            |    3 +
+>  drivers/scsi/storvsc_drv.c       | 1480 ++++++++++++++++++++++++++++++++++++++
+>  drivers/staging/hv/Kconfig       |    6 -
+>  drivers/staging/hv/Makefile      |    2 -
+>  drivers/staging/hv/storvsc_drv.c | 1480 --------------------------------------
+>  6 files changed, 1490 insertions(+), 1488 deletions(-)
 
---=20
- V=C3=A1=C5=BEen=C3=BD cuni.cz p=C5=99edplatitelem,
+What tree is this against?  The hv/storvsc_drv.c in upstream only has
 
- Provedeme aktualizaci v syst=C3=A9mu v d=C5=AFsledku spoustu p=C5=99et=
-=C3=AD=C5=BEen=C3=AD, vysok=C3=BD=20
- obsah spamu, kter=C3=BD poch=C3=A1z=C3=AD z na=C5=A1eho serveru a prop=
-u=C5=A1t=C4=9Bn=C3=AD nebezpe=C4=8Dn=C3=BD=20
- virus podle n=C4=9Bkter=C3=BDch z=C3=A1kazn=C3=ADk=C5=AF na tomto serv=
-eru, v=C5=A1echny =C3=BA=C4=8Dtu, =C5=BEe=20
- u=C5=BEivatel mus=C3=AD aktualizovat jejich =C3=BA=C4=8Det pro zv=C3=BD=
-=C5=A1en=C3=AD bezpe=C4=8Dnosti a lep=C5=A1=C3=AD=20
- po=C5=A1tovn=C3=AD slu=C5=BEby na aviod ukon=C4=8Den=C3=AD =C3=BA=C4=8D=
-et jako nespln=C4=9Bn=C3=AD povede k ukon=C4=8Den=C3=AD=20
- va=C5=A1eho =C3=BA=C4=8Dtu v n=C3=A1sleduj=C3=ADc=C3=ADch 48 hodin.
+jejb@dabdike> wc -l drivers/staging/hv/storvsc_drv.c 
+792 drivers/staging/hv/storvsc_drv.c
 
- Klepn=C4=9Bte na odkaz n=C3=AD=C5=BEe, vyplnit spr=C3=A1vn=C3=A9 infor=
-mace a p=C5=99ed=C3=A1 sout=C4=9B=C5=BEit pro=20
- aktualizaci,
+i.e. whatever you're sending is double the length (and obviously I have
+trouble applying the patch.
 
- http://buzurl.com/bu11
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -0,0 +1,1480 @@
 
- Doufal, =C5=BEe v=C3=A1m poslou=C5=BE=C3=AD l=C3=A9pe...
+So not a detailed review, but a couple of structural observations:
 
- S pozdravem
- Univerzita Karlova
- **********************************************************************=
-**********************
- Je to administrativn=C3=AD zpr=C3=A1vy na serveru cuni.cz. To nen=C3=AD=
- Nevy=C5=BE=C3=A1dan=C3=A1=20
- po=C5=A1ta. =C4=8Cas v =C4=8Dase Server cuni.cz v=C3=A1m za=C5=A1leme =
-tyto zpr=C3=A1vy p=C5=99edat d=C5=AFle=C5=BEit=C3=A9=20
- informace o p=C5=99edplatn=C3=A9m.
- **********************************************************************=
-********************
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The whole driver is a writeout deadlock trap since I assume you intend
+for it to be used as root/swap of a linux guest?  The writeout deadlock
+occurs when we can't make forward progress on a direct writeout I/O
+because one of the GFP_ATOMIC memory allocations in your driver fails.
+The only way to fix this is to back the allocations with mempools (one
+per actual device) so you can guarantee that whatever memory pressure
+the system is under, one command can always make the round trip to
+storage and back.
+
+You use the locked version of queuecommand, but it looks like you don't
+need the host lock in the submit path, so why not just use the unlocked
+version?
+
+The bounce buffer handling for discontiguous sg lists is a complete
+nightmare.  And can't you just fix the hypervisor instead of pulling
+this level of nastiness in the driver, I mean really, the last piece of
+real SCSI hardware that failed this badly was produced in the dark ages.
+Assuming the answer is "no", I really think you need to set the minimum
+block size to 4k, which will completely avoid the situation.
+
+Minor, but use accessors like shost_priv()
+
+The SET WINDOW command is an obsolete scanner command ... the comment
+about smart issuing it looks completely bogus, but even if there's
+something issuing scanner commands and your hypervisor crashes on them,
+you need to reject it with ILLEGAL_REQUEST not DID_ERROR.
+
+All the business around max segment size and supplying your own merge
+biovec function looks a bit bogus, don't you just want to disable
+clustering?  This looks like another knock on from the weird hypervisor
+sg list handling, where you apparently need one sg entry per page.  This
+was originally a bug in the circa 1990 era NCR 53c800 host controllers
+we then had, so that's actually why the clustering parameter exists ...
+it's sort of nostalgic to see you resurrecting such an ancient bug.
+
+James
