@@ -1,51 +1,86 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of
- staging
-Date: Mon, 17 Oct 2011 08:54:42 -0700
-Message-ID: <20111017155442.GA14911@suse.de>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of staging
+Date: Mon, 17 Oct 2011 23:00:56 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481AA1D68C@TK5EX14MBXC128.redmond.corp.microsoft.com>
 References: <1318660132-21529-1-git-send-email-kys@microsoft.com>
- <1318714047.7271.49.camel@dabdike.int.hansenpartnership.com>
- <6E21E5352C11B742B20C142EB499E0481AA0FED0@TK5EX14MBXC128.redmond.corp.microsoft.com>
- <1318859976.4794.8.camel@dabdike.int.hansenpartnership.com>
- <6E21E5352C11B742B20C142EB499E0481AA15174@TK5EX14MBXC124.redmond.corp.microsoft.com>
+	 <1318714047.7271.49.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA0FED0@TK5EX14MBXC128.redmond.corp.microsoft.com>
+	 <1318859976.4794.8.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA15174@TK5EX14MBXC124.redmond.corp.microsoft.com>
  <1318865202.4794.21.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:34120 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751512Ab1JQPzH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Oct 2011 11:55:07 -0400
-Content-Disposition: inline
+Received: from mail3.microsoft.com ([131.107.115.214]:11329 "EHLO
+	smtp.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159Ab1JQXBF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2011 19:01:05 -0400
 In-Reply-To: <1318865202.4794.21.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: KY Srinivasan <kys@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Haiyang Zhang <haiyangz@microsoft.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Haiyang Zhang <haiyangz@microsoft.com>
 
-On Mon, Oct 17, 2011 at 10:26:42AM -0500, James Bottomley wrote:
-> On Mon, 2011-10-17 at 15:15 +0000, KY Srinivasan wrote:
-> > This patch is against Greg's staging tree where recently I merged all
-> > of the storage
-> > drivers into a single driver. This change may not have percolated up
-> > yet - Greg has
-> > checked this into his staging tree though.
-> 
-> OK, that explains the difference.
-> 
-> > As I deal with the review comments now, do you want me to get these
-> > changes
-> > applied first to Greg's tree before you would consider moving this
-> > driver to drivers/scsi
-> > directory, or could you move the driver as it is in Greg's tree under
-> > staging and I could give
-> > you patches against the moved driver.
-> 
-> Either way is fine by me.  The best route for this is to get the staging
-> update into Linus head, then work on the actual SCSI problems.  I'd like
-> other SCSI people besides me to review it.
-
-That will happen for the 3.2-rc1 release, so that might be the better
-time to review this.
-
-greg k-h
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+TW9uZGF5LCBPY3RvYmVyIDE3LCAyMDExIDExOjI3IEFNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+
+IENjOiBncmVna2hAc3VzZS5kZTsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gZGV2
+ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgdmlydHVhbGl6YXRpb25AbGlzdHMub3NkbC5vcmc7
+IG9oZXJpbmdAc3VzZS5jb207DQo+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBoY2hAaW5m
+cmFkZWFkLm9yZzsgSGFpeWFuZyBaaGFuZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIDEvMV0gU3Rh
+Z2luZzogaHY6IHN0b3J2c2M6IE1vdmUgdGhlIHN0b3JhZ2UgZHJpdmVyIG91dCBvZg0KPiBzdGFn
+aW5nDQo+IA0KPiBPbiBNb24sIDIwMTEtMTAtMTcgYXQgMTU6MTUgKzAwMDAsIEtZIFNyaW5pdmFz
+YW4gd3JvdGU6DQo+ID4gVGhpcyBwYXRjaCBpcyBhZ2FpbnN0IEdyZWcncyBzdGFnaW5nIHRyZWUg
+d2hlcmUgcmVjZW50bHkgSSBtZXJnZWQgYWxsDQo+ID4gb2YgdGhlIHN0b3JhZ2UNCj4gPiBkcml2
+ZXJzIGludG8gYSBzaW5nbGUgZHJpdmVyLiBUaGlzIGNoYW5nZSBtYXkgbm90IGhhdmUgcGVyY29s
+YXRlZCB1cA0KPiA+IHlldCAtIEdyZWcgaGFzDQo+ID4gY2hlY2tlZCB0aGlzIGludG8gaGlzIHN0
+YWdpbmcgdHJlZSB0aG91Z2guDQo+IA0KPiBPSywgdGhhdCBleHBsYWlucyB0aGUgZGlmZmVyZW5j
+ZS4NCj4gDQo+ID4gQXMgSSBkZWFsIHdpdGggdGhlIHJldmlldyBjb21tZW50cyBub3csIGRvIHlv
+dSB3YW50IG1lIHRvIGdldCB0aGVzZQ0KPiA+IGNoYW5nZXMNCj4gPiBhcHBsaWVkIGZpcnN0IHRv
+IEdyZWcncyB0cmVlIGJlZm9yZSB5b3Ugd291bGQgY29uc2lkZXIgbW92aW5nIHRoaXMNCj4gPiBk
+cml2ZXIgdG8gZHJpdmVycy9zY3NpDQo+ID4gZGlyZWN0b3J5LCBvciBjb3VsZCB5b3UgbW92ZSB0
+aGUgZHJpdmVyIGFzIGl0IGlzIGluIEdyZWcncyB0cmVlIHVuZGVyDQo+ID4gc3RhZ2luZyBhbmQg
+SSBjb3VsZCBnaXZlDQo+ID4geW91IHBhdGNoZXMgYWdhaW5zdCB0aGUgbW92ZWQgZHJpdmVyLg0K
+PiANCj4gRWl0aGVyIHdheSBpcyBmaW5lIGJ5IG1lLiAgVGhlIGJlc3Qgcm91dGUgZm9yIHRoaXMg
+aXMgdG8gZ2V0IHRoZSBzdGFnaW5nDQo+IHVwZGF0ZSBpbnRvIExpbnVzIGhlYWQsIHRoZW4gd29y
+ayBvbiB0aGUgYWN0dWFsIFNDU0kgcHJvYmxlbXMuICBJJ2QgbGlrZQ0KPiBvdGhlciBTQ1NJIHBl
+b3BsZSBiZXNpZGVzIG1lIHRvIHJldmlldyBpdC4NCj4gDQo+ID4gPiBPSywgc28gYXMgSSByZWFk
+IHRoZSBjb2RlLCB3aGF0IGl0IGNhbid0IGhhbmRsZSBpcyBmcmFnbWVudHMgZXhjZXB0IGF0DQo+
+ID4gPiB0aGUgZW5kcy4gIEFzIGxvbmcgYXMgZXZlcnl0aGluZyBhbHdheXMgdHJhbnNmZXJzIGlu
+IG11bHRpcGxlcyBvZiA0aywNCj4gPiA+IHRoZSBwcm9ibGVtIHdpbGwgbmV2ZXIgb2NjdXIuICBU
+aGlzIG1lYW5zIHRoYXQgYWxsIGRldmljZXMgeW91IHByZXNlbnQNCj4gPiA+IG5lZWQgdG8gdGVs
+bCB0aGUgT1MgdGhleSBoYXZlIDRrIHNlY3RvcnMuICBJICp0aGluayogeW91IGNhbiBkbyB0aGlz
+IGJ5DQo+ID4gPiBzZXR0aW5nICBibGtfbGltaXRzX2lvX21pbigpIGluIHRoZSBkcml2ZXIgLi4u
+IGJ1dCB5b3UnbGwgaGF2ZSB0byB0ZXN0DQo+ID4gPiB0aGlzLiAgVGhlIG1pbmltdW0gc2VjdG9y
+IHNpemUgZ2V0cyBzZXQgYWxzbyBpbiBzZC5jIHdoZW4gd2UgcHJvYmUgdGhlDQo+ID4gPiBkaXNr
+LiAgSSB0aGluayB0aGF0IHdvbid0IG92ZXJyaWRlIGJsa19saW1pdHNfaW9fbWluKCksIGJ1dCBw
+bGVhc2UgdGVzdA0KPiA+ID4gKHdlIGRvbid0IGhhdmUgYW55IFNDU0kgZHJpdmVycyB3aGljaCBo
+YXZlIGV2ZXIgdXNlZCB0aGlzIHNldHRpbmcpLg0KPiA+ID4NCj4gPiA+IFRoZSB3YXkgdG8gdGVz
+dCwgaXMgdG8gcmVhZCBiYWNrIHRoZSAvc3lzL2Jsb2NrLzxkZXY+L3F1ZXVlLyBzZXR0aW5ncw0K
+PiA+ID4gd2hlbiBwcmVzZW50aW5nIGEgNTEyIGJ5dGUgc2VjdG9yIGRpc2suICAoQW5kIHRoZSB3
+YXkgdG8gYWN0aXZhdGUgeW91cg0KPiA+ID4gYm91bmNlIGNvZGUgd291bGQgYmUgdG8gY3JlYXRl
+IGEgZmlsZXN5c3RlbSB3aXRoIGEgPCBQQUdFX1NJWkUgYmxvY2sNCj4gPiA+IHNpemUpLg0KPiA+
+DQo+ID4gR2l2ZW4gdGhhdCB0aGUgYm91bmNlIGJ1ZmZlciBoYW5kbGluZyBjb2RlIHdvdWxkIHR5
+cGljYWxseQ0KPiA+IG5ldmVyIGJlIHRyaWdnZXJlZCwgSSBub3Qgc3VyZSBob3cgdXNlZnVsIGl0
+IHdpbGwgYmUgdG8gdHJ5IHRvIGdldCByaWQNCj4gPiBvZiB0aGUgYm91bmNlIGJ1ZmZlcg0KPiA+
+IGNvZGUgdXNpbmcgYSBmZWF0dXJlIHRoYXQgaXMgbm90IHdlbGwgdGVzdGVkLg0KPiANCj4gQXMg
+b3Bwb3NlZCB0byBib3VuY2UgYnVmZmVyIGNvZGUgd2hpY2ggaGFzbid0IGJlZW4gd2VsbCB0ZXN0
+ZWQgZWl0aGVyIGlmDQo+IGl0IGNhbid0IGJlIHRyaWdnZXJlZC4NCj4gDQo+ID4gIEluIGFueSBl
+dmVudCwgSSB3aWxsIHRyeSB5b3VyIHN1Z2dlc3Rpb24gdGhvdWdoLg0KPiANCj4gSnVzdCB0byBi
+ZSBjbGVhcjogU2V0dGluZyB0aGUgbWluaW11bSBJL08gc2l6ZSBpcyBjb21wbGV0ZWx5IHdlbGwN
+Cj4gdGVzdGVkOiBpdCdzIGhvdyB3ZSBoYW5kbGUgNGsgc2VjdG9yIGRyaXZlcy4gIFdoYXQgaGFz
+bid0IGJlZW4gdGVzdGVkIGlzDQo+IHRoZSBhYmlsaXR5IG9mIHRoZSAqZHJpdmVyKiB0byBlbmZv
+cmNlIHRoZSBtaW5pbXVtIHVzaW5nDQo+IGJsa19saW1pdHNfaW9fbWluKCkuICBBcyBsb25nIGF0
+IHRoYXQgZG9lc24ndCBnZXQgb3ZlcnJpZGRlbiBieSBzZCB3aGVuDQo+IGl0IHNlZXMgYSA1MTJi
+IGRyaXZlLCB0aGUgcmVzdCBvZiB0aGUgYmxvY2sgcGF0aHMgKHRob3NlIHdoaWNoIGFjdHVhbGx5
+DQo+IGVuZm9yY2UgdGhlIG1pbmltdW0pIGhhdmUgYWxsIGJlZW4gd2VsbCB0ZXN0ZWQuDQoNCkkg
+d2lsbCB3b3JrIG9uIGFkZHJlc3NpbmcgdGhlIGlzc3VlcyB5b3UgaGF2ZSByYWlzZWQgYW5kIGFu
+eSBvdGhlciBjb21tZW50cyBJIG1pZ2h0DQpnZXQgZnJvbSB0aGUgY29tbXVuaXR5LiBJIHdpbGwg
+c3VibWl0IHRoZXNlIHBhdGNoZXMgdG8gR3JlZyBhbmQgSSB3aWxsIGNvcHkgeW91IGFuZCBvdGhl
+cg0Kc2NzaSBtYWludGFpbmVycyBhcyB3ZWxsLiBPbmNlIEdyZWcncyBzdGFnaW5nIHRyZWUgaXMg
+c3luY2VkIHdpdGggTGludXMnIHRyZWUsIHRoZW4gSSB3aWxsIHN1Ym1pdA0KdGhlIGNvZGUgZm9y
+IGZ1cnRoZXIgcmV2aWV3IGluIHByZXBhcmF0aW9uIGZvciBtb3ZpbmcgdGhlIGNvZGUgb3V0IG9m
+IHN0YWdpbmcuDQoNClJlZ2FyZHMsDQoNCksuIFkNCg0K
