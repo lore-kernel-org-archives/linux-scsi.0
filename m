@@ -1,78 +1,107 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Mon, 17 Oct 2011 17:46:32 +0900
-Message-ID: <4E9BEB68.1050707@ce.jp.nec.com>
-References: <201109221318.p8MDIXPP020015@pentland.suse.de>	 <20110928004722.GA27421@kernel.dk>	 <CA+55aFznvejXWe68BpjsJqCWnDizbHWBOzKLY_H+YqhRiK42sQ@mail.gmail.com>	 <4E82751C.9050908@kernel.dk>	 <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>	 <1317183038.17578.9.camel@dabdike.hansenpartnership.com>	 <4E832A55.30709@kernel.dk>	 <1317219074.19034.4.camel@dabdike.hansenpartnership.com>	 <4E832BD2.50409@kernel.dk>  <4E96E2FF.6070601@linux.vnet.ibm.com> <1318608184.3018.42.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of staging
+Date: Mon, 17 Oct 2011 08:59:36 -0500
+Message-ID: <1318859976.4794.8.camel@dabdike.int.hansenpartnership.com>
+References: <1318660132-21529-1-git-send-email-kys@microsoft.com>
+	 <1318714047.7271.49.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA0FED0@TK5EX14MBXC128.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1318608184.3018.42.camel@dabdike.int.hansenpartnership.com>
+In-Reply-To: <6E21E5352C11B742B20C142EB499E0481AA0FED0@TK5EX14MBXC128.redmond.corp.microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/15/11 01:03, James Bottomley wrote:
-> On Thu, 2011-10-13 at 15:09 +0200, Steffen Maier wrote:
->> This fix also went into 3.0.5 via
->> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob;f=releases/3.0.5/block-free-queue-resources-at-blk_release_queue.patch
->> (originated at http://marc.info/?l=linux-scsi&m=131669751909474&w=2 and 
->> http://marc.info/?l=linux-scsi&m=131669414205696&w=2)
->>
->> However, it seems we still have a use-after-free bug, now causing the 
->> following oops with kernel 3.0.6 when removing paths to storage while 
->> generating load on device-mapper multipath disks:
->>
->>> Unable to handle kernel pointer dereference at virtual kernel address 6b6b6b6b6b6b6000
->>> Oops: 0038 [#1] PREEMPT SMP DEBUG_PAGEALLOC
->>> Modules linked in: iptable_filter ip_tables x_tables dm_round_robin sunrpc qeth_l3 binfmt_misc dm_multipath scsi_dh dm_mod ipv6 qeth ccwgroup [last unloaded: scsi_wait_scan]
->>> CPU: 1 Not tainted 3.0.6-50.x.20111006-s390xdefault #1
->>> Process blast.LzS_64_SL (pid: 26613, task: 0000000063e2a398, ksp: 0000000064de3560)
->>> Krnl PSW : 0704100180000000 000000000048a038 (scsi_print_command+0x44/0xf8)
->>>            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:0 CC:1 PM:0 EA:3
->>> Krnl GPRS: 000000000000006b 6b6b6b6b6b6b6b6b 000000006717f800 000000000094f2e0
->>>            000000000061242e 000000000062bd88 0000000066fb90d8 0000000065391ad7
->>>            000000006717f800 000000006717f800 000000006716a090 000000006717f800
->>>            0000000000000004 0000000000672f88 0000000064de3838 0000000064de3808
->>> Krnl Code: 000000000048a026: f0b80004ebbf        srp     4(12,%r0),3007(%r14),8
->>>            000000000048a02c: f0a0000407f4        srp     4(11,%r0),2036,0
->>>            000000000048a032: e31020800004        lg      %r1,128(%r2)
->>>           >000000000048a038: e31010b00004        lg      %r1,176(%r1)
->>>            000000000048a03e: b9020011            ltgr    %r1,%r1
->>>            000000000048a042: a7840032            brc     8,48a0a6
->>>            000000000048a046: e33020000004        lg      %r3,0(%r2)
->>>            000000000048a04c: c04000182f4c        larl    %r4,78fee4
->>> Call Trace:
->>> ([<000000006717f800>] 0x6717f800)
->>>  [<0000000000487f28>] scsi_log_send+0xf0/0x130
->>>  [<000000000048824c>] scsi_dispatch_cmd+0xc8/0x4bc
->>>  [<0000000000490694>] scsi_request_fn+0x3b8/0x480
+On Sun, 2011-10-16 at 03:01 +0000, KY Srinivasan wrote:
 > 
-> Correct me if I'm wrong, but this seems to be saying that struct
-> scsi_cmnd was used after free.  This looks to be a different problem
-> because the command has a separate refcounting model which wasn't
-> impacted by the change ... it could be we've just exposed yet another
-> refcounting problem outside of the queue one.
+> > -----Original Message-----
+> > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> > Sent: Saturday, October 15, 2011 5:27 PM
+> > To: KY Srinivasan
+> > Cc: gregkh@suse.de; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
+> > linux-scsi@vger.kernel.org; hch@infradead.org; Haiyang Zhang
+> > Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of
+> > staging
+> > 
+> > On Fri, 2011-10-14 at 23:28 -0700, K. Y. Srinivasan wrote:
+> > > In preparation for moving the storage driver out of staging, seek community
+> > > review of the storage  driver code.
+> > 
+> > That's not exactly a very descriptive commit message for me to put into
+> > SCSI.  It doesn't have to be huge, just something like "driver to enable
+> > hyperv windows guest on Linux" or something.
 > 
-> If I had to guess, I'd say a bio got cloned with a SCSI command already
-> attached, but the ref count on the SCSI command wasn't correctly
-> adjusted.
+> Sorry about the commit message. I will have a more descriptive message in the next
+> submission.
+> 
+> > 
+> > 
+> > >  drivers/scsi/Kconfig             |    7 +
+> > >  drivers/scsi/Makefile            |    3 +
+> > >  drivers/scsi/storvsc_drv.c       | 1480
+> > ++++++++++++++++++++++++++++++++++++++
+> > >  drivers/staging/hv/Kconfig       |    6 -
+> > >  drivers/staging/hv/Makefile      |    2 -
+> > >  drivers/staging/hv/storvsc_drv.c | 1480 --------------------------------------
+> > >  6 files changed, 1490 insertions(+), 1488 deletions(-)
+> > 
+> > What tree is this against?  The hv/storvsc_drv.c in upstream only has
+> > 
+> > jejb@dabdike> wc -l drivers/staging/hv/storvsc_drv.c
+> > 792 drivers/staging/hv/storvsc_drv.c
+> > 
+> > i.e. whatever you're sending is double the length (and obviously I have
+> > trouble applying the patch.
+> 
+> This patch  moves the file from drivers/staging/hv/ directory to the 
+> drivers/scsi directory; hence double the length.
 
-As far as dm is concerned, it shouldn't happen.
-Clone is made from a dm request, not from SCSI one.
-Also clone is not reused when retrying.
+No, that's not it.  Look again: the storvsc_drv.c in staging is removing
+1480 lines, but in git head, this file is only 792 lines long ... is
+there an alternative tree with the rest in?
 
->> Initially, we encountered use-after-free bugs in
->> scsi_print_command / scsi_dispatch_cmd
->> http://marc.info/?l=linux-scsi&m=130824013229933&w=2
+The point I'm making is that the staging file you're modifying isn't the
+one I see in Linus' git head, so which git tree is it in (I assume it's
+somewhere waiting for the merge window)?
 
-It is interesting that both this and the older report
-got oopsed in scsi_log_send(), while there are other
-dereferences of 'cmd' around scsi_dispatch_cmd().
-Are there any reason they are special? Just by accident?
+[...]
+> > The bounce buffer handling for discontiguous sg lists is a complete
+> > nightmare.  And can't you just fix the hypervisor instead of pulling
+> > this level of nastiness in the driver, I mean really, the last piece of
+> > real SCSI hardware that failed this badly was produced in the dark ages.
+> 
+> The restrictions (as they are) are really from the windows host side
+> and for what it is 
+> worth, I have never seen this code triggered at least for I/O
+> initiated by the file system. 
+> 
+>  
+> > Assuming the answer is "no", I really think you need to set the minimum
+> > block size to 4k, which will completely avoid the situation.
+> 
+> I would love to get rid of the bounce buffer handling code by ensuring
+> that the 
+> upper level code would never present scatter gather lists that would
+> trigger bounce buffer
+> handling code. How would I accomplish that. 
 
-Thanks,
--- 
-Jun'ichi Nomura, NEC Corporation
+OK, so as I read the code, what it can't handle is fragments except at
+the ends.  As long as everything always transfers in multiples of 4k,
+the problem will never occur.  This means that all devices you present
+need to tell the OS they have 4k sectors.  I *think* you can do this by
+setting  blk_limits_io_min() in the driver ... but you'll have to test
+this.  The minimum sector size gets set also in sd.c when we probe the
+disk.  I think that won't override blk_limits_io_min(), but please test
+(we don't have any SCSI drivers which have ever used this setting).
+
+The way to test, is to read back the /sys/block/<dev>/queue/ settings
+when presenting a 512 byte sector disk.  (And the way to activate your
+bounce code would be to create a filesystem with a < PAGE_SIZE block
+size).
+
+James
