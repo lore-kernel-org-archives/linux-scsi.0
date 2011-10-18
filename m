@@ -1,96 +1,116 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 9/10] megaraid_sas: Add driver workaround for PERC5/1068
- kdump kernel panic
-Date: Tue, 18 Oct 2011 16:41:08 +0200
-Message-ID: <4E9D9004.6070905@redhat.com>
-References: <CAHtARFFp12dh5fmsNQG8w_g_RP6ftXR57HmhydNomZy1PtExXg@mail.gmail.com>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Tue, 18 Oct 2011 17:45:42 +0200
+Message-ID: <20111018154542.GB3869@osiris.boeblingen.de.ibm.com>
+References: <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
+ <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
+ <4E832A55.30709@kernel.dk>
+ <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
+ <4E832BD2.50409@kernel.dk>
+ <4E96E2FF.6070601@linux.vnet.ibm.com>
+ <1318608184.3018.42.camel@dabdike.int.hansenpartnership.com>
+ <4E9BEB68.1050707@ce.jp.nec.com>
+ <1318860403.4794.12.camel@dabdike.int.hansenpartnership.com>
+ <4E9D7FA8.9000000@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58374 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932140Ab1JROlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Oct 2011 10:41:12 -0400
-In-Reply-To: <CAHtARFFp12dh5fmsNQG8w_g_RP6ftXR57HmhydNomZy1PtExXg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4E9D7FA8.9000000@ce.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-On 10/09/2011 03:15 AM, adam radford wrote:
-> James/linux-scsi,
->
-> The following patch for megaraid_sas adds a driver workaround for
-> PERC5/1068 based controller FW that keeps a command from the main
-> kernel that the driver cannot cancel which was causing a kernel panic
-> in shutdown of the kdump kernel.
->
-> Signed-off-by: Adam Radford <aradford@gmail.com>
-This is an improved version of http://www.spinics.net/lists/linux-scsi/msg54294.html
-I tested this patch too, I can confirm that it resolves the panic.
+On Tue, Oct 18, 2011 at 10:31:20PM +0900, Jun'ichi Nomura wrote:
+> On 10/17/11 23:06, James Bottomley wrote:
+> > On Mon, 2011-10-17 at 17:46 +0900, Jun'ichi Nomura wrote:
+> >> On 10/15/11 01:03, James Bottomley wrote:
+> >>> On Thu, 2011-10-13 at 15:09 +0200, Steffen Maier wrote:
+> >>>> Initially, we encountered use-after-free bugs in
+> >>>> scsi_print_command / scsi_dispatch_cmd
+> >>>> http://marc.info/?l=linux-scsi&m=130824013229933&w=2
+> >>
+> >> It is interesting that both this and the older report
+> >> got oopsed in scsi_log_send(), while there are other
+> >> dereferences of 'cmd' around scsi_dispatch_cmd().
+> >> Are there any reason they are special? Just by accident?
+> > 
+> > Right, that's why it looks like the command area got freed rather than
+> > the command pointer was bogus (6b is a poison free pattern).  Perhaps if
+> > the reporter could pin down the failing source line, we'd know better
+> > what was going on?
+> 
+> Yeah, that might be useful.
 
-Tomas
+The struct scsi_cmnd that was passed to scsi_log_send() was already freed
+(contents completely 6b6b6b...).
+Since SLUB debugging was turned on we can see that it was freed from
+__scsi_put_command(). Not too much of a surprise.
 
->
-> diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
-> scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c
-> --- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-08
-> 15:29:22.411330755 -0700
-> +++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-10-08
-> 17:20:01.091455209 -0700
-> @@ -215,6 +215,10 @@
->
->  	cmd->scmd = NULL;
->  	cmd->frame_count = 0;
-> +	if ((instance->pdev->device != PCI_DEVICE_ID_LSI_FUSION) &&
-> +	    (instance->pdev->device != PCI_DEVICE_ID_LSI_INVADER) &&
-> +	    (reset_devices))
-> +		cmd->frame->hdr.cmd = MFI_CMD_INVALID;
->  	list_add_tail(&cmd->list, &instance->cmd_pool);
->
->  	spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
-> @@ -2165,7 +2169,16 @@
->  		cmd->scmd->SCp.ptr = NULL;
->
->  	switch (hdr->cmd) {
-> -
-> +	case MFI_CMD_INVALID:
-> +		/* Some older 1068 controller FW may keep a pended
-> +		   MR_DCMD_CTRL_EVENT_GET_INFO left over from the main kernel
-> +		   when booting the kdump kernel.  Ignore this command to
-> +		   prevent a kernel panic on shutdown of the kdump kernel. */
-> +		printk(KERN_WARNING "megaraid_sas: MFI_CMD_INVALID command "
-> +		       "completed.\n");
-> +		printk(KERN_WARNING "megaraid_sas: If you have a controller "
-> +		       "other than PERC5, please upgrade your firmware.\n");
-> +		break;
->  	case MFI_CMD_PD_SCSI_IO:
->  	case MFI_CMD_LD_SCSI_IO:
->
-> @@ -2934,6 +2947,10 @@
->  		memset(cmd->frame, 0, total_sz);
->  		cmd->frame->io.context = cmd->index;
->  		cmd->frame->io.pad_0 = 0;
-> +		if ((instance->pdev->device != PCI_DEVICE_ID_LSI_FUSION) &&
-> +		    (instance->pdev->device != PCI_DEVICE_ID_LSI_INVADER) &&
-> +		    (reset_devices))
-> +			cmd->frame->hdr.cmd = MFI_CMD_INVALID;
->  	}
->
->  	return 0;
-> diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas.h
-> scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas.h
-> --- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas.h	2011-10-08
-> 15:29:22.413330801 -0700
-> +++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas.h	2011-10-08
-> 17:16:58.131395817 -0700
-> @@ -139,6 +139,7 @@
->  #define MFI_CMD_ABORT				0x06
->  #define MFI_CMD_SMP				0x07
->  #define MFI_CMD_STP				0x08
-> +#define MFI_CMD_INVALID				0xff
->
->  #define MR_DCMD_CTRL_GET_INFO			0x01010000
->  #define MR_DCMD_LD_GET_LIST			0x03010000
+> One remote possibility I imagined is if the submitting process
+> took very long after blk_start_request until scsi_dispatch_cmd
+> and timeout handler kicks in, can cmd be freed?
+> 
+> Also Tejun's report here could be related to possible data corruption:
+>   [PATCH] block: make gendisk hold a reference to its queue
+>   https://lkml.org/lkml/2011/10/16/148
+> 
+> Though I haven't hit the reported oops myself,
+> a process closing a removed device may modify freed memory.
+> And his patch will fix it.
+> 
+> So if the problem is easily reproducible, I think it's worth
+> trying his patch to see if the problem disappear.
 
+In addition it might be worthwhile to apply this small slub patch as well,
+so that we get a full trace of the caller in the object which was freed:
+
+---
+ mm/slub.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -27,6 +27,7 @@
+ #include <linux/memory.h>
+ #include <linux/math64.h>
+ #include <linux/fault-inject.h>
++#include <linux/stacktrace.h>
+ 
+ #include <trace/events/kmem.h>
+ 
+@@ -191,11 +192,14 @@ static LIST_HEAD(slab_caches);
+ /*
+  * Tracking user of a slab.
+  */
++#define SAVE_TRACE_NUM 30
+ struct track {
+ 	unsigned long addr;	/* Called from address */
+ 	int cpu;		/* Was running on cpu */
+ 	int pid;		/* Pid context */
+ 	unsigned long when;	/* When did the operation occur */
++	unsigned long trace[SAVE_TRACE_NUM];
++	unsigned long long stamp;
+ };
+ 
+ enum track_item { TRACK_ALLOC, TRACK_FREE };
+@@ -397,10 +401,17 @@ static void set_track(struct kmem_cache
+ 	struct track *p = get_track(s, object, alloc);
+ 
+ 	if (addr) {
++		struct stack_trace trace = {
++			.max_entries = SAVE_TRACE_NUM,
++			.entries = p->trace,
++		};
++
+ 		p->addr = addr;
+ 		p->cpu = smp_processor_id();
+ 		p->pid = current->pid;
+ 		p->when = jiffies;
++		p->stamp = get_clock();
++		save_stack_trace(&trace);
+ 	} else
+ 		memset(p, 0, sizeof(struct track));
+ }
