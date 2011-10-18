@@ -1,65 +1,43 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Tue, 18 Oct 2011 11:29:40 -0500
-Message-ID: <1318955380.5169.15.camel@dabdike.int.hansenpartnership.com>
-References: <CA+55aFyL76hD7o_839G7tKa0y6dFRcK-kC+g_h_coEp=Qk23pw@mail.gmail.com>
-	 <1317183038.17578.9.camel@dabdike.hansenpartnership.com>
-	 <4E832A55.30709@kernel.dk>
-	 <1317219074.19034.4.camel@dabdike.hansenpartnership.com>
-	 <4E832BD2.50409@kernel.dk> <4E96E2FF.6070601@linux.vnet.ibm.com>
-	 <1318608184.3018.42.camel@dabdike.int.hansenpartnership.com>
-	 <4E9BEB68.1050707@ce.jp.nec.com>
-	 <1318860403.4794.12.camel@dabdike.int.hansenpartnership.com>
-	 <4E9D7FA8.9000000@ce.jp.nec.com>
-	 <20111018154542.GB3869@osiris.boeblingen.de.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: ib_srpt status
+Date: Tue, 18 Oct 2011 09:41:15 -0700
+Message-ID: <1318956075.2454.10.camel@haakon2.linux-iscsi.org>
+References: <20111012092318.GA9405@lst.de>
+	 <CAO+b5-rqc7Dq-7p1XRHrxVMP9JS5N26Ht1q8ee=KGRqpUintFQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111018154542.GB3869@osiris.boeblingen.de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAO+b5-rqc7Dq-7p1XRHrxVMP9JS5N26Ht1q8ee=KGRqpUintFQ@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2011-10-18 at 17:45 +0200, Heiko Carstens wrote:
-> On Tue, Oct 18, 2011 at 10:31:20PM +0900, Jun'ichi Nomura wrote:
-> > On 10/17/11 23:06, James Bottomley wrote:
-> > > On Mon, 2011-10-17 at 17:46 +0900, Jun'ichi Nomura wrote:
-> > >> On 10/15/11 01:03, James Bottomley wrote:
-> > >>> On Thu, 2011-10-13 at 15:09 +0200, Steffen Maier wrote:
-> > >>>> Initially, we encountered use-after-free bugs in
-> > >>>> scsi_print_command / scsi_dispatch_cmd
-> > >>>> http://marc.info/?l=linux-scsi&m=130824013229933&w=2
-> > >>
-> > >> It is interesting that both this and the older report
-> > >> got oopsed in scsi_log_send(), while there are other
-> > >> dereferences of 'cmd' around scsi_dispatch_cmd().
-> > >> Are there any reason they are special? Just by accident?
-> > > 
-> > > Right, that's why it looks like the command area got freed rather than
-> > > the command pointer was bogus (6b is a poison free pattern).  Perhaps if
-> > > the reporter could pin down the failing source line, we'd know better
-> > > what was going on?
-> > 
-> > Yeah, that might be useful.
+On Tue, 2011-10-18 at 08:13 +0200, Bart Van Assche wrote:
+> On Wed, Oct 12, 2011 at 11:23 AM, Christoph Hellwig <hch@lst.de> wrote:
+> > what is the status of queueing up ib_srpt for mainline?  It's a very
+> > clean looking driver that was submitted 8 month ago and after an initial
+> > round of fixes only saw updates for changing core APIs.
 > 
-> The struct scsi_cmnd that was passed to scsi_log_send() was already freed
-> (contents completely 6b6b6b...).
-> Since SLUB debugging was turned on we can see that it was freed from
-> __scsi_put_command(). Not too much of a surprise.
+> The ib_srpt driver was working fine last time I tested it. But with
+> the current (3.1-rc9) LIO core performing I/O triggers grave memory
+> corruption and random kernel crashes. Something must have changed in
+> the LIO core that broke ib_srpt.
+> 
 
-But it does tell us the put must be racing with dispatch, since
-dereferencing the command to find the device worked higher up in
-scsi_dispatch_cmd().
+Hi Bart,
 
-There is one way to invalidate the theory that we cloned something with
-an attached command, and that's to put 
+I'm having no problems with the patch posted for v3.2 review on MT26428
+HCAs
 
-BUG_ON(rq->special)
+Can you verify you are actually using this patch, and not your private
+tree from github..?  The reason is that your tree did not contain the
+bugfix below to ib_srpt code that was originally causing problems:
 
-in blk_insert_cloned_request().  I think we're careful about clearing
-it, so it should work (perhaps a warn on just in case).
+ib_srpt: Fix bug with chainged SGLs in srpt_map_sg_to_ib_sge
+http://www.risingtidesystems.com/git/?p=lio-core-2.6.git;a=commitdiff;h=ea485147563b6555a97dbf811825fbb586519252
 
-James
+Thanks,
+
+--nab
