@@ -1,47 +1,35 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH] mpt2sas: Description Patch
-Date: Wed, 19 Oct 2011 15:59:53 +0000
-Message-ID: <1319039992.3034.20.camel@dabdike.int.hansenpartnership.com>
-References: <201110191055.p9JAtUDv026753@milmhbs0.lsil.com>
+From: <nagalakshmi.nandigama@lsi.com>
+Subject: RESEND [PATCH] mpt2sas: Description Patch
+Date: Wed, 19 Oct 2011 15:35:33 +0530
+Message-ID: <201110191611.p9JGBT2H025771@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:57571 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752876Ab1JSP74 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2011 11:59:56 -0400
-In-Reply-To: <201110191055.p9JAtUDv026753@milmhbs0.lsil.com>
-Content-Language: en-US
-Content-ID: <0C8DD961236D9341B957C199D2B4AB55@sw.swsoft.com>
+Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:46688 "EHLO
+	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751546Ab1JSQLh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Oct 2011 12:11:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "nagalakshmi.nandigama@lsi.com" <nagalakshmi.nandigama@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kashyap.desai@lsi.com" <kashyap.desai@lsi.com>, "Sathya.Prakash@lsi.com" <Sathya.Prakash@lsi.com>, "Eric.Moore@lsi.com" <Eric.Moore@lsi.com>
+To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
+Cc: JBottomley@parallels.com
 
-T24gV2VkLCAyMDExLTEwLTE5IGF0IDEwOjE5ICswNTMwLCBuYWdhbGFrc2htaS5uYW5kaWdhbWFA
-bHNpLmNvbSB3cm90ZToNCj4gUGxlYXNlIGNvbnNpZGVyIHRoaXMgcGF0Y2ggc2V0IGZvciBuZXh0
-IGtlcm5lbCByZWxlYXNlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogTmFnYWxha3NobWkgTmFuZGln
-YW1hIDxuYWdhbGFrc2htaS5uYW5kaWdhbWFAbHNpLmNvbT4NCj4gLS0tDQo+IFtQQVRDSCAwMS8x
-MF0gbXB0MnNhcyA6IE1QSSBuZXh0IHJldmlzaW9uIGhlYWRlciB1cGRhdGUuDQo+IFtQQVRDSCAw
-Mi8xMF0gbXB0MnNhcyA6IE5ldyBmZWF0dXJlIEZhc3QgTG9hZCBTdXBwb3J0Lg0KPiBbUEFUQ0gg
-MDMvMTBdIG1wdDJzYXMgOiBGaXggZm9yIHN5c3RlbSBoYW5nIHdoZW4gZGlzY292ZXJ5IGluIHBy
-b2dyZXNzLg0KPiBbUEFUQ0ggMDQvMTBdIG1wdDJzYXMgOiBGaXggZm9yIGlzc3VlIC0gRmFpbHVy
-ZSBtZXNzYWdlIGRpc3BsYXllZCBkdXJpbmcgZGlhZyByZXNldC4NCj4gW1BBVENIIDA1LzEwXSBt
-cHQyc2FzIDogRml4IGZvciBpc3N1ZSAtIERyaXZlcyBub3QgZ2V0dGluZyBwcm9wZXJseSBkZWxl
-dGVkIGlmIHNhcyBjYWJsZSBpcyByZW1vdmVkIA0KPiB3aGlsZSBob3N0IHJlc2V0IGlzIGFjdGl2
-ZS4NCj4gW1BBVENIIDA2LzEwXSBtcHQyc2FzIDogRml4IGZvciBkZWFkIGxvY2sgb2NjdXJyaW5n
-IGJldHdlZW4gaG9zdF9sb2NrIGFuZCBzYXNfZGV2aWNlX2xvY2suDQo+IFtQQVRDSCAwNy8xMF0g
-bXB0MnNhcyA6IEZpeCBmb3IgZGVhZGxvY2sgYmV0d2VlbiBob3QgcGx1ZyB3b3JrZXIgdGhyZWFk
-cyBhbmQgaG9zdCByZXNldCBjb250ZXh0Lg0KPiBbUEFUQ0ggMDgvMTBdIG1wdDJzYXMgOiBGaXgg
-Zm9yIGlzc3VlIFBvcnQgUmVzZXQgdGFraW5nIGxvbmcgdGltZShhcm91bmQgNSBtaW5zKSB0byBj
-b21wbGV0ZQ0KPiB3aGlsZSBpc3N1ZWQgZHVyaW5nIGNyZWF0aW5nIGEgdm9sdW1lLg0KPiBbUEFU
-Q0ggMDkvMTBdIG1wdDJzYXMgOiBGaXggZm9yIFBhbmljIHdoZW4gaW5hY3RpdmUgdm9sdW1lIGlz
-IHRyaWVkIGRlbGV0aW5nLg0KPiBbUEFUQ0ggMTAvMTBdIG1wdDJzYXMgOiBCdW1wIGRyaXZlciB2
-ZXJzaW9uIHRvIDEwLjEwMC4wMC4wMA0KDQpOb25lIG9mIHRoZSBwYXRjaCBudW1iZXJzIG1hZGUg
-aXQgdG8gdGhlIGFjdHVhbCBwYXRjaGVzLiAgVGhpcyBtYWtlcyBmb3INCmFuIGluY3JlZGlibHkg
-YW5ub3lpbmcgY3Jvc3MgcmVmZXJlbmNlIGpvYiB0cnlpbmcgdG8gYXBwbHkgdGhlbSwgY291bGQN
-CnlvdSBqdXN0IHJlc2VuZCB3aXRoIHRoZSBudW1iZXJpbmcgaW4gdGhlIFN1YmplY3Qgb2YgZWFj
-aCBwYXRjaC4NCg0KQWxzbyBzZXZlcmFsIG9mIHRoZSBvbmVzIGxhYmVsbGVkIGZpeCBsb29rIGxp
-a2UgdGhleSdyZSBjYW5kaWRhdGVzIGZvcg0KYmFja3BvcnQgdG8gc3RhYmxlLCBhcmUgdGhleT8N
-Cg0KSmFtZXMNCg0KDQo=
+Please consider this patch set for next kernel release.
+
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+---
+[PATCH 01/10] mpt2sas : MPI next revision header update.
+[PATCH 02/10] mpt2sas : New feature Fast Load Support.
+[PATCH 03/10] mpt2sas : Fix for system hang when discovery in progress.
+[PATCH 04/10] mpt2sas : Fix for issue - Failure message displayed during diag reset.
+[PATCH 05/10] mpt2sas : Fix for issue - Drives not getting properly deleted if sas cable is removed 
+while host reset is active.
+[PATCH 06/10] mpt2sas : Fix for dead lock occurring between host_lock and sas_device_lock.
+[PATCH 07/10] mpt2sas : Fix for deadlock between hot plug worker threads and host reset context.
+[PATCH 08/10] mpt2sas : Fix for issue Port Reset taking long time(around 5 mins) to complete
+while issued during creating a volume.
+[PATCH 09/10] mpt2sas : Fix for Panic when inactive volume is tried deleting.
+[PATCH 10/10] mpt2sas : Bump driver version to 10.100.00.00
+
