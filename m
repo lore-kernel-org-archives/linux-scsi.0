@@ -1,77 +1,88 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH] mpt2sas: Fix for issue - Failure message displayed during diag reset
-Date: Wed, 19 Oct 2011 10:21:36 +0530
-Message-ID: <201110191057.p9JAvW2F027120@milmhbs0.lsil.com>
+Subject: [PATCH] mpt2sas: Fix for issue - Drives not getting properly
+ deleted if sas cable is removed while host reset is active
+Date: Wed, 19 Oct 2011 10:22:05 +0530
+Message-ID: <201110191058.p9JAw1cL027251@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:42236 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755756Ab1JSK5g (ORCPT
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:53756 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754160Ab1JSK6G (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2011 06:57:36 -0400
+	Wed, 19 Oct 2011 06:58:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Fix for the issue - Failure message displayed during diag reset.
+Fix for issue Drives not getting properly deleted if sas cable is removed 
+while host reset is active. 
 
-The fix is to inhibit the warning message in _scsih_get_sas_address
-when the MPI2_IOCSTATUS_CONFIG_INVALID_PAGE ioc status is returned.
+The fix is in the driver-firmware handshake device removal code. We
+need to read the controller ioc_state to see if controller is OPERATIONAL
+prior to sending target reset and OP_REMOVE. Previously it was checking
+the flag ioc->shost_recovery flag, which is always set when host reset is
+active, thus preventing drives from getting properly deleted.
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 849fa84..deb9791 100644
+index deb9791..141f445 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -388,31 +388,34 @@ _scsih_get_sas_address(struct MPT2SAS_ADAPTER *ioc, u16 handle,
- 	Mpi2SasDevicePage0_t sas_device_pg0;
- 	Mpi2ConfigReply_t mpi_reply;
- 	u32 ioc_status;
-+	*sas_address = 0;
+@@ -3018,11 +3018,23 @@ _scsih_tm_tr_send(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 	unsigned long flags;
+ 	struct _tr_list *delayed_tr;
++	u32 ioc_state;
  
- 	if (handle <= ioc->sas_hba.num_phys) {
- 		*sas_address = ioc->sas_hba.sas_address;
- 		return 0;
--	} else
--		*sas_address = 0;
+-	if (ioc->shost_recovery || ioc->remove_host ||
+-	    ioc->pci_error_recovery) {
+-		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host reset in "
+-		   "progress!\n", __func__, ioc->name));
++	if (ioc->remove_host) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host has been "
++		    "removed: handle(0x%04x)\n", __func__, ioc->name, handle));
++		return;
++	} else if (ioc->pci_error_recovery) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host in pci "
++		    "error recovery: handle(0x%04x)\n", __func__, ioc->name,
++		    handle));
++		return;
 +	}
- 
- 	if ((mpt2sas_config_get_sas_device_pg0(ioc, &mpi_reply, &sas_device_pg0,
- 	    MPI2_SAS_DEVICE_PGAD_FORM_HANDLE, handle))) {
--		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
--		    ioc->name, __FILE__, __LINE__, __func__);
-+		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n", ioc->name,
-+		__FILE__, __LINE__, __func__);
- 		return -ENXIO;
++	ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
++	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host is not "
++		   "operational: handle(0x%04x)\n", __func__, ioc->name,
++		   handle));
+ 		return;
  	}
  
--	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
--	    MPI2_IOCSTATUS_MASK;
--	if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
--		printk(MPT2SAS_ERR_FMT "handle(0x%04x), ioc_status(0x%04x)"
--		    "\nfailure at %s:%d/%s()!\n", ioc->name, handle, ioc_status,
--		     __FILE__, __LINE__, __func__);
--		return -EIO;
-+	ioc_status = le16_to_cpu(mpi_reply.IOCStatus) & MPI2_IOCSTATUS_MASK;
-+	if (ioc_status == MPI2_IOCSTATUS_SUCCESS) {
-+		*sas_address = le64_to_cpu(sas_device_pg0.SASAddress);
-+		return 0;
+@@ -3223,11 +3235,21 @@ _scsih_tm_tr_complete(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	    mpt2sas_base_get_reply_virt_addr(ioc, reply);
+ 	Mpi2SasIoUnitControlRequest_t *mpi_request;
+ 	u16 smid_sas_ctrl;
++	u32 ioc_state;
+ 
+-	if (ioc->shost_recovery || ioc->remove_host ||
+-	    ioc->pci_error_recovery) {
+-		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host reset in "
+-		   "progress!\n", __func__, ioc->name));
++	if (ioc->remove_host) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host has been "
++		   "removed\n", __func__, ioc->name));
++		return 1;
++	} else if (ioc->pci_error_recovery) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host in pci "
++		    "error recovery\n", __func__, ioc->name));
++		return 1;
++	}
++	ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
++	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host is not "
++		    "operational\n", __func__, ioc->name));
+ 		return 1;
  	}
  
--	*sas_address = le64_to_cpu(sas_device_pg0.SASAddress);
--	return 0;
-+	/* we hit this becuase the given parent handle doesn't exist */
-+	if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
-+		return -ENXIO;
-+	/* else error case */
-+	printk(MPT2SAS_ERR_FMT "handle(0x%04x), ioc_status(0x%04x), "
-+	    "failure at %s:%d/%s()!\n", ioc->name, handle, ioc_status,
-+	     __FILE__, __LINE__, __func__);
-+	return -EIO;
- }
- 
- /**
