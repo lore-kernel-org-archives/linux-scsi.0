@@ -1,113 +1,161 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH] mpt2sas: Fix for deadlock between hot plug worker threads and host reset context
-Date: Wed, 19 Oct 2011 10:23:17 +0530
-Message-ID: <201110191059.p9JAxEl3027367@milmhbs0.lsil.com>
+Subject: [PATCH] mpt2sas: Fix for issue Port Reset taking long time(around 5 mins) to complete while issued during creating a volume
+Date: Wed, 19 Oct 2011 10:23:37 +0530
+Message-ID: <201110191059.p9JAxYFw027418@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:53227 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755835Ab1JSK7V (ORCPT
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:41904 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755835Ab1JSK7i (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2011 06:59:21 -0400
+	Wed, 19 Oct 2011 06:59:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Fix for issue deadlock between hot plug worker threads and host reset context.
+Fix for issue Port Reset is taking long time(around 5 mins) to complete
+while issued during creating a volume.
 
-This is due to driver reporting a device missing to the OS then the OS sending 
-a SYNC_CACHE request to driver while the IO queues are locked due to host reset.  
+This is due to the slave_configuration routine is getting called when
+host reset is active, and config page reads are failing, and driver
+attempts to added device with stale config data.
 
-To fix the issue, the driver will be waking up the port enable context 
-immediately when the driver receives the reply message, instead of waiting 
-on the hot plug worker threads. 
+To fix the issue, added error checking in slave_configure to check
+for configuration pages failing, and return "1" so the device  is
+not configured.  The config pages are failing if raid volume is
+configured while issuing a host reset, thus driver is reading stale
+data and proceeding to attempt to add.  The fix is to return error 
+so the volume is not configured.  
+
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index ca18a92..49a0530 100644
+index 6478cb3..bd25cf1 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3060,6 +3060,7 @@ _scsih_tm_tr_send(struct MPT2SAS_ADAPTER *ioc, u16 handle)
- 		"handle(0x%04x), sas_addr(0x%016llx)\n", ioc->name, handle,
- 			(unsigned long long)sas_address));
- 		_scsih_ublock_io_device(ioc, handle);
-+		sas_target_priv_data->handle = MPT2SAS_INVALID_DEVICE_HANDLE;
+@@ -1621,8 +1621,10 @@ _scsih_set_level(struct scsi_device *sdev, struct _raid_device *raid_device)
+  * _scsih_get_volume_capabilities - volume capabilities
+  * @ioc: per adapter object
+  * @sas_device: the raid_device object
++ *
++ * Returns 0 for success, else 1
+  */
+-static void
++static int
+ _scsih_get_volume_capabilities(struct MPT2SAS_ADAPTER *ioc,
+     struct _raid_device *raid_device)
+ {
+@@ -1635,9 +1637,10 @@ _scsih_get_volume_capabilities(struct MPT2SAS_ADAPTER *ioc,
+ 
+ 	if ((mpt2sas_config_get_number_pds(ioc, raid_device->handle,
+ 	    &num_pds)) || !num_pds) {
+-		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-		    ioc->name, __FILE__, __LINE__, __func__);
+-		return;
++		dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++		    "failure at %s:%d/%s()!\n", ioc->name, __FILE__, __LINE__,
++		    __func__));
++		return 1;
  	}
  
- 	smid = mpt2sas_base_get_smid_hpr(ioc, ioc->tm_tr_cb_idx);
-@@ -5202,6 +5203,9 @@ _scsih_remove_device(struct MPT2SAS_ADAPTER *ioc,
- 	if (sas_device_backup.starget && sas_device_backup.starget->hostdata) {
- 		sas_target_priv_data = sas_device_backup.starget->hostdata;
- 		sas_target_priv_data->deleted = 1;
-+		_scsih_ublock_io_device(ioc, sas_device_backup.handle);
-+		sas_target_priv_data->handle =
-+		     MPT2SAS_INVALID_DEVICE_HANDLE;
+ 	raid_device->num_pds = num_pds;
+@@ -1645,17 +1648,19 @@ _scsih_get_volume_capabilities(struct MPT2SAS_ADAPTER *ioc,
+ 	    sizeof(Mpi2RaidVol0PhysDisk_t));
+ 	vol_pg0 = kzalloc(sz, GFP_KERNEL);
+ 	if (!vol_pg0) {
+-		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-		    ioc->name, __FILE__, __LINE__, __func__);
+-		return;
++		dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++		    "failure at %s:%d/%s()!\n", ioc->name, __FILE__, __LINE__,
++		    __func__));
++		return 1;
  	}
  
- 	_scsih_ublock_io_device(ioc, sas_device_backup.handle);
-@@ -5355,7 +5359,7 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
- 		_scsih_sas_topology_change_event_debug(ioc, event_data);
- #endif
- 
--	if (ioc->shost_recovery || ioc->remove_host || ioc->pci_error_recovery)
-+	if (ioc->remove_host || ioc->pci_error_recovery)
- 		return;
- 
- 	if (!ioc->sas_hba.num_phys)
-@@ -5416,6 +5420,9 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
- 		switch (reason_code) {
- 		case MPI2_EVENT_SAS_TOPO_RC_PHY_CHANGED:
- 
-+			if (ioc->shost_recovery)
-+				break;
-+
- 			if (link_rate == prev_link_rate)
- 				break;
- 
-@@ -5429,6 +5436,9 @@ _scsih_sas_topology_change_event(struct MPT2SAS_ADAPTER *ioc,
- 			break;
- 		case MPI2_EVENT_SAS_TOPO_RC_TARG_ADDED:
- 
-+			if (ioc->shost_recovery)
-+				break;
-+
- 			mpt2sas_transport_update_links(ioc, sas_address,
- 			    handle, phy_number, link_rate);
- 
-@@ -7092,7 +7102,13 @@ mpt2sas_scsih_reset_handler(struct MPT2SAS_ADAPTER *ioc, int reset_phase)
- 		_scsih_search_responding_sas_devices(ioc);
- 		_scsih_search_responding_raid_devices(ioc);
- 		_scsih_search_responding_expanders(ioc);
-+		if (!ioc->is_driver_loading) {
-+			_scsih_prep_device_scan(ioc);
-+			_scsih_search_responding_sas_devices(ioc);
-+			_scsih_search_responding_raid_devices(ioc);
-+			_scsih_search_responding_expanders(ioc);
- 			_scsih_error_recovery_delete_devices(ioc);
-+		}
- 		break;
+ 	if ((mpt2sas_config_get_raid_volume_pg0(ioc, &mpi_reply, vol_pg0,
+ 	     MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, raid_device->handle, sz))) {
+-		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-		    ioc->name, __FILE__, __LINE__, __func__);
++		dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++		    "failure at %s:%d/%s()!\n", ioc->name, __FILE__, __LINE__,
++		    __func__));
+ 		kfree(vol_pg0);
+-		return;
++		return 1;
  	}
+ 
+ 	raid_device->volume_type = vol_pg0->VolumeType;
+@@ -1675,6 +1680,7 @@ _scsih_get_volume_capabilities(struct MPT2SAS_ADAPTER *ioc,
+ 	}
+ 
+ 	kfree(vol_pg0);
++	return 0;
  }
-@@ -7127,17 +7143,7 @@ _firmware_event_work(struct work_struct *work)
- 		_scsih_scan_for_devices_after_reset(ioc);
- 		break;
- 	case MPT2SAS_PORT_ENABLE_COMPLETE:
--		if (!ioc->is_driver_loading && ioc->shost_recovery) {
--			_scsih_prep_device_scan(ioc);
--			_scsih_search_responding_sas_devices(ioc);
--			_scsih_search_responding_raid_devices(ioc);
--			_scsih_search_responding_expanders(ioc);
--		}
--
--		if (ioc->start_scan)
--			ioc->start_scan = 0;
--		else
--			complete(&ioc->port_enable_done);
-+		ioc->start_scan = 0;
+ /**
+  * _scsih_disable_ddio - Disable direct I/O for all the volumes
+@@ -1945,13 +1951,20 @@ _scsih_slave_configure(struct scsi_device *sdev)
+ 		     sas_target_priv_data->handle);
+ 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+ 		if (!raid_device) {
+-			printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
+-			    ioc->name, __FILE__, __LINE__, __func__);
+-			return 0;
++			dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++			    "failure at %s:%d/%s()!\n", ioc->name, __FILE__,
++			    __LINE__, __func__));
++			return 1;
+ 		}
  
+ 		_scsih_get_volume_capabilities(ioc, raid_device);
  
++		if (_scsih_get_volume_capabilities(ioc, raid_device)) {
++			dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++			    "failure at %s:%d/%s()!\n", ioc->name, __FILE__,
++			    __LINE__, __func__));
++			return 1;
++		}
+ 		/*
+ 		 * WARPDRIVE: Initialize the required data for Direct IO
+ 		 */
+@@ -2025,11 +2038,21 @@ _scsih_slave_configure(struct scsi_device *sdev)
+ 	if (sas_device) {
+ 		if (sas_target_priv_data->flags &
+ 		    MPT_TARGET_FLAGS_RAID_COMPONENT) {
+-			mpt2sas_config_get_volume_handle(ioc,
+-			    sas_device->handle, &sas_device->volume_handle);
+-			mpt2sas_config_get_volume_wwid(ioc,
++			if (mpt2sas_config_get_volume_handle(ioc,
++			    sas_device->handle, &sas_device->volume_handle)) {
++				dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++				    "failure at %s:%d/%s()!\n", ioc->name,
++				    __FILE__, __LINE__, __func__));
++				return 1;
++			}
++			if (mpt2sas_config_get_volume_wwid(ioc,
+ 			    sas_device->volume_handle,
+-			    &sas_device->volume_wwid);
++			    &sas_device->volume_wwid)) {
++				dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++				    "failure at %s:%d/%s()!\n", ioc->name,
++				    __FILE__, __LINE__, __func__));
++				return 1;
++			}
+ 		}
+ 		if (sas_device->device_info & MPI2_SAS_DEVICE_INFO_SSP_TARGET) {
+ 			qdepth = MPT2SAS_SAS_QUEUE_DEPTH;
+@@ -2058,6 +2081,11 @@ _scsih_slave_configure(struct scsi_device *sdev)
  
+ 		if (!ssp_target)
+ 			_scsih_display_sata_capabilities(ioc, sas_device, sdev);
++	} else {
++		dfailprintk(ioc, printk(MPT2SAS_WARN_FMT
++		    "failure at %s:%d/%s()!\n", ioc->name, __FILE__, __LINE__,
++		    __func__));
++		return 1;
+ 	}
+ 
+ 	_scsih_change_queue_depth(sdev, qdepth, SCSI_QDEPTH_DEFAULT);
