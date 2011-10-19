@@ -1,22 +1,47 @@
-From: "Chen Guan" <info@boc.cn>
-Subject: Further details contact me via email (chenguan.cn@hotmail.com)
-Date: Wed, 19 Oct 2011 20:17:45 +0700 (ICT)
-Message-ID: <00440e3fb43515faff2eb19ef32e8697.squirrel@mail.nrru.ac.th>
-Reply-To: chenguan.cn@hotmail.com
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH] mpt2sas: Description Patch
+Date: Wed, 19 Oct 2011 15:59:53 +0000
+Message-ID: <1319039992.3034.20.camel@dabdike.int.hansenpartnership.com>
+References: <201110191055.p9JAtUDv026753@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;charset=tis-620
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.nrru.ac.th ([202.29.4.2]:56537 "EHLO mail.nrru.ac.th"
+Received: from mx2.parallels.com ([64.131.90.16]:57571 "EHLO mx2.parallels.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753067Ab1JSNaI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2011 09:30:08 -0400
+	id S1752876Ab1JSP74 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Oct 2011 11:59:56 -0400
+In-Reply-To: <201110191055.p9JAtUDv026753@milmhbs0.lsil.com>
+Content-Language: en-US
+Content-ID: <0C8DD961236D9341B957C199D2B4AB55@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: info@admin.org
+To: "nagalakshmi.nandigama@lsi.com" <nagalakshmi.nandigama@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kashyap.desai@lsi.com" <kashyap.desai@lsi.com>, "Sathya.Prakash@lsi.com" <Sathya.Prakash@lsi.com>, "Eric.Moore@lsi.com" <Eric.Moore@lsi.com>
 
-I am Mr. Chen Guan, Foreign Operations Manager of the Bank of China
-(HongKong). I have a business suggestion for you of
-$17.5MillionUSD.Further details contact me via email
-(chenguan.cn@hotmail.com)
-
+T24gV2VkLCAyMDExLTEwLTE5IGF0IDEwOjE5ICswNTMwLCBuYWdhbGFrc2htaS5uYW5kaWdhbWFA
+bHNpLmNvbSB3cm90ZToNCj4gUGxlYXNlIGNvbnNpZGVyIHRoaXMgcGF0Y2ggc2V0IGZvciBuZXh0
+IGtlcm5lbCByZWxlYXNlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogTmFnYWxha3NobWkgTmFuZGln
+YW1hIDxuYWdhbGFrc2htaS5uYW5kaWdhbWFAbHNpLmNvbT4NCj4gLS0tDQo+IFtQQVRDSCAwMS8x
+MF0gbXB0MnNhcyA6IE1QSSBuZXh0IHJldmlzaW9uIGhlYWRlciB1cGRhdGUuDQo+IFtQQVRDSCAw
+Mi8xMF0gbXB0MnNhcyA6IE5ldyBmZWF0dXJlIEZhc3QgTG9hZCBTdXBwb3J0Lg0KPiBbUEFUQ0gg
+MDMvMTBdIG1wdDJzYXMgOiBGaXggZm9yIHN5c3RlbSBoYW5nIHdoZW4gZGlzY292ZXJ5IGluIHBy
+b2dyZXNzLg0KPiBbUEFUQ0ggMDQvMTBdIG1wdDJzYXMgOiBGaXggZm9yIGlzc3VlIC0gRmFpbHVy
+ZSBtZXNzYWdlIGRpc3BsYXllZCBkdXJpbmcgZGlhZyByZXNldC4NCj4gW1BBVENIIDA1LzEwXSBt
+cHQyc2FzIDogRml4IGZvciBpc3N1ZSAtIERyaXZlcyBub3QgZ2V0dGluZyBwcm9wZXJseSBkZWxl
+dGVkIGlmIHNhcyBjYWJsZSBpcyByZW1vdmVkIA0KPiB3aGlsZSBob3N0IHJlc2V0IGlzIGFjdGl2
+ZS4NCj4gW1BBVENIIDA2LzEwXSBtcHQyc2FzIDogRml4IGZvciBkZWFkIGxvY2sgb2NjdXJyaW5n
+IGJldHdlZW4gaG9zdF9sb2NrIGFuZCBzYXNfZGV2aWNlX2xvY2suDQo+IFtQQVRDSCAwNy8xMF0g
+bXB0MnNhcyA6IEZpeCBmb3IgZGVhZGxvY2sgYmV0d2VlbiBob3QgcGx1ZyB3b3JrZXIgdGhyZWFk
+cyBhbmQgaG9zdCByZXNldCBjb250ZXh0Lg0KPiBbUEFUQ0ggMDgvMTBdIG1wdDJzYXMgOiBGaXgg
+Zm9yIGlzc3VlIFBvcnQgUmVzZXQgdGFraW5nIGxvbmcgdGltZShhcm91bmQgNSBtaW5zKSB0byBj
+b21wbGV0ZQ0KPiB3aGlsZSBpc3N1ZWQgZHVyaW5nIGNyZWF0aW5nIGEgdm9sdW1lLg0KPiBbUEFU
+Q0ggMDkvMTBdIG1wdDJzYXMgOiBGaXggZm9yIFBhbmljIHdoZW4gaW5hY3RpdmUgdm9sdW1lIGlz
+IHRyaWVkIGRlbGV0aW5nLg0KPiBbUEFUQ0ggMTAvMTBdIG1wdDJzYXMgOiBCdW1wIGRyaXZlciB2
+ZXJzaW9uIHRvIDEwLjEwMC4wMC4wMA0KDQpOb25lIG9mIHRoZSBwYXRjaCBudW1iZXJzIG1hZGUg
+aXQgdG8gdGhlIGFjdHVhbCBwYXRjaGVzLiAgVGhpcyBtYWtlcyBmb3INCmFuIGluY3JlZGlibHkg
+YW5ub3lpbmcgY3Jvc3MgcmVmZXJlbmNlIGpvYiB0cnlpbmcgdG8gYXBwbHkgdGhlbSwgY291bGQN
+CnlvdSBqdXN0IHJlc2VuZCB3aXRoIHRoZSBudW1iZXJpbmcgaW4gdGhlIFN1YmplY3Qgb2YgZWFj
+aCBwYXRjaC4NCg0KQWxzbyBzZXZlcmFsIG9mIHRoZSBvbmVzIGxhYmVsbGVkIGZpeCBsb29rIGxp
+a2UgdGhleSdyZSBjYW5kaWRhdGVzIGZvcg0KYmFja3BvcnQgdG8gc3RhYmxlLCBhcmUgdGhleT8N
+Cg0KSmFtZXMNCg0KDQo=
