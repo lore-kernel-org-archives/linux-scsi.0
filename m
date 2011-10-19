@@ -1,66 +1,88 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: RESEND [PATCH 03/10] mpt2sas: Fix for system hang when discovery
- in progress
-Date: Wed, 19 Oct 2011 15:36:37 +0530
-Message-ID: <201110191612.p9JGCYV3026157@milmhbs0.lsil.com>
+Subject: RESEND [PATCH 05/10] mpt2sas: Fix for issue - Drives not getting
+ properly deleted if sas cable is removed while host reset is active
+Date: Wed, 19 Oct 2011 15:37:00 +0530
+Message-ID: <201110191612.p9JGCvk7026298@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:55072 "EHLO
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:42107 "EHLO
 	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754155Ab1JSQNK (ORCPT
+	by vger.kernel.org with ESMTP id S1755407Ab1JSQNN (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2011 12:13:10 -0400
+	Wed, 19 Oct 2011 12:13:13 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Fix for issue : While discovery is in progress, hot unplug and hot plug of 
-enclosure connected to the controller card is causing system to hang.
+Fix for issue Drives not getting properly deleted if sas cable is removed 
+while host reset is active. 
 
-When a device is in the process of being detected at driver load time then 
-if it is removed, the device that is no longer present will not be added 
-to the list. So the code in _scsih_probe_sas() is rearranged as such so 
-the devices that failed to be detected are not added to the list.
+The fix is in the driver-firmware handshake device removal code. We
+need to read the controller ioc_state to see if controller is OPERATIONAL
+prior to sending target reset and OP_REMOVE. Previously it was checking
+the flag ioc->shost_recovery flag, which is always set when host reset is
+active, thus preventing drives from getting properly deleted.
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index bd9df3a..849fa84 100644
+index deb9791..141f445 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -7657,22 +7657,27 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER *ioc)
- 	/* SAS Device List */
- 	list_for_each_entry_safe(sas_device, next, &ioc->sas_device_init_list,
- 	    list) {
--		spin_lock_irqsave(&ioc->sas_device_lock, flags);
--		list_move_tail(&sas_device->list, &ioc->sas_device_list);
--		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+@@ -3018,11 +3018,23 @@ _scsih_tm_tr_send(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	struct MPT2SAS_TARGET *sas_target_priv_data;
+ 	unsigned long flags;
+ 	struct _tr_list *delayed_tr;
++	u32 ioc_state;
  
- 		if (ioc->hide_drives)
- 			continue;
- 
- 		if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
- 		    sas_device->sas_address_parent)) {
--			_scsih_sas_device_remove(ioc, sas_device);
-+			list_del(&sas_device->list);
-+			kfree(sas_device);
-+			continue;
- 		} else if (!sas_device->starget) {
- 			mpt2sas_transport_port_remove(ioc,
- 			    sas_device->sas_address,
- 			    sas_device->sas_address_parent);
--			_scsih_sas_device_remove(ioc, sas_device);
-+			list_del(&sas_device->list);
-+			kfree(sas_device);
-+			continue;
-+
- 		}
-+		spin_lock_irqsave(&ioc->sas_device_lock, flags);
-+		list_move_tail(&sas_device->list, &ioc->sas_device_list);
-+		spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+-	if (ioc->shost_recovery || ioc->remove_host ||
+-	    ioc->pci_error_recovery) {
+-		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host reset in "
+-		   "progress!\n", __func__, ioc->name));
++	if (ioc->remove_host) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host has been "
++		    "removed: handle(0x%04x)\n", __func__, ioc->name, handle));
++		return;
++	} else if (ioc->pci_error_recovery) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host in pci "
++		    "error recovery: handle(0x%04x)\n", __func__, ioc->name,
++		    handle));
++		return;
++	}
++	ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
++	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host is not "
++		   "operational: handle(0x%04x)\n", __func__, ioc->name,
++		   handle));
+ 		return;
  	}
- }
+ 
+@@ -3223,11 +3235,21 @@ _scsih_tm_tr_complete(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 	    mpt2sas_base_get_reply_virt_addr(ioc, reply);
+ 	Mpi2SasIoUnitControlRequest_t *mpi_request;
+ 	u16 smid_sas_ctrl;
++	u32 ioc_state;
+ 
+-	if (ioc->shost_recovery || ioc->remove_host ||
+-	    ioc->pci_error_recovery) {
+-		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host reset in "
+-		   "progress!\n", __func__, ioc->name));
++	if (ioc->remove_host) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host has been "
++		   "removed\n", __func__, ioc->name));
++		return 1;
++	} else if (ioc->pci_error_recovery) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host in pci "
++		    "error recovery\n", __func__, ioc->name));
++		return 1;
++	}
++	ioc_state = mpt2sas_base_get_iocstate(ioc, 1);
++	if (ioc_state != MPI2_IOC_STATE_OPERATIONAL) {
++		dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: host is not "
++		    "operational\n", __func__, ioc->name));
+ 		return 1;
+ 	}
  
