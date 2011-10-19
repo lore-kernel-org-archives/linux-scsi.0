@@ -1,35 +1,463 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: RESEND [PATCH] mpt2sas: Description Patch
-Date: Wed, 19 Oct 2011 15:35:33 +0530
-Message-ID: <201110191611.p9JGBT2H025771@milmhbs0.lsil.com>
+Subject: RESEND [PATCH 01/10] mpt2sas: MPI next revision header update
+Date: Wed, 19 Oct 2011 15:36:05 +0530
+Message-ID: <201110191612.p9JGC28g025991@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog117.obsmtp.com ([74.125.149.242]:46688 "EHLO
-	na3sys009aog117.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751546Ab1JSQLh (ORCPT
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:45257 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751546Ab1JSQMc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Oct 2011 12:11:37 -0400
+	Wed, 19 Oct 2011 12:12:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Please consider this patch set for next kernel release.
+
+1)Added ProxyVF_ID field to Configuration Request message.
+2)Added IO Unit Page 8, IO Unit Page 9,and IO Unit Page 10.
+3)Added SASNotifyPrimitiveMasks field to IOC Page 7.
+4)Added SAS NOTIFY Primitive event.
+5)Added Temperature Threshold Event.
+6)Added Host Message Event.
+7)Added Send Host Message request and reply.
+
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
-[PATCH 01/10] mpt2sas : MPI next revision header update.
-[PATCH 02/10] mpt2sas : New feature Fast Load Support.
-[PATCH 03/10] mpt2sas : Fix for system hang when discovery in progress.
-[PATCH 04/10] mpt2sas : Fix for issue - Failure message displayed during diag reset.
-[PATCH 05/10] mpt2sas : Fix for issue - Drives not getting properly deleted if sas cable is removed 
-while host reset is active.
-[PATCH 06/10] mpt2sas : Fix for dead lock occurring between host_lock and sas_device_lock.
-[PATCH 07/10] mpt2sas : Fix for deadlock between hot plug worker threads and host reset context.
-[PATCH 08/10] mpt2sas : Fix for issue Port Reset taking long time(around 5 mins) to complete
-while issued during creating a volume.
-[PATCH 09/10] mpt2sas : Fix for Panic when inactive volume is tried deleting.
-[PATCH 10/10] mpt2sas : Bump driver version to 10.100.00.00
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index 3105d5e..8dc1b32 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2011 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.18
++ *  mpi2.h Version:  02.00.20
+  *
+  *  Version History
+  *  ---------------
+@@ -66,6 +66,9 @@
+  *  08-11-10  02.00.17  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  11-10-10  02.00.18  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                      Added MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR define.
++ *  02-23-11  02.00.19  Bumped MPI2_HEADER_VERSION_UNIT.
++ *                      Added MPI2_FUNCTION_SEND_HOST_MESSAGE.
++ *  03-09-11  02.00.20  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -91,7 +94,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
+ 
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x12)
++#define MPI2_HEADER_VERSION_UNIT            (0x14)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+@@ -515,6 +518,8 @@ typedef union _MPI2_REPLY_DESCRIPTORS_UNION
+ #define MPI2_FUNCTION_HOST_BASED_DISCOVERY_ACTION   (0x2F)
+ /* Power Management Control */
+ #define MPI2_FUNCTION_PWR_MGMT_CONTROL              (0x30)
++/* Send Host Message */
++#define MPI2_FUNCTION_SEND_HOST_MESSAGE             (0x31)
+ /* beginning of product-specific range */
+ #define MPI2_FUNCTION_MIN_PRODUCT_SPECIFIC          (0xF0)
+ /* end of product-specific range */
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+index 61475a6..cfd95b4 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2011 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_cnfg.h
+  *          Title:  MPI Configuration messages and pages
+  *  Creation Date:  November 10, 2006
+  *
+- *    mpi2_cnfg.h Version:  02.00.17
++ *    mpi2_cnfg.h Version:  02.00.19
+  *
+  *  Version History
+  *  ---------------
+@@ -134,6 +134,12 @@
+  *                      to MPI2_CONFIG_PAGE_IO_UNIT_7.
+  *                      Added MPI2_CONFIG_EXTPAGETYPE_EXT_MANUFACTURING define
+  *                      and MPI2_CONFIG_PAGE_EXT_MAN_PS structure.
++ *  02-23-11  02.00.18  Added ProxyVF_ID field to MPI2_CONFIG_REQUEST.
++ *                      Added IO Unit Page 8, IO Unit Page 9,
++ *                      and IO Unit Page 10.
++ *                      Added SASNotifyPrimitiveMasks field to
++ *                      MPI2_CONFIG_PAGE_IOC_7.
++ *  03-09-11  02.00.19  Fixed IO Unit Page 10 (to match the spec).
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -329,7 +335,9 @@ typedef struct _MPI2_CONFIG_REQUEST
+     U8                      VP_ID;                      /* 0x08 */
+     U8                      VF_ID;                      /* 0x09 */
+     U16                     Reserved1;                  /* 0x0A */
+-    U32                     Reserved2;                  /* 0x0C */
++	U8                      Reserved2;                  /* 0x0C */
++	U8                      ProxyVF_ID;                 /* 0x0D */
++	U16                     Reserved4;                  /* 0x0E */
+     U32                     Reserved3;                  /* 0x10 */
+     MPI2_CONFIG_PAGE_HEADER Header;                     /* 0x14 */
+     U32                     PageAddress;                /* 0x18 */
+@@ -915,6 +923,120 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+ #define MPI2_IOUNITPAGE7_BOARD_TEMP_FAHRENHEIT      (0x01)
+ #define MPI2_IOUNITPAGE7_BOARD_TEMP_CELSIUS         (0x02)
+ 
++/* IO Unit Page 8 */
++
++#define MPI2_IOUNIT8_NUM_THRESHOLDS     (4)
++
++typedef struct _MPI2_IOUNIT8_SENSOR {
++	U16                     Flags;                /* 0x00 */
++	U16                     Reserved1;            /* 0x02 */
++	U16
++		Threshold[MPI2_IOUNIT8_NUM_THRESHOLDS]; /* 0x04 */
++	U32                     Reserved2;            /* 0x0C */
++	U32                     Reserved3;            /* 0x10 */
++	U32                     Reserved4;            /* 0x14 */
++} MPI2_IOUNIT8_SENSOR, MPI2_POINTER PTR_MPI2_IOUNIT8_SENSOR,
++Mpi2IOUnit8Sensor_t, MPI2_POINTER pMpi2IOUnit8Sensor_t;
++
++/* defines for IO Unit Page 8 Sensor Flags field */
++#define MPI2_IOUNIT8_SENSOR_FLAGS_T3_ENABLE         (0x0008)
++#define MPI2_IOUNIT8_SENSOR_FLAGS_T2_ENABLE         (0x0004)
++#define MPI2_IOUNIT8_SENSOR_FLAGS_T1_ENABLE         (0x0002)
++#define MPI2_IOUNIT8_SENSOR_FLAGS_T0_ENABLE         (0x0001)
++
++/*
++ * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ * one and check the value returned for NumSensors at runtime.
++ */
++#ifndef MPI2_IOUNITPAGE8_SENSOR_ENTRIES
++#define MPI2_IOUNITPAGE8_SENSOR_ENTRIES     (1)
++#endif
++
++typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_8 {
++	MPI2_CONFIG_PAGE_HEADER Header;               /* 0x00 */
++	U32                     Reserved1;            /* 0x04 */
++	U32                     Reserved2;            /* 0x08 */
++	U8                      NumSensors;           /* 0x0C */
++	U8                      PollingInterval;      /* 0x0D */
++	U16                     Reserved3;            /* 0x0E */
++	MPI2_IOUNIT8_SENSOR
++			Sensor[MPI2_IOUNITPAGE8_SENSOR_ENTRIES];/* 0x10 */
++} MPI2_CONFIG_PAGE_IO_UNIT_8, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_8,
++Mpi2IOUnitPage8_t, MPI2_POINTER pMpi2IOUnitPage8_t;
++
++#define MPI2_IOUNITPAGE8_PAGEVERSION                    (0x00)
++
++
++/* IO Unit Page 9 */
++
++typedef struct _MPI2_IOUNIT9_SENSOR {
++	U16                     CurrentTemperature;     /* 0x00 */
++	U16                     Reserved1;              /* 0x02 */
++	U8                      Flags;                  /* 0x04 */
++	U8                      Reserved2;              /* 0x05 */
++	U16                     Reserved3;              /* 0x06 */
++	U32                     Reserved4;              /* 0x08 */
++	U32                     Reserved5;              /* 0x0C */
++} MPI2_IOUNIT9_SENSOR, MPI2_POINTER PTR_MPI2_IOUNIT9_SENSOR,
++Mpi2IOUnit9Sensor_t, MPI2_POINTER pMpi2IOUnit9Sensor_t;
++
++/* defines for IO Unit Page 9 Sensor Flags field */
++#define MPI2_IOUNIT9_SENSOR_FLAGS_TEMP_VALID        (0x01)
++
++/*
++ * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ * one and check the value returned for NumSensors at runtime.
++ */
++#ifndef MPI2_IOUNITPAGE9_SENSOR_ENTRIES
++#define MPI2_IOUNITPAGE9_SENSOR_ENTRIES     (1)
++#endif
++
++typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_9 {
++	MPI2_CONFIG_PAGE_HEADER Header;                /* 0x00 */
++	U32                     Reserved1;             /* 0x04 */
++	U32                     Reserved2;             /* 0x08 */
++	U8                      NumSensors;            /* 0x0C */
++	U8                      Reserved4;             /* 0x0D */
++	U16                     Reserved3;             /* 0x0E */
++	MPI2_IOUNIT9_SENSOR
++			Sensor[MPI2_IOUNITPAGE9_SENSOR_ENTRIES];/* 0x10 */
++} MPI2_CONFIG_PAGE_IO_UNIT_9, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_9,
++Mpi2IOUnitPage9_t, MPI2_POINTER pMpi2IOUnitPage9_t;
++
++#define MPI2_IOUNITPAGE9_PAGEVERSION                    (0x00)
++
++
++/* IO Unit Page 10 */
++
++typedef struct _MPI2_IOUNIT10_FUNCTION {
++	U8                      CreditPercent;      /* 0x00 */
++	U8                      Reserved1;          /* 0x01 */
++	U16                     Reserved2;          /* 0x02 */
++} MPI2_IOUNIT10_FUNCTION, MPI2_POINTER PTR_MPI2_IOUNIT10_FUNCTION,
++Mpi2IOUnit10Function_t, MPI2_POINTER pMpi2IOUnit10Function_t;
++
++/*
++ * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
++ * one and check the value returned for NumFunctions at runtime.
++ */
++#ifndef MPI2_IOUNITPAGE10_FUNCTION_ENTRIES
++#define MPI2_IOUNITPAGE10_FUNCTION_ENTRIES      (1)
++#endif
++
++typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_10 {
++	MPI2_CONFIG_PAGE_HEADER Header;                    /* 0x00 */
++	U8                      NumFunctions;             /* 0x04 */
++	U8                      Reserved1;              /* 0x05 */
++	U16                     Reserved2;              /* 0x06 */
++	U32                     Reserved3;              /* 0x08 */
++	U32                     Reserved4;		/* 0x0C */
++	MPI2_IOUNIT10_FUNCTION
++		Function[MPI2_IOUNITPAGE10_FUNCTION_ENTRIES];/* 0x10 */
++} MPI2_CONFIG_PAGE_IO_UNIT_10, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IO_UNIT_10,
++Mpi2IOUnitPage10_t, MPI2_POINTER pMpi2IOUnitPage10_t;
++
++#define MPI2_IOUNITPAGE10_PAGEVERSION                   (0x01)
++
+ 
+ 
+ /****************************************************************************
+@@ -1022,12 +1144,12 @@ typedef struct _MPI2_CONFIG_PAGE_IOC_7
+     U32                     Reserved1;                  /* 0x04 */
+     U32                     EventMasks[MPI2_IOCPAGE7_EVENTMASK_WORDS];/* 0x08 */
+     U16                     SASBroadcastPrimitiveMasks; /* 0x18 */
+-    U16                     Reserved2;                  /* 0x1A */
++	U16                     SASNotifyPrimitiveMasks;    /* 0x1A */
+     U32                     Reserved3;                  /* 0x1C */
+ } MPI2_CONFIG_PAGE_IOC_7, MPI2_POINTER PTR_MPI2_CONFIG_PAGE_IOC_7,
+   Mpi2IOCPage7_t, MPI2_POINTER pMpi2IOCPage7_t;
+ 
+-#define MPI2_IOCPAGE7_PAGEVERSION                       (0x01)
++#define MPI2_IOCPAGE7_PAGEVERSION                       (0x02)
+ 
+ 
+ /* IOC Page 8 */
+@@ -2070,16 +2192,16 @@ typedef struct _MPI2_CONFIG_PAGE_SASIOUNIT_8 {
+ #define MPI2_SASIOUNITPAGE8_PAGEVERSION     (0x00)
+ 
+ /* defines for PowerManagementCapabilities field */
+-#define MPI2_SASIOUNIT8_PM_HOST_PORT_WIDTH_MOD          (0x000001000)
+-#define MPI2_SASIOUNIT8_PM_HOST_SAS_SLUMBER_MODE        (0x000000800)
+-#define MPI2_SASIOUNIT8_PM_HOST_SAS_PARTIAL_MODE        (0x000000400)
+-#define MPI2_SASIOUNIT8_PM_HOST_SATA_SLUMBER_MODE       (0x000000200)
+-#define MPI2_SASIOUNIT8_PM_HOST_SATA_PARTIAL_MODE       (0x000000100)
+-#define MPI2_SASIOUNIT8_PM_IOUNIT_PORT_WIDTH_MOD        (0x000000010)
+-#define MPI2_SASIOUNIT8_PM_IOUNIT_SAS_SLUMBER_MODE      (0x000000008)
+-#define MPI2_SASIOUNIT8_PM_IOUNIT_SAS_PARTIAL_MODE      (0x000000004)
+-#define MPI2_SASIOUNIT8_PM_IOUNIT_SATA_SLUMBER_MODE     (0x000000002)
+-#define MPI2_SASIOUNIT8_PM_IOUNIT_SATA_PARTIAL_MODE     (0x000000001)
++#define MPI2_SASIOUNIT8_PM_HOST_PORT_WIDTH_MOD          (0x00001000)
++#define MPI2_SASIOUNIT8_PM_HOST_SAS_SLUMBER_MODE        (0x00000800)
++#define MPI2_SASIOUNIT8_PM_HOST_SAS_PARTIAL_MODE        (0x00000400)
++#define MPI2_SASIOUNIT8_PM_HOST_SATA_SLUMBER_MODE       (0x00000200)
++#define MPI2_SASIOUNIT8_PM_HOST_SATA_PARTIAL_MODE       (0x00000100)
++#define MPI2_SASIOUNIT8_PM_IOUNIT_PORT_WIDTH_MOD        (0x00000010)
++#define MPI2_SASIOUNIT8_PM_IOUNIT_SAS_SLUMBER_MODE      (0x00000008)
++#define MPI2_SASIOUNIT8_PM_IOUNIT_SAS_PARTIAL_MODE      (0x00000004)
++#define MPI2_SASIOUNIT8_PM_IOUNIT_SATA_SLUMBER_MODE     (0x00000002)
++#define MPI2_SASIOUNIT8_PM_IOUNIT_SATA_PARTIAL_MODE     (0x00000001)
+ 
+ 
+ 
+@@ -2266,6 +2388,7 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_DEV_0
+ /* see mpi2_sas.h for values for SAS Device Page 0 DeviceInfo values */
+ 
+ /* values for SAS Device Page 0 Flags field */
++#define MPI2_SAS_DEVICE0_FLAGS_UNAUTHORIZED_DEVICE          (0x8000)
+ #define MPI2_SAS_DEVICE0_FLAGS_SLUMBER_PM_CAPABLE           (0x1000)
+ #define MPI2_SAS_DEVICE0_FLAGS_PARTIAL_PM_CAPABLE           (0x0800)
+ #define MPI2_SAS_DEVICE0_FLAGS_SATA_ASYNCHRONOUS_NOTIFY     (0x0400)
 
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index 1f0c190..6bef17e 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -1,12 +1,12 @@
+ /*
+- *  Copyright (c) 2000-2010 LSI Corporation.
++ *  Copyright (c) 2000-2011 LSI Corporation.
+  *
+  *
+  *           Name:  mpi2_ioc.h
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.16
++ *  mpi2_ioc.h Version:  02.00.17
+  *
+  *  Version History
+  *  ---------------
+@@ -104,6 +104,12 @@
+  *  05-12-10  02.00.15  Marked Task Set Full Event as obsolete.
+  *                      Added MPI2_EVENT_SAS_TOPO_LR_UNSUPPORTED_PHY define.
+  *  11-10-10  02.00.16  Added MPI2_FW_DOWNLOAD_ITYPE_MIN_PRODUCT_SPECIFIC.
++ *  02-23-11  02.00.17  Added SAS NOTIFY Primitive event, and added
++ *                      SASNotifyPrimitiveMasks field to
++ *                      MPI2_EVENT_NOTIFICATION_REQUEST.
++ *                      Added Temperature Threshold Event.
++ *                      Added Host Message Event.
++ *                      Added Send Host Message request and reply.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -421,7 +427,7 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REQUEST
+     U32                     Reserved6;                      /* 0x10 */
+     U32                     EventMasks[MPI2_EVENT_NOTIFY_EVENTMASK_WORDS];/* 0x14 */
+     U16                     SASBroadcastPrimitiveMasks;     /* 0x24 */
+-    U16                     Reserved7;                      /* 0x26 */
++	 U16                     SASNotifyPrimitiveMasks;        /* 0x26 */
+     U32                     Reserved8;                      /* 0x28 */
+ } MPI2_EVENT_NOTIFICATION_REQUEST,
+   MPI2_POINTER PTR_MPI2_EVENT_NOTIFICATION_REQUEST,
+@@ -476,6 +482,9 @@ typedef struct _MPI2_EVENT_NOTIFICATION_REPLY
+ #define MPI2_EVENT_GPIO_INTERRUPT                   (0x0023)
+ #define MPI2_EVENT_HOST_BASED_DISCOVERY_PHY         (0x0024)
+ #define MPI2_EVENT_SAS_QUIESCE                      (0x0025)
++#define MPI2_EVENT_SAS_NOTIFY_PRIMITIVE             (0x0026)
++#define MPI2_EVENT_TEMP_THRESHOLD                   (0x0027)
++#define MPI2_EVENT_HOST_MESSAGE                     (0x0028)
+ 
+ 
+ /* Log Entry Added Event data */
+@@ -507,6 +516,39 @@ typedef struct _MPI2_EVENT_DATA_GPIO_INTERRUPT {
+   MPI2_POINTER PTR_MPI2_EVENT_DATA_GPIO_INTERRUPT,
+   Mpi2EventDataGpioInterrupt_t, MPI2_POINTER pMpi2EventDataGpioInterrupt_t;
+ 
++/* Temperature Threshold Event data */
++
++typedef struct _MPI2_EVENT_DATA_TEMPERATURE {
++	U16         Status;                             /* 0x00 */
++	U8          SensorNum;                          /* 0x02 */
++	U8          Reserved1;                          /* 0x03 */
++	U16         CurrentTemperature;                 /* 0x04 */
++	U16         Reserved2;                          /* 0x06 */
++	U32         Reserved3;                          /* 0x08 */
++	U32         Reserved4;                          /* 0x0C */
++} MPI2_EVENT_DATA_TEMPERATURE,
++MPI2_POINTER PTR_MPI2_EVENT_DATA_TEMPERATURE,
++Mpi2EventDataTemperature_t, MPI2_POINTER pMpi2EventDataTemperature_t;
++
++/* Temperature Threshold Event data Status bits */
++#define MPI2_EVENT_TEMPERATURE3_EXCEEDED            (0x0008)
++#define MPI2_EVENT_TEMPERATURE2_EXCEEDED            (0x0004)
++#define MPI2_EVENT_TEMPERATURE1_EXCEEDED            (0x0002)
++#define MPI2_EVENT_TEMPERATURE0_EXCEEDED            (0x0001)
++
++
++/* Host Message Event data */
++
++typedef struct _MPI2_EVENT_DATA_HOST_MESSAGE {
++	U8          SourceVF_ID;                        /* 0x00 */
++	U8          Reserved1;                          /* 0x01 */
++	U16         Reserved2;                          /* 0x02 */
++	U32         Reserved3;                          /* 0x04 */
++	U32         HostData[1];                        /* 0x08 */
++} MPI2_EVENT_DATA_HOST_MESSAGE, MPI2_POINTER PTR_MPI2_EVENT_DATA_HOST_MESSAGE,
++Mpi2EventDataHostMessage_t, MPI2_POINTER pMpi2EventDataHostMessage_t;
++
++
+ /* Hard Reset Received Event data */
+ 
+ typedef struct _MPI2_EVENT_DATA_HARD_RESET_RECEIVED
+@@ -749,6 +791,24 @@ typedef struct _MPI2_EVENT_DATA_SAS_BROADCAST_PRIMITIVE
+ #define MPI2_EVENT_PRIMITIVE_CHANGE0_RESERVED               (0x07)
+ #define MPI2_EVENT_PRIMITIVE_CHANGE1_RESERVED               (0x08)
+ 
++/* SAS Notify Primitive Event data */
++
++typedef struct _MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE {
++	U8                      PhyNum;                     /* 0x00 */
++	U8                      Port;                       /* 0x01 */
++	U8                      Reserved1;                  /* 0x02 */
++	U8                      Primitive;                  /* 0x03 */
++} MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE,
++MPI2_POINTER PTR_MPI2_EVENT_DATA_SAS_NOTIFY_PRIMITIVE,
++Mpi2EventDataSasNotifyPrimitive_t,
++MPI2_POINTER pMpi2EventDataSasNotifyPrimitive_t;
++
++/* defines for the Primitive field */
++#define MPI2_EVENT_NOTIFY_ENABLE_SPINUP                     (0x01)
++#define MPI2_EVENT_NOTIFY_POWER_LOSS_EXPECTED               (0x02)
++#define MPI2_EVENT_NOTIFY_RESERVED1                         (0x03)
++#define MPI2_EVENT_NOTIFY_RESERVED2                         (0x04)
++
+ 
+ /* SAS Initiator Device Status Change Event data */
+ 
+@@ -1001,6 +1061,53 @@ typedef struct _MPI2_EVENT_ACK_REPLY
+ 
+ 
+ /****************************************************************************
++*  SendHostMessage message
++****************************************************************************/
++
++/* SendHostMessage Request message */
++typedef struct _MPI2_SEND_HOST_MESSAGE_REQUEST {
++	U16                     HostDataLength;                 /* 0x00 */
++	U8                      ChainOffset;                    /* 0x02 */
++	U8                      Function;                       /* 0x03 */
++	U16                     Reserved1;                      /* 0x04 */
++	U8                      Reserved2;                      /* 0x06 */
++	U8                      MsgFlags;                       /* 0x07 */
++	U8                      VP_ID;                          /* 0x08 */
++	U8                      VF_ID;                          /* 0x09 */
++	U16                     Reserved3;                      /* 0x0A */
++	U8                      Reserved4;                      /* 0x0C */
++	U8                      DestVF_ID;                      /* 0x0D */
++	U16                     Reserved5;                      /* 0x0E */
++	U32                     Reserved6;                      /* 0x10 */
++	U32                     Reserved7;                      /* 0x14 */
++	U32                     Reserved8;                      /* 0x18 */
++	U32                     Reserved9;                      /* 0x1C */
++	U32                     Reserved10;                     /* 0x20 */
++	U32                     HostData[1];                    /* 0x24 */
++} MPI2_SEND_HOST_MESSAGE_REQUEST,
++MPI2_POINTER PTR_MPI2_SEND_HOST_MESSAGE_REQUEST,
++Mpi2SendHostMessageRequest_t, MPI2_POINTER pMpi2SendHostMessageRequest_t;
++
++
++/* SendHostMessage Reply message */
++typedef struct _MPI2_SEND_HOST_MESSAGE_REPLY {
++	U16                     HostDataLength;                 /* 0x00 */
++	U8                      MsgLength;                      /* 0x02 */
++	U8                      Function;                       /* 0x03 */
++	U16                     Reserved1;                      /* 0x04 */
++	U8                      Reserved2;                      /* 0x06 */
++	U8                      MsgFlags;                       /* 0x07 */
++	U8                      VP_ID;                          /* 0x08 */
++	U8                      VF_ID;                          /* 0x09 */
++	U16                     Reserved3;                      /* 0x0A */
++	U16                     Reserved4;                      /* 0x0C */
++	U16                     IOCStatus;                      /* 0x0E */
++	U32                     IOCLogInfo;                     /* 0x10 */
++} MPI2_SEND_HOST_MESSAGE_REPLY, MPI2_POINTER PTR_MPI2_SEND_HOST_MESSAGE_REPLY,
++Mpi2SendHostMessageReply_t, MPI2_POINTER pMpi2SendHostMessageReply_t;
++
++
++/****************************************************************************
+ *  FWDownload message
+ ****************************************************************************/
+ 
