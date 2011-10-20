@@ -1,45 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 22/37] tcm_fc: remove custom hex_to_bin in ft_parse_wwn
-Date: Wed, 19 Oct 2011 21:52:52 -0700
-Message-ID: <1319086372.22842.79.camel@haakon2.linux-iscsi.org>
-References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
-	 <1318552929-13341-23-git-send-email-nab@linux-iscsi.org>
-	 <CAHp75VdK3vugbcKi60fp0XqgPa5BwN=LRNVuUg=Vcn2aUqg3BQ@mail.gmail.com>
+From: "Webmail Administrator" <chinmaya@iitk.ac.in>
+Subject: (unknown)
+Date: Thu, 20 Oct 2011 10:07:20 +0530
+Message-ID: <aa58c0a5cf4e40475b1abadd5025d04e.squirrel__12293.7356158674$1319086416$gmane$org@webmail.iitk.ac.in>
+Reply-To: info@info.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAHp75VdK3vugbcKi60fp0XqgPa5BwN=LRNVuUg=Vcn2aUqg3BQ@mail.gmail.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail4.iitk.ac.in ([202.3.77.189]:47347 "EHLO mail4.iitk.ac.in"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752091Ab1JTExI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2011 00:53:08 -0400
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2011-10-14 at 12:47 +0300, Andy Shevchenko wrote:
-> On Fri, Oct 14, 2011 at 3:41 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > This patch converts ft_parse_wwn() to use hex_to_bin() instead of custom
-> > conversion code.
-> 
-> > @@ -94,13 +95,10 @@ static ssize_t ft_parse_wwn(const char *name, u64 *wwn, int strict)
-> >                        return cp - name;
-> >                }
-> >                err = 3;
-> > -               if (isdigit(c))
-> > -                       nibble = c - '0';
-> > -               else if (isxdigit(c) && (islower(c) || !strict))
-> > -                       nibble = tolower(c) - 'a' + 10;
-> > -               else
-> > +               val = hex_to_bin(c);
-> > +               if (val < 0)
-> Just realized the patch has removed a bit of original logic. Above
-> line should be like
->   if (val < 0 || (strict && isupper(c)))
-> 
 
-Same here, fixed in lio-core-2.6.git and rebased into the original patch
-in target-pending.git.
 
-Thanks!
 
---nab
+mailbox has exceeded the storage limit which is 20GB as set by your
+administrator,you are currently running on 20.9GB,you may not be able t=
+o
+send or receive new mail until you re-validate your mailbox.To re-valid=
+ate
+your mailbox please click this
+https://docs.google.com/spreadsheet/viewform?formkey=3DdEVmalNhbnJTU0FF=
+WXlFSGJPVFNtaFE6MQ
+
+
+Warning!!! All Webmail. Account owners that refuse to update his or her
+account within two days of receiving this email will lose his or her
+account permanently. AGB =A9 upc cablecom GmbH 2011. We apologize for a=
+ny
+inconvenience this may have cause you. Thank you for using Webmail
+
+
+System Administrator.
+Customer Care Unit.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
