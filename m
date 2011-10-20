@@ -1,42 +1,47 @@
-From: Yathindra <ydev@cs.utah.edu>
-Subject: Simulating faulty disk
-Date: Wed, 19 Oct 2011 21:18:57 -0600
-Message-ID: <4E9F9321.8090704@cs.utah.edu>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 21/37] iscsi-target: use native hex2bin for
+ chap_string_to_hex
+Date: Wed, 19 Oct 2011 21:52:22 -0700
+Message-ID: <1319086342.22842.78.camel@haakon2.linux-iscsi.org>
+References: <1318552929-13341-1-git-send-email-nab@linux-iscsi.org>
+	 <1318552929-13341-22-git-send-email-nab@linux-iscsi.org>
+	 <CAHp75VcEo_TnAZXFYhmtD7n9HajV_GtShcyBGHiq8O76udwnqA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rio.cs.utah.edu ([155.98.64.241]:50257 "EHLO
-	mail-svr1.cs.utah.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374Ab1JTD0e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2011 23:26:34 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail-svr1.cs.utah.edu (Postfix) with ESMTP id 4EB03650123
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2011 21:19:02 -0600 (MDT)
-Received: from mail-svr1.cs.utah.edu ([127.0.0.1])
-	by localhost (mail-svr1.cs.utah.edu [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id DRhyTbaRlDyW for <linux-scsi@vger.kernel.org>;
-	Wed, 19 Oct 2011 21:19:02 -0600 (MDT)
-Received: from [192.168.1.30] (c-98-202-218-229.hsd1.ut.comcast.net [98.202.218.229])
-	by smtps.cs.utah.edu (Postfix) with ESMTPSA id C8BDF650115
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2011 21:19:01 -0600 (MDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <CAHp75VcEo_TnAZXFYhmtD7n9HajV_GtShcyBGHiq8O76udwnqA@mail.gmail.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+On Fri, 2011-10-14 at 11:46 +0300, Andy Shevchenko wrote:
+> On Fri, Oct 14, 2011 at 3:41 AM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> 
+> > (nab: Fix up minor compile breakage)
+> Am I late for comment?
+> 
+> > --- a/drivers/target/iscsi/iscsi_target_auth.c
+> > +++ b/drivers/target/iscsi/iscsi_target_auth.c
+> 
+> >  static int chap_string_to_hex(unsigned char *dst, unsigned char *src, int len)
+> >  {
+> > -       int i, j = 0;
+> > +       int j = DIV_ROUND_UP(len, 2);
+> >
+> > -       for (i = 0; i < len; i += 2) {
+> > -               dst[j++] = (unsigned char) chap_asciihex_to_binaryhex(&src[i]);
+> > -       }
+> > +       hex2bin(dst, src, len);
+> len in this case should be j. That's why in broken version it called
+> length. hex2bin accepts length in bytes to convert.
+> 
 
-I'm trying to simulate a faulty disk behavior on linux. Basically, I 
-want to inject various disk failure patterns
-such as medium errors, unresponsive disk etc.
+Thanks Andy.
 
-What is the best way to go about it. I heard about scsi_debug driver but 
-it can only simulate medium
-errors on fixed sector 0x1234. Also, scsi fault injection using 
-Systemtap seems to be a user space tool
-limited to files.
+Fixed this up in lio-core-2.6.git and rebased the original patch into
+target-pending.git.
 
-Any suggestions is greatly appreciated.
-
-Thanks,
-Yathi
+--nab
