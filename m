@@ -1,31 +1,33 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 0/6] skb fragment API: convert network drivers (part V,
- take 2)
-Date: Thu, 20 Oct 2011 05:23:33 -0400 (EDT)
-Message-ID: <20111020.052333.865812021350188883.davem@davemloft.net>
-References: <1319101275.3385.129.camel@zakaz.uk.xensource.com>
+From: "Bryn M. Reeves" <bmr@redhat.com>
+Subject: Re: Simulating faulty disk
+Date: Thu, 20 Oct 2011 10:27:26 +0100
+Message-ID: <4E9FE97E.4030209@redhat.com>
+References: <4E9F9321.8090704@cs.utah.edu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1319101275.3385.129.camel@zakaz.uk.xensource.com>
-Sender: owner-linux-mm@kvack.org
-To: Ian.Campbell@citrix.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42404 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755439Ab1JTJ13 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2011 05:27:29 -0400
+In-Reply-To: <4E9F9321.8090704@cs.utah.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yathindra <ydev@cs.utah.edu>
+Cc: linux-scsi@vger.kernel.org
 
-From: Ian Campbell <Ian.Campbell@citrix.com>
-Date: Thu, 20 Oct 2011 10:01:15 +0100
+On 10/20/2011 04:18 AM, Yathindra wrote:
+> I'm trying to simulate a faulty disk behavior on linux. Basically, I
+> want to inject various disk failure patterns
+> such as medium errors, unresponsive disk etc.
 
-> The following series is the second attempt to convert a fifth (and
-> hopefully final) batch of network drivers to the SKB pages fragment API
-> introduced in 131ea6675c76.
+If using a device-mapper device is acceptable for your purpose there are 
+the dm-flakey and dm-delay targets that can add delays, drop and corrupt 
+writes and introduce intermittent I/O errors.
 
-Applied, thanks Ian.
+The targets can be stacked to give devices having any combination of 
+these behaviours.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Regards,
+Bryn.
