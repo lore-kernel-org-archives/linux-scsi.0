@@ -1,84 +1,71 @@
-From: Yathindra <ydev@cs.utah.edu>
-Subject: Re: Simulating faulty disk
-Date: Thu, 20 Oct 2011 02:43:30 -0600
-Message-ID: <4E9FDF32.6050305@cs.utah.edu>
-References: <4E9F9321.8090704@cs.utah.edu> <20111020044734.GC15211@atlantis.cc.ndsu.nodak.edu> <4E9FCE16.4070106@cs.utah.edu>
+From: Ian Campbell <Ian.Campbell@citrix.com>
+Subject: [PATCH 0/6] skb fragment API: convert network drivers (part V, take
+ 2)
+Date: Thu, 20 Oct 2011 10:01:15 +0100
+Message-ID: <1319101275.3385.129.camel@zakaz.uk.xensource.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-svr1.cs.utah.edu ([155.98.64.241]:53941 "EHLO
-	mail-svr1.cs.utah.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752240Ab1JTIng (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2011 04:43:36 -0400
-Received: from localhost (localhost [127.0.0.1])
-	by mail-svr1.cs.utah.edu (Postfix) with ESMTP id C13FA65011D
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2011 02:43:35 -0600 (MDT)
-In-Reply-To: <4E9FCE16.4070106@cs.utah.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: "netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: ydev@cs.utah.edu
 
-Hi,
+The following series is the second attempt to convert a fifth (and
+hopefully final) batch of network drivers to the SKB pages fragment API
+introduced in 131ea6675c76.
 
-Can anybody with experience in using scsi_debug driver tell me if it can
-be used to inject medium errors on various file/disk blocks.
+There are four drivers here (mlx4, cxgb4, cxgb4vf and cxgbi) which used
+skb_frag_t as part of their internal datastructures which meant that
+they are impacted by changes to that type more than most drivers. To
+break this dependency I added a "struct page_frag" (struct page + offset
++ len) and converted them to use it. These conversions are a little less
+trivial than most of the preceding ones and I have only been able to
+compile test them.
 
-And also, can it delay commands so we can simulate an unresponsive disk.
+The struct page_frag addition has been acked by Andrew Morton to go
+through the net tree. (Andrew, I took you "yes please" as an Acked-by. I
+hope that's ok).
 
-Thanks,
-Yathi
-On 10/20/2011 1:30 AM, Yathindra wrote:
-> Hi Bryan,
->
-> I saw this too but it does not have features to delay the commands. 
-> And it works only at the file level.
->
-> I thought about scsi_debug driver but it seems to able to inject 
-> medium errors on sector 0x1234 only.
-> I'm not sure why that limitation exists though.
->
-> Thanks,
-> Yathi
-> On 10/19/2011 10:47 PM, Bryan Mesich wrote:
->> On Wed, Oct 19, 2011 at 09:18:57PM -0600, Yathindra wrote:
->>> Hi,
->>>
->>> I'm trying to simulate a faulty disk behavior on linux. Basically, I
->>> want to inject various disk failure patterns
->>> such as medium errors, unresponsive disk etc.
->>>
->>> What is the best way to go about it. I heard about scsi_debug driver 
->>> but
->>> it can only simulate medium
->>> errors on fixed sector 0x1234. Also, scsi fault injection using
->>> Systemtap seems to be a user space tool
->>> limited to files.
->>>
->>> Any suggestions is greatly appreciated.
->> I saw this go by the linux-scsi list a while back thinking it
->> might be useful sometime down the road:
->>
->> http://lwn.net/Articles/265187/
->>
->> I think the project is hosted on sourceforge.net at the following
->> URL:
->>
->> http://scsifaultinjtst.sourceforge.net/
->>
->> I had also read through part of a paper that was co-authored by
->> the same person (from linux symposium 2008):
->>
->> http://www.linuxsymposium.org/archives/OLS/Reprints-2008/tanaka-reprint.pdf 
->>
->>
->> Doesn't look like there has been much activity since 2009, but it
->> looks like it has the functionality you need.
->>
->> Bryan
->>
->>> Thanks,
->>> Yathi
->
+The final patch here wraps the page member of skb_frag_t in a structure,
+this is a precursor to adding the destructor here (those patches need a
+little more work, arising from comments made at LPC, I'll post regarding
+those shortly). This should help ensure that no direct uses of the page
+get introduced in the meantime.
 
+In the previous posting of this series I ran an allmodconfig build on a
+boatload architectures[2] on a baseline of the then current
+net-next/master (88c5100c28b0) and with that series. Although the
+baseline didn't build for most architectures I used "make -k" and
+confirmed that this series added no new warnings or errors. For this
+iteration I have just rebuilt things which changed in the interval
+88c5100c28b0..a0bec1cd8f7a (current net-next/master) on amd64 and
+eyeballed the diff for new uses of frag->page (I saw none).
+
+This is part of my series to enable visibility into SKB paged fragment's
+lifecycles, [0] contains some more background and rationale but
+basically the completed series will allow entities which inject pages
+into the networking stack to receive a notification when the stack has
+really finished with those pages (i.e. including retransmissions,
+clones, pull-ups etc) and not just when the original skb is finished
+with, which is beneficial to many subsystems which wish to inject pages
+into the network stack without giving up full ownership of those page's
+lifecycle. It implements something broadly along the lines of what was
+described in [1].
+
+Cheers,
+Ian.
+
+[0] http://marc.info/?l=linux-netdev&m=131072801125521&w=2
+[1] http://marc.info/?l=linux-netdev&m=130925719513084&w=2
+[2] arm amd64 blackfin cris i386 ia64 m68k mips64 mips powerpc64 powerpc
+s390x sh4 sparc64 sparc xtensa 
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom internet charges in Canada: sign http://stopthemeter.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
