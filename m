@@ -1,59 +1,65 @@
-From: Yathindra <ydev@cs.utah.edu>
-Subject: Re: Simulating faulty disk
-Date: Thu, 20 Oct 2011 09:59:16 -0600
-Message-ID: <4EA04554.8020703@cs.utah.edu>
-References: <4E9F9321.8090704@cs.utah.edu> <4E9FE97E.4030209@redhat.com> <4EA04201.1050702@cs.utah.edu> <4EA044A9.6070406@redhat.com>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [RESEND][PATCH 1/1] ipr: add definitions for additional adapter
+Date: Thu, 20 Oct 2011 09:25:50 -0700
+Message-ID: <4EA04B8E.9030909@linux.vnet.ibm.com>
+References: <20111019230016.134176494@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rio.cs.utah.edu ([155.98.64.241]:35313 "EHLO
-	mail-svr1.cs.utah.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753500Ab1JTP7X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2011 11:59:23 -0400
-In-Reply-To: <4EA044A9.6070406@redhat.com>
+Received: from e8.ny.us.ibm.com ([32.97.182.138]:48743 "EHLO e8.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753855Ab1JTQ1a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2011 12:27:30 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e8.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p9KGBnVB003053
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2011 12:11:49 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p9KGPwiY3559658
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2011 12:25:58 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p9KGPr5G014426
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2011 12:25:57 -0400
+In-Reply-To: <20111019230016.134176494@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Bryn M. Reeves" <bmr@redhat.com>
-Cc: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Thanks so much Bryn. Appreciate it.
+Add the appropriate definitions and table entry for an additional adapter.
 
-On 10/20/2011 9:56 AM, Bryn M. Reeves wrote:
-> On 10/20/2011 04:45 PM, Yathindra wrote:
->> Hi Bryn,
->>
->> Thanks for that info. Could you please tell me where I can find more
->> details about using it.
->>
->> Thanks again,
->> Yathi
->
-> There's a couple of brief files describing the targets in the 
-> Documentation/device-mapper directory:
->
-> http://www.kernel.org/doc/Documentation/device-mapper/dm-flakey.txt
-> http://www.kernel.org/doc/Documentation/device-mapper/delay.txt
->
-> They both work like the linear target (except that they introduce the 
-> specified faults according to their parameters).
->
-> To set up a device with both you'd need to use a pair of stacked 
-> devices so something like:
->
-> dmsetup create d0 --table="0 $SECTORS delay $DEVICE 0 500"
-> dmsetup create f0 --table="0 $SECTORS flakey /dev/mapper/d0 0 9 1"
->
-> This will create a device /dev/mapper/f0 that is drops out for 1s in 
-> every 10 and has a 500ms delay on reads and writes. SECTORS is the 
-> size of the underlying device in sectors (use e.g. $(blockdev 
-> --getsize)).
->
-> You can optionally specify separate delays/device for writes to the 
-> delay layer and write loss / write corruption for the flakey layer - 
-> see the doc files and also the comments above flakey_ctr and delay_ctr 
-> for more details.
->
-> Regards,
-> Bryn.
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
+ drivers/scsi/ipr.c |    4 +++-
+ drivers/scsi/ipr.h |    1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2011-10-19 15:53:30.852967743 -0700
++++ b/drivers/scsi/ipr.c	2011-10-19 15:56:17.363057868 -0700
+@@ -9114,8 +9114,10 @@ static struct pci_device_id ipr_pci_tabl
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B2, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+-		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C3, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_ASIC_E2,
++		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
++	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B4, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_ASIC_E2,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B1, 0, 0, 0 },
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2011-10-19 15:53:32.829134947 -0700
++++ b/drivers/scsi/ipr.h	2011-10-19 15:56:20.895356624 -0700
+@@ -82,6 +82,7 @@
+
+ #define IPR_SUBS_DEV_ID_57B4    0x033B
+ #define IPR_SUBS_DEV_ID_57B2    0x035F
++#define IPR_SUBS_DEV_ID_57C3    0x0353
+ #define IPR_SUBS_DEV_ID_57C4    0x0354
+ #define IPR_SUBS_DEV_ID_57C6    0x0357
+ #define IPR_SUBS_DEV_ID_57CC    0x035C
 
