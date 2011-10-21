@@ -1,56 +1,74 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] mpt2sas: Description Patch
-Date: Fri, 21 Oct 2011 09:13:17 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A60472483998@inbmail02.lsi.com>
-References: <201110191055.p9JAtUDv026753@milmhbs0.lsil.com>
- <1319039992.3034.20.camel@dabdike.int.hansenpartnership.com>
+From: Yathindra <ydev@cs.utah.edu>
+Subject: Re: Simulating faulty disk
+Date: Thu, 20 Oct 2011 22:14:39 -0600
+Message-ID: <4EA0F1AF.8090008@cs.utah.edu>
+References: <4E9F9321.8090704@cs.utah.edu> <4E9FE97E.4030209@redhat.com> <4EA04201.1050702@cs.utah.edu> <4EA044A9.6070406@redhat.com> <4EA05072.10107@cs.utah.edu> <4EA05D0A.7030909@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:57028 "EHLO
-	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752904Ab1JUDnm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Oct 2011 23:43:42 -0400
-In-Reply-To: <1319039992.3034.20.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
+Received: from rio.cs.utah.edu ([155.98.64.241]:52971 "EHLO
+	mail-svr1.cs.utah.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750837Ab1JUEOq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2011 00:14:46 -0400
+In-Reply-To: <4EA05D0A.7030909@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: "Bryn M. Reeves" <bmr@redhat.com>
+Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-SmFtZXMsDQpJIHJlc2VudCBhbGwgdGhlIHBhdGNoZXMgd2l0aCBudW1iZXJzIGFkZGVkIHRvIGVh
-Y2ggcGF0Y2guIEFsc28gdGhlIHBhdGNoZXMgd2hpY2ggbmVlZCB0byBiZSBiYWNrIHBvcnRlZCB0
-byBzdGFibGUsIEkgcHV0IENjOiBzdGFibGVAa2VybmVsLm9yZyBpbiB0aGUgcGF0Y2ggYW5kIHJl
-c2VudC4NCg0KUmVnYXJkcywNCk5hZ2FsYWtzaG1pDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdl
-LS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOmpib3R0b21sZXlAcGFyYWxsZWxz
-LmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE9jdG9iZXIgMTksIDIwMTEgOTozMCBQTQ0KVG86IE5h
-bmRpZ2FtYSwgTmFnYWxha3NobWkNCkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgRGVz
-YWksIEthc2h5YXA7IFByYWthc2gsIFNhdGh5YTsgTW9vcmUsIEVyaWMNClN1YmplY3Q6IFJlOiBb
-UEFUQ0hdIG1wdDJzYXM6IERlc2NyaXB0aW9uIFBhdGNoDQoNCk9uIFdlZCwgMjAxMS0xMC0xOSBh
-dCAxMDoxOSArMDUzMCwgbmFnYWxha3NobWkubmFuZGlnYW1hQGxzaS5jb20gd3JvdGU6DQo+IFBs
-ZWFzZSBjb25zaWRlciB0aGlzIHBhdGNoIHNldCBmb3IgbmV4dCBrZXJuZWwgcmVsZWFzZS4NCj4g
-DQo+IFNpZ25lZC1vZmYtYnk6IE5hZ2FsYWtzaG1pIE5hbmRpZ2FtYSA8bmFnYWxha3NobWkubmFu
-ZGlnYW1hQGxzaS5jb20+DQo+IC0tLQ0KPiBbUEFUQ0ggMDEvMTBdIG1wdDJzYXMgOiBNUEkgbmV4
-dCByZXZpc2lvbiBoZWFkZXIgdXBkYXRlLg0KPiBbUEFUQ0ggMDIvMTBdIG1wdDJzYXMgOiBOZXcg
-ZmVhdHVyZSBGYXN0IExvYWQgU3VwcG9ydC4NCj4gW1BBVENIIDAzLzEwXSBtcHQyc2FzIDogRml4
-IGZvciBzeXN0ZW0gaGFuZyB3aGVuIGRpc2NvdmVyeSBpbiBwcm9ncmVzcy4NCj4gW1BBVENIIDA0
-LzEwXSBtcHQyc2FzIDogRml4IGZvciBpc3N1ZSAtIEZhaWx1cmUgbWVzc2FnZSBkaXNwbGF5ZWQg
-ZHVyaW5nIGRpYWcgcmVzZXQuDQo+IFtQQVRDSCAwNS8xMF0gbXB0MnNhcyA6IEZpeCBmb3IgaXNz
-dWUgLSBEcml2ZXMgbm90IGdldHRpbmcgcHJvcGVybHkgZGVsZXRlZCBpZiBzYXMgY2FibGUgaXMg
-cmVtb3ZlZCANCj4gd2hpbGUgaG9zdCByZXNldCBpcyBhY3RpdmUuDQo+IFtQQVRDSCAwNi8xMF0g
-bXB0MnNhcyA6IEZpeCBmb3IgZGVhZCBsb2NrIG9jY3VycmluZyBiZXR3ZWVuIGhvc3RfbG9jayBh
-bmQgc2FzX2RldmljZV9sb2NrLg0KPiBbUEFUQ0ggMDcvMTBdIG1wdDJzYXMgOiBGaXggZm9yIGRl
-YWRsb2NrIGJldHdlZW4gaG90IHBsdWcgd29ya2VyIHRocmVhZHMgYW5kIGhvc3QgcmVzZXQgY29u
-dGV4dC4NCj4gW1BBVENIIDA4LzEwXSBtcHQyc2FzIDogRml4IGZvciBpc3N1ZSBQb3J0IFJlc2V0
-IHRha2luZyBsb25nIHRpbWUoYXJvdW5kIDUgbWlucykgdG8gY29tcGxldGUNCj4gd2hpbGUgaXNz
-dWVkIGR1cmluZyBjcmVhdGluZyBhIHZvbHVtZS4NCj4gW1BBVENIIDA5LzEwXSBtcHQyc2FzIDog
-Rml4IGZvciBQYW5pYyB3aGVuIGluYWN0aXZlIHZvbHVtZSBpcyB0cmllZCBkZWxldGluZy4NCj4g
-W1BBVENIIDEwLzEwXSBtcHQyc2FzIDogQnVtcCBkcml2ZXIgdmVyc2lvbiB0byAxMC4xMDAuMDAu
-MDANCg0KTm9uZSBvZiB0aGUgcGF0Y2ggbnVtYmVycyBtYWRlIGl0IHRvIHRoZSBhY3R1YWwgcGF0
-Y2hlcy4gIFRoaXMgbWFrZXMgZm9yDQphbiBpbmNyZWRpYmx5IGFubm95aW5nIGNyb3NzIHJlZmVy
-ZW5jZSBqb2IgdHJ5aW5nIHRvIGFwcGx5IHRoZW0sIGNvdWxkDQp5b3UganVzdCByZXNlbmQgd2l0
-aCB0aGUgbnVtYmVyaW5nIGluIHRoZSBTdWJqZWN0IG9mIGVhY2ggcGF0Y2guDQoNCkFsc28gc2V2
-ZXJhbCBvZiB0aGUgb25lcyBsYWJlbGxlZCBmaXggbG9vayBsaWtlIHRoZXkncmUgY2FuZGlkYXRl
-cyBmb3INCmJhY2twb3J0IHRvIHN0YWJsZSwgYXJlIHRoZXk/DQoNCkphbWVzDQoNCg0K
+Hi Bryn,
+
+I compiled a fresh kernel and enabled flakey and delay modules. Now am 
+able to create disks but
+it fails to mount.
+
+dmsetup create d0 --table="0 `blockdev --getsize /dev/sdb` delay 
+/dev/sdb 0 500"
+dmsetup create f0 --table="0 `blockdev --getsize /dev/mapper/d0` flakey 
+/dev/mapper/d0 0 9 1"
+mkfs -t ext3 /dev/mapper/f0
+...
+...
+ext2fs_mkdir: Attempt to read block from filesystem resulted in short 
+read while creating root dir
+
+Can we even mount such a device ?
+
+Thanks,
+Yathi
+
+
+
+On 10/20/2011 11:40 AM, Bryn M. Reeves wrote:
+> On 10/20/2011 05:46 PM, Yathindra wrote:
+>> >dmsetup create d0 --table="0 `blockdev --getsize /dev/sdb` delay
+>> /dev/sdb 0 500"
+>> device-mapper: reload ioctl failed: Invalid argument
+>> Command failed
+>>
+>> In /var/log/messages I see this,
+>> device-mapper: ioctl: error adding target to table
+>
+> I don't see this here:
+>
+> # dmsetup create d0 --table="0 `blockdev --getsize /dev/sdb` delay 
+> /dev/sdb 0 500"
+> # dmsetup info -c d0
+> Name             Maj Min Stat Open Targ Event  UUID
+> d0               253   3 L--w    1    1      0
+> # dmsetup create f0 --table="0 `blockdev --getsize /dev/mapper/d0` 
+> flakey /dev/mapper/d0 0 9 1"
+> # dmsetup info -c f0
+> Name             Maj Min Stat Open Targ Event  UUID
+> f0               253   4 L--w    0    1      0
+>
+> This is using the f15 2.6.40.3 (aka kernel-3.0) with a locally 
+> compiled dm-delay since it's not enabled in the Fedora kernels.
+>
+> Might want to move this thread over to dm-devel if you're having 
+> trouble with it.
+>
+> Regards,
+> Bryn.
+
