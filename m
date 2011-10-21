@@ -1,44 +1,56 @@
-From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: Re: [RESEND][PATCH 1/1] ipr: add definitions for additional adapter
-Date: Thu, 20 Oct 2011 12:24:27 -0700
-Message-ID: <4EA0756B.2060501@linux.vnet.ibm.com>
-References: <20111019230016.134176494@linux.vnet.ibm.com> <4EA04B8E.9030909@linux.vnet.ibm.com> <1319133843.10746.24.camel@dabdike>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] mpt2sas: Description Patch
+Date: Fri, 21 Oct 2011 09:13:17 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A60472483998@inbmail02.lsi.com>
+References: <201110191055.p9JAtUDv026753@milmhbs0.lsil.com>
+ <1319039992.3034.20.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:33390 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751295Ab1JTT3Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2011 15:29:25 -0400
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wayneb@linux.vnet.ibm.com>;
-	Thu, 20 Oct 2011 13:25:11 -0600
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p9KJOTF3048430
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2011 13:24:32 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p9KJOSj0005757
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2011 13:24:28 -0600
-In-Reply-To: <1319133843.10746.24.camel@dabdike>
+Received: from na3sys009aog125.obsmtp.com ([74.125.149.153]:57028 "EHLO
+	na3sys009aog125.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752904Ab1JUDnm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Oct 2011 23:43:42 -0400
+In-Reply-To: <1319039992.3034.20.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <jbottomley@parallels.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On 10/20/2011 11:04 AM, James Bottomley wrote:
-> On Thu, 2011-10-20 at 09:25 -0700, Wayne Boyer wrote:
->> Add the appropriate definitions and table entry for an additional adapter.
-> 
-> This is the same patch except that the description is less
-> descriptive ... is there some reason for that?
-> 
-
-Yes, the reason is that the name used in the first patch
-is an internal name. It won't be used outside of IBM and we
-don't want to cause any confusion.
-
-Wayne
-
-
+SmFtZXMsDQpJIHJlc2VudCBhbGwgdGhlIHBhdGNoZXMgd2l0aCBudW1iZXJzIGFkZGVkIHRvIGVh
+Y2ggcGF0Y2guIEFsc28gdGhlIHBhdGNoZXMgd2hpY2ggbmVlZCB0byBiZSBiYWNrIHBvcnRlZCB0
+byBzdGFibGUsIEkgcHV0IENjOiBzdGFibGVAa2VybmVsLm9yZyBpbiB0aGUgcGF0Y2ggYW5kIHJl
+c2VudC4NCg0KUmVnYXJkcywNCk5hZ2FsYWtzaG1pDQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdl
+LS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFpbHRvOmpib3R0b21sZXlAcGFyYWxsZWxz
+LmNvbV0gDQpTZW50OiBXZWRuZXNkYXksIE9jdG9iZXIgMTksIDIwMTEgOTozMCBQTQ0KVG86IE5h
+bmRpZ2FtYSwgTmFnYWxha3NobWkNCkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgRGVz
+YWksIEthc2h5YXA7IFByYWthc2gsIFNhdGh5YTsgTW9vcmUsIEVyaWMNClN1YmplY3Q6IFJlOiBb
+UEFUQ0hdIG1wdDJzYXM6IERlc2NyaXB0aW9uIFBhdGNoDQoNCk9uIFdlZCwgMjAxMS0xMC0xOSBh
+dCAxMDoxOSArMDUzMCwgbmFnYWxha3NobWkubmFuZGlnYW1hQGxzaS5jb20gd3JvdGU6DQo+IFBs
+ZWFzZSBjb25zaWRlciB0aGlzIHBhdGNoIHNldCBmb3IgbmV4dCBrZXJuZWwgcmVsZWFzZS4NCj4g
+DQo+IFNpZ25lZC1vZmYtYnk6IE5hZ2FsYWtzaG1pIE5hbmRpZ2FtYSA8bmFnYWxha3NobWkubmFu
+ZGlnYW1hQGxzaS5jb20+DQo+IC0tLQ0KPiBbUEFUQ0ggMDEvMTBdIG1wdDJzYXMgOiBNUEkgbmV4
+dCByZXZpc2lvbiBoZWFkZXIgdXBkYXRlLg0KPiBbUEFUQ0ggMDIvMTBdIG1wdDJzYXMgOiBOZXcg
+ZmVhdHVyZSBGYXN0IExvYWQgU3VwcG9ydC4NCj4gW1BBVENIIDAzLzEwXSBtcHQyc2FzIDogRml4
+IGZvciBzeXN0ZW0gaGFuZyB3aGVuIGRpc2NvdmVyeSBpbiBwcm9ncmVzcy4NCj4gW1BBVENIIDA0
+LzEwXSBtcHQyc2FzIDogRml4IGZvciBpc3N1ZSAtIEZhaWx1cmUgbWVzc2FnZSBkaXNwbGF5ZWQg
+ZHVyaW5nIGRpYWcgcmVzZXQuDQo+IFtQQVRDSCAwNS8xMF0gbXB0MnNhcyA6IEZpeCBmb3IgaXNz
+dWUgLSBEcml2ZXMgbm90IGdldHRpbmcgcHJvcGVybHkgZGVsZXRlZCBpZiBzYXMgY2FibGUgaXMg
+cmVtb3ZlZCANCj4gd2hpbGUgaG9zdCByZXNldCBpcyBhY3RpdmUuDQo+IFtQQVRDSCAwNi8xMF0g
+bXB0MnNhcyA6IEZpeCBmb3IgZGVhZCBsb2NrIG9jY3VycmluZyBiZXR3ZWVuIGhvc3RfbG9jayBh
+bmQgc2FzX2RldmljZV9sb2NrLg0KPiBbUEFUQ0ggMDcvMTBdIG1wdDJzYXMgOiBGaXggZm9yIGRl
+YWRsb2NrIGJldHdlZW4gaG90IHBsdWcgd29ya2VyIHRocmVhZHMgYW5kIGhvc3QgcmVzZXQgY29u
+dGV4dC4NCj4gW1BBVENIIDA4LzEwXSBtcHQyc2FzIDogRml4IGZvciBpc3N1ZSBQb3J0IFJlc2V0
+IHRha2luZyBsb25nIHRpbWUoYXJvdW5kIDUgbWlucykgdG8gY29tcGxldGUNCj4gd2hpbGUgaXNz
+dWVkIGR1cmluZyBjcmVhdGluZyBhIHZvbHVtZS4NCj4gW1BBVENIIDA5LzEwXSBtcHQyc2FzIDog
+Rml4IGZvciBQYW5pYyB3aGVuIGluYWN0aXZlIHZvbHVtZSBpcyB0cmllZCBkZWxldGluZy4NCj4g
+W1BBVENIIDEwLzEwXSBtcHQyc2FzIDogQnVtcCBkcml2ZXIgdmVyc2lvbiB0byAxMC4xMDAuMDAu
+MDANCg0KTm9uZSBvZiB0aGUgcGF0Y2ggbnVtYmVycyBtYWRlIGl0IHRvIHRoZSBhY3R1YWwgcGF0
+Y2hlcy4gIFRoaXMgbWFrZXMgZm9yDQphbiBpbmNyZWRpYmx5IGFubm95aW5nIGNyb3NzIHJlZmVy
+ZW5jZSBqb2IgdHJ5aW5nIHRvIGFwcGx5IHRoZW0sIGNvdWxkDQp5b3UganVzdCByZXNlbmQgd2l0
+aCB0aGUgbnVtYmVyaW5nIGluIHRoZSBTdWJqZWN0IG9mIGVhY2ggcGF0Y2guDQoNCkFsc28gc2V2
+ZXJhbCBvZiB0aGUgb25lcyBsYWJlbGxlZCBmaXggbG9vayBsaWtlIHRoZXkncmUgY2FuZGlkYXRl
+cyBmb3INCmJhY2twb3J0IHRvIHN0YWJsZSwgYXJlIHRoZXk/DQoNCkphbWVzDQoNCg0K
