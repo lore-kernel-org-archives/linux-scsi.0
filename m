@@ -1,118 +1,246 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: SCSI HA problems
-Date: Sat, 22 Oct 2011 19:26:09 -0500
-Message-ID: <4EA35F21.4060104@hardwarefreak.com>
-References: <3915A3F8-ECF9-469B-869F-EA4C8421476E@mines.edu> <20111022105046.5ab4e3e9@galadriel.home>
-Reply-To: stan@hardwarefreak.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo-65-41-216-221.sta.embarqhsd.net ([65.41.216.221]:32849 "EHLO
-	greer.hardwarefreak.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075Ab1JWAf6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2011 20:35:58 -0400
-In-Reply-To: <20111022105046.5ab4e3e9@galadriel.home>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 06/16] m68k/mac: cleanup mac_irq_pending
+Date: Mon, 24 Oct 2011 01:11:14 +1100
+Message-ID: <20111023141138.478727775@telegraphics.com.au>
+References: <20111023141108.856998818@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=replace-mac_irq_pending
+Sender: linux-m68k-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-m68k@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: Michael Robbert <mrobbert@mines.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 10/22/2011 3:50 AM, Emmanuel Florac wrote:
-> Le Fri, 21 Oct 2011 18:08:37 -0600 vous =E9criviez:
+mac_irq_pending() has only one caller (mac_esp.c). Nothing tests for Baboon, PSC or OSS pending interrupts. Until that need arises, let's keep it simple and remove all the unused abstraction. Replace it with a routine to check for SCSI DRQ.
 
->> So, my question is this, is this setup technically possible or are
->> the 2 HBAs going to conflict with each other when talking over the
->> same SAS bus to the SATA drives?
->=20
-> Your explanation lacks important information, like the hardware in us=
-e
-> (controllers, jbods, drives, cabling, etc), kernel version, RAID ( is=
- it
-> linux software RAID you're using?) etc. However:
->=20
-> First, you shouldn't be using desktop drives because it's extremely
-> dangerous (search the web and you'll find countless horror stories of
-> catastrophic failures, particularly with WD desktop drives).
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-Agreed.  Particularly the "Green" drives from any manufacturer.  Keep i=
-n
-mind that when a "home brew" system of this nature takes a catastrophic
-nose dive, you may spend a couple of days or more trying to hunt down
-the problem and fix it.  And therein lies the rub:  cheap SATA drives
-will drop en masse from arrays, inexplicably, and will test good in
-isolation on the bench.  Now what?  The problem isn't the drives but th=
-e
-entire low cost architecture.  The only fix it to replace _everything_
-if you want it to be reliable.  Or, fix it by avoiding such a thing in
-the first place.  Use "enterprise" quality SAS or SATA drives from day
-one, and use a good quality SAS controller, such as LSI.
-
-> Second, normally for SAS HA configuration, you must use SAS drives; t=
-he
-> main difference being that SAS drives have dual attachment, and can
-> manage commands coming from dual sources (controllers). SATA drives
-> lack the second path and can't be reliably driven from 2 different
-> controllers at once, unless you added a SAS to SATA adapter to them.
->=20
-> Third, your SAS controller must be able to work in multi-host
-> configuration. Most PCIe SAS controllers (3Ware, Adaptec, Areca,
-> HighPoint) can't do that at all. AFAIK only some LSI controllers are
-> multi-host aware, and this is a software option you must buy in
-> addition to the controller.
-
-You'll also want, if not outright need, an SAS switch, such as the LSI
-SAS6160.  Runs about $2000 USD from resellers.  You'll also want a
-quality JBOD chassis w/expander at about $2k each.
-
-> Fourth, for a dual attachment you need to use both SAS data path to
-> both hosts, which would quickly make clear you can't use SATA drives
-> (because they'll simply won't show up at all on the second path).
-
-Which is why hardware RAID enclosures and cluster filesystems and/or NF=
-S
-servers are much more popular than this type of shared SAS cluster.
-
-> Fifth, if you're actually using linux md raid driver, I don't think
-> it to be in any manner multi-host capable. So that would be a
-> definitive dead end.
-
-Yep.
-
-> My advice : the only reliable way to achieve HA using SATA drives and
-> common SAS controllers is to use DRDB or some similar replication
-> mechanism. Yes, that means you'll need a second JBOD and twice the
-> number of drives. But it will _just_ _work_, both with hardware or
-> software RAID.
-
-I see it as the only way to get away with using cheap SATA drives (whic=
-h
-I still wouldn't recommend).   If this is a lab exercise that's one
-thing.  If this will be a production system, stay away from consumer
-class drives.
-
-> If necessary, you may need a pair of 10 Ge or IB cards for data
-> synchronisation between hosts to perform well enough. Modern hardware
-> can easily replicate over DRBD at several hundred MB per second.
-
-The replication link bandwidth depends entirely on the target
-application and expected filesystem bandwidth required, which the OP
-didn't state IIRC.  That omission leads me to believe this is a researc=
-h
-project/exercise, with no actual goal to realize.
-
-> Don't forget : "cheap, good, fast: choose two." In the case of large,
-> important, valuable data, "good" isn't really an option you may go
-> without anyway.
-
-Good advice.
-
---=20
-Stan
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux-m68k/arch/m68k/include/asm/macintosh.h
+===================================================================
+--- linux-m68k.orig/arch/m68k/include/asm/macintosh.h	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/arch/m68k/include/asm/macintosh.h	2011-10-23 00:51:07.000000000 +1100
+@@ -11,7 +11,7 @@
+ extern void mac_reset(void);
+ extern void mac_poweroff(void);
+ extern void mac_init_IRQ(void);
+-extern int mac_irq_pending(unsigned int);
++
+ extern void mac_irq_enable(struct irq_data *data);
+ extern void mac_irq_disable(struct irq_data *data);
+ 
+Index: linux-m68k/arch/m68k/mac/baboon.c
+===================================================================
+--- linux-m68k.orig/arch/m68k/mac/baboon.c	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/arch/m68k/mac/baboon.c	2011-10-23 00:51:07.000000000 +1100
+@@ -123,10 +123,3 @@ void baboon_irq_disable(int irq)
+ 	if (baboon_disabled)
+ 		mac_irq_disable(irq_get_irq_data(IRQ_NUBUS_C));
+ }
+-
+-int baboon_irq_pending(int irq)
+-{
+-	int irq_idx = IRQ_IDX(irq);
+-
+-	return baboon->mb_ifr & (1 << irq_idx);
+-}
+Index: linux-m68k/arch/m68k/mac/macints.c
+===================================================================
+--- linux-m68k.orig/arch/m68k/mac/macints.c	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/arch/m68k/mac/macints.c	2011-10-23 00:51:07.000000000 +1100
+@@ -142,7 +142,6 @@ extern void via_register_interrupts(void
+ extern void via_irq_enable(int);
+ extern void via_irq_disable(int);
+ extern void via_irq_clear(int);
+-extern int  via_irq_pending(int);
+ 
+ /*
+  * OSS hooks
+@@ -152,7 +151,6 @@ extern void oss_register_interrupts(void
+ extern void oss_irq_enable(int);
+ extern void oss_irq_disable(int);
+ extern void oss_irq_clear(int);
+-extern int  oss_irq_pending(int);
+ 
+ /*
+  * PSC hooks
+@@ -162,7 +160,6 @@ extern void psc_register_interrupts(void
+ extern void psc_irq_enable(int);
+ extern void psc_irq_disable(int);
+ extern void psc_irq_clear(int);
+-extern int  psc_irq_pending(int);
+ 
+ /*
+  * IOP hooks
+@@ -239,7 +236,6 @@ void __init mac_init_IRQ(void)
+ /*
+  *  mac_irq_enable - enable an interrupt source
+  * mac_irq_disable - disable an interrupt source
+- * mac_irq_pending - returns the pending status of an IRQ (nonzero = pending)
+  *
+  * These routines are just dispatchers to the VIA/OSS/PSC routines.
+  */
+@@ -314,34 +310,6 @@ void mac_irq_disable(struct irq_data *da
+ 	}
+ }
+ 
+-int mac_irq_pending(unsigned int irq)
+-{
+-	switch(IRQ_SRC(irq)) {
+-	case 1:
+-		return via_irq_pending(irq);
+-	case 2:
+-	case 7:
+-		if (oss_present)
+-			return oss_irq_pending(irq);
+-		else
+-			return via_irq_pending(irq);
+-	case 3:
+-	case 5:
+-	case 6:
+-		if (psc_present)
+-			return psc_irq_pending(irq);
+-		else if (oss_present)
+-			return oss_irq_pending(irq);
+-		break;
+-	case 4:
+-		if (psc_present)
+-			return psc_irq_pending(irq);
+-		break;
+-	}
+-	return 0;
+-}
+-EXPORT_SYMBOL(mac_irq_pending);
+-
+ static int num_debug[8];
+ 
+ irqreturn_t mac_debug_handler(int irq, void *dev_id)
+Index: linux-m68k/arch/m68k/mac/oss.c
+===================================================================
+--- linux-m68k.orig/arch/m68k/mac/oss.c	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/arch/m68k/mac/oss.c	2011-10-23 00:51:07.000000000 +1100
+@@ -219,32 +219,3 @@ void oss_irq_disable(int irq) {
+ #endif
+ 	}
+ }
+-
+-/*
+- * Check to see if a specific OSS interrupt is pending
+- */
+-
+-int oss_irq_pending(int irq)
+-{
+-	switch(irq) {
+-		case IRQ_MAC_SCC:
+-			return oss->irq_pending & OSS_IP_IOPSCC;
+-			break;
+-		case IRQ_MAC_ADB:
+-			return oss->irq_pending & OSS_IP_IOPISM;
+-			break;
+-		case IRQ_MAC_SCSI:
+-			return oss->irq_pending & OSS_IP_SCSI;
+-			break;
+-		case IRQ_NUBUS_9:
+-		case IRQ_NUBUS_A:
+-		case IRQ_NUBUS_B:
+-		case IRQ_NUBUS_C:
+-		case IRQ_NUBUS_D:
+-		case IRQ_NUBUS_E:
+-			irq -= NUBUS_SOURCE_BASE;
+-			return oss->irq_pending & (1 << irq);
+-			break;
+-	}
+-	return 0;
+-}
+Index: linux-m68k/arch/m68k/mac/psc.c
+===================================================================
+--- linux-m68k.orig/arch/m68k/mac/psc.c	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/arch/m68k/mac/psc.c	2011-10-22 23:02:38.000000000 +1100
+@@ -180,12 +180,3 @@ void psc_irq_disable(int irq) {
+ #endif
+ 	psc_write_byte(pIER, 1 << irq_idx);
+ }
+-
+-int psc_irq_pending(int irq)
+-{
+-	int irq_src	= IRQ_SRC(irq);
+-	int irq_idx	= IRQ_IDX(irq);
+-	int pIFR	= pIERbase + (irq_src << 4);
+-
+-	return psc_read_byte(pIFR) & (1 << irq_idx);
+-}
+Index: linux-m68k/arch/m68k/mac/via.c
+===================================================================
+--- linux-m68k.orig/arch/m68k/mac/via.c	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/arch/m68k/mac/via.c	2011-10-23 00:51:07.000000000 +1100
+@@ -584,28 +584,6 @@ void via_irq_disable(int irq) {
+ 	}
+ }
+ 
+-/*
+- * Returns nonzero if an interrupt is pending on the given
+- * VIA/IRQ combination.
+- */
+-
+-int via_irq_pending(int irq)
+-{
+-	int irq_src	= IRQ_SRC(irq);
+-	int irq_idx	= IRQ_IDX(irq);
+-	int irq_bit	= 1 << irq_idx;
+-
+-	if (irq_src == 1) {
+-		return via1[vIFR] & irq_bit;
+-	} else if (irq_src == 2) {
+-		return via2[gIFR] & irq_bit;
+-	} else if (irq_src == 7) {
+-		/* Always 0 for MAC_VIA_QUADRA if the slot irq is disabled. */
+-		return ~via2[gBufA] & irq_bit;
+-	}
+-	return 0;
+-}
+-
+ void via1_set_head(int head)
+ {
+ 	if (head == 0)
+@@ -614,3 +592,9 @@ void via1_set_head(int head)
+ 		via1[vBufA] |= VIA1A_vHeadSel;
+ }
+ EXPORT_SYMBOL(via1_set_head);
++
++int via2_scsi_drq_pending(void)
++{
++	return via2[gIFR] & (1 << IRQ_IDX(IRQ_MAC_SCSIDRQ));
++}
++EXPORT_SYMBOL(via2_scsi_drq_pending);
+Index: linux-m68k/drivers/scsi/mac_esp.c
+===================================================================
+--- linux-m68k.orig/drivers/scsi/mac_esp.c	2011-10-22 23:02:38.000000000 +1100
++++ linux-m68k/drivers/scsi/mac_esp.c	2011-10-22 23:02:38.000000000 +1100
+@@ -25,6 +25,7 @@
+ #include <asm/dma.h>
+ #include <asm/macints.h>
+ #include <asm/macintosh.h>
++#include <asm/mac_via.h>
+ 
+ #include <scsi/scsi_host.h>
+ 
+@@ -149,7 +150,7 @@ static inline int mac_esp_wait_for_dreq(
+ 
+ 	do {
+ 		if (mep->pdma_regs == NULL) {
+-			if (mac_irq_pending(IRQ_MAC_SCSIDRQ))
++			if (via2_scsi_drq_pending())
+ 				return 0;
+ 		} else {
+ 			if (nubus_readl(mep->pdma_regs) & 0x200)
+Index: linux-m68k/arch/m68k/include/asm/mac_via.h
+===================================================================
+--- linux-m68k.orig/arch/m68k/include/asm/mac_via.h	2011-10-22 23:02:22.000000000 +1100
++++ linux-m68k/arch/m68k/include/asm/mac_via.h	2011-10-23 00:51:07.000000000 +1100
+@@ -254,6 +254,8 @@
+ extern volatile __u8 *via1,*via2;
+ extern int rbv_present,via_alt_mapping;
+ 
++extern int via2_scsi_drq_pending(void);
++
+ static inline int rbv_set_video_bpp(int bpp)
+ {
+ 	char val = (bpp==1)?0:(bpp==2)?1:(bpp==4)?2:(bpp==8)?3:-1;
