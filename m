@@ -1,36 +1,55 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH 2/5] m68k/scsi: Remove obsolete IRQ_FLG_* users
-Date: Sun, 23 Oct 2011 23:18:03 +0200
-Message-ID: <1319404686-10800-2-git-send-email-geert@linux-m68k.org>
-References: <1319404686-10800-1-git-send-email-geert@linux-m68k.org>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1319404686-10800-1-git-send-email-geert@linux-m68k.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [RFC] libsas: the trouble with ata resets
+Date: Sun, 23 Oct 2011 16:48:57 -0700
+Message-ID: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, Jacek Danecki <jacek.danecki@intel.com>, "edmund.nadolski" <edmund.nadolski@intel.com>, Luben Tuikov <ltuikov@yahoo.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>, Jack Wang <jack_wang@usish.com>, Hannes Reinecke <hare@suse.de>, David Milburn <dmilburn@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-The m68k core irq code stopped honoring these flags during the irq
-restructuring in 2006.
+Currently libsas has a problem with prematurely dropping sata devices
+during recovery.  Libata knows that some devices can take quite a
+while to recover from a reset and re-establish the link.  The fact
+that sas_ata_hard_reset() ignores its 'deadline'  parameter is
+evidence that it ignores the link management aspects of what libata
+wants from a ->hardreset() handler.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
----
-This is a split-up of "m68k/irq: Remove obsolete IRQ_FLG_* definitions and
-users", to reduce conflicts and dependencies.
+item1: teach sas_ata_hard_reset() to check that the link came back up.
+ For direct attached devices the lldd will need the deadline
+parameter, and for expander attached perform smp polling to wait for
+the link to come back.
 
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index af3a6af..ea2bde2 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -291,8 +291,7 @@ int __init macscsi_detect(struct scsi_host_template * tpnt)
-     ((struct NCR5380_hostdata *)instance->hostdata)->ctrl = 0;
- 
-     if (instance->irq != SCSI_IRQ_NONE)
--	if (request_irq(instance->irq, NCR5380_intr, IRQ_FLG_SLOW, 
--			"ncr5380", instance)) {
-+	if (request_irq(instance->irq, NCR5380_intr, 0, "ncr5380", instance)) {
- 	    printk(KERN_WARNING "scsi%d: IRQ%d not free, interrupts disabled\n",
- 		   instance->host_no, instance->irq);
- 	    instance->irq = SCSI_IRQ_NONE;
+Now, during this time that libata is trying to recover the connection
+in the host-eh context libsas will start receiving BCNs in the
+host-workqueue context.  In the unfortunate cases libsas may take
+removal action on a device that will come back with a bit more time.
+While libata-eh is in progress libsas should not take any action on
+the ata phys in question..
+
+item2:  flush eh before trying to determine what action to take on a phy.
+
+In the case of libsas not all resets are initiated by the eh process
+(the sas transport class can reset a phy directly).  It seems libata
+takes care to arrange for user requested resets to occur under the
+control of eh, and libsas should do the same.
+
+item3: teach all reset entry points to kick and flush eh for ata devices
+
+A corollary for items 1 and 3 is that there is a difference between
+scheduling the reset and performing the reset.
+->lldd_I_T_nexus_reset() is currently called twice, once by sas-eh to
+manage sas_tasks and again by ata-eh to recover the device.  Likely we
+need a new ->lldd_ata_hard_reset() handler that is called by ata-eh,
+while ->lldd_I_T_nexus_reset() cleans up the sas_tasks and just
+schedules reset on the ata_port.
+
+item4: allow for lldd's to provide a direct ->lldd_ata_hard_reset()
+which can be assumed to only be called from ata-eh context.
+
+Any other pain points in reset handling?
+
+--
+Dan
