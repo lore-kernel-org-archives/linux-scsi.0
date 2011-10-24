@@ -1,53 +1,44 @@
-From: Jesper Juhl <jj@chaosbits.net>
+From: Joe Perches <joe@perches.com>
 Subject: Re: [PATCH] SCSI, pmcraid: Fix kmalloc() argument order in
  pmcraid_chr_ioctl()
-Date: Tue, 25 Oct 2011 01:13:58 +0200 (CEST)
-Message-ID: <alpine.LNX.2.00.1110250110310.19795@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1110250036370.19795@swampdragon.chaosbits.net> <1319496149.2094.3.camel@Joe-Laptop> <CAFLxGvyh-u0Bg5_R4upMa=bM4H__i=dbvtLihFY+M+OEKdJL9w@mail.gmail.com> <20111024225459.GB25654@redhat.com>
- <CAFLxGvwMEmjyifB-_Ms5Xd8iAr+GCVbYk0RX5Qxwev1nyXpFUw@mail.gmail.com>
+Date: Mon, 24 Oct 2011 16:17:23 -0700
+Message-ID: <1319498243.2094.9.camel@Joe-Laptop>
+References: <alpine.LNX.2.00.1110250036370.19795@swampdragon.chaosbits.net>
+	 <1319496149.2094.3.camel@Joe-Laptop>
+	 <alpine.LNX.2.00.1110250047430.19795@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="8323328-1187331723-1319498038=:19795"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFLxGvwMEmjyifB-_Ms5Xd8iAr+GCVbYk0RX5Qxwev1nyXpFUw@mail.gmail.com>
+In-Reply-To: <alpine.LNX.2.00.1110250047430.19795@swampdragon.chaosbits.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: richard -rw- weinberger <richard.weinberger@gmail.com>
-Cc: Dave Jones <davej@redhat.com>, Joe Perches <joe@perches.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, 2011-10-25 at 00:51 +0200, Jesper Juhl wrote:
+> On Mon, 24 Oct 2011, Joe Perches wrote:
+> > On Tue, 2011-10-25 at 00:38 +0200, Jesper Juhl wrote:
+> > > The first argument to kmalloc() is the size, the second is
+> > > flags. pmcraid_chr_ioctl() gets this wrong and swaps the
+> > > arguments. This patch corrects the mistake.
+[]
+> > James seems to be uninterested in picking up
+> > obvious and trivially correct patches.
+> I've been getting that impression as well..
+> For example: 
+> http://git.kernel.org/?p=linux/kernel/git/next/linux-next-history.git;a=commitdiff;h=2abe1b25e56b7c8e65f101fb22282dafeb5ec4ef 
+> which I've been sumbitting numerous times over a long period of time 
+> (these days akpm has picked it up and sends it on repeatedly, so I don't 
+> really bother myself any more)... 
+> > >From a year ago...
+> > https://lkml.org/lkml/2010/10/31/123
+> Ok, so you obviously got there first
 
---8323328-1187331723-1319498038=:19795
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: 8BIT
+That doesn't matter at all to me.
 
-On Tue, 25 Oct 2011, richard -rw- weinberger wrote:
+What matters is getting the defects fixed
+and not dropping patches on the floor.
 
-> On Tue, Oct 25, 2011 at 12:54 AM, Dave Jones <davej@redhat.com> wrote:
-> > On Tue, Oct 25, 2011 at 12:50:08AM +0200, richard -rw- weinberger wrote:
-> >
-> >  > BTW: What about a checkpatch.pl rule to detect such a misuse of kmalloc()?
-> >  > We could grep for "k[mzc]alloc(GFP_".
-> >
-> > Make sure to ignore bio_kmalloc (which has reverse argument order to kmalloc, ugh)
-> >
-> 
-> Hmmm, maybe we should "fix" the argument order of bio_kmalloc().
-> But as this function is exported we'd silently break some out-of-tree
-> kernel modules....
-> 
-Or we could fix it noisily by renaming the function kmalloc_bio() and 
-fixing the argument order. That will still break out-of-tree modules, but 
-at least it won't break them silently...
-
-Or we could introduce kmalloc_bio() with fixed argument order, fix all 
-in-kernel users and mark bio_kmalloc() deprecated with a note that it'll 
-go away by 3.6 or thereabouts...
-I'd be happy to prepare a patch series doing that if it's wanted...?
-
--- 
-Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
-Don't top-post http://www.catb.org/jargon/html/T/top-post.html
-Plain text mails only, please.
-
---8323328-1187331723-1319498038=:19795--
+Maybe that means there should be a different
+or an additional scsi maintainer.
