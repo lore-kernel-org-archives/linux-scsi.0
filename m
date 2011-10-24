@@ -1,51 +1,66 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 7/9] ib_srpt: Convert srp_max_rdma_size into per port
- configfs attribute
-Date: Mon, 24 Oct 2011 13:29:55 -0700
-Message-ID: <1319488195.17450.73.camel@haakon2.linux-iscsi.org>
-References: <1319434422-15354-1-git-send-email-nab@linux-iscsi.org>
-	 <1319434422-15354-8-git-send-email-nab@linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] tcm_loop: Add explict read buffer memset for SCF_SCSI_CONTROL_SG_IO_CDB
+Date: Mon, 24 Oct 2011 20:43:39 +0000
+Message-ID: <1319489019-13074-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1319434422-15354-8-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Bart Van Assche <bvanassche@acm.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, stable@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2011-10-24 at 05:33 +0000, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch converts the srp_max_rdma_size module parameter into a per
-> endpoint configfs attribute.  This includes adding the necessary bits
-> for show + store attributes w/ min/max bounds checking, and updating
-> srpt_get_ioc() to accept a struct srpt_port parameter.
-> 
-> Reported-by: Roland Dreier <roland@purestorage.com>
-> Cc: Roland Dreier <roland@purestorage.com>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/infiniband/ulp/srpt/ib_srpt.c |   60 ++++++++++++++++++++++++++++-----
->  drivers/infiniband/ulp/srpt/ib_srpt.h |   10 +++++
->  2 files changed, 61 insertions(+), 9 deletions(-)
-> 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-<SNIP>
+This patch addresses an issue with buggy userspace code sending I/O
+via scsi-generic that does not explictly clear their associated read
+buffers.  It adds an explict memset of the first SGL entry within
+tcm_loop_new_cmd_map() for SCF_SCSI_CONTROL_SG_IO_CDB payloads that
+are currently guaranteed to be a single SGL by target-core code.
 
-> diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
-> index 59ee2d7..c9caa90 100644
-> --- a/drivers/infiniband/ulp/srpt/ib_srpt.h
-> +++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
-> @@ -114,6 +114,7 @@ enum {
->  	MIN_SRPT_SRQ_SIZE = 4,
->  	DEFAULT_SRPT_SRQ_SIZE = 4095,
->  	MAX_SRPT_SRQ_SIZE = 65535,
-> +	MAX_SRPT_RDMA_SIZE = 256U,
->  
+This issue is a side effect of the v3.1-rc1 merge to remove the
+extra memcpy between certain control CDB types using a contigious
++ cleared buffer in target-core, and performing a memcpy into the
+SGL list within tcm_loop.
 
-Hey btw, what should the proper MAX_SRPT_RDMA_SIZE be here..?
+It was originally mainfesting itself by udev + scsi_id + scsi-generic
+not properly setting up the expected /dev/disk/by-id/ symlinks because
+the INQUIRY payload was containing extra bogus data preventing the
+proper NAA IEEE WWN from being parsed by userspace.
 
---nab
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Andy Grover <agrover@redhat.com>
+Cc: stable@kernel.org
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/loopback/tcm_loop.c |   18 ++++++++++++++++++
+ 1 files changed, 18 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 01fb171..c0a2edc 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -174,6 +174,24 @@ static int tcm_loop_new_cmd_map(struct se_cmd *se_cmd)
+ 		sgl_bidi = sdb->table.sgl;
+ 		sgl_bidi_count = sdb->table.nents;
+ 	}
++	/*
++	 * Because some userspace code via scsi-generic do not memset their
++	 * associated read buffers, go ahead and do that here for type
++	 * SCF_SCSI_CONTROL_SG_IO_CDB.  Also note that this is currently
++	 * guaranteed to be a single SGL for SCF_SCSI_CONTROL_SG_IO_CDB
++	 * by target core in transport_generic_allocate_tasks() ->
++	 * transport_generic_cmd_sequencer().
++	 */
++	if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB &&
++	    se_cmd->data_direction == DMA_FROM_DEVICE) {
++		struct scatterlist *sg = scsi_sglist(sc);
++		unsigned char *buf = kmap(sg_page(sg)) + sg->offset;
++
++		if (buf != NULL) {
++			memset(buf, 0, sg->length);
++			kunmap(sg_page(sg));
++		}
++	}
+ 
+ 	/* Tell the core about our preallocated memory */
+ 	ret = transport_generic_map_mem_to_cmd(se_cmd, scsi_sglist(sc),
+-- 
+1.7.2.5
