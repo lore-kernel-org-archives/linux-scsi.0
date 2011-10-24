@@ -1,55 +1,81 @@
 From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 3/3] bnx2fc: Bumped version to 1.0.9
-Date: Sun, 23 Oct 2011 23:23:58 -0700
-Message-ID: <1319437438-7596-3-git-send-email-bprakash@broadcom.com>
+Subject: [PATCH 2/3] bnx2fc: Handle SRR LS_ACC drop scenario
+Date: Sun, 23 Oct 2011 23:23:57 -0700
+Message-ID: <1319437438-7596-2-git-send-email-bprakash@broadcom.com>
 References: <1319437438-7596-1-git-send-email-bprakash@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:4559 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2760 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752736Ab1JXGYH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2011 02:24:07 -0400
+	id S1753242Ab1JXGYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2011 02:24:11 -0400
 In-Reply-To: <1319437438-7596-1-git-send-email-bprakash@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
 Cc: mchan@broadcom.com
 
+When SRR LS_ACC is dropped, the driver was not issuing ABTS for SRR when it
+times out. Since the target received SRR, it was able to send the XFER_RDY and
+the the original IO request completed successfully. In this condition ABTS was
+not sent during bnx2fc_srr_compl(). Fix this by first checking for ELS timeout
+and issue ABTS before checking if original IO request is complete.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |    2 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2fc/bnx2fc_els.c |   23 ++++++++++++-----------
+ 1 files changed, 12 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 969ae03..8a2522d 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -62,7 +62,7 @@
- #include "bnx2fc_constants.h"
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+index fd382fe..ce0ce3e 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_els.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -268,17 +268,6 @@ void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
  
- #define BNX2FC_NAME		"bnx2fc"
--#define BNX2FC_VERSION		"1.0.8"
-+#define BNX2FC_VERSION		"1.0.9"
- 
- #define PFX			"bnx2fc: "
- 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index ba7ecb1..70252b3 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -22,7 +22,7 @@ DEFINE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
- 
- #define DRV_MODULE_NAME		"bnx2fc"
- #define DRV_MODULE_VERSION	BNX2FC_VERSION
--#define DRV_MODULE_RELDATE	"Oct 02, 2011"
-+#define DRV_MODULE_RELDATE	"Oct 21, 2011"
- 
- 
- static char version[] __devinitdata =
+ 	orig_io_req = cb_arg->aborted_io_req;
+ 	srr_req = cb_arg->io_req;
+-	if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags)) {
+-		BNX2FC_IO_DBG(srr_req, "srr_compl: xid - 0x%x completed",
+-			orig_io_req->xid);
+-		goto srr_compl_done;
+-	}
+-	if (test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
+-		BNX2FC_IO_DBG(srr_req, "rec abts in prog "
+-		       "orig_io - 0x%x\n",
+-			orig_io_req->xid);
+-		goto srr_compl_done;
+-	}
+ 	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &srr_req->req_flags)) {
+ 		/* SRR timedout */
+ 		BNX2FC_IO_DBG(srr_req, "srr timed out, abort "
+@@ -290,6 +279,12 @@ void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
+ 				"failed. issue cleanup\n");
+ 			bnx2fc_initiate_cleanup(srr_req);
+ 		}
++		if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags) ||
++		    test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
++			BNX2FC_IO_DBG(srr_req, "srr_compl:xid 0x%x flags = %lx",
++				      orig_io_req->xid, orig_io_req->req_flags);
++			goto srr_compl_done;
++		}
+ 		orig_io_req->srr_retry++;
+ 		if (orig_io_req->srr_retry <= SRR_RETRY_COUNT) {
+ 			struct bnx2fc_rport *tgt = orig_io_req->tgt;
+@@ -311,6 +306,12 @@ void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
+ 		}
+ 		goto srr_compl_done;
+ 	}
++	if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags) ||
++	    test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
++		BNX2FC_IO_DBG(srr_req, "srr_compl:xid - 0x%x flags = %lx",
++			      orig_io_req->xid, orig_io_req->req_flags);
++		goto srr_compl_done;
++	}
+ 	mp_req = &(srr_req->mp_req);
+ 	fc_hdr = &(mp_req->resp_fc_hdr);
+ 	resp_len = mp_req->resp_len;
 -- 
 1.7.0.6
 
