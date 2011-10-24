@@ -1,82 +1,52 @@
-From: "Bhanu Prakash Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 2/3] bnx2fc: Handle SRR LS_ACC drop scenario
-Date: Sun, 23 Oct 2011 23:23:57 -0700
-Message-ID: <1319437438-7596-2-git-send-email-bprakash@broadcom.com>
-References: <1319437438-7596-1-git-send-email-bprakash@broadcom.com>
+From: "Sampathkumar, Kishore" <Kishore.SampathKumar@lsi.com>
+Subject: No linkage from /sys entries for a given scsi_host to its PCI
+ device details?
+Date: Mon, 24 Oct 2011 13:18:04 +0530
+Message-ID: <E4D7778E36CF944ABD2F7E18D2DB9666271B897A1A@inbmail02.lsi.com>
+References: <S932680Ab1INNeE/20110914133404Z+1759@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2760 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753242Ab1JXGYL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2011 02:24:11 -0400
-In-Reply-To: <1319437438-7596-1-git-send-email-bprakash@broadcom.com>
+Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:54511 "EHLO
+	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753387Ab1JXHsK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Oct 2011 03:48:10 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: mchan@broadcom.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-When SRR LS_ACC is dropped, the driver was not issuing ABTS for SRR when it
-times out. Since the target received SRR, it was able to send the XFER_RDY and
-the the original IO request completed successfully. In this condition ABTS was
-not sent during bnx2fc_srr_compl(). Fix this by first checking for ELS timeout
-and issue ABTS before checking if original IO request is complete.
+[root@host26 /]# ls -l /dev/disk/by-id/wwn-0x5000c5000f8f4583
+lrwxrwxrwx. 1 root root 9 Oct 19 11:14 wwn-0x5000c5000f8f4583 -> ../../sdg
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- drivers/scsi/bnx2fc/bnx2fc_els.c |   23 ++++++++++++-----------
- 1 files changed, 12 insertions(+), 11 deletions(-)
+[root@host26 /]# ls /sys/block/sdg/device/scsi_disk
+3:0:5:0
+^
+|
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
-index fd382fe..ce0ce3e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_els.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
-@@ -268,17 +268,6 @@ void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
- 
- 	orig_io_req = cb_arg->aborted_io_req;
- 	srr_req = cb_arg->io_req;
--	if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags)) {
--		BNX2FC_IO_DBG(srr_req, "srr_compl: xid - 0x%x completed",
--			orig_io_req->xid);
--		goto srr_compl_done;
--	}
--	if (test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
--		BNX2FC_IO_DBG(srr_req, "rec abts in prog "
--		       "orig_io - 0x%x\n",
--			orig_io_req->xid);
--		goto srr_compl_done;
--	}
- 	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &srr_req->req_flags)) {
- 		/* SRR timedout */
- 		BNX2FC_IO_DBG(srr_req, "srr timed out, abort "
-@@ -290,6 +279,12 @@ void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
- 				"failed. issue cleanup\n");
- 			bnx2fc_initiate_cleanup(srr_req);
- 		}
-+		if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags) ||
-+		    test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
-+			BNX2FC_IO_DBG(srr_req, "srr_compl:xid 0x%x flags = %lx",
-+				      orig_io_req->xid, orig_io_req->req_flags);
-+			goto srr_compl_done;
-+		}
- 		orig_io_req->srr_retry++;
- 		if (orig_io_req->srr_retry <= SRR_RETRY_COUNT) {
- 			struct bnx2fc_rport *tgt = orig_io_req->tgt;
-@@ -311,6 +306,12 @@ void bnx2fc_srr_compl(struct bnx2fc_els_cb_arg *cb_arg)
- 		}
- 		goto srr_compl_done;
- 	}
-+	if (test_bit(BNX2FC_FLAG_IO_COMPL, &orig_io_req->req_flags) ||
-+	    test_bit(BNX2FC_FLAG_ISSUE_ABTS, &orig_io_req->req_flags)) {
-+		BNX2FC_IO_DBG(srr_req, "srr_compl:xid - 0x%x flags = %lx",
-+			      orig_io_req->xid, orig_io_req->req_flags);
-+		goto srr_compl_done;
-+	}
- 	mp_req = &(srr_req->mp_req);
- 	fc_hdr = &(mp_req->resp_fc_hdr);
- 	resp_len = mp_req->resp_len;
--- 
-1.7.0.6
+The above is the host{number} for the SCSI Host controller (in the above case "host3").
 
+[root@host26 /]# ls /sys/class/scsi_host/host3
+active_mode     device            io_delay           scan            unchecked_isa_dma       version_nvdata_persistent
+board_assembly  device_delay      logging_level      sg_tablesize    unique_id               version_product
+board_name      fw_queue_depth    power              state           version_bios
+board_tracer    fwfault_debug     proc_name          subsystem       version_fw
+can_queue       host_busy         prot_capabilities  supported_mode  version_mpi
+cmd_per_lun     host_sas_address  prot_guard_type    uevent          version_nvdata_default
 
+>From the above, there is no linkage to the PCI device corresponding to the above host controller. The only way I could establish the linkage was to actually start from the PCI device ID for this controller, and then, doing the following:
+
+[root@host26 /]# ls /sys/class/pci_bus/0000:0c/device/0000:0c:00.0
+broken_parity_status  host3          numa_node  resource   subsystem_device
+class                 irq            pools      resource0  subsystem_vendor
+config                local_cpulist  power      resource1  uevent
+device                local_cpus     remove     resource3  vendor
+driver                modalias       rescan     rom        vpd
+enable                msi_bus        reset      subsystem
+
+I think it is very useful to have the necessary linkage to get to the PCI device from the /sys/class/scsi_host/host3 entries.
+
+Thanks,
+-	Kishore
