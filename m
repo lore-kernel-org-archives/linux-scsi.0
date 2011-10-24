@@ -1,30 +1,32 @@
 From: "Sampathkumar, Kishore" <Kishore.SampathKumar@lsi.com>
-Subject: No linkage from /sys entries for a given scsi_host to its PCI
+Subject: RE: No linkage from /sys entries for a given scsi_host to its PCI
  device details?
-Date: Mon, 24 Oct 2011 13:18:04 +0530
-Message-ID: <E4D7778E36CF944ABD2F7E18D2DB9666271B897A1A@inbmail02.lsi.com>
+Date: Mon, 24 Oct 2011 13:20:17 +0530
+Message-ID: <E4D7778E36CF944ABD2F7E18D2DB9666271B897A1B@inbmail02.lsi.com>
 References: <S932680Ab1INNeE/20110914133404Z+1759@vger.kernel.org>
+  <E4D7778E36CF944ABD2F7E18D2DB9666271B897A1A@inbmail02.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog119.obsmtp.com ([74.125.149.246]:54511 "EHLO
-	na3sys009aog119.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753387Ab1JXHsK convert rfc822-to-8bit
+Received: from na3sys009aog126.obsmtp.com ([74.125.149.155]:46874 "EHLO
+	na3sys009aog126.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753649Ab1JXHuW convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Oct 2011 03:48:10 -0400
+	Mon, 24 Oct 2011 03:50:22 -0400
+In-Reply-To: <E4D7778E36CF944ABD2F7E18D2DB9666271B897A1A@inbmail02.lsi.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+Same text as before; but properly formatted.
 
 [root@host26 /]# ls -l /dev/disk/by-id/wwn-0x5000c5000f8f4583
 lrwxrwxrwx. 1 root root 9 Oct 19 11:14 wwn-0x5000c5000f8f4583 -> ../../sdg
 
 [root@host26 /]# ls /sys/block/sdg/device/scsi_disk
 3:0:5:0
-^
-|
 
 The above is the host{number} for the SCSI Host controller (in the above case "host3").
 
@@ -50,3 +52,7 @@ I think it is very useful to have the necessary linkage to get to the PCI device
 
 Thanks,
 -	Kishore
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
