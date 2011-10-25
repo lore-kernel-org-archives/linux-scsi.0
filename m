@@ -1,32 +1,63 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH-v2] ib_srpt: Initial SRP Target merge for v3.2-rc1
-Date: Tue, 25 Oct 2011 08:00:13 +0200
-Message-ID: <CAO+b5-oF=BB0YeTAMFqCwVUE7C2aC9z15tRiqQdcZ6nVpmTKrA@mail.gmail.com>
-References: <1319435841-19046-1-git-send-email-nab@linux-iscsi.org>
- <CAO+b5-rch-mPgXKjs4=t4ubfb9SFhDiR26EoeJgyZjWfhRJ9DA@mail.gmail.com> <1319481232.17450.11.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 7/9] ib_srpt: Convert srp_max_rdma_size into per port
+ configfs attribute
+Date: Mon, 24 Oct 2011 23:22:19 -0700
+Message-ID: <1319523739.17450.289.camel@haakon2.linux-iscsi.org>
+References: <1319434422-15354-1-git-send-email-nab@linux-iscsi.org>
+	 <1319434422-15354-8-git-send-email-nab@linux-iscsi.org>
+	 <1319488195.17450.73.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:56306 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033Ab1JYGAe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2011 02:00:34 -0400
-In-Reply-To: <1319481232.17450.11.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1319488195.17450.73.camel-Y1+j5t8j3WgjMeEPmliV8E/sVC8ogwMJ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-rdma <linux-rdma@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Christoph Hellwig <hch@lst.de>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 24, 2011 at 8:33 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> It would have been nice if you bothered to mention these in any of the
-> pre merge window reviews, but given your delay responsed on these items
-> they will have to be something we'll fix post merge.
+On Mon, 2011-10-24 at 13:29 -0700, Nicholas A. Bellinger wrote:
+> On Mon, 2011-10-24 at 05:33 +0000, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+> > 
+> > This patch converts the srp_max_rdma_size module parameter into a per
+> > endpoint configfs attribute.  This includes adding the necessary bits
+> > for show + store attributes w/ min/max bounds checking, and updating
+> > srpt_get_ioc() to accept a struct srpt_port parameter.
+> > 
+> > Reported-by: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+> > Cc: Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+> > Cc: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+> > Signed-off-by: Nicholas A. Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+> > ---
+> >  drivers/infiniband/ulp/srpt/ib_srpt.c |   60 ++++++++++++++++++++++++++++-----
+> >  drivers/infiniband/ulp/srpt/ib_srpt.h |   10 +++++
+> >  2 files changed, 61 insertions(+), 9 deletions(-)
+> > 
+> 
+> <SNIP>
+> 
+> > diff --git a/drivers/infiniband/ulp/srpt/ib_srpt.h b/drivers/infiniband/ulp/srpt/ib_srpt.h
+> > index 59ee2d7..c9caa90 100644
+> > --- a/drivers/infiniband/ulp/srpt/ib_srpt.h
+> > +++ b/drivers/infiniband/ulp/srpt/ib_srpt.h
+> > @@ -114,6 +114,7 @@ enum {
+> >  	MIN_SRPT_SRQ_SIZE = 4,
+> >  	DEFAULT_SRPT_SRQ_SIZE = 4095,
+> >  	MAX_SRPT_SRQ_SIZE = 65535,
+> > +	MAX_SRPT_RDMA_SIZE = 256U,
+> >  
+> 
+> Hey btw, what should the proper MAX_SRPT_RDMA_SIZE be here..?
+> 
 
-Sorry for that - it took some time though before I remembered myself
-about all this.
+Ping on this Bart..?
 
-If you are looking for a test case: pulling an IB cable during I/O a
-few times should allow to trigger this.
+Thanks,
 
-Bart.
+--nab
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
