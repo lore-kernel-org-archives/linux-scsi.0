@@ -1,36 +1,32 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] SCSI, pmcraid: Fix kmalloc() argument order in
- pmcraid_chr_ioctl()
-Date: Mon, 24 Oct 2011 18:10:57 -0700
-Message-ID: <1319505057.2094.35.camel@Joe-Laptop>
-References: <alpine.LNX.2.00.1110250036370.19795@swampdragon.chaosbits.net>
-	 <1319496149.2094.3.camel@Joe-Laptop> <20111024231829.GB25993@redhat.com>
-	 <CAFLxGvw1bmvr-g4Yhu2xtwx0E6tvV0ECvbvvECrpyVHnZB9+Xw@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH-v2] ib_srpt: Initial SRP Target merge for v3.2-rc1
+Date: Tue, 25 Oct 2011 08:00:13 +0200
+Message-ID: <CAO+b5-oF=BB0YeTAMFqCwVUE7C2aC9z15tRiqQdcZ6nVpmTKrA@mail.gmail.com>
+References: <1319435841-19046-1-git-send-email-nab@linux-iscsi.org>
+ <CAO+b5-rch-mPgXKjs4=t4ubfb9SFhDiR26EoeJgyZjWfhRJ9DA@mail.gmail.com> <1319481232.17450.11.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFLxGvw1bmvr-g4Yhu2xtwx0E6tvV0ECvbvvECrpyVHnZB9+Xw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: richard -rw- weinberger <richard.weinberger@gmail.com>
-Cc: Dave Jones <davej@redhat.com>, Jesper Juhl <jj@chaosbits.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:56306 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033Ab1JYGAe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2011 02:00:34 -0400
+In-Reply-To: <1319481232.17450.11.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-rdma <linux-rdma@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Christoph Hellwig <hch@lst.de>, Vu Pham <vu@mellanox.com>, David Dillow <dillowda@ornl.gov>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-10-25 at 01:24 +0200, richard -rw- weinberger wrote:
-> On Tue, Oct 25, 2011 at 1:18 AM, Dave Jones <davej@redhat.com> wrote:
-> > On Mon, Oct 24, 2011 at 03:42:29PM -0700, Joe Perches wrote:
-> >  > James seems to be uninterested in picking up
-> >  > obvious and trivially correct patches.
-> >  > >From a year ago...
-> >  > https://lkml.org/lkml/2010/10/31/123
-> >  > James?
-> > That's just ridiculous.
-> > If maintainers aren't picking up obviously correct fixes[*], just send
-> > them directly to Linus or Andrew.
-> Or resend the patch.
+On Mon, Oct 24, 2011 at 8:33 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> It would have been nice if you bothered to mention these in any of the
+> pre merge window reviews, but given your delay responsed on these items
+> they will have to be something we'll fix post merge.
 
-I resent it too.
+Sorry for that - it took some time though before I remembered myself
+about all this.
 
-> Sometimes maintainers are quite busy and overlook a patch...
+If you are looking for a test case: pulling an IB cable during I/O a
+few times should allow to trigger this.
 
-Or are perhaps just uninterested.
+Bart.
