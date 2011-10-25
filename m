@@ -1,88 +1,43 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target: Updates for v3.2-rc1 (round one)
-Date: Tue, 25 Oct 2011 03:07:30 -0700
-Message-ID: <1319537250.18871.23.camel@haakon2.linux-iscsi.org>
-References: <1319533236.17450.338.camel@haakon2.linux-iscsi.org>
-	 <CA+55aFyeCfXV9Fpg9vZywmHtP3PR8+voZpampVqW8TAfCvLv3Q@mail.gmail.com>
-	 <20111025094232.GA17763@lst.de>
-	 <CA+55aFyBgZoaN2di1iE4fyMh0r1rECG3stgiqGtiGY4SY7nBmw@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: [PATCH 7/9] ib_srpt: Convert srp_max_rdma_size into per port
+ configfs attribute
+Date: Tue, 25 Oct 2011 03:35:53 -0700
+Message-ID: <1319538953.20828.0.camel@haakon2.linux-iscsi.org>
+References: <1319434422-15354-1-git-send-email-nab@linux-iscsi.org>
+	 <1319434422-15354-8-git-send-email-nab@linux-iscsi.org>
+	 <1319488195.17450.73.camel@haakon2.linux-iscsi.org>
+	 <CAO+b5-p9xXB_sWes=uet6skkFn=xWD+vKuoOeuGwjbxYhE-ctg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFyBgZoaN2di1iE4fyMh0r1rECG3stgiqGtiGY4SY7nBmw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Christoph Hellwig <hch@lst.de>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Roland Dreier <roland@purestorage.com>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAO+b5-p9xXB_sWes=uet6skkFn=xWD+vKuoOeuGwjbxYhE-ctg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2011-10-25 at 11:45 +0200, Linus Torvalds wrote:
-> On Tue, Oct 25, 2011 at 11:42 AM, Christoph Hellwig <hch@lst.de> wrote:
-> > On Tue, Oct 25, 2011 at 11:29:39AM +0200, Linus Torvalds wrote:
-> >> On Tue, Oct 25, 2011 at 11:00 AM, Nicholas A. Bellinger
-> >> <nab@linux-iscsi.org> wrote:
-> >> >
-> >> > ?36 files changed, 937 insertions(+), 2068 deletions(-)
+On Tue, 2011-10-25 at 12:32 +0200, Bart Van Assche wrote:
+> On Mon, Oct 24, 2011 at 10:29 PM, Nicholas A. Bellinger
+> <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org> wrote:
+> >> @@ -114,6 +114,7 @@ enum {
+> >>       MIN_SRPT_SRQ_SIZE = 4,
+> >>       DEFAULT_SRPT_SRQ_SIZE = 4095,
+> >>       MAX_SRPT_SRQ_SIZE = 65535,
+> >> +     MAX_SRPT_RDMA_SIZE = 256U,
 > >>
-> >> Hmm. This is not what I get. It might be a git version issue or diff
-> >> algorithm one - although that's actually pretty unusual. Do you do
-> >> something odd/special?
 > >
-> > It's mostly me looking at the code and factoring code and removing
-> > unneeded things from old versions.
+> > Hey btw, what should the proper MAX_SRPT_RDMA_SIZE be here..?
 > 
-> No, I'm saying that the diffstat doesn't match what I get when I pull.
-> 
-> I get
-> 
->  36 files changed, 955 insertions(+), 2086 deletions(-)
-> 
-> which is *close*, but not identical. I'm wondering where the numbers
-> Nicholas has came from..
-> 
+> As you can see in the ib_srpt source code, the largest value filled in
+> for this parameter in the IOC profile is 1U << 24.
 
-Ok, just verified with git 1.7.2.3 from target-pending.git and the
-numbers match up with your pull.   Here is the full diff-stat for
-reference.  My apologies for the extra noise.
+Thanks Bart.  Fixing this up now.
 
 --nab
 
- drivers/target/Makefile                      |    1 -
- drivers/target/iscsi/iscsi_target.c          |   39 +-
- drivers/target/iscsi/iscsi_target_auth.c     |   34 +-
- drivers/target/iscsi/iscsi_target_core.h     |    4 +-
- drivers/target/iscsi/iscsi_target_erl2.c     |   49 +-
- drivers/target/iscsi/iscsi_target_tmr.c      |    6 +-
- drivers/target/iscsi/iscsi_target_util.c     |   20 +-
- drivers/target/iscsi/iscsi_target_util.h     |    1 +
- drivers/target/loopback/tcm_loop.c           |   18 +-
- drivers/target/target_core_alua.c            |   21 +-
- drivers/target/target_core_cdb.c             |   79 ++-
- drivers/target/target_core_configfs.c        |   16 +-
- drivers/target/target_core_device.c          |   70 +-
- drivers/target/target_core_fabric_configfs.c |    1 -
- drivers/target/target_core_file.c            |   56 +-
- drivers/target/target_core_file.h            |    4 +-
- drivers/target/target_core_iblock.c          |  274 ++----
- drivers/target/target_core_iblock.h          |    2 -
- drivers/target/target_core_pr.c              |    1 -
- drivers/target/target_core_pscsi.c           |  261 ++----
- drivers/target/target_core_pscsi.h           |    1 -
- drivers/target/target_core_rd.c              |   19 +-
- drivers/target/target_core_rd.h              |    2 -
- drivers/target/target_core_scdb.c            |  105 --
- drivers/target/target_core_scdb.h            |   10 -
- drivers/target/target_core_stat.c            |    1 -
- drivers/target/target_core_tmr.c             |  251 +++--
- drivers/target/target_core_transport.c       | 1513 ++++++++------------------
- drivers/target/target_core_ua.c              |    1 -
- drivers/target/tcm_fc/tfc_cmd.c              |   18 +-
- drivers/target/tcm_fc/tfc_conf.c             |   13 +-
- drivers/target/tcm_fc/tfc_io.c               |    1 -
- drivers/target/tcm_fc/tfc_sess.c             |    1 -
- include/target/target_core_base.h            |   71 +-
- include/target/target_core_tmr.h             |    2 +-
- include/target/target_core_transport.h       |   75 +-
- 36 files changed, 955 insertions(+), 2086 deletions(-)
- delete mode 100644 drivers/target/target_core_scdb.c
- delete mode 100644 drivers/target/target_core_scdb.h
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
