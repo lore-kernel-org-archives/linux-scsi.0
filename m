@@ -1,43 +1,43 @@
-From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Subject: Re: [PATCH 7/9] ib_srpt: Convert srp_max_rdma_size into per port
- configfs attribute
-Date: Tue, 25 Oct 2011 03:35:53 -0700
-Message-ID: <1319538953.20828.0.camel@haakon2.linux-iscsi.org>
-References: <1319434422-15354-1-git-send-email-nab@linux-iscsi.org>
-	 <1319434422-15354-8-git-send-email-nab@linux-iscsi.org>
-	 <1319488195.17450.73.camel@haakon2.linux-iscsi.org>
-	 <CAO+b5-p9xXB_sWes=uet6skkFn=xWD+vKuoOeuGwjbxYhE-ctg@mail.gmail.com>
+From: Peter Chang <dpf@google.com>
+Subject: Re: mtpbase ioc error codes?
+Date: Tue, 25 Oct 2011 05:44:27 -0700
+Message-ID: <CAF2xp_GXtEj626_cZ=5=3GOVBPs_-hNEbiCeCfhzd8wbh4YjnQ@mail.gmail.com>
+References: <CABzZrXcCRP2q2q9C7x0NPJPjxy=wqUdm0_MDLLdYZ0chPoOoug@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAO+b5-p9xXB_sWes=uet6skkFn=xWD+vKuoOeuGwjbxYhE-ctg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-out.google.com ([216.239.44.51]:57245 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755118Ab1JYMou convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2011 08:44:50 -0400
+Received: from hpaq13.eem.corp.google.com (hpaq13.eem.corp.google.com [172.25.149.13])
+	by smtp-out.google.com with ESMTP id p9PCinOC002309
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2011 05:44:49 -0700
+Received: from gyd10 (gyd10.prod.google.com [10.243.49.202])
+	by hpaq13.eem.corp.google.com with ESMTP id p9PCfeLV003384
+	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2011 05:44:47 -0700
+Received: by gyd10 with SMTP id 10so632453gyd.3
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2011 05:44:47 -0700 (PDT)
+In-Reply-To: <CABzZrXcCRP2q2q9C7x0NPJPjxy=wqUdm0_MDLLdYZ0chPoOoug@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eero Volotinen <eero.volotinen@iki.fi>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2011-10-25 at 12:32 +0200, Bart Van Assche wrote:
-> On Mon, Oct 24, 2011 at 10:29 PM, Nicholas A. Bellinger
-> <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org> wrote:
-> >> @@ -114,6 +114,7 @@ enum {
-> >>       MIN_SRPT_SRQ_SIZE = 4,
-> >>       DEFAULT_SRPT_SRQ_SIZE = 4095,
-> >>       MAX_SRPT_SRQ_SIZE = 65535,
-> >> +     MAX_SRPT_RDMA_SIZE = 256U,
-> >>
-> >
-> > Hey btw, what should the proper MAX_SRPT_RDMA_SIZE be here..?
-> 
-> As you can see in the ib_srpt source code, the largest value filled in
-> for this parameter in the IOC profile is 1U << 24.
+Le 25 octobre 2011 02:15, Eero Volotinen <eero.volotinen@iki.fi> a =E9c=
+rit :
+> My server reports following failures to kernel:
+>
+> mptbase: ioc0: WARNING - IOC is in FAULT state (1600h)!!!
 
-Thanks Bart.  Fixing this up now.
+  IFAULT_IOP_MID_OUT_OF_RANGE_SCSIIO_COMP_1 - Encountered an invalid mi=
+d number.
 
---nab
-
-
+\p
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
