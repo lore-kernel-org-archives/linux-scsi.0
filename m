@@ -1,57 +1,25 @@
-From: Eero Volotinen <eero.volotinen@iki.fi>
-Subject: mtpbase ioc error codes?
-Date: Tue, 25 Oct 2011 12:15:20 +0300
-Message-ID: <CABzZrXcCRP2q2q9C7x0NPJPjxy=wqUdm0_MDLLdYZ0chPoOoug@mail.gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] target: Updates for v3.2-rc1 (round one)
+Date: Tue, 25 Oct 2011 11:29:39 +0200
+Message-ID: <CA+55aFyeCfXV9Fpg9vZywmHtP3PR8+voZpampVqW8TAfCvLv3Q@mail.gmail.com>
+References: <1319533236.17450.338.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:53956 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751864Ab1JYJPU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2011 05:15:20 -0400
-Received: by ywm3 with SMTP id 3so290268ywm.19
-        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2011 02:15:20 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1319533236.17450.338.camel@haakon2.linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi List,
+On Tue, Oct 25, 2011 at 11:00 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+>
+> =A036 files changed, 937 insertions(+), 2068 deletions(-)
 
-My server reports following failures to kernel:
+Hmm. This is not what I get. It might be a git version issue or diff
+algorithm one - although that's actually pretty unusual. Do you do
+something odd/special?
 
-mptbase: ioc0: WARNING - IOC is in FAULT state (1600h)!!!
-
-mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
-
-mptbase: ioc0: Initiating recovery
-
-mptbase: ioc0: WARNING - IOC is in FAULT state!!!
-
-mptbase: ioc0: WARNING -            FAULT code = 1600h
-
-mptbase: ioc0: Recovered from IOC FAULT
-
-mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
-
-mptbase: ioc0: WARNING - IOC is in FAULT state (1600h)!!!
-
-mptbase: ioc0: WARNING - Issuing HardReset from mpt_fault_reset_work!!
-
-mptbase: ioc0: Initiating recovery
-
-mptbase: ioc0: WARNING - IOC is in FAULT state!!!
-
-mptbase: ioc0: WARNING -            FAULT code = 1600h
-
-mptbase: ioc0: Recovered from IOC FAULT
-
-mptbase: ioc0: WARNING - mpt_fault_reset_work: HardReset: success
-
-But I cannot find any description for this errorcode? It is broken
-harddisk or raid card failure?
-
-Thanks for any information.
-
-br,
---
-Eero
+             Linus
