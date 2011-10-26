@@ -1,79 +1,156 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re:[RFC] libsas: the trouble with ata resets
-Date: Wed, 26 Oct 2011 11:04:29 +0800
-Message-ID: <660ADDE5D3A1477593E284FFA68F76E3@usish.com.cn>
-References: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Check -ENOMEM to signal QUEUE_FULL from fabric callbacks
+Date: Wed, 26 Oct 2011 07:12:58 +0000
+Message-ID: <1319613178-8445-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:37593 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754540Ab1JZDDI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2011 23:03:08 -0400
-In-Reply-To: <CAA9_cmcgqQx4WZaWoSM=mgBAHNNZ6Y1RgZ5OwjW11qrspOcR1A@mail.gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:56760 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189Ab1JZHOi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2011 03:14:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, 'IDE/ATA development list' <linux-ide@vger.kernel.org>
-Cc: "'Skirvin, Jeffrey D'" <jeffrey.d.skirvin@intel.com>, 'Jacek Danecki' <jacek.danecki@intel.com>, "'edmund.nadolski'" <edmund.nadolski@intel.com>, 'Luben Tuikov' <ltuikov@yahoo.com>, 'Mark Salyzyn' <mark_salyzyn@us.xyratex.com>, 'Hannes Reinecke' <hare@suse.de>, 'David Milburn' <dmilburn@redhat.com>, 'Jeff Garzik' <jeff@garzik.org>, 'James Bottomley' <jbottomley@parallels.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>
 
-I have seen this problem too, but have not figure out how to do the right
-thing. Add Jeff and James to CC, maybe they have more insight idea to fix
-this.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-BTW: how to push Redhat and SUSE to include the libsas fix like: T-T support
-and others will cause this oops.
+This patch changes target core to also check for -ENOMEM from fabric callbacks
+to signal QUEUE_FULL status, instead of just -EAGAIN in order to catch a
+larger set of fabric failure cases that want to trigger QUEUE_FULL logic.
+This includes the callbacks for ->write_pending(), ->queue_data_in() and
+->queue_status().
 
-Jack
+It also makes transport_generic_write_pending() return zero upon QUEUE_FULL,
+and removes two unnecessary -EAGAIN checks to catch write pending QUEUE_FULL
+cases from transport_generic_new_cmd() failures in transport_handle_cdb_direct()
+and transport_processing_thread():TRANSPORT_NEW_CMD_MAP state.
 
-[RFC] libsas: the trouble with ata resets
-> 
-> Currently libsas has a problem with prematurely dropping sata devices
-> during recovery.  Libata knows that some devices can take quite a
-> while to recover from a reset and re-establish the link.  The fact
-> that sas_ata_hard_reset() ignores its 'deadline'  parameter is
-> evidence that it ignores the link management aspects of what libata
-> wants from a ->hardreset() handler.
-> 
-> item1: teach sas_ata_hard_reset() to check that the link came back up.
->  For direct attached devices the lldd will need the deadline
-> parameter, and for expander attached perform smp polling to wait for
-> the link to come back.
-> 
-> Now, during this time that libata is trying to recover the connection
-> in the host-eh context libsas will start receiving BCNs in the
-> host-workqueue context.  In the unfortunate cases libsas may take
-> removal action on a device that will come back with a bit more time.
-> While libata-eh is in progress libsas should not take any action on
-> the ata phys in question..
-> 
-> item2:  flush eh before trying to determine what action to take on a phy.
-> 
-> In the case of libsas not all resets are initiated by the eh process
-> (the sas transport class can reset a phy directly).  It seems libata
-> takes care to arrange for user requested resets to occur under the
-> control of eh, and libsas should do the same.
-> 
-> item3: teach all reset entry points to kick and flush eh for ata devices
-> 
-> A corollary for items 1 and 3 is that there is a difference between
-> scheduling the reset and performing the reset.
-> ->lldd_I_T_nexus_reset() is currently called twice, once by sas-eh to
-> manage sas_tasks and again by ata-eh to recover the device.  Likely we
-> need a new ->lldd_ata_hard_reset() handler that is called by ata-eh,
-> while ->lldd_I_T_nexus_reset() cleans up the sas_tasks and just
-> schedules reset on the ata_port.
-> 
-> item4: allow for lldd's to provide a direct ->lldd_ata_hard_reset()
-> which can be assumed to only be called from ata-eh context.
-> 
-> Any other pain points in reset handling?
-> 
-> --
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reported-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Roland Dreier <roland@purestorage.com>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c |   31 +++++++++++++++----------------
+ 1 files changed, 15 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index bfd420c..1821606 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -911,7 +911,7 @@ void transport_remove_task_from_execute_queue(
+ }
+ 
+ /*
+- * Handle QUEUE_FULL / -EAGAIN status
++ * Handle QUEUE_FULL / -EAGAIN and -ENOMEM status
+  */
+ 
+ static void target_qf_do_work(struct work_struct *work)
+@@ -1647,9 +1647,7 @@ int transport_handle_cdb_direct(
+ 	 * and call transport_generic_request_failure() if necessary..
+ 	 */
+ 	ret = transport_generic_new_cmd(cmd);
+-	if (ret == -EAGAIN)
+-		return 0;
+-	else if (ret < 0) {
++	if (ret < 0) {
+ 		cmd->transport_error_status = ret;
+ 		transport_generic_request_failure(cmd, 0,
+ 				(cmd->data_direction != DMA_TO_DEVICE));
+@@ -1888,7 +1886,7 @@ static void transport_generic_request_failure(
+ 				ASCQ_2CH_PREVIOUS_RESERVATION_CONFLICT_STATUS);
+ 
+ 		ret = cmd->se_tfo->queue_status(cmd);
+-		if (ret == -EAGAIN)
++		if (ret == -EAGAIN || ret == -ENOMEM)
+ 			goto queue_full;
+ 		goto check_stop;
+ 	case PYX_TRANSPORT_USE_SENSE_REASON:
+@@ -1915,7 +1913,7 @@ static void transport_generic_request_failure(
+ 	else {
+ 		ret = transport_send_check_condition_and_sense(cmd,
+ 				cmd->scsi_sense_reason, 0);
+-		if (ret == -EAGAIN)
++		if (ret == -EAGAIN || ret == -ENOMEM)
+ 			goto queue_full;
+ 	}
+ 
+@@ -3310,7 +3308,7 @@ static void target_complete_ok_work(struct work_struct *work)
+ 		if (cmd->scsi_status) {
+ 			ret = transport_send_check_condition_and_sense(
+ 					cmd, reason, 1);
+-			if (ret == -EAGAIN)
++			if (ret == -EAGAIN || ret == -ENOMEM)
+ 				goto queue_full;
+ 
+ 			transport_lun_remove_cmd(cmd);
+@@ -3335,7 +3333,7 @@ static void target_complete_ok_work(struct work_struct *work)
+ 		spin_unlock(&cmd->se_lun->lun_sep_lock);
+ 
+ 		ret = cmd->se_tfo->queue_data_in(cmd);
+-		if (ret == -EAGAIN)
++		if (ret == -EAGAIN || ret == -ENOMEM)
+ 			goto queue_full;
+ 		break;
+ 	case DMA_TO_DEVICE:
+@@ -3356,14 +3354,14 @@ static void target_complete_ok_work(struct work_struct *work)
+ 			}
+ 			spin_unlock(&cmd->se_lun->lun_sep_lock);
+ 			ret = cmd->se_tfo->queue_data_in(cmd);
+-			if (ret == -EAGAIN)
++			if (ret == -EAGAIN || ret == -ENOMEM)
+ 				goto queue_full;
+ 			break;
+ 		}
+ 		/* Fall through for DMA_TO_DEVICE */
+ 	case DMA_NONE:
+ 		ret = cmd->se_tfo->queue_status(cmd);
+-		if (ret == -EAGAIN)
++		if (ret == -EAGAIN || ret == -ENOMEM)
+ 			goto queue_full;
+ 		break;
+ 	default:
+@@ -3892,7 +3890,10 @@ EXPORT_SYMBOL(transport_generic_process_write);
+ 
+ static void transport_write_pending_qf(struct se_cmd *cmd)
+ {
+-	if (cmd->se_tfo->write_pending(cmd) == -EAGAIN) {
++	int ret;
++
++	ret = cmd->se_tfo->write_pending(cmd);
++	if (ret == -EAGAIN || ret == -ENOMEM) {
+ 		pr_debug("Handling write_pending QUEUE__FULL: se_cmd: %p\n",
+ 			 cmd);
+ 		transport_handle_queue_full(cmd, cmd->se_dev);
+@@ -3922,7 +3923,7 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
+ 	 * frontend know that WRITE buffers are ready.
+ 	 */
+ 	ret = cmd->se_tfo->write_pending(cmd);
+-	if (ret == -EAGAIN)
++	if (ret == -EAGAIN || ret == -ENOMEM)
+ 		goto queue_full;
+ 	else if (ret < 0)
+ 		return ret;
+@@ -3933,7 +3934,7 @@ queue_full:
+ 	pr_debug("Handling write_pending QUEUE__FULL: se_cmd: %p\n", cmd);
+ 	cmd->t_state = TRANSPORT_COMPLETE_QF_WP;
+ 	transport_handle_queue_full(cmd, cmd->se_dev);
+-	return ret;
++	return 0;
+ }
+ 
+ /**
+@@ -4585,9 +4586,7 @@ get_cmd:
+ 				break;
+ 			}
+ 			ret = transport_generic_new_cmd(cmd);
+-			if (ret == -EAGAIN)
+-				break;
+-			else if (ret < 0) {
++			if (ret < 0) {
+ 				cmd->transport_error_status = ret;
+ 				transport_generic_request_failure(cmd,
+ 					0, (cmd->data_direction !=
+-- 
+1.7.2.5
 
