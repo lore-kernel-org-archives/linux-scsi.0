@@ -1,48 +1,79 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [PATCH] scsi_dh_alua: Fix the time inteval for alua rtpg commands
-Date: Thu, 27 Oct 2011 14:36:32 -0400
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD91050E54E@RTPMVEXC1-PRD.hq.netapp.com>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: Re: [RESEND][PATCH 1/1] ipr: add definitions for additional adapter
+Date: Thu, 27 Oct 2011 11:42:39 -0700
+Message-ID: <4EA9A61F.3030605@linux.vnet.ibm.com>
+References: <20111019230016.134176494@linux.vnet.ibm.com> <4EA04B8E.9030909@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:32732 "EHLO mx2.netapp.com"
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:41099 "EHLO e4.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754362Ab1J0Sgv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2011 14:36:51 -0400
-Content-class: urn:content-classes:message
+	id S1754860Ab1J0SuC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 14:50:02 -0400
+Received: from /spool/local
+	by e4.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <wayneb@linux.vnet.ibm.com>;
+	Thu, 27 Oct 2011 14:43:21 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p9RIgfrD255500
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2011 14:42:41 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p9RIge0q003596
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2011 16:42:41 -0200
+In-Reply-To: <4EA04B8E.9030909@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>, hare@suse.de
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch corrects the retry interval for alua rtpg command. Purpose was to retry the commands in seconds.
-But that was not happening. Reason is msleep takes argument in milliseconds.
+This patch is not correct.  It will break support for the 57C4
+adapter.  New patch to follow.
 
-Also added minor text after successful attach. 
+Wayne
 
-Signed-off-by: Babu Moger <babu.moger@netapp.com>
-CC: Hannes Reinecke <hare@suse.de> 
----
-
---- linux-3.1-rc4/drivers/scsi/device_handler/scsi_dh_alua.c.orig	2011-10-26 11:36:11.000000000 -0500
-+++ linux-3.1-rc4/drivers/scsi/device_handler/scsi_dh_alua.c	2011-10-27 12:50:41.000000000 -0500
-@@ -507,7 +507,7 @@ static int alua_rtpg(struct scsi_device 
- 	int len, k, off, valid_states = 0;
- 	unsigned char *ucp;
- 	unsigned err;
--	unsigned long expiry, interval = 1;
-+	unsigned long expiry, interval = 1000;
- 
- 	expiry = round_jiffies_up(jiffies + ALUA_FAILOVER_TIMEOUT);
-  retry:
-@@ -734,6 +734,7 @@ static int alua_bus_attach(struct scsi_d
- 	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
- 	sdev->scsi_dh_data = scsi_dh_data;
- 	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+	sdev_printk(KERN_NOTICE, sdev, "%s: Attached\n", ALUA_DH_NAME);
- 
- 	return 0;
- 
+On 10/20/2011 09:25 AM, Wayne Boyer wrote:
+> Add the appropriate definitions and table entry for an additional adapter.
+> 
+> Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/ipr.c |    4 +++-
+>  drivers/scsi/ipr.h |    1 +
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> Index: b/drivers/scsi/ipr.c
+> ===================================================================
+> --- a/drivers/scsi/ipr.c	2011-10-19 15:53:30.852967743 -0700
+> +++ b/drivers/scsi/ipr.c	2011-10-19 15:56:17.363057868 -0700
+> @@ -9114,8 +9114,10 @@ static struct pci_device_id ipr_pci_tabl
+>  	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+>  		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B2, 0, 0, 0 },
+>  	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+> -		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
+> +		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C3, 0, 0, 0 },
+>  	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_ASIC_E2,
+> +		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
+> +	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
+>  		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B4, 0, 0, 0 },
+>  	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_ASIC_E2,
+>  		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B1, 0, 0, 0 },
+> Index: b/drivers/scsi/ipr.h
+> ===================================================================
+> --- a/drivers/scsi/ipr.h	2011-10-19 15:53:32.829134947 -0700
+> +++ b/drivers/scsi/ipr.h	2011-10-19 15:56:20.895356624 -0700
+> @@ -82,6 +82,7 @@
+> 
+>  #define IPR_SUBS_DEV_ID_57B4    0x033B
+>  #define IPR_SUBS_DEV_ID_57B2    0x035F
+> +#define IPR_SUBS_DEV_ID_57C3    0x0353
+>  #define IPR_SUBS_DEV_ID_57C4    0x0354
+>  #define IPR_SUBS_DEV_ID_57C6    0x0357
+>  #define IPR_SUBS_DEV_ID_57CC    0x035C
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 
