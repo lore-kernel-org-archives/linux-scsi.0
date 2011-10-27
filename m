@@ -1,67 +1,57 @@
-From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: Re: [RESEND][PATCH 1/1] ipr: add definitions for additional adapter
-Date: Thu, 27 Oct 2011 11:58:21 -0700
-Message-ID: <4EA9A9CD.7040302@linux.vnet.ibm.com>
-References: <20111019230016.134176494@linux.vnet.ibm.com> <4EA04B8E.9030909@linux.vnet.ibm.com>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 4/6 v2] PM: Limit race conditions between
+	runtime PM and system sleep (v2)
+Date: Thu, 27 Oct 2011 22:06:34 +0200
+Message-ID: <201110272206.35180.rjw@sisk.pl>
+References: <201106260054.20578.rjw@sisk.pl> <201106292334.24518.rjw@sisk.pl>
+	<CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:44966 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750900Ab1J0TJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2011 15:09:13 -0400
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <wayneb@linux.vnet.ibm.com>;
-	Thu, 27 Oct 2011 14:59:28 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p9RIwWOv287666
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2011 14:58:34 -0400
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p9RIwMKM025212
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2011 12:58:22 -0600
-In-Reply-To: <4EA04B8E.9030909@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, stable@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>, Wendy Xiong <wenxiong@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Here is the corrected patch.
+On Thursday, October 27, 2011, Linus Walleij wrote:
+> 2011/6/29 Rafael J. Wysocki <rjw@sisk.pl>:
+> 
+> > One of the roles of the PM core is to prevent different PM callbacks
+> > executed for the same device object from racing with each other.
+> > Unfortunately, after commit e8665002477f0278f84f898145b1f141ba26ee26
+> > (PM: Allow pm_runtime_suspend() to succeed during system suspend)
+> > runtime PM callbacks may be executed concurrently with system
+> > suspend/resume callbacks for the same device.
+> (...)
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
+> 
+> A quick question: is there some specific reason why this patch should
+> not go into the 3.0.y stable releases?
+>
+> We are trying to produce
+> a runtime PM system of product quality based on 3.0.y and we've
+> already had to backport this patch ourselves to get things stable.
+> 
+> We have also backported:
+> PM: Introduce generic "noirq" callback routines for subsystems (v2)
+> PM / Runtime: Update documentation of interactions with system sleep
+> PM / Runtime: Add new helper function: pm_runtime_status_suspended()
+> 
+> And now it seems to be sufficient to get this thing going.
 
----
+Well, it isn't a simple fix and it changes the code's behavior quite
+significantly, so I thought it might not be a good idea to risk problems
+with -stable because of it.  Perhaps let's see how it works out in 3.1
+and backport it later if there are no problem reports related to it?
 
-Add the appropriate definition and table entry for an additional adapter.
-
-Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |    2 ++
- drivers/scsi/ipr.h |    1 +
- 2 files changed, 3 insertions(+)
-
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2011-10-19 15:53:32.829134947 -0700
-+++ b/drivers/scsi/ipr.h	2011-10-27 11:47:05.015146361 -0700
-@@ -82,6 +82,7 @@
-
- #define IPR_SUBS_DEV_ID_57B4    0x033B
- #define IPR_SUBS_DEV_ID_57B2    0x035F
-+#define IPR_SUBS_DEV_ID_57C3    0x0353
- #define IPR_SUBS_DEV_ID_57C4    0x0354
- #define IPR_SUBS_DEV_ID_57C6    0x0357
- #define IPR_SUBS_DEV_ID_57CC    0x035C
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2011-10-19 15:53:30.852967743 -0700
-+++ b/drivers/scsi/ipr.c	2011-10-27 11:38:45.039388987 -0700
-@@ -9114,6 +9114,8 @@ static struct pci_device_id ipr_pci_tabl
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B2, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
-+		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C3, 0, 0, 0 },
-+	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_FPGA_E2,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57C4, 0, 0, 0 },
- 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_CROC_ASIC_E2,
- 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B4, 0, 0, 0 },
-
+Rafael
