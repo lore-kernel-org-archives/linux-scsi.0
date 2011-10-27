@@ -1,17 +1,16 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 08/11] isci: No need to manage the pending reset bit on
- pending requests.
-Date: Thu, 27 Oct 2011 15:05:27 -0700
-Message-ID: <20111027220527.4941.243.stgit@localhost6.localdomain6>
+Subject: [PATCH 09/11] isci: Fix hard reset timeout conditions.
+Date: Thu, 27 Oct 2011 15:05:32 -0700
+Message-ID: <20111027220532.4941.69527.stgit@localhost6.localdomain6>
 References: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:34588 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:51274 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754292Ab1J0WFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2011 18:05:31 -0400
+	id S1754292Ab1J0WFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 18:05:33 -0400
 In-Reply-To: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,86 +19,194 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-The lldd does not need to look at or manage the pending device
-reset bit in pending sas_tasks.
+A hard reset can timeout before or after the last phy in the
+port goes away.  If after, then notify the OS that the last
+phy has failed.
+
+The recovery for the failed hard reset has been removed.
+This recovery code was unecessary in that the link would
+recover from the failure normally by a new link reset sequence
+or hotplug of the remote device.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/remote_device.c |   35 -----------------------------------
- drivers/scsi/isci/remote_device.h |    3 +--
- drivers/scsi/isci/task.c          |    3 ---
- 3 files changed, 1 insertions(+), 40 deletions(-)
+ drivers/scsi/isci/port.c |  101 +++++++++++++++++++++++++++-------------------
+ drivers/scsi/isci/port.h |    1 
+ 2 files changed, 60 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index 9d9e33d..b207cd3 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -1438,38 +1438,3 @@ int isci_remote_device_found(struct domain_device *domain_dev)
- 
- 	return status == SCI_SUCCESS ? 0 : -ENODEV;
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 8e59c88..bfeb879 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -350,6 +350,34 @@ static void isci_port_stop_complete(struct isci_host *ihost,
+ 	dev_dbg(&ihost->pdev->dev, "Port stop complete\n");
  }
--
--/**
-- * isci_device_clear_reset_pending() - This function will clear if any pending
-- *    reset condition flags on the device.
-- * @request: This parameter is the isci_device object.
-- *
-- * true if there is a reset pending for the device.
-- */
--void isci_device_clear_reset_pending(struct isci_host *ihost, struct isci_remote_device *idev)
--{
--	struct isci_request *isci_request;
--	struct isci_request *tmp_req;
--	unsigned long flags = 0;
--
--	dev_dbg(&ihost->pdev->dev, "%s: idev=%p, ihost=%p\n",
--		 __func__, idev, ihost);
--
--	spin_lock_irqsave(&ihost->scic_lock, flags);
--
--	/* Clear reset pending on all pending requests. */
--	list_for_each_entry_safe(isci_request, tmp_req,
--				 &idev->reqs_in_process, dev_node) {
--		dev_dbg(&ihost->pdev->dev, "%s: idev = %p request = %p\n",
--			 __func__, idev, isci_request);
--
--		if (!test_bit(IREQ_TMF, &isci_request->flags)) {
--			struct sas_task *task = isci_request_access_task(isci_request);
--
--			spin_lock(&task->task_state_lock);
--			task->task_state_flags &= ~SAS_TASK_NEED_DEV_RESET;
--			spin_unlock(&task->task_state_lock);
--		}
--	}
--	spin_unlock_irqrestore(&ihost->scic_lock, flags);
--}
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index bee6dd2..483ee50 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -132,8 +132,7 @@ void isci_remote_device_nuke_requests(struct isci_host *ihost,
- 				      struct isci_remote_device *idev);
- void isci_remote_device_gone(struct domain_device *domain_dev);
- int isci_remote_device_found(struct domain_device *domain_dev);
--void isci_device_clear_reset_pending(struct isci_host *ihost,
--				     struct isci_remote_device *idev);
+ 
++
++static bool is_port_ready_state(enum sci_port_states state)
++{
++	switch (state) {
++	case SCI_PORT_READY:
++	case SCI_PORT_SUB_WAITING:
++	case SCI_PORT_SUB_OPERATIONAL:
++	case SCI_PORT_SUB_CONFIGURING:
++		return true;
++	default:
++		return false;
++	}
++}
++
++/* flag dummy rnc hanling when exiting a ready state */
++static void port_state_machine_change(struct isci_port *iport,
++				      enum sci_port_states state)
++{
++	struct sci_base_state_machine *sm = &iport->sm;
++	enum sci_port_states old_state = sm->current_state_id;
++
++	if (is_port_ready_state(old_state) && !is_port_ready_state(state))
++		iport->ready_exit = true;
++
++	sci_change_state(sm, state);
++	iport->ready_exit = false;
++}
 +
  /**
-  * sci_remote_device_stop() - This method will stop both transmission and
-  *    reception of link activity for the supplied remote device.  This method
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 80e1a69..6d8ff15 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -1570,9 +1570,6 @@ static int isci_reset_device(struct isci_host *ihost,
- 	}
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+  * isci_port_hard_reset_complete() - This function is called by the sci core
+  *    when the hard reset complete notification has been received.
+@@ -368,6 +396,26 @@ static void isci_port_hard_reset_complete(struct isci_port *isci_port,
+ 	/* Save the status of the hard reset from the port. */
+ 	isci_port->hard_reset_status = completion_status;
  
--	/* Make sure all pending requests are able to be fully terminated. */
--	isci_device_clear_reset_pending(ihost, idev);
++	if (completion_status != SCI_SUCCESS) {
++
++		/* The reset failed.  The port state is now SCI_PORT_FAILED. */
++		if (isci_port->active_phy_mask == 0) {
++
++			/* Generate the link down now to the host, since it
++			 * was intercepted by the hard reset state machine when
++			 * it really happened.
++			 */
++			isci_port_link_down(isci_port->isci_host,
++					    &isci_port->isci_host->phys[
++						   isci_port->last_active_phy],
++					    isci_port);
++		}
++		/* Advance the port state so that link state changes will be
++		* noticed.
++		*/
++		port_state_machine_change(isci_port, SCI_PORT_SUB_WAITING);
++
++	}
+ 	complete_all(&isci_port->hard_reset_complete);
+ }
+ 
+@@ -657,6 +705,8 @@ void sci_port_deactivate_phy(struct isci_port *iport, struct isci_phy *iphy,
+ 	struct isci_host *ihost = iport->owning_controller;
+ 
+ 	iport->active_phy_mask &= ~(1 << iphy->phy_index);
++	if (!iport->active_phy_mask)
++		iport->last_active_phy = iphy->phy_index;
+ 
+ 	iphy->max_negotiated_speed = SAS_LINK_RATE_UNKNOWN;
+ 
+@@ -683,33 +733,6 @@ static void sci_port_invalid_link_up(struct isci_port *iport, struct isci_phy *i
+ 	}
+ }
+ 
+-static bool is_port_ready_state(enum sci_port_states state)
+-{
+-	switch (state) {
+-	case SCI_PORT_READY:
+-	case SCI_PORT_SUB_WAITING:
+-	case SCI_PORT_SUB_OPERATIONAL:
+-	case SCI_PORT_SUB_CONFIGURING:
+-		return true;
+-	default:
+-		return false;
+-	}
+-}
 -
- 	/* If this is a device on an expander, disable BCN processing. */
- 	if (!scsi_is_sas_phy_local(phy))
- 		set_bit(IPORT_BCN_BLOCKED, &iport->flags);
+-/* flag dummy rnc hanling when exiting a ready state */
+-static void port_state_machine_change(struct isci_port *iport,
+-				      enum sci_port_states state)
+-{
+-	struct sci_base_state_machine *sm = &iport->sm;
+-	enum sci_port_states old_state = sm->current_state_id;
+-
+-	if (is_port_ready_state(old_state) && !is_port_ready_state(state))
+-		iport->ready_exit = true;
+-
+-	sci_change_state(sm, state);
+-	iport->ready_exit = false;
+-}
+-
+ /**
+  * sci_port_general_link_up_handler - phy can be assigned to port?
+  * @sci_port: sci_port object for which has a phy that has gone link up.
+@@ -1622,7 +1645,8 @@ void sci_port_construct(struct isci_port *iport, u8 index,
+ 	iport->logical_port_index  = SCIC_SDS_DUMMY_PORT;
+ 	iport->physical_port_index = index;
+ 	iport->active_phy_mask     = 0;
+-	iport->ready_exit	      = false;
++	iport->last_active_phy     = 0;
++	iport->ready_exit	   = false;
+ 
+ 	iport->owning_controller = ihost;
+ 
+@@ -1676,7 +1700,7 @@ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *ipor
+ {
+ 	unsigned long flags;
+ 	enum sci_status status;
+-	int idx, ret = TMF_RESP_FUNC_COMPLETE;
++	int ret = TMF_RESP_FUNC_COMPLETE;
+ 
+ 	dev_dbg(&ihost->pdev->dev, "%s: iport = %p\n",
+ 		__func__, iport);
+@@ -1697,8 +1721,13 @@ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *ipor
+ 			"%s: iport = %p; hard reset completion\n",
+ 			__func__, iport);
+ 
+-		if (iport->hard_reset_status != SCI_SUCCESS)
++		if (iport->hard_reset_status != SCI_SUCCESS) {
+ 			ret = TMF_RESP_FUNC_FAILED;
++
++			dev_err(&ihost->pdev->dev,
++				"%s: iport = %p; hard reset failed (0x%x)\n",
++				__func__, iport, iport->hard_reset_status);
++		}
+ 	} else {
+ 		ret = TMF_RESP_FUNC_FAILED;
+ 
+@@ -1718,18 +1747,6 @@ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *ipor
+ 			"%s: iport = %p; hard reset failed "
+ 			"(0x%x) - driving explicit link fail for all phys\n",
+ 			__func__, iport, iport->hard_reset_status);
+-
+-		/* Down all phys in the port. */
+-		spin_lock_irqsave(&ihost->scic_lock, flags);
+-		for (idx = 0; idx < SCI_MAX_PHYS; ++idx) {
+-			struct isci_phy *iphy = iport->phy_table[idx];
+-
+-			if (!iphy)
+-				continue;
+-			sci_phy_stop(iphy);
+-			sci_phy_start(iphy);
+-		}
+-		spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ 	}
+ 	return ret;
+ }
+diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
+index b50ecd4..e84d22a 100644
+--- a/drivers/scsi/isci/port.h
++++ b/drivers/scsi/isci/port.h
+@@ -109,6 +109,7 @@ struct isci_port {
+ 	u8 logical_port_index;
+ 	u8 physical_port_index;
+ 	u8 active_phy_mask;
++	u8 last_active_phy;
+ 	u16 reserved_rni;
+ 	u16 reserved_tag;
+ 	u32 started_request_count;
 
