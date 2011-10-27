@@ -1,64 +1,73 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 00/11] isci fixes: hotplug
-Date: Thu, 27 Oct 2011 15:04:45 -0700
-Message-ID: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
+Subject: [PATCH 02/11] isci: Immediately fail I/O to removed devices.
+Date: Thu, 27 Oct 2011 15:04:56 -0700
+Message-ID: <20111027220455.4941.62455.stgit@localhost6.localdomain6>
+References: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:62804 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:40843 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754424Ab1J0WEq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2011 18:04:46 -0400
+	id S1754569Ab1J0WE5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 18:04:57 -0400
+In-Reply-To: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-This series addresses some crash and hang conditions related to device
-removal, error handling, and discovery.
+From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-Patch 11 "isci: overriding max_concurr_spinup..." is a straightforward
-fix for handling a module parameter, but does not directly address a
-crash or hang condition (i.e. it could wait for 3.3).
+In the case where an I/O fails to start in isci_request_execute,
+only allow retries if the device is not already gone.
 
-Per the RFC [1] there are other libsas changes that need to occur around
-eh versus discovery that are a pre-requisite for further cleanups and
-fixes to isci error handling.
-
---
-Dan
-
-[1]: http://marc.info/?l=linux-scsi&m=131941375221687&w=2
-
+Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
+ drivers/scsi/isci/task.c |   31 +++++++++++++++++++++----------
+ 1 files changed, 21 insertions(+), 10 deletions(-)
 
-Andrzej Jakowski (1):
-      isci: overriding max_concurr_spinup oem parameter by max(oem, user)
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index e2d9418..e8cf17b 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -212,16 +212,27 @@ int isci_task_execute_task(struct sas_task *task, int num, gfp_t gfp_flags)
+ 					task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
+ 					spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 
+-					/* Indicate QUEUE_FULL so that the scsi
+-					* midlayer retries. if the request
+-					* failed for remote device reasons,
+-					* it gets returned as
+-					* SAS_TASK_UNDELIVERED next time
+-					* through.
+-					*/
+-					isci_task_refuse(ihost, task,
+-							 SAS_TASK_COMPLETE,
+-							 SAS_QUEUE_FULL);
++					if (test_bit(IDEV_GONE, &idev->flags)) {
++
++						/* Indicate that the device
++						 * is gone.
++						 */
++						isci_task_refuse(ihost, task,
++							SAS_TASK_UNDELIVERED,
++							SAS_DEVICE_UNKNOWN);
++					} else {
++						/* Indicate QUEUE_FULL so that
++						 * the scsi midlayer retries.
++						 * If the request failed for
++						 * remote device reasons, it
++						 * gets returned as
++						 * SAS_TASK_UNDELIVERED next
++						 * time through.
++						 */
++						isci_task_refuse(ihost, task,
++							SAS_TASK_COMPLETE,
++							SAS_QUEUE_FULL);
++					}
+ 				}
+ 			}
+ 		}
 
-Dan Williams (1):
-      isci: revert bcn filtering
-
-Jeff Skirvin (9):
-      isci: Lookup device references through requests in completions.
-      isci: Immediately fail I/O to removed devices.
-      isci: Fix tag leak in tasks and terminated requests.
-      isci: Handle task request timeouts correctly.
-      isci: No task_done callbacks in error handler paths.
-      isci: Fix task management for SMP, SATA and on dev remove.
-      isci: Remove redundant isci_request.ttype field.
-      isci: No need to manage the pending reset bit on pending requests.
-      isci: Fix hard reset timeout conditions.
-
-
- drivers/scsi/isci/host.c          |   23 +
- drivers/scsi/isci/init.c          |    2 
- drivers/scsi/isci/port.c          |  146 +++-----
- drivers/scsi/isci/port.h          |    6 
- drivers/scsi/isci/probe_roms.h    |    4 
- drivers/scsi/isci/remote_device.c |   85 -----
- drivers/scsi/isci/remote_device.h |    5 
- drivers/scsi/isci/request.c       |   52 +--
- drivers/scsi/isci/request.h       |    6 
- drivers/scsi/isci/task.c          |  698 ++++++++++++-------------------------
- drivers/scsi/isci/task.h          |   35 --
- 11 files changed, 337 insertions(+), 725 deletions(-)
