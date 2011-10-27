@@ -1,17 +1,16 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 01/11] isci: Lookup device references through requests in
- completions.
-Date: Thu, 27 Oct 2011 15:04:50 -0700
-Message-ID: <20111027220450.4941.33080.stgit@localhost6.localdomain6>
+Subject: [PATCH 05/11] isci: No task_done callbacks in error handler paths.
+Date: Thu, 27 Oct 2011 15:05:11 -0700
+Message-ID: <20111027220511.4941.50602.stgit@localhost6.localdomain6>
 References: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:45779 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:36746 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754535Ab1J0WEy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2011 18:04:54 -0400
+	id S1754364Ab1J0WFN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 18:05:13 -0400
 In-Reply-To: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,110 +19,114 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-The LLDD needs to obtain a reference to the device through the request
-itself and not through the domain_device, because the
-domain_device.lldd_dev is set to NULL early in the lldd_dev_gone call.
-This relies on the fact that the isci_remote_device object is keeping a
-seperate reference count of outstanding requests.  TODO: unify the
-request count tracking with the isci_remote_device kref.
-
-The failure signature of this condition looks like the following
-log, where the important bits are the call to lldd_dev_gone followed
-by a crash in isci_terminate_request_core:
-
-[  229.151541] isci 0000:0b:00.0: isci_remote_device_gone: domain_device = ffff8801492d4800, isci_device = ffff880143c657d0, isci_port = ffff880143c63658
-[  229.166007] isci 0000:0b:00.0: isci_remote_device_stop: isci_device = ffff880143c657d0
-[  229.175317] isci 0000:0b:00.0: isci_terminate_pending_requests: idev=ffff880143c657d0 request=ffff88014741f000; task=ffff8801470f46c0 old_state=2
-[  229.189702] isci 0000:0b:00.0: isci_terminate_request_core: device = ffff880143c657d0; request = ffff88014741f000
-[  229.201339] isci 0000:0b:00.0: isci_terminate_request_core: before completion wait (ffff88014741f000/ffff880149715ad0)
-[  229.213414] isci 0000:0b:00.0: sci_controller_process_completions: completion queue entry:0x8000a0e9
-[  229.214401] BUG: unable to handle kernel NULL pointer dereference at 0000000000000228
-[  229.214401] IP:jdskirvi-testlbo [<ffffffffa00a58be>] sci_request_completed_state_enter+0x50/0xafb [isci]
-[  229.214401] PGD 13d19e067 PUD 13d104067 PMD 0
-[  229.214401] Oops: 0000 [#1] SMP
-[  229.214401] CPU 0 x kernel: [  226
-[  229.214401] Modules linked in: ipv6 dm_multipath uinput nouveau snd_hda_codec_realtek snd_hda_intel ttm drm_kms_helper drm snd_hda_codec snd_hwdep snd_pcm snd_timer i2c_algo_bit isci snd libsas ioatdma mxm_wmi iTCO_wdt soundcore snd_page_alloc scsi_transport_sas iTCO_vendor_support wmi dca video i2c_i801 i2c_core [last unloaded: speedstep_lib]
-[  229.214401]
-[  229.214401] Pid: 5, comm: kworker/u:0 Not tainted 3.0.0-isci-11.7.29+ #30.353196] Buffer  Intel Corporation Stoakley/Pearlcity Workstation
-[  229.214401] RIP: 0010:[<ffffffffa00a58be>] I/O error on dev [<ffffffffa00a58be>] sci_request_completed_state_enter+0x50/0xafb [isci]
-[  229.214401] RSP: 0018:ffff88014fc03d20  EFLAGS: 00010046
-[  229.214401] RAX: 0000000000000000 RBX: ffff88014741f000 RCX: 0000000000000000
-[  229.214401] RDX: ffffffffa00b2c90 RSI: 0000000000000017 RDI: ffff88014741f0a0
-[  229.214401] RBP: ffff88014fc03d90 R08: 0000000000000018 R09: 0000000000000000
-[  229.214401] R10: 0000000000000000 R11: ffffffff81a17d98 R12: 000000000000001d
-[  229.214401] R13: ffff8801470f46c0 R14: 0000000000000000 R15: 0000000000008000
-[  229.214401] FS:  0000000000000000(0000) GS:ffff88014fc00000(0000) knlGS:0000000000000000
-[  229.214401] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  229.214401] CR2: 0000000000000228 CR3: 000000013ceaa000 CR4: 00000000000406f0
-[  229.214401] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  229.214401] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  229.214401] Process kworker/u:0 (pid: 5, threadinfo ffff880149714000, task ffff880149718000)
-[  229.214401] Call Trace:
-[  229.214401]  <IRQ>
-[  229.214401]  [<ffffffffa00aa6ce>] sci_change_state+0x4a/0x4f [isci]
-[  229.214401]  [<ffffffffa00a4ca6>] sci_io_request_tc_completion+0x79c/0x7a0 [isci]
-[  229.214401]  [<ffffffffa00acf35>] sci_controller_process_completions+0x14f/0x396 [isci]
-[  229.214401]  [<ffffffffa00abbda>] ? spin_lock_irq+0xe/0x10 [isci]
-[  229.214401]  [<ffffffffa00ad2cf>] isci_host_completion_routine+0x71/0x2be [isci]
-[  229.214401]  [<ffffffff8107c6b3>] ? mark_held_locks+0x52/0x70
-[  229.214401]  [<ffffffff810538e8>] tasklet_action+0x90/0xf1
-[  229.214401]  [<ffffffff81054050>] __do_softirq+0xe5/0x1bf
-[  229.214401]  [<ffffffff8106d9d1>] ? hrtimer_interrupt+0x129/0x1bb
-[  229.214401]  [<ffffffff814ff69c>] call_softirq+0x1c/0x30
-[  229.214401]  [<ffffffff8100bb67>] do_softirq+0x4b/0xa3
-[  229.214401]  [<ffffffff81053d84>] irq_exit+0x53/0xb4
-[  229.214401]  [<ffffffff814fffe7>] smp_apic_timer_interrupt+0x83/0x91
-[  229.214401]  [<ffffffff814fee53>] apic_timer_interrupt+0x13/0x20
-[  229.214401]  <EOI>
-[  229.214401]  [<ffffffff814f7ad4>] ? retint_restore_args+0x13/0x13
-[  229.214401]  [<ffffffff8107af29>] ? trace_hardirqs_off+0xd/0xf
-[  229.214401]  [<ffffffff8104ea71>] ? vprintk+0x40b/0x452
-[  229.214401]  [<ffffffff814f4b5a>] printk+0x41/0x47
-[  229.214401]  [<ffffffff81314484>] __dev_printk+0x78/0x7a
-[  229.214401]  [<ffffffff8131471e>] dev_printk+0x45/0x47
-[  229.214401]  [<ffffffffa00ae2a3>] isci_terminate_request_core+0x15d/0x317 [isci]
-[  229.214401]  [<ffffffffa00af1ad>] isci_terminate_pending_requests+0x1a4/0x204 [isci]
-[  229.214401]  [<ffffffffa00229f6>] ? sas_phye_oob_error+0xc3/0xc3 [libsas]
-[  229.214401]  [<ffffffffa00a7d9e>] isci_remote_device_nuke_requests+0xa6/0xff [isci]
-[  229.214401]  [<ffffffffa00a811a>] isci_remote_device_stop+0x7c/0x166 [isci]
-[  229.214401]  [<ffffffffa00229f6>] ? sas_phye_oob_error+0xc3/0xc3 [libsas]
-[  229.214401]  [<ffffffffa00a827a>] isci_remote_device_gone+0x76/0x7e [isci]
-[  229.214401]  [<ffffffffa002363e>] sas_notify_lldd_dev_gone+0x34/0x36 [libsas]
-[  229.214401]  [<ffffffffa0023945>] sas_unregister_dev+0x57/0x9c [libsas]
-[  229.214401]  [<ffffffffa00239c0>] sas_unregister_domain_devices+0x36/0x65 [libsas]
-[  229.214401]  [<ffffffffa0022cb8>] sas_deform_port+0x72/0x1ac [libsas]
-[  229.214401]  [<ffffffffa00229f6>] ? sas_phye_oob_error+0xc3/0xc3 [libsas]
-[  229.214401]  [<ffffffffa0022a34>] sas_phye_loss_of_signal+0x3e/0x42 [libsas]
+libsas will cleanup pending sas_tasks after error handler
+path functions are called; do not call task_done callbacks.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/request.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/isci/task.c |   69 +++++++++-------------------------------------
+ 1 files changed, 14 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 565a9f0..bfc7379 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -2728,9 +2728,9 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
- 	struct sas_task *task = isci_request_access_task(request);
- 	struct ssp_response_iu *resp_iu;
- 	unsigned long task_flags;
--	struct isci_remote_device *idev = isci_lookup_device(task->dev);
--	enum service_response response       = SAS_TASK_UNDELIVERED;
--	enum exec_status status         = SAS_ABORTED_TASK;
-+	struct isci_remote_device *idev = request->target_device;
-+	enum service_response response = SAS_TASK_UNDELIVERED;
-+	enum exec_status status = SAS_ABORTED_TASK;
- 	enum isci_request_status request_status;
- 	enum isci_completion_selection complete_to_host
- 		= isci_perform_normal_io_completion;
-@@ -3061,7 +3061,6 @@ static void isci_request_io_request_complete(struct isci_host *ihost,
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 4175f17..c1f439b 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -585,53 +585,6 @@ static enum isci_request_status isci_task_validate_request_to_abort(
+ 	return old_state;
+ }
  
- 	/* complete the io request to the core. */
- 	sci_controller_complete_io(ihost, request->target_device, request);
--	isci_put_device(idev);
+-/**
+-* isci_request_cleanup_completed_loiterer() - This function will take care of
+-*    the final cleanup on any request which has been explicitly terminated.
+-* @isci_host: This parameter specifies the ISCI host object
+-* @isci_device: This is the device to which the request is pending.
+-* @isci_request: This parameter specifies the terminated request object.
+-* @task: This parameter is the libsas I/O request.
+-*/
+-static void isci_request_cleanup_completed_loiterer(
+-	struct isci_host          *isci_host,
+-	struct isci_remote_device *isci_device,
+-	struct isci_request       *isci_request,
+-	struct sas_task           *task)
+-{
+-	unsigned long flags;
+-
+-	dev_dbg(&isci_host->pdev->dev,
+-		"%s: isci_device=%p, request=%p, task=%p\n",
+-		__func__, isci_device, isci_request, task);
+-
+-	if (task != NULL) {
+-
+-		spin_lock_irqsave(&task->task_state_lock, flags);
+-		task->lldd_task = NULL;
+-
+-		task->task_state_flags &= ~SAS_TASK_NEED_DEV_RESET;
+-
+-		isci_set_task_doneflags(task);
+-
+-		/* If this task is not in the abort path, call task_done. */
+-		if (!(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-
+-			spin_unlock_irqrestore(&task->task_state_lock, flags);
+-			task->task_done(task);
+-		} else
+-			spin_unlock_irqrestore(&task->task_state_lock, flags);
+-	}
+-
+-	if (isci_request != NULL) {
+-		spin_lock_irqsave(&isci_host->scic_lock, flags);
+-		isci_free_tag(isci_host, isci_request->io_tag);
+-		isci_request_change_state(isci_request, unallocated);
+-		list_del_init(&isci_request->dev_node);
+-		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
+-	}
+-}
+-
+ static int isci_request_is_dealloc_managed(enum isci_request_status stat)
+ {
+ 	switch (stat) {
+@@ -666,7 +619,6 @@ static void isci_terminate_request_core(struct isci_host *ihost,
+ 	unsigned long     flags;
+ 	unsigned long     termination_completed = 1;
+ 	struct completion *io_request_completion;
+-	struct sas_task   *task;
  
- 	/* set terminated handle so it cannot be completed or
- 	 * terminated again, and to cause any calls into abort
+ 	dev_dbg(&ihost->pdev->dev,
+ 		"%s: device = %p; request = %p\n",
+@@ -676,10 +628,6 @@ static void isci_terminate_request_core(struct isci_host *ihost,
+ 
+ 	io_request_completion = isci_request->io_request_completion;
+ 
+-	task = (isci_request->ttype == io_task)
+-		? isci_request_access_task(isci_request)
+-		: NULL;
+-
+ 	/* Note that we are not going to control
+ 	 * the target to abort the request.
+ 	 */
+@@ -783,9 +731,20 @@ static void isci_terminate_request_core(struct isci_host *ihost,
+ 			spin_unlock_irqrestore(&isci_request->state_lock, flags);
+ 
+ 		}
+-		if (needs_cleanup_handling)
+-			isci_request_cleanup_completed_loiterer(
+-				ihost, idev, isci_request, task);
++		if (needs_cleanup_handling) {
++
++			dev_dbg(&ihost->pdev->dev,
++				"%s: cleanup isci_device=%p, request=%p\n",
++				__func__, idev, isci_request);
++
++			if (isci_request != NULL) {
++				spin_lock_irqsave(&ihost->scic_lock, flags);
++				isci_free_tag(ihost, isci_request->io_tag);
++				isci_request_change_state(isci_request, unallocated);
++				list_del_init(&isci_request->dev_node);
++				spin_unlock_irqrestore(&ihost->scic_lock, flags);
++			}
++		}
+ 	}
+ }
+ 
 
