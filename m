@@ -1,57 +1,64 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 4/6 v2] PM: Limit race conditions between
-	runtime PM and system sleep (v2)
-Date: Thu, 27 Oct 2011 22:06:34 +0200
-Message-ID: <201110272206.35180.rjw@sisk.pl>
-References: <201106260054.20578.rjw@sisk.pl> <201106292334.24518.rjw@sisk.pl>
-	<CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 00/11] isci fixes: hotplug
+Date: Thu, 27 Oct 2011 15:04:45 -0700
+Message-ID: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, stable@kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:62804 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754424Ab1J0WEq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 18:04:46 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thursday, October 27, 2011, Linus Walleij wrote:
-> 2011/6/29 Rafael J. Wysocki <rjw@sisk.pl>:
-> 
-> > One of the roles of the PM core is to prevent different PM callbacks
-> > executed for the same device object from racing with each other.
-> > Unfortunately, after commit e8665002477f0278f84f898145b1f141ba26ee26
-> > (PM: Allow pm_runtime_suspend() to succeed during system suspend)
-> > runtime PM callbacks may be executed concurrently with system
-> > suspend/resume callbacks for the same device.
-> (...)
-> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
-> 
-> A quick question: is there some specific reason why this patch should
-> not go into the 3.0.y stable releases?
->
-> We are trying to produce
-> a runtime PM system of product quality based on 3.0.y and we've
-> already had to backport this patch ourselves to get things stable.
-> 
-> We have also backported:
-> PM: Introduce generic "noirq" callback routines for subsystems (v2)
-> PM / Runtime: Update documentation of interactions with system sleep
-> PM / Runtime: Add new helper function: pm_runtime_status_suspended()
-> 
-> And now it seems to be sufficient to get this thing going.
+This series addresses some crash and hang conditions related to device
+removal, error handling, and discovery.
 
-Well, it isn't a simple fix and it changes the code's behavior quite
-significantly, so I thought it might not be a good idea to risk problems
-with -stable because of it.  Perhaps let's see how it works out in 3.1
-and backport it later if there are no problem reports related to it?
+Patch 11 "isci: overriding max_concurr_spinup..." is a straightforward
+fix for handling a module parameter, but does not directly address a
+crash or hang condition (i.e. it could wait for 3.3).
 
-Rafael
+Per the RFC [1] there are other libsas changes that need to occur around
+eh versus discovery that are a pre-requisite for further cleanups and
+fixes to isci error handling.
+
+--
+Dan
+
+[1]: http://marc.info/?l=linux-scsi&m=131941375221687&w=2
+
+---
+
+Andrzej Jakowski (1):
+      isci: overriding max_concurr_spinup oem parameter by max(oem, user)
+
+Dan Williams (1):
+      isci: revert bcn filtering
+
+Jeff Skirvin (9):
+      isci: Lookup device references through requests in completions.
+      isci: Immediately fail I/O to removed devices.
+      isci: Fix tag leak in tasks and terminated requests.
+      isci: Handle task request timeouts correctly.
+      isci: No task_done callbacks in error handler paths.
+      isci: Fix task management for SMP, SATA and on dev remove.
+      isci: Remove redundant isci_request.ttype field.
+      isci: No need to manage the pending reset bit on pending requests.
+      isci: Fix hard reset timeout conditions.
+
+
+ drivers/scsi/isci/host.c          |   23 +
+ drivers/scsi/isci/init.c          |    2 
+ drivers/scsi/isci/port.c          |  146 +++-----
+ drivers/scsi/isci/port.h          |    6 
+ drivers/scsi/isci/probe_roms.h    |    4 
+ drivers/scsi/isci/remote_device.c |   85 -----
+ drivers/scsi/isci/remote_device.h |    5 
+ drivers/scsi/isci/request.c       |   52 +--
+ drivers/scsi/isci/request.h       |    6 
+ drivers/scsi/isci/task.c          |  698 ++++++++++++-------------------------
+ drivers/scsi/isci/task.h          |   35 --
+ 11 files changed, 337 insertions(+), 725 deletions(-)
