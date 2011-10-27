@@ -1,407 +1,141 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 10/11] isci: revert bcn filtering
-Date: Thu, 27 Oct 2011 15:05:37 -0700
-Message-ID: <20111027220537.4941.2766.stgit@localhost6.localdomain6>
+Subject: [PATCH 11/11] isci: overriding max_concurr_spinup oem parameter by
+ max(oem, user)
+Date: Thu, 27 Oct 2011 15:05:42 -0700
+Message-ID: <20111027220542.4941.84931.stgit@localhost6.localdomain6>
 References: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:61052 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:39874 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754292Ab1J0WFi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2011 18:05:38 -0400
+	id S1755096Ab1J0WFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 18:05:43 -0400
 In-Reply-To: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Andrzej Jakowski <andrzej.jakowski@intel.com>
 
-The initial bcn filtering implementation was validated on a kernel
-baseline that predated the switch to new libata error handling.  Also,
-prior to that conversion we borrowed the mvsas MVS_DEV_EH approach to
-prevent the unwanted extra ap->ops->phy_reset(ap) that occurred in the
-ata_bus_probe() path.
+From: Andrzej Jakowski <andrzej.jakowski@intel.com>
 
-After the conversion to new libata eh resets at discovery are more
-frequent and get filtered prematurely by IDEV_EH.  The result is that
-our bcn filtering has been blocked from running and at discovery and it
-appears to stall discovery completion to the point of triggering hung
-task timeouts.  So, revert the implementation for now.  When it returns
-it will go into libsas proper.
+Fixes bug where max_concurr_spinup oem parameter should be
+overriden by max_concurr_spinup user parameter. Override should
+happen only when max_concurr_spinup user parameter is specified
+in command line (greater than 0). Also this fix shortens variables
+representing max_conxurr_spinup for oem and user parameters.
 
-The domain rediscovery that takes place due to ->lldd_I_T_nexus_reset()
-events should now be properly waited for by the ata_port_wait_eh() call
-in ata_port_probe().  So the hard coded delay in the isci
-->lldd_I_T_nexus_reset() and other libsas drivers should help debounce
-the libsas thread from seeing temporary device removals.
-
+Signed-off-by: Andrzej Jakowski <andrzej.jakowski@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/port.c |   45 +--------
- drivers/scsi/isci/port.h |    5 -
- drivers/scsi/isci/task.c |  235 ----------------------------------------------
- 3 files changed, 4 insertions(+), 281 deletions(-)
+ drivers/scsi/isci/host.c       |   23 ++++++++++++++++-------
+ drivers/scsi/isci/init.c       |    2 +-
+ drivers/scsi/isci/probe_roms.h |    4 ++--
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index bfeb879..ac7f277 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -145,48 +145,15 @@ static void sci_port_bcn_enable(struct isci_port *iport)
- 	}
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index f07f30f..e7fe9c4 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1350,7 +1350,7 @@ static void isci_user_parameters_get(struct sci_user_parameters *u)
+ 	u->stp_max_occupancy_timeout = stp_max_occ_to;
+ 	u->ssp_max_occupancy_timeout = ssp_max_occ_to;
+ 	u->no_outbound_task_timeout = no_outbound_task_to;
+-	u->max_number_concurrent_device_spin_up = max_concurr_spinup;
++	u->max_concurr_spinup = max_concurr_spinup;
  }
  
--/* called under sci_lock to stabilize phy:port associations */
--void isci_port_bcn_enable(struct isci_host *ihost, struct isci_port *iport)
--{
--	int i;
--
--	clear_bit(IPORT_BCN_BLOCKED, &iport->flags);
--	wake_up(&ihost->eventq);
--
--	if (!test_and_clear_bit(IPORT_BCN_PENDING, &iport->flags))
--		return;
--
--	for (i = 0; i < ARRAY_SIZE(iport->phy_table); i++) {
--		struct isci_phy *iphy = iport->phy_table[i];
--
--		if (!iphy)
--			continue;
--
--		ihost->sas_ha.notify_port_event(&iphy->sas_phy,
--						PORTE_BROADCAST_RCVD);
--		break;
--	}
--}
--
- static void isci_port_bc_change_received(struct isci_host *ihost,
- 					 struct isci_port *iport,
- 					 struct isci_phy *iphy)
+ static void sci_controller_initial_state_enter(struct sci_base_state_machine *sm)
+@@ -1661,7 +1661,7 @@ static void sci_controller_set_default_config_parameters(struct isci_host *ihost
+ 	ihost->oem_parameters.controller.mode_type = SCIC_PORT_AUTOMATIC_CONFIGURATION_MODE;
+ 
+ 	/* Default to APC mode. */
+-	ihost->oem_parameters.controller.max_concurrent_dev_spin_up = 1;
++	ihost->oem_parameters.controller.max_concurr_spin_up = 1;
+ 
+ 	/* Default to no SSC operation. */
+ 	ihost->oem_parameters.controller.do_enable_ssc = false;
+@@ -1787,7 +1787,8 @@ int sci_oem_parameters_validate(struct sci_oem_params *oem)
+ 	} else
+ 		return -EINVAL;
+ 
+-	if (oem->controller.max_concurrent_dev_spin_up > MAX_CONCURRENT_DEVICE_SPIN_UP_COUNT)
++	if (oem->controller.max_concurr_spin_up > MAX_CONCURRENT_DEVICE_SPIN_UP_COUNT ||
++	    oem->controller.max_concurr_spin_up < 1)
+ 		return -EINVAL;
+ 
+ 	return 0;
+@@ -1810,6 +1811,16 @@ static enum sci_status sci_oem_parameters_set(struct isci_host *ihost)
+ 	return SCI_FAILURE_INVALID_STATE;
+ }
+ 
++static u8 max_spin_up(struct isci_host *ihost)
++{
++	if (ihost->user_parameters.max_concurr_spinup)
++		return min_t(u8, ihost->user_parameters.max_concurr_spinup,
++			     MAX_CONCURRENT_DEVICE_SPIN_UP_COUNT);
++	else
++		return min_t(u8, ihost->oem_parameters.controller.max_concurr_spin_up,
++			     MAX_CONCURRENT_DEVICE_SPIN_UP_COUNT);
++}
++
+ static void power_control_timeout(unsigned long data)
  {
--	if (iport && test_bit(IPORT_BCN_BLOCKED, &iport->flags)) {
--		dev_dbg(&ihost->pdev->dev,
--			"%s: disabled BCN; isci_phy = %p, sas_phy = %p\n",
--			__func__, iphy, &iphy->sas_phy);
--		set_bit(IPORT_BCN_PENDING, &iport->flags);
--		atomic_inc(&iport->event);
--		wake_up(&ihost->eventq);
--	} else {
--		dev_dbg(&ihost->pdev->dev,
--			"%s: isci_phy = %p, sas_phy = %p\n",
--			__func__, iphy, &iphy->sas_phy);
-+	dev_dbg(&ihost->pdev->dev,
-+		"%s: isci_phy = %p, sas_phy = %p\n",
-+		__func__, iphy, &iphy->sas_phy);
+ 	struct sci_timer *tmr = (struct sci_timer *)data;
+@@ -1839,8 +1850,7 @@ static void power_control_timeout(unsigned long data)
+ 		if (iphy == NULL)
+ 			continue;
  
--		ihost->sas_ha.notify_port_event(&iphy->sas_phy,
--						PORTE_BROADCAST_RCVD);
--	}
-+	ihost->sas_ha.notify_port_event(&iphy->sas_phy, PORTE_BROADCAST_RCVD);
- 	sci_port_bcn_enable(iport);
- }
+-		if (ihost->power_control.phys_granted_power >=
+-		    ihost->oem_parameters.controller.max_concurrent_dev_spin_up)
++		if (ihost->power_control.phys_granted_power >= max_spin_up(ihost))
+ 			break;
  
-@@ -278,9 +245,6 @@ static void isci_port_link_down(struct isci_host *isci_host,
- 		/* check to see if this is the last phy on this port. */
- 		if (isci_phy->sas_phy.port &&
- 		    isci_phy->sas_phy.port->num_phys == 1) {
--			atomic_inc(&isci_port->event);
--			isci_port_bcn_enable(isci_host, isci_port);
--
- 			/* change the state for all devices on this port.  The
- 			 * next task sent to this device will be returned as
- 			 * SAS_TASK_UNDELIVERED, and the scsi mid layer will
-@@ -1672,7 +1636,6 @@ void isci_port_init(struct isci_port *iport, struct isci_host *ihost, int index)
- 	init_completion(&iport->start_complete);
- 	iport->isci_host = ihost;
- 	isci_port_change_state(iport, isci_freed);
--	atomic_set(&iport->event, 0);
- }
- 
- /**
-diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
-index e84d22a..cb5ffbc 100644
---- a/drivers/scsi/isci/port.h
-+++ b/drivers/scsi/isci/port.h
-@@ -77,7 +77,6 @@ enum isci_status {
- 
- /**
-  * struct isci_port - isci direct attached sas port object
-- * @event: counts bcns and port stop events (for bcn filtering)
-  * @ready_exit: several states constitute 'ready'. When exiting ready we
-  *              need to take extra port-teardown actions that are
-  *              skipped when exiting to another 'ready' state.
-@@ -92,10 +91,6 @@ enum isci_status {
-  */
- struct isci_port {
- 	enum isci_status status;
--	#define IPORT_BCN_BLOCKED 0
--	#define IPORT_BCN_PENDING 1
--	unsigned long flags;
--	atomic_t event;
- 	struct isci_host *isci_host;
- 	struct asd_sas_port sas_port;
- 	struct list_head remote_dev_list;
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 6d8ff15..66ad3dc 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -1331,226 +1331,10 @@ isci_task_request_complete(struct isci_host *ihost,
- 		complete(tmf_complete);
- }
- 
--static void isci_smp_task_timedout(unsigned long _task)
--{
--	struct sas_task *task = (void *) _task;
--	unsigned long flags;
--
--	spin_lock_irqsave(&task->task_state_lock, flags);
--	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
--		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
--	spin_unlock_irqrestore(&task->task_state_lock, flags);
--
--	complete(&task->completion);
--}
--
--static void isci_smp_task_done(struct sas_task *task)
--{
--	if (!del_timer(&task->timer))
--		return;
--	complete(&task->completion);
--}
--
--static int isci_smp_execute_task(struct isci_host *ihost,
--				 struct domain_device *dev, void *req,
--				 int req_size, void *resp, int resp_size)
--{
--	int res, retry;
--	struct sas_task *task = NULL;
--
--	for (retry = 0; retry < 3; retry++) {
--		task = sas_alloc_task(GFP_KERNEL);
--		if (!task)
--			return -ENOMEM;
--
--		task->dev = dev;
--		task->task_proto = dev->tproto;
--		sg_init_one(&task->smp_task.smp_req, req, req_size);
--		sg_init_one(&task->smp_task.smp_resp, resp, resp_size);
--
--		task->task_done = isci_smp_task_done;
--
--		task->timer.data = (unsigned long) task;
--		task->timer.function = isci_smp_task_timedout;
--		task->timer.expires = jiffies + 10*HZ;
--		add_timer(&task->timer);
--
--		res = isci_task_execute_task(task, 1, GFP_KERNEL);
--
--		if (res) {
--			del_timer(&task->timer);
--			dev_dbg(&ihost->pdev->dev,
--				"%s: executing SMP task failed:%d\n",
--				__func__, res);
--			goto ex_err;
--		}
--
--		wait_for_completion(&task->completion);
--		res = -ECOMM;
--		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
--			dev_dbg(&ihost->pdev->dev,
--				"%s: smp task timed out or aborted\n",
--				__func__);
--			isci_task_abort_task(task);
--			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
--				dev_dbg(&ihost->pdev->dev,
--					"%s: SMP task aborted and not done\n",
--					__func__);
--				goto ex_err;
--			}
--		}
--		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		    task->task_status.stat == SAM_STAT_GOOD) {
--			res = 0;
--			break;
--		}
--		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		      task->task_status.stat == SAS_DATA_UNDERRUN) {
--			/* no error, but return the number of bytes of
--			* underrun */
--			res = task->task_status.residual;
--			break;
--		}
--		if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		      task->task_status.stat == SAS_DATA_OVERRUN) {
--			res = -EMSGSIZE;
--			break;
--		} else {
--			dev_dbg(&ihost->pdev->dev,
--				"%s: task to dev %016llx response: 0x%x "
--				"status 0x%x\n", __func__,
--				SAS_ADDR(dev->sas_addr),
--				task->task_status.resp,
--				task->task_status.stat);
--			sas_free_task(task);
--			task = NULL;
--		}
--	}
--ex_err:
--	BUG_ON(retry == 3 && task != NULL);
--	sas_free_task(task);
--	return res;
--}
--
--#define DISCOVER_REQ_SIZE  16
--#define DISCOVER_RESP_SIZE 56
--
--int isci_smp_get_phy_attached_dev_type(struct isci_host *ihost,
--				       struct domain_device *dev,
--				       int phy_id, int *adt)
--{
--	struct smp_resp *disc_resp;
--	u8 *disc_req;
--	int res;
--
--	disc_resp = kzalloc(DISCOVER_RESP_SIZE, GFP_KERNEL);
--	if (!disc_resp)
--		return -ENOMEM;
--
--	disc_req = kzalloc(DISCOVER_REQ_SIZE, GFP_KERNEL);
--	if (disc_req) {
--		disc_req[0] = SMP_REQUEST;
--		disc_req[1] = SMP_DISCOVER;
--		disc_req[9] = phy_id;
--	} else {
--		kfree(disc_resp);
--		return -ENOMEM;
--	}
--	res = isci_smp_execute_task(ihost, dev, disc_req, DISCOVER_REQ_SIZE,
--				    disc_resp, DISCOVER_RESP_SIZE);
--	if (!res) {
--		if (disc_resp->result != SMP_RESP_FUNC_ACC)
--			res = disc_resp->result;
--		else
--			*adt = disc_resp->disc.attached_dev_type;
--	}
--	kfree(disc_req);
--	kfree(disc_resp);
--
--	return res;
--}
--
--static void isci_wait_for_smp_phy_reset(struct isci_remote_device *idev, int phy_num)
--{
--	struct domain_device *dev = idev->domain_dev;
--	struct isci_port *iport = idev->isci_port;
--	struct isci_host *ihost = iport->isci_host;
--	int res, iteration = 0, attached_device_type;
--	#define STP_WAIT_MSECS 25000
--	unsigned long tmo = msecs_to_jiffies(STP_WAIT_MSECS);
--	unsigned long deadline = jiffies + tmo;
--	enum {
--		SMP_PHYWAIT_PHYDOWN,
--		SMP_PHYWAIT_PHYUP,
--		SMP_PHYWAIT_DONE
--	} phy_state = SMP_PHYWAIT_PHYDOWN;
--
--	/* While there is time, wait for the phy to go away and come back */
--	while (time_is_after_jiffies(deadline) && phy_state != SMP_PHYWAIT_DONE) {
--		int event = atomic_read(&iport->event);
--
--		++iteration;
--
--		tmo = wait_event_timeout(ihost->eventq,
--					 event != atomic_read(&iport->event) ||
--					 !test_bit(IPORT_BCN_BLOCKED, &iport->flags),
--					 tmo);
--		/* link down, stop polling */
--		if (!test_bit(IPORT_BCN_BLOCKED, &iport->flags))
--			break;
--
--		dev_dbg(&ihost->pdev->dev,
--			"%s: iport %p, iteration %d,"
--			" phase %d: time_remaining %lu, bcns = %d\n",
--			__func__, iport, iteration, phy_state,
--			tmo, test_bit(IPORT_BCN_PENDING, &iport->flags));
--
--		res = isci_smp_get_phy_attached_dev_type(ihost, dev, phy_num,
--							 &attached_device_type);
--		tmo = deadline - jiffies;
--
--		if (res) {
--			dev_dbg(&ihost->pdev->dev,
--				 "%s: iteration %d, phase %d:"
--				 " SMP error=%d, time_remaining=%lu\n",
--				 __func__, iteration, phy_state, res, tmo);
--			break;
--		}
--		dev_dbg(&ihost->pdev->dev,
--			"%s: iport %p, iteration %d,"
--			" phase %d: time_remaining %lu, bcns = %d, "
--			"attdevtype = %x\n",
--			__func__, iport, iteration, phy_state,
--			tmo, test_bit(IPORT_BCN_PENDING, &iport->flags),
--			attached_device_type);
--
--		switch (phy_state) {
--		case SMP_PHYWAIT_PHYDOWN:
--			/* Has the device gone away? */
--			if (!attached_device_type)
--				phy_state = SMP_PHYWAIT_PHYUP;
--
--			break;
--
--		case SMP_PHYWAIT_PHYUP:
--			/* Has the device come back? */
--			if (attached_device_type)
--				phy_state = SMP_PHYWAIT_DONE;
--			break;
--
--		case SMP_PHYWAIT_DONE:
--			break;
--		}
--
--	}
--	dev_dbg(&ihost->pdev->dev, "%s: done\n",  __func__);
--}
--
- static int isci_reset_device(struct isci_host *ihost,
- 			     struct isci_remote_device *idev)
+ 		ihost->power_control.requesters[i] = NULL;
+@@ -1865,8 +1875,7 @@ void sci_controller_power_control_queue_insert(struct isci_host *ihost,
  {
- 	struct sas_phy *phy = sas_find_local_phy(idev->domain_dev);
--	struct isci_port *iport = idev->isci_port;
- 	enum sci_status status;
- 	unsigned long flags;
- 	int rc;
-@@ -1570,10 +1354,6 @@ static int isci_reset_device(struct isci_host *ihost,
- 	}
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ 	BUG_ON(iphy == NULL);
  
--	/* If this is a device on an expander, disable BCN processing. */
--	if (!scsi_is_sas_phy_local(phy))
--		set_bit(IPORT_BCN_BLOCKED, &iport->flags);
--
- 	rc = sas_phy_reset(phy, true);
+-	if (ihost->power_control.phys_granted_power <
+-	    ihost->oem_parameters.controller.max_concurrent_dev_spin_up) {
++	if (ihost->power_control.phys_granted_power < max_spin_up(ihost)) {
+ 		ihost->power_control.phys_granted_power++;
+ 		sci_phy_consume_power_handler(iphy);
  
- 	/* Terminate in-progress I/O now. */
-@@ -1584,21 +1364,6 @@ static int isci_reset_device(struct isci_host *ihost,
- 	status = sci_remote_device_reset_complete(idev);
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 43fe840..a97edab 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -118,7 +118,7 @@ unsigned char phy_gen = 3;
+ module_param(phy_gen, byte, 0);
+ MODULE_PARM_DESC(phy_gen, "PHY generation (1: 1.5Gbps 2: 3.0Gbps 3: 6.0Gbps)");
  
--	/* If this is a device on an expander, bring the phy back up. */
--	if (!scsi_is_sas_phy_local(phy)) {
--		/* A phy reset will cause the device to go away then reappear.
--		 * Since libsas will take action on incoming BCNs (eg. remove
--		 * a device going through an SMP phy-control driven reset),
--		 * we need to wait until the phy comes back up before letting
--		 * discovery proceed in libsas.
--		 */
--		isci_wait_for_smp_phy_reset(idev, phy->number);
--
--		spin_lock_irqsave(&ihost->scic_lock, flags);
--		isci_port_bcn_enable(ihost, idev->isci_port);
--		spin_unlock_irqrestore(&ihost->scic_lock, flags);
--	}
--
- 	if (status != SCI_SUCCESS) {
- 		dev_dbg(&ihost->pdev->dev,
- 			 "%s: sci_remote_device_reset_complete(%p) "
+-unsigned char max_concurr_spinup = 1;
++unsigned char max_concurr_spinup;
+ module_param(max_concurr_spinup, byte, 0);
+ MODULE_PARM_DESC(max_concurr_spinup, "Max concurrent device spinup");
+ 
+diff --git a/drivers/scsi/isci/probe_roms.h b/drivers/scsi/isci/probe_roms.h
+index dc007e6..2c75248 100644
+--- a/drivers/scsi/isci/probe_roms.h
++++ b/drivers/scsi/isci/probe_roms.h
+@@ -112,7 +112,7 @@ struct sci_user_parameters {
+ 	 * This field specifies the maximum number of direct attached devices
+ 	 * that can have power supplied to them simultaneously.
+ 	 */
+-	u8 max_number_concurrent_device_spin_up;
++	u8 max_concurr_spinup;
+ 
+ 	/**
+ 	 * This field specifies the number of seconds to allow a phy to consume
+@@ -219,7 +219,7 @@ struct sci_bios_oem_param_block_hdr {
+ struct sci_oem_params {
+ 	struct {
+ 		uint8_t mode_type;
+-		uint8_t max_concurrent_dev_spin_up;
++		uint8_t max_concurr_spin_up;
+ 		uint8_t do_enable_ssc;
+ 		uint8_t reserved;
+ 	} controller;
 
