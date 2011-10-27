@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 07/11] isci: Remove redundant isci_request.ttype field.
-Date: Thu, 27 Oct 2011 15:05:22 -0700
-Message-ID: <20111027220521.4941.68732.stgit@localhost6.localdomain6>
+Subject: [PATCH 08/11] isci: No need to manage the pending reset bit on
+ pending requests.
+Date: Thu, 27 Oct 2011 15:05:27 -0700
+Message-ID: <20111027220527.4941.243.stgit@localhost6.localdomain6>
 References: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,8 +10,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga14.intel.com ([143.182.124.37]:34588 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754292Ab1J0WF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Oct 2011 18:05:28 -0400
+	id S1754292Ab1J0WFb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Oct 2011 18:05:31 -0400
 In-Reply-To: <20111027220346.4941.43260.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,248 +20,86 @@ Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
 From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-Use the existing IREQ_TMF flag as a request type indicator.
+The lldd does not need to look at or manage the pending device
+reset bit in pending sas_tasks.
 
 Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/remote_device.c |   11 +++------
- drivers/scsi/isci/request.c       |   45 ++++++++++---------------------------
- drivers/scsi/isci/request.h       |    6 -----
- drivers/scsi/isci/task.c          |   29 ++++++++++++------------
- 4 files changed, 31 insertions(+), 60 deletions(-)
+ drivers/scsi/isci/remote_device.c |   35 -----------------------------------
+ drivers/scsi/isci/remote_device.h |    3 +--
+ drivers/scsi/isci/task.c          |    3 ---
+ 3 files changed, 1 insertions(+), 40 deletions(-)
 
 diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index 20c77ed..9d9e33d 100644
+index 9d9e33d..b207cd3 100644
 --- a/drivers/scsi/isci/remote_device.c
 +++ b/drivers/scsi/isci/remote_device.c
-@@ -1463,15 +1463,12 @@ void isci_device_clear_reset_pending(struct isci_host *ihost, struct isci_remote
- 		dev_dbg(&ihost->pdev->dev, "%s: idev = %p request = %p\n",
- 			 __func__, idev, isci_request);
+@@ -1438,38 +1438,3 @@ int isci_remote_device_found(struct domain_device *domain_dev)
  
--		if (isci_request->ttype == io_task) {
-+		if (!test_bit(IREQ_TMF, &isci_request->flags)) {
-+			struct sas_task *task = isci_request_access_task(isci_request);
- 
--			unsigned long flags2;
--			struct sas_task *task = isci_request_access_task(
--				isci_request);
--
--			spin_lock_irqsave(&task->task_state_lock, flags2);
-+			spin_lock(&task->task_state_lock);
- 			task->task_state_flags &= ~SAS_TASK_NEED_DEV_RESET;
--			spin_unlock_irqrestore(&task->task_state_lock, flags2);
-+			spin_unlock(&task->task_state_lock);
- 		}
- 	}
- 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index bfc7379..dccb431 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -191,7 +191,7 @@ static void sci_task_request_build_ssp_task_iu(struct isci_request *ireq)
- 
- 	task_iu->task_func = isci_tmf->tmf_code;
- 	task_iu->task_tag =
--		(ireq->ttype == tmf_task) ?
-+		(test_bit(IREQ_TMF, &ireq->flags)) ?
- 		isci_tmf->io_tag :
- 		SCI_CONTROLLER_INVALID_IO_TAG;
+ 	return status == SCI_SUCCESS ? 0 : -ENODEV;
  }
-@@ -516,7 +516,7 @@ sci_io_request_construct_sata(struct isci_request *ireq,
- 	struct domain_device *dev = ireq->target_device->domain_dev;
- 
- 	/* check for management protocols */
--	if (ireq->ttype == tmf_task) {
-+	if (test_bit(IREQ_TMF, &ireq->flags)) {
- 		struct isci_tmf *tmf = isci_request_access_tmf(ireq);
- 
- 		if (tmf->tmf_code == isci_tmf_sata_srst_high ||
-@@ -632,7 +632,7 @@ enum sci_status sci_task_request_construct_sata(struct isci_request *ireq)
- 	enum sci_status status = SCI_SUCCESS;
- 
- 	/* check for management protocols */
--	if (ireq->ttype == tmf_task) {
-+	if (test_bit(IREQ_TMF, &ireq->flags)) {
- 		struct isci_tmf *tmf = isci_request_access_tmf(ireq);
- 
- 		if (tmf->tmf_code == isci_tmf_sata_srst_high ||
-@@ -2630,14 +2630,8 @@ static void isci_task_save_for_upper_layer_completion(
- 	switch (task_notification_selection) {
- 
- 	case isci_perform_normal_io_completion:
 -
- 		/* Normal notification (task_done) */
--		dev_dbg(&host->pdev->dev,
--			"%s: Normal - task = %p, response=%d (%d), status=%d (%d)\n",
--			__func__,
--			task,
--			task->task_status.resp, response,
--			task->task_status.stat, status);
+-/**
+- * isci_device_clear_reset_pending() - This function will clear if any pending
+- *    reset condition flags on the device.
+- * @request: This parameter is the isci_device object.
+- *
+- * true if there is a reset pending for the device.
+- */
+-void isci_device_clear_reset_pending(struct isci_host *ihost, struct isci_remote_device *idev)
+-{
+-	struct isci_request *isci_request;
+-	struct isci_request *tmp_req;
+-	unsigned long flags = 0;
+-
+-	dev_dbg(&ihost->pdev->dev, "%s: idev=%p, ihost=%p\n",
+-		 __func__, idev, ihost);
+-
+-	spin_lock_irqsave(&ihost->scic_lock, flags);
+-
+-	/* Clear reset pending on all pending requests. */
+-	list_for_each_entry_safe(isci_request, tmp_req,
+-				 &idev->reqs_in_process, dev_node) {
+-		dev_dbg(&ihost->pdev->dev, "%s: idev = %p request = %p\n",
+-			 __func__, idev, isci_request);
+-
+-		if (!test_bit(IREQ_TMF, &isci_request->flags)) {
+-			struct sas_task *task = isci_request_access_task(isci_request);
+-
+-			spin_lock(&task->task_state_lock);
+-			task->task_state_flags &= ~SAS_TASK_NEED_DEV_RESET;
+-			spin_unlock(&task->task_state_lock);
+-		}
+-	}
+-	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+-}
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index bee6dd2..483ee50 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -132,8 +132,7 @@ void isci_remote_device_nuke_requests(struct isci_host *ihost,
+ 				      struct isci_remote_device *idev);
+ void isci_remote_device_gone(struct domain_device *domain_dev);
+ int isci_remote_device_found(struct domain_device *domain_dev);
+-void isci_device_clear_reset_pending(struct isci_host *ihost,
+-				     struct isci_remote_device *idev);
 +
- 		/* Add to the completed list. */
- 		list_add(&request->completed_node,
- 			 &host->requests_to_complete);
-@@ -2650,13 +2644,6 @@ static void isci_task_save_for_upper_layer_completion(
- 		/* No notification to libsas because this request is
- 		 * already in the abort path.
- 		 */
--		dev_dbg(&host->pdev->dev,
--			 "%s: Aborted - task = %p, response=%d (%d), status=%d (%d)\n",
--			 __func__,
--			 task,
--			 task->task_status.resp, response,
--			 task->task_status.stat, status);
--
- 		/* Wake up whatever process was waiting for this
- 		 * request to complete.
- 		 */
-@@ -2673,30 +2660,22 @@ static void isci_task_save_for_upper_layer_completion(
- 
- 	case isci_perform_error_io_completion:
- 		/* Use sas_task_abort */
--		dev_dbg(&host->pdev->dev,
--			 "%s: Error - task = %p, response=%d (%d), status=%d (%d)\n",
--			 __func__,
--			 task,
--			 task->task_status.resp, response,
--			 task->task_status.stat, status);
- 		/* Add to the aborted list. */
- 		list_add(&request->completed_node,
- 			 &host->requests_to_errorback);
- 		break;
- 
- 	default:
--		dev_dbg(&host->pdev->dev,
--			 "%s: Unknown - task = %p, response=%d (%d), status=%d (%d)\n",
--			 __func__,
--			 task,
--			 task->task_status.resp, response,
--			 task->task_status.stat, status);
--
- 		/* Add to the error to libsas list. */
- 		list_add(&request->completed_node,
- 			 &host->requests_to_errorback);
- 		break;
- 	}
-+	dev_dbg(&host->pdev->dev,
-+		"%s: %d - task = %p, response=%d (%d), status=%d (%d)\n",
-+		__func__, task_notification_selection, task,
-+		(task) ? task->task_status.resp : 0, response,
-+		(task) ? task->task_status.stat : 0, status);
- }
- 
- static void isci_process_stp_response(struct sas_task *task, struct dev_to_host_fis *fis)
-@@ -3079,7 +3058,7 @@ static void sci_request_started_state_enter(struct sci_base_state_machine *sm)
- 	/* XXX as hch said always creating an internal sas_task for tmf
- 	 * requests would simplify the driver
- 	 */
--	task = ireq->ttype == io_task ? isci_request_access_task(ireq) : NULL;
-+	task = (test_bit(IREQ_TMF, &ireq->flags)) ? NULL : isci_request_access_task(ireq);
- 
- 	/* all unaccelerated request types (non ssp or ncq) handled with
- 	 * substates
-@@ -3563,7 +3542,7 @@ static struct isci_request *isci_io_request_from_tag(struct isci_host *ihost,
- 
- 	ireq = isci_request_from_tag(ihost, tag);
- 	ireq->ttype_ptr.io_task_ptr = task;
--	ireq->ttype = io_task;
-+	clear_bit(IREQ_TMF, &ireq->flags);;
- 	task->lldd_task = ireq;
- 
- 	return ireq;
-@@ -3577,7 +3556,7 @@ struct isci_request *isci_tmf_request_from_tag(struct isci_host *ihost,
- 
- 	ireq = isci_request_from_tag(ihost, tag);
- 	ireq->ttype_ptr.tmf_task_ptr = isci_tmf;
--	ireq->ttype = tmf_task;
-+	set_bit(IREQ_TMF, &ireq->flags);
- 
- 	return ireq;
- }
-diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
-index f720b97..be38933 100644
---- a/drivers/scsi/isci/request.h
-+++ b/drivers/scsi/isci/request.h
-@@ -77,11 +77,6 @@ enum isci_request_status {
- 	dead        = 0x07
- };
- 
--enum task_type {
--	io_task  = 0,
--	tmf_task = 1
--};
--
- enum sci_request_protocol {
- 	SCIC_NO_PROTOCOL,
- 	SCIC_SMP_PROTOCOL,
-@@ -116,7 +111,6 @@ struct isci_request {
- 	#define IREQ_ACTIVE 3
- 	unsigned long flags;
- 	/* XXX kill ttype and ttype_ptr, allocate full sas_task */
--	enum task_type ttype;
- 	union ttype_ptr_union {
- 		struct sas_task *io_task_ptr;   /* When ttype==io_task  */
- 		struct isci_tmf *tmf_task_ptr;  /* When ttype==tmf_task */
+ /**
+  * sci_remote_device_stop() - This method will stop both transmission and
+  *    reception of link activity for the supplied remote device.  This method
 diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index ec85beb..80e1a69 100644
+index 80e1a69..6d8ff15 100644
 --- a/drivers/scsi/isci/task.c
 +++ b/drivers/scsi/isci/task.c
-@@ -254,7 +254,7 @@ static enum sci_status isci_sata_management_task_request_build(struct isci_reque
- 	struct isci_tmf *isci_tmf;
- 	enum sci_status status;
- 
--	if (tmf_task != ireq->ttype)
-+	if (!test_bit(IREQ_TMF, &ireq->flags))
- 		return SCI_FAILURE;
- 
- 	isci_tmf = isci_request_access_tmf(ireq);
-@@ -352,18 +352,7 @@ static void isci_request_mark_zombie(struct isci_host *ihost, struct isci_reques
- 	req_completion = ireq->io_request_completion;
- 	ireq->io_request_completion = NULL;
- 
--	if (ireq->ttype == io_task) {
--
--		/* Break links with the sas_task - the callback is done
--		 * elsewhere.
--		 */
--		struct sas_task *task = isci_request_access_task(ireq);
--
--		if (task)
--			task->lldd_task = NULL;
--
--		ireq->ttype_ptr.io_task_ptr = NULL;
--	} else {
-+	if (test_bit(IREQ_TMF, &ireq->flags)) {
- 		/* Break links with the TMF request. */
- 		struct isci_tmf *tmf = isci_request_access_tmf(ireq);
- 
-@@ -380,6 +369,16 @@ static void isci_request_mark_zombie(struct isci_host *ihost, struct isci_reques
- 		ireq->ttype_ptr.tmf_task_ptr = NULL;
- 		dev_dbg(&ihost->pdev->dev, "%s: tmf_code %d, managed tag %#x\n",
- 			__func__, tmf->tmf_code, tmf->io_tag);
-+	} else {
-+		/* Break links with the sas_task - the callback is done
-+		 * elsewhere.
-+		 */
-+		struct sas_task *task = isci_request_access_task(ireq);
-+
-+		if (task)
-+			task->lldd_task = NULL;
-+
-+		ireq->ttype_ptr.io_task_ptr = NULL;
+@@ -1570,9 +1570,6 @@ static int isci_reset_device(struct isci_host *ihost,
  	}
+ 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
  
- 	dev_warn(&ihost->pdev->dev, "task context unrecoverable (tag: %#x)\n",
-@@ -803,7 +802,9 @@ void isci_terminate_pending_requests(struct isci_host *ihost,
- 		dev_dbg(&ihost->pdev->dev,
- 			 "%s: idev=%p request=%p; task=%p old_state=%d\n",
- 			 __func__, idev, ireq,
--			ireq->ttype == io_task ? isci_request_access_task(ireq) : NULL,
-+			(!test_bit(IREQ_TMF, &ireq->flags)
-+				? isci_request_access_task(ireq)
-+				: NULL),
- 			old_state);
- 
- 		/* If the old_state is started:
+-	/* Make sure all pending requests are able to be fully terminated. */
+-	isci_device_clear_reset_pending(ihost, idev);
+-
+ 	/* If this is a device on an expander, disable BCN processing. */
+ 	if (!scsi_is_sas_phy_local(phy))
+ 		set_bit(IPORT_BCN_BLOCKED, &iport->flags);
 
