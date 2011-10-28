@@ -1,48 +1,77 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 4/6 v2] PM: Limit race conditions between
- runtime PM and system sleep (v2)
-Date: Fri, 28 Oct 2011 22:00:01 +0200
-Message-ID: <CACRpkdahSR0P-hSSJWqhouAn8KwdH-=Tsgg9K0sjeT_JAtDzVg@mail.gmail.com>
-References: <201106260054.20578.rjw@sisk.pl> <201106292334.24518.rjw@sisk.pl>
-	<CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
-	<201110272206.35180.rjw@sisk.pl>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of staging
+Date: Fri, 28 Oct 2011 23:10:40 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481AA542D1@TK5EX14MBXC122.redmond.corp.microsoft.com>
+References: <1318660132-21529-1-git-send-email-kys@microsoft.com>
+	 <1318714047.7271.49.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA0FED0@TK5EX14MBXC128.redmond.corp.microsoft.com>
+	 <1318859976.4794.8.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA15174@TK5EX14MBXC124.redmond.corp.microsoft.com>
+ <1318865202.4794.21.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-In-Reply-To: <201110272206.35180.rjw@sisk.pl>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Ulf Hansson <Ulf.Hansson@stericsson.com>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, stable@kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1318865202.4794.21.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, Haiyang Zhang <haiyangz@microsoft.com>"Christoph Hellwig (hch@infradead.org)" <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 27, 2011 at 10:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
-
->> We are trying to produce
->> a runtime PM system of product quality based on 3.0.y and we've
->> already had to backport this patch ourselves to get things stable.
->>
->> We have also backported:
->> PM: Introduce generic "noirq" callback routines for subsystems (v2)
->> PM / Runtime: Update documentation of interactions with system sleep
->> PM / Runtime: Add new helper function: pm_runtime_status_suspended()
->>
->> And now it seems to be sufficient to get this thing going.
->
-> Well, it isn't a simple fix and it changes the code's behavior quite
-> significantly, so I thought it might not be a good idea to risk problems
-> with -stable because of it. =A0Perhaps let's see how it works out in 3.1
-> and backport it later if there are no problem reports related to it?
-
-OK no hurries, let's give it a spin in 3.1 for some weeks or so.
-
-Yours,
-Linus Walleij
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+TW9uZGF5LCBPY3RvYmVyIDE3LCAyMDExIDExOjI3IEFNDQo+IFRvOiBLWSBTcmluaXZhc2FuDQo+
+IENjOiBncmVna2hAc3VzZS5kZTsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsNCj4gZGV2
+ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgdmlydHVhbGl6YXRpb25AbGlzdHMub3NkbC5vcmc7
+IG9oZXJpbmdAc3VzZS5jb207DQo+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBoY2hAaW5m
+cmFkZWFkLm9yZzsgSGFpeWFuZyBaaGFuZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIDEvMV0gU3Rh
+Z2luZzogaHY6IHN0b3J2c2M6IE1vdmUgdGhlIHN0b3JhZ2UgZHJpdmVyIG91dCBvZg0KPiBzdGFn
+aW5nDQo+IA0KPiBPbiBNb24sIDIwMTEtMTAtMTcgYXQgMTU6MTUgKzAwMDAsIEtZIFNyaW5pdmFz
+YW4gd3JvdGU6DQo+IA0KPiA+IEFzIEkgZGVhbCB3aXRoIHRoZSByZXZpZXcgY29tbWVudHMgbm93
+LCBkbyB5b3Ugd2FudCBtZSB0byBnZXQgdGhlc2UNCj4gPiBjaGFuZ2VzDQo+ID4gYXBwbGllZCBm
+aXJzdCB0byBHcmVnJ3MgdHJlZSBiZWZvcmUgeW91IHdvdWxkIGNvbnNpZGVyIG1vdmluZyB0aGlz
+DQo+ID4gZHJpdmVyIHRvIGRyaXZlcnMvc2NzaQ0KPiA+IGRpcmVjdG9yeSwgb3IgY291bGQgeW91
+IG1vdmUgdGhlIGRyaXZlciBhcyBpdCBpcyBpbiBHcmVnJ3MgdHJlZSB1bmRlcg0KPiA+IHN0YWdp
+bmcgYW5kIEkgY291bGQgZ2l2ZQ0KPiA+IHlvdSBwYXRjaGVzIGFnYWluc3QgdGhlIG1vdmVkIGRy
+aXZlci4NCj4gDQo+IEVpdGhlciB3YXkgaXMgZmluZSBieSBtZS4gIFRoZSBiZXN0IHJvdXRlIGZv
+ciB0aGlzIGlzIHRvIGdldCB0aGUgc3RhZ2luZw0KPiB1cGRhdGUgaW50byBMaW51cyBoZWFkLCB0
+aGVuIHdvcmsgb24gdGhlIGFjdHVhbCBTQ1NJIHByb2JsZW1zLiAgSSdkIGxpa2UNCj4gb3RoZXIg
+U0NTSSBwZW9wbGUgYmVzaWRlcyBtZSB0byByZXZpZXcgaXQuDQoNCkNocmlzdG9waCBoYWQgcmV2
+aWV3ZWQgdGhpcyBjb2RlIHNvbWV0aW1lIGJhY2sgYW5kIEkgdGhpbmsgSSBoYXZlIGFkZHJlc3Nl
+ZCB0aGUNCmlzc3VlcyBoZSBoYWQgcmFpc2VkLiBUaGVzZSBwYXRjaGVzIGhhdmUgYWxyZWFkeSBi
+ZWVuIGFwcGxpZWQgYnkgR3JlZyB0byBoaXMNCnN0YWdpbmcgdHJlZS4NCg0KPiANCj4gPiA+IE9L
+LCBzbyBhcyBJIHJlYWQgdGhlIGNvZGUsIHdoYXQgaXQgY2FuJ3QgaGFuZGxlIGlzIGZyYWdtZW50
+cyBleGNlcHQgYXQNCj4gPiA+IHRoZSBlbmRzLiAgQXMgbG9uZyBhcyBldmVyeXRoaW5nIGFsd2F5
+cyB0cmFuc2ZlcnMgaW4gbXVsdGlwbGVzIG9mIDRrLA0KPiA+ID4gdGhlIHByb2JsZW0gd2lsbCBu
+ZXZlciBvY2N1ci4gIFRoaXMgbWVhbnMgdGhhdCBhbGwgZGV2aWNlcyB5b3UgcHJlc2VudA0KPiA+
+ID4gbmVlZCB0byB0ZWxsIHRoZSBPUyB0aGV5IGhhdmUgNGsgc2VjdG9ycy4gIEkgKnRoaW5rKiB5
+b3UgY2FuIGRvIHRoaXMgYnkNCj4gPiA+IHNldHRpbmcgIGJsa19saW1pdHNfaW9fbWluKCkgaW4g
+dGhlIGRyaXZlciAuLi4gYnV0IHlvdSdsbCBoYXZlIHRvIHRlc3QNCj4gPiA+IHRoaXMuICBUaGUg
+bWluaW11bSBzZWN0b3Igc2l6ZSBnZXRzIHNldCBhbHNvIGluIHNkLmMgd2hlbiB3ZSBwcm9iZSB0
+aGUNCj4gPiA+IGRpc2suICBJIHRoaW5rIHRoYXQgd29uJ3Qgb3ZlcnJpZGUgYmxrX2xpbWl0c19p
+b19taW4oKSwgYnV0IHBsZWFzZSB0ZXN0DQo+ID4gPiAod2UgZG9uJ3QgaGF2ZSBhbnkgU0NTSSBk
+cml2ZXJzIHdoaWNoIGhhdmUgZXZlciB1c2VkIHRoaXMgc2V0dGluZykuDQo+ID4gPg0KPiA+ID4g
+VGhlIHdheSB0byB0ZXN0LCBpcyB0byByZWFkIGJhY2sgdGhlIC9zeXMvYmxvY2svPGRldj4vcXVl
+dWUvIHNldHRpbmdzDQo+ID4gPiB3aGVuIHByZXNlbnRpbmcgYSA1MTIgYnl0ZSBzZWN0b3IgZGlz
+ay4gIChBbmQgdGhlIHdheSB0byBhY3RpdmF0ZSB5b3VyDQo+ID4gPiBib3VuY2UgY29kZSB3b3Vs
+ZCBiZSB0byBjcmVhdGUgYSBmaWxlc3lzdGVtIHdpdGggYSA8IFBBR0VfU0laRSBibG9jaw0KPiA+
+ID4gc2l6ZSkuDQo+IA0KPiA+ICBJbiBhbnkgZXZlbnQsIEkgd2lsbCB0cnkgeW91ciBzdWdnZXN0
+aW9uIHRob3VnaC4NCj4gDQo+IEp1c3QgdG8gYmUgY2xlYXI6IFNldHRpbmcgdGhlIG1pbmltdW0g
+SS9PIHNpemUgaXMgY29tcGxldGVseSB3ZWxsDQo+IHRlc3RlZDogaXQncyBob3cgd2UgaGFuZGxl
+IDRrIHNlY3RvciBkcml2ZXMuICBXaGF0IGhhc24ndCBiZWVuIHRlc3RlZCBpcw0KPiB0aGUgYWJp
+bGl0eSBvZiB0aGUgKmRyaXZlciogdG8gZW5mb3JjZSB0aGUgbWluaW11bSB1c2luZw0KPiBibGtf
+bGltaXRzX2lvX21pbigpLiAgQXMgbG9uZyBhdCB0aGF0IGRvZXNuJ3QgZ2V0IG92ZXJyaWRkZW4g
+Ynkgc2Qgd2hlbg0KPiBpdCBzZWVzIGEgNTEyYiBkcml2ZSwgdGhlIHJlc3Qgb2YgdGhlIGJsb2Nr
+IHBhdGhzICh0aG9zZSB3aGljaCBhY3R1YWxseQ0KPiBlbmZvcmNlIHRoZSBtaW5pbXVtKSBoYXZl
+IGFsbCBiZWVuIHdlbGwgdGVzdGVkLg0KPg0KIA0KSmFtZXMsIEkgdXNlZCB0aGUgYmxrX2xpbWl0
+c19pb19taW4oKSB0byA0ayBhbmQgeWV0IEkgc2VlIEkvTyByZXF1ZXN0cyBjb21pbmcgaW4NCnRv
+IHRoZSBkcml2ZXIgdGhhdCBuZWVkIHRvIGJlIGhhbmRsZWQgd2l0aCB0aGUgYm91bmNlIGJ1ZmZl
+cnMuIFNvIEkgYW0gbm90IHF1aXRlDQpzdXJlIGhvdyB0byBhdm9pZCBoYXZpbmcgdGhlIGJvdW5j
+ZSBidWZmZXIgaGFuZGxpbmcgY29kZS4gVGhpcyBpcyB3aXRoIGEgZmlsZSBzeXN0ZW0NCndpdGgg
+MmsgYmxvY2sgc2l6ZS4NCg0KT3RoZXIgdGhhbiB0aGlzLCBJIGhhdmUgYWRkcmVzc2VkIGFsbCBv
+ZiB5b3VyIG90aGVyIGNvbW1lbnRzLiBJIGFtIGdvaW5nIHRvIHNlbmQgdGhlc2UNCnBhdGNoZXMg
+b3V0IHRvIHRoZSBzdGFnaW5nIHRyZWUuIERvIHlvdSB3YW50IG1lIHRvIHNlbmQgb3V0IGEgcGF0
+Y2ggbW92aW5nIHRoZSBkcml2ZXINCm91dCBvZiBzdGFnaW5nIGZvciB5b3VyIHJldmlldyBhcyB3
+ZWxsLiBMZXQgbWUga25vdy4NCg0KUmVnYXJkcywNCg0KSy4gWSANCiAgIA0KDQo=
