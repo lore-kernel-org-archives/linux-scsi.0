@@ -1,171 +1,48 @@
-From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH 4/4] libfc: improve flogi retries to avoid lport stuck
-Date: Fri, 28 Oct 2011 11:34:23 -0700
-Message-ID: <20111028183423.15165.43499.stgit@localhost6.localdomain6>
-References: <20111028183305.15165.96974.stgit@localhost6.localdomain6>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 4/6 v2] PM: Limit race conditions between
+ runtime PM and system sleep (v2)
+Date: Fri, 28 Oct 2011 22:00:01 +0200
+Message-ID: <CACRpkdahSR0P-hSSJWqhouAn8KwdH-=Tsgg9K0sjeT_JAtDzVg@mail.gmail.com>
+References: <201106260054.20578.rjw@sisk.pl> <201106292334.24518.rjw@sisk.pl>
+	<CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
+	<201110272206.35180.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:39686 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933096Ab1J1Sp5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2011 14:45:57 -0400
-In-Reply-To: <20111028183305.15165.96974.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+In-Reply-To: <201110272206.35180.rjw@sisk.pl>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Ulf Hansson <Ulf.Hansson@stericsson.com>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, stable@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: robert.w.love@intel.com, Vasu Dev <vasu.dev@intel.com>, Yi Zou <yi.zou@intel.com>
 
-From: Vasu Dev <vasu.dev@intel.com>
+On Thu, Oct 27, 2011 at 10:06 PM, Rafael J. Wysocki <rjw@sisk.pl> wrote:
 
-Adds more cases to do flogi retry, now also retry
-on getting bad response due to either no ELS response
-or flogi response payload length not large enough.
-In those cases flogi was not retried and that
-was leaving lport offline.
+>> We are trying to produce
+>> a runtime PM system of product quality based on 3.0.y and we've
+>> already had to backport this patch ourselves to get things stable.
+>>
+>> We have also backported:
+>> PM: Introduce generic "noirq" callback routines for subsystems (v2)
+>> PM / Runtime: Update documentation of interactions with system sleep
+>> PM / Runtime: Add new helper function: pm_runtime_status_suspended()
+>>
+>> And now it seems to be sufficient to get this thing going.
+>
+> Well, it isn't a simple fix and it changes the code's behavior quite
+> significantly, so I thought it might not be a good idea to risk problems
+> with -stable because of it. =A0Perhaps let's see how it works out in 3.1
+> and backport it later if there are no problem reports related to it?
 
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-Tested-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Signed-off-by: Yi Zou <yi.zou@intel.com>
----
+OK no hurries, let's give it a spin in 3.1 for some weeks or so.
 
- drivers/scsi/fcoe/fcoe.c      |   13 ++----
- drivers/scsi/libfc/fc_lport.c |   90 ++++++++++++++++++++++-------------------
- 2 files changed, 54 insertions(+), 49 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 66fbff9..04686b5 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2365,14 +2365,11 @@ static void fcoe_flogi_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 		goto done;
- 
- 	mac = fr_cb(fp)->granted_mac;
--	if (is_zero_ether_addr(mac)) {
--		/* pre-FIP */
--		if (fcoe_ctlr_recv_flogi(fip, lport, fp)) {
--			fc_frame_free(fp);
--			return;
--		}
--	}
--	fcoe_update_src_mac(lport, mac);
-+	/* pre-FIP */
-+	if (is_zero_ether_addr(mac))
-+		fcoe_ctlr_recv_flogi(fip, lport, fp);
-+	if (!is_zero_ether_addr(mac))
-+		fcoe_update_src_mac(lport, mac);
- done:
- 	fc_lport_flogi_resp(seq, fp, lport);
- }
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e0fb891..2cb12b9 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1473,6 +1473,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			 void *lp_arg)
- {
- 	struct fc_lport *lport = lp_arg;
-+	struct fc_frame_header *fh;
- 	struct fc_els_flogi *flp;
- 	u32 did;
- 	u16 csp_flags;
-@@ -1500,49 +1501,56 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		goto err;
- 	}
- 
-+	fh = fc_frame_header_get(fp);
- 	did = fc_frame_did(fp);
--	if (fc_frame_payload_op(fp) == ELS_LS_ACC && did) {
--		flp = fc_frame_payload_get(fp, sizeof(*flp));
--		if (flp) {
--			mfs = ntohs(flp->fl_csp.sp_bb_data) &
--				FC_SP_BB_DATA_MASK;
--			if (mfs >= FC_SP_MIN_MAX_PAYLOAD &&
--			    mfs < lport->mfs)
--				lport->mfs = mfs;
--			csp_flags = ntohs(flp->fl_csp.sp_features);
--			r_a_tov = ntohl(flp->fl_csp.sp_r_a_tov);
--			e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
--			if (csp_flags & FC_SP_FT_EDTR)
--				e_d_tov /= 1000000;
--
--			lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
--
--			if ((csp_flags & FC_SP_FT_FPORT) == 0) {
--				if (e_d_tov > lport->e_d_tov)
--					lport->e_d_tov = e_d_tov;
--				lport->r_a_tov = 2 * e_d_tov;
--				fc_lport_set_port_id(lport, did, fp);
--				printk(KERN_INFO "host%d: libfc: "
--				       "Port (%6.6x) entered "
--				       "point-to-point mode\n",
--				       lport->host->host_no, did);
--				fc_lport_ptp_setup(lport, fc_frame_sid(fp),
--						   get_unaligned_be64(
--							   &flp->fl_wwpn),
--						   get_unaligned_be64(
--							   &flp->fl_wwnn));
--			} else {
--				lport->e_d_tov = e_d_tov;
--				lport->r_a_tov = r_a_tov;
--				fc_host_fabric_name(lport->host) =
--					get_unaligned_be64(&flp->fl_wwnn);
--				fc_lport_set_port_id(lport, did, fp);
--				fc_lport_enter_dns(lport);
--			}
--		}
--	} else {
--		FC_LPORT_DBG(lport, "FLOGI RJT or bad response\n");
-+	if (fh->fh_r_ctl != FC_RCTL_ELS_REP || did == 0 ||
-+	    fc_frame_payload_op(fp) != ELS_LS_ACC) {
-+		FC_LPORT_DBG(lport, "FLOGI not accepted or bad response\n");
- 		fc_lport_error(lport, fp);
-+		goto err;
-+	}
-+
-+	flp = fc_frame_payload_get(fp, sizeof(*flp));
-+	if (!flp) {
-+		FC_LPORT_DBG(lport, "FLOGI bad response\n");
-+		fc_lport_error(lport, fp);
-+		goto err;
-+	}
-+
-+	mfs = ntohs(flp->fl_csp.sp_bb_data) &
-+		FC_SP_BB_DATA_MASK;
-+	if (mfs >= FC_SP_MIN_MAX_PAYLOAD &&
-+	    mfs < lport->mfs)
-+		lport->mfs = mfs;
-+	csp_flags = ntohs(flp->fl_csp.sp_features);
-+	r_a_tov = ntohl(flp->fl_csp.sp_r_a_tov);
-+	e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
-+	if (csp_flags & FC_SP_FT_EDTR)
-+		e_d_tov /= 1000000;
-+
-+	lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
-+
-+	if ((csp_flags & FC_SP_FT_FPORT) == 0) {
-+		if (e_d_tov > lport->e_d_tov)
-+			lport->e_d_tov = e_d_tov;
-+		lport->r_a_tov = 2 * e_d_tov;
-+		fc_lport_set_port_id(lport, did, fp);
-+		printk(KERN_INFO "host%d: libfc: "
-+		       "Port (%6.6x) entered "
-+		       "point-to-point mode\n",
-+		       lport->host->host_no, did);
-+		fc_lport_ptp_setup(lport, fc_frame_sid(fp),
-+				   get_unaligned_be64(
-+					   &flp->fl_wwpn),
-+				   get_unaligned_be64(
-+					   &flp->fl_wwnn));
-+	} else {
-+		lport->e_d_tov = e_d_tov;
-+		lport->r_a_tov = r_a_tov;
-+		fc_host_fabric_name(lport->host) =
-+			get_unaligned_be64(&flp->fl_wwnn);
-+		fc_lport_set_port_id(lport, did, fp);
-+		fc_lport_enter_dns(lport);
- 	}
- 
- out:
-
+Yours,
+Linus Walleij
