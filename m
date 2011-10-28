@@ -1,16 +1,16 @@
 From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH 3/4] libfc: avoid exchanges collision during lport reset
-Date: Fri, 28 Oct 2011 11:34:17 -0700
-Message-ID: <20111028183417.15165.77742.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/4] libfc: improve flogi retries to avoid lport stuck
+Date: Fri, 28 Oct 2011 11:34:23 -0700
+Message-ID: <20111028183423.15165.43499.stgit@localhost6.localdomain6>
 References: <20111028183305.15165.96974.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:14835 "EHLO mga01.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:39686 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932668Ab1J1Spk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Oct 2011 14:45:40 -0400
+	id S933096Ab1J1Sp5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Oct 2011 14:45:57 -0400
 In-Reply-To: <20111028183305.15165.96974.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,62 +19,153 @@ Cc: robert.w.love@intel.com, Vasu Dev <vasu.dev@intel.com>, Yi Zou <yi.zou@intel
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Currently timer delay is large and is using msleep to avoid
-avoid exchanges collision across lport reset, so instead
-do this by initializing exches pool indexes during
-reset also.
+Adds more cases to do flogi retry, now also retry
+on getting bad response due to either no ELS response
+or flogi response payload length not large enough.
+In those cases flogi was not retried and that
+was leaving lport offline.
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Tested-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 ---
 
- drivers/scsi/libfc/fc_exch.c  |    4 ++++
- drivers/scsi/libfc/fc_lport.c |   10 +---------
- 2 files changed, 5 insertions(+), 9 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |   13 ++----
+ drivers/scsi/libfc/fc_lport.c |   90 ++++++++++++++++++++++-------------------
+ 2 files changed, 54 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 81235f3..1b22130 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1793,6 +1793,9 @@ restart:
- 			goto restart;
- 		}
- 	}
-+	pool->next_index = 0;
-+	pool->left = FC_XID_UNKNOWN;
-+	pool->right = FC_XID_UNKNOWN;
- 	spin_unlock_bh(&pool->lock);
- }
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 66fbff9..04686b5 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2365,14 +2365,11 @@ static void fcoe_flogi_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 		goto done;
  
-@@ -2281,6 +2284,7 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lport,
- 		goto free_mempool;
- 	for_each_possible_cpu(cpu) {
- 		pool = per_cpu_ptr(mp->pool, cpu);
-+		pool->next_index = 0;
- 		pool->left = FC_XID_UNKNOWN;
- 		pool->right = FC_XID_UNKNOWN;
- 		spin_lock_init(&pool->lock);
+ 	mac = fr_cb(fp)->granted_mac;
+-	if (is_zero_ether_addr(mac)) {
+-		/* pre-FIP */
+-		if (fcoe_ctlr_recv_flogi(fip, lport, fp)) {
+-			fc_frame_free(fp);
+-			return;
+-		}
+-	}
+-	fcoe_update_src_mac(lport, mac);
++	/* pre-FIP */
++	if (is_zero_ether_addr(mac))
++		fcoe_ctlr_recv_flogi(fip, lport, fp);
++	if (!is_zero_ether_addr(mac))
++		fcoe_update_src_mac(lport, mac);
+ done:
+ 	fc_lport_flogi_resp(seq, fp, lport);
+ }
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 628f347..e0fb891 100644
+index e0fb891..2cb12b9 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1030,16 +1030,8 @@ static void fc_lport_enter_reset(struct fc_lport *lport)
- 			   FCH_EVT_LIPRESET, 0);
- 	fc_vports_linkchange(lport);
- 	fc_lport_reset_locked(lport);
--	if (lport->link_up) {
--		/*
--		 * Wait upto resource allocation time out before
--		 * doing re-login since incomplete FIP exchanged
--		 * from last session may collide with exchanges
--		 * in new session.
--		 */
--		msleep(lport->r_a_tov);
-+	if (lport->link_up)
- 		fc_lport_enter_flogi(lport);
--	}
- }
+@@ -1473,6 +1473,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			 void *lp_arg)
+ {
+ 	struct fc_lport *lport = lp_arg;
++	struct fc_frame_header *fh;
+ 	struct fc_els_flogi *flp;
+ 	u32 did;
+ 	u16 csp_flags;
+@@ -1500,49 +1501,56 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 		goto err;
+ 	}
  
- /**
++	fh = fc_frame_header_get(fp);
+ 	did = fc_frame_did(fp);
+-	if (fc_frame_payload_op(fp) == ELS_LS_ACC && did) {
+-		flp = fc_frame_payload_get(fp, sizeof(*flp));
+-		if (flp) {
+-			mfs = ntohs(flp->fl_csp.sp_bb_data) &
+-				FC_SP_BB_DATA_MASK;
+-			if (mfs >= FC_SP_MIN_MAX_PAYLOAD &&
+-			    mfs < lport->mfs)
+-				lport->mfs = mfs;
+-			csp_flags = ntohs(flp->fl_csp.sp_features);
+-			r_a_tov = ntohl(flp->fl_csp.sp_r_a_tov);
+-			e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
+-			if (csp_flags & FC_SP_FT_EDTR)
+-				e_d_tov /= 1000000;
+-
+-			lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
+-
+-			if ((csp_flags & FC_SP_FT_FPORT) == 0) {
+-				if (e_d_tov > lport->e_d_tov)
+-					lport->e_d_tov = e_d_tov;
+-				lport->r_a_tov = 2 * e_d_tov;
+-				fc_lport_set_port_id(lport, did, fp);
+-				printk(KERN_INFO "host%d: libfc: "
+-				       "Port (%6.6x) entered "
+-				       "point-to-point mode\n",
+-				       lport->host->host_no, did);
+-				fc_lport_ptp_setup(lport, fc_frame_sid(fp),
+-						   get_unaligned_be64(
+-							   &flp->fl_wwpn),
+-						   get_unaligned_be64(
+-							   &flp->fl_wwnn));
+-			} else {
+-				lport->e_d_tov = e_d_tov;
+-				lport->r_a_tov = r_a_tov;
+-				fc_host_fabric_name(lport->host) =
+-					get_unaligned_be64(&flp->fl_wwnn);
+-				fc_lport_set_port_id(lport, did, fp);
+-				fc_lport_enter_dns(lport);
+-			}
+-		}
+-	} else {
+-		FC_LPORT_DBG(lport, "FLOGI RJT or bad response\n");
++	if (fh->fh_r_ctl != FC_RCTL_ELS_REP || did == 0 ||
++	    fc_frame_payload_op(fp) != ELS_LS_ACC) {
++		FC_LPORT_DBG(lport, "FLOGI not accepted or bad response\n");
+ 		fc_lport_error(lport, fp);
++		goto err;
++	}
++
++	flp = fc_frame_payload_get(fp, sizeof(*flp));
++	if (!flp) {
++		FC_LPORT_DBG(lport, "FLOGI bad response\n");
++		fc_lport_error(lport, fp);
++		goto err;
++	}
++
++	mfs = ntohs(flp->fl_csp.sp_bb_data) &
++		FC_SP_BB_DATA_MASK;
++	if (mfs >= FC_SP_MIN_MAX_PAYLOAD &&
++	    mfs < lport->mfs)
++		lport->mfs = mfs;
++	csp_flags = ntohs(flp->fl_csp.sp_features);
++	r_a_tov = ntohl(flp->fl_csp.sp_r_a_tov);
++	e_d_tov = ntohl(flp->fl_csp.sp_e_d_tov);
++	if (csp_flags & FC_SP_FT_EDTR)
++		e_d_tov /= 1000000;
++
++	lport->npiv_enabled = !!(csp_flags & FC_SP_FT_NPIV_ACC);
++
++	if ((csp_flags & FC_SP_FT_FPORT) == 0) {
++		if (e_d_tov > lport->e_d_tov)
++			lport->e_d_tov = e_d_tov;
++		lport->r_a_tov = 2 * e_d_tov;
++		fc_lport_set_port_id(lport, did, fp);
++		printk(KERN_INFO "host%d: libfc: "
++		       "Port (%6.6x) entered "
++		       "point-to-point mode\n",
++		       lport->host->host_no, did);
++		fc_lport_ptp_setup(lport, fc_frame_sid(fp),
++				   get_unaligned_be64(
++					   &flp->fl_wwpn),
++				   get_unaligned_be64(
++					   &flp->fl_wwnn));
++	} else {
++		lport->e_d_tov = e_d_tov;
++		lport->r_a_tov = r_a_tov;
++		fc_host_fabric_name(lport->host) =
++			get_unaligned_be64(&flp->fl_wwnn);
++		fc_lport_set_port_id(lport, did, fp);
++		fc_lport_enter_dns(lport);
+ 	}
+ 
+ out:
 
