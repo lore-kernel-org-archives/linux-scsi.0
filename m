@@ -1,17 +1,43 @@
-From: lisa hedstrand <lisa_hedstrand@indiatimes.com>
-Subject: Hi
-Date: Fri, 28 Oct 2011 16:54:25 +0530 (IST)
-Message-ID: <68780811.936401319801065739.JavaMail.root@tilmb17.indiatimes.com>
-Reply-To: lisa hedstrand <lisahedstrand@yahoo.com>
+From: Yi Zou <yi.zou@intel.com>
+Subject: [PATCH 0/4] Open-FCoE.org libfc and fcoe updates for scsi-misc
+Date: Fri, 28 Oct 2011 11:34:02 -0700
+Message-ID: <20111028183305.15165.96974.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trx4.indiatimes.com ([223.165.24.215]:48246 "EHLO
-	trx4.indiatimes.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755512Ab1J1LYU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2011 07:24:20 -0400
+Received: from mga11.intel.com ([192.55.52.93]:39651 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933062Ab1J1SpY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Oct 2011 14:45:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: robert.w.love@intel.com
 
-My name is Miss Lisa Please accept my apology if my mode of contacting you will in any way offend you. I am compelled to contact you via this medium because i needed a friend from that part of the world. We will get to know each other in details if my proposition accepted. l am a student in UK but originally from USA.
+This series consists of updates for the libfc and fcoe modules. These patches
+are directly applicable to latest tip of Linus's tree and I expect to be
+applied cleanly on scsi-misc as well. 
+
+thanks,
+yi
+
+---
+
+Michael Chan (1):
+      drivers/firmware/edd: Treat "XPRS" host bus type the same as "PCI"
+
+Vasu Dev (3):
+      libfc: improve flogi retries to avoid lport stuck
+      libfc: avoid exchanges collision during lport reset
+      libfc: fix checking FC_TYPE_BLS
+
+
+ drivers/firmware/edd.c        |    6 +-
+ drivers/scsi/fcoe/fcoe.c      |   13 ++---
+ drivers/scsi/libfc/fc_exch.c  |    7 ++-
+ drivers/scsi/libfc/fc_lport.c |  100 +++++++++++++++++++++--------------------
+ 4 files changed, 64 insertions(+), 62 deletions(-)
+
+-- 
+Signature: Yi Zou <yi.zou@intel.com>
