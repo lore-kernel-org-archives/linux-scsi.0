@@ -1,69 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH v2/RESEND] mv_sas: OCZ RevoDrive3 & zDrive R4 support
-Date: Sat, 29 Oct 2011 16:34:41 +0200
-Message-ID: <4EAC0F01.5070404@mvista.com>
-References: <1318032026-21913-1-git-send-email-robbat2@gentoo.org> <20111024223008.GB3305@orbis-terrarum.net>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 4/5] hpsa: fix potential array overflow in
+ hpsa_update_scsi_devices
+Date: Sun, 30 Oct 2011 14:16:22 +0400
+Message-ID: <1319969782.5215.23.camel@dabdike>
+References: <20111026212006.15570.26229.stgit@beardog.cce.hp.com>
+	 <20111026212112.15570.72971.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20111024223008.GB3305@orbis-terrarum.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111026212112.15570.72971.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Cc: stephenmcameron@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
+On Wed, 2011-10-26 at 16:21 -0500, Stephen M. Cameron wrote:
+> From: Scott Teel <scott.teel@hp.com>
+> 
+> The currentsd[] array in hpsa_update_scsi_devices had room for
+> 256 devices.  The code was iterating over however many physical
+> and logical devices plus an additional number of possible external
+> MSA2XXX controllers, which together could potentially exceed 256.
+> 
+> We increased the size of the currentsd array to 1024 + 1024 + 32 + 1
+> elements to reflect a reasonable maximum possible number of devices
+> which might be encountered.  We also don't just walk off the end
+> of the array if the array controller reports more devices than we
+> are prepared to handle, we just ignore the excessive devices.
+> 
+> Signed-off-by: Scott Teel <scott.teel@hp.com>
+> Acked-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-On 25.10.2011 0:30, Robin H. Johnson wrote:
+This should be Signed-off-by not Acked-by.  The reason is that the
+signoffs track whose hands the patch passes through.  If you send
+Scott's patch to me, it must have your signoff.  If Scott sends the
+patch directly to me and then you OK it on the list, then I'll add
+Acked-by.  I've assumed your acquiescence to correcting this in my tree.
 
-> In the OCZ RevoDrive3/zDrive R4 series, the "OCZ SuperScale Storage
-> Controller" with "Virtualized Controller Architecture 2.0" really seems
-> to be a Marvell 88SE9485 part, with OCZ firmware/BIOS.
->
-> Developed and tested on OCZ RevoDrive3 120GB [PCI 1b85:1021]
->
-> Should work on:
-> - OCZ RevoDrive3 (2x SandForce 2281)
-> - OCZ RevoDrive3 X2 (4x SandForce 2281)
-> - OCZ zDrive R4 CM84 (4x SandForce 2281)
-> - OCZ zDrive R4 CM88 (8x SandForce 2281)
-> - OCZ zDrive R4 RM84 (4x SandForce 2582)
-> - OCZ zDrive R4 RM88 (8x SandForce 2582)
->
-> All of this because a friend recently bought a OCZ RevoDrive3 and was
-> bitten by the lack of Linux support.
->
-> Notes from testing:
-> -------------------
-> - SMART works.
-> - VPD Device Identification is "OCZ-REVODRIVE3"
-> - Thin provisioning/TRIM seems to be implemented as WRITE SAME UNMAP,
->    with deterministic (non-zero) read after TRIM, but I'm not sure if it
->    works 100% in my testing.
-> - Some of the tuning in the firmware seems to ensure much better
->    performance when in a RAID0 setup than using the two devices
->    seperately.
->
-> I have not tested booting from the SSD, because all of this was
-> developed and tested remotely from the actual hardware.
->
-> Signed-off-by: Robin H. Johnson<robbat2@gentoo.org>
-> Thanks-To: Gordon Pritchard<gordp@sfu.ca>
-[...]
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index ae96bbe..3fe46e9 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -2868,3 +2868,5 @@
->
->   #define PCI_VENDOR_ID_XEN		0x5853
->   #define PCI_DEVICE_ID_XEN_PLATFORM	0x0001
-> +
-> +#define PCI_VENDOR_ID_OCZ		0x1b85
-
-    The vendor ID macros in this file are sorted by the ID value (except 
-Xen, it seems).
-
-WBR. Sergei
-
+James
