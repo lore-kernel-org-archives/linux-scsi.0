@@ -1,61 +1,48 @@
-From: Anton Altaparmakov <anton@tuxera.com>
-Subject: Deadlock due to device removal - race condition in scsi/block layer?
-Date: Sun, 30 Oct 2011 23:52:02 +0000
-Message-ID: <F9300DCD-387B-481A-85B2-5ED30204CADC@tuxera.com>
-Mime-Version: 1.0 (Apple Message framework v1251.1)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+From: yoma sophian <sophian.yoma@gmail.com>
+Subject: Re: question about passing physical address to lower level driver in scsi
+Date: Mon, 31 Oct 2011 09:53:47 +0800
+Message-ID: <CADUS3on70KNyS5=NfMRN2eJ_aOGnZbUqo7_P_RsrEuW49xh48A@mail.gmail.com>
+References: <CADUS3okkKEu_Re1FU_AvVk6agFwrmx0mwzbMSmso6pV8HFfWMA@mail.gmail.com>
+	<20111030132821.4df33f1e@stein>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qy0-f181.google.com ([209.85.216.181]:53975 "EHLO
+	mail-qy0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753441Ab1JaBxs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Oct 2011 21:53:48 -0400
+Received: by qyk27 with SMTP id 27so5867552qyk.19
+        for <linux-scsi@vger.kernel.org>; Sun, 30 Oct 2011 18:53:47 -0700 (PDT)
+In-Reply-To: <20111030132821.4df33f1e@stein>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+hi stefan:
+Thanks for your reply.
+2011/10/30, Stefan Richter <stefanr@s5r6.in-berlin.de>:
+> On Oct 30 yoma sophian wrote:
+>> in scsi_init_sgtable, we create sgtable, sdb->table.sgl, and get the
+>> page from blk_rq_map_sg.
+>> But when the dma_address of sdb->table.sgl will be calclated out
+>> before send the scsi command down to the lower level driver?
+>
+> The low level driver, not SCSI core, is responsible to obtain a DMA
+> address.
 
-We have seen a deadlock when doing "unplug whilst writing" testing.
-
-I have analysed is and what appears to be happening is this:
-
-File system does read_mapping_page() which calls the file system readpage function which uses fs/buffer.c::end_buffer_async_read() as i/o completion handler for the buffers of the page.  In this case the block size is 1kiB and the PAGE_SIZE is 4kiB thus each page has four buffer_heads attached.  The ->readpage() completes and do_read_cache_page() then does lock_page() which goes to sleep whilst waiting for all the buffers to complete i/o which then causes end_buffer_async_read() to mark the page error or uptodate and to unlock the page.
-
-However instead of the buffers completing, we only get one buffer completing with an error (due to the device having been unplugged before) and we then see this message in dmesg:
-
-	[ 1155.264728] scsi: killing requests for dead queue
-
-And that's it.  We now do NOT see the remaining buffers that had i/o in flight completing, i.e. end_buffer_async_read() was only called for one of the buffers but not for the others thus the page remains locked and thus do_read_cache_page() remains sleeping waiting for the page lock.
-
-DEADLOCK.  )-:
-
-120 seconds later the kernel starts printing the "task blocked for more than 120 seconds" reports which describe the above explained state.
-
-Why are the i/o completions not happening?  It presumably is a direct consequence of the "scsi: killing requests for dead queue" message.
-
-I looked around and the message appears to be coming from:
-
-	drivers/scsi/scsi_lib.c::scsi_request_fn()
-
-which at the top does:
-
-	if (!sdev) {
-               printk("scsi: killing requests for dead queue\n");
-               while ((req = blk_peek_request(q)) != NULL)
-                       scsi_kill_request(req, q);
-               return;
-       }
-
-So I imagine either blk_peek_request() is buggy so it is not seeing all the requests or more likely scsi_kill_request() is somehow causing the completion handler not to be called or a combination of the two.
-
-Note this was on a Debian Wheezy out-of-the-box kernel 3.0.0-1-686-pae and we have seen this happen only once so far which suggests that it is a race condition happening only when read_mapping_page() is called just at the "right" (or is that "wrong"? /-;) time when a device is unplugged so that the "scsi: killing requests for dead queue" happens in the middle of the i/os for the page buffers being in progress.
-
-Any ideas would be greatly appreciated!
-
-Thanks a lot in advance!
-
-Best regards,
-
-	Anton
--- 
-Anton Altaparmakov <aia21 at cam.ac.uk> (replace at with @)
-Unix Support, Computing Service, University of Cambridge, CB2 3QH, UK
-Linux NTFS maintainer, http://www.linux-ntfs.org/
+Why I ask this because I found there is no same transformation for
+scsi usb subsystem.
+Would anyone can let me know where it is?
+>
+> dma_map_sg() maps the scatter-gather list into DMA memory.  Then you can
+> iterate over the list with for_each_sg and obtain DMA handles and lengths
+> with sg_dma_address() and sg_dma_len().  E.g.:
+>
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=blob;f=drivers/firewire/sbp2.c;h=41841a3e3f99c9acd4c4fc72c972626d8dffdcee;hb=02f8c6aee8df3cdc935e9bdd4f2d020306035dbe#l1398
+> --
+> Stefan Richter
+> -=====-==-== =-=- ====-
+> http://arcgraph.de/sr/
+>
+Retards,
