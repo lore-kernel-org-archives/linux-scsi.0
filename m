@@ -1,46 +1,57 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Do we need to implement sr START/STOP management
-Date: Tue, 01 Nov 2011 16:35:36 +0400
-Message-ID: <1320150936.17402.10.camel@dabdike>
-References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
-	 <1320126812.7701.17.camel@dabdike>
-	 <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] qla4xx: a small loop fix
+Date: Tue, 01 Nov 2011 17:46:27 +0100
+Message-ID: <4EB02263.1080603@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37134 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754522Ab1KAMgH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2011 08:36:07 -0400
-In-Reply-To: <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:29980 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754863Ab1KAQqc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Nov 2011 12:46:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JiSheng Zhang <jszhang3@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On Tue, 2011-11-01 at 14:35 +0800, JiSheng Zhang wrote:
-> 2011/11/1 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> > On Tue, 2011-11-01 at 13:31 +0800, JiSheng Zhang wrote:
-> >> Currently, there's no start/stop management in scsi cdrom driver to
-> >> spin up/down the motor do we need to implement it?
-> >
-> > Say more ... like what you think it buys.  The auto spin down of a CD
-> > tends to be the best power control we have and it's not even clear that
-> > manufacturers have implemented any other useful power states.
-> 
-> Does it mean the behavior depends on manufacturers? Some cd will spin
-> down automatically?
+From: Tomas Henzl <thenzl@redhat.com>
 
-All CDs spin down when not reading (or burning) since the motor power is
-pretty high.  Most also do speed adjustments on the fly as well to try
-to match platter speed and read or burn rate.
+When the qla4xxx_get_fwddb_entry returns QLA_ERROR
+the nex_idx is not updated, 
+      for (idx = 0; idx < max_ddbs; idx = next_idx) {
+                ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
+                                              &next_idx, &state, &conn_err,
+                                                NULL, NULL);
+                if (ret == QLA_ERROR)
+                        continue;
+ 
+This means there is a risk that the 'idx < max_ddbs' condition will never
+met and the loop will loop forever.
+Fix this by explicitly increasing the next_idx in the error condition.
 
->  Even so, how about during shutdown just after reading
-> something from cdrom?
+Maybe a break instead of continue is more appropriate, leaving the decision
+on the qlogic maintainer.
 
-What's the use case?  For internal CDs, shutdown removes power anyway.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-James
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index 3075fba..17acb17 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -787,8 +787,10 @@ static void qla4xxx_free_ddb_index(struct scsi_qla_host *ha)
+ 		ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
+ 					      &next_idx, &state, &conn_err,
+ 						NULL, NULL);
+-		if (ret == QLA_ERROR)
++		if (ret == QLA_ERROR) {
++			next_idx++;
+ 			continue;
++		}
+ 		if (state == DDB_DS_NO_CONNECTION_ACTIVE ||
+ 		    state == DDB_DS_SESSION_FAILED) {
+ 			DEBUG2(ql4_printk(KERN_INFO, ha,
+-- 
+1.7.6.4
 
 
