@@ -1,57 +1,77 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] qla4xx: a small loop fix
-Date: Tue, 01 Nov 2011 17:46:27 +0100
-Message-ID: <4EB02263.1080603@redhat.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [PATCH 0/4] scsi_dh: Fix for handler attach and code clean up
+Date: Tue, 1 Nov 2011 13:19:19 -0400
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DB4D4@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:29980 "EHLO mx1.redhat.com"
+Received: from mx2.netapp.com ([216.240.18.37]:53582 "EHLO mx2.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754863Ab1KAQqc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Nov 2011 12:46:32 -0400
+	id S1755618Ab1KART2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2011 13:19:28 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
 
-From: Tomas Henzl <thenzl@redhat.com>
+These series of patches handles following things.
+1. Fixes handler attach issue.
+2. Introduces match function for all the handlers
+3. cleans up the scsi_dh code 
 
-When the qla4xxx_get_fwddb_entry returns QLA_ERROR
-the nex_idx is not updated, 
-      for (idx = 0; idx < max_ddbs; idx = next_idx) {
-                ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
-                                              &next_idx, &state, &conn_err,
-                                                NULL, NULL);
-                if (ret == QLA_ERROR)
-                        continue;
- 
-This means there is a risk that the 'idx < max_ddbs' condition will never
-met and the loop will loop forever.
-Fix this by explicitly increasing the next_idx in the error condition.
+I have noticed the attach issue during our multipath testing. We found that during
+the lun discovery there were lots of error messages like below..
 
-Maybe a break instead of continue is more appropriate, leaving the decision
-on the qlogic maintainer.
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav]  Result: hostbyte=DID_OK
+driverbyte=DRIVER_SENSE
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav]  Sense Key : Illegal
+Request [current]
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav]  <<vendor>> ASC=0x94
+ASCQ=0x1ASC=0x94 ASCQ=0x1
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav] CDB: Read(10): 28 00 00
+00 00 00 00 00 80 00
+Oct 25 08:24:43 kswm-mihosi kernel: end_request: I/O error, dev sdav, sector 0
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+These messages were coming in spite of having scsi_dh_rdac in initrd.  Reason
+for these errors are due to device handler not being attached properly. If the
+device handler was attached then the I/O's should not go to passive paths.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 3075fba..17acb17 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -787,8 +787,10 @@ static void qla4xxx_free_ddb_index(struct scsi_qla_host *ha)
- 		ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
- 					      &next_idx, &state, &conn_err,
- 						NULL, NULL);
--		if (ret == QLA_ERROR)
-+		if (ret == QLA_ERROR) {
-+			next_idx++;
- 			continue;
-+		}
- 		if (state == DDB_DS_NO_CONNECTION_ACTIVE ||
- 		    state == DDB_DS_SESSION_FAILED) {
- 			DEBUG2(ql4_printk(KERN_INFO, ha,
--- 
-1.7.6.4
+Investigating further we found that there errors started with the introduction
+of these patches below.
+
+http://www.spinics.net/lists/linux-scsi/msg54284.html
+or
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=6c3633d08acf514e2e89aa95d2346ce9d64d719a
+
+This patch introduces the match function for device handlers. But the match function
+was added only to scsi_dh_alua handler.
+
+Reason for the failure is, if the match function is not available then scsi_dh calls
+scsi_get_device_flags_keyed(sdev, sdev->vendor, sdev->model, SCSI_DEVINFO_DH)
+which compares the exact vendor and product strings from sdev(which comes from inquiry).
+
+While setting up the scsi_dev_info, handlers use the short strings(example below).
+Look at scsi_register_device_handler code. If  you look closely the handlers have
+only first few characters of the model string. So, scsi_get_device_flags_keyed
+fails and handler will not be attached. This applies to all the handlers.
+
+Example :
+
+        Strings in scsi_dh_rdac handler..
+                    {"IBM", "1746"},
+
+        Actual string..
+                     "IBM", "1746      FAStT"
+
+Couple of ways we can fix this problem.
+1. List the complete model strings in handlers for all the products.
+2. Introduce match function for all the handler and remove the call to scsi_get_device_flags_keyed.
+
+I think the option 2 is the best way to fix this problem. This removes lot of code in scsi_dh and 
+simplifies the things..
+
+TESTED the patches on NetApp E series storage.
 
 
