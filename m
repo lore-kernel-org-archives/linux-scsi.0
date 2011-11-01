@@ -1,27 +1,36 @@
 From: JiSheng Zhang <jszhang3@gmail.com>
-Subject: Is there any elegant way to re-identify and re-configure xfer mode
-Date: Tue, 1 Nov 2011 14:27:16 +0800
-Message-ID: <CADyp2PdXeq8phoWSntyjGSY7dc93kcRg9DRV6cdCWi96j5g2LA@mail.gmail.com>
+Subject: Re: Do we need to implement sr START/STOP management
+Date: Tue, 1 Nov 2011 14:35:09 +0800
+Message-ID: <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
+	<1320126812.7701.17.camel@dabdike>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1320126812.7701.17.camel@dabdike>
 Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi List,
+Hi James,
 
-I need your help. I'm developing driver for one specific cdrom:
+2011/11/1 James Bottomley <James.Bottomley@hansenpartnership.com>:
+> On Tue, 2011-11-01 at 13:31 +0800, JiSheng Zhang wrote:
+>> Currently, there's no start/stop management in scsi cdrom driver to
+>> spin up/down the motor do we need to implement it?
+>
+> Say more ... like what you think it buys. =A0The auto spin down of a =
+CD
+> tends to be the best power control we have and it's not even clear th=
+at
+> manufacturers have implemented any other useful power states.
 
-I need to send firmware to the "basic mode" cdrom via ATA bus, then
-then cdrom will be under "working mode".
+Does it mean the behavior depends on manufacturers? Some cd will spin
+down automatically? Even so, how about during shutdown just after readi=
+ng
+something from cdrom?
 
-The problem is the model, vendor and xfer mode etc is changed also, I
-need to re-identify and re-configure it.
-I did these by manually call
-ata_scsi_find_dev()=>ata_dev_read_id()=>ata_dev_configure()=>ata_set_mode()
-
-Is there any elegant way to handle such situation?
-
-Thanks very much,
+Thanks,
 Jisheng
