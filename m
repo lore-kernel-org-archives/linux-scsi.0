@@ -1,20 +1,18 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: Deadlock due to device removal - race condition in scsi/block layer?
-Date: Mon, 31 Oct 2011 17:45:01 +0100
-Message-ID: <CAO+b5-q0Mbfeb-57UsGYzjz0S=Z_Lra7o=HbpFxz83jHrvcnJA@mail.gmail.com>
-References: <F9300DCD-387B-481A-85B2-5ED30204CADC@tuxera.com>
+From: JiSheng Zhang <jszhang3@gmail.com>
+Subject: Do we need to implement sr START/STOP management
+Date: Tue, 1 Nov 2011 13:31:15 +0800
+Message-ID: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <F9300DCD-387B-481A-85B2-5ED30204CADC@tuxera.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Anton Altaparmakov <anton@tuxera.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/31/11, Anton Altaparmakov <anton@tuxera.com> wrote:
-> We have seen a deadlock when doing "unplug whilst writing" testing.
+Hi List,
 
-Does this patch help: http://marc.info/?l=linux-scsi&m=131680195721932 ?
+Currently, there's no start/stop management in scsi cdrom driver to
+spin up/down the motor do we need to implement it?
 
-Bart.
+Thanks in advance,
+Jisheng
