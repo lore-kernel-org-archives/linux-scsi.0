@@ -1,54 +1,71 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: srp_transport: Fix atttribute registration race
-Date: Tue, 1 Nov 2011 19:47:48 +0100
-Message-ID: <CAO+b5-oxshsL7Dm7vhv4zC8m0P4dG3iNzxU9sdbi5cBkAnTpMQ@mail.gmail.com>
-References: <201110211857.23622.bvanassche@acm.org> <1320053608.8283.29.camel@dabdike>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] qla4xx: a small loop fix
+Date: Tue, 01 Nov 2011 21:22:09 +0100
+Message-ID: <4EB054F1.8030104@redhat.com>
+References: <4EB02263.1080603@redhat.com> <4EB0362A.3050408@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1320053608.8283.29.camel@dabdike>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:54437 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755076Ab1KAUWS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Nov 2011 16:22:18 -0400
+In-Reply-To: <4EB0362A.3050408@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On Mon, Oct 31, 2011 at 10:33 AM, James Bottomley
-<James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
-> On Fri, 2011-10-21 at 18:57 +0200, Bart Van Assche wrote:
-> > Register transport attributes after the attribute array has been
-> > set up instead of before. The current code is racy because there
-> > is no guarantee that the CPU examining the attribute container
-> > will see all values written to the container.
+On 11/01/2011 07:10 PM, Mike Christie wrote:
+> On 11/01/2011 11:46 AM, Tomas Henzl wrote:
+>> From: Tomas Henzl <thenzl@redhat.com>
+>>
+>> When the qla4xxx_get_fwddb_entry returns QLA_ERROR
+>> the nex_idx is not updated, 
+>>       for (idx = 0; idx < max_ddbs; idx = next_idx) {
+>>                 ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
+>>                                               &next_idx, &state, &conn_err,
+>>                                                 NULL, NULL);
+>>                 if (ret == QLA_ERROR)
+>>                         continue;
+>>  
+>> This means there is a risk that the 'idx < max_ddbs' condition will never
+>> met and the loop will loop forever.
+>> Fix this by explicitly increasing the next_idx in the error condition.
+>>
+>> Maybe a break instead of continue is more appropriate, leaving the decision
+>> on the qlogic maintainer.
+>>
+>> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+>>
+>> diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+>> index 3075fba..17acb17 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_init.c
+>> +++ b/drivers/scsi/qla4xxx/ql4_init.c
+>> @@ -787,8 +787,10 @@ static void qla4xxx_free_ddb_index(struct scsi_qla_host *ha)
+>>  		ret = qla4xxx_get_fwddb_entry(ha, idx, NULL, 0, NULL,
+>>  					      &next_idx, &state, &conn_err,
+>>  						NULL, NULL);
+>> -		if (ret == QLA_ERROR)
+>> +		if (ret == QLA_ERROR) {
+>> +			next_idx++;
+>>  			continue;
+>> +		}
+>>  		if (state == DDB_DS_NO_CONNECTION_ACTIVE ||
+>>  		    state == DDB_DS_SESSION_FAILED) {
+>>  			DEBUG2(ql4_printk(KERN_INFO, ha,
+> Patch looks correct.
 >
-> I don't agree with this change log. =A0As far as the kernel is concer=
-ned,
-> nothing happens until that function returns because the only way to u=
-se
-> anything is to get a match to succeed, and they all check for
-> ->transportt which will be NULL.
->
-> I can accept that it's best practise to initialise something before
-> registering it, because the reverse excites everyone's bogosity senso=
-rs,
-> it's just not a bug in this case.
+> James, this is a patch for something that is not yet upstream. I will
+> just merge this patch with the patch I was going to send upstream, so do
+> not worry about it.
+It's created on top of scsi-misc (99a700bcc75429ba84a672d04f0b650dcc5b3042 [SCSI] mv_sas: OCZ RevoDrive3 & zDrive R4 support)
+it looks like being created on top of the not yet posted patch, but it isn't so :)
+To the method how this gets accepted i don't care.
 
-It's very well possible that I have missed something, but it's not
-clear to me what's wrong with the patch description ? At least with
-ib_srp device registration happens from another context than module
-initialization so it can potentially run on another CPU. I don't see
-any kind of memory barrier after the initialization of the SRP
-transport attribute array. So at least in theory and on an
-architecture with a sufficiently weak memory model (e.g. the POWER
-architecture) there is no guarantee that these store operations will
-be observed before an SRP device gets registered. Even more, there is
-no guarantee that the CPU on which device registration happens will
-observe these store operations in the same order as these were
-performed on the CPU that ran srp_attach_transport().
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
