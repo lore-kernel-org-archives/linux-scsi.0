@@ -1,24 +1,41 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [patch] target: blk_make_request() returns an ERR_PTR()
-Date: Wed, 02 Nov 2011 08:51:50 -0700
-Message-ID: <1320249110.1261.27.camel@haakon2.linux-iscsi.org>
-References: <20111031070315.GA13640@elgon.mountain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] drivers/scsi/scsi_transport_iscsi.c: Fix documentation
+ os parameter
+Date: Wed, 02 Nov 2011 12:23:43 -0500
+Message-ID: <4EB17C9F.4030700@cs.wisc.edu>
+References: <1320239837-7138-1-git-send-email-marcos.mage@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20111031070315.GA13640@elgon.mountain>
-Sender: target-devel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <1320239837-7138-1-git-send-email-marcos.mage@gmail.com>
+Sender: linux-doc-owner@vger.kernel.org
+To: Marcos Paulo de Souza <marcos.mage@gmail.com>
+Cc: michael@cs.wisc.edu, jbottomley@parallels.com, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, rdunlap@xenotime.net, linux-doc@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2011-10-31 at 10:03 +0300, Dan Carpenter wrote:
-> The check is wrong here because blk_make_request() returns an
-> ERR_PTR() and it doesn't return NULL.
+On 11/02/2011 08:17 AM, Marcos Paulo de Souza wrote:
+> Fixes documentation of a parameter of iscsi_bsg_host_add function to silence to make htmldocs[
 > 
+> Signed-off-by: Marcos Paulo de Souza <marcos.mage@gmail.com>
+> ---
+>  drivers/scsi/scsi_transport_iscsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 1bcd65a..96029e6 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -520,7 +520,7 @@ fail_host_msg:
+>  /**
+>   * iscsi_bsg_host_add - Create and add the bsg hooks to receive requests
+>   * @shost: shost for iscsi_host
+> - * @cls_host: iscsi_cls_host adding the structures to
+> + * @ihost: iscsi_cls_host adding the structures to
+>   */
+>  static int
+>  iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
 
-Applied and queuing for the next pull.  Thanks Dan!
+Looks ok to me.
 
---nab
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
