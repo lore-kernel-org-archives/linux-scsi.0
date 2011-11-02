@@ -1,63 +1,69 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 4/6 v2] PM: Limit race conditions between
- runtime PM and system sleep (v2)
-Date: Wed, 2 Nov 2011 13:11:01 -0700
-Message-ID: <20111102201101.GA5581@kroah.com>
-References: <201106260054.20578.rjw@sisk.pl> <201106292329.04163.rjw@sisk.pl>
-	<201106292334.24518.rjw@sisk.pl>
-	<CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
-	<20111102191432.GC29355@kroah.com>
-	<CACRpkdY8zAw_pdwn2yUEJPdfYPS+VCcLrpucZzhCyNsVPYehdg@mail.gmail.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: RE: [dm-devel] [PATCH] scsi_dh_alua: Fix the time inteval for alua rtpgcommands
+Date: Wed, 2 Nov 2011 16:56:57 -0400
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBBA5@RTPMVEXC1-PRD.hq.netapp.com>
+References: <47D23AD8469A2B448F33C24BD7A39BD91050E54E@RTPMVEXC1-PRD.hq.netapp.com> <47D23AD8469A2B448F33C24BD7A39BD9105DB9D5@RTPMVEXC1-PRD.hq.netapp.com> <4EB19FCF.8090402@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <CACRpkdY8zAw_pdwn2yUEJPdfYPS+VCcLrpucZzhCyNsVPYehdg@mail.gmail.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Ulf Hansson <Ulf.Hansson@stericsson.com>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, stable@kernel.org
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.netapp.com ([216.240.18.37]:58097 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750889Ab1KBU5C convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2011 16:57:02 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4EB19FCF.8090402@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>, Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>
 
-On Wed, Nov 02, 2011 at 09:06:02PM +0100, Linus Walleij wrote:
-> On Wed, Nov 2, 2011 at 8:14 PM, Greg KH <greg@kroah.com> wrote:
-> 
-> >> We have also backported:
-> >> PM: Introduce generic "noirq" callback routines for subsystems (v2)
-> >> PM / Runtime: Update documentation of interactions with system sleep
-> >> PM / Runtime: Add new helper function: pm_runtime_status_suspended()
-> >>
-> >> And now it seems to be sufficient to get this thing going.
+Thanks Hannes..
+
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Wednesday, November 02, 2011 2:54 PM
+> To: Moger, Babu
+> Subject: Re: [dm-devel] [PATCH] scsi_dh_alua: Fix the time inteval fo=
+r
+> alua rtpgcommands
+>=20
+> On 11/02/2011 06:22 PM, Moger, Babu wrote:
+> > Hannes, I did not see ur comment on this patch..  Any comments?
 > >
-> > So, what specific git commits do you want to see in the 3.0-stable
-> > tree, and in what order should they be applied in?
-> 
-> So to my untrained eye it looks like it should be applied like this (top to
-> bottom) using the reverse commit order from the mainline kernel:
-> 
-> e529192 PM: Introduce generic "noirq" callback routines for subsystems (v2)
-> 455716e PM / Runtime: Update documentation of interactions with system sleep
-> 1e2ef05 PM: Limit race conditions between runtime PM and system sleep (v2)
-> f3393b6 PM / Runtime: Add new helper function: pm_runtime_status_suspended()
-> 
-> So (2) documents the problem, (3) fixes it, whereas (1) and (4) makes
-> it possible
-> to write proper _noirq() code that does not race, IIRC.
-
-But, after this, it's just adding new infrastructure that drivers will
-then be able to use.  As I'm not adding new drivers to 3.0, there will
-not be any users of this code, so why add it in the first place?  It
-doesn't look like this follows the rules of the stable kernel tree at
-all, does it?
-
-confused,
-
-greg k-h
+> >> -----Original Message-----
+> >> From: Moger, Babu
+> >> Sent: Thursday, October 27, 2011 1:37 PM
+> >> To: Linux SCSI Mailing list
+> >> Cc: device-mapper development
+> >> Subject: [dm-devel] [PATCH] scsi_dh_alua: Fix the time inteval for
+> alua
+> >> rtpgcommands
+> >>
+> >> This patch corrects the retry interval for alua rtpg command.
+> Purpose
+> >> was to retry the commands in seconds.
+> >> But that was not happening. Reason is msleep takes argument in
+> >> milliseconds.
+> >>
+> >> Also added minor text after successful attach.
+> >>
+> >> Signed-off-by: Babu Moger <babu.moger@netapp.com>
+> >> CC: Hannes Reinecke <hare@suse.de>
+> Ach, forgot about it.
+>=20
+> Yes, patch is okay.
+>=20
+> Cheers,
+>=20
+> Hannes
+> --
+> Dr. Hannes Reinecke              zSeries & Storage
+> hare@suse.de                  +49 911 74053 688
+> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
