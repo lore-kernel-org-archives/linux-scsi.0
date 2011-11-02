@@ -1,7 +1,7 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH 1/3] scsi: fix potential dead lock for host runtime pm
-Date: Wed,  2 Nov 2011 14:21:38 +0800
-Message-ID: <1320214900-2112-2-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH 2/3] scsi: add hooks for host runtime power management
+Date: Wed,  2 Nov 2011 14:21:39 +0800
+Message-ID: <1320214900-2112-3-git-send-email-ming.m.lin@intel.com>
 References: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
@@ -10,87 +10,99 @@ To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@Parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In later patch hooks will be added to do ata port runtime pm through scsi layer.
-libata schedules scsi EH to handle suspend, then dead lock happens
-because scsi EH in turn waits for the ongoing suspend, as below.
-
-<scsi host runtime suspend>
- scsi_autopm_put_host
-   pm_runtime_put_sync
-     <scsi_host runtime pm status updated to RPM_SUSPENDING>
-     ......
-       <call libata hook to do suspend>
-         <wake up scsi EH to handle suspend>
-         <wait for scsi EH ...>
-
-<scsi EH wake up>
- scsi_error_handler
-   <resume scsi host>
-   scsi_autopm_get_host
-     pm_runtime_get_sync
-     .....
-       <sleep to wait for the ongoing scsi host suspend>
-
-This patch fixes the dead lock by checking if there is ongoing runtime PM request.
-If there is ongoing runtime PM request, scsi_autopm_get_host_noresume is called to
-increase the usage count, but don't resume the host.
+Adds ->suspend and ->resume callbacks in struct scsi_host_template
+to do host runtime power management.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/scsi/scsi_error.c |    4 +++-
- drivers/scsi/scsi_pm.c    |   11 +++++++++++
- drivers/scsi/scsi_priv.h  |    2 ++
- 3 files changed, 16 insertions(+), 1 deletions(-)
+ drivers/scsi/scsi_pm.c   |   34 +++++++++++++++++++++++++++++++---
+ include/scsi/scsi_host.h |    8 ++++++++
+ 2 files changed, 39 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a4b9cdb..d35d8f7 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1804,7 +1804,9 @@ int scsi_error_handler(void *data)
- 		 * what we need to do to get it up and online again (if we can).
- 		 * If we fail, we end up taking the thing offline.
- 		 */
--		if (scsi_autopm_get_host(shost) != 0) {
-+		if (scsi_autopm_host_busy(shost))
-+			scsi_autopm_get_host_noresume(shost);
-+		else if (scsi_autopm_get_host(shost) != 0) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				printk(KERN_ERR "Error handler scsi_eh_%d "
- 						"unable to autoresume\n",
 diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d82a023a..1be6c5a 100644
+index 1be6c5a..5742bed2 100644
 --- a/drivers/scsi/scsi_pm.c
 +++ b/drivers/scsi/scsi_pm.c
-@@ -185,6 +185,17 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
- 	pm_runtime_put_sync(&shost->shost_gendev);
+@@ -42,6 +42,28 @@ static int scsi_dev_type_resume(struct device *dev)
+ 	return err;
  }
  
-+bool scsi_autopm_host_busy(struct Scsi_Host *shost)
++static int scsi_host_suspend(struct device *dev)
 +{
-+	return (shost->shost_gendev.power.runtime_status == RPM_RESUMING
-+		|| shost->shost_gendev.power.runtime_status == RPM_SUSPENDING);
++	struct Scsi_Host *shost = dev_to_shost(dev);
++	int err = 0;
++
++	if (shost->hostt->suspend)
++		err = shost->hostt->suspend(shost);
++
++	return err;
 +}
 +
-+void scsi_autopm_get_host_noresume(struct Scsi_Host *shost)
++static int scsi_host_resume(struct device *dev)
 +{
-+	pm_runtime_get_noresume(&shost->shost_gendev);
++	struct Scsi_Host *shost = dev_to_shost(dev);
++	int err = 0;
++
++	if (shost->hostt->resume)
++		err = shost->hostt->resume(shost);
++
++	return err;
 +}
 +
- #else
+ #ifdef CONFIG_PM_SLEEP
  
- #define scsi_runtime_suspend	NULL
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 2a58895..1750651 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -156,6 +156,8 @@ extern void scsi_autopm_get_target(struct scsi_target *);
- extern void scsi_autopm_put_target(struct scsi_target *);
- extern int scsi_autopm_get_host(struct Scsi_Host *);
- extern void scsi_autopm_put_host(struct Scsi_Host *);
-+extern bool scsi_autopm_host_busy(struct Scsi_Host *shost);
-+extern void scsi_autopm_get_host_noresume(struct Scsi_Host *);
- #else
- static inline void scsi_autopm_get_target(struct scsi_target *t) {}
- static inline void scsi_autopm_put_target(struct scsi_target *t) {}
+ static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
+@@ -106,7 +128,10 @@ static int scsi_runtime_suspend(struct device *dev)
+ 				round_jiffies_up_relative(HZ/10)));
+ 	}
+ 
+-	/* Insert hooks here for targets, hosts, and transport classes */
++	/* Insert hooks here for targets and transport classes */
++
++	if (scsi_is_host_device(dev))
++		err = scsi_host_suspend(dev);
+ 
+ 	return err;
+ }
+@@ -119,7 +144,10 @@ static int scsi_runtime_resume(struct device *dev)
+ 	if (scsi_is_sdev_device(dev))
+ 		err = scsi_dev_type_resume(dev);
+ 
+-	/* Insert hooks here for targets, hosts, and transport classes */
++	/* Insert hooks here for targets and transport classes */
++
++	if (scsi_is_host_device(dev))
++		err = scsi_host_resume(dev);
+ 
+ 	return err;
+ }
+@@ -132,7 +160,7 @@ static int scsi_runtime_idle(struct device *dev)
+ 
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+-	if (scsi_is_sdev_device(dev))
++	if (scsi_is_sdev_device(dev) || scsi_is_host_device(dev))
+ 		err = pm_schedule_suspend(dev, 100);
+ 	else
+ 		err = pm_runtime_suspend(dev);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index f1f2644..512e2a0 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -356,6 +356,14 @@ struct scsi_host_template {
+ 	enum blk_eh_timer_return (*eh_timed_out)(struct scsi_cmnd *);
+ 
+ 	/*
++	 * Optional routine for scsi host runtime pm.
++	 *
++	 * Status: OPTIONAL
++	 */
++	int (*suspend)(struct Scsi_Host *);
++	int (*resume)(struct Scsi_Host *);
++
++	/*
+ 	 * Name of proc directory
+ 	 */
+ 	const char *proc_name;
 -- 
 1.7.2.5
