@@ -1,186 +1,96 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH 3/3] ata: implement ata port runtime pm hooks
-Date: Wed,  2 Nov 2011 14:21:40 +0800
-Message-ID: <1320214900-2112-4-git-send-email-ming.m.lin@intel.com>
+Subject: [PATCH 1/3] scsi: fix potential dead lock for host runtime pm
+Date: Wed,  2 Nov 2011 14:21:38 +0800
+Message-ID: <1320214900-2112-2-git-send-email-ming.m.lin@intel.com>
 References: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:39863 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756247Ab1KBGWL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Nov 2011 02:22:11 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@Parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Split a new function ata_port_request_pm from ata_host_request_pm.
-Implement runtime suspend and resume hooks for scsi layer.
+In later patch hooks will be added to do ata port runtime pm through scsi layer.
+libata schedules scsi EH to handle suspend, then dead lock happens
+because scsi EH in turn waits for the ongoing suspend, as below.
+
+<scsi host runtime suspend>
+ scsi_autopm_put_host
+   pm_runtime_put_sync
+     <scsi_host runtime pm status updated to RPM_SUSPENDING>
+     ......
+       <call libata hook to do suspend>
+         <wake up scsi EH to handle suspend>
+         <wait for scsi EH ...>
+
+<scsi EH wake up>
+ scsi_error_handler
+   <resume scsi host>
+   scsi_autopm_get_host
+     pm_runtime_get_sync
+     .....
+       <sleep to wait for the ongoing scsi host suspend>
+
+This patch fixes the dead lock by checking if there is ongoing runtime PM request.
+If there is ongoing runtime PM request, scsi_autopm_get_host_noresume is called to
+increase the usage count, but don't resume the host.
 
 Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 ---
- drivers/ata/libata-core.c |   96 +++++++++++++++++++++++++++++---------------
- include/linux/libata.h    |    7 +++
- 2 files changed, 70 insertions(+), 33 deletions(-)
+ drivers/scsi/scsi_error.c |    4 +++-
+ drivers/scsi/scsi_pm.c    |   11 +++++++++++
+ drivers/scsi/scsi_priv.h  |    2 ++
+ 3 files changed, 16 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4a3a5ae..2e191e7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -66,6 +66,7 @@
- #include <asm/byteorder.h>
- #include <linux/cdrom.h>
- #include <linux/ratelimit.h>
-+#include <linux/pm_runtime.h>
- 
- #include "libata.h"
- #include "libata-transport.h"
-@@ -5234,51 +5235,62 @@ bool ata_link_offline(struct ata_link *link)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index a4b9cdb..d35d8f7 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1804,7 +1804,9 @@ int scsi_error_handler(void *data)
+ 		 * what we need to do to get it up and online again (if we can).
+ 		 * If we fail, we end up taking the thing offline.
+ 		 */
+-		if (scsi_autopm_get_host(shost) != 0) {
++		if (scsi_autopm_host_busy(shost))
++			scsi_autopm_get_host_noresume(shost);
++		else if (scsi_autopm_get_host(shost) != 0) {
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+ 				printk(KERN_ERR "Error handler scsi_eh_%d "
+ 						"unable to autoresume\n",
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d82a023a..1be6c5a 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -185,6 +185,17 @@ void scsi_autopm_put_host(struct Scsi_Host *shost)
+ 	pm_runtime_put_sync(&shost->shost_gendev);
  }
  
- #ifdef CONFIG_PM
--static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
-+static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 			       unsigned int action, unsigned int ehi_flags,
- 			       int wait)
- {
-+	struct ata_link *link;
- 	unsigned long flags;
--	int i, rc;
-+	int rc;
- 
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap = host->ports[i];
--		struct ata_link *link;
-+	/* Previous resume operation might still be in
-+	 * progress.  Wait for PM_PENDING to clear.
-+	 */
-+	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
-+		ata_port_wait_eh(ap);
-+		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
-+	}
- 
--		/* Previous resume operation might still be in
--		 * progress.  Wait for PM_PENDING to clear.
--		 */
--		if (ap->pflags & ATA_PFLAG_PM_PENDING) {
--			ata_port_wait_eh(ap);
--			WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
--		}
-+	/* request PM ops to EH */
-+	spin_lock_irqsave(ap->lock, flags);
- 
--		/* request PM ops to EH */
--		spin_lock_irqsave(ap->lock, flags);
-+	ap->pm_mesg = mesg;
-+	if (wait) {
-+		rc = 0;
-+		ap->pm_result = &rc;
-+	}
- 
--		ap->pm_mesg = mesg;
--		if (wait) {
--			rc = 0;
--			ap->pm_result = &rc;
--		}
-+	ap->pflags |= ATA_PFLAG_PM_PENDING;
-+	ata_for_each_link(link, ap, HOST_FIRST) {
-+		link->eh_info.action |= action;
-+		link->eh_info.flags |= ehi_flags;
-+	}
- 
--		ap->pflags |= ATA_PFLAG_PM_PENDING;
--		ata_for_each_link(link, ap, HOST_FIRST) {
--			link->eh_info.action |= action;
--			link->eh_info.flags |= ehi_flags;
--		}
-+	ata_port_schedule_eh(ap);
- 
--		ata_port_schedule_eh(ap);
-+	spin_unlock_irqrestore(ap->lock, flags);
- 
--		spin_unlock_irqrestore(ap->lock, flags);
-+	/* wait and check result */
-+	if (wait) {
-+		ata_port_wait_eh(ap);
-+		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
-+	}
- 
--		/* wait and check result */
--		if (wait) {
--			ata_port_wait_eh(ap);
--			WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
--			if (rc)
--				return rc;
--		}
-+	return rc;
++bool scsi_autopm_host_busy(struct Scsi_Host *shost)
++{
++	return (shost->shost_gendev.power.runtime_status == RPM_RESUMING
++		|| shost->shost_gendev.power.runtime_status == RPM_SUSPENDING);
 +}
 +
-+static int ata_host_request_pm(struct ata_host *host, pm_message_t mesg,
-+			       unsigned int action, unsigned int ehi_flags,
-+			       int wait)
++void scsi_autopm_get_host_noresume(struct Scsi_Host *shost)
 +{
-+	int i, rc;
-+
-+	for (i = 0; i < host->n_ports; i++) {
-+		struct ata_port *ap = host->ports[i];
-+
-+		rc = ata_port_request_pm(ap, mesg, action, ehi_flags, wait);
-+		if (rc)
-+			return rc;
- 	}
- 
- 	return 0;
-@@ -5338,6 +5350,24 @@ void ata_host_resume(struct ata_host *host)
- 			    ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 0);
- 	host->dev->power.power_state = PMSG_ON;
- }
-+
-+#define to_ata_port(shost) (*(struct ata_port **)&shost->hostdata[0])
-+
-+int ata_scsi_host_suspend(struct Scsi_Host *shost)
-+{
-+	struct ata_port *ap = to_ata_port(shost);
-+
-+	return ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
++	pm_runtime_get_noresume(&shost->shost_gendev);
 +}
 +
-+int ata_scsi_host_resume(struct Scsi_Host *shost)
-+{
-+	struct ata_port *ap = to_ata_port(shost);
-+
-+	return ata_port_request_pm(ap, PMSG_ON, ATA_EH_RESET,
-+		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, 1);
-+}
-+
- #endif
+ #else
  
- /**
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index efd6f98..2fb9720 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1010,6 +1010,11 @@ extern bool ata_link_offline(struct ata_link *link);
- #ifdef CONFIG_PM
- extern int ata_host_suspend(struct ata_host *host, pm_message_t mesg);
- extern void ata_host_resume(struct ata_host *host);
-+extern int ata_scsi_host_suspend(struct Scsi_Host *shost);
-+extern int ata_scsi_host_resume(struct Scsi_Host *shost);
-+#else
-+static inline int ata_scsi_host_suspend(struct Scsi_Host *shost) { return 0; }
-+static inline int ata_scsi_host_resume(struct Scsi_Host *shost) { return 0; };
- #endif
- extern int ata_ratelimit(void);
- extern void ata_msleep(struct ata_port *ap, unsigned int msecs);
-@@ -1193,6 +1198,8 @@ extern struct device_attribute *ata_common_sdev_attrs[];
- 	.name			= drv_name,			\
- 	.ioctl			= ata_scsi_ioctl,		\
- 	.queuecommand		= ata_scsi_queuecmd,		\
-+	.suspend		= ata_scsi_host_suspend,	\
-+	.resume			= ata_scsi_host_resume,		\
- 	.can_queue		= ATA_DEF_QUEUE,		\
- 	.this_id		= ATA_SHT_THIS_ID,		\
- 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,		\
+ #define scsi_runtime_suspend	NULL
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 2a58895..1750651 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -156,6 +156,8 @@ extern void scsi_autopm_get_target(struct scsi_target *);
+ extern void scsi_autopm_put_target(struct scsi_target *);
+ extern int scsi_autopm_get_host(struct Scsi_Host *);
+ extern void scsi_autopm_put_host(struct Scsi_Host *);
++extern bool scsi_autopm_host_busy(struct Scsi_Host *shost);
++extern void scsi_autopm_get_host_noresume(struct Scsi_Host *);
+ #else
+ static inline void scsi_autopm_get_target(struct scsi_target *t) {}
+ static inline void scsi_autopm_put_target(struct scsi_target *t) {}
 -- 
 1.7.2.5
-
