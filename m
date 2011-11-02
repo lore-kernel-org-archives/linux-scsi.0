@@ -1,41 +1,57 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] drivers/scsi/scsi_transport_iscsi.c: Fix documentation
- os parameter
-Date: Wed, 02 Nov 2011 12:23:43 -0500
-Message-ID: <4EB17C9F.4030700@cs.wisc.edu>
-References: <1320239837-7138-1-git-send-email-marcos.mage@gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 4/6 v2] PM: Limit race conditions between
+ runtime PM and system sleep (v2)
+Date: Wed, 2 Nov 2011 12:14:32 -0700
+Message-ID: <20111102191432.GC29355@kroah.com>
+References: <201106260054.20578.rjw@sisk.pl> <201106292329.04163.rjw@sisk.pl>
+	<201106292334.24518.rjw@sisk.pl>
+	<CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <1320239837-7138-1-git-send-email-marcos.mage@gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Marcos Paulo de Souza <marcos.mage@gmail.com>
-Cc: michael@cs.wisc.edu, jbottomley@parallels.com, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, rdunlap@xenotime.net, linux-doc@vger.kernel.org
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <CAKnu2Mru4c-2LBCZ_k3ZA+v47u0+um8igYU7EWt8=qOTVgcUjA@mail.gmail.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Linus Walleij <linus.walleij@linaro.org>
+Cc: Kevin Hilman <khilman@ti.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jesse Barnes <jbarnes@virtuousgeek.org>, Tejun Heo <tj@kernel.org>, Linux PM mailing list <linux-pm@lists.linux-foundation.org>, stable@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/02/2011 08:17 AM, Marcos Paulo de Souza wrote:
-> Fixes documentation of a parameter of iscsi_bsg_host_add function to silence to make htmldocs[
+On Thu, Oct 27, 2011 at 03:54:20PM +0200, Linus Walleij wrote:
+> 2011/6/29 Rafael J. Wysocki <rjw@sisk.pl>:
 > 
-> Signed-off-by: Marcos Paulo de Souza <marcos.mage@gmail.com>
-> ---
->  drivers/scsi/scsi_transport_iscsi.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
+> > One of the roles of the PM core is to prevent different PM callbacks
+> > executed for the same device object from racing with each other.
+> > Unfortunately, after commit e8665002477f0278f84f898145b1f141ba26ee26
+> > (PM: Allow pm_runtime_suspend() to succeed during system suspend)
+> > runtime PM callbacks may be executed concurrently with system
+> > suspend/resume callbacks for the same device.
+> (...)
+> > Signed-off-by: Rafael J. Wysocki <rjw@sisk.pl>
 > 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 1bcd65a..96029e6 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -520,7 +520,7 @@ fail_host_msg:
->  /**
->   * iscsi_bsg_host_add - Create and add the bsg hooks to receive requests
->   * @shost: shost for iscsi_host
-> - * @cls_host: iscsi_cls_host adding the structures to
-> + * @ihost: iscsi_cls_host adding the structures to
->   */
->  static int
->  iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
+> A quick question: is there some specific reason why this patch should
+> not go into the 3.0.y stable releases? We are trying to produce
+> a runtime PM system of product quality based on 3.0.y and we've
+> already had to backport this patch ourselves to get things stable.
+> 
+> We have also backported:
+> PM: Introduce generic "noirq" callback routines for subsystems (v2)
+> PM / Runtime: Update documentation of interactions with system sleep
+> PM / Runtime: Add new helper function: pm_runtime_status_suspended()
+> 
+> And now it seems to be sufficient to get this thing going.
 
-Looks ok to me.
+So, what specific git commits do you want to see in the 3.0-stable
+tree, and in what order should they be applied in?
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+thanks,
+
+greg k-h
