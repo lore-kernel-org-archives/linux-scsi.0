@@ -1,177 +1,82 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [RESEND][PATCH 4/4] scsi_dh: code cleanup and remove the references to scsi_dev_info
-Date: Thu, 3 Nov 2011 11:52:06 -0400
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBE66@RTPMVEXC1-PRD.hq.netapp.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: NULL ptr deref at elv_drain_elevator
+Date: Thu, 03 Nov 2011 17:08:40 +0100
+Message-ID: <4EB2BC88.3070105@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:10244 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932263Ab1KCPwK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 11:52:10 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, "James E.J. Bottomley" <jejb@parisc-linux.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
 
-All the handlers have implemented the match function(look at patch 1, 2, 3).
-We don't need to use scsi_dev_info any more for matching purposes.
-Cleaning up the scsi_dh code.
+Hi,
 
-FYI..
-Match function was originally implemented by this 
+I'm seeing the NULL ptr dereference below on each boot of KVM virtual
+machine. q->elevator is NULL. This is next-20111025.
 
-http://www.spinics.net/lists/linux-scsi/msg54284.html
-or
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=6c3633d08acf514e2e89aa95d2346ce9d64d719a
+I tried to apply Tejun's patch from:
+ https://lkml.org/lkml/2011/4/30/87
+but it doesn't help. Maybe I should revert something?
 
-Signed-off-by: Babu Moger <babu.moger@netapp.com>
----
+Scanning for LVM volume groups...
+Reading all physical volumes.  This may take a while...
+No volume groups found
+BUG: unable to handle kernel NULL pointer dereference at           (null)
+IP: [<ffffffff8125a69c>] elv_drain_elevator+0x1c/0x70
+PGD 46176067 PUD 452b5067 PMD 0
+Oops: 0000 [#1] SMP
+CPU 0
+Modules linked in:
 
-diff -uprN -X linux/Documentation/dontdiff linux//drivers/scsi/device_handler/scsi_dh.c linux-new/linux//drivers/scsi/device_handler/scsi_dh.c
---- linux//drivers/scsi/device_handler/scsi_dh.c	2011-10-31 13:47:37.000000000 -0500
-+++ linux-new/linux//drivers/scsi/device_handler/scsi_dh.c	2011-10-31 13:45:46.000000000 -0500
-@@ -27,7 +27,6 @@
- 
- static DEFINE_SPINLOCK(list_lock);
- static LIST_HEAD(scsi_dh_list);
--static int scsi_dh_list_idx = 1;
- 
- static struct scsi_device_handler *get_device_handler(const char *name)
- {
-@@ -44,21 +43,6 @@ static struct scsi_device_handler *get_d
- 	return found;
- }
- 
--static struct scsi_device_handler *get_device_handler_by_idx(int idx)
--{
--	struct scsi_device_handler *tmp, *found = NULL;
--
--	spin_lock(&list_lock);
--	list_for_each_entry(tmp, &scsi_dh_list, list) {
--		if (tmp->idx == idx) {
--			found = tmp;
--			break;
--		}
--	}
--	spin_unlock(&list_lock);
--	return found;
--}
--
- /*
-  * device_handler_match_function - Match a device handler to a device
-  * @sdev - SCSI device to be tested
-@@ -83,23 +67,6 @@ device_handler_match_function(struct scs
- }
- 
- /*
-- * device_handler_match_devlist - Match a device handler to a device
-- * @sdev - SCSI device to be tested
-- *
-- * Tests @sdev against all device_handler registered in the devlist.
-- * Returns the found device handler or NULL if not found.
-- */
--static struct scsi_device_handler *
--device_handler_match_devlist(struct scsi_device *sdev)
--{
--	int idx;
--
--	idx = scsi_get_device_flags_keyed(sdev, sdev->vendor, sdev->model,
--					  SCSI_DEVINFO_DH);
--	return get_device_handler_by_idx(idx);
--}
--
--/*
-  * device_handler_match - Attach a device handler to a device
-  * @scsi_dh - The device handler to match against or NULL
-  * @sdev - SCSI device to be tested against @scsi_dh
-@@ -115,8 +82,6 @@ device_handler_match(struct scsi_device_
- 	struct scsi_device_handler *found_dh;
- 
- 	found_dh = device_handler_match_function(sdev);
--	if (!found_dh)
--		found_dh = device_handler_match_devlist(sdev);
- 
- 	if (scsi_dh && found_dh != scsi_dh)
- 		found_dh = NULL;
-@@ -360,25 +325,14 @@ static int scsi_dh_notifier_remove(struc
-  */
- int scsi_register_device_handler(struct scsi_device_handler *scsi_dh)
- {
--	int i;
- 
- 	if (get_device_handler(scsi_dh->name))
- 		return -EBUSY;
- 
- 	spin_lock(&list_lock);
--	scsi_dh->idx = scsi_dh_list_idx++;
- 	list_add(&scsi_dh->list, &scsi_dh_list);
- 	spin_unlock(&list_lock);
- 
--	for (i = 0; scsi_dh->devlist && scsi_dh->devlist[i].vendor; i++) {
--		scsi_dev_info_list_add_keyed(0,
--					scsi_dh->devlist[i].vendor,
--					scsi_dh->devlist[i].model,
--					NULL,
--					scsi_dh->idx,
--					SCSI_DEVINFO_DH);
--	}
--
- 	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh, scsi_dh_notifier_add);
- 	printk(KERN_INFO "%s: device handler registered\n", scsi_dh->name);
- 
-@@ -395,7 +349,6 @@ EXPORT_SYMBOL_GPL(scsi_register_device_h
-  */
- int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
- {
--	int i;
- 
- 	if (!get_device_handler(scsi_dh->name))
- 		return -ENODEV;
-@@ -403,12 +356,6 @@ int scsi_unregister_device_handler(struc
- 	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh,
- 			 scsi_dh_notifier_remove);
- 
--	for (i = 0; scsi_dh->devlist && scsi_dh->devlist[i].vendor; i++) {
--		scsi_dev_info_list_del_keyed(scsi_dh->devlist[i].vendor,
--					     scsi_dh->devlist[i].model,
--					     SCSI_DEVINFO_DH);
--	}
--
- 	spin_lock(&list_lock);
- 	list_del(&scsi_dh->list);
- 	spin_unlock(&list_lock);
-@@ -587,10 +534,6 @@ static int __init scsi_dh_init(void)
- {
- 	int r;
- 
--	r = scsi_dev_info_add_list(SCSI_DEVINFO_DH, "SCSI Device Handler");
--	if (r)
--		return r;
--
- 	r = bus_register_notifier(&scsi_bus_type, &scsi_dh_nb);
- 
- 	if (!r)
-@@ -605,7 +548,6 @@ static void __exit scsi_dh_exit(void)
- 	bus_for_each_dev(&scsi_bus_type, NULL, NULL,
- 			 scsi_dh_sysfs_attr_remove);
- 	bus_unregister_notifier(&scsi_bus_type, &scsi_dh_nb);
--	scsi_dev_info_remove_list(SCSI_DEVINFO_DH);
- }
- 
- module_init(scsi_dh_init);
-diff -uprN -X linux/Documentation/dontdiff linux//include/scsi/scsi_device.h linux-new/linux//include/scsi/scsi_device.h
---- linux//include/scsi/scsi_device.h	2011-10-31 13:48:47.000000000 -0500
-+++ linux-new/linux//include/scsi/scsi_device.h	2011-10-31 13:53:06.000000000 -0500
-@@ -185,7 +185,6 @@ typedef void (*activate_complete)(void *
- struct scsi_device_handler {
- 	/* Used by the infrastructure */
- 	struct list_head list; /* list of scsi_device_handlers */
--	int idx;
- 
- 	/* Filled by the hardware handler */
- 	struct module *module;
+Pid: 830, comm: kworker/0:2 Not tainted 3.1.0-next-20111025_64+ #1590
+Bochs Bochs
+RIP: 0010:[<ffffffff8125a69c>]  [<ffffffff8125a69c>]
+elv_drain_elevator+0x1c/0x70
+RSP: 0018:ffff8800461abd00  EFLAGS: 00010086
+RAX: 0000000000000000 RBX: ffff880046948e00 RCX: 00000001820001ee
+RDX: 0000000000000001 RSI: 0000000000000001 RDI: ffff880046948e00
+RBP: ffff8800461abd10 R08: 0000000000000001 R09: 0000000000000000
+R10: 0000000000000001 R11: 0000000000000000 R12: 0000000000000001
+R13: ffff8800469494e0 R14: ffff88004689c450 R15: 0000000000000000
+FS:  0000000000000000(0000) GS:ffff880049600000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 0000000000000000 CR3: 00000000451f6000 CR4: 00000000000006f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process kworker/0:2 (pid: 830, threadinfo ffff8800461aa000, task
+ffff880046f28670)
+Stack:
+ ffff88004789f888 ffff880046948e00 ffff8800461abd30 ffffffff8125da92
+ ffff880046948e00 ffff8800469491f4 ffff8800461abd60 ffffffff8125db90
+ ffff8800461abd40 ffff88004689c450 ffff88004689c400 ffff88004789f888
+Call Trace:
+ [<ffffffff8125da92>] blk_drain_queue+0x42/0x70
+ [<ffffffff8125db90>] blk_cleanup_queue+0xd0/0x1c0
+ [<ffffffff81469640>] md_free+0x50/0x70
+ [<ffffffff8126f43b>] kobject_release+0x8b/0x1d0
+ [<ffffffff8126f3b0>] ? kobject_del+0x40/0x40
+ [<ffffffff81469380>] ? bb_show+0x20/0x20
+ [<ffffffff81270d56>] kref_put+0x36/0xa0
+ [<ffffffff8126f2b7>] kobject_put+0x27/0x60
+ [<ffffffff814693af>] mddev_delayed_delete+0x2f/0x40
+ [<ffffffff81083450>] process_one_work+0x100/0x3b0
+ [<ffffffff8108527f>] worker_thread+0x15f/0x3a0
+ [<ffffffff81085120>] ? manage_workers.isra.32+0x240/0x240
+ [<ffffffff81089937>] kthread+0x87/0x90
+ [<ffffffff81621834>] kernel_thread_helper+0x4/0x10
+ [<ffffffff810898b0>] ? kthread_worker_fn+0x1a0/0x1a0
+ [<ffffffff81621830>] ? gs_change+0xb/0xb
+Code: c0 74 02 ff d0 5d c3 0f 1f 84 00 00 00 00 00 55 48 89 e5 53 48 89
+fb 48 83 ec 08 0f 1f 40 00 48 8b 43 18 be 01 00 00 00 48 89 df
+ 8b 00 ff 50 28 85 c0 75 ea 8b 93 80 04 00 00 85 d2 74 14 8b
+RIP  [<ffffffff8125a69c>] elv_drain_elevator+0x1c/0x70
+ RSP <ffff8800461abd00>
+CR2: 0000000000000000
+---[ end trace 2b4616ccecf0982b ]---
 
-
+thanks,
+-- 
+js
+suse labs
