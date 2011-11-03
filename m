@@ -1,52 +1,61 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH block/for-next] block: don't call blk_drain_queue() if
- elevator is not up
-Date: Thu, 03 Nov 2011 18:49:53 +0100
-Message-ID: <4EB2D441.9040708@kernel.dk>
-References: <4EB2BC88.3070105@suse.cz> <20111103161436.GJ4417@google.com> <20111103162634.GK4417@google.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Thu, 3 Nov 2011 14:25:48 -0400
+Message-ID: <20111103182548.GA12131@redhat.com>
+References: <1318608184.3018.42.camel@dabdike.int.hansenpartnership.com>
+ <4E9BEB68.1050707@ce.jp.nec.com>
+ <1318860403.4794.12.camel@dabdike.int.hansenpartnership.com>
+ <4E9D7FA8.9000000@ce.jp.nec.com>
+ <20111018154542.GB3869@osiris.boeblingen.de.ibm.com>
+ <1318955380.5169.15.camel@dabdike.int.hansenpartnership.com>
+ <20111031100557.GA2621@osiris.boeblingen.de.ibm.com>
+ <1320057746.2964.1.camel@dabdike>
+ <4EAE8A7E.8000504@ce.jp.nec.com>
+ <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:54525 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933174Ab1KCRuA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 13:50:00 -0400
-In-Reply-To: <20111103162634.GK4417@google.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jiri Slaby <jslaby@suse.cz>, "James E.J. Bottomley" <jejb@parisc-linux.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
 
-On 2011-11-03 17:26, Tejun Heo wrote:
-> blk_cleanup_queue() may be called before elevator is set up on a
-> queue which triggers the following oops.
+On Mon, Oct 31 2011 at  9:00am -0400,
+Heiko Carstens <heiko.carstens@de.ibm.com> wrote:
+
+> On Mon, Oct 31, 2011 at 08:46:06PM +0900, Jun'ichi Nomura wrote:
+> > Hm, dm_softirq_done is generic completion code of original
+> > request in dm-multipath.
+> > So oops here might be another manifestation of use-after-free.
+> > 
+> > Do you always hit the oops at the same address?
 > 
->  BUG: unable to handle kernel NULL pointer dereference at           (null)
->  IP: [<ffffffff8125a69c>] elv_drain_elevator+0x1c/0x70
->  ...
->  Pid: 830, comm: kworker/0:2 Not tainted 3.1.0-next-20111025_64+ #1590
->  Bochs Bochs
->  RIP: 0010:[<ffffffff8125a69c>]  [<ffffffff8125a69c>] elv_drain_elevator+0x1c/0x70
->  ...
->  Call Trace:
->   [<ffffffff8125da92>] blk_drain_queue+0x42/0x70
->   [<ffffffff8125db90>] blk_cleanup_queue+0xd0/0x1c0
->   [<ffffffff81469640>] md_free+0x50/0x70
->   [<ffffffff8126f43b>] kobject_release+0x8b/0x1d0
->   [<ffffffff81270d56>] kref_put+0x36/0xa0
->   [<ffffffff8126f2b7>] kobject_put+0x27/0x60
->   [<ffffffff814693af>] mddev_delayed_delete+0x2f/0x40
->   [<ffffffff81083450>] process_one_work+0x100/0x3b0
->   [<ffffffff8108527f>] worker_thread+0x15f/0x3a0
->   [<ffffffff81089937>] kthread+0x87/0x90
->   [<ffffffff81621834>] kernel_thread_helper+0x4/0x10
+> I think we saw this bug the first time. But before that the scsi
+> logging level was higher. Gonzalo is trying to recreate it with
+> the same (old) scsi logging level.
+> Afterwards we will try with barrier=0.
 > 
-> Fix it by making blk_cleanup_queue() check whether q->elevator is set
-> up before invoking blk_drain_queue.
+> Both on v3.0.7 btw.
+> 
+> > Could you find corresponding source code line for
+> > the crashed address, dm_softirq_done+0x72/0x140,
+> > and which pointer was invalid?
+> 
+> It crashes in the inlined function dm_done() when trying to
+> dereference tio (aka clone->end_io_data):
+> 
+> static void dm_done(struct request *clone, int error, bool mapped)
+> {
+>         int r = error;
+>         struct dm_rq_target_io *tio = clone->end_io_data;
+>         dm_request_endio_fn rq_end_io = tio->ti->type->rq_end_io;
 
-Thanks, glad this got caught before the merge...
+Hi,
 
--- 
-Jens Axboe
+Which underlying storage driver is being used by this multipath device?
 
+Thanks,
+Mike
