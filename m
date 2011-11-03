@@ -1,38 +1,49 @@
-From: JiSheng Zhang <jszhang3@gmail.com>
-Subject: Re: Do we need to implement sr START/STOP management
-Date: Thu, 3 Nov 2011 14:38:48 +0800
-Message-ID: <CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com>
-References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
-	<1320126812.7701.17.camel@dabdike>
-	<CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
-	<4EB0992C.5070309@gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] [SCSI] Clear Devloss Callback Done flag in
+ fc_remote_port_rolechg.
+Date: Thu, 03 Nov 2011 11:15:36 +0400
+Message-ID: <1320304536.11439.1.camel@dabdike>
+References: <fc185e15-b38b-407a-a98b-bb65c53c5f78@exht2.ad.emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4EB0992C.5070309@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:42057 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753803Ab1KCHPl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 03:15:41 -0400
+In-Reply-To: <fc185e15-b38b-407a-a98b-bb65c53c5f78@exht2.ad.emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alex.Iannicelli@Emulex.Com
+Cc: linux-scsi@vger.kernel.org, James.Smart@Emulex.Com
 
-Hello,
+On Thu, 2011-10-27 at 07:53 -0700, Alex.Iannicelli@Emulex.Com wrote:
+> This patch fixes a bug where devloss is not called on fc_host teardown. The 
+> issues is seen if the LLDD uses rport_rolechg to add target role to rport.
+> When an rport is discovered the LLDD uses fc_rport_add to add the rport and then 
+> uses remote_port_rolechg to indicate that it is a target. If this rport goes away 
+> and the LLDD calls fc_report_port_delete. The transport calls devloss after the 
+> devloss timer fires and it sets the FC_RPORT_DEVLOSS_CALLBK_DONE flag. If the
+> LLDD discovers this target again and uses remote_port_add to add it, but it was
+> a target and there is no target role assigned yet then this function returns 
+> without clearing the FC_RPORT_DEVLOSS_CALLBACK_DONE flag. When the LLDD calls
+> again to change the role to a target the report_port_rolechg routine neglects to
+> clear the flag as well. Once in this state, if the LLDD tears down the fc_host
+> then devloss will not be called for this target because the DEVLOSS_CALLBK_DONE
+> flag is still set.
+>  
+> This patch adds the FC_RPORT_DEVLOSS_CALLBK_DONE flag to the group of flags that
+> it clears when flushing devloss timers.
+>  
+> Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
+> Signed-off-by: James Smart <james.smart@emulex.com>
 
-2011/11/2 Robert Hancock <hancockrwd@gmail.com>:
-> On 11/01/2011 12:35 AM, JiSheng Zhang wrote:
->>
-> I believe the main reason disks are stopped during shutdown is that for many
-> hard drives that use head unloading, it's much better for the lifespan of
-> the drive to do a powered head unload on software command before powering
-> off than an emergency unload caused by a loss of power. I don't believe that
-> optical drives have such an issue.
->
-I have talked with one cdrom firmware engineer, cdrom also need to put
-the head at
-"park" position. So we also need to let cdrom spin down when poweroff,
-suspend etc for lifespan?
-
-Assume /sbin/shutdown immediately after reading from cdrom and cdrom
-has no time to spin down
+This patch has the usual outlook tab->space corruption.  Could you
+resend it either with a working email client or as an attachment?
 
 Thanks,
-Jisheng
+
+James
+
+
