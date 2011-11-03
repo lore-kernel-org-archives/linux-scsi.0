@@ -1,136 +1,60 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [dm-devel] [PATCH 3/4] scsi_dh_rdac: Adding the match function for	rdac device handler
-Date: Thu, 3 Nov 2011 10:47:39 -0400
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBDC7@RTPMVEXC1-PRD.hq.netapp.com>
-References: <47D23AD8469A2B448F33C24BD7A39BD9105DB4D8@RTPMVEXC1-PRD.hq.netapp.com><4EB0EF3F.1010300@suse.de><47D23AD8469A2B448F33C24BD7A39BD9105DB8EE@RTPMVEXC1-PRD.hq.netapp.com> <20111102154612.GA30632@redhat.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH 0/3] ata port runtime power management support
+Date: Thu, 03 Nov 2011 22:47:17 +0800
+Message-ID: <1320331637.2813.84.camel@hp6530s>
+References: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
+	 <20111102151711.GB12543@dhcp-172-17-108-109.mtv.corp.google.com>
+	 <1320330107.2813.73.camel@hp6530s>
+	 <CAOS58YMSwnp=Vm81+0_ZO9OYB4=NMnfETBen0QNCQwuDW0TjUA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:32388 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754722Ab1KCOr6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 10:47:58 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20111102154612.GA30632@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAOS58YMSwnp=Vm81+0_ZO9OYB4=NMnfETBen0QNCQwuDW0TjUA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Mike Snitzer [mailto:snitzer@redhat.com]
-> Sent: Wednesday, November 02, 2011 10:46 AM
-> To: device-mapper development
-> Cc: Linux SCSI Mailing list
-> Subject: Re: [dm-devel] [PATCH 3/4] scsi_dh_rdac: Adding the match
-> function for rdac device handler
+On Thu, 2011-11-03 at 22:30 +0800, Tejun Heo wrote:
+> Hello,
 > 
-> On Wed, Nov 02 2011 at 11:23am -0400,
-> Moger, Babu <Babu.Moger@netapp.com> wrote:
-> 
-> > > -----Original Message-----
-> > > From: Hannes Reinecke [mailto:hare@suse.de]
-> > > Sent: Wednesday, November 02, 2011 2:21 AM
-> > > To: dm-devel@redhat.com
-> > > Subject: Re: [dm-devel] [PATCH 3/4] scsi_dh_rdac: Adding the match
-> > > function for rdac device handler
-> > >
-> > > On 11/01/2011 06:19 PM, Moger, Babu wrote:
-> > > > This patch introduces the match function for rdac device handler.
-> > > Without this,
-> > > > sometimes handler attach fails during the device_add.  The match
-> > > function was
-> > > > introduced by this patch
-> > > > http://www.spinics.net/lists/linux-scsi/msg54284.html
-> > > >
-> > > > Signed-off-by: Babu Moger<babu.moger@netapp.com>
-> > > > ---
-> > > >
-> > > > --- linux/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-
-> 10-31
-> > > 11:25:44.000000000 -0500
-> > > > +++ linux/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-10-31
-> > > 11:31:34.000000000 -0500
-> > > > @@ -819,6 +819,21 @@ static const struct scsi_dh_devlist rdac
-> > > >   	{NULL, NULL},
-> > > >   };
-> > > >
-> > > > +static bool rdac_match(struct scsi_device *sdev)
-> > > > +{
-> > > > +	int i;
-> > > > +
-> > > > +	for (i = 0; rdac_dev_list[i].vendor; i++) {
-> > > > +		if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
-> > > > +			strlen(rdac_dev_list[i].vendor))&&
-> > > > +		    !strncmp(sdev->model, rdac_dev_list[i].model,
-> > > > +			strlen(rdac_dev_list[i].model))) {
-> > > > +			return true;
-> > > > +		}
-> > > > +	}
-> > > > +	return false;
-> > > > +}
-> > > > +
-> > > >   static int rdac_bus_attach(struct scsi_device *sdev);
-> > > >   static void rdac_bus_detach(struct scsi_device *sdev);
-> > > >
-> > > > @@ -831,6 +846,7 @@ static struct scsi_device_handler rdac_d
-> > > >   	.attach = rdac_bus_attach,
-> > > >   	.detach = rdac_bus_detach,
-> > > >   	.activate = rdac_activate,
-> > > > +	.match = rdac_match,
-> > > >   };
-> > > >
-> > > >   static int rdac_bus_attach(struct scsi_device *sdev)
-> > > >
-> > > As stated in the other mail, I guess we would need to have a check
-> > > if the LUN is in ALUA mode.
-> > > And, btw, the _original_ intention was to allow vendor-specific
-> > > device_handler to do some better probing, eg querying some
-> > > vendor-specific VPD pages.
-> > > Especially for RDAC it would make far more sense to query the
-> > > existence and format of one of the RDAC-specific VPD pages (eg
-> 0xC2,
-> > > 0xC4, or 0xC8) and use that for matching.
-> > > Then you could do away with the vendor/model array altogether here
-> > > and we wouldn't need to update the rdac handler every time a new
-> > > array comes out or has been rebranded by some OEM.
+> On Thu, Nov 3, 2011 at 7:21 AM, Lin Ming <ming.m.lin@intel.com> wrote:
+> >> * How much does this add on top of hardware timed auto spindown and
+> >>   dynamic link power management?
 > >
-> > OK. I will add the check for TPGS. I will send the patches tomorrow.
-> > For sending the VPD pages(0xC2, 0xC4 and 0xC8), I think we need be
-> little careful here.
-> > This includes sending these commands to every possible device in the
-> system. That is what we want to avoid.
-> > I will investigate more on that. That will be my next set of patches
-> independent of this.
+> > Sorry, I don't understand this question.
+> > What do you mean?
 > 
-> Much appreciated.  I agree with Hannes, ideally we wouldn't need the
-> rdac dev_list.
+> I was curious about the amount of additional power saving on top of
+> the existing PM features.
 
-Yes, We would like to remove the dependency on Vendor/product strings.
-I will work on that. These current patches will address the current the
-Attach issue which I mentioned in the description(PATCH 0/4).
-I will resubmit the patches now..
+I'll measure the power saving.
 
 > 
-> What about the issue where the appropriate scsi_dh isn't attached
-> during
-> scan (resulting in boot failures, trespasses, etc)?
+> >> * Do the added benefits justify yet another runtime powersaving
+> >>   mechanism?
+> >
+> > There will be ACPI firmware which supports ata port runtime D3Cold.
+> > To enable ata port runtime PM is the first step.
 > 
-> Hannes, I know you had plans for how to address the early scsi_dh
-> attachment (and this match() work is a great step forward).  I just
-> wanted to touch base with you on what your current vision is on how to
-> achieve proper early scsi_dh attachment (and what the remaining TODO
-> is).
+> libata can already turn off unused ports although it wouldn't go as
+> far as putting the whole controller into D3.
 
-I am not aware of any other issue at this point. Hannes may know about it.
+At runtime?
+Could you point me which piece of code implement this?
 
 > 
-> Thanks,
-> Mike
+> >> * Any way we can tie the other stuff with overall runtime PM?
+> >
+> > What's the other stuff?
+> > Do you mean tie disk/link/port/controller stuff with overall runtime PM?
 > 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+> Hardware initiated spin-down (hdparm -S) and link power saving (look
+> for ata_lpm_*). It would be great if there's an overall design how
+> they interact before adding yet another PM vector.
+
+Yes. Need to think about it.
+
+Thanks.
+
