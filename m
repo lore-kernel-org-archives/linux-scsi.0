@@ -1,52 +1,40 @@
-From: "majianpeng" <majianpeng@gmail.com>
-Subject: sas_queue_up:remove unused variable
-Date: Thu, 3 Nov 2011 13:38:19 +0800
-Message-ID: <201111031338165312058@gmail.com>
+From: JiSheng Zhang <jszhang3@gmail.com>
+Subject: Re: Is there any elegant way to re-identify and re-configure xfer mode
+Date: Thu, 3 Nov 2011 14:03:09 +0800
+Message-ID: <CADyp2PeT7hE2wy9ieqxOr3iJC5w_Zk0_pnmN51A0tUKk6VtKyg@mail.gmail.com>
+References: <CADyp2PdXeq8phoWSntyjGSY7dc93kcRg9DRV6cdCWi96j5g2LA@mail.gmail.com>
+	<CAOS58YPxZSdGWT+3Wgo7mvrL0xzJE-F7WGKC7LryVUFuUe9xSQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39601 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040Ab1KCFiN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 01:38:13 -0400
-Received: by iage36 with SMTP id e36so942527iag.19
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2011 22:38:12 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAOS58YPxZSdGWT+3Wgo7mvrL0xzJE-F7WGKC7LryVUFuUe9xSQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley <JBottomley@Parallels.com>JBottomley <JBottomley@Parallels.com>JBottomley <JBottomley@Parallels.com>JBottomley <JBottomley@Parallels.com>JBottomley <JBot>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
->From 75995bfd9fc4bdbc7830a8bbb15d82ab84cc92c1 Mon Sep 17 00:00:00 2001
-From: majianpeng <majianpeng@gmail.com>
-Date: Thu, 3 Nov 2011 11:15:31 +0000
-Subject: [PATCH] remove unused variable
+Hi Tejun
 
+2011/11/2 Tejun Heo <tj@kernel.org>:
+> From userland,
+>
+> # echo - - - > /sys/class/scsi_host/hostX/rescan
+>
 
-Signed-off-by: majianpeng <majianpeng@gmail.com>
----
- drivers/scsi/libsas/sas_scsi_host.c |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+There's no action after echo --- > /sys/class/scsi_host/hostX/scan
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index b2c4a77..c13f67d 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -167,7 +167,6 @@ int sas_queue_up(struct sas_task *task)
- 	struct sas_ha_struct *sas_ha = task->dev->port->ha;
- 	struct scsi_core *core = &sas_ha->core;
- 	unsigned long flags;
--	LIST_HEAD(list);
- 
- 	spin_lock_irqsave(&core->task_queue_lock, flags);
- 	if (sas_ha->lldd_queue_size < core->task_queue_size + 1) {
--- 
-1.7.3
- 				
- 				 
+> From kernel,
+>
+> =A0 =A0spin_lock_irqsave(ap->lock, flags);
+> =A0 =A0dev->link.eh_info.dev_action[dev->devno] |=3D ATA_EH_REVALIDAT=
+E;
+> =A0 =A0ata_port_schedule_eh(ap);
+> =A0 =A0spin_unlock_irqrestore(ap->lock, flags);
 
---------------
-majianpeng
-2011-11-03
+It cause link reset, the cdrom go back to Boot mode again :(
 
+would you plz give any suggestions?
+
+Thanks very much,
+Jisheng
