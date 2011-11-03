@@ -1,63 +1,177 @@
 From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [RESEND][PATCH 3/4] scsi_dh_rdac: Adding the match function for rdac device handler
-Date: Thu, 3 Nov 2011 11:51:53 -0400
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBE65@RTPMVEXC1-PRD.hq.netapp.com>
+Subject: [RESEND][PATCH 4/4] scsi_dh: code cleanup and remove the references to scsi_dev_info
+Date: Thu, 3 Nov 2011 11:52:06 -0400
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBE66@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:11276 "EHLO mx2.netapp.com"
+Received: from mx2.netapp.com ([216.240.18.37]:10244 "EHLO mx2.netapp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932263Ab1KCPv4 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 11:51:56 -0400
+	id S932263Ab1KCPwK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 11:52:10 -0400
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
 Cc: device-mapper development <dm-devel@redhat.com>
 
-This patch introduces the match function for rdac device handler. Without this,
-sometimes handler attach fails during the device_add. Included check for TPGS
-bit before proceeding further. The match function was introduced by this patch
+All the handlers have implemented the match function(look at patch 1, 2, 3).
+We don't need to use scsi_dev_info any more for matching purposes.
+Cleaning up the scsi_dh code.
+
+FYI..
+Match function was originally implemented by this 
+
 http://www.spinics.net/lists/linux-scsi/msg54284.html
+or
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=6c3633d08acf514e2e89aa95d2346ce9d64d719a
 
 Signed-off-by: Babu Moger <babu.moger@netapp.com>
 ---
 
---- linux-d211858/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-11-02 14:17:52.000000000 -0500
-+++ linux-d211858/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-11-02 15:27:51.000000000 -0500
-@@ -819,6 +819,24 @@ static const struct scsi_dh_devlist rdac
- 	{NULL, NULL},
- };
+diff -uprN -X linux/Documentation/dontdiff linux//drivers/scsi/device_handler/scsi_dh.c linux-new/linux//drivers/scsi/device_handler/scsi_dh.c
+--- linux//drivers/scsi/device_handler/scsi_dh.c	2011-10-31 13:47:37.000000000 -0500
++++ linux-new/linux//drivers/scsi/device_handler/scsi_dh.c	2011-10-31 13:45:46.000000000 -0500
+@@ -27,7 +27,6 @@
  
-+static bool rdac_match(struct scsi_device *sdev)
-+{
-+	int i;
-+
-+	if (scsi_device_tpgs(sdev))
-+		return false;
-+
-+	for (i = 0; rdac_dev_list[i].vendor; i++) {
-+		if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
-+			strlen(rdac_dev_list[i].vendor)) &&
-+		    !strncmp(sdev->model, rdac_dev_list[i].model,
-+			strlen(rdac_dev_list[i].model))) {
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- static int rdac_bus_attach(struct scsi_device *sdev);
- static void rdac_bus_detach(struct scsi_device *sdev);
+ static DEFINE_SPINLOCK(list_lock);
+ static LIST_HEAD(scsi_dh_list);
+-static int scsi_dh_list_idx = 1;
  
-@@ -831,6 +849,7 @@ static struct scsi_device_handler rdac_d
- 	.attach = rdac_bus_attach,
- 	.detach = rdac_bus_detach,
- 	.activate = rdac_activate,
-+	.match = rdac_match,
- };
+ static struct scsi_device_handler *get_device_handler(const char *name)
+ {
+@@ -44,21 +43,6 @@ static struct scsi_device_handler *get_d
+ 	return found;
+ }
  
- static int rdac_bus_attach(struct scsi_device *sdev)
+-static struct scsi_device_handler *get_device_handler_by_idx(int idx)
+-{
+-	struct scsi_device_handler *tmp, *found = NULL;
+-
+-	spin_lock(&list_lock);
+-	list_for_each_entry(tmp, &scsi_dh_list, list) {
+-		if (tmp->idx == idx) {
+-			found = tmp;
+-			break;
+-		}
+-	}
+-	spin_unlock(&list_lock);
+-	return found;
+-}
+-
+ /*
+  * device_handler_match_function - Match a device handler to a device
+  * @sdev - SCSI device to be tested
+@@ -83,23 +67,6 @@ device_handler_match_function(struct scs
+ }
+ 
+ /*
+- * device_handler_match_devlist - Match a device handler to a device
+- * @sdev - SCSI device to be tested
+- *
+- * Tests @sdev against all device_handler registered in the devlist.
+- * Returns the found device handler or NULL if not found.
+- */
+-static struct scsi_device_handler *
+-device_handler_match_devlist(struct scsi_device *sdev)
+-{
+-	int idx;
+-
+-	idx = scsi_get_device_flags_keyed(sdev, sdev->vendor, sdev->model,
+-					  SCSI_DEVINFO_DH);
+-	return get_device_handler_by_idx(idx);
+-}
+-
+-/*
+  * device_handler_match - Attach a device handler to a device
+  * @scsi_dh - The device handler to match against or NULL
+  * @sdev - SCSI device to be tested against @scsi_dh
+@@ -115,8 +82,6 @@ device_handler_match(struct scsi_device_
+ 	struct scsi_device_handler *found_dh;
+ 
+ 	found_dh = device_handler_match_function(sdev);
+-	if (!found_dh)
+-		found_dh = device_handler_match_devlist(sdev);
+ 
+ 	if (scsi_dh && found_dh != scsi_dh)
+ 		found_dh = NULL;
+@@ -360,25 +325,14 @@ static int scsi_dh_notifier_remove(struc
+  */
+ int scsi_register_device_handler(struct scsi_device_handler *scsi_dh)
+ {
+-	int i;
+ 
+ 	if (get_device_handler(scsi_dh->name))
+ 		return -EBUSY;
+ 
+ 	spin_lock(&list_lock);
+-	scsi_dh->idx = scsi_dh_list_idx++;
+ 	list_add(&scsi_dh->list, &scsi_dh_list);
+ 	spin_unlock(&list_lock);
+ 
+-	for (i = 0; scsi_dh->devlist && scsi_dh->devlist[i].vendor; i++) {
+-		scsi_dev_info_list_add_keyed(0,
+-					scsi_dh->devlist[i].vendor,
+-					scsi_dh->devlist[i].model,
+-					NULL,
+-					scsi_dh->idx,
+-					SCSI_DEVINFO_DH);
+-	}
+-
+ 	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh, scsi_dh_notifier_add);
+ 	printk(KERN_INFO "%s: device handler registered\n", scsi_dh->name);
+ 
+@@ -395,7 +349,6 @@ EXPORT_SYMBOL_GPL(scsi_register_device_h
+  */
+ int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
+ {
+-	int i;
+ 
+ 	if (!get_device_handler(scsi_dh->name))
+ 		return -ENODEV;
+@@ -403,12 +356,6 @@ int scsi_unregister_device_handler(struc
+ 	bus_for_each_dev(&scsi_bus_type, NULL, scsi_dh,
+ 			 scsi_dh_notifier_remove);
+ 
+-	for (i = 0; scsi_dh->devlist && scsi_dh->devlist[i].vendor; i++) {
+-		scsi_dev_info_list_del_keyed(scsi_dh->devlist[i].vendor,
+-					     scsi_dh->devlist[i].model,
+-					     SCSI_DEVINFO_DH);
+-	}
+-
+ 	spin_lock(&list_lock);
+ 	list_del(&scsi_dh->list);
+ 	spin_unlock(&list_lock);
+@@ -587,10 +534,6 @@ static int __init scsi_dh_init(void)
+ {
+ 	int r;
+ 
+-	r = scsi_dev_info_add_list(SCSI_DEVINFO_DH, "SCSI Device Handler");
+-	if (r)
+-		return r;
+-
+ 	r = bus_register_notifier(&scsi_bus_type, &scsi_dh_nb);
+ 
+ 	if (!r)
+@@ -605,7 +548,6 @@ static void __exit scsi_dh_exit(void)
+ 	bus_for_each_dev(&scsi_bus_type, NULL, NULL,
+ 			 scsi_dh_sysfs_attr_remove);
+ 	bus_unregister_notifier(&scsi_bus_type, &scsi_dh_nb);
+-	scsi_dev_info_remove_list(SCSI_DEVINFO_DH);
+ }
+ 
+ module_init(scsi_dh_init);
+diff -uprN -X linux/Documentation/dontdiff linux//include/scsi/scsi_device.h linux-new/linux//include/scsi/scsi_device.h
+--- linux//include/scsi/scsi_device.h	2011-10-31 13:48:47.000000000 -0500
++++ linux-new/linux//include/scsi/scsi_device.h	2011-10-31 13:53:06.000000000 -0500
+@@ -185,7 +185,6 @@ typedef void (*activate_complete)(void *
+ struct scsi_device_handler {
+ 	/* Used by the infrastructure */
+ 	struct list_head list; /* list of scsi_device_handlers */
+-	int idx;
+ 
+ 	/* Filled by the hardware handler */
+ 	struct module *module;
 
 
