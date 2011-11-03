@@ -1,52 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/3] ata port runtime power management support
-Date: Thu, 3 Nov 2011 07:30:15 -0700
-Message-ID: <CAOS58YMSwnp=Vm81+0_ZO9OYB4=NMnfETBen0QNCQwuDW0TjUA@mail.gmail.com>
-References: <1320214900-2112-1-git-send-email-ming.m.lin@intel.com>
-	<20111102151711.GB12543@dhcp-172-17-108-109.mtv.corp.google.com>
-	<1320330107.2813.73.camel@hp6530s>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH 2/3] scsi: add hooks for host runtime power management
+Date: Thu, 03 Nov 2011 22:37:43 +0800
+Message-ID: <1320331063.2813.78.camel@hp6530s>
+References: <Pine.LNX.4.44L0.1111031019250.2136-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1320330107.2813.73.camel@hp6530s>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([143.182.124.21]:30158 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932108Ab1KCOil (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Nov 2011 10:38:41 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1111031019250.2136-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@Parallels.com>, Tejun Heo <tj@kernel.org>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-Hello,
+On Thu, 2011-11-03 at 22:22 +0800, Alan Stern wrote:
+> On Thu, 3 Nov 2011, Lin Ming wrote:
+> 
+> > I realize that this is not the natural way to do ata port runtime pm.
+> > Hooking it to scsi host runtime pm is not good. It does not deal with
+> > the races with system suspend/resume of host controller.
+> > 
+> > How about making ata port as the parent device of scsi host?
+> > Then, for example, the runtime suspend happens as below,
+> > 
+> > disk suspend --> scsi target suspend --> scsi host suspend --> ata port
+> > suspend.
+> > 
+> > Current device tree is:
+> > /sys/devices/pci0000:00/0000:00:1f.2/
+> > |-- ata1
+> > |-- host0
+> > 
+> > After the change, the tree will become as:
+> > /sys/devices/pci0000:00/0000:00:1f.2/ata1/
+> > |-- host0
+> 
+> I don't know enough about the ATA subsystem to say much, except that 
+> this looks more logical.
+> 
+> > The tricky part is ata port(parent device) suspend need to schedule scsi
+> > EH which will resume scsi host(child device). Then the child device
+> > resume will in turn make parent device resume first. This is kind of
+> > recursive.
+> > 
+> > We can fix this by adding a flag somewhere to tell scsi EH don't resume
+> > the host in ata port pm request handling case.
+> > 
+> > What do you think?
+> 
+> Yes, it is a problem.  But it looks like the underlying issue is that
+> you're using the SCSI error handler to do something it was not intended
+> for.  Can't you suspend and resume the ATA port without using the error
+> handler?
 
-On Thu, Nov 3, 2011 at 7:21 AM, Lin Ming <ming.m.lin@intel.com> wrote:
->> * How much does this add on top of hardware timed auto spindown and
->> =A0 dynamic link power management?
->
-> Sorry, I don't understand this question.
-> What do you mean?
+The system suspend and resume of the ATA port uses the error handler.
+I think the runtime suspend and resume should use the error handler too.
 
-I was curious about the amount of additional power saving on top of
-the existing PM features.
+Tejun,
 
->> * Do the added benefits justify yet another runtime powersaving
->> =A0 mechanism?
->
-> There will be ACPI firmware which supports ata port runtime D3Cold.
-> To enable ata port runtime PM is the first step.
-
-libata can already turn off unused ports although it wouldn't go as
-far as putting the whole controller into D3.
-
->> * Any way we can tie the other stuff with overall runtime PM?
->
-> What's the other stuff?
-> Do you mean tie disk/link/port/controller stuff with overall runtime =
-PM?
-
-Hardware initiated spin-down (hdparm -S) and link power saving (look
-for ata_lpm_*). It would be great if there's an overall design how
-they interact before adding yet another PM vector.
+Could you comment more on this?
 
 Thanks.
 
---=20
-tejun
+> 
+> Alan Stern
+> 
+
+
