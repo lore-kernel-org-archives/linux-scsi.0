@@ -1,33 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/3] scsi: add hooks for host runtime power management
-Date: Thu, 3 Nov 2011 08:51:46 -0700
-Message-ID: <CAOS58YN1WByGtr1MNH12vbPVa-vyWa-LiHYgMWSJt1WbfK-vtw@mail.gmail.com>
-References: <CAOS58YNNx7XOGov19_hucAQYvw88F2YO+KoVpn8uD+COgJRbEw@mail.gmail.com>
-	<Pine.LNX.4.44L0.1111031139150.2136-100000@iolanthe.rowland.org>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [RESEND][PATCH 3/4] scsi_dh_rdac: Adding the match function for rdac device handler
+Date: Thu, 3 Nov 2011 11:51:53 -0400
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBE65@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1111031139150.2136-100000@iolanthe.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Lin Ming <ming.m.lin@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.netapp.com ([216.240.18.37]:11276 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932263Ab1KCPv4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 11:51:56 -0400
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
 
-Hello,
+This patch introduces the match function for rdac device handler. Without this,
+sometimes handler attach fails during the device_add. Included check for TPGS
+bit before proceeding further. The match function was introduced by this patch
+http://www.spinics.net/lists/linux-scsi/msg54284.html
 
-On Thu, Nov 3, 2011 at 8:39 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
->> I don't know. I haven't really thought about it but as it's currently
->> designed, I don't think it'll be possible to avoid going through EH to
->> put ATA ports into suspend mode.
->
-> Why not?
+Signed-off-by: Babu Moger <babu.moger@netapp.com>
+---
 
-It's just how things are designed now.  There's no reason why it's
-fundamentally impossible but going around that would require some
-amount of hackery or preferably re-design.  Synchronization against
-command processing, interrupts and all are built around EH.
+--- linux-d211858/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-11-02 14:17:52.000000000 -0500
++++ linux-d211858/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-11-02 15:27:51.000000000 -0500
+@@ -819,6 +819,24 @@ static const struct scsi_dh_devlist rdac
+ 	{NULL, NULL},
+ };
+ 
++static bool rdac_match(struct scsi_device *sdev)
++{
++	int i;
++
++	if (scsi_device_tpgs(sdev))
++		return false;
++
++	for (i = 0; rdac_dev_list[i].vendor; i++) {
++		if (!strncmp(sdev->vendor, rdac_dev_list[i].vendor,
++			strlen(rdac_dev_list[i].vendor)) &&
++		    !strncmp(sdev->model, rdac_dev_list[i].model,
++			strlen(rdac_dev_list[i].model))) {
++			return true;
++		}
++	}
++	return false;
++}
++
+ static int rdac_bus_attach(struct scsi_device *sdev);
+ static void rdac_bus_detach(struct scsi_device *sdev);
+ 
+@@ -831,6 +849,7 @@ static struct scsi_device_handler rdac_d
+ 	.attach = rdac_bus_attach,
+ 	.detach = rdac_bus_detach,
+ 	.activate = rdac_activate,
++	.match = rdac_match,
+ };
+ 
+ static int rdac_bus_attach(struct scsi_device *sdev)
 
-Thanks.
 
--- 
-tejun
