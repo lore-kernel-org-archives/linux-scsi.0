@@ -1,43 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Do we need to implement sr START/STOP management
-Date: Thu, 3 Nov 2011 07:38:48 -0700
-Message-ID: <CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com>
-References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
-	<1320126812.7701.17.camel@dabdike>
-	<CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
-	<4EB0992C.5070309@gmail.com>
-	<CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com>
+Subject: Re: [PATCH 2/3] scsi: add hooks for host runtime power management
+Date: Thu, 3 Nov 2011 07:41:43 -0700
+Message-ID: <CAOS58YNNx7XOGov19_hucAQYvw88F2YO+KoVpn8uD+COgJRbEw@mail.gmail.com>
+References: <Pine.LNX.4.44L0.1111031019250.2136-100000@iolanthe.rowland.org>
+	<1320331063.2813.78.camel@hp6530s>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: JiSheng Zhang <jszhang3@gmail.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dy0-f46.google.com ([209.85.220.46]:41678 "EHLO
+	mail-dy0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755277Ab1KCOlq convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 10:41:46 -0400
+In-Reply-To: <1320331063.2813.78.camel@hp6530s>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
 Hello,
 
-On Wed, Nov 2, 2011 at 11:38 PM, JiSheng Zhang <jszhang3@gmail.com> wrote:
-> I have talked with one cdrom firmware engineer, cdrom also need to put
-> the head at
-> "park" position. So we also need to let cdrom spin down when poweroff,
-> suspend etc for lifespan?
+On Thu, Nov 3, 2011 at 7:37 AM, Lin Ming <ming.m.lin@intel.com> wrote:
+>> Yes, it is a problem. =A0But it looks like the underlying issue is t=
+hat
+>> you're using the SCSI error handler to do something it was not inten=
+ded
+>> for. =A0Can't you suspend and resume the ATA port without using the =
+error
+>> handler?
+>
+> The system suspend and resume of the ATA port uses the error handler.
+> I think the runtime suspend and resume should use the error handler t=
+oo.
+>
+> Tejun,
+>
+> Could you comment more on this?
 
-I'm pretty skeptical that's necessary, and here's what we should do
-regarding ATAPI devices.
-
-  Do what Windows does.
-
-In many cases, manufacturers are verifying only against windows and
-deviation from windows behavior usually means trouble regardless of
-the standard. Even sending TURs repeatedly can send devices into
-complete lockup. So, I don't really care what the standard says. If
-windows isn't issuing spindown on shutdown, we shouldn't either. The
-only thing we would be achieving is to cause timeouts, retrials and
-device detach before the system eventually can turn itself off.
+I don't know. I haven't really thought about it but as it's currently
+designed, I don't think it'll be possible to avoid going through EH to
+put ATA ports into suspend mode.
 
 Thanks.
 
--- 
+--=20
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
