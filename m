@@ -1,45 +1,63 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH 2/3] scsi: add hooks for host runtime power management
-Date: Thu, 3 Nov 2011 12:08:53 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1111031205470.2136-100000@iolanthe.rowland.org>
-References: <CAOS58YN1WByGtr1MNH12vbPVa-vyWa-LiHYgMWSJt1WbfK-vtw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: NULL ptr deref at elv_drain_elevator
+Date: Thu, 3 Nov 2011 09:14:36 -0700
+Message-ID: <20111103161436.GJ4417@google.com>
+References: <4EB2BC88.3070105@suse.cz>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47212 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S933739Ab1KCQIy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 12:08:54 -0400
-In-Reply-To: <CAOS58YN1WByGtr1MNH12vbPVa-vyWa-LiHYgMWSJt1WbfK-vtw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4EB2BC88.3070105@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@parisc-linux.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Lin Ming <ming.m.lin@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 
-On Thu, 3 Nov 2011, Tejun Heo wrote:
-
-> Hello,
+On Thu, Nov 03, 2011 at 05:08:40PM +0100, Jiri Slaby wrote:
+> Hi,
 > 
-> On Thu, Nov 3, 2011 at 8:39 AM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> >> I don't know. I haven't really thought about it but as it's currently
-> >> designed, I don't think it'll be possible to avoid going through EH to
-> >> put ATA ports into suspend mode.
-> >
-> > Why not?
+> I'm seeing the NULL ptr dereference below on each boot of KVM virtual
+> machine. q->elevator is NULL. This is next-20111025.
 > 
-> It's just how things are designed now.  There's no reason why it's
-> fundamentally impossible but going around that would require some
-> amount of hackery or preferably re-design.  Synchronization against
-> command processing, interrupts and all are built around EH.
+> I tried to apply Tejun's patch from:
+>  https://lkml.org/lkml/2011/4/30/87
+> but it doesn't help. Maybe I should revert something?
+> 
+> Scanning for LVM volume groups...
+> Reading all physical volumes.  This may take a while...
+> No volume groups found
+> BUG: unable to handle kernel NULL pointer dereference at           (null)
+> IP: [<ffffffff8125a69c>] elv_drain_elevator+0x1c/0x70
+> PGD 46176067 PUD 452b5067 PMD 0
+> Oops: 0000 [#1] SMP
+> CPU 0
+> Modules linked in:
+> 
+> Pid: 830, comm: kworker/0:2 Not tainted 3.1.0-next-20111025_64+ #1590
+> Bochs Bochs
+> RIP: 0010:[<ffffffff8125a69c>]  [<ffffffff8125a69c>]
+> elv_drain_elevator+0x1c/0x70
 
-Then it sounds like the best idea is something like what Ming proposed 
-earlier: Have the error handler make some sort of test to determine 
-whether it has been invoked for suspend/resume handling, and skip the 
-runtime-PM calls on the host if it has.
+Heh, probably md is tearing down a queue which isn't fully setup.
+Does the following fix the problem?
 
-This new test, whatever it is, should apply both to system suspend and 
-runtime suspend.  By the way, what would happen if a system suspend 
-occurred while the ATA port was already runtime-suspended?
+Thanks.
 
-Alan Stern
+diff --git a/block/blk-core.c b/block/blk-core.c
+index f658711..5292e31 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -408,7 +408,8 @@ void blk_cleanup_queue(struct request_queue *q)
+ 	mutex_unlock(&q->sysfs_lock);
+ 
+ 	/* drain all requests queued before DEAD marking */
+-	blk_drain_queue(q, true);
++	if (q->elevator)
++		blk_drain_queue(q, true);
+ 
+ 	/* @q won't process any more request, flush async actions */
+ 	del_timer_sync(&q->backing_dev_info.laptop_mode_wb_timer);
 
+
+-- 
+tejun
