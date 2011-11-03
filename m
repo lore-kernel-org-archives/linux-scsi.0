@@ -1,48 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Do we need to implement sr START/STOP management
-Date: Thu, 3 Nov 2011 08:46:27 -0700
-Message-ID: <CAOS58YM2rwwaqEBDEHdBy_Mo_3FJsJUsHmdBM=T4hyApmKuOuA@mail.gmail.com>
-References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
-	<1320126812.7701.17.camel@dabdike>
-	<CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
-	<4EB0992C.5070309@gmail.com>
-	<CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com>
-	<CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com>
-	<4EB2B468.9010001@interlog.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [RESEND][PATCH 0/4] scsi_dh: Fix for handler attach and code clean up
+Date: Thu, 3 Nov 2011 11:51:06 -0400
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DBE60@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:48565 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932263Ab1KCPq3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 11:46:29 -0400
-In-Reply-To: <4EB2B468.9010001@interlog.com>
+Received: from mx2.netapp.com ([216.240.18.37]:29701 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932263Ab1KCPvQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 11:51:16 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: JiSheng Zhang <jszhang3@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
 
-On Thu, Nov 3, 2011 at 8:34 AM, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> That's a pretty poor attitude. I suspect Microsoft care. If so they
-> would be transitioning away from TEST UNIT READY to REQUEST SENSE
-> to monitor power conditions and the progress indication.
+Resubmitting the patches after the comments.  Added the TPGS check in emc and
+rdac handlers. Rest is same as before..
 
-I was talking about media presence polling.  We used to include TUR in
-the sequence and there have been some number of devices which worked
-fine for a while but lock up eventually.  Windows only issues
-CHECK_MEDIA_EVENT_STATUS so nobody has tested extended TUR cycles and
-nobody is fixing an optical drive EOL'd six months ago either, so what
-I or you think or feel doesn't matter in the end.  The most important
-thing is we provide drivers which allow proper operation and, sadly,
-at this point, the best way to get there is following what windows
-does.  It's not like we lose any functionality that way anyway.
+These series of patches handles following things..
+1. Fixes handler attach issue.
+2. Introduces match function for all the handlers
+3. cleans up the scsi_dh code 
 
-If windows isn't spinning down the drive, it is highly unlikely that
-missing that harms anything and it's highly like there are a bunch of
-devices which would go "uh... what the hell is this? I don't know
-this. osidfjalekjalkgjs".  So, there simply is no point at all.
+I have noticed the first problem during our multipath testing. We found that during
+the lun discovery there were lots of error messages like below..
 
-Thanks.
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav]  Result: hostbyte=DID_OK
+driverbyte=DRIVER_SENSE
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav]  Sense Key : Illegal
+Request [current]
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav]  <<vendor>> ASC=0x94
+ASCQ=0x1ASC=0x94 ASCQ=0x1
+Oct 25 08:24:43 kswm-mihosi kernel: sd 0:0:0:7: [sdav] CDB: Read(10): 28 00 00
+00 00 00 00 00 80 00
+Oct 25 08:24:43 kswm-mihosi kernel: end_request: I/O error, dev sdav, sector 0
 
--- 
-tejun
+These messages were coming in spite of having scsi_dh_rdac in initrd.  Reason
+for these errors are due to device handler not being attached properly. If the
+device handler was attached then the I/O's should not go to passive paths.
+
+Investigating further we found that there errors started with the introduction
+of these patches below.
+
+http://www.spinics.net/lists/linux-scsi/msg54284.html
+or
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=6c3633d08acf514e2e89aa95d2346ce9d64d719a
+
+This patch introduces the match function for device handlers. But the match function
+was added only to scsi_dh_alua handler.
+
+Reason for the failure is, if the match function is not available then scsi_dh calls
+scsi_get_device_flags_keyed(sdev, sdev->vendor, sdev->model, SCSI_DEVINFO_DH)
+which compares the exact vendor and product strings from sdev(which comes from inquiry).
+
+While setting up the scsi_dev_info, handlers use the short strings(example below).
+Look at scsi_register_device_handler code. If  you look closely the handlers have
+only first few characters of the model string. So, scsi_get_device_flags_keyed
+fails and handler will not be attached. This applies to all the handlers.
+
+Example :
+
+        Strings in scsi_dh_rdac handler..
+                    {"IBM", "1746"},
+
+        Actual string..
+                     "IBM", "1746      FAStT"
+
+Couple of ways we can fix this problem.
+1. List the complete model strings in handlers for all the products.
+2. Introduce match function for all the handler and remove the call to scsi_get_device_flags_keyed.
+
+I think the option 2 is the best way to fix this problem. This removes lot of code in scsi_dh and 
+simplifies the things..
+
+TESTED the patches on NetApp E series storage.
+
+
