@@ -1,61 +1,72 @@
-From: "Luck, Tony" <tony.luck@intel.com>
-Subject: scsi: killing requests for dead queue
-Date: Thu, 03 Nov 2011 14:23:24 -0700
-Message-ID: <4eb3064c133909be1c@agluck-desktop.sc.intel.com>
-Return-path: <linux-next-owner@vger.kernel.org>
-Sender: linux-next-owner@vger.kernel.org
-To: linux-next@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: Question about interface between scsi mid layer and lld
+Date: Thu, 3 Nov 2011 21:26:38 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77887D5D513DA2@GVW0547EXC.americas.hpqcorp.net>
+References: <20111103134647.GC6635@beardog.cce.hp.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g5t0008.atlanta.hp.com ([15.192.0.45]:14149 "EHLO
+	g5t0008.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870Ab1KCVf6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2011 17:35:58 -0400
+In-Reply-To: <20111103134647.GC6635@beardog.cce.hp.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "scameron@beardog.cce.hp.com" <scameron@beardog.cce.hp.com>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>
+Cc: "Brace, Don" <dab@hp.com>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-First saw these messages on next-20111102 (but my previous build from linux-next
-was next-20111017 ... so a big gap).  Still there today in next-20111103. Not seeing
-these messages from Linus 3.2 merge window builds.
+Adding the linux-scsi list...
 
-lspci says:
-----------
-20:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 08)
-20:01.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 08)
+-- mikem
 
-extract from dmesg:
-------------------
-Fusion MPT base driver 3.04.20
-Copyright (c) 1999-2008 LSI Corporation
-Fusion MPT SPI Host driver 3.04.20
-GSI 27 (level, low) -> CPU 0 (0x0000) vector 54
-mptspi 0000:20:01.0: PCI INT A -> GSI 27 (level, low) -> IRQ 54
-mptbase: ioc0: Initiating bringup
-ioc0: LSI53C1030 C0: Capabilities={Initiator,Target}
-scsi0 : ioc0: LSI53C1030 C0, FwRev=01032341h, Ports=1, MaxQ=255, IRQ=54
-scsi 0:0:0:0: Direct-Access     HP 36.4G MAU3036NC        HPC2 PQ: 0 ANSI: 3
-scsi target0:0:0: Beginning Domain Validation
-scsi target0:0:0: Ending Domain Validation
-scsi target0:0:0: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI WRFLOW PCOMP (6.25 ns, offset 127)
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-sd 0:0:0:0: [sda] 71132960 512-byte logical blocks: (36.4 GB/33.9 GiB)
-scsi 0:0:1:0: Direct-Access     HP 36.4G MAU3036NC        HPC2 PQ: 0 ANSI: 3
-scsi target0:0:1: Beginning Domain Validation
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] Mode Sense: cf 00 10 08
-sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
-scsi target0:0:1: Ending Domain Validation
-scsi target0:0:1: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS RTI WRFLOW PCOMP (6.25 ns, offset 127)
-sd 0:0:1:0: Attached scsi generic sg1 type 0
-sd 0:0:1:0: [sdb] 71132960 512-byte logical blocks: (36.4 GB/33.9 GiB)
- sda: sda1
-sd 0:0:1:0: [sdb] Write Protect is off
-sd 0:0:1:0: [sdb] Mode Sense: cf 00 10 08
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
-sd 0:0:1:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
-sd 0:0:0:0: [sda] Attached SCSI disk
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
-scsi: killing requests for dead queue
+"If you don't read the newspaper, you are uninformed; if you do read the newspaper, you are misinformed." - Mark Twain
 
-bunch more "scsi: killing requests for dead queue" messages. But system
-does eventually come up (and the messages stop).
+
+> -----Original Message-----
+> From: scameron@beardog.cce.hp.com [mailto:scameron@beardog.cce.hp.com]
+> Sent: Thursday, November 03, 2011 8:47 AM
+> To: james.bottomley@hansenpartnership.com
+> Cc: Brace, Don; Miller, Mike (OS Dev); scameron@beardog.cce.hp.com
+> Subject: Question about interface between scsi mid layer and lld
+> 
+> 
+> Hi James,
+> 
+> I had a question about the interface between the scsi mid layer
+> and LLDs, esp. how commands are submitted to the LLD.  Suppose you
+> have an HBA that might prefer to have a batch of commands submitted
+> to it all at once rather than one by one.
+> 
+> With the block layer interface, the LLD has a function which the
+> block layer calls to begin submitting requests, but then this function
+> calls blk_peek_request() and blk_start_request to pull requests out
+> of the block layer, and so it could pull as many as it could hold,
+> or as many as the block layer had lying around for it to work on.
+> 
+> The scsi LLD interface, with the queuecommand function is different
+> in that it gets called once for each SCSI command, and there's as far
+> as I know no way for the LLD to kind of pull more commands out of the
+> scsi mid layer.
+> 
+> First, am I correct in thinking that there's no way for the LLD to
+> process more than one command per call to queuecommand?  Or am
+> I missing some interface that's already there?
+> 
+> Second, if I am correct, are there any plans to provide an interface
+> to do something like that?
+> 
+> I'm thinking with the existing interface, if I want to batch commands
+> in SCSI a driver, I have to introduce latency, as the LLD has no idea
+> how many commands the mid layer has to submit, or when it will submit
+> them -- and introducing latency is probably not a good idea and likely
+> will eat all the benefits that might be gained by batching submissions
+> to the HBA.
+> 
+> Thanks,
+> 
+> -- steve
+> 
+
