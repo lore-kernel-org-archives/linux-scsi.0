@@ -1,29 +1,45 @@
-From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: scsi scan
-Date: Thu,  3 Nov 2011 13:29:02 -0700
-Message-ID: <1320352142-30592-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p3plsmtps2ded03.prod.phx3.secureserver.net ([208.109.80.60]:51582
-	"HELO p3plsmtps2ded03-01.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751016Ab1KCUD4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Nov 2011 16:03:56 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Do we need to implement sr START/STOP management
+Date: Thu, 3 Nov 2011 14:04:33 -0700
+Message-ID: <20111103210433.GL4417@google.com>
+References: <CADyp2PebObcVyMAA=XzTayiXmBxYRJtR3xY6b3tJYiVA=hCaqQ@mail.gmail.com>
+ <1320126812.7701.17.camel@dabdike>
+ <CADyp2Pdac=z6KzKnNykBCZNRLnjkv-z901Hwd-U0o2wB2qHWOA@mail.gmail.com>
+ <4EB0992C.5070309@gmail.com>
+ <CADyp2PcAOAiUbpSq_HmUs-wNqHuzo+7y1mZjJLAGNuO1yAhXEw@mail.gmail.com>
+ <CAOS58YOVC-dknjK50LHTjMOFFdM3KNyWzRPs8Ru2YRau4QQBWw@mail.gmail.com>
+ <4EB2B468.9010001@interlog.com>
+ <CAOS58YM2rwwaqEBDEHdBy_Mo_3FJsJUsHmdBM=T4hyApmKuOuA@mail.gmail.com>
+ <4EB2CBAC.70003@interlog.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4EB2CBAC.70003@interlog.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: JiSheng Zhang <jszhang3@gmail.com>, Robert Hancock <hancockrwd@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, james.bottomley@hansenpartnership.com, hch@infradead.org, kys@microsoft.com
 
-James,
+Hello,
 
-On the Windows host they allow hot add/remove of block devices attached to the scsi controller(s) assigned to the guest.
-So, when a hot add/remove event occurs, the host sends a message to the guest that something has changed on the hba and
-the guest is responsible for figuring out what has changed: a) Setup state to manage new devices that may have been added
-and b) get rid of devices that may have been removed. As I look at implementing this functionality for Linux guests,
-I would need to be able to do a scan on the hba under question and deal only with whatever has changed.
-Is this something that the scsi core supports or would I need to roll out a version of scan that would ignore
-devices already scanned (except for the remove case) and properly add new devices that may be found.
-Any guidance here would be greatly appreciated.
+On Thu, Nov 03, 2011 at 01:13:16PM -0400, Douglas Gilbert wrote:
+> Do you mean the GET EVENT STATUS NOTIFICATION command (as there is
+> no CHECK MEDIA EVENT STATUS command in SCSI or ATA)? If so it is
+> one of the "good guys" along with the REQUEST SENSE command. And
+> as I said TUR is not recommended. So looking at MS usage _and_
+> the standards is a useful guide.
 
-Regards,
+Yes, that's the one.  Sorry, I always get confused about its name.
+IIRC, it's a relatively new command, right?  Anyways, I'm not arguing
+standards are useless but that actual usages have to take precedence.
 
-K. Y
+> I agree. SCSI and ATA define idle states (with some fuzziness in
+> the naming) that have timers associated with them. Those
+> mechanisms seem to work pretty well without the intervention of
+> commands like START STOP UNIT.
 
+Cool, thanks.
+
+-- 
+tejun
