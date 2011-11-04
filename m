@@ -1,65 +1,42 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [RESEND][PATCH 2/4] scsi_dh_hp_sw: Adding the match function for hp_sw device handler
-Date: Fri, 4 Nov 2011 09:40:10 -0400
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9105DC2A0@RTPMVEXC1-PRD.hq.netapp.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-next] block: don't call blk_drain_queue() if
+ elevator is not up
+Date: Fri, 4 Nov 2011 07:26:27 -0700
+Message-ID: <CAOS58YM-6v2nriMv8izhePD04YiJe0s7wqwWw=Dc9w-4er_McA@mail.gmail.com>
+References: <4EB2BC88.3070105@suse.cz>
+	<20111103161436.GJ4417@google.com>
+	<20111103162634.GK4417@google.com>
+	<4EB2D441.9040708@kernel.dk>
+	<20111103211253.GO4417@google.com>
+	<4EB39E63.9020804@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:54080 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932119Ab1KDNkV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2011 09:40:21 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EB39E63.9020804@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Jiri Slaby <jslaby@suse.cz>, "James E.J. Bottomley" <jejb@parisc-linux.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jiri Slaby <jirislaby@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
 
-Resending just this patch after making changes per Hannes comments. 
+Hello,
 
-This patch introduces the match function for hp_sw device handler.
-Included the check for TPGS bit before proceeding further.
-The match function was introduced by this patch
-http://www.spinics.net/lists/linux-scsi/msg54284.html
+On Fri, Nov 4, 2011 at 1:12 AM, Jens Axboe <axboe@kernel.dk> wrote:
+>> Heh, yeah, definitely, and just to be paranoid, this whole thing is
+>> for the next merge window.
+>
+> Ehm, what parts? If the bug is in for-next, things are queued up for
+> _this_ merge window.
 
-Signed-off-by: Babu Moger <babu.moger@netapp.com>
----
+So, we had four patchsets - the original drain improvements, updates
+to drain improvements, cfq locking cleanup, and cfq api cleanup.
+Currently, the first one is in block tree but the other three are not.
+I was thinking all four were going mainline in the next merge window.
 
---- linux-d211858/drivers/scsi/device_handler/scsi_dh_hp_sw.c.orig	2011-11-02 14:17:29.000000000 -0500
-+++ linux-d211858/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2011-11-04 08:22:22.000000000 -0500
-@@ -319,6 +319,24 @@ static const struct scsi_dh_devlist hp_s
- 	{NULL, NULL},
- };
- 
-+static bool hp_sw_match(struct scsi_device *sdev)
-+{
-+	int i;
-+
-+	if (scsi_device_tpgs(sdev))
-+		return false;
-+
-+	for (i = 0; hp_sw_dh_data_list[i].vendor; i++) {
-+		if (!strncmp(sdev->vendor, hp_sw_dh_data_list[i].vendor,
-+			strlen(hp_sw_dh_data_list[i].vendor)) &&
-+		    !strncmp(sdev->model, hp_sw_dh_data_list[i].model,
-+			strlen(hp_sw_dh_data_list[i].model))) {
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- static int hp_sw_bus_attach(struct scsi_device *sdev);
- static void hp_sw_bus_detach(struct scsi_device *sdev);
- 
-@@ -330,6 +348,7 @@ static struct scsi_device_handler hp_sw_
- 	.detach		= hp_sw_bus_detach,
- 	.activate	= hp_sw_activate,
- 	.prep_fn	= hp_sw_prep_fn,
-+	.match		= hp_sw_match,
- };
- 
- static int hp_sw_bus_attach(struct scsi_device *sdev)
+Hmmm... yeah, the first and second patchsets kinda go together but
+well the first one definitely is pretty good bug fix without others,
+so I guess that split isn't too bad either. Alright, no objection.
 
+Thanks.
 
+-- 
+tejun
