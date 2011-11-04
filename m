@@ -1,48 +1,42 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] [SCSI] mpt2sas: add missing allocation.
-Date: Fri, 4 Nov 2011 21:25:01 +0300
-Message-ID: <20111104182501.GF5796@elgon.mountain>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: scsi: killing requests for dead queue
+Date: Fri, 4 Nov 2011 19:26:17 +0100
+Message-ID: <CAO+b5-qR61O7cQCRgpPGYUB2rewHN2fN+CUvsXb8NC+-k2_C=w@mail.gmail.com>
+References: <4eb3064c133909be1c@agluck-desktop.sc.intel.com>
+	<201111041838.46062.bvanassche@acm.org>
+	<987664A83D2D224EAE907B061CE93D5301FBD0FDFE@orsmsx505.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:25167 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932418Ab1KDSZZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2011 14:25:25 -0400
-Content-Disposition: inline
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42688 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932900Ab1KDS0S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Nov 2011 14:26:18 -0400
+In-Reply-To: <987664A83D2D224EAE907B061CE93D5301FBD0FDFE@orsmsx505.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>, James Bottomley <James.Bottomley@suse.de>, Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, Eric Moore <eric.moore@lsi.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>
 
-There was supposed to be a kzalloc() here and the compiler complained
-about it.
-mpt2sas_scsih.c: In function =E2=80=98mpt2sas_scsih_reset_handler=E2=80=
-=99:
-mpt2sas_scsih.c:2807:21: warning: =E2=80=98fw_event=E2=80=99 may be use=
-d uninitialized in this function [-Wuninitialized]
+On Fri, Nov 4, 2011 at 7:07 PM, Luck, Tony <tony.luck@intel.com> wrote:
+> > Commit 3308511 causes the SCSI queue cleanup code to be invoked
+> > for every killed queue. Since the SCSI scanning code can create
+> > and destroy SCSI queues repeatedly while probing LUNs, the
+> > following message can be printed several times during boot:
+> >
+> > =A0 =A0scsi: killing requests for dead queue
+>
+> Does this message show up in some other situation (like when
+> a device has failed?). Would you actually want to see these
+> messages then? =A0If so, demoting them to debug sounds like
+> the wrong thing to do.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+I might be wrong but I doubt that anyone is interested in these
+messages. It's not even mentioned in these messages which queue is
+being cleaned up.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sa=
-s/mpt2sas_scsih.c
-index 8889b1b..4e041f6 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2802,6 +2802,11 @@ _scsih_error_recovery_delete_devices(struct MPT2=
-SAS_ADAPTER *ioc)
-=20
- 	if (ioc->is_driver_loading)
- 		return;
-+
-+	fw_event =3D kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	if (!fw_event)
-+		return;
-+
- 	fw_event->event =3D MPT2SAS_REMOVE_UNRESPONDING_DEVICES;
- 	fw_event->ioc =3D ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
+Bart.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
