@@ -1,63 +1,65 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Mon, 7 Nov 2011 16:44:51 -0500
-Message-ID: <20111107214451.GA14339@redhat.com>
-References: <1318955380.5169.15.camel@dabdike.int.hansenpartnership.com>
- <20111031100557.GA2621@osiris.boeblingen.de.ibm.com>
- <1320057746.2964.1.camel@dabdike>
- <4EAE8A7E.8000504@ce.jp.nec.com>
- <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
- <20111103182548.GA12131@redhat.com>
- <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
- <4EB7C159.8020009@ce.jp.nec.com>
- <20111107153649.GA9935@redhat.com>
- <20111107171044.GA10801@redhat.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] crc-t10dif.c comments
+Date: Mon, 07 Nov 2011 17:59:51 -0500
+Message-ID: <4EB862E7.5020606@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------000706060903060906000203"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34395 "EHLO mx1.redhat.com"
+Received: from smtp.infotech.no ([82.134.31.41]:43555 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751214Ab1KGVpP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Nov 2011 16:45:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20111107171044.GA10801@redhat.com>
+	id S1752033Ab1KGW77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Nov 2011 17:59:59 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id D07CB2041B9
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2011 23:59:54 +0100 (CET)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id xnBd0HEFzV3L for <linux-scsi@vger.kernel.org>;
+	Mon,  7 Nov 2011 23:59:53 +0100 (CET)
+Received: from [192.168.48.66] (ip-180.53.99.216.dsl-cust.ca.inter.net [216.99.53.180])
+	by smtp.infotech.no (Postfix) with ESMTPA id 10AC62041B4
+	for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2011 23:59:52 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com, dm-devel@redhat.com
+To: linux-scsi@vger.kernel.org
 
-On Mon, Nov 07 2011 at 12:10pm -0500,
-Mike Snitzer <snitzer@redhat.com> wrote:
+This is a multi-part message in MIME format.
+--------------000706060903060906000203
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-> On Mon, Nov 07 2011 at 10:36am -0500,
-> Mike Snitzer <snitzer@redhat.com> wrote:
-> > Could be the block layer's onstack plugging changes are at the heart of
-> > this.
-> > 
-> > I voiced onstack plugging concerns relative to DM some time ago
-> > (https://lkml.org/lkml/2011/3/9/450) but somehow convinced myself DM was
-> > fine to no longer need dm_table_unplug_all() etc.  Unfortunately I
-> > cannot recall _why_ I felt that was the case.
-> > 
-> > So DM needs further review relative to block's onstack plugging changes
-> > and DM IO completion.
-> 
-> dm_suspend is performed as part of the DM table reload that is being
-> done my multipathd during path failure.  Seems DM no longer insures
-> inflight requests have finished during dm_suspend().
-> 
-> Before onstack plugging (< 2.6.39):
-> dm_suspend() -> dm_wait_for_completion() -> dm_unplug_all() -> dm_table_unplug_all()
-> 
-> After onstack plugging (>= 2.6.39, commit 7eaceaccab5f40bb):
-> dm_suspend's call to dm_wait_for_completion() no longer unplugs IO
-> (dm_unplug_all and dm_table_unplug_all were removed without introducing
-> a clear equivalent).
+ChangeLog:
+   - translate Latin (and Danish) to English
+   - fix error (in comment) and give a reference
 
-If a missing unplug were a concern then dm_wait_for_completion()'s check
-for inflight IO would cause dm_suspend() to hang.
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 
-So the onstack plugging changes are unlikely to be the reason for this.
+--------------000706060903060906000203
+Content-Type: text/x-patch;
+ name="crc-t10dif.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="crc-t10dif.patch"
 
-Mike
+diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
+index fbbd66e..97cc436 100644
+--- a/lib/crc-t10dif.c
++++ b/lib/crc-t10dif.c
+@@ -12,9 +12,11 @@
+ #include <linux/module.h>
+ #include <linux/crc-t10dif.h>
+ 
+-/* Table generated using the following polynomium:
++/* Table generated using the following polynomial:
+  * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
+- * gt: 0x8bb7
++ * G(x): 0x18bb7
++ *
++ * Reference: SBC-2 or SBC-3 at www.t10.org (protection information model)
+  */
+ static const __u16 t10_dif_crc_table[256] = {
+ 	0x0000, 0x8BB7, 0x9CD9, 0x176E, 0xB205, 0x39B2, 0x2EDC, 0xA56B,
+
+--------------000706060903060906000203--
