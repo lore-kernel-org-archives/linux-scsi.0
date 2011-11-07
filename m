@@ -1,48 +1,30 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target: Updates for v3.2-rc1 (round two)
-Date: Sun, 06 Nov 2011 22:47:54 -0800
-Message-ID: <1320648474.28530.18.camel@haakon2.linux-iscsi.org>
-References: <1320437345.5859.94.camel@haakon2.linux-iscsi.org>
-	 <1320634778.18988.10.camel@haakon2.linux-iscsi.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: WARNING: at drivers/scsi/scsi_lib.c:1704
+Date: Mon, 7 Nov 2011 08:33:46 +0100
+Message-ID: <CAO+b5-paS698V61BA8e4ZYstdqR4AKda2EKx4DHqv4gtR2ocPA@mail.gmail.com>
+References: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:60417 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750816Ab1KGGsV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2011 01:48:21 -0500
-In-Reply-To: <1320634778.18988.10.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Anton Blanchard <anton@samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, Bart Van Assche <bvanassche@acm.org>
 
-On Sun, 2011-11-06 at 18:59 -0800, Nicholas A. Bellinger wrote:
-> Hi Linus,
-> 
-> This is just a friendly reminder to please pull the two remaining
-> target-pending branches (for-next and for-next-merge) for -rc1.
-> 
+On Mon, Nov 7, 2011 at 7:24 AM, Stephen Rothwell <sfr@canb.auug.org.au>=
+ wrote:
+> I get lots more of these. =A0The obvious commit to point the finger a=
+t
+> is 3308511c93e6 ("[SCSI] Make scsi_free_queue() kill pending SCSI
+> commands") but the root cause may be something different.
 
-Thanks for pulling the target core changes from target-pending/for-next.
+It's probably the combination of commit 3308511c93e6 and patch
+http://marc.info/?l=3Dlinux-scsi&m=3D132027101521282 that's triggering
+that warning: the first commit changed scsi_free_queue() such that it
+expects that its callers reset the queuedata pointer but the second
+patch introduced a new scsi_free_queue() call that doesn't reset the
+queuedata pointer first.
 
-Please also consider pulling the new ib_srpt driver in for-next-merge
-here:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
-
-We are making forward progress on the remaining items to be included in
-the next rc-fixes pull, but please consider the last GIT PULL request
-below for an initial merge with what we have collectively agreed upon
-for the userspace API in /sys/kernel/config/target/srpt for v3.2.
-
-[GIT PULL] ib_srpt: Initial SRP Target merge for v3.2-rc1
-http://marc.info/?l=linux-rdma&m=132043748907782&w=2
-
-Thank you,
-
---nab
-
-
-
+Bart.
