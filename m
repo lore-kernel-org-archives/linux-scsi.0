@@ -1,109 +1,162 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: WARNING: at drivers/scsi/scsi_lib.c:1704
-Date: Mon, 07 Nov 2011 08:51:24 -0600
-Message-ID: <1320677484.1215.10.camel@dabdike.int.hansenpartnership.com>
-References: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Mon, 7 Nov 2011 10:36:49 -0500
+Message-ID: <20111107153649.GA9935@redhat.com>
+References: <4E9D7FA8.9000000@ce.jp.nec.com>
+ <20111018154542.GB3869@osiris.boeblingen.de.ibm.com>
+ <1318955380.5169.15.camel@dabdike.int.hansenpartnership.com>
+ <20111031100557.GA2621@osiris.boeblingen.de.ibm.com>
+ <1320057746.2964.1.camel@dabdike>
+ <4EAE8A7E.8000504@ce.jp.nec.com>
+ <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
+ <20111103182548.GA12131@redhat.com>
+ <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
+ <4EB7C159.8020009@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
+Content-Disposition: inline
+In-Reply-To: <4EB7C159.8020009@ce.jp.nec.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: LKML <linux-kernel@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: Heiko Carstens <heiko.carstens@de.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2011-11-07 at 17:24 +1100, Stephen Rothwell wrote:
-> Hi all,
+On Mon, Nov 07 2011 at  6:30am -0500,
+Jun'ichi Nomura <j-nomura@ce.jp.nec.com> wrote:
+
+> On 11/04/11 18:19, Heiko Carstens wrote:
+> > On Thu, Nov 03, 2011 at 02:25:48PM -0400, Mike Snitzer wrote:
+> >> On Mon, Oct 31 2011 at  9:00am -0400,
+> >> Heiko Carstens <heiko.carstens@de.ibm.com> wrote:
+> >>
+> >>> On Mon, Oct 31, 2011 at 08:46:06PM +0900, Jun'ichi Nomura wrote:
+> >>>> Hm, dm_softirq_done is generic completion code of original
+> >>>> request in dm-multipath.
+> >>>> So oops here might be another manifestation of use-after-free.
+> >>>>
+> >>>> Do you always hit the oops at the same address?
+> >>>
+> >>> I think we saw this bug the first time. But before that the scsi
+> >>> logging level was higher. Gonzalo is trying to recreate it with
+> >>> the same (old) scsi logging level.
+> >>> Afterwards we will try with barrier=0.
+> >>>
+> >>> Both on v3.0.7 btw.
+> >>>
+> >>>> Could you find corresponding source code line for
+> >>>> the crashed address, dm_softirq_done+0x72/0x140,
+> >>>> and which pointer was invalid?
+> >>>
+> >>> It crashes in the inlined function dm_done() when trying to
+> >>> dereference tio (aka clone->end_io_data):
+> >>>
+> >>> static void dm_done(struct request *clone, int error, bool mapped)
+> >>> {
+> >>>         int r = error;
+> >>>         struct dm_rq_target_io *tio = clone->end_io_data;
+> >>>         dm_request_endio_fn rq_end_io = tio->ti->type->rq_end_io;
+> >>
+> >> Hi,
+> >>
+> >> Which underlying storage driver is being used by this multipath device?
+> > 
+> > It's the s390 only zfcp device driver.
+> > 
+> > FWIW, yet another use-after-free crash, this time however in multipath_end_io:
+> > 
+> > [96875.870593] Unable to handle kernel pointer dereference at virtual kernel address 6b6b6b6b6b6b6000
+> > [96875.870602] Oops: 0038 [#1]
+> > [96875.870674] PREEMPT SMP DEBUG_PAGEALLOC
+> > [96875.870683] Modules linked in: dm_round_robin sunrpc ipv6 qeth_l2 binfmt_misc dm_multipath scsi_dh dm_mod qeth ccwgroup [la\
+> > st unloaded: scsi_wait_scan]
+> > [96875.870722] CPU: 2 Tainted: G        W   3.0.7-50.x.20111024-s390xdefault #1
+> > [96875.870728] Process udevd (pid: 36697, task: 0000000072c8a3a8, ksp: 0000000057c43868)
+> > [96875.870732] Krnl PSW : 0704200180000000 000003e001347138 (multipath_end_io+0x50/0x140 [dm_multipath])
+> > [96875.870746]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:0 CC:2 PM:0 EA:3
+> > [96875.870751] Krnl GPRS: 0000000000000000 000003e000000000 6b6b6b6b6b6b6b6b 00000000717ab940
+> > [96875.870755]            0000000000000000 00000000717abab0 0000000000000002 0700000000000008
+> > [96875.870759]            0000000000000002 0000000000000000 0000000058dd37a8 000000006f845478
+> > [96875.870764]            000003e0012e1000 000000005613d1f0 000000007a737bf0 000000007a737ba0
+> > [96875.870768] Krnl Code: 000003e00134712a: b90200dd            ltgr %r13,%r13
+> > [96875.870793]            000003e00134712e: a7840017            brc 8,3e00134715c
+> > [96875.870800]            000003e001347132: e320d0100004        lg %r2,16(%r13)
+> > [96875.870809]           >000003e001347138: e31020180004        lg %r1,24(%r2)
+> > [96875.870818]            000003e00134713e: e31010580004        lg %r1,88(%r1)
+> > [96875.870827]            000003e001347144: b9020011            ltgr %r1,%r1
+> > [96875.870835]            000003e001347148: a784000a            brc 8,3e00134715c
+> > [96875.870841]            000003e00134714c: 41202018            la %r2,24(%r2)
+> > [96875.870889] Call Trace:
+> > [96875.870892] ([<0700000000000008>] 0x700000000000008)
+> > [96875.870897]  [<000003e0012e3662>] dm_softirq_done+0x9a/0x140 [dm_mod]
+> > [96875.870915]  [<000000000040d29c>] blk_done_softirq+0xd4/0xf0
+> > [96875.870925]  [<00000000001587c2>] __do_softirq+0xda/0x398
+> > [96875.870932]  [<000000000010f47e>] do_softirq+0xe2/0xe8
+> > [96875.870940]  [<0000000000158e2c>] irq_exit+0xc8/0xcc
+> > [96875.870945]  [<00000000004ceb48>] do_IRQ+0x910/0x1bfc
+> > [96875.870953]  [<000000000061a164>] io_return+0x0/0x16
+> > [96875.870961]  [<000000000019c84e>] lock_acquire+0xd2/0x204
+> > [96875.870969] ([<000000000019c836>] lock_acquire+0xba/0x204)
+> > [96875.870974]  [<0000000000615f8e>] mutex_lock_killable_nested+0x92/0x520
+> > [96875.870983]  [<0000000000292796>] vfs_readdir+0x8a/0xe4
+> > [96875.870992]  [<00000000002928e0>] SyS_getdents+0x60/0xe8
+> > [96875.870999]  [<0000000000619af2>] sysc_noemu+0x16/0x1c
+> > [96875.871024]  [<000003fffd1ec83e>] 0x3fffd1ec83e
+> > [96875.871028] INFO: lockdep is turned off.
+> > [96875.871031] Last Breaking-Event-Address:
+> > [96875.871037]  [<000003e0012e3660>] dm_softirq_done+0x98/0x140 [dm_mod]
+> > 
+> > static int multipath_end_io(struct dm_target *ti, struct request *clone,
+> > 			    int error, union map_info *map_context)
+> > {
+> > 	struct multipath *m = ti->private;
+> > 	struct dm_mpath_io *mpio = map_context->ptr;
+> > 	struct pgpath *pgpath = mpio->pgpath;
+> > 	struct path_selector *ps;
+> > 	int r;
+> > 
+> > 	r  = do_end_io(m, clone, error, mpio);
+> > 	if (pgpath) {
+> > 		ps = &pgpath->pg->ps; <--- crashes here
+> > 		if (ps->type->end_io)
+> > 			ps->type->end_io(ps, &pgpath->path, mpio->nr_bytes);
+> > 	}
+> > 	mempool_free(mpio, m->mpio_pool);
+> > 
+> > 	return r;
+> > }
+> > 
+> > It crashes when trying to derefence pgpath, which was freed. Since we have
+> > SLUB debugging turned on the freed object tells us that it was allocated
+> > via a call to multipath_ctr() and freed via a call to free_priority_group().
 > 
-> Starting some time last week I am getting the following during boot on
-> our PPC970 blade:
-> 
-> calling  .ipr_init+0x0/0x68 @ 1
-> ipr: IBM Power RAID SCSI Device Driver version: 2.5.2 (April 27, 2011)
-> ipr 0000:01:01.0: Found IOA with IRQ: 26
-> ipr 0000:01:01.0: Starting IOA initialization sequence.
-> ipr 0000:01:01.0: Adapter firmware version: 06160039
-> ipr 0000:01:01.0: IOA initialized.
-> scsi0 : IBM 572E Storage Adapter
-> ------------[ cut here ]------------
-> WARNING: at drivers/scsi/scsi_lib.c:1704
-> Modules linked in:
-> NIP: c00000000053b3d4 LR: c00000000053e5b0 CTR: c000000000541d70
-> REGS: c0000000783c2f60 TRAP: 0700   Not tainted  (3.1.0-autokern1)
-> MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 24002024  XER: 20000002
-> TASK = c0000000783b8000[1] 'swapper' THREAD: c0000000783c0000 CPU: 0
-> GPR00: 0000000000000001 c0000000783c31e0 c000000000cf38b0 c00000000239a9d0 
-> GPR04: c000000000cbe8f8 0000000000000000 c0000000783c3040 0000000000000000 
-> GPR08: c000000075daf488 c000000078a3b7ff c000000000bcacc8 0000000000000000 
-> GPR12: 0000000044002028 c000000007ffb000 0000000002e40000 000000000099b800 
-> GPR16: 0000000000000000 c000000000bba5fc c000000000a61db8 0000000000000000 
-> GPR20: 0000000001b77200 0000000000000000 c000000078990000 0000000000000001 
-> GPR24: c000000002396828 0000000000000000 0000000000000000 c000000078a3b938 
-> GPR28: fffffffffffffffa c0000000008ad2c0 c000000000c7faa8 c00000000239a9d0 
-> NIP [c00000000053b3d4] .scsi_free_queue+0x24/0x90
-> LR [c00000000053e5b0] .scsi_alloc_sdev+0x280/0x2e0
-> Call Trace:
-> [c0000000783c31e0] [c000000000c7faa8] wireless_seq_fops+0x278d0/0x2eb88 (unreliable)
-> [c0000000783c3270] [c00000000053e5b0] .scsi_alloc_sdev+0x280/0x2e0
-> [c0000000783c3330] [c00000000053eba0] .scsi_probe_and_add_lun+0x390/0xb40
-> [c0000000783c34a0] [c00000000053f7ec] .__scsi_scan_target+0x16c/0x650
-> [c0000000783c35f0] [c00000000053fd90] .scsi_scan_channel+0xc0/0x100
-> [c0000000783c36a0] [c00000000053fefc] .scsi_scan_host_selected+0x12c/0x1c0
-> [c0000000783c3750] [c00000000083dcb4] .ipr_probe+0x2c0/0x390
-> [c0000000783c3830] [c0000000003f50b4] .local_pci_probe+0x34/0x50
-> [c0000000783c38a0] [c0000000003f5f78] .pci_device_probe+0x148/0x150
-> [c0000000783c3950] [c0000000004e1e8c] .driver_probe_device+0xdc/0x210
-> [c0000000783c39f0] [c0000000004e20cc] .__driver_attach+0x10c/0x110
-> [c0000000783c3a80] [c0000000004e1228] .bus_for_each_dev+0x98/0xf0
-> [c0000000783c3b30] [c0000000004e1bf8] .driver_attach+0x28/0x40
-> [c0000000783c3bb0] [c0000000004e07d8] .bus_add_driver+0x218/0x340
-> [c0000000783c3c60] [c0000000004e2a2c] .driver_register+0x9c/0x1b0
-> [c0000000783c3d00] [c0000000003f62d4] .__pci_register_driver+0x64/0x140
-> [c0000000783c3da0] [c000000000b99f88] .ipr_init+0x4c/0x68
-> [c0000000783c3e20] [c00000000000ad24] .do_one_initcall+0x1a4/0x1e0
-> [c0000000783c3ee0] [c000000000b512d0] .kernel_init+0x14c/0x1fc
-> [c0000000783c3f90] [c000000000022468] .kernel_thread+0x54/0x70
-> Instruction dump:
-> ebe1fff8 7c0803a6 4e800020 7c0802a6 fba1ffe8 fbe1fff8 7c7f1b78 f8010010 
-> f821ff71 e8030398 3120ffff 7c090110 <0b000000> e86303b0 482de065 60000000 
-> ---[ end trace 759bed76a85e8dec ]---
-> scsi 0:0:1:0: Direct-Access     IBM-ESXS MAY2036RC        T106 PQ: 0 ANSI: 5
-> ------------[ cut here ]------------
-> 
-> I get lots more of these.  The obvious commit to point the finger at
-> is 3308511c93e6 ("[SCSI] Make scsi_free_queue() kill pending SCSI
-> commands") but the root cause may be something different.
+> struct pgpath is freed before dm_target when tearing down dm table.
+> So if the problematic completion was being done after freeing pgpath
+> but before freeing dm_target, crash would look like that
+> and what's happening seems the same for these dm crashes:
+> dm table was somehow destroyed while I/O was in-flight.
 
-Actually, I don't think it's anything to do with this: it's Anton's
-fault
+Could be the block layer's onstack plugging changes are at the heart of
+this.
 
-commit f7c9c6bb14f3104608a3a83cadea10a6943d2804
-Author: Anton Blanchard <anton@samba.org>
-Date:   Thu Nov 3 08:56:22 2011 +1100
+I voiced onstack plugging concerns relative to DM some time ago
+(https://lkml.org/lkml/2011/3/9/450) but somehow convinced myself DM was
+fine to no longer need dm_table_unplug_all() etc.  Unfortunately I
+cannot recall _why_ I felt that was the case.
 
-    [SCSI] Fix block queue and elevator memory leak in scsi_alloc_sdev
+So DM needs further review relative to block's onstack plugging changes
+and DM IO completion.
 
-Doesn't completely do the teardown.  The true fix is to do a proper
-teardown instead of hand rolling it.  Does this fix it for you?
+> It's interesting that your test started to crash in dm with v3.0.7.
+> Have you gotten these dm crashes with v3.0.6 or before?
+> Have you hit the initially-reported scsi oops with v3.0.7?
+> Are your v3.0.6 and v3.0.7 compiled with same config and the tests
+> ran on same system?
 
-James
+If all 3.0.x fail: it would be interesting to know if 2.6.39 (which
+introduced the onstack plugging) also has these problems.  Testing with
+2.6.38 would be very insightful because it obviously doesn't have any of
+the onstack plugging churn.
 
----
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 72273a0..b3c6d95 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -319,11 +319,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	return sdev;
- 
- out_device_destroy:
--	scsi_device_set_state(sdev, SDEV_DEL);
--	transport_destroy_device(&sdev->sdev_gendev);
--	put_device(&sdev->sdev_dev);
--	scsi_free_queue(sdev->request_queue);
--	put_device(&sdev->sdev_gendev);
-+	__scsi_remove_device(sdev);
- out:
- 	if (display_failure_msg)
- 		printk(ALLOC_FAILURE_MSG, __func__);
+Mike
