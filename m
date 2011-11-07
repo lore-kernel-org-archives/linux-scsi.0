@@ -1,111 +1,116 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target: Updates for v3.2-rc1 (round two)
-Date: Sun, 06 Nov 2011 18:59:38 -0800
-Message-ID: <1320634778.18988.10.camel@haakon2.linux-iscsi.org>
-References: <1320437345.5859.94.camel@haakon2.linux-iscsi.org>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: WARNING: at drivers/scsi/scsi_lib.c:1704
+Date: Mon, 7 Nov 2011 17:24:08 +1100
+Message-ID: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Mon__7_Nov_2011_17_24_08_+1100_=mWbpLo469CnuKwn"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1320437345.5859.94.camel@haakon2.linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@purestorage.com>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Bart Van Assche <bvanassche@acm.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Linus,
+--Signature=_Mon__7_Nov_2011_17_24_08_+1100_=mWbpLo469CnuKwn
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This is just a friendly reminder to please pull the two remaining
-target-pending branches (for-next and for-next-merge) for -rc1.
+Hi all,
 
-Thank you,
+Starting some time last week I am getting the following during boot on
+our PPC970 blade:
 
---nab
+calling  .ipr_init+0x0/0x68 @ 1
+ipr: IBM Power RAID SCSI Device Driver version: 2.5.2 (April 27, 2011)
+ipr 0000:01:01.0: Found IOA with IRQ: 26
+ipr 0000:01:01.0: Starting IOA initialization sequence.
+ipr 0000:01:01.0: Adapter firmware version: 06160039
+ipr 0000:01:01.0: IOA initialized.
+scsi0 : IBM 572E Storage Adapter
+------------[ cut here ]------------
+WARNING: at drivers/scsi/scsi_lib.c:1704
+Modules linked in:
+NIP: c00000000053b3d4 LR: c00000000053e5b0 CTR: c000000000541d70
+REGS: c0000000783c2f60 TRAP: 0700   Not tainted  (3.1.0-autokern1)
+MSR: 8000000000029032 <EE,ME,CE,IR,DR>  CR: 24002024  XER: 20000002
+TASK =3D c0000000783b8000[1] 'swapper' THREAD: c0000000783c0000 CPU: 0
+GPR00: 0000000000000001 c0000000783c31e0 c000000000cf38b0 c00000000239a9d0=
+=20
+GPR04: c000000000cbe8f8 0000000000000000 c0000000783c3040 0000000000000000=
+=20
+GPR08: c000000075daf488 c000000078a3b7ff c000000000bcacc8 0000000000000000=
+=20
+GPR12: 0000000044002028 c000000007ffb000 0000000002e40000 000000000099b800=
+=20
+GPR16: 0000000000000000 c000000000bba5fc c000000000a61db8 0000000000000000=
+=20
+GPR20: 0000000001b77200 0000000000000000 c000000078990000 0000000000000001=
+=20
+GPR24: c000000002396828 0000000000000000 0000000000000000 c000000078a3b938=
+=20
+GPR28: fffffffffffffffa c0000000008ad2c0 c000000000c7faa8 c00000000239a9d0=
+=20
+NIP [c00000000053b3d4] .scsi_free_queue+0x24/0x90
+LR [c00000000053e5b0] .scsi_alloc_sdev+0x280/0x2e0
+Call Trace:
+[c0000000783c31e0] [c000000000c7faa8] wireless_seq_fops+0x278d0/0x2eb88 (un=
+reliable)
+[c0000000783c3270] [c00000000053e5b0] .scsi_alloc_sdev+0x280/0x2e0
+[c0000000783c3330] [c00000000053eba0] .scsi_probe_and_add_lun+0x390/0xb40
+[c0000000783c34a0] [c00000000053f7ec] .__scsi_scan_target+0x16c/0x650
+[c0000000783c35f0] [c00000000053fd90] .scsi_scan_channel+0xc0/0x100
+[c0000000783c36a0] [c00000000053fefc] .scsi_scan_host_selected+0x12c/0x1c0
+[c0000000783c3750] [c00000000083dcb4] .ipr_probe+0x2c0/0x390
+[c0000000783c3830] [c0000000003f50b4] .local_pci_probe+0x34/0x50
+[c0000000783c38a0] [c0000000003f5f78] .pci_device_probe+0x148/0x150
+[c0000000783c3950] [c0000000004e1e8c] .driver_probe_device+0xdc/0x210
+[c0000000783c39f0] [c0000000004e20cc] .__driver_attach+0x10c/0x110
+[c0000000783c3a80] [c0000000004e1228] .bus_for_each_dev+0x98/0xf0
+[c0000000783c3b30] [c0000000004e1bf8] .driver_attach+0x28/0x40
+[c0000000783c3bb0] [c0000000004e07d8] .bus_add_driver+0x218/0x340
+[c0000000783c3c60] [c0000000004e2a2c] .driver_register+0x9c/0x1b0
+[c0000000783c3d00] [c0000000003f62d4] .__pci_register_driver+0x64/0x140
+[c0000000783c3da0] [c000000000b99f88] .ipr_init+0x4c/0x68
+[c0000000783c3e20] [c00000000000ad24] .do_one_initcall+0x1a4/0x1e0
+[c0000000783c3ee0] [c000000000b512d0] .kernel_init+0x14c/0x1fc
+[c0000000783c3f90] [c000000000022468] .kernel_thread+0x54/0x70
+Instruction dump:
+ebe1fff8 7c0803a6 4e800020 7c0802a6 fba1ffe8 fbe1fff8 7c7f1b78 f8010010=20
+f821ff71 e8030398 3120ffff 7c090110 <0b000000> e86303b0 482de065 60000000=20
+---[ end trace 759bed76a85e8dec ]---
+scsi 0:0:1:0: Direct-Access     IBM-ESXS MAY2036RC        T106 PQ: 0 ANSI: 5
+------------[ cut here ]------------
 
-On Fri, 2011-11-04 at 13:09 -0700, Nicholas A. Bellinger wrote:
-> Hi Linus,
-> 
-> The following is the second round of target core updates for the v3.2
-> merge window.  Please go ahead and pull from:
-> 
->    git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
-> 
-> A separate PULL request for the ib_srpt fabric merge will be going out
-> shortly.
-> 
-> This series includes:
-> 
-> *) Bugfixes from Joern for TMR processing during LUN_RESET handling
-> *) Bugfix for tcm_loop to explictly clear control CDB READ payload
-> *) Conversion of TFO->check_stop_free to return status as a hint to
->    LUN_RESET processing
-> *) Removal of TRANSPORT_FREE_CMD_INTR in favor of per fabric release
->    workqueues
-> *) Initial pieces of generic active I/O shutdown tracking.  (Will be enabled
->    for ib_srpt in a seperate patch)
-> *) Convert control CDB code to pass se_task into CDB emulation callback
-> *) Refactoring of CDB emulation from Christoph to universally use
->    cmd->execute_task()
-> 
-> The generic active I/O shutdown bits and ->execute_task conversion got
-> in a bit late, but I still think are suitable v3.2 material.  Also, we
-> have one more bugfix+cleanup patch to remove legacy PYX_TRANSPORT_*
-> return code usage still being discussed, and will be sent out post merge
-> window to address existing breakage with se_cmd->scsi_sense_reason
-> assignment and errno return code conversion.
-> 
-> Thanks!
-> 
-> --nab
-> 
-> Christoph Hellwig (7):
->   target: add back error handling in transport_complete_task
->   target: split core_scsi2_emulate_crh
->   target: split core_scsi3_emulate_pr
->   target: pass the se_task to the CDB emulation callback
->   target: refactor transport_emulate_control_cdb
->   target: remove SCF_EMULATE_CDB_ASYNC
->   target: use ->exectute_task for all CDB emulation
-> 
-> Dan Carpenter (1):
->   target/pscsi: blk_make_request() returns an ERR_PTR()
-> 
-> Joern Engel (4):
->   target: Fix incorrect se_cmd assignment in core_tmr_drain_tmr_list
->   target: Fix wrong se_tmr being added to drain_tmr_list
->   target: Minor cleanups to core_tmr_drain_tmr_list
->   target: Avoid double list_del for aborted se_tmr_req
-> 
-> Nicholas Bellinger (8):
->   target: Fix compile warning w/ missing module.h include
->   tcm_loop: Add explict read buffer memset for
->     SCF_SCSI_CONTROL_SG_IO_CDB
->   target: Check -ENOMEM to signal QUEUE_FULL from fabric callbacks
->   iscsi-target: Add missing CMDSN_LOWER_THAN_EXP check in
->     iscsit_handle_scsi_cmd
->   iscsi-target: Fix non-immediate TMR handling
->   target: Make TFO->check_stop_free return free status
->   target: Remove core TRANSPORT_FREE_CMD_INTR usage
->   target: Add generic active I/O shutdown logic
-> 
->  drivers/target/iscsi/iscsi_target.c     |   11 +-
->  drivers/target/loopback/tcm_loop.c      |   23 ++-
->  drivers/target/target_core_alua.c       |   11 +-
->  drivers/target/target_core_alua.h       |    4 +-
->  drivers/target/target_core_cdb.c        |  217 +++++++-----------
->  drivers/target/target_core_cdb.h        |   14 +
->  drivers/target/target_core_device.c     |   14 +-
->  drivers/target/target_core_pr.c         |  349 ++++++++++++++++------------
->  drivers/target/target_core_pr.h         |    7 +-
->  drivers/target/target_core_pscsi.c      |    2 +-
->  drivers/target/target_core_tmr.c        |   23 +--
->  drivers/target/target_core_transport.c  |  392 ++++++++++++++++++++-----------
->  drivers/target/tcm_fc/tcm_fc.h          |    2 +-
->  drivers/target/tcm_fc/tfc_cmd.c         |    3 +-
->  include/target/target_core_base.h       |   13 +-
->  include/target/target_core_device.h     |    2 +-
->  include/target/target_core_fabric_ops.h |   11 +-
->  include/target/target_core_transport.h  |    7 +-
->  18 files changed, 630 insertions(+), 475 deletions(-)
->  create mode 100644 drivers/target/target_core_cdb.h
-> 
+I get lots more of these.  The obvious commit to point the finger at
+is 3308511c93e6 ("[SCSI] Make scsi_free_queue() kill pending SCSI
+commands") but the root cause may be something different.
+
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Mon__7_Nov_2011_17_24_08_+1100_=mWbpLo469CnuKwn
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJOt3mIAAoJEECxmPOUX5FEAloP/0N6rjRdcdNBrd2YJHh5lqeo
+lL3dUUrKfG5cZUuw7e7hTsKVjJPyGeKO2LPp+nX3b5Z7rjYNuvhd/RVZ/oteHVoM
+qwO5168F3Ro7K7pLmjXkarrmvlsW/vG1UTtq8VK9Ta3Y91Qs/sWff0hoH5MYuLpB
+u6w7zSBXgO9TiV25Cp4LmVutvfeJaZ8CHvEEysImdnzePmYm19MtB7+MlDJWzhKN
+f91NVjOXifNZC80dGq60poB9Gdk1ENKtfOoGhX5EwJSJyKK1xy3ai3l1InHOpX3q
+QVWIy4gN2RGaqThnYDTz/r9ImTxyxPfnAnHyda5iq70VZdYYr9nrpFgPtdHFercn
+klpa+fC1J8ZFXfX7SgtgSPZU3uVvYktPtygAjt2dEn6TolpZRwHdbF44kK7uga2C
+wjcKT1fBtJVsawbX4jGWZd9POcv3WPwqVfM66dET+YEUIzzDUwJHgMsdEn8XVaCL
+Gb6SCtOY4bAjOh0VSqmItanxve0C/i1J2PRVnDWUgLQiYC9t+WFjYbsq/XPBNG2u
+Ro5Z0z2mvSvUkN82q6whscDoB+ZJB5b7yzygr9kcvmHRh4oJhQwNXirN4HwvGGjj
+81OP3HtLjedkNZ1Z/TTsDG8I7R6Y1y1SA2k6ORsfqSwhLjY4DyRXhtINUrvGuHy7
+UPGAwWTE5yjCyK9xdwD9
+=pYCY
+-----END PGP SIGNATURE-----
+
+--Signature=_Mon__7_Nov_2011_17_24_08_+1100_=mWbpLo469CnuKwn--
