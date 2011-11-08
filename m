@@ -1,32 +1,44 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: WARNING: at drivers/scsi/scsi_lib.c:1704
-Date: Tue, 8 Nov 2011 08:07:37 +0100
-Message-ID: <CAO+b5-pPTt9B1se3-oGrZZ4-mScJh7_9MA29UTbOSB3QR4L38A@mail.gmail.com>
-References: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
-	<1320677484.1215.10.camel@dabdike.int.hansenpartnership.com>
-	<20111108110300.e8494242e6c404142b1fe4c0@canb.auug.org.au>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [patch] [SCSI] mpt2sas: add missing allocation.
+Date: Tue, 8 Nov 2011 13:55:51 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6047262C39E@inbmail02.lsi.com>
+References: <20111104182501.GF5796@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111108110300.e8494242e6c404142b1fe4c0@canb.auug.org.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:33717 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753207Ab1KHIZ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2011 03:25:58 -0500
+In-Reply-To: <20111104182501.GF5796@elgon.mountain>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, James Bottomley <James.Bottomley@suse.de>, "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Tue, Nov 8, 2011 at 1:03 AM, Stephen Rothwell <sfr@canb.auug.org.au>=
- wrote:
-> On Mon, 07 Nov 2011 08:51:24 -0600 James Bottomley <James.Bottomley@H=
-ansenPartnership.com> wrote:
->>=A0The true fix is to do a proper
->> teardown instead of hand rolling it. =A0Does this fix it for you?
->
-> I don't get the WARNING any more, but now get lots of:
->
-> scsi: killing requests for dead queue
-
-This patch should help: http://www.spinics.net/lists/linux-scsi/msg5537=
-3.html.
-
-Bart.
+VGhlIHBhdGNoIHNlZW0gdG8gYmUgZmluZS4gUGxlYXNlIGNvbnNpZGVyIHRoaXMgcGF0Y2ggYXMg
+YW4gQWNrZWQgYnkgbWUNCg0KUmVnYXJkcywNCk5hZ2FsYWtzaG1pDQoNCg0KLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCkZyb206IERhbiBDYXJwZW50ZXIgW21haWx0bzpkYW4uY2FycGVudGVy
+QG9yYWNsZS5jb21dIA0KU2VudDogRnJpZGF5LCBOb3ZlbWJlciAwNCwgMjAxMSAxMTo1NSBQTQ0K
+VG86IEphbWVzIEUuSi4gQm90dG9tbGV5DQpDYzogRGVzYWksIEthc2h5YXA7IEphbWVzIEJvdHRv
+bWxleTsgTmFuZGlnYW1hLCBOYWdhbGFrc2htaTsgTW9vcmUsIEVyaWM7IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnOyBrZXJuZWwtamFuaXRvcnNAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBb
+cGF0Y2hdIFtTQ1NJXSBtcHQyc2FzOiBhZGQgbWlzc2luZyBhbGxvY2F0aW9uLg0KDQpUaGVyZSB3
+YXMgc3VwcG9zZWQgdG8gYmUgYSBremFsbG9jKCkgaGVyZSBhbmQgdGhlIGNvbXBpbGVyIGNvbXBs
+YWluZWQNCmFib3V0IGl0Lg0KbXB0MnNhc19zY3NpaC5jOiBJbiBmdW5jdGlvbiDigJhtcHQyc2Fz
+X3Njc2loX3Jlc2V0X2hhbmRsZXLigJk6DQptcHQyc2FzX3Njc2loLmM6MjgwNzoyMTogd2Fybmlu
+Zzog4oCYZndfZXZlbnTigJkgbWF5IGJlIHVzZWQgdW5pbml0aWFsaXplZCBpbiB0aGlzIGZ1bmN0
+aW9uIFstV3VuaW5pdGlhbGl6ZWRdDQoNClNpZ25lZC1vZmYtYnk6IERhbiBDYXJwZW50ZXIgPGRh
+bi5jYXJwZW50ZXJAb3JhY2xlLmNvbT4NCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tcHQy
+c2FzL21wdDJzYXNfc2NzaWguYyBiL2RyaXZlcnMvc2NzaS9tcHQyc2FzL21wdDJzYXNfc2NzaWgu
+Yw0KaW5kZXggODg4OWIxYi4uNGUwNDFmNiAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9tcHQy
+c2FzL21wdDJzYXNfc2NzaWguYw0KKysrIGIvZHJpdmVycy9zY3NpL21wdDJzYXMvbXB0MnNhc19z
+Y3NpaC5jDQpAQCAtMjgwMiw2ICsyODAyLDExIEBAIF9zY3NpaF9lcnJvcl9yZWNvdmVyeV9kZWxl
+dGVfZGV2aWNlcyhzdHJ1Y3QgTVBUMlNBU19BREFQVEVSICppb2MpDQogDQogCWlmIChpb2MtPmlz
+X2RyaXZlcl9sb2FkaW5nKQ0KIAkJcmV0dXJuOw0KKw0KKwlmd19ldmVudCA9IGt6YWxsb2Moc2l6
+ZW9mKHN0cnVjdCBmd19ldmVudF93b3JrKSwgR0ZQX0FUT01JQyk7DQorCWlmICghZndfZXZlbnQp
+DQorCQlyZXR1cm47DQorDQogCWZ3X2V2ZW50LT5ldmVudCA9IE1QVDJTQVNfUkVNT1ZFX1VOUkVT
+UE9ORElOR19ERVZJQ0VTOw0KIAlmd19ldmVudC0+aW9jID0gaW9jOw0KIAlfc2NzaWhfZndfZXZl
+bnRfYWRkKGlvYywgZndfZXZlbnQpOw0K
