@@ -1,65 +1,70 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [PATCH] crc-t10dif.c comments
-Date: Mon, 07 Nov 2011 17:59:51 -0500
-Message-ID: <4EB862E7.5020606@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: WARNING: at drivers/scsi/scsi_lib.c:1704
+Date: Tue, 8 Nov 2011 11:03:00 +1100
+Message-ID: <20111108110300.e8494242e6c404142b1fe4c0@canb.auug.org.au>
+References: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
+	<1320677484.1215.10.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000706060903060906000203"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:43555 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752033Ab1KGW77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Nov 2011 17:59:59 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id D07CB2041B9
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2011 23:59:54 +0100 (CET)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id xnBd0HEFzV3L for <linux-scsi@vger.kernel.org>;
-	Mon,  7 Nov 2011 23:59:53 +0100 (CET)
-Received: from [192.168.48.66] (ip-180.53.99.216.dsl-cust.ca.inter.net [216.99.53.180])
-	by smtp.infotech.no (Postfix) with ESMTPA id 10AC62041B4
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Nov 2011 23:59:52 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA256";
+ boundary="Signature=_Tue__8_Nov_2011_11_03_00_+1100_UefxJahxFOuZmL9e"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1320677484.1215.10.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------000706060903060906000203
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+--Signature=_Tue__8_Nov_2011_11_03_00_+1100_UefxJahxFOuZmL9e
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-ChangeLog:
-   - translate Latin (and Danish) to English
-   - fix error (in comment) and give a reference
+Hi James,
 
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+On Mon, 07 Nov 2011 08:51:24 -0600 James Bottomley <James.Bottomley@HansenP=
+artnership.com> wrote:
+>
+> Actually, I don't think it's anything to do with this: it's Anton's
+> fault
+>=20
+> commit f7c9c6bb14f3104608a3a83cadea10a6943d2804
+> Author: Anton Blanchard <anton@samba.org>
+> Date:   Thu Nov 3 08:56:22 2011 +1100
+>=20
+>     [SCSI] Fix block queue and elevator memory leak in scsi_alloc_sdev
+>=20
+> Doesn't completely do the teardown.  The true fix is to do a proper
+> teardown instead of hand rolling it.  Does this fix it for you?
 
---------------000706060903060906000203
-Content-Type: text/x-patch;
- name="crc-t10dif.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="crc-t10dif.patch"
+I don't get the WARNING any more, but now get lots of:
 
-diff --git a/lib/crc-t10dif.c b/lib/crc-t10dif.c
-index fbbd66e..97cc436 100644
---- a/lib/crc-t10dif.c
-+++ b/lib/crc-t10dif.c
-@@ -12,9 +12,11 @@
- #include <linux/module.h>
- #include <linux/crc-t10dif.h>
- 
--/* Table generated using the following polynomium:
-+/* Table generated using the following polynomial:
-  * x^16 + x^15 + x^11 + x^9 + x^8 + x^7 + x^5 + x^4 + x^2 + x + 1
-- * gt: 0x8bb7
-+ * G(x): 0x18bb7
-+ *
-+ * Reference: SBC-2 or SBC-3 at www.t10.org (protection information model)
-  */
- static const __u16 t10_dif_crc_table[256] = {
- 	0x0000, 0x8BB7, 0x9CD9, 0x176E, 0xB205, 0x39B2, 0x2EDC, 0xA56B,
+scsi: killing requests for dead queue
 
---------------000706060903060906000203--
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Tue__8_Nov_2011_11_03_00_+1100_UefxJahxFOuZmL9e
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBCAAGBQJOuHG0AAoJEECxmPOUX5FEAzoP/i/XaBxyy7qTQxgiKOw18vj3
+t91awLvHiYMr85j/7A18Z2B6wS7wkRYKRT7vFuTy2i9lCgwNXE9gZd38jH0PZgzM
+gjc7wtK/voRGFmas+KupzLlBSf642kO9wOC/+U6sYpE2t4FpK/l1fIzI3YxXSMtO
+ZCz+8w8h1bAFRPB2WZW6BPd4jBiYpTYK3ha6k0izQOqnNm84A5i0Wjeo1VIyo9ho
+VjPuuZYMnR8CGFJfzztA0Ba8vP2M3cE/Eu0hyuS+DZ2bWxvO5FyshWITQan6NlKg
+7D7zzun8POeMT6ba7ac83MlbJLhAByqVzmQBN2HRRYsCucCD6lEZp5DrTBBX50Ok
+yhLXryImVjiYCjmyL2JMy5W9jpjbFG4TGfK6en/2OWIwAc70UOm2uXstsaMets2G
+5iODijOLn4lWS129WgCw80UC0xD1aoGVaBW367SyzZuQ8+TW9rKTYBZo0gxbqBaU
+Od8CkKkNo4BalylbbXeI4lAUZIjswXPUVb0+Gh05LdDNPic0ksjdrIltcf4AWCfK
+bon2LNQq6/U5JF3IpHafZQCp/BZG5lWMT3VMLKzZv3kKQUtQabeBOnrCSmnvYHdf
+5XxpwVqq3+G7OyhY2/xtcQ0jxzbfUzrwgvnxOlp1SdtEYXYY9GAz74wzQcyUQfGf
+nokrAfNdahbXaANWzOkF
+=4nW7
+-----END PGP SIGNATURE-----
+
+--Signature=_Tue__8_Nov_2011_11_03_00_+1100_UefxJahxFOuZmL9e--
