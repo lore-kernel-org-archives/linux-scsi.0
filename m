@@ -1,188 +1,70 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Wed, 09 Nov 2011 10:37:06 +0100
-Message-ID: <4EBA49C2.1000704@suse.de>
-References: <4E9BEB68.1050707@ce.jp.nec.com> <1318860403.4794.12.camel@dabdike.int.hansenpartnership.com> <4E9D7FA8.9000000@ce.jp.nec.com> <20111018154542.GB3869@osiris.boeblingen.de.ibm.com> <1318955380.5169.15.camel@dabdike.int.hansenpartnership.com> <20111031100557.GA2621@osiris.boeblingen.de.ibm.com> <1320057746.2964.1.camel@dabdike> <4EAE8A7E.8000504@ce.jp.nec.com> <20111031130004.GB4768@osiris.boeblingen.de.ibm.com> <20111103182548.GA12131@redhat.com> <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] Silencing 'killing requests for dead queue'
+Date: Wed, 9 Nov 2011 12:53:23 +0100
+Message-ID: <CAO+b5-r148yneG_h3PyfP9D8BGf5x7e7XKuY73BVtPTTRPkFuQ@mail.gmail.com>
+References: <1320824364-8510-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:53155 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751500Ab1KILxY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2011 06:53:24 -0500
+Received: by wyh15 with SMTP id 15so1508159wyh.19
+        for <linux-scsi@vger.kernel.org>; Wed, 09 Nov 2011 03:53:23 -0800 (PST)
+In-Reply-To: <1320824364-8510-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-On 11/04/2011 10:19 AM, Heiko Carstens wrote:
-> On Thu, Nov 03, 2011 at 02:25:48PM -0400, Mike Snitzer wrote:
->> On Mon, Oct 31 2011 at  9:00am -0400,
->> Heiko Carstens<heiko.carstens@de.ibm.com>  wrote:
->>
->>> On Mon, Oct 31, 2011 at 08:46:06PM +0900, Jun'ichi Nomura wrote:
->>>> Hm, dm_softirq_done is generic completion code of original
->>>> request in dm-multipath.
->>>> So oops here might be another manifestation of use-after-free.
->>>>
->>>> Do you always hit the oops at the same address?
->>>
->>> I think we saw this bug the first time. But before that the scsi
->>> logging level was higher. Gonzalo is trying to recreate it with
->>> the same (old) scsi logging level.
->>> Afterwards we will try with barrier=3D0.
->>>
->>> Both on v3.0.7 btw.
->>>
->>>> Could you find corresponding source code line for
->>>> the crashed address, dm_softirq_done+0x72/0x140,
->>>> and which pointer was invalid?
->>>
->>> It crashes in the inlined function dm_done() when trying to
->>> dereference tio (aka clone->end_io_data):
->>>
->>> static void dm_done(struct request *clone, int error, bool mapped)
->>> {
->>>          int r =3D error;
->>>          struct dm_rq_target_io *tio =3D clone->end_io_data;
->>>          dm_request_endio_fn rq_end_io =3D tio->ti->type->rq_end_io=
-;
->>
->> Hi,
->>
->> Which underlying storage driver is being used by this multipath devi=
-ce?
+On Wed, Nov 9, 2011 at 8:39 AM, Hannes Reinecke <hare@suse.de> wrote:
+> When we tear down a device we try to flush all outstanding
+> commands in scsi_free_queue(). However the check in
+> scsi_request_fn() is imperfect as it only signals that
+> we _might start_ aborting commands, not that we've actually
+> aborted some.
+> So move the printk inside the scsi_kill_request function,
+> this will also give us a hint about which commands are aborted.
 >
-> It's the s390 only zfcp device driver.
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 >
-> FWIW, yet another use-after-free crash, this time however in multipat=
-h_end_io:
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 06bc265..f85cfa6 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1409,6 +1409,8 @@ static void scsi_kill_request(struct request *r=
+eq, struct request_queue *q)
 >
-> [96875.870593] Unable to handle kernel pointer dereference at virtual=
- kernel address 6b6b6b6b6b6b6000
-> [96875.870602] Oops: 0038 [#1]
-> [96875.870674] PREEMPT SMP DEBUG_PAGEALLOC
-> [96875.870683] Modules linked in: dm_round_robin sunrpc ipv6 qeth_l2 =
-binfmt_misc dm_multipath scsi_dh dm_mod qeth ccwgroup [la\
-> st unloaded: scsi_wait_scan]
-> [96875.870722] CPU: 2 Tainted: G        W   3.0.7-50.x.20111024-s390x=
-default #1
-> [96875.870728] Process udevd (pid: 36697, task: 0000000072c8a3a8, ksp=
-: 0000000057c43868)
-> [96875.870732] Krnl PSW : 0704200180000000 000003e001347138 (multipat=
-h_end_io+0x50/0x140 [dm_multipath])
-> [96875.870746]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:0 CC=
-:2 PM:0 EA:3
-> [96875.870751] Krnl GPRS: 0000000000000000 000003e000000000 6b6b6b6b6=
-b6b6b6b 00000000717ab940
-> [96875.870755]            0000000000000000 00000000717abab0 000000000=
-0000002 0700000000000008
-> [96875.870759]            0000000000000002 0000000000000000 000000005=
-8dd37a8 000000006f845478
-> [96875.870764]            000003e0012e1000 000000005613d1f0 000000007=
-a737bf0 000000007a737ba0
-> [96875.870768] Krnl Code: 000003e00134712a: b90200dd            ltgr =
-%r13,%r13
-> [96875.870793]            000003e00134712e: a7840017            brc 8=
-,3e00134715c
-> [96875.870800]            000003e001347132: e320d0100004        lg %r=
-2,16(%r13)
-> [96875.870809]>000003e001347138: e31020180004        lg %r1,24(%r2)
-> [96875.870818]            000003e00134713e: e31010580004        lg %r=
-1,88(%r1)
-> [96875.870827]            000003e001347144: b9020011            ltgr =
-%r1,%r1
-> [96875.870835]            000003e001347148: a784000a            brc 8=
-,3e00134715c
-> [96875.870841]            000003e00134714c: 41202018            la %r=
-2,24(%r2)
-> [96875.870889] Call Trace:
-> [96875.870892] ([<0700000000000008>] 0x700000000000008)
-> [96875.870897]  [<000003e0012e3662>] dm_softirq_done+0x9a/0x140 [dm_m=
-od]
-> [96875.870915]  [<000000000040d29c>] blk_done_softirq+0xd4/0xf0
-> [96875.870925]  [<00000000001587c2>] __do_softirq+0xda/0x398
-> [96875.870932]  [<000000000010f47e>] do_softirq+0xe2/0xe8
-> [96875.870940]  [<0000000000158e2c>] irq_exit+0xc8/0xcc
-> [96875.870945]  [<00000000004ceb48>] do_IRQ+0x910/0x1bfc
-> [96875.870953]  [<000000000061a164>] io_return+0x0/0x16
-> [96875.870961]  [<000000000019c84e>] lock_acquire+0xd2/0x204
-> [96875.870969] ([<000000000019c836>] lock_acquire+0xba/0x204)
-> [96875.870974]  [<0000000000615f8e>] mutex_lock_killable_nested+0x92/=
-0x520
-> [96875.870983]  [<0000000000292796>] vfs_readdir+0x8a/0xe4
-> [96875.870992]  [<00000000002928e0>] SyS_getdents+0x60/0xe8
-> [96875.870999]  [<0000000000619af2>] sysc_noemu+0x16/0x1c
-> [96875.871024]  [<000003fffd1ec83e>] 0x3fffd1ec83e
-> [96875.871028] INFO: lockdep is turned off.
-> [96875.871031] Last Breaking-Event-Address:
-> [96875.871037]  [<000003e0012e3660>] dm_softirq_done+0x98/0x140 [dm_m=
-od]
+> =A0 =A0 =A0 =A0blk_start_request(req);
 >
-> static int multipath_end_io(struct dm_target *ti, struct request *clo=
-ne,
-> 			    int error, union map_info *map_context)
-> {
-> 	struct multipath *m =3D ti->private;
-> 	struct dm_mpath_io *mpio =3D map_context->ptr;
-> 	struct pgpath *pgpath =3D mpio->pgpath;
-> 	struct path_selector *ps;
-> 	int r;
+> + =A0 =A0 =A0 scmd_printk(KERN_INFO, cmd, "killing request\n");
+> +
+> =A0 =A0 =A0 =A0sdev =3D cmd->device;
+> =A0 =A0 =A0 =A0starget =3D scsi_target(sdev);
+> =A0 =A0 =A0 =A0shost =3D sdev->host;
+> @@ -1490,7 +1492,6 @@ static void scsi_request_fn(struct request_queu=
+e *q)
+> =A0 =A0 =A0 =A0struct request *req;
 >
-> 	r  =3D do_end_io(m, clone, error, mpio);
-> 	if (pgpath) {
-> 		ps =3D&pgpath->pg->ps;<--- crashes here
-> 		if (ps->type->end_io)
-> 			ps->type->end_io(ps,&pgpath->path, mpio->nr_bytes);
-> 	}
-> 	mempool_free(mpio, m->mpio_pool);
->
-> 	return r;
-> }
->
-> It crashes when trying to derefence pgpath, which was freed. Since we=
- have
-> SLUB debugging turned on the freed object tells us that it was alloca=
-ted
-> via a call to multipath_ctr() and freed via a call to free_priority_g=
-roup().
->
-> FWIW, this reproduction was done with barriers off.
->
-> Btw, since I cc'ed you rather late I'm not sure if you are aware of t=
-he
-> test scenario: it's I/O stress with multipathing were paths come and =
-go
-> all the time. It usually takes quite a few hours before the crashes a=
-re
-> observed.
+> =A0 =A0 =A0 =A0if (!sdev) {
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk("scsi: killing requests for dead=
+ queue\n");
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0while ((req =3D blk_peek_request(q)) !=
+=3D NULL)
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_kill_request(req,=
+ q);
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
 
-Hmm. Just to be on the safe side, could you try this one:
+Can this message appear during LUN scanning and hence confuse users ?
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 5e0090e..e6fad46 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -920,8 +920,10 @@ static int multipath_map(struct dm_target *ti,=20
-struct reque
-st *clone,
-         map_context->ptr =3D mpio;
-         clone->cmd_flags |=3D REQ_FAILFAST_TRANSPORT;
-         r =3D map_io(m, clone, mpio, 0);
--       if (r < 0 || r =3D=3D DM_MAPIO_REQUEUE)
-+       if (r < 0 || r =3D=3D DM_MAPIO_REQUEUE) {
-                 mempool_free(mpio, m->mpio_pool);
-+               map_context->ptr =3D NULL;
-+       }
+Also, patch 3308511 is already present in several stable trees so
+shouldn't a patch like the above CC stable@vger.kernel.org too ?
 
-         return r;
-  }
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
