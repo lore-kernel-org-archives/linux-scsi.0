@@ -1,23 +1,21 @@
-From: Tejun Heo <tj@kernel.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [PATCH v2 0/4] ata port runtime power management support
-Date: Thu, 10 Nov 2011 07:30:36 -0800
-Message-ID: <20111110153036.GC27258@google.com>
+Date: Thu, 10 Nov 2011 10:30:53 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1111101028250.2338-100000@iolanthe.rowland.org>
 References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Lin Ming <ming.m.lin@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>, Kay Sievers <kay.sievers@vrfy.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+On Thu, 10 Nov 2011, Lin Ming wrote:
 
-(cc'ing Kay for the sysfs tree hierarchy change)
-
-On Thu, Nov 10, 2011 at 02:22:42PM +0800, Lin Ming wrote:
+> Hi, all
+> 
 > These 4 patches add ata port runtime pm support.
 > 
 > v1:
@@ -56,12 +54,12 @@ On Thu, Nov 10, 2011 at 02:22:42PM +0800, Lin Ming wrote:
 > 
 > This is much cleaner and natural.
 
-Yeah, I really like this approach.  Nicely done.  I *think* the
-hierarchy change should be okay but cc'ing Kay just in case.
+Have you observed any real benefit from this feature?
 
- Acked-by: Tejun Heo <tj@kernel.org>
+Currently, disks will not be runtime-suspended unless (1) the user 
+requests it by setting the appropriate power/control attribute, and (2) 
+the device file is closed (in particular, the disk has no mounted 
+filesystems or swap partitions).  I don't imagine this combination of 
+events is very common for disks using libata.
 
-Thanks.
-
--- 
-tejun
+Alan Stern
