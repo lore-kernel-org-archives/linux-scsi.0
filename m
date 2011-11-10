@@ -1,67 +1,30 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: mptspi init failure on Sparc SMP in Linux 3.0
-Date: Thu, 10 Nov 2011 17:02:30 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com>
-References: <4EB7D137.7090903@univ.rzeszow.pl>
-	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl>
- <1320721518.18929.15.camel@deadeye>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] Silencing 'killing requests for dead queue'
+Date: Thu, 10 Nov 2011 12:57:37 +0100
+Message-ID: <CAO+b5-pAuUixoNsckZheThHnh5H2LbYHh8D8Tm7PQfRxEMgRJw@mail.gmail.com>
+References: <1320824364-8510-1-git-send-email-hare@suse.de>
+	<20111110131029.be09b1080f3fe22d5fa86fe4@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:46220 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751219Ab1KJLcv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2011 06:32:51 -0500
-In-Reply-To: <1320721518.18929.15.camel@deadeye>
-Content-Language: en-US
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:36687 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932433Ab1KJL5i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2011 06:57:38 -0500
+Received: by wyh15 with SMTP id 15so2591431wyh.19
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2011 03:57:37 -0800 (PST)
+In-Reply-To: <20111110131029.be09b1080f3fe22d5fa86fe4@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Biblioteka UR <biblio@univ.rzeszow.pl>, "647900@bugs.debian.org" <647900@bugs.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: James Bottomley <jbottomley@parallels.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-Q2FuIHlvdSBjb2xsZWN0IGRlYnVnIGxldmVsIGZvciBJTklUPw0KDQpSZWdhcmRzLA0KTmFnYWxh
-a3NobWkNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQmVuIEh1dGNoaW5n
-cyBbbWFpbHRvOmJlbkBkZWNhZGVudC5vcmcudWtdIA0KU2VudDogVHVlc2RheSwgTm92ZW1iZXIg
-MDgsIDIwMTEgODozNSBBTQ0KVG86IE1vb3JlLCBFcmljDQpDYzogQmlibGlvdGVrYSBVUjsgNjQ3
-OTAwQGJ1Z3MuZGViaWFuLm9yZzsgbGludXgtc2NzaTsgREwtTVBUIEZ1c2lvbiBMaW51eA0KU3Vi
-amVjdDogbXB0c3BpIGluaXQgZmFpbHVyZSBvbiBTcGFyYyBTTVAgaW4gTGludXggMy4wDQoNCk1h
-cml1c3ogYXQgQmlibGlvdGVrYSBVUiByZXBvcnRzIHRoaXMgZmFpbHVyZSBpbiBhIG5ldyBEZWJp
-YW4gaW5zdGFsbGF0aW9uIG9uIGEgU3VuRmlyZSB2NDkwIHN5c3RlbToNCg0KPiBbICAgIDAuMDAw
-MDAwXSBMaW51eCB2ZXJzaW9uIDMuMC4wLTEtc3BhcmM2NC1zbXAgKERlYmlhbiAzLjAuMC0zKSAo
-YmVuQGRlY2FkZW50Lm9yZy51aykgKGdjYyB2ZXJzaW9uIDQuNS4zIChEZWJpYW4gNC41LjMtOCkg
-KSAjMSBTTVAgU2F0IEF1ZyAyNyAxOTo1MToxNCBVVEMgMjANClsuLi5dDQo+IFsgICA1Mi4xOTA0
-MzNdIEZ1c2lvbiBNUFQgYmFzZSBkcml2ZXIgMy4wNC4xOQ0KPiBbICAgNTIuMjM4NTI4XSBDb3B5
-cmlnaHQgKGMpIDE5OTktMjAwOCBMU0kgQ29ycG9yYXRpb24NClsuLi5dDQo+IFsgICA1Mi4zNzAx
-NjFdIEZ1c2lvbiBNUFQgU1BJIEhvc3QgZHJpdmVyIDMuMDQuMTkNCj4gWyAgIDUyLjM3MDM2NF0g
-bXB0YmFzZTogaW9jMDogSW5pdGlhdGluZyBicmluZ3VwDQpbLi4uXQ0KPiBbICAgNTIuODQ3NTA0
-XSBpb2MwOiBMU0k1M0MxMDMwIEMwOiBDYXBhYmlsaXRpZXM9e0luaXRpYXRvcixUYXJnZXR9DQpb
-Li4uXQ0KPiBbICAgNjguMzE5NTE4XSBtcHRiYXNlOiBpb2MwOiBXQVJOSU5HIC0gSXNzdWluZyBS
-ZXNldCBmcm9tIG1wdF9jb25maWchISwgZG9vcmJlbGw9MHgyNDAwMDAwMA0KPiBbICAgNjkuMTc1
-NTA1XSBtcHRiYXNlOiBpb2MwOiBBdHRlbXB0aW5nIFJldHJ5IENvbmZpZyByZXF1ZXN0IHR5cGUg
-MHgzLCBwYWdlIDB4LCBhY3Rpb24gMA0KPiBbICAgODQuMjY3NTI0XSBtcHRiYXNlOiBpb2MwOiBX
-QVJOSU5HIC0gSXNzdWluZyBSZXNldCBmcm9tIG1wdF9jb25maWchISwgZG9vcmJlbGw9MHgyNDAw
-MDAwMA0KPiBbICAgODQuMzY0NDgyXSBtcHRiYXNlOiBpb2MwOiBJbml0aWF0aW5nIHJlY292ZXJ5
-DQo+IFsgICA5MC4yOTk1MDVdIG1wdGJhc2U6IGlvYzA6IEF0dGVtcHRpbmcgUmV0cnkgQ29uZmln
-IHJlcXVlc3QgdHlwZSAweDMsIHBhZ2UgMHgsIGFjdGlvbiAwDQo+IFsgIDEwNS4zOTE1MjNdIG1w
-dGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1aW5nIFJlc2V0IGZyb20gDQo+IG1wdF9jb25maWch
-ISwgZG9vcmJlbGw9MHgyNDAwMDAwMCBbICAxMDUuNDg4NTA5XSBtcHRiYXNlOiBpb2MwOiANCj4g
-SW5pdGlhdGluZyByZWNvdmVyeSBbICAxMjYuNTI3NTE2XSBtcHRiYXNlOiBpb2MwOiBXQVJOSU5H
-IC0gSXNzdWluZyANCj4gUmVzZXQgZnJvbSBtcHRfY29uZmlnISEsIGRvb3JiZWxsPTB4MjQwMDAw
-MDAgWyAgMTI3LjM4MzUwNV0gbXB0YmFzZTogDQo+IGlvYzA6IEF0dGVtcHRpbmcgUmV0cnkgQ29u
-ZmlnIHJlcXVlc3QgdHlwZSAweDQsIHBhZ2UgMHgxLCBhY3Rpb24gMCBbICANCj4gMTQyLjQ3NTUy
-OF0gbXB0YmFzZTogaW9jMDogV0FSTklORyAtIElzc3VpbmcgUmVzZXQgZnJvbSBtcHRfY29uZmln
-ISEsIA0KPiBkb29yYmVsbD0weDI0MDAwMDAwIFsgIDE0Mi41NzI1MDRdIG1wdGJhc2U6IGlvYzA6
-IEluaXRpYXRpbmcgcmVjb3ZlcnkgDQo+IFsgIDE0OC42MTE1MDVdIG1wdGJhc2U6IGlvYzA6IEF0
-dGVtcHRpbmcgUmV0cnkgQ29uZmlnIHJlcXVlc3QgdHlwZSANCj4gMHg0LCBwYWdlIDB4MSwgYWN0
-aW9uIDAgWyAgMTYzLjcwMzQ4Ml0gbXB0YmFzZTogaW9jMDogV0FSTklORyAtIA0KPiBJc3N1aW5n
-IFJlc2V0IGZyb20gbXB0X2NvbmZpZyEhLCBkb29yYmVsbD0weDI0MDAwMDAwIFsgIDE2My44MDA0
-OTVdIA0KPiBtcHRiYXNlOiBpb2MwOiBJbml0aWF0aW5nIHJlY292ZXJ5DQoNCihJIHRoaW5rIHRo
-ZXJlIGFyZSBzb21lIGNoYXJhY3RlcnMgbWlzc2luZyBpbiB0aGUgYWJvdmUgbG9nLCBwYXJ0aWN1
-bGFybHkgdGhlIHBhZ2UgbnVtYmVycy4pDQoNCkhvd2V2ZXIsIHRoZSBkcml2ZXIgYXBwYXJlbnRs
-eSB3b3JrcyBvbiB0aGUgc2FtZSBzeXN0ZW0gaW4gYSAhU01QIGtlcm5lbCBjb25maWd1cmF0aW9u
-Lg0KDQpUaGUgY29tcGxldGUgcmVwb3J0IGNhbiBiZSBmb3VuZCBhdCA8aHR0cDovL2J1Z3MuZGVi
-aWFuLm9yZy82NDc5MDA+Lg0KQ2FuIHlvdSBzdWdnZXN0IGFueSB3YXkgdG8gY29ycmVjdCBvciBk
-ZWJ1ZyB0aGlzIHByb2JsZW0/DQoNCkJlbi4NCg0KLS0NCkJlbiBIdXRjaGluZ3MNCllvdSBjYW4n
-dCBoYXZlIGV2ZXJ5dGhpbmcuICBXaGVyZSB3b3VsZCB5b3UgcHV0IGl0Pw0K
+On Thu, Nov 10, 2011 at 3:10 AM, Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> ipr_init is now down to 2543495 usecs (down from 494857993 usecs without
+> this patch) and the machine boots as well as can be expected.
+
+These timing differences are puzzling me. Have you been able to find
+out what is causing them ? Are kernel messages on that system perhaps
+sent to a serial console ?
+
+Bart.
