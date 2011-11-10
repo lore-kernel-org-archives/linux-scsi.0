@@ -1,57 +1,94 @@
-From: Yinghai Lu <yinghai.lu@oracle.com>
-Subject: [PATCH] mpt2sas: Fix null reference in recovery_delete_devices
-Date: Thu, 10 Nov 2011 08:05:26 -0800
-Message-ID: <4EBBF646.8010705@oracle.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: WARNING: at drivers/scsi/scsi_lib.c:1704
+Date: Thu, 10 Nov 2011 10:06:18 -0600
+Message-ID: <1320941178.11745.11.camel@dabdike.int.hansenpartnership.com>
+References: <20111107172408.834c6ffcecfe35f7452c7e60@canb.auug.org.au>
+	 <1320677484.1215.10.camel@dabdike.int.hansenpartnership.com>
+	 <4EBBF307.4070000@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EBBF307.4070000@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>, Eric Moore <eric.moore@lsi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, LKML <linux-kernel@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 2011-11-10 at 16:51 +0100, Steffen Maier wrote:
+> On 11/07/2011 03:51 PM, James Bottomley wrote:
+> > On Mon, 2011-11-07 at 17:24 +1100, Stephen Rothwell wrote:
+> 
+> >> WARNING: at drivers/scsi/scsi_lib.c:1704
+> 
+> >> I get lots more of these.  The obvious commit to point the finger at
+> >> is 3308511c93e6 ("[SCSI] Make scsi_free_queue() kill pending SCSI
+> >> commands") but the root cause may be something different.
+> >
+> > Actually, I don't think it's anything to do with this: it's Anton's
+> > fault
+> >
+> > commit f7c9c6bb14f3104608a3a83cadea10a6943d2804
+> > Author: Anton Blanchard<anton@samba.org>
+> > Date:   Thu Nov 3 08:56:22 2011 +1100
+> >
+> >      [SCSI] Fix block queue and elevator memory leak in scsi_alloc_sdev
+> >
+> > Doesn't completely do the teardown.  The true fix is to do a proper
+> > teardown instead of hand rolling it.  Does this fix it for you?
+> >
+> > James
+> >
+> > ---
+> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> > index 72273a0..b3c6d95 100644
+> > --- a/drivers/scsi/scsi_scan.c
+> > +++ b/drivers/scsi/scsi_scan.c
+> > @@ -319,11 +319,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+> >   	return sdev;
+> >
+> >   out_device_destroy:
+> > -	scsi_device_set_state(sdev, SDEV_DEL);
+> > -	transport_destroy_device(&sdev->sdev_gendev);
+> > -	put_device(&sdev->sdev_dev);
+> > -	scsi_free_queue(sdev->request_queue);
+> > -	put_device(&sdev->sdev_gendev);
+> > +	__scsi_remove_device(sdev);
+> >   out:
+> >   	if (display_failure_msg)
+> >   		printk(ALLOC_FAILURE_MSG, __func__);
+> 
+> James, is it OK that __scsi_remove_device() now also calls 
+> sdev->host->hostt->slave_destroy(sdev) which wasn't there before?
+> 
+> I cannot prove it yet, but with this patch and some asorted others on 
+> top of 3.1 our zfcp LLD gets called with an sdev argument that was freed 
+> before or at least before dereferencing (found with DEBUG_PAGEALLOC).
 
-Got panic:
-[  752.590700] BUG: unable to handle kernel NULL pointer dereference at 00000000000000f6
-[  752.598542] IP: [<ffffffff8160b5f3>] mpt2sas_scsih_reset_handler+0x168/0x183
-[  752.605595] PGD 175d43067 PUD 175d44067 PMD 0 
-[  752.610081] Oops: 0002 [#1] SMP 
-[  752.613342] CPU 0 
-[  752.615175] Modules linked in:
-[  752.618428] 
-[  752.619921] Pid: 9187, comm: sas2flash Not tainted 3.2.0-rc1-tip-yh-01580-g878f195-dirty #1288 Oracle Corporation Sun Blade
-[  752.632632] RIP: 0010:[<ffffffff8160b5f3>]  [<ffffffff8160b5f3>] mpt2sas_scsih_reset_handler+0x168/0x183
+You can argue it either way, but we're supposed to pair slave_destroy
+with slave_alloc and we already called the latter.
 
-it turns out it is introduced in
+zfcp just unconditionally assumes that if destroy is called, the
+allocation returned success.  This fixes it, doesn't it?
 
-_scsih_error_recovery_delete_devices() forget to alloc the event before using.
-
-It is introduced by:
-
-| commit 921cd8024b908f8f49f772c8d3a02381b4db2ed2
-| Author: nagalakshmi.nandigama@lsi.com <nagalakshmi.nandigama@lsi.com>
-| Date:   Wed Oct 19 15:36:26 2011 +0530
-|
-|    [SCSI] mpt2sas: New feature - Fast Load Support
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+James
 
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    3 +++
- 1 file changed, 3 insertions(+)
 
-Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2802,6 +2802,9 @@ _scsih_error_recovery_delete_devices(str
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 11f07f8..4008ec0 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -55,8 +55,10 @@ static void zfcp_scsi_slave_destroy(struct scsi_device *sdev)
+ {
+ 	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(sdev);
  
- 	if (ioc->is_driver_loading)
- 		return;
-+	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	if (!fw_event)
-+		return;
- 	fw_event->event = MPT2SAS_REMOVE_UNRESPONDING_DEVICES;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
+-	zfcp_erp_lun_shutdown_wait(sdev, "scssd_1");
+-	put_device(&zfcp_sdev->port->dev);
++	if (zfcp_sdev->port) {
++		zfcp_erp_lun_shutdown_wait(sdev, "scssd_1");
++		put_device(&zfcp_sdev->port->dev);
++	}
+ }
+ 
+ static int zfcp_scsi_slave_configure(struct scsi_device *sdp)
