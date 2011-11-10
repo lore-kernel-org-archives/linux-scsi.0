@@ -1,47 +1,57 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [PATCH v2 0/4] ata port runtime power management support
-Date: Thu, 10 Nov 2011 17:02:41 +0100
-Message-ID: <CAPXgP12-CxDBa0cHtM+ejczR4131tnvq3N0WKQ5egt4hb31kPg@mail.gmail.com>
-References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com> <20111110153036.GC27258@google.com>
+From: Yinghai Lu <yinghai.lu@oracle.com>
+Subject: [PATCH] mpt2sas: Fix null reference in recovery_delete_devices
+Date: Thu, 10 Nov 2011 08:05:26 -0800
+Message-ID: <4EBBF646.8010705@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20111110153036.GC27258@google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Lin Ming <ming.m.lin@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+Cc: Kashyap Desai <kashyap.desai@lsi.com>, Eric Moore <eric.moore@lsi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Nov 10, 2011 at 16:30, Tejun Heo <tj@kernel.org> wrote:
-> On Thu, Nov 10, 2011 at 02:22:42PM +0800, Lin Ming wrote:
 
->> v2 changes it to:
->>
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 /sys/devices/pci0000:00/0000:00:1f.2 =C2=
-=A0 =C2=A0(ahci controller)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- ata1 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0(ata port)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- host0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- (scsi host)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 |-- target0:=
-0:0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (scsi targe=
-t)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- |-- 0:0:0:0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (d=
-isk)
->>
->> So ata port runtime PM will happen as:
+Got panic:
+[  752.590700] BUG: unable to handle kernel NULL pointer dereference at 00000000000000f6
+[  752.598542] IP: [<ffffffff8160b5f3>] mpt2sas_scsih_reset_handler+0x168/0x183
+[  752.605595] PGD 175d43067 PUD 175d44067 PMD 0 
+[  752.610081] Oops: 0002 [#1] SMP 
+[  752.613342] CPU 0 
+[  752.615175] Modules linked in:
+[  752.618428] 
+[  752.619921] Pid: 9187, comm: sas2flash Not tainted 3.2.0-rc1-tip-yh-01580-g878f195-dirty #1288 Oracle Corporation Sun Blade
+[  752.632632] RIP: 0010:[<ffffffff8160b5f3>]  [<ffffffff8160b5f3>] mpt2sas_scsih_reset_handler+0x168/0x183
 
->> This is much cleaner and natural.
->
-> Yeah, I really like this approach. =C2=A0Nicely done. =C2=A0I *think*=
- the
-> hierarchy change should be okay but cc'ing Kay just in case.
+it turns out it is introduced in
 
-Looks good to me. All non-broken users of sysfs should be fine and
-cope with changes like this without any problem.
+_scsih_error_recovery_delete_devices() forget to alloc the event before using.
 
-Kay
+It is introduced by:
+
+| commit 921cd8024b908f8f49f772c8d3a02381b4db2ed2
+| Author: nagalakshmi.nandigama@lsi.com <nagalakshmi.nandigama@lsi.com>
+| Date:   Wed Oct 19 15:36:26 2011 +0530
+|
+|    [SCSI] mpt2sas: New feature - Fast Load Support
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2802,6 +2802,9 @@ _scsih_error_recovery_delete_devices(str
+ 
+ 	if (ioc->is_driver_loading)
+ 		return;
++	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
++	if (!fw_event)
++		return;
+ 	fw_event->event = MPT2SAS_REMOVE_UNRESPONDING_DEVICES;
+ 	fw_event->ioc = ioc;
+ 	_scsih_fw_event_add(ioc, fw_event);
