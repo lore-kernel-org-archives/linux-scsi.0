@@ -1,33 +1,49 @@
-From: Matt <mdm@iinet.net.au>
-Subject: Re: SCSI oops on USB disconnect, was: Issues with xHCI and USB 3.0
-Date: Thu, 10 Nov 2011 23:52:48 +1100
-Message-ID: <4EBBC920.3020706@iinet.net.au>
-References: <4EA54EBF.80905@iinet.net.au> <20111025072957.GA5821@xanatos> <4EA68418.9000504@iinet.net.au> <20111025113458.GA4590@xanatos> <4EA6B3FC.9010808@iinet.net.au> <20111027112831.GB4790@xanatos> <20111102190224.GB29845@xanatos> <4EB24040.1060208@iinet.net.au> <20111103202258.GA3585@xanatos> <4EB32928.6000901@iinet.net.au> <20111104144840.GA3079@xanatos>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Remove 'unhandled error code' messages
+Date: Thu, 10 Nov 2011 15:12:07 +0100
+Message-ID: <1320934327-8384-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound.icp-qv1-irony-out4.iinet.net.au ([203.59.1.104]:43021
-	"EHLO outbound.icp-qv1-irony-out4.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756452Ab1KJNCK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2011 08:02:10 -0500
-In-Reply-To: <20111104144840.GA3079@xanatos>
+Received: from cantor2.suse.de ([195.135.220.15]:45570 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934700Ab1KJOMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Nov 2011 09:12:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: James Bottomley <jbottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 5/11/2011 1:48 AM, Sarah Sharp wrote:
-> Hopefully the SCSI folks will be able to help you with that. James? 
+scsi_io_completion() tries to take some action based on
+the command result and sense code. It also displays
+'unhandled error code' or 'unhandled sense code' in case
+no special handling was found.
+This serves as an additional source of confusion to
+the unsuspecting user, as the message in fact means
+'everything okay, no special casing required',
+and not 'oh gosh, something has happened and the system
+couldn't deal with it'.
 
-Hello all,
+Plus it doesn't add any value for debugging, as the
+actual error and sense code is printed with the next
+statement anyway.
 
-Please let me know what type of debugging information you require from 
-me to give you a good view of the issue.
+So remove these lines.
 
-Many thanks in advance.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-Cheers,
-
-Matt.
-
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f85cfa6..1975b3f 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -921,12 +921,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			action = ACTION_FAIL;
+ 			break;
+ 		default:
+-			description = "Unhandled sense code";
+ 			action = ACTION_FAIL;
+ 			break;
+ 		}
+ 	} else {
+-		description = "Unhandled error code";
+ 		action = ACTION_FAIL;
+ 	}
+ 
