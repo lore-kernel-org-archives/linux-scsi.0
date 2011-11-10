@@ -1,70 +1,66 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [SCSI] mpt2sas: _scsih_smart_predicted_fault uses GFP_KERNEL in
- interrupt context
-Date: Thu, 10 Nov 2011 09:47:49 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6047262C625@inbmail02.lsi.com>
-References: <20110731192909.16bb341e@kryten> <20111107220521.03e22b45@kryten>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog124.obsmtp.com ([74.125.149.151]:39219 "EHLO
-	na3sys009aog124.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751039Ab1KJER5 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Nov 2011 23:17:57 -0500
-In-Reply-To: <20111107220521.03e22b45@kryten>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v2 0/4] ata port runtime power management support
+Date: Thu, 10 Nov 2011 14:22:42 +0800
+Message-ID: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Anton Blanchard <anton@samba.org>
-Cc: James Bottomley <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The patch seem to be fine. Please consider this patch as an Acked by me
+Hi, all
 
-Regards,
-Nagalakshmi
+These 4 patches add ata port runtime pm support.
 
+v1:
+https://lkml.org/lkml/2011/11/2/23
 
------Original Message-----
-From: Anton Blanchard [mailto:anton@samba.org] 
-Sent: Monday, November 07, 2011 4:35 PM
-To: Desai, Kashyap
-Cc: Moore, Eric; JBottomley@parallels.com; linux-scsi@vger.kernel.org
-Subject: Re: [SCSI] mpt2sas: _scsih_smart_predicted_fault uses GFP_KERNEL in interrupt context
+v2 is totally different than v1.
 
+v1 performed ata port runtime pm through scsi layer.
+Added hook to scsi host runtime suspend/resume code.
 
-Hi Kashyap,
+I realized that this is not the natural way to do ata port runtime pm.
+It does not deal with the races with ata port system suspend/resume.
 
-On Sun, 31 Jul 2011 19:29:09 +1000
-Anton Blanchard <anton@samba.org> wrote:
-> 
-> _scsih_smart_predicted_fault is called in an interrupt and therefore
-> must allocate memory using GFP_ATOMIC.
+With v2, ata port is made to be parent device of scsi host.
 
-Just noticed this hasn't made it upstream, any chance you could review
-it for merging?
+Currently, the device tree of ata port and scsi host looks as below,
 
-Anton
---
+        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+        |-- ata1                                (ata port)
+        |-- host0                               (scsi host)
+           |-- target0:0:0                      (scsi target)
+               |-- 0:0:0:0                      (disk)
 
-_scsih_smart_predicted_fault is called in an interrupt and therefore
-must allocate memory using GFP_ATOMIC.
+v2 changes it to:
 
-Signed-off-by: Anton Blanchard <anton@samba.org>
-Cc: <stable@kernel.org>
----
+        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+        |-- ata1                                (ata port)
+            |-- host0                           (scsi host)
+                |-- target0:0:0                 (scsi target)
+                    |-- 0:0:0:0                 (disk)
 
-Index: linux-work/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-===================================================================
---- linux-work.orig/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2011-11-07 22:03:33.728865287 +1100
-+++ linux-work/drivers/scsi/mpt2sas/mpt2sas_scsih.c	2011-11-07 22:03:39.724972491 +1100
-@@ -4330,7 +4330,7 @@ _scsih_smart_predicted_fault(struct MPT2
- 	/* insert into event log */
- 	sz = offsetof(Mpi2EventNotificationReply_t, EventData) +
- 	     sizeof(Mpi2EventDataSasDeviceStatusChange_t);
--	event_reply = kzalloc(sz, GFP_KERNEL);
-+	event_reply = kzalloc(sz, GFP_ATOMIC);
- 	if (!event_reply) {
- 		printk(MPT2SAS_ERR_FMT "failure at %s:%d/%s()!\n",
- 		    ioc->name, __FILE__, __LINE__, __func__);
+So ata port runtime PM will happen as:
+
+disk suspend --> scsi target suspend --> scsi host suspend --> ata port
+suspend.
+
+This is much cleaner and natural.
+
+Lin Ming (4):
+      ata: make ata port as parent device of scsi host
+      scsi: add flag to skip the runtime PM calls on host in EH
+      ata: add ata port system PM callbacks
+      ata: add ata port runtime PM callbacks
+
+ drivers/ata/libata-core.c      |  158 ++++++++++++++++++++++------------------
+ drivers/ata/libata-scsi.c      |    3 +-
+ drivers/ata/libata-transport.c |    5 +
+ drivers/ata/libata.h           |    1 +
+ drivers/scsi/scsi_error.c      |    5 +-
+ include/scsi/scsi_host.h       |    3 +
+ 6 files changed, 102 insertions(+), 73 deletions(-)
+
+Thanks for any comment.
+Lin Min
