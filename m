@@ -1,39 +1,61 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Thu, 10 Nov 2011 10:40:21 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1111101036160.2338-100000@iolanthe.rowland.org>
-References: <1320906166-15459-5-git-send-email-ming.m.lin@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] Remove 'unhandled error code' messages
+Date: Thu, 10 Nov 2011 09:44:07 -0600
+Message-ID: <1320939847.11745.7.camel@dabdike.int.hansenpartnership.com>
+References: <1320934327-8384-1-git-send-email-hare@suse.de>
+	 <1320936918.3040.1.camel@dabdike.int.hansenpartnership.com>
+	 <4EBBEB61.1090903@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1320906166-15459-5-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:40027 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752286Ab1KJPoJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Nov 2011 10:44:09 -0500
+In-Reply-To: <4EBBEB61.1090903@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 10 Nov 2011, Lin Ming wrote:
+On Thu, 2011-11-10 at 16:18 +0100, Hannes Reinecke wrote:
+> On 11/10/2011 03:55 PM, James Bottomley wrote:
+> > On Thu, 2011-11-10 at 15:12 +0100, Hannes Reinecke wrote:
+> >> scsi_io_completion() tries to take some action based on
+> >> the command result and sense code. It also displays
+> >> 'unhandled error code' or 'unhandled sense code' in case
+> >> no special handling was found.
+> >> This serves as an additional source of confusion to
+> >> the unsuspecting user, as the message in fact means
+> >> 'everything okay, no special casing required',
+> >> and not 'oh gosh, something has happened and the system
+> >> couldn't deal with it'.
+> >
+> > It means we're just about to fail the command with an error.  That's not
+> > really an everything ok case.
+> >
+> > Sometimes, you're right, this is the correct thing to do silently, but
+> > often it's not.  So, same question to you as to Rob: What are the
+> > circumstances you want silent failure for and can you special case them?
+> >
+> The whole point here is: It's not silent, even when the 
+> 'description' is not set.
 
-> Add ata port runtime suspend/resume/idle callbacks.
-> Set ->eh_noresume to skip the runtime PM calls on scsi host
-> in the error handler to avoid dead lock.
+So all we do is a random dump of result, sense and command.
 
-...
+That doesn't look like an improvement to me.
 
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3377,6 +3377,7 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
->  		if (!shost)
->  			goto err_alloc;
->  
-> +		shost->eh_noresume = 1;
->  		*(struct ata_port **)&shost->hostdata[0] = ap;
->  		ap->scsi_host = shost;
+We've had a set of discussions and proposals:
 
-Are you really sure you want to keep this flag set throughout the 
-lifetime of the port?
+http://marc.info/?t=131854150100005
+http://marc.info/?t=131806586600055
 
-What happens if a command fails, then the port suspends, and then the 
-error handler is invoked to take care of the failed command?
+But nothing really leaps out as the solution.  What the system is saying
+is that we encountered an error but it's not one of our handled cases,
+so we're just going to fail the command and hope for the best.
 
-Alan Stern
+James
+
+
