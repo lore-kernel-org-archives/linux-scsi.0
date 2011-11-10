@@ -1,84 +1,67 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] Remove 'unhandled error code' messages
-Date: Thu, 10 Nov 2011 16:18:57 +0100
-Message-ID: <4EBBEB61.1090903@suse.de>
-References: <1320934327-8384-1-git-send-email-hare@suse.de> <1320936918.3040.1.camel@dabdike.int.hansenpartnership.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 0/4] ata port runtime power management support
+Date: Thu, 10 Nov 2011 07:30:36 -0800
+Message-ID: <20111110153036.GC27258@google.com>
+References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50268 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935118Ab1KJPS6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Nov 2011 10:18:58 -0500
-In-Reply-To: <1320936918.3040.1.camel@dabdike.int.hansenpartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>, Kay Sievers <kay.sievers@vrfy.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 11/10/2011 03:55 PM, James Bottomley wrote:
-> On Thu, 2011-11-10 at 15:12 +0100, Hannes Reinecke wrote:
->> scsi_io_completion() tries to take some action based on
->> the command result and sense code. It also displays
->> 'unhandled error code' or 'unhandled sense code' in case
->> no special handling was found.
->> This serves as an additional source of confusion to
->> the unsuspecting user, as the message in fact means
->> 'everything okay, no special casing required',
->> and not 'oh gosh, something has happened and the system
->> couldn't deal with it'.
->
-> It means we're just about to fail the command with an error.  That's =
-not
-> really an everything ok case.
->
-> Sometimes, you're right, this is the correct thing to do silently, bu=
-t
-> often it's not.  So, same question to you as to Rob: What are the
-> circumstances you want silent failure for and can you special case th=
-em?
->
-The whole point here is: It's not silent, even when the=20
-'description' is not set.
+Hello,
 
-	switch (action) {
-	case ACTION_FAIL:
-		/* Give up and fail the remainder of the request */
-		scsi_release_buffers(cmd);
-		if (!(req->cmd_flags & REQ_QUIET)) {
-			if (description)
-				scmd_printk(KERN_INFO, cmd, "%s\n",
-					    description);
-			scsi_print_result(cmd);
-			if (driver_byte(result) & DRIVER_SENSE)
-				scsi_print_sense("", cmd);
-			scsi_print_command(cmd);
-		}
-		if (blk_end_request_err(req, error))
-			scsi_requeue_command(q, cmd);
-		else
-			scsi_next_command(cmd);
-		break;
+(cc'ing Kay for the sysfs tree hierarchy change)
 
-So the decoded result and sense code is printed always, regardless=20
-of the 'description'.
-The 'description' just tells us if there are special
-circumstances. And as we didn't do anything special
-we should print anything here.
+On Thu, Nov 10, 2011 at 02:22:42PM +0800, Lin Ming wrote:
+> These 4 patches add ata port runtime pm support.
+> 
+> v1:
+> https://lkml.org/lkml/2011/11/2/23
+> 
+> v2 is totally different than v1.
+> 
+> v1 performed ata port runtime pm through scsi layer.
+> Added hook to scsi host runtime suspend/resume code.
+> 
+> I realized that this is not the natural way to do ata port runtime pm.
+> It does not deal with the races with ata port system suspend/resume.
+> 
+> With v2, ata port is made to be parent device of scsi host.
+> 
+> Currently, the device tree of ata port and scsi host looks as below,
+> 
+>         /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+>         |-- ata1                                (ata port)
+>         |-- host0                               (scsi host)
+>            |-- target0:0:0                      (scsi target)
+>                |-- 0:0:0:0                      (disk)
+> 
+> v2 changes it to:
+> 
+>         /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+>         |-- ata1                                (ata port)
+>             |-- host0                           (scsi host)
+>                 |-- target0:0:0                 (scsi target)
+>                     |-- 0:0:0:0                 (disk)
+> 
+> So ata port runtime PM will happen as:
+> 
+> disk suspend --> scsi target suspend --> scsi host suspend --> ata port
+> suspend.
+> 
+> This is much cleaner and natural.
 
-Cheers,
+Yeah, I really like this approach.  Nicely done.  I *think* the
+hierarchy change should be okay but cc'ing Kay just in case.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg=
-)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ Acked-by: Tejun Heo <tj@kernel.org>
+
+Thanks.
+
+-- 
+tejun
