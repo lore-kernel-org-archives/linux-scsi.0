@@ -1,50 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] block: Revert "[SCSI] genhd: add a new attribute "alias"
- in gendisk"
-Date: Thu, 10 Nov 2011 16:21:49 -0500
-Message-ID: <4EBC406D.8010404@garzik.org>
-References: <20111109162512.GB1260@google.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v2 0/4] ata port runtime power management support
+Date: Fri, 11 Nov 2011 10:25:56 +0800
+Message-ID: <1320978356.32515.11.camel@minggr>
+References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
+	 <20111110153036.GC27258@google.com>  <20111110153132.GD27258@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111109162512.GB1260@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20111110153132.GD27258@google.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Nao Nishijima <nao.nishijima.xt@hitachi.com>, Kay Sievers <kay.sievers@vrfy.org>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Cox <alan@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>, Kay Sievers <kay.sievers@vrfy.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/09/2011 11:25 AM, Tejun Heo wrote:
-> This reverts commit a72c5e5eb738033938ab30d6a634b74d1d060f10.
->
-> The commit introduced alias for block devices which is intended to be
-> used during logging although actual usage hasn't been committed yet.
-> This approach adds very limited benefit (raw log might be easier to
-> follow) which can be trivially implemented in userland but has a lot
-> of problems.
->
-> It is much worse than netif renames because it doesn't rename the
-> actual device but just adds conveninence name which isn't used
-> universally or enforced.  Everything internal including device lookup
-> and sysfs still uses the internal name and nothing prevents two
-> devices from using conflicting alias - ie. sda can have sdb as its
-> alias.
->
-> This has been nacked by people working on device driver core, block
-> layer and kernel-userland interface and shouldn't have been
-> upstreamed.  Revert it.
->
->   http://thread.gmane.org/gmane.linux.kernel/1155104
->   http://thread.gmane.org/gmane.linux.scsi/68632
->   http://thread.gmane.org/gmane.linux.scsi/69776
->
-> Signed-off-by: Tejun Heo<tj@kernel.org>
-> Cc: Jens Axboe<axboe@kernel.dk>
-> Cc: "James E.J. Bottomley"<James.Bottomley@HansenPartnership.com>
-> Cc: Nao Nishijima<nao.nishijima.xt@hitachi.com>
-> Cc: Kay Sievers<kay.sievers@vrfy.org>
-> Cc: Greg Kroah-Hartman<gregkh@suse.de>
-> Cc: Alan Cox<alan@linux.intel.com>
-> Cc: Al Viro<viro@zeniv.linux.org.uk>
+On Thu, 2011-11-10 at 23:31 +0800, Tejun Heo wrote:
+> Ooh, by the way, can you please write more about how you tested it?
 
-Acked-by: Jeff Garzik <jgarzik@redhat.com>
+I have 2 disks installed.
+sda installs the OS. I use sdb to test ata port runtime PM.
+
+# set "auto" to enable disk runtime PM
+# echo auto > /sys/devices/pci0000:00/0000:00:1f.2/ata3/host2/target2:0:0/2:0:0:0/power/control
+
+mount sdb1 causes ata port resume
+
+umount sdb1 causes ata port suspend
+
+> 
+> Thanks.
+> 
+
+
