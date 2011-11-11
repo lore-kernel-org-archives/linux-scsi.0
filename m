@@ -1,52 +1,34 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: aacraid controller hangs if kernel uses non-default ASPM policy
-Date: Fri, 11 Nov 2011 12:27:55 +0000
-Message-ID: <1321014474.5161.10.camel@dabdike.int.hansenpartnership.com>
-References: <4EBCEDED.7030907@parallels.com>
+From: "Achim Leubner" <Achim_Leubner@pmc-sierra.com>
+Subject: RE: [patch] aacraid: controller hangs if kernel uses non-default ASPM policy
+Date: Fri, 11 Nov 2011 04:36:45 -0800
+Message-ID: <FD2BDBE06AC58549AE9E16C08B45675D0607BB3B@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+References: <4EBCEDF8.2090403@parallels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+	charset="UTF-8"
 Content-Transfer-Encoding: base64
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <4EBCEDED.7030907@parallels.com>
-Content-Language: en-US
-Content-ID: <6DA493F4042B134B95CC85A1268B2D10@sw.swsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Vasiliy Averin <vvs@parallels.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Matthew Garrett <mjg@redhat.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>, Shaohua Li <shaohua.li@intel.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:53182 "EHLO
+	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757263Ab1KKMgs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Nov 2011 07:36:48 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <4EBCEDF8.2090403@parallels.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vasily Averin <vvs@parallels.com>, linux-scsi@vger.kernel.org
+Cc: Matthew Garrett <mjg@redhat.com>, James Bottomley <jbottomley@parallels.com>, Mark Salyzyn <mark_salyzyn@us.xyratex.com>
 
-T24gRnJpLCAyMDExLTExLTExIGF0IDEzOjQyICswNDAwLCBWYXNpbHkgQXZlcmluIHdyb3RlOg0K
-PiBBYWNyYWlkIGNvbnRyb2xsZXIgY2FuIGhhbmcgb24gc29tZSBub2RlcyBpZiBrZXJuZWwgdXNl
-cyBub24tZGVmYXVsdA0KPiAocG93ZXJzYXZlKSBBU1BNIHBvbGljeS4NCj4gQ29udHJvbGxlciBo
-YW5ncyBzaG9ydGx5IGFmdGVyIHN1Y2Nlc3NmdWwgbG9hZCBhbmQgaGFyZHdhcmUgZGV0ZWN0aW9u
-Lg0KPiBTY3NpIGVycm9yIGhhbmRsZXIgZGV0ZWN0cyB0aGlzIGhhbmcgYW5kIHRyaWVzIHRvIHJl
-c3RhcnQgaGFyZHdhcmUgYnV0DQo+IGl0IGRvZXMgbm90IGhlbHAuDQo+IA0KPiBJbml0aWFsbHkg
-aXQgd2FzIG5vdGljZWQgb24gUkhFTDYtYmFzZWQgb3BlblZaIGtlcm5lbCBhZnRlcg0KPiBiYWNr
-cG9ydGluZyBhYWNyYWlkIGRyaXZlciBmcm9tIG1haW5saW5lIChSSEVMNiBrZXJuZWwgd2l0aCBv
-cmlnaW5hbA0KPiBkcml2ZXIgd29ya3Mgd2VsbCkNCj4gaHR0cDovL2J1Z3ppbGxhLm9wZW52ei5v
-cmcvc2hvd19idWcuY2dpP2lkPTIwNDMNCj4gDQo+IFRoaXMgaXNzdWUgaGFwcGVucyBiZWNhdXNl
-IGRlZmF1bHQgQVNQTSBwb2xpY3kgd2FzIGNoYW5nZWQgaW4gUmVkIEhhdA0KPiBrZXJuZWxzLiBU
-aGVyZWZvcmUgZ3V5cyBmcm9tIFJlZCBIYXQgaGF2ZSBub3RpY2VkIHRoaXMgcHJvYmxlbSBsb25n
-DQo+IHRpbWUgYWdvOg0KPiBvbiBGZWRvcmEgMTINCj4gIGh0dHBzOi8vYnVnemlsbGEucmVkaGF0
-LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9NTQwNDc4DQo+IG9uIEZlZG9yYSAxNA0KPiAgaHR0cHM6Ly9i
-dWd6aWxsYS5yZWRoYXQuY29tL3Nob3dfYnVnLmNnaT9pZD02NzkzODUNCj4gDQo+IEluIFJIRUw2
-IGtlcm5lbCB0aGlzIGlzc3VlIHdhcyBmaXhlZCwgQVNQTSB3YXMgZGlzYWJsZWQgaW4gYWFjcmFp
-ZA0KPiBkcml2ZXIuIEluIGtlcm5lbCBjaGFuZ2Vsb2cgSSd2ZSBmb3VuZCB0aGF0IHNlZW1zIGl0
-IHdhcyBkb25lIGJ5DQo+IE1hdHRoZXcgR2FycmV0dDogDQo+IC0gW3Njc2ldIGFhY3JhaWQ6IERp
-c2FibGUgQVNQTSBieSBkZWZhdWx0IChNYXR0aGV3IEdhcnJldHQpIFs1OTk3MzVdDQo+IA0KPiBI
-b3dldmVyIHNlZW1zIHRoaXMgcGF0Y2ggd2FzIG5vdCBzdWJtaXR0ZWQgdG8gbWFpbmxpbmUuIEkn
-dmUNCj4gcmVwcm9kdWNlZCB0aGlzIGlzc3VlIG9uIHZhbmlsbGEgMy4xLjAga2VybmVsIGJvb3Rl
-ZCB3aXRoDQo+ICJwY2llX2FzcG0ucG9saWN5PXBvd2Vyc2F2ZSIgb3B0aW9uLA0KPiBTbyBJIGJl
-bGlldmUgaXQgbWFrZXMgc2Vuc2UgdG8gZG8gaXQgbm93Lg0KPiANCj4gSSd2ZSByZXZpZXdlZCBz
-aW1pbGFyIGlzc3VlcyBhbmQgZm91bmQgdGhhdCBzaW1pbGFyIHRyb3VibGVzIGhhcHBlbg0KPiB3
-aXRoIGFub3RoZXIgaGFyZHdhcmUgdG9vLiBGb3IgZXhhbXBsZSBzaW1pbGFyIHBhdGNoIGNhbiBi
-ZSBmb3VuZCBpbg0KPiBlMTAwMCBkcml2ZXIuDQoNCkRvIHlvdSBoYXZlIGEgY29tcHJlaGVuc2l2
-ZSBsaXN0PyAgSWYgaXQncyBqdXN0IGEgY291cGxlIG9mIGRyaXZlcnMgaW4NCmVhY2ggc3Vic3lz
-dGVtLCB0aGVuIGFkZGluZyB3aGF0IGFtb3VudCB0byBkZXZpY2UgcXVpcmtzIGluIHRoZSBkcml2
-ZXINCnNlZW1zIHRvIGJlIGFwcHJvcHJpYXRlLiAgSWYgaXQncyBhIGh1Z2UgbnVtYmVyLCB3ZSBt
-aWdodCBoYXZlIHRvDQpyZXRoaW5rIGhvdyB0aGlzIGZlYXR1cmUgaXMgaW1wbGVtZW50ZWQuDQoN
-ClRoZSBuZXh0IHF1ZXN0aW9uIGlzOiBpcyB0aGUgZHJpdmVyIHRoZSBjb3JyZWN0IHBsYWNlPyAg
-VGhpcyBzb3VuZHMgbGlrZQ0KYSBQQ0llIExpbmsgUG93ZXIgTWFuYWdlbWVudCBibGFja2xpc3Qg
-c2V0IC4uLiB3aGljaCBtaWdodCBuZWVkIHVwZGF0aW5nDQpvbiB0aGUgZmx5IC4uLiBtaWdodCB3
-ZSBuZWVkIGEgdXNlciBrbm9iIGZvciB0aGlzIChsaWtlIHdlIGhhdmUgZm9yIHRoZQ0KU0NTSSBi
-bGFjay93aGl0ZSBsaXN0KT8NCg0KSmFtZXMNCg0K
+QWNrZWQtYnk6IEFjaGltIExldWJuZXIgPEFjaGltX0xldWJuZXJAcG1jLXNpZXJyYS5jb20+DQoN
+Cg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9u
+IEJlaGFsZiBPZiBWYXNpbHkgQXZlcmluDQpTZW50OiBGcmVpdGFnLCAxMS4gTm92ZW1iZXIgMjAx
+MSAxMDo0Mg0KVG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBBZGFwdGVjIE9FTSBSYWlk
+IFNvbHV0aW9ucw0KQ2M6IE1hdHRoZXcgR2FycmV0dDsgSmFtZXMgQm90dG9tbGV5OyBNYXJrIFNh
+bHl6eW4NClN1YmplY3Q6IFtwYXRjaF0gYWFjcmFpZDogY29udHJvbGxlciBoYW5ncyBpZiBrZXJu
+ZWwgdXNlcyBub24tZGVmYXVsdCBBU1BNIHBvbGljeQ0KDQpQYXRjaCBmcm9tIFJIRUw2IGtlcm5l
+bA0KLSBbc2NzaV0gYWFjcmFpZDogRGlzYWJsZSBBU1BNIGJ5IGRlZmF1bHQgKE1hdHRoZXcgR2Fy
+cmV0dCkgWzU5OTczNV0NCmFhY3JhaWQgY29udHJvbGxlciBoYW5ncyBpZiBrZXJuZWwgdXNlcyBu
+b24tZGVmYXVsdCBBU1BNIHBvbGljeQ0KDQpTaWduZWQtb2ZmLWJ5OglWYXNpbHkgQXZlcmluIDx2
+dnNAc3cucnU+DQpDQzogTWF0dGhldyBHYXJyZXR0IDxtamdAcmVkaGF0LmNvbT4NCg==
