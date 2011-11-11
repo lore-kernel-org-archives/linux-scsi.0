@@ -1,61 +1,32 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] block: Revert "[SCSI] genhd: add a new attribute "alias"
- in gendisk"
-Date: Fri, 11 Nov 2011 14:09:29 -0500
-Message-ID: <4EBD72E9.4020805@interlog.com>
-References: <20111109162512.GB1260@google.com> <4EBD361E.5040106@hitachi.com> <20111111173633.GA24351@suse.de>
-Reply-To: dgilbert@interlog.com
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: scsi/fcoe: Fix preempt count leak in fcoe_filter_frames()
+Date: Fri, 11 Nov 2011 20:52:01 +0100 (CET)
+Message-ID: <alpine.LFD.2.02.1111112049370.2694@ionos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111111173633.GA24351@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Nao Nishijima <nao.nishijima.xt@hitachi.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Kay Sievers <kay.sievers@vrfy.org>, Alan Cox <alan@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www.linutronix.de ([62.245.132.108]:35234 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754654Ab1KKTwE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2011 14:52:04 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: devel@open-fcoe.org
+Cc: linux-scsi@vger.kernel.org, James Bottomley <JBottomley@parallels.com>
 
-On 11-11-11 12:36 PM, Greg KH wrote:
-> On Fri, Nov 11, 2011 at 11:50:06PM +0900, Nao Nishijima wrote:
->> Hi,
->>
->> Finally, I understood why this patch is not acceptable and would lik=
-e to
->> solve the problem of the device name mismatch in *user space* using
->> udev. So, could you please give me your comment about it?
->>
->> I aim to unify the device name because the name shown in command out=
-put
->> is different from it that users use for command execution.
->>
->> So, I'd like to suggest that two new API should be added to udev.
->> - The API that returns any symlinks such as by-uuid, by id that user=
-s
->>    selected before if a device name is given as arguments
->>    If the commands directly access to proc filesystems, they cannot =
-get
->>    the symlinks. These commands should get the device name via this =
-API.
->> - The API that replaces device name to symlink in text messages
->> =E3=80=80=E3=80=80The dmesg and syslog messages include the raw devi=
-ce names such as
->>    sdX. They should be replaced with symlinks to unify the device na=
-mes.
->> - udev support alias
->>    Symlinks (by-uuid, by-id =E2=80=A6) is too long, compared to befo=
-re (e.g.
->>    sdX). I guess most of users need more friendly and short names.
->>
->> Could you give me some advice or comments?
->> (I will post this idea udev mailing list with prototype code)
->
-> Patches are always best to work off of, please post your changes to u=
-dev
-> to the linux-hotplug list and we can take it from there.
+The error exit path leaks preempt count. Add the missing put_cpu().
 
-=2E.. and getting examples of acceptable code and APIs
-for that purpose might help the requester (and others)
-produce those patches.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
-Doug Gilbert
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index cefbe44..f3f440c 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1624,6 +1624,7 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
+ 	stats->InvalidCRCCount++;
+ 	if (stats->InvalidCRCCount < 5)
+ 		printk(KERN_WARNING "fcoe: dropping frame with CRC error\n");
++	put_cpu();
+ 	return -EINVAL;
+ }
+ 
