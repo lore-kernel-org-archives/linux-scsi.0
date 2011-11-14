@@ -1,73 +1,64 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] mpt2sas: Fix null reference in recovery_delete_devices
-Date: Mon, 14 Nov 2011 11:23:10 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6047262C8F4@inbmail02.lsi.com>
-References: <4EBBF646.8010705@oracle.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
+Date: Mon, 14 Nov 2011 10:31:45 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
+References: <1321247661.6599.110.camel@minggr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4EBBF646.8010705@oracle.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai Lu <yinghai.lu@oracle.com>, James Bottomley <jejb@kernel.org>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1321247661.6599.110.camel@minggr>
+Sender: linux-ide-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-A similar patch to fix this issue was already posted by Dan Carpenter.  
+On Mon, 14 Nov 2011, Lin Ming wrote:
 
-Regards,
-Nagalakshmi
+> Current patches has a bug that system suspend fails if ata port was
+> runtime suspended.
+> 
+> disk suspend issues sync cache and stop device commands that obviously
+> need ata port to be active. So we need to runtime resume ata port first.
 
+This is wrong.  If the port is already suspended then so are all the 
+drives below the port.  Hence there is no need to sync the cache or 
+stop the device.
 
------Original Message-----
-From: Yinghai Lu [mailto:yinghai.lu@oracle.com] 
-Sent: Thursday, November 10, 2011 9:35 PM
-To: James E.J. Bottomley; Nandigama, Nagalakshmi
-Cc: Desai, Kashyap; Moore, Eric; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH] mpt2sas: Fix null reference in recovery_delete_devices
+> Alan, Tejun
+> 
+> How about below fix?
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index fa3a591..ebb87fbf 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -50,6 +50,7 @@
+>  #include <linux/string_helpers.h>
+>  #include <linux/async.h>
+>  #include <linux/slab.h>
+> +#include <linux/pm_runtime.h>
+>  #include <asm/uaccess.h>
+>  #include <asm/unaligned.h>
+>  
+> @@ -2762,6 +2763,14 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+>  	if (!sdkp)
+>  		return 0;	/* this can happen */
+>  
+> +	/*
+> +	 * Resume parent device to handle sync cache and
+> +	 * stop device commands
+> +	 */
+> +	ret = pm_runtime_get_sync(dev->parent);
+> +	if (ret)
+> +		goto exit;
+> +
+>  	if (sdkp->WCE) {
+>  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+>  		ret = sd_sync_cache(sdkp);
 
+This is not the right approach.  You should look instead at 
+scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
+suspended then the routine should return immediately.
 
-Got panic:
-[  752.590700] BUG: unable to handle kernel NULL pointer dereference at 00000000000000f6
-[  752.598542] IP: [<ffffffff8160b5f3>] mpt2sas_scsih_reset_handler+0x168/0x183
-[  752.605595] PGD 175d43067 PUD 175d44067 PMD 0 
-[  752.610081] Oops: 0002 [#1] SMP 
-[  752.613342] CPU 0 
-[  752.615175] Modules linked in:
-[  752.618428] 
-[  752.619921] Pid: 9187, comm: sas2flash Not tainted 3.2.0-rc1-tip-yh-01580-g878f195-dirty #1288 Oracle Corporation Sun Blade
-[  752.632632] RIP: 0010:[<ffffffff8160b5f3>]  [<ffffffff8160b5f3>] mpt2sas_scsih_reset_handler+0x168/0x183
+Alan Stern
 
-it turns out it is introduced in
-
-_scsih_error_recovery_delete_devices() forget to alloc the event before using.
-
-It is introduced by:
-
-| commit 921cd8024b908f8f49f772c8d3a02381b4db2ed2
-| Author: nagalakshmi.nandigama@lsi.com <nagalakshmi.nandigama@lsi.com>
-| Date:   Wed Oct 19 15:36:26 2011 +0530
-|
-|    [SCSI] mpt2sas: New feature - Fast Load Support
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    3 +++
- 1 file changed, 3 insertions(+)
-
-Index: linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ linux-2.6/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2802,6 +2802,9 @@ _scsih_error_recovery_delete_devices(str
- 
- 	if (ioc->is_driver_loading)
- 		return;
-+	fw_event = kzalloc(sizeof(struct fw_event_work), GFP_ATOMIC);
-+	if (!fw_event)
-+		return;
- 	fw_event->event = MPT2SAS_REMOVE_UNRESPONDING_DEVICES;
- 	fw_event->ioc = ioc;
- 	_scsih_fw_event_add(ioc, fw_event);
