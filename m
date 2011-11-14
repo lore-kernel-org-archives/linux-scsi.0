@@ -1,73 +1,152 @@
-From: "Paul Grun" <pgrun@systemfabricworks.com>
-Subject: RE: srp_transport: Fix atttribute registration race
-Date: Sun, 13 Nov 2011 14:46:55 -0800
-Message-ID: <000301cca256$279057c0$76b10740$@com>
-References: <201110211857.23622.bvanassche@acm.org> <1320053608.8283.29.camel@dabdike> <CAO+b5-oxshsL7Dm7vhv4zC8m0P4dG3iNzxU9sdbi5cBkAnTpMQ@mail.gmail.com> <045e01cca1bb$3dee1070$b9ca3150$@systemfabricworks.com> <20111113215523.GA6117@ornl.gov>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
+Date: Mon, 14 Nov 2011 13:14:21 +0800
+Message-ID: <1321247661.6599.110.camel@minggr>
+References: <1320906166-15459-1-git-send-email-ming.m.lin@intel.com>
+	 <1320906166-15459-5-git-send-email-ming.m.lin@intel.com>
+	 <CAF1ivSZ3rnb90u6LHXfWCBW-6mtfmWYjj1xXfABmm=uNVbomRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cdptpa-bc-oedgelb.mail.rr.com ([75.180.133.33]:59416 "EHLO
-	cdptpa-bc-oedgelb.mail.rr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752403Ab1KMWzY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Nov 2011 17:55:24 -0500
-Received: from cdptpa-bc-oedgelb.mail.rr.com ([10.127.134.103])
-          by cdptpa-bc-qmta01.mail.rr.com with ESMTP
-          id <20111113225357918.VBJK6456@cdptpa-bc-qmta01.mail.rr.com>
-          for <linux-scsi@vger.kernel.org>; Sun, 13 Nov 2011 22:53:57 +0000
-In-Reply-To: <20111113215523.GA6117@ornl.gov>
-Content-Language: en-us
+Received: from mga01.intel.com ([192.55.52.88]:32453 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158Ab1KNFOY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Nov 2011 00:14:24 -0500
+In-Reply-To: <CAF1ivSZ3rnb90u6LHXfWCBW-6mtfmWYjj1xXfABmm=uNVbomRw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dave Dillow' <dillowda@ornl.gov>, 'Bill Boas' <bboas@systemfabricworks.com>
-Cc: 'Bart Van Assche' <bvanassche@acm.org>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, 'Fujita Tomonori' <fujita.tomonori@lab.ntt.co.jp>, 'Brian King' <brking@linux.vnet.ibm.com>, 'Roland Dreier' <roland@purestorage.com>
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-Thanks for the suggestions. The problem turned out to be much more
-pedestrian...the destination MAC ID of packets being injected into the long
-distance link was wrong and thus many packets were being dropped.  We
-haven't gotten back to trying to run RC over the long distance link.  I
-understand the issues with running SRP over UC, and don't expect to do that.
-Thanks again,
--Paul Grun
-
-
-> -----Original Message-----
-> From: linux-rdma-owner@vger.kernel.org [mailto:linux-rdma-
-> owner@vger.kernel.org] On Behalf Of Dave Dillow
-> Sent: Sunday, November 13, 2011 1:55 PM
-> To: Bill Boas
-> Cc: 'Bart Van Assche'; 'James Bottomley'; linux-scsi@vger.kernel.org;
-> linux-rdma@vger.kernel.org; 'Fujita Tomonori'; 'Brian King'; 'Roland
-> Dreier'
-> Subject: Re: srp_transport: Fix atttribute registration race
+On Mon, 2011-11-14 at 11:22 +0800, Lin Ming wrote:
 > 
-> On Sat, Nov 12, 2011 at 11:18:04PM -0500, Bill Boas wrote:
-> > Bart, James, Dave,
-> >
-> > At SC we are running a video streaming demo across a 7000 mile fiber
-> > distance using IB extension boxes from Bay Microsystems at 40 Gbps. The
-> > video streaming app uses SRP to transmit the streams across this long
-> > distance link. Performance is not all what we would have hoped. We think
-> > that because SRP uses RC mode between initiator and target that it is
-> the RC
-> > behavior over this distance that is impacting performance. Are any of
-> you
-> > aware of an SRP implementation that uses UC mode.
+> Add ata port runtime suspend/resume/idle callbacks.
+> Set ->eh_noresume to skip the runtime PM calls on scsi host
+> in the error handler to avoid dead lock.
 > 
-> SRP uses RDMA, so you cannot use UC mode.
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> ---
+>  drivers/ata/libata-core.c      |   19 +++++++++++++++++++
+>  drivers/ata/libata-scsi.c      |    1 +
+>  drivers/ata/libata-transport.c |    3 +++
+>  3 files changed, 23 insertions(+), 0 deletions(-)
 > 
-> Your problem sounds a lot like issues we saw when starting to run over
-> 100m+ optical cables; IIRC it required increasing the credits available
-> the link. You should contact Jason Gunthorpe or Makia Minnich. Makia was
-> involved in that investigation at ORNL, but Jason may also be able to tell
-> you off the top of his head.
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index b77c40c..719d23c 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -66,6 +66,7 @@
+>  #include <asm/byteorder.h>
+>  #include <linux/cdrom.h>
+>  #include <linux/ratelimit.h>
+> +#include <linux/pm_runtime.h>
 > 
-> Dave
+>  #include "libata.h"
+>  #include "libata-transport.h"
+> @@ -5302,9 +5303,27 @@ static int ata_port_resume(struct device *dev)
+>        return rc;
+>  }
+> 
+> +static int ata_port_runtime_suspend(struct device *dev)
+> +{
+> +       struct ata_port *ap = to_ata_port(dev);
+> +       int rc;
+> +
+> +       rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
+> +       return rc;
+> +}
+> +
+> +static int ata_port_runtime_idle(struct device *dev)
+> +{
+> +       return pm_runtime_suspend(dev);
+> +}
+> +
+>  static const struct dev_pm_ops ata_port_pm_ops = {
+>        .suspend = ata_port_suspend,
+>        .resume = ata_port_resume,
+> +
+> +       .runtime_suspend = ata_port_runtime_suspend,
+> +       .runtime_resume = ata_port_resume,
+> +       .runtime_idle = ata_port_runtime_idle,
+>  };
+> 
+>  /**
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 4c2a524..f7afdd5 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3377,6 +3377,7 @@ int ata_scsi_add_hosts(struct ata_host *host,
+> struct scsi_host_template *sht)
+>                if (!shost)
+>                        goto err_alloc;
+> 
+> +               shost->eh_noresume = 1;
+>                *(struct ata_port **)&shost->hostdata[0] = ap;
+>                ap->scsi_host = shost;
+> 
+> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+> index a979bd76..9a7f0ea 100644
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -291,6 +291,9 @@ int ata_tport_add(struct device *parent,
+>                goto tport_err;
+>        }
+> 
+> +       pm_runtime_set_active(dev);
+> +       pm_runtime_enable(dev);
+> +
+>        transport_add_device(dev);
+>        transport_configure_device(dev);
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.7.2.5
+
+Current patches has a bug that system suspend fails if ata port was
+runtime suspended.
+
+disk suspend issues sync cache and stop device commands that obviously
+need ata port to be active. So we need to runtime resume ata port first.
+
+Alan, Tejun
+
+How about below fix?
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fa3a591..ebb87fbf 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,7 @@
+ #include <linux/string_helpers.h>
+ #include <linux/async.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+ 
+@@ -2762,6 +2763,14 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	if (!sdkp)
+ 		return 0;	/* this can happen */
+ 
++	/*
++	 * Resume parent device to handle sync cache and
++	 * stop device commands
++	 */
++	ret = pm_runtime_get_sync(dev->parent);
++	if (ret)
++		goto exit;
++
+ 	if (sdkp->WCE) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp);
+@@ -2775,6 +2784,8 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	}
+ 
+ done:
++	pm_runtime_put_sync(dev->parent);
++exit:
+ 	scsi_disk_put(sdkp);
+ 	return ret;
+ }
+
 
