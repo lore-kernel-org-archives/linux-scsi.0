@@ -1,59 +1,48 @@
 From: akpm@linux-foundation.org
-Subject: [patch 5/6] drivers/scsi/mpt2sas/mpt2sas_base.c: fix mismatch in mpt2sas_base_hard_reset_handler() mutex lock-unlock
-Date: Tue, 15 Nov 2011 14:58:17 -0800
-Message-ID: <201111152258.pAFMwHsm019331@wpaz9.hot.corp.google.com>
+Subject: [patch 1/6] scsi: fix a header to include linux/types.h
+Date: Tue, 15 Nov 2011 14:58:06 -0800
+Message-ID: <201111152258.pAFMw74D018922@wpaz9.hot.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ey0-f202.google.com ([209.85.215.202]:51909 "EHLO
-	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755826Ab1KOXDZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2011 18:03:25 -0500
-Received: by eyg5 with SMTP id 5so200878eyg.1
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2011 15:03:22 -0800 (PST)
+Received: from mail-fx0-f74.google.com ([209.85.161.74]:57661 "EHLO
+	mail-fx0-f74.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755826Ab1KOXDh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2011 18:03:37 -0500
+Received: by faap16 with SMTP id p16so26260faa.1
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2011 15:03:36 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, khoroshilov@ispras.ru, kashyap.desai@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, virtuoso@slind.org
 
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Subject: drivers/scsi/mpt2sas/mpt2sas_base.c: fix mismatch in mpt2sas_base_hard_reset_handler() mutex lock-unlock
+From: Alexander Shishkin <virtuoso@slind.org>
+Subject: scsi: fix a header to include linux/types.h
 
-If ioc->pci_error_recovery is set, goto out in
-mpt2sas_base_hard_reset_handler() leads to unlock unheld
-ioc->reset_in_progress_mutex.
+For headers that get exported to userland and make use of u32 style
+type names, it is advised to include linux/types.h.
 
-Fix the issue by jumping afer mutex_unlock() call.
+This fixes a headers_check warning.
 
-Found by Linux Driver Verification project (linuxtesting.org).
-
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Kashyap Desai <kashyap.desai@lsi.com>
+Signed-off-by: Alexander Shishkin <virtuoso@slind.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/mpt2sas/mpt2sas_base.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/scsi/scsi_netlink.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/mpt2sas/mpt2sas_base.c~mpt2sas-fix-mismatch-in-mpt2sas_base_hard_reset_handler-mutex-lock-unlock drivers/scsi/mpt2sas/mpt2sas_base.c
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c~mpt2sas-fix-mismatch-in-mpt2sas_base_hard_reset_handler-mutex-lock-unlock
-+++ a/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -4517,7 +4517,7 @@ mpt2sas_base_hard_reset_handler(struct M
- 		printk(MPT2SAS_ERR_FMT "%s: pci error recovery reset\n",
- 		    ioc->name, __func__);
- 		r = 0;
--		goto out;
-+		goto out_unlocked;
- 	}
+diff -puN include/scsi/scsi_netlink.h~scsi-fix-a-header-to-include-linux-typesh include/scsi/scsi_netlink.h
+--- a/include/scsi/scsi_netlink.h~scsi-fix-a-header-to-include-linux-typesh
++++ a/include/scsi/scsi_netlink.h
+@@ -23,7 +23,7 @@
+ #define SCSI_NETLINK_H
  
- 	if (mpt2sas_fwfault_debug)
-@@ -4573,6 +4573,7 @@ mpt2sas_base_hard_reset_handler(struct M
- 	spin_unlock_irqrestore(&ioc->ioc_reset_in_progress_lock, flags);
- 	mutex_unlock(&ioc->reset_in_progress_mutex);
+ #include <linux/netlink.h>
+-
++#include <linux/types.h>
  
-+ out_unlocked:
- 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: exit\n", ioc->name,
- 	    __func__));
- 	return r;
+ /*
+  * This file intended to be included by both kernel and user space
 _
