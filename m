@@ -1,34 +1,90 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: srp_transport: Fix atttribute registration race
-Date: Tue, 15 Nov 2011 08:04:51 +0100
-Message-ID: <CAO+b5-q9CozVcw0GsxWQk8ORVDOFNgUETMrmWgOxB3X_9smGKw@mail.gmail.com>
-References: <201110211857.23622.bvanassche@acm.org>
-	<1320053608.8283.29.camel@dabdike>
-	<CAO+b5-oxshsL7Dm7vhv4zC8m0P4dG3iNzxU9sdbi5cBkAnTpMQ@mail.gmail.com>
-	<045e01cca1bb$3dee1070$b9ca3150$@systemfabricworks.com>
-	<20111113215523.GA6117@ornl.gov>
-	<CAJZOPZ+N2OLLHdKAFk=xkXGzFEdisaGsDBf6ra56pcT6zO_8qQ@mail.gmail.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
+Date: Tue, 15 Nov 2011 16:51:29 +0800
+Message-ID: <1321347089.26084.2.camel@minggr>
+References: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAJZOPZ+N2OLLHdKAFk=xkXGzFEdisaGsDBf6ra56pcT6zO_8qQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Or Gerlitz <or.gerlitz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Dave Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Bill Boas <bboas-klaOcWyJdxkshyMvu7JE4pqQE7yCjDx5@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 14, 2011 at 10:43 PM, Or Gerlitz <or.gerlitz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> On Sun, Nov 13, 2011 at 11:55 PM, Dave Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
-> > SRP uses RDMA, so you cannot use UC mode.
->
-> per the IB spec, RDMA write is supported for UC
+On Mon, 2011-11-14 at 23:31 +0800, Alan Stern wrote:
+> On Mon, 14 Nov 2011, Lin Ming wrote:
+> 
+> > Current patches has a bug that system suspend fails if ata port was
+> > runtime suspended.
+> > 
+> > disk suspend issues sync cache and stop device commands that obviously
+> > need ata port to be active. So we need to runtime resume ata port first.
+> 
+> This is wrong.  If the port is already suspended then so are all the 
+> drives below the port.  Hence there is no need to sync the cache or 
+> stop the device.
 
-Agreed. But an SRP target does not only issue RDMA write requests, it
-also issues RDMA read requests. If I interpret the IB spec correctly,
-RDMA reads are not supported for UC.
+Ah, got it now!
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> > Alan, Tejun
+> > 
+> > How about below fix?
+> > 
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index fa3a591..ebb87fbf 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -50,6 +50,7 @@
+> >  #include <linux/string_helpers.h>
+> >  #include <linux/async.h>
+> >  #include <linux/slab.h>
+> > +#include <linux/pm_runtime.h>
+> >  #include <asm/uaccess.h>
+> >  #include <asm/unaligned.h>
+> >  
+> > @@ -2762,6 +2763,14 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+> >  	if (!sdkp)
+> >  		return 0;	/* this can happen */
+> >  
+> > +	/*
+> > +	 * Resume parent device to handle sync cache and
+> > +	 * stop device commands
+> > +	 */
+> > +	ret = pm_runtime_get_sync(dev->parent);
+> > +	if (ret)
+> > +		goto exit;
+> > +
+> >  	if (sdkp->WCE) {
+> >  		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+> >  		ret = sd_sync_cache(sdkp);
+> 
+> This is not the right approach.  You should look instead at 
+> scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
+> suspended then the routine should return immediately.
+
+How about below?
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d329f8b..94b60bd 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -20,6 +20,9 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+ 	struct device_driver *drv;
+ 	int err;
+ 
++	if (pm_runtime_suspended(dev))
++		return 0;
++
+ 	err = scsi_device_quiesce(to_scsi_device(dev));
+ 	if (err == 0) {
+ 		drv = dev->driver;
+
+
+> 
+> Alan Stern
+> 
+
+
