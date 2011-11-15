@@ -1,50 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Tue, 15 Nov 2011 06:54:25 -0800
-Message-ID: <20111115145425.GL30922@google.com>
-References: <Pine.LNX.4.44L0.1111141028140.2035-100000@iolanthe.rowland.org>
- <1321347089.26084.2.camel@minggr>
+From: "Webmail Technical Upgrade Team" <info@cis.rv.ua>
+Subject: System Administrator.
+Date: Tue, 15 Nov 2011 15:16:51 +0200 (EET)
+Message-ID: <17105.41.203.64.130.1321363011.squirrel__40651.8840500668$1321370971$gmane$org@mail.cis.rv.ua>
+Reply-To: account@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pz0-f42.google.com ([209.85.210.42]:48900 "EHLO
-	mail-pz0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120Ab1KOOyb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2011 09:54:31 -0500
-Content-Disposition: inline
-In-Reply-To: <1321347089.26084.2.camel@minggr>
+Received: from mail.cis.rv.ua ([193.108.129.50]:51190 "EHLO mail.cis.rv.ua"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756236Ab1KOP3W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Nov 2011 10:29:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+To: info@webmail.com
 
-On Tue, Nov 15, 2011 at 04:51:29PM +0800, Lin Ming wrote:
-> > This is not the right approach.  You should look instead at 
-> > scsi_dev_type_suspend() in scsi_pm.c.  If the device is already runtime 
-> > suspended then the routine should return immediately.
-> 
-> How about below?
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index d329f8b..94b60bd 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -20,6 +20,9 @@ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
->  	struct device_driver *drv;
->  	int err;
->  
-> +	if (pm_runtime_suspended(dev))
-> +		return 0;
-> +
+mailbox has exceeded the storage limit which is 20GB as set by your
+administrator,you are currently running on 20.9GB,you may not be able t=
+o
+send or receive new mail until you re-validate your mailbox.Tore-valida=
+te
+your mailbox please click this:
+https://docs.google.com/spreadsheet/viewform?formkey=3DdFA0TTdCOWJQUnRR=
+UFRCWmFoMVFoMFE6MQ
 
-Something to be careful about is there are different types of suspend
-states (PMSG_*).  IIUC, runtime PM is using PMSG_SUSPEND.  Other
-states may or may not be compatible with PMSG_SUSPEND expectations, so
-you can skip suspend operation if the newly requested state is
-PMSG_SUSPEND but otherwise the controller needs to be woken up and
-told to comply to the new state.
+Warning!!! All Webmail. Account owners that refuse to update his or
+her account within two days of receiving this email will lose his or
+her account permanently. AGB =C2=A9 upc cablecom GmbH 2011. We apologiz=
+e
+for any inconvenience this may have cause you. Thank you for using
+Webmail
 
-Thanks.
 
--- 
-tejun
+System Administrator.
+Customer Care Unit.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
