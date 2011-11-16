@@ -1,107 +1,75 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 3/4] scsi_dh_rdac: Adding the match function
- for	rdac device handler
-Date: Wed, 16 Nov 2011 12:32:43 -0500
-Message-ID: <20111116173243.GA26675@redhat.com>
-References: <47D23AD8469A2B448F33C24BD7A39BD9105DB4D8@RTPMVEXC1-PRD.hq.netapp.com>
-	<4EB0EF3F.1010300@suse.de>
-	<47D23AD8469A2B448F33C24BD7A39BD9105DB8EE@RTPMVEXC1-PRD.hq.netapp.com>
-	<20111102154612.GA30632@redhat.com>
-	<47D23AD8469A2B448F33C24BD7A39BD9105DBDC7@RTPMVEXC1-PRD.hq.netapp.com>
-	<20111103151748.GA10627@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Jing Huang <huangj@brocade.com>
+Subject: [PATCH 2/2] bfa: fix enidan and bit field check bug
+Date: Wed, 16 Nov 2011 12:29:26 -0800
+Message-ID: <1321475366-14801-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20111103151748.GA10627@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Babu.Moger@netapp.com, hare@suse.de
-Cc: device-mapper development <dm-devel@redhat.com>, Peter Jones <pjones@redhat.com>, Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:54028 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753594Ab1KPUvY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Nov 2011 15:51:24 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+Cc: adapter_linux_open_src_team@brocade.com, Jing Huang <huangj@brocade.com>
 
-On Thu, Nov 03 2011 at 11:17am -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+Fix some endian issue. __BIGENDIAN is not defined and it needs to be
+replaced with __BIG_ENDIAN. Also fixed a bug in bit field access.
+These two issues were reported by Dan Carpenter and he also provided a
+patch a few months ago, but somehow his patch is still not accepted.
 
-> On Thu, Nov 03 2011 at 10:47am -0400,
-> Moger, Babu <Babu.Moger@netapp.com> wrote:
-> 
-> > > -----Original Message-----
-> > > From: Mike Snitzer [mailto:snitzer@redhat.com]
-> > > Sent: Wednesday, November 02, 2011 10:46 AM
-> > > To: device-mapper development
-> > > Cc: Linux SCSI Mailing list
-> > > Subject: Re: [dm-devel] [PATCH 3/4] scsi_dh_rdac: Adding the match
-> > > function for rdac device handler
+This patch has been tested with linux-net, and is intended to be include in
+scsi-misc. 
 
-...
+Signed-off-by: Jing Huang <huangj@brocade.com>
+---
+ drivers/scsi/bfa/bfa_defs.h |    4 ++--
+ drivers/scsi/bfa/bfa_ioc.c  |    6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-> > > What about the issue where the appropriate scsi_dh isn't attached
-> > > during
-> > > scan (resulting in boot failures, trespasses, etc)?
-> > > 
-> > > Hannes, I know you had plans for how to address the early scsi_dh
-> > > attachment (and this match() work is a great step forward).  I just
-> > > wanted to touch base with you on what your current vision is on how to
-> > > achieve proper early scsi_dh attachment (and what the remaining TODO
-> > > is).
-> > 
-> > I am not aware of any other issue at this point. Hannes may know about it.
-> 
-> Yeap Hannes is aware.
-> 
-> I was referring to IO being issued to passive paths (ghost LUNs) because
-> scsi_dh isn't yet loaded.  Whereby causing the storage backend to
-> trespass unnecessarily.  This bouncing (and corresponding IO errors) are
-> avoided if the appropriate scsi_dh module is always loaded before the
-> storage driver (e.g. lpfc or qla2xxx).
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index 7b3d235..b5a1595 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -902,7 +902,7 @@ struct sfp_mem_s {
+ union sfp_xcvr_e10g_code_u {
+ 	u8		b;
+ 	struct {
+-#ifdef __BIGENDIAN
++#ifdef __BIG_ENDIAN
+ 		u8	e10g_unall:1;   /* 10G Ethernet compliance */
+ 		u8	e10g_lrm:1;
+ 		u8	e10g_lr:1;
+@@ -982,7 +982,7 @@ union sfp_xcvr_fc2_code_u {
+ union sfp_xcvr_fc3_code_u {
+ 	u8		b;
+ 	struct {
+-#ifdef __BIGENDIAN
++#ifdef __BIG_ENDIAN
+ 		u8	rsv4:1;
+ 		u8	mb800:1;    /* 800 Mbytes/sec */
+ 		u8	mb1600:1;   /* 1600 Mbytes/sec */
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index 1ac5aec..eca7ab7 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -3727,11 +3727,11 @@ bfa_sfp_media_get(struct bfa_sfp_s *sfp)
+ 			 (xmtr_tech & SFP_XMTR_TECH_SA))
+ 			*media = BFA_SFP_MEDIA_SW;
+ 		/* Check 10G Ethernet Compilance code */
+-		else if (e10g.b & 0x10)
++		else if (e10g.r.e10g_sr)
+ 			*media = BFA_SFP_MEDIA_SW;
+-		else if (e10g.b & 0x60)
++		else if (e10g.r.e10g_lrm && e10g.r.e10g_lr)
+ 			*media = BFA_SFP_MEDIA_LW;
+-		else if (e10g.r.e10g_unall & 0x80)
++		else if (e10g.r.e10g_unall)
+ 			*media = BFA_SFP_MEDIA_UNKNOWN;
+ 		else
+ 			bfa_trc(sfp, 0);
+-- 
+1.6.5.2
 
-I have reviewed the scsi_dh match() changes (those from Hannes that are
-already upstream and the 4 patches from Babu to complete match() for
-other device handlers and the scsi_dh cleanup).
-
-Hannes, in your cover-letter from the original scsi_dh_alua match
-patchset, here: http://www.spinics.net/lists/linux-scsi/msg54281.html,
-you said:
-
-"In contrast to what we've discussed at LinuxTag I have not tried
-to attach the alua device handler directly from scsi_scan.
-Reason is that I need to issue SCSI commands during activation,
-which means I would have to attach it from near the end of
-scsi_add_lun(), at which point the device_handler would be attached
-via the current method anyway. So I fail to see the gain here."
-
-I haven't picked through the scsi_dh/scsi code enough to know what "the
-current method" is (but I'm reviewing the code now).  That said, a quick
-recap of what you feel the relevant highlights are would be appreciated.
-
-But I thought the issue we discussed at LinuxTag was: how do we autoload
-the scsi_dh module(s) so that the device handler is even available for
-attachment?
-
-
-Babu, you said that your patchset to implement match() for rdac resolved
-the problem of the device handler not attaching properly:
-http://www.redhat.com/archives/dm-devel/2011-November/msg00032.html
-
-But that is only the case if scsi_dh_rdac has already been loaded early
-by the initramfs right?
-
-Given the updated scsi_dh match code: should it be safe for the
-initramfs to just load all scsi_dh modules (and ALUA will be preferred
-if TPGS is set)?
-
-Does it make sense to re-visit Peter Jones' modalias code to autoload
-scsi_dh in kernel rather than relying on adhoc initramfs code to know to
-load the modules?
-
-Mike
