@@ -1,50 +1,107 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v2 4/4] ata: add ata port runtime PM callbacks
-Date: Wed, 16 Nov 2011 10:42:11 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1111161038360.2086-100000@iolanthe.rowland.org>
-References: <1321449252.2565.2.camel@hp6530s>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 3/4] scsi_dh_rdac: Adding the match function
+ for	rdac device handler
+Date: Wed, 16 Nov 2011 12:32:43 -0500
+Message-ID: <20111116173243.GA26675@redhat.com>
+References: <47D23AD8469A2B448F33C24BD7A39BD9105DB4D8@RTPMVEXC1-PRD.hq.netapp.com>
+	<4EB0EF3F.1010300@suse.de>
+	<47D23AD8469A2B448F33C24BD7A39BD9105DB8EE@RTPMVEXC1-PRD.hq.netapp.com>
+	<20111102154612.GA30632@redhat.com>
+	<47D23AD8469A2B448F33C24BD7A39BD9105DBDC7@RTPMVEXC1-PRD.hq.netapp.com>
+	<20111103151748.GA10627@redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1321449252.2565.2.camel@hp6530s>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20111103151748.GA10627@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Babu.Moger@netapp.com, hare@suse.de
+Cc: device-mapper development <dm-devel@redhat.com>, Peter Jones <pjones@redhat.com>, Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 16 Nov 2011, Lin Ming wrote:
+On Thu, Nov 03 2011 at 11:17am -0400,
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-> > > Something to be careful about is there are different types of suspend
-> > > states (PMSG_*).  IIUC, runtime PM is using PMSG_SUSPEND.  Other
-> > > states may or may not be compatible with PMSG_SUSPEND expectations, so
-> > > you can skip suspend operation if the newly requested state is
-> > > PMSG_SUSPEND but otherwise the controller needs to be woken up and
-> > > told to comply to the new state.
+> On Thu, Nov 03 2011 at 10:47am -0400,
+> Moger, Babu <Babu.Moger@netapp.com> wrote:
+> 
+> > > -----Original Message-----
+> > > From: Mike Snitzer [mailto:snitzer@redhat.com]
+> > > Sent: Wednesday, November 02, 2011 10:46 AM
+> > > To: device-mapper development
+> > > Cc: Linux SCSI Mailing list
+> > > Subject: Re: [dm-devel] [PATCH 3/4] scsi_dh_rdac: Adding the match
+> > > function for rdac device handler
+
+...
+
+> > > What about the issue where the appropriate scsi_dh isn't attached
+> > > during
+> > > scan (resulting in boot failures, trespasses, etc)?
+> > > 
+> > > Hannes, I know you had plans for how to address the early scsi_dh
+> > > attachment (and this match() work is a great step forward).  I just
+> > > wanted to touch base with you on what your current vision is on how to
+> > > achieve proper early scsi_dh attachment (and what the remaining TODO
+> > > is).
 > > 
-> > That's right.  Surprisingly enough (and contrary to what I wrote
-> > earlier), the sd_suspend() routine doesn't spin down a drive for
-> > runtime suspend.  This probably should be considered a bug.
-> > 
-> > Anyway, it looks like the correct approach would be more like this:
+> > I am not aware of any other issue at this point. Hannes may know about it.
 > 
-> Thanks.
+> Yeap Hannes is aware.
 > 
-> I think ata_port_suspend also needs to call pm_runtime_resume, as below.
-> 
-> static int ata_port_suspend(struct device *dev)
-> {
->         struct ata_port *ap = to_ata_port(dev);
->         int rc;
-> 
->         pm_runtime_resume(dev);
->         rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
->         return rc;
-> }
+> I was referring to IO being issued to passive paths (ghost LUNs) because
+> scsi_dh isn't yet loaded.  Whereby causing the storage backend to
+> trespass unnecessarily.  This bouncing (and corresponding IO errors) are
+> avoided if the appropriate scsi_dh module is always loaded before the
+> storage driver (e.g. lpfc or qla2xxx).
 
-Maybe not.  You know a lot more about the state of the ATA ports than
-you do about the state of the SCSI devices.  If there's no difference
-in the port states for runtime suspend and system sleep then you don't
-have to power up the port just in order to power it down again.
+I have reviewed the scsi_dh match() changes (those from Hannes that are
+already upstream and the 4 patches from Babu to complete match() for
+other device handlers and the scsi_dh cleanup).
 
-Alan Stern
+Hannes, in your cover-letter from the original scsi_dh_alua match
+patchset, here: http://www.spinics.net/lists/linux-scsi/msg54281.html,
+you said:
 
+"In contrast to what we've discussed at LinuxTag I have not tried
+to attach the alua device handler directly from scsi_scan.
+Reason is that I need to issue SCSI commands during activation,
+which means I would have to attach it from near the end of
+scsi_add_lun(), at which point the device_handler would be attached
+via the current method anyway. So I fail to see the gain here."
+
+I haven't picked through the scsi_dh/scsi code enough to know what "the
+current method" is (but I'm reviewing the code now).  That said, a quick
+recap of what you feel the relevant highlights are would be appreciated.
+
+But I thought the issue we discussed at LinuxTag was: how do we autoload
+the scsi_dh module(s) so that the device handler is even available for
+attachment?
+
+
+Babu, you said that your patchset to implement match() for rdac resolved
+the problem of the device handler not attaching properly:
+http://www.redhat.com/archives/dm-devel/2011-November/msg00032.html
+
+But that is only the case if scsi_dh_rdac has already been loaded early
+by the initramfs right?
+
+Given the updated scsi_dh match code: should it be safe for the
+initramfs to just load all scsi_dh modules (and ALUA will be preferred
+if TPGS is set)?
+
+Does it make sense to re-visit Peter Jones' modalias code to autoload
+scsi_dh in kernel rather than relying on adhoc initramfs code to know to
+load the modules?
+
+Mike
