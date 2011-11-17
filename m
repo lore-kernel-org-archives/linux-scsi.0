@@ -1,63 +1,86 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Thu, 17 Nov 2011 11:29:20 -0500
-Message-ID: <20111117162919.GA3812@redhat.com>
-References: <20111018154542.GB3869@osiris.boeblingen.de.ibm.com>
- <1318955380.5169.15.camel@dabdike.int.hansenpartnership.com>
- <20111031100557.GA2621@osiris.boeblingen.de.ibm.com>
- <1320057746.2964.1.camel@dabdike>
- <4EAE8A7E.8000504@ce.jp.nec.com>
- <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
- <20111103182548.GA12131@redhat.com>
- <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
- <4EBA49C2.1000704@suse.de>
- <20111110161008.GA15659@osiris.boeblingen.de.ibm.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: sd: protection difficulties
+Date: Thu, 17 Nov 2011 11:31:13 -0500
+Message-ID: <4EC536D1.6080501@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20111110161008.GA15659@osiris.boeblingen.de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:41812 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753809Ab1KQQbV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2011 11:31:21 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id 629B92041B9
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2011 17:31:17 +0100 (CET)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id xDyESTdiG-M5 for <linux-scsi@vger.kernel.org>;
+	Thu, 17 Nov 2011 17:31:16 +0100 (CET)
+Received: from [192.168.48.66] (ip-17.55.99.216.dsl-cust.ca.inter.net [216.99.55.17])
+	by smtp.infotech.no (Postfix) with ESMTPA id 9E434204181
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2011 17:31:15 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
 
-On Thu, Nov 10 2011 at 11:10am -0500,
-Heiko Carstens <heiko.carstens@de.ibm.com> wrote:
+When a disk is freshly formatted with protection
+type 1 (ST33000650SS 3 TB taking 14 hours!) then
+its 8 bytes of protection information on all LBs
+are set to 0xFF.
 
-> On Wed, Nov 09, 2011 at 10:37:06AM +0100, Hannes Reinecke wrote:
+Now with zeros filling the user data part of each
+logical block and a LB guard field of 0xffffffff that
+means any attempt to read a LB before it is written
+will result in an error like this [lk 3.1.0]:
+  sd 6:0:0:0: [sdb]
+    Target Data Integrity Failure
+     Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+     Sense Key : Aborted Command [current]
+     Add. Sense: Logical block guard check failed
+     CDB: Read(10): 28 20 00 00 00 00 00 00 08 00
+     end_request: I/O error, dev sdb, sector 0
 
-...
- 
-> > Hmm. Just to be on the safe side, could you try this one:
-> > 
-> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> > index 5e0090e..e6fad46 100644
-> > --- a/drivers/md/dm-mpath.c
-> > +++ b/drivers/md/dm-mpath.c
-> > @@ -920,8 +920,10 @@ static int multipath_map(struct dm_target *ti,
-> > struct reque
-> > st *clone,
-> >         map_context->ptr = mpio;
-> >         clone->cmd_flags |= REQ_FAILFAST_TRANSPORT;
-> >         r = map_io(m, clone, mpio, 0);
-> > -       if (r < 0 || r == DM_MAPIO_REQUEUE)
-> > +       if (r < 0 || r == DM_MAPIO_REQUEUE) {
-> >                 mempool_free(mpio, m->mpio_pool);
-> > +               map_context->ptr = NULL;
-> > +       }
-> > 
-> >         return r;
-> >  }
-> 
-> With your patch we haven't been able to reproduce the kernel crash until now.
-> Now we "only" run into I/O stalls, which before your patch we also did. But
-> repeatedly rebooting and retrying and ignoring the I/O stalls always lead to
-> a crash.
-> Gonzalo will run a couple of extra rounds so we can have a feeling if at least
-> one of the bugs could be fixed with your patch ;)
+That is gparted reading LBA 0 to find out what partition
+table the disk has. Answer: no partition table because
+that LB has not been written to (since the FORMAT UNIT).
 
-Hi,
+Since the block layer insists on reading a disk before
+writing, and that the sd driver is setting the RDPROTECT
+field to 1 *** (i.e. the 0x20 is the second byte of the CDB
+above), then no tool that uses the block layer interface
+(i.e. /dev/sdb) can work with that disk. That includes dd.
 
-Any update after further testing with Hannes' patch?
+The only way I can see to make that disk useable
+currently is with a generic pass-through (e.g. the bsg
+or sg drivers) and write to the disk. My sg_dd and ddpt
+utilities can do that. Just writing zeros (with correct
+protection information) to the beginning and end of the
+disk to keep GPT stuff happy is not sufficient. That
+implies mkfs-type programs are also doing
+read-before-write. So lets waste another 14 hours writing
+zeros (with correct protection information) to the
+whole disk.
+
+Seems to be getting a bit silly. Am I missing something
+obvious or does the sd driver and the block layer above
+it need some serious work?
+
+
+How about starting with the idea of a "tentative read".
+That is a read operation to a LBA that it is not reasonable
+to assume has always been written to. The first read to a
+disk should always be tentative because the disk could have
+just been formatted (BTW the WRITE SAME command can also
+place 0xFF bytes in the protection fields).
+
+Doug Gilbert
+
+*** Recent work at t10.org states that if RDPROTECT=0 on
+     a READ command and the DPICZ bit is 1 in the Control
+     mode page then the protection information shall _not_
+     be checked. The ST33000650SS disk does not support the
+     DPICZ bit and when RDPROTECT=0 it does not check
+     protection information. Reports about other disks on
+     the market that support protection information welcome.
