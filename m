@@ -1,61 +1,65 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: sd: protection difficulties
-Date: Thu, 17 Nov 2011 12:54:56 -0500
-Message-ID: <4EC54A70.20406@interlog.com>
-References: <4EC536D1.6080501@interlog.com> <yq1vcqifzt5.fsf@sermon.lab.mkp.net>
-Reply-To: dgilbert@interlog.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Thu, 17 Nov 2011 12:26:33 -0600
+Message-ID: <1321554393.3041.77.camel@dabdike.int.hansenpartnership.com>
+References: <1320776028-29568-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:42494 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751333Ab1KQRzE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Nov 2011 12:55:04 -0500
-In-Reply-To: <yq1vcqifzt5.fsf@sermon.lab.mkp.net>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56442 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752931Ab1KQS0h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 Nov 2011 13:26:37 -0500
+In-Reply-To: <1320776028-29568-1-git-send-email-kys@microsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailing list <linux-scsi@vger.kernel.org>
+To: "K. Y. Srinivasan" <kys@microsoft.com>
+Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, linux-scsi@vger.kernel.org, ohering@suse.com, hch@infradead.org
 
-On 11-11-17 12:01 PM, Martin K. Petersen wrote:
->>>>>> "Doug" == Douglas Gilbert<dgilbert@interlog.com>  writes:
->
-> Doug,
->
-> Doug>  Now with zeros filling the user data part of each logical block
-> Doug>  and a LB guard field of 0xffffffff that means any attempt to read
-> Doug>  a LB before it is written will result in an error like this [lk
-> Doug>  3.1.0]:
-> Doug>   sd 6:0:0:0: [sdb]
-> Doug>     Target Data Integrity Failure
-> Doug>      Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE Sense Key :
-> Doug>      Aborted Command [current] Add. Sense: Logical block guard
-> Doug>      check failed CDB: Read(10): 28 20 00 00 00 00 00 00 08 00
-> Doug>      end_request: I/O error, dev sdb, sector 0
->
-> I'm guessing you are using an mpt2sas with recent firmware?
+On Tue, 2011-11-08 at 10:13 -0800, K. Y. Srinivasan wrote:
+> The storage driver (storvsc_drv.c) handles all block storage devices
+> assigned to Linux guests hosted on Hyper-V. This driver has been in the
+> staging tree for a while and this patch moves it out of the staging area.
+> As per Greg's recommendation, this patch makes no changes to the staging/hv
+> directory. Once the driver moves out of staging, we will cleanup the
+> staging/hv directory.
+> 
+> This patch includes all the patches that I have sent against the staging/hv
+> tree to address the comments I have gotten to date on this storage driver.
 
-Yes:
-   mpt2sas version 09.100.00.00 loaded
+First comment is that it would have been easier to see the individual
+patches for comment before you committed them.
 
-Whenever I report a bug to LSI (who are much better
-than most) they always say to upgrade to the latest
-firmware and re-test :-)
+The way you did mempool isn't entirely right: the problem is that to
+prevent a memory to I/O deadlock we need to ensure forward progress on
+the drain device.  Just having 64 commands available to the host doesn't
+necessarily achieve this because LUN1 could consume them all and starve
+LUN0 which is the drain device leading to the deadlock, so the mempool
+really needs to be per device using slave_alloc.
 
-  LSI changed
-> behavior to always check PI even when the app tag contains 0xFFFF (which
-> means "don't check" this block).
++static int storvsc_device_alloc(struct scsi_device *sdevice)
++{
++	/*
++	 * This enables luns to be located sparsely. Otherwise, we may not
++	 * discovered them.
++	 */
++	sdevice->sdev_bflags |= BLIST_SPARSELUN | BLIST_LARGELUN;
++	return 0;
++}
 
-That useful piece of information is well hidden!
-[sbc3r29.pdf section 4.21.3 top of page 61]
-You learn something every day.
+Looks bogus ... this should happen automatically for SCSI-3 devices ...
+unless your hypervisor has some strange (and wrong) identification?  I
+really think you want to use SCSI-3 because it will do report LUN
+scanning, which consumes far fewer resources.
 
-> I have some patches that LSI haven't signed off on yet. Which is why I
-> haven't posted them...
+I still think you need to disable clustering and junk the bvec merge
+function.  Your object seems to be to accumulate in page size multiples
+(and not aggregate over this) ... that's what clustering is designed to
+do.
 
-Hopefully this thread expedites matters.
-
-Doug Gilbert
+James
 
 
