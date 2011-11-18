@@ -1,72 +1,48 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
- of the staging area
-Date: Fri, 18 Nov 2011 04:53:03 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481AA6D232@TK5EX14MBXC128.redmond.corp.microsoft.com>
-References: <1320776028-29568-1-git-send-email-kys@microsoft.com>
- <1321554393.3041.77.camel@dabdike.int.hansenpartnership.com>
+From: Matt <mdm@iinet.net.au>
+Subject: Re: SCSI oops on USB disconnect, was: Issues with xHCI and USB 3.0
+Date: Fri, 18 Nov 2011 16:18:06 +1100
+Message-ID: <4EC5EA8E.40102@iinet.net.au>
+References: <4EA54EBF.80905@iinet.net.au> <20111025072957.GA5821@xanatos> <4EA68418.9000504@iinet.net.au> <20111025113458.GA4590@xanatos> <4EA6B3FC.9010808@iinet.net.au> <20111027112831.GB4790@xanatos> <20111102190224.GB29845@xanatos> <4EB24040.1060208@iinet.net.au> <20111103202258.GA3585@xanatos> <4EB32928.6000901@iinet.net.au> <20111104144840.GA3079@xanatos> <4EBBC920.3020706@iinet.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1321554393.3041.77.camel@dabdike.int.hansenpartnership.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outbound.icp-osb-irony-out8.iinet.net.au ([203.59.1.134]:4007
+	"EHLO outbound.icp-osb-irony-out8.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751046Ab1KRFSH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Nov 2011 00:18:07 -0500
+Received: from [192.168.1.44]
+	by mx.matt-sam.com with esmtp (Exim 4.63)
+	(envelope-from <mdm@iinet.net.au>)
+	id 1RRGpu-0003rM-N3
+	for linux-scsi@vger.kernel.org; Fri, 18 Nov 2011 16:18:02 +1100
+In-Reply-To: <4EBBC920.3020706@iinet.net.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIE5vdmVtYmVyIDE3LCAyMDExIDE6MjcgUE0NCj4gVG86IEtZIFNyaW5pdmFzYW4N
-Cj4gQ2M6IGdyZWdraEBzdXNlLmRlOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBk
-ZXZlbEBsaW51eGRyaXZlcnByb2plY3Qub3JnOyB2aXJ0dWFsaXphdGlvbkBsaXN0cy5vc2RsLm9y
-ZzsgbGludXgtDQo+IHNjc2lAdmdlci5rZXJuZWwub3JnOyBvaGVyaW5nQHN1c2UuY29tOyBoY2hA
-aW5mcmFkZWFkLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDEvMV0gU3RhZ2luZzogaHY6IHN0
-b3J2c2M6IE1vdmUgdGhlIHN0b3JhZ2UgZHJpdmVyIG91dCBvZiB0aGUNCj4gc3RhZ2luZyBhcmVh
-DQo+IA0KPiBPbiBUdWUsIDIwMTEtMTEtMDggYXQgMTA6MTMgLTA4MDAsIEsuIFkuIFNyaW5pdmFz
-YW4gd3JvdGU6DQo+ID4gVGhlIHN0b3JhZ2UgZHJpdmVyIChzdG9ydnNjX2Rydi5jKSBoYW5kbGVz
-IGFsbCBibG9jayBzdG9yYWdlIGRldmljZXMNCj4gPiBhc3NpZ25lZCB0byBMaW51eCBndWVzdHMg
-aG9zdGVkIG9uIEh5cGVyLVYuIFRoaXMgZHJpdmVyIGhhcyBiZWVuIGluIHRoZQ0KPiA+IHN0YWdp
-bmcgdHJlZSBmb3IgYSB3aGlsZSBhbmQgdGhpcyBwYXRjaCBtb3ZlcyBpdCBvdXQgb2YgdGhlIHN0
-YWdpbmcgYXJlYS4NCj4gPiBBcyBwZXIgR3JlZydzIHJlY29tbWVuZGF0aW9uLCB0aGlzIHBhdGNo
-IG1ha2VzIG5vIGNoYW5nZXMgdG8gdGhlIHN0YWdpbmcvaHYNCj4gPiBkaXJlY3RvcnkuIE9uY2Ug
-dGhlIGRyaXZlciBtb3ZlcyBvdXQgb2Ygc3RhZ2luZywgd2Ugd2lsbCBjbGVhbnVwIHRoZQ0KPiA+
-IHN0YWdpbmcvaHYgZGlyZWN0b3J5Lg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBpbmNsdWRlcyBhbGwg
-dGhlIHBhdGNoZXMgdGhhdCBJIGhhdmUgc2VudCBhZ2FpbnN0IHRoZSBzdGFnaW5nL2h2DQo+ID4g
-dHJlZSB0byBhZGRyZXNzIHRoZSBjb21tZW50cyBJIGhhdmUgZ290dGVuIHRvIGRhdGUgb24gdGhp
-cyBzdG9yYWdlIGRyaXZlci4NCj4gDQo+IEZpcnN0IGNvbW1lbnQgaXMgdGhhdCBpdCB3b3VsZCBo
-YXZlIGJlZW4gZWFzaWVyIHRvIHNlZSB0aGUgaW5kaXZpZHVhbA0KPiBwYXRjaGVzIGZvciBjb21t
-ZW50IGJlZm9yZSB5b3UgY29tbWl0dGVkIHRoZW0uDQoNCkkgYW0gbm90IHN1cmUgaWYgdGhlIHBh
-dGNoZXMgaGF2ZSBiZWVuIGNvbW1pdHRlZCB5ZXQuIEFsbCBwYXRjaGVzIHdlcmUgc2VudA0KdG8g
-dmFyaW91cyBtYWlsaW5nIGxpc3RzIGFuZCB5b3Ugd2VyZSBjb3BpZWQgYXMgd2VsbC4gSW4gdGhl
-IGZ1dHVyZSwgSSB3aWxsIGluY2x1ZGUNCnRoZSBzY3NpIG1haWxpbmcgbGlzdCBpbiB0aGUgc2V0
-IG9mIGxpc3RzIEkgaW5jbHVkZSBmb3IgdGhlIHN0YWdpbmcgcGF0Y2hlcy4gDQogDQo+IA0KPiBU
-aGUgd2F5IHlvdSBkaWQgbWVtcG9vbCBpc24ndCBlbnRpcmVseSByaWdodDogdGhlIHByb2JsZW0g
-aXMgdGhhdCB0bw0KPiBwcmV2ZW50IGEgbWVtb3J5IHRvIEkvTyBkZWFkbG9jayB3ZSBuZWVkIHRv
-IGVuc3VyZSBmb3J3YXJkIHByb2dyZXNzIG9uDQo+IHRoZSBkcmFpbiBkZXZpY2UuICBKdXN0IGhh
-dmluZyA2NCBjb21tYW5kcyBhdmFpbGFibGUgdG8gdGhlIGhvc3QgZG9lc24ndA0KPiBuZWNlc3Nh
-cmlseSBhY2hpZXZlIHRoaXMgYmVjYXVzZSBMVU4xIGNvdWxkIGNvbnN1bWUgdGhlbSBhbGwgYW5k
-IHN0YXJ2ZQ0KPiBMVU4wIHdoaWNoIGlzIHRoZSBkcmFpbiBkZXZpY2UgbGVhZGluZyB0byB0aGUg
-ZGVhZGxvY2ssIHNvIHRoZSBtZW1wb29sDQo+IHJlYWxseSBuZWVkcyB0byBiZSBwZXIgZGV2aWNl
-IHVzaW5nIHNsYXZlX2FsbG9jLg0KDQpJIHdpbGwgZG8gdGhpcyBwZXIgTFVOLg0KDQo+IA0KPiAr
-c3RhdGljIGludCBzdG9ydnNjX2RldmljZV9hbGxvYyhzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXZp
-Y2UpDQo+ICt7DQo+ICsJLyoNCj4gKwkgKiBUaGlzIGVuYWJsZXMgbHVucyB0byBiZSBsb2NhdGVk
-IHNwYXJzZWx5LiBPdGhlcndpc2UsIHdlIG1heSBub3QNCj4gKwkgKiBkaXNjb3ZlcmVkIHRoZW0u
-DQo+ICsJICovDQo+ICsJc2RldmljZS0+c2Rldl9iZmxhZ3MgfD0gQkxJU1RfU1BBUlNFTFVOIHwg
-QkxJU1RfTEFSR0VMVU47DQo+ICsJcmV0dXJuIDA7DQo+ICt9DQo+IA0KPiBMb29rcyBib2d1cyAu
-Li4gdGhpcyBzaG91bGQgaGFwcGVuIGF1dG9tYXRpY2FsbHkgZm9yIFNDU0ktMyBkZXZpY2VzIC4u
-Lg0KPiB1bmxlc3MgeW91ciBoeXBlcnZpc29yIGhhcyBzb21lIHN0cmFuZ2UgKGFuZCB3cm9uZykg
-aWRlbnRpZmljYXRpb24/ICBJDQo+IHJlYWxseSB0aGluayB5b3Ugd2FudCB0byB1c2UgU0NTSS0z
-IGJlY2F1c2UgaXQgd2lsbCBkbyByZXBvcnQgTFVODQo+IHNjYW5uaW5nLCB3aGljaCBjb25zdW1l
-cyBmYXIgZmV3ZXIgcmVzb3VyY2VzLg0KDQpJIHdpbGwgc2VlIGlmIEkgY2FuIGNsZWFuIHRoaXMg
-dXAuDQoNCj4gDQo+IEkgc3RpbGwgdGhpbmsgeW91IG5lZWQgdG8gZGlzYWJsZSBjbHVzdGVyaW5n
-IGFuZCBqdW5rIHRoZSBidmVjIG1lcmdlDQo+IGZ1bmN0aW9uLiAgWW91ciBvYmplY3Qgc2VlbXMg
-dG8gYmUgdG8gYWNjdW11bGF0ZSBpbiBwYWdlIHNpemUgbXVsdGlwbGVzDQo+IChhbmQgbm90IGFn
-Z3JlZ2F0ZSBvdmVyIHRoaXMpIC4uLiB0aGF0J3Mgd2hhdCBjbHVzdGVyaW5nIGlzIGRlc2lnbmVk
-IHRvDQo+IGRvLg0KDQpBcyBwYXJ0IG9mIGFkZHJlc3NpbmcgeW91ciBmaXJzdCByb3VuZCBvZiBj
-b21tZW50cywgSSBleHBlcmltZW50ZWQgd2l0aCB5b3VyDQpzdWdnZXN0aW9ucyBhbmQgSSBjb3Vs
-ZCBub3QgZ2V0IHJpZCBvZiB0aGUgY29kZSB0aGF0IGRvZXMgdGhlIGJvdW5jZSBidWZmZXIgaGFu
-ZGxpbmcuDQpJIGNvdWxkIGdlbmVyYXRlIEkvTyBwYXR0ZXJucyB0aGF0IHdvdWxkIHJlcXVpcmUg
-Ym91bmNlIGJ1ZmZlciBoYW5kbGluZyB3aXRoIHlvdXINCnN1Z2dlc3Rpb25zIGluIHBsYWNlLg0K
-DQpSZWdhcmRzLA0KDQpLLiBZICANCg0K
+On 10/11/2011 11:52 PM, Matt wrote:
+>
+> Hello all,
+>
+> Please let me know what type of debugging information you require from 
+> me to give you a good view of the issue.
+>
+> Many thanks in advance.
+>
+> Cheers,
+>
+> Matt.
+>
+
+Hi,
+
+I appreciate that there are a lot of questions being asked, but I'm 
+pretty keen to attempt to resolve this problem.  Can you please suggest 
+how I can get this looked at?
+
+Thanks,
+
+Matt.
+
