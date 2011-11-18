@@ -1,38 +1,45 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [patch] [SCSI] bfa: dereferencing freed memory in bfad_im_probe()
-Date: Fri, 18 Nov 2011 16:55:29 +0300
-Message-ID: <20111118135528.GI29436@mwanda>
-References: <20110729085306.GH3752@shale.localdomain>
+Subject: Re: [patch] [SCSI] be2iscsi: cleanup a min_t() call
+Date: Fri, 18 Nov 2011 17:00:31 +0300
+Message-ID: <20111118140031.GG4349@mwanda>
+References: <20110926062337.GD11832@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="l0l+eSofNeLXHSnY"
+	protocol="application/pgp-signature"; boundary="O8XZ+2Hy8Kj8wLPZ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:28367 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756338Ab1KRNyR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 08:54:17 -0500
+Received: from rcsinet15.oracle.com ([148.87.113.117]:58420 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754933Ab1KRN7T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 08:59:19 -0500
 Content-Disposition: inline
-In-Reply-To: <20110729085306.GH3752@shale.localdomain>
+In-Reply-To: <20110926062337.GD11832@elgon.mountain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>
-Cc: Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "open list:BROCADE BFA FC SC..." <linux-scsi@vger.kernel.org>, kernel-janitors@vger.kernel.org
+To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 
---l0l+eSofNeLXHSnY
+--O8XZ+2Hy8Kj8wLPZ
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 29, 2011 at 11:53:06AM +0300, Dan Carpenter wrote:
-> If bfad_thread_workq(bfad) was not BFA_STATUS_OK then we freed "im"
-> and then dereferenced it.
+On Mon, Sep 26, 2011 at 09:23:37AM +0300, Dan Carpenter wrote:
+> "sense_len" was declared as int type but actually it only stores a
+> u16 value that comes from hardware.  The cast to u16 in min_t()
+> confuses static analysis because it truncates the int to u16 so I've
+> fixed the declaration to reflect that "sense_len" is just a u16.
 >=20
-> I did a little clean up because it seemed nicer to return directly
-> instead of doing a superfluous goto.  I looked at other functions in
-> this file and it seems like returning directly is standard.
+> Also there was a call to cpu_to_be16() which I've changed to
+> be16_to_cpu().  The functions are equivalent, but obviously the
+> hardware is big endian and we're doing the min_t() comparison on CPU
+> endian values.
 >=20
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> This whole patch is just a cleanup and doesn't affect how the code
+> works.
+>=20
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
 
 Ping.
 
@@ -40,26 +47,26 @@ regards,
 dan carpenter
 
 
---l0l+eSofNeLXHSnY
+--O8XZ+2Hy8Kj8wLPZ
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBAgAGBQJOxmPQAAoJEOnZkXI/YHqR5CIP/29HsqK/v5RoS+9SDfXCR8Vv
-A2TdX3bhNGXrjAv8zhm0nFAGaez5QHd5DkCCb6ep0MJtZx/qHym7CN24iLI8tSwA
-dLB81fSTpXLb9vHrftpN4g3bANFGN3z36v93JHt8IBZOjQ0WOHjfijAfzJlaZ2bd
-Hr+UvezKhBJit3hnDqa+6OjAOv5vTWGDQadcSbXfcp9oeGnFRo481ADHJQQosIiC
-+Q7SyaMmykeLjDOmXaOe/8IMlrsCCyYIBkMrg5uMoPHtMysStVV6AjxcU3eT48tv
-dgiWTYT6FsMN/vIbENhp5xs0toT8/foDjpaao4vLvr2r4oMgZ8JS00SP3oUTzQb+
-sTJDV8PXW/LPJM2VRVPX1yZIqadnLU+DopFJSiHJE1/Pdhs+jqPYwJX7NrWWpuBb
-ncc1PfsL1JyTUGkf3CHClgGgkMES/KuP6RRUJVC9ikrDlr+eu0VgHZJVOoMEAw7E
-/Vjd5O3ci8IIsslWm92fTuiDe7hciB4I00zsXtS8e3LFJSkGb9v3Dz+80oCwrvEn
-0dfzzdHQFq9I9qBnN6XSEVJwGs1t0LNkltlHpjKdP/t0E6XGF/8ZLlXbUoF7TlGw
-UqMBbuCcYgBPd3gDx7mfYzCvKQKp2YQnGh898HsRbo4qTUxC0dCM5s0v2AKIlZBI
-FPGS2CKZYOKrdfJVIGt8
-=dBUm
+iQIcBAEBAgAGBQJOxmT/AAoJEOnZkXI/YHqRhL0P/iakUVR6g8SLZdjATvTKdexr
+oWl4jyWDnq935BkNcOjDzkM80m6maFWmArnz8fkZoq7JhTQRYtHJhONi2tzCbVHO
+jwolktbGQAc0TsgAbUnqIhlsZ83+F1UMNuhyag96CvNVpVB+ntfxdgvgVjkvu5eH
+PZmP/6ORX4F8q0fQn6iYQ4j9lf2vJmr1CoI0sjbfEtN/tpB6v2r8I7P02HOeAF4B
+TgA2pCcGmu14eye4bTv2CsePBEH5HYfZpJUuwCvu9V118pZ/WYXoKmU5fUfiqSyz
+gGG9OAqiqm1/UznpUE1HNkM3c/QRCaC7/Q1ijScQg/YXMltPwfoF/JF83/0rKlEV
+avywkxTiVkQSFi7A7/74oNfZaTR0EoJD89sZnDVKgv5Us6bxoeNerOI636VxJ2if
+wlgyJqQXRZLNm1UrDKQa2eXrdAt2au6csXmlMc6tfjxb7ZplvtVmeIdIJwNK+2d4
+/5RGjGo5B/wMIkSKomX82nFpG3EvwTbt06uRCrzl8L+WrG2Wq7lNCdnmwsjpj7Wx
+FlHu8bfM/QkDGZ28rCtUHJPlK7ZhcFYIgPBMETUTevZCPJ5mrvuAkv/cVDp3VclO
+yvB84afWO89BIgO/V5AWqsd83hHdGXFcI6if8tgJegcTJdL1nLMTlDK+Est9E1bC
+P8UScMQ1ibgd2czLXZ9q
+=szsT
 -----END PGP SIGNATURE-----
 
---l0l+eSofNeLXHSnY--
+--O8XZ+2Hy8Kj8wLPZ--
