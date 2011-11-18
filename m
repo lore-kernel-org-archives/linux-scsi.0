@@ -1,54 +1,34 @@
-From: "IT Service Desk" <tech.team@tech-center.com>
-Subject: Scheduled Maintenance & Upgrade
-Date: Fri, 18 Nov 2011 15:16:39 -0500
-Message-ID: <20111118151639.876569h0ne374yzr@184.173.117.72>
-Reply-To: itservicecenter@tech-center.com
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH] fcoe fix for 3.2
+Date: Fri, 18 Nov 2011 13:35:51 -0800
+Message-ID: <20111118213551.25510.37403.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailcloud5.ourmailservers.net ([184.173.67.243]:43662 "EHLO
-	mailcloud5.ourmailservers.net" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752234Ab1KRUXX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2011 15:23:23 -0500
-Content-Disposition: inline
+Received: from mga11.intel.com ([192.55.52.93]:53993 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755713Ab1KRVfv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Nov 2011 16:35:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+This patch is necessary so that SW FCoE packets are assigned to the
+correct DCB flow. Without it SW FCoE will not function in a DCB
+environment. DCB is the primary technology that FCoE uses for
+lossless Ethernet.
+
+---
+
+john fastabend (1):
+      fcoe: add DCB notifiers to set skb priority
 
 
-IT Service Desk
+ drivers/scsi/fcoe/fcoe.c      |  115 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe_ctlr.c |    4 +
+ include/scsi/libfcoe.h        |    3 +
+ 3 files changed, 122 insertions(+), 0 deletions(-)
 
-Attn account User,
-
-Scheduled Maintenance & Upgrade
-
-Your account is in the process of being upgraded to a newset of  
-Windows-based servers and an enhanced online email interface inline  
-with internet infrastructure Maintenance. The new servers will provide  
-better anti-spam and anti-virus functions, along withh IMAP Support  
-for mobile devices that Support IMAP to enhance your usage.
-
-To ensure that your account is not intermittently disrupted but active  
-during and after this upgrade, you are required to kindly confirm your  
-account by stating the details below:
-
-* User name:
-* Password:
-
-This will prompt the upgarde of your account.
-
-Failure to acknowledge receipt of this notification, might result to a  
-temporal deactivation of your account from IT Service Desk database.
-
-Your account shall remain active upon your confirmation of your login details.
-
-IT Service Desk apologize for any inconvenience caused.
-
-IT Service Desk
-
-Copyright 2011, All Rights Reserved.
-
-
-
+-- 
+Thanks, //Rob
