@@ -1,78 +1,67 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: [SCSI] be2iscsi: fix chip cleanup
-Date: Fri, 18 Nov 2011 10:57:00 +0300
-Message-ID: <20111118075659.GE4349@mwanda>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: SCSI oops on USB disconnect, was: Issues with xHCI and USB 3.0
+Date: Fri, 18 Nov 2011 12:31:14 +0100
+Message-ID: <CAO+b5-oY8qnhL=6tR2TO3HC1NJKEx_2x4SOTqFW5ZSnbf48Urg@mail.gmail.com>
+References: <4EA54EBF.80905@iinet.net.au>
+	<20111025072957.GA5821@xanatos>
+	<4EA68418.9000504@iinet.net.au>
+	<20111025113458.GA4590@xanatos>
+	<4EA6B3FC.9010808@iinet.net.au>
+	<20111027112831.GB4790@xanatos>
+	<20111102190224.GB29845@xanatos>
+	<4EB24040.1060208@iinet.net.au>
+	<20111103202258.GA3585@xanatos>
+	<4EB32928.6000901@iinet.net.au>
+	<20111104144840.GA3079@xanatos>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="Lb0e7rgc7IsuDeGj"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:37737 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199Ab1KRHzz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 02:55:55 -0500
-Content-Disposition: inline
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:42039 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752517Ab1KRLbR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 06:31:17 -0500
+In-Reply-To: <20111104144840.GA3079@xanatos>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Matt <mdm@iinet.net.au>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
+On Fri, Nov 4, 2011 at 3:48 PM, Sarah Sharp
+<sarah.a.sharp@linux.intel.com> wrote:
+> [ =A0325.497799] Call Trace:
+> [ =A0325.499007] =A0[<ffffffff8122c4eb>] ? blk_peek_request+0x3f/0x1d=
+2
+> [ =A0325.500236] =A0[<ffffffff813148e3>] scsi_request_fn+0x48/0x409
+> [ =A0325.501461] =A0[<ffffffff811163d4>] ? kmem_cache_free+0x72/0xab
+> [ =A0325.502685] =A0[<ffffffff81227338>] __blk_run_queue+0x1b/0x1d
+> [ =A0325.503906] =A0[<ffffffff8131428a>] scsi_run_queue+0x1c0/0x22d
+> [ =A0325.505126] =A0[<ffffffff813153d4>] scsi_next_command+0x39/0x49
+> [ =A0325.506337] =A0[<ffffffff81315895>] scsi_io_completion+0x45d/0x4=
+d7
+> [ =A0325.507552] =A0[<ffffffff8130dc14>] scsi_finish_command+0xe4/0xe=
+d
+> [ =A0325.508761] =A0[<ffffffff81312a3e>] scsi_eh_flush_done_q+0xfc/0x=
+124
+> [ =A0325.509971] =A0[<ffffffff8131310e>] scsi_error_handler+0x383/0x5=
+91
+> [ =A0325.511175] =A0[<ffffffff81312d8b>] ? scsi_eh_get_sense+0x183/0x=
+183
+> [ =A0325.512380] =A0[<ffffffff81072a17>] kthread+0x84/0x8c
+> [ =A0325.513580] =A0[<ffffffff814b01f4>] kernel_thread_helper+0x4/0x1=
+0
+> [ =A0325.514782] =A0[<ffffffff81072993>] ? kthread_worker_fn+0x148/0x=
+148
+>
+> Hopefully the SCSI folks will be able to help you with that. =A0James=
+?
 
---Lb0e7rgc7IsuDeGj
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Might be the same issue as this one:
+http://www.spinics.net/lists/linux-scsi/msg55497.html.
 
-Hi Jayamohan,
-
-My static checker complains about 069adc7b061 "[SCSI] be2iscsi: fix
-chip cleanup"
-
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -202,8 +202,8 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigne=
-d short chute)
-                           OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
-=20
-        req->chute =3D chute;
--       req->hdr_ring_id =3D 0;
--       req->data_ring_id =3D 0;
-+       req->hdr_ring_id =3D cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba));
-            ^^^^^^^^^^^^
-+       req->data_ring_id =3D cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba));
-            ^^^^^^^^^^^^^
-
-These two are only 8 bits so we lose part of the le16 value.  My
-guess is that we can just remove the calls to cpu_to_le16() and
-save the lower bits, since that what this code does on Intel.  But I
-don't know this subsystem.
-
-In mgmt_open_connection() ->hdr_ring_id is a 16bit field, but we just
-store a CPU endian HWI_GET_DEF_HDRQ_ID() into it.
-
-regards,
-dan carpenter
-
-
---Lb0e7rgc7IsuDeGj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJOxg/LAAoJEOnZkXI/YHqRcgcQAJV45xCGg8zLPFIHgRT3yFKG
-LcETMnhEWqZQr6Sduo2I6ZXUe4/CzFZnwWxEs8aLWFm2aZFUqoUwUuomfILDF4+Q
-1tiPvcQWSozyhZ7gGvji+st9qcDr3XuoLKrl04vzqDrvPhDAPPyaPhY8wAAhZyRj
-GNa/RToY4vpnDzAqW0j4ldHuVos3TvG5d9CoNv7Sg7YWXyIWp13YH7STWdqEDNi5
-nzJPtYfFdqgQcGsVS/iBIwMM74+NsNCBaNmBnMtOPV61Ysx5sjvlGMFSvnV4mvbK
-Xd74caSJgSA9V8x2hAk5Jgf82qlL/LCEoPUoqrYNJZqLVfqL0s/30L6/Jdt3tiRi
-tqI69k7tauN3/az9PuNDoGMeyGJNz5i6PGZZ3pQ9oy7E2lBiQerck+zHDzcAk+Qs
-B8BMo4QGCSdKvo9hVRAnwO0uqYVAxvBlix28cE7LSa4lre9GoZc+zWECByvUUZjg
-4oSt1WwGzRhlurFqKJncJHnRJtvXPcDiizPhK56qUTqT++isZDCvJLoJLAUfAIVJ
-ey4kruj8d42GjBHHs+UMZwupTfUVKoP+jHeH+hHho8kqi4dRJGFEniaOJoKaVbzI
-ZSeZAiqMBp30UvpgudMckgCh+G2Cda8o+NvJV8Oui7Djkg+HTtIwdas8RGnTuwdb
-QY3NTv1BxUYwriVdTtPk
-=dwMF
------END PGP SIGNATURE-----
-
---Lb0e7rgc7IsuDeGj--
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
