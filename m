@@ -1,68 +1,117 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 00/14] qla2xxx: Patches for 3.2-rc.
-Date: Fri, 18 Nov 2011 09:02:08 -0800
-Message-ID: <1321635742-16426-1-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 11/14] qla2xxx: Disable generating pause frames when firmware hang detected for ISP82xx.
+Date: Fri, 18 Nov 2011 09:02:19 -0800
+Message-ID: <1321635742-16426-12-git-send-email-chad.dupuis@qlogic.com>
+References: <1321635742-16426-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:44426
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:44718
 	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753597Ab1KRRP5 (ORCPT
+	by vger.kernel.org with ESMTP id S1758070Ab1KRRQH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2011 12:15:57 -0500
+	Fri, 18 Nov 2011 12:16:07 -0500
+In-Reply-To: <1321635742-16426-1-git-send-email-chad.dupuis@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-Hi James,
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Please apply the following patches for 3.2-rc.
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_dbg.c |    2 +-
+ drivers/scsi/qla2xxx/qla_mbx.c |   20 ++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_nx.c  |    6 +++++-
+ drivers/scsi/qla2xxx/qla_nx.h  |    4 ++++
+ 4 files changed, 28 insertions(+), 4 deletions(-)
 
-Thanks,
-Chad
-
-Andrew Vasquez (1):
-  qla2xxx: Return the correct value for a mailbox command if 82xx is in
-    reset recovery.
-
-Arun Easi (1):
-  qla2xxx: Check for SCSI status on underruns.
-
-Chad Dupuis (3):
-  qla2xxx: Display IPE error message for ISP82xx.
-  qla2xxx: Encapsulate prematurely completing mailbox commands during
-    ISP82xx firmware hang.
-  qla2xxx: Update version number to 8.03.07.12-k.
-
-Giridhar Malavali (6):
-  qla2xxx: Revert back the request queue mapping to request queue 0.
-  qla2xxx: Stop unconditional completion of mailbox commands issued in
-    interrupt mode during firmware hang.
-  qla2xxx: Enable Minidump by default with default capture mask 0x1f.
-  qla2xxx: Clear mailbox busy flag during premature mailbox completion
-    for ISP82xx.
-  qla2xxx: Disable generating pause frames when firmware hang detected
-    for ISP82xx.
-  qla2xxx: Submit all chained IOCBs for passthrough commands on request
-    queue 0.
-
-Saurav Kashyap (3):
-  qla2xxx: Remove qla2x00_wait_for_loop_ready function.
-  qla2xxx: Don't call alloc_fw_dump for ISP82XX.
-  qla2xxx: Correct fc_host port_state display.
-
- drivers/scsi/qla2xxx/qla_attr.c    |   27 ++++++++++--
- drivers/scsi/qla2xxx/qla_dbg.c     |    8 ++--
- drivers/scsi/qla2xxx/qla_gbl.h     |    1 +
- drivers/scsi/qla2xxx/qla_init.c    |    3 +-
- drivers/scsi/qla2xxx/qla_iocb.c    |   14 +++---
- drivers/scsi/qla2xxx/qla_isr.c     |    2 +-
- drivers/scsi/qla2xxx/qla_mbx.c     |   25 +++++++++--
- drivers/scsi/qla2xxx/qla_nx.c      |   42 +++++++++++------
- drivers/scsi/qla2xxx/qla_nx.h      |    4 ++
- drivers/scsi/qla2xxx/qla_os.c      |   86 ++++-------------------------------
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 11 files changed, 102 insertions(+), 112 deletions(-)
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index e320d54..f3cddd5 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -12,7 +12,7 @@
+  * |             Level            |   Last Value Used  |     Holes	|
+  * ----------------------------------------------------------------------
+  * | Module Init and Probe        |       0x0116       |  		|
+- * | Mailbox commands             |       0x1129       |		|
++ * | Mailbox commands             |       0x112b       |		|
+  * | Device Discovery             |       0x2083       |		|
+  * | Queue Command and IO tracing |       0x302e       |     0x3008     |
+  * | DPC Thread                   |       0x401c       |		|
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 6ff7c3c..82a3353 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -303,7 +303,15 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			if (!test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) &&
+ 			    !test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) &&
+ 			    !test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
+-
++				if (IS_QLA82XX(ha)) {
++					ql_dbg(ql_dbg_mbx, vha, 0x112a,
++					    "disabling pause transmit on port "
++					    "0 & 1.\n");
++					qla82xx_wr_32(ha,
++					    QLA82XX_CRB_NIU + 0x98,
++					    CRB_NIU_XG_PAUSE_CTL_P0|
++					    CRB_NIU_XG_PAUSE_CTL_P1);
++				}
+ 				ql_log(ql_log_info, base_vha, 0x101c,
+ 				    "Mailbox cmd timeout occured. "
+ 				    "Scheduling ISP abort eeh_busy=0x%x.\n",
+@@ -319,7 +327,15 @@ qla2x00_mailbox_command(scsi_qla_host_t *vha, mbx_cmd_t *mcp)
+ 			if (!test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags) &&
+ 			    !test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) &&
+ 			    !test_bit(ISP_ABORT_RETRY, &vha->dpc_flags)) {
+-
++				if (IS_QLA82XX(ha)) {
++					ql_dbg(ql_dbg_mbx, vha, 0x112b,
++					    "disabling pause transmit on port "
++					    "0 & 1.\n");
++					qla82xx_wr_32(ha,
++					    QLA82XX_CRB_NIU + 0x98,
++					    CRB_NIU_XG_PAUSE_CTL_P0|
++					    CRB_NIU_XG_PAUSE_CTL_P1);
++				}
+ 				ql_log(ql_log_info, base_vha, 0x101e,
+ 				    "Mailbox cmd timeout occured. "
+ 				    "Scheduling ISP abort.\n");
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index a54f15e..7d1b54f 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -3853,9 +3853,13 @@ void qla82xx_watchdog(scsi_qla_host_t *vha)
+ 			qla2xxx_wake_dpc(vha);
+ 		} else {
+ 			if (qla82xx_check_fw_alive(vha)) {
++				ql_dbg(ql_dbg_timer, vha, 0x6011,
++				    "disabling pause transmit on port 0 & 1.\n");
++				qla82xx_wr_32(ha, QLA82XX_CRB_NIU + 0x98,
++				    CRB_NIU_XG_PAUSE_CTL_P0|CRB_NIU_XG_PAUSE_CTL_P1);
+ 				halt_status = qla82xx_rd_32(ha,
+ 				    QLA82XX_PEG_HALT_STATUS1);
+-				ql_dbg(ql_dbg_timer, vha, 0x6005,
++				ql_log(ql_log_info, vha, 0x6005,
+ 				    "dumping hw/fw registers:.\n "
+ 				    " PEG_HALT_STATUS1: 0x%x, PEG_HALT_STATUS2: 0x%x,.\n "
+ 				    " PEG_NET_0_PC: 0x%x, PEG_NET_1_PC: 0x%x,.\n "
+diff --git a/drivers/scsi/qla2xxx/qla_nx.h b/drivers/scsi/qla2xxx/qla_nx.h
+index 57820c1..57a226b 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.h
++++ b/drivers/scsi/qla2xxx/qla_nx.h
+@@ -1173,4 +1173,8 @@ struct qla82xx_md_entry_queue {
+ 
+ static const int MD_MIU_TEST_AGT_RDDATA[] = { 0x410000A8, 0x410000AC,
+ 	0x410000B8, 0x410000BC };
++
++#define CRB_NIU_XG_PAUSE_CTL_P0        0x1
++#define CRB_NIU_XG_PAUSE_CTL_P1        0x8
++
+ #endif
+-- 
+1.6.0.2
 
 
