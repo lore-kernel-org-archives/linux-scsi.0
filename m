@@ -1,14 +1,14 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [PATCH 01/18] qla2xxx: Use less stack to emit logging messages.
-Date: Fri, 18 Nov 2011 09:03:05 -0800
-Message-ID: <1321635802-16491-2-git-send-email-chad.dupuis@qlogic.com>
+Subject: [PATCH 04/18] qla2xxx: Proper cleanup of pass through commands when firmware returns error.
+Date: Fri, 18 Nov 2011 09:03:08 -0800
+Message-ID: <1321635802-16491-5-git-send-email-chad.dupuis@qlogic.com>
 References: <1321635802-16491-1-git-send-email-chad.dupuis@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-va3.bigfish.com ([216.32.180.10]:7313 "EHLO
-	VA3EHSOBE009.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758153Ab1KRRQ2 (ORCPT
+Received: from mail-va3.bigfish.com ([216.32.180.10]:6650 "EHLO
+	VA3EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758178Ab1KRRQ2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 18 Nov 2011 12:16:28 -0500
 In-Reply-To: <1321635802-16491-1-git-send-email-chad.dupuis@qlogic.com>
@@ -17,324 +17,152 @@ List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com
 Cc: giridhar.malavali@qlogic.com, chad.dupuis@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Perches <joe@perches.ccom>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Return early when logging level too low.
-Use normal kernel codeing style for function braces.
-Add const where appropriate to logging functions.
-Remove now unused #define QL_DBG_BUF_LEN.
-
-Signed-off-by: Joe Perches <joe@perches.com>
-Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
 Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_dbg.c |  212 +++++++++++++++++++--------------------
- drivers/scsi/qla2xxx/qla_dbg.h |   10 +-
- 2 files changed, 107 insertions(+), 115 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c |   73 ++++++++++++++++++++++++++++-----------
+ drivers/scsi/qla2xxx/qla_os.c  |   19 +++++-----
+ 2 files changed, 61 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index f3cddd5..6db16af 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -1664,34 +1664,31 @@ qla81xx_fw_dump_failed:
-  * msg:   The message to be displayed.
-  */
- void
--ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-+ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, const char *fmt, ...)
-+{
-+	va_list va;
-+	struct va_format vaf;
- 
--	char pbuf[QL_DBG_BUF_LEN];
--	va_list ap;
--	uint32_t len;
--	struct pci_dev *pdev = NULL;
-+	if ((level & ql2xextended_error_logging) != level)
-+		return;
- 
--	memset(pbuf, 0, QL_DBG_BUF_LEN);
-+	va_start(va, fmt);
- 
--	va_start(ap, msg);
-+	vaf.fmt = fmt;
-+	vaf.va = &va;
- 
--	if ((level & ql2xextended_error_logging) == level) {
--		if (vha != NULL) {
--			pdev = vha->hw->pdev;
--			/* <module-name> <pci-name> <msg-id>:<host> Message */
--			sprintf(pbuf, "%s [%s]-%04x:%ld: ", QL_MSGHDR,
--			    dev_name(&(pdev->dev)), id + ql_dbg_offset,
--			    vha->host_no);
--		} else
--			sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
--			    "0000:00:00.0", id + ql_dbg_offset);
--
--		len = strlen(pbuf);
--		vsprintf(pbuf+len, msg, ap);
--		pr_warning("%s", pbuf);
-+	if (vha != NULL) {
-+		const struct pci_dev *pdev = vha->hw->pdev;
-+		/* <module-name> <pci-name> <msg-id>:<host> Message */
-+		pr_warn("%s [%s]-%04x:%ld: %pV",
-+			QL_MSGHDR, dev_name(&(pdev->dev)), id + ql_dbg_offset,
-+			vha->host_no, &vaf);
-+	} else {
-+		pr_warn("%s [%s]-%04x: : %pV",
-+			QL_MSGHDR, "0000:00:00.0", id + ql_dbg_offset, &vaf);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index b6023e9..c5d6cd1 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1895,6 +1895,45 @@ qla2x00_status_cont_entry(struct rsp_que *rsp, sts_cont_entry_t *pkt)
  	}
- 
--	va_end(ap);
-+	va_end(va);
- 
  }
  
-@@ -1710,31 +1707,27 @@ ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-  * msg:   The message to be displayed.
-  */
- void
--ql_dbg_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
--
--	char pbuf[QL_DBG_BUF_LEN];
--	va_list ap;
--	uint32_t len;
-+ql_dbg_pci(uint32_t level, struct pci_dev *pdev, int32_t id,
-+	   const char *fmt, ...)
++static int
++qla2x00_free_sp_ctx(scsi_qla_host_t *vha, srb_t *sp)
 +{
-+	va_list va;
-+	struct va_format vaf;
- 
- 	if (pdev == NULL)
- 		return;
-+	if ((level & ql2xextended_error_logging) != level)
-+		return;
- 
--	memset(pbuf, 0, QL_DBG_BUF_LEN);
--
--	va_start(ap, msg);
--
--	if ((level & ql2xextended_error_logging) == level) {
--		/* <module-name> <dev-name>:<msg-id> Message */
--		sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
--		    dev_name(&(pdev->dev)), id + ql_dbg_offset);
-+	va_start(va, fmt);
- 
--		len = strlen(pbuf);
--		vsprintf(pbuf+len, msg, ap);
--		pr_warning("%s", pbuf);
--	}
-+	vaf.fmt = fmt;
-+	vaf.va = &va;
- 
--	va_end(ap);
-+	/* <module-name> <dev-name>:<msg-id> Message */
-+	pr_warn("%s [%s]-%04x: : %pV",
-+		QL_MSGHDR, dev_name(&(pdev->dev)), id + ql_dbg_offset, &vaf);
- 
-+	va_end(va);
- }
- 
- /*
-@@ -1751,47 +1744,47 @@ ql_dbg_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
-  * msg:   The message to be displayed.
-  */
- void
--ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
--
--	char pbuf[QL_DBG_BUF_LEN];
--	va_list ap;
--	uint32_t len;
--	struct pci_dev *pdev = NULL;
--
--	memset(pbuf, 0, QL_DBG_BUF_LEN);
--
--	va_start(ap, msg);
--
--	if (level <= ql_errlev) {
--		if (vha != NULL) {
--			pdev = vha->hw->pdev;
--			/* <module-name> <msg-id>:<host> Message */
--			sprintf(pbuf, "%s [%s]-%04x:%ld: ", QL_MSGHDR,
--			    dev_name(&(pdev->dev)), id, vha->host_no);
--		} else
--			sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
--			    "0000:00:00.0", id);
-+ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, const char *fmt, ...)
-+{
-+	va_list va;
-+	struct va_format vaf;
-+	char pbuf[128];
- 
--		len = strlen(pbuf);
--			vsprintf(pbuf+len, msg, ap);
-+	if (level > ql_errlev)
-+		return;
- 
--		switch (level) {
--		case 0: /* FATAL LOG */
--			pr_crit("%s", pbuf);
--			break;
--		case 1:
--			pr_err("%s", pbuf);
--			break;
--		case 2:
--			pr_warn("%s", pbuf);
--			break;
--		default:
--			pr_info("%s", pbuf);
--			break;
--		}
-+	if (vha != NULL) {
-+		const struct pci_dev *pdev = vha->hw->pdev;
-+		/* <module-name> <msg-id>:<host> Message */
-+		snprintf(pbuf, sizeof(pbuf), "%s [%s]-%04x:%ld: ",
-+			QL_MSGHDR, dev_name(&(pdev->dev)), id, vha->host_no);
++	struct qla_hw_data *ha = vha->hw;
++	struct srb_ctx *ctx;
++
++	if (!sp->ctx)
++		return 1;
++
++	ctx = sp->ctx;
++
++	if (ctx->type == SRB_LOGIN_CMD ||
++	    ctx->type == SRB_LOGOUT_CMD ||
++	    ctx->type == SRB_TM_CMD) {
++		((struct srb_iocb*)ctx->u.iocb_cmd)->done(sp);
++		return 0;
++	} else if (ctx->type == SRB_ADISC_CMD) {
++		((struct srb_iocb*)ctx->u.iocb_cmd)->free(sp);
++		return 0;
 +	} else {
-+		snprintf(pbuf, sizeof(pbuf), "%s [%s]-%04x: : ",
-+			QL_MSGHDR, "0000:00:00.0", id);
++		struct fc_bsg_job *bsg_job;
++
++		bsg_job = ctx->u.bsg_job;
++		if (ctx->type == SRB_ELS_CMD_HST ||
++		    ctx->type == SRB_CT_CMD)
++			kfree(sp->fcport);
++
++		bsg_job->reply->reply_data.ctels_reply.status =
++		    FC_CTELS_STATUS_OK;
++		bsg_job->reply->result = DID_ERROR << 16;
++		bsg_job->reply->reply_payload_rcv_len = 0;
++		kfree(sp->ctx);
++		mempool_free(sp, ha->srb_mempool);
++		bsg_job->job_done(bsg_job);
++		return 0;
 +	}
-+	pbuf[sizeof(pbuf) - 1] = 0;
++	return 1;
++}
 +
-+	va_start(va, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &va;
-+
-+	switch (level) {
-+	case 0: /* FATAL LOG */
-+		pr_crit("%s%pV", pbuf, &vaf);
-+		break;
-+	case 1:
-+		pr_err("%s%pV", pbuf, &vaf);
-+		break;
-+	case 2:
-+		pr_warn("%s%pV", pbuf, &vaf);
-+		break;
-+	default:
-+		pr_info("%s%pV", pbuf, &vaf);
-+		break;
+ /**
+  * qla2x00_error_entry() - Process an error entry.
+  * @ha: SCSI driver HA context
+@@ -1905,7 +1944,7 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
+ {
+ 	srb_t *sp;
+ 	struct qla_hw_data *ha = vha->hw;
+-	uint32_t handle = LSW(pkt->handle);
++	const char func[] = "ERROR-IOCB";
+ 	uint16_t que = MSW(pkt->handle);
+ 	struct req_que *req = ha->req_q_map[que];
+ 
+@@ -1928,28 +1967,20 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
+ 		ql_dbg(ql_dbg_async, vha, 0x502f,
+ 		    "UNKNOWN flag error.\n");
+ 
+-	/* Validate handle. */
+-	if (handle < MAX_OUTSTANDING_COMMANDS)
+-		sp = req->outstanding_cmds[handle];
+-	else
+-		sp = NULL;
+-
++	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
+ 	if (sp) {
+-		/* Free outstanding command slot. */
+-		req->outstanding_cmds[handle] = NULL;
+-
+-		/* Bad payload or header */
+-		if (pkt->entry_status &
+-		    (RF_INV_E_ORDER | RF_INV_E_COUNT |
+-		     RF_INV_E_PARAM | RF_INV_E_TYPE)) {
+-			sp->cmd->result = DID_ERROR << 16;
+-		} else if (pkt->entry_status & RF_BUSY) {
+-			sp->cmd->result = DID_BUS_BUSY << 16;
+-		} else {
+-			sp->cmd->result = DID_ERROR << 16;
++		if (qla2x00_free_sp_ctx (vha, sp)) {
++			if (pkt->entry_status &
++			    (RF_INV_E_ORDER | RF_INV_E_COUNT |
++			     RF_INV_E_PARAM | RF_INV_E_TYPE)) {
++				sp->cmd->result = DID_ERROR << 16;
++			} else if (pkt->entry_status & RF_BUSY) {
++				sp->cmd->result = DID_BUS_BUSY << 16;
++			} else {
++				sp->cmd->result = DID_ERROR << 16;
++			}
++			qla2x00_sp_compl(ha, sp);
+ 		}
+-		qla2x00_sp_compl(ha, sp);
+-
+ 	} else if (pkt->entry_type == COMMAND_A64_TYPE || pkt->entry_type ==
+ 		COMMAND_TYPE || pkt->entry_type == COMMAND_TYPE_7
+ 		|| pkt->entry_type == COMMAND_TYPE_6) {
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index ae1699f..c9a7452 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3690,16 +3690,6 @@ qla2x00_sp_free_dma(srb_t *sp)
+ 		sp->flags &= ~SRB_CRC_CTX_DMA_VALID;
  	}
  
--	va_end(ap);
-+	va_end(va);
- }
- 
- /*
-@@ -1809,43 +1802,44 @@ ql_log(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
-  * msg:   The message to be displayed.
-  */
- void
--ql_log_pci(uint32_t level, struct pci_dev *pdev, int32_t id, char *msg, ...) {
+-	CMD_SP(cmd) = NULL;
+-}
 -
--	char pbuf[QL_DBG_BUF_LEN];
--	va_list ap;
--	uint32_t len;
-+ql_log_pci(uint32_t level, struct pci_dev *pdev, int32_t id,
-+	   const char *fmt, ...)
+-static void
+-qla2x00_sp_final_compl(struct qla_hw_data *ha, srb_t *sp)
+-{
+-	struct scsi_cmnd *cmd = sp->cmd;
+-
+-	qla2x00_sp_free_dma(sp);
+-
+ 	if (sp->flags & SRB_FCP_CMND_DMA_VALID) {
+ 		struct ct6_dsd *ctx = sp->ctx;
+ 		dma_pool_free(ha->fcp_cmnd_dma_pool, ctx->fcp_cmnd,
+@@ -3711,6 +3701,15 @@ qla2x00_sp_final_compl(struct qla_hw_data *ha, srb_t *sp)
+ 		sp->ctx = NULL;
+ 	}
+ 
++	CMD_SP(cmd) = NULL;
++}
++
++static void
++qla2x00_sp_final_compl(struct qla_hw_data *ha, srb_t *sp)
 +{
-+	va_list va;
-+	struct va_format vaf;
-+	char pbuf[128];
- 
- 	if (pdev == NULL)
- 		return;
-+	if (level > ql_errlev)
-+		return;
- 
--	memset(pbuf, 0, QL_DBG_BUF_LEN);
--
--	va_start(ap, msg);
--
--	if (level <= ql_errlev) {
--		/* <module-name> <dev-name>:<msg-id> Message */
--		sprintf(pbuf, "%s [%s]-%04x: : ", QL_MSGHDR,
--		    dev_name(&(pdev->dev)), id);
--
--		len = strlen(pbuf);
--		vsprintf(pbuf+len, msg, ap);
--		switch (level) {
--		case 0: /* FATAL LOG */
--			pr_crit("%s", pbuf);
--			break;
--		case 1:
--			pr_err("%s", pbuf);
--			break;
--		case 2:
--			pr_warn("%s", pbuf);
--			break;
--		default:
--			pr_info("%s", pbuf);
--			break;
--		}
-+	/* <module-name> <dev-name>:<msg-id> Message */
-+	snprintf(pbuf, sizeof(pbuf), "%s [%s]-%04x: : ",
-+		 QL_MSGHDR, dev_name(&(pdev->dev)), id);
-+	pbuf[sizeof(pbuf) - 1] = 0;
++	struct scsi_cmnd *cmd = sp->cmd;
 +
-+	va_start(va, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &va;
-+
-+	switch (level) {
-+	case 0: /* FATAL LOG */
-+		pr_crit("%s%pV", pbuf, &vaf);
-+		break;
-+	case 1:
-+		pr_err("%s%pV", pbuf, &vaf);
-+		break;
-+	case 2:
-+		pr_warn("%s%pV", pbuf, &vaf);
-+		break;
-+	default:
-+		pr_info("%s%pV", pbuf, &vaf);
-+		break;
- 	}
- 
--	va_end(ap);
-+	va_end(va);
++	qla2x00_sp_free_dma(sp);
+ 	mempool_free(sp, ha->srb_mempool);
+ 	cmd->scsi_done(cmd);
  }
- 
- void
-@@ -1888,7 +1882,7 @@ ql_dump_buffer(uint32_t level, scsi_qla_host_t *vha, int32_t id,
- 		ql_dbg(level, vha, id, "----------------------------------"
- 		    "----------------------------\n");
- 
--		ql_dbg(level, vha, id, "");
-+		ql_dbg(level, vha, id, " ");
- 		for (cnt = 0; cnt < size;) {
- 			c = *b++;
- 			printk("%02x", (uint32_t) c);
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.h b/drivers/scsi/qla2xxx/qla_dbg.h
-index 98a377b..0692814 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.h
-+++ b/drivers/scsi/qla2xxx/qla_dbg.h
-@@ -245,14 +245,14 @@ struct qla2xxx_fw_dump {
- extern int ql_errlev;
- 
- void
--ql_dbg(uint32_t, scsi_qla_host_t *vha, int32_t, char *, ...);
-+ql_dbg(uint32_t, scsi_qla_host_t *vha, int32_t, const char *fmt, ...);
- void
--ql_dbg_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
-+ql_dbg_pci(uint32_t, struct pci_dev *pdev, int32_t, const char *fmt, ...);
- 
- void
--ql_log(uint32_t, scsi_qla_host_t *vha, int32_t, char *, ...);
-+ql_log(uint32_t, scsi_qla_host_t *vha, int32_t, const char *fmt, ...);
- void
--ql_log_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
-+ql_log_pci(uint32_t, struct pci_dev *pdev, int32_t, const char *fmt, ...);
- 
- /* Debug Levels */
- /* The 0x40000000 is the max value any debug level can have
-@@ -275,5 +275,3 @@ ql_log_pci(uint32_t, struct pci_dev *pdev, int32_t, char *, ...);
- #define ql_dbg_misc	0x00010000 /* For dumping everything that is not
- 				    * not covered by upper categories
- 				    */
--
--#define QL_DBG_BUF_LEN	512
 -- 
 1.6.0.2
 
