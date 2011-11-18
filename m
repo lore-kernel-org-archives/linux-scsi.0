@@ -1,53 +1,53 @@
-From: David Daney <ddaney.cavm@gmail.com>
-Subject: [PATCH] mptsas: Add device ID for SAS1068_820XELP.
-Date: Fri, 18 Nov 2011 14:13:42 -0800
-Message-ID: <1321654422-27617-1-git-send-email-ddaney.cavm__5187.10964029214$1321654451$gmane$org@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:43259 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753517Ab1KRWNr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 17:13:47 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Fri, 18 Nov 2011 23:28:19 +0000
+Message-ID: <6E21E5352C11B742B20C142EB499E0481AA6D4CC@TK5EX14MBXC128.redmond.corp.microsoft.com>
+References: <1320776028-29568-1-git-send-email-kys@microsoft.com>
+	 <1321554393.3041.77.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA6D232@TK5EX14MBXC128.redmond.corp.microsoft.com>
+ <1321635631.3022.44.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1321635631.3022.44.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, Eric Moore <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@suse.de>, Kashyap Desai <kashyap.desai@lsi.com>, DL-MPTFusionLinux@lsi.com, support@lsi
-Cc: Chandrakala Chavva <cchavva@caviumnetworks.com>, David Daney <david.daney@cavium.com>
 
-From: Chandrakala Chavva <cchavva@caviumnetworks.com>
-
-We need this new devid to be able to use this board.
-
-Signed-off-by: Chandrakala Chavva <cchavva@caviumnetworks.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/message/fusion/lsi/mpi_cnfg.h |    1 +
- drivers/message/fusion/mptsas.c       |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-index 22027e7..d9bcfba 100644
---- a/drivers/message/fusion/lsi/mpi_cnfg.h
-+++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-@@ -583,6 +583,7 @@ typedef struct _MSG_CONFIG_REPLY
- #define MPI_MANUFACTPAGE_DEVID_SAS1066E             (0x005A)
- #define MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
- #define MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
-+#define MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP      (0x0059)
- #define MPI_MANUFACTPAGE_DEVID_SAS1078              (0x0062)
- 
- 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 9d95042..551262e 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5376,6 +5376,8 @@ static struct pci_device_id mptsas_pci_table[] = {
- 		PCI_ANY_ID, PCI_ANY_ID },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1078,
- 		PCI_ANY_ID, PCI_ANY_ID },
-+	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP,
-+		PCI_ANY_ID, PCI_ANY_ID },
- 	{0}	/* Terminating entry */
- };
- MODULE_DEVICE_TABLE(pci, mptsas_pci_table);
--- 
-1.7.2.3
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+RnJpZGF5LCBOb3ZlbWJlciAxOCwgMjAxMSAxMjowMSBQTQ0KPiBUbzogS1kgU3Jpbml2YXNhbg0K
+PiBDYzogZ3JlZ2toQHN1c2UuZGU7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7DQo+IGRl
+dmVsQGxpbnV4ZHJpdmVycHJvamVjdC5vcmc7IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3Jn
+OyBsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IG9oZXJpbmdAc3VzZS5jb207IGhjaEBp
+bmZyYWRlYWQub3JnDQo+IFN1YmplY3Q6IFJFOiBbUEFUQ0ggMS8xXSBTdGFnaW5nOiBodjogc3Rv
+cnZzYzogTW92ZSB0aGUgc3RvcmFnZSBkcml2ZXIgb3V0IG9mIHRoZQ0KPiBzdGFnaW5nIGFyZWEN
+Cj4gDQo+IE9uIEZyaSwgMjAxMS0xMS0xOCBhdCAwNDo1MyArMDAwMCwgS1kgU3Jpbml2YXNhbiB3
+cm90ZToNCj4gPiA+IEkgc3RpbGwgdGhpbmsgeW91IG5lZWQgdG8gZGlzYWJsZSBjbHVzdGVyaW5n
+IGFuZCBqdW5rIHRoZSBidmVjIG1lcmdlDQo+ID4gPiBmdW5jdGlvbi4gIFlvdXIgb2JqZWN0IHNl
+ZW1zIHRvIGJlIHRvIGFjY3VtdWxhdGUgaW4gcGFnZSBzaXplIG11bHRpcGxlcw0KPiA+ID4gKGFu
+ZCBub3QgYWdncmVnYXRlIG92ZXIgdGhpcykgLi4uIHRoYXQncyB3aGF0IGNsdXN0ZXJpbmcgaXMg
+ZGVzaWduZWQgdG8NCj4gPiA+IGRvLg0KPiA+DQo+ID4gQXMgcGFydCBvZiBhZGRyZXNzaW5nIHlv
+dXIgZmlyc3Qgcm91bmQgb2YgY29tbWVudHMsIEkgZXhwZXJpbWVudGVkIHdpdGggeW91cg0KPiA+
+IHN1Z2dlc3Rpb25zIGFuZCBJIGNvdWxkIG5vdCBnZXQgcmlkIG9mIHRoZSBjb2RlIHRoYXQgZG9l
+cyB0aGUgYm91bmNlIGJ1ZmZlcg0KPiBoYW5kbGluZy4NCj4gPiBJIGNvdWxkIGdlbmVyYXRlIEkv
+TyBwYXR0ZXJucyB0aGF0IHdvdWxkIHJlcXVpcmUgYm91bmNlIGJ1ZmZlciBoYW5kbGluZyB3aXRo
+DQo+IHlvdXINCj4gPiBzdWdnZXN0aW9ucyBpbiBwbGFjZS4NCj4gDQo+IFRoZXJlIGFyZSB0d28g
+c2VwYXJhdGUgdGhpbmdzIGhlcmUuICBPbmUgaXMgdGhlIHNjYXR0ZXIgZ2F0aGVyIGxpc3QNCj4g
+Ym91bmNlIGJ1ZmZlciBwcm9jZXNzaW5nLCB3aGljaCBpcyBhIGJpdCBuYXN0eSwgYnV0IGlmIHlv
+dSB3YW50IHRvIHVzZSA8DQo+IDRrYiBibG9jayBzaXplIGZpbGVzeXN0ZW1zLCBJIHN1cHBvc2Ug
+SSBoYXZlIHRvIGFjY2VwdCB0aGF0IHlvdSBuZWVkIGl0DQo+IChhbHRob3VnaCBzaW5jZSBpdCdz
+IGEgZ2xvYmFsIGZhdWx0IG9mIHRoZSBoeXBlcnZpc29yLCBwZXJoYXBzIGl0IHNob3VsZA0KPiBz
+aXQgaW4gdGhlIGh5cGVydmlzb3IgaW50ZXJmYWNlIGxheWVyLCBzbyB0aGF0IGV2ZXJ5IFNHIGJh
+c2VkIHRyYW5zcG9ydA0KPiBjYW4gdXNlIGl0KS4gIFRoZSBvdGhlciBpcyB0aGUgYmlvdmVjIG1l
+cmdlIGZ1bmN0aW9uIGFkZGl0aW9uLiAgVGhlDQo+IHB1cnBvc2Ugb2YgdGhpcyBmdW5jdGlvbiBz
+ZWVtcyB0byBiZSB0byBlbnN1cmUgeW91IGdldCBvbmUgU0cgZW50cnkgZm9yDQo+IGV2ZXJ5IHBh
+Z2UgKGlmIEkgcmVhZCBpdCByaWdodCk/ICBJbiB0aGF0IGNhc2UsIHlvdSBkb24ndCBuZWVkIGFu
+eSBvZg0KPiB0aGlzIHNwZWNpYWwgY2FzaW5nLiAgVGhlIGZsYWcgRElTQUJMRV9DTFVTVEVSSU5H
+IGFjaGlldmVzIHRoZSBzYW1lDQo+IHRoaW5nLg0KDQpUaGFua3MgSmFtZXMuIEkgd2lsbCBrZWVw
+IHlvdSBwb3N0ZWQgb24gbXkgcHJvZ3Jlc3Mgb24gdGhpcyBpc3N1ZS4NCg0KUmVnYXJkcywNCg0K
+Sy4gWQ0KDQo=
