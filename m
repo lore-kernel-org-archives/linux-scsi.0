@@ -1,56 +1,41 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: RE: [PATCH] scsi_dh_rdac: Fix error path
-Date: Fri, 18 Nov 2011 09:34:01 -0500
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD9108C7178@RTPMVEXC1-PRD.hq.netapp.com>
-References: <1321577067-26332-1-git-send-email-richard@nod.at>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
+ of the staging area
+Date: Fri, 18 Nov 2011 11:00:31 -0600
+Message-ID: <1321635631.3022.44.camel@dabdike.int.hansenpartnership.com>
+References: <1320776028-29568-1-git-send-email-kys@microsoft.com>
+	 <1321554393.3041.77.camel@dabdike.int.hansenpartnership.com>
+	 <6E21E5352C11B742B20C142EB499E0481AA6D232@TK5EX14MBXC128.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:32704 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757642Ab1KROeF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 09:34:05 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1321577067-26332-1-git-send-email-richard@nod.at>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <6E21E5352C11B742B20C142EB499E0481AA6D232@TK5EX14MBXC128.redmond.corp.microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Weinberger <richard@nod.at>, JBottomley@parallels.com
-Cc: Somasundaram.Krishnasamy@lsi.com, yanling.qi@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Looks good to me..
+On Fri, 2011-11-18 at 04:53 +0000, KY Srinivasan wrote:
+> > I still think you need to disable clustering and junk the bvec merge
+> > function.  Your object seems to be to accumulate in page size multiples
+> > (and not aggregate over this) ... that's what clustering is designed to
+> > do.
+> 
+> As part of addressing your first round of comments, I experimented with your
+> suggestions and I could not get rid of the code that does the bounce buffer handling.
+> I could generate I/O patterns that would require bounce buffer handling with your
+> suggestions in place.
 
-> -----Original Message-----
-> From: Richard Weinberger [mailto:richard@nod.at]
-> Sent: Thursday, November 17, 2011 6:44 PM
-> To: JBottomley@parallels.com
-> Cc: Moger, Babu; Somasundaram.Krishnasamy@lsi.com; yanling.qi@lsi.com;
-> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Richard
-> Weinberger
-> Subject: [PATCH] scsi_dh_rdac: Fix error path
-> 
-> If create_singlethread_workqueue() failes, rdac_init should fail too.
-> 
-> Signed-off-by: Richard Weinberger <richard@nod.at>
-> ---
->  drivers/scsi/device_handler/scsi_dh_rdac.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index 1d31279..2802394 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -934,6 +934,8 @@ static int __init rdac_init(void)
->  	if (!kmpath_rdacd) {
->  		scsi_unregister_device_handler(&rdac_dh);
->  		printk(KERN_ERR "kmpath_rdacd creation failed.\n");
-> +
-> +		r = -EINVAL;
->  	}
->  done:
->  	return r;
-> --
-> 1.7.7.3
+There are two separate things here.  One is the scatter gather list
+bounce buffer processing, which is a bit nasty, but if you want to use <
+4kb block size filesystems, I suppose I have to accept that you need it
+(although since it's a global fault of the hypervisor, perhaps it should
+sit in the hypervisor interface layer, so that every SG based transport
+can use it).  The other is the biovec merge function addition.  The
+purpose of this function seems to be to ensure you get one SG entry for
+every page (if I read it right)?  In that case, you don't need any of
+this special casing.  The flag DISABLE_CLUSTERING achieves the same
+thing.
 
+James
