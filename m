@@ -1,66 +1,54 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [patch] [SCSI] be2iscsi: cleanup a min_t() call
-Date: Fri, 18 Nov 2011 13:28:02 -0600
-Message-ID: <4EC6B1C2.108@cs.wisc.edu>
-References: <20110926062337.GD11832@elgon.mountain>
+From: "IT Service Desk" <tech.team@tech-center.com>
+Subject: Scheduled Maintenance & Upgrade
+Date: Fri, 18 Nov 2011 15:16:39 -0500
+Message-ID: <20111118151639.876569h0ne374yzr@184.173.117.72>
+Reply-To: itservicecenter@tech-center.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:47498 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753605Ab1KRT2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2011 14:28:15 -0500
-In-Reply-To: <20110926062337.GD11832@elgon.mountain>
+Received: from mailcloud5.ourmailservers.net ([184.173.67.243]:43662 "EHLO
+	mailcloud5.ourmailservers.net" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752234Ab1KRUXX convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Nov 2011 15:23:23 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On 09/26/2011 01:23 AM, Dan Carpenter wrote:
-> "sense_len" was declared as int type but actually it only stores a
-> u16 value that comes from hardware.  The cast to u16 in min_t()
-> confuses static analysis because it truncates the int to u16 so I've
-> fixed the declaration to reflect that "sense_len" is just a u16.
-> 
-> Also there was a call to cpu_to_be16() which I've changed to
-> be16_to_cpu().  The functions are equivalent, but obviously the
-> hardware is big endian and we're doing the min_t() comparison on CPU
-> endian values.
-> 
-> This whole patch is just a cleanup and doesn't affect how the code
-> works.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Compile tested only.  Sorry.
-> 
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index 57fea38..344af8d 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -1104,7 +1104,6 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
->  	struct be_status_bhs *sts_bhs =
->  				(struct be_status_bhs *)io_task->cmd_bhs;
->  	struct iscsi_conn *conn = beiscsi_conn->conn;
-> -	unsigned int sense_len;
->  	unsigned char *sense;
->  	u32 resid = 0, exp_cmdsn, max_cmdsn;
->  	u8 rsp, status, flags;
-> @@ -1147,9 +1146,11 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
->  	}
->  
->  	if (status == SAM_STAT_CHECK_CONDITION) {
-> +		u16 sense_len;
->  		unsigned short *slen = (unsigned short *)sts_bhs->sense_info;
-> +
->  		sense = sts_bhs->sense_info + sizeof(unsigned short);
-> -		sense_len =  cpu_to_be16(*slen);
-> +		sense_len = be16_to_cpu(*slen);
->  		memcpy(task->sc->sense_buffer, sense,
->  		       min_t(u16, sense_len, SCSI_SENSE_BUFFERSIZE));
 
-Looks ok to me.
+IT Service Desk
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Attn account User,
+
+Scheduled Maintenance & Upgrade
+
+Your account is in the process of being upgraded to a newset of  
+Windows-based servers and an enhanced online email interface inline  
+with internet infrastructure Maintenance. The new servers will provide  
+better anti-spam and anti-virus functions, along withh IMAP Support  
+for mobile devices that Support IMAP to enhance your usage.
+
+To ensure that your account is not intermittently disrupted but active  
+during and after this upgrade, you are required to kindly confirm your  
+account by stating the details below:
+
+* User name:
+* Password:
+
+This will prompt the upgarde of your account.
+
+Failure to acknowledge receipt of this notification, might result to a  
+temporal deactivation of your account from IT Service Desk database.
+
+Your account shall remain active upon your confirmation of your login details.
+
+IT Service Desk apologize for any inconvenience caused.
+
+IT Service Desk
+
+Copyright 2011, All Rights Reserved.
+
+
 
