@@ -1,48 +1,78 @@
-From: Matt <mdm@iinet.net.au>
-Subject: Re: SCSI oops on USB disconnect, was: Issues with xHCI and USB 3.0
-Date: Fri, 18 Nov 2011 16:18:06 +1100
-Message-ID: <4EC5EA8E.40102@iinet.net.au>
-References: <4EA54EBF.80905@iinet.net.au> <20111025072957.GA5821@xanatos> <4EA68418.9000504@iinet.net.au> <20111025113458.GA4590@xanatos> <4EA6B3FC.9010808@iinet.net.au> <20111027112831.GB4790@xanatos> <20111102190224.GB29845@xanatos> <4EB24040.1060208@iinet.net.au> <20111103202258.GA3585@xanatos> <4EB32928.6000901@iinet.net.au> <20111104144840.GA3079@xanatos> <4EBBC920.3020706@iinet.net.au>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: [SCSI] be2iscsi: fix chip cleanup
+Date: Fri, 18 Nov 2011 10:57:00 +0300
+Message-ID: <20111118075659.GE4349@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Lb0e7rgc7IsuDeGj"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound.icp-osb-irony-out8.iinet.net.au ([203.59.1.134]:4007
-	"EHLO outbound.icp-osb-irony-out8.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751046Ab1KRFSH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Nov 2011 00:18:07 -0500
-Received: from [192.168.1.44]
-	by mx.matt-sam.com with esmtp (Exim 4.63)
-	(envelope-from <mdm@iinet.net.au>)
-	id 1RRGpu-0003rM-N3
-	for linux-scsi@vger.kernel.org; Fri, 18 Nov 2011 16:18:02 +1100
-In-Reply-To: <4EBBC920.3020706@iinet.net.au>
+Received: from acsinet15.oracle.com ([141.146.126.227]:37737 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199Ab1KRHzz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2011 02:55:55 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
-On 10/11/2011 11:52 PM, Matt wrote:
->
-> Hello all,
->
-> Please let me know what type of debugging information you require from 
-> me to give you a good view of the issue.
->
-> Many thanks in advance.
->
-> Cheers,
->
-> Matt.
->
 
-Hi,
+--Lb0e7rgc7IsuDeGj
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I appreciate that there are a lot of questions being asked, but I'm 
-pretty keen to attempt to resolve this problem.  Can you please suggest 
-how I can get this looked at?
+Hi Jayamohan,
 
-Thanks,
+My static checker complains about 069adc7b061 "[SCSI] be2iscsi: fix
+chip cleanup"
 
-Matt.
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -202,8 +202,8 @@ int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigne=
+d short chute)
+                           OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
+=20
+        req->chute =3D chute;
+-       req->hdr_ring_id =3D 0;
+-       req->data_ring_id =3D 0;
++       req->hdr_ring_id =3D cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba));
+            ^^^^^^^^^^^^
++       req->data_ring_id =3D cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba));
+            ^^^^^^^^^^^^^
 
+These two are only 8 bits so we lose part of the le16 value.  My
+guess is that we can just remove the calls to cpu_to_le16() and
+save the lower bits, since that what this code does on Intel.  But I
+don't know this subsystem.
+
+In mgmt_open_connection() ->hdr_ring_id is a 16bit field, but we just
+store a CPU endian HWI_GET_DEF_HDRQ_ID() into it.
+
+regards,
+dan carpenter
+
+
+--Lb0e7rgc7IsuDeGj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJOxg/LAAoJEOnZkXI/YHqRcgcQAJV45xCGg8zLPFIHgRT3yFKG
+LcETMnhEWqZQr6Sduo2I6ZXUe4/CzFZnwWxEs8aLWFm2aZFUqoUwUuomfILDF4+Q
+1tiPvcQWSozyhZ7gGvji+st9qcDr3XuoLKrl04vzqDrvPhDAPPyaPhY8wAAhZyRj
+GNa/RToY4vpnDzAqW0j4ldHuVos3TvG5d9CoNv7Sg7YWXyIWp13YH7STWdqEDNi5
+nzJPtYfFdqgQcGsVS/iBIwMM74+NsNCBaNmBnMtOPV61Ysx5sjvlGMFSvnV4mvbK
+Xd74caSJgSA9V8x2hAk5Jgf82qlL/LCEoPUoqrYNJZqLVfqL0s/30L6/Jdt3tiRi
+tqI69k7tauN3/az9PuNDoGMeyGJNz5i6PGZZ3pQ9oy7E2lBiQerck+zHDzcAk+Qs
+B8BMo4QGCSdKvo9hVRAnwO0uqYVAxvBlix28cE7LSa4lre9GoZc+zWECByvUUZjg
+4oSt1WwGzRhlurFqKJncJHnRJtvXPcDiizPhK56qUTqT++isZDCvJLoJLAUfAIVJ
+ey4kruj8d42GjBHHs+UMZwupTfUVKoP+jHeH+hHho8kqi4dRJGFEniaOJoKaVbzI
+ZSeZAiqMBp30UvpgudMckgCh+G2Cda8o+NvJV8Oui7Djkg+HTtIwdas8RGnTuwdb
+QY3NTv1BxUYwriVdTtPk
+=dwMF
+-----END PGP SIGNATURE-----
+
+--Lb0e7rgc7IsuDeGj--
