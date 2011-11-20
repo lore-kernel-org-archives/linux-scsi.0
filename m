@@ -1,233 +1,91 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] bnx2fc: Reduce object size by consolidating formats
-Date: Sat, 19 Nov 2011 13:35:16 -0800
-Message-ID: <fe83ffc5f085b65765262b3c5c74740eb82c9442.1321738492.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Matt <mdm@iinet.net.au>
+Subject: Re: SCSI oops on USB disconnect, was: Issues with xHCI and USB 3.0
+Date: Sun, 20 Nov 2011 15:52:20 +1100
+Message-ID: <4EC88784.7020901@iinet.net.au>
+References: <4EA54EBF.80905@iinet.net.au> <20111025072957.GA5821@xanatos> <4EA68418.9000504@iinet.net.au> <20111025113458.GA4590@xanatos> <4EA6B3FC.9010808@iinet.net.au> <20111027112831.GB4790@xanatos> <20111102190224.GB29845@xanatos> <4EB24040.1060208@iinet.net.au> <20111103202258.GA3585@xanatos> <4EB32928.6000901@iinet.net.au> <20111104144840.GA3079@xanatos> <CAO+b5-oY8qnhL=6tR2TO3HC1NJKEx_2x4SOTqFW5ZSnbf48Urg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from outbound.icp-qv1-irony-out3.iinet.net.au ([203.59.1.148]:54773
+	"EHLO outbound.icp-qv1-irony-out3.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755235Ab1KTEw3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Nov 2011 23:52:29 -0500
+In-Reply-To: <CAO+b5-oY8qnhL=6tR2TO3HC1NJKEx_2x4SOTqFW5ZSnbf48Urg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Sarah Sharp <sarah.a.sharp@linux.intel.com>, Matt <mdm@iinet.net.au>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Deduplication of formats and consolidating tests
-makes the object much smaller.
+On 18/11/2011 10:31 PM, Bart Van Assche wrote:
+>
+>> [  325.497799] Call Trace:
+>> [  325.499007]  [<ffffffff8122c4eb>] ? blk_peek_request+0x3f/0x1d2
+>> [  325.500236]  [<ffffffff813148e3>] scsi_request_fn+0x48/0x409
+>> [  325.501461]  [<ffffffff811163d4>] ? kmem_cache_free+0x72/0xab
+>> [  325.502685]  [<ffffffff81227338>] __blk_run_queue+0x1b/0x1d
+>> [  325.503906]  [<ffffffff8131428a>] scsi_run_queue+0x1c0/0x22d
+>> [  325.505126]  [<ffffffff813153d4>] scsi_next_command+0x39/0x49
+>> [  325.506337]  [<ffffffff81315895>] scsi_io_completion+0x45d/0x4d7
+>> [  325.507552]  [<ffffffff8130dc14>] scsi_finish_command+0xe4/0xed
+>> [  325.508761]  [<ffffffff81312a3e>] scsi_eh_flush_done_q+0xfc/0x124
+>> [  325.509971]  [<ffffffff8131310e>] scsi_error_handler+0x383/0x591
+>> [  325.511175]  [<ffffffff81312d8b>] ? scsi_eh_get_sense+0x183/0x183
+>> [  325.512380]  [<ffffffff81072a17>] kthread+0x84/0x8c
+>> [  325.513580]  [<ffffffff814b01f4>] kernel_thread_helper+0x4/0x10
+>> [  325.514782]  [<ffffffff81072993>] ? kthread_worker_fn+0x148/0x148
+>>
+>> Hopefully the SCSI folks will be able to help you with that.  James?
+> Might be the same issue as this one:
+> http://www.spinics.net/lists/linux-scsi/msg55497.html.
+>
+> Bart.
+>
 
-Add bnx2fc_debug.c, add functions for a few logging
-functions (BNX2FC_IO_DBG, BNX2FC_TGT_DBG, BNX2FC_HBA_DBG).
-Use printf extension %pV.
-Add and use pr_fmt and pr_<level>.
-Move the debug #include below structure definitions.
+Thanks Bart -- your suggested patch fixed the oops I was experiencing.
 
-$ size drivers/scsi/bnx2fc/built-in.o*
-   text	   data	    bss	    dec	    hex	filename
- 101563	   1165	  24976	 127704	  1f2d8	drivers/scsi/bnx2fc/built-in.o.new
- 138473	   1109	  33400	 172982	  2a3b6	drivers/scsi/bnx2fc/built-in.o.old
+However I am still experiencing some much more minor problems with the 
+attaching of these disks.  I experience a significant pause (some sort 
+of timeout perhaps?) when initially accessing the disks which seems to 
+take about thirty to sixty seconds.  The delay is coupled with dmesg 
+output similar to:
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/bnx2fc/Makefile       |    3 +-
- drivers/scsi/bnx2fc/bnx2fc.h       |    6 ++-
- drivers/scsi/bnx2fc/bnx2fc_debug.c |   70 ++++++++++++++++++++++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_debug.h |   73 +++++++++---------------------------
- 4 files changed, 95 insertions(+), 57 deletions(-)
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.c
+[  254.478693] xhci_hcd 0000:03:00.0: WARN: Stalled endpoint
+[  254.478984] sd 5:0:0:1: [sdc] No Caching mode page present
+[  254.479016] sd 5:0:0:1: [sdc] Assuming drive cache: write through
+[  254.479050] sd 5:0:0:1: [sdc] Attached SCSI disk
+[  255.549968] hub 3-0:1.0: hub_suspend
+[  255.549976] usb usb3: bus auto-suspend
+[  284.618187] usb 4-1: reset SuperSpeed USB device number 2 using xhci_hcd
+[  284.628892] xhci_hcd 0000:03:00.0: WARN: short transfer on control ep
+[  284.628908] xhci_hcd 0000:03:00.0: xHCI xhci_drop_endpoint called 
+with disabled ep ffff880135f88900
+[  284.628911] xhci_hcd 0000:03:00.0: xHCI xhci_drop_endpoint called 
+with disabled ep ffff880135f88940
+[  284.629867] usb 4-1: Successful Endpoint Configure command
 
-diff --git a/drivers/scsi/bnx2fc/Makefile b/drivers/scsi/bnx2fc/Makefile
-index a92695a..141149e 100644
---- a/drivers/scsi/bnx2fc/Makefile
-+++ b/drivers/scsi/bnx2fc/Makefile
-@@ -1,3 +1,4 @@
- obj-$(CONFIG_SCSI_BNX2X_FCOE) += bnx2fc.o
- 
--bnx2fc-y := bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc_tgt.o
-+bnx2fc-y := bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc_tgt.o \
-+	    bnx2fc_debug.o
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index 049ea90..8fbf44f 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -11,6 +11,8 @@
-  * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
-  */
- 
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-+
- #include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
-@@ -57,7 +59,6 @@
- #include <scsi/fc/fc_fcp.h>
- 
- #include "57xx_hsi_bnx2fc.h"
--#include "bnx2fc_debug.h"
- #include "../../net/ethernet/broadcom/cnic_if.h"
- #include "bnx2fc_constants.h"
- 
-@@ -547,4 +548,7 @@ void bnx2fc_process_seq_cleanup_compl(struct bnx2fc_cmd *seq_clnup_req,
- int bnx2fc_initiate_seq_cleanup(struct bnx2fc_cmd *orig_io_req, u32 offset,
- 				enum fc_rctl r_ctl);
- 
-+
-+#include "bnx2fc_debug.h"
-+
- #endif
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_debug.c b/drivers/scsi/bnx2fc/bnx2fc_debug.c
-new file mode 100644
-index 0000000..0cbee1b
---- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc_debug.c
-@@ -0,0 +1,70 @@
-+#include "bnx2fc.h"
-+
-+void BNX2FC_IO_DBG(const struct bnx2fc_cmd *io_req, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (likely(!(bnx2fc_debug_level & LOG_IO)))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (io_req && io_req->port && io_req->port->lport &&
-+	    io_req->port->lport->host)
-+		shost_printk(KERN_INFO, io_req->port->lport->host,
-+			     PFX "xid:0x%x %pV",
-+			     io_req->xid, &vaf);
-+	else
-+		pr_info("NULL %pV", &vaf);
-+
-+	va_end(args);
-+}
-+
-+void BNX2FC_TGT_DBG(const struct bnx2fc_rport *tgt, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (likely(!(bnx2fc_debug_level & LOG_TGT)))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (tgt && tgt->port && tgt->port->lport && tgt->port->lport->host &&
-+	    tgt->rport)
-+		shost_printk(KERN_INFO, tgt->port->lport->host,
-+			     PFX "port:%x %pV",
-+			     tgt->rport->port_id, &vaf);
-+	else
-+		pr_info("NULL %pV", &vaf);
-+
-+	va_end(args);
-+}
-+
-+void BNX2FC_HBA_DBG(const struct fc_lport *lport, const char *fmt, ...)
-+{
-+	struct va_format vaf;
-+	va_list args;
-+
-+	if (likely(!(bnx2fc_debug_level & LOG_HBA)))
-+		return;
-+
-+	va_start(args, fmt);
-+
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+
-+	if (lport && lport->host)
-+		shost_printk(KERN_INFO, lport->host, PFX "%pV", &vaf);
-+	else
-+		pr_info("NULL %pV", &vaf);
-+
-+	va_end(args);
-+}
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_debug.h b/drivers/scsi/bnx2fc/bnx2fc_debug.h
-index 3416d9a..4808ff9 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_debug.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc_debug.h
-@@ -11,60 +11,23 @@
- 
- extern unsigned int bnx2fc_debug_level;
- 
--#define BNX2FC_CHK_LOGGING(LEVEL, CMD)					\
--	do {								\
--		if (unlikely(bnx2fc_debug_level & LEVEL))		\
--			do {						\
--				CMD;					\
--			} while (0);					\
--	} while (0)
--
--#define BNX2FC_ELS_DBG(fmt, arg...)					\
--	BNX2FC_CHK_LOGGING(LOG_ELS,					\
--			   printk(KERN_INFO PFX fmt, ##arg))
--
--#define BNX2FC_MISC_DBG(fmt, arg...)					\
--	BNX2FC_CHK_LOGGING(LOG_MISC,					\
--			   printk(KERN_INFO PFX fmt, ##arg))
--
--#define BNX2FC_IO_DBG(io_req, fmt, arg...)				\
--	do {								\
--		if (!io_req || !io_req->port || !io_req->port->lport ||	\
--		    !io_req->port->lport->host)				\
--			BNX2FC_CHK_LOGGING(LOG_IO,			\
--			   printk(KERN_INFO PFX "NULL " fmt, ##arg));	\
--		else							\
--			BNX2FC_CHK_LOGGING(LOG_IO,			\
--			   shost_printk(KERN_INFO,			\
--				   (io_req)->port->lport->host,		\
--				   PFX "xid:0x%x " fmt,			\
--				   (io_req)->xid, ##arg));		\
--	} while (0)
--
--#define BNX2FC_TGT_DBG(tgt, fmt, arg...)				\
--	do {								\
--		if (!tgt || !tgt->port || !tgt->port->lport ||		\
--		    !tgt->port->lport->host || !tgt->rport)		\
--			BNX2FC_CHK_LOGGING(LOG_TGT,			\
--			   printk(KERN_INFO PFX "NULL " fmt, ##arg));	\
--		else							\
--			BNX2FC_CHK_LOGGING(LOG_TGT,			\
--			   shost_printk(KERN_INFO,			\
--				   (tgt)->port->lport->host,		\
--				   PFX "port:%x " fmt,			\
--				   (tgt)->rport->port_id, ##arg));	\
--	} while (0)
--
--
--#define BNX2FC_HBA_DBG(lport, fmt, arg...)				\
--	do {								\
--		if (!lport || !lport->host)				\
--			BNX2FC_CHK_LOGGING(LOG_HBA,			\
--			   printk(KERN_INFO PFX "NULL " fmt, ##arg));	\
--		else							\
--			BNX2FC_CHK_LOGGING(LOG_HBA,			\
--			   shost_printk(KERN_INFO, lport->host,	\
--				   PFX fmt, ##arg));			\
--	} while (0)
-+#define BNX2FC_ELS_DBG(fmt, ...)				\
-+do {								\
-+	if (unlikely(bnx2fc_debug_level & LOG_ELS))		\
-+		pr_info(fmt, ##__VA_ARGS__);			\
-+} while (0)
-+
-+#define BNX2FC_MISC_DBG(fmt, ...)				\
-+do {								\
-+	if (unlikely(bnx2fc_debug_level & LOG_MISC))		\
-+		pr_info(fmt, ##__VA_ARGS__);			\
-+} while (0)
-+
-+__printf(2, 3)
-+void BNX2FC_IO_DBG(const struct bnx2fc_cmd *io_req, const char *fmt, ...);
-+__printf(2, 3)
-+void BNX2FC_TGT_DBG(const struct bnx2fc_rport *tgt, const char *fmt, ...);
-+__printf(2, 3)
-+void BNX2FC_HBA_DBG(const struct fc_lport *lport, const char *fmt, ...);
- 
- #endif
--- 
-1.7.6.405.gc1be0
+The full dmesg is uploaded here: http://pastebin.com/raw.php?i=39B9mdPR
+
+(Sarah: I disabled the verbose xHCI debugging on my last kernel compile 
+-- please let me know if you require it to be switched on again)
+
+After a few resets, the drives become active and will happily transfer 
+at approximately 100MB/sec which I'm quite comfortable with.
+
+I'm not sure to whom I should pose the question as it's a storage 
+question over USB so please forgive the crosspost.
+
+As always, I am happy to debug and retrieve whatever information is 
+required to investigate the issue; just let me know what you need.
+
+Thanks once again.
+
+Cheers,
+
+Matt.
+
+
+
+
+
