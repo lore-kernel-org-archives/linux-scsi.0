@@ -1,75 +1,44 @@
-From: Petr Tesarik <ptesarik@suse.cz>
-Subject: Locking scheme of /proc/scsi/scsi
-Date: Mon, 21 Nov 2011 18:32:35 +0100
-Message-ID: <201111211832.35865.ptesarik@suse.cz>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH][TRIVIAL] SCSI, qla2xxx: remove redundant semicolon
+Date: Mon, 21 Nov 2011 12:38:44 -0500
+Message-ID: <alpine.WNT.2.00.1111211237510.5992@N5102REMCQXM4BS.qlogic.org>
+References: <alpine.LNX.2.00.1111202231550.17395@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:51281 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752384Ab1KURci (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Nov 2011 12:32:38 -0500
-Received: from relay2.suse.de (nat.nue.novell.com [195.135.221.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 8C9FF8C061
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2011 18:32:37 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1111202231550.17395@swampdragon.chaosbits.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Driver <Linux-Driver@qlogic.com>, linux-kernel <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "trivial@kernel.org" <trivial@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi folks,
+Makes sense.
 
-I've been working on a kernel crash dump of an ancient kernel recently, and I 
-have come to the conculsion that walking the scsi devices via 
-bus_find_device() is completely flawed. While looking for an upstream fix, I 
-didn't find any, so the same flaw is probably still there. However, let me ask 
-here to check how this is supposed to work.
+Acked-by: Chad Dupuis <chad.dupuis@qlogic.com>
 
-First, this is how I understand the issue. The "/proc/scsi/scsi" file is 
-handled as a pretty standard seqfile, iterating over the devices with the 
-following function:
+On Sun, 20 Nov 2011, Jesper Juhl wrote:
 
-static inline struct device *next_scsi_device(struct device *start)
-{
-	struct device *next = bus_find_device(&scsi_bus_type, start, NULL,
-					      always_match);
-	put_device(start);
-	return next;
-}
+> One ';' at the end of the return statement is enough.
+>
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+> ---
+> drivers/scsi/qla2xxx/qla_nx.c |    2 +-
+> 1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+> index 94bded5..b9b3e5a 100644
+> --- a/drivers/scsi/qla2xxx/qla_nx.c
+> +++ b/drivers/scsi/qla2xxx/qla_nx.c
+> @@ -1055,7 +1055,7 @@ ql82xx_rom_lock_d(struct qla_hw_data *ha)
+>                   "ROM lock failed.\n");
+>               return -1;
+>       }
+> -     return 0;;
+> +     return 0;
+> }
+>
+> static int
+>
 
-The returned value is used for the next iteration. Now, bus_find_device() 
-assumes that the device is still attached to the knode_bus klist, because 
-that's how it initializes the klist iterator. When it finds the next device, 
-it increments the reference count on the device with get_device(), but it 
-doesn't do anything about the knode_bus field. So, when somebody calls 
-scsi_remove_device() on the current device between two calls to 
-next_scsi_device, then it does:
-
-	if (sdev->is_visible) {
-[...]
-		device_del(dev);
-
-which in turn calls:
-
-	bus_remove_device(dev);
-
-which does:
-
-		if (klist_node_attached(&dev->p->knode_bus))
-			klist_del(&dev->p->knode_bus);
-
-So, even though the struct device has a non-zero refcount, the code in 
-next_scsi_device cannot continue, because it only has a stale pointer to an 
-already detached klist, right?
-
-At least that's what I saw in 2.6.16, and I can still see the same thing 
-possible in 3.1.
-
-Please, include my mail in your replies, because I'm not subscribed to linux-
-scsi.
-
-Petr Tesarik
-SUSE LINUX
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
