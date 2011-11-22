@@ -1,31 +1,32 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Date: Tue, 22 Nov 2011 13:22:06 +0100
-Message-ID: <20111122122206.GD8397@redhat.com>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <4ECB37E4.6020204@linux.vnet.ibm.com>
- <20111121215918.febd9fd4.akpm@linux-foundation.org>
+Date: Tue, 22 Nov 2011 08:54:12 -0500
+Message-ID: <20111122135412.GA29905@phenom.dumpdata.com>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <20111121215918.febd9fd4.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Srivatsa S. Bhat" <srivatsa.bhat@linux.vnet.ibm.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Florian Mickler <florian@mickler.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
+In-Reply-To: <201111212249.31196.rjw@sisk.pl>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Florian Mickler <florian@mickler.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 21, 2011 at 09:59:18PM -0800, Andrew Morton wrote:
-> grr, nothing in that patch's changelog indicates that it fixed a
-> regression nor that it fixed an infinite blockage of suspend.
+> Subject    : Regression in 3.1 causes Xen to use wrong idle routine
+> Submitter  : Stefan Bader <stefan.bader@canonical.com>
+> Date       : 2011-10-26 10:24
+> Message-ID : 4EA7DFD1.9060608@canonical.com
+> References : http://marc.info/?l=linux-acpi&m=131962467924564&w=2
 
-Well it's not a recent thing so I didn't flag it as a regression. It
-doesn't infinite block it, suspend works fine almost all the time (or
-it would have been noticed before), and if you've bad luck and it
-doesn't suspend the first time around like someone experienced, if you
-try again a bit later it'll work.
-
-> I moved it to my 3.2 queue, thanks.
-
-Thanks!
+The patch mentioned in http://mid.gmane.org/20111115144004.GE22675@phenom.dumpdata.com 
+should do it. But the patch needs an Ack from ACPI/x86 folks.
