@@ -1,32 +1,75 @@
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Date: Tue, 22 Nov 2011 08:54:12 -0500
-Message-ID: <20111122135412.GA29905@phenom.dumpdata.com>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH] [SCSI] aacraid: Use kmemdup rather than duplicating its implementation
+Date: Tue, 22 Nov 2011 06:24:01 -0800
+Message-ID: <FC1F9E38C0703341A1A750524E2525A901978CD9@XYUS-EX22.xyus.xyratex.com>
+References: <1321569820.1624.290.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <201111212249.31196.rjw@sisk.pl>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
-List-Post: <mailto:linux-pm@lists.linux-foundation.org>
-List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
-	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
-Sender: linux-pm-bounces@lists.linux-foundation.org
-Errors-To: linux-pm-bounces@lists.linux-foundation.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Florian Mickler <florian@mickler.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xyratex195.xyratex.com ([194.131.166.195]:56973 "EHLO
+	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756226Ab1KVOYH convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Nov 2011 09:24:07 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1321569820.1624.290.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Thomas Meyer <thomas@m3y3r.de>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Achim Leubner <Achim_Leubner@pmc-sierra.com>, Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
 
-> Subject    : Regression in 3.1 causes Xen to use wrong idle routine
-> Submitter  : Stefan Bader <stefan.bader@canonical.com>
-> Date       : 2011-10-26 10:24
-> Message-ID : 4EA7DFD1.9060608@canonical.com
-> References : http://marc.info/?l=linux-acpi&m=131962467924564&w=2
+Ack
 
-The patch mentioned in http://mid.gmane.org/20111115144004.GE22675@phenom.dumpdata.com 
-should do it. But the patch needs an Ack from ACPI/x86 folks.
+This driver is maintained by Achim Leubner
+<Achim_Leubner@pmc-sierra.com> and Mahesh Rajashekhara
+<Mahesh_Rajashekhara@pmc-sierra.com>. I have added them so that either
+one of them can have the opportunity to respond.
+
+Sincerely -- Mark Salyzyn
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Thomas Meyer
+Sent: Thursday, November 17, 2011 5:44 PM
+To: JBottomley@parallels.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org
+Subject: [PATCH] [SCSI] aacraid: Use kmemdup rather than duplicating its
+implementation
+
+The semantic patch that makes this change is available
+in scripts/coccinelle/api/memdup.cocci.
+
+Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+---
+
+diff -u -p a/drivers/scsi/aacraid/commctrl.c
+b/drivers/scsi/aacraid/commctrl.c
+--- a/drivers/scsi/aacraid/commctrl.c 2011-11-07 19:38:06.463566391
++0100
++++ b/drivers/scsi/aacraid/commctrl.c 2011-11-08 10:53:23.848146953
++0100
+@@ -631,15 +631,14 @@ static int aac_send_raw_srb(struct aac_d
+ 			}
+ 		} else {
+ 			struct user_sgmap* usg;
+-			usg = kmalloc(actual_fibsize - sizeof(struct
+aac_srb)
+-			  + sizeof(struct sgmap), GFP_KERNEL);
++			usg = kmemdup(upsg,
++				      actual_fibsize - sizeof(struct
+aac_srb) + sizeof(struct sgmap),
++				      GFP_KERNEL);
+ 			if (!usg) {
+ 				dprintk((KERN_DEBUG"aacraid: Allocation
+error in Raw SRB command\n"));
+ 				rcode = -ENOMEM;
+ 				goto cleanup;
+ 			}
+-			memcpy (usg, upsg, actual_fibsize -
+sizeof(struct aac_srb)
+-			  + sizeof(struct sgmap));
+ 			actual_fibsize = actual_fibsize64;
+ 
+ 			for (i = 0; i < usg->count; i++) {
