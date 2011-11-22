@@ -1,41 +1,103 @@
-From: Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org>
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Date: Mon, 21 Nov 2011 23:16:25 -0800
-Message-ID: <CALCETrXP63VYU6mvxuUJKq7uJ-a3LG6c4t6asQFGUsJnrP6_ow@mail.gmail.com>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
- <CA+55aFwAELQieN=qR7Gz_MT5rHPp90H10uTMS+DOJjefk7q3ng@mail.gmail.com> <CALCETrUpXrsjBLZsZU3u+y7KCDO0LW55QoBQkBqN_BPFZHsrkw@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Locking scheme of /proc/scsi/scsi
+Date: Tue, 22 Nov 2011 09:59:35 +0100
+Message-ID: <4ECB6477.4050703@suse.de>
+References: <201111211832.35865.ptesarik@suse.cz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CALCETrUpXrsjBLZsZU3u+y7KCDO0LW55QoBQkBqN_BPFZHsrkw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:36303 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750851Ab1KVI7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Nov 2011 03:59:37 -0500
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx2.suse.de (Postfix) with ESMTP id 41A898D167
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2011 09:59:36 +0100 (CET)
+In-Reply-To: <201111211832.35865.ptesarik@suse.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Petr Tesarik <ptesarik@suse.cz>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Nov 21, 2011 at 2:34 PM, Andy Lutomirski <luto-kltTT9wpgjJwATOyAt5JVQ@public.gmane.org> =
-wrote:
-> On Mon, Nov 21, 2011 at 2:11 PM, Linus Torvalds
-> <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> wrote:
->> On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wro=
-te:
->>>
->>> Subject =A0 =A0: [3.1 REGRESSION] Commit 5cec93c216db77c45f7ce970d4=
-6283bcb1933884 breaks the Chromium seccomp sandbox
->>> Submitter =A0: Nix <nix-dKoSMcxRz+Te9xe1eoZjHA@public.gmane.org>
->>> Date =A0 =A0 =A0 : 2011-11-14 0:40
->>> Message-ID : 8762inleno.fsf-AdTWujXS48Mg67Zj9sPl2A@public.gmane.org
->>> References : http://marc.info/?l=3Dlinux-kernel&m=3D132123396226377=
-&w=3D2
->>
+On 11/21/2011 06:32 PM, Petr Tesarik wrote:
+> Hi folks,
+>=20
+> I've been working on a kernel crash dump of an ancient kernel recentl=
+y, and I=20
+> have come to the conculsion that walking the scsi devices via=20
+> bus_find_device() is completely flawed. While looking for an upstream=
+ fix, I=20
+> didn't find any, so the same flaw is probably still there. However, l=
+et me ask=20
+> here to check how this is supposed to work.
+>=20
+> First, this is how I understand the issue. The "/proc/scsi/scsi" file=
+ is=20
+> handled as a pretty standard seqfile, iterating over the devices with=
+ the=20
+> following function:
+>=20
+> static inline struct device *next_scsi_device(struct device *start)
+> {
+> 	struct device *next =3D bus_find_device(&scsi_bus_type, start, NULL,
+> 					      always_match);
+> 	put_device(start);
+> 	return next;
+> }
+>=20
+> The returned value is used for the next iteration. Now, bus_find_devi=
+ce()=20
+> assumes that the device is still attached to the knode_bus klist, bec=
+ause=20
+> that's how it initializes the klist iterator. When it finds the next =
+device,=20
+> it increments the reference count on the device with get_device(), bu=
+t it=20
+> doesn't do anything about the knode_bus field. So, when somebody call=
+s=20
+> scsi_remove_device() on the current device between two calls to=20
+> next_scsi_device, then it does:
+>=20
+> 	if (sdev->is_visible) {
+> [...]
+> 		device_del(dev);
+>=20
+> which in turn calls:
+>=20
+> 	bus_remove_device(dev);
+>=20
+> which does:
+>=20
+> 		if (klist_node_attached(&dev->p->knode_bus))
+> 			klist_del(&dev->p->knode_bus);
+>=20
+> So, even though the struct device has a non-zero refcount, the code i=
+n=20
+> next_scsi_device cannot continue, because it only has a stale pointer=
+ to an=20
+> already detached klist, right?
+>=20
+> At least that's what I saw in 2.6.16, and I can still see the same th=
+ing=20
+> possible in 3.1.
+>=20
+Hmm. Looks like we need to increase the refcount to knode_bus when
+we iterate devices.
+Let me check ...
 
-This is apparently fixed in seccompsandbox.  See:
+Cheers,
 
-https://code.google.com/p/seccompsandbox/issues/detail?id=3D17
-https://code.google.com/p/seccompsandbox/source/detail?r=3D178
-
-Unless someone objects, I'll consider this to not be a kernel
-regression worth fixing.
-
---Andy
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
