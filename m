@@ -1,19 +1,40 @@
-From: Joe Perches <joe@perches.com>
-Subject: RE: [PATCH] [SCSI] aacraid: Use kmemdup rather than duplicating its
- implementation
-Date: Tue, 22 Nov 2011 07:56:50 -0800
-Message-ID: <1321977410.1131.24.camel@Joe-Laptop>
-References: <1321569820.1624.290.camel@localhost.localdomain>
-	 <FC1F9E38C0703341A1A750524E2525A901978CD9@XYUS-EX22.xyus.xyratex.com>
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH] [SCSI] aacraid: Use kmemdup rather than duplicating its implementation
+Date: Tue, 22 Nov 2011 08:17:03 -0800
+Message-ID: <FC1F9E38C0703341A1A750524E2525A901978CDE@XYUS-EX22.xyus.xyratex.com>
+References: <1321569820.1624.290.camel@localhost.localdomain> <FC1F9E38C0703341A1A750524E2525A901978CD9@XYUS-EX22.xyus.xyratex.com> <1321977410.1131.24.camel@Joe-Laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <FC1F9E38C0703341A1A750524E2525A901978CD9@XYUS-EX22.xyus.xyratex.com>
+Content-class: urn:content-classes:message
+In-Reply-To: <1321977410.1131.24.camel@Joe-Laptop>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Salyzyn <mark_salyzyn@us.xyratex.com>
+To: Joe Perches <joe@perches.com>
 Cc: Thomas Meyer <thomas@m3y3r.de>, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Achim Leubner <Achim_Leubner@pmc-sierra.com>, Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
 List-Id: linux-scsi@vger.kernel.org
+
+aacraid@adaptec.com goes to them, I may have done a boo-boo by exposing
+the current underlying addressees. As it stands the patch was not
+addressed to any of the aacraid maintainers. The correct answer would
+have been for me to Cc: aacraid@adaptec.com.
+
+The MAINTAINERS file is *correct*. It has dealt with the arbitrary
+transition of individual assigned maintainers within Adaptec (now PMC)
+for nearly a decade now.
+
+Sincerely -- Mark Salyzyn (former maintainer, interested party now)
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Joe Perches
+Sent: Tuesday, November 22, 2011 10:57 AM
+To: Mark Salyzyn
+Cc: Thomas Meyer; JBottomley@parallels.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org; Achim Leubner; Mahesh Rajashekhara
+Subject: RE: [PATCH] [SCSI] aacraid: Use kmemdup rather than duplicating
+its implementation
 
 > -----Original Message-----
 > The semantic patch that makes this change is available
