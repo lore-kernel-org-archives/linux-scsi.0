@@ -1,74 +1,46 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v3 2/6] scsi: add flag to skip the runtime PM calls on the host
-Date: Wed, 23 Nov 2011 15:01:22 +0800
-Message-ID: <1322031686-28233-3-git-send-email-ming.m.lin@intel.com>
-References: <1322031686-28233-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8690 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756736Ab1KWHBg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Nov 2011 02:01:36 -0500
-In-Reply-To: <1322031686-28233-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+Date: Wed, 23 Nov 2011 08:37:45 +0100
+Message-ID: <CACna6rzQhp4DXonK_Mr+Od9yMQJtr24Z5TE27VxhcMrcY4u+EA@mail.gmail.com>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
+	<201111212249.31196.rjw@sisk.pl>
+	<CA+55aFyy19VYSdZW0+jNxAb8ix0xpX2j9YFw9oQi3jm3+mDEvw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CA+55aFyy19VYSdZW0+jNxAb8ix0xpX2j9YFw9oQi3jm3+mDEvw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, stephen hemminger <shemminger-ZtmgI6mnKB3QT0dZR+AlfA@public.gmane.org>
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 
-With previous change, now the ata port runtime suspend will happen as:
+W dniu 21 listopada 2011 23:22 u=C5=BCytkownik Linus Torvalds
+<torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org> napisa=C5=82:
+> On Mon, Nov 21, 2011 at 1:49 PM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrot=
+e:
+>>
+>> Subject =C2=A0 =C2=A0: [3.1-rc8 REGRESSION] sky2 hangs machine on tu=
+rning off or suspending
+>> Submitter =C2=A0: Rafa=C5=82 Mi=C5=82ecki <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+>> Date =C2=A0 =C2=A0 =C2=A0 : 2011-11-09 11:46
+>> Message-ID : CACna6ryTdLcWVYgHu=3D_mRFga1sFivpE_DyZOY-HMmKggkWAJAw@m=
+ail.gmail.com
+>> References : http://marc.info/?l=3Dlinux-netdev&m=3D132083922228088&=
+w=3D4
+>
+> This should be fixed by commit 1401a8008a09 ("sky2: fix hang on
+> shutdown (and other irq issues)") in current -git.
 
-disk suspend --> scsi target suspend --> scsi host suspend --> ata port
-suspend
+This patch doesn't fix my hang.
 
-ata port(parent device) suspend need to schedule scsi EH which will resume
-scsi host(child device). Then the child device resume will in turn make
-parent device resume first. This is kind of recursive.
+However git contains also:
+sky2: fix hang in napi_disable
+This is the one fixing my case.
 
-This patch adds a new flag Scsi_Host::eh_noresume.
-ata port will set this flag to skip the runtime PM calls on scsi host.
+So the bug is resolved, however I'm a little disappointed noone
+ping-ed me about that patches. I've spent some time on bisecting this
+issue, expected to get some response :/
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/scsi/scsi_error.c |    5 +++--
- include/scsi/scsi_host.h  |    3 +++
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index dc6131e..5f84a14 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1812,7 +1812,7 @@ int scsi_error_handler(void *data)
- 		 * what we need to do to get it up and online again (if we can).
- 		 * If we fail, we end up taking the thing offline.
- 		 */
--		if (scsi_autopm_get_host(shost) != 0) {
-+		if (!shost->eh_noresume && scsi_autopm_get_host(shost) != 0) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				printk(KERN_ERR "Error handler scsi_eh_%d "
- 						"unable to autoresume\n",
-@@ -1833,7 +1833,8 @@ int scsi_error_handler(void *data)
- 		 * which are still online.
- 		 */
- 		scsi_restart_operations(shost);
--		scsi_autopm_put_host(shost);
-+		if (!shost->eh_noresume)
-+			scsi_autopm_put_host(shost);
- 		set_current_state(TASK_INTERRUPTIBLE);
- 	}
- 	__set_current_state(TASK_RUNNING);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 50266c9..5f7d5b3 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -669,6 +669,9 @@ struct Scsi_Host {
- 	/* Asynchronous scan in progress */
- 	unsigned async_scan:1;
- 
-+	/* Don't resume host in EH */
-+	unsigned eh_noresume:1;
-+
- 	/*
- 	 * Optional work queue to be utilized by the transport
- 	 */
--- 
-1.7.2.5
-
+--=20
+Rafa=C5=82
