@@ -1,29 +1,54 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v3 0/6] ata port runtime power management support
-Date: Wed, 23 Nov 2011 15:01:20 +0800
-Message-ID: <1322031686-28233-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH v3 1/6] ata: make ata port as parent device of scsi host
+Date: Wed, 23 Nov 2011 15:01:21 +0800
+Message-ID: <1322031686-28233-2-git-send-email-ming.m.lin@intel.com>
+References: <1322031686-28233-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1322031686-28233-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jgarzik@pobox.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
+Currently, the device tree of ata port and scsi host looks as below,
 
-This is the v3 patches to add ata port runtime pm support.
-Applied on top of v3.2-rc2.
+        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+        |-- ata1                                (ata port)
+        |-- host0                               (scsi host)
+           |-- target0:0:0                      (scsi target)
+               |-- 0:0:0:0                      (disk)
 
-v1:
-https://lkml.org/lkml/2011/11/2/23
+This patch makes ata port as parent device of scsi host, then it becomes
 
-v2:
-https://lkml.org/lkml/2011/11/10/71
-Acked-by: Tejun Heo <tj@kernel.org>
-Kay Sievers reviewed sysfs change
+        /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
+        |-- ata1                                (ata port)
+            |-- host0                           (scsi host)
+                |-- target0:0:0                 (scsi target)
+                    |-- 0:0:0:0                 (disk)
 
-Changes in v3:
-- runtime resume scsi device before system suspend (Alan Stern)
-- check runtime status in sd_shutdown
+With this change, the ata port runtime PM is easier.
+For example, the ata port runtime suspend will happen as,
 
-Thanks for any comment,
-Lin Ming
+disk suspend --> scsi target suspend --> scsi host suspend --> ata port
+suspend.
+
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
+ drivers/ata/libata-scsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2a5412e..7ae1e77 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3398,7 +3398,7 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		 */
+ 		shost->max_host_blocked = 1;
+ 
+-		rc = scsi_add_host(ap->scsi_host, ap->host->dev);
++		rc = scsi_add_host(ap->scsi_host, &ap->tdev);
+ 		if (rc)
+ 			goto err_add;
+ 	}
+-- 
+1.7.2.5
