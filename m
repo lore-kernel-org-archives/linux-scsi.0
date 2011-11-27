@@ -1,50 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: (repost) vhost tree for linux-next
-Date: Sun, 27 Nov 2011 08:00:08 -0600
-Message-ID: <1322402408.2992.4.camel@dabdike.int.hansenpartnership.com>
-References: <20111124203843.GC4873@redhat.com>
-	 <20111127124816.GA23270@redhat.com>
-	 <1322401139.2992.1.camel@dabdike.int.hansenpartnership.com>
-	 <20111127135916.GB23302@redhat.com>
+From: greatoffers@gmail.com
+Subject: Promo Direct - The Promotional Products Superstore
+Date: Sun, 27 Nov 2011 14:34:27 -0800 (PST)
+Message-ID: <20707221.1322433267683.JavaMail.Administrator@cz-promo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20111127135916.GB23302@redhat.com>
-Sender: linux-next-owner@vger.kernel.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-next@vger.kernel.org, sfr@canb.auug.org.au, linux-pci@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from promodirectpro.info ([184.105.209.165]:39570 "HELO
+	promodirectpro.info" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with SMTP id S1754934Ab1K0WmO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Nov 2011 17:42:14 -0500
+Received: from cz-promo ([72.20.96.212]) by promodirectpro.info for <linux-scsi@vger.kernel.org>; Sun, 27 Nov 2011 14:34:28 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2011-11-27 at 15:59 +0200, Michael S. Tsirkin wrote:
-> On Sun, Nov 27, 2011 at 07:38:59AM -0600, James Bottomley wrote:
-> > On Sun, 2011-11-27 at 14:48 +0200, Michael S. Tsirkin wrote:
-> > > I normally merge things through Dave, Rusty, Jesse or Jens,
-> > > not directly to Linus. However, sometimes there's a large change
-> > > (for example, my recent RFC for pci_iomap changes)
-> > > where estimating how it interacts with other platforms and planned
-> > > changes in the next kernel would be beneficial.
-> > > 
-> > > For this purpose, it would be helpful if my tree were added to linux-next.
-> > > The tree is:
-> > > git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost.git linux-next
-> > > 
-> > > Could you do this please?
-> > > (The current contents of that tree was posted for review/feedback
-> > > for the first time today.   It might make sense to give it a few days
-> > > for any responses ...)
-> > 
-> > I'm a little confused by your to: field.  This is a linux-arch issue,
-> > isn't it, since it's altering architecture implementations of a PCI
-> > function rather than altering anything in SCSI or net?
-> > 
-> > James
-> 
-> Yes. Stephen Rothwell asked me to Cc widely to see if anyone
-> objects to picking this stuff in linux-next.
-> Sorry about any confusion.
 
-I;m fine with that, but the fact that you didn't send it to linux-arch
-was more my point ...
+Discover this FREE electricity by Nikola Tesla  http://nikolateslagenerator.com-pick.me Please Click The Link Here
 
-James
+Your friend, Discover this FREE electricity by Nikola Tesla  http://nikolateslagenerator.com-pick.me Please Click The Link Here , thought you might be interested in this link from Promo Direct (www.promodirect.com). 
+
+Promo Direct, Inc. is a nationwide supplier of promotional products and services.
+
+Promo Direct 
+Customer Care 
+Email: info@promodirect.com 
+Phone: 1-800-748-6150 
+Fax: 1-800-748-3326
+
