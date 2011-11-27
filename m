@@ -1,62 +1,107 @@
-From: James Bottomley <jbottomley@parallels.com>
+From: Huajun Li <huajun.li.lee@gmail.com>
 Subject: Re: [PATCH] SCSI/sd: Fix NULL dereference in sd_revalidate_disk
-Date: Sat, 26 Nov 2011 14:00:11 +0000
-Message-ID: <1322316009.5069.4.camel@dabdike.int.hansenpartnership.com>
+Date: Sun, 27 Nov 2011 09:28:05 +0800
+Message-ID: <CA+v9cxa+VbY6Oh800rHKjNQQL-zzk4jE8EUfKeamDgfuc800iw@mail.gmail.com>
 References: <CA+v9cxbk0p_FTDq7TMEc5draOMz4n46H4t=iLe2brkosM=LHVw@mail.gmail.com>
-	 <20111126105146.756a122a@stein>
+	<20111126105146.756a122a@stein>
+	<1322316009.5069.4.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:35144 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751246Ab1KZOAO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Nov 2011 09:00:14 -0500
-In-Reply-To: <20111126105146.756a122a@stein>
-Content-Language: en-US
-Content-ID: <C45147476FA4454485C677F8462FD10C@sw.swsoft.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:46424 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755220Ab1K0B2H convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Nov 2011 20:28:07 -0500
+Received: by bke11 with SMTP id 11so6343645bke.19
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2011 17:28:05 -0800 (PST)
+In-Reply-To: <1322316009.5069.4.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Huajun Li <huajun.li.lee@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Bottomley <jbottomley@parallels.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Huajun Li <huajun.li.lee@gmail.com>
 
-T24gU2F0LCAyMDExLTExLTI2IGF0IDEwOjUxICswMTAwLCBTdGVmYW4gUmljaHRlciB3cm90ZToN
-Cj4gT24gTm92IDI0IEh1YWp1biBMaSB3cm90ZToNCj4gPiAgIFdoaWxlIHVucGx1Z2dpbmcgdXNi
-IGRpc2ssIHNjc2lfZGlzayhkaXNrKS0+ZGV2aWNlICBtYXkgYmUgcmVsZWFzZWQNCj4gPiBiZWZv
-cmUgc2RfcmV2YWxpZGF0ZV9kaXNrKCkgaXMgY2FsbGVkLCB0aGVuIHRoZXJlIHdpbGwgb2NjdXIg
-T29wcyBhcw0KPiA+IHNob3duIGJlbG93Og0KPiBbLi4uXQ0KPiA+IC0tLSBhL2RyaXZlcnMvc2Nz
-aS9zZC5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL3NkLmMNCj4gPiBAQCAtMjM1NCwxMCArMjM1
-NCwxNSBAQCBzdGF0aWMgaW50IHNkX3RyeV9leHRlbmRlZF9pbnF1aXJ5KHN0cnVjdA0KPiA+IHNj
-c2lfZGV2aWNlICpzZHApDQo+ID4gIHN0YXRpYyBpbnQgc2RfcmV2YWxpZGF0ZV9kaXNrKHN0cnVj
-dCBnZW5kaXNrICpkaXNrKQ0KPiA+ICB7DQo+ID4gIAlzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwID0g
-c2NzaV9kaXNrKGRpc2spOw0KPiA+IC0Jc3RydWN0IHNjc2lfZGV2aWNlICpzZHAgPSBzZGtwLT5k
-ZXZpY2U7DQo+ID4gKwlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkcDsNCj4gPiAgCXVuc2lnbmVkIGNo
-YXIgKmJ1ZmZlcjsNCj4gPiAgCXVuc2lnbmVkIGZsdXNoID0gMDsNCj4gPiANCj4gPiArCWlmIChz
-ZGtwKQ0KPiA+ICsJCXNkcCA9IHNka3AtPmRldmljZTsNCj4gPiArCWVsc2UNCj4gPiArCQlnb3Rv
-IG91dDsNCj4gPiArDQo+ID4gIAlTQ1NJX0xPR19ITFFVRVVFKDMsIHNkX3ByaW50ayhLRVJOX0lO
-Rk8sIHNka3AsDQo+ID4gIAkJCQkgICAgICAic2RfcmV2YWxpZGF0ZV9kaXNrXG4iKSk7DQo+ID4g
-DQo+IA0KPiBTaG91bGRuJ3QgcmF0aGVyIHRoZSBbYmxvY2sgLS0gY29tbWFuZC1zZXQtZHJpdmVy
-IC0tIHNjc2ktY29yZSAtLSBsbGRdDQo+IHN0YWNrIGJlIHN0cnVjdHVyZWQgYWxvbmcgdGhlIGxp
-bmVzIHRoYXQgbG93ZXItbGV2ZWwgZGV2aWNlIGluc3RhbmNlcyBsaXZlDQo+IGFzIGxvbmcgYXMg
-aGlnaGVyIGxldmVscyByZWx5IG9uIHRoZW0/DQoNCk5vdCByZWFsbHksIG5vLiAgVGhlIHByb2Js
-ZW0gaXMgdGhlIGxpZmV0aW1lIHJ1bGVzIGFyZSBjb21wbGV4LiAgVGhlDQpsb3dlc3QgbGV2ZWwg
-b2JqZWN0cyBhY3R1YWxseSBsaXZlIHRoZSBsb25nZXN0IGJlY2F1c2UgdGhleSdyZSBmaXJzdCB0
-bw0KYmUgZGlzY292ZXJlZCBiZWZvcmUgd2Uga25vdyB3aGF0IGhpZ2hlciBsZXZlbCBmdW5jdGlv
-bnMgdG8gYXR0YWNoLg0KDQpUaGF0J3Mgd2h5IHlvdSBzZWUgY29tcGxleCBwYWlyZWQgZ2V0cyBp
-biB0aGluZ3MgbGlrZSBzY3NpX2Rpc2tfZ2V0DQpiZWNhdXNlIHdlIHRyeSB0byBnZXQgcmVmZXJl
-bmNlcyBib3RoIHRvIHRoZSBzZGtwIGFuZCB0aGUgdW5kZXJseWluZw0Kc2RwIC4uLiBzbyB0aGUg
-c2RrcCBjYW4gYmUgdG9ybiBkb3duIGJ5IGxhc3QgcmVmZXJlbmNlIHJlbGVhc2UgZnJvbQ0KZWl0
-aGVyIGFib3ZlIG9yIGJlbG93ICh0aGlzIGlzIHRoZSBtZW5hY2Ugb2YgaG90IHVucGx1ZykuDQoN
-Cj4gRm9yIGFib3V0IGEgeWVhciBub3cgb3Igc28sIEkgYW0gc2VlaW5nIHBhdGNoZXMgZmxvYXRp
-bmcgYnkgdGhhdCBhZGQgTlVMTA0KPiBwb2ludGVyIGNoZWNrcyBoZXJlIGFuZCB0aGVyZSAob3Ig
-cGF0Y2hlcyB0aGF0IGNsZWFyIHBvaW50ZXJzKSwgYW5kIGV2ZXJ5DQo+IHRpbWUgSSB3b25kZXIN
-Cj4gICAtIHdoZXJlIGVsc2Ugc3VjaCBOVUxMIHBvaW50ZXIgY2hlY2tzIG1pZ2h0IGJlIG5lZWRl
-ZCwNCj4gICAtIGluIHdoYXQgd2F5IChpZiBhdCBhbGwpIGl0IGlzIGVuc3VyZWQgdGhhdCBhIGZ1
-bmN0aW9uIHdoaWNoIGlzIG1hZGUgdG8NCj4gICAgIGNoZWNrIGZvciBhIHZhbGlkIHBvaW50ZXIg
-YXQgdGhlIHRvcCBkb2VzIG5vdCByYWNlIHdpdGggcG9pbnRlcg0KPiAgICAgaW52YWxpZGF0aW9u
-IGZ1cnRoZXIgZG93biB0aGUgcm9hZC4NCg0KSSBhZ3JlZS4gIFRoZSBwYXRjaCBpcyBjbGVhcmx5
-IHdyb25nIGJlY2F1c2Ugc2RrcCBpcyBhIHJlZmNvdW50ZWQgb2JqZWN0DQp0aGF0IG5ldmVyIGFj
-dHVhbGx5IHNldHMgc2RrcC0+ZGV2aWNlIHRvIE5VTEwuICBJZiB3ZSBmaW5kIGEgTlVMTCBpbg0K
-dGhlcmUgaXQgbXVzdCBiZSBiZWNhdXNlIHRoZSBzZGtwIG9iamVjdCBpcyB3cm9uZy4gIFRoZSBp
-bXBsaWNhdGlvbiBmcm9tDQp0aGUgdHJhY2Ugc2VlbXMgdG8gYmUgdGhhdCBzb21ldGhpbmcgYWxs
-b3dlZCBibGtpZCB0byBvcGVuIGEgbm9uDQpleGlzdGVudCBkZXZpY2UuDQoNCkphbWVzDQoNCg==
+=D4=DA 2011=C4=EA11=D4=C226=C8=D5 =CF=C2=CE=E710:00=A3=ACJames Bottomle=
+y <jbottomley@parallels.com> =D0=B4=B5=C0=A3=BA
+> On Sat, 2011-11-26 at 10:51 +0100, Stefan Richter wrote:
+>> On Nov 24 Huajun Li wrote:
+>> >   While unplugging usb disk, scsi_disk(disk)->device  may be relea=
+sed
+>> > before sd_revalidate_disk() is called, then there will occur Oops =
+as
+>> > shown below:
+>> [...]
+>> > --- a/drivers/scsi/sd.c
+>> > +++ b/drivers/scsi/sd.c
+>> > @@ -2354,10 +2354,15 @@ static int sd_try_extended_inquiry(struct
+>> > scsi_device *sdp)
+>> >  static int sd_revalidate_disk(struct gendisk *disk)
+>> >  {
+>> >     struct scsi_disk *sdkp =3D scsi_disk(disk);
+>> > -   struct scsi_device *sdp =3D sdkp->device;
+>> > +   struct scsi_device *sdp;
+>> >     unsigned char *buffer;
+>> >     unsigned flush =3D 0;
+>> >
+>> > +   if (sdkp)
+>> > +           sdp =3D sdkp->device;
+>> > +   else
+>> > +           goto out;
+>> > +
+>> >     SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
+>> >                                   "sd_revalidate_disk\n"));
+>> >
+>>
+>> Shouldn't rather the [block -- command-set-driver -- scsi-core -- ll=
+d]
+>> stack be structured along the lines that lower-level device instance=
+s live
+>> as long as higher levels rely on them?
+>
+> Not really, no.  The problem is the lifetime rules are complex.  The
+> lowest level objects actually live the longest because they're first =
+to
+> be discovered before we know what higher level functions to attach.
+>
+> That's why you see complex paired gets in things like scsi_disk_get
+> because we try to get references both to the sdkp and the underlying
+> sdp ... so the sdkp can be torn down by last reference release from
+> either above or below (this is the menace of hot unplug).
+>
+>> For about a year now or so, I am seeing patches floating by that add=
+ NULL
+>> pointer checks here and there (or patches that clear pointers), and =
+every
+>> time I wonder
+>>   - where else such NULL pointer checks might be needed,
+>>   - in what way (if at all) it is ensured that a function which is m=
+ade to
+>>     check for a valid pointer at the top does not race with pointer
+>>     invalidation further down the road.
+>
+> I agree.  The patch is clearly wrong because sdkp is a refcounted obj=
+ect
+> that never actually sets sdkp->device to NULL.  If we find a NULL in
+> there it must be because the sdkp object is wrong.  The implication f=
+rom
+> the trace seems to be that something allowed blkid to open a non
+> existent device.
+>
+> James
+>
+>
+
+Thanks for your response.
+
+Yes, in this case, actually sdkp is NULL rather than sdkp->device, and
+the patch indicates this.
+However, there is typo in my comments, maybe it misleads you, sorry!
+In fact, the comment should be:
+
+" While unplugging usb disk, scsi_disk(disk)  may be released
+ before sd_revalidate_disk() is called, then there will occur Oops."
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
