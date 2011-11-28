@@ -1,67 +1,55 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH] mptsas: Add device ID for SAS1068_820XELP.
-Date: Mon, 28 Nov 2011 14:29:49 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A604726F2879@inbmail02.lsi.com>
-References: <1321654422-27617-1-git-send-email-ddaney.cavm@gmail.com>
+From: Sergei Shtylyov <sshtylyov@mvista.com>
+Subject: Re: [PATCH v4 6/6] ata: add ata port runtime PM callbacks
+Date: Mon, 28 Nov 2011 14:13:19 +0400
+Message-ID: <4ED35EBF.6030602@mvista.com>
+References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com> <1322442950-16268-7-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1321654422-27617-1-git-send-email-ddaney.cavm@gmail.com>
-Content-Language: en-US
+In-Reply-To: <1322442950-16268-7-git-send-email-ming.m.lin@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: David Daney <ddaney.cavm@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, James Bottomley <jejb@kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, Support <support@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Chandrakala Chavva <cchavva@caviumnetworks.com>, David Daney <david.daney@cavium.com>
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Please consider this patch as an Acked by me.
+Hello.
 
-Regards,
-Nagalakshmi
+On 28-11-2011 5:15, Lin Ming wrote:
 
+> Add ata port runtime suspend/resume/idle callbacks.
+> Set ->eh_noresume to skip the runtime PM calls on scsi host
+> in the error handler to avoid dead lock.
 
------Original Message-----
-From: David Daney [mailto:ddaney.cavm@gmail.com] 
-Sent: Saturday, November 19, 2011 3:44 AM
-To: linux-kernel@vger.kernel.org; Moore, Eric; James Bottomley; Desai, Kashyap; DL-MPT Fusion Linux; Support; linux-scsi@vger.kernel.org
-Cc: Chandrakala Chavva; David Daney
-Subject: [PATCH] mptsas: Add device ID for SAS1068_820XELP.
+> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
+> ---
+>   drivers/ata/libata-core.c      |   10 ++++++++++
+>   drivers/ata/libata-scsi.c      |    1 +
+>   drivers/ata/libata-transport.c |    4 ++++
+>   3 files changed, 15 insertions(+), 0 deletions(-)
 
-From: Chandrakala Chavva <cchavva@caviumnetworks.com>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 04c208e..15a3d4d 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+[...]
+> @@ -5307,9 +5308,18 @@ static int ata_port_resume(struct device *dev)
+>   	return rc;
+>   }
+>
+> +static int ata_port_runtime_idle(struct device *dev)
+> +{
+> +	return pm_runtime_suspend(dev);
+> +}
+> +
+>   static const struct dev_pm_ops ata_port_pm_ops = {
+>   	.suspend = ata_port_suspend,
+>   	.resume = ata_port_resume,
+> +
+> +	.runtime_suspend = ata_port_suspend_common,
+> +	.runtime_resume = ata_port_resume,
+> +	.runtime_idle = ata_port_runtime_idle,
 
-We need this new devid to be able to use this board.
+    Can't use set this to pm_runtime_suspend directly?
 
-Signed-off-by: Chandrakala Chavva <cchavva@caviumnetworks.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
----
- drivers/message/fusion/lsi/mpi_cnfg.h |    1 +
- drivers/message/fusion/mptsas.c       |    2 ++
- 2 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-index 22027e7..d9bcfba 100644
---- a/drivers/message/fusion/lsi/mpi_cnfg.h
-+++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-@@ -583,6 +583,7 @@ typedef struct _MSG_CONFIG_REPLY
- #define MPI_MANUFACTPAGE_DEVID_SAS1066E             (0x005A)
- #define MPI_MANUFACTPAGE_DEVID_SAS1068              (0x0054)
- #define MPI_MANUFACTPAGE_DEVID_SAS1068E             (0x0058)
-+#define MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP      (0x0059)
- #define MPI_MANUFACTPAGE_DEVID_SAS1078              (0x0062)
- 
- 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 9d95042..551262e 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -5376,6 +5376,8 @@ static struct pci_device_id mptsas_pci_table[] = {
- 		PCI_ANY_ID, PCI_ANY_ID },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1078,
- 		PCI_ANY_ID, PCI_ANY_ID },
-+	{ PCI_VENDOR_ID_LSI_LOGIC, MPI_MANUFACTPAGE_DEVID_SAS1068_820XELP,
-+		PCI_ANY_ID, PCI_ANY_ID },
- 	{0}	/* Terminating entry */
- };
- MODULE_DEVICE_TABLE(pci, mptsas_pci_table);
--- 
-1.7.2.3
+MBR, Sergei
