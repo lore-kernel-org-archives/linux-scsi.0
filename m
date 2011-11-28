@@ -1,66 +1,51 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 6/6] ata: add ata port runtime PM callbacks
-Date: Mon, 28 Nov 2011 21:50:12 +0800
-Message-ID: <1322488212.3744.10.camel@hp6530s>
-References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
-	 <1322442950-16268-7-git-send-email-ming.m.lin@intel.com>
-	 <4ED35EBF.6030602@mvista.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH 1/2] cciss: add Smart Array 5i to the kdump blacklist
+Date: Mon, 28 Nov 2011 15:35:31 +0100
+Message-ID: <4ED39C33.5090004@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4ED35EBF.6030602@mvista.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:61412 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751795Ab1K1OgS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Nov 2011 09:36:18 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
 
-On Mon, 2011-11-28 at 18:13 +0800, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 28-11-2011 5:15, Lin Ming wrote:
-> 
-> > Add ata port runtime suspend/resume/idle callbacks.
-> > Set ->eh_noresume to skip the runtime PM calls on scsi host
-> > in the error handler to avoid dead lock.
-> 
-> > Signed-off-by: Lin Ming<ming.m.lin@intel.com>
-> > ---
-> >   drivers/ata/libata-core.c      |   10 ++++++++++
-> >   drivers/ata/libata-scsi.c      |    1 +
-> >   drivers/ata/libata-transport.c |    4 ++++
-> >   3 files changed, 15 insertions(+), 0 deletions(-)
-> 
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index 04c208e..15a3d4d 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> [...]
-> > @@ -5307,9 +5308,18 @@ static int ata_port_resume(struct device *dev)
-> >   	return rc;
-> >   }
-> >
-> > +static int ata_port_runtime_idle(struct device *dev)
-> > +{
-> > +	return pm_runtime_suspend(dev);
-> > +}
-> > +
-> >   static const struct dev_pm_ops ata_port_pm_ops = {
-> >   	.suspend = ata_port_suspend,
-> >   	.resume = ata_port_resume,
-> > +
-> > +	.runtime_suspend = ata_port_suspend_common,
-> > +	.runtime_resume = ata_port_resume,
-> > +	.runtime_idle = ata_port_runtime_idle,
-> 
->     Can't use set this to pm_runtime_suspend directly?
+The '5i' controller freezes when a kdump is attemted.
+This patch admits it and adds the controller
+to the unresetable list.
 
-No.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-pm_runtime_suspend is a runtime PM core helper function,
-It will call driver's .runtime_suspend callback.
+---
+ drivers/block/cciss.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> 
-> MBR, Sergei
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 8f4ef65..b43ed87 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -576,12 +576,14 @@ static u32 unresettable_controller[] = {
+ 	0x3215103C, /* Smart Array E200i */
+ 	0x3237103C, /* Smart Array E500 */
+ 	0x323D103C, /* Smart Array P700m */
++	0x40800E11, /* Smart Array 5i */
+ 	0x409C0E11, /* Smart Array 6400 */
+ 	0x409D0E11, /* Smart Array 6400 EM */
+ };
+ 
+ /* List of controllers which cannot even be soft reset */
+ static u32 soft_unresettable_controller[] = {
++	0x40800E11, /* Smart Array 5i */
+ 	0x409C0E11, /* Smart Array 6400 */
+ 	0x409D0E11, /* Smart Array 6400 EM */
+ };
+-- 
+1.7.6.4
+
 
 
