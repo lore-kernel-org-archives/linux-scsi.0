@@ -1,33 +1,66 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH] scsi: convert drivers/scsi/* to use
- module_platform_driver()
-Date: Mon, 28 Nov 2011 23:49:35 +1100 (EST)
-Message-ID: <alpine.LNX.2.00.1111282345090.26744@nippy.intranet>
-References: <1322315527.15832.1.camel@phoenix>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v4 6/6] ata: add ata port runtime PM callbacks
+Date: Mon, 28 Nov 2011 21:50:12 +0800
+Message-ID: <1322488212.3744.10.camel@hp6530s>
+References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
+	 <1322442950-16268-7-git-send-email-ming.m.lin@intel.com>
+	 <4ED35EBF.6030602@mvista.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1322315527.15832.1.camel@phoenix>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Axel Lin <axel.lin@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, "David S. Miller" <davem@davemloft.net>, Ralf Baechle <ralf@linux-mips.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4ED35EBF.6030602@mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 2011-11-28 at 18:13 +0800, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 28-11-2011 5:15, Lin Ming wrote:
+> 
+> > Add ata port runtime suspend/resume/idle callbacks.
+> > Set ->eh_noresume to skip the runtime PM calls on scsi host
+> > in the error handler to avoid dead lock.
+> 
+> > Signed-off-by: Lin Ming<ming.m.lin@intel.com>
+> > ---
+> >   drivers/ata/libata-core.c      |   10 ++++++++++
+> >   drivers/ata/libata-scsi.c      |    1 +
+> >   drivers/ata/libata-transport.c |    4 ++++
+> >   3 files changed, 15 insertions(+), 0 deletions(-)
+> 
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 04c208e..15a3d4d 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> [...]
+> > @@ -5307,9 +5308,18 @@ static int ata_port_resume(struct device *dev)
+> >   	return rc;
+> >   }
+> >
+> > +static int ata_port_runtime_idle(struct device *dev)
+> > +{
+> > +	return pm_runtime_suspend(dev);
+> > +}
+> > +
+> >   static const struct dev_pm_ops ata_port_pm_ops = {
+> >   	.suspend = ata_port_suspend,
+> >   	.resume = ata_port_resume,
+> > +
+> > +	.runtime_suspend = ata_port_suspend_common,
+> > +	.runtime_resume = ata_port_resume,
+> > +	.runtime_idle = ata_port_runtime_idle,
+> 
+>     Can't use set this to pm_runtime_suspend directly?
 
-On Sat, 26 Nov 2011, Axel Lin wrote:
+No.
 
-> This patch converts the drivers in drivers/scsi/* to use the
-> module_platform_driver() macro which makes the code smaller and a bit
-> simpler.
-...
->  
-> -static int __init jazz_esp_init(void)
-...
-> +module_platform_driver(esp_jazz_driver);
+pm_runtime_suspend is a runtime PM core helper function,
+It will call driver's .runtime_suspend callback.
 
-Doesn't this transform "jazz_esp_init" into "jazz_esp_driver_init"?
+> 
+> MBR, Sergei
 
-If that's the convention, it seems odd that the module_platform_driver 
-macro doesn't do it...
 
-Finn
