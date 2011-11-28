@@ -1,45 +1,43 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH] hpsa: Add IRQF_SHARED back in for the non-MSI(X) interrupt
-	handler
-Date: Mon, 28 Nov 2011 10:15:20 -0600
-Message-ID: <20111128161520.25516.69112.stgit@beardog.cce.hp.com>
+From: Josh Boyer <jwboyer@redhat.com>
+Subject: [PATCH] [SCSI] sd: Lower printk level for drive cache information
+Date: Mon, 28 Nov 2011 11:31:55 -0500
+Message-ID: <20111128163053.GA24618@zod.bos.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: stephenmcameron@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Numerous devices don't present cache data, particularly USB sticks.  The
+devices operate correctly despite this, so lower the printk severity to
+KERN_NOTICE.
 
-IRQF_SHARED is required for older controllers that don't support MSI(X)
-and which may end up sharing an interrupt.  All the controllers hpsa
-normally supports have MSI(X) capability, but older controllers may be
-encountered via the hpsa_allow_any=1 module parameter.
+Signed-off-by: Josh Boyer <jwboyer@redhat.com>
 
-Also remove deprecated IRQF_DISABLED.
-
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 865d452..594ce83 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -4072,10 +4072,10 @@ static int hpsa_request_irq(struct ctlr_info *h,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fa3a591..7cf9ec5 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2119,7 +2119,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		}
  
- 	if (h->msix_vector || h->msi_vector)
- 		rc = request_irq(h->intr[h->intr_mode], msixhandler,
--				IRQF_DISABLED, h->devname, h);
-+				0, h->devname, h);
- 	else
- 		rc = request_irq(h->intr[h->intr_mode], intxhandler,
--				IRQF_DISABLED, h->devname, h);
-+				IRQF_SHARED, h->devname, h);
- 	if (rc) {
- 		dev_err(&h->pdev->dev, "unable to get irq %d for %s\n",
- 		       h->intr[h->intr_mode], h->devname);
+ 		if (modepage == 0x3F) {
+-			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
++			sd_printk(KERN_NOTICE, sdkp, "No Caching mode page "
+ 				  "present\n");
+ 			goto defaults;
+ 		} else if ((buffer[offset] & 0x3f) != modepage) {
+@@ -2164,7 +2164,7 @@ bad_sense:
+ 		sd_printk(KERN_ERR, sdkp, "Asking for cache data failed\n");
+ 
+ defaults:
+-	sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
++	sd_printk(KERN_NOTICE, sdkp, "Assuming drive cache: write through\n");
+ 	sdkp->WCE = 0;
+ 	sdkp->RCD = 0;
+ 	sdkp->DPOFUA = 0;
