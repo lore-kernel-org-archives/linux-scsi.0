@@ -1,51 +1,45 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 2/2] hpsa: add the Smart Array 5i to the kdump blacklist
-Date: Mon, 28 Nov 2011 15:39:55 +0100
-Message-ID: <4ED39D3B.9080305@redhat.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH] hpsa: Add IRQF_SHARED back in for the non-MSI(X) interrupt
+	handler
+Date: Mon, 28 Nov 2011 10:15:20 -0600
+Message-ID: <20111128161520.25516.69112.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42511 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753708Ab1K1Okh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Nov 2011 09:40:37 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: stephenmcameron@gmail.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
 
-The '5i' controller freezes when a kdump is attemted.
-This patch admits it and adds the controller
-to the unresetable list.
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+IRQF_SHARED is required for older controllers that don't support MSI(X)
+and which may end up sharing an interrupt.  All the controllers hpsa
+normally supports have MSI(X) capability, but older controllers may be
+encountered via the hpsa_allow_any=1 module parameter.
 
+Also remove deprecated IRQF_DISABLED.
+
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index e011937..b21491b 100644
+index 865d452..594ce83 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -292,12 +292,14 @@ static u32 unresettable_controller[] = {
- 	0x3215103C, /* Smart Array E200i */
- 	0x3237103C, /* Smart Array E500 */
- 	0x323D103C, /* Smart Array P700m */
-+	0x40800E11, /* Smart Array 5i */
- 	0x409C0E11, /* Smart Array 6400 */
- 	0x409D0E11, /* Smart Array 6400 EM */
- };
+@@ -4072,10 +4072,10 @@ static int hpsa_request_irq(struct ctlr_info *h,
  
- /* List of controllers which cannot even be soft reset */
- static u32 soft_unresettable_controller[] = {
-+	0x40800E11, /* Smart Array 5i */
- 	/* Exclude 640x boards.  These are two pci devices in one slot
- 	 * which share a battery backed cache module.  One controls the
- 	 * cache, the other accesses the cache through the one that controls
--- 
-1.7.6.4
-
-
-
+ 	if (h->msix_vector || h->msi_vector)
+ 		rc = request_irq(h->intr[h->intr_mode], msixhandler,
+-				IRQF_DISABLED, h->devname, h);
++				0, h->devname, h);
+ 	else
+ 		rc = request_irq(h->intr[h->intr_mode], intxhandler,
+-				IRQF_DISABLED, h->devname, h);
++				IRQF_SHARED, h->devname, h);
+ 	if (rc) {
+ 		dev_err(&h->pdev->dev, "unable to get irq %d for %s\n",
+ 		       h->intr[h->intr_mode], h->devname);
