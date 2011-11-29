@@ -1,57 +1,114 @@
-From: scameron@beardog.cce.hp.com
-Subject: Re: [PATCH 1/2] cciss: add Smart Array 5i to the kdump blacklist
-Date: Tue, 29 Nov 2011 13:17:58 -0600
-Message-ID: <20111129191758.GO6635@beardog.cce.hp.com>
-References: <4ED39C33.5090004@redhat.com>
+From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
+Date: Tue, 29 Nov 2011 15:08:15 -0500
+Message-ID: <20111129200815.GA12114@phenom.dumpdata.com>
+References: <lx6sezwGldO.A.IhF.UBpWOB@chimera> <201111212249.31196.rjw@sisk.pl>
+	<20111122135412.GA29905@phenom.dumpdata.com>
+	<20111129180414.GA11459@phenom.dumpdata.com>
+	<20111129183428.GE8200@aftab>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:4569 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756231Ab1K2TR7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2011 14:17:59 -0500
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <4ED39C33.5090004@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20111129183428.GE8200@aftab>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/linux-pm/>
+List-Post: <mailto:linux-pm@lists.linux-foundation.org>
+List-Help: <mailto:linux-pm-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/linux-pm>,
+	<mailto:linux-pm-request@lists.linux-foundation.org?subject=subscribe>
+Sender: linux-pm-bounces@lists.linux-foundation.org
+Errors-To: linux-pm-bounces@lists.linux-foundation.org
+To: Borislav Petkov <bp@amd64.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Florian Mickler <florian@mickler.org>, Network Development <netdev@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, x86@kernel.org, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Linux ACPI <linux-acpi@vger.kernel.org>, mingo@redhat.com, hpa@zytor.com, tglx@linutronix.de, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
 
-On Mon, Nov 28, 2011 at 03:35:31PM +0100, Tomas Henzl wrote:
-> The '5i' controller freezes when a kdump is attemted.
-> This patch admits it and adds the controller
-> to the unresetable list.
+On Tue, Nov 29, 2011 at 07:34:28PM +0100, Borislav Petkov wrote:
+> On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
+> > This patch:
+> > 
+> > commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
+> > Author: Len Brown <len.brown@intel.com>
+> > Date:   Fri Apr 1 18:28:35 2011 -0400
+> > 
+> >     cpuidle: replace xen access to x86 pm_idle and default_idle
+> > 
+> >     ..scribble on pm_idle and access default_idle,
+> >    have it simply disable_cpuidle() so acpi_idle will not load and
+> >    architecture default HLT will be used.
+> > 
+> > idea was to have one call - disable_cpuidle() which would make
+> > pm_idle not be molested by other code. It disallows cpuidle_idle_call
+> > and acpi_idle_call to not set pm_idle (which is excellent). But the
 > 
-> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-> 
-> ---
->  drivers/block/cciss.c |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> index 8f4ef65..b43ed87 100644
-> --- a/drivers/block/cciss.c
-> +++ b/drivers/block/cciss.c
-> @@ -576,12 +576,14 @@ static u32 unresettable_controller[] = {
->  	0x3215103C, /* Smart Array E200i */
->  	0x3237103C, /* Smart Array E500 */
->  	0x323D103C, /* Smart Array P700m */
-> +	0x40800E11, /* Smart Array 5i */
->  	0x409C0E11, /* Smart Array 6400 */
->  	0x409D0E11, /* Smart Array 6400 EM */
->  };
->  
->  /* List of controllers which cannot even be soft reset */
->  static u32 soft_unresettable_controller[] = {
-> +	0x40800E11, /* Smart Array 5i */
->  	0x409C0E11, /* Smart Array 6400 */
->  	0x409D0E11, /* Smart Array 6400 EM */
->  };
-> -- 
-> 1.7.6.4
-> 
-> 
+> what is acpi_idle_call, I can't find it anywhere.
 
-Ack.
+You are right. I had "acpi_idle_enter_*" and its friend in mind. Which
+are called from the cpuidle_idle_call.
 
--- steve
+Let me fix that comment up.
+> 
+> > amd_e400_idle and mwait_idle can still setup pm_idle which we really
+> > do not want.
+> 
+> This is not the case: rather select_idle_routine()/idle_setup() sets
+> pm_idle.
+
+Yes. Let me fix up the comment.
+> 
+> [..]
+> 
+> > +bool set_pm_idle_to_default()
+> > +{
+> > +	if (!pm_idle) {
+> > +		pm_idle = default_idle;
+> > +		return true;
+> > +	}
+> > +	return false;
+> > +}
+> 
+> I don't understand what you're trying to achieve here? Do you want
+> default_idle to be always the pm_idle for xen or what is the deal here?
+
+Yes (always want default_idle).
+> 
+> If yes, then simply do:
+> 
+> bool set_pm_idle_to_default(void)	// remember to add "void" for no function args
+> {
+> 	bool ret = !!pm_idle;
+> 
+> 	pm_idle = default_idle;
+
+That would work too.
+> 
+> 	return ret;
+> 
+> }
+> 
+> ...
+> 
+> >  void stop_this_cpu(void *dummy) 
+> >  {
+> >  	local_irq_disable();
+> > diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
+> > index 46d6d21..7506181 100644
+> > --- a/arch/x86/xen/setup.c
+> > +++ b/arch/x86/xen/setup.c
+> > @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
+> >  #endif
+> >  	disable_cpuidle();
+> >  	boot_option_idle_override = IDLE_HALT;
+> > -
+> > +	WARN_ON(!set_pm_idle_to_default());
+> 
+> and then do
+> 
+> 	WARN_ON(set_pm_idle_to_default());
+> 
+> instead of having arbitrary confusing logic. This way you can warn
+> whether something else set pm_idle already. Or?
+
+That would work as well.
