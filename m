@@ -1,103 +1,61 @@
-From: Borislav Petkov <bp@amd64.org>
-Subject: Re: 3.2-rc2+: Reported regressions from 3.0 and 3.1
-Date: Tue, 29 Nov 2011 19:34:28 +0100
-Message-ID: <20111129183428.GE8200@aftab>
-References: <lx6sezwGldO.A.IhF.UBpWOB@chimera>
- <201111212249.31196.rjw@sisk.pl>
- <20111122135412.GA29905@phenom.dumpdata.com>
- <20111129180414.GA11459@phenom.dumpdata.com>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 2/2] hpsa: add the Smart Array 5i to the kdump blacklist
+Date: Tue, 29 Nov 2011 13:17:40 -0600
+Message-ID: <20111129191740.GN6635@beardog.cce.hp.com>
+References: <4ED39D3B.9080305@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:37586 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756118Ab1K2TRm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2011 14:17:42 -0500
 Content-Disposition: inline
-In-Reply-To: <20111129180414.GA11459@phenom.dumpdata.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, x86@kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, deepthi@linux.vnet.ibm.com
+In-Reply-To: <4ED39D3B.9080305@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, scameron@beardog.cce.hp.com
 
-On Tue, Nov 29, 2011 at 01:04:14PM -0500, Konrad Rzeszutek Wilk wrote:
-> This patch:
+On Mon, Nov 28, 2011 at 03:39:55PM +0100, Tomas Henzl wrote:
+> The '5i' controller freezes when a kdump is attemted.
+> This patch admits it and adds the controller
+> to the unresetable list.
 > 
-> commit d91ee5863b71e8c90eaf6035bff3078a85e2e7b5
-> Author: Len Brown <len.brown@intel.com>
-> Date:   Fri Apr 1 18:28:35 2011 -0400
+> Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 > 
->     cpuidle: replace xen access to x86 pm_idle and default_idle
+> ---
+>  drivers/scsi/hpsa.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
 > 
->     ..scribble on pm_idle and access default_idle,
->    have it simply disable_cpuidle() so acpi_idle will not load and
->    architecture default HLT will be used.
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index e011937..b21491b 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -292,12 +292,14 @@ static u32 unresettable_controller[] = {
+>  	0x3215103C, /* Smart Array E200i */
+>  	0x3237103C, /* Smart Array E500 */
+>  	0x323D103C, /* Smart Array P700m */
+> +	0x40800E11, /* Smart Array 5i */
+>  	0x409C0E11, /* Smart Array 6400 */
+>  	0x409D0E11, /* Smart Array 6400 EM */
+>  };
+>  
+>  /* List of controllers which cannot even be soft reset */
+>  static u32 soft_unresettable_controller[] = {
+> +	0x40800E11, /* Smart Array 5i */
+>  	/* Exclude 640x boards.  These are two pci devices in one slot
+>  	 * which share a battery backed cache module.  One controls the
+>  	 * cache, the other accesses the cache through the one that controls
+> -- 
+> 1.7.6.4
 > 
-> idea was to have one call - disable_cpuidle() which would make
-> pm_idle not be molested by other code. It disallows cpuidle_idle_call
-> and acpi_idle_call to not set pm_idle (which is excellent). But the
+> 
 
-what is acpi_idle_call, I can't find it anywhere.
+Ack.  
 
-> amd_e400_idle and mwait_idle can still setup pm_idle which we really
-> do not want.
+I don't actually still have anything so old as a 5i to try it myself.
+But at this point, finding out that the reset fails on some old Smart array
+does not surprise me very much.  :(
 
-This is not the case: rather select_idle_routine()/idle_setup() sets
-pm_idle.
-
-[..]
-
-> +bool set_pm_idle_to_default()
-> +{
-> +	if (!pm_idle) {
-> +		pm_idle = default_idle;
-> +		return true;
-> +	}
-> +	return false;
-> +}
-
-I don't understand what you're trying to achieve here? Do you want
-default_idle to be always the pm_idle for xen or what is the deal here?
-
-If yes, then simply do:
-
-bool set_pm_idle_to_default(void)	// remember to add "void" for no function args
-{
-	bool ret = !!pm_idle;
-
-	pm_idle = default_idle;
-
-	return ret;
-
-}
-
-...
-
->  void stop_this_cpu(void *dummy)
->  {
->  	local_irq_disable();
-> diff --git a/arch/x86/xen/setup.c b/arch/x86/xen/setup.c
-> index 46d6d21..7506181 100644
-> --- a/arch/x86/xen/setup.c
-> +++ b/arch/x86/xen/setup.c
-> @@ -448,6 +448,6 @@ void __init xen_arch_setup(void)
->  #endif
->  	disable_cpuidle();
->  	boot_option_idle_override = IDLE_HALT;
-> -
-> +	WARN_ON(!set_pm_idle_to_default());
-
-and then do
-
-	WARN_ON(set_pm_idle_to_default());
-
-instead of having arbitrary confusing logic. This way you can warn
-whether something else set pm_idle already. Or?
-
-Thanks.
-
--- 
-Regards/Gruss,
-Boris.
-
-Advanced Micro Devices GmbH
-Einsteinring 24, 85609 Dornach
-GM: Alberto Bozzo
-Reg: Dornach, Landkreis Muenchen
-HRB Nr. 43632 WEEE Registernr: 129 19551
+-- steve
