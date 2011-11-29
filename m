@@ -1,8 +1,8 @@
 From: Thomas Meyer <thomas@m3y3r.de>
-Subject: [PATCH] [SCSI] bnx2fc: Use kcalloc instead of kzalloc to allocate
+Subject: [PATCH] [SCSI] aacraid: Use kcalloc instead of kzalloc to allocate
  array
 Date: Tue, 29 Nov 2011 22:08:00 +0100
-Message-ID: <1322600880.1534.329.camel@localhost.localdomain>
+Message-ID: <1322600880.1534.328.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -21,26 +21,17 @@ in https://lkml.org/lkml/2011/11/25/107
 Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
 ---
 
-diff -u -p a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c 2011-11-13 11:07:46.087131212 +0100
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c 2011-11-28 20:02:42.476121413 +0100
-@@ -270,15 +270,15 @@ struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_al
- 		return NULL;
- 	}
+diff -u -p a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+--- a/drivers/scsi/aacraid/aachba.c 2011-11-13 11:07:45.697125064 +0100
++++ b/drivers/scsi/aacraid/aachba.c 2011-11-28 20:02:37.129376267 +0100
+@@ -381,8 +381,8 @@ int aac_get_containers(struct aac_dev *d
  
--	cmgr->free_list = kzalloc(sizeof(*cmgr->free_list) *
--				  arr_sz, GFP_KERNEL);
-+	cmgr->free_list = kcalloc(arr_sz, sizeof(*cmgr->free_list),
-+				  GFP_KERNEL);
- 	if (!cmgr->free_list) {
- 		printk(KERN_ERR PFX "failed to alloc free_list\n");
- 		goto mem_err;
- 	}
+ 	if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
+ 		maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
+-	fsa_dev_ptr = kzalloc(sizeof(*fsa_dev_ptr) * maximum_num_containers,
+-			GFP_KERNEL);
++	fsa_dev_ptr = kcalloc(maximum_num_containers, sizeof(*fsa_dev_ptr),
++			      GFP_KERNEL);
+ 	if (!fsa_dev_ptr)
+ 		return -ENOMEM;
  
--	cmgr->free_list_lock = kzalloc(sizeof(*cmgr->free_list_lock) *
--				       arr_sz, GFP_KERNEL);
-+	cmgr->free_list_lock = kcalloc(arr_sz, sizeof(*cmgr->free_list_lock),
-+				       GFP_KERNEL);
- 	if (!cmgr->free_list_lock) {
- 		printk(KERN_ERR PFX "failed to alloc free_list_lock\n");
- 		goto mem_err;
