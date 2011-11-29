@@ -1,92 +1,82 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
- resources at blk_release_queue())
-Date: Tue, 29 Nov 2011 15:18:03 -0500
-Message-ID: <20111129201803.GB6827@redhat.com>
-References: <20111031100557.GA2621@osiris.boeblingen.de.ibm.com>
- <1320057746.2964.1.camel@dabdike>
- <4EAE8A7E.8000504@ce.jp.nec.com>
- <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
- <20111103182548.GA12131@redhat.com>
- <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
- <4EBA49C2.1000704@suse.de>
- <20111110161008.GA15659@osiris.boeblingen.de.ibm.com>
- <20111117162919.GA3812@redhat.com>
- <20111129120047.GA2456@osiris.boeblingen.de.ibm.com>
+From: <Jayamohan.Kallickal@Emulex.Com>
+Subject: RE: [patch] [SCSI] be2iscsi: cleanup a min_t() call
+Date: Tue, 29 Nov 2011 12:55:13 -0800
+Message-ID: <50725EF61B96174EB1803401F1A2E3733CD830D13F@EXMAIL.ad.emulex.com>
+References: <20110926062337.GD11832@elgon.mountain>
+ <4EC6B1C2.108@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20111129120047.GA2456@osiris.boeblingen.de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com, dm-devel@redhat.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht1.emulex.com ([138.239.113.183]:4907 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756710Ab1K2VAu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2011 16:00:50 -0500
+In-Reply-To: <4EC6B1C2.108@cs.wisc.edu>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu, dan.carpenter@oracle.com
+Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Tue, Nov 29 2011 at  7:00am -0500,
-Heiko Carstens <heiko.carstens@de.ibm.com> wrote:
+Looks good.
 
-> > > > Hmm. Just to be on the safe side, could you try this one:
-> > > > 
-> > > > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> > > > index 5e0090e..e6fad46 100644
-> > > > --- a/drivers/md/dm-mpath.c
-> > > > +++ b/drivers/md/dm-mpath.c
-> > > > @@ -920,8 +920,10 @@ static int multipath_map(struct dm_target *ti,
-> > > > struct reque
-> > > > st *clone,
-> > > >         map_context->ptr = mpio;
-> > > >         clone->cmd_flags |= REQ_FAILFAST_TRANSPORT;
-> > > >         r = map_io(m, clone, mpio, 0);
-> > > > -       if (r < 0 || r == DM_MAPIO_REQUEUE)
-> > > > +       if (r < 0 || r == DM_MAPIO_REQUEUE) {
-> > > >                 mempool_free(mpio, m->mpio_pool);
-> > > > +               map_context->ptr = NULL;
-> > > > +       }
-> > > > 
-> > > >         return r;
-> > > >  }
-> > > 
-> > > With your patch we haven't been able to reproduce the kernel crash until now.
-> > > Now we "only" run into I/O stalls, which before your patch we also did. But
-> > > repeatedly rebooting and retrying and ignoring the I/O stalls always lead to
-> > > a crash.
-> > > Gonzalo will run a couple of extra rounds so we can have a feeling if at least
-> > > one of the bugs could be fixed with your patch ;)
-> > 
-> > Hi,
-> > 
-> > Any update after further testing with Hannes' patch?
+Acked-by: Jayamohan Kallickal <Jayamohan.kallickal@emulex.com>
+
+Thanks
+Jay
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Friday, November 18, 2011 11:28 AM
+To: Dan Carpenter
+Cc: Kallickal, Jayamohan; James E.J. Bottomley; linux-scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
+Subject: Re: [patch] [SCSI] be2iscsi: cleanup a min_t() call
+
+On 09/26/2011 01:23 AM, Dan Carpenter wrote:
+> "sense_len" was declared as int type but actually it only stores a
+> u16 value that comes from hardware.  The cast to u16 in min_t()
+> confuses static analysis because it truncates the int to u16 so I've
+> fixed the declaration to reflect that "sense_len" is just a u16.
 > 
-> Sorry for the late update, our internal IBM IMAP servers have been down
-> for nearly a week :/
+> Also there was a call to cpu_to_be16() which I've changed to
+> be16_to_cpu().  The functions are equivalent, but obviously the
+> hardware is big endian and we're doing the min_t() comparison on CPU
+> endian values.
 > 
-> So, we were unable to reproduce the original bug with the patch applied
-> during various runs.
-
-OK, so it seems to be a benenficial change (and obviously correct to
-me).  Hannes, care to formally post your fix to dm-devel so we can get
-it in 3.2-rc?
-
-> However, we ran into this one instead, which is yet another use-after-free bug
-> (I need to double check, but I'm quite sure that a freed struct scsi_cmnd
-> caused this).
-
-OK, yeah something is causing poisoned (POISON_FREE) memory to be used.
-
-> [ 4906.683654] Unable to handle kernel pointer dereference at virtual kernel address 6b6b6b6b6b6b6000
-
-...
-
-> Gonzalo also tried 2.6.38.8 as suggested and ran into this one:
+> This whole patch is just a cleanup and doesn't affect how the code
+> works.
 > 
-> [  292.877936] ------------[ cut here ]------------
-> [  292.877939] Kernel BUG at 6b6b6b6b6b6b6b6d [verbose debug info unavailable]
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Compile tested only.  Sorry.
+> 
+> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+> index 57fea38..344af8d 100644
+> --- a/drivers/scsi/be2iscsi/be_main.c
+> +++ b/drivers/scsi/be2iscsi/be_main.c
+> @@ -1104,7 +1104,6 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
+>  	struct be_status_bhs *sts_bhs =
+>  				(struct be_status_bhs *)io_task->cmd_bhs;
+>  	struct iscsi_conn *conn = beiscsi_conn->conn;
+> -	unsigned int sense_len;
+>  	unsigned char *sense;
+>  	u32 resid = 0, exp_cmdsn, max_cmdsn;
+>  	u8 rsp, status, flags;
+> @@ -1147,9 +1146,11 @@ be_complete_io(struct beiscsi_conn *beiscsi_conn,
+>  	}
+>  
+>  	if (status == SAM_STAT_CHECK_CONDITION) {
+> +		u16 sense_len;
+>  		unsigned short *slen = (unsigned short *)sts_bhs->sense_info;
+> +
+>  		sense = sts_bhs->sense_info + sizeof(unsigned short);
+> -		sense_len =  cpu_to_be16(*slen);
+> +		sense_len = be16_to_cpu(*slen);
+>  		memcpy(task->sc->sense_buffer, sense,
+>  		       min_t(u16, sense_len, SCSI_SENSE_BUFFERSIZE));
 
-Again, more poison.
+Looks ok to me.
 
-Seems this test is causing us to fall on our face no matter what.
-Likely, best to leave this 2.6.38 blk_unplug crash to one side and
-continue focusing on latest upstream.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
-Mike
