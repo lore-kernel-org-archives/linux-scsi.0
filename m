@@ -1,56 +1,37 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] [SCSI] mpt2sas: Remove unused duplicate diag_buffer_enable param
-Date: Wed, 30 Nov 2011 10:05:50 -0800
-Message-ID: <1322676350-2018-1-git-send-email-roland@kernel.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] iscsi_ibft: Display iBFT signature in sysfs
+Date: Wed, 30 Nov 2011 13:41:47 -0600
+Message-ID: <4ED686FB.6060308@cs.wisc.edu>
+References: <1322662228-51255-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog105.obsmtp.com ([74.125.245.78]:56239 "HELO
-	na3sys010aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752278Ab1K3SLD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2011 13:11:03 -0500
-Received: by mail-gy0-f178.google.com with SMTP id f1so940702ghb.9
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2011 10:11:02 -0800 (PST)
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60396 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751876Ab1K3Tl7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2011 14:41:59 -0500
+In-Reply-To: <1322662228-51255-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>
 
-From: Roland Dreier <roland@purestorage.com>
+On 11/30/2011 08:10 AM, Hannes Reinecke wrote:
+> Broadcom iSCSI offload cards use the signature 'BIFT' to signal
+> that iSCSI offload is in use. This patch exports the iBFT signature
+> to sysfs so that userspace can enable iSCSI offloading here.
 
-Commit 921cd8024b90 ("[SCSI] mpt2sas: New feature - Fast Load
-Support") moved handling of the diag_buffer_enable module parameter
-from mpt2sas_base.c to mpt2sas_scsih.c, but it left an old copy of the
-parameter in mpt2sas_base.c.  Remove the unused stub.
+Seems useful and ok to export.
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |   13 -------------
- 1 files changed, 0 insertions(+), 13 deletions(-)
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index beda04a..b3ad90e 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -89,19 +89,6 @@ static int disable_discovery = -1;
- module_param(disable_discovery, int, 0);
- MODULE_PARM_DESC(disable_discovery, " disable discovery ");
- 
--
--/* diag_buffer_enable is bitwise
-- * bit 0 set = TRACE
-- * bit 1 set = SNAPSHOT
-- * bit 2 set = EXTENDED
-- *
-- * Either bit can be set, or both
-- */
--static int diag_buffer_enable;
--module_param(diag_buffer_enable, int, 0);
--MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
--    "(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
--
- /**
-  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
-  *
--- 
-1.7.5.4
 
+Note that you should not need this for the iscsi tools though. The iscsi
+tools in git already figure this out for all drivers if you compile with
+OFFLOAD_BOOT_SUPPORTED set. Basically, if the MAC address in the
+firmware ibft/iscsi_boot dirs/info is the same as one in the
+/sys/class/iscsi_host dir then it is offload. For broadcom when you
+enable hba mode it puts the offloaded MAC address in ibft. If hba mode
+is not enabled then the MAC is the normal networking card port's MAC (in
+this case iscsi tools will just do iscsi_tcp over bnx2x/bnx2).
