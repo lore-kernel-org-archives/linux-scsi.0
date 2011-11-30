@@ -1,88 +1,134 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out
- of the staging area
-Date: Wed, 30 Nov 2011 13:46:18 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481AA7ACC4@TK5EX14MBXC126.redmond.corp.microsoft.com>
-References: <1320776028-29568-1-git-send-email-kys@microsoft.com>
- <1321554393.3041.77.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "ohering@suse.com" <ohering@suse.com>, "hch@infradead.org" <hch@infradead.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] iscsi_ibft: Display iBFT signature in sysfs
+Date: Wed, 30 Nov 2011 15:10:28 +0100
+Message-ID: <1322662228-51255-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:51258 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755571Ab1K3OKa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2011 09:10:30 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Bottomley <jbottomley@parallels.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogS1kgU3Jpbml2YXNhbg0K
-PiBTZW50OiBUaHVyc2RheSwgTm92ZW1iZXIgMTcsIDIwMTEgMTE6NTMgUE0NCj4gVG86ICdKYW1l
-cyBCb3R0b21sZXknDQo+IENjOiBncmVna2hAc3VzZS5kZTsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZzsNCj4gZGV2ZWxAbGludXhkcml2ZXJwcm9qZWN0Lm9yZzsgdmlydHVhbGl6YXRpb25A
-bGlzdHMub3NkbC5vcmc7IGxpbnV4LQ0KPiBzY3NpQHZnZXIua2VybmVsLm9yZzsgb2hlcmluZ0Bz
-dXNlLmNvbTsgaGNoQGluZnJhZGVhZC5vcmcNCj4gU3ViamVjdDogUkU6IFtQQVRDSCAxLzFdIFN0
-YWdpbmc6IGh2OiBzdG9ydnNjOiBNb3ZlIHRoZSBzdG9yYWdlIGRyaXZlciBvdXQgb2YgdGhlDQo+
-IHN0YWdpbmcgYXJlYQ0KPiANCj4gDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+ID4gRnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNl
-blBhcnRuZXJzaGlwLmNvbV0NCj4gPiBTZW50OiBUaHVyc2RheSwgTm92ZW1iZXIgMTcsIDIwMTEg
-MToyNyBQTQ0KPiA+IFRvOiBLWSBTcmluaXZhc2FuDQo+ID4gQ2M6IGdyZWdraEBzdXNlLmRlOyBs
-aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiA+IGRldmVsQGxpbnV4ZHJpdmVycHJvamVj
-dC5vcmc7IHZpcnR1YWxpemF0aW9uQGxpc3RzLm9zZGwub3JnOyBsaW51eC0NCj4gPiBzY3NpQHZn
-ZXIua2VybmVsLm9yZzsgb2hlcmluZ0BzdXNlLmNvbTsgaGNoQGluZnJhZGVhZC5vcmcNCj4gPiBT
-dWJqZWN0OiBSZTogW1BBVENIIDEvMV0gU3RhZ2luZzogaHY6IHN0b3J2c2M6IE1vdmUgdGhlIHN0
-b3JhZ2UgZHJpdmVyIG91dCBvZg0KPiB0aGUNCj4gPiBzdGFnaW5nIGFyZWENCj4gPg0KPiA+IE9u
-IFR1ZSwgMjAxMS0xMS0wOCBhdCAxMDoxMyAtMDgwMCwgSy4gWS4gU3Jpbml2YXNhbiB3cm90ZToN
-Cj4gPiA+IFRoZSBzdG9yYWdlIGRyaXZlciAoc3RvcnZzY19kcnYuYykgaGFuZGxlcyBhbGwgYmxv
-Y2sgc3RvcmFnZSBkZXZpY2VzDQo+ID4gPiBhc3NpZ25lZCB0byBMaW51eCBndWVzdHMgaG9zdGVk
-IG9uIEh5cGVyLVYuIFRoaXMgZHJpdmVyIGhhcyBiZWVuIGluIHRoZQ0KPiA+ID4gc3RhZ2luZyB0
-cmVlIGZvciBhIHdoaWxlIGFuZCB0aGlzIHBhdGNoIG1vdmVzIGl0IG91dCBvZiB0aGUgc3RhZ2lu
-ZyBhcmVhLg0KPiA+ID4gQXMgcGVyIEdyZWcncyByZWNvbW1lbmRhdGlvbiwgdGhpcyBwYXRjaCBt
-YWtlcyBubyBjaGFuZ2VzIHRvIHRoZQ0KPiBzdGFnaW5nL2h2DQo+ID4gPiBkaXJlY3RvcnkuIE9u
-Y2UgdGhlIGRyaXZlciBtb3ZlcyBvdXQgb2Ygc3RhZ2luZywgd2Ugd2lsbCBjbGVhbnVwIHRoZQ0K
-PiA+ID4gc3RhZ2luZy9odiBkaXJlY3RvcnkuDQo+ID4gPg0KPiA+ID4gVGhpcyBwYXRjaCBpbmNs
-dWRlcyBhbGwgdGhlIHBhdGNoZXMgdGhhdCBJIGhhdmUgc2VudCBhZ2FpbnN0IHRoZSBzdGFnaW5n
-L2h2DQo+ID4gPiB0cmVlIHRvIGFkZHJlc3MgdGhlIGNvbW1lbnRzIEkgaGF2ZSBnb3R0ZW4gdG8g
-ZGF0ZSBvbiB0aGlzIHN0b3JhZ2UgZHJpdmVyLg0KPiA+DQo+ID4gRmlyc3QgY29tbWVudCBpcyB0
-aGF0IGl0IHdvdWxkIGhhdmUgYmVlbiBlYXNpZXIgdG8gc2VlIHRoZSBpbmRpdmlkdWFsDQo+ID4g
-cGF0Y2hlcyBmb3IgY29tbWVudCBiZWZvcmUgeW91IGNvbW1pdHRlZCB0aGVtLg0KPiANCj4gSSBh
-bSBub3Qgc3VyZSBpZiB0aGUgcGF0Y2hlcyBoYXZlIGJlZW4gY29tbWl0dGVkIHlldC4gQWxsIHBh
-dGNoZXMgd2VyZSBzZW50DQo+IHRvIHZhcmlvdXMgbWFpbGluZyBsaXN0cyBhbmQgeW91IHdlcmUg
-Y29waWVkIGFzIHdlbGwuIEluIHRoZSBmdXR1cmUsIEkgd2lsbCBpbmNsdWRlDQo+IHRoZSBzY3Np
-IG1haWxpbmcgbGlzdCBpbiB0aGUgc2V0IG9mIGxpc3RzIEkgaW5jbHVkZSBmb3IgdGhlIHN0YWdp
-bmcgcGF0Y2hlcy4NCg0KR3JlZyBoYXMgY2hlY2tlZCBpbiB0aGVzZSBwYXRjaGVzIG5vdy4NCg0K
-PiANCj4gPg0KPiA+IFRoZSB3YXkgeW91IGRpZCBtZW1wb29sIGlzbid0IGVudGlyZWx5IHJpZ2h0
-OiB0aGUgcHJvYmxlbSBpcyB0aGF0IHRvDQo+ID4gcHJldmVudCBhIG1lbW9yeSB0byBJL08gZGVh
-ZGxvY2sgd2UgbmVlZCB0byBlbnN1cmUgZm9yd2FyZCBwcm9ncmVzcyBvbg0KPiA+IHRoZSBkcmFp
-biBkZXZpY2UuICBKdXN0IGhhdmluZyA2NCBjb21tYW5kcyBhdmFpbGFibGUgdG8gdGhlIGhvc3Qg
-ZG9lc24ndA0KPiA+IG5lY2Vzc2FyaWx5IGFjaGlldmUgdGhpcyBiZWNhdXNlIExVTjEgY291bGQg
-Y29uc3VtZSB0aGVtIGFsbCBhbmQgc3RhcnZlDQo+ID4gTFVOMCB3aGljaCBpcyB0aGUgZHJhaW4g
-ZGV2aWNlIGxlYWRpbmcgdG8gdGhlIGRlYWRsb2NrLCBzbyB0aGUgbWVtcG9vbA0KPiA+IHJlYWxs
-eSBuZWVkcyB0byBiZSBwZXIgZGV2aWNlIHVzaW5nIHNsYXZlX2FsbG9jLg0KPiANCg0KUHJlc2Vu
-dGx5LCBMaW51eCBvbiBIeXBlci1WIGNhbiBvbmx5IGJvb3QgZnJvbSBJREUgZGV2aWNlcy4gV2hp
-bGUgSURFIGRldmljZXMgYXJlDQpoYW5kbGVkIHZpYSB0aGlzIHN0b3IgZHJpdmVyLCB0aGUgd2F5
-IHdlIGhhbmRsZSB0aGVtIGlzIGEgbGl0dGxlIGRpZmZlcmVudCBjb21wYXJlZA0KdG8gYmxvY2sg
-ZGV2aWNlcyBjb25maWd1cmVkIGFzIHNjc2kgZGV2aWNlczoNCg0KRm9yICBJREUgZGV2aWNlczsg
-d2UgaGF2ZSBhIEhCQSBwZXIgTFVOLiBHaXZlbiB0aGF0IGZvciBhIGxvbmcgdGltZSB0aGUgZHJh
-aW4gZGV2aWNlIHdpbGwNCmJlIGFuIElERSBkZXZpY2UsIG15IGN1cnJlbnQgaW1wbGVtZW50YXRp
-b24gZG9lcyBhZGRyZXNzIHRoZSBjb25jZXJuIHRoYXQgeW91IGhhZCByYWlzZWQgDQp3aXRoIHJl
-Z2FyZHMgdG8gZGVhZGxvY2sgYXZvaWRhbmNlLiANCg0KPiANCj4gPg0KPiA+ICtzdGF0aWMgaW50
-IHN0b3J2c2NfZGV2aWNlX2FsbG9jKHN0cnVjdCBzY3NpX2RldmljZSAqc2RldmljZSkNCj4gPiAr
-ew0KPiA+ICsJLyoNCj4gPiArCSAqIFRoaXMgZW5hYmxlcyBsdW5zIHRvIGJlIGxvY2F0ZWQgc3Bh
-cnNlbHkuIE90aGVyd2lzZSwgd2UgbWF5IG5vdA0KPiA+ICsJICogZGlzY292ZXJlZCB0aGVtLg0K
-PiA+ICsJICovDQo+ID4gKwlzZGV2aWNlLT5zZGV2X2JmbGFncyB8PSBCTElTVF9TUEFSU0VMVU4g
-fCBCTElTVF9MQVJHRUxVTjsNCj4gPiArCXJldHVybiAwOw0KPiA+ICt9DQo+ID4NCj4gPiBMb29r
-cyBib2d1cyAuLi4gdGhpcyBzaG91bGQgaGFwcGVuIGF1dG9tYXRpY2FsbHkgZm9yIFNDU0ktMyBk
-ZXZpY2VzIC4uLg0KPiA+IHVubGVzcyB5b3VyIGh5cGVydmlzb3IgaGFzIHNvbWUgc3RyYW5nZSAo
-YW5kIHdyb25nKSBpZGVudGlmaWNhdGlvbj8gIEkNCj4gPiByZWFsbHkgdGhpbmsgeW91IHdhbnQg
-dG8gdXNlIFNDU0ktMyBiZWNhdXNlIGl0IHdpbGwgZG8gcmVwb3J0IExVTg0KPiA+IHNjYW5uaW5n
-LCB3aGljaCBjb25zdW1lcyBmYXIgZmV3ZXIgcmVzb3VyY2VzLg0KPiANCg0KRG9uZS4NCg0KPiAN
-Cj4gPg0KPiA+IEkgc3RpbGwgdGhpbmsgeW91IG5lZWQgdG8gZGlzYWJsZSBjbHVzdGVyaW5nIGFu
-ZCBqdW5rIHRoZSBidmVjIG1lcmdlDQo+ID4gZnVuY3Rpb24uICBZb3VyIG9iamVjdCBzZWVtcyB0
-byBiZSB0byBhY2N1bXVsYXRlIGluIHBhZ2Ugc2l6ZSBtdWx0aXBsZXMNCj4gPiAoYW5kIG5vdCBh
-Z2dyZWdhdGUgb3ZlciB0aGlzKSAuLi4gdGhhdCdzIHdoYXQgY2x1c3RlcmluZyBpcyBkZXNpZ25l
-ZCB0bw0KPiA+IGRvLg0KDQpEb25lLiBKYW1lcywgSSBhbSBnb2luZyB0byBzZW5kIHlvdSAoYW5k
-IHRoZSBzY3NpIG1haWxpbmcgbGlzdCkgdGhlIHBhdGNoZXMgYWRkcmVzc2luZyANCnlvdXIgY29t
-bWVudHMuIEkgd2lsbCBhbHNvIHNlbmQgb3V0IGEgY29uc29saWRhdGVkIHBhdGNoIGZvciBnZXR0
-aW5nIHRoZSBkcml2ZXIgb3V0IG9mIA0Kc3RhZ2luZyBhcyB3ZWxsLiBJIHdvdWxkIGxpa2UgdG8g
-dGhhbmsgeW91IGZvciB5b3VyIGhlbHAgaW4gY2xlYW5pbmcgdXAgdGhpcyBkcml2ZXIuDQoNClJl
-Z2FyZHMsDQoNCksuIFkNCg==
+Broadcom iSCSI offload cards use the signature 'BIFT' to signal
+that iSCSI offload is in use. This patch exports the iBFT signature
+to sysfs so that userspace can enable iSCSI offloading here.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/firmware/iscsi_ibft.c      |    7 +++++++
+ drivers/firmware/iscsi_ibft_find.c |    3 +++
+ drivers/scsi/iscsi_boot_sysfs.c    |    5 +++++
+ include/linux/iscsi_boot_sysfs.h   |    1 +
+ include/linux/iscsi_ibft.h         |    5 +++++
+ 5 files changed, 21 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/firmware/iscsi_ibft.c b/drivers/firmware/iscsi_ibft.c
+index c811cb1..fdedee6 100644
+--- a/drivers/firmware/iscsi_ibft.c
++++ b/drivers/firmware/iscsi_ibft.c
+@@ -275,6 +275,9 @@ static ssize_t ibft_attr_show_initiator(void *data, int type, char *buf)
+ 				      (char *)ibft_loc +
+ 				      initiator->initiator_name_off);
+ 		break;
++	case ISCSI_BOOT_INI_INITIATOR_SIG:
++		str += sprintf(str, "%s\n", ibft_sig);
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -559,6 +562,10 @@ static mode_t __init ibft_check_initiator_for(void *data, int type)
+ 		if (init->initiator_name_len)
+ 			rc = S_IRUGO;
+ 		break;
++	case ISCSI_BOOT_INI_INITIATOR_SIG:
++		if (ibft_sig)
++			rc = S_IRUGO;
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/firmware/iscsi_ibft_find.c b/drivers/firmware/iscsi_ibft_find.c
+index bfe7232..58830ee 100644
+--- a/drivers/firmware/iscsi_ibft_find.c
++++ b/drivers/firmware/iscsi_ibft_find.c
+@@ -41,6 +41,8 @@
+  */
+ struct acpi_table_ibft *ibft_addr;
+ EXPORT_SYMBOL_GPL(ibft_addr);
++char *ibft_sig;
++EXPORT_SYMBOL_GPL(ibft_sig);
+ 
+ static const struct {
+ 	char *sign;
+@@ -94,6 +96,7 @@ static int __init find_ibft_in_mem(void)
+ 				 * the table cannot be valid. */
+ 				if (pos + len <= (IBFT_END-1)) {
+ 					ibft_addr = (struct acpi_table_ibft *)virt;
++					ibft_sig = ibft_signs[i].sign;
+ 					goto done;
+ 				}
+ 			}
+diff --git a/drivers/scsi/iscsi_boot_sysfs.c b/drivers/scsi/iscsi_boot_sysfs.c
+index 89700cb..12edb0e 100644
+--- a/drivers/scsi/iscsi_boot_sysfs.c
++++ b/drivers/scsi/iscsi_boot_sysfs.c
+@@ -253,6 +253,7 @@ iscsi_boot_rd_attr(ini_primary_radius, pri-radius-server,
+ iscsi_boot_rd_attr(ini_secondary_radius, sec-radius-server,
+ 		   ISCSI_BOOT_INI_SEC_RADIUS_SERVER);
+ iscsi_boot_rd_attr(ini_name, initiator-name, ISCSI_BOOT_INI_INITIATOR_NAME);
++iscsi_boot_rd_attr(ini_sig, initiator-signature, ISCSI_BOOT_INI_INITIATOR_SIG);
+ 
+ static struct attribute *initiator_attrs[] = {
+ 	&iscsi_boot_attr_ini_index.attr,
+@@ -262,6 +263,7 @@ static struct attribute *initiator_attrs[] = {
+ 	&iscsi_boot_attr_ini_primary_radius.attr,
+ 	&iscsi_boot_attr_ini_secondary_radius.attr,
+ 	&iscsi_boot_attr_ini_name.attr,
++	&iscsi_boot_attr_ini_sig.attr,
+ 	NULL
+ };
+ 
+@@ -292,6 +294,9 @@ static mode_t iscsi_boot_ini_attr_is_visible(struct kobject *kobj,
+ 	if (attr ==  &iscsi_boot_attr_ini_name.attr)
+ 		return boot_kobj->is_visible(boot_kobj->data,
+ 					     ISCSI_BOOT_INI_INITIATOR_NAME);
++	if (attr ==  &iscsi_boot_attr_ini_sig.attr)
++		return boot_kobj->is_visible(boot_kobj->data,
++					     ISCSI_BOOT_INI_INITIATOR_SIG);
+ 
+ 	return 0;
+ }
+diff --git a/include/linux/iscsi_boot_sysfs.h b/include/linux/iscsi_boot_sysfs.h
+index f0a2f8b..2c4e8b0 100644
+--- a/include/linux/iscsi_boot_sysfs.h
++++ b/include/linux/iscsi_boot_sysfs.h
+@@ -60,6 +60,7 @@ enum iscsi_boot_initiator_properties_enum {
+ 	ISCSI_BOOT_INI_PRI_RADIUS_SERVER,
+ 	ISCSI_BOOT_INI_SEC_RADIUS_SERVER,
+ 	ISCSI_BOOT_INI_INITIATOR_NAME,
++	ISCSI_BOOT_INI_INITIATOR_SIG,
+ 	ISCSI_BOOT_INI_END_MARKER,
+ };
+ 
+diff --git a/include/linux/iscsi_ibft.h b/include/linux/iscsi_ibft.h
+index 8ba7e5b..8fadc5f 100644
+--- a/include/linux/iscsi_ibft.h
++++ b/include/linux/iscsi_ibft.h
+@@ -30,6 +30,11 @@
+ extern struct acpi_table_ibft *ibft_addr;
+ 
+ /*
++ * Pointer of the iSCSI Boot Format Table Signature.
++ */
++extern char *ibft_sig;
++
++/*
+  * Routine used to find and reserve the iSCSI Boot Format Table. The
+  * mapped address is set in the ibft_addr variable.
+  */
+-- 
+1.6.0.2
+
