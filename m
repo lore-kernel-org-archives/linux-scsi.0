@@ -1,59 +1,221 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH 03/07] [SCSI] mpt2sas : Adding support for customer
- specific branding
-Date: Thu, 1 Dec 2011 07:43:00 +0530
-Message-ID: <201112010919.pB19JS19018189@milmhbs0.lsil.com>
+Subject: [PATCH 04/07] [SCSI] mpt2sas : MPI next revision header update
+Date: Thu, 1 Dec 2011 07:43:37 +0530
+Message-ID: <201112010920.pB19K6RX018348@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:44723 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751193Ab1LAJTd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 04:19:33 -0500
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:38549 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751728Ab1LAJUJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 04:20:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Added support for customer specific branding
+MPI next revision header update
+
+1) Added product specific range of ImageType macros for the Extended 
+   Image Header. 
+
+2) Added Flags field and related defines to
+   MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST to support automatic 
+   reserve/release and page addressing.
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 40c270a..a289c1c 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1976,6 +1976,10 @@ _base_display_intel_branding(struct MPT2SAS_ADAPTER *ioc)
- 			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
- 			    MPT2SAS_INTEL_RMS2LL040_BRANDING);
- 			break;
-+		case MPT2SAS_INTEL_RAMSDALE_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_INTEL_RAMSDALE_BRANDING);
-+			break;
- 		default:
- 			break;
- 		}
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 61e5b24..c19982b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -163,14 +163,15 @@
- 				"Intel Integrated RAID Module RMS2LL040"
- #define MPT2SAS_INTEL_RS25GB008_BRANDING       \
- 				"Intel(R) RAID Controller RS25GB008"
--
-+#define MPT2SAS_INTEL_RAMSDALE_BRANDING        \
-+				"Intel 720 Series SSD"
- /*
-  * Intel HBA SSDIDs
+index 8dc1b32..9859133 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.20
++ *  mpi2.h Version:  02.00.21
+  *
+  *  Version History
+  *  ---------------
+@@ -69,6 +69,7 @@
+  *  02-23-11  02.00.19  Bumped MPI2_HEADER_VERSION_UNIT.
+  *                      Added MPI2_FUNCTION_SEND_HOST_MESSAGE.
+  *  03-09-11  02.00.20  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  05-25-11  02.00.21  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
   */
- #define MPT2SAS_INTEL_RMS2LL080_SSDID          0x350E
- #define MPT2SAS_INTEL_RMS2LL040_SSDID          0x350F
- #define MPT2SAS_INTEL_RS25GB008_SSDID          0x3000
--
-+#define MPT2SAS_INTEL_RAMSDALE_SSDID           0x3700
  
- /*
-  * HP HBA branding
+@@ -94,7 +95,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
+ 
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x14)
++#define MPI2_HEADER_VERSION_UNIT            (0x15)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+@@ -1073,8 +1074,10 @@ typedef struct _MPI2_IEEE_SGE_UNION
+ #define MPI2_IEEE_SGE_FLAGS_IOCPLB_ADDR         (0x02)
+ #define MPI2_IEEE_SGE_FLAGS_IOCPLBNTA_ADDR      (0x03)
+ 						/* IEEE Simple Element only */
+-#define MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR   (0x03)
++#define MPI2_IEEE_SGE_FLAGS_SYSTEMPLBPCI_ADDR   (0x03)
+ 						/* IEEE Chain Element only */
++#define MPI2_IEEE_SGE_FLAGS_SYSTEMPLBCPI_ADDR   \
++	(MPI2_IEEE_SGE_FLAGS_SYSTEMPLBPCI_ADDR) /* typo in name */
+ 
+ /****************************************************************************
+ *  IEEE SGE operation Macros
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+index cfd95b4..d237ab8 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Configuration messages and pages
+  *  Creation Date:  November 10, 2006
+  *
+- *    mpi2_cnfg.h Version:  02.00.19
++ *    mpi2_cnfg.h Version:  02.00.20
+  *
+  *  Version History
+  *  ---------------
+@@ -140,6 +140,7 @@
+  *                      Added SASNotifyPrimitiveMasks field to
+  *                      MPI2_CONFIG_PAGE_IOC_7.
+  *  03-09-11  02.00.19  Fixed IO Unit Page 10 (to match the spec).
++ *  05-25-11  02.00.20  Cleaned up a few comments.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -2321,13 +2322,12 @@ typedef struct _MPI2_CONFIG_PAGE_EXPANDER_1
+ 
+ /* use MPI2_SAS_NEG_LINK_RATE_ defines for the NegotiatedLinkRate field */
+ 
+-/* use MPI2_SAS_APHYINFO_ defines for AttachedPhyInfo field */
+-
+ /* values for SAS Expander Page 1 DiscoveryInfo field */
+ #define MPI2_SAS_EXPANDER1_DISCINFO_BAD_PHY_DISABLED    (0x04)
+ #define MPI2_SAS_EXPANDER1_DISCINFO_LINK_STATUS_CHANGE  (0x02)
+ #define MPI2_SAS_EXPANDER1_DISCINFO_NO_ROUTING_ENTRIES  (0x01)
+ 
++/* use MPI2_SAS_APHYINFO_ defines for AttachedPhyInfo field */
+ 
+ /****************************************************************************
+ *   SAS Device Config Pages
+@@ -2447,6 +2447,8 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_PHY_0
+ 
+ #define MPI2_SASPHY0_PAGEVERSION            (0x03)
+ 
++/* use MPI2_SAS_APHYINFO_ defines for AttachedPhyInfo field */
++
+ /* use MPI2_SAS_PRATE_ defines for the ProgrammedLinkRate field */
+ 
+ /* use MPI2_SAS_HWRATE_ defines for the HwLinkRate field */
+@@ -2454,12 +2456,10 @@ typedef struct _MPI2_CONFIG_PAGE_SAS_PHY_0
+ /* values for SAS PHY Page 0 Flags field */
+ #define MPI2_SAS_PHY0_FLAGS_SGPIO_DIRECT_ATTACH_ENC             (0x01)
+ 
+-/* use MPI2_SAS_APHYINFO_ defines for AttachedPhyInfo field */
++/* use MPI2_SAS_PHYINFO_ for the PhyInfo field */
+ 
+ /* use MPI2_SAS_NEG_LINK_RATE_ defines for the NegotiatedLinkRate field */
+ 
+-/* use MPI2_SAS_PHYINFO_ for the PhyInfo field */
+-
+ 
+ /* SAS PHY Page 1 */
+ 
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index 93d9b69..7b53be8 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.17
++ *  mpi2_ioc.h Version:  02.00.18
+  *
+  *  Version History
+  *  ---------------
+@@ -110,6 +110,10 @@
+  *                      Added Temperature Threshold Event.
+  *                      Added Host Message Event.
+  *                      Added Send Host Message request and reply.
++ *  05-25-11  02.00.18  For Extended Image Header, added
++ *                      MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC and
++ *                      MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC defines.
++ *                      Deprecated MPI2_EXT_IMAGE_TYPE_MAX define.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -1366,16 +1370,18 @@ typedef struct _MPI2_EXT_IMAGE_HEADER
+ #define MPI2_EXT_IMAGE_HEADER_SIZE              (0x40)
+ 
+ /* defines for the ImageType field */
+-#define MPI2_EXT_IMAGE_TYPE_UNSPECIFIED         (0x00)
+-#define MPI2_EXT_IMAGE_TYPE_FW                  (0x01)
+-#define MPI2_EXT_IMAGE_TYPE_NVDATA              (0x03)
+-#define MPI2_EXT_IMAGE_TYPE_BOOTLOADER          (0x04)
+-#define MPI2_EXT_IMAGE_TYPE_INITIALIZATION      (0x05)
+-#define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT        (0x06)
+-#define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES   (0x07)
+-#define MPI2_EXT_IMAGE_TYPE_MEGARAID            (0x08)
+-
+-#define MPI2_EXT_IMAGE_TYPE_MAX                 (MPI2_EXT_IMAGE_TYPE_MEGARAID)
++#define MPI2_EXT_IMAGE_TYPE_UNSPECIFIED				(0x00)
++#define MPI2_EXT_IMAGE_TYPE_FW						(0x01)
++#define MPI2_EXT_IMAGE_TYPE_NVDATA					(0x03)
++#define MPI2_EXT_IMAGE_TYPE_BOOTLOADER				(0x04)
++#define MPI2_EXT_IMAGE_TYPE_INITIALIZATION			(0x05)
++#define MPI2_EXT_IMAGE_TYPE_FLASH_LAYOUT			(0x06)
++#define MPI2_EXT_IMAGE_TYPE_SUPPORTED_DEVICES		(0x07)
++#define MPI2_EXT_IMAGE_TYPE_MEGARAID				(0x08)
++#define MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC    (0x80)
++#define MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC    (0xFF)
++#define MPI2_EXT_IMAGE_TYPE_MAX                   \
++	(MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC)	/* deprecated */
+ 
+ 
+ 
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+index 2a4bced..e45010b 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_tool.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI diagnostic tool structures and definitions
+  *  Creation Date:  March 26, 2007
+  *
+- *    mpi2_tool.h Version:  02.00.06
++ *    mpi2_tool.h Version:  02.00.07
+  *
+  *  Version History
+  *  ---------------
+@@ -25,6 +25,8 @@
+  *  05-12-10  02.00.05  Added Diagnostic Data Upload tool.
+  *  08-11-10  02.00.06  Added defines that were missing for Diagnostic Buffer
+  *                      Post Request.
++ *  05-25-11  02.00.07  Added Flags field and related defines to
++ *                      MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -181,7 +183,7 @@ typedef struct _MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST {
+     U8                      DevIndex;                   /* 0x14 */
+     U8                      Action;                     /* 0x15 */
+     U8                      SGLFlags;                   /* 0x16 */
+-    U8                      Reserved7;                  /* 0x17 */
++	 U8                      Flags;                      /* 0x17 */
+     U16                     TxDataLength;               /* 0x18 */
+     U16                     RxDataLength;               /* 0x1A */
+     U32                     Reserved8;                  /* 0x1C */
+@@ -205,6 +207,9 @@ typedef struct _MPI2_TOOLBOX_ISTWI_READ_WRITE_REQUEST {
+ 
+ /* use MPI2_SGLFLAGS_ defines from mpi2.h for the SGLFlags field */
+ 
++/* values for the Flags field */
++#define MPI2_TOOL_ISTWI_FLAG_AUTO_RESERVE_RELEASE   (0x80)
++#define MPI2_TOOL_ISTWI_FLAG_PAGE_ADDR_MASK         (0x07)
+ 
+ /* Toolbox ISTWI Read Write Tool reply message */
+ typedef struct _MPI2_TOOLBOX_ISTWI_REPLY {
