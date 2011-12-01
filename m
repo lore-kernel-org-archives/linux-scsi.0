@@ -1,54 +1,75 @@
-From: James Bottomley <jbottomley@parallels.com>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
 Subject: Re: [PATCH] qla2xxx: Don't memset buffer unless debug level is
  enabled
-Date: Thu, 1 Dec 2011 18:07:43 +0000
-Message-ID: <1322762860.6920.47.camel@dabdike>
-References: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>
-	 <4ED736EB.4090201@linutronix.de>
-	 <1322731309.25753.30.camel@haakon2.linux-iscsi.org>
-	 <alpine.WNT.2.00.1112011259150.1224@N5102REMCQXM4BS.qlogic.org>
+Date: Thu, 1 Dec 2011 13:43:17 -0500
+Message-ID: <alpine.WNT.2.00.1112011341510.196@N5102REMCQXM4BS.qlogic.org>
+References: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>  <4ED736EB.4090201@linutronix.de>  <1322731309.25753.30.camel@haakon2.linux-iscsi.org>  <alpine.WNT.2.00.1112011259150.1224@N5102REMCQXM4BS.qlogic.org> <1322762860.6920.47.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <alpine.WNT.2.00.1112011259150.1224@N5102REMCQXM4BS.qlogic.org>
-Content-Language: en-US
-Content-ID: <75E3F0535278014E8437B6604491AE46@sw.swsoft.com>
+In-Reply-To: <1322762860.6920.47.camel@dabdike>
 Sender: target-devel-owner@vger.kernel.org
-To: Chad Dupuis <chad.dupuis@qlogic.com>
+To: James Bottomley <jbottomley@parallels.com>
 Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>
 List-Id: linux-scsi@vger.kernel.org
 
-T24gVGh1LCAyMDExLTEyLTAxIGF0IDEzOjAxIC0wNTAwLCBDaGFkIER1cHVpcyB3cm90ZToNCj4g
-DQo+IE9uIFRodSwgMSBEZWMgMjAxMSwgTmljaG9sYXMgQS4gQmVsbGluZ2VyIHdyb3RlOg0KPiAN
-Cj4gPiBPbiBUaHUsIDIwMTEtMTItMDEgYXQgMDk6MTIgKzAxMDAsIFNlYmFzdGlhbiBBbmRyemVq
-IFNpZXdpb3Igd3JvdGU6DQo+ID4+IE9uIDExLzMwLzIwMTEgMTE6MDMgUE0sIE5pY2hvbGFzIEEu
-IEJlbGxpbmdlciB3cm90ZToNCj4gPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfZGJnLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGJnLmMNCj4gPj4+IGluZGV4
-IDA3MzcyZGUuLmNjMzJlYzggMTAwNjQ0DQo+ID4+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfZGJnLmMNCj4gPj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kYmcuYw0K
-PiA+Pj4gQEAgLTE2NzYsMTEgKzE2NzYsMTEgQEAgcWxfZGJnKHVpbnQzMl90IGxldmVsLCBzY3Np
-X3FsYV9ob3N0X3QgKnZoYSwgaW50MzJfdCBpZCwgY2hhciAqbXNnLCAuLi4pIHsNCj4gPj4+ICAg
-ICB1aW50MzJfdCBsZW47DQo+ID4+PiAgICAgc3RydWN0IHBjaV9kZXYgKnBkZXYgPSBOVUxMOw0K
-PiA+Pj4NCj4gPj4+IC0gICBtZW1zZXQocGJ1ZiwgMCwgUUxfREJHX0JVRl9MRU4pOw0KPiA+Pj4g
-LQ0KPiA+Pj4gICAgIHZhX3N0YXJ0KGFwLCBtc2cpOw0KPiA+Pj4NCj4gPj4+ICAgICBpZiAoKGxl
-dmVsJiAgcWwyeGV4dGVuZGVkX2Vycm9yX2xvZ2dpbmcpID09IGxldmVsKSB7DQo+ID4+PiArICAg
-ICAgICAgICBtZW1zZXQocGJ1ZiwgMCwgUUxfREJHX0JVRl9MRU4pOw0KPiA+Pj4gKw0KPiA+Pg0K
-PiA+PiA1MTJieXRlcyBvbiB0aGUgc3RhY2sgaXMgYnJhdmUuDQo+ID4NCj4gPiAuLi4NCj4gPg0K
-PiA+PiAgQW55d2F5LCB3aHkgZG8geW91IG1lbXNldCB0aGUgd2hvbGUNCj4gPj4gYnVmZmVyPyBB
-cyBmYXIgdGhlIHN0cmluZyBwcm9jZXNzaW5nIGlzIGNvbmNlcm5lZCwgc2V0dGluZyB0aGUgZmly
-c3QNCj4gPj4gYnl0ZSB0byB6ZXJvIGlzIGVub3VnaC4NCj4gPj4NCj4gPg0KPiA+IEFmdGVyIGNv
-bnZlcnRpbmcgcWxhX3RhcmdldC5jIGluIGEgZmV3IGh1bmRyZWQgbG9jYXRpb25zIHRvIHVzZQ0K
-PiA+IHFsYV9kYmcoKSBteSB3cmlzdHMgYXJlIHN0aWxsIGh1cnRpbmcsIHNvIHlvdSBjYW4gaW1h
-Z2luZSBJJ20gbm90IHJlYWwNCj4gPiBlYWdlciB0byBsb29rIGludG8gdGhpcyBjb2RlLiAgOykN
-Cj4gPg0KPiA+IEFueXdheXMsIG1lbXNldCBvZiB0aGUgd2hvbGUgYnVmZmVyIGlzIG92ZXJraWxs
-LiAgU2luY2Ugc3ByaW50ZigpIGlzDQo+ID4gYmVpbmcgdXNlZCBmb3IgcWxhX2RiZy5jIGNhc2Vz
-LCBldmVuIHRoZSAxIGJ5dGUgbWVtc2V0IGlzIHVubmVjZXNzYXJ5Lg0KPiANCj4gSSBkbyB3YW50
-IHRvIG5vdGUgdGhhdCB0aGVyZSBpcyBhIHBhdGNoIHBvc3RlZCBhbHJlYWR5IHRoYXQgcmVtb3Zl
-cyB0aGUNCj4gbWVtc2V0IGFzIHdlbGw6DQo+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtc2Nz
-aSZtPTEzMjE2MzY2NDgwOTg1NiZ3PTIuDQoNClNvIHNpbmNlIHRoYXQgb25lIGNhbWUgZnJvbSB5
-b3UgYXMgcGFydCBvZiBhIHNlcmllcywgSSB3YXMgb3JpZ2luYWxseQ0KcGxhbm5pbmcgdG8gbWVy
-Z2UgaXQgYmVmb3JlIHlvdSBhY2tlZCB0aGlzIG9uZSwgd2hpY2ggYmFzaWNhbGx5IG1ha2VzDQp0
-aGlzIG9uZSByZWR1bmRhbnQgKGFuZCBjb25mbGljdGluZyksIGRvZXNuJ3QgaXQ/ICBXaGljaCBw
-YXRjaCBkaWQgeW91DQp3YW50IG1lIHRvIHRha2UsIHNpbmNlIEkgY2FuJ3QgdGFrZSBib3RoPw0K
-DQpKYW1lcw0KDQo=
+
+
+On Thu, 1 Dec 2011, James Bottomley wrote:
+
+> On Thu, 2011-12-01 at 13:01 -0500, Chad Dupuis wrote:
+>>
+>> On Thu, 1 Dec 2011, Nicholas A. Bellinger wrote:
+>>
+>>> On Thu, 2011-12-01 at 09:12 +0100, Sebastian Andrzej Siewior wrote:
+>>>> On 11/30/2011 11:03 PM, Nicholas A. Bellinger wrote:
+>>>>> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+>>>>> index 07372de..cc32ec8 100644
+>>>>> --- a/drivers/scsi/qla2xxx/qla_dbg.c
+>>>>> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
+>>>>> @@ -1676,11 +1676,11 @@ ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
+>>>>>     uint32_t len;
+>>>>>     struct pci_dev *pdev = NULL;
+>>>>>
+>>>>> -   memset(pbuf, 0, QL_DBG_BUF_LEN);
+>>>>> -
+>>>>>     va_start(ap, msg);
+>>>>>
+>>>>>     if ((level&  ql2xextended_error_logging) == level) {
+>>>>> +           memset(pbuf, 0, QL_DBG_BUF_LEN);
+>>>>> +
+>>>>
+>>>> 512bytes on the stack is brave.
+>>>
+>>> ...
+>>>
+>>>>  Anyway, why do you memset the whole
+>>>> buffer? As far the string processing is concerned, setting the first
+>>>> byte to zero is enough.
+>>>>
+>>>
+>>> After converting qla_target.c in a few hundred locations to use
+>>> qla_dbg() my wrists are still hurting, so you can imagine I'm not real
+>>> eager to look into this code.  ;)
+>>>
+>>> Anyways, memset of the whole buffer is overkill.  Since sprintf() is
+>>> being used for qla_dbg.c cases, even the 1 byte memset is unnecessary.
+>>
+>> I do want to note that there is a patch posted already that removes the
+>> memset as well:
+>> http://marc.info/?l=linux-scsi&m=132163664809856&w=2.
+>
+> So since that one came from you as part of a series, I was originally
+> planning to merge it before you acked this one, which basically makes
+> this one redundant (and conflicting), doesn't it?  Which patch did you
+> want me to take, since I can't take both?
+
+Apologies for that. Please take the first one that was part of the series.
+
+>
+> James
+>
+>
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
