@@ -1,37 +1,39 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: Re: [PATCH] qla2xxx: Don't memset buffer unless debug level is enabled
-Date: Thu, 01 Dec 2011 09:12:27 +0100
-Message-ID: <4ED736EB.4090201@linutronix.de>
-References: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>
+From: <nagalakshmi.nandigama@lsi.com>
+Subject: [PATCH] [SCSI] mpt2sas : Description Patch
+Date: Thu, 1 Dec 2011 07:41:30 +0530
+Message-ID: <201112010918.pB19HxP8017883@milmhbs0.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, James Bottomley <JBottomley@Parallels.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:48994 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751689Ab1LAJSE convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2011 04:18:04 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
+Cc: JBottomley@parallels.com
 
-On 11/30/2011 11:03 PM, Nicholas A. Bellinger wrote:
-> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-> index 07372de..cc32ec8 100644
-> --- a/drivers/scsi/qla2xxx/qla_dbg.c
-> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
-> @@ -1676,11 +1676,11 @@ ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
->   	uint32_t len;
->   	struct pci_dev *pdev = NULL;
->
-> -	memset(pbuf, 0, QL_DBG_BUF_LEN);
-> -
->   	va_start(ap, msg);
->
->   	if ((level&  ql2xextended_error_logging) == level) {
-> +		memset(pbuf, 0, QL_DBG_BUF_LEN);
-> +		
+Please consider this patch set for next kernel release.
 
-512bytes on the stack is brave. Anyway, why do you memset the whole
-buffer? As far the string processing is concerned, setting the first
-byte to zero is enough.
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+---
+[PATCH 01/07] [SCSI] mpt2sas : Better handling DEAD IOC (PCI-E LInk down) error condition
+[PATCH 02/07] [SCSI] mpt2sas : When IOs are terminated, update the result to DID_SOFT_ERROR
+to avoid infinite resets.
+[PATCH 03/07] [SCSI] mpt2sas : Adding support for customer specific branding.
+[PATCH 04/07] [SCSI] mpt2sas : MPI next revision header update
+[PATCH 05/07] [SCSI] mpt2sas : Do not set sas_device->starget to NULL from the slave_destroy callback
+when all the LUNS have been deleted.
+[PATCH 06/07] [SCSI] mpt2sas : Rearrange the the code so that the completion queues are initialized prior 
+to sending the request to controller firmware.
+[PATCH 07/07] [SCSI] mpt2sas : Bump driver version to 11.100.00.00
 
-Sebastian
+The above patches are built by considering the following patches 
+1) [PATCH] [SCSI] mpt2sas: Fix leak on mpt2sas_base_attach() error path, Roland Dreier 
+2) [PATCH] [SCSI] mpt2sas: Fix possible integer truncation of cpu_count, Roland Dreier 
+3) [PATCH] [SCSI] mpt2sas: Remove unused duplicate diag_buffer_enable param, Roland Dreier 
+4) [PATCH] [SCSI] mpt2sas: Use kmemdup rather than duplicating its implementation, Thomas Meyer 
+5) [PATCH] [SCSI] mpt2sas: _scsih_smart_predicted_fault uses GFP_KERNEL in interrupt context, Anton Blanchard 
