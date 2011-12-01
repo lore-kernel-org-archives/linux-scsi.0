@@ -1,52 +1,56 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 08/14] srp_transport: Document sysfs attributes
-Date: Thu, 1 Dec 2011 20:05:02 +0100
-Message-ID: <201112012005.02943.bvanassche@acm.org>
+Subject: [PATCH 09/14] srp_transport: Fix attribute registration
+Date: Thu, 1 Dec 2011 20:06:50 +0100
+Message-ID: <201112012006.50445.bvanassche@acm.org>
 References: <201112011954.25811.bvanassche@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay04ant.iops.be ([212.53.5.219]:49009 "EHLO
+Received: from relay04ant.iops.be ([212.53.5.219]:49096 "EHLO
 	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755850Ab1LATFI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 14:05:08 -0500
+	with ESMTP id S1755974Ab1LATG4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 14:06:56 -0500
 In-Reply-To: <201112011954.25811.bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-rdma@vger.kernel.org
+To: linux-rdma@vger.kernel.org, David Dillow <dillowda@ornl.gov>, Roland Dreier <roland@purestorage.com>, stable@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-Document the srp_transport sysfs attributes according to the rules specified
-in Documentation/ABI/README.
+Register transport attributes after the attribute array has been
+set up instead of before.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: David Dillow <dillowda@ornl.gov>
+Cc: Roland Dreier <roland@purestorage.com>
+Cc: stable@vger.kernel.org
 ---
- Documentation/ABI/stable/sysfs-transport-srp |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/ABI/stable/sysfs-transport-srp
+ drivers/scsi/scsi_transport_srp.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/Documentation/ABI/stable/sysfs-transport-srp b/Documentation/ABI/stable/sysfs-transport-srp
-new file mode 100644
-index 0000000..7b0d4a5
---- /dev/null
-+++ b/Documentation/ABI/stable/sysfs-transport-srp
-@@ -0,0 +1,12 @@
-+What:		/sys/class/srp_remote_ports/port-<h>:<n>/port_id
-+Date:		June 27, 2007
-+KernelVersion:	2.6.24
-+Contact:	linux-scsi@vger.kernel.org
-+Description:	16-byte local SRP port identifier in hexadecimal format. An
-+		example: 4c:49:4e:55:58:20:56:49:4f:00:00:00:00:00:00:00.
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index 21a045e..07c4394 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -324,13 +324,14 @@ srp_attach_transport(struct srp_function_template *ft)
+ 	i->rport_attr_cont.ac.attrs = &i->rport_attrs[0];
+ 	i->rport_attr_cont.ac.class = &srp_rport_class.class;
+ 	i->rport_attr_cont.ac.match = srp_rport_match;
+-	transport_container_register(&i->rport_attr_cont);
+ 
+ 	count = 0;
+ 	SETUP_RPORT_ATTRIBUTE_RD(port_id);
+ 	SETUP_RPORT_ATTRIBUTE_RD(roles);
+ 	i->rport_attrs[count] = NULL;
+ 
++	transport_container_register(&i->rport_attr_cont);
 +
-+What:		/sys/class/srp_remote_ports/port-<h>:<n>/roles
-+Date:		June 27, 2007
-+KernelVersion:	2.6.24
-+Contact:	linux-scsi@vger.kernel.org
-+Description:	Role of the remote port. Either "SRP Initiator" or "SRP Target".
+ 	i->f = ft;
+ 
+ 	return &i->t;
 -- 
 1.7.3.4
 
