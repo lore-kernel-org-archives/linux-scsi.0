@@ -1,48 +1,57 @@
-From: Valdis.Kletnieks@vt.edu
-Subject: Re: 3.2.0-rc3-next-20111128 lockdep splat during boot..
-Date: Wed, 30 Nov 2011 18:59:32 -0500
-Message-ID: <28342.1322697572@turing-police.cc.vt.edu>
-References: <23526.1322620187@turing-police.cc.vt.edu>
-            <201112010017.19156.rjw@sisk.pl>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: dm-mpath: Clear map_context pointer when requeuing
+Date: Thu, 01 Dec 2011 09:12:42 +0900
+Message-ID: <4ED6C67A.3060305@ce.jp.nec.com>
+References: <1322663118-53387-1-git-send-email-hare@suse.de> <20111130144951.GA13775@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1322697572_2875P";
-	 micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: Your message of "Thu, 01 Dec 2011 00:17:18 +0100."
-             <201112010017.19156.rjw@sisk.pl>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, Len Brown <lenb@kernel.org>, Pavel Machek <pavel@ucw.cz>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:58293 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752462Ab1LAAOU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2011 19:14:20 -0500
+In-Reply-To: <20111130144951.GA13775@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, "Alasdair G. Kergon" <agk@redhat.com>, dm-devel@redhat.com
 
---==_Exmh_1322697572_2875P
-Content-Type: text/plain; charset=us-ascii
+Hi Hannes,
 
-On Thu, 01 Dec 2011 00:17:18 +0100, "Rafael J. Wysocki" said:
-> On Wednesday, November 30, 2011, Valdis.Kletnieks@vt.edu wrote:
-> > Seen this twice out of two boots while initrd was waiting for me to
-> > enter the passphrase for encrypted LVM.  No idea *who* to toss this
-> > one at - got ACPI, PM, SCSI and vtconsole all listed in tracebacks, so
-> > I'm tossing this at everybody and hope it sticks. ;)
+On 11/30/11 23:49, Mike Snitzer wrote:
+> On Wed, Nov 30 2011 at  9:25am -0500,
+> Hannes Reinecke <hare@suse.de> wrote:
 > 
-> This was caused by one of my patches in linux-next and was linux-next-only.
+>> When requeing a request we should be clearing the map_context
+>> pointer, otherwise we might access an invalid memory location.
+
+Could you elaborate on the mechanism how the map_context->ptr
+(= mpio) is accessed after freeing it?
+
+mpio is known to be non-NULL where it is used. So clearing the pointer
+should not make any difference in logic.
+
+If this is a preventive change so that we can see NULL dereference
+instead of random invalid access if anything happens, it should be
+noted in the patch description and in the code.
+Otherwise, somebody looking at the code/change in future might be
+confused: "why we have to clear this pointer?"
+
+And there are other places where mpio is freed.
+(E.g. in dispatch_queued_ios() in dm-mpath.c)
+Don't we need the same change there?
+
+>> Cc: Mike Snitzer <snitzer@redhat.com>
+>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+>> Tested-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 > 
-> I've already replaced the offending patch with a new version.
+> Acked-by: Mike Snitzer <snitzer@redhat.com>
+> 
+> Should Cc: stable too.
+> 
+> (I was thinking Alasdair would pick this up for 3.2 seeing as it is a
+> change to dm-mpath.c.  Alasdair, James.. I'll let you guys decide)
 
-OK, thanks.
-
---==_Exmh_1322697572_2875P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Exmh version 2.5 07/13/2001
-
-iD8DBQFO1sNkcC3lWbTT17ARApziAJ4xipIL+k6xkkdghUHcg5YTqMcCtQCeOWJ3
-nb56IOqtP6pioI7BGhCg+c8=
-=hnPv
------END PGP SIGNATURE-----
-
---==_Exmh_1322697572_2875P--
-
+-- 
+Jun'ichi Nomura, NEC Corporation
