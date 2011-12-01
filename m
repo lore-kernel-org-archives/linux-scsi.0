@@ -1,71 +1,37 @@
-From: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?=
-	<u.kleine-koenig@pengutronix.de>
-Subject: Re: [PATCH] arm: prevent inlining in arxescsi.c causing build
- failures
-Date: Thu, 1 Dec 2011 09:06:14 +0100
-Message-ID: <20111201080613.GF26618@pengutronix.de>
-References: <1322713611-30003-1-git-send-email-paul.gortmaker@windriver.com>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH] qla2xxx: Don't memset buffer unless debug level is enabled
+Date: Thu, 01 Dec 2011 09:12:27 +0100
+Message-ID: <4ED736EB.4090201@linutronix.de>
+References: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1322713611-30003-1-git-send-email-paul.gortmaker@windriver.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paul Gortmaker <paul.gortmaker@windriver.com>
-Cc: JBottomley@parallels.com, linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, James Bottomley <JBottomley@Parallels.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 30, 2011 at 11:26:51PM -0500, Paul Gortmaker wrote:
-> The following failure is seen in routine coverage builds:
->=20
->   CC [M]  drivers/scsi/arm/arxescsi.o
-> /tmp/cccEyiO7.s: Assembler messages:
-> /tmp/cccEyiO7.s:334: Error: symbol `.loop_1' is already defined
-> /tmp/cccEyiO7.s:337: Error: symbol `.loop_2' is already defined
-> /tmp/cccEyiO7.s:343: Error: symbol `.loop_3' is already defined
-> /tmp/cccEyiO7.s:365: Error: symbol `.loop_1' is already defined
-> /tmp/cccEyiO7.s:368: Error: symbol `.loop_2' is already defined
-> /tmp/cccEyiO7.s:374: Error: symbol `.loop_3' is already defined
-> make[4]: *** [drivers/scsi/arm/arxescsi.o] Error 1
->=20
-> It is caused by multiple inline of arxescsi_pseudo_dma_write()
-> which is responsible for the above labels.  Marking the fcn
-> as non-inline fixes the issue.
->=20
-> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-Is that a compiler or a code issue? If it's the compiler please fix
-that. If it's the code, then please document why you added the noinline=
-=2E
+On 11/30/2011 11:03 PM, Nicholas A. Bellinger wrote:
+> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+> index 07372de..cc32ec8 100644
+> --- a/drivers/scsi/qla2xxx/qla_dbg.c
+> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
+> @@ -1676,11 +1676,11 @@ ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
+>   	uint32_t len;
+>   	struct pci_dev *pdev = NULL;
+>
+> -	memset(pbuf, 0, QL_DBG_BUF_LEN);
+> -
+>   	va_start(ap, msg);
+>
+>   	if ((level&  ql2xextended_error_logging) == level) {
+> +		memset(pbuf, 0, QL_DBG_BUF_LEN);
+> +		
 
-Having said that, "my" compiler compiles drivers/scsi/arm/arxescsi.o
-just fine (using rpc_defconfig on v3.2-rc2).
+512bytes on the stack is brave. Anyway, why do you memset the whole
+buffer? As far the string processing is concerned, setting the first
+byte to zero is enough.
 
-> diff --git a/drivers/scsi/arm/arxescsi.c b/drivers/scsi/arm/arxescsi.=
-c
-> index a750aa7..2608a9e 100644
-> --- a/drivers/scsi/arm/arxescsi.c
-> +++ b/drivers/scsi/arm/arxescsi.c
-> @@ -72,7 +72,8 @@ arxescsi_dma_setup(struct Scsi_Host *host, struct s=
-csi_pointer *SCp,
->  	return fasdma_pseudo;
->  }
-> =20
-> -static void arxescsi_pseudo_dma_write(unsigned char *addr, void __io=
-mem *base)
-> +static noinline void
-> +arxescsi_pseudo_dma_write(unsigned char *addr, void __iomem *base)
-Shouldn't this line get some indention?
-
->  {
->         __asm__ __volatile__(
->         "               stmdb   sp!, {r0-r12}\n"
-
-Best regards
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig        =
-    |
-Industrial Linux Solutions                 | http://www.pengutronix.de/=
-  |
+Sebastian
