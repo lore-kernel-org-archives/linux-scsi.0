@@ -1,78 +1,44 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 0/6] ata port runtime power management support
-Date: Thu, 1 Dec 2011 22:09:49 +0800
-Message-ID: <CAF1ivSa8d-VNbOmO9UyG-J3TKDmfuuX9pWEtT_7a7OcCC-0Uow@mail.gmail.com>
-References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 3/5] Staging: hv: storvsc: Fix a bug in storvsc_command_completion()
+Date: Thu,  1 Dec 2011 04:59:18 -0800
+Message-ID: <1322744360-13067-3-git-send-email-kys@microsoft.com>
+References: <1322744315-13017-1-git-send-email-kys@microsoft.com>
+ <1322744360-13067-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
+In-Reply-To: <1322744360-13067-1-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 28, 2011 at 9:15 AM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Hi all,
->
-> This is the v4 patches to add ata port runtime pm support.
-> Applied on top of v3.2-rc2.
->
-> Jeff, any comment on the ata patches?
-> James, any comment on the scsi patches?
+Fix a bug in storvsc_command_completion() that leaks memory when scatter/gather
+lists are used on the "write" side.
 
-Ping ...
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+---
+ drivers/staging/hv/storvsc_drv.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Which git tree should these patches go into? ATA or SCSI?
-
-Lin Ming (6):
-    ata: make ata port as parent device of scsi host
-    [SCSI] add flag to skip the runtime PM calls on the host
-    [SCSI] check runtime PM status in system PM
-    [SCSI] sd: check runtime PM status in sd_shutdown
-    ata: add ata port system PM callbacks
-    ata: add ata port runtime PM callbacks
-
- drivers/ata/libata-core.c      |  154 ++++++++++++++++++++++----------=
---------
- drivers/ata/libata-scsi.c      |    3 +-
- drivers/ata/libata-transport.c |    5 ++
- drivers/ata/libata.h           |    1 +
- drivers/scsi/scsi_error.c      |    5 +-
- drivers/scsi/scsi_pm.c         |   16 ++++-
- drivers/scsi/sd.c              |    5 ++
- include/scsi/scsi_host.h       |    3 +
- 8 files changed, 118 insertions(+), 74 deletions(-)
-
-Thanks,
-Lin Ming
-
->
-> v1:
-> https://lkml.org/lkml/2011/11/2/23
->
-> v2:
-> https://lkml.org/lkml/2011/11/10/71
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Kay Sievers reviewed sysfs change
->
-> v3:
-> https://lkml.org/lkml/2011/11/23/37
->
-> Changes in v4:
-> - check SCSI device runtime PM status in system PM (Alan Stern, Tejun=
- Heo)
->
-> Changes in v3:
-> - runtime resume scsi device before system suspend (Alan Stern)
-> - check runtime status in sd_shutdown
->
-> Thanks for any comment,
-> Lin Ming
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
+index 14ecb69..8dafe52 100644
+--- a/drivers/staging/hv/storvsc_drv.c
++++ b/drivers/staging/hv/storvsc_drv.c
+@@ -1123,13 +1123,12 @@ static void storvsc_command_completion(struct hv_storvsc_request *request)
+ 
+ 	vm_srb = &request->vstor_packet.vm_srb;
+ 	if (cmd_request->bounce_sgl_count) {
+-		if (vm_srb->data_in == READ_TYPE) {
++		if (vm_srb->data_in == READ_TYPE)
+ 			copy_from_bounce_buffer(scsi_sglist(scmnd),
+ 					cmd_request->bounce_sgl,
+ 					scsi_sg_count(scmnd));
+-			destroy_bounce_buffer(cmd_request->bounce_sgl,
++		destroy_bounce_buffer(cmd_request->bounce_sgl,
+ 					cmd_request->bounce_sgl_count);
+-		}
+ 	}
+ 
+ 	/*
+-- 
+1.7.4.1
