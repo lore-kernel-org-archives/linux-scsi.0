@@ -1,80 +1,285 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH 03/08] [SCSI]  mpt2sas : Added support for customer
- specific branding
-Date: Thu, 1 Dec 2011 07:52:42 +0530
-Message-ID: <201112010929.pB19TBCx021166@milmhbs0.lsil.com>
+Subject: [PATCH 04/08] [SCSI]  mpt2sas : MPI next revision header update
+Date: Thu, 1 Dec 2011 07:52:49 +0530
+Message-ID: <201112010929.pB19TIbh021191@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog121.obsmtp.com ([74.125.149.145]:34461 "EHLO
-	na3sys009aog121.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751689Ab1LAJ3P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 04:29:15 -0500
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:58682 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751795Ab1LAJ3W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 04:29:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Added support for customer specific branding
+MPI next revision header update
+
+1)Removed Power Management Control option for PCIe link.    
+2)Added RAID Action for performing a compatibility check. Added
+product-specific range to RAID Action values.    
+3)Added PhysicalPort field to SAS Device Status Change Event data.    
+4)Added SpinupFlags field containing a Disable Spin-up bit to the 
+SpinupGroupParameters fields of SAS IO Unit Page 4.   
+
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index e78733f..3be6bc4 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1989,6 +1989,22 @@ _base_display_intel_branding(struct MPT2SAS_ADAPTER *ioc)
- 			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
- 			    MPT2SAS_INTEL_RS25GB008_BRANDING);
- 			break;
-+		case MPT2SAS_INTEL_RMS25JB080_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_INTEL_RMS25JB080_BRANDING);
-+			break;
-+		case MPT2SAS_INTEL_RMS25JB040_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_INTEL_RMS25JB040_BRANDING);
-+			break;
-+		case MPT2SAS_INTEL_RMS25KB080_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_INTEL_RMS25KB080_BRANDING);
-+			break;
-+		case MPT2SAS_INTEL_RMS25KB040_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_INTEL_RMS25KB040_BRANDING);
-+			break;
- 		default:
- 			break;
- 		}
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index 2c5bdbe..d7590f1 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -157,6 +157,14 @@
- /*
-  * Intel HBA branding
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2.h b/drivers/scsi/mpt2sas/mpi/mpi2.h
+index 1239661..cf10ee4 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2.h
+@@ -8,7 +8,7 @@
+  *                  scatter/gather formats.
+  *  Creation Date:  June 21, 2006
+  *
+- *  mpi2.h Version:  02.00.21
++ *  mpi2.h Version:  02.00.22
+  *
+  *  Version History
+  *  ---------------
+@@ -70,6 +70,7 @@
+  *                      Added MPI2_FUNCTION_SEND_HOST_MESSAGE.
+  *  03-09-11  02.00.20  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  05-25-11  02.00.21  Bumped MPI2_HEADER_VERSION_UNIT.
++ *  08-24-11  02.00.22  Bumped MPI2_HEADER_VERSION_UNIT.
+  *  --------------------------------------------------------------------------
   */
-+#define MPT2SAS_INTEL_RMS25JB080_BRANDING    \
-+				"Intel(R) Integrated RAID Module RMS25JB080"
-+#define MPT2SAS_INTEL_RMS25JB040_BRANDING    \
-+				"Intel(R) Integrated RAID Module RMS25JB040"
-+#define MPT2SAS_INTEL_RMS25KB080_BRANDING    \
-+				"Intel(R) Integrated RAID Module RMS25KB080"
-+#define MPT2SAS_INTEL_RMS25KB040_BRANDING    \
-+				"Intel(R) Integrated RAID Module RMS25KB040"
- #define MPT2SAS_INTEL_RMS2LL080_BRANDING	\
- 				"Intel Integrated RAID Module RMS2LL080"
- #define MPT2SAS_INTEL_RMS2LL040_BRANDING	\
-@@ -168,6 +176,10 @@
- /*
-  * Intel HBA SSDIDs
+ 
+@@ -95,7 +96,7 @@
+ #define MPI2_VERSION_02_00                  (0x0200)
+ 
+ /* versioning for this MPI header set */
+-#define MPI2_HEADER_VERSION_UNIT            (0x15)
++#define MPI2_HEADER_VERSION_UNIT            (0x16)
+ #define MPI2_HEADER_VERSION_DEV             (0x00)
+ #define MPI2_HEADER_VERSION_UNIT_MASK       (0xFF00)
+ #define MPI2_HEADER_VERSION_UNIT_SHIFT      (8)
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+index d237ab8..59b2c41 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Configuration messages and pages
+  *  Creation Date:  November 10, 2006
+  *
+- *    mpi2_cnfg.h Version:  02.00.20
++ *    mpi2_cnfg.h Version:  02.00.21
+  *
+  *  Version History
+  *  ---------------
+@@ -141,6 +141,12 @@
+  *                      MPI2_CONFIG_PAGE_IOC_7.
+  *  03-09-11  02.00.19  Fixed IO Unit Page 10 (to match the spec).
+  *  05-25-11  02.00.20  Cleaned up a few comments.
++ *  08-24-11  02.00.21  Marked the IO Unit Page 7 PowerManagementCapabilities
++ *                      for PCIe link as obsolete.
++ *                      Added SpinupFlags field containing a Disable Spin-up
++ *                      bit to the MPI2_SAS_IOUNIT4_SPINUP_GROUP fields of
++ *                      SAS IO Unit Page 4.
++
+  *  --------------------------------------------------------------------------
   */
-+#define MPT2SAS_INTEL_RMS25JB080_SSDID         0x3516
-+#define MPT2SAS_INTEL_RMS25JB040_SSDID         0x3517
-+#define MPT2SAS_INTEL_RMS25KB080_SSDID         0x3518
-+#define MPT2SAS_INTEL_RMS25KB040_SSDID         0x3519
- #define MPT2SAS_INTEL_RMS2LL080_SSDID          0x350E
- #define MPT2SAS_INTEL_RMS2LL040_SSDID          0x350F
- #define MPT2SAS_INTEL_RS25GB008_SSDID          0x3000
+ 
+@@ -905,8 +911,8 @@ typedef struct _MPI2_CONFIG_PAGE_IO_UNIT_7 {
+ #define MPI2_IOUNITPAGE7_PMCAP_12_5_PCT_IOCSPEED    (0x00000400)
+ #define MPI2_IOUNITPAGE7_PMCAP_25_0_PCT_IOCSPEED    (0x00000200)
+ #define MPI2_IOUNITPAGE7_PMCAP_50_0_PCT_IOCSPEED    (0x00000100)
+-#define MPI2_IOUNITPAGE7_PMCAP_PCIE_WIDTH_CHANGE    (0x00000008)
+-#define MPI2_IOUNITPAGE7_PMCAP_PCIE_SPEED_CHANGE    (0x00000004)
++#define MPI2_IOUNITPAGE7_PMCAP_PCIE_WIDTH_CHANGE    (0x00000008) /* obsolete */
++#define MPI2_IOUNITPAGE7_PMCAP_PCIE_SPEED_CHANGE    (0x00000004) /* obsolete */
+ 
+ /* defines for IO Unit Page 7 IOCTemperatureUnits field */
+ #define MPI2_IOUNITPAGE7_IOC_TEMP_NOT_PRESENT       (0x00)
+@@ -1971,10 +1977,14 @@ typedef struct _MPI2_SAS_IOUNIT4_SPINUP_GROUP
+ {
+     U8          MaxTargetSpinup;            /* 0x00 */
+     U8          SpinupDelay;                /* 0x01 */
+-    U16         Reserved1;                  /* 0x02 */
++	U8          SpinupFlags;                /* 0x02 */
++	U8          Reserved1;                  /* 0x03 */
+ } MPI2_SAS_IOUNIT4_SPINUP_GROUP, MPI2_POINTER PTR_MPI2_SAS_IOUNIT4_SPINUP_GROUP,
+   Mpi2SasIOUnit4SpinupGroup_t, MPI2_POINTER pMpi2SasIOUnit4SpinupGroup_t;
+ 
++/* defines for SAS IO Unit Page 4 SpinupFlags */
++#define MPI2_SASIOUNIT4_SPINUP_DISABLE_FLAG         (0x01)
++
+ /*
+  * Host code (drivers, BIOS, utilities, etc.) should leave this define set to
+  * one and check the value returned for NumPhys at runtime.
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+index e54d670..6355534 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_ioc.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI IOC, Port, Event, FW Download, and FW Upload messages
+  *  Creation Date:  October 11, 2006
+  *
+- *  mpi2_ioc.h Version:  02.00.18
++ *  mpi2_ioc.h Version:  02.00.19
+  *
+  *  Version History
+  *  ---------------
+@@ -114,6 +114,9 @@
+  *                      MPI2_EXT_IMAGE_TYPE_MIN_PRODUCT_SPECIFIC and
+  *                      MPI2_EXT_IMAGE_TYPE_MAX_PRODUCT_SPECIFIC defines.
+  *                      Deprecated MPI2_EXT_IMAGE_TYPE_MAX define.
++ *  08-24-11  02.00.19  Added PhysicalPort field to
++ *                      MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE structure.
++ *                      Marked MPI2_PM_CONTROL_FEATURE_PCIE_LINK as obsolete.
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -582,7 +585,7 @@ typedef struct _MPI2_EVENT_DATA_SAS_DEVICE_STATUS_CHANGE
+ {
+     U16                     TaskTag;                        /* 0x00 */
+     U8                      ReasonCode;                     /* 0x02 */
+-    U8                      Reserved1;                      /* 0x03 */
++	U8                      PhysicalPort;                   /* 0x03 */
+     U8                      ASC;                            /* 0x04 */
+     U8                      ASCQ;                           /* 0x05 */
+     U16                     DevHandle;                      /* 0x06 */
+@@ -1574,7 +1577,7 @@ typedef struct _MPI2_PWR_MGMT_CONTROL_REQUEST {
+ /* defines for the Feature field */
+ #define MPI2_PM_CONTROL_FEATURE_DA_PHY_POWER_COND       (0x01)
+ #define MPI2_PM_CONTROL_FEATURE_PORT_WIDTH_MODULATION   (0x02)
+-#define MPI2_PM_CONTROL_FEATURE_PCIE_LINK               (0x03)
++#define MPI2_PM_CONTROL_FEATURE_PCIE_LINK               (0x03) /* obsolete */
+ #define MPI2_PM_CONTROL_FEATURE_IOC_SPEED               (0x04)
+ #define MPI2_PM_CONTROL_FEATURE_MIN_PRODUCT_SPECIFIC    (0x80)
+ #define MPI2_PM_CONTROL_FEATURE_MAX_PRODUCT_SPECIFIC    (0xFF)
+@@ -1603,14 +1606,14 @@ typedef struct _MPI2_PWR_MGMT_CONTROL_REQUEST {
+ 
+ /* parameter usage for the MPI2_PM_CONTROL_FEATURE_PCIE_LINK Feature */
+ /* Parameter1 indicates desired PCIe link speed using these defines */
+-#define MPI2_PM_CONTROL_PARAM1_PCIE_2_5_GBPS            (0x00)
+-#define MPI2_PM_CONTROL_PARAM1_PCIE_5_0_GBPS            (0x01)
+-#define MPI2_PM_CONTROL_PARAM1_PCIE_8_0_GBPS            (0x02)
++#define MPI2_PM_CONTROL_PARAM1_PCIE_2_5_GBPS            (0x00) /* obsolete */
++#define MPI2_PM_CONTROL_PARAM1_PCIE_5_0_GBPS            (0x01) /* obsolete */
++#define MPI2_PM_CONTROL_PARAM1_PCIE_8_0_GBPS            (0x02) /* obsolete */
+ /* Parameter2 indicates desired PCIe link width using these defines */
+-#define MPI2_PM_CONTROL_PARAM2_WIDTH_X1                 (0x01)
+-#define MPI2_PM_CONTROL_PARAM2_WIDTH_X2                 (0x02)
+-#define MPI2_PM_CONTROL_PARAM2_WIDTH_X4                 (0x04)
+-#define MPI2_PM_CONTROL_PARAM2_WIDTH_X8                 (0x08)
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X1                 (0x01) /* obsolete */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X2                 (0x02) /* obsolete */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X4                 (0x04) /* obsolete */
++#define MPI2_PM_CONTROL_PARAM2_WIDTH_X8                 (0x08) /* obsolete */
+ /* Parameter3 and Parameter4 are reserved */
+ 
+ /* parameter usage for the MPI2_PM_CONTROL_FEATURE_IOC_SPEED Feature */
+diff --git a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+index bd61a7b..0601612 100644
+--- a/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
++++ b/drivers/scsi/mpt2sas/mpi/mpi2_raid.h
+@@ -6,7 +6,7 @@
+  *          Title:  MPI Integrated RAID messages and structures
+  *  Creation Date:  April 26, 2007
+  *
+- *    mpi2_raid.h Version:  02.00.05
++ *    mpi2_raid.h Version:  02.00.06
+  *
+  *  Version History
+  *  ---------------
+@@ -23,6 +23,10 @@
+  *  07-30-09  02.00.04  Added proper define for the Use Default Settings bit of
+  *                      VolumeCreationFlags and marked the old one as obsolete.
+  *  05-12-10  02.00.05  Added MPI2_RAID_VOL_FLAGS_OP_MDC define.
++ *  08-24-10  02.00.06  Added MPI2_RAID_ACTION_COMPATIBILITY_CHECK along with
++ *                      related structures and defines.
++ *                      Added product-specific range to RAID Action values.
++
+  *  --------------------------------------------------------------------------
+  */
+ 
+@@ -176,7 +180,9 @@ typedef struct _MPI2_RAID_ACTION_REQUEST
+ #define MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED  (0x20)
+ #define MPI2_RAID_ACTION_START_RAID_FUNCTION        (0x21)
+ #define MPI2_RAID_ACTION_STOP_RAID_FUNCTION         (0x22)
+-
++#define MPI2_RAID_ACTION_COMPATIBILITY_CHECK        (0x23)
++#define MPI2_RAID_ACTION_MIN_PRODUCT_SPECIFIC       (0x80)
++#define MPI2_RAID_ACTION_MAX_PRODUCT_SPECIFIC       (0xFF)
+ 
+ /* RAID Volume Creation Structure */
+ 
+@@ -244,6 +250,23 @@ typedef struct _MPI2_RAID_ONLINE_CAPACITY_EXPANSION
+   Mpi2RaidOnlineCapacityExpansion_t,
+   MPI2_POINTER pMpi2RaidOnlineCapacityExpansion_t;
+ 
++/* RAID Compatibility Input Structure */
++
++typedef struct _MPI2_RAID_COMPATIBILITY_INPUT_STRUCT {
++	U16                     SourceDevHandle;               /* 0x00 */
++	U16                     CandidateDevHandle;             /* 0x02 */
++	U32                     Flags;                          /* 0x04 */
++	U32                     Reserved1;                      /* 0x08 */
++	U32                     Reserved2;                      /* 0x0C */
++} MPI2_RAID_COMPATIBILITY_INPUT_STRUCT,
++MPI2_POINTER PTR_MPI2_RAID_COMPATIBILITY_INPUT_STRUCT,
++Mpi2RaidCompatibilityInputStruct_t,
++MPI2_POINTER pMpi2RaidCompatibilityInputStruct_t;
++
++/* defines for RAID Compatibility Structure Flags field */
++#define MPI2_RAID_COMPAT_SOURCE_IS_VOLUME_FLAG      (0x00000002)
++#define MPI2_RAID_COMPAT_REPORT_SOURCE_INFO_FLAG    (0x00000001)
++
+ 
+ /* RAID Volume Indicator Structure */
+ 
+@@ -263,15 +286,45 @@ typedef struct _MPI2_RAID_VOL_INDICATOR
+ #define MPI2_RAID_VOL_FLAGS_OP_RESYNC               (0x00000003)
+ #define MPI2_RAID_VOL_FLAGS_OP_MDC                  (0x00000004)
+ 
++/* RAID Compatibility Result Structure */
++
++typedef struct _MPI2_RAID_COMPATIBILITY_RESULT_STRUCT {
++	U8                      State;                          /* 0x00 */
++	U8                      Reserved1;                      /* 0x01 */
++	U16                     Reserved2;                      /* 0x02 */
++	U32                     GenericAttributes;              /* 0x04 */
++	U32                     OEMSpecificAttributes;          /* 0x08 */
++	U32                     Reserved3;                      /* 0x0C */
++	U32                     Reserved4;                      /* 0x10 */
++} MPI2_RAID_COMPATIBILITY_RESULT_STRUCT,
++MPI2_POINTER PTR_MPI2_RAID_COMPATIBILITY_RESULT_STRUCT,
++Mpi2RaidCompatibilityResultStruct_t,
++MPI2_POINTER pMpi2RaidCompatibilityResultStruct_t;
++
++/* defines for RAID Compatibility Result Structure State field */
++#define MPI2_RAID_COMPAT_STATE_COMPATIBLE           (0x00)
++#define MPI2_RAID_COMPAT_STATE_NOT_COMPATIBLE       (0x01)
++
++/* defines for RAID Compatibility Result Structure GenericAttributes field */
++#define MPI2_RAID_COMPAT_GENATTRIB_4K_SECTOR            (0x00000010)
++
++#define MPI2_RAID_COMPAT_GENATTRIB_MEDIA_MASK           (0x0000000C)
++#define MPI2_RAID_COMPAT_GENATTRIB_SOLID_STATE_DRIVE    (0x00000008)
++#define MPI2_RAID_COMPAT_GENATTRIB_HARD_DISK_DRIVE      (0x00000004)
++
++#define MPI2_RAID_COMPAT_GENATTRIB_PROTOCOL_MASK        (0x00000003)
++#define MPI2_RAID_COMPAT_GENATTRIB_SAS_PROTOCOL         (0x00000002)
++#define MPI2_RAID_COMPAT_GENATTRIB_SATA_PROTOCOL        (0x00000001)
+ 
+ /* RAID Action Reply ActionData union */
+ typedef union _MPI2_RAID_ACTION_REPLY_DATA
+ {
+-    U32                     Word[5];
+-    MPI2_RAID_VOL_INDICATOR RaidVolumeIndicator;
+-    U16                     VolDevHandle;
+-    U8                      VolumeState;
+-    U8                      PhysDiskNum;
++	U32                                     Word[5];
++	MPI2_RAID_VOL_INDICATOR                 RaidVolumeIndicator;
++	U16                                     VolDevHandle;
++	U8                                      VolumeState;
++	U8                                      PhysDiskNum;
++	MPI2_RAID_COMPATIBILITY_RESULT_STRUCT   RaidCompatibilityResult;
+ } MPI2_RAID_ACTION_REPLY_DATA, MPI2_POINTER PTR_MPI2_RAID_ACTION_REPLY_DATA,
+   Mpi2RaidActionReplyData_t, MPI2_POINTER pMpi2RaidActionReplyData_t;
+ 
