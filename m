@@ -1,75 +1,49 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH] qla2xxx: Don't memset buffer unless debug level is
- enabled
-Date: Thu, 1 Dec 2011 13:43:17 -0500
-Message-ID: <alpine.WNT.2.00.1112011341510.196@N5102REMCQXM4BS.qlogic.org>
-References: <1322690639-20756-1-git-send-email-nab@linux-iscsi.org>  <4ED736EB.4090201@linutronix.de>  <1322731309.25753.30.camel@haakon2.linux-iscsi.org>  <alpine.WNT.2.00.1112011259150.1224@N5102REMCQXM4BS.qlogic.org> <1322762860.6920.47.camel@dabdike>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: [PATCH 00/14] Make ib_srp better suited for H.A. purposes
+Date: Thu, 1 Dec 2011 19:54:25 +0100
+Message-ID: <201112011954.25811.bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1322762860.6920.47.camel@dabdike>
-Sender: target-devel-owner@vger.kernel.org
-To: James Bottomley <jbottomley@parallels.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
+This patch series makes the ib_srp driver better suited for use in a H.A.
+setup because:
+- Switchover without triggering read or write errors become possible. Such
+  errors are bad because these can make a filesystem switch to read-only
+  mode.
+- A ping mechanism has been added that allows to reduce the switch-over
+  time greatly.
+- Disconnecting from a target without unloading ib_srp becomes possible.
+- Switchover can be triggered explicitly by deleting an initiator device.
 
+Where possible these mechanisms have been modelled after similar
+functionality in the open-iscsi kernel code.
 
-On Thu, 1 Dec 2011, James Bottomley wrote:
+According to the measurements I ran these patches do not affect ib_srp
+performance.
 
-> On Thu, 2011-12-01 at 13:01 -0500, Chad Dupuis wrote:
->>
->> On Thu, 1 Dec 2011, Nicholas A. Bellinger wrote:
->>
->>> On Thu, 2011-12-01 at 09:12 +0100, Sebastian Andrzej Siewior wrote:
->>>> On 11/30/2011 11:03 PM, Nicholas A. Bellinger wrote:
->>>>> diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
->>>>> index 07372de..cc32ec8 100644
->>>>> --- a/drivers/scsi/qla2xxx/qla_dbg.c
->>>>> +++ b/drivers/scsi/qla2xxx/qla_dbg.c
->>>>> @@ -1676,11 +1676,11 @@ ql_dbg(uint32_t level, scsi_qla_host_t *vha, int32_t id, char *msg, ...) {
->>>>>     uint32_t len;
->>>>>     struct pci_dev *pdev = NULL;
->>>>>
->>>>> -   memset(pbuf, 0, QL_DBG_BUF_LEN);
->>>>> -
->>>>>     va_start(ap, msg);
->>>>>
->>>>>     if ((level&  ql2xextended_error_logging) == level) {
->>>>> +           memset(pbuf, 0, QL_DBG_BUF_LEN);
->>>>> +
->>>>
->>>> 512bytes on the stack is brave.
->>>
->>> ...
->>>
->>>>  Anyway, why do you memset the whole
->>>> buffer? As far the string processing is concerned, setting the first
->>>> byte to zero is enough.
->>>>
->>>
->>> After converting qla_target.c in a few hundred locations to use
->>> qla_dbg() my wrists are still hurting, so you can imagine I'm not real
->>> eager to look into this code.  ;)
->>>
->>> Anyways, memset of the whole buffer is overkill.  Since sprintf() is
->>> being used for qla_dbg.c cases, even the 1 byte memset is unnecessary.
->>
->> I do want to note that there is a patch posted already that removes the
->> memset as well:
->> http://marc.info/?l=linux-scsi&m=132163664809856&w=2.
->
-> So since that one came from you as part of a series, I was originally
-> planning to merge it before you acked this one, which basically makes
-> this one redundant (and conflicting), doesn't it?  Which patch did you
-> want me to take, since I can't take both?
-
-Apologies for that. Please take the first one that was part of the series.
-
->
-> James
->
->
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+The individual patches are:
+0001-ib_srp-Introduce-pr_fmt.patch
+0002-ib_srp-Consolidate-repetitive-sysfs-code.patch
+0003-ib_srp-Disallow-duplicate-logins.patch
+0004-ib_srp-Set-block-layer-timeout.patch
+0005-ib_srp-Avoid-that-late-SRP-replies-cause-trouble.patch
+0006-ib_srp-Micro-optimize-completion-handlers.patch
+0007-ib_srp-Introduce-srp_handle_qp_err.patch
+0008-srp_transport-Document-sysfs-attributes.patch
+0009-srp_transport-Fix-atttribute-registration-race.patch
+0010-srp_transport-Simplify-attribute-initialization-code.patch
+0011-ib_srp-Document-sysfs-attributes.patch
+0012-ib_srp-Rework-error-handling.patch
+0013-ib_srp-Implement-transport-layer-ping.patch
+0014-ib_srp-Allow-SRP-disconnect-through-sysfs.patch
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
