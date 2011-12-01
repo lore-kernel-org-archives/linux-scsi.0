@@ -1,49 +1,52 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: [PATCH 00/14] Make ib_srp better suited for H.A. purposes
-Date: Thu, 1 Dec 2011 19:54:25 +0100
-Message-ID: <201112011954.25811.bvanassche@acm.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 08/14] srp_transport: Document sysfs attributes
+Date: Thu, 1 Dec 2011 20:05:02 +0100
+Message-ID: <201112012005.02943.bvanassche@acm.org>
+References: <201112011954.25811.bvanassche@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Vu Pham <vuhuong-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay04ant.iops.be ([212.53.5.219]:49009 "EHLO
+	relay04ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755850Ab1LATFI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 14:05:08 -0500
+In-Reply-To: <201112011954.25811.bvanassche@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-rdma@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-This patch series makes the ib_srp driver better suited for use in a H.A.
-setup because:
-- Switchover without triggering read or write errors become possible. Such
-  errors are bad because these can make a filesystem switch to read-only
-  mode.
-- A ping mechanism has been added that allows to reduce the switch-over
-  time greatly.
-- Disconnecting from a target without unloading ib_srp becomes possible.
-- Switchover can be triggered explicitly by deleting an initiator device.
+Document the srp_transport sysfs attributes according to the rules specified
+in Documentation/ABI/README.
 
-Where possible these mechanisms have been modelled after similar
-functionality in the open-iscsi kernel code.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+---
+ Documentation/ABI/stable/sysfs-transport-srp |   12 ++++++++++++
+ 1 files changed, 12 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/ABI/stable/sysfs-transport-srp
 
-According to the measurements I ran these patches do not affect ib_srp
-performance.
+diff --git a/Documentation/ABI/stable/sysfs-transport-srp b/Documentation/ABI/stable/sysfs-transport-srp
+new file mode 100644
+index 0000000..7b0d4a5
+--- /dev/null
++++ b/Documentation/ABI/stable/sysfs-transport-srp
+@@ -0,0 +1,12 @@
++What:		/sys/class/srp_remote_ports/port-<h>:<n>/port_id
++Date:		June 27, 2007
++KernelVersion:	2.6.24
++Contact:	linux-scsi@vger.kernel.org
++Description:	16-byte local SRP port identifier in hexadecimal format. An
++		example: 4c:49:4e:55:58:20:56:49:4f:00:00:00:00:00:00:00.
++
++What:		/sys/class/srp_remote_ports/port-<h>:<n>/roles
++Date:		June 27, 2007
++KernelVersion:	2.6.24
++Contact:	linux-scsi@vger.kernel.org
++Description:	Role of the remote port. Either "SRP Initiator" or "SRP Target".
+-- 
+1.7.3.4
 
-The individual patches are:
-0001-ib_srp-Introduce-pr_fmt.patch
-0002-ib_srp-Consolidate-repetitive-sysfs-code.patch
-0003-ib_srp-Disallow-duplicate-logins.patch
-0004-ib_srp-Set-block-layer-timeout.patch
-0005-ib_srp-Avoid-that-late-SRP-replies-cause-trouble.patch
-0006-ib_srp-Micro-optimize-completion-handlers.patch
-0007-ib_srp-Introduce-srp_handle_qp_err.patch
-0008-srp_transport-Document-sysfs-attributes.patch
-0009-srp_transport-Fix-atttribute-registration-race.patch
-0010-srp_transport-Simplify-attribute-initialization-code.patch
-0011-ib_srp-Document-sysfs-attributes.patch
-0012-ib_srp-Rework-error-handling.patch
-0013-ib_srp-Implement-transport-layer-ping.patch
-0014-ib_srp-Allow-SRP-disconnect-through-sysfs.patch
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
