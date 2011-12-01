@@ -1,57 +1,53 @@
-From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
-Subject: Re: dm-mpath: Clear map_context pointer when requeuing
-Date: Thu, 01 Dec 2011 09:12:42 +0900
-Message-ID: <4ED6C67A.3060305@ce.jp.nec.com>
-References: <1322663118-53387-1-git-send-email-hare@suse.de> <20111130144951.GA13775@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] [SCSI] mpt2sas: Fix possible integer truncation of cpu_count
+Date: Wed, 30 Nov 2011 16:30:33 -0800
+Message-ID: <1322699433-22886-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:58293 "EHLO
-	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752462Ab1LAAOU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2011 19:14:20 -0500
-In-Reply-To: <20111130144951.GA13775@redhat.com>
+Received: from na3sys010aog103.obsmtp.com ([74.125.245.74]:60025 "HELO
+	na3sys010aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753001Ab1LAAaj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Nov 2011 19:30:39 -0500
+Received: by mail-gx0-f170.google.com with SMTP id v1so658050ggn.29
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2011 16:30:38 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, "Alasdair G. Kergon" <agk@redhat.com>, dm-devel@redhat.com
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, linux-scsi@vger.kernel.org
 
-Hi Hannes,
+From: Roland Dreier <roland@purestorage.com>
 
-On 11/30/11 23:49, Mike Snitzer wrote:
-> On Wed, Nov 30 2011 at  9:25am -0500,
-> Hannes Reinecke <hare@suse.de> wrote:
-> 
->> When requeing a request we should be clearing the map_context
->> pointer, otherwise we might access an invalid memory location.
+When computing reply_queue_count (the number of MSI-X vectors to use),
+the driver does
 
-Could you elaborate on the mechanism how the map_context->ptr
-(= mpio) is accessed after freeing it?
+	ioc->reply_queue_count = min_t(u8, ioc->cpu_count,
+	    ioc->msix_vector_count);
 
-mpio is known to be non-NULL where it is used. So clearing the pointer
-should not make any difference in logic.
+However, on a big machine, ioc->cpu_count could be outside the range
+that fits in a u8; eg a system with 256 CPUs will end up
+reply_queue_count set to 0.
 
-If this is a preventive change so that we can see NULL dereference
-instead of random invalid access if anything happens, it should be
-noted in the patch description and in the code.
-Otherwise, somebody looking at the code/change in future might be
-confused: "why we have to clear this pointer?"
+Fix this by calculating the minimum as ints and then letting the
+assignment to reply_queue_count handle integer demotion.
 
-And there are other places where mpio is freed.
-(E.g. in dispatch_queued_ios() in dm-mpath.c)
-Don't we need the same change there?
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
->> Cc: Mike Snitzer <snitzer@redhat.com>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> Tested-by: Heiko Carstens <heiko.carstens@de.ibm.com>
-> 
-> Acked-by: Mike Snitzer <snitzer@redhat.com>
-> 
-> Should Cc: stable too.
-> 
-> (I was thinking Alasdair would pick this up for 3.2 seeing as it is a
-> change to dm-mpath.c.  Alasdair, James.. I'll let you guys decide)
-
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index beda04a..9596ced 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1346,7 +1346,7 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	if (_base_check_enable_msix(ioc) != 0)
+ 		goto try_ioapic;
+ 
+-	ioc->reply_queue_count = min_t(u8, ioc->cpu_count,
++	ioc->reply_queue_count = min_t(int, ioc->cpu_count,
+ 	    ioc->msix_vector_count);
+ 
+ 	entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
 -- 
-Jun'ichi Nomura, NEC Corporation
+1.7.5.4
+
