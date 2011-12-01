@@ -1,47 +1,223 @@
 From: <nagalakshmi.nandigama@lsi.com>
-Subject: [PATCH] [SCSI] mpt2sas: Description Patch
-Date: Thu, 1 Dec 2011 07:51:43 +0530
-Message-ID: <201112010928.pB19SCkl020810@milmhbs0.lsil.com>
+Subject: [PATCH 01/08] [SCSI]  mpt2sas : Support for greater than 2TB
+ capacity WarpDrive
+Date: Thu, 1 Dec 2011 07:51:55 +0530
+Message-ID: <201112010928.pB19SOoV020874@milmhbs0.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:36659 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751780Ab1LAJ2T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 04:28:19 -0500
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:56528 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751689Ab1LAJ22 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 04:28:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, kashyap.desai@lsi.com, Nagalakshmi.Nandigama@lsi.com, Sathya.Prakash@lsi.com, Eric.Moore@lsi.com
 Cc: JBottomley@parallels.com
 
-Please consider this patch set for next kernel release.
+Support for greater than 2TB capacity WarpDrive
+
+The driver is modified to allow access to the greater than 2TB WarpDrive
+and properly handle direct-io mapping for WarpDrive volumes greater than 2TB.
 
 Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
 ---
-[PATCH 01/08] [SCSI]  mpt2sas : Support for greater than 2TB capacity WarpDrive
-[PATCH 02/08] [SCSI]  mpt2sas : Increase max transfer support from 4MB to 16MB
-[PATCH 03/08] [SCSI]  mpt2sas : Added support for customer specific branding 
-[PATCH 04/08] [SCSI]  mpt2sas : MPI next revision header update 
-[PATCH 05/08] [SCSI]  mpt2sas : Release spinlock for the raid device list before blocking it. 
-[PATCH 06/08] [SCSI]  mpt2sas : Do not retry a timed out direct IO for warpdrive
-[PATCH 07/08] [SCSI]  mpt2sas : Fix for memory allocation error for large host credits
-[PATCH 08/08] [SCSI]  mpt2sas : Bump driver vesion to 12.100.00.00
 
-
-The above patches are built by applying the following patches 
-1) [PATCH] [SCSI] mpt2sas: Fix leak on mpt2sas_base_attach() error path, Roland Dreier 
-2) [PATCH] [SCSI] mpt2sas: Fix possible integer truncation of cpu_count, Roland Dreier 
-3) [PATCH] [SCSI] mpt2sas: Remove unused duplicate diag_buffer_enable param, Roland Dreier 
-4) [PATCH] [SCSI] mpt2sas: Use kmemdup rather than duplicating its implementation, Thomas Meyer 
-5) [PATCH] [SCSI] mpt2sas: _scsih_smart_predicted_fault uses GFP_KERNEL in interrupt context, Anton Blanchard 
-6) [PATCH] [SCSI] mpt2sas : Better handling DEAD IOC (PCI-E LInk down) error condition
-7) [PATCH] [SCSI] mpt2sas : When IOs are terminated, update the result to DID_SOFT_ERROR
-to avoid infinite resets.
-8) [PATCH] [SCSI] mpt2sas : Adding support for customer specific branding.
-9) [PATCH] [SCSI] mpt2sas : MPI next revision header update
-10)[PATCH] [SCSI] mpt2sas : Do not set sas_device->starget to NULL from the slave_destroy callback
-when all the LUNS have been deleted.
-11)[PATCH] [SCSI] mpt2sas : Rearrange the the code so that the completion queues are initialized prior 
-to sending the request to controller firmware.
-12)[PATCH] [SCSI] mpt2sas : Bump driver version to 11.100.00.00
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index c19982b..ff7b05c 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -374,6 +374,7 @@ struct _sas_device {
+  * @percent_complete: resync percent complete
+  * @direct_io_enabled: Whether direct io to PDs are allowed or not
+  * @stripe_exponent: X where 2powX is the stripe sz in blocks
++ * @block_exponent: X where 2powX is the block sz in bytes
+  * @max_lba: Maximum number of LBA in the volume
+  * @stripe_sz: Stripe Size of the volume
+  * @device_info: Device info of the volume member disk
+@@ -395,6 +396,7 @@ struct _raid_device {
+ 	u8	percent_complete;
+ 	u8	direct_io_enabled;
+ 	u8	stripe_exponent;
++	u8	block_exponent;
+ 	u64	max_lba;
+ 	u32	stripe_sz;
+ 	u32	device_info;
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 0a1522b..8df4095 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -1781,11 +1781,9 @@ _scsih_init_warpdrive_properties(struct MPT2SAS_ADAPTER *ioc,
+ 	Mpi2ConfigReply_t mpi_reply;
+ 	u16 sz;
+ 	u8 num_pds, count;
+-	u64 mb = 1024 * 1024;
+-	u64 tb_2 = 2 * mb * mb;
+-	u64 capacity;
+-	u32 stripe_sz;
+-	u8 i, stripe_exp;
++	unsigned long stripe_sz, block_sz;
++	u8 stripe_exp, block_exp;
++	u64 dev_max_lba;
+ 
+ 	if (!ioc->is_warpdrive)
+ 		return;
+@@ -1849,51 +1847,57 @@ _scsih_init_warpdrive_properties(struct MPT2SAS_ADAPTER *ioc,
+ 			    vol_pg0->PhysDisk[count].PhysDiskNum);
+ 			goto out_error;
+ 		}
++		/* Disable direct I/O if member drive lba exceeds 4 bytes */
++		dev_max_lba = le64_to_cpu(pd_pg0.DeviceMaxLBA);
++		if (dev_max_lba >> 32) {
++			printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is "
++			    "disabled for the drive with handle(0x%04x) member"
++			    "handle (0x%04x) unsupported max lba 0x%016llx\n",
++			    ioc->name, raid_device->handle,
++			    le16_to_cpu(pd_pg0.DevHandle),
++			    (unsigned long long)dev_max_lba);
++			goto out_error;
++		}
++
+ 		raid_device->pd_handle[count] = le16_to_cpu(pd_pg0.DevHandle);
+ 	}
+ 
+ 	/*
+ 	 * Assumption for WD: Direct I/O is not supported if the volume is
+-	 * not RAID0, if the stripe size is not 64KB, if the block size is
+-	 * not 512 and if the volume size is >2TB
++	 * not RAID0
+ 	 */
+-	if (raid_device->volume_type != MPI2_RAID_VOL_TYPE_RAID0 ||
+-	    le16_to_cpu(vol_pg0->BlockSize) != 512) {
++	if (raid_device->volume_type != MPI2_RAID_VOL_TYPE_RAID0) {
+ 		printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled "
+ 		    "for the drive with handle(0x%04x): type=%d, "
+ 		    "s_sz=%uK, blk_size=%u\n", ioc->name,
+ 		    raid_device->handle, raid_device->volume_type,
+-		    le32_to_cpu(vol_pg0->StripeSize)/2,
++		    (le32_to_cpu(vol_pg0->StripeSize) *
++		    le16_to_cpu(vol_pg0->BlockSize)) / 1024,
+ 		    le16_to_cpu(vol_pg0->BlockSize));
+ 		goto out_error;
+ 	}
+ 
+-	capacity = (u64) le16_to_cpu(vol_pg0->BlockSize) *
+-	    (le64_to_cpu(vol_pg0->MaxLBA) + 1);
+-
+-	if (capacity > tb_2) {
++	stripe_sz = le32_to_cpu(vol_pg0->StripeSize);
++	stripe_exp = find_first_bit(&stripe_sz, 32);
++	if (stripe_exp == 32) {
+ 		printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled "
+-		"for the drive with handle(0x%04x) since drive sz > 2TB\n",
+-		ioc->name, raid_device->handle);
++		"for the drive with handle(0x%04x) invalid stripe sz %uK\n",
++		    ioc->name, raid_device->handle,
++		    (le32_to_cpu(vol_pg0->StripeSize) *
++		    le16_to_cpu(vol_pg0->BlockSize)) / 1024);
+ 		goto out_error;
+ 	}
+-
+-	stripe_sz = le32_to_cpu(vol_pg0->StripeSize);
+-	stripe_exp = 0;
+-	for (i = 0; i < 32; i++) {
+-		if (stripe_sz & 1)
+-			break;
+-		stripe_exp++;
+-		stripe_sz >>= 1;
+-	}
+-	if (i == 32) {
++	raid_device->stripe_exponent = stripe_exp;
++	block_sz = le16_to_cpu(vol_pg0->BlockSize);
++	block_exp = find_first_bit(&block_sz, 16);
++	if (block_exp == 16) {
+ 		printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled "
+-		    "for the drive with handle(0x%04x) invalid stripe sz %uK\n",
++		    "for the drive with handle(0x%04x) invalid block sz %u\n",
+ 		    ioc->name, raid_device->handle,
+-		    le32_to_cpu(vol_pg0->StripeSize)/2);
++		    le16_to_cpu(vol_pg0->BlockSize));
+ 		goto out_error;
+ 	}
+-	raid_device->stripe_exponent = stripe_exp;
++	raid_device->block_exponent = block_exp;
+ 	raid_device->direct_io_enabled = 1;
+ 
+ 	printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is Enabled for the drive"
+@@ -3804,8 +3808,9 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ {
+ 	u32 v_lba, p_lba, stripe_off, stripe_unit, column, io_size;
+ 	u32 stripe_sz, stripe_exp;
+-	u8 num_pds, *cdb_ptr, *tmp_ptr, *lba_ptr1, *lba_ptr2;
++	u8 num_pds, *cdb_ptr, i;
+ 	u8 cdb0 = scmd->cmnd[0];
++	u64 v_llba;
+ 
+ 	/*
+ 	 * Try Direct I/O to RAID memeber disks
+@@ -3816,15 +3821,11 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 
+ 		if ((cdb0 < READ_16) || !(cdb_ptr[2] | cdb_ptr[3] | cdb_ptr[4]
+ 			| cdb_ptr[5])) {
+-			io_size = scsi_bufflen(scmd) >> 9;
++			io_size = scsi_bufflen(scmd) >>
++			    raid_device->block_exponent;
++			i = (cdb0 < READ_16) ? 2 : 6;
+ 			/* get virtual lba */
+-			lba_ptr1 = lba_ptr2 = (cdb0 < READ_16) ? &cdb_ptr[2] :
+-			    &cdb_ptr[6];
+-			tmp_ptr = (u8 *)&v_lba + 3;
+-			*tmp_ptr-- = *lba_ptr1++;
+-			*tmp_ptr-- = *lba_ptr1++;
+-			*tmp_ptr-- = *lba_ptr1++;
+-			*tmp_ptr = *lba_ptr1;
++			v_lba = be32_to_cpu(*(__be32 *)(&cdb_ptr[i]));
+ 
+ 			if (((u64)v_lba + (u64)io_size - 1) <=
+ 			    (u32)raid_device->max_lba) {
+@@ -3843,11 +3844,39 @@ _scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 					mpi_request->DevHandle =
+ 						cpu_to_le16(raid_device->
+ 						    pd_handle[column]);
+-					tmp_ptr = (u8 *)&p_lba + 3;
+-					*lba_ptr2++ = *tmp_ptr--;
+-					*lba_ptr2++ = *tmp_ptr--;
+-					*lba_ptr2++ = *tmp_ptr--;
+-					*lba_ptr2 = *tmp_ptr;
++					(*(__be32 *)(&cdb_ptr[i])) =
++						cpu_to_be32(p_lba);
++					/*
++					* WD: To indicate this I/O is directI/O
++					*/
++					_scsih_scsi_direct_io_set(ioc, smid, 1);
++				}
++			}
++		} else {
++			io_size = scsi_bufflen(scmd) >>
++			    raid_device->block_exponent;
++			/* get virtual lba */
++			v_llba = be64_to_cpu(*(__be64 *)(&cdb_ptr[2]));
++
++			if ((v_llba + (u64)io_size - 1) <=
++			    raid_device->max_lba) {
++				stripe_sz = raid_device->stripe_sz;
++				stripe_exp = raid_device->stripe_exponent;
++				stripe_off = (u32) (v_llba & (stripe_sz - 1));
++
++				/* Check whether IO falls within a stripe */
++				if ((stripe_off + io_size) <= stripe_sz) {
++					num_pds = raid_device->num_pds;
++					p_lba = (u32)(v_llba >> stripe_exp);
++					stripe_unit = p_lba / num_pds;
++					column = p_lba % num_pds;
++					p_lba = (stripe_unit << stripe_exp) +
++					    stripe_off;
++					mpi_request->DevHandle =
++						cpu_to_le16(raid_device->
++						    pd_handle[column]);
++					(*(__be64 *)(&cdb_ptr[2])) =
++					    cpu_to_be64((u64)p_lba);
+ 					/*
+ 					* WD: To indicate this I/O is directI/O
+ 					*/
