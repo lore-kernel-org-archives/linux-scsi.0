@@ -1,15 +1,15 @@
 From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] [SCSI] mpt2sas: Fix possible integer truncation of cpu_count
-Date: Wed, 30 Nov 2011 16:30:33 -0800
-Message-ID: <1322699433-22886-1-git-send-email-roland@kernel.org>
+Subject: [PATCH] [SCSI] mpt2sas: Fix leak on mpt2sas_base_attach() error path
+Date: Wed, 30 Nov 2011 17:14:22 -0800
+Message-ID: <1322702062-26952-1-git-send-email-roland@kernel.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog103.obsmtp.com ([74.125.245.74]:60025 "HELO
-	na3sys010aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753001Ab1LAAaj (ORCPT
+Received: from na3sys010aog108.obsmtp.com ([74.125.245.84]:53990 "HELO
+	na3sys010aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752283Ab1LABO3 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Nov 2011 19:30:39 -0500
-Received: by mail-gx0-f170.google.com with SMTP id v1so658050ggn.29
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2011 16:30:38 -0800 (PST)
+	Wed, 30 Nov 2011 20:14:29 -0500
+Received: by mail-gx0-f179.google.com with SMTP id v5so1073708ggn.10
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2011 17:14:28 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <JBottomley@parallels.com>
@@ -17,18 +17,14 @@ Cc: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>, linux-scsi@vger.kerne
 
 From: Roland Dreier <roland@purestorage.com>
 
-When computing reply_queue_count (the number of MSI-X vectors to use),
-the driver does
+Commit 911ae9434f83 ("[SCSI] mpt2sas: Added NUNA IO support in driver
+which uses multi-reply queue support of the HBA") added new
+allocations to the beginning of mpt2sas_base_attach(), which means
+directly returning an error on failure of mpt2sas_base_map_resources()
+will leak those allocations.
 
-	ioc->reply_queue_count = min_t(u8, ioc->cpu_count,
-	    ioc->msix_vector_count);
-
-However, on a big machine, ioc->cpu_count could be outside the range
-that fits in a u8; eg a system with 256 CPUs will end up
-reply_queue_count set to 0.
-
-Fix this by calculating the minimum as ints and then letting the
-assignment to reply_queue_count handle integer demotion.
+Fix this by doing "goto out_free_resources" in this place too, as the
+rest of the function does.
 
 Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
@@ -36,18 +32,18 @@ Signed-off-by: Roland Dreier <roland@purestorage.com>
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index beda04a..9596ced 100644
+index beda04a..a7b2a16 100644
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1346,7 +1346,7 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
- 	if (_base_check_enable_msix(ioc) != 0)
- 		goto try_ioapic;
+@@ -4206,7 +4206,7 @@ mpt2sas_base_attach(struct MPT2SAS_ADAPTER *ioc)
  
--	ioc->reply_queue_count = min_t(u8, ioc->cpu_count,
-+	ioc->reply_queue_count = min_t(int, ioc->cpu_count,
- 	    ioc->msix_vector_count);
+ 	r = mpt2sas_base_map_resources(ioc);
+ 	if (r)
+-		return r;
++		goto out_free_resources;
  
- 	entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
+ 	if (ioc->is_warpdrive) {
+ 		ioc->reply_post_host_index[0] =
 -- 
 1.7.5.4
 
