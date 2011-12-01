@@ -1,7 +1,7 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 4/5] Staging: hv: storvsc: Fix a bug in copy_from_bounce_buffer()
-Date: Thu,  1 Dec 2011 04:59:19 -0800
-Message-ID: <1322744360-13067-4-git-send-email-kys@microsoft.com>
+Subject: [PATCH 2/5] Staging: hv: storvsc: Cleanup storvsc_device_alloc()
+Date: Thu,  1 Dec 2011 04:59:17 -0800
+Message-ID: <1322744360-13067-2-git-send-email-kys@microsoft.com>
 References: <1322744315-13017-1-git-send-email-kys@microsoft.com>
  <1322744360-13067-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,62 +11,31 @@ To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, 
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Fix a bug in copy_from_bounce_buffer().
+The code in storvsc_device_alloc() is not needed as this would be
+done by default. Get rid of it. We still keep the function as we use
+this hook to allocate per-LUN memory pools in a later patch.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
 ---
- drivers/staging/hv/storvsc_drv.c |   24 ++++++++++++++++++++++--
- 1 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/staging/hv/storvsc_drv.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
-index 8dafe52..c22de06 100644
+index 9153f98..14ecb69 100644
 --- a/drivers/staging/hv/storvsc_drv.c
 +++ b/drivers/staging/hv/storvsc_drv.c
-@@ -880,7 +880,8 @@ cleanup:
- /* Assume the original sgl has enough room */
- static unsigned int copy_from_bounce_buffer(struct scatterlist *orig_sgl,
- 					    struct scatterlist *bounce_sgl,
--					    unsigned int orig_sgl_count)
-+					    unsigned int orig_sgl_count,
-+					    unsigned int bounce_sgl_count)
- {
- 	int i;
- 	int j = 0;
-@@ -921,6 +922,24 @@ static unsigned int copy_from_bounce_buffer(struct scatterlist *orig_sgl,
- 				kunmap_atomic((void *)bounce_addr, KM_IRQ0);
- 				j++;
+@@ -790,11 +790,6 @@ static void storvsc_get_ide_info(struct hv_device *dev, int *target, int *path)
  
-+				/*
-+				 * It is possible that the number of elements
-+				 * in the bounce buffer may not be equal to
-+				 * the number of elements in the original
-+				 * scatter list. Handle this correctly.
-+				 */
-+
-+				if (j == bounce_sgl_count) {
-+					/*
-+					 * We are done; cleanup and return.
-+					 */
-+					kunmap_atomic((void *)(dest_addr -
-+							orig_sgl[i].offset),
-+							KM_IRQ0);
-+					local_irq_restore(flags);
-+					return total_copied;
-+				}
-+
- 				/* if we need to use another bounce buffer */
- 				if (destlen || i != orig_sgl_count - 1)
- 					bounce_addr =
-@@ -1126,7 +1145,8 @@ static void storvsc_command_completion(struct hv_storvsc_request *request)
- 		if (vm_srb->data_in == READ_TYPE)
- 			copy_from_bounce_buffer(scsi_sglist(scmnd),
- 					cmd_request->bounce_sgl,
--					scsi_sg_count(scmnd));
-+					scsi_sg_count(scmnd),
-+					cmd_request->bounce_sgl_count);
- 		destroy_bounce_buffer(cmd_request->bounce_sgl,
- 					cmd_request->bounce_sgl_count);
- 	}
+ static int storvsc_device_alloc(struct scsi_device *sdevice)
+ {
+-	/*
+-	 * This enables luns to be located sparsely. Otherwise, we may not
+-	 * discovered them.
+-	 */
+-	sdevice->sdev_bflags |= BLIST_SPARSELUN | BLIST_LARGELUN;
+ 	return 0;
+ }
+ 
 -- 
 1.7.4.1
