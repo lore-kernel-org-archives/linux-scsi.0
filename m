@@ -1,70 +1,75 @@
-From: "Achim Leubner" <Achim_Leubner@pmc-sierra.com>
-Subject: RE: [PATCH] SCSI: aacraid: potential integer overflow in aac_get_containers()
-Date: Thu, 1 Dec 2011 02:07:33 -0800
-Message-ID: <FD2BDBE06AC58549AE9E16C08B45675D061FCB70@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <1322706601-26181-1-git-send-email-haogangchen@gmail.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH] arm: prevent inlining in arxescsi.c causing build failures
+Date: Thu, 01 Dec 2011 14:46:11 +0400
+Message-ID: <4ED75AF3.2090901@ru.mvista.com>
+References: <1322713611-30003-1-git-send-email-paul.gortmaker@windriver.com> <20111201080613.GF26618@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:37277 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752454Ab1LAKHj convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2011 05:07:39 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1322706601-26181-1-git-send-email-haogangchen@gmail.com>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:59995 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751584Ab1LAKrM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2011 05:47:12 -0500
+In-Reply-To: <20111201080613.GF26618@pengutronix.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Haogang Chen <haogangchen@gmail.com>, aacraid@adaptec.com
-Cc: JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: =?ISO-8859-1?Q?Uwe_Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, JBottomley@parallels.com, linux-scsi@vger.kernel.org
 
-Acked-by: Achim Leubner <Achim_Leubner@pmc-sierra.com>
+Hello.
 
+On 01.12.2011 12:06, Uwe Kleine-K=F6nig wrote:
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Haogang Chen
-Sent: Donnerstag, 1. Dezember 2011 03:30
-To: aacraid@adaptec.com
-Cc: JBottomley@parallels.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; haogangchen@gmail.com
-Subject: [PATCH] SCSI: aacraid: potential integer overflow in
-aac_get_containers()
+>> The following failure is seen in routine coverage builds:
 
-There is a potential integer overflow in aac_get_containers(). When
-maximum_num_containers is large, the subsequent call to kzalloc() will
-allocate a buffer smaller than expected, which leads to memory
-corruption in the for loop.
+>>    CC [M]  drivers/scsi/arm/arxescsi.o
+>> /tmp/cccEyiO7.s: Assembler messages:
+>> /tmp/cccEyiO7.s:334: Error: symbol `.loop_1' is already defined
+>> /tmp/cccEyiO7.s:337: Error: symbol `.loop_2' is already defined
+>> /tmp/cccEyiO7.s:343: Error: symbol `.loop_3' is already defined
+>> /tmp/cccEyiO7.s:365: Error: symbol `.loop_1' is already defined
+>> /tmp/cccEyiO7.s:368: Error: symbol `.loop_2' is already defined
+>> /tmp/cccEyiO7.s:374: Error: symbol `.loop_3' is already defined
+>> make[4]: *** [drivers/scsi/arm/arxescsi.o] Error 1
 
-The patch replaces kzalloc with kcalloc.
+>> It is caused by multiple inline of arxescsi_pseudo_dma_write()
+>> which is responsible for the above labels.  Marking the fcn
+>> as non-inline fixes the issue.
 
-Signed-off-by: Haogang Chen <haogangchen@gmail.com>
----
- drivers/scsi/aacraid/aachba.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+>> Signed-off-by: Paul Gortmaker<paul.gortmaker@windriver.com>
 
-diff --git a/drivers/scsi/aacraid/aachba.c
-b/drivers/scsi/aacraid/aachba.c
-index 409f580..440b84d 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -381,7 +381,7 @@ int aac_get_containers(struct aac_dev *dev)
- 
- 	if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
- 		maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
--	fsa_dev_ptr = kzalloc(sizeof(*fsa_dev_ptr) *
-maximum_num_containers,
-+	fsa_dev_ptr = kcalloc(maximum_num_containers,
-sizeof(*fsa_dev_ptr), 
- 			GFP_KERNEL);
- 	if (!fsa_dev_ptr)
- 		return -ENOMEM;
--- 
-1.7.5.4
+> Is that a compiler or a code issue? If it's the compiler please fix
+> that. If it's the code, then please document why you added the noinli=
+ne.
+
+> Having said that, "my" compiler compiles drivers/scsi/arm/arxescsi.o
+> just fine (using rpc_defconfig on v3.2-rc2).
+
+>> diff --git a/drivers/scsi/arm/arxescsi.c b/drivers/scsi/arm/arxescsi=
+=2Ec
+>> index a750aa7..2608a9e 100644
+>> --- a/drivers/scsi/arm/arxescsi.c
+>> +++ b/drivers/scsi/arm/arxescsi.c
+>> @@ -72,7 +72,8 @@ arxescsi_dma_setup(struct Scsi_Host *host, struct =
+scsi_pointer *SCp,
+>>   	return fasdma_pseudo;
+>>   }
+>>
+>> -static void arxescsi_pseudo_dma_write(unsigned char *addr, void __i=
+omem *base)
+>> +static noinline void
+>> +arxescsi_pseudo_dma_write(unsigned char *addr, void __iomem *base)
+
+> Shouldn't this line get some indention?
+
+    No, usually such lines don't get indented.
+
+WBR, Sergei
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
 the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
