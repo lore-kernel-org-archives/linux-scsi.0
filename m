@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 1/3] workqueue: promote workqueue_lock to hard-irq safe
-Date: Fri, 02 Dec 2011 15:56:50 -0800
-Message-ID: <20111202235650.24470.57997.stgit@localhost6.localdomain6>
+Subject: [PATCH 2/3] workqueue: defer work to a draining queue
+Date: Fri, 02 Dec 2011 15:56:55 -0800
+Message-ID: <20111202235655.24470.24712.stgit@localhost6.localdomain6>
 References: <20111202235319.24470.65483.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -13,181 +13,189 @@ To: tj@kernel.org, JBottomley@parallels.com
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-In preparation for a deferred work implementation to queue unchained
-work at the conclusion of a drain_workqueue() event.
+commit 9c5a2ba7 "workqueue: separate out drain_workqueue() from
+destroy_workqueue()" provided drain_workqueue() for users like libsas to
+use for flushing events.
+
+When libsas drains it wants currently queued and chained events to be
+flushed, but it fully expects to continue issuing unchained events with
+the expectation that they are serviced sometime after the drain.
+
+For external users of drain_workqueue() let unchained work commence
+after the drain completes, if the caller cares if unchained work was
+queued as a result of the drain it can check for a non-zero return
+value.
+
+Unfortunately this causes the promotion of workqueue_lock to hard-irq
+safe and can't support queue_work_on() users.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- kernel/workqueue.c |   44 ++++++++++++++++++++++----------------------
- 1 files changed, 22 insertions(+), 22 deletions(-)
+ include/linux/workqueue.h |    3 +-
+ kernel/workqueue.c        |   70 +++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 62 insertions(+), 11 deletions(-)
 
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+index 0d556de..37de207 100644
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -257,6 +257,7 @@ enum {
+ 
+ 	WQ_DRAINING		= 1 << 6, /* internal: workqueue is draining */
+ 	WQ_RESCUER		= 1 << 7, /* internal: workqueue has rescuer */
++	WQ_NO_DEFER		= 1 << 8, /* internal: workqueue destructing */
+ 
+ 	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
+ 	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
+@@ -355,7 +356,7 @@ extern int queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
+ 			struct delayed_work *work, unsigned long delay);
+ 
+ extern void flush_workqueue(struct workqueue_struct *wq);
+-extern void drain_workqueue(struct workqueue_struct *wq);
++extern int drain_workqueue(struct workqueue_struct *wq);
+ extern void flush_scheduled_work(void);
+ 
+ extern int schedule_work(struct work_struct *work);
 diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 1783aab..f476895 100644
+index f476895..363a4ef 100644
 --- a/kernel/workqueue.c
 +++ b/kernel/workqueue.c
-@@ -2403,10 +2403,10 @@ void drain_workqueue(struct workqueue_struct *wq)
- 	 * hotter than drain_workqueue() and already looks at @wq->flags.
- 	 * Use WQ_DRAINING so that queue doesn't have to check nr_drainers.
+@@ -236,6 +236,7 @@ struct workqueue_struct {
+ 	struct wq_flusher	*first_flusher;	/* F: first flusher */
+ 	struct list_head	flusher_queue;	/* F: flush waiters */
+ 	struct list_head	flusher_overflow; /* F: flush overflow list */
++	struct list_head	drain_defer;	/* W: unchained work to defer */
+ 
+ 	mayday_mask_t		mayday_mask;	/* cpus requesting rescue */
+ 	struct worker		*rescuer;	/* I: rescue worker */
+@@ -979,6 +980,19 @@ static bool is_chained_work(struct workqueue_struct *wq)
+ 	return false;
+ }
+ 
++static bool defer_work(struct workqueue_struct *wq, struct work_struct *work)
++{
++	if (is_chained_work(wq))
++		return false;
++
++	if (WARN_ON_ONCE(wq->flags & WQ_NO_DEFER))
++		return true;
++
++	list_add_tail(&work->entry, &wq->drain_defer);
++
++	return true;
++}
++
+ static void __queue_work(unsigned int cpu, struct workqueue_struct *wq,
+ 			 struct work_struct *work)
+ {
+@@ -991,9 +1005,17 @@ static void __queue_work(unsigned int cpu, struct workqueue_struct *wq,
+ 	debug_work_activate(work);
+ 
+ 	/* if dying, only works from the same workqueue are allowed */
+-	if (unlikely(wq->flags & WQ_DRAINING) &&
+-	    WARN_ON_ONCE(!is_chained_work(wq)))
+-		return;
++	if (unlikely(wq->flags & WQ_DRAINING)) {
++		unsigned long flags;
++		bool defer = false;
++
++		spin_lock_irqsave(&workqueue_lock, flags);
++		if (wq->flags & WQ_DRAINING)
++			defer = defer_work(wq, work);
++		spin_unlock_irqrestore(&workqueue_lock, flags);
++		if (defer)
++			return;
++	}
+ 
+ 	/* determine gcwq to use */
+ 	if (!(wq->flags & WQ_UNBOUND)) {
+@@ -2383,8 +2405,9 @@ out_unlock:
+ EXPORT_SYMBOL_GPL(flush_workqueue);
+ 
+ /**
+- * drain_workqueue - drain a workqueue
++ * __drain_workqueue - drain a workqueue
+  * @wq: workqueue to drain
++ * @flags: WQ_NO_DEFER - reject unchained work
+  *
+  * Wait until the workqueue becomes empty.  While draining is in progress,
+  * only chain queueing is allowed.  IOW, only currently pending or running
+@@ -2392,11 +2415,17 @@ EXPORT_SYMBOL_GPL(flush_workqueue);
+  * repeatedly until it becomes empty.  The number of flushing is detemined
+  * by the depth of chaining and should be relatively short.  Whine if it
+  * takes too long.
++ *
++ * Indicate to the caller if any deferred (unchained) work was queued
++ * during the drain.
+  */
+-void drain_workqueue(struct workqueue_struct *wq)
++static int __drain_workqueue(struct workqueue_struct *wq, int flags)
+ {
++	struct work_struct *work, *w;
+ 	unsigned int flush_cnt = 0;
++	LIST_HEAD(drain_defer);
+ 	unsigned int cpu;
++	int ret = 0;
+ 
+ 	/*
+ 	 * __queue_work() needs to test whether there are drainers, is much
+@@ -2405,7 +2434,7 @@ void drain_workqueue(struct workqueue_struct *wq)
  	 */
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
+ 	spin_lock_irq(&workqueue_lock);
  	if (!wq->nr_drainers++)
- 		wq->flags |= WQ_DRAINING;
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
+-		wq->flags |= WQ_DRAINING;
++		wq->flags |= WQ_DRAINING | flags;
+ 	spin_unlock_irq(&workqueue_lock);
  reflush:
  	flush_workqueue(wq);
- 
-@@ -2428,10 +2428,10 @@ reflush:
- 		goto reflush;
+@@ -2429,9 +2458,25 @@ reflush:
  	}
  
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
- 	if (!--wq->nr_drainers)
- 		wq->flags &= ~WQ_DRAINING;
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
+ 	spin_lock_irq(&workqueue_lock);
+-	if (!--wq->nr_drainers)
+-		wq->flags &= ~WQ_DRAINING;
++	if (!--wq->nr_drainers) {
++		wq->flags &= ~(WQ_DRAINING | WQ_NO_DEFER);
++		list_splice_init(&wq->drain_defer, &drain_defer);
++		ret = !list_empty(&drain_defer);
++	}
+ 	spin_unlock_irq(&workqueue_lock);
++
++	/* requeue work on this queue provided it was not being destroyed */
++	list_for_each_entry_safe(work, w, &drain_defer, entry) {
++		list_del_init(&work->entry);
++		queue_work(wq, work);
++	}
++
++	return ret;
++}
++
++int drain_workqueue(struct workqueue_struct *wq)
++{
++	return __drain_workqueue(wq, 0);
  }
  EXPORT_SYMBOL_GPL(drain_workqueue);
  
-@@ -3033,7 +3033,7 @@ struct workqueue_struct *__alloc_workqueue_key(const char *name,
- 	 * list.  Grab it, set max_active accordingly and add the new
- 	 * workqueue to workqueues list.
- 	 */
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
+@@ -2990,6 +3035,7 @@ struct workqueue_struct *__alloc_workqueue_key(const char *name,
+ 	atomic_set(&wq->nr_cwqs_to_flush, 0);
+ 	INIT_LIST_HEAD(&wq->flusher_queue);
+ 	INIT_LIST_HEAD(&wq->flusher_overflow);
++	INIT_LIST_HEAD(&wq->drain_defer);
  
- 	if (workqueue_freezing && wq->flags & WQ_FREEZABLE)
- 		for_each_cwq_cpu(cpu, wq)
-@@ -3041,7 +3041,7 @@ struct workqueue_struct *__alloc_workqueue_key(const char *name,
+ 	wq->name = name;
+ 	lockdep_init_map(&wq->lockdep_map, lock_name, key, 0);
+@@ -3065,8 +3111,12 @@ void destroy_workqueue(struct workqueue_struct *wq)
+ {
+ 	unsigned int cpu;
  
- 	list_add(&wq->list, &workqueues);
+-	/* drain it before proceeding with destruction */
+-	drain_workqueue(wq);
++	/*
++	 * drain it before proceeding with destruction and disable drain
++	 * deferrement.  !is_chained_work() that arrives after this
++	 * point will be dropped on the floor
++	 */
++	__drain_workqueue(wq, WQ_NO_DEFER);
  
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
- 
- 	return wq;
- err:
-@@ -3072,9 +3072,9 @@ void destroy_workqueue(struct workqueue_struct *wq)
+ 	/*
  	 * wq list is used to freeze wq, remove from list after
- 	 * flushing is complete in case freeze races us.
- 	 */
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
- 	list_del(&wq->list);
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
- 
- 	/* sanity check */
- 	for_each_cwq_cpu(cpu, wq) {
-@@ -3114,23 +3114,23 @@ void workqueue_set_max_active(struct workqueue_struct *wq, int max_active)
- 
- 	max_active = wq_clamp_max_active(max_active, wq->flags, wq->name);
- 
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
- 
- 	wq->saved_max_active = max_active;
- 
- 	for_each_cwq_cpu(cpu, wq) {
- 		struct global_cwq *gcwq = get_gcwq(cpu);
- 
--		spin_lock_irq(&gcwq->lock);
-+		spin_lock(&gcwq->lock);
- 
- 		if (!(wq->flags & WQ_FREEZABLE) ||
- 		    !(gcwq->flags & GCWQ_FREEZING))
- 			get_cwq(gcwq->cpu, wq)->max_active = max_active;
- 
--		spin_unlock_irq(&gcwq->lock);
-+		spin_unlock(&gcwq->lock);
- 	}
- 
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
- }
- EXPORT_SYMBOL_GPL(workqueue_set_max_active);
- 
-@@ -3642,7 +3642,7 @@ void freeze_workqueues_begin(void)
- {
- 	unsigned int cpu;
- 
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
- 
- 	BUG_ON(workqueue_freezing);
- 	workqueue_freezing = true;
-@@ -3651,7 +3651,7 @@ void freeze_workqueues_begin(void)
- 		struct global_cwq *gcwq = get_gcwq(cpu);
- 		struct workqueue_struct *wq;
- 
--		spin_lock_irq(&gcwq->lock);
-+		spin_lock(&gcwq->lock);
- 
- 		BUG_ON(gcwq->flags & GCWQ_FREEZING);
- 		gcwq->flags |= GCWQ_FREEZING;
-@@ -3663,10 +3663,10 @@ void freeze_workqueues_begin(void)
- 				cwq->max_active = 0;
- 		}
- 
--		spin_unlock_irq(&gcwq->lock);
-+		spin_unlock(&gcwq->lock);
- 	}
- 
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
- }
- 
- /**
-@@ -3687,7 +3687,7 @@ bool freeze_workqueues_busy(void)
- 	unsigned int cpu;
- 	bool busy = false;
- 
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
- 
- 	BUG_ON(!workqueue_freezing);
- 
-@@ -3711,7 +3711,7 @@ bool freeze_workqueues_busy(void)
- 		}
- 	}
- out_unlock:
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
- 	return busy;
- }
- 
-@@ -3728,7 +3728,7 @@ void thaw_workqueues(void)
- {
- 	unsigned int cpu;
- 
--	spin_lock(&workqueue_lock);
-+	spin_lock_irq(&workqueue_lock);
- 
- 	if (!workqueue_freezing)
- 		goto out_unlock;
-@@ -3737,7 +3737,7 @@ void thaw_workqueues(void)
- 		struct global_cwq *gcwq = get_gcwq(cpu);
- 		struct workqueue_struct *wq;
- 
--		spin_lock_irq(&gcwq->lock);
-+		spin_lock(&gcwq->lock);
- 
- 		BUG_ON(!(gcwq->flags & GCWQ_FREEZING));
- 		gcwq->flags &= ~GCWQ_FREEZING;
-@@ -3758,12 +3758,12 @@ void thaw_workqueues(void)
- 
- 		wake_up_worker(gcwq);
- 
--		spin_unlock_irq(&gcwq->lock);
-+		spin_unlock(&gcwq->lock);
- 	}
- 
- 	workqueue_freezing = false;
- out_unlock:
--	spin_unlock(&workqueue_lock);
-+	spin_unlock_irq(&workqueue_lock);
- }
- #endif /* CONFIG_FREEZER */
- 
