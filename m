@@ -1,66 +1,53 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v4 0/6] ata port runtime power management support
-Date: Fri, 02 Dec 2011 13:35:50 +0800
-Message-ID: <1322804150.344.3.camel@minggr>
-References: <1322442950-16268-1-git-send-email-ming.m.lin@intel.com>
-	 <CAF1ivSa8d-VNbOmO9UyG-J3TKDmfuuX9pWEtT_7a7OcCC-0Uow@mail.gmail.com>
-	 <1322753439.6920.21.camel@dabdike>
+From: <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 0/9] qla4xxx: Patches for scsi-misc
+Date: Thu, 1 Dec 2011 22:42:05 -0800
+Message-ID: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1322753439.6920.21.camel@dabdike>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:13833
+	"EHLO VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751776Ab1LBGzv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 01:55:51 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com
 
-On Thu, 2011-12-01 at 23:30 +0800, James Bottomley wrote:
-> On Thu, 2011-12-01 at 22:09 +0800, Lin Ming wrote:
-> > On Mon, Nov 28, 2011 at 9:15 AM, Lin Ming <ming.m.lin@intel.com> wrote:
-> > > Hi all,
-> > >
-> > > This is the v4 patches to add ata port runtime pm support.
-> > > Applied on top of v3.2-rc2.
-> > >
-> > > Jeff, any comment on the ata patches?
-> > > James, any comment on the scsi patches?
-> > 
-> > Ping ...
-> > 
-> > Which git tree should these patches go into? ATA or SCSI?
-> 
-> >  drivers/ata/libata-core.c      |  154 ++++++++++++++++++++++------------------
-> >  drivers/ata/libata-scsi.c      |    3 +-
-> >  drivers/ata/libata-transport.c |    5 ++
-> >  drivers/ata/libata.h           |    1 +
-> >  drivers/scsi/scsi_error.c      |    5 +-
-> >  drivers/scsi/scsi_pm.c         |   16 ++++-
-> >  drivers/scsi/sd.c              |    5 ++
-> >  include/scsi/scsi_host.h       |    3 +
-> >  8 files changed, 118 insertions(+), 74 deletions(-)
-> 
-> I think the line count implies ATA since it's the most changed.
-> 
-> For the SCSI piece, the acks should come from Alan Stern, since real
-> SCSI doesn't use suspend/resume and the hooks were put in for the
-> benefit of USB storage.
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-Hi Alan,
+James,
 
-You have signed Patch 3: [SCSI] check runtime PM status in system PM.
+Please apply the following patches to scsi-misc for inclusion in mainline.
+These patches are on top of patchset posted by Mike Christie:-
+http://marc.info/?l=linux-scsi&m=132279682021696&w=2
 
-How about the other two SCSI patches?
+Mike Hernandez (1):
+      qla4xxx: Fix CPU lockups when ql4xdontresethba set
 
-Patch 2: [SCSI] add flag to skip the runtime PM calls on the host
-Patch 4: [SCSI] sd: check runtime PM status in sd_shutdown
+Nilesh Javali (1):
+      qla4xxx: Fix the IDC locking mechanism
 
-Regards,
-Lin Ming
+Sarang Radke (2):
+      qla4xxx: fix call trace on rmmod with ql4xdontresethba=1
+      qla4xxx: Don't recover adapter if device state is FAILED
 
-> 
-> James
-> 
-> 
+Shyam Sunder (1):
+      qla4xxx: check for FW alive before calling chip_reset
 
+Vikas Chaudhary (4):
+      qla4xxx: Perform context resets in case of context failures.
+      qla4xxx: Wait for disable_acb before doing set_acb
+      qla4xxx: Fix qla4xxx_dump_buffer to dump buffer correctly
+      qla4xxx: Update driver version to 5.02.00-k10
+
+ drivers/scsi/qla4xxx/ql4_dbg.c     |    6 +-
+ drivers/scsi/qla4xxx/ql4_def.h     |    1 +
+ drivers/scsi/qla4xxx/ql4_isr.c     |   30 ++++++---
+ drivers/scsi/qla4xxx/ql4_nx.c      |   23 ++++--
+ drivers/scsi/qla4xxx/ql4_os.c      |  126 +++++++++++++++++++++++++++++-------
+ drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+
+Thanks,
+Vikas
 
