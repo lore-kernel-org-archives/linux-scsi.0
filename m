@@ -1,54 +1,100 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 5/9] qla4xxx: Wait for disable_acb before doing set_acb
-Date: Thu, 1 Dec 2011 22:42:10 -0800
-Message-ID: <1322808134-21665-6-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 1/9] qla4xxx: Perform context resets in case of context failures.
+Date: Thu, 1 Dec 2011 22:42:06 -0800
+Message-ID: <1322808134-21665-2-git-send-email-vikas.chaudhary@qlogic.com>
 References: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:57703
-	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752469Ab1LBGzx (ORCPT
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:7787 "EHLO
+	VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752387Ab1LBGzx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 01:55:53 -0500
 In-Reply-To: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com, Shyam Sunder <shyam.sunder@qlogic.com>
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-In function qla4xxx_iface_set_param wait for disable_acb to
-complete so that set_acb will not fail.
+For 4032, context reset was the same as chip reset, and any firmware
+issue was recovered by performing a chip reset.
+For 82xx, the iSCSI firmware runs along with FCoE and the NIC
+firmware contexts, and an error encountered doesnot essentially mean
+that a chip reset is necessary.
 
-JIRA Key: UPSISCSI-121
+Perform Chip resets only in the following cases:
+1. Mailbox system error.
+2. Mailbox command timeout.
+3. fw_heartbeat_counter counter stops incrementing.
+
+For all other cases, only perform a context reset.
+1. Command Completion with an invalid srb.
+2. Other mailbox failures.
+
+JIRA Key: UPSISCSI-47
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Signed-off-by: Shyam Sunder <shyam.sunder@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |   11 ++++++++++-
- 1 files changed, 10 insertions(+), 1 deletions(-)
+ drivers/scsi/qla4xxx/ql4_isr.c |   30 +++++++++++++++++++-----------
+ 1 files changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index c5ae676..c6f9e7b 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -935,7 +935,16 @@ qla4xxx_iface_set_param(struct Scsi_Host *shost, void *data, uint32_t len)
- 		goto exit_init_fw_cb;
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index 827e930..9582886 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -123,13 +123,13 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
+ 
+ 	srb = qla4xxx_del_from_active_array(ha, le32_to_cpu(sts_entry->handle));
+ 	if (!srb) {
+-		DEBUG2(printk(KERN_WARNING "scsi%ld: %s: Status Entry invalid "
+-			      "handle 0x%x, sp=%p. This cmd may have already "
+-			      "been completed.\n", ha->host_no, __func__,
+-			      le32_to_cpu(sts_entry->handle), srb));
+-		ql4_printk(KERN_WARNING, ha, "%s invalid status entry:"
+-		    " handle=0x%0x\n", __func__, sts_entry->handle);
+-		set_bit(DPC_RESET_HA, &ha->dpc_flags);
++		ql4_printk(KERN_WARNING, ha, "%s invalid status entry: "
++			   "handle=0x%0x, srb=%p\n", __func__,
++			   sts_entry->handle, srb);
++		if (is_qla8022(ha))
++			set_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags);
++		else
++			set_bit(DPC_RESET_HA, &ha->dpc_flags);
+ 		return;
  	}
  
--	qla4xxx_disable_acb(ha);
-+	rval = qla4xxx_disable_acb(ha);
-+	if (rval != QLA_SUCCESS) {
-+		ql4_printk(KERN_ERR, ha, "%s: disable acb mbx failed\n",
-+			   __func__);
-+		rval = -EIO;
-+		goto exit_init_fw_cb;
-+	}
-+
-+	wait_for_completion_timeout(&ha->disable_acb_comp,
-+				    DISABLE_ACB_TOV * HZ);
+@@ -563,7 +563,11 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 		case MBOX_ASTS_DHCP_LEASE_EXPIRED:
+ 			DEBUG2(printk("scsi%ld: AEN %04x, ERROR Status, "
+ 				      "Reset HA\n", ha->host_no, mbox_status));
+-			set_bit(DPC_RESET_HA, &ha->dpc_flags);
++			if (is_qla8022(ha))
++				set_bit(DPC_RESET_HA_FW_CONTEXT,
++					&ha->dpc_flags);
++			else
++				set_bit(DPC_RESET_HA, &ha->dpc_flags);
+ 			break;
  
- 	qla4xxx_initcb_to_acb(init_fw_cb);
+ 		case MBOX_ASTS_LINK_UP:
+@@ -617,9 +621,13 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
+ 			    (mbox_sts[2] == ACB_STATE_ACQUIRING)))
+ 				set_bit(DPC_GET_DHCP_IP_ADDR, &ha->dpc_flags);
+ 			else if ((mbox_sts[3] == ACB_STATE_ACQUIRING) &&
+-			    (mbox_sts[2] == ACB_STATE_VALID))
+-				set_bit(DPC_RESET_HA, &ha->dpc_flags);
+-			else if ((mbox_sts[3] == ACB_STATE_UNCONFIGURED))
++				 (mbox_sts[2] == ACB_STATE_VALID)) {
++				if (is_qla8022(ha))
++					set_bit(DPC_RESET_HA_FW_CONTEXT,
++						&ha->dpc_flags);
++				else
++					set_bit(DPC_RESET_HA, &ha->dpc_flags);
++			} else if ((mbox_sts[3] == ACB_STATE_UNCONFIGURED))
+ 				complete(&ha->disable_acb_comp);
+ 			break;
  
 -- 
 1.7.8.rc2.3.g0911
