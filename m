@@ -1,14 +1,16 @@
 From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 0/9] qla4xxx: Patches for scsi-misc
-Date: Thu, 1 Dec 2011 22:42:05 -0800
-Message-ID: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
+Subject: [PATCH 7/9] qla4xxx: Fix qla4xxx_dump_buffer to dump buffer correctly
+Date: Thu, 1 Dec 2011 22:42:12 -0800
+Message-ID: <1322808134-21665-8-git-send-email-vikas.chaudhary@qlogic.com>
+References: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:13833
-	"EHLO VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751776Ab1LBGzv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 01:55:51 -0500
+Received: from va3ehsobe005.messaging.microsoft.com ([216.32.180.31]:1703 "EHLO
+	VA3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752080Ab1LBGzw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 01:55:52 -0500
+In-Reply-To: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jbottomley@parallels.com, michaelc@cs.wisc.edu
@@ -16,38 +18,35 @@ Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlo
 
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-James,
+KERN_INFO in printk adding new line character that mess-up
+dump print format. Remove KERN_INFO to fix dump format.
 
-Please apply the following patches to scsi-misc for inclusion in mainline.
-These patches are on top of patchset posted by Mike Christie:-
-http://marc.info/?l=linux-scsi&m=132279682021696&w=2
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+---
+ drivers/scsi/qla4xxx/ql4_dbg.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-Mike Hernandez (1):
-      qla4xxx: Fix CPU lockups when ql4xdontresethba set
+diff --git a/drivers/scsi/qla4xxx/ql4_dbg.c b/drivers/scsi/qla4xxx/ql4_dbg.c
+index af62c3c..8d58ae2 100644
+--- a/drivers/scsi/qla4xxx/ql4_dbg.c
++++ b/drivers/scsi/qla4xxx/ql4_dbg.c
+@@ -20,12 +20,12 @@ void qla4xxx_dump_buffer(void *b, uint32_t size)
+ 	printk("------------------------------------------------------------"
+ 	       "--\n");
+ 	for (cnt = 0; cnt < size; c++) {
+-		printk(KERN_INFO "%02x", *c);
++		printk("%02x", *c);
+ 		if (!(++cnt % 16))
+-			printk(KERN_INFO "\n");
++			printk("\n");
+ 
+ 		else
+-			printk(KERN_INFO "  ");
++			printk("  ");
+ 	}
+ 	printk(KERN_INFO "\n");
+ }
+-- 
+1.7.8.rc2.3.g0911
 
-Nilesh Javali (1):
-      qla4xxx: Fix the IDC locking mechanism
-
-Sarang Radke (2):
-      qla4xxx: fix call trace on rmmod with ql4xdontresethba=1
-      qla4xxx: Don't recover adapter if device state is FAILED
-
-Shyam Sunder (1):
-      qla4xxx: check for FW alive before calling chip_reset
-
-Vikas Chaudhary (4):
-      qla4xxx: Perform context resets in case of context failures.
-      qla4xxx: Wait for disable_acb before doing set_acb
-      qla4xxx: Fix qla4xxx_dump_buffer to dump buffer correctly
-      qla4xxx: Update driver version to 5.02.00-k10
-
- drivers/scsi/qla4xxx/ql4_dbg.c     |    6 +-
- drivers/scsi/qla4xxx/ql4_def.h     |    1 +
- drivers/scsi/qla4xxx/ql4_isr.c     |   30 ++++++---
- drivers/scsi/qla4xxx/ql4_nx.c      |   23 ++++--
- drivers/scsi/qla4xxx/ql4_os.c      |  126 +++++++++++++++++++++++++++++-------
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
-
-Thanks,
-Vikas
 
