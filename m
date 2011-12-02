@@ -1,102 +1,75 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 1/9] qla4xxx: Perform context resets in case of context failures.
-Date: Thu, 1 Dec 2011 22:42:06 -0800
-Message-ID: <1322808134-21665-2-git-send-email-vikas.chaudhary@qlogic.com>
-References: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] [SCSI] mpt2sas: Remove unused duplicate
+ diag_buffer_enable param
+Date: Fri, 2 Dec 2011 15:08:40 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6047278D3A8@inbmail02.lsi.com>
+References: <1322676350-2018-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:7787 "EHLO
-	VA3EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752387Ab1LBGzx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 01:55:53 -0500
-In-Reply-To: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from na3sys009aog101.obsmtp.com ([74.125.149.67]:45616 "EHLO
+	na3sys009aog101.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751680Ab1LBJit convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Dec 2011 04:38:49 -0500
+In-Reply-To: <1322676350-2018-1-git-send-email-roland@kernel.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com, Shyam Sunder <shyam.sunder@qlogic.com>
+To: Roland Dreier <roland@kernel.org>, James Bottomley <jejb@kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+This patch seem to be fine.
+Please consider this patch as acked by me.
 
-For 4032, context reset was the same as chip reset, and any firmware
-issue was recovered by performing a chip reset.
-For 82xx, the iSCSI firmware runs along with FCoE and the NIC
-firmware contexts, and an error encountered doesnot essentially mean
-that a chip reset is necessary.
+Regards,
+Nagalakshmi
 
-Perform Chip resets only in the following cases:
-1. Mailbox system error.
-2. Mailbox command timeout.
-3. fw_heartbeat_counter counter stops incrementing.
 
-For all other cases, only perform a context reset.
-1. Command Completion with an invalid srb.
-2. Other mailbox failures.
+-----Original Message-----
+From: Roland Dreier [mailto:roland@purestorage.com] On Behalf Of Roland Dreier
+Sent: Wednesday, November 30, 2011 11:36 PM
+To: James E.J. Bottomley
+Cc: Nandigama, Nagalakshmi; linux-scsi@vger.kernel.org
+Subject: [PATCH] [SCSI] mpt2sas: Remove unused duplicate diag_buffer_enable param
 
-JIRA Key: UPSISCSI-47
+From: Roland Dreier <roland@purestorage.com>
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Shyam Sunder <shyam.sunder@qlogic.com>
+Commit 921cd8024b90 ("[SCSI] mpt2sas: New feature - Fast Load
+Support") moved handling of the diag_buffer_enable module parameter
+from mpt2sas_base.c to mpt2sas_scsih.c, but it left an old copy of the
+parameter in mpt2sas_base.c.  Remove the unused stub.
+
+Signed-off-by: Roland Dreier <roland@purestorage.com>
 ---
- drivers/scsi/qla4xxx/ql4_isr.c |   30 +++++++++++++++++++-----------
- 1 files changed, 19 insertions(+), 11 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_base.c |   13 -------------
+ 1 files changed, 0 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 827e930..9582886 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -123,13 +123,13 @@ static void qla4xxx_status_entry(struct scsi_qla_host *ha,
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index beda04a..b3ad90e 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -89,19 +89,6 @@ static int disable_discovery = -1;
+ module_param(disable_discovery, int, 0);
+ MODULE_PARM_DESC(disable_discovery, " disable discovery ");
  
- 	srb = qla4xxx_del_from_active_array(ha, le32_to_cpu(sts_entry->handle));
- 	if (!srb) {
--		DEBUG2(printk(KERN_WARNING "scsi%ld: %s: Status Entry invalid "
--			      "handle 0x%x, sp=%p. This cmd may have already "
--			      "been completed.\n", ha->host_no, __func__,
--			      le32_to_cpu(sts_entry->handle), srb));
--		ql4_printk(KERN_WARNING, ha, "%s invalid status entry:"
--		    " handle=0x%0x\n", __func__, sts_entry->handle);
--		set_bit(DPC_RESET_HA, &ha->dpc_flags);
-+		ql4_printk(KERN_WARNING, ha, "%s invalid status entry: "
-+			   "handle=0x%0x, srb=%p\n", __func__,
-+			   sts_entry->handle, srb);
-+		if (is_qla8022(ha))
-+			set_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags);
-+		else
-+			set_bit(DPC_RESET_HA, &ha->dpc_flags);
- 		return;
- 	}
- 
-@@ -563,7 +563,11 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 		case MBOX_ASTS_DHCP_LEASE_EXPIRED:
- 			DEBUG2(printk("scsi%ld: AEN %04x, ERROR Status, "
- 				      "Reset HA\n", ha->host_no, mbox_status));
--			set_bit(DPC_RESET_HA, &ha->dpc_flags);
-+			if (is_qla8022(ha))
-+				set_bit(DPC_RESET_HA_FW_CONTEXT,
-+					&ha->dpc_flags);
-+			else
-+				set_bit(DPC_RESET_HA, &ha->dpc_flags);
- 			break;
- 
- 		case MBOX_ASTS_LINK_UP:
-@@ -617,9 +621,13 @@ static void qla4xxx_isr_decode_mailbox(struct scsi_qla_host * ha,
- 			    (mbox_sts[2] == ACB_STATE_ACQUIRING)))
- 				set_bit(DPC_GET_DHCP_IP_ADDR, &ha->dpc_flags);
- 			else if ((mbox_sts[3] == ACB_STATE_ACQUIRING) &&
--			    (mbox_sts[2] == ACB_STATE_VALID))
--				set_bit(DPC_RESET_HA, &ha->dpc_flags);
--			else if ((mbox_sts[3] == ACB_STATE_UNCONFIGURED))
-+				 (mbox_sts[2] == ACB_STATE_VALID)) {
-+				if (is_qla8022(ha))
-+					set_bit(DPC_RESET_HA_FW_CONTEXT,
-+						&ha->dpc_flags);
-+				else
-+					set_bit(DPC_RESET_HA, &ha->dpc_flags);
-+			} else if ((mbox_sts[3] == ACB_STATE_UNCONFIGURED))
- 				complete(&ha->disable_acb_comp);
- 			break;
- 
+-
+-/* diag_buffer_enable is bitwise
+- * bit 0 set = TRACE
+- * bit 1 set = SNAPSHOT
+- * bit 2 set = EXTENDED
+- *
+- * Either bit can be set, or both
+- */
+-static int diag_buffer_enable;
+-module_param(diag_buffer_enable, int, 0);
+-MODULE_PARM_DESC(diag_buffer_enable, " post diag buffers "
+-    "(TRACE=1/SNAPSHOT=2/EXTENDED=4/default=0)");
+-
+ /**
+  * _scsih_set_fwfault_debug - global setting of ioc->fwfault_debug.
+  *
 -- 
-1.7.8.rc2.3.g0911
-
+1.7.5.4
 
