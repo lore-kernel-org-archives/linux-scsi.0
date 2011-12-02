@@ -1,78 +1,50 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: dm-mpath: Clear map_context pointer when requeuing
-Date: Fri, 02 Dec 2011 17:19:27 +0100
-Message-ID: <4ED8FA8F.20109@suse.de>
-References: <1322663118-53387-1-git-send-email-hare@suse.de> <20111130144951.GA13775@redhat.com> <4ED6C67A.3060305@ce.jp.nec.com>
+From: Webmail =?iso-8859-1?b?WWxs5HBpdORq5A==?= <info@w.cn>
+Subject: =?iso-8859-1?b?SHl25A==?= Webmail =?iso-8859-1?b?S+R5dHTkauQ=?=
+Date: Fri,  2 Dec 2011 21:01:27 +0200
+Message-ID: <20111202210127.y5q2dwgjk4ssco8o__14881.0918712572$1322854247$gmane$org@webmail1.tkk.fi>
+Reply-To: accountmanagement101@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:35205 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756864Ab1LBQTc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Dec 2011 11:19:32 -0500
-In-Reply-To: <4ED6C67A.3060305@ce.jp.nec.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <jbottomley@parallels.com>, "Alasdair G. Kergon" <agk@redhat.com>, dm-devel@redhat.com
 
-Hi Jun'ichi,
+Hyv=E4 Webmail K=E4ytt=E4j=E4
 
-On 12/01/2011 01:12 AM, Jun'ichi Nomura wrote:
-> Hi Hannes,
->=20
-> On 11/30/11 23:49, Mike Snitzer wrote:
->> On Wed, Nov 30 2011 at  9:25am -0500,
->> Hannes Reinecke <hare@suse.de> wrote:
->>
->>> When requeing a request we should be clearing the map_context
->>> pointer, otherwise we might access an invalid memory location.
->=20
-> Could you elaborate on the mechanism how the map_context->ptr
-> (=3D mpio) is accessed after freeing it?
->=20
-In short: No. Pure guesswork :-)
+Meill=E4 on rajalliset mahdollisuudet tilap=E4isesti kaikki ominaisuude=
+t
+Herkk=E4 kaikille webmailtilit. Voit palauttaa p=E4=E4sy
+T=E4ytyy heti huomioon vastata t=E4h=E4n e-mail With Your
+K=E4ytt=E4j=E4tunnus ja salasana. K=E4ytt=E4j=E4tunnus: () Password:
+().
 
-The longer answer here is that 'map_context' is managed by the
-caller for multipath_map().
-So in theory the caller is free to re-use the map_context whenever
-'clone' is in use.
-So if 'clone' is terminated when it's still requeued the caller
-might be calling multipath_end_io(), at which point map_context->ptr
-will be pointing to an invalid memory location.
+Koska suuri m=E4=E4r=E4 roskapostia tai roskapostia saat joka p=E4iv=E4=
+,
+P=E4ivit=E4 kaikki s=E4hk=F6postitilit roskapostisuodatin rajoittamaan =
+ei-viestit
+Kysyi turvallisuussyist=E4 ja parantaa meid=E4n uusi
+Parannettuja ominaisuuksia s=E4hk=F6postitilin / email jotta
+He eiv=E4t koe palvelun keskeytyst=E4.
 
-But as I said, this is not a detailed analysis. It's good enough
-for me that it solves the problem :-)
+Sinun tulee v=E4litt=F6m=E4sti vastata t=E4h=E4n s=E4hk=F6postiin ja ki=
+rjoita nimi
+K=E4ytt=E4j=E4tunnus ja salasana tila, joka antaa meille mahdollisuuden=
+ p=E4ivitt=E4=E4
+S=E4hk=F6postitilin kunnolla.Vahvistus linkki l=E4hetet=E4=E4n
+Uudelleenk=E4yt=F6st=E4 aktivointi s=E4hk=F6postitilisi, saat
+vastaus
 
-> mpio is known to be non-NULL where it is used. So clearing the pointe=
-r
-> should not make any difference in logic.
->=20
-It does, see above.
+Kiitos ymm=E4rryst=E4.
+3xepyl Virhe 506: Varoitus Code
 
-> If this is a preventive change so that we can see NULL dereference
-> instead of random invalid access if anything happens, it should be
-> noted in the patch description and in the code.
-> Otherwise, somebody looking at the code/change in future might be
-> confused: "why we have to clear this pointer?"
->=20
-> And there are other places where mpio is freed.
-> (E.g. in dispatch_queued_ios() in dm-mpath.c)
-> Don't we need the same change there?
->=20
-I don't think so. It's just from multipath_map() where we need to
-ensure map_context->ptr is correct. All the other places will not
-touch the map_context->ptr again.
+kiitos
+Webmail yll=E4pit=E4j=E4
+Tuki Copyright 2011.
+foneettisesti ListenRead
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
