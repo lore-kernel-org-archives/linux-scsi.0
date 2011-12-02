@@ -1,65 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 3/9] qla4xxx: fix call trace on rmmod with ql4xdontresethba=1
-Date: Fri, 02 Dec 2011 15:56:46 -0600
-Message-ID: <4ED9499E.5070707@cs.wisc.edu>
-References: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com> <1322808134-21665-4-git-send-email-vikas.chaudhary@qlogic.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: scsi_error: do not allow IO errors with certain ILLEGAL_REQUEST
+ sense to be retryable
+Date: Fri, 2 Dec 2011 17:04:38 -0500
+Message-ID: <20111202220438.GA13463@redhat.com>
+References: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
+ <1322859891.6920.111.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:36545 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:7209 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755577Ab1LBV44 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 2 Dec 2011 16:56:56 -0500
-In-Reply-To: <1322808134-21665-4-git-send-email-vikas.chaudhary@qlogic.com>
+	id S1755248Ab1LBWEp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 2 Dec 2011 17:04:45 -0500
+Content-Disposition: inline
+In-Reply-To: <1322859891.6920.111.camel@dabdike>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com, Sarang Radke <sarang.radke@qlogic.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 12/02/2011 12:42 AM, vikas.chaudhary@qlogic.com wrote:
->  
->  /**
-> + * qla4xxx_is_eh_active:
+On Fri, Dec 02 2011 at  4:04pm -0500,
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-You need a description of the function above after the colon. And
-actually qla4xxx is doing a dash in other places. So you should do:
+> On Fri, 2011-12-02 at 15:31 -0500, Mike Snitzer wrote:
+> > Thin provisioned LUNs from multiple array vendors have failed WRITE SAME
+> > (16) w/ UNMAP bit set with ILLEGAL_REQUEST sense.  With additional sense
+> > 0x24 and 0x26 respectively.
+> > 
+> > In both instances the target would always fail the CDB no matter how
+> > many retries were performed (permanent target failure rather than
+> > transient path failure).  This resulted in mkfs.ext4's discard of a
+> > multipath device looping indefinitely while failing paths.
+> 
+> I don't quite understand this analysis.  ILLEGAL_REQUEST currently
+> always returns SUCCESS from scsi_check_sense().  That return is
+> propagated up to scsi_decide_disposition() which causes I/O completion.
+> We do have another gate for ILLEGAL_REQUEST in scsi_io_completion()
+> which can retry, but only if it's downshifting the command from _10 to
+> _6 ... so I don't get where you think the looping is coming from ... the
+> net effect of your patch is to change the error passed on to the block
+> layer in blk_end_request() from -EIO to -EREMOTEIO.  So it sounds like
+> if there is a retry problem it's above SCSI?
 
-/**
- * qla4xxx_is_eh_active - check if eh is rinning
+Exactly, the looping is in dm-multipath.  Because scsi_check_sense() is
+returning SUCCESS for these ILLEGAL_REQUEST, multipath is retrying the
+discard after failing the path that the request just failed on.
+Previously failed paths are recovered in time for the next retry of the
+discard that will _always_ fail... and so the cycle goes (and mkfs.ext4
+appears hung).
 
-And just to make sure, if the host state is in SHOST_CANCEL_RECOVERY the
-drivers shutdown code will have cleaned up the command right? It looks
-like it, but I was not 100% sure.
-
-
-
-> + * @shost: Pointer to SCSI Host struct
-> + *
-> + * This routine finds that if reset host is called in EH
-> + * scenario or from some application like sg_reset
-> + **/
-> +static int qla4xxx_is_eh_active(struct Scsi_Host *shost)
-> +{
-> +	if (shost->shost_state == SHOST_RECOVERY)
-> +		return 1;
-> +	return 0;
-> +}
-> +
-> +/**
->   * qla4xxx_eh_host_reset - kernel callback
->   * @cmd: Pointer to Linux's SCSI command structure
->   *
-> @@ -4832,6 +4846,11 @@ static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd)
->  	if (ql4xdontresethba) {
->  		DEBUG2(printk("scsi%ld: %s: Don't Reset HBA\n",
->  		     ha->host_no, __func__));
-> +
-> +		/* Clear outstanding srb in queues */
-> +		if (qla4xxx_is_eh_active(cmd->device->host))
-> +			qla4xxx_abort_active_cmds(ha, DID_ABORT << 16);
-> +
->  		return FAILED;
->  	}
->  
-
+commit 63583cca745f440 ([SCSI] Add detailed SCSI I/O errors) enabled
+mpath to immediately return target errors (-EREMOTEIO) without retry
+after path failure -- so the change to scsi_check_sense() is selectively
+returning TARGET_ERROR for ILLEGAL REQUEST; which will result in
+-EREMOTEIO.
