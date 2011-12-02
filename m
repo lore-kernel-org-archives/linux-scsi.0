@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/3] workqueue: defer work to a draining queue
-Date: Fri, 02 Dec 2011 15:56:55 -0800
-Message-ID: <20111202235655.24470.24712.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/3] scsi: use drain_workqueue
+Date: Fri, 02 Dec 2011 15:57:01 -0800
+Message-ID: <20111202235700.24470.23826.stgit@localhost6.localdomain6>
 References: <20111202235319.24470.65483.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,192 +10,77 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20111202235319.24470.65483.stgit@localhost6.localdomain6>
 Sender: linux-kernel-owner@vger.kernel.org
 To: tj@kernel.org, JBottomley@parallels.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-commit 9c5a2ba7 "workqueue: separate out drain_workqueue() from
-destroy_workqueue()" provided drain_workqueue() for users like libsas to
-use for flushing events.
+Use 'drain' versus 'flush' as the former additionally flushes chained
+operations.  libsas uses chained operations when it posts discovery work
+in response to a port event.
 
-When libsas drains it wants currently queued and chained events to be
-flushed, but it fully expects to continue issuing unchained events with
-the expectation that they are serviced sometime after the drain.
+As a result the hardcoded double-flush can be removed from the isci
+driver.
 
-For external users of drain_workqueue() let unchained work commence
-after the drain completes, if the caller cares if unchained work was
-queued as a result of the drain it can check for a non-zero return
-value.
-
-Unfortunately this causes the promotion of workqueue_lock to hard-irq
-safe and can't support queue_work_on() users.
-
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Robert Love <robert.w.love@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- include/linux/workqueue.h |    3 +-
- kernel/workqueue.c        |   70 +++++++++++++++++++++++++++++++++++++++------
- 2 files changed, 62 insertions(+), 11 deletions(-)
+ drivers/scsi/hosts.c     |    8 ++++----
+ drivers/scsi/isci/host.c |    3 ---
+ include/scsi/scsi_host.h |    2 +-
+ 3 files changed, 5 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
-index 0d556de..37de207 100644
---- a/include/linux/workqueue.h
-+++ b/include/linux/workqueue.h
-@@ -257,6 +257,7 @@ enum {
- 
- 	WQ_DRAINING		= 1 << 6, /* internal: workqueue is draining */
- 	WQ_RESCUER		= 1 << 7, /* internal: workqueue has rescuer */
-+	WQ_NO_DEFER		= 1 << 8, /* internal: workqueue destructing */
- 
- 	WQ_MAX_ACTIVE		= 512,	  /* I like 512, better ideas? */
- 	WQ_MAX_UNBOUND_PER_CPU	= 4,	  /* 4 * #cpus for unbound wq */
-@@ -355,7 +356,7 @@ extern int queue_delayed_work_on(int cpu, struct workqueue_struct *wq,
- 			struct delayed_work *work, unsigned long delay);
- 
- extern void flush_workqueue(struct workqueue_struct *wq);
--extern void drain_workqueue(struct workqueue_struct *wq);
-+extern int drain_workqueue(struct workqueue_struct *wq);
- extern void flush_scheduled_work(void);
- 
- extern int schedule_work(struct work_struct *work);
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index f476895..363a4ef 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -236,6 +236,7 @@ struct workqueue_struct {
- 	struct wq_flusher	*first_flusher;	/* F: first flusher */
- 	struct list_head	flusher_queue;	/* F: flush waiters */
- 	struct list_head	flusher_overflow; /* F: flush overflow list */
-+	struct list_head	drain_defer;	/* W: unchained work to defer */
- 
- 	mayday_mask_t		mayday_mask;	/* cpus requesting rescue */
- 	struct worker		*rescuer;	/* I: rescue worker */
-@@ -979,6 +980,19 @@ static bool is_chained_work(struct workqueue_struct *wq)
- 	return false;
- }
- 
-+static bool defer_work(struct workqueue_struct *wq, struct work_struct *work)
-+{
-+	if (is_chained_work(wq))
-+		return false;
-+
-+	if (WARN_ON_ONCE(wq->flags & WQ_NO_DEFER))
-+		return true;
-+
-+	list_add_tail(&work->entry, &wq->drain_defer);
-+
-+	return true;
-+}
-+
- static void __queue_work(unsigned int cpu, struct workqueue_struct *wq,
- 			 struct work_struct *work)
- {
-@@ -991,9 +1005,17 @@ static void __queue_work(unsigned int cpu, struct workqueue_struct *wq,
- 	debug_work_activate(work);
- 
- 	/* if dying, only works from the same workqueue are allowed */
--	if (unlikely(wq->flags & WQ_DRAINING) &&
--	    WARN_ON_ONCE(!is_chained_work(wq)))
--		return;
-+	if (unlikely(wq->flags & WQ_DRAINING)) {
-+		unsigned long flags;
-+		bool defer = false;
-+
-+		spin_lock_irqsave(&workqueue_lock, flags);
-+		if (wq->flags & WQ_DRAINING)
-+			defer = defer_work(wq, work);
-+		spin_unlock_irqrestore(&workqueue_lock, flags);
-+		if (defer)
-+			return;
-+	}
- 
- 	/* determine gcwq to use */
- 	if (!(wq->flags & WQ_UNBOUND)) {
-@@ -2383,8 +2405,9 @@ out_unlock:
- EXPORT_SYMBOL_GPL(flush_workqueue);
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 351dc0b..37155d1 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -564,19 +564,19 @@ int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
+ EXPORT_SYMBOL_GPL(scsi_queue_work);
  
  /**
-- * drain_workqueue - drain a workqueue
-+ * __drain_workqueue - drain a workqueue
-  * @wq: workqueue to drain
-+ * @flags: WQ_NO_DEFER - reject unchained work
-  *
-  * Wait until the workqueue becomes empty.  While draining is in progress,
-  * only chain queueing is allowed.  IOW, only currently pending or running
-@@ -2392,11 +2415,17 @@ EXPORT_SYMBOL_GPL(flush_workqueue);
-  * repeatedly until it becomes empty.  The number of flushing is detemined
-  * by the depth of chaining and should be relatively short.  Whine if it
-  * takes too long.
-+ *
-+ * Indicate to the caller if any deferred (unchained) work was queued
-+ * during the drain.
-  */
--void drain_workqueue(struct workqueue_struct *wq)
-+static int __drain_workqueue(struct workqueue_struct *wq, int flags)
+- * scsi_flush_work - Flush a Scsi_Host's workqueue.
++ * scsi_flush_work - Drain a Scsi_Host's workqueue.
+  * @shost:	Pointer to Scsi_Host.
+  **/
+-void scsi_flush_work(struct Scsi_Host *shost)
++int scsi_flush_work(struct Scsi_Host *shost)
  {
-+	struct work_struct *work, *w;
- 	unsigned int flush_cnt = 0;
-+	LIST_HEAD(drain_defer);
- 	unsigned int cpu;
-+	int ret = 0;
- 
- 	/*
- 	 * __queue_work() needs to test whether there are drainers, is much
-@@ -2405,7 +2434,7 @@ void drain_workqueue(struct workqueue_struct *wq)
- 	 */
- 	spin_lock_irq(&workqueue_lock);
- 	if (!wq->nr_drainers++)
--		wq->flags |= WQ_DRAINING;
-+		wq->flags |= WQ_DRAINING | flags;
- 	spin_unlock_irq(&workqueue_lock);
- reflush:
- 	flush_workqueue(wq);
-@@ -2429,9 +2458,25 @@ reflush:
+ 	if (!shost->work_q) {
+ 		printk(KERN_ERR
+ 			"ERROR: Scsi host '%s' attempted to flush scsi-work, "
+ 			"when no workqueue created.\n", shost->hostt->name);
+ 		dump_stack();
+-		return;
++		return 0;
  	}
  
- 	spin_lock_irq(&workqueue_lock);
--	if (!--wq->nr_drainers)
--		wq->flags &= ~WQ_DRAINING;
-+	if (!--wq->nr_drainers) {
-+		wq->flags &= ~(WQ_DRAINING | WQ_NO_DEFER);
-+		list_splice_init(&wq->drain_defer, &drain_defer);
-+		ret = !list_empty(&drain_defer);
-+	}
- 	spin_unlock_irq(&workqueue_lock);
-+
-+	/* requeue work on this queue provided it was not being destroyed */
-+	list_for_each_entry_safe(work, w, &drain_defer, entry) {
-+		list_del_init(&work->entry);
-+		queue_work(wq, work);
-+	}
-+
-+	return ret;
-+}
-+
-+int drain_workqueue(struct workqueue_struct *wq)
-+{
-+	return __drain_workqueue(wq, 0);
+-	flush_workqueue(shost->work_q);
++	return drain_workqueue(shost->work_q);
  }
- EXPORT_SYMBOL_GPL(drain_workqueue);
+ EXPORT_SYMBOL_GPL(scsi_flush_work);
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index e7fe9c4..240779a 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -655,9 +655,6 @@ int isci_host_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (test_bit(IHOST_START_PENDING, &ihost->flags))
+ 		return 0;
  
-@@ -2990,6 +3035,7 @@ struct workqueue_struct *__alloc_workqueue_key(const char *name,
- 	atomic_set(&wq->nr_cwqs_to_flush, 0);
- 	INIT_LIST_HEAD(&wq->flusher_queue);
- 	INIT_LIST_HEAD(&wq->flusher_overflow);
-+	INIT_LIST_HEAD(&wq->drain_defer);
+-	/* todo: use sas_flush_discovery once it is upstream */
+-	scsi_flush_work(shost);
+-
+ 	scsi_flush_work(shost);
  
- 	wq->name = name;
- 	lockdep_init_map(&wq->lockdep_map, lock_name, key, 0);
-@@ -3065,8 +3111,12 @@ void destroy_workqueue(struct workqueue_struct *wq)
- {
- 	unsigned int cpu;
+ 	dev_dbg(&ihost->pdev->dev,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 50266c9..505bc34 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -770,7 +770,7 @@ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
+ }
  
--	/* drain it before proceeding with destruction */
--	drain_workqueue(wq);
-+	/*
-+	 * drain it before proceeding with destruction and disable drain
-+	 * deferrement.  !is_chained_work() that arrives after this
-+	 * point will be dropped on the floor
-+	 */
-+	__drain_workqueue(wq, WQ_NO_DEFER);
+ extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
+-extern void scsi_flush_work(struct Scsi_Host *);
++extern int scsi_flush_work(struct Scsi_Host *);
  
- 	/*
- 	 * wq list is used to freeze wq, remove from list after
+ extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
+ extern int __must_check scsi_add_host_with_dma(struct Scsi_Host *,
