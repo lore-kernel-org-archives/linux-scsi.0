@@ -1,42 +1,25 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: Re: [PATCH 00/14] Make ib_srp better suited for H.A. purposes
-Date: Thu, 01 Dec 2011 18:26:55 -0500
-Message-ID: <1322782015.11664.4.camel@lap75545.ornl.gov>
-References: <201112011954.25811.bvanassche@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: qla4xxx fixes
+Date: Thu,  1 Dec 2011 21:38:40 -0600
+Message-ID: <1322797123-5299-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emroute3.ornl.gov ([160.91.4.110]:35979 "EHLO emroute3.ornl.gov"
+Received: from mx1.redhat.com ([209.132.183.28]:11343 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755596Ab1LBAAU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Dec 2011 19:00:20 -0500
-In-reply-to: <201112011954.25811.bvanassche@acm.org>
+	id S1756475Ab1LBDcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Dec 2011 22:32:05 -0500
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com (int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pB23W4Qg026927
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Dec 2011 22:32:04 -0500
+Received: from meanminna.corp.redhat.com (vpn-8-77.rdu.redhat.com [10.11.8.77])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id pB23W3nC008658
+	for <linux-scsi@vger.kernel.org>; Thu, 1 Dec 2011 22:32:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Vu Pham <vuhuong@mellanox.com>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2011-12-01 at 13:54 -0500, Bart Van Assche wrote:
-> This patch series makes the ib_srp driver better suited for use in a H.A.
-> setup because:
-> - Switchover without triggering read or write errors become possible. Such
->   errors are bad because these can make a filesystem switch to read-only
->   mode.
-> - A ping mechanism has been added that allows to reduce the switch-over
->   time greatly.
-> - Disconnecting from a target without unloading ib_srp becomes possible.
-> - Switchover can be triggered explicitly by deleting an initiator device.
-
-In general, I'm glad to see this being done. I won't have the time this
-week for a detailed review, but will take a look as soon as I can. I
-have a number of ideas I'd like to see implemented (and have partially
-done), so it will be interesting to see if we're using similar
-approaches.
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
-
+The following patches were made against scsi-rc-fixes and fix
+regression that were added in 3.2-rc1. If it is possible they
+should go into 3.2. If not then they should go into 3.3 and
+then sent to 3.2 stable.
 
