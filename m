@@ -1,43 +1,71 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi_error: do not allow IO errors with certain
- ILLEGAL_REQUEST sense to be retryable
-Date: Fri, 02 Dec 2011 15:04:51 -0600
-Message-ID: <1322859891.6920.111.camel@dabdike>
-References: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:46745 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751584Ab1LBVFH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 16:05:07 -0500
-In-Reply-To: <1322857889-2623-1-git-send-email-snitzer@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: [PATCH] target: virtio_scsi: SCSI host lock push-down
+Date: Fri,  2 Dec 2011 22:13:44 +0100
+Message-ID: <1322860424-21640-1-git-send-email-bigeasy@linutronix.de>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Jeff Garzik <jgarzik@redhat.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, 2011-12-02 at 15:31 -0500, Mike Snitzer wrote:
-> Thin provisioned LUNs from multiple array vendors have failed WRITE SAME
-> (16) w/ UNMAP bit set with ILLEGAL_REQUEST sense.  With additional sense
-> 0x24 and 0x26 respectively.
-> 
-> In both instances the target would always fail the CDB no matter how
-> many retries were performed (permanent target failure rather than
-> transient path failure).  This resulted in mkfs.ext4's discard of a
-> multipath device looping indefinitely while failing paths.
+Commit f281233d aka ("SCSI host lock push-down") was converting all
+drivers in tree. It looks to me that those two were not omitted on
+purpose. tcm_loop joined the tree after the conversion and virtio_scsi
+lives only in Nicholas' lio tree. So here is an equivalent change for
+those two.
 
-I don't quite understand this analysis.  ILLEGAL_REQUEST currently
-always returns SUCCESS from scsi_check_sense().  That return is
-propagated up to scsi_decide_disposition() which causes I/O completion.
-We do have another gate for ILLEGAL_REQUEST in scsi_io_completion()
-which can retry, but only if it's downshifting the command from _10 to
-_6 ... so I don't get where you think the looping is coming from ... the
-net effect of your patch is to change the error passed on to the block
-layer in blk_end_request() from -EIO to -EREMOTEIO.  So it sounds like
-if there is a retry problem it's above SCSI?
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+---
+Having a differnt callback name for converted and not converted users
+would probably make it easier to tell them apart.
 
-James
+ drivers/scsi/virtio_scsi.c         |    4 +++-
+ drivers/target/loopback/tcm_loop.c |    4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 7946f40..4c577fa 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -151,7 +151,7 @@ static void virtscsi_map_cmd(struct virtio_scsi *vscsi, struct scsi_cmnd *sc,
+ 	sg_set_buf(&sg[idx++], &cmd->footer, sizeof(cmd->footer));
+ }
+ 
+-static int virtscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
++static int virtscsi_queuecommand_lck(struct Scsi_Host *sh, struct scsi_cmnd *sc)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 	struct virtio_scsi_cmd *cmd;
+@@ -190,6 +190,8 @@ static int virtscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
+ 	return ret;
+ }
+ 
++static DEF_SCSI_QCMD(virtscsi_queuecommand);
++
+ static struct scsi_host_template virtscsi_host_template = {
+ 	.module = THIS_MODULE,
+ 	.name = "Virtio SCSI HBA",
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 5f69594..92ef58a 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -266,7 +266,7 @@ static int tcm_loop_change_queue_depth(
+  * Main entry point from struct scsi_host_template for incoming SCSI CDB+Data
+  * from Linux/SCSI subsystem for SCSI low level device drivers (LLDs)
+  */
+-static int tcm_loop_queuecommand(
++static int tcm_loop_queuecommand_lck(
+ 	struct Scsi_Host *sh,
+ 	struct scsi_cmnd *sc)
+ {
+@@ -310,6 +310,8 @@ static int tcm_loop_queuecommand(
+ 	return 0;
+ }
+ 
++static DEF_SCSI_QCMD(tcm_loop_queuecommand)
++
+ /*
+  * Called from SCSI EH process context to issue a LUN_RESET TMR
+  * to struct scsi_device
+-- 
+1.7.7.3
