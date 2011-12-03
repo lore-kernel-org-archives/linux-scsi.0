@@ -1,86 +1,66 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 3/3] scsi: use drain_workqueue
-Date: Fri, 02 Dec 2011 15:57:01 -0800
-Message-ID: <20111202235700.24470.23826.stgit@localhost6.localdomain6>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [PATCH 2/3] workqueue: defer work to a draining queue
+Date: Fri, 2 Dec 2011 17:53:40 -0800
+Message-ID: <CABE8wwvLysxv=dGxsP2zKAvWFaZwHdZDf9PwXpdYHZQNDTvJpg@mail.gmail.com>
 References: <20111202235319.24470.65483.stgit@localhost6.localdomain6>
+	<20111202235655.24470.24712.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20111202235319.24470.65483.stgit@localhost6.localdomain6>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, JBottomley@parallels.com
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga12.intel.com ([143.182.124.36]:51373 "EHLO
+	azsmga102.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753901Ab1LCBxm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2011 20:53:42 -0500
+In-Reply-To: <20111202235655.24470.24712.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tj@kernel.org, JBottomley@parallels.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Use 'drain' versus 'flush' as the former additionally flushes chained
-operations.  libsas uses chained operations when it posts discovery work
-in response to a port event.
+On Fri, Dec 2, 2011 at 3:56 PM, Dan Williams <dan.j.williams@intel.com>=
+ wrote:
+[..]
+> @@ -2405,7 +2434,7 @@ void drain_workqueue(struct workqueue_struct *w=
+q)
+> =A0 =A0 =A0 =A0 */
+> =A0 =A0 =A0 =A0spin_lock_irq(&workqueue_lock);
+> =A0 =A0 =A0 =A0if (!wq->nr_drainers++)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 wq->flags |=3D WQ_DRAINING;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 wq->flags |=3D WQ_DRAINING | flags;
+> =A0 =A0 =A0 =A0spin_unlock_irq(&workqueue_lock);
+> =A0reflush:
+> =A0 =A0 =A0 =A0flush_workqueue(wq);
+> @@ -2429,9 +2458,25 @@ reflush:
+> =A0 =A0 =A0 =A0}
+>
+> =A0 =A0 =A0 =A0spin_lock_irq(&workqueue_lock);
+> - =A0 =A0 =A0 if (!--wq->nr_drainers)
+> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 wq->flags &=3D ~WQ_DRAINING;
+> + =A0 =A0 =A0 if (!--wq->nr_drainers) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 wq->flags &=3D ~(WQ_DRAINING | WQ_NO_DE=
+=46ER);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_splice_init(&wq->drain_defer, &dra=
+in_defer);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 ret =3D !list_empty(&drain_defer);
+> + =A0 =A0 =A0 }
+> =A0 =A0 =A0 =A0spin_unlock_irq(&workqueue_lock);
+> +
+> + =A0 =A0 =A0 /* requeue work on this queue provided it was not being=
+ destroyed */
+> + =A0 =A0 =A0 list_for_each_entry_safe(work, w, &drain_defer, entry) =
+{
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_del_init(&work->entry);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 queue_work(wq, work);
+> + =A0 =A0 =A0 }
 
-As a result the hardcoded double-flush can be removed from the isci
-driver.
-
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Robert Love <robert.w.love@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/hosts.c     |    8 ++++----
- drivers/scsi/isci/host.c |    3 ---
- include/scsi/scsi_host.h |    2 +-
- 3 files changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 351dc0b..37155d1 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -564,19 +564,19 @@ int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
- EXPORT_SYMBOL_GPL(scsi_queue_work);
- 
- /**
-- * scsi_flush_work - Flush a Scsi_Host's workqueue.
-+ * scsi_flush_work - Drain a Scsi_Host's workqueue.
-  * @shost:	Pointer to Scsi_Host.
-  **/
--void scsi_flush_work(struct Scsi_Host *shost)
-+int scsi_flush_work(struct Scsi_Host *shost)
- {
- 	if (!shost->work_q) {
- 		printk(KERN_ERR
- 			"ERROR: Scsi host '%s' attempted to flush scsi-work, "
- 			"when no workqueue created.\n", shost->hostt->name);
- 		dump_stack();
--		return;
-+		return 0;
- 	}
- 
--	flush_workqueue(shost->work_q);
-+	return drain_workqueue(shost->work_q);
- }
- EXPORT_SYMBOL_GPL(scsi_flush_work);
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index e7fe9c4..240779a 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -655,9 +655,6 @@ int isci_host_scan_finished(struct Scsi_Host *shost, unsigned long time)
- 	if (test_bit(IHOST_START_PENDING, &ihost->flags))
- 		return 0;
- 
--	/* todo: use sas_flush_discovery once it is upstream */
--	scsi_flush_work(shost);
--
- 	scsi_flush_work(shost);
- 
- 	dev_dbg(&ihost->pdev->dev,
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 50266c9..505bc34 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -770,7 +770,7 @@ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
- }
- 
- extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
--extern void scsi_flush_work(struct Scsi_Host *);
-+extern int scsi_flush_work(struct Scsi_Host *);
- 
- extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
- extern int __must_check scsi_add_host_with_dma(struct Scsi_Host *,
+Actually, this won't work.  The queuing of deferred work would need to
+be under the lock and then flushed again to guarantee workqueue
+semantics which just devolves into a "wait until all work stops being
+submitted to the queue for one drain_workqueue() duration".  Which is
+more than what we need for libsas.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
