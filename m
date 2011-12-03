@@ -1,64 +1,33 @@
 From: Webmail Administrador de Sistemas <abuelo@icepr.com>
-Subject: Estimado usuario Webmail
-Date: Sat, 03 Dec 2011 03:09:50 -0430
-Message-ID: <20111203030950.190269mvk5bdfrk6@webmail.icepr.com>
-Reply-To: webcleaner202@live.co.uk
+Subject: Advertencia! Titulares de cuentas son para actualizar sus
+ =?iso-8859-1?b?YnV6824=?=
+Date: Sat, 03 Dec 2011 09:51:28 -0430
+Message-ID: <20111203095128.80922p6mff613jvs@webmail.icepr.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1;
 	DelSp=Yes	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailfilter.wntpr.net ([196.12.161.12]:60035 "EHLO icepr.com"
+Received: from mailfilter.wntpr.net ([196.12.161.12]:47659 "EHLO icepr.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752417Ab1LCJJo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Dec 2011 04:09:44 -0500
+	id S1751525Ab1LCO0r convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Dec 2011 09:26:47 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Estimado usuario Webmail,
 
-C=F3digo Advertencia: ACCOUNTHELPID67788980
+Buz=F3n est=E1 listo para realizar el mantenimiento Operaciones de poll=
+o =20
+en el siguiente enlace para Re-activit=E9 Su buz=F3n de la cuenta de Cl=
+ick =20
+sido cerrado: =20
+https://docs.google.com/spreadsheet/viewform?formkey=3DdFNEVV9tQWRfZlpS=
+cmdGN1hTcTVwVGc6MQ
 
-Este mensaje fue enviado autom=E1ticamente por un programa de
-Webmail que comprueba peri=F3dicamente el Centro de administraci=F3n o =
-de la
-tama=F1o de la bandeja de entrada, el programa se inicie autom=E1ticame=
-nte en
-cualquier usuario para asegurarse de la bandeja de entrada es =20
-demasiado grande. Si su buz=F3n de correo
-es demasiado grande, usted ser=E1 capaz de recibir nuevos correos elect=
-r=F3nicos.
-Justo antes de este mensaje fue enviado, que se est=E1
-funcionando a 20,9 GB, se ha superado el l=EDmite es de 20 GB.
+gracias
+administrador del sistema
 
-Para ayudarnos a volver antes de que su =E1rea cuenta en nuestra base d=
-e datos
-para mantener su bandeja de entrada, no proporcionar los detalles a =20
-continuaci=F3n
-dar=E1 lugar al cierre inmediato de su buz=F3n de correo.:
-
-E-mail: ... ... ... ... ... ... ... ...
-Webmail p=E1gina de acceso :.................
-Dominio / Nombre de usuario: ... ... ... ... ... ... ..
-Contrase=F1a actual: ... ... ... ... ... ... ..
-Contrase=F1a de nuevo: ... ... ... ...... ... ..
-
-A partir de este momento usted no ser=E1 capaz de recibir mensajes de =20
-correo nuevo
-correo ser=E1 devuelto al remitente, siempre que el anterior
-informaci=F3n para ayudarnos a restablecer su correo web de inmediato.
-
-NOTA: Su cuenta de correo electr=F3nico Vence en tres (3) d=EDas. despu=
-=E9s de
-leyendo este mensaje, lo mejor es responder con la
-informaci=F3n requerida en el buz=F3n para actualizar. respuesta a la
-Este nuevo puesto inmediatamente activar tu cuenta.
-
-Gracias por su cooperaci=F3n.
-Sistema de ayuda de escritorio.
-Webmail Administrador de Sistemas
---------------------------------------------------
 
 
 
