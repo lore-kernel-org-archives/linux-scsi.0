@@ -1,90 +1,67 @@
 From: Stratos Psomadakis <psomas@gentoo.org>
-Subject: Re: [SCSI] NULL pointer dereference in sym53c8xx (bisected)
-Date: Sun, 04 Dec 2011 19:36:25 +0200
-Message-ID: <4EDBAF99.6010904@gentoo.org>
-References: <4ED8EE1C.4090404@gentoo.org> <4EDA8FA9.8020004@linux.vnet.ibm.com> <4EDABAB5.10104@gentoo.org>
+Subject: Re: [PATCH] scsi/sym53c8xx_2: Fix NULL pointer dereference in slave_destroy
+Date: Sun, 04 Dec 2011 19:38:55 +0200
+Message-ID: <4EDBB02F.8070106@gentoo.org>
+References: <1322958234-9749-1-git-send-email-psomas@gentoo.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
  protocol="application/pgp-signature";
- boundary="------------enig86D68756C7202DB4D1D5E0E5"
+ boundary="------------enig2381399EFD701D1BF6F3A34D"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4EDABAB5.10104@gentoo.org>
+In-Reply-To: <1322958234-9749-1-git-send-email-psomas@gentoo.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Steffen Maier <maier@linux.vnet.ibm.com>, stable@vger.kernel.org, gregkh@suse.de, linux-scsi@vger.kernel.org, JBottomley@parallels.com, matthew@wil.cx, Martin.vGagern@gmx.net, kernel@gentoo.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, JBottomley@parallels.com, matthew@wil.cx, Martin.vGagern@gmx.net
 List-Id: linux-scsi@vger.kernel.org
 
 This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig86D68756C7202DB4D1D5E0E5
-Content-Type: text/plain; charset=UTF-8
+--------------enig2381399EFD701D1BF6F3A34D
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-On 12/04/2011 02:11 AM, Stratos Psomadakis wrote:
-> On 12/03/2011 11:07 PM, Steffen Maier wrote:
->> On 12/02/2011 04:26 PM, Stratos Psomadakis wrote:
->>> After upstream commit 4e6c82b3614a18740ef63109d58743a359266daf ([SCSI=
-]
->>> fix WARNING: at drivers/scsi/scsi_lib.c:1704), which is also included=
- in
->>> 3.0-stable and 3.1-stable kernels, the kernel fails to boot (NULL
->>> pointer dereference in sym53c8xx_slave_destroy).
->>>
->>> Bug report at the Gentoo Bugzilla (reported and bisected by Martin vo=
-n
->>> Gagern). [1]  (stack trace [2])
->>>
->>> I think that the problem is that (after commit 4e6c82b)
->>> __scsi_remove_device() is called if slave_alloc() in scsi_alloc_sdev(=
-)
->>> fails. But __scsi_remove_device() calls slave_destroy(), which (I thi=
-nk)
->>> doesn't make much sense (ie to call slave_destroy() when slave_alloc(=
-)
->>> fails).
->>>
->>> For sym53c8xx, this results in a NULL pointer dereference (struct
->>> sym_lcb pointer) in slave_destroy().
->>>
->>> [1] https://bugs.gentoo.org/show_bug.cgi?id=3D392567
->>> [2] https://392567.bugs.gentoo.org/attachment.cgi?id=3D294381
->> To me this looks like the same thing we encountered in the zfcp LLD:
->> http://www.spinics.net/lists/linux-scsi/msg55575.html
->> James explained the pairing of slave_alloc and slave_destroy even if
->> slave_alloc returned early in which case slave_destroy needs to cope
->> with that:
->> http://www.spinics.net/lists/linux-scsi/msg55449.html
->>
-> Indeed.
+On 12/04/2011 02:23 AM, psomas@gentoo.org wrote:
+> From: Stratos Psomadakis <psomas@gentoo.org>
 >
-> I'll follow-up with a patch similar to the one you sent for zfcp. I
-> think that returning if sym_lcb is NULL should be ok.
-I forgot to chain the patch email in this thread, so here's the link:
-http://marc.info/?l=3Dlinux-scsi&m=3D132295936832641&w=3D2
+> sym53c8xx_slave_destroy unconditionally assumes that sym53c8xx_slave_al=
+loc has
+> succesesfully allocated a sym_lcb. This can lead to a NULL pointer dere=
+ference
+> (exposed by commit 4e6c82b).
+>
+> Signed-off-by: Stratos Psomadakis <psomas@gentoo.org>
+> Cc: stable@vger.kernel.org
+Reported-by:  Martin von Gagern <Martin.vGagern@gmx.net>
+Tested-by: Martin von Gagern <Martin.vGagern@gmx.net>
 
->> HTH
->> Steffen
->>
->> Linux on System z Development
->>
->> IBM Deutschland Research & Development GmbH
->> Vorsitzender des Aufsichtsrats: Martin Jetter
->> Gesch=C3=A4ftsf=C3=BChrung: Dirk Wittkopp
->> Sitz der Gesellschaft: B=C3=B6blingen
->> Registergericht: Amtsgericht Stuttgart, HRB 243294
->>
->> --=20
->> To unsubscribe from this list: send the line "unsubscribe
->> linux-kernel" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> Please read the FAQ at  http://www.tux.org/lkml/
+> ---
+>
+>  drivers/scsi/sym53c8xx_2/sym_glue.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8=
+xx_2/sym_glue.c
+> index b4543f5..76432f8 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_glue.c
+> +++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+> @@ -839,6 +839,10 @@ static void sym53c8xx_slave_destroy(struct scsi_de=
+vice *sdev)
+>  	struct sym_lcb *lp =3D sym_lp(tp, sdev->lun);
+>  	unsigned long flags;
+> =20
+> +	/* if slave_alloc returned before allocating a sym_lcb, return */
+> +	if (!lp)
+> +		return;
+> +
+>  	spin_lock_irqsave(np->s.host->host_lock, flags);
+> =20
+>  	if (lp->busy_itlq || lp->busy_itl) {
 --=20
 Stratos Psomadakis
 <psomas@gentoo.org>
 
 
 
---------------enig86D68756C7202DB4D1D5E0E5
+--------------enig2381399EFD701D1BF6F3A34D
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: OpenPGP digital signature
 Content-Disposition: attachment; filename="signature.asc"
@@ -93,9 +70,9 @@ Content-Disposition: attachment; filename="signature.asc"
 Version: GnuPG v2.0.18 (GNU/Linux)
 Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
 
-iEYEARECAAYFAk7br54ACgkQid1lVeNDMmCanACeIgbWzHsX1aif1O/J7ayHT7CF
-V3UAn3pjstowPqmpvZa+DlRDccw4K7U5
-=tR1T
+iEYEARECAAYFAk7bsC8ACgkQid1lVeNDMmB7igCffkbgFNgsjoLsSLSlAPxOflxd
+ws0An20GlVqiK0rGk1VNx+rNg8zFozRs
+=ms1Y
 -----END PGP SIGNATURE-----
 
---------------enig86D68756C7202DB4D1D5E0E5--
+--------------enig2381399EFD701D1BF6F3A34D--
