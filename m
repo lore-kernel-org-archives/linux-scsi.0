@@ -1,113 +1,101 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 2/3] workqueue: defer work to a draining queue
-Date: Sat, 03 Dec 2011 23:12:47 -0800
-Message-ID: <1322982769.30484.12.camel@ultramagnus.opencreations.com>
-References: <20111202235319.24470.65483.stgit@localhost6.localdomain6>
-	 <20111202235655.24470.24712.stgit@localhost6.localdomain6>
+From: Stratos Psomadakis <psomas@gentoo.org>
+Subject: Re: [SCSI] NULL pointer dereference in sym53c8xx (bisected)
+Date: Sun, 04 Dec 2011 19:36:25 +0200
+Message-ID: <4EDBAF99.6010904@gentoo.org>
+References: <4ED8EE1C.4090404@gentoo.org> <4EDA8FA9.8020004@linux.vnet.ibm.com> <4EDABAB5.10104@gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:44945 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751774Ab1LDHMv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Dec 2011 02:12:51 -0500
-In-Reply-To: <20111202235655.24470.24712.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig86D68756C7202DB4D1D5E0E5"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EDABAB5.10104@gentoo.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>, stable@vger.kernel.org, gregkh@suse.de, linux-scsi@vger.kernel.org, JBottomley@parallels.com, matthew@wil.cx, Martin.vGagern@gmx.net, kernel@gentoo.org
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org
-Cc: JBottomley@parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, 2011-12-02 at 15:56 -0800, Dan Williams wrote:
-> commit 9c5a2ba7 "workqueue: separate out drain_workqueue() from
-> destroy_workqueue()" provided drain_workqueue() for users like libsas to
-> use for flushing events.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig86D68756C7202DB4D1D5E0E5
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Any reason to allow drain requests to stack?  If draining is under a
-mutex then we don't break workqueue semantics (at least with respect to
-draining), all chained work is flushed and all unchained work is
-registered in the queue.  But it still leaves deferred work invisible to
-flush_workqueue().  drain_workqueue() users would need to be careful not
-to mix 'flush' and 'drain'.
+On 12/04/2011 02:11 AM, Stratos Psomadakis wrote:
+> On 12/03/2011 11:07 PM, Steffen Maier wrote:
+>> On 12/02/2011 04:26 PM, Stratos Psomadakis wrote:
+>>> After upstream commit 4e6c82b3614a18740ef63109d58743a359266daf ([SCSI=
+]
+>>> fix WARNING: at drivers/scsi/scsi_lib.c:1704), which is also included=
+ in
+>>> 3.0-stable and 3.1-stable kernels, the kernel fails to boot (NULL
+>>> pointer dereference in sym53c8xx_slave_destroy).
+>>>
+>>> Bug report at the Gentoo Bugzilla (reported and bisected by Martin vo=
+n
+>>> Gagern). [1]  (stack trace [2])
+>>>
+>>> I think that the problem is that (after commit 4e6c82b)
+>>> __scsi_remove_device() is called if slave_alloc() in scsi_alloc_sdev(=
+)
+>>> fails. But __scsi_remove_device() calls slave_destroy(), which (I thi=
+nk)
+>>> doesn't make much sense (ie to call slave_destroy() when slave_alloc(=
+)
+>>> fails).
+>>>
+>>> For sym53c8xx, this results in a NULL pointer dereference (struct
+>>> sym_lcb pointer) in slave_destroy().
+>>>
+>>> [1] https://bugs.gentoo.org/show_bug.cgi?id=3D392567
+>>> [2] https://392567.bugs.gentoo.org/attachment.cgi?id=3D294381
+>> To me this looks like the same thing we encountered in the zfcp LLD:
+>> http://www.spinics.net/lists/linux-scsi/msg55575.html
+>> James explained the pairing of slave_alloc and slave_destroy even if
+>> slave_alloc returned early in which case slave_destroy needs to cope
+>> with that:
+>> http://www.spinics.net/lists/linux-scsi/msg55449.html
+>>
+> Indeed.
+>
+> I'll follow-up with a patch similar to the one you sent for zfcp. I
+> think that returning if sym_lcb is NULL should be ok.
+I forgot to chain the patch email in this thread, so here's the link:
+http://marc.info/?l=3Dlinux-scsi&m=3D132295936832641&w=3D2
 
-Untested incremental changes to implement above:
-
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 363a4ef..24563d6 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -236,12 +236,12 @@ struct workqueue_struct {
- 	struct wq_flusher	*first_flusher;	/* F: first flusher */
- 	struct list_head	flusher_queue;	/* F: flush waiters */
- 	struct list_head	flusher_overflow; /* F: flush overflow list */
-+	struct mutex		drain_mutex;	/* 1 drainer at a time */
- 	struct list_head	drain_defer;	/* W: unchained work to defer */
- 
- 	mayday_mask_t		mayday_mask;	/* cpus requesting rescue */
- 	struct worker		*rescuer;	/* I: rescue worker */
- 
--	int			nr_drainers;	/* W: drain in progress */
- 	int			saved_max_active; /* W: saved cwq max_active */
- 	const char		*name;		/* I: workqueue name */
- #ifdef CONFIG_LOCKDEP
-@@ -2427,14 +2427,10 @@ static int __drain_workqueue(struct workqueue_struct *wq, int flags)
- 	unsigned int cpu;
- 	int ret = 0;
- 
--	/*
--	 * __queue_work() needs to test whether there are drainers, is much
--	 * hotter than drain_workqueue() and already looks at @wq->flags.
--	 * Use WQ_DRAINING so that queue doesn't have to check nr_drainers.
--	 */
-+	mutex_lock(&wq->drain_mutex);
-+
- 	spin_lock_irq(&workqueue_lock);
--	if (!wq->nr_drainers++)
--		wq->flags |= WQ_DRAINING | flags;
-+	wq->flags |= WQ_DRAINING | flags;
- 	spin_unlock_irq(&workqueue_lock);
- reflush:
- 	flush_workqueue(wq);
-@@ -2458,24 +2454,26 @@ reflush:
- 	}
- 
- 	spin_lock_irq(&workqueue_lock);
--	if (!--wq->nr_drainers) {
--		wq->flags &= ~(WQ_DRAINING | WQ_NO_DEFER);
--		list_splice_init(&wq->drain_defer, &drain_defer);
--		ret = !list_empty(&drain_defer);
--	}
-+	wq->flags &= ~(WQ_DRAINING | WQ_NO_DEFER);
-+	list_splice_init(&wq->drain_defer, &drain_defer);
-+	ret = !list_empty(&drain_defer);
- 	spin_unlock_irq(&workqueue_lock);
- 
--	/* requeue work on this queue provided it was not being destroyed */
-+	/* submit deferred work provided wq was not being destroyed */
- 	list_for_each_entry_safe(work, w, &drain_defer, entry) {
- 		list_del_init(&work->entry);
- 		queue_work(wq, work);
- 	}
- 
-+	mutex_unlock(&wq->drain_mutex);
-+
- 	return ret;
- }
- 
- int drain_workqueue(struct workqueue_struct *wq)
- {
-+	if (WARN_ON_ONCE(wq->flags & WQ_NO_DEFER))
-+		return 0; /* lost drain vs destroy race */
- 	return __drain_workqueue(wq, 0);
- }
- EXPORT_SYMBOL_GPL(drain_workqueue);
-@@ -3032,6 +3030,7 @@ struct workqueue_struct *__alloc_workqueue_key(const char *name,
- 	wq->flags = flags;
- 	wq->saved_max_active = max_active;
- 	mutex_init(&wq->flush_mutex);
-+	mutex_init(&wq->drain_mutex);
- 	atomic_set(&wq->nr_cwqs_to_flush, 0);
- 	INIT_LIST_HEAD(&wq->flusher_queue);
- 	INIT_LIST_HEAD(&wq->flusher_overflow);
+>> HTH
+>> Steffen
+>>
+>> Linux on System z Development
+>>
+>> IBM Deutschland Research & Development GmbH
+>> Vorsitzender des Aufsichtsrats: Martin Jetter
+>> Gesch=C3=A4ftsf=C3=BChrung: Dirk Wittkopp
+>> Sitz der Gesellschaft: B=C3=B6blingen
+>> Registergericht: Amtsgericht Stuttgart, HRB 243294
+>>
+>> --=20
+>> To unsubscribe from this list: send the line "unsubscribe
+>> linux-kernel" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> Please read the FAQ at  http://www.tux.org/lkml/
+--=20
+Stratos Psomadakis
+<psomas@gentoo.org>
 
 
+
+--------------enig86D68756C7202DB4D1D5E0E5
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk7br54ACgkQid1lVeNDMmCanACeIgbWzHsX1aif1O/J7ayHT7CF
+V3UAn3pjstowPqmpvZa+DlRDccw4K7U5
+=tR1T
+-----END PGP SIGNATURE-----
+
+--------------enig86D68756C7202DB4D1D5E0E5--
