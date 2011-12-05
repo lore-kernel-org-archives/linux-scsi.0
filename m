@@ -1,65 +1,56 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v5 0/6] ata port runtime power management support
-Date: Mon,  5 Dec 2011 09:20:22 +0800
-Message-ID: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH v5 4/6] [SCSI] sd: check runtime PM status in sd_shutdown
+Date: Mon,  5 Dec 2011 09:20:26 +0800
+Message-ID: <1323048028-10421-5-git-send-email-ming.m.lin@intel.com>
+References: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Jeff,
+sd_shutdown is called during reboot/poweroff.
+It may fail if parent device, for example, ata port, was runtime suspended.
 
-This is the v5 patches to add ata port runtime pm support.
-Applied on top of v3.2-rc4.
+Fix it by checking runtime PM status of sd.
+Exit immediately if sd was runtime suspended already.
 
-Patch 1 was acked by Tejun Heo.
-Patch 2, 3, 4 were signed/acked by Alan Stern.
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
+ drivers/scsi/sd.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-Could you consider merging these patches?
-
-Chanes in v5(no functional change):
-- add SCSI patches acks by Alan Stern
-- rebase to v3.2-rc4
-
-Changes in v4:
-- check SCSI device runtime PM status in system PM (Alan Stern, Tejun Heo)
-
-Changes in v3:
-- runtime resume scsi device before system suspend (Alan Stern)
-- check runtime status in sd_shutdown
-
-v1:
-https://lkml.org/lkml/2011/11/2/23
-
-v2:
-https://lkml.org/lkml/2011/11/10/71
-Acked-by: Tejun Heo <tj@kernel.org>
-Kay Sievers reviewed sysfs change
-
-v3:
-https://lkml.org/lkml/2011/11/23/37
-
-v4:
-https://lkml.org/lkml/2011/11/27/275
-
-Lin Ming (6):
-   ata: make ata port as parent device of scsi host
-   [SCSI] add flag to skip the runtime PM calls on the host
-   [SCSI] check runtime PM status in system PM
-   [SCSI] sd: check runtime PM status in sd_shutdown
-   ata: add ata port system PM callbacks
-   ata: add ata port runtime PM callbacks
-
- drivers/ata/libata-core.c      |  154 ++++++++++++++++++++++------------------
- drivers/ata/libata-scsi.c      |    3 +-
- drivers/ata/libata-transport.c |    5 ++
- drivers/ata/libata.h           |    1 +
- drivers/scsi/scsi_error.c      |    5 +-
- drivers/scsi/scsi_pm.c         |   16 ++++-
- drivers/scsi/sd.c              |    5 ++
- include/scsi/scsi_host.h       |    3 +
- 8 files changed, 118 insertions(+), 74 deletions(-)
-
-Thanks for any comment,
-Lin Ming
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index fa3a591..7b3f807 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -50,6 +50,7 @@
+ #include <linux/string_helpers.h>
+ #include <linux/async.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <asm/uaccess.h>
+ #include <asm/unaligned.h>
+ 
+@@ -2741,6 +2742,9 @@ static void sd_shutdown(struct device *dev)
+ 	if (!sdkp)
+ 		return;         /* this can happen */
+ 
++	if (pm_runtime_suspended(dev))
++		goto exit;
++
+ 	if (sdkp->WCE) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp);
+@@ -2751,6 +2755,7 @@ static void sd_shutdown(struct device *dev)
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+ 
++exit:
+ 	scsi_disk_put(sdkp);
+ }
+ 
+-- 
+1.7.2.5
