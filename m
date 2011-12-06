@@ -1,102 +1,60 @@
 From: Holger Macht <holger@homac.de>
-Subject: [PATCH 5/7] libata: Add links between removable devices and docks
-Date: Tue, 6 Dec 2011 17:37:57 +0100
-Message-ID: <20111206163757.GF3629@homac.suse.de>
+Subject: [PATCH 6/7] libata: Generate and pass correct acpi handles
+Date: Tue, 6 Dec 2011 17:38:04 +0100
+Message-ID: <20111206163804.GG3629@homac.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-acpi-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:40209 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751785Ab1LFQiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Dec 2011 11:38:07 -0500
 Content-Disposition: inline
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Matthew Garrett <mjg@redhat.com>
-List-Id: linux-scsi@vger.kernel.org
 
-From: Matthew Garrett <mjg@redhat.com>
+Fix ACPI handle generation for device handles and pass the correct
+handles to the dock driver.
 
-Attaching ata objects to docks makes it possible to identify which dock
-should be used to trigger the removal of a device, and also allows
-userspace to cleanly unmount filesystems before completing a
-user-requested undocking.
-
-Signed-off-by: Matthew Garrett <mjg@redhat.com>
-Acked-by: Holger Macht <holger@homac.de>
+Signed-off-by: Holger Macht <holger@homac.de>
 ---
- libata-acpi.c |   20 ++++++++++++++++++++
- libata-scsi.c |    3 +++
- libata.h      |    4 ++++
- 3 files changed, 27 insertions(+)
+ libata-acpi.c |   10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
 
 Index: linux/drivers/ata/libata-acpi.c
 ===================================================================
 --- linux.orig/drivers/ata/libata-acpi.c
 +++ linux/drivers/ata/libata-acpi.c
-@@ -955,6 +955,26 @@ void ata_acpi_on_disable(struct ata_devi
- 	ata_acpi_clear_gtf(dev);
+@@ -74,9 +74,6 @@ acpi_handle ata_dev_acpi_handle(struct a
+ 	acpi_integer adr;
+ 	struct ata_port *ap = dev->link->ap;
+ 
+-	if (dev->sdev)
+-		return DEVICE_ACPI_HANDLE(&dev->sdev->sdev_gendev);
+-
+ 	if (ap->flags & ATA_FLAG_ACPI_SATA) {
+ 		if (!sata_pmp_attached(ap))
+ 			adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
+@@ -1004,8 +1001,7 @@ static int ata_acpi_bind_host(struct dev
+ 	if (!*handle)
+ 		return -ENODEV;
+ 
+-	register_hotplug_dock_device(ata_ap_acpi_handle(ap),
+-				     &ata_acpi_ap_dock_ops, ap);
++	register_hotplug_dock_device(*handle, &ata_acpi_ap_dock_ops, ap);
+ 
+ 	return 0;
  }
+@@ -1027,8 +1023,8 @@ static int ata_acpi_bind_device(struct d
  
-+void ata_acpi_bind_dock(struct ata_device *dev)
-+{
-+	struct device **docks;
+ 	if (!*handle)
+ 		return -ENODEV;
+-	register_hotplug_dock_device(ata_dev_acpi_handle(ata_dev),
+-				     &ata_acpi_dev_dock_ops, ata_dev);
 +
-+	if (!ata_dev_acpi_handle(dev))
-+		return;
-+	docks = dock_link_device(ata_dev_acpi_handle(dev));
-+	kfree(docks);
-+}
-+
-+void ata_acpi_unbind_dock(struct ata_device *dev)
-+{
-+	struct device **docks;
-+
-+	if (!ata_dev_acpi_handle(dev))
-+		return;
-+	docks = dock_unlink_device(ata_dev_acpi_handle(dev));
-+	kfree(docks);
-+}
-+
- static int is_pci_ata(struct device *dev)
- {
- 	struct pci_dev *pdev;
-Index: linux/drivers/ata/libata-scsi.c
-===================================================================
---- linux.orig/drivers/ata/libata-scsi.c
-+++ linux/drivers/ata/libata-scsi.c
-@@ -3443,6 +3443,7 @@ void ata_scsi_scan_host(struct ata_port
- 			if (!IS_ERR(sdev)) {
- 				dev->sdev = sdev;
- 				scsi_device_put(sdev);
-+				ata_acpi_bind_dock(dev);
- 			} else {
- 				dev->sdev = NULL;
- 			}
-@@ -3543,6 +3544,8 @@ static void ata_scsi_remove_dev(struct a
- 	sdev = dev->sdev;
- 	dev->sdev = NULL;
++	register_hotplug_dock_device(*handle, &ata_acpi_dev_dock_ops, ata_dev);
  
-+	ata_acpi_unbind_dock(dev);
-+
- 	if (sdev) {
- 		/* If user initiated unplug races with us, sdev can go
- 		 * away underneath us after the host lock and
-Index: linux/drivers/ata/libata.h
-===================================================================
---- linux.orig/drivers/ata/libata.h
-+++ linux/drivers/ata/libata.h
-@@ -116,6 +116,8 @@ extern void ata_acpi_on_disable(struct a
- extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
- extern int ata_acpi_register(void);
- extern void ata_acpi_unregister(void);
-+extern void ata_acpi_bind_dock(struct ata_device *dev);
-+extern void ata_acpi_unbind_dock(struct ata_device *dev);
- #else
- static inline void ata_acpi_dissociate(struct ata_host *host) { }
- static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
-@@ -126,6 +128,8 @@ static inline void ata_acpi_set_state(st
- 				      pm_message_t state) { }
- static inline int ata_acpi_register(void) { return 0; }
- static void ata_acpi_unregister(void) { }
-+static void ata_acpi_bind_dock(struct ata_device *dev) { }
-+static void ata_acpi_unbind_dock(struct ata_device *dev) { }
- #endif
- 
- /* libata-scsi.c */
+ 	return 0;
+ }
