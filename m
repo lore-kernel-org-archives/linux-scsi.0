@@ -1,46 +1,54 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] target: Set response format in INQUIRY response
-Date: Tue,  6 Dec 2011 10:02:09 -0800
-Message-ID: <1323194529-17886-1-git-send-email-roland@kernel.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/2] virtio-scsi: first version
+Date: Tue, 06 Dec 2011 12:09:59 -0600
+Message-ID: <1323194999.3014.8.camel@dabdike.int.hansenpartnership.com>
+References: <1323106159-6562-1-git-send-email-pbonzini@redhat.com>
+	 <1323106159-6562-2-git-send-email-pbonzini@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54827 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751995Ab1LFSKB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2011 13:10:01 -0500
+In-Reply-To: <1323106159-6562-2-git-send-email-pbonzini@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: linux-kernel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
 
-From: Roland Dreier <roland@purestorage.com>
+On Mon, 2011-12-05 at 18:29 +0100, Paolo Bonzini wrote:
+> The virtio-scsi HBA is the basis of an alternative storage stack
+> for QEMU-based virtual machines (including KVM).
 
-Current SCSI specs say that the "response format" field in the standard
-INQUIRY response should be set to 2, and all the real SCSI devices I
-have do put 2 here.  So let's do that too.
+Could you clarify what the problem with virtio-blk is?
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/target/target_core_cdb.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+>   Compared to
+> virtio-blk it is more scalable, because it supports many LUNs
+> on a single PCI slot),
 
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 957fac7..0a96bbb 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -96,6 +96,18 @@ target_emulate_inquiry_std(struct se_cmd *cmd)
- 	buf[2] = dev->transport->get_device_rev(dev);
- 
- 	/*
-+	 * NORMACA and HISUP = 0, RESPONSE DATA FORMAT = 2
-+	 *
-+	 * SPC4 says:
-+	 *   A RESPONSE DATA FORMAT field set to 2h indicates that the
-+	 *   standard INQUIRY data is in the format defined in this
-+	 *   standard. Response data format values less than 2h are
-+	 *   obsolete. Response data format values greater than 2h are
-+	 *   reserved.
-+	 */
-+	buf[3] = 2;
-+
-+	/*
- 	 * Enable SCCS and TPGS fields for Emulated ALUA
- 	 */
- 	if (dev->se_sub_dev->t10_alua.alua_type == SPC3_ALUA_EMULATED)
--- 
-1.7.5.4
+This is just multiplexing, surely, which should be easily fixable in
+virtio-blk?
+
+>  more powerful (it more easily supports
+> passthrough of host devices to the guest)
+
+I assume this means exclusive passthrough?  In which case, why doesn't
+passing the host block queue through to the guest just work?  That means
+the host is doing all the SCSI back end stuff and you've just got a
+lightweight queue pass through.
+
+>  and more easily
+> extensible (new SCSI features implemented by QEMU should not
+> require updating the driver in the guest).
+
+I don't really understand this comment at all:  The block protocol is
+far simpler than SCSI, but includes SG_IO, which can encapsulate all of
+the SCSI features ... I'm not familiar necessarily with the problems of
+QEMU devices, but surely it can unwrap the SG_IO transport generically
+rather than having to emulate on a per feature basis?
+
+James
+
+
