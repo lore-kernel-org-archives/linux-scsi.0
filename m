@@ -1,60 +1,99 @@
 From: Holger Macht <holger@homac.de>
-Subject: [PATCH 6/7] libata: Generate and pass correct acpi handles
-Date: Tue, 6 Dec 2011 17:38:04 +0100
-Message-ID: <20111206163804.GG3629@homac.suse.de>
+Subject: [PATCH 7/7] acpi: Prevent duplicate hotplug device registration on
+ dock stations
+Date: Tue, 6 Dec 2011 17:38:10 +0100
+Message-ID: <20111206163810.GH3629@homac.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40209 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:40217 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751785Ab1LFQiH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Dec 2011 11:38:07 -0500
+	id S1751785Ab1LFQiM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Dec 2011 11:38:12 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Matthew Garrett <mjg@redhat.com>
 
-Fix ACPI handle generation for device handles and pass the correct
-handles to the dock driver.
+register_hotplug_dock_device() must only be called once per ACPI
+handle. However, ACPI glue infrastructure does not allow to prevent
+multiple find_device() invocations when a scsi bus or device appears or
+disappears. So export a function from the dock driver to check if a
+specific hotplug dock device is already registered and call this before
+registering.
 
 Signed-off-by: Holger Macht <holger@homac.de>
 ---
- libata-acpi.c |   10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+ drivers/acpi/dock.c         |   20 ++++++++++++++++++++
+ drivers/ata/libata-acpi.c   |    6 ++++--
+ include/acpi/acpi_drivers.h |    1 +
+ 3 files changed, 25 insertions(+), 2 deletions(-)
 
+Index: linux/drivers/acpi/dock.c
+===================================================================
+--- linux.orig/drivers/acpi/dock.c
++++ linux/drivers/acpi/dock.c
+@@ -720,6 +720,26 @@ void unregister_hotplug_dock_device(acpi
+ }
+ EXPORT_SYMBOL_GPL(unregister_hotplug_dock_device);
+ 
++int is_registered_hotplug_dock_device(const struct acpi_dock_ops *ops)
++{
++	struct dock_dependent_device *dd;
++	struct dock_station *ds;
++
++	list_for_each_entry(ds, &dock_stations, sibling) {
++		mutex_lock(&ds->hp_lock);
++		list_for_each_entry(dd, &ds->hotplug_devices, hotplug_list) {
++			if (ops == dd->ops) {
++				mutex_unlock(&ds->hp_lock);
++				return 1;
++			}
++		}
++		mutex_unlock(&ds->hp_lock);
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL(is_registered_hotplug_dock_device);
++
+ /**
+  * handle_eject_request - handle an undock request checking for error conditions
+  *
 Index: linux/drivers/ata/libata-acpi.c
 ===================================================================
 --- linux.orig/drivers/ata/libata-acpi.c
 +++ linux/drivers/ata/libata-acpi.c
-@@ -74,9 +74,6 @@ acpi_handle ata_dev_acpi_handle(struct a
- 	acpi_integer adr;
- 	struct ata_port *ap = dev->link->ap;
- 
--	if (dev->sdev)
--		return DEVICE_ACPI_HANDLE(&dev->sdev->sdev_gendev);
--
- 	if (ap->flags & ATA_FLAG_ACPI_SATA) {
- 		if (!sata_pmp_attached(ap))
- 			adr = SATA_ADR(ap->port_no, NO_PORT_MULT);
-@@ -1004,8 +1001,7 @@ static int ata_acpi_bind_host(struct dev
+@@ -1001,7 +1001,8 @@ static int ata_acpi_bind_host(struct dev
  	if (!*handle)
  		return -ENODEV;
  
--	register_hotplug_dock_device(ata_ap_acpi_handle(ap),
--				     &ata_acpi_ap_dock_ops, ap);
-+	register_hotplug_dock_device(*handle, &ata_acpi_ap_dock_ops, ap);
+-	register_hotplug_dock_device(*handle, &ata_acpi_ap_dock_ops, ap);
++	if (!is_registered_hotplug_dock_device(&ata_acpi_ap_dock_ops))
++		register_hotplug_dock_device(*handle, &ata_acpi_ap_dock_ops, ap);
  
  	return 0;
  }
-@@ -1027,8 +1023,8 @@ static int ata_acpi_bind_device(struct d
- 
+@@ -1024,7 +1025,8 @@ static int ata_acpi_bind_device(struct d
  	if (!*handle)
  		return -ENODEV;
--	register_hotplug_dock_device(ata_dev_acpi_handle(ata_dev),
--				     &ata_acpi_dev_dock_ops, ata_dev);
-+
-+	register_hotplug_dock_device(*handle, &ata_acpi_dev_dock_ops, ata_dev);
+ 
+-	register_hotplug_dock_device(*handle, &ata_acpi_dev_dock_ops, ata_dev);
++	if (!is_registered_hotplug_dock_device(&ata_acpi_dev_dock_ops))
++		register_hotplug_dock_device(*handle, &ata_acpi_dev_dock_ops, ata_dev);
  
  	return 0;
  }
+Index: linux/include/acpi/acpi_drivers.h
+===================================================================
+--- linux.orig/include/acpi/acpi_drivers.h
++++ linux/include/acpi/acpi_drivers.h
+@@ -131,6 +131,7 @@ extern int register_hotplug_dock_device(
+ 					const struct acpi_dock_ops *ops,
+ 					void *context);
+ extern void unregister_hotplug_dock_device(acpi_handle handle);
++extern int is_registered_hotplug_dock_device(const struct acpi_dock_ops *ops);
+ extern struct device **dock_link_device(acpi_handle handle);
+ extern struct device **dock_unlink_device(acpi_handle handle);
+ #else
