@@ -1,148 +1,102 @@
 From: Holger Macht <holger@homac.de>
-Subject: [PATCH 4/7] acpi: Add support for linking docks to the objects they
- contain
-Date: Tue, 6 Dec 2011 17:37:51 +0100
-Message-ID: <20111206163751.GE3629@homac.suse.de>
+Subject: [PATCH 5/7] libata: Add links between removable devices and docks
+Date: Tue, 6 Dec 2011 17:37:57 +0100
+Message-ID: <20111206163757.GF3629@homac.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40180 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751820Ab1LFQhy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 6 Dec 2011 11:37:54 -0500
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 Cc: Matthew Garrett <mjg@redhat.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Matthew Garrett <mjg@redhat.com>
 
-When undocking, it's helpful to know which devices are going to
-disappear. This patch adds support for adding symlinks to the device
-into the docking bay.
+Attaching ata objects to docks makes it possible to identify which dock
+should be used to trigger the removal of a device, and also allows
+userspace to cleanly unmount filesystems before completing a
+user-requested undocking.
 
 Signed-off-by: Matthew Garrett <mjg@redhat.com>
 Acked-by: Holger Macht <holger@homac.de>
 ---
- drivers/acpi/dock.c         |   78 ++++++++++++++++++++++++++++++++++++++++++++
- include/acpi/acpi_drivers.h |   10 +++++
- 2 files changed, 88 insertions(+)
+ libata-acpi.c |   20 ++++++++++++++++++++
+ libata-scsi.c |    3 +++
+ libata.h      |    4 ++++
+ 3 files changed, 27 insertions(+)
 
-Index: linux/drivers/acpi/dock.c
+Index: linux/drivers/ata/libata-acpi.c
 ===================================================================
---- linux.orig/drivers/acpi/dock.c
-+++ linux/drivers/acpi/dock.c
-@@ -276,6 +276,84 @@ int is_dock_device(acpi_handle handle)
- EXPORT_SYMBOL_GPL(is_dock_device);
- 
- /**
-+ * dock_link_device - link a device from the dock
-+ * @handle: acpi handle of the potentially dependent device
-+ */
-+struct device **dock_link_device(acpi_handle handle)
-+{
-+	struct device *dev = acpi_get_physical_device(handle);
-+	struct dock_station *dock_station;
-+	int ret, dock = 0;
-+	struct device **devices;
-+
-+	devices = kmalloc(dock_station_count * sizeof(struct device *),
-+			  GFP_KERNEL);
-+
-+	if (!dev)
-+		return NULL;
-+
-+	if (is_dock(handle)) {
-+		put_device(dev);
-+		return NULL;
-+	}
-+
-+	list_for_each_entry(dock_station, &dock_stations, sibling) {
-+		if (find_dock_dependent_device(dock_station, handle)) {
-+			ret = sysfs_create_link(&dock_station->dock_device->dev.kobj,
-+						&dev->kobj, dev_name(dev));
-+			WARN_ON(ret);
-+			devices[dock] = &dock_station->dock_device->dev;
-+			dock++;
-+		}
-+	}
-+	if (!dock)
-+		put_device(dev);
-+
-+	devices[dock] = NULL;
-+	return devices;
-+}
-+EXPORT_SYMBOL_GPL(dock_link_device);
-+
-+/**
-+ * dock_unlink_device - unlink a device from the dock
-+ * @handle: acpi handle of the potentially dependent device
-+ */
-+struct device **dock_unlink_device(acpi_handle handle)
-+{
-+	struct device *dev = acpi_get_physical_device(handle);
-+	struct dock_station *dock_station;
-+	int dock = 0;
-+	struct device **devices =
-+		kmalloc(dock_station_count * sizeof(struct device *),
-+			GFP_KERNEL);
-+
-+	if (!dev)
-+		return NULL;
-+
-+	if (is_dock(handle)) {
-+		put_device(dev);
-+		return NULL;
-+	}
-+
-+	list_for_each_entry(dock_station, &dock_stations, sibling) {
-+		if (find_dock_dependent_device(dock_station, handle)) {
-+			sysfs_remove_link(&dock_station->dock_device->dev.kobj,
-+					  dev_name(dev));
-+			devices[dock] = &dock_station->dock_device->dev;
-+			dock++;
-+		}
-+	}
-+	/* An extra reference has been held while the link existed */
-+	if (dock)
-+		put_device(dev);
-+
-+	put_device(dev);
-+	devices[dock] = NULL;
-+	return devices;
-+}
-+EXPORT_SYMBOL_GPL(dock_unlink_device);
-+
-+/**
-  * dock_present - see if the dock station is present.
-  * @ds: the dock station
-  *
-Index: linux/include/acpi/acpi_drivers.h
-===================================================================
---- linux.orig/include/acpi/acpi_drivers.h
-+++ linux/include/acpi/acpi_drivers.h
-@@ -131,6 +131,8 @@ extern int register_hotplug_dock_device(
- 					const struct acpi_dock_ops *ops,
- 					void *context);
- extern void unregister_hotplug_dock_device(acpi_handle handle);
-+extern struct device **dock_link_device(acpi_handle handle);
-+extern struct device **dock_unlink_device(acpi_handle handle);
- #else
- static inline int is_dock_device(acpi_handle handle)
- {
-@@ -152,6 +154,14 @@ static inline int register_hotplug_dock_
- static inline void unregister_hotplug_dock_device(acpi_handle handle)
- {
+--- linux.orig/drivers/ata/libata-acpi.c
++++ linux/drivers/ata/libata-acpi.c
+@@ -955,6 +955,26 @@ void ata_acpi_on_disable(struct ata_devi
+ 	ata_acpi_clear_gtf(dev);
  }
-+static inline struct device **dock_link_device(acpi_handle handle)
+ 
++void ata_acpi_bind_dock(struct ata_device *dev)
 +{
-+	return NULL;
++	struct device **docks;
++
++	if (!ata_dev_acpi_handle(dev))
++		return;
++	docks = dock_link_device(ata_dev_acpi_handle(dev));
++	kfree(docks);
 +}
-+static inline struct device **dock_unlink_device(acpi_handle handle)
++
++void ata_acpi_unbind_dock(struct ata_device *dev)
 +{
-+	return NULL;
++	struct device **docks;
++
++	if (!ata_dev_acpi_handle(dev))
++		return;
++	docks = dock_unlink_device(ata_dev_acpi_handle(dev));
++	kfree(docks);
 +}
++
+ static int is_pci_ata(struct device *dev)
+ {
+ 	struct pci_dev *pdev;
+Index: linux/drivers/ata/libata-scsi.c
+===================================================================
+--- linux.orig/drivers/ata/libata-scsi.c
++++ linux/drivers/ata/libata-scsi.c
+@@ -3443,6 +3443,7 @@ void ata_scsi_scan_host(struct ata_port
+ 			if (!IS_ERR(sdev)) {
+ 				dev->sdev = sdev;
+ 				scsi_device_put(sdev);
++				ata_acpi_bind_dock(dev);
+ 			} else {
+ 				dev->sdev = NULL;
+ 			}
+@@ -3543,6 +3544,8 @@ static void ata_scsi_remove_dev(struct a
+ 	sdev = dev->sdev;
+ 	dev->sdev = NULL;
+ 
++	ata_acpi_unbind_dock(dev);
++
+ 	if (sdev) {
+ 		/* If user initiated unplug races with us, sdev can go
+ 		 * away underneath us after the host lock and
+Index: linux/drivers/ata/libata.h
+===================================================================
+--- linux.orig/drivers/ata/libata.h
++++ linux/drivers/ata/libata.h
+@@ -116,6 +116,8 @@ extern void ata_acpi_on_disable(struct a
+ extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t state);
+ extern int ata_acpi_register(void);
+ extern void ata_acpi_unregister(void);
++extern void ata_acpi_bind_dock(struct ata_device *dev);
++extern void ata_acpi_unbind_dock(struct ata_device *dev);
+ #else
+ static inline void ata_acpi_dissociate(struct ata_host *host) { }
+ static inline int ata_acpi_on_suspend(struct ata_port *ap) { return 0; }
+@@ -126,6 +128,8 @@ static inline void ata_acpi_set_state(st
+ 				      pm_message_t state) { }
+ static inline int ata_acpi_register(void) { return 0; }
+ static void ata_acpi_unregister(void) { }
++static void ata_acpi_bind_dock(struct ata_device *dev) { }
++static void ata_acpi_unbind_dock(struct ata_device *dev) { }
  #endif
  
- #endif /*__ACPI_DRIVERS_H__*/
+ /* libata-scsi.c */
