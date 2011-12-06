@@ -1,54 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] virtio-scsi: first version
-Date: Tue, 06 Dec 2011 12:09:59 -0600
-Message-ID: <1323194999.3014.8.camel@dabdike.int.hansenpartnership.com>
-References: <1323106159-6562-1-git-send-email-pbonzini@redhat.com>
-	 <1323106159-6562-2-git-send-email-pbonzini@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/9] qla4xxx: Patches for scsi-misc
+Date: Tue, 06 Dec 2011 14:15:44 -0600
+Message-ID: <4EDE77F0.8050708@cs.wisc.edu>
+References: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54827 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751995Ab1LFSKB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2011 13:10:01 -0500
-In-Reply-To: <1323106159-6562-2-git-send-email-pbonzini@redhat.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39728 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753200Ab1LFUPy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Dec 2011 15:15:54 -0500
+In-Reply-To: <1322808134-21665-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Rusty Russell <rusty@rustcorp.com.au>, Stefan Hajnoczi <stefanha@linux.vnet.ibm.com>
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, poornima.vonti@qlogic.com
 
-On Mon, 2011-12-05 at 18:29 +0100, Paolo Bonzini wrote:
-> The virtio-scsi HBA is the basis of an alternative storage stack
-> for QEMU-based virtual machines (including KVM).
+On 12/02/2011 12:42 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> 
+> James,
+> 
+> Please apply the following patches to scsi-misc for inclusion in mainline.
+> These patches are on top of patchset posted by Mike Christie:-
+> http://marc.info/?l=linux-scsi&m=132279682021696&w=2
+> 
+> Mike Hernandez (1):
+>       qla4xxx: Fix CPU lockups when ql4xdontresethba set
+> 
+> Nilesh Javali (1):
+>       qla4xxx: Fix the IDC locking mechanism
+> 
+> Sarang Radke (2):
+>       qla4xxx: fix call trace on rmmod with ql4xdontresethba=1
+>       qla4xxx: Don't recover adapter if device state is FAILED
+> 
+> Shyam Sunder (1):
+>       qla4xxx: check for FW alive before calling chip_reset
+> 
+> Vikas Chaudhary (4):
+>       qla4xxx: Perform context resets in case of context failures.
+>       qla4xxx: Wait for disable_acb before doing set_acb
+>       qla4xxx: Fix qla4xxx_dump_buffer to dump buffer correctly
+>       qla4xxx: Update driver version to 5.02.00-k10
+> 
 
-Could you clarify what the problem with virtio-blk is?
+With the updated 3rd patch "[PATCH v2 3/9] qla4xxx: fix call trace on
+rmmod with ql4xdontresethba=1" it looks ok to me.
 
->   Compared to
-> virtio-blk it is more scalable, because it supports many LUNs
-> on a single PCI slot),
-
-This is just multiplexing, surely, which should be easily fixable in
-virtio-blk?
-
->  more powerful (it more easily supports
-> passthrough of host devices to the guest)
-
-I assume this means exclusive passthrough?  In which case, why doesn't
-passing the host block queue through to the guest just work?  That means
-the host is doing all the SCSI back end stuff and you've just got a
-lightweight queue pass through.
-
->  and more easily
-> extensible (new SCSI features implemented by QEMU should not
-> require updating the driver in the guest).
-
-I don't really understand this comment at all:  The block protocol is
-far simpler than SCSI, but includes SG_IO, which can encapsulate all of
-the SCSI features ... I'm not familiar necessarily with the problems of
-QEMU devices, but surely it can unwrap the SG_IO transport generically
-rather than having to emulate on a per feature basis?
-
-James
-
-
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
