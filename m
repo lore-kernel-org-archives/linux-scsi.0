@@ -1,63 +1,35 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: mpt2sas regression: can not add disk...
-Date: Wed, 7 Dec 2011 23:24:57 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70D912FF83D@inbmail01.lsi.com>
-References: <7863850E8C98C748980632D9D3B7C19911968B8AE5@inbmail02.lsi.com>
-	<A6888A6805518E4EA4AF7072A28264A604726F2824@inbmail02.lsi.com>
-	<CAE9FiQWY-jhtbCmdfBY1zg_d0nreTHbkVe3CmaPQMgojDAtLaw@mail.gmail.com>
- <CAE9FiQXbu-O2exdhjziWCdiWWGNb8q7_RoECeKC5K80DEOobbw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 6/6] ata: add ata port runtime PM callbacks
+Date: Wed, 7 Dec 2011 10:29:33 -0800
+Message-ID: <20111207182933.GC7610@google.com>
+References: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com>
+ <1323048028-10421-7-git-send-email-ming.m.lin@intel.com>
+ <CAF1ivSbr3b8vkgtA1Lzy-hKvm6MJ77bS5V2JkJF5+ybKCPObKg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE9FiQXbu-O2exdhjziWCdiWWGNb8q7_RoECeKC5K80DEOobbw@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, James Bottomley <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAF1ivSbr3b8vkgtA1Lzy-hKvm6MJ77bS5V2JkJF5+ybKCPObKg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Lin Ming <ming.m.lin@intel.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Yinghai,
+On Wed, Dec 07, 2011 at 04:42:09PM +0800, Lin Ming wrote:
+> On Mon, Dec 5, 2011 at 9:20 AM, Lin Ming <ming.m.lin@intel.com> wrote:
+> > Add ata port runtime suspend/resume/idle callbacks.
+> > Set ->eh_noresume to skip the runtime PM calls on scsi host
+> > in the error handler to avoid dead lock.
+> 
+> Hi Tejun & Alan,
+> 
+> How about this patch?
 
-I am trying to reproduce this issue locally and get back to you with my findings.
+Looks good to me.
 
+ Acked-by: Tejun Heo <tj@kernel.org>
 
-Thanks, Kashyap
+Thanks.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Yinghai Lu
-> Sent: Wednesday, December 07, 2011 5:45 AM
-> To: Nandigama, Nagalakshmi; James Bottomley; Rafael J. Wysocki
-> Cc: linux-scsi-owner@vger.kernel.org; James Bottomley; linux-
-> scsi@vger.kernel.org; Linux Kernel Mailing List
-> Subject: Re: mpt2sas regression: can not add disk...
-> 
-> On Mon, Nov 28, 2011 at 12:00 PM, Yinghai Lu <yinghai@kernel.org> wrote:
-> > On Sun, Nov 27, 2011 at 10:09 PM, Nandigama, Nagalakshmi
-> > <Nagalakshmi.Nandigama@lsi.com> wrote:
-> >> Yinghai Lu,
-> >>
-> >> Please set the driver logging level to 0x421F8 (echo 0x421F8 >
-> >> /sys/module/mpt2sas/parameters/logging_level) and the scsi logging
-> >> level to 0x180000F1 (echo 0x180000F1 >
-> >> /proc/sys/dev/scsi/logging_level) and recreate the issue and provide
-> >> the var/log/message
-> >>
-> >
-> > please check two print out...
-> 
-> James,
-> 
-> one week passed, did not hear anything from the original author.
-> 
-> Can you  revert offending commit ?
-> 
-> it is 921cd8024b908f8f49f772c8d3a02381b4db2ed2
-> and several related commits after that.
-> 
-> please check attached reverting patch that i used locally.
-> 
-> Thanks
-> 
-> Yinghai
+-- 
+tejun
