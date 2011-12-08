@@ -1,45 +1,66 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [PATCH v5 1/6] ata: make ata port as parent device of scsi host
-Date: Wed, 07 Dec 2011 15:04:38 -0500
-Message-ID: <4EDFC6D6.3050601@pobox.com>
-References: <1323048028-10421-1-git-send-email-ming.m.lin@intel.com> <1323048028-10421-2-git-send-email-ming.m.lin@intel.com>
+From: "Rolf Eike Beer" <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/1] Staging: hv: storvsc: Move the storage driver out of
+ the staging area
+Date: Thu, 8 Dec 2011 11:37:28 +0100
+Message-ID: <0b79f774eeb89b67073e93fcc5db8c55.squirrel@webmail.sf-mail.de>
+References: <1323274574-22863-1-git-send-email-kys@microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1323048028-10421-2-git-send-email-ming.m.lin@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Huang Ying <ying.huang@intel.com>, Zhang Rui <rui.zhang@intel.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:33245 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751057Ab1LHKhb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Dec 2011 05:37:31 -0500
+In-Reply-To: <1323274574-22863-1-git-send-email-kys@microsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, james.bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>
 
-On 12/04/2011 08:20 PM, Lin Ming wrote:
-> Currently, the device tree of ata port and scsi host looks as below,
+> The storage driver (storvsc_drv.c) handles all block storage devices
+> assigned to Linux guests hosted on Hyper-V. This driver has been in the
+> staging tree for a while and this patch moves it out of the staging area.
+> As per Greg's recommendation, this patch makes no changes to the
+> staging/hv
+> directory. Once the driver moves out of staging, we will cleanup the
+> staging/hv directory.
 >
->          /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
->          |-- ata1                                (ata port)
->          |-- host0                               (scsi host)
->             |-- target0:0:0                      (scsi target)
->                 |-- 0:0:0:0                      (disk)
+> This patch includes all the patches that I have sent against the
+> staging/hv
+> tree to address the comments I have gotten to date on this storage driver.
 >
-> This patch makes ata port as parent device of scsi host, then it becomes
->
->          /sys/devices/pci0000:00/0000:00:1f.2    (ahci controller)
->          |-- ata1                                (ata port)
->              |-- host0                           (scsi host)
->                  |-- target0:0:0                 (scsi target)
->                      |-- 0:0:0:0                 (disk)
->
-> With this change, the ata port runtime PM is easier.
-> For example, the ata port runtime suspend will happen as,
->
-> disk suspend -->  scsi target suspend -->  scsi host suspend -->  ata port
-> suspend.
->
-> Acked-by: Tejun Heo<tj@kernel.org>
-> Signed-off-by: Lin Ming<ming.m.lin@intel.com>
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 > ---
->   drivers/ata/libata-scsi.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
+>  drivers/scsi/Kconfig       |    7 +
+>  drivers/scsi/Makefile      |    3 +
+>  drivers/scsi/storvsc_drv.c | 1586
+> ++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 1596 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/scsi/storvsc_drv.c
+>
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 06ea3bc..4910269 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -662,6 +662,13 @@ config VMWARE_PVSCSI
+>  	  To compile this driver as a module, choose M here: the
+>  	  module will be called vmw_pvscsi.
+>
+> +config HYPERV_STORAGE
+> +	tristate "Microsoft Hyper-V virtual storage driver"
+> +	depends on SCSI && HYPERV
+> +	default HYPERV
+> +	help
+> +	  Select this option to enable the Hyper-V virtual storage driver.
+> +
+>  config LIBFC
+>  	tristate "LibFC module"
+>  	select SCSI_FC_ATTRS
 
-applied 1-6, thanks
+Maybe that help text could be slightly more verbose? Like "This is only
+necessary if you plan to run this kernel as a guest on Microsoft Hyper-V"?
+And I would welcome the usual "the module will be called" text for this
+driver, too. See the first 2 lines of context of think hunk for a
+copy&paste source of this text.
+
+Eike
