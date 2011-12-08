@@ -1,51 +1,45 @@
-From: Stratos Psomadakis <psomas@gentoo.org>
-Subject: Re: [PATCH] scsi/sym53c8xx_2: Fix NULL pointer dereference in slave_destroy
-Date: Thu, 08 Dec 2011 23:15:14 +0200
-Message-ID: <4EE128E2.9050305@gentoo.org>
-References: <1322958234-9749-1-git-send-email-psomas@gentoo.org>
+From: "Y/Msn" <noreply@yahoo.com>
+Subject: Final Notice
+Date: Thu, 8 Dec 2011 18:54:33 +0200 (EET)
+Message-ID: <36b01e96b9a62883bf3b7b92a74c358d.squirrel@webmail.infoseka.lt>
+Reply-To: barclays_transfer_group_dept@hotmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1322958234-9749-1-git-send-email-psomas@gentoo.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, JBottomley@parallels.com, matthew@wil.cx, Martin.vGagern@gmx.net
+Content-Type: text/plain;charset=lt_LT
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pserver.infoseka.lt ([78.158.28.5]:54973 "EHLO infoseka.lt"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751642Ab1LICEz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Dec 2011 21:04:55 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/04/2011 02:23 AM, psomas@gentoo.org wrote:
-> From: Stratos Psomadakis <psomas@gentoo.org>
->
-> sym53c8xx_slave_destroy unconditionally assumes that sym53c8xx_slave_alloc has
-> succesesfully allocated a sym_lcb. This can lead to a NULL pointer dereference
-> (exposed by commit 4e6c82b).
->
-> Signed-off-by: Stratos Psomadakis <psomas@gentoo.org>
-> Cc: stable@vger.kernel.org
-> ---
->
->  drivers/scsi/sym53c8xx_2/sym_glue.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-> index b4543f5..76432f8 100644
-> --- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-> +++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-> @@ -839,6 +839,10 @@ static void sym53c8xx_slave_destroy(struct scsi_device *sdev)
->  	struct sym_lcb *lp = sym_lp(tp, sdev->lun);
->  	unsigned long flags;
->  
-> +	/* if slave_alloc returned before allocating a sym_lcb, return */
-> +	if (!lp)
-> +		return;
-> +
->  	spin_lock_irqsave(np->s.host->host_lock, flags);
->  
->  	if (lp->busy_itlq || lp->busy_itl) {
-Any comments/ack/nack on the patch?
+Dear Internet User!
 
-Thanks,
+Congratulations! you and your family have won 500,000 GBP from the
+Microsoft Family Benefit 2011 for being a regular web user.Your winnings
+has been
+submitted to BARCLAYS BANK OF SCOTLAND. Contact the Bank with your full
+info for claims.:
 
--- 
-Stratos Psomadakis
-<psomas@gentoo.org>
+Send mail to the Transfer Manager:
+
+Transfer Manager: Robert Williams
+Email: barclays_transfer_group_dept@hotmail.com
+
+Bank Name: Barclays Bank Of Scotland
+
+1.Name:
+2.Address:
+3.Telephone Number:
+4.Sex:
+Account Name:
+Account Number:
+Bank Name:
+
+
+Please use this as a subject of contact : TRANSFER/NUM/1090.
+
+Congratulations!!!
+Microsoft Window
+
