@@ -1,36 +1,51 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: Re: mpt2sas regression: can not add disk...
-Date: Thu, 8 Dec 2011 13:09:50 -0800
-Message-ID: <CAE9FiQUBkjfOYrjxAVxG7F3GF11trkOnf0ZoKS4h5Db2gQJvbA@mail.gmail.com>
-References: <7863850E8C98C748980632D9D3B7C19911968B8AE5@inbmail02.lsi.com>
-	<A6888A6805518E4EA4AF7072A28264A604726F2824@inbmail02.lsi.com>
-	<CAE9FiQWY-jhtbCmdfBY1zg_d0nreTHbkVe3CmaPQMgojDAtLaw@mail.gmail.com>
-	<CAE9FiQXbu-O2exdhjziWCdiWWGNb8q7_RoECeKC5K80DEOobbw@mail.gmail.com>
-	<B2FD678A64EAAD45B089B123FDFC3ED70D912FF83D@inbmail01.lsi.com>
-	<B2FD678A64EAAD45B089B123FDFC3ED70D912FF8E3@inbmail01.lsi.com>
+From: Stratos Psomadakis <psomas@gentoo.org>
+Subject: Re: [PATCH] scsi/sym53c8xx_2: Fix NULL pointer dereference in slave_destroy
+Date: Thu, 08 Dec 2011 23:15:14 +0200
+Message-ID: <4EE128E2.9050305@gentoo.org>
+References: <1322958234-9749-1-git-send-email-psomas@gentoo.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED70D912FF8E3@inbmail01.lsi.com>
+In-Reply-To: <1322958234-9749-1-git-send-email-psomas@gentoo.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, James Bottomley <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, JBottomley@parallels.com, matthew@wil.cx, Martin.vGagern@gmx.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 8, 2011 at 5:30 AM, Desai, Kashyap <Kashyap.Desai@lsi.com> wrote:
-> Yinghai,
+On 12/04/2011 02:23 AM, psomas@gentoo.org wrote:
+> From: Stratos Psomadakis <psomas@gentoo.org>
 >
-> Please try attached patch. This must be on top of latest upstream code.
-> When we have introduced fast load, scan of devices are happening from thread context.
+> sym53c8xx_slave_destroy unconditionally assumes that sym53c8xx_slave_alloc has
+> succesesfully allocated a sym_lcb. This can lead to a NULL pointer dereference
+> (exposed by commit 4e6c82b).
 >
-> But currently we have not removed " _scsih_probe_devices(ioc);" call from actual probe and it is getting called from multiple places.
-> As a result, we end-up into this issue.
+> Signed-off-by: Stratos Psomadakis <psomas@gentoo.org>
+> Cc: stable@vger.kernel.org
+> ---
 >
-> Please try the attached patch and provide your feedback. Based upon your result, we will post this patch to upstream.
+>  drivers/scsi/sym53c8xx_2/sym_glue.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+> index b4543f5..76432f8 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_glue.c
+> +++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+> @@ -839,6 +839,10 @@ static void sym53c8xx_slave_destroy(struct scsi_device *sdev)
+>  	struct sym_lcb *lp = sym_lp(tp, sdev->lun);
+>  	unsigned long flags;
+>  
+> +	/* if slave_alloc returned before allocating a sym_lcb, return */
+> +	if (!lp)
+> +		return;
+> +
+>  	spin_lock_irqsave(np->s.host->host_lock, flags);
+>  
+>  	if (lp->busy_itlq || lp->busy_itl) {
+Any comments/ack/nack on the patch?
 
-Yes.  The attaced patch fix the problem. the disk that is attached to
-the mpt2sas card is showing up in OS.
+Thanks,
 
-Thanks
-
-Yinghai Lu
+-- 
+Stratos Psomadakis
+<psomas@gentoo.org>
