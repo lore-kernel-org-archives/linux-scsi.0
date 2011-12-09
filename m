@@ -1,61 +1,74 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: mpt2sas regression: can not add disk...
-Date: Fri, 9 Dec 2011 20:26:57 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70D912FF9DE@inbmail01.lsi.com>
-References: <7863850E8C98C748980632D9D3B7C19911968B8AE5@inbmail02.lsi.com>
-	<A6888A6805518E4EA4AF7072A28264A604726F2824@inbmail02.lsi.com>
-	<CAE9FiQWY-jhtbCmdfBY1zg_d0nreTHbkVe3CmaPQMgojDAtLaw@mail.gmail.com>
-	<CAE9FiQXbu-O2exdhjziWCdiWWGNb8q7_RoECeKC5K80DEOobbw@mail.gmail.com>
-	<B2FD678A64EAAD45B089B123FDFC3ED70D912FF83D@inbmail01.lsi.com>
-	<B2FD678A64EAAD45B089B123FDFC3ED70D912FF8E3@inbmail01.lsi.com>
- <CAE9FiQUBkjfOYrjxAVxG7F3GF11trkOnf0ZoKS4h5Db2gQJvbA@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: Unique numeric ID for SCSI-3 disks
+Date: Fri, 09 Dec 2011 12:34:23 -0500
+Message-ID: <4EE2469F.606@interlog.com>
+References: <E4D7778E36CF944ABD2F7E18D2DB9666271BAC7FBF@inbmail02.lsi.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAE9FiQUBkjfOYrjxAVxG7F3GF11trkOnf0ZoKS4h5Db2gQJvbA@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, "linux-scsi-owner@vger.kernel.org" <linux-scsi-owner@vger.kernel.org>, James Bottomley <jejb@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:49658 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752461Ab1LIRfO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Dec 2011 12:35:14 -0500
+In-Reply-To: <E4D7778E36CF944ABD2F7E18D2DB9666271BAC7FBF@inbmail02.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Sampathkumar, Kishore" <Kishore.SampathKumar@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+On 11-12-05 03:33 AM, Sampathkumar, Kishore wrote:
+> In SCSI-3 SPC, I was going through the section on "Device Identification VPD Page" (Section 7.6.3). I see the following:
+>
+> If "Association" field in VPD83 page is set to 00b (i.e., The IDENTIFIER field is associated with the addressed logical unit), the above standard says:
+>
+> At least one identification descriptor should have the IDENTIFIER TYPE field set to:
+> a) 2h (i.e., EUI-64-based);
+> b) 3h (i.e., NAA); or
+> c) 8h (i.e., SCSI name string).
+>
+> Going through the details of (a) and (b), I notice that they are numeric.
+>
+> However, (c) above is an ASCII string. But, even in this case, if the first 4 UTF-8 characters are parsed, the rest of it contains numeric value in ASCII.
+>
+> For all SCSI disks that are SCSI-3 SPC compliant, for the above case, is it safe to say: each of them shall have an associated "numeric value" that is "unique" (assuming that the 4 UTF-8 characters for "SCSI name string" format are stored/available).
+
+"Logical Unit name" is the most recent t10.org term to
+describe the "designator" (no longer called "identifier")
+whose association is 00b in the Device Identification
+VPD page (83h).
+
+SCSI transport standards say very little about Logical
+Unit (LU) names. For example SPL-2 (SAS) says the LU name
+should be different from the target port identifiers and
+target device name of the device (disk) that contains the
+LU. In other words there are 3 NAA-5 values that the LU
+name of a SAS disk can _not_ be.
+
+You have found what SPC-3 (and SPC-4) says about LU names. That
+is it, nothing else. In SPC-4 the definition of a SCSI name
+string for a lead-in of ".iqn" (as used by iSCSI) breaks
+your assertion:
+
+"If the ASSOCIATION field is set to 00b (i.e., logical unit) and
+the SCSI NAME STRING field starts with the four UTF-8 characters
+'iqn.', the SCSI NAME STRING field ends with the five UTF-8
+characters ',L,0x' concatenated with 16 hexadecimal digits for
+the logical unit name extension. The logical unit name extension
+is a UTF-8 string containing no more than 16 hexadecimal digits.
+The logical unit name extension is assigned by the SCSI target
+device vendor and shall be assigned so the logical unit name is
+worldwide unique."
+
+Unlikely but possible is that a SAS fabric has a SAS to iSCSI
+bridge located behind a SAS target so any LUs behind that
+bridge are in a iSCSI domain. Such iSCSI LUs would most likely
+follow iSCSI LU naming conventions. So a SAS application client
+running on Linux could see a LU name like this:
+   "iqn.2001-04.com.example,L,0x0000000000000000"
+
+Doug Gilbert
 
 
 
-> -----Original Message-----
-> From: yhlu.kernel@gmail.com [mailto:yhlu.kernel@gmail.com] On Behalf Of
-> Yinghai Lu
-> Sent: Friday, December 09, 2011 2:40 AM
-> To: Desai, Kashyap
-> Cc: Nandigama, Nagalakshmi; James Bottomley; Rafael J. Wysocki; linux-
-> scsi-owner@vger.kernel.org; James Bottomley; linux-scsi@vger.kernel.org;
-> Linux Kernel Mailing List
-> Subject: Re: mpt2sas regression: can not add disk...
-> 
-> On Thu, Dec 8, 2011 at 5:30 AM, Desai, Kashyap <Kashyap.Desai@lsi.com>
-> wrote:
-> > Yinghai,
-> >
-> > Please try attached patch. This must be on top of latest upstream
-> code.
-> > When we have introduced fast load, scan of devices are happening from
-> thread context.
-> >
-> > But currently we have not removed " _scsih_probe_devices(ioc);" call
-> from actual probe and it is getting called from multiple places.
-> > As a result, we end-up into this issue.
-> >
-> > Please try the attached patch and provide your feedback. Based upon
-> your result, we will post this patch to upstream.
-> 
-> Yes.  The attaced patch fix the problem. the disk that is attached to
-> the mpt2sas card is showing up in OS.
-
-Thanks for the test report. LSI will post this patch to upstream. 
-
-` Kashyap
-
-> 
-> Thanks
-> 
-> Yinghai Lu
