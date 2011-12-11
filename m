@@ -1,44 +1,59 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [PATCH/resend] m68k/scsi: Remove obsolete IRQ_FLG_* users
-Date: Sun, 11 Dec 2011 10:04:51 +0100
-Message-ID: <1323594291-25304-1-git-send-email-geert@linux-m68k.org>
+From: taco <tacoee@gmail.com>
+Subject: [PATCH] block: Needn't read the size of device or partition again
+Date: Sun, 11 Dec 2011 21:10:47 +0800
+Message-ID: <1323609047-12242-1-git-send-email-tacoee@gmail.com>
+References: <yes>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from georges.telenet-ops.be ([195.130.137.68]:43985 "EHLO
-	georges.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088Ab1LKJEw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2011 04:04:52 -0500
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:63641 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901Ab1LKNM4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2011 08:12:56 -0500
+In-Reply-To: <yes>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-m68k@kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: axboe@kernel.dk, linux-kernel@vger.kernel.org
+Cc: taco <tacoee@gmail.com>, linux-scsi@vger.kernel.org
 
-The m68k core irq code stopped honoring these flags during the irq
-restructuring in 2006.
+It is not necessary to invoke i_size_read to get the size of device or
+partition again, due to did it before.i_size_read maybe need to abtain
+lock or disable preempt.
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+Signed-off-by: taco <tacoee@gmail.com>
 ---
-Please take or ack, so I can remove the definition for IRQ_FLG_SLOW in
-the m68k code
+ block/blk-core.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
- drivers/scsi/mac_scsi.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-index af3a6af..ea2bde2 100644
---- a/drivers/scsi/mac_scsi.c
-+++ b/drivers/scsi/mac_scsi.c
-@@ -291,8 +291,7 @@ int __init macscsi_detect(struct scsi_host_template * tpnt)
-     ((struct NCR5380_hostdata *)instance->hostdata)->ctrl = 0;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index ea70e6c..3aa3fc3 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1423,7 +1423,7 @@ static inline void blk_partition_remap(struct bio *bio)
+ 	}
+ }
  
-     if (instance->irq != SCSI_IRQ_NONE)
--	if (request_irq(instance->irq, NCR5380_intr, IRQ_FLG_SLOW, 
--			"ncr5380", instance)) {
-+	if (request_irq(instance->irq, NCR5380_intr, 0, "ncr5380", instance)) {
- 	    printk(KERN_WARNING "scsi%d: IRQ%d not free, interrupts disabled\n",
- 		   instance->host_no, instance->irq);
- 	    instance->irq = SCSI_IRQ_NONE;
+-static void handle_bad_sector(struct bio *bio)
++static void handle_bad_sector(struct bio *bio, sector_t maxsector)
+ {
+ 	char b[BDEVNAME_SIZE];
+ 
+@@ -1432,7 +1432,7 @@ static void handle_bad_sector(struct bio *bio)
+ 			bdevname(bio->bi_bdev, b),
+ 			bio->bi_rw,
+ 			(unsigned long long)bio->bi_sector + bio_sectors(bio),
+-			(long long)(i_size_read(bio->bi_bdev->bd_inode) >> 9));
++			(long long)maxsector);
+ 
+ 	set_bit(BIO_EOF, &bio->bi_flags);
+ }
+@@ -1493,7 +1493,7 @@ static inline int bio_check_eod(struct bio *bio, unsigned int nr_sectors)
+ 			 * without checking the size of the device, e.g., when
+ 			 * mounting a device.
+ 			 */
+-			handle_bad_sector(bio);
++			handle_bad_sector(bio, maxsector);
+ 			return 1;
+ 		}
+ 	}
 -- 
-1.7.0.4
+1.7.5.4
 
