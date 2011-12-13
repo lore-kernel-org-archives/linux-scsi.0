@@ -1,88 +1,33 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: mptspi init failure on Sparc SMP in Linux 3.0
-Date: Tue, 13 Dec 2011 12:51:04 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
-References: <4EB7D137.7090903@univ.rzeszow.pl>
-	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl>
- <1320721518.18929.15.camel@deadeye>
- <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com>
- <4EE5F1F4.3000006@univ.rzeszow.pl>
+From: Biblioteka UR <biblio@univ.rzeszow.pl>
+Subject: Re: mptspi init failure on Sparc SMP in Linux 3.0
+Date: Tue, 13 Dec 2011 09:23:57 +0100
+Message-ID: <4EE70B9D.5030309@univ.rzeszow.pl>
+References: <4EB7D137.7090903@univ.rzeszow.pl>	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl> <1320721518.18929.15.camel@deadeye> <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com> <4EE5F1F4.3000006@univ.rzeszow.pl> <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:35106 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751909Ab1LMHVK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Dec 2011 02:21:10 -0500
-In-Reply-To: <4EE5F1F4.3000006@univ.rzeszow.pl>
-Content-Language: en-US
+Received: from atena.univ.rzeszow.pl ([62.93.43.134]:34161 "EHLO
+	atena.univ.rzeszow.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753099Ab1LMIYX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 03:24:23 -0500
+In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Biblioteka UR <biblio@univ.rzeszow.pl>
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
 Cc: Ben Hutchings <ben@decadent.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, "647900@bugs.debian.org" <647900@bugs.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-VGhlIGlzc3VlIGlzIGhhcHBlbmluZyBiZWNhdXNlIGNvbmZpZyBwYWdlIGlzIHRpbWluZyBvdXQg
-YW5kIGluaXRpYWxpemF0aW9uIGlzIG5vdCBzdWNjZXNzZnVsDQpDYW4geW91IGNvbGxlY3QgdGhl
-IGtlcm5lbCBtZXNzYWdlcyBldmVuIGZvciB0aGUgS0VSTl9ERUJVRyBtZXNzYWdlcyBhbHNvIGZv
-ciBtcHQgZHJpdmVyPw0KVGhpcyBpcyB0byBmaW5kIG91dCB3aGljaCBjb25maWcgcGFnZSBpcyBm
-YWlsaW5nLg0KDQoNCkFsc28gd2hhdCBpcyB0aGUgZi93IHZlcnNpb24gb2YgTFNJNTNDMTAzMCBT
-Q1NJIGNvbnRyb2xsZXIgdGhhdCB5b3UgYXJlIHVzaW5nLg0KV2UgbmVlZCB0byB2ZXJpZnkgdGhl
-IGNvbXBhdGliaWxpdHkgYmV0d2VlbiB0aGUgZi93IGFuZCB2ZXJzaW9uIHZlcnNpb25zIHRoYXQg
-eW91IGFyZSB1c2luZy4NCg0KUmVnYXJkcywNCk5hZ2FsYWtzaG1pDQoNCg0KLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCkZyb206IEJpYmxpb3Rla2EgVVIgW21haWx0bzpiaWJsaW9AdW5pdi5y
-emVzem93LnBsXSANClNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgMTIsIDIwMTEgNTo1MiBQTQ0KVG86
-IE5hbmRpZ2FtYSwgTmFnYWxha3NobWkNCkNjOiBCZW4gSHV0Y2hpbmdzOyBNb29yZSwgRXJpYzsg
-NjQ3OTAwQGJ1Z3MuZGViaWFuLm9yZzsgbGludXgtc2NzaTsgREwtTVBUIEZ1c2lvbiBMaW51eA0K
-U3ViamVjdDogUmU6IG1wdHNwaSBpbml0IGZhaWx1cmUgb24gU3BhcmMgU01QIGluIExpbnV4IDMu
-MA0KDQpOb3RoaW5nIGhhcyBjaGFuZ2VkIGluIHRoZSB0b3BpYz8NCkkgaGF2ZSB0aGUgbGF0ZXN0
-IGxpbnV4LWltYWdlLTMuMS4wLTEtc3BhcmM2NC1zbXAgYW5kIHRoZSBzYW1lIHByb2JsZW0uIA0K
-U3VuRmlyZSB2NDkwIGlzIHJ1bm5pbmcgd2VsbCB3aXRoIGxpbnV4LWltYWdlLTMuMS4wLTEtc3Bh
-cmM2NCAobm9uIHNtcCkuDQoNClJlZ2FyZHMsDQpNYXJpdXN6DQoNClcgZG5pdSAyMDExLTExLTEw
-IDEyOjMyLCBOYW5kaWdhbWEsIE5hZ2FsYWtzaG1pIHBpc3plOg0KPiBDYW4geW91IGNvbGxlY3Qg
-ZGVidWcgbGV2ZWwgZm9yIElOSVQ/DQo+DQo+IFJlZ2FyZHMsDQo+IE5hZ2FsYWtzaG1pDQo+DQo+
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJlbiBIdXRjaGluZ3MgW21h
-aWx0bzpiZW5AZGVjYWRlbnQub3JnLnVrXQ0KPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAwOCwg
-MjAxMSA4OjM1IEFNDQo+IFRvOiBNb29yZSwgRXJpYw0KPiBDYzogQmlibGlvdGVrYSBVUjsgNjQ3
-OTAwQGJ1Z3MuZGViaWFuLm9yZzsgbGludXgtc2NzaTsgREwtTVBUIEZ1c2lvbiBMaW51eA0KPiBT
-dWJqZWN0OiBtcHRzcGkgaW5pdCBmYWlsdXJlIG9uIFNwYXJjIFNNUCBpbiBMaW51eCAzLjANCj4N
-Cj4gTWFyaXVzeiBhdCBCaWJsaW90ZWthIFVSIHJlcG9ydHMgdGhpcyBmYWlsdXJlIGluIGEgbmV3
-IERlYmlhbiBpbnN0YWxsYXRpb24gb24gYSBTdW5GaXJlIHY0OTAgc3lzdGVtOg0KPg0KPj4gWyAg
-ICAwLjAwMDAwMF0gTGludXggdmVyc2lvbiAzLjAuMC0xLXNwYXJjNjQtc21wIChEZWJpYW4gMy4w
-LjAtMykgKGJlbkBkZWNhZGVudC5vcmcudWspIChnY2MgdmVyc2lvbiA0LjUuMyAoRGViaWFuIDQu
-NS4zLTgpICkgIzEgU01QIFNhdCBBdWcgMjcgMTk6NTE6MTQgVVRDIDIwDQo+IFsuLi5dDQo+PiBb
-ICAgNTIuMTkwNDMzXSBGdXNpb24gTVBUIGJhc2UgZHJpdmVyIDMuMDQuMTkNCj4+IFsgICA1Mi4y
-Mzg1MjhdIENvcHlyaWdodCAoYykgMTk5OS0yMDA4IExTSSBDb3Jwb3JhdGlvbg0KPiBbLi4uXQ0K
-Pj4gWyAgIDUyLjM3MDE2MV0gRnVzaW9uIE1QVCBTUEkgSG9zdCBkcml2ZXIgMy4wNC4xOQ0KPj4g
-WyAgIDUyLjM3MDM2NF0gbXB0YmFzZTogaW9jMDogSW5pdGlhdGluZyBicmluZ3VwDQo+IFsuLi5d
-DQo+PiBbICAgNTIuODQ3NTA0XSBpb2MwOiBMU0k1M0MxMDMwIEMwOiBDYXBhYmlsaXRpZXM9e0lu
-aXRpYXRvcixUYXJnZXR9DQo+IFsuLi5dDQo+PiBbICAgNjguMzE5NTE4XSBtcHRiYXNlOiBpb2Mw
-OiBXQVJOSU5HIC0gSXNzdWluZyBSZXNldCBmcm9tIG1wdF9jb25maWchISwgZG9vcmJlbGw9MHgy
-NDAwMDAwMA0KPj4gWyAgIDY5LjE3NTUwNV0gbXB0YmFzZTogaW9jMDogQXR0ZW1wdGluZyBSZXRy
-eSBDb25maWcgcmVxdWVzdCB0eXBlIDB4MywgcGFnZSAweCwgYWN0aW9uIDANCj4+IFsgICA4NC4y
-Njc1MjRdIG1wdGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1aW5nIFJlc2V0IGZyb20gbXB0X2Nv
-bmZpZyEhLCBkb29yYmVsbD0weDI0MDAwMDAwDQo+PiBbICAgODQuMzY0NDgyXSBtcHRiYXNlOiBp
-b2MwOiBJbml0aWF0aW5nIHJlY292ZXJ5DQo+PiBbICAgOTAuMjk5NTA1XSBtcHRiYXNlOiBpb2Mw
-OiBBdHRlbXB0aW5nIFJldHJ5IENvbmZpZyByZXF1ZXN0IHR5cGUgMHgzLCBwYWdlIDB4LCBhY3Rp
-b24gMA0KPj4gWyAgMTA1LjM5MTUyM10gbXB0YmFzZTogaW9jMDogV0FSTklORyAtIElzc3Vpbmcg
-UmVzZXQgZnJvbQ0KPj4gbXB0X2NvbmZpZyEhLCBkb29yYmVsbD0weDI0MDAwMDAwIFsgIDEwNS40
-ODg1MDldIG1wdGJhc2U6IGlvYzA6DQo+PiBJbml0aWF0aW5nIHJlY292ZXJ5IFsgIDEyNi41Mjc1
-MTZdIG1wdGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1aW5nDQo+PiBSZXNldCBmcm9tIG1wdF9j
-b25maWchISwgZG9vcmJlbGw9MHgyNDAwMDAwMCBbICAxMjcuMzgzNTA1XSBtcHRiYXNlOg0KPj4g
-aW9jMDogQXR0ZW1wdGluZyBSZXRyeSBDb25maWcgcmVxdWVzdCB0eXBlIDB4NCwgcGFnZSAweDEs
-IGFjdGlvbiAwIFsNCj4+IDE0Mi40NzU1MjhdIG1wdGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1
-aW5nIFJlc2V0IGZyb20gbXB0X2NvbmZpZyEhLA0KPj4gZG9vcmJlbGw9MHgyNDAwMDAwMCBbICAx
-NDIuNTcyNTA0XSBtcHRiYXNlOiBpb2MwOiBJbml0aWF0aW5nIHJlY292ZXJ5DQo+PiBbICAxNDgu
-NjExNTA1XSBtcHRiYXNlOiBpb2MwOiBBdHRlbXB0aW5nIFJldHJ5IENvbmZpZyByZXF1ZXN0IHR5
-cGUNCj4+IDB4NCwgcGFnZSAweDEsIGFjdGlvbiAwIFsgIDE2My43MDM0ODJdIG1wdGJhc2U6IGlv
-YzA6IFdBUk5JTkcgLQ0KPj4gSXNzdWluZyBSZXNldCBmcm9tIG1wdF9jb25maWchISwgZG9vcmJl
-bGw9MHgyNDAwMDAwMCBbICAxNjMuODAwNDk1XQ0KPj4gbXB0YmFzZTogaW9jMDogSW5pdGlhdGlu
-ZyByZWNvdmVyeQ0KPiAoSSB0aGluayB0aGVyZSBhcmUgc29tZSBjaGFyYWN0ZXJzIG1pc3Npbmcg
-aW4gdGhlIGFib3ZlIGxvZywgcGFydGljdWxhcmx5IHRoZSBwYWdlIG51bWJlcnMuKQ0KPg0KPiBI
-b3dldmVyLCB0aGUgZHJpdmVyIGFwcGFyZW50bHkgd29ya3Mgb24gdGhlIHNhbWUgc3lzdGVtIGlu
-IGEgIVNNUCBrZXJuZWwgY29uZmlndXJhdGlvbi4NCj4NCj4gVGhlIGNvbXBsZXRlIHJlcG9ydCBj
-YW4gYmUgZm91bmQgYXQ8aHR0cDovL2J1Z3MuZGViaWFuLm9yZy82NDc5MDA+Lg0KPiBDYW4geW91
-IHN1Z2dlc3QgYW55IHdheSB0byBjb3JyZWN0IG9yIGRlYnVnIHRoaXMgcHJvYmxlbT8NCj4NCj4g
-QmVuLg0KPg0KPiAtLQ0KPiBCZW4gSHV0Y2hpbmdzDQo+IFlvdSBjYW4ndCBoYXZlIGV2ZXJ5dGhp
-bmcuICBXaGVyZSB3b3VsZCB5b3UgcHV0IGl0Pw0KPg0KDQo=
+Hello Nagalakshimi.
+
+Thank you for your reply.
+
+W dniu 2011-12-13 08:21, Nandigama, Nagalakshmi pisze:
+> The issue is happening because config page is timing out and initialization is not successful
+> Can you collect the kernel messages even for the KERN_DEBUG messages also for mpt driver?
+> This is to find out which config page is failing.
+Maybe so, but I confess that I do not know how. :( Do you have any 
+suggestions? I begin my adventure with Debian. I have little experience 
+with Centos, but it doesn't work with Sparc. :)
+
+Regards,
+Mariusz
