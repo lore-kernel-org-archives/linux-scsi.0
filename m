@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 7/7] lpfc 8.3.28: Update driver version to 8.3.28
-Date: Tue, 13 Dec 2011 13:23:28 -0500
-Message-ID: <1323800610.1111.17.camel@ogier>
+Subject: [PATCH 6/7] lpfc 8.3.28: Add Loopback support for SLI4 adapters
+Date: Tue, 13 Dec 2011 13:23:09 -0500
+Message-ID: <1323800591.1111.16.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -9,13 +9,20 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:31045 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754712Ab1LMS1d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 13:27:33 -0500
+	with ESMTP id S1754742Ab1LMS1e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 13:27:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Update Version to 8.3.28.
+Add Loopback support for SLI4 adapters
+
+- Add Basic support for SLI4 Loopback.
+  (CR 124951, 125766, 124951, 125843, 125832, 125843)
+- Added missing protection in setting/clearing of phba->link_flag bit
+  field (CR 125994)
+- Use link type and link number obtained from READ_CONFIG mailbox
+  command. (CR 126264)
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -23,22 +30,1284 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ lpfc_bsg.c     |  358 +++++++++++++++++++++++++++++++++++++++++++--------------
+ lpfc_crtn.h    |    9 +
+ lpfc_els.c     |  125 +++++++++++++++----
+ lpfc_hbadisc.c |   60 +++------
+ lpfc_hw.h      |    2 
+ lpfc_hw4.h     |    7 -
+ lpfc_init.c    |   40 +++++-
+ lpfc_mbox.c    |    8 +
+ lpfc_sli.c     |   28 +++-
+ 9 files changed, 470 insertions(+), 167 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2011-11-03 10:24:28.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2011-12-12 20:53:04.000000000 -0500
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2011-12-13 12:46:05.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2011-12-13 12:48:10.000000000 -0500
+@@ -916,9 +916,11 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba 
+ 				} else {
+ 					switch (cmd) {
+ 					case ELX_LOOPBACK_DATA:
+-						diag_cmd_data_free(phba,
+-						(struct lpfc_dmabufext *)
+-							dmabuf);
++						if (phba->sli_rev <
++						    LPFC_SLI_REV4)
++							diag_cmd_data_free(phba,
++							(struct lpfc_dmabufext
++							 *)dmabuf);
+ 						break;
+ 					case ELX_LOOPBACK_XRI_SETUP:
+ 						if ((phba->sli_rev ==
+@@ -1000,7 +1002,8 @@ lpfc_bsg_ct_unsol_event(struct lpfc_hba 
+ error_ct_unsol_exit:
+ 	if (!list_empty(&head))
+ 		list_del(&head);
+-	if (evt_req_id == SLI_CT_ELX_LOOPBACK)
++	if ((phba->sli_rev < LPFC_SLI_REV4) &&
++	    (evt_req_id == SLI_CT_ELX_LOOPBACK))
+ 		return 0;
+ 	return 1;
+ }
+@@ -1566,7 +1569,7 @@ lpfc_sli3_bsg_diag_loopback_mode(struct 
+ 	struct diag_mode_set *loopback_mode;
+ 	uint32_t link_flags;
+ 	uint32_t timeout;
+-	LPFC_MBOXQ_t *pmboxq;
++	LPFC_MBOXQ_t *pmboxq  = NULL;
+ 	int mbxstatus = MBX_SUCCESS;
+ 	int i = 0;
+ 	int rc = 0;
+@@ -1615,7 +1618,6 @@ lpfc_sli3_bsg_diag_loopback_mode(struct 
+ 				rc = -ETIMEDOUT;
+ 				goto loopback_mode_exit;
+ 			}
+-
+ 			msleep(10);
+ 		}
  
--#define LPFC_DRIVER_VERSION "8.3.27"
-+#define LPFC_DRIVER_VERSION "8.3.28"
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
- #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
+@@ -1635,7 +1637,9 @@ lpfc_sli3_bsg_diag_loopback_mode(struct 
+ 		if ((mbxstatus != MBX_SUCCESS) || (pmboxq->u.mb.mbxStatus))
+ 			rc = -ENODEV;
+ 		else {
++			spin_lock_irq(&phba->hbalock);
+ 			phba->link_flag |= LS_LOOPBACK_MODE;
++			spin_unlock_irq(&phba->hbalock);
+ 			/* wait for the link attention interrupt */
+ 			msleep(100);
+ 
+@@ -1659,7 +1663,7 @@ loopback_mode_exit:
+ 	/*
+ 	 * Let SLI layer release mboxq if mbox command completed after timeout.
+ 	 */
+-	if (mbxstatus != MBX_TIMEOUT)
++	if (pmboxq && mbxstatus != MBX_TIMEOUT)
+ 		mempool_free(pmboxq, phba->mbox_mem_pool);
+ 
+ job_error:
+@@ -1700,11 +1704,16 @@ lpfc_sli4_bsg_set_link_diag_state(struct
+ 		rc = -ENOMEM;
+ 		goto link_diag_state_set_out;
+ 	}
++	lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++			"3128 Set link to diagnostic state:x%x (x%x/x%x)\n",
++			diag, phba->sli4_hba.lnk_info.lnk_tp,
++			phba->sli4_hba.lnk_info.lnk_no);
++
+ 	link_diag_state = &pmboxq->u.mqe.un.link_diag_state;
+ 	bf_set(lpfc_mbx_set_diag_state_link_num, &link_diag_state->u.req,
+-	       phba->sli4_hba.link_state.number);
++	       phba->sli4_hba.lnk_info.lnk_no);
+ 	bf_set(lpfc_mbx_set_diag_state_link_type, &link_diag_state->u.req,
+-	       phba->sli4_hba.link_state.type);
++	       phba->sli4_hba.lnk_info.lnk_tp);
+ 	if (diag)
+ 		bf_set(lpfc_mbx_set_diag_state_diag,
+ 		       &link_diag_state->u.req, 1);
+@@ -1727,6 +1736,79 @@ link_diag_state_set_out:
+ }
+ 
+ /**
++ * lpfc_sli4_bsg_set_internal_loopback - set sli4 internal loopback diagnostic
++ * @phba: Pointer to HBA context object.
++ *
++ * This function is responsible for issuing a sli4 mailbox command for setting
++ * up internal loopback diagnostic.
++ */
++static int
++lpfc_sli4_bsg_set_internal_loopback(struct lpfc_hba *phba)
++{
++	LPFC_MBOXQ_t *pmboxq;
++	uint32_t req_len, alloc_len;
++	struct lpfc_mbx_set_link_diag_loopback *link_diag_loopback;
++	int mbxstatus = MBX_SUCCESS, rc = 0;
++
++	pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!pmboxq)
++		return -ENOMEM;
++	req_len = (sizeof(struct lpfc_mbx_set_link_diag_loopback) -
++		   sizeof(struct lpfc_sli4_cfg_mhdr));
++	alloc_len = lpfc_sli4_config(phba, pmboxq, LPFC_MBOX_SUBSYSTEM_FCOE,
++				LPFC_MBOX_OPCODE_FCOE_LINK_DIAG_LOOPBACK,
++				req_len, LPFC_SLI4_MBX_EMBED);
++	if (alloc_len != req_len) {
++		mempool_free(pmboxq, phba->mbox_mem_pool);
++		return -ENOMEM;
++	}
++	link_diag_loopback = &pmboxq->u.mqe.un.link_diag_loopback;
++	bf_set(lpfc_mbx_set_diag_state_link_num,
++	       &link_diag_loopback->u.req, phba->sli4_hba.lnk_info.lnk_no);
++	bf_set(lpfc_mbx_set_diag_state_link_type,
++	       &link_diag_loopback->u.req, phba->sli4_hba.lnk_info.lnk_tp);
++	bf_set(lpfc_mbx_set_diag_lpbk_type, &link_diag_loopback->u.req,
++	       LPFC_DIAG_LOOPBACK_TYPE_SERDES);
++
++	mbxstatus = lpfc_sli_issue_mbox_wait(phba, pmboxq, LPFC_MBOX_TMO);
++	if ((mbxstatus != MBX_SUCCESS) || (pmboxq->u.mb.mbxStatus)) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"3127 Failed setup loopback mode mailbox "
++				"command, rc:x%x, status:x%x\n", mbxstatus,
++				pmboxq->u.mb.mbxStatus);
++		rc = -ENODEV;
++	}
++	if (pmboxq && (mbxstatus != MBX_TIMEOUT))
++		mempool_free(pmboxq, phba->mbox_mem_pool);
++	return rc;
++}
++
++/**
++ * lpfc_sli4_diag_fcport_reg_setup - setup port registrations for diagnostic
++ * @phba: Pointer to HBA context object.
++ *
++ * This function set up SLI4 FC port registrations for diagnostic run, which
++ * includes all the rpis, vfi, and also vpi.
++ */
++static int
++lpfc_sli4_diag_fcport_reg_setup(struct lpfc_hba *phba)
++{
++	int rc;
++
++	if (phba->pport->fc_flag & FC_VFI_REGISTERED) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"3136 Port still had vfi registered: "
++				"mydid:x%x, fcfi:%d, vfi:%d, vpi:%d\n",
++				phba->pport->fc_myDID, phba->fcf.fcfi,
++				phba->sli4_hba.vfi_ids[phba->pport->vfi],
++				phba->vpi_ids[phba->pport->vpi]);
++		return -EINVAL;
++	}
++	rc = lpfc_issue_reg_vfi(phba->pport);
++	return rc;
++}
++
++/**
+  * lpfc_sli4_bsg_diag_loopback_mode - process an sli4 bsg vendor command
+  * @phba: Pointer to HBA context object.
+  * @job: LPFC_BSG_VENDOR_DIAG_MODE
+@@ -1738,10 +1820,8 @@ static int
+ lpfc_sli4_bsg_diag_loopback_mode(struct lpfc_hba *phba, struct fc_bsg_job *job)
+ {
+ 	struct diag_mode_set *loopback_mode;
+-	uint32_t link_flags, timeout, req_len, alloc_len;
+-	struct lpfc_mbx_set_link_diag_loopback *link_diag_loopback;
+-	LPFC_MBOXQ_t *pmboxq = NULL;
+-	int mbxstatus = MBX_SUCCESS, i, rc = 0;
++	uint32_t link_flags, timeout;
++	int i, rc = 0;
+ 
+ 	/* no data to return just the return code */
+ 	job->reply->reply_payload_rcv_len = 0;
+@@ -1762,65 +1842,100 @@ lpfc_sli4_bsg_diag_loopback_mode(struct 
+ 	if (rc)
+ 		goto job_error;
+ 
++	/* indicate we are in loobpack diagnostic mode */
++	spin_lock_irq(&phba->hbalock);
++	phba->link_flag |= LS_LOOPBACK_MODE;
++	spin_unlock_irq(&phba->hbalock);
++
++	/* reset port to start frome scratch */
++	rc = lpfc_selective_reset(phba);
++	if (rc)
++		goto job_error;
++
+ 	/* bring the link to diagnostic mode */
++	lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++			"3129 Bring link to diagnostic state.\n");
+ 	loopback_mode = (struct diag_mode_set *)
+ 		job->request->rqst_data.h_vendor.vendor_cmd;
+ 	link_flags = loopback_mode->type;
+ 	timeout = loopback_mode->timeout * 100;
+ 
+ 	rc = lpfc_sli4_bsg_set_link_diag_state(phba, 1);
+-	if (rc)
++	if (rc) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"3130 Failed to bring link to diagnostic "
++				"state, rc:x%x\n", rc);
+ 		goto loopback_mode_exit;
++	}
+ 
+ 	/* wait for link down before proceeding */
+ 	i = 0;
+ 	while (phba->link_state != LPFC_LINK_DOWN) {
+ 		if (i++ > timeout) {
+ 			rc = -ETIMEDOUT;
++			lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++					"3131 Timeout waiting for link to "
++					"diagnostic mode, timeout:%d ms\n",
++					timeout * 10);
+ 			goto loopback_mode_exit;
+ 		}
+ 		msleep(10);
+ 	}
++
+ 	/* set up loopback mode */
+-	pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+-	if (!pmboxq) {
+-		rc = -ENOMEM;
+-		goto loopback_mode_exit;
+-	}
+-	req_len = (sizeof(struct lpfc_mbx_set_link_diag_loopback) -
+-		   sizeof(struct lpfc_sli4_cfg_mhdr));
+-	alloc_len = lpfc_sli4_config(phba, pmboxq, LPFC_MBOX_SUBSYSTEM_FCOE,
+-				LPFC_MBOX_OPCODE_FCOE_LINK_DIAG_LOOPBACK,
+-				req_len, LPFC_SLI4_MBX_EMBED);
+-	if (alloc_len != req_len) {
+-		rc = -ENOMEM;
++	lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++			"3132 Set up loopback mode:x%x\n", link_flags);
++
++	if (link_flags == INTERNAL_LOOP_BACK)
++		rc = lpfc_sli4_bsg_set_internal_loopback(phba);
++	else if (link_flags == EXTERNAL_LOOP_BACK)
++		rc = lpfc_hba_init_link_fc_topology(phba,
++						    FLAGS_TOPOLOGY_MODE_PT_PT,
++						    MBX_NOWAIT);
++	else {
++		rc = -EINVAL;
++		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
++				"3141 Loopback mode:x%x not supported\n",
++				link_flags);
+ 		goto loopback_mode_exit;
+ 	}
+-	link_diag_loopback = &pmboxq->u.mqe.un.link_diag_loopback;
+-	bf_set(lpfc_mbx_set_diag_state_link_num,
+-	       &link_diag_loopback->u.req, phba->sli4_hba.link_state.number);
+-	bf_set(lpfc_mbx_set_diag_state_link_type,
+-	       &link_diag_loopback->u.req, phba->sli4_hba.link_state.type);
+-	if (link_flags == INTERNAL_LOOP_BACK)
+-		bf_set(lpfc_mbx_set_diag_lpbk_type,
+-		       &link_diag_loopback->u.req,
+-		       LPFC_DIAG_LOOPBACK_TYPE_INTERNAL);
+-	else
+-		bf_set(lpfc_mbx_set_diag_lpbk_type,
+-		       &link_diag_loopback->u.req,
+-		       LPFC_DIAG_LOOPBACK_TYPE_EXTERNAL);
+ 
+-	mbxstatus = lpfc_sli_issue_mbox_wait(phba, pmboxq, LPFC_MBOX_TMO);
+-	if ((mbxstatus != MBX_SUCCESS) || (pmboxq->u.mb.mbxStatus))
+-		rc = -ENODEV;
+-	else {
+-		phba->link_flag |= LS_LOOPBACK_MODE;
++	if (!rc) {
+ 		/* wait for the link attention interrupt */
+ 		msleep(100);
+ 		i = 0;
++		while (phba->link_state < LPFC_LINK_UP) {
++			if (i++ > timeout) {
++				rc = -ETIMEDOUT;
++				lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++					"3137 Timeout waiting for link up "
++					"in loopback mode, timeout:%d ms\n",
++					timeout * 10);
++				break;
++			}
++			msleep(10);
++		}
++	}
++
++	/* port resource registration setup for loopback diagnostic */
++	if (!rc) {
++		/* set up a none zero myDID for loopback test */
++		phba->pport->fc_myDID = 1;
++		rc = lpfc_sli4_diag_fcport_reg_setup(phba);
++	} else
++		goto loopback_mode_exit;
++
++	if (!rc) {
++		/* wait for the port ready */
++		msleep(100);
++		i = 0;
+ 		while (phba->link_state != LPFC_HBA_READY) {
+ 			if (i++ > timeout) {
+ 				rc = -ETIMEDOUT;
++				lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++					"3133 Timeout waiting for port "
++					"loopback mode ready, timeout:%d ms\n",
++					timeout * 10);
+ 				break;
+ 			}
+ 			msleep(10);
+@@ -1828,14 +1943,14 @@ lpfc_sli4_bsg_diag_loopback_mode(struct 
+ 	}
+ 
+ loopback_mode_exit:
++	/* clear loopback diagnostic mode */
++	if (rc) {
++		spin_lock_irq(&phba->hbalock);
++		phba->link_flag &= ~LS_LOOPBACK_MODE;
++		spin_unlock_irq(&phba->hbalock);
++	}
+ 	lpfc_bsg_diag_mode_exit(phba);
+ 
+-	/*
+-	 * Let SLI layer release mboxq if mbox command completed after timeout.
+-	 */
+-	if (pmboxq && (mbxstatus != MBX_TIMEOUT))
+-		mempool_free(pmboxq, phba->mbox_mem_pool);
+-
+ job_error:
+ 	/* make error code available to userspace */
+ 	job->reply->result = rc;
+@@ -1879,7 +1994,6 @@ lpfc_bsg_diag_loopback_mode(struct fc_bs
+ 		rc = -ENODEV;
+ 
+ 	return rc;
+-
+ }
+ 
+ /**
+@@ -1895,7 +2009,9 @@ lpfc_sli4_bsg_diag_mode_end(struct fc_bs
+ 	struct Scsi_Host *shost;
+ 	struct lpfc_vport *vport;
+ 	struct lpfc_hba *phba;
+-	int rc;
++	struct diag_mode_set *loopback_mode_end_cmd;
++	uint32_t timeout;
++	int rc, i;
+ 
+ 	shost = job->shost;
+ 	if (!shost)
+@@ -1913,11 +2029,47 @@ lpfc_sli4_bsg_diag_mode_end(struct fc_bs
+ 	    LPFC_SLI_INTF_IF_TYPE_2)
+ 		return -ENODEV;
+ 
++	/* clear loopback diagnostic mode */
++	spin_lock_irq(&phba->hbalock);
++	phba->link_flag &= ~LS_LOOPBACK_MODE;
++	spin_unlock_irq(&phba->hbalock);
++	loopback_mode_end_cmd = (struct diag_mode_set *)
++			job->request->rqst_data.h_vendor.vendor_cmd;
++	timeout = loopback_mode_end_cmd->timeout * 100;
++
+ 	rc = lpfc_sli4_bsg_set_link_diag_state(phba, 0);
++	if (rc) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_LIBDFC,
++				"3139 Failed to bring link to diagnostic "
++				"state, rc:x%x\n", rc);
++		goto loopback_mode_end_exit;
++	}
+ 
+-	if (!rc)
+-		rc = phba->lpfc_hba_init_link(phba, MBX_NOWAIT);
++	/* wait for link down before proceeding */
++	i = 0;
++	while (phba->link_state != LPFC_LINK_DOWN) {
++		if (i++ > timeout) {
++			rc = -ETIMEDOUT;
++			lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
++					"3140 Timeout waiting for link to "
++					"diagnostic mode_end, timeout:%d ms\n",
++					timeout * 10);
++			/* there is nothing much we can do here */
++			break;
++		}
++		msleep(10);
++	}
+ 
++	/* reset port resource registrations */
++	rc = lpfc_selective_reset(phba);
++	phba->pport->fc_myDID = 0;
++
++loopback_mode_end_exit:
++	/* make return code available to userspace */
++	job->reply->result = rc;
++	/* complete the job back to userspace if no error */
++	if (rc == 0)
++		job->job_done(job);
+ 	return rc;
+ }
+ 
+@@ -2012,9 +2164,9 @@ lpfc_sli4_bsg_link_diag_test(struct fc_b
+ 	}
+ 	run_link_diag_test = &pmboxq->u.mqe.un.link_diag_test;
+ 	bf_set(lpfc_mbx_run_diag_test_link_num, &run_link_diag_test->u.req,
+-	       phba->sli4_hba.link_state.number);
++	       phba->sli4_hba.lnk_info.lnk_no);
+ 	bf_set(lpfc_mbx_run_diag_test_link_type, &run_link_diag_test->u.req,
+-	       phba->sli4_hba.link_state.type);
++	       phba->sli4_hba.lnk_info.lnk_tp);
+ 	bf_set(lpfc_mbx_run_diag_test_test_id, &run_link_diag_test->u.req,
+ 	       link_diag_test_cmd->test_id);
+ 	bf_set(lpfc_mbx_run_diag_test_loops, &run_link_diag_test->u.req,
+@@ -2091,10 +2243,18 @@ static int lpfcdiag_loop_self_reg(struct
+ 	if (!mbox)
+ 		return -ENOMEM;
+ 
+-	if (phba->sli_rev == LPFC_SLI_REV4)
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		status = lpfc_reg_rpi(phba, 0, phba->pport->fc_myDID,
++				(uint8_t *)&phba->pport->fc_sparam,
++				mbox, *rpi);
++	else {
+ 		*rpi = lpfc_sli4_alloc_rpi(phba);
+-	status = lpfc_reg_rpi(phba, 0, phba->pport->fc_myDID,
+-			      (uint8_t *)&phba->pport->fc_sparam, mbox, *rpi);
++		status = lpfc_reg_rpi(phba, phba->pport->vpi,
++				phba->pport->fc_myDID,
++				(uint8_t *)&phba->pport->fc_sparam,
++				mbox, *rpi);
++	}
++
+ 	if (status) {
+ 		mempool_free(mbox, phba->mbox_mem_pool);
+ 		if (phba->sli_rev == LPFC_SLI_REV4)
+@@ -2117,7 +2277,8 @@ static int lpfcdiag_loop_self_reg(struct
+ 		return -ENODEV;
+ 	}
+ 
+-	*rpi = mbox->u.mb.un.varWords[0];
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		*rpi = mbox->u.mb.un.varWords[0];
+ 
+ 	lpfc_mbuf_free(phba, dmabuff->virt, dmabuff->phys);
+ 	kfree(dmabuff);
+@@ -2142,7 +2303,12 @@ static int lpfcdiag_loop_self_unreg(stru
+ 	if (mbox == NULL)
+ 		return -ENOMEM;
+ 
+-	lpfc_unreg_login(phba, 0, rpi, mbox);
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		lpfc_unreg_login(phba, 0, rpi, mbox);
++	else
++		lpfc_unreg_login(phba, phba->pport->vpi,
++				 phba->sli4_hba.rpi_ids[rpi], mbox);
++
+ 	status = lpfc_sli_issue_mbox_wait(phba, mbox, LPFC_MBOX_TMO);
+ 
+ 	if ((status != MBX_SUCCESS) || (mbox->u.mb.mbxStatus)) {
+@@ -2630,15 +2796,15 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 	uint32_t full_size;
+ 	size_t segment_len = 0, segment_offset = 0, current_offset = 0;
+ 	uint16_t rpi = 0;
+-	struct lpfc_iocbq *cmdiocbq, *rspiocbq;
+-	IOCB_t *cmd, *rsp;
++	struct lpfc_iocbq *cmdiocbq, *rspiocbq = NULL;
++	IOCB_t *cmd, *rsp = NULL;
+ 	struct lpfc_sli_ct_request *ctreq;
+ 	struct lpfc_dmabuf *txbmp;
+ 	struct ulp_bde64 *txbpl = NULL;
+ 	struct lpfc_dmabufext *txbuffer = NULL;
+ 	struct list_head head;
+ 	struct lpfc_dmabuf  *curr;
+-	uint16_t txxri, rxxri;
++	uint16_t txxri=0, rxxri;
+ 	uint32_t num_bde;
+ 	uint8_t *ptr = NULL, *rx_databuf = NULL;
+ 	int rc = 0;
+@@ -2665,7 +2831,6 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 		rc = -EINVAL;
+ 		goto loopback_test_exit;
+ 	}
+-
+ 	diag_mode = (struct diag_mode_test *)
+ 		job->request->rqst_data.h_vendor.vendor_cmd;
+ 
+@@ -2720,18 +2885,19 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 	if (rc)
+ 		goto loopback_test_exit;
+ 
+-	rc = lpfcdiag_loop_get_xri(phba, rpi, &txxri, &rxxri);
+-	if (rc) {
+-		lpfcdiag_loop_self_unreg(phba, rpi);
+-		goto loopback_test_exit;
+-	}
++	if (phba->sli_rev < LPFC_SLI_REV4) {
++		rc = lpfcdiag_loop_get_xri(phba, rpi, &txxri, &rxxri);
++		if (rc) {
++			lpfcdiag_loop_self_unreg(phba, rpi);
++			goto loopback_test_exit;
++		}
+ 
+-	rc = lpfcdiag_loop_post_rxbufs(phba, rxxri, full_size);
+-	if (rc) {
+-		lpfcdiag_loop_self_unreg(phba, rpi);
+-		goto loopback_test_exit;
++		rc = lpfcdiag_loop_post_rxbufs(phba, rxxri, full_size);
++		if (rc) {
++			lpfcdiag_loop_self_unreg(phba, rpi);
++			goto loopback_test_exit;
++		}
+ 	}
+-
+ 	evt = lpfc_bsg_event_new(FC_REG_CT_EVENT, current->pid,
+ 				SLI_CT_ELX_LOOPBACK);
+ 	if (!evt) {
+@@ -2746,7 +2912,8 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 	spin_unlock_irqrestore(&phba->ct_ev_lock, flags);
+ 
+ 	cmdiocbq = lpfc_sli_get_iocbq(phba);
+-	rspiocbq = lpfc_sli_get_iocbq(phba);
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		rspiocbq = lpfc_sli_get_iocbq(phba);
+ 	txbmp = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
+ 
+ 	if (txbmp) {
+@@ -2759,14 +2926,18 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 		}
+ 	}
+ 
+-	if (!cmdiocbq || !rspiocbq || !txbmp || !txbpl || !txbuffer ||
+-		!txbmp->virt) {
++	if (!cmdiocbq || !txbmp || !txbpl || !txbuffer || !txbmp->virt) {
++		rc = -ENOMEM;
++		goto err_loopback_test_exit;
++	}
++	if ((phba->sli_rev < LPFC_SLI_REV4) && !rspiocbq) {
+ 		rc = -ENOMEM;
+ 		goto err_loopback_test_exit;
+ 	}
+ 
+ 	cmd = &cmdiocbq->iocb;
+-	rsp = &rspiocbq->iocb;
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		rsp = &rspiocbq->iocb;
+ 
+ 	INIT_LIST_HEAD(&head);
+ 	list_add_tail(&head, &txbuffer->dma.list);
+@@ -2796,7 +2967,6 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 	list_del(&head);
+ 
+ 	/* Build the XMIT_SEQUENCE iocb */
+-
+ 	num_bde = (uint32_t)txbuffer->flag;
+ 
+ 	cmd->un.xseq64.bdl.addrHigh = putPaddrHigh(txbmp->phys);
+@@ -2813,16 +2983,27 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 	cmd->ulpBdeCount = 1;
+ 	cmd->ulpLe = 1;
+ 	cmd->ulpClass = CLASS3;
+-	cmd->ulpContext = txxri;
+ 
++	if (phba->sli_rev < LPFC_SLI_REV4) {
++		cmd->ulpContext = txxri;
++	} else {
++		cmd->un.xseq64.bdl.ulpIoTag32 = 0;
++		cmd->un.ulpWord[3] = phba->sli4_hba.rpi_ids[rpi];
++		cmdiocbq->context3 = txbmp;
++		cmdiocbq->sli4_xritag = NO_XRI;
++		cmd->unsli3.rcvsli3.ox_id = 0xffff;
++	}
+ 	cmdiocbq->iocb_flag |= LPFC_IO_LIBDFC;
+ 	cmdiocbq->vport = phba->pport;
+-
+ 	iocb_stat = lpfc_sli_issue_iocb_wait(phba, LPFC_ELS_RING, cmdiocbq,
+ 					     rspiocbq, (phba->fc_ratov * 2) +
+ 					     LPFC_DRVR_TIMEOUT);
+ 
+-	if ((iocb_stat != IOCB_SUCCESS) || (rsp->ulpStatus != IOCB_SUCCESS)) {
++	if ((iocb_stat != IOCB_SUCCESS) || ((phba->sli_rev < LPFC_SLI_REV4) &&
++					   (rsp->ulpStatus != IOCB_SUCCESS))) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
++				"3126 Failed loopback test issue iocb: "
++				"iocb_stat:x%x\n", iocb_stat);
+ 		rc = -EIO;
+ 		goto err_loopback_test_exit;
+ 	}
+@@ -2832,9 +3013,12 @@ lpfc_bsg_diag_loopback_run(struct fc_bsg
+ 		evt->wq, !list_empty(&evt->events_to_see),
+ 		((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT) * HZ);
+ 	evt->waiting = 0;
+-	if (list_empty(&evt->events_to_see))
++	if (list_empty(&evt->events_to_see)) {
+ 		rc = (time_left) ? -EINTR : -ETIMEDOUT;
+-	else {
++		lpfc_printf_log(phba, KERN_ERR, LOG_LIBDFC,
++				"3125 Not receiving unsolicited event, "
++				"rc:x%x\n", rc);
++	} else {
+ 		spin_lock_irqsave(&phba->ct_ev_lock, flags);
+ 		list_move(evt->events_to_see.prev, &evt->events_to_get);
+ 		evdat = list_entry(evt->events_to_get.prev,
+@@ -2891,7 +3075,7 @@ loopback_test_exit:
+ 	job->reply->result = rc;
+ 	job->dd_data = NULL;
+ 	/* complete the job back to userspace if no error */
+-	if (rc == 0)
++	if (rc == IOCB_SUCCESS)
+ 		job->job_done(job);
+ 	return rc;
+ }
+@@ -3078,7 +3262,9 @@ static int lpfc_bsg_check_cmd_access(str
+ 			&& (mb->un.varWords[1] == 1)) {
+ 			phba->wait_4_mlo_maint_flg = 1;
+ 		} else if (mb->un.varWords[0] == SETVAR_MLORST) {
++			spin_lock_irq(&phba->hbalock);
+ 			phba->link_flag &= ~LS_LOOPBACK_MODE;
++			spin_unlock_irq(&phba->hbalock);
+ 			phba->fc_topology = LPFC_TOPOLOGY_PT_PT;
+ 		}
+ 		break;
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2011-12-13 12:46:12.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2011-12-13 12:46:45.000000000 -0500
+@@ -78,6 +78,7 @@ void lpfc_mbx_cmpl_fabric_reg_login(stru
+ void lpfc_mbx_cmpl_ns_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_mbx_cmpl_fdmi_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *, LPFC_MBOXQ_t *);
++void lpfc_unregister_vfi_cmpl(struct lpfc_hba *, LPFC_MBOXQ_t *);
+ void lpfc_enqueue_node(struct lpfc_vport *, struct lpfc_nodelist *);
+ void lpfc_dequeue_node(struct lpfc_vport *, struct lpfc_nodelist *);
+ struct lpfc_nodelist *lpfc_enable_node(struct lpfc_vport *,
+@@ -453,7 +454,11 @@ int lpfc_sli_probe_sriov_nr_virtfn(struc
+ uint16_t lpfc_sli_sriov_nr_virtfn_get(struct lpfc_hba *);
+ int lpfc_sli4_queue_create(struct lpfc_hba *);
+ void lpfc_sli4_queue_destroy(struct lpfc_hba *);
+-int lpfc_sli4_read_config(struct lpfc_hba *phba);
+-int lpfc_scsi_buf_update(struct lpfc_hba *phba);
+ void lpfc_sli4_abts_err_handler(struct lpfc_hba *, struct lpfc_nodelist *,
+ 				struct sli4_wcqe_xri_aborted *);
++int lpfc_hba_init_link_fc_topology(struct lpfc_hba *, uint32_t, uint32_t);
++int lpfc_issue_reg_vfi(struct lpfc_vport *);
++int lpfc_issue_unreg_vfi(struct lpfc_vport *);
++int lpfc_selective_reset(struct lpfc_hba *);
++int lpfc_sli4_read_config(struct lpfc_hba *phba);
++int lpfc_scsi_buf_update(struct lpfc_hba *phba);
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2011-12-13 12:46:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2011-12-13 12:46:46.000000000 -0500
+@@ -421,13 +421,13 @@ fail:
+  * @vport: pointer to a host virtual N_Port data structure.
+  *
+  * This routine issues a REG_VFI mailbox for the vfi, vpi, fcfi triplet for
+- * the @vport. This mailbox command is necessary for FCoE only.
++ * the @vport. This mailbox command is necessary for SLI4 port only.
+  *
+  * Return code
+  *   0 - successfully issued REG_VFI for @vport
+  *   A failure code otherwise.
+  **/
+-static int
++int
+ lpfc_issue_reg_vfi(struct lpfc_vport *vport)
+ {
+ 	struct lpfc_hba  *phba = vport->phba;
+@@ -438,10 +438,14 @@ lpfc_issue_reg_vfi(struct lpfc_vport *vp
+ 	int rc = 0;
+ 
+ 	sp = &phba->fc_fabparam;
+-	ndlp = lpfc_findnode_did(vport, Fabric_DID);
+-	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
+-		rc = -ENODEV;
+-		goto fail;
++	/* move forward in case of SLI4 FC port loopback test */
++	if ((phba->sli_rev == LPFC_SLI_REV4) &&
++	    !(phba->link_flag & LS_LOOPBACK_MODE)) {
++		ndlp = lpfc_findnode_did(vport, Fabric_DID);
++		if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
++			rc = -ENODEV;
++			goto fail;
++		}
+ 	}
+ 
+ 	dmabuf = kzalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
+@@ -487,6 +491,54 @@ fail:
+ }
+ 
+ /**
++ * lpfc_issue_unreg_vfi - Unregister VFI for this vport's fabric login
++ * @vport: pointer to a host virtual N_Port data structure.
++ *
++ * This routine issues a UNREG_VFI mailbox with the vfi, vpi, fcfi triplet for
++ * the @vport. This mailbox command is necessary for SLI4 port only.
++ *
++ * Return code
++ *   0 - successfully issued REG_VFI for @vport
++ *   A failure code otherwise.
++ **/
++int
++lpfc_issue_unreg_vfi(struct lpfc_vport *vport)
++{
++	struct lpfc_hba *phba = vport->phba;
++	struct Scsi_Host *shost;
++	LPFC_MBOXQ_t *mboxq;
++	int rc;
++
++	mboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!mboxq) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY|LOG_MBOX,
++				"2556 UNREG_VFI mbox allocation failed"
++				"HBA state x%x\n", phba->pport->port_state);
++		return -ENOMEM;
++	}
++
++	lpfc_unreg_vfi(mboxq, vport);
++	mboxq->vport = vport;
++	mboxq->mbox_cmpl = lpfc_unregister_vfi_cmpl;
++
++	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_NOWAIT);
++	if (rc == MBX_NOT_FINISHED) {
++		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY|LOG_MBOX,
++				"2557 UNREG_VFI issue mbox failed rc x%x "
++				"HBA state x%x\n",
++				rc, phba->pport->port_state);
++		mempool_free(mboxq, phba->mbox_mem_pool);
++		return -EIO;
++	}
++
++	shost = lpfc_shost_from_vport(vport);
++	spin_lock_irq(shost->host_lock);
++	vport->fc_flag &= ~FC_VFI_REGISTERED;
++	spin_unlock_irq(shost->host_lock);
++	return 0;
++}
++
++/**
+  * lpfc_check_clean_addr_bit - Check whether assigned FCID is clean.
+  * @vport: pointer to a host virtual N_Port data structure.
+  * @sp: pointer to service parameter data structure.
+@@ -615,7 +667,9 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
+ 					 "1816 FLOGI NPIV supported, "
+ 					 "response data 0x%x\n",
+ 					 sp->cmn.response_multiple_NPort);
++			spin_lock_irq(&phba->hbalock);
+ 			phba->link_flag |= LS_NPIV_FAB_SUPPORTED;
++			spin_unlock_irq(&phba->hbalock);
+ 		} else {
+ 			/* Because we asked f/w for NPIV it still expects us
+ 			to call reg_vnpid atleast for the physcial host */
+@@ -623,7 +677,9 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
+ 					 LOG_ELS | LOG_VPORT,
+ 					 "1817 Fabric does not support NPIV "
+ 					 "- configuring single port mode.\n");
++			spin_lock_irq(&phba->hbalock);
+ 			phba->link_flag &= ~LS_NPIV_FAB_SUPPORTED;
++			spin_unlock_irq(&phba->hbalock);
+ 		}
+ 	}
+ 
+@@ -686,11 +742,16 @@ lpfc_cmpl_els_flogi_fabric(struct lpfc_v
+ 			lpfc_do_scr_ns_plogi(phba, vport);
+ 		} else if (vport->fc_flag & FC_VFI_REGISTERED)
+ 			lpfc_issue_init_vpi(vport);
+-		else
++		else {
++			lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++					"3135 Need register VFI: (x%x/%x)\n",
++					vport->fc_prevDID, vport->fc_myDID);
+ 			lpfc_issue_reg_vfi(vport);
++		}
+ 	}
+ 	return 0;
+ }
++
+ /**
+  * lpfc_cmpl_els_flogi_nport - Completion function for flogi to an N_Port
+  * @vport: pointer to a host virtual N_Port data structure.
+@@ -907,9 +968,8 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phb
+ 		 * LPFC_MAX_DISC_THREADS (32). Scanning in the case of no
+ 		 * alpa map would take too long otherwise.
+ 		 */
+-		if (phba->alpa_map[0] == 0) {
++		if (phba->alpa_map[0] == 0)
+ 			vport->cfg_discovery_threads = LPFC_MAX_DISC_THREADS;
+-		}
+ 		if ((phba->sli_rev == LPFC_SLI_REV4) &&
+ 		    (!(vport->fc_flag & FC_VFI_REGISTERED) ||
+ 		     (vport->fc_prevDID != vport->fc_myDID))) {
+@@ -1164,8 +1224,7 @@ lpfc_els_abort_flogi(struct lpfc_hba *ph
+ 	spin_lock_irq(&phba->hbalock);
+ 	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
+ 		icmd = &iocb->iocb;
+-		if (icmd->ulpCommand == CMD_ELS_REQUEST64_CR &&
+-		    icmd->un.elsreq64.bdl.ulpIoTag32) {
++		if (icmd->ulpCommand == CMD_ELS_REQUEST64_CR) {
+ 			ndlp = (struct lpfc_nodelist *)(iocb->context1);
+ 			if (ndlp && NLP_CHK_NODE_ACT(ndlp) &&
+ 			    (ndlp->nlp_DID == Fabric_DID))
+@@ -4879,23 +4938,31 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vp
+ 			    sizeof(struct lpfc_name));
+ 
+ 		if (!rc) {
+-			mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+-			if (!mbox)
++			if (phba->sli_rev < LPFC_SLI_REV4) {
++				mbox = mempool_alloc(phba->mbox_mem_pool,
++						     GFP_KERNEL);
++				if (!mbox)
++					return 1;
++				lpfc_linkdown(phba);
++				lpfc_init_link(phba, mbox,
++					       phba->cfg_topology,
++					       phba->cfg_link_speed);
++				mbox->u.mb.un.varInitLnk.lipsr_AL_PA = 0;
++				mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
++				mbox->vport = vport;
++				rc = lpfc_sli_issue_mbox(phba, mbox,
++							 MBX_NOWAIT);
++				lpfc_set_loopback_flag(phba);
++				if (rc == MBX_NOT_FINISHED)
++					mempool_free(mbox, phba->mbox_mem_pool);
+ 				return 1;
+-
+-			lpfc_linkdown(phba);
+-			lpfc_init_link(phba, mbox,
+-				       phba->cfg_topology,
+-				       phba->cfg_link_speed);
+-			mbox->u.mb.un.varInitLnk.lipsr_AL_PA = 0;
+-			mbox->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+-			mbox->vport = vport;
+-			rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
+-			lpfc_set_loopback_flag(phba);
+-			if (rc == MBX_NOT_FINISHED) {
+-				mempool_free(mbox, phba->mbox_mem_pool);
++			} else {
++				/* abort the flogi coming back to ourselves
++				 * due to external loopback on the port.
++				 */
++				lpfc_els_abort_flogi(phba);
++				return 0;
+ 			}
+-			return 1;
+ 		} else if (rc > 0) {	/* greater than */
+ 			spin_lock_irq(shost->host_lock);
+ 			vport->fc_flag |= FC_PT2PT_PLOGI;
+@@ -5850,8 +5917,12 @@ lpfc_els_rcv_fan(struct lpfc_vport *vpor
+ 			vport->fc_myDID = vport->fc_prevDID;
+ 			if (phba->sli_rev < LPFC_SLI_REV4)
+ 				lpfc_issue_fabric_reglogin(vport);
+-			else
++			else {
++				lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
++					"3138 Need register VFI: (x%x/%x)\n",
++					vport->fc_prevDID, vport->fc_myDID);
+ 				lpfc_issue_reg_vfi(vport);
++			}
+ 		}
+ 	}
+ 	return 0;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-12-13 12:46:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-12-13 12:46:46.000000000 -0500
+@@ -1074,6 +1074,12 @@ lpfc_mbx_cmpl_local_config_link(struct l
+ 
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+ 
++	/* don't perform discovery for SLI4 loopback diagnostic test */
++	if ((phba->sli_rev == LPFC_SLI_REV4) &&
++	    !(phba->hba_flag & HBA_FCOE_MODE) &&
++	    (phba->link_flag & LS_LOOPBACK_MODE))
++		return;
++
+ 	if (phba->fc_topology == LPFC_TOPOLOGY_LOOP &&
+ 	    vport->fc_flag & FC_PUBLIC_LOOP &&
+ 	    !(vport->fc_flag & FC_LBIT)) {
+@@ -2847,10 +2853,10 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 			lpfc_disc_list_loopmap(vport);
+ 			/* Start discovery */
+ 			lpfc_disc_start(vport);
+-			goto fail_free_mem;
++			goto out_free_mem;
+ 		}
+ 		lpfc_vport_set_state(vport, FC_VPORT_FAILED);
+-		goto fail_free_mem;
++		goto out_free_mem;
+ 	}
+ 	/* The VPI is implicitly registered when the VFI is registered */
+ 	spin_lock_irq(shost->host_lock);
+@@ -2860,6 +2866,13 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 	vport->fc_flag &= ~FC_VPORT_NEEDS_INIT_VPI;
+ 	spin_unlock_irq(shost->host_lock);
+ 
++	/* In case SLI4 FC loopback test, we are ready */
++	if ((phba->sli_rev == LPFC_SLI_REV4) &&
++	    (phba->link_flag & LS_LOOPBACK_MODE)) {
++		phba->link_state = LPFC_HBA_READY;
++		goto out_free_mem;
++	}
++
+ 	if (vport->port_state == LPFC_FABRIC_CFG_LINK) {
+ 		/* For private loop just start discovery and we are done. */
+ 		if ((phba->fc_topology == LPFC_TOPOLOGY_LOOP) &&
+@@ -2874,7 +2887,7 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *p
+ 		}
+ 	}
+ 
+-fail_free_mem:
++out_free_mem:
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+ 	lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
+ 	kfree(dmabuf);
+@@ -3235,15 +3248,14 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_
+ 	} else if (bf_get(lpfc_mbx_read_top_att_type, la) ==
+ 		   LPFC_ATT_LINK_DOWN) {
+ 		phba->fc_stat.LinkDown++;
+-		if (phba->link_flag & LS_LOOPBACK_MODE) {
++		if (phba->link_flag & LS_LOOPBACK_MODE)
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+ 				"1308 Link Down Event in loop back mode "
+ 				"x%x received "
+ 				"Data: x%x x%x x%x\n",
+ 				la->eventTag, phba->fc_eventTag,
+ 				phba->pport->port_state, vport->fc_flag);
+-		}
+-		else {
++		else
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+ 				"1305 Link Down Event x%x received "
+ 				"Data: x%x x%x x%x x%x x%x\n",
+@@ -3251,7 +3263,6 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_
+ 				phba->pport->port_state, vport->fc_flag,
+ 				bf_get(lpfc_mbx_read_top_mm, la),
+ 				bf_get(lpfc_mbx_read_top_fa, la));
+-		}
+ 		lpfc_mbx_issue_link_down(phba);
+ 	}
+ 	if ((bf_get(lpfc_mbx_read_top_mm, la)) &&
+@@ -5682,7 +5693,7 @@ out:
+  *
+  * This function frees memory associated with the mailbox command.
+  */
+-static void
++void
+ lpfc_unregister_vfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ {
+ 	struct lpfc_vport *vport = mboxq->vport;
+@@ -5734,7 +5745,6 @@ lpfc_unregister_fcfi_cmpl(struct lpfc_hb
+ int
+ lpfc_unregister_fcf_prep(struct lpfc_hba *phba)
+ {
+-	LPFC_MBOXQ_t *mbox;
+ 	struct lpfc_vport **vports;
+ 	struct lpfc_nodelist *ndlp;
+ 	struct Scsi_Host *shost;
+@@ -5770,35 +5780,9 @@ lpfc_unregister_fcf_prep(struct lpfc_hba
+ 	/* Cleanup any outstanding ELS commands */
+ 	lpfc_els_flush_all_cmd(phba);
+ 
+-	/* Unregister VFI */
+-	mbox = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+-	if (!mbox) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY|LOG_MBOX,
+-				"2556 UNREG_VFI mbox allocation failed"
+-				"HBA state x%x\n", phba->pport->port_state);
+-		return -ENOMEM;
+-	}
+-
+-	lpfc_unreg_vfi(mbox, phba->pport);
+-	mbox->vport = phba->pport;
+-	mbox->mbox_cmpl = lpfc_unregister_vfi_cmpl;
+-
+-	rc = lpfc_sli_issue_mbox(phba, mbox, MBX_NOWAIT);
+-	if (rc == MBX_NOT_FINISHED) {
+-		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY|LOG_MBOX,
+-				"2557 UNREG_VFI issue mbox failed rc x%x "
+-				"HBA state x%x\n",
+-				rc, phba->pport->port_state);
+-		mempool_free(mbox, phba->mbox_mem_pool);
+-		return -EIO;
+-	}
+-
+-	shost = lpfc_shost_from_vport(phba->pport);
+-	spin_lock_irq(shost->host_lock);
+-	phba->pport->fc_flag &= ~FC_VFI_REGISTERED;
+-	spin_unlock_irq(shost->host_lock);
+-
+-	return 0;
++	/* Unregister the physical port VFI */
++	rc = lpfc_issue_unreg_vfi(phba->pport);
++	return rc;
+ }
+ 
+ /**
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-12-13 12:46:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-12-13 12:46:46.000000000 -0500
+@@ -1351,11 +1351,11 @@ struct lpfc_mbx_set_link_diag_loopback {
+ 		struct {
+ 			uint32_t word0;
+ #define lpfc_mbx_set_diag_lpbk_type_SHIFT	0
+-#define lpfc_mbx_set_diag_lpbk_type_MASK	0x00000001
++#define lpfc_mbx_set_diag_lpbk_type_MASK	0x00000003
+ #define lpfc_mbx_set_diag_lpbk_type_WORD	word0
+ #define LPFC_DIAG_LOOPBACK_TYPE_DISABLE		0x0
+ #define LPFC_DIAG_LOOPBACK_TYPE_INTERNAL	0x1
+-#define LPFC_DIAG_LOOPBACK_TYPE_EXTERNAL	0x2
++#define LPFC_DIAG_LOOPBACK_TYPE_SERDES		0x2
+ #define lpfc_mbx_set_diag_lpbk_link_num_SHIFT	16
+ #define lpfc_mbx_set_diag_lpbk_link_num_MASK	0x0000003F
+ #define lpfc_mbx_set_diag_lpbk_link_num_WORD	word0
+@@ -3324,6 +3324,9 @@ struct wqe_rctl_dfctl {
+ #define wqe_la_SHIFT 3
+ #define wqe_la_MASK  0x000000001
+ #define wqe_la_WORD  word5
++#define wqe_xo_SHIFT	6
++#define wqe_xo_MASK	0x000000001
++#define wqe_xo_WORD	word5
+ #define wqe_ls_SHIFT 7
+ #define wqe_ls_MASK  0x000000001
+ #define wqe_ls_WORD  word5
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2011-12-13 12:46:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2011-12-13 12:46:46.000000000 -0500
+@@ -1858,8 +1858,8 @@ typedef struct {
+ 	uint8_t fabric_AL_PA;	/* If using a Fabric Assigned AL_PA */
+ #endif
+ 
+-#define FLAGS_LOCAL_LB               0x01 /* link_flags (=1) ENDEC loopback */
+ #define FLAGS_TOPOLOGY_MODE_LOOP_PT  0x00 /* Attempt loop then pt-pt */
++#define FLAGS_LOCAL_LB               0x01 /* link_flags (=1) ENDEC loopback */
+ #define FLAGS_TOPOLOGY_MODE_PT_PT    0x02 /* Attempt pt-pt only */
+ #define FLAGS_TOPOLOGY_MODE_LOOP     0x04 /* Attempt loop only */
+ #define FLAGS_TOPOLOGY_MODE_PT_LOOP  0x06 /* Attempt pt-pt then loop */
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-12-13 12:46:21.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-12-13 12:46:46.000000000 -0500
+@@ -628,6 +628,28 @@ lpfc_config_port_post(struct lpfc_hba *p
+ int
+ lpfc_hba_init_link(struct lpfc_hba *phba, uint32_t flag)
+ {
++	return lpfc_hba_init_link_fc_topology(phba, phba->cfg_topology, flag);
++}
++
++/**
++ * lpfc_hba_init_link_fc_topology - Initialize FC link with desired topology
++ * @phba: pointer to lpfc hba data structure.
++ * @fc_topology: desired fc topology.
++ * @flag: mailbox command issue mode - either MBX_POLL or MBX_NOWAIT
++ *
++ * This routine will issue the INIT_LINK mailbox command call.
++ * It is available to other drivers through the lpfc_hba data
++ * structure for use as a delayed link up mechanism with the
++ * module parameter lpfc_suppress_link_up.
++ *
++ * Return code
++ *              0 - success
++ *              Any other value - error
++ **/
++int
++lpfc_hba_init_link_fc_topology(struct lpfc_hba *phba, uint32_t fc_topology,
++			       uint32_t flag)
++{
+ 	struct lpfc_vport *vport = phba->pport;
+ 	LPFC_MBOXQ_t *pmb;
+ 	MAILBOX_t *mb;
+@@ -661,9 +683,10 @@ lpfc_hba_init_link(struct lpfc_hba *phba
+ 			phba->cfg_link_speed);
+ 			phba->cfg_link_speed = LPFC_USER_LINK_SPEED_AUTO;
+ 	}
+-	lpfc_init_link(phba, pmb, phba->cfg_topology, phba->cfg_link_speed);
++	lpfc_init_link(phba, pmb, fc_topology, phba->cfg_link_speed);
+ 	pmb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
+-	lpfc_set_loopback_flag(phba);
++	if (phba->sli_rev < LPFC_SLI_REV4)
++		lpfc_set_loopback_flag(phba);
+ 	rc = lpfc_sli_issue_mbox(phba, pmb, flag);
+ 	if ((rc != MBX_BUSY) && (rc != MBX_SUCCESS)) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+@@ -6654,9 +6677,10 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 			phba->sli4_hba.sp_eq->queue_id);
+ 
+ 	/* Set up fast-path event queue */
+-	if (!phba->sli4_hba.fp_eq) {
++	if (phba->cfg_fcp_eq_count && !phba->sli4_hba.fp_eq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3147 Fast-path EQs not allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_sp_eq;
+ 	}
+ 	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++) {
+@@ -6664,6 +6688,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0522 Fast-path EQ (%d) not "
+ 					"allocated\n", fcp_eqidx);
++			rc = -ENOMEM;
+ 			goto out_destroy_fp_eq;
+ 		}
+ 		rc = lpfc_eq_create(phba, phba->sli4_hba.fp_eq[fcp_eqidx],
+@@ -6688,6 +6713,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	if (!phba->sli4_hba.mbx_cq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0528 Mailbox CQ not allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_fp_eq;
+ 	}
+ 	rc = lpfc_cq_create(phba, phba->sli4_hba.mbx_cq, phba->sli4_hba.sp_eq,
+@@ -6707,6 +6733,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	if (!phba->sli4_hba.els_cq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0530 ELS CQ not allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_mbx_cq;
+ 	}
+ 	rc = lpfc_cq_create(phba, phba->sli4_hba.els_cq, phba->sli4_hba.sp_eq,
+@@ -6727,6 +6754,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3148 Fast-path FCP CQ array not "
+ 				"allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_els_cq;
+ 	}
+ 	fcp_cqidx = 0;
+@@ -6735,6 +6763,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0526 Fast-path FCP CQ (%d) not "
+ 					"allocated\n", fcp_cqidx);
++			rc = -ENOMEM;
+ 			goto out_destroy_fcp_cq;
+ 		}
+ 		if (phba->cfg_fcp_eq_count)
+@@ -6773,6 +6802,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	if (!phba->sli4_hba.mbx_wq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0538 Slow-path MQ not allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_fcp_cq;
+ 	}
+ 	rc = lpfc_mq_create(phba, phba->sli4_hba.mbx_wq,
+@@ -6792,6 +6822,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	if (!phba->sli4_hba.els_wq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0536 Slow-path ELS WQ not allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_mbx_wq;
+ 	}
+ 	rc = lpfc_wq_create(phba, phba->sli4_hba.els_wq,
+@@ -6812,6 +6843,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3149 Fast-path FCP WQ array not "
+ 				"allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_els_wq;
+ 	}
+ 	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++) {
+@@ -6819,6 +6851,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0534 Fast-path FCP WQ (%d) not "
+ 					"allocated\n", fcp_wqidx);
++			rc = -ENOMEM;
+ 			goto out_destroy_fcp_wq;
+ 		}
+ 		rc = lpfc_wq_create(phba, phba->sli4_hba.fcp_wq[fcp_wqidx],
+@@ -6849,6 +6882,7 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
+ 	if (!phba->sli4_hba.hdr_rq || !phba->sli4_hba.dat_rq) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"0540 Receive Queue not allocated\n");
++		rc = -ENOMEM;
+ 		goto out_destroy_fcp_wq;
+ 	}
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2011-12-13 12:46:13.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2011-12-13 12:46:46.000000000 -0500
+@@ -2133,6 +2133,14 @@ lpfc_reg_vfi(struct lpfcMboxq *mbox, str
+ 	reg_vfi->bde.tus.f.bdeSize = sizeof(vport->fc_sparam);
+ 	reg_vfi->bde.tus.f.bdeFlags = BUFF_TYPE_BDE_64;
+ 	bf_set(lpfc_reg_vfi_nport_id, reg_vfi, vport->fc_myDID);
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_MBOX,
++			"3134 Register VFI, mydid:x%x, fcfi:%d, "
++			" vfi:%d, vpi:%d, fc_pname:%x%x\n",
++			vport->fc_myDID,
++			vport->phba->fcf.fcfi,
++			vport->phba->sli4_hba.vfi_ids[vport->vfi],
++			vport->phba->vpi_ids[vport->vpi],
++			reg_vfi->wwn[0], reg_vfi->wwn[1]);
+ }
+ 
+ /**
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2011-12-13 12:46:21.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-12-13 12:46:47.000000000 -0500
+@@ -3619,8 +3619,8 @@ lpfc_sli_brdready(struct lpfc_hba *phba,
+  * lpfc_reset_barrier - Make HBA ready for HBA reset
+  * @phba: Pointer to HBA context object.
+  *
+- * This function is called before resetting an HBA. This
+- * function requests HBA to quiesce DMAs before a reset.
++ * This function is called before resetting an HBA. This function is called
++ * with hbalock held and requests HBA to quiesce DMAs before a reset.
+  **/
+ void lpfc_reset_barrier(struct lpfc_hba *phba)
+ {
+@@ -6267,9 +6267,12 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
+ 			goto out_unset_queue;
+ 		}
+ 	} else if (phba->cfg_suppress_link_up == LPFC_INITIALIZE_LINK) {
+-		rc = phba->lpfc_hba_init_link(phba, MBX_NOWAIT);
+-		if (rc)
+-			goto out_unset_queue;
++		/* don't perform init_link on SLI4 FC port loopback test */
++		if (!(phba->link_flag & LS_LOOPBACK_MODE)) {
++			rc = phba->lpfc_hba_init_link(phba, MBX_NOWAIT);
++			if (rc)
++				goto out_unset_queue;
++		}
+ 	}
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+ 	return rc;
+@@ -7540,6 +7543,7 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
+ 	struct ulp_bde64 *bpl = NULL;
+ 	struct ulp_bde64 bde;
+ 	struct sli4_sge *sgl  = NULL;
++	struct lpfc_dmabuf *dmabuf;
+ 	IOCB_t *icmd;
+ 	int numBdes = 0;
+ 	int i = 0;
+@@ -7558,9 +7562,12 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
+ 		 * have not been byteswapped yet so there is no
+ 		 * need to swap them back.
+ 		 */
+-		bpl  = (struct ulp_bde64 *)
+-			((struct lpfc_dmabuf *)piocbq->context3)->virt;
++		if (piocbq->context3)
++			dmabuf = (struct lpfc_dmabuf *)piocbq->context3;
++		else
++			return xritag;
+ 
++		bpl  = (struct ulp_bde64 *)dmabuf->virt;
+ 		if (!bpl)
+ 			return xritag;
+ 
+@@ -7670,6 +7677,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 	struct ulp_bde64 bde;
+ 	struct lpfc_nodelist *ndlp;
+ 	uint32_t *pcmd;
++	uint32_t if_type;
+ 
+ 	fip = phba->hba_flag & HBA_FIP_SUPPORT;
+ 	/* The fcp commands will set command type */
+@@ -7743,7 +7751,9 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 					>> LPFC_FIP_ELS_ID_SHIFT);
+ 		pcmd = (uint32_t *) (((struct lpfc_dmabuf *)
+ 					iocbq->context2)->virt);
+-		if (phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
++		if_type = bf_get(lpfc_sli_intf_if_type,
++					&phba->sli4_hba.sli_intf);
++		if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
+ 			if (pcmd && (*pcmd == ELS_CMD_FLOGI ||
+ 				*pcmd == ELS_CMD_SCR ||
+ 				*pcmd == ELS_CMD_PLOGI)) {
+@@ -7776,6 +7786,8 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 		/* The entire sequence is transmitted for this IOCB */
+ 		xmit_len = total_len;
+ 		cmnd = CMD_XMIT_SEQUENCE64_CR;
++		if (phba->link_flag & LS_LOOPBACK_MODE)
++			bf_set(wqe_xo, &wqe->xmit_sequence.wge_ctl, 1);
+ 	case CMD_XMIT_SEQUENCE64_CR:
+ 		/* word3 iocb=io_tag32 wqe=reserved */
+ 		wqe->xmit_sequence.rsvd3 = 0;
 
 
 
