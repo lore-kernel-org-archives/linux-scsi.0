@@ -1,55 +1,76 @@
-From: "Krishnamoorthy, Praveen" <Praveen.Krishnamoorthy@lsi.com>
-Subject: RE: mptspi init failure on Sparc SMP in Linux 3.0
-Date: Tue, 13 Dec 2011 09:48:01 -0700
-Message-ID: <A11ADD3877B3C543B65BE8E196B7BDFF0144B02F7B@cosmail02.lsi.com>
-References: <4EB7D137.7090903@univ.rzeszow.pl>
-	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl>
- <1320721518.18929.15.camel@deadeye>
- <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com>
- <4EE5F1F4.3000006@univ.rzeszow.pl>
- <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
- <4EE70B9D.5030309@univ.rzeszow.pl>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [GIT PULL] Queue free fix (was Re: [PATCH] block: Free queue
+ resources at blk_release_queue())
+Date: Tue, 13 Dec 2011 11:50:27 -0500
+Message-ID: <20111213165024.GA9391@redhat.com>
+References: <4EAE8A7E.8000504@ce.jp.nec.com>
+ <20111031130004.GB4768@osiris.boeblingen.de.ibm.com>
+ <20111103182548.GA12131@redhat.com>
+ <20111104091936.GB2397@osiris.boeblingen.de.ibm.com>
+ <4EBA49C2.1000704@suse.de>
+ <20111110161008.GA15659@osiris.boeblingen.de.ibm.com>
+ <20111117162919.GA3812@redhat.com>
+ <20111129120047.GA2456@osiris.boeblingen.de.ibm.com>
+ <20111129201803.GB6827@redhat.com>
+ <20111212123946.GA2307@osiris.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:42578 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751203Ab1LMQsG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Dec 2011 11:48:06 -0500
-In-Reply-To: <4EE70B9D.5030309@univ.rzeszow.pl>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:50960 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753929Ab1LMQvO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2011 11:51:14 -0500
+Content-Disposition: inline
+In-Reply-To: <20111212123946.GA2307@osiris.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Biblioteka UR <biblio@univ.rzeszow.pl>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, "647900@bugs.debian.org" <647900@bugs.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: Hannes Reinecke <hare@suse.de>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Linux Kernel <linux-kernel@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, "Taraka R. Bodireddy" <tarak.reddy@in.ibm.com>, "Seshagiri N. Ippili" <seshagiri.ippili@in.ibm.com>, "Manvanthara B. Puttashankar" <mputtash@in.ibm.com>, Jeff Moyer <jmoyer@redhat.com>, Shaohua Li <shaohua.li@intel.com>, gmuelas@de.ibm.com, dm-devel@redhat.com
 
-TWFyaXVzeiwNCg0KSW4gZGViaWFuLCB5b3UgY2FuIHNldCB0aGUga2VybmVsIGxvZ2dpbmcgbGV2
-ZWwgdG8gcmVjZWl2ZSBkZWJ1ZyBtZXNzYWdlcyBieSBhZGRpbmcgdGhlIGZvbGxvd2luZyBsaW5l
-IGluIC9ldGMvc3lzbG9nLmNvbmYNCg0KKi5kZWJ1ZyAgICAgICAgICAgICAgIC92YXIvbG9nL21l
-c3NhZ2VzDQoNClBsZWFzZSByZWZlciBodHRwOi8vd3d3LmFib3V0ZGViaWFuLmNvbS9zeXNsb2cu
-aHRtIGZvciBtb3JlIGluZm9ybWF0aW9uIG9uIGxvZ2dpbmcgbGV2ZWwgaW4gRGViaWFuLg0KDQpB
-bHNvIHdoaWxlIGxvYWRpbmcgdGhlIG1wdGJhc2Uua28sIGNvdWxkIHlvdSBwbGVhc2UgcGFzcyB0
-aGlzIG1vZHVsZSBwYXJhbWV0ZXIgdG9vPyBUaGlzIG9uZSB3b3VsZCBlbmFibGUgb3VyIGRyaXZl
-ciB0byBjYXB0dXJlIGRldGFpbGVkIGxvZ3MgZm9yIHdoZW4gY29uZmlnIHJlcXVlc3QsIGRvb3Ji
-ZWxsIGhhbmRzaGFrZXMgYXJlIGhhcHBlbmluZy4gDQoNCmluc21vZCBtcHRiYXNlLmtvIG1wdF9k
-ZWJ1Z19sZXZlbD0weDAwMDAxOTI5ICANCg0KRm9sbG93aW5nIHRoaXMgeW91IGNvdWxkIGxvYWQg
-dGhlIG90aGVyIG1vZHVsZXMgbGlrZSBtcHRzY3NpaC5rbywgbXB0c3BpLmtvLCBtcHRzYXMua28s
-IG1wdGN0bC5rbyAgDQoNClJlZ2FyZHMsDQpQcmF2ZWVuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNz
-YWdlLS0tLS0NCj4gRnJvbTogQmlibGlvdGVrYSBVUiBbbWFpbHRvOmJpYmxpb0B1bml2LnJ6ZXN6
-b3cucGxdDQo+IFNlbnQ6IFR1ZXNkYXksIERlY2VtYmVyIDEzLCAyMDExIDE6MjQgQU0NCj4gVG86
-IE5hbmRpZ2FtYSwgTmFnYWxha3NobWkNCj4gQ2M6IEJlbiBIdXRjaGluZ3M7IE1vb3JlLCBFcmlj
-OyA2NDc5MDBAYnVncy5kZWJpYW4ub3JnOyBsaW51eC1zY3NpOyBETC0NCj4gTVBUIEZ1c2lvbiBM
-aW51eA0KPiBTdWJqZWN0OiBSZTogbXB0c3BpIGluaXQgZmFpbHVyZSBvbiBTcGFyYyBTTVAgaW4g
-TGludXggMy4wDQo+IA0KPiBIZWxsbyBOYWdhbGFrc2hpbWkuDQo+IA0KPiBUaGFuayB5b3UgZm9y
-IHlvdXIgcmVwbHkuDQo+IA0KPiBXIGRuaXUgMjAxMS0xMi0xMyAwODoyMSwgTmFuZGlnYW1hLCBO
-YWdhbGFrc2htaSBwaXN6ZToNCj4gPiBUaGUgaXNzdWUgaXMgaGFwcGVuaW5nIGJlY2F1c2UgY29u
-ZmlnIHBhZ2UgaXMgdGltaW5nIG91dCBhbmQNCj4gaW5pdGlhbGl6YXRpb24gaXMgbm90IHN1Y2Nl
-c3NmdWwNCj4gPiBDYW4geW91IGNvbGxlY3QgdGhlIGtlcm5lbCBtZXNzYWdlcyBldmVuIGZvciB0
-aGUgS0VSTl9ERUJVRyBtZXNzYWdlcw0KPiBhbHNvIGZvciBtcHQgZHJpdmVyPw0KPiA+IFRoaXMg
-aXMgdG8gZmluZCBvdXQgd2hpY2ggY29uZmlnIHBhZ2UgaXMgZmFpbGluZy4NCj4gTWF5YmUgc28s
-IGJ1dCBJIGNvbmZlc3MgdGhhdCBJIGRvIG5vdCBrbm93IGhvdy4gOiggRG8geW91IGhhdmUgYW55
-DQo+IHN1Z2dlc3Rpb25zPyBJIGJlZ2luIG15IGFkdmVudHVyZSB3aXRoIERlYmlhbi4gSSBoYXZl
-IGxpdHRsZSBleHBlcmllbmNlDQo+IHdpdGggQ2VudG9zLCBidXQgaXQgZG9lc24ndCB3b3JrIHdp
-dGggU3BhcmMuIDopDQo+IA0KPiBSZWdhcmRzLA0KPiBNYXJpdXN6DQo=
+On Mon, Dec 12 2011 at  7:39am -0500,
+Heiko Carstens <heiko.carstens@de.ibm.com> wrote:
+
+> On Tue, Nov 29, 2011 at 03:18:03PM -0500, Mike Snitzer wrote:
+> > On Tue, Nov 29 2011 at  7:00am -0500,
+> > Heiko Carstens <heiko.carstens@de.ibm.com> wrote:
+> > > [ 4906.683654] Unable to handle kernel pointer dereference at virtual kernel address 6b6b6b6b6b6b6000
+> > 
+> > ...
+> > 
+> > > Gonzalo also tried 2.6.38.8 as suggested and ran into this one:
+> > > 
+> > > [  292.877936] ------------[ cut here ]------------
+> > > [  292.877939] Kernel BUG at 6b6b6b6b6b6b6b6d [verbose debug info unavailable]
+> > 
+> > Again, more poison.
+> > 
+> > Seems this test is causing us to fall on our face no matter what.
+> > Likely, best to leave this 2.6.38 blk_unplug crash to one side and
+> > continue focusing on latest upstream.
+> 
+> Sorry again, for taking so long to come back. This time however with good news:
+> 
+> With 3.2.0-rc4.00255.g77a7300 we were unable to reproduce any I/O stall or
+> user-after-free bugs even after nearly 3000 test iterations.
+
+Great news, so with an eye towards getting these fixes upstream:
+
+> The only patches on top we have are:
+> 
+> two patches from Hannes:
+> http://www.spinics.net/lists/linux-scsi/msg55112.html
+
+Has that scsi_lib.c patch been posted with a formal patch header?
+
+James, I'm not clear on where I should be looking to see what you have
+staged but not yet sent to Linus.  Does such a branch exist in your
+scsi-misc-2.6 tree?
+
+> http://www.spinics.net/lists/linux-scsi/msg55413.html
+
+Jun'ichi and Hannes said that additional NULL pointer check is needed:
+http://www.redhat.com/archives/dm-devel/2011-December/msg00022.html
+
+Hannes said he'd re-post an updated patch (but hasn't yet).
+
+Mike
