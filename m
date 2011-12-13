@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 5/7] lpfc 8.3.28: Critical Miscellaneous fixes
-Date: Tue, 13 Dec 2011 13:22:37 -0500
-Message-ID: <1323800565.1111.15.camel@ogier>
+Subject: [PATCH 4/7] Lpfc 8.3.28: FC and SCSI Discovery Fixes
+Date: Tue, 13 Dec 2011 13:22:17 -0500
+Message-ID: <1323800539.1111.14.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -9,26 +9,29 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:31044 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755378Ab1LMS0u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 13:26:50 -0500
+	with ESMTP id S1755379Ab1LMS0v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 13:26:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Critical Miscellaneous fixes
+FC and SCSI Discovery Fixes:
 
-- Make lpfc_sli4_pci_mem_unset interface type aware (CR 124390)
-- Convert byte count to word count when calling __iowrite32_copy (CR 122550)
-- Checked the ERR1 and ERR2 registers for error attention due to SLI
-  Port state affected by forced debug dump. (CR 122986, 122426, 124859)
-- Use the lpfc_readl routine instead of the readl for the port status
-  register read in lpfc_handle_eratt_s4 (CR 125403)
-- Call lpfc_sli4_queue_destroy inside of lpfc_sli4_brdreset before doing
-  a pci function reset (CR 125124, 125168, 125572, 125622)
-- Zero out the HBQ when it is allocated (CR 125663)
-- Alter port reset log messages to indicate error type (CR 125989)
-- Added proper NULL pointer checking to all the places that accessing
-  the queue memory (CR 125832)
+- Clear the virtual fabrics bit (word 1 bit 30) when sending the FLOGI
+  and FDISC. (CR 124339)
+- Return a MLQUEUE_DEVICE_BUSY if the driver detects that an I/O is being
+  retried too quickly (CR 124668)
+- Remove NDLP reference put in lpfc_cmpl_els_logo_acc for all but fabric
+  nodes (CR 123924)
+- Only retry FDISCs every second and stop retrying after devloss number
+  of retries (CR 13939)
+- Check to see if vports are unloading before adding them to the vport
+  work array. (CR 124996)
+- Fixed illegal state transition during driver unload (CR 124191)
+- Added missing protection on setting/clearing of vport->fc_flag bit (CR 126002)
+- Set NPIV flag in lpfc_mbx_process_link_up for all ports sli3 and
+  above. (CR 126094)
+- Clear FCP command bytes that are not used. (CR 126209)
 
 
 
@@ -37,1141 +40,298 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_compat.h  |    5 -
- lpfc_debugfs.c |  172 +++++++++++++++++++++++++++++++++++++--------------------
- lpfc_init.c    |  164 ++++++++++++++++++++++++++++++++++++++----------------
- lpfc_mem.c     |    4 -
- lpfc_sli.c     |  135 +++++++++++++++++++++++++++++++++++---------
- lpfc_sli4.h    |    9 ++
- 6 files changed, 350 insertions(+), 139 deletions(-)
+ lpfc_els.c       |   23 ++++++++++++++++++-----
+ lpfc_hbadisc.c   |   29 +++++++++++++++++++++++------
+ lpfc_hw.h        |    6 ++++++
+ lpfc_hw4.h       |    2 ++
+ lpfc_nportdisc.c |   10 +++++++++-
+ lpfc_scsi.c      |   13 +++++++++++--
+ lpfc_scsi.h      |    5 +++--
+ lpfc_vport.c     |    6 +++---
+ 8 files changed, 75 insertions(+), 19 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_compat.h b/drivers/scsi/lpfc/lpfc_compat.h
---- a/drivers/scsi/lpfc/lpfc_compat.h	2010-08-09 09:30:13.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_compat.h	2011-12-12 20:52:01.000000000 -0500
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2004-2005 Emulex.  All rights reserved.           *
-+ * Copyright (C) 2004-2011 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-  * www.emulex.com                                                  *
-  *                                                                 *
-@@ -82,7 +82,8 @@ lpfc_memcpy_from_slim( void *dest, void 
- static inline void
- lpfc_memcpy_to_slim( void __iomem *dest, void *src, unsigned int bytes)
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2011-12-12 20:51:18.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2011-12-12 20:51:39.000000000 -0500
+@@ -1075,6 +1075,7 @@ lpfc_issue_els_flogi(struct lpfc_vport *
+ 	/* Setup CSPs accordingly for Fabric */
+ 	sp->cmn.e_d_tov = 0;
+ 	sp->cmn.w2.r_a_tov = 0;
++	sp->cmn.virtual_fabric_support = 0;
+ 	sp->cls1.classValid = 0;
+ 	sp->cls2.seqDelivery = 1;
+ 	sp->cls3.seqDelivery = 1;
+@@ -3066,17 +3067,22 @@ lpfc_els_retry(struct lpfc_hba *phba, st
+ 	if (did == FDMI_DID)
+ 		retry = 1;
+ 
+-	if (((cmd == ELS_CMD_FLOGI) || (cmd == ELS_CMD_FDISC)) &&
++	if ((cmd == ELS_CMD_FLOGI) &&
+ 	    (phba->fc_topology != LPFC_TOPOLOGY_LOOP) &&
+ 	    !lpfc_error_lost_link(irsp)) {
+ 		/* FLOGI retry policy */
+ 		retry = 1;
+-		/* retry forever */
++		/* retry FLOGI forever */
+ 		maxretry = 0;
+ 		if (cmdiocb->retry >= 100)
+ 			delay = 5000;
+ 		else if (cmdiocb->retry >= 32)
+ 			delay = 1000;
++	} else if ((cmd == ELS_CMD_FDISC) && !lpfc_error_lost_link(irsp)) {
++		/* retry FDISCs every second up to devloss */
++		retry = 1;
++		maxretry = vport->cfg_devloss_tmo;
++		delay = 1000;
+ 	}
+ 
+ 	cmdiocb->retry++;
+@@ -3389,11 +3395,17 @@ lpfc_cmpl_els_logo_acc(struct lpfc_hba *
+ 
+ 	/*
+ 	 * The driver received a LOGO from the rport and has ACK'd it.
+-	 * At this point, the driver is done so release the IOCB and
+-	 * remove the ndlp reference.
++	 * At this point, the driver is done so release the IOCB
+ 	 */
+ 	lpfc_els_free_iocb(phba, cmdiocb);
+-	lpfc_nlp_put(ndlp);
++
++	/*
++	 * Remove the ndlp reference if it's a fabric node that has
++	 * sent us an unsolicted LOGO.
++	 */
++	if (ndlp->nlp_type & NLP_FABRIC)
++		lpfc_nlp_put(ndlp);
++
+ 	return;
+ }
+ 
+@@ -7231,6 +7243,7 @@ lpfc_issue_els_fdisc(struct lpfc_vport *
+ 	/* Setup CSPs accordingly for Fabric */
+ 	sp->cmn.e_d_tov = 0;
+ 	sp->cmn.w2.r_a_tov = 0;
++	sp->cmn.virtual_fabric_support = 0;
+ 	sp->cls1.classValid = 0;
+ 	sp->cls2.seqDelivery = 1;
+ 	sp->cls3.seqDelivery = 1;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-12-12 20:51:18.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-12-12 20:51:39.000000000 -0500
+@@ -2646,9 +2646,14 @@ lpfc_init_vfi_cmpl(struct lpfc_hba *phba
  {
--	__iowrite32_copy(dest, src, bytes);
-+	/* convert bytes in argument list to word count for copy function */
-+	__iowrite32_copy(dest, src, bytes / sizeof(uint32_t));
- }
+ 	struct lpfc_vport *vport = mboxq->vport;
  
- static inline void
-diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
---- a/drivers/scsi/lpfc/lpfc_debugfs.c	2011-12-12 20:25:00.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2011-12-12 20:52:01.000000000 -0500
-@@ -1997,7 +1997,8 @@ lpfc_idiag_queinfo_read(struct file *fil
- 	/* Get slow-path event queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Slow-path EQ information:\n");
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.sp_eq) {
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tEQID[%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
-@@ -2006,12 +2007,17 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.sp_eq->entry_size,
- 			phba->sli4_hba.sp_eq->host_index,
- 			phba->sli4_hba.sp_eq->hba_index);
-+	}
- 
- 	/* Get fast-path event queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Fast-path EQ information:\n");
--	for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count; fcp_qidx++) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.fp_eq) {
-+		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count;
-+		     fcp_qidx++) {
-+			if (phba->sli4_hba.fp_eq[fcp_qidx]) {
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 				"\tEQID[%02d], "
- 				"QE-COUNT[%04d], QE-SIZE[%04d], "
- 				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
-@@ -2020,16 +2026,19 @@ lpfc_idiag_queinfo_read(struct file *fil
- 				phba->sli4_hba.fp_eq[fcp_qidx]->entry_size,
- 				phba->sli4_hba.fp_eq[fcp_qidx]->host_index,
- 				phba->sli4_hba.fp_eq[fcp_qidx]->hba_index);
-+			}
-+		}
- 	}
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
- 
- 	/* Get mailbox complete queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Slow-path MBX CQ information:\n");
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.mbx_cq) {
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Associated EQID[%02d]:\n",
- 			phba->sli4_hba.mbx_cq->assoc_qid);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tCQID[%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
-@@ -2038,14 +2047,16 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.mbx_cq->entry_size,
- 			phba->sli4_hba.mbx_cq->host_index,
- 			phba->sli4_hba.mbx_cq->hba_index);
-+	}
- 
- 	/* Get slow-path complete queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Slow-path ELS CQ information:\n");
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.els_cq) {
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Associated EQID[%02d]:\n",
- 			phba->sli4_hba.els_cq->assoc_qid);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tCQID [%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
-@@ -2054,16 +2065,21 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.els_cq->entry_size,
- 			phba->sli4_hba.els_cq->host_index,
- 			phba->sli4_hba.els_cq->hba_index);
-+	}
- 
- 	/* Get fast-path complete queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Fast-path FCP CQ information:\n");
- 	fcp_qidx = 0;
--	do {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.fcp_cq) {
-+		do {
-+			if (phba->sli4_hba.fcp_cq[fcp_qidx]) {
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 				"Associated EQID[%02d]:\n",
- 				phba->sli4_hba.fcp_cq[fcp_qidx]->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+				len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 				"\tCQID[%02d], "
- 				"QE-COUNT[%04d], QE-SIZE[%04d], "
- 				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
-@@ -2072,16 +2088,20 @@ lpfc_idiag_queinfo_read(struct file *fil
- 				phba->sli4_hba.fcp_cq[fcp_qidx]->entry_size,
- 				phba->sli4_hba.fcp_cq[fcp_qidx]->host_index,
- 				phba->sli4_hba.fcp_cq[fcp_qidx]->hba_index);
--	} while (++fcp_qidx < phba->cfg_fcp_eq_count);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+			}
-+		} while (++fcp_qidx < phba->cfg_fcp_eq_count);
-+		len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
-+	}
- 
- 	/* Get mailbox queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Slow-path MBX MQ information:\n");
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.mbx_wq) {
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Associated CQID[%02d]:\n",
- 			phba->sli4_hba.mbx_wq->assoc_qid);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tWQID[%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
-@@ -2090,14 +2110,16 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.mbx_wq->entry_size,
- 			phba->sli4_hba.mbx_wq->host_index,
- 			phba->sli4_hba.mbx_wq->hba_index);
-+	}
- 
- 	/* Get slow-path work queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Slow-path ELS WQ information:\n");
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.els_wq) {
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Associated CQID[%02d]:\n",
- 			phba->sli4_hba.els_wq->assoc_qid);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tWQID[%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n\n",
-@@ -2106,15 +2128,22 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.els_wq->entry_size,
- 			phba->sli4_hba.els_wq->host_index,
- 			phba->sli4_hba.els_wq->hba_index);
-+	}
- 
- 	/* Get fast-path work queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Fast-path FCP WQ information:\n");
--	for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count; fcp_qidx++) {
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.fcp_wq) {
-+		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count;
-+		     fcp_qidx++) {
-+			if (!phba->sli4_hba.fcp_wq[fcp_qidx])
-+				continue;
-+			len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 				"Associated CQID[%02d]:\n",
- 				phba->sli4_hba.fcp_wq[fcp_qidx]->assoc_qid);
--		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+			len += snprintf(pbuffer+len,
-+					LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 				"\tWQID[%02d], "
- 				"QE-COUNT[%04d], WQE-SIZE[%04d], "
- 				"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
-@@ -2123,16 +2152,19 @@ lpfc_idiag_queinfo_read(struct file *fil
- 				phba->sli4_hba.fcp_wq[fcp_qidx]->entry_size,
- 				phba->sli4_hba.fcp_wq[fcp_qidx]->host_index,
- 				phba->sli4_hba.fcp_wq[fcp_qidx]->hba_index);
-+		}
-+		len += snprintf(pbuffer+len,
-+				LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
- 	}
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len, "\n");
- 
- 	/* Get receive queue information */
- 	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Slow-path RQ information:\n");
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+	if (phba->sli4_hba.hdr_rq && phba->sli4_hba.dat_rq) {
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"Associated CQID[%02d]:\n",
- 			phba->sli4_hba.hdr_rq->assoc_qid);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tHQID[%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
-@@ -2141,7 +2173,7 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.hdr_rq->entry_size,
- 			phba->sli4_hba.hdr_rq->host_index,
- 			phba->sli4_hba.hdr_rq->hba_index);
--	len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
-+		len += snprintf(pbuffer+len, LPFC_QUE_INFO_GET_BUF_SIZE-len,
- 			"\tDQID[%02d], "
- 			"QE-COUNT[%04d], QE-SIZE[%04d], "
- 			"HOST-INDEX[%04d], PORT-INDEX[%04d]\n",
-@@ -2150,7 +2182,7 @@ lpfc_idiag_queinfo_read(struct file *fil
- 			phba->sli4_hba.dat_rq->entry_size,
- 			phba->sli4_hba.dat_rq->host_index,
- 			phba->sli4_hba.dat_rq->hba_index);
--
-+	}
- 	return simple_read_from_buffer(buf, nbytes, ppos, pbuffer, len);
- }
- 
-@@ -2360,7 +2392,8 @@ lpfc_idiag_queacc_write(struct file *fil
- 	switch (quetp) {
- 	case LPFC_IDIAG_EQ:
- 		/* Slow-path event queue */
--		if (phba->sli4_hba.sp_eq->queue_id == queid) {
-+		if (phba->sli4_hba.sp_eq &&
-+		    phba->sli4_hba.sp_eq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.sp_eq, index, count);
-@@ -2370,23 +2403,29 @@ lpfc_idiag_queacc_write(struct file *fil
- 			goto pass_check;
- 		}
- 		/* Fast-path event queue */
--		for (qidx = 0; qidx < phba->cfg_fcp_eq_count; qidx++) {
--			if (phba->sli4_hba.fp_eq[qidx]->queue_id == queid) {
--				/* Sanity check */
--				rc = lpfc_idiag_que_param_check(
-+		if (phba->sli4_hba.fp_eq) {
-+			for (qidx = 0; qidx < phba->cfg_fcp_eq_count; qidx++) {
-+				if (phba->sli4_hba.fp_eq[qidx] &&
-+				    phba->sli4_hba.fp_eq[qidx]->queue_id ==
-+				    queid) {
-+					/* Sanity check */
-+					rc = lpfc_idiag_que_param_check(
- 						phba->sli4_hba.fp_eq[qidx],
- 						index, count);
--				if (rc)
--					goto error_out;
--				idiag.ptr_private = phba->sli4_hba.fp_eq[qidx];
--				goto pass_check;
-+					if (rc)
-+						goto error_out;
-+					idiag.ptr_private =
-+						phba->sli4_hba.fp_eq[qidx];
-+					goto pass_check;
-+				}
- 			}
- 		}
- 		goto error_out;
- 		break;
- 	case LPFC_IDIAG_CQ:
- 		/* MBX complete queue */
--		if (phba->sli4_hba.mbx_cq->queue_id == queid) {
-+		if (phba->sli4_hba.mbx_cq &&
-+		    phba->sli4_hba.mbx_cq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.mbx_cq, index, count);
-@@ -2396,7 +2435,8 @@ lpfc_idiag_queacc_write(struct file *fil
- 			goto pass_check;
- 		}
- 		/* ELS complete queue */
--		if (phba->sli4_hba.els_cq->queue_id == queid) {
-+		if (phba->sli4_hba.els_cq &&
-+		    phba->sli4_hba.els_cq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.els_cq, index, count);
-@@ -2406,25 +2446,30 @@ lpfc_idiag_queacc_write(struct file *fil
- 			goto pass_check;
- 		}
- 		/* FCP complete queue */
--		qidx = 0;
--		do {
--			if (phba->sli4_hba.fcp_cq[qidx]->queue_id == queid) {
--				/* Sanity check */
--				rc = lpfc_idiag_que_param_check(
-+		if (phba->sli4_hba.fcp_cq) {
-+			qidx = 0;
-+			do {
-+				if (phba->sli4_hba.fcp_cq[qidx] &&
-+				    phba->sli4_hba.fcp_cq[qidx]->queue_id ==
-+				    queid) {
-+					/* Sanity check */
-+					rc = lpfc_idiag_que_param_check(
- 						phba->sli4_hba.fcp_cq[qidx],
- 						index, count);
--				if (rc)
--					goto error_out;
--				idiag.ptr_private =
-+					if (rc)
-+						goto error_out;
-+					idiag.ptr_private =
- 						phba->sli4_hba.fcp_cq[qidx];
--				goto pass_check;
--			}
--		} while (++qidx < phba->cfg_fcp_eq_count);
-+					goto pass_check;
-+				}
-+			} while (++qidx < phba->cfg_fcp_eq_count);
-+		}
- 		goto error_out;
- 		break;
- 	case LPFC_IDIAG_MQ:
- 		/* MBX work queue */
--		if (phba->sli4_hba.mbx_wq->queue_id == queid) {
-+		if (phba->sli4_hba.mbx_wq &&
-+		    phba->sli4_hba.mbx_wq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.mbx_wq, index, count);
-@@ -2433,10 +2478,12 @@ lpfc_idiag_queacc_write(struct file *fil
- 			idiag.ptr_private = phba->sli4_hba.mbx_wq;
- 			goto pass_check;
- 		}
-+		goto error_out;
- 		break;
- 	case LPFC_IDIAG_WQ:
- 		/* ELS work queue */
--		if (phba->sli4_hba.els_wq->queue_id == queid) {
-+		if (phba->sli4_hba.els_wq &&
-+		    phba->sli4_hba.els_wq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.els_wq, index, count);
-@@ -2446,24 +2493,30 @@ lpfc_idiag_queacc_write(struct file *fil
- 			goto pass_check;
- 		}
- 		/* FCP work queue */
--		for (qidx = 0; qidx < phba->cfg_fcp_wq_count; qidx++) {
--			if (phba->sli4_hba.fcp_wq[qidx]->queue_id == queid) {
--				/* Sanity check */
--				rc = lpfc_idiag_que_param_check(
-+		if (phba->sli4_hba.fcp_wq) {
-+			for (qidx = 0; qidx < phba->cfg_fcp_wq_count; qidx++) {
-+				if (!phba->sli4_hba.fcp_wq[qidx])
-+					continue;
-+				if (phba->sli4_hba.fcp_wq[qidx]->queue_id ==
-+				    queid) {
-+					/* Sanity check */
-+					rc = lpfc_idiag_que_param_check(
- 						phba->sli4_hba.fcp_wq[qidx],
- 						index, count);
--				if (rc)
--					goto error_out;
--				idiag.ptr_private =
--					phba->sli4_hba.fcp_wq[qidx];
--				goto pass_check;
-+					if (rc)
-+						goto error_out;
-+					idiag.ptr_private =
-+						phba->sli4_hba.fcp_wq[qidx];
-+					goto pass_check;
-+				}
- 			}
- 		}
- 		goto error_out;
- 		break;
- 	case LPFC_IDIAG_RQ:
- 		/* HDR queue */
--		if (phba->sli4_hba.hdr_rq->queue_id == queid) {
-+		if (phba->sli4_hba.hdr_rq &&
-+		    phba->sli4_hba.hdr_rq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.hdr_rq, index, count);
-@@ -2473,7 +2526,8 @@ lpfc_idiag_queacc_write(struct file *fil
- 			goto pass_check;
- 		}
- 		/* DAT queue */
--		if (phba->sli4_hba.dat_rq->queue_id == queid) {
-+		if (phba->sli4_hba.dat_rq &&
-+		    phba->sli4_hba.dat_rq->queue_id == queid) {
- 			/* Sanity check */
- 			rc = lpfc_idiag_que_param_check(
- 					phba->sli4_hba.dat_rq, index, count);
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-12-12 20:50:38.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-12-12 20:52:01.000000000 -0500
-@@ -1417,7 +1417,10 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 	uint32_t event_data;
- 	struct Scsi_Host *shost;
- 	uint32_t if_type;
--	struct lpfc_register portstat_reg;
-+	struct lpfc_register portstat_reg = {0};
-+	uint32_t reg_err1, reg_err2;
-+	uint32_t uerrlo_reg, uemasklo_reg;
-+	uint32_t pci_rd_rc1, pci_rd_rc2;
+-	/* VFI not supported on interface type 0, just do the flogi */
+-	if (mboxq->u.mb.mbxStatus && (bf_get(lpfc_sli_intf_if_type,
+-	    &phba->sli4_hba.sli_intf) != LPFC_SLI_INTF_IF_TYPE_0)) {
++	/*
++	 * VFI not supported on interface type 0, just do the flogi
++	 * Also continue if the VFI is in use - just use the same one.
++	 */
++	if (mboxq->u.mb.mbxStatus &&
++	    (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) !=
++			LPFC_SLI_INTF_IF_TYPE_0) &&
++	    mboxq->u.mb.mbxStatus != MBX_VFI_IN_USE) {
+ 		lpfc_printf_vlog(vport, KERN_ERR,
+ 				LOG_MBOX,
+ 				"2891 Init VFI mailbox failed 0x%x\n",
+@@ -2922,6 +2927,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba
+ {
+ 	struct lpfc_vport *vport = phba->pport;
+ 	LPFC_MBOXQ_t *sparam_mbox, *cfglink_mbox = NULL;
++	struct Scsi_Host *shost;
+ 	int i;
+ 	struct lpfc_dmabuf *mp;
  	int rc;
+@@ -2945,6 +2951,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba
+ 	phba->fc_topology = bf_get(lpfc_mbx_read_top_topology, la);
+ 	phba->link_flag &= ~LS_NPIV_FAB_SUPPORTED;
  
- 	/* If the pci channel is offline, ignore possible errors, since
-@@ -1429,27 +1432,29 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 	if (!phba->cfg_enable_hba_reset)
- 		return;
- 
--	/* Send an internal error event to mgmt application */
--	lpfc_board_errevt_to_mgmt(phba);
--
--	/* For now, the actual action for SLI4 device handling is not
--	 * specified yet, just treated it as adaptor hardware failure
--	 */
--	event_data = FC_REG_DUMP_EVENT;
--	shost = lpfc_shost_from_vport(vport);
--	fc_host_post_vendor_event(shost, fc_get_event_number(),
--				  sizeof(event_data), (char *) &event_data,
--				  SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_EMULEX);
--
- 	if_type = bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf);
- 	switch (if_type) {
- 	case LPFC_SLI_INTF_IF_TYPE_0:
-+		pci_rd_rc1 = lpfc_readl(
-+				phba->sli4_hba.u.if_type0.UERRLOregaddr,
-+				&uerrlo_reg);
-+		pci_rd_rc2 = lpfc_readl(
-+				phba->sli4_hba.u.if_type0.UEMASKLOregaddr,
-+				&uemasklo_reg);
-+		/* consider PCI bus read error as pci_channel_offline */
-+		if (pci_rd_rc1 == -EIO && pci_rd_rc2 == -EIO)
-+			return;
- 		lpfc_sli4_offline_eratt(phba);
- 		break;
- 	case LPFC_SLI_INTF_IF_TYPE_2:
--		portstat_reg.word0 =
--			readl(phba->sli4_hba.u.if_type2.STATUSregaddr);
--
-+		pci_rd_rc1 = lpfc_readl(
-+				phba->sli4_hba.u.if_type2.STATUSregaddr,
-+				&portstat_reg.word0);
-+		/* consider PCI bus read error as pci_channel_offline */
-+		if (pci_rd_rc1 == -EIO)
-+			return;
-+		reg_err1 = readl(phba->sli4_hba.u.if_type2.ERR1regaddr);
-+		reg_err2 = readl(phba->sli4_hba.u.if_type2.ERR2regaddr);
- 		if (bf_get(lpfc_sliport_status_oti, &portstat_reg)) {
- 			/* TODO: Register for Overtemp async events. */
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -1459,8 +1464,20 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 			phba->over_temp_state = HBA_OVER_TEMP;
- 			spin_unlock_irq(&phba->hbalock);
- 			lpfc_sli4_offline_eratt(phba);
--			return;
-+			break;
- 		}
-+		if (reg_err1 == SLIPORT_ERR1_REG_ERR_CODE_2 &&
-+		    reg_err2 == SLIPORT_ERR2_REG_FW_RESTART)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"3143 Port Down: Firmware Restarted\n");
-+		else if (reg_err1 == SLIPORT_ERR1_REG_ERR_CODE_2 &&
-+			 reg_err2 == SLIPORT_ERR2_REG_FORCED_DUMP)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"3144 Port Down: Debug Dump\n");
-+		else if (reg_err1 == SLIPORT_ERR1_REG_ERR_CODE_2 &&
-+			 reg_err2 == SLIPORT_ERR2_REG_FUNC_PROVISON)
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+					"3145 Port Down: Provisioning\n");
- 		/*
- 		 * On error status condition, driver need to wait for port
- 		 * ready before performing reset.
-@@ -1469,14 +1486,19 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 		if (!rc) {
- 			/* need reset: attempt for port recovery */
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--					"2887 Port Error: Attempting "
--					"Port Recovery\n");
-+					"2887 Reset Needed: Attempting Port "
-+					"Recovery...\n");
- 			lpfc_offline_prep(phba);
- 			lpfc_offline(phba);
- 			lpfc_sli_brdrestart(phba);
- 			if (lpfc_online(phba) == 0) {
- 				lpfc_unblock_mgmt_io(phba);
--				return;
-+				/* don't report event on forced debug dump */
-+				if (reg_err1 == SLIPORT_ERR1_REG_ERR_CODE_2 &&
-+				    reg_err2 == SLIPORT_ERR2_REG_FORCED_DUMP)
-+					return;
-+				else
-+					break;
- 			}
- 			/* fall through for not able to recover */
- 		}
-@@ -1486,6 +1508,16 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 	default:
- 		break;
- 	}
-+	lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
-+			"3123 Report dump event to upper layer\n");
-+	/* Send an internal error event to mgmt application */
-+	lpfc_board_errevt_to_mgmt(phba);
-+
-+	event_data = FC_REG_DUMP_EVENT;
 +	shost = lpfc_shost_from_vport(vport);
-+	fc_host_post_vendor_event(shost, fc_get_event_number(),
-+				  sizeof(event_data), (char *) &event_data,
-+				  SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_EMULEX);
- }
+ 	if (phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
+ 		phba->sli3_options &= ~LPFC_SLI3_NPIV_ENABLED;
  
- /**
-@@ -6475,6 +6507,7 @@ out_free_fcp_wq:
- 		phba->sli4_hba.fcp_wq[fcp_wqidx] = NULL;
+@@ -2956,8 +2963,11 @@ lpfc_mbx_process_link_up(struct lpfc_hba
+ 				"1309 Link Up Event npiv not supported in loop "
+ 				"topology\n");
+ 				/* Get Loop Map information */
+-		if (bf_get(lpfc_mbx_read_top_il, la))
++		if (bf_get(lpfc_mbx_read_top_il, la)) {
++			spin_lock_irq(shost->host_lock);
+ 			vport->fc_flag |= FC_LBIT;
++			spin_unlock_irq(shost->host_lock);
++		}
+ 
+ 		vport->fc_myDID = bf_get(lpfc_mbx_read_top_alpa_granted, la);
+ 		i = la->lilpBde64.tus.f.bdeSize;
+@@ -3002,11 +3012,13 @@ lpfc_mbx_process_link_up(struct lpfc_hba
+ 	} else {
+ 		if (!(phba->sli3_options & LPFC_SLI3_NPIV_ENABLED)) {
+ 			if (phba->max_vpi && phba->cfg_enable_npiv &&
+-			   (phba->sli_rev == 3))
++			   (phba->sli_rev >= LPFC_SLI_REV3))
+ 				phba->sli3_options |= LPFC_SLI3_NPIV_ENABLED;
+ 		}
+ 		vport->fc_myDID = phba->fc_pref_DID;
++		spin_lock_irq(shost->host_lock);
+ 		vport->fc_flag |= FC_LBIT;
++		spin_unlock_irq(shost->host_lock);
  	}
- 	kfree(phba->sli4_hba.fcp_wq);
-+	phba->sli4_hba.fcp_wq = NULL;
- out_free_els_wq:
- 	lpfc_sli4_queue_free(phba->sli4_hba.els_wq);
- 	phba->sli4_hba.els_wq = NULL;
-@@ -6487,6 +6520,7 @@ out_free_fcp_cq:
- 		phba->sli4_hba.fcp_cq[fcp_cqidx] = NULL;
- 	}
- 	kfree(phba->sli4_hba.fcp_cq);
-+	phba->sli4_hba.fcp_cq = NULL;
- out_free_els_cq:
- 	lpfc_sli4_queue_free(phba->sli4_hba.els_cq);
- 	phba->sli4_hba.els_cq = NULL;
-@@ -6499,6 +6533,7 @@ out_free_fp_eq:
- 		phba->sli4_hba.fp_eq[fcp_eqidx] = NULL;
- 	}
- 	kfree(phba->sli4_hba.fp_eq);
-+	phba->sli4_hba.fp_eq = NULL;
- out_free_sp_eq:
- 	lpfc_sli4_queue_free(phba->sli4_hba.sp_eq);
- 	phba->sli4_hba.sp_eq = NULL;
-@@ -6532,8 +6567,10 @@ lpfc_sli4_queue_destroy(struct lpfc_hba 
- 	phba->sli4_hba.els_wq = NULL;
- 
- 	/* Release FCP work queue */
--	for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count; fcp_qidx++)
--		lpfc_sli4_queue_free(phba->sli4_hba.fcp_wq[fcp_qidx]);
-+	if (phba->sli4_hba.fcp_wq != NULL)
-+		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_wq_count;
-+		     fcp_qidx++)
-+			lpfc_sli4_queue_free(phba->sli4_hba.fcp_wq[fcp_qidx]);
- 	kfree(phba->sli4_hba.fcp_wq);
- 	phba->sli4_hba.fcp_wq = NULL;
- 
-@@ -6553,15 +6590,18 @@ lpfc_sli4_queue_destroy(struct lpfc_hba 
- 
- 	/* Release FCP response complete queue */
- 	fcp_qidx = 0;
--	do
--		lpfc_sli4_queue_free(phba->sli4_hba.fcp_cq[fcp_qidx]);
--	while (++fcp_qidx < phba->cfg_fcp_eq_count);
-+	if (phba->sli4_hba.fcp_cq != NULL)
-+		do
-+			lpfc_sli4_queue_free(phba->sli4_hba.fcp_cq[fcp_qidx]);
-+		while (++fcp_qidx < phba->cfg_fcp_eq_count);
- 	kfree(phba->sli4_hba.fcp_cq);
- 	phba->sli4_hba.fcp_cq = NULL;
- 
- 	/* Release fast-path event queue */
--	for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count; fcp_qidx++)
--		lpfc_sli4_queue_free(phba->sli4_hba.fp_eq[fcp_qidx]);
-+	if (phba->sli4_hba.fp_eq != NULL)
-+		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count;
-+		     fcp_qidx++)
-+			lpfc_sli4_queue_free(phba->sli4_hba.fp_eq[fcp_qidx]);
- 	kfree(phba->sli4_hba.fp_eq);
- 	phba->sli4_hba.fp_eq = NULL;
- 
-@@ -6614,6 +6654,11 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- 			phba->sli4_hba.sp_eq->queue_id);
- 
- 	/* Set up fast-path event queue */
-+	if (!phba->sli4_hba.fp_eq) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3147 Fast-path EQs not allocated\n");
-+		goto out_destroy_sp_eq;
-+	}
- 	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++) {
- 		if (!phba->sli4_hba.fp_eq[fcp_eqidx]) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -6678,6 +6723,12 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- 			phba->sli4_hba.sp_eq->queue_id);
- 
- 	/* Set up fast-path FCP Response Complete Queue */
-+	if (!phba->sli4_hba.fcp_cq) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3148 Fast-path FCP CQ array not "
-+				"allocated\n");
-+		goto out_destroy_els_cq;
-+	}
- 	fcp_cqidx = 0;
- 	do {
- 		if (!phba->sli4_hba.fcp_cq[fcp_cqidx]) {
-@@ -6757,6 +6808,12 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- 			phba->sli4_hba.els_cq->queue_id);
- 
- 	/* Set up fast-path FCP Work Queue */
-+	if (!phba->sli4_hba.fcp_wq) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3149 Fast-path FCP WQ array not "
-+				"allocated\n");
-+		goto out_destroy_els_wq;
-+	}
- 	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_wq_count; fcp_wqidx++) {
- 		if (!phba->sli4_hba.fcp_wq[fcp_wqidx]) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-@@ -6818,18 +6875,21 @@ lpfc_sli4_queue_setup(struct lpfc_hba *p
- out_destroy_fcp_wq:
- 	for (--fcp_wqidx; fcp_wqidx >= 0; fcp_wqidx--)
- 		lpfc_wq_destroy(phba, phba->sli4_hba.fcp_wq[fcp_wqidx]);
-+out_destroy_els_wq:
- 	lpfc_wq_destroy(phba, phba->sli4_hba.els_wq);
- out_destroy_mbx_wq:
- 	lpfc_mq_destroy(phba, phba->sli4_hba.mbx_wq);
- out_destroy_fcp_cq:
- 	for (--fcp_cqidx; fcp_cqidx >= 0; fcp_cqidx--)
- 		lpfc_cq_destroy(phba, phba->sli4_hba.fcp_cq[fcp_cqidx]);
-+out_destroy_els_cq:
- 	lpfc_cq_destroy(phba, phba->sli4_hba.els_cq);
- out_destroy_mbx_cq:
- 	lpfc_cq_destroy(phba, phba->sli4_hba.mbx_cq);
- out_destroy_fp_eq:
- 	for (--fcp_eqidx; fcp_eqidx >= 0; fcp_eqidx--)
- 		lpfc_eq_destroy(phba, phba->sli4_hba.fp_eq[fcp_eqidx]);
-+out_destroy_sp_eq:
- 	lpfc_eq_destroy(phba, phba->sli4_hba.sp_eq);
- out_error:
- 	return rc;
-@@ -6866,13 +6926,18 @@ lpfc_sli4_queue_unset(struct lpfc_hba *p
- 	/* Unset ELS complete queue */
- 	lpfc_cq_destroy(phba, phba->sli4_hba.els_cq);
- 	/* Unset FCP response complete queue */
--	fcp_qidx = 0;
--	do {
--		lpfc_cq_destroy(phba, phba->sli4_hba.fcp_cq[fcp_qidx]);
--	} while (++fcp_qidx < phba->cfg_fcp_eq_count);
-+	if (phba->sli4_hba.fcp_cq) {
-+		fcp_qidx = 0;
-+		do {
-+			lpfc_cq_destroy(phba, phba->sli4_hba.fcp_cq[fcp_qidx]);
-+		} while (++fcp_qidx < phba->cfg_fcp_eq_count);
-+	}
- 	/* Unset fast-path event queue */
--	for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count; fcp_qidx++)
--		lpfc_eq_destroy(phba, phba->sli4_hba.fp_eq[fcp_qidx]);
-+	if (phba->sli4_hba.fp_eq) {
-+		for (fcp_qidx = 0; fcp_qidx < phba->cfg_fcp_eq_count;
-+		     fcp_qidx++)
-+			lpfc_eq_destroy(phba, phba->sli4_hba.fp_eq[fcp_qidx]);
-+	}
- 	/* Unset slow-path event queue */
- 	lpfc_eq_destroy(phba, phba->sli4_hba.sp_eq);
- }
-@@ -7411,22 +7476,25 @@ out:
- static void
- lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
- {
--	struct pci_dev *pdev;
--
--	/* Obtain PCI device reference */
--	if (!phba->pcidev)
--		return;
--	else
--		pdev = phba->pcidev;
--
--	/* Free coherent DMA memory allocated */
--
--	/* Unmap I/O memory space */
--	iounmap(phba->sli4_hba.drbl_regs_memmap_p);
--	iounmap(phba->sli4_hba.ctrl_regs_memmap_p);
--	iounmap(phba->sli4_hba.conf_regs_memmap_p);
-+	uint32_t if_type;
-+	if_type = bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf);
- 
--	return;
-+	switch (if_type) {
-+	case LPFC_SLI_INTF_IF_TYPE_0:
-+		iounmap(phba->sli4_hba.drbl_regs_memmap_p);
-+		iounmap(phba->sli4_hba.ctrl_regs_memmap_p);
-+		iounmap(phba->sli4_hba.conf_regs_memmap_p);
-+		break;
-+	case LPFC_SLI_INTF_IF_TYPE_2:
-+		iounmap(phba->sli4_hba.conf_regs_memmap_p);
-+		break;
-+	case LPFC_SLI_INTF_IF_TYPE_1:
-+	default:
-+		dev_printk(KERN_ERR, &phba->pcidev->dev,
-+			   "FATAL - unsupported SLI4 interface type - %d\n",
-+			   if_type);
-+		break;
-+	}
- }
- 
- /**
-diff -upNr a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
---- a/drivers/scsi/lpfc/lpfc_mem.c	2011-07-06 10:53:52.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_mem.c	2011-12-12 20:52:01.000000000 -0500
-@@ -389,7 +389,7 @@ lpfc_els_hbq_alloc(struct lpfc_hba *phba
- {
- 	struct hbq_dmabuf *hbqbp;
- 
--	hbqbp = kmalloc(sizeof(struct hbq_dmabuf), GFP_KERNEL);
-+	hbqbp = kzalloc(sizeof(struct hbq_dmabuf), GFP_KERNEL);
- 	if (!hbqbp)
- 		return NULL;
- 
-@@ -441,7 +441,7 @@ lpfc_sli4_rb_alloc(struct lpfc_hba *phba
- {
- 	struct hbq_dmabuf *dma_buf;
- 
--	dma_buf = kmalloc(sizeof(struct hbq_dmabuf), GFP_KERNEL);
-+	dma_buf = kzalloc(sizeof(struct hbq_dmabuf), GFP_KERNEL);
- 	if (!dma_buf)
- 		return NULL;
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2011-12-12 20:50:38.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2011-12-12 20:52:01.000000000 -0500
-@@ -420,7 +420,16 @@ struct lpfc_sli4_hba {
- 			void __iomem *STATUSregaddr;
- 			void __iomem *CTRLregaddr;
- 			void __iomem *ERR1regaddr;
-+#define SLIPORT_ERR1_REG_ERR_CODE_1		0x1
-+#define SLIPORT_ERR1_REG_ERR_CODE_2		0x2
- 			void __iomem *ERR2regaddr;
-+#define SLIPORT_ERR2_REG_FW_RESTART		0x0
-+#define SLIPORT_ERR2_REG_FUNC_PROVISON		0x1
-+#define SLIPORT_ERR2_REG_FORCED_DUMP		0x2
-+#define SLIPORT_ERR2_REG_FAILURE_EQ		0x3
-+#define SLIPORT_ERR2_REG_FAILURE_CQ		0x4
-+#define SLIPORT_ERR2_REG_FAILURE_BUS		0x5
-+#define SLIPORT_ERR2_REG_FAILURE_RQ		0x6
- 		} if_type2;
- 	} u;
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2011-12-12 20:51:18.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-12-12 20:52:01.000000000 -0500
-@@ -89,10 +89,15 @@ lpfc_get_iocb_from_iocbq(struct lpfc_ioc
- static uint32_t
- lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
- {
--	union lpfc_wqe *temp_wqe = q->qe[q->host_index].wqe;
-+	union lpfc_wqe *temp_wqe;
- 	struct lpfc_register doorbell;
- 	uint32_t host_index;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return -ENOMEM;
-+	temp_wqe = q->qe[q->host_index].wqe;
-+
- 	/* If the host has not yet processed the next entry then we are done */
- 	if (((q->host_index + 1) % q->entry_count) == q->hba_index)
- 		return -ENOMEM;
-@@ -134,6 +139,10 @@ lpfc_sli4_wq_release(struct lpfc_queue *
- {
- 	uint32_t released = 0;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return 0;
-+
- 	if (q->hba_index == index)
- 		return 0;
- 	do {
-@@ -158,10 +167,15 @@ lpfc_sli4_wq_release(struct lpfc_queue *
- static uint32_t
- lpfc_sli4_mq_put(struct lpfc_queue *q, struct lpfc_mqe *mqe)
- {
--	struct lpfc_mqe *temp_mqe = q->qe[q->host_index].mqe;
-+	struct lpfc_mqe *temp_mqe;
- 	struct lpfc_register doorbell;
- 	uint32_t host_index;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return -ENOMEM;
-+	temp_mqe = q->qe[q->host_index].mqe;
-+
- 	/* If the host has not yet processed the next entry then we are done */
- 	if (((q->host_index + 1) % q->entry_count) == q->hba_index)
- 		return -ENOMEM;
-@@ -195,6 +209,10 @@ lpfc_sli4_mq_put(struct lpfc_queue *q, s
- static uint32_t
- lpfc_sli4_mq_release(struct lpfc_queue *q)
- {
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return 0;
-+
- 	/* Clear the mailbox pointer for completion */
- 	q->phba->mbox = NULL;
- 	q->hba_index = ((q->hba_index + 1) % q->entry_count);
-@@ -213,7 +231,12 @@ lpfc_sli4_mq_release(struct lpfc_queue *
- static struct lpfc_eqe *
- lpfc_sli4_eq_get(struct lpfc_queue *q)
- {
--	struct lpfc_eqe *eqe = q->qe[q->hba_index].eqe;
-+	struct lpfc_eqe *eqe;
-+
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return NULL;
-+	eqe = q->qe[q->hba_index].eqe;
- 
- 	/* If the next EQE is not valid then we are done */
- 	if (!bf_get_le32(lpfc_eqe_valid, eqe))
-@@ -248,6 +271,10 @@ lpfc_sli4_eq_release(struct lpfc_queue *
- 	struct lpfc_eqe *temp_eqe;
- 	struct lpfc_register doorbell;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return 0;
-+
- 	/* while there are valid entries */
- 	while (q->hba_index != q->host_index) {
- 		temp_eqe = q->qe[q->host_index].eqe;
-@@ -288,6 +315,10 @@ lpfc_sli4_cq_get(struct lpfc_queue *q)
- {
- 	struct lpfc_cqe *cqe;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return NULL;
-+
- 	/* If the next CQE is not valid then we are done */
- 	if (!bf_get_le32(lpfc_cqe_valid, q->qe[q->hba_index].cqe))
- 		return NULL;
-@@ -322,6 +353,9 @@ lpfc_sli4_cq_release(struct lpfc_queue *
- 	struct lpfc_cqe *temp_qe;
- 	struct lpfc_register doorbell;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!q))
-+		return 0;
- 	/* while there are valid entries */
- 	while (q->hba_index != q->host_index) {
- 		temp_qe = q->qe[q->host_index].cqe;
-@@ -359,11 +393,17 @@ static int
- lpfc_sli4_rq_put(struct lpfc_queue *hq, struct lpfc_queue *dq,
- 		 struct lpfc_rqe *hrqe, struct lpfc_rqe *drqe)
- {
--	struct lpfc_rqe *temp_hrqe = hq->qe[hq->host_index].rqe;
--	struct lpfc_rqe *temp_drqe = dq->qe[dq->host_index].rqe;
-+	struct lpfc_rqe *temp_hrqe;
-+	struct lpfc_rqe *temp_drqe;
- 	struct lpfc_register doorbell;
- 	int put_index = hq->host_index;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!hq) || unlikely(!dq))
-+		return -ENOMEM;
-+	temp_hrqe = hq->qe[hq->host_index].rqe;
-+	temp_drqe = dq->qe[dq->host_index].rqe;
-+
- 	if (hq->type != LPFC_HRQ || dq->type != LPFC_DRQ)
- 		return -EINVAL;
- 	if (hq->host_index != dq->host_index)
-@@ -402,6 +442,10 @@ lpfc_sli4_rq_put(struct lpfc_queue *hq, 
- static uint32_t
- lpfc_sli4_rq_release(struct lpfc_queue *hq, struct lpfc_queue *dq)
- {
-+	/* sanity check on queue memory */
-+	if (unlikely(!hq) || unlikely(!dq))
-+		return 0;
-+
- 	if ((hq->type != LPFC_HRQ) || (dq->type != LPFC_DRQ))
- 		return 0;
- 	hq->hba_index = ((hq->hba_index + 1) % hq->entry_count);
-@@ -3851,7 +3895,6 @@ lpfc_sli4_brdreset(struct lpfc_hba *phba
- {
- 	struct lpfc_sli *psli = &phba->sli;
- 	uint16_t cfg_value;
--	uint8_t qindx;
- 
- 	/* Reset HBA */
- 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-@@ -3867,19 +3910,6 @@ lpfc_sli4_brdreset(struct lpfc_hba *phba
- 	spin_lock_irq(&phba->hbalock);
- 	psli->sli_flag &= ~(LPFC_PROCESS_LA);
- 	phba->fcf.fcf_flag = 0;
--	/* Clean up the child queue list for the CQs */
--	list_del_init(&phba->sli4_hba.mbx_wq->list);
--	list_del_init(&phba->sli4_hba.els_wq->list);
--	list_del_init(&phba->sli4_hba.hdr_rq->list);
--	list_del_init(&phba->sli4_hba.dat_rq->list);
--	list_del_init(&phba->sli4_hba.mbx_cq->list);
--	list_del_init(&phba->sli4_hba.els_cq->list);
--	for (qindx = 0; qindx < phba->cfg_fcp_wq_count; qindx++)
--		list_del_init(&phba->sli4_hba.fcp_wq[qindx]->list);
--	qindx = 0;
--	do
--		list_del_init(&phba->sli4_hba.fcp_cq[qindx]->list);
--	while (++qindx < phba->cfg_fcp_eq_count);
  	spin_unlock_irq(&phba->hbalock);
  
- 	/* Now physically reset the device */
-@@ -3892,6 +3922,7 @@ lpfc_sli4_brdreset(struct lpfc_hba *phba
- 			      ~(PCI_COMMAND_PARITY | PCI_COMMAND_SERR)));
+@@ -3593,6 +3605,7 @@ lpfc_mbx_cmpl_fabric_reg_login(struct lp
+ 	MAILBOX_t *mb = &pmb->u.mb;
+ 	struct lpfc_dmabuf *mp = (struct lpfc_dmabuf *) (pmb->context1);
+ 	struct lpfc_nodelist *ndlp;
++	struct Scsi_Host *shost;
  
- 	/* Perform FCoE PCI function reset */
-+	lpfc_sli4_queue_destroy(phba);
- 	lpfc_pci_function_reset(phba);
+ 	ndlp = (struct lpfc_nodelist *) pmb->context2;
+ 	pmb->context1 = NULL;
+@@ -3638,8 +3651,12 @@ lpfc_mbx_cmpl_fabric_reg_login(struct lp
+ 		 * vport discovery */
+ 		if (!(vport->fc_flag & FC_LOGO_RCVD_DID_CHNG))
+ 			lpfc_start_fdiscs(phba);
+-		else
++		else {
++			shost = lpfc_shost_from_vport(vport);
++			spin_lock_irq(shost->host_lock);
+ 			vport->fc_flag &= ~FC_LOGO_RCVD_DID_CHNG ;
++			spin_unlock_irq(shost->host_lock);
++		}
+ 		lpfc_do_scr_ns_plogi(phba, vport);
+ 	}
  
- 	/* Restore PCI cmd register */
-@@ -4869,14 +4900,19 @@ lpfc_sli4_arm_cqeq_intr(struct lpfc_hba 
- 	lpfc_sli4_cq_release(phba->sli4_hba.mbx_cq, LPFC_QUEUE_REARM);
- 	lpfc_sli4_cq_release(phba->sli4_hba.els_cq, LPFC_QUEUE_REARM);
- 	fcp_eqidx = 0;
--	do
--		lpfc_sli4_cq_release(phba->sli4_hba.fcp_cq[fcp_eqidx],
--				     LPFC_QUEUE_REARM);
--	while (++fcp_eqidx < phba->cfg_fcp_eq_count);
-+	if (phba->sli4_hba.fcp_cq) {
-+		do
-+			lpfc_sli4_cq_release(phba->sli4_hba.fcp_cq[fcp_eqidx],
-+					     LPFC_QUEUE_REARM);
-+		while (++fcp_eqidx < phba->cfg_fcp_eq_count);
-+	}
- 	lpfc_sli4_eq_release(phba->sli4_hba.sp_eq, LPFC_QUEUE_REARM);
--	for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count; fcp_eqidx++)
--		lpfc_sli4_eq_release(phba->sli4_hba.fp_eq[fcp_eqidx],
--				     LPFC_QUEUE_REARM);
-+	if (phba->sli4_hba.fp_eq) {
-+		for (fcp_eqidx = 0; fcp_eqidx < phba->cfg_fcp_eq_count;
-+		     fcp_eqidx++)
-+			lpfc_sli4_eq_release(phba->sli4_hba.fp_eq[fcp_eqidx],
-+					     LPFC_QUEUE_REARM);
-+	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-12-12 20:49:51.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-12-12 20:51:39.000000000 -0500
+@@ -1830,6 +1830,8 @@ struct lpfc_mbx_init_vfi {
+ #define lpfc_init_vfi_hop_count_MASK	0x000000FF
+ #define lpfc_init_vfi_hop_count_WORD	word4
+ };
++#define MBX_VFI_IN_USE			0x9F02
++
+ 
+ struct lpfc_mbx_reg_vfi {
+ 	uint32_t word1;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2011-12-12 20:51:18.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2011-12-12 20:51:39.000000000 -0500
+@@ -349,6 +349,12 @@ struct csp {
+  * Word 1 Bit 31 in FLOGI response is clean address bit
+  */
+ #define clean_address_bit request_multiple_Nport /* Word 1, bit 31 */
++/*
++ * Word 1 Bit 30 in common service parameter is overloaded.
++ * Word 1 Bit 30 in FLOGI request is Virtual Fabrics
++ * Word 1 Bit 30 in PLOGI request is random offset
++ */
++#define virtual_fabric_support randomOffset /* Word 1, bit 30 */
+ #ifdef __BIG_ENDIAN_BITFIELD
+ 	uint16_t request_multiple_Nport:1;	/* FC Word 1, bit 31 */
+ 	uint16_t randomOffset:1;	/* FC Word 1, bit 30 */
+diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2011-07-06 10:53:52.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2011-12-12 20:51:39.000000000 -0500
+@@ -783,6 +783,14 @@ lpfc_device_rm_unused_node(struct lpfc_v
  }
  
- /**
-@@ -8083,6 +8119,8 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
- 		 */
- 		if (piocb->iocb_flag & LPFC_IO_FCP)
- 			piocb->fcp_wqidx = lpfc_sli4_scmd_to_wqidx_distr(phba);
-+		if (unlikely(!phba->sli4_hba.fcp_wq))
-+			return IOCB_ERROR;
- 		if (lpfc_sli4_wq_put(phba->sli4_hba.fcp_wq[piocb->fcp_wqidx],
- 				     &wqe))
- 			return IOCB_ERROR;
-@@ -9900,7 +9938,7 @@ lpfc_sli4_eratt_read(struct lpfc_hba *ph
- 			phba->work_status[1] =
- 				readl(phba->sli4_hba.u.if_type2.ERR2regaddr);
- 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--					"2885 Port Error Detected: "
-+					"2885 Port Status Event: "
- 					"port status reg 0x%x, "
- 					"port smphr reg 0x%x, "
- 					"error 1=0x%x, error 2=0x%x\n",
-@@ -10906,6 +10944,9 @@ static void
- lpfc_sli4_sp_handle_rel_wcqe(struct lpfc_hba *phba,
- 			     struct lpfc_wcqe_release *wcqe)
- {
-+	/* sanity check on queue memory */
-+	if (unlikely(!phba->sli4_hba.els_wq))
-+		return;
- 	/* Check for the slow-path ELS work queue */
- 	if (bf_get(lpfc_wcqe_r_wq_id, wcqe) == phba->sli4_hba.els_wq->queue_id)
- 		lpfc_sli4_wq_release(phba->sli4_hba.els_wq,
-@@ -10995,6 +11036,10 @@ lpfc_sli4_sp_handle_rcqe(struct lpfc_hba
- 	uint32_t status, rq_id;
- 	unsigned long iflags;
- 
-+	/* sanity check on queue memory */
-+	if (unlikely(!hrq) || unlikely(!drq))
-+		return workposted;
+ static uint32_t
++lpfc_device_recov_unused_node(struct lpfc_vport *vport,
++			struct lpfc_nodelist *ndlp,
++			   void *arg, uint32_t evt)
++{
++	return ndlp->nlp_state;
++}
 +
- 	if (bf_get(lpfc_cqe_code, rcqe) == CQE_CODE_RECEIVE_V1)
- 		rq_id = bf_get(lpfc_rcqe_rq_id_v1, rcqe);
- 	else
-@@ -11129,6 +11174,9 @@ lpfc_sli4_sp_handle_eqe(struct lpfc_hba 
- 
- 	/* Search for completion queue pointer matching this cqid */
- 	speq = phba->sli4_hba.sp_eq;
-+	/* sanity check on queue memory */
-+	if (unlikely(!speq))
-+		return;
- 	list_for_each_entry(childq, &speq->child_list, list) {
- 		if (childq->queue_id == cqid) {
- 			cq = childq;
-@@ -11370,12 +11418,18 @@ lpfc_sli4_fp_handle_eqe(struct lpfc_hba 
- 		return;
- 	}
- 
-+	if (unlikely(!phba->sli4_hba.fcp_cq)) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
-+				"3146 Fast-path completion queues "
-+				"does not exist\n");
-+		return;
-+	}
- 	cq = phba->sli4_hba.fcp_cq[fcp_cqidx];
- 	if (unlikely(!cq)) {
- 		if (phba->sli.sli_flag & LPFC_SLI_ACTIVE)
- 			lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
- 					"0367 Fast-path completion queue "
--					"does not exist\n");
-+					"(%d) does not exist\n", fcp_cqidx);
- 		return;
- 	}
- 
-@@ -11546,6 +11600,8 @@ lpfc_sli4_fp_intr_handler(int irq, void 
- 
- 	/* Get to the EQ struct associated with this vector */
- 	fpeq = phba->sli4_hba.fp_eq[fcp_eqidx];
-+	if (unlikely(!fpeq))
-+		return IRQ_NONE;
- 
- 	/* Check device state for handling interrupt */
- 	if (unlikely(lpfc_intr_state_check(phba))) {
-@@ -11764,6 +11820,9 @@ lpfc_eq_create(struct lpfc_hba *phba, st
- 	uint16_t dmult;
- 	uint32_t hw_page_size = phba->sli4_hba.pc_sli4_params.if_page_sz;
- 
-+	/* sanity check on queue memory */
-+	if (!eq)
-+		return -ENODEV;
- 	if (!phba->sli4_hba.pc_sli4_params.supported)
- 		hw_page_size = SLI4_PAGE_SIZE;
- 
-@@ -11880,6 +11939,9 @@ lpfc_cq_create(struct lpfc_hba *phba, st
- 	union lpfc_sli4_cfg_shdr *shdr;
- 	uint32_t hw_page_size = phba->sli4_hba.pc_sli4_params.if_page_sz;
- 
-+	/* sanity check on queue memory */
-+	if (!cq || !eq)
-+		return -ENODEV;
- 	if (!phba->sli4_hba.pc_sli4_params.supported)
- 		hw_page_size = SLI4_PAGE_SIZE;
- 
-@@ -12062,6 +12124,9 @@ lpfc_mq_create(struct lpfc_hba *phba, st
- 	union lpfc_sli4_cfg_shdr *shdr;
- 	uint32_t hw_page_size = phba->sli4_hba.pc_sli4_params.if_page_sz;
- 
-+	/* sanity check on queue memory */
-+	if (!mq || !cq)
-+		return -ENODEV;
- 	if (!phba->sli4_hba.pc_sli4_params.supported)
- 		hw_page_size = SLI4_PAGE_SIZE;
- 
-@@ -12212,6 +12277,9 @@ lpfc_wq_create(struct lpfc_hba *phba, st
- 	uint32_t hw_page_size = phba->sli4_hba.pc_sli4_params.if_page_sz;
- 	struct dma_address *page;
- 
-+	/* sanity check on queue memory */
-+	if (!wq || !cq)
-+		return -ENODEV;
- 	if (!phba->sli4_hba.pc_sli4_params.supported)
- 		hw_page_size = SLI4_PAGE_SIZE;
- 
-@@ -12304,6 +12372,9 @@ lpfc_rq_adjust_repost(struct lpfc_hba *p
++static uint32_t
+ lpfc_rcv_plogi_plogi_issue(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 			   void *arg, uint32_t evt)
  {
- 	uint32_t cnt;
+@@ -2147,7 +2155,7 @@ static uint32_t (*lpfc_disc_action[NLP_S
+ 	lpfc_disc_illegal,		/* CMPL_ADISC      */
+ 	lpfc_disc_illegal,		/* CMPL_REG_LOGIN  */
+ 	lpfc_device_rm_unused_node,	/* DEVICE_RM       */
+-	lpfc_disc_illegal,		/* DEVICE_RECOVERY */
++	lpfc_device_recov_unused_node,	/* DEVICE_RECOVERY */
  
-+	/* sanity check on queue memory */
-+	if (!rq)
-+		return;
- 	cnt = lpfc_hbq_defs[qno]->entry_count;
+ 	lpfc_rcv_plogi_plogi_issue,	/* RCV_PLOGI   PLOGI_ISSUE    */
+ 	lpfc_rcv_prli_plogi_issue,	/* RCV_PRLI        */
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2011-12-12 20:51:18.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-12-12 20:51:39.000000000 -0500
+@@ -2913,8 +2913,8 @@ lpfc_scsi_prep_cmnd(struct lpfc_vport *v
+ 	int_to_scsilun(lpfc_cmd->pCmd->device->lun,
+ 			&lpfc_cmd->fcp_cmnd->fcp_lun);
  
- 	/* Recalc repost for RQs based on buffers initially posted */
-@@ -12349,6 +12420,9 @@ lpfc_rq_create(struct lpfc_hba *phba, st
- 	union lpfc_sli4_cfg_shdr *shdr;
- 	uint32_t hw_page_size = phba->sli4_hba.pc_sli4_params.if_page_sz;
+-	memcpy(&fcp_cmnd->fcpCdb[0], scsi_cmnd->cmnd, 16);
+-
++	memset(&fcp_cmnd->fcpCdb[0], 0, LPFC_FCP_CDB_LEN);
++	memcpy(&fcp_cmnd->fcpCdb[0], scsi_cmnd->cmnd, scsi_cmnd->cmd_len);
+ 	if (scsi_populate_tag_msg(scsi_cmnd, tag)) {
+ 		switch (tag[0]) {
+ 		case HEAD_OF_QUEUE_TAG:
+@@ -3238,6 +3238,15 @@ lpfc_queuecommand_lck(struct scsi_cmnd *
+ 		cmnd->result = err;
+ 		goto out_fail_command;
+ 	}
++	/*
++	 * Do not let the mid-layer retry I/O too fast. If an I/O is retried
++	 * without waiting a bit then indicate that the device is busy.
++	 */
++	if (cmnd->retries &&
++	    time_before(jiffies, (cmnd->jiffies_at_alloc +
++				  msecs_to_jiffies(LPFC_RETRY_PAUSE *
++						   cmnd->retries))))
++		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	ndlp = rdata->pnode;
  
-+	/* sanity check on queue memory */
-+	if (!hrq || !drq || !cq)
-+		return -ENODEV;
- 	if (!phba->sli4_hba.pc_sli4_params.supported)
- 		hw_page_size = SLI4_PAGE_SIZE;
+ 	if ((scsi_get_prot_op(cmnd) != SCSI_PROT_NORMAL) &&
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
+--- a/drivers/scsi/lpfc/lpfc_scsi.h	2011-04-16 08:29:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.h	2011-12-12 20:51:39.000000000 -0500
+@@ -21,6 +21,7 @@
+ #include <asm/byteorder.h>
  
-@@ -12550,6 +12624,7 @@ lpfc_eq_destroy(struct lpfc_hba *phba, s
- 	uint32_t shdr_status, shdr_add_status;
- 	union lpfc_sli4_cfg_shdr *shdr;
+ struct lpfc_hba;
++#define LPFC_FCP_CDB_LEN 16
  
-+	/* sanity check on queue memory */
- 	if (!eq)
- 		return -ENODEV;
- 	mbox = mempool_alloc(eq->phba->mbox_mem_pool, GFP_KERNEL);
-@@ -12605,6 +12680,7 @@ lpfc_cq_destroy(struct lpfc_hba *phba, s
- 	uint32_t shdr_status, shdr_add_status;
- 	union lpfc_sli4_cfg_shdr *shdr;
+ #define list_remove_head(list, entry, type, member)		\
+ 	do {							\
+@@ -102,7 +103,7 @@ struct fcp_cmnd {
+ #define  WRITE_DATA      0x01	/* Bit 0 */
+ #define  READ_DATA       0x02	/* Bit 1 */
  
-+	/* sanity check on queue memory */
- 	if (!cq)
- 		return -ENODEV;
- 	mbox = mempool_alloc(cq->phba->mbox_mem_pool, GFP_KERNEL);
-@@ -12658,6 +12734,7 @@ lpfc_mq_destroy(struct lpfc_hba *phba, s
- 	uint32_t shdr_status, shdr_add_status;
- 	union lpfc_sli4_cfg_shdr *shdr;
+-	uint8_t fcpCdb[16];	/* SRB cdb field is copied here */
++	uint8_t fcpCdb[LPFC_FCP_CDB_LEN]; /* SRB cdb field is copied here */
+ 	uint32_t fcpDl;		/* Total transfer length */
  
-+	/* sanity check on queue memory */
- 	if (!mq)
- 		return -ENODEV;
- 	mbox = mempool_alloc(mq->phba->mbox_mem_pool, GFP_KERNEL);
-@@ -12711,6 +12788,7 @@ lpfc_wq_destroy(struct lpfc_hba *phba, s
- 	uint32_t shdr_status, shdr_add_status;
- 	union lpfc_sli4_cfg_shdr *shdr;
+ };
+@@ -153,5 +154,5 @@ struct lpfc_scsi_buf {
  
-+	/* sanity check on queue memory */
- 	if (!wq)
- 		return -ENODEV;
- 	mbox = mempool_alloc(wq->phba->mbox_mem_pool, GFP_KERNEL);
-@@ -12764,6 +12842,7 @@ lpfc_rq_destroy(struct lpfc_hba *phba, s
- 	uint32_t shdr_status, shdr_add_status;
- 	union lpfc_sli4_cfg_shdr *shdr;
- 
-+	/* sanity check on queue memory */
- 	if (!hrq || !drq)
- 		return -ENODEV;
- 	mbox = mempool_alloc(hrq->phba->mbox_mem_pool, GFP_KERNEL);
+ #define LPFC_SCSI_DMA_EXT_SIZE 264
+ #define LPFC_BPL_SIZE          1024
+-
++#define LPFC_RETRY_PAUSE       300
+ #define MDAC_DIRECT_CMD                  0x22
+diff -upNr a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c	2011-11-03 10:24:28.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_vport.c	2011-12-12 20:51:39.000000000 -0500
+@@ -774,10 +774,10 @@ lpfc_create_vport_work_array(struct lpfc
+ 		return NULL;
+ 	spin_lock_irq(&phba->hbalock);
+ 	list_for_each_entry(port_iterator, &phba->port_list, listentry) {
++		if (port_iterator->load_flag & FC_UNLOADING)
++			continue;
+ 		if (!scsi_host_get(lpfc_shost_from_vport(port_iterator))) {
+-			if (!(port_iterator->load_flag & FC_UNLOADING))
+-				lpfc_printf_vlog(port_iterator, KERN_ERR,
+-					 LOG_VPORT,
++			lpfc_printf_vlog(port_iterator, KERN_ERR, LOG_VPORT,
+ 					 "1801 Create vport work array FAILED: "
+ 					 "cannot do scsi_host_get\n");
+ 			continue;
 
 
 
