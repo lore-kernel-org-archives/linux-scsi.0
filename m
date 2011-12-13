@@ -1,57 +1,44 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH v5 5/6] ata: add ata port system PM callbacks
-Date: Tue, 13 Dec 2011 14:07:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1112131405560.1192-100000@iolanthe.rowland.org>
-References: <1323802667.3060.2.camel@hp6530s>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
+ routine fails
+Date: Tue, 13 Dec 2011 15:38:17 -0500
+Message-ID: <4EE7B7B9.7060700@garzik.org>
+References: <1323688722-25400-1-git-send-email-amit.sahrawat83@gmail.com> <1323694267.20451.5.camel@dabdike> <CAKYAXd-3LYJUWbAqaT4XfbNXJ_F0L1Lxu1evUxLyu=poHLMFug@mail.gmail.com> <1323766382.8163.12.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1323802667.3060.2.camel@hp6530s>
-Sender: linux-ide-owner@vger.kernel.org
-To: Lin Ming <ming.m.lin@intel.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, "Huang, Ying" <ying.huang@intel.com>, "Zhang, Rui" <rui.zhang@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:35913 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754944Ab1LMUiV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 15:38:21 -0500
+In-Reply-To: <1323766382.8163.12.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Namjae Jeon <linkinjeon@gmail.com>, Amit Sahrawat <amit.sahrawat83@gmail.com>, Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 14 Dec 2011, Lin Ming wrote:
+On 12/13/2011 03:53 AM, James Bottomley wrote:
+> On Tue, 2011-12-13 at 09:20 +0900, Namjae Jeon wrote:
+>>> This whole patch looks like a layering violation.  Why not just update
+>>> the SAT layer to translate the MODE SENSE correctly?
+>> Would plz you explain more ? I didn't clearly understand your point yet.
+>
+> The ATA layer does translation for SCSI commands.  Just translate the
+> mode sense correctly to use IDENTIFY word 85.  It's a smaller patch and
+> no need for any changes in SCSI.
 
-> > This suggests that the PM core is not the right place to solve the 
-> > problem.  One possible solution is for the subsystem or device driver 
-> > to call pm_runtime_get_sync(dev->parent) at the start of the 
-> > system-resume procedure and pm_runtime_put_sync(dev->parent) at the 
-> > end.
-> 
-> How about below?
-> (Not tested yet)
-> 
-> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-> index a633076..5cf9a19 100644
-> --- a/drivers/scsi/scsi_pm.c
-> +++ b/drivers/scsi/scsi_pm.c
-> @@ -71,9 +71,17 @@ static int scsi_bus_suspend_common(struct device *dev, pm_message_t msg)
->  static int scsi_bus_resume_common(struct device *dev)
->  {
->  	int err = 0;
-> +	bool put = false;
->  
-> -	if (scsi_is_sdev_device(dev))
-> +	if (scsi_is_sdev_device(dev)) {
-> +		if (dev->parent && pm_runtime_suspended(dev->parent)) {
-> +			pm_runtime_get_sync(dev->parent);
-> +			put = true;
-> +		}
+Correct.
 
-You don't need to test anything.  Always call pm_runtime_get_sync().
+> Actually, looking at it, it seems to be correct ... why is it not
+> working for you?
 
->  		err = scsi_dev_type_resume(dev);
-> +		if (put)
-> +			pm_runtime_put_sync(dev->parent);
+Indeed -- the patch attempts to address a problem that the libata-scsi 
+translation module already handles.
 
-Same here.
+I would look at why the device is not properly reporting that already. 
+If necessary, we would update libata not SCSI.
 
-> +	}
->  
->  	if (err == 0) {
->  		pm_runtime_disable(dev);
+	Jeff
 
-Alan Stern
 
