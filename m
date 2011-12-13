@@ -1,126 +1,88 @@
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Subject: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
- routine fails
-Date: Tue, 13 Dec 2011 10:26:21 +0530
-Message-ID: <CADDb1s0jFem00eqmm-jp0-0YCzS0bows6yvS77UuaEj=5GYdEw@mail.gmail.com>
-References: <1323688722-25400-1-git-send-email-amit.sahrawat83@gmail.com>
-	<1323694267.20451.5.camel@dabdike>
-	<CAKYAXd-3LYJUWbAqaT4XfbNXJ_F0L1Lxu1evUxLyu=poHLMFug@mail.gmail.com>
-	<CADDb1s2SOK5sC3N0OOdkBrPuDKc2d2A4z4yso4jYs=1rbxNmkA@mail.gmail.com>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: mptspi init failure on Sparc SMP in Linux 3.0
+Date: Tue, 13 Dec 2011 12:51:04 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
+References: <4EB7D137.7090903@univ.rzeszow.pl>
+	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl>
+ <1320721518.18929.15.camel@deadeye>
+ <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com>
+ <4EE5F1F4.3000006@univ.rzeszow.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lpp01m010-f46.google.com ([209.85.215.46]:59485 "EHLO
-	mail-lpp01m010-f46.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752640Ab1LME4X convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Dec 2011 23:56:23 -0500
-In-Reply-To: <CADDb1s2SOK5sC3N0OOdkBrPuDKc2d2A4z4yso4jYs=1rbxNmkA@mail.gmail.com>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:35106 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751909Ab1LMHVK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2011 02:21:10 -0500
+In-Reply-To: <4EE5F1F4.3000006@univ.rzeszow.pl>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Namjae Jeon <linkinjeon@gmail.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Biblioteka UR <biblio@univ.rzeszow.pl>
+Cc: Ben Hutchings <ben@decadent.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, "647900@bugs.debian.org" <647900@bugs.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-On Tue, Dec 13, 2011 at 10:24 AM, Amit Sahrawat
-<amit.sahrawat83@gmail.com> wrote:
->
-> Hi James,
->
->
->
-> We verified the changes by actually putting the setup through a serie=
-s of test cases. There were test cases where-in we were able to reduce =
-the filesystem corruption by 100%.
->
-> Yes, In normal operation SYNC_CACHE gets called up when we do a safe =
-removal of the device. But, Setting WCE also takes cares of sending the=
- SYNC_CACHE command in between the operations also.
->
->
->
-> What we are making sure is, that by providing this interface we can h=
-ave WCE enabled for some HDD =96that will mark QUEUE ORDERING to QUEUE_=
-ORDERED_DRAIN_FLUSH(Preflush-Postflush)(i.e., flushing will occur for a=
-ll the Mass Storage devices - which in turn will keep on calling SYNC_C=
-ACHE for these devices.
->
->
->
-> We checked this on USB HDD=92s, USB SSD, and USB Flash from a number =
-of vendors =96 all seemed to work pretty well with these changes.
->
->
->
-> Please share your opinion.
->
->
->
-> Thanks & Regards,
->
-> Amit Sahrawat
->
->
->
->
-> On Tue, Dec 13, 2011 at 5:50 AM, Namjae Jeon <linkinjeon@gmail.com> w=
-rote:
->>
->> 2011/12/12 James Bottomley <James.Bottomley@hansenpartnership.com>:
->> > On Mon, 2011-12-12 at 16:48 +0530, Amit Sahrawat wrote:
->> >> It has been observed that a number of USB HDD's do not respond co=
-rrectly
->> >> to SCSI mode sense command(retrieve caching pages) which results =
-in their
->> >> Write Cache being discarded by queue requests i.e., WCE if left s=
-et to
->> >> '0'(disabled).
->> >> This results in a number of Filesystem corruptions, when the devi=
-ce
->> >> is unplugged abruptly.
->> >
->> > Um, how would knowing the caching type correctly help? =A0If you s=
-urprise
->> > unplug the device, we can't send a flush to it anyway ...
->> Hi. James.
->> We can get device specification buffer to use ata_16 cmd.So we are
->> able to distinguish caching type by using 85byte of buffer.
->> And filesystem is using write barrier function to protect important
->> data like journaling data.
->> If filesystem is able to use write barrier by correctly setting WCE,
->> ordering can be guaranteed to flush data(preflush/postflush) to
->> internal write cache in hdd before power off. so filesystem can get
->> consistency and reliability by sudden plug and power off.
->> >
->> >> So, in order to identify the devices correctly - give it
->> >> a last try using ATA_16 after failure from normal routine.
->> >> Introduce a mechanism to store write-cache type using /sys/class/
->> >> interface, so that the normal code continues to function without =
-errors.
->> >>
->> >> Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
->> >> Signed-off-by: Nam-Jae Jeon <namjae.jeon@samsung.com>
->> >
->> > This whole patch looks like a layering violation. =A0Why not just =
-update
->> > the SAT layer to translate the MODE SENSE correctly?
->> Would plz you explain more ? I didn't clearly understand your point =
-yet.
->> >
->> > James
->> >
->> >
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-ke=
-rnel" in
->> > the body of a message to majordomo@vger.kernel.org
->> > More majordomo info at =A0http://vger.kernel.org/majordomo-info.ht=
-ml
->> > Please read the FAQ at =A0http://www.tux.org/lkml/
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+VGhlIGlzc3VlIGlzIGhhcHBlbmluZyBiZWNhdXNlIGNvbmZpZyBwYWdlIGlzIHRpbWluZyBvdXQg
+YW5kIGluaXRpYWxpemF0aW9uIGlzIG5vdCBzdWNjZXNzZnVsDQpDYW4geW91IGNvbGxlY3QgdGhl
+IGtlcm5lbCBtZXNzYWdlcyBldmVuIGZvciB0aGUgS0VSTl9ERUJVRyBtZXNzYWdlcyBhbHNvIGZv
+ciBtcHQgZHJpdmVyPw0KVGhpcyBpcyB0byBmaW5kIG91dCB3aGljaCBjb25maWcgcGFnZSBpcyBm
+YWlsaW5nLg0KDQoNCkFsc28gd2hhdCBpcyB0aGUgZi93IHZlcnNpb24gb2YgTFNJNTNDMTAzMCBT
+Q1NJIGNvbnRyb2xsZXIgdGhhdCB5b3UgYXJlIHVzaW5nLg0KV2UgbmVlZCB0byB2ZXJpZnkgdGhl
+IGNvbXBhdGliaWxpdHkgYmV0d2VlbiB0aGUgZi93IGFuZCB2ZXJzaW9uIHZlcnNpb25zIHRoYXQg
+eW91IGFyZSB1c2luZy4NCg0KUmVnYXJkcywNCk5hZ2FsYWtzaG1pDQoNCg0KLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCkZyb206IEJpYmxpb3Rla2EgVVIgW21haWx0bzpiaWJsaW9AdW5pdi5y
+emVzem93LnBsXSANClNlbnQ6IE1vbmRheSwgRGVjZW1iZXIgMTIsIDIwMTEgNTo1MiBQTQ0KVG86
+IE5hbmRpZ2FtYSwgTmFnYWxha3NobWkNCkNjOiBCZW4gSHV0Y2hpbmdzOyBNb29yZSwgRXJpYzsg
+NjQ3OTAwQGJ1Z3MuZGViaWFuLm9yZzsgbGludXgtc2NzaTsgREwtTVBUIEZ1c2lvbiBMaW51eA0K
+U3ViamVjdDogUmU6IG1wdHNwaSBpbml0IGZhaWx1cmUgb24gU3BhcmMgU01QIGluIExpbnV4IDMu
+MA0KDQpOb3RoaW5nIGhhcyBjaGFuZ2VkIGluIHRoZSB0b3BpYz8NCkkgaGF2ZSB0aGUgbGF0ZXN0
+IGxpbnV4LWltYWdlLTMuMS4wLTEtc3BhcmM2NC1zbXAgYW5kIHRoZSBzYW1lIHByb2JsZW0uIA0K
+U3VuRmlyZSB2NDkwIGlzIHJ1bm5pbmcgd2VsbCB3aXRoIGxpbnV4LWltYWdlLTMuMS4wLTEtc3Bh
+cmM2NCAobm9uIHNtcCkuDQoNClJlZ2FyZHMsDQpNYXJpdXN6DQoNClcgZG5pdSAyMDExLTExLTEw
+IDEyOjMyLCBOYW5kaWdhbWEsIE5hZ2FsYWtzaG1pIHBpc3plOg0KPiBDYW4geW91IGNvbGxlY3Qg
+ZGVidWcgbGV2ZWwgZm9yIElOSVQ/DQo+DQo+IFJlZ2FyZHMsDQo+IE5hZ2FsYWtzaG1pDQo+DQo+
+DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEJlbiBIdXRjaGluZ3MgW21h
+aWx0bzpiZW5AZGVjYWRlbnQub3JnLnVrXQ0KPiBTZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAwOCwg
+MjAxMSA4OjM1IEFNDQo+IFRvOiBNb29yZSwgRXJpYw0KPiBDYzogQmlibGlvdGVrYSBVUjsgNjQ3
+OTAwQGJ1Z3MuZGViaWFuLm9yZzsgbGludXgtc2NzaTsgREwtTVBUIEZ1c2lvbiBMaW51eA0KPiBT
+dWJqZWN0OiBtcHRzcGkgaW5pdCBmYWlsdXJlIG9uIFNwYXJjIFNNUCBpbiBMaW51eCAzLjANCj4N
+Cj4gTWFyaXVzeiBhdCBCaWJsaW90ZWthIFVSIHJlcG9ydHMgdGhpcyBmYWlsdXJlIGluIGEgbmV3
+IERlYmlhbiBpbnN0YWxsYXRpb24gb24gYSBTdW5GaXJlIHY0OTAgc3lzdGVtOg0KPg0KPj4gWyAg
+ICAwLjAwMDAwMF0gTGludXggdmVyc2lvbiAzLjAuMC0xLXNwYXJjNjQtc21wIChEZWJpYW4gMy4w
+LjAtMykgKGJlbkBkZWNhZGVudC5vcmcudWspIChnY2MgdmVyc2lvbiA0LjUuMyAoRGViaWFuIDQu
+NS4zLTgpICkgIzEgU01QIFNhdCBBdWcgMjcgMTk6NTE6MTQgVVRDIDIwDQo+IFsuLi5dDQo+PiBb
+ICAgNTIuMTkwNDMzXSBGdXNpb24gTVBUIGJhc2UgZHJpdmVyIDMuMDQuMTkNCj4+IFsgICA1Mi4y
+Mzg1MjhdIENvcHlyaWdodCAoYykgMTk5OS0yMDA4IExTSSBDb3Jwb3JhdGlvbg0KPiBbLi4uXQ0K
+Pj4gWyAgIDUyLjM3MDE2MV0gRnVzaW9uIE1QVCBTUEkgSG9zdCBkcml2ZXIgMy4wNC4xOQ0KPj4g
+WyAgIDUyLjM3MDM2NF0gbXB0YmFzZTogaW9jMDogSW5pdGlhdGluZyBicmluZ3VwDQo+IFsuLi5d
+DQo+PiBbICAgNTIuODQ3NTA0XSBpb2MwOiBMU0k1M0MxMDMwIEMwOiBDYXBhYmlsaXRpZXM9e0lu
+aXRpYXRvcixUYXJnZXR9DQo+IFsuLi5dDQo+PiBbICAgNjguMzE5NTE4XSBtcHRiYXNlOiBpb2Mw
+OiBXQVJOSU5HIC0gSXNzdWluZyBSZXNldCBmcm9tIG1wdF9jb25maWchISwgZG9vcmJlbGw9MHgy
+NDAwMDAwMA0KPj4gWyAgIDY5LjE3NTUwNV0gbXB0YmFzZTogaW9jMDogQXR0ZW1wdGluZyBSZXRy
+eSBDb25maWcgcmVxdWVzdCB0eXBlIDB4MywgcGFnZSAweCwgYWN0aW9uIDANCj4+IFsgICA4NC4y
+Njc1MjRdIG1wdGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1aW5nIFJlc2V0IGZyb20gbXB0X2Nv
+bmZpZyEhLCBkb29yYmVsbD0weDI0MDAwMDAwDQo+PiBbICAgODQuMzY0NDgyXSBtcHRiYXNlOiBp
+b2MwOiBJbml0aWF0aW5nIHJlY292ZXJ5DQo+PiBbICAgOTAuMjk5NTA1XSBtcHRiYXNlOiBpb2Mw
+OiBBdHRlbXB0aW5nIFJldHJ5IENvbmZpZyByZXF1ZXN0IHR5cGUgMHgzLCBwYWdlIDB4LCBhY3Rp
+b24gMA0KPj4gWyAgMTA1LjM5MTUyM10gbXB0YmFzZTogaW9jMDogV0FSTklORyAtIElzc3Vpbmcg
+UmVzZXQgZnJvbQ0KPj4gbXB0X2NvbmZpZyEhLCBkb29yYmVsbD0weDI0MDAwMDAwIFsgIDEwNS40
+ODg1MDldIG1wdGJhc2U6IGlvYzA6DQo+PiBJbml0aWF0aW5nIHJlY292ZXJ5IFsgIDEyNi41Mjc1
+MTZdIG1wdGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1aW5nDQo+PiBSZXNldCBmcm9tIG1wdF9j
+b25maWchISwgZG9vcmJlbGw9MHgyNDAwMDAwMCBbICAxMjcuMzgzNTA1XSBtcHRiYXNlOg0KPj4g
+aW9jMDogQXR0ZW1wdGluZyBSZXRyeSBDb25maWcgcmVxdWVzdCB0eXBlIDB4NCwgcGFnZSAweDEs
+IGFjdGlvbiAwIFsNCj4+IDE0Mi40NzU1MjhdIG1wdGJhc2U6IGlvYzA6IFdBUk5JTkcgLSBJc3N1
+aW5nIFJlc2V0IGZyb20gbXB0X2NvbmZpZyEhLA0KPj4gZG9vcmJlbGw9MHgyNDAwMDAwMCBbICAx
+NDIuNTcyNTA0XSBtcHRiYXNlOiBpb2MwOiBJbml0aWF0aW5nIHJlY292ZXJ5DQo+PiBbICAxNDgu
+NjExNTA1XSBtcHRiYXNlOiBpb2MwOiBBdHRlbXB0aW5nIFJldHJ5IENvbmZpZyByZXF1ZXN0IHR5
+cGUNCj4+IDB4NCwgcGFnZSAweDEsIGFjdGlvbiAwIFsgIDE2My43MDM0ODJdIG1wdGJhc2U6IGlv
+YzA6IFdBUk5JTkcgLQ0KPj4gSXNzdWluZyBSZXNldCBmcm9tIG1wdF9jb25maWchISwgZG9vcmJl
+bGw9MHgyNDAwMDAwMCBbICAxNjMuODAwNDk1XQ0KPj4gbXB0YmFzZTogaW9jMDogSW5pdGlhdGlu
+ZyByZWNvdmVyeQ0KPiAoSSB0aGluayB0aGVyZSBhcmUgc29tZSBjaGFyYWN0ZXJzIG1pc3Npbmcg
+aW4gdGhlIGFib3ZlIGxvZywgcGFydGljdWxhcmx5IHRoZSBwYWdlIG51bWJlcnMuKQ0KPg0KPiBI
+b3dldmVyLCB0aGUgZHJpdmVyIGFwcGFyZW50bHkgd29ya3Mgb24gdGhlIHNhbWUgc3lzdGVtIGlu
+IGEgIVNNUCBrZXJuZWwgY29uZmlndXJhdGlvbi4NCj4NCj4gVGhlIGNvbXBsZXRlIHJlcG9ydCBj
+YW4gYmUgZm91bmQgYXQ8aHR0cDovL2J1Z3MuZGViaWFuLm9yZy82NDc5MDA+Lg0KPiBDYW4geW91
+IHN1Z2dlc3QgYW55IHdheSB0byBjb3JyZWN0IG9yIGRlYnVnIHRoaXMgcHJvYmxlbT8NCj4NCj4g
+QmVuLg0KPg0KPiAtLQ0KPiBCZW4gSHV0Y2hpbmdzDQo+IFlvdSBjYW4ndCBoYXZlIGV2ZXJ5dGhp
+bmcuICBXaGVyZSB3b3VsZCB5b3UgcHV0IGl0Pw0KPg0KDQo=
