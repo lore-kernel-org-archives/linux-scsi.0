@@ -1,33 +1,38 @@
-From: Biblioteka UR <biblio@univ.rzeszow.pl>
-Subject: Re: mptspi init failure on Sparc SMP in Linux 3.0
-Date: Tue, 13 Dec 2011 09:23:57 +0100
-Message-ID: <4EE70B9D.5030309@univ.rzeszow.pl>
-References: <4EB7D137.7090903@univ.rzeszow.pl>	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl> <1320721518.18929.15.camel@deadeye> <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com> <4EE5F1F4.3000006@univ.rzeszow.pl> <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
+ routine fails
+Date: Tue, 13 Dec 2011 12:53:02 +0400
+Message-ID: <1323766382.8163.12.camel@dabdike>
+References: <1323688722-25400-1-git-send-email-amit.sahrawat83@gmail.com>
+	 <1323694267.20451.5.camel@dabdike>
+	 <CAKYAXd-3LYJUWbAqaT4XfbNXJ_F0L1Lxu1evUxLyu=poHLMFug@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atena.univ.rzeszow.pl ([62.93.43.134]:34161 "EHLO
-	atena.univ.rzeszow.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753099Ab1LMIYX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 03:24:23 -0500
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41022 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751660Ab1LMIxI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2011 03:53:08 -0500
+In-Reply-To: <CAKYAXd-3LYJUWbAqaT4XfbNXJ_F0L1Lxu1evUxLyu=poHLMFug@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, "647900@bugs.debian.org" <647900@bugs.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: Namjae Jeon <linkinjeon@gmail.com>
+Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello Nagalakshimi.
+On Tue, 2011-12-13 at 09:20 +0900, Namjae Jeon wrote:
+> > This whole patch looks like a layering violation.  Why not just update
+> > the SAT layer to translate the MODE SENSE correctly?
+> Would plz you explain more ? I didn't clearly understand your point yet.
 
-Thank you for your reply.
+The ATA layer does translation for SCSI commands.  Just translate the
+mode sense correctly to use IDENTIFY word 85.  It's a smaller patch and
+no need for any changes in SCSI.
 
-W dniu 2011-12-13 08:21, Nandigama, Nagalakshmi pisze:
-> The issue is happening because config page is timing out and initialization is not successful
-> Can you collect the kernel messages even for the KERN_DEBUG messages also for mpt driver?
-> This is to find out which config page is failing.
-Maybe so, but I confess that I do not know how. :( Do you have any 
-suggestions? I begin my adventure with Debian. I have little experience 
-with Centos, but it doesn't work with Sparc. :)
+Actually, looking at it, it seems to be correct ... why is it not
+working for you?
 
-Regards,
-Mariusz
+James
+
+
