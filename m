@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 0/7] lpfc 8.3.28: Update lpfc to revision 8.3.28
-Date: Tue, 13 Dec 2011 13:20:18 -0500
-Message-ID: <1323800420.1111.10.camel@ogier>
+Subject: [PATCH 3/7] lpfc 8.3.28: Add support for ABTS failure handling
+Date: Tue, 13 Dec 2011 13:21:57 -0500
+Message-ID: <1323800518.1111.13.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -9,107 +9,541 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:31044 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755171Ab1LMS0t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 13:26:49 -0500
+	with ESMTP id S1755088Ab1LMS0s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2011 13:26:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch set updates the lpfc driver to revision 8.3.28.
-
-The patches for 8.3.28 contain:
-
-Miscellaneous fixes in sysfs and mgmt interfaces:
-- Added SLI4 INTF_TYPE and SLI_FAMILY as sub-field to the fwrev sysfs
-  attribute (CR 124103)
-- Added a sysfs attribute "protocol" to report SLI4 port link protocol
-  type (CR 124102)
-- Increment mix-and-match minor number by 1 for added "protocol" sysfs
-  attribute. (124102)
-- Move the link speed check into the generic sli3/sli4 code
-  path. (CR 124185, 124122)
-- Deleted check for inExtWLen (CR 122523)
-- Add the word "offline" to message 2889 (CR 124385)
-- Conditionalize the firmware upgrade/downgrade so that it is only
-  attempted for SLI4 type 2 boards (CR 124406)
-- Return an error if the mbox sysfs is called. (CR 124210)
-- When port_state is less than LPFC_VPORT_READY, report
-  FC_PORTSTATE_BYPASSED (CR 120018)
-- Added driver support for performing persistent linkdown based on
-  configure region 23 (CR 124534)
-- Added restore state and error log when sysfs board_mode attribute
-  access failed (CR 124158)
-- Added support for SLI4_CONFIG non-embedded COMN_GET_CNTL_ADDL_ATTR
-  pass-through (CR 124466)
-- Rejecting un-supported multi-buffer mailbox commands (CR 124771)
-- Byte swap the extended data request and response data for extended
-  mailbox data (CR 125081)
-
-Adapter (SLI) interface fixes:
-- Modify WQ handling to use entry_repost (CR 123981)
-- Fix for ABTS.  Do not free original IOCB whenever ABTS fails. (CR 115829)
-- Check board for FCoE before reading FCoE paramaters (CR124731)
-- Add support for SLI4 FC Loop mode (CR 124721)
-- Add support for resource count changes during fw reset. (CR 125888, 125675)
-- Increase CQE count from 256 to 1024. (CR 126149)
-
 Add support for ABTS failure handling:
+
 - Add asynchronous ABTS notification event feature to driver (CR 124578)
 - Change driver message 3092 and 3116 to KERN_WARNING (CR 124768)
 - Alter the SCR ELS command to use the temporary RPI and the
   Destination DID for SLI4-FC (CR 126070)
 
-FC and SCSI Discovery Fixes:
-- Clear the virtual fabrics bit (word 1 bit 30) when sending the FLOGI
-  and FDISC. (CR 124339)
-- Return a MLQUEUE_DEVICE_BUSY if the driver detects that an I/O is being
-  retried too quickly (CR 124668)
-- Remove NDLP reference put in lpfc_cmpl_els_logo_acc for all but fabric
-  nodes (CR 123924)
-- Only retry FDISCs every second and stop retrying after devloss number
-  of retries (CR 13939)
-- Check to see if vports are unloading before adding them to the vport
-  work array. (CR 124996)
-- Fixed illegal state transition during driver unload (CR 124191)
-- Added missing protection on setting/clearing of vport->fc_flag bit (CR 126002)
-- Set NPIV flag in lpfc_mbx_process_link_up for all ports sli3 and
-  above. (CR 126094)
-- Clear FCP command bytes that are not used. (CR 126209)
-
-Critical Miscellaneous fixes
-- Make lpfc_sli4_pci_mem_unset interface type aware (CR 124390)
-- Convert byte count to word count when calling __iowrite32_copy (CR 122550)
-- Checked the ERR1 and ERR2 registers for error attention due to SLI
-  Port state affected by forced debug dump. (CR 122986, 122426, 124859)
-- Use the lpfc_readl routine instead of the readl for the port status
-  register read in lpfc_handle_eratt_s4 (CR 125403)
-- Call lpfc_sli4_queue_destroy inside of lpfc_sli4_brdreset before doing
-  a pci function reset (CR 125124, 125168, 125572, 125622)
-- Zero out the HBQ when it is allocated (CR 125663)
-- Alter port reset log messages to indicate error type (CR 125989)
-- Added proper NULL pointer checking to all the places that accessing
-  the queue memory (CR 125832)
-
-Add Loopback support for SLI4 adapters
-- Add Basic support for SLI4 Loopback.
-  (CR 124951, 125766, 124951, 125843, 125832, 125843)
-- Added missing protection in setting/clearing of phba->link_flag bit
-  field (CR 125994)
-- Use link type and link number obtained from READ_CONFIG mailbox
-  command. (CR 126264)
-
-Update Version to 8.3.28.
-
-
-The patches were cut against scsi-misc-2.6
-
--- james s
-
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
 Signed-off-by: James Smart <james.smart@emulex.com>
 
+ ---
 
+ lpfc_crtn.h    |    4 -
+ lpfc_els.c     |   50 -------------
+ lpfc_hbadisc.c |   67 +++++++++++++++++
+ lpfc_hw.h      |   13 ++-
+ lpfc_mbox.c    |    4 +
+ lpfc_scsi.c    |    4 -
+ lpfc_sli.c     |  214 +++++++++++++++++++++++++++++++++++++++++++++++----------
+ 7 files changed, 263 insertions(+), 93 deletions(-)
+
+
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2011-12-12 20:50:38.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2011-12-12 20:51:18.000000000 -0500
+@@ -106,7 +106,7 @@ void lpfc_cleanup(struct lpfc_vport *);
+ void lpfc_disc_timeout(unsigned long);
+ 
+ struct lpfc_nodelist *__lpfc_findnode_rpi(struct lpfc_vport *, uint16_t);
+-
++struct lpfc_nodelist * lpfc_findnode_rpi(struct lpfc_vport *, uint16_t);
+ void lpfc_worker_wake_up(struct lpfc_hba *);
+ int lpfc_workq_post_event(struct lpfc_hba *, void *, void *, uint32_t);
+ int lpfc_do_work(void *);
+@@ -455,3 +455,5 @@ int lpfc_sli4_queue_create(struct lpfc_h
+ void lpfc_sli4_queue_destroy(struct lpfc_hba *);
+ int lpfc_sli4_read_config(struct lpfc_hba *phba);
+ int lpfc_scsi_buf_update(struct lpfc_hba *phba);
++void lpfc_sli4_abts_err_handler(struct lpfc_hba *, struct lpfc_nodelist *,
++				struct sli4_wcqe_xri_aborted *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+--- a/drivers/scsi/lpfc/lpfc_els.c	2011-12-12 20:50:38.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_els.c	2011-12-12 20:51:18.000000000 -0500
+@@ -6596,56 +6596,6 @@ dropit:
+ }
+ 
+ /**
+- * lpfc_find_vport_by_vpid - Find a vport on a HBA through vport identifier
+- * @phba: pointer to lpfc hba data structure.
+- * @vpi: host virtual N_Port identifier.
+- *
+- * This routine finds a vport on a HBA (referred by @phba) through a
+- * @vpi. The function walks the HBA's vport list and returns the address
+- * of the vport with the matching @vpi.
+- *
+- * Return code
+- *    NULL - No vport with the matching @vpi found
+- *    Otherwise - Address to the vport with the matching @vpi.
+- **/
+-struct lpfc_vport *
+-lpfc_find_vport_by_vpid(struct lpfc_hba *phba, uint16_t vpi)
+-{
+-	struct lpfc_vport *vport;
+-	unsigned long flags;
+-	int i = 0;
+-
+-	/* The physical ports are always vpi 0 - translate is unnecessary. */
+-	if (vpi > 0) {
+-		/*
+-		 * Translate the physical vpi to the logical vpi.  The
+-		 * vport stores the logical vpi.
+-		 */
+-		for (i = 0; i < phba->max_vpi; i++) {
+-			if (vpi == phba->vpi_ids[i])
+-				break;
+-		}
+-
+-		if (i >= phba->max_vpi) {
+-			lpfc_printf_log(phba, KERN_ERR, LOG_ELS,
+-					 "2936 Could not find Vport mapped "
+-					 "to vpi %d\n", vpi);
+-			return NULL;
+-		}
+-	}
+-
+-	spin_lock_irqsave(&phba->hbalock, flags);
+-	list_for_each_entry(vport, &phba->port_list, listentry) {
+-		if (vport->vpi == i) {
+-			spin_unlock_irqrestore(&phba->hbalock, flags);
+-			return vport;
+-		}
+-	}
+-	spin_unlock_irqrestore(&phba->hbalock, flags);
+-	return NULL;
+-}
+-
+-/**
+  * lpfc_els_unsol_event - Process an unsolicited event from an els sli ring
+  * @phba: pointer to lpfc hba data structure.
+  * @pring: pointer to a SLI ring.
+diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-12-12 20:50:38.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-12-12 20:51:18.000000000 -0500
+@@ -5352,6 +5352,73 @@ lpfc_findnode_wwpn(struct lpfc_vport *vp
+ 	return ndlp;
+ }
+ 
++/*
++ * This routine looks up the ndlp lists for the given RPI. If the rpi
++ * is found, the routine returns the node element list pointer else
++ * return NULL.
++ */
++struct lpfc_nodelist *
++lpfc_findnode_rpi(struct lpfc_vport *vport, uint16_t rpi)
++{
++	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
++	struct lpfc_nodelist *ndlp;
++
++	spin_lock_irq(shost->host_lock);
++	ndlp = __lpfc_findnode_rpi(vport, rpi);
++	spin_unlock_irq(shost->host_lock);
++	return ndlp;
++}
++
++/**
++ * lpfc_find_vport_by_vpid - Find a vport on a HBA through vport identifier
++ * @phba: pointer to lpfc hba data structure.
++ * @vpi: the physical host virtual N_Port identifier.
++ *
++ * This routine finds a vport on a HBA (referred by @phba) through a
++ * @vpi. The function walks the HBA's vport list and returns the address
++ * of the vport with the matching @vpi.
++ *
++ * Return code
++ *    NULL - No vport with the matching @vpi found
++ *    Otherwise - Address to the vport with the matching @vpi.
++ **/
++struct lpfc_vport *
++lpfc_find_vport_by_vpid(struct lpfc_hba *phba, uint16_t vpi)
++{
++	struct lpfc_vport *vport;
++	unsigned long flags;
++	int i = 0;
++
++	/* The physical ports are always vpi 0 - translate is unnecessary. */
++	if (vpi > 0) {
++		/*
++		 * Translate the physical vpi to the logical vpi.  The
++		 * vport stores the logical vpi.
++		 */
++		for (i = 0; i < phba->max_vpi; i++) {
++			if (vpi == phba->vpi_ids[i])
++				break;
++		}
++
++		if (i >= phba->max_vpi) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_ELS,
++					 "2936 Could not find Vport mapped "
++					 "to vpi %d\n", vpi);
++			return NULL;
++		}
++	}
++
++	spin_lock_irqsave(&phba->hbalock, flags);
++	list_for_each_entry(vport, &phba->port_list, listentry) {
++		if (vport->vpi == i) {
++			spin_unlock_irqrestore(&phba->hbalock, flags);
++			return vport;
++		}
++	}
++	spin_unlock_irqrestore(&phba->hbalock, flags);
++	return NULL;
++}
++
+ void
+ lpfc_nlp_init(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	      uint32_t did)
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2011-08-10 14:34:51.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2011-12-12 20:51:18.000000000 -0500
+@@ -2819,7 +2819,8 @@ typedef struct {
+ #ifdef __BIG_ENDIAN_BITFIELD
+ 	uint32_t rsvd1     : 19;  /* Reserved                             */
+ 	uint32_t cdss      :  1;  /* Configure Data Security SLI          */
+-	uint32_t rsvd2     :  3;  /* Reserved                             */
++	uint32_t casabt    :  1;  /* Configure async abts status notice   */
++	uint32_t rsvd2     :  2;  /* Reserved                             */
+ 	uint32_t cbg       :  1;  /* Configure BlockGuard                 */
+ 	uint32_t cmv       :  1;  /* Configure Max VPIs                   */
+ 	uint32_t ccrp      :  1;  /* Config Command Ring Polling          */
+@@ -2839,14 +2840,16 @@ typedef struct {
+ 	uint32_t ccrp      :  1;  /* Config Command Ring Polling          */
+ 	uint32_t cmv	   :  1;  /* Configure Max VPIs                   */
+ 	uint32_t cbg       :  1;  /* Configure BlockGuard                 */
+-	uint32_t rsvd2     :  3;  /* Reserved                             */
++	uint32_t rsvd2     :  2;  /* Reserved                             */
++	uint32_t casabt    :  1;  /* Configure async abts status notice   */
+ 	uint32_t cdss      :  1;  /* Configure Data Security SLI          */
+ 	uint32_t rsvd1     : 19;  /* Reserved                             */
+ #endif
+ #ifdef __BIG_ENDIAN_BITFIELD
+ 	uint32_t rsvd3     : 19;  /* Reserved                             */
+ 	uint32_t gdss      :  1;  /* Configure Data Security SLI          */
+-	uint32_t rsvd4     :  3;  /* Reserved                             */
++	uint32_t gasabt    :  1;  /* Grant async abts status notice       */
++	uint32_t rsvd4     :  2;  /* Reserved                             */
+ 	uint32_t gbg       :  1;  /* Grant BlockGuard                     */
+ 	uint32_t gmv	   :  1;  /* Grant Max VPIs                       */
+ 	uint32_t gcrp	   :  1;  /* Grant Command Ring Polling           */
+@@ -2866,7 +2869,8 @@ typedef struct {
+ 	uint32_t gcrp	   :  1;  /* Grant Command Ring Polling           */
+ 	uint32_t gmv	   :  1;  /* Grant Max VPIs                       */
+ 	uint32_t gbg       :  1;  /* Grant BlockGuard                     */
+-	uint32_t rsvd4     :  3;  /* Reserved                             */
++	uint32_t rsvd4     :  2;  /* Reserved                             */
++	uint32_t gasabt    :  1;  /* Grant async abts status notice       */
+ 	uint32_t gdss      :  1;  /* Configure Data Security SLI          */
+ 	uint32_t rsvd3     : 19;  /* Reserved                             */
+ #endif
+@@ -3465,6 +3469,7 @@ typedef struct {
+ } ASYNCSTAT_FIELDS;
+ #define ASYNC_TEMP_WARN		0x100
+ #define ASYNC_TEMP_SAFE		0x101
++#define ASYNC_STATUS_CN		0x102
+ 
+ /* IOCB Command template for CMD_IOCB_RCV_ELS64_CX (0xB7)
+    or CMD_IOCB_RCV_SEQ64_CX (0xB5) */
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2011-12-12 20:49:51.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2011-12-12 20:51:18.000000000 -0500
+@@ -1293,6 +1293,10 @@ lpfc_config_port(struct lpfc_hba *phba, 
+ 		phba->sli_rev = LPFC_SLI_REV2;
+ 	mb->un.varCfgPort.sli_mode = phba->sli_rev;
+ 
++	/* If this is an SLI3 port, configure async status notification. */
++	if (phba->sli_rev == LPFC_SLI_REV3)
++		mb->un.varCfgPort.casabt = 1;
++
+ 	/* Now setup pcb */
+ 	phba->pcb->type = TYPE_NATIVE_SLI2;
+ 	phba->pcb->feature = FEATURE_INITIAL_SLI2;
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2011-12-12 20:25:00.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-12-12 20:51:18.000000000 -0500
+@@ -681,8 +681,10 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hb
+ 
+ 			rrq_empty = list_empty(&phba->active_rrq_list);
+ 			spin_unlock_irqrestore(&phba->hbalock, iflag);
+-			if (ndlp)
++			if (ndlp) {
+ 				lpfc_set_rrq_active(phba, ndlp, xri, rxid, 1);
++				lpfc_sli4_abts_err_handler(phba, ndlp, axri);
++			}
+ 			lpfc_release_scsi_buf_s4(phba, psb);
+ 			if (rrq_empty)
+ 				lpfc_worker_wake_up(phba);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2011-12-12 20:50:38.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-12-12 20:51:18.000000000 -0500
+@@ -4339,6 +4339,11 @@ lpfc_sli_config_port(struct lpfc_hba *ph
+ 			phba->sli.sli_flag &= ~LPFC_SLI_ASYNC_MBX_BLK;
+ 			spin_unlock_irq(&phba->hbalock);
+ 			done = 1;
++
++			if ((pmb->u.mb.un.varCfgPort.casabt == 1) &&
++			    (pmb->u.mb.un.varCfgPort.gasabt == 0))
++				lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
++					"3110 Port did not grant ASABT\n");
+ 		}
+ 	}
+ 	if (!done) {
+@@ -7704,6 +7709,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 					iocbq->context2)->virt);
+ 		if (phba->fc_topology == LPFC_TOPOLOGY_LOOP) {
+ 			if (pcmd && (*pcmd == ELS_CMD_FLOGI ||
++				*pcmd == ELS_CMD_SCR ||
+ 				*pcmd == ELS_CMD_PLOGI)) {
+ 				bf_set(els_req64_sp, &wqe->els_req, 1);
+ 				bf_set(els_req64_sid, &wqe->els_req,
+@@ -8213,6 +8219,137 @@ lpfc_extra_ring_setup( struct lpfc_hba *
+ 	return 0;
+ }
+ 
++/* lpfc_sli_abts_recover_port - Recover a port that failed an ABTS.
++ * @vport: pointer to virtual port object.
++ * @ndlp: nodelist pointer for the impacted rport.
++ *
++ * The driver calls this routine in response to a XRI ABORT CQE
++ * event from the port.  In this event, the driver is required to
++ * recover its login to the rport even though its login may be valid
++ * from the driver's perspective.  The failed ABTS notice from the
++ * port indicates the rport is not responding.
++ */
++static void
++lpfc_sli_abts_recover_port(struct lpfc_vport *vport,
++			   struct lpfc_nodelist *ndlp)
++{
++	struct Scsi_Host *shost;
++	struct lpfc_hba *phba;
++	unsigned long flags = 0;
++
++	shost = lpfc_shost_from_vport(vport);
++	phba = vport->phba;
++	if (ndlp->nlp_state != NLP_STE_MAPPED_NODE) {
++		lpfc_printf_log(phba, KERN_INFO,
++			LOG_SLI, "3093 No rport recovery needed. "
++			"rport in state 0x%x\n",
++			ndlp->nlp_state);
++		return;
++	}
++	lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
++			"3094 Start rport recovery on shost id 0x%x "
++			"fc_id 0x%06x vpi 0x%x rpi 0x%x state 0x%x "
++			"flags 0x%x\n",
++			shost->host_no, ndlp->nlp_DID,
++			vport->vpi, ndlp->nlp_rpi, ndlp->nlp_state,
++			ndlp->nlp_flag);
++	/*
++	 * The rport is not responding.  Don't attempt ADISC recovery.
++	 * Remove the FCP-2 flag to force a PLOGI.
++	 */
++	spin_lock_irqsave(shost->host_lock, flags);
++	ndlp->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	lpfc_disc_state_machine(vport, ndlp, NULL,
++				NLP_EVT_DEVICE_RECOVERY);
++	lpfc_cancel_retry_delay_tmo(vport, ndlp);
++	spin_lock_irqsave(shost->host_lock, flags);
++	ndlp->nlp_flag |= NLP_NPR_2B_DISC;
++	spin_unlock_irqrestore(shost->host_lock, flags);
++	lpfc_disc_start(vport);
++}
++
++/* lpfc_sli_abts_err_handler - handle a failed ABTS request from an SLI3 port.
++ * @phba: Pointer to HBA context object.
++ * @iocbq: Pointer to iocb object.
++ *
++ * The async_event handler calls this routine when it receives
++ * an ASYNC_STATUS_CN event from the port.  The port generates
++ * this event when an Abort Sequence request to an rport fails
++ * twice in succession.  The abort could be originated by the
++ * driver or by the port.  The ABTS could have been for an ELS
++ * or FCP IO.  The port only generates this event when an ABTS
++ * fails to complete after one retry.
++ */
++static void
++lpfc_sli_abts_err_handler(struct lpfc_hba *phba,
++			  struct lpfc_iocbq *iocbq)
++{
++	struct lpfc_nodelist *ndlp = NULL;
++	uint16_t rpi = 0, vpi = 0;
++	struct lpfc_vport *vport = NULL;
++
++	/* The rpi in the ulpContext is vport-sensitive. */
++	vpi = iocbq->iocb.un.asyncstat.sub_ctxt_tag;
++	rpi = iocbq->iocb.ulpContext;
++
++	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
++			"3092 Port generated ABTS async event "
++			"on vpi %d rpi %d status 0x%x\n",
++			vpi, rpi, iocbq->iocb.ulpStatus);
++
++	vport = lpfc_find_vport_by_vpid(phba, vpi);
++	if (!vport)
++		goto err_exit;
++	ndlp = lpfc_findnode_rpi(vport, rpi);
++	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp))
++		goto err_exit;
++
++	if (iocbq->iocb.ulpStatus == IOSTAT_LOCAL_REJECT)
++		lpfc_sli_abts_recover_port(vport, ndlp);
++	return;
++
++ err_exit:
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++			"3095 Event Context not found, no "
++			"action on vpi %d rpi %d status 0x%x, reason 0x%x\n",
++			iocbq->iocb.ulpContext, iocbq->iocb.ulpStatus,
++			vpi, rpi);
++}
++
++/* lpfc_sli4_abts_err_handler - handle a failed ABTS request from an SLI4 port.
++ * @phba: pointer to HBA context object.
++ * @ndlp: nodelist pointer for the impacted rport.
++ * @axri: pointer to the wcqe containing the failed exchange.
++ *
++ * The driver calls this routine when it receives an ABORT_XRI_FCP CQE from the
++ * port.  The port generates this event when an abort exchange request to an
++ * rport fails twice in succession with no reply.  The abort could be originated
++ * by the driver or by the port.  The ABTS could have been for an ELS or FCP IO.
++ */
++void
++lpfc_sli4_abts_err_handler(struct lpfc_hba *phba,
++			   struct lpfc_nodelist *ndlp,
++			   struct sli4_wcqe_xri_aborted *axri)
++{
++	struct lpfc_vport *vport;
++
++	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp))
++		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++				"3115 Node Context not found, driver "
++				"ignoring abts err event\n");
++	vport = ndlp->vport;
++	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
++			"3116 Port generated FCP XRI ABORT event on "
++			"vpi %d rpi %d xri x%x status 0x%x\n",
++			ndlp->vport->vpi, ndlp->nlp_rpi,
++			bf_get(lpfc_wcqe_xa_xri, axri),
++			bf_get(lpfc_wcqe_xa_status, axri));
++
++	if (bf_get(lpfc_wcqe_xa_status, axri) == IOSTAT_LOCAL_REJECT)
++		lpfc_sli_abts_recover_port(vport, ndlp);
++}
++
+ /**
+  * lpfc_sli_async_event_handler - ASYNC iocb handler function
+  * @phba: Pointer to HBA context object.
+@@ -8232,63 +8369,58 @@ lpfc_sli_async_event_handler(struct lpfc
+ {
+ 	IOCB_t *icmd;
+ 	uint16_t evt_code;
+-	uint16_t temp;
+ 	struct temp_event temp_event_data;
+ 	struct Scsi_Host *shost;
+ 	uint32_t *iocb_w;
+ 
+ 	icmd = &iocbq->iocb;
+ 	evt_code = icmd->un.asyncstat.evt_code;
+-	temp = icmd->ulpContext;
+ 
+-	if ((evt_code != ASYNC_TEMP_WARN) &&
+-		(evt_code != ASYNC_TEMP_SAFE)) {
++	switch (evt_code) {
++	case ASYNC_TEMP_WARN:
++	case ASYNC_TEMP_SAFE:
++		temp_event_data.data = (uint32_t) icmd->ulpContext;
++		temp_event_data.event_type = FC_REG_TEMPERATURE_EVENT;
++		if (evt_code == ASYNC_TEMP_WARN) {
++			temp_event_data.event_code = LPFC_THRESHOLD_TEMP;
++			lpfc_printf_log(phba, KERN_ERR, LOG_TEMP,
++				"0347 Adapter is very hot, please take "
++				"corrective action. temperature : %d Celsius\n",
++				(uint32_t) icmd->ulpContext);
++		} else {
++			temp_event_data.event_code = LPFC_NORMAL_TEMP;
++			lpfc_printf_log(phba, KERN_ERR, LOG_TEMP,
++				"0340 Adapter temperature is OK now. "
++				"temperature : %d Celsius\n",
++				(uint32_t) icmd->ulpContext);
++		}
++
++		/* Send temperature change event to applications */
++		shost = lpfc_shost_from_vport(phba->pport);
++		fc_host_post_vendor_event(shost, fc_get_event_number(),
++			sizeof(temp_event_data), (char *) &temp_event_data,
++			LPFC_NL_VENDOR_ID);
++		break;
++	case ASYNC_STATUS_CN:
++		lpfc_sli_abts_err_handler(phba, iocbq);
++		break;
++	default:
+ 		iocb_w = (uint32_t *) icmd;
+-		lpfc_printf_log(phba,
+-			KERN_ERR,
+-			LOG_SLI,
++		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+ 			"0346 Ring %d handler: unexpected ASYNC_STATUS"
+ 			" evt_code 0x%x\n"
+ 			"W0  0x%08x W1  0x%08x W2  0x%08x W3  0x%08x\n"
+ 			"W4  0x%08x W5  0x%08x W6  0x%08x W7  0x%08x\n"
+ 			"W8  0x%08x W9  0x%08x W10 0x%08x W11 0x%08x\n"
+ 			"W12 0x%08x W13 0x%08x W14 0x%08x W15 0x%08x\n",
+-			pring->ringno,
+-			icmd->un.asyncstat.evt_code,
++			pring->ringno, icmd->un.asyncstat.evt_code,
+ 			iocb_w[0], iocb_w[1], iocb_w[2], iocb_w[3],
+ 			iocb_w[4], iocb_w[5], iocb_w[6], iocb_w[7],
+ 			iocb_w[8], iocb_w[9], iocb_w[10], iocb_w[11],
+ 			iocb_w[12], iocb_w[13], iocb_w[14], iocb_w[15]);
+ 
+-		return;
+-	}
+-	temp_event_data.data = (uint32_t)temp;
+-	temp_event_data.event_type = FC_REG_TEMPERATURE_EVENT;
+-	if (evt_code == ASYNC_TEMP_WARN) {
+-		temp_event_data.event_code = LPFC_THRESHOLD_TEMP;
+-		lpfc_printf_log(phba,
+-				KERN_ERR,
+-				LOG_TEMP,
+-				"0347 Adapter is very hot, please take "
+-				"corrective action. temperature : %d Celsius\n",
+-				temp);
+-	}
+-	if (evt_code == ASYNC_TEMP_SAFE) {
+-		temp_event_data.event_code = LPFC_NORMAL_TEMP;
+-		lpfc_printf_log(phba,
+-				KERN_ERR,
+-				LOG_TEMP,
+-				"0340 Adapter temperature is OK now. "
+-				"temperature : %d Celsius\n",
+-				temp);
++		break;
+ 	}
+-
+-	/* Send temperature change event to applications */
+-	shost = lpfc_shost_from_vport(phba->pport);
+-	fc_host_post_vendor_event(shost, fc_get_event_number(),
+-		sizeof(temp_event_data), (char *) &temp_event_data,
+-		LPFC_NL_VENDOR_ID);
+-
+ }
+ 
+
+@@ -9247,6 +9379,14 @@ void
+ lpfc_sli_abort_fcp_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			struct lpfc_iocbq *rspiocb)
+ {
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++			"3096 ABORT_XRI_CN completing on xri x%x "
++			"original iotag x%x, abort cmd iotag x%x "
++			"status 0x%x, reason 0x%x\n",
++			cmdiocb->iocb.un.acxri.abortContextTag,
++			cmdiocb->iocb.un.acxri.abortIoTag,
++			cmdiocb->iotag, rspiocb->iocb.ulpStatus,
++			rspiocb->iocb.un.ulpWord[4]);
+ 	lpfc_sli_release_iocbq(phba, cmdiocb);
+ 	return;
+ }
 
 
 
