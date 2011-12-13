@@ -1,185 +1,161 @@
-From: "Nadolski, Edmund" <edmund.nadolski@intel.com>
-Subject: RE: 3.2-rc2+git: kernel BUG at block/blk-core.c:1000!
- (__scsi_queue_insert)
-Date: Tue, 13 Dec 2011 15:04:56 -0700
-Message-ID: <9EECC02A4CC333418C00A85D21E8932614C3E59BDD@azsmsx502.amr.corp.intel.com>
-References: <alpine.SOC.1.00.1111231223090.15939@math.ut.ee>
- <alpine.SOC.1.00.1112131603130.28063@math.ut.ee>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.SOC.1.00.1112131603130.28063@math.ut.ee>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, Linux Kernel list <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>
+From: Rob Evers <revers@redhat.com>
+Subject: [PATCH] delay transition requeues for 2 seconds - alua
+Date: Tue, 13 Dec 2011 17:40:41 -0500
+Message-ID: <1323816041-25557-1-git-send-email-revers@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:12259 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750996Ab1LMWkm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2011 17:40:42 -0500
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com (int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pBDMefgT028194
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2011 17:40:42 -0500
+Received: from localhost (dhcp-100-19-182.bos.redhat.com [10.16.19.182])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id pBDMefmo008108
+	for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2011 17:40:41 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Meelis
-> Roos
-> Sent: Tuesday, December 13, 2011 7:04 AM
-> To: Linux Kernel list; linux-scsi@vger.kernel.org
-> Subject: Re: 3.2-rc2+git: kernel BUG at block/blk-core.c:1000! (__scsi_queue_insert)
-> 
-> Any hope of somebody looking into it? It's still present and
-> reproducible in 3.2-rc5.
-> 
-> > Hello,
-> >
-> > While trying 3.2.0-rc2-00143-ga767835 on Sun Ultra 10 (sparc64) with
-> > Adaptec SCSI controller, I can consistently get the below BUG shortly
-> > after bootup. Another machine, Sun Ultra 5 with IDE disk, works fine
-> > (config might also differ in other details than ide/scsi).
-...
-> > kernel BUG at block/blk-core.c:1000!
-> >               \|/ ____ \|/
-> >               "@'/ .. \`@"
-> >               /_| \__/ |_\
-> >                  \__U_/
-> > swapper(0): Kernel bad sw trap 5 [#1]
-> > TSTATE: 0000008080e01602 TPC: 00000000005c3380 TNPC: 00000000005c3384 Y: 00000000    Not tainted
-> > TPC: <blk_requeue_request+0x60/0x80>
-> > g0: 0000000000000003 g1: 0000000000872000 g2: 0000000000000001 g3: ffffffffffffffd8
-> > g4: 0000000000869b50 g5: f7ddef20f7767b60 g6: 0000000000860000 g7: 0000000000001000
-> > o0: 0000000000000028 o1: 0000000000816440 o2: 00000000000003e8 o3: 00000000ffffa86e
-> > o4: fffff8001f00cb60 o5: 0000000000816440 sp: fffff8001fefb471 ret_pc: 00000000005c3378
-> > RPC: <blk_requeue_request+0x58/0x80>
-> > l0: 00000000fffc00f0 l1: 0000000000883790 l2: 0000000000000001 l3: fffff8001f0060c0
-> > l4: fffff8001f0020c0 l5: 0000000000000000 l6: 00000000008a2e18 l7: fffffffffffffff8
-> > i0: fffff8001f2d3100 i1: fffff8001f329a20 i2: 000000000091d56c i3: 000000000091d400
-> > i4: 0000000000000001 i5: 0000000000000000 i6: fffff8001fefb521 i7: 000000000065dc10
-> > I7: <__scsi_queue_insert+0xb0/0x100>
-> > Call Trace:
-> >  [000000000065dc10] __scsi_queue_insert+0xb0/0x100
-> >  [00000000005c812c] blk_done_softirq+0x6c/0xa0
-> >  [000000000045a530] __do_softirq+0x90/0x120
-> >  [000000000042b054] do_softirq+0x74/0xa0
-> >  [000000000045a82c] irq_exit+0x8c/0xa0
-> >  [000000000042af9c] handler_irq+0x9c/0xe0
-> >  [00000000004208b4] tl0_irq5+0x14/0x20
-> >  [0000000000439484] touch_nmi_watchdog+0x4/0x40
-> >  [00000000008a8788] start_kernel+0x318/0x328
-> >  [000000000074af88] tlb_fixup_done+0x80/0x88
-> >  [0000000000000000]           (null)
+When alua targets are transitioning, the scsi midlayer retry mechanism
+continuously retries the scsi commands that are returning with not ready
+transitioning status.  The target is not capable of handling the
+commands for time on the order of several seconds during these transistions.
 
-I see similar to this using 3.2.0-rc5+ on x86_64 with one SAS drive
-on an Intel C600.  It hits every time I run mkfs.  Stack shown
-below. Running 'git bisect' leads to this:
+This patch delays the device queue for 2 seconds, which is in the same
+order of aas transition time.
 
-commit b4fdcb02f1e39c27058a885905bd0277370ba441
-Merge: 044595d 6dd9ad7
-Author: Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri Nov 4 17:06:58 2011 -0700
+Also, handle all other cases where ADD_TO_MLQUEUE_DELAY could be returned
+instead of ADD_TO_MLQUEUE as if ADD_TO_MLQUEUE were being returned.
 
-    Merge branch 'for-3.2/core' of git://git.kernel.dk/linux-block
+Problem found by array partner testing
 
-I see the failure with git reset --hard b4fdcb0, but it does not
-occur with git reset --hard 6dd9ad7 or git reset --hard 044595d.
+Signed-off-by: Rob Evers <revers@redhat.com>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c |    7 ++++---
+ drivers/scsi/scsi.c                        |    3 +++
+ drivers/scsi/scsi_error.c                  |    1 +
+ drivers/scsi/scsi_lib.c                    |    9 ++++++++-
+ include/scsi/scsi.h                        |    4 +++-
+ 5 files changed, 19 insertions(+), 5 deletions(-)
 
-Any thoughts on what I can try next?
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 4ef0212..33b8df7 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -233,7 +233,7 @@ static void stpg_endio(struct request *req, int error)
+ 			goto done;
+ 		}
+ 		err = alua_check_sense(h->sdev, &sense_hdr);
+-		if (err == ADD_TO_MLQUEUE) {
++		if (err == ADD_TO_MLQUEUE || err == ADD_TO_MLQUEUE_DELAY) {
+ 			err = SCSI_DH_RETRY;
+ 			goto done;
+ 		}
+@@ -443,7 +443,7 @@ static int alua_check_sense(struct scsi_device *sdev,
+ 			/*
+ 			 * LUN Not Accessible - ALUA state transition
+ 			 */
+-			return ADD_TO_MLQUEUE;
++			return ADD_TO_MLQUEUE_DELAY;
+ 		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x0b)
+ 			/*
+ 			 * LUN Not Accessible -- Target port in standby state
+@@ -521,7 +521,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 			return SCSI_DH_IO;
+ 
+ 		err = alua_check_sense(sdev, &sense_hdr);
+-		if (err == ADD_TO_MLQUEUE && time_before(jiffies, expiry))
++		if ((err == ADD_TO_MLQUEUE || err == ADD_TO_MLQUEUE_DELAY) &&
++		    time_before(jiffies, expiry))
+ 			goto retry;
+ 		sdev_printk(KERN_INFO, sdev,
+ 			    "%s: rtpg sense code %02x/%02x/%02x\n",
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 2aeb2e9..ced0085 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -600,6 +600,9 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ 			case ADD_TO_MLQUEUE:
+ 				printk("MLQUEUE\n");
+ 				break;
++			case ADD_TO_MLQUEUE_DELAY:
++				printk("MLQUEUE_DELAY\n");
++				break;
+ 			case FAILED:
+ 				printk("FAILED\n");
+ 				break;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index dc6131e..775f822 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -812,6 +812,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 		case TARGET_ERROR:
+ 			break;
+ 		case ADD_TO_MLQUEUE:
++		case ADD_TO_MLQUEUE_DELAY:
+ 			rtn = NEEDS_RETRY;
+ 			break;
+ 		default:
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 06bc265..fb35a76 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -139,6 +139,7 @@ static int __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+ 		break;
+ 	case SCSI_MLQUEUE_DEVICE_BUSY:
+ 	case SCSI_MLQUEUE_EH_RETRY:
++	case SCSI_MLQUEUE_DEV_DLY_RTY:
+ 		device->device_blocked = device->max_device_blocked;
+ 		break;
+ 	case SCSI_MLQUEUE_TARGET_BUSY:
+@@ -161,7 +162,10 @@ static int __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, int unbusy)
+ 	blk_requeue_request(q, cmd->request);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+-	kblockd_schedule_work(q, &device->requeue_work);
++	if (reason == SCSI_MLQUEUE_DEV_DLY_RTY)
++		blk_delay_queue(q, 2000);
++	else
++		kblockd_schedule_work(q, &device->requeue_work);
+ 
+ 	return 0;
+ }
+@@ -1465,6 +1469,9 @@ static void scsi_softirq_done(struct request *rq)
+ 		case ADD_TO_MLQUEUE:
+ 			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
+ 			break;
++		case ADD_TO_MLQUEUE_DELAY:
++			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEV_DLY_RTY);
++			break;
+ 		default:
+ 			if (!scsi_eh_scmd_add(cmd, 0))
+ 				scsi_finish_command(cmd);
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 8001ae4..df0e353 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -466,9 +466,10 @@ static inline int scsi_is_wlun(unsigned int lun)
+ #define SOFT_ERROR      0x2005
+ #define ADD_TO_MLQUEUE  0x2006
+ #define TIMEOUT_ERROR   0x2007
+-#define SCSI_RETURN_NOT_HANDLED   0x2008
++#define SCSI_RETURN_NOT_HANDLED	0x2008
+ #define FAST_IO_FAIL	0x2009
+ #define TARGET_ERROR    0x200A
++#define ADD_TO_MLQUEUE_DELAY	0x200B
+ 
+ /*
+  * Midlevel queue return values.
+@@ -477,6 +478,7 @@ static inline int scsi_is_wlun(unsigned int lun)
+ #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
+ #define SCSI_MLQUEUE_EH_RETRY    0x1057
+ #define SCSI_MLQUEUE_TARGET_BUSY 0x1058
++#define SCSI_MLQUEUE_DEV_DLY_RTY 0x1059
+ 
+ /*
+  *  Use these to separate status msg and our bytes
+-- 
+1.7.4.2
 
-Thanks,
-Ed
-
-[root@scutest0 ~]# mkfs -t ext3 /dev/sdb1
-mke2fs 1.41.12 (17-May-2010)
-Filesystem label=
-OS type: Linux
-Block size=4096 (log=2)
-Fragment size=4096 (log=2)
-Stride=0 blocks, Stripe width=0 blocks
-8978432 inodes, 35909283 blocks
-1795464 blocks (5.00%) reserved for the super user
-First data block=0
-Maximum filesystem blocks=4294967296
-1096 block groups
-32768 blocks per group, 32768 fragments per group
-8192 inodes per group
-Superblock backups stored on blocks:
-        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208,
-        4096000, 7962624, 11239424, 20480000, 23887872
-
-Writing inode tables: done
-Creating journal (32768 blocks): done
-Writing superblocks and filesystem accounting information: [  122.752553] ------------[ cut here ]------------
-[  122.757713] kernel BUG at block/blk-core.c:1000!
-[  122.762863] invalid opcode: 0000 [#1] SMP
-[  122.767465] CPU 8
-[  122.769518] Modules linked in: cpufreq_ondemand acpi_cpufreq freq_table mperf ipv6 uinput iTCO_wdt iTCO_vendor_support i2c_i801 i2c_core ioatdma dca isci libsas scsi_transport_sas [last unloaded: scsi_wait_scan]
-[  122.790910]
-[  122.792578] Pid: 0, comm: swapper/8 Not tainted 3.2.0-rc5+ #2 Intel Corporation S2600CP/S2600CP
-[  122.802322] RIP: 0010:[<ffffffff81267e81>]  [<ffffffff81267e81>] blk_requeue_request+0x6b/0x82
-[  122.811962] RSP: 0018:ffff88083fa03dd0  EFLAGS: 00010006
-[  122.817885] RAX: 0000000000000000 RBX: ffff880766890b00 RCX: ffff88083fa03dc0
-[  122.825844] RDX: ffff8808205c2bd0 RSI: ffff880766890b00 RDI: ffff880422f694c0
-[  122.833810] RBP: ffff88083fa03df0 R08: ffff880766890c30 R09: 0000000000000001
-[  122.841769] R10: 0000000000000000 R11: ffff880422f69b20 R12: ffff880823217000
-[  122.849735] R13: ffff880422f694c0 R14: ffff880422f694c0 R15: ffff880423a5f000
-[  122.857695] FS:  0000000000000000(0000) GS:ffff88083fa00000(0000) knlGS:0000000000000000
-[  122.866719] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  122.873128] CR2: 00000000008a9000 CR3: 000000081818c000 CR4: 00000000000406e0
-[  122.881101] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  122.889061] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  122.897021] Process swapper/8 (pid: 0, threadinfo ffff880425fbc000, task ffff880425fb5f40)
-[  122.906247] Stack:
-[  122.908489]  ffffffff813547e0 0000000000000282 ffff880823217000 ffff880423a5e000
-[  122.916792]  ffff88083fa03e40 ffffffff813547f3 ffff88083fa03e30 ffff880423432028
-[  122.925087]  ffff880766978d80 ffff880823217000 0000000000002006 0000000000007530
-[  122.933383] Call Trace:
-[  122.936122]  <IRQ>
-[  122.938484]  [<ffffffff813547e0>] ? __scsi_queue_insert+0xc9/0x10b
-[  122.945386]  [<ffffffff813547f3>] __scsi_queue_insert+0xdc/0x10b
-[  122.952086]  [<ffffffff81354cce>] scsi_queue_insert+0x13/0x15
-[  122.958495]  [<ffffffff81354db7>] scsi_softirq_done+0xe7/0x108
-[  122.965018]  [<ffffffff8126d5b4>] blk_done_softirq+0x84/0x98
-[  122.971340]  [<ffffffff810566c5>] __do_softirq+0xe3/0x1d5
-[  122.977392]  [<ffffffff81511c67>] ? _raw_spin_lock+0x39/0x40
-[  122.983713]  [<ffffffff810b36e2>] ? handle_irq_event+0x4f/0x65
-[  122.990230]  [<ffffffff8151b3fc>] call_softirq+0x1c/0x30
-[  122.996167]  [<ffffffff81010b5f>] do_softirq+0x4b/0xa3
-[  123.001888]  [<ffffffff810563e5>] irq_exit+0x53/0xca
-[  123.007433]  [<ffffffff8151bd0d>] do_IRQ+0x9d/0xb4
-[  123.012790]  [<ffffffff815125b3>] common_interrupt+0x73/0x73
-[  123.019101]  <EOI>
-[  123.021467]  [<ffffffff8107bc7f>] ? tick_nohz_stop_sched_tick+0x31c/0x361
-[  123.029057]  [<ffffffff810169d7>] ? mwait_idle+0xa1/0xde
-[  123.034981]  [<ffffffff810169ce>] ? mwait_idle+0x98/0xde
-[  123.040905]  [<ffffffff8100ee58>] cpu_idle+0xca/0x108
-[  123.046550]  [<ffffffff81509796>] start_secondary+0x255/0x257
-[  123.052960] Code: 48 89 da 4c 89 ee 41 ff 14 24 49 83 c4 10 49 83 3c 24 00 eb e4 f6 43 42 08 74 0b 48 89 de 4c 89 ef e8 35 20 00 00 48 39 1b 74 04 <0f> 0b eb fe 48 89 de 4c 89 ef e8 1b bb ff ff 5e 5b 41 5c 41 5d
-[  123.074691] RIP  [<ffffffff81267e81>] blk_requeue_request+0x6b/0x82
-[  123.081700]  RSP <ffff88083fa03dd0>
-[  123.085598] ---[ end trace ebaf24a04fa3b80a ]---
-[  123.090747] Kernel panic - not syncing: Fatal exception in interrupt
-[  123.097833] Pid: 0, comm: swapper/8 Tainted: G      D      3.2.0-rc5+ #2
-[  123.105309] Call Trace:
-[  123.108034]  <IRQ>  [<ffffffff8150f58b>] panic+0x91/0x1b2
-[  123.114079]  [<ffffffff81513332>] oops_end+0xb7/0xc7
-[  123.119616]  [<ffffffff81011b5e>] die+0x5a/0x63
-[  123.124670]  [<ffffffff81512ff0>] do_trap+0x121/0x130
-[  123.130305]  [<ffffffff8100ffcb>] do_invalid_op+0x94/0x9d
-[  123.136327]  [<ffffffff81267e81>] ? blk_requeue_request+0x6b/0x82
-[  123.143141]  [<ffffffff81284a3d>] ? trace_hardirqs_off_thunk+0x3a/0x3c
-[  123.150423]  [<ffffffff815126a4>] ? restore_args+0x30/0x30
-[  123.156555]  [<ffffffff8151b17b>] invalid_op+0x1b/0x20
-[  123.162286]  [<ffffffff81267e81>] ? blk_requeue_request+0x6b/0x82
-[  123.169084]  [<ffffffff813547e0>] ? __scsi_queue_insert+0xc9/0x10b
-[  123.175979]  [<ffffffff813547f3>] __scsi_queue_insert+0xdc/0x10b
-[  123.182681]  [<ffffffff81354cce>] scsi_queue_insert+0x13/0x15
-[  123.189092]  [<ffffffff81354db7>] scsi_softirq_done+0xe7/0x108
-[  123.195598]  [<ffffffff8126d5b4>] blk_done_softirq+0x84/0x98
-[  123.201911]  [<ffffffff810566c5>] __do_softirq+0xe3/0x1d5
-[  123.207932]  [<ffffffff81511c67>] ? _raw_spin_lock+0x39/0x40
-[  123.214244]  [<ffffffff810b36e2>] ? handle_irq_event+0x4f/0x65
-[  123.220758]  [<ffffffff8151b3fc>] call_softirq+0x1c/0x30
-[  123.226691]  [<ffffffff81010b5f>] do_softirq+0x4b/0xa3
-[  123.232422]  [<ffffffff810563e5>] irq_exit+0x53/0xca
-[  123.237958]  [<ffffffff8151bd0d>] do_IRQ+0x9d/0xb4
-[  123.243303]  [<ffffffff815125b3>] common_interrupt+0x73/0x73
-[  123.249621]  <EOI>  [<ffffffff8107bc7f>] ? tick_nohz_stop_sched_tick+0x31c/0x361
-[  123.257883]  [<ffffffff810169d7>] ? mwait_idle+0xa1/0xde
-[  123.263808]  [<ffffffff810169ce>] ? mwait_idle+0x98/0xde
-[  123.269741]  [<ffffffff8100ee58>] cpu_idle+0xca/0x108
-[  123.275376]  [<ffffffff81509796>] start_secondary+0x255/0x257
