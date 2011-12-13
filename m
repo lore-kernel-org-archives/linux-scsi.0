@@ -1,35 +1,55 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: hv_storvsc driver
-Date: Tue, 13 Dec 2011 08:07:53 -0800
-Message-ID: <20111213160753.GA8006@suse.de>
-References: <1323791916-2340-1-git-send-email-kys@microsoft.com>
+From: "Krishnamoorthy, Praveen" <Praveen.Krishnamoorthy@lsi.com>
+Subject: RE: mptspi init failure on Sparc SMP in Linux 3.0
+Date: Tue, 13 Dec 2011 09:48:01 -0700
+Message-ID: <A11ADD3877B3C543B65BE8E196B7BDFF0144B02F7B@cosmail02.lsi.com>
+References: <4EB7D137.7090903@univ.rzeszow.pl>
+	 <20111107205409.GG3366@decadent.org.uk> <4EB858E8.6090304@univ.rzeszow.pl>
+ <1320721518.18929.15.camel@deadeye>
+ <A6888A6805518E4EA4AF7072A28264A6047262C728@inbmail02.lsi.com>
+ <4EE5F1F4.3000006@univ.rzeszow.pl>
+ <A6888A6805518E4EA4AF7072A28264A6047278DE4C@inbmail02.lsi.com>
+ <4EE70B9D.5030309@univ.rzeszow.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49428 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751800Ab1LMQJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 13 Dec 2011 11:09:13 -0500
-Content-Disposition: inline
-In-Reply-To: <1323791916-2340-1-git-send-email-kys@microsoft.com>
+Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:42578 "EHLO
+	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751203Ab1LMQsG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 13 Dec 2011 11:48:06 -0500
+In-Reply-To: <4EE70B9D.5030309@univ.rzeszow.pl>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, James.Bottomley@HansenPartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: Biblioteka UR <biblio@univ.rzeszow.pl>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Cc: Ben Hutchings <ben@decadent.org.uk>, "Moore, Eric" <Eric.Moore@lsi.com>, "647900@bugs.debian.org" <647900@bugs.debian.org>, linux-scsi <linux-scsi@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-On Tue, Dec 13, 2011 at 07:58:36AM -0800, K. Y. Srinivasan wrote:
-> 
-> Sometime back I had sent the scsi mailing list, the patch to move the 
-> Hyper-V storage driver out of staging. This patch addresses  the
-> review comments I have gotten to date from James, Greg and Christoph (I have not heard
-> from anybody else in the  scsi mailing list). The patches addressing the review
-> comments have already been sent to the staging tree and Greg has already
-> applied these patches. James, Let me know what I can do to expedite the
-> move from the staging tree.
-> 
-> Greg, do you have any issues you would want
-> me to address before this driver can exit staging. Let me know.
-
-It's not up to me, it's up to the scsi maintainers, sorry.
-
-greg k-h
+TWFyaXVzeiwNCg0KSW4gZGViaWFuLCB5b3UgY2FuIHNldCB0aGUga2VybmVsIGxvZ2dpbmcgbGV2
+ZWwgdG8gcmVjZWl2ZSBkZWJ1ZyBtZXNzYWdlcyBieSBhZGRpbmcgdGhlIGZvbGxvd2luZyBsaW5l
+IGluIC9ldGMvc3lzbG9nLmNvbmYNCg0KKi5kZWJ1ZyAgICAgICAgICAgICAgIC92YXIvbG9nL21l
+c3NhZ2VzDQoNClBsZWFzZSByZWZlciBodHRwOi8vd3d3LmFib3V0ZGViaWFuLmNvbS9zeXNsb2cu
+aHRtIGZvciBtb3JlIGluZm9ybWF0aW9uIG9uIGxvZ2dpbmcgbGV2ZWwgaW4gRGViaWFuLg0KDQpB
+bHNvIHdoaWxlIGxvYWRpbmcgdGhlIG1wdGJhc2Uua28sIGNvdWxkIHlvdSBwbGVhc2UgcGFzcyB0
+aGlzIG1vZHVsZSBwYXJhbWV0ZXIgdG9vPyBUaGlzIG9uZSB3b3VsZCBlbmFibGUgb3VyIGRyaXZl
+ciB0byBjYXB0dXJlIGRldGFpbGVkIGxvZ3MgZm9yIHdoZW4gY29uZmlnIHJlcXVlc3QsIGRvb3Ji
+ZWxsIGhhbmRzaGFrZXMgYXJlIGhhcHBlbmluZy4gDQoNCmluc21vZCBtcHRiYXNlLmtvIG1wdF9k
+ZWJ1Z19sZXZlbD0weDAwMDAxOTI5ICANCg0KRm9sbG93aW5nIHRoaXMgeW91IGNvdWxkIGxvYWQg
+dGhlIG90aGVyIG1vZHVsZXMgbGlrZSBtcHRzY3NpaC5rbywgbXB0c3BpLmtvLCBtcHRzYXMua28s
+IG1wdGN0bC5rbyAgDQoNClJlZ2FyZHMsDQpQcmF2ZWVuDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCj4gRnJvbTogQmlibGlvdGVrYSBVUiBbbWFpbHRvOmJpYmxpb0B1bml2LnJ6ZXN6
+b3cucGxdDQo+IFNlbnQ6IFR1ZXNkYXksIERlY2VtYmVyIDEzLCAyMDExIDE6MjQgQU0NCj4gVG86
+IE5hbmRpZ2FtYSwgTmFnYWxha3NobWkNCj4gQ2M6IEJlbiBIdXRjaGluZ3M7IE1vb3JlLCBFcmlj
+OyA2NDc5MDBAYnVncy5kZWJpYW4ub3JnOyBsaW51eC1zY3NpOyBETC0NCj4gTVBUIEZ1c2lvbiBM
+aW51eA0KPiBTdWJqZWN0OiBSZTogbXB0c3BpIGluaXQgZmFpbHVyZSBvbiBTcGFyYyBTTVAgaW4g
+TGludXggMy4wDQo+IA0KPiBIZWxsbyBOYWdhbGFrc2hpbWkuDQo+IA0KPiBUaGFuayB5b3UgZm9y
+IHlvdXIgcmVwbHkuDQo+IA0KPiBXIGRuaXUgMjAxMS0xMi0xMyAwODoyMSwgTmFuZGlnYW1hLCBO
+YWdhbGFrc2htaSBwaXN6ZToNCj4gPiBUaGUgaXNzdWUgaXMgaGFwcGVuaW5nIGJlY2F1c2UgY29u
+ZmlnIHBhZ2UgaXMgdGltaW5nIG91dCBhbmQNCj4gaW5pdGlhbGl6YXRpb24gaXMgbm90IHN1Y2Nl
+c3NmdWwNCj4gPiBDYW4geW91IGNvbGxlY3QgdGhlIGtlcm5lbCBtZXNzYWdlcyBldmVuIGZvciB0
+aGUgS0VSTl9ERUJVRyBtZXNzYWdlcw0KPiBhbHNvIGZvciBtcHQgZHJpdmVyPw0KPiA+IFRoaXMg
+aXMgdG8gZmluZCBvdXQgd2hpY2ggY29uZmlnIHBhZ2UgaXMgZmFpbGluZy4NCj4gTWF5YmUgc28s
+IGJ1dCBJIGNvbmZlc3MgdGhhdCBJIGRvIG5vdCBrbm93IGhvdy4gOiggRG8geW91IGhhdmUgYW55
+DQo+IHN1Z2dlc3Rpb25zPyBJIGJlZ2luIG15IGFkdmVudHVyZSB3aXRoIERlYmlhbi4gSSBoYXZl
+IGxpdHRsZSBleHBlcmllbmNlDQo+IHdpdGggQ2VudG9zLCBidXQgaXQgZG9lc24ndCB3b3JrIHdp
+dGggU3BhcmMuIDopDQo+IA0KPiBSZWdhcmRzLA0KPiBNYXJpdXN6DQo=
