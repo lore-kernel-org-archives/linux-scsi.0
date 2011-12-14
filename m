@@ -1,57 +1,66 @@
-From: Axel Theilmann <theilmann@pre-sense.de>
-Subject: status of oops in sd_revalidate_disk?
-Date: Wed, 14 Dec 2011 18:59:53 +0100
-Message-ID: <4EE8E419.8010000@pre-sense.de>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH 2/3] [SCSI]: runtime resume parent for child's
+ system-resume
+Date: Thu, 15 Dec 2011 02:31:52 +0800
+Message-ID: <1323887512.7655.3.camel@hp6530s>
+References: <Pine.LNX.4.44L0.1112141150520.1707-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.pre-sense.de ([213.238.39.107]:54130 "EHLO
-	mail.pre-sense.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755498Ab1LNSIN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2011 13:08:13 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1112141150520.1707-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: huajun.li.lee@gmail.com, jbottomley@parallels.com, stefanr@s5r6.in-berlin.de
+
+On Thu, 2011-12-15 at 00:51 +0800, Alan Stern wrote:
+> On Wed, 14 Dec 2011, Lin Ming wrote:
+>=20
+> > On Wed, Dec 14, 2011 at 11:18 AM, Lin Ming <ming.m.lin@intel.com> w=
+rote:
+> > > [Patch description from Alan Stern]
+> > >
+> > > If a child device was runtime-suspended when a system suspend beg=
+an,
+> > > then there will be nothing to prevent its parent from
+> > > runtime-suspending as soon as it is woken up during the system re=
+sume.
+> > > Then when the time comes to resume the child, the resume will fai=
+l
+> > > because the parent is already back at low power.
+> > >
+> > > On the other hand, there are some devices which should remain at =
+low
+> > > power across an entire suspend-resume cycle. =EF=BF=BDThe details=
+ depend on the
+> > > device and the platform.
+> > >
+> > > This suggests that the PM core is not the right place to solve th=
+e
+> > > problem. =EF=BF=BDOne possible solution is for the subsystem or d=
+evice driver
+> > > to call pm_runtime_get_sync(dev->parent) at the start of the
+> > > system-resume procedure and pm_runtime_put_sync(dev->parent) at t=
+he
+> > > end.
+> > >
+> > > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+> >=20
+> > Hi Alan,
+> >=20
+> > May I add your SOB?
+>=20
+> You can add: Acked-by: Alan Stern <stern@rowland.harvard.edu>
+>=20
+> Did you test this?  Does it do what you want?
+
+Yes, I have tested this and it fixes the problem.
+
+Thanks.
+
+>=20
+> Alan Stern
+>=20
 
 
-
-hi,
-
-two weeks ago Huajun Li posted a patch for a kernel oops, subject [PATC=
-H]
-SCSI/sd: Fix NULL dereference in sd_revalidate_disk".
-
-The patch was discussed but considered "clearly wrong". The bug shows u=
-p for
-us in kernel 3.1.4 quite often when unplugging usb sticks and it seems =
-a few
-other people have the same problem:
-
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/859199
-https://bugzilla.redhat.com/show_bug.cgi?id=3D754518
-https://bugzilla.novell.com/show_bug.cgi?id=3D722350
-http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D649735
-
-Can anyone of you maybe give me any status update on that bug?
-
-Thanks
-
-tty, axel
-
-
---=20
-Dipl.-Inform. Axel Theilmann             theilmann@pre-sense.de
-                               Tel.  (+49) 040  / 244 2407 - 13
-                               Fax   (+49) 040  / 244 2407 - 24
-                               Mobil (+49) 0151 / 116 18 664
-PRESENSE Technologies GmbH         Sachsenstr. 5, 20097 Hamburg
-                                         USt-IdNr.: DE263765024
-Gesch=E4ftsf=FChrer/Managing Directors       AG Hamburg, HRB 107844
-Till D=F6rges           J=FCrgen Sander              Axel Theilmann
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
