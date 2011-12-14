@@ -1,59 +1,95 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH 1/3] [SCSI] sd: fix runtime status check in sd_shutdown
-Date: Thu, 15 Dec 2011 02:34:24 +0800
-Message-ID: <1323887664.7655.5.camel@hp6530s>
-References: <Pine.LNX.4.44L0.1112141146230.1707-100000@iolanthe.rowland.org>
+Subject: Re: [PATCH 3/3] ata: update ata port's runtime status during system resume
+Date: Thu, 15 Dec 2011 02:45:01 +0800
+Message-ID: <CAF1ivSbt6a=CNqXJ9byrDmTHdhygBKSbr6Pxf+Cwwpa6B++BZw@mail.gmail.com>
+References: <1323832681-7177-1-git-send-email-ming.m.lin@intel.com>
+	<1323832681-7177-4-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1112141146230.1707-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1323832681-7177-4-git-send-email-ming.m.lin@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2011-12-15 at 00:49 +0800, Alan Stern wrote:
-> On Wed, 14 Dec 2011, Lin Ming wrote:
-> 
-> > Commit af8db15 disabled device's runtime PM during shutdown.
-> > So sd's runtime status can't be checked with pm_runtime_suspended(dev)
-> > any more.
-> > 
-> > Fix it by checking runtime status with pm_runtime_status_suspended(dev).
-> > 
-> > Signed-off-by: Lin Ming <ming.m.lin@intel.com>
-> > ---
-> >  drivers/scsi/sd.c |    7 ++++++-
-> >  1 files changed, 6 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index 7b3f807..284b087 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -2742,7 +2742,12 @@ static void sd_shutdown(struct device *dev)
-> >  	if (!sdkp)
-> >  		return;         /* this can happen */
-> >  
-> > -	if (pm_runtime_suspended(dev))
-> > +	/*
-> > +	 * Check runtime status with pm_runtime_status_suspended(dev)
-> > +	 * instead of pm_runtime_suspended(dev),
-> > +	 * because device_shutdown() has disabled the device's runtime PM.
-> > +	 */
-> > +	if (pm_runtime_status_suspended(dev))
-> >  		goto exit;
-> >  
-> >  	if (sdkp->WCE) {
-> 
-> This is no longer needed.  See commit
-> fe6b91f47080eb17d21cbf2a39311877d57f6938 (PM / Driver core: leave
-> runtime PM enabled during system shutdown).
+On Wed, Dec 14, 2011 at 11:18 AM, Lin Ming <ming.m.lin@intel.com> wrote=
+:
+> The ata port is brought back to full power state during system resume=
+=2E
+> So its runtime PM status will have to be updated to reflect
+> the actual post-system sleep status.
+>
+> This also fixes below warning during system suspend/resume.
+>
+> WARNING: at /work/linux/drivers/ata/libata-eh.c:4034
+> ata_scsi_port_error_handler+0x89/0x557()
+>
+> 4034 =A0 =A0 =A0 =A0 WARN_ON(!(ap->pflags & ATA_PFLAG_SUSPENDED));
+>
+> Signed-off-by: Lin Ming <ming.m.lin@intel.com>
 
-I'll remove this patch.
+Hi Alan,
 
-Thanks.
+Would you like to Ack this one also?
 
-> 
-> Alan Stern
-> 
+Thanks,
+Lin Ming
+
+> ---
+> =A0drivers/ata/libata-core.c | =A0 18 ++++++++++++++++--
+> =A01 files changed, 16 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 15a3d4d..8996758 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -5298,7 +5298,7 @@ static int ata_port_suspend(struct device *dev)
+> =A0 =A0 =A0 =A0return ata_port_suspend_common(dev);
+> =A0}
+>
+> -static int ata_port_resume(struct device *dev)
+> +static int ata_port_resume_common(struct device *dev)
+> =A0{
+> =A0 =A0 =A0 =A0struct ata_port *ap =3D to_ata_port(dev);
+> =A0 =A0 =A0 =A0int rc;
+> @@ -5308,6 +5308,20 @@ static int ata_port_resume(struct device *dev)
+> =A0 =A0 =A0 =A0return rc;
+> =A0}
+>
+> +static int ata_port_resume(struct device *dev)
+> +{
+> + =A0 =A0 =A0 int rc;
+> +
+> + =A0 =A0 =A0 rc =3D ata_port_resume_common(dev);
+> + =A0 =A0 =A0 if (!rc) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm_runtime_disable(dev);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm_runtime_set_active(dev);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 pm_runtime_enable(dev);
+> + =A0 =A0 =A0 }
+> +
+> + =A0 =A0 =A0 return rc;
+> +}
+> +
+> =A0static int ata_port_runtime_idle(struct device *dev)
+> =A0{
+> =A0 =A0 =A0 =A0return pm_runtime_suspend(dev);
+> @@ -5318,7 +5332,7 @@ static const struct dev_pm_ops ata_port_pm_ops =
+=3D {
+> =A0 =A0 =A0 =A0.resume =3D ata_port_resume,
+>
+> =A0 =A0 =A0 =A0.runtime_suspend =3D ata_port_suspend_common,
+> - =A0 =A0 =A0 .runtime_resume =3D ata_port_resume,
+> + =A0 =A0 =A0 .runtime_resume =3D ata_port_resume_common,
+> =A0 =A0 =A0 =A0.runtime_idle =3D ata_port_runtime_idle,
+> =A0};
+>
+> --
+> 1.7.2.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" =
+in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
