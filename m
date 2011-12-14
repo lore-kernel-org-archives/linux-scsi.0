@@ -1,88 +1,65 @@
-From: "Gail Kelly" <gjabaay771@aol.com>
-Subject: Did you instruct Mrs. Jenny Maria Moore?
-Date: Wed, 14 Dec 2011 12:03:56 -0800
-Message-ID: <201112141305.pBED53tG022662@ims-m13.mx.aol.com>
-Reply-To: <s.barristerdavid@yahoo.com.ph>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH 1/3] [SCSI] sd: fix runtime status check in sd_shutdown
+Date: Wed, 14 Dec 2011 21:24:31 +0800
+Message-ID: <1323869071.2656.7.camel@hp6530s>
+References: <1323832681-7177-1-git-send-email-ming.m.lin@intel.com>
+	 <1323832681-7177-2-git-send-email-ming.m.lin@intel.com>
+	 <4EE8813B.1090802@mvista.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_009D_01C2A9A6.6396C5FE"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ims-m13.mx.aol.com ([64.12.207.146]:51280 "EHLO
-	ims-m13.mx.aol.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756498Ab1LNNKV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2011 08:10:21 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EE8813B.1090802@mvista.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Wed, 2011-12-14 at 18:58 +0800, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 14-12-2011 7:17, Lin Ming wrote:
+> 
+> > Commit af8db15 disabled device's runtime PM during shutdown.
+> 
+>     Please also specify that commit's summary in parens.
 
-------=_NextPart_000_009D_01C2A9A6.6396C5FE
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+OK. Here it is.
 
-Did you instruct one Mrs. Jenny Maria Moore, whose information's is below, to claim and receive the payment on your behalf?
-Read the below attached document for complete details and respond promptly
+>From 7e3dcebe235d005126c03a3976bca859691110bc Mon Sep 17 00:00:00 2001
+From: Lin Ming <ming.m.lin@intel.com>
+Date: Wed, 14 Dec 2011 10:14:21 +0800
+Subject: [PATCH 1/3] [SCSI] sd: fix runtime status check in sd_shutdown
 
-------=_NextPart_000_009D_01C2A9A6.6396C5FE
-Content-Type: application/octet-stream;
-	name="Message From Gail Kelly.rtf"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="Message From Gail Kelly.rtf"
+Commit af8db15(PM / driver core: disable device's runtime PM during
+shutdown) makes pm_runtime_suspended(dev) always return false.
+So sd's runtime status can't be checked with pm_runtime_suspended(dev)
+any more.
 
-e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzEwMzN7XGZv
-bnR0Ymx7XGYwXGZzd2lzc1xmY2hhcnNldDAgQXJpYWw7fX0NCntcKlxnZW5l
-cmF0b3IgTXNmdGVkaXQgNS40MS4yMS4yNTA5O31cdmlld2tpbmQ0XHVjMVxw
-YXJkXGYwXGZzMjAgV2VsY29tZSB0byBXZXN0cGFjLCBUaGUgQXVzdHJhbGlh
-J3MgRmlyc3QgQmFuay5ccGFyDQoyODMtMjg1IEtlbnQgU3RyZWV0XHBhcg0K
-U3lkbmV5IE5TVyAyMDAwLCBBdXN0cmFsaWFccGFyDQoxMzAwIDM2OSA4NzZc
-cGFyDQpXZWJzaXRlOiBodHRwOi8vd3d3Lndlc3RwYWMuY29tLmF1L1xwYXIN
-ClxwYXINClxwYXINClVQREFURSBZT1VSIE9OTElORSBBQ0NPVU5UIEZPUiBT
-RUNVUklUWSBSRUFTT05TIElOIFJFR0FSRFMgVE8gVEhFIFRSQU5TRkVSIE9G
-IFlPVVIgRlVORC4gXHBhcg0KXHBhcg0KQXR0ZW50aW9uIEZyb20gTXJzLiBH
-YWlsIEtlbGx5IHRoZSAoQ0VPKSBvZiBXZXN0cGFjLCB0aGUgZmlyc3QgZmVt
-YWxlIENFTyBvZiBhIG1ham9yIEF1c3RyYWxpYW4gYmFuay5ccGFyDQpccGFy
-DQpEaWQgeW91IGluc3RydWN0IG9uZSBNcnMuIEplbm55IE1hcmlhIE1vb3Jl
-LCB3aG9zZSBpbmZvcm1hdGlvbidzIGlzIGJlbG93LCB0byBjbGFpbSBhbmQg
-cmVjZWl2ZSB0aGUgcGF5bWVudCBvbiB5b3VyIGJlaGFsZj9ccGFyDQogXHBh
-cg0KVGhpcyBtb3JuaW5nIE1ycy4gSmVubnkgTWFyaWEgTW9vcmUgY2FtZSB0
-byB0aGUgb2ZmaWNlIGNsYWltaW5nIHRoYXQgeW91IGhhdmUgaW5zdHJ1Y3Rl
-ZCBoaW0gdG8gY29tZSByZWNlaXZlIHlvdXIgcGF5bWVudCBvbiB5b3VyIGJl
-aGFsZiwgSSBoYXZlIGFzayBoaW0gdG8gY29tZSBiYWNrIHRvbW9ycm93IGFz
-IHRoZXkgZGlkIG5vdCBwcm92aWRlIGFueSBwb3dlciBvZiBhbiBhdHRvcm5l
-eSBmcm9tIHlvdSB3aGljaCB3aWxsIHByb29mIHRoYXQgeW91IHRob3JvdWdo
-bHkgc2VuZCBoaW0sIFRoaXMgd2FzIHRvIGVuYWJsZSBtZSBjb250YWN0IHlv
-dSB0byB2ZXJpZnkgaG93IGdlbnVpbmUgdGhpcyBwZW9wbGUgYXJlIHRvIHlv
-dS5ccGFyDQpccGFyDQpJIGhlcmVieSBzZW5kIHRvIHlvdSB0aGUgaW5mb3Jt
-YXRpb24gc3VibWl0dGVkIGJ5IE1ycy4gSmVubnkgTWFyaWEgTW9vcmUsIHdp
-dGggYW4gYXBwbGljYXRpb24gdG8gcGF5IHRoZSBhY2Nlc3MgY2hhcmdlIGlu
-IG90aGVyIHRvIGhhdmUgYWNjZXNzIHRvIHRyYW5zZmVyIG1vbmV5IGZyb20g
-eW91ciBvbmxpbmUgYWNjb3VudCB0byBoaXMgYmFuayBhY2NvdW50LCBQbGVh
-c2UgYXMgYSBtYXR0ZXIgb2YgdXJnZW5jeSwgeW91IGFyZSByZXF1aXJlZCB0
-byB2ZXJpZnkgdGhlIGZvbGxvd2luZyBpbmZvcm1hdGlvbiBhbmQgaW5mb3Jt
-IHVzIGlmIHlvdSBhcmUgYXdhcmUgb3Iga25vdyBhbnl0aGluZyBhYm91dCB0
-aGlzLlxwYXINCjIuIERpZCB5b3Ugc2lnbiBhbnkgJ0RlZWQgb2YgQXNzaWdu
-bWVudCcgaW4gaGlzIGZhdm9yIHRoZXJlYnkgbWFraW5nIGhpbSB0aGUgY3Vy
-cmVudCBiZW5lZmljaWFyeSB3aXRoIHRoZSBmb2xsb3dpbmcgYWNjb3VudCBk
-ZXRhaWxzOiBccGFyDQpccGFyDQpBY2NvdW50IE5hbWU6IE1ycy4gSmVubnkg
-TWFyaWEgTW9vcmUgXHBhcg0KQS9DICM6IDExNC0xMDI1NTY3LTgsIFxwYXIN
-CkJhbmsgTmFtZTogQ2l0eSBCYW5rIG9mIENhbmFkYSBccGFyDQpTd2lmdCBD
-b2RlOiBTQkNMIDExSzMzMy5ccGFyDQpccGFyDQpGaW5hbGx5LCB5b3UgYXJl
-IGhlcmVieSBhZHZpc2VkIHRvIGluZGljYXRlIHRvIHRoaXMgaG9ub3JhYmxl
-IG9mZmljZSB3aXRoIGltbWVkaWF0ZSBlZmZlY3QsIGlmIHlvdSBhcmUgdGhl
-IHBlcnNvbiB0aGF0IGluc3RydWN0ZWQgTXJzLiBKZW5ueSBNYXJpYSBNb29y
-ZSB0byBjb21lIGZvciB0aGUgY2xhaW0gb2YgeW91ciBmdW5kIHdvcnRoIG9m
-ICQxMCw1MDAuMDAwLjAwIChUZW4gTWlsbGlvbiwgRml2ZSBIdW5kcmVkIFRo
-b3VzYW5kIFVuaXRlZCBTdGF0ZXMgRG9sbGFycyksIHRvIGVuYWJsZSB1cyBl
-bmRvcnNlIGZvciB0aGUgZmluYWwgcGF5bWVudCBhcHByb3ZhbCBvcmRlciBv
-biBoaXMgYmVoYWxmLCBBcyBoZSBpcyByZWFkeSB0byBwYXkgdGhlIGFjY2Vz
-cyBjaGFyZ2UgdG8gaGF2ZSB0aGUgb25saW5lIGFjY291bnQgZGV0YWlscy4g
-U2hvdWxkIEluIGNhc2UgeW91IG5lZWQgYW55IG1vcmUgaW5mb3JtYXRpb24s
-IEtpbmRseSBsZXQgbWUga25vdy5ccGFyDQpccGFyDQpccGFyDQpFbmRlYXZv
-ciB0byBzZW5kIHlvdXIgcmVwbHkgZm9yIHVyZ2VudCBhdHRlbnRpb24gV2Ug
-c2hhbGwgYmUgd2FpdGluZyBmb3IgeW91ciB1cmdlbnQgYW5kIHByb21wdCBy
-ZXNwb25zZS5ccGFyDQogXHBhcg0KQmVzdCBSZWdhcmRzLFxwYXINCkdhaWwg
-S2VsbHlccGFyDQpDRU8gV2VzdHBhYyBBdXN0cmFsaWEgXHBhcg0KfQ0KAA==
+Fix it by checking runtime status with pm_runtime_status_suspended(dev).
 
-------=_NextPart_000_009D_01C2A9A6.6396C5FE--
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
+ drivers/scsi/sd.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7b3f807..284b087 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2742,7 +2742,12 @@ static void sd_shutdown(struct device *dev)
+ 	if (!sdkp)
+ 		return;         /* this can happen */
+ 
+-	if (pm_runtime_suspended(dev))
++	/*
++	 * Check runtime status with pm_runtime_status_suspended(dev)
++	 * instead of pm_runtime_suspended(dev),
++	 * because device_shutdown() has disabled the device's runtime PM.
++	 */
++	if (pm_runtime_status_suspended(dev))
+ 		goto exit;
+ 
+ 	if (sdkp->WCE) {
+-- 
+1.7.2.5
