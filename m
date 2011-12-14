@@ -1,65 +1,44 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH 1/3] [SCSI] sd: fix runtime status check in sd_shutdown
-Date: Wed, 14 Dec 2011 21:24:31 +0800
-Message-ID: <1323869071.2656.7.camel@hp6530s>
-References: <1323832681-7177-1-git-send-email-ming.m.lin@intel.com>
-	 <1323832681-7177-2-git-send-email-ming.m.lin@intel.com>
-	 <4EE8813B.1090802@mvista.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Subject: [PATCH] libcxgbi: do not print a message when memory allocation fails
+Date: Wed, 14 Dec 2011 13:46:23 -0200
+Message-ID: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4EE8813B.1090802@mvista.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sshtylyov@mvista.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org, kxie@chelsio.com, michaelc@cs.wisc.edu, davem@davemloft.net, JBottomley@parallels.com, linux-kernel@vger.kernel.org, Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2011-12-14 at 18:58 +0800, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 14-12-2011 7:17, Lin Ming wrote:
-> 
-> > Commit af8db15 disabled device's runtime PM during shutdown.
-> 
->     Please also specify that commit's summary in parens.
+In alloc_pdu, libcxgbi tries to allocate a skb with GFP_ATOMIC, which
+may potentially fail. When it happens, the current code prints a warning
+message.
 
-OK. Here it is.
+When the system is under IO stress, this failure may happen lots of
+times and it usually scares users.
 
->From 7e3dcebe235d005126c03a3976bca859691110bc Mon Sep 17 00:00:00 2001
-From: Lin Ming <ming.m.lin@intel.com>
-Date: Wed, 14 Dec 2011 10:14:21 +0800
-Subject: [PATCH 1/3] [SCSI] sd: fix runtime status check in sd_shutdown
+Instead of printing the warning message, the code now increases the
+tx_dropped statistics for the ethernet interface wich is doing the iscsi
+task.
 
-Commit af8db15(PM / driver core: disable device's runtime PM during
-shutdown) makes pm_runtime_suspended(dev) always return false.
-So sd's runtime status can't be checked with pm_runtime_suspended(dev)
-any more.
-
-Fix it by checking runtime status with pm_runtime_status_suspended(dev).
-
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
 ---
- drivers/scsi/sd.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ drivers/scsi/cxgbi/libcxgbi.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 7b3f807..284b087 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2742,7 +2742,12 @@ static void sd_shutdown(struct device *dev)
- 	if (!sdkp)
- 		return;         /* this can happen */
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index c10f74a..3422bc2 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1862,8 +1862,9 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task, u8 opcode)
  
--	if (pm_runtime_suspended(dev))
-+	/*
-+	 * Check runtime status with pm_runtime_status_suspended(dev)
-+	 * instead of pm_runtime_suspended(dev),
-+	 * because device_shutdown() has disabled the device's runtime PM.
-+	 */
-+	if (pm_runtime_status_suspended(dev))
- 		goto exit;
+ 	tdata->skb = alloc_skb(cdev->skb_tx_rsvd + headroom, GFP_ATOMIC);
+ 	if (!tdata->skb) {
+-		pr_warn("alloc skb %u+%u, opcode 0x%x failed.\n",
+-			cdev->skb_tx_rsvd, headroom, opcode);
++		struct cxgbi_sock *csk = cconn->cep->csk;
++		struct net_device *ndev = cdev->ports[csk->port_id];
++		ndev->stats.tx_dropped++;
+ 		return -ENOMEM;
+ 	}
  
- 	if (sdkp->WCE) {
 -- 
-1.7.2.5
+1.7.4.4
