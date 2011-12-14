@@ -1,65 +1,65 @@
-From: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>
-Subject: Re: copy offload support in Linux - new system call needed?
-Date: Wed, 14 Dec 2011 17:27:23 -0500
-Message-ID: <20111214222723.GD7623@fieldses.org>
-References: <4EE8F75F.6070800@gmail.com>
- <20111214192739.GN2203@ZenIV.linux.org.uk>
- <4EE8FC2E.3010207@gmail.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: Make UAS work on HS for devices with and without command tagging
+ support
+Date: Wed, 14 Dec 2011 14:53:31 -0800
+Message-ID: <20111214225331.GA5508@xanatos>
+References: <1323888472-21035-1-git-send-email-bigeasy@linutronix.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:9345 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758321Ab1LNWxc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Dec 2011 17:53:32 -0500
 Content-Disposition: inline
-In-Reply-To: <4EE8FC2E.3010207-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ric Wheeler <ricwheeler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Becker <jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+In-Reply-To: <1323888472-21035-1-git-send-email-bigeasy@linutronix.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Matthew Wilcox <willy@linux.intel.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>
 
-On Wed, Dec 14, 2011 at 02:42:38PM -0500, Ric Wheeler wrote:
-> On 12/14/2011 02:27 PM, Al Viro wrote:
-> >On Wed, Dec 14, 2011 at 02:22:07PM -0500, Ric Wheeler wrote:
-> >
-> >>We had an active thread a couple of years back that came out of the
-> >>reflink work and, at the time, there seemed to be moderately
-> >>positive support for adding a new system call that would fit this
-> >>use case (Joel Becker's copyfile()).
-> >>
-> >>Can we resurrect this effort? Is copyfile() still a good way to go,
-> >>or should we look at other hooks?
-> >copyfile(2) is probably a good way to go, provided that we do _not_
-> >go baroque as it had happened the last time syscall had been discussed.
-> >
-> >IOW, to hell with progress reports, etc. - just a fastpath kind of
-> >thing, in the same kind of relationship to cp(1) as rename(2) is to mv(1).
-> >If it works - fine, if not - caller has to be ready to deal with handling
-> >cross-device case anyway.
+On Wed, Dec 14, 2011 at 07:47:50PM +0100, Sebastian Andrzej Siewior wrote:
+> Hi Sarah and Matthew,
 > 
-> I think that this approach makes a lot of sense. Most of the
-> devices/targets that support the copy offload, will do it in very
-> reasonable amounts of time.
+> the two patches were required to get my new fancy uasp gadget work on HS
+> with dummy_hcd. It is processing only one command at a time however it
+> caught a few bugs already :)
 
-The current NFSv4.2 draft rolls both the "fast" and "slow" cases into
-one operation:
+Thanks for testing!  Are these patches on top of the patches I sent out
+a week ago?  Or just on top of Greg's tree?
 
-	http://tools.ietf.org/html/draft-ietf-nfsv4-minorversion2-06#section-2
- 
-Perhaps we should ask for separate operations for the two cases.  (Or at
-least a "please don't bother if this is going to take 8 hours" flag....)
+> To deal with canceled commands (where we may have to kill some status urbs)
+> I've been thinking about a list within uas_dev_info which keeps track of
+> all status urbs and counts all commands which are queued.  Once we start
+> removing commands which timed out we should make sure that the number of
+> commands which remain is the same as the number of status urbs which we
+> have. If we have more status urbs than commands then we kill some status
+> urbs. If it is the other way around then someone was too trigger happy.
 
---b.
+That might work, but we'd have to synchronize the list manipulations
+across status completions.  That would get complex in the USB 3.0 case,
+where we could (potentially, if the xHCI driver had multiple event ring
+support and the host had MSI-X support) have two status completion
+handlers running on different CPUs.  One of the completion handlers
+would have to spin, waiting on the other.  So if we can avoid a list of
+outstanding URBs, that would be better.
 
-> 
-> Let me see if I can dig up some of the presentations from the NetApp
-> guys who presented overviews or the specifications from the IETF and
-> T10....
-> 
-> Ric
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Matthew was just mentioning to me that it might be good to just have one
+status URB per USB 2.0 UAS device, and just keep re-submitting it.  USB
+2.0 devices don't have streams, so there can't be multiple status URBs
+being processed at the same time, so I think it would work.  The only
+difficulty I see is syncing the status completion with an abort of the
+same command, but I think that could be done with an RCU reader lock in
+the status completion.  There shouldn't be any performance difference
+between re-using one status URB or using a dedicated one in the
+cmnd_info structure.  Plus, we wouldn't have to allocate status URBs in
+completion handlers if we just used one dedicated status URB.
+
+For USB 3.0 UAS, I think the status URB should stay in the cmnd_info
+structure, since we know that when a status URB completes for a
+particular stream ID, it is directly associated with that command, and
+not a different command.  So I'd like to address the sense URB failure
+issue you tried to fix in the second patch, but I think we should go
+about it in a different way.
+
+Sarah Sharp
