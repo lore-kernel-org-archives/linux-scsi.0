@@ -1,45 +1,52 @@
-From: Ric Wheeler <ricwheeler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Jeremy Allison <jra@samba.org>
 Subject: Re: copy offload support in Linux - new system call needed?
-Date: Wed, 14 Dec 2011 14:42:38 -0500
-Message-ID: <4EE8FC2E.3010207@gmail.com>
-References: <4EE8F75F.6070800@gmail.com> <20111214192739.GN2203@ZenIV.linux.org.uk>
+Date: Wed, 14 Dec 2011 11:59:31 -0800
+Message-ID: <20111214195931.GC10664@samba2>
+References: <4EE8F75F.6070800@gmail.com>
+Reply-To: Jeremy Allison <jra@samba.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111214192739.GN2203-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Becker <jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4EE8F75F.6070800@gmail.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Ric Wheeler <ricwheeler@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/14/2011 02:27 PM, Al Viro wrote:
-> On Wed, Dec 14, 2011 at 02:22:07PM -0500, Ric Wheeler wrote:
->
->> We had an active thread a couple of years back that came out of the
->> reflink work and, at the time, there seemed to be moderately
->> positive support for adding a new system call that would fit this
->> use case (Joel Becker's copyfile()).
->>
->> Can we resurrect this effort? Is copyfile() still a good way to go,
->> or should we look at other hooks?
-> copyfile(2) is probably a good way to go, provided that we do _not_
-> go baroque as it had happened the last time syscall had been discussed.
->
-> IOW, to hell with progress reports, etc. - just a fastpath kind of
-> thing, in the same kind of relationship to cp(1) as rename(2) is to mv(1).
-> If it works - fine, if not - caller has to be ready to deal with handling
-> cross-device case anyway.
+On Wed, Dec 14, 2011 at 02:22:07PM -0500, Ric Wheeler wrote:
+> 
+> Back at LinuxCon Prague, we talked about the new NFS and SCSI
+> commands that let us offload copy operations to a storage device
+> (like an NFS server or storage array).
+> 
+> This got new life in the virtual machine world where you might want
+> to clone bulky guest files or ranges of blocks and was driven
+> through the standards bodies by vmware, microsoft and some of the
+> major storage vendors. Windows8 has this functionality fully coded
+> and integrated in the GUI, I assume vmware also uses it and there
+> are some vendors who announced support at the SNIA SDC conference.
+> 
+> We had an active thread a couple of years back that came out of the
+> reflink work and, at the time, there seemed to be moderately
+> positive support for adding a new system call that would fit this
+> use case (Joel Becker's copyfile()).
+> 
+> Can we resurrect this effort? Is copyfile() still a good way to go,
+> or should we look at other hooks?
 
-I think that this approach makes a lot of sense. Most of the devices/targets 
-that support the copy offload, will do it in very reasonable amounts of time.
+Windows uses a COPYCHUNK call, which specifies the
+following parameters:
 
-Let me see if I can dig up some of the presentations from the NetApp guys who 
-presented overviews or the specifications from the IETF and T10....
+Definition of a copy "chunk":
 
-Ric
+hyper source_off;
+hyper target_off;
+uint32 length;
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+and an array of these chunks which is passed
+into their kernel.
+
+This is what we have to implement in Samba.
+
+Jeremy.
