@@ -1,23 +1,26 @@
-From: Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+From: Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: copy offload support in Linux - new system call needed?
-Date: Thu, 15 Dec 2011 11:00:33 -0500
-Message-ID: <1323964833.14317.7.camel@lade.trondhjem.org>
+Date: Thu, 15 Dec 2011 11:03:30 -0500
+Message-ID: <20111215110330.33aed3a6@barsoom.rdu.redhat.com>
 References: <4EE8F75F.6070800@gmail.com>
-	 <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com>
-	 <20111214222723.GD7623@fieldses.org>
-	 <1323961140.14317.2.camel@lade.trondhjem.org>
-	 <20111215155213.GF18252@shiny>
+	<20111214192739.GN2203@ZenIV.linux.org.uk>
+	<4EE8FC2E.3010207@gmail.com>
+	<20111214222723.GD7623@fieldses.org>
+	<1323961140.14317.2.camel@lade.trondhjem.org>
+	<20111215155213.GF18252@shiny>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <20111215155213.GF18252@shiny>
 Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: Chris Mason <chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Ric Wheeler <ricwheeler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Becker <jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Cc: Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>, "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Ric Wheeler <ricwheeler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Becker <jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2011-12-15 at 10:52 -0500, Chris Mason wrote: 
+On Thu, 15 Dec 2011 10:52:13 -0500
+Chris Mason <chris.mason-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+
 > On Thu, Dec 15, 2011 at 09:59:00AM -0500, Trond Myklebust wrote:
 > > On Wed, 2011-12-14 at 17:27 -0500, J. Bruce Fields wrote: 
 > > > On Wed, Dec 14, 2011 at 02:42:38PM -0500, Ric Wheeler wrote:
@@ -58,20 +61,17 @@ On Thu, 2011-12-15 at 10:52 -0500, Chris Mason wrote:
 > 
 > If we're using this to copy VM image files, I could easily imagine
 > wanting to clone multiple copies of the VM in parallel.
+> 
+> -chris
+> 
 
-Sure, but in that case, your target file descriptors will differ, right?
+Not really a problem is it? Just dup() the fd before you issue the
+copyfile()? Or even simpler, just do periodic stat() on the destination
+file if you want a progress report.
 
-Cheers
-  Trond
-
+Regardless, I like the simple approach that Al is suggesting here.
 -- 
-Trond Myklebust
-Linux NFS client maintainer
-
-NetApp
-Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org
-www.netapp.com
-
+Jeff Layton <jlayton-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
 the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
