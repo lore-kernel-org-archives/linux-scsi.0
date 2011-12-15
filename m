@@ -1,37 +1,112 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: copy offload support in Linux - new system call needed?
-Date: Thu, 15 Dec 2011 12:55:42 -0500
-Message-ID: <4EEA349E.8060800@redhat.com>
-References: <4EE8F75F.6070800@gmail.com>  <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com>  <20111214222723.GD7623@fieldses.org>  <1323961140.14317.2.camel@lade.trondhjem.org>  <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com>  <1323965498.14317.13.camel@lade.trondhjem.org>  <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com> <1323968015.14317.28.camel@lade.trondhjem.org> <4EEA2BF7.5030107@gmail.com> <D3F292ADF945FB49B35E96C94C2061B91516E489@nsmail.netscout.com>
+From: =?utf-8?B?SsO2cm4=?= Engel <joern@logfs.org>
+Subject: [PATCH] qla2xxx: Improve qla2x00_req_pkt()
+Date: Thu, 15 Dec 2011 19:51:29 +0100
+Message-ID: <20111215185129.GA18429@logfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:15203 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756365Ab1LOR6o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Dec 2011 12:58:44 -0500
-In-Reply-To: <D3F292ADF945FB49B35E96C94C2061B91516E489@nsmail.netscout.com>
+Received: from [85.183.114.52] ([85.183.114.52]:43146 "EHLO Dublin.logfs.org"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751552Ab1LOSuT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 15 Dec 2011 13:50:19 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Loke, Chetan" <Chetan.Loke@netscout.com>
-Cc: Trond Myklebust <Trond.Myklebust@netapp.com>, "J. Bruce Fields" <bfields@fieldses.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-scsi@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: linux-driver@qlogic.com, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On 12/15/2011 12:31 PM, Loke, Chetan wrote:
->> I think that hypervisor vendors will be very interested in this feature
->> which
->> would explain why vmware was active in drafting both the NFS and T10
-> Specs are the only way to convince storage-target-vendors ;). Otherwise target-stack will need to implement multiple custom-CDB-handlers for different front-end APIs(which is ugly).
->
->
-> Chetan
+- Remove useless comments.  Hint: if the comment does not add more
+  information than the next line of code does without the comment,
+  just leave it out.
+- Replace HZ with 100 - see the comment for an explanation.  Arguably
+  one could use 250, 300 or 1000 as well.  Or 42, for that matter.
+- Replace hand-rolled memset with memset and avoid the macro to make the
+  code more obvious to a reader.
+- Replace "(req_cnt + 2)" with 3 and add a comment.
 
-Hi Chetan,
+The function still strikes me as horribly wrong.  Releasing and
+re-acquiring a lock held by the caller is never a good sign.  An
+arbitrary wait-loop using busy spinning is just Plain Wrong(tm).  The
+device has interrupts, so why do we implement polling in a function
+called from the interrupt handler?  Bonkers!
 
-I should post from my "Red Hat" email to make this less confusing for you - I 
-know that this is in fact interesting to vendors :)
+Signed-off-by: Joern Engel <joern@logfs.org>
+---
+ drivers/scsi/qla2xxx/qla_iocb.c |   36 +++++++++++++++++-------------------
+ 1 files changed, 17 insertions(+), 19 deletions(-)
 
-Thanks!
-
-Ric
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index c822967..941d413 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -569,13 +569,21 @@ qla2x00_req_pkt(scsi_qla_host_t *vha)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	device_reg_t __iomem *reg = ha->iobase;
+-	request_t *pkt = NULL;
+-	uint32_t *dword_ptr, timer;
+-	uint16_t req_cnt = 1, cnt;
++	request_t *pkt;
++	uint32_t timer;
++	uint16_t cnt;
+ 
+-	/* Wait 1 second for slot. */
+-	for (timer = HZ; timer; timer--) {
+-		if ((req_cnt + 2) >= vha->req->cnt) {
++	/*
++	 * Wait 200-900us for a slot.  200us for 100 udelay(2), another 700us seem
++	 * to be used up elsewhere in this loop - or in the calling code around.
++	 * An older comment and the former usage of HZ indicates that the intention
++	 * was to wait for 1s, but the code never did that.  Given that the actual
++	 * code, rather than the original intention has see a lot of testing, keep
++	 * it at 200us.
++	 */
++	for (timer = 100; timer; timer--) {
++		/* XXX Where does the magical value of 3 come from? */
++		if (3 >= vha->req->cnt) {
+ 			/* Calculate number of free request entries. */
+ 			if (IS_FWI2_CAPABLE(ha))
+ 				cnt = (uint16_t)RD_REG_DWORD(&reg->isp24.req_q_out);
+@@ -591,28 +599,19 @@ qla2x00_req_pkt(scsi_qla_host_t *vha)
+ 		}
+ 
+ 		/* If room for request in request ring. */
+-		if ((req_cnt + 2) < vha->req->cnt) {
++		/* XXX Where does the magical value of 3 come from? */
++		if (3 < vha->req->cnt) {
+ 			vha->req->cnt--;
+ 			pkt = vha->req->ring_ptr;
+ 
+-			/* Zero out packet. */
+-			dword_ptr = (uint32_t *)pkt;
+-			for (cnt = 0; cnt < REQUEST_ENTRY_SIZE / 4; cnt++)
+-				*dword_ptr++ = 0;
+-
+-			/* Set system defined field. */
++			memset(pkt, 0, sizeof(*pkt));
+ 			pkt->sys_define = (uint8_t)vha->req->ring_index;
+-
+-			/* Set entry count. */
+ 			pkt->entry_count = 1;
+-
+ 			return pkt;
+ 		}
+ 
+-		/* Release ring specific lock */
+ 		spin_unlock_irq(&ha->hardware_lock);
+ 
+-		/* 2 us */
+ 		udelay(2);
+ 		/*
+ 		 * Check for pending interrupts, during init we issue marker directly
+@@ -620,7 +619,6 @@ qla2x00_req_pkt(scsi_qla_host_t *vha)
+ 		if (!vha->marker_needed && !vha->flags.init_done)
+ 			qla2x00_poll(vha->req->rsp);
+ 
+-		/* Reaquire ring specific lock */
+ 		spin_lock_irq(&ha->hardware_lock);
+ 	}
+ 
+-- 
+1.7.7.3
 
