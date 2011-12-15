@@ -1,25 +1,20 @@
-From: "Loke, Chetan" <Chetan.Loke@netscout.com>
-Subject: RE: copy offload support in Linux - new system call needed?
-Date: Thu, 15 Dec 2011 11:08:25 -0500
-Message-ID: <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com>
-References: <4EE8F75F.6070800@gmail.com> <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com> <20111214222723.GD7623@fieldses.org> <1323961140.14317.2.camel@lade.trondhjem.org>
+From: Miss victoria <miss.victoria@indiatimes.com>
+Subject: Hello my dear
+Date: Thu, 15 Dec 2011 21:50:59 +0530 (IST)
+Message-ID: <1529564022.322351323966059479.JavaMail.root@tilmb16.indiatimes.com>
+Reply-To: Miss victoria <m_victoriaa@yahoo.com.ph>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod6og117.obsmtp.com ([64.18.1.39]:49726 "HELO
-	exprod6og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751295Ab1LOQPd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2011 11:15:33 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1323961140.14317.2.camel@lade.trondhjem.org>
+Received: from vomta1.indiatimes.com ([223.165.24.78]:51522 "HELO
+	vomta1.indiatimes.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758983Ab1LOQUx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2011 11:20:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Trond Myklebust <Trond.Myklebust@netapp.com>, "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Ric Wheeler <ricwheeler@gmail.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-scsi@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-PiBIb3cgd291bGQgdGhlIHNlcnZlciBrbm93PyBJIHN1Z2dlc3Qgd2UgZGVhbCB3aXRoIHRoaXMg
-YnkgYWRkaW5nIGFuDQo+IGlvY3RsKCkgdG8gYWxsb3cgdGhlIGFwcGxpY2F0aW9uIHRvIHBvbGwg
-Zm9yIHByb2dyZXNzOiBJJ20gYXNzdW1pbmcgbm93DQoNCldoeSBub3Qgc3VwcG9ydCBzb21ldGhp
-bmcgbGlrZSB0aGUgYXN5bmMtaW9jYj8NCg0KDQo=
+
+
+Hello my dear,
+How are you doing? I came across you contact why search on Google, how was there, hope fine? Mine is cold over here in Senegal, it will be of my pleasure to know you, I have being seeking a way to express my inner mind, I am Ms Victoria from Zimbabwe, i am seeking for friendship or future partner, i love to know who you are and your country, Cheers Victoria
