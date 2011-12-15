@@ -1,70 +1,37 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH] libcxgbi: do not print a message when memory allocation fails
-Date: Wed, 14 Dec 2011 16:52:42 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD3340AA0DF94@maui.asicdesigners.com>
-References: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <netdev-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-Sender: netdev-owner@vger.kernel.org
-To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
-Cc: netdev@vger.kernel.org, michaelc@cs.wisc.edu, davem@davemloft.net, JBottomley@parallels.com, linux-kernel@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v2 0/2] fixes for ata port runtime pm support
+Date: Thu, 15 Dec 2011 09:36:01 +0800
+Message-ID: <1323912963-26146-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:23058 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755628Ab1LOBgN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Dec 2011 20:36:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-The patch looks fine to me.
+Hi Jeff,
+
+Here are the v2 fixes for ata port runtime pm support.
+Applied on top of linux-next-20111214 tree.
+
+Changes in v2:
+- Drop the patch "[SCSI] sd: fix runtime status check in sd_shutdown".
+  It's no longer needed with commit fe6b91f(PM / Driver core: leave
+  runtime PM enabled during system shutdown).
+- Add Ack from Alan
+
+v1: https://lkml.org/lkml/2011/12/13/443
+
+Lin Ming (2):
+      [SCSI]: runtime resume parent for child's system-resume
+      ata: update ata port's runtime status during system resume
+
+ drivers/ata/libata-core.c |   18 ++++++++++++++++--
+ drivers/scsi/scsi_pm.c    |   11 ++++++++++-
+ 2 files changed, 26 insertions(+), 3 deletions(-)
 
 Thanks,
-Karen
-
------Original Message-----
-From: Thadeu Lima de Souza Cascardo [mailto:cascardo@linux.vnet.ibm.com]
-
-Sent: Wednesday, December 14, 2011 7:46 AM
-To: linux-scsi@vger.kernel.org
-Cc: netdev@vger.kernel.org; Karen Xie; michaelc@cs.wisc.edu;
-davem@davemloft.net; JBottomley@parallels.com;
-linux-kernel@vger.kernel.org; Thadeu Lima de Souza Cascardo
-Subject: [PATCH] libcxgbi: do not print a message when memory allocation
-fails
-
-In alloc_pdu, libcxgbi tries to allocate a skb with GFP_ATOMIC, which
-may potentially fail. When it happens, the current code prints a warning
-message.
-
-When the system is under IO stress, this failure may happen lots of
-times and it usually scares users.
-
-Instead of printing the warning message, the code now increases the
-tx_dropped statistics for the ethernet interface wich is doing the iscsi
-task.
-
-Signed-off-by: Thadeu Lima de Souza Cascardo
-<cascardo@linux.vnet.ibm.com>
----
- drivers/scsi/cxgbi/libcxgbi.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c
-b/drivers/scsi/cxgbi/libcxgbi.c
-index c10f74a..3422bc2 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -1862,8 +1862,9 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task,
-u8 opcode)
- 
- 	tdata->skb = alloc_skb(cdev->skb_tx_rsvd + headroom,
-GFP_ATOMIC);
- 	if (!tdata->skb) {
--		pr_warn("alloc skb %u+%u, opcode 0x%x failed.\n",
--			cdev->skb_tx_rsvd, headroom, opcode);
-+		struct cxgbi_sock *csk = cconn->cep->csk;
-+		struct net_device *ndev = cdev->ports[csk->port_id];
-+		ndev->stats.tx_dropped++;
- 		return -ENOMEM;
- 	}
- 
--- 
-1.7.4.4
+Lin Ming
