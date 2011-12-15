@@ -1,74 +1,70 @@
-From: Namjae Jeon <linkinjeon@gmail.com>
-Subject: Re: [PATCH 1/1] scsi: retrieve cache mode using ATA_16 if normal
- routine fails
-Date: Thu, 15 Dec 2011 09:25:51 +0900
-Message-ID: <CAKYAXd9ncxETxTEP0Vy8CVyDJODsGuVT4jnpfQYCkcU8tXRtDA@mail.gmail.com>
-References: <1323688722-25400-1-git-send-email-amit.sahrawat83@gmail.com>
-	<1323694267.20451.5.camel@dabdike>
-	<CAKYAXd-3LYJUWbAqaT4XfbNXJ_F0L1Lxu1evUxLyu=poHLMFug@mail.gmail.com>
-	<1323766382.8163.12.camel@dabdike>
-	<4EE7B7B9.7060700@garzik.org>
-	<CADDb1s1JwTbeFMsL4Vcz99PhgZKAMG05rgqankYCNeJLFRQSMg@mail.gmail.com>
-	<1323848398.3063.12.camel@dabdike>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH] libcxgbi: do not print a message when memory allocation fails
+Date: Wed, 14 Dec 2011 16:52:42 -0800
+Message-ID: <8A71B368A89016469F72CD08050AD3340AA0DF94@maui.asicdesigners.com>
+References: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:43546 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755403Ab1LOAZx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2011 19:25:53 -0500
-In-Reply-To: <1323848398.3063.12.camel@dabdike>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <netdev-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: netdev-owner@vger.kernel.org
+To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org, michaelc@cs.wisc.edu, davem@davemloft.net, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, Jeff Garzik <jeff@garzik.org>, Nam-Jae Jeon <namjae.jeon@samsung.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mdharm-usb@one-eyed-alien.net
 
-2011/12/14 James Bottomley <James.Bottomley@hansenpartnership.com>:
-> On Wed, 2011-12-14 at 09:14 +0530, Amit Sahrawat wrote:
->> Just to add a thought - this issues is not related with ATA, this is
->> primarily related with HDD's with a USB interface i.e., SCSI <-> USB=
-=2E
->> And, when I check my kernel config, CONFIG_ATA is not selected,
->> libata-scsi - this gets compiled only in case CONFIG_ATA is on.
->> Are these two things inter-related?
->
-Hi. James.
+The patch looks fine to me.
 
-> OK, so what you're telling us is that you're trying to correct a
-> deficiency in a SATL inside a USB device? =C2=A0The device itself is =
-ATA but
-> it doesn't use our libata connectors.
->
-> I think in that case, the best way forwards is a mini-SATL correction
-> layer within USB storage. =C2=A0USB storage is certainly the place to
-> black/white list whether this should be done. =C2=A0ATA_16 is a bit o=
-f a
-> dangerous command to be throwing around because it's known to crash
-> various USB devices (and some old SCSI ones might even choke on it).
-Okay, how about make some option in Kconfig of scsi or usb storage to
-protect from the a bit of risk ATA_16 ?
-The user can select this option to use stable filesystem on USB HDD.
->
-> depending on how big this SATL ends up being we should consider wheth=
-er
-> it should share processing with the libata SATL. =C2=A0If it's just a=
- single
-> mode sense, my instinct is that it's probably OK to implement separat=
-ely
-> (however, you need to use the libata headers ... no duplication of
-> libata opcodes and status defines like you had in the original SCSI
-> patch). =C2=A0If there are more commands to correct on the way, it mi=
-ght be
-> better as shared code.
-I agree. I and Amit will check the best way between SATL or miniSATL
-in usb_storage accoding to your advice.
+Thanks,
+Karen
 
-> James
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----Original Message-----
+From: Thadeu Lima de Souza Cascardo [mailto:cascardo@linux.vnet.ibm.com]
+
+Sent: Wednesday, December 14, 2011 7:46 AM
+To: linux-scsi@vger.kernel.org
+Cc: netdev@vger.kernel.org; Karen Xie; michaelc@cs.wisc.edu;
+davem@davemloft.net; JBottomley@parallels.com;
+linux-kernel@vger.kernel.org; Thadeu Lima de Souza Cascardo
+Subject: [PATCH] libcxgbi: do not print a message when memory allocation
+fails
+
+In alloc_pdu, libcxgbi tries to allocate a skb with GFP_ATOMIC, which
+may potentially fail. When it happens, the current code prints a warning
+message.
+
+When the system is under IO stress, this failure may happen lots of
+times and it usually scares users.
+
+Instead of printing the warning message, the code now increases the
+tx_dropped statistics for the ethernet interface wich is doing the iscsi
+task.
+
+Signed-off-by: Thadeu Lima de Souza Cascardo
+<cascardo@linux.vnet.ibm.com>
+---
+ drivers/scsi/cxgbi/libcxgbi.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c
+b/drivers/scsi/cxgbi/libcxgbi.c
+index c10f74a..3422bc2 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -1862,8 +1862,9 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task,
+u8 opcode)
+ 
+ 	tdata->skb = alloc_skb(cdev->skb_tx_rsvd + headroom,
+GFP_ATOMIC);
+ 	if (!tdata->skb) {
+-		pr_warn("alloc skb %u+%u, opcode 0x%x failed.\n",
+-			cdev->skb_tx_rsvd, headroom, opcode);
++		struct cxgbi_sock *csk = cconn->cep->csk;
++		struct net_device *ndev = cdev->ports[csk->port_id];
++		ndev->stats.tx_dropped++;
+ 		return -ENOMEM;
+ 	}
+ 
+-- 
+1.7.4.4
