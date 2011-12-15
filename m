@@ -1,32 +1,58 @@
-From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+From: Trond Myklebust <Trond.Myklebust@netapp.com>
 Subject: RE: copy offload support in Linux - new system call needed?
-Date: Thu, 15 Dec 2011 11:40:55 -0500
-Message-ID: <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com>
-References: <4EE8F75F.6070800@gmail.com> <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com> <20111214222723.GD7623@fieldses.org> <1323961140.14317.2.camel@lade.trondhjem.org> <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com> <1323965498.14317.13.camel@lade.trondhjem.org>
+Date: Thu, 15 Dec 2011 11:53:35 -0500
+Message-ID: <1323968015.14317.28.camel@lade.trondhjem.org>
+References: <4EE8F75F.6070800@gmail.com>
+	 <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com>
+	 <20111214222723.GD7623@fieldses.org>
+	 <1323961140.14317.2.camel@lade.trondhjem.org>
+	 <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com>
+	 <1323965498.14317.13.camel@lade.trondhjem.org>
+	 <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <1323965498.14317.13.camel@lade.trondhjem.org>
+In-Reply-To: <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com>
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Trond Myklebust <Trond.Myklebust@netapp.com>
+To: "Loke, Chetan" <Chetan.Loke@netscout.com>
 Cc: "J. Bruce Fields" <bfields@fieldses.org>, Ric Wheeler <ricwheeler@gmail.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-scsi@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-PiA+DQo+ID4gV2h5IG5vdCBzdXBwb3J0IHNvbWV0aGluZyBsaWtlIHRoZSBhc3luYy1pb2NiPw0K
-PiANCj4gWW91IGNvdWxkLCBidXQgdGhhdCB3b3VsZCB0aWUgY29weWZpbGUoKSB0byB0aGUgYWlv
-IGludGVyZmFjZSB3aGljaCB3YXMNCj4gb25lIG9mIHRoZSB0aGluZ3MgdGhhdCBJIGJlbGlldmUg
-QWwgd2FzIG9wcG9zZWQgdG8gd2hlbiB3ZSBkaXNjdXNzZWQNCj4gdGhpcyBhdCBMU0YvTU0tMjAx
-MC4NCj4gDQoNCnZpcnR1YWxpemF0aW9uIHZlbmRvcnMgd2hvIHN1cHBvcnQgdGhpcyBvZmZsb2Fk
-IGRvIGl0IGF0IGEgbGF5ZXIgYWJvdmUgdGhlIGd1ZXN0LU9TKEludHJhLUxVTih0bSkgbG9ja2lu
-ZyBvciB3aGF0ZXZlciBmYW5jeSBsb2NraW5nKS4gU28gSSB0aGluayAnY29weWZpbGUnIGlzIGdv
-aW5nIHRvIGJlIGFwcGVhbGluZyB0byBhcHBsaWNhdGlvbi1kZXZlbG9wZXJzIG1vcmUgdGhhbiB0
-aGUgaHlwZXJ2aXNvci12ZW5kb3JzLg0KDQpTbyBsZXQncyB0aGluayBhYm91dCBpdCBmcm9tIGVu
-ZC11c2VycyBwZXJzcGVjdGl2ZToNCldvbid0IGV2ZXJ5b25lIHJlcGxpY2F0ZSBjb2RlIHRvIGNo
-ZWNrIC0gJ0FtIEkgZG9uZSc/IEl0IHdpbGwganVzdCBtYWtlIGFwcGxpY2F0aW9uIGZvbGtzIHdy
-aXRlIG1vcmUgKHVnbHkpY29kZS4gQmVjYXVzZSB5b3Ugd291bGQgdGhlbiBoYXZlIHRvIG1haW50
-YWluIGFub3RoZXIgcXVldWUvZXRjIHRvIGNoZWNrIGZvciB0aGlzIG9wZXJhdGlvbi4NCg0KV2Ug
-Y2FuIGp1c3Qgc3VwcG9ydCBmdWxsLWNvcHkuIFBhcnRpYWwgY29waWVzIGNhbiBiZSByZXR1cm5l
-ZCBhcyBmYWlsdXJlLg0K
+On Thu, 2011-12-15 at 11:40 -0500, Loke, Chetan wrote: 
+> > >
+> > > Why not support something like the async-iocb?
+> > 
+> > You could, but that would tie copyfile() to the aio interface which was
+> > one of the things that I believe Al was opposed to when we discussed
+> > this at LSF/MM-2010.
+> > 
+> 
+> virtualization vendors who support this offload do it at a layer above the guest-OS(Intra-LUN(tm) locking or whatever fancy locking). So I think 'copyfile' is going to be appealing to application-developers more than the hypervisor-vendors.
+
+The application is thin provisioning, not the 'cp' command. When
+virtualisation vendors do support this, it will mainly be as part of
+their image management toolkits, not the hypervisor.
+
+> So let's think about it from end-users perspective:
+> Won't everyone replicate code to check - 'Am I done'? It will just make application folks write more (ugly)code. Because you would then have to maintain another queue/etc to check for this operation.
+
+'Am I done' is easy: copyfile() returns with the number of bytes that
+have been copied.
+
+'Is my copyfile() syscall making progress' is the question that needs
+answering.
+
+> We can just support full-copy. Partial copies can be returned as failure.
+
+Then you have to check the entire range on error instead of just
+resuming the copy from where it stopped.
+
+-- 
+Trond Myklebust
+Linux NFS client maintainer
+
+NetApp
+Trond.Myklebust@netapp.com
+www.netapp.com
+
