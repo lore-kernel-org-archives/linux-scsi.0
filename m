@@ -1,66 +1,64 @@
-From: Sergei Shtylyov <sshtylyov-Igf4POYTYCDQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/2] usb/uas: fix support on HS (device without command
- tagging)
-Date: Thu, 15 Dec 2011 15:14:18 +0400
-Message-ID: <4EE9D68A.4010001@mvista.com>
-References: <1323888472-21035-1-git-send-email-bigeasy@linutronix.de> <1323888472-21035-2-git-send-email-bigeasy@linutronix.de>
+From: Trond Myklebust <Trond.Myklebust@netapp.com>
+Subject: Re: copy offload support in Linux - new system call needed?
+Date: Thu, 15 Dec 2011 09:59:00 -0500
+Message-ID: <1323961140.14317.2.camel@lade.trondhjem.org>
+References: <4EE8F75F.6070800@gmail.com>
+	 <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com>
+	 <20111214222723.GD7623@fieldses.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1323888472-21035-2-git-send-email-bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20111214222723.GD7623@fieldses.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Ric Wheeler <ricwheeler@gmail.com>, Al Viro <viro@ZenIV.linux.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello.
+On Wed, 2011-12-14 at 17:27 -0500, J. Bruce Fields wrote: 
+> On Wed, Dec 14, 2011 at 02:42:38PM -0500, Ric Wheeler wrote:
+> > On 12/14/2011 02:27 PM, Al Viro wrote:
+> > >On Wed, Dec 14, 2011 at 02:22:07PM -0500, Ric Wheeler wrote:
+> > >
+> > >>We had an active thread a couple of years back that came out of the
+> > >>reflink work and, at the time, there seemed to be moderately
+> > >>positive support for adding a new system call that would fit this
+> > >>use case (Joel Becker's copyfile()).
+> > >>
+> > >>Can we resurrect this effort? Is copyfile() still a good way to go,
+> > >>or should we look at other hooks?
+> > >copyfile(2) is probably a good way to go, provided that we do _not_
+> > >go baroque as it had happened the last time syscall had been discussed.
+> > >
+> > >IOW, to hell with progress reports, etc. - just a fastpath kind of
+> > >thing, in the same kind of relationship to cp(1) as rename(2) is to mv(1).
+> > >If it works - fine, if not - caller has to be ready to deal with handling
+> > >cross-device case anyway.
+> > 
+> > I think that this approach makes a lot of sense. Most of the
+> > devices/targets that support the copy offload, will do it in very
+> > reasonable amounts of time.
+> 
+> The current NFSv4.2 draft rolls both the "fast" and "slow" cases into
+> one operation:
+> 
+> 	http://tools.ietf.org/html/draft-ietf-nfsv4-minorversion2-06#section-2
+>  
+> Perhaps we should ask for separate operations for the two cases.  (Or at
+> least a "please don't bother if this is going to take 8 hours" flag....)
 
-On 14-12-2011 22:47, Sebastian Andrzej Siewior wrote:
+How would the server know? I suggest we deal with this by adding an
+ioctl() to allow the application to poll for progress: I'm assuming now
+that we don't expect more than 1 copyfile() system call at a time per
+file descriptor...
 
-> Right now UAS can not handle HS devices. This patch tries to fix this.
-> On SS and HS we take the command tag increment it by one and assign it
-> as the stream_id. This number is used to compare the tag number.
-> This tag number is later used to find the matching command struct. On SS
-> we could use urb->stream_id but this way the code flow is the same.
-> Untagged commands are stashed in ->current_cmd. Once such a command is
-> in process no other commands are allowed.
-> What I observed so far is that the first command (INQUIRY) checked if
-> command tagging is supporteed by the device or not. If so, all further
-> commands are tagged, if not none are. So the assumption here is if
-> ->current_cmd is available then take it else go by tag the number.
-> Things will break apart if the initiator mixes tagged&  untagged
-> commands.
+Cheers
+   Trond
+-- 
+Trond Myklebust
+Linux NFS client maintainer
 
-> With this patch things work for me on HS-UASP without command tagging.
+NetApp
+Trond.Myklebust@netapp.com
+www.netapp.com
 
-> Signed-off-by: Sebastian Andrzej Siewior<bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-> ---
->   drivers/usb/storage/uas.c |   21 +++++++++++----------
->   1 files changed, 11 insertions(+), 10 deletions(-)
-
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 680bea9..97f969c 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -232,13 +232,16 @@ static void uas_stat_cmplt(struct urb *urb)
->   		return;
->   	}
->
-> -	tag = be16_to_cpup(&iu->tag) - 1;
-> -	if (sdev->current_cmnd)
-> -		cmnd = sdev->current_cmnd;
-> -	else
-> -		cmnd = scsi_find_tag(sdev, tag);
-> -	if (!cmnd)
-> +	cmnd = sdev->current_cmnd;
-> +	if (!cmnd) {
-> +		tag = be16_to_cpup(&iu->tag);
-
-    Why not just 'be16_to_cpu(iu->tag)'? Ah, that's how it was before...
-
-WBR, Sergei
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
