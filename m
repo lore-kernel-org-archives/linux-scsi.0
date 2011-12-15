@@ -1,166 +1,78 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: sg_requests for descriptor sense data
-Date: Thu, 15 Dec 2011 11:23:35 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70D91352AFB@inbmail01.lsi.com>
-References: <B2FD678A64EAAD45B089B123FDFC3ED70D912FFADD@inbmail01.lsi.com>
- <4EE62CF0.7020303@interlog.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: Re: pm8001: locking in mpi_sata_completion() is broken
+Date: Thu, 15 Dec 2011 09:15:01 +0300
+Message-ID: <20111215061501.GF26939@mwanda>
+References: <20111214092947.GA1537@elgon.mountain>
+ <05B890C6DE854627B79801C1B3B16BBE@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="CXFpZVxO6m2Ol4tQ"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog118.obsmtp.com ([74.125.149.244]:45998 "EHLO
-	na3sys009aog118.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752624Ab1LOFxn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 15 Dec 2011 00:53:43 -0500
-In-Reply-To: <4EE62CF0.7020303@interlog.com>
-Content-Language: en-US
+Received: from acsinet15.oracle.com ([141.146.126.227]:48137 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752152Ab1LOGOy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2011 01:14:54 -0500
+Content-Disposition: inline
+In-Reply-To: <05B890C6DE854627B79801C1B3B16BBE@usish.com.cn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jack Wang <jack_wang@usish.com>
+Cc: lindar_liu@usish.com, linux-scsi@vger.kernel.org
 
 
+--CXFpZVxO6m2Ol4tQ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> -----Original Message-----
-> From: Douglas Gilbert [mailto:dgilbert@interlog.com]
-> Sent: Monday, December 12, 2011 10:04 PM
-> To: Desai, Kashyap
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: sg_requests for descriptor sense data
-> 
-> On 11-12-12 10:43 AM, Desai, Kashyap wrote:
-> > Douglas,
-> >
-> > I am trying to generate Descriptor format sense data from driver
-> attached to LSI controller.
-> > I have tried few sets of commands on my linux machine. Please help me
-> if anything is wrong here.
-> 
-> Which version of sg3_utils are you using? 1.32 is the current
-> stable version. From the output of #3 it seems that a very
-> old Linux kernel or old version of sg3_utils (or both) is being
-> used.
-
-It is a RHEL6 and 1.32 version of sg util.
-
-> 
-> > 1. Output of " sg_inq -d /dev/sg0"
-> >
-> > [root@dhcp-135-24-192-117 ~]# sg_inq -d /dev/sg0
-> > standard INQUIRY:
-> >    PQual=0  Device_type=0  RMB=0  version=0x06  [SPC-4]
-> >    [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=1  Resp_data_format=2
-> >    SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  BQue=0
-> >    EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-> >    [RelAdr=0]  WBus16=0  Sync=0  Linked=0  [TranDis=0]  CmdQue=1
-> >    [SPI: Clocking=0x0  QAS=0  IUS=0]
-> >      length=74 (0x4a)   Peripheral device type: disk
-> >   Vendor identification: ATA
-> >   Product identification: WDC WD30EZRS-00J
-> >   Product revision level: 0A80
-> >   Unit serial number:      WD-WCAWZ0036672
-> >
-> >    Version descriptors:
-> >      SAM-4 (no version claimed)
-> >      SAT-2 (no version claimed)
-> >      SPC-4 (no version claimed)
-> >      SBC-3 (no version claimed)
-> >      SAS ANSI INCITS 376-2003
-> >      ATA/ATAPI-8 ATA-ACS ATA/ATAPI command set (no version claimed)
-> 
-> That is an ATA disk so there is a SATL somewhere. This output
-> looks good (and looks like libata and _not_ the better
-> SATL found in the firmware of LSI's MPT SAS HBAs).
-
-I agree.! I am not sure about what is a theory behind it, but yes your input clears my doubt
-Thanks.
-
-> 
-> > 2. Output of " sg_requests -v /dev/sg0 -d"
-> >
-> > [root@dhcp-135-24-192-117 ~]# sg_requests -v /dev/sg0 -d
-> >      Request Sense cmd: 03 01 00 00 fc 00
-> > request sense:  Fixed format, current;  Sense key: Illegal Request
-> >   Additional sense: Invalid field in cdb
-> > bad field in Request Sense cdb
-> 
-> Ah, that looks like libata's SATL! Whoever programmed
-> that didn't understand the SCSI REQUEST SENSE command.
-> I think libata's SATL has been broken with respect
-> to REQUEST SENSE since day one.
-> 
-> > 3. Reading beyond the range of drive to get sense data.
-> > Output of "sg_read if=/dev/sg0 cdbsz=16 skip=0x15d50a3af00 bs=512
-> verbose=3 count=512"
-> > [root@dhcp-135-24-192-117 ~]# sg_read if=/dev/sg0 cdbsz=16
-> skip=0x15d50a3af00 bs=512 verbose=3 count=512
-> > Opened /dev/sg0 for SG_IO with flags=0x2
-> >    SG_GET_RESERVED_SIZE yields: 32768
-> >      read cdb: 88 00 00 00 01 5d 50 a3 af 00 00 00 00 80 00 00
-> >        duration=123 ms
-> > reading: SCSI status: Check Condition
-> >   Fixed format, current;  Sense key: Illegal Request
-> >   Additional sense: Logical block address out of range
-> >   Raw sense data (in hex):
-> >          70 00 05 00 00 00 00 0a  00 00 00 00 21 00 00 00
-> >          00 00
-> > sg_read: SCSI READ failed
-> > Some error occurred,  remaining block count=512
-> > 0+0 records in
-> 
-> Could you try that again with ddpt? The "Logical block
-> address out of range" is correct but I haven't seen
-> a SG_GET_RESERVED_SIZE error in a very long time.
-
-I am trying this. Do you have any default "ddpt" command to be executed ?
-I am seeing some issue while running ddpt command related to ": undefined symbol: set_scsi_pt_flags"
-
-[root@dhcp-135-24-192-117 ddpt-0.92]# ddpt if=/dev/sg3 of=/dev/null count=10 verbose=2 
-Assume block size of 512 bytes for both input and output
- >> Input file type: pass-through [pt] device 
-open /dev/sg3 with flags=0x802
-    inquiry cdb: 12 00 00 00 24 00 
-    /dev/sg3: ATA       WDC WD30EZRS-00J  0A80  [pdt=0]
- >> Output file type: null device 
-    read capacity (10) cdb: 25 00 00 00 00 00 00 00 00 00 
-    READ CAPACITY (10) response cannot represent this capacity
-    read capacity (16) cdb: 9e 10 00 00 00 00 00 00 00 00 00 00 00 20 00 00 
-  /dev/sg3 [pt]: blocks=5860533168 [0x15d50a3b0], _bs=512, 3.00 TB
-skip=0 (blocks on input), seek=0 (blocks on output)
-  ibs=512 bytes, obs=512 bytes, OBPC=0
-  initial count=10 (blocks of input), blocks_per_transfer=128
-ddpt: symbol lookup error: ddpt: undefined symbol: set_scsi_pt_flags
-[root@dhcp-135-24-192-117 ddpt-0.92]#
+On Thu, Dec 15, 2011 at 09:26:46AM +0800, Jack Wang wrote:
+> >   2018                          mb();/*in order to force CPU ordering*/
+> >   2019                          spin_unlock_irqrestore(&pm8001_ha->lock,
+> > flags);
+> >=20
+> > ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> > Calling irqrestore before we've done an irqsave.  What are we trying to
+> > restore?
+> [Jack Wang]=20
+> We hold spin_lock_irqsave when we process interrupt, so here we need rest=
+ore
+> it to do task done clean.
 
 
-> 
-> > My Drive is SPC-4 complaint and sg_requests suggested to have SPC-3 or
-> higher version to enable descriptor format.
-> > _But_ for me it is not working.
-> 
-> Hmmm, hopefully your drive is compliant with some ATA standard,
-> perhaps ACS-1. The issues we are looking at here are SAT (or
-> SAT-2) compliance. Not sure how libata handles the D_SENSE
-> field in Control mode page but I wouldn't be surprised if it
-> is broken.
-> 
-> A recent Seagate 3 TB SAS disk with 512 byte blocks comes from
-> the factory like this:
->    D_SENSE     1  [cha: y, def:  1, sav:  1]  Descriptor format sense
-> data
-> 
-> and it does return descriptor sense data when appropriate.
+You're not restoring a previous saved state, flags is set to zero
+here.  You're calling:
+				spin_unlock_irqrestore(&pm8001_ha->lock, 0);
 
-I tried with another 3TB SAS drive and yes things are as expected there. I am able to see Descriptor sense data.
+The whole function is badly broken.  mpi_sata_event() has similar
+problems.
 
-> 
-> > Eventually, When I try to run command as mentioned in #3, I want to
-> see Descriptor format sense instead of Fixed one.
-> 
-> Well when a disk is over 2 TB in size then descriptor
-> sense format is required to represent LBAs that are
-> bigger than 32 bits (assuming a LB size of 512 bytes).
-> 
-> Doug Gilbert
+With spin_lock_irqsave() and spin_unlock_irqrestore() you first have
+to save the state to "flags" before you can restore it.  Doing it
+the other way round doesn't make any sort sense.
 
+regards,
+dan carpenter
+
+--CXFpZVxO6m2Ol4tQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIcBAEBAgAGBQJO6ZBlAAoJEOnZkXI/YHqRXKAP/2ifzBSR1R4DZooAM3c/wjoP
+VDlDNKikYYrMlXzP0M4YgPhFycVi+pVeehX+bLCZ7pVIrNjcdLiLzSj2/ZVYAP9w
+UP0elHP7DH8n8Gx5rwF6DDANDUFjeC/QRm9/IJkBOZKZIelicA0FZY5+xZIR6hwj
+Ehao8La5lyGWaLtAPV0PYIIYdo12+FNHa5M2RLlOboc55LBcji0b/igRX7tLxT6y
+kALSof9lz6uG09PpU1HeGHtrkDJsditgLVIlSER9XQxphand1VNrRrm7pPGv/lHZ
+I3Z2wv1n2CqwdIzpf0DjHTwyB3kgUC5oRd035OLEQ9swW4WrEbvRA+GvO4NtZgZ9
+M99z50m5SeW4+cV5mpvUUXfwhFzXiqoIGBKjepXnf0CI1D8H30A4ggEZ40gy2Qu5
+IbEfA8wQ0860zmy3qoQFrcGAV90KFTOg/B9G+rnJWex082FKvrT85rLWhcfTNMF6
+fWrdEJU5I35MQ/W9sext4En/VfXS84EEezv/EMw1d0C3zSfDdF9B0GOqShp0OAWl
+OsDISbDR7Q+vk6n0pZ1bEIswB0lE4utE0Dv5QonO0jjHtW5mZmZZmqVnE/lEhRvh
+kf0KmxTGZW+DuJbp7SLyGQ0fAdzxJlC6/9/zvVcNeidDOhaj3HvcHPCCC1GkrFgt
+NxPDYKCXw7huNFY9XaSN
+=HfK2
+-----END PGP SIGNATURE-----
+
+--CXFpZVxO6m2Ol4tQ--
