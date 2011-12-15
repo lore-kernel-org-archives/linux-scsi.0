@@ -1,117 +1,32 @@
-From: Trond Myklebust <Trond.Myklebust@netapp.com>
-Subject: Re: copy offload support in Linux - new system call needed?
-Date: Thu, 15 Dec 2011 11:38:34 -0500
-Message-ID: <1323967114.14317.18.camel@lade.trondhjem.org>
-References: <4EE8F75F.6070800@gmail.com>
-	 <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com>
-	 <20111214222723.GD7623@fieldses.org>
-	 <1323961140.14317.2.camel@lade.trondhjem.org>
-	 <20111215155213.GF18252@shiny>
-	 <20111215110330.33aed3a6@barsoom.rdu.redhat.com>
-	 <1323965176.14317.11.camel@lade.trondhjem.org>
-	 <20111215111649.19af23c1@barsoom.rdu.redhat.com>
+From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Subject: RE: copy offload support in Linux - new system call needed?
+Date: Thu, 15 Dec 2011 11:40:55 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com>
+References: <4EE8F75F.6070800@gmail.com> <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com> <20111214222723.GD7623@fieldses.org> <1323961140.14317.2.camel@lade.trondhjem.org> <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com> <1323965498.14317.13.camel@lade.trondhjem.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:41284 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932622Ab1LOQiw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2011 11:38:52 -0500
-In-Reply-To: <20111215111649.19af23c1@barsoom.rdu.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <1323965498.14317.13.camel@lade.trondhjem.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Trond Myklebust <Trond.Myklebust@netapp.com>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Ric Wheeler <ricwheeler@gmail.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-scsi@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Chris Mason <chris.mason@oracle.com>, "J. Bruce Fields" <bfields@fieldses.org>, Ric Wheeler <ricwheeler@gmail.com>, Al Viro <viro@ZenIV.linux.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Thu, 2011-12-15 at 11:16 -0500, Jeff Layton wrote: 
-> On Thu, 15 Dec 2011 11:06:16 -0500
-> Trond Myklebust <Trond.Myklebust@netapp.com> wrote:
-> 
-> > On Thu, 2011-12-15 at 11:03 -0500, Jeff Layton wrote: 
-> > > On Thu, 15 Dec 2011 10:52:13 -0500
-> > > Chris Mason <chris.mason@oracle.com> wrote:
-> > > 
-> > > > On Thu, Dec 15, 2011 at 09:59:00AM -0500, Trond Myklebust wrote:
-> > > > > On Wed, 2011-12-14 at 17:27 -0500, J. Bruce Fields wrote: 
-> > > > > > On Wed, Dec 14, 2011 at 02:42:38PM -0500, Ric Wheeler wrote:
-> > > > > > > On 12/14/2011 02:27 PM, Al Viro wrote:
-> > > > > > > >On Wed, Dec 14, 2011 at 02:22:07PM -0500, Ric Wheeler wrote:
-> > > > > > > >
-> > > > > > > >>We had an active thread a couple of years back that came out of the
-> > > > > > > >>reflink work and, at the time, there seemed to be moderately
-> > > > > > > >>positive support for adding a new system call that would fit this
-> > > > > > > >>use case (Joel Becker's copyfile()).
-> > > > > > > >>
-> > > > > > > >>Can we resurrect this effort? Is copyfile() still a good way to go,
-> > > > > > > >>or should we look at other hooks?
-> > > > > > > >copyfile(2) is probably a good way to go, provided that we do _not_
-> > > > > > > >go baroque as it had happened the last time syscall had been discussed.
-> > > > > > > >
-> > > > > > > >IOW, to hell with progress reports, etc. - just a fastpath kind of
-> > > > > > > >thing, in the same kind of relationship to cp(1) as rename(2) is to mv(1).
-> > > > > > > >If it works - fine, if not - caller has to be ready to deal with handling
-> > > > > > > >cross-device case anyway.
-> > > > > > > 
-> > > > > > > I think that this approach makes a lot of sense. Most of the
-> > > > > > > devices/targets that support the copy offload, will do it in very
-> > > > > > > reasonable amounts of time.
-> > > > > > 
-> > > > > > The current NFSv4.2 draft rolls both the "fast" and "slow" cases into
-> > > > > > one operation:
-> > > > > > 
-> > > > > > 	http://tools.ietf.org/html/draft-ietf-nfsv4-minorversion2-06#section-2
-> > > > > >  
-> > > > > > Perhaps we should ask for separate operations for the two cases.  (Or at
-> > > > > > least a "please don't bother if this is going to take 8 hours" flag....)
-> > > > > 
-> > > > > How would the server know? I suggest we deal with this by adding an
-> > > > > ioctl() to allow the application to poll for progress: I'm assuming now
-> > > > > that we don't expect more than 1 copyfile() system call at a time per
-> > > > > file descriptor...
-> > > > 
-> > > > If we're using this to copy VM image files, I could easily imagine
-> > > > wanting to clone multiple copies of the VM in parallel.
-> > > > 
-> > > > -chris
-> > > > 
-> > > 
-> > > Not really a problem is it? Just dup() the fd before you issue the
-> > > copyfile()? Or even simpler, just do periodic stat() on the destination
-> > > file if you want a progress report.
-> > > 
-> > > Regardless, I like the simple approach that Al is suggesting here.
-> > 
-> > Periodic stat() isn't good enough if you are copying subranges of a
-> > file. Part of the application here (as I understood it) is to initialise
-> > specific disk volumes on existing VM images when doing thin
-> > provisioning. In that case, the reported image size won't ever change...
-> > 
-> 
-> If they were sparse files then st_blocks would presumably change, but
-> that's not necessarily going to be the case. So, ok stat() is out for
-> this...
-> 
-> What's the use-case for these sorts of progress reports anyway?
-> Progress meters in GUI apps?
-
-Mainly... If you are copying several GB worth of data, you expect it to
-take some time, but you'd like to know that the server hasn't just
-crashed or something...
-
-> Either way, I think adding as simple an interface as possible to begin
-> with makes sense. If you want to add progress reports or other
-> doohickeys later, then that can be done in a separate set of patches...
-
-Agreed. ...and doing it as an ioctl allows for that. I just want to make
-sure someone else here doesn't have a use case that might blow that idea
-out of the water...
-
--- 
-Trond Myklebust
-Linux NFS client maintainer
-
-NetApp
-Trond.Myklebust@netapp.com
-www.netapp.com
-
+PiA+DQo+ID4gV2h5IG5vdCBzdXBwb3J0IHNvbWV0aGluZyBsaWtlIHRoZSBhc3luYy1pb2NiPw0K
+PiANCj4gWW91IGNvdWxkLCBidXQgdGhhdCB3b3VsZCB0aWUgY29weWZpbGUoKSB0byB0aGUgYWlv
+IGludGVyZmFjZSB3aGljaCB3YXMNCj4gb25lIG9mIHRoZSB0aGluZ3MgdGhhdCBJIGJlbGlldmUg
+QWwgd2FzIG9wcG9zZWQgdG8gd2hlbiB3ZSBkaXNjdXNzZWQNCj4gdGhpcyBhdCBMU0YvTU0tMjAx
+MC4NCj4gDQoNCnZpcnR1YWxpemF0aW9uIHZlbmRvcnMgd2hvIHN1cHBvcnQgdGhpcyBvZmZsb2Fk
+IGRvIGl0IGF0IGEgbGF5ZXIgYWJvdmUgdGhlIGd1ZXN0LU9TKEludHJhLUxVTih0bSkgbG9ja2lu
+ZyBvciB3aGF0ZXZlciBmYW5jeSBsb2NraW5nKS4gU28gSSB0aGluayAnY29weWZpbGUnIGlzIGdv
+aW5nIHRvIGJlIGFwcGVhbGluZyB0byBhcHBsaWNhdGlvbi1kZXZlbG9wZXJzIG1vcmUgdGhhbiB0
+aGUgaHlwZXJ2aXNvci12ZW5kb3JzLg0KDQpTbyBsZXQncyB0aGluayBhYm91dCBpdCBmcm9tIGVu
+ZC11c2VycyBwZXJzcGVjdGl2ZToNCldvbid0IGV2ZXJ5b25lIHJlcGxpY2F0ZSBjb2RlIHRvIGNo
+ZWNrIC0gJ0FtIEkgZG9uZSc/IEl0IHdpbGwganVzdCBtYWtlIGFwcGxpY2F0aW9uIGZvbGtzIHdy
+aXRlIG1vcmUgKHVnbHkpY29kZS4gQmVjYXVzZSB5b3Ugd291bGQgdGhlbiBoYXZlIHRvIG1haW50
+YWluIGFub3RoZXIgcXVldWUvZXRjIHRvIGNoZWNrIGZvciB0aGlzIG9wZXJhdGlvbi4NCg0KV2Ug
+Y2FuIGp1c3Qgc3VwcG9ydCBmdWxsLWNvcHkuIFBhcnRpYWwgY29waWVzIGNhbiBiZSByZXR1cm5l
+ZCBhcyBmYWlsdXJlLg0K
