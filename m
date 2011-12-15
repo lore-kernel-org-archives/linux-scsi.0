@@ -1,46 +1,63 @@
-From: Trond Myklebust <Trond.Myklebust@netapp.com>
-Subject: Re: copy offload support in Linux - new system call needed?
-Date: Thu, 15 Dec 2011 12:25:23 -0500
-Message-ID: <1323969923.14317.31.camel@lade.trondhjem.org>
-References: <4EE8F75F.6070800@gmail.com>
-	  <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com>
-	  <20111214222723.GD7623@fieldses.org>
-	  <1323961140.14317.2.camel@lade.trondhjem.org>
-	  <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com>
-	  <1323965498.14317.13.camel@lade.trondhjem.org>
-	  <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com>
-	 <1323968015.14317.28.camel@lade.trondhjem.org> <4EEA2BF7.5030107@gmail.com>
+From: "Loke, Chetan" <Chetan.Loke-Wi0MfyythtRWk0Htik3J/w@public.gmane.org>
+Subject: RE: copy offload support in Linux - new system call needed?
+Date: Thu, 15 Dec 2011 12:27:55 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B91516E47E@nsmail.netscout.com>
+References: <4EE8F75F.6070800@gmail.com> <20111214192739.GN2203@ZenIV.linux.org.uk> <4EE8FC2E.3010207@gmail.com> <20111214222723.GD7623@fieldses.org> <1323961140.14317.2.camel@lade.trondhjem.org> <D3F292ADF945FB49B35E96C94C2061B91516E391@nsmail.netscout.com> <1323965498.14317.13.camel@lade.trondhjem.org> <D3F292ADF945FB49B35E96C94C2061B91516E3FC@nsmail.netscout.com> <1323968015.14317.28.camel@lade.trondhjem.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:37417 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751257Ab1LORZk convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Dec 2011 12:25:40 -0500
-In-Reply-To: <4EEA2BF7.5030107@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <1323968015.14317.28.camel-SyLVLa/KEI9HwK5hSS5vWB2eb7JE58TQ@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Trond Myklebust <Trond.Myklebust-HgOvQuBEEgTQT0dZR+AlfA@public.gmane.org>
+Cc: "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Ric Wheeler <ricwheeler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Al Viro <viro-3bDd1+5oDREiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Becker <jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: "Loke, Chetan" <Chetan.Loke@netscout.com>, "J. Bruce Fields" <bfields@fieldses.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-scsi@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Thu, 2011-12-15 at 12:18 -0500, Ric Wheeler wrote: 
-> What I would like to see is a way to make sure that we can interrupt any long 
-> running command & also make sure that our timeouts (for SCSI specifically) are 
-> not too aggressive.
-
-The draft NFSv4.2 protocol contains features to make interruption
-possible, so as far as the NFS client is concerned, that should be
-doable. I can't answer for CIFS or SCSI...
-
-Cheers
-  Trond 
-
--- 
-Trond Myklebust
-Linux NFS client maintainer
-
-NetApp
-Trond.Myklebust@netapp.com
-www.netapp.com
-
+PiA+IHZpcnR1YWxpemF0aW9uIHZlbmRvcnMgd2hvIHN1cHBvcnQgdGhpcyBvZmZsb2FkIGRvIGl0
+IGF0IGEgbGF5ZXINCj4gYWJvdmUgdGhlIGd1ZXN0LU9TKEludHJhLUxVTih0bSkgbG9ja2luZyBv
+ciB3aGF0ZXZlciBmYW5jeSBsb2NraW5nKS4gU28NCj4gSSB0aGluayAnY29weWZpbGUnIGlzIGdv
+aW5nIHRvIGJlIGFwcGVhbGluZyB0byBhcHBsaWNhdGlvbi1kZXZlbG9wZXJzDQo+IG1vcmUgdGhh
+biB0aGUgaHlwZXJ2aXNvci12ZW5kb3JzLg0KPiANCj4gVGhlIGFwcGxpY2F0aW9uIGlzIHRoaW4g
+cHJvdmlzaW9uaW5nLCBub3QgdGhlICdjcCcgY29tbWFuZC4gV2hlbg0KDQoNCnRoaW4tcHJvdmlz
+aW9uaW5nIGlzIG9uZSB1c2UtY2FzZS4gVGhlcmUgYXJlIHF1aXRlIGEgZmV3IHVzZS1jYXNlcyBv
+ZiAnY29weWZpbGUnIGRlcGVuZGluZyBvbiB5b3VyIGJ1c2luZXNzLWxvZ2ljIGFuZCB0aGUgdHlw
+ZSBvZiBhcHBsaWFuY2UgeW91IHNlbGwuDQoNCg0KPiB2aXJ0dWFsaXNhdGlvbiB2ZW5kb3JzIGRv
+IHN1cHBvcnQgdGhpcywgaXQgd2lsbCBtYWlubHkgYmUgYXMgcGFydCBvZg0KPiB0aGVpciBpbWFn
+ZSBtYW5hZ2VtZW50IHRvb2xraXRzLCBub3QgdGhlIGh5cGVydmlzb3IuDQo+IA0KDQpUb29sa2l0
+cz8gTWF5IG5vdCBiZSB0cnVlLiBUaGUgdG9vbGtpdCBtaWdodCBuZWVkIHRvIHRhbGsgdG8gc29t
+ZSBoeXBlcnZpc29yLWNvbXBvbmVudCB0byBlbnN1cmUgTFVOLWxvY2tpbmcgZXRjIG9uIHRoZSB0
+YXJnZXQuIFNvIHRoaXMgaXMgbm90IGVudGlyZWx5IGlzb2xhdGVkIGFzIHlvdSBtaWdodCB0aGlu
+ay4gVGhlcmUgaXMgc29tZSBpbnRlZ3JhdGlvbi4gQXMgYW4gZXhhbXBsZShqdXN0IHRvIHByb3Zl
+IHRoZSBwb2ludCkgLSBIYXZlIHlvdSBldmVyIHNlZW4gYW55b25lIG5vdCB1c2UgdnNwaGVyZS1j
+bGllbnQgb24gVk13YXJlIGZvciBjb3B5aW5nIFZNIHRlbXBsYXRlcz8NCg0KDQo+ID4gU28gbGV0
+J3MgdGhpbmsgYWJvdXQgaXQgZnJvbSBlbmQtdXNlcnMgcGVyc3BlY3RpdmU6DQo+ID4gV29uJ3Qg
+ZXZlcnlvbmUgcmVwbGljYXRlIGNvZGUgdG8gY2hlY2sgLSAnQW0gSSBkb25lJz8gSXQgd2lsbCBq
+dXN0DQo+IG1ha2UgYXBwbGljYXRpb24gZm9sa3Mgd3JpdGUgbW9yZSAodWdseSljb2RlLiBCZWNh
+dXNlIHlvdSB3b3VsZCB0aGVuDQo+IGhhdmUgdG8gbWFpbnRhaW4gYW5vdGhlciBxdWV1ZS9ldGMg
+dG8gY2hlY2sgZm9yIHRoaXMgb3BlcmF0aW9uLg0KPiANCj4gJ0FtIEkgZG9uZScgaXMgZWFzeTog
+Y29weWZpbGUoKSByZXR1cm5zIHdpdGggdGhlIG51bWJlciBvZiBieXRlcyB0aGF0DQo+IGhhdmUg
+YmVlbiBjb3BpZWQuDQo+IA0KPiAnSXMgbXkgY29weWZpbGUoKSBzeXNjYWxsIG1ha2luZyBwcm9n
+cmVzcycgaXMgdGhlIHF1ZXN0aW9uIHRoYXQgbmVlZHMNCj4gYW5zd2VyaW5nLg0KPiANCg0KVW5k
+ZXJzdG9vZC4gQnV0IGFzIGEgdXNlciwgd2UgZG9uJ3Qga25vdyB3aGF0ICdhbSBJIGRvbmUnIGlz
+IGdvaW5nIHRvIHJlcG9ydC4NCg0KJ2FtIEkgZG9uZScgY2FuIHJldHVybjoNCjEpQUNLW2NvcHkg
+ZG9uZV0gLSBzaW1wbGlzdGljIGNhc2UuDQoyKUlOLXByb2dyZXNzLg0KMylOQUNLW2NvcHkgZmFp
+bGVkKHdpdGggc3RhdHVzIHZhbHVlcykgb3IgY29weSBwYXJ0aWFsbHkgY29tcGxldGVkXQ0KDQpB
+bmQgaWYgeW91IGFyZSB1c2luZyB0aGUgY29weS1WTSB1c2UtY2FzZSB0aGVuIHZlcnkgZmV3IFZN
+cyBhcmUgdW5kZXIgNEdCcy4gU28gd2Ugd2lsbCBoaXQgMikgYWJvdmUgbW9yZSBmcmVxdWVudGx5
+IHRoYW4gMSkgYW5kIDMpLg0KDQoNCj4gPiBXZSBjYW4ganVzdCBzdXBwb3J0IGZ1bGwtY29weS4g
+UGFydGlhbCBjb3BpZXMgY2FuIGJlIHJldHVybmVkIGFzDQo+IGZhaWx1cmUuDQo+IA0KPiBUaGVu
+IHlvdSBoYXZlIHRvIGNoZWNrIHRoZSBlbnRpcmUgcmFuZ2Ugb24gZXJyb3IgaW5zdGVhZCBvZiBq
+dXN0DQo+IHJlc3VtaW5nIHRoZSBjb3B5IGZyb20gd2hlcmUgaXQgc3RvcHBlZC4NCj4gDQoNCldo
+eSBub3QgcmVzdGFydD8gV2hhdCBpZiB0aGUgTFVOIHdhcyBpbXBsZW1lbnRpbmcgdGhpbi1wcm92
+aXNpb25pbmcgYW5kIG5vdyBpdCByYW4gb3V0LW9mLXNwYWNlIGFmdGVyIHBhcnRpYWxseSBjb3B5
+aW5nIHlvdXIgZGF0YS4NClNvIHdoeSBub3QgcmVzdGFydCB0aGUgY29weT8gSWYgdGhlIHRhcmdl
+dCBkb2Vzbid0IHN1cHBvcnQgYXV0by1leHRlbmQsIHNvbWVvbmUoc3RvcmFnZS1hZG1pbiBldGMp
+IHdvdWxkIGhhdmUgdG8gc3RlcC1pbiBhbmQgbWFuYWdlIHRoYXQgTFVOLg0KWW91IG1pZ2h0IGFz
+LXdlbGwgcmVzdGFydCB0aGUgY29weSBpbiB0aGlzIGNhc2UuDQoNCg0KDQpDaGV0YW4gTG9rZQ0K
+DQoNCg==
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
