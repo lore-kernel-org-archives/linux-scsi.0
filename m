@@ -1,37 +1,61 @@
 From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v2 0/2] fixes for ata port runtime pm support
-Date: Thu, 15 Dec 2011 09:36:01 +0800
-Message-ID: <1323912963-26146-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23058 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755628Ab1LOBgN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 14 Dec 2011 20:36:13 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v2 1/2] [SCSI]: runtime resume parent for child's system-resume
+Date: Thu, 15 Dec 2011 09:36:02 +0800
+Message-ID: <1323912963-26146-2-git-send-email-ming.m.lin@intel.com>
+References: <1323912963-26146-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1323912963-26146-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Hi Jeff,
+[Patch description from Alan Stern]
 
-Here are the v2 fixes for ata port runtime pm support.
-Applied on top of linux-next-20111214 tree.
+If a child device was runtime-suspended when a system suspend began,
+then there will be nothing to prevent its parent from
+runtime-suspending as soon as it is woken up during the system resume.
+Then when the time comes to resume the child, the resume will fail
+because the parent is already back at low power.
 
-Changes in v2:
-- Drop the patch "[SCSI] sd: fix runtime status check in sd_shutdown".
-  It's no longer needed with commit fe6b91f(PM / Driver core: leave
-  runtime PM enabled during system shutdown).
-- Add Ack from Alan
+On the other hand, there are some devices which should remain at low
+power across an entire suspend-resume cycle.  The details depend on the
+device and the platform.
 
-v1: https://lkml.org/lkml/2011/12/13/443
+This suggests that the PM core is not the right place to solve the
+problem. One possible solution is for the subsystem or device driver
+to call pm_runtime_get_sync(dev->parent) at the start of the
+system-resume procedure and pm_runtime_put_sync(dev->parent) at the
+end.
 
-Lin Ming (2):
-      [SCSI]: runtime resume parent for child's system-resume
-      ata: update ata port's runtime status during system resume
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Signed-off-by: Lin Ming <ming.m.lin@intel.com>
+---
+ drivers/scsi/scsi_pm.c |   11 ++++++++++-
+ 1 files changed, 10 insertions(+), 1 deletions(-)
 
- drivers/ata/libata-core.c |   18 ++++++++++++++++--
- drivers/scsi/scsi_pm.c    |   11 ++++++++++-
- 2 files changed, 26 insertions(+), 3 deletions(-)
-
-Thanks,
-Lin Ming
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index a633076..bf8bf79 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -72,8 +72,17 @@ static int scsi_bus_resume_common(struct device *dev)
+ {
+ 	int err = 0;
+ 
+-	if (scsi_is_sdev_device(dev))
++	if (scsi_is_sdev_device(dev)) {
++		/*
++		 * Parent device may have runtime suspended as soon as
++		 * it is woken up during the system resume.
++		 *
++		 * Resume it on behalf of child.
++		 */
++		pm_runtime_get_sync(dev->parent);
+ 		err = scsi_dev_type_resume(dev);
++		pm_runtime_put_sync(dev->parent);
++	}
+ 
+ 	if (err == 0) {
+ 		pm_runtime_disable(dev);
+-- 
+1.7.2.5
