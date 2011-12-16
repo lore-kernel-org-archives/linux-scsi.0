@@ -1,90 +1,141 @@
-From: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Subject: Re: [usb-storage] Re: Make UAS work on HS for devices with and
- without command tagging support
-Date: Fri, 16 Dec 2011 15:47:24 +0100
-Message-ID: <20111216144724.GC19563@linutronix.de>
-References: <1323888472-21035-1-git-send-email-bigeasy@linutronix.de>
- <20111214225331.GA5508@xanatos>
- <4EE9B375.4020606@linutronix.de>
- <20111215211201.GA6482@xanatos>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 04/18] qla2xxx: Proper cleanup of pass through commands
+ when firmware returns error.
+Date: Fri, 16 Dec 2011 10:32:39 -0500
+Message-ID: <alpine.WNT.2.00.1112161030380.3796@N5102REMCQXM4BS.qlogic.org>
+References: <1321635802-16491-1-git-send-email-chad.dupuis@qlogic.com>  <1321635802-16491-5-git-send-email-chad.dupuis@qlogic.com> <1323863717.3063.52.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20111215211201.GA6482@xanatos>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Cc: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from db3ehsobe003.messaging.microsoft.com ([213.199.154.141]:7466
+	"EHLO DB3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755763Ab1LPPcr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Dec 2011 10:32:47 -0500
+In-Reply-To: <1323863717.3063.52.camel@dabdike>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-* Sarah Sharp | 2011-12-15 13:12:01 [-0800]:
 
->You're rearranging the code a lot there, but it looks like the only behavioral
->change you made was to free the status URB if the command couldn't be found.
-Yup. Since we don't have a reference, we can't free it.
 
->Or are you also trying to skip setting tag to a big negative number in the
->untagged case?  tag is not used in the rest of the function if
->sdev->current_cmnd is non-NULL, so I don't think it matters much.
+On Wed, 14 Dec 2011, James Bottomley wrote:
 
-If it is untagged, the tag number should be always 1 and ->current_cmnd
-set. There can be only one untagged command at a time so therefore I
-look first for current_cmnd then look at the tag.
-
->I'm not sure what you're trying to fix with this bit of code:
->
->@@ -449,7 +452,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
->
->        BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
->
->-       if (!cmdinfo->status_urb && sdev->current_cmnd)
->+       if (sdev->current_cmnd)
->                return SCSI_MLQUEUE_DEVICE_BUSY;
->
->        if (blk_rq_tagged(cmnd->request)) {
->
->Was that supposed to be part of the second patch?
-Didn't I remove status_urb? Plus there can be only one default command
-at a time so looking at current_cmd seems wrong (unless we set
-->current_cmnd and drop the reqeust due to -ENOMEM).
-
->So I think you could replace your patch #1 with my patches #2 and #3,
->and then redo your patch #2.
-okay will do.
-
->> >Matthew was just mentioning to me that it might be good to just have one
->> >status URB per USB 2.0 UAS device, and just keep re-submitting it.  USB
->> >2.0 devices don't have streams, so there can't be multiple status URBs
->> >being processed at the same time, so I think it would work.  The only
->> Oh. That sounds great. I've been thinking how to avoid multiple
->> allocation/allocation of them.
+> On Fri, 2011-11-18 at 09:03 -0800, Chad Dupuis wrote:
+>> From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 >>
->> >For USB 3.0 UAS, I think the status URB should stay in the cmnd_info
->> >structure, since we know that when a status URB completes for a
->> >particular stream ID, it is directly associated with that command, and
->> >not a different command.  So I'd like to address the sense URB failure
->> >issue you tried to fix in the second patch, but I think we should go
->> >about it in a different way.
->> 
->> Fine by me. You want me to redo #2 with one status urb/uas device or do
->> you do it yourself?
+>> Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+>> Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
+>> ---
+>>  drivers/scsi/qla2xxx/qla_isr.c |   73 ++++++++++++++++++++++++++++-----------
+>>  drivers/scsi/qla2xxx/qla_os.c  |   19 +++++-----
+>>  2 files changed, 61 insertions(+), 31 deletions(-)
+>>
+>> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+>> index b6023e9..c5d6cd1 100644
+>> --- a/drivers/scsi/qla2xxx/qla_isr.c
+>> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+>> @@ -1895,6 +1895,45 @@ qla2x00_status_cont_entry(struct rsp_que *rsp, sts_cont_entry_t *pkt)
+>>      }
+>>  }
+>>
+>> +static int
+>> +qla2x00_free_sp_ctx(scsi_qla_host_t *vha, srb_t *sp)
+>> +{
+>> +    struct qla_hw_data *ha = vha->hw;
+>> +    struct srb_ctx *ctx;
+>> +
+>> +    if (!sp->ctx)
+>> +            return 1;
+>> +
+>> +    ctx = sp->ctx;
+>> +
+>> +    if (ctx->type == SRB_LOGIN_CMD ||
+>> +        ctx->type == SRB_LOGOUT_CMD ||
+>> +        ctx->type == SRB_TM_CMD) {
+>> +            ((struct srb_iocb*)ctx->u.iocb_cmd)->done(sp);
 >
->If you want to take a stab at redoing your patch #2 to use only one
->status URB for USB 2.0 devices, I would appreciate it.  Then I can build
->the abort/reset synchronization on top of it.
-Okay.
+> This cast is completely pointless: u.iocb_cmd is already a struct
+> sr_iocb * (and yes, you do need the space).
 
->Can you test the USB 3.0 side as well, or are you just testing USB 2.0
->with your device?
+Yes, this makes sense. Thanks.
 
-I made usb3.0 and stream support just work the other day but those
-patches were made before that. The usb3 test worked without problem but
-I don't have any error recovery/handling yet.
+>
+>> +            return 0;
+>> +    } else if (ctx->type == SRB_ADISC_CMD) {
+>> +            ((struct srb_iocb*)ctx->u.iocb_cmd)->free(sp);
+>
+> And here.
+>
+>> +            return 0;
+>> +    } else {
+>> +            struct fc_bsg_job *bsg_job;
+>> +
+>> +            bsg_job = ctx->u.bsg_job;
+>> +            if (ctx->type == SRB_ELS_CMD_HST ||
+>> +                ctx->type == SRB_CT_CMD)
+>> +                    kfree(sp->fcport);
+>> +
+>> +            bsg_job->reply->reply_data.ctels_reply.status =
+>> +                FC_CTELS_STATUS_OK;
+>> +            bsg_job->reply->result = DID_ERROR << 16;
+>> +            bsg_job->reply->reply_payload_rcv_len = 0;
+>> +            kfree(sp->ctx);
+>> +            mempool_free(sp, ha->srb_mempool);
+>> +            bsg_job->job_done(bsg_job);
+>> +            return 0;
+>> +    }
+>> +    return 1;
+>> +}
+>> +
+>>  /**
+>>   * qla2x00_error_entry() - Process an error entry.
+>>   * @ha: SCSI driver HA context
+>> @@ -1905,7 +1944,7 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
+>>  {
+>>      srb_t *sp;
+>>      struct qla_hw_data *ha = vha->hw;
+>> -    uint32_t handle = LSW(pkt->handle);
+>> +    const char func[] = "ERROR-IOCB";
+>>      uint16_t que = MSW(pkt->handle);
+>>      struct req_que *req = ha->req_q_map[que];
+>>
+>> @@ -1928,28 +1967,20 @@ qla2x00_error_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, sts_entry_t *pkt)
+>>              ql_dbg(ql_dbg_async, vha, 0x502f,
+>>                  "UNKNOWN flag error.\n");
+>>
+>> -    /* Validate handle. */
+>> -    if (handle < MAX_OUTSTANDING_COMMANDS)
+>> -            sp = req->outstanding_cmds[handle];
+>> -    else
+>> -            sp = NULL;
+>> -
+>> +    sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
+>>      if (sp) {
+>> -            /* Free outstanding command slot. */
+>> -            req->outstanding_cmds[handle] = NULL;
+>> -
+>> -            /* Bad payload or header */
+>> -            if (pkt->entry_status &
+>> -                (RF_INV_E_ORDER | RF_INV_E_COUNT |
+>> -                 RF_INV_E_PARAM | RF_INV_E_TYPE)) {
+>> -                    sp->cmd->result = DID_ERROR << 16;
+>> -            } else if (pkt->entry_status & RF_BUSY) {
+>> -                    sp->cmd->result = DID_BUS_BUSY << 16;
+>> -            } else {
+>> -                    sp->cmd->result = DID_ERROR << 16;
+>> +            if (qla2x00_free_sp_ctx (vha, sp)) {
+>
+> And there's an extra space here (checkpatch warns about this, so I
+> assume you didn't run it).
+>
+> James
+>
+>
+>
+>
 
->Sarah Sharp
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
-Sebastian
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
