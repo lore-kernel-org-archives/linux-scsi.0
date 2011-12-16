@@ -1,71 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [usb-storage] Re: Make UAS work on HS for devices with and
- without command tagging support
-Date: Fri, 16 Dec 2011 22:47:39 +0100
-Message-ID: <1324072059.10429.27.camel@dabdike>
-References: <1323888472-21035-1-git-send-email-bigeasy@linutronix.de>
-	 <20111214225331.GA5508@xanatos> <4EE9B375.4020606@linutronix.de>
-	 <20111215211201.GA6482@xanatos> <20111216144724.GC19563@linutronix.de>
-	 <20111216201236.GE19563@linutronix.de>
-	 <20111216203146.GN14291@linux.intel.com>
-	 <20111216204241.GA30915@linutronix.de>  <20111216213628.GA5509@xanatos>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH] fcoe patch fix for 3.3 (scsi-misc)
+Date: Fri, 16 Dec 2011 14:24:44 -0800
+Message-ID: <20111216222444.24177.32377.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:50867 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760426Ab1LPVrn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 16 Dec 2011 16:47:43 -0500
-In-Reply-To: <20111216213628.GA5509@xanatos>
+Received: from mga02.intel.com ([134.134.136.20]:29192 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752591Ab1LPWYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Dec 2011 17:24:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, Matthew Wilcox <willy@linux.intel.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2011-12-16 at 13:36 -0800, Sarah Sharp wrote:
-> On Fri, Dec 16, 2011 at 09:42:41PM +0100, Sebastian Andrzej Siewior wrote:
-> > * Matthew Wilcox | 2011-12-16 15:31:46 [-0500]:
-> > 
-> > >On Fri, Dec 16, 2011 at 09:12:36PM +0100, Sebastian Andrzej Siewior wrote:
-> > >> * Sebastian Andrzej Siewior | 2011-12-16 15:47:24 [+0100]:
-> > >> 
-> > >> >>If you want to take a stab at redoing your patch #2 to use only one
-> > >> >>status URB for USB 2.0 devices, I would appreciate it.  Then I can build
-> > >> >>the abort/reset synchronization on top of it.
-> > >> >Okay.
-> > >> 
-> > >> Just once things started to become easy.... So while I tried to have
-> > >> only one status urb which I always re-submit (as Matthew/ You suggested)
-> > >> I run into the problem that I don't have struct scsi_device yet. So I
-> > >> just created a device with two luns to see if this struct happens always
-> > >> to be same. Ofcourse it is not. 
-> > >
-> > >Can you not send one status URB per LUN (instead of one per command)?
-> > 
-> > The thing is by the time a status URB completes I have only the *TAG*
-> > number from the device which tells to which command it belongs. Sending
-> > one status per LUN does not help because once a status URB with TAG 1
-> > arrived I have no idea to which device/LUN it does belong. ->context
-> > does not help here at all.
-> 
-> Oh, right, now I understand.  With USB 2.0, we might have one status URB
-> per LUN, but they're being queued to the same endpoint ring.  Since the
-> device can re-order the commands any way it likes, we can't rely on the
-> scsi_device that's stored on the urb->context to be correct.
-> 
-> Ok, I think we just need to divide the tag address space equally between
-> devices.  The devinfo can keep track of the pointers to the scsi_devices
-> for each LUN, and what tag range each LUN has.  So if you have 255 tags
-> available, and two LUNs, you can give one of them tag 1 to 122, and the
-> other tags 123 to 254.
+This is just a trivial patch that I wanted to get out before the holidays.
 
-Well, no, what you want to do is use a shared tag map at the block
-level.  That will manage a joint tag space for N queues without your
-having to partition it arbitrarily.  see scsi_host_find_tag() and
-scsi_init_shared_tag_map().
+---
 
-James
+Robert Love (1):
+      fcoe: remove double check if skb is nonlinear
 
 
+ drivers/scsi/fcoe/fcoe.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+-- 
+Thanks, //Rob
