@@ -1,58 +1,43 @@
-From: Joel Becker <jlbec@evilplan.org>
-Subject: Re: copy offload support in Linux - new system call needed?
-Date: Fri, 16 Dec 2011 00:00:23 -0800
-Message-ID: <20111216080022.GA5183@noexit.corp.google.com>
-References: <4EE8F75F.6070800@gmail.com>
- <20111214192739.GN2203@ZenIV.linux.org.uk>
- <4EE8FC2E.3010207@gmail.com>
+From: <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 0/5] qla4xxx: Patches for scsi-misc
+Date: Fri, 16 Dec 2011 01:58:54 -0800
+Message-ID: <1324029539-26021-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4EE8FC2E.3010207@gmail.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Ric Wheeler <ricwheeler@gmail.com>
-Cc: Al Viro <viro@ZenIV.linux.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, linux-nfs@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:45101
+	"EHLO VA3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751869Ab1LPKNF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 16 Dec 2011 05:13:05 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jbottomley@parallels.com, michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-On Wed, Dec 14, 2011 at 02:42:38PM -0500, Ric Wheeler wrote:
-> On 12/14/2011 02:27 PM, Al Viro wrote:
-> >On Wed, Dec 14, 2011 at 02:22:07PM -0500, Ric Wheeler wrote:
-> >
-> >>We had an active thread a couple of years back that came out of the
-> >>reflink work and, at the time, there seemed to be moderately
-> >>positive support for adding a new system call that would fit this
-> >>use case (Joel Becker's copyfile()).
-> >>
-> >>Can we resurrect this effort? Is copyfile() still a good way to go,
-> >>or should we look at other hooks?
-> >copyfile(2) is probably a good way to go, provided that we do _not_
-> >go baroque as it had happened the last time syscall had been discussed.
-> >
-> >IOW, to hell with progress reports, etc. - just a fastpath kind of
-> >thing, in the same kind of relationship to cp(1) as rename(2) is to mv(1).
-> >If it works - fine, if not - caller has to be ready to deal with handling
-> >cross-device case anyway.
-> 
-> I think that this approach makes a lot of sense. Most of the
-> devices/targets that support the copy offload, will do it in very
-> reasonable amounts of time.
-> 
-> Let me see if I can dig up some of the presentations from the NetApp
-> guys who presented overviews or the specifications from the IETF and
-> T10....
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-	Whee!  I've been down the rabbit hole, but I've promised myself
-to get the updated patch out soon.  I know that Trond et al are probably
-wondering what happened to the patch.  more soon.
+James,
 
-Joel
+Please apply the following patches to scsi-misc for inclusion in mainline.
 
--- 
+Lalit Chandivade (1):
+      qla4xxx: cleanup, make qla4xxx_build_ddb_list short
 
-Life's Little Instruction Book #207
+Manish Rangankar (1):
+      qla4xxx: Fixed BFS with sendtargets as boot index.
 
-	"Swing for the fence."
+Nilesh Javali (2):
+      qla4xxx: Limit the ACB Default Timeout value to 12s
+      qla4xxx: Break the loop if the sendtargets list was empty
 
-			http://www.jlbec.org/
-			jlbec@evilplan.org
+Vikas Chaudhary (1):
+      qla4xxx: Update driver version to 5.02.00-k11
+
+ drivers/scsi/qla4xxx/ql4_os.c      |  419 +++++++++++++++++++++--------------
+ drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+ 2 files changed, 252 insertions(+), 169 deletions(-)
+
+Thanks,
+Vikas.
+
