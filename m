@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 03/24] scsi: use drain_workqueue
-Date: Fri, 16 Dec 2011 18:33:23 -0800
-Message-ID: <20111217023323.15036.67609.stgit@localhost6.localdomain6>
+Subject: [PATCH 05/24] libsas: kill sas_slave_destroy
+Date: Fri, 16 Dec 2011 18:33:33 -0800
+Message-ID: <20111217023333.15036.9536.stgit@localhost6.localdomain6>
 References: <20111217022912.15036.85808.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,78 +10,108 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20111217022912.15036.85808.stgit@localhost6.localdomain6>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, Robert Love <robert.w.love@intel.com>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use 'drain' versus 'flush' as the former additionally flushes chained
-operations.  libsas uses chained operations when it posts discovery work
-in response to a port event.
+Per commit 3e4ec344 "libata: kill ATA_FLAG_DISABLED" needing to set
+ATA_DEV_NONE is a holdover from before libsas converted to the
+"new-style" ata-eh.
 
-As a result the hardcoded double-flush can be removed from the isci
-driver.
-
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Robert Love <robert.w.love@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/hosts.c     |    8 ++++----
- drivers/scsi/isci/host.c |    3 ---
- include/scsi/scsi_host.h |    2 +-
- 3 files changed, 5 insertions(+), 8 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_init.c |    1 -
+ drivers/scsi/isci/init.c            |    1 -
+ drivers/scsi/libsas/sas_scsi_host.c |    9 ---------
+ drivers/scsi/mvsas/mv_init.c        |    1 -
+ drivers/scsi/pm8001/pm8001_init.c   |    1 -
+ include/scsi/libsas.h               |    1 -
+ 6 files changed, 0 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 351dc0b..37155d1 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -564,19 +564,19 @@ int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
- EXPORT_SYMBOL_GPL(scsi_queue_work);
- 
- /**
-- * scsi_flush_work - Flush a Scsi_Host's workqueue.
-+ * scsi_flush_work - Drain a Scsi_Host's workqueue.
-  * @shost:	Pointer to Scsi_Host.
-  **/
--void scsi_flush_work(struct Scsi_Host *shost)
-+int scsi_flush_work(struct Scsi_Host *shost)
- {
- 	if (!shost->work_q) {
- 		printk(KERN_ERR
- 			"ERROR: Scsi host '%s' attempted to flush scsi-work, "
- 			"when no workqueue created.\n", shost->hostt->name);
- 		dump_stack();
--		return;
-+		return 0;
- 	}
- 
--	flush_workqueue(shost->work_q);
-+	return drain_workqueue(shost->work_q);
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index d5ff142..8db4e72 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -68,7 +68,6 @@ static struct scsi_host_template aic94xx_sht = {
+ 	.queuecommand		= sas_queuecommand,
+ 	.target_alloc		= sas_target_alloc,
+ 	.slave_configure	= sas_slave_configure,
+-	.slave_destroy		= sas_slave_destroy,
+ 	.scan_finished		= asd_scan_finished,
+ 	.scan_start		= asd_scan_start,
+ 	.change_queue_depth	= sas_change_queue_depth,
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index a97edab..f988c16 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -146,7 +146,6 @@ static struct scsi_host_template isci_sht = {
+ 	.queuecommand			= sas_queuecommand,
+ 	.target_alloc			= sas_target_alloc,
+ 	.slave_configure		= sas_slave_configure,
+-	.slave_destroy			= sas_slave_destroy,
+ 	.scan_finished			= isci_host_scan_finished,
+ 	.scan_start			= isci_host_scan_start,
+ 	.change_queue_depth		= sas_change_queue_depth,
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index b6e233d..e95e5e1 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -797,14 +797,6 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
+ 	return 0;
  }
- EXPORT_SYMBOL_GPL(scsi_flush_work);
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index e7fe9c4..240779a 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -655,9 +655,6 @@ int isci_host_scan_finished(struct Scsi_Host *shost, unsigned long time)
- 	if (test_bit(IHOST_START_PENDING, &ihost->flags))
- 		return 0;
  
--	/* todo: use sas_flush_discovery once it is upstream */
--	scsi_flush_work(shost);
+-void sas_slave_destroy(struct scsi_device *scsi_dev)
+-{
+-	struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
 -
- 	scsi_flush_work(shost);
- 
- 	dev_dbg(&ihost->pdev->dev,
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 50266c9..505bc34 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -770,7 +770,7 @@ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
- }
- 
- extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
--extern void scsi_flush_work(struct Scsi_Host *);
-+extern int scsi_flush_work(struct Scsi_Host *);
- 
- extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
- extern int __must_check scsi_add_host_with_dma(struct Scsi_Host *,
+-	if (dev_is_sata(dev))
+-		sas_to_ata_dev(dev)->class = ATA_DEV_NONE;
+-}
+-
+ int sas_change_queue_depth(struct scsi_device *sdev, int depth, int reason)
+ {
+ 	struct domain_device *dev = sdev_to_domain_dev(sdev);
+@@ -1108,7 +1100,6 @@ EXPORT_SYMBOL_GPL(sas_request_addr);
+ EXPORT_SYMBOL_GPL(sas_queuecommand);
+ EXPORT_SYMBOL_GPL(sas_target_alloc);
+ EXPORT_SYMBOL_GPL(sas_slave_configure);
+-EXPORT_SYMBOL_GPL(sas_slave_destroy);
+ EXPORT_SYMBOL_GPL(sas_change_queue_depth);
+ EXPORT_SYMBOL_GPL(sas_change_queue_type);
+ EXPORT_SYMBOL_GPL(sas_bios_param);
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 6f58919..d45878b 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -60,7 +60,6 @@ static struct scsi_host_template mvs_sht = {
+ 	.queuecommand		= sas_queuecommand,
+ 	.target_alloc		= sas_target_alloc,
+ 	.slave_configure	= sas_slave_configure,
+-	.slave_destroy		= sas_slave_destroy,
+ 	.scan_finished		= mvs_scan_finished,
+ 	.scan_start		= mvs_scan_start,
+ 	.change_queue_depth	= sas_change_queue_depth,
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index c21a216..bd165ea 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -62,7 +62,6 @@ static struct scsi_host_template pm8001_sht = {
+ 	.queuecommand		= sas_queuecommand,
+ 	.target_alloc		= sas_target_alloc,
+ 	.slave_configure	= sas_slave_configure,
+-	.slave_destroy		= sas_slave_destroy,
+ 	.scan_finished		= pm8001_scan_finished,
+ 	.scan_start		= pm8001_scan_start,
+ 	.change_queue_depth	= sas_change_queue_depth,
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 6e64b03..2b14348 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -625,7 +625,6 @@ extern int sas_queuecommand(struct Scsi_Host * ,struct scsi_cmnd *);
+ extern int sas_target_alloc(struct scsi_target *);
+ extern int sas_slave_alloc(struct scsi_device *);
+ extern int sas_slave_configure(struct scsi_device *);
+-extern void sas_slave_destroy(struct scsi_device *);
+ extern int sas_change_queue_depth(struct scsi_device *, int new_depth,
+ 				  int reason);
+ extern int sas_change_queue_type(struct scsi_device *, int qt);
 
