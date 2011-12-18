@@ -1,61 +1,33 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [RFC][PATCH linux-firmware] isci: Add firmware blob and sources
-Date: Sun, 18 Dec 2011 10:59:50 -0800
-Message-ID: <CAA9_cmd9KMS3UBsQJ0WxT0rtQJVWceVwxvyXtRD+PuzwjUHUGA@mail.gmail.com>
-References: <1324142068.2825.341.camel@deadeye>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 14/24] libsas: prevent double completion of scmds from eh
+Date: Sun, 18 Dec 2011 11:19:27 -0800
+Message-ID: <CAA9_cmc4KdbVzr-sccxmF_pRQA++NB0ZK68J2HRo9jHeMgO0fQ@mail.gmail.com>
+References: <20111217022912.15036.85808.stgit@localhost6.localdomain6>
+	<20111217023420.15036.51486.stgit@localhost6.localdomain6>
+	<4EEC9442.8090300@mvista.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:36479 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751981Ab1LRS7w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2011 13:59:52 -0500
-In-Reply-To: <1324142068.2825.341.camel@deadeye>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:47422 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751991Ab1LRTT2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2011 14:19:28 -0500
+In-Reply-To: <4EEC9442.8090300@mvista.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Dec 17, 2011 at 9:14 AM, Ben Hutchings <ben@decadent.org.uk> wr=
-ote:
-> isci requires a parameter blob which is usually found in NVRAM, but i=
-t
-> can fall back to loading with request_firmware(). =A0These files are
-> taken from the Linux source tree where they were wrongly added in
-> Linux 3.0.
+On Sat, Dec 17, 2011 at 5:08 AM, Sergei Shtylyov <sshtylyov@mvista.com>=
+ wrote:
+>> + =A0 =A0 =A0 ASSIGN_SAS_TASK(sc, NULL);
+>
+>
+> =A0 Why do it twice -- once here and then in sas_end_task()?
 
-Oh, I was of the impression that the external firmware tree was for
-license incompatible firmware images?
-
-> ---
-> I'm a bit unclear on the purpose and use of isci_firmware.bin. =A0Is =
-it
-> needed for production hardware?
-
-It's a stop gap for platforms with missing or broken oem parameters.
-It is meant to become vestigial once the platform revisions quiet
-down.
-
-> Does it need to be customised
-> per-system, or are module parameters sufficient for that? =A0(If not,=
- why
-> isn't it built into the driver?)
-
-It is customized per system to meet EMI and signal integrity targets
-of a given platform.
-
-> probe_roms.h is labelled with a dual BSD/GPLv2 licence but the other
-> files had no licence header so I've treated them as GPLv2 by default.
-
-The latest version of probe_roms.h [1] supports the v1.3 oem parameter
-format, this patch appears to be v1.0 based.
-
-Regards,
-Dan
-
-[1]: http://git.kernel.org/?p=3Dlinux/kernel/git/djbw/isci.git;a=3Dblob=
-;f=3Ddrivers/scsi/isci/probe_roms.h;hb=3Drefs/heads/fixes
+=2E..for the sas_eh_finish_cmd() case where eh has taken responsibility
+for cleanup and the sas_scsi_task_done() path has been disabled.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
