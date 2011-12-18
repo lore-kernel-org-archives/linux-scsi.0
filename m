@@ -1,84 +1,125 @@
-From: Richard Weinberger <richard@nod.at>
-Subject: Re: [PATCH] scsi_dh: Fix return value of scsi_dh_attach()
-Date: Sun, 18 Dec 2011 15:53:02 +0100
-Message-ID: <4EEDFE4E.6090104@nod.at>
-References: <1321572864-23628-1-git-send-email-richard@nod.at>  <4EEDFC16.90303@nod.at> <1324219540.3091.28.camel@dabdike.int.hansenpartnership.com>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [GIT 3.2-rc PATCH 0/8] isci: platform and hardware enabling updates
+Date: Sun, 18 Dec 2011 10:46:07 -0800
+Message-ID: <CABE8wws_0WJgcgB1=Qtzkwr1nBQt2fLo_6S9oRzMfCOGURcjRA@mail.gmail.com>
+References: <20111217004820.14133.19249.stgit@localhost6.localdomain6>
+	<1324216168.3091.7.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig60DEDFA65EC78D6EB03FC35D"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from a.ns.miles-group.at ([95.130.255.143]:34923 "EHLO radon.swed.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751752Ab1LROxF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 18 Dec 2011 09:53:05 -0500
-In-Reply-To: <1324219540.3091.28.camel@dabdike.int.hansenpartnership.com>
+Received: from mga06.intel.com ([134.134.136.21]:34573 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751939Ab1LRSqI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2011 13:46:08 -0500
+Received: by iazz13 with SMTP id z13so5423932iaz.25
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Dec 2011 10:46:07 -0800 (PST)
+In-Reply-To: <1324216168.3091.7.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig60DEDFA65EC78D6EB03FC35D
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Sun, Dec 18, 2011 at 5:49 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Fri, 2011-12-16 at 16:53 -0800, Dan Williams wrote:
+>> These are priority updates, targeted for inclusion in 3.2-final, for=
+ the
+>> driver to honor the latest definition of oem parameters and support =
+the
+>> latest revision of silicon. =A0The oem parameter format (phy configu=
+ration
+>> settings passed along from platform firmware) has been updated to
+>> revision 1.3, current driver only supports 1.0. =A0The C1 silicon up=
+date
+>> involves updates to the per-silicon-revision hard-coded phy tuning
+>> recipes.
+>
+> The -rc tree is for bug fixes only, not whatever you choose to call
+> "priority updates". =A0We have long established the position that a d=
+river
+> update, even to support new hardware, isn't a bug fix ...
 
-Am 18.12.2011 15:45, schrieb James Bottomley:
-> On Sun, 2011-12-18 at 15:43 +0100, Richard Weinberger wrote:
->> Am 18.11.2011 00:34, schrieb Richard Weinberger:
->>> scsi_dh_attach() should return a negative value on error.
->>>
->>> Signed-off-by: Richard Weinberger <richard@nod.at>
->>> ---
->>>  include/scsi/scsi_dh.h |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
->>> index e3f2db2..e07ab10 100644
->>> --- a/include/scsi/scsi_dh.h
->>> +++ b/include/scsi/scsi_dh.h
->>> @@ -74,7 +74,7 @@ static inline int scsi_dh_handler_exist(const char =
-*name)
->>>  }
->>>  static inline int scsi_dh_attach(struct request_queue *req, const ch=
-ar *name)
->>>  {
->>> -	return SCSI_DH_NOSYS;
->>> +	return -SCSI_DH_NOSYS;
->>>  }
->>>  static inline void scsi_dh_detach(struct request_queue *q)
->>>  {
+These updates are aiming to get ahead of the bug reports that will be
+filed as these platform changes get distributed.  Public bugzillas
+seem to be the difference compared to some of the platform revision
+specific updates that went into -rc6 via the drm tree.
+
+> the
+> distributions apply it through their enhancement processes. See below
+> for the individual comments
+>
+>> This also updates the driver version from v1.0 to v1.1 to remove the
+>> stale EXPERIMENTAL tag and reflect the C1 level of silicon support.
 >>
->> James,
+>> A performance fix and a fix for a crash that can be triggered by
+>> enabling a dev_dbg() statement are also included.
 >>
->> can you please pickup this patch?
->=20
-> It still needs an ack from rdac people (other one just got overlooked).=
+>> Please apply, or pull from:
+>>
+>> =A0 git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git fixe=
+s
+>>
+>> ...to receive:
+>>
+>> Dan Williams (2):
+>> =A0 =A0 =A0 isci: cleanup oem parameter and recipe handling
+>
+> This isn't a bug fix
 
->=20
+Certainly not, but I wanted git blame on the subsequent settings to
+point to the commit where the value actually changed before adding
+more line wrapped register writes.
 
-Who are the rdac people?
-I sent the patch to all addresses reported by get_maintainers.pl.
+>> =A0 =A0 =A0 isci: update version to 1.1
 
-Thanks,
-//richard
+Mainline currently has v1.0+, and this reverts d962480e "[SCSI]
+libsas: fix try_test_sas_gpio_gp_bit() build error", because it was
+the wrong fix.
 
+>>
+>> Dave Jiang (1):
+>> =A0 =A0 =A0 isci: oem parameter format v1.1 (ssc select)
+>> Jeff Skirvin (3):
+>> =A0 =A0 =A0 isci: update afe (analog-front-end) recipe for C1
+>> =A0 =A0 =A0 isci: oem parameter format v1.3 (cable select)
+>
+> New silicon support is an enhancement not a bug fix (last three patch=
+es)
 
---------------enig60DEDFA65EC78D6EB03FC35D
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+I hate being put between a platform definition revision and a -rc windo=
+w.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+3.2 has an opportunity to ship with support for these settings that
+affect link stability and meet signal integrity targets so I felt it
+was worth calling these patches out separately from the wider updates
+targeted for 3.3.
 
-iQEcBAEBAgAGBQJO7f5PAAoJEN9758yqZn9e6gsIANAV834jgwFjKiWSGmXHWFHu
-eSMHIrMmLVzvu73poG2iNUKEA1hZGya3JYlvkIZSm9RduJ/ebDlO95ryWwZKlkbL
-D+rKI729C2JCZSWgDV8RGQPUdUCfFVUeMjJw7k8Sg4iXwhtr9DgNuTfYmxx58cVi
-/ft7RSIXDdYXAoZ7sPzgIaATng5Z0tMbP6bMnHyuaL9Odbkty0+woC5O9n40cn+7
-fvggefh2raD5ApxqpPQKI0FGjl4pbN4U6tryil7nVpRMRGb/dbkOgjUaerNpRqS2
-bx2dGA4xRl4Tdope3hWy5yQjgMhgHdHMKN4kdpLlOzw2kw8wUiiJ1uuVPQ8+YC4=
-=E8Lj
------END PGP SIGNATURE-----
+>> Maciej Trela (1):
+>> =A0 =A0 =A0 isci: remove unused 'isci_tmf->device' field
+>
+> This isn't a bug fix.
 
---------------enig60DEDFA65EC78D6EB03FC35D--
+Yeah, "kernel crash" made me throw it in the 'fixes' pile, but since
+it is hidden behind enabling a dev_dbg() statement it can certainly be
+deferred.
+
+>> Marcin Tomczak (1):
+>> =A0 =A0 =A0 isci: performance-fix, shorten default "no outbound task=
+" timeout
+>
+> I don't quite see from the description how this is a performance
+> enhancement? =A0It does nothing in the single initiator case, right?
+
+This rate limits the link arbitration for how often the hardware
+switches to a different remote-node-context.  At higher queue depths
+we would see IOPs performance drop off rather than saturate, adjusting
+this timeout corrected that condition.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
