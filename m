@@ -1,41 +1,68 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH 10/14] srp_transport: Simplify attribute initialization
- code
-Date: Sun, 18 Dec 2011 19:07:22 -0500
-Message-ID: <1324253243.17849.45.camel@obelisk.thedillows.org>
-References: <201112011954.25811.bvanassche@acm.org>
-	 <201112012008.00502.bvanassche@acm.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC][PATCH linux-firmware] isci: Add firmware blob and sources
+Date: Sun, 18 Dec 2011 16:15:53 -0800
+Message-ID: <CAA9_cmdSE7njUQgEZkA+WKP=0is3fRiaxCMvPxg7i=vgn1Auuw@mail.gmail.com>
+References: <1324142068.2825.341.camel@deadeye>
+	<CAA9_cmd9KMS3UBsQJ0WxT0rtQJVWceVwxvyXtRD+PuzwjUHUGA@mail.gmail.com>
+	<1324243556.2844.22.camel@deadeye>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <201112012008.00502.bvanassche-HInyCGIudOg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1324243556.2844.22.camel@deadeye>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2011-12-01 at 20:08 +0100, Bart Van Assche wrote:
-> Eliminate the private_rport_attrs[] array and the SETUP_*() macros
-> used to set up that array since the information in that array
-> duplicates the information in the static device attributes. Also,
-> trigger a kernel warning if SRP_RPORT_ATTRS is not large enough
-> since it is easy to forget to update that macro when adding new
-> attributes.
+On Sun, Dec 18, 2011 at 1:25 PM, Ben Hutchings <ben@decadent.org.uk> wr=
+ote:
+> On Sun, 2011-12-18 at 10:59 -0800, Dan Williams wrote:
+>> On Sat, Dec 17, 2011 at 9:14 AM, Ben Hutchings <ben@decadent.org.uk>=
+ wrote:
+>> > isci requires a parameter blob which is usually found in NVRAM, bu=
+t it
+>> > can fall back to loading with request_firmware(). =A0These files a=
+re
+>> > taken from the Linux source tree where they were wrongly added in
+>> > Linux 3.0.
+>>
+>> Oh, I was of the impression that the external firmware tree was for
+>> license incompatible firmware images?
+>
+> firmware/README.AddingFirmware doesn't say that the licence makes a
+> difference.
 
-Not sure I care one way or the other, but it looks to have been written
-the way it was to share a common code structure with the FC, SAS, and
-other SCSI transport code. They use a BUG_ON instead of WARN_ON, which
-seems more appropriate, since we just overran a buffer...
+Sorry, missed that readme.  Yes, should have been added to
+firmware.git directly.
 
-The SCSI guys need to review this one, as it needs their ack.
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+>> > ---
+>> > I'm a bit unclear on the purpose and use of isci_firmware.bin. =A0=
+Is it
+>> > needed for production hardware?
+>>
+>> It's a stop gap for platforms with missing or broken oem parameters.
+>> It is meant to become vestigial once the platform revisions quiet
+>> down.
+>>
+>> > Does it need to be customised
+>> > per-system, or are module parameters sufficient for that? =A0(If n=
+ot, why
+>> > isn't it built into the driver?)
+>>
+>> It is customized per system to meet EMI and signal integrity targets
+>> of a given platform.
+>
+> Given this, does it make sense to distribute a binary at all?
+>
+
+It defaults to something that is reasonable for a reference platform
+and if you end up needing to customize it is easier to distribute a
+new binary then move all these settings to module parameters.  That
+said, the intent was to start using WARN_TAINT_ONCE() if it ever got
+used and phase it out once the platform support stabilized.  It was
+certainly convenient to have it in the same tree in the early days of
+the driver.  Its use should be waning now.
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
