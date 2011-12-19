@@ -1,68 +1,32 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC][PATCH linux-firmware] isci: Add firmware blob and sources
-Date: Sun, 18 Dec 2011 16:15:53 -0800
-Message-ID: <CAA9_cmdSE7njUQgEZkA+WKP=0is3fRiaxCMvPxg7i=vgn1Auuw@mail.gmail.com>
-References: <1324142068.2825.341.camel@deadeye>
-	<CAA9_cmd9KMS3UBsQJ0WxT0rtQJVWceVwxvyXtRD+PuzwjUHUGA@mail.gmail.com>
-	<1324243556.2844.22.camel@deadeye>
+From: David Dillow <dillowda@ornl.gov>
+Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
+Date: Sun, 18 Dec 2011 19:50:05 -0500
+Message-ID: <1324255806.17849.68.camel@obelisk.thedillows.org>
+References: <201112011954.25811.bvanassche@acm.org>
+	 <201112012011.45444.bvanassche@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1324243556.2844.22.camel@deadeye>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Intel SCU Linux support <intel-linux-scu@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, David Woodhouse <dwmw2@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from matrix.voodoobox.net ([75.127.97.206]:37267 "EHLO
+	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752011Ab1LSAuQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2011 19:50:16 -0500
+In-Reply-To: <201112012011.45444.bvanassche@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-On Sun, Dec 18, 2011 at 1:25 PM, Ben Hutchings <ben@decadent.org.uk> wr=
-ote:
-> On Sun, 2011-12-18 at 10:59 -0800, Dan Williams wrote:
->> On Sat, Dec 17, 2011 at 9:14 AM, Ben Hutchings <ben@decadent.org.uk>=
- wrote:
->> > isci requires a parameter blob which is usually found in NVRAM, bu=
-t it
->> > can fall back to loading with request_firmware(). =A0These files a=
-re
->> > taken from the Linux source tree where they were wrongly added in
->> > Linux 3.0.
->>
->> Oh, I was of the impression that the external firmware tree was for
->> license incompatible firmware images?
->
-> firmware/README.AddingFirmware doesn't say that the licence makes a
-> difference.
+On Thu, 2011-12-01 at 20:11 +0100, Bart Van Assche wrote:
+> Add a time-based transport layer test such that fail-over in a multipath
+> setup can happen quickly.
 
-Sorry, missed that readme.  Yes, should have been added to
-firmware.git directly.
+Why should this be done in the kernel? multipathd already verifies all
+paths to a SCSI device are up and that the device is reachable.
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 
->> > ---
->> > I'm a bit unclear on the purpose and use of isci_firmware.bin. =A0=
-Is it
->> > needed for production hardware?
->>
->> It's a stop gap for platforms with missing or broken oem parameters.
->> It is meant to become vestigial once the platform revisions quiet
->> down.
->>
->> > Does it need to be customised
->> > per-system, or are module parameters sufficient for that? =A0(If n=
-ot, why
->> > isn't it built into the driver?)
->>
->> It is customized per system to meet EMI and signal integrity targets
->> of a given platform.
->
-> Given this, does it make sense to distribute a binary at all?
->
-
-It defaults to something that is reasonable for a reference platform
-and if you end up needing to customize it is easier to distribute a
-new binary then move all these settings to module parameters.  That
-said, the intent was to start using WARN_TAINT_ONCE() if it ever got
-used and phase it out once the platform support stabilized.  It was
-certainly convenient to have it in the same tree in the early days of
-the driver.  Its use should be waning now.
-
---
-Dan
