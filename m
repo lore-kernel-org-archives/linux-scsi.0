@@ -1,86 +1,37 @@
-From: <vikas.chaudhary@qlogic.com>
-Subject: [PATCH v2 2/5] qla4xxx: Limit the ACB Default Timeout value to 12s
-Date: Sun, 18 Dec 2011 21:40:44 -0800
-Message-ID: <1324273244-2447-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] [SCSI] mptfusion: Use kmemdup rather than duplicating
+ its implementation
+Date: Mon, 19 Dec 2011 14:08:16 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A60481D59EDA@inbmail02.lsi.com>
+References: <1321569820.1624.287.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from am1ehsobe002.messaging.microsoft.com ([213.199.154.205]:31351
-	"EHLO AM1EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750948Ab1LSFyz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Dec 2011 00:54:55 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1321569820.1624.287.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thomas Meyer <thomas@m3y3r.de>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: jbottomley@parallels.com, michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org, vikas.chaudhary@qlogic.com, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Nilesh Javali <nilesh.javali@qlogic.com>
 
-From: Nilesh Javali <nilesh.javali@qlogic.com>
-
-A wrong default timeout value programmed in the adapter causes driver
-to wait for that much time while waiting for target discoveries to complete.
-This could add huge delays during the driver load time. To avoid this,
-limit the default timeout value to 12 seconds if the default timeout value
-set in adapter is less than 12 seconds and greater than 120 seconds.
-
-JIRA Key: UPSISCSI-205
-
-Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_os.c |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 3642f1f..1221349 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1630,7 +1630,9 @@ void qla4xxx_update_session_conn_param(struct scsi_qla_host *ha,
- 
- 	/* Update timers after login */
- 	ddb_entry->default_relogin_timeout =
--				le16_to_cpu(fw_ddb_entry->def_timeout);
-+		(le16_to_cpu(fw_ddb_entry->def_timeout) > LOGIN_TOV) &&
-+		 (le16_to_cpu(fw_ddb_entry->def_timeout) < LOGIN_TOV * 10) ?
-+		 le16_to_cpu(fw_ddb_entry->def_timeout) : LOGIN_TOV;
- 	ddb_entry->default_time2wait =
- 				le16_to_cpu(fw_ddb_entry->iscsi_def_time2wait);
- 
-@@ -3882,6 +3884,8 @@ static int qla4xxx_verify_boot_idx(struct scsi_qla_host *ha, uint16_t idx)
- static void qla4xxx_setup_flash_ddb_entry(struct scsi_qla_host *ha,
- 					  struct ddb_entry *ddb_entry)
- {
-+	uint16_t def_timeout;
-+
- 	ddb_entry->ddb_type = FLASH_DDB;
- 	ddb_entry->fw_ddb_index = INVALID_ENTRY;
- 	ddb_entry->fw_ddb_device_state = DDB_DS_NO_CONNECTION_ACTIVE;
-@@ -3892,9 +3896,10 @@ static void qla4xxx_setup_flash_ddb_entry(struct scsi_qla_host *ha,
- 	atomic_set(&ddb_entry->retry_relogin_timer, INVALID_ENTRY);
- 	atomic_set(&ddb_entry->relogin_timer, 0);
- 	atomic_set(&ddb_entry->relogin_retry_count, 0);
--
-+	def_timeout = le16_to_cpu(ddb_entry->fw_ddb_entry.def_timeout);
- 	ddb_entry->default_relogin_timeout =
--		le16_to_cpu(ddb_entry->fw_ddb_entry.def_timeout);
-+		(def_timeout > LOGIN_TOV) && (def_timeout < LOGIN_TOV * 10) ?
-+		def_timeout : LOGIN_TOV;
- 	ddb_entry->default_time2wait =
- 		le16_to_cpu(ddb_entry->fw_ddb_entry.iscsi_def_time2wait);
- }
-@@ -4228,7 +4233,10 @@ void qla4xxx_build_ddb_list(struct scsi_qla_host *ha, int is_reset)
- 	}
- 
- 	/* Wait to ensure all sendtargets are done for min 12 sec wait */
--	tmo = ((ha->def_timeout < LOGIN_TOV) ? LOGIN_TOV : ha->def_timeout);
-+	tmo = ((ha->def_timeout > LOGIN_TOV) &&
-+	       (ha->def_timeout < LOGIN_TOV * 10) ?
-+	       ha->def_timeout : LOGIN_TOV);
-+
- 	DEBUG2(ql4_printk(KERN_INFO, ha,
- 			  "Default time to wait for build ddb %d\n", tmo));
- 
--- 
-1.7.8.247.g10f4e
-
-
+VGhpcyBwYXRjaCBzZWVtIHRvIGJlIGZpbmUuDQpQbGVhc2UgY29uc2lkZXIgdGhpcyBwYXRjaCBh
+cyBhY2tlZCBieSBtZS4NCg0KUmVnYXJkcywNCk5hZ2FsYWtzaG1pDQoNCg0KLS0tLS1PcmlnaW5h
+bCBNZXNzYWdlLS0tLS0NCkZyb206IFRob21hcyBNZXllciBbbWFpbHRvOnRob21hc0BtM3kzci5k
+ZV0gDQpTZW50OiBGcmlkYXksIE5vdmVtYmVyIDE4LCAyMDExIDQ6MTQgQU0NClRvOiBETC1NUFQg
+RnVzaW9uIExpbnV4OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZw0KU3ViamVjdDogW1BBVENIXSBbU0NTSV0gbXB0ZnVzaW9uOiBVc2Uga21l
+bWR1cCByYXRoZXIgdGhhbiBkdXBsaWNhdGluZyBpdHMgaW1wbGVtZW50YXRpb24NCg0KVGhlIHNl
+bWFudGljIHBhdGNoIHRoYXQgbWFrZXMgdGhpcyBjaGFuZ2UgaXMgYXZhaWxhYmxlDQppbiBzY3Jp
+cHRzL2NvY2NpbmVsbGUvYXBpL21lbWR1cC5jb2NjaS4NCg0KU2lnbmVkLW9mZi1ieTogVGhvbWFz
+IE1leWVyIDx0aG9tYXNAbTN5M3IuZGU+DQotLS0NCg0KZGlmZiAtdSAtcCBhL2RyaXZlcnMvbWVz
+c2FnZS9mdXNpb24vbXB0YmFzZS5jIGIvZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmMN
+Ci0tLSBhL2RyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0YmFzZS5jIDIwMTEtMTEtMDcgMTk6Mzc6
+NTEuNzk2Njc2OTU1ICswMTAwDQorKysgYi9kcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdGJhc2Uu
+YyAyMDExLTExLTA4IDEwOjQwOjIzLjEyMTAxNDY0MyArMDEwMA0KQEAgLTYwMDMsMTMgKzYwMDMs
+MTIgQEAgbXB0X2ZpbmRJbVZvbHVtZXMoTVBUX0FEQVBURVIgKmlvYykNCiAJaWYgKG1wdF9jb25m
+aWcoaW9jLCAmY2ZnKSAhPSAwKQ0KIAkJZ290byBvdXQ7DQogDQotCW1lbSA9IGttYWxsb2MoaW9j
+cGFnZTJzeiwgR0ZQX0tFUk5FTCk7DQorCW1lbSA9IGttZW1kdXAoKHU4ICopcElvYzIsIGlvY3Bh
+Z2Uyc3osIEdGUF9LRVJORUwpOw0KIAlpZiAoIW1lbSkgew0KIAkJcmMgPSAtRU5PTUVNOw0KIAkJ
+Z290byBvdXQ7DQogCX0NCiANCi0JbWVtY3B5KG1lbSwgKHU4ICopcElvYzIsIGlvY3BhZ2Uyc3op
+Ow0KIAlpb2MtPnJhaWRfZGF0YS5wSW9jUGcyID0gKElPQ1BhZ2UyX3QgKikgbWVtOw0KIA0KIAlt
+cHRfcmVhZF9pb2NfcGdfMyhpb2MpOw0K
