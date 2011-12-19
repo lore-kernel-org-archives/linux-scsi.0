@@ -1,43 +1,44 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: Re: [PATCH 14/14] ib_srp: Allow SRP disconnect through sysfs
-Date: Sun, 18 Dec 2011 23:03:34 -0500
-Message-ID: <1324267414.17849.98.camel@obelisk.thedillows.org>
-References: <201112011954.25811.bvanassche@acm.org>
-	 <201112012013.33246.bvanassche@acm.org>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH 2/5] qla4xxx: Limit the ACB Default Timeout value to 12s
+Date: Sun, 18 Dec 2011 21:51:32 -0800
+Message-ID: <CB14CD74.B7A1%vikas.chaudhary@qlogic.com>
+References: <1324070289.10429.16.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matrix.voodoobox.net ([75.127.97.206]:37282 "EHLO
-	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117Ab1LSEDo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2011 23:03:44 -0500
-In-Reply-To: <201112012013.33246.bvanassche@acm.org>
+Received: from am1ehsobe004.messaging.microsoft.com ([213.199.154.207]:20801
+	"EHLO AM1EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751306Ab1LSFvk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Dec 2011 00:51:40 -0500
+In-Reply-To: <1324070289.10429.16.camel@dabdike>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Roland Dreier <roland@purestorage.com>, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Nilesh Javali <nilesh.javali@qlogic.com>
 
-On Thu, 2011-12-01 at 20:13 +0100, Bart Van Assche wrote:
-> Make it possible to disconnect via sysfs the IB RC connection used by the
-> SRP protocol to communicate with a target.
-> 
-> Let the SRP transport layer create a sysfs "delete" attribute for
-> initiator drivers that support this functionality.
 
-This will be a nice feature to have, but I wonder about the proper
-behavior. I had thought about having a 'drain' state, where we wouldn't
-start new commands and would let existing ones complete or timeout
-before killing the connection. That may be in addition to a 'kill it
-now' variant.
 
-Though perhaps my gentler delete is best done by having a user script
-walk all of the devices under the host and set them to offline, wait for
-scsi_host/hostX/host_busy to drop to zero, then hit the SRP delete attr.
+On 17/12/11 2:48 AM, "James Bottomley"
+<James.Bottomley@HansenPartnership.com> wrote:
 
--- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+>On Fri, 2011-12-16 at 01:58 -0800, vikas.chaudhary@qlogic.com wrote:
+>> From: Nilesh Javali <nilesh.javali@qlogic.com>
+>>
+>> JIRA Key: UPSISCSI-205
+>>
+>> Signed-off-by: Nilesh Javali <nilesh.javali@qlogic.com>
+>> Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+>
+>OK, that's enough.  The JIRA key is completely useless to anyone outside
+>Qlogic as a patch description.  Please document what's wrong and what
+>you're doing rather than quoting something that won't be as durable as
+>the git log.
+
+Sending updated patch in next email with correct patch description.
+
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
