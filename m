@@ -1,45 +1,38 @@
 From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 10/14] srp_transport: Simplify attribute initialization code
-Date: Tue, 20 Dec 2011 10:21:22 +0000
-Message-ID: <CAO+b5-q7mBJ-K48Oyeh5jzRmiXAx7nnAhG97PpfSp8ESVC6tJQ@mail.gmail.com>
+Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
+Date: Tue, 20 Dec 2011 10:27:23 +0000
+Message-ID: <CAO+b5-r4AZymMkVyFSXbBzpcc86hL0RJm2j3FnT3=uXSLUkj9A@mail.gmail.com>
 References: <201112011954.25811.bvanassche@acm.org>
-	<201112012008.00502.bvanassche@acm.org>
-	<1324253243.17849.45.camel@obelisk.thedillows.org>
+	<201112012011.45444.bvanassche@acm.org>
+	<1324255806.17849.68.camel@obelisk.thedillows.org>
+	<CAO+b5-o+-JF61a+8vFWj1rxMuVWuG-CVLQKorr5cKzi-Kc44Ag@mail.gmail.com>
+	<1324333931.7043.52.camel@lap75545.ornl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1324253243.17849.45.camel-1q1vX8mYZiGLUyTwlgNVppKKF0rrzTr+@public.gmane.org>
+In-Reply-To: <1324333931.7043.52.camel-FqX9LgGZnHWDB2HL1qBt2PIbXMQ5te18@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Dec 19, 2011 at 12:07 AM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
-> On Thu, 2011-12-01 at 20:08 +0100, Bart Van Assche wrote:
->> Eliminate the private_rport_attrs[] array and the SETUP_*() macros
->> used to set up that array since the information in that array
->> duplicates the information in the static device attributes. Also,
->> trigger a kernel warning if SRP_RPORT_ATTRS is not large enough
->> since it is easy to forget to update that macro when adding new
->> attributes.
->
-> Not sure I care one way or the other, but it looks to have been written
-> the way it was to share a common code structure with the FC, SAS, and
-> other SCSI transport code.
+On Mon, Dec 19, 2011 at 10:32 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
+> Part of the problem is introduced by allowing for permanent connections
+> rather than using the familiar dev_loss_tmo and fast_io_fail_tmo
+> parameters from other SCSI transports. For instance, in the FC
+> transport, rports are allowed to disappear for up to dev_loss_tmo
+> seconds before being removed from the SCSI device tree. Until they have
+> been gone for fast_fail_io_tmo seconds, they are blocked (as is error
+> handling to prevent offlining devices). Once they have been gone longer
+> that fast_fail_io_tmo, they become unblocked and new IO will be failed.
 
-My opinion about the SETUP_*() macros is that - at least in the SRP
-transport code - they make the code harder to read without having any
-real value and hence should be removed.
-
-> They use a BUG_ON instead of WARN_ON, which
-> seems more appropriate, since we just overran a buffer...
-
-Sorry, but I disagree. The guideline for Linux kernel code is to use
-BUG_ON() only if a crash can't be avoided. With SLUB red zoning
-enabled it is still possible to unload kernel modules after a (mild)
-buffer overrun. And if you have a look at mm/slub.c, you will see that
-slab_err() is invoked in case padding has been overwritten. That last
-function does something similar to WARN_ON().
+I'm not convinced an equivalent of fast_fail_io_tmo is necessary for
+the SRP transport. If a target disappears briefly from the IB fabric
+what will happen with the posted patch series is that the initiator is
+blocked during one ping interval and also that a reconnect is
+triggered. Also, some SCSI commands may be reissued after
+reconnecting. But that shouldn't have any adverse consequences, isn't
+it ?
 
 Bart.
 --
