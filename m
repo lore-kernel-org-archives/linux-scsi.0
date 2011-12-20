@@ -1,41 +1,65 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
-Date: Tue, 20 Dec 2011 10:27:23 +0000
-Message-ID: <CAO+b5-r4AZymMkVyFSXbBzpcc86hL0RJm2j3FnT3=uXSLUkj9A@mail.gmail.com>
-References: <201112011954.25811.bvanassche@acm.org>
-	<201112012011.45444.bvanassche@acm.org>
-	<1324255806.17849.68.camel@obelisk.thedillows.org>
-	<CAO+b5-o+-JF61a+8vFWj1rxMuVWuG-CVLQKorr5cKzi-Kc44Ag@mail.gmail.com>
-	<1324333931.7043.52.camel@lap75545.ornl.gov>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RESEND] block: warn if tag is greater than real_max_depth.
+Date: Tue, 20 Dec 2011 14:56:29 +0100
+Message-ID: <4EF0940D.7070304@kernel.dk>
+References: <1315984992-5158-1-git-send-email-tm@tao.ma> <4EA57E40.2020301@tao.ma> <4EA670F9.8030601@kernel.dk> <CAA9_cmeV7uW8Rq_Rsn156SgtT4bBHV3Zip2=NS3kq+JrLm3AEQ@mail.gmail.com> <4EEFE0AE.7040201@tao.ma> <CAA9_cmfRXgwsamx2Q+Wccyfqnz3ePt60Z950pPippJuOnooJLA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1324333931.7043.52.camel-FqX9LgGZnHWDB2HL1qBt2PIbXMQ5te18@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from casper.infradead.org ([85.118.1.10]:57823 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751514Ab1LTN4e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2011 08:56:34 -0500
+In-Reply-To: <CAA9_cmfRXgwsamx2Q+Wccyfqnz3ePt60Z950pPippJuOnooJLA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Tao Ma <tm@tao.ma>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "edmund.nadolski" <edmund.nadolski@intel.com>, mroos@ut.ee
 
-On Mon, Dec 19, 2011 at 10:32 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
-> Part of the problem is introduced by allowing for permanent connections
-> rather than using the familiar dev_loss_tmo and fast_io_fail_tmo
-> parameters from other SCSI transports. For instance, in the FC
-> transport, rports are allowed to disappear for up to dev_loss_tmo
-> seconds before being removed from the SCSI device tree. Until they have
-> been gone for fast_fail_io_tmo seconds, they are blocked (as is error
-> handling to prevent offlining devices). Once they have been gone longer
-> that fast_fail_io_tmo, they become unblocked and new IO will be failed.
+On 2011-12-20 02:45, Dan Williams wrote:
+> On Mon, Dec 19, 2011 at 5:11 PM, Tao Ma <tm@tao.ma> wrote:
+>>>> Looks good, better than what we had. Applied.
+>>>
+>>> This appears to interact badly with scsi_adjust_queue_depth() when the
+>>> tag space shrinks.  I can reproduce a similar crash as reported in
+>>> "3.2-rc2+git: kernel BUG at block/blk-core.c:1000!
+>>> (__scsi_queue_insert)" [1].
+>>>
+>>> I can hit "kernel BUG at block/blk-core.c:2268!" which is the same
+>>> BUG_ON(blk_queued_rq(rq)) check reliably with:
+>>> # for i in $(seq 0 10); do dd if=/dev/zero of=/dev/sdX & done
+>>> # echo 4 > /sys/class/block/sdX/device/queue_depth
+>>>
+>>> The following fixes it for me, if this looks ok (versus reverting
+>>> commit 5e081591) I'll roll it into a formal patch with Ed and Meelis'
+>>> Reported-by.
+>> Interesting. If I read the code correctly, real_max_depth is the maximum
+>> queue depth we ever have and max_depth is the current depth.
+>>
+>> In your fix, we never resize the tag size to be smaller than max_depth.
+>> So I think this patch does expose some problem, but not lead to the BUG.
+> 
+> Yes, if we keep the "if (unlikely(tag >= bqt->max_depth))" check in
+> blk_queue_end_tag() then the side effect is that we can never shrink
+> the tag depth, which I don't think was intended.
+> 
+>> And in your new comment, you mentioned that "request between new_depth
+>> and max_depth can be in-flight", but max_depth <= real_max_depth, so
+>> what's wrong with the comment? Sorry, but am I missing something here?
+> 
+> Prior to the change blk_queue_end_tag() would continue to complete
+> requests with a tag > max_depth, now it silently drops them on the
+> floor leaving BUG_ON(blk_queued_rq(rq)) to trigger when we try to end
+> the request
 
-I'm not convinced an equivalent of fast_fail_io_tmo is necessary for
-the SRP transport. If a target disappears briefly from the IB fabric
-what will happen with the posted patch series is that the initiator is
-blocked during one ping interval and also that a reconnect is
-triggered. Also, some SCSI commands may be reissued after
-reconnecting. But that shouldn't have any adverse consequences, isn't
-it ?
+Yeah, that's just wrong. Tao Ma, which bug was the original fix intended
+to fix?
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The reason we have these two ceilings is exactly for shrinking depth
+situations. It's quite legal to have an inflight request with a tag
+inbetween max_depth and real_max_depth.
+
+-- 
+Jens Axboe
+
