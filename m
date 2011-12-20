@@ -1,51 +1,103 @@
-From: "H. Peter Anvin" <hpa-YMNOUZJC4hwAvxtiuMwx3w@public.gmane.org>
-Subject: Re: copy offload support in Linux - new system call needed?
-Date: Mon, 19 Dec 2011 15:29:50 -0800
-Message-ID: <4EEFC8EE.70001@zytor.com>
-References: <4EE8F75F.6070800@gmail.com> <20111214195931.GC10664@samba2> <4EEFB87F.9000104@zytor.com> <20111219225722.GS23662@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH RESEND] block: warn if tag is greater than real_max_depth.
+Date: Mon, 19 Dec 2011 16:07:04 -0800
+Message-ID: <CAA9_cmeV7uW8Rq_Rsn156SgtT4bBHV3Zip2=NS3kq+JrLm3AEQ@mail.gmail.com>
+References: <1315984992-5158-1-git-send-email-tm@tao.ma>
+	<4EA57E40.2020301@tao.ma>
+	<4EA670F9.8030601@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20111219225722.GS23662@dastard>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>
-Cc: Jeremy Allison <jra-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Ric Wheeler <ricwheeler-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joel Becker <jlbec-aKy9MeLSZ9dg9hUCZPvPmw@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EA670F9.8030601@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tao Ma <tm@tao.ma>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "edmund.nadolski" <edmund.nadolski@intel.com>, mroos@ut.ee
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/19/2011 02:57 PM, Dave Chinner wrote:
-> 
-> That was my immediate thought, but sendfile has plumbing that is
-> page cache based and we require completely different infrastructure
-> and semantics for an array offload.
-> 
+On Tue, Oct 25, 2011 at 1:19 AM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 2011-10-24 17:03, Tao Ma wrote:
+>> Hi Jens,
+>> =A0 =A0 =A0 any option with this patch?
+>>
+>> Thanks
+>> Tao
+>> On 09/14/2011 03:23 PM, Tao Ma wrote:
+>>> From: Tao Ma <boyu.mt@taobao.com>
+>>>
+>>> In case tag depth is reduced, it is max_depth not real_max_depth.
+>>> So we should allow a request with tag >=3D max_depth, but for a
+>>> tag >=3D real_max_depth, there really should be some problem.
+>>>
+>>> Cc: Jens Axboe <jaxboe@fusionio.com>
+>>> Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+>>> ---
+>>> =A0block/blk-tag.c | =A0 =A06 ++++--
+>>> =A01 files changed, 4 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/block/blk-tag.c b/block/blk-tag.c
+>>> index ece65fc..e74d6d1 100644
+>>> --- a/block/blk-tag.c
+>>> +++ b/block/blk-tag.c
+>>> @@ -286,12 +286,14 @@ void blk_queue_end_tag(struct request_queue *=
+q, struct request *rq)
+>>>
+>>> =A0 =A0 =A0BUG_ON(tag =3D=3D -1);
+>>>
+>>> - =A0 =A0if (unlikely(tag >=3D bqt->real_max_depth))
+>>> + =A0 =A0if (unlikely(tag >=3D bqt->max_depth)) {
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0/*
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 * This can happen after tag depth has b=
+een reduced.
+>>> - =A0 =A0 =A0 =A0 =A0 =A0 * FIXME: how about a warning or info mess=
+age here?
+>>> + =A0 =A0 =A0 =A0 =A0 =A0 * But tag shouldn't be larger than real_m=
+ax_depth.
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 */
+>>> + =A0 =A0 =A0 =A0 =A0 =A0WARN_ON(tag >=3D bqt->real_max_depth);
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0return;
+>>> + =A0 =A0}
+>>>
+>>> =A0 =A0 =A0list_del_init(&rq->queuelist);
+>>> =A0 =A0 =A0rq->cmd_flags &=3D ~REQ_QUEUED;
+>
+> Looks good, better than what we had. Applied.
 
-The plumbing is internal to the kernel and doesn't mean we have to use
-the same VFS methods.
+This appears to interact badly with scsi_adjust_queue_depth() when the
+tag space shrinks.  I can reproduce a similar crash as reported in
+"3.2-rc2+git: kernel BUG at block/blk-core.c:1000!
+(__scsi_queue_insert)" [1].
 
-> e.g. for an array offload, we have to flush the source file page
-> cache first so that the data being copied is known to be on disk,
-> then invalidate the destination page cache if overwriting or extend
-> and pre-allocate blocks if not. Then we have to map both files and
-> hand that off to the array.
-> 
-> Then there's a whole bunch of tricky questions about what the state
-> of the destination file should look like while the copy is in
-> progress, whether the source file should be allowed to change (e.g.
-> it can't be truncated and have blocks freed and then reused by other
-> files half way through the copy offload operation), and so on.
-> 
-> sendfile() has well known, fixed semantics that we can't change to
-> suit what is needed for an offload operation that could potentially
-> take hours to complete. Hence I think an new syscall is the way to
-> go....
+I can hit "kernel BUG at block/blk-core.c:2268!" which is the same
+BUG_ON(blk_queued_rq(rq)) check reliably with:
+# for i in $(seq 0 10); do dd if=3D/dev/zero of=3D/dev/sdX & done
+# echo 4 > /sys/class/block/sdX/device/queue_depth
 
-Perhaps what we need first in an explicit enumeration of the semantics
-you're looking for.
+The following fixes it for me, if this looks ok (versus reverting
+commit 5e081591) I'll roll it into a formal patch with Ed and Meelis'
+Reported-by.
 
-	-hpa
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index e74d6d1..09cf867 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -230,9 +230,12 @@ int blk_queue_resize_tags(struct request_queue
+*q, int new_depth)
+        /*
+         * if we already have large enough real_max_depth.  just
+         * adjust max_depth.  *NOTE* as requests with tag value
+-        * between new_depth and real_max_depth can be in-flight, tag
++        * between new_depth and max_depth can be in-flight, tag
+         * map can not be shrunk blindly here.
+         */
++       if (new_depth <=3D bqt->max_depth)
++               return 0;
++
+        if (new_depth <=3D bqt->real_max_depth) {
+                bqt->max_depth =3D new_depth;
+                return 0;
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dan
+
+[1]: http://marc.info/?l=3Dlinux-kernel&m=3D132204370518629&w=3D2
