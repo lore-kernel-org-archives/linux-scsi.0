@@ -1,46 +1,49 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC PATCH] scsi_dh: allow 3rd party multipath drivers to scsi_dh_detach
-Date: Tue, 20 Dec 2011 08:31:33 +0100
-Message-ID: <4EF039D5.5010201@suse.de>
-References: <20111215214440.GA17677@redhat.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 12/14] ib_srp: Rework error handling
+Date: Tue, 20 Dec 2011 09:01:49 +0000
+Message-ID: <CAO+b5-qF2taG0B4n9SBwqnuh0wajH5fXFLTb-VAaDrfT9TZ6aQ@mail.gmail.com>
+References: <201112011954.25811.bvanassche@acm.org>
+	<201112012010.37276.bvanassche@acm.org>
+	<1324265791.17849.92.camel@obelisk.thedillows.org>
+	<CAO+b5-q332RKkLrUV7X_D73SHBrLpt=6Xz=W7ZtOwZ+9iSOyDw@mail.gmail.com>
+	<1324335083.7043.66.camel@lap75545.ornl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36031 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752793Ab1LTHbe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Dec 2011 02:31:34 -0500
-In-Reply-To: <20111215214440.GA17677@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1324335083.7043.66.camel-FqX9LgGZnHWDB2HL1qBt2PIbXMQ5te18@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 12/15/2011 10:44 PM, Mike Snitzer wrote:
-> Some scsi_dh modules are known to conflict with with 3rd party multip=
-ath
-> drivers (e.g. scsi_dh_emc conflicts with EMC PowerPath).
->=20
-> Allow 3rd party multipath drivers to programatically detach a scsi_dh
-> using the scsi_dh_detach() interface rather than require writing
-> 'detach' to /sys/block/sdX/queue/dh_state
->=20
-> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-No problem with that.
+On Mon, Dec 19, 2011 at 10:51 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
+> I haven't parsed it all out from your changes just yet, but I think part
+> of the reason you may have had problems with req->scmd being null in
+> srp_handle_recv() is due to a new race between the tear down of the
+> connection and continuing to process completion notifications.
 
-Acked-by: Hannes Reinecke <hare@suse.de>
+The resources used by the QP completion handler are the srp_target
+port data structure and the QP data structure. And as you can see in
+srp_remove_target(), the scsi_host_put() call is invoked after
+srp_disconnect_target(). That last function waits for the DREP
+notification from the IB CM. That should guarantee that no IB
+completions arrive during or after the scsi_host_put() call. Or did I
+miss something ?
 
-Cheers,
+Note: I haven't observed the req->scmd == NULL condition yet.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+> > > You lock and unlock here without doing anything in the critical section.
+> >
+> > That's on purpose.
+>
+> I'm assuming you do this to ensure that everyone has seen the
+> appropriate state and exited the critical section, then? Best to add a
+> comment to that effect.
+
+OK, will do.
+
+Bart.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
