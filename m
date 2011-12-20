@@ -1,190 +1,101 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
-Date: Tue, 20 Dec 2011 16:41:04 +0100
-Message-ID: <4EF0AC90.5010109@suse.de>
-References: <1323816041-25557-1-git-send-email-revers@redhat.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH] usb/uas: one only one status URB/host on stream-less
+ connection
+Date: Tue, 20 Dec 2011 10:49:06 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1112201035240.1690-100000@iolanthe.rowland.org>
+References: <20111220150126.GA29286@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:59577 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751414Ab1LTPlF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Dec 2011 10:41:05 -0500
-In-Reply-To: <1323816041-25557-1-git-send-email-revers@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20111220150126.GA29286-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
+Cc: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Evers <revers@redhat.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 12/13/2011 11:40 PM, Rob Evers wrote:
-> When alua targets are transitioning, the scsi midlayer retry mechanis=
-m
-> continuously retries the scsi commands that are returning with not re=
-ady
-> transitioning status.  The target is not capable of handling the
-> commands for time on the order of several seconds during these transi=
-stions.
->=20
-> This patch delays the device queue for 2 seconds, which is in the sam=
-e
-> order of aas transition time.
->=20
-> Also, handle all other cases where ADD_TO_MLQUEUE_DELAY could be retu=
-rned
-> instead of ADD_TO_MLQUEUE as if ADD_TO_MLQUEUE were being returned.
->=20
-> Problem found by array partner testing
->=20
-> Signed-off-by: Rob Evers <revers@redhat.com>
+On Tue, 20 Dec 2011, Sebastian Andrzej Siewior wrote:
+
+> The status/sense URB is allocated on per-command basis. A read/write
+> looks the following way on a stream-less connection:
+> 
+> - send cmd tag X, queue status
+> - receive status, oh it is a read for tag X. queue status & read
+> - receive read
+> - receive status, oh I'm done for tag X. Cool call complete and free
+>   status urb.
+> 
+> This block repeats itself 1:1 for further commands and looks great so
+> far. Lets take a look now what happens if we do allow multiple commands:
+> 
+> - send cmd tag X, queue statusX (belongs to the command with the X tag)
+> - send cmd tag Y, queue statusY (belongs to the command with the Y tag)
+> - receive statusX, oh it is a read for tag X. queue statusX & a read
+> - receive read
+> - receive statusY, oh I'm done for tag X. Cool call complete and free statusY.
+> - receive statusX, oh it is a read for tag Y. queue statusY & before we
+>   queue the read the the following message can be observed:
+>   |sd 0:0:0:0: [sda] sense urb submission failure
+>   followed by a second attempt with the same result.
+> 
+> In order to address this problem there only one status URB for each scsi
+> host (as suggested by Matthew) in case we don't have stream support.
+> This URB is requeued until the device removed. Nothing changes on stream
+> based endpoints.
+> 
+> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
 > ---
->  drivers/scsi/device_handler/scsi_dh_alua.c |    7 ++++---
->  drivers/scsi/scsi.c                        |    3 +++
->  drivers/scsi/scsi_error.c                  |    1 +
->  drivers/scsi/scsi_lib.c                    |    9 ++++++++-
->  include/scsi/scsi.h                        |    4 +++-
->  5 files changed, 19 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scs=
-i/device_handler/scsi_dh_alua.c
-> index 4ef0212..33b8df7 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -233,7 +233,7 @@ static void stpg_endio(struct request *req, int e=
-rror)
->  			goto done;
->  		}
->  		err =3D alua_check_sense(h->sdev, &sense_hdr);
-> -		if (err =3D=3D ADD_TO_MLQUEUE) {
-> +		if (err =3D=3D ADD_TO_MLQUEUE || err =3D=3D ADD_TO_MLQUEUE_DELAY) =
-{
->  			err =3D SCSI_DH_RETRY;
->  			goto done;
->  		}
-> @@ -443,7 +443,7 @@ static int alua_check_sense(struct scsi_device *s=
-dev,
->  			/*
->  			 * LUN Not Accessible - ALUA state transition
->  			 */
-> -			return ADD_TO_MLQUEUE;
-> +			return ADD_TO_MLQUEUE_DELAY;
->  		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0b)
->  			/*
->  			 * LUN Not Accessible -- Target port in standby state
-> @@ -521,7 +521,8 @@ static int alua_rtpg(struct scsi_device *sdev, st=
-ruct alua_dh_data *h)
->  			return SCSI_DH_IO;
-> =20
->  		err =3D alua_check_sense(sdev, &sense_hdr);
-> -		if (err =3D=3D ADD_TO_MLQUEUE && time_before(jiffies, expiry))
-> +		if ((err =3D=3D ADD_TO_MLQUEUE || err =3D=3D ADD_TO_MLQUEUE_DELAY)=
- &&
-> +		    time_before(jiffies, expiry))
->  			goto retry;
->  		sdev_printk(KERN_INFO, sdev,
->  			    "%s: rtpg sense code %02x/%02x/%02x\n",
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 2aeb2e9..ced0085 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -600,6 +600,9 @@ void scsi_log_completion(struct scsi_cmnd *cmd, i=
-nt disposition)
->  			case ADD_TO_MLQUEUE:
->  				printk("MLQUEUE\n");
->  				break;
-> +			case ADD_TO_MLQUEUE_DELAY:
-> +				printk("MLQUEUE_DELAY\n");
-> +				break;
->  			case FAILED:
->  				printk("FAILED\n");
->  				break;
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index dc6131e..775f822 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -812,6 +812,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *sc=
-md, unsigned char *cmnd,
->  		case TARGET_ERROR:
->  			break;
->  		case ADD_TO_MLQUEUE:
-> +		case ADD_TO_MLQUEUE_DELAY:
->  			rtn =3D NEEDS_RETRY;
->  			break;
->  		default:
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 06bc265..fb35a76 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -139,6 +139,7 @@ static int __scsi_queue_insert(struct scsi_cmnd *=
-cmd, int reason, int unbusy)
->  		break;
->  	case SCSI_MLQUEUE_DEVICE_BUSY:
->  	case SCSI_MLQUEUE_EH_RETRY:
-> +	case SCSI_MLQUEUE_DEV_DLY_RTY:
->  		device->device_blocked =3D device->max_device_blocked;
->  		break;
->  	case SCSI_MLQUEUE_TARGET_BUSY:
-> @@ -161,7 +162,10 @@ static int __scsi_queue_insert(struct scsi_cmnd =
-*cmd, int reason, int unbusy)
->  	blk_requeue_request(q, cmd->request);
->  	spin_unlock_irqrestore(q->queue_lock, flags);
-> =20
-> -	kblockd_schedule_work(q, &device->requeue_work);
-> +	if (reason =3D=3D SCSI_MLQUEUE_DEV_DLY_RTY)
-> +		blk_delay_queue(q, 2000);
-> +	else
-> +		kblockd_schedule_work(q, &device->requeue_work);
-> =20
->  	return 0;
->  }
-> @@ -1465,6 +1469,9 @@ static void scsi_softirq_done(struct request *r=
-q)
->  		case ADD_TO_MLQUEUE:
->  			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
->  			break;
-> +		case ADD_TO_MLQUEUE_DELAY:
-> +			scsi_queue_insert(cmd, SCSI_MLQUEUE_DEV_DLY_RTY);
-> +			break;
->  		default:
->  			if (!scsi_eh_scmd_add(cmd, 0))
->  				scsi_finish_command(cmd);
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 8001ae4..df0e353 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -466,9 +466,10 @@ static inline int scsi_is_wlun(unsigned int lun)
->  #define SOFT_ERROR      0x2005
->  #define ADD_TO_MLQUEUE  0x2006
->  #define TIMEOUT_ERROR   0x2007
-> -#define SCSI_RETURN_NOT_HANDLED   0x2008
-> +#define SCSI_RETURN_NOT_HANDLED	0x2008
->  #define FAST_IO_FAIL	0x2009
->  #define TARGET_ERROR    0x200A
-> +#define ADD_TO_MLQUEUE_DELAY	0x200B
-> =20
->  /*
->   * Midlevel queue return values.
-> @@ -477,6 +478,7 @@ static inline int scsi_is_wlun(unsigned int lun)
->  #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
->  #define SCSI_MLQUEUE_EH_RETRY    0x1057
->  #define SCSI_MLQUEUE_TARGET_BUSY 0x1058
-> +#define SCSI_MLQUEUE_DEV_DLY_RTY 0x1059
-> =20
-Can't we just name it 'MLQUEUE_DELAYED_RETRY'?
-'MLQUEUE_DEV_DLY_RTY' is a bit unwieldy ...
+> Okay. That is the third patch of my UAS series. The only issue I'm aware
+> now is the fact that uas does not work on hcds which do not support sgs.
+> One bug at a time.....
+> 
+>  drivers/usb/storage/uas.c |   71 ++++++++++++++++++++++++++++++++++++++------
+>  1 files changed, 61 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index ecf2070..e3b936e 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -99,6 +99,8 @@ struct uas_dev_info {
+>  	unsigned use_streams:1;
+>  	unsigned uas_sense_old:1;
+>  	struct scsi_cmnd *cmnd;
+> +	/* only used if no stream support is available */
+> +	struct urb *status_urb;
+>  };
+>  
+>  enum {
+> @@ -117,6 +119,7 @@ struct uas_cmd_info {
+>  	unsigned int state;
+>  	unsigned int stream;
+>  	struct urb *cmd_urb;
+> +	/* only used if stream support is available */
+>  	struct urb *status_urb;
+>  	struct urb *data_in_urb;
+>  	struct urb *data_out_urb;
 
-Other than that: Looks good.
+Very minor stylistic point...  It's not clear whether the comments
+apply to the items preceding them or the items following them.  You
+might want to put each comment on the same line with its respective
+item.
 
-Cheers,
+Alan Stern
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+P.S.: Another very minor point, this time grammatical.  (In fact this
+is an _extremely_ common mistake -- virtually everybody does it, native
+English speakers included.)
+
+The word "only" generally modifies the term following it.  So when you
+write "X is only used if Y", the grammatical meaning is: "If Y is true
+then X is used but nothing else happens to X -- for example, X isn't
+changed or deleted".  (As an illustration of this point, consider the
+sentence "The disk is only read, not written, if the read-protect 
+flag is set".)
+
+Instead you should write "X is used only if Y", which means what you
+want: "If Y isn't true then X isn't used".  Or in this case: "used only 
+if stream support is available".
+
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
