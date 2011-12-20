@@ -1,51 +1,61 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the storage driver
- out of the staging area
-Date: Tue, 20 Dec 2011 15:06:28 -0800
-Message-ID: <CAA9_cmf2RQapBD3th-RAhhTBB64N9ChKNFNXz0PEZJexeQUoqw@mail.gmail.com>
-References: <1324407064-16875-1-git-send-email-kys@microsoft.com>
+Subject: [PATCH] block: fix blk_queue_end_tag()
+Date: Tue, 20 Dec 2011 15:33:49 -0800
+Message-ID: <20111220233117.17757.71139.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1324407064-16875-1-git-send-email-kys@microsoft.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "K. Y. Srinivasan" <kys@microsoft.com>
-Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, James.Bottomley@hansenpartnership.com, hch@infradead.org, linux-scsi@vger.kernel.org
+To: axboe@kernel.dk
+Cc: Tao Ma <boyu.mt@taobao.com>, Meelis Roos <mroos@ut.ee>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ed Nadolski <edmund.nadolski@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 20, 2011 at 10:51 AM, K. Y. Srinivasan <kys@microsoft.com> =
-wrote:
-> The storage driver (storvsc_drv.c) handles all block storage devices
-> assigned to Linux guests hosted on Hyper-V. This driver has been in t=
-he
-> staging tree for a while and this patch moves it out of the staging a=
-rea.
-> As per Greg's recommendation, this patch makes no changes to the stag=
-ing/hv
-> directory. Once the driver moves out of staging, we will cleanup the
-> staging/hv directory.
->
-> This patch includes all the patches that I have sent against the stag=
-ing/hv
-> tree to address the comments I have gotten to date on this storage dr=
-iver.
-> Greg has already applied all these patches to the staging tree.
->
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> ---
-> =A0drivers/scsi/Kconfig =A0 =A0 =A0 | =A0 =A07 +
-> =A0drivers/scsi/Makefile =A0 =A0 =A0| =A0 =A03 +
-> =A0drivers/scsi/storvsc_drv.c | 1586 ++++++++++++++++++++++++++++++++=
-++++++++++++
-> =A03 files changed, 1596 insertions(+), 0 deletions(-)
-> =A0create mode 100644 drivers/scsi/storvsc_drv.c
+Commit 5e081591 "block: warn if tag is greater than real_max_depth"
+cleaned up blk_queue_end_tag() to warn when the tag is truly invalid
+(greater than real_max_depth).  However, it changed behavior in the tag
+< max_depth case to not end the request.  Leading to triggering of
+BUG_ON(blk_queued_rq(rq)) in the request completion path:
 
-Shouldn't this diffstat be something like the following?
+  http://marc.info/?l=linux-kernel&m=132204370518629&w=2
 
- drivers/scsi/Kconfig                       |    7 +
- drivers/scsi/Makefile                      |    3 +
- drivers/{staging/hv =3D> scsi}/storvsc_drv.c |  310 ++++++++++++++++++=
-+---------
- 3 files changed, 218 insertions(+), 102 deletions(-)
- rename drivers/{staging/hv =3D> scsi}/storvsc_drv.c (87%)
+In order to allow blk_queue_resize_tags() to shrink the tag space
+blk_queue_end_tag() must always complete tags with a value less than
+real_max_depth regardless of the current max_depth.
+
+Cc: Tao Ma <boyu.mt@taobao.com>
+Reported-by: Meelis Roos <mroos@ut.ee>
+Reported-by: Ed Nadolski <edmund.nadolski@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+Functionally the same as Tao Ma's fix [1], but just moves the warn into the
+if() directly.
+
+[1]: http://marc.info/?l=linux-scsi&m=132439698602441&w=2
+
+--
+Dan
+
+ block/blk-tag.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index e74d6d1..6e61262 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -286,12 +286,13 @@ void blk_queue_end_tag(struct request_queue *q, struct request *rq)
+ 
+ 	BUG_ON(tag == -1);
+ 
+-	if (unlikely(tag >= bqt->max_depth)) {
++	if (WARN_ONCE(tag >= bqt->real_max_depth,
++		      "%s: tag %d greater than tag map size: %d\n",
++		      __func__, tag, bqt->real_max_depth)) {
+ 		/*
+ 		 * This can happen after tag depth has been reduced.
+ 		 * But tag shouldn't be larger than real_max_depth.
+ 		 */
+-		WARN_ON(tag >= bqt->real_max_depth);
+ 		return;
+ 	}
+ 
