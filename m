@@ -1,293 +1,129 @@
-From: Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
-Subject: Re: [PATCH v2] usb/uas: one only one status URB/host on stream-less
- connection
-Date: Wed, 21 Dec 2011 11:25:43 -0800
-Message-ID: <20111221192543.GA15279@xanatos>
-References: <20111220150126.GA29286@linutronix.de>
- <Pine.LNX.4.44L0.1112201035240.1690-100000@iolanthe.rowland.org>
- <20111220171621.GC29286@linutronix.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT 3.2-rc PATCH 0/8] isci: platform and hardware enabling
+ updates
+Date: Wed, 21 Dec 2011 15:05:26 -0600
+Message-ID: <1324501526.17423.13.camel@dabdike.int.hansenpartnership.com>
+References: <20111217004820.14133.19249.stgit@localhost6.localdomain6>
+	 <1324216168.3091.7.camel@dabdike.int.hansenpartnership.com>
+	 <CABE8wws_0WJgcgB1=Qtzkwr1nBQt2fLo_6S9oRzMfCOGURcjRA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20111220171621.GC29286-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage List <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33346 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751955Ab1LUVFa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Dec 2011 16:05:30 -0500
+In-Reply-To: <CABE8wws_0WJgcgB1=Qtzkwr1nBQt2fLo_6S9oRzMfCOGURcjRA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi Sebastian,
-
-The patch looks good (although I haven't tested it).  However, I think
-you should move this chunk from one of your previous patches:
-
-@@ -449,7 +452,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
-
-        BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
-
--       if (!cmdinfo->status_urb && sdev->current_cmnd)
-+       if (sdev->current_cmnd)
-                return SCSI_MLQUEUE_DEVICE_BUSY;
-
-into this patch, to keep the change to the status URB in one patch.
-
-Also, do you have a git branch up for the UAS work somewhere?  We need
-to figure out how to merge your bug fix patches with my bug fix patches
-into one patchset.  It's probably easier if you send your current
-patchset, or a pointer to your branch.
-
-Sarah Sharp
-
-On Tue, Dec 20, 2011 at 06:16:21PM +0100, Sebastian Andrzej Siewior wrote:
-> The status/sense URB is allocated on per-command basis. A read/write
-> looks the following way on a stream-less connection:
-> 
-> - send cmd tag X, queue status
-> - receive status, oh it is a read for tag X. queue status & read
-> - receive read
-> - receive status, oh I'm done for tag X. Cool call complete and free
->   status urb.
-> 
-> This block repeats itself 1:1 for further commands and looks great so
-> far. Lets take a look now what happens if we do allow multiple commands:
-> 
-> - send cmd tag X, queue statusX (belongs to the command with the X tag)
-> - send cmd tag Y, queue statusY (belongs to the command with the Y tag)
-> - receive statusX, oh it is a read for tag X. queue statusX & a read
-> - receive read
-> - receive statusY, oh I'm done for tag X. Cool call complete and free statusY.
-> - receive statusX, oh it is a read for tag Y. queue statusY & before we
->   queue the read the the following message can be observed:
->   |sd 0:0:0:0: [sda] sense urb submission failure
->   followed by a second attempt with the same result.
-> 
-> In order to address this problem there only one status URB for each scsi
-> host (as suggested by Matthew) in case we don't have stream support.
-> This URB is requeued until the device removed. Nothing changes on stream
-> based endpoints.
->
-> Signed-off-by: Sebastian Andrzej Siewior <bigeasy-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org>
-> ---
-> * Alan Stern | 2011-12-20 10:49:06 [-0500]:
-> >Very minor stylistic point...  It's not clear whether the comments
-> >apply to the items preceding them or the items following them.  You
-> >might want to put each comment on the same line with its respective
-> >item.
+On Sun, 2011-12-18 at 10:46 -0800, Williams, Dan J wrote: 
+> On Sun, Dec 18, 2011 at 5:49 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Fri, 2011-12-16 at 16:53 -0800, Dan Williams wrote:
+> >> These are priority updates, targeted for inclusion in 3.2-final, for the
+> >> driver to honor the latest definition of oem parameters and support the
+> >> latest revision of silicon.  The oem parameter format (phy configuration
+> >> settings passed along from platform firmware) has been updated to
+> >> revision 1.3, current driver only supports 1.0.  The C1 silicon update
+> >> involves updates to the per-silicon-revision hard-coded phy tuning
+> >> recipes.
 > >
-> >Alan Stern
+> > The -rc tree is for bug fixes only, not whatever you choose to call
+> > "priority updates".  We have long established the position that a driver
+> > update, even to support new hardware, isn't a bug fix ...
+> 
+> These updates are aiming to get ahead of the bug reports that will be
+> filed as these platform changes get distributed.  Public bugzillas
+> seem to be the difference compared to some of the platform revision
+> specific updates that went into -rc6 via the drm tree.
+> 
+> > the
+> > distributions apply it through their enhancement processes. See below
+> > for the individual comments
 > >
-> >P.S.: Another very minor point, this time grammatical.  (In fact this
-> >is an _extremely_ common mistake -- virtually everybody does it, native
-> >English speakers included.)
+> >> This also updates the driver version from v1.0 to v1.1 to remove the
+> >> stale EXPERIMENTAL tag and reflect the C1 level of silicon support.
+> >>
+> >> A performance fix and a fix for a crash that can be triggered by
+> >> enabling a dev_dbg() statement are also included.
+> >>
+> >> Please apply, or pull from:
+> >>
+> >>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git fixes
+> >>
+> >> ...to receive:
+> >>
+> >> Dan Williams (2):
+> >>       isci: cleanup oem parameter and recipe handling
 > >
-> >The word "only" generally modifies the term following it.  So when you
-> >write "X is only used if Y", the grammatical meaning is: "If Y is true
-> >then X is used but nothing else happens to X -- for example, X isn't
-> >changed or deleted".  (As an illustration of this point, consider the
-> >sentence "The disk is only read, not written, if the read-protect 
-> >flag is set".)
+> > This isn't a bug fix
+> 
+> Certainly not, but I wanted git blame on the subsequent settings to
+> point to the commit where the value actually changed before adding
+> more line wrapped register writes.
+
+Anyone who uses git blame knows how to cope with that.  If we adopted
+that principle; we'd have tons of whitespace and code motion type
+changes in the stable trees, which isn't a good precedent.
+
+> >>       isci: update version to 1.1
+> 
+> Mainline currently has v1.0+, and this reverts d962480e "[SCSI]
+> libsas: fix try_test_sas_gpio_gp_bit() build error", because it was
+> the wrong fix.
+> 
+> >>
+> >> Dave Jiang (1):
+> >>       isci: oem parameter format v1.1 (ssc select)
+> >> Jeff Skirvin (3):
+> >>       isci: update afe (analog-front-end) recipe for C1
+> >>       isci: oem parameter format v1.3 (cable select)
 > >
-> >Instead you should write "X is used only if Y", which means what you
-> >want: "If Y isn't true then X isn't used".  Or in this case: "used only 
-> >if stream support is available".
+> > New silicon support is an enhancement not a bug fix (last three patches)
 > 
-> I updated the comment thing. Thanks for the grammer hint, I try to keep
-> this mind.
+> I hate being put between a platform definition revision and a -rc window.
 > 
->  drivers/usb/storage/uas.c |   70 ++++++++++++++++++++++++++++++++++++++------
->  1 files changed, 60 insertions(+), 10 deletions(-)
+> 3.2 has an opportunity to ship with support for these settings that
+> affect link stability and meet signal integrity targets so I felt it
+> was worth calling these patches out separately from the wider updates
+> targeted for 3.3.
+
+The process for updates is that they go into the next merge window (i.e.
+for the 3.3 kernel).  If there's a case for adding this to 3.2 or
+earlier kernels, then the distros will do it.
+
+> >> Maciej Trela (1):
+> >>       isci: remove unused 'isci_tmf->device' field
+> >
+> > This isn't a bug fix.
 > 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index ecf2070..2f11431 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -99,6 +99,7 @@ struct uas_dev_info {
->  	unsigned use_streams:1;
->  	unsigned uas_sense_old:1;
->  	struct scsi_cmnd *cmnd;
-> +	struct urb *status_urb; /* used only if stream support is available */
->  };
->  
->  enum {
-> @@ -117,6 +118,7 @@ struct uas_cmd_info {
->  	unsigned int state;
->  	unsigned int stream;
->  	struct urb *cmd_urb;
-> +	/* status_urb is used only if stream support isn't available */
->  	struct urb *status_urb;
->  	struct urb *data_in_urb;
->  	struct urb *data_out_urb;
-> @@ -180,7 +182,6 @@ static void uas_sense(struct urb *urb, struct scsi_cmnd *cmnd)
->  
->  	cmnd->result = sense_iu->status;
->  	cmnd->scsi_done(cmnd);
-> -	usb_free_urb(urb);
->  }
->  
->  static void uas_sense_old(struct urb *urb, struct scsi_cmnd *cmnd)
-> @@ -205,7 +206,6 @@ static void uas_sense_old(struct urb *urb, struct scsi_cmnd *cmnd)
->  
->  	cmnd->result = sense_iu->status;
->  	cmnd->scsi_done(cmnd);
-> -	usb_free_urb(urb);
->  }
->  
->  static void uas_xfer_data(struct urb *urb, struct scsi_cmnd *cmnd,
-> @@ -214,7 +214,7 @@ static void uas_xfer_data(struct urb *urb, struct scsi_cmnd *cmnd,
->  	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
->  	int err;
->  
-> -	cmdinfo->state = direction | SUBMIT_STATUS_URB;
-> +	cmdinfo->state = direction;
->  	err = uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_ATOMIC);
->  	if (err) {
->  		spin_lock(&uas_work_lock);
-> @@ -231,10 +231,12 @@ static void uas_stat_cmplt(struct urb *urb)
->  	struct uas_dev_info *devinfo = (void *)shost->hostdata[0];
->  	struct scsi_cmnd *cmnd;
->  	u16 tag;
-> +	int ret;
->  
->  	if (urb->status) {
->  		dev_err(&urb->dev->dev, "URB BAD STATUS %d\n", urb->status);
-> -		usb_free_urb(urb);
-> +		if (devinfo->use_streams)
-> +			usb_free_urb(urb);
->  		return;
->  	}
->  
-> @@ -244,7 +246,13 @@ static void uas_stat_cmplt(struct urb *urb)
->  	else
->  		cmnd = scsi_host_find_tag(shost, tag - 1);
->  	if (!cmnd) {
-> -		usb_free_urb(urb);
-> +		if (devinfo->use_streams) {
-> +			usb_free_urb(urb);
-> +			return;
-> +		}
-> +		ret = usb_submit_urb(urb, GFP_ATOMIC);
-> +		if (ret)
-> +			dev_err(&urb->dev->dev, "failed submit status urb\n");
->  		return;
->  	}
->  
-> @@ -270,6 +278,15 @@ static void uas_stat_cmplt(struct urb *urb)
->  		scmd_printk(KERN_ERR, cmnd,
->  			"Bogus IU (%d) received on status pipe\n", iu->iu_id);
->  	}
-> +
-> +	if (devinfo->use_streams) {
-> +		usb_free_urb(urb);
-> +		return;
-> +	}
-> +
-> +	ret = usb_submit_urb(urb, GFP_ATOMIC);
-> +	if (ret)
-> +		dev_err(&urb->dev->dev, "failed submit status urb\n");
->  }
->  
->  static void uas_data_cmplt(struct urb *urb)
-> @@ -300,7 +317,7 @@ static struct urb *uas_alloc_data_urb(struct uas_dev_info *devinfo, gfp_t gfp,
->  }
->  
->  static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
-> -					struct scsi_cmnd *cmnd, u16 stream_id)
-> +		struct Scsi_Host *shost, u16 stream_id)
->  {
->  	struct usb_device *udev = devinfo->udev;
->  	struct urb *urb = usb_alloc_urb(0, gfp);
-> @@ -314,7 +331,7 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
->  		goto free;
->  
->  	usb_fill_bulk_urb(urb, udev, devinfo->status_pipe, iu, sizeof(*iu),
-> -						uas_stat_cmplt, cmnd->device->host);
-> +						uas_stat_cmplt, shost);
->  	urb->stream_id = stream_id;
->  	urb->transfer_flags |= URB_FREE_BUFFER;
->   out:
-> @@ -382,8 +399,8 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
->  	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
->  
->  	if (cmdinfo->state & ALLOC_STATUS_URB) {
-> -		cmdinfo->status_urb = uas_alloc_sense_urb(devinfo, gfp, cmnd,
-> -							  cmdinfo->stream);
-> +		cmdinfo->status_urb = uas_alloc_sense_urb(devinfo, gfp,
-> +				cmnd->device->host, cmdinfo->stream);
->  		if (!cmdinfo->status_urb)
->  			return SCSI_MLQUEUE_DEVICE_BUSY;
->  		cmdinfo->state &= ~ALLOC_STATUS_URB;
-> @@ -492,7 +509,8 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
->  	}
->  
->  	if (!devinfo->use_streams) {
-> -		cmdinfo->state &= ~(SUBMIT_DATA_IN_URB | SUBMIT_DATA_OUT_URB);
-> +		cmdinfo->state &= ~(SUBMIT_DATA_IN_URB | SUBMIT_DATA_OUT_URB |
-> +				ALLOC_STATUS_URB | SUBMIT_STATUS_URB);
->  		cmdinfo->stream = 0;
->  	}
->  
-> @@ -691,6 +709,29 @@ static void uas_configure_endpoints(struct uas_dev_info *devinfo)
->  	}
->  }
->  
-> +static int uas_alloc_status_urb(struct uas_dev_info *devinfo,
-> +		struct Scsi_Host *shost)
-> +{
-> +	if (devinfo->use_streams) {
-> +		devinfo->status_urb = NULL;
-> +		return 0;
-> +	}
-> +
-> +	devinfo->status_urb = uas_alloc_sense_urb(devinfo, GFP_KERNEL,
-> +			shost, 0);
-> +	if (!devinfo->status_urb)
-> +		goto err_s_urb;
-> +
-> +	if (usb_submit_urb(devinfo->status_urb, GFP_KERNEL))
-> +		goto err_submit_urb;
-> +
-> +	return 0;
-> +err_submit_urb:
-> +	usb_free_urb(devinfo->status_urb);
-> +err_s_urb:
-> +	return -ENOMEM;
-> +}
-> +
->  static void uas_free_streams(struct uas_dev_info *devinfo)
->  {
->  	struct usb_device *udev = devinfo->udev;
-> @@ -745,10 +786,17 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
->  
->  	shost->hostdata[0] = (unsigned long)devinfo;
->  
-> +	result = uas_alloc_status_urb(devinfo, shost);
-> +	if (result)
-> +		goto err_alloc_status;
-> +
->  	scsi_scan_host(shost);
->  	usb_set_intfdata(intf, shost);
->  	return result;
->  
-> +err_alloc_status:
-> +	scsi_remove_host(shost);
-> +	shost = NULL;
->  deconfig_eps:
->  	uas_free_streams(devinfo);
->   free:
-> @@ -776,6 +824,8 @@ static void uas_disconnect(struct usb_interface *intf)
->  	struct uas_dev_info *devinfo = (void *)shost->hostdata[0];
->  
->  	scsi_remove_host(shost);
-> +	usb_kill_urb(devinfo->status_urb);
-> +	usb_free_urb(devinfo->status_urb);
->  	uas_free_streams(devinfo);
->  	kfree(devinfo);
->  }
-> -- 
-> 1.7.7.3
+> Yeah, "kernel crash" made me throw it in the 'fixes' pile, but since
+> it is hidden behind enabling a dev_dbg() statement it can certainly be
+> deferred.
+
+What kernel crash?  The changelog doesn't mention anything about it.
+
+> >> Marcin Tomczak (1):
+> >>       isci: performance-fix, shorten default "no outbound task" timeout
+> >
+> > I don't quite see from the description how this is a performance
+> > enhancement?  It does nothing in the single initiator case, right?
 > 
-> Sebastian
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> This rate limits the link arbitration for how often the hardware
+> switches to a different remote-node-context.  At higher queue depths
+> we would see IOPs performance drop off rather than saturate, adjusting
+> this timeout corrected that condition.
+
+I think I still don't understand what this is.  All outbound links have
+to switch context rapidly in a multi-target environment with switches on
+the order of microseconds ... where exactly is this 10s timeout you
+reduce to 2s triggered?
+
+James
+
+
