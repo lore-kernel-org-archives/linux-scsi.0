@@ -1,52 +1,57 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [PATCH 12/14] ib_srp: Rework error handling
-Date: Tue, 20 Dec 2011 22:33:07 -0500
-Message-ID: <1324438387.7621.53.camel@obelisk.thedillows.org>
-References: <201112011954.25811.bvanassche@acm.org>
-	 <201112012010.37276.bvanassche@acm.org>
-	 <1324265791.17849.92.camel@obelisk.thedillows.org>
-	 <CAO+b5-q332RKkLrUV7X_D73SHBrLpt=6Xz=W7ZtOwZ+9iSOyDw@mail.gmail.com>
-	 <1324335083.7043.66.camel@lap75545.ornl.gov>
-	 <CAO+b5-qF2taG0B4n9SBwqnuh0wajH5fXFLTb-VAaDrfT9TZ6aQ@mail.gmail.com>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 1/3] bfa: Fix possible NULL pointer dereference in lunmask add/delete.
+Date: Tue, 20 Dec 2011 18:54:30 -0800
+Message-ID: <1324436070-17297-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAO+b5-qF2taG0B4n9SBwqnuh0wajH5fXFLTb-VAaDrfT9TZ6aQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:35005 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750771Ab1LUDqN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Dec 2011 22:46:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, adapter_linux_open_src_team@brocade.com, kgudipat@brocade.com
 
-On Tue, 2011-12-20 at 09:01 +0000, Bart Van Assche wrote:
-> On Mon, Dec 19, 2011 at 10:51 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
-> > I haven't parsed it all out from your changes just yet, but I think part
-> > of the reason you may have had problems with req->scmd being null in
-> > srp_handle_recv() is due to a new race between the tear down of the
-> > connection and continuing to process completion notifications.
-> 
-> The resources used by the QP completion handler are the srp_target
-> port data structure and the QP data structure. And as you can see in
-> srp_remove_target(), the scsi_host_put() call is invoked after
-> srp_disconnect_target(). That last function waits for the DREP
-> notification from the IB CM. That should guarantee that no IB
-> completions arrive during or after the scsi_host_put() call. Or did I
-> miss something ?
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-What keeps the srp_recv_completion() --> srp_handle_recv() -->
-srp_process_rsp() --> etc. call chain from racing with
-srp_reconnect_target()?
+Change details:
+	- Patch fixes the possible NULL pointer dereference when
+	  we try to add or delete a rpwwn to the lunmask config which is not
+	  zoned to this port.
+	- Check if the FCS rport is not NULL before de-referencing it.
 
-It looks like the srp_reset_req() in srp_reconnect_tartget() could race
-with srp_process_rsp() if receive completions continue to be processed
-after a send failure, but perhaps it is I who is missing something.
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfa_fcpim.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index e07bd47..846f15b 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -2647,7 +2647,8 @@ bfa_fcpim_lunmask_add(struct bfa_s *bfa, u16 vf_id, wwn_t *pwwn,
+ 	if (port) {
+ 		*pwwn = port->port_cfg.pwwn;
+ 		rp_fcs = bfa_fcs_lport_get_rport_by_pwwn(port, rpwwn);
+-		rp = rp_fcs->bfa_rport;
++		if (rp_fcs)
++			rp = rp_fcs->bfa_rport;
+ 	}
+ 
+ 	lunm_list = bfa_get_lun_mask_list(bfa);
+@@ -2715,7 +2716,8 @@ bfa_fcpim_lunmask_delete(struct bfa_s *bfa, u16 vf_id, wwn_t *pwwn,
+ 		if (port) {
+ 			*pwwn = port->port_cfg.pwwn;
+ 			rp_fcs = bfa_fcs_lport_get_rport_by_pwwn(port, rpwwn);
+-			rp = rp_fcs->bfa_rport;
++			if (rp_fcs)
++				rp = rp_fcs->bfa_rport;
+ 		}
+ 	}
+ 
 -- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+1.7.3.rc1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
