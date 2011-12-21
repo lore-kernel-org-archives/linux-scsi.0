@@ -1,101 +1,41 @@
-From: "Williams, Dan J" <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the storage driver
- out of the staging area
-Date: Tue, 20 Dec 2011 17:32:35 -0800
-Message-ID: <CABE8wwsat+JGLiKpu_70bxZQAYegdrcsow=9XXBabwgWUgBT4Q@mail.gmail.com>
-References: <1324407064-16875-1-git-send-email-kys@microsoft.com>
-	<CAA9_cmf2RQapBD3th-RAhhTBB64N9ChKNFNXz0PEZJexeQUoqw@mail.gmail.com>
-	<6E21E5352C11B742B20C142EB499E0481B286840@TK5EX14MBXC122.redmond.corp.microsoft.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH 5/8] [SCSI] tgt: Pass pointers to virt_to_page(), not
+ integers
+Date: Wed, 21 Dec 2011 01:34:20 +0000
+Message-ID: <1324431260.2844.150.camel@deadeye>
+References: <1324430940.2844.144.camel@deadeye>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga07.intel.com ([143.182.124.22]:26895 "EHLO
-	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752770Ab1LUBcg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2011 20:32:36 -0500
-In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B286840@TK5EX14MBXC122.redmond.corp.microsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1324430940.2844.144.camel@deadeye>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: KY Srinivasan <kys@microsoft.com>
-Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Dec 20, 2011 at 4:42 PM, KY Srinivasan <kys@microsoft.com> wrot=
-e:
->
->
->> -----Original Message-----
->> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On =
-Behalf Of
->> Dan Williams
->> Sent: Tuesday, December 20, 2011 6:06 PM
->> To: KY Srinivasan
->> Cc: gregkh@suse.de; linux-kernel@vger.kernel.org;
->> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering=
-@suse.com;
->> James.Bottomley@hansenpartnership.com; hch@infradead.org; linux-
->> scsi@vger.kernel.org
->> Subject: Re: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the stor=
-age driver
->> out of the staging area
->>
->> On Tue, Dec 20, 2011 at 10:51 AM, K. Y. Srinivasan <kys@microsoft.co=
-m> wrote:
->> > The storage driver (storvsc_drv.c) handles all block storage devic=
-es
->> > assigned to Linux guests hosted on Hyper-V. This driver has been i=
-n the
->> > staging tree for a while and this patch moves it out of the stagin=
-g area.
->> > As per Greg's recommendation, this patch makes no changes to the s=
-taging/hv
->> > directory. Once the driver moves out of staging, we will cleanup t=
-he
->> > staging/hv directory.
->> >
->> > This patch includes all the patches that I have sent against the s=
-taging/hv
->> > tree to address the comments I have gotten to date on this storage=
- driver.
->> > Greg has already applied all these patches to the staging tree.
->> >
->> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
->> > ---
->> > =A0drivers/scsi/Kconfig =A0 =A0 =A0 | =A0 =A07 +
->> > =A0drivers/scsi/Makefile =A0 =A0 =A0| =A0 =A03 +
->> > =A0drivers/scsi/storvsc_drv.c | 1586
->> ++++++++++++++++++++++++++++++++++++++++++++
->> > =A03 files changed, 1596 insertions(+), 0 deletions(-)
->> > =A0create mode 100644 drivers/scsi/storvsc_drv.c
->>
->> Shouldn't this diffstat be something like the following?
->>
->> =A0drivers/scsi/Kconfig =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-| =A0 =A07 +
->> =A0drivers/scsi/Makefile =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
-| =A0 =A03 +
->> =A0drivers/{staging/hv =3D> scsi}/storvsc_drv.c | =A0310 +++++++++++=
-++++++++---------
->> =A03 files changed, 218 insertions(+), 102 deletions(-)
->> =A0rename drivers/{staging/hv =3D> scsi}/storvsc_drv.c (87%)
->
-> As per Greg's suggestion, this patch does not remove the driver from
-> the staging tree. Once the driver lands in the correct directory, we =
-will
-> remove the driver from the staging directory.
+Most architectures define virt_to_page() as a macro that casts its
+argument such that an argument of type unsigned long will be accepted
+without complaint.  However, the proper type is void *, and passing
+unsigned long results in a warning on MIPS.
 
-Ah, ok, so the patch can be accepted in parallel with the staging updat=
-e.
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+---
+ drivers/scsi/scsi_tgt_if.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I still think it wouldn't hurt to show what:
-
-git diff --stat --summary -M
-
-=2E..is after the removal of the version in drivers/staging/hv/ to
-quickly show that git agrees that the versions are indeed identical,
-but no big deal.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index 6209110..7199753 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -286,7 +286,7 @@ static int uspace_ring_map(struct vm_area_struct *vma, unsigned long addr,
+ 	int i, err;
+ 
+ 	for (i = 0; i < TGT_RING_PAGES; i++) {
+-		struct page *page = virt_to_page(ring->tr_pages[i]);
++		struct page *page = virt_to_page((void *)ring->tr_pages[i]);
+ 		err = vm_insert_page(vma, addr, page);
+ 		if (err)
+ 			return err;
+-- 
+1.7.7.3
