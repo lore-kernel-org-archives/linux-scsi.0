@@ -1,45 +1,53 @@
-From: David Dillow <dillowda@ornl.gov>
-Subject: Re: [PATCH 10/14] srp_transport: Simplify attribute initialization
- code
-Date: Tue, 20 Dec 2011 22:23:32 -0500
-Message-ID: <1324437812.7621.47.camel@obelisk.thedillows.org>
-References: <201112011954.25811.bvanassche@acm.org>
-	 <201112012008.00502.bvanassche@acm.org>
-	 <1324253243.17849.45.camel@obelisk.thedillows.org>
-	 <CAO+b5-q7mBJ-K48Oyeh5jzRmiXAx7nnAhG97PpfSp8ESVC6tJQ@mail.gmail.com>
+From: <kgudipat@brocade.com>
+Subject: [PATCH 0/3] bfa: Modify LUN masking feature implementation, bug fixes.
+Date: Tue, 20 Dec 2011 18:54:21 -0800
+Message-ID: <1324436061-17084-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matrix.voodoobox.net ([75.127.97.206]:37403 "EHLO
-	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947Ab1LUDXl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2011 22:23:41 -0500
-In-Reply-To: <CAO+b5-q7mBJ-K48Oyeh5jzRmiXAx7nnAhG97PpfSp8ESVC6tJQ@mail.gmail.com>
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:47487 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751719Ab1LUD2g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Dec 2011 22:28:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-rdma@vger.kernel.org, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>, Roland Dreier <roland@purestorage.com>, linux-scsi@vger.kernel.org
+To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
+Cc: michaelc@cs.wisc.edu, adapter_linux_open_src_team@brocade.com, kgudipat@brocade.com
 
-On Tue, 2011-12-20 at 10:21 +0000, Bart Van Assche wrote:
-> On Mon, Dec 19, 2011 at 12:07 AM, David Dillow <dillowda@ornl.gov> wrote:
-> > They use a BUG_ON instead of WARN_ON, which
-> > seems more appropriate, since we just overran a buffer...
-> 
-> Sorry, but I disagree. The guideline for Linux kernel code is to use
-> BUG_ON() only if a crash can't be avoided. With SLUB red zoning
-> enabled it is still possible to unload kernel modules after a (mild)
-> buffer overrun. And if you have a look at mm/slub.c, you will see that
-> slab_err() is invoked in case padding has been overwritten. That last
-> function does something similar to WARN_ON().
+From: Krishna Gudipati <kgudipat@brocade.com>
 
-You aren't guaranteed to have SLUB as your allocator, much less having
-the red-zoning turned on, so you have no guarantee it is safe to
-continue.
+Hi James,
+
+	The following patch-set includes a bug fix and modifies BFA LUN Masking
+
+feature implementation to use SCSI slave callouts rather than modifying SCSI commands
+
+response payload, based on the review comments received.
+
+	I have compiled & tested the code against your scsi-misc and linux-next.
+
+Thanks,
+Krishna C Gudipati.
+
+Krishna Gudipati (3):
+  bfa: Fix possible NULL pointer dereference in lunmask add/delete.
+  bfa: Revert back the current LUN Masking Implementation.
+  bfa: Implement LUN Masking feature using the SCSI Slave Callouts.
+
+ drivers/scsi/bfa/bfa_defs_svc.h |    7 +-
+ drivers/scsi/bfa/bfa_fc.h       |  155 ---------------
+ drivers/scsi/bfa/bfa_fcpim.c    |  416 +--------------------------------------
+ drivers/scsi/bfa/bfa_fcpim.h    |    7 -
+ drivers/scsi/bfa/bfa_svc.h      |    5 -
+ drivers/scsi/bfa/bfad.c         |    2 +
+ drivers/scsi/bfa/bfad_attr.c    |    2 +-
+ drivers/scsi/bfa/bfad_bsg.c     |   27 +++-
+ drivers/scsi/bfa/bfad_drv.h     |    2 +
+ drivers/scsi/bfa/bfad_im.c      |   56 ++++++
+ drivers/scsi/bfa/bfad_im.h      |   27 +++
+ 11 files changed, 118 insertions(+), 588 deletions(-)
 
 -- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
+1.7.3.rc1
 
