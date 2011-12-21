@@ -1,39 +1,29 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: [LSF/MM TOPIC] linux servers as a storage server - what's missing?
-Date: Wed, 21 Dec 2011 10:59:43 -0500
-Message-ID: <4EF2026F.2090506@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes +
+	tcm_qla2xxx fabric module
+Date: Wed, 21 Dec 2011 18:11:35 +0100
+Message-ID: <20111221171135.GA27369@lst.de>
+References: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54351 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752874Ab1LUQBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Dec 2011 11:01:55 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@Parallels.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+I think the most important item is to sort out the mess around the old
+generation qla23xx support.  The way the code currently sprinkles ifs
+around that is a complete mess.  Given that the qla23xx support has as
+far as I know zero test coverage, and has been EOLed by qlogic I see
+no reason to keep it around.
 
-One common thing that I see a lot of these days is an increasing number of 
-platforms that are built on our stack as storage servers. Ranging from the 
-common linux based storage/NAS devices up to various distributed systems.  
-Almost all of them use our common stack - software RAID, LVM, XFS/ext4 and samba.
+Anyone disagreeing with that?
 
-At last year's SNIA developers conference, it was clear that Microsoft is 
-putting a lot of effort into enhancing windows 8 server as a storage server with 
-both support for a pNFS server and of course SMB. I think that linux (+samba) is 
-ahead of the windows based storage appliances today, but they are putting 
-together a very aggressive list of features.
-
-I think that it would be useful and interesting to take a slot at this year's 
-LSF to see how we are doing in this space. How large do we need to scale for an 
-appliance?  What kind of work is needed (support for the copy offload system 
-call? better support for out of band notifications like those used in "thinly 
-provisioned" SCSI devices? management API's? Ease of use CLI work? SMB2.2 support?).
-
-The goal would be to see what technical gaps we have that need more active 
-development in, not just a wish list :)
-
-Ric
-
+The other bit is sorting out handling of the full command queues in the
+hardware.  Currently the target core does a blind retry after some delay,
+which isn't a good idea.  I had an RFC patch on how to move it into the
+driver, but I'll really need some help to find the proper place to wake
+up any process waiting once we get free slots.
