@@ -1,77 +1,101 @@
-From: Ben Hutchings <ben-/+tVBieCtBitmTQ+vhA3Yw@public.gmane.org>
-Subject: [PATCH 0/8] Fix virtual and physical address types
-Date: Wed, 21 Dec 2011 01:29:00 +0000
-Message-ID: <1324430940.2844.144.camel@deadeye>
+From: "Williams, Dan J" <dan.j.williams@intel.com>
+Subject: Re: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the storage driver
+ out of the staging area
+Date: Tue, 20 Dec 2011 17:32:35 -0800
+Message-ID: <CABE8wwsat+JGLiKpu_70bxZQAYegdrcsow=9XXBabwgWUgBT4Q@mail.gmail.com>
+References: <1324407064-16875-1-git-send-email-kys@microsoft.com>
+	<CAA9_cmf2RQapBD3th-RAhhTBB64N9ChKNFNXz0PEZJexeQUoqw@mail.gmail.com>
+	<6E21E5352C11B742B20C142EB499E0481B286840@TK5EX14MBXC122.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-auuee/X1upD+bQMYrTHk"
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: Steve Wise <swise-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kevin Curtis <kevin.curtis-AP8L3A0T/wQqdlJmJB21zg@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Airlie <airlied-cv59FeDIM0c@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Hans J. Koch" <hjk-vqZO0P4V72/QD6PfKP4TzA@public.gmane.org>, Greg Kroah-Hartman <gregkh-l3A5Bk7waGM@public.gmane.org>, Venkat Venkatsubra <venkat.x.venkatsubra-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, rds-devel-N0ozoZBvEnrZJqsBc5GL+g@public.gmane.org, Anil Ravindranath <anil_ravindranath-4W7cOCfLBmzY0TyS/+Ba5Q@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga07.intel.com ([143.182.124.22]:26895 "EHLO
+	azsmga101.ch.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752770Ab1LUBcg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2011 20:32:36 -0500
+In-Reply-To: <6E21E5352C11B742B20C142EB499E0481B286840@TK5EX14MBXC122.redmond.corp.microsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "ohering@suse.com" <ohering@suse.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "hch@infradead.org" <hch@infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Tue, Dec 20, 2011 at 4:42 PM, KY Srinivasan <kys@microsoft.com> wrot=
+e:
+>
+>
+>> -----Original Message-----
+>> From: dan.j.williams@gmail.com [mailto:dan.j.williams@gmail.com] On =
+Behalf Of
+>> Dan Williams
+>> Sent: Tuesday, December 20, 2011 6:06 PM
+>> To: KY Srinivasan
+>> Cc: gregkh@suse.de; linux-kernel@vger.kernel.org;
+>> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering=
+@suse.com;
+>> James.Bottomley@hansenpartnership.com; hch@infradead.org; linux-
+>> scsi@vger.kernel.org
+>> Subject: Re: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the stor=
+age driver
+>> out of the staging area
+>>
+>> On Tue, Dec 20, 2011 at 10:51 AM, K. Y. Srinivasan <kys@microsoft.co=
+m> wrote:
+>> > The storage driver (storvsc_drv.c) handles all block storage devic=
+es
+>> > assigned to Linux guests hosted on Hyper-V. This driver has been i=
+n the
+>> > staging tree for a while and this patch moves it out of the stagin=
+g area.
+>> > As per Greg's recommendation, this patch makes no changes to the s=
+taging/hv
+>> > directory. Once the driver moves out of staging, we will cleanup t=
+he
+>> > staging/hv directory.
+>> >
+>> > This patch includes all the patches that I have sent against the s=
+taging/hv
+>> > tree to address the comments I have gotten to date on this storage=
+ driver.
+>> > Greg has already applied all these patches to the staging tree.
+>> >
+>> > Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+>> > ---
+>> > =A0drivers/scsi/Kconfig =A0 =A0 =A0 | =A0 =A07 +
+>> > =A0drivers/scsi/Makefile =A0 =A0 =A0| =A0 =A03 +
+>> > =A0drivers/scsi/storvsc_drv.c | 1586
+>> ++++++++++++++++++++++++++++++++++++++++++++
+>> > =A03 files changed, 1596 insertions(+), 0 deletions(-)
+>> > =A0create mode 100644 drivers/scsi/storvsc_drv.c
+>>
+>> Shouldn't this diffstat be something like the following?
+>>
+>> =A0drivers/scsi/Kconfig =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
+| =A0 =A07 +
+>> =A0drivers/scsi/Makefile =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0=
+| =A0 =A03 +
+>> =A0drivers/{staging/hv =3D> scsi}/storvsc_drv.c | =A0310 +++++++++++=
+++++++++---------
+>> =A03 files changed, 218 insertions(+), 102 deletions(-)
+>> =A0rename drivers/{staging/hv =3D> scsi}/storvsc_drv.c (87%)
+>
+> As per Greg's suggestion, this patch does not remove the driver from
+> the staging tree. Once the driver lands in the correct directory, we =
+will
+> remove the driver from the staging directory.
 
---=-auuee/X1upD+bQMYrTHk
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Ah, ok, so the patch can be accepted in parallel with the staging updat=
+e.
 
-This series fixes compiler warnings on some architectures about implicit
-conversions and narrowing conversions between pointer and integer types.
+I still think it wouldn't hurt to show what:
 
-Please apply these to the appropriate trees.
+git diff --stat --summary -M
 
-Ben.
-
-Ben Hutchings (8):
-  IB/cxgb4: Fix formatting of physical address
-  farsync: Fix confusion about DMA address and buffer offset types
-  drm: Do not include page offset in argument to virt_to_page()
-  drm: Pass pointers to virt_to_page()
-  [SCSI] tgt: Pass pointers to virt_to_page(), not integers
-  uio: Pass pointers to virt_to_page(), not integers
-  rds: Pass pointers to virt_to_page(), not integers
-  pmcraid: Pass pointers to access_ok(), not integers
-
- drivers/gpu/drm/drm_pci.c            |    4 ++--
- drivers/gpu/drm/drm_vm.c             |    2 +-
- drivers/infiniband/hw/cxgb4/device.c |    4 ++--
- drivers/net/wan/farsync.c            |   19 +++++++------------
- drivers/scsi/pmcraid.c               |    3 ++-
- drivers/scsi/scsi_tgt_if.c           |    2 +-
- drivers/uio/uio.c                    |    6 ++++--
- net/rds/message.c                    |    2 +-
- 8 files changed, 20 insertions(+), 22 deletions(-)
-
---=20
-1.7.7.3
-
-
-
---=-auuee/X1upD+bQMYrTHk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATvE2XOe/yOyVhhEJAQpCPBAAzxsxERWWaiZhuyPldAGrhVCYw5gYv014
-kiOOfmLRnZXeRxRVFi7ZJlV603NvxDWL3/FGtjFvwDI5CTxb6wqWjjzvp+fCcaET
-O6pv6ehpvSISQM0mmkpv2shy8+f7+IZtVB9xRpPmWnQ4lE2Nbc5JhjqQcmBb4bPx
-QYymccb4Xivg1a4i9R0zMeKsQ9oNS+SqZy3zJmGNhUFVVc7f/OChbXfGueFHtJ0u
-NOZz7bA9wD+tbm6PkGjjHpZ7vWPIDcJQ/n5CRo9LSgSY7BwwTLHd8Cwgz7tzrfTt
-emvQHA8kqN9tob486h02GAj3ny9GwfQZb6wDRsrmbhw4ahbeULlzfOxjLW76f0kf
-OmyE4xqFx7PqCJD8bT3Sw/JDCtF08CguJabEXpqzAPkgc+rmGdYr9pTxlJ1WeHCZ
-Q+Sv/pD88Jmn2USwg5fTNZcrTny39e4wMmLY1qKU5md5Z01RfQhEpzXWczrjIWeH
-hBR3GJr29lS4uodvex9hoMIK+N+KxIeWQe6o4lTcKuCQ6RjanB+z9CKTe7yejQri
-rvoHHmdkFFa/6nKDYNkp9UmODE4Aja3f1BRn/9VLEtztT4GRL2C+DY+bSI2ZpZXn
-wb/MG88Q00OZi5qQaHR2V2/fT+0V93xCgx+YLqHEei22Y75tQxgbujzXnzlOYjrn
-jju3au81Fks=
-=gkq1
------END PGP SIGNATURE-----
-
---=-auuee/X1upD+bQMYrTHk--
+=2E..is after the removal of the version in drivers/staging/hv/ to
+quickly show that git agrees that the versions are indeed identical,
+but no big deal.
 --
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
