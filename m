@@ -1,81 +1,54 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: pmcraid maintainer
-Date: Wed, 21 Dec 2011 01:49:22 +0000
-Message-ID: <1324432162.2844.163.camel@deadeye>
-References: <E1RdB0R-0000b3-Pk@shadbolt.decadent.org.uk>
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
+Date: Tue, 20 Dec 2011 21:32:06 -0500
+Message-ID: <1324434727.7621.19.camel@obelisk.thedillows.org>
+References: <201112011954.25811.bvanassche@acm.org>
+	 <201112012011.45444.bvanassche@acm.org>
+	 <1324255806.17849.68.camel@obelisk.thedillows.org>
+	 <CAO+b5-o+-JF61a+8vFWj1rxMuVWuG-CVLQKorr5cKzi-Kc44Ag@mail.gmail.com>
+	 <1324333931.7043.52.camel@lap75545.ornl.gov>
+	 <CAO+b5-qLxmcXCCxA8+bPYsinjr1eqCDO2JUJbjgVr59N55CU1Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-r2EVPFoqe43KnXuslBX1"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45666 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754048Ab1LUBte (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Dec 2011 20:49:34 -0500
-Received: from [2001:470:1f08:1539:21c:bfff:fe03:f805] (helo=deadeye)
-	by shadbolt.decadent.org.uk with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.72)
-	(envelope-from <ben@decadent.org.uk>)
-	id 1RdBJF-0001cO-7c
-	for linux-scsi@vger.kernel.org; Wed, 21 Dec 2011 01:49:33 +0000
-Received: from ben by deadeye with local (Exim 4.77)
-	(envelope-from <ben@decadent.org.uk>)
-	id 1RdBJB-0003k9-JK
-	for linux-scsi@vger.kernel.org; Wed, 21 Dec 2011 01:49:29 +0000
-In-Reply-To: <E1RdB0R-0000b3-Pk@shadbolt.decadent.org.uk>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-
-
---=-r2EVPFoqe43KnXuslBX1
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAO+b5-qLxmcXCCxA8+bPYsinjr1eqCDO2JUJbjgVr59N55CU1Q-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Cc: "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+List-Id: linux-scsi@vger.kernel.org
 
-I just had this bounce:
+On Tue, 2011-12-20 at 10:13 +0000, Bart Van Assche wrote:
+> On Mon, Dec 19, 2011 at 10:32 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
+> > I still think this is already solved in user space, but the new
+> > reconnect model you've implemented doesn't match up with the expected
+> > semantics. It'd be better to match the rest of the SCSI stack for this.
+> 
+> Sorry, but I'm afraid there is no "rest of the SCSI stack
+> [semantics]". I've been following the semantics implemented in
+> open-iscsi. If the semantics implemented for FC differ of those
+> proposed in this patch set, then that means that the semantics
+> implemented for FC differ of those for open-iscsi.
 
-On Wed, 2011-12-21 at 01:30 +0000, Mail Delivery System wrote:
-> This message was created automatically by mail delivery software.
->=20
-> A message that you sent could not be delivered to one or more of its
-> recipients. This is a permanent error. The following address(es) failed:
->=20
->   anil_ravindranath@pmc-sierra.com
->     SMTP error from remote mail server after RCPT TO:<anil_ravindranath@p=
-mc-sierra.com>:
->     host smtp.pmc-sierra.com [216.241.235.148]: 550 5.1.1 <anil_ravindran=
-ath@pmc-sierra.com>:
->     Recipient address rejected: User unknown in local recipient table
-[...]
+FC, SAS, SPI, (current) SRP, and FCoE currently use the same semantic to
+check if the transport is still alive -- user space initiates activity,
+usually via multipathd. You are changing SRP to match the iSCSI stack,
+and because SRP does not have a NOP command, you have to fake one up
+using Test Unit Ready to the first LUN to come through slave_alloc().
+You kill the entire connection if that LUN has issues and causes a
+timeout, though the rest of the LUNs may be fine and able to
+communicate.
 
-Perhaps an update to MAINTAINERS is in order?
+This is all handled properly by existing user space code; there's no
+need for it to be in kernel, especially if you have to fake it while
+going against the grain.
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 
-Ben.
-
---=20
-Ben Hutchings
-Humans are not rational beings; they are rationalising beings.
-
---=-r2EVPFoqe43KnXuslBX1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATvE7Iue/yOyVhhEJAQrBAw//WPxCUGqsgwK44wjNyDztsDZXVbgXzMXH
-99lt2uKDpJUL51fJon7hWJ2FWVmwvWVLnjRggpS7F7+M71I7GcbLXRnTy+0AET84
-3eKLYU3W8c4eIGhb8zvE5Sfx4ElSLNsbw/ADqhzojQqimwwmKsrQy5Gc/m8pfIyk
-8QkCAPVLML9nkM0JmD5pPKGnPwO0aGhpdfImWifpfmbHweBfRRTKnSUUduDC/Itk
-HmP7LsiPK6L/ki37DDcaHYpYn/Z50LOGSiqOnKrJyeRPs/Rnvm2DAvRDzpPzHFs1
-Oz2LK+6FgYPNCYu1a2cBEN0cyahzAGawyfWsp5whAnc9osD2HCy7XxQv8wh1+aB0
-gGAeMH6gKBAcQBmGg52D4sZq+vUZixbw8Z0Jp+kVUpumbA1Z8Pj2YP3gnzTmFx6a
-c/P3VCOZ/YMwW+3DD0gMO4UyrMn0xT7RdxIWfkTDhXjLjg8IDNyuKVYwhB/R5UCk
-2x0ubR64d0bKE4ZpNDvACcN8zRfNOSU7q+BX6lNu0n/a9nl6zy/6pBlENQIBoxqM
-2cYtAMy2Yxx4zYA15Jzxwpn1fsT9Mt8MCsICsTLus1uHWmAQi1U9nJXbAZh0gbtl
-iaR3HxKD3pGqGX2bVGghB+ASCR5LlWfxdS2SFp/pSQ7yiha1R51dGsOebf6vhMu2
-xuWFskUfL1Y=
-=WFeK
------END PGP SIGNATURE-----
-
---=-r2EVPFoqe43KnXuslBX1--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
