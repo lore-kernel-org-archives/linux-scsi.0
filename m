@@ -1,38 +1,72 @@
-From: =?iso-8859-1?Q?=22=A9Nokia=22?= <rev.mrs.gracewalter@bitscn.net>
-Subject: =?iso-8859-1?Q?=AECall_Tel_:_+44-701-004-8163?=
-Date: Wed, 21 Dec 2011 12:00:24 +0300
-Message-ID: <95771ad2afdc964fbf3df11ed3881412.squirrel@webmail.my-itech.com>
-Reply-To: rev.mrs.gracewalter@bitscn.net
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH] block: fix blk_queue_end_tag()
+Date: Wed, 21 Dec 2011 11:05:11 +0100
+Message-ID: <4EF1AF57.2010307@kernel.dk>
+References: <20111220233117.17757.71139.stgit@localhost6.localdomain6> <4EF17DC4.5010008@tao.ma> <alpine.SOC.1.00.1112210835010.6858@math.ut.ee> <4EF18129.7030407@tao.ma> <CABE8wwtrq=SuuhAvNDjpSbfPGE+N4cWjjmVGWq8UzaH6sM9kRg@mail.gmail.com> <4EF195EE.9010409@tao.ma> <CABE8wwsRDjNs=UjBG071=AF7-h7RB+NNrQzPMREypNwSpYAVPA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate9.dnshostmaster.net ([202.75.53.16]:33757 "EHLO
-	server.my-itech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752458Ab1LUJDP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2011 04:03:15 -0500
+Received: from casper.infradead.org ([85.118.1.10]:42769 "EHLO
+	casper.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752885Ab1LUKFP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2011 05:05:15 -0500
+In-Reply-To: <CABE8wwsRDjNs=UjBG071=AF7-h7RB+NNrQzPMREypNwSpYAVPA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Williams, Dan J" <dan.j.williams@intel.com>
+Cc: Tao Ma <tm@tao.ma>, Meelis Roos <mroos@linux.ee>, Tao Ma <boyu.mt@taobao.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Ed Nadolski <edmund.nadolski@intel.com>
 
+On 2011-12-21 09:22, Williams, Dan J wrote:
+> On Wed, Dec 21, 2011 at 12:16 AM, Tao Ma <tm@tao.ma> wrote:
+>> On 12/21/2011 03:30 PM, Williams, Dan J wrote:
+>>> On Tue, Dec 20, 2011 at 10:48 PM, Tao Ma <tm@tao.ma> wrote:
+>>>> On 12/21/2011 02:36 PM, Meelis Roos wrote:
+>>>>>>> -   if (unlikely(tag >= bqt->max_depth)) {
+>>>>>>> +   if (WARN_ONCE(tag >= bqt->real_max_depth,
+>>>>>>> +                 "%s: tag %d greater than tag map size: %d\n",
+>>>>>>> +                 __func__, tag, bqt->real_max_depth)) {
+>>>>>>>             /*
+>>>>>>>              * This can happen after tag depth has been reduced.
+>>>>>> Please also change the comments here since it should never happen in the
+>>>>>> right workload.
+>>>>>
+>>>>> What do you mean by right workload? Normal workload?
+>>>> yeah, so real_max_depth is the maximum depth we ever have. So in normal
+>>>> case(shrinking queue depth is also a normal user case), we should never
+>>>> arrive here. In another word, if tag >= real_max_depth, we should have a
+>>>> bug in the kernel.
+>>>
+>>> So this is what Ed Nadolski suggested, just cut to the chase and do,
+>>> the following.  Seems like the comment is what got us into trouble in
+>>> the first place.
+>>>
+>>> diff --git a/block/blk-tag.c b/block/blk-tag.c
+>>> index e74d6d1..e297d9d7 100644
+>>> --- a/block/blk-tag.c
+>>> +++ b/block/blk-tag.c
+>>> @@ -284,16 +284,7 @@ void blk_queue_end_tag(struct request_queue *q,
+>>> struct request *rq)
+>>>         struct blk_queue_tag *bqt = q->queue_tags;
+>>>         int tag = rq->tag;
+>>>
+>>> -       BUG_ON(tag == -1);
+>>> -
+>>> -       if (unlikely(tag >= bqt->max_depth)) {
+>>> -               /*
+>>> -                * This can happen after tag depth has been reduced.
+>>> -                * But tag shouldn't be larger than real_max_depth.
+>>> -                */
+>>> -               WARN_ON(tag >= bqt->real_max_depth);
+>>> -               return;
+>>> -       }
+>>> +       BUG_ON(tag == -1 || tag > bqt->real_max_depth);
+>> I guess tag = bqt->real_max_depth should also be a problem.
+> 
+> Yes, sorry, should have been >=
 
+Can you resend a v2 and I'll get it applied, thanks.
 
-
-
-
-
-
-Nokia has awarded you the sum of  500,000.00 Pounds  fill in
-
-below your
-
-Full Names, Occupation,Home address,Sex, Age, Telephone.
-
-Regards
-
-Mr Grace Walter
-
-mrs.gracewalternokia@live.com
-Tel : +44-701-004-8163
-
-
+-- 
+Jens Axboe
 
