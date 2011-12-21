@@ -1,57 +1,80 @@
-From: <kgudipat@brocade.com>
-Subject: [PATCH 1/3] bfa: Fix possible NULL pointer dereference in lunmask add/delete.
-Date: Tue, 20 Dec 2011 18:54:30 -0800
-Message-ID: <1324436070-17297-1-git-send-email-kgudipat@brocade.com>
+From: Tao Ma <tm@tao.ma>
+Subject: Re: [PATCH] block: fix blk_queue_end_tag()
+Date: Wed, 21 Dec 2011 14:33:40 +0800
+Message-ID: <4EF17DC4.5010008@tao.ma>
+References: <20111220233117.17757.71139.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:35005 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750771Ab1LUDqN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Dec 2011 22:46:13 -0500
+Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:37158 "HELO
+	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751214Ab1LUGdo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2011 01:33:44 -0500
+In-Reply-To: <20111220233117.17757.71139.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
-Cc: michaelc@cs.wisc.edu, adapter_linux_open_src_team@brocade.com, kgudipat@brocade.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: axboe@kernel.dk, Tao Ma <boyu.mt@taobao.com>, Meelis Roos <mroos@ut.ee>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ed Nadolski <edmund.nadolski@intel.com>
 
-From: Krishna Gudipati <kgudipat@brocade.com>
+On 12/21/2011 07:33 AM, Dan Williams wrote:
+> Commit 5e081591 "block: warn if tag is greater than real_max_depth"
+> cleaned up blk_queue_end_tag() to warn when the tag is truly invalid
+> (greater than real_max_depth).  However, it changed behavior in the tag
+> < max_depth case to not end the request.  Leading to triggering of
+> BUG_ON(blk_queued_rq(rq)) in the request completion path:
+> 
+>   http://marc.info/?l=linux-kernel&m=132204370518629&w=2
+> 
+> In order to allow blk_queue_resize_tags() to shrink the tag space
+> blk_queue_end_tag() must always complete tags with a value less than
+> real_max_depth regardless of the current max_depth.
+> 
+> Cc: Tao Ma <boyu.mt@taobao.com>
+> Reported-by: Meelis Roos <mroos@ut.ee>
+> Reported-by: Ed Nadolski <edmund.nadolski@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+> Functionally the same as Tao Ma's fix [1], but just moves the warn into the
+> if() directly.
+> 
+> [1]: http://marc.info/?l=linux-scsi&m=132439698602441&w=2
+> 
+> --
+> Dan
+> 
+>  block/blk-tag.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/block/blk-tag.c b/block/blk-tag.c
+> index e74d6d1..6e61262 100644
+> --- a/block/blk-tag.c
+> +++ b/block/blk-tag.c
+> @@ -286,12 +286,13 @@ void blk_queue_end_tag(struct request_queue *q, struct request *rq)
+>  
+>  	BUG_ON(tag == -1);
+>  
+> -	if (unlikely(tag >= bqt->max_depth)) {
+> +	if (WARN_ONCE(tag >= bqt->real_max_depth,
+> +		      "%s: tag %d greater than tag map size: %d\n",
+> +		      __func__, tag, bqt->real_max_depth)) {
+>  		/*
+>  		 * This can happen after tag depth has been reduced.
+Please also change the comments here since it should never happen in the
+right workload.
 
-Change details:
-	- Patch fixes the possible NULL pointer dereference when
-	  we try to add or delete a rpwwn to the lunmask config which is not
-	  zoned to this port.
-	- Check if the FCS rport is not NULL before de-referencing it.
-
-Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
----
- drivers/scsi/bfa/bfa_fcpim.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
-index e07bd47..846f15b 100644
---- a/drivers/scsi/bfa/bfa_fcpim.c
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -2647,7 +2647,8 @@ bfa_fcpim_lunmask_add(struct bfa_s *bfa, u16 vf_id, wwn_t *pwwn,
- 	if (port) {
- 		*pwwn = port->port_cfg.pwwn;
- 		rp_fcs = bfa_fcs_lport_get_rport_by_pwwn(port, rpwwn);
--		rp = rp_fcs->bfa_rport;
-+		if (rp_fcs)
-+			rp = rp_fcs->bfa_rport;
- 	}
- 
- 	lunm_list = bfa_get_lun_mask_list(bfa);
-@@ -2715,7 +2716,8 @@ bfa_fcpim_lunmask_delete(struct bfa_s *bfa, u16 vf_id, wwn_t *pwwn,
- 		if (port) {
- 			*pwwn = port->port_cfg.pwwn;
- 			rp_fcs = bfa_fcs_lport_get_rport_by_pwwn(port, rpwwn);
--			rp = rp_fcs->bfa_rport;
-+			if (rp_fcs)
-+				rp = rp_fcs->bfa_rport;
- 		}
- 	}
- 
--- 
-1.7.3.rc1
+Thanks
+Tao
+>  		 * But tag shouldn't be larger than real_max_depth.
+>  		 */
+> -		WARN_ON(tag >= bqt->real_max_depth);
+>  		return;
+>  	}
+>  
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 
