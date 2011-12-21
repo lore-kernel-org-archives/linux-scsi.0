@@ -1,63 +1,39 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [patch] [SCSI] lpfc: nested calls to spin_lock_irq()
-Date: Wed, 21 Dec 2011 10:42:59 -0500
-Message-ID: <4EF1FE83.1000201@emulex.com>
-References: <20111216202819.GF18570@elgon.mountain>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: [LSF/MM TOPIC] linux servers as a storage server - what's missing?
+Date: Wed, 21 Dec 2011 10:59:43 -0500
+Message-ID: <4EF2026F.2090506@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:41984 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751491Ab1LUPnV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2011 10:43:21 -0500
-In-Reply-To: <20111216202819.GF18570@elgon.mountain>
+Received: from mx1.redhat.com ([209.132.183.28]:54351 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752874Ab1LUQBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Dec 2011 11:01:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
-
-Thanks Dan...
-
--- james
+To: linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
-Acked-by: James Smart <james.smart@emulex.com>
+One common thing that I see a lot of these days is an increasing number of 
+platforms that are built on our stack as storage servers. Ranging from the 
+common linux based storage/NAS devices up to various distributed systems.  
+Almost all of them use our common stack - software RAID, LVM, XFS/ext4 and samba.
 
+At last year's SNIA developers conference, it was clear that Microsoft is 
+putting a lot of effort into enhancing windows 8 server as a storage server with 
+both support for a pNFS server and of course SMB. I think that linux (+samba) is 
+ahead of the windows based storage appliances today, but they are putting 
+together a very aggressive list of features.
 
-On 12/16/2011 3:28 PM, Dan Carpenter wrote:
-> We already have disabled IRQs so there is no need to disable them again.
-> Also the functions are not nestable, the first spin_unlock_irq() will
-> enable IRQs and we don't want to do that until the second unlock.
->
-> Signed-off-by: Dan Carpenter<dan.carpenter@oracle.com>
->
-> diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> index 678a4b1..d7e916b 100644
-> --- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-> +++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-> @@ -2977,9 +2977,9 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
->   				"topology\n");
->   				/* Get Loop Map information */
->   		if (bf_get(lpfc_mbx_read_top_il, la)) {
-> -			spin_lock_irq(shost->host_lock);
-> +			spin_lock(shost->host_lock);
->   			vport->fc_flag |= FC_LBIT;
-> -			spin_unlock_irq(shost->host_lock);
-> +			spin_unlock(shost->host_lock);
->   		}
->
->   		vport->fc_myDID = bf_get(lpfc_mbx_read_top_alpa_granted, la);
-> @@ -3029,9 +3029,9 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
->   				phba->sli3_options |= LPFC_SLI3_NPIV_ENABLED;
->   		}
->   		vport->fc_myDID = phba->fc_pref_DID;
-> -		spin_lock_irq(shost->host_lock);
-> +		spin_lock(shost->host_lock);
->   		vport->fc_flag |= FC_LBIT;
-> -		spin_unlock_irq(shost->host_lock);
-> +		spin_unlock(shost->host_lock);
->   	}
->   	spin_unlock_irq(&phba->hbalock);
->
->
+I think that it would be useful and interesting to take a slot at this year's 
+LSF to see how we are doing in this space. How large do we need to scale for an 
+appliance?  What kind of work is needed (support for the copy offload system 
+call? better support for out of band notifications like those used in "thinly 
+provisioned" SCSI devices? management API's? Ease of use CLI work? SMB2.2 support?).
+
+The goal would be to see what technical gaps we have that need more active 
+development in, not just a wish list :)
+
+Ric
+
