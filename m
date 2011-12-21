@@ -1,62 +1,121 @@
-From: Huajun Li <huajun.li.lee@gmail.com>
-Subject: Re: status of oops in sd_revalidate_disk?
-Date: Wed, 21 Dec 2011 22:12:31 +0800
-Message-ID: <CA+v9cxZFUC45WD0=+8mvH2Tq_xvX3PgaW4ttzPep0jqvqab_6w@mail.gmail.com>
-References: <4EE8E419.8010000@pre-sense.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [CFP] Linux Storage, Filesystem & Memory Management Summit 2012
+ (April 1-2)
+Date: Wed, 21 Dec 2011 08:45:23 -0600
+Message-ID: <1324478723.3069.3.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:56107 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703Ab1LUOMc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Dec 2011 09:12:32 -0500
-Received: by werm1 with SMTP id m1so2694190wer.19
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2011 06:12:31 -0800 (PST)
-In-Reply-To: <4EE8E419.8010000@pre-sense.de>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60466 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752384Ab1LUOpZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Dec 2011 09:45:25 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTP id ADDFF8EE0BD
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2011 06:45:24 -0800 (PST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+	by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id fsFJ97fDeDbM for <linux-scsi@vger.kernel.org>;
+	Wed, 21 Dec 2011 06:45:24 -0800 (PST)
+Received: from [192.168.2.11] (dagonet.hansenpartnership.com [76.243.235.53])
+	by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4D7D58EE08E
+	for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2011 06:45:24 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Axel Theilmann <theilmann@pre-sense.de>
-Cc: linux-scsi@vger.kernel.org, jbottomley@parallels.com, stefanr@s5r6.in-berlin.de, huajun.li.lee@gmail.com
+To: linux-scsi@vger.kernel.org
 
-=D4=DA 2011=C4=EA12=D4=C215=C8=D5 =C9=CF=CE=E71:59=A3=ACAxel Theilmann =
-<theilmann@pre-sense.de> =A3=BA
->
->
-> hi,
->
-> two weeks ago Huajun Li posted a patch for a kernel oops, subject [PA=
-TCH]
-> SCSI/sd: Fix NULL dereference in sd_revalidate_disk".
->
-> The patch was discussed but considered "clearly wrong". The bug shows=
- up for
-> us in kernel 3.1.4 quite often when unplugging usb sticks and it seem=
-s a few
-> other people have the same problem:
->
-> https://bugs.launchpad.net/ubuntu/+source/linux/+bug/859199
-> https://bugzilla.redhat.com/show_bug.cgi?id=3D754518
-> https://bugzilla.novell.com/show_bug.cgi?id=3D722350
-> http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D649735
->
-> Can anyone of you maybe give me any status update on that bug?
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2012 will be held on the 2 days preceding the Linux Foundation
+Collaboration Summit at Hotel Nikko in San Francisco, CA:
 
-It's quiet on this thread. :)
+        https://events.linuxfoundation.org/events/lsfmm-summit
+        https://events.linuxfoundation.org/events/collaboration-summit/
 
-As I mentioned at http://marc.info/?l=3Dlinux-scsi&m=3D132266428023443&=
-w=3D2
-, sd_open() may return -ENOMEDIUM, then rescan_partitions() and
-sd_revalidate_disk() will be triggered in turn, the latter will find
-sdkp is NULL. The patch can fix the issue _If_ there is no other
-dependency.
+We'd therefore like to issue a call for agenda proposals that are
+suitable for cross-track discussion as well as more technical subjects
+for discussion in the breakout sessions.
 
-Any comments?
+1) Suggestions for agenda topics should be sent before February 5th
+2012 to:
 
-Thanks,
---Huajun
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+lsf-pc@lists.linux-foundation.org
+
+and optionally cc the Linux list which would be most interested in it:
+
+SCSI: linux-scsi@vger.kernel.org
+FS: linux-fsdevel@vger.kernel.org
+MM: linux-mm@kvack.org
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+programme committee, but the final agenda will be formed by consensus
+of the attendees on the day.
+
+We'll try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend should be sent to:
+
+lsf-pc@lists.linux-foundation.org
+
+please summarize what expertise you will bring to the meeting, and what
+you'd like to discuss.  please also tag your email with [ATTEND] so
+there's less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged.  There will be no recording or audio bridge, however
+written minutes will be published as in previous years:
+
+2011:
+
+http://lwn.net/Articles/436871/
+http://lwn.net/Articles/437066/
+
+2010:
+http://lwn.net/Articles/399148/
+http://lwn.net/Articles/399313/
+http://lwn.net/Articles/400589/
+
+2009:
+http://lwn.net/Articles/327601/
+http://lwn.net/Articles/327740/
+http://lwn.net/Articles/328347/
+
+Prior years:
+http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the Program Committee:
+
+Storage
+
+Jens Axboe
+James Bottomley
+Vivek Goyal
+Dan Williams
+
+Filesystems
+
+Trond Myklebust
+Chris Mason
+Christoph Hellwig
+Theodore Ts'o
+Mingming Cao
+Jan Kara
+Joel Becker
+
+MM
+
+Andrea Arcangeli
+Hugh Dickins
+Mel Gorman
+
+
