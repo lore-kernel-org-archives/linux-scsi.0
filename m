@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 0/3] bfa: Modify LUN masking feature implementation, bug fixes.
-Date: Tue, 20 Dec 2011 18:54:21 -0800
-Message-ID: <1324436061-17084-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 3/3] bfa: Implement LUN Masking feature using the SCSI Slave Callouts.
+Date: Tue, 20 Dec 2011 18:58:32 -0800
+Message-ID: <1324436312-24582-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:47487 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:47556 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751719Ab1LUD2g (ORCPT
+	by vger.kernel.org with ESMTP id S1751719Ab1LUD3b (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Dec 2011 22:28:36 -0500
+	Tue, 20 Dec 2011 22:29:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: JBottomley@parallels.com, linux-scsi@vger.kernel.org
@@ -17,37 +17,255 @@ Cc: michaelc@cs.wisc.edu, adapter_linux_open_src_team@brocade.com, kgudipat@broc
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Hi James,
+Change details:
+	- This patch re-implements LUN Masking feature using SCSI Slave Callouts.
+	- With the new design in the slave_alloc entry point; for each new LUN
+	  discovered we check with our internal LUN Masking config whether to
+	  expose or to mask this particular LUN. We return -ENXIO (No such device
+	  or address) from slave_alloc for the LUNs we don't want to be exposed.
+	- We also notify the SCSI mid-layer to do a sequential LUN scan rather than
+	  REPORT_LUNS based scan if LUN masking is enabled on our HBA port, since
+	  a -ENXIO from any LUN in REPORT_LUNS based scan translates to a scan abort.
+	- This patch also handles the dynamic lun masking config change from enable
+	  to disable or vice-versa by resetting sdev_bflags of LUN 0 appropriately.
 
-	The following patch-set includes a bug fix and modifies BFA LUN Masking
+Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
+---
+ drivers/scsi/bfa/bfad.c      |    2 +
+ drivers/scsi/bfa/bfad_attr.c |    2 +-
+ drivers/scsi/bfa/bfad_bsg.c  |   27 ++++++++++++++++++--
+ drivers/scsi/bfa/bfad_drv.h  |    2 +
+ drivers/scsi/bfa/bfad_im.c   |   56 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfad_im.h   |   27 ++++++++++++++++++++
+ 6 files changed, 112 insertions(+), 4 deletions(-)
 
-feature implementation to use SCSI slave callouts rather than modifying SCSI commands
-
-response payload, based on the review comments received.
-
-	I have compiled & tested the code against your scsi-misc and linux-next.
-
-Thanks,
-Krishna C Gudipati.
-
-Krishna Gudipati (3):
-  bfa: Fix possible NULL pointer dereference in lunmask add/delete.
-  bfa: Revert back the current LUN Masking Implementation.
-  bfa: Implement LUN Masking feature using the SCSI Slave Callouts.
-
- drivers/scsi/bfa/bfa_defs_svc.h |    7 +-
- drivers/scsi/bfa/bfa_fc.h       |  155 ---------------
- drivers/scsi/bfa/bfa_fcpim.c    |  416 +--------------------------------------
- drivers/scsi/bfa/bfa_fcpim.h    |    7 -
- drivers/scsi/bfa/bfa_svc.h      |    5 -
- drivers/scsi/bfa/bfad.c         |    2 +
- drivers/scsi/bfa/bfad_attr.c    |    2 +-
- drivers/scsi/bfa/bfad_bsg.c     |   27 +++-
- drivers/scsi/bfa/bfad_drv.h     |    2 +
- drivers/scsi/bfa/bfad_im.c      |   56 ++++++
- drivers/scsi/bfa/bfad_im.h      |   27 +++
- 11 files changed, 118 insertions(+), 588 deletions(-)
-
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 66fb725..404fd10 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -674,6 +674,7 @@ bfad_vport_create(struct bfad_s *bfad, u16 vf_id,
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	bfa_fcs_vport_start(&vport->fcs_vport);
++	list_add_tail(&vport->list_entry, &bfad->vport_list);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+ 	return BFA_STATUS_OK;
+@@ -1404,6 +1405,7 @@ bfad_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
+ 	bfad->ref_count = 0;
+ 	bfad->pport.bfad = bfad;
+ 	INIT_LIST_HEAD(&bfad->pbc_vport_list);
++	INIT_LIST_HEAD(&bfad->vport_list);
+ 
+ 	/* Setup the debugfs node for this bfad */
+ 	if (bfa_debugfs_enable)
+diff --git a/drivers/scsi/bfa/bfad_attr.c b/drivers/scsi/bfa/bfad_attr.c
+index 9d95844..1938fe0 100644
+--- a/drivers/scsi/bfa/bfad_attr.c
++++ b/drivers/scsi/bfa/bfad_attr.c
+@@ -491,7 +491,7 @@ bfad_im_vport_delete(struct fc_vport *fc_vport)
+ 
+ free_scsi_host:
+ 	bfad_scsi_host_free(bfad, im_port);
+-
++	list_del(&vport->list_entry);
+ 	kfree(vport);
+ 
+ 	return 0;
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 06fc00c..530de2b 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -2394,6 +2394,21 @@ out:
+ 	return 0;
+ }
+ 
++/* Function to reset the LUN SCAN mode */
++static void
++bfad_iocmd_lunmask_reset_lunscan_mode(struct bfad_s *bfad, int lunmask_cfg)
++{
++	struct bfad_im_port_s *pport_im = bfad->pport.im_port;
++	struct bfad_vport_s *vport = NULL;
++
++	/* Set the scsi device LUN SCAN flags for base port */
++	bfad_reset_sdev_bflags(pport_im, lunmask_cfg);
++
++	/* Set the scsi device LUN SCAN flags for the vports */
++	list_for_each_entry(vport, &bfad->vport_list, list_entry)
++		bfad_reset_sdev_bflags(vport->drv_port.im_port, lunmask_cfg);
++}
++
+ int
+ bfad_iocmd_lunmask(struct bfad_s *bfad, void *pcmd, unsigned int v_cmd)
+ {
+@@ -2401,11 +2416,17 @@ bfad_iocmd_lunmask(struct bfad_s *bfad, void *pcmd, unsigned int v_cmd)
+ 	unsigned long	flags;
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+-	if (v_cmd == IOCMD_FCPIM_LUNMASK_ENABLE)
++	if (v_cmd == IOCMD_FCPIM_LUNMASK_ENABLE) {
+ 		iocmd->status = bfa_fcpim_lunmask_update(&bfad->bfa, BFA_TRUE);
+-	else if (v_cmd == IOCMD_FCPIM_LUNMASK_DISABLE)
++		/* Set the LUN Scanning mode to be Sequential scan */
++		if (iocmd->status == BFA_STATUS_OK)
++			bfad_iocmd_lunmask_reset_lunscan_mode(bfad, BFA_TRUE);
++	} else if (v_cmd == IOCMD_FCPIM_LUNMASK_DISABLE) {
+ 		iocmd->status = bfa_fcpim_lunmask_update(&bfad->bfa, BFA_FALSE);
+-	else if (v_cmd == IOCMD_FCPIM_LUNMASK_CLEAR)
++		/* Set the LUN Scanning mode to default REPORT_LUNS scan */
++		if (iocmd->status == BFA_STATUS_OK)
++			bfad_iocmd_lunmask_reset_lunscan_mode(bfad, BFA_FALSE);
++	} else if (v_cmd == IOCMD_FCPIM_LUNMASK_CLEAR)
+ 		iocmd->status = bfa_fcpim_lunmask_clear(&bfad->bfa);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 	return 0;
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index 5e19a5f..dc5b9d9 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -43,6 +43,7 @@
+ #include <scsi/scsi_transport_fc.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_bsg_fc.h>
++#include <scsi/scsi_devinfo.h>
+ 
+ #include "bfa_modules.h"
+ #include "bfa_fcs.h"
+@@ -227,6 +228,7 @@ struct bfad_s {
+ 	struct list_head	active_aen_q;
+ 	struct bfa_aen_entry_s	aen_list[BFA_AEN_MAX_ENTRY];
+ 	spinlock_t		bfad_aen_spinlock;
++	struct list_head	vport_list;
+ };
+ 
+ /* BFAD state machine events */
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index e5db649..3153923 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -918,16 +918,70 @@ bfad_get_itnim(struct bfad_im_port_s *im_port, int id)
+ }
+ 
+ /*
++ * Function is invoked from the SCSI Host Template slave_alloc() entry point.
++ * Has the logic to query the LUN Mask database to check if this LUN needs to
++ * be made visible to the SCSI mid-layer or not.
++ *
++ * Returns BFA_STATUS_OK if this LUN needs to be added to the OS stack.
++ * Returns -ENXIO to notify SCSI mid-layer to not add this LUN to the OS stack.
++ */
++static int
++bfad_im_check_if_make_lun_visible(struct scsi_device *sdev,
++				  struct fc_rport *rport)
++{
++	struct bfad_itnim_data_s *itnim_data =
++				(struct bfad_itnim_data_s *) rport->dd_data;
++	struct bfa_s *bfa = itnim_data->itnim->bfa_itnim->bfa;
++	struct bfa_rport_s *bfa_rport = itnim_data->itnim->bfa_itnim->rport;
++	struct bfa_lun_mask_s *lun_list = bfa_get_lun_mask_list(bfa);
++	int i = 0, ret = -ENXIO;
++
++	for (i = 0; i < MAX_LUN_MASK_CFG; i++) {
++		if (lun_list[i].state == BFA_IOIM_LUN_MASK_ACTIVE &&
++		    scsilun_to_int(&lun_list[i].lun) == sdev->lun &&
++		    lun_list[i].rp_tag == bfa_rport->rport_tag &&
++		    lun_list[i].lp_tag == (u8)bfa_rport->rport_info.lp_tag) {
++			ret = BFA_STATUS_OK;
++			break;
++		}
++	}
++	return ret;
++}
++
++/*
+  * Scsi_Host template entry slave_alloc
+  */
+ static int
+ bfad_im_slave_alloc(struct scsi_device *sdev)
+ {
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
++	struct bfad_itnim_data_s *itnim_data =
++				(struct bfad_itnim_data_s *) rport->dd_data;
++	struct bfa_s *bfa = itnim_data->itnim->bfa_itnim->bfa;
+ 
+ 	if (!rport || fc_remote_port_chkready(rport))
+ 		return -ENXIO;
+ 
++	if (bfa_get_lun_mask_status(bfa) == BFA_LUNMASK_ENABLED) {
++		/*
++		 * We should not mask LUN 0 - since this will translate
++		 * to no LUN / TARGET for SCSI ml resulting no scan.
++		 */
++		if (sdev->lun == 0) {
++			sdev->sdev_bflags |= BLIST_NOREPORTLUN |
++					     BLIST_SPARSELUN;
++			goto done;
++		}
++
++		/*
++		 * Query LUN Mask configuration - to expose this LUN
++		 * to the SCSI mid-layer or to mask it.
++		 */
++		if (bfad_im_check_if_make_lun_visible(sdev, rport) !=
++							BFA_STATUS_OK)
++			return -ENXIO;
++	}
++done:
+ 	sdev->hostdata = rport->dd_data;
+ 
+ 	return 0;
+@@ -1037,6 +1091,8 @@ bfad_im_fc_rport_add(struct bfad_im_port_s *im_port, struct bfad_itnim_s *itnim)
+ 	    && (fc_rport->scsi_target_id < MAX_FCP_TARGET))
+ 		itnim->scsi_tgt_id = fc_rport->scsi_target_id;
+ 
++	itnim->channel = fc_rport->channel;
++
+ 	return;
+ }
+ 
+diff --git a/drivers/scsi/bfa/bfad_im.h b/drivers/scsi/bfa/bfad_im.h
+index 004b6cf..0814367 100644
+--- a/drivers/scsi/bfa/bfad_im.h
++++ b/drivers/scsi/bfa/bfad_im.h
+@@ -91,6 +91,7 @@ struct bfad_itnim_s {
+ 	struct fc_rport *fc_rport;
+ 	struct bfa_itnim_s *bfa_itnim;
+ 	u16        scsi_tgt_id;
++	u16	   channel;
+ 	u16        queue_work;
+ 	unsigned long	last_ramp_up_time;
+ 	unsigned long	last_queue_full_time;
+@@ -166,4 +167,30 @@ irqreturn_t bfad_intx(int irq, void *dev_id);
+ int bfad_im_bsg_request(struct fc_bsg_job *job);
+ int bfad_im_bsg_timeout(struct fc_bsg_job *job);
+ 
++/*
++ * Macro to set the SCSI device sdev_bflags - sdev_bflags are used by the
++ * SCSI mid-layer to choose LUN Scanning mode REPORT_LUNS vs. Sequential Scan
++ *
++ * Internally iterate's over all the ITNIM's part of the im_port & set's the
++ * sdev_bflags for the scsi_device associated with LUN #0.
++ */
++#define bfad_reset_sdev_bflags(__im_port, __lunmask_cfg) do {		\
++	struct scsi_device *__sdev = NULL;				\
++	struct bfad_itnim_s *__itnim = NULL;				\
++	u32 scan_flags = BLIST_NOREPORTLUN | BLIST_SPARSELUN;		\
++	list_for_each_entry(__itnim, &((__im_port)->itnim_mapped_list),	\
++			    list_entry) {				\
++		__sdev = scsi_device_lookup((__im_port)->shost,		\
++					    __itnim->channel,		\
++					    __itnim->scsi_tgt_id, 0);	\
++		if (__sdev) {						\
++			if ((__lunmask_cfg) == BFA_TRUE)		\
++				__sdev->sdev_bflags |= scan_flags;	\
++			else						\
++				__sdev->sdev_bflags &= ~scan_flags;	\
++			scsi_device_put(__sdev);			\
++		}							\
++	}								\
++} while (0)
++
+ #endif
 -- 
 1.7.3.rc1
 
