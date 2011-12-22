@@ -1,88 +1,38 @@
-From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Subject: RE: [PATCH 02/08] [SCSI]  mpt2sas : Increase max transfer support
- from 4MB to 16MB
-Date: Thu, 22 Dec 2011 09:07:45 +0530
-Message-ID: <A6888A6805518E4EA4AF7072A28264A60481D5A23B@inbmail02.lsi.com>
-References: <201112010928.pB19Sbpf020920@milmhbs0.lsil.com>
- <4EF0B4D2.7070300@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:35063 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754620Ab1LVDi1 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Dec 2011 22:38:27 -0500
-In-Reply-To: <4EF0B4D2.7070300@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: [PATCH v3 0/3] fixes for ata port runtime pm support
+Date: Thu, 22 Dec 2011 14:50:46 +0800
+Message-ID: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 
-Thank you for pointing out. Will correct it in the next patches.
+Hi Jeff,
 
-Regards,
-Nagalakshmi
+Here are the v3 fixes for ata port runtime pm support.
 
+Could you consider applying these fixes?
+Thanks.
 
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com] 
-Sent: Tuesday, December 20, 2011 9:46 PM
-To: Nandigama, Nagalakshmi
-Cc: linux-scsi@vger.kernel.org; Desai, Kashyap; Prakash, Sathya; Moore, Eric; JBottomley@parallels.com
-Subject: Re: [PATCH 02/08] [SCSI] mpt2sas : Increase max transfer support from 4MB to 16MB
+Changes in v3:
+- Add ata port hibernate callbacks
 
-On 12/01/2011 03:22 AM, nagalakshmi.nandigama@lsi.com wrote:
-> Increase max transfer support from 4MB to 16MB.
-> This is done by changing the shost->max_sector from 8192 to 32767
->
-> Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
-> ---
->
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> index 8df4095..97f0997 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> @@ -100,7 +100,7 @@ MODULE_PARM_DESC(logging_level, " bits for enabling additional logging info "
->  
->  static ushort max_sectors = 0xFFFF;
->  module_param(max_sectors, ushort, 0);
-> -MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 8192  default=8192");
-> +MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 32767  default=32767");
->  
->  /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
->  #define MPT2SAS_MAX_LUN (16895)
-> @@ -7449,7 +7449,7 @@ static struct scsi_host_template scsih_driver_template = {
->  	.can_queue			= 1,
->  	.this_id			= -1,
->  	.sg_tablesize			= MPT2SAS_SG_DEPTH,
-> -	.max_sectors			= 8192,
-> +	.max_sectors			= 32767,
->  	.cmd_per_lun			= 7,
->  	.use_clustering			= ENABLE_CLUSTERING,
->  	.shost_attrs			= mpt2sas_host_attrs,
-> @@ -7990,11 +7990,11 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
->  			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
->  			    "for max_sectors, range is 64 to 8192. Assigning "
->  			    "value of 64.\n", ioc->name, max_sectors);
-> -		} else if (max_sectors > 8192) {
-> -			shost->max_sectors = 8192;
-> +		} else if (max_sectors > 32767) {
-> +			shost->max_sectors = 32767;
->  			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
->  			    "for max_sectors, range is 64 to 8192. Assigning "
-I think you wanted to change the text above "is 64 to 8192" to  "is 64 to 32767" too.
-That is clearly not so important and can wait for the next patch.
+Changes in v2:
+- Drop the patch "[SCSI] sd: fix runtime status check in sd_shutdown".
+ It's no longer needed with commit fe6b91f(PM / Driver core: leave
+ runtime PM enabled during system shutdown).
+- Add Ack from Alan
 
-> -			    "default value of 8192.\n", ioc->name,
-> +			    "default value of 32767.\n", ioc->name,
->  			    max_sectors);
->  		} else {
->  			shost->max_sectors = max_sectors & 0xFFFE;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v1: https://lkml.org/lkml/2011/12/13/443
+v2: https://lkml.org/lkml/2011/12/14/516
+
+Lin Ming (3):
+      [SCSI]: runtime resume parent for child's system-resume
+      ata: update ata port's runtime status during system resume
+      ata: add ata port hibernate callbacks
+
+ drivers/ata/libata-core.c |   58 ++++++++++++++++++++++++++++++++++++++++----
+ drivers/scsi/scsi_pm.c    |   11 +++++++-
+ 2 files changed, 62 insertions(+), 7 deletions(-)
 
