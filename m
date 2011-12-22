@@ -1,59 +1,43 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what's
- missing?
-Date: Fri, 23 Dec 2011 02:24:42 +0530
-Message-ID: <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM>
-References: <4EF2026F.2090506@redhat.com>
- <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM>
- <20111222155849.GD1388@redhat.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes + tcm_qla2xxx
+ fabric module
+Date: Thu, 22 Dec 2011 14:25:20 -0800
+Message-ID: <20111222222520.GP22063@plapa.qlogic.org>
+References: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org>
+ <20111221171135.GA27369@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20111222155849.GD1388@redhat.com>
-Content-Language: en-US
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: vgoyal@redhat.com
-Cc: rwheeler@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:35662
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752932Ab1LVWZx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2011 17:25:53 -0500
+Content-Disposition: inline
+In-Reply-To: <20111221171135.GA27369@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, James Bottomley <JBottomley@Parallels.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>
 
+On Wed, 21 Dec 2011, Christoph Hellwig wrote:
 
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Vivek Goyal
-> Sent: Thursday, December 22, 2011 10:59 AM
-> To: Iyer, Shyam
-> Cc: rwheeler@redhat.com; linux-fsdevel@vger.kernel.org; linux-
-> scsi@vger.kernel.org
-> Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
-> missing?
+> I think the most important item is to sort out the mess around the old
+> generation qla23xx support.  The way the code currently sprinkles ifs
+> around that is a complete mess.  Given that the qla23xx support has as
+> far as I know zero test coverage, and has been EOLed by qlogic I see
+> no reason to keep it around.
 > 
-> On Thu, Dec 22, 2011 at 01:44:16PM +0530, Shyam_Iyer@Dell.com wrote:
+> Anyone disagreeing with that?
 > 
-> [..]
-> 
-> > Simple asks -
-> > 1) Provide a consistent storage and fs management library that
-> discourages folks to write their own usespace storage library. Include
-> things like fs formatting(fs profiles), transport configuration(eg:
-> iscsiadm as a library), thin provisioning watermarks, cluster
-> management, apis for cgroups etc.
->                                       ^^^^^^^^^^^^^^^^
-> For cgroups, we have libcgroup library. Not many people like to use it
-> though as cgroup is exported as a filesystem and they prefer to use
-> normal
-> libc api to traverse and configure cgroups (Instead of going through
-> another library). Some examples include libvrit, systemd.
-> 
-> Thanks
-> Vivek
 
-Well honestly I think that is a libvirt/systemd issue and libvirt also invokes things like iscsiadm, dcb etc as a binary :-/
+Christoph,
 
-Some one could always use qemu command lines to invoke KVM/XEN but libvirt has saved me one too many days in doing a quick operation without wondering about a qemu commandline.
- 
-I am also asking for ideas on how to avoid this fragmentation because just like libvirt others are also encouraged to do their own libc thing in the absence of a common storage management framework..
+>From an engineering and support perspective it doesn't make sense to
+keep the (unsupported and untested) pre-ISP24xx codes around.  Going
+forward, once internal resources can be allocated, QLogic would like
+to see support for all ISP24xx and above hardware.
 
-Does the standard interface for linux end at the user/kernel boundary or the user/libc boundary? If so I feel we would continue to lag behind other OSes in features because of the model. 
+Regards,
+Andrew Vasquez
 
