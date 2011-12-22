@@ -1,61 +1,59 @@
-From: Rakib Mullick <rakib.mullick@gmail.com>
-Subject: [PATCH] scsi: Fix unused variable warning in mpt2sas_scsih.c
-Date: Fri, 23 Dec 2011 00:51:53 +0600
-Message-ID: <1324579913.19018.6.camel@localhost.localdomain>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what's
+ missing?
+Date: Fri, 23 Dec 2011 02:24:42 +0530
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM>
+References: <4EF2026F.2090506@redhat.com>
+ <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM>
+ <20111222155849.GD1388@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:59212 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753874Ab1LVSw1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2011 13:52:27 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20111222155849.GD1388@redhat.com>
+Content-Language: en-US
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: vgoyal@redhat.com
+Cc: rwheeler@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
-
- Fixes the following warning:
-
-drivers/scsi/mpt2sas/mpt2sas_scsih.c: In function =E2=80=98_scsih_sas_b=
-roadcast_primative_event=E2=80=99:
-drivers/scsi/mpt2sas/mpt2sas_scsih.c:5729:40: warning: unused variable =
-=E2=80=98event_data=E2=80=99=20
-
-Signed-off-by: Rakib Mullick <rakib.mullick@gmail.com>
----
-
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sa=
-s/mpt2sas_scsih.c
-index d570573..0301c5a 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -5726,7 +5726,6 @@ _scsih_sas_broadcast_primative_event(struct MPT2S=
-AS_ADAPTER *ioc,
- 	u32 termination_count;
- 	u32 query_count;
- 	Mpi2SCSITaskManagementReply_t *mpi_reply;
--	Mpi2EventDataSasBroadcastPrimitive_t *event_data =3D fw_event->event_=
-data;
- 	u16 ioc_status;
- 	unsigned long flags;
- 	int r;
-@@ -5735,8 +5734,8 @@ _scsih_sas_broadcast_primative_event(struct MPT2S=
-AS_ADAPTER *ioc,
-=20
- 	mutex_lock(&ioc->tm_cmds.mutex);
- 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: enter: phy number(%d), "
--	    "width(%d)\n", ioc->name, __func__, event_data->PhyNum,
--	     event_data->PortWidth));
-+	    "width(%d)\n", ioc->name, __func__, fw_event->event_data->PhyNum,
-+	     fw_event->event_data->PortWidth));
-=20
- 	_scsih_block_io_all_device(ioc);
-=20
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Vivek Goyal
+> Sent: Thursday, December 22, 2011 10:59 AM
+> To: Iyer, Shyam
+> Cc: rwheeler@redhat.com; linux-fsdevel@vger.kernel.org; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
+> missing?
+> 
+> On Thu, Dec 22, 2011 at 01:44:16PM +0530, Shyam_Iyer@Dell.com wrote:
+> 
+> [..]
+> 
+> > Simple asks -
+> > 1) Provide a consistent storage and fs management library that
+> discourages folks to write their own usespace storage library. Include
+> things like fs formatting(fs profiles), transport configuration(eg:
+> iscsiadm as a library), thin provisioning watermarks, cluster
+> management, apis for cgroups etc.
+>                                       ^^^^^^^^^^^^^^^^
+> For cgroups, we have libcgroup library. Not many people like to use it
+> though as cgroup is exported as a filesystem and they prefer to use
+> normal
+> libc api to traverse and configure cgroups (Instead of going through
+> another library). Some examples include libvrit, systemd.
+> 
+> Thanks
+> Vivek
+
+Well honestly I think that is a libvirt/systemd issue and libvirt also invokes things like iscsiadm, dcb etc as a binary :-/
+
+Some one could always use qemu command lines to invoke KVM/XEN but libvirt has saved me one too many days in doing a quick operation without wondering about a qemu commandline.
+ 
+I am also asking for ideas on how to avoid this fragmentation because just like libvirt others are also encouraged to do their own libc thing in the absence of a common storage management framework..
+
+Does the standard interface for linux end at the user/kernel boundary or the user/libc boundary? If so I feel we would continue to lag behind other OSes in features because of the model. 
+
