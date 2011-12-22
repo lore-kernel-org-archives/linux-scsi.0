@@ -1,90 +1,98 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: [PATCH v3 3/3] ata: add ata port hibernate callbacks
-Date: Thu, 22 Dec 2011 14:50:49 +0800
-Message-ID: <1324536649-5796-4-git-send-email-ming.m.lin@intel.com>
-References: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
+From: Roland Dreier <roland@purestorage.com>
+Subject: Re: [RFC-v4 3/3] qla2xxx: Add tcm_qla2xxx fabric module for mainline target
+Date: Thu, 22 Dec 2011 00:10:44 -0800
+Message-ID: <CAL1RGDX-MR6pEwDN-vSjx92wUD3x5zk26UAG9QKpw1jp5-85mg@mail.gmail.com>
+References: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org> <1324173746-14361-4-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1324173746-14361-4-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@parallels.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Signed-off-by: Lin Ming <ming.m.lin@intel.com>
----
- drivers/ata/libata-core.c |   40 ++++++++++++++++++++++++++++++++++++----
- 1 files changed, 36 insertions(+), 4 deletions(-)
+Hi Nic,
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 84aa741..8fbcad2 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5281,12 +5281,24 @@ static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
- 
- #define to_ata_port(d) container_of(d, struct ata_port, tdev)
- 
--static int ata_port_suspend_common(struct device *dev)
-+static int ata_port_suspend_common(struct device *dev, pm_message_t mesg)
- {
- 	struct ata_port *ap = to_ata_port(dev);
-+	unsigned int ehi_flags = ATA_EHI_QUIET;
- 	int rc;
- 
--	rc = ata_port_request_pm(ap, PMSG_SUSPEND, 0, ATA_EHI_QUIET, 1);
-+	/*
-+	 * On some hardware, device fails to respond after spun down
-+	 * for suspend.  As the device won't be used before being
-+	 * resumed, we don't need to touch the device.  Ask EH to skip
-+	 * the usual stuff and proceed directly to suspend.
-+	 *
-+	 * http://thread.gmane.org/gmane.linux.ide/46764
-+	 */
-+	if (mesg.event == PM_EVENT_SUSPEND)
-+		ehi_flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_NO_RECOVERY;
-+
-+	rc = ata_port_request_pm(ap, mesg, 0, ehi_flags, 1);
- 	return rc;
- }
- 
-@@ -5295,7 +5307,23 @@ static int ata_port_suspend(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return 0;
- 
--	return ata_port_suspend_common(dev);
-+	return ata_port_suspend_common(dev, PMSG_SUSPEND);
-+}
-+
-+static int ata_port_do_freeze(struct device *dev)
-+{
-+	if (pm_runtime_suspended(dev))
-+		pm_runtime_resume(dev);
-+
-+	return ata_port_suspend_common(dev, PMSG_FREEZE);
-+}
-+
-+static int ata_port_poweroff(struct device *dev)
-+{
-+	if (pm_runtime_suspended(dev))
-+		return 0;
-+
-+	return ata_port_suspend_common(dev, PMSG_HIBERNATE);
- }
- 
- static int ata_port_resume_common(struct device *dev)
-@@ -5330,8 +5358,12 @@ static int ata_port_runtime_idle(struct device *dev)
- static const struct dev_pm_ops ata_port_pm_ops = {
- 	.suspend = ata_port_suspend,
- 	.resume = ata_port_resume,
-+	.freeze = ata_port_do_freeze,
-+	.thaw = ata_port_resume,
-+	.poweroff = ata_port_poweroff,
-+	.restore = ata_port_resume,
- 
--	.runtime_suspend = ata_port_suspend_common,
-+	.runtime_suspend = ata_port_suspend,
- 	.runtime_resume = ata_port_resume_common,
- 	.runtime_idle = ata_port_runtime_idle,
- };
--- 
-1.7.2.5
+On Sat, Dec 17, 2011 at 6:02 PM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> +/*
+> + * Called from qla_target_template->free_cmd(), and will call
+> + * tcm_qla2xxx_release_cmd via normal struct target_core_fabric_ops
+> + * release callback. =A0qla_hw_data->hardware_lock is expected to be=
+ held
+> + */
+> +void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
+> +{
+> + =A0 =A0 =A0 barrier();
+> + =A0 =A0 =A0 /*
+> + =A0 =A0 =A0 =A0* Handle tcm_qla2xxx_init_cmd() -> transport_get_lun=
+_for_cmd()
+> + =A0 =A0 =A0 =A0* failure case where cmd->se_cmd.se_dev was not assi=
+gned, and
+> + =A0 =A0 =A0 =A0* a call to transport_generic_free_cmd_intr() is not=
+ possible..
+> + =A0 =A0 =A0 =A0*/
+> + =A0 =A0 =A0 if (!cmd->se_cmd.se_dev) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 target_put_sess_cmd(cmd->se_cmd.se_sess=
+, &cmd->se_cmd);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 transport_generic_free_cmd(&cmd->se_cmd=
+, 0);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
+> + =A0 =A0 =A0 }
+> +
+> + =A0 =A0 =A0 if (!atomic_read(&cmd->se_cmd.t_transport_complete))
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 target_put_sess_cmd(cmd->se_cmd.se_sess=
+, &cmd->se_cmd);
+> +
+> + =A0 =A0 =A0 INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
+> + =A0 =A0 =A0 queue_work(tcm_qla2xxx_free_wq, &cmd->work);
+> +}
 
+can you explain why you do the second target_put_sess_cmd()
+without a "return" here?  (the one when t_transport_complete =3D=3D 0)
+
+It seems this leads to use-after-free ... suppose cmd->execute_task in
+__transport_execute_tasks() returns an error (eg due to malformed
+emulated command from the initiator -- the easiest way to trigger this
+is to do something like "sg_raw /dev/sda 12 00 00 00 00 00" on a
+tcm_qla2xxx exported LUN).
+
+Then we'll call transport_generic_request_failure()  which will end up
+calling transport_cmd_check_stop_to_fabric(), which will call into
+tcm_qla2xxx_check_stop_free(), which will do target_put_sess_cmd()
+so we'll be down to 1 reference on the cmd.
+
+Then when the HW finishes sending the SCSI status back, we'll
+go into qla_tgt_do_ctio_completion(), which will call into ->free_cmd()
+and end up in the function quoted above.
+
+Since we failed the command we never call transport_complete_task()
+so t_transport_complete will be 0 and we'll call target_put_sess_cmd()
+a second time and therefore free the command immediately, and then
+go ahead and queue up the work to free it a second time.
+
+You can make this 100% reproducible and fatal by booting with
+"slub_debug=3DFZUP" (or whatever the corresponding SLAB config
+option is, I forget), and then doing some malformed emulated
+command that ends up returning bad SCSI status (like the sg_raw
+example above).
+
+I still don't understand the command reference counting and freeing
+scheme well enough to know what the right fix is here.  Are we
+supposed to return after that put in the transport_complete=3D=3D0 case=
+?
+But I thought we weren't supposed to free commands from interrupt
+context, although I don't know what's wrong with doing what ends
+up being just a kmem_cache_free() in the end.  So is doing the put in
+the free_cmd function (which is called from the CTIO completion
+handling interrupt context) OK?
+
+Why do we have that put if t_transport_complete isn't set, anyway?
+Doesn't the request failure path drop the reference?  Or is the problem
+that we return SCSI status without setting t_transport_complete?
+
+Thoughts?
+
+ - R.
