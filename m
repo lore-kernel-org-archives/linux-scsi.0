@@ -1,81 +1,88 @@
-From: Shaohua Li <shaohua.li@intel.com>
-Subject: [patch 1/2]scsi: scsi_run_queue() doesn't use local list to handle
- starved sdev
-Date: Thu, 22 Dec 2011 11:10:12 +0800
-Message-ID: <1324523412.22361.471.camel@sli10-conroe>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH 02/08] [SCSI]  mpt2sas : Increase max transfer support
+ from 4MB to 16MB
+Date: Thu, 22 Dec 2011 09:07:45 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A60481D5A23B@inbmail02.lsi.com>
+References: <201112010928.pB19Sbpf020920@milmhbs0.lsil.com>
+ <4EF0B4D2.7070300@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Cc: JBottomley@Parallels.com, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Ted Ts'o <tytso@mit.edu>, "Wu, Fengguang" <fengguang.wu@intel.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:35063 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754620Ab1LVDi1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Dec 2011 22:38:27 -0500
+In-Reply-To: <4EF0B4D2.7070300@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "JBottomley@parallels.com" <JBottomley@parallels.com>
 
-scsi_run_queue() picks off all sdev from host starved_list to a local list,
-then handle them. If there are multiple threads running scsi_run_queue(),
-the starved_list will get messed. This is quite common, because request
-rq_affinity is on by default.
+Thank you for pointing out. Will correct it in the next patches.
 
-Signed-off-by: Shaohua Li <shaohua.li@intel.com>
----
- drivers/scsi/scsi_lib.c |   21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+Regards,
+Nagalakshmi
 
-Index: linux/drivers/scsi/scsi_lib.c
-===================================================================
---- linux.orig/drivers/scsi/scsi_lib.c	2011-12-21 16:56:23.000000000 +0800
-+++ linux/drivers/scsi/scsi_lib.c	2011-12-22 09:33:09.000000000 +0800
-@@ -401,9 +401,8 @@ static inline int scsi_host_is_busy(stru
-  */
- static void scsi_run_queue(struct request_queue *q)
- {
--	struct scsi_device *sdev = q->queuedata;
-+	struct scsi_device *sdev = q->queuedata, *head_sdev = NULL;
- 	struct Scsi_Host *shost;
--	LIST_HEAD(starved_list);
- 	unsigned long flags;
- 
- 	/* if the device is dead, sdev will be NULL, so no queue to run */
-@@ -415,9 +414,8 @@ static void scsi_run_queue(struct reques
- 		scsi_single_lun_run(sdev);
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
--	list_splice_init(&shost->starved_list, &starved_list);
- 
--	while (!list_empty(&starved_list)) {
-+	while (!list_empty(&shost->starved_list)) {
- 		/*
- 		 * As long as shost is accepting commands and we have
- 		 * starved queues, call blk_run_queue. scsi_request_fn
-@@ -431,8 +429,13 @@ static void scsi_run_queue(struct reques
- 		if (scsi_host_is_busy(shost))
- 			break;
- 
--		sdev = list_entry(starved_list.next,
-+		sdev = list_entry(shost->starved_list.next,
- 				  struct scsi_device, starved_entry);
-+		if (sdev == head_sdev)
-+			break;
-+		if (!head_sdev)
-+			head_sdev = sdev;
-+
- 		list_del_init(&sdev->starved_entry);
- 		if (scsi_target_is_busy(scsi_target(sdev))) {
- 			list_move_tail(&sdev->starved_entry,
-@@ -445,9 +448,13 @@ static void scsi_run_queue(struct reques
- 		__blk_run_queue(sdev->request_queue);
- 		spin_unlock(sdev->request_queue->queue_lock);
- 		spin_lock(shost->host_lock);
-+		/*
-+		 * the head sdev is no longer starved and removed from the
-+		 * starved list, select a new sdev as head.
-+		 */
-+		if (head_sdev == sdev && list_empty(&sdev->starved_entry))
-+			head_sdev = NULL;
- 	}
--	/* put any unprocessed entries back */
--	list_splice(&starved_list, &shost->starved_list);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	blk_run_queue(q);
+
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Tuesday, December 20, 2011 9:46 PM
+To: Nandigama, Nagalakshmi
+Cc: linux-scsi@vger.kernel.org; Desai, Kashyap; Prakash, Sathya; Moore, Eric; JBottomley@parallels.com
+Subject: Re: [PATCH 02/08] [SCSI] mpt2sas : Increase max transfer support from 4MB to 16MB
+
+On 12/01/2011 03:22 AM, nagalakshmi.nandigama@lsi.com wrote:
+> Increase max transfer support from 4MB to 16MB.
+> This is done by changing the shost->max_sector from 8192 to 32767
+>
+> Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+> ---
+>
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> index 8df4095..97f0997 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -100,7 +100,7 @@ MODULE_PARM_DESC(logging_level, " bits for enabling additional logging info "
+>  
+>  static ushort max_sectors = 0xFFFF;
+>  module_param(max_sectors, ushort, 0);
+> -MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 8192  default=8192");
+> +MODULE_PARM_DESC(max_sectors, "max sectors, range 64 to 32767  default=32767");
+>  
+>  /* scsi-mid layer global parmeter is max_report_luns, which is 511 */
+>  #define MPT2SAS_MAX_LUN (16895)
+> @@ -7449,7 +7449,7 @@ static struct scsi_host_template scsih_driver_template = {
+>  	.can_queue			= 1,
+>  	.this_id			= -1,
+>  	.sg_tablesize			= MPT2SAS_SG_DEPTH,
+> -	.max_sectors			= 8192,
+> +	.max_sectors			= 32767,
+>  	.cmd_per_lun			= 7,
+>  	.use_clustering			= ENABLE_CLUSTERING,
+>  	.shost_attrs			= mpt2sas_host_attrs,
+> @@ -7990,11 +7990,11 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
+>  			    "for max_sectors, range is 64 to 8192. Assigning "
+>  			    "value of 64.\n", ioc->name, max_sectors);
+> -		} else if (max_sectors > 8192) {
+> -			shost->max_sectors = 8192;
+> +		} else if (max_sectors > 32767) {
+> +			shost->max_sectors = 32767;
+>  			printk(MPT2SAS_WARN_FMT "Invalid value %d passed "
+>  			    "for max_sectors, range is 64 to 8192. Assigning "
+I think you wanted to change the text above "is 64 to 8192" to  "is 64 to 32767" too.
+That is clearly not so important and can wait for the next patch.
+
+> -			    "default value of 8192.\n", ioc->name,
+> +			    "default value of 32767.\n", ioc->name,
+>  			    max_sectors);
+>  		} else {
+>  			shost->max_sectors = max_sectors & 0xFFFE;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
