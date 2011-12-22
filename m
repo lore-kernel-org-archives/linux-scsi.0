@@ -1,53 +1,61 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [patch 1/2]scsi: scsi_run_queue() doesn't use local list to
- handle starved sdev
-Date: Thu, 22 Dec 2011 18:27:29 +0000
-Message-ID: <1324578449.9709.15.camel@dabdike.int.hansenpartnership.com>
-References: <1324523412.22361.471.camel@sli10-conroe>
+From: Rakib Mullick <rakib.mullick@gmail.com>
+Subject: [PATCH] scsi: Fix unused variable warning in mpt2sas_scsih.c
+Date: Fri, 23 Dec 2011 00:51:53 +0600
+Message-ID: <1324579913.19018.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:41152 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751834Ab1LVS1c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2011 13:27:32 -0500
-In-Reply-To: <1324523412.22361.471.camel@sli10-conroe>
-Content-Language: en-US
-Content-ID: <A0BA817D123EB342B2D8E39A84CB3146@sw.swsoft.com>
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:59212 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753874Ab1LVSw1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2011 13:52:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Ted Ts'o <tytso@mit.edu>, "Wu, Fengguang" <fengguang.wu@intel.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-T24gVGh1LCAyMDExLTEyLTIyIGF0IDExOjEwICswODAwLCBTaGFvaHVhIExpIHdyb3RlOg0KPiBz
-Y3NpX3J1bl9xdWV1ZSgpIHBpY2tzIG9mZiBhbGwgc2RldiBmcm9tIGhvc3Qgc3RhcnZlZF9saXN0
-IHRvIGEgbG9jYWwgbGlzdCwNCj4gdGhlbiBoYW5kbGUgdGhlbS4gSWYgdGhlcmUgYXJlIG11bHRp
-cGxlIHRocmVhZHMgcnVubmluZyBzY3NpX3J1bl9xdWV1ZSgpLA0KPiB0aGUgc3RhcnZlZF9saXN0
-IHdpbGwgZ2V0IG1lc3NlZC4gVGhpcyBpcyBxdWl0ZSBjb21tb24sIGJlY2F1c2UgcmVxdWVzdA0K
-PiBycV9hZmZpbml0eSBpcyBvbiBieSBkZWZhdWx0Lg0KPiANCj4gU2lnbmVkLW9mZi1ieTogU2hh
-b2h1YSBMaSA8c2hhb2h1YS5saUBpbnRlbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3Nj
-c2lfbGliLmMgfCAgIDIxICsrKysrKysrKysrKysrLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQs
-IDE0IGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pDQo+IA0KPiBJbmRleDogbGludXgvZHJp
-dmVycy9zY3NpL3Njc2lfbGliLmMNCj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KPiAtLS0gbGludXgub3JpZy9kcml2
-ZXJzL3Njc2kvc2NzaV9saWIuYwkyMDExLTEyLTIxIDE2OjU2OjIzLjAwMDAwMDAwMCArMDgwMA0K
-PiArKysgbGludXgvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMJMjAxMS0xMi0yMiAwOTozMzowOS4w
-MDAwMDAwMDAgKzA4MDANCj4gQEAgLTQwMSw5ICs0MDEsOCBAQCBzdGF0aWMgaW5saW5lIGludCBz
-Y3NpX2hvc3RfaXNfYnVzeShzdHJ1DQo+ICAgKi8NCj4gIHN0YXRpYyB2b2lkIHNjc2lfcnVuX3F1
-ZXVlKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxKQ0KPiAgew0KPiAtCXN0cnVjdCBzY3NpX2Rldmlj
-ZSAqc2RldiA9IHEtPnF1ZXVlZGF0YTsNCj4gKwlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYgPSBx
-LT5xdWV1ZWRhdGEsICpoZWFkX3NkZXYgPSBOVUxMOw0KPiAgCXN0cnVjdCBTY3NpX0hvc3QgKnNo
-b3N0Ow0KPiAtCUxJU1RfSEVBRChzdGFydmVkX2xpc3QpOw0KPiAgCXVuc2lnbmVkIGxvbmcgZmxh
-Z3M7DQo+ICANCj4gIAkvKiBpZiB0aGUgZGV2aWNlIGlzIGRlYWQsIHNkZXYgd2lsbCBiZSBOVUxM
-LCBzbyBubyBxdWV1ZSB0byBydW4gKi8NCj4gQEAgLTQxNSw5ICs0MTQsOCBAQCBzdGF0aWMgdm9p
-ZCBzY3NpX3J1bl9xdWV1ZShzdHJ1Y3QgcmVxdWVzDQo+ICAJCXNjc2lfc2luZ2xlX2x1bl9ydW4o
-c2Rldik7DQo+ICANCj4gIAlzcGluX2xvY2tfaXJxc2F2ZShzaG9zdC0+aG9zdF9sb2NrLCBmbGFn
-cyk7DQo+IC0JbGlzdF9zcGxpY2VfaW5pdCgmc2hvc3QtPnN0YXJ2ZWRfbGlzdCwgJnN0YXJ2ZWRf
-bGlzdCk7DQo+ICANCj4gLQl3aGlsZSAoIWxpc3RfZW1wdHkoJnN0YXJ2ZWRfbGlzdCkpIHsNCj4g
-Kwl3aGlsZSAoIWxpc3RfZW1wdHkoJnNob3N0LT5zdGFydmVkX2xpc3QpKSB7DQoNClRoZSBvcmln
-aW5hbCByZWFzb24gZm9yIHdvcmtpbmcgZnJvbSBhIGNvcHkgaW5zdGVhZCBvZiB0aGUgb3JpZ2lu
-YWwgbGlzdA0Kd2FzIHRoYXQgdGhlIGRldmljZSBjYW4gZW5kIHVwIGJhY2sgb24gdGhlIHN0YXJ2
-ZWQgbGlzdCBiZWNhdXNlIG9mIGENCnZhcmlldHkgb2YgY29uZGl0aW9ucyBpbiB0aGUgSEJBIGFu
-ZCBzbyB0aGlzIHdvdWxkIGNhdXNlIHRoZSBsb29wIG5vdCB0bw0KZXhpdCwgc28gdGhpcyBwaWVj
-ZSBvZiB0aGUgcGF0Y2ggZG9lc24ndCBsb29rIHJpZ2h0IHRvIG1lLg0KDQpKYW1lcw0KDQo=
+ Fixes the following warning:
+
+drivers/scsi/mpt2sas/mpt2sas_scsih.c: In function =E2=80=98_scsih_sas_b=
+roadcast_primative_event=E2=80=99:
+drivers/scsi/mpt2sas/mpt2sas_scsih.c:5729:40: warning: unused variable =
+=E2=80=98event_data=E2=80=99=20
+
+Signed-off-by: Rakib Mullick <rakib.mullick@gmail.com>
+---
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sa=
+s/mpt2sas_scsih.c
+index d570573..0301c5a 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -5726,7 +5726,6 @@ _scsih_sas_broadcast_primative_event(struct MPT2S=
+AS_ADAPTER *ioc,
+ 	u32 termination_count;
+ 	u32 query_count;
+ 	Mpi2SCSITaskManagementReply_t *mpi_reply;
+-	Mpi2EventDataSasBroadcastPrimitive_t *event_data =3D fw_event->event_=
+data;
+ 	u16 ioc_status;
+ 	unsigned long flags;
+ 	int r;
+@@ -5735,8 +5734,8 @@ _scsih_sas_broadcast_primative_event(struct MPT2S=
+AS_ADAPTER *ioc,
+=20
+ 	mutex_lock(&ioc->tm_cmds.mutex);
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: enter: phy number(%d), "
+-	    "width(%d)\n", ioc->name, __func__, event_data->PhyNum,
+-	     event_data->PortWidth));
++	    "width(%d)\n", ioc->name, __func__, fw_event->event_data->PhyNum,
++	     fw_event->event_data->PortWidth));
+=20
+ 	_scsih_block_io_all_device(ioc);
+=20
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
