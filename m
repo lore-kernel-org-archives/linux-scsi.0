@@ -1,42 +1,53 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: [PATCH] SCSI: Change size of factor from u64 to unsigned int.
-Date: Thu, 22 Dec 2011 17:18:33 +0000
-Message-ID: <20111222171833.GA16435@linux-mips.org>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [patch 1/2]scsi: scsi_run_queue() doesn't use local list to
+ handle starved sdev
+Date: Thu, 22 Dec 2011 18:27:29 +0000
+Message-ID: <1324578449.9709.15.camel@dabdike.int.hansenpartnership.com>
+References: <1324523412.22361.471.camel@sli10-conroe>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.parallels.com ([64.131.90.16]:41152 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751834Ab1LVS1c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2011 13:27:32 -0500
+In-Reply-To: <1324523412.22361.471.camel@sli10-conroe>
+Content-Language: en-US
+Content-ID: <A0BA817D123EB342B2D8E39A84CB3146@sw.swsoft.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Shaohua Li <shaohua.li@intel.com>
+Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Ted Ts'o <tytso@mit.edu>, "Wu, Fengguang" <fengguang.wu@intel.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-Struct scsi_device.sector_size is unsigned int, so the value of factor
-can have at most 23 significant bits.
-
-Adding a type check to do_div() caught these two do_div as the only
-invocations in the kernel passing a non-32-bit divisor.
-
-Signed-off-by: Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-mips@linux-mips.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/scsi/sd.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fa3a591..42a1ff6 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1335,8 +1335,7 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
- 		start_lba <<= 1;
- 		end_lba <<= 1;
- 	} else {
--		/* be careful ... don't want any overflows */
--		u64 factor = scmd->device->sector_size / 512;
-+		unsigned int factor = scmd->device->sector_size / 512;
- 		do_div(start_lba, factor);
- 		do_div(end_lba, factor);
- 	}
+T24gVGh1LCAyMDExLTEyLTIyIGF0IDExOjEwICswODAwLCBTaGFvaHVhIExpIHdyb3RlOg0KPiBz
+Y3NpX3J1bl9xdWV1ZSgpIHBpY2tzIG9mZiBhbGwgc2RldiBmcm9tIGhvc3Qgc3RhcnZlZF9saXN0
+IHRvIGEgbG9jYWwgbGlzdCwNCj4gdGhlbiBoYW5kbGUgdGhlbS4gSWYgdGhlcmUgYXJlIG11bHRp
+cGxlIHRocmVhZHMgcnVubmluZyBzY3NpX3J1bl9xdWV1ZSgpLA0KPiB0aGUgc3RhcnZlZF9saXN0
+IHdpbGwgZ2V0IG1lc3NlZC4gVGhpcyBpcyBxdWl0ZSBjb21tb24sIGJlY2F1c2UgcmVxdWVzdA0K
+PiBycV9hZmZpbml0eSBpcyBvbiBieSBkZWZhdWx0Lg0KPiANCj4gU2lnbmVkLW9mZi1ieTogU2hh
+b2h1YSBMaSA8c2hhb2h1YS5saUBpbnRlbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3Nj
+c2lfbGliLmMgfCAgIDIxICsrKysrKysrKysrKysrLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQs
+IDE0IGluc2VydGlvbnMoKyksIDcgZGVsZXRpb25zKC0pDQo+IA0KPiBJbmRleDogbGludXgvZHJp
+dmVycy9zY3NpL3Njc2lfbGliLmMNCj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQ0KPiAtLS0gbGludXgub3JpZy9kcml2
+ZXJzL3Njc2kvc2NzaV9saWIuYwkyMDExLTEyLTIxIDE2OjU2OjIzLjAwMDAwMDAwMCArMDgwMA0K
+PiArKysgbGludXgvZHJpdmVycy9zY3NpL3Njc2lfbGliLmMJMjAxMS0xMi0yMiAwOTozMzowOS4w
+MDAwMDAwMDAgKzA4MDANCj4gQEAgLTQwMSw5ICs0MDEsOCBAQCBzdGF0aWMgaW5saW5lIGludCBz
+Y3NpX2hvc3RfaXNfYnVzeShzdHJ1DQo+ICAgKi8NCj4gIHN0YXRpYyB2b2lkIHNjc2lfcnVuX3F1
+ZXVlKHN0cnVjdCByZXF1ZXN0X3F1ZXVlICpxKQ0KPiAgew0KPiAtCXN0cnVjdCBzY3NpX2Rldmlj
+ZSAqc2RldiA9IHEtPnF1ZXVlZGF0YTsNCj4gKwlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYgPSBx
+LT5xdWV1ZWRhdGEsICpoZWFkX3NkZXYgPSBOVUxMOw0KPiAgCXN0cnVjdCBTY3NpX0hvc3QgKnNo
+b3N0Ow0KPiAtCUxJU1RfSEVBRChzdGFydmVkX2xpc3QpOw0KPiAgCXVuc2lnbmVkIGxvbmcgZmxh
+Z3M7DQo+ICANCj4gIAkvKiBpZiB0aGUgZGV2aWNlIGlzIGRlYWQsIHNkZXYgd2lsbCBiZSBOVUxM
+LCBzbyBubyBxdWV1ZSB0byBydW4gKi8NCj4gQEAgLTQxNSw5ICs0MTQsOCBAQCBzdGF0aWMgdm9p
+ZCBzY3NpX3J1bl9xdWV1ZShzdHJ1Y3QgcmVxdWVzDQo+ICAJCXNjc2lfc2luZ2xlX2x1bl9ydW4o
+c2Rldik7DQo+ICANCj4gIAlzcGluX2xvY2tfaXJxc2F2ZShzaG9zdC0+aG9zdF9sb2NrLCBmbGFn
+cyk7DQo+IC0JbGlzdF9zcGxpY2VfaW5pdCgmc2hvc3QtPnN0YXJ2ZWRfbGlzdCwgJnN0YXJ2ZWRf
+bGlzdCk7DQo+ICANCj4gLQl3aGlsZSAoIWxpc3RfZW1wdHkoJnN0YXJ2ZWRfbGlzdCkpIHsNCj4g
+Kwl3aGlsZSAoIWxpc3RfZW1wdHkoJnNob3N0LT5zdGFydmVkX2xpc3QpKSB7DQoNClRoZSBvcmln
+aW5hbCByZWFzb24gZm9yIHdvcmtpbmcgZnJvbSBhIGNvcHkgaW5zdGVhZCBvZiB0aGUgb3JpZ2lu
+YWwgbGlzdA0Kd2FzIHRoYXQgdGhlIGRldmljZSBjYW4gZW5kIHVwIGJhY2sgb24gdGhlIHN0YXJ2
+ZWQgbGlzdCBiZWNhdXNlIG9mIGENCnZhcmlldHkgb2YgY29uZGl0aW9ucyBpbiB0aGUgSEJBIGFu
+ZCBzbyB0aGlzIHdvdWxkIGNhdXNlIHRoZSBsb29wIG5vdCB0bw0KZXhpdCwgc28gdGhpcyBwaWVj
+ZSBvZiB0aGUgcGF0Y2ggZG9lc24ndCBsb29rIHJpZ2h0IHRvIG1lLg0KDQpKYW1lcw0KDQo=
