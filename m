@@ -1,111 +1,92 @@
-From: <Shyam_Iyer@Dell.com>
-Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what's
- missing?
-Date: Thu, 22 Dec 2011 13:44:16 +0530
-Message-ID: <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM>
-References: <4EF2026F.2090506@redhat.com>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH v2] usb/uas: one only one status URB/host on
+ stream-less connection
+Date: Thu, 22 Dec 2011 15:15:25 +0100
+Message-ID: <20111222141525.GA19406@linutronix.de>
+References: <20111220150126.GA29286@linutronix.de>
+ <Pine.LNX.4.44L0.1112201035240.1690-100000@iolanthe.rowland.org>
+ <20111220171621.GC29286@linutronix.de>
+ <20111221192543.GA15279@xanatos>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausxipps301.us.dell.com ([143.166.148.223]:18069 "EHLO
-	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615Ab1LVIOd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2011 03:14:33 -0500
-In-Reply-To: <4EF2026F.2090506@redhat.com>
-Content-Language: en-US
+Received: from www.linutronix.de ([62.245.132.108]:34798 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958Ab1LVOP2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2011 09:15:28 -0500
+Content-Disposition: inline
+In-Reply-To: <20111221192543.GA15279@xanatos>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rwheeler@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Matthew Wilcox <willy@linux.intel.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, USB Storage List <usb-storage@lists.one-eyed-alien.net>
 
+* Sarah Sharp | 2011-12-21 11:25:43 [-0800]:
 
+>Hi Sebastian,
+Hi Sarah,
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Ric Wheeler
-> Sent: Wednesday, December 21, 2011 11:00 AM
-> To: linux-fsdevel@vger.kernel.org; linux-scsi@vger.kernel.org
-> Subject: [LSF/MM TOPIC] linux servers as a storage server - what's
-> missing?
-> 
-> 
-> One common thing that I see a lot of these days is an increasing number
-> of
-> platforms that are built on our stack as storage servers. Ranging from
-> the
-> common linux based storage/NAS devices up to various distributed
-> systems.
-> Almost all of them use our common stack - software RAID, LVM, XFS/ext4
-> and samba.
-> 
-> At last year's SNIA developers conference, it was clear that Microsoft
-> is
-> putting a lot of effort into enhancing windows 8 server as a storage
-> server with
-> both support for a pNFS server and of course SMB. I think that linux
-> (+samba) is
-> ahead of the windows based storage appliances today, but they are
-> putting
-> together a very aggressive list of features.
-> 
-> I think that it would be useful and interesting to take a slot at this
-> year's
-> LSF to see how we are doing in this space. How large do we need to
-> scale for an
-> appliance?  What kind of work is needed (support for the copy offload
-> system
-> call? better support for out of band notifications like those used in
-> "thinly
-> provisioned" SCSI devices? management API's? Ease of use CLI work?
-> SMB2.2 support?).
-> 
-> The goal would be to see what technical gaps we have that need more
-> active
-> development in, not just a wish list :)
-> 
-> Ric
+>The patch looks good (although I haven't tested it).  However, I think
+>you should move this chunk from one of your previous patches:
+>
+>@@ -449,7 +452,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
+>
+>        BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
+>
+>-       if (!cmdinfo->status_urb && sdev->current_cmnd)
+>+       if (sdev->current_cmnd)
+>                return SCSI_MLQUEUE_DEVICE_BUSY;
+>
+>into this patch, to keep the change to the status URB in one patch.
 
-Working for a company that works with different OS vendors I get involved in such discussions on what linux offers and what it doesn't and where the gaps are both at the code level and the customer usage patterns..
+This isn't completely the chunk I have, it is:
 
-A few things that stand out..
+-       if (!cmdinfo->status_urb && sdev->current_cmnd)
++       if (devinfo->cmnd)
+                return SCSI_MLQUEUE_DEVICE_BUSY;
 
-- Management models.. Performance models.
+So I replace sdev with devinfo. Not sure why status_urb is considered
+here at all since it has to be NULL because it is a new command. We
+should look at "default command pointer" to check if we have a untagged
+command pending.
 
-I tend to think that we(linux folks) get into performance paradigm more frequently in the kernel and leave the management paradigms to the big vendors to play around leaving a lot of inconsistency in storage management by sysadmins.
+>Also, do you have a git branch up for the UAS work somewhere?  We need
+>to figure out how to merge your bug fix patches with my bug fix patches
+>into one patchset.  It's probably easier if you send your current
+>patchset, or a pointer to your branch.
 
-I think the analogy could be equated to a traffic scenario with rules vs a traffic scenario without rules.
-The traffic scenario without rules generally leaves a skilled expert driver navigating the traffic swiftly and reaching the destination much faster than the others but at the same time leaving the non-driving passenger with a bad feeling in the stomach.
-The customer is the analogy of the non-driving passenger in the case of linux.
+I did as you asked and applied your patches 1-3 and added my stuff on
+top. You can pull from:
 
-For eg: If someone had to write a decent use case that lets you use a clustered framework with nfs/pnfs with iSCSI storage backend supporting Copy offload while managing backup all you would end up is having a set of management windows in setting up this whole framework unless you are a vendor willing to take some extra brownie points from the customer in  writing this whole thing up and packaging it into a framework. And if there are features not implemented in a particular filesystem/kernel subsystem like the copy offload it just needs a lot of synchronization which means the feature generally takes a long time to evolve.
+git pull git://linutronix.de/users/bigeasy/linux for_sarah
 
-The kernel feature is usually implemented with the performance in mind but the management of the feature is usually left to the user.
+The following changes since commit 5611cc4572e889b62a7b4c72a413536bf6a9c416:
 
-In this case a vendor includes OS distributions and stake holder storage companies..
+  Linux 3.2-rc4 (2011-12-01 14:56:01 -0800)
 
-If I flip this over to what other OSes offer..
+are available in the git repository at:
+  git://linutronix.de/users/bigeasy/linux for_sarah
 
-1) A consistent clustered filesystem that supports performance oriented features like copy offload and optimization features like thin provisioning
-2) A management api for things like thin provisioning with well documented hooks to write a vendor specific plugin
-3) GUI/CLI support
-4) Backup management/API with hooks for vendor plugins
+Sarah Sharp (3):
+      UAS: Re-add workqueue items if submission fails.
+      UAS: Use unique tags on non-streams devices.
+      UAS: Free status URB when we can't find the SCSI tag.
 
-Usually all of this is within a common framework or single management window... providing a consistent view.
+Sebastian Andrzej Siewior (3):
+      usb/uas: use unique tags for all LUNs
+      usb/uas: use scsi_host_find_tag() to find command from a tag
+      usb/uas: one only one status URB/host on stream-less connection
 
-Simple asks -
-1) Provide a consistent storage and fs management library that discourages folks to write their own usespace storage library. Include things like fs formatting(fs profiles), transport configuration(eg: iscsiadm as a library), thin provisioning watermarks, cluster management, apis for cgroups etc. The library should provide a clean set of rules/interfaces to build management apps for.
-Think Android market place providing a well defined framework for app writers. Let the distributions/Storage companies write their own cool apps with this framework..
+ drivers/usb/storage/uas.c |  157 +++++++++++++++++++++++++++++++++------------
+ 1 files changed, 117 insertions(+), 40 deletions(-)
 
-2) View implementations like copy offload, thin provisioning, snapshots, watermarks in the kernel in conjunction with this storage library. So a usecase has to be discussed to be included in this library before working in the kernel
+which is -rc4 based which is almost what I had for testing (a bunch of
+target patches are missing). I also prepared a gpg signed tag for you so
+if you have a recent version git you should be able to pull it via
+   git pull git://linutronix.de/users/bigeasy/linux uas_for_sarah
 
-3) And this may sound controversial but inspite of being a long time linux fan, user and observer I would say provide hooks for folks to write clean pluggins that lets them protect their proprietary work by allowing them to bundle binary blobs. 
-Usually folks want to keep proprietary plugins in this area because -
-    a) No other storage vendor provides an open source pluggin. So if you are a storage vendor listening this might be your cue to start the avalanche
-    b) They are into IP protection agreement with another OS vendor
-    c) A startup protecting its IP
-The benefits of open sourcing are usually realized when maintaining code.. :-) not when pitching it against simpler management frameworks offered by other OS vendors who are able to offer the feature as vendors mutually want to keep it proprietary.
-(The last one being my personal opinion and not as the employee of an increasingly storage company)
+:)
 
-/me fully expects brickbats but then as they say from where I come from - A fool can always try his luck a few times and get wise in the process.. :-)
+>Sarah Sharp
 
-
+Sebastian
