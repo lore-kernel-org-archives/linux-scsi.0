@@ -1,98 +1,111 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: [RFC-v4 3/3] qla2xxx: Add tcm_qla2xxx fabric module for mainline target
-Date: Thu, 22 Dec 2011 00:10:44 -0800
-Message-ID: <CAL1RGDX-MR6pEwDN-vSjx92wUD3x5zk26UAG9QKpw1jp5-85mg@mail.gmail.com>
-References: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org> <1324173746-14361-4-git-send-email-nab@linux-iscsi.org>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what's
+ missing?
+Date: Thu, 22 Dec 2011 13:44:16 +0530
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM>
+References: <4EF2026F.2090506@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1324173746-14361-4-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@parallels.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:18069 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753615Ab1LVIOd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2011 03:14:33 -0500
+In-Reply-To: <4EF2026F.2090506@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: rwheeler@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Nic,
 
-On Sat, Dec 17, 2011 at 6:02 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> +/*
-> + * Called from qla_target_template->free_cmd(), and will call
-> + * tcm_qla2xxx_release_cmd via normal struct target_core_fabric_ops
-> + * release callback. =A0qla_hw_data->hardware_lock is expected to be=
- held
-> + */
-> +void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
-> +{
-> + =A0 =A0 =A0 barrier();
-> + =A0 =A0 =A0 /*
-> + =A0 =A0 =A0 =A0* Handle tcm_qla2xxx_init_cmd() -> transport_get_lun=
-_for_cmd()
-> + =A0 =A0 =A0 =A0* failure case where cmd->se_cmd.se_dev was not assi=
-gned, and
-> + =A0 =A0 =A0 =A0* a call to transport_generic_free_cmd_intr() is not=
- possible..
-> + =A0 =A0 =A0 =A0*/
-> + =A0 =A0 =A0 if (!cmd->se_cmd.se_dev) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 target_put_sess_cmd(cmd->se_cmd.se_sess=
-, &cmd->se_cmd);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 transport_generic_free_cmd(&cmd->se_cmd=
-, 0);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return;
-> + =A0 =A0 =A0 }
-> +
-> + =A0 =A0 =A0 if (!atomic_read(&cmd->se_cmd.t_transport_complete))
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 target_put_sess_cmd(cmd->se_cmd.se_sess=
-, &cmd->se_cmd);
-> +
-> + =A0 =A0 =A0 INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
-> + =A0 =A0 =A0 queue_work(tcm_qla2xxx_free_wq, &cmd->work);
-> +}
 
-can you explain why you do the second target_put_sess_cmd()
-without a "return" here?  (the one when t_transport_complete =3D=3D 0)
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Ric Wheeler
+> Sent: Wednesday, December 21, 2011 11:00 AM
+> To: linux-fsdevel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: [LSF/MM TOPIC] linux servers as a storage server - what's
+> missing?
+> 
+> 
+> One common thing that I see a lot of these days is an increasing number
+> of
+> platforms that are built on our stack as storage servers. Ranging from
+> the
+> common linux based storage/NAS devices up to various distributed
+> systems.
+> Almost all of them use our common stack - software RAID, LVM, XFS/ext4
+> and samba.
+> 
+> At last year's SNIA developers conference, it was clear that Microsoft
+> is
+> putting a lot of effort into enhancing windows 8 server as a storage
+> server with
+> both support for a pNFS server and of course SMB. I think that linux
+> (+samba) is
+> ahead of the windows based storage appliances today, but they are
+> putting
+> together a very aggressive list of features.
+> 
+> I think that it would be useful and interesting to take a slot at this
+> year's
+> LSF to see how we are doing in this space. How large do we need to
+> scale for an
+> appliance?  What kind of work is needed (support for the copy offload
+> system
+> call? better support for out of band notifications like those used in
+> "thinly
+> provisioned" SCSI devices? management API's? Ease of use CLI work?
+> SMB2.2 support?).
+> 
+> The goal would be to see what technical gaps we have that need more
+> active
+> development in, not just a wish list :)
+> 
+> Ric
 
-It seems this leads to use-after-free ... suppose cmd->execute_task in
-__transport_execute_tasks() returns an error (eg due to malformed
-emulated command from the initiator -- the easiest way to trigger this
-is to do something like "sg_raw /dev/sda 12 00 00 00 00 00" on a
-tcm_qla2xxx exported LUN).
+Working for a company that works with different OS vendors I get involved in such discussions on what linux offers and what it doesn't and where the gaps are both at the code level and the customer usage patterns..
 
-Then we'll call transport_generic_request_failure()  which will end up
-calling transport_cmd_check_stop_to_fabric(), which will call into
-tcm_qla2xxx_check_stop_free(), which will do target_put_sess_cmd()
-so we'll be down to 1 reference on the cmd.
+A few things that stand out..
 
-Then when the HW finishes sending the SCSI status back, we'll
-go into qla_tgt_do_ctio_completion(), which will call into ->free_cmd()
-and end up in the function quoted above.
+- Management models.. Performance models.
 
-Since we failed the command we never call transport_complete_task()
-so t_transport_complete will be 0 and we'll call target_put_sess_cmd()
-a second time and therefore free the command immediately, and then
-go ahead and queue up the work to free it a second time.
+I tend to think that we(linux folks) get into performance paradigm more frequently in the kernel and leave the management paradigms to the big vendors to play around leaving a lot of inconsistency in storage management by sysadmins.
 
-You can make this 100% reproducible and fatal by booting with
-"slub_debug=3DFZUP" (or whatever the corresponding SLAB config
-option is, I forget), and then doing some malformed emulated
-command that ends up returning bad SCSI status (like the sg_raw
-example above).
+I think the analogy could be equated to a traffic scenario with rules vs a traffic scenario without rules.
+The traffic scenario without rules generally leaves a skilled expert driver navigating the traffic swiftly and reaching the destination much faster than the others but at the same time leaving the non-driving passenger with a bad feeling in the stomach.
+The customer is the analogy of the non-driving passenger in the case of linux.
 
-I still don't understand the command reference counting and freeing
-scheme well enough to know what the right fix is here.  Are we
-supposed to return after that put in the transport_complete=3D=3D0 case=
-?
-But I thought we weren't supposed to free commands from interrupt
-context, although I don't know what's wrong with doing what ends
-up being just a kmem_cache_free() in the end.  So is doing the put in
-the free_cmd function (which is called from the CTIO completion
-handling interrupt context) OK?
+For eg: If someone had to write a decent use case that lets you use a clustered framework with nfs/pnfs with iSCSI storage backend supporting Copy offload while managing backup all you would end up is having a set of management windows in setting up this whole framework unless you are a vendor willing to take some extra brownie points from the customer in  writing this whole thing up and packaging it into a framework. And if there are features not implemented in a particular filesystem/kernel subsystem like the copy offload it just needs a lot of synchronization which means the feature generally takes a long time to evolve.
 
-Why do we have that put if t_transport_complete isn't set, anyway?
-Doesn't the request failure path drop the reference?  Or is the problem
-that we return SCSI status without setting t_transport_complete?
+The kernel feature is usually implemented with the performance in mind but the management of the feature is usually left to the user.
 
-Thoughts?
+In this case a vendor includes OS distributions and stake holder storage companies..
 
- - R.
+If I flip this over to what other OSes offer..
+
+1) A consistent clustered filesystem that supports performance oriented features like copy offload and optimization features like thin provisioning
+2) A management api for things like thin provisioning with well documented hooks to write a vendor specific plugin
+3) GUI/CLI support
+4) Backup management/API with hooks for vendor plugins
+
+Usually all of this is within a common framework or single management window... providing a consistent view.
+
+Simple asks -
+1) Provide a consistent storage and fs management library that discourages folks to write their own usespace storage library. Include things like fs formatting(fs profiles), transport configuration(eg: iscsiadm as a library), thin provisioning watermarks, cluster management, apis for cgroups etc. The library should provide a clean set of rules/interfaces to build management apps for.
+Think Android market place providing a well defined framework for app writers. Let the distributions/Storage companies write their own cool apps with this framework..
+
+2) View implementations like copy offload, thin provisioning, snapshots, watermarks in the kernel in conjunction with this storage library. So a usecase has to be discussed to be included in this library before working in the kernel
+
+3) And this may sound controversial but inspite of being a long time linux fan, user and observer I would say provide hooks for folks to write clean pluggins that lets them protect their proprietary work by allowing them to bundle binary blobs. 
+Usually folks want to keep proprietary plugins in this area because -
+    a) No other storage vendor provides an open source pluggin. So if you are a storage vendor listening this might be your cue to start the avalanche
+    b) They are into IP protection agreement with another OS vendor
+    c) A startup protecting its IP
+The benefits of open sourcing are usually realized when maintaining code.. :-) not when pitching it against simpler management frameworks offered by other OS vendors who are able to offer the feature as vendors mutually want to keep it proprietary.
+(The last one being my personal opinion and not as the employee of an increasingly storage company)
+
+/me fully expects brickbats but then as they say from where I come from - A fool can always try his luck a few times and get wise in the process.. :-)
+
+
