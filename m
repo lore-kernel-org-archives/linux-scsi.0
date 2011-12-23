@@ -1,171 +1,209 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 17/28] libsas: use libata-eh-reset for sata rediscovery fis
- transmit failures
-Date: Thu, 22 Dec 2011 18:59:57 -0800
-Message-ID: <20111223025957.21827.75352.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 18/28] libsas: perform sas-transport resets in shost->workq
+ context
+Date: Thu, 22 Dec 2011 19:00:02 -0800
+Message-ID: <20111223030002.21827.60864.stgit@localhost6.localdomain6>
 References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:31927 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756342Ab1LWDAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2011 22:00:03 -0500
 In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Since sata devices can take several seconds to recover the link on reset
-the 0.5 seconds that libsas currently waits may not be enough.  Instead
-if we are rediscovering a phy that was previously attached to a sata
-device let libata handle any resets to encourage the device to transmit
-the initial fis.
-
-Once sas_ata_hard_reset() and lldds learn how to honor 'deadline' libsas
-should stop encountering phys in an intermediate state, until then this
-will loop until the fis is transmitted or ->attached_sas_addr gets
-cleared, but in the more likely initial discovery case we keep existing
-behavior.
+Extend the sas transport class to allow transport users to attach extra
+data to a sas_phy (->hostdata).  Use this area in libsas to move resets
+to workq context in preparation for scheduling ata device resets through
+libata-eh.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c      |   19 ++++++++++++++++
- drivers/scsi/libsas/sas_expander.c |   44 ++++++++++++++++++++++++++++++++----
- include/scsi/sas_ata.h             |    6 ++++-
- 3 files changed, 63 insertions(+), 6 deletions(-)
+ drivers/scsi/libsas/sas_event.c    |    2 +
+ drivers/scsi/libsas/sas_init.c     |   58 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_internal.h |   10 ++++++
+ drivers/scsi/scsi_transport_sas.c  |   18 +++++++++++
+ include/scsi/scsi_transport_sas.h  |    5 ++-
+ 5 files changed, 89 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 21faf5a..dc1ff15 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -664,3 +664,22 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 
- 	return rtn;
- }
-+
-+void sas_ata_schedule_reset(struct domain_device *dev)
-+{
-+	struct ata_eh_info *ehi;
-+	struct ata_port *ap;
-+	unsigned long flags;
-+
-+	if (!dev_is_sata(dev))
-+		return;
-+
-+	ap = dev->sata_dev.ap;
-+	ehi = &ap->link.eh_info;
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+	ehi->err_mask |= AC_ERR_TIMEOUT;
-+	ehi->action |= ATA_EH_RESET;
-+	ata_port_schedule_eh(ap);
-+	spin_unlock_irqrestore(ap->lock, flags);
-+}
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index c3846cf..ed26a23 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -28,6 +28,7 @@
- 
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index 3ff73af..3a75c81 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -27,7 +27,7 @@
  #include "sas_internal.h"
+ #include "sas_dump.h"
  
-+#include <scsi/sas_ata.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_sas.h>
- #include "../scsi_sas_internal.h"
-@@ -226,12 +227,35 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
- 	return;
+-static void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
++void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
+ {
+ 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
+ 		return;
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index ffa9869..39d2899 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -290,9 +290,65 @@ int sas_set_phy_speed(struct sas_phy *phy,
+ 	return ret;
  }
  
-+/* check if we have an existing attached ata device on this expander phy */
-+static struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
++static void sas_phy_release(struct sas_phy *phy)
 +{
-+	struct ex_phy *ex_phy = &ex_dev->ex_dev.ex_phy[phy_id];
-+	struct domain_device *dev;
-+	struct sas_rphy *rphy;
-+
-+	if (!ex_phy->port)
-+		return NULL;
-+
-+	rphy = ex_phy->port->rphy;
-+	if (!rphy)
-+		return NULL;
-+
-+	dev = sas_find_dev_by_rphy(rphy);
-+
-+	if (dev && dev_is_sata(dev))
-+		return dev;
-+
-+	return NULL;
++	kfree(phy->hostdata);
++	phy->hostdata = NULL;
 +}
 +
- #define DISCOVER_REQ_SIZE  16
- #define DISCOVER_RESP_SIZE 56
- 
- static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
- 				      u8 *disc_resp, int single)
- {
-+	struct domain_device *ata_dev = sas_ex_to_ata(dev, single);
- 	int i, res;
- 
- 	disc_req[9] = single;
-@@ -242,20 +266,30 @@ static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
- 				       disc_resp, DISCOVER_RESP_SIZE);
- 		if (res)
- 			return res;
--		/* This is detecting a failure to transmit initial
--		 * dev to host FIS as described in section G.5 of
--		 * sas-2 r 04b */
- 		dr = &((struct smp_resp *)disc_resp)->disc;
- 		if (memcmp(dev->sas_addr, dr->attached_sas_addr,
- 			  SAS_ADDR_SIZE) == 0) {
- 			sas_printk("Found loopback topology, just ignore it!\n");
- 			return 0;
- 		}
++static void phy_reset_work(struct work_struct *work)
++{
++	struct sas_phy_data *d = container_of(work, typeof(*d), reset_work);
 +
-+		/* This is detecting a failure to transmit initial
-+		 * dev to host FIS as described in section J.5 of
-+		 * sas-2 r16
-+		 */
- 		if (!(dr->attached_dev_type == 0 &&
- 		      dr->attached_sata_dev))
- 			break;
--		/* In order to generate the dev to host FIS, we
--		 * send a link reset to the expander port */
++	d->reset_result = sas_phy_reset(d->phy, d->hard_reset);
++}
 +
-+		/* In order to generate the dev to host FIS, we send a
-+		 * link reset to the expander port.  If a device was
-+		 * previously detected on this port we ask libata to
-+		 * manage the reset and link recovery.
-+		 */
-+		if (ata_dev) {
-+			sas_ata_schedule_reset(ata_dev);
-+			break;
-+		}
- 		sas_smp_phy_control(dev, single, PHY_FUNC_LINK_RESET, NULL);
- 		/* Wait for the reset to trigger the negotiation */
- 		msleep(500);
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index 9f7a23d..c0bcd30 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -44,7 +44,7 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost);
- int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 	       struct list_head *done_q);
- void sas_probe_sata(struct work_struct *work);
--
-+void sas_ata_schedule_reset(struct domain_device *dev);
- #else
++static int sas_phy_setup(struct sas_phy *phy)
++{
++	struct sas_phy_data *d = kzalloc(sizeof(*d), GFP_KERNEL);
++
++	if (!d)
++		return -ENOMEM;
++
++	mutex_init(&d->event_lock);
++	INIT_WORK(&d->reset_work, phy_reset_work);
++	d->phy = phy;
++	phy->hostdata = d;
++
++	return 0;
++}
++
++static int queue_phy_reset(struct sas_phy *phy, int hard_reset)
++{
++	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
++	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
++	struct sas_phy_data *d = phy->hostdata;
++	int rc;
++
++	if (!d)
++		return -ENOMEM;
++
++	/* libsas workqueue coordinates ata-eh reset with discovery */
++	mutex_lock(&d->event_lock);
++	d->reset_result = 0;
++	d->hard_reset = hard_reset;
++
++	spin_lock_irq(&ha->state_lock);
++	sas_queue_work(ha, &d->reset_work);
++	spin_unlock_irq(&ha->state_lock);
++
++	sas_drain_work(ha);
++	rc = d->reset_result;
++	mutex_unlock(&d->event_lock);
++
++	return rc;
++}
++
+ static struct sas_function_template sft = {
+ 	.phy_enable = sas_phy_enable,
+-	.phy_reset = sas_phy_reset,
++	.phy_reset = queue_phy_reset,
++	.phy_setup = sas_phy_setup,
++	.phy_release = sas_phy_release,
+ 	.set_phy_speed = sas_set_phy_speed,
+ 	.get_linkerrors = sas_get_linkerrors,
+ 	.smp_handler = sas_smp_handler,
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index f60658e..2a873fa 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -38,6 +38,15 @@
+ #define TO_SAS_TASK(_scsi_cmd)  ((void *)(_scsi_cmd)->host_scribble)
+ #define ASSIGN_SAS_TASK(_sc, _t) do { (_sc)->host_scribble = (void *) _t; } while (0)
  
++struct sas_phy_data {
++	/* let reset be performed in sas_queue_work() context */
++	struct sas_phy *phy;
++	struct mutex event_lock;
++	int hard_reset;
++	int reset_result;
++	struct work_struct reset_work;
++};
++
+ void sas_scsi_recover_host(struct Scsi_Host *shost);
  
-@@ -75,6 +75,10 @@ static inline void sas_probe_sata(struct work_struct *work)
+ int sas_show_class(enum sas_class class, char *buf);
+@@ -64,6 +73,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work);
+ void sas_porte_link_reset_err(struct work_struct *work);
+ void sas_porte_timer_event(struct work_struct *work);
+ void sas_porte_hard_reset(struct work_struct *work);
++void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work);
+ 
+ int sas_notify_lldd_dev_found(struct domain_device *);
+ void sas_notify_lldd_dev_gone(struct domain_device *);
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 9421bae..ab3bd0b 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -652,9 +652,21 @@ sas_phy_linkerror_attr(running_disparity_error_count);
+ sas_phy_linkerror_attr(loss_of_dword_sync_count);
+ sas_phy_linkerror_attr(phy_reset_problem_count);
+ 
++static int sas_phy_setup(struct transport_container *tc, struct device *dev,
++			 struct device *cdev)
++{
++	struct sas_phy *phy = dev_to_phy(dev);
++	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
++	struct sas_internal *i = to_sas_internal(shost->transportt);
++
++	if (i->f->phy_setup)
++		i->f->phy_setup(phy);
++
++	return 0;
++}
+ 
+ static DECLARE_TRANSPORT_CLASS(sas_phy_class,
+-		"sas_phy", NULL, NULL, NULL);
++		"sas_phy", sas_phy_setup, NULL, NULL);
+ 
+ static int sas_phy_match(struct attribute_container *cont, struct device *dev)
  {
+@@ -678,7 +690,11 @@ static int sas_phy_match(struct attribute_container *cont, struct device *dev)
+ static void sas_phy_release(struct device *dev)
+ {
+ 	struct sas_phy *phy = dev_to_phy(dev);
++	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
++	struct sas_internal *i = to_sas_internal(shost->transportt);
+ 
++	if (i->f->phy_release)
++		i->f->phy_release(phy);
+ 	put_device(dev->parent);
+ 	kfree(phy);
  }
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 6d14daa..42817fa 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -75,7 +75,8 @@ struct sas_phy {
+ 	/* for the list of phys belonging to a port */
+ 	struct list_head	port_siblings;
  
-+static inline void sas_ata_schedule_reset(struct domain_device *dev)
-+{
-+}
-+
- #endif
+-	struct work_struct      reset_work;
++	/* available to the lldd */
++	void			*hostdata;
+ };
  
- #endif /* _SAS_ATA_H_ */
+ #define dev_to_phy(d) \
+@@ -169,6 +170,8 @@ struct sas_function_template {
+ 	int (*get_bay_identifier)(struct sas_rphy *);
+ 	int (*phy_reset)(struct sas_phy *, int);
+ 	int (*phy_enable)(struct sas_phy *, int);
++	int (*phy_setup)(struct sas_phy *);
++	void (*phy_release)(struct sas_phy *);
+ 	int (*set_phy_speed)(struct sas_phy *, struct sas_phy_linkrates *);
+ 	int (*smp_handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
+ };
 
