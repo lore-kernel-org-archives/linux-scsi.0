@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 22/28] libsas: add mutex for SMP task execution
-Date: Thu, 22 Dec 2011 19:00:23 -0800
-Message-ID: <20111223030023.21827.20295.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 23/28] libsas: async ata-eh
+Date: Thu, 22 Dec 2011 19:00:28 -0800
+Message-ID: <20111223030028.21827.84138.stgit@localhost6.localdomain6>
 References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,119 +10,64 @@ Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Once sas_ata_hard_reset() starts honoring the 'deadline' parameter a
+pathological configuration could take 25 seconds per ata device
+(serialized) to recover.  Run per-port recoveries in parallel.
 
-SAS does not tag SMP requests, and at least one lldd (isci) does not permit
-more than one in-flight request at a time.
-
-Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_discover.c |    1 +
- drivers/scsi/libsas/sas_expander.c |   29 ++++++++++++++++-------------
- include/scsi/libsas.h              |    2 ++
- 3 files changed, 19 insertions(+), 13 deletions(-)
+ drivers/scsi/libsas/sas_ata.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 3905143..6e5fdfd 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -43,6 +43,7 @@ void sas_init_dev(struct domain_device *dev)
-         case EDGE_DEV:
-         case FANOUT_DEV:
-                 INIT_LIST_HEAD(&dev->ex_dev.children);
-+		mutex_init(&dev->ex_dev.cmd_mutex);
-                 break;
-         case SATA_DEV:
-         case SATA_PM:
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 9d2bb32..fd77ea3 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -72,11 +72,13 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 	struct sas_internal *i =
- 		to_sas_internal(dev->port->ha->core.shost->transportt);
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 3b7c362..0c67577 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -23,6 +23,7 @@
  
-+	mutex_lock(&dev->ex_dev.cmd_mutex);
- 	for (retry = 0; retry < 3; retry++) {
- 		task = sas_alloc_task(GFP_KERNEL);
--		if (!task)
--			return -ENOMEM;
--
-+		if (!task) {
-+			res = -ENOMEM;
-+			break;
-+		}
- 		task->dev = dev;
- 		task->task_proto = dev->tproto;
- 		sg_init_one(&task->smp_task.smp_req, req, req_size);
-@@ -94,7 +96,7 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 		if (res) {
- 			del_timer(&task->timer);
- 			SAS_DPRINTK("executing SMP task failed:%d\n", res);
--			goto ex_err;
-+			break;
- 		}
+ #include <linux/scatterlist.h>
+ #include <linux/slab.h>
++#include <linux/async.h>
  
- 		wait_for_completion(&task->completion);
-@@ -104,21 +106,23 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 			i->dft->lldd_abort_task(task);
- 			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
- 				SAS_DPRINTK("SMP task aborted and not done\n");
--				goto ex_err;
-+				break;
- 			}
- 		}
- 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
- 		    task->task_status.stat == SAM_STAT_GOOD) {
- 			res = 0;
- 			break;
--		} if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		      task->task_status.stat == SAS_DATA_UNDERRUN) {
-+		}
-+		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-+		    task->task_status.stat == SAS_DATA_UNDERRUN) {
- 			/* no error, but return the number of bytes of
- 			 * underrun */
- 			res = task->task_status.residual;
- 			break;
--		} if (task->task_status.resp == SAS_TASK_COMPLETE &&
--		      task->task_status.stat == SAS_DATA_OVERRUN) {
-+		}
-+		if (task->task_status.resp == SAS_TASK_COMPLETE &&
-+		    task->task_status.stat == SAS_DATA_OVERRUN) {
- 			res = -EMSGSIZE;
- 			break;
- 		} else {
-@@ -131,11 +135,10 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
- 			task = NULL;
- 		}
- 	}
--ex_err:
-+	mutex_unlock(&dev->ex_dev.cmd_mutex);
-+
- 	BUG_ON(retry == 3 && task != NULL);
--	if (task != NULL) {
--		sas_free_task(task);
--	}
-+	sas_free_task(task);
- 	return res;
+ #include <scsi/sas_ata.h>
+ #include "sas_internal.h"
+@@ -600,22 +601,32 @@ int sas_discover_sata(struct domain_device *dev)
+ 	return 0;
  }
  
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 7ba7095..6e1c640 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -153,6 +153,8 @@ struct expander_device {
- 
- 	struct ex_phy *ex_phy;
- 	struct sas_port *parent_port;
++static void async_sas_ata_eh(void *data, async_cookie_t cookie)
++{
++	struct domain_device *dev = data;
++	struct ata_port *ap = dev->sata_dev.ap;
++	struct sas_ha_struct *ha = dev->port->ha;
 +
-+	struct mutex cmd_mutex;
- };
++	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
++	ata_scsi_port_error_handler(ha->core.shost, ap);
++}
++
+ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ {
+ 	struct scsi_device *sdev;
+ 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
++	LIST_HEAD(async);
  
- /* ---------- SATA device ---------- */
+ 	mutex_lock(&sas_ha->eh_mutex);
+ 	shost_for_each_device(sdev, shost) {
+ 		struct domain_device *ddev = sdev_to_domain_dev(sdev);
+-		struct ata_port *ap = ddev->sata_dev.ap;
+ 
+ 		if (!dev_is_sata(ddev))
+ 			continue;
+ 
+-		ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
+-		ata_scsi_port_error_handler(shost, ap);
++		async_schedule_domain(async_sas_ata_eh, ddev, &async);
+ 	}
++	async_synchronize_full_domain(&async);
+ 	mutex_unlock(&sas_ha->eh_mutex);
+ }
+ 
 
