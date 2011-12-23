@@ -1,50 +1,76 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 28/28] libsas: don't recover 'gone' devices in
- sas_ata_hard_reset()
-Date: Thu, 22 Dec 2011 19:00:54 -0800
-Message-ID: <20111223030054.21827.18482.stgit@localhost6.localdomain6>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
+ missing?
+Date: Thu, 22 Dec 2011 22:06:32 -0500
+Message-ID: <20111223030632.GF12738@redhat.com>
+References: <4EF2026F.2090506@redhat.com>
+ <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM>
+ <20111222155849.GD1388@redhat.com>
+ <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60434 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60420 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756337Ab1LWDAy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2011 22:00:54 -0500
-In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+	id S1754082Ab1LWDGk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2011 22:06:40 -0500
+Content-Disposition: inline
+In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Shyam_Iyer@Dell.com
+Cc: rwheeler@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-The commands that timeout when a disk is forcibly removed may trigger
-libata to attempt recovery of the device.  If libsas has decided to
-remove the device don't permit ata to continue to issue resets to its
-last known phy.
+On Fri, Dec 23, 2011 at 02:24:42AM +0530, Shyam_Iyer@Dell.com wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> > owner@vger.kernel.org] On Behalf Of Vivek Goyal
+> > Sent: Thursday, December 22, 2011 10:59 AM
+> > To: Iyer, Shyam
+> > Cc: rwheeler@redhat.com; linux-fsdevel@vger.kernel.org; linux-
+> > scsi@vger.kernel.org
+> > Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
+> > missing?
+> > 
+> > On Thu, Dec 22, 2011 at 01:44:16PM +0530, Shyam_Iyer@Dell.com wrote:
+> > 
+> > [..]
+> > 
+> > > Simple asks -
+> > > 1) Provide a consistent storage and fs management library that
+> > discourages folks to write their own usespace storage library. Include
+> > things like fs formatting(fs profiles), transport configuration(eg:
+> > iscsiadm as a library), thin provisioning watermarks, cluster
+> > management, apis for cgroups etc.
+> >                                       ^^^^^^^^^^^^^^^^
+> > For cgroups, we have libcgroup library. Not many people like to use it
+> > though as cgroup is exported as a filesystem and they prefer to use
+> > normal
+> > libc api to traverse and configure cgroups (Instead of going through
+> > another library). Some examples include libvrit, systemd.
+> > 
+> > Thanks
+> > Vivek
+> 
+> Well honestly I think that is a libvirt/systemd issue and libvirt also invokes things like iscsiadm, dcb etc as a binary :-/
+> 
+> Some one could always use qemu command lines to invoke KVM/XEN but libvirt has saved me one too many days in doing a quick operation without wondering about a qemu commandline.
+>  
+> I am also asking for ideas on how to avoid this fragmentation because just like libvirt others are also encouraged to do their own libc thing in the absence of a common storage management framework..
+> 
+> Does the standard interface for linux end at the user/kernel boundary or the user/libc boundary? If so I feel we would continue to lag behind other OSes in features because of the model. 
 
-The primary motivation for this patch is hotplug testing by writing 0 to
-/sys/class/sas_phy/phyX/enable.  Without this check this test leads to
-libata issuing a reset and re-enabling the device that wants to be torn
-down.
+This is true only for IO cgroup management. There is not much to be done. For
+basic management, an applicatoin can just write 500 lines of code and be
+done with it.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_ata.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+libcgroup does offer bunch of commnad lines operations too.
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 96f316f..2814731 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -321,6 +321,9 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
- 	struct domain_device *dev = ap->private_data;
- 	struct sas_internal *i = dev_to_sas_internal(dev);
- 
-+	if (dev->gone)
-+		return -ENODEV;
-+
- 	res = i->dft->lldd_I_T_nexus_reset(dev);
- 
- 	if (res != TMF_RESP_FUNC_COMPLETE)
+Do you have something in mind, what applications expect out of a IO cgroup
+library and what other OSes are supporting. Don't extend this libc thing
+to iscsi, and other storage management requirements.
 
+Thanks
+Vivek 
