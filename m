@@ -1,316 +1,261 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 07/28] libsas: introduce sas_drain_work()
-Date: Thu, 22 Dec 2011 18:59:05 -0800
-Message-ID: <20111223025905.21827.47892.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 08/28] libsas: remove ata_port.lock management duties from
+ lldds
+Date: Thu, 22 Dec 2011 18:59:10 -0800
+Message-ID: <20111223025910.21827.16303.stgit@localhost6.localdomain6>
 References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23450 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756290Ab1LWC7G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2011 21:59:06 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jack Wang <jack_wang@usish.com>
+List-Id: linux-scsi@vger.kernel.org
 
-When an lldd invokes ->notify_port_event() it can trigger a chain of libsas
-events to:
+Each libsas driver (mvsas, pm8001, and isci) has invented a different
+method for managing the ap->lock.  The lock is held by the ata
+->queuecommand() path.  mvsas drops it prior to acquiring any internal
+locks which allows it to hold its internal lock across calls to
+task->task_done().  This capability is important as it is the only way
+the driver can flush task->task_done() instances to guarantee that it no
+longer has any in-flight references to a domain_device at
+->lldd_dev_gone() time.
 
-  1/ form the port and find the direct attached device
+Assumes ->queuecommand() is always called with irqs enabled which was
+the assumption mvsas was making prior to the conversion.
 
-  2/ if the attached device is an expander perform domain discovery
-
-A call to flush_workqueue() will only flush the initial port formation work.
-Currently libsas users need to call scsi_flush_work() up to the max depth of
-chain (which will grow from 2 to 3 when ata discovery is moved to its own
-discovery event).  Instead of open coding multiple calls switch to use
-drain_workqueue() to flush sas work.
-
-drain_workqueue() does not handle new work submitted during the drain so
-libsas needs a bit of infrastructure to hold off unchained work submissions
-while a drain is in flight.  A lldd ->notify() event is considered 'unchained'
-while a sas_discover_event() is 'chained'.  As Tejun notes:
-
-  "For now, I think it would be best to add private wrapper in libsas to
-   support deferring unchained work items while draining."
-
-Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Jack Wang <jack_wang@usish.com>
+Cc: Xiangliang Yu <yuxiangl@marvell.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c |    2 +
- drivers/scsi/isci/host.c            |    8 ++---
- drivers/scsi/libsas/sas_discover.c  |   21 +++++++++++++-
- drivers/scsi/libsas/sas_event.c     |   54 +++++++++++++++++++++++++++++++++++
- drivers/scsi/libsas/sas_init.c      |    9 ++++--
- drivers/scsi/libsas/sas_internal.h  |   14 ---------
- drivers/scsi/mvsas/mv_sas.c         |    2 +
- drivers/scsi/pm8001/pm8001_sas.c    |    4 ++-
- include/scsi/libsas.h               |    4 +++
- 9 files changed, 92 insertions(+), 26 deletions(-)
+ drivers/scsi/isci/request.c         |    3 +--
+ drivers/scsi/isci/task.c            |    6 ++----
+ drivers/scsi/isci/task.h            |   36 -----------------------------------
+ drivers/scsi/libsas/sas_ata.c       |   31 ++++++++++++++++++------------
+ drivers/scsi/libsas/sas_scsi_host.c |    6 ++----
+ drivers/scsi/mvsas/mv_sas.c         |    6 ------
+ drivers/scsi/pm8001/pm8001_sas.c    |    6 +-----
+ 7 files changed, 24 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index 8db4e72..2b3717f 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -971,7 +971,7 @@ static int asd_scan_finished(struct Scsi_Host *shost, unsigned long time)
- 	if (time < HZ)
- 		return 0;
- 	/* Wait for discovery to finish */
--	scsi_flush_work(shost);
-+	sas_drain_work(SHOST_TO_SAS_HA(shost));
- 	return 1;
- }
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index 192cb48..83383ef 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3649,8 +3649,7 @@ int isci_request_execute(struct isci_host *ihost, struct isci_remote_device *ide
+ 		/* Cause this task to be scheduled in the SCSI error
+ 		 * handler thread.
+ 		 */
+-		isci_execpath_callback(ihost, task,
+-				       sas_task_abort);
++		sas_task_abort(task);
  
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index e7fe9c4..e7e5d06 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -650,15 +650,13 @@ static void isci_host_start_complete(struct isci_host *ihost, enum sci_status co
+ 		/* Change the status, since we are holding
+ 		 * the I/O until it is managed by the SCSI
+diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+index 66ad3dc..5901a0e 100644
+--- a/drivers/scsi/isci/task.c
++++ b/drivers/scsi/isci/task.c
+@@ -96,8 +96,7 @@ static void isci_task_refuse(struct isci_host *ihost, struct sas_task *task,
+ 			__func__, task, response, status);
  
- int isci_host_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
--	struct isci_host *ihost = SHOST_TO_SAS_HA(shost)->lldd_ha;
-+	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-+	struct isci_host *ihost = ha->lldd_ha;
- 
- 	if (test_bit(IHOST_START_PENDING, &ihost->flags))
- 		return 0;
- 
--	/* todo: use sas_flush_discovery once it is upstream */
--	scsi_flush_work(shost);
+ 		task->lldd_task = NULL;
 -
--	scsi_flush_work(shost);
-+	sas_drain_work(ha);
+-		isci_execpath_callback(ihost, task, task->task_done);
++		task->task_done(task);
+ 		break;
  
- 	dev_dbg(&ihost->pdev->dev,
- 		"%s: ihost->status = %d, time = %ld\n",
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index ed04118..32e0117 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -367,6 +367,25 @@ static void sas_revalidate_domain(struct work_struct *work)
+ 	case isci_perform_aborted_io_completion:
+@@ -117,8 +116,7 @@ static void isci_task_refuse(struct isci_host *ihost, struct sas_task *task,
+ 			"%s: Error - task = %p, response=%d, "
+ 			"status=%d\n",
+ 			__func__, task, response, status);
+-
+-		isci_execpath_callback(ihost, task, sas_task_abort);
++		sas_task_abort(task);
+ 		break;
  
- /* ---------- Events ---------- */
+ 	default:
+diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
+index bc78c0a..df8d440 100644
+--- a/drivers/scsi/isci/task.h
++++ b/drivers/scsi/isci/task.h
+@@ -322,40 +322,4 @@ isci_task_set_completion_status(
+ 	return task_notification_selection;
  
-+static void sas_chain_work(struct sas_ha_struct *ha, struct work_struct *work)
-+{
-+	/* chained work is not subject to SA_HA_DRAINING or SAS_HA_REGISTERED */
-+	scsi_queue_work(ha->core.shost, work);
-+}
-+
-+static void sas_chain_event(int event, unsigned long *pending,
-+			    struct work_struct *work,
-+			    struct sas_ha_struct *ha)
-+{
-+	if (!test_and_set_bit(event, pending)) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&ha->state_lock, flags);
-+		sas_chain_work(ha, work);
-+		spin_unlock_irqrestore(&ha->state_lock, flags);
-+	}
-+}
-+
- int sas_discover_event(struct asd_sas_port *port, enum discover_event ev)
- {
- 	struct sas_discovery *disc;
-@@ -377,7 +396,7 @@ int sas_discover_event(struct asd_sas_port *port, enum discover_event ev)
- 
- 	BUG_ON(ev >= DISC_NUM_EVENTS);
- 
--	sas_queue_event(ev, &disc->pending, &disc->disc_work[ev].work, port->ha);
-+	sas_chain_event(ev, &disc->pending, &disc->disc_work[ev].work, port->ha);
- 
- 	return 0;
  }
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 9c084bc..3ff73af 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -22,10 +22,64 @@
-  *
-  */
- 
-+#include <linux/export.h>
- #include <scsi/scsi_host.h>
- #include "sas_internal.h"
- #include "sas_dump.h"
- 
-+static void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
-+{
-+	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
-+		return;
-+
-+	if (test_bit(SAS_HA_DRAINING, &ha->state))
-+		list_add(&work->entry, &ha->defer_q);
-+	else
-+		scsi_queue_work(ha->core.shost, work);
-+}
-+
-+static void sas_queue_event(int event, unsigned long *pending,
-+			    struct work_struct *work,
-+			    struct sas_ha_struct *ha)
-+{
-+	if (!test_and_set_bit(event, pending)) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&ha->state_lock, flags);
-+		sas_queue_work(ha, work);
-+		spin_unlock_irqrestore(&ha->state_lock, flags);
-+	}
-+}
-+
-+int sas_drain_work(struct sas_ha_struct *ha)
-+{
-+	struct workqueue_struct *wq = ha->core.shost->work_q;
-+	struct work_struct *w, *_w;
-+	int ret;
-+
-+	mutex_lock(&ha->drain_mutex);
-+
-+	set_bit(SAS_HA_DRAINING, &ha->state);
-+	/* flush submitters */
-+	spin_lock_irq(&ha->state_lock);
-+	spin_unlock_irq(&ha->state_lock);
-+
-+	drain_workqueue(wq);
-+
-+	spin_lock_irq(&ha->state_lock);
-+	clear_bit(SAS_HA_DRAINING, &ha->state);
-+	ret = !list_empty(&ha->defer_q);
-+	list_for_each_entry_safe(w, _w, &ha->defer_q, entry) {
-+		list_del_init(&w->entry);
-+		sas_queue_work(ha, w);
-+	}
-+	spin_unlock_irq(&ha->state_lock);
-+	mutex_unlock(&ha->drain_mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(sas_drain_work);
-+
- static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
- {
- 	BUG_ON(event >= HA_NUM_EVENTS);
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index da244e6..572b943 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -114,6 +114,8 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 
- 	set_bit(SAS_HA_REGISTERED, &sas_ha->state);
- 	spin_lock_init(&sas_ha->state_lock);
-+	mutex_init(&sas_ha->drain_mutex);
-+	INIT_LIST_HEAD(&sas_ha->defer_q);
- 
- 	error = sas_register_phys(sas_ha);
- 	if (error) {
-@@ -157,12 +159,13 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
- {
- 	unsigned long flags;
- 
--	/* Set the state to unregistered to avoid further
--	 * events to be queued */
-+	/* Set the state to unregistered to avoid further unchained
-+	 * events to be queued
-+	 */
- 	spin_lock_irqsave(&sas_ha->state_lock, flags);
- 	clear_bit(SAS_HA_REGISTERED, &sas_ha->state);
- 	spin_unlock_irqrestore(&sas_ha->state_lock, flags);
--	scsi_flush_work(sas_ha->core.shost);
-+	sas_drain_work(sas_ha);
- 
- 	sas_unregister_ports(sas_ha);
- 
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 1fd84b3..948ea64 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -92,20 +92,6 @@ static inline int sas_smp_host_handler(struct Scsi_Host *shost,
- }
- #endif
- 
--static inline void sas_queue_event(int event, unsigned long *pending,
--				   struct work_struct *work,
--				   struct sas_ha_struct *sas_ha)
+-/**
+-* isci_execpath_callback() - This function is called from the task
+-* execute path when the task needs to callback libsas about the submit-time
+-* task failure.  The callback occurs either through the task's done function
+-* or through sas_task_abort.  In the case of regular non-discovery SATA/STP I/O
+-* requests, libsas takes the host lock before calling execute task.  Therefore
+-* in this situation the host lock must be managed before calling the func.
+-*
+-* @ihost: This parameter is the controller to which the I/O request was sent.
+-* @task: This parameter is the I/O request.
+-* @func: This parameter is the function to call in the correct context.
+-* @status: This parameter is the status code for the completed task.
+-*
+-*/
+-static inline void isci_execpath_callback(struct isci_host *ihost,
+-					  struct sas_task  *task,
+-					  void (*func)(struct sas_task *))
 -{
--	if (!test_and_set_bit(event, pending)) {
+-	struct domain_device *dev = task->dev;
+-
+-	if (dev_is_sata(dev) && task->uldd_task) {
 -		unsigned long flags;
 -
--		spin_lock_irqsave(&sas_ha->state_lock, flags);
--		if (test_bit(SAS_HA_REGISTERED, &sas_ha->state))
--			scsi_queue_work(sas_ha->core.shost, work);
--		spin_unlock_irqrestore(&sas_ha->state_lock, flags);
--	}
+-		/* Since we are still in the submit path, and since
+-		 * libsas takes the host lock on behalf of SATA
+-		 * devices before I/O starts (in the non-discovery case),
+-		 * we need to unlock before we can call the callback function.
+-		 */
+-		raw_local_irq_save(flags);
+-		spin_unlock(dev->sata_dev.ap->lock);
+-		func(task);
+-		spin_lock(dev->sata_dev.ap->lock);
+-		raw_local_irq_restore(flags);
+-	} else
+-		func(task);
 -}
--
- static inline void sas_fill_in_rphy(struct domain_device *dev,
- 				    struct sas_rphy *rphy)
+ #endif /* !defined(_SCI_TASK_H_) */
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 83118d0..0489001 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -166,23 +166,26 @@ qc_already_gone:
+ 
+ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
  {
+-	int res;
++	unsigned int si;
++	unsigned int xfer = 0;
+ 	struct sas_task *task;
+-	struct domain_device *dev = qc->ap->private_data;
++	struct scatterlist *sg;
++	int ret = AC_ERR_SYSTEM;
++	struct ata_port *ap = qc->ap;
++	struct domain_device *dev = ap->private_data;
+ 	struct sas_ha_struct *sas_ha = dev->port->ha;
+ 	struct Scsi_Host *host = sas_ha->core.shost;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
+-	struct scatterlist *sg;
+-	unsigned int xfer = 0;
+-	unsigned int si;
++
++	spin_unlock_irq(ap->lock);
+ 
+ 	/* If the device fell off, no sense in issuing commands */
+ 	if (dev->gone)
+-		return AC_ERR_SYSTEM;
++		goto out;
+ 
+ 	task = sas_alloc_task(GFP_ATOMIC);
+ 	if (!task)
+-		return AC_ERR_SYSTEM;
++		goto out;
+ 	task->dev = dev;
+ 	task->task_proto = SAS_PROTOCOL_STP;
+ 	task->task_done = sas_ata_task_done;
+@@ -227,21 +230,23 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 		ASSIGN_SAS_TASK(qc->scsicmd, task);
+ 
+ 	if (sas_ha->lldd_max_execute_num < 2)
+-		res = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
++		ret = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
+ 	else
+-		res = sas_queue_up(task);
++		ret = sas_queue_up(task);
+ 
+ 	/* Examine */
+-	if (res) {
+-		SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
++	if (ret) {
++		SAS_DPRINTK("lldd_execute_task returned: %d\n", ret);
+ 
+ 		if (qc->scsicmd)
+ 			ASSIGN_SAS_TASK(qc->scsicmd, NULL);
+ 		sas_free_task(task);
+-		return AC_ERR_SYSTEM;
++		ret = AC_ERR_SYSTEM;
+ 	}
+ 
+-	return 0;
++ out:
++	spin_lock_irq(ap->lock);
++	return ret;
+ }
+ 
+ static bool sas_ata_qc_fill_rtf(struct ata_queued_cmd *qc)
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 2a163c7..fd60465 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -198,11 +198,9 @@ int sas_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	}
+ 
+ 	if (dev_is_sata(dev)) {
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
++		spin_lock_irq(dev->sata_dev.ap->lock);
+ 		res = ata_sas_queuecmd(cmd, dev->sata_dev.ap);
+-		spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
++		spin_unlock_irq(dev->sata_dev.ap->lock);
+ 		return res;
+ 	}
+ 
 diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index a4884a5..b118e63 100644
+index b118e63..cd88223 100644
 --- a/drivers/scsi/mvsas/mv_sas.c
 +++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -308,7 +308,7 @@ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time)
- 	if (mvs_prv->scan_finished == 0)
- 		return 0;
+@@ -893,9 +893,6 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
  
--	scsi_flush_work(shost);
-+	sas_drain_work(sha);
- 	return 1;
+ 	mvi = ((struct mvs_device *)task->dev->lldd_dev)->mvi_info;
+ 
+-	if ((dev->dev_type == SATA_DEV) && (dev->sata_dev.ap != NULL))
+-		spin_unlock_irq(dev->sata_dev.ap->lock);
+-
+ 	spin_lock_irqsave(&mvi->lock, flags);
+ 	rc = mvs_task_prep(task, mvi, is_tmf, tmf, &pass);
+ 	if (rc)
+@@ -906,9 +903,6 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
+ 				(MVS_CHIP_SLOT_SZ - 1));
+ 	spin_unlock_irqrestore(&mvi->lock, flags);
+ 
+-	if ((dev->dev_type == SATA_DEV) && (dev->sata_dev.ap != NULL))
+-		spin_lock_irq(dev->sata_dev.ap->lock);
+-
+ 	return rc;
  }
  
 diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index fb3dc99..13811c7 100644
+index 13811c7..5add18c 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.c
 +++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -234,12 +234,14 @@ void pm8001_scan_start(struct Scsi_Host *shost)
+@@ -342,7 +342,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
+ 	struct pm8001_ccb_info *ccb;
+ 	u32 tag = 0xdeadbeef, rc, n_elem = 0;
+ 	u32 n = num;
+-	unsigned long flags = 0, flags_libsas = 0;
++	unsigned long flags = 0;
  
- int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
-+	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
-+
- 	/* give the phy enabling interrupt event time to come in (1s
- 	* is empirically about all it takes) */
- 	if (time < HZ)
- 		return 0;
- 	/* Wait for discovery to finish */
--	scsi_flush_work(shost);
-+	sas_drain_work(ha);
- 	return 1;
- }
+ 	if (!dev->port) {
+ 		struct task_status_struct *tsm = &t->task_status;
+@@ -366,11 +366,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
+ 				ts->stat = SAS_PHY_DOWN;
  
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 8e402d5..42900fa 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -330,6 +330,7 @@ struct sas_ha_event {
- 
- enum sas_ha_state {
- 	SAS_HA_REGISTERED,
-+	SAS_HA_DRAINING,
- };
- 
- struct sas_ha_struct {
-@@ -337,6 +338,8 @@ struct sas_ha_struct {
- 	struct sas_ha_event ha_events[HA_NUM_EVENTS];
- 	unsigned long	 pending;
- 
-+	struct list_head  defer_q; /* work queued while draining */
-+	struct mutex	  drain_mutex;
- 	unsigned long	  state;
- 	spinlock_t 	  state_lock;
- 
-@@ -657,6 +660,7 @@ int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd);
- extern void sas_target_destroy(struct scsi_target *);
- extern int sas_slave_alloc(struct scsi_device *);
- extern int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
-+extern int sas_drain_work(struct sas_ha_struct *ha);
- 
- extern int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 			   struct request *req);
+ 				spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+-				spin_unlock_irqrestore(dev->sata_dev.ap->lock,
+-						flags_libsas);
+ 				t->task_done(t);
+-				spin_lock_irqsave(dev->sata_dev.ap->lock,
+-					flags_libsas);
+ 				spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 				if (n > 1)
+ 					t = list_entry(t->list.next,
 
