@@ -1,300 +1,86 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 05/28] libsas: replace event locks with atomic bitops
-Date: Thu, 22 Dec 2011 18:58:55 -0800
-Message-ID: <20111223025854.21827.13295.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 06/28] libsas: convert ha->state to flags
+Date: Thu, 22 Dec 2011 18:59:00 -0800
+Message-ID: <20111223025900.21827.7539.stgit@localhost6.localdomain6>
 References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:11985 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756259Ab1LWC7A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2011 21:59:00 -0500
 In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-The locks only served to make sure the pending event bitmask was updated
-consistently.
+In preparation for adding new states (SAS_HA_DRAINING, SAS_HA_FROZEN),
+convert ha->state into a set of flags.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_discover.c |   10 +++-------
- drivers/scsi/libsas/sas_event.c    |    8 +++-----
- drivers/scsi/libsas/sas_init.c     |    3 +--
- drivers/scsi/libsas/sas_internal.h |   32 +++++++-------------------------
- drivers/scsi/libsas/sas_phy.c      |   12 ++++--------
- drivers/scsi/libsas/sas_port.c     |   15 +++++----------
- include/scsi/libsas.h              |    3 ---
- 7 files changed, 23 insertions(+), 60 deletions(-)
+ drivers/scsi/libsas/sas_init.c     |    4 ++--
+ drivers/scsi/libsas/sas_internal.h |    2 +-
+ include/scsi/libsas.h              |    3 +--
+ 3 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index dc52b1f..ed04118 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -295,8 +295,7 @@ static void sas_discover_domain(struct work_struct *work)
- 		container_of(work, struct sas_discovery_event, work);
- 	struct asd_sas_port *port = ev->port;
- 
--	sas_begin_event(DISCE_DISCOVER_DOMAIN, &port->disc.disc_event_lock,
--			&port->disc.pending);
-+	clear_bit(DISCE_DISCOVER_DOMAIN, &port->disc.pending);
- 
- 	if (port->port_dev)
- 		return;
-@@ -355,8 +354,7 @@ static void sas_revalidate_domain(struct work_struct *work)
- 		container_of(work, struct sas_discovery_event, work);
- 	struct asd_sas_port *port = ev->port;
- 
--	sas_begin_event(DISCE_REVALIDATE_DOMAIN, &port->disc.disc_event_lock,
--			&port->disc.pending);
-+	clear_bit(DISCE_REVALIDATE_DOMAIN, &port->disc.pending);
- 
- 	SAS_DPRINTK("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
- 		    task_pid_nr(current));
-@@ -379,8 +377,7 @@ int sas_discover_event(struct asd_sas_port *port, enum discover_event ev)
- 
- 	BUG_ON(ev >= DISC_NUM_EVENTS);
- 
--	sas_queue_event(ev, &disc->disc_event_lock, &disc->pending,
--			&disc->disc_work[ev].work, port->ha);
-+	sas_queue_event(ev, &disc->pending, &disc->disc_work[ev].work, port->ha);
- 
- 	return 0;
- }
-@@ -400,7 +397,6 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
- 		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
- 	};
- 
--	spin_lock_init(&disc->disc_event_lock);
- 	disc->pending = 0;
- 	for (i = 0; i < DISC_NUM_EVENTS; i++) {
- 		INIT_WORK(&disc->disc_work[i].work, sas_event_fns[i]);
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 9db30fb..9c084bc 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -30,7 +30,7 @@ static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
- {
- 	BUG_ON(event >= HA_NUM_EVENTS);
- 
--	sas_queue_event(event, &sas_ha->event_lock, &sas_ha->pending,
-+	sas_queue_event(event, &sas_ha->pending,
- 			&sas_ha->ha_events[event].work, sas_ha);
- }
- 
-@@ -40,7 +40,7 @@ static void notify_port_event(struct asd_sas_phy *phy, enum port_event event)
- 
- 	BUG_ON(event >= PORT_NUM_EVENTS);
- 
--	sas_queue_event(event, &ha->event_lock, &phy->port_events_pending,
-+	sas_queue_event(event, &phy->port_events_pending,
- 			&phy->port_events[event].work, ha);
- }
- 
-@@ -50,7 +50,7 @@ static void notify_phy_event(struct asd_sas_phy *phy, enum phy_event event)
- 
- 	BUG_ON(event >= PHY_NUM_EVENTS);
- 
--	sas_queue_event(event, &ha->event_lock, &phy->phy_events_pending,
-+	sas_queue_event(event, &phy->phy_events_pending,
- 			&phy->phy_events[event].work, ha);
- }
- 
-@@ -62,8 +62,6 @@ int sas_init_events(struct sas_ha_struct *sas_ha)
- 
- 	int i;
- 
--	spin_lock_init(&sas_ha->event_lock);
--
- 	for (i = 0; i < HA_NUM_EVENTS; i++) {
- 		INIT_WORK(&sas_ha->ha_events[i].work, sas_ha_event_fns[i]);
- 		sas_ha->ha_events[i].ha = sas_ha;
 diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index d81c3b1..a435876 100644
+index a435876..da244e6 100644
 --- a/drivers/scsi/libsas/sas_init.c
 +++ b/drivers/scsi/libsas/sas_init.c
-@@ -97,8 +97,7 @@ void sas_hae_reset(struct work_struct *work)
- 		container_of(work, struct sas_ha_event, work);
- 	struct sas_ha_struct *ha = ev->ha;
+@@ -112,7 +112,7 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 	else if (sas_ha->lldd_queue_size == -1)
+ 		sas_ha->lldd_queue_size = 128; /* Sanity */
  
--	sas_begin_event(HAE_RESET, &ha->event_lock,
--			&ha->pending);
-+	clear_bit(HAE_RESET, &ha->pending);
- }
+-	sas_ha->state = SAS_HA_REGISTERED;
++	set_bit(SAS_HA_REGISTERED, &sas_ha->state);
+ 	spin_lock_init(&sas_ha->state_lock);
  
- int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 	error = sas_register_phys(sas_ha);
+@@ -160,7 +160,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
+ 	/* Set the state to unregistered to avoid further
+ 	 * events to be queued */
+ 	spin_lock_irqsave(&sas_ha->state_lock, flags);
+-	sas_ha->state = SAS_HA_UNREGISTERED;
++	clear_bit(SAS_HA_REGISTERED, &sas_ha->state);
+ 	spin_unlock_irqrestore(&sas_ha->state_lock, flags);
+ 	scsi_flush_work(sas_ha->core.shost);
+ 
 diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 0d43408..7fe4ede 100644
+index 7fe4ede..1fd84b3 100644
 --- a/drivers/scsi/libsas/sas_internal.h
 +++ b/drivers/scsi/libsas/sas_internal.h
-@@ -92,36 +92,18 @@ static inline int sas_smp_host_handler(struct Scsi_Host *shost,
- }
- #endif
+@@ -100,7 +100,7 @@ static inline void sas_queue_event(int event, unsigned long *pending,
+ 		unsigned long flags;
  
--static inline void sas_queue_event(int event, spinlock_t *lock,
--				   unsigned long *pending,
-+static inline void sas_queue_event(int event, unsigned long *pending,
- 				   struct work_struct *work,
- 				   struct sas_ha_struct *sas_ha)
- {
--	unsigned long flags;
-+	if (!test_and_set_bit(event, pending)) {
-+		unsigned long flags;
- 
--	spin_lock_irqsave(lock, flags);
--	if (test_bit(event, pending)) {
--		spin_unlock_irqrestore(lock, flags);
--		return;
-+		spin_lock_irqsave(&sas_ha->state_lock, flags);
-+		if (sas_ha->state != SAS_HA_UNREGISTERED)
-+			scsi_queue_work(sas_ha->core.shost, work);
-+		spin_unlock_irqrestore(&sas_ha->state_lock, flags);
+ 		spin_lock_irqsave(&sas_ha->state_lock, flags);
+-		if (sas_ha->state != SAS_HA_UNREGISTERED)
++		if (test_bit(SAS_HA_REGISTERED, &sas_ha->state))
+ 			scsi_queue_work(sas_ha->core.shost, work);
+ 		spin_unlock_irqrestore(&sas_ha->state_lock, flags);
  	}
--	__set_bit(event, pending);
--	spin_unlock_irqrestore(lock, flags);
--
--	spin_lock_irqsave(&sas_ha->state_lock, flags);
--	if (sas_ha->state != SAS_HA_UNREGISTERED) {
--		scsi_queue_work(sas_ha->core.shost, work);
--	}
--	spin_unlock_irqrestore(&sas_ha->state_lock, flags);
--}
--
--static inline void sas_begin_event(int event, spinlock_t *lock,
--				   unsigned long *pending)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(lock, flags);
--	__clear_bit(event, pending);
--	spin_unlock_irqrestore(lock, flags);
- }
- 
- static inline void sas_fill_in_rphy(struct domain_device *dev,
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index e0f5018..dcfd4a9 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -36,8 +36,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
- 		container_of(work, struct asd_sas_event, work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	sas_begin_event(PHYE_LOSS_OF_SIGNAL, &phy->ha->event_lock,
--			&phy->phy_events_pending);
-+	clear_bit(PHYE_LOSS_OF_SIGNAL, &phy->phy_events_pending);
- 	phy->error = 0;
- 	sas_deform_port(phy, 1);
- }
-@@ -48,8 +47,7 @@ static void sas_phye_oob_done(struct work_struct *work)
- 		container_of(work, struct asd_sas_event, work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	sas_begin_event(PHYE_OOB_DONE, &phy->ha->event_lock,
--			&phy->phy_events_pending);
-+	clear_bit(PHYE_OOB_DONE, &phy->phy_events_pending);
- 	phy->error = 0;
- }
- 
-@@ -63,8 +61,7 @@ static void sas_phye_oob_error(struct work_struct *work)
- 	struct sas_internal *i =
- 		to_sas_internal(sas_ha->core.shost->transportt);
- 
--	sas_begin_event(PHYE_OOB_ERROR, &phy->ha->event_lock,
--			&phy->phy_events_pending);
-+	clear_bit(PHYE_OOB_ERROR, &phy->phy_events_pending);
- 
- 	sas_deform_port(phy, 1);
- 
-@@ -95,8 +92,7 @@ static void sas_phye_spinup_hold(struct work_struct *work)
- 	struct sas_internal *i =
- 		to_sas_internal(sas_ha->core.shost->transportt);
- 
--	sas_begin_event(PHYE_SPINUP_HOLD, &phy->ha->event_lock,
--			&phy->phy_events_pending);
-+	clear_bit(PHYE_SPINUP_HOLD, &phy->phy_events_pending);
- 
- 	phy->error = 0;
- 	i->dft->lldd_control_phy(phy, PHY_FUNC_RELEASE_SPINUP_HOLD, NULL);
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 42fd1f2..a47c7a7 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -213,8 +213,7 @@ void sas_porte_bytes_dmaed(struct work_struct *work)
- 		container_of(work, struct asd_sas_event, work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	sas_begin_event(PORTE_BYTES_DMAED, &phy->ha->event_lock,
--			&phy->port_events_pending);
-+	clear_bit(PORTE_BYTES_DMAED, &phy->port_events_pending);
- 
- 	sas_form_port(phy);
- }
-@@ -227,8 +226,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work)
- 	unsigned long flags;
- 	u32 prim;
- 
--	sas_begin_event(PORTE_BROADCAST_RCVD, &phy->ha->event_lock,
--			&phy->port_events_pending);
-+	clear_bit(PORTE_BROADCAST_RCVD, &phy->port_events_pending);
- 
- 	spin_lock_irqsave(&phy->sas_prim_lock, flags);
- 	prim = phy->sas_prim;
-@@ -244,8 +242,7 @@ void sas_porte_link_reset_err(struct work_struct *work)
- 		container_of(work, struct asd_sas_event, work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	sas_begin_event(PORTE_LINK_RESET_ERR, &phy->ha->event_lock,
--			&phy->port_events_pending);
-+	clear_bit(PORTE_LINK_RESET_ERR, &phy->port_events_pending);
- 
- 	sas_deform_port(phy, 1);
- }
-@@ -256,8 +253,7 @@ void sas_porte_timer_event(struct work_struct *work)
- 		container_of(work, struct asd_sas_event, work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	sas_begin_event(PORTE_TIMER_EVENT, &phy->ha->event_lock,
--			&phy->port_events_pending);
-+	clear_bit(PORTE_TIMER_EVENT, &phy->port_events_pending);
- 
- 	sas_deform_port(phy, 1);
- }
-@@ -268,8 +264,7 @@ void sas_porte_hard_reset(struct work_struct *work)
- 		container_of(work, struct asd_sas_event, work);
- 	struct asd_sas_phy *phy = ev->phy;
- 
--	sas_begin_event(PORTE_HARD_RESET, &phy->ha->event_lock,
--			&phy->port_events_pending);
-+	clear_bit(PORTE_HARD_RESET, &phy->port_events_pending);
- 
- 	sas_deform_port(phy, 1);
- }
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 7ecb5c1..de63a66 100644
+index de63a66..8e402d5 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -215,7 +215,6 @@ struct sas_discovery_event {
+@@ -330,7 +330,6 @@ struct sas_ha_event {
+ 
+ enum sas_ha_state {
+ 	SAS_HA_REGISTERED,
+-	SAS_HA_UNREGISTERED
  };
  
- struct sas_discovery {
--	spinlock_t disc_event_lock;
- 	struct sas_discovery_event disc_work[DISC_NUM_EVENTS];
- 	unsigned long    pending;
- 	u8     fanout_sas_addr[8];
-@@ -272,7 +271,6 @@ struct asd_sas_event {
-  */
- struct asd_sas_phy {
- /* private: */
--	/* protected by ha->event_lock */
- 	struct asd_sas_event   port_events[PORT_NUM_EVENTS];
- 	struct asd_sas_event   phy_events[PHY_NUM_EVENTS];
- 
-@@ -337,7 +335,6 @@ enum sas_ha_state {
- 
  struct sas_ha_struct {
- /* private: */
--	spinlock_t       event_lock;
+@@ -338,7 +337,7 @@ struct sas_ha_struct {
  	struct sas_ha_event ha_events[HA_NUM_EVENTS];
  	unsigned long	 pending;
  
+-	enum sas_ha_state state;
++	unsigned long	  state;
+ 	spinlock_t 	  state_lock;
+ 
+ 	struct scsi_core core;
 
