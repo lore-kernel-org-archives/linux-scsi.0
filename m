@@ -1,87 +1,171 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 16/28] libsas: defer SAS_TASK_NEED_DEV_RESET commands to
- libata
-Date: Thu, 22 Dec 2011 18:59:52 -0800
-Message-ID: <20111223025952.21827.26938.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 17/28] libsas: use libata-eh-reset for sata rediscovery fis
+ transmit failures
+Date: Thu, 22 Dec 2011 18:59:57 -0800
+Message-ID: <20111223025957.21827.75352.stgit@localhost6.localdomain6>
 References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:10173 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756331Ab1LWC7x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2011 21:59:53 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-lldds use the SAS_TASK_NEED_DEV_RESET interface to request that eh
-perform a reset.  In the sata device case defer the commands that
-triggered the reset to libata-eh context so it can perform its pre and
-post reset management.
+Since sata devices can take several seconds to recover the link on reset
+the 0.5 seconds that libsas currently waits may not be enough.  Instead
+if we are rediscovering a phy that was previously attached to a sata
+device let libata handle any resets to encourage the device to transmit
+the initial fis.
 
-In the sas_ata_post_internal() case the reset request is falling on deaf
-ears as the sas_task is immediately destroyed without any reset action.
-Since it is currently a nop, and likely superfluous given the conversion
-to new-style libata-eh, just drop the request.
+Once sas_ata_hard_reset() and lldds learn how to honor 'deadline' libsas
+should stop encountering phys in an intermediate state, until then this
+will loop until the fis is transmitted or ->attached_sas_addr gets
+cleared, but in the more likely initial discovery case we keep existing
+behavior.
 
-Cc: Darrick J. Wong <djwong@us.ibm.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c       |   14 ++++----------
- drivers/scsi/libsas/sas_scsi_host.c |    4 ++--
- 2 files changed, 6 insertions(+), 12 deletions(-)
+ drivers/scsi/libsas/sas_ata.c      |   19 ++++++++++++++++
+ drivers/scsi/libsas/sas_expander.c |   44 ++++++++++++++++++++++++++++++++----
+ include/scsi/sas_ata.h             |    6 ++++-
+ 3 files changed, 63 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 2bedc5af..21faf5a 100644
+index 21faf5a..dc1ff15 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -406,18 +406,12 @@ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
- 		 *  ourselves.
- 		 */
- 		struct sas_task *task = qc->lldd_task;
--		unsigned long flags;
+@@ -664,3 +664,22 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
  
- 		qc->lldd_task = NULL;
--		if (task) {
--			/* Should this be a AT(API) device reset? */
--			spin_lock_irqsave(&task->task_state_lock, flags);
--			task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
--			spin_unlock_irqrestore(&task->task_state_lock, flags);
+ 	return rtn;
+ }
++
++void sas_ata_schedule_reset(struct domain_device *dev)
++{
++	struct ata_eh_info *ehi;
++	struct ata_port *ap;
++	unsigned long flags;
++
++	if (!dev_is_sata(dev))
++		return;
++
++	ap = dev->sata_dev.ap;
++	ehi = &ap->link.eh_info;
++
++	spin_lock_irqsave(ap->lock, flags);
++	ehi->err_mask |= AC_ERR_TIMEOUT;
++	ehi->action |= ATA_EH_RESET;
++	ata_port_schedule_eh(ap);
++	spin_unlock_irqrestore(ap->lock, flags);
++}
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index c3846cf..ed26a23 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -28,6 +28,7 @@
+ 
+ #include "sas_internal.h"
+ 
++#include <scsi/sas_ata.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_sas.h>
+ #include "../scsi_sas_internal.h"
+@@ -226,12 +227,35 @@ static void sas_set_ex_phy(struct domain_device *dev, int phy_id,
+ 	return;
+ }
+ 
++/* check if we have an existing attached ata device on this expander phy */
++static struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id)
++{
++	struct ex_phy *ex_phy = &ex_dev->ex_dev.ex_phy[phy_id];
++	struct domain_device *dev;
++	struct sas_rphy *rphy;
++
++	if (!ex_phy->port)
++		return NULL;
++
++	rphy = ex_phy->port->rphy;
++	if (!rphy)
++		return NULL;
++
++	dev = sas_find_dev_by_rphy(rphy);
++
++	if (dev && dev_is_sata(dev))
++		return dev;
++
++	return NULL;
++}
++
+ #define DISCOVER_REQ_SIZE  16
+ #define DISCOVER_RESP_SIZE 56
+ 
+ static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
+ 				      u8 *disc_resp, int single)
+ {
++	struct domain_device *ata_dev = sas_ex_to_ata(dev, single);
+ 	int i, res;
+ 
+ 	disc_req[9] = single;
+@@ -242,20 +266,30 @@ static int sas_ex_phy_discover_helper(struct domain_device *dev, u8 *disc_req,
+ 				       disc_resp, DISCOVER_RESP_SIZE);
+ 		if (res)
+ 			return res;
+-		/* This is detecting a failure to transmit initial
+-		 * dev to host FIS as described in section G.5 of
+-		 * sas-2 r 04b */
+ 		dr = &((struct smp_resp *)disc_resp)->disc;
+ 		if (memcmp(dev->sas_addr, dr->attached_sas_addr,
+ 			  SAS_ADDR_SIZE) == 0) {
+ 			sas_printk("Found loopback topology, just ignore it!\n");
+ 			return 0;
+ 		}
++
++		/* This is detecting a failure to transmit initial
++		 * dev to host FIS as described in section J.5 of
++		 * sas-2 r16
++		 */
+ 		if (!(dr->attached_dev_type == 0 &&
+ 		      dr->attached_sata_dev))
+ 			break;
+-		/* In order to generate the dev to host FIS, we
+-		 * send a link reset to the expander port */
++
++		/* In order to generate the dev to host FIS, we send a
++		 * link reset to the expander port.  If a device was
++		 * previously detected on this port we ask libata to
++		 * manage the reset and link recovery.
++		 */
++		if (ata_dev) {
++			sas_ata_schedule_reset(ata_dev);
++			break;
++		}
+ 		sas_smp_phy_control(dev, single, PHY_FUNC_LINK_RESET, NULL);
+ 		/* Wait for the reset to trigger the negotiation */
+ 		msleep(500);
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index 9f7a23d..c0bcd30 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -44,7 +44,7 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost);
+ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 	       struct list_head *done_q);
+ void sas_probe_sata(struct work_struct *work);
 -
--			task->uldd_task = NULL;
--			sas_ata_internal_abort(task);
--		}
-+		if (!task)
-+			return;
-+		task->uldd_task = NULL;
-+		sas_ata_internal_abort(task);
- 	}
++void sas_ata_schedule_reset(struct domain_device *dev);
+ #else
+ 
+ 
+@@ -75,6 +75,10 @@ static inline void sas_probe_sata(struct work_struct *work)
+ {
  }
  
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 1804069..57a3484 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -288,7 +288,7 @@ static void sas_scsi_clear_queue_lu(struct list_head *error_q, struct scsi_cmnd
- 	list_for_each_entry_safe(cmd, n, error_q, eh_entry) {
- 		if (cmd->device->sdev_target == my_cmd->device->sdev_target &&
- 		    cmd->device->lun == my_cmd->device->lun)
--			sas_eh_finish_cmd(cmd);
-+			sas_eh_defer_cmd(cmd);
- 	}
- }
++static inline void sas_ata_schedule_reset(struct domain_device *dev)
++{
++}
++
+ #endif
  
-@@ -594,7 +594,7 @@ Again:
- 					    "recovered\n",
- 					    SAS_ADDR(task->dev),
- 					    cmd->device->lun);
--				sas_eh_finish_cmd(cmd);
-+				sas_eh_defer_cmd(cmd);
- 				sas_scsi_clear_queue_lu(work_q, cmd);
- 				goto Again;
- 			}
+ #endif /* _SAS_ATA_H_ */
 
