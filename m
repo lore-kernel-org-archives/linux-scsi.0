@@ -1,50 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v4 0/3] qla2xxx: v3.4 target mode LLD changes +
- tcm_qla2xxx fabric module
-Date: Fri, 23 Dec 2011 13:59:34 -0800
-Message-ID: <1324677574.16979.109.camel@haakon2.linux-iscsi.org>
-References: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org>
-	 <20111221171135.GA27369@lst.de>  <20111222222520.GP22063@plapa.qlogic.org>
+From: David Dillow <dillowda@ornl.gov>
+Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
+Date: Fri, 23 Dec 2011 17:34:56 -0500
+Message-ID: <1324679698.3004.12.camel@obelisk.thedillows.org>
+References: <201112011954.25811.bvanassche@acm.org>
+	 <201112012011.45444.bvanassche@acm.org>
+	 <1324255806.17849.68.camel@obelisk.thedillows.org>
+	 <CAO+b5-o+-JF61a+8vFWj1rxMuVWuG-CVLQKorr5cKzi-Kc44Ag@mail.gmail.com>
+	 <1324333931.7043.52.camel@lap75545.ornl.gov>
+	 <CAO+b5-r4AZymMkVyFSXbBzpcc86hL0RJm2j3FnT3=uXSLUkj9A@mail.gmail.com>
+	 <1324436736.7621.38.camel@obelisk.thedillows.org>
+	 <CAO+b5-p=01KyDv7swOP_K39+i1rSMDsd_VVvSi5rBWveMaov1Q@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20111222222520.GP22063@plapa.qlogic.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Christoph Hellwig <hch@lst.de>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Giridhar Malavali <giridhar.malavali@qlogic.com>, James Bottomley <JBottomley@Parallels.com>, Roland Dreier <roland@purestorage.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from matrix.voodoobox.net ([75.127.97.206]:47955 "EHLO
+	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757915Ab1LWWfQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2011 17:35:16 -0500
+In-Reply-To: <CAO+b5-p=01KyDv7swOP_K39+i1rSMDsd_VVvSi5rBWveMaov1Q@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-On Thu, 2011-12-22 at 14:25 -0800, Andrew Vasquez wrote:
-> On Wed, 21 Dec 2011, Christoph Hellwig wrote:
+On Wed, 2011-12-21 at 14:07 +0000, Bart Van Assche wrote:
+> On Wed, Dec 21, 2011 at 3:05 AM, David Dillow <dillowda@ornl.gov> wrote:
+> > We don't want to leave a target blocked indefinitely -- commands caught
+> > in the blocked queue won't be reissued until the queue is unblocked --
+> > but we may want to keep the sdX mappings around for a long time.
+> > fast_io_fail_tmo gives us the ability to do that -- the expiration of
+> > fast_io_fail_tmo unblocks the queue and allows commands to be failed due
+> > to the transport error. See commit f2818663.
 > 
-> > I think the most important item is to sort out the mess around the old
-> > generation qla23xx support.  The way the code currently sprinkles ifs
-> > around that is a complete mess.  Given that the qla23xx support has as
-> > far as I know zero test coverage, and has been EOLed by qlogic I see
-> > no reason to keep it around.
-> > 
-> > Anyone disagreeing with that?
-> > 
-> 
-> Christoph,
-> 
-> >From an engineering and support perspective it doesn't make sense to
-> keep the (unsupported and untested) pre-ISP24xx codes around.  Going
-> forward, once internal resources can be allocated, QLogic would like
-> to see support for all ISP24xx and above hardware.
-> 
-> Regards,
-> Andrew Vasquez
-> 
+> Our opinions may differ here. My opinion is that for some use cases it
+> is crucial to be able to block a target indefinitely, e.g. when there
+> is only a single path between initiator and target and when the user
+> prefers that I/O blocks instead of encountering I/O errors. See e.g.
+> the "iSCSI settings for iSCSI root" section in the iSCSI README
+> (http://www.open-iscsi.org/docs/README).
 
-Hi Andrew,
+I can see admins desiring that option, but it's also handled by putting
+your root on a dm-multipath volume. Either way, I'm open to letting
+things block indefinitely, but I do think we should look into why the
+SCSI stack has a concept of the maximum blocking time.
 
-Thanks for the official clarification here from Qlogic wrt to pre 24xx
-hardware support in qla_target.c.  We will go ahead and begin dropping
-the legacy support and plan to have all the old code removed for an
-RFC-v5 series to be posted after the holidays.
+> Regarding commit f2818663: as far as I can see what that commit does
+> is to make it impossible for a user to set fast_io_fail_tmo == -1
 
-Thank you,
+I was pointing to the commit message as evidence of more prominent SCSI
+developer's line of thought on handling missing devices. As you note,
+the actual diff is uninteresting.
 
---nab
+We should match the rest of the SCSI stack unless there is good reason
+to go our own way. The iSCSI transport can do what it does because it
+has a native ping, but I'm not convinced they should have introduced new
+semantics and/or names when taking advantage of that. As far as I can
+tell without deeply studying it, replacement_timeout is equivalent to
+fast_io_fail_tmo.
+
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
+
