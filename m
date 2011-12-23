@@ -1,244 +1,161 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 12/28] libsas: close error handling vs sas_ata_task_done()
- race
-Date: Thu, 22 Dec 2011 18:59:31 -0800
-Message-ID: <20111223025931.21827.43929.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 13/28] libsas: prevent double completion of scmds from eh
+Date: Thu, 22 Dec 2011 18:59:36 -0800
+Message-ID: <20111223025936.21827.3264.stgit@localhost6.localdomain6>
 References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:35471 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:10847 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756288Ab1LWC7c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 22 Dec 2011 21:59:32 -0500
+	id S1754323Ab1LWC7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 22 Dec 2011 21:59:37 -0500
 In-Reply-To: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: linux-ide@vger.kernel.org
 
-Since sas_ata does not implement ->freeze(), completions for scmds and
-internal commands can still arrive concurrent with
-ata_scsi_cmd_error_handler() and sas_ata_post_internal() respectively.
-By the time either of those is called libata has committed to completing
-the qc, and the ATA_PFLAG_FROZEN flag tells sas_ata_task_done() it has
-lost the race.
+We invoke task->task_done() to free the task in the eh case, but at thi=
+s
+point we are prepared for scsi_eh_flush_done_q() to finish off the scmd=
+=2E
 
-In the sas_ata_post_internal() case we take on the additional
-responsibility of freeing the sas_task to close the race with
-sas_ata_task_done() freeing the the task while sas_ata_post_internal()
-is in the process of invoking ->lldd_abort_task().
+Introduce sas_end_task() to capture the final response status from the
+lldd and free the task.
 
-Cc: Darrick J. Wong <djwong@us.ibm.com>
+Also take the opportunity to kill this warning.
+drivers/scsi/libsas/sas_scsi_host.c: In function =E2=80=98sas_end_task=E2=
+=80=99:
+drivers/scsi/libsas/sas_scsi_host.c:102:3: warning: case value =E2=80=98=
+2=E2=80=99 not in enumerated type =E2=80=98enum exec_status=E2=80=99 [-=
+Wswitch]
+
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c       |   84 +++++++++++++++++++++++++++++++----
- drivers/scsi/libsas/sas_scsi_host.c |   44 ------------------
- include/scsi/libsas.h               |    1 
- 3 files changed, 75 insertions(+), 54 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c |   61 +++++++++++++++++++--------=
+--------
+ include/scsi/libsas.h               |    5 ++-
+ 2 files changed, 37 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 649b04b..11d049d 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -100,15 +100,31 @@ static void sas_ata_task_done(struct sas_task *task)
- 	enum ata_completion_errors ac;
- 	unsigned long flags;
- 	struct ata_link *link;
-+	struct ata_port *ap;
- 
- 	if (!qc)
- 		goto qc_already_gone;
- 
--	dev = qc->ap->private_data;
-+	ap = qc->ap;
-+	dev = ap->private_data;
- 	sas_ha = dev->port->ha;
--	link = &dev->sata_dev.ap->link;
-+	link = &ap->link;
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+	/* check if we lost the race with libata/sas_ata_post_internal() */
-+	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN)) {
-+		spin_unlock_irqrestore(ap->lock, flags);
-+		if (qc->scsicmd)
-+			goto qc_already_gone;
-+		else {
-+			/* if eh is not involved and the port is frozen then the
-+			 * ata internal abort process has taken responsibility
-+			 * for this sas_task
-+			 */
-+			return;
-+		}
-+	}
- 
--	spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
- 	if (stat->stat == SAS_PROTO_RESPONSE || stat->stat == SAM_STAT_GOOD ||
- 	    ((stat->stat == SAM_STAT_CHECK_CONDITION &&
- 	      dev->sata_dev.command_set == ATAPI_COMMAND_SET))) {
-@@ -143,7 +159,7 @@ static void sas_ata_task_done(struct sas_task *task)
- 	if (qc->scsicmd)
- 		ASSIGN_SAS_TASK(qc->scsicmd, NULL);
- 	ata_qc_complete(qc);
--	spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
-+	spin_unlock_irqrestore(ap->lock, flags);
- 
- qc_already_gone:
- 	list_del_init(&task->list);
-@@ -320,6 +336,54 @@ static int sas_ata_soft_reset(struct ata_link *link, unsigned int *class,
- 	return ret;
- }
- 
-+/*
-+ * notify the lldd to forget the sas_task for this internal ata command
-+ * that bypasses scsi-eh
-+ */
-+static void sas_ata_internal_abort(struct sas_task *task)
-+{
-+	struct sas_internal *si =
-+		to_sas_internal(task->dev->port->ha->core.shost->transportt);
-+	unsigned long flags;
-+	int res;
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_STATE_ABORTED ||
-+	    task->task_state_flags & SAS_TASK_STATE_DONE) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		SAS_DPRINTK("%s: Task %p already finished.\n", __func__,
-+			    task);
-+		goto out;
-+	}
-+	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+
-+	res = si->dft->lldd_abort_task(task);
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	if (task->task_state_flags & SAS_TASK_STATE_DONE ||
-+	    res == TMF_RESP_FUNC_COMPLETE) {
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+		goto out;
-+	}
-+
-+	/* XXX we are not prepared to deal with ->lldd_abort_task()
-+	 * failures.  TODO: lldds need to unconditionally forget about
-+	 * aborted ata tasks, otherwise we (likely) leak the sas task
-+	 * here
-+	 */
-+	SAS_DPRINTK("%s: Task %p leaked.\n", __func__, task);
-+
-+	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
-+		task->task_state_flags &= ~SAS_TASK_STATE_ABORTED;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+
-+	return;
-+ out:
-+	list_del_init(&task->list);
-+	sas_free_task(task);
-+}
-+
- static void sas_ata_post_internal(struct ata_queued_cmd *qc)
- {
- 	if (qc->flags & ATA_QCFLAG_FAILED)
-@@ -327,10 +391,12 @@ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
- 
- 	if (qc->err_mask) {
- 		/*
--		 * Find the sas_task and kill it.  By this point,
--		 * libata has decided to kill the qc, so we needn't
--		 * bother with sas_ata_task_done.  But we still
--		 * ought to abort the task.
-+		 * Find the sas_task and kill it.  By this point, libata
-+		 * has decided to kill the qc and has frozen the port.
-+		 * In this state sas_ata_task_done() will no longer free
-+		 * the sas_task, so we need to notify the lldd (via
-+		 * ->lldd_abort_task) that the task is dead and free it
-+		 *  ourselves.
- 		 */
- 		struct sas_task *task = qc->lldd_task;
- 		unsigned long flags;
-@@ -343,7 +409,7 @@ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
- 			spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
- 			task->uldd_task = NULL;
--			__sas_task_abort(task);
-+			sas_ata_internal_abort(task);
- 		}
- 	}
- }
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index fd60465..5e9fa99 100644
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/=
+sas_scsi_host.c
+index 5e9fa99..6ee9826 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -957,49 +957,6 @@ void sas_shutdown_queue(struct sas_ha_struct *sas_ha)
+@@ -49,27 +49,12 @@
+ #include <linux/scatterlist.h>
+ #include <linux/libata.h>
+=20
+-/* ---------- SCSI Host glue ---------- */
+-
+-static void sas_scsi_task_done(struct sas_task *task)
++/* record final status and free the task */
++static void sas_end_task(struct scsi_cmnd *sc, struct sas_task *task)
+ {
+ 	struct task_status_struct *ts =3D &task->task_status;
+-	struct scsi_cmnd *sc =3D task->uldd_task;
+ 	int hs =3D 0, stat =3D 0;
+=20
+-	if (unlikely(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-		/* Aborted tasks will be completed by the error handler */
+-		SAS_DPRINTK("task done but aborted\n");
+-		return;
+-	}
+-
+-	if (unlikely(!sc)) {
+-		SAS_DPRINTK("task_done called with non existing SCSI cmnd!\n");
+-		list_del_init(&task->list);
+-		sas_free_task(task);
+-		return;
+-	}
+-
+ 	if (ts->resp =3D=3D SAS_TASK_UNDELIVERED) {
+ 		/* transport error */
+ 		hs =3D DID_NO_CONNECT;
+@@ -124,10 +109,32 @@ static void sas_scsi_task_done(struct sas_task *t=
+ask)
+ 			break;
+ 		}
+ 	}
+-	ASSIGN_SAS_TASK(sc, NULL);
++
+ 	sc->result =3D (hs << 16) | stat;
++	ASSIGN_SAS_TASK(sc, NULL);
+ 	list_del_init(&task->list);
+ 	sas_free_task(task);
++}
++
++static void sas_scsi_task_done(struct sas_task *task)
++{
++	struct scsi_cmnd *sc =3D task->uldd_task;
++
++	if (unlikely(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
++		/* Aborted tasks will be completed by the error handler */
++		SAS_DPRINTK("task done but aborted\n");
++		return;
++	}
++
++	if (unlikely(!sc)) {
++		SAS_DPRINTK("task_done called with non existing SCSI cmnd!\n");
++		list_del_init(&task->list);
++		sas_free_task(task);
++		return;
++	}
++
++	ASSIGN_SAS_TASK(sc, NULL);
++	sas_end_task(sc, task);
+ 	sc->scsi_done(sc);
  }
- 
- /*
-- * Call the LLDD task abort routine directly.  This function is intended for
-- * use by upper layers that need to tell the LLDD to abort a task.
-- */
--int __sas_task_abort(struct sas_task *task)
--{
--	struct sas_internal *si =
--		to_sas_internal(task->dev->port->ha->core.shost->transportt);
--	unsigned long flags;
--	int res;
--
--	spin_lock_irqsave(&task->task_state_lock, flags);
--	if (task->task_state_flags & SAS_TASK_STATE_ABORTED ||
--	    task->task_state_flags & SAS_TASK_STATE_DONE) {
--		spin_unlock_irqrestore(&task->task_state_lock, flags);
--		SAS_DPRINTK("%s: Task %p already finished.\n", __func__,
--			    task);
--		return 0;
--	}
--	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
--	spin_unlock_irqrestore(&task->task_state_lock, flags);
--
--	if (!si->dft->lldd_abort_task)
--		return -ENODEV;
--
--	res = si->dft->lldd_abort_task(task);
--
--	spin_lock_irqsave(&task->task_state_lock, flags);
--	if ((task->task_state_flags & SAS_TASK_STATE_DONE) ||
--	    (res == TMF_RESP_FUNC_COMPLETE))
--	{
--		spin_unlock_irqrestore(&task->task_state_lock, flags);
--		task->task_done(task);
--		return 0;
--	}
--
--	if (!(task->task_state_flags & SAS_TASK_STATE_DONE))
--		task->task_state_flags &= ~SAS_TASK_STATE_ABORTED;
--	spin_unlock_irqrestore(&task->task_state_lock, flags);
--
--	return -EAGAIN;
--}
--
--/*
-  * Tell an upper layer that it needs to initiate an abort for a given task.
-  * This should only ever be called by an LLDD.
-  */
-@@ -1097,7 +1054,6 @@ EXPORT_SYMBOL_GPL(sas_slave_configure);
- EXPORT_SYMBOL_GPL(sas_change_queue_depth);
- EXPORT_SYMBOL_GPL(sas_change_queue_type);
- EXPORT_SYMBOL_GPL(sas_bios_param);
--EXPORT_SYMBOL_GPL(__sas_task_abort);
- EXPORT_SYMBOL_GPL(sas_task_abort);
- EXPORT_SYMBOL_GPL(sas_phy_reset);
- EXPORT_SYMBOL_GPL(sas_phy_enable);
+=20
+@@ -236,18 +243,16 @@ static void sas_eh_finish_cmd(struct scsi_cmnd *c=
+md)
+ 	struct sas_task *task =3D TO_SAS_TASK(cmd);
+ 	struct sas_ha_struct *sas_ha =3D SHOST_TO_SAS_HA(cmd->device->host);
+=20
+-	/* remove the aborted task flag to allow the task to be
+-	 * completed now. At this point, we only get called following
+-	 * an actual abort of the task, so we should be guaranteed not
+-	 * to be racing with any completions from the LLD (hence we
+-	 * don't need the task state lock to clear the flag) */
+-	task->task_state_flags &=3D ~SAS_TASK_STATE_ABORTED;
+-	/* Now call task_done.  However, task will be free'd after
+-	 * this */
+-	task->task_done(task);
++	/* At this point, we only get called following an actual abort
++	 * of the task, so we should be guaranteed not to be racing with
++	 * any completions from the LLD.  Task is freed after this.
++	 */
++	sas_end_task(cmd, task);
++
+ 	/* now finish the command and move it on to the error
+ 	 * handler done list, this also takes it off the
+-	 * error handler pending list */
++	 * error handler pending list.
++	 */
+ 	scsi_eh_finish_cmd(cmd, &sas_ha->eh_done_q);
+ }
+=20
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 94845c3..d100503 100644
+index d100503..6e9ad20 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -657,7 +657,6 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *);
- void sas_init_dev(struct domain_device *);
- 
- void sas_task_abort(struct sas_task *);
--int __sas_task_abort(struct sas_task *);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
- int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd);
- 
+@@ -447,7 +447,10 @@ enum service_response {
+ };
+=20
+ enum exec_status {
+-	/* The SAM_STAT_.. codes fit in the lower 6 bits */
++	/* The SAM_STAT_.. codes fit in the lower 6 bits, alias some of
++	 * them here to silence 'case value not in enumerated type' warnings
++	 */
++	__SAM_STAT_CHECK_CONDITION =3D SAM_STAT_CHECK_CONDITION,
+=20
+ 	SAS_DEV_NO_RESPONSE =3D 0x80,
+ 	SAS_DATA_UNDERRUN,
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
