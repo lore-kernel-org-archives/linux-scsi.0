@@ -1,16 +1,16 @@
 From: "WEBMAIL OFFICE" <c.care_web@blumail.org>
-Subject: Dear Account Owner!!!
-Date: Sat, 24 Dec 2011 11:16:18 -0600 (CST)
-Message-ID: <5ebd3914af96793632efd75527ec2b46.squirrel__3018.30019238896$1324747026$gmane$org@mail.sag.gob.hn>
+Subject: New Update Of Webmail Account!!!
+Date: Sat, 24 Dec 2011 14:33:26 -0300
+Message-ID: <20111224171957.M15310__24167.9183244289$1324751890$gmane$org@blumail.org>
 Reply-To: c.care_web@pkuit.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain;
+	charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sag.gob.hn ([190.109.204.59]:57431 "EHLO mail.sag.gob.hn"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752492Ab1LXRQY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 24 Dec 2011 12:16:24 -0500
+Received: from smtp.urbi.com.br ([200.152.50.27]:42886 "EHLO
+	muttley.urbi.com.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751745Ab1LXSh1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Dec 2011 13:37:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
@@ -47,4 +47,3 @@ Kind Regards,
 Webmail Account Service Team Management.
 Thanks for your co-operation.
 Copyright @2011 WEBMAIL OFFICE All rights reserved.
-
