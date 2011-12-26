@@ -1,37 +1,53 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
-Date: Mon, 26 Dec 2011 20:01:13 +0000
-Message-ID: <CAO+b5-pbRgbJxH-_5-Pk-CeNBpAgiv4Qc+p3Xi1YsAmBi6khFw@mail.gmail.com>
-References: <201112011954.25811.bvanassche@acm.org>
-	<201112012011.45444.bvanassche@acm.org>
-	<1324255806.17849.68.camel@obelisk.thedillows.org>
-	<CAO+b5-o+-JF61a+8vFWj1rxMuVWuG-CVLQKorr5cKzi-Kc44Ag@mail.gmail.com>
-	<1324333931.7043.52.camel@lap75545.ornl.gov>
-	<CAO+b5-r4AZymMkVyFSXbBzpcc86hL0RJm2j3FnT3=uXSLUkj9A@mail.gmail.com>
-	<1324436736.7621.38.camel@obelisk.thedillows.org>
-	<CAO+b5-p=01KyDv7swOP_K39+i1rSMDsd_VVvSi5rBWveMaov1Q@mail.gmail.com>
-	<1324679698.3004.12.camel@obelisk.thedillows.org>
-	<4EF50705.7090200@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] libcxgbi: do not print a message when memory allocation
+ fails
+Date: Mon, 26 Dec 2011 16:27:01 -0600
+Message-ID: <4EF8F4B5.6000900@cs.wisc.edu>
+References: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wi0-f174.google.com ([209.85.212.174]:35734 "EHLO
-	mail-wi0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752675Ab1LZUBO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2011 15:01:14 -0500
-In-Reply-To: <4EF50705.7090200@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, kxie@chelsio.com, davem@davemloft.net, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: David Dillow <dillowda@ornl.gov>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-On Fri, Dec 23, 2011 at 10:56 PM, Mike Christie <michaelc@cs.wisc.edu> wrote:
-> iSCSI replacement_timeout is the same as fast_io_fail_tmo for FC. iSCSI
-> replacement_timeout actually came first so you should say FC should have
-> copied our name :)
+On 12/14/2011 09:46 AM, Thadeu Lima de Souza Cascardo wrote:
+> In alloc_pdu, libcxgbi tries to allocate a skb with GFP_ATOMIC, which
+> may potentially fail. When it happens, the current code prints a warning
+> message.
+> 
+> When the system is under IO stress, this failure may happen lots of
+> times and it usually scares users.
+> 
+> Instead of printing the warning message, the code now increases the
+> tx_dropped statistics for the ethernet interface wich is doing the iscsi
+> task.
+> 
+> Signed-off-by: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/cxgbi/libcxgbi.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+> index c10f74a..3422bc2 100644
+> --- a/drivers/scsi/cxgbi/libcxgbi.c
+> +++ b/drivers/scsi/cxgbi/libcxgbi.c
+> @@ -1862,8 +1862,9 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task, u8 opcode)
+>  
+>  	tdata->skb = alloc_skb(cdev->skb_tx_rsvd + headroom, GFP_ATOMIC);
+>  	if (!tdata->skb) {
+> -		pr_warn("alloc skb %u+%u, opcode 0x%x failed.\n",
+> -			cdev->skb_tx_rsvd, headroom, opcode);
+> +		struct cxgbi_sock *csk = cconn->cep->csk;
+> +		struct net_device *ndev = cdev->ports[csk->port_id];
+> +		ndev->stats.tx_dropped++;
+>  		return -ENOMEM;
+>  	}
+>  
 
-Agreed. But as far as I can see multipathd only supports the FC name
-(fast_io_fail_tmo) and not the iSCSI name (recovery_tmo). That looks
-like an argument to me to switch to the FC name for ib_srp.
+Looks ok to me.
 
-Bart.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
