@@ -1,42 +1,94 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: Re: [PATCH 0/3] SCSI: use pci_dev->revision
-Date: Mon, 26 Dec 2011 19:40:15 +0300
-Message-ID: <201112261940.15534.sshtylyov@ru.mvista.com>
-References: <201112261920.48250.sshtylyov@ru.mvista.com>
+From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
+Subject: Re: [PATCH] libcxgbi: do not print a message when memory allocation
+ fails
+Date: Mon, 26 Dec 2011 16:41:22 -0200
+Message-ID: <20111226184122.GA4277@oc1711230544.ibm.com>
+References: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
+ <8A71B368A89016469F72CD08050AD3340AA0DF94@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:54707 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755686Ab1LZPlV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2011 10:41:21 -0500
-In-Reply-To: <201112261920.48250.sshtylyov@ru.mvista.com>
+Received: from e24smtp05.br.ibm.com ([32.104.18.26]:34312 "EHLO
+	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752185Ab1LZSlb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2011 13:41:31 -0500
+Received: from /spool/local
+	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
+	Mon, 26 Dec 2011 16:41:29 -0200
 Content-Disposition: inline
+In-Reply-To: <8A71B368A89016469F72CD08050AD3340AA0DF94@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, michaelc@cs.wisc.edu, davem@davemloft.net, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 
-Hello.
+On Wed, Dec 14, 2011 at 04:52:42PM -0800, Karen Xie wrote:
+> The patch looks fine to me.
+> 
+> Thanks,
+> Karen
+> 
 
-On Monday 26 December 2011 07:20:47 pm Sergei Shtylyov wrote:
+Hi, Karen.
 
-> This patchset converts the remaining cases of reading the PCI revision register
-> directly to using the value already cached by PCI subsystem in the 'revision'
-> field of 'struct pci_dev'.
+Thanks for your quick response.
 
-> The patchset wasn't merged in either 2.6.39, 3.0, 3.1, or 3.2 time -- hopefully
-> it can be merged to 3.3 at least...
+Care to send a proper Acked-by? It seems this patch has not yet catch up
+in James' tree.
 
-> James B., you seem to consistently ignore this patchset without telling me what
-> is wrong with it; in all my attempts at submitting it I got no feedback what
-> so ever.  Andrew M., as James seem to ignore this patchset, maybe you could
-> queue it?
+Regards.
+Cascardo.
 
-   Forgot to add that all the analogous patches to other sybsystems (except
-these three to the SCSI subsystem and to the Fusion MPT driver) have been merged
-long ago, without much hassle...
 
-WBR, Sergei
+> -----Original Message-----
+> From: Thadeu Lima de Souza Cascardo [mailto:cascardo@linux.vnet.ibm.com]
+> 
+> Sent: Wednesday, December 14, 2011 7:46 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: netdev@vger.kernel.org; Karen Xie; michaelc@cs.wisc.edu;
+> davem@davemloft.net; JBottomley@parallels.com;
+> linux-kernel@vger.kernel.org; Thadeu Lima de Souza Cascardo
+> Subject: [PATCH] libcxgbi: do not print a message when memory allocation
+> fails
+> 
+> In alloc_pdu, libcxgbi tries to allocate a skb with GFP_ATOMIC, which
+> may potentially fail. When it happens, the current code prints a warning
+> message.
+> 
+> When the system is under IO stress, this failure may happen lots of
+> times and it usually scares users.
+> 
+> Instead of printing the warning message, the code now increases the
+> tx_dropped statistics for the ethernet interface wich is doing the iscsi
+> task.
+> 
+> Signed-off-by: Thadeu Lima de Souza Cascardo
+> <cascardo@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/cxgbi/libcxgbi.c |    5 +++--
+>  1 files changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/cxgbi/libcxgbi.c
+> b/drivers/scsi/cxgbi/libcxgbi.c
+> index c10f74a..3422bc2 100644
+> --- a/drivers/scsi/cxgbi/libcxgbi.c
+> +++ b/drivers/scsi/cxgbi/libcxgbi.c
+> @@ -1862,8 +1862,9 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task,
+> u8 opcode)
+>  
+>  	tdata->skb = alloc_skb(cdev->skb_tx_rsvd + headroom,
+> GFP_ATOMIC);
+>  	if (!tdata->skb) {
+> -		pr_warn("alloc skb %u+%u, opcode 0x%x failed.\n",
+> -			cdev->skb_tx_rsvd, headroom, opcode);
+> +		struct cxgbi_sock *csk = cconn->cep->csk;
+> +		struct net_device *ndev = cdev->ports[csk->port_id];
+> +		ndev->stats.tx_dropped++;
+>  		return -ENOMEM;
+>  	}
+>  
+> -- 
+> 1.7.4.4
+> 
+
