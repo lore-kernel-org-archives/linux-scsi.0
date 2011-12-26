@@ -1,94 +1,57 @@
-From: Thadeu Lima de Souza Cascardo <cascardo@linux.vnet.ibm.com>
-Subject: Re: [PATCH] libcxgbi: do not print a message when memory allocation
- fails
-Date: Mon, 26 Dec 2011 16:41:22 -0200
-Message-ID: <20111226184122.GA4277@oc1711230544.ibm.com>
-References: <1323877583-6844-1-git-send-email-cascardo@linux.vnet.ibm.com>
- <8A71B368A89016469F72CD08050AD3340AA0DF94@maui.asicdesigners.com>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [PATCH 12/14] ib_srp: Rework error handling
+Date: Mon, 26 Dec 2011 19:13:38 +0000
+Message-ID: <CAO+b5-qaMDNHz31K6pBaCqp6hFhPbnUNNwejnF6+RkzSwwsGzA@mail.gmail.com>
+References: <201112011954.25811.bvanassche@acm.org>
+	<201112012010.37276.bvanassche@acm.org>
+	<1324265791.17849.92.camel@obelisk.thedillows.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp05.br.ibm.com ([32.104.18.26]:34312 "EHLO
-	e24smtp05.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752185Ab1LZSlb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2011 13:41:31 -0500
-Received: from /spool/local
-	by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <cascardo@linux.vnet.ibm.com>;
-	Mon, 26 Dec 2011 16:41:29 -0200
-Content-Disposition: inline
-In-Reply-To: <8A71B368A89016469F72CD08050AD3340AA0DF94@maui.asicdesigners.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1324265791.17849.92.camel-1q1vX8mYZiGLUyTwlgNVppKKF0rrzTr+@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Fujita Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, Brian King <brking-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Roland Dreier <roland-BHEL68pLQRGGvPXPguhicg@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, michaelc@cs.wisc.edu, davem@davemloft.net, JBottomley@parallels.com, linux-kernel@vger.kernel.org
 
-On Wed, Dec 14, 2011 at 04:52:42PM -0800, Karen Xie wrote:
-> The patch looks fine to me.
-> 
-> Thanks,
-> Karen
-> 
+On Mon, Dec 19, 2011 at 3:36 AM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote=
+:
+> On Thu, 2011-12-01 at 20:10 +0100, Bart Van Assche wrote:
+> > =A0/*
+> > =A0 * Copyright (c) 2005 Cisco Systems. =A0All rights reserved.
+> > + * Copyright (c) 2010-2011 Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>.
+>
+> You've tried to add this in the past; I don't mean to deny you credit=
+,
+> and I certainly value your work, but I'm not sure where the threshold=
+ is
+> for adding a copyright line.
 
-Hi, Karen.
+The excerpts below might provide some guidance (source: "The Copyright
+Handbook: What Every Writer Needs to Know"):
+[ ... ]
+There are strict technical requirements as to what a copyright notice
+must contain. Follow these rules exactly or your notice may be found
+to be invalid and not accomplish its intended purpose. A valid
+copyright notice contains three elements:
+* the copyright symbol
+* the year in which the work was published
+* the name of the copyright owner.
+It is not required that these elements appear in any particular order
+in the notice, but most notices are written in the order set forth
+above. We'll discuss each element in turn.
+[ ... ]
+If there are multiple authors, they should all be listed in the
+copyright notice. The authors' names can appear in any order.
+[ ... ]
 
-Thanks for your quick response.
+If I interpret the above correctly, at least two names are missing in
+the copyright header of the source file ib_srp.c.
 
-Care to send a proper Acked-by? It seems this patch has not yet catch up
-in James' tree.
-
-Regards.
-Cascardo.
-
-
-> -----Original Message-----
-> From: Thadeu Lima de Souza Cascardo [mailto:cascardo@linux.vnet.ibm.com]
-> 
-> Sent: Wednesday, December 14, 2011 7:46 AM
-> To: linux-scsi@vger.kernel.org
-> Cc: netdev@vger.kernel.org; Karen Xie; michaelc@cs.wisc.edu;
-> davem@davemloft.net; JBottomley@parallels.com;
-> linux-kernel@vger.kernel.org; Thadeu Lima de Souza Cascardo
-> Subject: [PATCH] libcxgbi: do not print a message when memory allocation
-> fails
-> 
-> In alloc_pdu, libcxgbi tries to allocate a skb with GFP_ATOMIC, which
-> may potentially fail. When it happens, the current code prints a warning
-> message.
-> 
-> When the system is under IO stress, this failure may happen lots of
-> times and it usually scares users.
-> 
-> Instead of printing the warning message, the code now increases the
-> tx_dropped statistics for the ethernet interface wich is doing the iscsi
-> task.
-> 
-> Signed-off-by: Thadeu Lima de Souza Cascardo
-> <cascardo@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/cxgbi/libcxgbi.c |    5 +++--
->  1 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/cxgbi/libcxgbi.c
-> b/drivers/scsi/cxgbi/libcxgbi.c
-> index c10f74a..3422bc2 100644
-> --- a/drivers/scsi/cxgbi/libcxgbi.c
-> +++ b/drivers/scsi/cxgbi/libcxgbi.c
-> @@ -1862,8 +1862,9 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task,
-> u8 opcode)
->  
->  	tdata->skb = alloc_skb(cdev->skb_tx_rsvd + headroom,
-> GFP_ATOMIC);
->  	if (!tdata->skb) {
-> -		pr_warn("alloc skb %u+%u, opcode 0x%x failed.\n",
-> -			cdev->skb_tx_rsvd, headroom, opcode);
-> +		struct cxgbi_sock *csk = cconn->cep->csk;
-> +		struct net_device *ndev = cdev->ports[csk->port_id];
-> +		ndev->stats.tx_dropped++;
->  		return -ENOMEM;
->  	}
->  
-> -- 
-> 1.7.4.4
-> 
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
