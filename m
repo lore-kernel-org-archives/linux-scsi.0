@@ -1,261 +1,37 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH]: mpt2sas crashes on shutdown
-Date: Tue, 27 Dec 2011 10:09:28 -0700
-Message-ID: <4565AEA676113A449269C2F3A549520FAC5B1C55@cosmail03.lsi.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH]: mpt2sas crashes on shutdown
+Date: Tue, 27 Dec 2011 13:05:50 -0500 (EST)
+Message-ID: <20111227.130550.165386147383560860.davem@davemloft.net>
 References: <20111226.145920.1088076837634135764.davem@davemloft.net>
+	<4565AEA676113A449269C2F3A549520FAC5B1C55@cosmail03.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_4565AEA676113A449269C2F3A549520FAC5B1C55cosmail03lsicom_"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:36394 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754381Ab1L0RJd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Dec 2011 12:09:33 -0500
-In-Reply-To: <20111226.145920.1088076837634135764.davem@davemloft.net>
-Content-Language: en-US
+Received: from shards.monkeyblade.net ([198.137.202.13]:48454 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662Ab1L0SFy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2011 13:05:54 -0500
+In-Reply-To: <4565AEA676113A449269C2F3A549520FAC5B1C55@cosmail03.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+To: Eric.Moore@lsi.com
+Cc: stable@vger.kernel.org, linux-scsi@vger.kernel.org, Nagalakshmi.Nandigama@lsi.com
 
---_002_4565AEA676113A449269C2F3A549520FAC5B1C55cosmail03lsicom_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Date: Tue, 27 Dec 2011 10:09:28 -0700
 
-David - The backup and restoring of the MSIX vector capabilities registers =
-across diagnostic reset was only needed for our pre-production cards (A0 pa=
-rts). It was a workaround for some hardware errata.  This is not needed any=
-more as there was a fix addressed before those controllers when to producti=
-on, so I finally removed this workaround in the driver during phase 10 in t=
-he LSI in-house drivers, which was about 10 months ago.  Attached is my com=
-mit for the in-house drivers.  You should be able to remove the save_msix_t=
-able and restore_msix_table routines as I did.
+> David - The backup and restoring of the MSIX vector capabilities registers across diagnostic reset was only needed for our pre-production cards (A0 parts). It was a workaround for some hardware errata.  This is not needed anymore as there was a fix addressed before those controllers when to production, so I finally removed this workaround in the driver during phase 10 in the LSI in-house drivers, which was about 10 months ago.  Attached is my commit for the in-house drivers.  You should be able to remove the save_msix_table and restore_msix_table routines as I did.
 
-On Monday, December 26, 2011 12:59 PM, David Miller wrote:
->=20
-> The mpt2sas driver accesses I/O space as virtual addresses when saving an=
-d
-> restoring the MSIX table, this only works by luck on x86.
->=20
-> One needs to use the appropriate {read,write}{b,w,l}() APIs.
->=20
-> This is fixed in v3.2.x because all of this code got rewritten for NUMA I=
-/O
-> support.
->=20
-> But both 3.0.x and 3.1.x still have this bug, and my Niagara sparc machin=
-es
-> crash on shutdown every single time due to this bug making my -stable wor=
-k
-> more difficult than it needs to be.
->=20
-> Please apply to both 3.0.x-stable and 3.1.x-stable, thanks.
->=20
-> Signed-off-by: David S. Miller <davem@davemloft.net>
->=20
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 83035bd..8cec3bd 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -1096,7 +1096,7 @@ _base_save_msix_table(struct MPT2SAS_ADAPTER *ioc)
->  		return;
->=20
->  	for (i =3D 0; i < ioc->msix_vector_count; i++)
-> -		ioc->msix_table_backup[i] =3D ioc->msix_table[i];
-> +		ioc->msix_table_backup[i] =3D readl(&ioc->msix_table[i]);
->  }
->=20
->  /**
-> @@ -1113,7 +1113,7 @@ _base_restore_msix_table(struct MPT2SAS_ADAPTER *io=
-c)
->  		return;
->=20
->  	for (i =3D 0; i < ioc->msix_vector_count; i++)
-> -		ioc->msix_table[i] =3D ioc->msix_table_backup[i];
-> +		writel(ioc->msix_table_backup[i], &ioc->msix_table[i]);
->  }
->=20
->  /**
-> @@ -1144,7 +1144,7 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc=
-)
->  	/* get msix table  */
->  	pci_read_config_dword(ioc->pdev, base + 4, &msix_table_offset);
->  	msix_table_offset &=3D 0xFFFFFFF8;
-> -	ioc->msix_table =3D (u32 *)((void *)ioc->chip + msix_table_offset);
-> +	ioc->msix_table =3D ((void __iomem *)ioc->chip + msix_table_offset);
->=20
->  	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "msix is supported, "
->  	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> index 41a57a7..a8782f3 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> @@ -768,7 +768,7 @@ struct MPT2SAS_ADAPTER {
->=20
->  	u8		msix_enable;
->  	u16		msix_vector_count;
-> -	u32		*msix_table;
-> +	u32 __iomem	*msix_table;
->  	u32		*msix_table_backup;
->  	u32		ioc_reset_count;
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in =
-the
-> body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+I don't care how it is fixed, I only care that a fix makes it's way into -stable.
 
---_002_4565AEA676113A449269C2F3A549520FAC5B1C55cosmail03lsicom_
-Content-Type: application/octet-stream;
-	name="removing_msix_table_backup.patch"
-Content-Description: removing_msix_table_backup.patch
-Content-Disposition: attachment;
-	filename="removing_msix_table_backup.patch"; size=7904;
-	creation-date="Tue, 27 Dec 2011 10:02:04 GMT";
-	modification-date="Tue, 27 Dec 2011 10:00:46 GMT"
-Content-Transfer-Encoding: base64
+You LSI guys seem to ignore the -stable series and submit _ZERO_ bug
+fixes for your driver there, leaving it to people like me suffering
+from the bugs to submit the fixes for you.
 
-ZGlmZiAtLWdpdCBhL21wdDJzYXNfYmFzZS5jIGIvbXB0MnNhc19iYXNlLmMKaW5kZXggNDEzNjcx
-Ny4uYTE4NmY1YiAxMDA2NDQKLS0tIGEvbXB0MnNhc19iYXNlLmMKKysrIGIvbXB0MnNhc19iYXNl
-LmMKQEAgLTEyNDUsNDEgKzEyNDUsNiBAQCBfYmFzZV9jb25maWdfZG1hX2FkZHJlc3Npbmcoc3Ry
-dWN0IE1QVDJTQVNfQURBUFRFUiAqaW9jLCBzdHJ1Y3QgcGNpX2RldiAqcGRldikKICNlbmRpZgog
-CiAvKioKLSAqIG1wdDJzYXNfYmFzZV9zYXZlX21zaXhfdGFibGUgLSBiYWNrdXAgbXNpeCB2ZWN0
-b3IgdGFibGUKLSAqIEBpb2M6IHBlciBhZGFwdGVyIG9iamVjdAotICoKLSAqIFRoaXMgYWRkcmVz
-cyBhbiBlcnJhdGEgd2hlcmUgZGlhZyByZXNldCBjbGVhcnMgb3V0IHRoZSB0YWJsZQotICovCi12
-b2lkCi1tcHQyc2FzX2Jhc2Vfc2F2ZV9tc2l4X3RhYmxlKHN0cnVjdCBNUFQyU0FTX0FEQVBURVIg
-KmlvYykKLXsKLQlpbnQgaTsKLQotCWlmICghaW9jLT5tc2l4X2VuYWJsZSB8fCBpb2MtPm1zaXhf
-dGFibGVfYmFja3VwID09IE5VTEwpCi0JCXJldHVybjsKLQotCWZvciAoaSA9IDA7IGkgPCBpb2Mt
-Pm1zaXhfdmVjdG9yX2NvdW50OyBpKyspCi0JCWlvYy0+bXNpeF90YWJsZV9iYWNrdXBbaV0gPSBp
-b2MtPm1zaXhfdGFibGVbaV07Ci19Ci0KLS8qKgotICogbXB0MnNhc19iYXNlX3Jlc3RvcmVfbXNp
-eF90YWJsZSAtIHRoaXMgcmVzdG9yZXMgdGhlIG1zaXggdmVjdG9yIHRhYmxlCi0gKiBAaW9jOiBw
-ZXIgYWRhcHRlciBvYmplY3QKLSAqCi0gKi8KLXZvaWQKLW1wdDJzYXNfYmFzZV9yZXN0b3JlX21z
-aXhfdGFibGUoc3RydWN0IE1QVDJTQVNfQURBUFRFUiAqaW9jKQotewotCWludCBpOwotCi0JaWYg
-KCFpb2MtPm1zaXhfZW5hYmxlIHx8IGlvYy0+bXNpeF90YWJsZV9iYWNrdXAgPT0gTlVMTCkKLQkJ
-cmV0dXJuOwotCi0JZm9yIChpID0gMDsgaSA8IGlvYy0+bXNpeF92ZWN0b3JfY291bnQ7IGkrKykK
-LQkJaW9jLT5tc2l4X3RhYmxlW2ldID0gaW9jLT5tc2l4X3RhYmxlX2JhY2t1cFtpXTsKLX0KLQot
-LyoqCiAgKiBfYmFzZV9jaGVja19lbmFibGVfbXNpeCAtIGNoZWNrcyBNU0lYIGNhcGFiYWJsZS4K
-ICAqIEBpb2M6IHBlciBhZGFwdGVyIG9iamVjdAogICoKQEAgLTEyOTEsNyArMTI1Niw2IEBAIF9i
-YXNlX2NoZWNrX2VuYWJsZV9tc2l4KHN0cnVjdCBNUFQyU0FTX0FEQVBURVIgKmlvYykKIHsKIAlp
-bnQgYmFzZTsKIAl1MTYgbWVzc2FnZV9jb250cm9sOwotCXUzMiBtc2l4X3RhYmxlX29mZnNldDsK
-IAogCWJhc2UgPSBwY2lfZmluZF9jYXBhYmlsaXR5KGlvYy0+cGRldiwgUENJX0NBUF9JRF9NU0lY
-KTsKIAlpZiAoIWJhc2UpIHsKQEAgLTEzMDQsMTQgKzEyNjgsOCBAQCBfYmFzZV9jaGVja19lbmFi
-bGVfbXNpeChzdHJ1Y3QgTVBUMlNBU19BREFQVEVSICppb2MpCiAJcGNpX3JlYWRfY29uZmlnX3dv
-cmQoaW9jLT5wZGV2LCBiYXNlICsgMiwgJm1lc3NhZ2VfY29udHJvbCk7CiAJaW9jLT5tc2l4X3Zl
-Y3Rvcl9jb3VudCA9IChtZXNzYWdlX2NvbnRyb2wgJiAweDNGRikgKyAxOwogCi0JLyogZ2V0IG1z
-aXggdGFibGUgICovCi0JcGNpX3JlYWRfY29uZmlnX2R3b3JkKGlvYy0+cGRldiwgYmFzZSArIDQs
-ICZtc2l4X3RhYmxlX29mZnNldCk7Ci0JbXNpeF90YWJsZV9vZmZzZXQgJj0gMHhGRkZGRkZGODsK
-LQlpb2MtPm1zaXhfdGFibGUgPSAodTMyICopKCh2b2lkICopaW9jLT5jaGlwICsgbXNpeF90YWJs
-ZV9vZmZzZXQpOwotCiAJZGluaXRwcmludGsoaW9jLCBwcmludGsoTVBUMlNBU19JTkZPX0ZNVCAi
-bXNpeCBpcyBzdXBwb3J0ZWQsICIKLQkgICAgInZlY3Rvcl9jb3VudCglZCksIHRhYmxlX29mZnNl
-dCgweCUwOHgpLCB0YWJsZSglcClcbiIsIGlvYy0+bmFtZSwKLQkgICAgaW9jLT5tc2l4X3ZlY3Rv
-cl9jb3VudCwgbXNpeF90YWJsZV9vZmZzZXQsIGlvYy0+bXNpeF90YWJsZSkpOworCSAgICAidmVj
-dG9yX2NvdW50KCVkKVxuIiwgaW9jLT5uYW1lLCBpb2MtPm1zaXhfdmVjdG9yX2NvdW50KSk7CiAJ
-cmV0dXJuIDA7CiB9CiAKQEAgLTM5NTUsOCArMzkxMyw2IEBAIF9iYXNlX2RpYWdfcmVzZXQoc3Ry
-dWN0IE1QVDJTQVNfQURBUFRFUiAqaW9jLCBpbnQgc2xlZXBfZmxhZykKIAogCXByaW50ayhNUFQy
-U0FTX0lORk9fRk1UICJzZW5kaW5nIGRpYWcgcmVzZXQgISFcbiIsIGlvYy0+bmFtZSk7CiAKLQlt
-cHQyc2FzX2Jhc2Vfc2F2ZV9tc2l4X3RhYmxlKGlvYyk7Ci0KIAlkcnNwcmludGsoaW9jLCBwcmlu
-dGsoTVBUMlNBU19JTkZPX0ZNVCAiY2xlYXIgaW50ZXJydXB0c1xuIiwKIAkgICAgaW9jLT5uYW1l
-KSk7CiAKQEAgLTQwNTIsNyArNDAwOCw2IEBAIF9iYXNlX2RpYWdfcmVzZXQoc3RydWN0IE1QVDJT
-QVNfQURBUFRFUiAqaW9jLCBpbnQgc2xlZXBfZmxhZykKIAkJZ290byBvdXQ7CiAJfQogCi0JbXB0
-MnNhc19iYXNlX3Jlc3RvcmVfbXNpeF90YWJsZShpb2MpOwogCXByaW50ayhNUFQyU0FTX0lORk9f
-Rk1UICJkaWFnIHJlc2V0OiBTVUNDRVNTXG4iLCBpb2MtPm5hbWUpOwogCXJldHVybiAwOwogCkBA
-IC00MjEwLDcgKzQxNjUsOCBAQCBfYmFzZV9tYWtlX2lvY19vcGVyYXRpb25hbChzdHJ1Y3QgTVBU
-MlNBU19BREFQVEVSICppb2MsIGludCBzbGVlcF9mbGFnKQogCQlpb2MtPnJlcGx5X2ZyZWVbaV0g
-PSBjcHVfdG9fbGUzMihyZXBseV9hZGRyZXNzKTsKIAogCS8qIGluaXRpYWxpemUgcmVwbHkgcXVl
-dWVzICovCi0JX2Jhc2VfYXNzaWduX3JlcGx5X3F1ZXVlcyhpb2MpOworCWlmIChpb2MtPmlzX2Ry
-aXZlcl9sb2FkaW5nKQorCQlfYmFzZV9hc3NpZ25fcmVwbHlfcXVldWVzKGlvYyk7CiAKIAkvKiBp
-bml0aWFsaXplIFJlcGx5IFBvc3QgRnJlZSBRdWV1ZSAqLwogCXJlcGx5X3Bvc3RfZnJlZSA9IChs
-b25nKWlvYy0+cmVwbHlfcG9zdF9mcmVlOwpAQCAtNDIyNCwxOSArNDE4MCwyOCBAQCBfYmFzZV9t
-YWtlX2lvY19vcGVyYXRpb25hbChzdHJ1Y3QgTVBUMlNBU19BREFQVEVSICppb2MsIGludCBzbGVl
-cF9mbGFnKQogCQkJcmVwbHlfcS0+cmVwbHlfcG9zdF9mcmVlW2ldLldvcmRzID0KIAkJCSAgICBj
-cHVfdG9fbGU2NChVTExPTkdfTUFYKTsKIAkJaWYgKCFfYmFzZV9pc19jb250cm9sbGVyX21zaXhf
-ZW5hYmxlZChpb2MpKQotCQkJZ290byBza2lwOworCQkJZ290byBza2lwX2luaXRfcmVwbHlfcG9z
-dF9mcmVlX3F1ZXVlOwogCQlyZXBseV9wb3N0X2ZyZWUgKz0gcmVwbHlfcG9zdF9mcmVlX3N6Owog
-CX0KLSBza2lwOgorIHNraXBfaW5pdF9yZXBseV9wb3N0X2ZyZWVfcXVldWU6CiAKIAlyID0gX2Jh
-c2Vfc2VuZF9pb2NfaW5pdChpb2MsIHNsZWVwX2ZsYWcpOwogCWlmIChyKQogCQlyZXR1cm4gcjsK
-IAotCS8qIGluaXRpYWxpemUgdGhlIGluZGV4J3MgKi8KKwkvKiBpbml0aWFsaXplIHJlcGx5IGZy
-ZWUgaG9zdCBpbmRleCAqLwogCWlvYy0+cmVwbHlfZnJlZV9ob3N0X2luZGV4ID0gaW9jLT5yZXBs
-eV9mcmVlX3F1ZXVlX2RlcHRoIC0gMTsKIAl3cml0ZWwoaW9jLT5yZXBseV9mcmVlX2hvc3RfaW5k
-ZXgsICZpb2MtPmNoaXAtPlJlcGx5RnJlZUhvc3RJbmRleCk7Ci0Jd3JpdGVsKDAsICZpb2MtPmNo
-aXAtPlJlcGx5UG9zdEhvc3RJbmRleCk7CisKKwkvKiBpbml0aWFsaXplIHJlcGx5IHBvc3QgaG9z
-dCBpbmRleCAqLworCWxpc3RfZm9yX2VhY2hfZW50cnkocmVwbHlfcSwgJmlvYy0+cmVwbHlfcXVl
-dWVfbGlzdCwgbGlzdCkgeworCQl3cml0ZWwocmVwbHlfcS0+bXNpeF9pbmRleCA8PCBNUEkyX1JQ
-SElfTVNJWF9JTkRFWF9TSElGVCwKKwkJICAgICZpb2MtPmNoaXAtPlJlcGx5UG9zdEhvc3RJbmRl
-eCk7CisJCWlmICghX2Jhc2VfaXNfY29udHJvbGxlcl9tc2l4X2VuYWJsZWQoaW9jKSkKKwkJCWdv
-dG8gc2tpcF9pbml0X3JlcGx5X3Bvc3RfaG9zdF9pbmRleDsKKwl9CisKKyBza2lwX2luaXRfcmVw
-bHlfcG9zdF9ob3N0X2luZGV4OgogCiAJX2Jhc2VfdW5tYXNrX2ludGVycnVwdHMoaW9jKTsKIAly
-ID0gX2Jhc2VfZXZlbnRfbm90aWZpY2F0aW9uKGlvYywgc2xlZXBfZmxhZyk7CkBAIC00MzQwLDE4
-ICs0MzA1LDYgQEAgbXB0MnNhc19iYXNlX2F0dGFjaChzdHJ1Y3QgTVBUMlNBU19BREFQVEVSICpp
-b2MpCiAJaWYgKHIpCiAJCXJldHVybiByOwogCi0JaWYgKGlvYy0+bXNpeF9lbmFibGUpIHsKLQkJ
-aW9jLT5tc2l4X3RhYmxlX2JhY2t1cCA9IGtjYWxsb2MoaW9jLT5tc2l4X3ZlY3Rvcl9jb3VudCwK
-LQkJICAgIHNpemVvZih1MzIpLCBHRlBfS0VSTkVMKTsKLQkJaWYgKCFpb2MtPm1zaXhfdGFibGVf
-YmFja3VwKSB7Ci0JCQlkZmFpbHByaW50ayhpb2MsIHByaW50ayhNUFQyU0FTX0lORk9fRk1UCi0J
-CQkgICAgImFsbG9jYXRpb24gZm9yIG1zaXhfdGFibGVfYmFja3VwIGZhaWxlZCEhIVxuIiwKLQkJ
-CSAgICBpb2MtPm5hbWUpKTsKLQkJCXIgPSAtRU5PTUVNOwotCQkJZ290byBvdXRfZnJlZV9yZXNv
-dXJjZXM7Ci0JCX0KLQl9Ci0KIAlwY2lfc2V0X2RydmRhdGEoaW9jLT5wZGV2LCBpb2MtPnNob3N0
-KTsKIAlyID0gX2Jhc2VfZ2V0X2lvY19mYWN0cyhpb2MsIENBTl9TTEVFUCk7CiAJaWYgKHIpCkBA
-IC00NDg0LDcgKzQ0MzcsNiBAQCBtcHQyc2FzX2Jhc2VfYXR0YWNoKHN0cnVjdCBNUFQyU0FTX0FE
-QVBURVIgKmlvYykKIAlrZnJlZShpb2MtPmNwdV9tc2l4X3RhYmxlKTsKIAlrZnJlZShpb2MtPnBk
-X2hhbmRsZXMpOwogCWtmcmVlKGlvYy0+cGVuZF9vc19kZXZpY2VfYWRkKTsKLQlrZnJlZShpb2Mt
-Pm1zaXhfdGFibGVfYmFja3VwKTsKIAlrZnJlZShpb2MtPnRtX2NtZHMucmVwbHkpOwogCWtmcmVl
-KGlvYy0+dHJhbnNwb3J0X2NtZHMucmVwbHkpOwogCWtmcmVlKGlvYy0+c2NzaWhfY21kcy5yZXBs
-eSk7CkBAIC00NTI2LDcgKzQ0NzgsNiBAQCBtcHQyc2FzX2Jhc2VfZGV0YWNoKHN0cnVjdCBNUFQy
-U0FTX0FEQVBURVIgKmlvYykKIAlrZnJlZShpb2MtPmNwdV9tc2l4X3RhYmxlKTsKIAlrZnJlZShp
-b2MtPnBkX2hhbmRsZXMpOwogCWtmcmVlKGlvYy0+cGVuZF9vc19kZXZpY2VfYWRkKTsKLQlrZnJl
-ZShpb2MtPm1zaXhfdGFibGVfYmFja3VwKTsKIAlrZnJlZShpb2MtPnBmYWN0cyk7CiAJa2ZyZWUo
-aW9jLT5jdGxfY21kcy5yZXBseSk7CiAJa2ZyZWUoaW9jLT5jdGxfY21kcy5zZW5zZSk7CmRpZmYg
-LS1naXQgYS9tcHQyc2FzX2Jhc2UuaCBiL21wdDJzYXNfYmFzZS5oCmluZGV4IDY2MDJhN2YuLjA1
-YmI1NDEgMTAwNjQ0Ci0tLSBhL21wdDJzYXNfYmFzZS5oCisrKyBiL21wdDJzYXNfYmFzZS5oCkBA
-IC03MSwxMSArNzEsMTEgQEAKICNkZWZpbmUgTVBUMlNBU19EUklWRVJfTkFNRQkJIm1wdDJzYXMi
-CiAjZGVmaW5lIE1QVDJTQVNfQVVUSE9SCSJMU0kgQ29ycG9yYXRpb24gPERMLU1QVEZ1c2lvbkxp
-bnV4QGxzaS5jb20+IgogI2RlZmluZSBNUFQyU0FTX0RFU0NSSVBUSU9OCSJMU0kgTVBUIEZ1c2lv
-biBTQVMgMi4wIERldmljZSBEcml2ZXIiCi0jZGVmaW5lIE1QVDJTQVNfRFJJVkVSX1ZFUlNJT04J
-CSIwOS4yNTUuMDIuMDQiCisjZGVmaW5lIE1QVDJTQVNfRFJJVkVSX1ZFUlNJT04JCSIwOS4yNTUu
-MDIuMDUiCiAjZGVmaW5lIE1QVDJTQVNfTUFKT1JfVkVSU0lPTgkJOQogI2RlZmluZSBNUFQyU0FT
-X01JTk9SX1ZFUlNJT04JCTI1NQogI2RlZmluZSBNUFQyU0FTX0JVSUxEX1ZFUlNJT04JCTIKLSNk
-ZWZpbmUgTVBUMlNBU19SRUxFQVNFX1ZFUlNJT04JCTQKKyNkZWZpbmUgTVBUMlNBU19SRUxFQVNF
-X1ZFUlNJT04JCTUKIAogLyoKICAqIFNldCBNUFQyU0FTX1NHX0RFUFRIIHZhbHVlIGJhc2VkIG9u
-IHVzZXIgaW5wdXQuCkBAIC02ODMsNyArNjgzLDYgQEAgZW51bSBtdXRleF90eXBlIHsKICAqIEBt
-c2l4X2VuYWJsZTogZmxhZyBpbmRpY2F0aW5nIG1zaXggaXMgZW5hYmxlZAogICogQG1zaXhfdmVj
-dG9yX2NvdW50OiBudW1iZXIgbXNpeCB2ZWN0b3JzCiAgKiBAbXNpeF90YWJsZTogdmlydCBhZGRy
-ZXNzIHRvIHRoZSBtc2l4IHRhYmxlCi0gKiBAbXNpeF90YWJsZV9iYWNrdXA6IGJhY2t1cCBtc2l4
-IHRhYmxlCiAgKiBAY3B1X21zaXhfdGFibGU6IHRhYmxlIGZvciBtYXBwaW5nIGNwdXMgdG8gbXNp
-eCBpbmRleAogICogQGNwdV9tc2l4X3RhYmxlX3N6OiB0YWJsZSBzaXplCiAgKiBAc2NzaV9pb19j
-Yl9pZHg6IHNob3N0IGdlbmVyYXRlZCBjb21tYW5kcwpAQCAtODU5LDggKzg1OCw2IEBAIHN0cnVj
-dCBNUFQyU0FTX0FEQVBURVIgewogCiAJdTgJCW1zaXhfZW5hYmxlOwogCXUxNgkJbXNpeF92ZWN0
-b3JfY291bnQ7Ci0JdTMyCQkqbXNpeF90YWJsZTsKLQl1MzIJCSptc2l4X3RhYmxlX2JhY2t1cDsK
-IAl1OAkJKmNwdV9tc2l4X3RhYmxlOwogCXUxNgkJY3B1X21zaXhfdGFibGVfc3o7CiAJdTMyCQlp
-b2NfcmVzZXRfY291bnQ7CkBAIC0xMDQ0LDggKzEwNDEsNiBAQCB0eXBlZGVmIHU4ICgqTVBUX0NB
-TExCQUNLKShzdHJ1Y3QgTVBUMlNBU19BREFQVEVSICppb2MsIHUxNiBzbWlkLCB1OCBtc2l4X2lu
-ZGV4LAogZXh0ZXJuIHN0cnVjdCBsaXN0X2hlYWQgbXB0MnNhc19pb2NfbGlzdDsKIHZvaWQgbXB0
-MnNhc19iYXNlX3N0YXJ0X3dhdGNoZG9nKHN0cnVjdCBNUFQyU0FTX0FEQVBURVIgKmlvYyk7CiB2
-b2lkIG1wdDJzYXNfYmFzZV9zdG9wX3dhdGNoZG9nKHN0cnVjdCBNUFQyU0FTX0FEQVBURVIgKmlv
-Yyk7Ci12b2lkIG1wdDJzYXNfYmFzZV9zYXZlX21zaXhfdGFibGUoc3RydWN0IE1QVDJTQVNfQURB
-UFRFUiAqaW9jKTsKLXZvaWQgbXB0MnNhc19iYXNlX3Jlc3RvcmVfbXNpeF90YWJsZShzdHJ1Y3Qg
-TVBUMlNBU19BREFQVEVSICppb2MpOwogCiBpbnQgbXB0MnNhc19iYXNlX2F0dGFjaChzdHJ1Y3Qg
-TVBUMlNBU19BREFQVEVSICppb2MpOwogdm9pZCBtcHQyc2FzX2Jhc2VfZGV0YWNoKHN0cnVjdCBN
-UFQyU0FTX0FEQVBURVIgKmlvYyk7CmRpZmYgLS1naXQgYS9tcHQyc2FzX3Njc2loLmMgYi9tcHQy
-c2FzX3Njc2loLmMKaW5kZXggZmFjY2RmMS4uYWU1ODJhOSAxMDA2NDQKLS0tIGEvbXB0MnNhc19z
-Y3NpaC5jCisrKyBiL21wdDJzYXNfc2NzaWguYwpAQCAtOTY4NSw5ICs5Njg1LDYgQEAgX3Njc2lo
-X3N1c3BlbmQoc3RydWN0IHBjaV9kZXYgKnBkZXYsIHBtX21lc3NhZ2VfdCBzdGF0ZSkKIAkgICAg
-Im9wZXJhdGluZyBzdGF0ZSBbRCVkXVxuIiwgaW9jLT5uYW1lLCBwZGV2LAogCSAgICBwY2lfbmFt
-ZShwZGV2KSwgZGV2aWNlX3N0YXRlKTsKIAotI2lmIChMSU5VWF9WRVJTSU9OX0NPREUgPCBLRVJO
-RUxfVkVSU0lPTigyLDYsMTgpKQotCW1wdDJzYXNfYmFzZV9zYXZlX21zaXhfdGFibGUoaW9jKTsK
-LSNlbmRpZgogCXBjaV9zYXZlX3N0YXRlKHBkZXYpOwogCW1wdDJzYXNfYmFzZV9mcmVlX3Jlc291
-cmNlcyhpb2MpOwogCXBjaV9zZXRfcG93ZXJfc3RhdGUocGRldiwgZGV2aWNlX3N0YXRlKTsKQEAg
-LTk3MjAsOSArOTcxNyw2IEBAIF9zY3NpaF9yZXN1bWUoc3RydWN0IHBjaV9kZXYgKnBkZXYpCiAJ
-aWYgKHIpCiAJCXJldHVybiByOwogCi0jaWYgKExJTlVYX1ZFUlNJT05fQ09ERSA8IEtFUk5FTF9W
-RVJTSU9OKDIsNiwxOCkpCi0JbXB0MnNhc19iYXNlX3Jlc3RvcmVfbXNpeF90YWJsZShpb2MpOwot
-I2VuZGlmCiAJbXB0MnNhc19iYXNlX2hhcmRfcmVzZXRfaGFuZGxlcihpb2MsIENBTl9TTEVFUCwg
-U09GVF9SRVNFVCk7CiAJc2NzaV91bmJsb2NrX3JlcXVlc3RzKHNob3N0KTsKIAltcHQyc2FzX2Jh
-c2Vfc3RhcnRfd2F0Y2hkb2coaW9jKTsKQEAgLTk3OTYsMTAgKzk3OTAsNiBAQCBfc2NzaWhfcGNp
-X3Nsb3RfcmVzZXQoc3RydWN0IHBjaV9kZXYgKnBkZXYpCiAJaWYgKHJjKQogCQlyZXR1cm4gUENJ
-X0VSU19SRVNVTFRfRElTQ09OTkVDVDsKIAotI2lmIChMSU5VWF9WRVJTSU9OX0NPREUgPCBLRVJO
-RUxfVkVSU0lPTigyLDYsMTgpKQotCW1wdDJzYXNfYmFzZV9yZXN0b3JlX21zaXhfdGFibGUoaW9j
-KTsKLSNlbmRpZgotCiAJcmMgPSBtcHQyc2FzX2Jhc2VfaGFyZF9yZXNldF9oYW5kbGVyKGlvYywg
-Q0FOX1NMRUVQLAogCSAgICBGT1JDRV9CSUdfSEFNTUVSKTsKIAo=
+Therefore it is kind of out of place for you to suggest a specific way you want
+the bug fixed, because obviously you guys don't care about backporting bug
+fixes to -stable in the first place.
 
---_002_4565AEA676113A449269C2F3A549520FAC5B1C55cosmail03lsicom_--
+With that in mind, why not leave the decision to people who actually
+care, have actually tested the fix, and bothered to submit it to -stable?
