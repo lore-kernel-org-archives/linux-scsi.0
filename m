@@ -1,37 +1,56 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH]: mpt2sas crashes on shutdown
-Date: Tue, 27 Dec 2011 13:51:17 -0500 (EST)
-Message-ID: <20111227.135117.1551666013576311310.davem@davemloft.net>
-References: <4565AEA676113A449269C2F3A549520FAC5B1C55@cosmail03.lsi.com>
-	<20111227.130550.165386147383560860.davem@davemloft.net>
-	<4EFA0D53.9000605@interlog.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Tue, 27 Dec 2011 14:07:38 -0800
+Message-ID: <20111227140738.c9eedb7c.akpm@linux-foundation.org>
+References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au>
+	<20111221151503.4d78f94f.akpm@linux-foundation.org>
+	<20111222150836.af172886.akpm@linux-foundation.org>
+	<20111222232036.GP17084@google.com>
+	<20111222152427.c944c747.akpm@linux-foundation.org>
+	<20111222233843.GR17084@google.com>
+	<20111222154427.89b245c7.akpm@linux-foundation.org>
+	<20111222234639.GS17084@google.com>
+	<20111223004244.GU17084@google.com>
+	<alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+	<20111225010238.GA6013@htj.dyndns.org>
+	<4EF7253E.3070606@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([198.137.202.13]:48741 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400Ab1L0Svh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2011 13:51:37 -0500
-In-Reply-To: <4EFA0D53.9000605@interlog.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:54161 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750768Ab1L0WHk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2011 17:07:40 -0500
+In-Reply-To: <4EF7253E.3070606@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: Eric.Moore@lsi.com, stable@vger.kernel.org, linux-scsi@vger.kernel.org, Nagalakshmi.Nandigama@lsi.com
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hugh Dickins <hughd@google.com>, x86@kernel.org
 
-From: Douglas Gilbert <dgilbert@interlog.com>
-Date: Tue, 27 Dec 2011 13:24:19 -0500
+On Sun, 25 Dec 2011 14:29:34 +0100
+Jens Axboe <axboe@kernel.dk> wrote:
 
-> ... and goodwill to all.
+> On 2011-12-25 02:02, Tejun Heo wrote:
+> > While fixing io_context creation / task exit race condition,
+> > 6e736be7f2 "block: make ioc get/put interface more conventional and
+> > fix race on alloction" also prevented an exiting (%PF_EXITING) task
+> > from creating its own io_context.  This is incorrect as exit path may
+> > issue IOs, e.g. from exit_files(), and if those IOs are the first ones
+> > issued by the task, io_context needs to be created to process the IOs.
+> > 
+> > Combined with the existing problem of io_context / io_cq creation
+> > failure having the possibility of stalling IO, this problem results in
+> > deterministic full IO lockup with certain workloads.
+> > 
+> > Fix it by allowing io_context creation regardless of %PF_EXITING for
+> > %current.
 
-Think I'm being unreasonable?  You really don't get it do you?
+The patch works for me.
 
-Do you not see how self-serving and ironic it is that a driver
-maintainer only cares about -stable submissions when someone else
-tries to take care of the bugs for them?
+> Thanks, applied.
 
-And in doing so, all of a sudden cares enough to say that the fix
-should be done in a certain way?
+So we get another great big bisection hole in mainline.  I feel
+duty bound to rewhine about this :(
 
-If they cared so much, they should be feeding bug fixes to -stable in the
-first place instead of relying upon others to do so.
