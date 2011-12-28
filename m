@@ -1,54 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Wed, 28 Dec 2011 09:55:12 -0800
-Message-ID: <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
-References: <20111222150836.af172886.akpm@linux-foundation.org>
-	<20111222232036.GP17084@google.com>
-	<20111222152427.c944c747.akpm@linux-foundation.org>
-	<20111222233843.GR17084@google.com>
-	<20111222154427.89b245c7.akpm@linux-foundation.org>
-	<20111222234639.GS17084@google.com>
-	<20111223004244.GU17084@google.com>
-	<alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
-	<20111225010238.GA6013@htj.dyndns.org>
-	<alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
-	<20111228164836.GP17712@google.com>
-	<alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 27/28] libsas: fix sas_find_local_phy(), take phy references
+Date: Wed, 28 Dec 2011 10:45:46 -0800
+Message-ID: <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
+References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+	<20111223030049.21827.90091.stgit@localhost6.localdomain6>
+	<47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hugh Dickins <hughd@google.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
-
-On Wed, Dec 28, 2011 at 9:50 AM, Hugh Dickins <hughd@google.com> wrote:
-> "It's the tmpfs swapping test that I've been running, with variations=
-,
-> for years. =A0System booted with mem=3D700M and 1.5G swap, two repeti=
-tious
-> make -j20 kernel builds (of a 2.6.24 kernel: I stuck with that becaus=
-e
-> the balance of built to unbuilt source grows smaller with later kerne=
-ls),
-> one directly in a tmpfs, the other in a 1k-block ext2 (that I drive w=
-ith
-> ext4's CONFIG_EXT4_USE_FOR_EXT23) on /dev/loop0 on a 450MB tmpfs file=
-=2E"
+On Tue, Dec 27, 2011 at 1:21 AM, Jack Wang <jack_wang@usish.com> wrote:
+>>
+>> In the direct-attached case this routine returns the phy on which th=
+is
+>> device was first discovered. =A0Which is broken if we want to suppor=
+t
+>> wide-targets, as this phy reference can become stale even though the
+>> port is still active.
+>>
+>> In the expander-attached case this routine tries to lookup the phy b=
+y
+>> scanning the attached sas addresses of the parent expander, and BUG_=
+ONs
+>> if it can't find it. =A0However since eh and the libsas workqueue ru=
+n
+>> independently we can still be attempting device recovery via eh afte=
+r
+>> libsas has recorded the device as detached. =A0This is even easier t=
+o hit
+>> now that eh is blocked while device domain rediscovery takes place, =
+and
+>> that libata is fed more timed out commands increasing the chances th=
+at
+>> it will try to recover the ata device.
+>>
+>> Arrange for dev->phy to always point to a last known good phy, it ma=
+y be
+>> stale after the port is torn down, but it will catch up for wide por=
+t
+>> reconfigurations, and never be NULL.
+>>
+>> Q: How is pm8001_I_T_nexus_reset getting away with not performing re=
+set
+>> =A0 =A0on direct attached sata devices?
+>>
+> [Jack Wang]
+> We found reset may lead to some SATA disks can not be found sometime,=
+ in
+> fact no only for direct attached sata devices.
 >
-> I doubt much of that (quoted from an older mail to someone else about
-> one of the many other bugs it's found) is relevant: maybe just plenty
-> of file I/O and swapping.
+> I wonder why we always reset the sata device when probe, for pm8001 d=
+irect
+> attached sata firmware will report Initial SATA FIS when phy ready.
+>
 
-Plain -j4 build isn't triggering anything.  I'll try to replicate the c=
-ondition.
+We need to get the drive to a known state.  Do these problems still
+happen in your tests with the "wait for ready" checking?  That's
+supposed to allow enough time for the signature fis to be transmitted.
 
-Thanks.
+I'll take a closer look at your libsas fix, because I believe we are
+still seeing failures to rediscover all attached devices even with
+these patches.
 
---=20
-tejun
+--
+Dan
