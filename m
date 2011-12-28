@@ -1,68 +1,102 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH]libsas : do not set invalid phy
-Date: Wed, 28 Dec 2011 08:54:25 +0800
-Message-ID: <C6278937F038430BA4E16449DFF1120B@usish.com.cn>
-References: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Wed, 28 Dec 2011 00:33:01 -0800 (PST)
+Message-ID: <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au> <20111221151503.4d78f94f.akpm@linux-foundation.org> <20111222150836.af172886.akpm@linux-foundation.org> <20111222232036.GP17084@google.com> <20111222152427.c944c747.akpm@linux-foundation.org>
+ <20111222233843.GR17084@google.com> <20111222154427.89b245c7.akpm@linux-foundation.org> <20111222234639.GS17084@google.com> <20111223004244.GU17084@google.com> <alpine.LSU.2.00.1112232058550.3225@eggly.anvils> <20111225010238.GA6013@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:41573 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814Ab1L1AzS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2011 19:55:18 -0500
-In-Reply-To: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20111225010238.GA6013@htj.dyndns.org>
+Sender: linux-next-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Jack Wang' <jack_wang@usish.com>, dan.j.williams@intel.com, yuxiangl@marvell.com, ltuikov@yahoo.com, James.Bottomley@HansenPartnership.com
-Cc: 'james' <linux-scsi@vger.kernel.org>
 
-> 
-[Jack Wang] 
-Sorry, I forget to mention the patch are based on dan's V2 libsas fix.
-> Hi all,
-> 
-> For detecting a failure to transmit initial dev to host FIS as described
-in
-> section G.5 of sas-2 r 04b , In order to generate the dev to host FIS, we
-> send a link reset to the expander port, but this may still fail for some
-> device, when this happened , we should ignore this , do not set the phy,
-let
-> libsas find the device later .
-> 
-> >From a315c8ee6f6b7ad000d6dc72d31dfb576ecbceb5 Mon Sep 17 00:00:00 2001
-> From: Jack Wang <jack_wang@usish.com>
-> Date: Tue, 27 Dec 2011 02:25:19 -0500
-> Subject: [PATCH] don't set the invalid phy
-> 
-> Signed-off-by: Lindar Liu <Lindar_liu@usish.com>
-> Signed-off-by: Jack Wang <jack_wang@usish.com>
-> ---
->  drivers/scsi/libsas/sas_expander.c |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index e47599b..c7a27c7 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -304,6 +304,12 @@ static int sas_ex_phy_discover_helper(struct
-> domain_device *dev, u8 *disc_req,
->  		/* Wait for the reset to trigger the negotiation */
->  		msleep(500);
->  	}
-> +	if ((dr->attached_dev_type == 0 &&
-> +		dr->attached_sata_dev)) {
-> +		sas_printk("Found sata attached_dev_type = 0, ignore it to
-> let it found later!\n");
-> +		return 0;
-> +	}
-> +
->  	sas_set_ex_phy(dev, single, disc_resp);
->  	return 0;
->  }
-> --
-> 1.7.1
+On Sat, 24 Dec 2011, Tejun Heo wrote:
 
+> While fixing io_context creation / task exit race condition,
+> 6e736be7f2 "block: make ioc get/put interface more conventional and
+> fix race on alloction" also prevented an exiting (%PF_EXITING) task
+> from creating its own io_context.  This is incorrect as exit path may
+> issue IOs, e.g. from exit_files(), and if those IOs are the first ones
+> issued by the task, io_context needs to be created to process the IOs.
+> 
+> Combined with the existing problem of io_context / io_cq creation
+> failure having the possibility of stalling IO, this problem results in
+> deterministic full IO lockup with certain workloads.
+> 
+> Fix it by allowing io_context creation regardless of %PF_EXITING for
+> %current.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Reported-by: Andrew Morton <akpm@linux-foundation.org>
+> Reported-by: Hugh Dickins <hughd@google.com>
 
+Thanks, I think I've now built enough kernels on -next plus your patch
+to say that it does indeed solve that problem.
+
+However, there are a couple of other unhealthy symptoms I've noticed
+under load in -next's block/cfq layer, both with and without your patch.
+
+One is kernel BUG at block/cfq-iosched.c:2585!
+	BUG_ON(RB_EMPTY_ROOT(&cfqq->sort_list));
+
+cfq_dispatch_request+0x1a
+cfq_dispatch_requests+0x5c
+blk_peek_request+0x195
+scsi_request_fn+0x6a
+__blk_run_queue+0x16
+scsi_run_queue+0x18a
+scsi_next_command+0x36
+scsi_io_completion+0x426
+scsi_finish_command+0xaf
+scsi_softirq_done+0xdd
+blk_done_softirq+0x6c
+__do_softirq+0x80
+call_softirq+0x1c
+do_softirq+0x33
+irq_exit+0x3f
+do_IRQ+0x97
+ret_from_intr
+
+I've had that one four times now on different machines; but quicker
+to reproduce are these warnings from CONFIG_DEBUG_LIST=y:
+
+------------[ cut here ]------------
+WARNING: at lib/list_debug.c:53 __list_del_entry+0x8d/0x98()
+Hardware name: 4174AY9
+list_del corruption. prev->next should be ffff880005aa1380, but was 6b6b6b6b6b6b6b6b
+Modules linked in: snd_pcm_oss snd_mixer_oss snd_seq snd_seq_device
+Pid: 29241, comm: cc1 Tainted: G        W    3.2.0-rc6-next-20111222 #18
+Call Trace:
+ <IRQ>  [<ffffffff810544b4>] warn_slowpath_common+0x80/0x98
+ [<ffffffff81054560>] warn_slowpath_fmt+0x41/0x43
+ [<ffffffff811fc1a1>] __list_del_entry+0x8d/0x98
+ [<ffffffff811df8ab>] cfq_remove_request+0x3b/0xdf
+ [<ffffffff811df989>] cfq_dispatch_insert+0x3a/0x87
+ [<ffffffff811dfb3b>] cfq_dispatch_request+0x65/0x92
+ [<ffffffff811dfbc4>] cfq_dispatch_requests+0x5c/0x133
+ [<ffffffff812e103e>] ? scsi_request_fn+0x3b6/0x3d3
+ [<ffffffff811d3069>] blk_peek_request+0x195/0x1a6
+ [<ffffffff812e103e>] ? scsi_request_fn+0x3b6/0x3d3
+ [<ffffffff812e0cf5>] scsi_request_fn+0x6d/0x3d3
+ [<ffffffff811d0730>] __blk_run_queue+0x19/0x1b
+ [<ffffffff811d0bfd>] blk_run_queue+0x21/0x35
+ [<ffffffff812e08c4>] scsi_run_queue+0x11f/0x1b9
+ [<ffffffff812e205c>] scsi_next_command+0x36/0x46
+ [<ffffffff812e24dc>] scsi_io_completion+0x426/0x4a9
+ [<ffffffff812dc0b2>] scsi_finish_command+0xaf/0xb8
+ [<ffffffff812e200c>] scsi_softirq_done+0xdd/0xe5
+ [<ffffffff811d79c6>] blk_done_softirq+0x76/0x8a
+ [<ffffffff8105a28d>] __do_softirq+0x98/0x136
+ [<ffffffff814e649c>] call_softirq+0x1c/0x30
+ [<ffffffff8102f187>] do_softirq+0x38/0x81
+ [<ffffffff8105a596>] irq_exit+0x4e/0xb6
+ [<ffffffff8102ee9e>] do_IRQ+0x97/0xae
+ [<ffffffff814e49f0>] common_interrupt+0x70/0x70
+ <EOI>  [<ffffffff814e4a8e>] ? retint_swapgs+0xe/0x13
+---[ end trace 61fdaa1b260613d1 ]---
+
+Hugh
