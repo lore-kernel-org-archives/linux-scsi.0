@@ -1,85 +1,69 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH]libsas : do not set invalid phy
-Date: Wed, 28 Dec 2011 11:08:41 -0800
-Message-ID: <CAA9_cmf0Z6JZ5j=+h3wx8h7w9GvMjvz5JPMPiH_KfPt+bZyYNQ@mail.gmail.com>
-References: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Wed, 28 Dec 2011 13:19:18 -0800
+Message-ID: <20111228211918.GA3516@google.com>
+References: <20111222233843.GR17084@google.com>
+ <20111222154427.89b245c7.akpm@linux-foundation.org>
+ <20111222234639.GS17084@google.com>
+ <20111223004244.GU17084@google.com>
+ <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+ <20111225010238.GA6013@htj.dyndns.org>
+ <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+ <20111228164836.GP17712@google.com>
+ <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+ <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:51529 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754400Ab1L1TIm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2011 14:08:42 -0500
-Received: by vcbfk14 with SMTP id fk14so9684090vcb.19
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2011 11:08:41 -0800 (PST)
-In-Reply-To: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:55931 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754207Ab1L1VTY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 28 Dec 2011 16:19:24 -0500
+Content-Disposition: inline
+In-Reply-To: <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: yuxiangl@marvell.com, ltuikov@yahoo.com, James.Bottomley@hansenpartnership.com, james <linux-scsi@vger.kernel.org>
+To: Hugh Dickins <hughd@google.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 
-On Tue, Dec 27, 2011 at 4:49 PM, Jack Wang <jack_wang@usish.com> wrote:
-> Hi all,
->
-> For detecting a failure to transmit initial dev to host FIS as descri=
-bed in
-> section G.5 of sas-2 r 04b , In order to generate the dev to host FIS=
-, we
-> send a link reset to the expander port, but this may still fail for s=
-ome
-> device, when this happened , we should ignore this , do not set the p=
-hy, let
-> libsas find the device later .
->
-> From a315c8ee6f6b7ad000d6dc72d31dfb576ecbceb5 Mon Sep 17 00:00:00 200=
-1
-> From: Jack Wang <jack_wang@usish.com>
-> Date: Tue, 27 Dec 2011 02:25:19 -0500
-> Subject: [PATCH] don't set the invalid phy
->
-> Signed-off-by: Lindar Liu <Lindar_liu@usish.com>
-> Signed-off-by: Jack Wang <jack_wang@usish.com>
-> ---
-> =A0drivers/scsi/libsas/sas_expander.c | =A0 =A06 ++++++
-> =A01 files changed, 6 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index e47599b..c7a27c7 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -304,6 +304,12 @@ static int sas_ex_phy_discover_helper(struct
-> domain_device *dev, u8 *disc_req,
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Wait for the reset to trigger the n=
-egotiation */
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0msleep(500);
-> =A0 =A0 =A0 =A0}
-> + =A0 =A0 =A0 if ((dr->attached_dev_type =3D=3D 0 &&
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dr->attached_sata_dev)) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_printk("Found sata attached_dev_typ=
-e =3D 0, ignore it to
-> let it found later!\n");
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
-> + =A0 =A0 =A0 }
-> +
-> =A0 =A0 =A0 =A0sas_set_ex_phy(dev, single, disc_resp);
-> =A0 =A0 =A0 =A0return 0;
-> =A0}
+On Wed, Dec 28, 2011 at 09:55:12AM -0800, Tejun Heo wrote:
+> Hello,
+>=20
+> On Wed, Dec 28, 2011 at 9:50 AM, Hugh Dickins <hughd@google.com> wrot=
+e:
+> > "It's the tmpfs swapping test that I've been running, with variatio=
+ns,
+> > for years. =A0System booted with mem=3D700M and 1.5G swap, two repe=
+titious
+> > make -j20 kernel builds (of a 2.6.24 kernel: I stuck with that beca=
+use
+> > the balance of built to unbuilt source grows smaller with later ker=
+nels),
+> > one directly in a tmpfs, the other in a 1k-block ext2 (that I drive=
+ with
+> > ext4's CONFIG_EXT4_USE_FOR_EXT23) on /dev/loop0 on a 450MB tmpfs fi=
+le."
+> >
+> > I doubt much of that (quoted from an older mail to someone else abo=
+ut
+> > one of the many other bugs it's found) is relevant: maybe just plen=
+ty
+> > of file I/O and swapping.
+>=20
+> Plain -j4 build isn't triggering anything.  I'll try to replicate the=
+ condition.
 
-I wonder if we should just simulate the discovery of a sata disk in
-this scenario?? Because the first thing libata is going to do is reset
-it and wait for that to settle...
+It's not too reliable but I can reproduce it with -j 22 allmodconfig
+build inside qemu w/ 512M of memory.  I'll try to find out what's
+going on.
 
-However, for that to work we would need to allow sas_ata_hard_reset to
-set the detected device class.  The current scheme of returning
-dev->sata_dev.command_set (from what libsas set) is awkward since we
-may have legitimately switched device classes during the reset, and
-certainly wrong if we were not able to make a proper classification
-during initial discovery.
+Thanks.
 
---
-Dan
+--=20
+tejun
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
