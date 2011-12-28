@@ -1,71 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Wed, 28 Dec 2011 13:19:18 -0800
-Message-ID: <20111228211918.GA3516@google.com>
-References: <20111222233843.GR17084@google.com>
- <20111222154427.89b245c7.akpm@linux-foundation.org>
- <20111222234639.GS17084@google.com>
- <20111223004244.GU17084@google.com>
- <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
- <20111225010238.GA6013@htj.dyndns.org>
- <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
- <20111228164836.GP17712@google.com>
- <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
- <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+From: David Dillow <dillowda@ornl.gov>
+Subject: Re: [PATCH 13/14] ib_srp: Implement transport layer ping
+Date: Wed, 28 Dec 2011 18:53:48 -0500
+Message-ID: <1325116430.3004.36.camel@obelisk.thedillows.org>
+References: <201112011954.25811.bvanassche@acm.org>
+	 <201112012011.45444.bvanassche@acm.org>
+	 <1324255806.17849.68.camel@obelisk.thedillows.org>
+	 <CAO+b5-o+-JF61a+8vFWj1rxMuVWuG-CVLQKorr5cKzi-Kc44Ag@mail.gmail.com>
+	 <1324333931.7043.52.camel@lap75545.ornl.gov>
+	 <CAO+b5-r4AZymMkVyFSXbBzpcc86hL0RJm2j3FnT3=uXSLUkj9A@mail.gmail.com>
+	 <1324436736.7621.38.camel@obelisk.thedillows.org>
+	 <CAO+b5-p=01KyDv7swOP_K39+i1rSMDsd_VVvSi5rBWveMaov1Q@mail.gmail.com>
+	 <1324679698.3004.12.camel@obelisk.thedillows.org>
+	 <4EF50705.7090200@cs.wisc.edu>
+	 <1324757240.3004.28.camel@obelisk.thedillows.org>
+	 <CAO+b5-rShXpP_LQzHauD7GHwAhNrYfhqE8C5+EQ4Gf7JcY--gg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:55931 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754207Ab1L1VTY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Dec 2011 16:19:24 -0500
-Content-Disposition: inline
-In-Reply-To: <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+Received: from matrix.voodoobox.net ([75.127.97.206]:37865 "EHLO
+	matrix.voodoobox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754008Ab1L1XyM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2011 18:54:12 -0500
+In-Reply-To: <CAO+b5-rShXpP_LQzHauD7GHwAhNrYfhqE8C5+EQ4Gf7JcY--gg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hughd@google.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Roland Dreier <roland@purestorage.com>, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>
 
-On Wed, Dec 28, 2011 at 09:55:12AM -0800, Tejun Heo wrote:
-> Hello,
->=20
-> On Wed, Dec 28, 2011 at 9:50 AM, Hugh Dickins <hughd@google.com> wrot=
-e:
-> > "It's the tmpfs swapping test that I've been running, with variatio=
-ns,
-> > for years. =A0System booted with mem=3D700M and 1.5G swap, two repe=
-titious
-> > make -j20 kernel builds (of a 2.6.24 kernel: I stuck with that beca=
-use
-> > the balance of built to unbuilt source grows smaller with later ker=
-nels),
-> > one directly in a tmpfs, the other in a 1k-block ext2 (that I drive=
- with
-> > ext4's CONFIG_EXT4_USE_FOR_EXT23) on /dev/loop0 on a 450MB tmpfs fi=
-le."
-> >
-> > I doubt much of that (quoted from an older mail to someone else abo=
-ut
-> > one of the many other bugs it's found) is relevant: maybe just plen=
-ty
-> > of file I/O and swapping.
->=20
-> Plain -j4 build isn't triggering anything.  I'll try to replicate the=
- condition.
+On Mon, 2011-12-26 at 19:39 +0000, Bart Van Assche wrote:
+> On Sat, Dec 24, 2011 at 8:07 PM, David Dillow <dillowda@ornl.gov> wrote:
+> > This says to me that SRP should use the dev_loss_tmo semantics, though
+> > the naming of fast_io_fail vs replacement_timeout is a bit more of a
+> > question than I thought. I tend to think of SRP more in terms of FC than
+> > iSCSI, so I still prefer the former, but perhaps not as strongly now.
+> 
+> Do we need dev_loss_tmo functionality ? Since multipathd switches over
+> if the active path is in the blocked state, the posted patch set
+> already provides a way to make multipathd switch over if communication
+> is lost.
 
-It's not too reliable but I can reproduce it with -j 22 allmodconfig
-build inside qemu w/ 512M of memory.  I'll try to find out what's
-going on.
+I think so. multipathd isn't the only use case, though I think we need
+to reorganize the SRP device model to fully take advantage of
+dev_loss_tmo -- but that can come later. I'd like to see dev_loss_tmo
+take the place of max_reconnects to give admins an easy way to set a
+maximum time.
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 
-Thanks.
-
---=20
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
