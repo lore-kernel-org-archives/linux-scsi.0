@@ -1,72 +1,87 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 27/28] libsas: fix sas_find_local_phy(), take phy references
-Date: Wed, 28 Dec 2011 10:45:46 -0800
-Message-ID: <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-	<20111223030049.21827.90091.stgit@localhost6.localdomain6>
-	<47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn>
+Subject: Re: [PATCH]libsas : do not set invalid phy
+Date: Wed, 28 Dec 2011 11:08:41 -0800
+Message-ID: <CAA9_cmf0Z6JZ5j=+h3wx8h7w9GvMjvz5JPMPiH_KfPt+bZyYNQ@mail.gmail.com>
+References: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:51529 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400Ab1L1TIm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2011 14:08:42 -0500
+Received: by vcbfk14 with SMTP id fk14so9684090vcb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2011 11:08:41 -0800 (PST)
+In-Reply-To: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jack Wang <jack_wang@usish.com>
+Cc: yuxiangl@marvell.com, ltuikov@yahoo.com, James.Bottomley@hansenpartnership.com, james <linux-scsi@vger.kernel.org>
 
-On Tue, Dec 27, 2011 at 1:21 AM, Jack Wang <jack_wang@usish.com> wrote:
->>
->> In the direct-attached case this routine returns the phy on which th=
-is
->> device was first discovered. =A0Which is broken if we want to suppor=
-t
->> wide-targets, as this phy reference can become stale even though the
->> port is still active.
->>
->> In the expander-attached case this routine tries to lookup the phy b=
-y
->> scanning the attached sas addresses of the parent expander, and BUG_=
-ONs
->> if it can't find it. =A0However since eh and the libsas workqueue ru=
-n
->> independently we can still be attempting device recovery via eh afte=
-r
->> libsas has recorded the device as detached. =A0This is even easier t=
-o hit
->> now that eh is blocked while device domain rediscovery takes place, =
-and
->> that libata is fed more timed out commands increasing the chances th=
-at
->> it will try to recover the ata device.
->>
->> Arrange for dev->phy to always point to a last known good phy, it ma=
-y be
->> stale after the port is torn down, but it will catch up for wide por=
-t
->> reconfigurations, and never be NULL.
->>
->> Q: How is pm8001_I_T_nexus_reset getting away with not performing re=
-set
->> =A0 =A0on direct attached sata devices?
->>
-> [Jack Wang]
-> We found reset may lead to some SATA disks can not be found sometime,=
- in
-> fact no only for direct attached sata devices.
+On Tue, Dec 27, 2011 at 4:49 PM, Jack Wang <jack_wang@usish.com> wrote:
+> Hi all,
 >
-> I wonder why we always reset the sata device when probe, for pm8001 d=
-irect
-> attached sata firmware will report Initial SATA FIS when phy ready.
+> For detecting a failure to transmit initial dev to host FIS as descri=
+bed in
+> section G.5 of sas-2 r 04b , In order to generate the dev to host FIS=
+, we
+> send a link reset to the expander port, but this may still fail for s=
+ome
+> device, when this happened , we should ignore this , do not set the p=
+hy, let
+> libsas find the device later .
 >
+> From a315c8ee6f6b7ad000d6dc72d31dfb576ecbceb5 Mon Sep 17 00:00:00 200=
+1
+> From: Jack Wang <jack_wang@usish.com>
+> Date: Tue, 27 Dec 2011 02:25:19 -0500
+> Subject: [PATCH] don't set the invalid phy
+>
+> Signed-off-by: Lindar Liu <Lindar_liu@usish.com>
+> Signed-off-by: Jack Wang <jack_wang@usish.com>
+> ---
+> =A0drivers/scsi/libsas/sas_expander.c | =A0 =A06 ++++++
+> =A01 files changed, 6 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c
+> b/drivers/scsi/libsas/sas_expander.c
+> index e47599b..c7a27c7 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -304,6 +304,12 @@ static int sas_ex_phy_discover_helper(struct
+> domain_device *dev, u8 *disc_req,
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* Wait for the reset to trigger the n=
+egotiation */
+> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0msleep(500);
+> =A0 =A0 =A0 =A0}
+> + =A0 =A0 =A0 if ((dr->attached_dev_type =3D=3D 0 &&
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dr->attached_sata_dev)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_printk("Found sata attached_dev_typ=
+e =3D 0, ignore it to
+> let it found later!\n");
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return 0;
+> + =A0 =A0 =A0 }
+> +
+> =A0 =A0 =A0 =A0sas_set_ex_phy(dev, single, disc_resp);
+> =A0 =A0 =A0 =A0return 0;
+> =A0}
 
-We need to get the drive to a known state.  Do these problems still
-happen in your tests with the "wait for ready" checking?  That's
-supposed to allow enough time for the signature fis to be transmitted.
+I wonder if we should just simulate the discovery of a sata disk in
+this scenario?? Because the first thing libata is going to do is reset
+it and wait for that to settle...
 
-I'll take a closer look at your libsas fix, because I believe we are
-still seeing failures to rediscover all attached devices even with
-these patches.
+However, for that to work we would need to allow sas_ata_hard_reset to
+set the detected device class.  The current scheme of returning
+dev->sata_dev.command_set (from what libsas set) is awkward since we
+may have legitimately switched device classes during the reset, and
+certainly wrong if we were not able to make a proper classification
+during initial discovery.
 
 --
 Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
