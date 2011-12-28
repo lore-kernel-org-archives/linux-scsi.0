@@ -1,56 +1,111 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Tue, 27 Dec 2011 14:07:38 -0800
-Message-ID: <20111227140738.c9eedb7c.akpm@linux-foundation.org>
-References: <20111221174733.9ba0861e762e8d96844b060b@canb.auug.org.au>
-	<20111221151503.4d78f94f.akpm@linux-foundation.org>
-	<20111222150836.af172886.akpm@linux-foundation.org>
-	<20111222232036.GP17084@google.com>
-	<20111222152427.c944c747.akpm@linux-foundation.org>
-	<20111222233843.GR17084@google.com>
-	<20111222154427.89b245c7.akpm@linux-foundation.org>
-	<20111222234639.GS17084@google.com>
-	<20111223004244.GU17084@google.com>
-	<alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
-	<20111225010238.GA6013@htj.dyndns.org>
-	<4EF7253E.3070606@kernel.dk>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: [PATCH]libsas : do not set invalid phy
+Date: Wed, 28 Dec 2011 08:49:03 +0800
+Message-ID: <55AF4742E909495DB7D4D448381E7BFB@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0096_01CCC53D.8E0CEB30"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54161 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750768Ab1L0WHk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2011 17:07:40 -0500
-In-Reply-To: <4EF7253E.3070606@kernel.dk>
+Received: from sr-smtp.usish.com ([210.5.144.203]:35736 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752748Ab1L1At6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2011 19:49:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Hugh Dickins <hughd@google.com>, x86@kernel.org
+To: dan.j.williams@intel.com, yuxiangl@marvell.com, ltuikov@yahoo.com, James.Bottomley@HansenPartnership.com
+Cc: 'james' <linux-scsi@vger.kernel.org>
 
-On Sun, 25 Dec 2011 14:29:34 +0100
-Jens Axboe <axboe@kernel.dk> wrote:
+This is a multi-part message in MIME format.
 
-> On 2011-12-25 02:02, Tejun Heo wrote:
-> > While fixing io_context creation / task exit race condition,
-> > 6e736be7f2 "block: make ioc get/put interface more conventional and
-> > fix race on alloction" also prevented an exiting (%PF_EXITING) task
-> > from creating its own io_context.  This is incorrect as exit path may
-> > issue IOs, e.g. from exit_files(), and if those IOs are the first ones
-> > issued by the task, io_context needs to be created to process the IOs.
-> > 
-> > Combined with the existing problem of io_context / io_cq creation
-> > failure having the possibility of stalling IO, this problem results in
-> > deterministic full IO lockup with certain workloads.
-> > 
-> > Fix it by allowing io_context creation regardless of %PF_EXITING for
-> > %current.
+------=_NextPart_000_0096_01CCC53D.8E0CEB30
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 
-The patch works for me.
+Hi all,
 
-> Thanks, applied.
+For detecting a failure to transmit initial dev to host FIS as described in
+section G.5 of sas-2 r 04b , In order to generate the dev to host FIS, we
+send a link reset to the expander port, but this may still fail for some
+device, when this happened , we should ignore this , do not set the phy, let
+libsas find the device later .
 
-So we get another great big bisection hole in mainline.  I feel
-duty bound to rewhine about this :(
+>From a315c8ee6f6b7ad000d6dc72d31dfb576ecbceb5 Mon Sep 17 00:00:00 2001
+From: Jack Wang <jack_wang@usish.com>
+Date: Tue, 27 Dec 2011 02:25:19 -0500
+Subject: [PATCH] don't set the invalid phy
+
+Signed-off-by: Lindar Liu <Lindar_liu@usish.com>
+Signed-off-by: Jack Wang <jack_wang@usish.com>
+---
+ drivers/scsi/libsas/sas_expander.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_expander.c
+b/drivers/scsi/libsas/sas_expander.c
+index e47599b..c7a27c7 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -304,6 +304,12 @@ static int sas_ex_phy_discover_helper(struct
+domain_device *dev, u8 *disc_req,
+ 		/* Wait for the reset to trigger the negotiation */
+ 		msleep(500);
+ 	}
++	if ((dr->attached_dev_type == 0 &&
++		dr->attached_sata_dev)) {
++		sas_printk("Found sata attached_dev_type = 0, ignore it to
+let it found later!\n");
++		return 0;
++	}
++
+ 	sas_set_ex_phy(dev, single, disc_resp);
+ 	return 0;
+ }
+-- 
+1.7.1
+
+
+------=_NextPart_000_0096_01CCC53D.8E0CEB30
+Content-Type: application/octet-stream;
+	name="0001-don-t-set-the-invalid-phy.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0001-don-t-set-the-invalid-phy.patch"
+
+>From a315c8ee6f6b7ad000d6dc72d31dfb576ecbceb5 Mon Sep 17 00:00:00 2001=0A=
+From: Jack Wang <jack_wang@usish.com>=0A=
+Date: Tue, 27 Dec 2011 02:25:19 -0500=0A=
+Subject: [PATCH] don't set the invalid phy=0A=
+=0A=
+Signed-off-by: Lindar Liu <Lindar_liu@usish.com>=0A=
+Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
+---=0A=
+ drivers/scsi/libsas/sas_expander.c |    6 ++++++=0A=
+ 1 files changed, 6 insertions(+), 0 deletions(-)=0A=
+=0A=
+diff --git a/drivers/scsi/libsas/sas_expander.c =
+b/drivers/scsi/libsas/sas_expander.c=0A=
+index e47599b..c7a27c7 100644=0A=
+--- a/drivers/scsi/libsas/sas_expander.c=0A=
++++ b/drivers/scsi/libsas/sas_expander.c=0A=
+@@ -304,6 +304,12 @@ static int sas_ex_phy_discover_helper(struct =
+domain_device *dev, u8 *disc_req,=0A=
+ 		/* Wait for the reset to trigger the negotiation */=0A=
+ 		msleep(500);=0A=
+ 	}=0A=
++	if ((dr->attached_dev_type =3D=3D 0 &&=0A=
++		dr->attached_sata_dev)) {=0A=
++		sas_printk("Found sata attached_dev_type =3D 0, ignore it to let it =
+found later!\n");=0A=
++		return 0;=0A=
++	}=0A=
++=0A=
+ 	sas_set_ex_phy(dev, single, disc_resp);=0A=
+ 	return 0;=0A=
+ }=0A=
+-- =0A=
+1.7.1=0A=
+=0A=
+
+------=_NextPart_000_0096_01CCC53D.8E0CEB30--
 
