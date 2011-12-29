@@ -1,237 +1,82 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH v2 24/28] libsas: poll for ata device readiness after reset
-Date: Thu, 29 Dec 2011 14:18:44 +0800
-Message-ID: <FD5571266F8C4E5ABC22D51C90F90A79@usish.com.cn>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6> <20111223030033.21827.46127.stgit@localhost6.localdomain6>
+Subject: RE: [PATCH v2 27/28] libsas: fix sas_find_local_phy(), take phy references
+Date: Thu, 29 Dec 2011 14:18:59 +0800
+Message-ID: <B0C89E887B4642239ECCC0B2A7F4E52A@usish.com.cn>
+References: <20111223025350.21827.85779.stgit@localhost6.localdomain6><20111223030049.21827.90091.stgit@localhost6.localdomain6><47F78521CCB14D959AB0CD172E61E0C7@usish.com.cn> <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20111223030033.21827.46127.stgit@localhost6.localdomain6>
+In-Reply-To: <CAA9_cmfmBK2cYWpSO8aQiiwXpLmX9r0u8=BJVh3Q-kZVhpzrZg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
-Cc: 'Tejun Heo' <tj@kernel.org>, linux-ide@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, 'Xiangliang Yu' <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, 'Luben Tuikov' <ltuikov@yahoo.com>
 List-Id: linux-scsi@vger.kernel.org
 
-> @@ -267,39 +267,84 @@ static bool sas_ata_qc_fill_rtf(struct
-ata_queued_cmd
-> *qc)
->  	return true;
->  }
-> 
-> -static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
-> -			       unsigned long deadline)
-> +static struct sas_internal *dev_to_sas_internal(struct domain_device
-*dev)
-> +{
-> +	return to_sas_internal(dev->port->ha->core.shost->transportt);
-> +}
-> +
-> +static int smp_ata_check_ready(struct ata_link *link)
->  {
-> +	int res;
-> +	u8 addr[8];
->  	struct ata_port *ap = link->ap;
->  	struct domain_device *dev = ap->private_data;
-> -	struct sas_internal *i
-> -		to_sas_internal(dev->port->ha->core.shost->transportt);
-> -	int res = TMF_RESP_FUNC_FAILED;
-> -	int ret = 0;
-> +	struct domain_device *ex_dev = dev->parent;
-> +	struct sas_phy *phy = sas_find_local_phy(dev);
-> 
-> -	if (i->dft->lldd_I_T_nexus_reset)
-> -		res = i->dft->lldd_I_T_nexus_reset(dev);
-> +	res = sas_get_phy_attached_sas_addr(ex_dev, phy->number, addr);
-> +	/* break the wait early if the expander is unreachable,
-> +	 * otherwise keep polling
-> +	 */
-> +	if (res == -ECOMM)
-> +		return res;
-> +	if (res != SMP_RESP_FUNC_ACC || SAS_ADDR(addr) == 0)
-[Jack Wang] 
-This check may not guarantee the FIS have received by the expander, should
-we
- Use sas_ex_phy_discover instead, we still need to teach
-sas_ex_phy_discover_helper to return right code.
-> +		return 0;
-> +	else
-> +		return 1;
-> +}
-> 
-> -	if (res != TMF_RESP_FUNC_COMPLETE) {
-> -		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __func__);
-> -		ret = -EAGAIN;
-> +static int local_ata_check_ready(struct ata_link *link)
-> +{
-> +	struct ata_port *ap = link->ap;
-> +	struct domain_device *dev = ap->private_data;
-> +	struct sas_internal *i = dev_to_sas_internal(dev);
-> +
-> +	if (i->dft->lldd_ata_check_ready)
-> +		return i->dft->lldd_ata_check_ready(dev);
-> +	else {
-> +		/* lldd's that don't implement 'ready' checking get the
-> +		 * old default behavior of not coordinating reset
-> +		 * recovery with libata
-> +		 */
-> +		return 1;
->  	}
-> +}
-> 
-> +static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
-> +			      unsigned long deadline)
-> +{
-> +	int ret = 0, res;
-> +	struct ata_port *ap = link->ap;
-> +	int (*check_ready)(struct ata_link *link);
-> +	struct domain_device *dev = ap->private_data;
-> +	struct sas_phy *phy = sas_find_local_phy(dev);
-> +	struct sas_internal *i = dev_to_sas_internal(dev);
-> +
-> +	res = i->dft->lldd_I_T_nexus_reset(dev);
-> +
-> +	if (res != TMF_RESP_FUNC_COMPLETE)
-> +		SAS_DPRINTK("%s: Unable to reset ata device?\n", __func__);
-> +
-> +	if (scsi_is_sas_phy_local(phy))
-> +		check_ready = local_ata_check_ready;
-> +	else
-> +		check_ready = smp_ata_check_ready;
-> +
-> +	ret = ata_wait_after_reset(link, deadline, check_ready);
-> +	if (ret && ret != -EAGAIN)
-> +		ata_link_err(link, "COMRESET failed (errno=%d)\n", ret);
-> +
-> +	/* XXX: if the class changes during the reset the upper layer
-> +	 * should be informed, if the device has gone away we assume
-> +	 * libsas will eventually delete it
-> +	 */
->  	switch (dev->sata_dev.command_set) {
-> -		case ATA_COMMAND_SET:
-> -			SAS_DPRINTK("%s: Found ATA device.\n", __func__);
-> -			*class = ATA_DEV_ATA;
-> -			break;
-> -		case ATAPI_COMMAND_SET:
-> -			SAS_DPRINTK("%s: Found ATAPI device.\n", __func__);
-> -			*class = ATA_DEV_ATAPI;
-> -			break;
-> -		default:
-> -			SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
-> -				    __func__,
-> -				    dev->sata_dev.command_set);
-> -			*class = ATA_DEV_UNKNOWN;
-> -			break;
-> +	case ATA_COMMAND_SET:
-> +		*class = ATA_DEV_ATA;
-> +		break;
-> +	case ATAPI_COMMAND_SET:
-> +		*class = ATA_DEV_ATAPI;
-> +		break;
->  	}
-> 
->  	ap->cbl = ATA_CBL_SATA;
-> @@ -311,8 +356,7 @@ static int sas_ata_soft_reset(struct ata_link *link,
-> unsigned int *class,
->  {
->  	struct ata_port *ap = link->ap;
->  	struct domain_device *dev = ap->private_data;
-> -	struct sas_internal *i
-> -		to_sas_internal(dev->port->ha->core.shost->transportt);
-> +	struct sas_internal *i = dev_to_sas_internal(dev);
->  	int res = TMF_RESP_FUNC_FAILED;
->  	int ret = 0;
-> 
-> @@ -350,8 +394,7 @@ static int sas_ata_soft_reset(struct ata_link *link,
-> unsigned int *class,
->   */
->  static void sas_ata_internal_abort(struct sas_task *task)
->  {
-> -	struct sas_internal *si
-> -
-to_sas_internal(task->dev->port->ha->core.shost->transportt);
-> +	struct sas_internal *si = dev_to_sas_internal(task->dev);
->  	unsigned long flags;
->  	int res;
-> 
-> @@ -420,8 +463,7 @@ static void sas_ata_post_internal(struct
-ata_queued_cmd
-> *qc)
->  static void sas_ata_set_dmamode(struct ata_port *ap, struct ata_device
-> *ata_dev)
->  {
->  	struct domain_device *dev = ap->private_data;
-> -	struct sas_internal *i
-> -		to_sas_internal(dev->port->ha->core.shost->transportt);
-> +	struct sas_internal *i = dev_to_sas_internal(dev);
-> 
->  	if (i->dft->lldd_ata_set_dmamode)
->  		i->dft->lldd_ata_set_dmamode(dev);
-> diff --git a/drivers/scsi/libsas/sas_expander.c
-> b/drivers/scsi/libsas/sas_expander.c
-> index fd77ea3..5e1eec9 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -125,7 +125,11 @@ static int smp_execute_task(struct domain_device
-*dev,
-> void *req, int req_size,
->  		    task->task_status.stat == SAS_DATA_OVERRUN) {
->  			res = -EMSGSIZE;
->  			break;
-> -		} else {
-> +		}
-> +		if (task->task_status.resp == SAS_TASK_UNDELIVERED &&
-> +		    task->task_status.stat == SAS_DEVICE_UNKNOWN)
-> +			break;
-> +		else {
->  			SAS_DPRINTK("%s: task to dev %016llx response: 0x%x
-"
->  				    "status 0x%x\n", __func__,
->  				    SAS_ADDR(dev->sas_addr),
-> @@ -1648,8 +1652,8 @@ static int sas_get_phy_change_count(struct
-> domain_device *dev,
->  	return res;
->  }
-> 
-> -static int sas_get_phy_attached_sas_addr(struct domain_device *dev,
-> -					 int phy_id, u8 *attached_sas_addr)
-> +int sas_get_phy_attached_sas_addr(struct domain_device *dev, int phy_id,
-> +				  u8 *attached_sas_addr)
->  {
->  	int res;
->  	struct smp_resp *disc_resp;
-> diff --git a/drivers/scsi/libsas/sas_internal.h
-> b/drivers/scsi/libsas/sas_internal.h
-> index cde1a84..c6317c1 100644
-> --- a/drivers/scsi/libsas/sas_internal.h
-> +++ b/drivers/scsi/libsas/sas_internal.h
-> @@ -87,7 +87,8 @@ int sas_smp_get_phy_events(struct sas_phy *phy);
-> 
->  struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
->  struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int
-> phy_id);
-> -
-> +int sas_get_phy_attached_sas_addr(struct domain_device *dev, int phy_id,
-> +				  u8 *attached_sas_addr);
->  void sas_hae_reset(struct work_struct *work);
-> 
->  void sas_free_device(struct kref *kref);
-> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-> index 6e1c640..3c9849c 100644
-> --- a/include/scsi/libsas.h
-> +++ b/include/scsi/libsas.h
-> @@ -610,6 +610,7 @@ struct sas_domain_function_template {
->  	int (*lldd_clear_task_set)(struct domain_device *, u8 *lun);
->  	int (*lldd_I_T_nexus_reset)(struct domain_device *);
->  	int (*lldd_ata_soft_reset)(struct domain_device *);
-> +	int (*lldd_ata_check_ready)(struct domain_device *);
->  	void (*lldd_ata_set_dmamode)(struct domain_device *);
->  	int (*lldd_lu_reset)(struct domain_device *, u8 *lun);
->  	int (*lldd_query_task)(struct sas_task *);
-> 
+>=20
+> On Tue, Dec 27, 2011 at 1:21 AM, Jack Wang <jack_wang@usish.com> wrot=
+e:
+> >>
+> >> In the direct-attached case this routine returns the phy on which =
+this
+> >> device was first discovered. =A0Which is broken if we want to supp=
+ort
+> >> wide-targets, as this phy reference can become stale even though t=
+he
+> >> port is still active.
+> >>
+> >> In the expander-attached case this routine tries to lookup the phy=
+ by
+> >> scanning the attached sas addresses of the parent expander, and BU=
+G_ONs
+> >> if it can't find it. =A0However since eh and the libsas workqueue =
+run
+> >> independently we can still be attempting device recovery via eh af=
+ter
+> >> libsas has recorded the device as detached. =A0This is even easier=
+ to hit
+> >> now that eh is blocked while device domain rediscovery takes place=
+, and
+> >> that libata is fed more timed out commands increasing the chances =
+that
+> >> it will try to recover the ata device.
+> >>
+> >> Arrange for dev->phy to always point to a last known good phy, it =
+may
+be
+> >> stale after the port is torn down, but it will catch up for wide p=
+ort
+> >> reconfigurations, and never be NULL.
+> >>
+> >> Q: How is pm8001_I_T_nexus_reset getting away with not performing =
+reset
+> >> =A0 =A0on direct attached sata devices?
+> >>
+> > [Jack Wang]
+> > We found reset may lead to some SATA disks can not be found sometim=
+e, in
+> > fact no only for direct attached sata devices.
+> >
+> > I wonder why we always reset the sata device when probe, for pm8001
+direct
+> > attached sata firmware will report Initial SATA FIS when phy ready.
+> >
+>=20
+> We need to get the drive to a known state.  Do these problems still
+> happen in your tests with the "wait for ready" checking?  That's
+> supposed to allow enough time for the signature fis to be transmitted=
+=2E
+>=20
+> I'll take a closer look at your libsas fix, because I believe we are
+> still seeing failures to rediscover all attached devices even with
+> these patches.
+>=20
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Dan
+[Jack Wang]=20
+I only test sata behind expander, will add lldd_ata_check_ready to have=
+ a
+test later.
+
+
 
