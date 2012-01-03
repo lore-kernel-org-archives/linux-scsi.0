@@ -1,16 +1,16 @@
 From: Greg KH <gregkh@suse.de>
-Subject: [41/67] mpt2sas crashes on shutdown
-Date: Tue, 03 Jan 2012 14:29:59 -0800
-Message-ID: <20120103223034.779901025@clark.kroah.org>
-References: <20120103223043.GA26738@kroah.com>
+Subject: [50/75] mpt2sas crashes on shutdown
+Date: Tue, 03 Jan 2012 14:33:23 -0800
+Message-ID: <20120103223325.206012007@clark.kroah.org>
+References: <20120103223332.GA4112@kroah.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120103223043.GA26738@kroah.com>
+In-Reply-To: <20120103223332.GA4112@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, nagalakshmi.nandigama@lsi.com, "David S. Miller" <davem@davemloft.net>, Eric Moore <Eric.Moore@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-3.0-stable review patch.  If anyone has any objections, please let me know.
+3.1-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -72,7 +72,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -768,7 +768,7 @@ struct MPT2SAS_ADAPTER {
+@@ -779,7 +779,7 @@ struct MPT2SAS_ADAPTER {
  
  	u8		msix_enable;
  	u16		msix_vector_count;
