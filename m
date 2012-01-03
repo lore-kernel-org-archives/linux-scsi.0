@@ -1,93 +1,56 @@
-From: Chuck Lever <chuck.lever@oracle.com>
-Subject: Re: [LSF/MM TOPIC][ATTEND] linux servers as a storage server - what's missing?
-Date: Tue, 3 Jan 2012 14:32:40 -0500
-Message-ID: <7524F2E4-91F9-4DFE-958B-19D73B0AC26C@oracle.com>
-References: <4EF2026F.2090506@redhat.com> <20120103142609.2b4d06cb@tlielax.poochiereds.net>
-Mime-Version: 1.0 (Apple Message framework v1251.1)
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Tue, 3 Jan 2012 12:09:06 -0800
+Message-ID: <20120103200906.GG31746@google.com>
+References: <20111223004244.GU17084@google.com>
+ <alpine.LSU.2.00.1112232058550.3225@eggly.anvils>
+ <20111225010238.GA6013@htj.dyndns.org>
+ <alpine.LSU.2.00.1112280010550.1398@eggly.anvils>
+ <20111228164836.GP17712@google.com>
+ <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+ <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+ <20111228211918.GA3516@google.com>
+ <20120103173500.GB31746@google.com>
+ <20120103175922.GC31746@google.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:51824 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754772Ab2ACTcq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2012 14:32:46 -0500
-In-Reply-To: <20120103142609.2b4d06cb@tlielax.poochiereds.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120103175922.GC31746@google.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Hugh Dickins <hughd@google.com>, Jens Axboe <axboe@kernel.dk>, Shaohua Li <shaohua.li@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Layton <jlayton@redhat.com>
-Cc: Ric Wheeler <rwheeler@redhat.com>, linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Tue, Jan 03, 2012 at 09:59:22AM -0800, Tejun Heo wrote:
+> That should have been service tree.  I couldn't find more missing
+> removals other than the one Shaohua's patch already fixed.  Close
+> cooperator selection in cfq_select_queue() seems suspicious tho.  I
+> can't see what prevents it from returning an empty coopeator cfqq.
+> I'm trying to verify whether that's the case.  Will update when I know
+> more.
 
-On Jan 3, 2012, at 2:26 PM, Jeff Layton wrote:
+While testing, found another bug.
 
-> On Wed, 21 Dec 2011 10:59:43 -0500
-> Ric Wheeler <rwheeler@redhat.com> wrote:
-> 
->> 
->> One common thing that I see a lot of these days is an increasing number of 
->> platforms that are built on our stack as storage servers. Ranging from the 
->> common linux based storage/NAS devices up to various distributed systems.  
->> Almost all of them use our common stack - software RAID, LVM, XFS/ext4 and samba.
->> 
->> At last year's SNIA developers conference, it was clear that Microsoft is 
->> putting a lot of effort into enhancing windows 8 server as a storage server with 
->> both support for a pNFS server and of course SMB. I think that linux (+samba) is 
->> ahead of the windows based storage appliances today, but they are putting 
->> together a very aggressive list of features.
->> 
->> I think that it would be useful and interesting to take a slot at this year's 
->> LSF to see how we are doing in this space. How large do we need to scale for an 
->> appliance?  What kind of work is needed (support for the copy offload system 
->> call? better support for out of band notifications like those used in "thinly 
->> provisioned" SCSI devices? management API's? Ease of use CLI work? SMB2.2 support?).
->> 
->> The goal would be to see what technical gaps we have that need more active 
->> development in, not just a wish list :)
->> 
->> Ric
-> 
-> Unfortunately, w/o a wishlist of sorts, it's hard to know what needs
-> more active development ;).
-> 
-> While HCH will probably disagree, being able to support more
-> NFSv4/Windows API features at the VFS layer would make it a lot easier
-> to do a more unified serving appliance. Right now, both knfsd and samba
-> track too much info internally, and that makes it very difficult to
-> serve the same data via multiple protocols.
-> 
-> Off the top of my head, my "wishlist" for better NFSv4 serving would be:
-> 
-> - RichACLs
-> - Share/Deny mode support on open
-> - mandatory locking that doesn't rely on weirdo file modes
+ Redzone: 0x9f911029d74e35b/0x9f911029d74e35b.
+ Last user: [<ffffffff813a82ee>](cfq_put_queue+0x7e/0xd0)
+ 070: e8 32 ab 1d 00 88 ff ff e8 32 ab 1d 00 88 ff ff  .2.......2......
+ Prev obj: start=ffff88001dab3178, len=232
+ Redzone: 0x9f911029d74e35b/0x9f911029d74e35b.
+ Last user: [<ffffffff813a82ee>](cfq_put_queue+0x7e/0xd0)
+ 000: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+ 010: 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b 6b  kkkkkkkkkkkkkkkk
+ Next obj: start=ffff88001dab3378, len=232
+ Redzone: 0xd84156c5635688c0/0xd84156c5635688c0.
+ Last user: [<ffffffff813a8e53>](cfq_get_queue+0x153/0x670)
+ 000: 02 00 00 00 21 01 00 00 e0 c9 b1 1d 00 88 ff ff  ....!...........
+ 010: 89 96 ae 18 00 88 ff ff 00 00 00 00 00 00 00 00  ................
 
-To add a few more NFSv4 related items:
+The field at 0x70 which is being updated after being freed is
+cfqq->fifo.  Interestingly, it didn't lead to any visible failure.
 
- - Simplified ID mapping and security configuration
- - Support for NFSv4 migration and replication
- - Better server observability (for operational and performance debugging in the field)
- - FedFS and NFS basic junctions (already under way)
-
-> It's always going to be hard for us to compete with dedicated
-> appliances. Where Linux can shine though is in allowing for more
-> innovative combinations.
-> 
-> Being able to do active/active NFS serving from clustered filesystems,
-> for instance is something that we can eventually attain but that would
-> be harder to do in an appliance. This sort of discussion might also
-> dovetail with Benny's proposal about pNFS serving.
-> 
-> -- 
-> Jeff Layton <jlayton@redhat.com>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks.
 
 -- 
-Chuck Lever
-chuck[dot]lever[at]oracle[dot]com
-
-
-
-
+tejun
