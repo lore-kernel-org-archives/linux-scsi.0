@@ -1,17 +1,16 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 13/15] isci: fix io failures while wide port links are
- coming up
-Date: Wed, 04 Jan 2012 01:33:31 -0800
-Message-ID: <20120104093331.9147.96737.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 14/15] isci: fix start OOB
+Date: Wed, 04 Jan 2012 01:33:36 -0800
+Message-ID: <20120104093336.9147.16529.stgit@localhost6.localdomain6>
 References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:27065 "EHLO mga14.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:46192 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754732Ab2ADJdc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:33:32 -0500
+	id S1754732Ab2ADJdh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:33:37 -0500
 In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,161 +19,60 @@ Cc: Marcin Tomczak <marcin.tomczak@intel.com>
 
 From: Marcin Tomczak <marcin.tomczak@intel.com>
 
-When the first phy of a wide port comes up, don't report the port ready
-yet, always wait for 250 miliseconds then config the port with all phys
-added to the port. So that we can avoid reporting wide port device too
-early to kernel, which caused the first IOs (report luns, inquirys)
-failed due to not all the phys are configured into its port. Changes
-also made that the phys in a wide port don't need to go through half
-second wait time for consuming power.
+Split scu_link_layer_start_oob function to reset and enable and
+add flush after all steps.
 
 Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c        |   59 ++++++++++++++++++++++++++++++++++++---
- drivers/scsi/isci/port_config.c |   33 ++++++++++++++--------
- 2 files changed, 76 insertions(+), 16 deletions(-)
+ drivers/scsi/isci/phy.c |   35 ++++++++++++++++++-----------------
+ 1 files changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 7e4d709..1a65d65 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -899,7 +899,8 @@ static enum sci_status sci_controller_start_next_phy(struct isci_host *ihost)
- 			 */
- 			if ((iphy->is_in_link_training == false && state == SCI_PHY_INITIAL) ||
- 			    (iphy->is_in_link_training == false && state == SCI_PHY_STOPPED) ||
--			    (iphy->is_in_link_training == true && is_phy_starting(iphy))) {
-+			    (iphy->is_in_link_training == true && is_phy_starting(iphy)) ||
-+			    (ihost->port_agent.phy_ready_mask != ihost->port_agent.phy_configured_mask)) {
- 				is_controller_start_complete = false;
- 				break;
- 			}
-@@ -1904,6 +1905,31 @@ static void power_control_timeout(unsigned long data)
- 		ihost->power_control.phys_waiting--;
- 		ihost->power_control.phys_granted_power++;
- 		sci_phy_consume_power_handler(iphy);
-+
-+		if (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
-+			u8 j;
-+
-+			for (j = 0; j < SCI_MAX_PHYS; j++) {
-+				struct isci_phy *requester = ihost->power_control.requesters[j];
-+
-+				/*
-+				 * Search the power_control queue to see if there are other phys
-+				 * attached to the same remote device. If found, take all of
-+				 * them out of await_sas_power state.
-+				 */
-+				if (requester != NULL && requester != iphy) {
-+					u8 other = memcmp(requester->frame_rcvd.iaf.sas_addr,
-+							  iphy->frame_rcvd.iaf.sas_addr,
-+							  sizeof(requester->frame_rcvd.iaf.sas_addr));
-+
-+					if (other == 0) {
-+						ihost->power_control.requesters[j] = NULL;
-+						ihost->power_control.phys_waiting--;
-+						sci_phy_consume_power_handler(requester);
-+					}
-+				}
-+			}
-+		}
- 	}
- 
- 	/*
-@@ -1938,9 +1964,34 @@ void sci_controller_power_control_queue_insert(struct isci_host *ihost,
- 		ihost->power_control.timer_started = true;
- 
- 	} else {
--		/* Add the phy in the waiting list */
--		ihost->power_control.requesters[iphy->phy_index] = iphy;
--		ihost->power_control.phys_waiting++;
-+		/*
-+		 * There are phys, attached to the same sas address as this phy, are
-+		 * already in READY state, this phy don't need wait.
-+		 */
-+		u8 i;
-+		struct isci_phy *current_phy;
-+
-+		for (i = 0; i < SCI_MAX_PHYS; i++) {
-+			u8 other;
-+			current_phy = &ihost->phys[i];
-+
-+			other = memcmp(current_phy->frame_rcvd.iaf.sas_addr,
-+				       iphy->frame_rcvd.iaf.sas_addr,
-+				       sizeof(current_phy->frame_rcvd.iaf.sas_addr));
-+
-+			if (current_phy->sm.current_state_id == SCI_PHY_READY &&
-+			    current_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS &&
-+			    other == 0) {
-+				sci_phy_consume_power_handler(iphy);
-+				break;
-+			}
-+		}
-+
-+		if (i == SCI_MAX_PHYS) {
-+			/* Add the phy in the waiting list */
-+			ihost->power_control.requesters[iphy->phy_index] = iphy;
-+			ihost->power_control.phys_waiting++;
-+		}
- 	}
+diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
+index 61000cd..fe18acf 100644
+--- a/drivers/scsi/isci/phy.c
++++ b/drivers/scsi/isci/phy.c
+@@ -1098,24 +1098,25 @@ static void scu_link_layer_stop_protocol_engine(
+ 	writel(enable_spinup_value, &iphy->link_layer_registers->notify_enable_spinup_control);
  }
  
-diff --git a/drivers/scsi/isci/port_config.c b/drivers/scsi/isci/port_config.c
-index 37d15d3..6d1e954 100644
---- a/drivers/scsi/isci/port_config.c
-+++ b/drivers/scsi/isci/port_config.c
-@@ -466,6 +466,23 @@ sci_apc_agent_validate_phy_configuration(struct isci_host *ihost,
- 	return sci_port_configuration_agent_validate_ports(ihost, port_agent);
- }
- 
-+/*
-+ * This routine will restart the automatic port configuration timeout
-+ * timer for the next time period. This could be caused by either a link
-+ * down event or a link up event where we can not yet tell to which a phy
-+ * belongs.
-+ */
-+static void sci_apc_agent_start_timer(
-+	struct sci_port_configuration_agent *port_agent,
-+	u32 timeout)
-+{
-+	if (port_agent->timer_pending)
-+		sci_del_timer(&port_agent->timer);
-+
-+	port_agent->timer_pending = true;
-+	sci_mod_timer(&port_agent->timer, timeout);
-+}
-+
- static void sci_apc_agent_configure_ports(struct isci_host *ihost,
- 					       struct sci_port_configuration_agent *port_agent,
- 					       struct isci_phy *iphy,
-@@ -565,17 +582,8 @@ static void sci_apc_agent_configure_ports(struct isci_host *ihost,
- 		break;
- 
- 	case SCIC_SDS_APC_START_TIMER:
--		/*
--		 * This can occur for either a link down event, or a link
--		 * up event where we cannot yet tell the port to which a
--		 * phy belongs.
--		 */
--		if (port_agent->timer_pending)
--			sci_del_timer(&port_agent->timer);
+-/**
+- *
+- *
+- * This method will start the OOB/SN state machine for this struct isci_phy object.
+- */
+-static void scu_link_layer_start_oob(
+-	struct isci_phy *iphy)
++static void scu_link_layer_start_oob(struct isci_phy *iphy)
+ {
+-	u32 scu_sas_pcfg_value;
 -
--		port_agent->timer_pending = true;
--		sci_mod_timer(&port_agent->timer,
--			      SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION);
-+		sci_apc_agent_start_timer(port_agent,
-+					  SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION);
- 		break;
+-	scu_sas_pcfg_value =
+-		readl(&iphy->link_layer_registers->phy_configuration);
+-	scu_sas_pcfg_value |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
+-	scu_sas_pcfg_value &=
+-		~(SCU_SAS_PCFG_GEN_BIT(OOB_RESET) |
+-		SCU_SAS_PCFG_GEN_BIT(HARD_RESET));
+-	writel(scu_sas_pcfg_value,
+-	       &iphy->link_layer_registers->phy_configuration);
++	struct scu_link_layer_registers __iomem *ll = iphy->link_layer_registers;
++	u32 val;
++
++	/** Reset OOB sequence - start */
++	val = readl(&ll->phy_configuration);
++	val &= ~(SCU_SAS_PCFG_GEN_BIT(OOB_RESET) |
++		 SCU_SAS_PCFG_GEN_BIT(HARD_RESET));
++	writel(val, &ll->phy_configuration);
++	readl(&ll->phy_configuration); /* flush */
++	/** Reset OOB sequence - end */
++
++	/** Start OOB sequence - start */
++	val = readl(&ll->phy_configuration);
++	val |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
++	writel(val, &ll->phy_configuration);
++	readl(&ll->phy_configuration); /* flush */
++	/** Start OOB sequence - end */
+ }
  
- 	case SCIC_SDS_APC_SKIP_PHY:
-@@ -607,7 +615,8 @@ static void sci_apc_agent_link_up(struct isci_host *ihost,
- 	if (!iport) {
- 		/* the phy is not the part of this port */
- 		port_agent->phy_ready_mask |= 1 << phy_index;
--		sci_apc_agent_configure_ports(ihost, port_agent, iphy, true);
-+		sci_apc_agent_start_timer(port_agent,
-+					  SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION);
- 	} else {
- 		/* the phy is already the part of the port */
- 		u32 port_state = iport->sm.current_state_id;
+ /**
 
