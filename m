@@ -1,63 +1,60 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 06/15] isci: performance-fix,
- shorten default "no outbound task" timeout
-Date: Wed, 04 Jan 2012 01:32:54 -0800
-Message-ID: <20120104093254.9147.2460.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 07/15] isci: link speeds default to gen 2
+Date: Wed, 04 Jan 2012 01:33:00 -0800
+Message-ID: <20120104093300.9147.84867.stgit@localhost6.localdomain6>
 References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:38408 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:59534 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754805Ab2ADJcz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:32:55 -0500
+	id S1754732Ab2ADJdA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:33:00 -0500
 In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Marcin Tomczak <marcin.tomczak@intel.com>
+Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
-From: Marcin Tomczak <marcin.tomczak@intel.com>
+From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
->From Richard Boyd:
-"No task timeout timer reduced from 20 to 2 This timer controls how
-long the SCU hardware will hold open the TX side of the connection
-before sending a DONE.  The timer allows the hardware to attempt to
-optimize the DONE/CLOSE behavior to allow for new COMMAND IU to be
-posted.  In practice closing the connection quicker is better."
+Gen-3 operation is marginal, default to gen-2 for now.
 
-Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
+Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c |    2 +-
+ drivers/scsi/isci/host.c |    5 +++--
  drivers/scsi/isci/init.c |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 9a52b98..670ecb4 100644
+index 670ecb4..7e4d709 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -1697,7 +1697,7 @@ static void sci_controller_set_default_config_parameters(struct isci_host *ihost
- 	ihost->user_parameters.ssp_inactivity_timeout = 5;
- 	ihost->user_parameters.stp_max_occupancy_timeout = 5;
- 	ihost->user_parameters.ssp_max_occupancy_timeout = 20;
--	ihost->user_parameters.no_outbound_task_timeout = 20;
-+	ihost->user_parameters.no_outbound_task_timeout = 2;
- }
+@@ -1676,8 +1676,9 @@ static void sci_controller_set_default_config_parameters(struct isci_host *ihost
  
- static void controller_timeout(unsigned long data)
+ 	/* Initialize all of the phy parameter information. */
+ 	for (index = 0; index < SCI_MAX_PHYS; index++) {
+-		/* Default to 6G (i.e. Gen 3) for now. */
+-		ihost->user_parameters.phys[index].max_speed_generation = 3;
++		/* Default to 3G (i.e. Gen 2). */
++		ihost->user_parameters.phys[index].max_speed_generation =
++			SCIC_SDS_PARM_GEN2_SPEED;
+ 
+ 		/* the frequencies cannot be 0 */
+ 		ihost->user_parameters.phys[index].align_insertion_frequency = 0x7f;
 diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 1047108..3c4ddad 100644
+index 3c4ddad..2bcfb40 100644
 --- a/drivers/scsi/isci/init.c
 +++ b/drivers/scsi/isci/init.c
-@@ -94,7 +94,7 @@ MODULE_DEVICE_TABLE(pci, isci_id_table);
+@@ -114,7 +114,7 @@ u16 stp_inactive_to = 5;
+ module_param(stp_inactive_to, ushort, 0);
+ MODULE_PARM_DESC(stp_inactive_to, "STP inactivity timeout (100us incr)");
  
- /* linux isci specific settings */
- 
--unsigned char no_outbound_task_to = 20;
-+unsigned char no_outbound_task_to = 2;
- module_param(no_outbound_task_to, byte, 0);
- MODULE_PARM_DESC(no_outbound_task_to, "No Outbound Task Timeout (1us incr)");
+-unsigned char phy_gen = 3;
++unsigned char phy_gen = SCIC_SDS_PARM_GEN2_SPEED;
+ module_param(phy_gen, byte, 0);
+ MODULE_PARM_DESC(phy_gen, "PHY generation (1: 1.5Gbps 2: 3.0Gbps 3: 6.0Gbps)");
  
 
