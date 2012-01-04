@@ -1,96 +1,331 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [GIT PATCH v2 00/15] isci update for 3.3 (part1)
-Date: Wed, 04 Jan 2012 01:32:23 -0800
-Message-ID: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 01/15] isci,
+ firmware: Remove isci fallback parameter blob and generator
+Date: Wed, 04 Jan 2012 01:32:28 -0800
+Message-ID: <20120104093228.9147.10624.stgit@localhost6.localdomain6>
+References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:29484 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754694Ab2ADJcY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:32:24 -0500
+	id S1751190Ab2ADJc3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:32:29 -0500
+In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Ben Hutchings <ben@decadent.org.uk>
 
-These are the updates to the isci driver that have no conflicts with the
-pending libsas updates [1].  A follow-on set is based on the new
-sas_get_local_phy() interface [2], as well as the ability to schedule a
-libata-eh managed reset via sas_ata_schedule_reset().
+From: Ben Hutchings <ben@decadent.org.uk>
 
-It includes a rebased version of the platform / silicon support updates
-submitted a couple weeks back [3].  These patches were rebased to account for
-the movement of isci_firmware.bin to linux-firmware.git.
+This parameter blob and generator program have been moved to the
+linux-firmware.git repository.
 
-The new patches are fixups for wide-ported targets and other
-miscellaneous updates.
-
-[1]: http://marc.info/?l=linux-scsi&m=132460922902788&w=2
-[2]: http://marc.info/?l=linux-scsi&m=132460936902872&w=2
-[3]: http://marc.info/?l=linux-scsi&m=132408329807210&w=2
-
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
-The following changes since commit 7061bba1da7acb837d6a982648a8306ddc9d7409:
-
-  [SCSI] bfa: fix endian and bit field check bug (2011-12-12 23:48:08 +0400)
-
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git devel
-
-Bartek Nowakowski (1):
-      isci: enable wide port targets
-
-Ben Hutchings (1):
-      isci, firmware: Remove isci fallback parameter blob and generator
-
-Dan Williams (2):
-      isci: cleanup oem parameter and recipe handling
-      isci: update version to 1.1
-
-Dave Jiang (1):
-      isci: oem parameter format v1.1 (ssc select)
-
-Jeff Skirvin (3):
-      isci: update afe (analog-front-end) recipe for C1
-      isci: oem parameter format v1.3 (cable select)
-      isci: link speeds default to gen 2
-
-Maciej Trela (1):
-      isci: remove unused 'isci_tmf->device' field
-
-Marcin Tomczak (6):
-      isci: performance-fix, shorten default "no outbound task" timeout
-      isci: Fix IO fails when pull cable from phy in x4 wideport in MPC mode.
-      isci: allow more time for wide port targets
-      isci: fix io failures while wide port links are coming up
-      isci: fix start OOB
-      isci: fix, prevent port from getting stuck in the 'configuring' state
-
-
- drivers/scsi/Kconfig                   |    5 
- drivers/scsi/isci/firmware/Makefile    |   19 --
- drivers/scsi/isci/firmware/README      |   36 ---
- drivers/scsi/isci/firmware/create_fw.c |   99 ---------
- drivers/scsi/isci/firmware/create_fw.h |   77 -------
- drivers/scsi/isci/host.c               |  340 +++++++++++++++++++++++++-------
- drivers/scsi/isci/host.h               |   27 ++-
- drivers/scsi/isci/init.c               |   25 ++
- drivers/scsi/isci/isci.h               |    1 
- drivers/scsi/isci/phy.c                |  172 ++++++++++------
- drivers/scsi/isci/port.c               |  104 +++++-----
- drivers/scsi/isci/port.h               |   10 +
- drivers/scsi/isci/port_config.c        |   35 ++-
- drivers/scsi/isci/probe_roms.c         |    2 
- drivers/scsi/isci/probe_roms.h         |   89 ++++++++
- drivers/scsi/isci/remote_device.c      |   10 +
- drivers/scsi/isci/task.c               |    2 
- drivers/scsi/isci/task.h               |    7 -
+ drivers/scsi/isci/firmware/Makefile    |   19 ------
+ drivers/scsi/isci/firmware/README      |   36 ------------
+ drivers/scsi/isci/firmware/create_fw.c |   99 --------------------------------
+ drivers/scsi/isci/firmware/create_fw.h |   77 -------------------------
  firmware/Makefile                      |    1 
- firmware/isci/isci_firmware.bin.ihex   |   16 --
- 20 files changed, 610 insertions(+), 467 deletions(-)
+ firmware/isci/isci_firmware.bin.ihex   |   16 -----
+ 6 files changed, 0 insertions(+), 248 deletions(-)
  delete mode 100644 drivers/scsi/isci/firmware/Makefile
  delete mode 100644 drivers/scsi/isci/firmware/README
  delete mode 100644 drivers/scsi/isci/firmware/create_fw.c
  delete mode 100644 drivers/scsi/isci/firmware/create_fw.h
  delete mode 100644 firmware/isci/isci_firmware.bin.ihex
+
+diff --git a/drivers/scsi/isci/firmware/Makefile b/drivers/scsi/isci/firmware/Makefile
+deleted file mode 100644
+index 5f54461..0000000
+--- a/drivers/scsi/isci/firmware/Makefile
++++ /dev/null
+@@ -1,19 +0,0 @@
+-# Makefile for create_fw
+-#
+-CC=gcc
+-CFLAGS=-c -Wall -O2 -g
+-LDFLAGS=
+-SOURCES=create_fw.c
+-OBJECTS=$(SOURCES:.cpp=.o)
+-EXECUTABLE=create_fw
+-
+-all: $(SOURCES) $(EXECUTABLE)
+-
+-$(EXECUTABLE): $(OBJECTS)
+-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+-
+-.c.o:
+-	$(CC) $(CFLAGS) $< -O $@
+-
+-clean:
+-	rm -f *.o $(EXECUTABLE)
+diff --git a/drivers/scsi/isci/firmware/README b/drivers/scsi/isci/firmware/README
+deleted file mode 100644
+index 8056d2b..0000000
+--- a/drivers/scsi/isci/firmware/README
++++ /dev/null
+@@ -1,36 +0,0 @@
+-This defines the temporary binary blow we are to pass to the SCU
+-driver to emulate the binary firmware that we will eventually be
+-able to access via NVRAM on the SCU controller.
+-
+-The current size of the binary blob is expected to be 149 bytes or larger
+-
+-Header Types:
+-0x1: Phy Masks
+-0x2: Phy Gens
+-0x3: SAS Addrs
+-0xff: End of Data
+-
+-ID string - u8[12]: "#SCU MAGIC#\0"
+-Version - u8: 1
+-SubVersion - u8: 0
+-
+-Header Type - u8: 0x1
+-Size - u8: 8
+-Phy Mask - u32[8]
+-
+-Header Type - u8: 0x2
+-Size - u8: 8
+-Phy Gen - u32[8]
+-
+-Header Type - u8: 0x3
+-Size - u8: 8
+-Sas Addr - u64[8]
+-
+-Header Type - u8: 0xf
+-
+-
+-==============================================================================
+-
+-Place isci_firmware.bin in /lib/firmware
+-Be sure to recreate the initramfs image to include the firmware.
+-
+diff --git a/drivers/scsi/isci/firmware/create_fw.c b/drivers/scsi/isci/firmware/create_fw.c
+deleted file mode 100644
+index c7a2887..0000000
+--- a/drivers/scsi/isci/firmware/create_fw.c
++++ /dev/null
+@@ -1,99 +0,0 @@
+-#include <stdio.h>
+-#include <stdlib.h>
+-#include <unistd.h>
+-#include <sys/types.h>
+-#include <sys/stat.h>
+-#include <fcntl.h>
+-#include <string.h>
+-#include <errno.h>
+-#include <asm/types.h>
+-#include <strings.h>
+-#include <stdint.h>
+-
+-#include "create_fw.h"
+-#include "../probe_roms.h"
+-
+-int write_blob(struct isci_orom *isci_orom)
+-{
+-	FILE *fd;
+-	int err;
+-	size_t count;
+-
+-	fd = fopen(blob_name, "w+");
+-	if (!fd) {
+-		perror("Open file for write failed");
+-		fclose(fd);
+-		return -EIO;
+-	}
+-
+-	count = fwrite(isci_orom, sizeof(struct isci_orom), 1, fd);
+-	if (count != 1) {
+-		perror("Write data failed");
+-		fclose(fd);
+-		return -EIO;
+-	}
+-
+-	fclose(fd);
+-
+-	return 0;
+-}
+-
+-void set_binary_values(struct isci_orom *isci_orom)
+-{
+-	int ctrl_idx, phy_idx, port_idx;
+-
+-	/* setting OROM signature */
+-	strncpy(isci_orom->hdr.signature, sig, strlen(sig));
+-	isci_orom->hdr.version = version;
+-	isci_orom->hdr.total_block_length = sizeof(struct isci_orom);
+-	isci_orom->hdr.hdr_length = sizeof(struct sci_bios_oem_param_block_hdr);
+-	isci_orom->hdr.num_elements = num_elements;
+-
+-	for (ctrl_idx = 0; ctrl_idx < 2; ctrl_idx++) {
+-		isci_orom->ctrl[ctrl_idx].controller.mode_type = mode_type;
+-		isci_orom->ctrl[ctrl_idx].controller.max_concurrent_dev_spin_up =
+-			max_num_concurrent_dev_spin_up;
+-		isci_orom->ctrl[ctrl_idx].controller.do_enable_ssc =
+-			enable_ssc;
+-
+-		for (port_idx = 0; port_idx < 4; port_idx++)
+-			isci_orom->ctrl[ctrl_idx].ports[port_idx].phy_mask =
+-				phy_mask[ctrl_idx][port_idx];
+-
+-		for (phy_idx = 0; phy_idx < 4; phy_idx++) {
+-			isci_orom->ctrl[ctrl_idx].phys[phy_idx].sas_address.high =
+-				(__u32)(sas_addr[ctrl_idx][phy_idx] >> 32);
+-			isci_orom->ctrl[ctrl_idx].phys[phy_idx].sas_address.low =
+-				(__u32)(sas_addr[ctrl_idx][phy_idx]);
+-
+-			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control0 =
+-				afe_tx_amp_control0;
+-			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control1 =
+-				afe_tx_amp_control1;
+-			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control2 =
+-				afe_tx_amp_control2;
+-			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control3 =
+-				afe_tx_amp_control3;
+-		}
+-	}
+-}
+-
+-int main(void)
+-{
+-	int err;
+-	struct isci_orom *isci_orom;
+-
+-	isci_orom = malloc(sizeof(struct isci_orom));
+-	memset(isci_orom, 0, sizeof(struct isci_orom));
+-
+-	set_binary_values(isci_orom);
+-
+-	err = write_blob(isci_orom);
+-	if (err < 0) {
+-		free(isci_orom);
+-		return err;
+-	}
+-
+-	free(isci_orom);
+-	return 0;
+-}
+diff --git a/drivers/scsi/isci/firmware/create_fw.h b/drivers/scsi/isci/firmware/create_fw.h
+deleted file mode 100644
+index 5f29882..0000000
+--- a/drivers/scsi/isci/firmware/create_fw.h
++++ /dev/null
+@@ -1,77 +0,0 @@
+-#ifndef _CREATE_FW_H_
+-#define _CREATE_FW_H_
+-#include "../probe_roms.h"
+-
+-
+-/* we are configuring for 2 SCUs */
+-static const int num_elements = 2;
+-
+-/*
+- * For all defined arrays:
+- * elements 0-3 are for SCU0, ports 0-3
+- * elements 4-7 are for SCU1, ports 0-3
+- *
+- * valid configurations for one SCU are:
+- *  P0  P1  P2  P3
+- * ----------------
+- * 0xF,0x0,0x0,0x0 # 1 x4 port
+- * 0x3,0x0,0x4,0x8 # Phys 0 and 1 are a x2 port, phy 2 and phy 3 are each x1
+- *                 # ports
+- * 0x1,0x2,0xC,0x0 # Phys 0 and 1 are each x1 ports, phy 2 and phy 3 are a x2
+- *                 # port
+- * 0x3,0x0,0xC,0x0 # Phys 0 and 1 are a x2 port, phy 2 and phy 3 are a x2 port
+- * 0x1,0x2,0x4,0x8 # Each phy is a x1 port (this is the default configuration)
+- *
+- * if there is a port/phy on which you do not wish to override the default
+- * values, use the value assigned to UNINIT_PARAM (255).
+- */
+-
+-/* discovery mode type (port auto config mode by default ) */
+-
+-/*
+- * if there is a port/phy on which you do not wish to override the default
+- * values, use the value "0000000000000000". SAS address of zero's is
+- * considered invalid and will not be used.
+- */
+-#ifdef MPC
+-static const int mode_type = SCIC_PORT_MANUAL_CONFIGURATION_MODE;
+-static const __u8 phy_mask[2][4] = { {1, 2, 4, 8},
+-				     {1, 2, 4, 8} };
+-static const unsigned long long sas_addr[2][4] = { { 0x5FCFFFFFF0000001ULL,
+-						     0x5FCFFFFFF0000002ULL,
+-						     0x5FCFFFFFF0000003ULL,
+-						     0x5FCFFFFFF0000004ULL },
+-						   { 0x5FCFFFFFF0000005ULL,
+-						     0x5FCFFFFFF0000006ULL,
+-						     0x5FCFFFFFF0000007ULL,
+-						     0x5FCFFFFFF0000008ULL } };
+-#else	/* APC (default) */
+-static const int mode_type = SCIC_PORT_AUTOMATIC_CONFIGURATION_MODE;
+-static const __u8 phy_mask[2][4];
+-static const unsigned long long sas_addr[2][4] = { { 0x5FCFFFFF00000001ULL,
+-						     0x5FCFFFFF00000001ULL,
+-						     0x5FCFFFFF00000001ULL,
+-						     0x5FCFFFFF00000001ULL },
+-						   { 0x5FCFFFFF00000002ULL,
+-						     0x5FCFFFFF00000002ULL,
+-						     0x5FCFFFFF00000002ULL,
+-						     0x5FCFFFFF00000002ULL } };
+-#endif
+-
+-/* Maximum number of concurrent device spin up */
+-static const int max_num_concurrent_dev_spin_up = 1;
+-
+-/* enable of ssc operation */
+-static const int enable_ssc;
+-
+-/* AFE_TX_AMP_CONTROL */
+-static const unsigned int afe_tx_amp_control0 = 0x000bdd08;
+-static const unsigned int afe_tx_amp_control1 = 0x000ffc00;
+-static const unsigned int afe_tx_amp_control2 = 0x000b7c09;
+-static const unsigned int afe_tx_amp_control3 = 0x000afc6e;
+-
+-static const char blob_name[] = "isci_firmware.bin";
+-static const char sig[] = "ISCUOEMB";
+-static const unsigned char version = 0x10;
+-
+-#endif
+diff --git a/firmware/Makefile b/firmware/Makefile
+index 5f43bfb..0d15a3d 100644
+--- a/firmware/Makefile
++++ b/firmware/Makefile
+@@ -82,7 +82,6 @@ fw-shipped-$(CONFIG_SERIAL_8250_CS) += cis/MT5634ZLX.cis cis/RS-COM-2P.cis \
+ fw-shipped-$(CONFIG_PCMCIA_SMC91C92) += ositech/Xilinx7OD.bin
+ fw-shipped-$(CONFIG_SCSI_ADVANSYS) += advansys/mcode.bin advansys/38C1600.bin \
+ 				      advansys/3550.bin advansys/38C0800.bin
+-fw-shipped-$(CONFIG_SCSI_ISCI) += isci/isci_firmware.bin
+ fw-shipped-$(CONFIG_SCSI_QLOGIC_1280) += qlogic/1040.bin qlogic/1280.bin \
+ 					 qlogic/12160.bin
+ fw-shipped-$(CONFIG_SCSI_QLOGICPTI) += qlogic/isp1000.bin
+diff --git a/firmware/isci/isci_firmware.bin.ihex b/firmware/isci/isci_firmware.bin.ihex
+deleted file mode 100644
+index 2e66195..0000000
+--- a/firmware/isci/isci_firmware.bin.ihex
++++ /dev/null
+@@ -1,16 +0,0 @@
+-:10000000495343554F454D42E80018100002000087
+-:1000100000000000000000000101000000000000DE
+-:10002000FFFFCF5F0100000008DD0B0000FC0F00A8
+-:10003000097C0B006EFC0A00FFFFCF5F010000008F
+-:1000400008DD0B0000FC0F00097C0B006EFC0A00B1
+-:10005000FFFFCF5F0100000008DD0B0000FC0F0078
+-:10006000097C0B006EFC0A00FFFFCF5F010000005F
+-:1000700008DD0B0000FC0F00097C0B006EFC0A0081
+-:100080000101000000000000FFFFCF5F0200000040
+-:1000900008DD0B0000FC0F00097C0B006EFC0A0061
+-:1000A000FFFFCF5F0200000008DD0B0000FC0F0027
+-:1000B000097C0B006EFC0A00FFFFCF5F020000000E
+-:1000C00008DD0B0000FC0F00097C0B006EFC0A0031
+-:1000D000FFFFCF5F0200000008DD0B0000FC0F00F7
+-:0800E000097C0B006EFC0A0014
+-:00000001FF
+
