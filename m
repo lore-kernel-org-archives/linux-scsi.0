@@ -1,38 +1,171 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [50/75] mpt2sas crashes on shutdown
-Date: Wed, 04 Jan 2012 09:19:58 -0600
-Message-ID: <1325690398.2758.10.camel@dabdike.int.hansenpartnership.com>
+Subject: [PATCH] mpt2sas: fix non-x86 crash on shutdown
+Date: Wed, 04 Jan 2012 09:25:13 -0600
+Message-ID: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
 References: <20120103223332.GA4112@kroah.com>
 	 <20120103223325.206012007@clark.kroah.org>
 	 <A6888A6805518E4EA4AF7072A28264A60481D5AAEC@inbmail02.lsi.com>
+	 <1325690398.2758.10.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <A6888A6805518E4EA4AF7072A28264A60481D5AAEC@inbmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
-Cc: Greg KH <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, "Moore, Eric" <Eric.Moore@lsi.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:43947 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753597Ab2ADPZQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2012 10:25:16 -0500
+In-Reply-To: <1325690398.2758.10.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: Greg KH <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Wed, 2012-01-04 at 14:23 +0530, Nandigama, Nagalakshmi wrote:
-> Greg,
-> As a fix to this issue, I posted the patch "[PATCH] mpt2sas: Remove
-> msix_table_backup which is required only for preproduction boards".
-> The patch in this mail will not address the complete issue. 
-> 
-> Please revert back this patch and add the patch "[PATCH] mpt2sas:
-> Remove msix_table_backup which is required only for preproduction
-> boards" to the stable kernels 3.0 and 3.1.
+From: "nagalakshmi.nandigama@lsi.com" <nagalakshmi.nandigama@lsi.com>
 
-So the problem is that you still haven't actually manage to produce a
-patch for the problem in the form required by the stable tree as listed
-in 
+Upstrem commit: 911ae9434f83e7355d343f6c2be3ef5b00ea7aed
 
-Documentation/stable_kernel_rules.txt
+There's a bug in the MSIX backup and restore routines that cause a crash on
+non-x86 (direct access to PCI space not via read/write).  These routines are
+unnecessary and were removed by the above commit, so also remove them from
+stable to fix the crash.
 
-If you can't follow the guide, perhaps an example would work, so as a
-one time thing, I'll show you what such a patch should look like
-according to the rules of the stable kernel in reply to this email
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
 
-James
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 83035bd..39e81cd 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1082,41 +1082,6 @@ _base_config_dma_addressing(struct MPT2SAS_ADAPTER *ioc, struct pci_dev *pdev)
+ }
+ 
+ /**
+- * _base_save_msix_table - backup msix vector table
+- * @ioc: per adapter object
+- *
+- * This address an errata where diag reset clears out the table
+- */
+-static void
+-_base_save_msix_table(struct MPT2SAS_ADAPTER *ioc)
+-{
+-	int i;
+-
+-	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
+-		return;
+-
+-	for (i = 0; i < ioc->msix_vector_count; i++)
+-		ioc->msix_table_backup[i] = ioc->msix_table[i];
+-}
+-
+-/**
+- * _base_restore_msix_table - this restores the msix vector table
+- * @ioc: per adapter object
+- *
+- */
+-static void
+-_base_restore_msix_table(struct MPT2SAS_ADAPTER *ioc)
+-{
+-	int i;
+-
+-	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
+-		return;
+-
+-	for (i = 0; i < ioc->msix_vector_count; i++)
+-		ioc->msix_table[i] = ioc->msix_table_backup[i];
+-}
+-
+-/**
+  * _base_check_enable_msix - checks MSIX capabable.
+  * @ioc: per adapter object
+  *
+@@ -1128,7 +1093,7 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ {
+ 	int base;
+ 	u16 message_control;
+-	u32 msix_table_offset;
++
+ 
+ 	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
+ 	if (!base) {
+@@ -1141,14 +1106,8 @@ _base_check_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	pci_read_config_word(ioc->pdev, base + 2, &message_control);
+ 	ioc->msix_vector_count = (message_control & 0x3FF) + 1;
+ 
+-	/* get msix table  */
+-	pci_read_config_dword(ioc->pdev, base + 4, &msix_table_offset);
+-	msix_table_offset &= 0xFFFFFFF8;
+-	ioc->msix_table = (u32 *)((void *)ioc->chip + msix_table_offset);
+-
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "msix is supported, "
+-	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
+-	    ioc->msix_vector_count, msix_table_offset, ioc->msix_table));
++	    "vector_count(%d)\n", ioc->name, ioc->msix_vector_count));
+ 	return 0;
+ }
+ 
+@@ -1162,8 +1121,6 @@ _base_disable_msix(struct MPT2SAS_ADAPTER *ioc)
+ {
+ 	if (ioc->msix_enable) {
+ 		pci_disable_msix(ioc->pdev);
+-		kfree(ioc->msix_table_backup);
+-		ioc->msix_table_backup = NULL;
+ 		ioc->msix_enable = 0;
+ 	}
+ }
+@@ -1189,14 +1146,6 @@ _base_enable_msix(struct MPT2SAS_ADAPTER *ioc)
+ 	if (_base_check_enable_msix(ioc) != 0)
+ 		goto try_ioapic;
+ 
+-	ioc->msix_table_backup = kcalloc(ioc->msix_vector_count,
+-	    sizeof(u32), GFP_KERNEL);
+-	if (!ioc->msix_table_backup) {
+-		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "allocation for "
+-		    "msix_table_backup failed!!!\n", ioc->name));
+-		goto try_ioapic;
+-	}
+-
+ 	memset(&entries, 0, sizeof(struct msix_entry));
+ 	r = pci_enable_msix(ioc->pdev, &entries, 1);
+ 	if (r) {
+@@ -3513,9 +3462,6 @@ _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 	u32 hcb_size;
+ 
+ 	printk(MPT2SAS_INFO_FMT "sending diag reset !!\n", ioc->name);
+-
+-	_base_save_msix_table(ioc);
+-
+ 	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "clear interrupts\n",
+ 	    ioc->name));
+ 
+@@ -3611,7 +3557,6 @@ _base_diag_reset(struct MPT2SAS_ADAPTER *ioc, int sleep_flag)
+ 		goto out;
+ 	}
+ 
+-	_base_restore_msix_table(ioc);
+ 	printk(MPT2SAS_INFO_FMT "diag reset: SUCCESS\n", ioc->name);
+ 	return 0;
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
+index 8d5be21..7df640f 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -636,8 +636,6 @@ enum mutex_type {
+  * @wait_for_port_enable_to_complete:
+  * @msix_enable: flag indicating msix is enabled
+  * @msix_vector_count: number msix vectors
+- * @msix_table: virt address to the msix table
+- * @msix_table_backup: backup msix table
+  * @scsi_io_cb_idx: shost generated commands
+  * @tm_cb_idx: task management commands
+  * @scsih_cb_idx: scsih internal commands
+@@ -779,8 +777,6 @@ struct MPT2SAS_ADAPTER {
+ 
+ 	u8		msix_enable;
+ 	u16		msix_vector_count;
+-	u32		*msix_table;
+-	u32		*msix_table_backup;
+ 	u32		ioc_reset_count;
+ 
+ 	/* internal commands, callback index */
+
+
