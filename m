@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 14/15] isci: fix start OOB
-Date: Wed, 04 Jan 2012 01:33:36 -0800
-Message-ID: <20120104093336.9147.16529.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 15/15] isci: fix,
+ prevent port from getting stuck in the 'configuring' state
+Date: Wed, 04 Jan 2012 01:33:41 -0800
+Message-ID: <20120104093341.9147.12435.stgit@localhost6.localdomain6>
 References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,70 +10,295 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:46192 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754732Ab2ADJdh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:33:37 -0500
+	id S1754732Ab2ADJdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:33:42 -0500
 In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Marcin Tomczak <marcin.tomczak@intel.com>
+Cc: Maciej Trela <maciej.trela@intel.com>, Marcin Tomczak <marcin.tomczak@intel.com>, Bartek Nowakowski <bartek.nowakowski@intel.com>
 
 From: Marcin Tomczak <marcin.tomczak@intel.com>
 
-Split scu_link_layer_start_oob function to reset and enable and
-add flush after all steps.
+When expander connected in x2 or x4 mode and with IO runnning, if
+a cable from wideport is plugged out from the phy, IO's start failing
+on all the targets.
 
+Observed that when cable is pulled with IO running, cominit is
+happening on all the links and IO's start dropping to 0 and eventually
+the whole IO fails. Second observation, target is trying to open and
+SCU is responding with "Open reject no destination".
+
+A cause of the problem is when the port went from the "ready
+configuring substate" back to "ready configuring substate" as a result
+of phy being pulled off, scic suspended the port task scheduler
+register. As a result no IO was allowed and in the "substate
+configuring enter" routine the IO never goes back to 0. As a result
+the port never comes out of "ready substate configuring".
+
+The patch adds a mechanism of activate and deactivate phy when a port
+link up, which fixes the problem.
+
+Signed-off-by: Bartek Nowakowski <bartek.nowakowski@intel.com>
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
 Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/phy.c |   35 ++++++++++++++++++-----------------
- 1 files changed, 18 insertions(+), 17 deletions(-)
+ drivers/scsi/isci/port.c |   92 +++++++++++++++++++++++++---------------------
+ drivers/scsi/isci/port.h |    6 +++
+ 2 files changed, 56 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index 61000cd..fe18acf 100644
---- a/drivers/scsi/isci/phy.c
-+++ b/drivers/scsi/isci/phy.c
-@@ -1098,24 +1098,25 @@ static void scu_link_layer_stop_protocol_engine(
- 	writel(enable_spinup_value, &iphy->link_layer_registers->notify_enable_spinup_control);
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 49e8a72..7c6ac58 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -647,19 +647,26 @@ void sci_port_setup_transports(struct isci_port *iport, u32 device_id)
+ 	}
  }
  
--/**
-- *
-- *
-- * This method will start the OOB/SN state machine for this struct isci_phy object.
-- */
--static void scu_link_layer_start_oob(
--	struct isci_phy *iphy)
-+static void scu_link_layer_start_oob(struct isci_phy *iphy)
+-static void sci_port_activate_phy(struct isci_port *iport, struct isci_phy *iphy,
+-				  bool do_notify_user)
++static void sci_port_resume_phy(struct isci_port *iport, struct isci_phy *iphy)
++{
++	sci_phy_resume(iphy);
++	iport->enabled_phy_mask |= 1 << iphy->phy_index;
++}
++
++static void sci_port_activate_phy(struct isci_port *iport,
++				  struct isci_phy *iphy,
++				  u8 flags)
  {
--	u32 scu_sas_pcfg_value;
--
--	scu_sas_pcfg_value =
--		readl(&iphy->link_layer_registers->phy_configuration);
--	scu_sas_pcfg_value |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
--	scu_sas_pcfg_value &=
--		~(SCU_SAS_PCFG_GEN_BIT(OOB_RESET) |
--		SCU_SAS_PCFG_GEN_BIT(HARD_RESET));
--	writel(scu_sas_pcfg_value,
--	       &iphy->link_layer_registers->phy_configuration);
-+	struct scu_link_layer_registers __iomem *ll = iphy->link_layer_registers;
-+	u32 val;
-+
-+	/** Reset OOB sequence - start */
-+	val = readl(&ll->phy_configuration);
-+	val &= ~(SCU_SAS_PCFG_GEN_BIT(OOB_RESET) |
-+		 SCU_SAS_PCFG_GEN_BIT(HARD_RESET));
-+	writel(val, &ll->phy_configuration);
-+	readl(&ll->phy_configuration); /* flush */
-+	/** Reset OOB sequence - end */
-+
-+	/** Start OOB sequence - start */
-+	val = readl(&ll->phy_configuration);
-+	val |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
-+	writel(val, &ll->phy_configuration);
-+	readl(&ll->phy_configuration); /* flush */
-+	/** Start OOB sequence - end */
+ 	struct isci_host *ihost = iport->owning_controller;
+ 
+-	if (iphy->protocol != SCIC_SDS_PHY_PROTOCOL_SATA)
++	if (iphy->protocol != SCIC_SDS_PHY_PROTOCOL_SATA && (flags & PF_RESUME))
+ 		sci_phy_resume(iphy);
+ 
+ 	iport->active_phy_mask |= 1 << iphy->phy_index;
+ 
+ 	sci_controller_clear_invalid_phy(ihost, iphy);
+ 
+-	if (do_notify_user == true)
++	if (flags & PF_NOTIFY)
+ 		isci_port_link_up(ihost, iport, iphy);
  }
  
- /**
+@@ -669,6 +676,7 @@ void sci_port_deactivate_phy(struct isci_port *iport, struct isci_phy *iphy,
+ 	struct isci_host *ihost = iport->owning_controller;
+ 
+ 	iport->active_phy_mask &= ~(1 << iphy->phy_index);
++	iport->enabled_phy_mask &= ~(1 << iphy->phy_index);
+ 	if (!iport->active_phy_mask)
+ 		iport->last_active_phy = iphy->phy_index;
+ 
+@@ -705,18 +713,16 @@ static void sci_port_invalid_link_up(struct isci_port *iport, struct isci_phy *i
+  * sci_port_general_link_up_handler - phy can be assigned to port?
+  * @sci_port: sci_port object for which has a phy that has gone link up.
+  * @sci_phy: This is the struct isci_phy object that has gone link up.
+- * @do_notify_user: This parameter specifies whether to inform the user (via
+- *    sci_port_link_up()) as to the fact that a new phy as become ready.
++ * @flags: PF_RESUME, PF_NOTIFY to sci_port_activate_phy
+  *
+- * Determine if this phy can be assigned to this
+- * port . If the phy is not a valid PHY for
+- * this port then the function will notify the user. A PHY can only be
+- * part of a port if it's attached SAS ADDRESS is the same as all other PHYs in
+- * the same port. none
++ * Determine if this phy can be assigned to this port . If the phy is
++ * not a valid PHY for this port then the function will notify the user.
++ * A PHY can only be part of a port if it's attached SAS ADDRESS is the
++ * same as all other PHYs in the same port.
+  */
+ static void sci_port_general_link_up_handler(struct isci_port *iport,
+-						  struct isci_phy *iphy,
+-						  bool do_notify_user)
++					     struct isci_phy *iphy,
++					     u8 flags)
+ {
+ 	struct sci_sas_address port_sas_address;
+ 	struct sci_sas_address phy_sas_address;
+@@ -734,7 +740,7 @@ static void sci_port_general_link_up_handler(struct isci_port *iport,
+ 	    iport->active_phy_mask == 0) {
+ 		struct sci_base_state_machine *sm = &iport->sm;
+ 
+-		sci_port_activate_phy(iport, iphy, do_notify_user);
++		sci_port_activate_phy(iport, iphy, flags);
+ 		if (sm->current_state_id == SCI_PORT_RESETTING)
+ 			port_state_machine_change(iport, SCI_PORT_READY);
+ 	} else
+@@ -785,11 +791,16 @@ bool sci_port_link_detected(
+ 	struct isci_phy *iphy)
+ {
+ 	if ((iport->logical_port_index != SCIC_SDS_DUMMY_PORT) &&
+-	    (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SATA) &&
+-	    sci_port_is_wide(iport)) {
+-		sci_port_invalid_link_up(iport, iphy);
+-
+-		return false;
++	    (iphy->protocol == SCIC_SDS_PHY_PROTOCOL_SATA)) {
++		if (sci_port_is_wide(iport)) {
++			sci_port_invalid_link_up(iport, iphy);
++			return false;
++		} else {
++			struct isci_host *ihost = iport->owning_controller;
++			struct isci_port *dst_port = &(ihost->ports[iphy->phy_index]);
++			writel(iphy->phy_index,
++			       &dst_port->port_pe_configuration_register[iphy->phy_index]);
++		}
+ 	}
+ 
+ 	return true;
+@@ -979,6 +990,13 @@ static void sci_port_ready_substate_waiting_enter(struct sci_base_state_machine
+ 	}
+ }
+ 
++static void scic_sds_port_ready_substate_waiting_exit(
++					struct sci_base_state_machine *sm)
++{
++	struct isci_port *iport = container_of(sm, typeof(*iport), sm);
++	sci_port_resume_port_task_scheduler(iport);
++}
++
+ static void sci_port_ready_substate_operational_enter(struct sci_base_state_machine *sm)
+ {
+ 	u32 index;
+@@ -992,13 +1010,13 @@ static void sci_port_ready_substate_operational_enter(struct sci_base_state_mach
+ 			writel(iport->physical_port_index,
+ 				&iport->port_pe_configuration_register[
+ 					iport->phy_table[index]->phy_index]);
++			if (((iport->active_phy_mask^iport->enabled_phy_mask) & (1 << index)) != 0)
++				sci_port_resume_phy(iport, iport->phy_table[index]);
+ 		}
+ 	}
+ 
+ 	sci_port_update_viit_entry(iport);
+ 
+-	sci_port_resume_port_task_scheduler(iport);
+-
+ 	/*
+ 	 * Post the dummy task for the port so the hardware can schedule
+ 	 * io correctly
+@@ -1065,20 +1083,9 @@ static void sci_port_ready_substate_configuring_enter(struct sci_base_state_mach
+ 	if (iport->active_phy_mask == 0) {
+ 		isci_port_not_ready(ihost, iport);
+ 
+-		port_state_machine_change(iport,
+-					  SCI_PORT_SUB_WAITING);
+-	} else if (iport->started_request_count == 0)
+-		port_state_machine_change(iport,
+-					  SCI_PORT_SUB_OPERATIONAL);
+-}
+-
+-static void sci_port_ready_substate_configuring_exit(struct sci_base_state_machine *sm)
+-{
+-	struct isci_port *iport = container_of(sm, typeof(*iport), sm);
+-
+-	sci_port_suspend_port_task_scheduler(iport);
+-	if (iport->ready_exit)
+-		sci_port_invalidate_dummy_remote_node(iport);
++		port_state_machine_change(iport, SCI_PORT_SUB_WAITING);
++	} else
++		port_state_machine_change(iport, SCI_PORT_SUB_OPERATIONAL);
+ }
+ 
+ enum sci_status sci_port_start(struct isci_port *iport)
+@@ -1256,7 +1263,7 @@ enum sci_status sci_port_add_phy(struct isci_port *iport,
+ 		if (status != SCI_SUCCESS)
+ 			return status;
+ 
+-		sci_port_general_link_up_handler(iport, iphy, true);
++		sci_port_general_link_up_handler(iport, iphy, PF_NOTIFY|PF_RESUME);
+ 		iport->not_ready_reason = SCIC_PORT_NOT_READY_RECONFIGURING;
+ 		port_state_machine_change(iport, SCI_PORT_SUB_CONFIGURING);
+ 
+@@ -1266,7 +1273,7 @@ enum sci_status sci_port_add_phy(struct isci_port *iport,
+ 
+ 		if (status != SCI_SUCCESS)
+ 			return status;
+-		sci_port_general_link_up_handler(iport, iphy, true);
++		sci_port_general_link_up_handler(iport, iphy, PF_NOTIFY);
+ 
+ 		/* Re-enter the configuring state since this may be the last phy in
+ 		 * the port.
+@@ -1342,13 +1349,13 @@ enum sci_status sci_port_link_up(struct isci_port *iport,
+ 		/* Since this is the first phy going link up for the port we
+ 		 * can just enable it and continue
+ 		 */
+-		sci_port_activate_phy(iport, iphy, true);
++		sci_port_activate_phy(iport, iphy, PF_NOTIFY|PF_RESUME);
+ 
+ 		port_state_machine_change(iport,
+ 					  SCI_PORT_SUB_OPERATIONAL);
+ 		return SCI_SUCCESS;
+ 	case SCI_PORT_SUB_OPERATIONAL:
+-		sci_port_general_link_up_handler(iport, iphy, true);
++		sci_port_general_link_up_handler(iport, iphy, PF_NOTIFY|PF_RESUME);
+ 		return SCI_SUCCESS;
+ 	case SCI_PORT_RESETTING:
+ 		/* TODO We should  make  sure  that  the phy  that  has gone
+@@ -1365,7 +1372,7 @@ enum sci_status sci_port_link_up(struct isci_port *iport,
+ 		/* In the resetting state we don't notify the user regarding
+ 		 * link up and link down notifications.
+ 		 */
+-		sci_port_general_link_up_handler(iport, iphy, false);
++		sci_port_general_link_up_handler(iport, iphy, PF_RESUME);
+ 		return SCI_SUCCESS;
+ 	default:
+ 		dev_warn(sciport_to_dev(iport),
+@@ -1588,14 +1595,14 @@ static const struct sci_base_state sci_port_state_table[] = {
+ 	},
+ 	[SCI_PORT_SUB_WAITING] = {
+ 		.enter_state = sci_port_ready_substate_waiting_enter,
++		.exit_state  = scic_sds_port_ready_substate_waiting_exit,
+ 	},
+ 	[SCI_PORT_SUB_OPERATIONAL] = {
+ 		.enter_state = sci_port_ready_substate_operational_enter,
+ 		.exit_state  = sci_port_ready_substate_operational_exit
+ 	},
+ 	[SCI_PORT_SUB_CONFIGURING] = {
+-		.enter_state = sci_port_ready_substate_configuring_enter,
+-		.exit_state  = sci_port_ready_substate_configuring_exit
++		.enter_state = sci_port_ready_substate_configuring_enter
+ 	},
+ 	[SCI_PORT_RESETTING] = {
+ 		.exit_state  = sci_port_resetting_state_exit
+@@ -1613,6 +1620,7 @@ void sci_port_construct(struct isci_port *iport, u8 index,
+ 	iport->logical_port_index  = SCIC_SDS_DUMMY_PORT;
+ 	iport->physical_port_index = index;
+ 	iport->active_phy_mask     = 0;
++	iport->enabled_phy_mask    = 0;
+ 	iport->last_active_phy     = 0;
+ 	iport->ready_exit	   = false;
+ 
+diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
+index b3a7f12..0811609 100644
+--- a/drivers/scsi/isci/port.h
++++ b/drivers/scsi/isci/port.h
+@@ -63,6 +63,9 @@
+ 
+ #define SCIC_SDS_DUMMY_PORT   0xFF
+ 
++#define PF_NOTIFY (1 << 0)
++#define PF_RESUME (1 << 1)
++
+ struct isci_phy;
+ struct isci_host;
+ 
+@@ -83,6 +86,8 @@ enum isci_status {
+  * @logical_port_index: software port index
+  * @physical_port_index: hardware port index
+  * @active_phy_mask: identifies phy members
++ * @enabled_phy_mask: phy mask for the port
++ *                    that are already part of the port
+  * @reserved_tag:
+  * @reserved_rni: reserver for port task scheduler workaround
+  * @started_request_count: reference count for outstanding commands
+@@ -104,6 +109,7 @@ struct isci_port {
+ 	u8 logical_port_index;
+ 	u8 physical_port_index;
+ 	u8 active_phy_mask;
++	u8 enabled_phy_mask;
+ 	u8 last_active_phy;
+ 	u16 reserved_rni;
+ 	u16 reserved_tag;
 
