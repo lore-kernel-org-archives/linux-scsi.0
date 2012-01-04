@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 02/15] isci: cleanup oem parameter and recipe handling
-Date: Wed, 04 Jan 2012 01:32:34 -0800
-Message-ID: <20120104093234.9147.41513.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 03/15] isci: update afe (analog-front-end) recipe for C1
+Date: Wed, 04 Jan 2012 01:32:39 -0800
+Message-ID: <20120104093239.9147.78687.stgit@localhost6.localdomain6>
 References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,405 +9,285 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:29484 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190Ab2ADJce (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:32:34 -0500
+	id S1754799Ab2ADJck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:32:40 -0500
 In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Marcin Tomczak <marcin.tomczak@intel.com>, Jiangbi Liu <jiangbi.liu@intel.com>
 
-Before updating the code to support the latest platform updates and
-silicon revision cleanup some of the long deref chains.
+From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 
+C1 silicon requires updates to the phy tuning recipe and also support
+for user provided cable selects (per-phy) for short, medium, and long
+cables.  Default to 'short' awaiting support for selecting the cable via
+oem parameters.
+
+Reviewed-by: Jiangbi Liu <jiangbi.liu@intel.com>
+Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
+Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c |  107 ++++++++++++++++++++--------------------------
- drivers/scsi/isci/phy.c  |   81 +++++++++++++++++------------------
- 2 files changed, 86 insertions(+), 102 deletions(-)
+ drivers/scsi/isci/host.c       |  111 ++++++++++++++++++++++++++++++++--------
+ drivers/scsi/isci/host.h       |    9 +++
+ drivers/scsi/isci/phy.c        |    7 ++-
+ drivers/scsi/isci/probe_roms.c |    2 -
+ 4 files changed, 103 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index e7fe9c4..8e7de19 100644
+index 8e7de19..383bb69 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -1910,160 +1910,147 @@ void sci_controller_power_control_queue_remove(struct isci_host *ihost,
+@@ -1908,12 +1908,23 @@ void sci_controller_power_control_queue_remove(struct isci_host *ihost,
+ 	ihost->power_control.requesters[iphy->phy_index] = NULL;
+ }
  
++static int is_long_cable(int phy, unsigned char selection_byte)
++{
++	return 0;
++}
++
++static int is_medium_cable(int phy, unsigned char selection_byte)
++{
++	return 0;
++}
++
  #define AFE_REGISTER_WRITE_DELAY 10
  
--/* Initialize the AFE for this phy index. We need to read the AFE setup from
-- * the OEM parameters
-- */
  static void sci_controller_afe_initialization(struct isci_host *ihost)
  {
-+	struct scu_afe_registers __iomem *afe = &ihost->scu_registers->afe;
+ 	struct scu_afe_registers __iomem *afe = &ihost->scu_registers->afe;
  	const struct sci_oem_params *oem = &ihost->oem_parameters;
++	unsigned char cable_selection_mask = 0;
  	struct pci_dev *pdev = ihost->pdev;
  	u32 afe_status;
  	u32 phy_id;
- 
- 	/* Clear DFX Status registers */
--	writel(0x0081000f, &ihost->scu_registers->afe.afe_dfx_master_control0);
-+	writel(0x0081000f, &afe->afe_dfx_master_control0);
+@@ -1922,11 +1933,11 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
+ 	writel(0x0081000f, &afe->afe_dfx_master_control0);
  	udelay(AFE_REGISTER_WRITE_DELAY);
  
- 	if (is_b0(pdev)) {
+-	if (is_b0(pdev)) {
++	if (is_b0(pdev) || is_c0(pdev) || is_c1(pdev)) {
  		/* PM Rx Equalization Save, PM SPhy Rx Acknowledgement
--		 * Timer, PM Stagger Timer */
--		writel(0x0007BFFF, &ihost->scu_registers->afe.afe_pmsn_master_control2);
-+		 * Timer, PM Stagger Timer
-+		 */
-+		writel(0x0007BFFF, &afe->afe_pmsn_master_control2);
+ 		 * Timer, PM Stagger Timer
+ 		 */
+-		writel(0x0007BFFF, &afe->afe_pmsn_master_control2);
++		writel(0x0007FFFF, &afe->afe_pmsn_master_control2);
  		udelay(AFE_REGISTER_WRITE_DELAY);
  	}
  
- 	/* Configure bias currents to normal */
- 	if (is_a2(pdev))
--		writel(0x00005A00, &ihost->scu_registers->afe.afe_bias_control);
-+		writel(0x00005A00, &afe->afe_bias_control);
+@@ -1935,14 +1946,23 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
+ 		writel(0x00005A00, &afe->afe_bias_control);
  	else if (is_b0(pdev) || is_c0(pdev))
--		writel(0x00005F00, &ihost->scu_registers->afe.afe_bias_control);
-+		writel(0x00005F00, &afe->afe_bias_control);
+ 		writel(0x00005F00, &afe->afe_bias_control);
++	else if (is_c1(pdev))
++		writel(0x00005500, &afe->afe_bias_control);
  
  	udelay(AFE_REGISTER_WRITE_DELAY);
  
  	/* Enable PLL */
- 	if (is_b0(pdev) || is_c0(pdev))
--		writel(0x80040A08, &ihost->scu_registers->afe.afe_pll_control0);
+-	if (is_b0(pdev) || is_c0(pdev))
+-		writel(0x80040A08, &afe->afe_pll_control0);
+-	else
++	if (is_a2(pdev))
+ 		writel(0x80040908, &afe->afe_pll_control0);
++	else if (is_b0(pdev) || is_c0(pdev))
 +		writel(0x80040A08, &afe->afe_pll_control0);
- 	else
--		writel(0x80040908, &ihost->scu_registers->afe.afe_pll_control0);
-+		writel(0x80040908, &afe->afe_pll_control0);
++	else if (is_c1(pdev)) {
++		writel(0x80000B08, &afe->afe_pll_control0);
++		udelay(AFE_REGISTER_WRITE_DELAY);
++		writel(0x00000B08, &afe->afe_pll_control0);
++		udelay(AFE_REGISTER_WRITE_DELAY);
++		writel(0x80000B08, &afe->afe_pll_control0);
++	}
  
  	udelay(AFE_REGISTER_WRITE_DELAY);
  
- 	/* Wait for the PLL to lock */
- 	do {
--		afe_status = readl(&ihost->scu_registers->afe.afe_common_block_status);
-+		afe_status = readl(&afe->afe_common_block_status);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 	} while ((afe_status & 0x00001000) == 0);
- 
- 	if (is_a2(pdev)) {
--		/* Shorten SAS SNW lock time (RxLock timer value from 76 us to 50 us) */
--		writel(0x7bcc96ad, &ihost->scu_registers->afe.afe_pmsn_master_control0);
-+		/* Shorten SAS SNW lock time (RxLock timer value from 76
-+		 * us to 50 us)
-+		 */
-+		writel(0x7bcc96ad, &afe->afe_pmsn_master_control0);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 	}
- 
+@@ -1963,46 +1983,68 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
  	for (phy_id = 0; phy_id < SCI_MAX_PHYS; phy_id++) {
-+		struct scu_afe_transceiver *xcvr = &afe->scu_afe_xcvr[phy_id];
+ 		struct scu_afe_transceiver *xcvr = &afe->scu_afe_xcvr[phy_id];
  		const struct sci_phy_oem_params *oem_phy = &oem->phys[phy_id];
- 
- 		if (is_b0(pdev)) {
- 			 /* Configure transmitter SSC parameters */
--			writel(0x00030000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_ssc_control);
-+			writel(0x00030000, &xcvr->afe_tx_ssc_control);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 		} else if (is_c0(pdev)) {
- 			 /* Configure transmitter SSC parameters */
--			writel(0x0003000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_ssc_control);
-+			writel(0x0003000, &xcvr->afe_tx_ssc_control);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 
--			/*
--			 * All defaults, except the Receive Word Alignament/Comma Detect
--			 * Enable....(0xe800) */
--			writel(0x00004500, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control0);
-+			/* All defaults, except the Receive Word
-+			 * Alignament/Comma Detect Enable....(0xe800)
-+			 */
-+			writel(0x00004500, &xcvr->afe_xcvr_control0);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 		} else {
--			/*
--			 * All defaults, except the Receive Word Alignament/Comma Detect
--			 * Enable....(0xe800) */
--			writel(0x00004512, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control0);
++		int cable_length_long =
++			is_long_cable(phy_id, cable_selection_mask);
++		int cable_length_medium =
++			is_medium_cable(phy_id, cable_selection_mask);
++
++		if (is_a2(pdev)) {
 +			/* All defaults, except the Receive Word
 +			 * Alignament/Comma Detect Enable....(0xe800)
 +			 */
 +			writel(0x00004512, &xcvr->afe_xcvr_control0);
++			udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-		if (is_b0(pdev)) {
+-			 /* Configure transmitter SSC parameters */
++			writel(0x0050100F, &xcvr->afe_xcvr_control1);
++			udelay(AFE_REGISTER_WRITE_DELAY);
++		} else if (is_b0(pdev)) {
++			/* Configure transmitter SSC parameters */
+ 			writel(0x00030000, &xcvr->afe_tx_ssc_control);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 		} else if (is_c0(pdev)) {
+-			 /* Configure transmitter SSC parameters */
+-			writel(0x0003000, &xcvr->afe_tx_ssc_control);
++			/* Configure transmitter SSC parameters */
++			writel(0x00010202, &xcvr->afe_tx_ssc_control);
  			udelay(AFE_REGISTER_WRITE_DELAY);
  
--			writel(0x0050100F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control1);
-+			writel(0x0050100F, &xcvr->afe_xcvr_control1);
+ 			/* All defaults, except the Receive Word
+ 			 * Alignament/Comma Detect Enable....(0xe800)
+ 			 */
+-			writel(0x00004500, &xcvr->afe_xcvr_control0);
++			writel(0x00014500, &xcvr->afe_xcvr_control0);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+-		} else {
++		} else if (is_c1(pdev)) {
++			/* Configure transmitter SSC parameters */
++			writel(0x00010202, &xcvr->afe_tx_ssc_control);
++			udelay(AFE_REGISTER_WRITE_DELAY);
++
+ 			/* All defaults, except the Receive Word
+ 			 * Alignament/Comma Detect Enable....(0xe800)
+ 			 */
+-			writel(0x00004512, &xcvr->afe_xcvr_control0);
+-			udelay(AFE_REGISTER_WRITE_DELAY);
+-
+-			writel(0x0050100F, &xcvr->afe_xcvr_control1);
++			writel(0x0001C500, &xcvr->afe_xcvr_control0);
  			udelay(AFE_REGISTER_WRITE_DELAY);
  		}
  
--		/*
--		 * Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
--		 * & increase TX int & ext bias 20%....(0xe85c) */
-+		/* Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
-+		 * & increase TX int & ext bias 20%....(0xe85c)
-+		 */
+-		/* Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
+-		 * & increase TX int & ext bias 20%....(0xe85c)
++		/* Power up TX and RX out from power down (PWRDNTX and
++		 * PWRDNRX) & increase TX int & ext bias 20%....(0xe85c)
+ 		 */
  		if (is_a2(pdev))
--			writel(0x000003F0, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
-+			writel(0x000003F0, &xcvr->afe_channel_control);
+ 			writel(0x000003F0, &xcvr->afe_channel_control);
  		else if (is_b0(pdev)) {
- 			 /* Power down TX and RX (PWRDNTX and PWRDNRX) */
--			writel(0x000003D7, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
-+			writel(0x000003D7, &xcvr->afe_channel_control);
+-			 /* Power down TX and RX (PWRDNTX and PWRDNRX) */
+ 			writel(0x000003D7, &xcvr->afe_channel_control);
  			udelay(AFE_REGISTER_WRITE_DELAY);
--
--			/*
--			 * Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
--			 * & increase TX int & ext bias 20%....(0xe85c) */
--			writel(0x000003D4, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
-+			writel(0x000003D4, &xcvr->afe_channel_control);
- 		} else {
--			writel(0x000001E7, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
-+			writel(0x000001E7, &xcvr->afe_channel_control);
++
+ 			writel(0x000003D4, &xcvr->afe_channel_control);
+-		} else {
++		} else if (is_c0(pdev)) {
+ 			writel(0x000001E7, &xcvr->afe_channel_control);
  			udelay(AFE_REGISTER_WRITE_DELAY);
--
--			/*
--			 * Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
--			 * & increase TX int & ext bias 20%....(0xe85c) */
--			writel(0x000001E4, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
-+			writel(0x000001E4, &xcvr->afe_channel_control);
++
+ 			writel(0x000001E4, &xcvr->afe_channel_control);
++		} else if (is_c1(pdev)) {
++			writel(cable_length_long ? 0x000002F7 : 0x000001F7,
++			       &xcvr->afe_channel_control);
++			udelay(AFE_REGISTER_WRITE_DELAY);
++
++			writel(cable_length_long ? 0x000002F4 : 0x000001F4,
++			       &xcvr->afe_channel_control);
  		}
  		udelay(AFE_REGISTER_WRITE_DELAY);
  
- 		if (is_a2(pdev)) {
- 			/* Enable TX equalization (0xe824) */
--			writel(0x00040000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_control);
-+			writel(0x00040000, &xcvr->afe_tx_control);
+@@ -2012,7 +2054,16 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
  			udelay(AFE_REGISTER_WRITE_DELAY);
  		}
  
--		/*
--		 * RDPI=0x0(RX Power On), RXOOBDETPDNC=0x0, TPD=0x0(TX Power On),
--		 * RDD=0x0(RX Detect Enabled) ....(0xe800) */
--		writel(0x00004100, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control0);
-+		writel(0x00004100, &xcvr->afe_xcvr_control0);
+-		writel(0x00004100, &xcvr->afe_xcvr_control0);
++		if (is_a2(pdev) || is_b0(pdev))
++			/* RDPI=0x0(RX Power On), RXOOBDETPDNC=0x0,
++			 * TPD=0x0(TX Power On), RDD=0x0(RX Detect
++			 * Enabled) ....(0xe800)
++			 */
++			writel(0x00004100, &xcvr->afe_xcvr_control0);
++		else if (is_c0(pdev))
++			writel(0x00014100, &xcvr->afe_xcvr_control0);
++		else if (is_c1(pdev))
++			writel(0x0001C100, &xcvr->afe_xcvr_control0);
  		udelay(AFE_REGISTER_WRITE_DELAY);
  
  		/* Leave DFE/FFE on */
- 		if (is_a2(pdev))
--			writel(0x3F11103F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control0);
-+			writel(0x3F11103F, &xcvr->afe_rx_ssc_control0);
- 		else if (is_b0(pdev)) {
--			writel(0x3F11103F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control0);
-+			writel(0x3F11103F, &xcvr->afe_rx_ssc_control0);
+@@ -2023,8 +2074,8 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
  			udelay(AFE_REGISTER_WRITE_DELAY);
  			/* Enable TX equalization (0xe824) */
--			writel(0x00040000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_control);
-+			writel(0x00040000, &xcvr->afe_tx_control);
- 		} else {
--			writel(0x0140DF0F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control1);
-+			writel(0x0140DF0F, &xcvr->afe_rx_ssc_control1);
+ 			writel(0x00040000, &xcvr->afe_tx_control);
+-		} else {
+-			writel(0x0140DF0F, &xcvr->afe_rx_ssc_control1);
++		} else if (is_c0(pdev)) {
++			writel(0x01400C0F, &xcvr->afe_rx_ssc_control1);
  			udelay(AFE_REGISTER_WRITE_DELAY);
  
--			writel(0x3F6F103F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control0);
-+			writel(0x3F6F103F, &xcvr->afe_rx_ssc_control0);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 			writel(0x3F6F103F, &xcvr->afe_rx_ssc_control0);
+@@ -2032,6 +2083,22 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
  
  			/* Enable TX equalization (0xe824) */
--			writel(0x00040000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_control);
+ 			writel(0x00040000, &xcvr->afe_tx_control);
++		} else if (is_c1(pdev)) {
++			writel(cable_length_long ? 0x01500C0C :
++			       cable_length_medium ? 0x01400C0D : 0x02400C0D,
++			       &xcvr->afe_xcvr_control1);
++			udelay(AFE_REGISTER_WRITE_DELAY);
++
++			writel(0x000003E0, &xcvr->afe_dfx_rx_control1);
++			udelay(AFE_REGISTER_WRITE_DELAY);
++
++			writel(cable_length_long ? 0x33091C1F :
++			       cable_length_medium ? 0x3315181F : 0x2B17161F,
++			       &xcvr->afe_rx_ssc_control0);
++			udelay(AFE_REGISTER_WRITE_DELAY);
++
++			/* Enable TX equalization (0xe824) */
 +			writel(0x00040000, &xcvr->afe_tx_control);
  		}
  
  		udelay(AFE_REGISTER_WRITE_DELAY);
+diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
+index 646051a..4573075 100644
+--- a/drivers/scsi/isci/host.h
++++ b/drivers/scsi/isci/host.h
+@@ -435,7 +435,14 @@ static inline bool is_b0(struct pci_dev *pdev)
  
--		writel(oem_phy->afe_tx_amp_control0,
--			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control0);
-+		writel(oem_phy->afe_tx_amp_control0, &xcvr->afe_tx_amp_control0);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 
--		writel(oem_phy->afe_tx_amp_control1,
--			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control1);
-+		writel(oem_phy->afe_tx_amp_control1, &xcvr->afe_tx_amp_control1);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 
--		writel(oem_phy->afe_tx_amp_control2,
--			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control2);
-+		writel(oem_phy->afe_tx_amp_control2, &xcvr->afe_tx_amp_control2);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 
--		writel(oem_phy->afe_tx_amp_control3,
--			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control3);
-+		writel(oem_phy->afe_tx_amp_control3, &xcvr->afe_tx_amp_control3);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 	}
- 
- 	/* Transfer control to the PEs */
--	writel(0x00010f00, &ihost->scu_registers->afe.afe_dfx_master_control0);
-+	writel(0x00010f00, &afe->afe_dfx_master_control0);
- 	udelay(AFE_REGISTER_WRITE_DELAY);
+ static inline bool is_c0(struct pci_dev *pdev)
+ {
+-	if (pdev->revision >= 5)
++	if (pdev->revision == 5)
++		return true;
++	return false;
++}
++
++static inline bool is_c1(struct pci_dev *pdev)
++{
++	if (pdev->revision >= 6)
+ 		return true;
+ 	return false;
  }
- 
 diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index 35f50c2..0ae0990 100644
+index 0ae0990..c650d30 100644
 --- a/drivers/scsi/isci/phy.c
 +++ b/drivers/scsi/isci/phy.c
-@@ -91,22 +91,23 @@ sci_phy_transport_layer_initialization(struct isci_phy *iphy,
+@@ -186,8 +186,11 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
  
- static enum sci_status
- sci_phy_link_layer_initialization(struct isci_phy *iphy,
--				  struct scu_link_layer_registers __iomem *reg)
-+				  struct scu_link_layer_registers __iomem *llr)
- {
- 	struct isci_host *ihost = iphy->owning_port->owning_controller;
-+	struct sci_phy_user_params *phy_user;
-+	struct sci_phy_oem_params *phy_oem;
- 	int phy_idx = iphy->phy_index;
--	struct sci_phy_user_params *phy_user = &ihost->user_parameters.phys[phy_idx];
--	struct sci_phy_oem_params *phy_oem =
--		&ihost->oem_parameters.phys[phy_idx];
--	u32 phy_configuration;
- 	struct sci_phy_cap phy_cap;
-+	u32 phy_configuration;
- 	u32 parity_check = 0;
- 	u32 parity_count = 0;
- 	u32 llctl, link_rate;
- 	u32 clksm_value = 0;
- 	u32 sp_timeouts = 0;
+ 	writel(clksm_value, &llr->clock_skew_management);
  
--	iphy->link_layer_registers = reg;
-+	phy_user = &ihost->user_parameters.phys[phy_idx];
-+	phy_oem = &ihost->oem_parameters.phys[phy_idx];
-+	iphy->link_layer_registers = llr;
- 
- 	/* Set our IDENTIFY frame data */
- 	#define SCI_END_DEVICE 0x01
-@@ -116,32 +117,26 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 	       SCU_SAS_TIID_GEN_BIT(STP_INITIATOR) |
- 	       SCU_SAS_TIID_GEN_BIT(DA_SATA_HOST) |
- 	       SCU_SAS_TIID_GEN_VAL(DEVICE_TYPE, SCI_END_DEVICE),
--	       &iphy->link_layer_registers->transmit_identification);
-+	       &llr->transmit_identification);
- 
- 	/* Write the device SAS Address */
--	writel(0xFEDCBA98,
--	       &iphy->link_layer_registers->sas_device_name_high);
--	writel(phy_idx, &iphy->link_layer_registers->sas_device_name_low);
-+	writel(0xFEDCBA98, &llr->sas_device_name_high);
-+	writel(phy_idx, &llr->sas_device_name_low);
- 
- 	/* Write the source SAS Address */
--	writel(phy_oem->sas_address.high,
--		&iphy->link_layer_registers->source_sas_address_high);
--	writel(phy_oem->sas_address.low,
--		&iphy->link_layer_registers->source_sas_address_low);
-+	writel(phy_oem->sas_address.high, &llr->source_sas_address_high);
-+	writel(phy_oem->sas_address.low, &llr->source_sas_address_low);
- 
- 	/* Clear and Set the PHY Identifier */
--	writel(0, &iphy->link_layer_registers->identify_frame_phy_id);
--	writel(SCU_SAS_TIPID_GEN_VALUE(ID, phy_idx),
--		&iphy->link_layer_registers->identify_frame_phy_id);
-+	writel(0, &llr->identify_frame_phy_id);
-+	writel(SCU_SAS_TIPID_GEN_VALUE(ID, phy_idx), &llr->identify_frame_phy_id);
- 
- 	/* Change the initial state of the phy configuration register */
--	phy_configuration =
--		readl(&iphy->link_layer_registers->phy_configuration);
-+	phy_configuration = readl(&llr->phy_configuration);
- 
- 	/* Hold OOB state machine in reset */
- 	phy_configuration |=  SCU_SAS_PCFG_GEN_BIT(OOB_RESET);
--	writel(phy_configuration,
--		&iphy->link_layer_registers->phy_configuration);
-+	writel(phy_configuration, &llr->phy_configuration);
- 
- 	/* Configure the SNW capabilities */
- 	phy_cap.all = 0;
-@@ -155,9 +150,9 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 		phy_cap.gen1_ssc = 1;
- 	}
- 
--	/*
--	 * The SAS specification indicates that the phy_capabilities that
--	 * are transmitted shall have an even parity.  Calculate the parity. */
-+	/* The SAS specification indicates that the phy_capabilities that
-+	 * are transmitted shall have an even parity.  Calculate the parity.
-+	 */
- 	parity_check = phy_cap.all;
- 	while (parity_check != 0) {
- 		if (parity_check & 0x1)
-@@ -165,20 +160,20 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 		parity_check >>= 1;
- 	}
- 
--	/*
--	 * If parity indicates there are an odd number of bits set, then
--	 * set the parity bit to 1 in the phy capabilities. */
-+	/* If parity indicates there are an odd number of bits set, then
-+	 * set the parity bit to 1 in the phy capabilities.
-+	 */
- 	if ((parity_count % 2) != 0)
- 		phy_cap.parity = 1;
- 
--	writel(phy_cap.all, &iphy->link_layer_registers->phy_capabilities);
-+	writel(phy_cap.all, &llr->phy_capabilities);
- 
- 	/* Set the enable spinup period but disable the ability to send
- 	 * notify enable spinup
- 	 */
- 	writel(SCU_ENSPINUP_GEN_VAL(COUNT,
- 			phy_user->notify_enable_spin_up_insertion_frequency),
--		&iphy->link_layer_registers->notify_enable_spinup_control);
-+		&llr->notify_enable_spinup_control);
- 
- 	/* Write the ALIGN Insertion Ferequency for connected phy and
- 	 * inpendent of connected state
-@@ -189,11 +184,10 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 	clksm_value |= SCU_ALIGN_INSERTION_FREQUENCY_GEN_VAL(GENERAL,
- 			phy_user->align_insertion_frequency);
- 
--	writel(clksm_value, &iphy->link_layer_registers->clock_skew_management);
-+	writel(clksm_value, &llr->clock_skew_management);
- 
- 	/* @todo Provide a way to write this register correctly */
--	writel(0x02108421,
--		&iphy->link_layer_registers->afe_lookup_table_control);
-+	writel(0x02108421, &llr->afe_lookup_table_control);
+-	/* @todo Provide a way to write this register correctly */
+-	writel(0x02108421, &llr->afe_lookup_table_control);
++	if (is_c0(ihost->pdev) || is_c1(ihost->pdev)) {
++		writel(0x04210400, &llr->afe_lookup_table_control);
++		writel(0x020A7C05, &llr->sas_primitive_timeout);
++	} else
++		writel(0x02108421, &llr->afe_lookup_table_control);
  
  	llctl = SCU_SAS_LLCTL_GEN_VAL(NO_OUTBOUND_TASK_TIMEOUT,
  		(u8)ihost->user_parameters.no_outbound_task_timeout);
-@@ -210,9 +204,9 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 		break;
- 	}
- 	llctl |= SCU_SAS_LLCTL_GEN_VAL(MAX_LINK_RATE, link_rate);
--	writel(llctl, &iphy->link_layer_registers->link_layer_control);
-+	writel(llctl, &llr->link_layer_control);
+diff --git a/drivers/scsi/isci/probe_roms.c b/drivers/scsi/isci/probe_roms.c
+index b5f4341..9b8117b 100644
+--- a/drivers/scsi/isci/probe_roms.c
++++ b/drivers/scsi/isci/probe_roms.c
+@@ -147,7 +147,7 @@ struct isci_orom *isci_request_firmware(struct pci_dev *pdev, const struct firmw
  
--	sp_timeouts = readl(&iphy->link_layer_registers->sas_phy_timeouts);
-+	sp_timeouts = readl(&llr->sas_phy_timeouts);
+ 	memcpy(orom, fw->data, fw->size);
  
- 	/* Clear the default 0x36 (54us) RATE_CHANGE timeout value. */
- 	sp_timeouts &= ~SCU_SAS_PHYTOV_GEN_VAL(RATE_CHANGE, 0xFF);
-@@ -222,20 +216,23 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
- 	 */
- 	sp_timeouts |= SCU_SAS_PHYTOV_GEN_VAL(RATE_CHANGE, 0x3B);
+-	if (is_c0(pdev))
++	if (is_c0(pdev) || is_c1(pdev))
+ 		goto out;
  
--	writel(sp_timeouts, &iphy->link_layer_registers->sas_phy_timeouts);
-+	writel(sp_timeouts, &llr->sas_phy_timeouts);
- 
- 	if (is_a2(ihost->pdev)) {
--		/* Program the max ARB time for the PHY to 700us so we inter-operate with
--		 * the PMC expander which shuts down PHYs if the expander PHY generates too
--		 * many breaks.  This time value will guarantee that the initiator PHY will
--		 * generate the break.
-+		/* Program the max ARB time for the PHY to 700us so we
-+		 * inter-operate with the PMC expander which shuts down
-+		 * PHYs if the expander PHY generates too many breaks.
-+		 * This time value will guarantee that the initiator PHY
-+		 * will generate the break.
- 		 */
- 		writel(SCIC_SDS_PHY_MAX_ARBITRATION_WAIT_TIME,
--			&iphy->link_layer_registers->maximum_arbitration_wait_timer_timeout);
-+		       &llr->maximum_arbitration_wait_timer_timeout);
- 	}
- 
--	/* Disable link layer hang detection, rely on the OS timeout for I/O timeouts. */
--	writel(0, &iphy->link_layer_registers->link_layer_hang_detection_timeout);
-+	/* Disable link layer hang detection, rely on the OS timeout for
-+	 * I/O timeouts.
-+	 */
-+	writel(0, &llr->link_layer_hang_detection_timeout);
- 
- 	/* We can exit the initial state to the stopped state */
- 	sci_change_state(&iphy->sm, SCI_PHY_STOPPED);
+ 	/*
 
