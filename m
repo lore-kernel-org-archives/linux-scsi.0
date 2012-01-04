@@ -1,293 +1,267 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 03/15] isci: update afe (analog-front-end) recipe for C1
-Date: Wed, 04 Jan 2012 01:32:39 -0800
-Message-ID: <20120104093239.9147.78687.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 04/15] isci: oem parameter format v1.1 (ssc select)
+Date: Wed, 04 Jan 2012 01:32:44 -0800
+Message-ID: <20120104093244.9147.48298.stgit@localhost6.localdomain6>
 References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29484 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:13453 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754799Ab2ADJck (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:32:40 -0500
+	id S1754805Ab2ADJcp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:32:45 -0500
 In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Marcin Tomczak <marcin.tomczak@intel.com>, Jiangbi Liu <jiangbi.liu@intel.com>
+Cc: Dave Jiang <dave.jiang@intel.com>
 
-From: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+From: Dave Jiang <dave.jiang@intel.com>
 
-C1 silicon requires updates to the phy tuning recipe and also support
-for user provided cable selects (per-phy) for short, medium, and long
-cables.  Default to 'short' awaiting support for selecting the cable via
-oem parameters.
+v1.1 allows finer grained tuning of the SSC (spread-spectrum-clocking)
+settings for SAS and SATA.  See notes in probe_roms.h
 
-Reviewed-by: Jiangbi Liu <jiangbi.liu@intel.com>
-Signed-off-by: Marcin Tomczak <marcin.tomczak@intel.com>
-Signed-off-by: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/host.c       |  111 ++++++++++++++++++++++++++++++++--------
- drivers/scsi/isci/host.h       |    9 +++
- drivers/scsi/isci/phy.c        |    7 ++-
- drivers/scsi/isci/probe_roms.c |    2 -
- 4 files changed, 103 insertions(+), 26 deletions(-)
+ drivers/scsi/isci/host.c       |   47 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/isci/init.c       |    3 ++
+ drivers/scsi/isci/phy.c        |   51 ++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/isci/probe_roms.h |   53 ++++++++++++++++++++++++++++++++++++++--
+ 4 files changed, 148 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index 8e7de19..383bb69 100644
+index 383bb69..ed1441c 100644
 --- a/drivers/scsi/isci/host.c
 +++ b/drivers/scsi/isci/host.c
-@@ -1908,12 +1908,23 @@ void sci_controller_power_control_queue_remove(struct isci_host *ihost,
- 	ihost->power_control.requesters[iphy->phy_index] = NULL;
+@@ -1759,7 +1759,7 @@ static enum sci_status sci_controller_construct(struct isci_host *ihost,
+ 	return sci_controller_reset(ihost);
  }
  
-+static int is_long_cable(int phy, unsigned char selection_byte)
-+{
-+	return 0;
-+}
-+
-+static int is_medium_cable(int phy, unsigned char selection_byte)
-+{
-+	return 0;
-+}
-+
- #define AFE_REGISTER_WRITE_DELAY 10
- 
- static void sci_controller_afe_initialization(struct isci_host *ihost)
+-int sci_oem_parameters_validate(struct sci_oem_params *oem)
++int sci_oem_parameters_validate(struct sci_oem_params *oem, u8 version)
  {
- 	struct scu_afe_registers __iomem *afe = &ihost->scu_registers->afe;
- 	const struct sci_oem_params *oem = &ihost->oem_parameters;
-+	unsigned char cable_selection_mask = 0;
- 	struct pci_dev *pdev = ihost->pdev;
- 	u32 afe_status;
- 	u32 phy_id;
-@@ -1922,11 +1933,11 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
- 	writel(0x0081000f, &afe->afe_dfx_master_control0);
- 	udelay(AFE_REGISTER_WRITE_DELAY);
+ 	int i;
  
--	if (is_b0(pdev)) {
-+	if (is_b0(pdev) || is_c0(pdev) || is_c1(pdev)) {
- 		/* PM Rx Equalization Save, PM SPhy Rx Acknowledgement
- 		 * Timer, PM Stagger Timer
- 		 */
--		writel(0x0007BFFF, &afe->afe_pmsn_master_control2);
-+		writel(0x0007FFFF, &afe->afe_pmsn_master_control2);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 	}
+@@ -1791,18 +1791,61 @@ int sci_oem_parameters_validate(struct sci_oem_params *oem)
+ 	    oem->controller.max_concurr_spin_up < 1)
+ 		return -EINVAL;
  
-@@ -1935,14 +1946,23 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
- 		writel(0x00005A00, &afe->afe_bias_control);
- 	else if (is_b0(pdev) || is_c0(pdev))
- 		writel(0x00005F00, &afe->afe_bias_control);
-+	else if (is_c1(pdev))
-+		writel(0x00005500, &afe->afe_bias_control);
- 
- 	udelay(AFE_REGISTER_WRITE_DELAY);
- 
- 	/* Enable PLL */
--	if (is_b0(pdev) || is_c0(pdev))
--		writel(0x80040A08, &afe->afe_pll_control0);
--	else
-+	if (is_a2(pdev))
- 		writel(0x80040908, &afe->afe_pll_control0);
-+	else if (is_b0(pdev) || is_c0(pdev))
-+		writel(0x80040A08, &afe->afe_pll_control0);
-+	else if (is_c1(pdev)) {
-+		writel(0x80000B08, &afe->afe_pll_control0);
-+		udelay(AFE_REGISTER_WRITE_DELAY);
-+		writel(0x00000B08, &afe->afe_pll_control0);
-+		udelay(AFE_REGISTER_WRITE_DELAY);
-+		writel(0x80000B08, &afe->afe_pll_control0);
++	if (oem->controller.do_enable_ssc) {
++		if (version < ISCI_ROM_VER_1_1 && oem->controller.do_enable_ssc != 1)
++			return -EINVAL;
++
++		if (version >= ISCI_ROM_VER_1_1) {
++			u8 test = oem->controller.ssc_sata_tx_spread_level;
++
++			switch (test) {
++			case 0:
++			case 2:
++			case 3:
++			case 6:
++			case 7:
++				break;
++			default:
++				return -EINVAL;
++			}
++
++			test = oem->controller.ssc_sas_tx_spread_level;
++			if (oem->controller.ssc_sas_tx_type == 0) {
++				switch (test) {
++				case 0:
++				case 2:
++				case 3:
++					break;
++				default:
++					return -EINVAL;
++				}
++			} else if (oem->controller.ssc_sas_tx_type == 1) {
++				switch (test) {
++				case 0:
++				case 3:
++				case 6:
++					break;
++				default:
++					return -EINVAL;
++				}
++			}
++		}
 +	}
- 
- 	udelay(AFE_REGISTER_WRITE_DELAY);
- 
-@@ -1963,46 +1983,68 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
- 	for (phy_id = 0; phy_id < SCI_MAX_PHYS; phy_id++) {
- 		struct scu_afe_transceiver *xcvr = &afe->scu_afe_xcvr[phy_id];
- 		const struct sci_phy_oem_params *oem_phy = &oem->phys[phy_id];
-+		int cable_length_long =
-+			is_long_cable(phy_id, cable_selection_mask);
-+		int cable_length_medium =
-+			is_medium_cable(phy_id, cable_selection_mask);
 +
-+		if (is_a2(pdev)) {
-+			/* All defaults, except the Receive Word
-+			 * Alignament/Comma Detect Enable....(0xe800)
-+			 */
-+			writel(0x00004512, &xcvr->afe_xcvr_control0);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
- 
--		if (is_b0(pdev)) {
--			 /* Configure transmitter SSC parameters */
-+			writel(0x0050100F, &xcvr->afe_xcvr_control1);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
-+		} else if (is_b0(pdev)) {
-+			/* Configure transmitter SSC parameters */
- 			writel(0x00030000, &xcvr->afe_tx_ssc_control);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 		} else if (is_c0(pdev)) {
--			 /* Configure transmitter SSC parameters */
--			writel(0x0003000, &xcvr->afe_tx_ssc_control);
-+			/* Configure transmitter SSC parameters */
-+			writel(0x00010202, &xcvr->afe_tx_ssc_control);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 
- 			/* All defaults, except the Receive Word
- 			 * Alignament/Comma Detect Enable....(0xe800)
- 			 */
--			writel(0x00004500, &xcvr->afe_xcvr_control0);
-+			writel(0x00014500, &xcvr->afe_xcvr_control0);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
--		} else {
-+		} else if (is_c1(pdev)) {
-+			/* Configure transmitter SSC parameters */
-+			writel(0x00010202, &xcvr->afe_tx_ssc_control);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
-+
- 			/* All defaults, except the Receive Word
- 			 * Alignament/Comma Detect Enable....(0xe800)
- 			 */
--			writel(0x00004512, &xcvr->afe_xcvr_control0);
--			udelay(AFE_REGISTER_WRITE_DELAY);
--
--			writel(0x0050100F, &xcvr->afe_xcvr_control1);
-+			writel(0x0001C500, &xcvr->afe_xcvr_control0);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 		}
- 
--		/* Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
--		 * & increase TX int & ext bias 20%....(0xe85c)
-+		/* Power up TX and RX out from power down (PWRDNTX and
-+		 * PWRDNRX) & increase TX int & ext bias 20%....(0xe85c)
- 		 */
- 		if (is_a2(pdev))
- 			writel(0x000003F0, &xcvr->afe_channel_control);
- 		else if (is_b0(pdev)) {
--			 /* Power down TX and RX (PWRDNTX and PWRDNRX) */
- 			writel(0x000003D7, &xcvr->afe_channel_control);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
-+
- 			writel(0x000003D4, &xcvr->afe_channel_control);
--		} else {
-+		} else if (is_c0(pdev)) {
- 			writel(0x000001E7, &xcvr->afe_channel_control);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
-+
- 			writel(0x000001E4, &xcvr->afe_channel_control);
-+		} else if (is_c1(pdev)) {
-+			writel(cable_length_long ? 0x000002F7 : 0x000001F7,
-+			       &xcvr->afe_channel_control);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
-+
-+			writel(cable_length_long ? 0x000002F4 : 0x000001F4,
-+			       &xcvr->afe_channel_control);
- 		}
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 
-@@ -2012,7 +2054,16 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 		}
- 
--		writel(0x00004100, &xcvr->afe_xcvr_control0);
-+		if (is_a2(pdev) || is_b0(pdev))
-+			/* RDPI=0x0(RX Power On), RXOOBDETPDNC=0x0,
-+			 * TPD=0x0(TX Power On), RDD=0x0(RX Detect
-+			 * Enabled) ....(0xe800)
-+			 */
-+			writel(0x00004100, &xcvr->afe_xcvr_control0);
-+		else if (is_c0(pdev))
-+			writel(0x00014100, &xcvr->afe_xcvr_control0);
-+		else if (is_c1(pdev))
-+			writel(0x0001C100, &xcvr->afe_xcvr_control0);
- 		udelay(AFE_REGISTER_WRITE_DELAY);
- 
- 		/* Leave DFE/FFE on */
-@@ -2023,8 +2074,8 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 			/* Enable TX equalization (0xe824) */
- 			writel(0x00040000, &xcvr->afe_tx_control);
--		} else {
--			writel(0x0140DF0F, &xcvr->afe_rx_ssc_control1);
-+		} else if (is_c0(pdev)) {
-+			writel(0x01400C0F, &xcvr->afe_rx_ssc_control1);
- 			udelay(AFE_REGISTER_WRITE_DELAY);
- 
- 			writel(0x3F6F103F, &xcvr->afe_rx_ssc_control0);
-@@ -2032,6 +2083,22 @@ static void sci_controller_afe_initialization(struct isci_host *ihost)
- 
- 			/* Enable TX equalization (0xe824) */
- 			writel(0x00040000, &xcvr->afe_tx_control);
-+		} else if (is_c1(pdev)) {
-+			writel(cable_length_long ? 0x01500C0C :
-+			       cable_length_medium ? 0x01400C0D : 0x02400C0D,
-+			       &xcvr->afe_xcvr_control1);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
-+
-+			writel(0x000003E0, &xcvr->afe_dfx_rx_control1);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
-+
-+			writel(cable_length_long ? 0x33091C1F :
-+			       cable_length_medium ? 0x3315181F : 0x2B17161F,
-+			       &xcvr->afe_rx_ssc_control0);
-+			udelay(AFE_REGISTER_WRITE_DELAY);
-+
-+			/* Enable TX equalization (0xe824) */
-+			writel(0x00040000, &xcvr->afe_tx_control);
- 		}
- 
- 		udelay(AFE_REGISTER_WRITE_DELAY);
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 646051a..4573075 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -435,7 +435,14 @@ static inline bool is_b0(struct pci_dev *pdev)
- 
- static inline bool is_c0(struct pci_dev *pdev)
- {
--	if (pdev->revision >= 5)
-+	if (pdev->revision == 5)
-+		return true;
-+	return false;
-+}
-+
-+static inline bool is_c1(struct pci_dev *pdev)
-+{
-+	if (pdev->revision >= 6)
- 		return true;
- 	return false;
+ 	return 0;
  }
+ 
+ static enum sci_status sci_oem_parameters_set(struct isci_host *ihost)
+ {
+ 	u32 state = ihost->sm.current_state_id;
++	struct isci_pci_info *pci_info = to_pci_info(ihost->pdev);
+ 
+ 	if (state == SCIC_RESET ||
+ 	    state == SCIC_INITIALIZING ||
+ 	    state == SCIC_INITIALIZED) {
+ 
+-		if (sci_oem_parameters_validate(&ihost->oem_parameters))
++		if (sci_oem_parameters_validate(&ihost->oem_parameters,
++						pci_info->orom->hdr.version))
+ 			return SCI_FAILURE_INVALID_PARAMETER_VALUE;
+ 
+ 		return SCI_SUCCESS;
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index a97edab..8a34fd9 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -466,7 +466,8 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
+ 		orom = isci_request_oprom(pdev);
+ 
+ 	for (i = 0; orom && i < ARRAY_SIZE(orom->ctrl); i++) {
+-		if (sci_oem_parameters_validate(&orom->ctrl[i])) {
++		if (sci_oem_parameters_validate(&orom->ctrl[i],
++						orom->hdr.version)) {
+ 			dev_warn(&pdev->dev,
+ 				 "[%d]: invalid oem parameters detected, falling back to firmware\n", i);
+ 			devm_kfree(&pdev->dev, orom);
 diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
-index 0ae0990..c650d30 100644
+index c650d30..61000cd 100644
 --- a/drivers/scsi/isci/phy.c
 +++ b/drivers/scsi/isci/phy.c
-@@ -186,8 +186,11 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+@@ -144,10 +144,59 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 	phy_cap.gen3_no_ssc = 1;
+ 	phy_cap.gen2_no_ssc = 1;
+ 	phy_cap.gen1_no_ssc = 1;
+-	if (ihost->oem_parameters.controller.do_enable_ssc == true) {
++	if (ihost->oem_parameters.controller.do_enable_ssc) {
++		struct scu_afe_registers __iomem *afe = &ihost->scu_registers->afe;
++		struct scu_afe_transceiver *xcvr = &afe->scu_afe_xcvr[phy_idx];
++		struct isci_pci_info *pci_info = to_pci_info(ihost->pdev);
++		bool en_sas = false;
++		bool en_sata = false;
++		u32 sas_type = 0;
++		u32 sata_spread = 0x2;
++		u32 sas_spread = 0x2;
++
+ 		phy_cap.gen3_ssc = 1;
+ 		phy_cap.gen2_ssc = 1;
+ 		phy_cap.gen1_ssc = 1;
++
++		if (pci_info->orom->hdr.version < ISCI_ROM_VER_1_1)
++			en_sas = en_sata = true;
++		else {
++			sata_spread = ihost->oem_parameters.controller.ssc_sata_tx_spread_level;
++			sas_spread = ihost->oem_parameters.controller.ssc_sas_tx_spread_level;
++
++			if (sata_spread)
++				en_sata = true;
++
++			if (sas_spread) {
++				en_sas = true;
++				sas_type = ihost->oem_parameters.controller.ssc_sas_tx_type;
++			}
++
++		}
++
++		if (en_sas) {
++			u32 reg;
++
++			reg = readl(&xcvr->afe_xcvr_control0);
++			reg |= (0x00100000 | (sas_type << 19));
++			writel(reg, &xcvr->afe_xcvr_control0);
++
++			reg = readl(&xcvr->afe_tx_ssc_control);
++			reg |= sas_spread << 8;
++			writel(reg, &xcvr->afe_tx_ssc_control);
++		}
++
++		if (en_sata) {
++			u32 reg;
++
++			reg = readl(&xcvr->afe_tx_ssc_control);
++			reg |= sata_spread;
++			writel(reg, &xcvr->afe_tx_ssc_control);
++
++			reg = readl(&llr->stp_control);
++			reg |= 1 << 12;
++			writel(reg, &llr->stp_control);
++		}
+ 	}
  
- 	writel(clksm_value, &llr->clock_skew_management);
+ 	/* The SAS specification indicates that the phy_capabilities that
+diff --git a/drivers/scsi/isci/probe_roms.h b/drivers/scsi/isci/probe_roms.h
+index 2c75248..42dd054 100644
+--- a/drivers/scsi/isci/probe_roms.h
++++ b/drivers/scsi/isci/probe_roms.h
+@@ -152,7 +152,7 @@ struct sci_user_parameters {
+ #define MAX_CONCURRENT_DEVICE_SPIN_UP_COUNT 4
  
--	/* @todo Provide a way to write this register correctly */
--	writel(0x02108421, &llr->afe_lookup_table_control);
-+	if (is_c0(ihost->pdev) || is_c1(ihost->pdev)) {
-+		writel(0x04210400, &llr->afe_lookup_table_control);
-+		writel(0x020A7C05, &llr->sas_primitive_timeout);
-+	} else
-+		writel(0x02108421, &llr->afe_lookup_table_control);
+ struct sci_oem_params;
+-int sci_oem_parameters_validate(struct sci_oem_params *oem);
++int sci_oem_parameters_validate(struct sci_oem_params *oem, u8 version);
  
- 	llctl = SCU_SAS_LLCTL_GEN_VAL(NO_OUTBOUND_TASK_TIMEOUT,
- 		(u8)ihost->user_parameters.no_outbound_task_timeout);
-diff --git a/drivers/scsi/isci/probe_roms.c b/drivers/scsi/isci/probe_roms.c
-index b5f4341..9b8117b 100644
---- a/drivers/scsi/isci/probe_roms.c
-+++ b/drivers/scsi/isci/probe_roms.c
-@@ -147,7 +147,7 @@ struct isci_orom *isci_request_firmware(struct pci_dev *pdev, const struct firmw
+ struct isci_orom;
+ struct isci_orom *isci_request_oprom(struct pci_dev *pdev);
+@@ -191,6 +191,10 @@ struct isci_oem_hdr {
+ 			0x1a, 0x04, 0xc6)
+ #define ISCI_EFI_VAR_NAME	"RstScuO"
  
- 	memcpy(orom, fw->data, fw->size);
++#define ISCI_ROM_VER_1_0	0x10
++#define ISCI_ROM_VER_1_1	0x11
++#define ISCI_ROM_VER_LATEST	ISCI_ROM_VER_1_1
++
+ /* Allowed PORT configuration modes APC Automatic PORT configuration mode is
+  * defined by the OEM configuration parameters providing no PHY_MASK parameters
+  * for any PORT. i.e. There are no phys assigned to any of the ports at start.
+@@ -220,7 +224,52 @@ struct sci_oem_params {
+ 	struct {
+ 		uint8_t mode_type;
+ 		uint8_t max_concurr_spin_up;
+-		uint8_t do_enable_ssc;
++		/*
++		 * This bitfield indicates the OEM's desired default Tx
++		 * Spread Spectrum Clocking (SSC) settings for SATA and SAS.
++		 * NOTE: Default SSC Modulation Frequency is 31.5KHz.
++		 */
++		union {
++			struct {
++			/*
++			 * NOTE: Max spread for SATA is +0 / -5000 PPM.
++			 * Down-spreading SSC (only method allowed for SATA):
++			 *  SATA SSC Tx Disabled                    = 0x0
++			 *  SATA SSC Tx at +0 / -1419 PPM Spread    = 0x2
++			 *  SATA SSC Tx at +0 / -2129 PPM Spread    = 0x3
++			 *  SATA SSC Tx at +0 / -4257 PPM Spread    = 0x6
++			 *  SATA SSC Tx at +0 / -4967 PPM Spread    = 0x7
++			 */
++				uint8_t ssc_sata_tx_spread_level:4;
++			/*
++			 * SAS SSC Tx Disabled                     = 0x0
++			 *
++			 * NOTE: Max spread for SAS down-spreading +0 /
++			 *	 -2300 PPM
++			 * Down-spreading SSC:
++			 *  SAS SSC Tx at +0 / -1419 PPM Spread     = 0x2
++			 *  SAS SSC Tx at +0 / -2129 PPM Spread     = 0x3
++			 *
++			 * NOTE: Max spread for SAS center-spreading +2300 /
++			 *	 -2300 PPM
++			 * Center-spreading SSC:
++			 *  SAS SSC Tx at +1064 / -1064 PPM Spread  = 0x3
++			 *  SAS SSC Tx at +2129 / -2129 PPM Spread  = 0x6
++			 */
++				uint8_t ssc_sas_tx_spread_level:3;
++			/*
++			 * NOTE: Refer to the SSC section of the SAS 2.x
++			 * Specification for proper setting of this field.
++			 * For standard SAS Initiator SAS PHY operation it
++			 * should be 0 for Down-spreading.
++			 * SAS SSC Tx spread type:
++			 *  Down-spreading SSC      = 0
++			 *  Center-spreading SSC    = 1
++			 */
++				uint8_t ssc_sas_tx_type:1;
++			};
++			uint8_t do_enable_ssc;
++		};
+ 		uint8_t reserved;
+ 	} controller;
  
--	if (is_c0(pdev))
-+	if (is_c0(pdev) || is_c1(pdev))
- 		goto out;
- 
- 	/*
 
