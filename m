@@ -1,8 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2 01/15] isci,
- firmware: Remove isci fallback parameter blob and generator
-Date: Wed, 04 Jan 2012 01:32:28 -0800
-Message-ID: <20120104093228.9147.10624.stgit@localhost6.localdomain6>
+Subject: [PATCH v2 02/15] isci: cleanup oem parameter and recipe handling
+Date: Wed, 04 Jan 2012 01:32:34 -0800
+Message-ID: <20120104093234.9147.41513.stgit@localhost6.localdomain6>
 References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,322 +9,405 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:29484 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751190Ab2ADJc3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jan 2012 04:32:29 -0500
+	id S1751190Ab2ADJce (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jan 2012 04:32:34 -0500
 In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Ben Hutchings <ben@decadent.org.uk>
 
-From: Ben Hutchings <ben@decadent.org.uk>
+Before updating the code to support the latest platform updates and
+silicon revision cleanup some of the long deref chains.
 
-This parameter blob and generator program have been moved to the
-linux-firmware.git repository.
-
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/firmware/Makefile    |   19 ------
- drivers/scsi/isci/firmware/README      |   36 ------------
- drivers/scsi/isci/firmware/create_fw.c |   99 --------------------------------
- drivers/scsi/isci/firmware/create_fw.h |   77 -------------------------
- firmware/Makefile                      |    1 
- firmware/isci/isci_firmware.bin.ihex   |   16 -----
- 6 files changed, 0 insertions(+), 248 deletions(-)
- delete mode 100644 drivers/scsi/isci/firmware/Makefile
- delete mode 100644 drivers/scsi/isci/firmware/README
- delete mode 100644 drivers/scsi/isci/firmware/create_fw.c
- delete mode 100644 drivers/scsi/isci/firmware/create_fw.h
- delete mode 100644 firmware/isci/isci_firmware.bin.ihex
+ drivers/scsi/isci/host.c |  107 ++++++++++++++++++++--------------------------
+ drivers/scsi/isci/phy.c  |   81 +++++++++++++++++------------------
+ 2 files changed, 86 insertions(+), 102 deletions(-)
 
-diff --git a/drivers/scsi/isci/firmware/Makefile b/drivers/scsi/isci/firmware/Makefile
-deleted file mode 100644
-index 5f54461..0000000
---- a/drivers/scsi/isci/firmware/Makefile
-+++ /dev/null
-@@ -1,19 +0,0 @@
--# Makefile for create_fw
--#
--CC=gcc
--CFLAGS=-c -Wall -O2 -g
--LDFLAGS=
--SOURCES=create_fw.c
--OBJECTS=$(SOURCES:.cpp=.o)
--EXECUTABLE=create_fw
--
--all: $(SOURCES) $(EXECUTABLE)
--
--$(EXECUTABLE): $(OBJECTS)
--	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
--
--.c.o:
--	$(CC) $(CFLAGS) $< -O $@
--
--clean:
--	rm -f *.o $(EXECUTABLE)
-diff --git a/drivers/scsi/isci/firmware/README b/drivers/scsi/isci/firmware/README
-deleted file mode 100644
-index 8056d2b..0000000
---- a/drivers/scsi/isci/firmware/README
-+++ /dev/null
-@@ -1,36 +0,0 @@
--This defines the temporary binary blow we are to pass to the SCU
--driver to emulate the binary firmware that we will eventually be
--able to access via NVRAM on the SCU controller.
--
--The current size of the binary blob is expected to be 149 bytes or larger
--
--Header Types:
--0x1: Phy Masks
--0x2: Phy Gens
--0x3: SAS Addrs
--0xff: End of Data
--
--ID string - u8[12]: "#SCU MAGIC#\0"
--Version - u8: 1
--SubVersion - u8: 0
--
--Header Type - u8: 0x1
--Size - u8: 8
--Phy Mask - u32[8]
--
--Header Type - u8: 0x2
--Size - u8: 8
--Phy Gen - u32[8]
--
--Header Type - u8: 0x3
--Size - u8: 8
--Sas Addr - u64[8]
--
--Header Type - u8: 0xf
--
--
--==============================================================================
--
--Place isci_firmware.bin in /lib/firmware
--Be sure to recreate the initramfs image to include the firmware.
--
-diff --git a/drivers/scsi/isci/firmware/create_fw.c b/drivers/scsi/isci/firmware/create_fw.c
-deleted file mode 100644
-index c7a2887..0000000
---- a/drivers/scsi/isci/firmware/create_fw.c
-+++ /dev/null
-@@ -1,99 +0,0 @@
--#include <stdio.h>
--#include <stdlib.h>
--#include <unistd.h>
--#include <sys/types.h>
--#include <sys/stat.h>
--#include <fcntl.h>
--#include <string.h>
--#include <errno.h>
--#include <asm/types.h>
--#include <strings.h>
--#include <stdint.h>
--
--#include "create_fw.h"
--#include "../probe_roms.h"
--
--int write_blob(struct isci_orom *isci_orom)
--{
--	FILE *fd;
--	int err;
--	size_t count;
--
--	fd = fopen(blob_name, "w+");
--	if (!fd) {
--		perror("Open file for write failed");
--		fclose(fd);
--		return -EIO;
--	}
--
--	count = fwrite(isci_orom, sizeof(struct isci_orom), 1, fd);
--	if (count != 1) {
--		perror("Write data failed");
--		fclose(fd);
--		return -EIO;
--	}
--
--	fclose(fd);
--
--	return 0;
--}
--
--void set_binary_values(struct isci_orom *isci_orom)
--{
--	int ctrl_idx, phy_idx, port_idx;
--
--	/* setting OROM signature */
--	strncpy(isci_orom->hdr.signature, sig, strlen(sig));
--	isci_orom->hdr.version = version;
--	isci_orom->hdr.total_block_length = sizeof(struct isci_orom);
--	isci_orom->hdr.hdr_length = sizeof(struct sci_bios_oem_param_block_hdr);
--	isci_orom->hdr.num_elements = num_elements;
--
--	for (ctrl_idx = 0; ctrl_idx < 2; ctrl_idx++) {
--		isci_orom->ctrl[ctrl_idx].controller.mode_type = mode_type;
--		isci_orom->ctrl[ctrl_idx].controller.max_concurrent_dev_spin_up =
--			max_num_concurrent_dev_spin_up;
--		isci_orom->ctrl[ctrl_idx].controller.do_enable_ssc =
--			enable_ssc;
--
--		for (port_idx = 0; port_idx < 4; port_idx++)
--			isci_orom->ctrl[ctrl_idx].ports[port_idx].phy_mask =
--				phy_mask[ctrl_idx][port_idx];
--
--		for (phy_idx = 0; phy_idx < 4; phy_idx++) {
--			isci_orom->ctrl[ctrl_idx].phys[phy_idx].sas_address.high =
--				(__u32)(sas_addr[ctrl_idx][phy_idx] >> 32);
--			isci_orom->ctrl[ctrl_idx].phys[phy_idx].sas_address.low =
--				(__u32)(sas_addr[ctrl_idx][phy_idx]);
--
--			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control0 =
--				afe_tx_amp_control0;
--			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control1 =
--				afe_tx_amp_control1;
--			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control2 =
--				afe_tx_amp_control2;
--			isci_orom->ctrl[ctrl_idx].phys[phy_idx].afe_tx_amp_control3 =
--				afe_tx_amp_control3;
--		}
--	}
--}
--
--int main(void)
--{
--	int err;
--	struct isci_orom *isci_orom;
--
--	isci_orom = malloc(sizeof(struct isci_orom));
--	memset(isci_orom, 0, sizeof(struct isci_orom));
--
--	set_binary_values(isci_orom);
--
--	err = write_blob(isci_orom);
--	if (err < 0) {
--		free(isci_orom);
--		return err;
--	}
--
--	free(isci_orom);
--	return 0;
--}
-diff --git a/drivers/scsi/isci/firmware/create_fw.h b/drivers/scsi/isci/firmware/create_fw.h
-deleted file mode 100644
-index 5f29882..0000000
---- a/drivers/scsi/isci/firmware/create_fw.h
-+++ /dev/null
-@@ -1,77 +0,0 @@
--#ifndef _CREATE_FW_H_
--#define _CREATE_FW_H_
--#include "../probe_roms.h"
--
--
--/* we are configuring for 2 SCUs */
--static const int num_elements = 2;
--
--/*
-- * For all defined arrays:
-- * elements 0-3 are for SCU0, ports 0-3
-- * elements 4-7 are for SCU1, ports 0-3
-- *
-- * valid configurations for one SCU are:
-- *  P0  P1  P2  P3
-- * ----------------
-- * 0xF,0x0,0x0,0x0 # 1 x4 port
-- * 0x3,0x0,0x4,0x8 # Phys 0 and 1 are a x2 port, phy 2 and phy 3 are each x1
-- *                 # ports
-- * 0x1,0x2,0xC,0x0 # Phys 0 and 1 are each x1 ports, phy 2 and phy 3 are a x2
-- *                 # port
-- * 0x3,0x0,0xC,0x0 # Phys 0 and 1 are a x2 port, phy 2 and phy 3 are a x2 port
-- * 0x1,0x2,0x4,0x8 # Each phy is a x1 port (this is the default configuration)
-- *
-- * if there is a port/phy on which you do not wish to override the default
-- * values, use the value assigned to UNINIT_PARAM (255).
+diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
+index e7fe9c4..8e7de19 100644
+--- a/drivers/scsi/isci/host.c
++++ b/drivers/scsi/isci/host.c
+@@ -1910,160 +1910,147 @@ void sci_controller_power_control_queue_remove(struct isci_host *ihost,
+ 
+ #define AFE_REGISTER_WRITE_DELAY 10
+ 
+-/* Initialize the AFE for this phy index. We need to read the AFE setup from
+- * the OEM parameters
 - */
+ static void sci_controller_afe_initialization(struct isci_host *ihost)
+ {
++	struct scu_afe_registers __iomem *afe = &ihost->scu_registers->afe;
+ 	const struct sci_oem_params *oem = &ihost->oem_parameters;
+ 	struct pci_dev *pdev = ihost->pdev;
+ 	u32 afe_status;
+ 	u32 phy_id;
+ 
+ 	/* Clear DFX Status registers */
+-	writel(0x0081000f, &ihost->scu_registers->afe.afe_dfx_master_control0);
++	writel(0x0081000f, &afe->afe_dfx_master_control0);
+ 	udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+ 	if (is_b0(pdev)) {
+ 		/* PM Rx Equalization Save, PM SPhy Rx Acknowledgement
+-		 * Timer, PM Stagger Timer */
+-		writel(0x0007BFFF, &ihost->scu_registers->afe.afe_pmsn_master_control2);
++		 * Timer, PM Stagger Timer
++		 */
++		writel(0x0007BFFF, &afe->afe_pmsn_master_control2);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 	}
+ 
+ 	/* Configure bias currents to normal */
+ 	if (is_a2(pdev))
+-		writel(0x00005A00, &ihost->scu_registers->afe.afe_bias_control);
++		writel(0x00005A00, &afe->afe_bias_control);
+ 	else if (is_b0(pdev) || is_c0(pdev))
+-		writel(0x00005F00, &ihost->scu_registers->afe.afe_bias_control);
++		writel(0x00005F00, &afe->afe_bias_control);
+ 
+ 	udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+ 	/* Enable PLL */
+ 	if (is_b0(pdev) || is_c0(pdev))
+-		writel(0x80040A08, &ihost->scu_registers->afe.afe_pll_control0);
++		writel(0x80040A08, &afe->afe_pll_control0);
+ 	else
+-		writel(0x80040908, &ihost->scu_registers->afe.afe_pll_control0);
++		writel(0x80040908, &afe->afe_pll_control0);
+ 
+ 	udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+ 	/* Wait for the PLL to lock */
+ 	do {
+-		afe_status = readl(&ihost->scu_registers->afe.afe_common_block_status);
++		afe_status = readl(&afe->afe_common_block_status);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 	} while ((afe_status & 0x00001000) == 0);
+ 
+ 	if (is_a2(pdev)) {
+-		/* Shorten SAS SNW lock time (RxLock timer value from 76 us to 50 us) */
+-		writel(0x7bcc96ad, &ihost->scu_registers->afe.afe_pmsn_master_control0);
++		/* Shorten SAS SNW lock time (RxLock timer value from 76
++		 * us to 50 us)
++		 */
++		writel(0x7bcc96ad, &afe->afe_pmsn_master_control0);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 	}
+ 
+ 	for (phy_id = 0; phy_id < SCI_MAX_PHYS; phy_id++) {
++		struct scu_afe_transceiver *xcvr = &afe->scu_afe_xcvr[phy_id];
+ 		const struct sci_phy_oem_params *oem_phy = &oem->phys[phy_id];
+ 
+ 		if (is_b0(pdev)) {
+ 			 /* Configure transmitter SSC parameters */
+-			writel(0x00030000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_ssc_control);
++			writel(0x00030000, &xcvr->afe_tx_ssc_control);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 		} else if (is_c0(pdev)) {
+ 			 /* Configure transmitter SSC parameters */
+-			writel(0x0003000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_ssc_control);
++			writel(0x0003000, &xcvr->afe_tx_ssc_control);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-			/*
+-			 * All defaults, except the Receive Word Alignament/Comma Detect
+-			 * Enable....(0xe800) */
+-			writel(0x00004500, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control0);
++			/* All defaults, except the Receive Word
++			 * Alignament/Comma Detect Enable....(0xe800)
++			 */
++			writel(0x00004500, &xcvr->afe_xcvr_control0);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 		} else {
+-			/*
+-			 * All defaults, except the Receive Word Alignament/Comma Detect
+-			 * Enable....(0xe800) */
+-			writel(0x00004512, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control0);
++			/* All defaults, except the Receive Word
++			 * Alignament/Comma Detect Enable....(0xe800)
++			 */
++			writel(0x00004512, &xcvr->afe_xcvr_control0);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-			writel(0x0050100F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control1);
++			writel(0x0050100F, &xcvr->afe_xcvr_control1);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 		}
+ 
+-		/*
+-		 * Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
+-		 * & increase TX int & ext bias 20%....(0xe85c) */
++		/* Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
++		 * & increase TX int & ext bias 20%....(0xe85c)
++		 */
+ 		if (is_a2(pdev))
+-			writel(0x000003F0, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
++			writel(0x000003F0, &xcvr->afe_channel_control);
+ 		else if (is_b0(pdev)) {
+ 			 /* Power down TX and RX (PWRDNTX and PWRDNRX) */
+-			writel(0x000003D7, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
++			writel(0x000003D7, &xcvr->afe_channel_control);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
 -
--/* discovery mode type (port auto config mode by default ) */
+-			/*
+-			 * Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
+-			 * & increase TX int & ext bias 20%....(0xe85c) */
+-			writel(0x000003D4, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
++			writel(0x000003D4, &xcvr->afe_channel_control);
+ 		} else {
+-			writel(0x000001E7, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
++			writel(0x000001E7, &xcvr->afe_channel_control);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
 -
--/*
-- * if there is a port/phy on which you do not wish to override the default
-- * values, use the value "0000000000000000". SAS address of zero's is
-- * considered invalid and will not be used.
-- */
--#ifdef MPC
--static const int mode_type = SCIC_PORT_MANUAL_CONFIGURATION_MODE;
--static const __u8 phy_mask[2][4] = { {1, 2, 4, 8},
--				     {1, 2, 4, 8} };
--static const unsigned long long sas_addr[2][4] = { { 0x5FCFFFFFF0000001ULL,
--						     0x5FCFFFFFF0000002ULL,
--						     0x5FCFFFFFF0000003ULL,
--						     0x5FCFFFFFF0000004ULL },
--						   { 0x5FCFFFFFF0000005ULL,
--						     0x5FCFFFFFF0000006ULL,
--						     0x5FCFFFFFF0000007ULL,
--						     0x5FCFFFFFF0000008ULL } };
--#else	/* APC (default) */
--static const int mode_type = SCIC_PORT_AUTOMATIC_CONFIGURATION_MODE;
--static const __u8 phy_mask[2][4];
--static const unsigned long long sas_addr[2][4] = { { 0x5FCFFFFF00000001ULL,
--						     0x5FCFFFFF00000001ULL,
--						     0x5FCFFFFF00000001ULL,
--						     0x5FCFFFFF00000001ULL },
--						   { 0x5FCFFFFF00000002ULL,
--						     0x5FCFFFFF00000002ULL,
--						     0x5FCFFFFF00000002ULL,
--						     0x5FCFFFFF00000002ULL } };
--#endif
--
--/* Maximum number of concurrent device spin up */
--static const int max_num_concurrent_dev_spin_up = 1;
--
--/* enable of ssc operation */
--static const int enable_ssc;
--
--/* AFE_TX_AMP_CONTROL */
--static const unsigned int afe_tx_amp_control0 = 0x000bdd08;
--static const unsigned int afe_tx_amp_control1 = 0x000ffc00;
--static const unsigned int afe_tx_amp_control2 = 0x000b7c09;
--static const unsigned int afe_tx_amp_control3 = 0x000afc6e;
--
--static const char blob_name[] = "isci_firmware.bin";
--static const char sig[] = "ISCUOEMB";
--static const unsigned char version = 0x10;
--
--#endif
-diff --git a/firmware/Makefile b/firmware/Makefile
-index 5f43bfb..0d15a3d 100644
---- a/firmware/Makefile
-+++ b/firmware/Makefile
-@@ -82,7 +82,6 @@ fw-shipped-$(CONFIG_SERIAL_8250_CS) += cis/MT5634ZLX.cis cis/RS-COM-2P.cis \
- fw-shipped-$(CONFIG_PCMCIA_SMC91C92) += ositech/Xilinx7OD.bin
- fw-shipped-$(CONFIG_SCSI_ADVANSYS) += advansys/mcode.bin advansys/38C1600.bin \
- 				      advansys/3550.bin advansys/38C0800.bin
--fw-shipped-$(CONFIG_SCSI_ISCI) += isci/isci_firmware.bin
- fw-shipped-$(CONFIG_SCSI_QLOGIC_1280) += qlogic/1040.bin qlogic/1280.bin \
- 					 qlogic/12160.bin
- fw-shipped-$(CONFIG_SCSI_QLOGICPTI) += qlogic/isp1000.bin
-diff --git a/firmware/isci/isci_firmware.bin.ihex b/firmware/isci/isci_firmware.bin.ihex
-deleted file mode 100644
-index 2e66195..0000000
---- a/firmware/isci/isci_firmware.bin.ihex
-+++ /dev/null
-@@ -1,16 +0,0 @@
--:10000000495343554F454D42E80018100002000087
--:1000100000000000000000000101000000000000DE
--:10002000FFFFCF5F0100000008DD0B0000FC0F00A8
--:10003000097C0B006EFC0A00FFFFCF5F010000008F
--:1000400008DD0B0000FC0F00097C0B006EFC0A00B1
--:10005000FFFFCF5F0100000008DD0B0000FC0F0078
--:10006000097C0B006EFC0A00FFFFCF5F010000005F
--:1000700008DD0B0000FC0F00097C0B006EFC0A0081
--:100080000101000000000000FFFFCF5F0200000040
--:1000900008DD0B0000FC0F00097C0B006EFC0A0061
--:1000A000FFFFCF5F0200000008DD0B0000FC0F0027
--:1000B000097C0B006EFC0A00FFFFCF5F020000000E
--:1000C00008DD0B0000FC0F00097C0B006EFC0A0031
--:1000D000FFFFCF5F0200000008DD0B0000FC0F00F7
--:0800E000097C0B006EFC0A0014
--:00000001FF
+-			/*
+-			 * Power up TX and RX out from power down (PWRDNTX and PWRDNRX)
+-			 * & increase TX int & ext bias 20%....(0xe85c) */
+-			writel(0x000001E4, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_channel_control);
++			writel(0x000001E4, &xcvr->afe_channel_control);
+ 		}
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+ 		if (is_a2(pdev)) {
+ 			/* Enable TX equalization (0xe824) */
+-			writel(0x00040000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_control);
++			writel(0x00040000, &xcvr->afe_tx_control);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 		}
+ 
+-		/*
+-		 * RDPI=0x0(RX Power On), RXOOBDETPDNC=0x0, TPD=0x0(TX Power On),
+-		 * RDD=0x0(RX Detect Enabled) ....(0xe800) */
+-		writel(0x00004100, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_xcvr_control0);
++		writel(0x00004100, &xcvr->afe_xcvr_control0);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+ 		/* Leave DFE/FFE on */
+ 		if (is_a2(pdev))
+-			writel(0x3F11103F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control0);
++			writel(0x3F11103F, &xcvr->afe_rx_ssc_control0);
+ 		else if (is_b0(pdev)) {
+-			writel(0x3F11103F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control0);
++			writel(0x3F11103F, &xcvr->afe_rx_ssc_control0);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 			/* Enable TX equalization (0xe824) */
+-			writel(0x00040000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_control);
++			writel(0x00040000, &xcvr->afe_tx_control);
+ 		} else {
+-			writel(0x0140DF0F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control1);
++			writel(0x0140DF0F, &xcvr->afe_rx_ssc_control1);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-			writel(0x3F6F103F, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_rx_ssc_control0);
++			writel(0x3F6F103F, &xcvr->afe_rx_ssc_control0);
+ 			udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+ 			/* Enable TX equalization (0xe824) */
+-			writel(0x00040000, &ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_control);
++			writel(0x00040000, &xcvr->afe_tx_control);
+ 		}
+ 
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-		writel(oem_phy->afe_tx_amp_control0,
+-			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control0);
++		writel(oem_phy->afe_tx_amp_control0, &xcvr->afe_tx_amp_control0);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-		writel(oem_phy->afe_tx_amp_control1,
+-			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control1);
++		writel(oem_phy->afe_tx_amp_control1, &xcvr->afe_tx_amp_control1);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-		writel(oem_phy->afe_tx_amp_control2,
+-			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control2);
++		writel(oem_phy->afe_tx_amp_control2, &xcvr->afe_tx_amp_control2);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 
+-		writel(oem_phy->afe_tx_amp_control3,
+-			&ihost->scu_registers->afe.scu_afe_xcvr[phy_id].afe_tx_amp_control3);
++		writel(oem_phy->afe_tx_amp_control3, &xcvr->afe_tx_amp_control3);
+ 		udelay(AFE_REGISTER_WRITE_DELAY);
+ 	}
+ 
+ 	/* Transfer control to the PEs */
+-	writel(0x00010f00, &ihost->scu_registers->afe.afe_dfx_master_control0);
++	writel(0x00010f00, &afe->afe_dfx_master_control0);
+ 	udelay(AFE_REGISTER_WRITE_DELAY);
+ }
+ 
+diff --git a/drivers/scsi/isci/phy.c b/drivers/scsi/isci/phy.c
+index 35f50c2..0ae0990 100644
+--- a/drivers/scsi/isci/phy.c
++++ b/drivers/scsi/isci/phy.c
+@@ -91,22 +91,23 @@ sci_phy_transport_layer_initialization(struct isci_phy *iphy,
+ 
+ static enum sci_status
+ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+-				  struct scu_link_layer_registers __iomem *reg)
++				  struct scu_link_layer_registers __iomem *llr)
+ {
+ 	struct isci_host *ihost = iphy->owning_port->owning_controller;
++	struct sci_phy_user_params *phy_user;
++	struct sci_phy_oem_params *phy_oem;
+ 	int phy_idx = iphy->phy_index;
+-	struct sci_phy_user_params *phy_user = &ihost->user_parameters.phys[phy_idx];
+-	struct sci_phy_oem_params *phy_oem =
+-		&ihost->oem_parameters.phys[phy_idx];
+-	u32 phy_configuration;
+ 	struct sci_phy_cap phy_cap;
++	u32 phy_configuration;
+ 	u32 parity_check = 0;
+ 	u32 parity_count = 0;
+ 	u32 llctl, link_rate;
+ 	u32 clksm_value = 0;
+ 	u32 sp_timeouts = 0;
+ 
+-	iphy->link_layer_registers = reg;
++	phy_user = &ihost->user_parameters.phys[phy_idx];
++	phy_oem = &ihost->oem_parameters.phys[phy_idx];
++	iphy->link_layer_registers = llr;
+ 
+ 	/* Set our IDENTIFY frame data */
+ 	#define SCI_END_DEVICE 0x01
+@@ -116,32 +117,26 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 	       SCU_SAS_TIID_GEN_BIT(STP_INITIATOR) |
+ 	       SCU_SAS_TIID_GEN_BIT(DA_SATA_HOST) |
+ 	       SCU_SAS_TIID_GEN_VAL(DEVICE_TYPE, SCI_END_DEVICE),
+-	       &iphy->link_layer_registers->transmit_identification);
++	       &llr->transmit_identification);
+ 
+ 	/* Write the device SAS Address */
+-	writel(0xFEDCBA98,
+-	       &iphy->link_layer_registers->sas_device_name_high);
+-	writel(phy_idx, &iphy->link_layer_registers->sas_device_name_low);
++	writel(0xFEDCBA98, &llr->sas_device_name_high);
++	writel(phy_idx, &llr->sas_device_name_low);
+ 
+ 	/* Write the source SAS Address */
+-	writel(phy_oem->sas_address.high,
+-		&iphy->link_layer_registers->source_sas_address_high);
+-	writel(phy_oem->sas_address.low,
+-		&iphy->link_layer_registers->source_sas_address_low);
++	writel(phy_oem->sas_address.high, &llr->source_sas_address_high);
++	writel(phy_oem->sas_address.low, &llr->source_sas_address_low);
+ 
+ 	/* Clear and Set the PHY Identifier */
+-	writel(0, &iphy->link_layer_registers->identify_frame_phy_id);
+-	writel(SCU_SAS_TIPID_GEN_VALUE(ID, phy_idx),
+-		&iphy->link_layer_registers->identify_frame_phy_id);
++	writel(0, &llr->identify_frame_phy_id);
++	writel(SCU_SAS_TIPID_GEN_VALUE(ID, phy_idx), &llr->identify_frame_phy_id);
+ 
+ 	/* Change the initial state of the phy configuration register */
+-	phy_configuration =
+-		readl(&iphy->link_layer_registers->phy_configuration);
++	phy_configuration = readl(&llr->phy_configuration);
+ 
+ 	/* Hold OOB state machine in reset */
+ 	phy_configuration |=  SCU_SAS_PCFG_GEN_BIT(OOB_RESET);
+-	writel(phy_configuration,
+-		&iphy->link_layer_registers->phy_configuration);
++	writel(phy_configuration, &llr->phy_configuration);
+ 
+ 	/* Configure the SNW capabilities */
+ 	phy_cap.all = 0;
+@@ -155,9 +150,9 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 		phy_cap.gen1_ssc = 1;
+ 	}
+ 
+-	/*
+-	 * The SAS specification indicates that the phy_capabilities that
+-	 * are transmitted shall have an even parity.  Calculate the parity. */
++	/* The SAS specification indicates that the phy_capabilities that
++	 * are transmitted shall have an even parity.  Calculate the parity.
++	 */
+ 	parity_check = phy_cap.all;
+ 	while (parity_check != 0) {
+ 		if (parity_check & 0x1)
+@@ -165,20 +160,20 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 		parity_check >>= 1;
+ 	}
+ 
+-	/*
+-	 * If parity indicates there are an odd number of bits set, then
+-	 * set the parity bit to 1 in the phy capabilities. */
++	/* If parity indicates there are an odd number of bits set, then
++	 * set the parity bit to 1 in the phy capabilities.
++	 */
+ 	if ((parity_count % 2) != 0)
+ 		phy_cap.parity = 1;
+ 
+-	writel(phy_cap.all, &iphy->link_layer_registers->phy_capabilities);
++	writel(phy_cap.all, &llr->phy_capabilities);
+ 
+ 	/* Set the enable spinup period but disable the ability to send
+ 	 * notify enable spinup
+ 	 */
+ 	writel(SCU_ENSPINUP_GEN_VAL(COUNT,
+ 			phy_user->notify_enable_spin_up_insertion_frequency),
+-		&iphy->link_layer_registers->notify_enable_spinup_control);
++		&llr->notify_enable_spinup_control);
+ 
+ 	/* Write the ALIGN Insertion Ferequency for connected phy and
+ 	 * inpendent of connected state
+@@ -189,11 +184,10 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 	clksm_value |= SCU_ALIGN_INSERTION_FREQUENCY_GEN_VAL(GENERAL,
+ 			phy_user->align_insertion_frequency);
+ 
+-	writel(clksm_value, &iphy->link_layer_registers->clock_skew_management);
++	writel(clksm_value, &llr->clock_skew_management);
+ 
+ 	/* @todo Provide a way to write this register correctly */
+-	writel(0x02108421,
+-		&iphy->link_layer_registers->afe_lookup_table_control);
++	writel(0x02108421, &llr->afe_lookup_table_control);
+ 
+ 	llctl = SCU_SAS_LLCTL_GEN_VAL(NO_OUTBOUND_TASK_TIMEOUT,
+ 		(u8)ihost->user_parameters.no_outbound_task_timeout);
+@@ -210,9 +204,9 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 		break;
+ 	}
+ 	llctl |= SCU_SAS_LLCTL_GEN_VAL(MAX_LINK_RATE, link_rate);
+-	writel(llctl, &iphy->link_layer_registers->link_layer_control);
++	writel(llctl, &llr->link_layer_control);
+ 
+-	sp_timeouts = readl(&iphy->link_layer_registers->sas_phy_timeouts);
++	sp_timeouts = readl(&llr->sas_phy_timeouts);
+ 
+ 	/* Clear the default 0x36 (54us) RATE_CHANGE timeout value. */
+ 	sp_timeouts &= ~SCU_SAS_PHYTOV_GEN_VAL(RATE_CHANGE, 0xFF);
+@@ -222,20 +216,23 @@ sci_phy_link_layer_initialization(struct isci_phy *iphy,
+ 	 */
+ 	sp_timeouts |= SCU_SAS_PHYTOV_GEN_VAL(RATE_CHANGE, 0x3B);
+ 
+-	writel(sp_timeouts, &iphy->link_layer_registers->sas_phy_timeouts);
++	writel(sp_timeouts, &llr->sas_phy_timeouts);
+ 
+ 	if (is_a2(ihost->pdev)) {
+-		/* Program the max ARB time for the PHY to 700us so we inter-operate with
+-		 * the PMC expander which shuts down PHYs if the expander PHY generates too
+-		 * many breaks.  This time value will guarantee that the initiator PHY will
+-		 * generate the break.
++		/* Program the max ARB time for the PHY to 700us so we
++		 * inter-operate with the PMC expander which shuts down
++		 * PHYs if the expander PHY generates too many breaks.
++		 * This time value will guarantee that the initiator PHY
++		 * will generate the break.
+ 		 */
+ 		writel(SCIC_SDS_PHY_MAX_ARBITRATION_WAIT_TIME,
+-			&iphy->link_layer_registers->maximum_arbitration_wait_timer_timeout);
++		       &llr->maximum_arbitration_wait_timer_timeout);
+ 	}
+ 
+-	/* Disable link layer hang detection, rely on the OS timeout for I/O timeouts. */
+-	writel(0, &iphy->link_layer_registers->link_layer_hang_detection_timeout);
++	/* Disable link layer hang detection, rely on the OS timeout for
++	 * I/O timeouts.
++	 */
++	writel(0, &llr->link_layer_hang_detection_timeout);
+ 
+ 	/* We can exit the initial state to the stopped state */
+ 	sci_change_state(&iphy->sm, SCI_PHY_STOPPED);
 
