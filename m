@@ -1,33 +1,62 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] mpt2sas: fix non-x86 crash on shutdown
-Date: Wed, 04 Jan 2012 14:39:29 -0500 (EST)
-Message-ID: <20120104.143929.962116161801444281.davem@davemloft.net>
-References: <1325690398.2758.10.camel@dabdike.int.hansenpartnership.com>
-	<1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
-	<20120104192102.GB18214@kroah.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
+ allowed to create io_context
+Date: Wed, 4 Jan 2012 17:24:45 -0800
+Message-ID: <20120105012445.GP31746@google.com>
+References: <20111228164836.GP17712@google.com>
+ <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
+ <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
+ <20111228211918.GA3516@google.com>
+ <20120103173500.GB31746@google.com>
+ <20120103175922.GC31746@google.com>
+ <20120103200906.GG31746@google.com>
+ <4F03631C.8080501@kernel.dk>
+ <20120103221301.GH31746@google.com>
+ <20120103223505.GI31746@google.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120104192102.GB18214@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: greg@kroah.com
-Cc: James.Bottomley@HansenPartnership.com, Nagalakshmi.Nandigama@lsi.com, stable@vger.kernel.org, gregkh@suse.de, linux-kernel@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120103223505.GI31746@google.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Hugh Dickins <hughd@google.com>, Shaohua Li <shaohua.li@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Greg KH <greg@kroah.com>
-Date: Wed, 4 Jan 2012 11:21:02 -0800
+Hello, again.
 
-> On Wed, Jan 04, 2012 at 09:25:13AM -0600, James Bottomley wrote:
->> From: "nagalakshmi.nandigama@lsi.com" <nagalakshmi.nandigama@lsi.com>
+On Tue, Jan 03, 2012 at 02:35:05PM -0800, Tejun Heo wrote:
+> > Hmmm... I disabled cfqq merge logic (commented out
+> > cfq_close_cooperator() and the following cfq_setup_merge() calls) in
+> > cfq_select_queue() and neither is triggering for quite a while now.
+> > Maybe cfqq refcnt is getting borked over cfqq merging / splitting?  It
+> > would also explain the low frequency of the issue too.  I'll try to
+> > further isolate it but It would be awesome if someone more familiar
+> > with the logic can go over that part.
 > 
-> That's not a correct "from" line, sorry.  That would create a mess of
-> the log.  Oh, I see Linus's tree is already a mess here, ugh.  Please be
-> more careful when accepting patches, otherwise stuff like this causes me
-> to have to hand-edit the kernel git logs when I run the "who does what"
-> statistic reports...
-> 
-> David, any objection for me taking this patch (left below) instead of
-> your original one for the stable tree?
+> Scrap that.  It triggered and yeah cfq_get_next_queue() is retrieving
+> empty cfqq from the service tree.
 
-No objection.
+Update: I've been running with ELEVATOR_INSERT_SORT_MERGE disabled and
+none of the issues triggered for about three hours now.  It usually
+triggers under an hour.
+
+Hugh, can you please verify whether the patch appended at the end
+makes the problem go away?
+
+Thanks.
+
+diff --git a/block/elevator.c b/block/elevator.c
+index 99838f4..2e172d2 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -644,6 +644,9 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+ 
+ 	rq->q = q;
+ 
++	if (where == ELEVATOR_INSERT_SORT_MERGE)
++		where = ELEVATOR_INSERT_SORT;
++
+ 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
+ 		/* barriers are scheduling boundary, update end_sector */
+ 		if (rq->cmd_type == REQ_TYPE_FS ||
