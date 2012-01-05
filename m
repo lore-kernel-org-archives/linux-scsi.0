@@ -1,52 +1,194 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Thu, 5 Jan 2012 10:38:42 -0800
-Message-ID: <20120105183842.GF18486@google.com>
-References: <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
- <20111228211918.GA3516@google.com>
- <20120103173500.GB31746@google.com>
- <20120103175922.GC31746@google.com>
- <20120103200906.GG31746@google.com>
- <4F03631C.8080501@kernel.dk>
- <20120103221301.GH31746@google.com>
- <20120103223505.GI31746@google.com>
- <20120105012445.GP31746@google.com>
- <alpine.LSU.2.00.1201051026090.2009@eggly.anvils>
+From: <gregkh@suse.de>
+Subject: Patch "mpt2sas: fix non-x86 crash on shutdown" has been added to the 3.0-stable tree
+Date: Thu, 05 Jan 2012 11:10:08 -0800
+Message-ID: <13257906083471@kroah.org>
+References: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.1201051026090.2009@eggly.anvils>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hugh Dickins <hughd@google.com>
-Cc: Jens Axboe <axboe@kernel.dk>, Shaohua Li <shaohua.li@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset=ASCII
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, davem@davemloft.net, Eric.Moore@lsi.com, gregkh@suse.de, JBottomley@Parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nagalakshmi.nandigama@lsi.com, Nagalakshmi.Nandigama@lsi.com, torvalds@linux-foundation.org
+Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello, Hugh.
 
-On Thu, Jan 05, 2012 at 10:36:21AM -0800, Hugh Dickins wrote:
-> I can vouch that it makes the list_debug.c:53 warnings go away: they
-> used to come in half an hour, but I've run on two machines for 10
-> hours so far without seeing any.
+This is a note to let you know that I've just added the patch titled
 
-Yeah, my overnight test is pretty conclusive too.  I can usually hit
-the bug under 30mins without the patch.
+    mpt2sas: fix non-x86 crash on shutdown
 
-> And I've not yet seen a cfq-iosched.c:2585 with that patch in; but
-> those were more elusive - we'll have to run until tomorrow night
-> before concluding that it makes those go away too.
-> 
-> Or if you understand the connection between these, and would prefer
-> to assume that it fixes them both, and want me to try another patch
-> instead (I assume the one I'm running with is a workaround to narrow
-> down the issue, rather than an intended fix?), let me know and I'll
-> switch over.
+to the 3.0-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
-Yeap, I can see the connections now and think I know where the bug is
-too.  I'll, hopefully, be able to post fix soon.
+The filename of the patch is:
+     mpt2sas-fix-non-x86-crash-on-shutdown.patch
+and it can be found in the queue-3.0 subdirectory.
 
-Thanks.
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
 
--- 
-tejun
+
+>From James.Bottomley@HansenPartnership.com  Thu Jan  5 10:58:15 2012
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Wed, 04 Jan 2012 09:25:13 -0600
+Subject: mpt2sas: fix non-x86 crash on shutdown
+To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Cc: Greg KH <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, "Moore, Eric" <Eric.Moore@lsi.com>
+Message-ID: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
+
+
+From: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+
+Upstrem commit: 911ae9434f83e7355d343f6c2be3ef5b00ea7aed
+
+There's a bug in the MSIX backup and restore routines that cause a crash on
+non-x86 (direct access to PCI space not via read/write).  These routines are
+unnecessary and were removed by the above commit, so also remove them from
+stable to fix the crash.
+
+Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+Signed-off-by: James Bottomley <JBottomley@Parallels.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/scsi/mpt2sas/mpt2sas_base.c |   59 +-----------------------------------
+ drivers/scsi/mpt2sas/mpt2sas_base.h |    4 --
+ 2 files changed, 2 insertions(+), 61 deletions(-)
+
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -1082,41 +1082,6 @@ _base_config_dma_addressing(struct MPT2S
+ }
+ 
+ /**
+- * _base_save_msix_table - backup msix vector table
+- * @ioc: per adapter object
+- *
+- * This address an errata where diag reset clears out the table
+- */
+-static void
+-_base_save_msix_table(struct MPT2SAS_ADAPTER *ioc)
+-{
+-	int i;
+-
+-	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
+-		return;
+-
+-	for (i = 0; i < ioc->msix_vector_count; i++)
+-		ioc->msix_table_backup[i] = ioc->msix_table[i];
+-}
+-
+-/**
+- * _base_restore_msix_table - this restores the msix vector table
+- * @ioc: per adapter object
+- *
+- */
+-static void
+-_base_restore_msix_table(struct MPT2SAS_ADAPTER *ioc)
+-{
+-	int i;
+-
+-	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
+-		return;
+-
+-	for (i = 0; i < ioc->msix_vector_count; i++)
+-		ioc->msix_table[i] = ioc->msix_table_backup[i];
+-}
+-
+-/**
+  * _base_check_enable_msix - checks MSIX capabable.
+  * @ioc: per adapter object
+  *
+@@ -1128,7 +1093,7 @@ _base_check_enable_msix(struct MPT2SAS_A
+ {
+ 	int base;
+ 	u16 message_control;
+-	u32 msix_table_offset;
++
+ 
+ 	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
+ 	if (!base) {
+@@ -1141,14 +1106,8 @@ _base_check_enable_msix(struct MPT2SAS_A
+ 	pci_read_config_word(ioc->pdev, base + 2, &message_control);
+ 	ioc->msix_vector_count = (message_control & 0x3FF) + 1;
+ 
+-	/* get msix table  */
+-	pci_read_config_dword(ioc->pdev, base + 4, &msix_table_offset);
+-	msix_table_offset &= 0xFFFFFFF8;
+-	ioc->msix_table = (u32 *)((void *)ioc->chip + msix_table_offset);
+-
+ 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "msix is supported, "
+-	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
+-	    ioc->msix_vector_count, msix_table_offset, ioc->msix_table));
++	    "vector_count(%d)\n", ioc->name, ioc->msix_vector_count));
+ 	return 0;
+ }
+ 
+@@ -1162,8 +1121,6 @@ _base_disable_msix(struct MPT2SAS_ADAPTE
+ {
+ 	if (ioc->msix_enable) {
+ 		pci_disable_msix(ioc->pdev);
+-		kfree(ioc->msix_table_backup);
+-		ioc->msix_table_backup = NULL;
+ 		ioc->msix_enable = 0;
+ 	}
+ }
+@@ -1189,14 +1146,6 @@ _base_enable_msix(struct MPT2SAS_ADAPTER
+ 	if (_base_check_enable_msix(ioc) != 0)
+ 		goto try_ioapic;
+ 
+-	ioc->msix_table_backup = kcalloc(ioc->msix_vector_count,
+-	    sizeof(u32), GFP_KERNEL);
+-	if (!ioc->msix_table_backup) {
+-		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "allocation for "
+-		    "msix_table_backup failed!!!\n", ioc->name));
+-		goto try_ioapic;
+-	}
+-
+ 	memset(&entries, 0, sizeof(struct msix_entry));
+ 	r = pci_enable_msix(ioc->pdev, &entries, 1);
+ 	if (r) {
+@@ -3513,9 +3462,6 @@ _base_diag_reset(struct MPT2SAS_ADAPTER
+ 	u32 hcb_size;
+ 
+ 	printk(MPT2SAS_INFO_FMT "sending diag reset !!\n", ioc->name);
+-
+-	_base_save_msix_table(ioc);
+-
+ 	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "clear interrupts\n",
+ 	    ioc->name));
+ 
+@@ -3611,7 +3557,6 @@ _base_diag_reset(struct MPT2SAS_ADAPTER
+ 		goto out;
+ 	}
+ 
+-	_base_restore_msix_table(ioc);
+ 	printk(MPT2SAS_INFO_FMT "diag reset: SUCCESS\n", ioc->name);
+ 	return 0;
+ 
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.h
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+@@ -626,8 +626,6 @@ struct mpt2sas_port_facts {
+  * @wait_for_port_enable_to_complete:
+  * @msix_enable: flag indicating msix is enabled
+  * @msix_vector_count: number msix vectors
+- * @msix_table: virt address to the msix table
+- * @msix_table_backup: backup msix table
+  * @scsi_io_cb_idx: shost generated commands
+  * @tm_cb_idx: task management commands
+  * @scsih_cb_idx: scsih internal commands
+@@ -768,8 +766,6 @@ struct MPT2SAS_ADAPTER {
+ 
+ 	u8		msix_enable;
+ 	u16		msix_vector_count;
+-	u32		*msix_table;
+-	u32		*msix_table_backup;
+ 	u32		ioc_reset_count;
+ 
+ 	/* internal commands, callback index */
+
+
+Patches currently in stable-queue which might be from James.Bottomley@HansenPartnership.com are
+
+queue-3.0/mpt2sas-fix-non-x86-crash-on-shutdown.patch
