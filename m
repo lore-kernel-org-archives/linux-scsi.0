@@ -1,194 +1,222 @@
-From: <gregkh@suse.de>
-Subject: Patch "mpt2sas: fix non-x86 crash on shutdown" has been added to the 3.1-stable tree
-Date: Thu, 05 Jan 2012 11:25:09 -0800
-Message-ID: <1325791509610@kroah.org>
-References: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] Next round of SCSI updates for 3.2 merge window
+Date: Thu, 05 Jan 2012 14:19:04 -0800
+Message-ID: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, davem@davemloft.net, Eric.Moore@lsi.com, gregkh@suse.de, JBottomley@Parallels.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, nagalakshmi.nandigama@lsi.com, Nagalakshmi.Nandigama@lsi.com, torvalds@linux-foundation.org
-Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+Trying the signed tag approach for the first time
 
-This is a note to let you know that I've just added the patch titled
+This patch contains the first tranche of SCSI updates including qla2xxx,
+qla4xxx, mpt2sas, lpfc and device_handler
 
-    mpt2sas: fix non-x86 crash on shutdown
+Before people start complaining, I have a lot of queued patches I didn't
+get around to merging before the Christmas holidays, so I'll do that
+now.
 
-to the 3.1-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+The patch is available here:
 
-The filename of the patch is:
-     mpt2sas-fix-non-x86-crash-on-shutdown.patch
-and it can be found in the queue-3.1 subdirectory.
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git#scsi-misc
 
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
+The short changelog is
 
+Andrew Vasquez (3):
+      qla2xxx: Ensure there's enough request-queue space for passthru IOCBs.
+      qla2xxx: Limit excessive DPC cycles.
+      qla2xxx: Only read requested mailbox registers.
 
->From James.Bottomley@HansenPartnership.com  Thu Jan  5 10:58:15 2012
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Wed, 04 Jan 2012 09:25:13 -0600
-Subject: mpt2sas: fix non-x86 crash on shutdown
-To: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
-Cc: Greg KH <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "alan@lxorguk.ukuu.org.uk" <alan@lxorguk.ukuu.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, "Moore, Eric" <Eric.Moore@lsi.com>
-Message-ID: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
+Chad Dupuis (3):
+      qla2xxx: Do not check for minidump when device state is QLA82XX_DEV_READY.
+      qla2xxx: Move initialization of some variables before iospace_config.
+      qla2xxx: Update to dynamic logging.
 
+Chandrakala Chavva (1):
+      mptsas: Add device ID for SAS1068_820XELP.
 
-From: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
+Dan Carpenter (1):
+      be2iscsi: cleanup a min_t() call
 
-Upstrem commit: 911ae9434f83e7355d343f6c2be3ef5b00ea7aed
+Eddie Wai (1):
+      bnx2i: Fixed kernel panic caused by unprotected task->sc->request deref
 
-There's a bug in the MSIX backup and restore routines that cause a crash on
-non-x86 (direct access to PCI space not via read/write).  These routines are
-unnecessary and were removed by the above commit, so also remove them from
-stable to fix the crash.
+Ferenc Wagner (1):
+      fusion: ensure NUL-termination of MptCallbacksName elements
 
-Signed-off-by: Nagalakshmi Nandigama <nagalakshmi.nandigama@lsi.com>
-Signed-off-by: James Bottomley <JBottomley@Parallels.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+Geert Uytterhoeven (1):
+      mac_scsi: Remove obsolete IRQ_FLG_* users
 
----
- drivers/scsi/mpt2sas/mpt2sas_base.c |   59 +-----------------------------------
- drivers/scsi/mpt2sas/mpt2sas_base.h |    4 --
- 2 files changed, 2 insertions(+), 61 deletions(-)
+Giridhar Malavali (8):
+      qla2xxx: Consolidated IOCB processing routines.
+      qla2xxx: Process marker IOCB request on request queue 0.
+      qla2xxx: Added a new entry to ISP specific function pointers structure.
+      qla2xxx: Corrected the display of firmware dump availability for ISP82xx.
+      qla2xxx: Corrected the default setting of the help text of Minidump capture mask.
+      qla2xxx: Correct report-id acquisition check
+      qla2xxx: Fix to include FCE data as part of dump.
+      qla2xxx: Proper cleanup of pass through commands when firmware returns error.
 
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1082,41 +1082,6 @@ _base_config_dma_addressing(struct MPT2S
- }
- 
- /**
-- * _base_save_msix_table - backup msix vector table
-- * @ioc: per adapter object
-- *
-- * This address an errata where diag reset clears out the table
-- */
--static void
--_base_save_msix_table(struct MPT2SAS_ADAPTER *ioc)
--{
--	int i;
--
--	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
--		return;
--
--	for (i = 0; i < ioc->msix_vector_count; i++)
--		ioc->msix_table_backup[i] = ioc->msix_table[i];
--}
--
--/**
-- * _base_restore_msix_table - this restores the msix vector table
-- * @ioc: per adapter object
-- *
-- */
--static void
--_base_restore_msix_table(struct MPT2SAS_ADAPTER *ioc)
--{
--	int i;
--
--	if (!ioc->msix_enable || ioc->msix_table_backup == NULL)
--		return;
--
--	for (i = 0; i < ioc->msix_vector_count; i++)
--		ioc->msix_table[i] = ioc->msix_table_backup[i];
--}
--
--/**
-  * _base_check_enable_msix - checks MSIX capabable.
-  * @ioc: per adapter object
-  *
-@@ -1128,7 +1093,7 @@ _base_check_enable_msix(struct MPT2SAS_A
- {
- 	int base;
- 	u16 message_control;
--	u32 msix_table_offset;
-+
- 
- 	base = pci_find_capability(ioc->pdev, PCI_CAP_ID_MSIX);
- 	if (!base) {
-@@ -1141,14 +1106,8 @@ _base_check_enable_msix(struct MPT2SAS_A
- 	pci_read_config_word(ioc->pdev, base + 2, &message_control);
- 	ioc->msix_vector_count = (message_control & 0x3FF) + 1;
- 
--	/* get msix table  */
--	pci_read_config_dword(ioc->pdev, base + 4, &msix_table_offset);
--	msix_table_offset &= 0xFFFFFFF8;
--	ioc->msix_table = (u32 *)((void *)ioc->chip + msix_table_offset);
--
- 	dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "msix is supported, "
--	    "vector_count(%d), table_offset(0x%08x), table(%p)\n", ioc->name,
--	    ioc->msix_vector_count, msix_table_offset, ioc->msix_table));
-+	    "vector_count(%d)\n", ioc->name, ioc->msix_vector_count));
- 	return 0;
- }
- 
-@@ -1162,8 +1121,6 @@ _base_disable_msix(struct MPT2SAS_ADAPTE
- {
- 	if (ioc->msix_enable) {
- 		pci_disable_msix(ioc->pdev);
--		kfree(ioc->msix_table_backup);
--		ioc->msix_table_backup = NULL;
- 		ioc->msix_enable = 0;
- 	}
- }
-@@ -1189,14 +1146,6 @@ _base_enable_msix(struct MPT2SAS_ADAPTER
- 	if (_base_check_enable_msix(ioc) != 0)
- 		goto try_ioapic;
- 
--	ioc->msix_table_backup = kcalloc(ioc->msix_vector_count,
--	    sizeof(u32), GFP_KERNEL);
--	if (!ioc->msix_table_backup) {
--		dfailprintk(ioc, printk(MPT2SAS_INFO_FMT "allocation for "
--		    "msix_table_backup failed!!!\n", ioc->name));
--		goto try_ioapic;
--	}
--
- 	memset(&entries, 0, sizeof(struct msix_entry));
- 	r = pci_enable_msix(ioc->pdev, &entries, 1);
- 	if (r) {
-@@ -3513,9 +3462,6 @@ _base_diag_reset(struct MPT2SAS_ADAPTER
- 	u32 hcb_size;
- 
- 	printk(MPT2SAS_INFO_FMT "sending diag reset !!\n", ioc->name);
--
--	_base_save_msix_table(ioc);
--
- 	drsprintk(ioc, printk(MPT2SAS_INFO_FMT "clear interrupts\n",
- 	    ioc->name));
- 
-@@ -3611,7 +3557,6 @@ _base_diag_reset(struct MPT2SAS_ADAPTER
- 		goto out;
- 	}
- 
--	_base_restore_msix_table(ioc);
- 	printk(MPT2SAS_INFO_FMT "diag reset: SUCCESS\n", ioc->name);
- 	return 0;
- 
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -636,8 +636,6 @@ enum mutex_type {
-  * @wait_for_port_enable_to_complete:
-  * @msix_enable: flag indicating msix is enabled
-  * @msix_vector_count: number msix vectors
-- * @msix_table: virt address to the msix table
-- * @msix_table_backup: backup msix table
-  * @scsi_io_cb_idx: shost generated commands
-  * @tm_cb_idx: task management commands
-  * @scsih_cb_idx: scsih internal commands
-@@ -779,8 +777,6 @@ struct MPT2SAS_ADAPTER {
- 
- 	u8		msix_enable;
- 	u16		msix_vector_count;
--	u32		*msix_table;
--	u32		*msix_table_backup;
- 	u32		ioc_reset_count;
- 
- 	/* internal commands, callback index */
+James Smart (7):
+      lpfc 8.3.28: Update driver version to 8.3.28
+      lpfc 8.3.28: Add Loopback support for SLI4 adapters
+      lpfc 8.3.28: Critical Miscellaneous fixes
+      Lpfc 8.3.28: FC and SCSI Discovery Fixes
+      lpfc 8.3.28: Add support for ABTS failure handling
+      lpfc 8.3.28: SLI fixes and added SLI4 support
+      lpfc 8.3.28: Miscellaneous fixes in sysfs and mgmt interfaces
 
+Jesper Juhl (1):
+      qla2xxx: remove redundant semicolon
 
-Patches currently in stable-queue which might be from James.Bottomley@HansenPartnership.com are
+Jing Huang (2):
+      bfa: fix endian and bit field check bug
+      bfa: fix formating and checkpatch issues
 
-queue-3.1/mpt2sas-fix-non-x86-crash-on-shutdown.patch
+Joe Carnuccio (1):
+      qla2xxx: Corrections to returned sysfs error codes.
+
+Joe Perches (2):
+      qla2xxx: Make the logging functions verify their arguments and fixed the current broken uses as appropriate.
+      qla2xxx: Use less stack to emit logging messages.
+
+Mike Christie (1):
+      iscsi class: export pid of process that created
+
+Mike Hernandez (1):
+      qla4xxx: Fix CPU lockups when ql4xdontresethba set
+
+Moger, Babu (4):
+      scsi_dh: code cleanup and remove the references to scsi_dev_info
+      scsi_dh_rdac: Adding the match function for rdac device handler
+      scsi_dh_hp_sw: Adding the match function for hp_sw device handler
+      scsi_dh_emc: Add a match function for emc device handler
+
+Nilesh Javali (1):
+      qla4xxx: Fix the IDC locking mechanism
+
+Roland Dreier (3):
+      mpt2sas: Remove unused duplicate diag_buffer_enable param
+      mpt2sas: Fix possible integer truncation of cpu_count
+      mpt2sas: Fix leak on mpt2sas_base_attach() error path
+
+Sarang Radke (2):
+      qla4xxx: Don't recover adapter if device state is FAILED
+      qla4xxx: fix call trace on rmmod with ql4xdontresethba=1
+
+Saurav Kashyap (1):
+      qla2xxx: Implement FCP priority tagging for 82xx adapters.
+
+Shyam Sunder (1):
+      qla4xxx: check for FW alive before calling chip_reset
+
+Stephen M. Cameron (1):
+      hpsa: Add IRQF_SHARED back in for the non-MSI(X) interrupt handler
+
+Tomas Henzl (1):
+      hpsa: add the Smart Array 5i to the kdump blacklist
+
+Vikas Chaudhary (4):
+      qla4xxx: Update driver version to 5.02.00-k10
+      qla4xxx: Fix qla4xxx_dump_buffer to dump buffer correctly
+      qla4xxx: Wait for disable_acb before doing set_acb
+      qla4xxx: Perform context resets in case of context failures.
+
+nagalakshmi.nandigama@lsi.com (16):
+      mpt2sas: Removed redundant calling of _scsih_probe_devices() from _scsih_probe
+      mpt2sas : Bump driver vesion to 12.100.00.00
+      mpt2sas : Fix for memory allocation error for large host credits
+      mpt2sas: Do not retry a timed out direct IO for warpdrive
+      mpt2sas: Release spinlock for the raid device list before blocking it
+      mpt2sas: MPI next revision header update
+      mpt2sas: Added support for customer specific branding
+      mpt2sas: Increase max transfer support from 4MB to 16MB
+      mpt2sas: Support for greater than 2TB capacity WarpDrive
+      mpt2sas: Bump driver version to 11.100.00.00
+      mpt2sas: Rearrange the the code so that the completion queues are initialized prior to sending the request to controller firmware
+      mpt2sas: Do not set sas_device->starget to NULL from the slave_destroy callback when all the LUNS have been deleted
+      mpt2sas: MPI next revision header update
+      mpt2sas: Adding support for customer specific branding
+      mpt2sas: When IOs are terminated, update the result to DID_SOFT_ERROR to avoid infinite resets
+      mpt2sas: Better handling DEAD IOC (PCI-E LInk down) error condition
+
+And the diffstat:
+
+ drivers/message/fusion/lsi/mpi_cnfg.h       |    1 +
+ drivers/message/fusion/mptbase.c            |    7 +-
+ drivers/message/fusion/mptbase.h            |    1 +
+ drivers/message/fusion/mptsas.c             |    2 +
+ drivers/scsi/be2iscsi/be_main.c             |    5 +-
+ drivers/scsi/bfa/bfa_defs.h                 |    4 +-
+ drivers/scsi/bfa/bfa_defs_svc.h             |  437 +++++++++--------
+ drivers/scsi/bfa/bfa_ioc.c                  |    6 +-
+ drivers/scsi/bfa/bfad_debugfs.c             |    3 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c              |    5 +-
+ drivers/scsi/device_handler/scsi_dh.c       |   58 ---
+ drivers/scsi/device_handler/scsi_dh_emc.c   |   19 +
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c |   19 +
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |   19 +
+ drivers/scsi/hpsa.c                         |    6 +-
+ drivers/scsi/lpfc/lpfc.h                    |   14 -
+ drivers/scsi/lpfc/lpfc_attr.c               |  436 ++++++-----------
+ drivers/scsi/lpfc/lpfc_bsg.c                |  432 +++++++++++++----
+ drivers/scsi/lpfc/lpfc_bsg.h                |    3 +-
+ drivers/scsi/lpfc/lpfc_compat.h             |    5 +-
+ drivers/scsi/lpfc/lpfc_crtn.h               |   13 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c            |  172 +++++---
+ drivers/scsi/lpfc/lpfc_els.c                |  214 +++++----
+ drivers/scsi/lpfc/lpfc_hbadisc.c            |  157 +++++--
+ drivers/scsi/lpfc/lpfc_hw.h                 |   21 +-
+ drivers/scsi/lpfc/lpfc_hw4.h                |   11 +-
+ drivers/scsi/lpfc/lpfc_init.c               |  338 +++++++++-----
+ drivers/scsi/lpfc/lpfc_mbox.c               |   25 +-
+ drivers/scsi/lpfc/lpfc_mem.c                |    4 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c          |   10 +-
+ drivers/scsi/lpfc/lpfc_scsi.c               |   17 +-
+ drivers/scsi/lpfc/lpfc_scsi.h               |    5 +-
+ drivers/scsi/lpfc/lpfc_sli.c                |  704 +++++++++++++++++++--------
+ drivers/scsi/lpfc/lpfc_sli4.h               |   11 +-
+ drivers/scsi/lpfc/lpfc_version.h            |    2 +-
+ drivers/scsi/lpfc/lpfc_vport.c              |    6 +-
+ drivers/scsi/mac_scsi.c                     |    3 +-
+ drivers/scsi/mpt2sas/mpi/mpi2.h             |   10 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h        |   28 +-
+ drivers/scsi/mpt2sas/mpi/mpi2_ioc.h         |   49 ++-
+ drivers/scsi/mpt2sas/mpi/mpi2_raid.h        |   67 +++-
+ drivers/scsi/mpt2sas/mpi/mpi2_tool.h        |    9 +-
+ drivers/scsi/mpt2sas/mpt2sas_base.c         |  205 +++++----
+ drivers/scsi/mpt2sas/mpt2sas_base.h         |   26 +-
+ drivers/scsi/mpt2sas/mpt2sas_ctl.c          |    8 +-
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c        |  168 ++++---
+ drivers/scsi/mpt2sas/mpt2sas_transport.c    |    9 +-
+ drivers/scsi/qla2xxx/qla_attr.c             |   10 +-
+ drivers/scsi/qla2xxx/qla_bsg.c              |   20 +-
+ drivers/scsi/qla2xxx/qla_dbg.c              |  310 ++++++------
+ drivers/scsi/qla2xxx/qla_dbg.h              |   19 +-
+ drivers/scsi/qla2xxx/qla_def.h              |    6 +-
+ drivers/scsi/qla2xxx/qla_gbl.h              |    2 +-
+ drivers/scsi/qla2xxx/qla_gs.c               |    2 +-
+ drivers/scsi/qla2xxx/qla_init.c             |   95 ++--
+ drivers/scsi/qla2xxx/qla_iocb.c             |  641 ++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_isr.c              |  253 ++++++----
+ drivers/scsi/qla2xxx/qla_mbx.c              |    2 +-
+ drivers/scsi/qla2xxx/qla_nx.c               |  512 +-------------------
+ drivers/scsi/qla2xxx/qla_os.c               |  363 +++++++-------
+ drivers/scsi/qla2xxx/qla_sup.c              |    5 +-
+ drivers/scsi/qla4xxx/ql4_dbg.c              |    6 +-
+ drivers/scsi/qla4xxx/ql4_def.h              |    1 +
+ drivers/scsi/qla4xxx/ql4_isr.c              |   30 +-
+ drivers/scsi/qla4xxx/ql4_nx.c               |   23 +-
+ drivers/scsi/qla4xxx/ql4_os.c               |  127 ++++-
+ drivers/scsi/qla4xxx/ql4_version.h          |    2 +-
+ drivers/scsi/scsi_priv.h                    |    1 -
+ drivers/scsi/scsi_transport_iscsi.c         |   21 +-
+ include/scsi/scsi_device.h                  |    1 -
+ include/scsi/scsi_transport_iscsi.h         |    5 +
+ 71 files changed, 3627 insertions(+), 2604 deletions(-)
+
+James
