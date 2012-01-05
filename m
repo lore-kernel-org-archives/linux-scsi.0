@@ -1,69 +1,42 @@
-From: Lin Ming <ming.m.lin@intel.com>
-Subject: Re: [PATCH v3 0/3] fixes for ata port runtime pm support
-Date: Thu, 5 Jan 2012 09:50:11 +0800
-Message-ID: <CAF1ivSZx5pkZPQcL-X4=QA9rqvCoyW8kzg1_Q1ANsCwk-D=D=Q@mail.gmail.com>
-References: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
+From: Holger Macht <holger@homac.de>
+Subject: Re: [PATCH 0/7] acpi/libata: Express dependencies for devices on
+ dock stations and bays
+Date: Thu, 5 Jan 2012 11:36:52 +0100
+Message-ID: <20120105103651.GB13066@homac.suse.de>
+References: <20111206163718.GA3629@homac.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:59608 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553Ab2AEBuM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2012 20:50:12 -0500
-In-Reply-To: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20111206163718.GA3629@homac.suse.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Matthew Garrett <mjg@redhat.com>, Len Brown <lenb@kernel.org>, Shaohua Li <shaohua.li@intel.com>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-On Thu, Dec 22, 2011 at 2:50 PM, Lin Ming <ming.m.lin@intel.com> wrote:
-> Hi Jeff,
->
-> Here are the v3 fixes for ata port runtime pm support.
->
-> Could you consider applying these fixes?
+On Di 06. Dez - 17:37:19, Holger Macht wrote:
+> Patches 1 through 5 are just a refresh of the patches from Matthew
+> Garrett sent to this list in September 2010 [1]:
+> 
+>  [PATCH 1/7] scsi: Export scsi_bus_type
+>  [PATCH 2/7] libata: Bind the Linux device tree to the ACPI device tree
+>  [PATCH 3/7] libata: Migrate ACPI code over to new bindings
+>  [PATCH 4/7] acpi: Add support for linking docks to the objects they contain
+>  [PATCH 5/7] libata: Add links between removable devices and docks
+> 
+> Patches 6 and 7 make the patches actually work on my test hardware
+> (Thinkpad x60/Thingpad T60) by fixing some minor issues.
+> 
+>  [PATCH 6/7] libata: Generate and pass correct acpi handles
+>  [PATCH 7/7] acpi: Prevent duplicate hotplug device registration on dock stations
 
-Hi Jeff,
+So, due to the merge window for 3.3 being open, I like to give this
+patch set a heads up.
 
-Hope you have a good holiday.
+Matthew, any word on this?
 
-How about these fixes?
+Len, I really would like to see this merged because it would really make
+the docking station stuff kind of feature complete, finally.
 
-Lin Ming
-
-> Thanks.
->
-> Changes in v3:
-> - Add ata port hibernate callbacks
->
-> Changes in v2:
-> - Drop the patch "[SCSI] sd: fix runtime status check in sd_shutdown"=
-=2E
-> =A0It's no longer needed with commit fe6b91f(PM / Driver core: leave
-> =A0runtime PM enabled during system shutdown).
-> - Add Ack from Alan
->
-> v1: https://lkml.org/lkml/2011/12/13/443
-> v2: https://lkml.org/lkml/2011/12/14/516
->
-> Lin Ming (3):
-> =A0 =A0 =A0[SCSI]: runtime resume parent for child's system-resume
-> =A0 =A0 =A0ata: update ata port's runtime status during system resume
-> =A0 =A0 =A0ata: add ata port hibernate callbacks
->
-> =A0drivers/ata/libata-core.c | =A0 58 +++++++++++++++++++++++++++++++=
-+++++++++----
-> =A0drivers/scsi/scsi_pm.c =A0 =A0| =A0 11 +++++++-
-> =A02 files changed, 62 insertions(+), 7 deletions(-)
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pm" i=
-n
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+ Holger
