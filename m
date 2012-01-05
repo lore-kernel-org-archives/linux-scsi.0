@@ -1,7 +1,7 @@
 From: <gregkh@suse.de>
-Subject: Patch "mpt2sas: fix non-x86 crash on shutdown" has been added to the 3.0-stable tree
-Date: Thu, 05 Jan 2012 11:10:08 -0800
-Message-ID: <13257906083471@kroah.org>
+Subject: Patch "mpt2sas: fix non-x86 crash on shutdown" has been added to the 3.1-stable tree
+Date: Thu, 05 Jan 2012 11:25:09 -0800
+Message-ID: <1325791509610@kroah.org>
 References: <1325690713.2758.13.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
@@ -18,12 +18,12 @@ This is a note to let you know that I've just added the patch titled
 
     mpt2sas: fix non-x86 crash on shutdown
 
-to the 3.0-stable tree which can be found at:
+to the 3.1-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
      mpt2sas-fix-non-x86-crash-on-shutdown.patch
-and it can be found in the queue-3.0 subdirectory.
+and it can be found in the queue-3.1 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
@@ -169,7 +169,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
  
 --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
 +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -626,8 +626,6 @@ struct mpt2sas_port_facts {
+@@ -636,8 +636,6 @@ enum mutex_type {
   * @wait_for_port_enable_to_complete:
   * @msix_enable: flag indicating msix is enabled
   * @msix_vector_count: number msix vectors
@@ -178,7 +178,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
   * @scsi_io_cb_idx: shost generated commands
   * @tm_cb_idx: task management commands
   * @scsih_cb_idx: scsih internal commands
-@@ -768,8 +766,6 @@ struct MPT2SAS_ADAPTER {
+@@ -779,8 +777,6 @@ struct MPT2SAS_ADAPTER {
  
  	u8		msix_enable;
  	u16		msix_vector_count;
@@ -191,4 +191,4 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
 Patches currently in stable-queue which might be from James.Bottomley@HansenPartnership.com are
 
-queue-3.0/mpt2sas-fix-non-x86-crash-on-shutdown.patch
+queue-3.1/mpt2sas-fix-non-x86-crash-on-shutdown.patch
