@@ -1,62 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block/for-3.3/core] block: an exiting task should be
- allowed to create io_context
-Date: Wed, 4 Jan 2012 17:24:45 -0800
-Message-ID: <20120105012445.GP31746@google.com>
-References: <20111228164836.GP17712@google.com>
- <alpine.LSU.2.00.1112280939390.3320@eggly.anvils>
- <CAOS58YOzUcZz41+H+7dk5FteHy+Ufrtpk9dvdPqX6eie-GHi0Q@mail.gmail.com>
- <20111228211918.GA3516@google.com>
- <20120103173500.GB31746@google.com>
- <20120103175922.GC31746@google.com>
- <20120103200906.GG31746@google.com>
- <4F03631C.8080501@kernel.dk>
- <20120103221301.GH31746@google.com>
- <20120103223505.GI31746@google.com>
+From: Lin Ming <ming.m.lin@intel.com>
+Subject: Re: [PATCH v3 0/3] fixes for ata port runtime pm support
+Date: Thu, 5 Jan 2012 09:50:11 +0800
+Message-ID: <CAF1ivSZx5pkZPQcL-X4=QA9rqvCoyW8kzg1_Q1ANsCwk-D=D=Q@mail.gmail.com>
+References: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120103223505.GI31746@google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Hugh Dickins <hughd@google.com>, Shaohua Li <shaohua.li@intel.com>, Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:59608 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751553Ab2AEBuM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2012 20:50:12 -0500
+In-Reply-To: <1324536649-5796-1-git-send-email-ming.m.lin@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>, James Bottomley <JBottomley@parallels.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-pm@vger.kernel.org
 
-Hello, again.
+On Thu, Dec 22, 2011 at 2:50 PM, Lin Ming <ming.m.lin@intel.com> wrote:
+> Hi Jeff,
+>
+> Here are the v3 fixes for ata port runtime pm support.
+>
+> Could you consider applying these fixes?
 
-On Tue, Jan 03, 2012 at 02:35:05PM -0800, Tejun Heo wrote:
-> > Hmmm... I disabled cfqq merge logic (commented out
-> > cfq_close_cooperator() and the following cfq_setup_merge() calls) in
-> > cfq_select_queue() and neither is triggering for quite a while now.
-> > Maybe cfqq refcnt is getting borked over cfqq merging / splitting?  It
-> > would also explain the low frequency of the issue too.  I'll try to
-> > further isolate it but It would be awesome if someone more familiar
-> > with the logic can go over that part.
-> 
-> Scrap that.  It triggered and yeah cfq_get_next_queue() is retrieving
-> empty cfqq from the service tree.
+Hi Jeff,
 
-Update: I've been running with ELEVATOR_INSERT_SORT_MERGE disabled and
-none of the issues triggered for about three hours now.  It usually
-triggers under an hour.
+Hope you have a good holiday.
 
-Hugh, can you please verify whether the patch appended at the end
-makes the problem go away?
+How about these fixes?
 
-Thanks.
+Lin Ming
 
-diff --git a/block/elevator.c b/block/elevator.c
-index 99838f4..2e172d2 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -644,6 +644,9 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
- 
- 	rq->q = q;
- 
-+	if (where == ELEVATOR_INSERT_SORT_MERGE)
-+		where = ELEVATOR_INSERT_SORT;
-+
- 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
- 		/* barriers are scheduling boundary, update end_sector */
- 		if (rq->cmd_type == REQ_TYPE_FS ||
+> Thanks.
+>
+> Changes in v3:
+> - Add ata port hibernate callbacks
+>
+> Changes in v2:
+> - Drop the patch "[SCSI] sd: fix runtime status check in sd_shutdown"=
+=2E
+> =A0It's no longer needed with commit fe6b91f(PM / Driver core: leave
+> =A0runtime PM enabled during system shutdown).
+> - Add Ack from Alan
+>
+> v1: https://lkml.org/lkml/2011/12/13/443
+> v2: https://lkml.org/lkml/2011/12/14/516
+>
+> Lin Ming (3):
+> =A0 =A0 =A0[SCSI]: runtime resume parent for child's system-resume
+> =A0 =A0 =A0ata: update ata port's runtime status during system resume
+> =A0 =A0 =A0ata: add ata port hibernate callbacks
+>
+> =A0drivers/ata/libata-core.c | =A0 58 +++++++++++++++++++++++++++++++=
++++++++++----
+> =A0drivers/scsi/scsi_pm.c =A0 =A0| =A0 11 +++++++-
+> =A02 files changed, 62 insertions(+), 7 deletions(-)
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pm" i=
+n
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
