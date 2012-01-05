@@ -1,67 +1,43 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH] firmware/isci: update to oem parameter format v1.3
-Date: Thu, 05 Jan 2012 13:22:54 +0000
-Message-ID: <1325769774.13595.282.camel@deadeye>
-References: <20120104092339.8562.74674.stgit@localhost6.localdomain6>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [RFC PATCH] scsi_dh: allow 3rd party multipath drivers to
+ scsi_dh_detach
+Date: Thu, 5 Jan 2012 10:24:41 -0500
+Message-ID: <20120105152441.GA5130@redhat.com>
+References: <20111215214440.GA17677@redhat.com>
+ <4EF039D5.5010201@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-miKuzGCdmxZb7bNEKb91"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:48415 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756821Ab2AENXL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2012 08:23:11 -0500
-In-Reply-To: <20120104092339.8562.74674.stgit@localhost6.localdomain6>
+Received: from mx1.redhat.com ([209.132.183.28]:32146 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755874Ab2AEPYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2012 10:24:45 -0500
+Content-Disposition: inline
+In-Reply-To: <4EF039D5.5010201@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
+To: Hannes Reinecke <hare@suse.de>
 Cc: linux-scsi@vger.kernel.org
 
+On Tue, Dec 20 2011 at  2:31am -0500,
+Hannes Reinecke <hare@suse.de> wrote:
 
---=-miKuzGCdmxZb7bNEKb91
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On 12/15/2011 10:44 PM, Mike Snitzer wrote:
+> > Some scsi_dh modules are known to conflict with with 3rd party multipath
+> > drivers (e.g. scsi_dh_emc conflicts with EMC PowerPath).
+> > 
+> > Allow 3rd party multipath drivers to programatically detach a scsi_dh
+> > using the scsi_dh_detach() interface rather than require writing
+> > 'detach' to /sys/block/sdX/queue/dh_state
+> > 
+> > Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> No problem with that.
+> 
+> Acked-by: Hannes Reinecke <hare@suse.de>
 
-On Wed, 2012-01-04 at 01:25 -0800, Dan Williams wrote:
-> v1.1 allows finer grained tuning of the SSC (spread-spectrum-clocking)
-> settings for SAS and SATA.  See notes in probe_roms.h
->=20
-> v1.3 allows the attenuation of the attached cables to be specified to
-> the driver in terms of 'short', 'medium', and 'long' (see probe_roms.h).
-> These settings (per phy) are retrieved from the platform oem-parameters
-> (BIOS rom), the fallback firmware blob, or via a module parameter
-> override.
-[...]
+Thanks Hannes,
 
-Applied, thanks.
+So will this change make it into 3.3?  In general, I'm not clear on
+where scsi_dh changes are staged for upstream inclusion.
 
-Ben.
-
---=20
-Ben Hutchings
-Make three consecutive correct guesses and you will be considered an expert=
-.
-
---=-miKuzGCdmxZb7bNEKb91
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIVAwUATwWkL+e/yOyVhhEJAQrIyBAAwESuTPBMcrVcGwf1p+PUUoOH9W9yUYJk
-aRmFiC0y2Di6I4elxVKZJoNnupetnCSzfgZdGbdyWCZ4+tW4cinimKUnxEXt6sqE
-9iV3hXYst4e0ZXx/L+FQ2rSQN2qEuWmYeGrRNoHMgRpnUHNXyfaWvPwOo3uCUySx
-yOb3jFYdAlfPYBTQQzxU6FemlaylKOAhutgJCzH+DJG22V8ct0+YpWwdhJYqpjll
-e8a5EvJj8UK+/nCwn6BQ2xjYdtwo3tCW20SElV/30cRdy71MCYDj29+fBcRe1AwP
-JvbJ/EQMx2lWOHyVkKpkDpZTVwWVOsdawYsK/PscmgguEMVAYhCymzu7kPIVUqjn
-74XgaUkKY5M5Vjq2w4upToO4wR8c8XEImSlQIs/qBLA8XmArz75qKC8Hb+CMRSTd
-5rLUcuTVRgzWN4rZ1rStiDIGFGXFZFDH7+3i+eJPc17lKiKY9D0cxlrmzP/Ji5WJ
-zIlalf/pv1yeqnI4hU6KtaVgJfaUvvDQpszISkIQowk4S7MtF0nAo9KDF/NmrF8g
-xqp5PKOxpT+jX5DaJTLb/rpDsN5XLJme+GjjoNhuvf3Nl3axiBbgie7G0a6HY/zw
-E6L/eELDIv+31Q/KqMR02Kbn78QEN6LBYQbM5/5RfB3D3LsOGeXtX4KUXBZiyS3W
-ky4SiLx3azs=
-=V+f9
------END PGP SIGNATURE-----
-
---=-miKuzGCdmxZb7bNEKb91--
+Mike
