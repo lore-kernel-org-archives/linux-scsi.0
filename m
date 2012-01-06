@@ -1,498 +1,89 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 11/14] isci: stop interpreting ->lldd_lu_reset() as an ata
- soft-reset
-Date: Thu, 05 Jan 2012 16:59:56 -0800
-Message-ID: <20120106005956.11464.5601.stgit@localhost6.localdomain6>
+Subject: [PATCH v3 12/14] isci: ->lldd_ata_check_ready handler
+Date: Thu, 05 Jan 2012 17:00:02 -0800
+Message-ID: <20120106010001.11464.91347.stgit@localhost6.localdomain6>
 References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:5663 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030200Ab2AFA75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2012 19:59:57 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>
+Cc: linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Driving resets from libsas-eh is pre-mature as libata will make a
-decision about performing a softreset.  Currently libata determines
-whether to perform a softreset based on ata_eh_followup_srst_needed(),
-and none of those conditions apply to isci.
+Report to libata whether the link to the given domain_device is up and the
+signature fis has been received.
 
-Remove the srst implementation and translate ->lldd_lu_reset() for ata
-devices as a request to drive a reset via libata-eh.
-
-Cc: Jack Wang <jack_wang@usish.com>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/request.c   |  195 +----------------------------------------
- drivers/scsi/isci/request.h   |    9 --
- drivers/scsi/isci/task.c      |   93 +-------------------
- drivers/scsi/isci/task.h      |    2 
- drivers/scsi/libsas/sas_ata.c |    2 
- 5 files changed, 15 insertions(+), 286 deletions(-)
+ drivers/scsi/isci/init.c |    3 +++
+ drivers/scsi/isci/port.c |   28 ++++++++++++++++++++++++++++
+ drivers/scsi/isci/port.h |    1 +
+ 3 files changed, 32 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 83383ef..0e43efd 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -519,18 +519,12 @@ sci_io_request_construct_sata(struct isci_request *ireq,
- 	if (test_bit(IREQ_TMF, &ireq->flags)) {
- 		struct isci_tmf *tmf = isci_request_access_tmf(ireq);
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index 59f2ae7..40293b3 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -185,6 +185,9 @@ static struct sas_domain_function_template isci_transport_ops  = {
+ 	.lldd_lu_reset		= isci_task_lu_reset,
+ 	.lldd_query_task	= isci_task_query_task,
  
--		if (tmf->tmf_code == isci_tmf_sata_srst_high ||
--		    tmf->tmf_code == isci_tmf_sata_srst_low) {
--			scu_stp_raw_request_construct_task_context(ireq);
--			return SCI_SUCCESS;
--		} else {
--			dev_err(&ireq->owning_controller->pdev->dev,
--				"%s: Request 0x%p received un-handled SAT "
--				"management protocol 0x%x.\n",
--				__func__, ireq, tmf->tmf_code);
-+		dev_err(&ireq->owning_controller->pdev->dev,
-+			"%s: Request 0x%p received un-handled SAT "
-+			"management protocol 0x%x.\n",
-+			__func__, ireq, tmf->tmf_code);
- 
--			return SCI_FAILURE;
--		}
-+		return SCI_FAILURE;
- 	}
- 
- 	if (!sas_protocol_ata(task->task_proto)) {
-@@ -627,34 +621,6 @@ static enum sci_status sci_io_request_construct_basic_sata(struct isci_request *
- 	return status;
- }
- 
--enum sci_status sci_task_request_construct_sata(struct isci_request *ireq)
--{
--	enum sci_status status = SCI_SUCCESS;
--
--	/* check for management protocols */
--	if (test_bit(IREQ_TMF, &ireq->flags)) {
--		struct isci_tmf *tmf = isci_request_access_tmf(ireq);
--
--		if (tmf->tmf_code == isci_tmf_sata_srst_high ||
--		    tmf->tmf_code == isci_tmf_sata_srst_low) {
--			scu_stp_raw_request_construct_task_context(ireq);
--		} else {
--			dev_err(&ireq->owning_controller->pdev->dev,
--				"%s: Request 0x%p received un-handled SAT "
--				"Protocol 0x%x.\n",
--				__func__, ireq, tmf->tmf_code);
--
--			return SCI_FAILURE;
--		}
--	}
--
--	if (status != SCI_SUCCESS)
--		return status;
--	sci_change_state(&ireq->sm, SCI_REQ_CONSTRUCTED);
--
--	return status;
--}
--
- /**
-  * sci_req_tx_bytes - bytes transferred when reply underruns request
-  * @ireq: request that was terminated early
-@@ -756,9 +722,6 @@ sci_io_request_terminate(struct isci_request *ireq)
- 	case SCI_REQ_STP_PIO_WAIT_FRAME:
- 	case SCI_REQ_STP_PIO_DATA_IN:
- 	case SCI_REQ_STP_PIO_DATA_OUT:
--	case SCI_REQ_STP_SOFT_RESET_WAIT_H2D_ASSERTED:
--	case SCI_REQ_STP_SOFT_RESET_WAIT_H2D_DIAG:
--	case SCI_REQ_STP_SOFT_RESET_WAIT_D2H:
- 	case SCI_REQ_ATAPI_WAIT_H2D:
- 	case SCI_REQ_ATAPI_WAIT_PIO_SETUP:
- 	case SCI_REQ_ATAPI_WAIT_D2H:
-@@ -1938,59 +1901,6 @@ sci_io_request_frame_handler(struct isci_request *ireq,
- 		return status;
- 	}
- 
--	case SCI_REQ_STP_SOFT_RESET_WAIT_D2H: {
--		struct dev_to_host_fis *frame_header;
--		u32 *frame_buffer;
--
--		status = sci_unsolicited_frame_control_get_header(&ihost->uf_control,
--								       frame_index,
--								       (void **)&frame_header);
--		if (status != SCI_SUCCESS) {
--			dev_err(&ihost->pdev->dev,
--				"%s: SCIC IO Request 0x%p could not get frame "
--				"header for frame index %d, status %x\n",
--				__func__,
--				stp_req,
--				frame_index,
--				status);
--			return status;
--		}
--
--		switch (frame_header->fis_type) {
--		case FIS_REGD2H:
--			sci_unsolicited_frame_control_get_buffer(&ihost->uf_control,
--								      frame_index,
--								      (void **)&frame_buffer);
--
--			sci_controller_copy_sata_response(&ireq->stp.rsp,
--							       frame_header,
--							       frame_buffer);
--
--			/* The command has completed with error */
--			ireq->scu_status = SCU_TASK_DONE_CHECK_RESPONSE;
--			ireq->sci_status = SCI_FAILURE_IO_RESPONSE_VALID;
--			break;
--
--		default:
--			dev_warn(&ihost->pdev->dev,
--				 "%s: IO Request:0x%p Frame Id:%d protocol "
--				 "violation occurred\n",
--				 __func__,
--				 stp_req,
--				 frame_index);
--
--			ireq->scu_status = SCU_TASK_DONE_UNEXP_FIS;
--			ireq->sci_status = SCI_FAILURE_PROTOCOL_VIOLATION;
--			break;
--		}
--
--		sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
--
--		/* Frame has been decoded return it to the controller */
--		sci_controller_release_frame(ihost, frame_index);
--
--		return status;
--	}
- 	case SCI_REQ_ATAPI_WAIT_PIO_SETUP: {
- 		struct sas_task *task = isci_request_access_task(ireq);
- 
-@@ -2088,57 +1998,6 @@ static enum sci_status stp_request_udma_await_tc_event(struct isci_request *ireq
- 	return status;
- }
- 
--static enum sci_status
--stp_request_soft_reset_await_h2d_asserted_tc_event(struct isci_request *ireq,
--						   u32 completion_code)
--{
--	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
--	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
--		ireq->scu_status = SCU_TASK_DONE_GOOD;
--		ireq->sci_status = SCI_SUCCESS;
--		sci_change_state(&ireq->sm, SCI_REQ_STP_SOFT_RESET_WAIT_H2D_DIAG);
--		break;
--
--	default:
--		/*
--		 * All other completion status cause the IO to be complete.
--		 * If a NAK was received, then it is up to the user to retry
--		 * the request.
--		 */
--		ireq->scu_status = SCU_NORMALIZE_COMPLETION_STATUS(completion_code);
--		ireq->sci_status = SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR;
--		sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
--		break;
--	}
--
--	return SCI_SUCCESS;
--}
--
--static enum sci_status
--stp_request_soft_reset_await_h2d_diagnostic_tc_event(struct isci_request *ireq,
--						     u32 completion_code)
--{
--	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
--	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
--		ireq->scu_status = SCU_TASK_DONE_GOOD;
--		ireq->sci_status = SCI_SUCCESS;
--		sci_change_state(&ireq->sm, SCI_REQ_STP_SOFT_RESET_WAIT_D2H);
--		break;
--
--	default:
--		/* All other completion status cause the IO to be complete.  If
--		 * a NAK was received, then it is up to the user to retry the
--		 * request.
--		 */
--		ireq->scu_status = SCU_NORMALIZE_COMPLETION_STATUS(completion_code);
--		ireq->sci_status = SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR;
--		sci_change_state(&ireq->sm, SCI_REQ_COMPLETED);
--		break;
--	}
--
--	return SCI_SUCCESS;
--}
--
- static enum sci_status atapi_raw_completion(struct isci_request *ireq, u32 completion_code,
- 						  enum sci_base_request_states next)
- {
-@@ -2284,14 +2143,6 @@ sci_io_request_tc_completion(struct isci_request *ireq,
- 	case SCI_REQ_STP_PIO_DATA_OUT:
- 		return pio_data_out_tx_done_tc_event(ireq, completion_code);
- 
--	case SCI_REQ_STP_SOFT_RESET_WAIT_H2D_ASSERTED:
--		return stp_request_soft_reset_await_h2d_asserted_tc_event(ireq,
--									  completion_code);
--
--	case SCI_REQ_STP_SOFT_RESET_WAIT_H2D_DIAG:
--		return stp_request_soft_reset_await_h2d_diagnostic_tc_event(ireq,
--									    completion_code);
--
- 	case SCI_REQ_ABORTING:
- 		return request_aborting_state_tc_event(ireq,
- 						       completion_code);
-@@ -3065,10 +2916,6 @@ static void sci_request_started_state_enter(struct sci_base_state_machine *sm)
- 	 */
- 	if (!task && dev->dev_type == SAS_END_DEV) {
- 		state = SCI_REQ_TASK_WAIT_TC_COMP;
--	} else if (!task &&
--		   (isci_request_access_tmf(ireq)->tmf_code == isci_tmf_sata_srst_high ||
--		    isci_request_access_tmf(ireq)->tmf_code == isci_tmf_sata_srst_low)) {
--		state = SCI_REQ_STP_SOFT_RESET_WAIT_H2D_ASSERTED;
- 	} else if (task && task->task_proto == SAS_PROTOCOL_SMP) {
- 		state = SCI_REQ_SMP_WAIT_RESP;
- 	} else if (task && sas_protocol_ata(task->task_proto) &&
-@@ -3125,31 +2972,6 @@ static void sci_stp_request_started_pio_await_h2d_completion_enter(struct sci_ba
- 	ireq->target_device->working_request = ireq;
- }
- 
--static void sci_stp_request_started_soft_reset_await_h2d_asserted_completion_enter(struct sci_base_state_machine *sm)
--{
--	struct isci_request *ireq = container_of(sm, typeof(*ireq), sm);
--
--	ireq->target_device->working_request = ireq;
--}
--
--static void sci_stp_request_started_soft_reset_await_h2d_diagnostic_completion_enter(struct sci_base_state_machine *sm)
--{
--	struct isci_request *ireq = container_of(sm, typeof(*ireq), sm);
--	struct scu_task_context *tc = ireq->tc;
--	struct host_to_dev_fis *h2d_fis;
--	enum sci_status status;
--
--	/* Clear the SRST bit */
--	h2d_fis = &ireq->stp.cmd;
--	h2d_fis->control = 0;
--
--	/* Clear the TC control bit */
--	tc->control_frame = 0;
--
--	status = sci_controller_continue_io(ireq);
--	WARN_ONCE(status != SCI_SUCCESS, "isci: continue io failure\n");
--}
--
- static const struct sci_base_state sci_request_state_table[] = {
- 	[SCI_REQ_INIT] = { },
- 	[SCI_REQ_CONSTRUCTED] = { },
-@@ -3168,13 +2990,6 @@ static const struct sci_base_state sci_request_state_table[] = {
- 	[SCI_REQ_STP_PIO_DATA_OUT] = { },
- 	[SCI_REQ_STP_UDMA_WAIT_TC_COMP] = { },
- 	[SCI_REQ_STP_UDMA_WAIT_D2H] = { },
--	[SCI_REQ_STP_SOFT_RESET_WAIT_H2D_ASSERTED] = {
--		.enter_state = sci_stp_request_started_soft_reset_await_h2d_asserted_completion_enter,
--	},
--	[SCI_REQ_STP_SOFT_RESET_WAIT_H2D_DIAG] = {
--		.enter_state = sci_stp_request_started_soft_reset_await_h2d_diagnostic_completion_enter,
--	},
--	[SCI_REQ_STP_SOFT_RESET_WAIT_D2H] = { },
- 	[SCI_REQ_TASK_WAIT_TC_COMP] = { },
- 	[SCI_REQ_TASK_WAIT_TC_RESP] = { },
- 	[SCI_REQ_SMP_WAIT_RESP] = { },
-diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
-index be38933..bcf2f37 100644
---- a/drivers/scsi/isci/request.h
-+++ b/drivers/scsi/isci/request.h
-@@ -211,10 +211,6 @@ enum sci_base_request_states {
- 	SCI_REQ_STP_NON_DATA_WAIT_H2D,
- 	SCI_REQ_STP_NON_DATA_WAIT_D2H,
- 
--	SCI_REQ_STP_SOFT_RESET_WAIT_H2D_ASSERTED,
--	SCI_REQ_STP_SOFT_RESET_WAIT_H2D_DIAG,
--	SCI_REQ_STP_SOFT_RESET_WAIT_D2H,
--
- 	/*
- 	 * While in this state the IO request object is waiting for the TC
- 	 * completion notification for the H2D Register FIS
-@@ -446,10 +442,7 @@ sci_task_request_construct(struct isci_host *ihost,
- 			    struct isci_remote_device *idev,
- 			    u16 io_tag,
- 			    struct isci_request *ireq);
--enum sci_status
--sci_task_request_construct_ssp(struct isci_request *ireq);
--enum sci_status
--sci_task_request_construct_sata(struct isci_request *ireq);
-+enum sci_status sci_task_request_construct_ssp(struct isci_request *ireq);
- void sci_smp_request_copy_response(struct isci_request *ireq);
- 
- static inline int isci_task_is_ncq_recovery(struct sas_task *task)
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 0e7429b..48df8e5 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -247,46 +247,6 @@ int isci_task_execute_task(struct sas_task *task, int num, gfp_t gfp_flags)
- 	return 0;
- }
- 
--static enum sci_status isci_sata_management_task_request_build(struct isci_request *ireq)
--{
--	struct isci_tmf *isci_tmf;
--	enum sci_status status;
--
--	if (!test_bit(IREQ_TMF, &ireq->flags))
--		return SCI_FAILURE;
--
--	isci_tmf = isci_request_access_tmf(ireq);
--
--	switch (isci_tmf->tmf_code) {
--
--	case isci_tmf_sata_srst_high:
--	case isci_tmf_sata_srst_low: {
--		struct host_to_dev_fis *fis = &ireq->stp.cmd;
--
--		memset(fis, 0, sizeof(*fis));
--
--		fis->fis_type  =  0x27;
--		fis->flags     &= ~0x80;
--		fis->flags     &= 0xF0;
--		if (isci_tmf->tmf_code == isci_tmf_sata_srst_high)
--			fis->control |= ATA_SRST;
--		else
--			fis->control &= ~ATA_SRST;
--		break;
--	}
--	/* other management commnd go here... */
--	default:
--		return SCI_FAILURE;
--	}
--
--	/* core builds the protocol specific request
--	 *  based on the h2d fis.
--	 */
--	status = sci_task_request_construct_sata(ireq);
--
--	return status;
--}
--
- static struct isci_request *isci_task_request_build(struct isci_host *ihost,
- 						    struct isci_remote_device *idev,
- 						    u16 tag, struct isci_tmf *isci_tmf)
-@@ -326,13 +286,6 @@ static struct isci_request *isci_task_request_build(struct isci_host *ihost,
- 			return NULL;
- 	}
- 
--	if (dev->dev_type == SATA_DEV || (dev->tproto & SAS_PROTOCOL_STP)) {
--		isci_tmf->proto = SAS_PROTOCOL_SATA;
--		status = isci_sata_management_task_request_build(ireq);
--
--		if (status != SCI_SUCCESS)
--			return NULL;
--	}
- 	return ireq;
- }
- 
-@@ -871,53 +824,20 @@ static int isci_task_send_lu_reset_sas(
++	/* ata recovery called from ata-eh */
++	.lldd_ata_check_ready	= isci_ata_check_ready,
++
+ 	/* Port and Adapter management */
+ 	.lldd_clear_nexus_port	= isci_task_clear_nexus_port,
+ 	.lldd_clear_nexus_ha	= isci_task_clear_nexus_ha,
+diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
+index 7e4a9ee..e795645 100644
+--- a/drivers/scsi/isci/port.c
++++ b/drivers/scsi/isci/port.c
+@@ -1663,6 +1663,34 @@ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *ipor
  	return ret;
  }
  
--static int isci_task_send_lu_reset_sata(struct isci_host *ihost,
--				 struct isci_remote_device *idev, u8 *lun)
-+int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
++int isci_ata_check_ready(struct domain_device *dev)
++{
++	struct isci_port *iport = dev->port->lldd_port;
++	struct isci_host *ihost = dev_to_ihost(dev);
++	struct isci_remote_device *idev;
++	unsigned long flags;
++	int rc = 0;
++
++	spin_lock_irqsave(&ihost->scic_lock, flags);
++	idev = isci_lookup_device(dev);
++	spin_unlock_irqrestore(&ihost->scic_lock, flags);
++
++	if (!idev)
++		goto out;
++
++	if (test_bit(IPORT_RESET_PENDING, &iport->state))
++		goto out;
++
++	/* snapshot active phy mask */
++	spin_lock_irqsave(&ihost->scic_lock, flags);
++	rc = !!iport->active_phy_mask;
++	spin_unlock_irqrestore(&ihost->scic_lock, flags);
++ out:
++	isci_put_device(idev);
++
++	return rc;
++}
++
+ void isci_port_deformed(struct asd_sas_phy *phy)
  {
--	int ret = TMF_RESP_FUNC_FAILED;
--	struct isci_tmf tmf;
--
--	/* Send the soft reset to the target */
--	#define ISCI_SRST_TIMEOUT_MS 25000 /* 25 second timeout. */
--	isci_task_build_tmf(&tmf, isci_tmf_sata_srst_high, NULL, NULL);
--
--	ret = isci_task_execute_tmf(ihost, idev, &tmf, ISCI_SRST_TIMEOUT_MS);
--
--	if (ret != TMF_RESP_FUNC_COMPLETE) {
--		dev_dbg(&ihost->pdev->dev,
--			 "%s: Assert SRST failed (%p) = %x",
--			 __func__, idev, ret);
--
--		/* Return the failure so that the LUN reset is escalated
--		 * to a target reset.
--		 */
--	}
--	return ret;
--}
--
--/**
-- * isci_task_lu_reset() - This function is one of the SAS Domain Template
-- *    functions. This is one of the Task Management functoins called by libsas,
-- *    to reset the given lun. Note the assumption that while this call is
-- *    executing, no I/O will be sent by the host to the device.
-- * @lun: This parameter specifies the lun to be reset.
-- *
-- * status, zero indicates success.
-- */
--int isci_task_lu_reset(struct domain_device *domain_device, u8 *lun)
--{
--	struct isci_host *isci_host = dev_to_ihost(domain_device);
-+	struct isci_host *isci_host = dev_to_ihost(dev);
- 	struct isci_remote_device *isci_device;
- 	unsigned long flags;
- 	int ret;
+ 	struct isci_host *ihost = phy->ha->lldd_ha;
+diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
+index 78e1e82..b4a733c 100644
+--- a/drivers/scsi/isci/port.h
++++ b/drivers/scsi/isci/port.h
+@@ -293,4 +293,5 @@ void isci_port_init(
  
- 	spin_lock_irqsave(&isci_host->scic_lock, flags);
--	isci_device = isci_lookup_device(domain_device);
-+	isci_device = isci_lookup_device(dev);
- 	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
- 
- 	dev_dbg(&isci_host->pdev->dev,
- 		"%s: domain_device=%p, isci_host=%p; isci_device=%p\n",
--		 __func__, domain_device, isci_host, isci_device);
-+		 __func__, dev, isci_host, isci_device);
- 
- 	if (!isci_device) {
- 		/* If the device is gone, stop the escalations. */
-@@ -929,8 +849,9 @@ int isci_task_lu_reset(struct domain_device *domain_device, u8 *lun)
- 	set_bit(IDEV_EH, &isci_device->flags);
- 
- 	/* Send the task management part of the reset. */
--	if (sas_protocol_ata(domain_device->tproto)) {
--		ret = isci_task_send_lu_reset_sata(isci_host, isci_device, lun);
-+	if (dev_is_sata(dev)) {
-+		sas_ata_schedule_reset(dev);
-+		ret = TMF_RESP_FUNC_COMPLETE;
- 	} else
- 		ret = isci_task_send_lu_reset_sas(isci_host, isci_device, lun);
- 
-diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
-index df8d440..8ffcdc9 100644
---- a/drivers/scsi/isci/task.h
-+++ b/drivers/scsi/isci/task.h
-@@ -86,8 +86,6 @@ enum isci_tmf_function_codes {
- 	isci_tmf_func_none      = 0,
- 	isci_tmf_ssp_task_abort = TMF_ABORT_TASK,
- 	isci_tmf_ssp_lun_reset  = TMF_LU_RESET,
--	isci_tmf_sata_srst_high = TMF_LU_RESET + 0x100, /* Non SCSI */
--	isci_tmf_sata_srst_low  = TMF_LU_RESET + 0x101  /* Non SCSI */
- };
- /**
-  * struct isci_tmf - This class represents the task management object which
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 84eae8b..f90fdcf 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -24,6 +24,7 @@
- #include <linux/scatterlist.h>
- #include <linux/slab.h>
- #include <linux/async.h>
-+#include <linux/export.h>
- 
- #include <scsi/sas_ata.h>
- #include "sas_internal.h"
-@@ -757,6 +758,7 @@ void sas_ata_schedule_reset(struct domain_device *dev)
- 	ata_port_schedule_eh(ap);
- 	spin_unlock_irqrestore(ap->lock, flags);
- }
-+EXPORT_SYMBOL_GPL(sas_ata_schedule_reset);
- 
- void sas_ata_wait_eh(struct domain_device *dev)
- {
+ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *iport,
+ 				 struct isci_phy *iphy);
++int isci_ata_check_ready(struct domain_device *dev);
+ #endif /* !defined(_ISCI_PORT_H_) */
 
