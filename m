@@ -1,107 +1,85 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT PATCH v2 00/15] isci update for 3.3 (part1)
-Date: Thu, 05 Jan 2012 17:54:02 -0800
-Message-ID: <1325814844.17049.8.camel@ultramagnus.opencreations.com>
-References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH block:for-3.3/core] cfq: merged request shouldn't jump to a
+ different cfqq
+Date: Thu, 5 Jan 2012 18:17:07 -0800
+Message-ID: <20120106021707.GA6276@google.com>
+References: <20111228211918.GA3516@google.com>
+ <20120103173500.GB31746@google.com>
+ <20120103175922.GC31746@google.com>
+ <20120103200906.GG31746@google.com>
+ <4F03631C.8080501@kernel.dk>
+ <20120103221301.GH31746@google.com>
+ <20120103223505.GI31746@google.com>
+ <20120105012445.GP31746@google.com>
+ <alpine.LSU.2.00.1201051026090.2009@eggly.anvils>
+ <20120105183842.GF18486@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:11876 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754602Ab2AFByH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2012 20:54:07 -0500
-Received: by ggnq1 with SMTP id q1so513834ggn.25
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Jan 2012 17:54:05 -0800 (PST)
-In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120105183842.GF18486@google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Shaohua Li <shaohua.li@intel.com>, Hugh Dickins <hughd@google.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-On Wed, 2012-01-04 at 01:32 -0800, Dan Williams wrote:
-> These are the updates to the isci driver that have no conflicts with the
-> pending libsas updates [1].  A follow-on set is based on the new
-> sas_get_local_phy() interface [2], as well as the ability to schedule a
-> libata-eh managed reset via sas_ata_schedule_reset().
-> 
-> It includes a rebased version of the platform / silicon support updates
-> submitted a couple weeks back [3].  These patches were rebased to account for
-> the movement of isci_firmware.bin to linux-firmware.git.
-> 
-> The new patches are fixups for wide-ported targets and other
-> miscellaneous updates.
-> 
-> [1]: http://marc.info/?l=linux-scsi&m=132460922902788&w=2
-> [2]: http://marc.info/?l=linux-scsi&m=132460936902872&w=2
-> [3]: http://marc.info/?l=linux-scsi&m=132408329807210&w=2
-> 
-> ---
-> The following changes since commit 7061bba1da7acb837d6a982648a8306ddc9d7409:
+When two requests are merged, if the absorbed request is older than
+the absorbing one, cfq_merged_requests() tries to reposition it in the
+cfqq->fifo list by list_move()'ing the absorbing request to the
+absorbed one before removing it.
 
-scsi-misc rebased, so 'devel' needs to follow suit, no content changed
-new top commit is 6ac8595:
+This works if both requests are on the same cfqq but nothing
+guarantees that and the code ends up moving the merged request to a
+different cfqq's fifo list without adjusting the rest.  This leads to
+the following failures.
 
-The following changes since commit 5c41dc3a79150e93e5d050871a10b761be8281a1:
+* A request may be on the fifo list of a cfqq without holding
+  reference to it and the cfqq can be freed before requst is finished.
+  Among other things, this triggers list debug warning and slab debug
+  use-after-free warning.
 
-  [SCSI] lpfc 8.3.28: Update driver version to 8.3.28 (2011-12-15 10:57:45 +0400)
+* As a request can be on the wrong fifo queue, it may be issued and
+  completed before its cfqq is scheduled.  If the cfqq didn't have
+  other requests on it, it would be empty by the time it's dispatched
+  triggering BUG_ON() in cfq_dispatch_request().
 
-are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git devel
+Fix it by making cfq_merged_requests() scan the absorbing request's
+fifo list for the correct slot and move there instead.
 
-Bartek Nowakowski (1):
-      isci: enable wide port targets
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Hugh Dickins <hughd@google.com>
+Cc: stable@vger.kernel.org
+---
+It survived my testing long enough and I'm relatively confident this
+should fix the crash but I might have gotten the scanning wrong, so
+please pay extra attention there.
 
-Ben Hutchings (1):
-      isci, firmware: Remove isci fallback parameter blob and generator
+I suspect we just didn't have enough backward request-request merges
+before the recent plug merge updates to trigger this bug.
 
-Dan Williams (2):
-      isci: cleanup oem parameter and recipe handling
-      isci: update version to 1.1
+Thanks.
 
-Dave Jiang (1):
-      isci: oem parameter format v1.1 (ssc select)
+ block/cfq-iosched.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-Jeff Skirvin (3):
-      isci: update afe (analog-front-end) recipe for C1
-      isci: oem parameter format v1.3 (cable select)
-      isci: link speeds default to gen 2
-
-Maciej Trela (1):
-      isci: remove unused 'isci_tmf->device' field
-
-Marcin Tomczak (6):
-      isci: performance-fix, shorten default "no outbound task" timeout
-      isci: Fix IO fails when pull cable from phy in x4 wideport in MPC mode.
-      isci: allow more time for wide port targets
-      isci: fix io failures while wide port links are coming up
-      isci: fix start OOB
-      isci: fix, prevent port from getting stuck in the 'configuring' state
-
- drivers/scsi/Kconfig                   |    5 -
- drivers/scsi/isci/firmware/Makefile    |   19 --
- drivers/scsi/isci/firmware/README      |   36 ----
- drivers/scsi/isci/firmware/create_fw.c |   99 ---------
- drivers/scsi/isci/firmware/create_fw.h |   77 -------
- drivers/scsi/isci/host.c               |  340 ++++++++++++++++++++++++-------
- drivers/scsi/isci/host.h               |   27 +++-
- drivers/scsi/isci/init.c               |   25 ++-
- drivers/scsi/isci/isci.h               |    1 +
- drivers/scsi/isci/phy.c                |  172 +++++++++++------
- drivers/scsi/isci/port.c               |  104 ++++++-----
- drivers/scsi/isci/port.h               |   10 +
- drivers/scsi/isci/port_config.c        |   35 ++--
- drivers/scsi/isci/probe_roms.c         |    2 +-
- drivers/scsi/isci/probe_roms.h         |   89 ++++++++-
- drivers/scsi/isci/remote_device.c      |   10 +-
- drivers/scsi/isci/task.c               |    2 +-
- drivers/scsi/isci/task.h               |    7 +-
- firmware/Makefile                      |    1 -
- firmware/isci/isci_firmware.bin.ihex   |   16 --
- 20 files changed, 610 insertions(+), 467 deletions(-)
- delete mode 100644 drivers/scsi/isci/firmware/Makefile
- delete mode 100644 drivers/scsi/isci/firmware/README
- delete mode 100644 drivers/scsi/isci/firmware/create_fw.c
- delete mode 100644 drivers/scsi/isci/firmware/create_fw.h
- delete mode 100644 firmware/isci/isci_firmware.bin.ihex
-
-
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 163263d..a235cf3 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -1663,8 +1663,15 @@ cfq_merged_requests(struct request_queue *q, struct request *rq,
+ 	 */
+ 	if (!list_empty(&rq->queuelist) && !list_empty(&next->queuelist) &&
+ 	    time_before(rq_fifo_time(next), rq_fifo_time(rq))) {
+-		list_move(&rq->queuelist, &next->queuelist);
++		struct request *pos = rq;
++
+ 		rq_set_fifo_time(rq, rq_fifo_time(next));
++
++		list_for_each_entry_continue_reverse(pos, &cfqq->fifo, queuelist)
++			if (time_before_eq(rq_fifo_time(pos), rq_fifo_time(rq)))
++				break;
++		if (rq != pos)
++			list_move(&rq->queuelist, &pos->queuelist);
+ 	}
+ 
+ 	if (cfqq->next_rq == next)
