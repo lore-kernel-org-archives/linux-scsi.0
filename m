@@ -1,83 +1,109 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 05/14] libsas: perform sas-transport resets in shost->workq
- context
-Date: Thu, 05 Jan 2012 16:59:26 -0800
-Message-ID: <20120106005925.11464.3339.stgit@localhost6.localdomain6>
+Subject: [PATCH v3 06/14] libsas: sas_phy_enable via transport_sas_phy_reset
+Date: Thu, 05 Jan 2012 16:59:31 -0800
+Message-ID: <20120106005931.11464.75965.stgit@localhost6.localdomain6>
 References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:59724 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932924Ab2AFA7c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2012 19:59:32 -0500
 In-Reply-To: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-Extend the sas transport class to allow transport users to attach extra
-data to a sas_phy (->hostdata).  Use this area in libsas to move resets
-to workq context in preparation for scheduling ata device resets through
-libata-eh.
+Execute the link-reset triggered by sas_phy_enable via
+transport_sas_phy_reset so that it can be managed by libata.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_event.c    |    2 +
- drivers/scsi/libsas/sas_init.c     |   59 +++++++++++++++++++++++++++++++++++-
- drivers/scsi/libsas/sas_internal.h |   10 ++++++
- drivers/scsi/scsi_transport_sas.c  |   18 ++++++++++-
- include/scsi/scsi_transport_sas.h  |    5 ++-
- 5 files changed, 90 insertions(+), 4 deletions(-)
+ drivers/scsi/libsas/sas_init.c      |   57 ++++++++++++++++++++++++++++++-----
+ drivers/scsi/libsas/sas_internal.h  |    3 ++
+ drivers/scsi/libsas/sas_scsi_host.c |    1 -
+ include/scsi/libsas.h               |    1 -
+ 4 files changed, 52 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 933d757..dbfacee 100644
---- a/drivers/scsi/libsas/sas_event.c
-+++ b/drivers/scsi/libsas/sas_event.c
-@@ -27,7 +27,7 @@
- #include "sas_internal.h"
- #include "sas_dump.h"
- 
--static void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
-+void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work)
- {
- 	if (!test_bit(SAS_HA_REGISTERED, &ha->state))
- 		return;
 diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index e17fe35..cb65adf 100644
+index a15fb86..53ae893 100644
 --- a/drivers/scsi/libsas/sas_init.c
 +++ b/drivers/scsi/libsas/sas_init.c
-@@ -290,9 +290,66 @@ int sas_set_phy_speed(struct sas_phy *phy,
+@@ -249,15 +249,15 @@ static int transport_sas_phy_reset(struct sas_phy *phy, int hard_reset)
  	return ret;
  }
  
-+static void sas_phy_release(struct sas_phy *phy)
+-int sas_phy_enable(struct sas_phy *phy, int enable)
++static int sas_phy_enable(struct sas_phy *phy, int enable)
+ {
+ 	int ret;
+-	enum phy_func command;
++	enum phy_func cmd;
+ 
+ 	if (enable)
+-		command = PHY_FUNC_LINK_RESET;
++		cmd = PHY_FUNC_LINK_RESET;
+ 	else
+-		command = PHY_FUNC_DISABLE;
++		cmd = PHY_FUNC_DISABLE;
+ 
+ 	if (scsi_is_sas_phy_local(phy)) {
+ 		struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
+@@ -266,15 +266,21 @@ int sas_phy_enable(struct sas_phy *phy, int enable)
+ 		struct sas_internal *i =
+ 			to_sas_internal(sas_ha->core.shost->transportt);
+ 
+-		if (!enable) {
++		if (enable)
++			ret = transport_sas_phy_reset(phy, 0);
++		else {
+ 			sas_phy_disconnected(asd_phy);
+ 			sas_ha->notify_phy_event(asd_phy, PHYE_LOSS_OF_SIGNAL);
++			ret = i->dft->lldd_control_phy(asd_phy, cmd, NULL);
+ 		}
+-		ret = i->dft->lldd_control_phy(asd_phy, command, NULL);
+ 	} else {
+ 		struct sas_rphy *rphy = dev_to_rphy(phy->dev.parent);
+ 		struct domain_device *ddev = sas_find_dev_by_rphy(rphy);
+-		ret = sas_smp_phy_control(ddev, phy->number, command, NULL);
++
++		if (enable)
++			ret = transport_sas_phy_reset(phy, 0);
++		else
++			ret = sas_smp_phy_control(ddev, phy->number, cmd, NULL);
+ 	}
+ 	return ret;
+ }
+@@ -357,6 +363,13 @@ static void phy_reset_work(struct work_struct *work)
+ 	d->reset_result = transport_sas_phy_reset(d->phy, d->hard_reset);
+ }
+ 
++static void phy_enable_work(struct work_struct *work)
 +{
-+	kfree(phy->hostdata);
-+	phy->hostdata = NULL;
++	struct sas_phy_data *d = container_of(work, typeof(*d), enable_work);
++
++	d->enable_result = sas_phy_enable(d->phy, d->enable);
 +}
 +
-+static void phy_reset_work(struct work_struct *work)
-+{
-+	struct sas_phy_data *d = container_of(work, typeof(*d), reset_work);
-+
-+	d->reset_result = sas_phy_reset(d->phy, d->hard_reset);
-+}
-+
-+static int sas_phy_setup(struct sas_phy *phy)
-+{
-+	struct sas_phy_data *d = kzalloc(sizeof(*d), GFP_KERNEL);
-+
-+	if (!d)
-+		return -ENOMEM;
-+
-+	mutex_init(&d->event_lock);
-+	INIT_WORK(&d->reset_work, phy_reset_work);
-+	d->phy = phy;
-+	phy->hostdata = d;
-+
-+	return 0;
-+}
-+
-+static int queue_phy_reset(struct sas_phy *phy, int hard_reset)
+ static int sas_phy_setup(struct sas_phy *phy)
+ {
+ 	struct sas_phy_data *d = kzalloc(sizeof(*d), GFP_KERNEL);
+@@ -366,6 +379,7 @@ static int sas_phy_setup(struct sas_phy *phy)
+ 
+ 	mutex_init(&d->event_lock);
+ 	INIT_WORK(&d->reset_work, phy_reset_work);
++	INIT_WORK(&d->enable_work, phy_enable_work);
+ 	d->phy = phy;
+ 	phy->hostdata = d;
+ 
+@@ -399,8 +413,35 @@ static int queue_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	return rc;
+ }
+ 
++static int queue_phy_enable(struct sas_phy *phy, int enable)
 +{
 +	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
 +	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
@@ -89,118 +115,63 @@ index e17fe35..cb65adf 100644
 +
 +	/* libsas workqueue coordinates ata-eh reset with discovery */
 +	mutex_lock(&d->event_lock);
-+	d->reset_result = 0;
-+	d->hard_reset = hard_reset;
++	d->enable_result = 0;
++	d->enable = enable;
 +
 +	spin_lock_irq(&ha->state_lock);
-+	sas_queue_work(ha, &d->reset_work);
++	sas_queue_work(ha, &d->enable_work);
 +	spin_unlock_irq(&ha->state_lock);
 +
 +	rc = sas_drain_work(ha);
 +	if (rc == 0)
-+		rc = d->reset_result;
++		rc = d->enable_result;
 +	mutex_unlock(&d->event_lock);
 +
 +	return rc;
 +}
 +
  static struct sas_function_template sft = {
- 	.phy_enable = sas_phy_enable,
--	.phy_reset = sas_phy_reset,
-+	.phy_reset = queue_phy_reset,
-+	.phy_setup = sas_phy_setup,
-+	.phy_release = sas_phy_release,
- 	.set_phy_speed = sas_set_phy_speed,
- 	.get_linkerrors = sas_get_linkerrors,
- 	.smp_handler = sas_smp_handler,
+-	.phy_enable = sas_phy_enable,
++	.phy_enable = queue_phy_enable,
+ 	.phy_reset = queue_phy_reset,
+ 	.phy_setup = sas_phy_setup,
+ 	.phy_release = sas_phy_release,
 diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 662ffcb..9ba65e0 100644
+index ae9698d..9e960b2 100644
 --- a/drivers/scsi/libsas/sas_internal.h
 +++ b/drivers/scsi/libsas/sas_internal.h
-@@ -38,6 +38,15 @@
- #define TO_SAS_TASK(_scsi_cmd)  ((void *)(_scsi_cmd)->host_scribble)
- #define ASSIGN_SAS_TASK(_sc, _t) do { (_sc)->host_scribble = (void *) _t; } while (0)
+@@ -45,6 +45,9 @@ struct sas_phy_data {
+ 	int hard_reset;
+ 	int reset_result;
+ 	struct work_struct reset_work;
++	int enable;
++	int enable_result;
++	struct work_struct enable_work;
+ };
  
-+struct sas_phy_data {
-+	/* let reset be performed in sas_queue_work() context */
-+	struct sas_phy *phy;
-+	struct mutex event_lock;
-+	int hard_reset;
-+	int reset_result;
-+	struct work_struct reset_work;
-+};
-+
  void sas_scsi_recover_host(struct Scsi_Host *shost);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 57a3484..b849dcd 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -1077,7 +1077,6 @@ EXPORT_SYMBOL_GPL(sas_change_queue_type);
+ EXPORT_SYMBOL_GPL(sas_bios_param);
+ EXPORT_SYMBOL_GPL(sas_task_abort);
+ EXPORT_SYMBOL_GPL(sas_phy_reset);
+-EXPORT_SYMBOL_GPL(sas_phy_enable);
+ EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
+ EXPORT_SYMBOL_GPL(sas_eh_bus_reset_handler);
+ EXPORT_SYMBOL_GPL(sas_slave_alloc);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index a32407f..04b74bf 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -630,7 +630,6 @@ extern int sas_unregister_ha(struct sas_ha_struct *);
  
- int sas_show_class(enum sas_class class, char *buf);
-@@ -66,6 +75,7 @@ void sas_porte_broadcast_rcvd(struct work_struct *work);
- void sas_porte_link_reset_err(struct work_struct *work);
- void sas_porte_timer_event(struct work_struct *work);
- void sas_porte_hard_reset(struct work_struct *work);
-+void sas_queue_work(struct sas_ha_struct *ha, struct work_struct *work);
- 
- int sas_notify_lldd_dev_found(struct domain_device *);
- void sas_notify_lldd_dev_gone(struct domain_device *);
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 9421bae..ab3bd0b 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -652,9 +652,21 @@ sas_phy_linkerror_attr(running_disparity_error_count);
- sas_phy_linkerror_attr(loss_of_dword_sync_count);
- sas_phy_linkerror_attr(phy_reset_problem_count);
- 
-+static int sas_phy_setup(struct transport_container *tc, struct device *dev,
-+			 struct device *cdev)
-+{
-+	struct sas_phy *phy = dev_to_phy(dev);
-+	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
-+	struct sas_internal *i = to_sas_internal(shost->transportt);
-+
-+	if (i->f->phy_setup)
-+		i->f->phy_setup(phy);
-+
-+	return 0;
-+}
- 
- static DECLARE_TRANSPORT_CLASS(sas_phy_class,
--		"sas_phy", NULL, NULL, NULL);
-+		"sas_phy", sas_phy_setup, NULL, NULL);
- 
- static int sas_phy_match(struct attribute_container *cont, struct device *dev)
- {
-@@ -678,7 +690,11 @@ static int sas_phy_match(struct attribute_container *cont, struct device *dev)
- static void sas_phy_release(struct device *dev)
- {
- 	struct sas_phy *phy = dev_to_phy(dev);
-+	struct Scsi_Host *shost = dev_to_shost(phy->dev.parent);
-+	struct sas_internal *i = to_sas_internal(shost->transportt);
- 
-+	if (i->f->phy_release)
-+		i->f->phy_release(phy);
- 	put_device(dev->parent);
- 	kfree(phy);
- }
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 6d14daa..42817fa 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -75,7 +75,8 @@ struct sas_phy {
- 	/* for the list of phys belonging to a port */
- 	struct list_head	port_siblings;
- 
--	struct work_struct      reset_work;
-+	/* available to the lldd */
-+	void			*hostdata;
- };
- 
- #define dev_to_phy(d) \
-@@ -169,6 +170,8 @@ struct sas_function_template {
- 	int (*get_bay_identifier)(struct sas_rphy *);
- 	int (*phy_reset)(struct sas_phy *, int);
- 	int (*phy_enable)(struct sas_phy *, int);
-+	int (*phy_setup)(struct sas_phy *);
-+	void (*phy_release)(struct sas_phy *);
- 	int (*set_phy_speed)(struct sas_phy *, struct sas_phy_linkrates *);
- 	int (*smp_handler)(struct Scsi_Host *, struct sas_rphy *, struct request *);
- };
+ int sas_set_phy_speed(struct sas_phy *phy,
+ 		      struct sas_phy_linkrates *rates);
+-int sas_phy_enable(struct sas_phy *phy, int enabled);
+ int sas_phy_reset(struct sas_phy *phy, int hard_reset);
+ int sas_queue_up(struct sas_task *task);
+ extern int sas_queuecommand(struct Scsi_Host * ,struct scsi_cmnd *);
 
