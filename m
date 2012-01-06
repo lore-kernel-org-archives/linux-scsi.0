@@ -1,115 +1,107 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT PATCH v3 00/14] libsas: eh reworks (ata-eh vs discovery,
- races, ...)
-Date: Thu, 05 Jan 2012 17:46:40 -0800
-Message-ID: <1325814402.17049.5.camel@ultramagnus.opencreations.com>
-References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
+Subject: Re: [GIT PATCH v2 00/15] isci update for 3.3 (part1)
+Date: Thu, 05 Jan 2012 17:54:02 -0800
+Message-ID: <1325814844.17049.8.camel@ultramagnus.opencreations.com>
+References: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.21]:11876 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754602Ab2AFByH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2012 20:54:07 -0500
+Received: by ggnq1 with SMTP id q1so513834ggn.25
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Jan 2012 17:54:05 -0800 (PST)
+In-Reply-To: <20120104093015.9147.24234.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2012-01-05 at 16:59 -0800, Dan Williams wrote:
-> Note, the patches mailed with this update only include the libsas patches
-> that have been revised since v2, and the isci updates that were
-> dependent on these changes.
+On Wed, 2012-01-04 at 01:32 -0800, Dan Williams wrote:
+> These are the updates to the isci driver that have no conflicts with the
+> pending libsas updates [1].  A follow-on set is based on the new
+> sas_get_local_phy() interface [2], as well as the ability to schedule a
+> libata-eh managed reset via sas_ata_schedule_reset().
 > 
-> For the full set in proper order see the current state of the 'libsas'
-> branch in isci.git (commit c3766a3):
+> It includes a rebased version of the platform / silicon support updates
+> submitted a couple weeks back [3].  These patches were rebased to account for
+> the movement of isci_firmware.bin to linux-firmware.git.
+> 
+> The new patches are fixups for wide-ported targets and other
+> miscellaneous updates.
+> 
+> [1]: http://marc.info/?l=linux-scsi&m=132460922902788&w=2
+> [2]: http://marc.info/?l=linux-scsi&m=132460936902872&w=2
+> [3]: http://marc.info/?l=linux-scsi&m=132408329807210&w=2
+> 
+> ---
+> The following changes since commit 7061bba1da7acb837d6a982648a8306ddc9d7409:
 
-Just noticed that scsi-misc was rebased since last checked.   Patch kit
-re-flowed (none of the contents changed).  'libsas' is now at commit
-5c41dc3:
+scsi-misc rebased, so 'devel' needs to follow suit, no content changed
+new top commit is 6ac8595:
 
 The following changes since commit 5c41dc3a79150e93e5d050871a10b761be8281a1:
 
   [SCSI] lpfc 8.3.28: Update driver version to 8.3.28 (2011-12-15 10:57:45 +0400)
 
 are available in the git repository at:
-  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git devel
 
-Dan Williams (33):
-      libsas: remove unused ata_task_resp fields
-      libsas: kill sas_slave_destroy
-      libsas: fix domain_device leak
-      libsas: fix leak of dev->sata_dev.identify_[packet_]device
-      libsas: replace event locks with atomic bitops
-      libsas: convert ha->state to flags
-      libsas: introduce sas_drain_work()
-      libsas: remove ata_port.lock management duties from lldds
-      libsas: prevent domain rediscovery competing with ata error handling
-      libsas: use ->set_dmamode to notify lldds of NCQ parameters
-      libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
-      libsas: close error handling vs sas_ata_task_done() race
-      libsas: prevent double completion of scmds from eh
-      libsas: fix timeout vs completion race
-      libsas: let libata handle command timeouts
-      libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
-      libsas: use libata-eh-reset for sata rediscovery fis transmit failures
-      libsas: perform sas-transport resets in shost->workq context
-      libsas: execute transport link resets with libata-eh via host workqueue
-      libsas: sas_phy_enable via transport_sas_phy_reset
-      libsas: async ata-eh
-      libsas: poll for ata device readiness after reset
-      libsas: don't mark expanders as gone when a child device is removed
-      libsas: check for 'gone' expanders in smp_execute_task()
-      libsas: fix sas_find_local_phy(), take phy references
-      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
-      isci: kill iphy->isci_port lookups
-      isci: kill isci_port->status
-      isci: fix interpretation of "hard" reset
-      isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
-      isci: ->lldd_ata_check_ready handler
-      isci: remove bus and reset handlers
-      isci: remove IDEV_EH hack to disable "discovery-time" ata resets
+Bartek Nowakowski (1):
+      isci: enable wide port targets
 
-Jeff Skirvin (2):
-      libsas: Remove redundant phy state notification calls.
-      libsas: add mutex for SMP task execution
+Ben Hutchings (1):
+      isci, firmware: Remove isci fallback parameter blob and generator
 
- Documentation/scsi/libsas.txt       |   15 -
- drivers/ata/libata-eh.c             |    1 +
- drivers/ata/libata.h                |    1 -
- drivers/scsi/aic94xx/aic94xx.h      |    2 +
- drivers/scsi/aic94xx/aic94xx_dev.c  |   38 ++-
- drivers/scsi/aic94xx/aic94xx_init.c |    5 +-
- drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 +-
- drivers/scsi/isci/host.c            |    8 +-
- drivers/scsi/isci/host.h            |   19 +-
- drivers/scsi/isci/init.c            |   13 +-
- drivers/scsi/isci/phy.c             |   18 +-
- drivers/scsi/isci/phy.h             |    1 -
- drivers/scsi/isci/port.c            |  220 ++++++------
- drivers/scsi/isci/port.h            |   11 +-
- drivers/scsi/isci/remote_device.c   |   32 +--
- drivers/scsi/isci/remote_device.h   |    7 +-
- drivers/scsi/isci/request.c         |  198 +----------
- drivers/scsi/isci/request.h         |    9 +-
- drivers/scsi/isci/task.c            |  158 ++-------
- drivers/scsi/isci/task.h            |   40 --
- drivers/scsi/libsas/sas_ata.c       |  685 +++++++++++++++--------------------
- drivers/scsi/libsas/sas_discover.c  |  151 +++++++--
- drivers/scsi/libsas/sas_event.c     |   89 +++++-
- drivers/scsi/libsas/sas_expander.c  |  107 ++++--
- drivers/scsi/libsas/sas_init.c      |  192 +++++++++-
- drivers/scsi/libsas/sas_internal.h  |   73 ++--
- drivers/scsi/libsas/sas_phy.c       |   12 +-
- drivers/scsi/libsas/sas_port.c      |   24 +-
- drivers/scsi/libsas/sas_scsi_host.c |  299 +++++++---------
- drivers/scsi/mvsas/mv_init.c        |    1 -
- drivers/scsi/mvsas/mv_sas.c         |   11 +-
- drivers/scsi/pm8001/pm8001_init.c   |    1 -
- drivers/scsi/pm8001/pm8001_sas.c    |   29 +-
- drivers/scsi/scsi_transport_sas.c   |   59 +++-
- include/linux/libata.h              |    1 +
- include/scsi/libsas.h               |   59 ++--
- include/scsi/sas_ata.h              |   26 +-
- include/scsi/scsi_transport_sas.h   |   12 +-
- 38 files changed, 1292 insertions(+), 1344 deletions(-)
+Dan Williams (2):
+      isci: cleanup oem parameter and recipe handling
+      isci: update version to 1.1
+
+Dave Jiang (1):
+      isci: oem parameter format v1.1 (ssc select)
+
+Jeff Skirvin (3):
+      isci: update afe (analog-front-end) recipe for C1
+      isci: oem parameter format v1.3 (cable select)
+      isci: link speeds default to gen 2
+
+Maciej Trela (1):
+      isci: remove unused 'isci_tmf->device' field
+
+Marcin Tomczak (6):
+      isci: performance-fix, shorten default "no outbound task" timeout
+      isci: Fix IO fails when pull cable from phy in x4 wideport in MPC mode.
+      isci: allow more time for wide port targets
+      isci: fix io failures while wide port links are coming up
+      isci: fix start OOB
+      isci: fix, prevent port from getting stuck in the 'configuring' state
+
+ drivers/scsi/Kconfig                   |    5 -
+ drivers/scsi/isci/firmware/Makefile    |   19 --
+ drivers/scsi/isci/firmware/README      |   36 ----
+ drivers/scsi/isci/firmware/create_fw.c |   99 ---------
+ drivers/scsi/isci/firmware/create_fw.h |   77 -------
+ drivers/scsi/isci/host.c               |  340 ++++++++++++++++++++++++-------
+ drivers/scsi/isci/host.h               |   27 +++-
+ drivers/scsi/isci/init.c               |   25 ++-
+ drivers/scsi/isci/isci.h               |    1 +
+ drivers/scsi/isci/phy.c                |  172 +++++++++++------
+ drivers/scsi/isci/port.c               |  104 ++++++-----
+ drivers/scsi/isci/port.h               |   10 +
+ drivers/scsi/isci/port_config.c        |   35 ++--
+ drivers/scsi/isci/probe_roms.c         |    2 +-
+ drivers/scsi/isci/probe_roms.h         |   89 ++++++++-
+ drivers/scsi/isci/remote_device.c      |   10 +-
+ drivers/scsi/isci/task.c               |    2 +-
+ drivers/scsi/isci/task.h               |    7 +-
+ firmware/Makefile                      |    1 -
+ firmware/isci/isci_firmware.bin.ihex   |   16 --
+ 20 files changed, 610 insertions(+), 467 deletions(-)
+ delete mode 100644 drivers/scsi/isci/firmware/Makefile
+ delete mode 100644 drivers/scsi/isci/firmware/README
+ delete mode 100644 drivers/scsi/isci/firmware/create_fw.c
+ delete mode 100644 drivers/scsi/isci/firmware/create_fw.h
+ delete mode 100644 firmware/isci/isci_firmware.bin.ihex
 
 
