@@ -1,10 +1,9 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH block:for-3.3/core] cfq: merged request shouldn't jump
- to a different cfqq
-Date: Thu, 5 Jan 2012 19:30:12 -0800
-Message-ID: <20120106033012.GE6276@google.com>
-References: <4F03631C.8080501@kernel.dk>
- <20120103221301.GH31746@google.com>
+Subject: [PATCH block:for-3.3/core] block: disable
+ ELEVATOR_INSERT_SORT_MERGE
+Date: Thu, 5 Jan 2012 19:52:47 -0800
+Message-ID: <20120106035247.GF6276@google.com>
+References: <20120103221301.GH31746@google.com>
  <20120103223505.GI31746@google.com>
  <20120105012445.GP31746@google.com>
  <alpine.LSU.2.00.1201051026090.2009@eggly.anvils>
@@ -13,47 +12,81 @@ References: <4F03631C.8080501@kernel.dk>
  <20120106023638.GC6276@google.com>
  <1325819655.22361.513.camel@sli10-conroe>
  <20120106030406.GD6276@google.com>
+ <20120106033012.GE6276@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-next-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20120106030406.GD6276@google.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20120106033012.GE6276@google.com>
+Sender: linux-next-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>, Hugh Dickins <hughd@google.com>, Shaohua Li <shaohua.li@intel.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, x86@kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Ummmm... I've been looking at the code and currently I think the best
-option is yank out plug merging for this merge window.
+5e84ea3a9c "block: attempt to merge with existing requests on plug
+flush" added support for merging requests on plug flush and 274193224c
+"block: recursive merge requests" added recursive merging.
 
-Bypassing rqhash for request merging doesn't seem like a good idea.
-rqhash itself is, at this point, redundant and the limitation that it
-can only find requests by the ending sectors lead to weird designs.
-The single ->last_merge was okay but the recursive back merging is
-just ugly.  What it should be doing is trying back merge and then
-front merge once for each request insertion as the usual merge path
-does.
+Because these mergings happen before the request is inserted on the
+elevator, the usual elv_latter/former_request() can't be used to
+locate merge candidates.  It instead used bio merging mechanism -
+last_merge hint and rqhash; unfortunately, this means that the
+elevator doesn't have a say in which are allowed to merge and which
+aren't.
 
-We can't do attempt_back/front_merge() for INSERT_MERGE at this point
-because elv_latter/former_request() only works for requests which are
-already on elevator and, unfortunately, putting a request onto cfq may
-kick the queue directly and the request might already be gone by the
-time we try to merge it.
+For cfq, this resulted in merges across different cfqq's which led to
+crashes as requests jump between different cfqq's unexpectedly.
 
-For this merge window, I think we better just disable INSERT_MERGE.
+Proper solution would be improving merge mechanism such that we can
+always query elevator to find out merge candidates and remove rqhash;
+however, the merge window is already upon us.  Disable
+INSERT_SORT_MERGE for now.
 
-A mid-term solution could be changing elevator interface such that
-elevator_add_req_fn() doesn't kick the queue directly but notify
-elevator core that the queue needs kicking via return value, so that
-merging can happen before kicking the queue.  Note that there's a
-caveat here.  Merging might make kicking unnecessary or wrong.
+For detailed discussion of the bug:
 
-Better solution would be changing elevator merge logic so that it has
-"give me request closest to this offset" interface and then use
-prev/next from there to find out merge candidates for both bio-rq and
-rq-rq merges and just kill rqhash.
+ http://thread.gmane.org/gmane.linux.kernel.next/20064/focus=20159
 
-Thanks.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Hugh Dickins <hughd@google.com>
+Cc: stable@vger.kernel.org
+---
+ block/blk-core.c |    5 ++++-
+ block/elevator.c |    5 +++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
 
--- 
-tejun
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 8fbdac7..7db6afa 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2859,11 +2859,14 @@ void blk_flush_plug_list(struct blk_plug *plug, bool from_schedule)
+ 
+ 		/*
+ 		 * rq is already accounted, so use raw insert
++		 *
++		 * FIXME: We want INSERT_SORT_MERGE for non-FLUSH/FUA
++		 * requests but it's currently broken.
+ 		 */
+ 		if (rq->cmd_flags & (REQ_FLUSH | REQ_FUA))
+ 			__elv_add_request(q, rq, ELEVATOR_INSERT_FLUSH);
+ 		else
+-			__elv_add_request(q, rq, ELEVATOR_INSERT_SORT_MERGE);
++			__elv_add_request(q, rq, ELEVATOR_INSERT_SORT);
+ 
+ 		depth++;
+ 	}
+diff --git a/block/elevator.c b/block/elevator.c
+index 99838f4..c32f5bc 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -644,6 +644,11 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+ 
+ 	rq->q = q;
+ 
++	/*
++	 * FIXME: INSERT_SORT_MERGE is broken and blk_flush_plug_list(),
++	 * the only user, is updated to use INSERT_SORT for now.
++	 */
++
+ 	if (rq->cmd_flags & REQ_SOFTBARRIER) {
+ 		/* barriers are scheduling boundary, update end_sector */
+ 		if (rq->cmd_type == REQ_TYPE_FS ||
