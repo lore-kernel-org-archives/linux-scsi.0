@@ -1,263 +1,518 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 02/14] libsas: remove ata_port.lock management duties from
- lldds
-Date: Thu, 05 Jan 2012 16:59:10 -0800
-Message-ID: <20120106005910.11464.73768.stgit@localhost6.localdomain6>
+Subject: [PATCH v3 03/14] libsas: prevent domain rediscovery competing with
+ ata error handling
+Date: Thu, 05 Jan 2012 16:59:15 -0800
+Message-ID: <20120106005915.11464.83503.stgit@localhost6.localdomain6>
 References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:19000 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932924Ab2AFA7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2012 19:59:16 -0500
 In-Reply-To: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jack Wang <jack_wang@usish.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 
-Each libsas driver (mvsas, pm8001, and isci) has invented a different
-method for managing the ap->lock.  The lock is held by the ata
-->queuecommand() path.  mvsas drops it prior to acquiring any internal
-locks which allows it to hold its internal lock across calls to
-task->task_done().  This capability is important as it is the only way
-the driver can flush task->task_done() instances to guarantee that it no
-longer has any in-flight references to a domain_device at
-->lldd_dev_gone() time.
+libata error handling provides for a timeout for link recovery.  libsas
+must not rescan for previously known devices in this interval otherwise
+it may remove a device that is simply waiting for its link to recover.
+Let libata-eh make the determination of when the link is stable and
+prevent libsas (host workqueue) from taking action while this
+determination is pending.
+
+Using a mutex (ha->disco_mutex) to flush and disable revalidation while
+eh is running requires any discovery action that may block on eh be
+moved to its own context outside the lock.  Probing ATA devices
+explicitly waits on ata-eh and the cache-flush-io issued during device
+removal may also pend awaiting eh completion.  Essentially any rphy
+add/remove activity needs to run outside the lock.
+
+This adds a new cleanup state for domain devices to libsas
+'allocated-not-probed'.  In this state dev->rphy points to a rphy that
+is known to have been through a sas_rphy_add() event.  At
+sas_unregister_dev() time check if this device is still pending probe
+and cleanup accordingly.
 
 Cc: Christoph Hellwig <hch@lst.de>
-Cc: Jack Wang <jack_wang@usish.com>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/request.c         |    3 +--
- drivers/scsi/isci/task.c            |    6 ++----
- drivers/scsi/isci/task.h            |   36 -----------------------------------
- drivers/scsi/libsas/sas_ata.c       |   36 ++++++++++++++++++++++-------------
- drivers/scsi/libsas/sas_scsi_host.c |    6 ++----
- drivers/scsi/mvsas/mv_sas.c         |    6 ------
- drivers/scsi/pm8001/pm8001_sas.c    |    6 +-----
- 7 files changed, 29 insertions(+), 70 deletions(-)
+ drivers/scsi/libsas/sas_ata.c      |   55 ++++++++++++++++++++++++++++++--
+ drivers/scsi/libsas/sas_discover.c |   62 +++++++++++++++++++++++++++++++++---
+ drivers/scsi/libsas/sas_event.c    |   26 +++++++++++++++
+ drivers/scsi/libsas/sas_expander.c |    5 +--
+ drivers/scsi/libsas/sas_init.c     |    2 +
+ drivers/scsi/libsas/sas_internal.h |    3 ++
+ drivers/scsi/libsas/sas_port.c     |    2 +
+ drivers/scsi/scsi_transport_sas.c  |   18 +++++++++-
+ include/scsi/libsas.h              |   11 +++++-
+ include/scsi/sas_ata.h             |    5 +++
+ include/scsi/scsi_transport_sas.h  |    1 +
+ 11 files changed, 172 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
-index 192cb48..83383ef 100644
---- a/drivers/scsi/isci/request.c
-+++ b/drivers/scsi/isci/request.c
-@@ -3649,8 +3649,7 @@ int isci_request_execute(struct isci_host *ihost, struct isci_remote_device *ide
- 		/* Cause this task to be scheduled in the SCSI error
- 		 * handler thread.
- 		 */
--		isci_execpath_callback(ihost, task,
--				       sas_task_abort);
-+		sas_task_abort(task);
- 
- 		/* Change the status, since we are holding
- 		 * the I/O until it is managed by the SCSI
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 66ad3dc..5901a0e 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -96,8 +96,7 @@ static void isci_task_refuse(struct isci_host *ihost, struct sas_task *task,
- 			__func__, task, response, status);
- 
- 		task->lldd_task = NULL;
--
--		isci_execpath_callback(ihost, task, task->task_done);
-+		task->task_done(task);
- 		break;
- 
- 	case isci_perform_aborted_io_completion:
-@@ -117,8 +116,7 @@ static void isci_task_refuse(struct isci_host *ihost, struct sas_task *task,
- 			"%s: Error - task = %p, response=%d, "
- 			"status=%d\n",
- 			__func__, task, response, status);
--
--		isci_execpath_callback(ihost, task, sas_task_abort);
-+		sas_task_abort(task);
- 		break;
- 
- 	default:
-diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
-index bc78c0a..df8d440 100644
---- a/drivers/scsi/isci/task.h
-+++ b/drivers/scsi/isci/task.h
-@@ -322,40 +322,4 @@ isci_task_set_completion_status(
- 	return task_notification_selection;
- 
- }
--/**
--* isci_execpath_callback() - This function is called from the task
--* execute path when the task needs to callback libsas about the submit-time
--* task failure.  The callback occurs either through the task's done function
--* or through sas_task_abort.  In the case of regular non-discovery SATA/STP I/O
--* requests, libsas takes the host lock before calling execute task.  Therefore
--* in this situation the host lock must be managed before calling the func.
--*
--* @ihost: This parameter is the controller to which the I/O request was sent.
--* @task: This parameter is the I/O request.
--* @func: This parameter is the function to call in the correct context.
--* @status: This parameter is the status code for the completed task.
--*
--*/
--static inline void isci_execpath_callback(struct isci_host *ihost,
--					  struct sas_task  *task,
--					  void (*func)(struct sas_task *))
--{
--	struct domain_device *dev = task->dev;
--
--	if (dev_is_sata(dev) && task->uldd_task) {
--		unsigned long flags;
--
--		/* Since we are still in the submit path, and since
--		 * libsas takes the host lock on behalf of SATA
--		 * devices before I/O starts (in the non-discovery case),
--		 * we need to unlock before we can call the callback function.
--		 */
--		raw_local_irq_save(flags);
--		spin_unlock(dev->sata_dev.ap->lock);
--		func(task);
--		spin_lock(dev->sata_dev.ap->lock);
--		raw_local_irq_restore(flags);
--	} else
--		func(task);
--}
- #endif /* !defined(_SCI_TASK_H_) */
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 83118d0..81ce39d 100644
+index 81ce39d..5418778 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -166,23 +166,30 @@ qc_already_gone:
+@@ -758,6 +758,35 @@ static int sas_discover_sata_pm(struct domain_device *dev)
+ 	return -ENODEV;
+ }
  
- static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- {
--	int res;
-+	unsigned long flags;
- 	struct sas_task *task;
--	struct domain_device *dev = qc->ap->private_data;
-+	struct scatterlist *sg;
-+	int ret = AC_ERR_SYSTEM;
-+	unsigned int si, xfer = 0;
-+	struct ata_port *ap = qc->ap;
-+	struct domain_device *dev = ap->private_data;
- 	struct sas_ha_struct *sas_ha = dev->port->ha;
- 	struct Scsi_Host *host = sas_ha->core.shost;
- 	struct sas_internal *i = to_sas_internal(host->transportt);
--	struct scatterlist *sg;
--	unsigned int xfer = 0;
--	unsigned int si;
++void sas_probe_sata(struct work_struct *work)
++{
++	struct domain_device *dev, *n;
++	struct sas_discovery_event *ev =
++		container_of(work, struct sas_discovery_event, work);
++	struct asd_sas_port *port = ev->port;
 +
-+	/* TODO: audit callers to ensure they are ready for qc_issue to
-+	 * unconditionally re-enable interrupts
++	clear_bit(DISCE_PROBE, &port->disc.pending);
++
++	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node) {
++		int err;
++
++		spin_lock_irq(&port->dev_list_lock);
++		list_add_tail(&dev->dev_list_node, &port->dev_list);
++		spin_unlock_irq(&port->dev_list_lock);
++
++		err = sas_rphy_add(dev->rphy);
++
++		if (err) {
++			SAS_DPRINTK("%s: for %s device %16llx returned %d\n",
++				    __func__, dev->parent ? "exp-attached" :
++							    "direct-attached",
++				    SAS_ADDR(dev->sas_addr), err);
++			sas_unregister_dev(port, dev);
++		} else
++			list_del_init(&dev->disco_list_node);
++	}
++}
++
+ /**
+  * sas_discover_sata -- discover an STP/SATA domain device
+  * @dev: pointer to struct domain_device of interest
+@@ -794,10 +823,15 @@ int sas_discover_sata(struct domain_device *dev)
+ 		break;
+ 	}
+ 	sas_notify_lldd_dev_gone(dev);
+-	if (!res) {
+-		sas_notify_lldd_dev_found(dev);
+-		res = sas_rphy_add(dev->rphy);
+-	}
++
++	if (res)
++		return res;
++
++	res = sas_notify_lldd_dev_found(dev);
++	if (res)
++		return res;
++
++	sas_discover_event(dev->port, DISCE_PROBE);
+ 
+ 	return res;
+ }
+@@ -805,6 +839,17 @@ int sas_discover_sata(struct domain_device *dev)
+ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ {
+ 	struct scsi_device *sdev;
++	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
++
++	/* it's ok to defer revalidation events during ata eh, these
++	 * disks are in one of three states:
++	 * 1/ present for initial domain discovery, and these
++	 *    resets will cause bcn flutters
++	 * 2/ hot removed, we'll discover that after eh fails
++	 * 3/ hot added after initial discovery, lost the race, and need
++	 *    to catch the next train.
 +	 */
-+	local_irq_save(flags);
-+	spin_unlock(ap->lock);
++	sas_disable_revalidation(sas_ha);
  
- 	/* If the device fell off, no sense in issuing commands */
- 	if (dev->gone)
--		return AC_ERR_SYSTEM;
-+		goto out;
- 
- 	task = sas_alloc_task(GFP_ATOMIC);
- 	if (!task)
--		return AC_ERR_SYSTEM;
-+		goto out;
- 	task->dev = dev;
- 	task->task_proto = SAS_PROTOCOL_STP;
- 	task->task_done = sas_ata_task_done;
-@@ -227,21 +234,24 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 		ASSIGN_SAS_TASK(qc->scsicmd, task);
- 
- 	if (sas_ha->lldd_max_execute_num < 2)
--		res = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
-+		ret = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
- 	else
--		res = sas_queue_up(task);
-+		ret = sas_queue_up(task);
- 
- 	/* Examine */
--	if (res) {
--		SAS_DPRINTK("lldd_execute_task returned: %d\n", res);
-+	if (ret) {
-+		SAS_DPRINTK("lldd_execute_task returned: %d\n", ret);
- 
- 		if (qc->scsicmd)
- 			ASSIGN_SAS_TASK(qc->scsicmd, NULL);
- 		sas_free_task(task);
--		return AC_ERR_SYSTEM;
-+		ret = AC_ERR_SYSTEM;
+ 	shost_for_each_device(sdev, shost) {
+ 		struct domain_device *ddev = sdev_to_domain_dev(sdev);
+@@ -816,6 +861,8 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ 		ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
+ 		ata_scsi_port_error_handler(shost, ap);
  	}
++
++	sas_enable_revalidation(sas_ha);
+ }
  
--	return 0;
+ int sas_ata_timed_out(struct scsi_cmnd *cmd, struct sas_task *task,
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index 32e0117..8926274 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -148,9 +148,14 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 	port->disc.max_level = 0;
+ 
+ 	dev->rphy = rphy;
+-	spin_lock_irq(&port->dev_list_lock);
+-	list_add_tail(&dev->dev_list_node, &port->dev_list);
+-	spin_unlock_irq(&port->dev_list_lock);
++
++	if (dev_is_sata(dev))
++		list_add_tail(&dev->disco_list_node, &port->disco_list);
++	else {
++		spin_lock_irq(&port->dev_list_lock);
++		list_add_tail(&dev->dev_list_node, &port->dev_list);
++		spin_unlock_irq(&port->dev_list_lock);
++	}
+ 
+ 	return 0;
+ }
+@@ -255,14 +260,42 @@ static void sas_unregister_common_dev(struct asd_sas_port *port, struct domain_d
+ 	sas_put_device(dev);
+ }
+ 
+-void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
++static void sas_destruct_devices(struct work_struct *work)
+ {
+-	if (dev->rphy) {
++	struct domain_device *dev, *n;
++	struct sas_discovery_event *ev =
++		container_of(work, struct sas_discovery_event, work);
++	struct asd_sas_port *port = ev->port;
++
++	clear_bit(DISCE_DESTRUCT, &port->disc.pending);
++
++	list_for_each_entry_safe(dev, n, &port->destroy_list, dev_list_node) {
+ 		sas_remove_children(&dev->rphy->dev);
+ 		sas_rphy_delete(dev->rphy);
+ 		dev->rphy = NULL;
++		sas_unregister_common_dev(port, dev);
++	}
++}
++
++void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
++{
++	if (!list_empty(&dev->disco_list_node)) {
++		/* this rphy never saw sas_rphy_add */
++		list_del_init(&dev->disco_list_node);
++		sas_rphy_free(dev->rphy);
++		dev->rphy = NULL;
++		sas_unregister_common_dev(port, dev);
++	}
++
++	if (dev->rphy) {
++		sas_rphy_unlink(dev->rphy);
++
++		spin_lock_irq(&port->dev_list_lock);
++		list_move_tail(&dev->dev_list_node, &port->destroy_list);
++		spin_unlock_irq(&port->dev_list_lock);
++
++		sas_discover_event(dev->port, DISCE_DESTRUCT);
+ 	}
+-	sas_unregister_common_dev(port, dev);
+ }
+ 
+ void sas_unregister_domain_devices(struct asd_sas_port *port)
+@@ -271,6 +304,8 @@ void sas_unregister_domain_devices(struct asd_sas_port *port)
+ 
+ 	list_for_each_entry_safe_reverse(dev, n, &port->dev_list, dev_list_node)
+ 		sas_unregister_dev(port, dev);
++	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
++		sas_unregister_dev(port, dev);
+ 
+ 	port->port->rphy = NULL;
+ 
+@@ -335,6 +370,7 @@ static void sas_discover_domain(struct work_struct *work)
+ 		sas_rphy_free(dev->rphy);
+ 		dev->rphy = NULL;
+ 
++		list_del_init(&dev->disco_list_node);
+ 		spin_lock_irq(&port->dev_list_lock);
+ 		list_del_init(&dev->dev_list_node);
+ 		spin_unlock_irq(&port->dev_list_lock);
+@@ -353,16 +389,28 @@ static void sas_revalidate_domain(struct work_struct *work)
+ 	struct sas_discovery_event *ev =
+ 		container_of(work, struct sas_discovery_event, work);
+ 	struct asd_sas_port *port = ev->port;
++	struct sas_ha_struct *ha = port->ha;
++
++	/* prevent revalidation from finding sata links in recovery */
++	mutex_lock(&ha->disco_mutex);
++	if (test_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state)) {
++		SAS_DPRINTK("REVALIDATION DEFERRED on port %d, pid:%d\n",
++			    port->id, task_pid_nr(current));
++		goto out;
++	}
+ 
+ 	clear_bit(DISCE_REVALIDATE_DOMAIN, &port->disc.pending);
+ 
+ 	SAS_DPRINTK("REVALIDATING DOMAIN on port %d, pid:%d\n", port->id,
+ 		    task_pid_nr(current));
++
+ 	if (port->port_dev)
+ 		res = sas_ex_revalidate_domain(port->port_dev);
+ 
+ 	SAS_DPRINTK("done REVALIDATING DOMAIN on port %d, pid:%d, res 0x%x\n",
+ 		    port->id, task_pid_nr(current), res);
 + out:
-+	spin_lock(ap->lock);
-+	local_irq_restore(flags);
-+	return ret;
++	mutex_unlock(&ha->disco_mutex);
  }
  
- static bool sas_ata_qc_fill_rtf(struct ata_queued_cmd *qc)
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 2a163c7..fd60465 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -198,11 +198,9 @@ int sas_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ /* ---------- Events ---------- */
+@@ -414,6 +462,8 @@ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *port)
+ 	static const work_func_t sas_event_fns[DISC_NUM_EVENTS] = {
+ 		[DISCE_DISCOVER_DOMAIN] = sas_discover_domain,
+ 		[DISCE_REVALIDATE_DOMAIN] = sas_revalidate_domain,
++		[DISCE_PROBE] = sas_probe_sata,
++		[DISCE_DESTRUCT] = sas_destruct_devices,
+ 	};
+ 
+ 	disc->pending = 0;
+diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
+index e5035aa..933d757 100644
+--- a/drivers/scsi/libsas/sas_event.c
++++ b/drivers/scsi/libsas/sas_event.c
+@@ -81,6 +81,32 @@ int sas_drain_work(struct sas_ha_struct *ha)
+ }
+ EXPORT_SYMBOL_GPL(sas_drain_work);
+ 
++void sas_disable_revalidation(struct sas_ha_struct *ha)
++{
++	mutex_lock(&ha->disco_mutex);
++	set_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state);
++	mutex_unlock(&ha->disco_mutex);
++}
++
++void sas_enable_revalidation(struct sas_ha_struct *ha)
++{
++	int i;
++
++	mutex_lock(&ha->disco_mutex);
++	clear_bit(SAS_HA_ATA_EH_ACTIVE, &ha->state);
++	for (i = 0; i < ha->num_phys; i++) {
++		struct asd_sas_port *port = ha->sas_port[i];
++		const int ev = DISCE_REVALIDATE_DOMAIN;
++		struct sas_discovery *d = &port->disc;
++
++		if (!test_and_clear_bit(ev, &d->pending))
++			continue;
++
++		sas_queue_event(ev, &d->pending, &d->disc_work[ev].work, ha);
++	}
++	mutex_unlock(&ha->disco_mutex);
++}
++
+ static void notify_ha_event(struct sas_ha_struct *sas_ha, enum ha_event event)
+ {
+ 	BUG_ON(event >= HA_NUM_EVENTS);
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 15d2239..c3846cf 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -704,9 +704,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 
+ 		child->rphy = rphy;
+ 
+-		spin_lock_irq(&parent->port->dev_list_lock);
+-		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
+-		spin_unlock_irq(&parent->port->dev_list_lock);
++		list_add_tail(&child->disco_list_node, &parent->port->disco_list);
+ 
+ 		res = sas_discover_sata(child);
+ 		if (res) {
+@@ -756,6 +754,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 	sas_rphy_free(child->rphy);
+ 	child->rphy = NULL;
+ 
++	list_del(&child->disco_list_node);
+ 	spin_lock_irq(&parent->port->dev_list_lock);
+ 	list_del(&child->dev_list_node);
+ 	spin_unlock_irq(&parent->port->dev_list_lock);
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index 572b943..52cd11d 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -104,6 +104,7 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ {
+ 	int error = 0;
+ 
++	mutex_init(&sas_ha->disco_mutex);
+ 	spin_lock_init(&sas_ha->phy_port_lock);
+ 	sas_hash_addr(sas_ha->hashed_sas_addr, sas_ha->sas_addr);
+ 
+@@ -168,6 +169,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
+ 	sas_drain_work(sas_ha);
+ 
+ 	sas_unregister_ports(sas_ha);
++	sas_drain_work(sas_ha);
+ 
+ 	if (sas_ha->lldd_max_execute_num > 1) {
+ 		sas_shutdown_queue(sas_ha);
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 948ea64..ebe9b81 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -56,6 +56,8 @@ enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *);
+ int  sas_init_queue(struct sas_ha_struct *sas_ha);
+ int  sas_init_events(struct sas_ha_struct *sas_ha);
+ void sas_shutdown_queue(struct sas_ha_struct *sas_ha);
++void sas_disable_revalidation(struct sas_ha_struct *ha);
++void sas_enable_revalidation(struct sas_ha_struct *ha);
+ 
+ void sas_deform_port(struct asd_sas_phy *phy, int gone);
+ 
+@@ -138,6 +140,7 @@ static inline struct domain_device *sas_alloc_device(void)
+ 	if (dev) {
+ 		INIT_LIST_HEAD(&dev->siblings);
+ 		INIT_LIST_HEAD(&dev->dev_list_node);
++		INIT_LIST_HEAD(&dev->disco_list_node);
+ 		kref_init(&dev->kref);
+ 	}
+ 	return dev;
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index a47c7a7..e8e68d0 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -277,6 +277,8 @@ static void sas_init_port(struct asd_sas_port *port,
+ 	memset(port, 0, sizeof(*port));
+ 	port->id = i;
+ 	INIT_LIST_HEAD(&port->dev_list);
++	INIT_LIST_HEAD(&port->disco_list);
++	INIT_LIST_HEAD(&port->destroy_list);
+ 	spin_lock_init(&port->phy_list_lock);
+ 	INIT_LIST_HEAD(&port->phy_list);
+ 	port->ha = sas_ha;
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 9d9330a..9421bae 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -1603,6 +1603,20 @@ sas_rphy_delete(struct sas_rphy *rphy)
+ EXPORT_SYMBOL(sas_rphy_delete);
+ 
+ /**
++ * sas_rphy_unlink  -  unlink SAS remote PHY
++ * @rphy:	SAS remote phy to unlink from its parent port
++ *
++ * Removes port reference to an rphy
++ */
++void sas_rphy_unlink(struct sas_rphy *rphy)
++{
++	struct sas_port *parent = dev_to_sas_port(rphy->dev.parent);
++
++	parent->rphy = NULL;
++}
++EXPORT_SYMBOL(sas_rphy_unlink);
++
++/**
+  * sas_rphy_remove  -  remove SAS remote PHY
+  * @rphy:	SAS remote phy to remove
+  *
+@@ -1612,7 +1626,6 @@ void
+ sas_rphy_remove(struct sas_rphy *rphy)
+ {
+ 	struct device *dev = &rphy->dev;
+-	struct sas_port *parent = dev_to_sas_port(dev->parent);
+ 
+ 	switch (rphy->identify.device_type) {
+ 	case SAS_END_DEVICE:
+@@ -1626,10 +1639,9 @@ sas_rphy_remove(struct sas_rphy *rphy)
+ 		break;
  	}
  
- 	if (dev_is_sata(dev)) {
--		unsigned long flags;
++	sas_rphy_unlink(rphy);
+ 	transport_remove_device(dev);
+ 	device_del(dev);
 -
--		spin_lock_irqsave(dev->sata_dev.ap->lock, flags);
-+		spin_lock_irq(dev->sata_dev.ap->lock);
- 		res = ata_sas_queuecmd(cmd, dev->sata_dev.ap);
--		spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags);
-+		spin_unlock_irq(dev->sata_dev.ap->lock);
- 		return res;
- 	}
+-	parent->rphy = NULL;
+ }
+ EXPORT_SYMBOL(sas_rphy_remove);
  
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index b118e63..cd88223 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -893,9 +893,6 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 42900fa..c66c034 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -86,7 +86,9 @@ enum discover_event {
+ 	DISCE_DISCOVER_DOMAIN   = 0U,
+ 	DISCE_REVALIDATE_DOMAIN = 1,
+ 	DISCE_PORT_GONE         = 2,
+-	DISC_NUM_EVENTS 	= 3,
++	DISCE_PROBE		= 3,
++	DISCE_DESTRUCT		= 4,
++	DISC_NUM_EVENTS		= 5,
+ };
  
- 	mvi = ((struct mvs_device *)task->dev->lldd_dev)->mvi_info;
+ /* ---------- Expander Devices ---------- */
+@@ -188,6 +190,7 @@ struct domain_device {
+         struct asd_sas_port *port;        /* shortcut to root of the tree */
  
--	if ((dev->dev_type == SATA_DEV) && (dev->sata_dev.ap != NULL))
--		spin_unlock_irq(dev->sata_dev.ap->lock);
+         struct list_head dev_list_node;
++	struct list_head disco_list_node;
+ 
+         enum sas_protocol    iproto;
+         enum sas_protocol    tproto;
+@@ -223,7 +226,6 @@ struct sas_discovery {
+ 	int    max_level;
+ };
+ 
 -
- 	spin_lock_irqsave(&mvi->lock, flags);
- 	rc = mvs_task_prep(task, mvi, is_tmf, tmf, &pass);
- 	if (rc)
-@@ -906,9 +903,6 @@ static int mvs_task_exec(struct sas_task *task, const int num, gfp_t gfp_flags,
- 				(MVS_CHIP_SLOT_SZ - 1));
- 	spin_unlock_irqrestore(&mvi->lock, flags);
+ /* The port struct is Class:RW, driver:RO */
+ struct asd_sas_port {
+ /* private: */
+@@ -233,6 +235,8 @@ struct asd_sas_port {
+ 	struct domain_device *port_dev;
+ 	spinlock_t dev_list_lock;
+ 	struct list_head dev_list;
++	struct list_head disco_list;
++	struct list_head destroy_list;
+ 	enum   sas_linkrate linkrate;
  
--	if ((dev->dev_type == SATA_DEV) && (dev->sata_dev.ap != NULL))
--		spin_lock_irq(dev->sata_dev.ap->lock);
--
- 	return rc;
+ 	struct sas_phy *phy;
+@@ -331,6 +335,7 @@ struct sas_ha_event {
+ enum sas_ha_state {
+ 	SAS_HA_REGISTERED,
+ 	SAS_HA_DRAINING,
++	SAS_HA_ATA_EH_ACTIVE,
+ };
+ 
+ struct sas_ha_struct {
+@@ -343,6 +348,8 @@ struct sas_ha_struct {
+ 	unsigned long	  state;
+ 	spinlock_t 	  state_lock;
+ 
++	struct mutex disco_mutex;
++
+ 	struct scsi_core core;
+ 
+ /* public: */
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index 7d5013f..557fc9a 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -45,6 +45,7 @@ int sas_ata_timed_out(struct scsi_cmnd *cmd, struct sas_task *task,
+ 		      enum blk_eh_timer_return *rtn);
+ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 	       struct list_head *done_q);
++void sas_probe_sata(struct work_struct *work);
+ 
+ #else
+ 
+@@ -78,6 +79,10 @@ static inline int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 	return 0;
  }
  
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 13811c7..5add18c 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -342,7 +342,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
- 	struct pm8001_ccb_info *ccb;
- 	u32 tag = 0xdeadbeef, rc, n_elem = 0;
- 	u32 n = num;
--	unsigned long flags = 0, flags_libsas = 0;
-+	unsigned long flags = 0;
++static inline void sas_probe_sata(struct work_struct *work)
++{
++}
++
+ #endif
  
- 	if (!dev->port) {
- 		struct task_status_struct *tsm = &t->task_status;
-@@ -366,11 +366,7 @@ static int pm8001_task_exec(struct sas_task *task, const int num,
- 				ts->stat = SAS_PHY_DOWN;
+ #endif /* _SAS_ATA_H_ */
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index ffeebc3..6d14daa 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -194,6 +194,7 @@ void sas_rphy_free(struct sas_rphy *);
+ extern int sas_rphy_add(struct sas_rphy *);
+ extern void sas_rphy_remove(struct sas_rphy *);
+ extern void sas_rphy_delete(struct sas_rphy *);
++extern void sas_rphy_unlink(struct sas_rphy *);
+ extern int scsi_is_sas_rphy(const struct device *);
  
- 				spin_unlock_irqrestore(&pm8001_ha->lock, flags);
--				spin_unlock_irqrestore(dev->sata_dev.ap->lock,
--						flags_libsas);
- 				t->task_done(t);
--				spin_lock_irqsave(dev->sata_dev.ap->lock,
--					flags_libsas);
- 				spin_lock_irqsave(&pm8001_ha->lock, flags);
- 				if (n > 1)
- 					t = list_entry(t->list.next,
+ struct sas_port *sas_port_alloc(struct device *, int);
 
