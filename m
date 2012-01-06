@@ -1,99 +1,100 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 13/14] isci: remove bus and reset handlers
-Date: Thu, 05 Jan 2012 17:00:07 -0800
-Message-ID: <20120106010007.11464.42991.stgit@localhost6.localdomain6>
+Subject: [PATCH v3 14/14] isci: remove IDEV_EH hack to disable
+ "discovery-time" ata resets
+Date: Thu, 05 Jan 2012 17:00:12 -0800
+Message-ID: <20120106010012.11464.84924.stgit@localhost6.localdomain6>
 References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25275 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:35545 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030273Ab2AFBAH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jan 2012 20:00:07 -0500
+	id S1030239Ab2AFBAO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jan 2012 20:00:14 -0500
 In-Reply-To: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, linux-ide@vger.kernel.org, Luben Tuikov <ltuikov@yahoo.com>, Jack Wang <jack_wang@usish.com>
+Cc: linux-ide@vger.kernel.org, Xiangliang Yu <yuxiangl@marvell.com>
 
-Remove ->eh_device_reset_handler() and ->eh_bus_reset_handler() for the
-same reason they are not implemented for libata hosts, they cannot be
-implemented reliably with ata-eh.  ATA error recovery wants to divert
-all resets to the eh thread and wait for completion, these handlers may
-be invoked from a non-blocking ioctl.
+Prior to commit 61aaff49 "isci: filter broadcast change notifications
+during SMP phy resets" we borrowed the MVS_DEV_EH approach from the
+mvsas driver for preventing ->lldd_I_T_nexus_reset() events during ata
+discovery.  This hack was protecting against the old ->phy_reset() in
+ata_bus_probe(), but since the conversion to the new error handling this
+hack is preventing resets from reaching ata devices.
 
-The other path they are called from is libsas-eh, and if we escalate
-past I_T_nexus reset we have larger problems i.e. tear down all
-in-flight commands in the domain potentially without notification to the
-lldd if it has chosen not to implement ->lldd_clear_nexus_port() /
-->lldd_clear_nexus_ha().
-
-Cc: Jack Wang <jack_wang@usish.com>
 Cc: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/init.c |    2 --
- drivers/scsi/isci/task.c |   23 -----------------------
- drivers/scsi/isci/task.h |    2 --
- 3 files changed, 0 insertions(+), 27 deletions(-)
+ drivers/scsi/isci/remote_device.c |    1 -
+ drivers/scsi/isci/remote_device.h |    7 +++----
+ drivers/scsi/isci/task.c          |    9 ++++-----
+ 3 files changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 40293b3..437f76b 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -157,8 +157,6 @@ static struct scsi_host_template isci_sht = {
- 	.sg_tablesize			= SG_ALL,
- 	.max_sectors			= SCSI_DEFAULT_MAX_SECTORS,
- 	.use_clustering			= ENABLE_CLUSTERING,
--	.eh_device_reset_handler	= sas_eh_device_reset_handler,
--	.eh_bus_reset_handler		= isci_bus_reset_handler,
- 	.slave_alloc			= sas_slave_alloc,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
+diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
+index 967394d..f83be32 100644
+--- a/drivers/scsi/isci/remote_device.c
++++ b/drivers/scsi/isci/remote_device.c
+@@ -1304,7 +1304,6 @@ void isci_remote_device_release(struct kref *kref)
+ 	clear_bit(IDEV_STOP_PENDING, &idev->flags);
+ 	clear_bit(IDEV_IO_READY, &idev->flags);
+ 	clear_bit(IDEV_GONE, &idev->flags);
+-	clear_bit(IDEV_EH, &idev->flags);
+ 	smp_mb__before_clear_bit();
+ 	clear_bit(IDEV_ALLOCATED, &idev->flags);
+ 	wake_up(&ihost->eventq);
+diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
+index 483ee50..98c2801 100644
+--- a/drivers/scsi/isci/remote_device.h
++++ b/drivers/scsi/isci/remote_device.h
+@@ -82,10 +82,9 @@ struct isci_remote_device {
+ 	#define IDEV_START_PENDING 0
+ 	#define IDEV_STOP_PENDING 1
+ 	#define IDEV_ALLOCATED 2
+-	#define IDEV_EH 3
+-	#define IDEV_GONE 4
+-	#define IDEV_IO_READY 5
+-	#define IDEV_IO_NCQERROR 6
++	#define IDEV_GONE 3
++	#define IDEV_IO_READY 4
++	#define IDEV_IO_NCQERROR 5
+ 	unsigned long flags;
+ 	struct kref kref;
+ 	struct isci_port *isci_port;
 diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 48df8e5..edaba78 100644
+index edaba78..fd9f67c 100644
 --- a/drivers/scsi/isci/task.c
 +++ b/drivers/scsi/isci/task.c
-@@ -1322,26 +1322,3 @@ int isci_task_I_T_nexus_reset(struct domain_device *dev)
- 	isci_put_device(idev);
- 	return ret;
- }
--
--int isci_bus_reset_handler(struct scsi_cmnd *cmd)
--{
--	struct domain_device *dev = sdev_to_domain_dev(cmd->device);
--	struct isci_host *ihost = dev_to_ihost(dev);
--	struct isci_remote_device *idev;
--	unsigned long flags;
--	int ret;
--
--	spin_lock_irqsave(&ihost->scic_lock, flags);
--	idev = isci_lookup_device(dev);
--	spin_unlock_irqrestore(&ihost->scic_lock, flags);
--
--	if (!idev) {
--		ret = TMF_RESP_FUNC_COMPLETE;
--		goto out;
--	}
--
--	ret = isci_reset_device(ihost, dev, idev);
-- out:
--	isci_put_device(idev);
--	return ret;
--}
-diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
-index 8ffcdc9..7bc6fd6 100644
---- a/drivers/scsi/isci/task.h
-+++ b/drivers/scsi/isci/task.h
-@@ -209,8 +209,6 @@ int isci_queuecommand(
- 	struct scsi_cmnd *scsi_cmd,
- 	void (*donefunc)(struct scsi_cmnd *));
+@@ -846,7 +846,6 @@ int isci_task_lu_reset(struct domain_device *dev, u8 *lun)
+ 		ret = TMF_RESP_FUNC_COMPLETE;
+ 		goto out;
+ 	}
+-	set_bit(IDEV_EH, &isci_device->flags);
  
--int isci_bus_reset_handler(struct scsi_cmnd *cmd);
+ 	/* Send the task management part of the reset. */
+ 	if (dev_is_sata(dev)) {
+@@ -981,9 +980,6 @@ int isci_task_abort_task(struct sas_task *task)
+ 		"%s: dev = %p, task = %p, old_request == %p\n",
+ 		__func__, isci_device, task, old_request);
+ 
+-	if (isci_device)
+-		set_bit(IDEV_EH, &isci_device->flags);
 -
- /**
-  * enum isci_completion_selection - This enum defines the possible actions to
-  *    take with respect to a given request's notification back to libsas.
+ 	/* Device reset conditions signalled in task_state_flags are the
+ 	 * responsbility of libsas to observe at the start of the error
+ 	 * handler thread.
+@@ -1312,7 +1308,10 @@ int isci_task_I_T_nexus_reset(struct domain_device *dev)
+ 	idev = isci_lookup_device(dev);
+ 	spin_unlock_irqrestore(&ihost->scic_lock, flags);
+ 
+-	if (!idev || !test_bit(IDEV_EH, &idev->flags)) {
++	if (!idev) {
++		/* XXX: need to cleanup any ireqs targeting this
++		 * domain_device
++		 */
+ 		ret = TMF_RESP_FUNC_COMPLETE;
+ 		goto out;
+ 	}
 
