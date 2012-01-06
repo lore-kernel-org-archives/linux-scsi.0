@@ -1,222 +1,170 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] Next round of SCSI updates for 3.2 merge window
-Date: Thu, 05 Jan 2012 14:19:04 -0800
-Message-ID: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [GIT PATCH v3 00/14] libsas: eh reworks (ata-eh vs discovery, races,
+ ...)
+Date: Thu, 05 Jan 2012 16:59:00 -0800
+Message-ID: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Trying the signed tag approach for the first time
+Note, the patches mailed with this update only include the libsas patches
+that have been revised since v2, and the isci updates that were
+dependent on these changes.
 
-This patch contains the first tranche of SCSI updates including qla2xxx,
-qla4xxx, mpt2sas, lpfc and device_handler
+For the full set in proper order see the current state of the 'libsas'
+branch in isci.git (commit c3766a3):
 
-Before people start complaining, I have a lot of queued patches I didn't
-get around to merging before the Christmas holidays, so I'll do that
-now.
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas
 
-The patch is available here:
+...full diffstat below.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git#scsi-misc
+Although hot-plug / error handling operation is improved with these
+changes there are still problems (like the backtrace from the v2
+message), the need to better handle the fail-to-transmit-fis case (as
+noted by Jack), and more fallout from eh colliding with sdev end of life
+issues.  However, those fixes are post 3.3-rc1 material.
 
-The short changelog is
+Changes since v2: http://marc.info/?l=linux-scsi&m=132460922902788&w=2
 
-Andrew Vasquez (3):
-      qla2xxx: Ensure there's enough request-queue space for passthru IOCBs.
-      qla2xxx: Limit excessive DPC cycles.
-      qla2xxx: Only read requested mailbox registers.
+1/ "libsas: introduce sas_drain_work()": changed sas_drain_work() to use
+   mutex_lock_interruptible().  With the change to route user requested
+   reset requests through the host workqueue userspace can end up waiting a
+   long time for sysfs triggered resets to complete.  Certainly longer than
+   120 seconds as each sata device being managed may take 50 seconds for
+   ata-eh to give up.  So allow that wait to be interrupted, and prevent
+   hung task timeouts from triggering.
 
-Chad Dupuis (3):
-      qla2xxx: Do not check for minidump when device state is QLA82XX_DEV_READY.
-      qla2xxx: Move initialization of some variables before iospace_config.
-      qla2xxx: Update to dynamic logging.
+2/ "libsas: remove ata_port.lock management duties from lldds": changed
+   to disable interrupts while unlocking the ap->lock.  We should be
+   able to enable interrupts in sas_ata_qc_issue, but save that for a later
+   patch (need to first downgrade all callers of ->qc_issue from
+   spin_lock_irqsave to spin_lock_irq).
 
-Chandrakala Chavva (1):
-      mptsas: Add device ID for SAS1068_820XELP.
+3/ "libsas: prevent domain rediscovery competing with ata error
+   handling" since eh across an entire domain can take a large amount
+   of time it isn't practical to hold up the libsas thread for that
+   duration.  Instead, just flush and disable domain revalidation during
+   eh.  Explanation of why this is likely safe added to
+   sas_ata_strategy_handler()
 
-Dan Carpenter (1):
-      be2iscsi: cleanup a min_t() call
+4/ minor rebase updates to the other libsas patches to account for the
+   above reworks
 
-Eddie Wai (1):
-      bnx2i: Fixed kernel panic caused by unprotected task->sc->request deref
+5/ isci updates to leverage the functionality and guarantees offered by
+   the new libsas.  Notably we defer all ata resets to be managed by libata
+   and provide a lldd_ata_check_ready handler.
 
-Ferenc Wagner (1):
-      fusion: ensure NUL-termination of MptCallbacksName elements
+Changes since v1: http://marc.info/?l=linux-scsi&m=132408929808366&w=2
 
-Geert Uytterhoeven (1):
-      mac_scsi: Remove obsolete IRQ_FLG_* users
+1/ The changes to kernel/workqueue.c (to track unchained work during a
+   drain_workqueue() operation) have been dropped.  Instead this
+   functionality has been pushed down into libsas.  "[PATCH v2 07/28]
+   libsas: introduce sas_drain_work()"
 
-Giridhar Malavali (8):
-      qla2xxx: Consolidated IOCB processing routines.
-      qla2xxx: Process marker IOCB request on request queue 0.
-      qla2xxx: Added a new entry to ISP specific function pointers structure.
-      qla2xxx: Corrected the display of firmware dump availability for ISP82xx.
-      qla2xxx: Corrected the default setting of the help text of Minidump capture mask.
-      qla2xxx: Correct report-id acquisition check
-      qla2xxx: Fix to include FCE data as part of dump.
-      qla2xxx: Proper cleanup of pass through commands when firmware returns error.
+2/ Extended "[PATCH v2 09/28] libsas: prevent domain rediscovery
+   competing with ata error handling" to fix a deadlock encountered while
+   removing a device.  Since device removal issues cache-flush i/o it
+   causes libsas to be dependent on the completion of eh which in turn
+   means that libsas must not hold eh_mutex over a removal event.
 
-James Smart (7):
-      lpfc 8.3.28: Update driver version to 8.3.28
-      lpfc 8.3.28: Add Loopback support for SLI4 adapters
-      lpfc 8.3.28: Critical Miscellaneous fixes
-      Lpfc 8.3.28: FC and SCSI Discovery Fixes
-      lpfc 8.3.28: Add support for ABTS failure handling
-      lpfc 8.3.28: SLI fixes and added SLI4 support
-      lpfc 8.3.28: Miscellaneous fixes in sysfs and mgmt interfaces
+3/ New patch "[PATCH v2 27/28] libsas: fix sas_find_local_phy(), take
+   phy references" addresses hitting the BUG_ON(!exphy) in this routine.
+   Nothing prevents eh from still being in flight after libsas has removed a
+   device from the domain, so the BUG_ON is bogus.
 
-Jesper Juhl (1):
-      qla2xxx: remove redundant semicolon
+4/ A small collection of dev->gone related fixups, patch 25, 26, and 28.
 
-Jing Huang (2):
-      bfa: fix endian and bit field check bug
-      bfa: fix formating and checkpatch issues
+5/ Picked up a few acked-by and reviewed-by's from Jack, but did not
+   include his tested-by across the set given the changes since v1.
 
-Joe Carnuccio (1):
-      qla2xxx: Corrections to returned sysfs error codes.
+---
+The following changes since commit 7061bba1da7acb837d6a982648a8306ddc9d7409:
 
-Joe Perches (2):
-      qla2xxx: Make the logging functions verify their arguments and fixed the current broken uses as appropriate.
-      qla2xxx: Use less stack to emit logging messages.
+  [SCSI] bfa: fix endian and bit field check bug (2011-12-12 23:48:08 +0400)
 
-Mike Christie (1):
-      iscsi class: export pid of process that created
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas
 
-Mike Hernandez (1):
-      qla4xxx: Fix CPU lockups when ql4xdontresethba set
+Dan Williams (33):
+      libsas: remove unused ata_task_resp fields
+      libsas: kill sas_slave_destroy
+      libsas: fix domain_device leak
+      libsas: fix leak of dev->sata_dev.identify_[packet_]device
+      libsas: replace event locks with atomic bitops
+      libsas: convert ha->state to flags
+      libsas: introduce sas_drain_work()
+      libsas: remove ata_port.lock management duties from lldds
+      libsas: prevent domain rediscovery competing with ata error handling
+      libsas: use ->set_dmamode to notify lldds of NCQ parameters
+      libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
+      libsas: close error handling vs sas_ata_task_done() race
+      libsas: prevent double completion of scmds from eh
+      libsas: fix timeout vs completion race
+      libsas: let libata handle command timeouts
+      libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
+      libsas: use libata-eh-reset for sata rediscovery fis transmit failures
+      libsas: perform sas-transport resets in shost->workq context
+      libsas: execute transport link resets with libata-eh via host workqueue
+      libsas: sas_phy_enable via transport_sas_phy_reset
+      libsas: async ata-eh
+      libsas: poll for ata device readiness after reset
+      libsas: don't mark expanders as gone when a child device is removed
+      libsas: check for 'gone' expanders in smp_execute_task()
+      libsas: fix sas_find_local_phy(), take phy references
+      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+      isci: kill iphy->isci_port lookups
+      isci: kill isci_port->status
+      isci: fix interpretation of "hard" reset
+      isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
+      isci: ->lldd_ata_check_ready handler
+      isci: remove bus and reset handlers
+      isci: remove IDEV_EH hack to disable "discovery-time" ata resets
 
-Moger, Babu (4):
-      scsi_dh: code cleanup and remove the references to scsi_dev_info
-      scsi_dh_rdac: Adding the match function for rdac device handler
-      scsi_dh_hp_sw: Adding the match function for hp_sw device handler
-      scsi_dh_emc: Add a match function for emc device handler
+Jeff Skirvin (2):
+      libsas: Remove redundant phy state notification calls.
+      libsas: add mutex for SMP task execution
 
-Nilesh Javali (1):
-      qla4xxx: Fix the IDC locking mechanism
-
-Roland Dreier (3):
-      mpt2sas: Remove unused duplicate diag_buffer_enable param
-      mpt2sas: Fix possible integer truncation of cpu_count
-      mpt2sas: Fix leak on mpt2sas_base_attach() error path
-
-Sarang Radke (2):
-      qla4xxx: Don't recover adapter if device state is FAILED
-      qla4xxx: fix call trace on rmmod with ql4xdontresethba=1
-
-Saurav Kashyap (1):
-      qla2xxx: Implement FCP priority tagging for 82xx adapters.
-
-Shyam Sunder (1):
-      qla4xxx: check for FW alive before calling chip_reset
-
-Stephen M. Cameron (1):
-      hpsa: Add IRQF_SHARED back in for the non-MSI(X) interrupt handler
-
-Tomas Henzl (1):
-      hpsa: add the Smart Array 5i to the kdump blacklist
-
-Vikas Chaudhary (4):
-      qla4xxx: Update driver version to 5.02.00-k10
-      qla4xxx: Fix qla4xxx_dump_buffer to dump buffer correctly
-      qla4xxx: Wait for disable_acb before doing set_acb
-      qla4xxx: Perform context resets in case of context failures.
-
-nagalakshmi.nandigama@lsi.com (16):
-      mpt2sas: Removed redundant calling of _scsih_probe_devices() from _scsih_probe
-      mpt2sas : Bump driver vesion to 12.100.00.00
-      mpt2sas : Fix for memory allocation error for large host credits
-      mpt2sas: Do not retry a timed out direct IO for warpdrive
-      mpt2sas: Release spinlock for the raid device list before blocking it
-      mpt2sas: MPI next revision header update
-      mpt2sas: Added support for customer specific branding
-      mpt2sas: Increase max transfer support from 4MB to 16MB
-      mpt2sas: Support for greater than 2TB capacity WarpDrive
-      mpt2sas: Bump driver version to 11.100.00.00
-      mpt2sas: Rearrange the the code so that the completion queues are initialized prior to sending the request to controller firmware
-      mpt2sas: Do not set sas_device->starget to NULL from the slave_destroy callback when all the LUNS have been deleted
-      mpt2sas: MPI next revision header update
-      mpt2sas: Adding support for customer specific branding
-      mpt2sas: When IOs are terminated, update the result to DID_SOFT_ERROR to avoid infinite resets
-      mpt2sas: Better handling DEAD IOC (PCI-E LInk down) error condition
-
-And the diffstat:
-
- drivers/message/fusion/lsi/mpi_cnfg.h       |    1 +
- drivers/message/fusion/mptbase.c            |    7 +-
- drivers/message/fusion/mptbase.h            |    1 +
- drivers/message/fusion/mptsas.c             |    2 +
- drivers/scsi/be2iscsi/be_main.c             |    5 +-
- drivers/scsi/bfa/bfa_defs.h                 |    4 +-
- drivers/scsi/bfa/bfa_defs_svc.h             |  437 +++++++++--------
- drivers/scsi/bfa/bfa_ioc.c                  |    6 +-
- drivers/scsi/bfa/bfad_debugfs.c             |    3 +-
- drivers/scsi/bnx2i/bnx2i_hwi.c              |    5 +-
- drivers/scsi/device_handler/scsi_dh.c       |   58 ---
- drivers/scsi/device_handler/scsi_dh_emc.c   |   19 +
- drivers/scsi/device_handler/scsi_dh_hp_sw.c |   19 +
- drivers/scsi/device_handler/scsi_dh_rdac.c  |   19 +
- drivers/scsi/hpsa.c                         |    6 +-
- drivers/scsi/lpfc/lpfc.h                    |   14 -
- drivers/scsi/lpfc/lpfc_attr.c               |  436 ++++++-----------
- drivers/scsi/lpfc/lpfc_bsg.c                |  432 +++++++++++++----
- drivers/scsi/lpfc/lpfc_bsg.h                |    3 +-
- drivers/scsi/lpfc/lpfc_compat.h             |    5 +-
- drivers/scsi/lpfc/lpfc_crtn.h               |   13 +-
- drivers/scsi/lpfc/lpfc_debugfs.c            |  172 +++++---
- drivers/scsi/lpfc/lpfc_els.c                |  214 +++++----
- drivers/scsi/lpfc/lpfc_hbadisc.c            |  157 +++++--
- drivers/scsi/lpfc/lpfc_hw.h                 |   21 +-
- drivers/scsi/lpfc/lpfc_hw4.h                |   11 +-
- drivers/scsi/lpfc/lpfc_init.c               |  338 +++++++++-----
- drivers/scsi/lpfc/lpfc_mbox.c               |   25 +-
- drivers/scsi/lpfc/lpfc_mem.c                |    4 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c          |   10 +-
- drivers/scsi/lpfc/lpfc_scsi.c               |   17 +-
- drivers/scsi/lpfc/lpfc_scsi.h               |    5 +-
- drivers/scsi/lpfc/lpfc_sli.c                |  704 +++++++++++++++++++--------
- drivers/scsi/lpfc/lpfc_sli4.h               |   11 +-
- drivers/scsi/lpfc/lpfc_version.h            |    2 +-
- drivers/scsi/lpfc/lpfc_vport.c              |    6 +-
- drivers/scsi/mac_scsi.c                     |    3 +-
- drivers/scsi/mpt2sas/mpi/mpi2.h             |   10 +-
- drivers/scsi/mpt2sas/mpi/mpi2_cnfg.h        |   28 +-
- drivers/scsi/mpt2sas/mpi/mpi2_ioc.h         |   49 ++-
- drivers/scsi/mpt2sas/mpi/mpi2_raid.h        |   67 +++-
- drivers/scsi/mpt2sas/mpi/mpi2_tool.h        |    9 +-
- drivers/scsi/mpt2sas/mpt2sas_base.c         |  205 +++++----
- drivers/scsi/mpt2sas/mpt2sas_base.h         |   26 +-
- drivers/scsi/mpt2sas/mpt2sas_ctl.c          |    8 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c        |  168 ++++---
- drivers/scsi/mpt2sas/mpt2sas_transport.c    |    9 +-
- drivers/scsi/qla2xxx/qla_attr.c             |   10 +-
- drivers/scsi/qla2xxx/qla_bsg.c              |   20 +-
- drivers/scsi/qla2xxx/qla_dbg.c              |  310 ++++++------
- drivers/scsi/qla2xxx/qla_dbg.h              |   19 +-
- drivers/scsi/qla2xxx/qla_def.h              |    6 +-
- drivers/scsi/qla2xxx/qla_gbl.h              |    2 +-
- drivers/scsi/qla2xxx/qla_gs.c               |    2 +-
- drivers/scsi/qla2xxx/qla_init.c             |   95 ++--
- drivers/scsi/qla2xxx/qla_iocb.c             |  641 ++++++++++++++++++++----
- drivers/scsi/qla2xxx/qla_isr.c              |  253 ++++++----
- drivers/scsi/qla2xxx/qla_mbx.c              |    2 +-
- drivers/scsi/qla2xxx/qla_nx.c               |  512 +-------------------
- drivers/scsi/qla2xxx/qla_os.c               |  363 +++++++-------
- drivers/scsi/qla2xxx/qla_sup.c              |    5 +-
- drivers/scsi/qla4xxx/ql4_dbg.c              |    6 +-
- drivers/scsi/qla4xxx/ql4_def.h              |    1 +
- drivers/scsi/qla4xxx/ql4_isr.c              |   30 +-
- drivers/scsi/qla4xxx/ql4_nx.c               |   23 +-
- drivers/scsi/qla4xxx/ql4_os.c               |  127 ++++-
- drivers/scsi/qla4xxx/ql4_version.h          |    2 +-
- drivers/scsi/scsi_priv.h                    |    1 -
- drivers/scsi/scsi_transport_iscsi.c         |   21 +-
- include/scsi/scsi_device.h                  |    1 -
- include/scsi/scsi_transport_iscsi.h         |    5 +
- 71 files changed, 3627 insertions(+), 2604 deletions(-)
-
-James
+ Documentation/scsi/libsas.txt       |   15 -
+ drivers/ata/libata-eh.c             |    1 +
+ drivers/ata/libata.h                |    1 -
+ drivers/scsi/aic94xx/aic94xx.h      |    2 +
+ drivers/scsi/aic94xx/aic94xx_dev.c  |   38 ++-
+ drivers/scsi/aic94xx/aic94xx_init.c |    5 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 +-
+ drivers/scsi/isci/host.c            |    8 +-
+ drivers/scsi/isci/host.h            |   19 +-
+ drivers/scsi/isci/init.c            |   13 +-
+ drivers/scsi/isci/phy.c             |   18 +-
+ drivers/scsi/isci/phy.h             |    1 -
+ drivers/scsi/isci/port.c            |  220 ++++++------
+ drivers/scsi/isci/port.h            |   11 +-
+ drivers/scsi/isci/remote_device.c   |   32 +--
+ drivers/scsi/isci/remote_device.h   |    7 +-
+ drivers/scsi/isci/request.c         |  198 +----------
+ drivers/scsi/isci/request.h         |    9 +-
+ drivers/scsi/isci/task.c            |  158 ++-------
+ drivers/scsi/isci/task.h            |   40 --
+ drivers/scsi/libsas/sas_ata.c       |  685 +++++++++++++++--------------------
+ drivers/scsi/libsas/sas_discover.c  |  151 +++++++--
+ drivers/scsi/libsas/sas_event.c     |   89 +++++-
+ drivers/scsi/libsas/sas_expander.c  |  107 ++++--
+ drivers/scsi/libsas/sas_init.c      |  192 +++++++++-
+ drivers/scsi/libsas/sas_internal.h  |   73 ++--
+ drivers/scsi/libsas/sas_phy.c       |   12 +-
+ drivers/scsi/libsas/sas_port.c      |   24 +-
+ drivers/scsi/libsas/sas_scsi_host.c |  299 +++++++---------
+ drivers/scsi/mvsas/mv_init.c        |    1 -
+ drivers/scsi/mvsas/mv_sas.c         |   11 +-
+ drivers/scsi/pm8001/pm8001_init.c   |    1 -
+ drivers/scsi/pm8001/pm8001_sas.c    |   29 +-
+ drivers/scsi/scsi_transport_sas.c   |   59 +++-
+ include/linux/libata.h              |    1 +
+ include/scsi/libsas.h               |   59 ++--
+ include/scsi/sas_ata.h              |   26 +-
+ include/scsi/scsi_transport_sas.h   |   12 +-
+ 38 files changed, 1292 insertions(+), 1344 deletions(-)
