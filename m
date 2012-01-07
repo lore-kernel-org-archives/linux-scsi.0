@@ -1,63 +1,31 @@
-From: CAPITAL EQUALITY LOAN COMPANY <capitalequalityloan@hotmail.com>
-Subject: Wir bieten Darlehen
-Date: Sat, 07 Jan 2012 13:16:50 +0100
-Message-ID: <20120107131650.21325urpqkm0hdpu__48698.9774661653$1325940204$gmane$org@mail.med.unibs.it>
-Reply-To: capitalequalityloancompany@yahoo.com.hk
+From: "lykw2011" <lykw2011@gmail.com>
+Subject: Professional manufacturer of slewing bearings
+Date: Sat, 7 Jan 2012 20:53:32 +0800
+Message-ID: <201201072053016713837@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	DelSp=Yes	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iperione.med.unibs.it ([192.167.24.182]:46073 "EHLO
-	mail.med.unibs.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750930Ab2AGMnQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2012 07:43:16 -0500
-Content-Disposition: inline
+Received: from mail-iy0-f194.google.com ([209.85.210.194]:37162 "EHLO
+	mail-iy0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752626Ab2AGMxf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Jan 2012 07:53:35 -0500
+Received: by mail-iy0-f194.google.com with SMTP id o28so1116237iao.1
+        for <linux-scsi@vger.kernel.org>; Sat, 07 Jan 2012 04:53:35 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Dear Sir / Madam,
+Dear Manager
+We are Luoyang JiaWei Bearing Manufacturing Co,.Ltd.We supply all kinds of  slewing bearings ranging from 200mm to 6500mm with good quality and competitive price.If you need to purchase bearings please contact us to know details.Hope we can do business in the future.
+ 
+We look forward to hearing you soon. 
+  
+Sincerely
+  
+SamChen
+Tel:+86-379- 64566652
+Fax:+86-379-62797567
+Mobile Phone: +86-13592063789                                 
 
-Hiermit m=F6chten wir Sie dar=FCber informieren, dass CAPITAL GLEICHHEI=
-T =20
-Loan Company ist derzeit ein Darlehen anbieten zu 3% Zins.
-
-Wir bieten eine Vielzahl von Krediten an unsere Kunden. Was auch immer =
-=20
-Ihr Darlehen braucht, sind gro=DFe oder kleine, pers=F6nliche oder =20
-Hypotheken, sind wir bereit, mit Ihnen dar=FCber, wie wir Ihre =20
-needs.application untenstehende Formular treffen reden
-
-CAPITAL GLEICHHEIT Loan Company
-71 Queen Victoria Street
-London, United Kingdom, EC4V 4DE
-
-Bewerbungsformular:
-1) Vollst=E4ndiger Name :.........
-2) Land :..............
-3) Anschrift: ...
-4) Sex :..............
-5) Familienstand :......................
-6) Beruf :..............
-7) Telefon :......
-8) Monatliches Einkommen :.....................
-9) Darlehensbetrag Ben=F6tigte :...............
-10) Dauer der Ausleihe :..................
-11) Zweck des Darlehens :.................
-12) Alter: ..............
-
-Rosmarie Neely
-Loan Officer
-E-mail: capitalequalityloancompany@yahoo.com.hk
-Tell: +447035958575
-=46ax: +448447742385
-
-----------------------------------------------------------------
-This message was sent using IMP, the Internet Messaging Program.
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
