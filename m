@@ -1,48 +1,28 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH/TRIVIAL] [SCSI] Fix typo "neuxs" -> "nexus"
-Date: Fri,  6 Jan 2012 16:08:43 -0800
-Message-ID: <1325894923-26703-1-git-send-email-roland@kernel.org>
+From: adam radford <aradford@gmail.com>
+Subject: [PATCH 0/4] megaraid_sas: Updates for scsi-misc
+Date: Fri, 6 Jan 2012 17:01:39 -0800
+Message-ID: <CAHtARFEimZeSaxBM3QrBdzfM6Hzvzvc-94S15tW5=JUa2DS6tQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog107.obsmtp.com ([74.125.245.82]:38912 "HELO
-	na3sys010aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758725Ab2AGAIu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2012 19:08:50 -0500
-Received: by iapp10 with SMTP id p10so4459192iap.21
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2012 16:08:48 -0800 (PST)
+Received: from mail-we0-f174.google.com ([74.125.82.174]:58644 "EHLO
+	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755035Ab2AGBBl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2012 20:01:41 -0500
+Received: by werm1 with SMTP id m1so1502252wer.19
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2012 17:01:40 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-From: Roland Dreier <roland@purestorage.com>
+James/linux-scsi,
 
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/scsi_tgt_lib.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+The following patch series for megaraid_sas brings the driver up to v6.14-rc1:
 
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index 84a1fdf..d7bec3e 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -575,7 +575,7 @@ int scsi_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
- 	err = scsi_tgt_uspace_send_it_nexus_request(shost->host_no, itn_id, 0,
- 						    initiator);
- 	if (err < 0)
--		eprintk("The i_t_neuxs request lost, %d %llx!\n",
-+		eprintk("The i_t_nexus request lost, %d %llx!\n",
- 			shost->host_no, (unsigned long long)itn_id);
- 	return err;
- }
-@@ -589,7 +589,7 @@ int scsi_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
- 	err = scsi_tgt_uspace_send_it_nexus_request(shost->host_no,
- 						    itn_id, 1, NULL);
- 	if (err < 0)
--		eprintk("The i_t_neuxs request lost, %d %llx!\n",
-+		eprintk("The i_t_nexus request lost, %d %llx!\n",
- 			shost->host_no, (unsigned long long)itn_id);
- 	return err;
- }
--- 
-1.7.7.3
+1. Fix reglockFlags for degraded raid5/6 for MR 9360/9380.
+2. Mask off flags in ioctl path to prevent memory scribble with older
+MegaCLI versions.
+3. Remove poll_mode_io module parameter, sysfs node, and associated code.
+4. Version and Changelog update.
 
+-Adam
