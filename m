@@ -1,72 +1,56 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH v3 12/14] isci: ->lldd_ata_check_ready handler
-Date: Mon, 9 Jan 2012 09:57:36 +0800
-Message-ID: <513F55D9529643AC8F6F4C5B4B9F4B9D@usish.com.cn>
-References: <20120106005634.11464.64030.stgit@localhost6.localdomain6> <20120106010001.11464.91347.stgit@localhost6.localdomain6>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [dm-devel] [PATCH] scsi_dh_alua: Retry the check-condition in
+ case	Mode Parameters Changed
+Date: Mon, 09 Jan 2012 08:12:13 +0100
+Message-ID: <4F0A934D.6000802@suse.de>
+References: <47D23AD8469A2B448F33C24BD7A39BD910D14606@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120106010001.11464.91347.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>, linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54184 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754462Ab2AIHMO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jan 2012 02:12:14 -0500
+In-Reply-To: <47D23AD8469A2B448F33C24BD7A39BD910D14606@RTPMVEXC1-PRD.hq.netapp.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: "Moger, Babu" <Babu.Moger@netapp.com>, linux-scsi@vger.kernel.org, JBottomley@Parallels.com
 
-> +int isci_ata_check_ready(struct domain_device *dev)
-> +{
-> +	struct isci_port *iport = dev->port->lldd_port;
-> +	struct isci_host *ihost = dev_to_ihost(dev);
-> +	struct isci_remote_device *idev;
-> +	unsigned long flags;
-> +	int rc = 0;
-> +
-> +	spin_lock_irqsave(&ihost->scic_lock, flags);
-> +	idev = isci_lookup_device(dev);
-> +	spin_unlock_irqrestore(&ihost->scic_lock, flags);
-> +
-> +	if (!idev)
-> +		goto out;
-> +
-> +	if (test_bit(IPORT_RESET_PENDING, &iport->state))
-> +		goto out;
-> +
-> +	/* snapshot active phy mask */
-> +	spin_lock_irqsave(&ihost->scic_lock, flags);
-> +	rc = !!iport->active_phy_mask;
-[Jack Wang] 
-Hi Dan,
+On 12/22/2011 12:01 AM, Moger, Babu wrote:
+> This patch adds a check-condition in scsi_dh_alua handler for a retry=
+=2E
+> Sometimes,
+> I have seen attach failing due to this check-condition with following
+> error=20
+> messages on NetApp E series storage.
+>=20
+> Dec  7 15:31:01 nilgiris kernel: [102979.696673] scsi 3:0:2:9: alua:
+> port group 00 rel port 01
+> Dec  7 15:31:01 nilgiris kernel: [102979.697082] scsi 3:0:2:9: alua:
+> rtpg failed with 8000002
+> Dec  7 15:31:01 nilgiris kernel: [102979.697086] scsi 3:0:2:9: alua:
+> rtpg sense code 06/2a/01
+> Dec  7 15:31:01 nilgiris kernel: [102979.697088] scsi 3:0:2:9: alua: =
+not
+> attached
+>=20
+> Signed-off-by: Babu Moger <babu.moger@netapp.com>
+Looks ok.
 
-Could you explain why here you not directly use "
-rc = !!iport->active_phy_mask;
-"
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-> +	spin_unlock_irqrestore(&ihost->scic_lock, flags);
-> + out:
-> +	isci_put_device(idev);
-> +
-> +	return rc;
-> +}
-> +
->  void isci_port_deformed(struct asd_sas_phy *phy)
->  {
->  	struct isci_host *ihost = phy->ha->lldd_ha;
-> diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
-> index 78e1e82..b4a733c 100644
-> --- a/drivers/scsi/isci/port.h
-> +++ b/drivers/scsi/isci/port.h
-> @@ -293,4 +293,5 @@ void isci_port_init(
-> 
->  int isci_port_perform_hard_reset(struct isci_host *ihost, struct
-isci_port
-> *iport,
->  				 struct isci_phy *iphy);
-> +int isci_ata_check_ready(struct domain_device *dev);
->  #endif /* !defined(_ISCI_PORT_H_) */
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers,
 
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
