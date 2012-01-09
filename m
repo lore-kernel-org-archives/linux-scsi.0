@@ -1,228 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [patch 1/2]scsi: scsi_run_queue() doesn't use local list to
- handle starved sdev
-Date: Mon, 09 Jan 2012 11:30:28 -0600
-Message-ID: <1326130228.18456.11.camel@dabdike.int.hansenpartnership.com>
-References: <1324523412.22361.471.camel@sli10-conroe>
-	 <1324578449.9709.15.camel@dabdike.int.hansenpartnership.com>
-	 <1324600851.22361.475.camel@sli10-conroe>
-	 <1324603045.9282.2.camel@dabdike.cust.hotspot.t-mobile.com>
-	 <1324605214.22361.490.camel@sli10-conroe>
-	 <1326094267.22361.556.camel@sli10-conroe>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 26/28] libsas: check for 'gone' expanders in smp_execute_task()
+Date: Mon, 9 Jan 2012 11:04:45 -0800
+Message-ID: <CAA9_cmeLcUA5TdTgOSetb1XdNTEKwNMdfAyzM6nxoSU8s8WUkw@mail.gmail.com>
+References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
+	<20111223030044.21827.27431.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:55012 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932429Ab2AIRab (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2012 12:30:31 -0500
-In-Reply-To: <1326094267.22361.556.camel@sli10-conroe>
+Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:41744 "EHLO
+	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755816Ab2AITEq convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jan 2012 14:04:46 -0500
+In-Reply-To: <20111223030044.21827.27431.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shaohua Li <shaohua.li@intel.com>
-Cc: lkml <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Ted Ts'o <tytso@mit.edu>, "Wu, Fengguang" <fengguang.wu@intel.com>, "Darrick J. Wong" <djwong@us.ibm.com>
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Mon, 2012-01-09 at 15:31 +0800, Shaohua Li wrote:
-> On Fri, 2011-12-23 at 09:53 +0800, Shaohua Li wrote:
-> > On Thu, 2011-12-22 at 19:17 -0600, James Bottomley wrote:
-> > > On Fri, 2011-12-23 at 08:40 +0800, Shaohua Li wrote:
-> > > > On Thu, 2011-12-22 at 18:27 +0000, James Bottomley wrote:
-> > > > > On Thu, 2011-12-22 at 11:10 +0800, Shaohua Li wrote:
-> > > > > > scsi_run_queue() picks off all sdev from host starved_list to a local list,
-> > > > > > then handle them. If there are multiple threads running scsi_run_queue(),
-> > > > > > the starved_list will get messed. This is quite common, because request
-> > > > > > rq_affinity is on by default.
-> > > > > > 
-> > > > > > Signed-off-by: Shaohua Li <shaohua.li@intel.com>
-> > > > > > ---
-> > > > > >  drivers/scsi/scsi_lib.c |   21 ++++++++++++++-------
-> > > > > >  1 file changed, 14 insertions(+), 7 deletions(-)
-> > > > > > 
-> > > > > > Index: linux/drivers/scsi/scsi_lib.c
-> > > > > > ===================================================================
-> > > > > > --- linux.orig/drivers/scsi/scsi_lib.c	2011-12-21 16:56:23.000000000 +0800
-> > > > > > +++ linux/drivers/scsi/scsi_lib.c	2011-12-22 09:33:09.000000000 +0800
-> > > > > > @@ -401,9 +401,8 @@ static inline int scsi_host_is_busy(stru
-> > > > > >   */
-> > > > > >  static void scsi_run_queue(struct request_queue *q)
-> > > > > >  {
-> > > > > > -	struct scsi_device *sdev = q->queuedata;
-> > > > > > +	struct scsi_device *sdev = q->queuedata, *head_sdev = NULL;
-> > > > > >  	struct Scsi_Host *shost;
-> > > > > > -	LIST_HEAD(starved_list);
-> > > > > >  	unsigned long flags;
-> > > > > >  
-> > > > > >  	/* if the device is dead, sdev will be NULL, so no queue to run */
-> > > > > > @@ -415,9 +414,8 @@ static void scsi_run_queue(struct reques
-> > > > > >  		scsi_single_lun_run(sdev);
-> > > > > >  
-> > > > > >  	spin_lock_irqsave(shost->host_lock, flags);
-> > > > > > -	list_splice_init(&shost->starved_list, &starved_list);
-> > > > > >  
-> > > > > > -	while (!list_empty(&starved_list)) {
-> > > > > > +	while (!list_empty(&shost->starved_list)) {
-> > > > > 
-> > > > > The original reason for working from a copy instead of the original list
-> > > > > was that the device can end up back on the starved list because of a
-> > > > > variety of conditions in the HBA and so this would cause the loop not to
-> > > > > exit, so this piece of the patch doesn't look right to me.
-> > > > +               /*
-> > > > +                * the head sdev is no longer starved and removed from the
-> > > > +                * starved list, select a new sdev as head.
-> > > > +                */
-> > > > +               if (head_sdev == sdev && list_empty(&sdev->starved_entry))
-> > > > +                       head_sdev = NULL;
-> > > > I had this in the loop, which is to guarantee the loop will exit if a
-> > > > device is removed from the starved list.
-> > > 
-> > > And the non-head sdevs? which can also get put back onto the list
-> > yes, it will be put back to the list tail. Note we always handle the
-> > head sdev first. move the cursor of list iterating to next dev and next,
-> > we will hit head_sdev == sdev eventually, then the loop exit. or the
-> > cursor isn't moving, which means we have scsi_host_is_busy(). in both
-> > cases, the loop will exit.
-> > 
-> > > What's the reason for not just traversing the list once using list
-> > > splice?
-> > > 
-> > > Basically, the changelog doesn't seem to explain what you're doing and
-> > > the logic looks flawed.
-> > The main reason is we have multiple CPU trying to get the list to its
-> > local list and then handle it, then putback unprocessed entries back. we
-> > have multiple cpu handles blk softirq, because request rq_affinity is on
-> > default. And the putback always happen, because scsi_run_queue is called
-> > after every request finish. When it's called, scsi_host has just one
-> > free slot. The in-coordination of multiple threads handle of the starved
-> > list will mess the list. I observed dev which doesn't get chance to
-> > dispatch request is put to starved list tail, while dev which dispatches
-> > request is still at head. eg, this will cause unfairness. This means
-> > some devices will get starved.
-> James,
-> can you take a look at it? the two patches give 12% improvement in a
-> simple file creation workload. I updated the patch log.
-
-The exit criteria still don't look right to me.
-
-given two devices on the starved list, s1 and s2.  First loop around
-head_sdev is s1, we run the queue and it gets put back.  Now we loop to
-s2.  as we drop the lock to run the queue, a competing thread gets in,
-runs the starved loop and s1 gets removed.  We run s2, it gets put back,
-but we don't see s1 is gone (since the sdev we're processing is s2 and
-the check head_sdev == sdev fails) and it remains our head_sdev.  The
-result is a loop until s2 gets removed, which would be highly
-undesirable.
-
-The problem essentially is that you're using local variables to track
-what you've made a global list, so any other list manipulation external
-to your local variables is invisible to you.  You can fix this by
-checking list_empty(&head_sdev->starved_list) instead, but this will
-still lead to running the starved list up to twice as much as we would
-have previously.
-
-It strikes me that a far better (and certainly easier to follow logic)
-is to split the queue up for CPU affinity.  So the first pass instead of
-splicing everything, it just takes all the unaffine requests plus all
-those affine to that CPU, but leaves all those whose affinities don't
-match the CPU on the global list (for any competing thread, which must
-necessarily be on a different CPU, to process).
-
-James
-
-> Thanks,
-> Shaohua
-> 
-> Subject: scsi: scsi_run_queue() doesn't use local list to handle starved sdev
-> 
-> scsi_run_queue() picks off all sdev from host starved_list to a local list,
-> then handle them, and putback unprocessed entries back. we have multiple cpu
-> handles blk softirq, because request rq_affinity is on by default. And the
-> putback always happen, because scsi_run_queue() is called after every request
-> finish. When it's called, scsi_host has just one free slot. The in-coordination
-> of multiple threads handle of the starved list will mess the list. I observed
-> dev which doesn't get chance to dispatch request is put to starved list tail,
-> while dev which dispatches request successfully is still at head. This will
-> cause unfairness, which means some devices will get starved.
-> 
-> Signed-off-by: Shaohua Li <shaohua.li@intel.com>
+On Thu, Dec 22, 2011 at 7:00 PM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> No sense in issuing or retrying commands to an expander that has been
+> removed.
+>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 > ---
->  drivers/scsi/scsi_lib.c |   25 +++++++++++++++----------
->  1 file changed, 15 insertions(+), 10 deletions(-)
-> 
-> Index: linux/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/scsi_lib.c	2011-12-23 10:21:22.000000000 +0800
-> +++ linux/drivers/scsi/scsi_lib.c	2012-01-09 15:14:53.000000000 +0800
-> @@ -401,9 +401,8 @@ static inline int scsi_host_is_busy(stru
->   */
->  static void scsi_run_queue(struct request_queue *q)
->  {
-> -	struct scsi_device *sdev = q->queuedata;
-> +	struct scsi_device *sdev = q->queuedata, *head_sdev = NULL;
->  	struct Scsi_Host *shost;
-> -	LIST_HEAD(starved_list);
->  	unsigned long flags;
->  
->  	/* if the device is dead, sdev will be NULL, so no queue to run */
-> @@ -415,9 +414,8 @@ static void scsi_run_queue(struct reques
->  		scsi_single_lun_run(sdev);
->  
->  	spin_lock_irqsave(shost->host_lock, flags);
-> -	list_splice_init(&shost->starved_list, &starved_list);
->  
-> -	while (!list_empty(&starved_list)) {
-> +	while (!list_empty(&shost->starved_list)) {
->  		/*
->  		 * As long as shost is accepting commands and we have
->  		 * starved queues, call blk_run_queue. scsi_request_fn
-> @@ -431,8 +429,13 @@ static void scsi_run_queue(struct reques
->  		if (scsi_host_is_busy(shost))
->  			break;
->  
-> -		sdev = list_entry(starved_list.next,
-> +		sdev = list_entry(shost->starved_list.next,
->  				  struct scsi_device, starved_entry);
-> +		if (sdev == head_sdev)
-> +			break;
-> +		if (!head_sdev)
-> +			head_sdev = sdev;
+> =A0drivers/scsi/libsas/sas_expander.c | =A0 =A03 +++
+> =A01 files changed, 3 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas=
+/sas_expander.c
+> index d9c2769..e2efc6c 100644
+> --- a/drivers/scsi/libsas/sas_expander.c
+> +++ b/drivers/scsi/libsas/sas_expander.c
+> @@ -74,6 +74,9 @@ static int smp_execute_task(struct domain_device *d=
+ev, void *req, int req_size,
+>
+> =A0 =A0 =A0 =A0mutex_lock(&dev->ex_dev.cmd_mutex);
+> =A0 =A0 =A0 =A0for (retry =3D 0; retry < 3; retry++) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (dev->gone)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ECOMM;
 > +
->  		list_del_init(&sdev->starved_entry);
->  		if (scsi_target_is_busy(scsi_target(sdev))) {
->  			list_move_tail(&sdev->starved_entry,
-> @@ -445,9 +448,13 @@ static void scsi_run_queue(struct reques
->  		__blk_run_queue(sdev->request_queue);
->  		spin_unlock(sdev->request_queue->queue_lock);
->  		spin_lock(shost->host_lock);
-> +		/*
-> +		 * the head sdev is no longer starved and removed from the
-> +		 * starved list, select a new sdev as head.
-> +		 */
-> +		if (head_sdev == sdev && list_empty(&sdev->starved_entry))
-> +			head_sdev = NULL;
->  	}
-> -	/* put any unprocessed entries back */
-> -	list_splice(&starved_list, &shost->starved_list);
->  	spin_unlock_irqrestore(shost->host_lock, flags);
->  
->  	blk_run_queue(q);
-> @@ -1316,9 +1323,7 @@ static inline int scsi_target_queue_read
->  	}
->  
->  	if (scsi_target_is_busy(starget)) {
-> -		if (list_empty(&sdev->starved_entry))
-> -			list_add_tail(&sdev->starved_entry,
-> -				      &shost->starved_list);
-> +		list_move_tail(&sdev->starved_entry, &shost->starved_list);
->  		return 0;
->  	}
->  
-> 
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+Test results are just now tripping up on this obvious deadlock.  Will r=
+esend.
 
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
