@@ -1,48 +1,68 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v3 03/14] libsas: prevent domain rediscovery competing
- with ata error handling
-Date: Mon, 9 Jan 2012 12:03:17 -0800
-Message-ID: <CAA9_cmc+-7=pctiBW_g25uJ7fNkrvCfrrLKSfLj0Vm_psoP01Q@mail.gmail.com>
-References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-	<20120106005915.11464.83503.stgit@localhost6.localdomain6>
-	<CAA9_cmfOBdi9E-9be-gmsyW1s+1MYRu0GS1LkFXpORvfJ2PtfQ@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH] scsi_dh_rdac: Fix error path
+Date: Mon, 9 Jan 2012 17:13:05 -0500
+Message-ID: <CAMM=eLeXa7qLMyG+njL9yuYDkUAxTNLV5eHi+y_=X+1eDVwZ_g@mail.gmail.com>
+References: <1321577067-26332-1-git-send-email-richard@nod.at>
+ <47D23AD8469A2B448F33C24BD7A39BD9108C7178@RTPMVEXC1-PRD.hq.netapp.com> <4EEDFBCF.4040802@nod.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CAA9_cmfOBdi9E-9be-gmsyW1s+1MYRu0GS1LkFXpORvfJ2PtfQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4EEDFBCF.4040802@nod.at>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Richard Weinberger <richard@nod.at>
+Cc: "Moger, Babu" <Babu.Moger@netapp.com>, JBottomley@parallels.com, Somasundaram.Krishnasamy@lsi.com, yanling.qi@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 9, 2012 at 11:14 AM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> On Thu, Jan 5, 2012 at 4:59 PM, Dan Williams <dan.j.williams@intel.co=
-m> wrote:
->> +void sas_unregister_dev(struct asd_sas_port *port, struct domain_de=
-vice *dev)
->> +{
->> + =A0 =A0 =A0 if (!list_empty(&dev->disco_list_node)) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* this rphy never saw sas_rphy_add */
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_del_init(&dev->disco_list_node);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_free(dev->rphy);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev->rphy =3D NULL;
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_unregister_common_dev(port, dev);
->> + =A0 =A0 =A0 }
->> +
->> + =A0 =A0 =A0 if (dev->rphy) {
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_unlink(dev->rphy);
->> +
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irq(&port->dev_list_lock);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_move_tail(&dev->dev_list_node, &p=
-ort->destroy_list);
->> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&port->dev_list_lock);
+On Sun, Dec 18, 2011 at 9:42 AM, Richard Weinberger <richard@nod.at> wr=
+ote:
+> Am 18.11.2011 15:34, schrieb Moger, Babu:
+>> Looks good to me..
+>>
+>>> -----Original Message-----
+>>> From: Richard Weinberger [mailto:richard@nod.at]
+>>> Sent: Thursday, November 17, 2011 6:44 PM
+>>> To: JBottomley@parallels.com
+>>> Cc: Moger, Babu; Somasundaram.Krishnasamy@lsi.com; yanling.qi@lsi.c=
+om;
+>>> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Richard
+>>> Weinberger
+>>> Subject: [PATCH] scsi_dh_rdac: Fix error path
+>>>
+>>> If create_singlethread_workqueue() failes, rdac_init should fail to=
+o.
+>>>
+>>> Signed-off-by: Richard Weinberger <richard@nod.at>
+>>> ---
+>>> =A0drivers/scsi/device_handler/scsi_dh_rdac.c | =A0 =A02 ++
+>>> =A01 files changed, 2 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> b/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> index 1d31279..2802394 100644
+>>> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+>>> @@ -934,6 +934,8 @@ static int __init rdac_init(void)
+>>> =A0 =A0 =A0if (!kmpath_rdacd) {
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_unregister_device_handler(&rdac_dh)=
+;
+>>> =A0 =A0 =A0 =A0 =A0 =A0 =A0printk(KERN_ERR "kmpath_rdacd creation f=
+ailed.\n");
+>>> +
+>>> + =A0 =A0 =A0 =A0 =A0 =A0r =3D -EINVAL;
+>>> =A0 =A0 =A0}
+>>> =A0done:
+>>> =A0 =A0 =A0return r;
+>>> --
+>>> 1.7.7.3
+>>
 >
-> This is too early to make the device appear removed from the domain.
-> Will revise the patch to re-use disco_list_node to for
-> port->destroy_list.
+> James,
+>
+> can you please pickup this patch?
 
-=2E..we also need to clear the parent sas_port's rphy reference to get
-sas_port_delete to skip its call to sas_rphy_delete and leave it to
-the DISCE_DESTRUCT event.
+James, was this the one that you said was overlooked?
+
+In any case, please apply, and for good measure:
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
