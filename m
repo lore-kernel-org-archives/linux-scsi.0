@@ -1,55 +1,49 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 26/28] libsas: check for 'gone' expanders in smp_execute_task()
-Date: Mon, 9 Jan 2012 11:04:45 -0800
-Message-ID: <CAA9_cmeLcUA5TdTgOSetb1XdNTEKwNMdfAyzM6nxoSU8s8WUkw@mail.gmail.com>
-References: <20111223025350.21827.85779.stgit@localhost6.localdomain6>
-	<20111223030044.21827.27431.stgit@localhost6.localdomain6>
+Subject: Re: [PATCH v3 03/14] libsas: prevent domain rediscovery competing
+ with ata error handling
+Date: Mon, 9 Jan 2012 11:14:51 -0800
+Message-ID: <CAA9_cmfOBdi9E-9be-gmsyW1s+1MYRu0GS1LkFXpORvfJ2PtfQ@mail.gmail.com>
+References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
+	<20120106005915.11464.83503.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-tul01m020-f174.google.com ([209.85.214.174]:41744 "EHLO
-	mail-tul01m020-f174.google.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755816Ab2AITEq convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jan 2012 14:04:46 -0500
-In-Reply-To: <20111223030044.21827.27431.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20120106005915.11464.83503.stgit@localhost6.localdomain6>
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 22, 2011 at 7:00 PM, Dan Williams <dan.j.williams@intel.com=
-> wrote:
-> No sense in issuing or retrying commands to an expander that has been
-> removed.
->
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
-> =A0drivers/scsi/libsas/sas_expander.c | =A0 =A03 +++
-> =A01 files changed, 3 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas=
-/sas_expander.c
-> index d9c2769..e2efc6c 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -74,6 +74,9 @@ static int smp_execute_task(struct domain_device *d=
-ev, void *req, int req_size,
->
-> =A0 =A0 =A0 =A0mutex_lock(&dev->ex_dev.cmd_mutex);
-> =A0 =A0 =A0 =A0for (retry =3D 0; retry < 3; retry++) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (dev->gone)
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ECOMM;
+On Thu, Jan 5, 2012 at 4:59 PM, Dan Williams <dan.j.williams@intel.com>=
+ wrote:
+> +void sas_unregister_dev(struct asd_sas_port *port, struct domain_dev=
+ice *dev)
+> +{
+> + =A0 =A0 =A0 if (!list_empty(&dev->disco_list_node)) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* this rphy never saw sas_rphy_add */
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_del_init(&dev->disco_list_node);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_free(dev->rphy);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev->rphy =3D NULL;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_unregister_common_dev(port, dev);
+> + =A0 =A0 =A0 }
 > +
+> + =A0 =A0 =A0 if (dev->rphy) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_unlink(dev->rphy);
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irq(&port->dev_list_lock);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_move_tail(&dev->dev_list_node, &po=
+rt->destroy_list);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&port->dev_list_lock);
 
-Test results are just now tripping up on this obvious deadlock.  Will r=
-esend.
+This is too early to make the device appear removed from the domain.
+Will revise the patch to re-use disco_list_node to for
+port->destroy_list.
 
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_discover_event(dev->port, DISCE_DES=
+TRUCT);
+> =A0 =A0 =A0 =A0}
+> - =A0 =A0 =A0 sas_unregister_common_dev(port, dev);
+> =A0}
+>
