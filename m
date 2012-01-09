@@ -1,51 +1,48 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v3 12/14] isci: ->lldd_ata_check_ready handler
-Date: Mon, 9 Jan 2012 11:26:36 -0800
-Message-ID: <CAA9_cmfv2xgLc6usdJcz0xdhmXeW3F3pYpiGaCogJSOELYARDA@mail.gmail.com>
+Subject: Re: [PATCH v3 03/14] libsas: prevent domain rediscovery competing
+ with ata error handling
+Date: Mon, 9 Jan 2012 12:03:17 -0800
+Message-ID: <CAA9_cmc+-7=pctiBW_g25uJ7fNkrvCfrrLKSfLj0Vm_psoP01Q@mail.gmail.com>
 References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-	<20120106010001.11464.91347.stgit@localhost6.localdomain6>
-	<513F55D9529643AC8F6F4C5B4B9F4B9D@usish.com.cn>
+	<20120106005915.11464.83503.stgit@localhost6.localdomain6>
+	<CAA9_cmfOBdi9E-9be-gmsyW1s+1MYRu0GS1LkFXpORvfJ2PtfQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <513F55D9529643AC8F6F4C5B4B9F4B9D@usish.com.cn>
+In-Reply-To: <CAA9_cmfOBdi9E-9be-gmsyW1s+1MYRu0GS1LkFXpORvfJ2PtfQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jan 8, 2012 at 5:57 PM, Jack Wang <jack_wang@usish.com> wrote:
->> +int isci_ata_check_ready(struct domain_device *dev)
+On Mon, Jan 9, 2012 at 11:14 AM, Dan Williams <dan.j.williams@intel.com=
+> wrote:
+> On Thu, Jan 5, 2012 at 4:59 PM, Dan Williams <dan.j.williams@intel.co=
+m> wrote:
+>> +void sas_unregister_dev(struct asd_sas_port *port, struct domain_de=
+vice *dev)
 >> +{
->> + =A0 =A0 struct isci_port *iport =3D dev->port->lldd_port;
->> + =A0 =A0 struct isci_host *ihost =3D dev_to_ihost(dev);
->> + =A0 =A0 struct isci_remote_device *idev;
->> + =A0 =A0 unsigned long flags;
->> + =A0 =A0 int rc =3D 0;
+>> + =A0 =A0 =A0 if (!list_empty(&dev->disco_list_node)) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* this rphy never saw sas_rphy_add */
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_del_init(&dev->disco_list_node);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_free(dev->rphy);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev->rphy =3D NULL;
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_unregister_common_dev(port, dev);
+>> + =A0 =A0 =A0 }
 >> +
->> + =A0 =A0 spin_lock_irqsave(&ihost->scic_lock, flags);
->> + =A0 =A0 idev =3D isci_lookup_device(dev);
->> + =A0 =A0 spin_unlock_irqrestore(&ihost->scic_lock, flags);
+>> + =A0 =A0 =A0 if (dev->rphy) {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_unlink(dev->rphy);
 >> +
->> + =A0 =A0 if (!idev)
->> + =A0 =A0 =A0 =A0 =A0 =A0 goto out;
->> +
->> + =A0 =A0 if (test_bit(IPORT_RESET_PENDING, &iport->state))
->> + =A0 =A0 =A0 =A0 =A0 =A0 goto out;
->> +
->> + =A0 =A0 /* snapshot active phy mask */
->> + =A0 =A0 spin_lock_irqsave(&ihost->scic_lock, flags);
->> + =A0 =A0 rc =3D !!iport->active_phy_mask;
-> [Jack Wang]
-> Hi Dan,
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irq(&port->dev_list_lock);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_move_tail(&dev->dev_list_node, &p=
+ort->destroy_list);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&port->dev_list_lock);
 >
-> Could you explain why here you not directly use "
-> rc =3D !!iport->active_phy_mask;
+> This is too early to make the device appear removed from the domain.
+> Will revise the patch to re-use disco_list_node to for
+> port->destroy_list.
 
-You are right, it can look at the field outside the lock... and since
-we have already taken the lock to get a device reference we know we
-have flushed any recent port events.
-
---
-Dan
+=2E..we also need to clear the parent sas_port's rphy reference to get
+sas_port_delete to skip its call to sas_rphy_delete and leave it to
+the DISCE_DESTRUCT event.
