@@ -1,49 +1,51 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v3 03/14] libsas: prevent domain rediscovery competing
- with ata error handling
-Date: Mon, 9 Jan 2012 11:14:51 -0800
-Message-ID: <CAA9_cmfOBdi9E-9be-gmsyW1s+1MYRu0GS1LkFXpORvfJ2PtfQ@mail.gmail.com>
+Subject: Re: [PATCH v3 12/14] isci: ->lldd_ata_check_ready handler
+Date: Mon, 9 Jan 2012 11:26:36 -0800
+Message-ID: <CAA9_cmfv2xgLc6usdJcz0xdhmXeW3F3pYpiGaCogJSOELYARDA@mail.gmail.com>
 References: <20120106005634.11464.64030.stgit@localhost6.localdomain6>
-	<20120106005915.11464.83503.stgit@localhost6.localdomain6>
+	<20120106010001.11464.91347.stgit@localhost6.localdomain6>
+	<513F55D9529643AC8F6F4C5B4B9F4B9D@usish.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20120106005915.11464.83503.stgit@localhost6.localdomain6>
+In-Reply-To: <513F55D9529643AC8F6F4C5B4B9F4B9D@usish.com.cn>
 Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: Jack Wang <jack_wang@usish.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jan 5, 2012 at 4:59 PM, Dan Williams <dan.j.williams@intel.com>=
- wrote:
-> +void sas_unregister_dev(struct asd_sas_port *port, struct domain_dev=
-ice *dev)
-> +{
-> + =A0 =A0 =A0 if (!list_empty(&dev->disco_list_node)) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* this rphy never saw sas_rphy_add */
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_del_init(&dev->disco_list_node);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_free(dev->rphy);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 dev->rphy =3D NULL;
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_unregister_common_dev(port, dev);
-> + =A0 =A0 =A0 }
-> +
-> + =A0 =A0 =A0 if (dev->rphy) {
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_rphy_unlink(dev->rphy);
-> +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_lock_irq(&port->dev_list_lock);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 list_move_tail(&dev->dev_list_node, &po=
-rt->destroy_list);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 spin_unlock_irq(&port->dev_list_lock);
-
-This is too early to make the device appear removed from the domain.
-Will revise the patch to re-use disco_list_node to for
-port->destroy_list.
-
-> +
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 sas_discover_event(dev->port, DISCE_DES=
-TRUCT);
-> =A0 =A0 =A0 =A0}
-> - =A0 =A0 =A0 sas_unregister_common_dev(port, dev);
-> =A0}
+On Sun, Jan 8, 2012 at 5:57 PM, Jack Wang <jack_wang@usish.com> wrote:
+>> +int isci_ata_check_ready(struct domain_device *dev)
+>> +{
+>> + =A0 =A0 struct isci_port *iport =3D dev->port->lldd_port;
+>> + =A0 =A0 struct isci_host *ihost =3D dev_to_ihost(dev);
+>> + =A0 =A0 struct isci_remote_device *idev;
+>> + =A0 =A0 unsigned long flags;
+>> + =A0 =A0 int rc =3D 0;
+>> +
+>> + =A0 =A0 spin_lock_irqsave(&ihost->scic_lock, flags);
+>> + =A0 =A0 idev =3D isci_lookup_device(dev);
+>> + =A0 =A0 spin_unlock_irqrestore(&ihost->scic_lock, flags);
+>> +
+>> + =A0 =A0 if (!idev)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+>> +
+>> + =A0 =A0 if (test_bit(IPORT_RESET_PENDING, &iport->state))
+>> + =A0 =A0 =A0 =A0 =A0 =A0 goto out;
+>> +
+>> + =A0 =A0 /* snapshot active phy mask */
+>> + =A0 =A0 spin_lock_irqsave(&ihost->scic_lock, flags);
+>> + =A0 =A0 rc =3D !!iport->active_phy_mask;
+> [Jack Wang]
+> Hi Dan,
 >
+> Could you explain why here you not directly use "
+> rc =3D !!iport->active_phy_mask;
+
+You are right, it can look at the field outside the lock... and since
+we have already taken the lock to get a device reference we know we
+have flushed any recent port events.
+
+--
+Dan
