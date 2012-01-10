@@ -1,64 +1,67 @@
-From: =?UTF-8?B?QW5kcsOpLVNlYmFzdGlhbiBMaWViZQ==?= <andre@lianse.eu>
-Subject: Re: [PATCH] mpt2sas: New feature - Fast Load Support
-Date: Tue, 10 Jan 2012 09:48:29 +0100
-Message-ID: <4F0BFB5D.6030802@lianse.eu>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] mpt2sas: New feature - Fast Load Support
+Date: Tue, 10 Jan 2012 16:23:47 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED7299CF90B84@inbmail01.lsi.com>
+References: <4F0BFB5D.6030802@lianse.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ee0-f46.google.com ([74.125.83.46]:40948 "EHLO
-	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752684Ab2AJIse (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 03:48:34 -0500
-Received: by eekc41 with SMTP id c41so104318eek.19
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2012 00:48:32 -0800 (PST)
+Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:55518 "EHLO
+	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752942Ab2AJKxz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2012 05:53:55 -0500
+In-Reply-To: <4F0BFB5D.6030802@lianse.eu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: =?utf-8?B?QW5kcsOpLVNlYmFzdGlhbiBMaWViZQ==?= <andre@lianse.eu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-Hi guys,
-
-I've run into problems with the all new shiny 3.2 kernel. My system
-broke badly as it's depending on some devices which are attached to my
-LSI SAS 2008 hba.
-The mount scripts of my gentoo/openrc setup get triggered right after
-udev has settled.  But with the new fast load support udev settles
-before my drives appear to the system, so mount fails for all those
-drives and of cause all subsequent services depending on them.
-Is there any switch to revert back to the old behavior of blocking unti=
-l
-all ports scans are done?
-
-Thanks in advance
-Andr=C3=A9-Sebastian Liebe
-
-- --=20
-gpg key AA1E1F66 @ gpg-keyserver.de: Andr=C3=A9-Sebastian Liebe <andre@=
-lianse.eu>
-Key fingerprint =3D 5436 5358 172C EB7D E414  C6DE 6664 89BF AA1E 1F66
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iQIcBAEBAgAGBQJPC/tXAAoJEIvQ0TmZSz9R+ywP/Ays9LD9+UgfrmU/U5mc2HxA
-n9QcZUK6CNGdw6QA8XsLKXPIOZYsCBiiLroNORzFfwRW7xsue1YMD6tR121TjmYL
-QA9C9Clf9WYJT8RTEkmECHkejvxAkBqu0FhMJJC3377L2/qAN2NSkz6VInzqAdqE
-My4948xRx0z7ysjiFqRwOeZgss70IowshwDO5mAbuAawOQZa3UZo72HZ8gVxbf4H
-xKhPLy6QraEJX3SMtTmJDvp46xJ5UN4yXosdOD7pkYUeCnTX7AhaO+bIuEPgGB9Q
-UaEawMoMq8cPVEXl4L5gvPkIKCWdnmCLTtDcOeqTxuHoyOx/qn8xvh2D4K2shWgf
-jaxPN9VGa6VBIxmZWjX4emtI2QqhjnaW8o7A+hz1K8rJO1SgCdGJxdB+gjLhXcLe
-ZYKLOJ5OFIX8JQk6IjUTLkRCnZpEG/WORU+fSU93dCglcRxnevPUvIs3rpTzstGd
-/DKN5JPXMIPvX3aJ5sWoXygpnq9oOfPAMDXB4jibkYbbnF4aqWEp7m+l7g84dH0N
-2O0SFQm7VTb15Pp3ZIKGQhxfVxHwsd+fnoM1rpqkRRrF4YmovuFgsHr7qjE4astq
-/c9TUJzn/93fan/f0FrW9KlBE26zqwCp6HIbNe/HLSZgdMXGVWynwa3w86d17eyg
-givRtuynhgPB/KDyoavm
-=3D5BNV
------END PGP SIGNATURE-----
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+VGhlcmUgaXMgYSBzb21lIHNjc2lfbW9kIHBhcmFtZXRlciBjYWxsZWQgInNjYW4iLg0KSWYgeW91
+IHBhc3MgdGhvc2UgcGFyYW1ldGVyIGF0IGJvb3QgdGltZSB5b3UgY2FuIGNoYW5nZSB0aGUgYmVo
+YXZpb3IuIChzZWUgYmVsb3cgZGVzY3JpcHRpb24pDQoNCglzY3NpX21vZC5zY2FuPQlbU0NTSV0g
+c3luYyAoZGVmYXVsdCkgc2NhbnMgU0NTSSBidXNzZXMgYXMgdGhleSBhcmUNCgkJZGlzY292ZXJl
+ZC4gIEFzeW5jIHNjYW5zIHRoZW0gaW4ga2VybmVsIHRocmVhZHMsIGFsbG93aW5nIGJvb3QgdG8g
+cHJvY2VlZC4gIA0KCQlub25lIGlnbm9yZXMgdGhlbSwgZXhwZWN0aW5nIHVzZXIgc3BhY2UgdG8g
+ZG8gdGhlIHNjYW4uDQoNCn4gS2FzaHlhcA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQo+IEZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgt
+c2NzaS0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQW5kcsOpLVNlYmFz
+dGlhbiBMaWViZQ0KPiBTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDEwLCAyMDEyIDI6MTggUE0NCj4g
+VG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG1w
+dDJzYXM6IE5ldyBmZWF0dXJlIC0gRmFzdCBMb2FkIFN1cHBvcnQNCj4gDQo+IC0tLS0tQkVHSU4g
+UEdQIFNJR05FRCBNRVNTQUdFLS0tLS0NCj4gSGFzaDogU0hBMQ0KPiANCj4gSGkgZ3V5cywNCj4g
+DQo+IEkndmUgcnVuIGludG8gcHJvYmxlbXMgd2l0aCB0aGUgYWxsIG5ldyBzaGlueSAzLjIga2Vy
+bmVsLiBNeSBzeXN0ZW0NCj4gYnJva2UgYmFkbHkgYXMgaXQncyBkZXBlbmRpbmcgb24gc29tZSBk
+ZXZpY2VzIHdoaWNoIGFyZSBhdHRhY2hlZCB0byBteQ0KPiBMU0kgU0FTIDIwMDggaGJhLg0KPiBU
+aGUgbW91bnQgc2NyaXB0cyBvZiBteSBnZW50b28vb3BlbnJjIHNldHVwIGdldCB0cmlnZ2VyZWQg
+cmlnaHQgYWZ0ZXINCj4gdWRldiBoYXMgc2V0dGxlZC4gIEJ1dCB3aXRoIHRoZSBuZXcgZmFzdCBs
+b2FkIHN1cHBvcnQgdWRldiBzZXR0bGVzDQo+IGJlZm9yZSBteSBkcml2ZXMgYXBwZWFyIHRvIHRo
+ZSBzeXN0ZW0sIHNvIG1vdW50IGZhaWxzIGZvciBhbGwgdGhvc2UNCj4gZHJpdmVzIGFuZCBvZiBj
+YXVzZSBhbGwgc3Vic2VxdWVudCBzZXJ2aWNlcyBkZXBlbmRpbmcgb24gdGhlbS4NCj4gSXMgdGhl
+cmUgYW55IHN3aXRjaCB0byByZXZlcnQgYmFjayB0byB0aGUgb2xkIGJlaGF2aW9yIG9mIGJsb2Nr
+aW5nIHVudGlsDQo+IGFsbCBwb3J0cyBzY2FucyBhcmUgZG9uZT8NCj4gDQo+IFRoYW5rcyBpbiBh
+ZHZhbmNlDQo+IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gDQo+IC0gLS0NCj4gZ3BnIGtleSBB
+QTFFMUY2NiBAIGdwZy1rZXlzZXJ2ZXIuZGU6IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gPGFu
+ZHJlQGxpYW5zZS5ldT4NCj4gS2V5IGZpbmdlcnByaW50ID0gNTQzNiA1MzU4IDE3MkMgRUI3RCBF
+NDE0ICBDNkRFIDY2NjQgODlCRiBBQTFFIDFGNjYNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJF
+LS0tLS0NCj4gVmVyc2lvbjogR251UEcgdjIuMC4xOCAoR05VL0xpbnV4KQ0KPiBDb21tZW50OiBV
+c2luZyBHbnVQRyB3aXRoIE1vemlsbGEgLSBodHRwOi8vZW5pZ21haWwubW96ZGV2Lm9yZy8NCj4g
+DQo+IGlRSWNCQUVCQWdBR0JRSlBDL3RYQUFvSkVJdlEwVG1aU3o5Uit5d1AvQXlzOUxEOStVZ2Zy
+bVUvVTVtYzJIeEENCj4gbjlRY1pVSzZDTkdkdzZRQThYc0xLWFBJT1pZc0NCaWlMcm9OT1J6RmZ3
+Ulc3eHN1ZTFZTUQ2dFIxMjFUam1ZTA0KPiBRQTlDOUNsZjlXWUpUOFJURWttRUNIa2VqdnhBa0Jx
+dTBGaE1KSkMzMzc3TDIvcUFOMk5Ta3o2VkluenFBZHFFDQo+IE15NDk0OHhSeDB6N3lzamlGcVJ3
+T2VaZ3NzNzBJb3dzaHdETzVtQWJ1QWF3T1FaYTNVWm83MkhaOGdWeGJmNEgNCj4geEtoUEx5NlFy
+YUVKWDNTTXRUbUpEdnA0NnhKNVVONHlYb3NkT0Q3cGtZVWVDblRYN0FoYU8rYkl1RVBnR0I5UQ0K
+PiBVYUVhd01vTXE4Y1BWRVhsNEw1Z3ZQa0lLQ1dkbm1DTFR0RGNPZXFUeHVIb3lPeC9xbjh4dmgy
+RDRLMnNoV2dmDQo+IGpheFBOOVZHYTZWQkl4bVpXalg0ZW10STJRcWhqbmFXOG83QStoejFLOHJK
+TzFTZ0NkR0p4ZEIrZ2pMaFhjTGUNCj4gWllLTE9KNU9GSVg4SlFrNklqVVRMa1JDblpwRUcvV09S
+VStmU1U5M2RDZ2xjUnhuZXZQVXZJczNycFR6c3RHZA0KPiAvREtONUpQWE1JUHZYM2FKNXNXb1h5
+Z3BucTlvT2ZQQU1EWEI0amlia1liYm5GNGFxV0VwN20rbDdnODRkSDBODQo+IDJPMFNGUW03VlRi
+MTVQcDNaSUtHUWh4ZlZ4SHdzZCtmbm9NMXJwcWtSUnJGNFltb3Z1RmdzSHI3cWpFNGFzdHENCj4g
+L2M5VFVKem4vOTNmYW4vZjBGclc5S2xCRTI2enF3Q3A2SEliTmUvSExTWmdkTVhHVld5bndhM3c4
+NmQxN2V5Zw0KPiBnaXZSdHV5bmhnUEIvS0R5b2F2bQ0KPiA9NUJOVg0KPiAtLS0tLUVORCBQR1Ag
+U0lHTkFUVVJFLS0tLS0NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
+bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEg
+bWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGlu
+Zm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
