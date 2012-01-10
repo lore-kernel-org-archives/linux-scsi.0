@@ -1,43 +1,168 @@
 From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH 1/3] SCSI: fix typo in definition of struct scsi_target
-Date: Tue, 10 Jan 2012 13:43:04 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1201101336500.1594-100000@iolanthe.rowland.org>
+Subject: [PATCH 2/3] SCSI & usb-storage: add flags for VPD pages and REPORT
+ LUNS
+Date: Tue, 10 Jan 2012 13:43:30 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1201101337501.1594-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:55183 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:55189 "HELO
 	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756457Ab2AJSnF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 13:43:05 -0500
+	with SMTP id S1756457Ab2AJSnb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 13:43:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
 Cc: Perry Wagle <wagle@mac.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-This patch (as1506) corrects a typo in the definition of the
-scsi_target structure.  pdt_1f_for_no_lun is supposed to be a
-single-bit flag, not a full-sized integer.
+This patch (as1507) adds a skip_vpd_pages flag to struct scsi_device
+and a no_report_luns flag to struct scsi_target.  The first is used to
+control whether sd will look at VPD pages for information on block
+provisioning, limits, and characteristics.  The second prevents
+scsi_report_lun_scan() from issuing a REPORT LUNS command.
+
+The patch also modifies usb-storage to set the new flag bits for all
+USB devices and targets, and to stop adjusting the scsi_level value.
+
+Historically we have seen that USB mass-storage devices often don't
+support VPD pages or REPORT LUNS properly.  Until now we have avoided
+these things by setting the scsi_level to SCSI_2 for all USB devices.
+But this has the side effect of storing the LUN bits into the second
+byte of each CDB, and now we have a report of a device which doesn't
+like that.  The best solution is to stop abusing scsi_level and
+instead have separate flags for VPD pages and REPORT LUNS.
 
 Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Reported-by: Perry Wagle <wagle@mac.com>
+CC: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
 
 ---
 
- include/scsi/scsi_device.h |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_scan.c       |    4 ++++
+ drivers/scsi/sd.c              |    2 +-
+ drivers/usb/storage/scsiglue.c |   26 ++++++++++++++++----------
+ include/scsi/scsi_device.h     |    3 +++
+ 4 files changed, 24 insertions(+), 11 deletions(-)
 
 Index: usb-3.2/include/scsi/scsi_device.h
 ===================================================================
 --- usb-3.2.orig/include/scsi/scsi_device.h
 +++ usb-3.2/include/scsi/scsi_device.h
-@@ -247,8 +247,8 @@ struct scsi_target {
- 	unsigned int		single_lun:1;	/* Indicates we should only
- 						 * allow I/O to one of the luns
+@@ -136,6 +136,7 @@ struct scsi_device {
+ 	unsigned use_10_for_ms:1; /* first try 10-byte mode sense/select */
+ 	unsigned skip_ms_page_8:1;	/* do not use MODE SENSE page 0x08 */
+ 	unsigned skip_ms_page_3f:1;	/* do not use MODE SENSE page 0x3f */
++	unsigned skip_vpd_pages:1;	/* do not read VPD pages */
+ 	unsigned use_192_bytes_for_3f:1; /* ask for 192 bytes from page 0x3f */
+ 	unsigned no_start_on_add:1;	/* do not issue start on add */
+ 	unsigned allow_restart:1; /* issue START_UNIT in error handler */
+@@ -249,6 +250,8 @@ struct scsi_target {
  						 * for the device at a time. */
--	unsigned int		pdt_1f_for_no_lun;	/* PDT = 0x1f */
--						/* means no lun present */
-+	unsigned int		pdt_1f_for_no_lun:1;	/* PDT = 0x1f
-+						 * means no lun present. */
+ 	unsigned int		pdt_1f_for_no_lun:1;	/* PDT = 0x1f
+ 						 * means no lun present. */
++	unsigned int		no_report_luns:1;	/* Don't use
++						 * REPORT LUNS for scanning. */
  	/* commands actually active on LLD. protected by host lock. */
  	unsigned int		target_busy;
  	/*
+Index: usb-3.2/drivers/scsi/scsi_scan.c
+===================================================================
+--- usb-3.2.orig/drivers/scsi/scsi_scan.c
++++ usb-3.2/drivers/scsi/scsi_scan.c
+@@ -1295,6 +1295,7 @@ EXPORT_SYMBOL(int_to_scsilun);
+  *   LUNs even if it's older than SCSI-3.
+  *   If BLIST_NOREPORTLUN is set, return 1 always.
+  *   If BLIST_NOLUN is set, return 0 always.
++ *   If starget->no_report_luns is set, return 1 always.
+  *
+  * Return:
+  *     0: scan completed (or no memory, so further scanning is futile)
+@@ -1321,6 +1322,7 @@ static int scsi_report_lun_scan(struct s
+ 	 * Only support SCSI-3 and up devices if BLIST_NOREPORTLUN is not set.
+ 	 * Also allow SCSI-2 if BLIST_REPORTLUN2 is set and host adapter does
+ 	 * support more than 8 LUNs.
++	 * Don't attempt if the target doesn't support REPORT LUNS.
+ 	 */
+ 	if (bflags & BLIST_NOREPORTLUN)
+ 		return 1;
+@@ -1332,6 +1334,8 @@ static int scsi_report_lun_scan(struct s
+ 		return 1;
+ 	if (bflags & BLIST_NOLUN)
+ 		return 0;
++	if (starget->no_report_luns)
++		return 1;
+ 
+ 	if (!(sdev = scsi_device_lookup_by_target(starget, 0))) {
+ 		sdev = scsi_alloc_sdev(starget, 0, NULL);
+Index: usb-3.2/drivers/scsi/sd.c
+===================================================================
+--- usb-3.2.orig/drivers/scsi/sd.c
++++ usb-3.2/drivers/scsi/sd.c
+@@ -2341,7 +2341,7 @@ static int sd_try_extended_inquiry(struc
+ 	 * some USB ones crash on receiving them, and the pages
+ 	 * we currently ask for are for SPC-3 and beyond
+ 	 */
+-	if (sdp->scsi_level > SCSI_SPC_2)
++	if (sdp->scsi_level > SCSI_SPC_2 && !sdp->skip_vpd_pages)
+ 		return 1;
+ 	return 0;
+ }
+Index: usb-3.2/drivers/usb/storage/scsiglue.c
+===================================================================
+--- usb-3.2.orig/drivers/usb/storage/scsiglue.c
++++ usb-3.2/drivers/usb/storage/scsiglue.c
+@@ -197,6 +197,9 @@ static int slave_configure(struct scsi_d
+ 		 * page x08, so we will skip it. */
+ 		sdev->skip_ms_page_8 = 1;
+ 
++		/* Some devices don't handle VPD pages correctly */
++		sdev->skip_vpd_pages = 1;
++
+ 		/* Some disks return the total number of blocks in response
+ 		 * to READ CAPACITY rather than the highest block number.
+ 		 * If this device makes that mistake, tell the sd driver. */
+@@ -217,16 +220,6 @@ static int slave_configure(struct scsi_d
+ 		if (sdev->scsi_level > SCSI_SPC_2)
+ 			us->fflags |= US_FL_SANE_SENSE;
+ 
+-		/* Some devices report a SCSI revision level above 2 but are
+-		 * unable to handle the REPORT LUNS command (for which
+-		 * support is mandatory at level 3).  Since we already have
+-		 * a Get-Max-LUN request, we won't lose much by setting the
+-		 * revision level down to 2.  The only devices that would be
+-		 * affected are those with sparse LUNs. */
+-		if (sdev->scsi_level > SCSI_2)
+-			sdev->sdev_target->scsi_level =
+-					sdev->scsi_level = SCSI_2;
+-
+ 		/* USB-IDE bridges tend to report SK = 0x04 (Non-recoverable
+ 		 * Hardware Error) when any low-level error occurs,
+ 		 * recoverable or not.  Setting this flag tells the SCSI
+@@ -283,6 +276,18 @@ static int slave_configure(struct scsi_d
+ 	return 0;
+ }
+ 
++static int target_alloc(struct scsi_target *starget)
++{
++	/*
++	 * Some USB drives don't support REPORT LUNS, even though they
++	 * report a SCSI revision level above 2.  Tell the SCSI layer
++	 * not to issue that command; it will perform a normal sequential
++	 * scan instead.
++	 */
++	starget->no_report_luns = 1;
++	return 0;
++}
++
+ /* queue a command */
+ /* This is always called with scsi_lock(host) held */
+ static int queuecommand_lck(struct scsi_cmnd *srb,
+@@ -546,6 +551,7 @@ struct scsi_host_template usb_stor_host_
+ 
+ 	.slave_alloc =			slave_alloc,
+ 	.slave_configure =		slave_configure,
++	.target_alloc =			target_alloc,
+ 
+ 	/* lots of sg segments can be handled */
+ 	.sg_tablesize =			SCSI_MAX_SG_CHAIN_SEGMENTS,
 
