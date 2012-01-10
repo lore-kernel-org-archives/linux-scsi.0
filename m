@@ -1,60 +1,71 @@
-From: "Moger, Babu" <Babu.Moger@netapp.com>
-Subject: [PATCH v2] scsi_dh_alua: Retry the check-condition in case Mode Parameters Changed
-Date: Tue, 10 Jan 2012 16:23:32 -0500
-Message-ID: <47D23AD8469A2B448F33C24BD7A39BD910E32B32@RTPMVEXC1-PRD.hq.netapp.com>
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [LSF/MM TOPIC] Copy offload
+Date: Tue, 10 Jan 2012 14:11:27 -0800
+Message-ID: <20120110221125.GB30141@dhcp-172-17-9-228.mtv.corp.google.com>
+References: <4F0AC112.2000709@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.netapp.com ([216.240.18.37]:10579 "EHLO mx2.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756839Ab2AJVXz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 16:23:55 -0500
-Content-class: urn:content-classes:message
+Received: from zeniv.linux.org.uk ([195.92.253.2]:44847 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752303Ab2AJWLd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 17:11:33 -0500
+Content-Disposition: inline
+In-Reply-To: <4F0AC112.2000709@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
-Cc: Mike Snitzer <snitzer@redhat.com>, hare@suse.de, JBottomley@Parallels.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: lsf-pc@lists.linux-foundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
 
-Looks like original post was malformed. Reposting again.
- 
-This patch adds a check-condition in scsi_dh_alua handler for a retry.
-Sometimes,
-I have seen attach failing due to this check-condition with following
-error 
-messages on NetApp E series storage.
+On Mon, Jan 09, 2012 at 11:27:30AM +0100, Hannes Reinecke wrote:
+> Quite a lot of discussion has come up recently on supporting Copy
+> Offload (aka SCSI XCOPY) with linux.
+> 
+> During the course of this several topics were found which need some
+> discussion:
+> 
+> - Interface: do we need a new syscall? Should we try to resurrect
+>   the original sys_copyfile() approach from Joel Becker?
+>   What are the areas and use-cases this syscall should cover?
+> 
+> - Scope: SCSI XCOPY is not the only possible user here, CIFS and
+>   NFSv4 have similar needs. We should aim for integrating all of
+>   these use-cases. However, we need to revisit them to figure out
+>   if and to what extend they are really compatible.
+> 
+> - Implementation: The new interface is likely to reside on the
+>   filesystem level. To quote Dave Chinner:
+>   > e.g. for an array offload, we have to flush the source file
+>   > page cache first so that the data being copied is known to
+>   > be on disk, then invalidate the destination page cache if
+>   > overwriting or extend and pre-allocate blocks if not. Then
+>   > we have to map both files and hand that off to the array.
+>   >
+>   > Then there's a whole bunch of tricky questions about what
+>   > the state of the destination file should look like while
+>   > the copy is in progress, whether the source file should be
+>   > allowed to change (e.g. it can't be truncated and have
+>   > blocks freed and then reused by other files half way through
+>   > the copy offload operation), and so on.
+> 
+> - Backends: Should we concentrate on the new 'XCOPY LITE' proposal
+>   or should we try to implement the original XCOPY command, too?
+> 
+> I guess this'll warrant a joint session, as at least filesystem and
+> storage people will be involved here.
 
-Dec  7 15:31:01 nilgiris kernel: [102979.696673] scsi 3:0:2:9: alua:
-port group 00 rel port 01
-Dec  7 15:31:01 nilgiris kernel: [102979.697082] scsi 3:0:2:9: alua:
-rtpg failed with 8000002
-Dec  7 15:31:01 nilgiris kernel: [102979.697086] scsi 3:0:2:9: alua:
-rtpg sense code 06/2a/01
-Dec  7 15:31:01 nilgiris kernel: [102979.697088] scsi 3:0:2:9: alua: not
-attached
+	I'll join in for sure.  I've owed code for over a year now
+(hanging head in shame).
 
-Signed-off-by: Babu Moger <babu.moger@netapp.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
----
-
---- linux-3.2-rc6/drivers/scsi/device_handler/scsi_dh_alua.c.orig
-2011-12-21 15:48:46.000000000 -0600
-+++ linux-3.2-rc6/drivers/scsi/device_handler/scsi_dh_alua.c
-2011-12-21 16:03:56.000000000 -0600
-@@ -466,6 +466,11 @@ static int alua_check_sense(struct scsi_
- 			 * Power On, Reset, or Bus Device Reset, just
-retry.
- 			 */
- 			return ADD_TO_MLQUEUE;
-+		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
-+			/*
-+			 * Mode Parameters Changed
-+			 */
-+			return ADD_TO_MLQUEUE;
- 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
- 			/*
- 			 * ALUA state changed
+Joel
 
 
+-- 
+
+"Lately I've been talking in my sleep.
+ Can't imagine what I'd have to say.
+ Except my world will be right
+ When love comes back my way."
+
+			http://www.jlbec.org/
+			jlbec@evilplan.org
