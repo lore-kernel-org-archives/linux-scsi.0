@@ -1,26 +1,48 @@
-From: James Bottomley <jbottomley@parallels.com>
-Subject: Re: [PATCH v2] scsi_dh_alua: Retry the check-condition in case Mode
- Parameters Changed
-Date: Tue, 10 Jan 2012 23:05:11 +0000
-Message-ID: <1326236708.3264.68.camel@dabdike.int.hansenpartnership.com>
-References: <47D23AD8469A2B448F33C24BD7A39BD910E32B32@RTPMVEXC1-PRD.hq.netapp.com>
+From: akpm@linux-foundation.org
+Subject: [patch 1/6] scsi: fix a header to include linux/types.h
+Date: Tue, 10 Jan 2012 15:42:27 -0800
+Message-ID: <20120110234227.E28795C013D@hpza9.eem.corp.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ASCII
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.parallels.com ([64.131.90.16]:40437 "EHLO mx2.parallels.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756887Ab2AJXFU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2012 18:05:20 -0500
-In-Reply-To: <47D23AD8469A2B448F33C24BD7A39BD910E32B32@RTPMVEXC1-PRD.hq.netapp.com>
-Content-Language: en-US
-Content-ID: <975C643B26BBDA498BF80CE45987D8DE@sw.swsoft.com>
+Received: from mail-ey0-f202.google.com ([209.85.215.202]:64968 "EHLO
+	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755381Ab2AJXma (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 18:42:30 -0500
+Received: by eaak10 with SMTP id k10so4933eaa.1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2012 15:42:29 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@netapp.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "hare@suse.de" <hare@suse.de>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, virtuoso@slind.org
 
-T24gVHVlLCAyMDEyLTAxLTEwIGF0IDE2OjIzIC0wNTAwLCBNb2dlciwgQmFidSB3cm90ZToNCj4g
-TG9va3MgbGlrZSBvcmlnaW5hbCBwb3N0IHdhcyBtYWxmb3JtZWQuIFJlcG9zdGluZyBhZ2Fpbi4N
-Cg0KSXQgd2FzLCBidXQgSSBnb3QgYSBiaXQgdGlyZWQgb2YgeWVsbGluZywgc28gSSBqdXN0IGZp
-eGVkIGl0IHVwIChpdCB3YXMNCmEgc2luZ2xlIGxpbmUpLg0KDQpKYW1lcw0KDQo=
+From: Alexander Shishkin <virtuoso@slind.org>
+Subject: scsi: fix a header to include linux/types.h
+
+For headers that get exported to userland and make use of u32 style
+type names, it is advised to include linux/types.h.
+
+This fixes a headers_check warning.
+
+Signed-off-by: Alexander Shishkin <virtuoso@slind.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ include/scsi/scsi_netlink.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN include/scsi/scsi_netlink.h~scsi-fix-a-header-to-include-linux-typesh include/scsi/scsi_netlink.h
+--- a/include/scsi/scsi_netlink.h~scsi-fix-a-header-to-include-linux-typesh
++++ a/include/scsi/scsi_netlink.h
+@@ -23,7 +23,7 @@
+ #define SCSI_NETLINK_H
+ 
+ #include <linux/netlink.h>
+-
++#include <linux/types.h>
+ 
+ /*
+  * This file intended to be included by both kernel and user space
+_
