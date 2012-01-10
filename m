@@ -1,71 +1,26 @@
-From: Joel Becker <jlbec@evilplan.org>
-Subject: Re: [LSF/MM TOPIC] Copy offload
-Date: Tue, 10 Jan 2012 14:11:27 -0800
-Message-ID: <20120110221125.GB30141@dhcp-172-17-9-228.mtv.corp.google.com>
-References: <4F0AC112.2000709@suse.de>
+From: James Bottomley <jbottomley@parallels.com>
+Subject: Re: [PATCH v2] scsi_dh_alua: Retry the check-condition in case Mode
+ Parameters Changed
+Date: Tue, 10 Jan 2012 23:05:11 +0000
+Message-ID: <1326236708.3264.68.camel@dabdike.int.hansenpartnership.com>
+References: <47D23AD8469A2B448F33C24BD7A39BD910E32B32@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:44847 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752303Ab2AJWLd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 17:11:33 -0500
-Content-Disposition: inline
-In-Reply-To: <4F0AC112.2000709@suse.de>
+Received: from mx2.parallels.com ([64.131.90.16]:40437 "EHLO mx2.parallels.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756887Ab2AJXFU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2012 18:05:20 -0500
+In-Reply-To: <47D23AD8469A2B448F33C24BD7A39BD910E32B32@RTPMVEXC1-PRD.hq.netapp.com>
+Content-Language: en-US
+Content-ID: <975C643B26BBDA498BF80CE45987D8DE@sw.swsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: lsf-pc@lists.linux-foundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: "Moger, Babu" <Babu.Moger@netapp.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, Mike Snitzer <snitzer@redhat.com>, "hare@suse.de" <hare@suse.de>
 
-On Mon, Jan 09, 2012 at 11:27:30AM +0100, Hannes Reinecke wrote:
-> Quite a lot of discussion has come up recently on supporting Copy
-> Offload (aka SCSI XCOPY) with linux.
-> 
-> During the course of this several topics were found which need some
-> discussion:
-> 
-> - Interface: do we need a new syscall? Should we try to resurrect
->   the original sys_copyfile() approach from Joel Becker?
->   What are the areas and use-cases this syscall should cover?
-> 
-> - Scope: SCSI XCOPY is not the only possible user here, CIFS and
->   NFSv4 have similar needs. We should aim for integrating all of
->   these use-cases. However, we need to revisit them to figure out
->   if and to what extend they are really compatible.
-> 
-> - Implementation: The new interface is likely to reside on the
->   filesystem level. To quote Dave Chinner:
->   > e.g. for an array offload, we have to flush the source file
->   > page cache first so that the data being copied is known to
->   > be on disk, then invalidate the destination page cache if
->   > overwriting or extend and pre-allocate blocks if not. Then
->   > we have to map both files and hand that off to the array.
->   >
->   > Then there's a whole bunch of tricky questions about what
->   > the state of the destination file should look like while
->   > the copy is in progress, whether the source file should be
->   > allowed to change (e.g. it can't be truncated and have
->   > blocks freed and then reused by other files half way through
->   > the copy offload operation), and so on.
-> 
-> - Backends: Should we concentrate on the new 'XCOPY LITE' proposal
->   or should we try to implement the original XCOPY command, too?
-> 
-> I guess this'll warrant a joint session, as at least filesystem and
-> storage people will be involved here.
-
-	I'll join in for sure.  I've owed code for over a year now
-(hanging head in shame).
-
-Joel
-
-
--- 
-
-"Lately I've been talking in my sleep.
- Can't imagine what I'd have to say.
- Except my world will be right
- When love comes back my way."
-
-			http://www.jlbec.org/
-			jlbec@evilplan.org
+T24gVHVlLCAyMDEyLTAxLTEwIGF0IDE2OjIzIC0wNTAwLCBNb2dlciwgQmFidSB3cm90ZToNCj4g
+TG9va3MgbGlrZSBvcmlnaW5hbCBwb3N0IHdhcyBtYWxmb3JtZWQuIFJlcG9zdGluZyBhZ2Fpbi4N
+Cg0KSXQgd2FzLCBidXQgSSBnb3QgYSBiaXQgdGlyZWQgb2YgeWVsbGluZywgc28gSSBqdXN0IGZp
+eGVkIGl0IHVwIChpdCB3YXMNCmEgc2luZ2xlIGxpbmUpLg0KDQpKYW1lcw0KDQo=
