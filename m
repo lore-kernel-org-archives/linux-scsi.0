@@ -1,37 +1,52 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] Next round of SCSI updates for 3.2 merge window
-Date: Tue, 10 Jan 2012 10:36:59 -0800
-Message-ID: <CA+55aFzR7Qvhoo9QVy-0RzPkqQ=J-DBpLurYSV7azMbQGOJchg@mail.gmail.com>
-References: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: [PATCH 0/3] SCSI & usb-storage: new flags for VPD pages and REPORT
+ LUNS
+Date: Tue, 10 Jan 2012 13:42:40 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1201101327030.1594-100000@iolanthe.rowland.org>
+References: <E9801365-C2D1-4E5C-8BE4-BD712DA0D2FD@mac.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:55174 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756457Ab2AJSmm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 13:42:42 -0500
+In-Reply-To: <E9801365-C2D1-4E5C-8BE4-BD712DA0D2FD@mac.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Perry Wagle <wagle@mac.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 5, 2012 at 2:19 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> The patch is available here:
->
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git#scsi-misc
+James and Greg:
 
-No it's not.
+Perry Wagle reports that his new USB-ESATA drives don't work properly 
+because they don't like getting the LUN bits in the second byte of the 
+command string.  We set those bits only because usb-storage adjusts the 
+SCSI revision level for all devices to SCSI-2; the drives themselves 
+report a value of 0x06 (which would be SCSI-7).
 
-Please fix your crappy script.
+The reason for mangling the scsi_level value was that some USB devices 
+reported SCSI-3 but couldn't handle some of the mandatory features: VPD 
+pages and the REPORT LUNS command.  It's now clear that instead of 
+abusing scsi_level, we should have separate flags for the individual 
+features we need to control.
 
-First off, that '#' is wrong. It should be a space.
+That's what this patch series does.  The first merely corrects an 
+existing typo in the definition of struct scsi_target.  The second adds 
+the new flags and makes usb-storage use them.  The third takes this 
+opportunity to do a little code clean-up in usb-storage.
 
-Secondly, "master.kernel.org" doesn't support ssh'ing into it any
-more, and can't be used the way you claim I should use it.
+The changes are more or less equally divided between SCSI and
+usb-storage.  James, if they look okay to you and you don't mind taking
+them through your tree, that would be fine.  Or if you prefer, I'm sure
+Greg won't mind taking them.
 
-IOW, that thing should have been
+Although this should be quite safe, there is a small possibility that
+it will mess up some buggy device that has been working okay up to now.  
+If necessary, we can always add another blacklist flag to usb-storage
+to treat such devices in the old way -- setting scsi_level to SCSI_2.  
+However, because of this possibility I'm not going to send these
+patches to the stable tree.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git scsi-misc
+Alan Stern
 
-so please fix your script to do that,
-
-                   Linus
