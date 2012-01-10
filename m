@@ -1,49 +1,64 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v4 2/2] libsas: feed the scsi_block_when_processing_errors()
- meter
-Date: Mon, 09 Jan 2012 23:38:36 -0800
-Message-ID: <20120110073836.4563.85860.stgit@localhost6.localdomain6>
-References: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
+From: =?UTF-8?B?QW5kcsOpLVNlYmFzdGlhbiBMaWViZQ==?= <andre@lianse.eu>
+Subject: Re: [PATCH] mpt2sas: New feature - Fast Load Support
+Date: Tue, 10 Jan 2012 09:48:29 +0100
+Message-ID: <4F0BFB5D.6030802@lianse.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64286 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752011Ab2AJHih (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2012 02:38:37 -0500
-In-Reply-To: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:40948 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752684Ab2AJIse (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 03:48:34 -0500
+Received: by eekc41 with SMTP id c41so104318eek.19
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2012 00:48:32 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Abraham Carranza <abrahamx.c.carranza@intel.com>, jack_wang@usish.com
 
-This is called per-sdev but in the sas-transport case this waits for the
-entire domain to recover which is never guaranteed to be less than 120
-seconds with libata taking nearly a minute per-device to recover.  Ping
-the waitqueue so that the hung task timer knows we're still making
-progress.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-Reported-by: Abraham Carranza <abrahamx.c.carranza@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/libsas/sas_ata.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+Hi guys,
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 37a9e73..a062adc 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -663,6 +663,11 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
- 
- 	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
- 	ata_scsi_port_error_handler(ha->core.shost, ap);
-+
-+	/* tell scsi_block_when_processing_errors() waiters that we are
-+	 * still making forward progress
-+	 */
-+	wake_up(&ha->core.shost->host_wait);
- }
- 
- void sas_ata_strategy_handler(struct Scsi_Host *shost)
+I've run into problems with the all new shiny 3.2 kernel. My system
+broke badly as it's depending on some devices which are attached to my
+LSI SAS 2008 hba.
+The mount scripts of my gentoo/openrc setup get triggered right after
+udev has settled.  But with the new fast load support udev settles
+before my drives appear to the system, so mount fails for all those
+drives and of cause all subsequent services depending on them.
+Is there any switch to revert back to the old behavior of blocking unti=
+l
+all ports scans are done?
 
+Thanks in advance
+Andr=C3=A9-Sebastian Liebe
+
+- --=20
+gpg key AA1E1F66 @ gpg-keyserver.de: Andr=C3=A9-Sebastian Liebe <andre@=
+lianse.eu>
+Key fingerprint =3D 5436 5358 172C EB7D E414  C6DE 6664 89BF AA1E 1F66
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPC/tXAAoJEIvQ0TmZSz9R+ywP/Ays9LD9+UgfrmU/U5mc2HxA
+n9QcZUK6CNGdw6QA8XsLKXPIOZYsCBiiLroNORzFfwRW7xsue1YMD6tR121TjmYL
+QA9C9Clf9WYJT8RTEkmECHkejvxAkBqu0FhMJJC3377L2/qAN2NSkz6VInzqAdqE
+My4948xRx0z7ysjiFqRwOeZgss70IowshwDO5mAbuAawOQZa3UZo72HZ8gVxbf4H
+xKhPLy6QraEJX3SMtTmJDvp46xJ5UN4yXosdOD7pkYUeCnTX7AhaO+bIuEPgGB9Q
+UaEawMoMq8cPVEXl4L5gvPkIKCWdnmCLTtDcOeqTxuHoyOx/qn8xvh2D4K2shWgf
+jaxPN9VGa6VBIxmZWjX4emtI2QqhjnaW8o7A+hz1K8rJO1SgCdGJxdB+gjLhXcLe
+ZYKLOJ5OFIX8JQk6IjUTLkRCnZpEG/WORU+fSU93dCglcRxnevPUvIs3rpTzstGd
+/DKN5JPXMIPvX3aJ5sWoXygpnq9oOfPAMDXB4jibkYbbnF4aqWEp7m+l7g84dH0N
+2O0SFQm7VTb15Pp3ZIKGQhxfVxHwsd+fnoM1rpqkRRrF4YmovuFgsHr7qjE4astq
+/c9TUJzn/93fan/f0FrW9KlBE26zqwCp6HIbNe/HLSZgdMXGVWynwa3w86d17eyg
+givRtuynhgPB/KDyoavm
+=3D5BNV
+-----END PGP SIGNATURE-----
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
