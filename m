@@ -1,67 +1,37 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] mpt2sas: New feature - Fast Load Support
-Date: Tue, 10 Jan 2012 16:23:47 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED7299CF90B84@inbmail01.lsi.com>
-References: <4F0BFB5D.6030802@lianse.eu>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] Next round of SCSI updates for 3.2 merge window
+Date: Tue, 10 Jan 2012 10:36:59 -0800
+Message-ID: <CA+55aFzR7Qvhoo9QVy-0RzPkqQ=J-DBpLurYSV7azMbQGOJchg@mail.gmail.com>
+References: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog120.obsmtp.com ([74.125.149.140]:55518 "EHLO
-	na3sys009aog120.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752942Ab2AJKxz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2012 05:53:55 -0500
-In-Reply-To: <4F0BFB5D.6030802@lianse.eu>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?QW5kcsOpLVNlYmFzdGlhbiBMaWViZQ==?= <andre@lianse.eu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-VGhlcmUgaXMgYSBzb21lIHNjc2lfbW9kIHBhcmFtZXRlciBjYWxsZWQgInNjYW4iLg0KSWYgeW91
-IHBhc3MgdGhvc2UgcGFyYW1ldGVyIGF0IGJvb3QgdGltZSB5b3UgY2FuIGNoYW5nZSB0aGUgYmVo
-YXZpb3IuIChzZWUgYmVsb3cgZGVzY3JpcHRpb24pDQoNCglzY3NpX21vZC5zY2FuPQlbU0NTSV0g
-c3luYyAoZGVmYXVsdCkgc2NhbnMgU0NTSSBidXNzZXMgYXMgdGhleSBhcmUNCgkJZGlzY292ZXJl
-ZC4gIEFzeW5jIHNjYW5zIHRoZW0gaW4ga2VybmVsIHRocmVhZHMsIGFsbG93aW5nIGJvb3QgdG8g
-cHJvY2VlZC4gIA0KCQlub25lIGlnbm9yZXMgdGhlbSwgZXhwZWN0aW5nIHVzZXIgc3BhY2UgdG8g
-ZG8gdGhlIHNjYW4uDQoNCn4gS2FzaHlhcA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQo+IEZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgt
-c2NzaS0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgQW5kcsOpLVNlYmFz
-dGlhbiBMaWViZQ0KPiBTZW50OiBUdWVzZGF5LCBKYW51YXJ5IDEwLCAyMDEyIDI6MTggUE0NCj4g
-VG86IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG1w
-dDJzYXM6IE5ldyBmZWF0dXJlIC0gRmFzdCBMb2FkIFN1cHBvcnQNCj4gDQo+IC0tLS0tQkVHSU4g
-UEdQIFNJR05FRCBNRVNTQUdFLS0tLS0NCj4gSGFzaDogU0hBMQ0KPiANCj4gSGkgZ3V5cywNCj4g
-DQo+IEkndmUgcnVuIGludG8gcHJvYmxlbXMgd2l0aCB0aGUgYWxsIG5ldyBzaGlueSAzLjIga2Vy
-bmVsLiBNeSBzeXN0ZW0NCj4gYnJva2UgYmFkbHkgYXMgaXQncyBkZXBlbmRpbmcgb24gc29tZSBk
-ZXZpY2VzIHdoaWNoIGFyZSBhdHRhY2hlZCB0byBteQ0KPiBMU0kgU0FTIDIwMDggaGJhLg0KPiBU
-aGUgbW91bnQgc2NyaXB0cyBvZiBteSBnZW50b28vb3BlbnJjIHNldHVwIGdldCB0cmlnZ2VyZWQg
-cmlnaHQgYWZ0ZXINCj4gdWRldiBoYXMgc2V0dGxlZC4gIEJ1dCB3aXRoIHRoZSBuZXcgZmFzdCBs
-b2FkIHN1cHBvcnQgdWRldiBzZXR0bGVzDQo+IGJlZm9yZSBteSBkcml2ZXMgYXBwZWFyIHRvIHRo
-ZSBzeXN0ZW0sIHNvIG1vdW50IGZhaWxzIGZvciBhbGwgdGhvc2UNCj4gZHJpdmVzIGFuZCBvZiBj
-YXVzZSBhbGwgc3Vic2VxdWVudCBzZXJ2aWNlcyBkZXBlbmRpbmcgb24gdGhlbS4NCj4gSXMgdGhl
-cmUgYW55IHN3aXRjaCB0byByZXZlcnQgYmFjayB0byB0aGUgb2xkIGJlaGF2aW9yIG9mIGJsb2Nr
-aW5nIHVudGlsDQo+IGFsbCBwb3J0cyBzY2FucyBhcmUgZG9uZT8NCj4gDQo+IFRoYW5rcyBpbiBh
-ZHZhbmNlDQo+IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gDQo+IC0gLS0NCj4gZ3BnIGtleSBB
-QTFFMUY2NiBAIGdwZy1rZXlzZXJ2ZXIuZGU6IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gPGFu
-ZHJlQGxpYW5zZS5ldT4NCj4gS2V5IGZpbmdlcnByaW50ID0gNTQzNiA1MzU4IDE3MkMgRUI3RCBF
-NDE0ICBDNkRFIDY2NjQgODlCRiBBQTFFIDFGNjYNCj4gLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJF
-LS0tLS0NCj4gVmVyc2lvbjogR251UEcgdjIuMC4xOCAoR05VL0xpbnV4KQ0KPiBDb21tZW50OiBV
-c2luZyBHbnVQRyB3aXRoIE1vemlsbGEgLSBodHRwOi8vZW5pZ21haWwubW96ZGV2Lm9yZy8NCj4g
-DQo+IGlRSWNCQUVCQWdBR0JRSlBDL3RYQUFvSkVJdlEwVG1aU3o5Uit5d1AvQXlzOUxEOStVZ2Zy
-bVUvVTVtYzJIeEENCj4gbjlRY1pVSzZDTkdkdzZRQThYc0xLWFBJT1pZc0NCaWlMcm9OT1J6RmZ3
-Ulc3eHN1ZTFZTUQ2dFIxMjFUam1ZTA0KPiBRQTlDOUNsZjlXWUpUOFJURWttRUNIa2VqdnhBa0Jx
-dTBGaE1KSkMzMzc3TDIvcUFOMk5Ta3o2VkluenFBZHFFDQo+IE15NDk0OHhSeDB6N3lzamlGcVJ3
-T2VaZ3NzNzBJb3dzaHdETzVtQWJ1QWF3T1FaYTNVWm83MkhaOGdWeGJmNEgNCj4geEtoUEx5NlFy
-YUVKWDNTTXRUbUpEdnA0NnhKNVVONHlYb3NkT0Q3cGtZVWVDblRYN0FoYU8rYkl1RVBnR0I5UQ0K
-PiBVYUVhd01vTXE4Y1BWRVhsNEw1Z3ZQa0lLQ1dkbm1DTFR0RGNPZXFUeHVIb3lPeC9xbjh4dmgy
-RDRLMnNoV2dmDQo+IGpheFBOOVZHYTZWQkl4bVpXalg0ZW10STJRcWhqbmFXOG83QStoejFLOHJK
-TzFTZ0NkR0p4ZEIrZ2pMaFhjTGUNCj4gWllLTE9KNU9GSVg4SlFrNklqVVRMa1JDblpwRUcvV09S
-VStmU1U5M2RDZ2xjUnhuZXZQVXZJczNycFR6c3RHZA0KPiAvREtONUpQWE1JUHZYM2FKNXNXb1h5
-Z3BucTlvT2ZQQU1EWEI0amlia1liYm5GNGFxV0VwN20rbDdnODRkSDBODQo+IDJPMFNGUW03VlRi
-MTVQcDNaSUtHUWh4ZlZ4SHdzZCtmbm9NMXJwcWtSUnJGNFltb3Z1RmdzSHI3cWpFNGFzdHENCj4g
-L2M5VFVKem4vOTNmYW4vZjBGclc5S2xCRTI2enF3Q3A2SEliTmUvSExTWmdkTVhHVld5bndhM3c4
-NmQxN2V5Zw0KPiBnaXZSdHV5bmhnUEIvS0R5b2F2bQ0KPiA9NUJOVg0KPiAtLS0tLUVORCBQR1Ag
-U0lHTkFUVVJFLS0tLS0NCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNl
-bmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEg
-bWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jkb21vIGlu
-Zm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+On Thu, Jan 5, 2012 at 2:19 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> The patch is available here:
+>
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git#scsi-misc
+
+No it's not.
+
+Please fix your crappy script.
+
+First off, that '#' is wrong. It should be a space.
+
+Secondly, "master.kernel.org" doesn't support ssh'ing into it any
+more, and can't be used the way you claim I should use it.
+
+IOW, that thing should have been
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git scsi-misc
+
+so please fix your script to do that,
+
+                   Linus
