@@ -1,53 +1,45 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [GIT PATCH v4 0/2] libsas: eh reworks (ata-eh vs discovery,
- races, ...)
-Date: Tue, 10 Jan 2012 12:18:06 -0800
-Message-ID: <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
-References: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
-	<1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: scsi_dh_alua: Retry the check-condition in case Mode Parameters
+ Changed
+Date: Tue, 10 Jan 2012 15:50:40 -0500
+Message-ID: <20120110205040.GA7632@redhat.com>
+References: <47D23AD8469A2B448F33C24BD7A39BD910D14606@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.21]:30300 "EHLO
-	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754842Ab2AJUSJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 15:18:09 -0500
-In-Reply-To: <1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53473 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756672Ab2AJUvZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jan 2012 15:51:25 -0500
+Content-Disposition: inline
+In-Reply-To: <47D23AD8469A2B448F33C24BD7A39BD910D14606@RTPMVEXC1-PRD.hq.netapp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jack_wang@usish.com
+To: "Moger, Babu" <Babu.Moger@netapp.com>
+Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, JBottomley@Parallels.com
 
-On Tue, Jan 10, 2012 at 11:29 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Mon, 2012-01-09 at 23:38 -0800, Dan Williams wrote:
->> The latest version of the patch kit is available here:
->>
->> =A0 git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libs=
-as-eh-reworks-v4
->>
->> Changes since v3: http://marc.info/?l=3Dlinux-scsi&m=3D1325814552147=
-89&w=3D2
->
-> Just to check I'm not lost here. I think this is currently the only
-> mergeable set of patches you have because you're reworking patches in
-> all your other series and will repost ... is this correct?
+On Wed, Dec 21 2011 at  6:01pm -0500,
+Moger, Babu <Babu.Moger@netapp.com> wrote:
 
-There are two mergeable topics in isci.git:
-libsas-eh-reworks-v4: mergeable
-devel: mergeable, posted as "[GIT PATCH v2 00/15] isci update for 3.3
-(part1)" [1].  This contains all the general updates to the driver
-that were independent of the libsas churn.  It was rebased to
-incorporate Ben's firmware removal patch, but is otherwise idle and
-ready to merge.
+> This patch adds a check-condition in scsi_dh_alua handler for a retry.
+> Sometimes,
+> I have seen attach failing due to this check-condition with following
+> error 
+> messages on NetApp E series storage.
+> 
+> Dec  7 15:31:01 nilgiris kernel: [102979.696673] scsi 3:0:2:9: alua:
+> port group 00 rel port 01
+> Dec  7 15:31:01 nilgiris kernel: [102979.697082] scsi 3:0:2:9: alua:
+> rtpg failed with 8000002
+> Dec  7 15:31:01 nilgiris kernel: [102979.697086] scsi 3:0:2:9: alua:
+> rtpg sense code 06/2a/01
+> Dec  7 15:31:01 nilgiris kernel: [102979.697088] scsi 3:0:2:9: alua: not
+> attached
+> 
+> Signed-off-by: Babu Moger <babu.moger@netapp.com>
 
---
-Dan
+Babu, this patch is malformed due to line wrapping.
 
-http://marc.info/?l=3Dlinux-scsi&m=3D132581499114886&w=3D2
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please repost with my:
+
+Acked-by: Mike Snitzer <snitzer@redhat.com>
