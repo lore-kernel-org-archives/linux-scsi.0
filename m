@@ -1,73 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target: Updates for v3.3-rc1 (round 1)
-Date: Tue, 10 Jan 2012 13:04:03 -0800
-Message-ID: <1326229443.20199.2.camel@haakon2.linux-iscsi.org>
-References: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
-	 <CAO+b5-qs3fE8yZaKQ+kzpsSsX1PyXE09wBzxnUi55GZ5j4TJKg@mail.gmail.com>
-	 <1326223998.14089.26.camel@haakon2.linux-iscsi.org>
-	 <1326225067.3264.51.camel@dabdike.int.hansenpartnership.com>
+From: "Moger, Babu" <Babu.Moger@netapp.com>
+Subject: [PATCH v2] scsi_dh_alua: Retry the check-condition in case Mode Parameters Changed
+Date: Tue, 10 Jan 2012 16:23:32 -0500
+Message-ID: <47D23AD8469A2B448F33C24BD7A39BD910E32B32@RTPMVEXC1-PRD.hq.netapp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1326225067.3264.51.camel@dabdike.int.hansenpartnership.com>
-Sender: target-devel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.netapp.com ([216.240.18.37]:10579 "EHLO mx2.netapp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756839Ab2AJVXz convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 16:23:55 -0500
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Cc: Mike Snitzer <snitzer@redhat.com>, hare@suse.de, JBottomley@Parallels.com
 
-On Tue, 2012-01-10 at 13:51 -0600, James Bottomley wrote:
-> On Tue, 2012-01-10 at 11:33 -0800, Nicholas A. Bellinger wrote:
-> > On Tue, 2012-01-10 at 19:19 +0000, Bart Van Assche wrote:
-> > > 2012/1/10 Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > > > *) Initial merge for the SRP target (ib_srpt) fabric module (bart)
-> > > 
-> > > As far as I know the last time that patch was posted for review is
-> > > November 4 (http://permalink.gmane.org/gmane.linux.scsi.target.devel/420).
-> > > The date of the ib_srpt commit is December 16
-> > > (http://git.kernel.org/?p=linux/kernel/git/nab/target-pending.git;a=commitdiff;h=a42d985bd5b234da8b61347a78dc3057bf7bb94d).
-> > > The two patches aren't identical. That makes me wonder whether that
-> > > patch should have been reposted for review ?
-> > > 
-> > 
-> > Hi Bart,
-> > 
-> > The changes since the Nov 4 RFC are listed in the patch commit log:
-> > 
-> > ib_srpt: Make compilation with BUG=n proceed`
-> > ib_srpt: Use new target_core_fabric.h include
-> > ib_srpt: Check hex2bin() return code to silence build warning
-> > 
-> > These are all very minor and did not warrant another full RFC posting.
-> 
-> They might not warrant a full RFC reposting, but individually they
-> should have been posted to the list, so Bart is right.
-> 
+Looks like original post was malformed. Reposting again.
+ 
+This patch adds a check-condition in scsi_dh_alua handler for a retry.
+Sometimes,
+I have seen attach failing due to this check-condition with following
+error 
+messages on NetApp E series storage.
 
-Thanks for your input here, but the last two where reported to
-linux-next / target-devel and fixed weeks ago.  The first one was from
-Bart himself.
+Dec  7 15:31:01 nilgiris kernel: [102979.696673] scsi 3:0:2:9: alua:
+port group 00 rel port 01
+Dec  7 15:31:01 nilgiris kernel: [102979.697082] scsi 3:0:2:9: alua:
+rtpg failed with 8000002
+Dec  7 15:31:01 nilgiris kernel: [102979.697086] scsi 3:0:2:9: alua:
+rtpg sense code 06/2a/01
+Dec  7 15:31:01 nilgiris kernel: [102979.697088] scsi 3:0:2:9: alua: not
+attached
 
-> As a maintainer, there shouldn't be a patch in your tree that hasn't
-> been over the mailing list once.  This is for three reasons
-> 
->      1. Git is a great source control tool, bit it doesn't hugely
->         facilitate review.  Even virtuoso git users find it easier to
->         read and reply to emailed patches for this purpose
->      2. Not everyone in our community is a wholesale git user.  For
->         them, email might be the only way they get to see a patch, so
->         using git alone lowers our pool of reviewers (and reviewers are
->         the species we most need to encourage)
->      3. Enforcing the rule that everything is emailed first can save you
->         from the maintainers curse:  the temptation to bung in that last
->         little "obvious" fix just before you send your tree to Linus
->         which later turns out to cause huge regressions and much
->         heartache.
-> 
-> You don't have to endlessly repost patch series, just make sure that
-> small updates get posted for review and comment before they get applied.
-> 
+Signed-off-by: Babu Moger <babu.moger@netapp.com>
+Acked-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Mike Snitzer <snitzer@redhat.com>
+---
 
-Yes, yes and yes.  :)
+--- linux-3.2-rc6/drivers/scsi/device_handler/scsi_dh_alua.c.orig
+2011-12-21 15:48:46.000000000 -0600
++++ linux-3.2-rc6/drivers/scsi/device_handler/scsi_dh_alua.c
+2011-12-21 16:03:56.000000000 -0600
+@@ -466,6 +466,11 @@ static int alua_check_sense(struct scsi_
+ 			 * Power On, Reset, or Bus Device Reset, just
+retry.
+ 			 */
+ 			return ADD_TO_MLQUEUE;
++		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x01)
++			/*
++			 * Mode Parameters Changed
++			 */
++			return ADD_TO_MLQUEUE;
+ 		if (sense_hdr->asc == 0x2a && sense_hdr->ascq == 0x06)
+ 			/*
+ 			 * ALUA state changed
 
---nab
+
