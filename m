@@ -1,32 +1,31 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
 Subject: Re: [GIT PULL] Next round of SCSI updates for 3.2 merge window
-Date: Tue, 10 Jan 2012 13:12:06 -0600
-Message-ID: <1326222726.3264.41.camel@dabdike.int.hansenpartnership.com>
-References: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com>
-	 <CA+55aFzR7Qvhoo9QVy-0RzPkqQ=J-DBpLurYSV7azMbQGOJchg@mail.gmail.com>
+Date: Tue, 10 Jan 2012 20:13:46 +0100
+Message-ID: <6379540.WxJleGASKO@eto>
+References: <1325801944.2775.32.camel@dabdike.Larkspurhotels.com> <CA+55aFzR7Qvhoo9QVy-0RzPkqQ=J-DBpLurYSV7azMbQGOJchg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57728 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756664Ab2AJTMJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jan 2012 14:12:09 -0500
+Content-Type: multipart/signed; boundary="nextPart1333682.YmYbM4jU38"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <CA+55aFzR7Qvhoo9QVy-0RzPkqQ=J-DBpLurYSV7azMbQGOJchg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2012-01-10 at 10:36 -0800, Linus Torvalds wrote:
+
+--nextPart1333682.YmYbM4jU38
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+Linus Torvalds wrote:
 > On Thu, Jan 5, 2012 at 2:19 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> >
-> > The patch is available here:
-> >
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git#scsi-misc
 > 
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > The patch is available here:
+> > 
+> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git#scsi-
+> > misc
 > No it's not.
 > 
 > Please fix your crappy script.
@@ -38,12 +37,24 @@ On Tue, 2012-01-10 at 10:36 -0800, Linus Torvalds wrote:
 > 
 > IOW, that thing should have been
 > 
->   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git scsi-misc
+>   git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> scsi-misc
 > 
 > so please fix your script to do that,
 
-OK, fixed and resent.  Thanks,
+And maybe even to get the version number right ;)
 
-James
+Eike
+--nextPart1333682.YmYbM4jU38
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iEYEABECAAYFAk8MjfAACgkQXKSJPmm5/E673gCeL2pQqQpCZnJ5gIS1QCxqMQm2
+7d8Anj0GRkcl4+tYaCcwBG3445TJfwhU
+=aPIZ
+-----END PGP SIGNATURE-----
+
+--nextPart1333682.YmYbM4jU38--
