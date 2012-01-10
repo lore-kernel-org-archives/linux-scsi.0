@@ -1,63 +1,53 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] target: Updates for v3.3-rc1 (round 1)
-Date: Tue, 10 Jan 2012 13:51:07 -0600
-Message-ID: <1326225067.3264.51.camel@dabdike.int.hansenpartnership.com>
-References: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
-	 <CAO+b5-qs3fE8yZaKQ+kzpsSsX1PyXE09wBzxnUi55GZ5j4TJKg@mail.gmail.com>
-	 <1326223998.14089.26.camel@haakon2.linux-iscsi.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT PATCH v4 0/2] libsas: eh reworks (ata-eh vs discovery,
+ races, ...)
+Date: Tue, 10 Jan 2012 12:18:06 -0800
+Message-ID: <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
+References: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
+	<1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1326223998.14089.26.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.21]:30300 "EHLO
+	orsmga101.jf.intel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754842Ab2AJUSJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 15:18:09 -0500
+In-Reply-To: <1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jack_wang@usish.com
 
-On Tue, 2012-01-10 at 11:33 -0800, Nicholas A. Bellinger wrote:
-> On Tue, 2012-01-10 at 19:19 +0000, Bart Van Assche wrote:
-> > 2012/1/10 Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > > *) Initial merge for the SRP target (ib_srpt) fabric module (bart)
-> > 
-> > As far as I know the last time that patch was posted for review is
-> > November 4 (http://permalink.gmane.org/gmane.linux.scsi.target.devel/420).
-> > The date of the ib_srpt commit is December 16
-> > (http://git.kernel.org/?p=linux/kernel/git/nab/target-pending.git;a=commitdiff;h=a42d985bd5b234da8b61347a78dc3057bf7bb94d).
-> > The two patches aren't identical. That makes me wonder whether that
-> > patch should have been reposted for review ?
-> > 
-> 
-> Hi Bart,
-> 
-> The changes since the Nov 4 RFC are listed in the patch commit log:
-> 
-> ib_srpt: Make compilation with BUG=n proceed`
-> ib_srpt: Use new target_core_fabric.h include
-> ib_srpt: Check hex2bin() return code to silence build warning
-> 
-> These are all very minor and did not warrant another full RFC posting.
+On Tue, Jan 10, 2012 at 11:29 AM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Mon, 2012-01-09 at 23:38 -0800, Dan Williams wrote:
+>> The latest version of the patch kit is available here:
+>>
+>> =A0 git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libs=
+as-eh-reworks-v4
+>>
+>> Changes since v3: http://marc.info/?l=3Dlinux-scsi&m=3D1325814552147=
+89&w=3D2
+>
+> Just to check I'm not lost here. I think this is currently the only
+> mergeable set of patches you have because you're reworking patches in
+> all your other series and will repost ... is this correct?
 
-They might not warrant a full RFC reposting, but individually they
-should have been posted to the list, so Bart is right.
+There are two mergeable topics in isci.git:
+libsas-eh-reworks-v4: mergeable
+devel: mergeable, posted as "[GIT PATCH v2 00/15] isci update for 3.3
+(part1)" [1].  This contains all the general updates to the driver
+that were independent of the libsas churn.  It was rebased to
+incorporate Ben's firmware removal patch, but is otherwise idle and
+ready to merge.
 
-As a maintainer, there shouldn't be a patch in your tree that hasn't
-been over the mailing list once.  This is for three reasons
+--
+Dan
 
-     1. Git is a great source control tool, bit it doesn't hugely
-        facilitate review.  Even virtuoso git users find it easier to
-        read and reply to emailed patches for this purpose
-     2. Not everyone in our community is a wholesale git user.  For
-        them, email might be the only way they get to see a patch, so
-        using git alone lowers our pool of reviewers (and reviewers are
-        the species we most need to encourage)
-     3. Enforcing the rule that everything is emailed first can save you
-        from the maintainers curse:  the temptation to bung in that last
-        little "obvious" fix just before you send your tree to Linus
-        which later turns out to cause huge regressions and much
-        heartache.
-
-You don't have to endlessly repost patch series, just make sure that
-small updates get posted for review and comment before they get applied.
-
-James
+http://marc.info/?l=3Dlinux-scsi&m=3D132581499114886&w=3D2
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
