@@ -1,84 +1,60 @@
 From: akpm@linux-foundation.org
-Subject: [patch 4/6] drivers/scsi/sg.c: convert to kstrtoul_from_user()
-Date: Tue, 10 Jan 2012 15:42:34 -0800
-Message-ID: <20120110234235.774BF200133@hpza10.eem.corp.google.com>
+Subject: [patch 6/6] drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell "primitive" correctly
+Date: Tue, 10 Jan 2012 15:42:43 -0800
+Message-ID: <20120110234243.D6ABE10014E@wpzn3.hot.corp.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ASCII
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ey0-f202.google.com ([209.85.215.202]:64968 "EHLO
-	mail-ey0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752110Ab2AJXmi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 18:42:38 -0500
-Received: by mail-ey0-f202.google.com with SMTP id k10so4933eaa.1
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2012 15:42:37 -0800 (PST)
+Received: from mail-yx0-f202.google.com ([209.85.213.202]:42438 "EHLO
+	mail-yx0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756633Ab2AJXmo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 18:42:44 -0500
+Received: by yenm5 with SMTP id m5so18689yen.1
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2012 15:42:44 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, sboyd@codeaurora.org, dgilbert@interlog.com, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-From: Stephen Boyd <sboyd@codeaurora.org>
-Subject: drivers/scsi/sg.c: convert to kstrtoul_from_user()
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: drivers/scsi/mpt2sas/mpt2sas_scsih.c: spell "primitive" correctly
 
-Instead of open coding this function use kstrtoul_from_user() directly.
 
-Signed-off-by: Stephen Boyd <sboyd@codeaurora.org>
-Cc: Doug Gilbert <dgilbert@interlog.com>
-Cc: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sg.c |   25 +++++++++++--------------
- 1 file changed, 11 insertions(+), 14 deletions(-)
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/sg.c~drivers-scsi-sgc-convert-to-kstrtoul_from_user drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~drivers-scsi-sgc-convert-to-kstrtoul_from_user
-+++ a/drivers/scsi/sg.c
-@@ -2368,16 +2368,15 @@ static ssize_t 
- sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 		   size_t count, loff_t *off)
- {
--	int num;
--	char buff[11];
-+	int err;
-+	unsigned long num;
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	num = (count < 10) ? count : 10;
--	if (copy_from_user(buff, buffer, num))
--		return -EFAULT;
--	buff[num] = '\0';
--	sg_allow_dio = simple_strtoul(buff, NULL, 10) ? 1 : 0;
-+	err = kstrtoul_from_user(buffer, count, 0, &num);
-+	if (err)
-+		return err;
-+	sg_allow_dio = num ? 1 : 0;
- 	return count;
+diff -puN drivers/scsi/mpt2sas/mpt2sas_scsih.c~drivers-scsi-mpt2sas-mpt2sas_scsihc-spell-primitive-correctly drivers/scsi/mpt2sas/mpt2sas_scsih.c
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c~drivers-scsi-mpt2sas-mpt2sas_scsihc-spell-primitive-correctly
++++ a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -5744,7 +5744,7 @@ _scsih_sas_enclosure_dev_status_change_e
  }
  
-@@ -2390,17 +2389,15 @@ static ssize_t 
- sg_proc_write_dressz(struct file *filp, const char __user *buffer,
- 		     size_t count, loff_t *off)
+ /**
+- * _scsih_sas_broadcast_primative_event - handle broadcast events
++ * _scsih_sas_broadcast_primitive_event - handle broadcast events
+  * @ioc: per adapter object
+  * @fw_event: The fw_event_work object
+  * Context: user.
+@@ -5752,7 +5752,7 @@ _scsih_sas_enclosure_dev_status_change_e
+  * Return nothing.
+  */
+ static void
+-_scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
++_scsih_sas_broadcast_primitive_event(struct MPT2SAS_ADAPTER *ioc,
+     struct fw_event_work *fw_event)
  {
--	int num;
-+	int err;
- 	unsigned long k = ULONG_MAX;
--	char buff[11];
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
- 		return -EACCES;
--	num = (count < 10) ? count : 10;
--	if (copy_from_user(buff, buffer, num))
--		return -EFAULT;
--	buff[num] = '\0';
--	k = simple_strtoul(buff, NULL, 10);
-+
-+	err = kstrtoul_from_user(buffer, count, 0, &k);
-+	if (err)
-+		return err;
- 	if (k <= 1048576) {	/* limit "big buff" to 1 MB */
- 		sg_big_buff = k;
- 		return count;
+ 	struct scsi_cmnd *scmd;
+@@ -7263,7 +7263,7 @@ _firmware_event_work(struct work_struct 
+ 		    fw_event);
+ 		break;
+ 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
+-		_scsih_sas_broadcast_primative_event(ioc,
++		_scsih_sas_broadcast_primitive_event(ioc,
+ 		    fw_event);
+ 		break;
+ 	case MPI2_EVENT_SAS_ENCL_DEVICE_STATUS_CHANGE:
 _
