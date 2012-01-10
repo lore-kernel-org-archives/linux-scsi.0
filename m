@@ -1,68 +1,78 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH] scsi_dh_rdac: Fix error path
-Date: Mon, 9 Jan 2012 17:13:05 -0500
-Message-ID: <CAMM=eLeXa7qLMyG+njL9yuYDkUAxTNLV5eHi+y_=X+1eDVwZ_g@mail.gmail.com>
-References: <1321577067-26332-1-git-send-email-richard@nod.at>
- <47D23AD8469A2B448F33C24BD7A39BD9108C7178@RTPMVEXC1-PRD.hq.netapp.com> <4EEDFBCF.4040802@nod.at>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v4 3/3] qla2xxx: Add tcm_qla2xxx fabric module for
+ mainline target
+Date: Mon, 09 Jan 2012 16:24:13 -0800
+Message-ID: <1326155053.6802.40.camel@haakon2.linux-iscsi.org>
+References: <1324173746-14361-1-git-send-email-nab@linux-iscsi.org>
+	 <1324173746-14361-4-git-send-email-nab@linux-iscsi.org>
+	 <CAL1RGDX-MR6pEwDN-vSjx92wUD3x5zk26UAG9QKpw1jp5-85mg@mail.gmail.com>
+	 <1324677068.16979.103.camel@haakon2.linux-iscsi.org>
+	 <CAL1RGDX2FkenDkJxkB2hcj1hyqfsTJF2O0tygpwHNRgHupSsBw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4EEDFBCF.4040802@nod.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Richard Weinberger <richard@nod.at>
-Cc: "Moger, Babu" <Babu.Moger@netapp.com>, JBottomley@parallels.com, Somasundaram.Krishnasamy@lsi.com, yanling.qi@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43457 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933521Ab2AJAYV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2012 19:24:21 -0500
+In-Reply-To: <CAL1RGDX2FkenDkJxkB2hcj1hyqfsTJF2O0tygpwHNRgHupSsBw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <JBottomley@parallels.com>, Joern Engel <joern@logfs.org>, Madhuranath Iyengar <mni@risingtidesystems.com>
 
-On Sun, Dec 18, 2011 at 9:42 AM, Richard Weinberger <richard@nod.at> wr=
-ote:
-> Am 18.11.2011 15:34, schrieb Moger, Babu:
->> Looks good to me..
->>
->>> -----Original Message-----
->>> From: Richard Weinberger [mailto:richard@nod.at]
->>> Sent: Thursday, November 17, 2011 6:44 PM
->>> To: JBottomley@parallels.com
->>> Cc: Moger, Babu; Somasundaram.Krishnasamy@lsi.com; yanling.qi@lsi.c=
-om;
->>> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; Richard
->>> Weinberger
->>> Subject: [PATCH] scsi_dh_rdac: Fix error path
->>>
->>> If create_singlethread_workqueue() failes, rdac_init should fail to=
-o.
->>>
->>> Signed-off-by: Richard Weinberger <richard@nod.at>
->>> ---
->>> =A0drivers/scsi/device_handler/scsi_dh_rdac.c | =A0 =A02 ++
->>> =A01 files changed, 2 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> b/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> index 1d31279..2802394 100644
->>> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
->>> @@ -934,6 +934,8 @@ static int __init rdac_init(void)
->>> =A0 =A0 =A0if (!kmpath_rdacd) {
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0scsi_unregister_device_handler(&rdac_dh)=
-;
->>> =A0 =A0 =A0 =A0 =A0 =A0 =A0printk(KERN_ERR "kmpath_rdacd creation f=
-ailed.\n");
->>> +
->>> + =A0 =A0 =A0 =A0 =A0 =A0r =3D -EINVAL;
->>> =A0 =A0 =A0}
->>> =A0done:
->>> =A0 =A0 =A0return r;
->>> --
->>> 1.7.7.3
->>
->
-> James,
->
-> can you please pickup this patch?
+Hi Roland & Co,
 
-James, was this the one that you said was overlooked?
+My apologies for the delayed response here, still catching up after the
+holidays..
 
-In any case, please apply, and for good measure:
 
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+On Mon, 2012-01-02 at 13:38 -0800, Roland Dreier wrote:
+> On Fri, Dec 23, 2011 at 1:51 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > So the (t_transport_complete == 0) check causing the issue above should
+> > be safe to remove now..  The same is true for the !cmd->se_cmd.se_dev
+> > check in tcm_qla2xxx_free_cmd() as well.
+> 
+> Basically you're saying the following is the right fix?
+> 
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -401,21 +401,6 @@ static void tcm_qla2xxx_complete_free(struct
+> work_struct *work)
+>   */
+>  void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
+>  {
+> -       barrier();
+> -       /*
+> -        * Handle tcm_qla2xxx_init_cmd() -> transport_get_lun_for_cmd()
+> -        * failure case where cmd->se_cmd.se_dev was not assigned, and
+> -        * a call to transport_generic_free_cmd_intr() is not possible..
+> -        */
+> -       if (!cmd->se_cmd.se_dev) {
+> -               target_put_sess_cmd(cmd->se_cmd.se_sess, &cmd->se_cmd);
+> -               transport_generic_free_cmd(&cmd->se_cmd, 0);
+> -               return;
+> -       }
+> -
+> -       if (!atomic_read(&cmd->se_cmd.t_transport_complete))
+> -               target_put_sess_cmd(cmd->se_cmd.se_sess, &cmd->se_cmd);
+> -
+>         INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
+>         queue_work(tcm_qla2xxx_free_wq, &cmd->work);
+>  }
+> 
+> (I'm deleting the barrier() as part of this too because it's almost certainly
+> wrong... an indirect call through a function pointer that gets here is just
+> as much of a compiler optimization barrier anyway).
+> 
+
+Yes, this should be fine.  I still need to verify this internally, and
+will push this into lio-core/qla_tgt-3.3 after testing.
+
+Thanks,
+
+--nab
+
+
