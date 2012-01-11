@@ -1,35 +1,25 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: aacraid question: is maximum_num_containers supposed to be minimum?
-Date: Wed, 11 Jan 2012 11:28:43 +0300
-Message-ID: <20120111082842.GA31452@elgon.mountain>
-Mime-Version: 1.0
+From: Xi Wang <xi.wang@gmail.com>
+Subject: Re: aacraid question: is maximum_num_containers supposed to be minimum?
+Date: Wed, 11 Jan 2012 03:38:55 -0500
+Message-ID: <8654A042-17CA-4C02-8F34-554ED55B34F4@gmail.com>
+References: <20120111082842.GA31452@elgon.mountain>
+Mime-Version: 1.0 (Apple Message framework v1084)
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
+In-Reply-To: <20120111082842.GA31452@elgon.mountain>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Haogang Chen <haogangchen@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-MAXIMUM_NUM_CONTAINERS is consistently used as a minimum not a maximum
-so I was wondering what was up with that?  This is ancient code that
-predates git.
+On Jan 11, 2012, at 3:28 AM, Dan Carpenter wrote:
+> MAXIMUM_NUM_CONTAINERS is consistently used as a minimum not a maximum
+> so I was wondering what was up with that?  This is ancient code that
+> predates git.
 
-drivers/scsi/aacraid/aachba.c
-   382          if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
-   383                  maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
-   384          fsa_dev_ptr = kzalloc(sizeof(*fsa_dev_ptr) * maximum_num_containers,
-   385                          GFP_KERNEL);
+Check out some early discussion. ;-)
 
-Btw, if maximum_num_containers were really a maximum instead of minimum
-then it should be unsigned.  That was what brought the code to my
-attention initially.
+https://lkml.org/lkml/2011/12/3/85
 
-drivers/scsi/aacraid/linit.c
-  1235          if (shost->max_id < MAXIMUM_NUM_CONTAINERS)
-  1236                  shost->max_id = MAXIMUM_NUM_CONTAINERS;
-  1237          else
-  1238                  shost->this_id = shost->max_id;
-
-regards,
-dan carpenter
+- xi
