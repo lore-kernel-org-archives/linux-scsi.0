@@ -1,107 +1,89 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [patch 2/6] drivers/scsi/megaraid.c: fix sparse warnings
-Date: Tue, 10 Jan 2012 18:07:56 -0800
-Message-ID: <CAHtARFFf3dHMVuC5OvOUUrWfLuv4ExsjMGqq7oawq9c_eMijnA@mail.gmail.com>
-References: <20120110234230.58C9F20012E@hpza10.eem.corp.google.com>
-	<CAHtARFFWhGpFDZ51JsSHQsXs02i4Pu4x4YUfM37JxvYLucH5Dg@mail.gmail.com>
-	<1326245138.3264.121.camel@dabdike.int.hansenpartnership.com>
-	<20120110174814.351384c1.akpm@linux-foundation.org>
+From: "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>
+Subject: RE: [PATCH] mpt2sas: Fix for data corruption issue in the routine
+ sd_prep_fn
+Date: Wed, 11 Jan 2012 10:41:13 +0530
+Message-ID: <A6888A6805518E4EA4AF7072A28264A60481F526DC@inbmail02.lsi.com>
+References: <201111151447.pAFElZhR029655@milmhbs0.lsil.com>
+ <1321376586.3021.47.camel@dabdike.int.hansenpartnership.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0016e6d7ea90a41d0204b637198d
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-we0-f174.google.com ([74.125.82.174]:36074 "EHLO
-	mail-we0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757035Ab2AKCH6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2012 21:07:58 -0500
-Received: by werm1 with SMTP id m1so178920wer.19
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2012 18:07:56 -0800 (PST)
-In-Reply-To: <20120110174814.351384c1.akpm@linux-foundation.org>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:53750 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750747Ab2AKFM0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jan 2012 00:12:26 -0500
+In-Reply-To: <1321376586.3021.47.camel@dabdike.int.hansenpartnership.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, rdunlap@xenotime.net, megaraidlinux@lsi.com, viro@zeniv.linux.org.uk
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---0016e6d7ea90a41d0204b637198d
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jan 10, 2012 at 5:48 PM, Andrew Morton
-<akpm@linux-foundation.org> wrote:
-> Yes, it sounds like this is a day-one bug which we can't really fix
-> now, with an acceptable level of effort or risk. =A0I agree that replacin=
-g
-> it with literal zero and a decent code comment is appropriate.
->
-
-James/Andrew/linux-scsi,
-
-The following patch for the older megaraid driver fixes some sparse warning=
-s.
-
-Signed-off-by: Adam Radford <aradford@gmail.com>
-
-diff -Naur scsi-misc-2.6/drivers/scsi/megaraid.c
-scsi-misc-2.6.new/drivers/scsi/megaraid.c
---- scsi-misc-2.6/drivers/scsi/megaraid.c	2012-02-06 12:50:20.000000000 -08=
-00
-+++ scsi-misc-2.6.new/drivers/scsi/megaraid.c	2012-01-10
-18:00:23.570267019 -0800
-@@ -306,19 +306,22 @@
- 	adapter->host->sg_tablesize =3D adapter->sglen;
-
-
--	/* use HP firmware and bios version encoding */
-+	/* use HP firmware and bios version encoding
-+	   Note: fw_version[0|1] and bios_version[0|1] were originally shifted
-+	   right 8 bits making them zero. This 0 value was hardcoded to fix
-+	   sparse warnings. */
- 	if (adapter->product_info.subsysvid =3D=3D HP_SUBSYS_VID) {
- 		sprintf (adapter->fw_version, "%c%d%d.%d%d",
- 			 adapter->product_info.fw_version[2],
--			 adapter->product_info.fw_version[1] >> 8,
-+			 0,
- 			 adapter->product_info.fw_version[1] & 0x0f,
--			 adapter->product_info.fw_version[0] >> 8,
-+			 0,
- 			 adapter->product_info.fw_version[0] & 0x0f);
- 		sprintf (adapter->bios_version, "%c%d%d.%d%d",
- 			 adapter->product_info.bios_version[2],
--			 adapter->product_info.bios_version[1] >> 8,
-+			 0,
- 			 adapter->product_info.bios_version[1] & 0x0f,
--			 adapter->product_info.bios_version[0] >> 8,
-+			 0,
- 			 adapter->product_info.bios_version[0] & 0x0f);
- 	} else {
- 		memcpy(adapter->fw_version,
-
---0016e6d7ea90a41d0204b637198d
-Content-Type: text/x-patch; charset=US-ASCII; name="megaraid.patch"
-Content-Disposition: attachment; filename="megaraid.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gx9pjcyt0
-
-ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC5jIHNjc2ktbWlz
-Yy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC5jCi0tLSBzY3NpLW1pc2MtMi42L2RyaXZl
-cnMvc2NzaS9tZWdhcmFpZC5jCTIwMTItMDItMDYgMTI6NTA6MjAuMDAwMDAwMDAwIC0wODAwCisr
-KyBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQuYwkyMDEyLTAxLTEwIDE4
-OjAwOjIzLjU3MDI2NzAxOSAtMDgwMApAQCAtMzA2LDE5ICszMDYsMjIgQEAKIAlhZGFwdGVyLT5o
-b3N0LT5zZ190YWJsZXNpemUgPSBhZGFwdGVyLT5zZ2xlbjsKIAogCi0JLyogdXNlIEhQIGZpcm13
-YXJlIGFuZCBiaW9zIHZlcnNpb24gZW5jb2RpbmcgKi8KKwkvKiB1c2UgSFAgZmlybXdhcmUgYW5k
-IGJpb3MgdmVyc2lvbiBlbmNvZGluZworCSAgIE5vdGU6IGZ3X3ZlcnNpb25bMHwxXSBhbmQgYmlv
-c192ZXJzaW9uWzB8MV0gd2VyZSBvcmlnaW5hbGx5IHNoaWZ0ZWQKKwkgICByaWdodCA4IGJpdHMg
-bWFraW5nIHRoZW0gemVyby4gVGhpcyAwIHZhbHVlIHdhcyBoYXJkY29kZWQgdG8gZml4IAorCSAg
-IHNwYXJzZSB3YXJuaW5ncy4gKi8KIAlpZiAoYWRhcHRlci0+cHJvZHVjdF9pbmZvLnN1YnN5c3Zp
-ZCA9PSBIUF9TVUJTWVNfVklEKSB7CiAJCXNwcmludGYgKGFkYXB0ZXItPmZ3X3ZlcnNpb24sICIl
-YyVkJWQuJWQlZCIsCiAJCQkgYWRhcHRlci0+cHJvZHVjdF9pbmZvLmZ3X3ZlcnNpb25bMl0sCi0J
-CQkgYWRhcHRlci0+cHJvZHVjdF9pbmZvLmZ3X3ZlcnNpb25bMV0gPj4gOCwKKwkJCSAwLAogCQkJ
-IGFkYXB0ZXItPnByb2R1Y3RfaW5mby5md192ZXJzaW9uWzFdICYgMHgwZiwKLQkJCSBhZGFwdGVy
-LT5wcm9kdWN0X2luZm8uZndfdmVyc2lvblswXSA+PiA4LAorCQkJIDAsCiAJCQkgYWRhcHRlci0+
-cHJvZHVjdF9pbmZvLmZ3X3ZlcnNpb25bMF0gJiAweDBmKTsKIAkJc3ByaW50ZiAoYWRhcHRlci0+
-Ymlvc192ZXJzaW9uLCAiJWMlZCVkLiVkJWQiLAogCQkJIGFkYXB0ZXItPnByb2R1Y3RfaW5mby5i
-aW9zX3ZlcnNpb25bMl0sCi0JCQkgYWRhcHRlci0+cHJvZHVjdF9pbmZvLmJpb3NfdmVyc2lvblsx
-XSA+PiA4LAorCQkJIDAsCiAJCQkgYWRhcHRlci0+cHJvZHVjdF9pbmZvLmJpb3NfdmVyc2lvblsx
-XSAmIDB4MGYsCi0JCQkgYWRhcHRlci0+cHJvZHVjdF9pbmZvLmJpb3NfdmVyc2lvblswXSA+PiA4
-LAorCQkJIDAsCiAJCQkgYWRhcHRlci0+cHJvZHVjdF9pbmZvLmJpb3NfdmVyc2lvblswXSAmIDB4
-MGYpOwogCX0gZWxzZSB7CiAJCW1lbWNweShhZGFwdGVyLT5md192ZXJzaW9uLAo=
---0016e6d7ea90a41d0204b637198d--
+SmFtZXMsDQpUaGlzIHBhdGNoIGlzIG5vdCBwdWxsZWQgaW50byBHSVQgdHJlZSB5ZXQuIENhbiBJ
+IGtub3cgd2hlbiB3aWxsIHRoaXMgZ2V0IGFkZGVkLg0KDQpSZWdhcmRzLA0KTmFnYWxha3NobWkN
+Cg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEphbWVzIEJvdHRvbWxleSBbbWFp
+bHRvOkphbWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb21dIA0KU2VudDogVHVlc2Rh
+eSwgTm92ZW1iZXIgMTUsIDIwMTEgMTA6MzMgUE0NClRvOiBOYW5kaWdhbWEsIE5hZ2FsYWtzaG1p
+DQpDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IERlc2FpLCBLYXNoeWFwOyBNb29yZSwg
+RXJpYw0KU3ViamVjdDogUmU6IFtQQVRDSF0gbXB0MnNhczogRml4IGZvciBkYXRhIGNvcnJ1cHRp
+b24gaXNzdWUgaW4gdGhlIHJvdXRpbmUgc2RfcHJlcF9mbg0KDQpPbiBUdWUsIDIwMTEtMTEtMTUg
+YXQgMTQ6MTEgKzA1MzAsIG5hZ2FsYWtzaG1pLm5hbmRpZ2FtYUBsc2kuY29tIHdyb3RlOg0KPiBG
+aXggZm9yIGRhdGEgY29ycnVwdGlvbiBpc3N1ZSBpbiB0aGUgcm91dGluZSBzZF9wcmVwX2ZuIHdo
+aWNoIGNhbg0KPiBvY2N1ciBmb3IgNGtiIHNlY3RvciBzdXBwb3J0Lg0KPiANCj4gVGhlIGlzc3Vl
+IGlzIHRoYXQsIHRoZSByb3V0aW5lIHNkX3ByZXBfZm4gaXMgc2hhcmluZyB0aGUgc2FtZSBwYXJh
+bWV0ZXIgY2FsbGVkDQo+IHRoaXNfY291bnQgZm9yIHNldHRpbmcgdGhlIExCQSBjb3VudCBhbmQg
+dGhlIHVuZGVyZmxvdy4gV2hlbiB0aGlzIHJvdXRpbmUNCj4gY29udmVydHMgdGhpc19jb3VudCBz
+byB0aGUgTEJBIGNvdW50IGlzIGluIDRrYiB1bml0cywgaXQgaXMgbm90IGNvbnZlcnRlZCBiYWNr
+IA0KPiB0byA1MTIgYnl0ZXMgdW5pdHMgd2hlbiBzZXR0aW5nIHRoZSB1bmRlcmZsb3cuIFRodXMg
+dW5kZXJmbG93IGlzIG9mZiBieSBhIA0KPiBtdWx0aXBsZSBvZiA4LiAgIA0KPiANCj4gVGhpcyBw
+YXRjaCB3aWxsIHNldCB0aGUgdW5kZXJmbG93IHRvIHRoZSBkYXRhIHRyYW5zZmVyIHNpemUgaW4g
+Ynl0ZXMuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBOYWdhbGFrc2htaSBOYW5kaWdhbWEgPG5hZ2Fs
+YWtzaG1pLm5hbmRpZ2FtYUBsc2kuY29tPg0KPiBDYzogc3RhYmxlQGtlcm5lbC5vcmcNCj4gLS0t
+DQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2Qu
+YyANCj4gaW5kZXggZmEzYTU5MS4uM2M0YWQxNCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3Np
+L3NkLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL3NkLmMNCj4gQEAgLTg5NSw3ICs4OTUsNyBAQCBz
+dGF0aWMgaW50IHNkX3ByZXBfZm4oc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0cnVjdCByZXF1
+ZXN0ICpycSkNCj4gIAkgKiB0aGlzIG1hbnkgYnl0ZXMgYmV0d2VlbiBlYWNoIGNvbm5lY3QgLyBk
+aXNjb25uZWN0Lg0KPiAgCSAqLw0KPiAgCVNDcG50LT50cmFuc2ZlcnNpemUgPSBzZHAtPnNlY3Rv
+cl9zaXplOw0KPiAtCVNDcG50LT51bmRlcmZsb3cgPSB0aGlzX2NvdW50IDw8IDk7DQo+ICsJU0Nw
+bnQtPnVuZGVyZmxvdyA9IGJsa19ycV9ieXRlcyhycSk7DQo+ICAJU0NwbnQtPmFsbG93ZWQgPSBT
+RF9NQVhfUkVUUklFUzsNCg0KQWN0dWFsbHkgaWYgd2UncmUgZ29pbmcgdG8gZG8gdGhpcywgbGV0
+J3MgZ2V0IHJpZCBvZiB0aGUgbXVsdGlwbGljYXRpb24NCmluIHRoZSBmYXN0IHBhdGggdG9vLg0K
+DQpKYW1lcw0KDQotLS0NCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvczM5MC9zY3NpL3pmY3Bfc2Nz
+aS5jIGIvZHJpdmVycy9zMzkwL3Njc2kvemZjcF9zY3NpLmMNCmluZGV4IDExZjA3ZjguLjQwMDhl
+YzAgMTAwNjQ0DQotLS0gYS9kcml2ZXJzL3MzOTAvc2NzaS96ZmNwX3Njc2kuYw0KKysrIGIvZHJp
+dmVycy9zMzkwL3Njc2kvemZjcF9zY3NpLmMNCkBAIC01NSw4ICs1NSwxMCBAQCBzdGF0aWMgdm9p
+ZCB6ZmNwX3Njc2lfc2xhdmVfZGVzdHJveShzdHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYpDQogew0K
+IAlzdHJ1Y3QgemZjcF9zY3NpX2RldiAqemZjcF9zZGV2ID0gc2Rldl90b196ZmNwKHNkZXYpOw0K
+IA0KLQl6ZmNwX2VycF9sdW5fc2h1dGRvd25fd2FpdChzZGV2LCAic2Nzc2RfMSIpOw0KLQlwdXRf
+ZGV2aWNlKCZ6ZmNwX3NkZXYtPnBvcnQtPmRldik7DQorCWlmICh6ZmNwX3NkZXYtPnBvcnQpIHsN
+CisJCXpmY3BfZXJwX2x1bl9zaHV0ZG93bl93YWl0KHNkZXYsICJzY3NzZF8xIik7DQorCQlwdXRf
+ZGV2aWNlKCZ6ZmNwX3NkZXYtPnBvcnQtPmRldik7DQorCX0NCiB9DQogDQogc3RhdGljIGludCB6
+ZmNwX3Njc2lfc2xhdmVfY29uZmlndXJlKHN0cnVjdCBzY3NpX2RldmljZSAqc2RwKQ0KZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4uYyBiL2RyaXZlcnMvc2NzaS9zY3NpX3NjYW4u
+Yw0KaW5kZXggNzIyNzNhMC4uYjNjNmQ5NSAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9zY3Np
+X3NjYW4uYw0KKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jDQpAQCAtMzE5LDExICszMTks
+NyBAQCBzdGF0aWMgc3RydWN0IHNjc2lfZGV2aWNlICpzY3NpX2FsbG9jX3NkZXYoc3RydWN0IHNj
+c2lfdGFyZ2V0ICpzdGFyZ2V0LA0KIAlyZXR1cm4gc2RldjsNCiANCiBvdXRfZGV2aWNlX2Rlc3Ry
+b3k6DQotCXNjc2lfZGV2aWNlX3NldF9zdGF0ZShzZGV2LCBTREVWX0RFTCk7DQotCXRyYW5zcG9y
+dF9kZXN0cm95X2RldmljZSgmc2Rldi0+c2Rldl9nZW5kZXYpOw0KLQlwdXRfZGV2aWNlKCZzZGV2
+LT5zZGV2X2Rldik7DQotCXNjc2lfZnJlZV9xdWV1ZShzZGV2LT5yZXF1ZXN0X3F1ZXVlKTsNCi0J
+cHV0X2RldmljZSgmc2Rldi0+c2Rldl9nZW5kZXYpOw0KKwlfX3Njc2lfcmVtb3ZlX2RldmljZShz
+ZGV2KTsNCiBvdXQ6DQogCWlmIChkaXNwbGF5X2ZhaWx1cmVfbXNnKQ0KIAkJcHJpbnRrKEFMTE9D
+X0ZBSUxVUkVfTVNHLCBfX2Z1bmNfXyk7DQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMg
+Yi9kcml2ZXJzL3Njc2kvc2QuYw0KaW5kZXggZmEzYTU5MS4uZWU1NzNmMiAxMDA2NDQNCi0tLSBh
+L2RyaXZlcnMvc2NzaS9zZC5jDQorKysgYi9kcml2ZXJzL3Njc2kvc2QuYw0KQEAgLTg4Myw3ICs4
+ODMsNyBAQCBzdGF0aWMgaW50IHNkX3ByZXBfZm4oc3RydWN0IHJlcXVlc3RfcXVldWUgKnEsIHN0
+cnVjdCByZXF1ZXN0ICpycSkNCiAJCVNDcG50LT5jbW5kWzRdID0gKHVuc2lnbmVkIGNoYXIpIHRo
+aXNfY291bnQ7DQogCQlTQ3BudC0+Y21uZFs1XSA9IDA7DQogCX0NCi0JU0NwbnQtPnNkYi5sZW5n
+dGggPSB0aGlzX2NvdW50ICogc2RwLT5zZWN0b3Jfc2l6ZTsNCisJU0NwbnQtPnVuZGVyZmxvdyA9
+IFNDcG50LT5zZGIubGVuZ3RoID0gYmxrX3JxX2J5dGVzKHJxKTsNCiANCiAJLyogSWYgRElGIG9y
+IERJWCBpcyBlbmFibGVkLCB0ZWxsIEhCQSBob3cgdG8gaGFuZGxlIHJlcXVlc3QgKi8NCiAJaWYg
+KGhvc3RfZGlmIHx8IHNjc2lfcHJvdF9zZ19jb3VudChTQ3BudCkpDQpAQCAtODk1LDcgKzg5NSw2
+IEBAIHN0YXRpYyBpbnQgc2RfcHJlcF9mbihzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSwgc3RydWN0
+IHJlcXVlc3QgKnJxKQ0KIAkgKiB0aGlzIG1hbnkgYnl0ZXMgYmV0d2VlbiBlYWNoIGNvbm5lY3Qg
+LyBkaXNjb25uZWN0Lg0KIAkgKi8NCiAJU0NwbnQtPnRyYW5zZmVyc2l6ZSA9IHNkcC0+c2VjdG9y
+X3NpemU7DQotCVNDcG50LT51bmRlcmZsb3cgPSB0aGlzX2NvdW50IDw8IDk7DQogCVNDcG50LT5h
+bGxvd2VkID0gU0RfTUFYX1JFVFJJRVM7DQogDQogCS8qDQoNCg0K
