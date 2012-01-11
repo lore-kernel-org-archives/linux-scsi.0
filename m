@@ -1,68 +1,48 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: aacraid question: is maximum_num_containers supposed to be
- minimum?
-Date: Wed, 11 Jan 2012 12:04:31 +0300
-Message-ID: <20120111090430.GE16258@mwanda>
-References: <20120111082842.GA31452@elgon.mountain>
- <8654A042-17CA-4C02-8F34-554ED55B34F4@gmail.com>
+Subject: re: [SCSI] bfa: Implement LUN Masking feature using the SCSI Slave
+ Callouts.
+Date: Wed, 11 Jan 2012 12:32:34 +0300
+Message-ID: <20120111093234.GA30629@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d8Lz2Tf5e5STOWUP"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8654A042-17CA-4C02-8F34-554ED55B34F4@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Xi Wang <xi.wang@gmail.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Haogang Chen <haogangchen@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
-
---d8Lz2Tf5e5STOWUP
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet15.oracle.com ([148.87.113.117]:44458 "EHLO
+	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754816Ab2AKJcn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2012 04:32:43 -0500
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: kgudipat@brocade.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Jan 11, 2012 at 03:38:55AM -0500, Xi Wang wrote:
-> On Jan 11, 2012, at 3:28 AM, Dan Carpenter wrote:
-> > MAXIMUM_NUM_CONTAINERS is consistently used as a minimum not a maximum
-> > so I was wondering what was up with that?  This is ancient code that
-> > predates git.
->=20
-> Check out some early discussion. ;-)
->=20
-> https://lkml.org/lkml/2011/12/3/85
+Hello Krishna Gudipati,
 
-Heh.  That's weird that we were both looking at the same code so
-many years down the line.
+This is a semi-automatic email about new static checker warnings.
 
-Still Haogang is assuming that MAXIMUM_NUM_CONTAINERS is supposed to
-be a minimum instead of it just being used that way by mistake.
-Mark is more familiar with code and thought it was supposed to be a
-maximum.
+The patch 5b7db7af522d: "[SCSI] bfa: Implement LUN Masking feature 
+using the SCSI Slave Callouts." from Dec 20, 2011, leads to the 
+following Smatch complaint:
+
+drivers/scsi/bfa/bfad_im.c +962 bfad_im_slave_alloc()
+	 warn: variable dereferenced before check 'rport' (see line 959)
+
+drivers/scsi/bfa/bfad_im.c
+   957          struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+   958		struct bfad_itnim_data_s *itnim_data =
+   959					(struct bfad_itnim_data_s *) rport->dd_data;
+                                                                     ^^^^^^^
+New dereference.
+
+   960		struct bfa_s *bfa = itnim_data->itnim->bfa_itnim->bfa;
+   961	
+   962		if (!rport || fc_remote_port_chkready(rport))
+                     ^^^^^
+Old check.
+
+   963			return -ENXIO;
+   964	
 
 regards,
 dan carpenter
 
---d8Lz2Tf5e5STOWUP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iQIcBAEBAgAGBQJPDVCeAAoJEOnZkXI/YHqRfYYP/RNZn9IWSu77NqnnV4sKi/Yc
-poolk1upL8J46z3tK5cOyuxib6DbtL6AR+XAFGMVXns1Svu2K9Fq0bxHJd0F/nQs
-grBfgCSPARpeOYkx6OczDyV81Zsjv0sE+3+D517S7qTpROXFWdf9jdlpc02PRmhY
-VG9foy9VGQzAMknmNmYB4Jb3CvxrHralJZh5N10UqYfuQ9Ka3cYBs7/E3pdOKHk9
-jnYtSrdAdewCAJ8vMmp7KW3Gv1uIbCy9wWyJ+pSNoAMkYF8TxlF3HqF7T+ogcsOY
-/mrKVsNujB8SkAn75APygndX3Qq1Wr8sh4eZdhoj6+8zc2TvZG5CaHNqV4Y5EyMQ
-Glh1oetkmMGHrLErZdSji1zA4c51OYzWnuKC/LHZjU89zRDADSUNVRJ2dWdPFQmv
-kQeY8lJZHcTLEgRNChs4HzMZ0lNIaNkvrKdbT6cZNJ9a0qT/KgiqlOVRBYl5Q4G3
-1H3ComuDn7TcKWOjU14I5lKgJ2wOrrfTsgoTpGJGwjzkvgaMvxiCNS7LCJTHwS3B
-8RGBZRIj45FvMStS4G+kSWNhrY9GQFkwb9zU93olkMAJqWhuI+UKvl2KxRFcYH/2
-ET1uEp6tRV+kK28CjzaNKKbqyh62OTbbF3uOBiVWqXY0GbH6dO33REZn/paLPtWB
-CqZcxSHt483C4mdpGiQT
-=tKGx
------END PGP SIGNATURE-----
-
---d8Lz2Tf5e5STOWUP--
