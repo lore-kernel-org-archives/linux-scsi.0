@@ -1,52 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
-Date: Thu, 12 Jan 2012 23:13:43 +0100
-Message-ID: <4F0F5B17.3090606@suse.de>
-References: <1325618414-26992-1-git-send-email-revers@redhat.com> <4F0EAB53.7020404@suse.de> <4F0F124D.3000708@redhat.com> <4F0F4F43.2010902@suse.de> <4F0F3A73.9060602@cs.wisc.edu> <4F0F3BB1.7090902@cs.wisc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: "K. Y. Srinivasan" <kys@microsoft.com>
+Subject: [PATCH 0000/0015] Staging: hv: storvsc cleanup
+Date: Thu, 12 Jan 2012 12:37:17 -0800
+Message-ID: <1326400637-13494-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49721 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755208Ab2ALUNj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 15:13:39 -0500
-In-Reply-To: <4F0F3BB1.7090902@cs.wisc.edu>
+Received: from p3plsmtps2ded01.prod.phx3.secureserver.net ([208.109.80.58]:34256
+	"HELO p3plsmtps2ded01-02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755126Ab2ALUej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 15:34:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Rob Evers <revers@redhat.com>, linux-scsi@vger.kernel.org
+To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 
-On 01/12/2012 08:59 PM, Mike Christie wrote:
-> On 01/12/2012 01:54 PM, Mike Christie wrote:
->> alua_check_sense will return ADD_TO_MLQUEUE_DELAY then scsi_check_se=
-nse
->> will pass that up and scsi_decide_disposition will return that right
->> away.
->
-> I mean it is one of those weird ones where we do not do the goto
-> maybe_retry in scsi_decide_disposition, so we do not see the fast fai=
-l
-> bit set. This happens for ADD_TO_MLQUEUE_DELAY and ADD_TO_MLQUEUE.
->
-Hmm. Not sure here.
-With the above reasoning SG_IO would be retried, too.
-Which it most definitely isn't.
+Cleanup storvsc driver  based on the latest review comments from Christoph:
 
-I'll be digging deeper here tomorrow.
+	1. Get rid of unnecessary comments and unused defines. Use a consistent
+	   style for comments.
 
-Cheers,
+	2. Cleanup all the structure definitions used in communication with
+	   the host. Also consolidate all protocol related definitions to
+	   a single location in the file.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+	3. Get rid of some unnecessary indirection and consolidate the state in
+	   request structure.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	4. Some general cleanup.
+
+With this, I believe I have addressed all of the review comments I have received
+on this driver. I will submit a separate patch for moving the driver out of staging
+(that includes these patches).
+
+
+Regards,
+
+K. Y
+
