@@ -1,168 +1,172 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 2/3] block: fail SCSI passthrough ioctls on partition devices
-Date: Thu, 12 Jan 2012 16:01:28 +0100
-Message-ID: <1326380489-9044-3-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 1/3] block: add and use scsi_blk_cmd_ioctl
+Date: Thu, 12 Jan 2012 16:01:27 +0100
+Message-ID: <1326380489-9044-2-git-send-email-pbonzini@redhat.com>
 References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:64343 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753903Ab2ALPCF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2012 10:02:05 -0500
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:33900 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918Ab2ALPCD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2012 10:02:03 -0500
 In-Reply-To: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Petr Matousek <pmatouse@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 
-Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
-will pass the command to the underlying block device.  This is well-known,
-but it is also a large security problem when (via Unix permissions,
-ACLs, SELinux or a combination thereof) a program or user needs to be
-granted access only to part of the disk.
-
-This patch lets partitions forward a small set of harmless ioctls; others
-are logged with printk so that we can see which ioctls are actually sent.
-In my tests only CDROM_GET_CAPABILITY actually occurred.  Of course it
-was being sent to a (partition on a) hard disk, so it would have failed
-with ENOTTY and the patch isn't changing anything in practice.  Still,
-I'm treating it specially to avoid spamming the logs.
-
-In principle, this restriction should include programs running
-with CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2
-and /dev/sdb, it still should not be able to read/write outside the
-boundaries of /dev/sda2 independent of the capabilities.  However, for
-now programs with CAP_SYS_RAWIO will still be allowed to send the ioctls.
-Their actions will still be logged.
-
-This patch does not affect the non-libata IDE driver.  That driver however
-already tests for bd != bd->bd_contains before issuing some ioctl; it could
-be restricted further to forbid these ioctls even for programs running with
-CAP_SYS_ADMIN/CAP_SYS_RAWIO.
+Introduce a wrapper around scsi_cmd_ioctl that takes a block device.
+The function will then be enhanced to detect partition block devices and,
+in that case, subject the ioctls to whitelisting.
 
 Cc: linux-scsi@vger.kernel.org
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: James Bottomley <JBottomley@parallels.com>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- block/scsi_ioctl.c     |   43 +++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.c      |   11 +++++++++--
- include/linux/blkdev.h |    1 +
- 3 files changed, 53 insertions(+), 2 deletions(-)
+ block/scsi_ioctl.c             |    7 +++++++
+ drivers/block/cciss.c          |    6 +++---
+ drivers/block/ub.c             |    3 +--
+ drivers/block/virtio_blk.c     |    4 ++--
+ drivers/cdrom/cdrom.c          |    3 +--
+ drivers/ide/ide-floppy_ioctl.c |    3 +--
+ drivers/scsi/sd.c              |    2 +-
+ include/linux/blkdev.h         |    2 ++
+ 8 files changed, 18 insertions(+), 12 deletions(-)
 
 diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index a2c11f3..bdb8489 100644
+index fbdf0d8..a2c11f3 100644
 --- a/block/scsi_ioctl.c
 +++ b/block/scsi_ioctl.c
-@@ -24,6 +24,7 @@
- #include <linux/capability.h>
- #include <linux/completion.h>
- #include <linux/cdrom.h>
-+#include <linux/ratelimit.h>
- #include <linux/slab.h>
- #include <linux/times.h>
- #include <asm/uaccess.h>
-@@ -690,9 +691,53 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
+@@ -690,6 +690,13 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
  }
  EXPORT_SYMBOL(scsi_cmd_ioctl);
  
-+int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
++int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
++		       unsigned int cmd, void __user *arg)
 +{
-+	if (bd && bd == bd->bd_contains)
-+		return 0;
-+
-+	/* Actually none of these is particularly useful on a partition,
-+	 * but they are safe.
-+	 */
-+	switch (cmd) {
-+	case SCSI_IOCTL_GET_IDLUN:
-+	case SCSI_IOCTL_GET_BUS_NUMBER:
-+	case SCSI_IOCTL_GET_PCI:
-+	case SCSI_IOCTL_PROBE_HOST:
-+	case SG_GET_VERSION_NUM:
-+	case SG_SET_TIMEOUT:
-+	case SG_GET_TIMEOUT:
-+	case SG_GET_RESERVED_SIZE:
-+	case SG_SET_RESERVED_SIZE:
-+	case SG_EMULATED_HOST:
-+		return 0;
-+	case CDROM_GET_CAPABILITY:
-+		/* Keep this until we remove the printk below.  udev sends it
-+		 * and we do not want to spam dmesg about it.   CD-ROMs do
-+		 * not have partitions, so we get here only for disks.
-+		 */
-+		return -ENOIOCTLCMD;
-+	default:
-+		break;
-+	}
-+
-+	/* In particular, rule out all resets and host-specific ioctls.  */
-+	printk_ratelimited(KERN_WARNING
-+			   "sending ioctl %x to a partition!\n", cmd);
-+
-+	return capable(CAP_SYS_RAWIO) ? 0 : -ENOIOCTLCMD;
++	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
 +}
-+EXPORT_SYMBOL(scsi_verify_blk_ioctl);
++EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
 +
- int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
- 		       unsigned int cmd, void __user *arg)
+ static int __init blk_scsi_ioctl_init(void)
  {
-+	int ret;
-+
-+	ret = scsi_verify_blk_ioctl(bd, cmd);
-+	if (ret < 0)
-+		return ret;
-+
- 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
+ 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 587cce5..b0f553b 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1735,7 +1735,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case CCISS_BIG_PASSTHRU:
+ 		return cciss_bigpassthru(h, argp);
+ 
+-	/* scsi_cmd_ioctl handles these, below, though some are not */
++	/* scsi_cmd_blk_ioctl handles these, below, though some are not */
+ 	/* very meaningful for cciss.  SG_IO is the main one people want. */
+ 
+ 	case SG_GET_VERSION_NUM:
+@@ -1746,9 +1746,9 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case SG_EMULATED_HOST:
+ 	case SG_IO:
+ 	case SCSI_IOCTL_SEND_COMMAND:
+-		return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++		return scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+-	/* scsi_cmd_ioctl would normally handle these, below, but */
++	/* scsi_cmd_blk_ioctl would normally handle these, below, but */
+ 	/* they aren't a good fit for cciss, as CD-ROMs are */
+ 	/* not supported, and we don't have any bus/target/lun */
+ 	/* which we present to the kernel. */
+diff --git a/drivers/block/ub.c b/drivers/block/ub.c
+index 0e376d4..7333b9e 100644
+--- a/drivers/block/ub.c
++++ b/drivers/block/ub.c
+@@ -1744,12 +1744,11 @@ static int ub_bd_release(struct gendisk *disk, fmode_t mode)
+ static int ub_bd_ioctl(struct block_device *bdev, fmode_t mode,
+     unsigned int cmd, unsigned long arg)
+ {
+-	struct gendisk *disk = bdev->bd_disk;
+ 	void __user *usermem = (void __user *) arg;
+ 	int ret;
+ 
+ 	mutex_lock(&ub_mutex);
+-	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, usermem);
++	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, usermem);
+ 	mutex_unlock(&ub_mutex);
+ 
+ 	return ret;
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 4d0b70a..e46f2f7 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -243,8 +243,8 @@ static int virtblk_ioctl(struct block_device *bdev, fmode_t mode,
+ 	if (!virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_SCSI))
+ 		return -ENOTTY;
+ 
+-	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd,
+-			      (void __user *)data);
++	return scsi_cmd_blk_ioctl(bdev, mode, cmd,
++				  (void __user *)data);
  }
- EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+ 
+ /* We provide getgeo only to please some old bootloader/partitioning tools */
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 2118211..129af31 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2746,12 +2746,11 @@ int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
+ {
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
+-	struct gendisk *disk = bdev->bd_disk;
+ 
+ 	/*
+ 	 * Try the generic SCSI command ioctl's first.
+ 	 */
+-	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 	if (ret != -ENOTTY)
+ 		return ret;
+ 
+diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
+index d267b7a..a22ca84 100644
+--- a/drivers/ide/ide-floppy_ioctl.c
++++ b/drivers/ide/ide-floppy_ioctl.c
+@@ -292,8 +292,7 @@ int ide_floppy_ioctl(ide_drive_t *drive, struct block_device *bdev,
+ 	 * and CDROM_SEND_PACKET (legacy) ioctls
+ 	 */
+ 	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
+-		err = scsi_cmd_ioctl(bdev->bd_disk->queue, bdev->bd_disk,
+-				mode, cmd, argp);
++		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+ 	if (err == -ENOTTY)
+ 		err = generic_ide_ioctl(drive, bdev, cmd, arg);
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index ffa1c79..fd96409 100644
+index fa3a591..ffa1c79 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1074,6 +1074,10 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
- 				    "cmd=0x%x\n", disk->disk_name, cmd));
- 
-+	error = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (error < 0)
-+		return error;
-+
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
- 	 * else try and use this device.  Also, if error recovery fails, it
-@@ -1266,6 +1270,11 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
- 			   unsigned int cmd, unsigned long arg)
- {
- 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
-+	int ret;
-+
-+	ret = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (ret < 0)
-+		return ret;
- 
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
-@@ -1277,8 +1286,6 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
- 		return -ENODEV;
- 	       
- 	if (sdev->host->hostt->compat_ioctl) {
--		int ret;
--
- 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
- 
- 		return ret;
+@@ -1096,7 +1096,7 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
+ 			error = scsi_ioctl(sdp, cmd, p);
+ 			break;
+ 		default:
+-			error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
++			error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
+ 			if (error != -ENOTTY)
+ 				break;
+ 			error = scsi_ioctl(sdp, cmd, p);
 diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index ca7b869..0ed1eb0 100644
+index 94acd81..ca7b869 100644
 --- a/include/linux/blkdev.h
 +++ b/include/linux/blkdev.h
-@@ -675,6 +675,7 @@ extern int blk_insert_cloned_request(struct request_queue *q,
+@@ -675,6 +675,8 @@ extern int blk_insert_cloned_request(struct request_queue *q,
  				     struct request *rq);
  extern void blk_delay_queue(struct request_queue *, unsigned long);
  extern void blk_recount_segments(struct request_queue *, struct bio *);
-+extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
- extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
- 			      unsigned int, void __user *);
++extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
++			      unsigned int, void __user *);
  extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			  unsigned int, void __user *);
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
 -- 
 1.7.7.1
 
