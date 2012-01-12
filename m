@@ -1,74 +1,109 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH] mpt2sas: New feature - Fast Load Support -
- scsi_mod.scan=sync drops drive
-Date: Thu, 12 Jan 2012 12:00:12 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED7299CF90CF2@inbmail01.lsi.com>
-References: <4F0BFB5D.6030802@lianse.eu>
- <B2FD678A64EAAD45B089B123FDFC3ED7299CF90B84@inbmail01.lsi.com>
- <4F0D4C76.7090303@lianse.eu>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
+Date: Thu, 12 Jan 2012 10:43:47 +0100
+Message-ID: <4F0EAB53.7020404@suse.de>
+References: <1325618414-26992-1-git-send-email-revers@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:34739 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751102Ab2ALGaT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 01:30:19 -0500
-In-Reply-To: <4F0D4C76.7090303@lianse.eu>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:49324 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752859Ab2ALJnt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 04:43:49 -0500
+In-Reply-To: <1325618414-26992-1-git-send-email-revers@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?utf-8?B?QW5kcsOpLVNlYmFzdGlhbiBMaWViZQ==?= <andre@lianse.eu>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "Thakkar, Vishal" <Vishal.Thakkar@lsi.com>
+To: Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-QW5kcmUsDQoNCkNhbiB5b3UgZW5hYmxlIG1wdDJzYXMgZHJpdmVyIGxvZyBsZXZlbCAgdG8gMHgz
-OGMgYW5kIHJlLXNlbmQgdGhlIGRyaXZlciBsb2dzIGluIGNhc2Ugb2YgDQoic2NzaV9tb2Quc2Nh
-bj1zeW5jIg0KDQpZb3UgbmVlZCB0byBwYXNzIGJvb3QgdGltZSBwYXJhbWV0ZXIgbXB0MnNhcy5s
-b2dnaW5nX2xldmVsPTB4MzhjDQoNCmAgS2FzaHlhcA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
-ZS0tLS0tDQo+IEZyb206IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUgW21haWx0bzphbmRyZUBsaWFu
-c2UuZXVdDQo+IFNlbnQ6IFdlZG5lc2RheSwgSmFudWFyeSAxMSwgMjAxMiAyOjE3IFBNDQo+IFRv
-OiBEZXNhaSwgS2FzaHlhcA0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3Vi
-amVjdDogUmU6IFtQQVRDSF0gbXB0MnNhczogTmV3IGZlYXR1cmUgLSBGYXN0IExvYWQgU3VwcG9y
-dCAtDQo+IHNjc2lfbW9kLnNjYW49c3luYyBkcm9wcyBkcml2ZQ0KPiANCj4gVGFua3MgZm9yIHlv
-dXIgc3VnZ2VzdGlvbiBLYXNoeWFwIQ0KPiANCj4gSSd2ZSB0cmllZCBpdCBvdXQgYnV0IHJhbiBk
-aXJlY3RseSBpbnRvIGFuIG90aGVyIHByb2JsZW0uIFdpdGgNCj4gc2NzaV9tb2Quc2Nhbj1zeW5j
-IHRoZSBoYmEgcmVwb3J0ZWQgYWxsIDQgZHJpdmVzIGNvcnJlY3RseSBidXQgZHJvcHBlZA0KPiBv
-bmUgb2YgaXQgaW5zdGFudGFuZW91c2x5LiBTbyBJJ20gZWl0aGVyIHN0dWNrIHdpdGgga2VybmVs
-IDMuMSBhbmQgYWxsDQo+IGJvb3RpbmcgdXAgY29ycmVjdGx5IG9yIHVzaW5nIDMuMiBhbmQgbWFu
-dWFsbHkgbW91bnRpbmcgdGhlIGRyaXZlcw0KPiBiZWhpbmQgdGhlIGhiYSBhbmQgc3RhcnRpbmcg
-dGhlIHNlcnZpY2VzIGRlcGVuZGluZyBvbiB0aGVtIHRoZXJlYWZ0ZXIuDQo+IA0KPiBJJ3ZlIGF0
-dGFjaGVkIHBhcnRzIG9mIHRoZSBrZXJuZWwgbG9nIHdpdGggc2NzaV9tb2Quc3luYyBwYXJhbWV0
-ZXIgc2V0DQo+IHRvICBzeW5jL2FzeW5jDQo+IA0KPiAtYW5kcmUNCj4gDQo+IA0KPiBPbiAxMC4w
-MS4yMDEyIDExOjUzLCBEZXNhaSwgS2FzaHlhcCB3cm90ZToNCj4gPiBUaGVyZSBpcyBhIHNvbWUg
-c2NzaV9tb2QgcGFyYW1ldGVyIGNhbGxlZCAic2NhbiIuDQo+ID4gSWYgeW91IHBhc3MgdGhvc2Ug
-cGFyYW1ldGVyIGF0IGJvb3QgdGltZSB5b3UgY2FuIGNoYW5nZSB0aGUgYmVoYXZpb3IuDQo+ID4g
-KHNlZSBiZWxvdyBkZXNjcmlwdGlvbikNCj4gPg0KPiA+IAlzY3NpX21vZC5zY2FuPQlbU0NTSV0g
-c3luYyAoZGVmYXVsdCkgc2NhbnMgU0NTSSBidXNzZXMgYXMgdGhleQ0KPiBhcmUNCj4gPiAJCWRp
-c2NvdmVyZWQuICBBc3luYyBzY2FucyB0aGVtIGluIGtlcm5lbCB0aHJlYWRzLCBhbGxvd2luZw0K
-PiBib290IHRvIHByb2NlZWQuDQo+ID4gCQlub25lIGlnbm9yZXMgdGhlbSwgZXhwZWN0aW5nIHVz
-ZXIgc3BhY2UgdG8gZG8gdGhlIHNjYW4uDQo+ID4NCj4gPiB+IEthc2h5YXANCj4gPg0KPiA+PiAt
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+ID4+IG93bmVyQHZnZXIua2VybmVs
-Lm9yZ10gT24gQmVoYWxmIE9mIEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gPj4gU2VudDogVHVl
-c2RheSwgSmFudWFyeSAxMCwgMjAxMiAyOjE4IFBNDQo+ID4+IFRvOiBsaW51eC1zY3NpQHZnZXIu
-a2VybmVsLm9yZw0KPiA+PiBTdWJqZWN0OiBSZTogW1BBVENIXSBtcHQyc2FzOiBOZXcgZmVhdHVy
-ZSAtIEZhc3QgTG9hZCBTdXBwb3J0DQo+ID4+DQo+ID4gSGkgZ3V5cywNCj4gPg0KPiA+IEkndmUg
-cnVuIGludG8gcHJvYmxlbXMgd2l0aCB0aGUgYWxsIG5ldyBzaGlueSAzLjIga2VybmVsLiBNeSBz
-eXN0ZW0NCj4gPiBicm9rZSBiYWRseSBhcyBpdCdzIGRlcGVuZGluZyBvbiBzb21lIGRldmljZXMg
-d2hpY2ggYXJlIGF0dGFjaGVkIHRvIG15DQo+ID4gTFNJIFNBUyAyMDA4IGhiYS4NCj4gPiBUaGUg
-bW91bnQgc2NyaXB0cyBvZiBteSBnZW50b28vb3BlbnJjIHNldHVwIGdldCB0cmlnZ2VyZWQgcmln
-aHQgYWZ0ZXINCj4gPiB1ZGV2IGhhcyBzZXR0bGVkLiAgQnV0IHdpdGggdGhlIG5ldyBmYXN0IGxv
-YWQgc3VwcG9ydCB1ZGV2IHNldHRsZXMNCj4gPiBiZWZvcmUgbXkgZHJpdmVzIGFwcGVhciB0byB0
-aGUgc3lzdGVtLCBzbyBtb3VudCBmYWlscyBmb3IgYWxsIHRob3NlDQo+ID4gZHJpdmVzIGFuZCBv
-ZiBjYXVzZSBhbGwgc3Vic2VxdWVudCBzZXJ2aWNlcyBkZXBlbmRpbmcgb24gdGhlbS4NCj4gPiBJ
-cyB0aGVyZSBhbnkgc3dpdGNoIHRvIHJldmVydCBiYWNrIHRvIHRoZSBvbGQgYmVoYXZpb3Igb2Yg
-YmxvY2tpbmcNCj4gPiB1bnRpbCBhbGwgcG9ydHMgc2NhbnMgYXJlIGRvbmU/DQo+ID4NCj4gPiBU
-aGFua3MgaW4gYWR2YW5jZQ0KPiA+IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gPg0KPiA+PiAt
-LQ0KPiA+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5z
-dWJzY3JpYmUgbGludXgtc2NzaSINCj4gPj4gaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
-am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8NCj4gPj4gaW5mbyBhdCAgaHR0
-cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0KPiAtLQ0KPiBncGcg
-a2V5IEFBMUUxRjY2IEAgZ3BnLWtleXNlcnZlci5kZTogQW5kcsOpLVNlYmFzdGlhbiBMaWViZQ0K
-PiA8YW5kcmVAbGlhbnNlLmV1PiBLZXkgZmluZ2VycHJpbnQgPSA1NDM2IDUzNTggMTcyQyBFQjdE
-IEU0MTQgIEM2REUgNjY2NA0KPiA4OUJGIEFBMUUgMUY2Ng0K
+On 01/03/2012 08:20 PM, Rob Evers wrote:
+> From: Rob Evers <revers@redhat.com>
+>=20
+> When alua targets are transitioning, the scsi midlayer retry mechanis=
+m
+> continuously retries the scsi commands that are returning with not re=
+ady
+> transitioning status.  The target is not capable of handling the
+> commands for time on the order of several seconds during these transi=
+stions.
+>=20
+> This patch delays the device queue for 2 seconds, which is in the sam=
+e
+> order of aas transition time.
+>=20
+> Also, handle all other cases where ADD_TO_MLQUEUE_DELAY could be retu=
+rned
+> instead of ADD_TO_MLQUEUE as if ADD_TO_MLQUEUE were being returned.
+>=20
+> Problem found by array partner testing
+>=20
+> change MLQUEUE_DEV_DLY_RTY to MLQUEUE_DELAYED_RETRY
+>=20
+I have been working on a different solution, whic
+> Signed-off-by: Rob Evers <revers@redhat.com>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c |    7 ++++---
+>  drivers/scsi/scsi.c                        |    3 +++
+>  drivers/scsi/scsi_error.c                  |    1 +
+>  drivers/scsi/scsi_lib.c                    |    9 ++++++++-
+>  include/scsi/scsi.h                        |   12 +++++++-----
+>  5 files changed, 23 insertions(+), 9 deletions(-)
+>=20
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scs=
+i/device_handler/scsi_dh_alua.c
+> index 4ef0212..33b8df7 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -233,7 +233,7 @@ static void stpg_endio(struct request *req, int e=
+rror)
+>  			goto done;
+>  		}
+>  		err =3D alua_check_sense(h->sdev, &sense_hdr);
+> -		if (err =3D=3D ADD_TO_MLQUEUE) {
+> +		if (err =3D=3D ADD_TO_MLQUEUE || err =3D=3D ADD_TO_MLQUEUE_DELAY) =
+{
+>  			err =3D SCSI_DH_RETRY;
+>  			goto done;
+>  		}
+> @@ -443,7 +443,7 @@ static int alua_check_sense(struct scsi_device *s=
+dev,
+>  			/*
+>  			 * LUN Not Accessible - ALUA state transition
+>  			 */
+> -			return ADD_TO_MLQUEUE;
+> +			return ADD_TO_MLQUEUE_DELAY;
+>  		if (sense_hdr->asc =3D=3D 0x04 && sense_hdr->ascq =3D=3D 0x0b)
+>  			/*
+>  			 * LUN Not Accessible -- Target port in standby state
+> @@ -521,7 +521,8 @@ static int alua_rtpg(struct scsi_device *sdev, st=
+ruct alua_dh_data *h)
+>  			return SCSI_DH_IO;
+> =20
+>  		err =3D alua_check_sense(sdev, &sense_hdr);
+> -		if (err =3D=3D ADD_TO_MLQUEUE && time_before(jiffies, expiry))
+> +		if ((err =3D=3D ADD_TO_MLQUEUE || err =3D=3D ADD_TO_MLQUEUE_DELAY)=
+ &&
+> +		    time_before(jiffies, expiry))
+>  			goto retry;
+>  		sdev_printk(KERN_INFO, sdev,
+>  			    "%s: rtpg sense code %02x/%02x/%02x\n",
+Actually, this doesn't help if the RTPG command returns with the
+mentioned error; then you'll just continue flooding the array with
+RTPG commands. You'll need to delay the RTPG commands, too.
+
+I'll be sending an updated patch.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
