@@ -1,7 +1,7 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 15/15] Staging: hv: storvsc: Consolidate all the wire protocol definitions
-Date: Thu, 12 Jan 2012 12:38:08 -0800
-Message-ID: <1326400688-13544-15-git-send-email-kys@microsoft.com>
+Subject: [PATCH 14/15] Staging: hv: storvsc: Consolidate the request structure
+Date: Thu, 12 Jan 2012 12:38:07 -0800
+Message-ID: <1326400688-13544-14-git-send-email-kys@microsoft.com>
 References: <1326400637-13494-1-git-send-email-kys@microsoft.com>
  <1326400688-13544-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,130 +11,235 @@ To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, 
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Consolidate all definitions that support communication with the host.
+Consolidate the request structure by getting rid of struct hv_storvsc_request.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/staging/hv/storvsc_drv.c |   83 +++++++++++++++++++++----------------
- 1 files changed, 47 insertions(+), 36 deletions(-)
+ drivers/staging/hv/storvsc_drv.c |   65 ++++++++++++++++----------------------
+ 1 files changed, 27 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
-index 9ccc1c4..695ffc3 100644
+index d34e3ca..9ccc1c4 100644
 --- a/drivers/staging/hv/storvsc_drv.c
 +++ b/drivers/staging/hv/storvsc_drv.c
-@@ -42,33 +42,13 @@
- #include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_dbg.h>
- 
--
--/*
-- * We setup a mempool to allocate request structures for this driver
-- * on a per-lun basis. The following define specifies the number of
-- * elements in the pool.
-- */
--
--#define STORVSC_MIN_BUF_NR				64
--static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
--
--module_param(storvsc_ringbuffer_size, int, S_IRUGO);
--MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
--
--
- /*
-- * Major/minor macros.  Minor version is in LSB, meaning that earlier flat
-- * version numbers will be interpreted as "0.x" (i.e., 1 becomes 0.1).
-+ * All wire protocol details (storage protocol between the guest and the host)
-+ * are consolidated here.
-+ *
-+ * Begin protocol definitions.
-  */
- 
--static inline u16 storvsc_get_version(u8 major, u8 minor)
--{
--	u16 version;
--
--	version = ((major << 8) | minor);
--	return version;
--}
--
- /*
-  * Version history:
-  * V1 Beta: 0.1
-@@ -207,18 +187,6 @@ struct vstor_packet {
- 
- #define REQUEST_COMPLETION_FLAG	0x1
- 
--#define STORVSC_MAX_IO_REQUESTS				128
--
--/*
-- * In Hyper-V, each port/path/target maps to 1 scsi host adapter.  In
-- * reality, the path/target is not used (ie always set to 0) so our
-- * scsi host adapter essentially has 1 bus with 1 target that contains
-- * up to 256 luns.
-- */
--#define STORVSC_MAX_LUNS_PER_TARGET			64
--#define STORVSC_MAX_TARGETS				1
--#define STORVSC_MAX_CHANNELS				1
--
- /* Matches Windows-end */
- enum storvsc_request_type {
- 	WRITE_TYPE = 0,
-@@ -235,6 +203,36 @@ enum storvsc_request_type {
- #define SRB_STATUS_SUCCESS	0x01
+@@ -236,17 +236,20 @@ enum storvsc_request_type {
  #define SRB_STATUS_ERROR	0x04
  
-+/*
-+ * This is the end of Protocol specific defines.
-+ */
-+
-+
-+/*
-+ * We setup a mempool to allocate request structures for this driver
-+ * on a per-lun basis. The following define specifies the number of
-+ * elements in the pool.
-+ */
-+
-+#define STORVSC_MIN_BUF_NR				64
-+static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
-+
-+module_param(storvsc_ringbuffer_size, int, S_IRUGO);
-+MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
-+
-+#define STORVSC_MAX_IO_REQUESTS				128
-+
-+/*
-+ * In Hyper-V, each port/path/target maps to 1 scsi host adapter.  In
-+ * reality, the path/target is not used (ie always set to 0) so our
-+ * scsi host adapter essentially has 1 bus with 1 target that contains
-+ * up to 256 luns.
-+ */
-+#define STORVSC_MAX_LUNS_PER_TARGET			64
-+#define STORVSC_MAX_TARGETS				1
-+#define STORVSC_MAX_CHANNELS				1
-+
-+
  
- struct storvsc_cmd_request {
- 	struct list_head entry;
-@@ -337,6 +335,19 @@ done:
++struct storvsc_cmd_request {
++	struct list_head entry;
++	struct scsi_cmnd *cmd;
++
++	unsigned int bounce_sgl_count;
++	struct scatterlist *bounce_sgl;
+ 
+-struct hv_storvsc_request {
+ 	struct hv_device *device;
+ 
+ 	/* Synchronize the request/response if needed */
+ 	struct completion wait_event;
+ 
+ 	unsigned char *sense_buffer;
+-	struct storvsc_cmd_request  *cmd;
+ 	struct hv_multipage_buffer data_buffer;
+-
+ 	struct vstor_packet vstor_packet;
+ };
+ 
+@@ -272,8 +275,8 @@ struct storvsc_device {
+ 	unsigned char target_id;
+ 
+ 	/* Used for vsc/vsp channel reset process */
+-	struct hv_storvsc_request init_request;
+-	struct hv_storvsc_request reset_request;
++	struct storvsc_cmd_request init_request;
++	struct storvsc_cmd_request reset_request;
+ };
+ 
+ struct stor_mem_pools {
+@@ -288,16 +291,6 @@ struct hv_host_device {
+ 	unsigned char target;
+ };
+ 
+-struct storvsc_cmd_request {
+-	struct list_head entry;
+-	struct scsi_cmnd *cmd;
+-
+-	unsigned int bounce_sgl_count;
+-	struct scatterlist *bounce_sgl;
+-
+-	struct hv_storvsc_request request;
+-};
+-
+ struct storvsc_scan_work {
+ 	struct work_struct work;
+ 	struct Scsi_Host *host;
+@@ -628,7 +621,7 @@ static unsigned int copy_to_bounce_buffer(struct scatterlist *orig_sgl,
+ static int storvsc_channel_init(struct hv_device *device)
+ {
+ 	struct storvsc_device *stor_device;
+-	struct hv_storvsc_request *request;
++	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
+ 
+@@ -643,7 +636,7 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	 * Now, initiate the vsc/vsp initialization protocol on the open
+ 	 * channel
+ 	 */
+-	memset(request, 0, sizeof(struct hv_storvsc_request));
++	memset(request, 0, sizeof(struct storvsc_cmd_request));
+ 	init_completion(&request->wait_event);
+ 	vstor_packet->operation = VSTOR_OPERATION_BEGIN_INITIALIZATION;
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+@@ -757,9 +750,8 @@ cleanup:
  }
  
- /*
-+ * Major/minor macros.  Minor version is in LSB, meaning that earlier flat
-+ * version numbers will be interpreted as "0.x" (i.e., 1 becomes 0.1).
-+ */
-+
-+static inline u16 storvsc_get_version(u8 major, u8 minor)
-+{
-+	u16 version;
-+
-+	version = ((major << 8) | minor);
-+	return version;
-+}
-+
-+/*
-  * We can get incoming messages from the host that are not in response to
-  * messages that we have sent out. An example of this would be messages
-  * received by the guest to notify dynamic addition/removal of LUNs. To
+ 
+-static void storvsc_command_completion(struct hv_storvsc_request *request)
++static void storvsc_command_completion(struct storvsc_cmd_request *cmd_request)
+ {
+-	struct storvsc_cmd_request *cmd_request = request->cmd;
+ 	struct scsi_cmnd *scmnd = cmd_request->cmd;
+ 	struct hv_host_device *host_dev = shost_priv(scmnd->device->host);
+ 	void (*scsi_done_fn)(struct scsi_cmnd *);
+@@ -768,7 +760,7 @@ static void storvsc_command_completion(struct hv_storvsc_request *request)
+ 	struct storvsc_scan_work *wrk;
+ 	struct stor_mem_pools *memp = scmnd->device->hostdata;
+ 
+-	vm_srb = &request->vstor_packet.vm_srb;
++	vm_srb = &cmd_request->vstor_packet.vm_srb;
+ 	if (cmd_request->bounce_sgl_count) {
+ 		if (vm_srb->data_in == READ_TYPE)
+ 			copy_from_bounce_buffer(scsi_sglist(scmnd),
+@@ -819,7 +811,7 @@ static void storvsc_command_completion(struct hv_storvsc_request *request)
+ 	}
+ 
+ 	scsi_set_resid(scmnd,
+-		request->data_buffer.len -
++		cmd_request->data_buffer.len -
+ 		vm_srb->data_transfer_length);
+ 
+ 	scsi_done_fn = scmnd->scsi_done;
+@@ -834,7 +826,7 @@ static void storvsc_command_completion(struct hv_storvsc_request *request)
+ 
+ static void storvsc_on_io_completion(struct hv_device *device,
+ 				  struct vstor_packet *vstor_packet,
+-				  struct hv_storvsc_request *request)
++				  struct storvsc_cmd_request *request)
+ {
+ 	struct storvsc_device *stor_device;
+ 	struct vstor_packet *stor_pkt;
+@@ -906,7 +898,7 @@ static void storvsc_on_io_completion(struct hv_device *device,
+ 
+ static void storvsc_on_receive(struct hv_device *device,
+ 			     struct vstor_packet *vstor_packet,
+-			     struct hv_storvsc_request *request)
++			     struct storvsc_cmd_request *request)
+ {
+ 	struct storvsc_scan_work *work;
+ 	struct storvsc_device *stor_device;
+@@ -940,7 +932,7 @@ static void storvsc_on_channel_callback(void *context)
+ 	u32 bytes_recvd;
+ 	u64 request_id;
+ 	unsigned char packet[ALIGN(sizeof(struct vstor_packet), 8)];
+-	struct hv_storvsc_request *request;
++	struct storvsc_cmd_request *request;
+ 	int ret;
+ 
+ 
+@@ -954,7 +946,7 @@ static void storvsc_on_channel_callback(void *context)
+ 				       &bytes_recvd, &request_id);
+ 		if (ret == 0 && bytes_recvd > 0) {
+ 
+-			request = (struct hv_storvsc_request *)
++			request = (struct storvsc_cmd_request *)
+ 					(unsigned long)request_id;
+ 
+ 			if ((request == &stor_device->init_request) ||
+@@ -1036,7 +1028,7 @@ static int storvsc_dev_remove(struct hv_device *device)
+ }
+ 
+ static int storvsc_do_io(struct hv_device *device,
+-			      struct hv_storvsc_request *request)
++			      struct storvsc_cmd_request *request)
+ {
+ 	struct storvsc_device *stor_device;
+ 	struct vstor_packet *vstor_packet;
+@@ -1174,7 +1166,7 @@ static int storvsc_host_reset_handler(struct scsi_cmnd *scmnd)
+ 	struct hv_device *device = host_dev->dev;
+ 
+ 	struct storvsc_device *stor_device;
+-	struct hv_storvsc_request *request;
++	struct storvsc_cmd_request *request;
+ 	struct vstor_packet *vstor_packet;
+ 	int ret, t;
+ 
+@@ -1238,7 +1230,6 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	int ret;
+ 	struct hv_host_device *host_dev = shost_priv(host);
+ 	struct hv_device *dev = host_dev->dev;
+-	struct hv_storvsc_request *request;
+ 	struct storvsc_cmd_request *cmd_request;
+ 	unsigned int request_size = 0;
+ 	int i;
+@@ -1271,8 +1262,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 
+ 	scmnd->host_scribble = (unsigned char *)cmd_request;
+ 
+-	request = &cmd_request->request;
+-	vm_srb = &request->vstor_packet.vm_srb;
++	vm_srb = &cmd_request->vstor_packet.vm_srb;
+ 
+ 
+ 	/* Build the SRB */
+@@ -1288,7 +1278,6 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 		break;
+ 	}
+ 
+-	request->cmd = cmd_request;
+ 
+ 	vm_srb->port_number = host_dev->port;
+ 	vm_srb->path_id = scmnd->device->channel;
+@@ -1299,10 +1288,10 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 
+ 	memcpy(vm_srb->cdb, scmnd->cmnd, vm_srb->cdb_length);
+ 
+-	request->sense_buffer = scmnd->sense_buffer;
++	cmd_request->sense_buffer = scmnd->sense_buffer;
+ 
+ 
+-	request->data_buffer.len = scsi_bufflen(scmnd);
++	cmd_request->data_buffer.len = scsi_bufflen(scmnd);
+ 	if (scsi_sg_count(scmnd)) {
+ 		sgl = (struct scatterlist *)scsi_sglist(scmnd);
+ 		sg_count = scsi_sg_count(scmnd);
+@@ -1331,21 +1320,21 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 			sg_count = cmd_request->bounce_sgl_count;
+ 		}
+ 
+-		request->data_buffer.offset = sgl[0].offset;
++		cmd_request->data_buffer.offset = sgl[0].offset;
+ 
+ 		for (i = 0; i < sg_count; i++)
+-			request->data_buffer.pfn_array[i] =
++			cmd_request->data_buffer.pfn_array[i] =
+ 				page_to_pfn(sg_page((&sgl[i])));
+ 
+ 	} else if (scsi_sglist(scmnd)) {
+-		request->data_buffer.offset =
++		cmd_request->data_buffer.offset =
+ 			virt_to_phys(scsi_sglist(scmnd)) & (PAGE_SIZE-1);
+-		request->data_buffer.pfn_array[0] =
++		cmd_request->data_buffer.pfn_array[0] =
+ 			virt_to_phys(scsi_sglist(scmnd)) >> PAGE_SHIFT;
+ 	}
+ 
+ 	/* Invokes the vsc to start an IO */
+-	ret = storvsc_do_io(dev, &cmd_request->request);
++	ret = storvsc_do_io(dev, cmd_request);
+ 
+ 	if (ret == -EAGAIN) {
+ 		/* no more space */
 -- 
 1.7.4.1
