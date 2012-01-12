@@ -1,173 +1,90 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 1/3] block: add and use scsi_blk_cmd_ioctl
-Date: Thu, 12 Jan 2012 16:01:27 +0100
-Message-ID: <1326380489-9044-2-git-send-email-pbonzini@redhat.com>
-References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
+From: Rob Evers <revers@redhat.com>
+Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
+Date: Thu, 12 Jan 2012 12:03:09 -0500
+Message-ID: <4F0F124D.3000708@redhat.com>
+References: <1325618414-26992-1-git-send-email-revers@redhat.com> <4F0EAB53.7020404@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f46.google.com ([209.85.213.46]:33900 "EHLO
-	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753918Ab2ALPCD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2012 10:02:03 -0500
-In-Reply-To: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:12626 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754367Ab2ALRDN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 12:03:13 -0500
+In-Reply-To: <4F0EAB53.7020404@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Petr Matousek <pmatouse@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
-
-Introduce a wrapper around scsi_cmd_ioctl that takes a block device.
-The function will then be enhanced to detect partition block devices and,
-in that case, subject the ioctls to whitelisting.
-
+To: Hannes Reinecke <hare@suse.de>
 Cc: linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <JBottomley@parallels.com>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- block/scsi_ioctl.c             |    7 +++++++
- drivers/block/cciss.c          |    6 +++---
- drivers/block/ub.c             |    3 +--
- drivers/block/virtio_blk.c     |    4 ++--
- drivers/cdrom/cdrom.c          |    3 +--
- drivers/ide/ide-floppy_ioctl.c |    3 +--
- drivers/scsi/sd.c              |    2 +-
- include/linux/blkdev.h         |    2 ++
- 8 files changed, 18 insertions(+), 12 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index fbdf0d8..a2c11f3 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -690,6 +690,13 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
- }
- EXPORT_SYMBOL(scsi_cmd_ioctl);
- 
-+int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
-+		       unsigned int cmd, void __user *arg)
-+{
-+	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
-+}
-+EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
-+
- static int __init blk_scsi_ioctl_init(void)
- {
- 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 587cce5..b0f553b 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -1735,7 +1735,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
- 	case CCISS_BIG_PASSTHRU:
- 		return cciss_bigpassthru(h, argp);
- 
--	/* scsi_cmd_ioctl handles these, below, though some are not */
-+	/* scsi_cmd_blk_ioctl handles these, below, though some are not */
- 	/* very meaningful for cciss.  SG_IO is the main one people want. */
- 
- 	case SG_GET_VERSION_NUM:
-@@ -1746,9 +1746,9 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
- 	case SG_EMULATED_HOST:
- 	case SG_IO:
- 	case SCSI_IOCTL_SEND_COMMAND:
--		return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
-+		return scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
- 
--	/* scsi_cmd_ioctl would normally handle these, below, but */
-+	/* scsi_cmd_blk_ioctl would normally handle these, below, but */
- 	/* they aren't a good fit for cciss, as CD-ROMs are */
- 	/* not supported, and we don't have any bus/target/lun */
- 	/* which we present to the kernel. */
-diff --git a/drivers/block/ub.c b/drivers/block/ub.c
-index 0e376d4..7333b9e 100644
---- a/drivers/block/ub.c
-+++ b/drivers/block/ub.c
-@@ -1744,12 +1744,11 @@ static int ub_bd_release(struct gendisk *disk, fmode_t mode)
- static int ub_bd_ioctl(struct block_device *bdev, fmode_t mode,
-     unsigned int cmd, unsigned long arg)
- {
--	struct gendisk *disk = bdev->bd_disk;
- 	void __user *usermem = (void __user *) arg;
- 	int ret;
- 
- 	mutex_lock(&ub_mutex);
--	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, usermem);
-+	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, usermem);
- 	mutex_unlock(&ub_mutex);
- 
- 	return ret;
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 4d0b70a..e46f2f7 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -243,8 +243,8 @@ static int virtblk_ioctl(struct block_device *bdev, fmode_t mode,
- 	if (!virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_SCSI))
- 		return -ENOTTY;
- 
--	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd,
--			      (void __user *)data);
-+	return scsi_cmd_blk_ioctl(bdev, mode, cmd,
-+				  (void __user *)data);
- }
- 
- /* We provide getgeo only to please some old bootloader/partitioning tools */
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 2118211..129af31 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -2746,12 +2746,11 @@ int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
- {
- 	void __user *argp = (void __user *)arg;
- 	int ret;
--	struct gendisk *disk = bdev->bd_disk;
- 
- 	/*
- 	 * Try the generic SCSI command ioctl's first.
- 	 */
--	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
-+	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
- 	if (ret != -ENOTTY)
- 		return ret;
- 
-diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
-index d267b7a..a22ca84 100644
---- a/drivers/ide/ide-floppy_ioctl.c
-+++ b/drivers/ide/ide-floppy_ioctl.c
-@@ -292,8 +292,7 @@ int ide_floppy_ioctl(ide_drive_t *drive, struct block_device *bdev,
- 	 * and CDROM_SEND_PACKET (legacy) ioctls
- 	 */
- 	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
--		err = scsi_cmd_ioctl(bdev->bd_disk->queue, bdev->bd_disk,
--				mode, cmd, argp);
-+		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
- 
- 	if (err == -ENOTTY)
- 		err = generic_ide_ioctl(drive, bdev, cmd, arg);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index fa3a591..ffa1c79 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1096,7 +1096,7 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 			error = scsi_ioctl(sdp, cmd, p);
- 			break;
- 		default:
--			error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
-+			error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
- 			if (error != -ENOTTY)
- 				break;
- 			error = scsi_ioctl(sdp, cmd, p);
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 94acd81..ca7b869 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -675,6 +675,8 @@ extern int blk_insert_cloned_request(struct request_queue *q,
- 				     struct request *rq);
- extern void blk_delay_queue(struct request_queue *, unsigned long);
- extern void blk_recount_segments(struct request_queue *, struct bio *);
-+extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
-+			      unsigned int, void __user *);
- extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
- 			  unsigned int, void __user *);
- extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
--- 
-1.7.7.1
+On 01/12/2012 04:43 AM, Hannes Reinecke wrote:
+> On 01/03/2012 08:20 PM, Rob Evers wrote:
+>> From: Rob Evers<revers@redhat.com>
+>>
+>> When alua targets are transitioning, the scsi midlayer retry mechanism
+>> continuously retries the scsi commands that are returning with not ready
+>> transitioning status.  The target is not capable of handling the
+>> commands for time on the order of several seconds during these transistions.
+>>
+>> This patch delays the device queue for 2 seconds, which is in the same
+>> order of aas transition time.
+>>
+>> Also, handle all other cases where ADD_TO_MLQUEUE_DELAY could be returned
+>> instead of ADD_TO_MLQUEUE as if ADD_TO_MLQUEUE were being returned.
+>>
+>> Problem found by array partner testing
+>>
+>> change MLQUEUE_DEV_DLY_RTY to MLQUEUE_DELAYED_RETRY
+>>
+> I have been working on a different solution, whic
+>> Signed-off-by: Rob Evers<revers@redhat.com>
+>> ---
+>>   drivers/scsi/device_handler/scsi_dh_alua.c |    7 ++++---
+>>   drivers/scsi/scsi.c                        |    3 +++
+>>   drivers/scsi/scsi_error.c                  |    1 +
+>>   drivers/scsi/scsi_lib.c                    |    9 ++++++++-
+>>   include/scsi/scsi.h                        |   12 +++++++-----
+>>   5 files changed, 23 insertions(+), 9 deletions(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> index 4ef0212..33b8df7 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -233,7 +233,7 @@ static void stpg_endio(struct request *req, int error)
+>>   			goto done;
+>>   		}
+>>   		err = alua_check_sense(h->sdev,&sense_hdr);
+>> -		if (err == ADD_TO_MLQUEUE) {
+>> +		if (err == ADD_TO_MLQUEUE || err == ADD_TO_MLQUEUE_DELAY) {
+>>   			err = SCSI_DH_RETRY;
+>>   			goto done;
+>>   		}
+>> @@ -443,7 +443,7 @@ static int alua_check_sense(struct scsi_device *sdev,
+>>   			/*
+>>   			 * LUN Not Accessible - ALUA state transition
+>>   			 */
+>> -			return ADD_TO_MLQUEUE;
+>> +			return ADD_TO_MLQUEUE_DELAY;
+>>   		if (sense_hdr->asc == 0x04&&  sense_hdr->ascq == 0x0b)
+>>   			/*
+>>   			 * LUN Not Accessible -- Target port in standby state
+>> @@ -521,7 +521,8 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+>>   			return SCSI_DH_IO;
+>>
+>>   		err = alua_check_sense(sdev,&sense_hdr);
+>> -		if (err == ADD_TO_MLQUEUE&&  time_before(jiffies, expiry))
+>> +		if ((err == ADD_TO_MLQUEUE || err == ADD_TO_MLQUEUE_DELAY)&&
+>> +		    time_before(jiffies, expiry))
+>>   			goto retry;
+>>   		sdev_printk(KERN_INFO, sdev,
+>>   			    "%s: rtpg sense code %02x/%02x/%02x\n",
+> Actually, this doesn't help if the RTPG command returns with the
+> mentioned error; then you'll just continue flooding the array with
+> RTPG commands. You'll need to delay the RTPG commands, too.
 
+I thought that the rtpg command would get requeued into the
+device queue that is being delayed anyway.
 
+Isn't that true?
+
+Rob
