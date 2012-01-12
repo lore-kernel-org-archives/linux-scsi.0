@@ -1,205 +1,73 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 10/15] Staging: hv: storvsc: Miscellaneous cleanup of storvsc driver
-Date: Thu, 12 Jan 2012 12:38:03 -0800
-Message-ID: <1326400688-13544-10-git-send-email-kys@microsoft.com>
+Subject: [PATCH 12/15] Staging: hv: storvsc: Cleanup some protocol related constants
+Date: Thu, 12 Jan 2012 12:38:05 -0800
+Message-ID: <1326400688-13544-12-git-send-email-kys@microsoft.com>
 References: <1326400637-13494-1-git-send-email-kys@microsoft.com>
  <1326400688-13544-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:51461
-	"HELO p3plsmtps2ded02-01.prod.phx3.secureserver.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755394Ab2ALUfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 15:35:23 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1326400688-13544-1-git-send-email-kys@microsoft.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Miscellaneous cleanup of storvsc driver - get rid of unnecessary defines and
-use fixed size types for structures used for communication with the host.
+Cleanup some protocol related constants.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/staging/hv/storvsc_drv.c |   94 ++++++++++++++++----------------------
- 1 files changed, 39 insertions(+), 55 deletions(-)
+ drivers/staging/hv/storvsc_drv.c |   19 +++++++------------
+ 1 files changed, 7 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
-index 0515707..da71294 100644
+index 629edd1..9f07458 100644
 --- a/drivers/staging/hv/storvsc_drv.c
 +++ b/drivers/staging/hv/storvsc_drv.c
-@@ -43,32 +43,18 @@
- #include <scsi/scsi_dbg.h>
- 
- 
-+/*
-+ * We setup a mempool to allocate request structures for this driver
-+ * on a per-lun basis. The following define specifies the number of
-+ * elements in the pool.
-+ */
-+
- #define STORVSC_MIN_BUF_NR				64
--#define STORVSC_RING_BUFFER_SIZE			(20*PAGE_SIZE)
--static int storvsc_ringbuffer_size = STORVSC_RING_BUFFER_SIZE;
-+static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
- 
- module_param(storvsc_ringbuffer_size, int, S_IRUGO);
- MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
- 
--/*
-- * To alert the user that structure sizes may be mismatched even though the
-- * protocol versions match.
-- */
+@@ -114,13 +114,9 @@ enum vstor_packet_operation {
+  * this remains the same across the write regardless of 32/64 bit
+  * note: it's patterned off the SCSI_PASS_THROUGH structure
+  */
+-#define CDB16GENERIC_LENGTH			0x10
 -
+-#ifndef SENSE_BUFFER_SIZE
+-#define SENSE_BUFFER_SIZE			0x12
+-#endif
 -
--#define REVISION_STRING(REVISION_) #REVISION_
--#define FILL_VMSTOR_REVISION(RESULT_LVALUE_)				\
--	do {								\
--		char *revision_string					\
--			= REVISION_STRING($Rev : 6 $) + 6;		\
--		RESULT_LVALUE_ = 0;					\
--		while (*revision_string >= '0'				\
--			&& *revision_string <= '9') {			\
--			RESULT_LVALUE_ *= 10;				\
--			RESULT_LVALUE_ += *revision_string - '0';	\
--			revision_string++;				\
--		}							\
--	} while (0)
- 
- /*
-  * Major/minor macros.  Minor version is in LSB, meaning that earlier flat
-@@ -79,7 +65,6 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
- #define VMSTOR_PROTOCOL_MINOR(VERSION_)		(((VERSION_))      & 0xff)
- #define VMSTOR_PROTOCOL_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
- 						 (((MINOR_) & 0xff)))
--#define VMSTOR_INVALID_PROTOCOL_VERSION		(-1)
- 
- /*
-  * Version history:
-@@ -136,26 +121,26 @@ enum vstor_packet_operation {
- #define MAX_DATA_BUF_LEN_WITH_PADDING		0x14
+-#define MAX_DATA_BUF_LEN_WITH_PADDING		0x14
++#define STORVSC_MAX_CMD_LEN			0x10
++#define STORVSC_SENSE_BUFFER_SIZE		0x12
++#define STORVSC_MAX_BUF_LEN_WITH_PADDING	0x14
  
  struct vmscsi_request {
--	unsigned short length;
--	unsigned char srb_status;
--	unsigned char scsi_status;
-+	u16 length;
-+	u8 srb_status;
-+	u8 scsi_status;
- 
--	unsigned char port_number;
--	unsigned char path_id;
--	unsigned char target_id;
--	unsigned char lun;
-+	u8  port_number;
-+	u8  path_id;
-+	u8  target_id;
-+	u8  lun;
- 
--	unsigned char cdb_length;
--	unsigned char sense_info_length;
--	unsigned char data_in;
--	unsigned char reserved;
-+	u8  cdb_length;
-+	u8  sense_info_length;
-+	u8  data_in;
-+	u8  reserved;
- 
--	unsigned int data_transfer_length;
-+	u32 data_transfer_length;
+ 	u16 length;
+@@ -140,9 +136,9 @@ struct vmscsi_request {
+ 	u32 data_transfer_length;
  
  	union {
--		unsigned char cdb[CDB16GENERIC_LENGTH];
--		unsigned char sense_data[SENSE_BUFFER_SIZE];
--		unsigned char reserved_array[MAX_DATA_BUF_LEN_WITH_PADDING];
-+		u8 cdb[CDB16GENERIC_LENGTH];
-+		u8 sense_data[SENSE_BUFFER_SIZE];
-+		u8 reserved_array[MAX_DATA_BUF_LEN_WITH_PADDING];
+-		u8 cdb[CDB16GENERIC_LENGTH];
+-		u8 sense_data[SENSE_BUFFER_SIZE];
+-		u8 reserved_array[MAX_DATA_BUF_LEN_WITH_PADDING];
++		u8 cdb[STORVSC_MAX_CMD_LEN];
++		u8 sense_data[STORVSC_SENSE_BUFFER_SIZE];
++		u8 reserved_array[STORVSC_MAX_BUF_LEN_WITH_PADDING];
  	};
  } __attribute((packed));
  
-@@ -165,18 +150,21 @@ struct vmscsi_request {
-  * properties of the channel.
-  */
- struct vmstorage_channel_properties {
--	unsigned short protocol_version;
--	unsigned char path_id;
--	unsigned char target_id;
-+	u16 protocol_version;
-+	u8  path_id;
-+	u8 target_id;
- 
- 	/* Note: port number is only really known on the client side */
--	unsigned int port_number;
--	unsigned int flags;
--	unsigned int max_transfer_bytes;
-+	u32  port_number;
-+	u32  flags;
-+	u32   max_transfer_bytes;
- 
--	/*  This id is unique for each channel and will correspond with */
--	/*  vendor specific data in the inquirydata */
--	unsigned long long unique_id;
-+	/*
-+	 * This id is unique for each channel and will correspond with
-+	 * vendor specific data in the inquiry data.
-+	 */
-+
-+	u64  unique_id;
- } __packed;
- 
- /*  This structure is sent during the storage protocol negotiations. */
-@@ -189,6 +177,7 @@ struct vmstorage_protocol_version {
- 	 * (See FILL_VMSTOR_REVISION macro above).  Mismatch does not
- 	 * definitely indicate incompatibility--but it does indicate mismatched
- 	 * builds.
-+	 * This is only used on the windows side. Just set it to 0.
- 	 */
- 	unsigned short revision;
- } __packed;
-@@ -202,10 +191,10 @@ struct vstor_packet {
- 	enum vstor_packet_operation operation;
- 
- 	/*  Flags - see below for values */
--	unsigned int flags;
-+	u32 flags;
- 
- 	/* Status of the request returned from the server side. */
--	unsigned int status;
-+	u32 status;
- 
- 	/* Data payload area */
- 	union {
-@@ -232,11 +221,6 @@ struct vstor_packet {
- 
- #define REQUEST_COMPLETION_FLAG	0x1
- 
--/*  This is the set of flags that the vsc can set in any packets it sends */
--#define VSC_LEGAL_FLAGS		(REQUEST_COMPLETION_FLAG)
--
--
--
- #define STORVSC_MAX_IO_REQUESTS				128
- 
- /*
-@@ -252,7 +236,7 @@ struct vstor_packet {
+@@ -234,7 +230,6 @@ struct vstor_packet {
+ #define STORVSC_MAX_LUNS_PER_TARGET			64
+ #define STORVSC_MAX_TARGETS				1
+ #define STORVSC_MAX_CHANNELS				1
+-#define STORVSC_MAX_CMD_LEN				16
  
  /* Matches Windows-end */
  enum storvsc_request_type {
--	WRITE_TYPE,
-+	WRITE_TYPE = 0,
- 	READ_TYPE,
- 	UNKNOWN_TYPE,
- };
-@@ -704,7 +688,7 @@ static int storvsc_channel_init(struct hv_device *device)
- 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+@@ -1074,7 +1069,7 @@ static int storvsc_do_io(struct hv_device *device,
+ 	vstor_packet->vm_srb.length = sizeof(struct vmscsi_request);
  
- 	vstor_packet->version.major_minor = VMSTOR_PROTOCOL_VERSION_CURRENT;
--	FILL_VMSTOR_REVISION(vstor_packet->version.revision);
-+	vstor_packet->version.revision = 0;
  
- 	ret = vmbus_sendpacket(device->channel, vstor_packet,
- 			       sizeof(struct vstor_packet),
+-	vstor_packet->vm_srb.sense_info_length = SENSE_BUFFER_SIZE;
++	vstor_packet->vm_srb.sense_info_length = STORVSC_SENSE_BUFFER_SIZE;
+ 
+ 
+ 	vstor_packet->vm_srb.data_transfer_length =
 -- 
 1.7.4.1
-
