@@ -1,75 +1,94 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 06/15] Staging: hv: storvsc: Move and cleanup storvsc_remove()
-Date: Thu, 12 Jan 2012 12:37:59 -0800
-Message-ID: <1326400688-13544-6-git-send-email-kys@microsoft.com>
+Subject: [PATCH 11/15] Staging: hv: storvsc: Cleanup the code for generating protocol version
+Date: Thu, 12 Jan 2012 12:38:04 -0800
+Message-ID: <1326400688-13544-11-git-send-email-kys@microsoft.com>
 References: <1326400637-13494-1-git-send-email-kys@microsoft.com>
  <1326400688-13544-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:56861
-	"HELO p3plsmtps2ded02-01.prod.phx3.secureserver.net"
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:56911
+	"HELO p3plsmtps2ded02-02.prod.phx3.secureserver.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755439Ab2ALUlp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 15:41:45 -0500
+	id S1755478Ab2ALUlq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 15:41:46 -0500
 In-Reply-To: <1326400688-13544-1-git-send-email-kys@microsoft.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 
-Relocate the storvsc_remove() function to a different location in the file
-and invoke scsi_host_put() only after all the cleanup. 
+Cleanup the code for generating protocol version.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/staging/hv/storvsc_drv.c |   28 ++++++++++++----------------
- 1 files changed, 12 insertions(+), 16 deletions(-)
+ drivers/staging/hv/storvsc_drv.c |   27 +++++++++++++++++----------
+ 1 files changed, 17 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
-index 8340387..e0e471c 100644
+index da71294..629edd1 100644
 --- a/drivers/staging/hv/storvsc_drv.c
 +++ b/drivers/staging/hv/storvsc_drv.c
-@@ -1083,22 +1083,6 @@ static unsigned int copy_to_bounce_buffer(struct scatterlist *orig_sgl,
- 	return total_copied;
- }
+@@ -61,10 +61,13 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+  * version numbers will be interpreted as "0.x" (i.e., 1 becomes 0.1).
+  */
  
--
--static int storvsc_remove(struct hv_device *dev)
--{
--	struct storvsc_device *stor_device = hv_get_drvdata(dev);
--	struct Scsi_Host *host = stor_device->host;
--
--	scsi_remove_host(host);
--
--	scsi_host_put(host);
--
--	storvsc_dev_remove(dev);
--
--	return 0;
--}
--
--
- static int storvsc_get_chs(struct scsi_device *sdev, struct block_device * bdev,
- 			   sector_t capacity, int *info)
- {
-@@ -1526,6 +1510,18 @@ err_out0:
- 	return ret;
- }
- 
-+static int storvsc_remove(struct hv_device *dev)
+-#define VMSTOR_PROTOCOL_MAJOR(VERSION_)		(((VERSION_) >> 8) & 0xff)
+-#define VMSTOR_PROTOCOL_MINOR(VERSION_)		(((VERSION_))      & 0xff)
+-#define VMSTOR_PROTOCOL_VERSION(MAJOR_, MINOR_)	((((MAJOR_) & 0xff) << 8) | \
+-						 (((MINOR_) & 0xff)))
++static inline u16 storvsc_get_version(u8 major, u8 minor)
 +{
-+	struct storvsc_device *stor_device = hv_get_drvdata(dev);
-+	struct Scsi_Host *host = stor_device->host;
++	u16 version;
 +
-+	scsi_remove_host(host);
-+	storvsc_dev_remove(dev);
-+	scsi_host_put(host);
-+
-+	return 0;
++	version = ((major << 8) | minor);
++	return version;
 +}
+ 
+ /*
+  * Version history:
+@@ -74,9 +77,8 @@ MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+  * Win7: 4.2
+  */
+ 
+-#define VMSTOR_PROTOCOL_VERSION_CURRENT VMSTOR_PROTOCOL_VERSION(4, 2)
+-
+-
++#define VMSTOR_CURRENT_MAJOR  4
++#define VMSTOR_CURRENT_MINOR  2
+ 
+ 
+ /*
+@@ -170,7 +172,7 @@ struct vmstorage_channel_properties {
+ /*  This structure is sent during the storage protocol negotiations. */
+ struct vmstorage_protocol_version {
+ 	/* Major (MSW) and minor (LSW) version numbers. */
+-	unsigned short major_minor;
++	u16 major_minor;
+ 
+ 	/*
+ 	 * Revision number is auto-incremented whenever this file is changed
+@@ -179,7 +181,7 @@ struct vmstorage_protocol_version {
+ 	 * builds.
+ 	 * This is only used on the windows side. Just set it to 0.
+ 	 */
+-	unsigned short revision;
++	u16 revision;
+ } __packed;
+ 
+ /* Channel Property Flags */
+@@ -687,7 +689,12 @@ static int storvsc_channel_init(struct hv_device *device)
+ 	vstor_packet->operation = VSTOR_OPERATION_QUERY_PROTOCOL_VERSION;
+ 	vstor_packet->flags = REQUEST_COMPLETION_FLAG;
+ 
+-	vstor_packet->version.major_minor = VMSTOR_PROTOCOL_VERSION_CURRENT;
++	vstor_packet->version.major_minor =
++		storvsc_get_version(VMSTOR_CURRENT_MAJOR, VMSTOR_CURRENT_MINOR);
 +
- static struct hv_driver storvsc_drv = {
- 	.name = KBUILD_MODNAME,
- 	.id_table = id_table,
++	/*
++	 * The revision number is only used in Windows; set it to 0.
++	 */
+ 	vstor_packet->version.revision = 0;
+ 
+ 	ret = vmbus_sendpacket(device->channel, vstor_packet,
 -- 
 1.7.4.1
 
