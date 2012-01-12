@@ -1,89 +1,44 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 7/15] drivers/scsi/mvsas/mv_init.c: add missing iounmap
-Date: Thu, 12 Jan 2012 10:55:09 +0100
-Message-ID: <1326362117-29371-7-git-send-email-Julia.Lawall@lip6.fr>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH 6/7] qla4xxx: Cleanup modinfo display
+Date: Thu, 12 Jan 2012 04:57:03 -0800
+Message-ID: <CB34D5CA.BC0F%vikas.chaudhary@qlogic.com>
+References: <4F0E3EF0.7030106@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:41639 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753298Ab2ALJzb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 04:55:31 -0500
+Received: from va3ehsobe006.messaging.microsoft.com ([216.32.180.16]:45170
+	"EHLO VA3EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752774Ab2ALM5O convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 07:57:14 -0500
+In-Reply-To: <4F0E3EF0.7030106@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: "jbottomley@parallels.com" <jbottomley@parallels.com>, scsi <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>
 
-From: Julia Lawall <Julia.Lawall@lip6.fr>
 
-Add missing iounmap in error handling code, in a case where the function
-already preforms iounmap on some other execution path.
 
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
+On 12/01/12 7:31 AM, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
 
-// <smpl>
-@@
-expression e;
-statement S,S1;
-int ret;
-@@
-e = \(ioremap\|ioremap_nocache\)(...)
-... when != iounmap(e)
-if (<+...e...+>) S
-... when any
-    when != iounmap(e)
-*if (...)
-   { ... when != iounmap(e)
-     return ...; }
-... when any
-iounmap(e);
-// </smpl>
+>On 01/11/2012 04:44 AM, vikas.chaudhary@qlogic.com wrote:
+>>
+>> -int ql4xextended_error_logging = 0; /* 0 = off, 1 = log errors */
+>> +int ql4xextended_error_logging = 0;
+>
+>You do not need to init this to 0 like above. It gets set to zero for
+>you. I think this is some codingstyle doc rule violation. You should run
+>checkpatch.pl on your patches before sending to catch this type of stuff.
+>
+>It is probably ok since it was there before and you are not adding it
+>and your patch is focused on other stuff, but you should clean it up one
+>day and make note of it for the future.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+Yes, I will send separate cleanup patch for this type of codingstyle doc
+rule violation.
 
----
-This changes the semantics at the point of the first change, as it
-introduces the setting of mvi->regs_ex to NULL.  I do not know if this is
-correct.
 
-It also assumes that if mvi->regs_ex is non-null, then bar_ex != -1.
-This seems to be already assumed in the second block of error handling code.
-
- drivers/scsi/mvsas/mv_init.c |   15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 6f58919..adfd11f 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -350,7 +350,7 @@ int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex)
- 	res_start = pci_resource_start(pdev, bar);
- 	res_len = pci_resource_len(pdev, bar);
- 	if (!res_start || !res_len)
--		goto err_out;
-+		goto err_unmap;
- 
- 	res_flag = pci_resource_flags(pdev, bar);
- 	if (res_flag & IORESOURCE_CACHEABLE)
-@@ -358,14 +358,15 @@ int mvs_ioremap(struct mvs_info *mvi, int bar, int bar_ex)
- 	else
- 		mvi->regs = ioremap_nocache(res_start, res_len);
- 
--	if (!mvi->regs) {
--		if (mvi->regs_ex && (res_flag_ex & IORESOURCE_MEM))
--			iounmap(mvi->regs_ex);
--		mvi->regs_ex = NULL;
--		goto err_out;
--	}
-+	if (!mvi->regs)
-+		goto err_unmap;
- 
- 	return 0;
-+err_unmap:
-+	if (mvi->regs_ex && (res_flag_ex & IORESOURCE_MEM))
-+		iounmap(mvi->regs_ex);
-+	mvi->regs_ex = NULL;
-+
- err_out:
- 	return -1;
- }
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
