@@ -1,49 +1,74 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 0/7] qla4xxx: Update driver version to 5.02.00-k12
-Date: Wed, 11 Jan 2012 20:02:00 -0600
-Message-ID: <4F0E3F18.90608@cs.wisc.edu>
-References: <1326278661-16368-1-git-send-email-vikas.chaudhary@qlogic.com>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] mpt2sas: New feature - Fast Load Support -
+ scsi_mod.scan=sync drops drive
+Date: Thu, 12 Jan 2012 12:00:12 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED7299CF90CF2@inbmail01.lsi.com>
+References: <4F0BFB5D.6030802@lianse.eu>
+ <B2FD678A64EAAD45B089B123FDFC3ED7299CF90B84@inbmail01.lsi.com>
+ <4F0D4C76.7090303@lianse.eu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:48240 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751890Ab2ALByE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jan 2012 20:54:04 -0500
-In-Reply-To: <1326278661-16368-1-git-send-email-vikas.chaudhary@qlogic.com>
+Received: from na3sys009aob106.obsmtp.com ([74.125.149.76]:34739 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751102Ab2ALGaT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 01:30:19 -0500
+In-Reply-To: <4F0D4C76.7090303@lianse.eu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vikas.chaudhary@qlogic.com
-Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
+To: =?utf-8?B?QW5kcsOpLVNlYmFzdGlhbiBMaWViZQ==?= <andre@lianse.eu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nandigama, Nagalakshmi" <Nagalakshmi.Nandigama@lsi.com>, "Thakkar, Vishal" <Vishal.Thakkar@lsi.com>
 
-On 01/11/2012 04:44 AM, vikas.chaudhary@qlogic.com wrote:
-> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> 
-> James,
-> 
-> Please apply the following patches to scsi-misc for inclusion in mainline.
-> 
-> Giridhar Malavali (1):
->       qla4xxx: Disable generating pause frames in case of FW hung
-> 
-> Karen Higgins (1):
->       qla4xxx: Cleanup modinfo display
-> 
-> Mike Hernandez (1):
->       qla4xxx: Temperature monitoring for ISP82XX core.
-> 
-> Nilesh Javali (1):
->       qla4xxx: Added error logging for firmware abort
-> 
-> Sarang Radke (1):
->       qla4xxx: Clear the RISC interrupt bit during FW init
-> 
-> Vikas Chaudhary (2):
->       qla4xxx: Update license
->       qla4xxx: Update driver version to 5.02.00-k12
-> 
-
-Looks ok.
-
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+QW5kcmUsDQoNCkNhbiB5b3UgZW5hYmxlIG1wdDJzYXMgZHJpdmVyIGxvZyBsZXZlbCAgdG8gMHgz
+OGMgYW5kIHJlLXNlbmQgdGhlIGRyaXZlciBsb2dzIGluIGNhc2Ugb2YgDQoic2NzaV9tb2Quc2Nh
+bj1zeW5jIg0KDQpZb3UgbmVlZCB0byBwYXNzIGJvb3QgdGltZSBwYXJhbWV0ZXIgbXB0MnNhcy5s
+b2dnaW5nX2xldmVsPTB4MzhjDQoNCmAgS2FzaHlhcA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2Fn
+ZS0tLS0tDQo+IEZyb206IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUgW21haWx0bzphbmRyZUBsaWFu
+c2UuZXVdDQo+IFNlbnQ6IFdlZG5lc2RheSwgSmFudWFyeSAxMSwgMjAxMiAyOjE3IFBNDQo+IFRv
+OiBEZXNhaSwgS2FzaHlhcA0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3Vi
+amVjdDogUmU6IFtQQVRDSF0gbXB0MnNhczogTmV3IGZlYXR1cmUgLSBGYXN0IExvYWQgU3VwcG9y
+dCAtDQo+IHNjc2lfbW9kLnNjYW49c3luYyBkcm9wcyBkcml2ZQ0KPiANCj4gVGFua3MgZm9yIHlv
+dXIgc3VnZ2VzdGlvbiBLYXNoeWFwIQ0KPiANCj4gSSd2ZSB0cmllZCBpdCBvdXQgYnV0IHJhbiBk
+aXJlY3RseSBpbnRvIGFuIG90aGVyIHByb2JsZW0uIFdpdGgNCj4gc2NzaV9tb2Quc2Nhbj1zeW5j
+IHRoZSBoYmEgcmVwb3J0ZWQgYWxsIDQgZHJpdmVzIGNvcnJlY3RseSBidXQgZHJvcHBlZA0KPiBv
+bmUgb2YgaXQgaW5zdGFudGFuZW91c2x5LiBTbyBJJ20gZWl0aGVyIHN0dWNrIHdpdGgga2VybmVs
+IDMuMSBhbmQgYWxsDQo+IGJvb3RpbmcgdXAgY29ycmVjdGx5IG9yIHVzaW5nIDMuMiBhbmQgbWFu
+dWFsbHkgbW91bnRpbmcgdGhlIGRyaXZlcw0KPiBiZWhpbmQgdGhlIGhiYSBhbmQgc3RhcnRpbmcg
+dGhlIHNlcnZpY2VzIGRlcGVuZGluZyBvbiB0aGVtIHRoZXJlYWZ0ZXIuDQo+IA0KPiBJJ3ZlIGF0
+dGFjaGVkIHBhcnRzIG9mIHRoZSBrZXJuZWwgbG9nIHdpdGggc2NzaV9tb2Quc3luYyBwYXJhbWV0
+ZXIgc2V0DQo+IHRvICBzeW5jL2FzeW5jDQo+IA0KPiAtYW5kcmUNCj4gDQo+IA0KPiBPbiAxMC4w
+MS4yMDEyIDExOjUzLCBEZXNhaSwgS2FzaHlhcCB3cm90ZToNCj4gPiBUaGVyZSBpcyBhIHNvbWUg
+c2NzaV9tb2QgcGFyYW1ldGVyIGNhbGxlZCAic2NhbiIuDQo+ID4gSWYgeW91IHBhc3MgdGhvc2Ug
+cGFyYW1ldGVyIGF0IGJvb3QgdGltZSB5b3UgY2FuIGNoYW5nZSB0aGUgYmVoYXZpb3IuDQo+ID4g
+KHNlZSBiZWxvdyBkZXNjcmlwdGlvbikNCj4gPg0KPiA+IAlzY3NpX21vZC5zY2FuPQlbU0NTSV0g
+c3luYyAoZGVmYXVsdCkgc2NhbnMgU0NTSSBidXNzZXMgYXMgdGhleQ0KPiBhcmUNCj4gPiAJCWRp
+c2NvdmVyZWQuICBBc3luYyBzY2FucyB0aGVtIGluIGtlcm5lbCB0aHJlYWRzLCBhbGxvd2luZw0K
+PiBib290IHRvIHByb2NlZWQuDQo+ID4gCQlub25lIGlnbm9yZXMgdGhlbSwgZXhwZWN0aW5nIHVz
+ZXIgc3BhY2UgdG8gZG8gdGhlIHNjYW4uDQo+ID4NCj4gPiB+IEthc2h5YXANCj4gPg0KPiA+PiAt
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiA+PiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+ID4+IG93bmVyQHZnZXIua2VybmVs
+Lm9yZ10gT24gQmVoYWxmIE9mIEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gPj4gU2VudDogVHVl
+c2RheSwgSmFudWFyeSAxMCwgMjAxMiAyOjE4IFBNDQo+ID4+IFRvOiBsaW51eC1zY3NpQHZnZXIu
+a2VybmVsLm9yZw0KPiA+PiBTdWJqZWN0OiBSZTogW1BBVENIXSBtcHQyc2FzOiBOZXcgZmVhdHVy
+ZSAtIEZhc3QgTG9hZCBTdXBwb3J0DQo+ID4+DQo+ID4gSGkgZ3V5cywNCj4gPg0KPiA+IEkndmUg
+cnVuIGludG8gcHJvYmxlbXMgd2l0aCB0aGUgYWxsIG5ldyBzaGlueSAzLjIga2VybmVsLiBNeSBz
+eXN0ZW0NCj4gPiBicm9rZSBiYWRseSBhcyBpdCdzIGRlcGVuZGluZyBvbiBzb21lIGRldmljZXMg
+d2hpY2ggYXJlIGF0dGFjaGVkIHRvIG15DQo+ID4gTFNJIFNBUyAyMDA4IGhiYS4NCj4gPiBUaGUg
+bW91bnQgc2NyaXB0cyBvZiBteSBnZW50b28vb3BlbnJjIHNldHVwIGdldCB0cmlnZ2VyZWQgcmln
+aHQgYWZ0ZXINCj4gPiB1ZGV2IGhhcyBzZXR0bGVkLiAgQnV0IHdpdGggdGhlIG5ldyBmYXN0IGxv
+YWQgc3VwcG9ydCB1ZGV2IHNldHRsZXMNCj4gPiBiZWZvcmUgbXkgZHJpdmVzIGFwcGVhciB0byB0
+aGUgc3lzdGVtLCBzbyBtb3VudCBmYWlscyBmb3IgYWxsIHRob3NlDQo+ID4gZHJpdmVzIGFuZCBv
+ZiBjYXVzZSBhbGwgc3Vic2VxdWVudCBzZXJ2aWNlcyBkZXBlbmRpbmcgb24gdGhlbS4NCj4gPiBJ
+cyB0aGVyZSBhbnkgc3dpdGNoIHRvIHJldmVydCBiYWNrIHRvIHRoZSBvbGQgYmVoYXZpb3Igb2Yg
+YmxvY2tpbmcNCj4gPiB1bnRpbCBhbGwgcG9ydHMgc2NhbnMgYXJlIGRvbmU/DQo+ID4NCj4gPiBU
+aGFua3MgaW4gYWR2YW5jZQ0KPiA+IEFuZHLDqS1TZWJhc3RpYW4gTGllYmUNCj4gPg0KPiA+PiAt
+LQ0KPiA+PiBUbyB1bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5z
+dWJzY3JpYmUgbGludXgtc2NzaSINCj4gPj4gaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
+am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8NCj4gPj4gaW5mbyBhdCAgaHR0
+cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQo+IA0KPiAtLQ0KPiBncGcg
+a2V5IEFBMUUxRjY2IEAgZ3BnLWtleXNlcnZlci5kZTogQW5kcsOpLVNlYmFzdGlhbiBMaWViZQ0K
+PiA8YW5kcmVAbGlhbnNlLmV1PiBLZXkgZmluZ2VycHJpbnQgPSA1NDM2IDUzNTggMTcyQyBFQjdE
+IEU0MTQgIEM2REUgNjY2NA0KPiA4OUJGIEFBMUUgMUY2Ng0K
