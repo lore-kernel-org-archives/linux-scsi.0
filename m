@@ -1,99 +1,169 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 0/3] possible privilege escalation via SG_IO ioctl (CVE-2011-4127)
-Date: Thu, 12 Jan 2012 16:01:26 +0100
-Message-ID: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 2/3] block: fail SCSI passthrough ioctls on partition devices
+Date: Thu, 12 Jan 2012 16:01:28 +0100
+Message-ID: <1326380489-9044-3-git-send-email-pbonzini@redhat.com>
+References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-gy0-f174.google.com ([209.85.160.174]:64343 "EHLO
 	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753903Ab2ALPCA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2012 10:02:00 -0500
+	with ESMTP id S1753903Ab2ALPCF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2012 10:02:05 -0500
+In-Reply-To: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Petr Matousek <pmatouse@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
 
-Partition block devices or LVM volumes can be sent SCSI commands via
-SG_IO, which are then passed down to the underlying device; it's
-been this way forever, it was mentioned in 2004 in LKML at
-https://lkml.org/lkml/2004/8/12/218 and it is even documented in the
-sg_dd man page:
+Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
+will pass the command to the underlying block device.  This is well-known,
+but it is also a large security problem when (via Unix permissions,
+ACLs, SELinux or a combination thereof) a program or user needs to be
+granted access only to part of the disk.
 
-    blk_sgio=1
-              when set to 0, block devices (e.g. /dev/sda) are treated
-              like normal files (i.e. read(2) and write(2) are used for
-              IO). When set to 1, block devices are assumed to accept the
-              SG_IO ioctl and  SCSI commands are issued for IO. [...]
-              If the input or output device is a block device partition
-              (e.g. /dev/sda3) then setting this option causes the
-              partition information to be ignored (since access is
-              directly to the underlying device).
+This patch lets partitions forward a small set of harmless ioctls; others
+are logged with printk so that we can see which ioctls are actually sent.
+In my tests only CDROM_GET_CAPABILITY actually occurred.  Of course it
+was being sent to a (partition on a) hard disk, so it would have failed
+with ENOTTY and the patch isn't changing anything in practice.  Still,
+I'm treating it specially to avoid spamming the logs.
 
-This is problematic because "safe" SCSI commands, including READ or WRITE,
-can be sent to the disk without any particular capability.  All that is
-required is having a file descriptor for the block device, and permission
-to send a ioctl.  However, when a user lets a program access /dev/sda2,
-it still should not be able to read/write /dev/sda outside the boundaries
-of that partition.
+In principle, this restriction should include programs running
+with CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2
+and /dev/sdb, it still should not be able to read/write outside the
+boundaries of /dev/sda2 independent of the capabilities.  However, for
+now programs with CAP_SYS_RAWIO will still be allowed to send the ioctls.
+Their actions will still be logged.
 
-Encryption on the host is a mitigating factor, but it does not provide
-a full solution.  In particular it doesn't protect against DoS (write
-random data), replay attacks (reinstate old ciphertext sectors), or
-writes to unencrypted areas including the MBR, the partition table, or
-/boot.
+This patch does not affect the non-libata IDE driver.  That driver however
+already tests for bd != bd->bd_contains before issuing some ioctl; it could
+be restricted further to forbid these ioctls even for programs running with
+CAP_SYS_ADMIN/CAP_SYS_RAWIO.
 
-The patches implement a simple global whitelist for both partitions
-and partial disk mappings.  Patch 1 refactors the code to prepare for
-introduction of the whitelist, while patch 2 actually implements it for
-the SCSI ioctls.  Logical volumes are also affected if they have only one
-target, and this target can pass ioctls to the underlying block device.
-Patch 3 thus adds the whitelist to logical volumes as well.
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
+ block/scsi_ioctl.c     |   43 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.c      |   11 +++++++++--
+ include/linux/blkdev.h |    1 +
+ 3 files changed, 53 insertions(+), 2 deletions(-)
 
-This should be entirely independent of capabilities.  Continuing the
-previous example, if the same user gives CAP_SYS_RAWIO to the program and
-write access to /dev/sdb, the program should be able to send arbitrary
-SCSI commands to /dev/sdb, but still should not be able to access /dev/sda
-outside the boundaries of /dev/sda2.  However, for now when the program
-has CAP_SYS_RAWIO the ioctls are let through (while still being logged
-to dmesg).
-
-drivers/ide/ has several ioctls that should only be restricted to the full
-block device (for example HDIO_SET_*, HDIO_DRIVE_CMD, HDIO_DRIVE_TASK,
-HDIO_DRIVE_RESET).  However, all of them require either CAP_SYS_ADMIN
-or CAP_SYS_RAWIO, so they do not need any change given the above interim
-measure.
-
-Tested on top of 3.2 + Linus's patch to sanitize ioctl return values.
-
-Thanks to Daniel Berrange, Milan Broz, Mike Christie, Alasdair Kergon,
-Petr Matousek, Jeff Moyer, Mike Snitzer and others for help discussing
-this issue.
-
-Paolo
-
-v1->v2:
-	Added logging and temporary wildcard for CAP_SYS_RAWIO;
-	added CDROM ioctls to the whitelist; return -ENOIOCTLCMD.
-	No changes in patches 1 and 3.
-
-Paolo Bonzini (3):
-  block: add and use scsi_blk_cmd_ioctl
-  block: fail SCSI passthrough ioctls on partition devices
-  dm: do not forward ioctls from logical volumes to the underlying
-    device
-
- block/scsi_ioctl.c             |   50 ++++++++++++++++++++++++++++++++++++++++
- drivers/block/cciss.c          |    6 ++--
- drivers/block/ub.c             |    3 +-
- drivers/block/virtio_blk.c     |    4 +-
- drivers/cdrom/cdrom.c          |    3 +-
- drivers/ide/ide-floppy_ioctl.c |    3 +-
- drivers/md/dm-flakey.c         |   11 ++++++++-
- drivers/md/dm-linear.c         |   12 ++++++++-
- drivers/md/dm-mpath.c          |    6 ++++
- drivers/scsi/sd.c              |   13 ++++++++--
- include/linux/blkdev.h         |    3 ++
- 11 files changed, 98 insertions(+), 16 deletions(-)
-
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index a2c11f3..bdb8489 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -24,6 +24,7 @@
+ #include <linux/capability.h>
+ #include <linux/completion.h>
+ #include <linux/cdrom.h>
++#include <linux/ratelimit.h>
+ #include <linux/slab.h>
+ #include <linux/times.h>
+ #include <asm/uaccess.h>
+@@ -690,9 +691,53 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
++{
++	if (bd && bd == bd->bd_contains)
++		return 0;
++
++	/* Actually none of these is particularly useful on a partition,
++	 * but they are safe.
++	 */
++	switch (cmd) {
++	case SCSI_IOCTL_GET_IDLUN:
++	case SCSI_IOCTL_GET_BUS_NUMBER:
++	case SCSI_IOCTL_GET_PCI:
++	case SCSI_IOCTL_PROBE_HOST:
++	case SG_GET_VERSION_NUM:
++	case SG_SET_TIMEOUT:
++	case SG_GET_TIMEOUT:
++	case SG_GET_RESERVED_SIZE:
++	case SG_SET_RESERVED_SIZE:
++	case SG_EMULATED_HOST:
++		return 0;
++	case CDROM_GET_CAPABILITY:
++		/* Keep this until we remove the printk below.  udev sends it
++		 * and we do not want to spam dmesg about it.   CD-ROMs do
++		 * not have partitions, so we get here only for disks.
++		 */
++		return -ENOIOCTLCMD;
++	default:
++		break;
++	}
++
++	/* In particular, rule out all resets and host-specific ioctls.  */
++	printk_ratelimited(KERN_WARNING
++			   "sending ioctl %x to a partition!\n", cmd);
++
++	return capable(CAP_SYS_RAWIO) ? 0 : -ENOIOCTLCMD;
++}
++EXPORT_SYMBOL(scsi_verify_blk_ioctl);
++
+ int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
+ 		       unsigned int cmd, void __user *arg)
+ {
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bd, cmd);
++	if (ret < 0)
++		return ret;
++
+ 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
+ }
+ EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ffa1c79..fd96409 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1074,6 +1074,10 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
+ 	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
+ 				    "cmd=0x%x\n", disk->disk_name, cmd));
+ 
++	error = scsi_verify_blk_ioctl(bdev, cmd);
++	if (error < 0)
++		return error;
++
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+ 	 * else try and use this device.  Also, if error recovery fails, it
+@@ -1266,6 +1270,11 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
+ 			   unsigned int cmd, unsigned long arg)
+ {
+ 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
++	int ret;
++
++	ret = scsi_verify_blk_ioctl(bdev, cmd);
++	if (ret < 0)
++		return ret;
+ 
+ 	/*
+ 	 * If we are in the middle of error recovery, don't let anyone
+@@ -1277,8 +1286,6 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
+ 		return -ENODEV;
+ 	       
+ 	if (sdev->host->hostt->compat_ioctl) {
+-		int ret;
+-
+ 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
+ 
+ 		return ret;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ca7b869..0ed1eb0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -675,6 +675,7 @@ extern int blk_insert_cloned_request(struct request_queue *q,
+ 				     struct request *rq);
+ extern void blk_delay_queue(struct request_queue *, unsigned long);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
+ extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
+ 			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
 -- 
 1.7.7.1
+
 
