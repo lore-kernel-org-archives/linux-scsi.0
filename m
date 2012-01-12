@@ -1,28 +1,60 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
-Date: Thu, 12 Jan 2012 13:59:45 -0600
-Message-ID: <4F0F3BB1.7090902@cs.wisc.edu>
-References: <1325618414-26992-1-git-send-email-revers@redhat.com> <4F0EAB53.7020404@suse.de> <4F0F124D.3000708@redhat.com> <4F0F4F43.2010902@suse.de> <4F0F3A73.9060602@cs.wisc.edu>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 2/4] drivers/scsi/lpfc/lpfc_sli.c: convert GFP_KERNEL
+ to GFP_ATOMIC
+Date: Thu, 12 Jan 2012 15:00:28 -0500
+Message-ID: <4F0F3BDC.10103@emulex.com>
+References: <1326102050-30265-2-git-send-email-Julia.Lawall@lip6.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49493 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753848Ab2ALT75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 14:59:57 -0500
-In-Reply-To: <4F0F3A73.9060602@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1326102050-30265-2-git-send-email-Julia.Lawall@lip6.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Rob Evers <revers@redhat.com>, linux-scsi@vger.kernel.org
 
-On 01/12/2012 01:54 PM, Mike Christie wrote:
-> alua_check_sense will return ADD_TO_MLQUEUE_DELAY then scsi_check_sense
-> will pass that up and scsi_decide_disposition will return that right
-> away.
+Julia,
 
-I mean it is one of those weird ones where we do not do the goto
-maybe_retry in scsi_decide_disposition, so we do not see the fast fail
-bit set. This happens for ADD_TO_MLQUEUE_DELAY and ADD_TO_MLQUEUE.
+We actually do not want any ATOMIC allocations if we can avoid them.  We 
+reworked the calling sequence to deal with the locks being held. The change 
+will be in the next patch set.
 
+As such - Nack on the patch.
+
+-- james s
+
+
+
+On 1/9/2012 4:40 AM, Julia Lawall wrote:
+> From: Julia Lawall<julia.lawall@lip6.fr>
+>
+> The function is called with locks held and thus should not use GFP_KERNEL.
+>
+> The semantic patch that makes this report is available
+> in scripts/coccinelle/locks/call_kern.cocci.
+>
+> More information about semantic patching is available at
+> http://coccinelle.lip6.fr/
+>
+> Signed-off-by: Julia Lawall<julia.lawall@lip6.fr>
+>
+> ---
+>   drivers/scsi/lpfc/lpfc_sli.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index 23a2759..622d24f 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -601,7 +601,7 @@ __lpfc_set_rrq_active(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+>   	if (test_and_set_bit(xritag, ndlp->active_rrqs.xri_bitmap))
+>   		goto out;
+>
+> -	rrq = mempool_alloc(phba->rrq_pool, GFP_KERNEL);
+> +	rrq = mempool_alloc(phba->rrq_pool, GFP_ATOMIC);
+>   	if (rrq) {
+>   		rrq->send_rrq = send_rrq;
+>   		rrq->xritag = xritag;
+>
+>
