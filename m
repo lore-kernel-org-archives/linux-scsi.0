@@ -1,99 +1,123 @@
-From: KY Srinivasan <kys@microsoft.com>
-Subject: RE: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the storage
- driver out of the staging area
-Date: Thu, 12 Jan 2012 17:55:45 +0000
-Message-ID: <6E21E5352C11B742B20C142EB499E0481B6EFEF0@TK5EX14MBXC126.redmond.corp.microsoft.com>
-References: <1325622441-15600-1-git-send-email-kys@microsoft.com>
- <20120111103649.GB22652@infradead.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
+Date: Thu, 12 Jan 2012 22:23:15 +0100
+Message-ID: <4F0F4F43.2010902@suse.de>
+References: <1325618414-26992-1-git-send-email-revers@redhat.com> <4F0EAB53.7020404@suse.de> <4F0F124D.3000708@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:2769 "EHLO
-	VA3EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751860Ab2ALR4G convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jan 2012 12:56:06 -0500
-In-Reply-To: <20120111103649.GB22652@infradead.org>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:46508 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752926Ab2ALTXL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 14:23:11 -0500
+In-Reply-To: <4F0F124D.3000708@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "gregkh@suse.de" <gregkh@suse.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "virtualization@lists.osdl.org" <virtualization@lists.osdl.org>, "ohering@suse.com" <ohering@suse.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Rob Evers <revers@redhat.com>
+Cc: linux-scsi@vger.kernel.org
 
-Christoph,
+On 01/12/2012 06:03 PM, Rob Evers wrote:
+> On 01/12/2012 04:43 AM, Hannes Reinecke wrote:
+>> On 01/03/2012 08:20 PM, Rob Evers wrote:
+>>> From: Rob Evers<revers@redhat.com>
+>>>
+>>> When alua targets are transitioning, the scsi midlayer retry mechan=
+ism
+>>> continuously retries the scsi commands that are returning with not =
+ready
+>>> transitioning status. The target is not capable of handling the
+>>> commands for time on the order of several seconds during these
+>>> transistions.
+>>>
+>>> This patch delays the device queue for 2 seconds, which is in the s=
+ame
+>>> order of aas transition time.
+>>>
+>>> Also, handle all other cases where ADD_TO_MLQUEUE_DELAY could be
+>>> returned
+>>> instead of ADD_TO_MLQUEUE as if ADD_TO_MLQUEUE were being returned.
+>>>
+>>> Problem found by array partner testing
+>>>
+>>> change MLQUEUE_DEV_DLY_RTY to MLQUEUE_DELAYED_RETRY
+>>>
+>> I have been working on a different solution, whic
+>>> Signed-off-by: Rob Evers<revers@redhat.com>
+>>> ---
+>>> drivers/scsi/device_handler/scsi_dh_alua.c | 7 ++++---
+>>> drivers/scsi/scsi.c | 3 +++
+>>> drivers/scsi/scsi_error.c | 1 +
+>>> drivers/scsi/scsi_lib.c | 9 ++++++++-
+>>> include/scsi/scsi.h | 12 +++++++-----
+>>> 5 files changed, 23 insertions(+), 9 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> index 4ef0212..33b8df7 100644
+>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> @@ -233,7 +233,7 @@ static void stpg_endio(struct request *req, int
+>>> error)
+>>> goto done;
+>>> }
+>>> err =3D alua_check_sense(h->sdev,&sense_hdr);
+>>> - if (err =3D=3D ADD_TO_MLQUEUE) {
+>>> + if (err =3D=3D ADD_TO_MLQUEUE || err =3D=3D ADD_TO_MLQUEUE_DELAY)=
+ {
+>>> err =3D SCSI_DH_RETRY;
+>>> goto done;
+>>> }
+>>> @@ -443,7 +443,7 @@ static int alua_check_sense(struct scsi_device
+>>> *sdev,
+>>> /*
+>>> * LUN Not Accessible - ALUA state transition
+>>> */
+>>> - return ADD_TO_MLQUEUE;
+>>> + return ADD_TO_MLQUEUE_DELAY;
+>>> if (sense_hdr->asc =3D=3D 0x04&& sense_hdr->ascq =3D=3D 0x0b)
+>>> /*
+>>> * LUN Not Accessible -- Target port in standby state
+>>> @@ -521,7 +521,8 @@ static int alua_rtpg(struct scsi_device *sdev,
+>>> struct alua_dh_data *h)
+>>> return SCSI_DH_IO;
+>>>
+>>> err =3D alua_check_sense(sdev,&sense_hdr);
+>>> - if (err =3D=3D ADD_TO_MLQUEUE&& time_before(jiffies, expiry))
+>>> + if ((err =3D=3D ADD_TO_MLQUEUE || err =3D=3D ADD_TO_MLQUEUE_DELAY=
+)&&
+>>> + time_before(jiffies, expiry))
+>>> goto retry;
+>>> sdev_printk(KERN_INFO, sdev,
+>>> "%s: rtpg sense code %02x/%02x/%02x\n",
+>> Actually, this doesn't help if the RTPG command returns with the
+>> mentioned error; then you'll just continue flooding the array with
+>> RTPG commands. You'll need to delay the RTPG commands, too.
+>
+> I thought that the rtpg command would get requeued into the
+> device queue that is being delayed anyway.
+>
+> Isn't that true?
+>
+Nope.
 
-Let me begin by first thanking you for your detailed review. I have addressed all the issues you have
-identified - the code looks much better now; thank you! I am currently testing this code and I will post
-the patches soon - individual patches against the current code in the staging tree as well as a patch to
-move the driver out of staging (as I have done in the past). Please find my responses to your comments
-in-line.
+rtpg is being send via the SG_IO path, for which the error is returned=20
+directly without being retried.
 
-Regards,
+So we'll need to fix it up in the alua handler.
 
-K. Y
+Cheers,
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Wednesday, January 11, 2012 5:37 AM
-> To: KY Srinivasan
-> Cc: gregkh@suse.de; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; virtualization@lists.osdl.org; ohering@suse.com;
-> James.Bottomley@HansenPartnership.com; hch@infradead.org; linux-
-> scsi@vger.kernel.org
-> Subject: Re: [PATCH 1/1][RESEND] Staging: hv: storvsc: Move the storage driver
-> out of the staging area
-> 
-> 
-> I'd also really recommend splitting the actual protocol defintion in
-> a header separate from the driver implementation to make it clear what
-> is part of the protocol and what's internal to the driver.
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
 
-I have consolidated all of the protocol defines at the start of the file and
-these are properly commented. The decision to not have a separate header file
-was based on the comments I got from the community a while ago. Hopefully,
-this consolidation will address all the concerns.
-
-> 
-> > +static inline struct storvsc_device *get_out_stor_device(
-> > +					struct hv_device *device)
-> 
-> > +static inline struct storvsc_device *get_in_stor_device(
-> > +					struct hv_device *device)
-> 
-> I'm pretty sure you defended this odd reference counting scheme last
-> time the discussion came up, but please write up a long comment in
-> the code explaning it so that the question doesn't come up again
-> all the time.
-
-I don't have any reference counting anymore. I have added a comment
-explaining the protocol for managing the life-cycle.
- 
-> 
-> > +	request_size = sizeof(struct storvsc_cmd_request);
-> > +
-> > +	cmd_request = mempool_alloc(memp->request_mempool,
-> > +				       GFP_ATOMIC);
-> > +	if (!cmd_request)
-> > +		return SCSI_MLQUEUE_DEVICE_BUSY;
-> 
-> The point of the mempool allocator is that it will never return NULL.
-
-With GFP_ATOMIC flag, the allocation I think can fail. At least that is what
-mempool_alloc() comment says.
-
-> 
-> > +	/* max # of devices per target */
-> > +	host->max_lun = STORVSC_MAX_LUNS_PER_TARGET;
-> > +	/* max # of targets per channel */
-> > +	host->max_id = STORVSC_MAX_TARGETS;
-> > +	/* max # of channels */
-> > +	host->max_channel = STORVSC_MAX_CHANNELS - 1;
-> > +	/* max cmd length */
-> > +	host->max_cmd_len = STORVSC_MAX_CMD_LEN;
-> 
-> Any reason these aren't set directly in the host template?
-
-This state is not in the scsi_host_template. What am I missing here.
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
