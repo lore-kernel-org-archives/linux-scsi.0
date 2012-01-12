@@ -1,71 +1,52 @@
-From: James Smart <james.smart@emulex.com>
-Subject: Re: [PATCH 1/1] [SCSI] Clear Devloss Callback Done flag in fc_remote_port_rolechg
-Date: Thu, 12 Jan 2012 16:44:31 -0500
-Message-ID: <0236d7bd-4521-4f00-9ab1-f5e46dc81eb9@exht1.ad.emulex.com>
-References: <1320333041.4568.3.camel@ogier>
+From: Alok Kataria <akataria@vmware.com>
+Subject: Re: [PATCH] MAINTAINERS: pvscsi maintainers update
+Date: Thu, 12 Jan 2012 14:00:13 -0800
+Message-ID: <1326405613.32232.15.camel@ank32.eng.vmware.com>
+References: <1320984243.21865.40.camel@ank32.eng.vmware.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:45874 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755624Ab2ALVo4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2012 16:44:56 -0500
-In-Reply-To: <1320333041.4568.3.camel@ogier>
+Received: from smtp-outbound-2.vmware.com ([65.115.85.73]:47515 "EHLO
+	smtp-outbound-2.vmware.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755547Ab2ALWAO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 17:00:14 -0500
+In-Reply-To: <1320984243.21865.40.camel@ank32.eng.vmware.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Smart, James" <James.Smart@Emulex.Com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Iannicelli, Alex" <Alex.Iannicelli@Emulex.Com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Arvind Kumar <arvindkumar@vmware.com>, linux-scsi@vger.kernel.org, Clinton Wong <clintdw@vmware.com>
 
-James,
+Hi James/Andrew
 
-Ping...  anything holding up inclusion of this patch ?
+Can one of you please include this update to the maintainers file. 
 
--- james s
+Thanks,
+Alok
 
+On Thu, 2011-11-10 at 20:04 -0800, Alok Kataria wrote:
+> MAINTAINERS: pvscsi maintainers update
+> 
+> From: Alok N Kataria <akataria@vmware.com>
+> 
+> Welcome to Arvind Kumar, our new pvscsi maintainer.
+> 
+> Signed-off-by: Alok N Kataria <akataria@vmware.com>
+> Cc: Arvind Kumar <arvindkumar@vmware.com>
+> 
+> Index: linux-2.6/MAINTAINERS
+> ===================================================================
+> --- linux-2.6.orig/MAINTAINERS	2011-11-10 19:54:24.000000000 -0800
+> +++ linux-2.6/MAINTAINERS	2011-11-10 19:56:09.000000000 -0800
+> @@ -7177,7 +7177,7 @@ S:	Maintained
+>  F:	drivers/net/vmxnet3/
+>  
+>  VMware PVSCSI driver
+> -M:	Alok Kataria <akataria@vmware.com>
+> +M:	Arvind Kumar <arvindkumar@vmware.com>
+>  M:	VMware PV-Drivers <pv-drivers@vmware.com>
+>  L:	linux-scsi@vger.kernel.org
+>  S:	Maintained
+> 
 
-On 11/3/2011 11:10 AM, James Smart wrote:
-> This patch fixes a bug where devloss is not called on fc_host teardown.
-> The issue is seen if the LLDD uses rport_rolechg to add the target role
-> to an rport.
->
-> When an rport goes away, the LLDD will call fc_remote_port_delete, which
-> will start the devloss timer.  If the timer expires, the transport will
-> call the devloss callback and set the FC_RPORT_DEVLOSS_CALLBK_DONE flag.
-> However, the rport structure is not deleted, it is retained to store the
-> SCSI id mappings for the rport in case it comes back. In the scenario
-> where it does come back, and the driver calls fc_remote_port_add, but does
-> not indicate the "target" role for the rport - the create will clear the
-> structure, but forgets to clear FC_RPORT_DEVLOSS_CALLBK_DONE flag (which
-> is cleared if it's added with the target role). The secondary call, of
-> fc_remote_port_rolechg to add the target role also does not clear the flag.
-> Thus, the next time the rport goes away, the resulting devloss timer
-> expiration will not call the driver callback as the flag is still set.
->
-> This patch adds the FC_RPORT_DEVLOSS_CALLBK_DONE flags to the list of
-> those that are cleared upon reuse of the rport structure.
->
->   Signed-off-by: Alex Iannicelli<alex.iannicelli@emulex.com>
->   Signed-off-by: James Smart<james.smart@emulex.com>
->
->   ---
->
->   scsi_transport_fc.c |    3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
->
->
-> diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> --- a/drivers/scsi/scsi_transport_fc.c	2011-11-03 10:27:14.000000000 -0400
-> +++ b/drivers/scsi/scsi_transport_fc.c	2011-11-03 10:28:59.000000000 -0400
-> @@ -3048,7 +3048,8 @@ fc_remote_port_rolechg(struct fc_rport
->
->   		spin_lock_irqsave(shost->host_lock, flags);
->   		rport->flags&= ~(FC_RPORT_FAST_FAIL_TIMEDOUT |
-> -				  FC_RPORT_DEVLOSS_PENDING);
-> +				  FC_RPORT_DEVLOSS_PENDING |
-> +				  FC_RPORT_DEVLOSS_CALLBK_DONE);
->   		spin_unlock_irqrestore(shost->host_lock, flags);
->
->   		/* ensure any stgt delete functions are done */
->
->
