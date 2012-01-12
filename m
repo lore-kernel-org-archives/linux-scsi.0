@@ -1,39 +1,51 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target: Updates for v3.3-rc1 (round 1)
-Date: Wed, 11 Jan 2012 11:32:57 -0800
-Message-ID: <1326310377.20199.16.camel@haakon2.linux-iscsi.org>
-References: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
-	 <CAO+b5-qs3fE8yZaKQ+kzpsSsX1PyXE09wBzxnUi55GZ5j4TJKg@mail.gmail.com>
-	 <1326223998.14089.26.camel@haakon2.linux-iscsi.org>
-	 <CAO+b5-oqsimTj6fRa=euEegH8Sqg=N_j4vXs6u=j31Za+WBKOw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Roland Dreier <roland@kernel.org>
+Subject: [PATCH] qla2xxx: Fix a possible hang on target shutdown
+Date: Wed, 11 Jan 2012 16:58:05 -0800
+Message-ID: <1326329885-6814-1-git-send-email-roland@kernel.org>
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <CAO+b5-oqsimTj6fRa=euEegH8Sqg=N_j4vXs6u=j31Za+WBKOw@mail.gmail.com>
 Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2012-01-11 at 07:57 +0100, Bart Van Assche wrote:
-> 2012/1/10 Nicholas A. Bellinger <nab@linux-iscsi.org>:
-> > These are all very minor and did not warrant another full RFC posting.
-> 
-> There is a reason why the ib_srpt patch should have been reposted:
-> Last WQE handling is still wrong, despite a patch being available
-> (http://www.spinics.net/lists/linux-rdma/msg09982.html).
-> 
+From: Roland Dreier <roland@purestorage.com>
 
-This patch was applied to lio-core.git, but considering that I've
-received zero testing feedback on this I elected not to include it in
-target-pending for the initial merge.
+If tgt->tgt_stop is set, current code in qla_tgt_do_work() jumps to the
+exit path before setting sess, so the code
 
-Once it can get some real testing it will be included into rc-fixes
-along with the rest of the post merge-window updates.  So please, lets
-not try to delay the merging of this driver (again) over bits that will
-be addressed post -rc1.
+        if (sess)
+                __qla_tgt_sess_put(sess);
 
-Thanks,
+skips the kref_put() and therefore sess is be left with an extra
+reference forever.  When this happens, qla_tgt_stop_phase1() waits
+forever for all the sessions to go away.  Fix this by making sure sess
+is always set in qla_tgt_do_work().
 
---nab
+Signed-off-by: Roland Dreier <roland@purestorage.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b1ef4b1..51de953 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2955,7 +2955,7 @@ static void qla_tgt_do_work(struct work_struct *work)
+ 	scsi_qla_host_t *vha = cmd->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct qla_tgt *tgt = ha->qla_tgt;
+-	struct qla_tgt_sess *sess = NULL;
++	struct qla_tgt_sess *sess = cmd->sess;
+ 	atio_from_isp_t *atio = &cmd->atio;
+ 	unsigned char *cdb;
+ 	unsigned long flags;
+@@ -2965,7 +2965,6 @@ static void qla_tgt_do_work(struct work_struct *work)
+ 	if (tgt->tgt_stop)
+ 		goto out_term;	
+ 
+-	sess = cmd->sess;
+ 	if (!sess) {
+ 		uint8_t *s_id = NULL;
+ 		uint16_t loop_id = 0;
+-- 
+1.7.8.3
