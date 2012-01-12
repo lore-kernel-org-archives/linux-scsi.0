@@ -1,51 +1,31 @@
-From: Roland Dreier <roland@kernel.org>
-Subject: [PATCH] qla2xxx: Fix a possible hang on target shutdown
-Date: Wed, 11 Jan 2012 16:58:05 -0800
-Message-ID: <1326329885-6814-1-git-send-email-roland@kernel.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 6/7] qla4xxx: Cleanup modinfo display
+Date: Wed, 11 Jan 2012 20:01:20 -0600
+Message-ID: <4F0E3EF0.7030106@cs.wisc.edu>
+References: <1326278661-16368-1-git-send-email-vikas.chaudhary@qlogic.com> <1326278661-16368-7-git-send-email-vikas.chaudhary@qlogic.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:48237 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751890Ab2ALBxZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jan 2012 20:53:25 -0500
+In-Reply-To: <1326278661-16368-7-git-send-email-vikas.chaudhary@qlogic.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com, Karen Higgins <karen.higgins@qlogic.com>
 
-From: Roland Dreier <roland@purestorage.com>
+On 01/11/2012 04:44 AM, vikas.chaudhary@qlogic.com wrote:
+>  
+> -int ql4xextended_error_logging = 0; /* 0 = off, 1 = log errors */
+> +int ql4xextended_error_logging = 0;
 
-If tgt->tgt_stop is set, current code in qla_tgt_do_work() jumps to the
-exit path before setting sess, so the code
+You do not need to init this to 0 like above. It gets set to zero for
+you. I think this is some codingstyle doc rule violation. You should run
+checkpatch.pl on your patches before sending to catch this type of stuff.
 
-        if (sess)
-                __qla_tgt_sess_put(sess);
-
-skips the kref_put() and therefore sess is be left with an extra
-reference forever.  When this happens, qla_tgt_stop_phase1() waits
-forever for all the sessions to go away.  Fix this by making sure sess
-is always set in qla_tgt_do_work().
-
-Signed-off-by: Roland Dreier <roland@purestorage.com>
----
- drivers/scsi/qla2xxx/qla_target.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b1ef4b1..51de953 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2955,7 +2955,7 @@ static void qla_tgt_do_work(struct work_struct *work)
- 	scsi_qla_host_t *vha = cmd->vha;
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt *tgt = ha->qla_tgt;
--	struct qla_tgt_sess *sess = NULL;
-+	struct qla_tgt_sess *sess = cmd->sess;
- 	atio_from_isp_t *atio = &cmd->atio;
- 	unsigned char *cdb;
- 	unsigned long flags;
-@@ -2965,7 +2965,6 @@ static void qla_tgt_do_work(struct work_struct *work)
- 	if (tgt->tgt_stop)
- 		goto out_term;	
- 
--	sess = cmd->sess;
- 	if (!sess) {
- 		uint8_t *s_id = NULL;
- 		uint16_t loop_id = 0;
--- 
-1.7.8.3
+It is probably ok since it was there before and you are not adding it
+and your patch is focused on other stuff, but you should clean it up one
+day and make note of it for the future.
