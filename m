@@ -1,7 +1,7 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 12/15] Staging: hv: storvsc: Cleanup some protocol related constants
-Date: Thu, 12 Jan 2012 12:38:05 -0800
-Message-ID: <1326400688-13544-12-git-send-email-kys@microsoft.com>
+Subject: [PATCH 15/15] Staging: hv: storvsc: Consolidate all the wire protocol definitions
+Date: Thu, 12 Jan 2012 12:38:08 -0800
+Message-ID: <1326400688-13544-15-git-send-email-kys@microsoft.com>
 References: <1326400637-13494-1-git-send-email-kys@microsoft.com>
  <1326400688-13544-1-git-send-email-kys@microsoft.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
@@ -11,63 +11,130 @@ To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, 
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Cleanup some protocol related constants.
+Consolidate all definitions that support communication with the host.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/staging/hv/storvsc_drv.c |   19 +++++++------------
- 1 files changed, 7 insertions(+), 12 deletions(-)
+ drivers/staging/hv/storvsc_drv.c |   83 +++++++++++++++++++++----------------
+ 1 files changed, 47 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
-index 629edd1..9f07458 100644
+index 9ccc1c4..695ffc3 100644
 --- a/drivers/staging/hv/storvsc_drv.c
 +++ b/drivers/staging/hv/storvsc_drv.c
-@@ -114,13 +114,9 @@ enum vstor_packet_operation {
-  * this remains the same across the write regardless of 32/64 bit
-  * note: it's patterned off the SCSI_PASS_THROUGH structure
+@@ -42,33 +42,13 @@
+ #include <scsi/scsi_devinfo.h>
+ #include <scsi/scsi_dbg.h>
+ 
+-
+-/*
+- * We setup a mempool to allocate request structures for this driver
+- * on a per-lun basis. The following define specifies the number of
+- * elements in the pool.
+- */
+-
+-#define STORVSC_MIN_BUF_NR				64
+-static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
+-
+-module_param(storvsc_ringbuffer_size, int, S_IRUGO);
+-MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
+-
+-
+ /*
+- * Major/minor macros.  Minor version is in LSB, meaning that earlier flat
+- * version numbers will be interpreted as "0.x" (i.e., 1 becomes 0.1).
++ * All wire protocol details (storage protocol between the guest and the host)
++ * are consolidated here.
++ *
++ * Begin protocol definitions.
   */
--#define CDB16GENERIC_LENGTH			0x10
+ 
+-static inline u16 storvsc_get_version(u8 major, u8 minor)
+-{
+-	u16 version;
 -
--#ifndef SENSE_BUFFER_SIZE
--#define SENSE_BUFFER_SIZE			0x12
--#endif
+-	version = ((major << 8) | minor);
+-	return version;
+-}
 -
--#define MAX_DATA_BUF_LEN_WITH_PADDING		0x14
-+#define STORVSC_MAX_CMD_LEN			0x10
-+#define STORVSC_SENSE_BUFFER_SIZE		0x12
-+#define STORVSC_MAX_BUF_LEN_WITH_PADDING	0x14
+ /*
+  * Version history:
+  * V1 Beta: 0.1
+@@ -207,18 +187,6 @@ struct vstor_packet {
  
- struct vmscsi_request {
- 	u16 length;
-@@ -140,9 +136,9 @@ struct vmscsi_request {
- 	u32 data_transfer_length;
+ #define REQUEST_COMPLETION_FLAG	0x1
  
- 	union {
--		u8 cdb[CDB16GENERIC_LENGTH];
--		u8 sense_data[SENSE_BUFFER_SIZE];
--		u8 reserved_array[MAX_DATA_BUF_LEN_WITH_PADDING];
-+		u8 cdb[STORVSC_MAX_CMD_LEN];
-+		u8 sense_data[STORVSC_SENSE_BUFFER_SIZE];
-+		u8 reserved_array[STORVSC_MAX_BUF_LEN_WITH_PADDING];
- 	};
- } __attribute((packed));
- 
-@@ -234,7 +230,6 @@ struct vstor_packet {
- #define STORVSC_MAX_LUNS_PER_TARGET			64
- #define STORVSC_MAX_TARGETS				1
- #define STORVSC_MAX_CHANNELS				1
--#define STORVSC_MAX_CMD_LEN				16
- 
+-#define STORVSC_MAX_IO_REQUESTS				128
+-
+-/*
+- * In Hyper-V, each port/path/target maps to 1 scsi host adapter.  In
+- * reality, the path/target is not used (ie always set to 0) so our
+- * scsi host adapter essentially has 1 bus with 1 target that contains
+- * up to 256 luns.
+- */
+-#define STORVSC_MAX_LUNS_PER_TARGET			64
+-#define STORVSC_MAX_TARGETS				1
+-#define STORVSC_MAX_CHANNELS				1
+-
  /* Matches Windows-end */
  enum storvsc_request_type {
-@@ -1074,7 +1069,7 @@ static int storvsc_do_io(struct hv_device *device,
- 	vstor_packet->vm_srb.length = sizeof(struct vmscsi_request);
+ 	WRITE_TYPE = 0,
+@@ -235,6 +203,36 @@ enum storvsc_request_type {
+ #define SRB_STATUS_SUCCESS	0x01
+ #define SRB_STATUS_ERROR	0x04
  
++/*
++ * This is the end of Protocol specific defines.
++ */
++
++
++/*
++ * We setup a mempool to allocate request structures for this driver
++ * on a per-lun basis. The following define specifies the number of
++ * elements in the pool.
++ */
++
++#define STORVSC_MIN_BUF_NR				64
++static int storvsc_ringbuffer_size = (20 * PAGE_SIZE);
++
++module_param(storvsc_ringbuffer_size, int, S_IRUGO);
++MODULE_PARM_DESC(storvsc_ringbuffer_size, "Ring buffer size (bytes)");
++
++#define STORVSC_MAX_IO_REQUESTS				128
++
++/*
++ * In Hyper-V, each port/path/target maps to 1 scsi host adapter.  In
++ * reality, the path/target is not used (ie always set to 0) so our
++ * scsi host adapter essentially has 1 bus with 1 target that contains
++ * up to 256 luns.
++ */
++#define STORVSC_MAX_LUNS_PER_TARGET			64
++#define STORVSC_MAX_TARGETS				1
++#define STORVSC_MAX_CHANNELS				1
++
++
  
--	vstor_packet->vm_srb.sense_info_length = SENSE_BUFFER_SIZE;
-+	vstor_packet->vm_srb.sense_info_length = STORVSC_SENSE_BUFFER_SIZE;
+ struct storvsc_cmd_request {
+ 	struct list_head entry;
+@@ -337,6 +335,19 @@ done:
+ }
  
- 
- 	vstor_packet->vm_srb.data_transfer_length =
+ /*
++ * Major/minor macros.  Minor version is in LSB, meaning that earlier flat
++ * version numbers will be interpreted as "0.x" (i.e., 1 becomes 0.1).
++ */
++
++static inline u16 storvsc_get_version(u8 major, u8 minor)
++{
++	u16 version;
++
++	version = ((major << 8) | minor);
++	return version;
++}
++
++/*
+  * We can get incoming messages from the host that are not in response to
+  * messages that we have sent out. An example of this would be messages
+  * received by the guest to notify dynamic addition/removal of LUNs. To
 -- 
 1.7.4.1
