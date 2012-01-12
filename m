@@ -1,57 +1,140 @@
 From: "K. Y. Srinivasan" <kys@microsoft.com>
-Subject: [PATCH 07/15] Staging: hv: storvsc: Add a comment to explain life-cycle management
-Date: Thu, 12 Jan 2012 12:38:00 -0800
-Message-ID: <1326400688-13544-7-git-send-email-kys@microsoft.com>
+Subject: [PATCH 03/15] Staging: hv: storvsc: Cleanup storvsc_queuecommand()
+Date: Thu, 12 Jan 2012 12:37:56 -0800
+Message-ID: <1326400688-13544-3-git-send-email-kys@microsoft.com>
 References: <1326400637-13494-1-git-send-email-kys@microsoft.com>
  <1326400688-13544-1-git-send-email-kys@microsoft.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from p3plsmtps2ded02.prod.phx3.secureserver.net ([208.109.80.59]:51435
+	"HELO p3plsmtps2ded02-02.prod.phx3.secureserver.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755342Ab2ALUfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jan 2012 15:35:23 -0500
 In-Reply-To: <1326400688-13544-1-git-send-email-kys@microsoft.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: gregkh@suse.de, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org, virtualization@lists.osdl.org, ohering@suse.com, jbottomley@parallels.com, hch@infradead.org, linux-scsi@vger.kernel.org
 Cc: "K. Y. Srinivasan" <kys@microsoft.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Add a comment to explain life-cycle management and fix format issue.
+Cleanup storvsc_queuecommand(). As part of this cleanup, rename the function to
+check if the scsi command can be sent to the host, consolidate error recovery
+and get rid of some dead code.
 
 Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
 ---
- drivers/staging/hv/storvsc_drv.c |   17 ++++++++++++++++-
- 1 files changed, 16 insertions(+), 1 deletions(-)
+ drivers/staging/hv/storvsc_drv.c |   48 +++++++++++++++++--------------------
+ 1 files changed, 22 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
-index e0e471c..204b3ca 100644
+index 7561d29..71e50c3 100644
 --- a/drivers/staging/hv/storvsc_drv.c
 +++ b/drivers/staging/hv/storvsc_drv.c
-@@ -375,6 +375,21 @@ done:
- 	kfree(wrk);
+@@ -1239,13 +1239,16 @@ static void storvsc_command_completion(struct hv_storvsc_request *request)
+ 	mempool_free(cmd_request, memp->request_mempool);
  }
  
-+/*
-+ * We can get incoming messages from the host that are not in response to
-+ * messages that we have sent out. An example of this would be messages
-+ * received by the guest to notify dynamic addition/removal of LUNs. To
-+ * deal with potential race conditions where the driver may be in the
-+ * midst of being unloaded when we might receive an unsolicited message
-+ * from the host, we have implemented a mechanism to gurantee sequential
-+ * consistency:
-+ *
-+ * 1) Once the device is marked as being destroyed, we will fail all
-+ *    outgoing messages.
-+ * 2) We permit incoming messages when the device is being destroyed,
-+ *    only to properly account for messages already sent out.
-+ */
-+
- static inline struct storvsc_device *get_out_stor_device(
- 					struct hv_device *device)
+-static bool storvsc_check_scsi_cmd(struct scsi_cmnd *scmnd)
++static bool storvsc_scsi_cmd_ok(struct scsi_cmnd *scmnd)
  {
-@@ -569,7 +584,7 @@ static void storvsc_on_io_completion(struct hv_device *device,
- 	 */
+ 	bool allowed = true;
+ 	u8 scsi_op = scmnd->cmnd[0];
  
- 	if ((stor_pkt->vm_srb.cdb[0] == INQUIRY) ||
--		(stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
-+	   (stor_pkt->vm_srb.cdb[0] == MODE_SENSE)) {
- 		vstor_packet->vm_srb.scsi_status = 0;
- 		vstor_packet->vm_srb.srb_status = SRB_STATUS_SUCCESS;
+ 	switch (scsi_op) {
+-	/* smartd sends this command, which will offline the device */
++	/*
++	 * smartd sends this command and the host does not handle
++	 * this. So, don't send it.
++	 */
+ 	case SET_WINDOW:
+ 		scmnd->result = ILLEGAL_REQUEST << 16;
+ 		allowed = false;
+@@ -1270,32 +1273,26 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	struct vmscsi_request *vm_srb;
+ 	struct stor_mem_pools *memp = scmnd->device->hostdata;
+ 
+-	if (storvsc_check_scsi_cmd(scmnd) == false) {
++	if (!storvsc_scsi_cmd_ok(scmnd)) {
+ 		scmnd->scsi_done(scmnd);
+ 		return 0;
  	}
+ 
+-	/* If retrying, no need to prep the cmd */
+-	if (scmnd->host_scribble) {
+-
+-		cmd_request =
+-			(struct storvsc_cmd_request *)scmnd->host_scribble;
+-
+-		goto retry_request;
+-	}
+-
+ 	request_size = sizeof(struct storvsc_cmd_request);
+ 
+ 	cmd_request = mempool_alloc(memp->request_mempool,
+ 				       GFP_ATOMIC);
++
++	/*
++	 * We might be invoked in an interrupt context; hence
++	 * mempool_alloc() can fail.
++	 */
+ 	if (!cmd_request)
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 
+ 	memset(cmd_request, 0, sizeof(struct storvsc_cmd_request));
+ 
+ 	/* Setup the cmd request */
+-	cmd_request->bounce_sgl_count = 0;
+-	cmd_request->bounce_sgl = NULL;
+ 	cmd_request->cmd = scmnd;
+ 
+ 	scmnd->host_scribble = (unsigned char *)cmd_request;
+@@ -1344,11 +1341,8 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 						     scsi_bufflen(scmnd),
+ 						     vm_srb->data_in);
+ 			if (!cmd_request->bounce_sgl) {
+-				scmnd->host_scribble = NULL;
+-				mempool_free(cmd_request,
+-						memp->request_mempool);
+-
+-				return SCSI_MLQUEUE_HOST_BUSY;
++				ret = SCSI_MLQUEUE_HOST_BUSY;
++				goto queue_error;
+ 			}
+ 
+ 			cmd_request->bounce_sgl_count =
+@@ -1377,24 +1371,26 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 			virt_to_phys(scsi_sglist(scmnd)) >> PAGE_SHIFT;
+ 	}
+ 
+-retry_request:
+ 	/* Invokes the vsc to start an IO */
+ 	ret = storvsc_do_io(dev, &cmd_request->request);
+ 
+ 	if (ret == -EAGAIN) {
+ 		/* no more space */
+ 
+-		if (cmd_request->bounce_sgl_count)
++		if (cmd_request->bounce_sgl_count) {
+ 			destroy_bounce_buffer(cmd_request->bounce_sgl,
+ 					cmd_request->bounce_sgl_count);
+ 
+-		mempool_free(cmd_request, memp->request_mempool);
+-
+-		scmnd->host_scribble = NULL;
+-
+-		ret = SCSI_MLQUEUE_DEVICE_BUSY;
++			ret = SCSI_MLQUEUE_DEVICE_BUSY;
++			goto queue_error;
++		}
+ 	}
+ 
++	return 0;
++
++queue_error:
++	mempool_free(cmd_request, memp->request_mempool);
++	scmnd->host_scribble = NULL;
+ 	return ret;
+ }
+ 
 -- 
 1.7.4.1
+
