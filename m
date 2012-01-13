@@ -1,33 +1,64 @@
-From: Roland Dreier <roland@purestorage.com>
-Subject: Re: [LSF/MM TOPIC] Copy offload
-Date: Fri, 13 Jan 2012 11:35:38 -0800
-Message-ID: <CAL1RGDWJjzBnN6Aj_ngvkFco_toe8Dey5QApgmYafpEqECuTSw@mail.gmail.com>
-References: <4F0AC112.2000709@suse.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] qla2xxx: Fix a possible hang on target shutdown
+Date: Fri, 13 Jan 2012 14:28:26 -0800
+Message-ID: <1326493706.30987.56.camel@haakon2.linux-iscsi.org>
+References: <1326329885-6814-1-git-send-email-roland@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys010aog114.obsmtp.com ([74.125.245.96]:42389 "HELO
-	na3sys010aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758862Ab2AMTgB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2012 14:36:01 -0500
-Received: by wibhj6 with SMTP id hj6so998945wib.17
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2012 11:35:59 -0800 (PST)
-In-Reply-To: <4F0AC112.2000709@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1326329885-6814-1-git-send-email-roland@kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Roland Dreier <roland@kernel.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-In general, with my target vendor hat on, I'd be very interested in
-what special SCSI commands the Linux initiator stack might want
-to use.  Extended copy is one (very complex) case -- and BTW
-Microsoft seems to plan on using XCOPY LITE with NTFS.
+On Wed, 2012-01-11 at 16:58 -0800, Roland Dreier wrote:
+> From: Roland Dreier <roland@purestorage.com>
+> 
+> If tgt->tgt_stop is set, current code in qla_tgt_do_work() jumps to the
+> exit path before setting sess, so the code
+> 
+>         if (sess)
+>                 __qla_tgt_sess_put(sess);
+> 
+> skips the kref_put() and therefore sess is be left with an extra
+> reference forever.  When this happens, qla_tgt_stop_phase1() waits
+> forever for all the sessions to go away.  Fix this by making sure sess
+> is always set in qla_tgt_do_work().
+> 
+> Signed-off-by: Roland Dreier <roland@purestorage.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_target.c |    3 +--
+>  1 files changed, 1 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+> index b1ef4b1..51de953 100644
+> --- a/drivers/scsi/qla2xxx/qla_target.c
+> +++ b/drivers/scsi/qla2xxx/qla_target.c
+> @@ -2955,7 +2955,7 @@ static void qla_tgt_do_work(struct work_struct *work)
+>  	scsi_qla_host_t *vha = cmd->vha;
+>  	struct qla_hw_data *ha = vha->hw;
+>  	struct qla_tgt *tgt = ha->qla_tgt;
+> -	struct qla_tgt_sess *sess = NULL;
+> +	struct qla_tgt_sess *sess = cmd->sess;
+>  	atio_from_isp_t *atio = &cmd->atio;
+>  	unsigned char *cdb;
+>  	unsigned long flags;
+> @@ -2965,7 +2965,6 @@ static void qla_tgt_do_work(struct work_struct *work)
+>  	if (tgt->tgt_stop)
+>  		goto out_term;	
+>  
+> -	sess = cmd->sess;
+>  	if (!sess) {
+>  		uint8_t *s_id = NULL;
+>  		uint16_t loop_id = 0;
 
-Another possibly interesting example would be COMPARE AND
-WRITE for clustered filesystems.
+A very nice catch here Roland.
 
-Any other storage operations that FS developers might want
-from the block device?  (Either standard SCSI commands or
-more speculative stuff that T10 hasn't thought of yet)
+Applied to lio-core/qla_tgt-3.3, and will make sure this is included in
+the next RFC.
 
- - R.
+Thanks,
+
+--nab
