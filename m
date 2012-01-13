@@ -1,48 +1,374 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH] delay transition requeues for 2 seconds - alua
-Date: Fri, 13 Jan 2012 12:51:13 -0500
-Message-ID: <4F106F11.5050702@redhat.com>
-References: <1325618414-26992-1-git-send-email-revers@redhat.com> <4F0EAB53.7020404@suse.de> <4F0F124D.3000708@redhat.com> <4F0F4F43.2010902@suse.de> <4F0F3A73.9060602@cs.wisc.edu> <4F0F3BB1.7090902@cs.wisc.edu> <4F0F5B17.3090606@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: [PATCH] pm8001: Add FUNC_GET_EVENTS
+Date: Fri, 13 Jan 2012 12:53:32 -0500
+Message-ID: <C816DDC9-9495-4F26-80A5-3FF2C73CE175@xyratex.com>
+References: <46C64AF8-8DB5-4380-AB15-DF861E10F3A8@xyratex.com>
+Mime-Version: 1.0 (Apple Message framework v1251.1)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59761 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751917Ab2AMRvX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2012 12:51:23 -0500
-In-Reply-To: <4F0F5B17.3090606@suse.de>
+Received: from xyratex197.xyratex.com ([194.131.166.197]:45500 "EHLO
+	XY01EX21.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751917Ab2AMRxj convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2012 12:53:39 -0500
+In-Reply-To: <46C64AF8-8DB5-4380-AB15-DF861E10F3A8@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jack Wang <jack_wang@usish.com>, JBottomley@parallels.com, crystal_yu@usish.com, john_gong@usish.com, lindar_liu <lindar_liu@usish.com>
 
-On 01/12/2012 05:13 PM, Hannes Reinecke wrote:
-> On 01/12/2012 08:59 PM, Mike Christie wrote:
->> On 01/12/2012 01:54 PM, Mike Christie wrote:
->>> alua_check_sense will return ADD_TO_MLQUEUE_DELAY then scsi_check_sense
->>> will pass that up and scsi_decide_disposition will return that right
->>> away.
->>
->> I mean it is one of those weird ones where we do not do the goto
->> maybe_retry in scsi_decide_disposition, so we do not see the fast fail
->> bit set. This happens for ADD_TO_MLQUEUE_DELAY and ADD_TO_MLQUEUE.
->>
-> Hmm. Not sure here.
-> With the above reasoning SG_IO would be retried, too.
-> Which it most definitely isn't.
->
-> I'll be digging deeper here tomorrow.
->
-> Cheers,
->
-> Hannes
+The pm8001 driver is missing the FUNC_GET_EVENTS handler in the phy control function. Since the pm8001_bar4_shift function was not designed to be called at runtime, we had to take some pre-emptive additional attention to protect the hardware accesses throughout the driver.
 
-Hannes,
+Signed-off-by: mark_salyzyn@xyratex.com
+Cc: jack_wang@usish.com
+Cc: JBottomley@parallels.com
+Cc: crystal_yu@usish.com
+Cc: john_gong@usish.com
+Cc: lindar_liu <lindar_liu@usish.com>
 
-I ran some tests today to verify what you said about rtpg not ending
-up executing the ADD_TO_MLQUEUE_DELAY path via scsi_softirq_done.
+ drivers/scsi/pm8001/pm8001_hwi.c |   84 ++++++++++++++++++++++++++++++++++++++++-------------------
+ drivers/scsi/pm8001/pm8001_sas.c |   34 +++++++++++++++++++++++
+ drivers/scsi/pm8001/pm8001_sas.h |    1 
+ 3 files changed, 92 insertions(+), 27 deletions(-)
 
-So yes, looks like another delay is required in alua_rtpg.
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+index b7b92f7..4bddb2a 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -338,26 +338,25 @@ update_outbnd_queue_table(struct pm8001_hba_info *pm8001_ha, int number)
+ }
+ 
+ /**
+- * bar4_shift - function is called to shift BAR base address
+- * @pm8001_ha : our hba card information
++ * pm8001_bar4_shift - function is called to shift BAR base address
++ * @pm8001_ha : our hba card infomation
+  * @shiftValue : shifting value in memory bar.
+  */
+-static int bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
++int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
+ {
+ 	u32 regVal;
+-	u32 max_wait_count;
++	unsigned long start;
+ 
+ 	/* program the inbound AXI translation Lower Address */
+ 	pm8001_cw32(pm8001_ha, 1, SPC_IBW_AXI_TRANSLATION_LOW, shiftValue);
+ 
+ 	/* confirm the setting is written */
+-	max_wait_count = 1 * 1000 * 1000;  /* 1 sec */
++	start = jiffies + HZ; /* 1 sec */
+ 	do {
+-		udelay(1);
+ 		regVal = pm8001_cr32(pm8001_ha, 1, SPC_IBW_AXI_TRANSLATION_LOW);
+-	} while ((regVal != shiftValue) && (--max_wait_count));
++	} while ((regVal != shiftValue) && time_before(jiffies, start));
+ 
+-	if (!max_wait_count) {
++	if (regVal != shiftValue) {
+ 		PM8001_INIT_DBG(pm8001_ha,
+ 			pm8001_printk("TIMEOUT:SPC_IBW_AXI_TRANSLATION_LOW"
+ 			" = 0x%x\n", regVal));
+@@ -388,16 +387,23 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32 SSCbit)
+     * Using shifted destination address 0x3_0000:0x1074 + 0x4000*N (N=0:3)
+     * Using shifted destination address 0x4_0000:0x1074 + 0x4000*(N-4) (N=4:7)
+     */
+-	if (-1 == bar4_shift(pm8001_ha, SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR))
++	spin_lock_irqsave(&pm8001_ha->lock, flags);
++	if (-1 == pm8001_bar4_shift(pm8001_ha,
++				SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		return;
++	}
+ 
+ 	for (i = 0; i < 4; i++) {
+ 		offset = SAS2_SETTINGS_LOCAL_PHY_0_3_OFFSET + 0x4000 * i;
+ 		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
+ 	}
+ 	/* shift membase 3 for SAS2_SETTINGS_LOCAL_PHY 4 - 7 */
+-	if (-1 == bar4_shift(pm8001_ha, SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR))
++	if (-1 == pm8001_bar4_shift(pm8001_ha,
++				SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		return;
++	}
+ 	for (i = 4; i < 8; i++) {
+ 		offset = SAS2_SETTINGS_LOCAL_PHY_4_7_OFFSET + 0x4000 * (i-4);
+ 		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
+@@ -421,7 +427,8 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32 SSCbit)
+ 	pm8001_cw32(pm8001_ha, 2, 0xd8, 0x8000C016);
+ 
+ 	/*set the shifted destination address to 0x0 to avoid error operation */
+-	bar4_shift(pm8001_ha, 0x0);
++	pm8001_bar4_shift(pm8001_ha, 0x0);
++	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 	return;
+ }
+ 
+@@ -437,6 +444,7 @@ mpi_set_open_retry_interval_reg(struct pm8001_hba_info *pm8001_ha,
+ 	u32 offset;
+ 	u32 value;
+ 	u32 i;
++	unsigned long flags;
+ 
+ #define OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR 0x00030000
+ #define OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR 0x00040000
+@@ -445,24 +453,30 @@ mpi_set_open_retry_interval_reg(struct pm8001_hba_info *pm8001_ha,
+ #define OPEN_RETRY_INTERVAL_REG_MASK 0x0000FFFF
+ 
+ 	value = interval & OPEN_RETRY_INTERVAL_REG_MASK;
++	spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 	/* shift bar and set the OPEN_REJECT(RETRY) interval time of PHY 0 -3.*/
+-	if (-1 == bar4_shift(pm8001_ha,
+-			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR))
++	if (-1 == pm8001_bar4_shift(pm8001_ha,
++			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		return;
++	}
+ 	for (i = 0; i < 4; i++) {
+ 		offset = OPEN_RETRY_INTERVAL_PHY_0_3_OFFSET + 0x4000 * i;
+ 		pm8001_cw32(pm8001_ha, 2, offset, value);
+ 	}
+ 
+-	if (-1 == bar4_shift(pm8001_ha,
+-			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR))
++	if (-1 == pm8001_bar4_shift(pm8001_ha,
++			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		return;
++	}
+ 	for (i = 4; i < 8; i++) {
+ 		offset = OPEN_RETRY_INTERVAL_PHY_4_7_OFFSET + 0x4000 * (i-4);
+ 		pm8001_cw32(pm8001_ha, 2, offset, value);
+ 	}
+ 	/*set the shifted destination address to 0x0 to avoid error operation */
+-	bar4_shift(pm8001_ha, 0x0);
++	pm8001_bar4_shift(pm8001_ha, 0x0);
++	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 	return;
+ }
+ 
+@@ -688,8 +702,11 @@ static u32 soft_reset_ready_check(struct pm8001_hba_info *pm8001_ha)
+ 		PM8001_INIT_DBG(pm8001_ha,
+ 			pm8001_printk("Firmware is ready for reset .\n"));
+ 	} else {
+-	/* Trigger NMI twice via RB6 */
+-		if (-1 == bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
++		unsigned long flags;
++		/* Trigger NMI twice via RB6 */
++		spin_lock_irqsave(&pm8001_ha->lock, flags);
++		if (-1 == pm8001_bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			PM8001_FAIL_DBG(pm8001_ha,
+ 				pm8001_printk("Shift Bar4 to 0x%x failed\n",
+ 					RB6_ACCESS_REG));
+@@ -715,8 +732,10 @@ static u32 soft_reset_ready_check(struct pm8001_hba_info *pm8001_ha)
+ 			PM8001_FAIL_DBG(pm8001_ha,
+ 				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
+ 				pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_3)));
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			return -1;
+ 		}
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 	}
+ 	return 0;
+ }
+@@ -733,6 +752,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 	u32	regVal, toggleVal;
+ 	u32	max_wait_count;
+ 	u32	regVal1, regVal2, regVal3;
++	unsigned long flags;
+ 
+ 	/* step1: Check FW is ready for soft reset */
+ 	if (soft_reset_ready_check(pm8001_ha) != 0) {
+@@ -743,7 +763,9 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 	/* step 2: clear NMI status register on AAP1 and IOP, write the same
+ 	value to clear */
+ 	/* map 0x60000 to BAR4(0x20), BAR2(win) */
+-	if (-1 == bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
++	spin_lock_irqsave(&pm8001_ha->lock, flags);
++	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+ 			MBIC_AAP1_ADDR_BASE));
+@@ -754,7 +776,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 		pm8001_printk("MBIC - NMI Enable VPE0 (IOP)= 0x%x\n", regVal));
+ 	pm8001_cw32(pm8001_ha, 2, MBIC_NMI_ENABLE_VPE0_IOP, 0x0);
+ 	/* map 0x70000 to BAR4(0x20), BAR2(win) */
+-	if (-1 == bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
++	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+ 			MBIC_IOP_ADDR_BASE));
+@@ -796,7 +819,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 
+ 	/* read required registers for confirmming */
+ 	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
+-	if (-1 == bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
++	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+ 			GSM_ADDR_BASE));
+@@ -862,7 +886,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 	/* step 5: delay 10 usec */
+ 	udelay(10);
+ 	/* step 5-b: set GPIO-0 output control to tristate anyway */
+-	if (-1 == bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
++	if (-1 == pm8001_bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_INIT_DBG(pm8001_ha,
+ 				pm8001_printk("Shift Bar4 to 0x%x failed\n",
+ 				GPIO_ADDR_BASE));
+@@ -878,7 +903,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 
+ 	/* Step 6: Reset the IOP and AAP1 */
+ 	/* map 0x00000 to BAR4(0x20), BAR2(win) */
+-	if (-1 == bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
++	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
+ 			SPC_TOP_LEVEL_ADDR_BASE));
+@@ -915,7 +941,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 
+ 	/* step 11: reads and sets the GSM Configuration and Reset Register */
+ 	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
+-	if (-1 == bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
++	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
+ 			GSM_ADDR_BASE));
+@@ -968,7 +995,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 
+ 	/* step 13: bring the IOP and AAP1 out of reset */
+ 	/* map 0x00000 to BAR4(0x20), BAR2(win) */
+-	if (-1 == bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
++	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		PM8001_FAIL_DBG(pm8001_ha,
+ 			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+ 			SPC_TOP_LEVEL_ADDR_BASE));
+@@ -1010,6 +1038,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
+ 				pm8001_cr32(pm8001_ha, 0,
+ 				MSGU_SCRATCH_PAD_3)));
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			return -1;
+ 		}
+ 
+@@ -1039,9 +1068,12 @@ pm8001_chip_soft_rst(struct pm8001_hba_info *pm8001_ha, u32 signature)
+ 				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
+ 				pm8001_cr32(pm8001_ha, 0,
+ 				MSGU_SCRATCH_PAD_3)));
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			return -1;
+ 		}
+ 	}
++	pm8001_bar4_shift(pm8001_ha, 0);
++	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 
+ 	PM8001_INIT_DBG(pm8001_ha,
+ 		pm8001_printk("SPC soft reset Complete\n"));
+@@ -1157,8 +1189,8 @@ pm8001_chip_msix_interrupt_disable(struct pm8001_hba_info *pm8001_ha,
+ 	msi_index = int_vec_idx * MSIX_TABLE_ELEMENT_SIZE;
+ 	msi_index += MSIX_TABLE_BASE;
+ 	pm8001_cw32(pm8001_ha, 0,  msi_index, MSIX_INTERRUPT_DISABLE);
+-
+ }
++
+ /**
+  * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+  * @pm8001_ha: our hba card information
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index fb3dc99..957bd6a 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -166,6 +166,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 	struct pm8001_hba_info *pm8001_ha = NULL;
+ 	struct sas_phy_linkrates *rates;
+ 	DECLARE_COMPLETION_ONSTACK(completion);
++	unsigned long flags;
+ 	pm8001_ha = sas_phy->ha->lldd_ha;
+ 	pm8001_ha->phy[phy_id].enable_completion = &completion;
+ 	switch (func) {
+@@ -188,7 +189,9 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 		break;
+ 	case PHY_FUNC_HARD_RESET:
+ 		if (pm8001_ha->phy[phy_id].phy_state == 0) {
++			spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, phy_id);
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			wait_for_completion(&completion);
+ 		}
+ 		PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
+@@ -196,21 +199,50 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
+ 		break;
+ 	case PHY_FUNC_LINK_RESET:
+ 		if (pm8001_ha->phy[phy_id].phy_state == 0) {
++			spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, phy_id);
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 			wait_for_completion(&completion);
+ 		}
++		spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 		PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
+ 					      PHY_LINK_RESET);
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		break;
+ 	case PHY_FUNC_RELEASE_SPINUP_HOLD:
++		spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 		PM8001_CHIP_DISP->phy_ctl_req(pm8001_ha, phy_id,
+ 					      PHY_LINK_RESET);
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		break;
+ 	case PHY_FUNC_DISABLE:
++		spin_lock_irqsave(&pm8001_ha->lock, flags);
+ 		PM8001_CHIP_DISP->phy_stop_req(pm8001_ha, phy_id);
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+ 		break;
++	case PHY_FUNC_GET_EVENTS:
++		spin_lock_irqsave(&pm8001_ha->lock, flags);
++		if (-1 == pm8001_bar4_shift(pm8001_ha,
++					(phy_id < 4) ? 0x30000 : 0x40000)) {
++			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
++			return -EINVAL;
++		}
++		{
++			struct sas_phy *phy = sas_phy->phy;
++			uint32_t *qp = (uint32_t *)(((char *)
++				pm8001_ha->io_mem[2].memvirtaddr)
++				+ 0x1034 + (0x4000 * (phy_id & 3)));
++
++			phy->invalid_dword_count = qp[0];
++			phy->running_disparity_error_count = qp[1];
++			phy->loss_of_dword_sync_count = qp[3];
++			phy->phy_reset_problem_count = qp[4];
++		}
++		pm8001_bar4_shift(pm8001_ha, 0);
++		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
++		return 0;
+ 	default:
+-		rc = -ENOSYS;
++		rc = -EOPNOTSUPP;
+ 	}
+ 	msleep(300);
+ 	return rc;
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 93959fe..83a48f3 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -488,6 +488,7 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void **virt_addr,
+ 	dma_addr_t *pphys_addr, u32 *pphys_addr_hi, u32 *pphys_addr_lo,
+ 	u32 mem_size, u32 align);
+ 
++int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+ 
+ /* ctl shared API */
+ extern struct device_attribute *pm8001_host_attrs[];
 
-Rob
