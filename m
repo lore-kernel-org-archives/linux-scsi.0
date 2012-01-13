@@ -1,199 +1,89 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/6] mpt2sas: Do not check DIF for unwritten blocks
-Date: Fri, 13 Jan 2012 17:43:03 -0500
-Message-ID: <1326494586-17360-4-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 6/6] scsi: Disable DIF on Hitachi Ultrastar 15K300
+Date: Fri, 13 Jan 2012 17:43:06 -0500
+Message-ID: <1326494586-17360-7-git-send-email-martin.petersen@oracle.com>
 References: <1326494586-17360-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet15.oracle.com ([148.87.113.117]:40336 "EHLO
-	rcsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759396Ab2AMWnd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2012 17:43:33 -0500
+Received: from acsinet15.oracle.com ([141.146.126.227]:24435 "EHLO
+	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759400Ab2AMWne (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2012 17:43:34 -0500
 In-Reply-To: <1326494586-17360-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Nagalakshmi.Nandigama@lsi.com
+Cc: jbottomley@parallels.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Blocks that have never been written contain all ones in the protection
-information. When reading, a target device will disable checking for any
-block whose application tag contains 0xFFFF.
-
-Some MPT adapters, however, enable checking for all blocks by
-default. This causes reads to previously unwritten sectors to fail.
-
-Tweak the relevant bit in the MPT configuration page that causes the HBA
-to disable PI checking when a received app tag contains 0xFFFF.
+Hitachi Ultrastar 15K300 is quirky. Disable T10 PI (DIF).
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Nagalakshmi.Nandigama@lsi.com
 ---
- drivers/scsi/mpt2sas/mpt2sas_base.c   |   15 +++++++
- drivers/scsi/mpt2sas/mpt2sas_base.h   |   19 +++++++++
- drivers/scsi/mpt2sas/mpt2sas_config.c |   72 +++++++++++++++++++++++++++++++++
- 3 files changed, 106 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_devinfo.c |    1 +
+ drivers/scsi/scsi_scan.c    |    3 +++
+ include/scsi/scsi_device.h  |    4 ++++
+ include/scsi/scsi_devinfo.h |    1 +
+ 4 files changed, 9 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 0b2c955..a7f90e9 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -2269,6 +2269,21 @@ _base_static_config_pages(struct MPT2SAS_ADAPTER *ioc)
- 	if (ioc->ir_firmware)
- 		mpt2sas_config_get_manufacturing_pg10(ioc, &mpi_reply,
- 		    &ioc->manu_pg10);
-+
-+	/*
-+	 * Ensure correct T10 PI operation if vendor left EEDPTagMode
-+	 * flag unset in NVDATA.
-+	 */
-+	mpt2sas_config_get_manufacturing_pg11(ioc, &mpi_reply, &ioc->manu_pg11);
-+	if (ioc->manu_pg11.EEDPTagMode == 0) {
-+		printk(KERN_ERR "%s: overriding NVDATA EEDPTagMode setting\n",
-+		       ioc->name);
-+		ioc->manu_pg11.EEDPTagMode &= ~0x3;
-+		ioc->manu_pg11.EEDPTagMode |= 0x1;
-+		mpt2sas_config_set_manufacturing_pg11(ioc, &mpi_reply,
-+						      &ioc->manu_pg11);
-+	}
-+
- 	mpt2sas_config_get_bios_pg2(ioc, &mpi_reply, &ioc->bios_pg2);
- 	mpt2sas_config_get_bios_pg3(ioc, &mpi_reply, &ioc->bios_pg3);
- 	mpt2sas_config_get_ioc_pg8(ioc, &mpi_reply, &ioc->ioc_pg8);
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index c7459fd..f68195f 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -296,6 +296,19 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_10 {
- #define MFG_PAGE10_EXPOSE_ALL_DISKS	(0x01)
- #define MFG_PAGE10_HIDE_IF_VOL_PRESENT	(0x02)
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index cf8dfab..43fca91 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -172,6 +172,7 @@ static struct {
+ 	{"HITACHI", "DF400", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "DF500", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HITACHI", "HUS1530", "*", BLIST_NO_DIF},
+ 	{"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
+ 	{"HITACHI", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HITACHI", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index b3c6d95..5019f18 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -923,6 +923,9 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	if (*bflags & BLIST_RETRY_HWERROR)
+ 		sdev->retry_hwerror = 1;
  
-+/* Miscellaneous options */
-+typedef struct _MPI2_CONFIG_PAGE_MAN_11 {
-+    MPI2_CONFIG_PAGE_HEADER Header;                                 /* 00h */
-+    U32                     Reserved1;                              /* 04h */
-+    U8                      Reserved2;                              /* 08h */
-+    U8                      EEDPTagMode;                            /* 09h */
-+    U8                      Reserved3;                              /* 0Ah */
-+    U8                      Reserved4;                              /* 0Bh */
-+    U32                     Reserved5[23];                          /* 0Ch-60h*/
-+} MPI2_CONFIG_PAGE_MAN_11,
-+  MPI2_POINTER PTR_MPI2_CONFIG_PAGE_MAN_11,
-+  Mpi2ManufacturingPage11_t, MPI2_POINTER pMpi2ManufacturingPage11_t;
++	if (*bflags & BLIST_NO_DIF)
++		sdev->no_dif = 1;
 +
+ 	transport_configure_device(&sdev->sdev_gendev);
  
- struct MPT2SAS_DEVICE {
- 	struct MPT2SAS_TARGET *sas_target;
-@@ -706,6 +719,7 @@ typedef void (*MPT2SAS_FLUSH_RUNNING_CMDS)(struct MPT2SAS_ADAPTER *ioc);
-  * @pfacts: static port facts data
-  * @manu_pg0: static manufacturing page 0
-  * @manu_pg10: static manufacturing page 10
-+ * @manu_pg11: static manufacturing page 11
-  * @bios_pg2: static bios page 2
-  * @bios_pg3: static bios page 3
-  * @ioc_pg8: static ioc page 8
-@@ -978,6 +992,7 @@ struct MPT2SAS_ADAPTER {
- 	u8		diag_buffer_status[MPI2_DIAG_BUF_TYPE_COUNT];
- 	u32		unique_id[MPI2_DIAG_BUF_TYPE_COUNT];
- 	Mpi2ManufacturingPage10_t manu_pg10;
-+	Mpi2ManufacturingPage11_t manu_pg11;
- 	u32		product_specific[MPI2_DIAG_BUF_TYPE_COUNT][23];
- 	u32		diagnostic_flags[MPI2_DIAG_BUF_TYPE_COUNT];
- 	u32		ring_buffer_offset;
-@@ -1078,6 +1093,10 @@ int mpt2sas_config_get_manufacturing_pg0(struct MPT2SAS_ADAPTER *ioc,
-     Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage0_t *config_page);
- int mpt2sas_config_get_manufacturing_pg10(struct MPT2SAS_ADAPTER *ioc,
-     Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage10_t *config_page);
-+int mpt2sas_config_get_manufacturing_pg11(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage11_t *config_page);
-+int mpt2sas_config_set_manufacturing_pg11(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage11_t *config_page);
- int mpt2sas_config_get_bios_pg2(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-     *mpi_reply, Mpi2BiosPage2_t *config_page);
- int mpt2sas_config_get_bios_pg3(struct MPT2SAS_ADAPTER *ioc, Mpi2ConfigReply_t
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_config.c b/drivers/scsi/mpt2sas/mpt2sas_config.c
-index 36ea0b2..fb737bb 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_config.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_config.c
-@@ -503,6 +503,78 @@ mpt2sas_config_get_manufacturing_pg10(struct MPT2SAS_ADAPTER *ioc,
+ 	if (sdev->host->hostt->slave_configure) {
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 77273f2..f48d94e 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -151,6 +151,7 @@ struct scsi_device {
+ 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+ 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
++	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+ 
+ 	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
+ 	struct list_head event_list;	/* asserted events */
+@@ -468,6 +469,9 @@ static inline int scsi_device_enclosure(struct scsi_device *sdev)
+ 
+ static inline int scsi_device_protection(struct scsi_device *sdev)
+ {
++	if (sdev->no_dif)
++		return 0;
++
+ 	return sdev->scsi_level > SCSI_2 && sdev->inquiry[5] & (1<<0);
  }
  
- /**
-+ * mpt2sas_config_get_manufacturing_pg11 - obtain manufacturing page 11
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * Context: sleep.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+mpt2sas_config_get_manufacturing_pg11(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage11_t *config_page)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_MANUFACTURING;
-+	mpi_request.Header.PageNumber = 11;
-+	mpi_request.Header.PageVersion = MPI2_MANUFACTURING0_PAGEVERSION;
-+	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-+	    sizeof(*config_page));
-+ out:
-+	return r;
-+}
-+
-+/**
-+ * mpt2sas_config_set_manufacturing_pg11 - set manufacturing page 11
-+ * @ioc: per adapter object
-+ * @mpi_reply: reply mf payload returned from firmware
-+ * @config_page: contents of the config page
-+ * Context: sleep.
-+ *
-+ * Returns 0 for success, non-zero for failure.
-+ */
-+int
-+mpt2sas_config_set_manufacturing_pg11(struct MPT2SAS_ADAPTER *ioc,
-+    Mpi2ConfigReply_t *mpi_reply, Mpi2ManufacturingPage11_t *config_page)
-+{
-+	Mpi2ConfigRequest_t mpi_request;
-+	int r;
-+
-+	memset(&mpi_request, 0, sizeof(Mpi2ConfigRequest_t));
-+	mpi_request.Function = MPI2_FUNCTION_CONFIG;
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_HEADER;
-+	mpi_request.Header.PageType = MPI2_CONFIG_PAGETYPE_MANUFACTURING;
-+	mpi_request.Header.PageNumber = 11;
-+	mpi_request.Header.PageVersion = MPI2_MANUFACTURING0_PAGEVERSION;
-+	mpt2sas_base_build_zero_len_sge(ioc, &mpi_request.PageBufferSGE);
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, NULL, 0);
-+	if (r)
-+		goto out;
-+
-+	mpi_request.Action = MPI2_CONFIG_ACTION_PAGE_WRITE_CURRENT;
-+	r = _config_request(ioc, &mpi_request, mpi_reply,
-+	    MPT2_CONFIG_PAGE_DEFAULT_TIMEOUT, config_page,
-+	    sizeof(*config_page));
-+ out:
-+	return r;
-+}
-+
-+/**
-  * mpt2sas_config_get_bios_pg2 - obtain bios page 2
-  * @ioc: per adapter object
-  * @mpi_reply: reply mf payload returned from firmware
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index b4ddd3b..b10d2c0 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -30,4 +30,5 @@
+ #define BLIST_RETRY_HWERROR	0x400000 /* retry HARDWARE_ERROR */
+ #define BLIST_MAX_512		0x800000 /* maximum 512 sector cdb length */
+ #define BLIST_ATTACH_PQ3	0x1000000 /* Scan: Attach to PQ3 devices */
++#define BLIST_NO_DIF		0x2000000 /* Disable PI */
+ #endif
 -- 
 1.7.8.3.21.gab8a7
 
