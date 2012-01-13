@@ -1,68 +1,54 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 5/6] sd: Allow protection_type to be overridden
-Date: Fri, 13 Jan 2012 17:43:05 -0500
-Message-ID: <1326494586-17360-6-git-send-email-martin.petersen@oracle.com>
-References: <1326494586-17360-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from acsinet15.oracle.com ([141.146.126.227]:24429 "EHLO
-	acsinet15.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759397Ab2AMWnd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2012 17:43:33 -0500
-In-Reply-To: <1326494586-17360-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [GIT PULL] target: Updates for v3.3-rc1 (round 1)
+Date: Fri, 13 Jan 2012 15:02:39 -0800
+Message-ID: <1326495759.30987.77.camel@haakon2.linux-iscsi.org>
+References: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Bart Van Assche <bvanassche@acm.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jbottomley@parallels.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+On Tue, 2012-01-10 at 10:56 -0800, Nicholas A. Bellinger wrote:
+> Hi Linus,
+> 
+> The following are the v3.3-rc1 merge window updates for the target
+> subsystem.  The series has been in linux-next since before the holiday
+> break, and can be pulled directly from:
+> 
+>   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
+> 
+> The series has been cut against the following mainline commit:
+> 
+> commit dc47ce90c3a822cd7c9e9339fe4d5f61dcb26b50
+> Author: Linus Torvalds <torvalds@linux-foundation.org>
+> Date:   Fri Dec 9 15:09:32 2011 -0800
+> 
+>     Linux 3.2-rc5
+> 
+> The main highlights include:
+> 
+> *) Initial merge for the SRP target (ib_srpt) fabric module (bart)
+> *) Restructuring of target private + public target headers (hch)
+> *) Addition of target_submit_cmd() for fabrics (hch + nab)
+> *) Conversion of tcm_fc to use target_submit_cmd() (nab)
+> *) Remove legacy se_device TCQ depth handling (nab)
+> *) Remove extra se_device->execute_task_lock is fast path (nab)
+> *) Set missing additional sense length field (roland)
+> 
+> Please let us know if you have any questions.
+> 
 
-We have encountered a few devices that misbehaved when operating in T10
-PI mode. Allow T10 PI protection type to be overridden from userland.
+Hi Linus,
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- drivers/scsi/sd.c |   21 ++++++++++++++++++++-
- 1 files changed, 20 insertions(+), 1 deletions(-)
+Just a friendly ping on this pull request for -rc1.  Please go ahead and
+pull at your earliest convenience, and let us know if you have any
+questions or concerns.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index debe7ba..5806c7b 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -260,6 +260,24 @@ sd_show_protection_type(struct device *dev, struct device_attribute *attr,
- }
- 
- static ssize_t
-+sd_store_protection_type(struct device *dev, struct device_attribute *attr,
-+			 const char *buf, size_t count)
-+{
-+	struct scsi_disk *sdkp = to_scsi_disk(dev);
-+	unsigned long val;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	val = simple_strtoul(buf, NULL, 10);
-+
-+	if (val >= 0 && val <= SD_DIF_TYPE3_PROTECTION)
-+		sdkp->protection_type = val;
-+
-+	return count;
-+}
-+
-+static ssize_t
- sd_show_protection_mode(struct device *dev, struct device_attribute *attr,
- 			char *buf)
- {
-@@ -354,7 +372,8 @@ static struct device_attribute sd_disk_attrs[] = {
- 	       sd_store_allow_restart),
- 	__ATTR(manage_start_stop, S_IRUGO|S_IWUSR, sd_show_manage_start_stop,
- 	       sd_store_manage_start_stop),
--	__ATTR(protection_type, S_IRUGO, sd_show_protection_type, NULL),
-+	__ATTR(protection_type, S_IRUGO|S_IWUSR, sd_show_protection_type,
-+	       sd_store_protection_type),
- 	__ATTR(protection_mode, S_IRUGO, sd_show_protection_mode, NULL),
- 	__ATTR(app_tag_own, S_IRUGO, sd_show_app_tag_own, NULL),
- 	__ATTR(thin_provisioning, S_IRUGO, sd_show_thin_provisioning, NULL),
--- 
-1.7.8.3.21.gab8a7
+Thank you,
 
+--nab
