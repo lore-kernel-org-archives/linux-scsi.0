@@ -1,53 +1,93 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 4/4] libfc: remove redundant timer init for fcp
-Date: Fri, 13 Jan 2012 17:26:30 -0800
-Message-ID: <20120114012630.19185.81821.stgit@localhost6.localdomain6>
-References: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
+From: jack_wang <jack_wang@usish.com>
+Subject: Re: [PATCH] pm8001: optimization surrounding call to sas_ssp_task_response
+Date: Sat, 14 Jan 2012 10:29:27 +0800
+Message-ID: <201201141029242033621@usish.com>
+References: <46C64AF8-8DB5-4380-AB15-DF861E10F3A8@xyratex.com>
+Reply-To: jack_wang <jack_wang@usish.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50602 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754318Ab2ANB0b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2012 20:26:31 -0500
-In-Reply-To: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
+Received: from sr-smtp.usish.com ([210.5.144.203]:39187 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754444Ab2ANC31 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2012 21:29:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>, Yi Zou <yi.zou@intel.com>
+To: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <JBottomley@parallels.com>, crystal_yu <crystal_yu@usish.com>, john_gong <john_gong@usish.com>, lindar_liu <lindar_liu@usish.com>
 
-From: Yi Zou <yi.zou@intel.com>
-
-The fcp timer is already initialized when it gets allocated.
-
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/libfc/fc_fcp.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 221875e..f607314 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -155,6 +155,7 @@ static struct fc_fcp_pkt *fc_fcp_pkt_alloc(struct fc_lport *lport, gfp_t gfp)
- 		fsp->xfer_ddp = FC_XID_UNKNOWN;
- 		atomic_set(&fsp->ref_cnt, 1);
- 		init_timer(&fsp->timer);
-+		fsp->timer.data = (unsigned long)fsp;
- 		INIT_LIST_HEAD(&fsp->list);
- 		spin_lock_init(&fsp->scsi_pkt_lock);
- 	}
-@@ -1850,9 +1851,6 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
- 	}
- 	put_cpu();
- 
--	init_timer(&fsp->timer);
--	fsp->timer.data = (unsigned long)fsp;
--
- 	/*
- 	 * send it to the lower layer
- 	 * if we get -1 return then put the request in the pending
+DQpUaGFua3MgTWFyayBmb3IgZml4LiANCkFja2VkLWJ5OiBqYWNrX3dhbmdAdXNpc2guY29tDQpT
+b3JyeSBmb3IgcmVwbHkgdHdpY2UsIGZvcmdldCB0byBjaGFuZ2UgdGV4dCBmb3JtYXQuDQoNCg0K
+LS0tLS0tLS0tLS0tLS0NCmphY2tfd2FuZw0KPk9wdGltaXphdGlvbi4gU2luY2Ugc2FzX3NzcF90
+YXNrX3Jlc3BvbnNlIHNldHMgYm90aCB0aGUgdHMtPnJlc3AgYW5kIHRzLT5zdGF0IHZhbHVlcywg
+dGhlcmUgaXMgbm8gbmVlZCB0byBzZXQgdGhlbSBiZWZvcmUgdGhlIGNhbGwuIFJlbWFpbmluZyBj
+aGFuZ2VzIGFyZSBhbGwgY29zbWV0aWMgZGVidWcgcHJpbnQgbWVzc2FnZXMuDQo+DQo+U2lnbmVk
+LW9mZi1ieTogbWFya19zYWx5enluQHh5cmF0ZXguY29tDQo+Q2M6IGphY2tfd2FuZ0B1c2lzaC5j
+b20NCj5DYzogSkJvdHRvbWxleUBwYXJhbGxlbHMuY29tDQo+Q2M6IGNyeXN0YWxfeXVAdXNpc2gu
+Y29tDQo+Q2M6IGpvaG5fZ29uZ0B1c2lzaC5jb20NCj5DYzogbGluZGFyX2xpdSA8bGluZGFyX2xp
+dUB1c2lzaC5jb20+DQo+DQo+IGRyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2h3aS5jIHwgICAx
+NiArKysrKysrLS0tLS0tLS0tDQo+IDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlvbnMoKyksIDkg
+ZGVsZXRpb25zKC0pDQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAx
+X2h3aS5jIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaHdpLmMNCj5pbmRleCBiN2I5MmY3
+Li42YjYzYTU0IDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvc2NzaS9wbTgwMDEvcG04MDAxX2h3aS5j
+DQo+KysrIGIvZHJpdmVycy9zY3NpL3BtODAwMS9wbTgwMDFfaHdpLmMNCj5AQCAtMTQ3NCwxMyAr
+MTQ3NCwxMSBAQCBtcGlfc3NwX2NvbXBsZXRpb24oc3RydWN0IHBtODAwMV9oYmFfaW5mbyAqcG04
+MDAxX2hhICwgdm9pZCAqcGlvbWIpDQo+IAlzd2l0Y2ggKHN0YXR1cykgew0KPiAJY2FzZSBJT19T
+VUNDRVNTOg0KPiAJCVBNODAwMV9JT19EQkcocG04MDAxX2hhLCBwbTgwMDFfcHJpbnRrKCJJT19T
+VUNDRVNTIg0KPi0JCQkiLHBhcmFtID0gJWRcbiIsIHBhcmFtKSk7DQo+KwkJCSIsIHBhcmFtID0g
+JWRcbiIsIHBhcmFtKSk7DQo+IAkJaWYgKHBhcmFtID09IDApIHsNCj4gCQkJdHMtPnJlc3AgPSBT
+QVNfVEFTS19DT01QTEVURTsNCj4gCQkJdHMtPnN0YXQgPSBTQU1fU1RBVF9HT09EOw0KPiAJCX0g
+ZWxzZSB7DQo+LQkJCXRzLT5yZXNwID0gU0FTX1RBU0tfQ09NUExFVEU7DQo+LQkJCXRzLT5zdGF0
+ID0gU0FTX1BST1RPX1JFU1BPTlNFOw0KPiAJCQl0cy0+cmVzaWR1YWwgPSBwYXJhbTsNCj4gCQkJ
+aXUgPSAmcHNzcFBheWxvYWQtPnNzcF9yZXNwX2l1Ow0KPiAJCQlzYXNfc3NwX3Rhc2tfcmVzcG9u
+c2UocG04MDAxX2hhLT5kZXYsIHQsIGl1KTsNCj5AQCAtMTQ5Nyw3ICsxNDk1LDcgQEAgbXBpX3Nz
+cF9jb21wbGV0aW9uKHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSAsIHZvaWQgKnBp
+b21iKQ0KPiAJY2FzZSBJT19VTkRFUkZMT1c6DQo+IAkJLyogU1NQIENvbXBsZXRpb24gd2l0aCBl
+cnJvciAqLw0KPiAJCVBNODAwMV9JT19EQkcocG04MDAxX2hhLCBwbTgwMDFfcHJpbnRrKCJJT19V
+TkRFUkZMT1ciDQo+LQkJCSIscGFyYW0gPSAlZFxuIiwgcGFyYW0pKTsNCj4rCQkJIiwgcGFyYW0g
+PSAlZFxuIiwgcGFyYW0pKTsNCj4gCQl0cy0+cmVzcCA9IFNBU19UQVNLX0NPTVBMRVRFOw0KPiAJ
+CXRzLT5zdGF0ID0gU0FTX0RBVEFfVU5ERVJSVU47DQo+IAkJdHMtPnJlc2lkdWFsID0gcGFyYW07
+DQo+QEAgLTE2NTksNyArMTY1Nyw3IEBAIG1waV9zc3BfY29tcGxldGlvbihzdHJ1Y3QgcG04MDAx
+X2hiYV9pbmZvICpwbTgwMDFfaGEgLCB2b2lkICpwaW9tYikNCj4gCQlicmVhazsNCj4gCX0NCj4g
+CVBNODAwMV9JT19EQkcocG04MDAxX2hhLA0KPi0JCXBtODAwMV9wcmludGsoInNjc2lfc3RhdHVz
+ID0gJXggXG4gIiwNCj4rCQlwbTgwMDFfcHJpbnRrKCJzY3NpX3N0YXR1cyA9ICV4XG4iLA0KPiAJ
+CXBzc3BQYXlsb2FkLT5zc3BfcmVzcF9pdS5zdGF0dXMpKTsNCj4gCXNwaW5fbG9ja19pcnFzYXZl
+KCZ0LT50YXNrX3N0YXRlX2xvY2ssIGZsYWdzKTsNCj4gCXQtPnRhc2tfc3RhdGVfZmxhZ3MgJj0g
+flNBU19UQVNLX1NUQVRFX1BFTkRJTkc7DQo+QEAgLTE4NDIsNyArMTg0MCw3IEBAIHN0YXRpYyB2
+b2lkIG1waV9zc3BfZXZlbnQoc3RydWN0IHBtODAwMV9oYmFfaW5mbyAqcG04MDAxX2hhICwgdm9p
+ZCAqcGlvbWIpDQo+IAkJYnJlYWs7DQo+IAljYXNlIElPX1hGRVJfQ01EX0ZSQU1FX0lTU1VFRDoN
+Cj4gCQlQTTgwMDFfSU9fREJHKHBtODAwMV9oYSwNCj4tCQkJcG04MDAxX3ByaW50aygiICBJT19Y
+RkVSX0NNRF9GUkFNRV9JU1NVRURcbiIpKTsNCj4rCQkJcG04MDAxX3ByaW50aygiSU9fWEZFUl9D
+TURfRlJBTUVfSVNTVUVEXG4iKSk7DQo+IAkJcmV0dXJuOw0KPiAJZGVmYXVsdDoNCj4gCQlQTTgw
+MDFfSU9fREJHKHBtODAwMV9oYSwNCj5AQCAtMzEzNyw3ICszMTM1LDcgQEAgc3RhdGljIGludCBt
+cGlfZGVyZWdfcmVzcChzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgwMDFfaGEsIHZvaWQgKnBp
+b21iKQ0KPiAJZGV2aWNlX2lkID0gbGUzMl90b19jcHUocmVnaXN0ZXJSZXNwUGF5bG9hZC0+ZGV2
+aWNlX2lkKTsNCj4gCWlmIChzdGF0dXMgIT0gMCkNCj4gCQlQTTgwMDFfTVNHX0RCRyhwbTgwMDFf
+aGEsDQo+LQkJCXBtODAwMV9wcmludGsoIiBkZXJlZ2lzdGVyIGRldmljZSBmYWlsZWQgLHN0YXR1
+cyA9ICV4Ig0KPisJCQlwbTgwMDFfcHJpbnRrKCJkZXJlZ2lzdGVyIGRldmljZSBmYWlsZWQsIHN0
+YXR1cyA9ICV4Ig0KPiAJCQkiLCBkZXZpY2VfaWQgPSAleFxuIiwgc3RhdHVzLCBkZXZpY2VfaWQp
+KTsNCj4gCXJldHVybiAwOw0KPiB9DQo+QEAgLTMyMTgsNyArMzIxNiw3IEBAIG1waV9nZW5lcmFs
+X2V2ZW50KHN0cnVjdCBwbTgwMDFfaGJhX2luZm8gKnBtODAwMV9oYSAsIHZvaWQgKnBpb21iKQ0K
+PiAJCShzdHJ1Y3QgZ2VuZXJhbF9ldmVudF9yZXNwICopKHBpb21iICsgNCk7DQo+IAlzdGF0dXMg
+PSBsZTMyX3RvX2NwdShwUGF5bG9hZC0+c3RhdHVzKTsNCj4gCVBNODAwMV9NU0dfREJHKHBtODAw
+MV9oYSwNCj4tCQlwbTgwMDFfcHJpbnRrKCIgc3RhdHVzID0gMHgleFxuIiwgc3RhdHVzKSk7DQo+
+KwkJcG04MDAxX3ByaW50aygiT1BDX09VQl9HRU5FUkFMX0VWRU5UOiBzdGF0dXMgPSAweCV4XG4i
+LCBzdGF0dXMpOw0KPiAJZm9yIChpID0gMDsgaSA8IEdFTkVSQUxfRVZFTlRfUEFZTE9BRDsgaSsr
+KQ0KPiAJCVBNODAwMV9NU0dfREJHKHBtODAwMV9oYSwNCj4gCQkJcG04MDAxX3ByaW50aygiaW5i
+X0lPTUJfcGF5bG9hZFsweCV4XSAweCV4LFxuIiwgaSwNCj5AQCAtMzUzMiw3ICszNTMwLDcgQEAg
+c3RhdGljIHZvaWQgcHJvY2Vzc19vbmVfaW9tYihzdHJ1Y3QgcG04MDAxX2hiYV9pbmZvICpwbTgw
+MDFfaGEsIHZvaWQgKnBpb21iKQ0KPiAJCWJyZWFrOw0KPiAJY2FzZSBPUENfT1VCX0RFUkVHX0RF
+VjoNCj4gCQlQTTgwMDFfTVNHX0RCRyhwbTgwMDFfaGEsDQo+LQkJCXBtODAwMV9wcmludGsoInVu
+cmVzZ2lzdGVyIHRoZSBkZXZpZWNlXG4iKSk7DQo+KwkJCXBtODAwMV9wcmludGsoIk9QQ19PVUJf
+REVSRUdfREVWXG4iKSk7DQo+IAkJbXBpX2RlcmVnX3Jlc3AocG04MDAxX2hhLCBwaW9tYik7DQo+
+IAkJYnJlYWs7DQo+IAljYXNlIE9QQ19PVUJfR0VUX0RFVl9IQU5ETEU6DQo+DQo+LS0NCj5UbyB1
+bnN1YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGlu
+dXgtc2NzaSIgaW4NCj50aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
+bmVsLm9yZw0KPk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcv
+bWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KPl9fX19fX19fX18gSW5mb3JtYXRpb24gZnJvbSBFU0VU
+IE5PRDMyIEFudGl2aXJ1cywgdmVyc2lvbiBvZiB2aXJ1cyBzaWduYXR1cmUgZGF0YWJhc2UgNTY1
+OSAoMjAxMDExMjkpIF9fX19fX19fX18NCj4NCj5UaGUgbWVzc2FnZSB3YXMgY2hlY2tlZCBieSBF
+U0VUIE5PRDMyIEFudGl2aXJ1cy4NCj4NCj5odHRwOi8vd3d3LmVzZXQuY29tDQo+DQo+DQo+
 
