@@ -1,45 +1,82 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v5 0/7] libsas eh reworks: new + regression fixes
-Date: Sat, 14 Jan 2012 10:09:51 -0800
-Message-ID: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
+Subject: [PATCH v5 1/7] libsas: mark all domain devices gone if root port
+ disappears
+Date: Sat, 14 Jan 2012 10:10:00 -0800
+Message-ID: <20120114180956.25887.68501.stgit@localhost6.localdomain6>
+References: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:12890 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756031Ab2ANSKB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Jan 2012 13:10:01 -0500
+In-Reply-To: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-ide@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-The following are incremental to v4: http://marc.info/?l=linux-scsi&m=132618126007864&w=2
+If the top level expander is hot removed, mark all child devices as gone
+before unregistration to short circuit futile recovery.
 
-1/ patch 1, 2, 3, 4 new fixes to clean up eh vs device remove 
-2/ patch 5 regression fix for the sas_drain_work implementation
-3/ patch 6 regression fix for domain_device reference counting
-4/ patch 7 RFC implementation for hardening sata device discovery.
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/libsas/sas_discover.c |    8 ++++++--
+ drivers/scsi/libsas/sas_port.c     |    4 +---
+ include/scsi/libsas.h              |    2 +-
+ 3 files changed, 8 insertions(+), 6 deletions(-)
 
-Patch 7 is still undergoing test, but looking for feedback from other
-libsas users, particularly Jack, about the approach and whether it
-addresses the sata discovery problems that have been discussed on the
-list.
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index dfb0250..3ef7741 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -299,12 +299,16 @@ void sas_unregister_dev(struct asd_sas_port *port, struct domain_device *dev)
+ 	}
+ }
+ 
+-void sas_unregister_domain_devices(struct asd_sas_port *port)
++void sas_unregister_domain_devices(struct asd_sas_port *port, int gone)
+ {
+ 	struct domain_device *dev, *n;
+ 
+-	list_for_each_entry_safe_reverse(dev, n, &port->dev_list, dev_list_node)
++	list_for_each_entry_safe_reverse(dev, n, &port->dev_list, dev_list_node) {
++		if (gone)
++			set_bit(SAS_DEV_GONE, &dev->state);
+ 		sas_unregister_dev(port, dev);
++	}
++
+ 	list_for_each_entry_safe(dev, n, &port->disco_list, disco_list_node)
+ 		sas_unregister_dev(port, dev);
+ 
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index 31adcd1..59ee8a0 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -167,9 +167,7 @@ void sas_deform_port(struct asd_sas_phy *phy, int gone)
+ 		dev->pathways--;
+ 
+ 	if (port->num_phys == 1) {
+-		if (dev && gone)
+-			set_bit(SAS_DEV_GONE, &dev->state);
+-		sas_unregister_domain_devices(port);
++		sas_unregister_domain_devices(port, gone);
+ 		sas_port_delete(port->port);
+ 		port->port = NULL;
+ 	} else {
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 55bab86..4a42be3 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -664,7 +664,7 @@ void sas_init_ex_attr(void);
+ 
+ int  sas_ex_revalidate_domain(struct domain_device *);
+ 
+-void sas_unregister_domain_devices(struct asd_sas_port *port);
++void sas_unregister_domain_devices(struct asd_sas_port *port, int gone);
+ void sas_init_disc(struct sas_discovery *disc, struct asd_sas_port *);
+ int  sas_discover_event(struct asd_sas_port *, enum discover_event ev);
+ 
 
-[PATCH 1/7] libsas: mark all domain devices gone if root port disappears
-[PATCH 2/7] libsas: close scsi_remove_target() vs libata-eh race
-[PATCH 3/7] libsas: fix mixed topology recovery
-[PATCH 4/7] libsas: route local link resets through ata-eh
-[PATCH 5/7] libsas: fix sas_unregister_ports vs sas_drain_work
-[PATCH 6/7] libsas: kill spurious sas_put_device
-[RFC PATCH 7/7] libsas: let libata recover links that fail to transmit initial sig-fis
-
- drivers/scsi/libsas/sas_ata.c       |   84 ++++++++++++++++++++----
- drivers/scsi/libsas/sas_discover.c  |   16 +++-
- drivers/scsi/libsas/sas_expander.c  |  125 ++++++++++++++++-------------------
- drivers/scsi/libsas/sas_host_smp.c  |   11 +++
- drivers/scsi/libsas/sas_init.c      |   53 +++++++++------
- drivers/scsi/libsas/sas_internal.h  |    7 +-
- drivers/scsi/libsas/sas_port.c      |    4 -
- drivers/scsi/libsas/sas_scsi_host.c |   16 ++--
- include/scsi/libsas.h               |    2 -
- include/scsi/sas.h                  |    4 +
- include/scsi/sas_ata.h              |   17 +++--
- 11 files changed, 210 insertions(+), 129 deletions(-)
