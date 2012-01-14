@@ -1,130 +1,128 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v5 2/7] libsas: close scsi_remove_target() vs libata-eh race
-Date: Sat, 14 Jan 2012 10:10:09 -0800
-Message-ID: <20120114181005.25887.65328.stgit@localhost6.localdomain6>
+Subject: [PATCH v5 3/7] libsas: fix mixed topology recovery
+Date: Sat, 14 Jan 2012 10:10:16 -0800
+Message-ID: <20120114181015.25887.25138.stgit@localhost6.localdomain6>
 References: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:47475 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756031Ab2ANSKK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Jan 2012 13:10:10 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Marcin Tomczak <marcin.tomczak@intel.com>
+Cc: linux-ide@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@intel.com>
+List-Id: linux-scsi@vger.kernel.org
 
-ata_port lifetime in libata follows the host.  In libsas it follows the
-scsi_target.  Once scsi_remove_device() has caused all commands to be
-completed it allows scsi_remove_target() to immediately proceed to
-freeing the ata_port causing bug reports like:
+If we have a domain with sas and sata devices there may still be sas
+recovery actions to take after peeling off the commands to send to
+libata.
 
-[  848.393333] BUG: spinlock bad magic on CPU#4, kworker/u:2/5107
-[  848.400262] general protection fault: 0000 [#1] SMP
-[  848.406244] CPU 4
-[  848.408310] Modules linked in: nls_utf8 ipv6 uinput i2c_i801 i2c_core iTCO_wdt iTCO_vendor_support ioatdma dca sg sd_mod sr_mod cdrom ahci libahci isci libsas libata scsi_transport_sas [last unloaded: scsi_wait_scan]
-[  848.432060]
-[  848.434137] Pid: 5107, comm: kworker/u:2 Not tainted 3.2.0-isci+ #8 Intel Corporation S2600CP/S2600CP
-[  848.445310] RIP: 0010:[<ffffffff8126a68c>]  [<ffffffff8126a68c>] spin_dump+0x5e/0x8c
-[  848.454787] RSP: 0018:ffff8807f868dca0  EFLAGS: 00010002
-[  848.461137] RAX: 0000000000000048 RBX: ffff8807fe86a630 RCX: ffffffff817d0be0
-[  848.469520] RDX: 0000000000000000 RSI: ffffffff814af1cf RDI: 0000000000000002
-[  848.477959] RBP: ffff8807f868dcb0 R08: 00000000ffffffff R09: 000000006b6b6b6b
-[  848.486327] R10: 000000000003fb8c R11: ffffffff81a19448 R12: 6b6b6b6b6b6b6b6b
-[  848.494699] R13: ffff8808027dc520 R14: 0000000000000000 R15: 000000000000001e
-[  848.503067] FS:  0000000000000000(0000) GS:ffff88083fd00000(0000) knlGS:0000000000000000
-[  848.512899] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[  848.519710] CR2: 00007ff77d001000 CR3: 00000007f7a5d000 CR4: 00000000000406e0
-[  848.528072] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[  848.536446] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[  848.544831] Process kworker/u:2 (pid: 5107, threadinfo ffff8807f868c000, task ffff8807ff348000)
-[  848.555327] Stack:
-[  848.557959]  ffff8807fe86a630 ffff8807fe86a630 ffff8807f868dcd0 ffffffff8126a6e0
-[  848.567072]  ffffffff817c142f ffff8807fe86a630 ffff8807f868dcf0 ffffffff8126a703
-[  848.576190]  ffff8808027dc520 0000000000000286 ffff8807f868dd10 ffffffff814af1bb
-[  848.585281] Call Trace:
-[  848.588409]  [<ffffffff8126a6e0>] spin_bug+0x26/0x28
-[  848.594357]  [<ffffffff8126a703>] do_raw_spin_unlock+0x21/0x88
-[  848.601283]  [<ffffffff814af1bb>] _raw_spin_unlock_irqrestore+0x2c/0x65
-[  848.609089]  [<ffffffffa001c103>] ata_scsi_port_error_handler+0x548/0x557 [libata]
-[  848.618331]  [<ffffffff81061813>] ? async_schedule+0x17/0x17
-[  848.625060]  [<ffffffffa004f30f>] async_sas_ata_eh+0x45/0x69 [libsas]
-[  848.632655]  [<ffffffff810618aa>] async_run_entry_fn+0x97/0x125
-[  848.639670]  [<ffffffff81057439>] process_one_work+0x207/0x38d
-[  848.646577]  [<ffffffff8105738c>] ? process_one_work+0x15a/0x38d
-[  848.653681]  [<ffffffff810576f7>] worker_thread+0x138/0x21c
-[  848.660305]  [<ffffffff810575bf>] ? process_one_work+0x38d/0x38d
-[  848.667493]  [<ffffffff8105b098>] kthread+0x9d/0xa5
-[  848.673382]  [<ffffffff8106e1bd>] ? trace_hardirqs_on_caller+0x12f/0x166
-[  848.681304]  [<ffffffff814b7704>] kernel_thread_helper+0x4/0x10
-[  848.688324]  [<ffffffff814af534>] ? retint_restore_args+0x13/0x13
-[  848.695530]  [<ffffffff8105affb>] ? __init_kthread_worker+0x5b/0x5b
-[  848.702929]  [<ffffffff814b7700>] ? gs_change+0x13/0x13
-[  848.709155] Code: 00 00 48 8d 88 38 04 00 00 44 8b 80 84 02 00 00 31 c0 e8 cf 1b 24 00 41 83 c8 ff 44 8b 4b 08 48 c7 c1 e0 0b 7d 81 4d 85 e4 74 10 <45> 8b 84 24 84 02 00 00 49 8d 8c 24 38 04 00 00 8b 53 04 48 89
-[  848.732467] RIP  [<ffffffff8126a68c>] spin_dump+0x5e/0x8c
-[  848.738905]  RSP <ffff8807f868dca0>
-[  848.743743] ---[ end trace 143161646eee8caa ]---
-
-...so arrange for the ata_port to have the same end of life as the domain
-device.
-
-Reported-by: Marcin Tomczak <marcin.tomczak@intel.com>
+Reported-by: Andrzej Jakowski <andrzej.jakowski@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c       |    5 +++++
- drivers/scsi/libsas/sas_discover.c  |    5 +++++
- drivers/scsi/libsas/sas_scsi_host.c |    3 ---
- 3 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/libsas/sas_ata.c       |    8 ++------
+ drivers/scsi/libsas/sas_scsi_host.c |   13 +++++++------
+ include/scsi/sas_ata.h              |    9 ++++-----
+ 3 files changed, 13 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index a062adc..2c00a38 100644
+index 2c00a38..0ee6831 100644
 --- a/drivers/scsi/libsas/sas_ata.c
 +++ b/drivers/scsi/libsas/sas_ata.c
-@@ -661,8 +661,13 @@ static void async_sas_ata_eh(void *data, async_cookie_t cookie)
- 	struct ata_port *ap = dev->sata_dev.ap;
- 	struct sas_ha_struct *ha = dev->port->ha;
- 
-+	/* hold a reference over eh since we may be racing with final
-+	 * remove once all commands are completed
-+	 */
-+	kref_get(&dev->kref);
- 	ata_port_printk(ap, KERN_DEBUG, "sas eh calling libata port error handler");
- 	ata_scsi_port_error_handler(ha->core.shost, ap);
-+	sas_put_device(dev);
- 
- 	/* tell scsi_block_when_processing_errors() waiters that we are
- 	 * still making forward progress
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 3ef7741..9367101 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -242,6 +242,11 @@ void sas_free_device(struct kref *kref)
- 	if (dev->dev_type == EDGE_DEV || dev->dev_type == FANOUT_DEV)
- 		kfree(dev->ex_dev.ex_phy);
- 
-+	if (dev_is_sata(dev) && dev->sata_dev.ap) {
-+		ata_sas_port_destroy(dev->sata_dev.ap);
-+		dev->sata_dev.ap = NULL;
-+	}
-+
- 	kfree(dev);
+@@ -704,10 +704,9 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ 	sas_enable_revalidation(sas_ha);
  }
  
+-int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+-	       struct list_head *done_q)
++void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
++		struct list_head *done_q)
+ {
+-	int rtn = 0;
+ 	struct scsi_cmnd *cmd, *n;
+ 	struct ata_port *ap;
+ 
+@@ -724,7 +723,6 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 			if (ap && ap != ddev->sata_dev.ap)
+ 				continue;
+ 			ap = ddev->sata_dev.ap;
+-			rtn = 1;
+ 			list_move(&cmd->eh_entry, &sata_q);
+ 		}
+ 
+@@ -746,8 +744,6 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+ 				list_del_init(sata_q.next);
+ 		}
+ 	} while (ap);
+-
+-	return rtn;
+ }
+ 
+ void sas_ata_schedule_reset(struct domain_device *dev)
 diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 731c892..b563ff2 100644
+index b563ff2..e58ca50 100644
 --- a/drivers/scsi/libsas/sas_scsi_host.c
 +++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -1028,9 +1028,6 @@ void sas_target_destroy(struct scsi_target *starget)
- 	if (!found_dev)
- 		return;
+@@ -678,7 +678,8 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+ 	shost->host_eh_scheduled = 0;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
  
--	if (dev_is_sata(found_dev))
--		ata_sas_port_destroy(found_dev->sata_dev.ap);
--
- 	starget->hostdata = NULL;
- 	sas_put_device(found_dev);
+-	SAS_DPRINTK("Enter %s\n", __func__);
++	SAS_DPRINTK("Enter %s busy: %d failed: %d\n",
++		    __func__, shost->host_busy, shost->host_failed);
+ 	/*
+ 	 * Deal with commands that still have SAS tasks (i.e. they didn't
+ 	 * complete via the normal sas_task completion mechanism)
+@@ -693,9 +694,9 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+ 	 * scsi_unjam_host does, but we skip scsi_eh_abort_cmds because any
+ 	 * command we see here has no sas_task and is thus unknown to the HA.
+ 	 */
+-	if (!sas_ata_eh(shost, &eh_work_q, &ha->eh_done_q))
+-		if (!scsi_eh_get_sense(&eh_work_q, &ha->eh_done_q))
+-			scsi_eh_ready_devs(shost, &eh_work_q, &ha->eh_done_q);
++	sas_ata_eh(shost, &eh_work_q, &ha->eh_done_q);
++	if (!scsi_eh_get_sense(&eh_work_q, &ha->eh_done_q))
++		scsi_eh_ready_devs(shost, &eh_work_q, &ha->eh_done_q);
+ 
+ out:
+ 	clear_bit(SAS_HA_FROZEN, &ha->state);
+@@ -707,8 +708,8 @@ out:
+ 
+ 	scsi_eh_flush_done_q(&ha->eh_done_q);
+ 
+-	SAS_DPRINTK("--- Exit %s\n", __func__);
+-	return;
++	SAS_DPRINTK("--- Exit %s: busy: %d failed: %d\n",
++		    __func__, shost->host_busy, shost->host_failed);
  }
+ 
+ enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index da3f377..cb724fd 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -41,8 +41,8 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
+ 
+ void sas_ata_task_abort(struct sas_task *task);
+ void sas_ata_strategy_handler(struct Scsi_Host *shost);
+-int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+-	       struct list_head *done_q);
++void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
++		struct list_head *done_q);
+ void sas_probe_sata(struct work_struct *work);
+ void sas_ata_schedule_reset(struct domain_device *dev);
+ void sas_ata_wait_eh(struct domain_device *dev);
+@@ -66,10 +66,9 @@ static inline void sas_ata_strategy_handler(struct Scsi_Host *shost)
+ {
+ }
+ 
+-static inline int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
+-			     struct list_head *done_q)
++static inline void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
++			      struct list_head *done_q)
+ {
+-	return 0;
+ }
+ 
+ static inline void sas_probe_sata(struct work_struct *work)
 
