@@ -1,128 +1,157 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v5 3/7] libsas: fix mixed topology recovery
-Date: Sat, 14 Jan 2012 10:10:16 -0800
-Message-ID: <20120114181015.25887.25138.stgit@localhost6.localdomain6>
+Subject: [PATCH v5 4/7] libsas: route local link resets through ata-eh
+Date: Sat, 14 Jan 2012 10:10:24 -0800
+Message-ID: <20120114181021.25887.5209.stgit@localhost6.localdomain6>
 References: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:24603 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755902Ab2ANSK3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 14 Jan 2012 13:10:29 -0500
 In-Reply-To: <20120114180904.25887.75601.stgit@localhost6.localdomain6>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Andrzej Jakowski <andrzej.jakowski@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Jacek Danecki <jacek.danecki@intel.com>
 
-If we have a domain with sas and sata devices there may still be sas
-recovery actions to take after peeling off the commands to send to
-libata.
+Similar to the conversion of the transport-class reset we want bsg
+initiated resets to be managed by libata.
 
-Reported-by: Andrzej Jakowski <andrzej.jakowski@intel.com>
+Reported-by: Jacek Danecki <jacek.danecki@intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c       |    8 ++------
- drivers/scsi/libsas/sas_scsi_host.c |   13 +++++++------
- include/scsi/sas_ata.h              |    9 ++++-----
- 3 files changed, 13 insertions(+), 17 deletions(-)
+ drivers/scsi/libsas/sas_host_smp.c |   11 ++++++++-
+ drivers/scsi/libsas/sas_init.c     |   45 +++++++++++++++++++++---------------
+ drivers/scsi/libsas/sas_internal.h |    1 +
+ 3 files changed, 37 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 2c00a38..0ee6831 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -704,10 +704,9 @@ void sas_ata_strategy_handler(struct Scsi_Host *shost)
- 	sas_enable_revalidation(sas_ha);
+diff --git a/drivers/scsi/libsas/sas_host_smp.c b/drivers/scsi/libsas/sas_host_smp.c
+index bb8f492..e921e53 100644
+--- a/drivers/scsi/libsas/sas_host_smp.c
++++ b/drivers/scsi/libsas/sas_host_smp.c
+@@ -187,11 +187,14 @@ static void sas_phy_control(struct sas_ha_struct *sas_ha, u8 phy_id,
+ 	struct sas_internal *i =
+ 		to_sas_internal(sas_ha->core.shost->transportt);
+ 	struct sas_phy_linkrates rates;
++	struct asd_sas_phy *asd_phy;
+ 
+ 	if (phy_id >= sas_ha->num_phys) {
+ 		resp_data[2] = SMP_RESP_NO_PHY;
+ 		return;
+ 	}
++
++	asd_phy = sas_ha->sas_phy[phy_id];
+ 	switch (phy_op) {
+ 	case PHY_FUNC_NOP:
+ 	case PHY_FUNC_LINK_RESET:
+@@ -210,7 +213,13 @@ static void sas_phy_control(struct sas_ha_struct *sas_ha, u8 phy_id,
+ 	rates.minimum_linkrate = min;
+ 	rates.maximum_linkrate = max;
+ 
+-	if (i->dft->lldd_control_phy(sas_ha->sas_phy[phy_id], phy_op, &rates))
++	/* filter reset requests through libata eh */
++	if (phy_op == PHY_FUNC_LINK_RESET && sas_try_ata_reset(asd_phy) == 0) {
++		resp_data[2] = SMP_RESP_FUNC_ACC;
++		return;
++	}
++
++	if (i->dft->lldd_control_phy(asd_phy, phy_op, &rates))
+ 		resp_data[2] = SMP_RESP_FUNC_FAILED;
+ 	else
+ 		resp_data[2] = SMP_RESP_FUNC_ACC;
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index cf1b532..dc93e118 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -196,6 +196,27 @@ static int sas_get_linkerrors(struct sas_phy *phy)
+ 	return sas_smp_get_phy_events(phy);
  }
  
--int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
--	       struct list_head *done_q)
-+void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
-+		struct list_head *done_q)
++int sas_try_ata_reset(struct asd_sas_phy *asd_phy)
++{
++	struct domain_device *dev = NULL;
++
++	/* try to route user requested link resets through libata */
++	if (asd_phy->port)
++		dev = asd_phy->port->port_dev;
++
++	/* validate that dev has been probed */
++	if (dev)
++		dev = sas_find_dev_by_rphy(dev->rphy);
++
++	if (dev && dev_is_sata(dev)) {
++		sas_ata_schedule_reset(dev);
++		sas_ata_wait_eh(dev);
++		return 0;
++	}
++
++	return -ENODEV;
++}
++
+ /**
+  * transport_sas_phy_reset - reset a phy and permit libata to manage the link
+  *
+@@ -204,7 +225,6 @@ static int sas_get_linkerrors(struct sas_phy *phy)
+  */
+ static int transport_sas_phy_reset(struct sas_phy *phy, int hard_reset)
  {
--	int rtn = 0;
- 	struct scsi_cmnd *cmd, *n;
- 	struct ata_port *ap;
+-	int ret;
+ 	enum phy_func reset_type;
  
-@@ -724,7 +723,6 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 			if (ap && ap != ddev->sata_dev.ap)
- 				continue;
- 			ap = ddev->sata_dev.ap;
--			rtn = 1;
- 			list_move(&cmd->eh_entry, &sata_q);
- 		}
- 
-@@ -746,8 +744,6 @@ int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
- 				list_del_init(sata_q.next);
- 		}
- 	} while (ap);
+ 	if (hard_reset)
+@@ -218,21 +238,10 @@ static int transport_sas_phy_reset(struct sas_phy *phy, int hard_reset)
+ 		struct asd_sas_phy *asd_phy = sas_ha->sas_phy[phy->number];
+ 		struct sas_internal *i =
+ 			to_sas_internal(sas_ha->core.shost->transportt);
+-		struct domain_device *dev = NULL;
 -
--	return rtn;
+-		if (asd_phy->port)
+-			dev = asd_phy->port->port_dev;
+-
+-		/* validate that dev has been probed */
+-		if (dev)
+-			dev = sas_find_dev_by_rphy(dev->rphy);
+ 
+-		if (dev && dev_is_sata(dev) && !hard_reset) {
+-			sas_ata_schedule_reset(dev);
+-			sas_ata_wait_eh(dev);
+-			ret = 0;
+-		} else
+-			ret = i->dft->lldd_control_phy(asd_phy, reset_type, NULL);
++		if (!hard_reset && sas_try_ata_reset(asd_phy) == 0)
++			return 0;
++		return i->dft->lldd_control_phy(asd_phy, reset_type, NULL);
+ 	} else {
+ 		struct sas_rphy *rphy = dev_to_rphy(phy->dev.parent);
+ 		struct domain_device *ddev = sas_find_dev_by_rphy(rphy);
+@@ -241,12 +250,10 @@ static int transport_sas_phy_reset(struct sas_phy *phy, int hard_reset)
+ 		if (ata_dev && !hard_reset) {
+ 			sas_ata_schedule_reset(ata_dev);
+ 			sas_ata_wait_eh(ata_dev);
+-			ret = 0;
++			return 0;
+ 		} else
+-			ret = sas_smp_phy_control(ddev, phy->number, reset_type, NULL);
++			return sas_smp_phy_control(ddev, phy->number, reset_type, NULL);
+ 	}
+-
+-	return ret;
  }
  
- void sas_ata_schedule_reset(struct domain_device *dev)
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index b563ff2..e58ca50 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -678,7 +678,8 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 	shost->host_eh_scheduled = 0;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
+ static int sas_phy_enable(struct sas_phy *phy, int enable)
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index c8febc7..4157f6e 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -92,6 +92,7 @@ struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy);
+ struct domain_device *sas_ex_to_ata(struct domain_device *ex_dev, int phy_id);
+ int sas_get_phy_attached_sas_addr(struct domain_device *dev, int phy_id,
+ 				  u8 *attached_sas_addr);
++int sas_try_ata_reset(struct asd_sas_phy *phy);
+ void sas_hae_reset(struct work_struct *work);
  
--	SAS_DPRINTK("Enter %s\n", __func__);
-+	SAS_DPRINTK("Enter %s busy: %d failed: %d\n",
-+		    __func__, shost->host_busy, shost->host_failed);
- 	/*
- 	 * Deal with commands that still have SAS tasks (i.e. they didn't
- 	 * complete via the normal sas_task completion mechanism)
-@@ -693,9 +694,9 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 	 * scsi_unjam_host does, but we skip scsi_eh_abort_cmds because any
- 	 * command we see here has no sas_task and is thus unknown to the HA.
- 	 */
--	if (!sas_ata_eh(shost, &eh_work_q, &ha->eh_done_q))
--		if (!scsi_eh_get_sense(&eh_work_q, &ha->eh_done_q))
--			scsi_eh_ready_devs(shost, &eh_work_q, &ha->eh_done_q);
-+	sas_ata_eh(shost, &eh_work_q, &ha->eh_done_q);
-+	if (!scsi_eh_get_sense(&eh_work_q, &ha->eh_done_q))
-+		scsi_eh_ready_devs(shost, &eh_work_q, &ha->eh_done_q);
- 
- out:
- 	clear_bit(SAS_HA_FROZEN, &ha->state);
-@@ -707,8 +708,8 @@ out:
- 
- 	scsi_eh_flush_done_q(&ha->eh_done_q);
- 
--	SAS_DPRINTK("--- Exit %s\n", __func__);
--	return;
-+	SAS_DPRINTK("--- Exit %s: busy: %d failed: %d\n",
-+		    __func__, shost->host_busy, shost->host_failed);
- }
- 
- enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
-diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
-index da3f377..cb724fd 100644
---- a/include/scsi/sas_ata.h
-+++ b/include/scsi/sas_ata.h
-@@ -41,8 +41,8 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
- 
- void sas_ata_task_abort(struct sas_task *task);
- void sas_ata_strategy_handler(struct Scsi_Host *shost);
--int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
--	       struct list_head *done_q);
-+void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
-+		struct list_head *done_q);
- void sas_probe_sata(struct work_struct *work);
- void sas_ata_schedule_reset(struct domain_device *dev);
- void sas_ata_wait_eh(struct domain_device *dev);
-@@ -66,10 +66,9 @@ static inline void sas_ata_strategy_handler(struct Scsi_Host *shost)
- {
- }
- 
--static inline int sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
--			     struct list_head *done_q)
-+static inline void sas_ata_eh(struct Scsi_Host *shost, struct list_head *work_q,
-+			      struct list_head *done_q)
- {
--	return 0;
- }
- 
- static inline void sas_probe_sata(struct work_struct *work)
+ void sas_free_device(struct kref *kref);
 
