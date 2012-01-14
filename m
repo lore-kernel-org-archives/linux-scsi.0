@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 2/4] libfc: Declare local functions static
-Date: Fri, 13 Jan 2012 17:26:20 -0800
-Message-ID: <20120114012620.19185.89189.stgit@localhost6.localdomain6>
+Subject: [PATCH 3/4] fcoe: Move fcoe_debug_logging from fcoe.h to fcoe.c
+Date: Fri, 13 Jan 2012 17:26:25 -0800
+Message-ID: <20120114012625.19185.97594.stgit@localhost6.localdomain6>
 References: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,8 +9,8 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga09.intel.com ([134.134.136.24]:54280 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754356Ab2ANB0V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2012 20:26:21 -0500
+	id S1754404Ab2ANB00 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2012 20:26:26 -0500
 In-Reply-To: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,154 +19,168 @@ Cc: Bart Van Assche <bvanassche@acm.org>, Yi Zou <yi.zou@intel.com>
 
 From: Bart Van Assche <bvanassche@acm.org>
 
-Avoid that sparse complains about missing declarations for local
-functions by declaring these static or by adding an #include directive.
-Add the __percpu annotation where it is missing.
+Move the definition of the global variable fcoe_debug_logging
+from fcoe.h to fcoe.c. Avoid that sparse complains about missing
+declarations for local functions or variables by declaring these
+static.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_disc.c  |    6 +++---
- drivers/scsi/libfc/fc_elsct.c |    1 +
- drivers/scsi/libfc/fc_exch.c  |    2 +-
- drivers/scsi/libfc/fc_lport.c |    5 +++--
- drivers/scsi/libfc/fc_rport.c |   10 +++++-----
- include/scsi/libfc.h          |    2 +-
- 6 files changed, 14 insertions(+), 12 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   34 +++++++++++++++++++---------------
+ drivers/scsi/fcoe/fcoe.h |    4 +---
+ 2 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 7269e92..1d1b0c9 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -61,7 +61,7 @@ static void fc_disc_restart(struct fc_disc *);
-  * Locking Note: This function expects that the lport mutex is locked before
-  * calling it.
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 507504b..e959960 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -58,7 +58,11 @@ module_param_named(ddp_min, fcoe_ddp_min, uint, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
+ 		 "Direct Data Placement (DDP).");
+ 
+-DEFINE_MUTEX(fcoe_config_mutex);
++unsigned int fcoe_debug_logging;
++module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
++
++static DEFINE_MUTEX(fcoe_config_mutex);
+ 
+ static struct workqueue_struct *fcoe_wq;
+ 
+@@ -67,8 +71,8 @@ static DECLARE_COMPLETION(fcoe_flush_completion);
+ 
+ /* fcoe host list */
+ /* must only by accessed under the RTNL mutex */
+-LIST_HEAD(fcoe_hostlist);
+-DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
++static LIST_HEAD(fcoe_hostlist);
++static DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
+ 
+ /* Function Prototypes */
+ static int fcoe_reset(struct Scsi_Host *);
+@@ -157,7 +161,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ 	.lport_set_port_id = fcoe_set_port_id,
+ };
+ 
+-struct fc_function_template fcoe_nport_fc_functions = {
++static struct fc_function_template fcoe_nport_fc_functions = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+ 	.show_host_supported_classes = 1,
+@@ -197,7 +201,7 @@ struct fc_function_template fcoe_nport_fc_functions = {
+ 	.bsg_request = fc_lport_bsg_request,
+ };
+ 
+-struct fc_function_template fcoe_vport_fc_functions = {
++static struct fc_function_template fcoe_vport_fc_functions = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+ 	.show_host_supported_classes = 1,
+@@ -433,7 +437,7 @@ static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
+  *
+  * Caller must be holding the RTNL mutex
   */
--void fc_disc_stop_rports(struct fc_disc *disc)
-+static void fc_disc_stop_rports(struct fc_disc *disc)
+-void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
++static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
+ {
+ 	struct net_device *netdev = fcoe->netdev;
+ 	struct fcoe_ctlr *fip = &fcoe->ctlr;
+@@ -748,7 +752,7 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
+  *
+  * Returns: True for read types I/O, otherwise returns false.
+  */
+-bool fcoe_oem_match(struct fc_frame *fp)
++static bool fcoe_oem_match(struct fc_frame *fp)
+ {
+ 	struct fc_frame_header *fh = fc_frame_header_get(fp);
+ 	struct fcp_cmnd *fcp;
+@@ -1107,7 +1111,7 @@ static int __init fcoe_if_init(void)
+  *
+  * Returns: 0 on success
+  */
+-int __exit fcoe_if_exit(void)
++static int __exit fcoe_if_exit(void)
+ {
+ 	fc_release_transport(fcoe_nport_scsi_transport);
+ 	fc_release_transport(fcoe_vport_scsi_transport);
+@@ -1296,7 +1300,7 @@ static inline unsigned int fcoe_select_cpu(void)
+  *
+  * Returns: 0 for success
+  */
+-int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
++static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
+ 	     struct packet_type *ptype, struct net_device *olddev)
  {
  	struct fc_lport *lport;
- 	struct fc_rport_priv *rdata;
-@@ -682,7 +682,7 @@ static int fc_disc_single(struct fc_lport *lport, struct fc_disc_port *dp)
-  * fc_disc_stop() - Stop discovery for a given lport
-  * @lport: The local port that discovery should stop on
-  */
--void fc_disc_stop(struct fc_lport *lport)
-+static void fc_disc_stop(struct fc_lport *lport)
- {
- 	struct fc_disc *disc = &lport->disc;
- 
-@@ -698,7 +698,7 @@ void fc_disc_stop(struct fc_lport *lport)
-  * This function will block until discovery has been
-  * completely stopped and all rports have been deleted.
-  */
--void fc_disc_stop_final(struct fc_lport *lport)
-+static void fc_disc_stop_final(struct fc_lport *lport)
- {
- 	fc_disc_stop(lport);
- 	lport->tt.rport_flush_queue();
-diff --git a/drivers/scsi/libfc/fc_elsct.c b/drivers/scsi/libfc/fc_elsct.c
-index fb9161d..e17a28d 100644
---- a/drivers/scsi/libfc/fc_elsct.c
-+++ b/drivers/scsi/libfc/fc_elsct.c
-@@ -28,6 +28,7 @@
- #include <scsi/fc/fc_els.h>
- #include <scsi/libfc.h>
- #include <scsi/fc_encode.h>
-+#include "fc_libfc.h"
- 
- /**
-  * fc_elsct_send() - Send an ELS or CT frame
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 9de9db2..4d70d96 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -91,7 +91,7 @@ struct fc_exch_pool {
-  * It manages the allocation of exchange IDs.
-  */
- struct fc_exch_mgr {
--	struct fc_exch_pool *pool;
-+	struct fc_exch_pool __percpu *pool;
- 	mempool_t	*ep_pool;
- 	enum fc_class	class;
- 	struct kref	kref;
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index e77094a..83750eb 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -677,7 +677,8 @@ EXPORT_SYMBOL(fc_set_mfs);
-  * @lport: The local port receiving the event
-  * @event: The discovery event
-  */
--void fc_lport_disc_callback(struct fc_lport *lport, enum fc_disc_event event)
-+static void fc_lport_disc_callback(struct fc_lport *lport,
-+				   enum fc_disc_event event)
- {
- 	switch (event) {
- 	case DISC_EV_SUCCESS:
-@@ -1568,7 +1569,7 @@ EXPORT_SYMBOL(fc_lport_flogi_resp);
-  * Locking Note: The lport lock is expected to be held before calling
-  * this routine.
-  */
--void fc_lport_enter_flogi(struct fc_lport *lport)
-+static void fc_lport_enter_flogi(struct fc_lport *lport)
- {
- 	struct fc_frame *fp;
- 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index b9e4348..83aa1ef 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -391,7 +391,7 @@ static void fc_rport_work(struct work_struct *work)
-  * If it appears we are already logged in, ADISC is used to verify
-  * the setup.
-  */
--int fc_rport_login(struct fc_rport_priv *rdata)
-+static int fc_rport_login(struct fc_rport_priv *rdata)
- {
- 	mutex_lock(&rdata->rp_mutex);
- 
-@@ -451,7 +451,7 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
-  * function will hold the rport lock, call an _enter_*
-  * function and then unlock the rport.
-  */
--int fc_rport_logoff(struct fc_rport_priv *rdata)
-+static int fc_rport_logoff(struct fc_rport_priv *rdata)
- {
- 	mutex_lock(&rdata->rp_mutex);
- 
-@@ -653,8 +653,8 @@ static int fc_rport_login_complete(struct fc_rport_priv *rdata,
-  * @fp:	    The FLOGI response frame
-  * @rp_arg: The remote port that received the FLOGI response
-  */
--void fc_rport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
--			 void *rp_arg)
-+static void fc_rport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
-+				void *rp_arg)
- {
- 	struct fc_rport_priv *rdata = rp_arg;
- 	struct fc_lport *lport = rdata->local_port;
-@@ -1520,7 +1520,7 @@ reject:
+@@ -1452,7 +1456,7 @@ static int fcoe_alloc_paged_crc_eof(struct sk_buff *skb, int tlen)
   *
-  * Locking Note: Called with the lport lock held.
+  * Return: 0 for success
   */
--void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
-+static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
+-int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
++static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
  {
- 	struct fc_seq_els_data els_data;
+ 	int wlen;
+ 	u32 crc;
+@@ -1728,7 +1732,7 @@ drop:
+  *
+  * Return: 0 for success
+  */
+-int fcoe_percpu_receive_thread(void *arg)
++static int fcoe_percpu_receive_thread(void *arg)
+ {
+ 	struct fcoe_percpu_s *p = arg;
+ 	struct sk_buff *skb;
+@@ -2146,7 +2150,7 @@ out_nortnl:
+  * Returns: 0 if the ethtool query was successful
+  *          -1 if the ethtool query failed
+  */
+-int fcoe_link_speed_update(struct fc_lport *lport)
++static int fcoe_link_speed_update(struct fc_lport *lport)
+ {
+ 	struct net_device *netdev = fcoe_netdev(lport);
+ 	struct ethtool_cmd ecmd;
+@@ -2180,7 +2184,7 @@ int fcoe_link_speed_update(struct fc_lport *lport)
+  * Returns: 0 if link is UP and OK, -1 if not
+  *
+  */
+-int fcoe_link_ok(struct fc_lport *lport)
++static int fcoe_link_ok(struct fc_lport *lport)
+ {
+ 	struct net_device *netdev = fcoe_netdev(lport);
  
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 5d1a758..6a3922f 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -857,7 +857,7 @@ struct fc_lport {
- 	enum fc_lport_state	       state;
- 	unsigned long		       boot_time;
- 	struct fc_host_statistics      host_stats;
--	struct fcoe_dev_stats	       *dev_stats;
-+	struct fcoe_dev_stats __percpu *dev_stats;
- 	u8			       retry_count;
+@@ -2200,7 +2204,7 @@ int fcoe_link_ok(struct fc_lport *lport)
+  * there no packets that will be handled by the lport, but also that any
+  * threads already handling packet have returned.
+  */
+-void fcoe_percpu_clean(struct fc_lport *lport)
++static void fcoe_percpu_clean(struct fc_lport *lport)
+ {
+ 	struct fcoe_percpu_s *pp;
+ 	struct fcoe_rcv_info *fr;
+@@ -2251,7 +2255,7 @@ void fcoe_percpu_clean(struct fc_lport *lport)
+  *
+  * Returns: Always 0 (return value required by FC transport template)
+  */
+-int fcoe_reset(struct Scsi_Host *shost)
++static int fcoe_reset(struct Scsi_Host *shost)
+ {
+ 	struct fc_lport *lport = shost_priv(shost);
+ 	struct fcoe_port *port = lport_priv(lport);
+diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
+index 6c6884b..bcc89e6 100644
+--- a/drivers/scsi/fcoe/fcoe.h
++++ b/drivers/scsi/fcoe/fcoe.h
+@@ -40,9 +40,7 @@
+ #define FCOE_MIN_XID		0x0000	/* the min xid supported by fcoe_sw */
+ #define FCOE_MAX_XID		0x0FFF	/* the max xid supported by fcoe_sw */
  
- 	/* Fabric information */
+-unsigned int fcoe_debug_logging;
+-module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
++extern unsigned int fcoe_debug_logging;
+ 
+ #define FCOE_LOGGING	    0x01 /* General logging, not categorized */
+ #define FCOE_NETDEV_LOGGING 0x02 /* Netdevice logging */
 
