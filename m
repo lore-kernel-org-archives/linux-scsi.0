@@ -1,186 +1,53 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/4] fcoe: Move fcoe_debug_logging from fcoe.h to fcoe.c
-Date: Fri, 13 Jan 2012 17:26:25 -0800
-Message-ID: <20120114012625.19185.97594.stgit@localhost6.localdomain6>
+Subject: [PATCH 4/4] libfc: remove redundant timer init for fcp
+Date: Fri, 13 Jan 2012 17:26:30 -0800
+Message-ID: <20120114012630.19185.81821.stgit@localhost6.localdomain6>
 References: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:54280 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:50602 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754404Ab2ANB00 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jan 2012 20:26:26 -0500
+	id S1754318Ab2ANB0b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2012 20:26:31 -0500
 In-Reply-To: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>, Yi Zou <yi.zou@intel.com>
+Cc: Ross Brattain <ross.b.brattain@intel.com>, Yi Zou <yi.zou@intel.com>
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Yi Zou <yi.zou@intel.com>
 
-Move the definition of the global variable fcoe_debug_logging
-from fcoe.h to fcoe.c. Avoid that sparse complains about missing
-declarations for local functions or variables by declaring these
-static.
+The fcp timer is already initialized when it gets allocated.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   34 +++++++++++++++++++---------------
- drivers/scsi/fcoe/fcoe.h |    4 +---
- 2 files changed, 20 insertions(+), 18 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 507504b..e959960 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -58,7 +58,11 @@ module_param_named(ddp_min, fcoe_ddp_min, uint, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
- 		 "Direct Data Placement (DDP).");
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 221875e..f607314 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -155,6 +155,7 @@ static struct fc_fcp_pkt *fc_fcp_pkt_alloc(struct fc_lport *lport, gfp_t gfp)
+ 		fsp->xfer_ddp = FC_XID_UNKNOWN;
+ 		atomic_set(&fsp->ref_cnt, 1);
+ 		init_timer(&fsp->timer);
++		fsp->timer.data = (unsigned long)fsp;
+ 		INIT_LIST_HEAD(&fsp->list);
+ 		spin_lock_init(&fsp->scsi_pkt_lock);
+ 	}
+@@ -1850,9 +1851,6 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 	}
+ 	put_cpu();
  
--DEFINE_MUTEX(fcoe_config_mutex);
-+unsigned int fcoe_debug_logging;
-+module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-+
-+static DEFINE_MUTEX(fcoe_config_mutex);
- 
- static struct workqueue_struct *fcoe_wq;
- 
-@@ -67,8 +71,8 @@ static DECLARE_COMPLETION(fcoe_flush_completion);
- 
- /* fcoe host list */
- /* must only by accessed under the RTNL mutex */
--LIST_HEAD(fcoe_hostlist);
--DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
-+static LIST_HEAD(fcoe_hostlist);
-+static DEFINE_PER_CPU(struct fcoe_percpu_s, fcoe_percpu);
- 
- /* Function Prototypes */
- static int fcoe_reset(struct Scsi_Host *);
-@@ -157,7 +161,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
- 	.lport_set_port_id = fcoe_set_port_id,
- };
- 
--struct fc_function_template fcoe_nport_fc_functions = {
-+static struct fc_function_template fcoe_nport_fc_functions = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
- 	.show_host_supported_classes = 1,
-@@ -197,7 +201,7 @@ struct fc_function_template fcoe_nport_fc_functions = {
- 	.bsg_request = fc_lport_bsg_request,
- };
- 
--struct fc_function_template fcoe_vport_fc_functions = {
-+static struct fc_function_template fcoe_vport_fc_functions = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
- 	.show_host_supported_classes = 1,
-@@ -433,7 +437,7 @@ static inline void fcoe_interface_put(struct fcoe_interface *fcoe)
-  *
-  * Caller must be holding the RTNL mutex
-  */
--void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
-+static void fcoe_interface_cleanup(struct fcoe_interface *fcoe)
- {
- 	struct net_device *netdev = fcoe->netdev;
- 	struct fcoe_ctlr *fip = &fcoe->ctlr;
-@@ -748,7 +752,7 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
-  *
-  * Returns: True for read types I/O, otherwise returns false.
-  */
--bool fcoe_oem_match(struct fc_frame *fp)
-+static bool fcoe_oem_match(struct fc_frame *fp)
- {
- 	struct fc_frame_header *fh = fc_frame_header_get(fp);
- 	struct fcp_cmnd *fcp;
-@@ -1107,7 +1111,7 @@ static int __init fcoe_if_init(void)
-  *
-  * Returns: 0 on success
-  */
--int __exit fcoe_if_exit(void)
-+static int __exit fcoe_if_exit(void)
- {
- 	fc_release_transport(fcoe_nport_scsi_transport);
- 	fc_release_transport(fcoe_vport_scsi_transport);
-@@ -1296,7 +1300,7 @@ static inline unsigned int fcoe_select_cpu(void)
-  *
-  * Returns: 0 for success
-  */
--int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
-+static int fcoe_rcv(struct sk_buff *skb, struct net_device *netdev,
- 	     struct packet_type *ptype, struct net_device *olddev)
- {
- 	struct fc_lport *lport;
-@@ -1452,7 +1456,7 @@ static int fcoe_alloc_paged_crc_eof(struct sk_buff *skb, int tlen)
-  *
-  * Return: 0 for success
-  */
--int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
-+static int fcoe_xmit(struct fc_lport *lport, struct fc_frame *fp)
- {
- 	int wlen;
- 	u32 crc;
-@@ -1728,7 +1732,7 @@ drop:
-  *
-  * Return: 0 for success
-  */
--int fcoe_percpu_receive_thread(void *arg)
-+static int fcoe_percpu_receive_thread(void *arg)
- {
- 	struct fcoe_percpu_s *p = arg;
- 	struct sk_buff *skb;
-@@ -2146,7 +2150,7 @@ out_nortnl:
-  * Returns: 0 if the ethtool query was successful
-  *          -1 if the ethtool query failed
-  */
--int fcoe_link_speed_update(struct fc_lport *lport)
-+static int fcoe_link_speed_update(struct fc_lport *lport)
- {
- 	struct net_device *netdev = fcoe_netdev(lport);
- 	struct ethtool_cmd ecmd;
-@@ -2180,7 +2184,7 @@ int fcoe_link_speed_update(struct fc_lport *lport)
-  * Returns: 0 if link is UP and OK, -1 if not
-  *
-  */
--int fcoe_link_ok(struct fc_lport *lport)
-+static int fcoe_link_ok(struct fc_lport *lport)
- {
- 	struct net_device *netdev = fcoe_netdev(lport);
- 
-@@ -2200,7 +2204,7 @@ int fcoe_link_ok(struct fc_lport *lport)
-  * there no packets that will be handled by the lport, but also that any
-  * threads already handling packet have returned.
-  */
--void fcoe_percpu_clean(struct fc_lport *lport)
-+static void fcoe_percpu_clean(struct fc_lport *lport)
- {
- 	struct fcoe_percpu_s *pp;
- 	struct fcoe_rcv_info *fr;
-@@ -2251,7 +2255,7 @@ void fcoe_percpu_clean(struct fc_lport *lport)
-  *
-  * Returns: Always 0 (return value required by FC transport template)
-  */
--int fcoe_reset(struct Scsi_Host *shost)
-+static int fcoe_reset(struct Scsi_Host *shost)
- {
- 	struct fc_lport *lport = shost_priv(shost);
- 	struct fcoe_port *port = lport_priv(lport);
-diff --git a/drivers/scsi/fcoe/fcoe.h b/drivers/scsi/fcoe/fcoe.h
-index 6c6884b..bcc89e6 100644
---- a/drivers/scsi/fcoe/fcoe.h
-+++ b/drivers/scsi/fcoe/fcoe.h
-@@ -40,9 +40,7 @@
- #define FCOE_MIN_XID		0x0000	/* the min xid supported by fcoe_sw */
- #define FCOE_MAX_XID		0x0FFF	/* the max xid supported by fcoe_sw */
- 
--unsigned int fcoe_debug_logging;
--module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-+extern unsigned int fcoe_debug_logging;
- 
- #define FCOE_LOGGING	    0x01 /* General logging, not categorized */
- #define FCOE_NETDEV_LOGGING 0x02 /* Netdevice logging */
+-	init_timer(&fsp->timer);
+-	fsp->timer.data = (unsigned long)fsp;
+-
+ 	/*
+ 	 * send it to the lower layer
+ 	 * if we get -1 return then put the request in the pending
 
