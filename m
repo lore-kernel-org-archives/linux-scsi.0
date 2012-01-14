@@ -1,54 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [GIT PULL] target: Updates for v3.3-rc1 (round 1)
-Date: Fri, 13 Jan 2012 15:02:39 -0800
-Message-ID: <1326495759.30987.77.camel@haakon2.linux-iscsi.org>
-References: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
+From: Robert Love <robert.w.love@intel.com>
+Subject: [PATCH 0/4] Fixes for libfc, libfcoe and fcoe
+Date: Fri, 13 Jan 2012 17:26:10 -0800
+Message-ID: <20120114012609.19185.66603.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, =?ISO-8859-1?Q?J=F6rn?= Engel <joern@purestorage.com>, Bart Van Assche <bvanassche@acm.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:63932 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753645Ab2ANB0K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Jan 2012 20:26:10 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2012-01-10 at 10:56 -0800, Nicholas A. Bellinger wrote:
-> Hi Linus,
-> 
-> The following are the v3.3-rc1 merge window updates for the target
-> subsystem.  The series has been in linux-next since before the holiday
-> break, and can be pulled directly from:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
-> 
-> The series has been cut against the following mainline commit:
-> 
-> commit dc47ce90c3a822cd7c9e9339fe4d5f61dcb26b50
-> Author: Linus Torvalds <torvalds@linux-foundation.org>
-> Date:   Fri Dec 9 15:09:32 2011 -0800
-> 
->     Linux 3.2-rc5
-> 
-> The main highlights include:
-> 
-> *) Initial merge for the SRP target (ib_srpt) fabric module (bart)
-> *) Restructuring of target private + public target headers (hch)
-> *) Addition of target_submit_cmd() for fabrics (hch + nab)
-> *) Conversion of tcm_fc to use target_submit_cmd() (nab)
-> *) Remove legacy se_device TCQ depth handling (nab)
-> *) Remove extra se_device->execute_task_lock is fast path (nab)
-> *) Set missing additional sense length field (roland)
-> 
-> Please let us know if you have any questions.
-> 
+Here are a few fixes to libfc, libfcoe and fcoe. If possible,
+please apply them for the 3.3 merge. If they cannot make the
+merge window I think that the "fcoe: fix regression on offload
+em matching function for initiator/target" patch would need
+to go in scsi-rc-fixes since it fixes a regression and it seems
+to block the use of offloads. The others I believe are less
+necessary. I will re-mail the regression patch, targeting it
+for scsi-rc-fixes, if these patches don't make the merge window.
 
-Hi Linus,
+---
 
-Just a friendly ping on this pull request for -rc1.  Please go ahead and
-pull at your earliest convenience, and let us know if you have any
-questions or concerns.
+Bart Van Assche (2):
+      libfc: Declare local functions static
+      fcoe: Move fcoe_debug_logging from fcoe.h to fcoe.c
 
-Thank you,
+Yi Zou (2):
+      fcoe: fix regression on offload em matching function for initiator/target
+      libfc: remove redundant timer init for fcp
 
---nab
+
+ drivers/scsi/fcoe/fcoe.c      |   43 +++++++++++++++++++++++------------------
+ drivers/scsi/fcoe/fcoe.h      |    4 +---
+ drivers/scsi/libfc/fc_disc.c  |    6 +++---
+ drivers/scsi/libfc/fc_elsct.c |    1 +
+ drivers/scsi/libfc/fc_exch.c  |    2 +-
+ drivers/scsi/libfc/fc_fcp.c   |    4 +---
+ drivers/scsi/libfc/fc_lport.c |    5 +++--
+ drivers/scsi/libfc/fc_rport.c |   10 +++++-----
+ include/scsi/libfc.h          |    2 +-
+ 9 files changed, 40 insertions(+), 37 deletions(-)
+
+-- 
+Thanks, //Rob
