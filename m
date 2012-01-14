@@ -1,50 +1,97 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL] target: Updates for v3.3-rc1 (round 1)
-Date: Sat, 14 Jan 2012 15:19:57 +0000
-Message-ID: <1326554397.3293.13.camel@dabdike.airangel.com>
-References: <1326221809.14089.23.camel@haakon2.linux-iscsi.org>
-	 <CAO+b5-qs3fE8yZaKQ+kzpsSsX1PyXE09wBzxnUi55GZ5j4TJKg@mail.gmail.com>
-	 <1326223998.14089.26.camel@haakon2.linux-iscsi.org>
-	 <1326225067.3264.51.camel@dabdike.int.hansenpartnership.com>
-	 <20120111104940.GA5394@infradead.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH] scsi: Sparse fixes
+Date: Sat, 14 Jan 2012 16:39:37 +0000
+Message-ID: <1352978.xR7YmcYmPS@asus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20120111104940.GA5394@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Bart Van Assche <bvanassche@acm.org>, Linus Torvalds <torvalds@linux-foundation.org>, target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Roland Dreier <roland@kernel.org>, J?rn Engel <joern@purestorage.com>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay01ant.iops.be ([212.53.4.34]:58219 "EHLO
+	relay01ant.iops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab2ANQjm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Jan 2012 11:39:42 -0500
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by relay01ant.iops.be (Postfix) with ESMTP id 7F336208A6
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2012 17:39:41 +0100 (CET)
+Received: from relay01ant.iops.be ([127.0.0.1])
+	by localhost (bdell034.dcn.iops.be [127.0.0.1]) (amavisd-new, port 10026)
+	with LMTP id 02ZkzZrH+zkp for <linux-scsi@vger.kernel.org>;
+	Sat, 14 Jan 2012 17:39:40 +0100 (CET)
+Received: from asus.localnet (cust-30-27-110-94.dyn.as47377.net [94.110.27.30])
+	by relay01ant.iops.be (Postfix) with ESMTP id EEA81208AB
+	for <linux-scsi@vger.kernel.org>; Sat, 14 Jan 2012 17:39:37 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Wed, 2012-01-11 at 05:49 -0500, Christoph Hellwig wrote:
-> On Tue, Jan 10, 2012 at 01:51:07PM -0600, James Bottomley wrote:
-> > > The changes since the Nov 4 RFC are listed in the patch commit log:
-> > > 
-> > > ib_srpt: Make compilation with BUG=n proceed`
-> > > ib_srpt: Use new target_core_fabric.h include
-> > > ib_srpt: Check hex2bin() return code to silence build warning
-> > > 
-> > > These are all very minor and did not warrant another full RFC posting.
-> > 
-> > They might not warrant a full RFC reposting, but individually they
-> > should have been posted to the list, so Bart is right.
-> 
-> At least 2 and 3 list, just not as global patches against the
-> target tree, not ib_srpt specificly:
-> 
-> 2 is from: [PATCH] target: header reshuffle, part2
-> 3 is from: [PATCH 5/5] target: check hex2bin result
-> 
-> Not sure about 1.
-> 
-> I'm really getting tired of this bickering. It's a brand new driver and
-> doesn't have to be perfect.  While Bart generally has technically good
-> points there's really no reason to put his remaining fixups in after
-> the driver has been merged and available to a wieder audience.
+Reduce the number of complaints reported by sparse on the SCSI
+midlayer.
 
-Absolutely.  I was just reminding about git best practises, not NAKing a
-pull.  Putting this in the kernel and sorting out the rough edges later
-is fine by me ... just make sure the rough edges go over the list ...
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/libiscsi.c   |    4 +++-
+ drivers/scsi/scsi_lib.c   |    2 ++
+ drivers/scsi/scsi_sysfs.c |    4 ++--
+ 3 files changed, 7 insertions(+), 3 deletions(-)
 
-James
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 143bbe4..3faa45a 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1762,6 +1762,8 @@ static void iscsi_tmf_timedout(unsigned long data)
+ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
+ 				   struct iscsi_tm *hdr, int age,
+ 				   int timeout)
++	__releases(&conn->session->lock)
++	__acquires(&conn->session->lock)
+ {
+ 	struct iscsi_session *session = conn->session;
+ 	struct iscsi_task *task;
+@@ -2384,7 +2386,7 @@ static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
+  *
+  * This will attempt to send a warm target reset.
+  */
+-int iscsi_eh_target_reset(struct scsi_cmnd *sc)
++static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
+ {
+ 	struct iscsi_cls_session *cls_session;
+ 	struct iscsi_session *session;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index f85cfa6..67b60ea 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1485,6 +1485,8 @@ static void scsi_softirq_done(struct request *rq)
+  * Lock status: IO request lock assumed to be held when called.
+  */
+ static void scsi_request_fn(struct request_queue *q)
++	__releases(q->queue_lock)
++	__acquires(q->queue_lock)
+ {
+ 	struct scsi_device *sdev = q->queuedata;
+ 	struct Scsi_Host *shost;
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 04c2a27..fbff014 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -197,7 +197,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
+ }
+ 
+ /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
+-struct device_attribute dev_attr_hstate =
++static struct device_attribute dev_attr_hstate =
+ 	__ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
+ 
+ static ssize_t
+@@ -313,7 +313,7 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
+ 	NULL
+ };
+ 
+-struct attribute_group scsi_shost_attr_group = {
++static struct attribute_group scsi_shost_attr_group = {
+ 	.attrs =	scsi_sysfs_shost_attrs,
+ };
+ 
+-- 
+1.7.7
+
+
