@@ -1,37 +1,27 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] target: make one-bit bitfields unsigned
-Date: Sun, 15 Jan 2012 14:30:24 +0300
-Message-ID: <20120115113024.GE20463@elgon.mountain>
+From: James Courtier-Dutton <james.dutton@gmail.com>
+Subject: sniffing scsi
+Date: Sun, 15 Jan 2012 11:54:31 +0000
+Message-ID: <CAAMvbhEcheTpAU1kX9nR=D+p3X6uWCu1uXEr6xaH3Wuezpcn+g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qw0-f53.google.com ([209.85.216.53]:59779 "EHLO
+	mail-qw0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752841Ab2AOLyc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Jan 2012 06:54:32 -0500
+Received: by qadc16 with SMTP id c16so786129qad.19
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Jan 2012 03:54:31 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Signed bitfields are a problem because instead of being 1 or 0 like
-you'd expect they are 0 and -1.  It doesn't cause a problem in this case
-but sparse complains:
+Hi,
 
-drivers/target/iscsi/iscsi_target_core.h:564:56: error: dubious one-bit
-signed bitfield
+Is it possible to monitor scsi messages on a particular bus.
+E.g. Attach to /dev/sda or /dev/sr0 and capture all messages going between them.
+Ideally, in such a way that wireshark can capture it.
+We can do this for Ethernet and USB, but I cannot find SCSI bus capture.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+KInd Regards
 
-diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
-index f1a02da..ebf81fd 100644
---- a/drivers/target/iscsi/iscsi_target_core.h
-+++ b/drivers/target/iscsi/iscsi_target_core.h
-@@ -561,8 +561,8 @@ struct iscsi_conn {
- 	struct hash_desc	conn_tx_hash;
- 	/* Used for scheduling TX and RX connection kthreads */
- 	cpumask_var_t		conn_cpumask;
--	int			conn_rx_reset_cpumask:1;
--	int			conn_tx_reset_cpumask:1;
-+	unsigned int		conn_rx_reset_cpumask:1;
-+	unsigned int		conn_tx_reset_cpumask:1;
- 	/* list_head of struct iscsi_cmd for this connection */
- 	struct list_head	conn_cmd_list;
- 	struct list_head	immed_queue_list;
+James
