@@ -1,45 +1,111 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: sniffing scsi
-Date: Sun, 15 Jan 2012 12:13:06 +0000
-Message-ID: <1326629586.2903.10.camel@dabdike.sthat4.btopenzone.com>
-References: <CAAMvbhEcheTpAU1kX9nR=D+p3X6uWCu1uXEr6xaH3Wuezpcn+g@mail.gmail.com>
+From: loody <miloody@gmail.com>
+Subject: Re: Kernel coredump about kblockd deadlock
+Date: Sun, 15 Jan 2012 22:45:23 +0800
+Message-ID: <CANudz+s9wTjWbTYyN292x1Ksh6POh63n-_P+6LX18gQhHmxULQ@mail.gmail.com>
+References: <CANudz+um5XG2Qua6a1O7ENnBeYcfiG5mOyyA6-=ctccXMYEFhg@mail.gmail.com>
+	<CANudz+uoY8pxCVEeKFhorfb0nqsD+re_Ai-6Ruz2b3ExtJChSA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41078 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750761Ab2AOMNJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 15 Jan 2012 07:13:09 -0500
-In-Reply-To: <CAAMvbhEcheTpAU1kX9nR=D+p3X6uWCu1uXEr6xaH3Wuezpcn+g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CANudz+uoY8pxCVEeKFhorfb0nqsD+re_Ai-6Ruz2b3ExtJChSA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Courtier-Dutton <james.dutton@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2012-01-15 at 11:54 +0000, James Courtier-Dutton wrote:
-> Is it possible to monitor scsi messages on a particular bus.
-> E.g. Attach to /dev/sda or /dev/sr0 and capture all messages going between them.
-> Ideally, in such a way that wireshark can capture it.
-> We can do this for Ethernet and USB, but I cannot find SCSI bus capture.
+hi all:
+2012/1/15 loody <miloody@gmail.com>:
+> Dear all:
+> I use kernel 2.6.35.13 and cpu for mips
+> When I plug in/out usb stick for several times I got following warnin=
+g
+> messages as I append at the end of mail.
+>
+> is it possible correlate to below issue
+> http://thread.gmane.org/gmane.linux.kernel/1177383/focus=3D69879
+I want to reproduce the issue of the thread above in my platform.
+But I have no idea about:
+1  dm-multipath
+2. dm-round-robin
 
-The answer is that it depends.  You need to modify the target mode
-driver for the card you have, so it doesn't quite work out of the box:
-for the Obsolete parallel SCSI bus, yes if you modify the target mode
-driver to pass up all packets.  For all other target mode drivers, you
-can still modify them to pass up all packets they can see (this might
-involve firmware programming in the HBA to put it into what networks
-call promiscuous mode), but that's not necessarily all packets on the
-bus: modern transport busses are effectively packet switched networks
-and not all end points see all the traffic (much like modern switched
-ethernet networks).
+are they additional module I need to download or it already include
+kernel source?
+if the later, which config I shout select?
 
-If you want to interface to wireshark, I believe you then have to write
-a PCAP interface for the target driver.  It's been done for the IP
-protocols and for one of the IBM target drivers, but not for STGT or LIO
-I think.
+Appreciate your help,
 
-James
+>
+>
+> INFO: task kblockd/0:10 blocked for more than 120 seconds.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this mess=
+age.
+> kblockd/0 =A0 =A0 =A0 =A0D [87016a78] 802d1e48 =A0 =A0 0 =A0 =A010 0x=
+00100000 =A0 =A0 =A02
+> =A0 =A0 =A0 =A0 =A011 =A0 =A0 =A0 9 =A0 =A0 =A0(kernel thread)
+> Stack : 00000001 80107148 8562ed80 800e9098 00000001 00000001 7ffffff=
+f 00000000
+> =A0 =A0 =A0 =A000000000 7fffffff 87053d38 ffffffff 87053d38 87053d28 =
+872ff00c 802d1e48
+> =A0 =A0 =A0 =A000000001 00000009 00000102 80071c80 00005965 0056addf =
+00005965 00000001
+> =A0 =A0 =A0 =A000000000 00000000 7fffffff 80020c64 00000000 00000002 =
+00000000 00000000
+> =A0 =A0 =A0 =A07fffffff 802d1ca8 00000000 80024538 00000004 0000000a =
+00000001 87016a78
+> =A0 =A0 =A0 =A0...
+> Call Trace:
+> [<802d1764>] schedule+0x648/0x70c from[<802d1e48>] schedule_timeout+0=
+x30/0x324
+> [<802d1e48>] schedule_timeout+0x30/0x324 from[<802d1ca8>]
+> wait_for_common+0xf8/0x1c0
+> [<802d1ca8>] wait_for_common+0xf8/0x1c0 from[<80044400>]
+> __cancel_work_timer+0x188/0x210
+> [<80044400>] __cancel_work_timer+0x188/0x210 from[<801a48c4>]
+> blk_cleanup_queue+0x18/0x6c
+> [<801a48c4>] blk_cleanup_queue+0x18/0x6c from[<802098f4>]
+> scsi_device_dev_release_usercontext+0x174/0x1e4
+> [<802098f4>] scsi_device_dev_release_usercontext+0x174/0x1e4
+> from[<80043aa8>] execute_in_process_context+0x30/0x5c
+> [<80043aa8>] execute_in_process_context+0x30/0x5c from[<801eeda8>]
+> device_release+0x54/0x90
+> [<801eeda8>] device_release+0x54/0x90 from[<801b0180>] kobject_releas=
+e+0x70/0xa8
+> [<801b0180>] kobject_release+0x70/0xa8 from[<801b17bc>] kref_put+0x80=
+/0x98
+> [<801b17bc>] kref_put+0x80/0x98 from[<80203c04>] scsi_request_fn+0x51=
+c/0x61c
+> [<80203c04>] scsi_request_fn+0x51c/0x61c from[<801a482c>]
+> generic_unplug_device+0x38/0x7c
+> [<801a482c>] generic_unplug_device+0x38/0x7c from[<80043e90>]
+> worker_thread+0x1ec/0x2d4
+> [<80043e90>] worker_thread+0x1ec/0x2d4 from[<800482c4>] kthread+0x7c/=
+0x84
+> [<800482c4>] kthread+0x7c/0x84 from[<80007818>] kernel_thread_helper+=
+0x10/0x18
+>
+> ---------------------------------------------------------------------=
+----------------
+> hub 1-0:1.0: state 7 ports 1 chg 0000 evt 0002
+> hub 1-0:1.0: port 1, status 0000, change 0001, 12 Mb/s
+> usb 1-1: USB disconnect, address 35
+> usb 1-1: unregistering device
+> usb 1-1: unregistering interface 1-1:1.0
+> usb 1-1: usb_disable_device nuking all URBs
+> hub 1-0:1.0: debounce: port 1: total 100ms stable 100ms status 0x0
+> hub 1-0:1.0: state 7 ports 1 chg 0000 evt 0002
+> ehci-ehci ehci-ehci.0: GetStatus port 1 status 000803 sig=3Dj CSC CON=
+NECT
+> hub 1-0:1.0: port 1, status 0401, change 0001, 480 Mb/s
+> hub 1-0:1.0: debounce: port 1: total 100ms stable 100ms status 0x401
+> ehci-ehci ehci-ehci.0: port 1 high speed
+> ehci-ehci ehci-ehci.0: GetStatus port 1 status 00000d sig=3Dse0 PEC P=
+E CONNECT
+> usb 1-1: new high speed USB device using ehci-ehci and address 36
+> ehci-ehci ehci-ehci.0: port 1 high speed
+> ehci-ehci ehci-ehci.0: GetStatus port 1 status 00000d sig=3Dse0 PEC P=
+E CONNECT
+> usb 1-1: default language 0x0409
+> usb 1-1: udev 36, busnum 1, minor =3D 35
 
-
+--=20
+Regards,
