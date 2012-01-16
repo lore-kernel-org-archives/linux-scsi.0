@@ -1,54 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PATCH v4 0/2] libsas: eh reworks (ata-eh vs discovery,
- races, ...)
-Date: Mon, 16 Jan 2012 12:40:28 +0400
-Message-ID: <1326703228.2872.5.camel@dabdike>
-References: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
-	 <1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
-	 <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v2 2/3] block: fail SCSI passthrough ioctls on partition
+ devices
+Date: Mon, 16 Jan 2012 09:51:09 +0100
+Message-ID: <4F13E4FD.3070500@redhat.com>
+References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com> <1326380489-9044-3-git-send-email-pbonzini@redhat.com> <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jack_wang@usish.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1025 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753578Ab2APIvU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jan 2012 03:51:20 -0500
+In-Reply-To: <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, stable@vger.kernel.org
 
-On Tue, 2012-01-10 at 12:18 -0800, Dan Williams wrote:
-> On Tue, Jan 10, 2012 at 11:29 AM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
-> > On Mon, 2012-01-09 at 23:38 -0800, Dan Williams wrote:
-> >> The latest version of the patch kit is available here:
-> >>
-> >>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v4
-> >>
-> >> Changes since v3: http://marc.info/?l=linux-scsi&m=132581455214789&w=2
-> >
-> > Just to check I'm not lost here. I think this is currently the only
-> > mergeable set of patches you have because you're reworking patches in
-> > all your other series and will repost ... is this correct?
-> 
-> There are two mergeable topics in isci.git:
-> libsas-eh-reworks-v4: mergeable
-> devel: mergeable, posted as "[GIT PATCH v2 00/15] isci update for 3.3
-> (part1)" [1].  This contains all the general updates to the driver
-> that were independent of the libsas churn.  It was rebased to
-> incorporate Ben's firmware removal patch, but is otherwise idle and
-> ready to merge.
+On 01/15/2012 12:43 AM, Linus Torvalds wrote:
+> Anyway, with the changes to print out warnings and still allow it for
+> root, this all looked safe and nice, so they are in my tree now. I
+> only noticed after applying them that you hadn't marked them with 'cc:
+> stable@kernel.org', so we should probably point Greg at them. They are
+> commits
+>
+>    577ebb374c78 block: add and use scsi_blk_cmd_ioctl
+>    0bfc96cb7722 block: fail SCSI passthrough ioctls on partition devices
+>    ec8013beddd7 dm: do not forward ioctls from logical volumes to the
+> underlying device
+>
+> in my tree now.
 
-1/2 doesn't apply:
+I'll tweak them myself for stable based on what you committed, so that 
+they do not require your ENOTTY/ENOIOCTLCMD change (i.e. with the uglier 
+v1 implementation).
 
-patching file drivers/scsi/libsas/sas_scsi_host.c
-Hunk #1 succeeded at 235 with fuzz 2 (offset -14 lines).
-Hunk #2 FAILED at 267.
-Hunk #3 succeeded at 505 with fuzz 2 (offset -25 lines).
-Hunk #4 succeeded at 512 with fuzz 1 (offset -34 lines).
-Hunk #5 FAILED at 655.
-2 out of 5 hunks FAILED -- saving rejects to file
-drivers/scsi/libsas/sas_scsi_host.c.rej
+Thanks very much.
 
-James
-
-
+Paolo
