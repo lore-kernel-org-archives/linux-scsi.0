@@ -1,171 +1,164 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH stable 2/3] block: fail SCSI passthrough ioctls on partition devices
-Date: Mon, 16 Jan 2012 17:12:59 +0100
-Message-ID: <1326730380-7674-3-git-send-email-pbonzini@redhat.com>
-References: <1326730380-7674-1-git-send-email-pbonzini@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1326730380-7674-1-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: stable@kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [GIT PATCH v4 0/2] libsas: eh reworks (ata-eh vs discovery,
+ races, ...)
+Date: Mon, 16 Jan 2012 09:00:10 -0800
+Message-ID: <1326733212.2548.3.camel@ultramagnus.opencreations.com>
+References: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
+	 <1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
+	 <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
+	 <1326703228.2872.5.camel@dabdike>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1326703228.2872.5.camel@dabdike>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jack_wang@usish.com
 List-Id: linux-scsi@vger.kernel.org
 
-Linux allows executing the SG_IO ioctl on a partition or LVM volume, and
-will pass the command to the underlying block device.  This is
-well-known, but it is also a large security problem when (via Unix
-permissions, ACLs, SELinux or a combination thereof) a program or user
-needs to be granted access only to part of the disk.
+On Mon, 2012-01-16 at 12:40 +0400, James Bottomley wrote:
+> On Tue, 2012-01-10 at 12:18 -0800, Dan Williams wrote:
+> > On Tue, Jan 10, 2012 at 11:29 AM, James Bottomley
+> > <James.Bottomley@hansenpartnership.com> wrote:
+> > > On Mon, 2012-01-09 at 23:38 -0800, Dan Williams wrote:
+> > >> The latest version of the patch kit is available here:
+> > >>
+> > >>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v4
+> > >>
+> > >> Changes since v3: http://marc.info/?l=linux-scsi&m=132581455214789&w=2
+> > >
+> > > Just to check I'm not lost here. I think this is currently the only
+> > > mergeable set of patches you have because you're reworking patches in
+> > > all your other series and will repost ... is this correct?
+> > 
+> > There are two mergeable topics in isci.git:
+> > libsas-eh-reworks-v4: mergeable
+> > devel: mergeable, posted as "[GIT PATCH v2 00/15] isci update for 3.3
+> > (part1)" [1].  This contains all the general updates to the driver
+> > that were independent of the libsas churn.  It was rebased to
+> > incorporate Ben's firmware removal patch, but is otherwise idle and
+> > ready to merge.
+> 
+> 1/2 doesn't apply:
+> 
+> patching file drivers/scsi/libsas/sas_scsi_host.c
+> Hunk #1 succeeded at 235 with fuzz 2 (offset -14 lines).
+> Hunk #2 FAILED at 267.
+> Hunk #3 succeeded at 505 with fuzz 2 (offset -25 lines).
+> Hunk #4 succeeded at 512 with fuzz 1 (offset -34 lines).
+> Hunk #5 FAILED at 655.
+> 2 out of 5 hunks FAILED -- saving rejects to file
+> drivers/scsi/libsas/sas_scsi_host.c.rej
+> 
 
-This patch lets partitions forward a small set of harmless ioctls;
-others are logged with printk so that we can see which ioctls are
-actually sent.  In my tests only CDROM_GET_CAPABILITY actually occurred.
-Of course it was being sent to a (partition on a) hard disk, so it would
-have failed with ENOTTY and the patch isn't changing anything in
-practice.  Still, I'm treating it specially to avoid spamming the logs.
+...and you have the pre-requisites to
+drivers/scsi/libsas/sas_scsi_host.c?
 
-In principle, this restriction should include programs running with
-CAP_SYS_RAWIO.  If for example I let a program access /dev/sda2 and
-/dev/sdb, it still should not be able to read/write outside the
-boundaries of /dev/sda2 independent of the capabilities.  However, for
-now programs with CAP_SYS_RAWIO will still be allowed to send the
-ioctls.  Their actions will still be logged.
+d7ca96e libsas: kill sas_slave_destroy
+eb4a9d3 libsas: fix domain_device leak
+07ec747 libsas: remove ata_port.lock management duties from lldds
+8f2c41b libsas: convert dev->gone to flags
+2145ed7 libsas: close error handling vs sas_ata_task_done() race
+9540580b libsas: prevent double completion of scmds from eh
+630efd3 libsas: fix timeout vs completion race
+41707de libsas: let libata handle command timeouts
+6b7b289 libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
+b13a7df libsas: sas_phy_enable via transport_sas_phy_reset
+3b58c03 libsas: fix sas_find_local_phy(), take phy references
 
-This patch does not affect the non-libata IDE driver.  That driver
-however already tests for bd != bd->bd_contains before issuing some
-ioctl; it could be restricted further to forbid these ioctls even for
-programs running with CAP_SYS_ADMIN/CAP_SYS_RAWIO.
+I managed to confuse things by posting only incremental series... the
+full set is in git, and I can repost as needed.
 
-[ Cherry picked from 3ed4e7ba4be8c72051d87dcb2dec279d97a18d41
+...or:
 
-  Changes with respect to 3.3: return -ENOTTY from scsi_verify_blk_ioctl
-  and -ENOIOCTLCMD from sd_compat_ioctl. ]
+The following changes since commit 5c41dc3a79150e93e5d050871a10b761be8281a1:
 
-Cc: stable@kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: James Bottomley <JBottomley@parallels.com>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-[ Make it also print the command name when warning - Linus ]
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
----
- block/scsi_ioctl.c     |   45 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.c      |   11 +++++++++--
- include/linux/blkdev.h |    1 +
- 3 files changed, 55 insertions(+), 2 deletions(-)
+  [SCSI] lpfc 8.3.28: Update driver version to 8.3.28 (2011-12-15 10:57:45 +0400)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index a2c11f3..260fa80 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -24,6 +24,7 @@
- #include <linux/capability.h>
- #include <linux/completion.h>
- #include <linux/cdrom.h>
-+#include <linux/ratelimit.h>
- #include <linux/slab.h>
- #include <linux/times.h>
- #include <asm/uaccess.h>
-@@ -690,9 +691,53 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
- }
- EXPORT_SYMBOL(scsi_cmd_ioctl);
- 
-+int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
-+{
-+	if (bd && bd == bd->bd_contains)
-+		return 0;
-+
-+	/* Actually none of these is particularly useful on a partition,
-+	 * but they are safe.
-+	 */
-+	switch (cmd) {
-+	case SCSI_IOCTL_GET_IDLUN:
-+	case SCSI_IOCTL_GET_BUS_NUMBER:
-+	case SCSI_IOCTL_GET_PCI:
-+	case SCSI_IOCTL_PROBE_HOST:
-+	case SG_GET_VERSION_NUM:
-+	case SG_SET_TIMEOUT:
-+	case SG_GET_TIMEOUT:
-+	case SG_GET_RESERVED_SIZE:
-+	case SG_SET_RESERVED_SIZE:
-+	case SG_EMULATED_HOST:
-+		return 0;
-+	case CDROM_GET_CAPABILITY:
-+		/* Keep this until we remove the printk below.  udev sends it
-+		 * and we do not want to spam dmesg about it.   CD-ROMs do
-+		 * not have partitions, so we get here only for disks.
-+		 */
-+		return -ENOTTY;
-+	default:
-+		break;
-+	}
-+
-+	/* In particular, rule out all resets and host-specific ioctls.  */
-+	printk_ratelimited(KERN_WARNING
-+			   "%s: sending ioctl %x to a partition!\n", current->comm, cmd);
-+
-+	return capable(CAP_SYS_RAWIO) ? 0 : -ENOTTY;
-+}
-+EXPORT_SYMBOL(scsi_verify_blk_ioctl);
-+
- int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
- 		       unsigned int cmd, void __user *arg)
- {
-+	int ret;
-+
-+	ret = scsi_verify_blk_ioctl(bd, cmd);
-+	if (ret < 0)
-+		return ret;
-+
- 	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
- }
- EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b4d57bb..c691fb5 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1075,6 +1075,10 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
- 				    "cmd=0x%x\n", disk->disk_name, cmd));
- 
-+	error = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (error < 0)
-+		return error;
-+
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
- 	 * else try and use this device.  Also, if error recovery fails, it
-@@ -1267,6 +1271,11 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
- 			   unsigned int cmd, unsigned long arg)
- {
- 	struct scsi_device *sdev = scsi_disk(bdev->bd_disk)->device;
-+	int ret;
-+
-+	ret = scsi_verify_blk_ioctl(bdev, cmd);
-+	if (ret < 0)
-+		return -ENOIOCTLCMD;
- 
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
-@@ -1278,8 +1287,6 @@ static int sd_compat_ioctl(struct block_device *bdev, fmode_t mode,
- 		return -ENODEV;
- 	       
- 	if (sdev->host->hostt->compat_ioctl) {
--		int ret;
--
- 		ret = sdev->host->hostt->compat_ioctl(sdev, cmd, (void __user *)arg);
- 
- 		return ret;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index ca7b869..0ed1eb0 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -675,6 +675,7 @@ extern int blk_insert_cloned_request(struct request_queue *q,
- 				     struct request *rq);
- extern void blk_delay_queue(struct request_queue *, unsigned long);
- extern void blk_recount_segments(struct request_queue *, struct bio *);
-+extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
- extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
- 			      unsigned int, void __user *);
- extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
--- 
-1.7.7.1
+are available in the git repository at:
+  git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v4
+
+Dan Williams (36):
+      libsas: remove unused ata_task_resp fields
+      libsas: kill sas_slave_destroy
+      libsas: fix domain_device leak
+      libsas: fix leak of dev->sata_dev.identify_[packet_]device
+      libsas: replace event locks with atomic bitops
+      libsas: convert ha->state to flags
+      libsas: introduce sas_drain_work()
+      libsas: remove ata_port.lock management duties from lldds
+      libsas: convert dev->gone to flags
+      libsas: prevent domain rediscovery competing with ata error halibsas-eh-reworks-v4ndling
+      libsas: use ->set_dmamode to notify lldds of NCQ parameters
+      libsas: kill invocation of scsi_eh_finish_cmd from sas_ata_task_done
+      libsas: close error handling vs sas_ata_task_done() race
+      libsas: prevent double completion of scmds from eh
+      libsas: fix timeout vs completion race
+      libsas: let libata handle command timeouts
+      libsas: defer SAS_TASK_NEED_DEV_RESET commands to libata
+      libsas: use libata-eh-reset for sata rediscovery fis transmit failures
+      libsas: perform sas-transport resets in shost->workq context
+      libsas: execute transport link resets with libata-eh via host workqueue
+      libsas: sas_phy_enable via transport_sas_phy_reset
+      libsas: async ata-eh
+      libsas: poll for ata device readiness after reset
+      libsas: don't mark expanders as gone when a child device is removed
+      libsas: check for 'gone' expanders in smp_execute_task()
+      libsas: fix sas_find_local_phy(), take phy references
+      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+      isci: kill iphy->isci_port lookups
+      isci: kill isci_port->status
+      isci: fix interpretation of "hard" reset
+      isci: stop interpreting ->lldd_lu_reset() as an ata soft-reset
+      isci: ->lldd_ata_check_ready handler
+      isci: remove bus and reset handlers
+      isci: remove IDEV_EH hack to disable "discovery-time" ata resets
+      libsas: pre-clean commands that won the eh vs completion race
+      libsas: feed the scsi_block_when_processing_errors() meter
+
+Jeff Skirvin (2):
+      libsas: Remove redundant phy state notification calls.
+      libsas: add mutex for SMP task execution
+
+ Documentation/scsi/libsas.txt       |   15 -
+ drivers/ata/libata-eh.c             |    1 +
+ drivers/ata/libata.h                |    1 -
+ drivers/scsi/aic94xx/aic94xx.h      |    2 +
+ drivers/scsi/aic94xx/aic94xx_dev.c  |   38 ++-
+ drivers/scsi/aic94xx/aic94xx_init.c |    5 +-
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 +-
+ drivers/scsi/isci/host.c            |    8 +-
+ drivers/scsi/isci/host.h            |   19 +-
+ drivers/scsi/isci/init.c            |   13 +-
+ drivers/scsi/isci/phy.c             |   18 +-
+ drivers/scsi/isci/phy.h             |    1 -
+ drivers/scsi/isci/port.c            |  217 ++++++------
+ drivers/scsi/isci/port.h            |   11 +-
+ drivers/scsi/isci/remote_device.c   |   32 +--
+ drivers/scsi/isci/remote_device.h   |    7 +-
+ drivers/scsi/isci/request.c         |  198 +----------
+ drivers/scsi/isci/request.h         |    9 +-
+ drivers/scsi/isci/task.c            |  158 ++-------
+ drivers/scsi/isci/task.h            |   40 --
+ drivers/scsi/libsas/sas_ata.c       |  692 +++++++++++++++--------------------
+ drivers/scsi/libsas/sas_discover.c  |  152 +++++++--
+ drivers/scsi/libsas/sas_event.c     |   89 +++++-
+ drivers/scsi/libsas/sas_expander.c  |  113 ++++--
+ drivers/scsi/libsas/sas_init.c      |  192 +++++++++-
+ drivers/scsi/libsas/sas_internal.h  |   73 ++--
+ drivers/scsi/libsas/sas_phy.c       |   12 +-
+ drivers/scsi/libsas/sas_port.c      |   26 +-
+ drivers/scsi/libsas/sas_scsi_host.c |  320 +++++++---------
+ drivers/scsi/mvsas/mv_init.c        |    1 -
+ drivers/scsi/mvsas/mv_sas.c         |   11 +-
+ drivers/scsi/pm8001/pm8001_init.c   |    1 -
+ drivers/scsi/pm8001/pm8001_sas.c    |   29 +-
+ drivers/scsi/scsi_transport_sas.c   |   59 +++-
+ include/linux/libata.h              |    1 +
+ include/scsi/libsas.h               |   67 ++--
+ include/scsi/sas_ata.h              |   26 +-
+ include/scsi/scsi_transport_sas.h   |   12 +-
+ 38 files changed, 1321 insertions(+), 1357 deletions(-)
+
+
