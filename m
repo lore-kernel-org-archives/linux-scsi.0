@@ -1,132 +1,54 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: SCSI:implement PM for sr
-Date: Mon, 16 Jan 2012 09:41:41 +0100
-Message-ID: <201201160941.41334.oneukum@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [GIT PATCH v4 0/2] libsas: eh reworks (ata-eh vs discovery,
+ races, ...)
+Date: Mon, 16 Jan 2012 12:40:28 +0400
+Message-ID: <1326703228.2872.5.camel@dabdike>
+References: <20120110073647.4563.7504.stgit@localhost6.localdomain6>
+	 <1326223752.3264.43.camel@dabdike.int.hansenpartnership.com>
+	 <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:39462 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753509Ab2APIjw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2012 03:39:52 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CABE8wwuBN45f2s-bcW3R=5VE1V3svtcrp93-9LW5zZ6VtZFqmQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jack_wang@usish.com
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: hare@suse.de, linux-scsi@vger.kernel.org
 
->From e81a6204b9c53b1e6a2817a96f0e1b44e3c87fb4 Mon Sep 17 00:00:00 2001
-From: Oliver Neukum <oliver@neukum.org>
-Date: Mon, 16 Jan 2012 09:38:04 +0100
-Subject: [PATCH] SCSI:implement PM for sr
+On Tue, 2012-01-10 at 12:18 -0800, Dan Williams wrote:
+> On Tue, Jan 10, 2012 at 11:29 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Mon, 2012-01-09 at 23:38 -0800, Dan Williams wrote:
+> >> The latest version of the patch kit is available here:
+> >>
+> >>   git://git.kernel.org/pub/scm/linux/kernel/git/djbw/isci.git libsas-eh-reworks-v4
+> >>
+> >> Changes since v3: http://marc.info/?l=linux-scsi&m=132581455214789&w=2
+> >
+> > Just to check I'm not lost here. I think this is currently the only
+> > mergeable set of patches you have because you're reworking patches in
+> > all your other series and will repost ... is this correct?
+> 
+> There are two mergeable topics in isci.git:
+> libsas-eh-reworks-v4: mergeable
+> devel: mergeable, posted as "[GIT PATCH v2 00/15] isci update for 3.3
+> (part1)" [1].  This contains all the general updates to the driver
+> that were independent of the libsas churn.  It was rebased to
+> incorporate Ben's firmware removal patch, but is otherwise idle and
+> ready to merge.
 
-This implements basic power management for SCSI CDs.
+1/2 doesn't apply:
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
----
- drivers/scsi/sr.c |   31 +++++++++++++++++++++++++++++--
- 1 files changed, 29 insertions(+), 2 deletions(-)
+patching file drivers/scsi/libsas/sas_scsi_host.c
+Hunk #1 succeeded at 235 with fuzz 2 (offset -14 lines).
+Hunk #2 FAILED at 267.
+Hunk #3 succeeded at 505 with fuzz 2 (offset -25 lines).
+Hunk #4 succeeded at 512 with fuzz 1 (offset -34 lines).
+Hunk #5 FAILED at 655.
+2 out of 5 hunks FAILED -- saving rejects to file
+drivers/scsi/libsas/sas_scsi_host.c.rej
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 5fc97d2..91b545b 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -508,16 +508,29 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
- 
- static int sr_block_open(struct block_device *bdev, fmode_t mode)
- {
-+	struct scsi_device *sdev;
- 	struct scsi_cd *cd;
- 	int ret = -ENXIO;
-+	int err;
- 
- 	mutex_lock(&sr_mutex);
- 	cd = scsi_cd_get(bdev->bd_disk);
-+	sdev = cd->device;
-+
-+	err = scsi_autopm_get_device(sdev);
-+	if (err) {
-+		ret = -EIO;
-+		goto err_out;
-+	}
-+
- 	if (cd) {
- 		ret = cdrom_open(&cd->cdi, bdev, mode);
--		if (ret)
-+		if (ret) {
- 			scsi_cd_put(cd);
-+			scsi_autopm_put_device(sdev);
-+		}
- 	}
-+err_out:
- 	mutex_unlock(&sr_mutex);
- 	return ret;
- }
-@@ -525,9 +538,12 @@ static int sr_block_open(struct block_device *bdev, fmode_t mode)
- static int sr_block_release(struct gendisk *disk, fmode_t mode)
- {
- 	struct scsi_cd *cd = scsi_cd(disk);
-+	struct scsi_device *sdev = cd->device;
-+
- 	mutex_lock(&sr_mutex);
- 	cdrom_release(&cd->cdi, mode);
- 	scsi_cd_put(cd);
-+	scsi_autopm_put_device(sdev);
- 	mutex_unlock(&sr_mutex);
- 	return 0;
- }
-@@ -615,6 +631,11 @@ static int sr_open(struct cdrom_device_info *cdi, int purpose)
- 	struct scsi_device *sdev = cd->device;
- 	int retval;
- 
-+	retval = scsi_autopm_get_device(sdev);
-+	if (retval) {
-+		retval = -EIO;
-+		goto pm_error_out;
-+	}
- 	/*
- 	 * If the device is in error recovery, wait until it is done.
- 	 * If the device is offline, then disallow any access to it.
-@@ -626,16 +647,19 @@ static int sr_open(struct cdrom_device_info *cdi, int purpose)
- 	return 0;
- 
- error_out:
-+	scsi_autopm_put_device(sdev);
-+pm_error_out:
- 	return retval;	
- }
- 
- static void sr_release(struct cdrom_device_info *cdi)
- {
- 	struct scsi_cd *cd = cdi->handle;
-+	struct scsi_device *sdev = cd->device;
- 
- 	if (cd->device->sector_size > 2048)
- 		sr_set_blocklength(cd, 2048);
--
-+	scsi_autopm_put_device(sdev);
- }
- 
- static int sr_probe(struct device *dev)
-@@ -715,6 +739,7 @@ static int sr_probe(struct device *dev)
- 	dev_set_drvdata(dev, cd);
- 	disk->flags |= GENHD_FL_REMOVABLE;
- 	add_disk(disk);
-+	scsi_autopm_put_device(sdev);
- 
- 	sdev_printk(KERN_DEBUG, sdev,
- 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
-@@ -964,7 +989,9 @@ static void sr_kref_release(struct kref *kref)
- static int sr_remove(struct device *dev)
- {
- 	struct scsi_cd *cd = dev_get_drvdata(dev);
-+	struct scsi_device *sdev = cd->device;
- 
-+	scsi_autopm_get_device(sdev);
- 	blk_queue_prep_rq(cd->device->request_queue, scsi_prep_fn);
- 	del_gendisk(cd->disk);
- 
--- 
-1.7.1
+James
+
 
