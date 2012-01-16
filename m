@@ -1,73 +1,172 @@
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH stable 0/3] possible privilege escalation via SG_IO ioctl (CVE-2011-4127)
-Date: Mon, 16 Jan 2012 17:12:57 +0100
-Message-ID: <1326730380-7674-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH stable 1/3] block: add and use scsi_blk_cmd_ioctl
+Date: Mon, 16 Jan 2012 17:12:58 +0100
+Message-ID: <1326730380-7674-2-git-send-email-pbonzini@redhat.com>
+References: <1326730380-7674-1-git-send-email-pbonzini@redhat.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1326730380-7674-1-git-send-email-pbonzini@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: stable@kernel.org, Petr Matousek <pmatouse@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
+Cc: stable@kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Partition block devices or LVM volumes can be sent SCSI commands via
-SG_IO, which are then passed down to the underlying device; it's
-been this way forever, it was mentioned in 2004 in LKML at
-https://lkml.org/lkml/2004/8/12/218 and it is even documented in the
-sg_dd man page:
+Introduce a wrapper around scsi_cmd_ioctl that takes a block device.
 
-    blk_sgio=1
-              when set to 0, block devices (e.g. /dev/sda) are treated
-              like normal files (i.e. read(2) and write(2) are used for
-              IO). When set to 1, block devices are assumed to accept the
-              SG_IO ioctl and  SCSI commands are issued for IO. [...]
-              If the input or output device is a block device partition
-              (e.g. /dev/sda3) then setting this option causes the
-              partition information to be ignored (since access is
-              directly to the underlying device).
+The function will then be enhanced to detect partition block devices
+and, in that case, subject the ioctls to whitelisting.
 
-This is problematic because "safe" SCSI commands, including READ or WRITE,
-can be sent to the disk without any particular capability.  All that is
-required is having a file descriptor for the block device, and permission
-to send a ioctl.  However, when a user lets a program access /dev/sda2,
-it still should not be able to read/write /dev/sda outside the boundaries
-of that partition.
+[ Cherry picked from 6ad62f051ef784a48a6103af289f91b5c472e955 ]
 
-Encryption on the host is a mitigating factor, but it does not provide
-a full solution.  In particular it doesn't protect against DoS (write
-random data), replay attacks (reinstate old ciphertext sectors), or
-writes to unencrypted areas including the MBR, the partition table, or
-/boot.
+Cc: stable@kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: James Bottomley <JBottomley@parallels.com>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+---
+ block/scsi_ioctl.c             |    7 +++++++
+ drivers/block/cciss.c          |    6 +++---
+ drivers/block/ub.c             |    3 +--
+ drivers/block/virtio_blk.c     |    4 ++--
+ drivers/cdrom/cdrom.c          |    3 +--
+ drivers/ide/ide-floppy_ioctl.c |    3 +--
+ drivers/scsi/sd.c              |    2 +-
+ include/linux/blkdev.h         |    2 ++
+ 8 files changed, 18 insertions(+), 12 deletions(-)
 
-The patches implement a simple global whitelist for both partitions
-and partial disk mappings.  Patch 1 refactors the code to prepare for
-introduction of the whitelist, while patch 2 actually implements it for
-the SCSI ioctls.  Logical volumes are also affected if they have only one
-target, and this target can pass ioctls to the underlying block device.
-Patch 3 thus adds the whitelist to logical volumes as well.
-
-For stable, I removed the dependency on commit 07d106d (vfs: fix up
-ENOIOCTLCMD error handling, 2012-01-05).  Patches 1 and 3 are untouched.
-
-Paolo
-
-
-Paolo Bonzini (3):
-  block: add and use scsi_blk_cmd_ioctl
-  block: fail SCSI passthrough ioctls on partition devices
-  dm: do not forward ioctls from logical volumes to the underlying
-    device
-
- block/scsi_ioctl.c             |   52 ++++++++++++++++++++++++++++++++++++++++
- drivers/block/cciss.c          |    6 ++--
- drivers/block/ub.c             |    3 +-
- drivers/block/virtio_blk.c     |    4 +-
- drivers/cdrom/cdrom.c          |    3 +-
- drivers/ide/ide-floppy_ioctl.c |    3 +-
- drivers/md/dm-flakey.c         |   11 +++++++-
- drivers/md/dm-linear.c         |   12 ++++++++-
- drivers/md/dm-mpath.c          |    6 ++++
- drivers/scsi/sd.c              |   13 +++++++--
- include/linux/blkdev.h         |    3 ++
- 11 files changed, 100 insertions(+), 16 deletions(-)
-
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index fbdf0d8..a2c11f3 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -690,6 +690,13 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
+ }
+ EXPORT_SYMBOL(scsi_cmd_ioctl);
+ 
++int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
++		       unsigned int cmd, void __user *arg)
++{
++	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
++}
++EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
++
+ static int __init blk_scsi_ioctl_init(void)
+ {
+ 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 587cce5..b0f553b 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1735,7 +1735,7 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case CCISS_BIG_PASSTHRU:
+ 		return cciss_bigpassthru(h, argp);
+ 
+-	/* scsi_cmd_ioctl handles these, below, though some are not */
++	/* scsi_cmd_blk_ioctl handles these, below, though some are not */
+ 	/* very meaningful for cciss.  SG_IO is the main one people want. */
+ 
+ 	case SG_GET_VERSION_NUM:
+@@ -1746,9 +1746,9 @@ static int cciss_ioctl(struct block_device *bdev, fmode_t mode,
+ 	case SG_EMULATED_HOST:
+ 	case SG_IO:
+ 	case SCSI_IOCTL_SEND_COMMAND:
+-		return scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++		return scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+-	/* scsi_cmd_ioctl would normally handle these, below, but */
++	/* scsi_cmd_blk_ioctl would normally handle these, below, but */
+ 	/* they aren't a good fit for cciss, as CD-ROMs are */
+ 	/* not supported, and we don't have any bus/target/lun */
+ 	/* which we present to the kernel. */
+diff --git a/drivers/block/ub.c b/drivers/block/ub.c
+index 0e376d4..7333b9e 100644
+--- a/drivers/block/ub.c
++++ b/drivers/block/ub.c
+@@ -1744,12 +1744,11 @@ static int ub_bd_release(struct gendisk *disk, fmode_t mode)
+ static int ub_bd_ioctl(struct block_device *bdev, fmode_t mode,
+     unsigned int cmd, unsigned long arg)
+ {
+-	struct gendisk *disk = bdev->bd_disk;
+ 	void __user *usermem = (void __user *) arg;
+ 	int ret;
+ 
+ 	mutex_lock(&ub_mutex);
+-	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, usermem);
++	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, usermem);
+ 	mutex_unlock(&ub_mutex);
+ 
+ 	return ret;
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index ffd5ca9..c4a60ba 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -250,8 +250,8 @@ static int virtblk_ioctl(struct block_device *bdev, fmode_t mode,
+ 	if (!virtio_has_feature(vblk->vdev, VIRTIO_BLK_F_SCSI))
+ 		return -ENOTTY;
+ 
+-	return scsi_cmd_ioctl(disk->queue, disk, mode, cmd,
+-			      (void __user *)data);
++	return scsi_cmd_blk_ioctl(bdev, mode, cmd,
++				  (void __user *)data);
+ }
+ 
+ /* We provide getgeo only to please some old bootloader/partitioning tools */
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 1bbf764..55eaf47 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2746,12 +2746,11 @@ int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
+ {
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
+-	struct gendisk *disk = bdev->bd_disk;
+ 
+ 	/*
+ 	 * Try the generic SCSI command ioctl's first.
+ 	 */
+-	ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
++	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 	if (ret != -ENOTTY)
+ 		return ret;
+ 
+diff --git a/drivers/ide/ide-floppy_ioctl.c b/drivers/ide/ide-floppy_ioctl.c
+index d267b7a..a22ca84 100644
+--- a/drivers/ide/ide-floppy_ioctl.c
++++ b/drivers/ide/ide-floppy_ioctl.c
+@@ -292,8 +292,7 @@ int ide_floppy_ioctl(ide_drive_t *drive, struct block_device *bdev,
+ 	 * and CDROM_SEND_PACKET (legacy) ioctls
+ 	 */
+ 	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
+-		err = scsi_cmd_ioctl(bdev->bd_disk->queue, bdev->bd_disk,
+-				mode, cmd, argp);
++		err = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
+ 
+ 	if (err == -ENOTTY)
+ 		err = generic_ide_ioctl(drive, bdev, cmd, arg);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7b3f807..b4d57bb 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1097,7 +1097,7 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
+ 			error = scsi_ioctl(sdp, cmd, p);
+ 			break;
+ 		default:
+-			error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
++			error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
+ 			if (error != -ENOTTY)
+ 				break;
+ 			error = scsi_ioctl(sdp, cmd, p);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 94acd81..ca7b869 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -675,6 +675,8 @@ extern int blk_insert_cloned_request(struct request_queue *q,
+ 				     struct request *rq);
+ extern void blk_delay_queue(struct request_queue *, unsigned long);
+ extern void blk_recount_segments(struct request_queue *, struct bio *);
++extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
++			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			  unsigned int, void __user *);
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
 -- 
 1.7.7.1
