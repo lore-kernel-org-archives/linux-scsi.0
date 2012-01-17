@@ -1,61 +1,30 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH v2 2/3] block: fail SCSI passthrough ioctls on partition
- devices
-Date: Tue, 17 Jan 2012 12:03:17 -0800
-Message-ID: <20120117200317.GA14237@kroah.com>
-References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
- <1326380489-9044-3-git-send-email-pbonzini@redhat.com>
- <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, stable@vger.kernel.org
+From: Chuck Lever <chuck.lever-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: [LSF/MM TOPIC] end-to-end data and metadata corruption detection
+Date: Tue, 17 Jan 2012 15:15:23 -0500
+Message-ID: <38C050B3-2AAD-4767-9A25-02C33627E427@oracle.com>
+Mime-Version: 1.0 (Apple Message framework v1251.1)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: lsf-pc-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Cc: linux-fsdevel <linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux NFS Mailing List <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Jan 14, 2012 at 03:43:01PM -0800, Linus Torvalds wrote:
-> On Thu, Jan 12, 2012 at 7:01 AM, Paolo Bonzini <pbonzini@redhat.com> =
-wrote:
-> > + =A0 =A0 =A0 case CDROM_GET_CAPABILITY:
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Keep this until we remove the prin=
-tk below. =A0udev sends it
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* and we do not want to spam dmesg=
- about it. =A0 CD-ROMs do
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* not have partitions, so we get h=
-ere only for disks.
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
-> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENOIOCTLCMD;
->=20
-> Looks like CDROMMULTISESSION is another of these.
->=20
-> I get two of these:
->=20
->    mount: sending ioctl 5310 to a partition!
->=20
-> with Fedora 14 whenever a USB stick is inserted (I changed your patch
-> to also print the name of the program). Let's see if anything else
-> pops up.
->=20
-> Anyway, with the changes to print out warnings and still allow it for
-> root, this all looked safe and nice, so they are in my tree now. I
-> only noticed after applying them that you hadn't marked them with 'cc=
-:
-> stable@kernel.org', so we should probably point Greg at them. They ar=
-e
-> commits
->=20
->   577ebb374c78 block: add and use scsi_blk_cmd_ioctl
->   0bfc96cb7722 block: fail SCSI passthrough ioctls on partition devic=
-es
->   ec8013beddd7 dm: do not forward ioctls from logical volumes to the
-> underlying device
->=20
-> in my tree now.
+Hi-
 
-Thanks, I've queued them all up for the 3.2 and 3.0-stable trees.
+I know there is some work on ext4 regarding metadata corruption detection; btrfs also has some corruption detection facilities.  The IETF NFS working group is considering the addition of corruption detection to the next NFSv4 minor version.  T10 has introduced DIF/DIX.
 
-greg k-h
+I'm probably ignorant of the current state of implementation in Linux, but I'm interested in understanding common ground among local file systems, block storage, and network file systems.  Example questions include:  Do we need standardized APIs for block device corruption detection?  How much of T10 DIF/DIX should NFS support?  What are the drivers for this feature (broad use cases)?
+
+-- 
+Chuck Lever
+chuck[dot]lever[at]oracle[dot]com
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
