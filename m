@@ -1,78 +1,67 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH stable 4/4] dm: do not forward ioctls from logical volumes
- to the underlying device
-Date: Tue, 17 Jan 2012 04:07:31 +0000
-Message-ID: <1326773251.2819.173.camel@deadeye>
-References: <1326772723.2819.167.camel@deadeye>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [resend PATCH v4 00/10] libsas: eh reworks (ata-eh vs discovery, races,
+ ...)
+Date: Mon, 16 Jan 2012 21:11:01 -0800
+Message-ID: <20120117050847.22344.4961.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1326772723.2819.167.camel@deadeye>
-Sender: linux-kernel-owner@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: Paolo Bonzini <pbonzini@redhat.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Paolo Bonzini <pbonzini@redhat.com>
+A resend of v4: http://marc.info/?l=linux-scsi&m=132618126007864&w=1
 
-commit ec8013beddd717d1740cfefb1a9b900deef85462 upstream.
+These are all the patches that were modified between v3 and v4.  Previously
+only an incremental diff was provided.
 
-A logical volume can map to just part of underlying physical volume.
-In this case, it must be treated like a partition.
-
-Based on a patch from Alasdair G Kergon.
-
-Cc: Alasdair G Kergon <agk@redhat.com>
-Cc: dm-devel@redhat.com
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-[bwh: Backport to 2.6.32 - drop change to drivers/md/dm-flakey.c]
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/md/dm-linear.c |   12 +++++++++++-
- drivers/md/dm-mpath.c  |    6 ++++++
- 2 files changed, 17 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
-index 82f7d6e..7ab302d 100644
---- a/drivers/md/dm-linear.c
-+++ b/drivers/md/dm-linear.c
-@@ -116,7 +116,17 @@ static int linear_ioctl(struct dm_target *ti, unsigned int cmd,
- 			unsigned long arg)
- {
- 	struct linear_c *lc = (struct linear_c *) ti->private;
--	return __blkdev_driver_ioctl(lc->dev->bdev, lc->dev->mode, cmd, arg);
-+	struct dm_dev *dev = lc->dev;
-+	int r = 0;
-+
-+	/*
-+	 * Only pass ioctls through if the device sizes match exactly.
-+	 */
-+	if (lc->start ||
-+	    ti->len != i_size_read(dev->bdev->bd_inode) >> SECTOR_SHIFT)
-+		r = scsi_verify_blk_ioctl(NULL, cmd);
-+
-+	return r ? : __blkdev_driver_ioctl(dev->bdev, dev->mode, cmd, arg);
- }
- 
- static int linear_merge(struct dm_target *ti, struct bvec_merge_data *bvm,
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index b03cd39..4ec5fe2 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1464,6 +1464,12 @@ static int multipath_ioctl(struct dm_target *ti, unsigned int cmd,
- 
- 	spin_unlock_irqrestore(&m->lock, flags);
- 
-+	/*
-+	 * Only pass ioctls through if the device sizes match exactly.
-+	 */
-+	if (!r && ti->len != i_size_read(bdev->bd_inode) >> SECTOR_SHIFT)
-+		r = scsi_verify_blk_ioctl(NULL, cmd);
-+
- 	return r ? : __blkdev_driver_ioctl(bdev, mode, cmd, arg);
- }
- 
--- 
-1.7.8.2
+Dan Williams (10):
+      libsas: convert dev->gone to flags
+      libsas: prevent domain rediscovery competing with ata error handling
+      libsas: fix timeout vs completion race
+      libsas: don't mark expanders as gone when a child device is removed
+      libsas: check for 'gone' expanders in smp_execute_task()
+      libsas: fix sas_find_local_phy(), take phy references
+      libsas: don't recover 'gone' devices in sas_ata_hard_reset()
+      isci: ->lldd_ata_check_ready handler
+      libsas: pre-clean commands that won the eh vs completion race
+      libsas: feed the scsi_block_when_processing_errors() meter
+
+ drivers/ata/libata-eh.c             |    1 
+ drivers/ata/libata.h                |    1 
+ drivers/scsi/aic94xx/aic94xx.h      |    2 
+ drivers/scsi/aic94xx/aic94xx_dev.c  |   38 +-
+ drivers/scsi/aic94xx/aic94xx_init.c |    2 
+ drivers/scsi/aic94xx/aic94xx_tmf.c  |    9 
+ drivers/scsi/isci/host.h            |   19 -
+ drivers/scsi/isci/init.c            |   12 -
+ drivers/scsi/isci/phy.c             |   18 +
+ drivers/scsi/isci/phy.h             |    1 
+ drivers/scsi/isci/port.c            |  217 ++++++------
+ drivers/scsi/isci/port.h            |   11 -
+ drivers/scsi/isci/remote_device.c   |   32 --
+ drivers/scsi/isci/remote_device.h   |    7 
+ drivers/scsi/isci/request.c         |  195 ----------
+ drivers/scsi/isci/request.h         |    9 
+ drivers/scsi/isci/task.c            |  152 ++------
+ drivers/scsi/isci/task.h            |    4 
+ drivers/scsi/libsas/sas_ata.c       |  652 +++++++++++++++--------------------
+ drivers/scsi/libsas/sas_discover.c  |   93 ++++-
+ drivers/scsi/libsas/sas_event.c     |   28 +-
+ drivers/scsi/libsas/sas_expander.c  |  103 ++++--
+ drivers/scsi/libsas/sas_init.c      |  176 +++++++++
+ drivers/scsi/libsas/sas_internal.h  |   22 +
+ drivers/scsi/libsas/sas_port.c      |   11 -
+ drivers/scsi/libsas/sas_scsi_host.c |  289 +++++++---------
+ drivers/scsi/mvsas/mv_sas.c         |    3 
+ drivers/scsi/pm8001/pm8001_sas.c    |   19 +
+ drivers/scsi/scsi_transport_sas.c   |   59 +++
+ include/linux/libata.h              |    1 
+ include/scsi/libsas.h               |   48 ++-
+ include/scsi/sas_ata.h              |   23 +
+ include/scsi/scsi_transport_sas.h   |   12 +
+ 33 files changed, 1124 insertions(+), 1145 deletions(-)
