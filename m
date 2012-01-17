@@ -1,7 +1,8 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v4 08/10] isci: ->lldd_ata_check_ready handler
-Date: Mon, 16 Jan 2012 21:11:43 -0800
-Message-ID: <20120117051143.22344.21687.stgit@localhost6.localdomain6>
+Subject: [PATCH v4 09/10] libsas: pre-clean commands that won the eh vs
+ completion race
+Date: Mon, 16 Jan 2012 21:11:48 -0800
+Message-ID: <20120117051148.22344.90576.stgit@localhost6.localdomain6>
 References: <20120117050847.22344.4961.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,83 +10,94 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga11.intel.com ([192.55.52.93]:38218 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751170Ab2AQFLn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2012 00:11:43 -0500
+	id S1751170Ab2AQFLs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jan 2012 00:11:48 -0500
 In-Reply-To: <20120117050847.22344.4961.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, Jack Wang <jack_wang@usish.com>
+Cc: linux-ide@vger.kernel.org
 
-Report to libata whether the link to the given domain_device is up and the
-signature fis has been received.
+When scrolling forward through the eh list (in a clear_q scenario) it is
+possible to encounter commands that won the completion vs eh race.  Rather
+than sprinkle more "if (!task)" throughout the handler just make a pass
+through the list and delete the race winners before handling the rest.
 
-Cc: Jack Wang <jack_wang@usish.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/init.c |    3 +++
- drivers/scsi/isci/port.c |   25 +++++++++++++++++++++++++
- drivers/scsi/isci/port.h |    1 +
- 3 files changed, 29 insertions(+), 0 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c |   25 ++++++++++++++++---------
+ 1 files changed, 16 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 59f2ae7..40293b3 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -185,6 +185,9 @@ static struct sas_domain_function_template isci_transport_ops  = {
- 	.lldd_lu_reset		= isci_task_lu_reset,
- 	.lldd_query_task	= isci_task_query_task,
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 94ef763..731c892 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -249,8 +249,8 @@ out_done:
  
-+	/* ata recovery called from ata-eh */
-+	.lldd_ata_check_ready	= isci_ata_check_ready,
+ static void sas_eh_finish_cmd(struct scsi_cmnd *cmd)
+ {
+-	struct sas_task *task = TO_SAS_TASK(cmd);
+ 	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(cmd->device->host);
++	struct sas_task *task = TO_SAS_TASK(cmd);
+ 
+ 	/* At this point, we only get called following an actual abort
+ 	 * of the task, so we should be guaranteed not to be racing with
+@@ -267,9 +267,9 @@ static void sas_eh_finish_cmd(struct scsi_cmnd *cmd)
+ 
+ static void sas_eh_defer_cmd(struct scsi_cmnd *cmd)
+ {
+-	struct sas_task *task = TO_SAS_TASK(cmd);
+-	struct domain_device *dev = task->dev;
++	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct sas_ha_struct *ha = dev->port->ha;
++	struct sas_task *task = TO_SAS_TASK(cmd);
+ 
+ 	if (!dev_is_sata(dev)) {
+ 		sas_eh_finish_cmd(cmd);
+@@ -530,8 +530,9 @@ static int sas_eh_handle_sas_errors(struct Scsi_Host *shost,
+ 	struct sas_internal *i = to_sas_internal(shost->transportt);
+ 	unsigned long flags;
+ 	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(shost);
++	LIST_HEAD(done);
+ 
+-Again:
++	/* clean out any commands that won the completion vs eh race */
+ 	list_for_each_entry_safe(cmd, n, work_q, eh_entry) {
+ 		struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 		struct sas_task *task;
+@@ -545,7 +546,12 @@ Again:
+ 		spin_unlock_irqrestore(&dev->done_lock, flags);
+ 
+ 		if (!task)
+-			continue;
++			list_move_tail(&cmd->eh_entry, &done);
++	}
 +
- 	/* Port and Adapter management */
- 	.lldd_clear_nexus_port	= isci_task_clear_nexus_port,
- 	.lldd_clear_nexus_ha	= isci_task_clear_nexus_ha,
-diff --git a/drivers/scsi/isci/port.c b/drivers/scsi/isci/port.c
-index 7e4a9ee..eca9ba0 100644
---- a/drivers/scsi/isci/port.c
-+++ b/drivers/scsi/isci/port.c
-@@ -1663,6 +1663,31 @@ int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *ipor
- 	return ret;
++ Again:
++	list_for_each_entry_safe(cmd, n, work_q, eh_entry) {
++		struct sas_task *task = TO_SAS_TASK(cmd);
+ 
+ 		list_del_init(&cmd->eh_entry);
+ 
+@@ -649,15 +655,16 @@ Again:
+ 			goto clear_q;
+ 		}
+ 	}
++ out:
++	list_splice_tail(&done, work_q);
+ 	list_splice_tail_init(&ha->eh_ata_q, work_q);
+ 	return list_empty(work_q);
+-clear_q:
++
++ clear_q:
+ 	SAS_DPRINTK("--- Exit %s -- clear_q\n", __func__);
+ 	list_for_each_entry_safe(cmd, n, work_q, eh_entry)
+ 		sas_eh_finish_cmd(cmd);
+-
+-	list_splice_tail_init(&ha->eh_ata_q, work_q);
+-	return list_empty(work_q);
++	goto out;
  }
  
-+int isci_ata_check_ready(struct domain_device *dev)
-+{
-+	struct isci_port *iport = dev->port->lldd_port;
-+	struct isci_host *ihost = dev_to_ihost(dev);
-+	struct isci_remote_device *idev;
-+	unsigned long flags;
-+	int rc = 0;
-+
-+	spin_lock_irqsave(&ihost->scic_lock, flags);
-+	idev = isci_lookup_device(dev);
-+	spin_unlock_irqrestore(&ihost->scic_lock, flags);
-+
-+	if (!idev)
-+		goto out;
-+
-+	if (test_bit(IPORT_RESET_PENDING, &iport->state))
-+		goto out;
-+
-+	rc = !!iport->active_phy_mask;
-+ out:
-+	isci_put_device(idev);
-+
-+	return rc;
-+}
-+
- void isci_port_deformed(struct asd_sas_phy *phy)
- {
- 	struct isci_host *ihost = phy->ha->lldd_ha;
-diff --git a/drivers/scsi/isci/port.h b/drivers/scsi/isci/port.h
-index 78e1e82..b4a733c 100644
---- a/drivers/scsi/isci/port.h
-+++ b/drivers/scsi/isci/port.h
-@@ -293,4 +293,5 @@ void isci_port_init(
- 
- int isci_port_perform_hard_reset(struct isci_host *ihost, struct isci_port *iport,
- 				 struct isci_phy *iphy);
-+int isci_ata_check_ready(struct domain_device *dev);
- #endif /* !defined(_ISCI_PORT_H_) */
+ void sas_scsi_recover_host(struct Scsi_Host *shost)
 
