@@ -1,52 +1,61 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [LSF/MM TOPIC] a few storage topics
-Date: Tue, 17 Jan 2012 15:06:12 -0500
-Message-ID: <20120117200609.GA7933@redhat.com>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH v2 2/3] block: fail SCSI passthrough ioctls on partition
+ devices
+Date: Tue, 17 Jan 2012 12:03:17 -0800
+Message-ID: <20120117200317.GA14237@kroah.com>
+References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
+ <1326380489-9044-3-git-send-email-pbonzini@redhat.com>
+ <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43597 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751550Ab2AQUGU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jan 2012 15:06:20 -0500
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org
 
-1) expose WRITE SAME via higher level interface (ala sb_issue_discard)
-   for more efficient zeroing on SCSI devices that support it
-   - dm-thinp and dm-kcopyd could benefit from offloading the zeroing to
-     the array
-   - I'll be reviewing this closer to assess the scope of the work
+On Sat, Jan 14, 2012 at 03:43:01PM -0800, Linus Torvalds wrote:
+> On Thu, Jan 12, 2012 at 7:01 AM, Paolo Bonzini <pbonzini@redhat.com> =
+wrote:
+> > + =A0 =A0 =A0 case CDROM_GET_CAPABILITY:
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 /* Keep this until we remove the prin=
+tk below. =A0udev sends it
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* and we do not want to spam dmesg=
+ about it. =A0 CD-ROMs do
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0* not have partitions, so we get h=
+ere only for disks.
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0*/
+> > + =A0 =A0 =A0 =A0 =A0 =A0 =A0 return -ENOIOCTLCMD;
+>=20
+> Looks like CDROMMULTISESSION is another of these.
+>=20
+> I get two of these:
+>=20
+>    mount: sending ioctl 5310 to a partition!
+>=20
+> with Fedora 14 whenever a USB stick is inserted (I changed your patch
+> to also print the name of the program). Let's see if anything else
+> pops up.
+>=20
+> Anyway, with the changes to print out warnings and still allow it for
+> root, this all looked safe and nice, so they are in my tree now. I
+> only noticed after applying them that you hadn't marked them with 'cc=
+:
+> stable@kernel.org', so we should probably point Greg at them. They ar=
+e
+> commits
+>=20
+>   577ebb374c78 block: add and use scsi_blk_cmd_ioctl
+>   0bfc96cb7722 block: fail SCSI passthrough ioctls on partition devic=
+es
+>   ec8013beddd7 dm: do not forward ioctls from logical volumes to the
+> underlying device
+>=20
+> in my tree now.
 
-2) revise fs/block_dev.c:__blkdev_put's "sync on last close" semantic,
-   please see Mikulas Patocka's recent proposal on dm-devel:
-   http://www.redhat.com/archives/dm-devel/2012-January/msg00021.html
-   - patch didn't create much discussion (other than hch's suggestion to
-     use file->private_data).  Are the current semantics somehow 
-     important to some filesystems (e.g. NFS)?
-   - allowing read-only opens to _not_ trigger a sync is desirable
-     (e.g. if dm-thinp's storage pool was exhausted we should still be
-      able to read data from thinp devices)
+Thanks, I've queued them all up for the 3.2 and 3.0-stable trees.
 
-3) Are any SSD+rotational storage caching layers that are being
-   developed for upstream consideration (there were: bcache, fb's
-   dm-cache, etc).
-   - Red Hat would like to know if leveraging the dm-thinp
-     infrastructure to implement a new DM target for caching would be
-     well received by the greater community
-   - and are there any proposals for classifying data/files as cache
-     hot, etc (T10 has an active proposal for passing info in the CDB)
-     -- is anyone working in this area?
-
-4) is anyone working on an interface to GET LBA STATUS?
-   - Martin Petersen added GET LBA STATUS support to scsi_debug, but is
-     there a vision for how tools (e.g. pvmove) could access such info
-     in a uniform way across different vendors' storage?
-
-5) Any more progress on stable pages?
-   - I know Darrick Wong had some proposals, what remains?
+greg k-h
