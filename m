@@ -1,37 +1,80 @@
-From: Brad Campbell <brad@fnarfbargle.com>
-Subject: Re: mvsas with 3.1 (mdraid+xfs locked up, single drive w/xfs not
- locked up)
-Date: Tue, 17 Jan 2012 11:55:41 +0800
-Message-ID: <4F14F13D.2000407@fnarfbargle.com>
-References: <201201131144.58044.thomas@fjellstrom.ca> <201201162000.54940.thomas@fjellstrom.ca>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: Re: [PATCH v2 2/3] block: fail SCSI passthrough ioctls on partition
+ devices
+Date: Tue, 17 Jan 2012 03:58:43 +0000
+Message-ID: <1326772723.2819.167.camel@deadeye>
+References: <1326380489-9044-1-git-send-email-pbonzini@redhat.com>
+	 <1326380489-9044-3-git-send-email-pbonzini@redhat.com>
+	 <CA+55aFxuEzfAOL=pH1m7KQxdO1yzz=nGb2fU80AbysFd3J4Dvg@mail.gmail.com>
+	 <4F13E4FD.3070500@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fnarfbargle.com ([93.93.131.224]:41049 "EHLO fnarfbargle.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750855Ab2AQDz5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jan 2012 22:55:57 -0500
-In-Reply-To: <201201162000.54940.thomas@fjellstrom.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-W7KKVG6eRrG7Z4jkp/AY"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4F13E4FD.3070500@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: linux-kernel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, ayan@marvell.com, andy yan <andyysj@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 
-On 17/01/12 11:00, Thomas Fjellstrom wrote:
->
-> Here's something interesting though, I just tried writing to the one disk on
-> the card that isn't part of the mdraid raid5 volume. It is fine. I can read
-> from it and write to it. So something to do with mdraid, or the XFS filesystem
-> (or both) is causing a bad interaction with the card itself.
 
-Try doing IO to multiple drives simultaneously. I had a SIL card that would corrupt data when used 
-in RAID, but not single drive IO tests. I could make it fail by doing multiple dd/cp/md5sum to two 
-drives simultaneously.
+--=-W7KKVG6eRrG7Z4jkp/AY
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Do yourself a favour. Whack it on fleabay and sell it to a Windows user, then get something 
-supported. Leave enough scatter around that people thinking of buying a card with that Marvell 
-chipset will stay clear.
+On Mon, 2012-01-16 at 09:51 +0100, Paolo Bonzini wrote:
+> On 01/15/2012 12:43 AM, Linus Torvalds wrote:
+> > Anyway, with the changes to print out warnings and still allow it for
+> > root, this all looked safe and nice, so they are in my tree now. I
+> > only noticed after applying them that you hadn't marked them with 'cc:
+> > stable@kernel.org', so we should probably point Greg at them. They are
+> > commits
+> >
+> >    577ebb374c78 block: add and use scsi_blk_cmd_ioctl
+> >    0bfc96cb7722 block: fail SCSI passthrough ioctls on partition device=
+s
+> >    ec8013beddd7 dm: do not forward ioctls from logical volumes to the
+> > underlying device
+> >
+> > in my tree now.
+>=20
+> I'll tweak them myself for stable based on what you committed, so that=
+=20
+> they do not require your ENOTTY/ENOIOCTLCMD change (i.e. with the uglier=
+=20
+> v1 implementation).
+>=20
+> Thanks very much.
 
-Regards,
-Brad
+Paolo, I've just done this for Debian's stable kernel based on 2.6.32.
+I'll send them as a follow-up to this.
+
+Ben.
+
+--=20
+Ben Hutchings
+When in doubt, use brute force. - Ken Thompson
+
+--=-W7KKVG6eRrG7Z4jkp/AY
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iQIVAwUATxTx8+e/yOyVhhEJAQrH4w/7BYOD35Ixmnzsu86KS4vIEGO6BcebzyPm
+JHffaXnTb/NNZTIYizw1DWJjKDS0eytHbbocb1Co7Qoa/j2cT9gFOwYglE0/9GwX
++bsm60TuqDB9wDpvLgr0VRog/ZMxvTshSdNbRy8Zp8D/ktoSsrJMn5JoPI84ljsU
+UaF1hkwd6aYAz9DDgPANA5UfFAPMRA6lq77+fYeVPvIxsg4GuaTVTHZH07tXsMP9
+Hy75I7bEdc1hMFrcnEhIN1KnPZd0xAGrBcG5TTrHaeHJwNXfz5hqU+8GVafn3qZ3
+AzPrsv5gCyl+n1ev6LsteUUjUP07hJ6yyar5EwmgYBUMSEHT3DkFpGRxg+tWQzAa
+wn70xtQjmaWo4BaEzaDBN70xo0vZTdTLO59ugUpGYWTTvhYrJigI6hI+Js37f0Kt
+IwkjZkpmg/xt4myjKE8dfzUBdy0RP7U0tzxCaHthcvNVaOvMObI+WfEpKnLCMNoo
+NEEMHDaQm+1qs/IfeJKw0QVswYUmL2PaCRZ9693sV3RtNXDBspGTqEPZGEGMg1H7
+0GPAC7G5qqGjUsAMLDP2Bi6Ig0R3GFs1Pan4uzd1iB17XpGzWyofIjvtMbr2Fszy
+6U1/peWd5GLxADc5OHIAw3YzsC05E4LBYVDWJSPgpmTaVETY0EzzTuYJ3vCC8eme
+kZLX9l5GsoM=
+=w7F9
+-----END PGP SIGNATURE-----
+
+--=-W7KKVG6eRrG7Z4jkp/AY--
