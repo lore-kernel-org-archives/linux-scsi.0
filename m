@@ -1,77 +1,51 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: iscsi: TargetAddress in SendTargets when bound to INADDR_ANY
-Date: Mon, 16 Jan 2012 18:58:14 -0800
-Message-ID: <1326769094.3600.69.camel@haakon2.linux-iscsi.org>
-References: <4F0E1760.1020905@redhat.com>
-	 <1326495332.30987.73.camel@haakon2.linux-iscsi.org>
-	 <4F1472C3.30304@redhat.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: mvsas with 3.1 (mdraid+xfs locked up, single drive w/xfs not locked up)
+Date: Mon, 16 Jan 2012 20:00:54 -0700
+Message-ID: <201201162000.54940.thomas@fjellstrom.ca>
+References: <201201131144.58044.thomas@fjellstrom.ca>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <4F1472C3.30304@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: target-devel <target-devel@vger.kernel.org>, Dax Kelson <dkelson@gurulabs.com>, David Miller <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201201131144.58044.thomas@fjellstrom.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, ayan@marvell.com, andy yan <andyysj@gmail.com>, linux-raid <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2012-01-16 at 10:56 -0800, Andy Grover wrote:
-> On 01/13/2012 02:55 PM, Nicholas A. Bellinger wrote:
-> > On Wed, 2012-01-11 at 15:12 -0800, Andy Grover wrote:
-> >> Hi all,
-> >>
-> >> Dax discovered an issue with portals bound to 0.0.0.0 (INADDR_ANY), and
-> >> we've been working together to address it.
-> >>
-> >> When a portal is bound to INADDR_ANY, we return 0.0.0.0 for
-> >> TargetAddress in the response to iscsi SendTargets cmd. Should we
-> >> instead be returning the IP that the request came in on, or perhaps emit
-> >> TargetAddress for each active interface?
-> >>
-> >> Thanks -- Regards -- Andy
-> >>
-> >> PS I was initially tempted to just not return TargetAddress (it's
-> >> optional) since we don't support redir, but it's needed for MC/S as well..
-> >> PPS any tips on how to get the needed info from the struct iscsi_cmd
-> >> passed to iscsit_build_sendtargets_response?
-> > 
-> > So the sanitized string output is saved into iscsi_conn->login_ip from
-> > initial lookup via ->getname() in __iscsi_target_login_thread()..
-> > 
-> > However, as you mentioned this would still be an issue with MC/S where a
-> > client would have to perform explicit discovery to each IP address that
-> > could be used in a multiple connection session with in-band discovery.
-> > 
-> > I'm tempted to say that solving this in the kernel is the wrong
-> > approach, and that we should depend upon higher level userspace code to
-> > explictly create network portals via normal configfs means for us to
-> > simulate INADDR_ANY operation based on the configured interfaces..  I'm
-> > leaning this way because I'm not aware of an expected method to walk
-> > configured IP addresses to achieve what would be required here for a
-> > purely kernel-level solution..
-> > 
-> > Perhaps DaveM (Cc'ed) has some input here..?
+On Fri Jan 13, 2012, Thomas Fjellstrom wrote:
+> Is there chance this driver will ever be stable? After more than two years
+> I'm starting to get extremely frustrated. I don't really have the option
+> at the moment to get a new card, otherwise I would, likely a non marvell
+> based device.
 > 
-> Hi Nick,
+> It actually managed to last 10 days this time though. Which is a record.
+> The interesting thing is there are no warnings or errors in dmesg coming
+> from the mvsas driver or scsi code. All that's happened is processes lock
+> up when trying to write. Reading seems to be fine.
 > 
-> [+CC linux-scsi]
-> 
-> I thought about this a little over the weekend and I think the best
-> thing to do might be this:
-> 
-> for portal in tpg.portals
->   if portal.ip == INADDR_ANY
->     emit TargetAddress <incoming connection IP & port>
->   else
->     emit TargetAddress portal.ip & port
-> 
-> This lets us use INADDR_ANY and not fake it from userland for the
-> non-MC/S case, the common case. MC/S still works, you just can't
-> wildcard your IP, but rather explicitly state IPs, and then they will be
-> returned properly.
-> 
+> Just to refresh everyone's memory, it's a AOC-SASLP-MV8 card, has a
+> MV64460/64461/64462 chipset. And I have 7 (seagate 7200.12 SATA drives
+> hooked up).
 
-This sounds like a reasonable tradeoff to me.  Will get this addressed
-shortly..
+I attached an 8th drive for kicks (for saving stuff temporarily that don't need 
+to be on the big array), and if anything, the array locks up more than it did 
+before. But there is one difference between the lockups that were happening and 
+that are happening now. Now the entire array is still readable. It just locks 
+up any process attempting to write to the array. Before both read and write 
+would lock up, and a bunch of scary messages would hit dmesg. Now there are 
+very few log messages about the array. In fact no messages show up from the 
+scsi or other subsystems. The only evidence of "bad things" happening is the 
+continual "process foo blocked for more than 120s" messages, and of course 
+anything attempting to write to the array.
 
---nab
+Here's something interesting though, I just tried writing to the one disk on 
+the card that isn't part of the mdraid raid5 volume. It is fine. I can read 
+from it and write to it. So something to do with mdraid, or the XFS filesystem 
+(or both) is causing a bad interaction with the card itself.
+
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
