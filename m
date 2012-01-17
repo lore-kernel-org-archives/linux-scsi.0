@@ -1,39 +1,54 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target: core updates for v3.3-rc1
-Date: Tue, 17 Jan 2012 13:33:20 -0800
-Message-ID: <1326836000.16983.37.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: [GIT PULL]: ib_srpt: Initial SRP target merge for v3.3-rc1
+Date: Tue, 17 Jan 2012 13:33:41 -0800
+Message-ID: <1326836021.16983.38.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: target-devel <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Roland Dreier <roland-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Hi Linus,
 
-The following is the pull re-request for current pending target-core
-updates for v3.3-rc1.  Please go ahead and pull the target-core updates
-here:
+This is the PULL request for an initial merge of the ib_srpt driver
+using mainline target infrastructure into v3.3-rc1.  Please go ahead and
+pull from:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git =
-for-next
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next-merge
 
-This series is made against the following commit:
+Note that 'target: core updates for v3.3-rc1' should be pulled
+first via target-pending.git/for-next, and has gone out in a separate
+PULL request. 
 
-commit dc47ce90c3a822cd7c9e9339fe4d5f61dcb26b50
-Author: Linus Torvalds <torvalds <at> linux-foundation.org>
-Date:   Fri Dec 9 15:09:32 2011 -0800
+Here are full set of review changes from Roland and Bart that have been
+made:
 
-    Linux 3.2-rc5
+v1 -> v2 review changes:
 
-The original pull request was here:
+ib_srpt: Fix potential out-of-bounds array access
+ib_srpt: Avoid failed multipart RDMA transfers
+ib_srpt: Fix srpt_alloc_fabric_acl failure case return value
+ib_srpt: Update comments to reference $driver/$port layout
+ib_srpt: Fix sport->port_guid formatting code
+ib_srpt: Remove legacy use_port_guid_in_session_name module parameter
+ib_srpt: Convert srp_max_rdma_size into per port configfs attribute
+ib_srpt: Convert srp_max_rsp_size into per port configfs attribute
+ib_srpt: Convert srpt_sq_size into per port configfs attribute
 
-http://thread.gmane.org/gmane.linux.kernel/1237524/
+v2 -> v3 review changes:
 
-This time around I'm sending two PULL requests, this one for the core
-updates and the other for the new ib_srpt fabric driver.
+ib_srpt: Fix possible race with srp_sq_size in srpt_create_ch_ib
+ib_srpt: Fix possible race with srp_max_rsp_size in srpt_release_channel_work
+ib_srpt: Fix up MAX_SRPT_RDMA_SIZE define
+ib_srpt: Make srpt_map_sg_to_ib_sge() failure case return -EAGAIN
+ib_srpt: Convert port_guid to use subnet_prefix + interface_id formatting
+ib_srpt: Make srpt_check_stop_free return kref_put status
+ib_srpt: Make compilation with BUG=n proceed`
+ib_srpt: Use new target_core_fabric.h include
+ib_srpt: Check hex2bin() return code to silence build warning
 
 Please pull ASAP.
 
@@ -41,108 +56,25 @@ Thanks,
 
 --nab
 
-Christoph Hellwig (7):
-  target: reshuffle headers
-  target: header reshuffle, part2
-  target: fold se_task.task_sense into task_flags
-  target: remove the se_task task_error_status field
-  target: make the se_task task_state_active a normal bool
-  tcm_loop: bump max_sectors
-  target: remove overagressive ____cacheline_aligned annoations
+Bart Van Assche (1):
+  ib_srpt: Initial SRP Target merge for v3.3-rc1
 
-J=C3=B6rn Engel (3):
-  target: Move core_scsi3_check_cdb_abort_and_preempt
-  target: simplify target_check_cdb_and_preempt
-  target: remove useless casts
+ drivers/infiniband/Kconfig              |    1 +
+ drivers/infiniband/Makefile             |    1 +
+ drivers/infiniband/ulp/srpt/Kconfig     |   12 +
+ drivers/infiniband/ulp/srpt/Makefile    |    2 +
+ drivers/infiniband/ulp/srpt/ib_dm_mad.h |  139 ++
+ drivers/infiniband/ulp/srpt/ib_srpt.c   | 4073 +++++++++++++++++++++++++++++++
+ drivers/infiniband/ulp/srpt/ib_srpt.h   |  444 ++++
+ 7 files changed, 4672 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/infiniband/ulp/srpt/Kconfig
+ create mode 100644 drivers/infiniband/ulp/srpt/Makefile
+ create mode 100644 drivers/infiniband/ulp/srpt/ib_dm_mad.h
+ create mode 100644 drivers/infiniband/ulp/srpt/ib_srpt.c
+ create mode 100644 drivers/infiniband/ulp/srpt/ib_srpt.h
 
-Nicholas Bellinger (11):
-  iscsi-target: fix chap identifier simple_strtoul usage
-  Documentation/target: Fix tcm_mod_builder.py build breakage
-  target: Make target_put_sess_cmd use target_release_cmd_kref
-  target: Add target_submit_cmd() for process context fabric submission
-  tcm_fc: Convert ft_send_work to use target_submit_cmd
-  target: Remove TFO->check_release_cmd() fabric API caller
-  target: Fix possible NULL pointer with __transport_execute_tasks
-  target: Drop se_device TCQ queue_depth usage from I/O path
-  target: Remove extra se_device->execute_task_lock access in fast path
-  target: Remove __transport_execute_tasks() for each processing
-    context
-  target: Remove legacy device status check from
-    transport_execute_tasks
 
-Roland Dreier (2):
-  target: Set response format in INQUIRY response
-  target: Set additional sense length field in sense data
-
-Sebastian Andrzej Siewior (3):
-  target: use \n as a separator for configuration
-  target/configs: remove trailing newline from udev_path and alias
-  target: tcm_mod_builder: small fixups
-
- Documentation/target/tcm_mod_builder.py        |   60 +---
- drivers/target/iscsi/iscsi_target.c            |   19 +-
- drivers/target/iscsi/iscsi_target_auth.c       |   36 ++--
- drivers/target/iscsi/iscsi_target_configfs.c   |   11 +-
- drivers/target/iscsi/iscsi_target_device.c     |    3 +-
- drivers/target/iscsi/iscsi_target_erl0.c       |    2 +-
- drivers/target/iscsi/iscsi_target_erl1.c       |    2 +-
- drivers/target/iscsi/iscsi_target_erl2.c       |    2 +-
- drivers/target/iscsi/iscsi_target_login.c      |   23 +-
- drivers/target/iscsi/iscsi_target_nego.c       |    4 +-
- drivers/target/iscsi/iscsi_target_nodeattrib.c |    3 +-
- drivers/target/iscsi/iscsi_target_stat.c       |   17 +-
- drivers/target/iscsi/iscsi_target_tmr.c        |    2 +-
- drivers/target/iscsi/iscsi_target_tpg.c        |    6 +-
- drivers/target/iscsi/iscsi_target_util.c       |    8 +-
- drivers/target/loopback/tcm_loop.c             |   33 +--
- drivers/target/loopback/tcm_loop.h             |   11 +-
- drivers/target/target_core_alua.c              |    7 +-
- drivers/target/target_core_cdb.c               |   39 ++-
- drivers/target/target_core_cdb.h               |   14 -
- drivers/target/target_core_configfs.c          |   34 ++-
- drivers/target/target_core_device.c            |   15 +-
- drivers/target/target_core_fabric_configfs.c   |    8 +-
- drivers/target/target_core_fabric_lib.c        |   13 +-
- drivers/target/target_core_file.c              |   15 +-
- drivers/target/target_core_hba.c               |    7 +-
- drivers/target/target_core_hba.h               |    7 -
- drivers/target/target_core_iblock.c            |    7 +-
- drivers/target/target_core_internal.h          |  123 +++++++++
- drivers/target/target_core_pr.c                |   24 +--
- drivers/target/target_core_pr.h                |    2 -
- drivers/target/target_core_pscsi.c             |   20 +-
- drivers/target/target_core_rd.c                |    6 +-
- drivers/target/target_core_stat.c              |    9 +-
- drivers/target/target_core_stat.h              |    8 -
- drivers/target/target_core_tmr.c               |   36 ++-
- drivers/target/target_core_tpg.c               |    9 +-
- drivers/target/target_core_transport.c         |  343 ++++++++++++++--=
---------
- drivers/target/target_core_ua.c                |    6 +-
- drivers/target/tcm_fc/tfc_cmd.c                |   57 +---
- drivers/target/tcm_fc/tfc_conf.c               |    6 +-
- drivers/target/tcm_fc/tfc_io.c                 |    5 +-
- drivers/target/tcm_fc/tfc_sess.c               |    5 +-
- include/target/target_core_backend.h           |   65 +++++
- include/target/target_core_base.h              |  169 +++++++++---
- include/target/target_core_device.h            |   63 -----
- include/target/target_core_fabric.h            |  187 +++++++++++++
- include/target/target_core_fabric_lib.h        |   28 --
- include/target/target_core_fabric_ops.h        |  105 -------
- include/target/target_core_tmr.h               |   35 ---
- include/target/target_core_tpg.h               |   35 ---
- include/target/target_core_transport.h         |  287 ----------------=
-----
- 52 files changed, 928 insertions(+), 1113 deletions(-)
- delete mode 100644 drivers/target/target_core_cdb.h
- delete mode 100644 drivers/target/target_core_hba.h
- create mode 100644 drivers/target/target_core_internal.h
- delete mode 100644 drivers/target/target_core_stat.h
- create mode 100644 include/target/target_core_backend.h
- delete mode 100644 include/target/target_core_device.h
- create mode 100644 include/target/target_core_fabric.h
- delete mode 100644 include/target/target_core_fabric_lib.h
- delete mode 100644 include/target/target_core_fabric_ops.h
- delete mode 100644 include/target/target_core_tmr.h
- delete mode 100644 include/target/target_core_tpg.h
- delete mode 100644 include/target/target_core_transport.h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
