@@ -1,25 +1,31 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Tue, 17 Jan 2012 22:36:48 +0100
-Message-ID: <20120117213648.GA9457@quack.suse.cz>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
- <20120117200609.GA7933@redhat.com>
+From: Holger Macht <hmacht@suse.de>
+Subject: Re: ACPI & Power Management Patches for 3.3
+Date: Tue, 17 Jan 2012 23:17:09 +0100
+Message-ID: <20120117221709.GA10776@homac.suse.de>
+References: <1326802902-21583-1-git-send-email-lenb@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20120117200609.GA7933@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: lsf-pc@lists.linux-foundation.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+In-Reply-To: <1326802902-21583-1-git-send-email-lenb@kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Len Brown <lenb@kernel.org>
+Cc: linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue 17-01-12 15:06:12, Mike Snitzer wrote:
-> 5) Any more progress on stable pages?
->    - I know Darrick Wong had some proposals, what remains?
-  As far as I know this is done for XFS, btrfs, ext4. Is more needed?
+On Di 17. Jan - 07:20:52, Len Brown wrote:
+> These patches are queued for 3.3 in
+> git://git.kernel.org/pub/scm/linux/kernel/git/lenb/linux.git next
+> 
+> Let me know if you have troubles with any of them.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Any specific reason why the patches regarding the dock station/libata
+hotplug stuff (initially sent by Matthew Garrett, resent and extended by
+me on 2011-12-06 [1]) are not considered? I know, they're spanning two
+different subsystems, but one subsystem maintainer might need to take
+the first step.
+
+Thanks,
+ Holger
+
+[1] [Patch 0/7] acpi/libata: Express dependencies for devices on dock stations and bays
