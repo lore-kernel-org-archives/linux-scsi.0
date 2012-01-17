@@ -1,116 +1,43 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [dm-devel] [PATCH stable 3/3] dm: do not forward ioctls from
- logical volumes to the underlying device
-Date: Mon, 16 Jan 2012 19:32:19 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.1201161926190.26607@hs20-bc2-1.build.redhat.com>
-References: <1326730380-7674-1-git-send-email-pbonzini@redhat.com>
- <1326730380-7674-4-git-send-email-pbonzini@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [patch] target: make one-bit bitfields unsigned
+Date: Mon, 16 Jan 2012 18:28:47 -0800
+Message-ID: <1326767327.3600.39.camel@haakon2.linux-iscsi.org>
+References: <20120115113024.GE20463@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1326730380-7674-4-git-send-email-pbonzini@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-kernel@vger.kernel.org, dm-devel@redhat.com, Linus Torvalds <torvalds@linux-foundation.org>, stable@kernel.org, Alasdair G Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <20120115113024.GE20463@elgon.mountain>
+Sender: target-devel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andy Grover <agrover@redhat.com>, Joern Engel <joern@logfs.org>, Roland Dreier <roland@kernel.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi
-
-You should put this test to a function or macro. Don't copy the same logic 
-to three different places. Think what happens if someone needs to change 
-it after few years --- it will be hard to find out what was copied where.
-
-Mikulas
-
-On Mon, 16 Jan 2012, Paolo Bonzini wrote:
-
-> A logical volume can map to just part of underlying physical volume.
-> In this case, it must be treated like a partition.
+On Sun, 2012-01-15 at 14:30 +0300, Dan Carpenter wrote:
+> Signed bitfields are a problem because instead of being 1 or 0 like
+> you'd expect they are 0 and -1.  It doesn't cause a problem in this case
+> but sparse complains:
 > 
-> Based on a patch from Alasdair G Kergon.
+> drivers/target/iscsi/iscsi_target_core.h:564:56: error: dubious one-bit
+> signed bitfield
 > 
-> [ Cherry picked from 95113a17a2a1eb06151dc698dca9bcc4a29e4fbb ]
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> Cc: stable@kernel.org
-> Cc: Alasdair G Kergon <agk@redhat.com>
-> Cc: dm-devel@redhat.com
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
-> Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-> ---
->  drivers/md/dm-flakey.c |   11 ++++++++++-
->  drivers/md/dm-linear.c |   12 +++++++++++-
->  drivers/md/dm-mpath.c  |    6 ++++++
->  3 files changed, 27 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/md/dm-flakey.c b/drivers/md/dm-flakey.c
-> index f84c080..9fb18c1 100644
-> --- a/drivers/md/dm-flakey.c
-> +++ b/drivers/md/dm-flakey.c
-> @@ -368,8 +368,17 @@ static int flakey_status(struct dm_target *ti, status_type_t type,
->  static int flakey_ioctl(struct dm_target *ti, unsigned int cmd, unsigned long arg)
->  {
->  	struct flakey_c *fc = ti->private;
-> +	struct dm_dev *dev = fc->dev;
-> +	int r = 0;
->  
-> -	return __blkdev_driver_ioctl(fc->dev->bdev, fc->dev->mode, cmd, arg);
-> +	/*
-> +	 * Only pass ioctls through if the device sizes match exactly.
-> +	 */
-> +	if (fc->start ||
-> +	    ti->len != i_size_read(dev->bdev->bd_inode) >> SECTOR_SHIFT)
-> +		r = scsi_verify_blk_ioctl(NULL, cmd);
-> +
-> +	return r ? : __blkdev_driver_ioctl(dev->bdev, dev->mode, cmd, arg);
->  }
->  
->  static int flakey_merge(struct dm_target *ti, struct bvec_merge_data *bvm,
-> diff --git a/drivers/md/dm-linear.c b/drivers/md/dm-linear.c
-> index 3921e3b..9728839 100644
-> --- a/drivers/md/dm-linear.c
-> +++ b/drivers/md/dm-linear.c
-> @@ -116,7 +116,17 @@ static int linear_ioctl(struct dm_target *ti, unsigned int cmd,
->  			unsigned long arg)
->  {
->  	struct linear_c *lc = (struct linear_c *) ti->private;
-> -	return __blkdev_driver_ioctl(lc->dev->bdev, lc->dev->mode, cmd, arg);
-> +	struct dm_dev *dev = lc->dev;
-> +	int r = 0;
-> +
-> +	/*
-> +	 * Only pass ioctls through if the device sizes match exactly.
-> +	 */
-> +	if (lc->start ||
-> +	    ti->len != i_size_read(dev->bdev->bd_inode) >> SECTOR_SHIFT)
-> +		r = scsi_verify_blk_ioctl(NULL, cmd);
-> +
-> +	return r ? : __blkdev_driver_ioctl(dev->bdev, dev->mode, cmd, arg);
->  }
->  
->  static int linear_merge(struct dm_target *ti, struct bvec_merge_data *bvm,
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 5e0090e..801d92d 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -1520,6 +1520,12 @@ static int multipath_ioctl(struct dm_target *ti, unsigned int cmd,
->  
->  	spin_unlock_irqrestore(&m->lock, flags);
->  
-> +	/*
-> +	 * Only pass ioctls through if the device sizes match exactly.
-> +	 */
-> +	if (!r && ti->len != i_size_read(bdev->bd_inode) >> SECTOR_SHIFT)
-> +		r = scsi_verify_blk_ioctl(NULL, cmd);
-> +
->  	return r ? : __blkdev_driver_ioctl(bdev, mode, cmd, arg);
->  }
->  
-> -- 
-> 1.7.7.1
-> 
+> diff --git a/drivers/target/iscsi/iscsi_target_core.h b/drivers/target/iscsi/iscsi_target_core.h
+> index f1a02da..ebf81fd 100644
+> --- a/drivers/target/iscsi/iscsi_target_core.h
+> +++ b/drivers/target/iscsi/iscsi_target_core.h
+> @@ -561,8 +561,8 @@ struct iscsi_conn {
+>  	struct hash_desc	conn_tx_hash;
+>  	/* Used for scheduling TX and RX connection kthreads */
+>  	cpumask_var_t		conn_cpumask;
+> -	int			conn_rx_reset_cpumask:1;
+> -	int			conn_tx_reset_cpumask:1;
+> +	unsigned int		conn_rx_reset_cpumask:1;
+> +	unsigned int		conn_tx_reset_cpumask:1;
+>  	/* list_head of struct iscsi_cmd for this connection */
+>  	struct list_head	conn_cmd_list;
+>  	struct list_head	immed_queue_list;
 > --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
-> 
+
+Applied to lio-core.  Thanks Dan!
