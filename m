@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 02/07] lpfc 8.3.29: SLI related fixes
-Date: Wed, 18 Jan 2012 16:24:06 -0500
-Message-ID: <1326921847.32733.11.camel@ogier>
+Subject: [PATCH 01/07] lpfc 8.3.29: BSG and User interface fixes
+Date: Wed, 18 Jan 2012 16:23:48 -0500
+Message-ID: <1326921829.32733.10.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
@@ -9,29 +9,18 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:32996 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751336Ab2ARVYL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2012 16:24:11 -0500
+	with ESMTP id S1750993Ab2ARVYK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2012 16:24:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-SLI related fixes:
+BSG and User interface fixes:
 
-- Fix REG_RPI fails on SLI4 HBA putting NPort into NPR state (126230)
-- Fix ELS FDISC failing with local reject / invalid RPI. (126350)
-- Fix reset port when reset is needed during fw_dump (125807)
-- Fix unbounded firmware revision string from port cause panic (126560)
-- Fix driver behavior when receiving an ADISC (126654)
-- Fix driver not returning when bad ndlp found in abts error event
-  handling (126209)
-- Add more driver logs in area of SLI4 port error attention and reset
-  recovery (126813, 124466)
-- Fix failure in handling large CQ/EQ identifiers in an IOV
-  environment (126856)
-- Fix for driver using duplicate RPIs after lancer port reset (126723)
-- Clear vport->fc_myDID in lpfc_els_issue_fdisc to guarentee a
-  zero SID (126779, 126897)
-- Fix for SLI4 Port delivery for BLS ABORT ACC (126289)
+- Fix driver processing an els command using 16Gb FC Adapter (126345)
+- Change SLI4 FC port internal loopback to inner internal (126409)
+- Fix bug with driver dump command type 4 using 16Gb FC Adapter (126406)
+- Create character device to take a reference on the driver (126082)
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -39,567 +28,170 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_attr.c      |   12 +++++---
- lpfc_bsg.c       |    4 +-
- lpfc_crtn.h      |    1 
- lpfc_ct.c        |    4 +-
- lpfc_els.c       |    3 +-
- lpfc_hw.h        |    1 
- lpfc_hw4.h       |   26 +++++++++++++-----
- lpfc_init.c      |   64 +++++++++++++++++++++++++++++++++++++++++-----
- lpfc_nportdisc.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++---
- lpfc_sli.c       |   47 ++++++++++++++++++++++++++++------
- lpfc_sli4.h      |    3 +-
- 11 files changed, 207 insertions(+), 34 deletions(-)
+ lpfc_bsg.c  |   14 +++++++++++---
+ lpfc_hw.h   |    4 +++-
+ lpfc_init.c |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ lpfc_sli.c  |    2 +-
+ 4 files changed, 63 insertions(+), 5 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2012-01-18 11:32:50.000000000 -0500
-@@ -353,7 +353,7 @@ lpfc_fwrev_show(struct device *dev, stru
- 	struct lpfc_hba   *phba = vport->phba;
- 	uint32_t if_type;
- 	uint8_t sli_family;
--	char fwrev[32];
-+	char fwrev[FW_REV_STR_SIZE];
- 	int len;
- 
- 	lpfc_decode_firmware_rev(phba, fwrev, 1);
-@@ -922,11 +922,15 @@ lpfc_sli4_pdev_reg_request(struct lpfc_h
- 	rc = lpfc_sli4_pdev_status_reg_wait(phba);
- 
- 	if (rc == -EPERM) {
--		/* no privilage for reset, restore if needed */
--		if (before_fc_flag & FC_OFFLINE_MODE)
--			goto out;
-+		/* no privilage for reset */
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"3150 No privilage to perform the requested "
-+				"access: x%x\n", reg_val);
- 	} else if (rc == -EIO) {
- 		/* reset failed, there is nothing more we can do */
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+				"3153 Fail to perform the requested "
-+				"access: x%x\n", reg_val);
- 		return rc;
- 	}
- 
 diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2012-01-18 11:32:20.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2012-01-18 11:32:50.000000000 -0500
-@@ -3980,7 +3980,7 @@ lpfc_bsg_handle_sli_cfg_mbox(struct lpfc
- 			case COMN_OPCODE_GET_CNTL_ADDL_ATTRIBUTES:
- 				lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
- 						"3106 Handled SLI_CONFIG "
--						"subsys_fcoe, opcode:x%x\n",
-+						"subsys_comn, opcode:x%x\n",
- 						opcode);
- 				rc = lpfc_bsg_sli_cfg_read_cmd_ext(phba, job,
- 							nemb_mse, dmabuf);
-@@ -3988,7 +3988,7 @@ lpfc_bsg_handle_sli_cfg_mbox(struct lpfc
- 			default:
- 				lpfc_printf_log(phba, KERN_INFO, LOG_LIBDFC,
- 						"3107 Reject SLI_CONFIG "
--						"subsys_fcoe, opcode:x%x\n",
-+						"subsys_comn, opcode:x%x\n",
- 						opcode);
- 				rc = -EPERM;
- 				break;
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2012-01-18 11:32:50.000000000 -0500
-@@ -462,3 +462,4 @@ int lpfc_issue_unreg_vfi(struct lpfc_vpo
- int lpfc_selective_reset(struct lpfc_hba *);
- int lpfc_sli4_read_config(struct lpfc_hba *phba);
- int lpfc_scsi_buf_update(struct lpfc_hba *phba);
-+void lpfc_sli4_node_prep(struct lpfc_hba *phba);
-diff -upNr a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
---- a/drivers/scsi/lpfc/lpfc_ct.c	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_ct.c	2012-01-18 11:32:50.000000000 -0500
-@@ -1076,7 +1076,7 @@ int
- lpfc_vport_symbolic_node_name(struct lpfc_vport *vport, char *symbol,
- 	size_t size)
- {
--	char fwrev[16];
-+	char fwrev[FW_REV_STR_SIZE];
- 	int n;
- 
- 	lpfc_decode_firmware_rev(vport->phba, fwrev, 0);
-@@ -1834,7 +1834,7 @@ lpfc_decode_firmware_rev(struct lpfc_hba
- 	uint8_t *fwname;
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4)
--		sprintf(fwrevision, "%s", vp->rev.opFwName);
-+		snprintf(fwrevision, FW_REV_STR_SIZE, "%s", vp->rev.opFwName);
- 	else if (vp->rev.rBit) {
- 		if (psli->sli_flag & LPFC_SLI_ACTIVE)
- 			rev = vp->rev.sli2FwRev;
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2012-01-18 11:32:50.000000000 -0500
-@@ -7172,7 +7172,7 @@ lpfc_cmpl_els_fdisc(struct lpfc_hba *phb
- 			goto out;
- 		/* FDISC failed */
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--				 "0126 FDISC failed. (%d/%d)\n",
-+				 "0126 FDISC failed. (x%x/x%x)\n",
- 				 irsp->ulpStatus, irsp->un.ulpWord[4]);
- 		goto fdisc_failed;
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2012-01-12 22:43:34.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2012-01-18 11:32:20.000000000 -0500
+@@ -589,7 +589,10 @@ lpfc_bsg_rport_els(struct fc_bsg_job *jo
  	}
-@@ -7283,6 +7283,7 @@ lpfc_issue_els_fdisc(struct lpfc_vport *
- 	int rc;
+ 	cmdiocbq->iocb.un.elsreq64.bdl.bdeSize =
+ 		(request_nseg + reply_nseg) * sizeof(struct ulp_bde64);
+-	cmdiocbq->iocb.ulpContext = rpi;
++	if (phba->sli_rev == LPFC_SLI_REV4)
++		cmdiocbq->iocb.ulpContext = phba->sli4_hba.rpi_ids[rpi];
++	else
++		cmdiocbq->iocb.ulpContext = rpi;
+ 	cmdiocbq->iocb_flag |= LPFC_IO_LIBDFC;
+ 	cmdiocbq->context1 = NULL;
+ 	cmdiocbq->context2 = NULL;
+@@ -1768,7 +1771,7 @@ lpfc_sli4_bsg_set_internal_loopback(stru
+ 	bf_set(lpfc_mbx_set_diag_state_link_type,
+ 	       &link_diag_loopback->u.req, phba->sli4_hba.lnk_info.lnk_tp);
+ 	bf_set(lpfc_mbx_set_diag_lpbk_type, &link_diag_loopback->u.req,
+-	       LPFC_DIAG_LOOPBACK_TYPE_SERDES);
++	       LPFC_DIAG_LOOPBACK_TYPE_INTERNAL);
  
- 	vport->port_state = LPFC_FDISC;
-+	vport->fc_myDID = 0;
- 	cmdsize = (sizeof(uint32_t) + sizeof(struct serv_parm));
- 	elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp, did,
- 				     ELS_CMD_FDISC);
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2012-01-18 11:32:50.000000000 -0500
-@@ -715,12 +715,20 @@ struct lpfc_register {
- #define lpfc_eqcq_doorbell_eqci_SHIFT		9
- #define lpfc_eqcq_doorbell_eqci_MASK		0x0001
- #define lpfc_eqcq_doorbell_eqci_WORD		word0
--#define lpfc_eqcq_doorbell_cqid_SHIFT		0
--#define lpfc_eqcq_doorbell_cqid_MASK		0x03FF
--#define lpfc_eqcq_doorbell_cqid_WORD		word0
--#define lpfc_eqcq_doorbell_eqid_SHIFT		0
--#define lpfc_eqcq_doorbell_eqid_MASK		0x01FF
--#define lpfc_eqcq_doorbell_eqid_WORD		word0
-+#define lpfc_eqcq_doorbell_cqid_lo_SHIFT	0
-+#define lpfc_eqcq_doorbell_cqid_lo_MASK		0x03FF
-+#define lpfc_eqcq_doorbell_cqid_lo_WORD		word0
-+#define lpfc_eqcq_doorbell_cqid_hi_SHIFT	11
-+#define lpfc_eqcq_doorbell_cqid_hi_MASK		0x001F
-+#define lpfc_eqcq_doorbell_cqid_hi_WORD		word0
-+#define lpfc_eqcq_doorbell_eqid_lo_SHIFT	0
-+#define lpfc_eqcq_doorbell_eqid_lo_MASK		0x01FF
-+#define lpfc_eqcq_doorbell_eqid_lo_WORD		word0
-+#define lpfc_eqcq_doorbell_eqid_hi_SHIFT	11
-+#define lpfc_eqcq_doorbell_eqid_hi_MASK		0x001F
-+#define lpfc_eqcq_doorbell_eqid_hi_WORD		word0
-+#define LPFC_CQID_HI_FIELD_SHIFT		10
-+#define LPFC_EQID_HI_FIELD_SHIFT		9
+ 	mbxstatus = lpfc_sli_issue_mbox_wait(phba, pmboxq, LPFC_MBOX_TMO);
+ 	if ((mbxstatus != MBX_SUCCESS) || (pmboxq->u.mb.mbxStatus)) {
+@@ -4556,7 +4559,12 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 							+ sizeof(MAILBOX_t));
+ 		}
+ 	} else if (phba->sli_rev == LPFC_SLI_REV4) {
+-		if (pmb->mbxCommand == MBX_DUMP_MEMORY) {
++		/* Let type 4 (well known data) through because the data is
++		 * returned in varwords[4-8]
++		 * otherwise check the recieve length and fetch the buffer addr
++		 */
++		if ((pmb->mbxCommand == MBX_DUMP_MEMORY) &&
++			(pmb->un.varDmp.type != DMP_WELL_KNOWN)) {
+ 			/* rebuild the command for sli4 using our own buffers
+ 			* like we do for biu diags
+ 			*/
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2012-01-12 22:43:34.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2012-01-18 11:32:20.000000000 -0500
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2004-2010 Emulex.  All rights reserved.           *
++ * Copyright (C) 2004-2011 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
+  * www.emulex.com                                                  *
+  *                                                                 *
+@@ -2567,6 +2567,8 @@ typedef struct {
  
- #define LPFC_BMBX			0x0160
- #define lpfc_bmbx_addr_SHIFT		2
-@@ -3313,7 +3321,11 @@ struct xmit_bls_rsp64_wqe {
- 	uint32_t rsrvd4;
- 	struct wqe_did	wqe_dest;
- 	struct wqe_common wqe_com; /* words 6-11 */
--	uint32_t rsvd_12_15[4];
-+	uint32_t word12;
-+#define xmit_bls_rsp64_temprpi_SHIFT  0
-+#define xmit_bls_rsp64_temprpi_MASK   0x0000ffff
-+#define xmit_bls_rsp64_temprpi_WORD   word12
-+	uint32_t rsvd_13_15[3];
+ #define  DMP_MEM_REG             0x1
+ #define  DMP_NV_PARAMS           0x2
++#define  DMP_LMSD                0x3 /* Link Module Serial Data */
++#define  DMP_WELL_KNOWN          0x4
+ 
+ #define  DMP_REGION_VPD          0xe
+ #define  DMP_VPD_SIZE            0x400  /* maximum amount of VPD */
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2012-01-12 22:43:34.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2012-01-18 11:32:20.000000000 -0500
+@@ -32,6 +32,7 @@
+ #include <linux/aer.h>
+ #include <linux/slab.h>
+ #include <linux/firmware.h>
++#include <linux/miscdevice.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+@@ -10012,6 +10013,36 @@ lpfc_io_resume(struct pci_dev *pdev)
+ 	return;
+ }
+ 
++/**
++ * lpfc_mgmt_open - method called when 'lpfcmgmt' is opened from userspace
++ * @inode: pointer to the inode representing the lpfcmgmt device
++ * @filep: pointer to the file representing the open lpfcmgmt device
++ *
++ * This routine puts a reference count on the lpfc module whenever the
++ * character device is opened
++ **/
++static int
++lpfc_mgmt_open(struct inode *inode, struct file *filep)
++{
++	try_module_get(THIS_MODULE);
++	return 0;
++}
++
++/**
++ * lpfc_mgmt_release - method called when 'lpfcmgmt' is closed in userspace
++ * @inode: pointer to the inode representing the lpfcmgmt device
++ * @filep: pointer to the file representing the open lpfcmgmt device
++ *
++ * This routine removes a reference count from the lpfc module when the
++ * character device is closed
++ **/
++static int
++lpfc_mgmt_release(struct inode *inode, struct file *filep)
++{
++	module_put(THIS_MODULE);
++	return 0;
++}
++
+ static struct pci_device_id lpfc_id_table[] = {
+ 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_VIPER,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+@@ -10124,6 +10155,17 @@ static struct pci_driver lpfc_driver = {
+ 	.err_handler    = &lpfc_err_handler,
  };
  
- struct wqe_rctl_dfctl {
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2012-01-18 11:32:20.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2012-01-18 11:32:50.000000000 -0500
-@@ -70,6 +70,7 @@
- /* vendor ID used in SCSI netlink calls */
- #define LPFC_NL_VENDOR_ID (SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_EMULEX)
- 
-+#define FW_REV_STR_SIZE	32
- /* Common Transport structures and definitions */
- 
- union CtRevisionId {
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-01-18 11:32:20.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-01-18 11:32:50.000000000 -0500
-@@ -1475,8 +1475,12 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 				phba->sli4_hba.u.if_type2.STATUSregaddr,
- 				&portstat_reg.word0);
- 		/* consider PCI bus read error as pci_channel_offline */
--		if (pci_rd_rc1 == -EIO)
-+		if (pci_rd_rc1 == -EIO) {
-+			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3151 PCI bus read access failure: x%x\n",
-+				readl(phba->sli4_hba.u.if_type2.STATUSregaddr));
- 			return;
-+		}
- 		reg_err1 = readl(phba->sli4_hba.u.if_type2.ERR1regaddr);
- 		reg_err2 = readl(phba->sli4_hba.u.if_type2.ERR2regaddr);
- 		if (bf_get(lpfc_sliport_status_oti, &portstat_reg)) {
-@@ -1526,6 +1530,9 @@ lpfc_handle_eratt_s4(struct lpfc_hba *ph
- 			}
- 			/* fall through for not able to recover */
- 		}
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"3152 Unrecoverable error, bring the port "
-+				"offline\n");
- 		lpfc_sli4_offline_eratt(phba);
- 		break;
- 	case LPFC_SLI_INTF_IF_TYPE_1:
-@@ -2514,6 +2521,42 @@ lpfc_block_mgmt_io(struct lpfc_hba * phb
- }
- 
++static const struct file_operations lpfc_mgmt_fop = {
++	.open = lpfc_mgmt_open,
++	.release = lpfc_mgmt_release,
++};
++
++static struct miscdevice lpfc_mgmt_dev = {
++	.minor = MISC_DYNAMIC_MINOR,
++	.name = "lpfcmgmt",
++	.fops = &lpfc_mgmt_fop,
++};
++
  /**
-+ * lpfc_sli4_node_prep - Assign RPIs for active nodes.
-+ * @phba: pointer to lpfc hba data structure.
-+ *
-+ * Allocate RPIs for all active remote nodes. This is needed whenever
-+ * an SLI4 adapter is reset and the driver is not unloading. Its purpose
-+ * is to fixup the temporary rpi assignments.
-+ **/
-+void
-+lpfc_sli4_node_prep(struct lpfc_hba *phba)
-+{
-+	struct lpfc_nodelist  *ndlp, *next_ndlp;
-+	struct lpfc_vport **vports;
-+	int i;
-+
-+	if (phba->sli_rev != LPFC_SLI_REV4)
-+		return;
-+
-+	vports = lpfc_create_vport_work_array(phba);
-+	if (vports != NULL) {
-+		for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
-+			if (vports[i]->load_flag & FC_UNLOADING)
-+				continue;
-+
-+			list_for_each_entry_safe(ndlp, next_ndlp,
-+						 &vports[i]->fc_nodes,
-+						 nlp_listp) {
-+				if (NLP_CHK_NODE_ACT(ndlp))
-+					ndlp->nlp_rpi =
-+						lpfc_sli4_alloc_rpi(phba);
-+			}
-+		}
-+	}
-+	lpfc_destroy_vport_work_array(phba, vports);
-+}
-+
-+/**
-  * lpfc_online - Initialize and bring a HBA online
-  * @phba: pointer to lpfc hba data structure.
+  * lpfc_init - lpfc module initialization routine
   *
-@@ -2654,6 +2697,15 @@ lpfc_offline_prep(struct lpfc_hba * phba
- 				}
- 				spin_lock_irq(shost->host_lock);
- 				ndlp->nlp_flag &= ~NLP_NPR_ADISC;
-+
-+				/*
-+				 * Whenever an SLI4 port goes offline, free the
-+				 * RPI.  A new RPI when the adapter port comes 
-+				 * back online.
-+				 */
-+				if (phba->sli_rev == LPFC_SLI_REV4)
-+					lpfc_sli4_free_rpi(phba, ndlp->nlp_rpi);
-+
- 				spin_unlock_irq(shost->host_lock);
- 				lpfc_unreg_rpi(vports[i], ndlp);
- 			}
-@@ -7224,19 +7276,17 @@ lpfc_pci_function_reset(struct lpfc_hba 
- 					rc = -ENODEV;
- 					goto out;
- 				}
--				if (bf_get(lpfc_sliport_status_rdy, &reg_data))
--					break;
--				if (bf_get(lpfc_sliport_status_rn, &reg_data)) {
-+				if (bf_get(lpfc_sliport_status_rn, &reg_data))
- 					reset_again++;
-+				if (bf_get(lpfc_sliport_status_rdy, &reg_data))
- 					break;
--				}
- 			}
+@@ -10144,6 +10186,11 @@ lpfc_init(void)
+ 	printk(LPFC_MODULE_DESC "\n");
+ 	printk(LPFC_COPYRIGHT "\n");
  
- 			/*
- 			 * If the port responds to the init request with
- 			 * reset needed, delay for a bit and restart the loop.
- 			 */
--			if (reset_again) {
-+			if (reset_again && (rdy_chk < 1000)) {
- 				msleep(10);
- 				reset_again = 0;
- 				continue;
-@@ -9059,7 +9109,7 @@ lpfc_sli4_get_els_iocb_cnt(struct lpfc_h
- int
- lpfc_write_firmware(struct lpfc_hba *phba, const struct firmware *fw)
++	error = misc_register(&lpfc_mgmt_dev);
++	if (error)
++		printk(KERN_ERR "Could not register lpfcmgmt device, "
++			"misc_register returned with status %d", error);
++
+ 	if (lpfc_enable_npiv) {
+ 		lpfc_transport_functions.vport_create = lpfc_vport_create;
+ 		lpfc_transport_functions.vport_delete = lpfc_vport_delete;
+@@ -10180,6 +10227,7 @@ lpfc_init(void)
+ static void __exit
+ lpfc_exit(void)
  {
--	char fwrev[32];
-+	char fwrev[FW_REV_STR_SIZE];
- 	struct lpfc_grp_hdr *image = (struct lpfc_grp_hdr *)fw->data;
- 	struct list_head dma_buffer_list;
- 	int i, rc = 0;
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2012-01-18 11:32:50.000000000 -0500
-@@ -48,6 +48,10 @@ static int
- lpfc_check_adisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		 struct lpfc_name *nn, struct lpfc_name *pn)
- {
-+	/* First, we MUST have a RPI registered */
-+	if (!(ndlp->nlp_flag & NLP_RPI_REGISTERED))
-+		return 0;
-+
- 	/* Compare the ADISC rsp WWNN / WWPN matches our internal node
- 	 * table entry for that node.
- 	 */
-@@ -385,6 +389,10 @@ lpfc_rcv_plogi(struct lpfc_vport *vport,
- 	if (!mbox)
- 		goto out;
- 
-+	/* Registering an existing RPI behaves differently for SLI3 vs SLI4 */
-+	if (phba->sli_rev == LPFC_SLI_REV4)
-+		lpfc_unreg_rpi(vport, ndlp);
-+
- 	rc = lpfc_reg_rpi(phba, vport->vpi, icmd->un.rcvels.remoteID,
- 			    (uint8_t *) sp, mbox, ndlp->nlp_rpi);
- 	if (rc) {
-@@ -445,11 +453,42 @@ out:
- 	return 0;
- }
- 
-+/**
-+ * lpfc_mbx_cmpl_resume_rpi - Resume RPI completion routine
-+ * @phba: pointer to lpfc hba data structure.
-+ * @mboxq: pointer to mailbox object
-+ *
-+ * This routine is invoked to issue a completion to a rcv'ed
-+ * ADISC or PDISC after the paused RPI has been resumed.
-+ **/
-+static void
-+lpfc_mbx_cmpl_resume_rpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
-+{
-+	struct lpfc_vport *vport;
-+	struct lpfc_iocbq *elsiocb;
-+	struct lpfc_nodelist *ndlp;
-+	uint32_t cmd;
-+
-+	elsiocb = (struct lpfc_iocbq *)mboxq->context1;
-+	ndlp = (struct lpfc_nodelist *) mboxq->context2;
-+	vport = mboxq->vport;
-+	cmd = elsiocb->drvrTimeout;
-+
-+	if (cmd == ELS_CMD_ADISC) {
-+		lpfc_els_rsp_adisc_acc(vport, elsiocb, ndlp);
-+	} else {
-+		lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, elsiocb,
-+			ndlp, NULL);
-+	}
-+	kfree(elsiocb);
-+}
-+
- static int
- lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		struct lpfc_iocbq *cmdiocb)
- {
- 	struct Scsi_Host   *shost = lpfc_shost_from_vport(vport);
-+	struct lpfc_iocbq  *elsiocb;
- 	struct lpfc_dmabuf *pcmd;
- 	struct serv_parm   *sp;
- 	struct lpfc_name   *pnn, *ppn;
-@@ -475,12 +514,43 @@ lpfc_rcv_padisc(struct lpfc_vport *vport
- 
- 	icmd = &cmdiocb->iocb;
- 	if (icmd->ulpStatus == 0 && lpfc_check_adisc(vport, ndlp, pnn, ppn)) {
-+
-+		/*
-+		 * As soon as  we send ACC, the remote NPort can
-+		 * start sending us data. Thus, for SLI4 we must
-+		 * resume the RPI before the ACC goes out.
-+		 */
-+		if (vport->phba->sli_rev == LPFC_SLI_REV4) {
-+			elsiocb = kmalloc(sizeof(struct lpfc_iocbq),
-+				GFP_KERNEL);
-+			if (elsiocb) {
-+
-+				/* Save info from cmd IOCB used in rsp */
-+				memcpy((uint8_t *)elsiocb, (uint8_t *)cmdiocb,
-+					sizeof(struct lpfc_iocbq));
-+
-+				/* Save the ELS cmd */
-+				elsiocb->drvrTimeout = cmd;
-+
-+				lpfc_sli4_resume_rpi(ndlp,
-+					lpfc_mbx_cmpl_resume_rpi, elsiocb);
-+				goto out;
-+			}
-+		}
-+
- 		if (cmd == ELS_CMD_ADISC) {
- 			lpfc_els_rsp_adisc_acc(vport, cmdiocb, ndlp);
- 		} else {
--			lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb, ndlp,
--					 NULL);
-+			lpfc_els_rsp_acc(vport, ELS_CMD_PLOGI, cmdiocb,
-+				ndlp, NULL);
- 		}
-+out:
-+		/* If we are authenticated, move to the proper state */
-+		if (ndlp->nlp_type & NLP_FCP_TARGET)
-+			lpfc_nlp_set_state(vport, ndlp, NLP_STE_MAPPED_NODE);
-+		else
-+			lpfc_nlp_set_state(vport, ndlp, NLP_STE_UNMAPPED_NODE);
-+
- 		return 1;
- 	}
- 	/* Reject this request because invalid parameters */
-@@ -1229,7 +1299,7 @@ lpfc_cmpl_adisc_adisc_issue(struct lpfc_
- 	}
- 
- 	if (phba->sli_rev == LPFC_SLI_REV4) {
--		rc = lpfc_sli4_resume_rpi(ndlp);
-+		rc = lpfc_sli4_resume_rpi(ndlp, NULL, NULL);
- 		if (rc) {
- 			/* Stay in state and retry. */
- 			ndlp->nlp_prev_state = NLP_STE_ADISC_ISSUE;
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2012-01-12 22:43:34.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2012-01-18 11:32:50.000000000 -0500
-@@ -633,7 +633,8 @@ void lpfc_sli4_free_rpi(struct lpfc_hba 
- void lpfc_sli4_remove_rpis(struct lpfc_hba *);
- void lpfc_sli4_async_event_proc(struct lpfc_hba *);
- void lpfc_sli4_fcf_redisc_event_proc(struct lpfc_hba *);
--int lpfc_sli4_resume_rpi(struct lpfc_nodelist *);
-+int lpfc_sli4_resume_rpi(struct lpfc_nodelist *,
-+			void (*)(struct lpfc_hba *, LPFC_MBOXQ_t *), void *);
- void lpfc_sli4_fcp_xri_abort_event_proc(struct lpfc_hba *);
- void lpfc_sli4_els_xri_abort_event_proc(struct lpfc_hba *);
- void lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *,
++	misc_deregister(&lpfc_mgmt_dev);
+ 	pci_unregister_driver(&lpfc_driver);
+ 	fc_release_transport(lpfc_transport_template);
+ 	if (lpfc_enable_npiv)
 diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:32:20.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:32:50.000000000 -0500
-@@ -293,7 +293,9 @@ lpfc_sli4_eq_release(struct lpfc_queue *
- 	}
- 	bf_set(lpfc_eqcq_doorbell_num_released, &doorbell, released);
- 	bf_set(lpfc_eqcq_doorbell_qt, &doorbell, LPFC_QUEUE_TYPE_EVENT);
--	bf_set(lpfc_eqcq_doorbell_eqid, &doorbell, q->queue_id);
-+	bf_set(lpfc_eqcq_doorbell_eqid_hi, &doorbell,
-+			(q->queue_id >> LPFC_EQID_HI_FIELD_SHIFT));
-+	bf_set(lpfc_eqcq_doorbell_eqid_lo, &doorbell, q->queue_id);
- 	writel(doorbell.word0, q->phba->sli4_hba.EQCQDBregaddr);
- 	/* PCI read to flush PCI pipeline on re-arming for INTx mode */
- 	if ((q->phba->intr_type == INTx) && (arm == LPFC_QUEUE_REARM))
-@@ -372,7 +374,9 @@ lpfc_sli4_cq_release(struct lpfc_queue *
- 		bf_set(lpfc_eqcq_doorbell_arm, &doorbell, 1);
- 	bf_set(lpfc_eqcq_doorbell_num_released, &doorbell, released);
- 	bf_set(lpfc_eqcq_doorbell_qt, &doorbell, LPFC_QUEUE_TYPE_COMPLETION);
--	bf_set(lpfc_eqcq_doorbell_cqid, &doorbell, q->queue_id);
-+	bf_set(lpfc_eqcq_doorbell_cqid_hi, &doorbell,
-+			(q->queue_id >> LPFC_CQID_HI_FIELD_SHIFT));
-+	bf_set(lpfc_eqcq_doorbell_cqid_lo, &doorbell, q->queue_id);
- 	writel(doorbell.word0, q->phba->sli4_hba.EQCQDBregaddr);
- 	return released;
- }
-@@ -5596,6 +5600,8 @@ lpfc_sli4_alloc_resource_identifiers(str
- 		for (i = 0; i < count; i++)
- 			phba->sli4_hba.rpi_ids[i] = base + i;
- 
-+		lpfc_sli4_node_prep(phba);
-+
- 		/* VPIs. */
- 		count = phba->sli4_hba.max_cfg_param.max_vpi;
- 		base = phba->sli4_hba.max_cfg_param.vpi_base;
-@@ -7555,6 +7561,8 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
- 
- 	sgl  = (struct sli4_sge *)sglq->sgl;
- 	icmd = &piocbq->iocb;
-+	if (icmd->ulpCommand == CMD_XMIT_BLS_RSP64_CX)
-+		return sglq->sli4_xritag;
- 	if (icmd->un.genreq64.bdl.bdeFlags == BUFF_TYPE_BLP_64) {
- 		numBdes = icmd->un.genreq64.bdl.bdeSize /
- 				sizeof(struct ulp_bde64);
-@@ -7756,6 +7764,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		if (if_type == LPFC_SLI_INTF_IF_TYPE_2) {
- 			if (pcmd && (*pcmd == ELS_CMD_FLOGI ||
- 				*pcmd == ELS_CMD_SCR ||
-+				*pcmd == ELS_CMD_FDISC ||
- 				*pcmd == ELS_CMD_PLOGI)) {
- 				bf_set(els_req64_sp, &wqe->els_req, 1);
- 				bf_set(els_req64_sid, &wqe->els_req,
-@@ -7982,6 +7991,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		xritag = 0;
- 		break;
- 	case CMD_XMIT_BLS_RSP64_CX:
-+		ndlp = (struct lpfc_nodelist *)iocbq->context1;
- 		/* As BLS ABTS RSP WQE is very different from other WQEs,
- 		 * we re-construct this WQE here based on information in
- 		 * iocbq from scratch.
-@@ -8008,8 +8018,15 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		}
- 		bf_set(xmit_bls_rsp64_seqcnthi, &wqe->xmit_bls_rsp, 0xffff);
- 		bf_set(wqe_xmit_bls_pt, &wqe->xmit_bls_rsp.wqe_dest, 0x1);
-+
-+		/* Use CT=VPI */
-+		bf_set(wqe_els_did, &wqe->xmit_bls_rsp.wqe_dest,
-+			ndlp->nlp_DID);
-+		bf_set(xmit_bls_rsp64_temprpi, &wqe->xmit_bls_rsp,
-+			iocbq->iocb.ulpContext);
-+		bf_set(wqe_ct, &wqe->xmit_bls_rsp.wqe_com, 1);
- 		bf_set(wqe_ctxt_tag, &wqe->xmit_bls_rsp.wqe_com,
--		       iocbq->iocb.ulpContext);
-+			phba->vpi_ids[phba->pport->vpi]);
- 		bf_set(wqe_qosd, &wqe->xmit_bls_rsp.wqe_com, 1);
- 		bf_set(wqe_lenloc, &wqe->xmit_bls_rsp.wqe_com,
- 		       LPFC_WQE_LENLOC_NONE);
-@@ -8073,8 +8090,7 @@ __lpfc_sli_issue_iocb_s4(struct lpfc_hba
- 
- 	if (piocb->sli4_xritag == NO_XRI) {
- 		if (piocb->iocb.ulpCommand == CMD_ABORT_XRI_CN ||
--		    piocb->iocb.ulpCommand == CMD_CLOSE_XRI_CN ||
--		    piocb->iocb.ulpCommand == CMD_XMIT_BLS_RSP64_CX)
-+		    piocb->iocb.ulpCommand == CMD_CLOSE_XRI_CN)
- 			sglq = NULL;
- 		else {
- 			if (pring->txq_cnt) {
-@@ -8384,10 +8400,13 @@ lpfc_sli4_abts_err_handler(struct lpfc_h
- {
- 	struct lpfc_vport *vport;
- 
--	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp))
-+	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 				"3115 Node Context not found, driver "
- 				"ignoring abts err event\n");
-+		return;
-+	}
-+
- 	vport = ndlp->vport;
- 	lpfc_printf_log(phba, KERN_WARNING, LOG_SLI,
- 			"3116 Port generated FCP XRI ABORT event on "
-@@ -14042,6 +14061,13 @@ lpfc_sli4_seq_abort_rsp_cmpl(struct lpfc
- {
- 	if (cmd_iocbq)
- 		lpfc_sli_release_iocbq(phba, cmd_iocbq);
-+
-+	/* Failure means BLS ABORT RSP did not get delivered to remote node*/
-+	if (rsp_iocbq && rsp_iocbq->iocb.ulpStatus)
-+		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
-+			"3154 BLS ABORT RSP failed, data:  x%x/x%x\n",
-+			rsp_iocbq->iocb.ulpStatus,
-+			rsp_iocbq->iocb.un.ulpWord[4]);
- }
- 
- /**
-@@ -14748,7 +14774,8 @@ lpfc_sli4_remove_rpis(struct lpfc_hba *p
-  * provided rpi via a bitmask.
-  **/
- int
--lpfc_sli4_resume_rpi(struct lpfc_nodelist *ndlp)
-+lpfc_sli4_resume_rpi(struct lpfc_nodelist *ndlp,
-+	void (*cmpl)(struct lpfc_hba *, LPFC_MBOXQ_t *), void *arg)
- {
- 	LPFC_MBOXQ_t *mboxq;
- 	struct lpfc_hba *phba = ndlp->phba;
-@@ -14761,6 +14788,12 @@ lpfc_sli4_resume_rpi(struct lpfc_nodelis
- 
- 	/* Post all rpi memory regions to the port. */
- 	lpfc_resume_rpi(mboxq, ndlp);
-+	if (cmpl) {
-+		mboxq->mbox_cmpl = cmpl;
-+		mboxq->context1 = arg;
-+		mboxq->context2 = ndlp;
-+	}
-+	mboxq->vport = ndlp->vport;
- 	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_NOWAIT);
- 	if (rc == MBX_NOT_FINISHED) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-01-12 22:43:34.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:32:20.000000000 -0500
+@@ -7763,7 +7763,7 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
+ 				bf_set(wqe_ct, &wqe->els_req.wqe_com, 1);
+ 				bf_set(wqe_ctxt_tag, &wqe->els_req.wqe_com,
+ 					phba->vpi_ids[phba->pport->vpi]);
+-			} else if (iocbq->context1) {
++			} else if (pcmd && iocbq->context1) {
+ 				bf_set(wqe_ct, &wqe->els_req.wqe_com, 0);
+ 				bf_set(wqe_ctxt_tag, &wqe->els_req.wqe_com,
+ 					phba->sli4_hba.rpi_ids[ndlp->nlp_rpi]);
 
 
 
