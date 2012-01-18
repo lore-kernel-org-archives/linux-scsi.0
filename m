@@ -1,65 +1,74 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: Re: [PATCH] pm8001: PM8001F_RUN_TIME state, not bit.
-Date: Wed, 18 Jan 2012 09:41:24 +0800
-Message-ID: <92D7F475061B423D99929A5AB92990A3@usish.com.cn>
-References: <E05C3B97-AF03-4B09-90B6-D124B78DE653@xyratex.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH] pm8001: panics/lockups from asynchronous device removal.
+Date: Tue, 17 Jan 2012 20:04:48 -0800
+Message-ID: <CAA9_cmeNHj=MwuG8zzh9tpJ8M-80WNOn-cAOGF9o3d2EsvEFxQ@mail.gmail.com>
+References: <09A902B5-56B8-46CB-82B7-0DF81E7BBC12@xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:33443 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754422Ab2ARBnG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2012 20:43:06 -0500
-In-Reply-To: <E05C3B97-AF03-4B09-90B6-D124B78DE653@xyratex.com>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:56622 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756760Ab2AREEt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2012 23:04:49 -0500
+Received: by vcbfo1 with SMTP id fo1so2397823vcb.19
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2012 20:04:48 -0800 (PST)
+In-Reply-To: <09A902B5-56B8-46CB-82B7-0DF81E7BBC12@xyratex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Mark Salyzyn' <mark_salyzyn@xyratex.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>
-Cc: 'crystal_yu' <crystal_yu@usish.com>, 'lindar_liu' <lindar_liu@usish.com>, 'James Bottomley' <JBottomley@parallels.com>
+To: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, jack_wang Wang <jack_wang@usish.com>, crystal_yu <crystal_yu@usish.com>, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>
 
-> pm8001_phy_control PHY_FUNC_HARD_RESET locks up on second try via
-> smp_phy_control because response HW_EVENT_PHY_START_STATUS fails to
-complete
-> previous command. The PM8001F_RUN_TIME flag is not treated as a bit, but a
-state
-> in all readers, yet once we are operational or in the run time state, the
-flags
-> use a bit-set operation.
-> 
-[Jack Wang] 
-Thanks for fix.
-Ack-by: Jack Wang <jack_wang@usish.com>
-
+On Tue, Jan 17, 2012 at 10:29 AM, Mark Salyzyn <mark_salyzyn@xyratex.co=
+m> wrote:
+> pm8001_query_task() and pm8001_abort_task() panic kernel when devices=
+ asynchronously disappear, a possible scenario since these functions ar=
+e generally called when errors are mounting. Some of the panics are a d=
+irect result of a failure to NULL check some of the structure variables=
+ that are in certain states of teardown. One of the lockups was a direc=
+t result of returning an unexpected code to libsas' sas_scsi_find_task(=
+) function (creating a tight loop of an unexpected code 138 upstream to=
+ the scsi layer queue function).
+>
 > Signed-off-by: mark_salyzyn@xyratex.com
 > Cc: jack_wang@usish.com
 > Cc: JBottomley@parallels.com
 > Cc: crystal_yu@usish.com
 > Cc: john_gong@usish.com
 > Cc: lindar_liu <lindar_liu@usish.com>
-> 
->  drivers/scsi/pm8001/pm8001_sas.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.c
-> b/drivers/scsi/pm8001/pm8001_sas.c
-> index fb3dc99..7ae22a6 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.c
-> +++ b/drivers/scsi/pm8001/pm8001_sas.c
-> @@ -615,7 +615,7 @@ static int pm8001_dev_found_notify(struct
-domain_device
-> *dev)
->  	wait_for_completion(&completion);
->  	if (dev->dev_type == SAS_END_DEV)
->  		msleep(50);
-> -	pm8001_ha->flags |= PM8001F_RUN_TIME ;
-> +	pm8001_ha->flags = PM8001F_RUN_TIME;
->  	return 0;
->  found_out:
->  	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
-> 
-> Sincerely -- Mark Salyzyn--
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+While your in the area of libsas error handling, mind weighing in on
+the pending libsas error handling rework backlog?
+
+http://git.kernel.org/?p=3Dlinux/kernel/git/djbw/isci.git;a=3Dshortlog;=
+h=3Drefs/heads/libsas-eh-reworks-v4
+
+
+=2E..more notes below:
+
+> @@ -986,7 +997,8 @@ int pm8001_abort_task(struct sas_task *task)
+> =A0 =A0 =A0 =A0struct pm8001_device *pm8001_dev;
+> =A0 =A0 =A0 =A0struct pm8001_tmf_task tmf_task;
+> =A0 =A0 =A0 =A0int rc =3D TMF_RESP_FUNC_FAILED;
+> - =A0 =A0 =A0 if (unlikely(!task || !task->lldd_task || !task->dev))
+> + =A0 =A0 =A0 if (unlikely(!task || !task->lldd_task
+> + =A0 =A0 =A0 =A0|| !task->dev || !task->dev->lldd_dev))
+
+Hmm some of these are "never can happen" checks, so if you are indeed
+seeing !task or !task->dev something is very wrong in libsas. checking
+task->lldd_task and task->dev->lldd_dev should be all that is
+required.
+
+Also, I think it confuses the situation to return TMF_RESP_FUNC_FAILED
+in this case because the truth of the matter, as far as error handling
+is concerned, is that the lldd has forgotten the task, but you would
+need to check that the lldd does not subsequently call task->task_done
+in some other path.
+
+--
+Dan
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
