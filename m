@@ -1,85 +1,75 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: [PATCH stable 3/4] block: fail SCSI passthrough ioctls on
- partition devices
-Date: Wed, 18 Jan 2012 16:04:36 +0000
-Message-ID: <1326902676.3271.10.camel@deadeye>
-References: <1326772723.2819.167.camel@deadeye>
-	 <1326773222.2819.172.camel@deadeye> <4F1545A4.3000809@redhat.com>
-	 <1326862077.2819.210.camel@deadeye> <4F168A49.8000606@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-iRPf7VBMQwTUe3FIl8dG"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4F168A49.8000606@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: stable@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, Petr Matousek <pmatouse@redhat.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <JBottomley@parallels.com>
+From: Mark Salyzyn <mark_salyzyn@xyratex.com>
+Subject: Re: [PATCH] pm8001: panics/lockups from asynchronous device removal.
+Date: Wed, 18 Jan 2012 11:08:27 -0500
+Message-ID: <D6D2776D-2AA8-461A-AA96-EB80B63CE625@xyratex.com>
+References: <09A902B5-56B8-46CB-82B7-0DF81E7BBC12@xyratex.com> <CAA9_cmeNHj=MwuG8zzh9tpJ8M-80WNOn-cAOGF9o3d2EsvEFxQ@mail.gmail.com>
+Mime-Version: 1.0 (Apple Message framework v1251.1)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xyratex197.xyratex.com ([194.131.166.197]:42873 "EHLO
+	XY01EX21.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1757944Ab2ARQIi convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jan 2012 11:08:38 -0500
+In-Reply-To: <CAA9_cmeNHj=MwuG8zzh9tpJ8M-80WNOn-cAOGF9o3d2EsvEFxQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi <linux-scsi@vger.kernel.org>, jack_wang Wang <jack_wang@usish.com>, crystal_yu <crystal_yu@usish.com>, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>, Greg KH <greg@kroah.com>
 
+Thanks, Comments inline
 
---=-iRPf7VBMQwTUe3FIl8dG
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+On Jan 17, 2012, at 11:04 PM, Dan Williams wrote:
 
-On Wed, 2012-01-18 at 10:00 +0100, Paolo Bonzini wrote:
-> On 01/18/2012 05:47 AM, Ben Hutchings wrote:
-> > >     Changes with respect to 3.3: return -ENOTTY from scsi_verify_blk_=
-ioctl
-> > >     and -ENOIOCTLCMD from sd_compat_ioctl. ]
-> >
-> > But in 2.6.32, compat_sys_ioctl will end up returning EINVAL rather tha=
-n
-> > ENOTTY for an unhandled ioctl number.
->=20
-> No, it won't.  The ioctl will percolate up the non-compat path and then=
-=20
-> sd_ioctl will return ENOTTY.
+> On Tue, Jan 17, 2012 at 10:29 AM, Mark Salyzyn <mark_salyzyn@xyratex.com> wrote:
+>> pm8001_query_task() and pm8001_abort_task() panic kernel when devices asynchronously disappear, a possible scenario since these functions are generally called when errors are mounting. Some of the panics are a direct result of a failure to NULL check some of the structure variables that are in certain states of teardown. One of the lockups was a direct result of returning an unexpected code to libsas' sas_scsi_find_task() function (creating a tight loop of an unexpected code 138 upstream to the scsi layer queue function).
+>> 
+>> Signed-off-by: mark_salyzyn@xyratex.com
+>> Cc: jack_wang@usish.com
+>> Cc: JBottomley@parallels.com
+>> Cc: crystal_yu@usish.com
+>> Cc: john_gong@usish.com
+>> Cc: lindar_liu <lindar_liu@usish.com>
+> 
+> While your in the area of libsas error handling, mind weighing in on the pending libsas error handling rework backlog?
+> 
+> http://git.kernel.org/?p=linux/kernel/git/djbw/isci.git;a=shortlog;h=refs/heads/libsas-eh-reworks-v4
 
-Ah, yes.
+Xyratex has me focussed on 2.6.32 problems, I will look at these, but will be off the reservation (and with no Q/A testing resource to keep me honest) when doing so ;-}. Pure Code Inspection thus trumps experimentation ...
 
-> > Also, since we're denying ioctls
-> > for security reasons rather than because we don't know how to handle
-> > them, I don't think there's any harm in doing this.
->=20
-> There is harm.  You'll be blacklisting also the standard block device=20
-> ioctls, and those won't work on 32-on-64 anymore.  A system with 32-bit=
-=20
-> userland will likely not boot anymore.
+> ...more notes below:
+> 
+>> @@ -986,7 +997,8 @@ int pm8001_abort_task(struct sas_task *task)
+>>        struct pm8001_device *pm8001_dev;
+>>        struct pm8001_tmf_task tmf_task;
+>>        int rc = TMF_RESP_FUNC_FAILED;
+>> -       if (unlikely(!task || !task->lldd_task || !task->dev))
+>> +       if (unlikely(!task || !task->lldd_task
+>> +        || !task->dev || !task->dev->lldd_dev))
+> 
+> Hmm some of these are "never can happen" checks, so if you are indeed
+> seeing !task or !task->dev something is very wrong in libsas. checking
+> task->lldd_task and task->dev->lldd_dev should be all that is
+> required.
 
-It does (yes, I tested that myself now).  The standard block device
-ioctls are handled without calling the driver's compat_ioctl.
+OK, point taken, these issues surface with careless abandon in the 2.6.32-vintage kernels; and may, or may not, be present in 3.2.1-vintage kernels.
 
-> This is also somewhat exchanged in my original exchange with Linus.
+What this means is that maybe we should be submitting these stabilization/band-aid patches to the stable trees rather than to the top-of-tree?
 
-Anyway, I agree that it is not necessary to differ from mainline here.
+I'd opt (not that I have the rights) for paranoia and adding these in at top-of-tree, as band-aids against panics (in libsas or pm8001). The checks are not costly IMHO (hopefully less-so as wrapped by unlikely()). My WAG is that this patch should be cancelled here, and placed into the 2.6.32-stable bucket ...
 
-Ben.
+Looking forward to yours and Greg's comments to straighten me out.
 
---=20
-Ben Hutchings
-When in doubt, use brute force. - Ken Thompson
+> Also, I think it confuses the situation to return TMF_RESP_FUNC_FAILED
+> in this case because the truth of the matter, as far as error handling
+> is concerned, is that the lldd has forgotten the task, but you would
+> need to check that the lldd does not subsequently call task->task_done
+> in some other path.
 
+In our private copy of the pm8001 driver, we have some debug code that performs tag tracking and memory-leak detection. In that code we ensure that task_done is not called for a tag that has already been released by another path. In 2.6.32-vintage kernels, when we hit these we try to remove them (those patches are in my back-log).
 
---=-iRPf7VBMQwTUe3FIl8dG
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+> Dan
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+Sincerely -- Mark Salyzyn
 
-iQIVAwUATxbtlOe/yOyVhhEJAQoN4hAAgOnelAuU47CyXox96eKB6Sg0kGFWg7mf
-wwpN8EH/eICZV9OBu3MTySjbOnDE6W4Lvy4wWUfJWwarY9i+U82EsuwXRbIzLL//
-cyFgyKvnAuN2yg9bzAVOaNnDL1UwQ8dxlqyNEsQzMZYXHxHckKXJryngSReXNVP2
-XhdiAYeLMZXk/iHKSY+Zb0mRlG04SU81ruWIyTgPI20wk50Sc8Cso71skoyOgO+l
-Tm87ZjyUKhiWP9ufoM2N818LTsjnFm2cHGnMEDkW7zt7VP0Rs01xqkUe5vMzx66B
-GGFW/lAtAtq91FnSXCH4WEyF33pr/SKATpEjxwq5pOAsTfFBAIGozjD9Y+pY6ydK
-BPGzkZbaYLG4cXJdUV9CF63jWy3D0M7o3FNCzTYQaVPVZ2uCwTU3nBHtyG1tmT5h
-QfKgOXsIx6M7Cs97phnmBx1xiQlTpH47oucak85kudbj1CxaC2XIbUEZ0epacD5W
-Uum6xQZbXRNRME/+vVzcItLj0t4vZ9vIKWQJ7Hg06xWBMEOZBA6gWwt906BQzv5I
-XWyWRYwaTgYM0zIlU2voyQYuPLvoLgr4NPqfpx1dZPv1/CIcY7hU/HqZmwTly0BZ
-c/iKwnVHUW4qQg6bSwiq37AzjWJLsutNT6pS+rKrA5X+1ZWzH4KNT5KQUTEsTHtD
-5grShIsjwoE=
-=SShS
------END PGP SIGNATURE-----
-
---=-iRPf7VBMQwTUe3FIl8dG--
