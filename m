@@ -1,91 +1,124 @@
-From: Mark Salyzyn <mark_salyzyn@xyratex.com>
-Subject: Re: [PATCH] pm8001: panics/lockups from asynchronous device removal.
-Date: Wed, 18 Jan 2012 16:28:05 -0500
-Message-ID: <BDAD800B-ED4E-4165-8A36-A8A6078D356B@xyratex.com>
-References: <09A902B5-56B8-46CB-82B7-0DF81E7BBC12@xyratex.com> <CAA9_cmeNHj=MwuG8zzh9tpJ8M-80WNOn-cAOGF9o3d2EsvEFxQ@mail.gmail.com> <D6D2776D-2AA8-461A-AA96-EB80B63CE625@xyratex.com> <CABE8wwvMx=51gM0Si4pAwKcgotC2+uTQd8QJhrJ1hMZDbm2_mQ@mail.gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1251.1)
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 01/07] lpfc 8.3.29: BSG and User interface fixes
+Date: Wed, 18 Jan 2012 16:21:55 -0600
+Message-ID: <4F174603.8060104@cs.wisc.edu>
+References: <1326921829.32733.10.camel@ogier>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xyratex195.xyratex.com ([194.131.166.195]:38321 "EHLO
-	XY01EX22.xy01.xyratex.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751240Ab2ARV2M convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jan 2012 16:28:12 -0500
-In-Reply-To: <CABE8wwvMx=51gM0Si4pAwKcgotC2+uTQd8QJhrJ1hMZDbm2_mQ@mail.gmail.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:60124 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753988Ab2ARWWE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jan 2012 17:22:04 -0500
+In-Reply-To: <1326921829.32733.10.camel@ogier>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi <linux-scsi@vger.kernel.org>, jack_wang Wang <jack_wang@usish.com>, crystal_yu <crystal_yu@usish.com>, lindar_liu <lindar_liu@usish.com>, James Bottomley <JBottomley@parallels.com>, Greg KH <greg@kroah.com>
+To: james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org
 
-Thanks for the Ack. I will work on testing that these checks are still relevant for 3.2+
+On 01/18/2012 03:23 PM, James Smart wrote:
+> - Create character device to take a reference on the driver (126082)
+>
 
-Note, the changes are there for SAS devices and not ATA devices (we have none of the later), so I get the impression that many of the changes in libata/libsas would not touch on the problems we are experiencing.
+Is this so the driver cannot get unloaded when doing multiple bsg/sysfs
+requests? If so having every driver create its own char device seems
+wrong. qla2xxx does this too.qla4xxx wants to do it.  Every driver has
+the problem.
 
-I guarantee that the unexpected code 138 is 'bad', and the change is relevant for the current crop of kernels.
+If we do this can we at least have a scsi lib helper function that can
+enforce a consistent naming policy for the char devs so userspace apps
+do not have to have some crazy look up table for every driver.
 
-Sincerely -- Mark Salyzyn
+Or, is there a better way to support this? Maybe a common sysfs attr on
+the host or a bsg request? Something common that works for all drivers
+so we do not have to go around to every driver and add char device to them?
 
-On Jan 18, 2012, at 12:47 PM, Dan Williams wrote:
 
-> On Wed, Jan 18, 2012 at 8:08 AM, Mark Salyzyn <mark_salyzyn@xyratex.com> wrote:
->> Thanks, Comments inline
->> 
->> On Jan 17, 2012, at 11:04 PM, Dan Williams wrote:
->> 
->>> On Tue, Jan 17, 2012 at 10:29 AM, Mark Salyzyn <mark_salyzyn@xyratex.com> wrote:
->>>> pm8001_query_task() and pm8001_abort_task() panic kernel when devices asynchronously disappear, a possible scenario since these functions are generally called when errors are mounting. Some of the panics are a direct result of a failure to NULL check some of the structure variables that are in certain states of teardown. One of the lockups was a direct result of returning an unexpected code to libsas' sas_scsi_find_task() function (creating a tight loop of an unexpected code 138 upstream to the scsi layer queue function).
->>>> 
->>>> Signed-off-by: mark_salyzyn@xyratex.com
->>>> Cc: jack_wang@usish.com
->>>> Cc: JBottomley@parallels.com
->>>> Cc: crystal_yu@usish.com
->>>> Cc: john_gong@usish.com
->>>> Cc: lindar_liu <lindar_liu@usish.com>
->>> 
->>> While your in the area of libsas error handling, mind weighing in on the pending libsas error handling rework backlog?
->>> 
->>> http://git.kernel.org/?p=linux/kernel/git/djbw/isci.git;a=shortlog;h=refs/heads/libsas-eh-reworks-v4
->> 
->> Xyratex has me focussed on 2.6.32 problems, I will look at these, but will be off the reservation (and with no Q/A testing resource to keep me honest) when doing so ;-}. Pure Code Inspection thus trumps experimentation ...
->> 
->>> ...more notes below:
->>> 
->>>> @@ -986,7 +997,8 @@ int pm8001_abort_task(struct sas_task *task)
->>>>        struct pm8001_device *pm8001_dev;
->>>>        struct pm8001_tmf_task tmf_task;
->>>>        int rc = TMF_RESP_FUNC_FAILED;
->>>> -       if (unlikely(!task || !task->lldd_task || !task->dev))
->>>> +       if (unlikely(!task || !task->lldd_task
->>>> +        || !task->dev || !task->dev->lldd_dev))
->>> 
->>> Hmm some of these are "never can happen" checks, so if you are indeed
->>> seeing !task or !task->dev something is very wrong in libsas. checking
->>> task->lldd_task and task->dev->lldd_dev should be all that is
->>> required.
->> 
->> OK, point taken, these issues surface with careless abandon in the 2.6.32-vintage kernels; and may, or may not, be present in 3.2.1-vintage kernels.
->> 
->> What this means is that maybe we should be submitting these stabilization/band-aid patches to the stable trees rather than to the top-of-tree?
-> 
-> 2.6.32 pre-dates the libsas conversion to "new-style" libata error
-> handling, so a band aid that works there may now be invalid, like:
-> http://git.kernel.org/?p=linux/kernel/git/djbw/isci.git;a=commitdiff;h=030253ca
-> 
->> I'd opt (not that I have the rights) for paranoia and adding these in at top-of-tree, as band-aids against panics (in libsas or pm8001). The checks are not costly IMHO (hopefully less-so as wrapped by unlikely()). My WAG is that this patch should be cancelled here, and placed into the 2.6.32-stable bucket ...
-> 
-> -stable needs the upstream commit as a reference and it is certainly
-> valid to add the  !task->dev->lldd_dev check to current upstream.  The
-> !task and !task->dev are paranoia, but they are already in the code,
-> so removing them is just a clean up to reduce confusion about the
-> guarantees that libsas makes to lldds.
-> 
-> In other words,
-> Acked-by: Dan Williams <dan.j.williams@intel.com>
-> 
-> ...and if you can reproduce a !task or !task->dev situation on current
-> upstream I'd like to see it.
-> 
-> --
-> Dan
 
+> diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> --- a/drivers/scsi/lpfc/lpfc_init.c	2012-01-12 22:43:34.000000000 -0500
+> +++ b/drivers/scsi/lpfc/lpfc_init.c	2012-01-18 11:32:20.000000000 -0500
+> @@ -32,6 +32,7 @@
+>  #include <linux/aer.h>
+>  #include <linux/slab.h>
+>  #include <linux/firmware.h>
+> +#include <linux/miscdevice.h>
+>  
+>  #include <scsi/scsi.h>
+>  #include <scsi/scsi_device.h>
+> @@ -10012,6 +10013,36 @@ lpfc_io_resume(struct pci_dev *pdev)
+>  	return;
+>  }
+>  
+> +/**
+> + * lpfc_mgmt_open - method called when 'lpfcmgmt' is opened from userspace
+> + * @inode: pointer to the inode representing the lpfcmgmt device
+> + * @filep: pointer to the file representing the open lpfcmgmt device
+> + *
+> + * This routine puts a reference count on the lpfc module whenever the
+> + * character device is opened
+> + **/
+> +static int
+> +lpfc_mgmt_open(struct inode *inode, struct file *filep)
+> +{
+> +	try_module_get(THIS_MODULE);
+> +	return 0;
+> +}
+> +
+> +/**
+> + * lpfc_mgmt_release - method called when 'lpfcmgmt' is closed in userspace
+> + * @inode: pointer to the inode representing the lpfcmgmt device
+> + * @filep: pointer to the file representing the open lpfcmgmt device
+> + *
+> + * This routine removes a reference count from the lpfc module when the
+> + * character device is closed
+> + **/
+> +static int
+> +lpfc_mgmt_release(struct inode *inode, struct file *filep)
+> +{
+> +	module_put(THIS_MODULE);
+> +	return 0;
+> +}
+> +
+>  static struct pci_device_id lpfc_id_table[] = {
+>  	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_VIPER,
+>  		PCI_ANY_ID, PCI_ANY_ID, },
+> @@ -10124,6 +10155,17 @@ static struct pci_driver lpfc_driver = {
+>  	.err_handler    = &lpfc_err_handler,
+>  };
+>  
+> +static const struct file_operations lpfc_mgmt_fop = {
+> +	.open = lpfc_mgmt_open,
+> +	.release = lpfc_mgmt_release,
+> +};
+> +
+> +static struct miscdevice lpfc_mgmt_dev = {
+> +	.minor = MISC_DYNAMIC_MINOR,
+> +	.name = "lpfcmgmt",
+> +	.fops = &lpfc_mgmt_fop,
+> +};
+> +
+>  /**
+>   * lpfc_init - lpfc module initialization routine
+>   *
+> @@ -10144,6 +10186,11 @@ lpfc_init(void)
+>  	printk(LPFC_MODULE_DESC "\n");
+>  	printk(LPFC_COPYRIGHT "\n");
+>  
+> +	error = misc_register(&lpfc_mgmt_dev);
+> +	if (error)
+> +		printk(KERN_ERR "Could not register lpfcmgmt device, "
+> +			"misc_register returned with status %d", error);
+> +
+>  	if (lpfc_enable_npiv) {
+>  		lpfc_transport_functions.vport_create = lpfc_vport_create;
+>  		lpfc_transport_functions.vport_delete = lpfc_vport_delete;
+> @@ -10180,6 +10227,7 @@ lpfc_init(void)
+>  static void __exit
+>  lpfc_exit(void)
+>  {
+> +	misc_deregister(&lpfc_mgmt_dev);
+>  	pci_unregister_driver(&lpfc_driver);
+>  	fc_release_transport(lpfc_transport_template);
+>  	if (lpfc_enable_npiv)
