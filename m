@@ -1,24 +1,25 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 05/07] lpfc 8.3.29: Locking fix and Memory leak Fixes
-Date: Wed, 18 Jan 2012 16:25:38 -0500
-Message-ID: <1326921939.32733.14.camel@ogier>
+Subject: [PATCH 06/07] lpfc 8.3.29: Remove KERNAL allocation while lock is
+ held
+Date: Wed, 18 Jan 2012 16:25:55 -0500
+Message-ID: <1326921955.32733.15.camel@ogier>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:33060 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:33062 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751969Ab2ARVZ4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2012 16:25:56 -0500
+	with ESMTP id S1752391Ab2ARV0Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2012 16:26:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Locking fix and Memory leak Fixes
+Remove KERNAL allocation while lock is held
 
-- Fix Locking code raises IRQ twice (NA)
-- Fix mailbox and vpi memory leaks (126818)
+Note: this is a replacement patch for the issue pointed out in 
+http://www.gossamer-threads.com/lists/linux/kernel/1477270
 
 
 Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
@@ -26,87 +27,168 @@ Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_hbadisc.c   |    8 ++++----
- lpfc_init.c      |    6 ++++++
- lpfc_nportdisc.c |    1 +
- lpfc_sli.c       |    3 ++-
- 4 files changed, 13 insertions(+), 5 deletions(-)
+ lpfc_sli.c |  136 +++++++++++++++++++++++++------------------------------------
+ 1 file changed, 57 insertions(+), 79 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-01-18 11:33:56.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2012-01-18 11:34:10.000000000 -0500
-@@ -2977,9 +2977,9 @@ lpfc_mbx_process_link_up(struct lpfc_hba
- 				"topology\n");
- 				/* Get Loop Map information */
- 		if (bf_get(lpfc_mbx_read_top_il, la)) {
--			spin_lock_irq(shost->host_lock);
-+			spin_lock(shost->host_lock);
- 			vport->fc_flag |= FC_LBIT;
--			spin_unlock_irq(shost->host_lock);
-+			spin_unlock(shost->host_lock);
- 		}
- 
- 		vport->fc_myDID = bf_get(lpfc_mbx_read_top_alpa_granted, la);
-@@ -3029,9 +3029,9 @@ lpfc_mbx_process_link_up(struct lpfc_hba
- 				phba->sli3_options |= LPFC_SLI3_NPIV_ENABLED;
- 		}
- 		vport->fc_myDID = phba->fc_pref_DID;
--		spin_lock_irq(shost->host_lock);
-+		spin_lock(shost->host_lock);
- 		vport->fc_flag |= FC_LBIT;
--		spin_unlock_irq(shost->host_lock);
-+		spin_unlock(shost->host_lock);
- 	}
- 	spin_unlock_irq(&phba->hbalock);
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2012-01-18 11:33:56.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2012-01-18 11:34:10.000000000 -0500
-@@ -8178,6 +8178,9 @@ lpfc_unset_hba(struct lpfc_hba *phba)
- 	vport->load_flag |= FC_UNLOADING;
- 	spin_unlock_irq(shost->host_lock);
- 
-+	kfree(phba->vpi_bmask);
-+	kfree(phba->vpi_ids);
-+
- 	lpfc_stop_hba_timers(phba);
- 
- 	phba->pport->work_port_events = 0;
-@@ -8710,6 +8713,9 @@ lpfc_pci_remove_one_s3(struct pci_dev *p
- 	/* Final cleanup of txcmplq and reset the HBA */
- 	lpfc_sli_brdrestart(phba);
- 
-+	kfree(phba->vpi_bmask);
-+	kfree(phba->vpi_ids);
-+
- 	lpfc_stop_hba_timers(phba);
- 	spin_lock_irq(&phba->hbalock);
- 	list_del_init(&vport->listentry);
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2012-01-18 11:32:50.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2012-01-18 11:34:10.000000000 -0500
-@@ -481,6 +481,7 @@ lpfc_mbx_cmpl_resume_rpi(struct lpfc_hba
- 			ndlp, NULL);
- 	}
- 	kfree(elsiocb);
-+	mempool_free(mboxq, phba->mbox_mem_pool);
+diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+--- a/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:34:10.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:34:32.000000000 -0500
+@@ -558,81 +558,6 @@ __lpfc_get_active_sglq(struct lpfc_hba *
  }
  
- static int
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:33:41.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2012-01-18 11:34:10.000000000 -0500
-@@ -14840,7 +14840,8 @@ lpfc_sli4_resume_rpi(struct lpfc_nodelis
- 		mboxq->mbox_cmpl = cmpl;
- 		mboxq->context1 = arg;
- 		mboxq->context2 = ndlp;
+ /**
+- * __lpfc_set_rrq_active - set RRQ active bit in the ndlp's xri_bitmap.
+- * @phba: Pointer to HBA context object.
+- * @ndlp: nodelist pointer for this target.
+- * @xritag: xri used in this exchange.
+- * @rxid: Remote Exchange ID.
+- * @send_rrq: Flag used to determine if we should send rrq els cmd.
+- *
+- * This function is called with hbalock held.
+- * The active bit is set in the ndlp's active rrq xri_bitmap. Allocates an
+- * rrq struct and adds it to the active_rrq_list.
+- *
+- * returns  0 for rrq slot for this xri
+- *         < 0  Were not able to get rrq mem or invalid parameter.
+- **/
+-static int
+-__lpfc_set_rrq_active(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+-		uint16_t xritag, uint16_t rxid, uint16_t send_rrq)
+-{
+-	struct lpfc_node_rrq *rrq;
+-	int empty;
+-	uint32_t did = 0;
+-
+-
+-	if (!ndlp)
+-		return -EINVAL;
+-
+-	if (!phba->cfg_enable_rrq)
+-		return -EINVAL;
+-
+-	if (phba->pport->load_flag & FC_UNLOADING) {
+-		phba->hba_flag &= ~HBA_RRQ_ACTIVE;
+-		goto out;
 -	}
-+	} else
-+		mboxq->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
- 	mboxq->vport = ndlp->vport;
- 	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_NOWAIT);
- 	if (rc == MBX_NOT_FINISHED) {
+-	did = ndlp->nlp_DID;
+-
+-	/*
+-	 * set the active bit even if there is no mem available.
+-	 */
+-	if (NLP_CHK_FREE_REQ(ndlp))
+-		goto out;
+-
+-	if (ndlp->vport && (ndlp->vport->load_flag & FC_UNLOADING))
+-		goto out;
+-
+-	if (test_and_set_bit(xritag, ndlp->active_rrqs.xri_bitmap))
+-		goto out;
+-
+-	rrq = mempool_alloc(phba->rrq_pool, GFP_KERNEL);
+-	if (rrq) {
+-		rrq->send_rrq = send_rrq;
+-		rrq->xritag = xritag;
+-		rrq->rrq_stop_time = jiffies + HZ * (phba->fc_ratov + 1);
+-		rrq->ndlp = ndlp;
+-		rrq->nlp_DID = ndlp->nlp_DID;
+-		rrq->vport = ndlp->vport;
+-		rrq->rxid = rxid;
+-		empty = list_empty(&phba->active_rrq_list);
+-		rrq->send_rrq = send_rrq;
+-		list_add_tail(&rrq->list, &phba->active_rrq_list);
+-		if (!(phba->hba_flag & HBA_RRQ_ACTIVE)) {
+-			phba->hba_flag |= HBA_RRQ_ACTIVE;
+-			if (empty)
+-				lpfc_worker_wake_up(phba);
+-		}
+-		return 0;
+-	}
+-out:
+-	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+-			"2921 Can't set rrq active xri:0x%x rxid:0x%x"
+-			" DID:0x%x Send:%d\n",
+-			xritag, rxid, did, send_rrq);
+-	return -EINVAL;
+-}
+-
+-/**
+  * lpfc_clr_rrq_active - Clears RRQ active bit in xri_bitmap.
+  * @phba: Pointer to HBA context object.
+  * @xritag: xri used in this exchange.
+@@ -860,15 +785,68 @@ lpfc_test_rrq_active(struct lpfc_hba *ph
+  **/
+ int
+ lpfc_set_rrq_active(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp,
+-			uint16_t xritag, uint16_t rxid, uint16_t send_rrq)
++		    uint16_t xritag, uint16_t rxid, uint16_t send_rrq)
+ {
+-	int ret;
+ 	unsigned long iflags;
++	struct lpfc_node_rrq *rrq;
++	int empty;
++
++	if (!ndlp)
++		return -EINVAL;
++
++	if (!phba->cfg_enable_rrq)
++		return -EINVAL;
+ 
+ 	spin_lock_irqsave(&phba->hbalock, iflags);
+-	ret = __lpfc_set_rrq_active(phba, ndlp, xritag, rxid, send_rrq);
++	if (phba->pport->load_flag & FC_UNLOADING) {
++		phba->hba_flag &= ~HBA_RRQ_ACTIVE;
++		goto out;
++	}
++
++	/*
++	 * set the active bit even if there is no mem available.
++	 */
++	if (NLP_CHK_FREE_REQ(ndlp))
++		goto out;
++
++	if (ndlp->vport && (ndlp->vport->load_flag & FC_UNLOADING))
++		goto out;
++
++	if (test_and_set_bit(xritag, ndlp->active_rrqs.xri_bitmap))
++		goto out;
++
+ 	spin_unlock_irqrestore(&phba->hbalock, iflags);
+-	return ret;
++	rrq = mempool_alloc(phba->rrq_pool, GFP_KERNEL);
++	if (!rrq) {
++		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++				"3155 Unable to allocate RRQ xri:0x%x rxid:0x%x"
++				" DID:0x%x Send:%d\n",
++				xritag, rxid, ndlp->nlp_DID, send_rrq);
++		return -EINVAL;
++	}
++	rrq->send_rrq = send_rrq;
++	rrq->xritag = xritag;
++	rrq->rrq_stop_time = jiffies + HZ * (phba->fc_ratov + 1);
++	rrq->ndlp = ndlp;
++	rrq->nlp_DID = ndlp->nlp_DID;
++	rrq->vport = ndlp->vport;
++	rrq->rxid = rxid;
++	rrq->send_rrq = send_rrq;
++	spin_lock_irqsave(&phba->hbalock, iflags);
++	empty = list_empty(&phba->active_rrq_list);
++	list_add_tail(&rrq->list, &phba->active_rrq_list);
++	phba->hba_flag |= HBA_RRQ_ACTIVE;
++	if (empty)
++		lpfc_worker_wake_up(phba);
++	spin_unlock_irqrestore(&phba->hbalock, iflags);
++	return 0;
++out:
++	spin_unlock_irqrestore(&phba->hbalock, iflags);
++	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
++			"2921 Can't set rrq active xri:0x%x rxid:0x%x"
++			" DID:0x%x Send:%d\n",
++			xritag, rxid, ndlp->nlp_DID, send_rrq);
++	return -EINVAL;
+ }
+ 
+ /**
 
 
 
