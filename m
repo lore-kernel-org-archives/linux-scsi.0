@@ -1,76 +1,58 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what'smissing?
-Date: Thu, 19 Jan 2012 12:44:10 -0500
-Message-ID: <4F18566A.2060107@redhat.com>
-References: <4EF2026F.2090506@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM> <20111222155849.GD1388@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM> <4F0ADB0A.9020707@suse.de> <1326113987.2580.8.camel@localhost.localdomain> <D3F292ADF945FB49B35E96C94C2061B9159134BD@nsmail.netscout.com> <4F18429C.3020803@redhat.com> <D3F292ADF945FB49B35E96C94C2061B9159134EF@nsmail.netscout.com> <4F1844F0.1030406@redhat.com> <D3F292ADF945FB49B35E96C94C2061B9159135BF@nsmail.netscout.com>
+From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what's missing?
+Date: Thu, 19 Jan 2012 12:50:33 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B9159135E1@nsmail.netscout.com>
+References: <4EF2026F.2090506@redhat.com> <CAL1RGDVvSbOjvCFWDSYLm4xRvKftM5OhwEf9pMGrJhjJHxzsaA@mail.gmail.com> <4F1706AD.3080405@redhat.com> <CAL1RGDXDaeNG_YVC38f4nxvBA+btbypcW=1KyEzm90UQOw3HiQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58054 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756762Ab2ASRqj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2012 12:46:39 -0500
-In-Reply-To: <D3F292ADF945FB49B35E96C94C2061B9159135BF@nsmail.netscout.com>
+Received: from exprod6og107.obsmtp.com ([64.18.1.208]:60270 "HELO
+	exprod6og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932129Ab2ASRug convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 12:50:36 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <CAL1RGDXDaeNG_YVC38f4nxvBA+btbypcW=1KyEzm90UQOw3HiQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Loke, Chetan" <Chetan.Loke@netscout.com>
-Cc: Tom Coughlan <coughlan@redhat.com>, Hannes Reinecke <hare@suse.de>, tasleson@redhat.com, Shyam_Iyer@Dell.com, vgoyal@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Roland Dreier <roland@purestorage.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 01/19/2012 12:32 PM, Loke, Chetan wrote:
->>> True, a single front-end won't see all of those LUNs/devices. So not
->> a
->>> big concern
->>> about the front-end hosts.
->>>
->>> I am thinking of a use-case where folks can use a linux-box to
-> manage
->>> their different storage arrays.
->>> So this linux box with 'libstoragemgmt + app' needs to
->>> manage(scan/create/delete/so on) all those LUNs.
->>>
->> People do have boxes with thousands of luns though&  file systems in
->> active use.
->> Both for SAN and NAS volumes.
->>
->> One of the challenges is what to do when just one LUN (or NFS server)
->> crashes
->> and burns.
-> The FS needs to go read-only(plain&  simple) because you don't know
-> what's going on.
-> You can't risk writing data anymore. Let the apps fail. You can make it
-> happen even today.
-> It's a simple exercise.
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Roland Dreier
+> Sent: January 18, 2012 1:46 PM
+> To: Ric Wheeler
+> Cc: linux-fsdevel@vger.kernel.org; linux-scsi@vger.kernel.org
+> Subject: Re: [LSF/MM TOPIC] linux servers as a storage server - what's
+> missing?
+> 
+> > Why would you crash is you have device mapper multipath configured
+to
+> handle
+> > path fail over? We have tons of enterprise customers that use
+that...
+> 
+> cf http://www.spinics.net/lists/linux-scsi/msg56254.html
+> 
+> Basically hot unplug of an sdX can oops on any recent kernel, no
+> matter what dm stuff you have on top.
 
-Nope - it needs to be torn down and we need to be able to cleanly unmount it.
 
-Letting an application see and read-only file system when the disk is gone or 
-server down is not very useful since you won't get any non-cached data back.
+Depends on the use-case. In the particular (SAN)use-case that I'm
+talking about, 
+you shouldn't unplug live sdX which is still mapped on the target(array)
+side.
+I've attempted to fix it somewhere and it works. If you need more info
+about eh and initiator fixes, email me offline.
 
-Also, if you have an ability to migrate that mount (same mount point) to another 
-server or clone LUN, you want to unmount the source so you can remount the data 
-under that same mount point/namespace....
+When would this case arise? :
+a) you unknowingly unmap *hot* LUNs from target(array) while managing
+the array.
 
-ric
+End result - reset storm on front-end. You just need a smarter way to
+isolate/localize this
+front-end storm.
 
->
-> Like others, I have seen/debugged enough weirdness when it comes to
-> resets/aborts(FYI - 200+ hosts in a cluster).
-> Because of NDA reasons I can't disclose a whole lot but folks have
-> fixed/enhanced
-> scsi stack to make resets/aborts fully robust. And you need folks who
-> can debug
-> 'apps/FS/block/initiator/wire-protocol/target-side' in one shot. Simple.
-> So when you say 'crash&  burn' then either or 'all' of the above(minus
-> the protocol handling) might need fixing.
->
->> You simply cannot "reboot" the server to clean up after one
->> bad mount when you have thousands of other happy users runs on
-> thousands/hundreds
->> of other mount points :)
-> Again, can't front-end can go read only and limit the outage w/o
-> disturbing thousands of users?
->
->
-> Chetan Loke
 
+Chetan Loke
