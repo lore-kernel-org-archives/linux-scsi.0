@@ -1,30 +1,52 @@
-From: jack_wang <jack_wang@usish.com>
-Subject: Re: Re: [PATCH] pm8001: Add FUNC_GET_EVENTS (take 2)
-Date: Thu, 19 Jan 2012 22:11:19 +0800
-Message-ID: <201201192211161408363@usish.com>
-References: <46C64AF8-8DB5-4380-AB15-DF861E10F3A8@xyratex.com>,
-	<C816DDC9-9495-4F26-80A5-3FF2C73CE175@xyratex.com> <201201141031150158092@usish.com> <393624A3-D838-4DE0-80B8-2A83F1894ED2@xyratex.com> <C5B35CF20DA341678B633DF2939C1C55@usish.com.cn>,
-	<4B4F725B-AA77-4FDD-9A03-6456B5E13906@xyratex.com>
-Reply-To: jack_wang <jack_wang@usish.com>
+From: Andrea Arcangeli <aarcange@redhat.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
+Date: Thu, 19 Jan 2012 16:08:49 +0100
+Message-ID: <20120119150849.GD8316@redhat.com>
+References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
+ <20120117200609.GA7933@redhat.com>
+ <20120117213648.GA9457@quack.suse.cz>
+ <20120118225808.GA3074@tux1.beaverton.ibm.com>
+ <20120118232200.GA22019@quack.suse.cz>
+ <4F1758D4.9010401@panasas.com>
+ <20120119094637.GA23442@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="gb2312"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:33418 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751567Ab2ASOLV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 09:11:21 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20120119094637.GA23442@quack.suse.cz>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-Cc: Mark Salyzyn <mark_salyzyn@xyratex.com>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <JBottomley@parallels.com>, crystal_yu <crystal_yu@usish.com>, john_gong <john_gong@usish.com>, lindar_liu <lindar_liu@usish.com>
 
-VGhhbmtzLCBtYXliZSBteSBjb3B5ICYgcGFzdGUgYnJlYWsgdGhlIHBhdGNoLg0KDQoNCi0tLS0t
-LS0tLS0tLS0tDQpqYWNrX3dhbmcNCj5JIHB1bGxlZCBmcm9tIHRoZSBlbWFpbCB0aGF0IGNhbWUg
-YmFjayBmcm9tIHRoZSByZWZsZWN0b3IsIHRoZSBwYXRjaCBhcHBsaWVkIGNsZWFubHkgd2l0aCBu
-byBtYWxmb3JtZWQgd2FybmluZ3MuIEVuY2xvc2VkIGlzIHRoYXQgZW1haWwuDQo+DQo+DQo+DQo+
-DQo+X19fX19fX19fXyBJbmZvcm1hdGlvbiBmcm9tIEVTRVQgTk9EMzIgQW50aXZpcnVzLCB2ZXJz
-aW9uIG9mIHZpcnVzIHNpZ25hdHVyZSBkYXRhYmFzZSA1NjU5ICgyMDEwMTEyOSkgX19fX19fX19f
-Xw0KPg0KPlRoZSBtZXNzYWdlIHdhcyBjaGVja2VkIGJ5IEVTRVQgTk9EMzIgQW50aXZpcnVzLg0K
-Pg0KPmh0dHA6Ly93d3cuZXNldC5jb20NCj4NCj4=
+On Thu, Jan 19, 2012 at 10:46:37AM +0100, Jan Kara wrote:
+> So to make this useful the logic won't be trivial. Thirdly, the benefit is
+> questionable anyway (at least for most of realistic workloads) because
+> flusher thread doesn't write the pages all that often - when there are not
+> many pages, we write them out just once every couple of seconds, when we
+> have lots of dirty pages we cycle through all of them so one page is not
+> written that often.
 
+If you mean migrate as in mm/migrate.c that's also not cheap, it will
+page fault anybody accessing the page, it'll do the page copy, and
+it'll IPI all cpus that had the mm on the TLB, it locks the page too
+and does all sort of checks. But it's true it'll be CPU bound... while
+I understand the current solution is I/O bound.
+
+> 
+> > Do you have a more detailed description of the workload? Is it theoretically
+> > avoidable?
+>   See https://lkml.org/lkml/2011/10/23/156. Using page migration or copyout
+> would solve the problems of this guy.
+
+Copying in the I/O layer should be better than page migration,
+1) copying the page to a I/O kernel buffer won't involve expensive TLB
+IPIs that migration requires, 2) copying the page to a I/O kernel
+buffer won't cause page faults because of migration entries being set,
+3) migration has to copy too so the cost on the memory bus is the
+same.
+
+So unless I'm missing something page migration and pte/tlb mangling (I
+mean as in mm/migrate.c) is worse in every way than bounce buffering
+at the I/O layer if you notice the page can be modified while it's
+under I/O.
