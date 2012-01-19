@@ -1,52 +1,65 @@
-From: Andrea Arcangeli <aarcange@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Thu, 19 Jan 2012 16:08:49 +0100
-Message-ID: <20120119150849.GD8316@redhat.com>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
- <20120117200609.GA7933@redhat.com>
- <20120117213648.GA9457@quack.suse.cz>
- <20120118225808.GA3074@tux1.beaverton.ibm.com>
- <20120118232200.GA22019@quack.suse.cz>
- <4F1758D4.9010401@panasas.com>
- <20120119094637.GA23442@quack.suse.cz>
+From: "Loke, Chetan" <Chetan.Loke@netscout.com>
+Subject: RE: [LSF/MM TOPIC] linux servers as a storage server - what'smissing?
+Date: Thu, 19 Jan 2012 11:17:30 -0500
+Message-ID: <D3F292ADF945FB49B35E96C94C2061B9159134BD@nsmail.netscout.com>
+References: <4EF2026F.2090506@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22B19@BLRX7MCDC203.AMER.DELL.COM> <20111222155849.GD1388@redhat.com> <DBFB1B45AF80394ABD1C807E9F28D157077DD22D79@BLRX7MCDC203.AMER.DELL.COM> <4F0ADB0A.9020707@suse.de> <1326113987.2580.8.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20120119094637.GA23442@quack.suse.cz>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, neilb@suse.de, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, "Darrick J. Wong" <djwong@us.ibm.com>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exprod6og112.obsmtp.com ([64.18.1.29]:56931 "HELO
+	exprod6og112.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932171Ab2ASQRf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2012 11:17:35 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1326113987.2580.8.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Coughlan <coughlan@redhat.com>, Hannes Reinecke <hare@suse.de>, tasleson@redhat.com
+Cc: Shyam_Iyer@Dell.com, vgoyal@redhat.com, rwheeler@redhat.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, Jan 19, 2012 at 10:46:37AM +0100, Jan Kara wrote:
-> So to make this useful the logic won't be trivial. Thirdly, the benefit is
-> questionable anyway (at least for most of realistic workloads) because
-> flusher thread doesn't write the pages all that often - when there are not
-> many pages, we write them out just once every couple of seconds, when we
-> have lots of dirty pages we cycle through all of them so one page is not
-> written that often.
-
-If you mean migrate as in mm/migrate.c that's also not cheap, it will
-page fault anybody accessing the page, it'll do the page copy, and
-it'll IPI all cpus that had the mm on the TLB, it locks the page too
-and does all sort of checks. But it's true it'll be CPU bound... while
-I understand the current solution is I/O bound.
-
+> From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Tom Coughlan
 > 
-> > Do you have a more detailed description of the workload? Is it theoretically
-> > avoidable?
->   See https://lkml.org/lkml/2011/10/23/156. Using page migration or copyout
-> would solve the problems of this guy.
 
-Copying in the I/O layer should be better than page migration,
-1) copying the page to a I/O kernel buffer won't involve expensive TLB
-IPIs that migration requires, 2) copying the page to a I/O kernel
-buffer won't cause page faults because of migration entries being set,
-3) migration has to copy too so the cost on the memory bus is the
-same.
 
-So unless I'm missing something page migration and pte/tlb mangling (I
-mean as in mm/migrate.c) is worse in every way than bounce buffering
-at the I/O layer if you notice the page can be modified while it's
-under I/O.
+> Yes, Red Hat does. Tony Asleson. libStorageMgmt:
+> 
+> http://sourceforge.net/apps/trac/libstoragemgmt
+> 
+> The current focus is on managing external storage (SMI-S, etc.). This
+> focus can be expanded over time. Contributions welcome.
+> 
+
+Device management(scalability/feature mgmt) - 
+
+1) scalability:
+I may be wrong but storage boxes like symmetrix(and others) support
+large number of LUNs.
+So device management 'scalability' will make linux shine. By scalability
+I mean efficiently managing let's say 32K(?) LUNs.
+
+2) feature management:
+As Shyam mentioned in earlier emails - provide an ecosystem similar to
+smart-phones. Let me provide an example(and then
+you guys can correct me by saying this already exists or bits and pieces
+exist):
+
+a) As a kernel developer - export all the features(to the upper layers)
+we can by querying the target.
+
+b) As an app developer - GetLUNFeatures(), could return - {Thin
+Provision, RAID-level, ... ).
+
+c) As a sys-admin - If I right click(for a volume/LUN) on my management
+GUI, I should be able to tell if my volume supports thin-prov, backed by
+DRBD[proxy?] etc.
+
+So once we provide b) from above, tens(if not hundreds) of apps will be
+developed in a short period of time.
+I feel libstoragemgmt is an excellent place to get all of this
+organized.
+
+
+Chetan Loke
