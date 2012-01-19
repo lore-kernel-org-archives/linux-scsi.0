@@ -1,72 +1,459 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] a few storage topics
-Date: Thu, 19 Jan 2012 01:42:12 +0200
-Message-ID: <4F1758D4.9010401@panasas.com>
-References: <CABE8wws67dn0fwhTCs_XqH0g_CxGuT+hPQH9cVFe1xx5t_O9Jw@mail.gmail.com>
-	<20120117200609.GA7933@redhat.com>
-	<20120117213648.GA9457@quack.suse.cz>
-	<20120118225808.GA3074@tux1.beaverton.ibm.com>
-	<20120118232200.GA22019@quack.suse.cz>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: Re: [PATCH] pm8001: Add FUNC_GET_EVENTS (take 2)
+Date: Thu, 19 Jan 2012 10:34:19 +0800
+Message-ID: <C5B35CF20DA341678B633DF2939C1C55@usish.com.cn>
+References: <46C64AF8-8DB5-4380-AB15-DF861E10F3A8@xyratex.com>,  <C816DDC9-9495-4F26-80A5-3FF2C73CE175@xyratex.com> <201201141031150158092@usish.com> <393624A3-D838-4DE0-80B8-2A83F1894ED2@xyratex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20120118232200.GA22019@quack.suse.cz>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Jan Kara <jack@suse.cz>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:58549 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753163Ab2ASCf5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2012 21:35:57 -0500
+In-Reply-To: <393624A3-D838-4DE0-80B8-2A83F1894ED2@xyratex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Mark Salyzyn' <mark_salyzyn@xyratex.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>
+Cc: 'James Bottomley' <JBottomley@parallels.com>, 'crystal_yu' <crystal_yu@usish.com>, 'john_gong' <john_gong@usish.com>, 'lindar_liu' <lindar_liu@usish.com>
 
-On 01/19/2012 01:22 AM, Jan Kara wrote:
-> On Wed 18-01-12 14:58:08, Darrick J. Wong wrote:
->> On Tue, Jan 17, 2012 at 10:36:48PM +0100, Jan Kara wrote:
->>> On Tue 17-01-12 15:06:12, Mike Snitzer wrote:
->>>> 5) Any more progress on stable pages?
->>>>    - I know Darrick Wong had some proposals, what remains?
->>>   As far as I know this is done for XFS, btrfs, ext4. Is more needed?
->>
->> Yep, it's done for those three fses.
->>
->> I suppose it might help some people if instead of wait_on_page_writeback we
->> could simply page-migrate all the processes onto a new page...?
+Dear Mark,
 
->   Well, but it will cost some more memory & copying so whether it's faster
-> or not pretty much depends on the workload, doesn't it? Anyway I've already
-> heard one guy complaining that his RT application does redirtying of mmaped
-> pages and it started seeing big latencies due to stable pages work. So for
-> these guys migrating might be an option (or maybe fadvise/madvise flag to
-> do copy out before submitting for IO?).
+This patch seems broken, I see this when apply:
+
+patch -p1 < pm8001_get_event.patch 
+patching file drivers/scsi/pm8001/pm8001_hwi.c
+patch: **** malformed patch at line 56: @@ -375,6 +374,7 @@ static void
+__devinit  mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32
+SSCbit)  {
+
+> Jack noticed I dropped a patch fragment associated with a flags automatic
+> variable in  mpi_set_phys_g3_with_ssc (ooops) and that the pre-emptive
+> locking that piggy-backed this patch was not in-fact necessary because of
+> underlying atomic accesses to the hardware. Here is the updated patch
+fixing
+> these two issues.
+> 
+> 
+> The pm8001 driver is missing the FUNC_GET_EVENTS handler in the phy
+control
+> function. Since the pm8001_bar4_shift function was not designed to be
+called
+> at runtime, added locking surrounding the adjustment for all accesses.
+> 
+> Signed-off-by: mark_salyzyn@xyratex.com
+> Cc: jack_wang@usish.com
+> Cc: JBottomley@parallels.com
+> Cc: crystal_yu@usish.com
+> Cc: john_gong@usish.com
+> Cc: lindar_liu <lindar_liu@usish.com>
+> 
+>  drivers/scsi/pm8001/pm8001_hwi.c |   85
+> ++++++++++++++++++++++++++++++++++++++++-------------------
+>  drivers/scsi/pm8001/pm8001_sas.c |   24 +++++++++++++++-
+>  drivers/scsi/pm8001/pm8001_sas.h |    1
+>  3 files changed, 83 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
+> b/drivers/scsi/pm8001/pm8001_hwi.c
+> index b7b92f7..f3c44b9 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -338,26 +338,25 @@ update_outbnd_queue_table(struct pm8001_hba_info
+> *pm8001_ha, int number)
+>  }
+> 
+>  /**
+> - * bar4_shift - function is called to shift BAR base address
+> - * @pm8001_ha : our hba card information
+> + * pm8001_bar4_shift - function is called to shift BAR base address
+> + * @pm8001_ha : our hba card infomation
+>   * @shiftValue : shifting value in memory bar.
+>   */
+> -static int bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
+> +int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
+>  {
+>  	u32 regVal;
+> -	u32 max_wait_count;
+> +	unsigned long start;
+> 
+>  	/* program the inbound AXI translation Lower Address */
+>  	pm8001_cw32(pm8001_ha, 1, SPC_IBW_AXI_TRANSLATION_LOW, shiftValue);
+> 
+>  	/* confirm the setting is written */
+> -	max_wait_count = 1 * 1000 * 1000;  /* 1 sec */
+> +	start = jiffies + HZ; /* 1 sec */
+>  	do {
+> -		udelay(1);
+>  		regVal = pm8001_cr32(pm8001_ha, 1,
+SPC_IBW_AXI_TRANSLATION_LOW);
+> -	} while ((regVal != shiftValue) && (--max_wait_count));
+> +	} while ((regVal != shiftValue) && time_before(jiffies, start));
+> 
+> -	if (!max_wait_count) {
+> +	if (regVal != shiftValue) {
+>  		PM8001_INIT_DBG(pm8001_ha,
+>  			pm8001_printk("TIMEOUT:SPC_IBW_AXI_TRANSLATION_LOW"
+>  			" = 0x%x\n", regVal));
+> @@ -375,6 +374,7 @@ static void __devinit
+>  mpi_set_phys_g3_with_ssc(struct pm8001_hba_info *pm8001_ha, u32 SSCbit)
+>  {
+>  	u32 value, offset, i;
+> +	unsigned long flags;
+> 
+>  #define SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR 0x00030000
+>  #define SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR 0x00040000
+> @@ -388,16 +388,23 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info
+> *pm8001_ha, u32 SSCbit)
+>      * Using shifted destination address 0x3_0000:0x1074 + 0x4000*N
+(N=0:3)
+>      * Using shifted destination address 0x4_0000:0x1074 + 0x4000*(N-4)
+> (N=4:7)
+>      */
+> -	if (-1 == bar4_shift(pm8001_ha,
+> SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR))
+> +	spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
+> +				SAS2_SETTINGS_LOCAL_PHY_0_3_SHIFT_ADDR)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		return;
+> +	}
+> 
+>  	for (i = 0; i < 4; i++) {
+>  		offset = SAS2_SETTINGS_LOCAL_PHY_0_3_OFFSET + 0x4000 * i;
+>  		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
+>  	}
+>  	/* shift membase 3 for SAS2_SETTINGS_LOCAL_PHY 4 - 7 */
+> -	if (-1 == bar4_shift(pm8001_ha,
+> SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR))
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
+> +				SAS2_SETTINGS_LOCAL_PHY_4_7_SHIFT_ADDR)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		return;
+> +	}
+>  	for (i = 4; i < 8; i++) {
+>  		offset = SAS2_SETTINGS_LOCAL_PHY_4_7_OFFSET + 0x4000 *
+(i-4);
+>  		pm8001_cw32(pm8001_ha, 2, offset, 0x80001501);
+> @@ -421,7 +428,8 @@ mpi_set_phys_g3_with_ssc(struct pm8001_hba_info
+> *pm8001_ha, u32 SSCbit)
+>  	pm8001_cw32(pm8001_ha, 2, 0xd8, 0x8000C016);
+> 
+>  	/*set the shifted destination address to 0x0 to avoid error
+operation */
+> -	bar4_shift(pm8001_ha, 0x0);
+> +	pm8001_bar4_shift(pm8001_ha, 0x0);
+> +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  	return;
+>  }
+> 
+> @@ -437,6 +445,7 @@ mpi_set_open_retry_interval_reg(struct pm8001_hba_info
+> *pm8001_ha,
+>  	u32 offset;
+>  	u32 value;
+>  	u32 i;
+> +	unsigned long flags;
+> 
+>  #define OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR 0x00030000
+>  #define OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR 0x00040000
+> @@ -445,24 +454,30 @@ mpi_set_open_retry_interval_reg(struct
+pm8001_hba_info
+> *pm8001_ha,
+>  #define OPEN_RETRY_INTERVAL_REG_MASK 0x0000FFFF
+> 
+>  	value = interval & OPEN_RETRY_INTERVAL_REG_MASK;
+> +	spin_lock_irqsave(&pm8001_ha->lock, flags);
+>  	/* shift bar and set the OPEN_REJECT(RETRY) interval time of PHY 0
+-3.*/
+> -	if (-1 == bar4_shift(pm8001_ha,
+> -			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR))
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
+> +			     OPEN_RETRY_INTERVAL_PHY_0_3_SHIFT_ADDR)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		return;
+> +	}
+>  	for (i = 0; i < 4; i++) {
+>  		offset = OPEN_RETRY_INTERVAL_PHY_0_3_OFFSET + 0x4000 * i;
+>  		pm8001_cw32(pm8001_ha, 2, offset, value);
+>  	}
+> 
+> -	if (-1 == bar4_shift(pm8001_ha,
+> -			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR))
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha,
+> +			     OPEN_RETRY_INTERVAL_PHY_4_7_SHIFT_ADDR)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		return;
+> +	}
+>  	for (i = 4; i < 8; i++) {
+>  		offset = OPEN_RETRY_INTERVAL_PHY_4_7_OFFSET + 0x4000 *
+(i-4);
+>  		pm8001_cw32(pm8001_ha, 2, offset, value);
+>  	}
+>  	/*set the shifted destination address to 0x0 to avoid error
+operation */
+> -	bar4_shift(pm8001_ha, 0x0);
+> +	pm8001_bar4_shift(pm8001_ha, 0x0);
+> +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  	return;
+>  }
+> 
+> @@ -688,8 +703,11 @@ static u32 soft_reset_ready_check(struct
+pm8001_hba_info
+> *pm8001_ha)
+>  		PM8001_INIT_DBG(pm8001_ha,
+>  			pm8001_printk("Firmware is ready for reset .\n"));
+>  	} else {
+> -	/* Trigger NMI twice via RB6 */
+> -		if (-1 == bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
+> +		unsigned long flags;
+> +		/* Trigger NMI twice via RB6 */
+> +		spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +		if (-1 == pm8001_bar4_shift(pm8001_ha, RB6_ACCESS_REG)) {
+> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  			PM8001_FAIL_DBG(pm8001_ha,
+>  				pm8001_printk("Shift Bar4 to 0x%x failed\n",
+>  					RB6_ACCESS_REG));
+> @@ -715,8 +733,10 @@ static u32 soft_reset_ready_check(struct
+pm8001_hba_info
+> *pm8001_ha)
+>  			PM8001_FAIL_DBG(pm8001_ha,
+>  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
+>  				pm8001_cr32(pm8001_ha, 0,
+MSGU_SCRATCH_PAD_3)));
+> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  			return -1;
+>  		}
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  	}
+>  	return 0;
+>  }
+> @@ -733,6 +753,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+>  	u32	regVal, toggleVal;
+>  	u32	max_wait_count;
+>  	u32	regVal1, regVal2, regVal3;
+> +	unsigned long flags;
+> 
+>  	/* step1: Check FW is ready for soft reset */
+>  	if (soft_reset_ready_check(pm8001_ha) != 0) {
+> @@ -743,7 +764,9 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+>  	/* step 2: clear NMI status register on AAP1 and IOP, write the same
+>  	value to clear */
+>  	/* map 0x60000 to BAR4(0x20), BAR2(win) */
+> -	if (-1 == bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
+> +	spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_AAP1_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+>  			MBIC_AAP1_ADDR_BASE));
+> @@ -754,7 +777,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+>  		pm8001_printk("MBIC - NMI Enable VPE0 (IOP)= 0x%x\n",
+regVal));
+>  	pm8001_cw32(pm8001_ha, 2, MBIC_NMI_ENABLE_VPE0_IOP, 0x0);
+>  	/* map 0x70000 to BAR4(0x20), BAR2(win) */
+> -	if (-1 == bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, MBIC_IOP_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+>  			MBIC_IOP_ADDR_BASE));
+> @@ -796,7 +820,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+> 
+>  	/* read required registers for confirmming */
+>  	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
+> -	if (-1 == bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+>  			GSM_ADDR_BASE));
+> @@ -862,7 +887,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+>  	/* step 5: delay 10 usec */
+>  	udelay(10);
+>  	/* step 5-b: set GPIO-0 output control to tristate anyway */
+> -	if (-1 == bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, GPIO_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_INIT_DBG(pm8001_ha,
+>  				pm8001_printk("Shift Bar4 to 0x%x failed\n",
+>  				GPIO_ADDR_BASE));
+> @@ -878,7 +904,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+> 
+>  	/* Step 6: Reset the IOP and AAP1 */
+>  	/* map 0x00000 to BAR4(0x20), BAR2(win) */
+> -	if (-1 == bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
+>  			SPC_TOP_LEVEL_ADDR_BASE));
+> @@ -915,7 +942,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+> 
+>  	/* step 11: reads and sets the GSM Configuration and Reset Register
+*/
+>  	/* map 0x0700000 to BAR4(0x20), BAR2(win) */
+> -	if (-1 == bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, GSM_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("SPC Shift Bar4 to 0x%x failed\n",
+>  			GSM_ADDR_BASE));
+> @@ -968,7 +996,8 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+> 
+>  	/* step 13: bring the IOP and AAP1 out of reset */
+>  	/* map 0x00000 to BAR4(0x20), BAR2(win) */
+> -	if (-1 == bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
+> +	if (-1 == pm8001_bar4_shift(pm8001_ha, SPC_TOP_LEVEL_ADDR_BASE)) {
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  		PM8001_FAIL_DBG(pm8001_ha,
+>  			pm8001_printk("Shift Bar4 to 0x%x failed\n",
+>  			SPC_TOP_LEVEL_ADDR_BASE));
+> @@ -1010,6 +1039,7 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+>  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
+>  				pm8001_cr32(pm8001_ha, 0,
+>  				MSGU_SCRATCH_PAD_3)));
+> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  			return -1;
+>  		}
+> 
+> @@ -1039,9 +1069,12 @@ pm8001_chip_soft_rst(struct pm8001_hba_info
+*pm8001_ha,
+> u32 signature)
+>  				pm8001_printk("SCRATCH_PAD3 value = 0x%x\n",
+>  				pm8001_cr32(pm8001_ha, 0,
+>  				MSGU_SCRATCH_PAD_3)));
+> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+>  			return -1;
+>  		}
+>  	}
+> +	pm8001_bar4_shift(pm8001_ha, 0);
+> +	spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> 
+>  	PM8001_INIT_DBG(pm8001_ha,
+>  		pm8001_printk("SPC soft reset Complete\n"));
+> @@ -1157,8 +1190,8 @@ pm8001_chip_msix_interrupt_disable(struct
+> pm8001_hba_info *pm8001_ha,
+>  	msi_index = int_vec_idx * MSIX_TABLE_ELEMENT_SIZE;
+>  	msi_index += MSIX_TABLE_BASE;
+>  	pm8001_cw32(pm8001_ha, 0,  msi_index, MSIX_INTERRUPT_DISABLE);
+> -
+>  }
+> +
+>  /**
+>   * pm8001_chip_interrupt_enable - enable PM8001 chip interrupt
+>   * @pm8001_ha: our hba card information
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c
+> b/drivers/scsi/pm8001/pm8001_sas.c
+> index fb3dc99..b673524 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -166,6 +166,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy,
+enum
+> phy_func func,
+>  	struct pm8001_hba_info *pm8001_ha = NULL;
+>  	struct sas_phy_linkrates *rates;
+>  	DECLARE_COMPLETION_ONSTACK(completion);
+> +	unsigned long flags;
+>  	pm8001_ha = sas_phy->ha->lldd_ha;
+>  	pm8001_ha->phy[phy_id].enable_completion = &completion;
+>  	switch (func) {
+> @@ -209,8 +210,29 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy,
+enum
+> phy_func func,
+>  	case PHY_FUNC_DISABLE:
+>  		PM8001_CHIP_DISP->phy_stop_req(pm8001_ha, phy_id);
+>  		break;
+> +	case PHY_FUNC_GET_EVENTS:
+> +		spin_lock_irqsave(&pm8001_ha->lock, flags);
+> +		if (-1 == pm8001_bar4_shift(pm8001_ha,
+> +					(phy_id < 4) ? 0x30000 : 0x40000)) {
+> +			spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> +			return -EINVAL;
+> +		}
+> +		{
+> +			struct sas_phy *phy = sas_phy->phy;
+> +			uint32_t *qp = (uint32_t *)(((char *)
+> +				pm8001_ha->io_mem[2].memvirtaddr)
+> +				+ 0x1034 + (0x4000 * (phy_id & 3)));
+> +
+> +			phy->invalid_dword_count = qp[0];
+> +			phy->running_disparity_error_count = qp[1];
+> +			phy->loss_of_dword_sync_count = qp[3];
+> +			phy->phy_reset_problem_count = qp[4];
+> +		}
+> +		pm8001_bar4_shift(pm8001_ha, 0);
+> +		spin_unlock_irqrestore(&pm8001_ha->lock, flags);
+> +		return 0;
+>  	default:
+> -		rc = -ENOSYS;
+> +		rc = -EOPNOTSUPP;
+>  	}
+>  	msleep(300);
+>  	return rc;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h
+> b/drivers/scsi/pm8001/pm8001_sas.h
+> index 93959fe..83a48f3 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -488,6 +488,7 @@ int pm8001_mem_alloc(struct pci_dev *pdev, void
+> **virt_addr,
+>  	dma_addr_t *pphys_addr, u32 *pphys_addr_hi, u32 *pphys_addr_lo,
+>  	u32 mem_size, u32 align);
+> 
+> +int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue);
+> 
+>  /* ctl shared API */
+>  extern struct device_attribute *pm8001_host_attrs[];
+> 
+> ______________________________________________________________________
+> This email may contain privileged or confidential information, which
+should
+> only be used for the purpose for which it was sent by Xyratex. No further
+rights
+> or licenses are granted to use such information. If you are not the
+intended
+> recipient of this message, please notify the sender by return and delete
+it.
+> You may not use, copy, disclose or rely on the information contained in
+it.
+> 
+> Internet email is susceptible to data corruption, interception and
+> unauthorised amendment for which Xyratex does not accept liability. While
+we
+> have taken reasonable precautions to ensure that this email is free of
+viruses,
+> Xyratex does not accept liability for the presence of any computer viruses
+in
+> this email, nor for any losses caused as a result of viruses.
+> 
+> Xyratex Technology Limited (03134912), Registered in England & Wales,
+> Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+> 
+> The Xyratex group of companies also includes, Xyratex Ltd, registered in
+> Bermuda, Xyratex International Inc, registered in California, Xyratex
+> (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co
+Ltd
+> registered in The People's Republic of China and Xyratex Japan Limited
+> registered in Japan.
+> ______________________________________________________________________
 > 
 
-OK That one is interesting. Because I'd imagine that the Kernel would not
-start write-out on a busily modified page.
-
-Some heavy modifying then a single write. If it's not so then there is already
-great inefficiency, just now exposed, but was always there. The "page-migrate"
-mentioned here will not help.
-
-Could we not better our page write-out algorithms to avoid heavy contended pages?
-
-Do you have a more detailed description of the workload? Is it theoretically
-avoidable?
-
->> Or possibly modify md-raid5 not to snapshot dirty pages prior to xor/write?
->> (I never really bothered to find out if it really does this.)
-
-md-raid5/1 currently copies all pages if that what you meant.
-
->   Not sure either. Neil should know :) (added to CC).
-> 
-> 								Honze
-
-Thanks
-Boaz
