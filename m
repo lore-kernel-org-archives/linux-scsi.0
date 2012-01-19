@@ -1,7 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 04/10] hpsa: factor out driver name
-Date: Thu, 19 Jan 2012 14:00:59 -0600
-Message-ID: <20120119200059.17835.90819.stgit@beardog.cce.hp.com>
+Subject: [PATCH 02/10] hpsa: removed unneeded structure member max_sg_entries
+	and fix badly named constant MAXSGENTRIES
+Date: Thu, 19 Jan 2012 14:00:48 -0600
+Message-ID: <20120119200048.17835.62579.stgit@beardog.cce.hp.com>
 References: <20120119200042.17835.93058.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,132 +16,131 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Sometimes, for testing purposes (e.g. testing rmmod on a system
-that normally boots using hpsa) it's nice to rename the driver
-and split it into two drivers and restrict it to certain
-controllers.  This makes that easier.
+We had both h->max_sg_entries and h->maxsgentries in the per controller
+structure which is terribly confusing.  max_sg_entries was really
+just a constant, 32, which defines how big the "block fetch table"
+is, which is as large as the max number of SG elements embedded
+within a command (excluding SG elements in chain blocks).
+
+MAXSGENTRIES was the constant used to denote the max number of SG
+elements embedded within a command, also a poor name.
+
+So renamed MAXSGENTREIS to SG_ENTRIES_IN_CMD, and removed
+h->max_sg_entries and replaced it with SG_ENTRIES_IN_CMD.
+
+h->maxsgentries is unchanged, and is the maximum number of sg
+elements the controller will support in a command, including
+those in chain blocks, minus 1 for the chain block pointer..
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   27 ++++++++++++++-------------
- drivers/scsi/hpsa.h |    2 +-
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/scsi/hpsa.c     |   20 ++++++++++----------
+ drivers/scsi/hpsa.h     |    1 -
+ drivers/scsi/hpsa_cmd.h |    4 ++--
+ 3 files changed, 12 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index d191e3f..129655a 100644
+index e9b1aa8..d70d59c 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -56,6 +56,7 @@
- /* HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.' */
- #define HPSA_DRIVER_VERSION "2.0.2-1"
- #define DRIVER_NAME "HP HPSA Driver (v " HPSA_DRIVER_VERSION ")"
-+#define HPSA "hpsa"
- 
- /* How long to wait (in milliseconds) for board to go into simple mode */
- #define MAX_CONFIG_WAIT 30000
-@@ -202,30 +203,30 @@ static int check_for_unit_attention(struct ctlr_info *h,
- 
- 	switch (c->err_info->SenseInfo[12]) {
- 	case STATE_CHANGED:
--		dev_warn(&h->pdev->dev, "hpsa%d: a state change "
-+		dev_warn(&h->pdev->dev, HPSA "%d: a state change "
- 			"detected, command retried\n", h->ctlr);
- 		break;
- 	case LUN_FAILED:
--		dev_warn(&h->pdev->dev, "hpsa%d: LUN failure "
-+		dev_warn(&h->pdev->dev, HPSA "%d: LUN failure "
- 			"detected, action required\n", h->ctlr);
- 		break;
- 	case REPORT_LUNS_CHANGED:
--		dev_warn(&h->pdev->dev, "hpsa%d: report LUN data "
-+		dev_warn(&h->pdev->dev, HPSA "%d: report LUN data "
- 			"changed, action required\n", h->ctlr);
- 	/*
- 	 * Note: this REPORT_LUNS_CHANGED condition only occurs on the MSA2012.
+@@ -2698,16 +2698,16 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		status = -EINVAL;
+ 		goto cleanup1;
+ 	}
+-	if (ioc->buf_size > ioc->malloc_size * MAXSGENTRIES) {
++	if (ioc->buf_size > ioc->malloc_size * SG_ENTRIES_IN_CMD) {
+ 		status = -EINVAL;
+ 		goto cleanup1;
+ 	}
+-	buff = kzalloc(MAXSGENTRIES * sizeof(char *), GFP_KERNEL);
++	buff = kzalloc(SG_ENTRIES_IN_CMD * sizeof(char *), GFP_KERNEL);
+ 	if (!buff) {
+ 		status = -ENOMEM;
+ 		goto cleanup1;
+ 	}
+-	buff_size = kmalloc(MAXSGENTRIES * sizeof(int), GFP_KERNEL);
++	buff_size = kmalloc(SG_ENTRIES_IN_CMD * sizeof(int), GFP_KERNEL);
+ 	if (!buff_size) {
+ 		status = -ENOMEM;
+ 		goto cleanup1;
+@@ -4599,15 +4599,15 @@ static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h,
+ 	 * Each SG entry requires 16 bytes.  The eight registers are programmed
+ 	 * with the number of 16-byte blocks a command of that size requires.
+ 	 * The smallest command possible requires 5 such 16 byte blocks.
+-	 * the largest command possible requires MAXSGENTRIES + 4 16-byte
++	 * the largest command possible requires SG_ENTRIES_IN_CMD + 4 16-byte
+ 	 * blocks.  Note, this only extends to the SG entries contained
+ 	 * within the command block, and does not extend to chained blocks
+ 	 * of SG elements.   bft[] contains the eight values we write to
+ 	 * the registers.  They are not evenly distributed, but have more
+ 	 * sizes for small commands, and fewer sizes for larger commands.
  	 */
- 		break;
- 	case POWER_OR_RESET:
--		dev_warn(&h->pdev->dev, "hpsa%d: a power on "
-+		dev_warn(&h->pdev->dev, HPSA "%d: a power on "
- 			"or device reset detected\n", h->ctlr);
- 		break;
- 	case UNIT_ATTENTION_CLEARED:
--		dev_warn(&h->pdev->dev, "hpsa%d: unit attention "
-+		dev_warn(&h->pdev->dev, HPSA "%d: unit attention "
- 		    "cleared by another initiator\n", h->ctlr);
- 		break;
- 	default:
--		dev_warn(&h->pdev->dev, "hpsa%d: unknown "
-+		dev_warn(&h->pdev->dev, HPSA "%d: unknown "
- 			"unit attention detected\n", h->ctlr);
- 		break;
- 	}
-@@ -473,8 +474,8 @@ static struct device_attribute *hpsa_shost_attrs[] = {
+-	int bft[8] = {5, 6, 8, 10, 12, 20, 28, MAXSGENTRIES + 4};
+-	BUILD_BUG_ON(28 > MAXSGENTRIES + 4);
++	int bft[8] = {5, 6, 8, 10, 12, 20, 28, SG_ENTRIES_IN_CMD + 4};
++	BUILD_BUG_ON(28 > SG_ENTRIES_IN_CMD + 4);
+ 	/*  5 = 1 s/g entry or 4k
+ 	 *  6 = 2 s/g entry or 8k
+ 	 *  8 = 4 s/g entry or 16k
+@@ -4620,8 +4620,9 @@ static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h,
+ 	memset(h->reply_pool, 0, h->reply_pool_size);
+ 	h->reply_pool_head = h->reply_pool;
  
- static struct scsi_host_template hpsa_driver_template = {
- 	.module			= THIS_MODULE,
--	.name			= "hpsa",
--	.proc_name		= "hpsa",
-+	.name			= HPSA,
-+	.proc_name		= HPSA,
- 	.queuecommand		= hpsa_scsi_queue_command,
- 	.scan_start		= hpsa_scan_start,
- 	.scan_finished		= hpsa_scan_finished,
-@@ -3341,7 +3342,7 @@ static int hpsa_controller_hard_reset(struct pci_dev *pdev,
- static __devinit void init_driver_version(char *driver_version, int len)
- {
- 	memset(driver_version, 0, len);
--	strncpy(driver_version, "hpsa " HPSA_DRIVER_VERSION, len - 1);
-+	strncpy(driver_version, HPSA " " HPSA_DRIVER_VERSION, len - 1);
- }
+-	bft[7] = h->max_sg_entries + 4;
+-	calc_bucket_map(bft, ARRAY_SIZE(bft), 32, h->blockFetchTable);
++	bft[7] = SG_ENTRIES_IN_CMD + 4;
++	calc_bucket_map(bft, ARRAY_SIZE(bft),
++				SG_ENTRIES_IN_CMD, h->blockFetchTable);
+ 	for (i = 0; i < 8; i++)
+ 		writel(bft[i], &h->transtable->BlockFetch[i]);
  
- static __devinit int write_driver_ver_to_cfgtable(
-@@ -3922,7 +3923,7 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
- 		return err;
- 	}
+@@ -4659,14 +4660,13 @@ static __devinit void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 		return;
  
--	err = pci_request_regions(h->pdev, "hpsa");
-+	err = pci_request_regions(h->pdev, HPSA);
- 	if (err) {
- 		dev_err(&h->pdev->dev,
- 			"cannot obtain PCI resources, aborting\n");
-@@ -4240,7 +4241,7 @@ static void start_controller_lockup_detector(struct ctlr_info *h)
- 		spin_lock_init(&lockup_detector_lock);
- 		hpsa_lockup_detector =
- 			kthread_run(detect_controller_lockup_thread,
--						NULL, "hpsa");
-+						NULL, HPSA);
- 	}
- 	if (!hpsa_lockup_detector) {
- 		dev_warn(&h->pdev->dev,
-@@ -4312,7 +4313,7 @@ reinit_after_soft_reset:
- 	if (rc != 0)
- 		goto clean1;
+ 	hpsa_get_max_perf_mode_cmds(h);
+-	h->max_sg_entries = 32;
+ 	/* Performant mode ring buffer and supporting data structures */
+ 	h->reply_pool_size = h->max_commands * sizeof(u64);
+ 	h->reply_pool = pci_alloc_consistent(h->pdev, h->reply_pool_size,
+ 				&(h->reply_pool_dhandle));
  
--	sprintf(h->devname, "hpsa%d", number_of_controllers);
-+	sprintf(h->devname, HPSA "%d", number_of_controllers);
- 	h->ctlr = number_of_controllers;
- 	number_of_controllers++;
+ 	/* Need a block fetch table for performant mode */
+-	h->blockFetchTable = kmalloc(((h->max_sg_entries+1) *
++	h->blockFetchTable = kmalloc(((SG_ENTRIES_IN_CMD + 1) *
+ 				sizeof(u32)), GFP_KERNEL);
  
-@@ -4526,7 +4527,7 @@ static int hpsa_resume(__attribute__((unused)) struct pci_dev *pdev)
- }
- 
- static struct pci_driver hpsa_pci_driver = {
--	.name = "hpsa",
-+	.name = HPSA,
- 	.probe = hpsa_init_one,
- 	.remove = __devexit_p(hpsa_remove_one),
- 	.id_table = hpsa_pci_device_id,	/* id_table */
+ 	if ((h->reply_pool == NULL)
 diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index b4b97eb..7b28d54 100644
+index 91edafb..b4b97eb 100644
 --- a/drivers/scsi/hpsa.h
 +++ b/drivers/scsi/hpsa.h
-@@ -316,7 +316,7 @@ static unsigned long SA5_completed(struct ctlr_info *h)
- 		dev_dbg(&h->pdev->dev, "Read %lx back from board\n",
- 			register_value);
- 	else
--		dev_dbg(&h->pdev->dev, "hpsa: FIFO Empty read\n");
-+		dev_dbg(&h->pdev->dev, "FIFO Empty read\n");
- #endif
+@@ -58,7 +58,6 @@ struct ctlr_info {
+ 	unsigned long paddr;
+ 	int 	nr_cmds; /* Number of commands allowed on this controller */
+ 	struct CfgTable __iomem *cfgtable;
+-	int     max_sg_entries;
+ 	int	interrupts_enabled;
+ 	int	major;
+ 	int 	max_commands;
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 3fd4715..516d6e5 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -23,7 +23,7 @@
  
- 	return register_value;
+ /* general boundary defintions */
+ #define SENSEINFOBYTES          32 /* may vary between hbas */
+-#define MAXSGENTRIES            32
++#define SG_ENTRIES_IN_CMD	32 /* Max SG entries excluding chain blocks */
+ #define HPSA_SG_CHAIN		0x80000000
+ #define MAXREPLYQS              256
+ 
+@@ -282,7 +282,7 @@ struct CommandList {
+ 	struct CommandListHeader Header;
+ 	struct RequestBlock      Request;
+ 	struct ErrDescriptor     ErrDesc;
+-	struct SGDescriptor      SG[MAXSGENTRIES];
++	struct SGDescriptor      SG[SG_ENTRIES_IN_CMD];
+ 	/* information associated with the command */
+ 	u32			   busaddr; /* physical addr of this record */
+ 	struct ErrorInfo *err_info; /* pointer to the allocated mem */
