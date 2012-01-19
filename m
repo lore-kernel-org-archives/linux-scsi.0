@@ -1,63 +1,37 @@
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [RFC] Proposed fix for scsi related boot crash
-Date: Thu, 19 Jan 2012 12:41:28 +0100
-Message-ID: <20120119114127.GC6514@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/5] qla4xxx: Patches for scsi-misc
+Date: Thu, 19 Jan 2012 06:37:15 -0600
+Message-ID: <4F180E7B.30402@cs.wisc.edu>
+References: <1326971217-14323-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34309 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:32801 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329Ab2ASLlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Jan 2012 06:41:32 -0500
-Content-Disposition: inline
+	id S1755188Ab2ASMhZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jan 2012 07:37:25 -0500
+In-Reply-To: <1326971217-14323-1-git-send-email-vikas.chaudhary@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: vikas.chaudhary@qlogic.com
+Cc: jbottomley@parallels.com, linux-scsi@vger.kernel.org, lalit.chandivade@qlogic.com, ravi.anand@qlogic.com
 
-Hi
+On 01/19/2012 05:06 AM, vikas.chaudhary@qlogic.com wrote:
+> From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> 
+> James,
+> 
+> Please apply the following patches to scsi-misc for inclusion in mainline.
+> 
+> Vikas Chaudhary (5):
+>       libiscsi: Added support to show targetalias in sysfs
+>       qla4xxx: Added support to show targetalias in sysfs
+>       scsi_transport_iscsi: Added support to show port_state and port_speed in sysfs
+>       qla4xxx: Added support to show port_state and port_speed in sysfs
+>       qla4xxx: Update driver version to 5.02.00-k13
+> 
 
-We have fedora bug report where system crash at boot when SCSI card is
-plugged into the system:
-https://bugzilla.redhat.com/show_bug.cgi?id=781625
+Looks ok to me
 
-Since it is 3.1.2 -> 3.1.4 regression, it was easy to find out that
-the problem is caused by:
-
-commit 4e6c82b3614a18740ef63109d58743a359266daf
-Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date:   Mon Nov 7 08:51:24 2011 -0600
-
-    [SCSI] fix WARNING: at drivers/scsi/scsi_lib.c:1704
- 
-User confirmed that reverting the commit fixed the problem (and
-generates lot's of scsi/scsi_lib.c:1704 warnings).
-
-The remain question is how to properly fix. My proposition is to
-revert 4e6c82b361 and nullify sdev->request_queue->queuedata what
-should fix the warning.
-
-Thanks
-Stanislaw
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 89da43f..fcc8b53 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -319,7 +319,15 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	return sdev;
- 
- out_device_destroy:
--	__scsi_remove_device(sdev);
-+	scsi_device_set_state(sdev, SDEV_DEL);
-+	transport_destroy_device(&sdev->sdev_gendev);
-+	put_device(&sdev->sdev_dev);
-+
-+	/* stop the block layer for our device */
-+	sdev->request_queue->queuedata = NULL;
-+	scsi_free_queue(sdev->request_queue);
-+
-+	put_device(&sdev->sdev_gendev);
- out:
- 	if (display_failure_msg)
- 		printk(ALLOC_FAILURE_MSG, __func__);
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
